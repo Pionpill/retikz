@@ -1,6 +1,6 @@
 ---
 title: 数据变换
-description: 数据变换在数据模型接入之后改写 canonical 行，覆盖排序、汇总、代表行选择、统计标注以及自定义 transform definition。
+description: 数据变换在数据模型接入之后改写 canonical 行，覆盖排序、汇总、代表行选择与统计标注。
 ---
 
 数据变换属于 `@retikz/data`：它们只读取 canonical 行并输出新的 canonical 行，不依赖 plot 的 mark、scale 或坐标系。plot 可以把这些 transform 放在 `<Transform>`、`dataTransforms` 或 mark-local `transform` 里使用；table / geo 后续也可以复用同一组数据能力。
@@ -9,15 +9,14 @@ plot 另外注册的绘图变换仍放在[绘图语法的变换](/viz/plot/trans
 
 ## 能力一览
 
-| kind        | 行数       | 数据语义                            | 常见消费者                 |
-| ----------- | ---------- | ----------------------------------- | -------------------------- |
-| `sort`      | N → N      | 按字段稳定重排行                    | 折线顺序、堆叠前置整理     |
-| `summarize` | N → G      | 按组生成统计行                      | 分组柱、汇总表、统计摘要   |
-| `select`    | N → K      | 按组选择原始代表行                  | 极值点、top-N、异常样本    |
-| `annotate`  | N → N      | 把组统计或代表值广播回每一条明细行  | 均值线、阈值标签、上下文层 |
-| custom      | 取决于定义 | 由 `defineTransform` 注册运行时逻辑 | 业务专用派生或长尾数据形态 |
+| kind        | 行数  | 数据语义                           | 常见消费者                 |
+| ----------- | ----- | ---------------------------------- | -------------------------- |
+| `sort`      | N → N | 按字段稳定重排行                   | 折线顺序、堆叠前置整理     |
+| `summarize` | N → G | 按组生成统计行                     | 分组柱、汇总表、统计摘要   |
+| `select`    | N → K | 按组选择原始代表行                 | 极值点、top-N、异常样本    |
+| `annotate`  | N → N | 把组统计或代表值广播回每一条明细行 | 均值线、阈值标签、上下文层 |
 
-这些 operation 本身是 JSON 可序列化配置；真正的运行函数来自 data 包内置定义或运行时注入的 definition。变换读取字段会参与 model 校验，变换产出的字段不需要提前写进 model。
+这些 operation 本身是 JSON 可序列化配置，运行函数由 data 包内置 Definition 提供。变换读取字段会参与 model 校验，变换产出的字段不需要提前写进 model。
 
 ## TypeScript 类型
 
@@ -37,7 +36,7 @@ transform schema 派生类型统一使用 `IRDataXxx`。旧的 `Transform`、`Re
 
 `null`、`undefined`、`NaN` 与无穷值按 missing 处理，无论升序还是降序都稳定排在有效值之后。
 
-注意把它和数据模型里的 [`order`](/viz/data/model#分类顺序) 分开：`sort` 排的是数据行，`order` 排的是分类域。
+注意把它和字段契约里的 [`order`](/viz/data/model/contract#分类顺序) 分开：`sort` 排的是数据行，`order` 排的是分类域。
 
 <ComponentPreview files={['transform-sort', 'transform-sort.data.ts']} />
 
@@ -91,7 +90,7 @@ transform schema 派生类型统一使用 `IRDataXxx`。旧的 `Transform`、`Re
 
 `annotate` 先按 `groupBy` 分组，再把 reducer 结果或 selector 选中的代表值回填到组内每一行。它适合在明细点旁边画组均值线、组中位数带、分组阈值等上下文层。
 
-selector 标注只接受至多选中一行的内置规则：`min` / `max`、`first` / `last` / `nth`，以及固定 `n: 1` 的 `top` / `bottom`。平局策略可用默认的 `first` 或 `last`，不能用 `all`；多行选择、`outside-quantile-band` 和自定义 selector 应改用 `select`，需要广播自定义单值时改写成 reducer。
+selector 标注只接受至多选中一行的内置规则：`min` / `max`、`first` / `last` / `nth`，以及固定 `n: 1` 的 `top` / `bottom`。平局策略可用默认的 `first` 或 `last`，不能用 `all`；多行选择与 `outside-quantile-band` 应改用 `select`，需要广播其它单值统计时改写成 reducer。
 
 <ComponentPreview files={['transform-annotate', 'transform-annotate.data.ts']} />
 
@@ -145,15 +144,4 @@ const { rows, lineage } = applyTransformsWithLineage(sourceRows, operations, {
 
 如果传入 `lineage.sink`，事件会流式发送给回调，默认不再保留到返回值的 `lineage.events`。需要同时流式消费和返回事件数组时，显式设置 `retainEvents: true`。
 
-## 自定义 transform
-
-输入 / 输出行结构不属于现有 transform 形态时，用 `defineTransform` 注册完整运行时 definition。definition 不进入 JSON IR；IR 只保存 `{ kind, ...config }`，运行时通过 transform definition 集合注入执行逻辑。
-
-<ComponentPreview files={['transform-custom', 'transform-custom.data.ts']} />
-
-| definition 字段 | 负责声明                                              | 进入 IR |
-| --------------- | ----------------------------------------------------- | ------- |
-| `schema`        | 校验 `{ kind, ...config }` 并提取注册键               | 否      |
-| `inputFields`   | 读取哪些源字段，参与 strict model 校验                | 否      |
-| `outputFields`  | 产生哪些派生字段，从 strict model 中排除              | 否      |
-| `apply`         | 运行时行处理逻辑 `(rows, operation, context) => rows` | 否      |
+需要注册自定义 transform、reducer 或 selector 时，统一参见[扩展机制](/viz/data/model/extensions)。

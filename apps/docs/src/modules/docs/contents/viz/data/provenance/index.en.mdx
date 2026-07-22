@@ -24,13 +24,12 @@ These fields are debugging and consumer metadata. They do not change values, sca
 
 Different transform shapes preserve provenance differently:
 
-| transform shape                           | provenance meaning                                                         |
-| ----------------------------------------- | -------------------------------------------------------------------------- |
-| Row-preserving rewrite such as `sort`     | The row still comes from the same source row; keep `sourceIndex`           |
-| Representative selection such as `select` | The output row is an original selected row; keep `sourceIndex`             |
-| Group summary such as `summarize`         | The output row comes from a group; record `sourceIndexes`                  |
-| Statistical annotation such as `annotate` | Detail rows keep their own `sourceIndex` and can carry group-stat sources  |
-| Custom transform                          | The definition declares whether provenance can be preserved or synthesized |
+| transform shape                           | provenance meaning                                                        |
+| ----------------------------------------- | ------------------------------------------------------------------------- |
+| Row-preserving rewrite such as `sort`     | The row still comes from the same source row; keep `sourceIndex`          |
+| Representative selection such as `select` | The output row is an original selected row; keep `sourceIndex`            |
+| Group summary such as `summarize`         | The output row comes from a group; record `sourceIndexes`                 |
+| Statistical annotation such as `annotate` | Detail rows keep their own `sourceIndex` and can carry group-stat sources |
 
 This avoids pretending that a statistical row came from one arbitrary source row. A grouped sum is not one order; it is a derived result from a set of orders.
 
@@ -120,19 +119,6 @@ const { svg, lineage } = renderPlot(
 
 The default `lineage: {}` records only the necessary summary: data source / transform steps, mark identity, mark encoding, and the split between root transforms and mark-local transforms. `scaleMappings`, `layoutContext`, `locatorAnchors`, `rowValues`, and `hostMetadata` are independent switches. `rowValues` must provide `maxRows` and a non-empty `fields` whitelist so the runtime never copies whole rows by default. `scaleMappings` records declared scales from `spec.scales` and their mark-channel bindings; internally derived temporary scales are not part of this stable contract.
 
-Lineage lowering reuses the same transform definitions and runs its own recording pass so the existing `lowerPlots` return shape stays unchanged. Custom transforms therefore need to be deterministic and side-effect free, just as they do for ordinary lowering. Hosts that use random or stateful transforms should freeze the input data first or record additional audit data inside the custom definition.
-
 Use `createPlotLineageLocator` when an interaction needs to trace a hit datum back to its source. It returns the original locator anchor plus the datum `markIndex`, `transformedIndex`, and source identity summary for tooltips, AI explanation panels, or audit entry points.
 
-## Custom Definitions
-
-Custom transforms should declare provenance behavior explicitly:
-
-| case                                 | recommendation                                                |
-| ------------------------------------ | ------------------------------------------------------------- |
-| One input row maps to one output row | Copy input provenance and update `transformedIndex`           |
-| Several rows reduce to one row       | Store the source collection instead of a single `sourceIndex` |
-| Sampling or simulated rows           | Mark the row as `derived` and record `operation`              |
-| Source cannot be traced reliably     | Omit source fields instead of faking traceability             |
-
-That lets downstream modules know whether a row can be traced, how many original rows contributed to it, and whether the lineage passed through derived data without understanding the custom algorithm.
+See [Extension Mechanisms](/viz/data/model/extensions) for provenance handling in custom transforms.

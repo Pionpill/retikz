@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
 
-import { quarterlyRows } from './processing-resolve.data';
+import { quarterlyRows } from './extension-resolver.data';
 
 const parseQuarter = (raw: unknown): number | undefined => {
   const match = /^(\d{4})Q([1-4])$/.exec(String(raw));
@@ -12,7 +12,7 @@ const parseQuarter = (raw: unknown): number | undefined => {
   return Date.UTC(year, (quarter - 1) * 3, 1);
 };
 
-/** resolveField handles custom quarter strings that are outside the declarative format table. */
+/** 用 resolveField 解析声明式格式表之外的季度字符串 */
 const Demo: FC = () => (
   <Plot
     data={quarterlyRows}

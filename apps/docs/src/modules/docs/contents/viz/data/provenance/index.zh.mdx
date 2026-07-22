@@ -24,13 +24,12 @@ provenance 是数据层能力，不负责创建 plot 节点 id，也不决定交
 
 不同 transform 对来源的保留方式不同：
 
-| transform 类型           | 来源语义                                       |
-| ------------------------ | ---------------------------------------------- |
-| 保行重写，如 `sort`      | 行仍来自同一原始行，保留 `sourceIndex`         |
-| 代表行选择，如 `select`  | 输出行就是被选中的原始行，保留 `sourceIndex`   |
-| 统计汇总，如 `summarize` | 输出行来自一组原始行，记录 `sourceIndexes`     |
-| 统计标注，如 `annotate`  | 明细行保留自身 `sourceIndex`，附加组统计来源   |
-| 自定义 transform         | definition 负责声明是否能保留或合成 provenance |
+| transform 类型           | 来源语义                                     |
+| ------------------------ | -------------------------------------------- |
+| 保行重写，如 `sort`      | 行仍来自同一原始行，保留 `sourceIndex`       |
+| 代表行选择，如 `select`  | 输出行就是被选中的原始行，保留 `sourceIndex` |
+| 统计汇总，如 `summarize` | 输出行来自一组原始行，记录 `sourceIndexes`   |
+| 统计标注，如 `annotate`  | 明细行保留自身 `sourceIndex`，附加组统计来源 |
 
 这个规则避免把统计行伪装成某一条原始数据。比如分组求和后的 `total` 不是任何一个订单，而是一组订单的派生结果；它应该携带来源集合，而不是随便挑一个 `sourceIndex`。
 
@@ -122,19 +121,6 @@ const { svg, lineage } = renderPlot(
 
 默认链路配置 `lineage: {}` 只记录必要摘要：data source / transform step、mark identity、mark encoding，以及 root transform 与 mark-local transform 的分段。`scaleMappings`、`layoutContext`、`locatorAnchors`、`rowValues` 和 `hostMetadata` 都是独立开关；`rowValues` 必须给 `maxRows` 与非空 `fields` 白名单，避免默认复制整行数据。`scaleMappings` 记录的是 `spec.scales` 中声明的 scale 与 mark channel 绑定，不把 lowering 内部派生的临时 scale 当成稳定契约。
 
-链路下沉会复用同一组 transform definition，并为了保持 `lowerPlots` 返回形状不变而独立执行链路记录。因此自定义 transform 必须和普通 lowering 一样保持确定性、无外部副作用；随机或有状态 transform 需要由宿主先固化输入数据或在自定义 definition 内自行记录额外审计信息。
-
 需要把交互命中的 datum 反查到来源时，用 `createPlotLineageLocator`。它在原 locator anchor 之外返回 datum 的 `markIndex`、`transformedIndex` 与 source identity 摘要，适合做 tooltip、AI 解释面板或审计入口。
 
-## 自定义定义
-
-自定义 transform 应尽量显式声明 provenance 行为：
-
-| 情况                 | 建议                                             |
-| -------------------- | ------------------------------------------------ |
-| 一行输入对应一行输出 | 复制输入行 provenance，并更新 `transformedIndex` |
-| 多行规约成一行       | 写入来源集合，不写单一 `sourceIndex`             |
-| 生成采样 / 模拟行    | 标记 `derived`，并写明 `operation`               |
-| 来源无法可靠追踪     | 省略来源字段，不伪造可追踪性                     |
-
-这样下游模块可以在不理解自定义算法细节的情况下，仍然知道一行数据是否可回溯、能回溯到多少原始行，以及这条来源链是否经过派生。
+自定义 transform 怎样保留来源，统一见[扩展机制](/viz/data/model/extensions)。

@@ -1,0 +1,100 @@
+---
+title: Validation & Diagnostics
+description: Skip, sample-check, or reject missing and unparseable values while diagnosing blank charts at the field level.
+---
+
+External data often contains missing fields, mixed types, or parsing failures. Validation considers only fields referenced by the current data pipeline and checks canonical values after intake but before data transforms run. The configuration surface and visible result below use Plot as the example host; Data owns the validation rules.
+
+## Default behavior
+
+The default is `invalid="skip"`: a consumer can skip invalid values without fabricating replacements or blocking the whole result because of unrelated dirty columns. In the Plot example below, invalid points do not reach marks; the unparseable string, missing value, and `null` in the right-hand chart are all skipped.
+
+<ComponentPreview files={['processing-invalid', 'processing-invalid.data.ts']} />
+
+| Situation                           | Default behavior                            |
+| ----------------------------------- | ------------------------------------------- |
+| Participating field is missing      | Skip the corresponding point                |
+| Leaf is an object or array          | Treat it as non-scalar and skip it          |
+| `bigint` exceeds safe-integer range | Treat it as invalid                         |
+| Path traverses an array             | Do not unwind; flatten it in the data layer |
+
+Canonical rows remain available to sorting, stacking, and other data transforms, while each consumer decides how to skip invalid values. In a Plot application, skipping happens when marks consume values. This default tolerates a few dirty points in production, but it can produce a blank chart when every point is skipped.
+
+## Choosing validation strength
+
+| Option                     | Check                                                             | Use it for                          |
+| -------------------------- | ----------------------------------------------------------------- | ----------------------------------- |
+| Default / `invalid="skip"` | Do not report proactively; skip invalid consumed values           | Production views that tolerate dirt |
+| `validateData`             | Sample until each participating field has a valid value           | Debugging blank charts and mappings |
+| `invalid="error"`          | Check every participating value and fail on the first invalid one | Intake gates, tests, strict reports |
+
+### Diagnosing blank charts
+
+`validateData` samples the first 100 rows by default. When a participating field has no valid value in the sample, the error includes the field name and invalid / missing counts.
+
+```tsx
+import type { IRDataModel } from '@retikz/data';
+
+const salesModel: IRDataModel = [
+  { name: 'month', type: 'temporal' },
+  { name: 'revenue', type: 'continuous' },
+];
+
+<Plot data={rows} model={salesModel} validateData>
+  <PathMark x="month" y="revenue" order="month" />
+</Plot>;
+```
+
+This is a diagnostic switch, not a guarantee that every row beyond the sample is valid. Use the full policy for intake enforcement.
+
+### Rejecting bad values
+
+`invalid="error"` checks every canonical row. A missing participating field, failed conversion, or non-finite result fails immediately and reports the field and row index.
+
+```tsx
+<Plot data={rows} model={salesModel} invalid="error">
+  <PathMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+Columns not referenced by the current data pipeline are not checked. Strict validation therefore follows the consumer's actual data dependencies instead of requiring the entire source table to be clean. In this Plot example, field references in the chart configuration define that dependency set.
+
+## Where diagnostics run
+
+1. Data intake first writes physical values under logical names.
+2. `validateData` samples canonical rows, or `invalid="error"` checks all of them.
+3. Validated rows enter data transforms; under the default policy, invalid sentinels remain for the consumer to handle. Plot marks consume them in this example.
+
+This ordering keeps errors tied to the intake contract instead of row shapes produced by sorting, aggregation, or filtering. Reference mismatches belong to the [Field Contract](/viz/data/model/contract); incorrect parsing belongs to [Data Intake](/viz/data/model/intake).
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Sample diagnostics and full strict validation',
+      path: 'packages/viz/data/src/providers/data/normalize.ts',
+      startLine: 47,
+      endLine: 93,
+    },
+    {
+      label: 'Plot integration validates after normalization and before data transforms',
+      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
+      startLine: 140,
+      endLine: 163,
+    },
+  ]}
+/>
+
+## Related
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/data/model/intake">
+    <span className="font-semibold">Data Intake</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Fix physical paths, formats, and normalization rules.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/provenance">
+    <span className="font-semibold">Provenance</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Trace lowered results back to source rows.</span>
+  </LinkedCard>
+</div>

@@ -4,7 +4,7 @@ import type { FC } from 'react';
 import { defineFieldFormat } from '@retikz/data';
 import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
 
-import { wanRows } from './processing-custom-format.data';
+import { wanRows } from './extension-format.data';
 
 /**
  * 自定义具名格式：把 '1.2万' 解析成 12000。

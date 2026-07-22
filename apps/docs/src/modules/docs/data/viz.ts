@@ -13,7 +13,25 @@ export const vizSection: Array<Section> = [
     label: 'viz.data',
     document: true,
     pages: [
-      { id: 'model', label: 'viz.dataModel' },
+      {
+        id: 'model',
+        label: 'viz.dataModel',
+        children: [
+          { id: 'contract', label: 'viz.dataModelContract' },
+          { id: 'intake', label: 'viz.dataModelIntake' },
+          { id: 'validation', label: 'viz.dataModelValidation' },
+          {
+            id: 'extensions',
+            label: 'viz.dataModelExtensions',
+            meta: {
+              pageType: 'extension',
+              audience: 'extension-author',
+              capability: 'data.extensions',
+              sourceOfTruth: 'runtime',
+            },
+          },
+        ],
+      },
       { id: 'transform', label: 'viz.dataTransform' },
       { id: 'provenance', label: 'viz.dataProvenance' },
     ],

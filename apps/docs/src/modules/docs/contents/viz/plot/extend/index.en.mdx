@@ -5,7 +5,7 @@ description: Extend the drawing grammar by registering long-tail channels, scale
 
 This group covers how to **extend** Plot's drawing grammar. The built-ins cover common charts; when you need a new channel, scale, coordinate projection, or mark, runtime-injected definitions reuse the same parsing, validation, and lowering flow as built-in plot capabilities.
 
-Data formats, field parsing, and data transforms belong to [Data](/viz/data): custom field formats are documented under [Data Model](/viz/data/model), and custom transform / reducer / selector definitions are documented under [Data Transforms](/viz/data/transform). Plot can consume those data capabilities, but they are no longer part of this drawing-grammar extension group.
+Data formats, field parsing, and data transforms belong to [Data](/viz/data). Custom field formats, transforms, reducers, and selectors are documented together under [Extension Mechanisms](/viz/data/model/extensions). Plot can consume those data capabilities, but they are no longer part of this drawing-grammar extension group.
 
 > Extension definitions are host capabilities and do not enter Plot IR directly. The IR stores only serializable types, names, field bindings, and JSON config; functions, projections, evaluators, and lowerers are injected through `<Plot>` props or vanilla options.
 

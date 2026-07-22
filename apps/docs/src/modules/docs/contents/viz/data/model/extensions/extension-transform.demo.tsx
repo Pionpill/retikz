@@ -5,10 +5,10 @@ import { defineTransform } from '@retikz/data';
 import { Axis, Plot, PointMark, Transform } from '@retikz/plot-react';
 import { z } from 'zod';
 
-import { customTransformRows } from './transform-custom.data';
+import { customTransformRows } from './extension-transform.data';
 
 const doubleX = defineTransform({
-  schema: z.object({
+  schema: z.strictObject({
     kind: z.literal('double-x').describe('Discriminator: double the selected x-like field'),
     field: z.string().min(1).describe('Input field read from each row'),
     as: z.string().min(1).describe('Output field written to each row'),

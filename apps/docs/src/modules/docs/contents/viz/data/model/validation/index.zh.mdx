@@ -1,0 +1,98 @@
+---
+title: 校验与诊断
+description: 为缺失值和解析失败选择跳过、抽样检查或全量报错，并把空图问题定位到具体字段。
+---
+
+外部数据常有缺字段、混合类型或解析失败。校验只关注当前数据管线真正引用的字段，并在数据接入完成、数据变换执行之前检查规范化值。下面的配置入口与可视结果仍以 Plot 为例，校验规则本身由 Data 提供。
+
+## 默认处理
+
+默认 `invalid="skip"`：消费方可以跳过非法值，但不会伪造替代值，也不会因无关脏列阻塞整个结果。在下面的 Plot 示例中，非法数据点不会进入图元；右图中的无法解析字符串、缺失值与 `null` 都被跳过。
+
+<ComponentPreview files={['processing-invalid', 'processing-invalid.data.ts']} />
+
+| 情形                      | 默认行为                         |
+| ------------------------- | -------------------------------- |
+| 当前字段缺失              | 跳过对应数据点                   |
+| 叶子是对象或数组          | 视为非标量并跳过                 |
+| `bigint` 超出安全整数范围 | 视为非法值                       |
+| 路径中途经过数组          | 不自动展开；应先在数据层 flatten |
+
+规范化行本身仍保留，并可继续参与排序、堆叠等数据变换；具体怎样跳过由消费方决定。在 Plot 应用中，跳过发生在 mark 消费阶段，因此默认策略适合生产图容忍少量坏点，但全部点都被跳过时可能只剩空图。
+
+## 选择校验强度
+
+| 配置                    | 检查方式                                   | 适合场景                 |
+| ----------------------- | ------------------------------------------ | ------------------------ |
+| 默认 / `invalid="skip"` | 不主动报错，消费时跳过非法点               | 生产图容忍少量脏数据     |
+| `validateData`          | 抽样确认每个参与字段至少有一个有效值       | 开发期排查空图与字段映射 |
+| `invalid="error"`       | 全量检查每个参与字段，遇首个非法值立即报错 | 数据准入、测试与严格报表 |
+
+### 排查空图
+
+`validateData` 默认抽样前 100 行。某个参与字段在样本中一个有效值都没有时，错误会包含字段名以及非法 / 缺失计数。
+
+```tsx
+import type { IRDataModel } from '@retikz/data';
+
+const salesModel: IRDataModel = [
+  { name: 'month', type: 'temporal' },
+  { name: 'revenue', type: 'continuous' },
+];
+
+<Plot data={rows} model={salesModel} validateData>
+  <PathMark x="month" y="revenue" order="month" />
+</Plot>;
+```
+
+它是诊断开关，不保证样本之外的每一行都合法；需要数据准入时使用全量策略。
+
+### 严格拒绝坏值
+
+`invalid="error"` 检查全部规范化行。任一参与字段缺失、无法转换或产生非有限值都会立即报错，并指明字段与行号。
+
+```tsx
+<Plot data={rows} model={salesModel} invalid="error">
+  <PathMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+未被当前数据管线引用的列不会进入检查；严格模式因此围绕消费方的实际数据依赖，而不是要求整张源表完全干净。在这个 Plot 示例中，依赖集合由图形配置中的字段引用产生。
+
+## 诊断发生在哪里
+
+1. 数据接入先把真实值写入逻辑字段。
+2. `validateData` 对规范化行做抽样检查，或由 `invalid="error"` 做全量检查。
+3. 通过检查的行再进入数据变换；默认跳过策略则把非法哨兵留给后续消费方处理。在 Plot 中由图元消费这些值。
+
+这个顺序保证错误指向数据接入契约，而不会被排序、汇总或筛选后的行形状干扰。字段声明与引用不一致属于[字段契约](/viz/data/model/contract)错误；解析方式不正确则回到[数据接入](/viz/data/model/intake)调整。
+
+<SourceLinks
+  sources={[
+    {
+      label: '抽样诊断与全量严格校验',
+      path: 'packages/viz/data/src/providers/data/normalize.ts',
+      startLine: 47,
+      endLine: 93,
+    },
+    {
+      label: 'Plot 接入中校验位于规范化之后、数据变换之前',
+      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
+      startLine: 140,
+      endLine: 163,
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/data/model/intake">
+    <span className="font-semibold">数据接入</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">修正字段路径、格式与规范化规则。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/provenance">
+    <span className="font-semibold">来源追踪</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">把下沉结果回指到原始数据行。</span>
+  </LinkedCard>
+</div>

@@ -17,13 +17,13 @@ const Demo: FC = () => (
     <Plot data={currentSales} model={model} width={300} height={220} x={0} y={20}>
       <PathMark x="month" y="revenue" order="month" />
       <PointMark x="month" y="revenue" />
-      <Axis dimension="x" />
+      <Axis dimension="x" tickLabels={{ format: '%b', layout: { rotate: false } }} />
       <Axis dimension="y" grid />
     </Plot>
     <Plot data={forecastSales} model={model} width={300} height={220} x={320} y={20}>
       <PathMark x="month" y="revenue" order="month" />
       <PointMark x="month" y="revenue" />
-      <Axis dimension="x" />
+      <Axis dimension="x" tickLabels={{ format: '%b', layout: { rotate: false } }} />
       <Axis dimension="y" grid />
     </Plot>
   </Layout>
