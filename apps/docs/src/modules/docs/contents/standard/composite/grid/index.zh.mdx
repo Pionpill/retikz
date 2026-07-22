@@ -1,5 +1,5 @@
 ---
-title: Grid
+title: 网格
 description: 用 JSON-safe Tier 2 Grid 描述规则参考线、主线和边框，并在已加载时下沉到 Core Path。
 ---
 
@@ -55,14 +55,14 @@ Grid 的 IR 不直接成为新的渲染图元。lowering 先按 `origin` 枚举 
 
 ## API Reference
 
-| 属性      | 类型                                                   | 默认值       | 描述                                        |
-| --------- | ------------------------------------------------------ | ------------ | ------------------------------------------- |
-| `bounds`  | `{ min: Position; max: Position }`                     | —            | 严格二维范围，两个轴上 `min` 必须小于 `max` |
-| `spacing` | `number \| { x: number; y: number }`                   | —            | 统一或分轴的正格距                          |
-| `origin`  | `Position`                                             | `bounds.min` | 格点与主线计数的对齐基准                    |
-| `lines`   | `{ vertical?; horizontal?; includeBoundary?; style? }` | 两方向可见   | 普通线的方向、补边界与样式                  |
-| `major`   | `{ every; offset?; style? }`                           | —            | 主线间隔、索引偏移和浅覆盖样式              |
-| `border`  | `{ padding?; order?; extendLines?; style? }`           | —            | 可选边框的外扩、顺序、线段延长和样式        |
+| 属性      | 类型                                                                                                                               | 默认值       | 描述                                        |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------- |
+| `bounds`  | `{ min: Position; max: Position }`                                                                                                 | —            | 严格二维范围，两个轴上 `min` 必须小于 `max` |
+| `spacing` | `number \| { x: number; y: number }`                                                                                               | —            | 统一或分轴的正格距                          |
+| `origin`  | `Position`                                                                                                                         | `bounds.min` | 格点与主线计数的对齐基准                    |
+| `lines`   | `{ vertical?: boolean;`<br />`horizontal?: boolean;`<br />`includeBoundary?: boolean;`<br />`style?: IRStandardPathStrokeStyle }`  | 两方向可见   | 普通线的方向、补边界与样式                  |
+| `major`   | `{ every: number;`<br />`offset?: number;`<br />`style?: IRStandardPathStrokeStyle }`                                              | —            | 主线间隔、索引偏移和浅覆盖样式              |
+| `border`  | `{ padding?: number;`<br />`order?: 'behind' \| 'front';`<br />`extendLines?: boolean;`<br />`style?: IRStandardPathBorderStyle }` | —            | 可选边框的外扩、顺序、线段延长和样式        |
 
 ## Related
 

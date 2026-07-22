@@ -1,7 +1,7 @@
 import { CompositeBaseSchema, NodeSchema } from '@retikz/core';
 import { z } from 'zod';
 
-import { StandardPathBorderStyleSchema } from '../shared';
+import { StandardPathBorderStyleSchema } from '../shared/schemas';
 
 const FrameBorderSchema = StandardPathBorderStyleSchema.extend({
   stroke: StandardPathBorderStyleSchema.shape.stroke.default('currentColor'),

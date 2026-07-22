@@ -1,9 +1,9 @@
 import type { IRNode, IRPath, IRPosition } from '@retikz/core';
 
-import type { IRStandardPathStrokeStyle } from '../shared';
+import type { IRStandardPathStrokeStyle } from '../shared/types';
 import type { IRAxes } from './types';
 
-import { enumerateGridLattice } from '../../shared';
+import { enumerateLattice } from '../shared/lattice';
 import { AxesArrowMode } from './constants';
 
 type AxesChild = IRPath | IRNode;
@@ -22,7 +22,7 @@ export const lowerAxes = (axes: IRAxes): Array<AxesChild> => {
     const verticalStyle = { ...axes.grid.style, ...axes.grid.vertical };
     const horizontalStyle = { ...axes.grid.style, ...axes.grid.horizontal };
 
-    enumerateGridLattice({
+    enumerateLattice({
       min: axes.bounds.x.min,
       max: axes.bounds.x.max,
       spacing: spacingX,
@@ -31,7 +31,7 @@ export const lowerAxes = (axes: IRAxes): Array<AxesChild> => {
     }).forEach(line => {
       children.push(createLinePath([line.value, axes.bounds.y.min], [line.value, axes.bounds.y.max], verticalStyle));
     });
-    enumerateGridLattice({
+    enumerateLattice({
       min: axes.bounds.y.min,
       max: axes.bounds.y.max,
       spacing: spacingY,
@@ -65,7 +65,7 @@ export const lowerAxes = (axes: IRAxes): Array<AxesChild> => {
 };
 
 const enumerateTickValues = (min: number, max: number, spacing: number, origin: number): Array<number> =>
-  enumerateGridLattice({ min, max, spacing, origin, includeBoundary: false })
+  enumerateLattice({ min, max, spacing, origin, includeBoundary: false })
     .filter(value => value.index !== 0)
     .map(value => value.value);
 

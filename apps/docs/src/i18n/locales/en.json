@@ -116,7 +116,7 @@
   },
   "standard": {
     "label": "Library",
-    "components": "Standard Components",
+    "composite": "Composite",
     "grid": "Grid",
     "axes": "Axes",
     "frame": "Frame"

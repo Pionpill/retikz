@@ -1,8 +1,8 @@
 import { CompositeBaseSchema, PositionSchema } from '@retikz/core';
 import { z } from 'zod';
 
-import { getGridLatticeRangeError } from '../../shared';
-import { StandardGridSpacingSchema, StandardPathStrokeStyleSchema } from '../shared';
+import { getLatticeRangeError } from '../shared/lattice';
+import { StandardGridSpacingSchema, StandardPathStrokeStyleSchema } from '../shared/schemas';
 import { AxesArrowMode } from './constants';
 
 const AxesRangeSchema = z.strictObject({
@@ -93,14 +93,14 @@ const refineAxes = (axes: AxesRefinementInput, ctx: z.RefinementCtx): void => {
       typeof axes.grid.spacing === 'number'
         ? [axes.grid.spacing, axes.grid.spacing]
         : [axes.grid.spacing.x, axes.grid.spacing.y];
-    const verticalError = getGridLatticeRangeError({
+    const verticalError = getLatticeRangeError({
       min: axes.bounds.x.min,
       max: axes.bounds.x.max,
       spacing: spacingX,
       origin: originX,
       includeBoundary: false,
     });
-    const horizontalError = getGridLatticeRangeError({
+    const horizontalError = getLatticeRangeError({
       min: axes.bounds.y.min,
       max: axes.bounds.y.max,
       spacing: spacingY,
@@ -124,7 +124,7 @@ const refineAxes = (axes: AxesRefinementInput, ctx: z.RefinementCtx): void => {
   }
 
   if (axes.ticks?.x !== undefined) {
-    const tickXError = getGridLatticeRangeError({
+    const tickXError = getLatticeRangeError({
       min: axes.bounds.x.min,
       max: axes.bounds.x.max,
       spacing: axes.ticks.x,
@@ -136,7 +136,7 @@ const refineAxes = (axes: AxesRefinementInput, ctx: z.RefinementCtx): void => {
     }
   }
   if (axes.ticks?.y !== undefined) {
-    const tickYError = getGridLatticeRangeError({
+    const tickYError = getLatticeRangeError({
       min: axes.bounds.y.min,
       max: axes.bounds.y.max,
       spacing: axes.ticks.y,

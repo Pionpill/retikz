@@ -1,3 +1,2 @@
-export * from './grid-spacing';
-export * from './path-style';
+export * from './schemas';
 export * from './types';

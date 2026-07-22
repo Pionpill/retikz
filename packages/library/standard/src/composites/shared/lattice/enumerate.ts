@@ -1,10 +1,10 @@
-import type { GridLatticeOptions, GridLatticeValue } from './types';
+import type { LatticeOptions, LatticeValue } from './types';
 
 /** 单轴 lowering 允许生成的最大格点数 */
-export const MAX_GRID_LATTICE_VALUES_PER_AXIS = 10_000;
+export const MAX_LATTICE_VALUES_PER_AXIS = 10_000;
 
 /** 返回格点索引或输出规模违反确定性 lowering 上限时的错误信息 */
-export const getGridLatticeRangeError = ({ min, max, spacing, origin }: GridLatticeOptions): string | undefined => {
+export const getLatticeRangeError = ({ min, max, spacing, origin }: LatticeOptions): string | undefined => {
   const firstIndex = Math.ceil((min - origin) / spacing);
   const lastIndex = Math.floor((max - origin) / spacing);
 
@@ -14,21 +14,21 @@ export const getGridLatticeRangeError = ({ min, max, spacing, origin }: GridLatt
   }
 
   const count = lastIndex - firstIndex + 1;
-  if (!Number.isSafeInteger(count) || count > MAX_GRID_LATTICE_VALUES_PER_AXIS) {
-    return `Grid lattice enumeration exceeds ${MAX_GRID_LATTICE_VALUES_PER_AXIS} values per axis.`;
+  if (!Number.isSafeInteger(count) || count > MAX_LATTICE_VALUES_PER_AXIS) {
+    return `Grid lattice enumeration exceeds ${MAX_LATTICE_VALUES_PER_AXIS} values per axis.`;
   }
   return undefined;
 };
 
 /** 按 origin-relative 整数索引枚举闭区间内的格点，并按需补足未命中的边界 */
-export const enumerateGridLattice = (options: GridLatticeOptions): Array<GridLatticeValue> => {
+export const enumerateLattice = (options: LatticeOptions): Array<LatticeValue> => {
   const { min, max, spacing, origin, includeBoundary } = options;
-  const rangeError = getGridLatticeRangeError(options);
+  const rangeError = getLatticeRangeError(options);
   if (rangeError !== undefined) throw new RangeError(rangeError);
 
   const firstIndex = Math.ceil((min - origin) / spacing);
   const lastIndex = Math.floor((max - origin) / spacing);
-  const values: Array<GridLatticeValue> = [];
+  const values: Array<LatticeValue> = [];
 
   for (let index = firstIndex; index <= lastIndex; index += 1) {
     values.push({ value: origin + index * spacing, index });
@@ -42,16 +42,7 @@ export const enumerateGridLattice = (options: GridLatticeOptions): Array<GridLat
   return withBoundary.sort((left, right) => left.value - right.value);
 };
 
-/** 判断值是否是当前 Grid major 周期中的主线 */
-export const isGridMajorLine = (
-  lattice: GridLatticeValue,
-  major: { every: number; offset: number } | undefined,
-): boolean => {
-  if (major === undefined || lattice.index === undefined) return false;
-  return (((lattice.index - major.offset) % major.every) + major.every) % major.every === 0;
-};
-
-const addBoundaryIfMissing = (values: Array<GridLatticeValue>, boundary: number): void => {
+const addBoundaryIfMissing = (values: Array<LatticeValue>, boundary: number): void => {
   if (values.some(item => Math.abs(item.value - boundary) <= Number.EPSILON * 16)) return;
   values.push({ value: boundary });
 };

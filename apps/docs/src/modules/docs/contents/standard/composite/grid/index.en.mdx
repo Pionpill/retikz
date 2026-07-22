@@ -55,14 +55,14 @@ A handwritten `IRGrid` without a loaded definition is never silently interpreted
 
 ## API Reference
 
-| Prop      | Type                                                   | Default                 | Description                                                               |
-| --------- | ------------------------------------------------------ | ----------------------- | ------------------------------------------------------------------------- |
-| `bounds`  | `{ min: Position; max: Position }`                     | —                       | Strict two-dimensional bounds; `min` must be less than `max` on both axes |
-| `spacing` | `number \| { x: number; y: number }`                   | —                       | Uniform or axis-specific positive spacing                                 |
-| `origin`  | `Position`                                             | `bounds.min`            | Lattice alignment and major-line counting base                            |
-| `lines`   | `{ vertical?; horizontal?; includeBoundary?; style? }` | both directions visible | Ordinary-line directions, boundary insertion, and style                   |
-| `major`   | `{ every; offset?; style? }`                           | —                       | Major-line interval, index offset, and shallow style override             |
-| `border`  | `{ padding?; order?; extendLines?; style? }`           | —                       | Optional border outward padding, order, line extension, and style         |
+| Prop      | Type                                                                                                                               | Default                 | Description                                                               |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------- |
+| `bounds`  | `{ min: Position; max: Position }`                                                                                                 | —                       | Strict two-dimensional bounds; `min` must be less than `max` on both axes |
+| `spacing` | `number \| { x: number; y: number }`                                                                                               | —                       | Uniform or axis-specific positive spacing                                 |
+| `origin`  | `Position`                                                                                                                         | `bounds.min`            | Lattice alignment and major-line counting base                            |
+| `lines`   | `{ vertical?: boolean;`<br />`horizontal?: boolean;`<br />`includeBoundary?: boolean;`<br />`style?: IRStandardPathStrokeStyle }`  | both directions visible | Ordinary-line directions, boundary insertion, and style                   |
+| `major`   | `{ every: number;`<br />`offset?: number;`<br />`style?: IRStandardPathStrokeStyle }`                                              | —                       | Major-line interval, index offset, and shallow style override             |
+| `border`  | `{ padding?: number;`<br />`order?: 'behind' \| 'front';`<br />`extendLines?: boolean;`<br />`style?: IRStandardPathBorderStyle }` | —                       | Optional border outward padding, order, line extension, and style         |
 
 ## Related
 

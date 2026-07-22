@@ -116,8 +116,8 @@
   },
   "standard": {
     "label": "标准库",
-    "components": "标准组件",
-    "grid": "Grid",
+    "composite": "复合",
+    "grid": "网格",
     "axes": "坐标轴",
     "frame": "分组框"
   },

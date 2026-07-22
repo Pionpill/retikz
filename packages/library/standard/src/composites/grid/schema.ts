@@ -1,8 +1,12 @@
 import { CompositeBaseSchema, PositionSchema } from '@retikz/core';
 import { z } from 'zod';
 
-import { getGridLatticeRangeError } from '../../shared';
-import { StandardGridSpacingSchema, StandardPathBorderStyleSchema, StandardPathStrokeStyleSchema } from '../shared';
+import { getLatticeRangeError } from '../shared/lattice';
+import {
+  StandardGridSpacingSchema,
+  StandardPathBorderStyleSchema,
+  StandardPathStrokeStyleSchema,
+} from '../shared/schemas';
 import { GridBorderOrder } from './constants';
 
 const GridBoundsSchema = z.strictObject({
@@ -75,7 +79,7 @@ const refineGrid = (grid: GridRefinementInput, ctx: z.RefinementCtx): void => {
   const [spacingX, spacingY] =
     typeof grid.spacing === 'number' ? [grid.spacing, grid.spacing] : [grid.spacing.x, grid.spacing.y];
   const verticalError = grid.lines.vertical
-    ? getGridLatticeRangeError({
+    ? getLatticeRangeError({
         min: grid.bounds.min[0],
         max: grid.bounds.max[0],
         spacing: spacingX,
@@ -84,7 +88,7 @@ const refineGrid = (grid: GridRefinementInput, ctx: z.RefinementCtx): void => {
       })
     : undefined;
   const horizontalError = grid.lines.horizontal
-    ? getGridLatticeRangeError({
+    ? getLatticeRangeError({
         min: grid.bounds.min[1],
         max: grid.bounds.max[1],
         spacing: spacingY,
