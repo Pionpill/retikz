@@ -117,7 +117,8 @@
   "standard": {
     "label": "Library",
     "components": "Standard Components",
-    "grid": "Grid"
+    "grid": "Grid",
+    "axes": "Axes"
   },
   "viz": {
     "label": "Visualization",

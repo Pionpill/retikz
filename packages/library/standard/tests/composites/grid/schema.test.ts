@@ -64,4 +64,16 @@ describe('GridSchema', () => {
       expect(unknownStyle.error.issues[0].path).toEqual(['lines', 'style']);
     }
   });
+
+  it('rejects lattice configurations that exceed the bounded lowering size', () => {
+    const result = GridSchema.safeParse({
+      namespace: 'standard',
+      type: 'grid',
+      bounds: { min: [0, 0], max: [1, 1] },
+      spacing: 0.000001,
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.issues[0]?.path).toEqual(['spacing']);
+  });
 });

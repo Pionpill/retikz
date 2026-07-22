@@ -17,20 +17,6 @@ export const lowerGrid = (grid: IRGrid): Array<IRPath> => {
   const lineMaxX = grid.border?.extendLines ? maxX + borderPadding : maxX;
   const lineMinY = grid.border?.extendLines ? minY - borderPadding : minY;
   const lineMaxY = grid.border?.extendLines ? maxY + borderPadding : maxY;
-  const vertical = enumerateGridLattice({
-    min: minX,
-    max: maxX,
-    spacing: spacingX,
-    origin: originX,
-    includeBoundary: grid.lines.includeBoundary,
-  });
-  const horizontal = enumerateGridLattice({
-    min: minY,
-    max: maxY,
-    spacing: spacingY,
-    origin: originY,
-    includeBoundary: grid.lines.includeBoundary,
-  });
   const paths: Array<IRPath> = [];
 
   if (grid.border?.order === 'behind') {
@@ -38,6 +24,13 @@ export const lowerGrid = (grid: IRGrid): Array<IRPath> => {
   }
 
   if (grid.lines.vertical) {
+    const vertical = enumerateGridLattice({
+      min: minX,
+      max: maxX,
+      spacing: spacingX,
+      origin: originX,
+      includeBoundary: grid.lines.includeBoundary,
+    });
     vertical.forEach(line => {
       paths.push(
         createGridLinePath(
@@ -50,6 +43,13 @@ export const lowerGrid = (grid: IRGrid): Array<IRPath> => {
   }
 
   if (grid.lines.horizontal) {
+    const horizontal = enumerateGridLattice({
+      min: minY,
+      max: maxY,
+      spacing: spacingY,
+      origin: originY,
+      includeBoundary: grid.lines.includeBoundary,
+    });
     horizontal.forEach(line => {
       paths.push(
         createGridLinePath(

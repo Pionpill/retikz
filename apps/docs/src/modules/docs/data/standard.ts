@@ -6,6 +6,9 @@ export const standardSection: Array<Section> = [
     id: 'components',
     label: 'standard.components',
     document: true,
-    pages: [{ id: 'grid', label: 'standard.grid' }],
+    pages: [
+      { id: 'grid', label: 'standard.grid' },
+      { id: 'axes', label: 'standard.axes' },
+    ],
   },
 ];

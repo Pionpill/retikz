@@ -1,6 +1,5 @@
-import { describe, expect, it } from 'vitest';
-
 import { normalizeFigureSpec } from '@retikz/vanilla';
+import { describe, expect, it } from 'vitest';
 
 import { grid, GridVanillaAdapter } from '../src';
 

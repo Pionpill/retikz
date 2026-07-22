@@ -123,4 +123,16 @@ describe('GridDefinition', () => {
 
     expect(warnings).toContain('COMPOSITE_NOT_REGISTERED');
   });
+
+  it('fails fast when unchecked IR would produce non-finite lattice indices', () => {
+    expect(() =>
+      lowerGrid({
+        namespace: 'standard',
+        type: 'grid',
+        bounds: { min: [-1, -1], max: [1, 1] },
+        spacing: Number.MIN_VALUE,
+        lines: { vertical: true, horizontal: true, includeBoundary: false },
+      }),
+    ).toThrow(/finite safe integers/i);
+  });
 });

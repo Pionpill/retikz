@@ -117,7 +117,8 @@
   "standard": {
     "label": "标准库",
     "components": "标准组件",
-    "grid": "Grid"
+    "grid": "Grid",
+    "axes": "坐标轴"
   },
   "viz": {
     "label": "可视化",
