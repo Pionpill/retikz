@@ -20,6 +20,14 @@ import { Grid } from '@retikz/standard-react';
 
 The React entry contributes `GridDefinition` locally to the current `Layout`. For persistence or non-React use, create IR through `createGrid` from `@retikz/standard` and explicitly provide `GridDefinition` to Core compile options.
 
+| Scenario         | Public entry point                                                       |
+| ---------------- | ------------------------------------------------------------------------ |
+| React            | `Grid` from `@retikz/standard-react`                                     |
+| Vanilla          | `grid` and `GridVanillaAdapter` from `@retikz/standard-vanilla`          |
+| IR / persistence | `GridSchema`, `createGrid`, and `GridDefinition` from `@retikz/standard` |
+
+See [Get Started](/standard/get-start) for complete Vanilla mounting and persistence flows. This page focuses on Grid-specific fields and semantics.
+
 ## Examples
 
 ### Basic grid
@@ -41,6 +49,12 @@ Give normalized `bounds` and uniform `spacing` to produce background guides.
 <ComponentPreview files="grid-border" size="sm" />
 
 ## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="You only need this lowering model when working with Grid IR directly or debugging compile diagnostics."
+/>
 
 Grid IR does not become a renderer primitive. Lowering enumerates x/y lattice points from `origin`, identifies major lines by origin-relative lattice index, then emits ordinary `Path` nodes for Core's existing compiler and renderers.
 

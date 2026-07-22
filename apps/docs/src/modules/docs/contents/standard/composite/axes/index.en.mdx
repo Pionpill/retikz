@@ -10,13 +10,23 @@ description: Describe a Cartesian reference plane with arrows, ticks, labels, an
 ```tsx
 import { Layout } from '@retikz/react';
 import { Axes } from '@retikz/standard-react';
+```
 
+```tsx
 <Layout width={280} height={170}>
   <Axes bounds={{ x: { min: 30, max: 250 }, y: { min: 30, max: 140 } }} origin={[140, 90]} />
-</Layout>;
+</Layout>
 ```
 
 The React entry contributes `AxesDefinition` locally to the current `Layout`. `bounds` uses direct user coordinates and does not introduce Plot data scales, formatters, or guide semantics.
+
+| Scenario         | Public entry point                                                       |
+| ---------------- | ------------------------------------------------------------------------ |
+| React            | `Axes` from `@retikz/standard-react`                                     |
+| Vanilla          | `axes` and `AxesVanillaAdapter` from `@retikz/standard-vanilla`          |
+| IR / persistence | `AxesSchema`, `createAxes`, and `AxesDefinition` from `@retikz/standard` |
+
+See [Get Started](/standard/get-start) for complete Vanilla mounting and persistence flows, replacing its Grid entries with the Axes entries above.
 
 ## Examples
 
@@ -26,22 +36,17 @@ Axis lines have positive-end arrows by default, and labels default to `x` / `y`.
 
 <ComponentPreview files="axes-basic" size="sm" />
 
-Grid lines may start with shared `grid.style` fields and then shallowly override them through `vertical` / `horizontal`. Axes only reuses Grid's lattice helper; it does not require `GridDefinition` to be loaded in the figure.
+Grid lines may start with shared `grid.style` fields and then shallowly override them through `vertical` / `horizontal`.
 
 ## How it works
 
-### Vanilla and direct IR
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="You only need this lowering model when working with Axes IR directly or checking Definition dependencies."
+/>
 
-```ts
-import { axes, AxesVanillaAdapter } from '@retikz/standard-vanilla';
-
-const plane = axes('plane', {
-  bounds: { x: { min: -6, max: 6 }, y: { min: -4, max: 4 } },
-  ticks: { x: 1, y: 1 },
-});
-```
-
-For persisted scenes, call `createAxes` from `@retikz/standard` and explicitly pass `AxesDefinition` to Core compile options. A handwritten `IRAxes` without a loaded definition preserves Core's `COMPOSITE_NOT_REGISTERED` diagnostic.
+The optional Axes grid lowers directly to ordinary Core `Path` primitives. It only reuses Grid's lattice enumeration helper and never emits `IRGrid`, so the current figure needs `AxesDefinition` without also loading `GridDefinition`.
 
 <SourceLinks
   sources={[

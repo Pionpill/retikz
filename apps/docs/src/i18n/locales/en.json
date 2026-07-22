@@ -116,6 +116,8 @@
   },
   "standard": {
     "label": "Library",
+    "introduction": "Introduction",
+    "getStart": "Get Started",
     "composite": "Composite",
     "grid": "Grid",
     "axes": "Axes",

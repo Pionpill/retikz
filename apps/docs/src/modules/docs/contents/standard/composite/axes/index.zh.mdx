@@ -10,13 +10,23 @@ description: 用 JSON-safe Axes 描述带箭头、刻度、轴名和可选网格
 ```tsx
 import { Layout } from '@retikz/react';
 import { Axes } from '@retikz/standard-react';
+```
 
+```tsx
 <Layout width={280} height={170}>
   <Axes bounds={{ x: { min: 30, max: 250 }, y: { min: 30, max: 140 } }} origin={[140, 90]} />
-</Layout>;
+</Layout>
 ```
 
 React 入口会在当前 `Layout` 局部贡献 `AxesDefinition`。`bounds` 使用直接的用户坐标，不包含 Plot 的数据 scale、formatter 或 guide 语义。
+
+| 场景        | 公开入口                                                           |
+| ----------- | ------------------------------------------------------------------ |
+| React       | `Axes`（`@retikz/standard-react`）                                 |
+| Vanilla     | `axes`、`AxesVanillaAdapter`（`@retikz/standard-vanilla`）         |
+| IR / 持久化 | `AxesSchema`、`createAxes`、`AxesDefinition`（`@retikz/standard`） |
+
+完整的 Vanilla 挂载与持久化加载流程统一见[快速开始](/standard/get-start)；把其中的 Grid 入口替换为本表对应的 Axes 入口即可。
 
 ## 示例
 
@@ -26,22 +36,17 @@ React 入口会在当前 `Layout` 局部贡献 `AxesDefinition`。`bounds` 使�
 
 <ComponentPreview files="axes-basic" size="sm" />
 
-格线样式可先写共同的 `grid.style`，再用 `vertical` / `horizontal` 分方向浅覆盖。它只复用 Grid 的格点枚举 helper，不要求当前图同时加载 `GridDefinition`。
+格线样式可先写共同的 `grid.style`，再用 `vertical` / `horizontal` 分方向浅覆盖。
 
-## 工作原理
+## 技术原理
 
-### Vanilla 与直接 IR
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="只有在直接读写 Axes IR 或排查 Definition 依赖时才需要理解 lowering。"
+/>
 
-```ts
-import { axes, AxesVanillaAdapter } from '@retikz/standard-vanilla';
-
-const plane = axes('plane', {
-  bounds: { x: { min: -6, max: 6 }, y: { min: -4, max: 4 } },
-  ticks: { x: 1, y: 1 },
-});
-```
-
-持久化场景可从 `@retikz/standard` 调用 `createAxes`，并在 Core compile options 中显式传入 `AxesDefinition`。未加载 definition 的手写 `IRAxes` 会保留 Core 的 `COMPOSITE_NOT_REGISTERED` 诊断。
+Axes 的可选网格会直接下沉为普通 Core `Path`。它只复用 Grid 的格点枚举 helper，不产生 `IRGrid`，因此当前图只需加载 `AxesDefinition`，不需要同时加载 `GridDefinition`。
 
 <SourceLinks
   sources={[

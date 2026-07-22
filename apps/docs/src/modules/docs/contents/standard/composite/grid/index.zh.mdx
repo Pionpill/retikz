@@ -20,6 +20,14 @@ import { Grid } from '@retikz/standard-react';
 
 React 入口会在当前 `Layout` 局部贡献 `GridDefinition`。持久化或非 React 场景可从 `@retikz/standard` 使用 `createGrid`，并在 Core compile options 中显式传入 `GridDefinition`。
 
+| 场景        | 公开入口                                                           |
+| ----------- | ------------------------------------------------------------------ |
+| React       | `Grid`（`@retikz/standard-react`）                                 |
+| Vanilla     | `grid`、`GridVanillaAdapter`（`@retikz/standard-vanilla`）         |
+| IR / 持久化 | `GridSchema`、`createGrid`、`GridDefinition`（`@retikz/standard`） |
+
+完整的 Vanilla 挂载与持久化加载流程统一见[快速开始](/standard/get-start)；本页只展开 Grid 自身的字段与语义。
+
 ## 示例
 
 ### 基础网格
@@ -41,6 +49,12 @@ React 入口会在当前 `Layout` 局部贡献 `GridDefinition`。持久化或�
 <ComponentPreview files="grid-border" size="sm" />
 
 ## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="只有在直接读写 Grid IR 或排查编译诊断时才需要理解 lowering。"
+/>
 
 Grid 的 IR 不直接成为新的渲染图元。lowering 先按 `origin` 枚举 x/y 轴格点，并以 origin-relative lattice index 判断主线；随后输出普通 `Path`，最后由 Core 的既有 compile 与 renderer 消费。
 

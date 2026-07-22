@@ -12,16 +12,26 @@ Frame 不替代 Core `Scope`：Scope 负责逻辑分组、transform 和样式级
 ```tsx
 import { Layout, Node } from '@retikz/react';
 import { Frame } from '@retikz/standard-react';
+```
 
+```tsx
 <Layout width={320} height={180}>
   <Frame id="contract" label="Definition contract">
     <Node position={[100, 90]} text="BUILTIN_*" />
     <Node position={[220, 90]} text="defineXxx(custom)" />
   </Frame>
-</Layout>;
+</Layout>
 ```
 
 React 入口会把 children 转成 Core IR，并在当前 `Layout` 局部贡献 `FrameDefinition`。Frame v0.1 只接受直接 `Node` children；`Path`、`Scope`、`Coordinate` 或其它 Tier 2 composite 会立即报错，而不会静默忽略。
+
+| 场景        | 公开入口                                                              |
+| ----------- | --------------------------------------------------------------------- |
+| React       | `Frame`（`@retikz/standard-react`）                                   |
+| Vanilla     | `frame`、`FrameVanillaAdapter`（`@retikz/standard-vanilla`）          |
+| IR / 持久化 | `FrameSchema`、`createFrame`、`FrameDefinition`（`@retikz/standard`） |
+
+完整的 Vanilla 挂载与持久化加载流程统一见[快速开始](/standard/get-start)；把其中的 Grid 入口替换为本表对应的 Frame 入口即可。
 
 ## 示例
 
@@ -31,22 +41,17 @@ React 入口会把 children 转成 Core IR，并在当前 `Layout` 局部贡献 
 
 <ComponentPreview files="frame-basic" size="sm" />
 
-## 工作原理
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="遇到自动 bounds、派生 id 或重复 id 诊断时再回来阅读。"
+/>
 
 lowering 先输出引用 Frame scope 的 rectangle Path，再输出带同一 `id` 的 Scope。Core 会在收集完 Scope Node bounds 后解析先前排队的 Path，所以边框可以安全地出现在内容之前。标签由透明 carrier Path 的 step label 产生，不进入 Scope，也不会撑大 Frame bounds。
 
-### Vanilla 与直接 IR
-
-```ts
-import { frame, FrameVanillaAdapter } from '@retikz/standard-vanilla';
-
-const group = frame('definition-contract', {
-  label: 'Definition contract',
-  children: [{ type: 'node', position: [100, 90], text: 'BUILTIN_*' }],
-});
-```
-
-Vanilla 会把 Scope id 确定性派生为 `definition-contract/frame`。持久化场景可从 `@retikz/standard` 调用 `createFrame`，并在 Core compile options 中显式传入 `FrameDefinition`。Frame `id` 与 child id 冲突属于无效 Core 输入，继续使用 `DUPLICATE_NODE_ID` 诊断。
+Vanilla 会从 embed id 确定性派生 Scope id，例如 `frame('definition-contract', …)` 对应 `definition-contract/frame`。直接 IR 则使用 `createFrame` 输入中的 `id`；无论哪种入口，Frame `id` 与 child id 冲突都属于无效 Core 输入，并沿用 `DUPLICATE_NODE_ID` 诊断。
 
 <SourceLinks
   sources={[

@@ -12,16 +12,26 @@ Frame does not replace Core `Scope`: Scope owns logical grouping, transforms, an
 ```tsx
 import { Layout, Node } from '@retikz/react';
 import { Frame } from '@retikz/standard-react';
+```
 
+```tsx
 <Layout width={320} height={180}>
   <Frame id="contract" label="Definition contract">
     <Node position={[100, 90]} text="BUILTIN_*" />
     <Node position={[220, 90]} text="defineXxx(custom)" />
   </Frame>
-</Layout>;
+</Layout>
 ```
 
 The React entry converts children to Core IR and contributes `FrameDefinition` locally to the current `Layout`. Frame v0.1 only accepts direct `Node` children; `Path`, `Scope`, `Coordinate`, or another Tier 2 composite fails loudly instead of being ignored.
+
+| Scenario         | Public entry point                                                          |
+| ---------------- | --------------------------------------------------------------------------- |
+| React            | `Frame` from `@retikz/standard-react`                                       |
+| Vanilla          | `frame` and `FrameVanillaAdapter` from `@retikz/standard-vanilla`           |
+| IR / persistence | `FrameSchema`, `createFrame`, and `FrameDefinition` from `@retikz/standard` |
+
+See [Get Started](/standard/get-start) for complete Vanilla mounting and persistence flows, replacing its Grid entries with the Frame entries above.
 
 ## Examples
 
@@ -33,20 +43,15 @@ The React entry converts children to Core IR and contributes `FrameDefinition` l
 
 ## How it works
 
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Return when investigating automatic bounds, derived ids, or duplicate-id diagnostics."
+/>
+
 Lowering first emits a rectangle Path that targets the Frame scope, then emits the Scope with the same `id`. Core resolves the queued Path after collecting the Scope's Node bounds, so the border can safely precede its content. A transparent carrier Path produces the step label outside the Scope and therefore does not inflate Frame bounds.
 
-### Vanilla and direct IR
-
-```ts
-import { frame, FrameVanillaAdapter } from '@retikz/standard-vanilla';
-
-const group = frame('definition-contract', {
-  label: 'Definition contract',
-  children: [{ type: 'node', position: [100, 90], text: 'BUILTIN_*' }],
-});
-```
-
-Vanilla deterministically derives the Scope id as `definition-contract/frame`. For persisted scenes, call `createFrame` from `@retikz/standard` and explicitly pass `FrameDefinition` to Core compile options. A collision between the Frame `id` and a child id is invalid Core input and preserves the `DUPLICATE_NODE_ID` diagnostic.
+Vanilla deterministically derives the Scope id from the embed id, so `frame('definition-contract', …)` becomes `definition-contract/frame`. Direct IR instead uses the `id` passed to `createFrame`. In both paths, a collision between the Frame `id` and a child id is invalid Core input and preserves the `DUPLICATE_NODE_ID` diagnostic.
 
 <SourceLinks
   sources={[
