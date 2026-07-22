@@ -32,8 +32,8 @@ description: 分箱与统计图层说明 plot 如何把连续字段切成直方�
 
 统计 transform 只负责产出 rows，图形仍由普通 mark 画出来。箱线图就是一个组合：`quantile-band` reducer 先生成箱体、中位数和须线字段，`outside-quantile-band` selector 再保留区间外原始点。
 
-这类组合使用 data 的数据 transform 准备统计行，再由 plot 的普通 mark 消费。完整示例放在[数据变换](/viz/data/transform#reducer-与-selector)；本页只说明 plot 如何把这些统计字段画成图层。
+这类组合使用 data 的数据 transform 准备统计行，再由 plot 的普通 mark 消费。完整示例放在[统计子算子](/viz/data/transform/statistics)；本页只说明 plot 如何把这些统计字段画成图层。
 
 ## 与数据变换的关系
 
-`bin` 是 plot 注册的绘图变换，因为它直接面向直方图区间字段和图层组合；但它的 `metrics` 复用 data 的 reducer。需要普通分组统计行时，优先用[数据变换 / summarize](/viz/data/transform#汇总-summarize)；需要保留原始代表行时，优先用[数据变换 / select](/viz/data/transform#代表行选择-select)。
+`bin` 是 plot 注册的绘图变换，因为它直接面向直方图区间字段和图层组合；但它的 `metrics` 复用 data 的 reducer。需要普通分组统计行时，优先用[数据变换 / summarize](/viz/data/transform/operations#汇总-summarize)；需要保留原始代表行时，优先用[数据变换 / select](/viz/data/transform/operations#代表行选择-select)。

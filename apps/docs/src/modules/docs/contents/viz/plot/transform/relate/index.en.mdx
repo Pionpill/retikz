@@ -19,7 +19,7 @@ This example selects the minimum and maximum points on a trend line, projects `s
 <ComponentPreview files={['transform-relate', 'transform-relate.data.ts']} />
 
 The input is still ordinary data rows. In the demo, `PathMark` and `PointMark` consume the original rows; the local transform on `RelationMark` generates one paired row only for the relation layer.
-The source and target selectors reuse the same [data transform statistic capabilities](/viz/data/transform#reducers-and-selectors) as `select`, so they can choose top-N rows, ordered endpoints, or custom representative rows.
+The source and target selectors reuse the same [Statistical Sub-operators](/viz/data/transform/statistics) as `select`, so they can choose top-N rows, ordered endpoints, or custom representative rows.
 
 | prop              | Type                    | Default          | Notes                                      |
 | ----------------- | ----------------------- | ---------------- | ------------------------------------------ |

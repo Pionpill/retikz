@@ -32,8 +32,8 @@ This page covers only plot-registered statistical drawing capabilities. General 
 
 Statistical transforms produce rows; ordinary marks still draw the graphic. A boxplot is a composition: `quantile-band` generates box, median, and whisker fields, while `outside-quantile-band` keeps outlier original points.
 
-This composition uses data data transforms to prepare statistic rows, then lets ordinary plot marks consume them. The full example lives under [Data Transforms](/viz/data/transform#reducers-and-selectors); this page only explains how plot draws those statistic fields as layers.
+This composition uses data transforms to prepare statistic rows, then lets ordinary plot marks consume them. The full example lives under [Statistical Sub-operators](/viz/data/transform/statistics); this page only explains how plot draws those statistic fields as layers.
 
 ## Relationship To Data Transforms
 
-`bin` is plot-registered because it targets histogram interval fields and statistical drawing composition, but its `metrics` reuse data reducers. For ordinary grouped statistic rows, use [Data Transforms / summarize](/viz/data/transform#summarize). For representative original rows, use [Data Transforms / select](/viz/data/transform#select).
+`bin` is plot-registered because it targets histogram interval fields and statistical drawing composition, but its `metrics` reuse data reducers. For ordinary grouped statistic rows, use [Data Transforms / summarize](/viz/data/transform/operations#summarize). For representative original rows, use [Data Transforms / select](/viz/data/transform/operations#select).
