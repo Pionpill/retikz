@@ -167,6 +167,7 @@
     "grammarCoordinateComposition": "Coordinate Composition",
     "grammarMark": "Marks",
     "grammarGuide": "Guides",
+    "plotLineage": "Plot Lineage",
     "grammarExtend": "Extending",
     "grammarExtendChannel": "Custom Channels",
     "grammarExtendScale": "Custom Scales",

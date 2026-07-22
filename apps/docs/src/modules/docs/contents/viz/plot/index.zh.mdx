@@ -16,7 +16,7 @@ Plot 不拥有数据底座或渲染器：[Data](/viz/data)负责字段模型与�
 ## 从声明到 Scene
 
 1. **形成 Plot IR**：`<Plot>` 子组件、Vanilla builder 与 plain spec 最终都形成同一份 JSON-safe `IRPlotSpec`。React DSL 只是 authoring 入口，不拥有另一套图表语义。
-2. **接入外部数据**：IR 通过 `data.reference` 指向运行时数据集。字段解析、通用变换与来源追踪由 Data 提供，数据行本身不进入 IR。
+2. **接入外部数据**：IR 通过 `data.reference` 指向运行时数据集。字段解析、通用变换与来源追溯由 Data 提供，数据行本身不进入 IR。
 3. **解析绘图语义**：lowering 依次处理数据变换、通道绑定、比例尺和坐标投影，再由 mark 与 guide definition 生成可下沉结果。内置与自定义能力走同一套 registry、resolver 与 consumer 路径。
 4. **下沉到 Core IR**：`lowerPlots` 作为 Tier 2 composite definition，把 Plot 节点展开为 `Scope`、`Node`、`Path` 等 Core IR；lineage、locator 和 diagnostics 作为运行时结果单独返回。
 5. **编译与渲染**：Kernel 将 Core IR 编译为 renderer-agnostic Scene，随后由 SVG 或 Canvas renderer 输出。Plot 不绕开 Scene，也不实现平行渲染器。
@@ -64,7 +64,7 @@ Plot 不拥有数据底座或渲染器：[Data](/viz/data)负责字段模型与�
 
 | Plot 负责                               | 交给其它模块                                                            |
 | --------------------------------------- | ----------------------------------------------------------------------- |
-| Plot IR 与图形语法契约                  | 字段模型、解析、通用变换与 provenance 交给 [Data](/viz/data)            |
+| Plot IR 与图形语法契约                  | 字段模型、解析、通用变换与来源追溯交给 [Data](/viz/data)                |
 | channel、scale、coordinate、mark、guide | Core IR、布局、引用解析与 Scene 编译交给 [Kernel](/kernel/introduction) |
 | composition 与 Plot → Core lowering     | SVG / Canvas 输出交给 renderer                                          |
 | Definition、registry、resolver 与诊断   | React / Vanilla 生命周期与宿主接线交给 adapter                          |
@@ -106,6 +106,10 @@ Plot 不拥有数据底座或渲染器：[Data](/viz/data)负责字段模型与�
   <LinkedCard href="/viz/plot/guide">
     <span className="font-semibold">辅助</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">用坐标轴与图例解释比例尺和通道映射。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/lineage">
+    <span className="font-semibold">图元链路</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">把数据来源补充为图元、比例尺与布局语义。</span>
   </LinkedCard>
   <LinkedCard href="/viz/plot/extend">
     <span className="font-semibold">扩展</span>

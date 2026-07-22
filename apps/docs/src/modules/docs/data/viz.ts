@@ -143,6 +143,16 @@ export const vizSection: Array<Section> = [
         ],
       },
       {
+        id: 'lineage',
+        label: 'viz.plotLineage',
+        meta: {
+          pageType: 'concept',
+          audience: 'integrator',
+          capability: 'plot.lineage',
+          sourceOfTruth: 'runtime',
+        },
+      },
+      {
         id: 'extend',
         label: 'viz.grammarExtend',
         children: [
