@@ -1,7 +1,7 @@
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { createGrid, lowerGrid } from '../../../src';
+import { createGrid, GridDefinition, lowerGrid } from '../../../src';
 
 describe('GridDefinition', () => {
   it('lowers a uniform grid to ordered Core paths', () => {
@@ -106,6 +106,21 @@ describe('GridDefinition', () => {
       { type: 'step', kind: 'move', to: [0, -2] },
       { type: 'step', kind: 'line', to: [0, 12] },
     ]);
+  });
+
+  it('compiles through the registered Grid definition without diagnostics', () => {
+    const warnings: Array<string> = [];
+    const scene = compileToScene(
+      {
+        type: 'scene',
+        version: 1,
+        children: [createGrid({ bounds: { min: [0, 0], max: [10, 10] }, spacing: 10 })],
+      },
+      { composites: [GridDefinition], onWarn: warning => warnings.push(warning.code) },
+    );
+
+    expect(warnings).toEqual([]);
+    expect(scene.primitives.filter(primitive => primitive.type === 'path')).toHaveLength(4);
   });
 
   it('keeps Core diagnostics for direct Grid IR without its definition', () => {

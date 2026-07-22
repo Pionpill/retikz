@@ -22,6 +22,7 @@ import type {
   PreviewControlsDefinition,
   PreviewControlSlot,
   PreviewControlsOptions,
+  PreviewControlValues,
   PreviewControlValuesFor,
   PreviewControlVisibility,
   PreviewSourceConfig,
@@ -945,6 +946,116 @@ describe('preview controls registry', () => {
       const source = demoSources[resolveDemoKey([...item.segments], item.name, item.language)];
       expect(source, `${item.name} ${item.language}`).toContain('export const previewControls =');
     }
+  });
+
+  it('Grid playground 覆盖完整语义并按状态隐藏无效字段', () => {
+    const segments = ['standard', 'composite', 'grid'];
+    expect(Object.keys(controlModules).filter(key => key.includes('/standard/composite/grid/'))).toEqual([
+      buildControlsKey(segments, 'grid-playground'),
+      buildLangControlsKey(segments, 'grid-playground', 'en'),
+    ]);
+    const zhDefinition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'grid-playground')]);
+    const enDefinition = resolvePreviewControls(
+      controlModules[buildLangControlsKey(segments, 'grid-playground', 'en')],
+    );
+
+    expect(zhDefinition?.presentation).toBe('panel');
+    expect(enDefinition?.presentation).toBe('panel');
+    expect(controlDefinitionContractOf(enDefinition as PreviewControlsDefinition)).toEqual(
+      controlDefinitionContractOf(zhDefinition as PreviewControlsDefinition),
+    );
+    expect(getPreviewControlFields(zhDefinition as PreviewControlsDefinition).slice(0, 2)).toMatchObject([
+      {
+        id: 'boundsMin',
+        kind: 'point',
+        defaultValue: [60, 50],
+      },
+      {
+        id: 'boundsMax',
+        kind: 'point',
+        defaultValue: [340, 230],
+      },
+    ]);
+    expect(getPreviewControlFields(zhDefinition as PreviewControlsDefinition).map(field => field.label)).toEqual(
+      expect.arrayContaining([
+        '起始',
+        '终止',
+        '间距模式',
+        '横向间距',
+        '纵向间距',
+        '自定义原点',
+        '包含边界',
+        '启用主线',
+        '主线间隔',
+        '主线偏移',
+        '启用边框',
+        '边框外扩',
+        '绘制顺序',
+        '延伸网格线',
+      ]),
+    );
+
+    const visibleFieldIds = (definition: PreviewControlsDefinition | undefined, values: PreviewControlValues) =>
+      definition?.presentation === 'panel'
+        ? resolveVisiblePreviewControlSections(definition.sections, values).flatMap(section =>
+            section.controls.map(field => field.id),
+          )
+        : [];
+    const disabledValues = {
+      spacingMode: 'uniform',
+      originEnabled: false,
+      majorEnabled: false,
+      borderEnabled: false,
+    };
+    const disabledIds = visibleFieldIds(zhDefinition, disabledValues);
+
+    expect(disabledIds).toContain('spacing');
+    expect(disabledIds).not.toContain('spacingX');
+    expect(disabledIds).not.toContain('originX');
+    expect(disabledIds).not.toContain('majorEvery');
+    expect(disabledIds).not.toContain('borderPadding');
+
+    const enabledIds = visibleFieldIds(zhDefinition, {
+      spacingMode: 'axis',
+      originEnabled: true,
+      majorEnabled: true,
+      borderEnabled: true,
+    });
+    expect(enabledIds).not.toContain('spacing');
+    expect(enabledIds).toEqual(
+      expect.arrayContaining(['spacingX', 'spacingY', 'originX', 'originY', 'majorEvery', 'borderPadding']),
+    );
+
+    const source = demoSources[buildKey(segments, 'grid-playground')];
+    expect(source).toContain('export const previewControls =');
+    expect(source).toContain('defineControlledPreview(previewControlContract');
+    expect(source).toMatch(/viewBox=\{\{ x: 0, y: 0, width: 400, height: 280 \}\}/u);
+  });
+
+  it('Grid 文档按基础、常见变体和 playground 递进，并用自绘图解释 lowering', () => {
+    const contentRoot = resolve('src/modules/docs/contents/standard/composite/grid');
+    const basicSource = demoSources[buildKey(['standard', 'composite', 'grid'], 'grid-basic')];
+
+    for (const locale of ['zh', 'en']) {
+      const pageSource = readFileSync(resolve(contentRoot, `index.${locale}.mdx`), 'utf8');
+      const variantsSource = demoSources[resolveDemoKey(['standard', 'composite', 'grid'], 'grid-variants', locale)];
+      const previewNames = Array.from(
+        pageSource.matchAll(/<ComponentPreview\b[^>]*\bfiles="([^"]+)"/gu),
+        match => match[1],
+      );
+
+      expect(previewNames).toEqual(['grid-basic', 'grid-variants', 'grid-playground', 'grid-lowering']);
+      expect(pageSource).toContain('<ComponentPreview files="grid-variants" size="sm" />');
+      expect(pageSource).toContain('<ComponentPreview files="grid-lowering" hideCode');
+      expect(variantsSource).toContain('<Layout width={760} height={145}');
+      expect(variantsSource?.match(/position=\{\[\d+, 18\]\}/gu)).toHaveLength(4);
+    }
+
+    expect(basicSource).toContain("border={{ style: { stroke: 'gray' } }}");
+    expect(demoSources[resolveDemoKey(['standard', 'composite', 'grid'], 'grid-variants', 'zh')]).toBeDefined();
+    expect(demoSources[resolveDemoKey(['standard', 'composite', 'grid'], 'grid-variants', 'en')]).toBeDefined();
+    expect(demoSources[resolveDemoKey(['standard', 'composite', 'grid'], 'grid-lowering', 'zh')]).toBeDefined();
+    expect(demoSources[resolveDemoKey(['standard', 'composite', 'grid'], 'grid-lowering', 'en')]).toBeDefined();
   });
 
   it('所有 controls 显式声明完整且双语一致的文档契约', () => {

@@ -82,7 +82,13 @@ const formatObject = (obj: Record<string, unknown>, indent: number): string => {
   return `{\n${entries.map(e => pad(indent + 1) + e).join(',\n')},\n${pad(indent)}}`;
 };
 
-type Ctx = { used: Set<string>; usesDrawWay: boolean };
+type Ctx = {
+  used: Set<string>;
+  usesDrawWay: boolean;
+  standardHelpers: Set<string>;
+  standardAdapters: Set<string>;
+  standardCounts: Map<string, number>;
+};
 
 type WayFrag = { text: string; comment?: boolean };
 
@@ -260,8 +266,31 @@ const scopeCode = (scope: IRScope, indent: number, ctx: Ctx): string => {
   return `scope(${formatObject(config, indent)}, ${childrenStr})`;
 };
 
+const STANDARD_HELPER_ORDER: ReadonlyArray<string> = ['grid', 'axes', 'frame'];
+const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
+  'GridVanillaAdapter',
+  'AxesVanillaAdapter',
+  'FrameVanillaAdapter',
+];
+
+const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
+  const record = child as IRChild & { namespace: string; type: string; id?: string };
+  const adapterName = `${record.type.charAt(0).toUpperCase()}${record.type.slice(1)}VanillaAdapter`;
+  if (!STANDARD_HELPER_ORDER.includes(record.type) || !STANDARD_ADAPTER_ORDER.includes(adapterName)) {
+    throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${record.namespace}.${record.type}".`);
+  }
+
+  const count = (ctx.standardCounts.get(record.type) ?? 0) + 1;
+  ctx.standardCounts.set(record.type, count);
+  ctx.standardHelpers.add(record.type);
+  ctx.standardAdapters.add(adapterName);
+  const input = stripKeys(record, record.type === 'frame' ? ['namespace', 'type', 'id'] : ['namespace', 'type']);
+  return `${record.type}(${formatString(`preview-${record.type}-${count}`)}, ${formatObject(input, indent)})`;
+};
+
 const childCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   if ('namespace' in child) {
+    if (child.namespace === 'standard') return standardCompositeCode(child, indent, ctx);
     throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
   }
   switch (child.type) {
@@ -285,7 +314,13 @@ const childListCode = (children: ReadonlyArray<IRChild>, indent: number, ctx: Ct
 const HELPER_ORDER: ReadonlyArray<string> = ['figure', 'node', 'path', 'coordinate', 'scope'];
 
 export const irToVanillaCode = (ir: IRScene): string => {
-  const ctx: Ctx = { used: new Set(['figure']), usesDrawWay: false };
+  const ctx: Ctx = {
+    used: new Set(['figure']),
+    usesDrawWay: false,
+    standardHelpers: new Set(),
+    standardAdapters: new Set(),
+    standardCounts: new Map(),
+  };
   const childrenStr = childListCode(ir.children, 0, ctx);
   const figureConfig = {
     ...(ir.viewBox ? { viewBox: ir.viewBox } : {}),
@@ -300,6 +335,15 @@ export const irToVanillaCode = (ir: IRScene): string => {
   const helpers = HELPER_ORDER.filter(name => ctx.used.has(name));
   const imports = [`import { ${helpers.join(', ')} } from '@retikz/vanilla';`];
   if (ctx.usesDrawWay) imports.push("import { DrawWay } from '@retikz/core';");
+  const standardHelpers = STANDARD_HELPER_ORDER.filter(name => ctx.standardHelpers.has(name));
+  const standardAdapters = STANDARD_ADAPTER_ORDER.filter(name => ctx.standardAdapters.has(name));
+  if (standardHelpers.length > 0) {
+    imports.push(`import { ${[...standardHelpers, ...standardAdapters].join(', ')} } from '@retikz/standard-vanilla';`);
+  }
 
-  return `${imports.join('\n')}\n\nconst fig = figure(${figureArgs});\n`;
+  const adapters = standardAdapters.length > 0 ? `\nconst adapters = [${standardAdapters.join(', ')}];\n` : '';
+  return `${imports.join('\n')}\n\nconst fig = figure(${figureArgs});\n${adapters}`;
 };
+
+/** 把 JSON-safe 值格式化为 Vanilla 示例使用的 TypeScript 字面量。 */
+export const formatVanillaValue = (value: unknown): string => formatValue(value, 0);

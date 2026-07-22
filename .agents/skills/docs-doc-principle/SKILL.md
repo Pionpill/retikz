@@ -11,7 +11,7 @@ description: Use when changing any retikz apps/docs content, route data, i18n, d
 
 1. 先读 `apps/docs/AGENTS.md` 与本 skill
 2. 再按页型只读一个主 skill：
-   - 组件页：[`docs-doc-component`](../docs-doc-component/SKILL.md)
+   - 组件页：[`docs-doc-component`](../docs-doc-component/SKILL.md)；Standard Tier 2 composite 组件页继续读 `docs-doc-standard-composite`
    - 扩展指南：[`docs-doc-extension`](../docs-doc-extension/SKILL.md)
    - 示例页：[`docs-doc-example`](../docs-doc-example/SKILL.md)
    - 分组落地页：[`docs-doc-group`](../docs-doc-group/SKILL.md)
