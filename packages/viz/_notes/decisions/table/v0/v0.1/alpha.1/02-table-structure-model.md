@@ -275,15 +275,11 @@ const detail = {
 };
 ```
 
-## 测试设计
+## 实现摘要与验证
 
-- manual 地址归一、稳定 ID 与空 cells
-- manual 重复地址 / 越界地址 / 重复显式 id fail-loud
-- detail 按 records 与 columns 生成 header/body
-- detail 重复 column id、未知 field、非 scalar field fail-loud
-- header false 不生成 columnHeader row
-- custom structure 与内置走同一 registry / pipeline
-- duplicate / builtin override definition fail-loud
+manual、detail 与 custom structure 已通过同一 Definition / registry / normalize pipeline 生成递归冻结的 `SemanticTableModel`。内置结构与自定义结构共用精确 schema、provider output guard、跨字段矩阵和稳定 identity 规则，Data field path 与 field type 继续复用 `@retikz/data`。
+
+验证覆盖 manual/detail 正常路径、空数据与 header 变体、地址和 id 冲突、字段缺失或非 scalar、保留 kind、definition 冲突、非法 provider output，以及 canonical model 的只读所有权隔离。
 
 ## 影响
 
@@ -312,64 +308,3 @@ const detail = {
 - group、hierarchy、summary、pivot、matrix、transpose
 - span、row/column style、sorting/filtering
 - formatter、rule、theme 与布局
-
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-`red`：新增公开结构 schema、Definition registry 与 canonical model pipeline。
-
-### Schema 改动
-
-| 文件                           | 操作 | 字段名         | 类型                                    | 默认值                | describe 中文摘要           |
-| ------------------------------ | ---- | -------------- | --------------------------------------- | --------------------- | --------------------------- |
-| `schemas/structure/schema.ts`  | 新增 | `kind`         | `'manual' \| 'detail' \| custom string` | —                     | 结构 operation 判别         |
-| 同上                           | 新增 | `rows`         | manual `z.number().int().positive()`    | —                     | manual 行数                 |
-| 同上                           | 新增 | `rowKinds`     | row kind 数组 optional                  | 全部 body             | manual 各行语义             |
-| 同上                           | 新增 | `columns`      | manual 正整数 / detail 非空 column 数组 | —                     | manual 列数或 detail 列定义 |
-| 同上                           | 新增 | `cells`        | `z.array(TableCellSchema)`              | `[]` 由调用方显式给出 | manual Cell                 |
-| 同上                           | 新增 | `header`       | detail `z.boolean().optional()`         | pipeline true         | 是否生成 column header      |
-| `schemas/structure/detail.ts`  | 新增 | `id`           | 非空字符串                              | —                     | detail column 稳定 id       |
-| 同上                           | 新增 | `field`        | 非空字符串                              | —                     | Data dotted field path      |
-| 同上                           | 新增 | `header`       | `TableCellPayloadSchema.optional()`     | column id             | header payload              |
-| 同上                           | 新增 | `presentation` | `TablePresentationRefSchema.optional()` | text                  | body presentation           |
-| `schemas/cell/address.ts`      | 新增 | `row`          | `z.number().int().nonnegative()`        | —                     | 零基 row index              |
-| 同上                           | 新增 | `column`       | `z.number().int().nonnegative()`        | —                     | 零基 column index           |
-| `schemas/cell/schema.ts`       | 新增 | `id`           | 非空字符串 optional                     | 生成稳定 id           | manual Cell id              |
-| 同上                           | 新增 | `address`      | `TableCellAddressSchema`                | —                     | manual Cell 地址            |
-| 同上                           | 新增 | `payload`      | `TableCellPayloadSchema`                | —                     | Cell 内容                   |
-| 同上                           | 新增 | `location`     | `TableCellLocationValue.optional()`     | 所在 row kind         | Cell 语义位置               |
-| 同上                           | 新增 | `roles`        | 非空 role 数组 optional                 | 所在 row kind         | Cell 语义角色               |
-| `contract/structure/output.ts` | 新增 | runtime output | 闭合 rows / columns / cells schema      | —                     | Definition 输出完整校验     |
-
-公开 IR 类型全部由 `schemas/` 内的 IR schema 推导；`TableStructureOutput` 由 contract runtime schema 唯一派生，Semantic model 类型位于 contract，不作为 IR schema。
-
-### 文件 scope
-
-- `packages/viz/table/src/schemas/structure/**`
-- `packages/viz/table/src/schemas/cell/{address,location,role,schema}.ts`（payload 分支由 ADR-03）
-- `packages/viz/table/src/contract/model/**`
-- `packages/viz/table/src/contract/structure/**`
-- `packages/viz/table/src/providers/structure/**`
-- `packages/viz/table/src/pipeline/normalize/**`
-- 对应 owner `index.ts` 与包根 barrel；`TableStructureOutputSchema` 只经 contract owner barrel 供 pipeline 内部消费，包根只导出作者需要的 output 类型与 Definition API
-- `packages/viz/table/tests/{ir,structure}/**`
-
-### 测试象限
-
-**Happy path**：manual 2×2；manual `rowKinds` header/body；detail header+body；header false；custom structure。
-
-**边界**：1×1；省略 `rowKinds` 全部 body；空 manual cells；单 column；detail 无 model 的空 dataset；nested field path；null scalar。
-
-**错误路径**：`rowKinds` 长度不等于 rows；manual header/body Cell 与 row kind 冲突；重复/越界/非整数地址；任一 owner 重复/空 id；非法 location-role-row 组合；非法 manual/field/generated source；model 存在时未知 field（含空 dataset）；无 model 的非空 dataset 缺 field；非 scalar field；未注册 custom kind；operation 使用 `pivot` / `matrix` 保留名；分别注册 `pivot` / `matrix` / `custom` definition；builtin collision；duplicate custom key；custom output 含函数、`undefined`、非法 payload/枚举/source；definition schema transform 产生非 JSON 值。
-
-**交互**：manual/detail 输出同一 canonical model；detail source 与 ADR-05 manifest identity 对齐；内置/custom 经同一 `AnyTableStructureDefinition` parse/build dispatch；custom output 经过同一 runtime parser 与跨字段 validator；custom 尝试修改 model、output payload/source 或 canonical payload/source 时，递归只读类型阻止直接写入且 runtime 冻结对象保持不变。
-
-### 依赖的现有元素
-
-- `IRDataScalarValue`、`IRDataModel`、`ExternalRow`、`resolveFieldPath`、`resolveFieldTypes`（`@retikz/data`）——字段读取、strict model 与 scalar 边界
-- `JsonObjectSchema`、`JsonValueSchema`（`@retikz/core`）——operation / provider output JSON-safe 校验
-- `Map` registry 模式与 `defineXxx` 分层规则——复用仓库 Definition 约定
-- `IRTableCellPayload`、`IRTablePresentationRef`（ADR-03）——Cell 内容与 detail presentation 引用

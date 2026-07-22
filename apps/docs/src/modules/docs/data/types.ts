@@ -122,6 +122,9 @@ export const PACKAGE_IDS = [
   '@retikz/plot',
   '@retikz/plot-react',
   '@retikz/plot-vanilla',
+  '@retikz/table',
+  '@retikz/table-react',
+  '@retikz/table-vanilla',
   'docs',
 ] as const;
 export type PackageId = (typeof PACKAGE_IDS)[number];
@@ -138,6 +141,9 @@ export const PACKAGE_LABEL: Record<PackageId, Localized> = {
   '@retikz/plot': { zh: '@retikz/plot', en: '@retikz/plot' },
   '@retikz/plot-react': { zh: '@retikz/plot-react', en: '@retikz/plot-react' },
   '@retikz/plot-vanilla': { zh: '@retikz/plot-vanilla', en: '@retikz/plot-vanilla' },
+  '@retikz/table': { zh: '@retikz/table', en: '@retikz/table' },
+  '@retikz/table-react': { zh: '@retikz/table-react', en: '@retikz/table-react' },
+  '@retikz/table-vanilla': { zh: '@retikz/table-vanilla', en: '@retikz/table-vanilla' },
   docs: { zh: '文档站', en: 'Docs' },
 };
 
@@ -152,6 +158,17 @@ export const PACKAGE_GROUPS: ReadonlyArray<PackageGroup> = [
     id: 'kernel',
     members: ['@retikz/math', '@retikz/core', '@retikz/render', '@retikz/react', '@retikz/vanilla', '@retikz/tex'],
   },
-  { id: 'viz', members: ['@retikz/data', '@retikz/plot', '@retikz/plot-react', '@retikz/plot-vanilla'] },
+  {
+    id: 'viz',
+    members: [
+      '@retikz/data',
+      '@retikz/plot',
+      '@retikz/plot-react',
+      '@retikz/plot-vanilla',
+      '@retikz/table',
+      '@retikz/table-react',
+      '@retikz/table-vanilla',
+    ],
+  },
   { id: 'other', members: ['docs'] },
 ];

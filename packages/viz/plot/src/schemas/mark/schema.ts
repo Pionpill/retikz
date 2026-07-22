@@ -51,7 +51,6 @@ export const MarkTransformSchema = z
 
 export const RelationTransformSchema = MarkTransformSchema;
 
-/** 各 mark 变体共享的基础字段（可选 id 句柄）；encoding 各 mark 自带（位置 mark 用 EncodingSchema，reference 用专属） */
 const markBase = {
   id: z.string().min(1).optional().describe('Optional mark handle used by generated scope and anchor targets'),
   layer: PlotLayerSchema.optional().describe(
@@ -234,17 +233,14 @@ export const RelationRoutingSpecSchema = z
   .discriminatedUnion('kind', [RelationLineRoutingSchema, RelationBendRoutingSchema, RelationOrthogonalRoutingSchema])
   .describe('Relation route strategy lowered to core Path steps after source and target refs are resolved');
 
-/** 位置 mark（point / path / interval）的 encoding：x / y 可选（必填性下放 coordinate 级校验）+ 样式 */
 const positionalEncoding = { encoding: EncodingSchema };
 
-/** node-host mark 的可选 datum label：lowering 时挂到该 mark 每个 datum Node 的 label */
 const nodeHostLabel = {
   label: MarkNodeLabelListSchema.optional().describe(
     'Node-host label: lowered onto each datum Node.label (core border-relative placement)',
   ),
 };
 
-/** geometry-host mark 的可选 label：lowering 时挂到生成的 path-like host label */
 const geometryHostLabel = {
   label: MarkGeometryLabelListSchema.optional().describe(
     'Geometry-host label: lowered onto the generated core Path.label',

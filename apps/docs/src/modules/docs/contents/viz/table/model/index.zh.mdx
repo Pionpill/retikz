@@ -1,0 +1,61 @@
+---
+title: 表格模型
+description: 理解不同表格类型共享的 Structure、Cell、Presentation、Layout 与 lowering 管线。
+---
+
+明细表从记录生成 Cell，显式网格直接列出 Cell，自定义结构则由扩展定义产生 Cell。它们的输入方式不同，但进入 Table 后都会收敛到同一个语义模型，再共用呈现、布局和下沉逻辑。
+
+## 一条共享管线
+
+下面这条管线是 Table 自身的底层模型，不是要求普通用户逐层手写的另一套产品 API。`DetailTable`、`ManualTable` 和完整 `TableSpec` 只是进入它的不同入口。
+
+<ComponentPreview files="table-model-pipeline" hideCode size="xs" />
+
+`Structure` 决定有哪些行、列和 Cell；语义模型统一 Cell 的身份、位置、角色和来源；`Presentation` 把 Cell payload 变成 Core child；`Layout` 计算固定轨道与 Cell box。最后，同一次解析既产生可渲染的 Core IR，也产生可追踪的 manifest。
+
+## Structure：表格如何产生 Cell
+
+`structure.kind` 判别当前结构操作。v0.1 内置两种结构，并允许注册自定义结构：
+
+| kind     | 数据放在哪里                            | 适合谁                         |
+| -------- | --------------------------------------- | ------------------------------ |
+| `detail` | spec 保存字段映射，记录在运行时注入     | 一条记录对应一行的明细表       |
+| `manual` | spec 直接保存行列尺寸与 Cell            | 需要精确声明静态网格的底层场景 |
+| custom   | spec 保存自定义参数，由 definition 解析 | 扩展作者定义新的结构操作       |
+
+`manual` 与 `detail` 是内置 Structure，不是两个互不相干的表格引擎；custom 也复用同一个 definition registry、语义输出和消费管线。只有一种表格类型的 LLM 或工具应持有精确的 `IRDetailTableSpec`、`IRManualTableSpec` 或 `IRCustomTableSpec`；需要在同一存储或协议中接收多种类型时，才使用聚合的 `IRTableSpec`。
+
+### 显式网格入口
+
+`ManualTable` 直接声明行、列和零基 Cell 地址，适合表头、摘要或不依赖外部记录的静态网格。它是共享模型的底层入口，不作为“明细表之外的第二种业务表型”。
+
+<ComponentPreview files={['table-manual', 'table-manual.zh.data.ts']} size="xs" />
+
+## Cell 与 Presentation
+
+每个 Cell 的 `payload.kind` 决定内容从哪里来：
+
+| kind      | 保存内容                         | 处理方式                                      |
+| --------- | -------------------------------- | --------------------------------------------- |
+| `value`   | JSON 标量值与可选呈现引用        | 交给 presentation definition；默认使用 `text` |
+| `content` | JSON-safe 的 Core / Tier 2 child | 直接作为 Cell 局部坐标中的内容，不经过值呈现  |
+
+因此 `{ kind: 'value', value: 'Score' }` 表示“这是一个待呈现的标量值”；`value` 是判别分支，不是字符串类型的别名。若 Cell 要直接容纳 Node、Path 或另一个 Tier 2 child，则使用 `content`。
+
+Presentation 只负责把值变成 Core 内容，不决定 Cell 属于哪一行或多宽。内置 `text` 与自定义 presentation 通过同一个 registry 解析。
+
+## Layout 与 Manifest
+
+v0.1 的布局是固定轨道模型：所有列共用 `columnWidth`，正文行共用 `rowHeight`，列头可以单独设置 `headerHeight`，行列之间可以设置 gap。Cell 内容不会反向改变轨道尺寸。
+
+`TableLayoutManifest` 保存表格 bounds、行列轨道的 offset/size，以及每个 Cell 的 box、语义位置、角色和可选来源。它让命中测试、调试、导出或上层交互读取布局结果，而不必从 SVG 反推几何。
+
+## 扩展边界
+
+扩展作者可以用 `defineTableStructure()` 增加新的 Structure，或用 `defineCellPresentation()` 增加新的 value 呈现。两类 definition 都在运行时传入，不进入 JSON TableSpec；新能力仍必须输出既有语义模型或 Core child，不能绕开共享管线另造布局与渲染语义。
+
+## 相关
+
+- [明细表](/viz/table/detail)：从记录到行的用户入口
+- [API 参考](/viz/table/reference)：精确 schema、React / Vanilla API 与 lowering 契约
+- [Composite](/kernel/concepts/design/composite)：Tier 2 能力如何进入 Core 编译管线

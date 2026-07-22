@@ -1,18 +1,30 @@
 # @retikz/table
 
-`@retikz/table` is retikz's renderer-agnostic Tier 2 table package. It will own the JSON-safe Table
-IR, table structure and presentation contracts, constraint-grid layout, and lowering to
-`@retikz/core`.
+`@retikz/table` is retikz's renderer-agnostic Tier 2 table package. It owns the JSON-safe Table IR,
+table structure and presentation contracts, constraint-grid layout, and lowering to `@retikz/core`.
 
-The npm package scaffold is initialized for `0.1.0-alpha.1`. Its public Table API will be added by
-the alpha.1 ADR sequence; this scaffold intentionally does not expose provisional schema or runtime
-APIs.
+`DetailTableSpecSchema`, `ManualTableSpecSchema`, and `CustomTableSpecSchema` define precise public
+variants. `TableSpecSchema` and `IRTableSpec` aggregate them under the same `table.table` composite
+root. A Table spec keeps actual dataset rows outside the IR, referring to host-supplied data through
+`data.reference` instead.
+
+Use `createDetailTableSpec()` for record-per-row tables and `createManualTableSpec()` for explicit
+dimensions and Cells. They return plain, JSON-safe `IRDetailTableSpec` and `IRManualTableSpec`
+values, while sharing structure normalization, presentation, layout, and lowering.
+
+Use `lowerTables(datasets, options)` to register Table composite lowering with `@retikz/core`.
+`lowerTableWithArtifacts(spec, datasets, options)` runs the same deterministic pipeline and also
+returns the detached, recursively frozen `TableLayoutManifest` sidecar.
 
 - `@retikz/data` owns shared data models and transforms.
-- `@retikz/table-react` will provide React authoring and runtime integration.
-- `@retikz/table-vanilla` will provide framework-free authoring and SSR integration.
+- `@retikz/table-react` provides `Table`, `DetailTable`, and `ManualTable` React entries.
+- `@retikz/table-vanilla` provides plain spec helpers, a Tier 2 embed adapter, and one-shot SSR.
 - Plot content may enter a Cell through Core composition, but this package does not depend on
   `@retikz/plot`.
+
+Adapter authors can use `createTableRuntimeContribution()` and `makeTableRuntimeComposites()` to
+merge runtime datasets and definitions with the same conflict rules as the built-in React and
+Vanilla adapters. This extension contract is runtime-only and does not enter Table IR.
 
 ## Install
 
@@ -25,4 +37,4 @@ This package is ESM-only and requires Node.js 24 or newer.
 
 See the [table architecture](https://github.com/Pionpill/retikz/blob/next-table/packages/viz/_notes/architecture/table-design.md)
 and [table capability boundary](https://github.com/Pionpill/retikz/blob/next-table/packages/viz/_notes/architecture/table-visualization-complete.md)
-for the planned model and ownership boundary.
+for the model and ownership boundary.

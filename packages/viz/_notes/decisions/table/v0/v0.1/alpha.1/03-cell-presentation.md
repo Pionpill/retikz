@@ -147,16 +147,11 @@ const compositeCell = {
 };
 ```
 
-## 测试设计
+## 实现摘要与验证
 
-- value/string/number/boolean/null 经 text provider 输出确定 Core Node
-- content payload 原样保留 `IRChild`
-- 非 scalar value、ReactNode、函数或非 JSON options 被 schema 拒绝
-- custom presentation 通过 define / registry / dispatch 输出内容
-- options 省略按 `{}` 解析；options schema 与 provider output 分别经过精确 runtime guard
-- PresentedTableModel 保留 semantic identity/source/order，并与 semantic cells 一一对应
-- 未注册 presentation 与重复 key fail-loud
-- direct nested composite 不要求 Table 依赖对应 feature package
+Cell 已以 `value` / `content` 两类 payload 统一 scalar presentation 与直接 `IRChild`。内置 `text` 和自定义 presentation 通过同一 Definition / registry / runtime guard，`PresentedTableModel` 保留 semantic identity 并隔离 provider output 的可变所有权。
+
+验证覆盖全部 Data scalar、直接 Core child 与 nested composite、自定义 provider、options 与 provider output 的 JSON/Core schema 边界、重复或未注册 key，以及 presented/semantic Cell 的顺序与 identity 对齐。
 
 ## 影响
 
@@ -186,48 +181,3 @@ const compositeCell = {
 - formatter、conditional rule、theme、badge/dataBar/sparkline
 - 内容 intrinsic / constrained measurement、bounds-aware alignment、fit、clip 或 overflow
 - Cell padding、border 与 span
-
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-`red`：新增公开 Cell payload schema、Presentation Definition 与 runtime dispatch。
-
-### Schema 改动
-
-| 文件                             | 操作 | 字段名         | 类型                                    | 默认值 | describe 中文摘要          |
-| -------------------------------- | ---- | -------------- | --------------------------------------- | ------ | -------------------------- |
-| `schemas/cell/payload.ts`        | 新增 | `kind`         | `'value' \| 'content'`                  | —      | Cell payload 判别          |
-| 同上                             | 新增 | `value`        | `ScalarValueSchema`                     | —      | value payload scalar       |
-| 同上                             | 新增 | `presentation` | `TablePresentationRefSchema.optional()` | text   | value presentation 引用    |
-| 同上                             | 新增 | `content`      | Core `ChildSchema`                      | —      | 直接 Core / Tier 2 内容    |
-| `schemas/presentation/schema.ts` | 新增 | `name`         | 非空字符串                              | —      | presentation provider name |
-| 同上                             | 新增 | `options`      | `JsonObjectSchema.optional()`           | —      | provider JSON options      |
-
-### 文件 scope
-
-- `packages/viz/table/src/schemas/cell/payload.ts`
-- `packages/viz/table/src/schemas/presentation/**`
-- `packages/viz/table/src/contract/presentation/**`
-- `packages/viz/table/src/providers/presentation/{text,definitions,registry,index}.ts`
-- `packages/viz/table/src/pipeline/presentation/**`
-- 对应 owner barrels 与包根导出
-- `packages/viz/table/tests/{ir,presentation}/**`
-
-### 测试象限
-
-**Happy path**：五种 Data scalar；direct Core Node；direct nested composite；custom provider。
-
-**边界**：空字符串；null；空 options；局部原点内容。
-
-**错误路径**：非 scalar value；非法 content；未注册/空 name；重复/内置冲突 key；原始 options 非 JSON；options schema 失败或 transform/default 产生非 JSON；provider output 不是合法 JSON-safe `IRChild`。
-
-**交互**：manual payload 与 detail runtime value 共用 presentation；PresentedTableModel 与 semantic cell identity/source/order 一致且递归冻结；custom output 在 ADR-05 与 ADR-04 TableLayout 配对；nested composite 由 Core 递归 lowering。
-
-### 依赖的现有元素
-
-- `ChildSchema`、`IRChild`、`JsonObjectSchema`、`NodeSchema`（`@retikz/core`）——内容与 JSON 边界
-- `ScalarValueSchema`、`IRDataScalarValue`（`@retikz/data`）——value payload
-- `defineComposite` 递归 expansion——direct nested Tier 2 由 Core 消费，不在 Table dispatch

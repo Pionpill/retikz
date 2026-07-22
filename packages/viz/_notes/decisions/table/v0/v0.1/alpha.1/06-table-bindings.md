@@ -292,28 +292,13 @@ expect(manualTable(manualInput)).toEqual(createManualTableSpec(manualInput));
 expect(resolveReactManualTableSpec(manualProps)).toEqual(createManualTableSpec(manualInput));
 ```
 
-## 测试设计
+## 实现摘要与验证
 
-- React `<Table>` 渲染 manual/detail/custom spec，manual spec 可省略 `data`
-- React `<DetailTable>` 生成确定 data reference、model、structure header 与 column header payload；`header: false` 与手写 spec 等价
-- React `<ManualTable>` 生成确定 dimensions、rowKinds 与 Cell payload
-- 三个组件 standalone / embedded 都归一到同一 runtime，sugar 组件不是 render-time `<Table>` wrapper
-- React embedded Table 只接受稳定唯一 spec id；匿名/重复 id fail-loud，组件重排、Strict Mode 与 SSR 重入不改变 runtime reference
-- React onManifest 只按内容变化通知
-- 任一 embedded Table component 携带 onManifest 都 fail-loud，不静默丢回调
-- 两个不同 embedded Table components 的同引用 definitions/composites 去重，不同 key 合并，同 key 不同对象 fail-loud
-- Vanilla `detailTable` / `manualTable` 返回 plain、schema-valid spec，与共享构造函数等价且不修改输入
-- `embedTable` + `createTableAdapter` 可进入 Kernel figure/layer、SSR、SVG mount 与 Canvas mount；嵌入输出 id 从 embed id 派生
-- 同一 mounted view 更新为带新 dataset 的 next figure 后输出新内容，root DOM/canvas identity 与 adapter identity 保持稳定
-- 多个 Vanilla Table embed 与多个 React embedded Table 使用同一 runtime contribution 合并和冲突规则
-- renderTable 缺省返回 string，artifact mode 返回 sidecar，manual spec 可省略 `data`
-- React / Vanilla 对同一 spec 输出相同 Scene/SVG 语义
-- React display size 与 Vanilla output size 不回写 TableSpec 或改变 manifest bounds
-- React / Vanilla 都能注入额外 composite definitions；未注入的 nested composite 沿用 Core warning，adapter 不宣称其已渲染
-- alpha.1 的 nested Plot fixture 只验证显式局部定位后的注册、递归 lowering 与 adapter parity；自动测量、fit 和 clip 由 alpha.2 fixture 验收
-- 两个 adapter 不复制 schema/layout/lowering，不依赖 Plot
-- SSR 环境无 window/document
-- release-group、viz scripts 与 publish artifact checker 覆盖最终三个 Table packages
+`@retikz/table-react` 已提供 `<Table>`、`<DetailTable>`、`<ManualTable>`；`@retikz/table-vanilla` 已提供 plain spec helper、Tier 2 embed adapter 与一次性 SSR。两侧共享 `@retikz/table` 的 authoring normalization、runtime contribution 与 lowering，不复制 schema、layout 或 renderer runtime。
+
+验证覆盖三种 React 入口的 standalone/embedded 行为、manifest effect、稳定嵌入 identity 与 contribution 冲突；Vanilla plain helper、figure/layer embed、SVG/Canvas mount、`update()`、SSR 与 artifact overload；两侧都覆盖 nested composite 注入并验证共享 authoring 结果。
+
+当前 adapter parity 主要由共享 normalization/lowering、同一 contribution contract 和两侧定向测试共同保证；尚未建立一个同时导入两个 adapter、对同一 fixture 做直接 Scene/SVG 快照比较的独立 integration harness。后续增加该测试时不得引入 table-react 与 table-vanilla 的运行时互相依赖。
 
 ## 影响
 
@@ -352,74 +337,3 @@ expect(resolveReactManualTableSpec(manualProps)).toEqual(createManualTableSpec(m
 - 单元格编辑；不属于 Table 家族目标
 - async data、服务端分页与缓存状态；由宿主负责
 - formatter/rule/theme convenience props
-
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-`red`：新增两个公开 packages、组件/函数 API 与 docs-visible 行为。
-
-### Schema 改动
-
-无。所有 authoring 结果必须通过 `TableSpecSchema`，adapter 不拥有 schema。
-
-### 文件 scope
-
-- `packages/viz/table-react/{package.json,tsconfig.json,vite.config.ts,README.md,LICENSE}`
-- `packages/viz/table-react/src/index.ts`
-- `packages/viz/table-react/src/Table.tsx`
-- `packages/viz/table-react/src/DetailTable.tsx`
-- `packages/viz/table-react/src/ManualTable.tsx`
-- `packages/viz/table-react/src/table-runtime.ts`
-- `packages/viz/table-react/src/embedded-runtime.ts`
-- `packages/viz/table-react/tests/**`
-- `packages/viz/AGENTS.md`
-- `packages/viz/table/AGENTS.md`
-- `packages/viz/table-react/AGENTS.md`
-- `packages/viz/table-vanilla/AGENTS.md`
-- `packages/viz/table/README.md`
-- `packages/viz/table/src/contract/authoring/**`
-- `packages/viz/table/src/contract/index.ts`
-- `packages/viz/table/src/pipeline/contribution/**`
-- `packages/viz/table/src/pipeline/index.ts`
-- `packages/viz/table/src/index.ts`
-- `packages/viz/table/tests/contract/authoring/**`
-- `packages/viz/table/tests/pipeline/contribution/**`
-- `packages/viz/table-vanilla/{package.json,tsconfig.json,vite.config.ts,README.md,LICENSE}`
-- `packages/viz/table-vanilla/src/index.ts`
-- `packages/viz/table-vanilla/src/spec/**`
-- `packages/viz/table-vanilla/src/adapter/**`
-- `packages/viz/table-vanilla/src/runtime/**`
-- `packages/viz/table-vanilla/tests/**`
-- `apps/docs/src/modules/docs/contents/viz/components/table/**`
-- `apps/docs/src/modules/docs/data/viz.ts`
-- `apps/docs/src/modules/docs/data/types.ts`
-- `apps/docs/src/i18n/locales/{zh,en}.json`
-- `apps/docs/package.json`
-- `scripts/release-groups.config.mjs`
-- `scripts/check-release-groups.test.mjs`
-- `scripts/publish-artifact-limits.json`
-- 根 `package.json`
-- `pnpm-lock.yaml`
-
-### 测试象限
-
-**Happy path**：React `<Table>` manual/detail/custom spec；`<DetailTable>`（含 `header: false`）；`<ManualTable>`；三个 embedded components；Vanilla detail/manual plain helper；`embedTable` 经 figure/layer 在 SVG/Canvas mount 与 SSR 渲染；render string/artifact overload。
-
-**边界**：standalone `<Table>` / `renderTable` 允许匿名 manual spec 并省略 data；Vanilla spec 无 id 时嵌入输出使用 `${embedId}/table`；空 detail dataset；manual 空 cells；单 column；custom definition options；两个不同 Table components/embed 共享同一 definition 对象；authoring 输入不变性；React embedded Table 重排、Strict Mode 重入和 SSR 重复执行保持同一 runtime reference。
-
-**错误路径**：`<DetailTable>` / `detailTable` 缺 dataRef 或空 columns；`<ManualTable>` / `manualTable` 非正 dimensions、rowKinds 长度错误或越界 Cell；React embedded Table 匿名或重复 id；`embedTable('')` 与手写空 id embed 都 fail-loud；手写 embed 非法 spec；missing dataset；空 runtime contribution reference；runtime reference 与用户 dataset 冲突；unregistered provider；任一 React embedded component 携带 onManifest；同 structure/presentation/composite key 的不同 definition 对象；shared lower option 冲突；adapter 输出 id 未按 embed id 命名空间化。
-
-**交互**：React / Vanilla detail 在 `header: false` 下 authoring parity；React / Vanilla manual parity；三个 React 组件共享 runtime/renderer/manifest 语义；standalone onManifest 去重；React 与 Vanilla 对多实例 runtime definitions/composites 执行同一聚合；`mount().update(nextFigure)` 更换 dataset 后内容更新而 root identity 稳定；显式局部定位的 nested Plot composite 通过两套 `composites` 通道注册后可渲染；docs typecheck 与 Table 页面/路由可访问；最终三包 release-group 检查通过。
-
-### 依赖的现有元素
-
-- `Layout`、`EmbeddableTier2Adapter`（`@retikz/react`）——React host / embedding
-- `CompositeDefinition`、`compileToScene`（`@retikz/core`）——nested Tier 2 注入与一次性 convenience compile
-- `VanillaEmbedSpec`、`VanillaTier2Adapter`、`figure`、`layer`、`embed`（`@retikz/vanilla`）——复用 plain spec 与 Tier 2 嵌入协议
-- `mount`、`mountSvg`、`mountCanvas`、`renderToSvgString`（`@retikz/vanilla`）——统一浏览器 runtime 与 SSR output
-- `RenderToStringOptions`（`@retikz/vanilla`）——复用 SVG output 配置，不开放内部 compile 覆盖
-- `ExternalDatasets` / `ExternalRow`（`@retikz/data`）——runtime data
-- `IRTableSpec`、`lowerTables`、`lowerTableWithArtifacts`（ADR-01/05）——唯一领域入口

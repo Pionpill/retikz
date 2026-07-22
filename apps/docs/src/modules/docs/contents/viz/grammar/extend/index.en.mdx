@@ -5,7 +5,7 @@ description: Extend the drawing grammar by registering long-tail channels, scale
 
 This group covers how to **extend** Plot's drawing grammar. The built-ins cover common charts; when you need a new channel, scale, coordinate projection, or mark, runtime-injected definitions reuse the same parsing, validation, and lowering flow as built-in plot capabilities.
 
-Data formats, field parsing, and data transforms belong to [Data Flow](/viz/data): custom field formats are documented under [Data Model](/viz/data/model), and custom transform / reducer / selector definitions are documented under [Data Transforms](/viz/data/transform). Plot can consume those data capabilities, but they are no longer part of this drawing-grammar extension group.
+Data formats, field parsing, and data transforms belong to [Data](/viz/data): custom field formats are documented under [Data Model](/viz/data/model), and custom transform / reducer / selector definitions are documented under [Data Transforms](/viz/data/transform). Plot can consume those data capabilities, but they are no longer part of this drawing-grammar extension group.
 
 > Extension definitions are host capabilities and do not enter Plot IR directly. The IR stores only serializable types, names, field bindings, and JSON config; functions, projections, evaluators, and lowerers are injected through `<Plot>` props or vanilla options.
 
@@ -20,7 +20,7 @@ Data formats, field parsing, and data transforms belong to [Data Flow](/viz/data
 
 ## Three Boundaries
 
-- **Data and drawing are separate layers**: real rows, parsers, and data transforms belong to Data Flow; PlotSpec records drawing-related field bindings and serializable config.
+- **Data and drawing are separate layers**: real rows, parsers, and data transforms belong to the data layer; PlotSpec records drawing-related field bindings and serializable config.
 - **Built-ins and custom definitions share one mechanism**: custom definitions do not use private patch points; they register, parse, validate, and consume through the same path as built-ins.
 - **Lowering still returns to core**: custom coordinates and marks can decide how geometry is generated, but the final output should still be core Node / Path / Coordinate / Scope primitives.
 

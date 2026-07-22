@@ -1,9 +1,10 @@
-import type { core, ZodTypeAny } from 'zod';
+import type { core, z } from 'zod';
 
 import * as IR from '@retikz/core';
+import * as TableIR from '@retikz/table';
 
 export type SchemaRegistryEntry = {
-  schema: ZodTypeAny;
+  schema: z.ZodType;
   /** 渲染类型签名时使用的名字（去掉 "Schema" 后缀） */
   label: string;
   /** Reference 页面 URL（含可选 #anchor） */
@@ -296,6 +297,52 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IR.ArrowEndDetailSchema,
     label: 'ArrowEndDetail',
     url: '/kernel/reference/schema/path#arrowenddetail',
+  },
+
+  TableSpecSchema: {
+    schema: TableIR.TableSpecSchema,
+    label: 'TableSpec',
+    url: '/viz/table/reference/contract-table#tablespecschema',
+  },
+  DetailTableSpecSchema: {
+    schema: TableIR.DetailTableSpecSchema,
+    label: 'DetailTableSpec',
+    url: '/viz/table/reference/contract-detail#detailtablespecschema',
+  },
+  ManualTableSpecSchema: {
+    schema: TableIR.ManualTableSpecSchema,
+    label: 'ManualTableSpec',
+    url: '/viz/table/reference/contract-table#manualtablespecschema',
+  },
+  CustomTableSpecSchema: {
+    schema: TableIR.CustomTableSpecSchema,
+    label: 'CustomTableSpec',
+    url: '/viz/table/reference/contract-table#customtablespecschema',
+  },
+  TableCellSchema: {
+    schema: TableIR.TableCellSchema,
+    label: 'TableCell',
+    url: '/viz/table/reference/contract-table#tablecellschema',
+  },
+  TableCellPayloadSchema: {
+    schema: TableIR.TableCellPayloadSchema,
+    label: 'TableCellPayload',
+    url: '/viz/table/reference/contract-table#tablecellpayloadschema',
+  },
+  TableLayoutSchema: {
+    schema: TableIR.TableLayoutSchema,
+    label: 'TableLayout',
+    url: '/viz/table/reference/contract-table#tablelayoutschema',
+  },
+  DetailTableStructureSchema: {
+    schema: TableIR.DetailTableStructureSchema,
+    label: 'DetailTableStructure',
+    url: '/viz/table/reference/contract-detail#detailtablestructureschema',
+  },
+  TableDetailColumnSchema: {
+    schema: TableIR.TableDetailColumnSchema,
+    label: 'TableDetailColumn',
+    url: '/viz/table/reference/contract-detail#tabledetailcolumnschema',
   },
 };
 
