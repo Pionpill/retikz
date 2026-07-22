@@ -42,6 +42,10 @@ Authoring helpers only produce and validate JSON-safe specs. They do not bind a 
 | `DetailTable` | Builds a precise detail spec from `DetailTableSpecInput` | `data: Array<ExternalRow>` |
 | `ManualTable` | Builds a precise manual spec from `ManualTableSpecInput` | No external dataset        |
 
+`Table` always receives a complete `spec`. `DetailTable` chooses between the complete `columns` prop and `DetailColumn` children; `ManualTable` chooses between complete `cells` / `rowKinds` props and nested `Row` / `Cell` markers. The three markers only collect React authoring input and still produce the same detail or manual TableSpec.
+
+Nested manual authoring still requires explicit root `rows` / `columns`; Row count must equal `rows`, and each row may omit trailing Cells. Use the `cells` prop for arbitrary sparse addresses. A `Cell` accepts mutually exclusive scalar children, `value`, or JSON-safe `content` payload sources.
+
 All three components share these runtime props:
 
 | Prop                      | Type                                           | Default | Description                                             |

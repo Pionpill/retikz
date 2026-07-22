@@ -235,6 +235,10 @@ export type PreviewPanelControlsDefinition = {
   presentation: 'panel';
   /** 面板标题 */
   title?: string;
+  /** 桌面端控制面板的初始宽度百分比
+   * @default 25
+   */
+  defaultSize?: number;
   /** 面板字段分组 */
   sections: ReadonlyArray<PreviewControlSection>;
   /** 在预览区追加的自定义 slot */

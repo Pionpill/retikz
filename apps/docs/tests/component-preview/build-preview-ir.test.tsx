@@ -7,13 +7,16 @@ import { describe, expect, it } from 'vitest';
 
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
 
+const hookedDatasets = { sample: [{ value: 1 }] };
+const makeHookedComposites = () => [];
+
 const hookedEmbeddableAdapter: EmbeddableTier2Adapter = {
   displayName: 'HookedEmbeddable',
   namespace: 'hooked',
   contribute: () => ({
     node: { namespace: 'hooked', type: 'demo' },
-    datasets: {},
-    makeComposites: () => [],
+    datasets: hookedDatasets,
+    makeComposites: makeHookedComposites,
   }),
 };
 
@@ -36,5 +39,12 @@ describe('buildPreviewIR', () => {
     const preview = buildPreviewIR(HookedEmbeddableDemo);
 
     expect(preview.ir.children).toEqual([{ namespace: 'hooked', type: 'demo' }]);
+    expect(preview.contributions).toEqual([
+      {
+        namespace: 'hooked',
+        datasets: hookedDatasets,
+        makeComposites: makeHookedComposites,
+      },
+    ]);
   });
 });

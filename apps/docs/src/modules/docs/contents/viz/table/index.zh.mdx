@@ -5,7 +5,7 @@ description: 从明细表开始，将数据组织成可阅读、可持久化并�
 
 Table 是独立的 Tier 2 能力：它负责行列结构、Cell 语义、确定性布局和 lowering，而[数据](/viz/data)负责记录、字段模型与数据变换。表格不是 Plot 上再包一层的“图表类型”，也不需要为每种表型复制一套底层语法。
 
-当前版本只开放一条面向业务使用的路径：用 `DetailTable` 把一条记录映射为一行。`ManualTable` 是直接声明 Cell 网格的底层入口，放在共享模型和 API 参考中说明，不作为第二种业务表型。
+使用 `DetailTable` 可以把一条记录映射为一行。
 
 ## 如何阅读
 
@@ -14,8 +14,6 @@ Table 是独立的 Tier 2 能力：它负责行列结构、Cell 语义、确定�
 | 展示名单、流水或逐行记录            | [明细表](/viz/table/detail)      |
 | 理解 Structure、Cell、布局和下沉    | [表格模型](/viz/table/model)     |
 | 查询完整 spec、React 或 Vanilla API | [API 参考](/viz/table/reference) |
-
-未来增加交叉表、矩阵表等表型时，它们会与明细表并列进入“表格类型”；共享的 Cell、Presentation、Layout、规则和 lowering 仍留在同一套表格模型中。
 
 ## 章节内容
 

@@ -1,7 +1,7 @@
 # @retikz/table
 
 `@retikz/table` is retikz's renderer-agnostic Tier 2 table package. It owns the JSON-safe Table IR,
-table structure and presentation contracts, constraint-grid layout, and lowering to `@retikz/core`.
+table structure and presentation contracts, fixed-track layout, and lowering to `@retikz/core`.
 
 `DetailTableSpecSchema`, `ManualTableSpecSchema`, and `CustomTableSpecSchema` define precise public
 variants. `TableSpecSchema` and `IRTableSpec` aggregate them under the same `table.table` composite

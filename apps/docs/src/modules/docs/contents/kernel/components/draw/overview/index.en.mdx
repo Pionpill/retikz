@@ -5,7 +5,7 @@ description: Declare everyday links, folds, curves, cycles, and edge labels in o
 
 `<Draw>` is the default entry point for most connections. It accepts a `way` array and expands targets, folds, cycles, curves, shapes, and edge labels into Kernel `<Path>` + `<Step>`. Stroke, fill, arrow, and opacity props match `<Path>`.
 
-Choosing rule: use `<Draw>` for ordinary relationship lines, flowchart edges, and arrowed connections; switch to `<Path>` + `<Step>` when you need multiple `move`s, precise per-segment `kind` control, or IR-close debugging; use the **shape sugar** below to draw a single geometric shape (circle / rectangle / sector, etc.); use Standard [Grid](/standard/components/grid) for background reference lines. Work with IR directly only at AI / persistence boundaries.
+Choosing rule: use `<Draw>` for ordinary relationship lines, flowchart edges, and arrowed connections; switch to `<Path>` + `<Step>` when you need multiple `move`s, precise per-segment `kind` control, or IR-close debugging; use the **shape sugar** below to draw a single geometric shape (circle / rectangle / sector, etc.); use Standard [Grid](/standard/composite/grid) for background reference lines. Work with IR directly only at AI / persistence boundaries.
 
 ## Usage
 
@@ -80,7 +80,7 @@ When you need a geometric shape rather than a relationship, use the one-line sug
 | `<RegularPolygon>` | regular polygon                   |
 | `<Star>`           | star                              |
 
-Background grids are not geometric shapes; repeated reference lines are an optional Standard capability. Start geometric shapes with [Circle and Ellipse](/kernel/components/shapes/circle-ellipse), or see [Grid](/standard/components/grid) for regular reference lines.
+Background grids are not geometric shapes; repeated reference lines are an optional Standard capability. Start geometric shapes with [Circle and Ellipse](/kernel/components/shapes/circle-ellipse), or see [Grid](/standard/composite/grid) for regular reference lines.
 
 ## How it works
 
@@ -212,4 +212,4 @@ Draw forwards whole-path properties such as stroke, fill, arrows, and stacking t
 - [Step](/kernel/components/draw/step): the Kernel step semantics behind each Draw segment
 - [Arrow](/kernel/components/draw/arrow): Arrow shape, size, color, and per-end overrides
 - [Shapes](/kernel/components/shapes): geometric shortcut forms such as Circle / Ellipse / Arc / Sector / Rectangle / RegularPolygon / Star
-- [Grid](/standard/components/grid): optional background reference lines
+- [Grid](/standard/composite/grid): optional background reference lines

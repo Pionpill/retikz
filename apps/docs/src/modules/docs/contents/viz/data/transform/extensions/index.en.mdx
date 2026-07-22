@@ -1,0 +1,160 @@
+---
+title: Extension Mechanisms
+description: Extend data transforms and statistical sub-operators with runtime Definitions while keeping operation configuration serializable.
+---
+
+Data-transform extension points add row-processing operations or statistical reducers and selectors used by existing transforms. An operation stores only `{ kind, ...config }`; schemas and execution functions remain in runtime Definitions and never enter serializable configuration.
+
+## Applicability
+
+Prefer built-in operations. Register a Definition only when new row-processing semantics need a stable name, configuration validation, and reuse across hosts.
+
+| Extension entry point     | Responsibility                                  | Stored configuration |
+| ------------------------- | ----------------------------------------------- | -------------------- |
+| `defineTransform`         | Reorder, filter, add, or remove rows and fields | `{ kind, ... }`      |
+| `defineStatisticsReducer` | Reduce a group of rows into a field fragment    | Reducer operation    |
+| `defineRowSelector`       | Select original rows from a group               | Selector operation   |
+
+When the existing `summarize`, `select`, or `annotate` structure already fits and only a calculation or row-selection rule is missing, extend a reducer or selector. Define a complete transform when the feature needs a new grouping strategy, multiple processing stages, or a different row structure.
+
+## Defining Data Operations
+
+`defineTransform` extracts a unique `kind` from `schema`, declares field dependencies through `inputFields` and `outputFields`, and processes rows in `apply`. `apply` must be pure and deterministic and must not mutate the input array or rows.
+
+The `double-x` operation below reads `x`, produces `x2`, and uses Plot as an example host to display the result:
+
+<ComponentPreview files={['extension-transform', 'extension-transform.data.ts']} />
+
+Built-in and custom transforms merge into one registry and use the same `kind` lookup, schema validation, and execution path.
+
+### Provenance
+
+A row-preserving transform usually retains provenance by spreading the original row. When a transform changes the row count and an output represents a group of source rows, use `TransformContext.groupProvenance` to associate those members. A newly generated row with no source counterpart may omit provenance.
+
+| Scenario                        | Recommended handling                                      |
+| ------------------------------- | --------------------------------------------------------- |
+| Reorder or retain original rows | Return the original row or spread it before adding fields |
+| Aggregate multiple rows         | Wrap output with `groupProvenance(out, members)`          |
+| Generate source-free data       | Return a new row and allow provenance to be empty         |
+
+With provenance enabled, the same Definition may run during ordinary lowering and lineage collection. A host should freeze random or stateful inputs first, or perform nondeterministic work outside the Definition.
+
+## Defining Statistical Sub-operators
+
+Reducers and selectors are not independent pipeline steps. They are sub-operators invoked by transforms such as `summarize`, `select`, and `annotate`.
+
+| Sub-operator | Core function | Result                                    | Typical use                      |
+| ------------ | ------------- | ----------------------------------------- | -------------------------------- |
+| Reducer      | `reduce`      | Field fragment written to output          | Custom statistics and aggregates |
+| Selector     | `select`      | Original row plus optional one-based rank | Representative or ranked rows    |
+
+The example below registers a midpoint reducer and a selector for the row closest to the mean. The left plot generates aggregate rows through `summarize`; the right plot retains original representative rows through `select`:
+
+<ComponentPreview files={['extension-statistics', 'extension-statistics.data.ts']} />
+
+A reducer should declare read and written fields through `inputFields` and `outputFields`. A selector declares its read fields through `inputFields` and returns selected original rows. Promote the logic to a complete transform when it must change several fields or combine multiple stages.
+
+## Injecting A Host
+
+The consuming host passes custom Definitions into the data-transform pipeline. In Plot:
+
+| Capability       | Injection entry point          | Operation reference       |
+| ---------------- | ------------------------------ | ------------------------- |
+| Custom transform | `transformDefinitions`         | `kind`                    |
+| Custom reducer   | `statisticsReducerDefinitions` | `reducer operation.kind`  |
+| Custom selector  | `rowSelectorDefinitions`       | `selector operation.kind` |
+
+Other consumers can expose equivalent adapter entry points. The Definition and operation contracts themselves belong to Data.
+
+## Execution
+
+```text
+inject Definitions → merge built-in and custom registries → look up kind → validate schema → execute
+```
+
+Field collection and actual execution use the same registry. `inputFields` includes source fields read by an extension in strict model validation, while `outputFields` marks derived fields so they do not have to appear in the source data model.
+
+## Errors And Limits
+
+| Condition                                       | Result                                  |
+| ----------------------------------------------- | --------------------------------------- |
+| `kind` duplicates a built-in or custom key      | Registry construction fails immediately |
+| Operation uses an unregistered `kind`           | Execution fails before applying it      |
+| Operation fails its Definition schema           | Schema validation fails                 |
+| Operation contains functions or non-JSON values | Serializability validation fails        |
+
+A Definition should implement only data-row and statistical semantics. Color, mark, layout, and other consumer-side semantics belong to the corresponding module extension point.
+
+## API Reference
+
+The following public exports come from `@retikz/data`:
+
+| Capability          | Definition type               | Definition function       |
+| ------------------- | ----------------------------- | ------------------------- |
+| Data operation      | `TransformDefinition`         | `defineTransform`         |
+| Statistical reducer | `StatisticsReducerDefinition` | `defineStatisticsReducer` |
+| Row selector        | `RowSelectorDefinition`       | `defineRowSelector`       |
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Transform Definition contract',
+      path: 'packages/viz/data/src/contract/transform.ts',
+      startLine: 29,
+      endLine: 51,
+    },
+    {
+      label: 'Statistical sub-operator contracts',
+      path: 'packages/viz/data/src/contract/statistics.ts',
+      startLine: 7,
+      endLine: 70,
+    },
+    {
+      label: 'Transform registry merge rules',
+      path: 'packages/viz/data/src/providers/transform/definitions.ts',
+      startLine: 89,
+      endLine: 105,
+    },
+    {
+      label: 'Statistical registry merge rules',
+      path: 'packages/viz/data/src/providers/statistics/registry.ts',
+      startLine: 31,
+      endLine: 55,
+    },
+    {
+      label: 'Transform lookup, validation, and execution',
+      path: 'packages/viz/data/src/pipeline/transform.ts',
+      startLine: 24,
+      endLine: 75,
+    },
+    {
+      label: 'Transform extension injection in Plot',
+      path: 'packages/viz/plot/src/pipeline/expand/data.ts',
+      startLine: 88,
+      endLine: 96,
+    },
+  ]}
+/>
+
+## Related
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+  <LinkedCard href="/viz/data/transform/operations">
+    <span className="font-semibold">Transform Operations</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Check whether a built-in transform already covers the requirement.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/transform/statistics">
+    <span className="font-semibold">Statistical Sub-operators</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Learn the built-in reducer and selector semantics.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/model/extensions">
+    <span className="font-semibold">Data Model Extensions</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Extend field formats and runtime field resolution.
+    </span>
+  </LinkedCard>
+</div>

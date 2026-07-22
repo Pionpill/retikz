@@ -42,6 +42,10 @@ Table 的三个宿主入口共享一条运行时：React 组件和 Vanilla helpe
 | `DetailTable` | 从 `DetailTableSpecInput` 构造精确 detail spec | `data: Array<ExternalRow>` |
 | `ManualTable` | 从 `ManualTableSpecInput` 构造精确 manual spec | 无外部 dataset             |
 
+`Table` 始终接收完整的 `spec`。`DetailTable` 可在完整 `columns` props 与 `DetailColumn` children 间二选一；`ManualTable` 可在完整 `cells` / `rowKinds` props 与嵌套 `Row` / `Cell` 间二选一。三个 marker 只收集 React authoring 输入，最终仍进入相同的 detail 或 manual TableSpec。
+
+嵌套 manual 写法仍要求根上显式 `rows` / `columns`；Row 数必须等于 `rows`，每行尾部可省略 Cell。任意稀疏地址使用 `cells` props；`Cell` 的标量 children、`value` 与 JSON-safe `content` 三种 payload 来源互斥。
+
 三个组件共享这些运行时属性：
 
 | 属性                      | 类型                                           | 默认值  | 描述                                  |

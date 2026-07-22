@@ -44,7 +44,7 @@ describe('LLM documentation artifacts', () => {
   });
 
   it('把同页 demo、data 与 controls 作为 LLM 可读取的配套源码', () => {
-    const pathPage = collectDocManifest(docsRoot).find(entry => entry.path === '/viz/grammar/mark/path');
+    const pathPage = collectDocManifest(docsRoot).find(entry => entry.path === '/viz/plot/mark/path');
 
     expect(pathPage?.assets).toEqual(
       expect.arrayContaining([

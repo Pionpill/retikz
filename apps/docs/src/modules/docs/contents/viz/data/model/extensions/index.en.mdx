@@ -1,0 +1,118 @@
+---
+title: Extension Mechanisms
+description: Extend data intake with named field formats and runtime resolvers while keeping data-model configuration serializable.
+---
+
+Data-model extension points only parse external values into a stable field contract. Reusable parsing rules become named formats, while one-off or source-specific rules use a runtime resolver. Neither form writes functions into serializable configuration.
+
+## Applicability
+
+Prefer built-in formats and field types. Register a `FieldFormatDefinition` only when a storage format must be reused across data sources; use `resolveField` for parsing branches local to the current source.
+
+| Extension entry point | Responsibility                     | Stored configuration |
+| --------------------- | ---------------------------------- | -------------------- |
+| `defineFieldFormat`   | Reusable field storage formats     | `format` name        |
+| `resolveField`        | Temporary type and parser override | Nothing              |
+
+`fieldMap` only maps logical fields to physical paths; it neither parses values nor registers an extension. Measurement types remain the closed set `continuous`, `temporal`, and `categorical`. Custom parsing must normalize values into one of those domains.
+
+## Defining Field Formats
+
+Use `defineFieldFormat` for formats that must be persisted and reused across data sources. `name` is the model lookup key, `impliedType` declares the canonical value type, and `parse` converts raw input to text, a finite number, or `undefined`.
+
+The `wan` Definition below is injected through `<Plot formatDefinitions>`. The model stores only `format: 'wan'`, never the parsing function.
+
+<ComponentPreview files={['extension-format', 'extension-format.data.ts']} />
+
+## Runtime Field Resolution
+
+Use `resolveField` for one-off logic and source-specific branches. It returns an optional `type` and `parse` for each logical field and takes precedence over the model, named format, and default coercion. Returning `undefined` falls back to the standard intake path.
+
+<ComponentPreview files={['extension-resolver', 'extension-resolver.data.ts']} />
+
+`resolveField` is a runtime escape hatch. It does not use a registry and cannot be serialized. Use a `FieldFormatDefinition` when a stable name, cross-host reuse, or persisted configuration is required.
+
+## Injecting A Host
+
+The consuming host passes field-parsing capabilities into the intake pipeline. In Plot:
+
+| Capability          | Injection entry point | Model reference           |
+| ------------------- | --------------------- | ------------------------- |
+| Named field formats | `formatDefinitions`   | Field `format: name`      |
+| Temporary parsers   | `resolveField`        | None; resolved at runtime |
+
+Other consumers can expose equivalent adapter entry points. The data model only consumes the format registry and resolver result.
+
+## Execution
+
+```text
+field contract → look up named format → apply resolveField override → normalize field value
+```
+
+Named formats provide an initial field type and parser, then `resolveField` may override either value per field. When no custom rule matches, intake continues with the model declaration, inference result, and default coercion.
+
+## Errors And Limits
+
+| Condition                                 | Result                                                                          |
+| ----------------------------------------- | ------------------------------------------------------------------------------- |
+| Duplicate built-in/custom format name     | Registry construction fails immediately                                         |
+| Model references an unknown format        | Intake fails before normalization                                               |
+| `resolveField.parse` has no resolved type | Declare the type in the model or return `type` from the resolver                |
+| Parser returns the wrong value type       | Invalid value handled by [Validation & Diagnostics](/viz/data/model/validation) |
+
+Field parsing normalizes individual values. It does not reorder rows, change row counts, or produce statistical fields; those capabilities belong to [Data Transform Extensions](/viz/data/transform/extensions).
+
+## API Reference
+
+The following public exports come from `@retikz/data`:
+
+| Capability     | Definition / function type        | Definition form           |
+| -------------- | --------------------------------- | ------------------------- |
+| Field format   | `FieldFormatDefinition`           | `defineFieldFormat`       |
+| Field resolver | `ResolveField`, `FieldResolution` | Supply a runtime function |
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Field-format Definition contract',
+      path: 'packages/viz/data/src/contract/format.ts',
+      startLine: 5,
+      endLine: 22,
+    },
+    {
+      label: 'Runtime field-resolver contract',
+      path: 'packages/viz/data/src/contract/data.ts',
+      startLine: 5,
+      endLine: 31,
+    },
+    {
+      label: 'Resolver overrides and type validation',
+      path: 'packages/viz/data/src/providers/data/resolve.ts',
+      startLine: 5,
+      endLine: 39,
+    },
+    {
+      label: 'Field-format and resolver order in Plot',
+      path: 'packages/viz/plot/src/pipeline/expand/data.ts',
+      startLine: 97,
+      endLine: 116,
+    },
+  ]}
+/>
+
+## Related
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/data/model/intake">
+    <span className="font-semibold">Data Intake</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Learn field paths, built-in formats, and normalization order.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/transform/extensions">
+    <span className="font-semibold">Data Transform Extensions</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Define custom transforms, reducers, and selectors.
+    </span>
+  </LinkedCard>
+</div>

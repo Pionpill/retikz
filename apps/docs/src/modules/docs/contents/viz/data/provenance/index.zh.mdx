@@ -1,140 +1,147 @@
 ---
-title: 来源追踪
-description: 来源追踪记录 canonical 行和 transform 输出行来自哪些原始行，让下游模块可以解释统计结果、定位异常和构造交互元信息。
+title: 来源追溯
+description: 来源追溯让变换后的数据行仍能回指原始输入，并用可选的运行时事件解释数据怎样被处理。
 ---
 
-数据一旦经过字段映射、解析和 transform，输出行就不一定还能直接等同于原始数据集里的某一行。`@retikz/data` 的 provenance 用来记录这条输出行从哪里来：是原始行、重排行、分组统计行、代表行，还是多个来源合成出的派生行。
+数据经过解析、排序或汇总后，输出行可能已经不再等同于原始数据集中的某一行。`@retikz/data` 用来源追溯回答两个不同的问题：**这行来自哪里**，以及**这次计算经历了什么**。
 
-provenance 是数据层能力，不负责创建 plot 节点 id，也不决定交互命中策略。plot 可以把这些来源信息继续写入 mark meta，table 可以用它解释汇总行，geo 可以用它回溯空间聚合来源。
+来源追溯是宿主无关的数据层能力，不创建 Plot 图元 id，也不决定 tooltip 或命中策略。本文用 Plot、Table 等作为消费示例；这些宿主不属于 Data 契约。
 
-## 记录什么
+## 整体流程
 
-| 字段               | 含义                                       | 典型来源                       |
-| ------------------ | ------------------------------------------ | ------------------------------ |
-| `sourceIndex`      | 原始数据集里的行号；仅能唯一回指原行时存在 | 字段解析、`sort`、`select`     |
-| `sourceIndexes`    | 多个原始行号；适合分组统计或聚合结果       | `summarize`、`annotate`        |
-| `transformedIndex` | 当前阶段输出行序号                         | 每个 transform 阶段            |
-| `derived`          | 该行是否由统计、采样或投影生成             | `summarize`、plot 注册的 `bin` |
-| `operation`        | 产生该行的 transform kind 或处理阶段       | `sort` / `summarize` / custom  |
-| `lineage`          | 需要跨多个阶段保留来源时追加的轻量链路信息 | 多段 transform 管线            |
+<ComponentPreview files="provenance-flow" size="xs" hideCode />
 
-这些字段是调试和消费层元信息，不会改变字段值、scale 推断或 mark 几何。数据层只保证“可追踪时就保留，不可唯一追踪时不伪造单一来源”。
+来源身份在数据进入变换管线时建立。保行变换继续携带单行来源，聚合类变换把多个来源合并成集合，最终与 canonical 行一起交给消费模块。下游不需要根据字段值或输出位置重新猜测来源。
 
-## transform 后的语义
+## 两种来源产物
 
-不同 transform 对来源的保留方式不同：
+<ComponentPreview files="provenance-artifacts" size="sm" hideCode />
 
-| transform 类型           | 来源语义                                       |
-| ------------------------ | ---------------------------------------------- |
-| 保行重写，如 `sort`      | 行仍来自同一原始行，保留 `sourceIndex`         |
-| 代表行选择，如 `select`  | 输出行就是被选中的原始行，保留 `sourceIndex`   |
-| 统计汇总，如 `summarize` | 输出行来自一组原始行，记录 `sourceIndexes`     |
-| 统计标注，如 `annotate`  | 明细行保留自身 `sourceIndex`，附加组统计来源   |
-| 自定义 transform         | definition 负责声明是否能保留或合成 provenance |
+Data 将“随行传播的来源”与“解释一次运行的事件”分成两套产物，避免把审计信息塞进业务数据行。
 
-这个规则避免把统计行伪装成某一条原始数据。比如分组求和后的 `total` 不是任何一个订单，而是一组订单的派生结果；它应该携带来源集合，而不是随便挑一个 `sourceIndex`。
+| 产物           | 载体                                     | 回答的问题                 | 生命周期                      |
+| -------------- | ---------------------------------------- | -------------------------- | ----------------------------- |
+| 行级来源元数据 | `SOURCE_INDEX` / `SOURCE_INDICES` Symbol | 当前行来自哪些输入行       | 随数据行传播                  |
+| 运行时链路事件 | `DataLineageRun.events`                  | 运行了哪些阶段、字段和算子 | 由本次调用返回或发送给 `sink` |
 
-## 下游消费
+### 行级来源元数据
 
-provenance 常见有三类消费者：
+`SOURCE_INDEX` 和 `SOURCE_INDICES` 是 Symbol 键，不是字符串字段名：
 
-| 消费方 | 使用方式                                                                                                                           |
-| ------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| plot   | 把来源信息写入 mark meta，供 tooltip、locator 或调试工具读取；plot 自己注册的 datum id / anchor 仍在[绘图语法](/viz/grammar)下说明 |
-| table  | 在汇总行、筛选行或异常行旁展示来源数量与回溯入口                                                                                   |
-| geo    | 对聚合后的区域、网格或采样点解释来自哪些原始空间记录                                                                               |
+| Symbol           | 何时存在                               | 读取方式                 |
+| ---------------- | -------------------------------------- | ------------------------ |
+| `SOURCE_INDEX`   | 当前行仍能唯一回指一条原始输入行       | `readSourceIndex(row)`   |
+| `SOURCE_INDICES` | 当前行由多条输入行汇总、分组或聚合而成 | `readSourceIndices(row)` |
 
-如果只需要在 plot 里绑定 `x` / `y` / `color`，不需要手动处理 provenance；它是给调试、交互和跨模块解释用的附加数据。
+对象展开会保留这些可枚举 Symbol，因此常规保行变换可以自然传播来源；字段路径解析和 `JSON.stringify` 会忽略它们，不会污染数据字段或可序列化配置。自己组装 Data 管线时可用 `tagSourceIndex` 给输入行打标；`applyTransformsWithLineage` 已自动完成这一步。
 
-## 图元链路
+### 运行时链路事件
 
-需要解释某个图元如何由数据和绘图语义生成时，React 侧仍然按普通 `<Plot>` 写图；宿主需要审计或检查面板时，在 `<Plot>` 上传入链路追踪配置并接收运行时图元链路产物。这份链路不会写入 PlotSpec，也不会塞进 Scene meta。
+链路事件按开关记录 source、transform 阶段、字段流、reducer、selector 或受限的行样本。它们不会写回数据行，也不会进入 JSON IR。`transformedIndex`、transform kind 和字段流等运行信息属于事件或具体宿主的产物，不是 Data 行上的通用字段。
 
-```tsx
-import { useCallback, useMemo, useState } from 'react';
-import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
-import type { PlotLineageOptions, PlotLineageRun } from '@retikz/plot';
+## 来源怎样传播
 
-export function SalesPlot({ sales, queryId }: { sales: Array<Record<string, unknown>>; queryId: string }) {
-  const [, setAuditLineage] = useState<PlotLineageRun | null>(null);
-  const lineage = useMemo<PlotLineageOptions>(
-    () => ({
-      scaleMappings: true,
-      layoutContext: true,
-      rowValues: { maxRows: 3, fields: ['region', 'revenue'] },
-      hostMetadata: { query: true },
-    }),
-    [],
-  );
-  const handleLineage = useCallback((run: PlotLineageRun) => {
-    setAuditLineage(run);
-  }, []);
+<ComponentPreview files="provenance-transform" size="sm" hideCode />
 
-  return (
-    <Plot
-      id="salesPlot"
-      data={sales}
-      width={420}
-      height={260}
-      lineage={lineage}
-      hostLineageMetadata={{ queryId, datasetVersion: 'sales-v3' }}
-      onLineage={handleLineage}
-    >
-      <IntervalMark id="revenueBars" x="region" y="revenue" color="month" />
-      <Axis dimension="x" />
-      <Axis dimension="y" grid />
-    </Plot>
-  );
-}
-```
+| 变换形态                 | 来源语义                                                        |
+| ------------------------ | --------------------------------------------------------------- |
+| 稳定重排，如 `sort`      | 行仍来自同一输入行，保留 `SOURCE_INDEX`                         |
+| 代表行选择，如 `select`  | 输出就是被选中的原始行，保留该行来源                            |
+| 明细标注，如 `annotate`  | 每条明细行保留自身来源；新增统计字段不改变行身份                |
+| 分组汇总，如 `summarize` | 输出行代表整组输入，写入 `SOURCE_INDICES`                       |
+| 自定义改行数变换         | 若输出代表一组输入，必须通过 `context.groupProvenance` 合并来源 |
 
-Vanilla / SSR 侧用同一组配置传给 `renderPlot`；不传链路配置时仍返回 SVG 字符串，传入对象后返回 `{ svg, lineage }`。
+关键约束是：**不可唯一追溯时，不伪造单一来源**。例如分组求和后的 `total` 不是某一笔订单，而是一组订单的派生结果；它应该携带来源集合。
+
+## 记录计算链路
+
+需要解释 transform 顺序、字段输入输出或统计子算子时，用 `applyTransformsWithLineage` 代替 `applyTransforms`。两者执行相同的 transform Definition；前者额外返回运行时事件。
 
 ```ts
-import { plotBuilder, renderPlot } from '@retikz/plot-vanilla';
+import { applyTransformsWithLineage } from '@retikz/data';
 
-const spec = plotBuilder({
-  data: { reference: 'sales' },
-  scales: [
-    { type: 'band', name: 'x' },
-    { type: 'linear', name: 'y' },
-  ],
-  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-})
-  .interval({ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'revenue' } } })
-  .build();
-
-const { svg, lineage } = renderPlot(
-  spec,
-  { sales },
-  {
-    width: 420,
-    height: 260,
-    lineage: {
-      scaleMappings: true,
-      rowValues: { maxRows: 3, fields: ['region', 'revenue'] },
-      hostMetadata: { query: true },
-    },
-    hostLineageMetadata: { queryId: 'q-sales', datasetVersion: 'sales-v3' },
+const { rows, lineage } = applyTransformsWithLineage(sourceRows, operations, {
+  lineage: {
+    sourceIdentity: { mode: 'summary', maxIndices: 10 },
+    fieldFlow: true,
+    reducerOperations: true,
+    rowSamples: { maxRows: 5, fields: ['region', 'revenue', 'total'] },
   },
-);
+});
 ```
 
-默认链路配置 `lineage: {}` 只记录必要摘要：data source / transform step、mark identity、mark encoding，以及 root transform 与 mark-local transform 的分段。`scaleMappings`、`layoutContext`、`locatorAnchors`、`rowValues` 和 `hostMetadata` 都是独立开关；`rowValues` 必须给 `maxRows` 与非空 `fields` 白名单，避免默认复制整行数据。`scaleMappings` 记录的是 `spec.scales` 中声明的 scale 与 mark channel 绑定，不把 lowering 内部派生的临时 scale 当成稳定契约。
+`lineage: {}` 默认只记录来源索引摘要和 transform 阶段摘要，包括顺序、kind、输入 / 输出行数与字段集合。其它信息必须显式开启：
 
-链路下沉会复用同一组 transform definition，并为了保持 `lowerPlots` 返回形状不变而独立执行链路记录。因此自定义 transform 必须和普通 lowering 一样保持确定性、无外部副作用；随机或有状态 transform 需要由宿主先固化输入数据或在自定义 definition 内自行记录额外审计信息。
+| 开关                 | 默认值                    | 记录内容                                                   |
+| -------------------- | ------------------------- | ---------------------------------------------------------- |
+| `sourceIdentity`     | `summary`，最多 20 个索引 | 来源数量、受上限约束的索引前缀和截断状态                   |
+| `transformSteps`     | `true`                    | transform 顺序、kind、行数和字段集合                       |
+| `fieldFlow`          | `false`                   | 每个阶段读取与产出的字段                                   |
+| `reducerOperations`  | `false`                   | reducer 配置、字段、行数与来源摘要                         |
+| `selectorOperations` | `false`                   | selector 配置、输入来源与选中来源摘要                      |
+| `rowSamples`         | `false`                   | transform 前后受行数和字段白名单约束的样本                 |
+| `calculationDetails` | `false`                   | reducer 输入或 selector 候选详情，同样要求行数与字段白名单 |
 
-需要把交互命中的 datum 反查到来源时，用 `createPlotLineageLocator`。它在原 locator anchor 之外返回 datum 的 `markIndex`、`transformedIndex` 与 source identity 摘要，适合做 tooltip、AI 解释面板或审计入口。
+`sourceIdentity: { mode: 'full' }` 会记录完整来源索引，必须由宿主明确开启。`rowSamples` 与 `calculationDetails` 都要求正整数 `maxRows` 和非空 `fields`，避免默认复制整行数据。
 
-## 自定义定义
+如果提供 `lineage.sink`，事件会逐条发送给回调，默认不再保留到返回的 `lineage.events`。宿主同时需要流式消费和完整数组时，再设置 `retainEvents: true`。
 
-自定义 transform 应尽量显式声明 provenance 行为：
+## 消费边界
 
-| 情况                 | 建议                                             |
-| -------------------- | ------------------------------------------------ |
-| 一行输入对应一行输出 | 复制输入行 provenance，并更新 `transformedIndex` |
-| 多行规约成一行       | 写入来源集合，不写单一 `sourceIndex`             |
-| 生成采样 / 模拟行    | 标记 `derived`，并写明 `operation`               |
-| 来源无法可靠追踪     | 省略来源字段，不伪造可追踪性                     |
+<ComponentPreview files="provenance-consumers" size="md" hideCode />
 
-这样下游模块可以在不理解自定义算法细节的情况下，仍然知道一行数据是否可回溯、能回溯到多少原始行，以及这条来源链是否经过派生。
+Data 只交付数据行、行级来源和可选链路事件；怎样把它们变成视图、交互或审计面板，由具体宿主决定。
+
+| 消费方   | 典型用途                                                 |
+| -------- | -------------------------------------------------------- |
+| Plot     | 把 Data 链路补充为图元、比例尺和布局语义，支持定位与审计 |
+| Table    | 解释汇总行、筛选行或异常行来自哪些明细                   |
+| 其它宿主 | 按自身契约追溯聚合、采样或派生结果                       |
+
+只做字段绑定、排序或汇总时通常不需要直接读取来源元数据；它主要服务回查、诊断和审计。Plot 如何生成宿主专属链路，见[图元链路](/viz/plot/lineage)。
+
+<SourceLinks
+  sources={[
+    {
+      label: '行级来源 Symbol 与传播 helper',
+      path: 'packages/viz/data/src/pipeline/provenance.ts',
+      startLine: 1,
+      endLine: 56,
+    },
+    {
+      label: '数据链路选项与事件契约',
+      path: 'packages/viz/data/src/contract/lineage.ts',
+      startLine: 25,
+      endLine: 126,
+    },
+    {
+      label: '链路默认值与安全白名单',
+      path: 'packages/viz/data/src/pipeline/lineage.ts',
+      startLine: 43,
+      endLine: 99,
+    },
+    {
+      label: '带链路的数据变换入口',
+      path: 'packages/viz/data/src/pipeline/transform.ts',
+      startLine: 78,
+      endLine: 130,
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+  <LinkedCard href="/viz/data/transform">
+    <span className="font-semibold">数据变换</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">理解各类变换怎样改变行与字段。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/transform/extensions">
+    <span className="font-semibold">扩展机制</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">让自定义 transform 正确传播来源。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/lineage">
+    <span className="font-semibold">图元链路</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">把数据来源扩展成 Plot 运行时语义。</span>
+  </LinkedCard>
+</div>

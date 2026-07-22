@@ -8,14 +8,14 @@ import type { TableStructureOutput } from '../../src';
 import {
   defineCellPresentation,
   defineTableStructure,
-  normalizeTableStructure,
-  presentTable,
   resolveTableStructureRegistry,
   TableCellLocation,
   TableCellRole,
   TableCellSourceKind,
   TableRowKind,
 } from '../../src';
+import { normalizeTableStructure } from '../../src/pipeline/normalize';
+import { presentTable } from '../../src/pipeline/presentation';
 
 const bodyCell = (row: number, column: number, value: string | number | boolean | null) => ({
   address: { row, column },

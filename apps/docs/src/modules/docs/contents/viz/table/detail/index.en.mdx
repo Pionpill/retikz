@@ -5,13 +5,13 @@ description: Use DetailTable to map each external record into one Cell row and r
 
 Detail tables fit two-dimensional data with one record per row, such as lists, ledgers, and record sets. Declare a data reference and columns; `DetailTable` reads every record in column order and generates header and body Cells.
 
-> v0.1 currently exposes Detail Table as its only business-facing table type. `ManualTable` is a low-level Structure entry for declaring rows, columns, and Cells directly, not a second table type beside Detail Table; both converge on the same Table model.
-
 ## Usage
 
 ```tsx
-import { DetailTable } from '@retikz/table-react';
+import { DetailColumn, DetailTable } from '@retikz/table-react';
 ```
+
+For programmatic column construction, pass the complete `columns` prop:
 
 ```tsx
 <DetailTable
@@ -26,11 +26,22 @@ import { DetailTable } from '@retikz/table-react';
 
 `dataRef` is the stable reference stored in TableSpec. `data` contains current runtime records and never enters the persistable spec. `columns` controls field access, display order, headers, and optional Cell presentations.
 
+For JSX-local column declarations, use `DetailColumn` children:
+
+```tsx
+<DetailTable id="scores" dataRef="scores" data={rows}>
+  <DetailColumn id="name" field="name" header="Name" />
+  <DetailColumn id="score" field="score" header="Score" />
+</DetailTable>
+```
+
+Choose either `columns` or `DetailColumn` children. Both forms produce the same detail-table spec, and every `DetailTable` root prop other than `columns` is available in both forms.
+
 ## Examples
 
 ### Basic detail table
 
-Header strings become value Cells automatically. The three external records below map into three rows in `columns` order:
+Header strings become value Cells automatically. The three external records below map into three rows in `DetailColumn` declaration order:
 
 <ComponentPreview files={['table-detail', 'table-detail.data.ts']} size="sm" />
 
@@ -78,22 +89,32 @@ const svg = renderTable(spec, { data: { scores: rows } });
 
 ### DetailTable
 
-| Prop                      | Type                                           | Default              | Description                                                    |
-| ------------------------- | ---------------------------------------------- | -------------------- | -------------------------------------------------------------- |
-| `dataRef`                 | `string`                                       | —                    | External dataset reference stored in the spec                  |
-| `data`                    | `Array<ExternalRow>`                           | —                    | Current detail records; excluded from the spec                 |
-| `columns`                 | `Array<TableDetailColumnInput>`                | —                    | Fields, headers, and presentations in display order            |
-| `model`                   | `IRDataModel`                                  | —                    | Optional field model                                           |
-| `header`                  | `boolean`                                      | `true`               | Whether to generate a column-header row                        |
-| `id`                      | `string`                                       | —                    | Stable Table id; required inside a parent `Layout`             |
-| `layout`                  | `IRTableLayout`                                | fixed-track defaults | Column width, body/header heights, and row/column gaps         |
-| `structureDefinitions`    | `ReadonlyArray<AnyTableStructureDefinition>`   | `[]`                 | Custom structure definitions                                   |
-| `presentationDefinitions` | `ReadonlyArray<AnyCellPresentationDefinition>` | `[]`                 | Custom Cell presentation definitions                           |
-| `composites`              | `ReadonlyArray<CompositeDefinition>`           | `[]`                 | Definitions required by Tier 2 Cell content                    |
-| `onManifest`              | `(manifest: TableLayoutManifest) => void`      | —                    | Standalone layout artifact callback; unsupported when embedded |
-| `width` / `height`        | `number \| string`                             | —                    | Host size; does not change fixed tracks                        |
-| `renderer`                | `'svg' \| 'canvas'`                            | `'svg'`              | Rendering backend                                              |
-| `className` / `style`     | `string`<br />`CSSProperties`                  | —                    | Passed to the rendering host                                   |
+| Prop                      | Type                                           | Default              | Description                                                              |
+| ------------------------- | ---------------------------------------------- | -------------------- | ------------------------------------------------------------------------ |
+| `dataRef`                 | `string`                                       | —                    | External dataset reference stored in the spec                            |
+| `data`                    | `Array<ExternalRow>`                           | —                    | Current detail records; excluded from the spec                           |
+| `columns`                 | `Array<TableDetailColumnInput>`                | —                    | Programmatic fields, headers, and presentations; exclusive with children |
+| `children`                | `ReactNode`                                    | —                    | `DetailColumn` declarations in order; exclusive with `columns`           |
+| `model`                   | `IRDataModel`                                  | —                    | Optional field model                                                     |
+| `header`                  | `boolean`                                      | `true`               | Whether to generate a column-header row                                  |
+| `id`                      | `string`                                       | —                    | Stable Table id; required inside a parent `Layout`                       |
+| `layout`                  | `IRTableLayout`                                | fixed-track defaults | Column width, body/header heights, and row/column gaps                   |
+| `structureDefinitions`    | `ReadonlyArray<AnyTableStructureDefinition>`   | `[]`                 | Custom structure definitions                                             |
+| `presentationDefinitions` | `ReadonlyArray<AnyCellPresentationDefinition>` | `[]`                 | Custom Cell presentation definitions                                     |
+| `composites`              | `ReadonlyArray<CompositeDefinition>`           | `[]`                 | Definitions required by Tier 2 Cell content                              |
+| `onManifest`              | `(manifest: TableLayoutManifest) => void`      | —                    | Standalone layout artifact callback; unsupported when embedded           |
+| `width` / `height`        | `number \| string`                             | —                    | Host size; does not change fixed tracks                                  |
+| `renderer`                | `'svg' \| 'canvas'`                            | `'svg'`              | Rendering backend                                                        |
+| `className` / `style`     | `string`<br />`CSSProperties`                  | —                    | Passed to the rendering host                                             |
+
+### DetailColumn
+
+| Prop           | Type                               | Default | Description                                          |
+| -------------- | ---------------------------------- | ------- | ---------------------------------------------------- |
+| `id`           | `string`                           | —       | Stable column identifier                             |
+| `field`        | `string`                           | —       | Field read from each record                          |
+| `header`       | `IRTableCellPayload`<br />`string` | —       | Header payload; strings normalize to value Cells     |
+| `presentation` | `IRTablePresentationRef`           | —       | Optional presentation reference for body value Cells |
 
 `detailTable(input)` accepts the same spec inputs and returns `IRDetailTableSpec`. See [API Reference](/viz/table/reference) for complete `Table`, `ManualTable`, schema, adapter, and lowering contracts.
 

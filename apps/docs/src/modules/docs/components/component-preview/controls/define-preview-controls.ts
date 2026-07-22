@@ -10,6 +10,8 @@ import type {
 } from '../types';
 
 const COLOR_HEX_PATTERN = /^#[0-9a-fA-F]{6}$/;
+const MIN_PANEL_SIZE = 18;
+const MAX_PANEL_SIZE = 45;
 
 /** 获取控件定义中的扁平字段列表 */
 export const getPreviewControlFields = (definition: PreviewControlsDefinition): Array<PreviewControlField> =>
@@ -141,6 +143,14 @@ const validatePreviewControls = (definition: PreviewControlsDefinition): void =>
     if (field.visibleWhen) validateControlCondition(field.visibleWhen, ids);
   }
   if (definition.presentation === 'panel') {
+    if (
+      definition.defaultSize !== undefined &&
+      (!Number.isFinite(definition.defaultSize) ||
+        definition.defaultSize < MIN_PANEL_SIZE ||
+        definition.defaultSize > MAX_PANEL_SIZE)
+    ) {
+      throw new Error(`Preview panel defaultSize must be between ${MIN_PANEL_SIZE} and ${MAX_PANEL_SIZE}.`);
+    }
     for (const section of definition.sections) {
       if (section.visibleWhen) validateControlCondition(section.visibleWhen, ids);
     }

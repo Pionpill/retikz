@@ -1,0 +1,68 @@
+---
+title: Statistical Sub-operators
+description: Use reducers to produce statistical fields, selectors to preserve representative rows, and combine quantile bands, whiskers, and outliers.
+---
+
+Reducers and selectors are reusable statistical sub-operators inside data transforms. A reducer collapses a group of rows into a field fragment; a selector returns original rows from the group. Both are JSON-serializable configuration executed by built-in or custom Definitions.
+
+`summarize`, `annotate`, and Plot-registered `bin` reuse reducers. `select`, `annotate`, and Plot-registered `relate` reuse selectors. Plot consumes these capabilities but does not own Data's statistical contract.
+
+## Choose a sub-operator
+
+| Goal                                              | Use                   | Returns                                 |
+| ------------------------------------------------- | --------------------- | --------------------------------------- |
+| Compute sum, mean, quantiles, or other new fields | reducer               | Fields named by `as` or `outputs`       |
+| Preserve complete extreme, top-N, or outlier rows | selector              | Original rows with ids, labels, etc.    |
+| Broadcast one statistic to every detail row       | `annotate` + reducer  | Original rows with a statistical field  |
+| Broadcast values from one representative row      | `annotate` + selector | Original rows with representative value |
+
+## Reducers
+
+| kind            | input config                            | output config | meaning                                             |
+| --------------- | --------------------------------------- | ------------- | --------------------------------------------------- |
+| `count`         | —                                       | `as`          | Number of rows in the group                         |
+| `sum`           | `field`                                 | `as`          | Sum of finite numeric values                        |
+| `mean`          | `field`                                 | `as`          | Arithmetic mean                                     |
+| `median`        | `field`                                 | `as`          | Median                                              |
+| `min` / `max`   | `field`                                 | `as`          | Minimum / maximum                                   |
+| `extent`        | `field`                                 | `as`          | `[min, max]` extent                                 |
+| `quantile`      | `field`, `p`                            | `as`          | One quantile at probability `p`                     |
+| `quantile-band` | `field`, `lowerP`, `upperP`, `whisker?` | `outputs`     | Quantile interval plus optional spread and whiskers |
+
+Ordinary reducers use `as` for one output field. `quantile-band` produces related fields together, so it uses an `outputs` mapping instead: `lower` and `upper` are required; add `points`, `spread`, `lowerFence`, `upperFence`, `whiskerMin`, `whiskerMax`, `min`, `max`, and `count` as needed. Every output name must be unique.
+
+`whisker` may be `{ kind: 'minMax' }` or `{ kind: 'spread', factor?: number }`; the default spread factor is `1.5`.
+
+When a field has no finite numeric values, `sum` keeps the empty-sum identity `0` and `count` reports the group row count. `mean`, `median`, `min`, `max`, `extent`, `quantile`, and `quantile-band` return an invalid sentinel for downstream skip / error handling instead of fabricating zero.
+
+## Selectors
+
+| kind                    | required config             | optional config | selection rule                                        |
+| ----------------------- | --------------------------- | --------------- | ----------------------------------------------------- |
+| `min` / `max`           | `by`                        | `tie`           | Row with the numeric minimum / maximum                |
+| `first` / `last`        | —                           | `orderBy`       | First / last row in current or explicit order         |
+| `top` / `bottom`        | `by`, `n`                   | `tie`           | First / last N ranked rows                            |
+| `nth`                   | `orderBy`, `index`          | —               | Zero-based row after explicit ordering                |
+| `outside-quantile-band` | `field`, `lowerP`, `upperP` | `boundary`      | Original rows outside a quantile band or spread fence |
+
+`tie` defaults to `first` and also accepts `last` or `all`. `orderBy` is an array of `{ field, order? }`, with `order` defaulting to `ascending`. `outside-quantile-band.boundary` defaults to `{ kind: 'band' }`; for conventional boxplot outliers, use `{ kind: 'spread', factor?: 1.5 }`.
+
+`select` accepts the complete selector set. `annotate` accepts only the subset that returns at most one row; see [annotate](/viz/data/transform/operations#annotate) for the exact restriction.
+
+## Compose boxplot data
+
+`quantile-band` uses `lowerP` and `upperP` for arbitrary quantile intervals instead of hard-coding q1 / q3. `outside-quantile-band` returns original rows beyond that interval, preserving outlier ids, labels, and provenance.
+
+<ComponentPreview files={['transform-boxplot', 'transform-boxplot.data.ts']} />
+
+The boxplot above has no dedicated `BoxPlotMark`. Data transforms produce the box, median, whisker, and outlier rows; the Plot example only consumes those fields through `IntervalMark`, `ReferenceMark`, and `PointMark`.
+
+## TypeScript Types
+
+| Scope     | Types                                                                                  |
+| --------- | -------------------------------------------------------------------------------------- |
+| Reducers  | `IRDataReducerOperation`, `IRDataReducerMetrics`, `IRDataQuantileBandReducerOperation` |
+| Selectors | `IRDataSelectorOperation`, `IRDataOutsideQuantileBandSelectorOperation`                |
+| Ordering  | `IRDataOrderBy`                                                                        |
+
+See [Extension Mechanisms](/viz/data/transform/extensions) to register a custom reducer or selector.

@@ -172,8 +172,8 @@ def.expand(spec); // spec.coordinate = { type:'custom', name:'bridge', roles:['x
 - `packages/viz/plot/tests/lower/custom-coordinate.test.ts`（修改：加 frameAlong 契约 case + 迁 createCustomFrame 调用到 options 对象）
 - `packages/viz/plot/tests/lower/coordinate-frame.test.ts`（修改：built-in 回归）
 - `packages/viz/plot-react/tests/components/buildPlotSpec.test.tsx`（修改：custom 表面 case）
-- `apps/docs/src/modules/docs/contents/viz/grammar/coordinate/index.{zh,en}.mdx`（修改：实验性 → 正式 + frameAlong 说明）
-- `apps/docs/src/modules/docs/contents/viz/grammar/coordinate/coordinate-custom-bridge.demo.tsx`（修改：迁 options 对象 + 示范 frameAlong，按需）
+- `apps/docs/src/modules/docs/contents/viz/plot/coordinate/index.{zh,en}.mdx`（修改：实验性 → 正式 + frameAlong 说明）
+- `apps/docs/src/modules/docs/contents/viz/plot/coordinate/coordinate-custom-bridge.demo.tsx`（修改：迁 options 对象 + 示范 frameAlong，按需）
 
 ### 测试象限
 
