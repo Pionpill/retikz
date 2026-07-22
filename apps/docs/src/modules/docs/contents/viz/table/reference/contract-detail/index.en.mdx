@@ -1,0 +1,47 @@
+---
+title: Contract - Detail Table
+description: Look up the precise JSON schemas for external data references, detail columns, and the record-per-row Structure.
+---
+
+Detail Table contracts persist “one external record becomes one row” as a serializable rule without copying records into IR. `data.ref` points to a runtime dataset, while `structure.columns` controls field access, column order, headers, and body presentations.
+
+## DetailTableSpec
+
+`IRDetailTableSpec` is the precise detail-table root. Unlike aggregate `IRTableSpec`, it requires `data` and narrows `structure` to the detail variant.
+
+| Field               | Type                         | Default | Description                             |
+| ------------------- | ---------------------------- | ------- | --------------------------------------- |
+| `data`              | `IRDataReference`            | —       | Required external dataset reference     |
+| `structure.kind`    | `'detail'`                   | —       | Record-per-row Structure discriminator  |
+| `structure.columns` | `Array<IRTableDetailColumn>` | —       | At least one column with unique ids     |
+| `structure.header?` | `boolean`                    | `true`  | Whether to generate a column-header row |
+
+### DetailTableSpecSchema
+
+<ZodSchema name="DetailTableSpecSchema" />
+
+## Detail Structure
+
+### DetailTableStructureSchema
+
+<ZodSchema name="DetailTableStructureSchema" />
+
+Field paths support dotted access. Runtime resolution fails when a declared field is missing; source records always stay in the external dataset instead of being copied into TableSpec.
+
+## Column
+
+### TableDetailColumnSchema
+
+<ZodSchema name="TableDetailColumnSchema" />
+
+Authoring-side `TableDetailColumnInput` also accepts a string `header`. `createDetailTableSpec()`, `DetailTable`, and `detailTable()` normalize it to `{ kind: 'value', value: header }`.
+
+## When to use the precise schema
+
+An LLM, form, or persistence endpoint that only emits detail tables should use `DetailTableSpecSchema`, avoiding irrelevant manual/custom fields. Switch to aggregate `TableSpecSchema` only when one protocol must accept several Table root variants.
+
+## Related
+
+- [Table contracts](/viz/table/reference/contract-table) — shared root fields, Cells, and Layout schemas
+- [Detail Table](/viz/table/detail) — React and Vanilla usage
+- [Runtime](/viz/table/reference/runtime) — spec helpers, adapters, lowering, and SSR

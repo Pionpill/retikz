@@ -4,15 +4,15 @@
 
 ## 包职责与边界
 
-| 包                      | 解决的问题                             | 拥有                                                                   | 不拥有                                               |
-| ----------------------- | -------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------- |
-| `@retikz/data`          | 为多个可视化宿主提供统一数据处理底座   | 数据模型、字段解析、通用 transform / statistics、registry、lineage     | channel、scale、mark、可视化布局、renderer           |
-| `@retikz/plot`          | 把数据语义映射成可组合的 Core 图形语义 | Plot IR、channel / scale / coordinate / mark / guide、layout、lowering | 通用数据算法、Core IR 语义、renderer、框架 authoring |
-| `@retikz/plot-react`    | 用 React JSX authoring 和运行 Plot     | React 组件、composition builder、数据注入和 React runtime 接线         | Data / Plot 算法、Core 编译、renderer                |
-| `@retikz/plot-vanilla`  | 无框架 authoring、SSR 和运行 Plot      | plot builder、数据注入、vanilla / SSR 编排                             | Data / Plot 算法、Core 编译、renderer                |
-| `@retikz/table`         | 把数据或显式内容组织为二维语义表格     | Table IR、结构/呈现、约束布局、lowering、追溯                          | 通用数据算法、Core 测量、Plot 语义、renderer         |
-| `@retikz/table-react`   | 用 React authoring 和运行 Table        | React 组件、数据注入、composite 与宿主 runtime 接线                    | Table 算法、Core 编译、renderer                      |
-| `@retikz/table-vanilla` | 无框架 authoring、SSR 和运行 Table     | table builder、数据注入、vanilla / SSR 编排                            | Table 算法、Core 编译、renderer                      |
+| 包                      | 解决的问题                             | 拥有                                                                       | 不拥有                                               |
+| ----------------------- | -------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `@retikz/data`          | 为多个可视化宿主提供统一数据处理底座   | 数据模型、字段解析、通用 transform / statistics、registry、lineage         | channel、scale、mark、可视化布局、renderer           |
+| `@retikz/plot`          | 把数据语义映射成可组合的 Core 图形语义 | Plot IR、channel / scale / coordinate / mark / guide、layout、lowering     | 通用数据算法、Core IR 语义、renderer、框架 authoring |
+| `@retikz/plot-react`    | 用 React JSX authoring 和运行 Plot     | React 组件、composition builder、数据注入和 React runtime 接线             | Data / Plot 算法、Core 编译、renderer                |
+| `@retikz/plot-vanilla`  | 无框架 authoring、SSR 和运行 Plot      | plot builder、数据注入、vanilla / SSR 编排                                 | Data / Plot 算法、Core 编译、renderer                |
+| `@retikz/table`         | 把数据或显式内容组织为二维语义表格     | Table IR、结构/呈现、约束布局、lowering、追溯                              | 通用数据算法、Core 测量、Plot 语义、renderer         |
+| `@retikz/table-react`   | 用 React authoring 和运行 Table        | Table / DetailTable / ManualTable、数据注入、composite 与宿主 runtime 接线 | Table 算法、Core 编译、renderer                      |
+| `@retikz/table-vanilla` | 无框架 authoring、SSR 和运行 Table     | plain helper、Tier 2 adapter、数据注入与 SSR convenience                   | Table 算法、Core 编译、renderer                      |
 
 未来的 chart / geo 等边界只在 ADR 或 roadmap 明确后落包；AGENTS 不为未存在包保留详细规则。
 
@@ -33,7 +33,7 @@
 - `@retikz/data` 的主责边界见 [`data-capability-complete.md`](./_notes/architecture/data-capability-complete.md)。
 - `@retikz/plot` 的主责边界见 [`plot-visualization-complete.md`](./_notes/architecture/plot-visualization-complete.md)。
 - `@retikz/table` 的主责边界见 [`table-visualization-complete.md`](./_notes/architecture/table-visualization-complete.md)。
-- 新能力先判断属于 Data Complete、Visualization Complete 还是应下沉 Drawing Complete；adapter / preset 能展示不等于能力闭环。
+- 新能力先判断属于 Data Complete、Visualization Complete、Tabular Visualization Complete 还是应下沉 Drawing Complete；adapter / preset 能展示不等于能力闭环。
 
 ## 代码风格
 

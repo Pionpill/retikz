@@ -148,7 +148,7 @@ export const PathRibbonOptionsSchema = z
   .superRefine((options, ctx) => {
     if (options.samples !== undefined && options.sampling !== undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['sampling'],
         message: 'Use either `samples` or `sampling`, not both.',
       });
@@ -156,14 +156,14 @@ export const PathRibbonOptionsSchema = z
     if (options.mode === 'boundary') {
       if (options.upper === undefined) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['upper'],
           message: 'Boundary ribbons require `upper` steps.',
         });
       }
       if (options.lower === undefined) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['lower'],
           message: 'Boundary ribbons require `lower` steps.',
         });
@@ -171,7 +171,7 @@ export const PathRibbonOptionsSchema = z
       for (const field of ['width', 'align', 'start', 'end', 'interpolation'] as const) {
         if (options[field] !== undefined) {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: 'custom',
             path: [field],
             message: `Boundary ribbons do not use \`${field}\`.`,
           });
@@ -183,21 +183,21 @@ export const PathRibbonOptionsSchema = z
     const hasEndWidth = options.end?.width !== undefined;
     if (options.width !== undefined && (hasStartWidth || hasEndWidth)) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['width'],
         message: 'Use either top-level `width` or `start.width` + `end.width`, not both.',
       });
     }
     if (options.width === undefined && (!hasStartWidth || !hasEndWidth)) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['start'],
         message: 'Centerline ribbons require either top-level `width` or both `start.width` and `end.width`.',
       });
     }
     if (options.width !== undefined && options.interpolation !== undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['interpolation'],
         message: '`interpolation` only applies to start.width/end.width taper.',
       });
@@ -205,7 +205,7 @@ export const PathRibbonOptionsSchema = z
     for (const field of ['upper', 'lower'] as const) {
       if (options[field] !== undefined) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: [field],
           message: `Centerline ribbons do not use \`${field}\`.`,
         });

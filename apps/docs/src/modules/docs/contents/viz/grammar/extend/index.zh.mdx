@@ -5,7 +5,7 @@ description: 扩展绘图语法——把通道、比例尺、坐标系和图元�
 
 这一分组讲怎么**扩展** plot 绘图语法。内置语法覆盖常见图表；当你要接入新的通道、比例尺、坐标投影或图元时，扩展 definition 会在运行时注入，并复用内置能力同一套解析、校验和 lowering（图形下沉）流程。
 
-数据格式、字段解析和数据 transform 属于[数据流](/viz/data)：自定义字段格式见[数据模型](/viz/data/model)，自定义 transform / reducer / selector 见[数据变换](/viz/data/transform)。plot 可以消费这些 data 能力，但它们不再放在绘图语法的扩展分组里。
+数据格式、字段解析和数据 transform 属于[数据](/viz/data)：自定义字段格式见[数据模型](/viz/data/model)，自定义 transform / reducer / selector 见[数据变换](/viz/data/transform)。plot 可以消费这些 data 能力，但它们不再放在绘图语法的扩展分组里。
 
 > 扩展 definition 是宿主能力，不直接写进 Plot IR。IR 只保存可序列化的 type、name、字段绑定和 JSON 配置；函数、投影、求值器、lower 函数都由 `<Plot>` props 或 vanilla options 注入。
 
@@ -20,7 +20,7 @@ description: 扩展绘图语法——把通道、比例尺、坐标系和图元�
 
 ## 三条边界
 
-- **数据与绘图分层**：真实数据、解析函数和数据 transform 属于数据流；PlotSpec 只记录绘图相关的字段绑定和可序列化配置。
+- **数据与绘图分层**：真实数据、解析函数和数据 transform 属于数据层；PlotSpec 只记录绘图相关的字段绑定和可序列化配置。
 - **内置与自定义同机制**：自定义 definition 不走私有补丁口，而是和内置能力一起注册、解析、校验和消费。
 - **下沉仍回到 core**：自定义坐标系和图元可以决定几何怎么生成，但最终产物仍应是 core Node / Path / Coordinate / Scope 等基础图元。
 

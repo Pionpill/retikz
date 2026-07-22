@@ -11,7 +11,7 @@ export type CompositeDefinition<T = unknown> = {
   namespace: string;
   /** composite IR 节点引用的 provider type */
   type: string;
-  /** 完整节点 schema（extend CompositeBaseSchema；namespace / type 为 literal） */
+  /** 完整节点 schema；单个对象或对象 union 的 namespace / type 必须是相同 literal */
   schema: ZodType<T>;
   /** 把该 composite 节点展开成 Tier 1 IR 的纯函数；据节点字段不同产不同子树 */
   expand: (node: T) => IRChild | Array<IRChild>;

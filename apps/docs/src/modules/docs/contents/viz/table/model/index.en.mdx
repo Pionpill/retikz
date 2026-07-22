@@ -1,0 +1,61 @@
+---
+title: Table Model
+description: Understand the Structure, Cell, Presentation, Layout, and lowering pipeline shared by every table type.
+---
+
+A detail table generates Cells from records, an explicit grid lists Cells directly, and a custom structure asks an extension definition to produce Cells. Their inputs differ, but they converge on one semantic model and then share presentation, layout, and lowering.
+
+## One shared pipeline
+
+This pipeline is Table's internal model, not a second product API that everyday users must author stage by stage. `DetailTable`, `ManualTable`, and a complete `TableSpec` are simply different entries into it.
+
+<ComponentPreview files="table-model-pipeline" hideCode size="xs" />
+
+`Structure` determines rows, columns, and Cells. The semantic model gives every Cell a stable identity, location, role, and source. `Presentation` turns Cell payloads into Core children, and `Layout` computes fixed tracks and Cell boxes. One resolution produces both renderable Core IR and a traceable manifest.
+
+## Structure: how a table produces Cells
+
+`structure.kind` discriminates the current structure operation. v0.1 has two built-in structures and permits registered custom structures:
+
+| kind     | Where the data lives                                          | Intended use                                   |
+| -------- | ------------------------------------------------------------- | ---------------------------------------------- |
+| `detail` | Field mappings live in spec; records arrive at runtime        | Record-per-row detail tables                   |
+| `manual` | Dimensions and Cells live directly in spec                    | Low-level scenarios that need an explicit grid |
+| custom   | Custom parameters live in spec and a definition resolves them | Extension-defined structure operations         |
+
+`manual` and `detail` are built-in Structures, not separate table engines. Custom Structures reuse the same definition registry, semantic output, and consumer pipeline. An LLM or tool that emits one table type should retain the precise `IRDetailTableSpec`, `IRManualTableSpec`, or `IRCustomTableSpec`; use aggregate `IRTableSpec` only when one store or protocol accepts several variants.
+
+### Explicit-grid entry
+
+`ManualTable` declares dimensions and zero-based Cell addresses directly. It suits headers, summaries, or static grids without external records. It is a low-level entry into the shared model, not a second business table type beside Detail Table.
+
+<ComponentPreview files={['table-manual', 'table-manual.en.data.ts']} size="xs" />
+
+## Cells and Presentation
+
+Each Cell's `payload.kind` selects where its content comes from:
+
+| kind      | Stored content                                        | Processing                                                         |
+| --------- | ----------------------------------------------------- | ------------------------------------------------------------------ |
+| `value`   | A JSON scalar plus an optional presentation reference | Resolved by a presentation definition; defaults to `text`          |
+| `content` | A JSON-safe Core or Tier 2 child                      | Used directly in Cell-local coordinates without value presentation |
+
+`{ kind: 'value', value: 'Score' }` therefore means “this is a scalar value to present.” `value` is the variant discriminator, not an alias for the JavaScript string type. Use `content` when a Cell directly hosts a Node, Path, or another Tier 2 child.
+
+Presentation only turns a value into Core content; it does not decide which row owns the Cell or how wide it is. Built-in `text` and custom presentations resolve through the same registry.
+
+## Layout and Manifest
+
+v0.1 uses fixed tracks. Every column shares `columnWidth`, body rows share `rowHeight`, headers may use `headerHeight`, and row or column gaps are configurable. Cell content never feeds back into track size.
+
+`TableLayoutManifest` records table bounds, row and column offsets/sizes, and each Cell's box, semantic location, roles, and optional source. Hit testing, debugging, export, or higher-level interaction can consume layout results without reverse-engineering SVG geometry.
+
+## Extension boundary
+
+Extension authors can add a Structure through `defineTableStructure()` or a value presentation through `defineCellPresentation()`. Both definitions arrive at runtime and stay outside JSON TableSpec. New capabilities must still output the shared semantic model or a Core child instead of bypassing the pipeline with parallel layout and rendering semantics.
+
+## Related
+
+- [Detail Table](/viz/table/detail) — the record-to-row user entry
+- [API Reference](/viz/table/reference) — precise schemas, React / Vanilla APIs, and lowering contracts
+- [Composite](/kernel/concepts/design/composite) — how Tier 2 capabilities enter the Core compile pipeline

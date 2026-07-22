@@ -7,7 +7,7 @@ import { z } from 'zod';
 const sin = definePathGenerator({
   name: 'sin',
   paramsSchema: z.strictObject({
-    amplitude: z.number().finite().nonnegative(),
+    amplitude: z.number().nonnegative(),
     waves: z.number().int().positive(),
   }),
   generate: ({ from, to, params }) => {

@@ -90,6 +90,39 @@ describe('lowerComposites — happy path', () => {
     };
     expect(compileToScene(irComposite, { composites: [labeledBox] })).toEqual(compileToScene(irManual));
   });
+
+  it('object-union-schema: 相同 composite key 的变体共用一次注册与展开', () => {
+    const schema = z.union([
+      CompositeBaseSchema.extend({
+        namespace: z.literal('example'),
+        type: z.literal('variantBox'),
+        variant: z.literal('text'),
+        value: z.string(),
+      }),
+      CompositeBaseSchema.extend({
+        namespace: z.literal('example'),
+        type: z.literal('variantBox'),
+        variant: z.literal('count'),
+        value: z.number(),
+      }),
+    ]);
+    const variantBox = defineComposite({
+      namespace: 'example',
+      type: 'variantBox',
+      schema,
+      expand: node => ({ type: 'node', position: [0, 0], text: String(node.value) }),
+    });
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { namespace: 'example', type: 'variantBox', variant: 'text', value: 'A' },
+        { namespace: 'example', type: 'variantBox', variant: 'count', value: 2 },
+      ],
+    };
+
+    expect(() => compileToScene(ir, { composites: [variantBox] })).not.toThrow();
+  });
 });
 
 describe('lowerComposites — 边界', () => {

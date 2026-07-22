@@ -133,18 +133,13 @@ const scene = compileToScene({ version: 1, type: 'scene', children: [tableSpec] 
 const { node, manifest } = lowerTableWithArtifacts(tableSpec, { sales: rows });
 ```
 
-## 测试设计
+## 实现摘要与验证
 
-- manual/detail 产生合法 Core Scope / Node
-- Table id 映射到外层 Scope id
-- Cell translation 与 TableLayout center 一致
-- empty/manual、1×1 与带 gap 表格的 bounds sentinel 使 Core AABB 覆盖完整 TableLayout bounds
-- lowerTables 与 lowerTableWithArtifacts node 深相等
-- nested composite 保留并由 Core 递归 lowering
-- 缺 dataset、未注册 structure/presentation、非法 provider output fail-loud
-- manifest row/column/cell boxes 与 layout 深相等
-- manifest 全对象图递归冻结，且与 layout/model/node 不共享可变对象
-- 重复调用无全局状态且结果确定
+`resolveTable()` 已串联根校验、structure、presentation、layout、emit 与 manifest；`lowerTables()` 通过 Core composite 返回普通渲染节点，`lowerTableWithArtifacts()` 通过显式调用返回同一算法生成的 node 与递归冻结 manifest。bounds sentinel、局部命名空间、根 id 与 Cell source meta 均已落地。
+
+验证覆盖 manual/detail、空表与 gap bounds、stable id、Cell translation、nested composite、普通 lowering 与 artifact node 等价、manifest/layout 一致、错误诊断、所有权隔离和重复调用确定性。
+
+当前 artifact/manifest 消费仍会与普通 composite 渲染分别调用一次 Table resolve；这是显式 sidecar 不穿过 Core 隐藏状态的成本。Definition 保持纯且确定可保证结果一致，后续若优化重复计算，必须继续维持无全局 side channel 的边界。
 
 ## 影响
 
@@ -172,43 +167,3 @@ const { node, manifest } = lowerTableWithArtifacts(tableSpec, { sales: rows });
 - background、border、clip、span、fragment
 - per-Cell Core id 与外部 anchor
 - 完整 lineage、locator、reading order、contribution mapping
-
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-`red`：新增 Tier 2 lowering、公开 options 与 artifact 返回契约。
-
-### Schema 改动
-
-无。消费 ADR-01~04 schema；manifest 是 runtime contract，不进入 Table IR，diagnostics 延至 alpha.6。
-
-### 文件 scope
-
-- `packages/viz/table/src/contract/manifest.ts`
-- `packages/viz/table/src/pipeline/{types,resolve,index}.ts`
-- `packages/viz/table/src/pipeline/lower/{lower,emit,meta,index}.ts`
-- `packages/viz/table/src/pipeline/manifest/**`
-- 对应 owner barrels 与包根导出
-- `packages/viz/table/tests/{lower,manifest,deps-guard}/**`
-
-### 测试象限
-
-**Happy path**：manual；detail；root id；artifact API；nested composite。
-
-**边界**：无 id；空 Cell；空 detail dataset；null text；单 Cell；零行/零列退化 bounds sentinel 不补最小正尺寸。
-
-**错误路径**：缺 dataset；未注册 kind/name；provider schema/output 非法；Core 未注册 nested composite 时沿用 Core warning。
-
-**交互**：lowerTables/artifact parity；React/Vanilla parity；PresentedTableModel/TableLayout 按顺序与 cellId 对齐；manifest/layout parity；custom structure × custom presentation；尝试修改 manifest bounds/track/Cell box/roles/source 不成功且不影响 node、layout/model 或重复调用；`compileToScene(..., { padding: 0 })` 的 Scene layout 覆盖 Table bounds。
-
-### 依赖的现有元素
-
-- `CompositeDefinition`、`defineComposite`、`IRChild`、`IRScope`（`@retikz/core`）——composite lowering
-- `IRNode.minimumSize`（`@retikz/core`）——用单个不可见 sentinel 把 Table bounds 合法贡献给 Core AABB
-- `BoundsRect`（`@retikz/math`）——manifest 与 layout 的左上角矩形语义
-- `ExternalDatasets`（`@retikz/data`）——运行时数据注入
-- ADR-02 registry/model、ADR-03 presentation、ADR-04 layout——单一 resolve pipeline
-- Plot `lowerPlots` / explicit lineage API——仅参考边界，不产生 Table → Plot 依赖

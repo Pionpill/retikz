@@ -114,6 +114,13 @@
     "refDomains": "Domain Modules",
     "refVisualizationPlot": "Visualization - Plot"
   },
+  "standard": {
+    "label": "Library",
+    "components": "Standard Components",
+    "grid": "Grid",
+    "axes": "Axes",
+    "frame": "Frame"
+  },
   "viz": {
     "label": "Visualization",
     "introduction": "Introduction",
@@ -121,7 +128,14 @@
     "releases": "Releases",
     "changelog": "Changelog",
     "changelogV01": "v0.1",
-    "dataFlow": "Data Flow",
+    "data": "Data",
+    "table": "Tables",
+    "detailTable": "Detail Table",
+    "tableModel": "Table Model",
+    "tableReference": "API Reference",
+    "tableReferenceContractTable": "Contract - Table",
+    "tableReferenceContractDetail": "Contract - Detail Table",
+    "tableReferenceRuntime": "Runtime",
     "dataModel": "Data Model",
     "dataTransform": "Data Transforms",
     "dataProvenance": "Provenance",
@@ -150,8 +164,6 @@
     "grammarExtendScale": "Custom Scales",
     "grammarExtendCoordinate": "Custom Coordinates",
     "grammarExtendMark": "Custom Marks",
-    "components": "Components",
-    "compPlot": "Container",
     "compMark": "Marks",
     "compPathMark": "PathMark",
     "compPointMark": "PointMark",

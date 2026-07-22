@@ -1,0 +1,56 @@
+---
+title: 契约 - 明细表
+description: 查询外部数据引用、detail columns 与 record-per-row Structure 的精确 JSON schema。
+---
+
+明细表契约把“每条外部记录生成一行”保存为可序列化规则，而不把记录本身写进 IR。`data.ref` 指向运行时 dataset，`structure.columns` 决定字段读取、列顺序、列头与正文 presentation。
+
+## DetailTableSpec
+
+`IRDetailTableSpec` 是明细表的精确根类型。与聚合 `IRTableSpec` 相比，它明确要求 `data`，并把 `structure` 收窄为 `detail`。
+
+| 字段                | 类型                         | 默认值 | 描述                            |
+| ------------------- | ---------------------------- | ------ | ------------------------------- |
+| `data`              | `IRDataReference`            | —      | 必需的外部 dataset reference    |
+| `structure.kind`    | `'detail'`                   | —      | record-per-row Structure 判别值 |
+| `structure.columns` | `Array<IRTableDetailColumn>` | —      | 至少一列，id 必须唯一           |
+| `structure.header?` | `boolean`                    | `true` | 是否生成列头行                  |
+
+### DetailTableSpecSchema
+
+<ZodSchema
+  name="DetailTableSpecSchema"
+  description="明细表精确根 spec：必须引用外部数据，并使用 record-per-row 的 detail Structure。"
+/>
+
+## Detail Structure
+
+### DetailTableStructureSchema
+
+<ZodSchema
+  name="DetailTableStructureSchema"
+  description="按 columns 顺序读取每条外部记录，并生成列头与正文 Cell 的 detail Structure。"
+/>
+
+字段路径支持点号访问。运行时找不到声明字段时会报错；源记录始终保留在外部 dataset，不复制到 TableSpec。
+
+## Column
+
+### TableDetailColumnSchema
+
+<ZodSchema
+  name="TableDetailColumnSchema"
+  description="明细列：稳定 id、数据字段路径、可选列头 payload 与正文 presentation 引用。"
+/>
+
+作者侧 `TableDetailColumnInput` 额外允许把 `header` 写成字符串；`createDetailTableSpec()`、`DetailTable` 和 `detailTable()` 会把它规范化为 `{ kind: 'value', value: header }`。
+
+## 精确 schema 的使用边界
+
+只生成明细表的 LLM、表单或持久化接口应使用 `DetailTableSpecSchema`，这样不会暴露 manual/custom 无关字段。只有在同一协议需要接收多种 Table 根变体时，才切换到聚合 `TableSpecSchema`。
+
+## 相关
+
+- [表格契约](/viz/table/reference/contract-table)：共享根字段、Cell 与 Layout schema
+- [明细表](/viz/table/detail)：React 与 Vanilla 使用方式
+- [运行时](/viz/table/reference/runtime)：spec helper、adapter、lowering 与 SSR

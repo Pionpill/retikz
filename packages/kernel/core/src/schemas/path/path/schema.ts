@@ -111,21 +111,21 @@ export const PathSchema = PathBaseSchema.superRefine((path, ctx) => {
   if (kind === PathKind.Stroke) {
     if (path.children === undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['children'],
         message: 'Stroke paths require `children` steps.',
       });
     }
     if (path.ribbon !== undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['ribbon'],
         message: '`ribbon` options are only valid when `kind` is `ribbon`.',
       });
     }
     if (path.kindOptions !== undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['kindOptions'],
         message: '`kindOptions` is only valid for custom path kinds.',
       });
@@ -135,14 +135,14 @@ export const PathSchema = PathBaseSchema.superRefine((path, ctx) => {
   if (kind === PathKind.Ribbon) {
     if (path.ribbon === undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['ribbon'],
         message: 'Ribbon paths require a `ribbon` options object.',
       });
     }
     if (path.kindOptions !== undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['kindOptions'],
         message: '`kindOptions` is only valid for custom path kinds.',
       });
@@ -150,14 +150,14 @@ export const PathSchema = PathBaseSchema.superRefine((path, ctx) => {
     if (path.ribbon?.mode === 'boundary') {
       if (path.children !== undefined) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['children'],
           message: 'Boundary ribbon paths use `ribbon.upper` and `ribbon.lower`, not top-level `children`.',
         });
       }
     } else if (path.children === undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['children'],
         message: 'Centerline ribbon paths require top-level `children` steps.',
       });
@@ -166,7 +166,7 @@ export const PathSchema = PathBaseSchema.superRefine((path, ctx) => {
   }
   if (path.ribbon !== undefined) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       path: ['ribbon'],
       message: '`ribbon` options are only valid when `kind` is `ribbon`.',
     });
