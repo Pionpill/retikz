@@ -1,4 +1,9 @@
 export const releaseGroups = {
+  standard: {
+    domain: 'library',
+    kind: 'feature',
+    packages: ['@retikz/standard', '@retikz/standard-react', '@retikz/standard-vanilla'],
+  },
   kernel: {
     domain: 'kernel',
     kind: 'foundation',

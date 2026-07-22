@@ -1,0 +1,33 @@
+import type { EmbeddableTier2Adapter } from '@retikz/react';
+import type { AxesInput } from '@retikz/standard';
+import type { FC } from 'react';
+
+import { AxesDefinition, createAxes } from '@retikz/standard';
+
+/** React Axes 组件接受的 Standard authoring 输入 */
+export type AxesProps = AxesInput;
+
+type AxesComponent = FC<AxesProps> & {
+  isTier2Embeddable?: true;
+  embeddableAdapter?: EmbeddableTier2Adapter<AxesProps>;
+};
+
+/** 当前 Layout 内贡献 Standard AxesDefinition 的稳定 maker */
+const makeAxesComposites = () => [AxesDefinition];
+
+const axesEmbeddableAdapter: EmbeddableTier2Adapter<AxesProps> = {
+  displayName: 'Axes',
+  namespace: 'standard.axes',
+  contribute: props => ({
+    node: createAxes(props),
+    datasets: {},
+    makeComposites: makeAxesComposites,
+  }),
+};
+
+/** Standard Axes 的 React Tier 2 authoring 组件 */
+export const Axes: AxesComponent = () => null;
+
+Axes.displayName = 'Axes';
+Axes.isTier2Embeddable = true;
+Axes.embeddableAdapter = axesEmbeddableAdapter;
