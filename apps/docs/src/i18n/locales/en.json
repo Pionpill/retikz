@@ -118,7 +118,8 @@
     "label": "Library",
     "components": "Standard Components",
     "grid": "Grid",
-    "axes": "Axes"
+    "axes": "Axes",
+    "frame": "Frame"
   },
   "viz": {
     "label": "Visualization",
