@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import type { SemanticTableModel } from '../../src';
 
-import { layoutTable, normalizeTableStructure, resolveTableLayoutSpec, TableRowKind } from '../../src';
+import { TableRowKind } from '../../src';
+import { layoutTable, resolveTableLayoutSpec } from '../../src/pipeline/layout';
+import { normalizeTableStructure } from '../../src/pipeline/normalize';
 
 const manualModel = () =>
   normalizeTableStructure({

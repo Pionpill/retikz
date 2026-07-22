@@ -7,7 +7,7 @@ description: 理解不同表格类型共享的 Structure、Cell、Presentation�
 
 ## 一条共享管线
 
-下面这条管线是 Table 自身的底层模型，不是要求普通用户逐层手写的另一套产品 API。`DetailTable`、`ManualTable` 和完整 `TableSpec` 只是进入它的不同入口。
+下面这条管线是 Table 自身的底层模型，不要求普通用户逐层手写。
 
 <ComponentPreview files="table-model-pipeline" hideCode size="xs" />
 
@@ -15,7 +15,7 @@ description: 理解不同表格类型共享的 Structure、Cell、Presentation�
 
 ## Structure：表格如何产生 Cell
 
-`structure.kind` 判别当前结构操作。v0.1 内置两种结构，并允许注册自定义结构：
+`structure.kind` 判别当前结构操作。当前内置两种结构，并允许注册自定义结构：
 
 | kind     | 数据放在哪里                            | 适合谁                         |
 | -------- | --------------------------------------- | ------------------------------ |
@@ -23,13 +23,32 @@ description: 理解不同表格类型共享的 Structure、Cell、Presentation�
 | `manual` | spec 直接保存行列尺寸与 Cell            | 需要精确声明静态网格的底层场景 |
 | custom   | spec 保存自定义参数，由 definition 解析 | 扩展作者定义新的结构操作       |
 
-`manual` 与 `detail` 是内置 Structure，不是两个互不相干的表格引擎；custom 也复用同一个 definition registry、语义输出和消费管线。只有一种表格类型的 LLM 或工具应持有精确的 `IRDetailTableSpec`、`IRManualTableSpec` 或 `IRCustomTableSpec`；需要在同一存储或协议中接收多种类型时，才使用聚合的 `IRTableSpec`。
+自定义 Structure 也复用同一个 definition registry、语义输出和消费管线。只生成一种结构的 LLM 或工具应持有精确的 `IRDetailTableSpec`、`IRManualTableSpec` 或 `IRCustomTableSpec`；需要在同一存储或协议中接收多种结构时，才使用聚合的 `IRTableSpec`。
 
 ### 显式网格入口
 
-`ManualTable` 直接声明行、列和零基 Cell 地址，适合表头、摘要或不依赖外部记录的静态网格。它是共享模型的底层入口，不作为“明细表之外的第二种业务表型”。
+`ManualTable` 直接声明行、列和零基 Cell 地址，适合表头、摘要或不依赖外部记录的静态网格。
 
 <ComponentPreview files={['table-manual', 'table-manual.zh.data.ts']} size="xs" />
+
+React 中也可以用嵌套的 `Row` / `Cell` 按声明顺序生成地址：
+
+```tsx
+import { Cell, ManualTable, Row } from '@retikz/table-react';
+
+<ManualTable rows={2} columns={2}>
+  <Row kind="columnHeader">
+    <Cell>姓名</Cell>
+    <Cell>分数</Cell>
+  </Row>
+  <Row>
+    <Cell>Alice</Cell>
+    <Cell value={95} />
+  </Row>
+</ManualTable>;
+```
+
+根上的 `rows` 与 `columns` 必须显式声明，嵌套 `Row` 数量必须等于 `rows`。每个 Row 可少写尾部 Cell，未声明位置保持稀疏；需要任意零基地址的稀疏 Cell 时，改用完整 `cells` props。`Cell` 的 children、`value` 与 `content` 三者只能选一个：children / `value` 只能是 JSON 标量，`content` 必须是 JSON-safe 的 Core 或 Tier 2 child。
 
 ## Cell 与 Presentation
 
