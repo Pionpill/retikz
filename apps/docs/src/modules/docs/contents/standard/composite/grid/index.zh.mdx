@@ -32,21 +32,37 @@ React 入口会在当前 `Layout` 局部贡献 `GridDefinition`。持久化或�
 
 ### 基础网格
 
-指定规范化的 `bounds` 和统一的 `spacing`，得到背景参考线。
+定义网格只需要两个必填属性：
+
+- `bounds` 用 `min` 和 `max` 两个角限定网格覆盖的矩形。两个轴上的 `min` 都必须小于 `max`；默认情况下，网格线只在这个范围内延伸
+- `spacing` 决定相邻格线的距离。传数字时，竖线和横线使用相同间距；传 `{ x, y }` 时，`x` 控制相邻竖线的距离，`y` 控制相邻横线的距离
+
+下面的网格覆盖 `[20, 20]` 到 `[260, 150]`，两个方向每隔 20 个用户单位生成一条线。
 
 <ComponentPreview files="grid-basic" size="sm" />
 
-### 分方向的网格
+在此基础上，可选属性负责四类决策：
 
-`spacing` 可以按轴分别设置；`lines.vertical` 与 `lines.horizontal` 决定可见方向。`major.style` 只浅覆盖普通线样式。
+- `origin`：移动格点的对齐基准，也是主线计数的起点
+- `lines`：选择竖线、横线、范围边界和普通线样式
+- `major`：每隔若干格突出一条主线，并覆盖普通线的部分样式
+- `border`：增加独立外框，控制外扩距离、绘制顺序以及网格线是否延伸到外框
 
-<ComponentPreview files="grid-directions" size="sm" />
+### 常见变体
 
-### 对齐、边界和边框
+四个并列场景展示分轴间距、单方向网格线、周期主线，以及 `origin`、`includeBoundary` 和 `border` 的组合效果。
 
-`origin` 是格点的对齐基准；`includeBoundary` 只补足未命中的范围边；边框可独立置后并向外延长线段。
+<ComponentPreview files="grid-variants" size="sm" />
 
-<ComponentPreview files="grid-border" size="sm" />
+### 自行调整
+
+使用面板改变范围、间距、方向、对齐、主线和边框。预览采用固定视野，因此参数变化会直接反映为网格的位置、密度与层级变化。
+
+<ComponentPreview
+  files="grid-playground"
+  size="lg"
+  caption="切换统一/分轴间距或启用 origin、major、border，观察对应字段如何共同决定最终网格。"
+/>
 
 ## 技术原理
 
@@ -56,7 +72,13 @@ React 入口会在当前 `Layout` 局部贡献 `GridDefinition`。持久化或�
   description="只有在直接读写 Grid IR 或排查编译诊断时才需要理解 lowering。"
 />
 
-Grid 的 IR 不直接成为新的渲染图元。lowering 先按 `origin` 枚举 x/y 轴格点，并以 origin-relative lattice index 判断主线；随后输出普通 `Path`，最后由 Core 的既有 compile 与 renderer 消费。
+Grid 的 IR 不直接成为新的渲染图元。lowering 先规范化范围、原点和间距，再分别枚举 x/y 方向的格点，以相对于 `origin` 的索引判断主线，最后按边框顺序组装普通 Core `Path`。
+
+下图从左到右展示这条确定性转换链。输出到达 `Core Path[]` 后，Grid 的职责就结束了。
+
+<ComponentPreview files="grid-lowering" hideCode size="xs" />
+
+每条网格线都会成为一条 `move + line` 路径，边框则成为闭合路径。后续仍由 Core 的既有 compile 与 renderer 消费，因此 renderer 不需要识别 Grid。
 
 未加载 definition 的手写 `IRGrid` 不会被静默解释：Core 会给出 `COMPOSITE_NOT_REGISTERED` 诊断并跳过它。这样 Standard 仍保持按能力动态加载，而不会污染其它图的编译行为。
 
@@ -78,7 +100,7 @@ Grid 的 IR 不直接成为新的渲染图元。lowering 先按 `origin` 枚举 
 | `major`   | `{ every: number;`<br />`offset?: number;`<br />`style?: IRStandardPathStrokeStyle }`                                              | —            | 主线间隔、索引偏移和浅覆盖样式              |
 | `border`  | `{ padding?: number;`<br />`order?: 'behind' \| 'front';`<br />`extendLines?: boolean;`<br />`style?: IRStandardPathBorderStyle }` | —            | 可选边框的外扩、顺序、线段延长和样式        |
 
-## Related
+## 相关
 
 - [Tier 2 Composites](/kernel/concepts/design/composite)：Core 如何注册和下沉高层 IR
 - [Path](/kernel/components/draw/path)：Grid 下沉后使用的 Core 路径图元

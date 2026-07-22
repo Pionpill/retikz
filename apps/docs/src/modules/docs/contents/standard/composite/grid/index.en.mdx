@@ -32,21 +32,37 @@ See [Get Started](/standard/get-start) for complete Vanilla mounting and persist
 
 ### Basic grid
 
-Give normalized `bounds` and uniform `spacing` to produce background guides.
+You only need two required props to define a grid:
+
+- `bounds` uses `min` and `max` corners to limit the rectangular area covered by the grid. `min` must be less than `max` on both axes; grid lines normally extend only within this area
+- `spacing` sets the distance between adjacent lines. A number uses one distance for both directions; `{ x, y }` uses `x` between vertical lines and `y` between horizontal lines
+
+The grid below covers `[20, 20]` through `[260, 150]` and emits a line every 20 user units in both directions.
 
 <ComponentPreview files="grid-basic" size="sm" />
 
-### Directional grids
+Optional props then answer four kinds of decisions:
 
-`spacing` can differ per axis; `lines.vertical` and `lines.horizontal` choose visible directions. `major.style` shallowly overrides ordinary line style.
+- `origin` moves the lattice alignment base and the starting point for major-line counting
+- `lines` selects vertical lines, horizontal lines, range boundaries, and ordinary-line style
+- `major` emphasizes every Nth lattice line and overrides selected ordinary-line style fields
+- `border` adds an independent outer frame and controls padding, drawing order, and whether lines reach that frame
 
-<ComponentPreview files="grid-directions" size="sm" />
+### Common variants
 
-### Alignment, boundaries, and border
+These four side-by-side cases compare per-axis spacing, a single line direction, periodic major lines, and the combined effect of `origin`, `includeBoundary`, and `border`.
 
-`origin` is the lattice alignment base; `includeBoundary` only inserts missing range edges; the border can render behind and extend the lines outward.
+<ComponentPreview files="grid-variants" size="sm" />
 
-<ComponentPreview files="grid-border" size="sm" />
+### Try it yourself
+
+Use the panel to change bounds, spacing, direction, alignment, major lines, and the border. The preview keeps a fixed view, so each change is visible as a change in position, density, or drawing order.
+
+<ComponentPreview
+  files="grid-playground"
+  size="lg"
+  caption="Switch between uniform and per-axis spacing, or enable origin, major, and border to see how the fields combine."
+/>
 
 ## How it works
 
@@ -56,7 +72,13 @@ Give normalized `bounds` and uniform `spacing` to produce background guides.
   description="You only need this lowering model when working with Grid IR directly or debugging compile diagnostics."
 />
 
-Grid IR does not become a renderer primitive. Lowering enumerates x/y lattice points from `origin`, identifies major lines by origin-relative lattice index, then emits ordinary `Path` nodes for Core's existing compiler and renderers.
+Grid IR does not become a renderer primitive. Lowering first normalizes bounds, origin, and spacing, enumerates lattice points for the x and y directions, identifies major lines by their `origin`-relative indices, and assembles ordinary Core `Path` nodes in border order.
+
+The figure follows this deterministic transformation from left to right. Grid's responsibility ends once the output reaches `Core Path[]`.
+
+<ComponentPreview files="grid-lowering" hideCode size="xs" />
+
+Each grid line becomes a `move + line` path, while the border becomes a closed path. Core's existing compiler and renderers consume the result, so renderers never need to recognize Grid.
 
 A handwritten `IRGrid` without a loaded definition is never silently interpreted: Core emits `COMPOSITE_NOT_REGISTERED` and skips it. Standard therefore remains dynamically loaded by capability without changing compilation for other figures.
 
