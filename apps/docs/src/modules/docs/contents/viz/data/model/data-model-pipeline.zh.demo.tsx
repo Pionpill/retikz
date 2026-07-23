@@ -2,47 +2,129 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node, Text } from '@retikz/react';
 
-/**
- * 数据模型页 "技术原理" 流程插图
- * @description lowering 前 Plot 收集引用字段 → 校验契约 → 确定类型 → 整理成字段元信息，供比例尺 / 坐标轴 / 图例 / 校验共用。
- */
+/** 数据模型从外部行到下游消费者的整体流程 */
 const Demo: FC = () => (
-  <Layout width={700} height={180} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node id="collect" position={[-255, -16]} stroke="none" align="middle" lineHeight={16}>
-      <Text font={{ size: 15, weight: 'bold' }}>收集字段</Text>
+  <Layout width={700} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Node
+      id="rows"
+      position={[-245, 25]}
+      minimumSize={{ width: 120, height: 58 }}
+      stroke="gray"
+      fill="lightgray"
+      fillOpacity={0.12}
+      cornerRadius={4}
+      align="middle"
+      lineHeight={17}
+    >
+      <Text font={{ size: 14, weight: 'bold' }}>外部数据行</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        引用的逻辑字段
+        接口 · 文件 · 数据库
       </Text>
     </Node>
-    <Node id="validate" position={[-95, -16]} stroke="none" align="middle" lineHeight={16}>
-      <Text font={{ size: 15, weight: 'bold' }}>校验契约</Text>
+    <Node
+      id="canonical"
+      position={[-25, 25]}
+      minimumSize={{ width: 126, height: 58 }}
+      stroke="gray"
+      fill="lightgray"
+      fillOpacity={0.12}
+      cornerRadius={4}
+      align="middle"
+      lineHeight={17}
+    >
+      <Text font={{ size: 14, weight: 'bold' }}>规范化行</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        model 引用 · 去重
+        逻辑字段 + 标准值
       </Text>
     </Node>
-    <Node id="resolve" position={[80, -16]} stroke="none" align="middle" lineHeight={16}>
-      <Text font={{ size: 15, weight: 'bold' }}>确定类型</Text>
+    <Node
+      id="consumers"
+      position={[225, 25]}
+      minimumSize={{ width: 164, height: 58 }}
+      stroke="dodgerblue"
+      fill="dodgerblue"
+      fillOpacity={0.08}
+      cornerRadius={4}
+      align="middle"
+      lineHeight={17}
+    >
+      <Text font={{ size: 14, weight: 'bold' }}>后续处理</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        显式 / format / 推断
+        数据变换 · 消费模块
       </Text>
     </Node>
-    <Node id="meta" position={[235, -16]} stroke="none" align="middle" lineHeight={16}>
-      <Text font={{ size: 15, weight: 'bold' }}>字段元信息</Text>
+    <Node
+      id="contract"
+      position={[-25, -70]}
+      minimumSize={{ width: 150, height: 50 }}
+      stroke="darkorange"
+      fill="darkorange"
+      fillOpacity={0.08}
+      cornerRadius={4}
+      align="middle"
+      lineHeight={16}
+    >
+      <Text font={{ size: 14, weight: 'bold' }}>字段契约</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        类型 + 分类顺序
+        类型 · 格式 · 顺序
       </Text>
     </Node>
 
-    <Draw way={['collect', 'validate']} arrow="->" />
-    <Draw way={['validate', 'resolve']} arrow="->" />
-    <Draw way={['resolve', 'meta']} arrow="->" />
-
-    <Node id="note" position={[235, 72]} stroke="none" align="middle">
-      <Text fill="gray" font={{ size: 12 }}>
-        比例尺 · 坐标轴 · 图例 · 校验
-      </Text>
-    </Node>
-    <Draw way={['note', 'meta']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw
+      way={[
+        'rows',
+        {
+          label: {
+            text: '解析',
+            position: 'midway',
+            side: 'top',
+            sloped: false,
+            textColor: 'gray',
+            font: { size: 12 },
+          },
+        },
+        'canonical',
+      ]}
+      arrow="->"
+      stroke="gray"
+    />
+    <Draw
+      way={[
+        'canonical',
+        {
+          label: {
+            text: '消费',
+            position: 'midway',
+            side: 'top',
+            sloped: false,
+            textColor: 'gray',
+            font: { size: 12 },
+          },
+        },
+        'consumers',
+      ]}
+      arrow="->"
+      stroke="gray"
+    />
+    <Draw
+      way={[
+        'contract',
+        {
+          label: {
+            text: '约束',
+            position: 'midway',
+            side: 'right',
+            sloped: false,
+            textColor: 'gray',
+            font: { size: 12 },
+          },
+        },
+        'canonical',
+      ]}
+      arrow="->"
+      stroke="darkorange"
+      dashPattern={[4, 3]}
+    />
   </Layout>
 );
 

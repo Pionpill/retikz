@@ -28,8 +28,10 @@ export const AnchorRefSchema = z
 
 export const NodeTargetSchema = z
   .object({
-    id: z.string().min(1).describe('Referenced Node/Coordinate id'),
-    anchor: AnchorRefSchema.optional().describe('Optional anchor; omitted = auto clip to boundary'),
+    id: z.string().min(1).describe('Referenced Node, Coordinate, or resolved Scope id.'),
+    anchor: AnchorRefSchema.optional().describe(
+      'Optional target anchor. The meaning of omission is defined by the consuming position or path context.',
+    ),
     offset: z
       .tuple([z.number(), z.number()])
       .optional()
@@ -38,4 +40,4 @@ export const NodeTargetSchema = z
       'Per-endpoint override of the target node connection surface. Used for auto-clipped endpoints and standard direction or angle anchors.',
     ),
   })
-  .describe('Reference to a Node/Coordinate by id, with optional anchor and world-space offset');
+  .describe('Reference to a Node, Coordinate, or resolved Scope by id, with optional anchor and world-space offset');

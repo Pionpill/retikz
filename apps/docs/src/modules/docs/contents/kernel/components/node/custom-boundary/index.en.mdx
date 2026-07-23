@@ -142,13 +142,13 @@ The first violates `paramsSchema`; the second registers the same key twice.
 
 ### `BoundaryDefinitionInput<TParams>`
 
-| Prop            | Type                                            | Default      | Description                                                   |
-| --------------- | ----------------------------------------------- | ------------ | ------------------------------------------------------------- |
-| `name`          | `string`                                        | —            | Registry key referenced by Node `boundary`                    |
-| `paramsSchema`  | `z.ZodType<TParams>`                            | —            | Validates JSON-safe `boundary.params`                         |
-| `resolveRect`   | `(context, params) => Rect`                     | `visualRect` | Optionally derive the surface rect from visual or safe bounds |
-| `boundaryPoint` | `(rect, toward, params) => Position`            | —            | Returns the ray intersection with the surface                 |
-| `anchor`        | `(rect, name, params) => Position \| undefined` | —            | Optional standard directional-anchor resolver                 |
+| Prop            | Type                                 | Default      | Description                                                   |
+| --------------- | ------------------------------------ | ------------ | ------------------------------------------------------------- |
+| `name`          | `string`                             | —            | Registry key referenced by Node `boundary`                    |
+| `paramsSchema`  | `z.ZodType<TParams>`                 | —            | Validates JSON-safe `boundary.params`                         |
+| `resolveRect`   | `(context, params) => Rect`          | `visualRect` | Optionally derive the surface rect from visual or safe bounds |
+| `boundaryPoint` | `(rect, toward, params) => Position` | —            | Returns the ray intersection with the surface                 |
+| `anchor`        | `BoundaryDefinition['anchor']`       | —            | Optional standard directional-anchor resolver                 |
 
 Import `defineBoundary`, `BoundaryDefinition`, `BoundaryDefinitionInput`, and `BUILTIN_BOUNDARIES` from `@retikz/core`. The author-side definitions are not re-exported by `@retikz/react` or `@retikz/vanilla`.
 

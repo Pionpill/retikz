@@ -1,0 +1,96 @@
+---
+title: Transforms
+description: Drawing-grammar transforms are plot-registered transforms layered on top of shared data flow, producing intervals, stacks, bins, densities, trends, and relation rows.
+---
+
+Plot transforms run after [Data](/viz/data) has produced canonical rows and before scales and marks consume them. This group covers plot-registered drawing capabilities: intervals, percent stacks, histograms, density areas, trend lines, and relation edges.
+
+Data transforms owned by `@retikz/data` (`sort`, `summarize`, `select`, `annotate`, and `defineTransform`) are documented under [Data / Data Transforms](/viz/data/transform). Plot can consume them, but this group does not redefine them.
+
+<ComponentPreview files="transform-pipeline" size="sm" hideCode />
+
+## Responsibilities
+
+| group              | plot-registered members      | rows   | use cases                                                    |
+| ------------------ | ---------------------------- | ------ | ------------------------------------------------------------ |
+| Intervals / jitter | `derive-interval` / `jitter` | N -> N | Gantt bars, non-zero baselines, deterministic scatter jitter |
+| Stacking / shares  | `stack` / `normalize`        | N -> N | Stacked bars, stacked areas, percent stacks                  |
+| Binning stats      | `bin`                        | N -> B | Histograms, boxplot statistic fields                         |
+| Sampled stats      | `density` / `smooth`         | N -> S | Density curves, density areas, trend lines                   |
+| Row pairing        | `relate`                     | N -> P | Project source / target rows into relation fields            |
+
+These transforms still output ordinary rows. Fields produced by transforms, such as `y0` / `y1`, `binStart` / `binEnd`, `density`, and `sourceId` / `targetId`, do not need to be declared in the model ahead of time. Input fields read by transforms still go through the data model and validation.
+
+## Declaration
+
+Declare plot-level transforms with `<Transform kind="...">`; `kind` discriminates the operation, and the remaining props match that transform. Multiple `<Transform>` children compose in declaration order:
+
+```tsx
+<Plot data={rows} model={model}>
+  <Transform kind="bin" field="value" count={12} />
+  <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
+</Plot>
+```
+
+The same transform array can also be attached to any mark, giving that layer a local data view:
+
+```tsx
+<Plot data={rows} model={model}>
+  <PointMark x="x" y="y" />
+  <PathMark
+    x="trendX"
+    y="trendY"
+    order="trendX"
+    transform={[{ kind: 'smooth', x: 'x', y: 'y', xAs: 'trendX', yAs: 'trendY' }]}
+  />
+</Plot>
+```
+
+Programmatic construction can pass `<Plot dataTransforms={[...]}>` directly. It shares the same pipeline as `<Transform>` children, and the direct array is placed before child declarations.
+
+> The prop is named `dataTransforms` to avoid colliding with core geometry `transforms` for translate / rotate.
+
+High-level React shortcuts still lower into ordinary transforms. For example, `IntervalMark` `angle` / `stack` / `percent` generate `stack` or `normalize + stack`; custom authoring syntax can use `markTransformShortcuts` to generate the same transform operations. Shortcuts do not add new data semantics.
+
+## How It Works
+
+During lowering, Plot first collects source fields read by transforms and registers fields produced by transforms. Strict models therefore validate real input fields without requiring derived fields to be declared ahead of time.
+
+Plot-level transforms affect the whole plot's scales, guides, and marks. Mark-local transforms only affect rows visible to the current mark, which is useful for local statistic layers or relation rows.
+
+`bin`, `density`, `smooth`, and `relate` reuse data-level statistical sub-capabilities such as reducers and selectors. Full data transforms and custom transform definitions are documented under [Data Transforms](/viz/data/transform).
+
+## Pages
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/transform/row">
+    <span className="font-semibold">Derive & Jitter</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Derive per-row intervals or deterministic data-space jitter.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/transform/annotation">
+    <span className="font-semibold">Stacking & Shares</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Keep detail rows while adding stack intervals or share fields.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/transform/summary">
+    <span className="font-semibold">Binning & Stat Layers</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Turn detail rows into histogram bins or compose boxplot statistic layers.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/transform/statistics">
+    <span className="font-semibold">Density & Trend</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Generate KDE density samples or linear trend samples.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/transform/relate">
+    <span className="font-semibold">Row Pairing</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Select source / target rows and project relation fields.
+    </span>
+  </LinkedCard>
+</div>

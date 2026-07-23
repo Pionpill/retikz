@@ -1,14 +1,21 @@
+import type { AxesInput } from '@retikz/standard';
+
 import { createAxes } from '@retikz/standard';
 import { normalizeFigureSpec } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { axes, AxesVanillaAdapter, grid, GridVanillaAdapter } from '../src';
 
-const input = {
-  bounds: { x: { min: -2, max: 2 }, y: { min: -1, max: 1 } },
-  grid: { spacing: 1 },
-  ticks: { x: 1, y: 1 },
-} as const;
+const input: AxesInput = {
+  origin: [100, 80],
+  extent: { x: 40, y: { negative: 20, positive: 40 } },
+  grid: { spacing: 1, offset: [0.5, -0.5], style: { dashPattern: [2, 1] } },
+  x: {
+    line: { arrows: 'both', arrowDetail: { shape: 'openStealth', scale: 1.25 } },
+    ticks: { source: { kind: 'spacing', spacing: 10, extent: 'positive' } },
+  },
+  y: { ticks: { source: { kind: 'values', values: [-20, 20, 40] } } },
+};
 
 describe('axes()', () => {
   it('creates an embed that contributes canonical Axes IR', () => {

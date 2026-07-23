@@ -68,6 +68,8 @@ shared/schemas <- parsers
 
 简单能力可合并文件；一旦职责混杂，按上表拆开。
 
+只有一个调用点、且没有独立契约或测试边界的短小 helper 保留在消费文件内；形成稳定概念、独立测试边界或多个消费方后再抽成文件或子域。
+
 ## React DSL 目录范式
 
 `@retikz/react` 的 DSL 代码按 owner 拆分：

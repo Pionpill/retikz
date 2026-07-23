@@ -98,20 +98,20 @@ A custom kind must return renderer-neutral Scene primitives. It cannot embed SVG
 
 ### PathKindDefinition
 
-| Field           | Type                                         | Default                 | Description                                   |
-| --------------- | -------------------------------------------- | ----------------------- | --------------------------------------------- |
-| `schema`        | `ZodObject<{ kind: ZodLiteral<string> }>`    | —                       | Declares Path shape and provides registry key |
-| `optionsSchema` | `ZodType<IRJsonObject>`                      | Raw `kindOptions ?? {}` | Validates custom instance options             |
-| `compile`       | `(context) => PathKindCompileResult \| null` | —                       | Emits whole-Path Scene primitives and bounds  |
+| Field           | Type                            | Default                 | Description                                   |
+| --------------- | ------------------------------- | ----------------------- | --------------------------------------------- |
+| `schema`        | `PathKindDefinition['schema']`  | —                       | Declares Path shape and provides registry key |
+| `optionsSchema` | `ZodType<IRJsonObject>`         | Raw `kindOptions ?? {}` | Validates custom instance options             |
+| `compile`       | `PathKindDefinition['compile']` | —                       | Emits whole-Path Scene primitives and bounds  |
 
 ### Compile context
 
-| Field        | Type                                       | Default      | Description                                   |
-| ------------ | ------------------------------------------ | ------------ | --------------------------------------------- |
-| `path`       | `IRPathBase`                               | —            | Complete IR for the current Path              |
-| `options`    | `TOptions`                                 | —            | `kindOptions ?? {}` parsed by `optionsSchema` |
-| `emitStroke` | `(path?) => PathKindCompileResult \| null` | Current Path | Reuses standard stroke compilation            |
-| `emitRibbon` | `(path?) => PathKindCompileResult \| null` | Current Path | Reuses standard ribbon compilation            |
+| Field        | Type                                   | Default      | Description                                   |
+| ------------ | -------------------------------------- | ------------ | --------------------------------------------- |
+| `path`       | `IRPathBase`                           | —            | Complete IR for the current Path              |
+| `options`    | `TOptions`                             | —            | `kindOptions ?? {}` parsed by `optionsSchema` |
+| `emitStroke` | `PathKindCompileContext['emitStroke']` | Current Path | Reuses standard stroke compilation            |
+| `emitRibbon` | `PathKindCompileContext['emitRibbon']` | Current Path | Reuses standard ribbon compilation            |
 
 ### PathKindCompileResult
 

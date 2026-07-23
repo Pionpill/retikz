@@ -1,3 +1,4 @@
+export * from './anchor-position';
 export * from './at-position';
 export * from './between-position';
 export * from './node-target';

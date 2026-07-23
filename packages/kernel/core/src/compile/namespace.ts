@@ -3,6 +3,17 @@ import type { NodeLayout } from './node';
 /** namespace 栈当前写入/解析阶段 */
 export type NamespacePhase = 'registering' | 'resolving';
 
+/** namespace layout 的编译生命周期状态 */
+export type NamespaceEntryState = 'resolved' | 'scope-placeholder';
+
+/** namespace 中带生命周期状态的内部条目 */
+export type NamespaceEntry = {
+  /** 可供既有引用解析逻辑消费的布局 */
+  layout: NodeLayout;
+  /** 区分合法已解析布局与尚未闭合的 Scope 占位布局 */
+  state: NamespaceEntryState;
+};
+
 /** 同一 namespace frame 内重复 id 的诊断载荷 */
 export type DuplicateRegisterInfo = {
   /** 同 frame 内重复出现的 id（两次 register 都用此 id） */
@@ -27,7 +38,7 @@ export type NamespaceStackOptions = {
  */
 export class NamespaceStack {
   /** 栈式 frame 容器；栈底（index 0）= 根 frame，栈顶（last）= 当前 frame */
-  private readonly frames: Array<Map<string, NodeLayout>>;
+  private readonly frames: Array<Map<string, NamespaceEntry>>;
   /** 与每个 frame 对应的"已注册 id → 首次 register 时的 irPath"映射，用于 duplicate warn 复述位置 */
   private readonly firstIrPaths: Array<Map<string, string | undefined>>;
   private readonly onDuplicate?: (info: DuplicateRegisterInfo) => void;
@@ -76,7 +87,7 @@ export class NamespaceStack {
   }
 
   /** 注册 id 到栈顶 frame；返回是否覆盖了同 frame 旧值 */
-  register(id: string, layout: NodeLayout, irPath?: string): boolean {
+  register(id: string, layout: NodeLayout, irPath?: string, state: NamespaceEntryState = 'resolved'): boolean {
     if (this.currentPhase !== 'registering') {
       throw new Error(
         `NamespaceStack.register('${id}'): only allowed during registering; current phase is '${this.currentPhase}'`,
@@ -95,7 +106,7 @@ export class NamespaceStack {
     } else {
       topFirstPaths.set(id, irPath);
     }
-    topFrame.set(id, layout);
+    topFrame.set(id, { layout, state });
     return wasOverwritten;
   }
 
@@ -117,16 +128,22 @@ export class NamespaceStack {
         `NamespaceStack.replaceLayout('${id}'): id not previously registered in frame at depth ${frameDepth}`,
       );
     }
-    if (expectedCurrent !== undefined && targetFrame.get(id) !== expectedCurrent) return false;
-    targetFrame.set(id, layout);
+    const current = targetFrame.get(id);
+    if (expectedCurrent !== undefined && current?.layout !== expectedCurrent) return false;
+    targetFrame.set(id, { layout, state: 'resolved' });
     return true;
   }
 
   /** 按 inside-out 规则查找 id 对应的 layout */
   lookup(id: string): NodeLayout | undefined {
+    return this.lookupEntry(id)?.layout;
+  }
+
+  /** 按 inside-out 规则查找 id 对应的 layout 与生命周期状态 */
+  lookupEntry(id: string): NamespaceEntry | undefined {
     for (let i = this.frames.length - 1; i >= 0; i--) {
-      const layout = this.frames[i].get(id);
-      if (layout !== undefined) return layout;
+      const entry = this.frames[i].get(id);
+      if (entry !== undefined) return entry;
     }
     return undefined;
   }

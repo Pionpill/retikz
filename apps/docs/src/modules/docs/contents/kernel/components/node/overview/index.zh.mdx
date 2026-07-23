@@ -27,11 +27,21 @@ import { Node } from '@retikz/react';
 
 ### 定位
 
-`position` 可以写笛卡尔、极坐标、方向相对、引用点偏移或两点比例位置。用面板切换输入形态并调整参数，观察同一个 `q` 如何围绕固定参照节点 `a` / `b` 移动。
+`position` 的五种中心 / 点定位写法包括笛卡尔、极坐标、方向相对、引用点偏移和两点比例位置。用面板切换输入形态并调整参数，观察同一个 `q` 如何围绕固定参照节点 `a` / `b` 移动。
 
 <ComponentPreview files="node-position" size="md" />
 
 引用 id 必须先声明；方向定位的默认距离来自 `<Layout nodeDistance>`，`between` 的 `fraction: 0.5` 表示中点。完整输入类型见下方 [API 参考](#定位)，需要不可见辅助点时使用 [Coordinate](/kernel/components/node/coordinate)。
+
+Node 还支持第六种、依赖自身真实尺寸的锚点对齐。用面板切换双方标准 anchor，并调整 offset、目标 margin、两端 rotate 与当前 Node scale；非对称 padding 和这些几何参数都会先参与布局。
+
+<ComponentPreview
+  files="node-anchor-position"
+  size="md"
+  caption="浅灰圆点标出 target.anchor + offset；它始终与 q 的 selfAnchor 重合。"
+/>
+
+`target.anchor` 与 `selfAnchor` 都省略时默认为 `center`。target 只能引用已完成布局的 Node、Coordinate 或 Scope；未定义、后定义、自引用和仍在布局中的祖先 Scope 会直接报错。
 
 ### 形状
 
@@ -173,6 +183,8 @@ import { Node } from '@retikz/react';
 
 节点尺寸按固定顺序收敛：文本先测量与折行，`padding` 再形成内容内框，shape definition 根据内框与 params 算出视觉外接盒，`minimumSize` 只负责托底。`scale` 从前面开始同步影响字体、间距和形状参数，`rotate` 最后附着到几何结果。
 
+锚点对齐在这份 provisional 布局完成后才计算目标与自身 anchor，再整体平移 Node。`onNodeLayout`、id 注册、Scene 输出、Scope bbox 与自动 viewBox 都只会看到平移后的最终几何。
+
 `label` 不参与视觉形状尺寸计算，而是作为附属图元单独布局；它不会撑大节点边框，但会与 `margin`、阴影一起进入自动 viewBox 的内容范围。
 
 <SourceLinks
@@ -180,8 +192,8 @@ import { Node } from '@retikz/react';
     {
       label: '内容与几何收敛为 Node 布局',
       path: 'packages/kernel/core/src/compile/node/layout.ts',
-      startLine: 69,
-      endLine: 169,
+      startLine: 129,
+      endLine: 293,
     },
     {
       label: '形状、内容与标签输出为 Scene 图元',
@@ -192,7 +204,7 @@ import { Node } from '@retikz/react';
     {
       label: '命名注册与自动视框收集',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 211,
+      startLine: 177,
       endLine: 229,
     },
   ]}
@@ -229,21 +241,21 @@ import { Node } from '@retikz/react';
     {
       label: '视觉轮廓、连接面与 anchor 分流',
       path: 'packages/kernel/core/src/compile/node/anchors.ts',
-      startLine: 35,
-      endLine: 82,
+      startLine: 58,
+      endLine: 117,
     },
     {
       label: 'margin 与锚点类型的解析边界',
       path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts',
-      startLine: 16,
-      endLine: 50,
+      startLine: 10,
+      endLine: 52,
     },
   ]}
 />
 
 ### 命名引用为何受顺序影响
 
-Node 定位是在遍历到该节点时立即解析的：编译器先查询当前命名空间，得到布局后才注册这个节点的 `id`。所以 `position` 引用同一作用域里后声明的 Node / Coordinate 会失败，循环定位也无法成立。
+Node 定位是在遍历到该节点时立即解析的：编译器先查询当前命名空间，得到布局后才注册这个节点的 `id`。所以 `position` 引用同一作用域里后声明的 Node / Coordinate / Scope 会失败，循环定位也无法成立。锚点定位可以引用前面已闭合的 Scope；若在 Scope 子树里引用仍在计算 bbox 的祖先 Scope，则会被识别为未完成布局并直接报错。已闭合的空 Scope 虽然是 0×0，仍是合法 target。
 
 Path / Draw 的端点采用另一种时机。路径先保留绘制顺序占位，等当前作用域的 Node 与 Coordinate 都注册完成后再统一解析，因此路径端点可以引用后声明的同级节点。
 
@@ -258,14 +270,14 @@ Path / Draw 的端点采用另一种时机。路径先保留绘制顺序占位�
     {
       label: 'Node 布局后注册 id',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 179,
-      endLine: 215,
+      startLine: 177,
+      endLine: 229,
     },
     {
       label: 'Path 加入延迟输出队列',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 256,
-      endLine: 281,
+      startLine: 255,
+      endLine: 278,
     },
     {
       label: '命名注册完成后解析 Path',
@@ -282,28 +294,28 @@ Path / Draw 的端点采用另一种时机。路径先保留绘制顺序占位�
 | ----------- | ------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`        | `string`                  | —      | 唯一标识；被 `<Path>` / `<Draw>` 用来引用                                                                                                                                                                 |
 | `meta`      | `Record<string, JSON 值>` | —      | provenance 元数据：随该节点原样透传到渲染产物，renderer 忽略、不参与布局 / 连接 / 样式；典型由 plot 等高层注入（标记来自哪个 datum / series / layer），供交互层命中图元后反查来源。须为 JSON 可序列化对象 |
-| `on<Event>` | `HydrationHandler`        | —      | `onClick`、pointer 与 wheel 等水合事件；需要 `id`，完整列表见[水合](/kernel/packages/render/hydration)                                                                                                    |
+| `on<Event>` | `NodeProps['onClick']`    | —      | 与 `onClick` 同签名的 pointer、wheel 等水合事件；需要 `id`，完整列表见[水合](/kernel/packages/render/hydration)                                                                                           |
 
 其余 props 按职责列在下方四个 API 主题；每个小节都能独立查阅对应默认值和示例。
 
 ### 定位
 
-| 属性       | 类型                                                                                                 | 默认值 | 描述                                                                                                      |
-| ---------- | ---------------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------- |
-| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, fraction }` | —      | 节点中心位置：笛卡尔 / 极坐标 / 相对定位 / 偏移定位 / 比例定位；`of` 三态：节点 id、笛卡尔、PolarPosition |
+| 属性       | 类型                    | 默认值 | 描述                                                                                                                             |
+| ---------- | ----------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `position` | `NodeProps['position']` | —      | 前五种直接确定中心 / 点位置；`IRAnchorPosition` 在自身布局完成后把 `selfAnchor` 对齐到已完成 target 的 anchor，双方默认 `center` |
 
 ### 几何
 
-| 属性           | 类型                                                                                     | 默认值        | 描述                                                                                                                                                                                                                                                                                                                                                                                       |
-| -------------- | ---------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `shape`        | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond' \| string`<br />`\| { type, params }` | `'rectangle'` | 节点形状：裸字符串仅限无必填参数的形状（`rectangle` / `circle` / `ellipse` / `diamond` / 无参注册名）；`polygon` / `sector` / `arc` / `star` 等带必填参数的形状必须用 `{ type, params }`（裸字符串会编译期抛错）；内置见上，或经 `<Layout shapes>` / `CompileOptions.shapes` 注册                                                                                                          |
-| `boundary`     | `'shape' \| 'circle' \| 'rectangle' \| 'ellipse' \| string`<br />`\| { type, params }`   | `'shape'`     | 连接面：边在此节点如何贴边、标准方位锚点如何解析，独立于视觉 `shape`。内置规则面参数为 `{ fit?: 'tight' \| 'bounds', gap?: number }`，默认 `{ fit:'tight', gap:0 }`；`gap` 有符号且必须有限，负值允许穿过视觉形状但不推荐，最终半轴必须大于 0。其它值先查自定义连接面，再 fallback 到已注册 shape 边界。不改节点占位；形状专属锚点与边上比例点仍走视觉形状。单条边可用端点 `boundary` 覆盖 |
-| `rotate`       | `number`                                                                                 | `0`           | 绕中心旋转角度（度，正值顺时针）                                                                                                                                                                                                                                                                                                                                                           |
-| `padding`      | `number \| { default?, x?, y?, left?, right?, top?, bottom? }`                           | `8`           | 内容到边框的内边距；对象字段按 `left/right/top/bottom` → `x/y` → `default` → 默认值解析                                                                                                                                                                                                                                                                                                    |
-| `margin`       | `number \| { default?, x?, y?, left?, right?, top?, bottom? }`                           | `0`           | 边框外推距离；对象字段按 `left/right/top/bottom` → `x/y` → `default` → 默认值解析；作用于**所有 border 锚点**（显式 `.top` / `.30` 与自动连线端点一致），并**计入节点布局占位 / viewBox**；不改视觉形状                                                                                                                                                                                    |
-| `cornerRadius` | `number`                                                                                 | —             | 顶层圆角半径；仅对 `rectangle` 形状生效（默认或显式 `'rectangle'`），且仅在 params 未给 `cornerRadius` 时合入。各形状的圆角写在 params 里：`shape={{ type, params:{ ..., cornerRadius } }}`（params 优先）                                                                                                                                                                                 |
-| `minimumSize`  | `number \| { default?: number; width?: number; height?: number }`                        | —             | 撑开最小 bbox 宽高；数字表示宽高相同，对象可分别指定宽高，轴字段优先于 `default`                                                                                                                                                                                                                                                                                                           |
-| `scale`        | `number \| { default?: number; x?: number; y?: number }`                                 | `1`           | 均匀或分轴缩放；轴字段优先于 `default`，并影响 bbox、字号、padding、margin 与路径附着点                                                                                                                                                                                                                                                                                                    |
+| 属性           | 类型                                                                                                                                                                                       | 默认值        | 描述                                                                                                                                                                                                                                                                                                                                                                                       |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `shape`        | <ApiValues name="BuiltinShape" /> \| `string` \| `IRShapeRef`                                                                                                                              | `'rectangle'` | 节点形状：裸字符串仅限无必填参数的形状（`rectangle` / `circle` / `ellipse` / `diamond` / 无参注册名）；`polygon` / `sector` / `arc` / `star` 等带必填参数的形状必须用 `{ type, params }`（裸字符串会编译期抛错）；内置见上，或经 `<Layout shapes>` / `CompileOptions.shapes` 注册                                                                                                          |
+| `boundary`     | `IRBoundary`                                                                                                                                                                               | `'shape'`     | 连接面：边在此节点如何贴边、标准方位锚点如何解析，独立于视觉 `shape`。内置规则面参数为 `{ fit?: 'tight' \| 'bounds', gap?: number }`，默认 `{ fit:'tight', gap:0 }`；`gap` 有符号且必须有限，负值允许穿过视觉形状但不推荐，最终半轴必须大于 0。其它值先查自定义连接面，再 fallback 到已注册 shape 边界。不改节点占位；形状专属锚点与边上比例点仍走视觉形状。单条边可用端点 `boundary` 覆盖 |
+| `rotate`       | `number`                                                                                                                                                                                   | `0`           | 绕中心旋转角度（度，正值顺时针）                                                                                                                                                                                                                                                                                                                                                           |
+| `padding`      | `number` \| `IRBoxSpacing`<br />- `default?: number`<br />- `x?: number`<br />- `y?: number`<br />- `left?: number`<br />- `right?: number`<br />- `top?: number`<br />- `bottom?: number` | `8`           | 内容到边框的内边距<br />- 四边 fallback<br />- 左右 fallback<br />- 上下 fallback<br />- 左边<br />- 右边<br />- 上边<br />- 下边；边字段优先于轴字段，再优先于 `default`                                                                                                                                                                                                                  |
+| `margin`       | `number` \| `IRBoxSpacing`<br />- `default?: number`<br />- `x?: number`<br />- `y?: number`<br />- `left?: number`<br />- `right?: number`<br />- `top?: number`<br />- `bottom?: number` | `0`           | 边框外推距离<br />- 四边 fallback<br />- 左右 fallback<br />- 上下 fallback<br />- 左边<br />- 右边<br />- 上边<br />- 下边；边字段优先于轴字段，再优先于 `default`；作用于**所有 border 锚点**并计入布局占位 / viewBox                                                                                                                                                                    |
+| `cornerRadius` | `number`                                                                                                                                                                                   | —             | 顶层圆角半径；仅对 `rectangle` 形状生效（默认或显式 `'rectangle'`），且仅在 params 未给 `cornerRadius` 时合入。各形状的圆角写在 params 里：`shape={{ type, params:{ ..., cornerRadius } }}`（params 优先）                                                                                                                                                                                 |
+| `minimumSize`  | `number` \| `IRBoxSize`<br />- `default?: number`<br />- `width?: number`<br />- `height?: number`                                                                                         | —             | 撑开最小 bbox 宽高<br />- 宽高 fallback<br />- 最小宽度<br />- 最小高度；宽高字段优先于 `default`                                                                                                                                                                                                                                                                                          |
+| `scale`        | `number` \| `IRAxisScale`<br />- `default?: number`<br />- `x?: number`<br />- `y?: number`                                                                                                | `1`           | 均匀或分轴缩放<br />- 双轴 fallback<br />- 横轴缩放<br />- 纵轴缩放；轴字段优先于 `default`，并影响 bbox、字号、padding、margin 与路径附着点                                                                                                                                                                                                                                               |
 
 ### margin 与 padding 的区别
 
@@ -316,35 +328,36 @@ Path / Draw 的端点采用另一种时机。路径先保留绘制顺序占位�
 
 ### 内容
 
-| 属性                | 类型                                  | 默认值            | 描述                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| ------------------- | ------------------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `children` / `text` | `string \| Array<string \| LineSpec>` | —                 | 节点内可见文字；字符串里 `'\n'` 是硬换行 / 数组一元素一行；数组元素可混入 `LineSpec` 对象（`{ text, fill?, opacity?, font? }`）做行级覆盖；`text` 优先于 `children`                                                                                                                                                                                                                                                                                                                                  |
-| `align`             | `'start' \| 'middle' \| 'end'`        | `'middle'`        | 多行文本块内各行水平对齐方式                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `lineHeight`        | `number`                              | `font.size × 1.2` | 多行块的行高（user units）                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `maxTextWidth`      | `number`                              | —                 | 折行阈值（user units）；超过才折行（西文按词 / CJK 按字），短文本盒宽收缩；非固定段落宽                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `font`              | `{ family?, size?, weight?, style? }` | —                 | 字体规格；嵌套对象，所有字段可选                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `textColor`         | `string`                              | `currentColor`    | 文字颜色（块级默认；行级覆盖通过 LineSpec.fill）                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `label`             | `NodeLabel \| Array<NodeLabel>`       | —                 | 边挂标签；单对象或数组；`position` 接 8 方向枚举（缺省 `'top'`）、`'center'`、数字角度或 `{ boundary, fraction }`（矩形边界比例点），`placement` 缺省 `'outside'`，可设 `'inside'` 放到节点内部；`distance` 缺省 12，`font` / `textColor` 缺省继承 node，`opacity` 单独控制标签 0~1；`rotate`（`'none'` / `'radial'` / `'tangent'` / 数字度数）+ `keepUpright` 控制标签自旋；`pin`（`true` 默认线 / `{ stroke, strokeWidth, dashPattern, dashOffset }` 带样式 / 省略无引线）画引线，且仅支持外侧标签 |
+| 属性           | 类型                                                                                                                                                                                                                                | 默认值            | 描述                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `children`     | `NodeProps['children']`                                                                                                                                                                                                             | —                 | JSX 子元素；没有显式 `text` 时，字符串、数字、数组、Fragment 与 `<Text>` 会按顺序归一为节点文字                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `text`         | `NodeProps['text']`                                                                                                                                                                                                                 | —                 | 显式节点文字；字符串里 `'\n'` 是硬换行 / 数组一元素一行；数组元素可用 `IRLineSpec` 做行级覆盖；优先于 `children`                                                                                                                                                                                                                                                                                                                                                                                     |
+| `align`        | <ApiValues name="NodeTextAlign" />                                                                                                                                                                                                  | `'middle'`        | 多行文本块内各行水平对齐方式                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `lineHeight`   | `number`                                                                                                                                                                                                                            | `font.size × 1.2` | 多行块的行高（user units）                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `maxTextWidth` | `number`                                                                                                                                                                                                                            | —                 | 折行阈值（user units）；超过才折行（西文按词 / CJK 按字），短文本盒宽收缩；非固定段落宽                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `font`         | `IRFont`<br />- `family?: string`<br />- `size?: number` \| <ApiValues name="WebFontSizePreset" /> \| `string`<br />- `weight?:` <ApiValues name="FontWeightKeyword" /> \| `number`<br />- `style?:` <ApiValues name="FontStyle" /> | —                 | 字体规格<br />- CSS 字体族<br />- 字号 preset、正数 `em` / `rem` 或用户单位数值<br />- 字重<br />- 字体样式                                                                                                                                                                                                                                                                                                                                                                                          |
+| `textColor`    | `string`                                                                                                                                                                                                                            | `currentColor`    | 文字颜色（块级默认；行级覆盖通过 `IRLineSpec['fill']`）                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `label`        | `IRNodeLabelInput` \| `Array<IRNodeLabelInput>`                                                                                                                                                                                     | —                 | 边挂标签；单对象或数组；`position` 接 8 方向枚举（缺省 `'top'`）、`'center'`、数字角度或 `{ boundary, fraction }`（矩形边界比例点），`placement` 缺省 `'outside'`，可设 `'inside'` 放到节点内部；`distance` 缺省 12，`font` / `textColor` 缺省继承 node，`opacity` 单独控制标签 0~1；`rotate`（`'none'` / `'radial'` / `'tangent'` / 数字度数）+ `keepUpright` 控制标签自旋；`pin`（`true` 默认线 / `{ stroke, strokeWidth, dashPattern, dashOffset }` 带样式 / 省略无引线）画引线，且仅支持外侧标签 |
 
 ### 视觉样式 API
 
-| 属性            | 类型                                                                                                          | 默认值         | 描述                                                                                                                                                                                    |
-| --------------- | ------------------------------------------------------------------------------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `color`         | `string`                                                                                                      | —              | 主色；`stroke` / `fill` / `textColor` 未单设则随它，并级联到内部文字与边 label                                                                                                          |
-| `fill`          | `string \| IRPaintSpec`                                                                                       | —              | 背景填充：纯色 CSS 串，或 IRPaintSpec（渐变 linear / radial / conic、图案 pattern、图片 image）                                                                                         |
-| `stroke`        | `string \| IRPaintSpec`                                                                                       | `currentColor` | 边框 paint：CSS 颜色或 IRPaintSpec（渐变 / pattern / image）                                                                                                                            |
-| `strokeWidth`   | `number`                                                                                                      | `1`            | 边框宽度（user units）                                                                                                                                                                  |
-| `opacity`       | `number`                                                                                                      | —              | 整节点 0~1，同时作用于 shape + text                                                                                                                                                     |
-| `fillOpacity`   | `number`                                                                                                      | —              | 仅填充透明 0~1                                                                                                                                                                          |
-| `strokeOpacity` | `number`                                                                                                      | —              | 仅描边透明 0~1                                                                                                                                                                          |
-| `shadow`        | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none' \| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | —              | 形状投影：预设字符串或对象；只作用于 shape，不作用于文字 / 标签。详见 [视觉效果](/kernel/components/effects)                                                                            |
-| `blendMode`     | `'normal' \| 'multiply' \| 'screen' \| ...`（16 个 W3C 分离模式）                                             | `'normal'`     | 形状与其下方已绘内容的混合模式；只作用于 shape。详见 [视觉效果](/kernel/components/effects)                                                                                             |
-| `dashed`        | `boolean`                                                                                                     | —              | 虚线预设（`[4, 2]`）                                                                                                                                                                    |
-| `dotted`        | `boolean`                                                                                                     | —              | 点线预设（`[1, 2]`）                                                                                                                                                                    |
-| `dashPattern`   | `Array<number>`                                                                                               | —              | 显式 dash/gap 长度序列；优先级最高                                                                                                                                                      |
-| `dashOffset`    | `number`                                                                                                      | —              | 边框虚线起点偏移，单位同 user units                                                                                                                                                     |
-| `zIndex`        | `number`（整数）                                                                                              | `0`            | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效                                                                                                                              |
-| `animations`    | `Array<AnimationTrack>`                                                                                       | —              | 时间轴动画 tracks：每条 track 动一个 renderer 无关 property，base = 动画终态；透传进 Scene 图元，renderer 播放或降级到静态。不参与布局。见 [动画](/kernel/components/effects/animation) |
+| 属性            | 类型                                                | 默认值         | 描述                                                                                                                                                                                    |
+| --------------- | --------------------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `color`         | `string`                                            | —              | 主色；`stroke` / `fill` / `textColor` 未单设则随它，并级联到内部文字与边 label                                                                                                          |
+| `fill`          | `string` \| `IRPaintSpec`                           | —              | 背景填充：纯色 CSS 串，或 IRPaintSpec（渐变 linear / radial / conic、图案 pattern、图片 image）                                                                                         |
+| `stroke`        | `string` \| `IRPaintSpec`                           | `currentColor` | 边框 paint：CSS 颜色或 IRPaintSpec（渐变 / pattern / image）                                                                                                                            |
+| `strokeWidth`   | `number`                                            | `1`            | 边框宽度（user units）                                                                                                                                                                  |
+| `opacity`       | `number`                                            | —              | 整节点 0~1，同时作用于 shape + text                                                                                                                                                     |
+| `fillOpacity`   | `number`                                            | —              | 仅填充透明 0~1                                                                                                                                                                          |
+| `strokeOpacity` | `number`                                            | —              | 仅描边透明 0~1                                                                                                                                                                          |
+| `shadow`        | <ApiValues name="ShadowPreset" /> \| `IRDropShadow` | —              | 形状投影：预设字符串或对象；只作用于 shape，不作用于文字 / 标签。详见 [视觉效果](/kernel/components/effects)                                                                            |
+| `blendMode`     | <ApiValues name="BlendMode" />                      | `'normal'`     | 形状与其下方已绘内容的混合模式；只作用于 shape。详见 [视觉效果](/kernel/components/effects)                                                                                             |
+| `dashed`        | `boolean`                                           | —              | 虚线预设（`[4, 2]`）                                                                                                                                                                    |
+| `dotted`        | `boolean`                                           | —              | 点线预设（`[1, 2]`）                                                                                                                                                                    |
+| `dashPattern`   | `Array<number>`                                     | —              | 显式 dash/gap 长度序列；优先级最高                                                                                                                                                      |
+| `dashOffset`    | `number`                                            | —              | 边框虚线起点偏移，单位同 user units                                                                                                                                                     |
+| `zIndex`        | `number`（整数）                                    | `0`            | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效                                                                                                                              |
+| `animations`    | `Array<IRAnimationTrack>`                           | —              | 时间轴动画 tracks：每条 track 动一个 renderer 无关 property，base = 动画终态；透传进 Scene 图元，renderer 播放或降级到静态。不参与布局。见 [动画](/kernel/components/effects/animation) |
 
 ## 相关
 

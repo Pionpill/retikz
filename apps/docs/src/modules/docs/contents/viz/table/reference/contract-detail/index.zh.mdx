@@ -9,12 +9,10 @@ description: 查询外部数据引用、detail columns 与 record-per-row Struct
 
 `IRDetailTableSpec` 是明细表的精确根类型。与聚合 `IRTableSpec` 相比，它明确要求 `data`，并把 `structure` 收窄为 `detail`。
 
-| 字段                | 类型                         | 默认值 | 描述                            |
-| ------------------- | ---------------------------- | ------ | ------------------------------- |
-| `data`              | `IRDataReference`            | —      | 必需的外部 dataset reference    |
-| `structure.kind`    | `'detail'`                   | —      | record-per-row Structure 判别值 |
-| `structure.columns` | `Array<IRTableDetailColumn>` | —      | 至少一列，id 必须唯一           |
-| `structure.header?` | `boolean`                    | `true` | 是否生成列头行                  |
+| 字段        | 类型                                                                                                                                                   | 默认值                                     | 描述                                                                                                |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| `data`      | `IRDetailTableSpec['data']`<br />- `reference: string`<br />- `model?: IRDataModel`                                                                    | —<br />- —<br />- —                        | 必需的外部 dataset reference<br />- 运行时 dataset 名称<br />- 可选数据模型                         |
+| `structure` | `IRDetailTableStructure`<br />- `kind:` <ApiValues name="TableStructureKind" /><br />- `columns: Array<IRTableDetailColumn>`<br />- `header?: boolean` | —<br />- `'detail'`<br />- —<br />- `true` | record-per-row Structure<br />- Structure 判别值<br />- 至少一列，id 必须唯一<br />- 是否生成列头行 |
 
 ### DetailTableSpecSchema
 

@@ -1,6 +1,6 @@
 import type { Position } from '@retikz/math';
 
-import type { IRBoundary, IRPosition } from '../../schemas';
+import type { IRAnchorRef, IRBoundary, IRPosition } from '../../schemas';
 import type { SideValue } from '../../shared';
 import type { NodeLayout } from '../node';
 
@@ -10,25 +10,45 @@ import { anchorOf, angleBoundaryOf, boundaryKey } from '../node';
 /** 单个 NodeLayout 生命周期内的 anchor 坐标缓存 */
 const cache = new WeakMap<NodeLayout, Map<string, IRPosition>>();
 
-/** 角度字符串识别：可选负号 + 数字 + 可选小数；与 parseTarget.ts 的 ANGLE_RE 同语义 */
+/** 角度字符串识别规则，与文本 target parser 保持一致 */
 const ANGLE_RE = /^-?\d+(\.\d+)?$/;
 
-/** 把 anchor 名称解析为节点上的全局坐标 */
+/** geometry Position 转 IRPosition 元组 */
+const positionToIR = (position: Position): IRPosition => [position[0], position[1]];
+
+/** 不经过 WeakMap 缓存解析命名或角度 anchor */
 const computeAnchor = (layout: NodeLayout, anchorName: string, boundary: IRBoundary | undefined): IRPosition => {
   if (ANGLE_RE.test(anchorName)) {
-    const angle = Number(anchorName);
-    return positionToIR(angleBoundaryOf(layout, angle, boundary, true));
+    return positionToIR(angleBoundaryOf(layout, Number(anchorName), boundary, true));
   }
-  if (isAnchor(anchorName)) {
-    return positionToIR(anchorOf(layout, anchorName, boundary, true));
-  }
-  // 形状专属命名 anchor：anchorOf 走 layout.shapeDef.anchor(rect, name)，shape 不认识的名字返回 undefined → 抛 Unknown anchor。
-  // 恒走视觉 rect（不外扩）；调用方（parseNodeRef）通常已先按标准方位 anchor 集合校验内置 anchor 名合法性
-  return positionToIR(anchorOf(layout, anchorName, boundary));
+  return positionToIR(anchorOf(layout, anchorName, boundary, isAnchor(anchorName)));
 };
 
-/** geometry Position（含 readonly 形态）转 IRPosition 元组（IRPosition === [number, number]） */
-const positionToIR = (p: Position): IRPosition => [p[0], p[1]];
+/** 不经过 WeakMap 缓存解析视觉 shape 的边上比例点 */
+const computeEdgePoint = (layout: NodeLayout, side: SideValue, fraction: number): IRPosition => {
+  const { edgePoint } = layout.shapeDef;
+  if (!edgePoint) {
+    throw new Error(`shape '${layout.shapeName}' does not support side anchors ({ side, fraction })`);
+  }
+  if (layout.rect.width === 0 && layout.rect.height === 0) {
+    throw new Error(`{ side, fraction } is not meaningful on a zero-size target (shape '${layout.shapeName}')`);
+  }
+  return positionToIR(edgePoint(layout.rect, side, fraction, layout.shapeParams ?? {}));
+};
+
+/**
+ * 不经过 WeakMap 缓存解析完整 anchor 引用
+ * @description 供仍会整体平移的 provisional layout 使用，避免缓存平移前坐标
+ */
+export const resolveAnchorRefUncached = (
+  layout: NodeLayout,
+  anchor: IRAnchorRef,
+  boundary: IRBoundary | undefined = 'shape',
+): IRPosition => {
+  if (typeof anchor === 'number') return computeAnchor(layout, String(anchor), boundary);
+  if (typeof anchor === 'string') return computeAnchor(layout, anchor, boundary);
+  return computeEdgePoint(layout, anchor.side, anchor.fraction);
+};
 
 /** 取节点 anchor 的全局坐标 */
 export const resolveAnchor = (
@@ -51,13 +71,6 @@ export const resolveAnchor = (
 
 /** 取节点边上比例点的全局坐标 */
 export const resolveEdgePoint = (layout: NodeLayout, side: SideValue, t: number): IRPosition => {
-  const { edgePoint } = layout.shapeDef;
-  if (!edgePoint) {
-    throw new Error(`shape '${layout.shapeName}' does not support side anchors ({ side, fraction })`);
-  }
-  if (layout.rect.width === 0 && layout.rect.height === 0) {
-    throw new Error(`{ side, fraction } is not meaningful on a zero-size Coordinate (shape '${layout.shapeName}')`);
-  }
   let layoutCache = cache.get(layout);
   if (!layoutCache) {
     layoutCache = new Map<string, IRPosition>();
@@ -66,7 +79,18 @@ export const resolveEdgePoint = (layout: NodeLayout, side: SideValue, t: number)
   const key = `${side}:${t}`;
   const cached = layoutCache.get(key);
   if (cached !== undefined) return cached;
-  const result = positionToIR(edgePoint(layout.rect, side, t, layout.shapeParams ?? {}));
+  const result = computeEdgePoint(layout, side, t);
   layoutCache.set(key, result);
   return result;
+};
+
+/** 使用既有 WeakMap 缓存解析完整 anchor 引用 */
+export const resolveAnchorRef = (
+  layout: NodeLayout,
+  anchor: IRAnchorRef,
+  boundary: IRBoundary | undefined = 'shape',
+): IRPosition => {
+  if (typeof anchor === 'number') return resolveAnchor(layout, String(anchor), boundary);
+  if (typeof anchor === 'string') return resolveAnchor(layout, anchor, boundary);
+  return resolveEdgePoint(layout, anchor.side, anchor.fraction);
 };

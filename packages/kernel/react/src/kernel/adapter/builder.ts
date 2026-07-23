@@ -195,9 +195,8 @@ const readNodeText = (props: NodeProps): IRNode['text'] => {
   return lines;
 };
 
-const normalizePositionInput = (position: NodeProps['position'] | CoordinateProps['position']): IRNode['position'] => {
-  return position;
-};
+const normalizePositionInput = <T extends NodeProps['position'] | CoordinateProps['position']>(position: T): T =>
+  position;
 
 const normalizeNodeLabelPositionInput = (
   position: IRNodeLabelInput['position'],

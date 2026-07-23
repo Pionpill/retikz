@@ -2,7 +2,6 @@ import type { Transform } from '../../../contract';
 import type {
   FoldStepViaValue,
   IRBetweenPosition,
-  IRBoundary,
   IRNodeTarget,
   IRPosition,
   IRRelativeAccumulateTarget,
@@ -10,7 +9,6 @@ import type {
   IRTarget,
 } from '../../../schemas';
 import type { NamespaceStack } from '../../namespace';
-import type { NodeLayout } from '../../node';
 
 import { FoldStepVia } from '../../../schemas';
 import {
@@ -22,7 +20,7 @@ import {
 import { lerpPoint, point } from '../../../shared/geometry';
 import { boundaryPointOf } from '../../node';
 import { resolvePosition } from '../../position';
-import { resolveAnchor, resolveEdgePoint } from '../../reference';
+import { resolveAnchorRef } from '../../reference';
 import { applyTransformChain, inverseTransformChain } from '../../transform';
 
 /** 判断 target 是否为按 id 引用节点或坐标的对象目标 */
@@ -38,17 +36,6 @@ const isBetween = (t: IRTarget): t is IRBetweenPosition => isBetweenPositionLike
 /** 判断 target 是否为进入 emit 前应被 path 游标归一化的相对端点 */
 const isRelative = (t: IRTarget): t is IRRelativeTarget | IRRelativeAccumulateTarget =>
   isRelativeTargetLike(t) || isRelativeAccumulateTargetLike(t);
-
-/** 将显式 anchor 解析为世界坐标 */
-const resolveAnchorRef = (
-  node: NodeLayout,
-  anchor: NonNullable<IRNodeTarget['anchor']>,
-  boundary: IRBoundary | undefined,
-): IRPosition => {
-  if (typeof anchor === 'number') return resolveAnchor(node, String(anchor), boundary);
-  if (typeof anchor === 'string') return resolveAnchor(node, anchor, boundary);
-  return resolveEdgePoint(node, anchor.side, anchor.fraction);
-};
 
 /** 在世界坐标系叠加节点目标的 offset */
 const addOffset = (base: IRPosition, offset: IRNodeTarget['offset']): IRPosition =>

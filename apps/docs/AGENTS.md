@@ -44,6 +44,7 @@ docs 内容规则不复制在 AGENTS 中，按需动态加载：
 - 通用规则：`.agents/skills/docs-doc-principle/SKILL.md`
 - 带 controls 的 ComponentPreview：`docs-doc-control`
 - 组件页：`docs-doc-component`
+- Standard Tier 2 composite 组件页：`docs-doc-standard-composite`
 - 扩展指南：`docs-doc-extension`
 - 示例页：`docs-doc-example`
 - 分组落地页：`docs-doc-group`

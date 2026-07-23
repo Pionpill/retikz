@@ -168,13 +168,13 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
 
 ### 输入与视框
 
-| 属性       | 类型                      | 默认值 | 描述                                         |
-| ---------- | ------------------------- | ------ | -------------------------------------------- |
-| `children` | `ReactNode`               | —      | Kernel / Sugar 组件树；未传 `ir` 时使用      |
-| `ir`       | `IRScene`                 | —      | 已构造的 Core IR；同时传 children 时采用本项 |
-| `width`    | `number \| string`        | —      | SVG / Canvas 在页面上的显示宽度              |
-| `height`   | `number \| string`        | —      | SVG / Canvas 在页面上的显示高度              |
-| `viewBox`  | `{ x, y, width, height }` | —      | 内部坐标范围；覆盖 IR viewBox 与自动范围     |
+| 属性       | 类型                 | 默认值 | 描述                                         |
+| ---------- | -------------------- | ------ | -------------------------------------------- |
+| `children` | `ReactNode`          | —      | Kernel / Sugar 组件树；未传 `ir` 时使用      |
+| `ir`       | `IRScene`            | —      | 已构造的 Core IR；同时传 children 时采用本项 |
+| `width`    | `number` \| `string` | —      | SVG / Canvas 在页面上的显示宽度              |
+| `height`   | `number` \| `string` | —      | SVG / Canvas 在页面上的显示高度              |
+| `viewBox`  | `IRViewBox`          | —      | 内部坐标范围；覆盖 IR viewBox 与自动范围     |
 
 ### 编译基础
 
@@ -218,13 +218,13 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
 
 ### 渲染与宿主
 
-| 属性        | 类型                | 默认值  | 描述                                                                        |
-| ----------- | ------------------- | ------- | --------------------------------------------------------------------------- |
-| `renderer`  | `'svg' \| 'canvas'` | `'svg'` | 输出后端；缺省时读取最近的 `RendererModeProvider`                           |
-| `className` | `string`            | —       | 透传到 SVG / Canvas 根元素                                                  |
-| `style`     | `CSSProperties`     | —       | 透传到 SVG / Canvas 根元素                                                  |
-| `idPrefix`  | `string`            | —       | 覆盖资源 id 前缀，用于多实例或 SSR 水合稳定性                               |
-| `handlers`  | `HydrationHandlers` | —       | `ir` 模式的事件 handler 注册表；见[水合](/kernel/packages/render/hydration) |
+| 属性        | 类型                      | 默认值  | 描述                                                                        |
+| ----------- | ------------------------- | ------- | --------------------------------------------------------------------------- |
+| `renderer`  | `'svg'` \| `'canvas'`     | `'svg'` | 输出后端；缺省时读取最近的 `RendererModeProvider`                           |
+| `className` | `string`                  | —       | 透传到 SVG / Canvas 根元素                                                  |
+| `style`     | `CSSProperties`           | —       | 透传到 SVG / Canvas 根元素                                                  |
+| `idPrefix`  | `string`                  | —       | 覆盖资源 id 前缀，用于多实例或 SSR 水合稳定性                               |
+| `handlers`  | `LayoutProps['handlers']` | —       | `ir` 模式的事件 handler 注册表；见[水合](/kernel/packages/render/hydration) |
 
 ### React 宿主导出
 
@@ -234,14 +234,14 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
 
 ### 动画
 
-| 属性                  | 类型                             | 默认值 | 描述                                                                    |
-| --------------------- | -------------------------------- | ------ | ----------------------------------------------------------------------- |
-| `animate`             | `boolean`                        | 系统   | 播放开关；见[动画](/kernel/components/effects/animation)                |
-| `snapshotAt`          | `number`                         | —      | 静态截帧时刻，覆盖 `animate`                                            |
-| `animations`          | `Array<IRAnimationTrack>`        | —      | scene 根动画 tracks，例如 viewBox 镜头动画                              |
-| `animationRef`        | `Ref<AnimationControls \| null>` | —      | `play` / `pause` / `seek` 命令式句柄                                    |
-| `easings`             | `EasingRegistry`                 | —      | 自定义缓动；见[自定义动画](/kernel/components/effects/custom-animation) |
-| `animationProperties` | `AnimationPropertyRegistry`      | —      | 自定义动画属性插值器；当前仅 Canvas                                     |
+| 属性                  | 类型                                 | 默认值 | 描述                                                                    |
+| --------------------- | ------------------------------------ | ------ | ----------------------------------------------------------------------- |
+| `animate`             | `boolean`                            | 系统   | 播放开关；见[动画](/kernel/components/effects/animation)                |
+| `snapshotAt`          | `number`                             | —      | 静态截帧时刻，覆盖 `animate`                                            |
+| `animations`          | `Array<IRAnimationTrack>`            | —      | scene 根动画 tracks，例如 viewBox 镜头动画                              |
+| `animationRef`        | `LayoutProps['animationRef']`        | —      | `play` / `pause` / `seek` 命令式句柄                                    |
+| `easings`             | `LayoutProps['easings']`             | —      | 自定义缓动；见[自定义动画](/kernel/components/effects/custom-animation) |
+| `animationProperties` | `LayoutProps['animationProperties']` | —      | 自定义动画属性插值器；当前仅 Canvas                                     |
 
 ## 相关
 

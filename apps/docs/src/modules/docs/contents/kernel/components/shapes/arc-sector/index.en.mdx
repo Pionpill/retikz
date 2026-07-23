@@ -105,10 +105,10 @@ Shared props (forwarded to the underlying `<Path>`):
 | ------------------ | ---------------------------------------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------ |
 | angles             | `startAngle` / `endAngle` / `sweepAngle`                                                 | Arc / Sector        | Any two, in degrees; `0`=+x, `90`=screen-down                            |
 | `center`           | target                                                                                   | Arc / filled Sector | Node id / polar / Cartesian; a hollow Sector must use a literal `[x, y]` |
-| `close`            | `'open' \| 'chord' \| 'sector'`                                                          | Arc                 | Closing mode, defaults to `'open'`                                       |
+| `close`            | `'open'` \| `'chord'` \| `'sector'`                                                      | Arc                 | Closing mode, defaults to `'open'`                                       |
 | `label`            | edge-label object                                                                        | Arc / Sector        | Positioned along the arc, `position` defaults to `midway`                |
-| `rotate` / `scale` | `number` / `{ x, y }`                                                                    | Arc / Sector        | Whole-shape transform around the bounding-box center                     |
-| `marks`            | `{ pos, mark }[]`                                                                        | Arc / Sector        | Mid-path direction markers along the path                                |
+| `rotate` / `scale` | `number` / `IRPathScale`                                                                 | Arc / Sector        | Whole-shape transform around the bounding-box center                     |
+| `marks`            | `IRPathBase['marks']`                                                                    | Arc / Sector        | Mid-path direction markers along the path                                |
 | visual             | `stroke` / `strokeWidth` / `dashPattern` / `dashOffset` / `arrow` / `fill` / `opacity` … | Arc / Sector        | Forwards the full `<Path>` visual prop set                               |
 
 ## As a node shape

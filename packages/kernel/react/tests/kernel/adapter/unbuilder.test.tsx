@@ -94,6 +94,23 @@ describe('convertIRToReactNode', () => {
     });
   });
 
+  it('Node anchor-to-anchor position 往返保持原结构', () => {
+    const position = {
+      kind: 'anchor' as const,
+      target: { id: 'A', anchor: 'bottom-left' as const, offset: [6, -2] as [number, number] },
+      selfAnchor: 'top-left' as const,
+    };
+    const ir: IRScene = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: [{ type: 'node', id: 'B', position }],
+    };
+
+    const [element] = toElements(convertIRToReactNode(ir));
+    expect(element.props.position).toEqual(position);
+    expect(buildIR(element)).toEqual(ir);
+  });
+
   it('IR Node 上 undefined 字段不写进 element props', () => {
     const ir: IRScene = {
       version: CURRENT_IR_VERSION,

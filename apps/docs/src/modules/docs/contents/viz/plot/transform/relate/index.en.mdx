@@ -1,0 +1,51 @@
+---
+title: Pairing Rows
+description: relate selects source and target rows from each group, then projects them into ordinary relation rows for RelationMark or any other mark.
+---
+
+`relate` first selects a source row and a target row, then projects fields from those rows into `sourceXxx` / `targetXxx` fields. It is often placed on `RelationMark.transform`, but it is not private to RelationMark; the output fields are ordinary transform-derived fields.
+
+| Step             | Config                            | Output                                          |
+| ---------------- | --------------------------------- | ----------------------------------------------- |
+| Select source    | `source.selector`                 | One original source row                         |
+| Select target    | `target.selector`                 | One original target row                         |
+| Project fields   | `source.fields` / `target.fields` | Endpoint fields such as `sourceId` / `targetId` |
+| Compute measures | `measures`                        | Relation fields such as `delta` / `deltaLabel`  |
+
+## Extremes With Relate
+
+This example selects the minimum and maximum points on a trend line, projects `sourceId` / `targetId`, and computes the `value` difference for the label.
+
+<ComponentPreview files={['transform-relate', 'transform-relate.data.ts']} />
+
+The input is still ordinary data rows. In the demo, `PathMark` and `PointMark` consume the original rows; the local transform on `RelationMark` generates one paired row only for the relation layer.
+The source and target selectors reuse the same [Statistical Sub-operators](/viz/data/transform/statistics) as `select`, so they can choose top-N rows, ordered endpoints, or custom representative rows.
+
+`IRPlotRelateTransform` fixes `kind` to `'relate'`.
+
+| prop                | Type                                                                                                                                                                                              | Default          | Notes                                                                                                                                                     |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `groupBy?`          | `Array<string>`                                                                                                                                                                                   | One global group | Generate pairs independently per group                                                                                                                    |
+| `source` / `target` | `IRPlotEndpointProjection`<br />- `selector: IRDataSelectorOperation`<br />- `fields: Record<string, string>`                                                                                     | —                | Endpoint projection<br />- Representative-row rule<br />- Non-empty output-suffix to endpoint-row-field map                                               |
+| `measures?`         | `Array<IRPlotPairMeasureOperation>`<br />- `op:` <ApiValues name="PairMeasureOperationKind" /><br />- `field: string`<br />- `as: string`<br />- `labelAs?: string`<br />- `labelPrefix?: string` | —                | Derived endpoint measures<br />- Measure kind<br />- Numeric input field<br />- Output field<br />- Optional label field<br />- Non-negative label prefix |
+
+```tsx
+<RelationMark
+  transform={[
+    {
+      kind: 'relate',
+      source: { selector: { kind: 'min', by: 'value' }, fields: { id: 'id' } },
+      target: { selector: { kind: 'max', by: 'value' }, fields: { id: 'id' } },
+      measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+    },
+  ]}
+  source={{ anchorId: { prefix: 'trend', field: 'sourceId' } }}
+  target={{ anchorId: { prefix: 'trend', field: 'targetId' } }}
+/>
+```
+
+## Field Names
+
+The keys in `fields` become output suffixes, with `source` or `target` prepended. For example, `source.fields: { id: 'id', x: 'month' }` outputs `sourceId` and `sourceX`.
+
+The built-in pair measure is currently `difference`, which means `target[field] - source[field]`. For more complex pair measures, generate relation rows with a custom transform first, or add a dedicated pair-measure extension later.
