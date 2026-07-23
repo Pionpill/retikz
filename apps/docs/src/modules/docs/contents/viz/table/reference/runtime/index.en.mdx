@@ -48,17 +48,53 @@ Nested manual authoring still requires explicit root `rows` / `columns`; Row cou
 
 All three components share these runtime props:
 
-| Prop                      | Type                                           | Default | Description                                             |
-| ------------------------- | ---------------------------------------------- | ------- | ------------------------------------------------------- |
-| `structureDefinitions`    | `ReadonlyArray<AnyTableStructureDefinition>`   | `[]`    | Custom Structure definitions                            |
-| `presentationDefinitions` | `ReadonlyArray<AnyCellPresentationDefinition>` | `[]`    | Custom Cell presentation definitions                    |
-| `composites`              | `ReadonlyArray<CompositeDefinition>`           | `[]`    | Definitions required by Tier 2 Cell content             |
-| `onManifest`              | `(manifest: TableLayoutManifest) => void`      | —       | Standalone layout callback; unsupported when embedded   |
-| `renderer`                | `'svg' \| 'canvas'`                            | `'svg'` | Renderer backend                                        |
-| `width` / `height`        | `number \| string`                             | —       | Host display size; does not change Table's fixed tracks |
-| `className` / `style`     | `string`<br />`CSSProperties`                  | —       | Passed to the rendering host                            |
+| Prop                       | Type                                           | Default | Description                                             |
+| -------------------------- | ---------------------------------------------- | ------- | ------------------------------------------------------- |
+| `structureDefinitions?`    | `ReadonlyArray<AnyTableStructureDefinition>`   | `[]`    | Custom Structure definitions                            |
+| `presentationDefinitions?` | `ReadonlyArray<AnyCellPresentationDefinition>` | `[]`    | Custom Cell presentation definitions                    |
+| `composites?`              | `ReadonlyArray<CompositeDefinition>`           | `[]`    | Definitions required by Tier 2 Cell content             |
+| `onManifest?`              | `(manifest: TableLayoutManifest) => void`      | —       | Standalone layout callback; unsupported when embedded   |
+| `renderer?`                | `'svg' \| 'canvas'`                            | `'svg'` | Renderer backend                                        |
+| `width?` / `height?`       | `number \| string`                             | —       | Host display size; does not change Table's fixed tracks |
+| `className?` / `style?`    | `string`<br />`CSSProperties`                  | —       | Passed to the rendering host                            |
 
 Standalone components may omit their TableSpec `id`; embedding in a parent `Layout` requires a stable id. Embedded mode cannot use `onManifest`, so consume the sidecar through `lowerTableWithArtifacts()` explicitly.
+
+### ManualTable
+
+| Prop        | Type                           | Default              | Description                                                         |
+| ----------- | ------------------------------ | -------------------- | ------------------------------------------------------------------- |
+| `rows`      | `ManualTableProps['rows']`     | —                    | Explicit row count; must equal the number of Row children           |
+| `columns`   | `ManualTableProps['columns']`  | —                    | Explicit column count; each Row may declare at most this many Cells |
+| `cells?`    | `ManualTableProps['cells']`    | —                    | Complete addressed Cell set; exclusive with `children`              |
+| `rowKinds?` | `ManualTableProps['rowKinds']` | all `body`           | Semantic kind for each row; exclusive with Row children             |
+| `children?` | `ManualTableProps['children']` | —                    | Ordered Row markers; exclusive with `cells` / `rowKinds`            |
+| `id?`       | `ManualTableProps['id']`       | —                    | Stable Table id; required inside a parent `Layout`                  |
+| `layout?`   | `ManualTableProps['layout']`   | fixed-track defaults | Column width, row height, and row/column gaps                       |
+| `meta?`     | `ManualTableProps['meta']`     | —                    | JSON metadata stored in TableSpec                                   |
+
+`ManualTable` also accepts the shared runtime props above.
+
+### Row
+
+| Prop        | Type                   | Default | Description                      |
+| ----------- | ---------------------- | ------- | -------------------------------- |
+| `kind?`     | `RowProps['kind']`     | `body`  | Semantic kind of the current row |
+| `children?` | `RowProps['children']` | —       | Cell markers in column order     |
+
+### Cell
+
+| Prop            | Type                        | Default                    | Description                                                           |
+| --------------- | --------------------------- | -------------------------- | --------------------------------------------------------------------- |
+| `id?`           | `CellProps['id']`           | derived from the address   | Stable Cell id                                                        |
+| `children?`     | `CellProps['children']`     | —                          | JSON scalar value payload; exclusive with `value` / `content`         |
+| `value?`        | `CellProps['value']`        | —                          | Explicit value payload; exclusive with `children` / `content`         |
+| `content?`      | `CellProps['content']`      | —                          | Direct JSON-safe Core `IRChild`; exclusive with other payload sources |
+| `presentation?` | `CellProps['presentation']` | built-in `text`            | Presentation for value or scalar children; unavailable with content   |
+| `location?`     | `CellProps['location']`     | derived from row semantics | Semantic region occupied by the Cell                                  |
+| `roles?`        | `CellProps['roles']`        | derived from row semantics | Non-empty semantic role set                                           |
+
+Provide exactly one of `children`, `value`, or `content`. `presentation` only applies to value payloads, including scalar children.
 
 ## Vanilla runtime
 

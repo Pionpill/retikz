@@ -198,6 +198,14 @@ type CellProps = CellSharedProps &
 
 具体行为、不变量、反例和最低测试层见 ignored `notes/plans/table-react-composition-api/TEST_CONTRACT.md`。
 
+## 最终实现与验证
+
+`@retikz/table-react` 已公开 `DetailColumn`、`Row` 与 `Cell` marker。`DetailTable` 支持完整 `columns` props 或 `DetailColumn` children，`ManualTable` 支持完整 `cells` / `rowKinds` props 或 `Row` / `Cell` children；两组来源均互斥，并通过 `resolveReactTableRuntime()` 进入同一 spec、standalone 与 embedded runtime。
+
+marker traversal 保留 Fragment、数组与条件空节点中的有效声明顺序；Cell scalar children、显式 value 和 content 归一为既有 JSON-safe payload。未知 element、双来源、维度越界和非法 ReactNode 均 fail-loud，ReactNode 本身不进入 Table IR。
+
+验证覆盖 marker 与 props 等价、根属性保留、payload 边界、稀疏 manual 行、错误 grammar、standalone / embedded 同源、manifest 与公开导出。Table React 的 ESLint、TypeScript、build 与 4 个测试文件 / 26 项测试通过；Table 双语 7 页完整性检查和 docs TypeScript 通过。
+
 ## 影响
 
 - `DetailTableProps` / `ManualTableProps` 增加互斥 children authoring 分支；现有合法 columns / cells props 调用保持兼容，重复结构来源在类型和运行时均被拒绝
@@ -231,72 +239,3 @@ type CellProps = CellSharedProps &
 - 任意 ReactNode Cell content、hooks、事件、选择、编辑或异步数据状态
 - 从 JSX 推断 rows / columns，或为任意稀疏 manual 地址增加隐式占位规则
 - 保留旧别名、命名空间静态 API 或单一 `<Table type>` 兼容层
-
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-本 ADR 自评 level：`yellow`。公开 React authoring 与 adapter normalization 改动，不修改 schema、Table pipeline 或 Core compile。
-
-### Schema 改动
-
-无。
-
-### 文件 scope
-
-本 ADR 实现允许触碰的文件白名单：
-
-- `packages/viz/table-react/src/DetailTable.tsx`
-- `packages/viz/table-react/src/ManualTable.tsx`
-- `packages/viz/table-react/src/table-runtime.ts`
-- `packages/viz/table-react/src/index.ts`
-- `packages/viz/table-react/src/components/**`
-- `packages/viz/table-react/tests/components/**`
-- `packages/viz/table-react/README.md`
-- `packages/viz/table-react/AGENTS.md`
-- `apps/docs/src/modules/docs/contents/viz/table/detail/**`
-- `apps/docs/src/modules/docs/contents/viz/table/model/**`
-- `apps/docs/src/modules/docs/contents/viz/table/reference/**`
-- `packages/viz/_notes/decisions/table/v0/v0.1/alpha.1/08-table-react-composition-api.md`
-- `packages/viz/_notes/decisions/table/v0/v0.1/alpha.1/roadmap.md`
-- `packages/viz/_notes/decisions/table/v0/v0.1/roadmap.md`
-
-偏离白名单需要先修订本 ADR 或另开 ADR。不得因 builder 实现方便修改 `@retikz/table` schema / pipeline、`@retikz/data`、`@retikz/core` 或 `@retikz/table-vanilla`。
-
-### 测试象限
-
-**Happy path**：
-
-- detail children：多个 `<DetailColumn>` 按声明序生成与 columns props 相等的 detail spec
-- manual children：多个 `<Row>/<Cell>` 生成与 cells / rowKinds props 相等的 manual spec
-- Cell payload：scalar children、value、content 与 presentation 分别生成既有 payload 变体
-- runtime parity：children spec 在 standalone 与 embedded adapter 中产生相同节点和数据注入
-
-**边界**：
-
-- JSX 容器：Fragment、数组、`null` / `undefined` / boolean 空节点不改变有效声明顺序
-- 稀疏尾部：空 Row 或少于 columns 的 Cell 保持合法，显式 rows / columns 不被推断修改
-- 根属性：header false、model、layout、meta、definitions 与 manifest props 在两种 authoring 模式中保持原语义
-
-**错误路径**：
-
-- 双来源：columns + DetailColumn、cells / rowKinds + Row 直接 fail-loud
-- 非法 grammar：未知 detail child、Row 外 Cell、Row 内未知 element、detail children 无有效 column 直接 fail-loud
-- dimensions：Row 数量不等于 rows、单 Row Cell 超过 columns 直接 fail-loud
-- payload：value / content / children 多选或 React element children 直接 fail-loud
-
-**交互**：
-
-- embedded identity：三个根组件现有 id、dataset contribution 与 onManifest 限制保持不变
-- custom content：Cell content 继续接收合法 IRChild，并通过 composites 走现有 lowering
-- public surface：新组件从包根导出，现有 Table / DetailTable / ManualTable 导出不回退
-
-### 依赖的现有元素
-
-- `TableDetailColumnInput`、`DetailTableSpecInput`、`ManualTableSpecInput`——作为 React props 和 builder 输出真源
-- `createDetailTableSpec()` / `createManualTableSpec()`——负责最终 plain spec normalization 与 schema parse
-- `IRTableCell`、`IRTableCellPayload`、`IRDataScalarValue`、`IRChild`——定义 Cell marker 可表达的 JSON-safe 边界
-- `resolveReactTableRuntime()` 与三个 embeddable adapters——继续消费规范 spec，不复制 children grammar
-- alpha.1 ADR-06 的 shared authoring / runtime contribution 合同——保留并由本 ADR补充 JSX authoring
