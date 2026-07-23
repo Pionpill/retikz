@@ -4,18 +4,18 @@ import { definePreviewControls } from '@/modules/docs/preview';
 
 import { ScopeTransformControlId, ScopeTransformVisibleWhen } from './scope-translate-basic.controls';
 
-/** Scope transform playground controls in English */
+/** Scope placement and transform playground controls in English */
 export const scopeTranslateBasicEnControls = definePreviewControls({
   presentation: 'panel',
-  title: 'Scope transform',
+  title: 'Scope local coordinates',
   sections: [
     {
-      label: 'Transform type',
+      label: 'Operation',
       controls: [
         {
           kind: 'select',
-          id: ScopeTransformControlId.Kind,
-          label: 'kind',
+          id: ScopeTransformControlId.Operation,
+          label: 'Operation',
           defaultValue: 'translate',
           options: [
             { value: 'translate', label: 'Cartesian translate' },
@@ -28,15 +28,67 @@ export const scopeTranslateBasicEnControls = definePreviewControls({
           ],
         },
         {
+          kind: 'switch',
+          id: ScopeTransformControlId.PlacementEnabled,
+          label: 'Self placement',
+          defaultValue: false,
+        },
+      ],
+    },
+    {
+      label: 'Transform referent',
+      visibleWhen: ScopeTransformVisibleWhen.Referent,
+      controls: [
+        {
           kind: 'select',
           id: ScopeTransformControlId.Referent,
           label: 'Referent',
           defaultValue: 'O',
-          visibleWhen: ScopeTransformVisibleWhen.Referent,
+          visibleWhen: ScopeTransformVisibleWhen.PlacementDisabled,
           options: [
             { value: 'O', label: 'O (left)' },
             { value: 'T', label: 'T (right)' },
           ],
+        },
+      ],
+    },
+    {
+      label: 'Self placement',
+      visibleWhen: ScopeTransformVisibleWhen.Placement,
+      controls: [
+        {
+          kind: 'select',
+          id: ScopeTransformControlId.PlacementTarget,
+          label: 'Placement target',
+          defaultValue: 'T',
+          options: [
+            { value: 'O', label: 'O (left)' },
+            { value: 'T', label: 'T (right)' },
+          ],
+        },
+        {
+          kind: 'select',
+          id: ScopeTransformControlId.SelfAnchor,
+          label: 'selfAnchor',
+          defaultValue: 'center',
+          options: [
+            { value: 'origin', label: 'Local origin' },
+            { value: 'center', label: 'Envelope center' },
+            { value: 'right', label: 'Right center' },
+            { value: 'top-left', label: 'Top left' },
+            { value: 'bottom-right', label: 'Bottom right' },
+            { value: 'explicit', label: 'Explicit local point' },
+          ],
+        },
+        {
+          kind: 'point',
+          id: ScopeTransformControlId.SelfPoint,
+          label: 'Self point',
+          defaultValue: [0, 0],
+          min: [-40, -60],
+          max: [80, 40],
+          step: 5,
+          visibleWhen: ScopeTransformVisibleWhen.ExplicitSelfPoint,
         },
       ],
     },
@@ -151,26 +203,6 @@ export const scopeTranslateBasicEnControls = definePreviewControls({
           visibleWhen: ScopeTransformVisibleWhen.Rotate,
         },
         {
-          kind: 'number',
-          id: ScopeTransformControlId.RotateCenterX,
-          label: 'Center x',
-          defaultValue: 0,
-          min: -40,
-          max: 40,
-          step: 5,
-          visibleWhen: ScopeTransformVisibleWhen.Rotate,
-        },
-        {
-          kind: 'number',
-          id: ScopeTransformControlId.RotateCenterY,
-          label: 'Center y',
-          defaultValue: 0,
-          min: -40,
-          max: 40,
-          step: 5,
-          visibleWhen: ScopeTransformVisibleWhen.Rotate,
-        },
-        {
           kind: 'range',
           id: ScopeTransformControlId.ScaleX,
           label: 'scale x',
@@ -192,15 +224,49 @@ export const scopeTranslateBasicEnControls = definePreviewControls({
         },
       ],
     },
+    {
+      label: 'Transform pivot',
+      visibleWhen: ScopeTransformVisibleWhen.Pivot,
+      controls: [
+        {
+          kind: 'select',
+          id: ScopeTransformControlId.Pivot,
+          label: 'pivot',
+          defaultValue: 'origin',
+          options: [
+            { value: 'origin', label: 'Local origin' },
+            { value: 'center', label: 'Envelope center' },
+            { value: 'right', label: 'Right center' },
+            { value: 'top-left', label: 'Top left' },
+            { value: 'bottom-right', label: 'Bottom right' },
+            { value: 'explicit', label: 'Explicit local point' },
+          ],
+        },
+        {
+          kind: 'point',
+          id: ScopeTransformControlId.PivotPoint,
+          label: 'Pivot point',
+          defaultValue: [0, 0],
+          min: [-40, -60],
+          max: [80, 40],
+          step: 5,
+          visibleWhen: ScopeTransformVisibleWhen.ExplicitPivot,
+        },
+      ],
+    },
   ],
 });
 
-/** Stable documentation contract for the Scope transform controls */
+/** Stable documentation contract for the Scope local-coordinate controls */
 export const previewControlContract = {
   controls: scopeTranslateBasicEnControls,
   canonicalValues: {
-    transformKind: 'translate',
+    operation: 'translate',
+    placementEnabled: false,
+    placementTarget: 'T',
     referent: 'O',
+    selfAnchor: 'center',
+    selfPoint: [0, 0],
     translateX: 0,
     translateY: 0,
     offsetX: 100,
@@ -210,10 +276,10 @@ export const previewControlContract = {
     direction: 'right',
     fraction: 0.5,
     rotateDegrees: 0,
-    rotateCenterX: 0,
-    rotateCenterY: 0,
     scaleX: 1,
     scaleY: 1,
+    pivot: 'origin',
+    pivotPoint: [0, 0],
   },
-  relatedApis: ['Scope.transforms'],
+  relatedApis: ['Scope.placement', 'Scope.transforms'],
 } satisfies PreviewControlContract;

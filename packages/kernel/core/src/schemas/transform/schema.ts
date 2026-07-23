@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { Anchor } from '../../shared';
 import { AbsoluteTargetSchema, PolarPositionSchema, PositionSchema } from '../position';
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../scalar';
+import { ScopeSelfPointSchema } from '../scope-point';
 
 const TranslateSchema = z
   .object({
@@ -67,23 +68,27 @@ const BetweenTranslateSchema = z
   .describe('Proportional translate transform lowered to Cartesian translate at compile time.');
 
 const RotateSchema = z
-  .object({
+  .strictObject({
     kind: z.literal('rotate').describe('Discriminator: rotation about a point.'),
     degrees: AngleDegreesSchema.describe(
       'Rotation angle in degrees; positive = visually clockwise under screen y-down.',
     ),
-    cx: z.number().optional().describe('Rotation center x in user units; omit = 0 (rotate about local origin).'),
-    cy: z.number().optional().describe('Rotation center y in user units; omit = 0 (rotate about local origin).'),
+    pivot: ScopeSelfPointSchema.optional().describe(
+      'Pivot on the intrinsic Scope envelope or an explicit local point. Omitted fields use origin.',
+    ),
   })
-  .describe('Rotation transform around an optional local-origin offset.');
+  .describe('Rotation transform around an intrinsic Scope self point.');
 
 const ScaleSchema = z
-  .object({
+  .strictObject({
     kind: z.literal('scale').describe('Discriminator: uniform / anisotropic scale.'),
     x: z.number().describe('Scale factor on the x axis.'),
     y: z.number().optional().describe('Scale factor on the y axis. Omitted fields use x for uniform scaling.'),
+    pivot: ScopeSelfPointSchema.optional().describe(
+      'Pivot on the intrinsic Scope envelope or an explicit local point. Omitted fields use origin.',
+    ),
   })
-  .describe('Scale transform with x and optional y factors.');
+  .describe('Scale transform with x and optional y factors around an intrinsic Scope self point.');
 
 export const TransformSchema = z
   .discriminatedUnion('kind', [

@@ -848,7 +848,7 @@ describe('convertIRToReactNode', () => {
       expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
     });
 
-    it('round-trips IRScope：含 id / localNamespace / 6 种 transform 变体复合', () => {
+    it('round-trips IRScope：含 placement / pivot / id / localNamespace 的 transform 复合', () => {
       const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
@@ -858,13 +858,17 @@ describe('convertIRToReactNode', () => {
             type: 'scope',
             id: 'cluster',
             localNamespace: true,
+            placement: {
+              target: { id: 'hub', anchor: 'top-right', offset: [4, -2] },
+              selfAnchor: 'top-left',
+            },
             transforms: [
               { kind: 'translate', x: 5, y: 5 },
               { kind: 'polar-translate', origin: 'hub', angle: 30, radius: 20 },
               { kind: 'at-translate', direction: 'right', of: 'hub', distance: 10 },
               { kind: 'offset-translate', of: 'hub', offset: [3, 0] },
-              { kind: 'rotate', degrees: 45, cx: 1, cy: 2 },
-              { kind: 'scale', x: 2, y: 1.5 },
+              { kind: 'rotate', degrees: 45, pivot: [1, 2] },
+              { kind: 'scale', x: 2, y: 1.5, pivot: 'center' },
             ],
             children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
           },

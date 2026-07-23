@@ -11,6 +11,24 @@ description: Scope grouping, local namespaces, style defaults, transforms, clipp
 
 <ZodSchema name="ScopeSchema" />
 
+<span id="scopeposition"></span>
+
+## Scope placement
+
+`ScopePlacementSchema` is the closed self-anchor-to-target contract. `target` accepts only a Cartesian `[x, y]` in the parent frame or a previously completed `NodeTarget`; Polar, Offset, Between, and path-relative targets are excluded.
+
+<ZodSchema name="ScopePlacementSchema" />
+
+A NodeTarget offset is added once in world user units before projection into the parent frame. Forward, self, descendant, and unresolved Scope-placeholder references fail synchronously without topological sorting.
+
+<span id="scopeselfpoint"></span>
+
+### Scope self point
+
+<ZodSchema name="ScopeSelfPointSchema" />
+
+`origin` is always intrinsic local `[0, 0]`. Other anchors reuse standard names, numeric angles, and `{ side, fraction }`; an explicit local point is also accepted. For an empty Scope, origin, center, edges, corners, and numeric angles collapse to `[0, 0]`, while `{ side, fraction }` still fails on the zero-size envelope.
+
 <span id="default-channels"></span>
 
 ### Four default channels
@@ -28,7 +46,7 @@ Scope separates defaults into four independent channels. Each fills only fields 
 
 ## Transform
 
-`TransformSchema` is the union accepted by `Scope.transforms`. Array order is application order: translate variants resolve to Cartesian translation during compile, while rotate and scale remain renderer-agnostic transforms.
+`TransformSchema` is the union accepted by `Scope.transforms`. Index 0 is outermost and the last item acts first. Translation variants resolve to Cartesian translation; a rotate pivot lowers to Scene `cx/cy`, while a non-origin scale pivot lowers to `translate(p) → scale → translate(-p)`.
 
 <ZodSchema name="TransformSchema" />
 
@@ -39,8 +57,10 @@ Scope separates defaults into four independent channels. Each fills only fields 
 | `at-translate`      | `direction`, `of`, `distance?` | Translation relative to a named entity |
 | `offset-translate`  | `of`, `offset?`                | Base point plus a 2D offset            |
 | `between-translate` | `between`, `fraction`          | Proportional point between endpoints   |
-| `rotate`            | `degrees`, `cx?`, `cy?`        | Rotation around a local point          |
-| `scale`             | `x`, `y?`                      | Uniform or anisotropic scale           |
+| `rotate`            | `degrees`, `pivot?`            | Rotate around a Scope self point       |
+| `scale`             | `x`, `y?`, `pivot?`            | Scale around a Scope self point        |
+
+`pivot` defaults to `origin` and accepts a [Scope self point](#scope-self-point). v0.5 removes IR rotate `cx` / `cy`; migrate to `pivot: [cx, cy]`. Scene transform `cx` / `cy` remain lowering output.
 
 <span id="clipspec"></span>
 

@@ -446,7 +446,7 @@ describe('ATTACK 10: path transform 嵌套 scope transform（双重变换）', (
       children: [
         {
           type: 'scope',
-          transforms: [{ kind: 'rotate', degrees: 30, cx: 0, cy: 0 }],
+          transforms: [{ kind: 'rotate', degrees: 30, pivot: 'origin' }],
           children: [
             {
               type: 'path',
@@ -464,7 +464,7 @@ describe('ATTACK 10: path transform 嵌套 scope transform（双重变换）', (
     const outer = scene.primitives[0];
     expect(outer.type).toBe('group');
     if (outer.type !== 'group') throw new Error('expected scope group');
-    expect(outer.transforms).toEqual([{ kind: 'rotate', degrees: 30, cx: 0, cy: 0 }]);
+    expect(outer.transforms).toEqual([{ kind: 'rotate', degrees: 30 }]);
     const inner = outer.children.find(child => child.type === 'group');
     expect(inner?.type).toBe('group');
     if (inner?.type !== 'group') throw new Error('expected path transform group');

@@ -1,7 +1,12 @@
-import { boundsOf, mergeBounds } from '@retikz/math';
-
 import type { GroupPrim, PathKindCompileResult, Transform } from '../../contract';
-import type { IRChild, IRPathBase, IRPosition, IRTransform } from '../../schemas';
+import type {
+  IRChild,
+  IRPathBase,
+  IRPosition,
+  IRScopePlacementTarget,
+  IRScopeSelfPoint,
+  IRTransform,
+} from '../../schemas';
 import type { NodeLayout } from '../node';
 import type { CompileContext } from './context';
 import type { InternalScenePrimitive } from './primitive';
@@ -11,11 +16,9 @@ import type {
   NodeChild,
   PathChild,
   PendingPathEmission,
-  RegisterResolvedScopeLayoutContext,
   ScopeChild,
   ScopeLayoutPlaceholder,
   ScopeLayoutPlaceholderContext,
-  ScopeTransformResolution,
   TraversalFrame,
   TraversalResult,
   TraversalRuntime,
@@ -40,9 +43,10 @@ import {
 import { emitPathPrimitive, emitRibbonPrimitive, refPointOfTarget } from '../path';
 import { resolvePosition } from '../position';
 import { parseProviderPayload } from '../provider-payload';
+import { resolveAnchorRefUncached } from '../reference';
 import { collectScopeCornerPoints, computeScopeBoundingBox, lowerScopeTransforms } from '../scope';
 import { createStyleFrame, resolveEffectivePath, resolveLabelDefault, resolveNodeStyle, resolveShadow } from '../style';
-import { applyTransformChain, projectLayoutToGlobal } from '../transform';
+import { applyTransformChain, inverseTransformChain, projectLayoutToGlobal } from '../transform';
 import { filterAnimations } from './animation';
 import { collectLayoutBounds } from './bounds';
 import { createDuplicateWarning, transformWarnCode } from './diagnostics';
@@ -160,13 +164,10 @@ export const compileChildrenToPrimitives = (
         runtime.state.placeholderBalance--;
         for (const prim of primitives) recordPrimitiveZIndex(runtime.state.zIndexOf, prim, pendingPath.zIndex);
         if (result !== null) {
-          runtime.state.layoutBounds = collectLayoutBounds(
-            runtime.state.layoutBounds,
-            pendingPath.scopeChain.length === 0
-              ? result.boundsPoints
-              : result.boundsPoints.map(point => applyTransformChain(point, pendingPath.scopeChain)),
-            resolveShadow(pendingPath.path.shadow),
-          );
+          pendingPath.boundsSink.push({
+            points: [...result.boundsPoints],
+            shadow: resolveShadow(pendingPath.path.shadow),
+          });
         }
       }
     } finally {
@@ -207,25 +208,26 @@ export const compileChildrenToPrimitives = (
         },
       },
     );
-    runtime.context.onNodeLayout?.(computeCompiledNodeLayout(layout, scopeChain));
-    const globalLayout = scopeChain.length === 0 ? layout : projectLayoutToGlobal(layout, scopeChain);
+    const globalLayout = projectLayoutToGlobal(layout, scopeChain);
     if (child.id) {
       runtime.state.namespaceStack.register(child.id, globalLayout, `${nodeIrPath}.id`);
     }
+    frame.publicationSink.push(globalLayout);
+    frame.observationSink.push({ layout, scopeChain: [...scopeChain] });
     for (const prim of emitNodePrimitives(layout, runtime.context.round, runtime.context.paint.register)) {
       primitiveSink.push(prim);
       recordPrimitiveZIndex(runtime.state.zIndexOf, prim, child.zIndex);
     }
-    const outerRect = outerRectOf(globalLayout);
+    const outerRect = outerRectOf(layout);
     const nodeBoundsPoints: Array<IRPosition> = [
       rectOps.anchor(outerRect, Anchor.TopLeft),
       rectOps.anchor(outerRect, Anchor.TopRight),
       rectOps.anchor(outerRect, Anchor.BottomLeft),
       rectOps.anchor(outerRect, Anchor.BottomRight),
     ];
-    runtime.state.layoutBounds = collectLayoutBounds(runtime.state.layoutBounds, nodeBoundsPoints, globalLayout.shadow);
-    runtime.state.layoutBounds = mergeBounds(runtime.state.layoutBounds, boundsOf(labelExtentPoints(globalLayout)));
-    layoutSink.push(globalLayout);
+    frame.boundsSink.push({ points: nodeBoundsPoints, shadow: layout.shadow });
+    frame.boundsSink.push({ points: labelExtentPoints(layout) });
+    layoutSink.push(layout);
   };
 
   /** 解析 coordinate 位置并注册为零尺寸 layout，供后续命名引用使用 */
@@ -244,12 +246,17 @@ export const compileChildrenToPrimitives = (
       );
     }
     const globalCenter = scopeChain.length === 0 ? localCenter : applyTransformChain(localCenter, scopeChain);
+    const localCoordinateLayout = createSyntheticRectangleLayout(
+      { id: child.id, rect: { x: localCenter[0], y: localCenter[1], width: 0, height: 0, rotate: 0 } },
+      { shapes: runtime.context.shapes, boundaries: runtime.context.boundaries },
+    );
     const coordinateLayout = createSyntheticRectangleLayout(
       { id: child.id, rect: { x: globalCenter[0], y: globalCenter[1], width: 0, height: 0, rotate: 0 } },
       { shapes: runtime.context.shapes, boundaries: runtime.context.boundaries },
     );
     runtime.state.namespaceStack.register(child.id, coordinateLayout, `${coordinateIrPath}.id`);
-    layoutSink.push(coordinateLayout);
+    frame.publicationSink.push(coordinateLayout);
+    layoutSink.push(localCoordinateLayout);
   };
 
   /** 合并 path 样式并加入延迟 emit 队列，保留顶层绘制顺序占位 */
@@ -269,7 +276,8 @@ export const compileChildrenToPrimitives = (
         }),
       },
       irPath: pathIrPath,
-      scopeChain,
+      scopeChain: [...scopeChain],
+      boundsSink: frame.boundsSink,
       placeholderSlot: { primitiveSink, placeholder },
       zIndex: child.zIndex,
     };
@@ -277,24 +285,144 @@ export const compileChildrenToPrimitives = (
     pathSink.push(pending);
   };
 
-  /** 解析 scope 自身 transforms，并生成子树继续使用的累积 scopeChain */
-  const resolveScopeTransforms = (
+  /** 拒绝非 finite 的 Scope placement 中间结果 */
+  const assertFinitePlacementPoint = (point: IRPosition, label: string): IRPosition => {
+    if (!Number.isFinite(point[0]) || !Number.isFinite(point[1])) {
+      throw new Error(`${label} must resolve to a finite point`);
+    }
+    return point;
+  };
+
+  /**
+   * 在 children 编译前冻结 Scope placement target
+   * @description 只允许父 frame 显式坐标或此前已完成的 namespace entry，避免 descendant / self / placeholder cycle
+   */
+  const resolveScopePlacementTarget = (
     child: ScopeChild,
     index: number,
     frame: TraversalFrame,
-  ): ScopeTransformResolution => {
-    const { scopeChain, locatorPrefix } = frame;
-    const scopeIrPath = `${locatorPrefix}children[${index}].scope`;
-    const rawTransforms = child.transforms ?? [];
+  ): IRPosition | undefined => {
+    const target: IRScopePlacementTarget | undefined = child.placement?.target;
+    if (target === undefined) return undefined;
+    if (Array.isArray(target)) {
+      return assertFinitePlacementPoint([target[0], target[1]], 'scope placement target');
+    }
+    const scopeIrPath = `${frame.locatorPrefix}children[${index}].scope`;
+    if (target.id === child.id) {
+      throw new Error(
+        `Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}: self target is not allowed`,
+      );
+    }
+    const entry = runtime.state.namespaceStack.lookupEntry(target.id);
+    if (entry === undefined || entry.state !== 'resolved') {
+      throw new Error(
+        `Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}: target must be defined and fully resolved before this Scope`,
+      );
+    }
+    const world = refPointOfTarget(target, runtime.state.namespaceStack, frame.scopeChain);
+    if (world === null) {
+      throw new Error(`Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}`);
+    }
+    const parentPoint = frame.scopeChain.length === 0 ? world : inverseTransformChain(world, frame.scopeChain);
+    return assertFinitePlacementPoint(parentPoint, 'scope placement target');
+  };
+
+  /** 从当前 Scope 的固有 child layouts 创建 rectangle / circle synthetic envelope */
+  const createIntrinsicScopeLayout = (child: ScopeChild, scopeLayouts: ReadonlyArray<NodeLayout>): NodeLayout => {
+    const id = child.id ?? '__anonymous_scope__';
+    return child.boundingShape === ScopeBoundingShape.Circle
+      ? createScopeCircleLayout(
+          { id, cornerPoints: collectScopeCornerPoints(scopeLayouts), fallbackOrigin: [0, 0] },
+          { shapes: runtime.context.shapes, boundaries: runtime.context.boundaries },
+        )
+      : createScopeRectangleLayout(
+          { id, bbox: computeScopeBoundingBox(scopeLayouts), fallbackOrigin: [0, 0] },
+          { shapes: runtime.context.shapes, boundaries: runtime.context.boundaries },
+        );
+  };
+
+  /** 将已按 parent ancestor chain 发布的 layout 原位插入当前 Scope own chain */
+  const applyOwnTransformsToPublishedLayout = (
+    layout: NodeLayout,
+    parentChain: ReadonlyArray<Transform>,
+    ownChain: ReadonlyArray<Transform>,
+  ): void => {
+    if (ownChain.length === 0) return;
+    const projectAcrossParent = (point: IRPosition): IRPosition => {
+      const parentPoint = parentChain.length === 0 ? point : inverseTransformChain(point, parentChain);
+      const transformedParent = applyTransformChain(parentPoint, ownChain);
+      return parentChain.length === 0 ? transformedParent : applyTransformChain(transformedParent, parentChain);
+    };
+    const [x, y] = projectAcrossParent([layout.rect.x, layout.rect.y]);
+    const [contentX, contentY] = projectAcrossParent(layout.contentCenter);
+    let rotateDegrees = 0;
+    let scaleX = 1;
+    let scaleY = 1;
+    for (const transform of ownChain) {
+      if (transform.kind === 'rotate') rotateDegrees += transform.degrees;
+      if (transform.kind === 'scale') {
+        scaleX *= transform.x;
+        scaleY *= transform.y ?? transform.x;
+      }
+    }
+    layout.rect = {
+      ...layout.rect,
+      x,
+      y,
+      rotate: (layout.rect.rotate ?? 0) + (rotateDegrees * Math.PI) / 180,
+      width: layout.rect.width * Math.abs(scaleX),
+      height: layout.rect.height * Math.abs(scaleY),
+    };
+    layout.contentCenter = [contentX, contentY];
+    layout.rotateDeg += rotateDegrees;
+    layout.margin = {
+      top: layout.margin.top * Math.abs(scaleY),
+      right: layout.margin.right * Math.abs(scaleX),
+      bottom: layout.margin.bottom * Math.abs(scaleY),
+      left: layout.margin.left * Math.abs(scaleX),
+    };
+  };
+
+  /** placement self point：anchor 在 transformed envelope 上解析；origin / 显式点先按 own chain 投影 */
+  const resolveTransformedSelfPoint = (
+    point: IRScopeSelfPoint,
+    intrinsicLayout: NodeLayout,
+    transformedLayout: NodeLayout,
+    scopeTransforms: ReadonlyArray<Transform>,
+  ): IRPosition => {
+    if (point === 'origin' || Array.isArray(point)) {
+      const intrinsicPoint: IRPosition = point === 'origin' ? [0, 0] : [point[0], point[1]];
+      return assertFinitePlacementPoint(
+        applyTransformChain(intrinsicPoint, scopeTransforms),
+        'scope placement selfAnchor',
+      );
+    }
+    return assertFinitePlacementPoint(resolveAnchorRefUncached(transformedLayout, point), 'scope placement selfAnchor');
+  };
+
+  /** children intrinsic layout 完成后解析 pivot，并生成最终 own chain */
+  const resolveFinalScopeTransforms = (
+    child: ScopeChild,
+    index: number,
+    frame: TraversalFrame,
+    intrinsicLayout: NodeLayout,
+    placementTarget: IRPosition | undefined,
+    preliminaryTransforms: Array<Transform> | undefined,
+  ): Array<Transform> => {
+    const scopeIrPath = `${frame.locatorPrefix}children[${index}].scope`;
     let failedTransform: IRTransform | undefined;
-    const loweredOwn = lowerScopeTransforms(rawTransforms, {
-      namespaceStack: runtime.state.namespaceStack,
-      nodeDistance: runtime.context.nodeDistance,
-      resolveBetweenGlobal: refPointOfTarget,
-      onUnresolved: t => {
-        failedTransform = t;
-      },
-    });
+    const loweredOwn =
+      preliminaryTransforms ??
+      lowerScopeTransforms(child.transforms ?? [], {
+        namespaceStack: runtime.state.namespaceStack,
+        nodeDistance: runtime.context.nodeDistance,
+        scopeChain: frame.scopeChain,
+        resolveBetweenGlobal: refPointOfTarget,
+        intrinsicLayout,
+        onUnresolved: transform => {
+          failedTransform = transform;
+        },
+      });
     if (loweredOwn === null) {
       runtime.context.onWarn({
         code: transformWarnCode(failedTransform),
@@ -302,8 +430,59 @@ export const compileChildrenToPrimitives = (
         path: `${scopeIrPath}.transforms`,
       });
     }
-    const scopeTransforms: ReadonlyArray<Transform> = loweredOwn ?? [];
-    return { scopeTransforms, childScopeChain: [...scopeChain, ...scopeTransforms] };
+    const scopeTransforms = loweredOwn ?? [];
+    if (placementTarget === undefined) return scopeTransforms;
+
+    const transformedLayout =
+      scopeTransforms.length === 0 ? intrinsicLayout : projectLayoutToGlobal(intrinsicLayout, scopeTransforms);
+    const selfPoint = resolveTransformedSelfPoint(
+      child.placement?.selfAnchor ?? 'center',
+      intrinsicLayout,
+      transformedLayout,
+      scopeTransforms,
+    );
+    const placement: Transform = {
+      kind: 'translate',
+      x: placementTarget[0] - selfPoint[0],
+      y: placementTarget[1] - selfPoint[1],
+    };
+    assertFinitePlacementPoint([placement.x, placement.y], 'scope placement');
+    return [placement, ...scopeTransforms];
+  };
+
+  /**
+   * 不依赖 intrinsic envelope 的既有 transform 可在 children 前冻结
+   * @description 保持 v0.4 Scope transform 下跨 frame relative 定位语义；anchor pivot 才进入完整两阶段收尾
+   */
+  const resolvePreliminaryScopeTransforms = (
+    child: ScopeChild,
+    index: number,
+    frame: TraversalFrame,
+  ): Array<Transform> | undefined => {
+    const needsIntrinsicEnvelope = (child.transforms ?? []).some(transform => {
+      if (transform.kind !== 'rotate' && transform.kind !== 'scale') return false;
+      const pivot = transform.pivot;
+      return pivot !== undefined && pivot !== 'origin' && !Array.isArray(pivot);
+    });
+    if (needsIntrinsicEnvelope) return undefined;
+
+    let failedTransform: IRTransform | undefined;
+    const transforms = lowerScopeTransforms(child.transforms ?? [], {
+      namespaceStack: runtime.state.namespaceStack,
+      nodeDistance: runtime.context.nodeDistance,
+      scopeChain: frame.scopeChain,
+      resolveBetweenGlobal: refPointOfTarget,
+      onUnresolved: transform => {
+        failedTransform = transform;
+      },
+    });
+    if (transforms !== null) return transforms;
+    runtime.context.onWarn({
+      code: transformWarnCode(failedTransform),
+      message: `Cannot resolve one of scope.transforms; referent (at.of / offset.of / polar.origin / between endpoints) is undefined or defined later in the IR`,
+      path: `${frame.locatorPrefix}children[${index}].scope.transforms`,
+    });
+    return [];
   };
 
   /** 有 scope.id 时先注册占位 layout，等子树 bbox 算出后再替换 */
@@ -311,7 +490,7 @@ export const compileChildrenToPrimitives = (
     child: ScopeChild,
     input: ScopeLayoutPlaceholderContext,
   ): ScopeLayoutPlaceholder => {
-    const { index, childScopeChain, frame } = input;
+    const { index, frame } = input;
     const { locatorPrefix } = frame;
     const scopeIrPath = `${locatorPrefix}children[${index}].scope`;
     const parentFrameDepth = runtime.state.namespaceStack.depth - 1;
@@ -319,42 +498,12 @@ export const compileChildrenToPrimitives = (
       return { parentFrameDepth };
     }
 
-    const placeholderLayout = createScopePlaceholderLayout(child.id, childScopeChain, {
+    const placeholderLayout = createScopePlaceholderLayout(child.id, frame.scopeChain, {
       shapes: runtime.context.shapes,
       boundaries: runtime.context.boundaries,
     });
     runtime.state.namespaceStack.register(child.id, placeholderLayout, `${scopeIrPath}.id`, 'scope-placeholder');
     return { parentFrameDepth, placeholderLayout };
-  };
-
-  /** 根据子 layout 计算 scope 的最终命名 layout，并回填 scope.id 注册结果 */
-  const registerResolvedScopeLayout = (child: ScopeChild, input: RegisterResolvedScopeLayoutContext): void => {
-    const { childScopeChain, scopeLayouts, layoutPlaceholder, frame } = input;
-    const { layoutSink } = frame;
-    if (child.id === undefined) {
-      for (const scopeLayout of scopeLayouts) layoutSink.push(scopeLayout);
-      return;
-    }
-
-    const fallbackOrigin: IRPosition =
-      childScopeChain.length === 0 ? [0, 0] : applyTransformChain([0, 0], childScopeChain);
-    const bboxLayout =
-      child.boundingShape === ScopeBoundingShape.Circle
-        ? createScopeCircleLayout(
-            { id: child.id, cornerPoints: collectScopeCornerPoints(scopeLayouts), fallbackOrigin },
-            { shapes: runtime.context.shapes, boundaries: runtime.context.boundaries },
-          )
-        : createScopeRectangleLayout(
-            { id: child.id, bbox: computeScopeBoundingBox(scopeLayouts), fallbackOrigin },
-            { shapes: runtime.context.shapes, boundaries: runtime.context.boundaries },
-          );
-    runtime.state.namespaceStack.replaceLayout(
-      child.id,
-      bboxLayout,
-      layoutPlaceholder.parentFrameDepth,
-      layoutPlaceholder.placeholderLayout,
-    );
-    layoutSink.push(bboxLayout);
   };
 
   /** 在需要可见输出时 emit scope group，并挂载 transform、clip 和动画 */
@@ -388,24 +537,84 @@ export const compileChildrenToPrimitives = (
   /** 编排单个 scope 子树，处理命名空间、局部输出容器、延迟 path 和 scope group 输出 */
   const compileScopeChild = (child: ScopeChild, index: number, frame: TraversalFrame): void => {
     const { locatorPrefix, styleStack } = frame;
-    const { scopeTransforms, childScopeChain } = resolveScopeTransforms(child, index, frame);
-    const layoutPlaceholder = registerScopeLayoutPlaceholder(child, { index, childScopeChain, frame });
+    const placementTarget = resolveScopePlacementTarget(child, index, frame);
+    const preliminaryTransforms = resolvePreliminaryScopeTransforms(child, index, frame);
+    const preliminaryScopeChain =
+      preliminaryTransforms === undefined ? frame.scopeChain : [...frame.scopeChain, ...preliminaryTransforms];
+    const layoutPlaceholder = registerScopeLayoutPlaceholder(child, { index, frame });
 
     const didPushNamespaceFrame = child.localNamespace === true;
     if (didPushNamespaceFrame) runtime.state.namespaceStack.pushFrame();
     const scopePrimitiveSink: Array<InternalScenePrimitive> = [];
     const scopeLayouts: Array<NodeLayout> = [];
     const scopePendingPaths: Array<PendingPathEmission> = [];
+    const scopePublications: Array<NodeLayout> = [];
+    const scopeBounds: TraversalFrame['boundsSink'] = [];
+    const scopeObservations: TraversalFrame['observationSink'] = [];
+    let scopeTransforms: Array<Transform> = [];
     try {
       compileChildren(child.children, {
-        scopeChain: childScopeChain,
+        scopeChain: preliminaryScopeChain,
         primitiveSink: scopePrimitiveSink,
         locatorPrefix: `${locatorPrefix}children[${index}].scope.`,
         layoutSink: scopeLayouts,
         pathSink: scopePendingPaths,
         styleStack: [...styleStack, createStyleFrame(child)],
+        publicationSink: scopePublications,
+        boundsSink: scopeBounds,
+        observationSink: scopeObservations,
       });
-      registerResolvedScopeLayout(child, { childScopeChain, scopeLayouts, layoutPlaceholder, frame });
+
+      const intrinsicLayout = createIntrinsicScopeLayout(child, scopeLayouts);
+      scopeTransforms = resolveFinalScopeTransforms(
+        child,
+        index,
+        frame,
+        intrinsicLayout,
+        placementTarget,
+        preliminaryTransforms,
+      );
+      const postTransforms =
+        preliminaryTransforms === undefined
+          ? scopeTransforms
+          : scopeTransforms.slice(0, scopeTransforms.length - preliminaryTransforms.length);
+      for (const layout of scopePublications) {
+        applyOwnTransformsToPublishedLayout(layout, frame.scopeChain, postTransforms);
+        frame.publicationSink.push(layout);
+      }
+      for (const observation of scopeObservations) {
+        observation.scopeChain.splice(frame.scopeChain.length, 0, ...postTransforms);
+        frame.observationSink.push(observation);
+      }
+      for (const contribution of scopeBounds) {
+        frame.boundsSink.push({
+          points: contribution.points.map(point => applyTransformChain(point, scopeTransforms)),
+          shadow: contribution.shadow,
+        });
+      }
+      for (const pendingPath of scopePendingPaths) {
+        pendingPath.scopeChain.splice(frame.scopeChain.length, 0, ...postTransforms);
+      }
+
+      const finalEnvelope =
+        scopeTransforms.length === 0 ? intrinsicLayout : projectLayoutToGlobal(intrinsicLayout, scopeTransforms);
+      if (child.id === undefined) {
+        for (const scopeLayout of scopeLayouts) {
+          frame.layoutSink.push(
+            scopeTransforms.length === 0 ? scopeLayout : projectLayoutToGlobal(scopeLayout, scopeTransforms),
+          );
+        }
+      } else {
+        const globalEnvelope = projectLayoutToGlobal(finalEnvelope, frame.scopeChain);
+        runtime.state.namespaceStack.replaceLayout(
+          child.id,
+          globalEnvelope,
+          layoutPlaceholder.parentFrameDepth,
+          layoutPlaceholder.placeholderLayout,
+        );
+        frame.layoutSink.push(finalEnvelope);
+        frame.publicationSink.push(globalEnvelope);
+      }
       flushPendingPathEmissions(scopePendingPaths);
     } finally {
       if (didPushNamespaceFrame) runtime.state.namespaceStack.popFrame();
@@ -438,6 +647,8 @@ export const compileChildrenToPrimitives = (
   };
 
   const rootPendingPaths: Array<PendingPathEmission> = [];
+  const rootBounds: TraversalFrame['boundsSink'] = [];
+  const rootObservations: TraversalFrame['observationSink'] = [];
   compileChildren(rootChildren, {
     scopeChain: [],
     primitiveSink: runtime.state.primitives,
@@ -445,8 +656,21 @@ export const compileChildrenToPrimitives = (
     layoutSink: [],
     pathSink: rootPendingPaths,
     styleStack: [],
+    publicationSink: [],
+    boundsSink: rootBounds,
+    observationSink: rootObservations,
   });
   flushPendingPathEmissions(rootPendingPaths);
+  for (const contribution of rootBounds) {
+    runtime.state.layoutBounds = collectLayoutBounds(
+      runtime.state.layoutBounds,
+      contribution.points,
+      contribution.shadow,
+    );
+  }
+  for (const observation of rootObservations) {
+    runtime.context.onNodeLayout?.(computeCompiledNodeLayout(observation.layout, observation.scopeChain));
+  }
 
   if (runtime.state.placeholderBalance !== 0) {
     const detail =

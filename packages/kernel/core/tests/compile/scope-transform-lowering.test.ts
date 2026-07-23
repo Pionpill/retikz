@@ -185,12 +185,14 @@ describe('lowerScopeTransforms 失败情形', () => {
 });
 
 describe('lowerScopeTransforms rotate / scale 透传', () => {
-  it('rotate 含 cx/cy', () => {
-    const out = lower([{ kind: 'rotate', degrees: 45, cx: 1, cy: 2 }]);
-    expect(out![0]).toEqual({ kind: 'rotate', degrees: 45, cx: 1, cy: 2 });
+  it('rotate pivot=center 解析 intrinsic envelope 中心并 lower 为 Scene cx/cy', () => {
+    const out = lower([{ kind: 'rotate', degrees: 45, pivot: 'center' }], undefined, {
+      intrinsicLayout: layoutForProjection(),
+    });
+    expect(out![0]).toEqual({ kind: 'rotate', degrees: 45, cx: 10, cy: 20 });
   });
 
-  it('rotate 缺 cx/cy 不带它们', () => {
+  it('rotate 缺省 pivot=origin，不生成 cx/cy', () => {
     const out = lower([{ kind: 'rotate', degrees: 30 }]);
     expect(out![0]).toEqual({ kind: 'rotate', degrees: 30 });
   });
@@ -203,6 +205,24 @@ describe('lowerScopeTransforms rotate / scale 透传', () => {
   it('scale 缺 y 不带它', () => {
     const out = lower([{ kind: 'scale', x: 2 }]);
     expect(out![0]).toEqual({ kind: 'scale', x: 2 });
+  });
+
+  it('scale pivot 显式坐标展开为 translate(p) → scale → translate(-p)', () => {
+    const out = lower([{ kind: 'scale', x: 2, y: 3, pivot: [4, 5] }], undefined, {
+      intrinsicLayout: layoutForProjection(),
+    });
+    expect(out).toEqual([
+      { kind: 'translate', x: 4, y: 5 },
+      { kind: 'scale', x: 2, y: 3 },
+      { kind: 'translate', x: -4, y: -5 },
+    ]);
+  });
+
+  it('rectangle self point 包含 margin，top-left 解析为 outerRect 左上角', () => {
+    const out = lower([{ kind: 'rotate', degrees: 15, pivot: 'top-left' }], undefined, {
+      intrinsicLayout: layoutForProjection(),
+    });
+    expect(out).toEqual([{ kind: 'rotate', degrees: 15, cx: -7, cy: -2 }]);
   });
 
   it('projectLayoutToGlobal 在负 scale 下保持 rect 尺寸为正数', () => {

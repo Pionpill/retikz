@@ -1,7 +1,7 @@
 import type { AxisAlignedBounds } from '@retikz/math';
 
 import type { ScenePrimitive, Transform } from '../../contract';
-import type { IRChild, IRPathBase, IRTransform } from '../../schemas';
+import type { IRChild, IRPathBase, IRPosition, ResolvedDropShadow } from '../../schemas';
 import type { NamespaceStack } from '../namespace';
 import type { NodeLayout } from '../node';
 import type { StyleFrame } from '../style';
@@ -15,7 +15,9 @@ export type PendingPathEmission = {
   /** warning 与诊断使用的 IR locator */
   irPath: string;
   /** path 所在 scope 的累计 transform */
-  scopeChain: ReadonlyArray<Transform>;
+  scopeChain: Array<Transform>;
+  /** path 几何完成后写入的当前 frame bbox 贡献 */
+  boundsSink: Array<LayoutBoundsContribution>;
   /** path 在所属 primitive sink 中的原位回填槽 */
   placeholderSlot: { primitiveSink: Array<InternalScenePrimitive>; placeholder: PathPlaceholder };
   /** 编译期排序用 zIndex，不写入 Scene primitive */
@@ -87,20 +89,18 @@ export type TraversalFrame = {
   pathSink: Array<PendingPathEmission>;
   /** 当前层样式继承栈 */
   styleStack: ReadonlyArray<StyleFrame>;
+  /** 当前层及后代注册的全局 layout 对象，供 Scope 收尾时原位升级到最终几何 */
+  publicationSink: Array<NodeLayout>;
+  /** 当前层自动 viewBox 几何贡献；Scope 收尾后再投到父 frame */
+  boundsSink: Array<LayoutBoundsContribution>;
+  /** 延迟到完整 Scope chain 冻结后发布的 Node layout observer 记录 */
+  observationSink: Array<PendingNodeLayoutObservation>;
 };
 
 export type NodeChild = Extract<IRChild, { type: 'node' }>;
 export type CoordinateChild = Extract<IRChild, { type: 'coordinate' }>;
 export type ScopeChild = Extract<IRChild, { type: 'scope' }>;
 export type PathChild = Extract<IRChild, { type: 'path' | 'ribbon' }>;
-
-/** scope transforms 解析结果 */
-export type ScopeTransformResolution = {
-  /** 当前 scope 自身的 Scene transforms */
-  scopeTransforms: ReadonlyArray<Transform>;
-  /** 子树使用的累计 scopeChain */
-  childScopeChain: ReadonlyArray<Transform>;
-};
 
 /** scope.id layout 占位注册结果 */
 export type ScopeLayoutPlaceholder = {
@@ -112,14 +112,6 @@ export type ScopeLayoutPlaceholder = {
 
 export type ScopeLayoutPlaceholderContext = {
   index: number;
-  childScopeChain: ReadonlyArray<Transform>;
-  frame: TraversalFrame;
-};
-
-export type RegisterResolvedScopeLayoutContext = {
-  childScopeChain: ReadonlyArray<Transform>;
-  scopeLayouts: ReadonlyArray<NodeLayout>;
-  layoutPlaceholder: ScopeLayoutPlaceholder;
   frame: TraversalFrame;
 };
 
@@ -130,4 +122,18 @@ export type EmitScopeGroupContext = {
   frame: TraversalFrame;
 };
 
-export type FailedScopeTransform = IRTransform | undefined;
+/** 自动 viewBox 的当前 frame 几何贡献 */
+export type LayoutBoundsContribution = {
+  /** 当前 frame 中的几何点 */
+  points: Array<IRPosition>;
+  /** 与该点集关联的阴影外溢 */
+  shadow?: ResolvedDropShadow;
+};
+
+/** 等完整 Scope chain 冻结后再发送的节点布局观测记录 */
+export type PendingNodeLayoutObservation = {
+  /** 节点自身局部 layout */
+  layout: NodeLayout;
+  /** 从节点所在 frame 到 world 的最终 chain；Scope 收尾期间原位插入 own transforms */
+  scopeChain: Array<Transform>;
+};

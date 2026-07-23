@@ -6,6 +6,7 @@ import type {
   IRBetweenPosition,
   IROffsetPosition,
   IRPosition,
+  IRScopeSelfPoint,
   IRTransform,
   PolarPosition,
 } from '../schemas';
@@ -18,6 +19,7 @@ import { Anchor } from '../shared';
 import { rect as rectOps } from '../shared/geometry';
 import { outerRectOf } from './node';
 import { resolvePosition } from './position';
+import { resolveAnchorRefUncached } from './reference';
 
 /** scope transform lowering 所需的编译上下文 */
 export type LowerScopeTransformsContext = {
@@ -29,6 +31,31 @@ export type LowerScopeTransformsContext = {
   resolveBetweenGlobal?: ResolveBetweenGlobal;
   /** transform 引用解析失败时的回调 */
   onUnresolved?: (failed: IRTransform) => void;
+  /** pivot 解析使用的 Scope 固有包络 layout */
+  intrinsicLayout?: NodeLayout;
+  /** 当前 Scope 父 frame 到 world 的累计 transform */
+  scopeChain?: ReadonlyArray<Transform>;
+};
+
+/** 断言 self point / placement 计算结果是可发布的有限坐标 */
+const assertFiniteScopePoint = (point: IRPosition, label: string): IRPosition => {
+  if (!Number.isFinite(point[0]) || !Number.isFinite(point[1])) {
+    throw new Error(`${label} must resolve to a finite point`);
+  }
+  return point;
+};
+
+/**
+ * 在 Scope 固有包络上解析 self point
+ * @description `origin` 与显式坐标不依赖包络；anchor 引用统一走现有 shape / boundary resolver
+ */
+export const resolveScopeSelfPoint = (point: IRScopeSelfPoint, intrinsicLayout: NodeLayout | undefined): IRPosition => {
+  if (point === 'origin') return [0, 0];
+  if (Array.isArray(point)) return assertFiniteScopePoint([point[0], point[1]], 'scope self point');
+  if (intrinsicLayout === undefined) {
+    throw new Error('internal: intrinsic Scope layout is required to resolve an anchor self point');
+  }
+  return assertFiniteScopePoint(resolveAnchorRefUncached(intrinsicLayout, point), 'scope self point');
 };
 
 /**
@@ -41,7 +68,14 @@ export const lowerScopeTransforms = (
   transforms: ReadonlyArray<IRTransform>,
   context: LowerScopeTransformsContext,
 ): Array<Transform> | null => {
-  const { namespaceStack, nodeDistance, resolveBetweenGlobal, onUnresolved } = context;
+  const {
+    namespaceStack,
+    nodeDistance,
+    resolveBetweenGlobal,
+    onUnresolved,
+    intrinsicLayout,
+    scopeChain = [],
+  } = context;
   const out: Array<Transform> = [];
   for (const t of transforms) {
     switch (t.kind) {
@@ -51,7 +85,7 @@ export const lowerScopeTransforms = (
       case 'polar-translate': {
         const polar: PolarPosition = { angle: t.angle, radius: t.radius };
         if (t.origin !== undefined) polar.origin = t.origin;
-        const resolved = resolvePosition(polar, { namespaceStack, nodeDistance });
+        const resolved = resolvePosition(polar, { namespaceStack, nodeDistance, scopeChain });
         if (!resolved) {
           onUnresolved?.(t);
           return null;
@@ -62,7 +96,7 @@ export const lowerScopeTransforms = (
       case 'at-translate': {
         const at: IRAtPosition = { direction: t.direction, of: t.of };
         if (t.distance !== undefined) at.distance = t.distance;
-        const resolved = resolvePosition(at, { namespaceStack, nodeDistance });
+        const resolved = resolvePosition(at, { namespaceStack, nodeDistance, scopeChain });
         if (!resolved) {
           onUnresolved?.(t);
           return null;
@@ -75,7 +109,7 @@ export const lowerScopeTransforms = (
           of: t.of,
           offset: t.offset ?? [0, 0],
         };
-        const resolved = resolvePosition(off, { namespaceStack, nodeDistance });
+        const resolved = resolvePosition(off, { namespaceStack, nodeDistance, scopeChain });
         if (!resolved) {
           onUnresolved?.(t);
           return null;
@@ -85,7 +119,12 @@ export const lowerScopeTransforms = (
       }
       case 'between-translate': {
         const between: IRBetweenPosition = { between: t.between, fraction: t.fraction };
-        const resolved = resolvePosition(between, { namespaceStack, nodeDistance, resolveBetweenGlobal });
+        const resolved = resolvePosition(between, {
+          namespaceStack,
+          nodeDistance,
+          scopeChain,
+          resolveBetweenGlobal,
+        });
         if (!resolved) {
           onUnresolved?.(t);
           return null;
@@ -95,15 +134,27 @@ export const lowerScopeTransforms = (
       }
       case 'rotate': {
         const r: Transform = { kind: 'rotate', degrees: t.degrees };
-        if (t.cx !== undefined) r.cx = t.cx;
-        if (t.cy !== undefined) r.cy = t.cy;
+        if (t.pivot !== undefined && t.pivot !== 'origin') {
+          const [cx, cy] = resolveScopeSelfPoint(t.pivot, intrinsicLayout);
+          r.cx = cx;
+          r.cy = cy;
+        }
         out.push(r);
         break;
       }
       case 'scale': {
         const s: Transform = { kind: 'scale', x: t.x };
         if (t.y !== undefined) s.y = t.y;
-        out.push(s);
+        if (t.pivot === undefined || t.pivot === 'origin') {
+          out.push(s);
+          break;
+        }
+        const [px, py] = resolveScopeSelfPoint(t.pivot, intrinsicLayout);
+        if (px === 0 && py === 0) {
+          out.push(s);
+          break;
+        }
+        out.push({ kind: 'translate', x: px, y: py }, s, { kind: 'translate', x: -px, y: -py });
         break;
       }
     }

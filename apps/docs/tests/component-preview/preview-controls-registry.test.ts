@@ -285,14 +285,22 @@ describe('preview controls registry', () => {
     expect(legacySources).toEqual([]);
   });
 
-  it('Scope transform demo 使用坐标轴而非原点和轴端节点', () => {
+  it('Scope 局部坐标 demo 使用偏心方形包络与非布局原点标记', () => {
     const source = demoSources[buildKey(['kernel', 'components', 'layout', 'scope'], 'scope-translate-basic')];
 
     expect(source).toContain('id="Q"');
+    expect(source).toContain('position={[30, -20]}');
+    expect(source).toContain('minimumSize={{ width: 80, height: 80 }}');
+    expect(source).toContain('<Circle center={[0, 0]} radius={3}');
     expect(source).not.toMatch(/<Node id="[ABCPXY]"/);
-    expect(source?.match(/arrow="->"/g)).toHaveLength(2);
-    expect(source?.match(/dashPattern=\{\[1, 4\]\}/g)).toHaveLength(5);
-    expect(source?.match(/lineCap="round"/g)).toHaveLength(5);
+    expect(source).not.toContain('arrow="->"');
+    expect(source?.match(/dashPattern=\{\[1, 4\]\}/g)).toHaveLength(3);
+    expect(source?.match(/lineCap="round"/g)).toHaveLength(3);
+    expect(source?.match(/stroke="gray"/g)).toHaveLength(3);
+    expect(source).not.toContain('stroke="lightgray"');
+    expect(source).toContain('target: { id: values.placementTarget }');
+    expect(source).not.toContain('[45, 0]');
+    expect(source).not.toContain('[0, -40]');
     expect(source).not.toContain('dashPattern={[4, 3]}');
   });
 
@@ -1128,56 +1136,142 @@ describe('preview controls registry', () => {
     expect(widerThanPreferred.filter(({ key, width }) => !validatedWiderLayouts.has(`${key}:${width}`))).toEqual([]);
   });
 
-  it('Scope transform playground 只显示当前 kind 对应参数，且中英文条件一致', () => {
+  it('Scope 局部坐标 playground 可在任意 transform 下独立切换 placement，且中英文条件一致', () => {
     const segments = ['kernel', 'components', 'layout', 'scope'];
-    const zhDefinition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'scope-translate-basic')]);
-    const enDefinition = resolvePreviewControls(
-      controlModules[buildLangControlsKey(segments, 'scope-translate-basic', 'en')],
-    );
+    const zhModule = controlModules[buildControlsKey(segments, 'scope-translate-basic')];
+    const enModule = controlModules[buildLangControlsKey(segments, 'scope-translate-basic', 'en')];
+    const zhDefinition = resolvePreviewControls(zhModule);
+    const enDefinition = resolvePreviewControls(enModule);
+    const zhContract = resolvePreviewControlContract(zhModule);
+    const enContract = resolvePreviewControlContract(enModule);
     expect(zhDefinition?.presentation).toBe('panel');
     expect(enDefinition?.presentation).toBe('panel');
+    expect(zhContract).toBeDefined();
+    expect(enContract).toBeDefined();
+    if (!zhContract || !enContract) return;
+
+    expect(zhContract.canonicalValues.placementEnabled).toBe(false);
+    expect(enContract.canonicalValues.placementEnabled).toBe(false);
+    expect(
+      getPreviewControlFields(zhContract.controls).find(field => field.id === 'placementEnabled')?.defaultValue,
+    ).toBe(false);
+    expect(
+      getPreviewControlFields(enContract.controls).find(field => field.id === 'placementEnabled')?.defaultValue,
+    ).toBe(false);
+    expect(getPreviewControlFields(zhContract.controls).find(field => field.id === 'selfAnchor')?.label).toBe(
+      '自身锚点',
+    );
+    expect(getPreviewControlFields(enContract.controls).find(field => field.id === 'selfAnchor')?.label).toBe(
+      'selfAnchor',
+    );
 
     const conditionContractOf = (definition: typeof zhDefinition) =>
       definition?.presentation === 'panel'
-        ? definition.sections.flatMap(section =>
-            section.controls.map(field => ({ id: field.id, visibleWhen: field.visibleWhen })),
-          )
+        ? definition.sections.map(section => ({
+            visibleWhen: section.visibleWhen,
+            controls: section.controls.map(field => ({ id: field.id, visibleWhen: field.visibleWhen })),
+          }))
         : [];
     expect(conditionContractOf(zhDefinition)).toEqual(conditionContractOf(enDefinition));
 
-    const visibleFieldIds = (definition: typeof zhDefinition, transformKind: string) =>
+    const visibleFieldIds = (
+      definition: typeof zhDefinition,
+      values: { operation: string; placementEnabled: boolean; selfAnchor?: string; pivot?: string },
+    ) =>
       definition?.presentation === 'panel'
-        ? resolveVisiblePreviewControlSections(definition.sections, { transformKind }).flatMap(section =>
+        ? resolveVisiblePreviewControlSections(definition.sections, values).flatMap(section =>
             section.controls.map(field => field.id),
           )
         : [];
 
-    expect(visibleFieldIds(zhDefinition, 'translate')).toEqual(['transformKind', 'translateX', 'translateY']);
-    expect(visibleFieldIds(zhDefinition, 'polar-translate')).toEqual([
-      'transformKind',
+    const operations = [
+      'translate',
+      'polar-translate',
+      'at-translate',
+      'offset-translate',
+      'between-translate',
+      'rotate',
+      'scale',
+    ];
+    for (const operation of operations) {
+      expect(visibleFieldIds(zhDefinition, { operation, placementEnabled: true })).toContain('selfAnchor');
+      expect(visibleFieldIds(zhDefinition, { operation, placementEnabled: false })).not.toContain('selfAnchor');
+    }
+
+    expect(
+      visibleFieldIds(zhDefinition, { operation: 'translate', placementEnabled: true, selfAnchor: 'center' }),
+    ).toEqual(['operation', 'placementEnabled', 'placementTarget', 'selfAnchor', 'translateX', 'translateY']);
+    expect(
+      visibleFieldIds(zhDefinition, { operation: 'translate', placementEnabled: true, selfAnchor: 'explicit' }),
+    ).toEqual([
+      'operation',
+      'placementEnabled',
+      'placementTarget',
+      'selfAnchor',
+      'selfPoint',
+      'translateX',
+      'translateY',
+    ]);
+    expect(visibleFieldIds(zhDefinition, { operation: 'translate', placementEnabled: false })).toEqual([
+      'operation',
+      'placementEnabled',
+      'translateX',
+      'translateY',
+    ]);
+    expect(visibleFieldIds(zhDefinition, { operation: 'polar-translate', placementEnabled: false })).toEqual([
+      'operation',
+      'placementEnabled',
       'referent',
       'polarAngle',
       'distance',
     ]);
-    expect(visibleFieldIds(zhDefinition, 'at-translate')).toEqual([
-      'transformKind',
+    expect(
+      visibleFieldIds(zhDefinition, {
+        operation: 'polar-translate',
+        placementEnabled: true,
+        selfAnchor: 'center',
+      }),
+    ).toEqual(['operation', 'placementEnabled', 'placementTarget', 'selfAnchor', 'polarAngle', 'distance']);
+    expect(visibleFieldIds(zhDefinition, { operation: 'at-translate', placementEnabled: false })).toEqual([
+      'operation',
+      'placementEnabled',
       'referent',
       'distance',
       'direction',
     ]);
-    expect(visibleFieldIds(zhDefinition, 'offset-translate')).toEqual([
-      'transformKind',
+    expect(visibleFieldIds(zhDefinition, { operation: 'offset-translate', placementEnabled: false })).toEqual([
+      'operation',
+      'placementEnabled',
       'referent',
       'offsetX',
       'offsetY',
     ]);
-    expect(visibleFieldIds(zhDefinition, 'between-translate')).toEqual(['transformKind', 'fraction']);
-    expect(visibleFieldIds(zhDefinition, 'rotate')).toEqual([
-      'transformKind',
-      'rotateDegrees',
-      'rotateCenterX',
-      'rotateCenterY',
+    expect(visibleFieldIds(zhDefinition, { operation: 'between-translate', placementEnabled: false })).toEqual([
+      'operation',
+      'placementEnabled',
+      'fraction',
     ]);
-    expect(visibleFieldIds(zhDefinition, 'scale')).toEqual(['transformKind', 'scaleX', 'scaleY']);
+    expect(visibleFieldIds(zhDefinition, { operation: 'rotate', placementEnabled: false, pivot: 'origin' })).toEqual([
+      'operation',
+      'placementEnabled',
+      'rotateDegrees',
+      'pivot',
+    ]);
+    expect(visibleFieldIds(zhDefinition, { operation: 'rotate', placementEnabled: true, pivot: 'explicit' })).toEqual([
+      'operation',
+      'placementEnabled',
+      'placementTarget',
+      'selfAnchor',
+      'rotateDegrees',
+      'pivot',
+      'pivotPoint',
+    ]);
+    expect(visibleFieldIds(zhDefinition, { operation: 'scale', placementEnabled: false, pivot: 'center' })).toEqual([
+      'operation',
+      'placementEnabled',
+      'scaleX',
+      'scaleY',
+      'pivot',
+    ]);
   });
 });

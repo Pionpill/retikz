@@ -6,7 +6,9 @@ import { FontSchema } from '../font';
 import { JsonObjectSchema } from '../json';
 import { NodeSchema } from '../node';
 import { ArrowDetailSchema, PathBaseSchema } from '../path';
+import { NodeTargetSchema, PositionSchema } from '../position';
 import { getRecursiveChildSchema } from '../recursive';
+import { ScopeSelfPointSchema } from '../scope-point';
 import { CascadingGraphicStyleSchema, CssColorSchema, OpacitySchema } from '../style';
 import { TransformSchema } from '../transform';
 import { ScopeBoundingShape, ScopeStyleChannel } from './constants';
@@ -53,6 +55,21 @@ export const LabelDefaultSchema = z
 
 export const ArrowDefaultSchema = ArrowDetailSchema;
 
+/** Scope placement 的闭合 target：父坐标系显式点或此前已完成的命名实体 */
+export const ScopePlacementTargetSchema = z
+  .union([PositionSchema, NodeTargetSchema.strict()])
+  .describe('Parent-frame Cartesian point or previously resolved Node, Coordinate, or Scope target.');
+
+/** Scope 固有包络到父坐标系 target 的锚点对齐放置 */
+export const ScopePlacementSchema = z
+  .strictObject({
+    target: ScopePlacementTargetSchema.describe('Placement target resolved in the parent coordinate frame.'),
+    selfAnchor: ScopeSelfPointSchema.optional().describe(
+      'Point on the transformed Scope envelope aligned to target. Omitted fields use center.',
+    ),
+  })
+  .describe('Placement that aligns a transformed intrinsic Scope point to a parent-frame target.');
+
 export const ScopeSchema = z
   .object({
     type: z.literal('scope').describe('Discriminator marking this child as a scope container.'),
@@ -74,6 +91,9 @@ export const ScopeSchema = z
       .describe(
         'Local transforms applied to all scope children. Array order is application order; translate variants are lowered at compile time.',
       ),
+    placement: ScopePlacementSchema.optional().describe(
+      'Optional final placement applied after intrinsic layout and local transforms.',
+    ),
     nodeDefault: NodeDefaultSchema.optional().describe(
       'Default style applied to nodes in this scope. Independent from the other default channels.',
     ),

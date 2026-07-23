@@ -81,16 +81,14 @@ describe('applyTransformChain / inverseTransformChain 对偶性', () => {
     expect(inverseTransformChain(applyTransformChain(p, chain), chain)).toEqual([10, 20]);
   });
 
-  it('scale x=0 inverse 退化为 (0, 0) 防 NaN', () => {
+  it('scale x=0 inverse fail-loud', () => {
     const chain = [{ kind: 'scale' as const, x: 0 }];
-    const result = inverseTransformChain([5, 10], chain);
-    expect(result).toEqual([0, 0]);
+    expect(() => inverseTransformChain([5, 10], chain)).toThrow('non-invertible scope transform');
   });
 
-  it('scale y=0 inverse 同样退化', () => {
+  it('scale y=0 inverse 同样 fail-loud', () => {
     const chain = [{ kind: 'scale' as const, x: 2, y: 0 }];
-    const result = inverseTransformChain([10, 5], chain);
-    expect(result).toEqual([0, 0]);
+    expect(() => inverseTransformChain([10, 5], chain)).toThrow('non-invertible scope transform');
   });
 });
 
@@ -463,8 +461,7 @@ describe('边界：scope transform 单变体对 relative 的影响', () => {
 });
 
 describe('错误路径', () => {
-  it('scope_scale_zero_relative_resolve：scope scale=0 + relative → inverseTransformChain 退化为 (0, 0)，compile 不抛错', () => {
-    // schema 不拒 scale=0（discriminatedUnion 限制不能加 refine）；compile 退化为 (0, 0) 防 NaN
+  it('scope_scale_zero_relative_resolve：zero scale + 跨 frame referent fail-loud', () => {
     const ir = scene([
       { type: 'node', id: 'A', position: [10, 0], text: 'A' },
       {
@@ -480,7 +477,7 @@ describe('错误路径', () => {
         ],
       },
     ]);
-    expect(() => compileToScene(ir, { onWarn: () => {} })).not.toThrow();
+    expect(() => compileToScene(ir, { onWarn: () => {} })).toThrow('non-invertible scope transform');
   });
 
   it('scope_polar_origin_forward_reference_within_scope：scope 内 polar.origin 引用同 scope 后定义 id → 抛错', () => {

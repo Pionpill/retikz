@@ -27,6 +27,11 @@ export type ScopeProps = ScopeStyleProps &
      * @description 支持 translate / polar-translate / at-translate / offset-translate / between-translate / rotate / scale
      */
     transforms?: Array<IRTransformInput>;
+    /**
+     * Scope 最终锚点对齐定位
+     * @description target 是父坐标系显式点或此前已完成的命名实体；selfAnchor 缺省为固有包络 center
+     */
+    placement?: IRScope['placement'];
     /** 继承屏障：切外层对应通道继承（true 全切 / 数组按 'node'|'path'|'label'|'arrow' 切） */
     resetStyle?: IRScope['resetStyle'];
     /** 显式栈序：作用于 scope 整体在父层的位置（不影响 scope 内部子元素相对栈序）；缺省 0 = 声明顺序 */
@@ -45,7 +50,7 @@ export type ScopeProps = ScopeStyleProps &
 
 /**
  * Scope 容器组件——TikZ `\begin{scope}[...]...\end{scope}` 同义
- * @description 给一组节点 / 路径提供局部样式、命名空间、变换、裁剪和引用包络
+ * @description 给一组节点 / 路径提供局部样式、命名空间、变换、最终锚点定位、裁剪和引用包络
  */
 export const Scope: FC<ScopeProps> = () => null;
 Scope.displayName = TIKZ_SCOPE;

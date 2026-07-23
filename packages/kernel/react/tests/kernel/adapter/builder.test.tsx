@@ -873,9 +873,17 @@ after`;
       expect(fromSugar.children[0]).toMatchObject({ strokeWidth: 3 });
     });
 
-    it('<Scope> emit IRScope：transforms / id / localNamespace 透传', () => {
+    it('<Scope> emit IRScope：placement / pivot / id / localNamespace 透传', () => {
       const ir = buildIR(
-        <Scope id="cluster" localNamespace transforms={[{ kind: 'translate', x: 50, y: 0 }]}>
+        <Scope
+          id="cluster"
+          localNamespace
+          placement={{ target: { id: 'panel', anchor: 'top-right', offset: [4, -2] }, selfAnchor: 'top-left' }}
+          transforms={[
+            { kind: 'scale', x: 1.2, pivot: 'center' },
+            { kind: 'rotate', degrees: 12, pivot: [8, 12] },
+          ]}
+        >
           <Node id="A" position={[0, 0]}>
             A
           </Node>
@@ -886,7 +894,14 @@ after`;
         type: 'scope',
         id: 'cluster',
         localNamespace: true,
-        transforms: [{ kind: 'translate', x: 50, y: 0 }],
+        placement: {
+          target: { id: 'panel', anchor: 'top-right', offset: [4, -2] },
+          selfAnchor: 'top-left',
+        },
+        transforms: [
+          { kind: 'scale', x: 1.2, pivot: 'center' },
+          { kind: 'rotate', degrees: 12, pivot: [8, 12] },
+        ],
       });
     });
 

@@ -32,6 +32,16 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
 
   ScopeSchema: { schema: IR.ScopeSchema, label: 'Scope', url: '/kernel/reference/schema/scope#scope' },
+  ScopePlacementSchema: {
+    schema: IR.ScopePlacementSchema,
+    label: 'ScopePlacement',
+    url: '/kernel/reference/schema/scope#scopeplacement',
+  },
+  ScopeSelfPointSchema: {
+    schema: IR.ScopeSelfPointSchema,
+    label: 'ScopeSelfPoint',
+    url: '/kernel/reference/schema/scope#scopeselfpoint',
+  },
   NodeDefaultSchema: {
     schema: IR.NodeDefaultSchema,
     label: 'NodeDefault',

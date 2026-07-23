@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 import type { VanillaTier2Adapter } from '../../src';
 
-import { embed, figure, layer, mount, node, path, renderToSvgString, VanillaLayerCache } from '../../src';
+import { embed, figure, layer, mount, node, path, renderToSvgString, scope, VanillaLayerCache } from '../../src';
 import { normalizeFigureSpec } from '../../src/spec';
 
 const boxComposite = defineComposite({
@@ -67,6 +67,26 @@ describe('@retikz/vanilla plain spec', () => {
     };
 
     expect(node('B', { position })).toEqual({ type: 'node', id: 'B', position });
+  });
+
+  it('scope helper 直接透传 placement 与 transform pivot，不物化默认值', () => {
+    const config = {
+      id: 'cluster',
+      placement: {
+        target: { id: 'panel', anchor: 'top-right' as const, offset: [4, -2] as [number, number] },
+        selfAnchor: 'top-left' as const,
+      },
+      transforms: [
+        { kind: 'scale' as const, x: 1.2, pivot: 'center' as const },
+        { kind: 'rotate' as const, degrees: 12, pivot: [8, 12] as [number, number] },
+      ],
+    };
+
+    expect(scope(config, [node('inside', { position: [0, 0] })])).toEqual({
+      type: 'scope',
+      ...config,
+      children: [node('inside', { position: [0, 0] })],
+    });
   });
 
   afterEach(() => {

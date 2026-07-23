@@ -72,7 +72,7 @@ describe('path rotate 与绕同一中心的 scope rotate 等价', () => {
       children: [
         {
           type: 'scope',
-          transforms: [{ kind: 'rotate', degrees: 30, cx: 5, cy: 0 }],
+          transforms: [{ kind: 'rotate', degrees: 30, pivot: [5, 0] }],
           children: [
             {
               type: 'path',
