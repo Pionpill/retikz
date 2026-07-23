@@ -48,17 +48,53 @@ Table 的三个宿主入口共享一条运行时：React 组件和 Vanilla helpe
 
 三个组件共享这些运行时属性：
 
-| 属性                      | 类型                                           | 默认值  | 描述                                  |
-| ------------------------- | ---------------------------------------------- | ------- | ------------------------------------- |
-| `structureDefinitions`    | `ReadonlyArray<AnyTableStructureDefinition>`   | `[]`    | 自定义 Structure definitions          |
-| `presentationDefinitions` | `ReadonlyArray<AnyCellPresentationDefinition>` | `[]`    | 自定义 Cell presentation definitions  |
-| `composites`              | `ReadonlyArray<CompositeDefinition>`           | `[]`    | Cell 内嵌 Tier 2 内容所需 definitions |
-| `onManifest`              | `(manifest: TableLayoutManifest) => void`      | —       | standalone 布局产物通知；嵌入时不支持 |
-| `renderer`                | `'svg' \| 'canvas'`                            | `'svg'` | renderer backend                      |
-| `width` / `height`        | `number \| string`                             | —       | 宿主显示尺寸；不改变 Table 固定轨道   |
-| `className` / `style`     | `string`<br />`CSSProperties`                  | —       | 透传给渲染宿主                        |
+| 属性                       | 类型                                           | 默认值  | 描述                                  |
+| -------------------------- | ---------------------------------------------- | ------- | ------------------------------------- |
+| `structureDefinitions?`    | `ReadonlyArray<AnyTableStructureDefinition>`   | `[]`    | 自定义 Structure definitions          |
+| `presentationDefinitions?` | `ReadonlyArray<AnyCellPresentationDefinition>` | `[]`    | 自定义 Cell presentation definitions  |
+| `composites?`              | `ReadonlyArray<CompositeDefinition>`           | `[]`    | Cell 内嵌 Tier 2 内容所需 definitions |
+| `onManifest?`              | `(manifest: TableLayoutManifest) => void`      | —       | standalone 布局产物通知；嵌入时不支持 |
+| `renderer?`                | `'svg' \| 'canvas'`                            | `'svg'` | renderer backend                      |
+| `width?` / `height?`       | `number \| string`                             | —       | 宿主显示尺寸；不改变 Table 固定轨道   |
+| `className?` / `style?`    | `string`<br />`CSSProperties`                  | —       | 透传给渲染宿主                        |
 
 Standalone 组件可以省略 TableSpec `id`；嵌入父级 `Layout` 时必须提供稳定 id。嵌入模式不能使用 `onManifest`，需要显式调用 `lowerTableWithArtifacts()` 读取 sidecar。
+
+### ManualTable
+
+| 属性        | 类型                           | 默认值         | 描述                                                   |
+| ----------- | ------------------------------ | -------------- | ------------------------------------------------------ |
+| `rows`      | `ManualTableProps['rows']`     | —              | 显式行数；Row children 数量必须与其一致                |
+| `columns`   | `ManualTableProps['columns']`  | —              | 显式列数；每个 Row 声明的 Cell 数量不得超过它          |
+| `cells?`    | `ManualTableProps['cells']`    | —              | 带地址的完整 Cell 集合；与 `children` 互斥             |
+| `rowKinds?` | `ManualTableProps['rowKinds']` | 全部为 `body`  | 每行的语义类型；与 Row children 互斥                   |
+| `children?` | `ManualTableProps['children']` | —              | 按顺序排列的 Row markers；与 `cells` / `rowKinds` 互斥 |
+| `id?`       | `ManualTableProps['id']`       | —              | 稳定 Table id；嵌入父级 `Layout` 时必填                |
+| `layout?`   | `ManualTableProps['layout']`   | 固定轨道默认值 | 列宽、行高与行列间距                                   |
+| `meta?`     | `ManualTableProps['meta']`     | —              | 写入 TableSpec 的 JSON 元数据                          |
+
+`ManualTable` 同时接受上面的共享运行时属性。
+
+### Row
+
+| 属性        | 类型                   | 默认值 | 描述                        |
+| ----------- | ---------------------- | ------ | --------------------------- |
+| `kind?`     | `RowProps['kind']`     | `body` | 当前行的语义类型            |
+| `children?` | `RowProps['children']` | —      | 按列顺序排列的 Cell markers |
+
+### Cell
+
+| 属性            | 类型                        | 默认值       | 描述                                                         |
+| --------------- | --------------------------- | ------------ | ------------------------------------------------------------ |
+| `id?`           | `CellProps['id']`           | 由地址派生   | 稳定 Cell id                                                 |
+| `children?`     | `CellProps['children']`     | —            | 作为 value payload 的 JSON 标量；与 `value` / `content` 互斥 |
+| `value?`        | `CellProps['value']`        | —            | 显式 value payload；与 `children` / `content` 互斥           |
+| `content?`      | `CellProps['content']`      | —            | 直接使用的 JSON-safe Core `IRChild`；与其它 payload 来源互斥 |
+| `presentation?` | `CellProps['presentation']` | 内置 `text`  | value 或标量 children 使用的 presentation；不适用于 content  |
+| `location?`     | `CellProps['location']`     | 由行语义派生 | Cell 所在的语义区域                                          |
+| `roles?`        | `CellProps['roles']`        | 由行语义派生 | 非空语义角色集合                                             |
+
+`children`、`value` 与 `content` 必须且只能提供一个。`presentation` 只适用于 value payload，包括标量 children 语法。
 
 ## Vanilla runtime
 

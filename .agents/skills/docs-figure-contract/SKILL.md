@@ -102,12 +102,32 @@ MDX 中使用：
 
 分组框只表达一组节点共同所属的 layer、runtime、adapter 或其它职责范围，不作为流程步骤。
 
+- apps/docs 中的语义分组统一使用 `LogicFrame` + `LogicFrameTitle`，从 `@/modules/docs/components/logic-figure` 导入；不要再用空的低透明虚线 `Node` 手绘边界，也不要用独立 `Node` 模拟标题。
+- `LogicFrame` 只用于 layer、runtime、adapter、package、职责范围等语义分组。Standard `Frame` 教学示例以及 viewBox、margin、bbox、clip、连接面等几何 / 参考边界保持原组件和画法。
 - 边界按内部标题与节点的实际包围盒紧密包裹，只增加一致的小内边距；不要用明显大于内容的 `minimumSize` 制造空白。
 - 框内预留一行紧凑标题区，内容节点从标题下方开始；标题同时贴近上边界与首行内容，不要用标题行制造额外纵向空白。
 - 标题放在框内左上角的固定内边距位置，使用 `gray`、常规字重和普通字号；不要使用类别色、粗体或外置 `label`。
-- 标题是分组标识，不是角色节点。它可以使用 `stroke="none"`、无填充的独立 `Node`，这是有框模式不混用无框节点规则的唯一默认例外；不要让箭头连接标题。
-- 边界默认使用 `lightgray` 虚线、无填充或极浅灰填充与 `cornerRadius={4}`；视觉权重低于内部节点。
+- 标题是分组标识，不是角色节点；使用 `LogicFrameTitle` 作为 `LogicFrame` 的直接子元素，不要让箭头连接标题。
+- 边界默认样式由 `LogicFrame` 提供；只有语义确实需要时才显式覆盖，视觉权重始终低于内部节点。
 - 多个同级分组复用相同的标题位置、标题行高度、内边距与边界样式。
+- 跨分组连线以及连接分组外节点的 `Draw` 默认放在 `LogicFrame` 外部，继续通过稳定节点 id 表达关系。
+
+```tsx
+import { Draw, Node } from '@retikz/react';
+
+import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+
+<LogicFrame id="core-group">
+  <LogicFrameTitle>@retikz/core</LogicFrameTitle>
+  <Node id="compile" position={[0, 0]}>
+    compileToScene
+  </Node>
+</LogicFrame>
+<Node id="render" position={[160, 0]}>
+  render
+</Node>
+<Draw way={['compile', 'render']} arrow="->" />
+```
 
 ## 连线语义
 

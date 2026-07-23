@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
 import { BotMessageSquare, ChevronsDownUp, ChevronsUpDown, X } from 'lucide-react';
+import { memo } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib';
@@ -37,7 +38,7 @@ export type InlineSourcePanelProps = {
 };
 
 /** 带 teaser、折叠与卡片动作的内联源码面板。 */
-export const InlineSourcePanel: FC<InlineSourcePanelProps> = props => {
+const InlineSourcePanelComponent: FC<InlineSourcePanelProps> = props => {
   const { state, isCodeVisible, showAskAi, onAskAi, isExpanded, onExpandedChange, onHideSource, onShowCode } = props;
   const teaser = state.display(false);
   const full = state.display(true);
@@ -99,3 +100,6 @@ export const InlineSourcePanel: FC<InlineSourcePanelProps> = props => {
     </div>
   );
 };
+
+/** 源码状态未变化时跳过 controls 与预览交互引起的重渲染。 */
+export const InlineSourcePanel = memo(InlineSourcePanelComponent);

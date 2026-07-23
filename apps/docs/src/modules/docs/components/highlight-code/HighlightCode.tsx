@@ -1,5 +1,6 @@
 import type { FC } from 'react';
 
+import { memo } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
@@ -31,7 +32,7 @@ const LINE_KIND_CLASS: Record<DiffLineKind, string> = {
   removed: `${LINE_BASE_CLASS} bg-red-500/15 before:content-['-'] before:absolute before:left-1 before:text-red-600 dark:before:text-red-400`,
 };
 
-export const HighlightCode: FC<HighlightCodeProps> = props => {
+const HighlightCodeComponent: FC<HighlightCodeProps> = props => {
   const { lang, code, showLineNumbers, lineKinds } = props;
 
   const theme = useThemeStore(state => state.theme);
@@ -74,3 +75,6 @@ export const HighlightCode: FC<HighlightCodeProps> = props => {
     </SyntaxHighlighter>
   );
 };
+
+/** 相同源码与主题下复用语法高亮结果。 */
+export const HighlightCode = memo(HighlightCodeComponent);

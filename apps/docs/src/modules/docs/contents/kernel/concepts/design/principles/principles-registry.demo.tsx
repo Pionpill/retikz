@@ -2,52 +2,36 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
+import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+
 /** 内置与自定义 Definition 共用协议、registry 与 compile consumer */
 const Demo: FC = () => (
   <Layout width={760} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node
-      id="definition-contract"
-      text=" "
-      position={[-250, 5]}
-      minimumSize={{ width: 200, height: 130 }}
-      stroke="lightgray"
-      fill="lightgray"
-      fillOpacity={0.04}
-      dashPattern={[4, 3]}
-      cornerRadius={4}
-    />
-    <Node
-      text="XxxDefinition contract"
-      position={[-270, -48]}
-      stroke="none"
-      fill="none"
-      padding={0}
-      textColor="gray"
-      font={{ size: 12 }}
-    />
-
-    <Node
-      id="builtins"
-      text="BUILTIN_*"
-      position={[-250, -18]}
-      minimumSize={{ width: 150, height: 34 }}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
-      cornerRadius={4}
-      font={{ size: 13 }}
-    />
-    <Node
-      id="custom"
-      text="defineXxx(custom)"
-      position={[-250, 28]}
-      minimumSize={{ width: 150, height: 34 }}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
-      cornerRadius={4}
-      font={{ size: 13 }}
-    />
+    <LogicFrame id="definition-contract">
+      <LogicFrameTitle>XxxDefinition contract</LogicFrameTitle>
+      <Node
+        id="builtins"
+        text="BUILTIN_*"
+        position={[-250, -18]}
+        minimumSize={{ width: 150, height: 34 }}
+        stroke="dodgerblue"
+        fill="dodgerblue"
+        fillOpacity={0.08}
+        cornerRadius={4}
+        font={{ size: 13 }}
+      />
+      <Node
+        id="custom"
+        text="defineXxx(custom)"
+        position={[-250, 28]}
+        minimumSize={{ width: 150, height: 34 }}
+        stroke="dodgerblue"
+        fill="dodgerblue"
+        fillOpacity={0.08}
+        cornerRadius={4}
+        font={{ size: 13 }}
+      />
+    </LogicFrame>
     <Node
       id="resolver"
       text="resolveXxxRegistry"

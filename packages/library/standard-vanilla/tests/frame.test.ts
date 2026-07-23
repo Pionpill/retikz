@@ -4,15 +4,33 @@ import { describe, expect, it } from 'vitest';
 
 import type { FrameVanillaInput } from '../src';
 
-import { axes, AxesVanillaAdapter, frame, FrameVanillaAdapter, grid, GridVanillaAdapter } from '../src';
+import {
+  axes,
+  AxesVanillaAdapter,
+  frame,
+  frameDescription,
+  frameTitle,
+  FrameVanillaAdapter,
+  grid,
+  GridVanillaAdapter,
+} from '../src';
 
 const input: FrameVanillaInput = {
-  label: 'Contract',
+  padding: 12,
+  cornerRadius: 6,
+  headerDirection: 'vertical',
+  title: frameTitle({ text: 'Contract', font: { family: 'serif' } }),
+  description: frameDescription({ text: 'One registry contract.', maxTextWidth: 220 }),
   children: [{ type: 'node', position: [0, 0], text: 'A' }],
 };
 
 describe('frame()', () => {
-  it('derives the Frame scope identity from the Vanilla embed id', () => {
+  it('validates JSON-safe title and description builders', () => {
+    expect(frameTitle({ text: 'Title', padding: 2 })).toEqual({ text: 'Title', padding: 2 });
+    expect(frameDescription({ text: '', opacity: 0.6 })).toEqual({ text: '', opacity: 0.6 });
+  });
+
+  it('derives the Frame identity and canonical IR from the Vanilla embed id', () => {
     const embed = frame('definition-contract', input);
     const contribution = FrameVanillaAdapter.lower(embed.props, {
       id: embed.id,
@@ -42,5 +60,6 @@ describe('frame()', () => {
 
     expect(figure.composites).toHaveLength(3);
     expect(figure.ir.children.map(child => child.type)).toEqual(['grid', 'axes', 'frame']);
+    expect(figure.ir.children[2]).toEqual(createFrame({ id: 'definition-contract/frame', ...input }));
   });
 });

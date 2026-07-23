@@ -1061,6 +1061,74 @@ describe('preview controls registry', () => {
     expect(demoSources[resolveDemoKey(['standard', 'composite', 'grid'], 'grid-lowering', 'en')]).toBeDefined();
   });
 
+  it('Frame 文档按组合语义递进，并以双语 controls 和自绘图闭合三条入口', () => {
+    const segments = ['standard', 'composite', 'frame'];
+    const controlsKeys = Object.keys(controlModules).filter(key => key.includes('/standard/composite/frame/'));
+
+    expect(controlsKeys).toEqual([
+      buildControlsKey(segments, 'frame-playground'),
+      buildLangControlsKey(segments, 'frame-playground', 'en'),
+    ]);
+
+    const zhDefinition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'frame-playground')]);
+    const enDefinition = resolvePreviewControls(
+      controlModules[buildLangControlsKey(segments, 'frame-playground', 'en')],
+    );
+
+    expect(zhDefinition?.presentation).toBe('panel');
+    expect(enDefinition?.presentation).toBe('panel');
+    expect(controlDefinitionContractOf(enDefinition as PreviewControlsDefinition)).toEqual(
+      controlDefinitionContractOf(zhDefinition as PreviewControlsDefinition),
+    );
+    expect(getPreviewControlFields(zhDefinition as PreviewControlsDefinition).map(field => field.id)).toEqual([
+      'paddingX',
+      'paddingY',
+      'gap',
+      'headerDirection',
+      'borderStroke',
+      'strokeWidth',
+      'strokeOpacity',
+      'borderLineStyle',
+      'fillOpacity',
+      'titlePadding',
+      'titleFontSize',
+      'titleFontWeight',
+      'titleFillOpacity',
+      'descriptionFontSize',
+      'descriptionOpacity',
+      'nodeAText',
+      'nodeBText',
+      'connected',
+    ]);
+
+    const playgroundSource = demoSources[buildKey(segments, 'frame-playground')];
+    expect(playgroundSource).toContain('export const previewControls =');
+    expect(playgroundSource).toContain('defineControlledPreview(previewControlContract');
+    expect(playgroundSource).toMatch(/viewBox=\{\{ x: 0, y: 0, width: 420, height: 260 \}\}/u);
+    expect(playgroundSource).toContain('headerDirection={values.headerDirection}');
+    expect(playgroundSource).toContain("values.borderLineStyle === 'dotted'");
+    expect(playgroundSource).toContain("lineCap: 'round'");
+    expect(playgroundSource).toContain('text={values.nodeAText}');
+    expect(playgroundSource).toContain('text={values.nodeBText}');
+    expect(playgroundSource).toContain('values.connected ? <Draw');
+    expect(playgroundSource).toContain("way={['A', 'B']}");
+
+    const contentRoot = resolve('src/modules/docs/contents/standard/composite/frame');
+    for (const locale of ['zh', 'en']) {
+      const pageSource = readFileSync(resolve(contentRoot, `index.${locale}.mdx`), 'utf8');
+      const previewNames = Array.from(
+        pageSource.matchAll(/<ComponentPreview\b[^>]*\bfiles="([^"]+)"/gu),
+        match => match[1],
+      );
+
+      expect(previewNames).toEqual(['frame-basic', 'frame-variants', 'frame-playground', 'frame-lowering']);
+      expect(pageSource).toContain('<ComponentPreview files="frame-lowering" hideCode');
+      expect(demoSources[resolveDemoKey(segments, 'frame-basic', locale)]).toBeDefined();
+      expect(demoSources[resolveDemoKey(segments, 'frame-variants', locale)]).toBeDefined();
+      expect(demoSources[resolveDemoKey(segments, 'frame-lowering', locale)]).toBeDefined();
+    }
+  });
+
   it('Channel 文档把参数型静态示例收敛为四个双语 controls playground', () => {
     const bindingSegments = ['viz', 'plot', 'channel', 'binding'];
     const builtinSegments = ['viz', 'plot', 'channel', 'builtin'];

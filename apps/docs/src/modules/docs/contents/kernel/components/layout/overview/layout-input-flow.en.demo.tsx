@@ -2,62 +2,53 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
+import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+
 /** Layout ownership boundaries across React, Core, and the render host */
 const Demo: FC = () => (
   <Layout width={640} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node
-      id="react-adapter-group"
-      text=" "
-      position={[-212.5, 0]}
-      minimumSize={{ width: 315, height: 145 }}
-      stroke="lightgray"
-      fill="lightgray"
-      fillOpacity={0.04}
-      dashPattern={[4, 3]}
-      cornerRadius={4}
-    />
-    <Node position={[-300, -53]} stroke="none" fill="none" padding={0} textColor="gray" font={{ size: 12 }}>
-      @retikz/react
-    </Node>
-    <Node
-      id="react-input"
-      position={[-278, -15]}
-      minimumSize={{ width: 112, height: 38 }}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
-      cornerRadius={4}
-      font={{ size: 13 }}
-    >
-      JSX children / ir prop
-    </Node>
-    <Node
-      id="layout"
-      text={[
-        { text: 'Layout', font: { weight: 'bold' } },
-        { text: 'React adapter boundary', fill: 'gray', font: { size: 11 } },
-      ]}
-      position={[-135, -15]}
-      minimumSize={{ width: 118, height: 48 }}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
-      cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={15}
-    />
-    <Node
-      id="definitions"
-      position={[-135, 42]}
-      minimumSize={{ width: 132, height: 36 }}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
-      cornerRadius={4}
-      font={{ size: 12 }}
-    >
-      definitions / options
-    </Node>
+    <LogicFrame id="react-adapter-group">
+      <LogicFrameTitle>@retikz/react</LogicFrameTitle>
+      <Node
+        id="react-input"
+        position={[-278, -15]}
+        minimumSize={{ width: 112, height: 38 }}
+        stroke="dimgray"
+        fill="lightgray"
+        fillOpacity={0.16}
+        cornerRadius={4}
+        font={{ size: 13 }}
+      >
+        JSX children / ir prop
+      </Node>
+      <Node
+        id="layout"
+        text={[
+          { text: 'Layout', font: { weight: 'bold' } },
+          { text: 'React adapter boundary', fill: 'gray', font: { size: 11 } },
+        ]}
+        position={[-135, -15]}
+        minimumSize={{ width: 118, height: 48 }}
+        stroke="dodgerblue"
+        fill="dodgerblue"
+        fillOpacity={0.08}
+        cornerRadius={4}
+        font={{ size: 13 }}
+        lineHeight={15}
+      />
+      <Node
+        id="definitions"
+        position={[-135, 42]}
+        minimumSize={{ width: 132, height: 36 }}
+        stroke="dimgray"
+        fill="lightgray"
+        fillOpacity={0.16}
+        cornerRadius={4}
+        font={{ size: 12 }}
+      >
+        definitions / options
+      </Node>
+    </LogicFrame>
 
     <Node
       id="core-compile"

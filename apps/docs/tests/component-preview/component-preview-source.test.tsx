@@ -183,7 +183,7 @@ describe('ComponentPreview Vanilla source', () => {
 describe('ComponentPreview localized controls', () => {
   it('将 previewClassName 透传给卡片且不再传旧名称', () => {
     const props = renderPreview(
-      ['viz', 'grammar', 'mark', 'path'],
+      ['viz', 'plot', 'mark', 'path'],
       <ComponentPreview files="line-basic" previewClassName="outer-preview-class" />,
     );
 
@@ -200,7 +200,7 @@ describe('ComponentPreview localized controls', () => {
       render: () => <button aria-label="Local control" />,
     };
     const props = renderPreview(
-      ['viz', 'grammar', 'mark', 'path'],
+      ['viz', 'plot', 'mark', 'path'],
       <ComponentPreview files="line-basic" controls={{ animation: true, slots: [localSlot] }} />,
     );
 
@@ -366,7 +366,7 @@ describe('ComponentPreview localized controls', () => {
     await i18n.changeLanguage('en');
 
     try {
-      const props = renderPreview(['viz', 'grammar', 'mark', 'path'], <ComponentPreview files="line-curve" />);
+      const props = renderPreview(['viz', 'plot', 'mark', 'path'], <ComponentPreview files="line-curve" />);
       const control = props.controlSlots?.[0];
 
       expect(control).toBeDefined();
@@ -384,7 +384,7 @@ describe('ComponentPreview localized controls', () => {
 
     try {
       const props = renderPreview(
-        ['viz', 'grammar', 'mark', 'path'],
+        ['viz', 'plot', 'mark', 'path'],
         <ComponentPreview files="line-basic" controls={{ name: 'line-curve' }} />,
       );
       const control = props.controlSlots?.[0];
@@ -400,7 +400,7 @@ describe('ComponentPreview localized controls', () => {
 
   it('可通过 name=false 禁用内容 controls', () => {
     const props = renderPreview(
-      ['viz', 'grammar', 'mark', 'path'],
+      ['viz', 'plot', 'mark', 'path'],
       <ComponentPreview files="line-curve" controls={{ name: false }} />,
     );
 
@@ -416,7 +416,7 @@ describe('ComponentPreview localized controls', () => {
 
     expect(() =>
       renderPreview(
-        ['viz', 'grammar', 'mark', 'path'],
+        ['viz', 'plot', 'mark', 'path'],
         <ComponentPreview files="line-curve" controls={{ slots: [localSlot] }} />,
       ),
     ).toThrow('Duplicate preview control slot id: "path-curve".');

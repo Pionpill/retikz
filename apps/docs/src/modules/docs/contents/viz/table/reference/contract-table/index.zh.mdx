@@ -33,6 +33,20 @@ description: 查询 TableSpec 根、Cell payload、固定轨道布局及 manual/
 <ZodSchema
   name="ManualTableSpecSchema"
   description="显式网格 spec：直接保存行、列与 Cell，不接受外部 data reference。"
+  descriptions={{
+    namespace: 'Table Tier 2 composite 的固定命名空间，用于把节点路由到 Table composite definition。',
+    type: '顶层 Table 规格的 composite 类型判别值。',
+    id: '可选稳定 Table id；省略时由 lowering 生成根 Scope id。',
+    layout: '固定轨道布局配置；省略字段使用 pipeline 默认值。',
+    meta: '由 lowering 原样保留的 JSON-safe 元数据。',
+    data: 'manual Table 不接受外部数据引用。',
+    structure: 'manual Table 的显式行、列与 Cell 结构。',
+    'structure.kind': '显式 manual Structure 的判别值。',
+    'structure.rows': '显式声明的行数。',
+    'structure.columns': '显式声明的列数。',
+    'structure.rowKinds': '每一行的可选语义类型；省略时所有行均按正文行处理。',
+    'structure.cells': '按声明行列范围内的地址保存的显式 Cell。',
+  }}
 />
 
 ### CustomTableSpecSchema
@@ -40,6 +54,18 @@ description: 查询 TableSpec 根、Cell payload、固定轨道布局及 manual/
 <ZodSchema
   name="CustomTableSpecSchema"
   description="自定义结构 spec：通过 registry 解析 structure kind，并可选引用外部数据。"
+  descriptions={{
+    namespace: 'Table Tier 2 composite 的固定命名空间，用于把节点路由到 Table composite definition。',
+    type: '顶层 Table 规格的 composite 类型判别值。',
+    id: '可选稳定 Table id；省略时由 lowering 生成根 Scope id。',
+    layout: '固定轨道布局配置；省略字段使用 pipeline 默认值。',
+    meta: '由 lowering 原样保留的 JSON-safe 元数据。',
+    data: '可选外部数据引用，运行时会把对应 dataset 暴露给自定义 Structure definition。',
+    'data.reference': '外部 dataset 名称；实际数据值不写入 IR。',
+    'data.model': '可选字段声明；字段名必须唯一。',
+    structure: '由 registry 解析的自定义 Table Structure operation。',
+    'structure.kind': '自定义 Table Structure provider 的名称。',
+  }}
 />
 
 ## Cell
@@ -51,6 +77,15 @@ description: 查询 TableSpec 根、Cell payload、固定轨道布局及 manual/
 <ZodSchema
   name="TableCellSchema"
   description="显式 Cell：包含零基地址、value/content payload，以及可选身份与语义角色。"
+  descriptions={{
+    id: '可选稳定 Cell id；省略时根据 Cell 地址派生。',
+    address: 'manual Structure 中的零基 Cell 地址。',
+    'address.row': 'Structure 输出中的零基行索引。',
+    'address.column': 'Structure 输出中的零基列索引。',
+    payload: 'Cell 的标量值或直接 Core/Tier 2 内容。',
+    location: 'Cell 所在的可选语义区域；省略时根据所在行类型派生。',
+    roles: 'Cell 承担的可选非空语义角色；省略时根据所在行类型派生。',
+  }}
 />
 
 ### TableCellPayloadSchema
@@ -66,7 +101,17 @@ description: 查询 TableSpec 根、Cell payload、固定轨道布局及 manual/
 
 ### TableLayoutSchema
 
-<ZodSchema name="TableLayoutSchema" description="v0.1 固定轨道布局：统一列宽、正文/列头行高，以及非负的行列间距。" />
+<ZodSchema
+  name="TableLayoutSchema"
+  description="v0.1 固定轨道布局：统一列宽、正文/列头行高，以及非负的行列间距。"
+  descriptions={{
+    columnWidth: '统一列宽；省略时使用 120。',
+    rowHeight: '统一正文行高；省略时使用 32。',
+    headerHeight: '统一列头行高；省略时跟随最终正文行高。',
+    columnGap: '相邻列之间的非负间距；省略时使用 0。',
+    rowGap: '相邻行之间的非负间距；省略时使用 0。',
+  }}
+/>
 
 省略字段时，`columnWidth` 为 `120`、`rowHeight` 为 `32`、`headerHeight` 跟随正文行高，行列 gap 为 `0`。Cell 内容不会反向改变轨道尺寸。
 

@@ -84,6 +84,7 @@ afterEach(async () => {
   for (const root of renderedRoots.splice(0)) {
     await act(() => root.unmount());
   }
+  vi.unstubAllGlobals();
   document.body.replaceChildren();
 });
 
@@ -322,6 +323,42 @@ describe('PreviewControlFieldInput', () => {
       }
     });
     expect(onColorChange).toHaveBeenLastCalledWith('#112233');
+  });
+
+  it('同一帧内合并 color picker 的连续输入并只提交最后值', async () => {
+    const animationFrames = new Map<number, FrameRequestCallback>();
+    let nextFrameId = 0;
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      nextFrameId += 1;
+      animationFrames.set(nextFrameId, callback);
+      return nextFrameId;
+    });
+    vi.stubGlobal('cancelAnimationFrame', (frameId: number) => {
+      animationFrames.delete(frameId);
+    });
+    const onValueChange = vi.fn();
+    const color = await renderField(
+      { kind: 'color', id: 'fill', label: 'Fill', defaultValue: '#ffffff' },
+      '#ffffff',
+      onValueChange,
+    );
+    const picker = color.container.querySelector<HTMLInputElement>('input[type="color"]');
+
+    expect(picker).not.toBeNull();
+    await act(() => {
+      if (!picker) return;
+      setInputValue(picker, '#112233');
+      setInputValue(picker, '#223344');
+      setInputValue(picker, '#334455');
+    });
+
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(animationFrames).toHaveLength(1);
+
+    await act(() => animationFrames.values().next().value?.(16));
+
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenLastCalledWith('#334455');
   });
 
   it('忽略空或非有限 number 输入', async () => {
