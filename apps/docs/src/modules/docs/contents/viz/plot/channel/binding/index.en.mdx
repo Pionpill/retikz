@@ -14,22 +14,6 @@ Those props are the user-facing surface of channels: `x` is a position channel, 
 
 Internally, that becomes the mark's `encoding`: `x` and `y` are positional channels, `color` and `size` are style channels, and `text` is the text-content channel.
 
-## Binding Playground
-
-Use the panel to switch the `x` / `y` fields and change color, size, or shape from field-driven values to constants. The chart structure stays fixed, so each action isolates the effect of the selected binding.
-
-<ComponentPreview
-  files={['channel-binding', 'channel-binding.data.ts']}
-  size="lg"
-  caption="Position channels move data through the coordinate system; style channels can read fields or use fixed values."
-/>
-
-One row can bind to several channels at once: `gdp` and `life` determine position, `region` determines color and shape, `population` determines point radius, and `abbr` supplies labels. When a style switches to a constant, that data field no longer participates in the corresponding visual calculation.
-
-Channels read canonical values produced by data preparation—the normalized values written back under logical field names after `fieldMap`, `format`, and `resolveField` run. Plot then derives scales from field types and explicit scale configuration. `Axis` consumes scales from position channels; only field-driven color and size bindings produce their corresponding `Legend`.
-
-Each GOG layer consumes the channels it understands. `PathMark` can use `x` / `y` / `order` / `series` / `color` / `strokeWidth` to produce lines, while `PointMark` reads position and node style from the same binding model. A channel says which value to read and which semantic entry it belongs to; it does not own a rendered result.
-
 ## Fields And Constants
 
 In the React DSL, strings usually mean field names:
@@ -47,6 +31,22 @@ Some channels also accept constants. `ReferenceMark` is the clearest example:
 In IR, fields become `{ field: 'gdp' }`, while constants become `{ value: 80 }`. A channel must choose exactly one: field-driven or constant.
 
 Field lookup follows the same rule as the model: first check whether the whole field name is a direct key on the row, then fall back to `.` traversal. Because canonical rows write normalized values back under logical field names, marks only reference logical fields and do not need to know the physical source name or storage format.
+
+## Binding Playground
+
+Use the panel to switch the `x` / `y` fields and change color, size, or shape from field-driven values to constants. The chart structure stays fixed, so each action isolates the effect of the selected binding.
+
+<ComponentPreview
+  files={['channel-binding', 'channel-binding.data.ts']}
+  size="lg"
+  caption="Position channels move data through the coordinate system; style channels can read fields or use fixed values."
+/>
+
+One row can bind to several channels at once: `gdp` and `life` determine position, `region` determines color and shape, `population` determines point radius, and `abbr` supplies labels. When a style switches to a constant, that data field no longer participates in the corresponding visual calculation.
+
+Channels read canonical values produced by data preparation—the normalized values written back under logical field names after `fieldMap`, `format`, and `resolveField` run. Plot then derives scales from field types and explicit scale configuration. `Axis` consumes scales from position channels; only field-driven color and size bindings produce their corresponding `Legend`.
+
+Each GOG layer consumes the channels it understands. `PathMark` can use `x` / `y` / `order` / `series` / `color` / `strokeWidth` to produce lines, while `PointMark` reads position and node style from the same binding model. A channel says which value to read and which semantic entry it belongs to; it does not own a rendered result.
 
 ## How It Works
 

@@ -1197,12 +1197,15 @@ describe('preview controls registry', () => {
     for (const locale of ['zh', 'en']) {
       const bindingPage = readFileSync(resolve(bindingRoot, `index.${locale}.mdx`), 'utf8');
       const builtinPage = readFileSync(resolve(builtinRoot, `index.${locale}.mdx`), 'utf8');
+      const fieldsHeading = locale === 'zh' ? '## 字段与常量' : '## Fields And Constants';
+      const playgroundHeading = locale === 'zh' ? '## 绑定试验场' : '## Binding Playground';
       const builtinPreviews = Array.from(
         builtinPage.matchAll(/<ComponentPreview\b[^>]*\bfiles="([^"]+)"/gu),
         match => match[1],
       );
 
       expect(bindingPage).toContain("files={['channel-binding', 'channel-binding.data.ts']}");
+      expect(bindingPage.indexOf(fieldsHeading), locale).toBeLessThan(bindingPage.indexOf(playgroundHeading));
       expect(builtinPreviews).toEqual([
         'builtin-position',
         'builtin-point-style',

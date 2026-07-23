@@ -14,22 +14,6 @@ description: 通道绑定描述字段或常量如何进入 x、y、color、size�
 
 上面的写法会在内部形成 mark 的 `encoding`：`x`、`y` 走位置通道，`color`、`size` 走样式通道，`text` 走文本内容通道。
 
-## 绑定试验场
-
-在面板中切换 `x` / `y` 字段，并把颜色、大小或形状从字段驱动改成固定值。图形结构保持不变，因此每次操作只展示当前通道绑定带来的差异。
-
-<ComponentPreview
-  files={['channel-binding', 'channel-binding.data.ts']}
-  size="lg"
-  caption="位置通道改变数据在坐标系中的落点；样式通道可以读取字段，也可以使用固定值。"
-/>
-
-同一行数据可以同时绑定到多个通道：`gdp` 与 `life` 决定位置，`region` 决定颜色和形状，`population` 决定点半径，`abbr` 决定文字标注。切成固定值后，数据行不再参与对应样式的计算。
-
-通道读取的是数据准备阶段得到的 canonical 值（规范化值：`fieldMap`、`format`、`resolveField` 都已生效后写回逻辑字段名的标准值），然后 Plot 再按字段类型和显式 scale 配置派生比例尺。`Axis` 消费位置通道派生的坐标尺度；只有字段驱动的颜色和大小才会生成对应 `Legend`。
-
-Plot 的 GOG 层会各自消费自己理解的通道。`PathMark` 可以使用 `x` / `y` / `order` / `series` / `color` / `strokeWidth` 生成折线；`PointMark` 则从同一份绑定模型中读取位置与节点样式。通道只描述“读哪个值”和“这个值属于哪个语义入口”，不会直接持有渲染结果。
-
 ## 字段与常量
 
 React DSL 里字符串通常表示字段名：
@@ -47,6 +31,22 @@ React DSL 里字符串通常表示字段名：
 在 IR 里，字段会变成 `{ field: 'gdp' }`，常量会变成 `{ value: 80 }`。一个通道只能二选一：要么来自字段，要么来自常量。
 
 字段名解析遵循和 model 相同的规则：先查整段字段名是不是行上的直接 key，再按 `.` 下钻。因为 canonical 行会把规范化值写回逻辑字段名，所以 mark 只需要引用逻辑字段，不需要关心真实数据字段名或存储格式。
+
+## 绑定试验场
+
+在面板中切换 `x` / `y` 字段，并把颜色、大小或形状从字段驱动改成固定值。图形结构保持不变，因此每次操作只展示当前通道绑定带来的差异。
+
+<ComponentPreview
+  files={['channel-binding', 'channel-binding.data.ts']}
+  size="lg"
+  caption="位置通道改变数据在坐标系中的落点；样式通道可以读取字段，也可以使用固定值。"
+/>
+
+同一行数据可以同时绑定到多个通道：`gdp` 与 `life` 决定位置，`region` 决定颜色和形状，`population` 决定点半径，`abbr` 决定文字标注。切成固定值后，数据行不再参与对应样式的计算。
+
+通道读取的是数据准备阶段得到的 canonical 值（规范化值：`fieldMap`、`format`、`resolveField` 都已生效后写回逻辑字段名的标准值），然后 Plot 再按字段类型和显式 scale 配置派生比例尺。`Axis` 消费位置通道派生的坐标尺度；只有字段驱动的颜色和大小才会生成对应 `Legend`。
+
+Plot 的 GOG 层会各自消费自己理解的通道。`PathMark` 可以使用 `x` / `y` / `order` / `series` / `color` / `strokeWidth` 生成折线；`PointMark` 则从同一份绑定模型中读取位置与节点样式。通道只描述“读哪个值”和“这个值属于哪个语义入口”，不会直接持有渲染结果。
 
 ## 技术原理
 
