@@ -928,8 +928,8 @@ export const vizV01: Release = {
           version: 'alpha.1',
           date: '2026-07-21',
           summary: {
-            zh: '首发 `<Table>`、`<DetailTable>` 与 `<ManualTable>`，覆盖 standalone、Layout 嵌入、SVG/Canvas 与 manifest 通知。',
-            en: 'Introduces `<Table>`, `<DetailTable>`, and `<ManualTable>` across standalone rendering, Layout embedding, SVG/Canvas, and manifest notifications.',
+            zh: '首发 `<Table>`、`<DetailTable>` 与 `<ManualTable>`，并提供可选的 `DetailColumn`、`Row`、`Cell` 组合式 authoring。',
+            en: 'Introduces `<Table>`, `<DetailTable>`, and `<ManualTable>` with optional `DetailColumn`, `Row`, and `Cell` composition authoring.',
           },
           items: [
             {
@@ -937,6 +937,13 @@ export const vizV01: Release = {
               content: {
                 zh: 'detail/manual React props 委托 `@retikz/table` 构造 JSON-safe spec，string header、默认值与错误语义不在 adapter 重复实现。',
                 en: 'Detail/manual React props delegate JSON-safe spec construction to `@retikz/table`, so string headers, defaults, and errors are not reimplemented in the adapter.',
+              },
+            },
+            {
+              label: { zh: '组合式 authoring', en: 'Composition authoring' },
+              content: {
+                zh: '`<DetailColumn>` 可替代 columns，`<Row>` / `<Cell>` 可替代 cells 与 rowKinds；根组件仍保留完整 props，两种结构来源互斥并归一为同一 JSON-safe TableSpec。',
+                en: '`<DetailColumn>` can replace columns, while `<Row>` / `<Cell>` can replace cells and rowKinds. Root components retain their complete props; the two structure sources are exclusive and normalize to the same JSON-safe TableSpec.',
               },
             },
             {

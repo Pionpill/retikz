@@ -19,11 +19,13 @@ description: '发布或准备发布 retikz npm 包时使用。覆盖版本号 bu
 
 发布组真源是 `scripts/release-groups.config.mjs`。每个可发布包的 `package.json` 必须声明 `retikz.domain`、`retikz.releaseGroup`、`retikz.layer`、`retikz.publishable`。若下表、skill 文本与配置或 manifest 不一致，先修配置 / manifest / skill 并运行 `pnpm run check:release-groups`。
 
-| 组     | 包                                                                                                  | 发布顺序                                          | tag               |
-| ------ | --------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ----------------- |
-| kernel | `@retikz/math`, `@retikz/core`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla`, `@retikz/tex` | math -> core -> render -> react -> vanilla -> tex | `v<version>`      |
-| data   | `@retikz/data`                                                                                      | data                                              | `data-v<version>` |
-| plot   | `@retikz/plot`, `@retikz/plot-vanilla`, `@retikz/plot-react`                                        | plot -> plot-vanilla -> plot-react                | `plot-v<version>` |
+| 组       | 包                                                                                                  | 发布顺序                                          | tag                   |
+| -------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------- | --------------------- |
+| kernel   | `@retikz/math`, `@retikz/core`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla`, `@retikz/tex` | math -> core -> render -> react -> vanilla -> tex | `v<version>`          |
+| data     | `@retikz/data`                                                                                      | data                                              | `data-v<version>`     |
+| plot     | `@retikz/plot`, `@retikz/plot-vanilla`, `@retikz/plot-react`                                        | plot -> plot-vanilla -> plot-react                | `plot-v<version>`     |
+| table    | `@retikz/table`, `@retikz/table-vanilla`, `@retikz/table-react`                                     | table -> table-vanilla -> table-react             | `table-v<version>`    |
+| standard | `@retikz/standard`, `@retikz/standard-vanilla`, `@retikz/standard-react`                            | standard -> standard-vanilla -> standard-react    | `standard-v<version>` |
 
 不发布：`@retikz/docs`、`@retikz/eval` 是 private app。
 
@@ -39,10 +41,10 @@ description: '发布或准备发布 retikz npm 包时使用。覆盖版本号 bu
 
 改文件前先向用户确认：
 
-- 发布组：`kernel` / `data` / `plot`；
+- 发布组：`kernel` / `data` / `plot` / `table` / `standard`；
 - 目标版本、npm dist-tag、git tag；
 - 包列表与每个包的 `old -> target`；
-- `apps/docs/src/modules/docs/data/changelog.ts` 的 release note 范围；
+- `apps/docs/src/modules/docs/data/changelog/*.ts` 中对应 release 文件的 note 范围；
 - 是否需要同步 module badge 或 roadmap milestone 状态。
 
 ## 版本连续性
@@ -56,6 +58,10 @@ npm view @retikz/data versions --registry=https://registry.npmjs.org/
 npm view @retikz/data dist-tags --registry=https://registry.npmjs.org/
 npm view @retikz/plot versions --registry=https://registry.npmjs.org/
 npm view @retikz/plot dist-tags --registry=https://registry.npmjs.org/
+npm view @retikz/table versions --registry=https://registry.npmjs.org/
+npm view @retikz/table dist-tags --registry=https://registry.npmjs.org/
+npm view @retikz/standard versions --registry=https://registry.npmjs.org/
+npm view @retikz/standard dist-tags --registry=https://registry.npmjs.org/
 ```
 
 规则：
@@ -70,7 +76,7 @@ npm view @retikz/plot dist-tags --registry=https://registry.npmjs.org/
 只做发布准备相关改动：
 
 1. **包版本号**：发布组内每个包都改到目标版本。
-2. **changelog 数据**：更新 `apps/docs/src/modules/docs/data/changelog.ts`，结构以 `apps/docs/src/modules/docs/data/types.ts` 为准；不要改旧 changelog MDX。
+2. **changelog 数据**：更新 `apps/docs/src/modules/docs/data/changelog/*.ts` 中对应 release 文件，结构以 `apps/docs/src/modules/docs/data/types.ts` 为准；不要改旧 changelog MDX。
 3. **模块徽章**：只有可见模块版本变化时才改 `apps/docs/src/modules/docs/data/module.ts`，例如 minor / major 切档或 alpha -> beta -> rc -> stable。
 4. **roadmap**：按发布组当前 roadmap 的既有格式更新。
 5. **ADR 检查**：确认本次发版覆盖的已完成 ADR 已在 `develop-wrapup` 阶段压缩并置为 `Accepted`；发现未压缩 ADR 时停下，先走 wrapup 修正。
@@ -142,7 +148,7 @@ rg --files packages | rg 'packages/.*/src/.*\.(d\.ts|d\.ts\.map|js)$'
 2. 按根 AGENTS 的 commit 格式提交，常用 `🔖 <scope>: 发布 <version>` 或 `🔖 <scope>: 准备发布 <version>`。
 3. 确认 HEAD 中发布组每个包都是目标版本。
 4. 确认 `git status --short` 没有意外发布文件改动。
-5. 创建 tag：kernel 用 `v<version>`，data 用 `data-v<version>`，plot 用 `plot-v<version>`。
+5. 创建 tag：kernel 用 `v<version>`，其余发布组用 `<group>-v<version>`。
 6. 确认 npm 登录：`npm whoami --registry=https://registry.npmjs.org/`。
 7. 按组内顺序发布：
 
@@ -169,7 +175,7 @@ pnpm --filter @retikz/<pkg> publish --access public --tag <tag> --no-git-checks 
 - [ ] 已按 npm registry 校验版本连续性。
 - [ ] `scripts/release-groups.config.mjs`、`package.json` 的 `retikz` 元信息和目标发布组一致。
 - [ ] 发布组内包版本全部等于目标版本。
-- [ ] 用户可见行为变化已更新 `changelog.ts`。
+- [ ] 用户可见行为变化已更新对应 changelog 数据文件。
 - [ ] 只有需要改变可见徽章时才更新 `module.ts`。
 - [ ] roadmap 已按既有格式更新。
 - [ ] 发版范围内已完成 ADR 已压缩并为 `Accepted`。
