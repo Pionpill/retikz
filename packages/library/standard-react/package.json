@@ -52,7 +52,7 @@
     "react-dom": ">=18"
   },
   "dependencies": {
-    "@retikz/react": "workspace:*",
+    "@retikz/react": "workspace:^",
     "@retikz/standard": "workspace:*"
   },
   "devDependencies": {

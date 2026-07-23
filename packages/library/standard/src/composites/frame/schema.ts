@@ -1,4 +1,4 @@
-import { BoxSpacingSchema, CompositeBaseSchema, NodeSchema } from '@retikz/core';
+import { BoxSpacingSchema, CompositeBaseSchema, NodeSchema, RectangleStepSchema } from '@retikz/core';
 import { z } from 'zod';
 
 import { StandardPathBorderStyleSchema } from '../shared/schemas';
@@ -32,6 +32,9 @@ const FrameBaseSchema = CompositeBaseSchema.extend({
     .describe('Horizontal or vertical arrangement of the optional title and description.'),
   stroke: FrameBorderStyleSchema.shape.stroke.default('currentColor'),
   strokeWidth: FrameBorderStyleSchema.shape.strokeWidth.default(1),
+  cornerRadius: RectangleStepSchema.shape.cornerRadius.describe(
+    'Uniform corner radius for the rectangular Frame border; omitted keeps sharp corners.',
+  ),
   zIndex: NodeSchema.shape.zIndex.describe('Stacking order of the complete lowered Frame Scope.'),
   title: FrameTitleSchema.optional().describe('Optional Node-like primary title arranged above the Frame body.'),
   description: FrameDescriptionSchema.optional().describe(

@@ -25,6 +25,7 @@ import type {
   PreviewControlValues,
   PreviewControlValuesFor,
   PreviewControlVisibility,
+  PreviewPanelControlItem,
   PreviewSourceConfig,
   RendererMode,
   SizeKey,
@@ -73,18 +74,27 @@ const privateExportKeys = [
 ];
 
 /** 抹平文案后比较单个 controls 字段的运行时结构契约 */
-const controlFieldContractOf = (field: PreviewControlField) => ({
-  id: field.id,
-  kind: field.kind,
-  defaultValue: field.defaultValue,
-  min: 'min' in field ? field.min : undefined,
-  max: 'max' in field ? field.max : undefined,
-  step: 'step' in field ? field.step : undefined,
-  playDuration: field.kind === 'range' ? field.playDuration : undefined,
-  multiline: field.kind === 'text' ? field.multiline : undefined,
-  optionValues: field.kind === 'select' ? field.options.map(option => option.value) : undefined,
-  visibleWhen: field.visibleWhen,
-});
+const controlFieldContractOf = (field: PreviewPanelControlItem) =>
+  field.kind === 'table'
+    ? {
+        id: field.id,
+        kind: field.kind,
+        rowCount: field.rows.length,
+        columnKeys: field.columns?.map(column => column.key),
+        visibleWhen: field.visibleWhen,
+      }
+    : {
+        id: field.id,
+        kind: field.kind,
+        defaultValue: field.defaultValue,
+        min: 'min' in field ? field.min : undefined,
+        max: 'max' in field ? field.max : undefined,
+        step: 'step' in field ? field.step : undefined,
+        playDuration: field.kind === 'range' ? field.playDuration : undefined,
+        multiline: field.kind === 'text' ? field.multiline : undefined,
+        optionValues: field.kind === 'select' ? field.options.map(option => option.value) : undefined,
+        visibleWhen: field.visibleWhen,
+      };
 
 /** 抹平文案与 slot 渲染函数后比较 controls 的运行时结构契约 */
 const controlDefinitionContractOf = (definition: PreviewControlsDefinition) => {
@@ -394,14 +404,12 @@ describe('preview controls registry', () => {
 
     const contractOf = (definition: typeof zhDefinition) =>
       definition?.presentation === 'panel'
-        ? definition.sections.flatMap(section =>
-            section.controls.map(field => ({
-              id: field.id,
-              kind: field.kind,
-              defaultValue: field.defaultValue,
-              optionValues: field.kind === 'select' ? field.options.map(option => option.value) : undefined,
-            })),
-          )
+        ? getPreviewControlFields(definition).map(field => ({
+            id: field.id,
+            kind: field.kind,
+            defaultValue: field.defaultValue,
+            optionValues: field.kind === 'select' ? field.options.map(option => option.value) : undefined,
+          }))
         : [];
 
     expect(contractOf(zhDefinition)).toEqual(contractOf(enDefinition));
@@ -473,12 +481,13 @@ describe('preview controls registry', () => {
     ] as const;
 
     const contractOf = (definition: PreviewControlsDefinition) => {
-      const fields =
-        definition.presentation === 'panel'
-          ? definition.sections.flatMap(section =>
-              section.controls.map(field => ({ field, sectionVisibleWhen: section.visibleWhen })),
-            )
-          : definition.controls.map(field => ({ field, sectionVisibleWhen: undefined }));
+      const fields = getPreviewControlFields(definition).map(field => ({
+        field,
+        sectionVisibleWhen:
+          definition.presentation === 'panel'
+            ? definition.sections.find(section => section.controls.some(item => item.id === field.id))?.visibleWhen
+            : undefined,
+      }));
 
       return fields.map(({ field, sectionVisibleWhen }) => ({
         id: field.id,
@@ -518,16 +527,14 @@ describe('preview controls registry', () => {
     ];
     const contractOf = (definition: PreviewControlsDefinition | undefined) => {
       if (!definition || definition.presentation !== 'panel') return [];
-      return definition.sections.flatMap(section =>
-        section.controls.map(field => ({
-          id: field.id,
-          label: field.label,
-          defaultValue: field.defaultValue,
-          min: field.kind === 'range' ? field.min : undefined,
-          max: field.kind === 'range' ? field.max : undefined,
-          step: field.kind === 'range' ? field.step : undefined,
-        })),
-      );
+      return getPreviewControlFields(definition).map(field => ({
+        id: field.id,
+        label: field.label,
+        defaultValue: field.defaultValue,
+        min: field.kind === 'range' ? field.min : undefined,
+        max: field.kind === 'range' ? field.max : undefined,
+        step: field.kind === 'range' ? field.step : undefined,
+      }));
     };
 
     expect(contractOf(zhDefinition)).toEqual(expected);
@@ -568,15 +575,13 @@ describe('preview controls registry', () => {
     ] as const;
     const contractOf = (definition: PreviewControlsDefinition | undefined) => {
       if (!definition || definition.presentation !== 'panel') return [];
-      return definition.sections.flatMap(section =>
-        section.controls.map(field => ({
-          id: field.id,
-          defaultValue: field.defaultValue,
-          min: field.kind === 'range' ? field.min : undefined,
-          max: field.kind === 'range' ? field.max : undefined,
-          step: field.kind === 'range' ? field.step : undefined,
-        })),
-      );
+      return getPreviewControlFields(definition).map(field => ({
+        id: field.id,
+        defaultValue: field.defaultValue,
+        min: field.kind === 'range' ? field.min : undefined,
+        max: field.kind === 'range' ? field.max : undefined,
+        step: field.kind === 'range' ? field.step : undefined,
+      }));
     };
 
     for (const item of cases) {
@@ -665,13 +670,11 @@ describe('preview controls registry', () => {
 
     const contractOf = (definition: PreviewControlsDefinition | undefined) => {
       if (!definition || definition.presentation !== 'panel') return [];
-      return definition.sections.flatMap(section =>
-        section.controls.map(field => ({
-          id: field.id,
-          defaultValue: field.defaultValue,
-          optionValues: field.kind === 'select' ? field.options.map(option => option.value) : undefined,
-        })),
-      );
+      return getPreviewControlFields(definition).map(field => ({
+        id: field.id,
+        defaultValue: field.defaultValue,
+        optionValues: field.kind === 'select' ? field.options.map(option => option.value) : undefined,
+      }));
     };
     const shapeOptions = ['rectangle', 'circle', 'ellipse', 'diamond', 'polygon', 'star', 'sector', 'arc'];
     const boundaryOptions = ['shape', 'circle', 'rectangle', 'ellipse'];
@@ -759,7 +762,7 @@ describe('preview controls registry', () => {
     if (!definition || definition.presentation !== 'panel') return;
 
     const defaults = Object.fromEntries(
-      definition.sections.flatMap(section => section.controls.map(field => [field.id, field.defaultValue])),
+      getPreviewControlFields(definition).map(field => [field.id, field.defaultValue]),
     );
     expect(defaults).toMatchObject({
       paddingX: 18,
@@ -917,7 +920,7 @@ describe('preview controls registry', () => {
     ]) {
       expect(definition?.presentation).toBe('panel');
       if (!definition || definition.presentation !== 'panel') continue;
-      const content = definition.sections.flatMap(section => section.controls).find(field => field.id === 'content');
+      const content = getPreviewControlFields(definition).find(field => field.id === 'content');
       expect(content?.defaultValue).toBe('A\nB\nC');
     }
   });
@@ -1123,6 +1126,104 @@ describe('preview controls registry', () => {
       expect(demoSources[resolveDemoKey(segments, 'frame-basic', locale)]).toBeDefined();
       expect(demoSources[resolveDemoKey(segments, 'frame-variants', locale)]).toBeDefined();
       expect(demoSources[resolveDemoKey(segments, 'frame-lowering', locale)]).toBeDefined();
+    }
+  });
+
+  it('Channel 文档把参数型静态示例收敛为四个双语 controls playground', () => {
+    const bindingSegments = ['viz', 'plot', 'channel', 'binding'];
+    const builtinSegments = ['viz', 'plot', 'channel', 'builtin'];
+    const expectedControls = [
+      { segments: bindingSegments, name: 'channel-binding' },
+      { segments: builtinSegments, name: 'builtin-point-style' },
+      { segments: builtinSegments, name: 'builtin-node-text' },
+      { segments: builtinSegments, name: 'builtin-path-style' },
+    ];
+
+    for (const { segments, name } of expectedControls) {
+      const controlKey = `../../contents/${segments.join('/')}/${name}.controls.ts`;
+      const englishControlKey = `../../contents/${segments.join('/')}/${name}.en.controls.ts`;
+      const source = demoSources[buildKey(segments, name)];
+
+      expect(controlModules[controlKey], controlKey).toBeDefined();
+      expect(controlModules[englishControlKey], englishControlKey).toBeDefined();
+      expect(source, buildKey(segments, name)).toContain('export const previewControls =');
+      expect(source, buildKey(segments, name)).toContain('defineControlledPreview(previewControlContract');
+    }
+
+    for (const language of ['zh', 'en'] as const) {
+      const definition = resolvePreviewControls(
+        controlModules[
+          language === 'zh'
+            ? buildControlsKey(bindingSegments, 'channel-binding')
+            : buildLangControlsKey(bindingSegments, 'channel-binding', 'en')
+        ],
+      );
+      const tables =
+        definition?.presentation === 'panel'
+          ? definition.sections.flatMap(section =>
+              section.controls.flatMap(field =>
+                field.kind === 'table'
+                  ? [
+                      {
+                        id: field.id,
+                        rowCount: field.rows.length,
+                        columnKeys: field.columns?.map(column => column.key),
+                      },
+                    ]
+                  : [],
+              ),
+            )
+          : [];
+
+      expect(
+        definition?.presentation === 'panel' ? definition.sections[0]?.controls.map(control => control.id) : [],
+        language,
+      ).toEqual(['cities']);
+      expect(tables, language).toEqual([
+        {
+          id: 'cities',
+          rowCount: 8,
+          columnKeys: ['city', 'abbr', 'region', 'gdp', 'life', 'population'],
+        },
+      ]);
+    }
+
+    const nodeTextSource = demoSources[buildKey(builtinSegments, 'builtin-node-text')];
+    expect(nodeTextSource).toContain('<PointMark\n      x="x"\n      y="nodeY"');
+    expect(nodeTextSource).toContain('<PointMark\n      x="x"\n      y="textY"\n      text="word"');
+
+    const bindingRoot = resolve('src/modules/docs/contents/viz/plot/channel/binding');
+    const builtinRoot = resolve('src/modules/docs/contents/viz/plot/channel/builtin');
+    for (const locale of ['zh', 'en']) {
+      const bindingPage = readFileSync(resolve(bindingRoot, `index.${locale}.mdx`), 'utf8');
+      const builtinPage = readFileSync(resolve(builtinRoot, `index.${locale}.mdx`), 'utf8');
+      const builtinPreviews = Array.from(
+        builtinPage.matchAll(/<ComponentPreview\b[^>]*\bfiles="([^"]+)"/gu),
+        match => match[1],
+      );
+
+      expect(bindingPage).toContain("files={['channel-binding', 'channel-binding.data.ts']}");
+      expect(builtinPreviews).toEqual([
+        'builtin-position',
+        'builtin-point-style',
+        'builtin-node-text',
+        'builtin-path-style',
+        'builtin-other',
+      ]);
+    }
+
+    for (const removedDemo of [
+      'builtin-arrow',
+      'builtin-color',
+      'builtin-effect',
+      'builtin-node-geometry',
+      'builtin-opacity',
+      'builtin-shape',
+      'builtin-size',
+      'builtin-text-label',
+      'builtin-text-node',
+    ]) {
+      expect(demoSources[buildKey(builtinSegments, removedDemo)], removedDemo).toBeUndefined();
     }
   });
 

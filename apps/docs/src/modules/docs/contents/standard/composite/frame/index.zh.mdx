@@ -79,7 +79,7 @@ Frame 的 JSON IR 不会成为新的 renderer 图元。`FrameDefinition` 先校�
 
 lowering 把内容区放入 `${frameId}/content` Scope。默认横向模式先把 Title 的左下 anchor 对齐到内容区左上方，再把 Description 的左下 anchor 接到 Title 的右下 anchor；纵向模式则先排 Description，再把 Title 放到其上方，从视觉上形成 Title、Description、内容区的顺序。只有一个标题区组成部分时，它会直接对齐内容区。Core 会先完成 Node 的文字、shape、padding、margin、scale 与 rotate 布局，再执行这些 anchor 对齐。
 
-边框是外层 Scope 内部的 rectangle Path，并按 `padding` 扩张标题区与内容区的最终边界。边框、内容区与标题区的内部 `zIndex` 默认分别为 `-1`、`0` 与 `1`；显式标题区 `zIndex` 仍会保留，Frame 自身的 `zIndex` 则作用于整个外层 Scope。
+边框是外层 Scope 内部的 rectangle Path，并按 `padding` 扩张标题区与内容区的最终边界。`cornerRadius` 控制四角相同的圆角半径；省略或设为 `0` 时保持直角，正值由 Core 限制到短边的一半。边框、内容区与标题区的内部 `zIndex` 默认分别为 `-1`、`0` 与 `1`；显式标题区 `zIndex` 仍会保留，Frame 自身的 `zIndex` 则作用于整个外层 Scope。
 
 省略标题区 id 时会派生 `${frameId}/title` 与 `${frameId}/description`。Frame 会拒绝内容区或标题区显式占用 `frameId`、`${frameId}/content` 及这些派生 id；其它重复 id 继续使用 Core 的诊断规则。
 
@@ -106,6 +106,7 @@ React、IR 与 Vanilla 最终都由 `FrameSchema` 校验为 `IRFrame`。React �
 | `headerDirection?` | `FrameHeaderDirectionValue` | `horizontal`   | 标题与说明的排列方向；可选 `horizontal` 或 `vertical`          |
 | `stroke?`          | `IRPath['stroke']`          | `currentColor` | 边框描边                                                       |
 | `strokeWidth?`     | `number`                    | `1`            | 边框描边宽度                                                   |
+| `cornerRadius?`    | `number`                    | —              | 边框统一圆角半径；省略或 `0` 保持直角，最大有效值为短边的一半  |
 | `strokeOpacity?`   | `number`                    | —              | 边框描边透明度                                                 |
 | `dashPattern?`     | `Array<number>`             | —              | 边框虚线长度序列                                               |
 | `dashOffset?`      | `number`                    | —              | 边框虚线偏移                                                   |

@@ -20,6 +20,7 @@ describe('FrameSchema', () => {
       stroke: 'currentColor',
       strokeWidth: 1,
     });
+    expect(parsed.cornerRadius).toBeUndefined();
     expect(FrameSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
@@ -67,6 +68,7 @@ describe('FrameSchema', () => {
       headerDirection: FrameHeaderDirection.Vertical,
       fill: '#fff',
       dashPattern: [4, 2],
+      cornerRadius: 6,
       zIndex: 3,
       title: { text: 'Group' },
       description: { text: 'Details', maxTextWidth: 160 },
@@ -79,6 +81,7 @@ describe('FrameSchema', () => {
       headerDirection: 'vertical',
       fill: '#fff',
       dashPattern: [4, 2],
+      cornerRadius: 6,
       zIndex: 3,
       title: { text: 'Group' },
       description: { text: 'Details', maxTextWidth: 160 },
@@ -102,6 +105,10 @@ describe('FrameSchema', () => {
       {
         input: { namespace: 'standard', type: 'frame', id: 'group', gap: -1, children: [node] },
         path: ['gap'],
+      },
+      {
+        input: { namespace: 'standard', type: 'frame', id: 'group', cornerRadius: -1, children: [node] },
+        path: ['cornerRadius'],
       },
       {
         input: { namespace: 'standard', type: 'frame', id: 'group', headerDirection: 'diagonal', children: [node] },

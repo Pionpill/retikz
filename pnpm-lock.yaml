@@ -645,7 +645,7 @@ importers:
   packages/library/standard:
     dependencies:
       '@retikz/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../kernel/core
       zod:
         specifier: 'catalog:'
@@ -670,7 +670,7 @@ importers:
   packages/library/standard-react:
     dependencies:
       '@retikz/react':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../kernel/react
       '@retikz/standard':
         specifier: workspace:*
@@ -713,7 +713,7 @@ importers:
         specifier: workspace:*
         version: link:../standard
       '@retikz/vanilla':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../kernel/vanilla
     devDependencies:
       '@types/node':

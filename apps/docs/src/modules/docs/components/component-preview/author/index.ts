@@ -6,7 +6,11 @@ export type {
   PreviewControlPoint,
   PreviewControlsDefinition,
   PreviewControlValuesFor,
+  PreviewPanelControlItem,
   PreviewPointControlField,
   PreviewSourceConfig,
+  PreviewStateControlField,
+  PreviewTableColumn,
+  PreviewTableControlField,
 } from '../types';
 export * from './define-controlled-preview';

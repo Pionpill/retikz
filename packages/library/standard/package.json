@@ -48,7 +48,7 @@
     "test:changed": "vitest run --changed --passWithNoTests"
   },
   "dependencies": {
-    "@retikz/core": "workspace:*",
+    "@retikz/core": "workspace:^",
     "zod": "catalog:"
   },
   "devDependencies": {

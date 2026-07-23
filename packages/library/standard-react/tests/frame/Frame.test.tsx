@@ -9,6 +9,7 @@ describe('<Frame>', () => {
     const props = {
       id: 'definition-contract/frame',
       padding: 12,
+      cornerRadius: 6,
       headerDirection: 'vertical' as const,
       children: (
         <>
@@ -27,6 +28,7 @@ describe('<Frame>', () => {
       createFrame({
         id: 'definition-contract/frame',
         padding: 12,
+        cornerRadius: 6,
         headerDirection: 'vertical',
         title: { text: 'Explicit title', font: { family: 'serif' } },
         description: { text: 'One registry contract.', maxTextWidth: 220 },

@@ -428,6 +428,98 @@ describe('PreviewControlPanel', () => {
     expect(markup).not.toContain('Text：');
   });
 
+  it('在 panel 内渲染只读二维表格并限制大数据行数', async () => {
+    const rows = Array.from({ length: 102 }, (_, index) => ({
+      city: index === 0 ? 'Tokyo' : `City ${index}`,
+      gdp: 1810 - index,
+      meta: index === 0 ? { region: 'Asia' } : null,
+    }));
+    const tableDefinition = definePreviewControls({
+      presentation: 'panel',
+      title: 'Channel bindings',
+      sections: [
+        {
+          label: 'Data',
+          controls: [
+            {
+              kind: 'table',
+              id: 'cities',
+              label: 'Cities',
+              rows,
+              columns: [{ key: 'city' }, { key: 'gdp', label: 'GDP' }, { key: 'life' }, { key: 'meta' }],
+            },
+          ],
+        },
+      ],
+    });
+    const container = await mount(
+      <PreviewControlPanel definition={tableDefinition} controlState={emptyControlState} onClose={() => undefined} />,
+    );
+    const table = container.querySelector('[data-slot="preview-table-control"]');
+    const scrollArea = container.querySelector('[data-slot="preview-table-scroll-area"]');
+    const headers = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-slot="preview-table-header-cell"]'),
+      cell => cell.textContent,
+    );
+
+    expect(table).not.toBeNull();
+    expect(table?.textContent).toContain('Cities');
+    expect(table?.textContent).toContain('102 rows · 4 columns');
+    expect(table?.textContent).toContain('Showing first 100 of 102 rows');
+    expect(headers).toEqual(['city', 'GDP', 'life', 'meta']);
+    expect(container.querySelectorAll('[data-slot="preview-table-row"]')).toHaveLength(100);
+    expect(scrollArea?.getAttribute('data-visible-body-rows')).toBe('5');
+    expect((scrollArea as HTMLElement | null)?.style.maxHeight).toBe('170px');
+    expect(scrollArea?.classList.contains('overflow-auto')).toBe(true);
+    expect(container.querySelector('[data-slot="preview-table-header-cell"]')?.classList.contains('h-7')).toBe(true);
+    expect(container.querySelector('[data-slot="preview-table-row"] td')?.classList.contains('h-7')).toBe(true);
+    expect(container.querySelector('[data-slot="preview-table-header-cell"]')?.classList.contains('sticky')).toBe(true);
+    expect(container.querySelector('[data-preview-table-numeric="true"]')?.textContent).toBe('1810');
+    expect(table?.textContent).toContain('{"region":"Asia"}');
+    expect(table?.textContent).toContain('—');
+    expect(container.querySelector('[data-control-id="cities"] input')).toBeNull();
+  });
+
+  it('推导首次出现的列、显示空数据并为 compact 模式收紧间距', () => {
+    const inferredDefinition = definePreviewControls({
+      presentation: 'panel',
+      sections: [
+        {
+          controls: [
+            {
+              kind: 'table',
+              id: 'inferred',
+              label: 'Inferred',
+              rows: [
+                { city: 'Tokyo', gdp: 1810 },
+                { life: 84.6, city: 'Paris' },
+              ],
+            },
+            { kind: 'table', id: 'empty', label: 'Empty', rows: [] },
+          ],
+        },
+      ],
+    });
+    const markup = renderToStaticMarkup(
+      <PreviewControlPanel
+        definition={inferredDefinition}
+        controlState={emptyControlState}
+        density="compact"
+        onClose={() => undefined}
+      />,
+    );
+
+    expect(markup.match(/data-slot="preview-table-header-cell"/g)).toHaveLength(3);
+    expect(markup).toMatch(/>city<.*>gdp<.*>life</);
+    expect(markup).toContain('No data');
+    expect(markup).toContain('data-density="compact"');
+    expect(markup).toContain('data-table-density="compact"');
+    expect(markup).toContain('data-visible-body-rows="5"');
+    expect(markup).toContain('max-height:146px');
+    expect(markup).toContain('h-6');
+    expect(markup).toContain('px-1.5');
+  });
+
   it('多个面板为 section 生成唯一关联 id，且控制组标题不进入文档标题大纲', async () => {
     const container = await mount(
       <>

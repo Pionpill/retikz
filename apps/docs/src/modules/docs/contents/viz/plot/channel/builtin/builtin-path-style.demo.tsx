@@ -3,49 +3,57 @@
 import { DataFieldType } from '@retikz/data';
 import { Axis, PathMark, Plot } from '@retikz/plot-react';
 
+import { defineControlledPreview } from '@/modules/docs/preview';
+
+import { builtinPathStyleControls, previewControlContract } from './builtin-path-style.controls';
+
 const rows = [
-  { step: 1, smooth: 10, sharp: 6 },
-  { step: 2, smooth: 18, sharp: 17 },
-  { step: 3, smooth: 13, sharp: 9 },
-  { step: 4, smooth: 24, sharp: 22 },
-  { step: 5, smooth: 19, sharp: 12 },
+  { step: 1, value: 10 },
+  { step: 2, value: 18 },
+  { step: 3, value: 13 },
+  { step: 4, value: 24 },
+  { step: 5, value: 19 },
 ];
 
-const Demo: FC = () => (
-  <Plot
-    data={rows}
-    model={[
-      { name: 'step', type: DataFieldType.Continuous },
-      { name: 'smooth', type: DataFieldType.Continuous },
-      { name: 'sharp', type: DataFieldType.Continuous },
-    ]}
-    width={420}
-    height={250}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
-    <PathMark
-      x="step"
-      y="smooth"
-      order="step"
-      strokeWidth={5}
-      lineCap="round"
-      lineJoin="round"
-      roundedCorners={10}
-      opacity={0.8}
-    />
-    <PathMark
-      x="step"
-      y="sharp"
-      order="step"
-      strokeWidth={2}
-      lineCap="square"
-      lineJoin="bevel"
-      dashPattern={[7, 4]}
-      opacity={0.9}
-    />
-    <Axis dimension="x" />
-    <Axis dimension="y" grid />
-  </Plot>
-);
+/** 注册回退使用的路径样式 controls */
+export const previewControls = builtinPathStyleControls;
+
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
+  const dashPattern = values.dashMode === 'dashed' ? [7, 4] : values.dashMode === 'dotted' ? [1, 4] : undefined;
+
+  return (
+    <Plot
+      data={rows}
+      model={[
+        { name: 'step', type: DataFieldType.Continuous },
+        { name: 'value', type: DataFieldType.Continuous },
+      ]}
+      width={440}
+      height={280}
+      style={{ maxWidth: '100%', height: 'auto' }}
+    >
+      <PathMark
+        x="step"
+        y="value"
+        order="step"
+        stroke={{ kind: 'constant', value: values.stroke }}
+        strokeWidth={values.strokeWidth}
+        opacity={values.opacity}
+        dashPattern={dashPattern}
+        lineCap={values.lineCap}
+        lineJoin={values.lineJoin}
+        roundedCorners={values.roundedCorners}
+      />
+      <Axis dimension="x" />
+      <Axis dimension="y" grid />
+    </Plot>
+  );
+});
+
+/** canonical 状态派生的稳定源码配置 */
+export const previewSource = controlledPreview.source;
+
+/** 路径描边、端点与连接样式 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

@@ -2,125 +2,92 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
+import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+
 /** Plot 从 Viz 数据处理到 Kernel Scene 的分组主链 */
 const Demo: FC = () => (
   <Layout width={760} height={200} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node
-      id="viz-group"
-      text=" "
-      position={[-180, -10]}
-      minimumSize={{ width: 370, height: 90 }}
-      stroke="lightgray"
-      fill="lightgray"
-      fillOpacity={0.04}
-      dashPattern={[4, 3]}
-      cornerRadius={4}
-    />
-    <Node
-      text="Viz"
-      position={[-330, -43]}
-      stroke="none"
-      fill="none"
-      padding={0}
-      textColor="gray"
-      font={{ size: 12 }}
-    />
-    <Node
-      id="kernel-group"
-      text=" "
-      position={[187.5, -10]}
-      minimumSize={{ width: 355, height: 90 }}
-      stroke="lightgray"
-      fill="lightgray"
-      fillOpacity={0.04}
-      dashPattern={[4, 3]}
-      cornerRadius={4}
-    />
-    <Node
-      text="Kernel"
-      position={[45, -43]}
-      stroke="none"
-      fill="none"
-      padding={0}
-      textColor="gray"
-      font={{ size: 12 }}
-    />
-
-    <Node
-      id="data"
-      text={['Data', { text: 'external datasets', fill: 'gray', font: { size: 10 } }]}
-      position={[-305, -5]}
-      minimumSize={{ width: 90, height: 46 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
-      cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={14}
-    />
-    <Node
-      id="plot"
-      text={[
-        { text: 'Plot', font: { weight: 'bold' } },
-        { text: 'visual grammar', fill: 'gray', font: { size: 10 } },
-      ]}
-      position={[-205, -5]}
-      minimumSize={{ width: 90, height: 46 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
-      cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={14}
-    />
-    <Node
-      id="pipeline"
-      text={['Pipeline', { text: 'prepare · resolve · lower', fill: 'gray', font: { size: 10 } }]}
-      position={[-80, -5]}
-      minimumSize={{ width: 150, height: 46 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
-      cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={14}
-    />
-    <Node
-      id="core"
-      text={['Core', { text: 'graphical primitives', fill: 'gray', font: { size: 10 } }]}
-      position={[75, -5]}
-      minimumSize={{ width: 110, height: 46 }}
-      stroke="darkviolet"
-      fill="darkviolet"
-      fillOpacity={0.06}
-      cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={14}
-    />
-    <Node
-      id="compile"
-      text={['Compile', { text: 'assemble Scene', fill: 'gray', font: { size: 10 } }]}
-      position={[195, -5]}
-      minimumSize={{ width: 110, height: 46 }}
-      stroke="darkviolet"
-      fill="darkviolet"
-      fillOpacity={0.06}
-      cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={14}
-    />
-    <Node
-      id="scene"
-      text={['Scene', { text: 'renderer input', fill: 'gray', font: { size: 10 } }]}
-      position={[305, -5]}
-      minimumSize={{ width: 90, height: 46 }}
-      stroke="darkviolet"
-      fill="darkviolet"
-      fillOpacity={0.06}
-      cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={14}
-    />
+    <LogicFrame id="viz-group">
+      <LogicFrameTitle>Viz</LogicFrameTitle>
+      <Node
+        id="data"
+        text={['Data', { text: 'external datasets', fill: 'gray', font: { size: 10 } }]}
+        position={[-305, -5]}
+        minimumSize={{ width: 90, height: 46 }}
+        stroke="darkorange"
+        fill="darkorange"
+        fillOpacity={0.08}
+        cornerRadius={4}
+        font={{ size: 13 }}
+        lineHeight={14}
+      />
+      <Node
+        id="plot"
+        text={[
+          { text: 'Plot', font: { weight: 'bold' } },
+          { text: 'visual grammar', fill: 'gray', font: { size: 10 } },
+        ]}
+        position={[-205, -5]}
+        minimumSize={{ width: 90, height: 46 }}
+        stroke="darkorange"
+        fill="darkorange"
+        fillOpacity={0.08}
+        cornerRadius={4}
+        font={{ size: 13 }}
+        lineHeight={14}
+      />
+      <Node
+        id="pipeline"
+        text={['Pipeline', { text: 'prepare · resolve · lower', fill: 'gray', font: { size: 10 } }]}
+        position={[-80, -5]}
+        minimumSize={{ width: 150, height: 46 }}
+        stroke="darkorange"
+        fill="darkorange"
+        fillOpacity={0.08}
+        cornerRadius={4}
+        font={{ size: 13 }}
+        lineHeight={14}
+      />
+    </LogicFrame>
+    <LogicFrame id="kernel-group">
+      <LogicFrameTitle>Kernel</LogicFrameTitle>
+      <Node
+        id="core"
+        text={['Core', { text: 'graphical primitives', fill: 'gray', font: { size: 10 } }]}
+        position={[75, -5]}
+        minimumSize={{ width: 110, height: 46 }}
+        stroke="darkviolet"
+        fill="darkviolet"
+        fillOpacity={0.06}
+        cornerRadius={4}
+        font={{ size: 13 }}
+        lineHeight={14}
+      />
+      <Node
+        id="compile"
+        text={['Compile', { text: 'assemble Scene', fill: 'gray', font: { size: 10 } }]}
+        position={[195, -5]}
+        minimumSize={{ width: 110, height: 46 }}
+        stroke="darkviolet"
+        fill="darkviolet"
+        fillOpacity={0.06}
+        cornerRadius={4}
+        font={{ size: 13 }}
+        lineHeight={14}
+      />
+      <Node
+        id="scene"
+        text={['Scene', { text: 'renderer input', fill: 'gray', font: { size: 10 } }]}
+        position={[305, -5]}
+        minimumSize={{ width: 90, height: 46 }}
+        stroke="darkviolet"
+        fill="darkviolet"
+        fillOpacity={0.06}
+        cornerRadius={4}
+        font={{ size: 13 }}
+        lineHeight={14}
+      />
+    </LogicFrame>
 
     <Node
       id="definition"

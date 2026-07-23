@@ -79,7 +79,7 @@ Frame's responsibility ends at Core IR. A hand-authored `IRFrame` without `Frame
 
 Lowering places the body in a `${frameId}/content` Scope. Horizontal mode aligns the Title's bottom-left anchor above the body's top-left, then attaches the Description's bottom-left to the Title's bottom-right. Vertical mode lowers Description first and places Title above it, producing the visual Title, Description, body sequence. A single header part aligns directly to the body. Core resolves these anchors after Node text, shape, padding, margin, scale, and rotate layout.
 
-The border is a rectangle Path in the outer Scope, expanded from final header + body bounds by `padding`. Border, body, and headers default to internal `zIndex` values of `-1`, `0`, and `1`; an explicit header `zIndex` is preserved, while Frame's own `zIndex` applies to the complete outer Scope.
+The border is a rectangle Path inside the outer Scope and expands the final header and body bounds by `padding`. `cornerRadius` applies one radius to all four corners; omitting it or setting it to `0` keeps sharp corners, while Core clamps positive values to half the shorter side. Border, body, and headers default to internal `zIndex` values of `-1`, `0`, and `1`; an explicit header `zIndex` is preserved, while Frame's own `zIndex` applies to the complete outer Scope.
 
 Omitted header ids derive `${frameId}/title` and `${frameId}/description`. Frame rejects a body or header that explicitly occupies `frameId`, `${frameId}/content`, or either derived id; other duplicate ids continue to use Core diagnostics.
 
@@ -98,24 +98,25 @@ React, IR, and Vanilla are all validated into `IRFrame` by `FrameSchema`. React 
 
 ### React: `FrameProps`
 
-| Prop               | Type                        | Default        | Description                                                             |
-| ------------------ | --------------------------- | -------------- | ----------------------------------------------------------------------- |
-| `id`               | `string`                    | —              | Stable identity of the outer Scope                                      |
-| `padding?`         | `number \| IRBoxSpacing`    | `8`            | Border spacing around final bounds; precedence is side > axis > default |
-| `gap?`             | `number`                    | `4`            | Gap between adjacent header parts and between the header and body       |
-| `headerDirection?` | `FrameHeaderDirectionValue` | `horizontal`   | Horizontal or vertical Title and Description arrangement                |
-| `stroke?`          | `IRPath['stroke']`          | `currentColor` | Border stroke                                                           |
-| `strokeWidth?`     | `number`                    | `1`            | Border stroke width                                                     |
-| `strokeOpacity?`   | `number`                    | —              | Border stroke opacity                                                   |
-| `dashPattern?`     | `Array<number>`             | —              | Border dash lengths                                                     |
-| `dashOffset?`      | `number`                    | —              | Border dash offset                                                      |
-| `lineCap?`         | `IRPath['lineCap']`         | —              | Border endpoint style                                                   |
-| `lineJoin?`        | `IRPath['lineJoin']`        | —              | Border corner style                                                     |
-| `fill?`            | `IRPath['fill']`            | —              | Border interior fill                                                    |
-| `fillOpacity?`     | `number`                    | —              | Border fill opacity                                                     |
-| `fillRule?`        | `IRPath['fillRule']`        | —              | Border fill rule                                                        |
-| `zIndex?`          | `number`                    | —              | Stacking order of the complete Frame Scope                              |
-| `children`         | `ReactNode`                 | —              | At most one Title, one Description, and a non-empty direct Node body    |
+| Prop               | Type                        | Default        | Description                                                                                                                   |
+| ------------------ | --------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `id`               | `string`                    | —              | Stable identity of the outer Scope                                                                                            |
+| `padding?`         | `number \| IRBoxSpacing`    | `8`            | Border spacing around final bounds; precedence is side > axis > default                                                       |
+| `gap?`             | `number`                    | `4`            | Gap between adjacent header parts and between the header and body                                                             |
+| `headerDirection?` | `FrameHeaderDirectionValue` | `horizontal`   | Horizontal or vertical Title and Description arrangement                                                                      |
+| `stroke?`          | `IRPath['stroke']`          | `currentColor` | Border stroke                                                                                                                 |
+| `strokeWidth?`     | `number`                    | `1`            | Border stroke width                                                                                                           |
+| `cornerRadius?`    | `number`                    | —              | Uniform border corner radius; omitted or `0` keeps sharp corners, with the effective maximum clamped to half the shorter side |
+| `strokeOpacity?`   | `number`                    | —              | Border stroke opacity                                                                                                         |
+| `dashPattern?`     | `Array<number>`             | —              | Border dash lengths                                                                                                           |
+| `dashOffset?`      | `number`                    | —              | Border dash offset                                                                                                            |
+| `lineCap?`         | `IRPath['lineCap']`         | —              | Border endpoint style                                                                                                         |
+| `lineJoin?`        | `IRPath['lineJoin']`        | —              | Border corner style                                                                                                           |
+| `fill?`            | `IRPath['fill']`            | —              | Border interior fill                                                                                                          |
+| `fillOpacity?`     | `number`                    | —              | Border fill opacity                                                                                                           |
+| `fillRule?`        | `IRPath['fillRule']`        | —              | Border fill rule                                                                                                              |
+| `zIndex?`          | `number`                    | —              | Stacking order of the complete Frame Scope                                                                                    |
+| `children`         | `ReactNode`                 | —              | At most one Title, one Description, and a non-empty direct Node body                                                          |
 
 ### React: `FrameTitleProps` / `FrameDescriptionProps`
 

@@ -260,6 +260,27 @@ describe('lowerFrame', () => {
     });
   });
 
+  it('forwards zero and positive corner radius only to the border rectangle step', () => {
+    const rounded = lowerFrame(createFrame({ id: 'rounded', cornerRadius: 6, children: [...children] }));
+    const sharp = lowerFrame(createFrame({ id: 'sharp', cornerRadius: 0, children: [...children] }));
+    const roundedBorder = rounded.children[0] as IRPath;
+    const sharpBorder = sharp.children[0] as IRPath;
+
+    expect(roundedBorder).not.toHaveProperty('cornerRadius');
+    expect(roundedBorder.children[0]).toMatchObject({ kind: 'rectangle', cornerRadius: 6 });
+    expect(sharpBorder.children[0]).toMatchObject({ kind: 'rectangle', cornerRadius: 0 });
+    expect(rounded.children.slice(1)).toEqual([
+      {
+        type: 'scope',
+        id: 'rounded/content',
+        localNamespace: false,
+        boundingShape: 'rectangle',
+        zIndex: 0,
+        children: [...children],
+      },
+    ]);
+  });
+
   it('keeps Frame and internal zIndex contracts while preserving explicit header overrides', () => {
     const lowered = lowerFrame(
       createFrame({

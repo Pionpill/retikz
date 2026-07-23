@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type {
   ComponentRenderSource,
@@ -13,6 +13,8 @@ import type {
 } from '../types';
 
 import { availableSourceViews, filterDiffByMode } from './utils';
+
+const EMPTY_SOURCE_FILES: Array<ComponentSourceFile> = [];
 
 /** 源码面板当前应展示的代码。 */
 export type SourcePanelDisplay = {
@@ -66,7 +68,7 @@ export const useSourcePanelState = (source: ComponentRenderSource | undefined): 
   const [view, setView] = useState<SourceView>('react');
   const effectiveView: SourceView = views.includes(view) ? view : (views[0] ?? 'react');
   const viewData = source?.[effectiveView];
-  const files = viewData?.files ?? [];
+  const files = viewData?.files ?? EMPTY_SOURCE_FILES;
   const [fileIndex, setFileIndex] = useState(0);
   const activeFileIndex = Math.min(Math.max(fileIndex, 0), Math.max(files.length - 1, 0));
   const activeFile = files.at(activeFileIndex);
@@ -81,52 +83,70 @@ export const useSourcePanelState = (source: ComponentRenderSource | undefined): 
     };
   }, []);
 
-  const copyActiveFile = () => {
+  const copyActiveFile = useCallback(() => {
     void navigator.clipboard.writeText(activeFile?.code ?? '');
     setCopied(true);
     if (timerRef.current !== null) window.clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(() => setCopied(false), 3000);
-  };
+  }, [activeFile?.code]);
 
-  const display = (showFull: boolean): SourcePanelDisplay => {
-    const code = activeFile?.code ?? '';
-    const lang = activeFile?.lang ?? 'tsx';
-    if (!showFull) {
-      const teaser = code.split('\n').slice(0, 3).join('\n');
+  const display = useCallback(
+    (showFull: boolean): SourcePanelDisplay => {
+      const code = activeFile?.code ?? '';
+      const lang = activeFile?.lang ?? 'tsx';
+      if (!showFull) {
+        const teaser = code.split('\n').slice(0, 3).join('\n');
+        return {
+          lang,
+          code: teaser,
+          lineCount: teaser.split('\n').length,
+          showDiffPicker: false,
+        };
+      }
+
+      const diff = activeFile?.diff;
+      const displayedDiff = diff !== undefined && diffMode !== 'off' ? filterDiffByMode(diff, diffMode) : undefined;
+      const displayedCode = displayedDiff?.code ?? code;
       return {
         lang,
-        code: teaser,
-        lineCount: teaser.split('\n').length,
-        showDiffPicker: false,
+        code: displayedCode,
+        lineKinds: displayedDiff?.lineKinds,
+        lineCount: displayedCode.split('\n').length,
+        showDiffPicker: diff !== undefined,
       };
-    }
+    },
+    [activeFile, diffMode],
+  );
 
-    const diff = activeFile?.diff;
-    const displayedDiff = diff !== undefined && diffMode !== 'off' ? filterDiffByMode(diff, diffMode) : undefined;
-    const displayedCode = displayedDiff?.code ?? code;
-    return {
-      lang,
-      code: displayedCode,
-      lineKinds: displayedDiff?.lineKinds,
-      lineCount: displayedCode.split('\n').length,
-      showDiffPicker: diff !== undefined,
-    };
-  };
-
-  return {
-    views,
-    view: effectiveView,
-    setView,
-    files,
-    activeFileIndex,
-    setActiveFileIndex: setFileIndex,
-    activeFile,
-    activeRender: viewData?.render,
-    activeRendererMode: viewData?.rendererMode,
-    diffMode,
-    setDiffMode,
-    copied,
-    copyActiveFile,
-    display,
-  };
+  return useMemo(
+    () => ({
+      views,
+      view: effectiveView,
+      setView,
+      files,
+      activeFileIndex,
+      setActiveFileIndex: setFileIndex,
+      activeFile,
+      activeRender: viewData?.render,
+      activeRendererMode: viewData?.rendererMode,
+      diffMode,
+      setDiffMode,
+      copied,
+      copyActiveFile,
+      display,
+    }),
+    [
+      activeFile,
+      activeFileIndex,
+      copied,
+      copyActiveFile,
+      diffMode,
+      display,
+      effectiveView,
+      files,
+      viewData?.render,
+      viewData?.rendererMode,
+      views,
+    ],
+  );
 };

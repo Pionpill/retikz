@@ -2,25 +2,11 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
+import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+
 /** Kernel 包级架构与主数据流总览 */
 const Demo: FC = () => (
   <Layout width={740} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node
-      id="core-group"
-      position={[-55, 0]}
-      minimumSize={{ width: 350, height: 74 }}
-      stroke="lightgray"
-      fill="lightgray"
-      fillOpacity={0.04}
-      dashPattern={[4, 3]}
-      cornerRadius={4}
-    >
-      {' '}
-    </Node>
-    <Node position={[-175, -27]} stroke="none" fill="none" padding={0} textColor="gray" font={{ size: 12 }}>
-      @retikz/core
-    </Node>
-
     <Node
       id="react"
       position={[-315, -42]}
@@ -55,39 +41,42 @@ const Demo: FC = () => (
       external IR
     </Node>
 
-    <Node
-      id="ir"
-      position={[-185, 0]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
-      cornerRadius={4}
-      font={{ size: 14, weight: 'bold' }}
-    >
-      IR
-    </Node>
-    <Node
-      id="compile"
-      position={[-55, 0]}
-      stroke="dimgray"
-      fill="dimgray"
-      fillOpacity={0.08}
-      cornerRadius={4}
-      font={{ size: 13 }}
-    >
-      compileToScene
-    </Node>
-    <Node
-      id="scene"
-      position={[70, 0]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
-      cornerRadius={4}
-      font={{ size: 14, weight: 'bold' }}
-    >
-      Scene
-    </Node>
+    <LogicFrame id="core-group">
+      <LogicFrameTitle>@retikz/core</LogicFrameTitle>
+      <Node
+        id="ir"
+        position={[-185, 0]}
+        stroke="darkorange"
+        fill="darkorange"
+        fillOpacity={0.08}
+        cornerRadius={4}
+        font={{ size: 14, weight: 'bold' }}
+      >
+        IR
+      </Node>
+      <Node
+        id="compile"
+        position={[-55, 0]}
+        stroke="dimgray"
+        fill="dimgray"
+        fillOpacity={0.08}
+        cornerRadius={4}
+        font={{ size: 13 }}
+      >
+        compileToScene
+      </Node>
+      <Node
+        id="scene"
+        position={[70, 0]}
+        stroke="darkorange"
+        fill="darkorange"
+        fillOpacity={0.08}
+        cornerRadius={4}
+        font={{ size: 14, weight: 'bold' }}
+      >
+        Scene
+      </Node>
+    </LogicFrame>
 
     <Node
       id="math"
