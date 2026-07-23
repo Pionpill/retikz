@@ -295,27 +295,27 @@ preset 与手写轨道最终都是同一种 `AnimationTrack`。preset 只负责�
 
 ### 组件属性
 
-| 属性           | 类型                             | 默认值      | 描述                                        |
-| -------------- | -------------------------------- | ----------- | ------------------------------------------- |
-| `animations`   | `Array<IRAnimationTrack>`        | —           | 挂到 Node、Path、Scope 或 Layout 的动画轨道 |
-| `animate`      | `boolean`                        | `undefined` | Layout 播放总开关；省略时跟随系统偏好       |
-| `snapshotAt`   | `number`                         | —           | Layout 静态截帧时间，单位毫秒               |
-| `animationRef` | `Ref<AnimationControls \| null>` | —           | Layout 的 scene 级播放控制句柄              |
+| 属性           | 类型                          | 默认值      | 描述                                        |
+| -------------- | ----------------------------- | ----------- | ------------------------------------------- |
+| `animations`   | `Array<IRAnimationTrack>`     | —           | 挂到 Node、Path、Scope 或 Layout 的动画轨道 |
+| `animate`      | `boolean`                     | `undefined` | Layout 播放总开关；省略时跟随系统偏好       |
+| `snapshotAt`   | `number`                      | —           | Layout 静态截帧时间，单位毫秒               |
+| `animationRef` | `LayoutProps['animationRef']` | —           | Layout 的 scene 级播放控制句柄              |
 
 ### AnimationTrack
 
-| 属性         | 类型                                                                 | 默认值                | 描述                                                   |
-| ------------ | -------------------------------------------------------------------- | --------------------- | ------------------------------------------------------ |
-| `property`   | `string`                                                             | —                     | 动画属性通道；`viewBox` 只用于 Layout                  |
-| `keyframes`  | `Array<{ at, value, easing? }>`                                      | —                     | 按 `at` 升序的绝对值关键帧                             |
-| `duration`   | `number`                                                             | —                     | 单次迭代时长，单位毫秒                                 |
-| `delay`      | `number`                                                             | `0`                   | 首次迭代前延迟，单位毫秒                               |
-| `easing`     | `string \| [number, number, number, number]`                         | `'linear'`            | track 级缓动；关键帧可覆盖下一段                       |
-| `iterations` | `number \| 'infinite'`                                               | `1`                   | 播放次数                                               |
-| `direction`  | `'normal' \| 'reverse' \| 'alternate'`<br />`\| 'alternate-reverse'` | `'normal'`            | 每轮播放方向                                           |
-| `fill`       | `'none' \| 'forwards' \| 'backwards' \| 'both'`                      | `'forwards'`          | 活动区间外采用的值                                     |
-| `trigger`    | `'load' \| 'visible' \| 'manual'`<br />`\| { onEvent: string }`      | `'load'`              | 播放触发方式                                           |
-| `origin`     | `Anchor \| [number, number]`                                         | 可推导中心 / 后端默认 | scale、scaleX/Y 与 rotate 的支点；跨图元一致时显式设置 |
+| 属性         | 类型                                                                                   | 默认值                | 描述                                                   |
+| ------------ | -------------------------------------------------------------------------------------- | --------------------- | ------------------------------------------------------ |
+| `property`   | <ApiValues name="AnimationProperty" /> \| `string`                                     | —                     | 动画属性通道；`viewBox` 只用于 Layout                  |
+| `keyframes`  | `Array<IRKeyframe>`                                                                    | —                     | 按 `at` 升序的绝对值关键帧                             |
+| `duration`   | `number`                                                                               | —                     | 单次迭代时长，单位毫秒                                 |
+| `delay`      | `number`                                                                               | `0`                   | 首次迭代前延迟，单位毫秒                               |
+| `easing`     | <ApiValues name="AnimationEasing" /> \| `string` \| `[number, number, number, number]` | `'linear'`            | track 级缓动；关键帧可覆盖下一段                       |
+| `iterations` | `number` \| `'infinite'`                                                               | `1`                   | 播放次数                                               |
+| `direction`  | <ApiValues name="AnimationDirection" />                                                | `'normal'`            | 每轮播放方向                                           |
+| `fill`       | <ApiValues name="AnimationFill" />                                                     | `'forwards'`          | 活动区间外采用的值                                     |
+| `trigger`    | <ApiValues name="AnimationTrigger" /> \| `IRAnimationTrigger`                          | `'load'`              | 播放触发方式                                           |
+| `origin`     | `IRAnimationOrigin`                                                                    | 可推导中心 / 后端默认 | scale、scaleX/Y 与 rotate 的支点；跨图元一致时显式设置 |
 
 ## 相关
 

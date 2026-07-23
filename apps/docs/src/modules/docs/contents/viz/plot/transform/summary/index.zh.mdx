@@ -18,15 +18,18 @@ description: 分箱与统计图层说明 plot 如何把连续字段切成直方�
 
 `IntervalMark` 用 `x0` / `x1` 读取箱边，画出连续 x 轴上紧贴排列、宽度随箱边变化的直方图柱；`y` 读取 `binCount` 或自定义 metric 字段作为高度。
 
-| prop                      | 类型                | 默认值                | 说明                                     |
-| ------------------------- | ------------------- | --------------------- | ---------------------------------------- |
-| `field`                   | `string`            | —                     | 被分箱的连续源字段                       |
-| `count`                   | `number?`           | `10`                  | 目标箱数；与 `step` / `thresholds` 互斥  |
-| `step`                    | `number?`           | —                     | 固定箱宽；与 `count` / `thresholds` 互斥 |
-| `thresholds`              | `Array<number>?`    | —                     | 显式内部边界；与 `count` / `step` 互斥   |
-| `extent`                  | `[number, number]?` | 观测 min/max          | 覆盖分箱域                               |
-| `metrics`                 | `Array<Reducer>?`   | `count → binCount`    | 每箱统计指标，复用 data reducer          |
-| `startField` / `endField` | `string?`           | `binStart` / `binEnd` | 箱边输出字段名                           |
+`IRPlotBinTransform` 的 `kind` 固定为 `'bin'`。
+
+| prop                        | 类型                   | 默认值                | 说明                                     |
+| --------------------------- | ---------------------- | --------------------- | ---------------------------------------- |
+| `field`                     | `string`               | —                     | 被分箱的连续源字段                       |
+| `count?`                    | `number`               | `10`                  | 目标箱数；与 `step` / `thresholds` 互斥  |
+| `step?`                     | `number`               | —                     | 固定箱宽；与 `count` / `thresholds` 互斥 |
+| `thresholds?`               | `Array<number>`        | —                     | 显式内部边界；与 `count` / `step` 互斥   |
+| `extent?`                   | `[number, number]`     | 观测 min/max          | 覆盖分箱域                               |
+| `nice?`                     | `boolean`              | `true`                | count 策略下把边界取整为便于阅读的值     |
+| `startField?` / `endField?` | `string`               | `binStart` / `binEnd` | 箱边输出字段名                           |
+| `metrics?`                  | `IRDataReducerMetrics` | `count → binCount`    | 每箱统计指标，复用 data reducer          |
 
 ## 统计图层组合
 

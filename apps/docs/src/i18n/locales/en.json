@@ -116,7 +116,9 @@
   },
   "standard": {
     "label": "Library",
-    "components": "Standard Components",
+    "introduction": "Introduction",
+    "getStart": "Get Started",
+    "composite": "Composite",
     "grid": "Grid",
     "axes": "Axes",
     "frame": "Frame"

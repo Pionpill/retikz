@@ -9,14 +9,14 @@ In a Plot application, that downstream logic includes marks, transforms, and sca
 
 ## Declaring fields
 
-Each field declaration has up to four properties:
+Each field declaration is an `IRDataFieldDefinition` exported from `@retikz/data`:
 
-| Property | Responsibility                                                  |
-| -------- | --------------------------------------------------------------- |
-| `name`   | Logical name referenced by data transforms and consumer config  |
-| `type`   | `continuous`, `temporal`, or `categorical`; omitted means infer |
-| `format` | Declarative parsing format, which can also imply the field type |
-| `order`  | Category-domain order; valid only for `categorical` fields      |
+| Field     | Type                                                                  | Default        | Responsibility                                                                  |
+| --------- | --------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------- |
+| `name`    | `string`                                                              | —              | Logical name referenced by data transforms and consumer config                  |
+| `type?`   | <ApiValues name="DataFieldType" />                                    | inferred       | Field measurement type                                                          |
+| `format?` | <ApiValues name="DataFieldFormat" /> \| `string`                      | default parser | Declarative parsing format; a named format may also imply the field type        |
+| `order?`  | <ApiValues name="FieldOrderMode" /> \|<br />`Array<string \| number>` | `'appearance'` | Category-domain order; explicit values take priority and only affect categories |
 
 Both charts below use the same funnel data, with `stage` encoded as the uneven values `10`, `20`, `50`, and `100`. Without `model`, the numeric field is inferred as continuous and spacing follows numeric distance. The explicit contract makes it categorical, so every stage receives equal spacing.
 

@@ -1,0 +1,121 @@
+---
+title: Get Started
+description: Load one Library Grid through React, a Vanilla plain spec, or persisted JSON, and learn where its Definition is injected.
+---
+
+This page uses one Grid to show all three entry points. React and Vanilla are authoring surfaces; the persistence path restores JSON configuration from a database, file, or `localStorage`.
+
+## React
+
+Install the React entry point and its host:
+
+<PackageManagerInstall packages="@retikz/standard-react @retikz/react react react-dom" />
+
+`<Grid>` loads `GridDefinition` locally into the current `Layout`; no manual registration is needed.
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Grid } from '@retikz/standard-react';
+import { createRoot } from 'react-dom/client';
+
+const container = document.querySelector('#diagram');
+if (container === null) throw new Error('Missing #diagram container');
+
+createRoot(container).render(
+  <Layout width={280} height={170}>
+    <Grid bounds={{ min: [20, 20], max: [260, 150] }} spacing={20} lines={{ style: { stroke: 'lightgray' } }} />
+  </Layout>,
+);
+```
+
+## Vanilla
+
+Install the Vanilla authoring entry point and Kernel runtime:
+
+<PackageManagerInstall packages="@retikz/standard-vanilla @retikz/vanilla" />
+
+`grid()` creates a plain-spec embed. `GridVanillaAdapter` contributes the same `GridDefinition` while normalizing the current figure.
+
+```ts
+import type { VanillaFigureSpec } from '@retikz/vanilla';
+
+import { grid, GridVanillaAdapter } from '@retikz/standard-vanilla';
+import { mountSvg } from '@retikz/vanilla';
+
+const figure = {
+  type: 'figure',
+  version: 1,
+  viewBox: { x: 0, y: 0, width: 280, height: 170 },
+  children: [
+    grid('paper-grid', {
+      bounds: { min: [20, 20], max: [260, 150] },
+      spacing: 20,
+      lines: { style: { stroke: 'lightgray' } },
+    }),
+  ],
+} satisfies VanillaFigureSpec;
+
+const container = document.querySelector('#diagram');
+if (container === null) throw new Error('Missing #diagram container');
+
+mountSvg(container, figure, {
+  adapters: [GridVanillaAdapter],
+  output: { width: 280, height: 170 },
+});
+```
+
+## Load Persisted JSON
+
+When working with IR directly, install the Library source of truth, Core schemas, and your chosen runtime:
+
+<PackageManagerInstall packages="@retikz/standard @retikz/core @retikz/vanilla" />
+
+Persist a complete `IRGrid` rather than only `GridInput`. Complete IR includes `namespace` and `type`, so hosts and tools can identify its capability. A Definition contains functions and cannot enter JSON, so the host must inject it while loading.
+
+```ts
+import { SceneSchema } from '@retikz/core';
+import { createGrid, GridDefinition, GridSchema } from '@retikz/standard';
+import { mountSvg } from '@retikz/vanilla';
+
+const storageKey = 'retikz:grid';
+
+localStorage.setItem(
+  storageKey,
+  JSON.stringify(
+    createGrid({
+      bounds: { min: [20, 20], max: [260, 150] },
+      spacing: 20,
+      lines: { style: { stroke: 'lightgray' } },
+    }),
+  ),
+);
+
+const raw = localStorage.getItem(storageKey);
+if (raw === null) throw new Error('Missing persisted Grid');
+
+const storedGrid = GridSchema.parse(JSON.parse(raw));
+const scene = SceneSchema.parse({
+  type: 'scene',
+  version: 1,
+  viewBox: { x: 0, y: 0, width: 280, height: 170 },
+  children: [storedGrid],
+});
+
+const container = document.querySelector('#diagram');
+if (container === null) throw new Error('Missing #diagram container');
+
+mountSvg(container, scene, {
+  compile: { composites: [GridDefinition] },
+  output: { width: 280, height: 170 },
+});
+```
+
+If `GridDefinition` is omitted, Core emits `COMPOSITE_NOT_REGISTERED` and skips the Grid. Other registered or native Core children still compile.
+
+## Next Steps
+
+| Page                               | Continue with                                |
+| ---------------------------------- | -------------------------------------------- |
+| [Grid](/standard/composite/grid)   | Spacing, major lines, boundaries, and border |
+| [Axes](/standard/composite/axes)   | Arrows, ticks, labels, and directional grid  |
+| [Frame](/standard/composite/frame) | Automatic bounds, gap, border, and label     |

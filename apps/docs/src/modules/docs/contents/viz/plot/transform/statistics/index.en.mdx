@@ -11,14 +11,18 @@ General reducers / selectors, `summarize`, `select`, and custom transform defini
 
 <ComponentPreview files={['transform-density', 'transform-density.data.ts']} />
 
-| prop                | type                                                            | default                 | description                                         |
-| ------------------- | --------------------------------------------------------------- | ----------------------- | --------------------------------------------------- |
-| `field`             | `string`                                                        | —                       | One-dimensional continuous field to estimate        |
-| `groupBy`           | `Array<string>?`                                                | one global group        | Estimate density per group                          |
-| `bandwidth`         | `{ kind: 'silverman' }`<br />`{ kind: 'value'; value: number }` | `silverman`             | KDE bandwidth; explicit values must be positive     |
-| `sampleCount`       | `number?`                                                       | `64`                    | Number of sampled output rows per group; at least 2 |
-| `extent`            | `[number, number]?`                                             | expanded observed range | Sampling interval                                   |
-| `xAs` / `densityAs` | `string`                                                        | —                       | Output fields for sample position and density       |
+`IRPlotDensityTransform` fixes `kind` to `'density'`.
+
+The public closed set for `bandwidth.kind` comes from <ApiValues name="DensityBandwidthKind" />.
+
+| prop                | type                                                                                                                                                                                                                                                                                                                                                 | default                 | description                                                                                                                                                         |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `field`             | `string`                                                                                                                                                                                                                                                                                                                                             | —                       | One-dimensional continuous field to estimate                                                                                                                        |
+| `groupBy?`          | `Array<string>`                                                                                                                                                                                                                                                                                                                                      | one global group        | Estimate density per group                                                                                                                                          |
+| `bandwidth?`        | `IRPlotDensityBandwidthSpec`<br />`Extract<IRPlotDensityBandwidthSpec, { kind: typeof DensityBandwidthKind.Silverman }>`<br />- `kind:` `typeof DensityBandwidthKind.Silverman`<br />\| `Extract<IRPlotDensityBandwidthSpec, { kind: typeof DensityBandwidthKind.Value }>`<br />- `kind:` `typeof DensityBandwidthKind.Value`<br />- `value: number` | `silverman`             | KDE bandwidth strategy<br />Rule-of-thumb branch<br />- Silverman discriminator<br />Explicit-bandwidth branch<br />- Value discriminator<br />- Positive bandwidth |
+| `sampleCount?`      | `number`                                                                                                                                                                                                                                                                                                                                             | `64`                    | Number of sampled output rows per group; at least 2                                                                                                                 |
+| `extent?`           | `[number, number]`                                                                                                                                                                                                                                                                                                                                   | expanded observed range | Sampling interval                                                                                                                                                   |
+| `xAs` / `densityAs` | `string`                                                                                                                                                                                                                                                                                                                                             | —                       | Output fields for sample position and density                                                                                                                       |
 
 `density` outputs ordinary rows. Draw a density curve with `PathMark`; draw a density area with the same `PathMark` plus `closure={{ kind: 'baseline' }}` and `fill`. Do not add a dedicated mark just for density.
 
@@ -28,14 +32,18 @@ General reducers / selectors, `summarize`, `select`, and custom transform defini
 
 <ComponentPreview files={['transform-smooth', 'transform-smooth.data.ts']} />
 
-| prop          | type                  | default                 | description                                                     |
-| ------------- | --------------------- | ----------------------- | --------------------------------------------------------------- |
-| `x` / `y`     | `string`              | —                       | Regression input fields                                         |
-| `groupBy`     | `Array<string>?`      | one global group        | Fit a separate trend per group                                  |
-| `method`      | `{ kind: 'linear' }?` | `linear`                | Smoothing method; first release supports linear regression only |
-| `sampleCount` | `number?`             | `64`                    | Number of predicted samples per group; at least 2               |
-| `extent`      | `[number, number]?`   | finite observed x range | Sampling interval; explicit values can extrapolate              |
-| `xAs` / `yAs` | `string`              | —                       | Output fields for predicted x and y values                      |
+`IRPlotSmoothTransform` fixes `kind` to `'smooth'`.
+
+The public closed set for `method.kind` comes from <ApiValues name="SmoothMethodKind" />.
+
+| prop           | type                                                                                                                                                      | default                 | description                                                                |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | -------------------------------------------------------------------------- |
+| `x` / `y`      | `string`                                                                                                                                                  | —                       | Regression input fields                                                    |
+| `groupBy?`     | `Array<string>`                                                                                                                                           | one global group        | Fit a separate trend per group                                             |
+| `method?`      | `IRPlotSmoothMethodSpec`<br />`Extract<IRPlotSmoothMethodSpec, { kind: typeof SmoothMethodKind.Linear }>`<br />- `kind:` `typeof SmoothMethodKind.Linear` | `linear`                | Smoothing method<br />Linear-regression branch<br />- Linear discriminator |
+| `sampleCount?` | `number`                                                                                                                                                  | `64`                    | Number of predicted samples per group; at least 2                          |
+| `extent?`      | `[number, number]`                                                                                                                                        | finite observed x range | Sampling interval; explicit values can extrapolate                         |
+| `xAs` / `yAs`  | `string`                                                                                                                                                  | —                       | Output fields for predicted x and y values                                 |
 
 `smooth` fails loudly for non-fit inputs: every group needs at least two finite `(x, y)` points, and x cannot be constant. Keep original points and the trend line as separate mark layers: points read source data, while the trend line reads rows generated by `smooth`.
 

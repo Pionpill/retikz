@@ -24,10 +24,12 @@ Keep it separate from [`order`](/viz/data/model/contract#category-order) in the 
 
 <ComponentPreview files={['transform-sort', 'transform-sort.data.ts']} />
 
-| prop    | type                           | default       | description |
-| ------- | ------------------------------ | ------------- | ----------- |
-| `field` | `string`                       | —             | Sort field  |
-| `order` | `'ascending' \| 'descending'?` | `'ascending'` | Direction   |
+`IRDataSortTransform` fixes `kind` to `'sort'`.
+
+| prop     | type                               | default       | description |
+| -------- | ---------------------------------- | ------------- | ----------- |
+| `field`  | `string`                           | —             | Sort field  |
+| `order?` | <ApiValues name="DataSortOrder" /> | `'ascending'` | Direction   |
 
 ## summarize
 
@@ -37,10 +39,12 @@ Output names must be unique within one operation: reducer outputs cannot collide
 
 <ComponentPreview files={['transform-summarize', 'transform-summarize.data.ts']} />
 
-| prop      | type             | default          | description                                       |
-| --------- | ---------------- | ---------------- | ------------------------------------------------- |
-| `groupBy` | `Array<string>?` | one global group | Group key fields; supports composite keys         |
-| `metrics` | `Array<Reducer>` | —                | Group statistics; every reducer must declare `as` |
+`IRDataSummarizeTransform` fixes `kind` to `'summarize'`.
+
+| prop       | type                   | default          | description                                            |
+| ---------- | ---------------------- | ---------------- | ------------------------------------------------------ |
+| `groupBy?` | `Array<string>`        | one global group | Group key fields; supports composite keys              |
+| `metrics`  | `IRDataReducerMetrics` | —                | Group statistics; every reducer declares output fields |
 
 ```tsx
 <Transform
@@ -60,11 +64,13 @@ Output names must be unique within one operation: reducer outputs cannot collide
 
 <ComponentPreview files={['transform-select', 'transform-select.data.ts']} />
 
-| prop       | type             | default          | description                                  |
-| ---------- | ---------------- | ---------------- | -------------------------------------------- |
-| `groupBy`  | `Array<string>?` | one global group | Group key fields                             |
-| `selector` | `Selector`       | —                | Representative-row rule                      |
-| `rankAs`   | `string?`        | —                | Optional one-based rank field on output rows |
+`IRDataSelectTransform` fixes `kind` to `'select'`.
+
+| prop       | type                      | default          | description                         |
+| ---------- | ------------------------- | ---------------- | ----------------------------------- |
+| `groupBy?` | `Array<string>`           | one global group | Group key fields                    |
+| `selector` | `IRDataSelectorOperation` | —                | Representative-row rule             |
+| `rankAs?`  | `string`                  | —                | One-based rank field on output rows |
 
 ```tsx
 <Transform kind="select" groupBy={['region']} selector={{ kind: 'top', by: 'revenue', n: 3 }} rankAs="rank" />
@@ -78,11 +84,13 @@ Selector annotations accept only built-in rules that select at most one row: `mi
 
 <ComponentPreview files={['transform-annotate', 'transform-annotate.data.ts']} />
 
-| prop        | type                             | default          | description                                   |
-| ----------- | -------------------------------- | ---------------- | --------------------------------------------- |
-| `groupBy`   | `Array<string>?`                 | one global group | Group key fields; supports composite keys     |
-| `metrics`   | `Array<Reducer>?`                | —                | Statistical metrics to broadcast to every row |
-| `selectors` | `Array<IRDataAnnotateSelector>?` | —                | Broadcast one representative                  |
+`IRDataAnnotateTransform` fixes `kind` to `'annotate'` and requires at least `metrics` or `selectors`.
+
+| prop         | type                            | default          | description                                   |
+| ------------ | ------------------------------- | ---------------- | --------------------------------------------- |
+| `groupBy?`   | `Array<string>`                 | one global group | Group key fields; supports composite keys     |
+| `metrics?`   | `IRDataReducerMetrics`          | —                | Statistical metrics to broadcast to every row |
+| `selectors?` | `Array<IRDataAnnotateSelector>` | —                | Broadcast one representative                  |
 
 ```tsx
 <Transform

@@ -1,11 +1,11 @@
 # table v0.1-alpha.1 Roadmap：最薄纵向闭环
 
-> milestone 已完成最薄纵向闭环与根 schema 精确度修订。长期决策写入同目录 ADR。
+> milestone 已完成最薄纵向闭环、根 schema 精确度修订与 React 组合式 authoring API。长期决策写入同目录 ADR。
 > 关联：[`table v0.1 roadmap`](../roadmap.md) · [`table-design.md`](../../../../../architecture/table-design.md) · [`_template.md`](../../../../_template.md)
 
 - 状态：已完成
 - 首轮完成日期：2026-07-21
-- 修订完成日期：2026-07-21
+- 修订完成日期：2026-07-22
 
 ## 目标
 
@@ -28,15 +28,16 @@ ADR 编号按概念阅读顺序组织，不等同于实现顺序；实现以依�
 
 ## ADR 清单
 
-| ADR                                      | 主题                                                      | Level | 依赖                                          | 状态     |
-| ---------------------------------------- | --------------------------------------------------------- | ----- | --------------------------------------------- | -------- |
-| [01](./01-table-spec-root.md)            | Table composite 根节点、外部数据引用与 package scaffold   | red   | ADR-02、ADR-04、Core composite、DataReference | Accepted |
-| [02](./02-table-structure-model.md)      | manual/detail 结构与 canonical SemanticTableModel         | red   | ADR-03                                        | Accepted |
-| [03](./03-cell-presentation.md)          | Cell payload、基础 text presentation 与 registry          | red   | Core IRChild、Data scalar                     | Accepted |
-| [04](./04-table-layout.md)               | 固定轨道与 TableLayout                                    | red   | ADR-02~03                                     | Accepted |
-| [05](./05-table-lowering.md)             | Table composite lowering、stable identity 与最小 manifest | red   | ADR-01~04                                     | Accepted |
-| [06](./06-table-bindings.md)             | React 结构组件与 Vanilla plain spec / Tier 2 runtime      | red   | ADR-05、Kernel Vanilla plain spec             | Accepted |
-| [07](./07-table-spec-variant-schemas.md) | 精确 Table 变体 schema 与统一根 union                     | red   | ADR-01、ADR-02、ADR-06、Core composite union  | Accepted |
+| ADR                                       | 主题                                                      | Level  | 依赖                                          | 状态     |
+| ----------------------------------------- | --------------------------------------------------------- | ------ | --------------------------------------------- | -------- |
+| [01](./01-table-spec-root.md)             | Table composite 根节点、外部数据引用与 package scaffold   | red    | ADR-02、ADR-04、Core composite、DataReference | Accepted |
+| [02](./02-table-structure-model.md)       | manual/detail 结构与 canonical SemanticTableModel         | red    | ADR-03                                        | Accepted |
+| [03](./03-cell-presentation.md)           | Cell payload、基础 text presentation 与 registry          | red    | Core IRChild、Data scalar                     | Accepted |
+| [04](./04-table-layout.md)                | 固定轨道与 TableLayout                                    | red    | ADR-02~03                                     | Accepted |
+| [05](./05-table-lowering.md)              | Table composite lowering、stable identity 与最小 manifest | red    | ADR-01~04                                     | Accepted |
+| [06](./06-table-bindings.md)              | React 结构组件与 Vanilla plain spec / Tier 2 runtime      | red    | ADR-05、Kernel Vanilla plain spec             | Accepted |
+| [07](./07-table-spec-variant-schemas.md)  | 精确 Table 变体 schema 与统一根 union                     | red    | ADR-01、ADR-02、ADR-06、Core composite union  | Accepted |
+| [08](./08-table-react-composition-api.md) | DetailColumn 与 Row / Cell 组合式 React authoring         | yellow | ADR-06、ADR-07                                | Accepted |
 
 ## 测试策略
 
@@ -48,7 +49,7 @@ ADR 编号按概念阅读顺序组织，不等同于实现顺序；实现以依�
 
 ## 完成结果
 
-- 七份 ADR 均已 Accepted，并压缩为长期决策记录；detail / manual / custom 拥有精确根 schema，通用 pipeline 消费统一 union
+- 八份 ADR 均已 Accepted，并压缩为长期决策记录；detail / manual / custom 拥有精确根 schema，通用 pipeline 消费统一 union
 - `@retikz/table`、`@retikz/table-react`、`@retikz/table-vanilla` 已形成可构建、可测试的 lockstep alpha.1 薄片
 - manual/detail、Cell presentation、固定轨道、Core lowering、manifest、React/Vanilla/SSR 已闭环
 - 双语组件文档、可运行 demo、API 参考与三包 changelog 已同步

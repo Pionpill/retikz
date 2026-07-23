@@ -283,6 +283,9 @@ importers:
       '@retikz/standard-react':
         specifier: workspace:*
         version: link:../../packages/library/standard-react
+      '@retikz/standard-vanilla':
+        specifier: workspace:*
+        version: link:../../packages/library/standard-vanilla
       '@retikz/table':
         specifier: workspace:*
         version: link:../../packages/viz/table
@@ -295,6 +298,9 @@ importers:
       '@retikz/tex':
         specifier: workspace:*
         version: link:../../packages/kernel/tex
+      '@retikz/vanilla':
+        specifier: workspace:*
+        version: link:../../packages/kernel/vanilla
       acorn:
         specifier: ^8.16.0
         version: 8.16.0

@@ -156,6 +156,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'BetweenPosition',
     url: '/kernel/reference/schema/placement#betweenposition',
   },
+  AnchorPositionSchema: {
+    schema: IR.AnchorPositionSchema,
+    label: 'AnchorPosition',
+    url: '/kernel/reference/schema/placement#anchorposition',
+  },
   AbsoluteTargetSchema: {
     schema: IR.AbsoluteTargetSchema,
     label: 'AbsoluteTarget',

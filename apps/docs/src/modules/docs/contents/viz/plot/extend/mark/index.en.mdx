@@ -21,12 +21,15 @@ The third argument to `lower` is the coordinate `frame`. It projects each row's 
 
 ## Definition contract
 
-| Field           | Required | Purpose                                                                                                                                           |
-| --------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `schema`        | required | Complete operation schema; `type` must be a non-empty `z.literal(...)`, whose value is the registry key and must not collide with a built-in mark |
-| `lower`         | required | Receives the schema-parsed mark, data rows, `frame`, and channel resolvers, then lowers to core IR; returns `null` when nothing is drawable       |
-| `collectFields` | optional | Receives the same schema contract and registers source fields so strict model validation does not flag them as missing                            |
-| `buildCell`     | optional | Per-row cell builder for interval-like marks (built-in `interval` uses this; plain glyphs do not)                                                 |
+`MarkDefinition<TMark>` is exported from the `@retikz/plot` package root:
+
+| Field            | Type                                                                                                                                        | Purpose                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `schema`         | `z.ZodType<TMark>`                                                                                                                          | Complete operation schema whose non-empty literal `type` is the unique registry key |
+| `collectFields?` | `(mark: TMark, fields: FieldCollector) => void`                                                                                             | Registers additional source fields; Data collects common encoding and label fields  |
+| `channelKinds?`  | `(mark: TMark) => ReadonlySet<ChannelDefinitionKindValue>`                                                                                  | Declares the channel delivery surfaces consumed by the lowered mark                 |
+| `buildCell?`     | `(mark: TMark, row: ExternalRow, frame: CoordinateFrame, context?: IntervalContext) => Cell \| null`                                        | Builds a per-row Cell for interval-like marks                                       |
+| `lower`          | `(mark: TMark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, context?: MarkLoweringContext) => IRChild \| null` | Lowers to Core IR and returns `null` when nothing is drawable                       |
 
 Use `defineMark<MyMark>` with the operation type inferred from your schema, so `lower` / `collectFields` receive the precise mark shape. Lowering first checks that the operation is a JSON object, then parses it through the definition schema, so invalid config never reaches behavior callbacks.
 

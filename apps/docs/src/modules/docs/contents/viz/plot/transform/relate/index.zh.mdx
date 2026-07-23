@@ -21,14 +21,13 @@ description: relate 会从每个分组中选择 source 和 target 行，并投�
 `relate` 的输入仍然是普通数据行。demo 中 `PathMark` 和 `PointMark` 消费原始行；`RelationMark` 的局部 transform 只为当前关系层生成一行配对数据。
 source / target 使用的 selector 与 `select` 共用同一套[统计子算子](/viz/data/transform/statistics)，因此也可以选择 top-N、排序后的首尾行或自定义代表行。
 
-| prop              | 类型                    | 默认值   | 说明                           |
-| ----------------- | ----------------------- | -------- | ------------------------------ |
-| `groupBy`         | `Array<string>?`        | 全局单组 | 每组独立生成一条或多条配对行   |
-| `source.selector` | `Selector`              | —        | source 端代表行选择规则        |
-| `source.fields`   | `Record<string,string>` | —        | 输出字段后缀 → source 行字段   |
-| `target.selector` | `Selector`              | —        | target 端代表行选择规则        |
-| `target.fields`   | `Record<string,string>` | —        | 输出字段后缀 → target 行字段   |
-| `measures`        | `Array<PairMeasure>?`   | —        | source / target 之间的派生度量 |
+`IRPlotRelateTransform` 的 `kind` 固定为 `'relate'`。
+
+| prop                | 类型                                                                                                                                                                                              | 默认值   | 说明                                                                                                                   |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `groupBy?`          | `Array<string>`                                                                                                                                                                                   | 全局单组 | 每组独立生成一条或多条配对行                                                                                           |
+| `source` / `target` | `IRPlotEndpointProjection`<br />- `selector: IRDataSelectorOperation`<br />- `fields: Record<string, string>`                                                                                     | —        | 端点投影<br />- 组内代表行选择规则<br />- 输出字段后缀到端点行字段的非空映射                                           |
+| `measures?`         | `Array<IRPlotPairMeasureOperation>`<br />- `op:` <ApiValues name="PairMeasureOperationKind" /><br />- `field: string`<br />- `as: string`<br />- `labelAs?: string`<br />- `labelPrefix?: string` | —        | source / target 间派生度量<br />- 度量类型<br />- 输入数值字段<br />- 输出字段<br />- 可选文字字段<br />- 非负文字前缀 |
 
 ```tsx
 <RelationMark

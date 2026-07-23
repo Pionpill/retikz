@@ -3,7 +3,7 @@ title: Coordinate
 description: Coordinate 命名一个不渲染的几何点，供路径端点和其它节点按 id 定位。
 ---
 
-`<Coordinate>` 给位置一个稳定的 `id`，但不画形状或文字。路径可以把它当端点，其它节点也能通过相对、偏移或比例定位引用它。
+`<Coordinate>` 给位置一个稳定的 `id`，但不画形状或文字。路径可以把它当端点，其它节点也能通过相对、偏移、比例或锚点定位引用它。
 
 ## 用法
 
@@ -15,7 +15,7 @@ import { Coordinate } from '@retikz/react';
 <Coordinate id="hub" position={[0, 0]} />
 ```
 
-`position` 接受 `<Node>` 完全相同的五种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例定位 `{ between, fraction }`。
+`Coordinate.position` 接受五种中心 / 点定位形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例定位 `{ between, fraction }`。Node 额外支持依赖自身真实尺寸的 `{ kind: 'anchor', target, selfAnchor? }`；Coordinate 可以作为它的 target，但自身没有 `selfAnchor` 定位。
 
 ### 何时使用
 
@@ -131,24 +131,24 @@ Node / Coordinate 的定位引用同样在遍历时解析，因此只看得到�
     {
       label: '命名 anchor 解析',
       path: 'packages/kernel/core/src/compile/node/anchors.ts',
-      startLine: 57,
-      endLine: 84,
+      startLine: 65,
+      endLine: 117,
     },
     {
       label: '零尺寸边上比例点拒绝',
       path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts',
-      startLine: 52,
-      endLine: 72,
+      startLine: 29,
+      endLine: 52,
     },
   ]}
 />
 
 ## API 参考
 
-| 属性       | 类型                                                                                                 | 默认值 | 描述                                                                                                   |
-| ---------- | ---------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------ |
-| `id`       | `string`                                                                                             | —      | **必填**——占位的全部意义就在于被 id 引用                                                               |
-| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, fraction }` | —      | 占位点位置；与 `<Node position>` 完全一致；其中 id 依赖必须先登记，解析时序见[技术原理](#先登记再引用) |
+| 属性       | 类型                          | 默认值 | 描述                                                                                                                         |
+| ---------- | ----------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| `id`       | `string`                      | —      | **必填**——占位的全部意义就在于被 id 引用                                                                                     |
+| `position` | `CoordinateProps['position']` | —      | 零尺寸占位点的五种位置形态；不接受 Node-only `IRAnchorPosition`。其中 id 依赖必须先登记，解析时序见[技术原理](#先登记再引用) |
 
 ## 相关
 

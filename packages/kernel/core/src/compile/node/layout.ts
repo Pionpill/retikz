@@ -1,6 +1,6 @@
 ﻿import type { BoundaryDefinition, ShapeDefinition, Transform } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
-import type { IRLabelDefault, IRNode } from '../../schemas';
+import type { IRAnchorPosition, IRLabelDefault, IRNode, IRPosition } from '../../schemas';
 import type { NamespaceStack } from '../namespace';
 import type { ResolveBetweenGlobal } from '../position';
 import type { TextMeasurer } from '../text';
@@ -9,11 +9,14 @@ import type { NodeLayout, TexLoweringContext } from './types';
 
 import { resolveBoundaryRegistry } from '../../providers/boundary';
 import { resolveShapeRegistry } from '../../providers/shape';
+import { CenterAnchor } from '../../shared';
 import { DEG_TO_RAD } from '../../shared/geometry';
 import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE } from '../constants';
 import { resolvePosition } from '../position';
+import { resolveAnchorRefUncached } from '../reference';
 import { resolveShadow } from '../style';
 import { resolveFontSize } from '../text';
+import { inverseTransformChain, isTransformChainInvertible, projectLayoutToGlobal } from '../transform';
 import { resolveAxisScale, resolveBoxSize, resolveBoxSpacing } from './box';
 import { layoutNodeContent } from './content/layout';
 import { DEFAULT_LINE_HEIGHT_FACTOR, resolveDashPattern } from './content/text';
@@ -21,6 +24,77 @@ import { layoutNodeLabels } from './label/layout';
 import { resolveNodeShape } from './shape';
 
 const DEFAULT_PADDING = 8;
+
+/** 判断 Node.position 是否为锚点对锚点定位 */
+const isAnchorPosition = (position: IRNode['position']): position is IRAnchorPosition =>
+  !Array.isArray(position) && 'kind' in position;
+
+/** 把全局位移反投影为当前 Scope 的局部位移 */
+const localDeltaOf = (
+  deltaGlobal: IRPosition,
+  globalOrigin: IRPosition,
+  scopeChain: ReadonlyArray<Transform>,
+): IRPosition => {
+  if (scopeChain.length === 0) return deltaGlobal;
+  if (!isTransformChainInvertible(scopeChain)) {
+    throw new Error('Cannot resolve anchor position through a Scope transform with a zero scale axis');
+  }
+  const before = inverseTransformChain(globalOrigin, scopeChain);
+  const after = inverseTransformChain([globalOrigin[0] + deltaGlobal[0], globalOrigin[1] + deltaGlobal[1]], scopeChain);
+  return [after[0] - before[0], after[1] - before[1]];
+};
+
+/** 根据 target 与 self anchor 平移完整 provisional layout */
+const placeAnchorPositionedLayout = (
+  node: IRNode,
+  position: IRAnchorPosition,
+  provisional: NodeLayout,
+  namespaceStack: NamespaceStack,
+  scopeChain: ReadonlyArray<Transform>,
+): NodeLayout => {
+  if (node.id !== undefined && node.id === position.target.id) {
+    throw new Error(`Node anchor position cannot reference itself ('${node.id}')`);
+  }
+  const targetEntry = namespaceStack.lookupEntry(position.target.id);
+  if (targetEntry === undefined) {
+    throw new Error(
+      `Cannot resolve anchor position target '${position.target.id}'; it is undefined or defined later in the IR`,
+    );
+  }
+  if (targetEntry.state === 'scope-placeholder') {
+    throw new Error(
+      `Cannot resolve anchor position target '${position.target.id}'; the referenced Scope is still being laid out`,
+    );
+  }
+
+  const targetAnchor = position.target.anchor ?? CenterAnchor.Center;
+  const targetPointBase = resolveAnchorRefUncached(
+    targetEntry.layout,
+    targetAnchor,
+    position.target.boundary ?? targetEntry.layout.boundary,
+  );
+  const targetPoint: IRPosition = position.target.offset
+    ? [targetPointBase[0] + position.target.offset[0], targetPointBase[1] + position.target.offset[1]]
+    : targetPointBase;
+
+  const projected =
+    scopeChain.length === 0
+      ? { ...provisional, rect: { ...provisional.rect } }
+      : projectLayoutToGlobal(provisional, scopeChain);
+  const selfPoint = resolveAnchorRefUncached(projected, position.selfAnchor ?? CenterAnchor.Center, node.boundary);
+  const deltaGlobal: IRPosition = [targetPoint[0] - selfPoint[0], targetPoint[1] - selfPoint[1]];
+  const deltaLocal = localDeltaOf(deltaGlobal, [projected.rect.x, projected.rect.y], scopeChain);
+
+  return {
+    ...provisional,
+    rect: {
+      ...provisional.rect,
+      x: provisional.rect.x + deltaLocal[0],
+      y: provisional.rect.y + deltaLocal[1],
+    },
+    contentCenter: [provisional.contentCenter[0] + deltaLocal[0], provisional.contentCenter[1] + deltaLocal[1]],
+  };
+};
 
 /** 节点 layout 阶段使用的编译依赖 */
 export type LayoutNodeContext = {
@@ -132,7 +206,14 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
   const boundsHalfH = Math.max(circumscribed.halfHeight, minHalfH);
 
   const rotateDeg = node.rotate ?? 0;
-  const center = resolvePosition(node.position, { namespaceStack, nodeDistance, scopeChain, resolveBetweenGlobal });
+  let anchorPosition: IRAnchorPosition | undefined;
+  let center: IRPosition | null;
+  if (isAnchorPosition(node.position)) {
+    anchorPosition = node.position;
+    center = [0, 0];
+  } else {
+    center = resolvePosition(node.position, { namespaceStack, nodeDistance, scopeChain, resolveBetweenGlobal });
+  }
   if (!center) {
     throw new Error(
       `Cannot resolve position for node ${node.id ?? '(unnamed)'}; polar.origin / at.of / between endpoint may reference an undefined node`,
@@ -157,7 +238,7 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
     fontStyle,
   });
 
-  return {
+  const provisional: NodeLayout = {
     irPath,
     id: node.id,
     shapeName,
@@ -207,4 +288,7 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
     connectionEnvelopeWarnings: new Set(),
     warn,
   };
+  return anchorPosition
+    ? placeAnchorPositionedLayout(node, anchorPosition, provisional, namespaceStack, scopeChain)
+    : provisional;
 };

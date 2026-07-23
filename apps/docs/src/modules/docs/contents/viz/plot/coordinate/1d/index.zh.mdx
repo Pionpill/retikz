@@ -37,11 +37,12 @@ description: 一维坐标系只绑定一个位置通道：cartesian1D 把值落�
 <Plot coordinate={{ type: 'polar1D', radius: 0.8, startAngle: 180, endAngle: 360 }}>
 ```
 
-| 坐标系        | 字段                      | 说明                                                       |
-| ------------- | ------------------------- | ---------------------------------------------------------- |
-| `cartesian1D` | `orientation`             | `'horizontal'` 或 `'vertical'`，决定那条一维轴横放还是竖放 |
-| `polar1D`     | `radius`                  | 圆周半径占绘图区半径的比例                                 |
-| `polar1D`     | `startAngle` / `endAngle` | 角向区间，单位度                                           |
+两种对象分支都属于 `@retikz/plot-react` 包根公开的 `CoordinateInput`。
+
+| 坐标系        | 类型                                                                                                                                                      | 默认值                                        | 说明                                                                                 |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `cartesian1D` | `Extract<CoordinateInput, { type: 'cartesian1D' }>`<br />- `type: 'cartesian1D'`<br />- `orientation?:` <ApiValues name="Cartesian1DOrientation" />       | —<br />- —<br />- `'horizontal'`              | 一维直线<br />- 判别字段<br />- 横放或竖放                                           |
+| `polar1D`     | `Extract<CoordinateInput, { type: 'polar1D' }>`<br />- `type: 'polar1D'`<br />- `radius?: number`<br />- `startAngle?: number`<br />- `endAngle?: number` | —<br />- —<br />- `1`<br />- `0`<br />- `360` | 一维圆周<br />- 判别字段<br />- 可用半径占比<br />- 起始角（度）<br />- 终止角（度） |
 
 ## 限制
 

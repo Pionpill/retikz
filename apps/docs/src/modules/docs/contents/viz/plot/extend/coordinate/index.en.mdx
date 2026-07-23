@@ -65,11 +65,13 @@ const bridge = defineCoordinate({
 
 ## Definition Contract
 
-| Field     | Role                                                                                                                                                                                                                                                                    |
-| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `schema`  | Validates the custom op that enters IR. `type` must be a non-built-in `z.literal(...)`, and all other fields must stay JSON-serializable.                                                                                                                               |
-| `roles`   | Declares the positional channels this coordinate needs. Built-ins use `x` / `y` / `z`, while custom coordinates may declare role names such as `u` / `v`. Missing required roles, or encoding keys not supported by the active coordinate, fail loudly during lowering. |
-| `resolve` | Builds the `frame` from domains, scales, and canvas size, then returns `plotArea` / guide layers. The function stays at runtime and never enters IR.                                                                                                                    |
+`CoordinateDefinition<TCoordinateOperation>` is exported from the `@retikz/plot` package root:
+
+| Field     | Type                                                                                           | Role                                                                                                           |
+| --------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `schema`  | `z.ZodType<TCoordinateOperation>`                                                              | Validates the custom IR op; `type` is a non-built-in literal and all remaining fields stay JSON-serializable   |
+| `roles`   | `ReadonlyArray<DimensionRole>`                                                                 | Declares required positional channels; missing roles and unsupported encoding keys fail loudly during lowering |
+| `resolve` | `(operation: TCoordinateOperation, context: CoordinateResolveContext) => CoordinateResolution` | Builds `frame` from domains, scales, and canvas size, then returns `plotArea` and guide layers at runtime      |
 
 `CoordinateResolveContext` provides `collectRoleValues`, `resolveScaleForRole`, `buildPositionScale`, `axisGuides`, `lowerGuide`, and `lowerCustomAxis`. Custom coordinates v1 default to the whole canvas as `plotArea`; they do not automatically get cartesian-style margin / legend reservation.
 

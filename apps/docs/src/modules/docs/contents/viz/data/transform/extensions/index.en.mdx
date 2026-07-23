@@ -87,13 +87,39 @@ A Definition should implement only data-row and statistical semantics. Color, ma
 
 ## API Reference
 
-The following public exports come from `@retikz/data`:
+The following Definitions and helpers are exported from the `@retikz/data` package root.
 
-| Capability          | Definition type               | Definition function       |
-| ------------------- | ----------------------------- | ------------------------- |
-| Data operation      | `TransformDefinition`         | `defineTransform`         |
-| Statistical reducer | `StatisticsReducerDefinition` | `defineStatisticsReducer` |
-| Row selector        | `RowSelectorDefinition`       | `defineRowSelector`       |
+### `TransformDefinition`
+
+| Field           | Type                                                                                                 | Description                                         |
+| --------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `schema`        | `z.ZodType<TTransform>`                                                                              | Complete operation schema with a literal `kind`     |
+| `inputFields?`  | `(operation: TTransform, context: TransformContext) => Array<string>`                                | Returns source fields read by the operation         |
+| `outputFields?` | `(operation: TTransform, context: TransformContext) => Array<string>`                                | Returns derived fields produced by the operation    |
+| `apply`         | `(rows: Array<ExternalRow>, operation: TTransform, context: TransformContext) => Array<ExternalRow>` | Executes the transform purely and deterministically |
+
+Use `defineTransform(definition)` to preserve the generic relationship among these fields.
+
+### `StatisticsReducerDefinition`
+
+| Field           | Type                                                                                                 | Description                                  |
+| --------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `schema`        | `z.ZodType<TReducerOperation>`                                                                       | Schema with a non-empty literal `kind`       |
+| `inputFields?`  | `(operation: TReducerOperation) => Array<string>`                                                    | Returns source fields read by the reducer    |
+| `outputFields?` | `(operation: TReducerOperation) => Array<string>`                                                    | Returns fields produced by the reducer       |
+| `reduce`        | `(rows: Array<ExternalRow>, operation: TReducerOperation, context: TransformContext) => ExternalRow` | Returns the field fragment written to output |
+
+Use `defineStatisticsReducer(definition)` to define a reducer.
+
+### `RowSelectorDefinition`
+
+| Field          | Type                                                                               | Description                                        |
+| -------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------- |
+| `schema`       | `z.ZodType<TSelectorOperation>`                                                    | Schema with a non-empty literal `kind`             |
+| `inputFields?` | `(operation: TSelectorOperation) => Array<string>`                                 | Returns source fields read by the selector         |
+| `select`       | `(rows: Array<ExternalRow>, operation: TSelectorOperation) => Array<RowSelection>` | Returns original rows and optional one-based ranks |
+
+Use `defineRowSelector(definition)` to define a selector.
 
 <SourceLinks
   sources={[

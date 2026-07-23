@@ -37,11 +37,13 @@ So polar charts still use `x` / `y`. The coordinate system decides whether those
 <Plot coordinate={{ type: 'polar2D', innerRadius: 0.5, startAngle: 0, endAngle: 360 }}>
 ```
 
-| Field         | Type      | Default | Description                                                                                                        |
-| ------------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------------ |
-| `innerRadius` | `number?` | `0`     | Inner radius as a fraction `0..1` of the outer radius; `0` is a solid pie, `> 0` carves a center hole into a donut |
-| `startAngle`  | `number?` | `0`     | Starting angle in degrees                                                                                          |
-| `endAngle`    | `number?` | `360`   | Ending angle in degrees; together with `startAngle` it controls full or partial rings                              |
+These fields come from `Extract<CoordinateInput, { type: 'polar2D' }>`.
+
+| Field          | Type     | Default | Description                                                                                                        |
+| -------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------ |
+| `innerRadius?` | `number` | `0`     | Inner radius as a fraction `0..1` of the outer radius; `0` is a solid pie, `> 0` carves a center hole into a donut |
+| `startAngle?`  | `number` | `0`     | Starting angle in degrees                                                                                          |
+| `endAngle?`    | `number` | `360`   | Ending angle in degrees; together with `startAngle` it controls full or partial rings                              |
 
 ## Common Shapes
 

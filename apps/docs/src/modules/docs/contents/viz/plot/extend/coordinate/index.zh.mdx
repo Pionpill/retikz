@@ -65,11 +65,13 @@ const bridge = defineCoordinate({
 
 ## 定义契约
 
-| 字段      | 作用                                                                                                                                                                                                   |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `schema`  | 校验进入 IR 的自定义 op。`type` 必须是非内置的 `z.literal(...)`，其余字段必须保持 JSON 可序列化。                                                                                                      |
-| `roles`   | 声明这个坐标系需要哪些位置通道。内置坐标系使用 `x` / `y` / `z`，自定义坐标系也可以声明 `u` / `v` 这类自己的 role；缺少必填 role，或写了当前坐标系不支持的 encoding key，都会在 lowering 时 fail-loud。 |
-| `resolve` | 用数据域、scale 和画布尺寸构造 `frame`，并返回 `plotArea` / guide 层。函数留在运行时，不进 IR。                                                                                                        |
+`CoordinateDefinition<TCoordinateOperation>` 从 `@retikz/plot` 包根导出：
+
+| 字段      | 类型                                                                                           | 作用                                                                                         |
+| --------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `schema`  | `z.ZodType<TCoordinateOperation>`                                                              | 校验进入 IR 的自定义 op；`type` 必须是非内置字面量，其余字段保持 JSON 可序列化               |
+| `roles`   | `ReadonlyArray<DimensionRole>`                                                                 | 声明坐标系需要的位置通道；缺少必填 role 或出现不支持的 encoding key 时 lowering 会 fail-loud |
+| `resolve` | `(operation: TCoordinateOperation, context: CoordinateResolveContext) => CoordinateResolution` | 用数据域、scale 和画布尺寸构造 `frame`，返回 `plotArea` 与 guide 层；函数只存在于运行时      |
 
 `CoordinateResolveContext` 提供 `collectRoleValues`、`resolveScaleForRole`、`buildPositionScale`、`axisGuides`、`lowerGuide` 和 `lowerCustomAxis`。自定义坐标系 v1 默认使用整张画布作为 `plotArea`；它不会自动获得 cartesian 那种 margin / legend 预留收窄。
 

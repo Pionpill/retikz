@@ -21,12 +21,15 @@ description: 自定义图元把下沉函数留在运行时：IR 只保存自定�
 
 ## 定义契约
 
-| 字段            | 必填 | 作用                                                                                                 |
-| --------------- | ---- | ---------------------------------------------------------------------------------------------------- |
-| `schema`        | 必填 | 完整 operation schema；`type` 必须是非空 `z.literal(...)`，其值就是注册键，且不能撞内置图元          |
-| `lower`         | 必填 | 接收 schema 解析后的图元 + 数据行 + `frame` + 通道 resolver，下沉成 core IR；无可绘制内容返回 `null` |
-| `collectFields` | 可选 | 接收同一 schema 契约下的图元并登记源字段；strict model 据此校验，避免把字段误判为缺失                |
-| `buildCell`     | 可选 | 区间类图元的 per-row cell 构造入口（内置 `interval` 走这条；普通 glyph 不需要）                      |
+`MarkDefinition<TMark>` 从 `@retikz/plot` 包根导出：
+
+| 字段             | 类型                                                                                                                                        | 作用                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `schema`         | `z.ZodType<TMark>`                                                                                                                          | 完整 operation schema；非空字面量 `type` 是唯一注册键      |
+| `collectFields?` | `(mark: TMark, fields: FieldCollector) => void`                                                                                             | 登记额外源字段；通用 encoding / label 字段由 Data 统一收集 |
+| `channelKinds?`  | `(mark: TMark) => ReadonlySet<ChannelDefinitionKindValue>`                                                                                  | 声明 lowering 产物能消费的通道交付面                       |
+| `buildCell?`     | `(mark: TMark, row: ExternalRow, frame: CoordinateFrame, context?: IntervalContext) => Cell \| null`                                        | 区间类图元的逐行 Cell 构造入口                             |
+| `lower`          | `(mark: TMark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, context?: MarkLoweringContext) => IRChild \| null` | 下沉成 Core IR；无可绘制内容返回 `null`                    |
 
 用 `defineMark<MyMark>` 显式给出 schema 推导的 operation 类型，`lower` / `collectFields` 里就能拿到精确的图元形态。lowering 会先确认 operation 是 JSON object，再用 definition schema 解析，非法配置不会进入行为回调。
 

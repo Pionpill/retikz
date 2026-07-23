@@ -64,12 +64,24 @@ Field parsing normalizes individual values. It does not reorder rows, change row
 
 ## API Reference
 
-The following public exports come from `@retikz/data`:
+The following contracts are exported from the `@retikz/data` package root.
 
-| Capability     | Definition / function type        | Definition form           |
-| -------------- | --------------------------------- | ------------------------- |
-| Field format   | `FieldFormatDefinition`           | `defineFieldFormat`       |
-| Field resolver | `ResolveField`, `FieldResolution` | Supply a runtime function |
+### `FieldFormatDefinition`
+
+`defineFieldFormat(definition)` accepts and returns the same `FieldFormatDefinition`.
+
+| Field         | Type                                 | Description                                                               |
+| ------------- | ------------------------------------ | ------------------------------------------------------------------------- |
+| `name`        | `string`                             | Non-empty registry key that cannot collide with a built-in or custom name |
+| `impliedType` | <ApiValues name="DataFieldType" />   | Measurement type used when the model omits `type`                         |
+| `parse`       | `(raw: unknown) => ParsedFieldValue` | Converts a raw value to a canonical string, finite number, or `undefined` |
+
+### `ResolveField` and `FieldResolution`
+
+| Export            | Type                                                                                                                     | Description                                                         |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| `ResolveField`    | `(field: string, context: Parameters<ResolveField>[1]) => FieldResolution \| undefined`                                  | Returns an override for one logical field; `undefined` falls back   |
+| `FieldResolution` | `FieldResolution`<br />- `type?:` <ApiValues name="DataFieldType" /><br />- `parse?: (raw: unknown) => ParsedFieldValue` | Runtime override<br />- Final measurement type<br />- Custom parser |
 
 <SourceLinks
   sources={[

@@ -157,6 +157,12 @@ const overlayDefinition = definePreviewControls({
   controls: [{ kind: 'text', id: 'text', label: 'Text', defaultValue: 'Node' }],
 });
 
+const widePreviewDefinition = definePreviewControls({
+  presentation: 'panel',
+  defaultSize: 20,
+  sections: [{ controls: [{ kind: 'text', id: 'text', label: 'Text', defaultValue: 'Node' }] }],
+});
+
 const shortRangeDurationDefinition = definePreviewControls({
   presentation: 'panel',
   title: 'Short range duration',
@@ -804,6 +810,14 @@ describe('PreviewWorkspace', () => {
         panel.getAttribute('data-order'),
       ),
     ).toEqual(['1', '2']);
+  });
+
+  it('允许 demo 为控制区配置更窄的初始宽度', async () => {
+    const container = await mount(<WorkspaceHarness definition={widePreviewDefinition} />);
+    const panels = container.querySelectorAll('[data-slot="resizable-panel"]');
+
+    expect(panels[0].getAttribute('data-default-size')).toBe('20');
+    expect(panels[1].getAttribute('data-default-size')).toBe('80');
   });
 
   it('窄 Workspace 在完整预览上方提供 100–300px 的纵向拖拽面板', async () => {

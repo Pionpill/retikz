@@ -87,13 +87,39 @@ Definition 只应实现数据行与统计语义。颜色、图元或布局等消
 
 ## API 参考
 
-以下公开导出来自 `@retikz/data`：
+以下 Definition 与定义函数都从 `@retikz/data` 包根导出。
 
-| 能力         | Definition 类型               | 定义函数                  |
-| ------------ | ----------------------------- | ------------------------- |
-| 数据操作     | `TransformDefinition`         | `defineTransform`         |
-| 统计 reducer | `StatisticsReducerDefinition` | `defineStatisticsReducer` |
-| 行 selector  | `RowSelectorDefinition`       | `defineRowSelector`       |
+### `TransformDefinition`
+
+| 字段            | 类型                                                                                                 | 描述                                        |
+| --------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `schema`        | `z.ZodType<TTransform>`                                                                              | 含非空字面量 `kind` 的完整 operation schema |
+| `inputFields?`  | `(operation: TTransform, context: TransformContext) => Array<string>`                                | 返回 operation 读取的源字段                 |
+| `outputFields?` | `(operation: TTransform, context: TransformContext) => Array<string>`                                | 返回 operation 生成的派生字段               |
+| `apply`         | `(rows: Array<ExternalRow>, operation: TTransform, context: TransformContext) => Array<ExternalRow>` | 纯且确定地执行变换                          |
+
+使用 `defineTransform(definition)` 保留这四个字段之间的泛型关联。
+
+### `StatisticsReducerDefinition`
+
+| 字段            | 类型                                                                                                 | 描述                          |
+| --------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------- |
+| `schema`        | `z.ZodType<TReducerOperation>`                                                                       | 含非空字面量 `kind` 的 schema |
+| `inputFields?`  | `(operation: TReducerOperation) => Array<string>`                                                    | 返回读取的源字段              |
+| `outputFields?` | `(operation: TReducerOperation) => Array<string>`                                                    | 返回生成的字段                |
+| `reduce`        | `(rows: Array<ExternalRow>, operation: TReducerOperation, context: TransformContext) => ExternalRow` | 返回写入输出行的字段片段      |
+
+使用 `defineStatisticsReducer(definition)` 定义 reducer。
+
+### `RowSelectorDefinition`
+
+| 字段           | 类型                                                                               | 描述                          |
+| -------------- | ---------------------------------------------------------------------------------- | ----------------------------- |
+| `schema`       | `z.ZodType<TSelectorOperation>`                                                    | 含非空字面量 `kind` 的 schema |
+| `inputFields?` | `(operation: TSelectorOperation) => Array<string>`                                 | 返回读取的源字段              |
+| `select`       | `(rows: Array<ExternalRow>, operation: TSelectorOperation) => Array<RowSelection>` | 返回原始行与可选一基 rank     |
+
+使用 `defineRowSelector(definition)` 定义 selector。
 
 <SourceLinks
   sources={[

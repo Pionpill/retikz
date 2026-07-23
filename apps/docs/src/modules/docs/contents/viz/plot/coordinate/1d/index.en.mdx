@@ -37,11 +37,12 @@ Sometimes data has only one positional dimension: a list of samples, event times
 <Plot coordinate={{ type: 'polar1D', radius: 0.8, startAngle: 180, endAngle: 360 }}>
 ```
 
-| Coordinate    | Field                     | Description                                                        |
-| ------------- | ------------------------- | ------------------------------------------------------------------ |
-| `cartesian1D` | `orientation`             | `'horizontal'` or `'vertical'`, choosing how the 1D axis is placed |
-| `polar1D`     | `radius`                  | Circle radius as a fraction of the plot radius                     |
-| `polar1D`     | `startAngle` / `endAngle` | Angular range in degrees                                           |
+Both object branches belong to `CoordinateInput`, exported from the `@retikz/plot-react` package root.
+
+| Coordinate    | Type                                                                                                                                                      | Default                                       | Description                                                                                                                            |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `cartesian1D` | `Extract<CoordinateInput, { type: 'cartesian1D' }>`<br />- `type: 'cartesian1D'`<br />- `orientation?:` <ApiValues name="Cartesian1DOrientation" />       | —<br />- —<br />- `'horizontal'`              | One-dimensional line<br />- Discriminator<br />- Horizontal or vertical orientation                                                    |
+| `polar1D`     | `Extract<CoordinateInput, { type: 'polar1D' }>`<br />- `type: 'polar1D'`<br />- `radius?: number`<br />- `startAngle?: number`<br />- `endAngle?: number` | —<br />- —<br />- `1`<br />- `0`<br />- `360` | One-dimensional circle<br />- Discriminator<br />- Available-radius fraction<br />- Start angle in degrees<br />- End angle in degrees |
 
 ## Limits
 

@@ -194,3 +194,30 @@ describe('NamespaceStack resolving phase 禁止 register', () => {
     expect(() => stack.register('B', makeLayout('B'))).toThrow(/only allowed during registering/);
   });
 });
+
+describe('NamespaceStack Scope placeholder 生命周期', () => {
+  it('lookupEntry 区分 placeholder 与合法 resolved 零尺寸 layout', () => {
+    const stack = new NamespaceStack();
+    const placeholder = makeLayout('scope');
+    const resolved = makeLayout('scope');
+
+    stack.register('scope', placeholder, undefined, 'scope-placeholder');
+    expect(stack.lookupEntry('scope')).toEqual({ layout: placeholder, state: 'scope-placeholder' });
+
+    expect(stack.replaceLayout('scope', resolved, 0, placeholder)).toBe(true);
+    expect(stack.lookupEntry('scope')).toEqual({ layout: resolved, state: 'resolved' });
+  });
+
+  it('placeholder 被同 frame 的合法同名 layout 覆盖后不再回填旧 Scope', () => {
+    const stack = new NamespaceStack();
+    const placeholder = makeLayout('scope');
+    const childWithSameId = makeLayout('scope', 10, 20);
+    const resolvedScope = makeLayout('scope', 30, 40);
+
+    stack.register('scope', placeholder, undefined, 'scope-placeholder');
+    stack.register('scope', childWithSameId);
+
+    expect(stack.replaceLayout('scope', resolvedScope, 0, placeholder)).toBe(false);
+    expect(stack.lookupEntry('scope')).toEqual({ layout: childWithSameId, state: 'resolved' });
+  });
+});

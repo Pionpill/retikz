@@ -18,15 +18,18 @@ This page covers only plot-registered statistical drawing capabilities. General 
 
 `IntervalMark` reads `x0` / `x1` for bin edges, drawing adjacent histogram bars on a continuous x axis. `y` reads `binCount` or a custom metric field for height.
 
-| prop                      | type                | default               | description                                                            |
-| ------------------------- | ------------------- | --------------------- | ---------------------------------------------------------------------- |
-| `field`                   | `string`            | —                     | Continuous source field to bin                                         |
-| `count`                   | `number?`           | `10`                  | Target bin count; mutually exclusive with `step` / `thresholds`        |
-| `step`                    | `number?`           | —                     | Fixed bin width; mutually exclusive with `count` / `thresholds`        |
-| `thresholds`              | `Array<number>?`    | —                     | Explicit internal boundaries; mutually exclusive with `count` / `step` |
-| `extent`                  | `[number, number]?` | observed min/max      | Override the binning domain                                            |
-| `metrics`                 | `Array<Reducer>?`   | `count -> binCount`   | Per-bin statistics, reusing data reducers                              |
-| `startField` / `endField` | `string?`           | `binStart` / `binEnd` | Output edge field names                                                |
+`IRPlotBinTransform` fixes `kind` to `'bin'`.
+
+| prop                        | type                   | default               | description                                                            |
+| --------------------------- | ---------------------- | --------------------- | ---------------------------------------------------------------------- |
+| `field`                     | `string`               | —                     | Continuous source field to bin                                         |
+| `count?`                    | `number`               | `10`                  | Target bin count; mutually exclusive with `step` / `thresholds`        |
+| `step?`                     | `number`               | —                     | Fixed bin width; mutually exclusive with `count` / `thresholds`        |
+| `thresholds?`               | `Array<number>`        | —                     | Explicit internal boundaries; mutually exclusive with `count` / `step` |
+| `extent?`                   | `[number, number]`     | observed min/max      | Override the binning domain                                            |
+| `nice?`                     | `boolean`              | `true`                | Rounds boundaries to readable values for the count strategy            |
+| `startField?` / `endField?` | `string`               | `binStart` / `binEnd` | Output edge field names                                                |
+| `metrics?`                  | `IRDataReducerMetrics` | `count -> binCount`   | Per-bin statistics, reusing data reducers                              |
 
 ## Stat-Layer Composition
 
