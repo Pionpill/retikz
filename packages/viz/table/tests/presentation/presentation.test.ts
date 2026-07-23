@@ -3,7 +3,8 @@ import type { IRChild, IRJsonObject } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { defineCellPresentation, presentCellPayload, resolveCellPresentationRegistry } from '../../src';
+import { defineCellPresentation, resolveCellPresentationRegistry } from '../../src';
+import { presentCellPayload } from '../../src/pipeline/presentation';
 
 describe('Cell presentation registry', () => {
   it.each([

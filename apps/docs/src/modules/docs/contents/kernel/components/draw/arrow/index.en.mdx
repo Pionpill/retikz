@@ -144,27 +144,27 @@ A multi-node path can become several subpaths during compile, but the start arro
 
 ### arrow
 
-| Property      | Type                                                                                     | Default | Description                                                                                                           |
-| ------------- | ---------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
-| `arrow`       | `'none' \| '->' \| '<-' \| '<->'`                                                        | —       | Path-level arrow direction                                                                                            |
-| `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | —       | Arrow visual config; 8 top-level fields all optional + optional `start` / `end` sub-objects that merge field-by-field |
+| Property      | Type                                    | Default | Description                                                                                                           |
+| ------------- | --------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
+| `arrow`       | `'none'` \| `'->'` \| `'<-'` \| `'<->'` | —       | Path-level arrow direction                                                                                            |
+| `arrowDetail` | `IRArrowDetail`                         | —       | Arrow visual config; 8 top-level fields all optional + optional `start` / `end` sub-objects that merge field-by-field |
 
 ### arrowDetail fields
 
 `arrowDetail` carries 8 visual fields + optional `start` / `end` sub-objects. The `start` / `end` sub-objects use the same field set (non-recursive) and merge field-by-field into the top-level defaults:
 
-| Field       | Type                                                                                                                   | Default                      | Description                                                                                                               |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `shape`     | `'normal' \| 'open' \| 'stealth' \| 'openStealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle' \| string` | `'stealth'`                  | Arrow tip shape; one of the 8 built-ins or a custom arrow name registered via `<Layout arrows>` / `CompileOptions.arrows` |
-| `scale`     | `number > 0`                                                                                                           | `1`                          | Uniform scale factor; multiplied **after** `length` / `width` (`length=10, scale=1.5` → effective 15)                     |
-| `length`    | `number ≥ 0`                                                                                                           | `6`                          | Arrow length along the path direction (user units)                                                                        |
-| `width`     | `number ≥ 0`                                                                                                           | `6`                          | Arrow width perpendicular to the path (user units)                                                                        |
-| `color`     | `string`                                                                                                               | —                            | Stroke color override; default inherits the path stroke color                                                             |
-| `fill`      | `string`                                                                                                               | `color` or path stroke color | Fill color override; **silent no-op on hollow shapes** (written value is dropped)                                         |
-| `opacity`   | `number ∈ [0, 1]`                                                                                                      | —                            | Arrow-only opacity; default inherits path opacity                                                                         |
-| `lineWidth` | `number ≥ 0`                                                                                                           | `1.5`                        | Stroke width for hollow shapes; ignored on solid shapes                                                                   |
-| `start`     | `ArrowEndDetail` (same field set, no `start` / `end`)                                                                  | —                            | Start-end override (only effective when `arrow` includes the start: `'<-'` / `'<->'`)                                     |
-| `end`       | `ArrowEndDetail` (same field set, no `start` / `end`)                                                                  | —                            | End-end override (only effective when `arrow` includes the end: `'->'` / `'<->'`)                                         |
+| Field       | Type                                                    | Default                      | Description                                                                                                               |
+| ----------- | ------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `shape`     | <ApiValues name="BuiltinArrowShape" /> \| `string`      | `'stealth'`                  | Arrow tip shape; one of the 8 built-ins or a custom arrow name registered via `<Layout arrows>` / `CompileOptions.arrows` |
+| `scale`     | `number > 0`                                            | `1`                          | Uniform scale factor; multiplied **after** `length` / `width` (`length=10, scale=1.5` → effective 15)                     |
+| `length`    | `number ≥ 0`                                            | `6`                          | Arrow length along the path direction (user units)                                                                        |
+| `width`     | `number ≥ 0`                                            | `6`                          | Arrow width perpendicular to the path (user units)                                                                        |
+| `color`     | `string`                                                | —                            | Stroke color override; default inherits the path stroke color                                                             |
+| `fill`      | `string`                                                | `color` or path stroke color | Fill color override; **silent no-op on hollow shapes** (written value is dropped)                                         |
+| `opacity`   | `number ∈ [0, 1]`                                       | —                            | Arrow-only opacity; default inherits path opacity                                                                         |
+| `lineWidth` | `number ≥ 0`                                            | `1.5`                        | Stroke width for hollow shapes; ignored on solid shapes                                                                   |
+| `start`     | `IRArrowEndDetail` (same field set, no `start` / `end`) | —                            | Start-end override (only effective when `arrow` includes the start: `'<-'` / `'<->'`)                                     |
+| `end`       | `IRArrowEndDetail` (same field set, no `start` / `end`) | —                            | End-end override (only effective when `arrow` includes the end: `'->'` / `'<->'`)                                         |
 
 ## Related
 

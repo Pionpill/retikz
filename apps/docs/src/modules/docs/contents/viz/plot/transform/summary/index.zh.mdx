@@ -1,0 +1,42 @@
+---
+title: 分箱与统计图层
+description: 分箱与统计图层说明 plot 如何把连续字段切成直方图区间，并用普通 mark 组合统计图形。
+---
+
+这一页只讲 plot 注册的统计绘图能力。通用的分组汇总和代表行选择已经迁到[数据变换](/viz/data/transform)：`summarize` 用来生成分组统计行，`select` 用来保留组内代表原始行。
+
+| 能力         | 输出行                 | 常见用途               |
+| ------------ | ---------------------- | ---------------------- |
+| `bin`        | 每个区间一行           | 直方图、分布概览       |
+| 统计图层组合 | 多个 mark 消费统计字段 | 箱线图、异常点、统计带 |
+
+## 分箱 bin
+
+`bin` 把连续字段切成区间，每个区间产出一行。输出行包含箱下界、箱上界和 metric 字段；默认 metric 是 `{ kind: 'count', as: 'binCount' }`。
+
+<ComponentPreview files={['transform-histogram', 'transform-histogram.data.ts']} />
+
+`IntervalMark` 用 `x0` / `x1` 读取箱边，画出连续 x 轴上紧贴排列、宽度随箱边变化的直方图柱；`y` 读取 `binCount` 或自定义 metric 字段作为高度。
+
+`IRPlotBinTransform` 的 `kind` 固定为 `'bin'`。
+
+| prop                        | 类型                   | 默认值                | 说明                                     |
+| --------------------------- | ---------------------- | --------------------- | ---------------------------------------- |
+| `field`                     | `string`               | —                     | 被分箱的连续源字段                       |
+| `count?`                    | `number`               | `10`                  | 目标箱数；与 `step` / `thresholds` 互斥  |
+| `step?`                     | `number`               | —                     | 固定箱宽；与 `count` / `thresholds` 互斥 |
+| `thresholds?`               | `Array<number>`        | —                     | 显式内部边界；与 `count` / `step` 互斥   |
+| `extent?`                   | `[number, number]`     | 观测 min/max          | 覆盖分箱域                               |
+| `nice?`                     | `boolean`              | `true`                | count 策略下把边界取整为便于阅读的值     |
+| `startField?` / `endField?` | `string`               | `binStart` / `binEnd` | 箱边输出字段名                           |
+| `metrics?`                  | `IRDataReducerMetrics` | `count → binCount`    | 每箱统计指标，复用 data reducer          |
+
+## 统计图层组合
+
+统计 transform 只负责产出 rows，图形仍由普通 mark 画出来。箱线图就是一个组合：`quantile-band` reducer 先生成箱体、中位数和须线字段，`outside-quantile-band` selector 再保留区间外原始点。
+
+这类组合使用 data 的数据 transform 准备统计行，再由 plot 的普通 mark 消费。完整示例放在[统计子算子](/viz/data/transform/statistics)；本页只说明 plot 如何把这些统计字段画成图层。
+
+## 与数据变换的关系
+
+`bin` 是 plot 注册的绘图变换，因为它直接面向直方图区间字段和图层组合；但它的 `metrics` 复用 data 的 reducer。需要普通分组统计行时，优先用[数据变换 / summarize](/viz/data/transform/operations#汇总-summarize)；需要保留原始代表行时，优先用[数据变换 / select](/viz/data/transform/operations#代表行选择-select)。

@@ -213,8 +213,8 @@ const svg = renderToSvgString(spec, { compile: { lowerTex } });
 
 | API                                  | 类型                                      | 描述                                                                    |
 | ------------------------------------ | ----------------------------------------- | ----------------------------------------------------------------------- |
-| `useLowerTex`（`@retikz/tex/react`） | `() => LowerTex \| undefined`             | 启动并共享 MathJax engine；未就绪或初始化失败时返回 `undefined`         |
+| `useLowerTex`（`@retikz/tex/react`） | `typeof useLowerTex`                      | 启动并共享 MathJax engine；未就绪或初始化失败时返回 `undefined`         |
 | `createMathJaxEngine`                | `(options?) => Promise<MathJaxSvgEngine>` | 创建 MathJax SVG engine；`packages` 默认 `['base']`                     |
 | `createLowerTex`                     | `(engine) => LowerTex`                    | 把 engine 转换成 Core lowerer，并按字号、display 模式和 TeX source 缓存 |
-| `MathJaxSvgEngine`                   | `{ convert(tex, { display }): string }`   | 本包消费的最小同步 engine 抽象                                          |
-| `LowerTex`（`@retikz/core`）         | `(content, style) => LoweredTex \| null`  | Core 注入点；返回 renderer-agnostic 字形路径与度量，失败返回 `null`     |
+| `MathJaxSvgEngine`                   | `MathJaxSvgEngine`                        | 本包消费的最小同步 engine 抽象                                          |
+| `LowerTex`（`@retikz/core`）         | `LowerTex`                                | Core 注入点；返回 renderer-agnostic 字形路径与度量，失败返回 `null`     |

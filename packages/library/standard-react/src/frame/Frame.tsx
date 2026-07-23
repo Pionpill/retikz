@@ -5,15 +5,12 @@ import type { FC, ReactNode } from 'react';
 import { convertReactNodeToIR } from '@retikz/react';
 import { createFrame, FrameDefinition } from '@retikz/standard';
 
+import type { StandardEmbeddableComponent } from '../shared';
+
 /** React Frame 组件接受的 Standard authoring 输入 */
 export type FrameProps = Omit<FrameInput, 'children'> & {
   /** 参与 Frame Scope 自动 bounds 的 Core Node children */
   children: ReactNode;
-};
-
-type FrameComponent = FC<FrameProps> & {
-  isTier2Embeddable?: true;
-  embeddableAdapter?: EmbeddableTier2Adapter<FrameProps>;
 };
 
 type FrameNode = IRFrame['children'][number];
@@ -43,8 +40,10 @@ const frameEmbeddableAdapter: EmbeddableTier2Adapter<FrameProps> = {
   },
 };
 
+const FrameComponent: FC<FrameProps> = () => null;
+
 /** Standard Frame 的 React Tier 2 authoring 组件 */
-export const Frame: FrameComponent = () => null;
+export const Frame = FrameComponent as StandardEmbeddableComponent<FrameProps>;
 
 Frame.displayName = 'Frame';
 Frame.isTier2Embeddable = true;

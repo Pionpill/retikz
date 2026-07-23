@@ -94,24 +94,24 @@ import { Node } from '@retikz/react';
 
 ### 图元属性
 
-| 属性     | 类型                    | 默认值 | 描述                   |
-| -------- | ----------------------- | ------ | ---------------------- |
-| `fill`   | `string \| IRPaintSpec` | —      | 填充 Node 或闭合 Path  |
-| `stroke` | `string \| IRPaintSpec` | —      | 描边；支持相同图案规格 |
+| 属性     | 类型                      | 默认值 | 描述                   |
+| -------- | ------------------------- | ------ | ---------------------- |
+| `fill`   | `string` \| `IRPaintSpec` | —      | 填充 Node 或闭合 Path  |
+| `stroke` | `string` \| `IRPaintSpec` | —      | 描边；支持相同图案规格 |
 
 ### Pattern 分支
 
 `IRPaintSpec` 中 `kind: 'pattern'` 的对象字段如下：
 
-| 属性         | 类型        | 默认值                   | 描述                       |
-| ------------ | ----------- | ------------------------ | -------------------------- |
-| `kind`       | `'pattern'` | —                        | 图案 paint 的判别字段      |
-| `shape`      | `string`    | —                        | 内置名或已注册的自定义名称 |
-| `color`      | `string`    | `currentColor`           | 重复单元主色               |
-| `background` | `string`    | 透明                     | 每块 tile 的背景色         |
-| `size`       | `number`    | `8`                      | 重复周期，必须为有限正数   |
-| `lineWidth`  | `number`    | 线/网格 `1`；点 `size/5` | 线宽；dots 中作为圆点半径  |
-| `rotation`   | `number`    | `0`                      | 整块图案旋转角度           |
+| 属性         | 类型                                          | 默认值                   | 描述                       |
+| ------------ | --------------------------------------------- | ------------------------ | -------------------------- |
+| `kind`       | `'pattern'`                                   | —                        | 图案 paint 的判别字段      |
+| `shape`      | <ApiValues name="PatternShape" /> \| `string` | —                        | 内置名或已注册的自定义名称 |
+| `color`      | `string`                                      | `currentColor`           | 重复单元主色               |
+| `background` | `string`                                      | 透明                     | 每块 tile 的背景色         |
+| `size`       | `number`                                      | `8`                      | 重复周期，必须为有限正数   |
+| `lineWidth`  | `number`                                      | 线/网格 `1`；点 `size/5` | 线宽；dots 中作为圆点半径  |
+| `rotation`   | `number`                                      | `0`                      | 整块图案旋转角度           |
 
 ## 相关
 

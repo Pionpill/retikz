@@ -12,6 +12,7 @@ retikz 使用一组统一的位置表达来描述实体放置与路径目标解�
 | 绝对位置     | `[x, y]` / `{ angle, radius }`            | 实体位置、路径目标           |
 | 引用图元     | `{ id, anchor? }`                         | 路径目标                     |
 | 方向 / 偏移  | `{ direction, of }` / `{ of, offset }`    | 实体位置；偏移也可作路径目标 |
+| 锚点对齐     | `{ kind: 'anchor', target, selfAnchor? }` | 仅 Node.position             |
 | 两点之间     | `{ between: [A, B], fraction }`           | 实体位置、路径目标           |
 | 路径相对移动 | `{ relative }` / `{ relativeAccumulate }` | 仅路径目标                   |
 
@@ -23,7 +24,28 @@ retikz 使用一组统一的位置表达来描述实体放置与路径目标解�
 
 线段的实际起止点由 retikz 自动算——见 [图元关系](/kernel/concepts/core/primitive-relations)。
 
-`<Node>` / `<Coordinate>` 不能直接把 `position` 写成节点 id，因为"把一个实体放在另一个实体中心"通常不是最有用的默认。要表达节点之间的关系，用 `{ direction, of, distance? }`；要表达任意二维偏移，用 `{ of, offset }`。这两种写法把布局意图留在文档里，比提前算好每个绝对坐标更容易维护。
+`<Node>` / `<Coordinate>` 都不能直接把 `position` 写成裸节点 id。`<Coordinate>` 若要依赖另一个实体，可用 `{ direction, of, distance? }` 或 `{ of, offset }`；`<Node>` 还可用结构化的 anchor 定位把两个真实布局锚点重合，默认就是 center 对 center。
+
+## 锚点对齐
+
+Node 的 anchor 定位先完成当前 Node 的文本测量、shape、padding、margin、scale 与 rotate，再整体平移，使 `selfAnchor` 与 `target.anchor + target.offset` 重合。`target.anchor` 与 `selfAnchor` 都默认 `center`。
+
+```tsx
+<Node id="source" position={[0, 0]}>
+  source
+</Node>
+<Node
+  position={{
+    kind: 'anchor',
+    target: { id: 'source', anchor: 'bottom-left', offset: [24, 12] },
+    selfAnchor: 'top-left',
+  }}
+>
+  aligned
+</Node>
+```
+
+目标可以是已完成布局的 Node、Coordinate 或 Scope。定位只进入 `Node.position`：Coordinate 没有可供 `selfAnchor` 使用的 shape / padding / margin 布局边界。标准方向 anchor 与数字角度 anchor 按目标 boundary 与 margin 解析；shape-specific anchor 和 `{ side, fraction }` 继续使用视觉边界语义。
 
 ## 相对定位
 
@@ -75,13 +97,14 @@ retikz 使用一组统一的位置表达来描述实体放置与路径目标解�
 
 <ComponentPreview files="positioning-path-relative" size="sm" />
 
-它们只属于 path target，不用于 `<Node>.position` / `<Coordinate>.position`。如果要摆放实体，请用笛卡尔、极坐标、相对定位、偏移定位或比例定位。
+它们只属于 path target，不用于 `<Node>.position` / `<Coordinate>.position`。如果要摆放实体，请用笛卡尔、极坐标、相对定位、偏移定位、比例定位，或 Node 专用的 anchor 定位。
 
 ## 引用顺序
 
 实体位置与路径目标的解析时机不同：
 
 - `<Node>.position` / `<Coordinate>.position` 中的 `origin`、`of` 和 `between` 会按 IR children 顺序解析，因此被引用实体必须先定义。
+- Node anchor 定位的 `target` 同样只接受已经完成布局的实体；未定义、后置、自引用或尚未完成的祖先 Scope 都会立即报错。已经解析完成的零尺寸空 Scope 是合法 center 目标，但没有可供 edge-fraction anchor 使用的边。
 - `<Step>.to` / `<Draw>.way` 中的节点或 Coordinate 引用会延迟到当前命名空间的实体完成注册后解析，因此可以引用同一可解析作用域内稍后定义的实体。
 
 实体位置引用无法解析时，编译会报错；路径目标最终仍找不到对应实体时，该路径无法正常输出，并会产生诊断。
@@ -113,10 +136,16 @@ retikz 使用一组统一的位置表达来描述实体放置与路径目标解�
       endLine: 98,
     },
     {
+      label: '按真实布局锚点平移 Node',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
+      startLine: 47,
+      endLine: 97,
+    },
+    {
       label: '登记 Node 与 Coordinate 命名引用',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 210,
-      endLine: 252,
+      startLine: 177,
+      endLine: 253,
     },
     {
       label: '定义 path target 的完整 union',

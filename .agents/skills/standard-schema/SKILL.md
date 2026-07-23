@@ -60,6 +60,8 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 
 同一概念出现多个同前缀一级字段时，优先收敛成一个对象字段；对象子字段用命名 schema/type 承载，并通过 `shape` spread、`.extend()` 或对象 spread 复用，不重复声明同一份字段 shape。
 
+上层需要与允许依赖层完全同义的字段时，从该层公开的权威 schema 用 `.pick()`、`.omit()`、`.extend()` 或 `.shape` 精确复用。只选择所需字段，不从 primitive schema 重复拼装同一契约，也不整段引入包含无关字段的 BaseSchema；复用后验证默认值、refinement 与未知字段拒绝行为保持预期。
+
 适用场景：
 
 - 大部分字段共享，只是不同 `kind` / 模式有组合约束。

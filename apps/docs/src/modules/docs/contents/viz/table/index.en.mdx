@@ -5,7 +5,7 @@ description: Start with detail tables and turn data into readable, persistable t
 
 Table is an independent Tier 2 capability. It owns row-and-column structure, Cell semantics, deterministic layout, and lowering, while [Data](/viz/data) owns records, field models, and data transforms. A table is not another chart type layered over Plot, and each table type does not need a duplicated low-level grammar.
 
-The current release exposes one business-facing path: use `DetailTable` to map one record to one row. `ManualTable` is the low-level entry for declaring a Cell grid directly, so it is documented under the shared model and API reference instead of appearing as a second business table type.
+Use `DetailTable` to map one record to one row.
 
 ## Where to start
 
@@ -14,8 +14,6 @@ The current release exposes one business-facing path: use `DetailTable` to map o
 | Show lists, ledgers, or record-per-row data       | [Detail Table](/viz/table/detail)     |
 | Understand Structure, Cells, layout, and lowering | [Table Model](/viz/table/model)       |
 | Look up complete specs or React and Vanilla APIs  | [API Reference](/viz/table/reference) |
-
-When pivot, matrix, or other table types arrive, they will sit beside Detail Table under table types. Shared Cell, Presentation, Layout, rule, and lowering concepts will remain in one table model.
 
 ## Pages
 

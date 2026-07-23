@@ -94,24 +94,24 @@ This also defines the option boundaries: `size` is the tile period, `lineWidth` 
 
 ### Primitive props
 
-| Prop     | Type                    | Default | Description                     |
-| -------- | ----------------------- | ------- | ------------------------------- |
-| `fill`   | `string \| IRPaintSpec` | —       | Fill a Node or closed Path      |
-| `stroke` | `string \| IRPaintSpec` | —       | Stroke with the same paint spec |
+| Prop     | Type                      | Default | Description                     |
+| -------- | ------------------------- | ------- | ------------------------------- |
+| `fill`   | `string` \| `IRPaintSpec` | —       | Fill a Node or closed Path      |
+| `stroke` | `string` \| `IRPaintSpec` | —       | Stroke with the same paint spec |
 
 ### Pattern branch
 
 The `kind: 'pattern'` branch of `IRPaintSpec` has these fields:
 
-| Prop         | Type        | Default                       | Description                       |
-| ------------ | ----------- | ----------------------------- | --------------------------------- |
-| `kind`       | `'pattern'` | —                             | Pattern paint discriminator       |
-| `shape`      | `string`    | —                             | Built-in or registered name       |
-| `color`      | `string`    | `currentColor`                | Motif color                       |
-| `background` | `string`    | transparent                   | Background for each tile          |
-| `size`       | `number`    | `8`                           | Positive finite tile period       |
-| `lineWidth`  | `number`    | lines/grid `1`; dots `size/5` | Line width or dot radius          |
-| `rotation`   | `number`    | `0`                           | Rotation for the complete pattern |
+| Prop         | Type                                          | Default                       | Description                       |
+| ------------ | --------------------------------------------- | ----------------------------- | --------------------------------- |
+| `kind`       | `'pattern'`                                   | —                             | Pattern paint discriminator       |
+| `shape`      | <ApiValues name="PatternShape" /> \| `string` | —                             | Built-in or registered name       |
+| `color`      | `string`                                      | `currentColor`                | Motif color                       |
+| `background` | `string`                                      | transparent                   | Background for each tile          |
+| `size`       | `number`                                      | `8`                           | Positive finite tile period       |
+| `lineWidth`  | `number`                                      | lines/grid `1`; dots `size/5` | Line width or dot radius          |
+| `rotation`   | `number`                                      | `0`                           | Rotation for the complete pattern |
 
 ## Related
 

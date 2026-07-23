@@ -21,7 +21,41 @@ import { DetailTable } from '@retikz/table-react';
 />;
 ```
 
-All three components work standalone or as Tier 2 children of `@retikz/react` `Layout`. Embedded
+`DetailTable` also supports JSX column markers. Choose either the complete `columns` prop or
+`DetailColumn` children for one table:
+
+```tsx
+import { DetailColumn, DetailTable } from '@retikz/table-react';
+
+<DetailTable id="scores" dataRef="scores" data={rows}>
+  <DetailColumn id="name" field="name" header="Name" />
+  <DetailColumn id="score" field="score" header="Score" />
+</DetailTable>;
+```
+
+`ManualTable` likewise accepts the complete `cells` / `rowKinds` props or nested `Row` and `Cell`
+markers. Dimensions always remain explicit on the root component:
+
+```tsx
+import { Cell, ManualTable, Row } from '@retikz/table-react';
+
+<ManualTable rows={2} columns={2}>
+  <Row kind="columnHeader">
+    <Cell>Name</Cell>
+    <Cell>Score</Cell>
+  </Row>
+  <Row>
+    <Cell>Alice</Cell>
+    <Cell value={95} />
+  </Row>
+</ManualTable>;
+```
+
+`DetailColumn`, `Row`, and `Cell` are React authoring markers: they compile to the same TableSpec
+forms as their respective plain props. `<Table>` remains the entry for callers that already hold a
+complete TableSpec.
+
+All three root components work standalone or as Tier 2 children of `@retikz/react` `Layout`. Embedded
 usage requires a stable spec id. `onManifest` is standalone-only; datasets, custom definitions, and
 extra composites remain runtime inputs outside Table IR.
 

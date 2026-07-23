@@ -3,13 +3,8 @@ import { z } from 'zod';
 
 import type { IRTableStructureOperation, TableStructureOutput } from '../../src';
 
-import {
-  defineTableStructure,
-  normalizeTableStructure,
-  TableCellLocation,
-  TableCellRole,
-  TableRowKind,
-} from '../../src';
+import { defineTableStructure, TableCellLocation, TableCellRole, TableRowKind } from '../../src';
+import { normalizeTableStructure } from '../../src/pipeline/normalize';
 
 const validOutput = (): TableStructureOutput => ({
   rows: [{ id: 'row.0', kind: TableRowKind.Body }],

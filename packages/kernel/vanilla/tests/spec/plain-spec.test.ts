@@ -59,6 +59,16 @@ const createCanvasContext = (): CanvasRenderingContext2D => {
 };
 
 describe('@retikz/vanilla plain spec', () => {
+  it('node helper 透传 anchor-to-anchor position', () => {
+    const position = {
+      kind: 'anchor' as const,
+      target: { id: 'A', anchor: 'bottom-left' as const, offset: [6, -2] as [number, number] },
+      selfAnchor: 'top-left' as const,
+    };
+
+    expect(node('B', { position })).toEqual({ type: 'node', id: 'B', position });
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
   });

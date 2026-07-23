@@ -11,7 +11,7 @@ description: Use when changing any retikz apps/docs content, route data, i18n, d
 
 1. 先读 `apps/docs/AGENTS.md` 与本 skill
 2. 再按页型只读一个主 skill：
-   - 组件页：[`docs-doc-component`](../docs-doc-component/SKILL.md)
+   - 组件页：[`docs-doc-component`](../docs-doc-component/SKILL.md)；Standard Tier 2 composite 组件页继续读 `docs-doc-standard-composite`
    - 扩展指南：[`docs-doc-extension`](../docs-doc-extension/SKILL.md)
    - 示例页：[`docs-doc-example`](../docs-doc-example/SKILL.md)
    - 分组落地页：[`docs-doc-group`](../docs-doc-group/SKILL.md)
@@ -90,6 +90,12 @@ API 参考按需使用“公开导出概览 → 核心契约 → 重要闭合集
 文档里的函数、类型和常量名必须是从所属包公开入口可导入的真实标识符。不要把概念简称、内部类型或 owner 深层 export 冒充公共 API。写 API 表前沿着“组件 Props / schema → owner barrel → package root”核对；宿主组件页还要检查同 owner barrel 的 Provider、Context、hook 与 helper，避免漏掉用户完成任务所需的伴随导出。
 
 共享或继承 props 不在每页复制完整字段表：用一行说明公开共享契约及其职责，并链接到唯一权威页；本页只展开新增或重定义的字段。
+
+手写 API 表遇到对象类型时：
+
+- 类型列第一行写公开对象类型，从第二行起按声明顺序将每个属性写成独立的 `- field?: Type`；描述列第一行写整体语义，后续逐行与属性同序、同数、一一对应
+- 属性名和类型值保留行内代码样式；联合类型拆成多个代码片段，让页面在 `|` 边界换行，不把整条类型包成跨行灰块
+- 类型分支来自公开 const object 或 preset 时，用 `<ApiValues name="PublicConstant" />` 显示常量名并在悬浮、聚焦时列出具体值；注册表直接引用公开常量，MDX 不手写重复值，描述列仍说明该集合的语义
 
 机制说明先写用户可观察行为，再用 `<SourceLinks>` 给直接实现入口。每项 `path` 使用仓库相对路径，行号范围最小且必须仍支撑正文结论；源码链接不能替代解释。
 

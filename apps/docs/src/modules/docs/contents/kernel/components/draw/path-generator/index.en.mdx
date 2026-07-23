@@ -127,23 +127,23 @@ A generator may return `move` commands to create subpaths, but it cannot return 
 
 ### Generate context
 
-| Field             | Type                       | Default | Description                                                     |
-| ----------------- | -------------------------- | ------- | --------------------------------------------------------------- |
-| `from`            | `Position`                 | —       | Current cursor in Path-local coordinates                        |
-| `to`              | `Position`                 | —       | Optional resolved Step endpoint                                 |
-| `params`          | `Record<string, unknown>`  | —       | Schema-validated parameters                                     |
-| `resolvedTargets` | `Record<string, Position>` | `{}`    | Successfully resolved `targetParams` keys and local coordinates |
-| `round`           | `(number) => number`       | —       | Compile/render precision rounding function                      |
+| Field             | Type                                     | Default | Description                                                     |
+| ----------------- | ---------------------------------------- | ------- | --------------------------------------------------------------- |
+| `from`            | `Position`                               | —       | Current cursor in Path-local coordinates                        |
+| `to`              | `Position`                               | —       | Optional resolved Step endpoint                                 |
+| `params`          | `PathGeneratorGenerateContext['params']` | —       | Schema-validated parameters                                     |
+| `resolvedTargets` | `Record<string, Position>`               | `{}`    | Successfully resolved `targetParams` keys and local coordinates |
+| `round`           | `(number) => number`                     | —       | Compile/render precision rounding function                      |
 
 ### Generator Step
 
-| Prop     | Type          | Default | Description                                |
-| -------- | ------------- | ------- | ------------------------------------------ |
-| `kind`   | `'generator'` | —       | Selects the generator action               |
-| `name`   | `string`      | —       | Generator registry key                     |
-| `to`     | `Target`      | —       | Optional endpoint passed as `ctx.to`       |
-| `params` | `JsonObject`  | —       | Serializable instance parameters           |
-| `label`  | `StepLabel`   | —       | Optional edge label for the generated span |
+| Prop     | Type                        | Default | Description                                |
+| -------- | --------------------------- | ------- | ------------------------------------------ |
+| `kind`   | `'generator'`               | —       | Selects the generator action               |
+| `name`   | `string`                    | —       | Generator registry key                     |
+| `to`     | `IRGeneratorStep['to']`     | —       | Optional endpoint passed as `ctx.to`       |
+| `params` | `IRGeneratorStep['params']` | —       | Serializable instance parameters           |
+| `label`  | `IRGeneratorStep['label']`  | —       | Optional edge label for the generated span |
 
 ## Related
 

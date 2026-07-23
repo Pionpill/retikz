@@ -1,0 +1,49 @@
+---
+title: 1D Coordinates
+description: 1D coordinates bind one position channel: cartesian1D places values on a line, while polar1D wraps them around a circle for rugs, timelines, and cyclic events.
+---
+
+Sometimes data has only one positional dimension: a list of samples, event times within a day, or a distribution along one axis. A 2D chart wastes one axis; a 1D coordinate binds one position channel and collapses the other screen dimension to a baseline or wraps it into a circle.
+
+## Two Forms
+
+| coordinate      | Shape  | Binding                       | Typical use                               |
+| --------------- | ------ | ----------------------------- | ----------------------------------------- |
+| `"cartesian1D"` | Line   | binds `x` only                | rug ticks, timeline, 1D strip             |
+| `"polar1D"`     | Circle | binds `x` only (as the angle) | 24-hour clock, weekday wheel, cyclic data |
+
+1D coordinates are scale-agnostic: like a 2D axis they accept linear / log / time. Below, left is a `cartesian1D` rug, and right is `polar1D` wrapping a day of event times into a circle.
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <ComponentPreview files={['coordinate-rug', 'coordinate-rug.data.ts']} size="sm" />
+  <ComponentPreview files={['coordinate-polar1d', 'coordinate-polar1d.data.ts']} size="sm" />
+</div>
+
+<p className="text-sm text-muted-foreground">
+  Left: <code>cartesian1D</code> line rug; right: <code>polar1D</code> wrapping 24 hours around a circle.
+</p>
+
+## Options
+
+`cartesian1D` can use the object form to control orientation:
+
+```tsx
+<Plot coordinate={{ type: 'cartesian1D', orientation: 'horizontal' }}>
+```
+
+`polar1D` can control the circle radius fraction and angular range:
+
+```tsx
+<Plot coordinate={{ type: 'polar1D', radius: 0.8, startAngle: 180, endAngle: 360 }}>
+```
+
+Both object branches belong to `CoordinateInput`, exported from the `@retikz/plot-react` package root.
+
+| Coordinate    | Type                                                                                                                                                      | Default                                       | Description                                                                                                                            |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `cartesian1D` | `Extract<CoordinateInput, { type: 'cartesian1D' }>`<br />- `type: 'cartesian1D'`<br />- `orientation?:` <ApiValues name="Cartesian1DOrientation" />       | —<br />- —<br />- `'horizontal'`              | One-dimensional line<br />- Discriminator<br />- Horizontal or vertical orientation                                                    |
+| `polar1D`     | `Extract<CoordinateInput, { type: 'polar1D' }>`<br />- `type: 'polar1D'`<br />- `radius?: number`<br />- `startAngle?: number`<br />- `endAngle?: number` | —<br />- —<br />- `1`<br />- `0`<br />- `360` | One-dimensional circle<br />- Discriminator<br />- Available-radius fraction<br />- Start angle in degrees<br />- End angle in degrees |
+
+## Limits
+
+This round, 1D coordinates support `<PointMark>` only, for rug ticks, timeline points, or circular event points. Bars, sectors, areas, and other marks that need a 2D cell or region have no 1D geometry and fail loudly instead of drawing a misleading chart.

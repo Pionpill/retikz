@@ -65,6 +65,12 @@ export const inverseTransformChain = (global: IRPosition, chain: ReadonlyArray<T
   return [x, y];
 };
 
+/** 判断 transform chain 是否可用于精确反投影位移 */
+export const isTransformChainInvertible = (chain: ReadonlyArray<Transform>): boolean =>
+  chain.every(transform =>
+    transform.kind === 'scale' ? transform.x !== 0 && (transform.y ?? transform.x) !== 0 : true,
+  );
+
 /** 将 NodeLayout 投影到全局坐标系 */
 export const projectLayoutToGlobal = (layout: NodeLayout, chain: ReadonlyArray<Transform>): NodeLayout => {
   const [gx, gy] = applyTransformChain([layout.rect.x, layout.rect.y], chain);

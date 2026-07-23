@@ -1,0 +1,36 @@
+---
+title: 简介
+description: 了解标准库如何以可选、可动态加载的 Tier 2 能力横向扩展 Core，以及三个发布包各自负责的入口。
+---
+
+标准库（Library）组承载不应进入最小 Core、但适合跨领域复用的官方绘图能力。Grid、Axes、Frame 等组件用紧凑的高层配置表达常见结构，再下沉为 Core 已有的 `Path`、`Node` 与 `Scope`。
+
+## 与 Core 的边界
+
+标准库是 Core 的横向扩展，不是新的绘图内核。每项 Tier 2 能力拥有 JSON-safe schema 和 lowering，但不另造基础 IR、几何底座或 renderer 语义。
+
+这意味着：
+
+- 不使用标准库时，Kernel 的安装、编译和渲染路径保持不变。
+- 能力按图加载，Definition 不做全局注册，也不会写入持久化 JSON。
+- Standard IR 下沉后仍由 Core compile，并交给既有 SVG、Canvas 等 renderer。
+
+## 三个发布包
+
+| 包                         | 负责什么                                    | 什么时候使用                          |
+| -------------------------- | ------------------------------------------- | ------------------------------------- |
+| `@retikz/standard`         | schema、factory、Definition 与 lowering     | 校验或持久化 IR，直接接入 Core 编译   |
+| `@retikz/standard-react`   | `<Grid>`、`<Axes>`、`<Frame>` 等 React DSL  | 在 `@retikz/react` 的 `Layout` 中使用 |
+| `@retikz/standard-vanilla` | plain spec helper 与 Vanilla Tier 2 adapter | 无 React 的浏览器或脚本入口           |
+
+三个包共享 `@retikz/standard` 中的同一套 schema 与 lowering。React 和 Vanilla 只负责把各自的作者输入接到这套能力上，不复制语义。
+
+## 加载方式
+
+| 场景      | 加载方式                                                                |
+| --------- | ----------------------------------------------------------------------- |
+| React     | 组件在当前 `Layout` 局部贡献对应 Definition                             |
+| Vanilla   | helper 生成 embed，宿主通过 `adapters` 传入对应 Adapter                 |
+| 持久化 IR | schema 校验 JSON，宿主通过 `compile.composites` 显式注入对应 Definition |
+
+从 [快速开始](/standard/get-start) 查看三条完整路径；从 [复合](/standard/composite) 选择具体能力。

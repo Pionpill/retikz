@@ -268,15 +268,15 @@ export const vizV01: Release = {
             {
               label: { zh: 'axis guide 能力补齐', en: 'Axis guide completion' },
               content: {
-                zh: '连续 / 时间位置 scale 支持 domain padding、single-value fallback、显式 tick source、interval 与 density；axis line 支持 extent、lineCap、dashOffset 与方向箭头；tick mark 支持内置 shape 与自定义 Node shape，tick label 支持自适应旋转 / 省略，title 支持 padding、path-like placement、orientation、anchor 与 shift。 [坐标轴](/viz/grammar/guide/axis)',
-                en: 'Continuous / temporal position scales gain domain padding, single-value fallbacks, explicit tick sources, intervals, and density. Axis lines support extent, lineCap, dashOffset, and directional arrows; tick marks support built-in shapes and custom Node shapes; tick labels gain adaptive rotation / omission; titles support padding, path-like placement, orientation, anchor, and shift. [Axis](/viz/grammar/guide/axis)',
+                zh: '连续 / 时间位置 scale 支持 domain padding、single-value fallback、显式 tick source、interval 与 density；axis line 支持 extent、lineCap、dashOffset 与方向箭头；tick mark 支持内置 shape 与自定义 Node shape，tick label 支持自适应旋转 / 省略，title 支持 padding、path-like placement、orientation、anchor 与 shift。 [坐标轴](/viz/plot/guide/axis)',
+                en: 'Continuous / temporal position scales gain domain padding, single-value fallbacks, explicit tick sources, intervals, and density. Axis lines support extent, lineCap, dashOffset, and directional arrows; tick marks support built-in shapes and custom Node shapes; tick labels gain adaptive rotation / omission; titles support padding, path-like placement, orientation, anchor, and shift. [Axis](/viz/plot/guide/axis)',
               },
             },
             {
               label: { zh: 'grid / legend / theme', en: 'Grid / legend / theme' },
               content: {
-                zh: '`PlotSpec.theme` 统一 axis、grid、legend、palette、typography 与 background token；axis grid 支持独立 tick source、density、minor grid、bandPosition、dashOffset 与 lineCap；size legend 默认把大符号压入 symbol 盒子并按最终尺寸预留空间。 [图例](/viz/grammar/guide/legend)',
-                en: '`PlotSpec.theme` now unifies axis, grid, legend, palette, typography, and background tokens. Axis grids support independent tick sources, density, minor grids, bandPosition, dashOffset, and lineCap; size legends fit large symbols into symbol boxes and reserve space from the final size. [Legend](/viz/grammar/guide/legend)',
+                zh: '`PlotSpec.theme` 统一 axis、grid、legend、palette、typography 与 background token；axis grid 支持独立 tick source、density、minor grid、bandPosition、dashOffset 与 lineCap；size legend 默认把大符号压入 symbol 盒子并按最终尺寸预留空间。 [图例](/viz/plot/guide/legend)',
+                en: '`PlotSpec.theme` now unifies axis, grid, legend, palette, typography, and background tokens. Axis grids support independent tick sources, density, minor grids, bandPosition, dashOffset, and lineCap; size legends fit large symbols into symbol boxes and reserve space from the final size. [Legend](/viz/plot/guide/legend)',
               },
             },
             {
@@ -493,8 +493,8 @@ export const vizV01: Release = {
             {
               label: { zh: 'Axis / Legend props', en: 'Axis / Legend props' },
               content: {
-                zh: '`<Axis>` 透传 line extent / arrow、crossing、ticks interval / density / mark、tickLabels layout、title placement / orientation / anchor / shift、grid source / minor / bandPosition 等字段；`<Legend>` 透传 size symbol fit 与 theme 样式入口，组件只装配同一份 PlotSpec。 [坐标轴](/viz/grammar/guide/axis)',
-                en: '`<Axis>` passes through line extent / arrows, crossing, tick interval / density / marks, tick-label layout, title placement / orientation / anchor / shift, and grid source / minor / bandPosition fields. `<Legend>` passes through size-symbol fit and theme styling entries while still assembling the same PlotSpec. [Axis](/viz/grammar/guide/axis)',
+                zh: '`<Axis>` 透传 line extent / arrow、crossing、ticks interval / density / mark、tickLabels layout、title placement / orientation / anchor / shift、grid source / minor / bandPosition 等字段；`<Legend>` 透传 size symbol fit 与 theme 样式入口，组件只装配同一份 PlotSpec。 [坐标轴](/viz/plot/guide/axis)',
+                en: '`<Axis>` passes through line extent / arrows, crossing, tick interval / density / marks, tick-label layout, title placement / orientation / anchor / shift, and grid source / minor / bandPosition fields. `<Legend>` passes through size-symbol fit and theme styling entries while still assembling the same PlotSpec. [Axis](/viz/plot/guide/axis)',
               },
             },
             {

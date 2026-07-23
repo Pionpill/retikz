@@ -1,0 +1,63 @@
+---
+title: 比例尺
+description: 比例尺（scale）把数据值映射成视觉量。按产出分两族——位置比例尺产坐标 / 长度 / 半径，颜色比例尺产颜色，外加自定义比例尺。
+---
+
+比例尺决定「数据值 → 视觉量」怎么算。位置通道（`x` / `y`，polar 下对应 `angle` / `radius`）的值要变成画布坐标、`size` 通道要变成半径、`color` 通道要变成颜色——中间都隔着一个 scale。`<Plot>` 会按字段的测量类型自动选 scale，常见图表不用手写。
+
+坐标轴是位置比例尺最常见的配置入口，但 scale 与 axis 分层：scale 负责映射，axis 负责显示刻度。把颜色 scale 解释给读者看则是[图例](/viz/plot/guide/legend)的活。
+
+## 两族：位置与颜色
+
+比例尺按**产出**分两族，也是本组的分页依据：
+
+- [位置比例尺](/viz/plot/scale/position)产**坐标 / 长度 / 半径**，喂坐标投影与 `size` 通道——数值轴（`linear` / `log` / `sqrt` / `pow` / `symlog` / `radial`）、时间轴（`time`）、分类轴（`band` / `point`）。
+- [颜色比例尺](/viz/plot/scale/color)产**颜色**，喂 `color` 通道与图例——分类一类一色（`ordinal`）、连续色带（`sequential` / `diverging`）、离散化分箱（`quantize` / `threshold` / `quantile`）。
+
+两族下具体选哪种，`<Plot>` 按字段的测量类型自动决定：
+
+| 字段类型      | 位置默认                                                      | 颜色（按 datum 着色）                   |
+| ------------- | ------------------------------------------------------------- | --------------------------------------- |
+| `continuous`  | `linear`（可换 `log` / `sqrt` / `pow` / `symlog` / `radial`） | `sequential` / `diverging` + 离散化色阶 |
+| `temporal`    | `time`                                                        | `sequential`（时间也是连续量）          |
+| `categorical` | `band`（折线用 `point`）                                      | `ordinal`                               |
+
+字段类型怎么声明见[字段契约](/viz/data/model/contract)。内置 15 个 scale 之外的长尾（品牌色阶、领域专用映射……）走[自定义比例尺](/viz/plot/extend/scale)。
+
+## 显式覆盖
+
+`<Scale>` 是 `<Plot>` 的声明式子组件，覆盖对应坐标维度的默认选型；也可以把最常用的位置 scale 直接写在坐标轴上：
+
+```tsx
+<Plot data={rows}>
+  <PathMark x="date" y="value" order="date" />
+  <Scale dimension="x" type="time" />
+  {/* 或快捷写法：<Axis dimension="x" scale="time" /> */}
+  <Axis dimension="x" />
+</Plot>
+```
+
+polar 图里用 `dimension="angle"` / `dimension="radius"`，也可用 `x` / `y` 作为别名。`Axis.scale` 支持 `linear` / `time` / `point` / `log` / `sqrt` / `symlog` / `radial` 这类位置 scale 快捷类型。`log` 默认以 10 为底，需要自然对数时写 `<Scale dimension="y" type="log" base={Math.E} />`；`symlog` 的线性区宽度可用 `constant` 调整。幂指数等其它细参数仍写在完整 spec 的 `scales` 中。
+
+连续位置 scale 推断 domain 时会默认在上下界各留 5% 弹性，避免只有一个点或极值点贴到笛卡尔坐标系边角。需要精确贴边时写 `domainPadding={0}`；只想放大一侧时写对象：
+
+```tsx
+<Scale dimension="y" type="linear" domainPadding={{ lower: 0, upper: 0.12 }} />
+```
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/scale/position">
+    <span className="font-semibold">位置比例尺</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      数值轴 linear / log / sqrt / pow / symlog / radial、时间轴 time、分类轴 band / point
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/scale/color">
+    <span className="font-semibold">颜色比例尺</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      ordinal 一类一色、sequential / diverging 连续色带、quantize / threshold / quantile 离散化分箱
+    </span>
+  </LinkedCard>
+</div>

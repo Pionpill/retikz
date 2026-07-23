@@ -42,10 +42,12 @@ export default defineConfig(({ command }) => ({
     exclude: [
       '@retikz/core',
       '@retikz/react',
+      '@retikz/vanilla',
       '@retikz/tex',
       '@retikz/plot',
       '@retikz/plot-react',
       '@retikz/plot-vanilla',
+      '@retikz/standard-vanilla',
     ],
     // mathjax-full 是 CJS（tex 引擎运行时动态 import 其 SVG 输出栈）——预打包成 ESM，让浏览器侧动态 import 可解析
     include: [

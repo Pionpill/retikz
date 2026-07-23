@@ -1,0 +1,122 @@
+---
+title: 字段契约
+description: 用 model 声明逻辑字段、测量类型与分类顺序，并在需要时保留自动推断。
+---
+
+`model` 是数据与消费方配置之间的字段契约。它让下游逻辑只依赖稳定的逻辑字段名，而不必猜测某列是数值、时间还是类别。
+
+在 Plot 应用中，这些下游逻辑包括 mark、transform 与 scale；Table 或其它模块也可以按自己的消费契约读取同一个 model。下面默认使用 Plot 展示字段类型和分类顺序带来的可视差异，但 `model` 本身属于 Data，不依赖 Plot。
+
+## 声明字段
+
+每项字段声明都是可从 `@retikz/data` 导入的 `IRDataFieldDefinition`：
+
+| 字段      | 类型                                                                  | 默认值         | 作用                                                   |
+| --------- | --------------------------------------------------------------------- | -------------- | ------------------------------------------------------ |
+| `name`    | `string`                                                              | —              | 逻辑字段名，也是数据变换与消费方配置引用的名字         |
+| `type?`   | <ApiValues name="DataFieldType" />                                    | 自动推断       | 字段测量类型                                           |
+| `format?` | <ApiValues name="DataFieldFormat" /> \| `string`                      | 默认转换       | 声明式解析格式；具名格式也可以蕴含字段类型             |
+| `order?`  | <ApiValues name="FieldOrderMode" /> \|<br />`Array<string \| number>` | `'appearance'` | 分类域顺序；数组中的值按给定顺序优先，只对分类字段有效 |
+
+下面的左右对比使用同一份漏斗数据，`stage` 编码为不等距的 `10`、`20`、`50`、`100`。左图没有 `model`，数值被推断为连续字段，点按数值距离排列；右图把它声明为分类字段，每个阶段等距排列。
+
+<ComponentPreview files={['data-model-custom', 'data-model-custom.data.ts']} />
+
+只要声明了 `model`，当前数据管线引用的每个源字段都必须列在其中。拼错字段名或重复声明会立即报错，不会退化为空结果。在 Plot 应用中，检查范围包括 `x` / `y` / `color`、mark 的 `order`、尺寸与形状通道，以及 transform 输入字段。
+
+### 部分声明
+
+`type` 可以省略，只写 `{ name }`。字段仍进入严格字段集合，但类型留到运行时从样本推断；写了 `format` 时则优先采用格式蕴含的类型。
+
+```tsx
+<Plot
+  data={sales}
+  model={[{ name: 'createdAt', format: 'slashDate' }, { name: 'statusCode', type: 'categorical' }, { name: 'revenue' }]}
+>
+  {/* … */}
+</Plot>
+```
+
+要让配置脱离数据也能完整自描述，就为每个字段写明 `type` 或 `format`；只想快速试画时，可以完全省略 `model`。
+
+## 自动推断
+
+字段既没有 `type` 也没有 `format` 时，retikz 最多扫描前 1000 行，并收集前 100 个有效样本：
+
+| 样本值                                    | 判为             |
+| ----------------------------------------- | ---------------- |
+| `Date`、无歧义 ISO 日期或带时区时间       | `temporal`       |
+| 有限 `number`、`bigint`                   | `continuous`     |
+| 其它字符串、布尔值                        | `categorical`    |
+| `null`、`undefined`、非有限数、对象或数组 | 跳过，不计入样本 |
+
+样本全部是时间才得到 `temporal`，全部是数值才得到 `continuous`；混合样本、全空字段或其它情况都回退到 `categorical`。`2024/01/01`、无时区时间和裸数字串不会被自动当成时间或连续数值，非默认格式请在[数据接入](/viz/data/model/intake)中显式解析。
+
+## 类型如何影响下游
+
+字段类型是消费模块理解数据语义的输入，Data 只提供类型，不规定它必须怎样显示。在 Plot 应用中，字段类型会影响比例尺、坐标轴和图例；位置通道省略比例尺时，`continuous`、`temporal`、`categorical` 分别对应线性、时间与分类带比例尺。
+
+<ComponentPreview files={['data-model', 'data-model.data.ts']} size="xxxl" />
+
+在 Plot 中，颜色通道还要区分 authoring 层级：React `<Plot>` 在 `model` 类型已知时可以补出默认离散或连续色阶；直接书写低层 Plot IR 时，分类字段可缺省为 `ordinal`，连续或时间字段必须显式引用连续色阶。完整规则与覆盖方式见[比例尺](/viz/plot/scale)。
+
+## 分类顺序
+
+`categorical` 字段默认按数据出现顺序形成分类域。需要 `S → M → L → XL` 这样的业务顺序时，在字段上写 `order`：
+
+<ComponentPreview files={['data-model-order', 'data-model-order.data.ts']} />
+
+| `order`                        | 效果                               |
+| ------------------------------ | ---------------------------------- |
+| 不写 / `'appearance'`          | 按数据出现序                       |
+| `'ascending'` / `'descending'` | 全数值按数值比较，否则按字符串比较 |
+| 数组，如 `['S', 'M', 'L']`     | 以数组为先，其余实际类别追加到末尾 |
+
+`model.order` 排的是**分类域**，不会重排数据行。消费模块可以用它保持统一的类别语义；在 Plot 应用中，它会影响分类位置、图例和离散颜色，但不会改变折线连接顺序。要重排行，请使用[数据变换里的排序](/viz/data/transform/operations#排序-sort)；Plot 显式比例尺 `domain` 的优先级高于 `order`。
+
+## 公开类型
+
+这些 schema 与派生类型都可从 `@retikz/data` 的包入口导入：
+
+| 概念     | 公开导出                                             |
+| -------- | ---------------------------------------------------- |
+| 字段声明 | `IRDataFieldDefinition`<br />`FieldDefinitionSchema` |
+| 数据模型 | `IRDataModel`<br />`DataModelSchema`                 |
+| 数据引用 | `IRDataReference`<br />`DataReferenceSchema`         |
+| 标量值域 | `IRDataScalarValue`<br />`ScalarValueSchema`         |
+
+<SourceLinks
+  sources={[
+    {
+      label: '字段声明与数据模型 schema',
+      path: 'packages/viz/data/src/schemas/data/schema.ts',
+      startLine: 5,
+      endLine: 40,
+    },
+    {
+      label: '字段路径、分类域与类型推断',
+      path: 'packages/viz/data/src/providers/data/field.ts',
+      startLine: 14,
+      endLine: 150,
+    },
+    {
+      label: 'React 根据 model 补默认颜色比例尺',
+      path: 'packages/viz/plot-react/src/components/build-plot-spec.ts',
+      startLine: 1671,
+      endLine: 1690,
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/data/model/intake">
+    <span className="font-semibold">数据接入</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">把真实字段与存储格式接到这份契约上。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/scale">
+    <span className="font-semibold">比例尺</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">查看字段类型如何进入位置与视觉映射。</span>
+  </LinkedCard>
+</div>

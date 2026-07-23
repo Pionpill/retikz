@@ -9,15 +9,15 @@ description: 查询 TableSpec 根、Cell payload、固定轨道布局及 manual/
 
 `IRTableSpec` 是 `IRDetailTableSpec | IRManualTableSpec | IRCustomTableSpec` 的聚合类型。三个变体共享 `namespace + type`，再分别约束 `data` 与 `structure`。
 
-| 字段        | 类型                        | 默认值         | 描述                                  |
-| ----------- | --------------------------- | -------------- | ------------------------------------- |
-| `namespace` | `'table'`                   | —              | Tier 2 composite namespace            |
-| `type`      | `'table'`                   | —              | 顶层 Table node type                  |
-| `id?`       | `string`                    | —              | 可选稳定 id                           |
-| `data?`     | `IRDataReference`           | —              | detail 必需、manual 禁止、custom 可选 |
-| `structure` | `IRTableStructureOperation` | —              | detail、manual 或 custom Structure    |
-| `layout?`   | `IRTableLayout`             | 固定轨道默认值 | 列宽、正文/列头行高与行列 gap         |
-| `meta?`     | `IRJsonObject`              | —              | lowering 原样保留的 JSON-safe 元数据  |
+| 字段        | 类型                                | 默认值         | 描述                                  |
+| ----------- | ----------------------------------- | -------------- | ------------------------------------- |
+| `namespace` | `'table'`                           | —              | Tier 2 composite namespace            |
+| `type`      | <ApiValues name="TableComposite" /> | —              | 顶层 Table node type                  |
+| `id?`       | `string`                            | —              | 可选稳定 id                           |
+| `layout?`   | `IRTableLayout`                     | 固定轨道默认值 | 列宽、正文/列头行高与行列 gap         |
+| `meta?`     | `IRJsonObject`                      | —              | lowering 原样保留的 JSON-safe 元数据  |
+| `data?`     | `IRDataReference`                   | —              | detail 必需、manual 禁止、custom 可选 |
+| `structure` | `IRTableStructureOperation`         | —              | detail、manual 或 custom Structure    |
 
 ### TableSpecSchema
 

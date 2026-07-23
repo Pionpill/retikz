@@ -142,13 +142,13 @@ compileToScene(ir, { boundaries: [biasedPorts, biasedPorts] });
 
 ### `BoundaryDefinitionInput<TParams>`
 
-| 属性            | 类型                                            | 默认值       | 描述                                            |
-| --------------- | ----------------------------------------------- | ------------ | ----------------------------------------------- |
-| `name`          | `string`                                        | —            | Registry key，由 Node `boundary` 引用           |
-| `paramsSchema`  | `z.ZodType<TParams>`                            | —            | 校验 JSON-safe 的 `boundary.params`             |
-| `resolveRect`   | `(context, params) => Rect`                     | `visualRect` | 可选；从视觉矩形或 shape 安全包络解析连接面矩形 |
-| `boundaryPoint` | `(rect, toward, params) => Position`            | —            | 返回射线与连接面的交点                          |
-| `anchor`        | `(rect, name, params) => Position \| undefined` | —            | 可选标准方位锚点解析器                          |
+| 属性            | 类型                                 | 默认值       | 描述                                            |
+| --------------- | ------------------------------------ | ------------ | ----------------------------------------------- |
+| `name`          | `string`                             | —            | Registry key，由 Node `boundary` 引用           |
+| `paramsSchema`  | `z.ZodType<TParams>`                 | —            | 校验 JSON-safe 的 `boundary.params`             |
+| `resolveRect`   | `(context, params) => Rect`          | `visualRect` | 可选；从视觉矩形或 shape 安全包络解析连接面矩形 |
+| `boundaryPoint` | `(rect, toward, params) => Position` | —            | 返回射线与连接面的交点                          |
+| `anchor`        | `BoundaryDefinition['anchor']`       | —            | 可选标准方位锚点解析器                          |
 
 `defineBoundary`、`BoundaryDefinition`、`BoundaryDefinitionInput` 与 `BUILTIN_BOUNDARIES` 从 `@retikz/core` 导入。`@retikz/react` 和 `@retikz/vanilla` 不重复导出作者侧定义。
 

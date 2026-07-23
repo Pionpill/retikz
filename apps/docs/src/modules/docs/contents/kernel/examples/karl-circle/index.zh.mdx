@@ -7,7 +7,7 @@ description: 学术 / 教材类绘图示例——30° 角下 sin / cos / tan 的
 
 这是 [TikZ 入门教程](https://tikz.dev/tutorial) 最后那张「Karl 给女儿讲三角函数」的图：单位圆 + 30° 角下 sin / cos / tan 的几何关系示意。
 
-本页把它拆成 7 个累加 step：从一个孤零零的圆开始，每步加一点东西、对应学一点 retikz 能力——结束时既得到完整图，也顺手看完形状 sugar [Circle](/kernel/components/shapes/circle-ellipse) / [Sector](/kernel/components/shapes/arc-sector)，以及 Standard [Grid](/standard/components/grid)。它们会压短手写的 Path / Step 片段，或保留可复用的高层绘图意图；后面的 [Draw](/kernel/components/draw/overview) / [Coordinate](/kernel/components/node/coordinate) / [Node](/kernel/components/node/overview) 则继续把完整图拼起来，顺带练到极坐标、多 Draw 协同、Node 多行多色文本等高频技巧。
+本页把它拆成 7 个累加 step：从一个孤零零的圆开始，每步加一点东西、对应学一点 retikz 能力——结束时既得到完整图，也顺手看完形状 sugar [Circle](/kernel/components/shapes/circle-ellipse) / [Sector](/kernel/components/shapes/arc-sector)，以及 Standard [网格](/standard/composite/grid)。它们会压短手写的 Path / Step 片段，或保留可复用的高层绘图意图；后面的 [Draw](/kernel/components/draw/overview) / [Coordinate](/kernel/components/node/coordinate) / [Node](/kernel/components/node/overview) 则继续把完整图拼起来，顺带练到极坐标、多 Draw 协同、Node 多行多色文本等高频技巧。
 
 <ComponentPreview files="karl-circle-07-info" size="lg" />
 
@@ -69,7 +69,7 @@ x 轴和 y 轴用 [Draw](/kernel/components/draw/overview) 配 `arrow="->"` 一�
 
 ### 步骤 3：加网格 + 刻度
 
-背景网格现在直接用 Standard [Grid](/standard/components/grid)；它保留网格语义并在加载后下沉为多条线，不再需要手写 5 横 5 竖，所以新手读起来更像“我要一张网格背景”，而不是“我要拼 10 条线”。刻度同样靠数组遍历，每条短线配一个无背景的 [Node](/kernel/components/node/overview)，文字写 `$-\frac{1}{2}$` 等行内公式；现在 `−1/2` / `1/2` 不再是 `-1/2` 纯文本，而是渲染出的真分数。label 位置在 tick 基础上**轻微偏移**（x 轴左偏 10px / y 轴下偏 10px），避开圆周线与轴线交叠。
+背景网格现在直接用 Standard [网格](/standard/composite/grid)；它保留网格语义并在加载后下沉为多条线，不再需要手写 5 横 5 竖，所以新手读起来更像“我要一张网格背景”，而不是“我要拼 10 条线”。刻度同样靠数组遍历，每条短线配一个无背景的 [Node](/kernel/components/node/overview)，文字写 `$-\frac{1}{2}$` 等行内公式；现在 `−1/2` / `1/2` 不再是 `-1/2` 纯文本，而是渲染出的真分数。label 位置在 tick 基础上**轻微偏移**（x 轴左偏 10px / y 轴下偏 10px），避开圆周线与轴线交叠。
 
 retikz 坐标统一是 SVG 像素，y 向下为正——所以「向上 1 单位」写成 `[0, -100]`（本例取 100px = 单位圆半径作为长度基准）。顶层 `<Layout>` 不接 picture-level scale + 不翻 y，TikZ 教程里的数学坐标得手动给 y 加负号。
 
@@ -113,7 +113,7 @@ tan 线从 (1, 0) 垂直到 (1, tan30°)。原图用 TikZ 的 named path + inter
 | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | [Circle](/kernel/components/shapes/circle-ellipse)                         | 单位圆                                                                                                        | [1](#步骤-1画单位圆), [3](#步骤-3加网格--刻度), [4](#步骤-4画-30-扇形--α-标签)                                                         |
 | [Sector](/kernel/components/shapes/arc-sector)                             | 30° 扇形                                                                                                      | [4](#步骤-4画-30-扇形--α-标签), [5](#步骤-5sin-α-红线--cos-α-蓝线), [6](#步骤-6tan-α-橙线--辅助射线)                                   |
-| [Grid](/standard/components/grid)                                          | 背景网格                                                                                                      | [3](#步骤-3加网格--刻度)                                                                                                               |
+| [网格](/standard/composite/grid)                                           | 背景网格                                                                                                      | [3](#步骤-3加网格--刻度)                                                                                                               |
 | [Draw](/kernel/components/draw/overview)                                   | 坐标轴 + 刻度短线 + sin/cos/tan 三色线（边标注用 `$...$` 公式）+ 辅助射线                                     | [2](#步骤-2加坐标轴--端点标签--命名锚), [3](#步骤-3加网格--刻度), [5](#步骤-5sin-α-红线--cos-α-蓝线), [6](#步骤-6tan-α-橙线--辅助射线) |
 | [Node](/kernel/components/node/overview) + [`$...$`](/kernel/packages/tex) | 轴端 x / y、刻度真分数、α（行内公式）+ 右侧说明框（多行 `{ runs }` 文字 + 公式混排、逐 run 着色，自带虚线框） | [2](#步骤-2加坐标轴--端点标签--命名锚), [3](#步骤-3加网格--刻度), [4](#步骤-4画-30-扇形--α-标签), [7](#步骤-7右侧多色信息说明框)       |
 | [Coordinate](/kernel/components/node/coordinate)                           | 命名 x/y 轴端点 + tan 交点 t                                                                                  | [2](#步骤-2加坐标轴--端点标签--命名锚), [6](#步骤-6tan-α-橙线--辅助射线)                                                               |

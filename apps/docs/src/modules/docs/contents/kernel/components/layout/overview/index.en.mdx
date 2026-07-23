@@ -172,13 +172,13 @@ The renderer Provider fills only an omitted renderer, so an explicit descendant 
 
 ### Input and Viewport
 
-| Prop       | Type                      | Default | Description                                       |
-| ---------- | ------------------------- | ------- | ------------------------------------------------- |
-| `children` | `ReactNode`               | —       | Kernel / Sugar tree, used when `ir` is omitted    |
-| `ir`       | `IRScene`                 | —       | Pre-built Core IR; wins when children also exist  |
-| `width`    | `number \| string`        | —       | SVG / Canvas display width                        |
-| `height`   | `number \| string`        | —       | SVG / Canvas display height                       |
-| `viewBox`  | `{ x, y, width, height }` | —       | Internal range; overrides IR and automatic layout |
+| Prop       | Type                 | Default | Description                                       |
+| ---------- | -------------------- | ------- | ------------------------------------------------- |
+| `children` | `ReactNode`          | —       | Kernel / Sugar tree, used when `ir` is omitted    |
+| `ir`       | `IRScene`            | —       | Pre-built Core IR; wins when children also exist  |
+| `width`    | `number` \| `string` | —       | SVG / Canvas display width                        |
+| `height`   | `number` \| `string` | —       | SVG / Canvas display height                       |
+| `viewBox`  | `IRViewBox`          | —       | Internal range; overrides IR and automatic layout |
 
 ### Compile Basics
 
@@ -222,13 +222,13 @@ These props reuse the [`<Scope>`](/kernel/components/layout/scope) cascade contr
 
 ### Rendering and Host Runtime
 
-| Prop        | Type                | Default | Description                                                                      |
-| ----------- | ------------------- | ------- | -------------------------------------------------------------------------------- |
-| `renderer`  | `'svg' \| 'canvas'` | `'svg'` | Output backend; falls back to the nearest `RendererModeProvider`                 |
-| `className` | `string`            | —       | Forwarded to the SVG / Canvas root                                               |
-| `style`     | `CSSProperties`     | —       | Forwarded to the SVG / Canvas root                                               |
-| `idPrefix`  | `string`            | —       | Overrides resource ids for multi-instance or SSR hydration stability             |
-| `handlers`  | `HydrationHandlers` | —       | Event registry for `ir` mode; see [Hydration](/kernel/packages/render/hydration) |
+| Prop        | Type                      | Default | Description                                                                      |
+| ----------- | ------------------------- | ------- | -------------------------------------------------------------------------------- |
+| `renderer`  | `'svg'` \| `'canvas'`     | `'svg'` | Output backend; falls back to the nearest `RendererModeProvider`                 |
+| `className` | `string`                  | —       | Forwarded to the SVG / Canvas root                                               |
+| `style`     | `CSSProperties`           | —       | Forwarded to the SVG / Canvas root                                               |
+| `idPrefix`  | `string`                  | —       | Overrides resource ids for multi-instance or SSR hydration stability             |
+| `handlers`  | `LayoutProps['handlers']` | —       | Event registry for `ir` mode; see [Hydration](/kernel/packages/render/hydration) |
 
 ### React host exports
 
@@ -238,14 +238,14 @@ These props reuse the [`<Scope>`](/kernel/components/layout/scope) cascade contr
 
 ### Animation
 
-| Prop                  | Type                             | Default | Description                                                                        |
-| --------------------- | -------------------------------- | ------- | ---------------------------------------------------------------------------------- |
-| `animate`             | `boolean`                        | system  | Playback switch; see [Animation](/kernel/components/effects/animation)             |
-| `snapshotAt`          | `number`                         | —       | Static snapshot time; overrides `animate`                                          |
-| `animations`          | `Array<IRAnimationTrack>`        | —       | Scene-root tracks such as viewBox camera animation                                 |
-| `animationRef`        | `Ref<AnimationControls \| null>` | —       | Imperative `play` / `pause` / `seek` handle                                        |
-| `easings`             | `EasingRegistry`                 | —       | Custom easing; see [Custom Animation](/kernel/components/effects/custom-animation) |
-| `animationProperties` | `AnimationPropertyRegistry`      | —       | Custom animation-property interpolation; Canvas only for now                       |
+| Prop                  | Type                                 | Default | Description                                                                        |
+| --------------------- | ------------------------------------ | ------- | ---------------------------------------------------------------------------------- |
+| `animate`             | `boolean`                            | system  | Playback switch; see [Animation](/kernel/components/effects/animation)             |
+| `snapshotAt`          | `number`                             | —       | Static snapshot time; overrides `animate`                                          |
+| `animations`          | `Array<IRAnimationTrack>`            | —       | Scene-root tracks such as viewBox camera animation                                 |
+| `animationRef`        | `LayoutProps['animationRef']`        | —       | Imperative `play` / `pause` / `seek` handle                                        |
+| `easings`             | `LayoutProps['easings']`             | —       | Custom easing; see [Custom Animation](/kernel/components/effects/custom-animation) |
+| `animationProperties` | `LayoutProps['animationProperties']` | —       | Custom animation-property interpolation; Canvas only for now                       |
 
 ## Related
 

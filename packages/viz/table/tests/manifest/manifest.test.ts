@@ -6,15 +6,15 @@ import type { IRTableSpec } from '../../src';
 import {
   defineCellPresentation,
   defineTableStructure,
-  layoutTable,
   lowerTableWithArtifacts,
-  normalizeTableStructure,
   TABLE_NAMESPACE,
   TableCellLocation,
   TableCellRole,
   TableComposite,
   TableRowKind,
 } from '../../src';
+import { layoutTable } from '../../src/pipeline/layout';
+import { normalizeTableStructure } from '../../src/pipeline/normalize';
 
 /** 断言 JSON 风格对象图的每一层都已冻结 */
 const expectDeepFrozen = (value: unknown): void => {

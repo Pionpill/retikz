@@ -105,10 +105,10 @@ Arc 与 Sector 共用椭圆半径和角度模型。掌握上面的基础写法�
 | ------------------ | ---------------------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------ |
 | 角度               | `startAngle` / `endAngle` / `sweepAngle`                                                 | Arc / Sector      | 三选二，单位度；`0`=+x、`90`=屏幕下方                        |
 | `center`           | target                                                                                   | Arc / 实心 Sector | 接节点 id / 极坐标 / 笛卡尔；空心 Sector 须 literal `[x, y]` |
-| `close`            | `'open' \| 'chord' \| 'sector'`                                                          | Arc               | 闭合方式，缺省 `'open'`                                      |
+| `close`            | `'open'` \| `'chord'` \| `'sector'`                                                      | Arc               | 闭合方式，缺省 `'open'`                                      |
 | `label`            | 边标注对象                                                                               | Arc / Sector      | 沿弧定位，`position` 缺省 `midway`                           |
-| `rotate` / `scale` | `number` / `{ x, y }`                                                                    | Arc / Sector      | 绕包围盒中心整体变换                                         |
-| `marks`            | `{ pos, mark }[]`                                                                        | Arc / Sector      | 沿路径中段放方向标记                                         |
+| `rotate` / `scale` | `number` / `IRPathScale`                                                                 | Arc / Sector      | 绕包围盒中心整体变换                                         |
+| `marks`            | `IRPathBase['marks']`                                                                    | Arc / Sector      | 沿路径中段放方向标记                                         |
 | 视觉               | `stroke` / `strokeWidth` / `dashPattern` / `dashOffset` / `arrow` / `fill` / `opacity` … | Arc / Sector      | 透传 `<Path>` 全套视觉属性                                   |
 
 ## 作为 Node 形状

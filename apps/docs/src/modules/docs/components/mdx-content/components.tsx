@@ -8,6 +8,7 @@ import { cn } from '@/lib';
 
 import { ComponentPreview } from '../component-preview';
 import { CodeBlock } from '../highlight-code';
+import { ApiValues } from './api-values';
 import { Comparison } from './comparison';
 import { ComponentAlert } from './component-alert';
 import { ExamplePrompt } from './example-prompt';
@@ -90,6 +91,7 @@ const Code: FC<CodeProps> = ({ className, children, showLineNumbers, ...rest }) 
 };
 
 export const mdxComponents: MDXComponents = {
+  ApiValues,
   h1: ({ className, ...props }) => (
     <h1 className={cn('mt-2 scroll-m-28 font-heading text-3xl font-bold tracking-tight', className)} {...props} />
   ),

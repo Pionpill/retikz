@@ -9,6 +9,7 @@ description: Use when writing or editing component pages under a module's apps/d
 
 - 在 `apps/docs/src/modules/docs/contents/<module>/components/**` 下加 / 改组件页
 - 即将动手前**必须先读** [`docs-doc-principle`](../docs-doc-principle/SKILL.md) 拿通用规则
+- Standard Tier 2 composite 组件页继续读 `docs-doc-standard-composite`
 - 页面含 controls 时再读 [`docs-doc-control`](../docs-doc-control/SKILL.md)，统一面板、契约、取景与视觉层级
 - 页面使用多文件、数据文件或动态源码派生时，再读 [`ComponentPreview 按需契约`](../docs-doc-principle/references/component-preview.md)
 
@@ -209,6 +210,7 @@ controls 用于探索参数空间，不用于隐藏核心设计。每页通常�
 - 继承的共享 props 用一行“共享契约 + 职责 + 权威链接”概括，不在每个组件页复制整张字段表
 - 列固定 4 列：`属性 / 类型 / 默认值 / 描述`（zh）或 `Prop / Type / Default / Description`（en）
 - 没有默认值填 `—`（em dash）；不要留空
+- 嵌套对象契约逐项写明字段名、类型与默认值；不得用 `field?` 这类裸可选字段代替字段类型
 - 属性名 + 类型字面量用反引号包：`` `stroke` ``、`` `'->'` ``
 - union 类型用 `\|` 转义：`` `'butt' \| 'round' \| 'square'` ``
 - 一页含多个组件时（如 `<Path>` 同时记 `<Step>`），按组件分 `###` 子节，每个组件一张 4 列表

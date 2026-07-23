@@ -1,59 +1,45 @@
 ---
-title: Introduction
-description: "retikz's charting layer: describe chart semantics with Plot IR, supply data separately, then lower into core primitives for rendering."
+title: Visualization Overview
+description: 'An overview of the Viz group: Data prepares data, Plot expresses chart semantics, Table expresses table semantics, and both lower into Kernel.'
 ---
 
-`@retikz/plot` is the Tier 2 charting layer built on top of core. Core handles general primitives, paths, and render-neutral compilation; plot organizes how data fields become visual marks into a serializable, validated chart specification.
+Viz is the visualization capability group built on Kernel. It does not force every visualization into one “drawing grammar.” Instead, it separates stable problems into Data, Plot, and Table: a shared data foundation, independent chart and table semantics, and a common path into Kernel through Core IR.
 
-It is for cases where you want to draw structured data as charts while keeping retikz's IR, AI, and multi-renderer workflow. The current beta.1 release covers common scales, 1D / 2D / polar / ternary coordinates, Point / Path / Interval / Reference / Relation marks, Axis / Legend guides, facet / scaffold composition, and sort / stack transforms.
+## Three capabilities
 
-## Core + Graphic Grammar
+| Capability          | Problem it solves                                                                          | Input and output                                                    | Does not own                                          |
+| ------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- | ----------------------------------------------------- |
+| [Data](/viz/data)   | Field models, parsing, general transforms, statistics, provenance                          | External records + data contracts → canonical rows and lineage      | Channels, scales, marks, Cells, or rendering          |
+| [Plot](/viz/plot)   | Channels, scales, coordinates, marks, and guides that map fields into charts               | Plot IR + datasets → Core IR contributions and runtime observations | General data algorithms, Core IR, Scene, or renderers |
+| [Table](/viz/table) | Row / column structure, Cell semantics, presentation rules, and deterministic table layout | Table specs + data → Core IR contributions and manifests            | Plot grammar, general data processing, or renderers   |
 
-<ComponentPreview files="plot-grammar-parts" size="md" hideCode />
+Plot and Table are peer Tier 2 domain modules. Table is not a Plot mark, and Plot does not duplicate Table's row, column, or Cell model. Both can reuse Data's field and processing capabilities, then complete lowering inside their own boundary.
 
-plot is essentially **core + graphic grammar**. Core provides the renderable nodes, paths, scopes, and Scene contract; plot does not create a separate renderer. It adds a grammar layer above core for describing how data fields become visual marks.
+## Shared foundation
 
-| Part                | In the implementation                                                                                                     | Role                                                                                                                                              |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Graphic grammar** | `marks`, `encoding`, `scales`, `coordinate`, `guides`; in React, `<PathMark>` / `<PointMark>` / `<Axis>`                  | The drawing idea: declare which field maps to which visual channel, then let scales, coordinates, and guides place it on the canvas               |
-| **data**            | `data.reference` + optional `model` point to an external dataset; lowering resolves each row into `x` / `y` data channels | Holds real values and field declarations; values stay outside IR, field paths enter channels through `field`, and constants enter through `value` |
-| **`@retikz/plot`**  | `PlotSpecSchema`, extension contracts, `lowerPlots`                                                                       | The semantic source of truth: validates PlotSpec, resolves extension capabilities, computes domains / ticks / projectors, and lowers to core IR   |
+Data, Plot, and Table follow the same architectural constraints: IR remains JSON-serializable, built-in and custom capabilities share Definition / registry contracts, framework adapters own only authoring and runtime wiring, and domain semantics ultimately lower into Kernel Core IR.
 
-## Plot IR at the Center
+Kernel then owns layout, reference resolution, Scene compilation, and renderer integration. Viz can therefore extend data and high-level expression without creating parallel geometry, Scene, or SVG / Canvas semantics. Read [Kernel Architecture](/kernel/concepts/design/principles) for the common lower-level pipeline.
 
-<ComponentPreview files="plot-ir-centric" size="md" hideCode />
+## Where to start
 
-The center of plot is not a large data table; it is a Plot IR document that describes chart semantics. Components, handwritten specs, and AI output all converge on that IR. The real data joins only during lowering, where `lowerPlots` turns the spec + data into core nodes and paths.
-
-## Three parts
-
-A plot chart does not put the dataset into the IR. The IR says what to draw; the actual data is supplied at render time.
-
-| Part           | What it is               | Responsibility                                                                               |
-| -------------- | ------------------------ | -------------------------------------------------------------------------------------------- |
-| **Plot IR**    | JSON-serializable config | Stores marks, scales, coordinate, axes, and field bindings                                   |
-| **Data**       | External dataset         | Supplies the actual values; never enters the IR, so config size does not grow with row count |
-| **lowerPlots** | Lowering function        | Turns Plot IR + Data into core nodes and paths                                               |
-
-React users usually do not need to write the whole IR by hand. `@retikz/plot-react`'s `<Plot>` assembles Plot IR synchronously from child components such as `<PathMark>`, `<PointMark>`, and `<Axis>`; when React-aware code needs a plain spec, use `buildPlotSpec` from the same package. When a program or AI generates the spec directly, you can render it with `<Plot spec={spec} data={{ sales }} />`.
-
-## Packages
-
-plot is split into three packages so chart semantics and framework entrypoints stay separate:
-
-| Package                | Responsibility                                            | Typical entry                                   |
-| ---------------------- | --------------------------------------------------------- | ----------------------------------------------- |
-| `@retikz/plot`         | Plot IR schemas, extension contracts, and lowering source | `lowerPlots(datasets, options?)`                |
-| `@retikz/plot-react`   | React composition DSL, `<Plot>`, and spec assembly        | `<Plot data={rows}>...</Plot>`, `buildPlotSpec` |
-| `@retikz/plot-vanilla` | Framework-free / SSR builder and SVG rendering entry      | `plotBuilder(...).build()`, `renderPlot(...)`   |
-
-Whether you start from React components, the vanilla builder, a handwritten spec, or an AI-generated plain spec, the chart goes through the same Plot IR and the same lowering path.
-
-## Current Stage
-
-<ComponentAlert
-  title="v0.1 beta.1"
-  description="The current plot layer supports linear / band / point / time / ordinal / sqrt / pow scales, cartesian1D / cartesian2D / polar1D / polar2D / ternary coordinates, PointMark / PathMark / IntervalMark / ReferenceMark / RelationMark, Axis and Legend guides, facet / scaffold composition, and sort / stack transforms. React provides <Plot> / buildPlotSpec, while Vanilla provides plotBuilder(...).build() / renderPlot(...); tooltip and event interactions remain future directions."
-/>
-
-If this is your first time using plot, start with Get Started and build the local-data line + scatter chart first. The IR / data / lowering split will read more naturally after that.
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+  <LinkedCard href="/viz/data">
+    <span className="font-semibold">Data</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Start with field models, data transforms, and provenance.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot">
+    <span className="font-semibold">Plot</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Build charts and learn Plot IR, graphic grammar, and lowering.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table">
+    <span className="font-semibold">Table</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Show detail records and learn Cells, table layout, and lowering.
+    </span>
+  </LinkedCard>
+</div>

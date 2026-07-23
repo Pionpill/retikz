@@ -299,27 +299,27 @@ The default `fill="forwards"` keeps the last frame after playback. Built-in intr
 
 ### Component props
 
-| Prop           | Type                             | Default     | Description                                               |
-| -------------- | -------------------------------- | ----------- | --------------------------------------------------------- |
-| `animations`   | `Array<IRAnimationTrack>`        | —           | Tracks attached to a Node, Path, Scope, or Layout         |
-| `animate`      | `boolean`                        | `undefined` | Layout playback switch; omitted follows system preference |
-| `snapshotAt`   | `number`                         | —           | Layout static-snapshot time in milliseconds               |
-| `animationRef` | `Ref<AnimationControls \| null>` | —           | Layout's scene-level playback control handle              |
+| Prop           | Type                          | Default     | Description                                               |
+| -------------- | ----------------------------- | ----------- | --------------------------------------------------------- |
+| `animations`   | `Array<IRAnimationTrack>`     | —           | Tracks attached to a Node, Path, Scope, or Layout         |
+| `animate`      | `boolean`                     | `undefined` | Layout playback switch; omitted follows system preference |
+| `snapshotAt`   | `number`                      | —           | Layout static-snapshot time in milliseconds               |
+| `animationRef` | `LayoutProps['animationRef']` | —           | Layout's scene-level playback control handle              |
 
 ### AnimationTrack
 
-| Prop         | Type                                                                 | Default                          | Description                                                                             |
-| ------------ | -------------------------------------------------------------------- | -------------------------------- | --------------------------------------------------------------------------------------- |
-| `property`   | `string`                                                             | —                                | Property channel; `viewBox` is Layout-only                                              |
-| `keyframes`  | `Array<{ at, value, easing? }>`                                      | —                                | Absolute-value keyframes sorted by `at`                                                 |
-| `duration`   | `number`                                                             | —                                | Duration of one iteration in milliseconds                                               |
-| `delay`      | `number`                                                             | `0`                              | Delay before the first iteration in milliseconds                                        |
-| `easing`     | `string \| [number, number, number, number]`                         | `'linear'`                       | Track easing; a keyframe can override the next segment                                  |
-| `iterations` | `number \| 'infinite'`                                               | `1`                              | Playback count                                                                          |
-| `direction`  | `'normal' \| 'reverse' \| 'alternate'`<br />`\| 'alternate-reverse'` | `'normal'`                       | Direction of each iteration                                                             |
-| `fill`       | `'none' \| 'forwards' \| 'backwards' \| 'both'`                      | `'forwards'`                     | Value used outside the active interval                                                  |
-| `trigger`    | `'load' \| 'visible' \| 'manual'`<br />`\| { onEvent: string }`      | `'load'`                         | Playback trigger                                                                        |
-| `origin`     | `Anchor \| [number, number]`                                         | derived center / backend default | Pivot for scale, scaleX/Y, and rotate; set explicitly for consistency across primitives |
+| Prop         | Type                                                                                   | Default                          | Description                                                                             |
+| ------------ | -------------------------------------------------------------------------------------- | -------------------------------- | --------------------------------------------------------------------------------------- |
+| `property`   | <ApiValues name="AnimationProperty" /> \| `string`                                     | —                                | Property channel; `viewBox` is Layout-only                                              |
+| `keyframes`  | `Array<IRKeyframe>`                                                                    | —                                | Absolute-value keyframes sorted by `at`                                                 |
+| `duration`   | `number`                                                                               | —                                | Duration of one iteration in milliseconds                                               |
+| `delay`      | `number`                                                                               | `0`                              | Delay before the first iteration in milliseconds                                        |
+| `easing`     | <ApiValues name="AnimationEasing" /> \| `string` \| `[number, number, number, number]` | `'linear'`                       | Track easing; a keyframe can override the next segment                                  |
+| `iterations` | `number` \| `'infinite'`                                                               | `1`                              | Playback count                                                                          |
+| `direction`  | <ApiValues name="AnimationDirection" />                                                | `'normal'`                       | Direction of each iteration                                                             |
+| `fill`       | <ApiValues name="AnimationFill" />                                                     | `'forwards'`                     | Value used outside the active interval                                                  |
+| `trigger`    | <ApiValues name="AnimationTrigger" /> \| `IRAnimationTrigger`                          | `'load'`                         | Playback trigger                                                                        |
+| `origin`     | `IRAnimationOrigin`                                                                    | derived center / backend default | Pivot for scale, scaleX/Y, and rotate; set explicitly for consistency across primitives |
 
 ## Related
 

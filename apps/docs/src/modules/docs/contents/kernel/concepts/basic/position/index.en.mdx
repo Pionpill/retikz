@@ -12,6 +12,7 @@ The full model for Cartesian, polar, user units, and viewBox lives in [Coordinat
 | Absolute point   | `[x, y]` / `{ angle, radius }`            | Entity position, path target                        |
 | Reference entity | `{ id, anchor? }`                         | Path target                                         |
 | Direction/offset | `{ direction, of }` / `{ of, offset }`    | Entity position; offset also works as a path target |
+| Anchor alignment | `{ kind: 'anchor', target, selfAnchor? }` | `Node.position` only                                |
 | Between points   | `{ between: [A, B], fraction }`           | Entity position, path target                        |
 | Path-relative    | `{ relative }` / `{ relativeAccumulate }` | Path target only                                    |
 
@@ -23,7 +24,28 @@ The full model for Cartesian, polar, user units, and viewBox lives in [Coordinat
 
 The actual line endpoints are computed by retikz automatically — see [Primitive Relations](/kernel/concepts/core/primitive-relations).
 
-`<Node>` / `<Coordinate>` do not accept a bare node id as `position`, because "place this entity at another entity's center" is rarely the useful default. Use `{ direction, of, distance? }` for relational placement, or `{ of, offset }` for arbitrary 2D offsets. Both keep layout intent in the document instead of baking every coordinate up front.
+Neither `<Node>` nor `<Coordinate>` accepts a bare node id as `position`. A Coordinate can depend on another entity through `{ direction, of, distance? }` or `{ of, offset }`; a Node can also use structured anchor placement to align two anchors from actual layout, defaulting to center-to-center.
+
+## Anchor-to-anchor placement
+
+Node anchor placement first completes the current Node's text measurement, shape, padding, margin, scale, and rotation. It then translates the whole Node until `selfAnchor` coincides with `target.anchor + target.offset`. Both `target.anchor` and `selfAnchor` default to `center`.
+
+```tsx
+<Node id="source" position={[0, 0]}>
+  source
+</Node>
+<Node
+  position={{
+    kind: 'anchor',
+    target: { id: 'source', anchor: 'bottom-left', offset: [24, 12] },
+    selfAnchor: 'top-left',
+  }}
+>
+  aligned
+</Node>
+```
+
+The target may be an already-laid-out Node, Coordinate, or Scope. This position form belongs only to `Node.position`: Coordinate has no shape / padding / margin layout boundary for `selfAnchor`. Standard directional and numeric anchors resolve against the target boundary plus margin; shape-specific anchors and `{ side, fraction }` retain visual-boundary semantics.
 
 ## Relative Placement
 
@@ -75,13 +97,14 @@ Paths also support relative targets that are only valid in `<Step>.to` / `<Draw>
 
 <ComponentPreview files="positioning-path-relative" size="sm" />
 
-These forms are path targets only; they are not valid for `<Node>.position` / `<Coordinate>.position`. For entity placement, use Cartesian, polar, relative placement, offset placement, or proportional placement.
+These forms are path targets only; they are not valid for `<Node>.position` / `<Coordinate>.position`. For entity placement, use Cartesian, polar, relative placement, offset placement, proportional placement, or Node-only anchor placement.
 
 ## Reference order
 
 Entity positions and path targets resolve at different times:
 
 - `origin`, `of`, and `between` inside `<Node>.position` / `<Coordinate>.position` resolve in IR children order, so the referenced entity must be defined first.
+- A Node anchor position's `target` likewise accepts only an entity whose layout is complete. Undefined, later, self, or still-open ancestor Scope targets fail immediately. A resolved zero-size Scope is a valid center target, but it has no edge for an edge-fraction anchor.
 - Node or Coordinate references inside `<Step>.to` / `<Draw>.way` are deferred until entities in the current namespace have been registered, so they may reference an entity defined later in the same resolvable scope.
 
 Compilation fails when an entity position reference cannot resolve. If a path target still cannot find its entity during deferred resolution, that path cannot be emitted normally and produces a diagnostic.
@@ -113,10 +136,16 @@ A path reference may appear first:
       endLine: 98,
     },
     {
+      label: 'Translate a Node using anchors from actual layout',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
+      startLine: 47,
+      endLine: 97,
+    },
+    {
       label: 'Register named Node and Coordinate references',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 210,
-      endLine: 252,
+      startLine: 177,
+      endLine: 253,
     },
     {
       label: 'Define the complete path-target union',
