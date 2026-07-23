@@ -37,6 +37,8 @@ description: Use when independently reviewing retikz docs pages or docs diffs fo
 - 示例页是否符合 [`docs-doc-example`](../docs-doc-example/SKILL.md) 的 6 段结构：引言 hero / Prompt / 过程 / 能力 / Limitations / Related
 - 分组页是否符合 [`docs-doc-group`](../docs-doc-group/SKILL.md)：分组介绍 + 职责表 + LinkedCard 子页索引
 - Reference 页是否保持词典职责：字段完整、可扫描、可链接，不写成教程
+- 中文 Reference 的 object `<ZodSchema>` 是否用 `descriptions` 覆盖全部字段与匿名对象点路径；只有顶层 `description`、字段仍回退英文 `.describe()` 均不算完成
+- 英文 Reference 是否直接复用源码 `.describe()`，不重复维护 `descriptions`
 - zh / en 是否结构对齐：标题层级、表格列、示例数量、关键 bullet 数一致
 
 ### 2. 读者视角
@@ -152,7 +154,7 @@ INFO（做得好的地方 / 可保留）：
 
 严重度判定：
 
-- **BLOCKING**：结构不符合页型、zh/en 明显不一致、API / demo 与实际行为冲突、必要 demo 缺失、核心职责或边界缺失导致读者无法理解主线、链接 404 / 锚点失效 / 源码路径或行号错误
+- **BLOCKING**：结构不符合页型、zh/en 明显不一致、中文 `<ZodSchema>` 字段缺少翻译而回退英文、API / demo 与实际行为冲突、必要 demo 缺失、核心职责或边界缺失导致读者无法理解主线、链接 404 / 锚点失效 / 源码路径或行号错误
 - **WARNING**：术语偏多但还能读、进阶内容位置不佳、Related 不够好、通用样式挤占正文、controls 与静态 demo 分工不清
 - **INFO**：可保留的写法、已经满足规范的地方、适合进入 changelog / review summary 的亮点
 

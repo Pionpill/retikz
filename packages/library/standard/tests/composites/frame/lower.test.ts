@@ -1,156 +1,346 @@
-import type { IRPath, IRScope } from '@retikz/core';
+import type { CompiledNodeLayout, IRNode, IRPath, IRScope } from '@retikz/core';
 
-import { compileToScene } from '@retikz/core';
+import { compileToScene, rect as rectOps } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { createFrame, FrameDefinition, lowerFrame } from '../../../src';
+import { createFrame, FrameDefinition, FrameHeaderDirection, lowerFrame } from '../../../src';
 
 const children = [
-  { type: 'node', position: [0, 0], text: 'A' },
-  { type: 'node', position: [80, 40], text: 'B', shape: 'circle' },
+  { type: 'node', id: 'body-a', position: [0, 0], text: 'A' },
+  { type: 'node', id: 'body-b', position: [80, 40], text: 'B', shape: 'circle' },
 ] as const;
 
 describe('lowerFrame', () => {
-  it('lowers to a bounded border, content Scope, and fixed horizontal label carrier', () => {
-    const lowered = lowerFrame(
-      createFrame({
-        id: 'group',
-        gap: 10,
-        border: { dashPattern: [4, 2] },
-        label: 'Contract',
-        children: [...children],
-      }),
-    );
+  it('lowers the default Frame to one bounded Scope with border and content Scope', () => {
+    const lowered = lowerFrame(createFrame({ id: 'group', children: [...children] }));
 
-    expect(lowered).toHaveLength(3);
-    expect(lowered[0]).toEqual({
-      type: 'path',
-      stroke: 'currentColor',
-      strokeWidth: 1,
-      dashPattern: [4, 2],
-      zIndex: -1,
-      children: [
-        {
-          type: 'step',
-          kind: 'rectangle',
-          from: { id: 'group', anchor: 'top-left', offset: [-10, -10] },
-          to: { id: 'group', anchor: 'bottom-right', offset: [10, 10] },
-        },
-      ],
-    });
-    expect(lowered[1]).toEqual({
+    expect(lowered).toEqual({
       type: 'scope',
       id: 'group',
       localNamespace: false,
       boundingShape: 'rectangle',
-      zIndex: 0,
-      children: [...children],
-    });
-    expect(lowered[2]).toEqual({
-      type: 'path',
-      stroke: 'transparent',
-      strokeWidth: 0,
-      zIndex: 1,
       children: [
-        { type: 'step', kind: 'move', to: { id: 'group', anchor: 'top-left', offset: [10, -8] } },
         {
-          type: 'step',
-          kind: 'line',
-          to: { id: 'group', anchor: 'top-left', offset: [11, -8] },
-          label: {
-            text: 'Contract',
-            position: 'at-start',
-            side: 'right',
-            distance: 0,
-            textColor: 'currentColor',
-          },
+          type: 'path',
+          stroke: 'currentColor',
+          strokeWidth: 1,
+          zIndex: -1,
+          children: [
+            {
+              type: 'step',
+              kind: 'rectangle',
+              from: { id: 'group', anchor: 'top-left', offset: [-8, -8] },
+              to: { id: 'group', anchor: 'bottom-right', offset: [8, 8] },
+            },
+          ],
+        },
+        {
+          type: 'scope',
+          id: 'group/content',
+          localNamespace: false,
+          boundingShape: 'rectangle',
+          zIndex: 0,
+          children: [...children],
         },
       ],
     });
   });
 
-  it('keeps zero gap, custom border zIndex, and children unchanged without a label carrier', () => {
-    const input = createFrame({
-      id: 'group',
-      gap: 0,
-      border: { fill: '#fff', dashPattern: [2, 1], zIndex: -3 },
-      children: [...children],
-    });
-    const lowered = lowerFrame(input);
+  it('defaults to a horizontal title and description row above the body', () => {
+    const lowered = lowerFrame(
+      createFrame({
+        id: 'group',
+        gap: 6,
+        title: { text: 'Contract' },
+        description: { text: 'One registry' },
+        children: [...children],
+      }),
+    );
 
-    expect(lowered).toHaveLength(2);
-    expect(lowered[0]).toMatchObject({ fill: '#fff', dashPattern: [2, 1], zIndex: -3 });
-    const border = lowered[0] as IRPath;
-    expect(border.children[0]).toMatchObject({ from: { offset: [0, 0] }, to: { offset: [0, 0] } });
-    expect((lowered[1] as IRScope).children).toEqual(input.children);
+    expect(lowered.children[2]).toMatchObject({
+      type: 'node',
+      id: 'group/title',
+      position: {
+        kind: 'anchor',
+        target: { id: 'group/content', anchor: 'top-left', offset: [0, -6] },
+        selfAnchor: 'bottom-left',
+      },
+    });
+    expect(lowered.children[3]).toMatchObject({
+      type: 'node',
+      id: 'group/description',
+      position: {
+        kind: 'anchor',
+        target: { id: 'group/title', anchor: 'bottom-right', offset: [6, 0] },
+        selfAnchor: 'bottom-left',
+      },
+    });
   });
 
-  it('resolves the border to the precise Scope bounds including gap and child shapes', () => {
-    const warnings: Array<string> = [];
+  it('supports an explicit vertical title, description, and body sequence', () => {
+    const lowered = lowerFrame(
+      createFrame({
+        id: 'group',
+        gap: 6,
+        headerDirection: FrameHeaderDirection.Vertical,
+        title: { text: 'Contract' },
+        description: { text: 'One registry' },
+        children: [...children],
+      }),
+    );
+    const scope = lowered;
+
+    expect(scope.children[2]).toEqual({
+      type: 'node',
+      id: 'group/description',
+      position: {
+        kind: 'anchor',
+        target: { id: 'group/content', anchor: 'top-left', offset: [0, -6] },
+        selfAnchor: 'bottom-left',
+      },
+      text: 'One registry',
+      shape: 'rectangle',
+      stroke: 'none',
+      fill: 'none',
+      padding: 0,
+      font: { size: 'xs' },
+      opacity: 0.7,
+      zIndex: 1,
+    });
+    expect(scope.children[3]).toEqual({
+      type: 'node',
+      id: 'group/title',
+      position: {
+        kind: 'anchor',
+        target: { id: 'group/description', anchor: 'top-left', offset: [0, -6] },
+        selfAnchor: 'bottom-left',
+      },
+      text: 'Contract',
+      shape: 'rectangle',
+      stroke: 'none',
+      fill: 'none',
+      padding: 0,
+      font: { size: 'sm', weight: 600 },
+      zIndex: 1,
+    });
+  });
+
+  it('preserves explicit Node fields and merges header font defaults field by field', () => {
+    const animations = [
+      {
+        property: 'opacity',
+        duration: 200,
+        keyframes: [
+          { at: 0, value: 0 },
+          { at: 1, value: 1 },
+        ],
+      },
+    ];
+    const lowered = lowerFrame(
+      createFrame({
+        id: 'group',
+        title: {
+          id: 'custom-title',
+          text: 'Contract',
+          shape: 'circle',
+          stroke: '#334155',
+          fill: '#f8fafc',
+          padding: 5,
+          font: { family: 'serif' },
+          label: { text: 'stable', position: 'right' },
+          meta: { role: 'title' },
+          animations,
+          zIndex: 7,
+        },
+        children: [...children],
+      }),
+    );
+    const title = lowered.children[2] as IRNode;
+
+    expect(title).toMatchObject({
+      type: 'node',
+      id: 'custom-title',
+      text: 'Contract',
+      shape: 'circle',
+      stroke: '#334155',
+      fill: '#f8fafc',
+      padding: 5,
+      font: { family: 'serif', size: 'sm', weight: 600 },
+      label: { text: 'stable', position: 'right' },
+      meta: { role: 'title' },
+      animations,
+      zIndex: 7,
+    });
+    expect(title.position).toMatchObject({ target: { id: 'group/content' } });
+  });
+
+  it('keeps header defaults when optional overrides are explicitly undefined', () => {
+    const lowered = lowerFrame(
+      createFrame({
+        id: 'group',
+        title: {
+          text: 'Contract',
+          shape: undefined,
+          stroke: undefined,
+          fill: undefined,
+          padding: undefined,
+          font: { size: undefined, weight: undefined },
+          zIndex: undefined,
+        },
+        description: {
+          text: 'Details',
+          shape: undefined,
+          stroke: undefined,
+          fill: undefined,
+          padding: undefined,
+          font: { size: undefined },
+          opacity: undefined,
+          zIndex: undefined,
+        },
+        children: [...children],
+      }),
+    );
+    const title = lowered.children[2] as IRNode;
+    const description = lowered.children[3] as IRNode;
+
+    expect(title).toMatchObject({
+      id: 'group/title',
+      shape: 'rectangle',
+      stroke: 'none',
+      fill: 'none',
+      padding: 0,
+      font: { size: 'sm', weight: 600 },
+      zIndex: 1,
+    });
+    expect(description).toMatchObject({
+      id: 'group/description',
+      shape: 'rectangle',
+      stroke: 'none',
+      fill: 'none',
+      padding: 0,
+      font: { size: 'xs' },
+      opacity: 0.7,
+      zIndex: 1,
+    });
+  });
+
+  it('supports title-only and description-only Frames without empty header nodes', () => {
+    const titleOnly = lowerFrame(createFrame({ id: 'title-only', title: { text: 'Title' }, children: [...children] }));
+    const descriptionOnly = lowerFrame(
+      createFrame({ id: 'description-only', description: { text: 'Details' }, children: [...children] }),
+    );
+
+    expect(titleOnly.children).toHaveLength(3);
+    expect((titleOnly.children[2] as IRNode).id).toBe('title-only/title');
+    expect((titleOnly.children[2] as IRNode).position).toMatchObject({
+      target: { id: 'title-only/content', offset: [0, -4] },
+    });
+    expect(descriptionOnly.children).toHaveLength(3);
+    expect((descriptionOnly.children[2] as IRNode).id).toBe('description-only/description');
+    expect((descriptionOnly.children[2] as IRNode).position).toMatchObject({
+      target: { id: 'description-only/content', offset: [0, -4] },
+    });
+  });
+
+  it('resolves box padding by side, axis, default, and fallback without moving body Nodes', () => {
+    const paddingCases = [
+      { padding: 5, from: [-5, -5], to: [5, 5] },
+      {
+        padding: { default: 3, x: 4, y: 5, left: 6, bottom: 7 },
+        from: [-6, -5],
+        to: [4, 7],
+      },
+    ] as const;
+
+    paddingCases.forEach(({ padding, from, to }) => {
+      const lowered = lowerFrame(createFrame({ id: 'group', padding, children: [...children] }));
+      const border = lowered.children[0] as IRPath;
+      expect(border.children[0]).toMatchObject({ from: { offset: from }, to: { offset: to } });
+      expect((lowered.children[1] as IRScope).children).toEqual(children);
+    });
+  });
+
+  it('keeps Frame and internal zIndex contracts while preserving explicit header overrides', () => {
+    const lowered = lowerFrame(
+      createFrame({
+        id: 'group',
+        zIndex: 9,
+        title: { text: 'Title', zIndex: -4 },
+        description: { text: 'Description' },
+        children: [...children],
+      }),
+    );
+
+    expect(lowered.zIndex).toBe(9);
+    expect(lowered.children.map(child => ('zIndex' in child ? child.zIndex : undefined))).toEqual([-1, 0, -4, 1]);
+  });
+
+  it('uses actual header Node layouts and includes them in the padded border without moving body', () => {
+    const layouts = new Map<string, CompiledNodeLayout>();
     const scene = compileToScene(
       {
         type: 'scene',
         version: 1,
-        children: [createFrame({ id: 'group', gap: 6, children: [...children] })],
+        children: [
+          createFrame({
+            id: 'group',
+            padding: { left: 7, right: 9, top: 11, bottom: 13 },
+            gap: 5,
+            title: { text: 'A long title', padding: 3, scale: 1.2 },
+            description: { text: 'Description', rotate: -5 },
+            children: [{ type: 'node', id: 'body', position: [40, 50], text: 'Body' }],
+          }),
+        ],
       },
-      { composites: [FrameDefinition], onWarn: warning => warnings.push(warning.code) },
+      {
+        composites: [FrameDefinition],
+        onNodeLayout: layout => {
+          if (layout.id !== undefined) layouts.set(layout.id, layout);
+        },
+      },
     );
 
-    expect(warnings).not.toContain('UNRESOLVED_NODE_REFERENCE');
-    const border = scene.primitives.find(primitive => primitive.type === 'path');
+    const body = layouts.get('body');
+    const description = layouts.get('group/description');
+    const title = layouts.get('group/title');
+    expect(body?.content.center).toEqual([40, 50]);
+    expect(description).toBeDefined();
+    expect(title).toBeDefined();
+    if (!body || !description || !title) throw new Error('Expected Frame Node layouts');
+    const bodyTopLeft = rectOps.anchor(body.rect, 'top-left');
+    const descriptionBottomLeft = rectOps.anchor(description.rect, 'bottom-left');
+    const titleBottomLeft = rectOps.anchor(title.rect, 'bottom-left');
+    const titleBottomRight = rectOps.anchor(title.rect, 'bottom-right');
+    expect(titleBottomLeft[0]).toBeCloseTo(bodyTopLeft[0], 8);
+    expect(titleBottomLeft[1]).toBeCloseTo(bodyTopLeft[1] - 5, 8);
+    expect(descriptionBottomLeft[0]).toBeCloseTo(titleBottomRight[0] + 5, 8);
+    expect(descriptionBottomLeft[1]).toBeCloseTo(titleBottomRight[1], 8);
+
+    const border = scene.primitives
+      .flatMap(primitive => (primitive.type === 'group' ? primitive.children : [primitive]))
+      .find(primitive => primitive.type === 'path');
     expect(border).toMatchObject({ type: 'path', stroke: 'currentColor', strokeWidth: 1 });
-    if (!border) throw new Error('Expected compiled Frame border path');
+    if (border?.type !== 'path') throw new Error('Expected compiled Frame border path');
     expect(border.commands).toEqual([
-      { kind: 'move', to: [-18.4, -23.6] },
-      { kind: 'line', to: [107.53, -23.6] },
-      { kind: 'line', to: [107.53, 67.53] },
-      { kind: 'line', to: [-18.4, 67.53] },
+      { kind: 'move', to: [7.4, -10.96] },
+      { kind: 'line', to: [218.8, -10.96] },
+      { kind: 'line', to: [218.8, 80.6] },
+      { kind: 'line', to: [7.4, 80.6] },
       { kind: 'close' },
     ]);
   });
 
-  it('keeps a long label outside Scope bounds', () => {
-    const compileFrame = (label?: string) =>
-      compileToScene(
-        {
-          type: 'scene',
-          version: 1,
-          children: [createFrame({ id: 'group', gap: 6, label, children: [...children] })],
-        },
-        { composites: [FrameDefinition] },
-      );
-    const unlabeledBorder = compileFrame().primitives.find(primitive => primitive.type === 'path');
-    const labeledBorder = compileFrame('A very long label that must not affect bounds').primitives.find(
-      primitive => primitive.type === 'path' && primitive.stroke === 'currentColor',
-    );
-
-    expect(labeledBorder).toEqual(unlabeledBorder);
-  });
-
-  it('keeps Core diagnostics for duplicate ids and direct Frame IR without its definition', () => {
-    const duplicateWarnings: Array<string> = [];
-    const missingWarnings: Array<string> = [];
+  it('preserves the missing-definition diagnostic for direct Frame IR', () => {
+    const warnings: Array<string> = [];
     compileToScene(
       {
         type: 'scene',
         version: 1,
-        children: [createFrame({ id: 'same', children: [{ type: 'node', id: 'same', position: [0, 0] }] })],
+        children: [createFrame({ id: 'group', children: [...children] })],
       },
-      { composites: [FrameDefinition], onWarn: warning => duplicateWarnings.push(warning.code) },
-    );
-    compileToScene(
-      {
-        type: 'scene',
-        version: 1,
-        children: [
-          createFrame({ id: 'group', children: [{ type: 'node', position: [0, 0] }] }),
-          { type: 'node', position: [4, 4], text: 'kept' },
-        ],
-      },
-      { onWarn: warning => missingWarnings.push(warning.code) },
+      { onWarn: warning => warnings.push(warning.code) },
     );
 
-    expect(duplicateWarnings).toContain('DUPLICATE_NODE_ID');
-    expect(missingWarnings).toContain('COMPOSITE_NOT_REGISTERED');
+    expect(warnings).toContain('COMPOSITE_NOT_REGISTERED');
   });
 });

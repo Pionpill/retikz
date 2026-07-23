@@ -99,6 +99,7 @@ const svg = renderTable(spec, { data: { scores: rows } });
 | `header?`                  | `DetailTableProps['header']`                                     | `true`               | Whether to generate a column-header row                                  |
 | `id?`                      | `DetailTableProps['id']`                                         | —                    | Stable Table id; required inside a parent `Layout`                       |
 | `layout?`                  | `DetailTableProps['layout']`                                     | fixed-track defaults | Column width, body/header heights, and row/column gaps                   |
+| `meta?`                    | `DetailTableProps['meta']`                                       | —                    | JSON metadata stored in TableSpec                                        |
 | `structureDefinitions?`    | `DetailTableProps['structureDefinitions']`                       | `[]`                 | Custom structure definitions                                             |
 | `presentationDefinitions?` | `DetailTableProps['presentationDefinitions']`                    | `[]`                 | Custom Cell presentation definitions                                     |
 | `composites?`              | `DetailTableProps['composites']`                                 | `[]`                 | Definitions required by Tier 2 Cell content                              |

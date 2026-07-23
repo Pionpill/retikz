@@ -187,7 +187,28 @@ export type PreviewPointControlField = {
   step?: number;
 };
 
-/** 声明式预览控件字段 */
+/** 只读二维表格的列定义 */
+export type PreviewTableColumn = {
+  /** 从每一行读取的字段名 */
+  key: string;
+  /** 展示给用户的列标题，默认使用字段名 */
+  label?: string;
+};
+
+/** 只读二维表格预览字段 */
+export type PreviewTableControlField = {
+  kind: 'table';
+  id: string;
+  label: string;
+  /** 按行组织的二维数据 */
+  rows: ReadonlyArray<Readonly<object>>;
+  /** 可选的显式列顺序与标题 */
+  columns?: ReadonlyArray<PreviewTableColumn>;
+  /** 字段的可选显示条件 */
+  visibleWhen?: PreviewControlCondition;
+};
+
+/** 进入共享值状态的声明式预览控件字段 */
 export type PreviewControlField = (
   | PreviewTextControlField
   | PreviewNumberControlField
@@ -201,8 +222,14 @@ export type PreviewControlField = (
   visibleWhen?: PreviewControlCondition;
 };
 
+/** 进入共享值状态的声明式预览控件字段 */
+export type PreviewStateControlField = PreviewControlField;
+
+/** 属性面板支持的可写字段或只读展示项 */
+export type PreviewPanelControlItem = PreviewControlField | PreviewTableControlField;
+
 /** 可放置在预览浮层中的声明式字段 */
-export type PreviewOverlayControlField = PreviewControlField & {
+export type PreviewOverlayControlField = PreviewStateControlField & {
   /** 字段在预览区九宫格中的位置 */
   placement?: PreviewControlPlacement;
   /** 字段生成的 slot 可见策略
@@ -218,7 +245,7 @@ export type PreviewControlSection = {
   /** 整个分组的可选显示条件 */
   visibleWhen?: PreviewControlCondition;
   /** 分组内字段 */
-  controls: ReadonlyArray<PreviewControlField>;
+  controls: ReadonlyArray<PreviewPanelControlItem>;
 };
 
 /** 浮层形式的预览控件定义 */
@@ -255,7 +282,7 @@ type PreviewControlFieldOf<TDefinition extends PreviewControlsDefinition> =
       ? TDefinition['sections'][number]['controls'][number]
       : never;
 
-type PreviewControlValueForField<TField extends PreviewControlField> = TField extends PreviewSelectControlField
+type PreviewControlValueForField<TField extends PreviewPanelControlItem> = TField extends PreviewSelectControlField
   ? TField['options'][number]['value']
   : TField extends PreviewTextControlField | PreviewColorControlField
     ? string
@@ -269,7 +296,9 @@ type PreviewControlValueForField<TField extends PreviewControlField> = TField ex
 
 /** 从声明式定义推导出的控件值对象 */
 export type PreviewControlValuesFor<TDefinition extends PreviewControlsDefinition> = {
-  [TField in PreviewControlFieldOf<TDefinition> as TField['id']]: PreviewControlValueForField<TField>;
+  [TField in PreviewControlFieldOf<TDefinition> as TField extends PreviewTableControlField
+    ? never
+    : TField['id']]: PreviewControlValueForField<TField>;
 };
 
 /** 预览控件运行时值集合 */
