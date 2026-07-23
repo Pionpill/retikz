@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 
 import { Minus, PanelLeftClose, Plus, RotateCcw } from 'lucide-react';
-import { Fragment, useId, useMemo, useRef, useState } from 'react';
+import { Fragment, memo, useId, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -37,7 +37,7 @@ export type PreviewControlPanelProps = {
 };
 
 /** 渲染可滚动的声明式预览属性面板 */
-export const PreviewControlPanel: FC<PreviewControlPanelProps> = props => {
+const PreviewControlPanelComponent: FC<PreviewControlPanelProps> = props => {
   const { definition, controlState, density = 'default', onClose } = props;
   const { t } = useTranslation();
   const controlPanelId = useId();
@@ -191,3 +191,6 @@ export const PreviewControlPanel: FC<PreviewControlPanelProps> = props => {
     </aside>
   );
 };
+
+/** controls state 未变化时跳过纯预览 controller 更新。 */
+export const PreviewControlPanel = memo(PreviewControlPanelComponent);
