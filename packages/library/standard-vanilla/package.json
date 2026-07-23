@@ -49,7 +49,7 @@
   },
   "dependencies": {
     "@retikz/standard": "workspace:*",
-    "@retikz/vanilla": "workspace:*"
+    "@retikz/vanilla": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "catalog:",
