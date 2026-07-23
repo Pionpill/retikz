@@ -29,13 +29,15 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 ## 样式
 
-样式通道控制 mark 的可见外观。颜色、透明度、大小和形状都属于样式；底层可以根据 mark 产物下沉到 mark semantic、scope、node 或 path。
+样式通道控制 mark 的可见外观。颜色、透明度、大小和形状都属于样式；在面板中切换作用通道并调整数值，可以直接比较它们在同一组点上的差异。
+
+<ComponentPreview
+  files="builtin-point-style"
+  size="md"
+  caption="作用通道决定颜色写入 color、fill 还是 stroke；其余控件保持主体与数据不变。"
+/>
 
 ### 颜色
-
-这个 demo 把 `color`、`fill`、`stroke`、`textColor` 拆成三组点：左侧看语义主色，中间看填充色和描边色分离，右侧看文本颜色。
-
-<ComponentPreview files="builtin-color" size="md" />
 
 | 通道        | 通道值                                                     | 含义       | 落点 / 图例                                                   |
 | ----------- | ---------------------------------------------------------- | ---------- | ------------------------------------------------------------- |
@@ -46,9 +48,7 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 ### 透明度
 
-这个 demo 左中右分别绑定 `opacity`、`fillOpacity`、`strokeOpacity`。整体透明度会同时影响填充和描边；填充透明度只弱化内部；描边透明度只弱化外框。
-
-<ComponentPreview files="builtin-opacity" size="md" />
+整体透明度会同时影响填充和描边；填充透明度只弱化内部；描边透明度只弱化外框。
 
 | 通道            | 通道值                                                             | 含义       | 落点 / 图例                                                                     |
 | --------------- | ------------------------------------------------------------------ | ---------- | ------------------------------------------------------------------------------- |
@@ -60,8 +60,6 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 `size` 通道适合表达数量大小。字段值默认走 sqrt scale，让面积感更接近数据差异。
 
-<ComponentPreview files="builtin-size" size="md" />
-
 | 通道   | 通道值                                         | 含义       | 落点 / 图例                                                 |
 | ------ | ---------------------------------------------- | ---------- | ----------------------------------------------------------- |
 | `size` | 字段：`size = "field"`<br />常量：`size = {8}` | glyph 大小 | node `minimumSize`；字段值默认 sqrt scale，支持 size legend |
@@ -70,17 +68,23 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 `shape` 通道适合表达分类。分类字段会映射到内置 glyph 形状，并可以生成 symbol legend。
 
-<ComponentPreview files="builtin-shape" size="md" />
-
 | 通道    | 通道值                                                | 含义       | 落点 / 图例                            |
 | ------- | ----------------------------------------------------- | ---------- | -------------------------------------- |
 | `shape` | 字段：`shape = "field"`<br />常量：`shape = "circle"` | glyph 形状 | node `shape`；字段值支持 symbol legend |
 
-## 节点几何
+## 节点、文本与效果
+
+这一组通道都作用在 mark 生成的 node 上。面板固定同一组文本节点，让尺寸、排版、外侧标签和效果可以连续调整，而不再拆成四张静态图。
+
+<ComponentPreview
+  files="builtin-node-text"
+  size="lg"
+  caption="下排矩形展示节点几何、label 与效果；上排文字展示 textColor 和排版，两个主体的位置保持固定。"
+/>
+
+### 节点几何
 
 节点几何通道控制 node 自身的尺寸约束、内边距、圆角和旋转。它们更像 core node 属性下沉，而不是数据可视化中的颜色或大小 encoding。
-
-<ComponentPreview files="builtin-node-geometry" size="md" />
 
 | 通道                 | 通道值                                                                              | 含义          | 落点                       |
 | -------------------- | ----------------------------------------------------------------------------------- | ------------- | -------------------------- |
@@ -89,15 +93,9 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 | `cornerRadius`       | 字段：`cornerRadius = "field"`<br />常量：`cornerRadius = {8}`                      | 矩形圆角      | core node `cornerRadius`   |
 | `rotate` / `scale`   | 字段：`rotate = "field"`<br />常量：`rotate = {18}`                                 | node 变换提示 | core node transform fields |
 
-## 文本
-
-文本通道分成两类：节点内部的可见文本，以及挂在节点外侧的 label。
-
 ### 节点内文本
 
 `text` 会让 point mark 生成文本 node。`textColor`、`align`、`lineHeight`、`maxTextWidth`、`font` 控制这个文本 node 的排版和颜色。
-
-<ComponentPreview files="builtin-text-node" size="md" />
 
 | 通道                                                | 通道值                                                                                             | 含义                         | 落点                                |
 | --------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------- | ----------------------------------- |
@@ -108,22 +106,32 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 `label` 不替代节点内容，而是给 datum host node 挂外侧标签。`labelPosition`、`labelDistance`、`labelPin` 决定标签的位置和引线。
 
-<ComponentPreview files="builtin-text-label" size="md" />
-
 | 通道                                              | 通道值                                                          | 含义            | 落点                   |
 | ------------------------------------------------- | --------------------------------------------------------------- | --------------- | ---------------------- |
 | `label`                                           | 字段：`label = "field"`                                         | datum host 标签 | core node `label`      |
 | `labelPosition` / `labelDistance`<br />`labelPin` | 常量：`labelPosition = "top"`<br />常量：`labelDistance = {16}` | label 布局      | core node label fields |
 
+### 效果
+
+效果通道是共享视觉提示。`shadow` 改变节点投影，`blendMode` 在图形重叠时改变颜色合成；`boundary` 属于高级边界覆盖，保留在表格中查询。
+
+| 通道        | 通道值                                                                   | 含义           | 落点                       |
+| ----------- | ------------------------------------------------------------------------ | -------------- | -------------------------- |
+| `shadow`    | 字段：`shadow = "field"`<br />常量：`shadow = "xl"`                      | 阴影预设或对象 | core node/path `shadow`    |
+| `blendMode` | 字段：`blendMode = "field"`<br />常量：`blendMode = "multiply"`          | 混合模式       | core node/path `blendMode` |
+| `boundary`  | 字段：`boundary = "field"`<br />常量：`boundary = {{ shape: "circle" }}` | node 边界覆盖  | core node `boundary`       |
+
 ## 路径
 
 路径通道作用在下沉为 core path 的 mark 上，例如折线、relation、区域边界和参考线。端点箭头不是 plot channel；需要箭头时在对应 path 配置中写 `marks`。
 
+<ComponentPreview
+  files="builtin-path-style"
+  size="md"
+  caption="描边、端点、连接和虚线模式都作用在同一条路径上，便于直接比较。"
+/>
+
 ### 路径样式
-
-这个 demo 用两条线对比 `strokeWidth`、`lineCap`、`lineJoin`、`roundedCorners` 和 `dashPattern` 对路径外观的影响。
-
-<ComponentPreview files="builtin-path-style" size="md" />
 
 | 通道                                   | 通道值                                                             | 含义           | 落点 / 图例                                                  |
 | -------------------------------------- | ------------------------------------------------------------------ | -------------- | ------------------------------------------------------------ |
@@ -131,18 +139,6 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 | `roundedCorners`                       | 字段：`roundedCorners = "field"`<br />常量：`roundedCorners = {8}` | path 圆角提示  | core path `roundedCorners`                                   |
 | `lineCap`<br />`lineJoin`              | 字段：`lineCap = "field"`<br />常量：`lineCap = "round"`           | 线端和连接样式 | core path line fields                                        |
 | `dashPattern` / `dashed`<br />`dotted` | 字段：`dashPattern = "field"`<br />常量：`dashPattern = {[7, 4]}`  | 描边虚线样式   | core node/path dash fields                                   |
-
-## 效果
-
-效果通道是共享的视觉提示。这个 demo 使用更多重叠样本，让 `shadow` 和 `blendMode` 的叠加效果更容易看出来。
-
-<ComponentPreview files="builtin-effect" size="md" />
-
-| 通道        | 通道值                                                                   | 含义           | 落点                       |
-| ----------- | ------------------------------------------------------------------------ | -------------- | -------------------------- |
-| `shadow`    | 字段：`shadow = "field"`<br />常量：`shadow = "xl"`                      | 阴影预设或对象 | core node/path `shadow`    |
-| `blendMode` | 字段：`blendMode = "field"`<br />常量：`blendMode = "multiply"`          | 混合模式       | core node/path `blendMode` |
-| `boundary`  | 字段：`boundary = "field"`<br />常量：`boundary = {{ shape: "circle" }}` | node 边界覆盖  | core node `boundary`       |
 
 ## 其他
 
