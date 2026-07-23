@@ -2,27 +2,14 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node, Text } from '@retikz/react';
 
+import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+
 /** Plot 从 authoring 到 renderer 的主流程与运行时旁路 */
 const Demo: FC = () => (
   <Layout width={740} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
-      position={[-132, -12]}
-      minimumSize={{ width: 264, height: 88 }}
-      stroke="lightgray"
-      fill="lightgray"
-      fillOpacity={0.04}
-      dashPattern={[4, 3]}
-      cornerRadius={4}
-    >
-      {' '}
-    </Node>
-    <Node position={[-248, -48]} stroke="none" fill="none" padding={0} textColor="gray" font={{ size: 12 }}>
-      @retikz/plot
-    </Node>
-
-    <Node
       id="authoring"
-      position={[-318, -12]}
+      position={[-350, -12]}
       stroke="dimgray"
       fill="dimgray"
       fillOpacity={0.08}
@@ -35,36 +22,39 @@ const Demo: FC = () => (
         React · Vanilla · spec
       </Text>
     </Node>
-    <Node
-      id="plot-ir"
-      position={[-200, -12]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
-      cornerRadius={4}
-      align="middle"
-      lineHeight={16}
-    >
-      <Text font={{ size: 14, weight: 'bold' }}>Plot IR</Text>
-      <Text fill="gray" font={{ size: 12 }}>
-        JSON 图表语义
-      </Text>
-    </Node>
-    <Node
-      id="lower"
-      position={[-64, -12]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
-      cornerRadius={4}
-      align="middle"
-      lineHeight={16}
-    >
-      <Text font={{ size: 14, weight: 'bold' }}>lowerPlots</Text>
-      <Text fill="gray" font={{ size: 12 }}>
-        变换 · 映射 · 下沉
-      </Text>
-    </Node>
+    <LogicFrame id="plot-group">
+      <LogicFrameTitle>@retikz/plot</LogicFrameTitle>
+      <Node
+        id="plot-ir"
+        position={[-200, -12]}
+        stroke="darkorange"
+        fill="darkorange"
+        fillOpacity={0.08}
+        cornerRadius={4}
+        align="middle"
+        lineHeight={16}
+      >
+        <Text font={{ size: 14, weight: 'bold' }}>Plot IR</Text>
+        <Text fill="gray" font={{ size: 12 }}>
+          JSON 图表语义
+        </Text>
+      </Node>
+      <Node
+        id="lower"
+        position={[-64, -12]}
+        stroke="dodgerblue"
+        fill="dodgerblue"
+        fillOpacity={0.08}
+        cornerRadius={4}
+        align="middle"
+        lineHeight={16}
+      >
+        <Text font={{ size: 14, weight: 'bold' }}>lowerPlots</Text>
+        <Text fill="gray" font={{ size: 12 }}>
+          变换 · 映射 · 下沉
+        </Text>
+      </Node>
+    </LogicFrame>
     <Node
       id="core-ir"
       position={[72, -12]}
