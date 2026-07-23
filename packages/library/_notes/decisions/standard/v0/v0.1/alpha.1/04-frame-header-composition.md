@@ -49,6 +49,7 @@ type IRFrame = {
   fill?: IRPath['fill'];
   fillOpacity?: number;
   fillRule?: IRPath['fillRule'];
+  cornerRadius?: number;
   zIndex?: number;
   title?: IRFrameTitle;
   description?: IRFrameDescription;
@@ -60,7 +61,9 @@ Frame 样式字段直接描述自身边框，不再嵌套 `border` 对象。`pad
 
 `gap` 默认 `4`，表示相邻 header part 以及 header 与 body 的间距：横向模式同时用于 Title / Description 的水平间距和 header row / body 的垂直间距；纵向模式用于 Title / Description / body 的垂直间距。
 
-Frame 默认边框是矩形，`stroke: 'currentColor'`、`strokeWidth: 1`、无填充，内部层级为 `-1`。Frame 的 `zIndex` 作用于整个外层 Scope；body Scope 固定使用 `0`，Title / Description 默认使用 `1`。Title / Description 显式传入的 `zIndex` 与普通 Node 一样覆盖默认值；Frame 只保证边框位于内部 `-1` 层，不把 header 的显式层级重写为固定值。Frame 不提供整体 `opacity`，避免边框视觉字段意外改变 body children；调用方使用 `strokeOpacity` / `fillOpacity` 控制边框，并在 child 上独立控制内容透明度。
+Frame 默认边框是矩形，`stroke: 'currentColor'`、`strokeWidth: 1`、无填充，内部层级为 `-1`。可选 `cornerRadius` 直接复用 `RectangleStepSchema.shape.cornerRadius` 的非负半径契约；lowering 只在有值时把它写入边框 rectangle step，不把它留在顶层 Path。缺省或设为 `0` 时保持直角，正值在 Core compile 时限制到短边的一半。Frame 不提供分角半径或 renderer 专有圆角分支。
+
+Frame 的 `zIndex` 作用于整个外层 Scope；body Scope 固定使用 `0`，Title / Description 默认使用 `1`。Title / Description 显式传入的 `zIndex` 与普通 Node 一样覆盖默认值；Frame 只保证边框位于内部 `-1` 层，不把 header 的显式层级重写为固定值。Frame 不提供整体 `opacity`，避免边框视觉字段意外改变 body children；调用方使用 `strokeOpacity` / `fillOpacity` 控制边框，并在 child 上独立控制内容透明度。
 
 `FrameTitleSchema` 与 `FrameDescriptionSchema` 从公开 `NodeSchema` 精确 omit `type` / `position` 后复用全部 Node 字段，并把 `text` 收窄为必填。它们不复制 TextBlock、font、shape、style、label、meta 或 animation schema。`text` 字段必须存在，但不额外拒绝空字符串：空字符串继续沿用普通 Node 的合法文本语义。lowering 只补回 `type: 'node'` 和由 Frame 计算的 anchor position，因此两者在 Core compile、Scene 与 renderer 中继续走普通 Node 路径。
 
@@ -119,7 +122,14 @@ React：
 import { Node } from '@retikz/react';
 import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react';
 
-<Frame id="definition-contract/frame" padding={12} headerDirection="horizontal" stroke="#64748b" dashPattern={[4, 3]}>
+<Frame
+  id="definition-contract/frame"
+  padding={12}
+  headerDirection="horizontal"
+  stroke="#64748b"
+  dashPattern={[4, 3]}
+  cornerRadius={4}
+>
   <FrameTitle>Definition contract</FrameTitle>
   <FrameDescription maxTextWidth={220}>Builtin and custom definitions share one registry contract.</FrameDescription>
 
@@ -156,11 +166,11 @@ frame('definition-contract', {
 
 ## 测试设计
 
-Standard 覆盖 Frame 默认边框 / padding、box spacing、Title / Description Node 字段复用、默认横向与显式纵向 header anchor layout、派生 id、保留 id 冲突诊断、只有 Title / 只有 Description，以及 body position 不变。Core anchor placement 与 box spacing helper 由其独立变更证明；Standard 只保留依赖契约和集成回归。
+Standard 覆盖 Frame 默认边框 / padding、box spacing、可选圆角向 rectangle step 的透传、Title / Description Node 字段复用、默认横向与显式纵向 header anchor layout、派生 id、保留 id 冲突诊断、只有 Title / 只有 Description，以及 body position 不变。Core anchor placement、rectangle step 圆角与 box spacing helper 由其独立变更证明；Standard 只保留依赖契约和集成回归。
 
 adapter 覆盖 React JSX parts 与 Vanilla builders 产生同一 `IRFrame`，包括 `headerDirection` 默认值与显式值，以及 Node `children` / `text`、style、shape、label、meta、animation 字段不在 adapter 中丢失；React 另外覆盖 part 脱离 Frame 的 fail-loud 行为。docs 页面需要同时展示默认横向、纵向变体和样式 / padding 覆盖；Controls 允许修改两个 body Node 的文本，并用 Frame 外层的 sibling Draw 开关演示 Node id 连接，不放宽 Frame body 契约。
 
-详细行为到测试证据见 `packages/library/_notes/plans/frame-header-composition/TEST_CONTRACT.md`。
+详细行为到测试证据见 `notes/plans/2026-07-23-frame-corner-radius-test-contract.md`。
 
 ## 影响
 
@@ -169,6 +179,7 @@ adapter 覆盖 React JSX parts 与 Vanilla builders 产生同一 `IRFrame`，包
 - ⚠️ BREAKING：删除嵌套 `border` 对象，边框视觉字段提升到 Frame 顶层；`border.zIndex` 不再公开，Frame `zIndex` 作用于整个外层 Scope
 - `IRFrame` 新增可选 `title` / `description` Node-like 输入和 box spacing `padding`
 - `IRFrame` 新增 `headerDirection`，默认 `horizontal`，并支持显式 `vertical`
+- `IRFrame` 新增可选 `cornerRadius`，缺省保持直角，并复用 Core rectangle step 圆角
 - `standard-react` 新增 `FrameTitle` / `FrameDescription`，并必须复用公开 Node authoring 转换路径
 - `standard-vanilla` 新增 `frameTitle()` / `frameDescription()` builder
 - Frame lowering 从“border + content Scope + label carrier”改为一个拥有 border、body Scope 与 header Nodes 的外层 Scope
@@ -182,7 +193,7 @@ adapter 覆盖 React JSX parts 与 Vanilla builders 产生同一 `IRFrame`，包
 - 主责包与协作包：Standard 拥有 Frame schema / definition / lowering；Core 拥有 Node / Scope / target / anchor position 与 compile；React / Vanilla 只 author；Render 继续执行普通 Scene primitives
 - 是否可由现有能力组合：可以。嵌套 Scope bounds、Node layout、Path target 与 Node 自身 anchor 到目标 anchor 的 placement 均已满足；横向 / 纵向只是 Frame lowering 选择的固定 anchor 链
 - 是否需要下沉到依赖能力域：Core `IRAnchorPosition` 依赖已由 Kernel v0.5 alpha.1 满足；Frame 不新增 Core / React 契约，不实现文本测量、私有 position 或私有 handler collector
-- 内部表达链路：`IRFrame` → `FrameDefinition` → body Scope + Node-like Title / Description + border Path → Core layout / target resolve → 普通 group / path / text Scene primitives
+- 内部表达链路：`IRFrame` → `FrameDefinition` → body Scope + Node-like Title / Description + rectangle-step border Path → Core layout / target resolve / rectangle corner compile → 普通 group / path / text Scene primitives
 - 外部扩展链路：Frame 是固定官方 composite，`headerDirection` 是两个值的封闭排列策略，不新增 Frame layout registry；Title / Description 的 shape、boundary 等开放能力继续走 Core 现有 definition / registry
 - 下游执行 / adapter 等价性：React components 与 Vanilla builders 产生相同 Standard IR；SVG / Canvas 只接收普通 Core Scene，不新增 renderer 行为
 - 不支持边界与诊断：不排列 body、不接受 Path / Coordinate / foreign composite 参与 body bounds、不提供多 Title / 多 Description、不提供任意 React slot、不在 Standard 兜底未接受的 Core anchor contract
@@ -194,6 +205,7 @@ adapter 覆盖 React JSX parts 与 Vanilla builders 产生同一 `IRFrame`，包
 - 多 Title、多 Description、Header / Content / Footer section 组件
 - 独立 `FrameBorder`、`FrameBackground`、多层装饰或 renderer 专有 frame
 - Path、Coordinate、foreign composite 直接作为 Frame body，或让 Path bounds 参与 Frame
+- 四角独立半径、椭圆半径或 renderer 专有圆角
 - selection、collapse、hit area、事件状态与 editor runtime
 - 为 ADR-03 的 `label`、`gap`、`border` 旧写法保留 alias 或兼容桥
 
@@ -215,6 +227,7 @@ adapter 覆盖 React JSX parts 与 Vanilla builders 产生同一 `IRFrame`，包
 | 同上                                                              | 加   | `headerDirection`                             | `'horizontal' \| 'vertical'`                  | `horizontal` | header 的排列方向                            |
 | 同上                                                              | 删   | `border`                                      | —                                             | —            | 删除嵌套边框样式对象                         |
 | 同上                                                              | 加   | border style fields                           | 复用 Standard Path border style 的选定字段    | 见决策       | Frame 自身边框样式                           |
+| 同上                                                              | 加   | `cornerRadius`                                | `RectangleStepSchema.shape.cornerRadius`      | —            | Frame rectangle 边框的统一圆角半径           |
 | 同上                                                              | 删   | `label`                                       | —                                             | —            | 删除 Path label 字符串                       |
 | 同上                                                              | 加   | `title`                                       | `FrameTitleSchema?`                           | —            | 可选 Node-like 主标题                        |
 | 同上                                                              | 加   | `description`                                 | `FrameDescriptionSchema?`                     | —            | 可选 Node-like 辅助说明                      |
@@ -234,6 +247,12 @@ adapter 覆盖 React JSX parts 与 Vanilla builders 产生同一 `IRFrame`，包
 - `packages/library/standard-vanilla/src/frame.ts`、`packages/library/standard-vanilla/src/index.ts`
 - `packages/library/standard-vanilla/tests/frame.test.ts`
 - `apps/docs/src/modules/docs/contents/standard/composite/frame/**`
+- `apps/docs/src/modules/docs/components/logic-figure/LogicFrame.tsx`
+- `apps/docs/src/modules/docs/components/logic-figure/index.ts`
+- `apps/docs/src/modules/docs/components/index.ts`
+- `apps/docs/tests/logic-figure/LogicFrame.test.tsx`
+- `apps/docs/src/modules/docs/contents/kernel/concepts/design/principles/principles-packages.demo.tsx`
+- `apps/docs/src/modules/docs/contents/kernel/concepts/design/principles/principles-registry.demo.tsx`
 - `apps/docs/src/modules/docs/contents/standard/composite/index.{zh,en}.mdx`
 - `apps/docs/src/modules/docs/data/standard.ts`
 - `apps/docs/src/i18n/locales/{zh,en}.json`
@@ -244,7 +263,7 @@ adapter 覆盖 React JSX parts 与 Vanilla builders 产生同一 `IRFrame`，包
 - `apps/docs/tests/component-preview/component-preview-source.test.tsx`（仅当 Frame source preview 路径受影响）
 - 本 ADR、同 milestone roadmap 与 ignored 测试契约矩阵
 
-不得修改 Core、React runtime、renderer、Plot 或其它 Standard composite。Core anchor placement 已由 Kernel v0.5 alpha.1 的 schema / compile tests 证明；本 ADR 只保留 Standard 集成回归。
+不得修改 Core、React runtime、renderer、Plot 或其它 Standard composite。Core anchor placement 与 rectangle step 圆角已由 Kernel schema / compile tests 证明；本 ADR 只保留 Standard 集成回归。LogicFrame 只提供 `cornerRadius: 4` 的文档逻辑图默认值，显式 `0` 或其它合法值仍可覆盖，不改变 Standard Frame 缺省直角语义。
 
 ### 测试象限
 
@@ -254,18 +273,20 @@ adapter 覆盖 React JSX parts 与 Vanilla builders 产生同一 `IRFrame`，包
 - `frame-defaults-header-to-horizontal`：Title + Description + body → Title 位于 body 上方，Description 自动接在 Title 右侧，两个 header 的 bottom anchor 对齐
 - `frame-reuses-node-visual-contract`：Title / Description 的 text、shape、font、padding、label、meta、animations 与 style → lower 后逐字段保持并走普通 Node Scene 输出
 - `react-and-vanilla-produce-equivalent-header-ir`：同一 JSX / builders 输入 → 相同 canonical `IRFrame` 与 Core contribution
+- `react-and-vanilla-forward-frame-corner-radius`：同一正值经 React Frame 与 Vanilla frame builder → 相同 `IRFrame.cornerRadius`
 
 **边界（≥ 2）**：
 
 - `frame-supports-title-only-or-description-only`：任一单项 → 与 body 保持一个 gap，另一项不产生占位或空 Node
 - `frame-supports-vertical-header-direction`：显式 `vertical` → Title、Description、body 按 gap=4 纵向排列
 - `frame-resolves-box-padding-by-side-axis-default`：number 与 object spacing → side > axis > default > 8，且只改变边框不移动 header / body
+- `frame-forwards-corner-radius-to-border-step`：省略、`0` 与正数 → 分别得到无字段、`0` 与相同正数的 rectangle step
 - `frame-derived-header-ids-are-stable`：省略 part id → 稳定派生 `/title`、`/description`、`/content`
 - `frame-body-node-positions-remain-unchanged`：不同 header 文本尺寸 → body Node position 与无 header 时一致
 
 **错误路径（≥ 2）**：
 
-- `frame-rejects-empty-body-missing-header-text-and-invalid-spacing`：空 body、缺失 Title / Description text、负 padding / gap、未知 header direction → schema issue 指向具体字段；显式空字符串 text 仍合法
+- `frame-rejects-empty-body-missing-header-text-and-invalid-spacing`：空 body、缺失 Title / Description text、负 padding / gap / cornerRadius、未知 header direction → schema issue 指向具体字段；显式空字符串 text 仍合法
 - `frame-rejects-reserved-id-collisions`：direct body Node、Title 或 Description 的显式 id 命中 frame id、`/content`、`/title`、`/description` 任一保留项 → schema fail-loud
 - `frame-header-anchor-dependency-fails-loud`：Core 无法解析 anchor dependency → 保留 Core position diagnostic，不回退固定坐标
 - `frame-react-rejects-invalid-part-composition`：JSX 中重复 Title / Description、不支持的 Frame child，或 part 脱离 Frame 使用 → adapter fail-loud
@@ -285,6 +306,7 @@ adapter 覆盖 React JSX parts 与 Vanilla builders 产生同一 `IRFrame`，包
 - `BoxSpacingSchema`——Frame padding 复用同义 JSON 输入；Frame 内部 helper 只负责边框四边 offset
 - `IRScope`、nested Scope layout sink、`boundingShape: 'rectangle'`——body 与最终 Frame bounds
 - `IRPath`、NodeTarget / anchor 与 deferred Path emission——默认矩形边框引用最终 Frame Scope
+- `RectangleStepSchema` 与 rectangle step compile——`FrameSchema.cornerRadius` 直接复用 `RectangleStepSchema.shape.cornerRadius`，保留 optional / undefined 且不设置默认值；lowering 复用短边半径限制与跨 renderer 的普通 Path 输出
 - `CompositeDefinition`、`defineComposite`、React / Vanilla Tier 2 adapter——Frame 注册、lowering 与双入口接线
 - `IRAnchorPosition` / `AnchorPositionSchema`——把 header Nodes 的自身 anchor 对齐到 body / sibling anchors
 - const object enum + `ValueOf`——公开 `FrameHeaderDirection` 与 `FrameHeaderDirectionValue` 的闭合取值真源

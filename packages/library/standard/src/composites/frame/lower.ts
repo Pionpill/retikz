@@ -71,6 +71,7 @@ export const lowerFrame = (frame: IRFrame): IRScope => {
     padding,
     gap,
     headerDirection,
+    cornerRadius,
     zIndex,
     title,
     description,
@@ -95,6 +96,7 @@ export const lowerFrame = (frame: IRFrame): IRScope => {
         kind: 'rectangle',
         from: { id, anchor: 'top-left', offset: [-insets.left, -insets.top] },
         to: { id, anchor: 'bottom-right', offset: [insets.right, insets.bottom] },
+        ...(cornerRadius !== undefined ? { cornerRadius } : {}),
       },
     ],
   };
