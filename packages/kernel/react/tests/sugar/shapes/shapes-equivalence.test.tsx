@@ -268,67 +268,6 @@ describe('Rectangle equivalence', () => {
   });
 });
 
-describe('Grid equivalence', () => {
-  /*
-  it('corner1/corner2 + step', () => {
-    expect(ir(<Grid corner1={[0, 0]} corner2={[2, 2]} step={1} />).children).toEqual(
-      ir(
-        <>
-          <Path>
-            <Step kind="move" to={[0, 0]} />
-            <Step kind="line" to={[0, 2]} />
-          </Path>
-          <Path>
-            <Step kind="move" to={[1, 0]} />
-            <Step kind="line" to={[1, 2]} />
-          </Path>
-          <Path>
-            <Step kind="move" to={[2, 0]} />
-            <Step kind="line" to={[2, 2]} />
-          </Path>
-          <Path>
-            <Step kind="move" to={[0, 0]} />
-            <Step kind="line" to={[2, 0]} />
-          </Path>
-          <Path>
-            <Step kind="move" to={[0, 1]} />
-            <Step kind="line" to={[2, 1]} />
-          </Path>
-          <Path>
-            <Step kind="move" to={[0, 2]} />
-            <Step kind="line" to={[2, 2]} />
-          </Path>
-        </>,
-      ).children,
-    );
-  });
-
-  // <Grid> 按参数改变产出的 Path 节点数（Tier2-ish 行为，锁定计数防回归）
-  const gridLineCount = (jsx: React.ReactNode): number => {
-    const children = ir(jsx).children;
-    return Array.isArray(children) ? children.length : 0;
-  };
-
-  it('showVertical/showHorizontal 控制方向、改变线数', () => {
-    expect(gridLineCount(<Grid corner1={[0, 0]} corner2={[2, 2]} step={1} />)).toBe(6); // 3 竖 + 3 横
-    expect(gridLineCount(<Grid corner1={[0, 0]} corner2={[2, 2]} step={1} showHorizontal={false} />)).toBe(3);
-    expect(gridLineCount(<Grid corner1={[0, 0]} corner2={[2, 2]} step={1} showVertical={false} />)).toBe(3);
-  });
-
-  it('includeBoundary 在不整除时补一条边界线', () => {
-    expect(gridLineCount(<Grid corner1={[0, 0]} corner2={[2.5, 2]} step={1} showHorizontal={false} />)).toBe(3); // x=0,1,2
-    expect(
-      gridLineCount(<Grid corner1={[0, 0]} corner2={[2.5, 2]} step={1} showHorizontal={false} includeBoundary />),
-    ).toBe(4); // + x=2.5
-  });
-});
-
-*/
-  it('moved Grid coverage to @retikz/standard-react', () => {
-    expect(true).toBe(true);
-  });
-});
-
 describe('RegularPolygon equivalence', () => {
   it('sides=4', () => {
     const verts = regularPolygonVertices([0, 0], 30, 30, 4, -90);

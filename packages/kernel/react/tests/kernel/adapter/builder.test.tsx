@@ -1133,13 +1133,13 @@ after`;
       expect(ir.children.map(c => (c as { id?: string }).id)).toEqual(['A', 'B']);
     });
 
-    it('混合 .map(Fragment) + 直接子节点 + 再 .map(Fragment) 保持 JSX 顺序（回归 karl-circle 网格→圆→刻度 模式）', () => {
+    it('混合 .map(Fragment) + 直接子节点 + 再 .map(Fragment) 保持 JSX 顺序', () => {
       const ir = buildIR(
         <>
           {[1, 2].map(i => (
-            <Fragment key={`g${i}`}>
-              <Node id={`grid${i}`} position={[i, 0]}>
-                g
+            <Fragment key={`before${i}`}>
+              <Node id={`before${i}`} position={[i, 0]}>
+                b
               </Node>
             </Fragment>
           ))}
@@ -1155,7 +1155,7 @@ after`;
           ))}
         </>,
       );
-      expect(ir.children.map(c => (c as { id?: string }).id)).toEqual(['grid1', 'grid2', 'circle', 'tick3']);
+      expect(ir.children.map(c => (c as { id?: string }).id)).toEqual(['before1', 'before2', 'circle', 'tick3']);
     });
   });
 
