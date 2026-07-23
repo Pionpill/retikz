@@ -11,7 +11,7 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib';
 
-import type { PreviewControlField, PreviewControlValue, PreviewRangeControlField } from '../types';
+import type { PreviewControlValue, PreviewRangeControlField, PreviewStateControlField } from '../types';
 
 import { PreviewPointControlInput } from './PreviewPointControlInput';
 
@@ -51,7 +51,7 @@ const useReleaseSelectDocumentLock = (open: boolean): void => {
 /** 单个声明式预览字段的渲染属性 */
 export type PreviewControlFieldInputProps = {
   /** 字段定义 */
-  field: PreviewControlField;
+  field: PreviewStateControlField;
   /** 当前字段值 */
   value: PreviewControlValue;
   /** 是否使用适合浮层工具栏的紧凑尺寸

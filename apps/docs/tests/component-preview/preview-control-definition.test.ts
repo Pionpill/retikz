@@ -1,6 +1,9 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import type { PreviewControlValuesFor } from '../../src/modules/docs/components/component-preview';
+import type {
+  PreviewControlsDefinition,
+  PreviewControlValuesFor,
+} from '../../src/modules/docs/components/component-preview';
 
 import { definePreviewControls } from '../../src/modules/docs/components/component-preview';
 import {
@@ -69,6 +72,73 @@ describe('preview controls definition', () => {
       opacity: 1,
       controlPoint: [100, -70],
     });
+  });
+
+  it('只读 table 不进入控件值与默认状态', () => {
+    const definition = definePreviewControls({
+      presentation: 'panel',
+      sections: [
+        {
+          controls: [
+            { kind: 'text', id: 'title', label: 'Title', defaultValue: 'Cities' },
+            {
+              kind: 'table',
+              id: 'cities',
+              label: 'Cities',
+              rows: [{ city: 'Tokyo', gdp: 1810 }],
+            },
+          ],
+        },
+      ],
+    });
+
+    expectTypeOf<PreviewControlValuesFor<typeof definition>>().toEqualTypeOf<{ title: string }>();
+    expect(getPreviewControlFields(definition).map(field => field.id)).toEqual(['title']);
+    expect(buildPreviewControlDefaults(definition)).toEqual({ title: 'Cities' });
+  });
+
+  it('只读 table 接受具名 interface 的行数据', () => {
+    interface CityRow {
+      city: string;
+      gdp: number;
+    }
+
+    const rows: ReadonlyArray<CityRow> = [{ city: 'Tokyo', gdp: 1810 }];
+    const definition = definePreviewControls({
+      presentation: 'panel',
+      sections: [{ controls: [{ kind: 'table', id: 'cities', label: 'Cities', rows }] }],
+    });
+
+    expect(definition.presentation).toBe('panel');
+  });
+
+  it('拒绝 overlay table 与重复的显式列', () => {
+    const overlayTable = {
+      presentation: 'overlay',
+      controls: [{ kind: 'table', id: 'cities', label: 'Cities', rows: [] }],
+    } as unknown as PreviewControlsDefinition;
+
+    expect(() => definePreviewControls(overlayTable)).toThrow(
+      'Preview table control "cities" is only supported in panel controls.',
+    );
+    expect(() =>
+      definePreviewControls({
+        presentation: 'panel',
+        sections: [
+          {
+            controls: [
+              {
+                kind: 'table',
+                id: 'cities',
+                label: 'Cities',
+                rows: [],
+                columns: [{ key: 'city' }, { key: 'city', label: 'City' }],
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrow('Duplicate preview table column key "city" in control "cities".');
   });
 
   it('拒绝重复字段 id', () => {

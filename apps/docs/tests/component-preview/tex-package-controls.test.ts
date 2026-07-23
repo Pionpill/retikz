@@ -7,14 +7,12 @@ import type {
   PreviewControlsDefinition,
 } from '../../src/modules/docs/components/component-preview/types';
 
+import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
 import { previewControlContract as texPlaygroundContract } from '../../src/modules/docs/contents/kernel/packages/tex/tex-playground.controls';
 import { previewControlContract as texPlaygroundEnContract } from '../../src/modules/docs/contents/kernel/packages/tex/tex-playground.en.controls';
 
 const fieldContractOf = (definition: PreviewControlsDefinition) => {
-  const fields =
-    definition.presentation === 'panel'
-      ? definition.sections.flatMap(section => section.controls)
-      : definition.controls;
+  const fields = getPreviewControlFields(definition);
 
   return fields.map(field => ({
     id: field.id,
