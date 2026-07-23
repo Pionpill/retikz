@@ -1,14 +1,14 @@
 # table v0.1-alpha.2 Roadmap：二维约束布局
 
 > 本 milestone 先解决任意 `IRChild` 的通用测量与受约束布局依赖，再扩展 Table 的轨道、跨度、边框与内容适配。长期决策写入同目录 ADR。
-> 关联：[`table v0.1 roadmap`](../roadmap.md) · [`table-design.md`](../../../../../architecture/table-design.md) · [`table completeness`](../../../../../architecture/table-visualization-complete.md) · [`_template.md`](../../../../_template.md)
+> 关联：[`table v0.1 roadmap`](../roadmap.md) · [`Kernel contextual composite ADR`](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/01-contextual-composite-layout.md) · [`table-design.md`](../../../../../architecture/table-design.md) · [`table completeness`](../../../../../architecture/table-visualization-complete.md) · [`_template.md`](../../../../_template.md)
 
 - 状态：设计已接受
 - 启动日期：2026-07-23
 
 ## 目标
 
-让 Table 能依据真实 Cell 内容完成 renderer-agnostic 的二维约束布局，覆盖 auto / fraction / minmax 轨道、矩形 span、padding、bounds-aware alignment、fit / overflow / clip、文本换行与自动行高，并将结果稳定 lowering 为 Core IR。
+让 Table 能依据真实 Cell 内容完成 renderer-agnostic 的二维约束布局，覆盖 auto / fraction / minmax 轨道、矩形 span、padding、bounds-aware alignment、fit / overflow / clip、文本换行与自动行高，并在同一次 Core contextual compile 中产出 Scene 与 manifest。
 
 alpha.2 不在 Table 内复制 Core 测量器。通用 `IRChild` intrinsic measurement 与 constrained layout 是本 milestone 的前置 gate；上游能力未闭环前，只进行 Table 侧设计，不实现私有 fallback。
 
@@ -54,7 +54,7 @@ Gate 的验收要求由 [ADR-01](./01-core-constrained-layout-gate.md) 冻结。
 
 - Core gate 用行为契约验证任意合法 `IRChild`、nested composite、含文本 Node 的换行、非局部引用和失败诊断，不用 Table 私有实现证明上游能力
 - 轨道与 span solver 使用 plain-data 几何断言，覆盖确定性、约束传播、顺序无关、非法尺寸与冲突定义
-- lowering 同时验证 Core IR、Cell bounds、stable identity、manifest 映射和 renderer parity
+- contextual compile 同时验证 Core output、Cell bounds、stable identity、manifest 映射和 renderer parity
 - React / Vanilla 从相同 spec 与 datasets 形成等价 definitions、compile options、host capabilities 和约束，再产生等价布局
 - `deps-guard` 确认 Table 不依赖 Core 内部 compile 路径、DOM、renderer 或 Plot
 
@@ -79,4 +79,4 @@ Gate 的验收要求由 [ADR-01](./01-core-constrained-layout-gate.md) 冻结。
 
 ## ADR 约定
 
-每份 ADR 从 Proposed 开始，Architecture Gate PASS 且人工确认后才能进入实现。ADR-01 只冻结跨能力域前置合同；Core 具体 API、schema 与 compile 时序必须由 Kernel 独立 ADR 决定。
+每份 ADR 从 Proposed 开始，Architecture Gate PASS 且人工确认后才能进入实现。ADR-01 只冻结跨能力域前置合同；Core 具体 API 与 compile 时序由 Kernel v0.5-alpha.2 ADR-01 冻结。

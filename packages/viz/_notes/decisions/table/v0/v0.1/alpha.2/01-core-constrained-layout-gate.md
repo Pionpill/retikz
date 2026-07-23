@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-07-23
-- 关联：[table v0.1 roadmap](../roadmap.md) · [Table 完备设计](../../../../../architecture/table-visualization-complete.md) · [Table 总设计](../../../../../architecture/table-design.md) · [Core 绘图完备设计](../../../../../../../kernel/_notes/architecture/core-drawing-complete.md) · [Core Node 布局测量 ADR](../../../../../../../kernel/_notes/decisions/v0/v0.4/beta.1/02-node-layout-measurement.md)
+- 关联：[table v0.1 roadmap](../roadmap.md) · [Kernel contextual composite ADR](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/01-contextual-composite-layout.md) · [Table 完备设计](../../../../../architecture/table-visualization-complete.md) · [Table 总设计](../../../../../architecture/table-design.md) · [Core 绘图完备设计](../../../../../../../kernel/_notes/architecture/core-drawing-complete.md) · [Core Node 布局测量 ADR](../../../../../../../kernel/_notes/decisions/v0/v0.4/beta.1/02-node-layout-measurement.md)
 
 ## 背景
 

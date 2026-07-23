@@ -12,16 +12,17 @@ v0.5 继续补充跨图元、跨 adapter 或影响 IR / compile 的纵向机制�
 
 ## 候选索引
 
-| 方向                      | 解决的问题                                             | 当前状态                                                 |
-| ------------------------- | ------------------------------------------------------ | -------------------------------------------------------- |
-| Node 锚点对齐定位         | 基于真实 Node 布局把自身 anchor 对齐已完成实体 anchor  | [alpha.1 Accepted](./alpha.1/01-node-anchor-position.md) |
-| Scope 自身锚点与变换基点  | 放置、旋转或缩放子图时不再泄漏内部坐标                 | 待 ADR                                                   |
-| 单轴路径连接              | 只沿垂直或水平轴连接，不强制补齐正交折线的第二段       | 待 ADR                                                   |
-| Node 文本自动对比色       | 根据实际填充明度选择黑色或白色文字，保持可读性         | 待 ADR                                                   |
-| Node label 包围盒间距     | 长标签按自身尺寸离开节点边界，避免左右标签与节点重叠   | 待 ADR                                                   |
-| TeX 数学语法兼容          | 正确解析 MathJax 支持的 TeX 语法并保留跨后端视觉语义   | 待 ADR                                                   |
-| Headless interaction      | 补齐 renderer-agnostic 的 target / intent / manifest   | 待启动                                                   |
-| Progressive IR / 增量编译 | 评估 AI step、局部重编译与 SVG / Canvas 更新的共同契约 | 待证据                                                   |
+| 方向                      | 解决的问题                                                | 当前状态                                                        |
+| ------------------------- | --------------------------------------------------------- | --------------------------------------------------------------- |
+| Node 锚点对齐定位         | 基于真实 Node 布局把自身 anchor 对齐已完成实体 anchor     | [alpha.1 Accepted](./alpha.1/01-node-anchor-position.md)        |
+| 上下文化 Composite 布局   | 让 Tier 2 在同次 compile 中测量、约束并 replay 任意 child | [alpha.2 Proposed](./alpha.2/01-contextual-composite-layout.md) |
+| Scope 自身锚点与变换基点  | 放置、旋转或缩放子图时不再泄漏内部坐标                    | 待 ADR                                                          |
+| 单轴路径连接              | 只沿垂直或水平轴连接，不强制补齐正交折线的第二段          | 待 ADR                                                          |
+| Node 文本自动对比色       | 根据实际填充明度选择黑色或白色文字，保持可读性            | 待 ADR                                                          |
+| Node label 包围盒间距     | 长标签按自身尺寸离开节点边界，避免左右标签与节点重叠      | 待 ADR                                                          |
+| TeX 数学语法兼容          | 正确解析 MathJax 支持的 TeX 语法并保留跨后端视觉语义      | 待 ADR                                                          |
+| Headless interaction      | 补齐 renderer-agnostic 的 target / intent / manifest      | 待启动                                                          |
+| Progressive IR / 增量编译 | 评估 AI step、局部重编译与 SVG / Canvas 更新的共同契约    | 待证据                                                          |
 
 ## Node 锚点对齐定位
 

@@ -5,7 +5,7 @@
 
 ## 版本目标
 
-同一份 JSON-safe TableSpec 能在 React / Vanilla 中表达，并沿统一 Table pipeline lowering 为 Core IR；renderer 不需要认识 Table 私有类型。
+同一份 JSON-safe TableSpec 能在 React / Vanilla 中表达，并沿统一 Table pipeline 进入 Core contextual compile；renderer 不需要认识 Table 私有类型。
 
 v0.1 发布前应覆盖明细、分组、汇总与交叉表等核心静态表格形态，同时保持 Data、Core、adapter 和 data-grid 宿主边界清晰。
 

@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-07-23
-- 关联：[alpha.2 roadmap](./roadmap.md) · [layout transaction 与迁移](./06-layout-lowering-manifest-and-migration.md) · [Cell box、span 与 alignment](./03-cell-box-span-and-alignment.md) · [内容 fit / overflow / wrap](./04-content-fit-overflow-and-wrap.md) · [alpha.1 React composition API](../alpha.1/08-table-react-composition-api.md) · [Table 完备设计](../../../../../architecture/table-visualization-complete.md)
+- 关联：[alpha.2 roadmap](./roadmap.md) · [layout transaction 与迁移](./06-layout-lowering-manifest-and-migration.md) · [Kernel contextual composite ADR](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/01-contextual-composite-layout.md) · [Cell box、span 与 alignment](./03-cell-box-span-and-alignment.md) · [内容 fit / overflow / wrap](./04-content-fit-overflow-and-wrap.md) · [alpha.1 React composition API](../alpha.1/08-table-react-composition-api.md) · [Table 完备设计](../../../../../architecture/table-visualization-complete.md)
 
 ## 背景
 
@@ -73,15 +73,15 @@ Manual children builder 按 ADR-03 使用 canonical occupancy matrix：
 共享 props 改为完整复用 Kernel React 宿主合同：
 
 ```ts
-type TableCommonProps = Omit<LayoutProps, 'ir' | 'children' | 'embeddables'> &
+type TableCommonProps = Omit<LayoutProps, 'ir' | 'children' | 'embeddables' | 'onCompileResult'> &
   LowerTablesOptions & {
     onManifest?: (manifest: TableLayoutManifest) => void;
   };
 ```
 
-`LayoutProps.composites` 已包含 Cell 内嵌 Tier 2 definitions，不再在 Table 侧重复声明同名字段。`ir` 与 `children` 由三个 Table 根入口重新定义；`embeddables` 只对 Layout children authoring 有意义，Table standalone 始终从规范 TableSpec 构造 IR，因此在类型与运行时都精确拒绝。除此以外 Table 不挑选、复制或重新命名 Layout host props；新增 Kernel host prop 会自动进入 standalone Table 根组件。
+`LayoutProps.composites` 已包含 Cell 内嵌 Tier 2 definitions，不再在 Table 侧重复声明同名字段。`ir` 与 `children` 由三个 Table 根入口重新定义；`embeddables` 只对 Layout children authoring 有意义。`onCompileResult` 是 adapter-to-adapter 低层 bridge，由 Table runtime 内部占用，不能与公开 `onManifest` 并列暴露。除此以外 Table 不挑选、复制或重新命名 Layout host props；新增 Kernel host prop 会自动进入 standalone Table 根组件。
 
-运行时不能从 TypeScript 类型枚举 key，因此 adapter 维护一个仅用于分拣与诊断的 `TABLE_LAYOUT_HOST_PROP_KEYS` tuple，并用双向 `AssertEqual` 类型测试保证它与 `keyof Omit<LayoutProps, 'ir' | 'children' | 'embeddables' | 'composites'>` 完全相等。新增 Kernel host prop若未同步tuple，`tsc --noEmit`必须失败；不得使用不受类型校验的allowlist静默漏传。
+运行时不能从 TypeScript 类型枚举 key，因此 adapter 维护一个仅用于分拣与诊断的 `TABLE_LAYOUT_HOST_PROP_KEYS` tuple，并用双向 `AssertEqual` 类型测试保证它与 `keyof Omit<LayoutProps, 'ir' | 'children' | 'embeddables' | 'onCompileResult' | 'composites'>` 完全相等。新增 Kernel host prop若未同步tuple，`tsc --noEmit`必须失败；不得使用不受类型校验的allowlist静默漏传。
 
 standalone 的 `hostPropsOf()` 只按该 tuple提取Layout host props，`lowerOptionsOf()` 单独提取 Table definitions，`composites` 单独进入 Core environment，`onManifest` 只进入 artifact observer。不得把完整 Table props object盲目spread给`<Layout>`。
 
@@ -95,6 +95,7 @@ standalone 的 `hostPropsOf()` 只按该 tuple提取Layout host props，`lowerOp
 4. `Layout` 的 `ir` 模式把显式 `ScopeStyleProps` 规范化为包裹 IR children 的 synthetic Core Scope，使 `color`、`stroke`、`fill`、`strokeWidth`、三种 opacity 与 `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` 和 children 模式具有相同级联语义；本 gate 不新增 transform、clip、zIndex 等容器 props
 5. `handlers` 继续按 `ir` mode 的 id registry 接线；synthetic Scope 不改变用户 child id
 6. `embeddables` 仍只属于 children normalization，不在 `ir` mode 伪装为有意义
+7. `LayoutProps.onCompileResult` 在 commit 后交付同次 `CompileResult` 与 `sourceRootOwners`；callback identity 不触发重新 compile，SSR 不调用
 
 该 Kernel ADR/实现属于 red 上游 gate，不在本 ADR 的产品文件 scope。若上游不满足，Table 不能声明“完整 Layout props”或“custom measurer/options parity”，也不能只把类型交叉后静默忽略行为。
 
@@ -103,7 +104,8 @@ standalone React：
 1. 根 props/markers 规范化为 TableSpec
 2. Table spec、datasets、`LowerTablesOptions` 与完整 Layout host props 进入同一个 `<Layout>`；ScopeStyle 通过上游 synthetic Scope 真实生效
 3. `<Layout>` 通过 ADR-06 的 compile-with-artifacts 合同只 compile 一次
-4. React commit 后 effect 以本次 typed Table artifact 通知 `onManifest`
+4. Table 内部 `onCompileResult` observer 使用 `sourceRootOwners[0]` 精确选择 typed Table artifact
+5. React commit 后 effect 以该 artifact 的 `payload.manifest` 通知 `onManifest`
 
 `onManifest` 不参与 render-phase lowering，不允许触发第二次 presentation、layout、replay 或 compile。
 
@@ -111,16 +113,20 @@ embedded React 的 Table component 仍使用相同 props 类型以支持统一�
 
 ### Typed artifact 根实例选择
 
-公开 `tableId` 继续可选，不能作为 compile 内唯一实例选择器。Core compile-with-artifacts 与 composite expand context必须为每个输入occurrence分配JSON-safe、compile-local且确定的traversal locator；同一 TableSpec被多次嵌入、匿名根Table、Cell内嵌Table与多个Table同图都获得不同locator。
+公开 `tableId` 继续可选，不能作为 compile 内唯一实例选择器。Core compile-with-artifacts 与 contextual composite context必须为每个输入occurrence分配JSON-safe、compile-local且确定的traversal locator；同一 TableSpec被多次嵌入、匿名根Table、Cell内嵌Table与多个Table同图都获得不同locator。
 
 每个 typed Table artifact 至少携带：
 
 ```ts
-type TableCompileArtifact = Readonly<{
-  owner: CompositeOccurrenceLocator;
+type TableCompileArtifactPayload = Readonly<{
   tableId?: string;
   manifest: TableLayoutManifest;
 }>;
+
+type TableCompileArtifact = CompileArtifact<TableCompileArtifactPayload> &
+  Readonly<{
+    channel: '@retikz/table/layout-manifest';
+  }>;
 ```
 
 standalone React/Vanilla 在构造单根 Table scene 时，同时保留“根 Table 输入 occurrence”的 locator selector；compile 后只接受 owner 与该 selector 精确相等的一条 artifact：
@@ -129,7 +135,7 @@ standalone React/Vanilla 在构造单根 Table scene 时，同时保留“根 Ta
 - `>1` 条表示 Core artifact identity 破坏，fail-loud
 - nested/并列 Table artifacts 保留在宿主 collection，但不能被根 `onManifest` / `artifacts:true` 误选
 
-locator 的正式类型名与序列化形态由 Kernel ADR命名，但必须由遍历occurrence产生，不能使用可缺省的tableId、对象引用、数组返回顺序、module counter或“第一条Table artifact”选择。React/Vanilla/SSR对同一根scene结构必须选择同一owner语义。
+locator 使用 Kernel ADR 冻结的 `CompositeOccurrenceLocator` 与 `child` / `expansion` / `replay` segment contract，必须由 traversal occurrence 产生，不能使用可缺省的tableId、对象引用、数组返回顺序、module counter或“第一条Table artifact”选择。React/Vanilla/SSR对同一根scene结构必须选择同一owner语义。
 
 ### Vanilla 对齐 Kernel options
 
@@ -159,7 +165,7 @@ breaking 规则：
 
 对相同的 TableSpec、datasets、Table definitions 与 Core environment：
 
-- `<Table spec>` 与 `renderTable(spec)` 产生等价 Table transaction、Core IR、Scene geometry 与 manifest
+- `<Table spec>` 与 `renderTable(spec)` 产生等价 Table transaction、Core compile output、Scene geometry 与 manifest
 - `DetailTable columns`、`DetailColumn` children 与 `detailTable(input)` 产生等价精确 detail spec
 - `ManualTable cells`、occupancy-based `Row/Cell` children 与 `manualTable(input)` 产生等价精确 manual spec
 - custom Structure、Presentation、nested composite、measurer/capability 与 Core options 在 intrinsic、constrained、replay、Scene 和 manifest 中同源
@@ -211,14 +217,13 @@ React-only marker 不需要在 Vanilla 镜像成 builder；parity 比较的是�
 
 ## 待决策点 🔻
 
-只有 Kernel 上游正式命名仍待独立 ADR：
+Kernel v0.5-alpha.2 ADR-01 已冻结：
 
-- compile-with-artifacts result 与 typed Table artifact contribution 的公开类型名
-- `CompositeOccurrenceLocator` 与根 input occurrence selector 的正式类型名
-- React `<Layout>` 观察 typed artifacts 的正式内部接线
-- `LayoutProps.compile` 及顶层 compile sugar 重叠诊断的正式 API 命名
+- `CompileResult`、`CompileArtifact` 与 `CompositeOccurrenceLocator`
+- React `LayoutCompileObservation`、`LayoutCompileObserver`、`sourceRootOwners` 与 `LayoutProps.onCompileResult`
+- `LayoutProps.compile` 及顶层 compile sugar 的逐字段冲突/默认合并规则
 
-这些命名不得改变 ScopeStyle 在 ir mode 生效、handlers 保留、embeddables 排除、完整 `TableCommonProps`、occurrence 精确选择、embedded fail-loud、Vanilla `compile` 归属、adapter 单次 compile 或 manifest 回调时序。若 Kernel 无法提供 ADR-06/07 要求的公共环境、React compile options 与 artifact channel，本 ADR 不得实现。
+这些合同不得改变 ScopeStyle 在 ir mode 生效、handlers 保留、embeddables 排除、Table 内部占用 `onCompileResult`、occurrence 精确选择、embedded fail-loud、Vanilla `compile` 归属、adapter 单次 compile 或 manifest 回调时序。
 
 ## DSL 表面
 
@@ -299,9 +304,10 @@ result.manifest;
 
 - Detail columns props与`DetailColumn` children 在 alpha.2 完整字段下深等
 - Manual cells props与span-aware occupancy `Row/Cell` children深等；覆盖未来行预占、空洞与 row kind 失败
-- `TableCommonProps` 排除 ir/children/embeddables 后完整复用 `LayoutProps`，ScopeStyle/handlers/animation/compile options真实进入standalone Layout
+- `TableCommonProps` 排除 ir/children/embeddables/onCompileResult 后完整复用 `LayoutProps`，ScopeStyle/handlers/animation/compile options真实进入standalone Layout
 - embedded 对 standalone-only host props 与 `onManifest` fail-loud，`composites` 仍进入宿主 contribution
 - React `onManifest` 与 Vanilla `artifacts:true` 不增加 layout/compile 次数，均来自同次 typed artifact
+- React `sourceRootOwners` 在 synthetic ScopeStyle 下仍匹配根 Table；observer identity变化不重compile，SSR不触发callback
 - 匿名/显式 id 根、nested Table 与同次多 Table 通过 occurrence locator精确选择根artifact，0/多候选fail-loud
 - Vanilla 顶层 `composites` 类型与运行时精确拒绝，`compile.composites` 与其它 Core options 同源
 - React / Vanilla / SSR / embedded 对 custom Structure/Presentation/composite/measurer/options 产生等价 spec、Scene geometry 与 manifest
@@ -311,7 +317,7 @@ result.manifest;
 
 ## 影响
 
-- ⚠️ BREAKING：React `TableCommonProps` 从五个挑选字段升级为除 `ir` / `children` / `embeddables` 外的完整 `LayoutProps`
+- ⚠️ BREAKING：React `TableCommonProps` 从五个挑选字段升级为除 `ir` / `children` / `embeddables` / `onCompileResult` 外的完整 `LayoutProps`
 - ⚠️ BREAKING：embedded Table 对传入的 standalone host props 从静默忽略改为 fail-loud
 - ⚠️ BREAKING：Vanilla `renderTable` 删除顶层 `composites`，迁移到 `compile.composites`
 - React/Vanilla artifact 从双 lowering 切换为 ADR-06 同次 compile typed artifact
@@ -326,7 +332,7 @@ result.manifest;
 - 主责包与协作包：Table 主责 schema/normalization/layout/artifact；React/Vanilla 主责 authoring/host 接线；Core 主责 compile environment；docs 主责公开说明
 - 是否可由现有能力组合：marker 组合现有 plain input；完整 host props 组合 Kernel contracts；不新增 Table 领域底座
 - 是否需要下沉到 data / core / math：typed artifact/compile-with-artifacts 下沉 Core；Data Transform 延期 alpha.4；不修改 Math
-- 内部表达链路：props/plain input/markers → 精确 TableSpec → ADR-06 transaction → Core IR/Scene + typed manifest artifact
+- 内部表达链路：props/plain input/markers → 精确 TableSpec → ADR-06 transaction → Core compile output/Scene + typed manifest artifact
 - 外部扩展链路：custom Structure/Presentation 经 `LowerTablesOptions`，custom composite/Core definitions 经公共 host environment；内置与自定义同路
 - define-registry 是否适用：本 ADR 不新增开放领域语义，不新增 Definition；只把既有 registries 等价接入 adapters
 - pipeline / lowering 与下游消费：adapters 不执行算法，React effect/Vanilla result 从同次 compile artifact 观察 manifest
@@ -363,7 +369,7 @@ result.manifest;
 - `packages/viz/table-react/tests/{components,deps-guard}/**`
 - `packages/viz/table-vanilla/src/{runtime,spec,adapter}/**`
 - `packages/viz/table-vanilla/tests/{runtime,spec,adapter,deps-guard}/**`
-- ADR-06/07 所需的 Kernel artifact/occurrence locator、`LayoutProps.compile` 与 ir-mode ScopeStyle 改动由独立 Kernel ADR 所有，不进入本 ADR 产品 scope
+- ADR-06/07 所需的 Kernel artifact/occurrence locator、`LayoutProps.compile`、`onCompileResult` bridge 与 ir-mode ScopeStyle 改动由独立 Kernel ADR 所有，不进入本 ADR 产品 scope
 - `apps/docs/src/modules/docs/contents/viz/table/**`
 - `apps/docs/src/modules/docs/data/viz.ts`
 - `apps/docs/src/i18n/locales/{zh,en}.json`
@@ -402,7 +408,7 @@ result.manifest;
 
 - `custom 全链路`：Structure × Presentation × composite/measurer/options 在 React/Vanilla/SSR/embedded 等价
 - `ScopeStyle × handlers × compile`：synthetic Scope、事件 id 与 custom measurer/options 在同次 React compile 生效
-- `span × wrap × fit × clip × border`：props/marker 两路产生等价 Core IR、Scene 与 manifest
+- `span × wrap × fit × clip × border`：props/marker 两路产生等价 Core compile output、Scene 与 manifest
 - `observer × 单次 transaction`：React callback 与 Vanilla artifact 不增加 presentation/layout/replay 次数
 - `docs × public surface`：zh/en API、schema、demo 与实际 exports/defaults/breaking migration 对账
 
