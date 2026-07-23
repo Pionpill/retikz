@@ -4,19 +4,14 @@ import { ChildSchema, compileToScene, CompileWarningCode, CompositeBaseSchema, d
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { IRTableSpec, PresentedTableModel, TableLayout } from '../../src';
+import type { IRTableSpec, PresentedTableModel } from '../../src';
+import type { TableLayout } from '../../src/pipeline/layout';
 
-import {
-  defineTableStructure,
-  emitTable,
-  layoutTable,
-  lowerTables,
-  lowerTableWithArtifacts,
-  normalizeTableStructure,
-  presentTable,
-  TABLE_NAMESPACE,
-  TableComposite,
-} from '../../src';
+import { defineTableStructure, lowerTables, lowerTableWithArtifacts, TABLE_NAMESPACE, TableComposite } from '../../src';
+import { layoutTable } from '../../src/pipeline/layout';
+import { emitTable } from '../../src/pipeline/lower';
+import { normalizeTableStructure } from '../../src/pipeline/normalize';
+import { presentTable } from '../../src/pipeline/presentation';
 
 const manualSpec = (id?: string): IRTableSpec => ({
   namespace: TABLE_NAMESPACE,

@@ -1,0 +1,126 @@
+---
+title: 扩展机制
+description: 用具名字段格式与运行时 resolver 扩展数据接入，同时保持数据模型配置可序列化。
+---
+
+数据模型的扩展点只负责把外部值解析到稳定字段契约。可复用的解析规则注册为具名格式，一次性或数据源专用规则通过运行时 resolver 提供；两者都不会把函数写进可序列化配置。
+
+## 适用边界
+
+优先使用内置格式和字段类型。只有新的存储格式会跨数据源复用时才注册 `FieldFormatDefinition`；只服务当前数据源的解析分支使用 `resolveField`。
+
+| 扩展入口            | 解决什么                  | 配置保存什么  |
+| ------------------- | ------------------------- | ------------- |
+| `defineFieldFormat` | 可复用字段存储格式        | `format` 名称 |
+| `resolveField`      | 临时类型覆盖与字段 parser | 不进入配置    |
+
+`fieldMap` 只负责把逻辑字段映射到真实路径，不执行解析，也不是扩展注册机制。字段测量类型仍是封闭的 `continuous`、`temporal` 与 `categorical`；自定义解析最终必须落到这三种规范值域。
+
+## 定义字段格式
+
+可持久化、可跨数据源复用的格式使用 `defineFieldFormat`。`name` 是 model 中的引用键，`impliedType` 声明规范值类型，`parse` 把原始值转换为字符串、有限数值或 `undefined`。
+
+下面的 `wan` Definition 通过 `<Plot formatDefinitions>` 注入；model 只保存 `format: 'wan'`，不会保存解析函数。
+
+<ComponentPreview files={['extension-format', 'extension-format.data.ts']} />
+
+## 运行时字段解析
+
+一次性逻辑或数据源专用分支使用 `resolveField`。它按逻辑字段返回可选的 `type` 与 `parse`，优先级高于 model、具名格式和默认转换；返回 `undefined` 时回到标准接入路径。
+
+<ComponentPreview files={['extension-resolver', 'extension-resolver.data.ts']} />
+
+`resolveField` 是运行时逃生舱，不经过 registry，也不能序列化。需要稳定名称、跨宿主复用或持久化配置时，应改为 `FieldFormatDefinition`。
+
+## 注入宿主
+
+消费宿主负责把字段解析能力交给数据接入管线。以 Plot 为例：
+
+| 能力         | 注入入口            | model 引用方式          |
+| ------------ | ------------------- | ----------------------- |
+| 具名字段格式 | `formatDefinitions` | 字段声明 `format: name` |
+| 临时解析规则 | `resolveField`      | 无，运行时按字段解析    |
+
+其它消费模块可以在自己的 adapter 中提供等价入口；数据模型只关心格式 registry 与 resolver 结果。
+
+## 执行机制
+
+```text
+字段契约 → 查找具名格式 → 应用 resolveField 覆盖 → 规范化字段值
+```
+
+具名格式先提供字段类型和 parser，`resolveField` 再按字段覆盖其中任一项。没有命中自定义规则时，数据接入继续使用 model 声明、推断结果与默认转换。
+
+## 错误与限制
+
+| 情况                                | 结果                                                     |
+| ----------------------------------- | -------------------------------------------------------- |
+| 格式名与内置或自定义键重复          | registry 构建立即报错                                    |
+| model 引用未注册格式                | 数据接入前报未注册错误                                   |
+| `resolveField.parse` 没有可确定类型 | 要求在 model 声明类型或由 resolver 返回 `type`           |
+| parser 返回错误类型                 | 形成非法值，交给[校验与诊断](/viz/data/model/validation) |
+
+字段解析只负责单值规范化，不重排行、不改变行数，也不生成统计字段；这些能力属于[数据变换扩展](/viz/data/transform/extensions)。
+
+## API 参考
+
+以下契约都从 `@retikz/data` 包根导出。
+
+### `FieldFormatDefinition`
+
+`defineFieldFormat(definition)` 接收并返回同一个 `FieldFormatDefinition`。
+
+| 字段          | 类型                                 | 描述                                            |
+| ------------- | ------------------------------------ | ----------------------------------------------- |
+| `name`        | `string`                             | 非空 registry key，不能与内置或其它自定义名冲突 |
+| `impliedType` | <ApiValues name="DataFieldType" />   | model 未声明 `type` 时采用的字段测量类型        |
+| `parse`       | `(raw: unknown) => ParsedFieldValue` | 把原始值转成规范字符串、有限数值或 `undefined`  |
+
+### `ResolveField` 与 `FieldResolution`
+
+| 导出              | 类型                                                                                                                     | 描述                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| `ResolveField`    | `(field: string, context: Parameters<ResolveField>[1]) => FieldResolution \| undefined`                                  | 按逻辑字段返回覆盖；`undefined` 回到标准接入路径           |
+| `FieldResolution` | `FieldResolution`<br />- `type?:` <ApiValues name="DataFieldType" /><br />- `parse?: (raw: unknown) => ParsedFieldValue` | 单字段运行时覆盖<br />- 最终测量类型<br />- 自定义解析函数 |
+
+<SourceLinks
+  sources={[
+    {
+      label: '字段格式 Definition 契约',
+      path: 'packages/viz/data/src/contract/format.ts',
+      startLine: 5,
+      endLine: 22,
+    },
+    {
+      label: '运行时字段 resolver 契约',
+      path: 'packages/viz/data/src/contract/data.ts',
+      startLine: 5,
+      endLine: 31,
+    },
+    {
+      label: 'resolver 覆盖与类型校验',
+      path: 'packages/viz/data/src/providers/data/resolve.ts',
+      startLine: 5,
+      endLine: 39,
+    },
+    {
+      label: 'Plot 中字段格式与 resolver 的接入顺序',
+      path: 'packages/viz/plot/src/pipeline/expand/data.ts',
+      startLine: 97,
+      endLine: 116,
+    },
+  ]}
+/>
+
+## 相关
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/data/model/intake">
+    <span className="font-semibold">数据接入</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">了解字段路径、内置格式与规范化顺序。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/transform/extensions">
+    <span className="font-semibold">数据变换扩展</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">定义自定义 transform、reducer 与 selector。</span>
+  </LinkedCard>
+</div>

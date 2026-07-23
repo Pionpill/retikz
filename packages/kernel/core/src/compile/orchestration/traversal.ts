@@ -323,7 +323,7 @@ export const compileChildrenToPrimitives = (
       shapes: runtime.context.shapes,
       boundaries: runtime.context.boundaries,
     });
-    runtime.state.namespaceStack.register(child.id, placeholderLayout, `${scopeIrPath}.id`);
+    runtime.state.namespaceStack.register(child.id, placeholderLayout, `${scopeIrPath}.id`, 'scope-placeholder');
     return { parentFrameDepth, placeholderLayout };
   };
 

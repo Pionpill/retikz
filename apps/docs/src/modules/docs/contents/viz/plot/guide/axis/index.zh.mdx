@@ -1,0 +1,125 @@
+---
+title: 坐标轴
+description: 用 <Axis> 定制刻度、标签和网格；dimension 选择装饰哪个维度——cartesian 的 x / y 或 polar 的 x / y。
+---
+
+`<Axis>` 声明一条坐标轴。`dimension` 选它装饰哪个维度：cartesian 下是 `x`（水平）/ `y`（垂直），polar 下仍写 `x`（角向）/ `y`（径向），ternary 下是 `x` / `y` / `z`（三角三边）。维度须匹配当前坐标系，给错会报错（不静默画空轴）。轴线、刻度、刻度文字、轴标题和网格是同一个 Axis guide 的几个槽位。
+
+`<Plot>` 是薄容器、自己不画轴——不写 `<Axis>` 就没有轴，你列出哪些 `<Axis>` 就画哪些。若只是想给某个轴换成对数、时间或平方根比例尺，也可以在同一个 `<Axis>` 上写 `scale`，不用再额外放一个 `<Scale>`。
+
+## 用法
+
+最小结构是在 `<Plot>` 里显式列出要画的 x / y 轴。下面的 demo 里，y 轴加了网格和目标刻度数；源码、IR 和 Vanilla 写法都可以在 demo 面板里切换查看。
+
+<ComponentPreview files={['axis-cartesian', 'axis-cartesian.data.ts']} />
+
+## 例子
+
+### 整图文案
+
+轴标题属于 `<Axis>`，因为它跟随某个 scale 的方向和位置。整张图的标题、说明这类静态文案用 `<TitleLabel>`、`<CaptionLabel>` 声明；内容可以写在 `text` prop，也可以像 core 的 `<Node>` 一样用 `<Text>` 子元素组织多行样式，并由 `layout.autoPadding` 决定是否自动预留空间。
+
+<ComponentPreview files={['axis-plot-labels', 'axis-plot-labels.data.ts']} />
+
+### 样式槽位
+
+`line` 控制轴线；`ticks` 控制刻度来源、长度和刻度线样式；`tickLabels` 控制刻度文字是否显示和文字样式；`title` 是轴标题，支持字符串或结构化文本；`grid` 可以是布尔值，也可以带线条样式与独立刻度来源。`dashOffset` 与 `dashPattern` 配合时，可以调整虚线起点。
+
+<ComponentPreview files={['axis-style-slots', 'axis-style-slots.data.ts']} />
+
+### 网格来源
+
+默认情况下，`grid: true` 会复用当前轴的可见 tick。需要轴上只显示少量刻度、但背景网格更密时，可以给 `grid.ticks` 单独配置 `values`、`interval` 或 `count`；`grid.density` 只抽稀网格，不会改变轴 tick。`grid.minor` 用来画次网格，和主网格重合的位置会自动跳过。
+
+<ComponentPreview files={['axis-grid-source', 'axis-grid-source.data.ts']} />
+
+### 刻度密度
+
+`ticks.count` 是给 scale 的目标数量提示，不保证最终数量。需要固定间隔时用 `ticks.interval`，需要从候选 tick 中抽稀时用 `ticks.density`；`ticks.mark` 可以把短线换成内置形状或自定义 core shape。
+
+| 配置       | 主要形态                                                                                                                                        | 用途                        |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| `interval` | `{ kind:'number', step, anchor? }` / `{ kind:'time', unit, step?, anchor? }` / `{ kind:'category', step, offset? }`                             | 生成固定间隔候选 tick       |
+| `density`  | `{ kind:'all' }` / `{ kind:'sample', maxCount?, minGap?, preserveEnds? }`                                                                       | 从候选 tick 中抽稀可见 tick |
+| `mark`     | `false` / `{ kind:'line', length?, line? }` / `{ kind:'circle' \| 'square' \| 'triangle' \| 'diamond', ... }` / `{ kind:'custom', shape, ... }` | 控制刻度标记外观            |
+
+<ComponentPreview files={['axis-tick-density', 'axis-tick-density.data.ts']} />
+
+### 刻度文字避让
+
+`tickLabels.layout` 只调整文字节点，不改变 tick、tick mark 或 grid 的来源。省略时会使用内置自适应策略；需要精确排版时，可以写 `layout: false` 关闭自动旋转、隐藏和边界处理。
+
+| 配置                | 主要形态                                                                  | 用途                                                    |
+| ------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `layout.rotate`     | `false` / `{ angles?, recoverWhenFailed? }`                               | 自动选择刻度文字旋转角度；显式 `tickLabels.rotate` 优先 |
+| `layout.hide`       | `false` / `{ strategy:'greedy' \| 'parity', preserveEnds?, separation? }` | 隐藏重叠文字，保留 tick、tick mark 和 grid              |
+| `layout.bounds`     | `false` / `{ overflow:'allow' \| 'hide' \| 'flush', tolerance? }`         | 处理首尾文字超出轴范围的情况                            |
+| `layout.sampleSize` | `number`                                                                  | 限制自动旋转估算时扫描的 label 数量                     |
+
+<ComponentPreview files={['axis-tick-label-layout', 'axis-tick-label-layout.data.ts']} />
+
+### 原点轴
+
+cartesian 下可以让轴线穿过另一维的指定值。`placement.kind="origin"` 只改变轴线摆放，不会自动扩展 domain；需要原点可见时，请显式配置 `domain` 或 `domainPadding`。`crossing` 控制交叉值处的 tick 与 label，`line.arrow` 用 `positive` / `negative` 表达轴方向端点，`ticks.endpoint` 避让箭头附近的刻度标记，`title.placement` 控制标题沿可见轴线的位置。
+
+| 配置                | 常用取值                                                                        | 作用                                                                                           |
+| ------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `crossing.tick`     | `'show' \| 'hide'`                                                              | 显示或隐藏交叉值处的 tick mark                                                                 |
+| `crossing.label`    | `'show' \| 'hide' \| 'corner'`                                                  | 显示、隐藏或把交叉值 label 放到角落                                                            |
+| `crossing.corner`   | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'`                  | `label:'corner'` 时的角落位置                                                                  |
+| `ticks.endpoint`    | `false \| { hideWhenArrow?, distance?, affect? }`                               | 控制箭头端点附近的 tick 避让；`false` 关闭默认避让，`affect:'mark-and-label'` 会同时隐藏 label |
+| `title.placement`   | `'at-start'` / `'near-start'` / `'midway'` / `'near-end'` / `'at-end'` / `0..1` | 沿轴线从负方向到正方向放置标题                                                                 |
+| `title.orientation` | `'auto'` / `'horizontal'` / `'axis'`                                            | 控制标题旋转；数学坐标系常用 `horizontal` 让 y 标题正向显示                                    |
+
+<ComponentPreview files={['axis-math-origin', 'axis-math-origin.data.ts']} />
+
+### polar 轴
+
+polar 下用 `dimension="x"`（角向刻度标签）和 `dimension="y"`（径向刻度 + 同心环网格）。雷达 / 极坐标图常两条一起用。
+
+<ComponentPreview files={['axis-polar', 'axis-polar.data.ts']} />
+
+<p className="text-sm text-muted-foreground">x 轴在 polar 中标角向维度，y 轴加 grid 画同心环。</p>
+
+### 图层顺序
+
+坐标轴默认在 mark 之上、图例和整图文案之下。需要特殊覆盖时，在 `<Axis>` 上写 `layer={{ zIndex }}`；它只控制轴本身的外层 scope，`grid` 仍然留在网格层，避免网格盖住数据图元。默认层级是：网格 `-300`、mark `0`、轴 `200`、整图文案 `400`、图例 `500`。
+
+## API
+
+| 属性          | 类型                      | 默认值   | 描述                                                                                                                                                                                   |
+| ------------- | ------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dimension`   | `AxisProps['dimension']`  | —        | 装饰哪个维度：cartesian 的 x / y，polar 的 x / y，ternary 的 x / y / z（三角三边）；须匹配坐标系合法集、否则报错                                                                       |
+| `scale?`      | `PositionScaleType`       | 自动派生 | 位置 scale 快捷类型；等价于同维度的 `<Scale dimension="..." type="..." />`，仅适用于 x / y / z                                                                                         |
+| `placement?`  | `AxisProps['placement']`  | 自动推断 | 坐标轴摆放；各分支的 `kind` 来自 <ApiValues name="AxisPlacementKind" />；`origin` 仅支持 cartesian，x 轴的 `origin` 是 y 值，y 轴的 `origin` 是 x 值                                   |
+| `line?`       | `AxisProps['line']`       | 默认轴线 | 轴线样式与端点几何；`extent` 控制数据范围，`arrow.positive/negative` 控制轴方向箭头；`extent` / `arrow` 目前仅支持 cartesian                                                           |
+| `crossing?`   | `AxisProps['crossing']`   | 正常刻度 | 控制轴线交叉值处的 tick 与 label；`label:'corner'` 可把共用原点 label 放到角落                                                                                                         |
+| `ticks?`      | `AxisProps['ticks']`      | 默认刻度 | `values > interval > count` 生成候选 tick；`density` 抽稀可见 tick；`endpoint` 避让箭头附近的刻度标记且不改变 grid 来源；`mark` 控制短线 / 形状刻度                                    |
+| `tickLabels?` | `AxisProps['tickLabels']` | `true`   | 刻度文字配置；`format` 支持 d3-format / d3-time-format；`rotate` 是固定旋转，优先于 `layout.rotate`；`layout:false` 关闭自动避让                                                       |
+| `title?`      | `AxisProps['title']`      | —        | 轴标题；`padding` 控制标题到刻度文字带的距离，`placement` 支持 path label 同类关键字或 `0..1` 比例，`anchor` / `shift` 微调端点对齐与局部偏移，显式 `rotate` 优先                      |
+| `grid?`       | `AxisProps['grid']`       | `false`  | 是否画网格线；默认复用本轴可见 tick，也可用 `grid.ticks` 独立设置来源；`minor` 画次网格；`applyTo/select` 控制组合 / 分面投放；`bandPosition` 只在 band scale 上生效                   |
+| `id?`         | `AxisProps['id']`         | —        | 可选 guide 句柄；开启 provenance 时轴层使用 `<plotId>.<id>`，网格层使用同一 owner 派生的 `<plotId>.<id>.grid`；匿名组合轴按 coordinate view 生成结构 id，facet 中再加入 panel identity |
+
+`layout` 是 `<Plot>` 属性；`labels` 是 `TitleLabel` / `CaptionLabel` 等声明汇入的 PlotSpec 字段，二者都不属于 `<Axis>`：
+
+| 字段      | 类型                   | 默认值   | 描述                                                                                                           |
+| --------- | ---------------------- | -------- | -------------------------------------------------------------------------------------------------------------- |
+| `layout?` | `PlotProps['layout']`  | 自动布局 | 控制整图 labels 是否参与自动预留；`mode:'fixed'` 或 `autoPadding:false` 会放置文案但不自动收缩 plot area       |
+| `labels?` | `IRPlotSpec['labels']` | `[]`     | 整图静态文案；`role:'title'/'caption'/'source'` 默认参与预留，`role:'note'` 和 `kind:'point'` 默认只定位不占位 |
+
+图例的 `style` 也可以控制 size 图例的符号尺寸。默认 `symbolFit:'fit'` 会把 size 符号压入 `symbolSize` 盒子，避免大半径点遮挡图例条目；需要保留实绘半径时再显式使用 `symbolFit:'preserve'`。
+
+| 字段                 | 类型                                 | 默认值             | 描述                                                                                               |
+| -------------------- | ------------------------------------ | ------------------ | -------------------------------------------------------------------------------------------------- |
+| `style.symbolSize?`  | `number`                             | `style.swatchSize` | size / shape 等符号型图例的目标视觉盒尺寸                                                          |
+| `style.symbolScale?` | `number`                             | `1`                | 图例符号的整体缩放系数                                                                             |
+| `style.symbolFit?`   | <ApiValues name="LegendSymbolFit" /> | `'fit'`            | `fit` 会压入 `symbolSize`；`preserve` 保留通道 descriptor 的原始半径，并按实际符号尺寸预留条目空间 |
+
+## 相关
+
+- [坐标系](/viz/plot/coordinate) —— polar 开关与角色映射
+
+<ComponentAlert
+  title="参考线 / 参考带不是轴"
+  description="想在某个值 / 区间画阈值线、均值线、容差带，用 <ReferenceMark>（数据驱动的标注，参与 mark 叠放），不是 <Axis>。<Axis> 只画比例尺的刻度身。"
+/>

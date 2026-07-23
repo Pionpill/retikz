@@ -91,14 +91,18 @@ Grid 的 IR 不直接成为新的渲染图元。lowering 先规范化范围、�
 
 ## API 参考
 
-| 属性      | 类型                                                                                                                               | 默认值       | 描述                                        |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------- |
-| `bounds`  | `{ min: Position; max: Position }`                                                                                                 | —            | 严格二维范围，两个轴上 `min` 必须小于 `max` |
-| `spacing` | `number \| { x: number; y: number }`                                                                                               | —            | 统一或分轴的正格距                          |
-| `origin`  | `Position`                                                                                                                         | `bounds.min` | 格点与主线计数的对齐基准                    |
-| `lines`   | `{ vertical?: boolean;`<br />`horizontal?: boolean;`<br />`includeBoundary?: boolean;`<br />`style?: IRStandardPathStrokeStyle }`  | 两方向可见   | 普通线的方向、补边界与样式                  |
-| `major`   | `{ every: number;`<br />`offset?: number;`<br />`style?: IRStandardPathStrokeStyle }`                                              | —            | 主线间隔、索引偏移和浅覆盖样式              |
-| `border`  | `{ padding?: number;`<br />`order?: 'behind' \| 'front';`<br />`extendLines?: boolean;`<br />`style?: IRStandardPathBorderStyle }` | —            | 可选边框的外扩、顺序、线段延长和样式        |
+`GridProps` 是 `GridInput` 的公开别名，Vanilla adapter 也接收同一个 `GridInput`；`createGrid` 校验输入并返回应用了 schema 默认值的 `IRGrid`。下表中的 `Position` 来自 `@retikz/math`。
+
+### `GridInput`
+
+| 属性      | 类型                                                                                                                                                                            | 默认值                                                                                                             | 描述                                                                                                                                       |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `bounds`  | `GridInput['bounds']`<br />- `min: Position`<br />- `max: Position`                                                                                                             | —<br />- —<br />- —                                                                                                | 严格二维范围<br />- 包含的最小角点<br />- 包含的最大角点；两个轴上都必须大于 `min`                                                         |
+| `spacing` | `GridInput['spacing']`<br />`number` \| `Exclude<GridInput['spacing'], number>`<br />- `x:` `number`<br />- `y:` `number`                                                       | —<br />- —<br />- —                                                                                                | 正格距；数字对两方向使用同一间距，对象则分轴设置<br />- 竖直格线的 x 间距<br />- 水平格线的 y 间距                                         |
+| `origin?` | `Position`                                                                                                                                                                      | `bounds.min`                                                                                                       | lowering 中格点对齐与主线计数的基准                                                                                                        |
+| `lines?`  | `GridInput['lines']`<br />- `vertical?: boolean`<br />- `horizontal?: boolean`<br />- `includeBoundary?: boolean`<br />- `style?: IRStandardPathStrokeStyle`                    | `{ vertical: true, horizontal: true, includeBoundary: false }`<br />- `true`<br />- `true`<br />- `false`<br />- — | 普通格线配置<br />- 生成竖线<br />- 生成横线<br />- 当格点未命中边界时补边线<br />- 普通格线的 Path 描边样式                               |
+| `major?`  | `GridInput['major']`<br />- `every: number`<br />- `offset?: number`<br />- `style?: IRStandardPathStrokeStyle`                                                                 | —<br />- —<br />- `0`<br />- —                                                                                     | 可选主线配置<br />- 每隔多少个格点索引生成主线<br />- 相对 `origin` 的整数索引偏移<br />- 浅覆盖普通格线的 Path 描边字段                   |
+| `border?` | `GridInput['border']`<br />- `padding?: number`<br />- `order?:` <ApiValues name="GridBorderOrder" /><br />- `extendLines?: boolean`<br />- `style?: IRStandardPathBorderStyle` | —<br />- `0`<br />- `'front'`<br />- `false`<br />- —                                                              | 可选边框配置<br />- 向外扩展的均匀间距<br />- 边框在格线前方或后方输出<br />- 格线是否延长到外扩后的边框<br />- 边框的 Path 描边与填充样式 |
 
 ## 相关
 

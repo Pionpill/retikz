@@ -3,7 +3,7 @@ title: Coordinate
 description: Coordinate names a non-rendering geometric point that paths and other nodes can position against by id.
 ---
 
-`<Coordinate>` gives a position a stable `id` without drawing shape or text. Paths can target it, and other nodes can reference it through relative, offset, or proportional positioning.
+`<Coordinate>` gives a position a stable `id` without drawing shape or text. Paths can target it, and other nodes can reference it through relative, offset, proportional, or anchor placement.
 
 ## Usage
 
@@ -15,7 +15,7 @@ import { Coordinate } from '@retikz/react';
 <Coordinate id="hub" position={[0, 0]} />
 ```
 
-`position` accepts the same five forms as `<Node>`: Cartesian `[x, y]` / polar `{ angle, radius, origin? }` / relative `{ direction, of, distance? }` / offset `{ of, offset }` / proportional `{ between, fraction }`.
+`Coordinate.position` accepts five center/point forms: Cartesian `[x, y]` / polar `{ angle, radius, origin? }` / relative `{ direction, of, distance? }` / offset `{ of, offset }` / proportional `{ between, fraction }`. Node additionally supports `{ kind: 'anchor', target, selfAnchor? }`, which depends on its real measured size. A Coordinate may be that form's target, but Coordinate itself has no `selfAnchor` placement.
 
 ### When to use
 
@@ -131,24 +131,24 @@ Node / Coordinate position references also resolve during traversal, so they see
     {
       label: 'named anchor resolution',
       path: 'packages/kernel/core/src/compile/node/anchors.ts',
-      startLine: 57,
-      endLine: 84,
+      startLine: 65,
+      endLine: 117,
     },
     {
       label: 'zero-size side-fraction rejection',
       path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts',
-      startLine: 52,
-      endLine: 72,
+      startLine: 29,
+      endLine: 52,
     },
   ]}
 />
 
 ## API Reference
 
-| Prop       | Type                                                                                                 | Default | Description                                                                                                                                         |
-| ---------- | ---------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`       | `string`                                                                                             | —       | **Required** — a placeholder's entire purpose is to be referenced by id                                                                             |
-| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, fraction }` | —       | Placeholder position; same shapes as `<Node position>`; id dependencies must be registered first—see [How it works](#register-first-then-reference) |
+| Prop       | Type                          | Default | Description                                                                                                                                                                               |
+| ---------- | ----------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`       | `string`                      | —       | **Required** — a placeholder's entire purpose is to be referenced by id                                                                                                                   |
+| `position` | `CoordinateProps['position']` | —       | Five placement forms for a zero-size point; does not accept the Node-only `IRAnchorPosition`. Id dependencies must be registered first—see [How it works](#register-first-then-reference) |
 
 ## Related
 

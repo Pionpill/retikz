@@ -144,6 +144,6 @@ describe('Coordinate（零尺寸）anchor 退化', () => {
   });
 
   it('{ side, fraction } 对零尺寸 Coordinate 报明确错', () => {
-    expect(() => coordEnd({ id: 'c', anchor: { side: 'top', fraction: 0.5 } })).toThrow(/zero-size Coordinate/);
+    expect(() => coordEnd({ id: 'c', anchor: { side: 'top', fraction: 0.5 } })).toThrow(/zero-size target/);
   });
 });

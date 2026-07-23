@@ -1,159 +1,64 @@
 ---
 title: Data Transforms
-description: Data transforms rewrite canonical rows after data-model intake, covering sorting, summarization, representative-row selection, statistical annotation, and custom transform definitions.
+description: Data transforms rewrite canonical rows in order and make sorting, summarization, representative-row selection, and statistical annotation reusable across consumers.
 ---
 
-Data transforms belong to `@retikz/data`: they read canonical rows and return canonical rows without depending on plot marks, scales, or coordinates. Plot can use them through `<Transform>`, `dataTransforms`, or mark-local `transform`; table and geo can later reuse the same data capabilities.
+Data transforms belong to `@retikz/data`. They read canonical rows produced by the data model, process them in order, and return new canonical rows for charts, tables, and other consumers.
 
-Plot-only drawing transforms stay in [Drawing Grammar transforms](/viz/grammar/transform), including `stack`, `bin`, `normalize`, `derive-interval`, `jitter`, `density`, `smooth`, and `relate`. This page covers only the built-in capabilities owned by the data package.
+This site uses Plot as the default example host only because a chart makes changes in row count, order, and statistical fields easy to see. Plot's React API can apply these capabilities through `<Transform>`, `dataTransforms`, or mark-local `transform`; those entry points are not part of Data itself.
 
-## Capabilities
+## Overall flow
 
-| kind        | Row count            | Data meaning                                  | Common consumers                                   |
-| ----------- | -------------------- | --------------------------------------------- | -------------------------------------------------- |
-| `sort`      | N -> N               | Stably reorder rows by a field                | Line order, pre-stack preparation                  |
-| `summarize` | N -> G               | Generate one statistical row per group        | Grouped bars, summary tables, statistics           |
-| `select`    | N -> K               | Select representative original rows           | Extremes, top-N, outlier samples                   |
-| `annotate`  | N -> N               | Broadcast group stats or representatives      | Mean lines, threshold labels, context layers       |
-| custom      | definition-dependent | Runtime logic registered by `defineTransform` | Domain-specific derivation or long-tail row shapes |
+| Stage              | Input                        | Output                     | Responsibility                                  |
+| ------------------ | ---------------------------- | -------------------------- | ----------------------------------------------- |
+| Data model         | External rows + field model  | Canonical rows             | Align fields, parse values, and validate intake |
+| Transform pipeline | Canonical rows + operation[] | New canonical rows         | Sort, summarize, select, or annotate in order   |
+| Consumer           | Transformed rows             | Chart, table, or domain UI | Interpret fields and produce a concrete view    |
 
-The operations are JSON-serializable config. The implementation function comes from data built-ins or runtime-injected definitions. Input fields read by a transform participate in model validation; fields produced by a transform do not need to be declared in the model ahead of time.
+Every operation is JSON-serializable configuration backed by a Definition that supplies runtime behavior. Fields read by transforms participate in model validation; fields produced by transforms do not need to be declared in the model ahead of time.
 
-## TypeScript Types
+## Responsibilities
 
-Types inferred from transform schemas use the `IRDataXxx` convention. The old `Transform`, `ReducerOperation`, and `SelectorOperation` names have been removed without compatibility aliases; JSON operation shapes are unchanged.
+| Topic                     | Responsibility                                                    | Read it when                                      |
+| ------------------------- | ----------------------------------------------------------------- | ------------------------------------------------- |
+| Transform                 | Declare Plot React operations and understand multi-entry ordering | You compose a pipeline in JSX or debug its order  |
+| Transform Operations      | `sort`, `summarize`, `select`, and `annotate`                     | You reorder, aggregate, or retain original rows   |
+| Statistical Sub-operators | Reducers, selectors, and quantile-band composition                | You compute metrics, choose extremes, or boxplots |
+| Extension Mechanisms      | Custom transform, reducer, and selector Definitions               | Built-ins cannot express new processing semantics |
 
-| Scope         | Types                                                                                                 |
-| ------------- | ----------------------------------------------------------------------------------------------------- |
-| Overall union | `IRDataTransform`, `IRDataBuiltinTransform`                                                           |
-| Built-ins     | `IRDataSortTransform`, `IRDataSummarizeTransform`, `IRDataSelectTransform`, `IRDataAnnotateTransform` |
-| Reducers      | `IRDataReducerOperation`, `IRDataReducerMetrics`, `IRDataQuantileBandReducerOperation`                |
-| Selectors     | `IRDataSelectorOperation`, `IRDataOutsideQuantileBandSelectorOperation`                               |
-| Nested config | `IRDataOrderBy`, `IRDataAnnotateSelector`                                                             |
+Plot-registered `stack`, `bin`, `normalize`, `derive-interval`, `relate`, `jitter`, `density`, and `smooth` remain under [Drawing Grammar transforms](/viz/plot/transform). Registration of custom transforms, reducers, and selectors is centralized under [Extension Mechanisms](/viz/data/transform/extensions), while runtime lineage events live under [Provenance](/viz/data/provenance).
 
-## sort
+## Pages
 
-`sort` stably reorders rows by a field. Equal values keep their original relative order, which is useful before line connection, time-series display, or later grouped processing.
-
-`null`, `undefined`, `NaN`, and infinities are treated as missing and remain after valid values in both ascending and descending order.
-
-Keep it separate from [`order`](/viz/data/model#category-order) in the data model: `sort` reorders rows, while `order` reorders a categorical domain.
-
-<ComponentPreview files={['transform-sort', 'transform-sort.data.ts']} />
-
-| prop    | type                           | default       | description |
-| ------- | ------------------------------ | ------------- | ----------- |
-| `field` | `string`                       | —             | Sort field  |
-| `order` | `'ascending' \| 'descending'?` | `'ascending'` | Direction   |
-
-## summarize
-
-`summarize` groups by `groupBy`, then reduces each group into one output row through `metrics`. The output row keeps the group keys, and every reducer must declare an `as` field name.
-
-Output names must be unique within one operation: summarize reducer outputs cannot collide with `groupBy`, and annotate metric outputs cannot collide with selector `as` fields. The schema rejects conflicts instead of silently overwriting data.
-
-<ComponentPreview files={['transform-summarize', 'transform-summarize.data.ts']} />
-
-| prop      | type             | default          | description                                       |
-| --------- | ---------------- | ---------------- | ------------------------------------------------- |
-| `groupBy` | `Array<string>?` | one global group | Group key fields; supports composite keys         |
-| `metrics` | `Array<Reducer>` | —                | Group statistics; every reducer must declare `as` |
-
-```tsx
-<Transform
-  kind="summarize"
-  groupBy={['region']}
-  metrics={[
-    { kind: 'sum', field: 'revenue', as: 'total' },
-    { kind: 'median', field: 'revenue', as: 'median' },
-    { kind: 'count', as: 'orders' },
-  ]}
-/>
-```
-
-## select
-
-`select` runs a selector per group and outputs the selected original rows. It does not reduce values into new statistical objects, so it keeps original city names, ids, anchors, and other row fields while filtering to extremes or top-N rows.
-
-<ComponentPreview files={['transform-select', 'transform-select.data.ts']} />
-
-| prop       | type             | default          | description                                  |
-| ---------- | ---------------- | ---------------- | -------------------------------------------- |
-| `groupBy`  | `Array<string>?` | one global group | Group key fields                             |
-| `selector` | `Selector`       | —                | Representative-row rule                      |
-| `rankAs`   | `string?`        | —                | Optional one-based rank field on output rows |
-
-```tsx
-<Transform kind="select" groupBy={['region']} selector={{ kind: 'top', by: 'revenue', n: 3 }} rankAs="rank" />
-```
-
-## annotate
-
-`annotate` groups rows first, then broadcasts reducer results or selected representative values back to every row in the group. It is useful for group mean lines, median bands, thresholds, or other contextual layers around detail rows.
-
-Selector annotations accept only built-in rules that select at most one row: `min` / `max`, `first` / `last` / `nth`, and `top` / `bottom` with `n: 1`. Tie handling may use the default `first` or `last`, but not `all`. Use `select` for multi-row selection, `outside-quantile-band`, or custom selectors; express a custom scalar annotation as a reducer.
-
-<ComponentPreview files={['transform-annotate', 'transform-annotate.data.ts']} />
-
-| prop        | type                             | default          | description                                   |
-| ----------- | -------------------------------- | ---------------- | --------------------------------------------- |
-| `groupBy`   | `Array<string>?`                 | one global group | Group key fields; supports composite keys     |
-| `metrics`   | `Array<Reducer>?`                | —                | Statistical metrics to broadcast to every row |
-| `selectors` | `Array<IRDataAnnotateSelector>?` | —                | Broadcast one representative                  |
-
-```tsx
-<Transform
-  kind="annotate"
-  groupBy={['store']}
-  metrics={[{ kind: 'mean', field: 'revenue', as: 'storeMean' }]}
-  selectors={[{ selector: { kind: 'max', by: 'revenue' }, as: 'storeMax' }]}
-/>
-```
-
-## Reducers And Selectors
-
-`summarize`, `annotate`, and plot-registered `bin` reuse reducers. `select`, `annotate`, and plot-registered `relate` reuse selectors. `select` accepts the complete selector set, while `annotate` uses only the single-row subset above.
-
-| sub-operator | returns        | typical ops                                                                           |
-| ------------ | -------------- | ------------------------------------------------------------------------------------- |
-| reducer      | field fragment | `count` / `sum` / `mean` / `median` / `min` / `max` / `quantile-band`                 |
-| selector     | original rows  | `min` / `max` / `first` / `last` / `top` / `bottom` / `nth` / `outside-quantile-band` |
-
-`quantile-band` uses `lowerP` and `upperP` for arbitrary quantile intervals instead of hard-coding q1 / q3. `outside-quantile-band` is a selector, so it outputs original rows and preserves ids, labels, and provenance.
-
-When a field has no finite numeric values, `sum` keeps the empty-sum identity `0` and `count` reports the group row count. `mean`, `median`, `min`, `max`, `extent`, `quantile`, and `quantile-band` have no defined statistic, so they return an invalid sentinel for downstream skip / error handling instead of fabricating zero.
-
-<ComponentPreview files={['transform-boxplot', 'transform-boxplot.data.ts']} />
-
-The boxplot above has no dedicated `BoxPlotMark`. Data transforms produce the box, median, whisker, and outlier rows; plot only consumes those fields with `IntervalMark`, `ReferenceMark`, and `PointMark`.
-
-## Lineage
-
-Use `applyTransformsWithLineage` instead of `applyTransforms` when a host needs to explain the data computation chain. It executes the same transform definitions and returns runtime-only lineage events; those events do not enter JSON IR and are not written back into data rows.
-
-```ts
-const { rows, lineage } = applyTransformsWithLineage(sourceRows, operations, {
-  lineage: {
-    fieldFlow: true,
-    reducerOperations: true,
-    rowSamples: { maxRows: 5, fields: ['region', 'revenue', 'total'] },
-  },
-});
-```
-
-The default `lineage: {}` records only the necessary summary: source-index summary, transform order, input / output row counts, and field sets. `rowSamples`, `calculationDetails`, reducer details, and selector details are independent opt-ins. Sample switches must provide `maxRows` and a non-empty `fields` whitelist so the runtime never copies whole rows by default.
-
-When `lineage.sink` is provided, events stream to the callback and are not retained in the returned `lineage.events` by default. Set `retainEvents: true` when a host needs both streaming and the returned event array.
-
-## Custom Transforms
-
-When the input / output row shape does not fit an existing transform, register a runtime definition with `defineTransform`. Definitions do not enter JSON IR; IR stores only `{ kind, ...config }`, and runtime definition sets provide the implementation.
-
-<ComponentPreview files={['transform-custom', 'transform-custom.data.ts']} />
-
-| definition field | declares                                                     | enters IR |
-| ---------------- | ------------------------------------------------------------ | --------- |
-| `schema`         | Validates `{ kind, ...config }` and reads the key            | No        |
-| `inputFields`    | Source fields read by the transform and model validation     | No        |
-| `outputFields`   | Derived fields excluded from strict model checks             | No        |
-| `apply`          | Runtime row processing: `(rows, operation, context) => rows` | No        |
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/data/transform/overview">
+    <span className="font-semibold">Transform</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Declare transforms in Plot React and understand component, array, and automatic transform ordering.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/transform/operations">
+    <span className="font-semibold">Transform Operations</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Look up the semantics, parameters, and examples for the four Data built-ins.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/transform/statistics">
+    <span className="font-semibold">Statistical Sub-operators</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Compose reducers and selectors to produce metrics or preserve representative rows.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/transform/extensions">
+    <span className="font-semibold">Extension Mechanisms</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Register custom transform, reducer, and selector Definitions.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/provenance">
+    <span className="font-semibold">Provenance</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Record operation order, field flow, and optional calculation details.
+    </span>
+  </LinkedCard>
+</div>

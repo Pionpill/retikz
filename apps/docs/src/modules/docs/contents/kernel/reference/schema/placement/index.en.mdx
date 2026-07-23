@@ -1,9 +1,9 @@
 ---
 title: Placement
-description: Five forms a `position` field can take — Cartesian / Polar / At-relative / Offset / Proportional partway
+description: Five shared position forms plus Node-only anchor-to-anchor placement
 ---
 
-A `position` field can be filled with any of five forms. Non-Cartesian forms resolve to Cartesian coordinates at compile time.
+Node and Coordinate share five `position` forms. Node additionally supports anchor-to-anchor placement based on actual layout. Non-Cartesian forms resolve to a final position at compile time.
 
 ## Position
 
@@ -49,6 +49,14 @@ A `position` field can be filled with any of five forms. Non-Cartesian forms res
 
 <ZodSchema name="BetweenPositionSchema" />
 
+<span id="anchorposition"></span>
+
+## AnchorPosition
+
+`AnchorPositionSchema` is valid only in `Node.position`. The compiler completes the current Node's text, shape, padding, margin, scale, and rotation layout before translating the whole Node until its selected anchor coincides with the target anchor plus offset.
+
+<ZodSchema name="AnchorPositionSchema" />
+
 <span id="absolutetarget"></span>
 
 ## AbsoluteTarget
@@ -61,7 +69,7 @@ A `position` field can be filled with any of five forms. Non-Cartesian forms res
 
 ## NodeTarget
 
-`NodeTargetSchema` is the object form for a path endpoint referencing a Node / Coordinate. Omitting `anchor` enables automatic boundary clipping; explicit anchor, offset, and per-endpoint boundary overrides affect this endpoint only.
+`NodeTargetSchema` references a named Node, Coordinate, or Scope. Its consumer defines what an omitted `anchor` means: a path endpoint enables automatic boundary clipping, while `AnchorPositionSchema.target` defaults to `center`. Explicit anchor, offset, and boundary overrides affect this reference only.
 
 <ZodSchema name="NodeTargetSchema" />
 

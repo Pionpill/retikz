@@ -181,20 +181,20 @@ SVG maps `blur` to Gaussian standard deviation and bases the filter region on th
 
 `shadow` is a shared style prop on `<Node>` and `<Path>`, written the same way on both.
 
-| Prop     | Type                                                                                                                 | Default | Description                                                     |
-| -------- | -------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------- |
-| `shadow` | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none'`<br />`\| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | —       | Shadow on primary geometry; see precedence and boundaries above |
+| Prop     | Type                                                | Default | Description                                                     |
+| -------- | --------------------------------------------------- | ------- | --------------------------------------------------------------- |
+| `shadow` | <ApiValues name="ShadowPreset" /> \| `IRDropShadow` | —       | Shadow on primary geometry; see precedence and boundaries above |
 
 ### shadow object fields
 
-| Prop      | Type                                              | Default           | Description                                                                                           |
-| --------- | ------------------------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------- |
-| `preset`  | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none'` | —                 | Tailwind-style step seeding offsetX / offsetY / blur / color as defaults; explicit fields override it |
-| `offsetX` | `number`                                          | `0` (from preset) | Horizontal offset (user units)                                                                        |
-| `offsetY` | `number`                                          | from preset       | Vertical offset (user units, positive = downward)                                                     |
-| `blur`    | `number` (≥0)                                     | from preset       | Blur radius (user units); `0` = hard edge                                                             |
-| `color`   | `string`                                          | `rgba(0,0,0,0.5)` | Shadow color, any CSS color                                                                           |
-| `opacity` | `number` (0–1)                                    | —                 | Shadow opacity, multiplied onto the color's effective alpha                                           |
+| Prop      | Type                              | Default           | Description                                                                                           |
+| --------- | --------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------- |
+| `preset`  | <ApiValues name="ShadowPreset" /> | —                 | Tailwind-style step seeding offsetX / offsetY / blur / color as defaults; explicit fields override it |
+| `offsetX` | `number`                          | `0` (from preset) | Horizontal offset (user units)                                                                        |
+| `offsetY` | `number`                          | from preset       | Vertical offset (user units, positive = downward)                                                     |
+| `blur`    | `number` (≥0)                     | from preset       | Blur radius (user units); `0` = hard edge                                                             |
+| `color`   | `string`                          | `rgba(0,0,0,0.5)` | Shadow color, any CSS color                                                                           |
+| `opacity` | `number` (0–1)                    | —                 | Shadow opacity, multiplied onto the color's effective alpha                                           |
 
 ## Related
 

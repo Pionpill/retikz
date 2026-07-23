@@ -1,0 +1,202 @@
+---
+title: PathMark
+description: 'PathMark is a one-dimensional trajectory made from ordered points; lines, closed paths, multi-series lines, and radar outlines are presentation forms of the same mark.'
+---
+
+`<PathMark>` produces one 1D trajectory from a set of data rows. It projects each row into a point, sorts the points by `order`, and lowers the result into a core `Path`. Under cartesian2D it is usually a line; under polar2D it can become a polar path or a radar outline.
+
+`x` / `y` bind position channels, `order` decides connection order, `series` decides whether to split into multiple paths, `curve` decides how adjacent points connect, and `closure` decides whether the path closes by baseline or by cycle. PathMark currently supports cartesian2D and polar2D.
+
+## Usage
+
+```tsx
+import { PathMark, Plot } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={revenue}>
+  <PathMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+Set `order` explicitly. Otherwise PathMark follows data array order, so a different row order changes the path shape.
+
+## Presentation Layer
+
+PathMark is a low-level line mark: it only connects a set of ordered anchors into one 1D trajectory. It does not care whether the presentation layer calls that trajectory a line chart, trend line, outline, or radar outline; those are interpretations of the same PathMark.
+
+The presentation form mainly changes through three groups of props: position channels decide where points come from, series channels decide how many paths are produced, and geometry props decide whether the path closes as a line or as a fillable area.
+
+| Presentation form | Key props           | Behavior                                                                                                          |
+| ----------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Line              | `x` / `y` / `order` | Project each row into a point, then connect the points in order                                                   |
+| Multi-series line | `series` / `color`  | Split rows by series first, then produce one path per group                                                       |
+| Radar outline     | `polar2D`           | Polar paths close by default; set `closed={false}` for an open path                                               |
+| Path area         | `closure` / `fill`  | Close the path by cycle, constant baseline, or per-row stacked baseline; set `fill` explicitly to fill the result |
+
+## Examples
+
+### Position Props
+
+`x` / `y` decide which points the path visits, and `order` decides how those points connect. The left side uses cartesian2D and the right side uses polar2D, so the same data shows how position channels project under different coordinates.
+
+<ComponentPreview files={['line-basic', 'line-basic.data.ts']} />
+
+### Series Props
+
+Set `series` to a field and rows split into groups first. Each series keeps an independent render group containing one or more continuous Path segments. SVG uses `<g>`, while Canvas reuses the same hierarchy. This example explicitly splits by `city`: the left side is a multi-series line, and the right side shows the same series under polar coordinates.
+
+<ComponentPreview files={['line-series', 'line-series.data.ts']} />
+
+With no `series`, giving `color` a categorical field also splits PathMark implicitly. This example uses a different dataset to make the compact “color is the series” form visually distinct from explicit `series`.
+
+<ComponentPreview files={['line-color-split', 'line-series.data.ts']} />
+
+### Mark-Local Transforms
+
+When `transform` is placed on PathMark, only that path layer sees the changed rows. The point layer below keeps the original channel values, while the dark path layer runs `smooth` only inside this mark and connects the sampled trend rows.
+
+<ComponentPreview files={['line-transform', 'line-transform.data.ts']} />
+
+### Paint Styles
+
+Both `stroke` and `fill` can be `IRPaintSpec` values. The left chart applies a linear gradient to the stroke; the right chart uses `closure={{ kind: 'baseline' }}` to create a fillable area layer, passes the gradient to `fill`, and then overlays a stroke-only PathMark for the upper outline.
+
+<ComponentPreview files={['line-paint', 'line-basic.data.ts']} />
+
+### Geometry Props
+
+`closed` connects the last point back to the first. Under `polar2D`, PathMark closes by default: the left side omits `closed` and still forms a radar outline, while the right side sets `closed={false}` to keep the path open.
+
+<ComponentPreview files={['line-radar', 'line-radar.data.ts']} />
+
+### Connection Type
+
+`curve` controls how adjacent points connect. The left side uses cartesian2D and the right side uses polar2D; when you switch the connection type, both sides update together. The polar plot does not set an inner radius, so PathMark projects angular and radial positions directly. Because `monotoneX` / `monotoneY` rely on monotonic projected screen x / y values, they fall back to `linear` under polar2D to avoid long control handles in closed areas.
+
+<ComponentPreview files={['line-curve', 'line-curve.data.ts']} size="md" />
+
+| Value        | Meaning                    | Behavior                                                                                                                   |
+| ------------ | -------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `linear`     | Straight line              | Preserves the segment-by-segment relationship between neighboring points; useful when local changes should stay explicit   |
+| `step`       | Midpoint step              | Switches the y value midway between two x positions; useful for state or inventory-like data                               |
+| `stepBefore` | Before step                | Switches to the new value first, then moves along x; useful when a new value takes effect immediately                      |
+| `stepAfter`  | After step                 | Keeps the old value until the next x position, then switches; useful when an old value remains valid until the next moment |
+| `basis`      | Smooth spline              | Produces the softest curve, but does not guarantee passing through every middle point; useful for an overall trend         |
+| `cardinal`   | Cardinal spline            | Passes through data points with a softer curve than straight lines, but local extrema may overshoot slightly               |
+| `catmullRom` | Point-passing smooth curve | Passes through data points while preserving more local shape; useful as a general smooth line                              |
+| `monotoneX`  | Monotone x                 | When x is monotonic, reduces y overshoot beyond neighboring extrema; prefer this for BI trend lines                        |
+| `monotoneY`  | Monotone y                 | When y is monotonic, reduces x overshoot beyond neighboring extrema; useful for vertical trajectories                      |
+| `natural`    | Natural spline             | Keeps the whole curve continuous with relaxed endpoints; useful when continuous curvature matters                          |
+
+### Path Areas
+
+`closure` only closes PathMark into a fillable path; it does not enable filling by itself. `stroke` is on by default, and `stroke="none"` removes the border line; `fill` is off by default, and a concrete color or paint enables filling. The left area effect is composed from two PathMark layers: one `baseline + fill + stroke="none"` layer for the area, and one normal path layer for the upper outline. The right side uses `cycle + fill` to fill a radar polygon. Use the top-left control to switch `curve`; the default is a straight line. Baseline and stack return edges use the same connection curve.
+
+<ComponentPreview files={['line-closure', 'line-closure.data.ts']} controls={{ name: 'line-curve' }} size="md" />
+
+When `baseline` is omitted, it follows the value axis: use 0 when 0 is inside the value-axis domain; if an explicit domain excludes 0, such as `[30, 80]`, use the nearest domain edge, 30. Pass `closure={{ kind: 'baseline', baseline: ... }}` when the lower edge should be pinned to another value.
+
+For stacked areas, bind the upper boundary to `y` and pass the lower boundary field as `closure.baselineField`. The data can come from a stack transform or from precomputed `y0` / `y1` fields. The example uses the same fill-layer plus outline-layer composition for the area-chart effect. When `curve` is set, both boundaries use the same connection mode.
+
+<ComponentPreview files={['line-stack-area', 'line-stack-area.data.ts']} controls={{ name: 'line-curve' }} size="md" />
+
+### Interrupted Paths
+
+When a row cannot project into a valid point, PathMark breaks there by default and lowers the surrounding runs into separate core `Path` elements. If the path also has `closure` and `fill`, the fill follows the same segments instead of spanning across the missing gap.
+
+In this example, `Yasin` has no 2019 value, so both the outline and the filled area stop between 2018 and 2020. Set `connectNulls` explicitly when a chart should connect across gaps.
+
+<ComponentPreview files={['line-interruption', 'line-interruption.data.ts']} size="md" />
+
+## How It Works
+
+`PathMark` is a built-in registered mark. The React `<PathMark>` component does not render DOM; `<Plot>` collects it into mark IR with `type: 'path'` and records settings such as `x` / `y` / `order` / `series` / `closed` / `closure`.
+
+At compile time, `lowerMark` looks up `MARK_REGISTRY` by `mark.type`. `PathMark` resolves to the `PlotMark.Path` entry, which calls `lowerPathLayer`. `lowerPathLayer` accepts only cartesian2D / polar2D, then calls `lowerPath`: it splits rows into series, splits each series into projectable continuous segments, and lowers each segment into a core `Path`.
+
+For registration, focus on the `PathMark` registry entry and the `lowerPathLayer` / `lowerPath` functions that perform the lowering:
+
+```ts
+[PlotMark.Path]: { type: PlotMark.Path, lower: lowerPathLayer },
+
+const lowerPathLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+  if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) {
+    throw new Error(failLoudMessage(mark.type, frame.type));
+  }
+  const layer = lowerPath(mark, rows, frame, channels.colorOf, channels.defaultColor, markProvenance);
+  return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
+};
+
+const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+  if (mark.type !== PlotMark.Path) return null;
+  const closure = mark.closure;
+  const closed = mark.closed ?? isPolarCoordinateFrame(frame);
+  const seriesField = pathSeriesField(mark, rows);
+  const buildSegments = (segmentRows: Array<ExternalRow>) =>
+    closure
+      ? buildClosureStepSegments(mark, segmentRows, frame, closure, closed)
+      : buildLineStepSegments(mark, segmentRows, frame, closed);
+  if (seriesField) {
+    const seriesScopes = buildSeriesPathScopes(mark, rows, seriesField, buildSegments, paintOfSeries, markProvenance);
+    return seriesScopes.length === 0 ? null : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: seriesScopes };
+  }
+  const segments = buildSegments(rows);
+  if (segments.length === 0) return null;
+  const colorValue = mark.encoding.color?.value;
+  const stroke = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
+  return {
+    type: 'scope',
+    pathDefault: { stroke, strokeWidth: LINE_STROKE_WIDTH },
+    children: segments.map(segment => ({ type: 'path', children: segment.steps })),
+  };
+};
+```
+
+The logic has four parts:
+
+| Step             | Behavior                                                                                                                                                                                                                                                |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Coordinate check | PathMark needs 2D trajectory geometry; this release lowers it only under cartesian2D / polar2D                                                                                                                                                          |
+| Sort and project | `orderRows` decides connection order, and `frame.project(...)` maps position channels into screen points                                                                                                                                                |
+| Series split     | Explicit `series` wins; without `series`, categorical `color` can implicitly split the rows                                                                                                                                                             |
+| Core lowering    | Each series becomes an independent `Scope`, and each continuous segment becomes a child `Path`; `closed` appends a cycle for a line outline (`polar2D` closes by default), while `closure` builds a closed path and `fill` decides whether it is filled |
+
+## API
+
+`PathMark` props are grouped as Position, Specific, Path, Label, General, and Custom: position fields decide trajectory points, specific fields split series or close the path, and path fields lower onto the core `Path`. `FieldName` means a data field name or field path, such as `month` / `city`. Path labels use the core geometry-label host; `label` does not carry `kind`, because PathMark infers the host.
+
+The public closed set for `closure.kind` comes from <ApiValues name="PathClosureKind" />.
+
+| Prop                                     | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Default                                   | Description                                                                                                                                                                                                                                         |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `x` / `y`                                | `PathMarkProps['x']`<br />`PathMarkProps['y']`                                                                                                                                                                                                                                                                                                                                                                                                                    | —                                         | Coordinate role fields; cartesian2D uses planar points, polar2D interprets them as angle / radius                                                                                                                                                   |
+| `color?`                                 | `PathMarkProps['color']`                                                                                                                                                                                                                                                                                                                                                                                                                                          | `series`                                  | Color field; without explicit `series`, categorical color can split the rows                                                                                                                                                                        |
+| `order?`                                 | `PathMarkProps['order']`                                                                                                                                                                                                                                                                                                                                                                                                                                          | data order                                | Field bound to connection order                                                                                                                                                                                                                     |
+| `series?`                                | `PathMarkProps['series']`                                                                                                                                                                                                                                                                                                                                                                                                                                         | —                                         | Split rows into multiple paths                                                                                                                                                                                                                      |
+| `curve?`                                 | <ApiValues name="PathCurve" />                                                                                                                                                                                                                                                                                                                                                                                                                                    | `linear`                                  | Connection curve between adjacent points; under polar2D, `monotoneX` / `monotoneY` fall back to `linear`                                                                                                                                            |
+| `closed?`                                | `PathMarkProps['closed']`                                                                                                                                                                                                                                                                                                                                                                                                                                         | cartesian2D: `false`<br />polar2D: `true` | Connect the last point back to the first; set `false` under polar coordinates to keep an open path                                                                                                                                                  |
+| `connectNulls?`                          | `PathMarkProps['connectNulls']`                                                                                                                                                                                                                                                                                                                                                                                                                                   | `false`                                   | Whether to connect across missing or invalid points; by default the path breaks and lowers into multiple core `Path` elements                                                                                                                       |
+| `closure?`                               | `IRPlotPathClosure`<br />`Extract<IRPlotPathClosure, { kind: typeof PathClosureKind.Cycle }>`<br />- `kind:` `typeof PathClosureKind.Cycle`<br />\| `Extract<IRPlotPathClosure, { kind: typeof PathClosureKind.Baseline }>`<br />- `kind:` `typeof PathClosureKind.Baseline`<br />- `baseline?: number`<br />\| `Extract<IRPlotPathClosure, { kind: typeof PathClosureKind.Stack }>`<br />- `kind:` `typeof PathClosureKind.Stack`<br />- `baselineField: string` | —                                         | Closure strategy<br />Cycle branch<br />- Cycle discriminator<br />Value-axis baseline branch<br />- Baseline discriminator<br />- Optional constant lower edge<br />Per-row lower-bound branch<br />- Stack discriminator<br />- Lower-bound field |
+| `stroke?` / `fill?`                      | `PathMarkProps['stroke']`<br />`PathMarkProps['fill']`                                                                                                                                                                                                                                                                                                                                                                                                            | `currentColor` / —                        | Path stroke paint and closed-path fill paint; `stroke="none"` disables the border, while omitted `fill` keeps the path unfilled                                                                                                                     |
+| `strokeWidth?`<br />`opacity?`           | `PathMarkProps['strokeWidth']`<br />`PathMarkProps['opacity']`                                                                                                                                                                                                                                                                                                                                                                                                    | —<br />—                                  | Path stroke width and whole-path opacity                                                                                                                                                                                                            |
+| `strokeOpacity?`                         | `PathMarkProps['strokeOpacity']`                                                                                                                                                                                                                                                                                                                                                                                                                                  | —                                         | Stroke opacity                                                                                                                                                                                                                                      |
+| `zIndex?`                                | `PathMarkProps['zIndex']`                                                                                                                                                                                                                                                                                                                                                                                                                                         | —                                         | Draw order                                                                                                                                                                                                                                          |
+| `rotate?`                                | `PathMarkProps['rotate']`                                                                                                                                                                                                                                                                                                                                                                                                                                         | —                                         | Path rotation                                                                                                                                                                                                                                       |
+| `roundedCorners?`                        | `PathMarkProps['roundedCorners']`                                                                                                                                                                                                                                                                                                                                                                                                                                 | —                                         | Rounded corners for path steps                                                                                                                                                                                                                      |
+| `lineCap?` / `lineJoin?`                 | `PathMarkProps['lineCap']`<br />`PathMarkProps['lineJoin']`                                                                                                                                                                                                                                                                                                                                                                                                       | —<br />—                                  | Line cap and join style                                                                                                                                                                                                                             |
+| `scale?`<br />`fillRule?` / `thickness?` | `PathMarkProps['scale']`<br />`PathMarkProps['fillRule']`<br />`PathMarkProps['thickness']`                                                                                                                                                                                                                                                                                                                                                                       | —<br />—<br />—                           | Path scaling, fill rule, and thickness preset                                                                                                                                                                                                       |
+| `marks?`                                 | `PathMarkProps['marks']`                                                                                                                                                                                                                                                                                                                                                                                                                                          | —                                         | Static core path marks, including endpoint arrows                                                                                                                                                                                                   |
+| `dashPattern?`                           | `PathMarkProps['dashPattern']`                                                                                                                                                                                                                                                                                                                                                                                                                                    | —                                         | Path dash pattern                                                                                                                                                                                                                                   |
+| `shadow?`                                | `PathMarkProps['shadow']`                                                                                                                                                                                                                                                                                                                                                                                                                                         | —                                         | Path shadow                                                                                                                                                                                                                                         |
+| `blendMode?`                             | `PathMarkProps['blendMode']`                                                                                                                                                                                                                                                                                                                                                                                                                                      | —                                         | Path blend mode                                                                                                                                                                                                                                     |
+| `label?`                                 | `PathMarkProps['label']`                                                                                                                                                                                                                                                                                                                                                                                                                                          | —                                         | Attach geometry labels to path segments; content lives in `content.field` / `content.value`, while `position`, `side`, and `distance` reuse core geometry labels                                                                                    |
+| `resolveLabel?`                          | `PathMarkProps['resolveLabel']`                                                                                                                                                                                                                                                                                                                                                                                                                                   | —                                         | Runtime override for label content; requires `id` and is not stored in PlotSpec                                                                                                                                                                     |
+| `id?`                                    | `PathMarkProps['id']`                                                                                                                                                                                                                                                                                                                                                                                                                                             | —                                         | Optional mark handle for layer ids / runtime label resolution                                                                                                                                                                                       |
+| `transform?`                             | `PathMarkProps['transform']`                                                                                                                                                                                                                                                                                                                                                                                                                                      | —                                         | Mark-local data transform; runs after the plot-level transform and only changes the rows seen by this layer                                                                                                                                         |
+| `channels?`                              | `PathMarkProps['channels']`                                                                                                                                                                                                                                                                                                                                                                                                                                       | —                                         | Custom channel bindings; resolved by registered channel definitions                                                                                                                                                                                 |
+
+## Related
+
+- [PointMark](/viz/plot/mark/point) — overlay markers on each observation
+- [Coordinates](/viz/plot/coordinate) — how cartesian2D / polar2D interpret position roles

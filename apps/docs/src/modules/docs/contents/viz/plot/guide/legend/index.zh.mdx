@@ -1,0 +1,95 @@
+---
+title: 图例
+description: '用 <Legend> 把非位置通道（颜色 / 尺寸 / 透明度 / 形状）可视化成图例；channel 选可视化哪个通道，形态据 scale 类型自动选。'
+---
+
+`<Legend>` 是 scale 的可视化身。坐标轴（`<Axis>`）解释 x / y 这两个位置通道；图例解释剩下的非位置通道：`color`（颜色）、`size`（尺寸）、`opacity`（透明度）、`shape`（形状）。两者并列，都是图表的 guide。
+
+`channel` 选择图例解释哪个通道。它的形态由该通道绑定的 scale 类型决定：分类色会画一组 swatch，连续色会画平滑 ramp 和刻度，分箱色会画区间块，尺寸会画几个代表大小的圆。
+
+图例要解释某个通道，该通道必须先有数据驱动的 scale。也就是说，先在 `<PointMark>` 上把字段绑到通道（`color="region"` / `size="pop"`），再写 `<Legend channel="..." />`。连续字段（连续色 ramp、尺寸梯度）还要靠 `model` 声明字段类型，否则会按分类处理。
+
+`<Legend>` 和 `<Axis>` 各自独立：加 `<Legend>` 只管图例，坐标轴由你显式写的 `<Axis>` 决定，`<Plot>` 自己不画轴。
+
+## 用法
+
+```tsx
+import { Plot, PointMark, Legend } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={cities}>
+  <PointMark x="lng" y="lat" color="region" size="pop" />
+  <Legend channel="color" />
+  <Legend channel="size" position="bottom" />
+</Plot>
+```
+
+## 例子
+
+### 分类色 swatch
+
+`color` 绑分类字段时会得到 ordinal 色阶，图例为每个类别画一个色块。x / y 轴由显式 `<Axis>` 画出。
+
+<ComponentPreview files={['legend-color-swatch', 'legend.data.ts']} />
+
+<p className="text-sm text-muted-foreground">每个 region 一个色块；图例落在右侧预留带，x / y 轴由显式 `<Axis>` 画出。</p>
+
+### 连续色 ramp
+
+`color` 绑连续数值字段时，需要在 `model` 声明为 `continuous`，图例会使用 sequential 色阶并画成平滑色带和刻度。用 `ticks` 控制刻度来源，用 `tickLabels.format` 控制显示格式。
+
+<ComponentPreview files={['legend-color-ramp', 'legend.data.ts']} />
+
+<p className="text-sm text-muted-foreground">连续值连成一道色带，旁边标出几个格式化后的刻度值。</p>
+
+### 尺寸梯度符号
+
+`size` 绑连续字段时会走平方根半径 scale，图例取几个代表值画成圆和标签。`position="bottom"` 把图例放到底部。
+
+<ComponentPreview files={['legend-size', 'legend.data.ts']} />
+
+<p className="text-sm text-muted-foreground">几个代表大小标出尺寸到值的对应关系，图例摆在底部。</p>
+
+### 主题与局部样式
+
+图例默认值来自 `Plot.theme.legend` 和 `Plot.theme.palette`。单个 `<Legend>` 仍然可以用 `style` 覆盖自己的布局和文本 token；`channel`、`position`、`orient`、`ticks`、`tickLabels.format` 这类语义字段保留在 `<Legend>` 根部。
+
+```tsx
+<Plot
+  theme={{
+    palette: { sequential: 'magma' },
+    legend: { rampLength: 120, label: { textColor: '#475569' } },
+  }}
+>
+  <Legend
+    channel="color"
+    ticks={{ count: 4 }}
+    tickLabels={{ format: '~s' }}
+    style={{ title: { font: { weight: 600 } } }}
+  />
+</Plot>
+```
+
+### 图层顺序
+
+图例默认在坐标轴、mark 和整图文案之上，层级值是 `500`。需要把图例压低或抬高时，在 `<Legend>` 上写 `layer={{ zIndex }}`；它只影响图例外层 scope，不改变图例内部条目顺序。
+
+## API
+
+| 属性          | 类型                                | 默认值        | 描述                                                                                    |
+| ------------- | ----------------------------------- | ------------- | --------------------------------------------------------------------------------------- |
+| `channel`     | `LegendProps['channel']`            | —             | 图例解释非位置通道；内置通道为 color / size / opacity / shape，注册的自定义通道同样可用 |
+| `scale?`      | `LegendProps['scale']`              | —             | 同一通道被多个 scale 驱动时指定 scale name；省略表示唯一 scale                          |
+| `title?`      | `LegendProps['title']`              | 无            | 图例标题内容；复用 core 文本节点的 text-block 形态                                      |
+| `position?`   | <ApiValues name="LegendPosition" /> | `'right'`     | 图例所在边；该边会预留图例带                                                            |
+| `orient?`     | <ApiValues name="LegendOrient" />   | 按 `position` | 条目排布方向；左右默认 vertical，上下默认 horizontal                                    |
+| `ticks?`      | `LegendProps['ticks']`              | scale 默认    | 连续 ramp 的刻度来源；显式 `values` 优先于 `count`，离散 swatch 忽略                    |
+| `tickLabels?` | `LegendProps['tickLabels']`         | `true`        | 用 `false` 隐藏标签，或用声明式 format 格式化 ramp 刻度标签                             |
+| `style?`      | `LegendProps['style']`              | theme legend  | 本地图例视觉 token：swatch / ramp 尺寸、间距、标题和标签文本样式                        |
+
+## 相关
+
+- [坐标轴](/viz/plot/guide/axis)：解释 x / y 位置通道的 guide
+- [比例尺](/viz/plot/scale)：图例形态由通道的 scale 类型决定
+- [散点](/viz/plot/mark/point)：绑定 color / size / shape 通道

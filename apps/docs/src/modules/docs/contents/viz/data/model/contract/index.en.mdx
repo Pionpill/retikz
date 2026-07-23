@@ -1,0 +1,126 @@
+---
+title: Field Contract
+description: Declare logical fields, measurement types, and category order with model while retaining inference where useful.
+---
+
+`model` is the field contract between data and consumer configuration. Downstream logic can depend on stable logical names without guessing whether a column is numeric, temporal, or categorical.
+
+In a Plot application, that downstream logic includes marks, transforms, and scales. Table and other modules can read the same model through their own consumption contracts. The examples below use Plot to show visible differences caused by field types and category order, but `model` belongs to Data and does not depend on Plot.
+
+## Declaring fields
+
+Each field declaration is an `IRDataFieldDefinition` exported from `@retikz/data`:
+
+| Field     | Type                                                                  | Default        | Responsibility                                                                  |
+| --------- | --------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------- |
+| `name`    | `string`                                                              | —              | Logical name referenced by data transforms and consumer config                  |
+| `type?`   | <ApiValues name="DataFieldType" />                                    | inferred       | Field measurement type                                                          |
+| `format?` | <ApiValues name="DataFieldFormat" /> \| `string`                      | default parser | Declarative parsing format; a named format may also imply the field type        |
+| `order?`  | <ApiValues name="FieldOrderMode" /> \|<br />`Array<string \| number>` | `'appearance'` | Category-domain order; explicit values take priority and only affect categories |
+
+Both charts below use the same funnel data, with `stage` encoded as the uneven values `10`, `20`, `50`, and `100`. Without `model`, the numeric field is inferred as continuous and spacing follows numeric distance. The explicit contract makes it categorical, so every stage receives equal spacing.
+
+<ComponentPreview files={['data-model-custom', 'data-model-custom.data.ts']} />
+
+Once `model` exists, every source field referenced by the current data pipeline must be listed. Misspelled references and duplicate declarations fail immediately instead of degrading into an empty result. In a Plot application, the check covers position and color channels, mark ordering, size and shape channels, and transform inputs.
+
+### Partial declarations
+
+`type` is optional: `{ name }` still enters the strict field set while leaving type inference to runtime. When `format` is present, its implied type takes precedence over inference.
+
+```tsx
+<Plot
+  data={sales}
+  model={[{ name: 'createdAt', format: 'slashDate' }, { name: 'statusCode', type: 'categorical' }, { name: 'revenue' }]}
+>
+  {/* … */}
+</Plot>
+```
+
+Declare `type` or `format` on every field when the configuration must be fully self-describing without data. Omit `model` entirely for quick exploration.
+
+## Automatic inference
+
+When a field has neither `type` nor `format`, retikz scans at most 1,000 rows and collects up to 100 valid samples:
+
+| Sample value                                         | Classified as       |
+| ---------------------------------------------------- | ------------------- |
+| `Date`, unambiguous ISO date, or zoned datetime      | `temporal`          |
+| Finite `number` or `bigint`                          | `continuous`        |
+| Other strings or booleans                            | `categorical`       |
+| Empty values, non-finite numbers, objects, or arrays | Skipped as a sample |
+
+All samples must be temporal to produce `temporal`, and all must be numeric to produce `continuous`; mixed samples, empty fields, and everything else fall back to `categorical`. `2024/01/01`, timezone-less datetimes, and bare numeric strings are not inferred as temporal or continuous. Parse non-default formats explicitly in [Data Intake](/viz/data/model/intake).
+
+## How types affect downstream behavior
+
+Field types let consumer modules understand data semantics; Data supplies the type without prescribing its presentation. In a Plot application, types affect scales, axes, and legends. When a position channel omits a scale, `continuous`, `temporal`, and `categorical` derive linear, time, and band scales respectively.
+
+<ComponentPreview files={['data-model', 'data-model.data.ts']} size="xxxl" />
+
+Within Plot, color behavior depends on the authoring layer. React `<Plot>` can synthesize a default discrete or continuous color scale when the `model` type is known. In low-level Plot IR, categorical fields may default to `ordinal`, while continuous and temporal fields must explicitly reference a continuous color scale. See [Scales](/viz/plot/scale) for the full rules and overrides.
+
+## Category order
+
+Categorical fields form their domain in data-appearance order by default. Put `order` on the field when the business order should be `S → M → L → XL`:
+
+<ComponentPreview files={['data-model-order', 'data-model-order.data.ts']} />
+
+| `order`                         | Effect                                                         |
+| ------------------------------- | -------------------------------------------------------------- |
+| Omitted / `'appearance'`        | Preserve data-appearance order                                 |
+| `'ascending'` / `'descending'`  | Compare all-numeric categories numerically, otherwise as text  |
+| Array such as `['S', 'M', 'L']` | Use the array first, then append remaining observed categories |
+
+`model.order` orders the **categorical domain**; it does not reorder rows. Consumers can use it to preserve category semantics. In a Plot application, it affects categorical positions, legends, and discrete colors without changing path connection order. Use [data-transform sorting](/viz/data/transform/operations#sort) for rows; an explicit Plot scale `domain` takes precedence over `order`.
+
+## Public types
+
+These schemas and derived types are exported from the `@retikz/data` package root:
+
+| Concept           | Public exports                                       |
+| ----------------- | ---------------------------------------------------- |
+| Field declaration | `IRDataFieldDefinition`<br />`FieldDefinitionSchema` |
+| Data model        | `IRDataModel`<br />`DataModelSchema`                 |
+| Data reference    | `IRDataReference`<br />`DataReferenceSchema`         |
+| Scalar value      | `IRDataScalarValue`<br />`ScalarValueSchema`         |
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Field declaration and data-model schemas',
+      path: 'packages/viz/data/src/schemas/data/schema.ts',
+      startLine: 5,
+      endLine: 40,
+    },
+    {
+      label: 'Field paths, categorical domains, and type inference',
+      path: 'packages/viz/data/src/providers/data/field.ts',
+      startLine: 14,
+      endLine: 150,
+    },
+    {
+      label: 'React default color scale derived from model',
+      path: 'packages/viz/plot-react/src/components/build-plot-spec.ts',
+      startLine: 1671,
+      endLine: 1690,
+    },
+  ]}
+/>
+
+## Related
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/data/model/intake">
+    <span className="font-semibold">Data Intake</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Bind physical fields and storage formats to this contract.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/scale">
+    <span className="font-semibold">Scales</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      See how field types enter positional and visual mappings.
+    </span>
+  </LinkedCard>
+</div>

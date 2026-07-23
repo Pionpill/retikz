@@ -1,0 +1,48 @@
+---
+title: Stacking & Shares
+description: Stacking and share transforms preserve detail rows while adding plot-specific stack intervals or normalized share fields.
+---
+
+This group contains plot-registered row-preserving drawing transforms. Marks still draw detail rows, but each row receives extra fields for visual layout. These transforms do not reduce groups or discard original rows.
+
+Group statistic broadcasting is a data capability; see [Data Transforms / annotate](/viz/data/transform/operations#annotate).
+
+| kind        | rows   | common output                     |
+| ----------- | ------ | --------------------------------- |
+| `stack`     | N -> N | `y0` / `y1`                       |
+| `normalize` | N -> N | Share fields or overwritten input |
+
+## stack
+
+`stack` accumulates values within each `x` group by series, adding lower and upper bounds to every row. The default output is `y0` / `y1`, matching `IntervalMark` interval consumption.
+
+<ComponentPreview files={['transform-stack', 'transform-stack.data.ts']} />
+
+`<IntervalMark stack>` / `<IntervalMark angle>` auto-stacking is shorthand. When a matching explicit `stack` already exists in the pipeline, auto-stacking is suppressed to avoid stacking twice.
+
+`IRPlotStackTransform` fixes `kind` to `'stack'`.
+
+| prop                        | type                             | default        | description                                           |
+| --------------------------- | -------------------------------- | -------------- | ----------------------------------------------------- |
+| `x?`                        | `string`                         | one group      | Group key; values stack within the same key           |
+| `y`                         | `string`                         | —              | Numeric field to accumulate                           |
+| `groupBy?`                  | `string`                         | data row order | Series field; appearance order controls segment order |
+| `startField?` / `endField?` | `string`                         | `y0` / `y1`    | Output bound field names                              |
+| `offset?`                   | <ApiValues name="StackOffset" /> | `'zero'`       | Stack baseline and normalization strategy             |
+
+## normalize
+
+`normalize` divides each row's value by the total of its group, yielding a within-group share. `basis` can be `fraction` (0 to 1) or `percent` (0 to 100); when `as` is omitted, the input field is overwritten.
+
+<ComponentPreview files={['transform-normalize', 'transform-normalize.data.ts']} />
+
+Normalize followed by stack gives a percent stack: first convert every group to shares, then stack those shares.
+
+`IRPlotNormalizeTransform` fixes `kind` to `'normalize'`.
+
+| prop       | type                                | default          | description                         |
+| ---------- | ----------------------------------- | ---------------- | ----------------------------------- |
+| `field`    | `string`                            | —                | Numeric field to normalize          |
+| `groupBy?` | `Array<string>`                     | one global group | Group keys; supports composite keys |
+| `basis?`   | <ApiValues name="NormalizeBasis" /> | `'fraction'`     | Output scale                        |
+| `as?`      | `string`                            | overwrite input  | Output field name                   |

@@ -7,7 +7,7 @@
     "layer": "feature",
     "publishable": true
   },
-  "description": "retikz table (Tier 2): JSON-serializable table grammar and constraint-grid layout lowering to @retikz/core.",
+  "description": "retikz table (Tier 2): JSON-serializable table grammar and fixed-track layout lowering to @retikz/core.",
   "type": "module",
   "engines": {
     "node": ">=24"

@@ -189,28 +189,28 @@ Scope 包络只收集 node、coordinate 与嵌套 Scope layout，不包含 path 
 
 ### 上下文与输出
 
-| 属性             | 类型                      | 默认值        | 描述                                                               |
-| ---------------- | ------------------------- | ------------- | ------------------------------------------------------------------ |
-| `children`       | `ReactNode`               | —             | Node / Path / Coordinate / 嵌套 Scope                              |
-| `transforms`     | `Array<IRTransformInput>` | —             | 七种局部变换；数组最后一项先作用                                   |
-| `id`             | `string`                  | —             | 把 Scope 包络注册成外部可引用句柄                                  |
-| `localNamespace` | `boolean`                 | `false`       | 隔离内部 id；`scope.id` 仍对外可见                                 |
-| `boundingShape`  | `'rectangle' \| 'circle'` | `'rectangle'` | `scope.id` 的矩形或圆形包络                                        |
-| `clip`           | `IRClipSpec`              | —             | Scope 局部坐标中的内置或自定义裁剪区                               |
-| `zIndex`         | `number`（整数）          | `0`           | Scope 整体在父层的稳定栈序                                         |
-| `meta`           | `Record<string, JSON 值>` | —             | 透传到 GroupPrim，不参与布局或继承                                 |
-| `animations`     | `Array<IRAnimationTrack>` | —             | Scope 整体动画，不下传 children                                    |
-| `on<Event>`      | `HydrationHandler`        | —             | 需要 `id`；完整事件列表见[水合](/kernel/packages/render/hydration) |
+| 属性             | 类型                                    | 默认值        | 描述                                                                                    |
+| ---------------- | --------------------------------------- | ------------- | --------------------------------------------------------------------------------------- |
+| `children`       | `ReactNode`                             | —             | Node / Path / Coordinate / 嵌套 Scope                                                   |
+| `transforms`     | `Array<IRTransformInput>`               | —             | 七种局部变换；数组最后一项先作用                                                        |
+| `id`             | `string`                                | —             | 把 Scope 包络注册成外部可引用句柄                                                       |
+| `localNamespace` | `boolean`                               | `false`       | 隔离内部 id；`scope.id` 仍对外可见                                                      |
+| `boundingShape`  | <ApiValues name="ScopeBoundingShape" /> | `'rectangle'` | `scope.id` 的矩形或圆形包络                                                             |
+| `clip`           | `IRClipSpec`                            | —             | Scope 局部坐标中的内置或自定义裁剪区                                                    |
+| `zIndex`         | `number`（整数）                        | `0`           | Scope 整体在父层的稳定栈序                                                              |
+| `meta`           | `Record<string, JSON 值>`               | —             | 透传到 GroupPrim，不参与布局或继承                                                      |
+| `animations`     | `Array<IRAnimationTrack>`               | —             | Scope 整体动画，不下传 children                                                         |
+| `on<Event>`      | `ScopeProps['onClick']`                 | —             | 与 `onClick` 同签名；需要 `id`，完整事件列表见[水合](/kernel/packages/render/hydration) |
 
 ### 样式默认值
 
-| 属性                                                            | 类型                             | 默认值  | 描述                              |
-| --------------------------------------------------------------- | -------------------------------- | ------- | --------------------------------- |
-| `color`                                                         | `string`                         | —       | 跨元素级联的主色                  |
-| `stroke` / `fill`                                               | `string \| IRPaintSpec`          | —       | 跨元素逐字段级联的描边与填充      |
-| `strokeWidth` / opacity 字段                                    | `number`                         | —       | 线宽与逐字段级联的透明度          |
-| `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` | 对应默认值对象                   | —       | 四类元素各自独立的默认通道        |
-| `resetStyle`                                                    | `boolean \| Array<StyleChannel>` | `false` | 全部或按通道切断外层 Scope 的继承 |
+| 属性                                                            | 类型                               | 默认值  | 描述                              |
+| --------------------------------------------------------------- | ---------------------------------- | ------- | --------------------------------- |
+| `color`                                                         | `string`                           | —       | 跨元素级联的主色                  |
+| `stroke` / `fill`                                               | `string` \| `IRPaintSpec`          | —       | 跨元素逐字段级联的描边与填充      |
+| `strokeWidth` / opacity 字段                                    | `number`                           | —       | 线宽与逐字段级联的透明度          |
+| `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` | 对应默认值对象                     | —       | 四类元素各自独立的默认通道        |
+| `resetStyle`                                                    | `boolean` \| `Array<StyleChannel>` | `false` | 全部或按通道切断外层 Scope 的继承 |
 
 ## 相关
 

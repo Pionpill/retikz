@@ -1,0 +1,130 @@
+---
+title: Data Intake
+description: Bind external field paths and storage formats to logical fields, producing canonical rows before transforms run.
+---
+
+Data intake converts API, file, or database records into logical fields that consumers can reference consistently. The examples use React `<Plot>` to visualize the result, but Plot is only the example host: field paths, models, formats, and normalization belong to Data and can be reused by other consumers.
+
+## Field paths
+
+A field name may be a dotted path: `user.address.city` traverses nested objects, and the leaf must be a scalar such as text, number, boolean, or time. Resolution checks for an exact own key before traversing `.`, so a canonical logical name can itself contain dots.
+
+```tsx
+<Plot data={rows}>
+  <PathMark x="user.createdAt" y="metrics.revenue" order="user.createdAt" />
+</Plot>
+```
+
+Arrays are not unwound automatically. Flatten them into separate rows in the data layer when one source record should produce several observations.
+
+## Switching data sources
+
+Real rows stay outside the serializable field contract, so one consumer configuration can use different sources. Choose the binding based on what changed; the examples below continue to use Plot.
+
+### Same field contract
+
+When both sources expose the same names and types, the consumer only replaces its data input. In the Plot example below, that means replacing `<Plot data>`; actual and forecast values share one field contract and consumer configuration.
+
+<ComponentPreview files={['processing-same', 'processing-same.data.ts']} />
+
+### Different field names
+
+Use `fieldMap` to map logical names to physical paths. Data transforms and consumer configuration continue to reference only logical names. In a Plot application, marks and transforms therefore do not need to know the physical path either:
+
+```tsx
+<Plot
+  data={rows}
+  model={[
+    { name: 'month', type: 'temporal' },
+    { name: 'revenue', type: 'continuous' },
+  ]}
+  fieldMap={{ month: 'period', revenue: 'pricing.amount' }}
+>
+  <PathMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+`fieldMap` aligns names without computing values. It requires `model`, because there is no logical field set to map without a field contract.
+
+<ComponentPreview files={['processing-source', 'processing-source.data.ts']} />
+
+### Different storage shapes
+
+Default coercion unifies `Date`, strict ISO strings, and epoch milliseconds as temporal values. It also unifies finite numbers, safe-integer `bigint` values, and strict numeric strings as continuous values. The mixed representations below still normalize against one model.
+
+<ComponentPreview files={['processing-storage', 'processing-storage.data.ts']} />
+
+## Declaring parsing formats
+
+Put common non-default formats on the field as `format`. The format name enters the serializable model, while a built-in or injected Definition supplies the parser.
+
+| `format`       | Type         | Parsing                                        |
+| -------------- | ------------ | ---------------------------------------------- |
+| `iso`          | `temporal`   | Strict ISO, equivalent to default time parsing |
+| `epochSeconds` | `temporal`   | Epoch seconds to milliseconds                  |
+| `epochMillis`  | `temporal`   | Epoch milliseconds                             |
+| `slashDate`    | `temporal`   | Strict `YYYY/MM/DD` at UTC midnight            |
+| `numberString` | `continuous` | Numeric strings with whitespace or commas      |
+| `percent`      | `continuous` | Percentage string `'50%'` to `0.5`             |
+
+`format` implies a type. The intake stage reports an error when an explicit `type` conflicts with the format's type. The standard intake path applies declarative `format` before falling back to default coercion.
+
+<ComponentPreview files={['processing-format', 'processing-format.data.ts']} />
+
+See [Extension Mechanisms](/viz/data/model/extensions) when you need to register a custom format or supply a runtime field parser.
+
+## Intake order
+
+1. Collect fields referenced by the current configuration.
+2. Read physical paths through `fieldMap`.
+3. Resolve type from the model / format, then inference.
+4. Parse with the declarative format, then default coercion.
+5. Write the result under the logical name to form a canonical row.
+
+Data transforms and consumer modules read those canonical rows instead of repeating parsing independently. In a Plot application, those consumers include scales, marks, and locators.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Unified preparation when Plot consumes Data capabilities',
+      path: 'packages/viz/plot/src/pipeline/expand/data.ts',
+      startLine: 40,
+      endLine: 116,
+    },
+    {
+      label: 'Canonical values written under logical field names',
+      path: 'packages/viz/data/src/providers/data/normalize.ts',
+      startLine: 26,
+      endLine: 45,
+    },
+    {
+      label: 'Format type compatibility and parser resolution',
+      path: 'packages/viz/data/src/providers/format/orchestrate.ts',
+      startLine: 6,
+      endLine: 38,
+    },
+  ]}
+/>
+
+## Related
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/data/model/contract">
+    <span className="font-semibold">Field Contract</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Define logical fields, types, and category order first.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/model/validation">
+    <span className="font-semibold">Validation & Diagnostics</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Choose how parsing failures and missing values are handled.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/model/extensions">
+    <span className="font-semibold">Extension Mechanisms</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Learn custom field parsing and runtime injection in one place.
+    </span>
+  </LinkedCard>
+</div>

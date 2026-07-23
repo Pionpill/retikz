@@ -23,6 +23,17 @@ describe('buildIR', () => {
     expect(ir.children).toEqual([expect.objectContaining({ type: 'node', id: 'A', text: 'Hi' })]);
   });
 
+  it('透传 Node anchor-to-anchor position', () => {
+    const position = {
+      kind: 'anchor' as const,
+      target: { id: 'A', anchor: 'bottom-left' as const, offset: [6, -2] as [number, number] },
+      selfAnchor: 'top-left' as const,
+    };
+    const ir = buildIR(<Node id="B" position={position} />);
+
+    expect(ir.children).toEqual([{ type: 'node', id: 'B', position }]);
+  });
+
   it('meta prop 透传进 Node / Path / Scope 的 IR', () => {
     const ir = buildIR(
       <Fragment>
