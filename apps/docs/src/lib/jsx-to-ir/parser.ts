@@ -18,7 +18,7 @@ import {
   Step,
   Text,
 } from '@retikz/react';
-import { Axes, Frame, Grid } from '@retikz/standard-react';
+import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react';
 import { Parser } from 'acorn';
 import jsx from 'acorn-jsx';
 import { createElement } from 'react';
@@ -43,6 +43,8 @@ const COMPONENT_REGISTRY: Record<string, FC<Record<string, unknown>> | undefined
   Grid: Grid as unknown as FC<Record<string, unknown>>,
   Axes: Axes as unknown as FC<Record<string, unknown>>,
   Frame: Frame as unknown as FC<Record<string, unknown>>,
+  FrameTitle,
+  FrameDescription,
   RegularPolygon: RegularPolygon as unknown as FC<Record<string, unknown>>,
   Star: Star as unknown as FC<Record<string, unknown>>,
 };

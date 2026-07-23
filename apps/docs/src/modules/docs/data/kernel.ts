@@ -212,6 +212,7 @@ export const kernelSection: Array<Section> = [
         id: 'changelog',
         label: 'kernel.changelog',
         children: [
+          { id: 'v0-5', label: 'kernel.changelogV05' },
           { id: 'v0-4', label: 'kernel.changelogV04' },
           { id: 'v0-3', label: 'kernel.changelogV03' },
           { id: 'v0-2', label: 'kernel.changelogV02' },

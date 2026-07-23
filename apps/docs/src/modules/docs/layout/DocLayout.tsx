@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
-import { Outlet } from 'react-router';
+import { useLayoutEffect } from 'react';
+import { Outlet, useLocation } from 'react-router';
 
 import { cn } from '@/lib';
 import { useLayoutStore } from '@/store';
@@ -13,6 +14,12 @@ import { AppSidebar } from './sidebar/AppSidebar';
  */
 export const DocLayout: FC = () => {
   const layout = useLayoutStore(s => s.layout);
+  const { pathname } = useLocation();
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [pathname]);
+
   return (
     <div className={cn('flex flex-1', layout === 'centered' && 'mx-auto w-full max-w-[1440px]')}>
       <AppSidebar />

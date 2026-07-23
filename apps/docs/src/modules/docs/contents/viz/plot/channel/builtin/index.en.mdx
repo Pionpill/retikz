@@ -29,13 +29,15 @@ Position channels say which row fields participate in coordinate projection. `x`
 
 ## Style
 
-Style channels control the visible appearance of a mark. Color, opacity, size, and shape are style channels; internally, they can still land on mark semantics, scope, node, or path delivery depending on what the mark produces.
+Style channels control the visible appearance of a mark. Color, opacity, size, and shape are style channels. Use the panel to change the target channel and values while the same points and data remain fixed.
+
+<ComponentPreview
+  files="builtin-point-style"
+  size="md"
+  caption="The target chooses whether paint enters color, fill, or stroke; the remaining controls keep the subject and data fixed."
+/>
 
 ### Color
-
-This demo separates `color`, `fill`, `stroke`, and `textColor`: the left group shows semantic color, the middle group separates fill and stroke, and the right group shows text color.
-
-<ComponentPreview files="builtin-color" size="md" />
 
 | Channel     | Channel Value                                                   | Meaning             | Delivery / guide                                                            |
 | ----------- | --------------------------------------------------------------- | ------------------- | --------------------------------------------------------------------------- |
@@ -46,9 +48,7 @@ This demo separates `color`, `fill`, `stroke`, and `textColor`: the left group s
 
 ### Opacity
 
-This demo binds `opacity`, `fillOpacity`, and `strokeOpacity` in separate groups. Overall opacity affects both fill and stroke, fill opacity only fades the interior, and stroke opacity only fades the outline.
-
-<ComponentPreview files="builtin-opacity" size="md" />
+Overall opacity affects both fill and stroke, fill opacity only fades the interior, and stroke opacity only fades the outline.
 
 | Channel         | Channel Value                                                           | Meaning         | Delivery / guide                                                                           |
 | --------------- | ----------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------ |
@@ -60,8 +60,6 @@ This demo binds `opacity`, `fillOpacity`, and `strokeOpacity` in separate groups
 
 The `size` channel is for quantitative magnitude. Field values default to a sqrt scale so perceived area is closer to the data difference.
 
-<ComponentPreview files="builtin-size" size="md" />
-
 | Channel | Channel Value                                       | Meaning    | Delivery / guide                                                                 |
 | ------- | --------------------------------------------------- | ---------- | -------------------------------------------------------------------------------- |
 | `size`  | Field: `size = "field"`<br />Constant: `size = {8}` | Glyph size | node `minimumSize`; field values default to a sqrt scale and support size legend |
@@ -70,17 +68,23 @@ The `size` channel is for quantitative magnitude. Field values default to a sqrt
 
 The `shape` channel is for categories. Categorical values map to built-in glyph shapes and can produce a symbol legend.
 
-<ComponentPreview files="builtin-shape" size="md" />
-
 | Channel | Channel Value                                              | Meaning     | Delivery / guide                                 |
 | ------- | ---------------------------------------------------------- | ----------- | ------------------------------------------------ |
 | `shape` | Field: `shape = "field"`<br />Constant: `shape = "circle"` | Glyph shape | node `shape`; field values support symbol legend |
 
-## Node Geometry
+## Nodes, Text, And Effects
+
+These channels all act on nodes produced by a mark. The panel keeps the same text nodes in place so size, typography, outside labels, and effects can be adjusted continuously instead of split across four static figures.
+
+<ComponentPreview
+  files="builtin-node-text"
+  size="lg"
+  caption="The lower rectangles show node geometry, labels, and effects; the upper text shows textColor and layout while both subjects stay fixed."
+/>
+
+### Node Geometry
 
 Node geometry channels control the node's own size constraints, spacing, corner radius, and rotation. They are closer to core node properties than to color or size encoding.
-
-<ComponentPreview files="builtin-node-geometry" size="md" />
 
 | Channel              | Channel Value                                                                            | Meaning                 | Delivery                   |
 | -------------------- | ---------------------------------------------------------------------------------------- | ----------------------- | -------------------------- |
@@ -89,15 +93,9 @@ Node geometry channels control the node's own size constraints, spacing, corner 
 | `cornerRadius`       | Field: `cornerRadius = "field"`<br />Constant: `cornerRadius = {8}`                      | Rectangle corner radius | core node `cornerRadius`   |
 | `rotate` / `scale`   | Field: `rotate = "field"`<br />Constant: `rotate = {18}`                                 | Node transform hints    | core node transform fields |
 
-## Text
-
-Text channels split into two groups: visible text inside a node, and labels attached outside a node.
-
 ### Text inside nodes
 
 `text` makes a point mark produce text nodes. `textColor`, `align`, `lineHeight`, `maxTextWidth`, and `font` control the text node's layout and color.
-
-<ComponentPreview files="builtin-text-node" size="md" />
 
 | Channel                                             | Channel Value                                                                                               | Meaning                                | Delivery                           |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------- | ---------------------------------- |
@@ -108,22 +106,32 @@ Text channels split into two groups: visible text inside a node, and labels atta
 
 `label` does not replace node content. It attaches an outside label to the datum host node. `labelPosition`, `labelDistance`, and `labelPin` control placement and leader line.
 
-<ComponentPreview files="builtin-text-label" size="md" />
-
 | Channel                                           | Channel Value                                                           | Meaning          | Delivery               |
 | ------------------------------------------------- | ----------------------------------------------------------------------- | ---------------- | ---------------------- |
 | `label`                                           | Field: `label = "field"`                                                | Datum host label | core node `label`      |
 | `labelPosition` / `labelDistance`<br />`labelPin` | Constant: `labelPosition = "top"`<br />Constant: `labelDistance = {16}` | Label layout     | core node label fields |
 
+### Effects
+
+Effect channels are shared visual hints. `shadow` changes the node projection, while `blendMode` changes color compositing where shapes overlap. `boundary` remains in the table as the advanced boundary override.
+
+| Channel     | Channel Value                                                                 | Meaning                 | Delivery                   |
+| ----------- | ----------------------------------------------------------------------------- | ----------------------- | -------------------------- |
+| `shadow`    | Field: `shadow = "field"`<br />Constant: `shadow = "xl"`                      | Shadow preset or object | core node/path `shadow`    |
+| `blendMode` | Field: `blendMode = "field"`<br />Constant: `blendMode = "multiply"`          | Compositing mode        | core node/path `blendMode` |
+| `boundary`  | Field: `boundary = "field"`<br />Constant: `boundary = {{ shape: "circle" }}` | Node boundary override  | core node `boundary`       |
+
 ## Paths
 
 Path channels apply to marks that lower to core paths, such as line marks, relation marks, region boundaries, and reference lines. Endpoint arrows are not plot channels; configure them with `marks` on the relevant path config.
 
+<ComponentPreview
+  files="builtin-path-style"
+  size="md"
+  caption="Stroke, cap, join, corner, and dash controls all act on one fixed path for direct comparison."
+/>
+
 ### Path styling
-
-This demo contrasts `strokeWidth`, `lineCap`, `lineJoin`, `roundedCorners`, and `dashPattern` across two lines.
-
-<ComponentPreview files="builtin-path-style" size="md" />
 
 | Channel                                | Channel Value                                                           | Meaning             | Delivery / guide                                                            |
 | -------------------------------------- | ----------------------------------------------------------------------- | ------------------- | --------------------------------------------------------------------------- |
@@ -131,18 +139,6 @@ This demo contrasts `strokeWidth`, `lineCap`, `lineJoin`, `roundedCorners`, and 
 | `roundedCorners`                       | Field: `roundedCorners = "field"`<br />Constant: `roundedCorners = {8}` | Path corner hint    | core path `roundedCorners`                                                  |
 | `lineCap`<br />`lineJoin`              | Field: `lineCap = "field"`<br />Constant: `lineCap = "round"`           | Stroke cap and join | core path line fields                                                       |
 | `dashPattern` / `dashed`<br />`dotted` | Field: `dashPattern = "field"`<br />Constant: `dashPattern = {[7, 4]}`  | Stroke pattern      | core node/path dash fields                                                  |
-
-## Effects
-
-Effect channels are shared visual hints. This demo uses more overlapping samples so `shadow` and `blendMode` are easier to see.
-
-<ComponentPreview files="builtin-effect" size="md" />
-
-| Channel     | Channel Value                                                                 | Meaning                 | Delivery                   |
-| ----------- | ----------------------------------------------------------------------------- | ----------------------- | -------------------------- |
-| `shadow`    | Field: `shadow = "field"`<br />Constant: `shadow = "xl"`                      | Shadow preset or object | core node/path `shadow`    |
-| `blendMode` | Field: `blendMode = "field"`<br />Constant: `blendMode = "multiply"`          | Compositing mode        | core node/path `blendMode` |
-| `boundary`  | Field: `boundary = "field"`<br />Constant: `boundary = {{ shape: "circle" }}` | Node boundary override  | core node `boundary`       |
 
 ## Other
 
