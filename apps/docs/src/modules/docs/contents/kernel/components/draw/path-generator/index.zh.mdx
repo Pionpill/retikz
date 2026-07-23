@@ -127,23 +127,23 @@ React 通过 `<Layout pathGenerators>` 注入；直接调用 core 时使用 `Com
 
 ### generate 上下文
 
-| 字段              | 类型                       | 默认值 | 描述                                     |
-| ----------------- | -------------------------- | ------ | ---------------------------------------- |
-| `from`            | `Position`                 | —      | 当前游标的局部坐标                       |
-| `to`              | `Position`                 | —      | Step 的可选终点解析结果                  |
-| `params`          | `Record<string, unknown>`  | —      | 经 schema 校验的参数                     |
-| `resolvedTargets` | `Record<string, Position>` | `{}`   | 成功解析的 `targetParams` key 与局部坐标 |
-| `round`           | `(number) => number`       | —      | 与 compile / render 一致的精度取整函数   |
+| 字段              | 类型                                     | 默认值 | 描述                                     |
+| ----------------- | ---------------------------------------- | ------ | ---------------------------------------- |
+| `from`            | `Position`                               | —      | 当前游标的局部坐标                       |
+| `to`              | `Position`                               | —      | Step 的可选终点解析结果                  |
+| `params`          | `PathGeneratorGenerateContext['params']` | —      | 经 schema 校验的参数                     |
+| `resolvedTargets` | `Record<string, Position>`               | `{}`   | 成功解析的 `targetParams` key 与局部坐标 |
+| `round`           | `(number) => number`                     | —      | 与 compile / render 一致的精度取整函数   |
 
 ### generator Step
 
-| 属性     | 类型          | 默认值 | 描述                          |
-| -------- | ------------- | ------ | ----------------------------- |
-| `kind`   | `'generator'` | —      | 选择 generator Step           |
-| `name`   | `string`      | —      | 生成器 registry key           |
-| `to`     | `Target`      | —      | 可选终点，解析后传给 `ctx.to` |
-| `params` | `JsonObject`  | —      | 可序列化的实例参数            |
-| `label`  | `StepLabel`   | —      | 生成段的可选边标注            |
+| 属性     | 类型                        | 默认值 | 描述                          |
+| -------- | --------------------------- | ------ | ----------------------------- |
+| `kind`   | `'generator'`               | —      | 选择 generator Step           |
+| `name`   | `string`                    | —      | 生成器 registry key           |
+| `to`     | `IRGeneratorStep['to']`     | —      | 可选终点，解析后传给 `ctx.to` |
+| `params` | `IRGeneratorStep['params']` | —      | 可序列化的实例参数            |
+| `label`  | `IRGeneratorStep['label']`  | —      | 生成段的可选边标注            |
 
 ## 相关
 

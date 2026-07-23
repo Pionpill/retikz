@@ -62,13 +62,40 @@ Vanilla deterministically derives the Scope id from the embed id, so `frame('def
 
 ## API Reference
 
-| Prop       | Type                          | Default                                      | Description                                                                            |
-| ---------- | ----------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `id`       | `string`                      | —                                            | Non-empty Scope identity and border/label target                                       |
-| `gap`      | `number`                      | `8`                                          | Uniform nonnegative outward border gap                                                 |
-| `border`   | `IRStandardPathBorderStyle`   | `{ stroke: 'currentColor', strokeWidth: 1 }` | Border Path style; `zIndex` defaults to `-1`                                           |
-| `label`    | `string`                      | —                                            | Optional non-empty top-left label                                                      |
-| `children` | `ReactNode` / `Array<IRNode>` | —                                            | React / IR inputs require at least one direct Core Node; other child types unsupported |
+The three entry points do not accept one interchangeable object. React uses `FrameProps`, `createFrame` uses persistable `FrameInput`, and the Vanilla helper uses `FrameVanillaInput` without a Scope `id`. All three are ultimately validated by `FrameSchema` as `IRFrame`.
+
+### React: `FrameProps`
+
+| Prop       | Type                        | Default                                      | Description                                                    |
+| ---------- | --------------------------- | -------------------------------------------- | -------------------------------------------------------------- |
+| `id`       | `string`                    | —                                            | Non-empty Scope identity and border/label target               |
+| `gap?`     | `number`                    | `8`                                          | Uniform nonnegative outward border gap                         |
+| `border?`  | `IRStandardPathBorderStyle` | `{ stroke: 'currentColor', strokeWidth: 1 }` | Border Path style; lowering uses `-1` when `zIndex` is omitted |
+| `label?`   | `string`                    | —                                            | Optional non-empty top-left label                              |
+| `children` | `ReactNode`                 | —                                            | At least one React child convertible to a direct Core Node     |
+
+### IR / persistence: `FrameInput`
+
+`createFrame(input)` adds the fixed `namespace` / `type` discriminators and returns complete `IRFrame`.
+
+| Prop       | Type                        | Default                                      | Description                                                             |
+| ---------- | --------------------------- | -------------------------------------------- | ----------------------------------------------------------------------- |
+| `id`       | `string`                    | —                                            | Non-empty Scope identity persisted in `IRFrame`                         |
+| `gap?`     | `number`                    | `8`                                          | Uniform nonnegative outward border gap                                  |
+| `border?`  | `IRStandardPathBorderStyle` | `{ stroke: 'currentColor', strokeWidth: 1 }` | Border Path style; schema does not default `zIndex`, lowering uses `-1` |
+| `label?`   | `string`                    | —                                            | Optional non-empty top-left label                                       |
+| `children` | `Array<IRNode>`             | —                                            | Non-empty direct Core Node list; other IR child types unsupported       |
+
+### Vanilla: `FrameVanillaInput`
+
+The `input` in `frame(embedId, input)` has no `id`; the adapter deterministically derives the Scope id as `` `${embedId}/frame` ``.
+
+| Prop       | Type                        | Default                                      | Description                                                       |
+| ---------- | --------------------------- | -------------------------------------------- | ----------------------------------------------------------------- |
+| `gap?`     | `number`                    | `8`                                          | Uniform nonnegative outward border gap                            |
+| `border?`  | `IRStandardPathBorderStyle` | `{ stroke: 'currentColor', strokeWidth: 1 }` | Border Path style; lowering uses `-1` when `zIndex` is omitted    |
+| `label?`   | `string`                    | —                                            | Optional non-empty top-left label                                 |
+| `children` | `Array<IRNode>`             | —                                            | Non-empty direct Core Node list; other IR child types unsupported |
 
 ## Related
 

@@ -20,12 +20,15 @@ Group statistic broadcasting is a data capability; see [Data Transforms / annota
 
 `<IntervalMark stack>` / `<IntervalMark angle>` auto-stacking is shorthand. When a matching explicit `stack` already exists in the pipeline, auto-stacking is suppressed to avoid stacking twice.
 
-| prop                      | type      | default        | description                                           |
-| ------------------------- | --------- | -------------- | ----------------------------------------------------- |
-| `x`                       | `string?` | one group      | Group key; values stack within the same key           |
-| `y`                       | `string`  | —              | Numeric field to accumulate                           |
-| `groupBy`                 | `string?` | data row order | Series field; appearance order controls segment order |
-| `startField` / `endField` | `string?` | `y0` / `y1`    | Output bound field names                              |
+`IRPlotStackTransform` fixes `kind` to `'stack'`.
+
+| prop                        | type                             | default        | description                                           |
+| --------------------------- | -------------------------------- | -------------- | ----------------------------------------------------- |
+| `x?`                        | `string`                         | one group      | Group key; values stack within the same key           |
+| `y`                         | `string`                         | —              | Numeric field to accumulate                           |
+| `groupBy?`                  | `string`                         | data row order | Series field; appearance order controls segment order |
+| `startField?` / `endField?` | `string`                         | `y0` / `y1`    | Output bound field names                              |
+| `offset?`                   | <ApiValues name="StackOffset" /> | `'zero'`       | Stack baseline and normalization strategy             |
 
 ## normalize
 
@@ -35,9 +38,11 @@ Group statistic broadcasting is a data capability; see [Data Transforms / annota
 
 Normalize followed by stack gives a percent stack: first convert every group to shares, then stack those shares.
 
-| prop      | type                       | default          | description                         |
-| --------- | -------------------------- | ---------------- | ----------------------------------- |
-| `field`   | `string`                   | —                | Numeric field to normalize          |
-| `groupBy` | `Array<string>?`           | one global group | Group keys; supports composite keys |
-| `basis`   | `'fraction' \| 'percent'?` | `'fraction'`     | Output scale                        |
-| `as`      | `string?`                  | overwrite input  | Output field name                   |
+`IRPlotNormalizeTransform` fixes `kind` to `'normalize'`.
+
+| prop       | type                                | default          | description                         |
+| ---------- | ----------------------------------- | ---------------- | ----------------------------------- |
+| `field`    | `string`                            | —                | Numeric field to normalize          |
+| `groupBy?` | `Array<string>`                     | one global group | Group keys; supports composite keys |
+| `basis?`   | <ApiValues name="NormalizeBasis" /> | `'fraction'`     | Output scale                        |
+| `as?`      | `string`                            | overwrite input  | Output field name                   |

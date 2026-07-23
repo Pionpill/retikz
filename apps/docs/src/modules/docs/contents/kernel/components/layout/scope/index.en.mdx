@@ -193,28 +193,28 @@ The Scope envelope collects node, coordinate, and nested-Scope layouts, not path
 
 ### Context and output
 
-| Prop             | Type                         | Default       | Description                                                                       |
-| ---------------- | ---------------------------- | ------------- | --------------------------------------------------------------------------------- |
-| `children`       | `ReactNode`                  | —             | Node / Path / Coordinate / nested Scope                                           |
-| `transforms`     | `Array<IRTransformInput>`    | —             | Seven local transforms; the last acts first                                       |
-| `id`             | `string`                     | —             | Register the Scope envelope as a group handle                                     |
-| `localNamespace` | `boolean`                    | `false`       | Isolate child ids; `scope.id` remains visible                                     |
-| `boundingShape`  | `'rectangle' \| 'circle'`    | `'rectangle'` | Rectangle or circle envelope for `scope.id`                                       |
-| `clip`           | `IRClipSpec`                 | —             | Built-in or custom clip in local coordinates                                      |
-| `zIndex`         | `number` (integer)           | `0`           | Stable sibling order for the whole Scope                                          |
-| `meta`           | `Record<string, JSON value>` | —             | Forwarded to GroupPrim, not layout or cascade                                     |
-| `animations`     | `Array<IRAnimationTrack>`    | —             | Group animation, not inherited by children                                        |
-| `on<Event>`      | `HydrationHandler`           | —             | Requires `id`; see [Hydration](/kernel/packages/render/hydration) for every event |
+| Prop             | Type                                    | Default       | Description                                                                                                        |
+| ---------------- | --------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `children`       | `ReactNode`                             | —             | Node / Path / Coordinate / nested Scope                                                                            |
+| `transforms`     | `Array<IRTransformInput>`               | —             | Seven local transforms; the last acts first                                                                        |
+| `id`             | `string`                                | —             | Register the Scope envelope as a group handle                                                                      |
+| `localNamespace` | `boolean`                               | `false`       | Isolate child ids; `scope.id` remains visible                                                                      |
+| `boundingShape`  | <ApiValues name="ScopeBoundingShape" /> | `'rectangle'` | Rectangle or circle envelope for `scope.id`                                                                        |
+| `clip`           | `IRClipSpec`                            | —             | Built-in or custom clip in local coordinates                                                                       |
+| `zIndex`         | `number` (integer)                      | `0`           | Stable sibling order for the whole Scope                                                                           |
+| `meta`           | `Record<string, JSON value>`            | —             | Forwarded to GroupPrim, not layout or cascade                                                                      |
+| `animations`     | `Array<IRAnimationTrack>`               | —             | Group animation, not inherited by children                                                                         |
+| `on<Event>`      | `ScopeProps['onClick']`                 | —             | Uses the `onClick` signature and requires `id`; see [Hydration](/kernel/packages/render/hydration) for every event |
 
 ### Style defaults
 
-| Prop                                                            | Type                             | Default | Description                               |
-| --------------------------------------------------------------- | -------------------------------- | ------- | ----------------------------------------- |
-| `color`                                                         | `string`                         | —       | Primary color cascaded across elements    |
-| `stroke` / `fill`                                               | `string \| IRPaintSpec`          | —       | Per-field stroke and fill cascade         |
-| `strokeWidth` / opacity fields                                  | `number`                         | —       | Stroke width and per-field opacity        |
-| `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` | default objects                  | —       | Four independent element-default channels |
-| `resetStyle`                                                    | `boolean \| Array<StyleChannel>` | `false` | Cut all or selected outer Scope channels  |
+| Prop                                                            | Type                               | Default | Description                               |
+| --------------------------------------------------------------- | ---------------------------------- | ------- | ----------------------------------------- |
+| `color`                                                         | `string`                           | —       | Primary color cascaded across elements    |
+| `stroke` / `fill`                                               | `string` \| `IRPaintSpec`          | —       | Per-field stroke and fill cascade         |
+| `strokeWidth` / opacity fields                                  | `number`                           | —       | Stroke width and per-field opacity        |
+| `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` | default objects                    | —       | Four independent element-default channels |
+| `resetStyle`                                                    | `boolean` \| `Array<StyleChannel>` | `false` | Cut all or selected outer Scope channels  |
 
 ## Related
 

@@ -79,16 +79,16 @@ Legends are drawn above axes, marks, and plot-level labels by default, with zInd
 
 ## API
 
-| Prop         | Type                                        | Default       | Description                                                                                             |
-| ------------ | ------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------- |
-| `channel`    | `'color' \| 'size' \| 'opacity' \| 'shape'` | —             | Which non-positional channel the legend explains; form follows the bound scale type                     |
-| `scale`      | `string?`                                   | —             | Disambiguating scale name when one channel is driven by several scales; omit = the channel's only scale |
-| `title`      | `string \| TextBlock?`                      | none          | Legend title content; accepts the same text-block form as core text nodes                               |
-| `position`   | `'right' \| 'left' \| 'top' \| 'bottom'`    | `'right'`     | Which edge the legend sits on (a band is reserved there)                                                |
-| `orient`     | `'vertical' \| 'horizontal'`                | by `position` | Item layout direction; left/right default to vertical, top/bottom to horizontal                         |
-| `ticks`      | `{ count?; values? }`                       | scale default | Tick source for continuous ramps; explicit `values` win over `count`; ignored for discrete swatches     |
-| `tickLabels` | `false \| { format? }`                      | `true`        | Hide labels with `false`, or format ramp tick labels with a declarative format string                   |
-| `style`      | `LegendGuideStyle?`                         | theme legend  | Local legend visual tokens: swatch / ramp size, gaps, and title / label text style                      |
+| Prop          | Type                                | Default       | Description                                                                                                                                |
+| ------------- | ----------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `channel`     | `LegendProps['channel']`            | —             | Non-positional channel the legend explains; built-ins are color / size / opacity / shape, and registered custom channels are also accepted |
+| `scale?`      | `LegendProps['scale']`              | —             | Disambiguating scale name when one channel is driven by several scales; omit = the channel's only scale                                    |
+| `title?`      | `LegendProps['title']`              | none          | Legend title content; accepts the same text-block form as core text nodes                                                                  |
+| `position?`   | <ApiValues name="LegendPosition" /> | `'right'`     | Which edge the legend sits on (a band is reserved there)                                                                                   |
+| `orient?`     | <ApiValues name="LegendOrient" />   | by `position` | Item layout direction; left/right default to vertical, top/bottom to horizontal                                                            |
+| `ticks?`      | `LegendProps['ticks']`              | scale default | Tick source for continuous ramps; explicit `values` win over `count`; ignored for discrete swatches                                        |
+| `tickLabels?` | `LegendProps['tickLabels']`         | `true`        | Hide labels with `false`, or format ramp tick labels with a declarative format string                                                      |
+| `style?`      | `LegendProps['style']`              | theme legend  | Local legend visual tokens: swatch / ramp size, gaps, and title / label text style                                                         |
 
 ## Related
 

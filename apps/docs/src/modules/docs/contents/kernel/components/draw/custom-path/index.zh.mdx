@@ -98,20 +98,20 @@ provider 可以完全创建新的 Scene primitive，也可以调用 `emitStroke`
 
 ### PathKindDefinition
 
-| 字段            | 类型                                         | 默认值                   | 描述                                  |
-| --------------- | -------------------------------------------- | ------------------------ | ------------------------------------- |
-| `schema`        | `ZodObject<{ kind: ZodLiteral<string> }>`    | —                        | 声明 Path 形态并提供 registry key     |
-| `optionsSchema` | `ZodType<IRJsonObject>`                      | 原始 `kindOptions ?? {}` | 校验自定义实例配置                    |
-| `compile`       | `(context) => PathKindCompileResult \| null` | —                        | 为整条 Path 生成 Scene 图元与边界依据 |
+| 字段            | 类型                            | 默认值                   | 描述                                  |
+| --------------- | ------------------------------- | ------------------------ | ------------------------------------- |
+| `schema`        | `PathKindDefinition['schema']`  | —                        | 声明 Path 形态并提供 registry key     |
+| `optionsSchema` | `ZodType<IRJsonObject>`         | 原始 `kindOptions ?? {}` | 校验自定义实例配置                    |
+| `compile`       | `PathKindDefinition['compile']` | —                        | 为整条 Path 生成 Scene 图元与边界依据 |
 
 ### compile 上下文
 
-| 字段         | 类型                                       | 默认值    | 描述                                                |
-| ------------ | ------------------------------------------ | --------- | --------------------------------------------------- |
-| `path`       | `IRPathBase`                               | —         | 当前 Path 的完整 IR                                 |
-| `options`    | `TOptions`                                 | —         | `kindOptions ?? {}` 经 `optionsSchema` 解析后的结果 |
-| `emitStroke` | `(path?) => PathKindCompileResult \| null` | 当前 Path | 复用标准描边编译                                    |
-| `emitRibbon` | `(path?) => PathKindCompileResult \| null` | 当前 Path | 复用标准流带编译                                    |
+| 字段         | 类型                                   | 默认值    | 描述                                                |
+| ------------ | -------------------------------------- | --------- | --------------------------------------------------- |
+| `path`       | `IRPathBase`                           | —         | 当前 Path 的完整 IR                                 |
+| `options`    | `TOptions`                             | —         | `kindOptions ?? {}` 经 `optionsSchema` 解析后的结果 |
+| `emitStroke` | `PathKindCompileContext['emitStroke']` | 当前 Path | 复用标准描边编译                                    |
+| `emitRibbon` | `PathKindCompileContext['emitRibbon']` | 当前 Path | 复用标准流带编译                                    |
 
 ### PathKindCompileResult
 

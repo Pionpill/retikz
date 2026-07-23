@@ -142,18 +142,18 @@ By default, `scaleParams` deep-scales every numeric leaf by `Math.sqrt(sx * sy)`
 
 ## API Reference
 
-| Field                | Type                                                                     | Required | Responsibility                                                                      |
-| -------------------- | ------------------------------------------------------------------------ | -------- | ----------------------------------------------------------------------------------- |
-| `name`               | `string`                                                                 | Yes      | Registry key referenced by the `node.shape` string or `type`                        |
-| `paramsSchema`       | `z.ZodType<TParams>`                                                     | Yes      | Validate and parse JSON-safe `shape.params`                                         |
-| `circumscribe`       | `(innerHalfWidth, innerHalfHeight, params) => { halfWidth, halfHeight }` | Yes      | Derive the complete shape's AABB half-axes from text plus padding                   |
-| `circumscribeOffset` | `(params) => Position`                                                   | No       | Offset the AABB center from `position` when the semantic origin differs             |
-| `boundaryPoint`      | `(rect, toward, params) => Position`                                     | Yes      | Derive the automatic connection point from rotatable `rect` and `toward`            |
-| `anchor`             | `(rect, name, params) => Position \| undefined`                          | Yes      | Resolve standard or shape-specific named anchors; return `undefined` when unhandled |
-| `connectionEnvelope` | `(rect, kind, params) => { halfWidth, halfHeight } \| undefined`         | No       | Return a safe regular envelope for circle / ellipse / rectangle `tight` fitting     |
-| `edgePoint`          | `(rect, side, t, params) => Position`                                    | No       | Support `{ side, fraction }` points with `t ∈ [0, 1]`                               |
-| `emit`               | `(rect, style, round, params) => Iterable<ScenePrimitive>`               | Yes      | Emit one or more renderer-agnostic Scene primitives in aligned space                |
-| `scaleParams`        | `(params, sx, sy) => TParams`                                            | No       | Define how Node scale applies to shape params                                       |
+| Field                | Type                                                       | Required | Responsibility                                                                      |
+| -------------------- | ---------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------- |
+| `name`               | `string`                                                   | Yes      | Registry key referenced by the `node.shape` string or `type`                        |
+| `paramsSchema`       | `z.ZodType<TParams>`                                       | Yes      | Validate and parse JSON-safe `shape.params`                                         |
+| `circumscribe`       | `ShapeDefinition['circumscribe']`                          | Yes      | Derive the complete shape's AABB half-axes from text plus padding                   |
+| `circumscribeOffset` | `(params) => Position`                                     | No       | Offset the AABB center from `position` when the semantic origin differs             |
+| `boundaryPoint`      | `(rect, toward, params) => Position`                       | Yes      | Derive the automatic connection point from rotatable `rect` and `toward`            |
+| `anchor`             | `ShapeDefinition['anchor']`                                | Yes      | Resolve standard or shape-specific named anchors; return `undefined` when unhandled |
+| `connectionEnvelope` | `ShapeDefinition['connectionEnvelope']`                    | No       | Return a safe regular envelope for circle / ellipse / rectangle `tight` fitting     |
+| `edgePoint`          | `(rect, side, t, params) => Position`                      | No       | Support `{ side, fraction }` points with `t ∈ [0, 1]`                               |
+| `emit`               | `(rect, style, round, params) => Iterable<ScenePrimitive>` | Yes      | Emit one or more renderer-agnostic Scene primitives in aligned space                |
+| `scaleParams`        | `(params, sx, sy) => TParams`                              | No       | Define how Node scale applies to shape params                                       |
 
 `@retikz/core` exports `defineShape`, `ShapeDefinition`, `ShapeDefinitionInput`, `ConnectionEnvelope`, `ConnectionEnvelopeKind`, `ResolvedShapeStyle`, `BUILTIN_SHAPES`, `Rect`, `worldToLocal`, and `localToWorld`. Import the point-coordinate type `Position` from `@retikz/math`.
 

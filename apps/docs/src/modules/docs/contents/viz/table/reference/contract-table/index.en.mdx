@@ -9,15 +9,15 @@ Base Table contracts define the top-level identity, Cell content, and layout fie
 
 `IRTableSpec` aggregates `IRDetailTableSpec | IRManualTableSpec | IRCustomTableSpec`. The three variants share `namespace + type` fields and constrain `data` and `structure` independently.
 
-| Field       | Type                        | Default              | Description                                              |
-| ----------- | --------------------------- | -------------------- | -------------------------------------------------------- |
-| `namespace` | `'table'`                   | —                    | Tier 2 composite namespace                               |
-| `type`      | `'table'`                   | —                    | Top-level Table node type                                |
-| `id?`       | `string`                    | —                    | Optional stable id                                       |
-| `data?`     | `IRDataReference`           | —                    | Required by detail, forbidden by manual, optional custom |
-| `structure` | `IRTableStructureOperation` | —                    | Detail, manual, or custom Structure                      |
-| `layout?`   | `IRTableLayout`             | fixed-track defaults | Widths, body/header heights, and row/column gaps         |
-| `meta?`     | `IRJsonObject`              | —                    | JSON-safe metadata preserved by lowering                 |
+| Field       | Type                                | Default              | Description                                              |
+| ----------- | ----------------------------------- | -------------------- | -------------------------------------------------------- |
+| `namespace` | `'table'`                           | —                    | Tier 2 composite namespace                               |
+| `type`      | <ApiValues name="TableComposite" /> | —                    | Top-level Table node type                                |
+| `id?`       | `string`                            | —                    | Optional stable id                                       |
+| `layout?`   | `IRTableLayout`                     | fixed-track defaults | Widths, body/header heights, and row/column gaps         |
+| `meta?`     | `IRJsonObject`                      | —                    | JSON-safe metadata preserved by lowering                 |
+| `data?`     | `IRDataReference`                   | —                    | Required by detail, forbidden by manual, optional custom |
+| `structure` | `IRTableStructureOperation`         | —                    | Detail, manual, or custom Structure                      |
 
 ### TableSpecSchema
 

@@ -145,10 +145,10 @@ Node / Coordinate position references also resolve during traversal, so they see
 
 ## API Reference
 
-| Prop       | Type                                                                                                 | Default | Description                                                                                                                                                                               |
-| ---------- | ---------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`       | `string`                                                                                             | —       | **Required** — a placeholder's entire purpose is to be referenced by id                                                                                                                   |
-| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, fraction }` | —       | Five placement forms for a zero-size point; does not accept the Node-only `IRAnchorPosition`. Id dependencies must be registered first—see [How it works](#register-first-then-reference) |
+| Prop       | Type                          | Default | Description                                                                                                                                                                               |
+| ---------- | ----------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`       | `string`                      | —       | **Required** — a placeholder's entire purpose is to be referenced by id                                                                                                                   |
+| `position` | `CoordinateProps['position']` | —       | Five placement forms for a zero-size point; does not accept the Node-only `IRAnchorPosition`. Id dependencies must be registered first—see [How it works](#register-first-then-reference) |
 
 ## Related
 

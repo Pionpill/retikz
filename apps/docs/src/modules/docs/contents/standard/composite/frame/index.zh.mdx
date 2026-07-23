@@ -62,13 +62,40 @@ Vanilla 会从 embed id 确定性派生 Scope id，例如 `frame('definition-con
 
 ## API 参考
 
-| 属性       | 类型                          | 默认值                                       | 描述                                                                   |
-| ---------- | ----------------------------- | -------------------------------------------- | ---------------------------------------------------------------------- |
-| `id`       | `string`                      | —                                            | 非空 Scope identity，也是边框和标签的 target                           |
-| `gap`      | `number`                      | `8`                                          | 所有边相同的非负外扩间距                                               |
-| `border`   | `IRStandardPathBorderStyle`   | `{ stroke: 'currentColor', strokeWidth: 1 }` | 外框 Path 样式；`zIndex` 缺省为 `-1`                                   |
-| `label`    | `string`                      | —                                            | 可选的非空左上角标签                                                   |
-| `children` | `ReactNode` / `Array<IRNode>` | —                                            | React / IR 输入均须包含至少一个直接 Core Node；其它 child 类型暂不支持 |
+三个入口不会接收同一种对象：React 使用 `FrameProps`，`createFrame` 使用持久化 `FrameInput`，Vanilla helper 使用不含 Scope `id` 的 `FrameVanillaInput`。三者最终都由 `FrameSchema` 校验为 `IRFrame`。
+
+### React：`FrameProps`
+
+| 属性       | 类型                        | 默认值                                       | 描述                                                |
+| ---------- | --------------------------- | -------------------------------------------- | --------------------------------------------------- |
+| `id`       | `string`                    | —                                            | 非空 Scope identity，也是边框和标签的 target        |
+| `gap?`     | `number`                    | `8`                                          | 所有边相同的非负外扩间距                            |
+| `border?`  | `IRStandardPathBorderStyle` | `{ stroke: 'currentColor', strokeWidth: 1 }` | 外框 Path 样式；省略 `zIndex` 时 lowering 使用 `-1` |
+| `label?`   | `string`                    | —                                            | 可选的非空左上角标签                                |
+| `children` | `ReactNode`                 | —                                            | 至少一个可转换为直接 Core Node 的 React child       |
+
+### IR / 持久化：`FrameInput`
+
+`createFrame(input)` 会补上固定的 `namespace` / `type` discriminator，并返回完整 `IRFrame`。
+
+| 属性       | 类型                        | 默认值                                       | 描述                                                         |
+| ---------- | --------------------------- | -------------------------------------------- | ------------------------------------------------------------ |
+| `id`       | `string`                    | —                                            | 持久化到 `IRFrame` 的非空 Scope identity                     |
+| `gap?`     | `number`                    | `8`                                          | 所有边相同的非负外扩间距                                     |
+| `border?`  | `IRStandardPathBorderStyle` | `{ stroke: 'currentColor', strokeWidth: 1 }` | 外框 Path 样式；schema 不默认 `zIndex`，lowering 缺省用 `-1` |
+| `label?`   | `string`                    | —                                            | 可选的非空左上角标签                                         |
+| `children` | `Array<IRNode>`             | —                                            | 非空直接 Core Node 列表；其它 IR child 类型暂不支持          |
+
+### Vanilla：`FrameVanillaInput`
+
+`frame(embedId, input)` 的 `input` 没有 `id`；adapter 会把 Scope id 确定性派生为 `` `${embedId}/frame` ``。
+
+| 属性       | 类型                        | 默认值                                       | 描述                                                |
+| ---------- | --------------------------- | -------------------------------------------- | --------------------------------------------------- |
+| `gap?`     | `number`                    | `8`                                          | 所有边相同的非负外扩间距                            |
+| `border?`  | `IRStandardPathBorderStyle` | `{ stroke: 'currentColor', strokeWidth: 1 }` | 外框 Path 样式；省略 `zIndex` 时 lowering 使用 `-1` |
+| `label?`   | `string`                    | —                                            | 可选的非空左上角标签                                |
+| `children` | `Array<IRNode>`             | —                                            | 非空直接 Core Node 列表；其它 IR child 类型暂不支持 |
 
 ## 相关
 

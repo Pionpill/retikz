@@ -89,32 +89,32 @@ const svg = renderTable(spec, { data: { scores: rows } });
 
 ### DetailTable
 
-| 属性                      | 类型                                           | 默认值         | 描述                                                              |
-| ------------------------- | ---------------------------------------------- | -------------- | ----------------------------------------------------------------- |
-| `dataRef`                 | `string`                                       | —              | spec 中的外部数据引用名                                           |
-| `data`                    | `Array<ExternalRow>`                           | —              | 当前明细记录；不写入 spec                                         |
-| `columns`                 | `Array<TableDetailColumnInput>`                | —              | 程序化地按展示顺序声明字段、列头与 presentation；与 children 互斥 |
-| `children`                | `ReactNode`                                    | —              | `DetailColumn` 声明顺序；与 `columns` 互斥                        |
-| `model`                   | `IRDataModel`                                  | —              | 可选字段模型                                                      |
-| `header`                  | `boolean`                                      | `true`         | 是否生成列头行                                                    |
-| `id`                      | `string`                                       | —              | 稳定 Table id；嵌入父级 `Layout` 时必填                           |
-| `layout`                  | `IRTableLayout`                                | 固定轨道默认值 | 列宽、正文/列头行高与行列间距                                     |
-| `structureDefinitions`    | `ReadonlyArray<AnyTableStructureDefinition>`   | `[]`           | 自定义结构 definitions                                            |
-| `presentationDefinitions` | `ReadonlyArray<AnyCellPresentationDefinition>` | `[]`           | 自定义 Cell presentation definitions                              |
-| `composites`              | `ReadonlyArray<CompositeDefinition>`           | `[]`           | Cell 内嵌 Tier 2 内容所需 definitions                             |
-| `onManifest`              | `(manifest: TableLayoutManifest) => void`      | —              | standalone 布局产物通知；嵌入时不支持                             |
-| `width` / `height`        | `number \| string`                             | —              | 宿主显示尺寸；不改变固定轨道                                      |
-| `renderer`                | `'svg' \| 'canvas'`                            | `'svg'`        | 渲染后端                                                          |
-| `className` / `style`     | `string`<br />`CSSProperties`                  | —              | 透传给渲染宿主                                                    |
+| 属性                       | 类型                                                             | 默认值         | 描述                                                              |
+| -------------------------- | ---------------------------------------------------------------- | -------------- | ----------------------------------------------------------------- |
+| `dataRef`                  | `DetailTableProps['dataRef']`                                    | —              | spec 中的外部数据引用名                                           |
+| `data`                     | `DetailTableProps['data']`                                       | —              | 当前明细记录；不写入 spec                                         |
+| `columns?`                 | `DetailTableProps['columns']`                                    | —              | 程序化地按展示顺序声明字段、列头与 presentation；与 children 互斥 |
+| `children?`                | `DetailTableProps['children']`                                   | —              | `DetailColumn` 声明顺序；与 `columns` 互斥                        |
+| `model?`                   | `DetailTableProps['model']`                                      | —              | 可选字段模型                                                      |
+| `header?`                  | `DetailTableProps['header']`                                     | `true`         | 是否生成列头行                                                    |
+| `id?`                      | `DetailTableProps['id']`                                         | —              | 稳定 Table id；嵌入父级 `Layout` 时必填                           |
+| `layout?`                  | `DetailTableProps['layout']`                                     | 固定轨道默认值 | 列宽、正文/列头行高与行列间距                                     |
+| `structureDefinitions?`    | `DetailTableProps['structureDefinitions']`                       | `[]`           | 自定义结构 definitions                                            |
+| `presentationDefinitions?` | `DetailTableProps['presentationDefinitions']`                    | `[]`           | 自定义 Cell presentation definitions                              |
+| `composites?`              | `DetailTableProps['composites']`                                 | `[]`           | Cell 内嵌 Tier 2 内容所需 definitions                             |
+| `onManifest?`              | `DetailTableProps['onManifest']`                                 | —              | standalone 布局产物通知；嵌入时不支持                             |
+| `width?` / `height?`       | `DetailTableProps['width']`                                      | —              | 宿主显示尺寸；不改变固定轨道                                      |
+| `renderer?`                | `DetailTableProps['renderer']`                                   | `'svg'`        | 渲染后端                                                          |
+| `className?` / `style?`    | `DetailTableProps['className']`<br />`DetailTableProps['style']` | —              | 透传给渲染宿主                                                    |
 
 ### DetailColumn
 
-| 属性           | 类型                               | 默认值 | 描述                                  |
-| -------------- | ---------------------------------- | ------ | ------------------------------------- |
-| `id`           | `string`                           | —      | 列的稳定标识                          |
-| `field`        | `string`                           | —      | 从每条记录读取的字段                  |
-| `header`       | `IRTableCellPayload`<br />`string` | —      | 列头 payload；字符串会转为 value Cell |
-| `presentation` | `IRTablePresentationRef`           | —      | 正文 value Cell 的可选呈现引用        |
+| 属性            | 类型                                | 默认值 | 描述                                  |
+| --------------- | ----------------------------------- | ------ | ------------------------------------- |
+| `id`            | `DetailColumnProps['id']`           | —      | 列的稳定标识                          |
+| `field`         | `DetailColumnProps['field']`        | —      | 从每条记录读取的字段                  |
+| `header?`       | `DetailColumnProps['header']`       | —      | 列头 payload；字符串会转为 value Cell |
+| `presentation?` | `DetailColumnProps['presentation']` | —      | 正文 value Cell 的可选呈现引用        |
 
 `detailTable(input)` 接收同一组 spec 输入并返回 `IRDetailTableSpec`。完整的 `Table`、`ManualTable`、schema、adapter 和 lowering 契约见 [API 参考](/viz/table/reference)。
 

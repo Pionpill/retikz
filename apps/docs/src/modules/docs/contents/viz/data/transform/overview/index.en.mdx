@@ -89,10 +89,9 @@ When an explicit `stack` has the same signature as an automatic `stack`, the aut
 
 `TransformProps` equals `IRPlotTransform`, a union discriminated by `kind`. After choosing a `kind`, TypeScript requires the configuration of that operation branch.
 
-| prop                | type                      | default | description                                                        |
-| ------------------- | ------------------------- | ------- | ------------------------------------------------------------------ |
-| `kind`              | `IRPlotTransform['kind']` | —       | Operation discriminator                                            |
-| kind-specific props | Selected union branch     | —       | JSON-serializable config documented on the matching Data/Plot page |
+| prop   | type                      | default | description                                                                                                                    |
+| ------ | ------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `kind` | `IRPlotTransform['kind']` | —       | Operation discriminator; remaining props come from the selected union branch and are documented on the matching Data/Plot page |
 
 ### kind coverage
 

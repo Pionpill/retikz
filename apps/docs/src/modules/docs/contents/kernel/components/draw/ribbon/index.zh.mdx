@@ -121,26 +121,26 @@ Boundary 模式直接采样给定的上下边界。两种模式最终都输出�
 
 ### Path 入口
 
-| 属性       | 类型                                    | 默认值         | 描述                                                                           |
-| ---------- | --------------------------------------- | -------------- | ------------------------------------------------------------------------------ |
-| `kind`     | `'ribbon'`                              | —              | 选择内置 Ribbon Path kind                                                      |
-| `ribbon`   | `PathRibbonOptions`                     | —              | 必填；配置构造模式、宽度、采样、对齐、端点与预计算边界                         |
-| `label`    | `GeometryLabel \| Array<GeometryLabel>` | —              | centerline 模式可用的宿主标签                                                  |
-| `children` | `Array<<Step>>`                         | —              | centerline 模式必填；boundary 模式省略                                         |
-| `fill`     | `string \| IRPaintSpec`                 | `currentColor` | 带状面填充；其它 Path 共享字段见 [Path](/kernel/components/draw/path#api-参考) |
+| 属性       | 类型                                          | 默认值         | 描述                                                                           |
+| ---------- | --------------------------------------------- | -------------- | ------------------------------------------------------------------------------ |
+| `kind`     | `'ribbon'`                                    | —              | 选择内置 Ribbon Path kind                                                      |
+| `ribbon`   | `IRPathRibbonOptions`                         | —              | 必填；配置构造模式、宽度、采样、对齐、端点与预计算边界                         |
+| `label`    | `IRGeometryLabel` \| `Array<IRGeometryLabel>` | —              | centerline 模式可用的宿主标签                                                  |
+| `children` | `Array<<Step>>`                               | —              | centerline 模式必填；boundary 模式省略                                         |
+| `fill`     | `string` \| `IRPaintSpec`                     | `currentColor` | 带状面填充；其它 Path 共享字段见 [Path](/kernel/components/draw/path#api-参考) |
 
 ### ribbon 选项
 
-| 字段              | 类型                                               | 默认值         | 描述                                              |
-| ----------------- | -------------------------------------------------- | -------------- | ------------------------------------------------- |
-| `mode`            | `'centerline' \| 'boundary'`                       | `'centerline'` | 选择从中心线生成，或直接闭合预计算边界            |
-| `width`           | `number \| RibbonWidthStops \| RibbonWidthProfile` | —              | 整条中心线的宽度规则；与起末端宽度二选一          |
-| `start` / `end`   | `{ width?, direction?, cap? }`                     | —              | 端点宽度、切线方向与端帽；默认 cap 为 `'butt'`    |
-| `interpolation`   | `'linear' \| 'smooth'`                             | `'linear'`     | 起末端宽度之间的插值                              |
-| `align`           | `'left' \| 'center' \| 'right'`                    | `'center'`     | 中心线位于带宽中的位置                            |
-| `samples`         | `boolean \| number`                                | —              | 两种模式通用的固定采样短写；`true` 使用 64 个截面 |
-| `sampling`        | `{ kind: 'fixed' \| 'adaptive', ... }`             | —              | 显式采样策略；不能与 `samples` 同时使用           |
-| `upper` / `lower` | `Array<IRStep>`                                    | —              | boundary 模式必填的两条开放边界                   |
+| 字段              | 类型                                          | 默认值         | 描述                                              |
+| ----------------- | --------------------------------------------- | -------------- | ------------------------------------------------- |
+| `mode`            | <ApiValues name="RibbonMode" />               | `'centerline'` | 选择从中心线生成，或直接闭合预计算边界            |
+| `width`           | `IRRibbonWidth`                               | —              | 整条中心线的宽度规则；与起末端宽度二选一          |
+| `start` / `end`   | `IRRibbonEndpoint`                            | —              | 端点宽度、切线方向与端帽；默认 cap 为 `'butt'`    |
+| `interpolation`   | <ApiValues name="RibbonTaperInterpolation" /> | `'linear'`     | 起末端宽度之间的插值                              |
+| `align`           | <ApiValues name="RibbonAlignment" />          | `'center'`     | 中心线位于带宽中的位置                            |
+| `samples`         | `boolean` \| `number`                         | —              | 两种模式通用的固定采样短写；`true` 使用 64 个截面 |
+| `sampling`        | `IRRibbonSampling`                            | —              | 显式采样策略；不能与 `samples` 同时使用           |
+| `upper` / `lower` | `Array<IRStep>`                               | —              | boundary 模式必填的两条开放边界                   |
 
 完整校验约束见 [PathRibbonOptions schema](/kernel/reference/schema/path#pathribbonoptions)。
 

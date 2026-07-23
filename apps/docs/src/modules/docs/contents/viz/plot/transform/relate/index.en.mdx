@@ -21,14 +21,13 @@ This example selects the minimum and maximum points on a trend line, projects `s
 The input is still ordinary data rows. In the demo, `PathMark` and `PointMark` consume the original rows; the local transform on `RelationMark` generates one paired row only for the relation layer.
 The source and target selectors reuse the same [Statistical Sub-operators](/viz/data/transform/statistics) as `select`, so they can choose top-N rows, ordered endpoints, or custom representative rows.
 
-| prop              | Type                    | Default          | Notes                                      |
-| ----------------- | ----------------------- | ---------------- | ------------------------------------------ |
-| `groupBy`         | `Array<string>?`        | One global group | Generate pairs independently per group     |
-| `source.selector` | `Selector`              | —                | Source endpoint selector                   |
-| `source.fields`   | `Record<string,string>` | —                | Output suffix → source row field           |
-| `target.selector` | `Selector`              | —                | Target endpoint selector                   |
-| `target.fields`   | `Record<string,string>` | —                | Output suffix → target row field           |
-| `measures`        | `Array<PairMeasure>?`   | —                | Derived measures between source and target |
+`IRPlotRelateTransform` fixes `kind` to `'relate'`.
+
+| prop                | Type                                                                                                                                                                                              | Default          | Notes                                                                                                                                                     |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `groupBy?`          | `Array<string>`                                                                                                                                                                                   | One global group | Generate pairs independently per group                                                                                                                    |
+| `source` / `target` | `IRPlotEndpointProjection`<br />- `selector: IRDataSelectorOperation`<br />- `fields: Record<string, string>`                                                                                     | —                | Endpoint projection<br />- Representative-row rule<br />- Non-empty output-suffix to endpoint-row-field map                                               |
+| `measures?`         | `Array<IRPlotPairMeasureOperation>`<br />- `op:` <ApiValues name="PairMeasureOperationKind" /><br />- `field: string`<br />- `as: string`<br />- `labelAs?: string`<br />- `labelPrefix?: string` | —                | Derived endpoint measures<br />- Measure kind<br />- Numeric input field<br />- Output field<br />- Optional label field<br />- Non-negative label prefix |
 
 ```tsx
 <RelationMark

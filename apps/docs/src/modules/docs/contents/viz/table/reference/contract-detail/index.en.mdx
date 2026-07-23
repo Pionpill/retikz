@@ -9,12 +9,10 @@ Detail Table contracts persist “one external record becomes one row” as a se
 
 `IRDetailTableSpec` is the precise detail-table root. Unlike aggregate `IRTableSpec`, it requires `data` and narrows `structure` to the detail variant.
 
-| Field               | Type                         | Default | Description                             |
-| ------------------- | ---------------------------- | ------- | --------------------------------------- |
-| `data`              | `IRDataReference`            | —       | Required external dataset reference     |
-| `structure.kind`    | `'detail'`                   | —       | Record-per-row Structure discriminator  |
-| `structure.columns` | `Array<IRTableDetailColumn>` | —       | At least one column with unique ids     |
-| `structure.header?` | `boolean`                    | `true`  | Whether to generate a column-header row |
+| Field       | Type                                                                                                                                                   | Default                                    | Description                                                                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data`      | `IRDetailTableSpec['data']`<br />- `reference: string`<br />- `model?: IRDataModel`                                                                    | —<br />- —<br />- —                        | Required external dataset reference<br />- Runtime dataset name<br />- Optional data model                                                        |
+| `structure` | `IRDetailTableStructure`<br />- `kind:` <ApiValues name="TableStructureKind" /><br />- `columns: Array<IRTableDetailColumn>`<br />- `header?: boolean` | —<br />- `'detail'`<br />- —<br />- `true` | Record-per-row Structure<br />- Structure discriminator<br />- At least one column with unique ids<br />- Whether to generate a column-header row |
 
 ### DetailTableSpecSchema
 

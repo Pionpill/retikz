@@ -213,8 +213,8 @@ const svg = renderToSvgString(spec, { compile: { lowerTex } });
 
 | API                                 | Type                                      | Description                                                                                   |
 | ----------------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `useLowerTex` (`@retikz/tex/react`) | `() => LowerTex \| undefined`             | Start and share the MathJax engine; return `undefined` while unavailable                      |
+| `useLowerTex` (`@retikz/tex/react`) | `typeof useLowerTex`                      | Start and share the MathJax engine; return `undefined` while unavailable                      |
 | `createMathJaxEngine`               | `(options?) => Promise<MathJaxSvgEngine>` | Create the MathJax SVG engine; `packages` defaults to `['base']`                              |
 | `createLowerTex`                    | `(engine) => LowerTex`                    | Adapt an engine to Core and cache by font size, display mode, and TeX source                  |
-| `MathJaxSvgEngine`                  | `{ convert(tex, { display }): string }`   | Minimal synchronous engine abstraction consumed by this package                               |
-| `LowerTex` (`@retikz/core`)         | `(content, style) => LoweredTex \| null`  | Core injection point returning renderer-neutral glyph paths and metrics, or `null` on failure |
+| `MathJaxSvgEngine`                  | `MathJaxSvgEngine`                        | Minimal synchronous engine abstraction consumed by this package                               |
+| `LowerTex` (`@retikz/core`)         | `LowerTex`                                | Core injection point returning renderer-neutral glyph paths and metrics, or `null` on failure |

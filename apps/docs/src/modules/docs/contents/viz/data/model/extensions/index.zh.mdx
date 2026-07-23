@@ -64,12 +64,24 @@ description: 用具名字段格式与运行时 resolver 扩展数据接入，同
 
 ## API 参考
 
-以下公开导出来自 `@retikz/data`：
+以下契约都从 `@retikz/data` 包根导出。
 
-| 能力          | Definition / 函数类型             | 定义方式            |
-| ------------- | --------------------------------- | ------------------- |
-| 字段格式      | `FieldFormatDefinition`           | `defineFieldFormat` |
-| 字段 resolver | `ResolveField`、`FieldResolution` | 直接提供运行时函数  |
+### `FieldFormatDefinition`
+
+`defineFieldFormat(definition)` 接收并返回同一个 `FieldFormatDefinition`。
+
+| 字段          | 类型                                 | 描述                                            |
+| ------------- | ------------------------------------ | ----------------------------------------------- |
+| `name`        | `string`                             | 非空 registry key，不能与内置或其它自定义名冲突 |
+| `impliedType` | <ApiValues name="DataFieldType" />   | model 未声明 `type` 时采用的字段测量类型        |
+| `parse`       | `(raw: unknown) => ParsedFieldValue` | 把原始值转成规范字符串、有限数值或 `undefined`  |
+
+### `ResolveField` 与 `FieldResolution`
+
+| 导出              | 类型                                                                                                                     | 描述                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| `ResolveField`    | `(field: string, context: Parameters<ResolveField>[1]) => FieldResolution \| undefined`                                  | 按逻辑字段返回覆盖；`undefined` 回到标准接入路径           |
+| `FieldResolution` | `FieldResolution`<br />- `type?:` <ApiValues name="DataFieldType" /><br />- `parse?: (raw: unknown) => ParsedFieldValue` | 单字段运行时覆盖<br />- 最终测量类型<br />- 自定义解析函数 |
 
 <SourceLinks
   sources={[
