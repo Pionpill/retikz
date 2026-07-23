@@ -1,10 +1,17 @@
 import type { IRChild } from '@retikz/core';
 import type { EmbeddableTier2Adapter } from '@retikz/react';
 
-import { createDetailTableSpec, createManualTableSpec } from '@retikz/table';
+import { CompositeBaseSchema, defineComposite } from '@retikz/core';
+import {
+  createDetailTableSpec,
+  createManualTableSpec,
+  defineCellPresentation,
+  defineTableStructure,
+} from '@retikz/table';
 import { Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { z } from 'zod';
 
 import type { DetailTableProps, ManualTableProps } from '../../src';
 import type { CellProps } from '../../src/components/cell';
@@ -17,6 +24,7 @@ import { buildManualStructure } from '../../src/components/build-manual-structur
 import { Cell } from '../../src/components/cell';
 import { DetailColumn } from '../../src/components/detail-column';
 import { Row } from '../../src/components/row';
+import { ReactTableRuntimeKind, resolveReactTableRuntime } from '../../src/table-runtime';
 
 const content: IRChild = { type: 'node', position: [0, 0], text: 'Badge' };
 
@@ -254,6 +262,81 @@ describe('Table React composition root integration', () => {
     expect(renderToStaticMarkup(<DetailTable {...childrenMode} />)).toBe(
       renderToStaticMarkup(<DetailTable {...propsMode} />),
     );
+  });
+
+  it('preserves every DetailTable root prop in DetailColumn children mode', () => {
+    const structureDefinitions = [
+      defineTableStructure({
+        schema: z.strictObject({ kind: z.literal('root-props-structure') }),
+        build: () => ({
+          rows: [{ id: 'row.0', kind: 'body' }],
+          columns: [{ id: 'column.0' }],
+          cells: [],
+        }),
+      }),
+    ];
+    const presentationDefinitions = [
+      defineCellPresentation({
+        name: 'root-props-presentation',
+        optionsSchema: z.strictObject({}),
+        present: () => content,
+      }),
+    ];
+    const compositeSchema = CompositeBaseSchema.extend({
+      namespace: z.literal('root-props'),
+      type: z.literal('content'),
+    });
+    const composites = [
+      defineComposite({
+        namespace: 'root-props',
+        type: 'content',
+        schema: compositeSchema,
+        expand: () => content,
+      }),
+    ];
+    const onManifest = vi.fn();
+    const style = { color: 'rebeccapurple' };
+    const runtime = resolveReactTableRuntime(ReactTableRuntimeKind.Detail, {
+      id: 'detail-root-props',
+      dataRef: 'people',
+      data: [{ name: 'Ada' }],
+      model: [{ name: 'name' }],
+      header: false,
+      layout: { columnWidth: 96 },
+      meta: { source: 'root-props-test' },
+      children: <DetailColumn id="name" field="name" />,
+      structureDefinitions,
+      presentationDefinitions,
+      composites,
+      onManifest,
+      width: 640,
+      height: 320,
+      className: 'table-fixture',
+      style,
+      renderer: 'svg',
+    });
+
+    expect(runtime.spec).toMatchObject({
+      id: 'detail-root-props',
+      data: { reference: 'people', model: [{ name: 'name' }] },
+      structure: { kind: 'detail', header: false, columns: [{ id: 'name', field: 'name' }] },
+      layout: { columnWidth: 96 },
+      meta: { source: 'root-props-test' },
+    });
+    expect(runtime.datasets).toMatchObject({ people: [{ name: 'Ada' }] });
+    expect(runtime.lowerOptions).toEqual({
+      structureDefinitions,
+      presentationDefinitions,
+    });
+    expect(runtime.composites).toBe(composites);
+    expect(runtime.onManifest).toBe(onManifest);
+    expect(runtime.display).toEqual({
+      width: 640,
+      height: 320,
+      className: 'table-fixture',
+      style,
+      renderer: 'svg',
+    });
   });
 
   it('normalizes ManualTable props and Row children to the same embedded node and standalone values', () => {

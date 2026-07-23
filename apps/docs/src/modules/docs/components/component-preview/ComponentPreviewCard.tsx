@@ -1,6 +1,6 @@
 import type { FC, ReactNode } from 'react';
 
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { cn } from '@/lib';
 import { useAiChatStore } from '@/modules/docs/ai-chat';
@@ -109,13 +109,13 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
   const isExpanded = localIsExpanded ?? globalIsExpand;
   const controlPanelOpen = localControlPanelOpen ?? globalControlPanelDefaultOpen;
 
-  const handleHideAll = () => {
+  const handleHideAll = useCallback(() => {
     setLocalIsCodeVisible(false);
     setLocalIsExpanded(false);
     sourceState.setView('react');
-  };
+  }, [sourceState]);
 
-  const handleAskAi = () => {
+  const handleAskAi = useCallback(() => {
     const heading = findPrecedingHeading(containerRef.current);
     const lang = aiCurrentPage?.lang ?? 'zh';
     const pageTitle = aiCurrentPage?.title ?? '';
@@ -123,7 +123,8 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     const prompt = buildAskAiPrompt(lang, pageTitle, headingText, name);
     setAiOpen(true);
     fillAiDraft(prompt);
-  };
+  }, [aiCurrentPage, fillAiDraft, name, setAiOpen]);
+  const handleShowCode = useCallback(() => setLocalIsCodeVisible(true), []);
 
   const previewToolSlots = buildPreviewToolSlots({
     transform: previewState.transform,
@@ -175,7 +176,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
             isExpanded={isExpanded}
             onExpandedChange={setLocalIsExpanded}
             onHideSource={handleHideAll}
-            onShowCode={() => setLocalIsCodeVisible(true)}
+            onShowCode={handleShowCode}
           />
         ) : null}
         {isMaximized ? (

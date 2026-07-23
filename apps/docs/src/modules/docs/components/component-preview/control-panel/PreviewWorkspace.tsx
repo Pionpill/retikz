@@ -9,7 +9,7 @@ import type {
 } from 'react';
 
 import { PanelLeftOpen } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { cn } from '@/lib';
@@ -147,6 +147,14 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
   const [panelSize, setPanelSize] = useState(defaultControlPanelSize);
   const mobileResizeStartRef = useRef<MobileControlPanelResizeStart | null>(null);
   const [mobileControlPanelHeight, setMobileControlPanelHeight] = useState(DEFAULT_MOBILE_CONTROL_PANEL_HEIGHT);
+  const handleControlPanelOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) setPanelSize(panelSizeRef.current);
+      onControlPanelOpenChange(open);
+    },
+    [onControlPanelOpenChange],
+  );
+  const closeControlPanel = useCallback(() => handleControlPanelOpenChange(false), [handleControlPanelOpenChange]);
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
@@ -213,10 +221,6 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
   const resolvedControlSlots = controlPanelOpen
     ? controlSlots
     : mergePreviewControlSlots(controlSlots, [openControlPanelSlot]);
-  const handleControlPanelOpenChange = (open: boolean) => {
-    if (!open) setPanelSize(panelSizeRef.current);
-    onControlPanelOpenChange(open);
-  };
   const startMobileResize = (clientY: number) => {
     mobileResizeStartRef.current = {
       clientY,
@@ -269,7 +273,7 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
                 definition={definition}
                 controlState={controlState}
                 density={controlDensity}
-                onClose={() => handleControlPanelOpenChange(false)}
+                onClose={closeControlPanel}
               />
             </div>
             <div
@@ -319,7 +323,7 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
                   definition={definition}
                   controlState={controlState}
                   density={controlDensity}
-                  onClose={() => handleControlPanelOpenChange(false)}
+                  onClose={closeControlPanel}
                 />
               </ResizablePanel>
               <PreviewResizeHandle />

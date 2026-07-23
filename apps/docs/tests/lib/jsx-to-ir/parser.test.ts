@@ -1,6 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 
-import { convertReactNodeToIR } from '@retikz/react';
+import { buildIRWithContributions, convertReactNodeToIR } from '@retikz/react';
 import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -132,6 +132,23 @@ describe('parseRetikzJsx — happy path', () => {
     expect(ir.children.length).toBe(2);
     expect(ir.children[0]?.type).toBe('node');
     expect(ir.children[1]?.type).toBe('node');
+  });
+
+  it('解析 FrameTitle / FrameDescription 并保留语义 header IR', () => {
+    const element = parseOk(
+      '<Layout><Frame id="group/frame" padding={12}><FrameTitle>Group</FrameTitle><FrameDescription>Details</FrameDescription><Node position={[0, 0]}>A</Node></Frame></Layout>',
+    );
+    const layoutProps = element.props as { children?: ReactNode };
+    const result = buildIRWithContributions(layoutProps.children);
+
+    expect(result.ir.children[0]).toMatchObject({
+      namespace: 'standard',
+      type: 'frame',
+      id: 'group/frame',
+      padding: 12,
+      title: { text: 'Group' },
+      description: { text: 'Details' },
+    });
   });
 });
 

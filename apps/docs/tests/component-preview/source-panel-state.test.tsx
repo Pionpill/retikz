@@ -1,7 +1,12 @@
+// @vitest-environment jsdom
 import type { FC } from 'react';
+import type { Root } from 'react-dom/client';
 
+import { useState } from 'react';
+import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { act } from 'react-dom/test-utils';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import type { ComponentRenderSource } from '../../src/modules/docs/components/component-preview';
 import type { SourcePanelState } from '../../src/modules/docs/components/component-preview/source-panel';
@@ -19,6 +24,32 @@ const Probe: FC<ProbeProps> = props => {
   onState(state);
   return null;
 };
+
+type StabilityProbeProps = ProbeProps;
+
+const StabilityProbe: FC<StabilityProbeProps> = props => {
+  const { source, onState } = props;
+  const [, setParentRevision] = useState(0);
+  const state = useSourcePanelState(source);
+  onState(state);
+
+  return (
+    <button type="button" onClick={() => setParentRevision(revision => revision + 1)}>
+      rerender parent
+    </button>
+  );
+};
+
+Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+
+const renderedRoots: Array<Root> = [];
+
+afterEach(async () => {
+  for (const root of renderedRoots.splice(0)) {
+    await act(() => root.unmount());
+  }
+  document.body.replaceChildren();
+});
 
 describe('useSourcePanelState', () => {
   it('提供固定排序的视图、三行 teaser 与默认 added diff', () => {
@@ -68,5 +99,23 @@ describe('useSourcePanelState', () => {
     expect(card!.setActiveFileIndex).not.toBe(dialog!.setActiveFileIndex);
     expect(card!.setDiffMode).not.toBe(dialog!.setDiffMode);
     expect(card!.copyActiveFile).not.toBe(dialog!.copyActiveFile);
+  });
+
+  it('父级无关状态更新时保持 source state 引用稳定', async () => {
+    const source: ComponentRenderSource = {
+      react: { files: [{ filename: 'example.tsx', code: 'export default null;', lang: 'tsx' }] },
+    };
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    renderedRoots.push(root);
+    const snapshots: Array<SourcePanelState> = [];
+
+    await act(() => root.render(<StabilityProbe source={source} onState={state => snapshots.push(state)} />));
+    const initialState = snapshots.at(-1);
+
+    await act(() => container.querySelector('button')?.click());
+
+    expect(snapshots.at(-1)).toBe(initialState);
   });
 });

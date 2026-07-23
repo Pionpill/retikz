@@ -25,7 +25,7 @@ describe('resolveDocPageNode', () => {
     const node = resolveDocPageNode({ moduleId: 'viz', sectionId: 'data', pageId: null });
     expect(node.section?.id).toBe('data');
     expect(node.target?.id).toBe('data');
-    expect(node.target?.label).toBe('viz.dataFlow');
+    expect(node.target?.label).toBe('viz.data');
   });
 
   it('缺失页面时返回空 target', () => {

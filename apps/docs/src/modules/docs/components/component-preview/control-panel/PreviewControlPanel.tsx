@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 
 import { Minus, PanelLeftClose, Plus, RotateCcw } from 'lucide-react';
-import { Fragment, useId, useMemo, useRef, useState } from 'react';
+import { Fragment, memo, useId, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import {
   resolveVisiblePreviewControlSections,
 } from '../controls';
 import { usePreviewControlLayout } from './hooks';
+import { PreviewTableControl } from './PreviewTableControl';
 
 type PreviewCollapsedSectionsState = {
   definition: PreviewPanelControlsDefinition;
@@ -37,7 +38,7 @@ export type PreviewControlPanelProps = {
 };
 
 /** 渲染可滚动的声明式预览属性面板 */
-export const PreviewControlPanel: FC<PreviewControlPanelProps> = props => {
+const PreviewControlPanelComponent: FC<PreviewControlPanelProps> = props => {
   const { definition, controlState, density = 'default', onClose } = props;
   const { t } = useTranslation();
   const controlPanelId = useId();
@@ -161,22 +162,31 @@ export const PreviewControlPanel: FC<PreviewControlPanelProps> = props => {
                             key={field.id}
                             data-slot="preview-control-field"
                             data-control-id={field.id}
-                            className="flex min-h-7 w-full items-center gap-2"
+                            className={field.kind === 'table' ? 'min-w-0' : 'flex min-h-7 w-full items-center gap-2'}
                           >
-                            <Label className="max-w-16 shrink-0 truncate text-xs whitespace-nowrap" title={field.label}>
-                              {field.label}
-                            </Label>
-                            <div className="flex min-w-0 flex-1 justify-end">
-                              <PreviewControlFieldInput
-                                field={field}
-                                value={controlState.values[field.id] ?? field.defaultValue}
-                                compact={compact}
-                                onValueChange={value => controlState.setValue(field.id, value)}
-                                playingRangeId={controlState.rangePlaybackId}
-                                onRangePlaybackStart={controlState.startRangePlayback}
-                                onRangePlaybackStop={controlState.stopRangePlayback}
-                              />
-                            </div>
+                            {field.kind === 'table' ? (
+                              <PreviewTableControl field={field} density={density} />
+                            ) : (
+                              <>
+                                <Label
+                                  className="max-w-16 shrink-0 truncate text-xs whitespace-nowrap"
+                                  title={field.label}
+                                >
+                                  {field.label}
+                                </Label>
+                                <div className="flex min-w-0 flex-1 justify-end">
+                                  <PreviewControlFieldInput
+                                    field={field}
+                                    value={controlState.values[field.id] ?? field.defaultValue}
+                                    compact={compact}
+                                    onValueChange={value => controlState.setValue(field.id, value)}
+                                    playingRangeId={controlState.rangePlaybackId}
+                                    onRangePlaybackStart={controlState.startRangePlayback}
+                                    onRangePlaybackStop={controlState.stopRangePlayback}
+                                  />
+                                </div>
+                              </>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -191,3 +201,6 @@ export const PreviewControlPanel: FC<PreviewControlPanelProps> = props => {
     </aside>
   );
 };
+
+/** controls state 未变化时跳过纯预览 controller 更新。 */
+export const PreviewControlPanel = memo(PreviewControlPanelComponent);
