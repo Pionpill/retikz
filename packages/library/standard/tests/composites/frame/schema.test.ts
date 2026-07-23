@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { FrameSchema } from '../../../src';
+import { FrameDescriptionSchema, FrameHeaderDirection, FrameSchema, FrameTitleSchema } from '../../../src';
 
 const node = { type: 'node', position: [0, 0], text: 'A' } as const;
 
 describe('FrameSchema', () => {
-  it('fills stable gap and border defaults and round-trips through JSON', () => {
+  it('fills stable border, padding, and header gap defaults and round-trips through JSON', () => {
     const parsed = FrameSchema.parse({
       namespace: 'standard',
       type: 'frame',
@@ -13,77 +13,136 @@ describe('FrameSchema', () => {
       children: [node],
     });
 
-    expect(parsed).toMatchObject({ gap: 8, border: { stroke: 'currentColor', strokeWidth: 1 } });
+    expect(parsed).toMatchObject({
+      padding: 8,
+      gap: 4,
+      headerDirection: FrameHeaderDirection.Horizontal,
+      stroke: 'currentColor',
+      strokeWidth: 1,
+    });
     expect(FrameSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
-  it('accepts closed border style and arbitrary Core Node shapes', () => {
+  it('reuses the closed Node contract for title and description without accepting position', () => {
+    const title = FrameTitleSchema.parse({
+      id: 'heading',
+      text: 'Contract',
+      shape: 'circle',
+      font: { family: 'serif' },
+      padding: { x: 4, top: 2 },
+      label: { text: 'stable', position: 'right' },
+      meta: { role: 'title' },
+      animations: [
+        {
+          property: 'opacity',
+          duration: 200,
+          keyframes: [
+            { at: 0, value: 0 },
+            { at: 1, value: 1 },
+          ],
+        },
+      ],
+    });
+    const description = FrameDescriptionSchema.parse({ text: '', opacity: 0.5 });
+
+    expect(title).toMatchObject({
+      id: 'heading',
+      text: 'Contract',
+      shape: 'circle',
+      font: { family: 'serif' },
+      meta: { role: 'title' },
+    });
+    expect(description.text).toBe('');
+    expect(FrameTitleSchema.safeParse({ text: 'invalid', position: [0, 0] }).success).toBe(false);
+    expect(FrameDescriptionSchema.safeParse({ opacity: 0.5 }).success).toBe(false);
+  });
+
+  it('accepts top-level border styles, box padding, and optional Node-like headers', () => {
     const parsed = FrameSchema.parse({
       namespace: 'standard',
       type: 'frame',
       id: 'group',
+      padding: { default: 6, x: 8, top: 10 },
       gap: 0,
-      border: { fill: '#fff', dashPattern: [4, 2], zIndex: -2 },
-      label: 'Group',
-      children: [{ type: 'node', position: [0, 0], shape: 'custom-shape', text: 'A' }],
-    });
-
-    expect(parsed.border).toEqual({
-      stroke: 'currentColor',
-      strokeWidth: 1,
+      headerDirection: FrameHeaderDirection.Vertical,
       fill: '#fff',
       dashPattern: [4, 2],
-      zIndex: -2,
+      zIndex: 3,
+      title: { text: 'Group' },
+      description: { text: 'Details', maxTextWidth: 160 },
+      children: [node],
+    });
+
+    expect(parsed).toMatchObject({
+      padding: { default: 6, x: 8, top: 10 },
+      gap: 0,
+      headerDirection: 'vertical',
+      fill: '#fff',
+      dashPattern: [4, 2],
+      zIndex: 3,
+      title: { text: 'Group' },
+      description: { text: 'Details', maxTextWidth: 160 },
     });
   });
 
-  it('rejects empty identity, label, children, negative gap, and unsupported direct children precisely', () => {
-    const invalidId = FrameSchema.safeParse({
-      namespace: 'standard',
-      type: 'frame',
-      id: '',
-      children: [node],
-    });
-    const invalidLabel = FrameSchema.safeParse({
-      namespace: 'standard',
-      type: 'frame',
-      id: 'group',
-      label: '',
-      children: [node],
-    });
-    const emptyChildren = FrameSchema.safeParse({
-      namespace: 'standard',
-      type: 'frame',
-      id: 'group',
-      children: [],
-    });
-    const negativeGap = FrameSchema.safeParse({
-      namespace: 'standard',
-      type: 'frame',
-      id: 'group',
-      gap: -1,
-      children: [node],
-    });
-    const unsupported = ['scope', 'path', 'coordinate', 'grid'].map(type =>
-      FrameSchema.safeParse({
-        namespace: 'standard',
-        type: 'frame',
-        id: 'group',
-        children: [{ type, namespace: type === 'grid' ? 'standard' : undefined }],
-      }),
-    );
+  it('rejects empty body, missing header text, negative spacing, and removed legacy fields precisely', () => {
+    const cases = [
+      {
+        input: { namespace: 'standard', type: 'frame', id: 'group', children: [] },
+        path: ['children'],
+      },
+      {
+        input: { namespace: 'standard', type: 'frame', id: 'group', title: {}, children: [node] },
+        path: ['title', 'text'],
+      },
+      {
+        input: { namespace: 'standard', type: 'frame', id: 'group', padding: -1, children: [node] },
+        path: ['padding'],
+      },
+      {
+        input: { namespace: 'standard', type: 'frame', id: 'group', gap: -1, children: [node] },
+        path: ['gap'],
+      },
+      {
+        input: { namespace: 'standard', type: 'frame', id: 'group', headerDirection: 'diagonal', children: [node] },
+        path: ['headerDirection'],
+      },
+      {
+        input: { namespace: 'standard', type: 'frame', id: 'group', label: 'legacy', children: [node] },
+        path: [],
+      },
+      {
+        input: { namespace: 'standard', type: 'frame', id: 'group', border: {}, children: [node] },
+        path: [],
+      },
+    ];
 
-    expect(invalidId.success).toBe(false);
-    expect(invalidLabel.success).toBe(false);
-    expect(emptyChildren.success).toBe(false);
-    expect(negativeGap.success).toBe(false);
-    expect(unsupported.every(result => !result.success)).toBe(true);
-    if (!invalidId.success) expect(invalidId.error.issues[0]?.path).toEqual(['id']);
-    if (!invalidLabel.success) expect(invalidLabel.error.issues[0]?.path).toEqual(['label']);
-    if (!emptyChildren.success) expect(emptyChildren.error.issues[0]?.path).toEqual(['children']);
-    if (!negativeGap.success) expect(negativeGap.error.issues[0]?.path).toEqual(['gap']);
-    unsupported.forEach(result => {
-      if (!result.success) expect(result.error.issues[0]?.path[0]).toBe('children');
+    cases.forEach(({ input, path }) => {
+      const result = FrameSchema.safeParse(input);
+      expect(result.success).toBe(false);
+      if (!result.success) expect(result.error.issues[0]?.path).toEqual(path);
+    });
+  });
+
+  it('rejects explicit ids reserved by the Frame structure for body and header nodes', () => {
+    const reserved = ['group', 'group/content', 'group/title', 'group/description'];
+    const parts = [
+      (id: string) => ({ children: [{ ...node, id }] }),
+      (id: string) => ({ children: [node], title: { id, text: 'Title' } }),
+      (id: string) => ({ children: [node], description: { id, text: 'Description' } }),
+    ];
+
+    parts.forEach(makePart => {
+      reserved.forEach(id => {
+        const result = FrameSchema.safeParse({
+          namespace: 'standard',
+          type: 'frame',
+          id: 'group',
+          ...makePart(id),
+        });
+        expect(result.success).toBe(false);
+        if (!result.success) expect(result.error.issues[0]?.path.at(-1)).toBe('id');
+      });
     });
   });
 });

@@ -3,12 +3,15 @@ import type { FC } from 'react';
 
 import { Plot, PointMark } from '@retikz/plot-react';
 import { Layout, Node } from '@retikz/react';
-import { Axes, Frame, Grid } from '@retikz/standard-react';
+import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { buildPreviewSource } from '../../src/modules/docs/components/component-preview/source-panel';
 import { buildPreviewIR, formatIR, irHasAnimations } from '../../src/modules/docs/components/component-preview/utils';
+import FramePlaygroundDemo, {
+  previewSource as framePlaygroundPreviewSource,
+} from '../../src/modules/docs/contents/standard/composite/frame/frame-playground.demo';
 
 const StaticDemo: FC = () => (
   <Layout width={40} height={20}>
@@ -30,7 +33,9 @@ const StandardCompositeDemo: FC = () => (
   <Layout width={100} height={80}>
     <Grid bounds={{ min: [10, 10], max: [90, 70] }} spacing={20} />
     <Axes extent={{ x: 40, y: 30 }} />
-    <Frame id="group" gap={4}>
+    <Frame id="group/frame" padding={{ x: 8, y: 10 }} gap={4} headerDirection="vertical">
+      <FrameTitle>Group</FrameTitle>
+      <FrameDescription>Preview source</FrameDescription>
       <Node position={[50, 40]}>A</Node>
     </Frame>
   </Layout>
@@ -80,10 +85,31 @@ describe('buildPreviewSource', () => {
     expect(result.source?.vanilla?.files[0]?.code).toContain("grid('preview-grid-1'");
     expect(result.source?.vanilla?.files[0]?.code).toContain("axes('preview-axes-1'");
     expect(result.source?.vanilla?.files[0]?.code).toContain("frame('preview-frame-1'");
+    expect(result.source?.vanilla?.files[0]?.code).toContain("title: { text: 'Group' }");
+    expect(result.source?.vanilla?.files[0]?.code).toContain("description: { text: 'Preview source' }");
+    expect(result.source?.vanilla?.files[0]?.code).toContain('padding: { x: 8, y: 10 }');
+    expect(result.source?.vanilla?.files[0]?.code).toContain("headerDirection: 'vertical'");
     expect(result.source?.vanilla?.files[0]?.code).toContain('GridVanillaAdapter');
     expect(result.source?.vanilla?.files[0]?.code).toContain('AxesVanillaAdapter');
     expect(result.source?.vanilla?.files[0]?.code).toContain('FrameVanillaAdapter');
     expect(renderToStaticMarkup(result.source?.vanilla?.render?.('svg'))).toContain('<svg');
+  });
+
+  it('从 Frame controls canonical 状态生成包含 header 的 Vanilla 视图', () => {
+    const result = buildPreviewSource(
+      createInput({
+        Component: FramePlaygroundDemo,
+        previewSource: framePlaygroundPreviewSource,
+      }),
+    );
+    const vanilla = result.source?.vanilla;
+
+    expect(vanilla?.files[0]?.code).toContain("from '@retikz/standard-vanilla'");
+    expect(vanilla?.files[0]?.code).toContain("text: 'FrameTitle'");
+    expect(vanilla?.files[0]?.code).toContain("text: 'FrameDescription'");
+    expect(vanilla?.files[0]?.code).not.toContain('Failed to generate vanilla code');
+    expect(vanilla?.render).toBeTypeOf('function');
+    expect(renderToStaticMarkup(vanilla?.render?.('svg'))).toContain('<svg');
   });
 
   it('为 Plot composite 自动生成 renderPlot、dataset 与真实 Vanilla SVG', () => {
