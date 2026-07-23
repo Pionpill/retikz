@@ -1,23 +1,29 @@
 import type {
   PreviewControlCondition,
-  PreviewControlField,
   PreviewControlsDefinition,
   PreviewControlValues,
   PreviewNumberControlField,
+  PreviewPanelControlItem,
   PreviewPointControlField,
   PreviewRangeControlField,
   PreviewSelectControlField,
+  PreviewStateControlField,
+  PreviewTableControlField,
 } from '../types';
 
 const COLOR_HEX_PATTERN = /^#[0-9a-fA-F]{6}$/;
 const MIN_PANEL_SIZE = 18;
 const MAX_PANEL_SIZE = 45;
 
-/** 获取控件定义中的扁平字段列表 */
-export const getPreviewControlFields = (definition: PreviewControlsDefinition): Array<PreviewControlField> =>
+/** 获取控件定义中的全部扁平字段 */
+export const getPreviewControlItems = (definition: PreviewControlsDefinition): Array<PreviewPanelControlItem> =>
   definition.presentation === 'overlay'
     ? [...definition.controls]
     : definition.sections.flatMap(section => [...section.controls]);
+
+/** 获取进入共享值状态的扁平字段列表 */
+export const getPreviewControlFields = (definition: PreviewControlsDefinition): Array<PreviewStateControlField> =>
+  getPreviewControlItems(definition).filter((field): field is PreviewStateControlField => field.kind !== 'table');
 
 /** 构建控件定义对应的默认值集合 */
 export const buildPreviewControlDefaults = (definition: PreviewControlsDefinition | undefined): PreviewControlValues =>
@@ -110,6 +116,21 @@ const validateSelectControl = (field: PreviewSelectControlField): void => {
   }
 };
 
+/** 校验只读表格的行与显式列定义 */
+const validateTableControl = (field: PreviewTableControlField): void => {
+  if (!Array.isArray(field.rows)) {
+    throw new Error(`Preview table control "${field.id}" rows must be an array.`);
+  }
+
+  const columnKeys = new Set<string>();
+  for (const column of field.columns ?? []) {
+    if (columnKeys.has(column.key)) {
+      throw new Error(`Duplicate preview table column key "${column.key}" in control "${field.id}".`);
+    }
+    columnKeys.add(column.key);
+  }
+};
+
 /** 校验显示条件的引用与值集合 */
 const validateControlCondition = (condition: PreviewControlCondition, knownIds: ReadonlySet<string>): void => {
   if (!knownIds.has(condition.controlId)) {
@@ -123,7 +144,8 @@ const validateControlCondition = (condition: PreviewControlCondition, knownIds: 
 /** 校验字段 id 与各 kind 的运行时约束 */
 const validatePreviewControls = (definition: PreviewControlsDefinition): void => {
   const ids = new Set<string>();
-  const fields = getPreviewControlFields(definition);
+  const fields = getPreviewControlItems(definition);
+  const stateFieldIds = new Set(getPreviewControlFields(definition).map(field => field.id));
 
   for (const field of fields) {
     if (ids.has(field.id)) {
@@ -131,6 +153,12 @@ const validatePreviewControls = (definition: PreviewControlsDefinition): void =>
     }
     ids.add(field.id);
 
+    if (field.kind === 'table') {
+      if (definition.presentation === 'overlay') {
+        throw new Error(`Preview table control "${field.id}" is only supported in panel controls.`);
+      }
+      validateTableControl(field);
+    }
     if (field.kind === 'select') validateSelectControl(field);
     if (field.kind === 'number' || field.kind === 'range') validateNumericControl(field);
     if (field.kind === 'point') validatePointControl(field);
@@ -140,7 +168,7 @@ const validatePreviewControls = (definition: PreviewControlsDefinition): void =>
   }
 
   for (const field of fields) {
-    if (field.visibleWhen) validateControlCondition(field.visibleWhen, ids);
+    if (field.visibleWhen) validateControlCondition(field.visibleWhen, stateFieldIds);
   }
   if (definition.presentation === 'panel') {
     if (
@@ -152,7 +180,7 @@ const validatePreviewControls = (definition: PreviewControlsDefinition): void =>
       throw new Error(`Preview panel defaultSize must be between ${MIN_PANEL_SIZE} and ${MAX_PANEL_SIZE}.`);
     }
     for (const section of definition.sections) {
-      if (section.visibleWhen) validateControlCondition(section.visibleWhen, ids);
+      if (section.visibleWhen) validateControlCondition(section.visibleWhen, stateFieldIds);
     }
   }
 };

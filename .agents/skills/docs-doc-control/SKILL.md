@@ -25,6 +25,8 @@ description: Use when a retikz ComponentPreview has controls, a *.controls.ts co
 - 默认使用 `presentation: 'panel'`；面板便于后续继续扩展字段
 - 按能力所有者、职责层级或视觉对象分 section，不按字段类型机械分组
 - 双节点、多层对象分别分组，如“节点 A / 节点 B”“主体 / 标签 / 阴影”
+- controls 包含只读 `table` 数据时，数据 section 默认作为首个 section，先展示输入再操作绑定、变换或样式
+- `table` 滚动视口默认完整展示 5 行正文，header 不计入；更多行继续滚动，渲染行数上限单独控制
 - 用 `visibleWhen` 隐藏当前分支无效的字段；不要让用户操作没有效果的 control
 - label 简短，直接使用公开 API 名或用户能判断的中文，不重复括号说明
 - 范围覆盖有意义的最小值、最大值和代表性极值；默认值保持可读、可比较

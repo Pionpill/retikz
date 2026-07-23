@@ -1,50 +1,49 @@
 ---
 title: Channels
-description: Channels connect fields or constants to mark attributes: position chooses coordinate roles, while mark / scope / node / path channels decide how visible attributes are consumed.
+description: 'Channels bind fields or constants to visual roles such as position, color, and size, giving coordinates, marks, and guides a shared value source.'
 ---
 
-A channel answers "where does this attribute read its value from?" The data layer first normalizes external rows into canonical rows, then channels pass fields or constants to coordinates, mark lowering, core scopes, core nodes, core paths, and legends. `x` / `y` / `color` / `size` / `text` share one binding model, while later stages consume them differently.
+A channel describes two things: where a value comes from and which visual role it belongs to. For example, `x="gdp"` reads the `gdp` field for position, while `color="region"` reads the `region` field for color. Data owns field preparation; Core and the renderer still own the final drawing semantics and output.
 
-## Mental Model
+Mark props in the React DSL become JSON-safe field or constant bindings in PlotSpec. At runtime, coordinate-definition roles read position bindings; other visual channels look up a matching definition in the channel registry and resolve into mark properties or guide descriptors.
 
-A channel is not the final rendered property. It is a binding: first exposed as a short name in the DSL, then stored as a field or constant in PlotSpec, then consumed by one part of the grammar of graphics.
+<ComponentPreview files="channel-flow" size="lg" hideCode />
 
-<ComponentPreview files="channel-flow" size="md" hideCode />
+PlotSpec stores bindings, not functions. Position roles follow the coordinate definition; other built-in and custom definitions enter the same registry, then meet bindings at the resolver. Extending a visual channel therefore does not require a parallel IR or consumption path.
 
-| Layer      | Surface                                                          | Role                                                                       |
-| ---------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| React DSL  | Props such as `<PointMark x="gdp" color="region" />`             | Gives users short names for the fields a mark binds                        |
-| PlotSpec   | `encoding.x = { field: 'gdp' }` or `encoding.channels.intensity` | Stores JSON-safe field / constant bindings                                 |
-| Definition | `ChannelDefinitionKind.Position / Mark / Scope / Node / Path`    | Declares who consumes the channel, how values resolve, and where they land |
-
-From a user-facing view, a channel supported by a mark is usually a prop on that mark component. Common built-in channels get named props; custom channels start in `encoding.channels.<name>` and receive runtime behavior through `channelDefinitions`.
-
-## Who Consumes Channels
-
-In Plot's GoG layer, marks are not the only channel consumers. Several stages read channels, but each one asks a different question:
-
-| Consumer   | Reads                                                                  | Purpose                                                                          |
-| ---------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| data model | all field-bound channels                                               | Infers field types for scales and diagnostics                                    |
-| transform  | fields such as `x` / `y` / `series` / `order`                          | stack, dodge, sort, and bin steps need grouping, ordering, or value sources      |
-| scale      | fields bound to position / color / size / opacity and similar channels | Collects domains and maps raw values into coordinates, colors, radii, or opacity |
-| coordinate | position channels: `x` / `y` / `z` / custom roles                      | Decides how positional components project onto the canvas                        |
-| mark       | resolved mark / scope / node / path channels                           | Chooses the graphic shape and applies style to the right core surface            |
-| guide      | channel descriptors                                                    | Builds axes / legends that explain a channel's scale                             |
-
-So a channel does three jobs: it names which value to read, gives scale / coordinate / guide a shared field source, and lets marks apply the resolved value to the correct visual surface.
+<SourceLinks
+  sources={[
+    {
+      label: 'Position bindings are read through coordinate roles',
+      path: 'packages/viz/plot/src/pipeline/expand/frame/resolve.ts',
+      startLine: 244,
+      endLine: 256,
+    },
+    {
+      label: 'Built-in and custom definitions merge into one registry',
+      path: 'packages/viz/plot/src/providers/channel/registry.ts',
+      startLine: 77,
+      endLine: 114,
+    },
+    {
+      label: 'Bindings resolve and dispatch by definition kind',
+      path: 'packages/viz/plot/src/providers/channel/registry.ts',
+      startLine: 120,
+      endLine: 190,
+    },
+  ]}
+/>
 
 ## Responsibilities
 
-| Topic             | Responsibility                                                                                                                                                       | Reach for it when                                                        |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| Channel binding   | How fields / constants appear in mark props or `encoding`                                                                                                            | You want to confirm what `x="date"`, `color="region"`, or `y={80}` means |
-| Built-in channels | Who consumes position / mark / scope / node / path channels                                                                                                          | You want to decide where `color`, `size`, or `strokeWidth` belongs       |
-| Custom channels   | Declare runtime definitions with `defineScopeChannel` / `defineNodeChannel` / `definePathChannel` / `defineChannel`, then register them through `channelDefinitions` | Your spec needs `encoding.channels.<name>`                               |
+| Topic             | Responsibility                                                           | Reach for it when                                                        |
+| ----------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| Channel binding   | Explain how fields or constants enter mark props and PlotSpec            | You want to confirm what `x="date"`, `color="region"`, or `y={80}` means |
+| Built-in channels | List available channels, default scales, and destinations by visual task | You want to choose channels such as `color`, `size`, or `strokeWidth`    |
 
-Position channels are reinterpreted by coordinates: the same `x` / `y` means horizontal / vertical under `cartesian2D`, but angle / radius under `polar2D`. `color` is a mark channel because different marks land it on node fill, text color, path stroke, or path fill. `size` and `shape` are node channels; shared styles such as `opacity` and `strokeWidth` land on scope / node / path according to the mark's consumption surface.
+To add a project-specific visual channel, continue to [Custom Channels](/viz/plot/extend/channel). Custom capabilities enter through `channelDefinitions` and share the same registry, resolution, and delivery paths as built-ins.
 
-## Topics
+## In This Section
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/viz/plot/channel/binding">
@@ -60,3 +59,5 @@ Position channels are reinterpreted by coordinates: the same `x` / `y` means hor
     </span>
   </LinkedCard>
 </div>
+
+Channels decide which value to read; [Scales](/viz/plot/scale) decide how values map, and [Coordinates](/viz/plot/coordinate) decide how positional roles project.
