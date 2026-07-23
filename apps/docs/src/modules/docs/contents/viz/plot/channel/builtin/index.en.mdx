@@ -3,17 +3,17 @@ title: Built-In Channels
 description: Explains plot built-in channels by channel type, channel value forms, delivery surfaces, and guide support.
 ---
 
-Built-in channels are easiest to read by intent, not by the lower-level `Node` / `Path` / `Scope` surface. In React DSL, a channel appears as a mark prop such as `<PointMark x="gdp" color="region" />`; the mark then decides which channels land on the core elements it produces.
+Built-in channels map data to visual results such as position, style, text, and paths. In React DSL, declare channels directly as mark props, such as `<PointMark x="gdp" color="region" />`. Start with a visual goal in the overview below, then use the corresponding section to check value forms, delivery, and guide support.
 
 | Type          | Channels                                                                     | Meaning                                        |
 | ------------- | ---------------------------------------------------------------------------- | ---------------------------------------------- |
-| Position      | `x` / `y`<br />`z`                                                           | Fields determine coordinate roles              |
+| Position      | `x` / `y` / `z`                                                              | Fields determine coordinate roles              |
 | Style         | `color` / `fill` / `stroke` / `textColor`<br />`opacity` / `size` / `shape`  | Color, opacity, size, and shape                |
 | Node geometry | `padding` / `cornerRadius`<br />`rotate` / `minimumSize`                     | Node size, spacing, and transforms             |
-| Text          | `text`<br />`label`                                                          | Text inside nodes and labels attached to nodes |
+| Text          | `text` / `label`                                                             | Text inside nodes and labels attached to nodes |
 | Paths         | `strokeWidth` / `lineCap` / `lineJoin`<br />`roundedCorners` / `dashPattern` | Path stroke, caps, joins, corners, and dashes  |
-| Effects       | `shadow`<br />`blendMode`                                                    | Shadows and compositing                        |
-| Other         | `zIndex` / `order`<br />`series`                                             | Drawing order, ordering, and series splitting  |
+| Effects       | `shadow` / `blendMode`                                                       | Shadows and compositing                        |
+| Other         | `zIndex` / `order` / `series`                                                | Drawing order, ordering, and series splitting  |
 
 ## Position
 

@@ -3,17 +3,17 @@ title: 内置通道
 description: 按通道类型说明 plot 内置通道、通道值写法、底层落点和图例能力。
 ---
 
-内置通道优先按“你想控制什么”理解，而不是按底层 `Node` / `Path` / `Scope` 分类。通道在 React DSL 里表现为 mark props，例如 `<PointMark x="gdp" color="region" />`；mark 再决定哪些通道会落到自己产出的 core 元素上。
+内置通道把数据映射为位置、样式、文本和路径等视觉结果。在 React DSL 中，直接通过 mark props 声明通道，例如 `<PointMark x="gdp" color="region" />`；先按下面的视觉目标选择通道，再到对应小节查看取值方式、落点和图例支持。
 
 | 类型     | 通道                                                                         | 说明                             |
 | -------- | ---------------------------------------------------------------------------- | -------------------------------- |
-| 位置     | `x` / `y`<br />`z`                                                           | 字段决定坐标角色                 |
+| 位置     | `x` / `y` / `z`                                                              | 字段决定坐标角色                 |
 | 样式     | `color` / `fill` / `stroke` / `textColor`<br />`opacity` / `size` / `shape`  | 颜色、透明度、大小和形状         |
 | 节点几何 | `padding` / `cornerRadius`<br />`rotate` / `minimumSize`                     | node 尺寸、间距和变换            |
-| 文本     | `text`<br />`label`                                                          | 节点内文本和节点外 label         |
+| 文本     | `text` / `label`                                                             | 节点内文本和节点外 label         |
 | 路径     | `strokeWidth` / `lineCap` / `lineJoin`<br />`roundedCorners` / `dashPattern` | 路径描边、端点、连接、圆角和虚线 |
-| 效果     | `shadow`<br />`blendMode`                                                    | 阴影和混合模式                   |
-| 其他     | `zIndex` / `order`<br />`series`                                             | 绘制顺序、排序和系列拆分         |
+| 效果     | `shadow` / `blendMode`                                                       | 阴影和混合模式                   |
+| 其他     | `zIndex` / `order` / `series`                                                | 绘制顺序、排序和系列拆分         |
 
 ## 位置
 

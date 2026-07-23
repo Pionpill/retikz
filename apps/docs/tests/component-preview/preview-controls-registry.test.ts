@@ -1230,6 +1230,24 @@ describe('preview controls registry', () => {
     }
   });
 
+  it('内置通道总览仅为长通道组主动换行', () => {
+    const builtinRoot = resolve('src/modules/docs/contents/viz/plot/channel/builtin');
+    const compactChannelGroups = [
+      '`x` / `y` / `z`',
+      '`text` / `label`',
+      '`shadow` / `blendMode`',
+      '`zIndex` / `order` / `series`',
+    ];
+
+    for (const locale of ['zh', 'en']) {
+      const builtinPage = readFileSync(resolve(builtinRoot, `index.${locale}.mdx`), 'utf8');
+
+      for (const channels of compactChannelGroups) {
+        expect(builtinPage, `${locale}: ${channels}`).toContain(channels);
+      }
+    }
+  });
+
   it('所有 controls 显式声明完整且双语一致的文档契约', () => {
     const prefix = '../../contents/';
     const entries = Object.entries(controlModules).filter(
