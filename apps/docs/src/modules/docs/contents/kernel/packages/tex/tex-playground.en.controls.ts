@@ -91,6 +91,10 @@ export const previewControlContract = {
     shape: 'none',
     padding: 14,
   },
+  presetSelector: {
+    label: 'Formula example',
+    customLabel: 'Custom',
+  },
   presets: [
     {
       id: 'inline-energy',
@@ -109,7 +113,7 @@ export const previewControlContract = {
       label: 'Display summation',
       values: {
         source: TexPlaygroundFormula.DisplaySum,
-        profile: 'base',
+        profile: 'math',
         displayMode: 'display',
         fontSize: 22,
         shape: 'none',

@@ -51,6 +51,14 @@ describe('@retikz/tex package playground controls', () => {
       oneOf: ['rectangle', 'circle'],
     });
     expect(texPlaygroundEnContract.canonicalValues).toEqual(texPlaygroundContract.canonicalValues);
+    expect(texPlaygroundContract.presetSelector).toEqual({
+      label: '公式示例',
+      customLabel: '自定义',
+    });
+    expect(texPlaygroundEnContract.presetSelector).toEqual({
+      label: 'Formula example',
+      customLabel: 'Custom',
+    });
     expect(presetContractOf(texPlaygroundEnContract)).toEqual(presetContractOf(texPlaygroundContract));
     expect(presetContractOf(texPlaygroundContract).map(preset => preset.id)).toEqual([
       'inline-energy',
@@ -60,6 +68,9 @@ describe('@retikz/tex package playground controls', () => {
       'colored-cancellation',
     ]);
     expect(texPlaygroundContract.presets.every(preset => Object.keys(preset.values).length === 6)).toBe(true);
+    expect(texPlaygroundContract.presets.find(preset => preset.id === 'display-sum')?.values).toEqual(
+      texPlaygroundContract.canonicalValues,
+    );
     expect(texPlaygroundContract.relatedApis).toEqual([
       'MathJaxEngineOptions.profile',
       'Node.text',

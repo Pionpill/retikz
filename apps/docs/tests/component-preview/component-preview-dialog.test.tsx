@@ -12,6 +12,7 @@ import type {
   AlignKey,
   ComponentRenderSource,
   PreviewActionSlot,
+  PreviewControlContract,
   PreviewControlsDefinition,
   PreviewControlSlot,
   PreviewControlState,
@@ -89,6 +90,7 @@ describe('ComponentPreviewDialog', () => {
       initialSize: SizeKey;
       controlState: PreviewControlState;
       controlDefinition?: PreviewControlsDefinition;
+      controlContract?: PreviewControlContract;
       showContextBar: boolean;
       themeMode: PreviewThemeMode;
       onThemeModeChange: (themeMode: PreviewThemeMode) => void;

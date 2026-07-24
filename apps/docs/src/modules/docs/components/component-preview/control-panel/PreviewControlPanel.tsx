@@ -8,7 +8,15 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 
-import type { PreviewControlState, PreviewControlValues, PreviewPanelControlsDefinition } from '../types';
+import type {
+  PreviewControlContract,
+  PreviewControlPreset,
+  PreviewControlState,
+  PreviewControlValue,
+  PreviewControlValues,
+  PreviewPanelControlsDefinition,
+  PreviewSelectControlField,
+} from '../types';
 
 import {
   buildPreviewControlVisibilityKey,
@@ -23,10 +31,31 @@ type PreviewCollapsedSectionsState = {
   indexes: Set<number>;
 };
 
+const CUSTOM_PRESET_ID = '__preview-custom-preset__';
+
+/** 比较 scalar 与 point control 值 */
+const previewControlValueEquals = (left: PreviewControlValue | undefined, right: PreviewControlValue | undefined) => {
+  if (!Array.isArray(left) || !Array.isArray(right)) return left === right;
+  return left.every((value, index) => value === right[index]);
+};
+
+/** 判断实时 controls 是否完整匹配 preset 的 resolved values */
+const matchesPreviewControlPreset = (
+  values: Readonly<PreviewControlValues>,
+  canonicalValues: Readonly<PreviewControlValues>,
+  preset: PreviewControlPreset,
+): boolean => {
+  const expected = { ...canonicalValues, ...preset.values };
+  const keys = new Set([...Object.keys(values), ...Object.keys(expected)]);
+  return Array.from(keys).every(key => previewControlValueEquals(values[key], expected[key]));
+};
+
 /** 预览属性面板属性 */
 export type PreviewControlPanelProps = {
   /** panel 形式的控件定义 */
   definition: PreviewPanelControlsDefinition;
+  /** 可选的完整 controls contract */
+  controlContract?: PreviewControlContract;
   /** Card/Dialog 共享的字段值状态 */
   controlState: PreviewControlState;
   /** 字段控件密度
@@ -39,11 +68,31 @@ export type PreviewControlPanelProps = {
 
 /** 渲染可滚动的声明式预览属性面板 */
 const PreviewControlPanelComponent: FC<PreviewControlPanelProps> = props => {
-  const { definition, controlState, density = 'default', onClose } = props;
+  const { definition, controlContract, controlState, density = 'default', onClose } = props;
   const { t } = useTranslation();
   const controlPanelId = useId();
   const panelTitleId = `${controlPanelId}-preview-control-panel-title`;
   const compact = density === 'compact';
+  const presets = controlContract?.presets ?? [];
+  const presetSelector = controlContract?.presetSelector;
+  const activePresetId =
+    presets.find(preset => matchesPreviewControlPreset(controlState.values, controlState.canonicalValues, preset))
+      ?.id ?? CUSTOM_PRESET_ID;
+  const presetField: PreviewSelectControlField | undefined =
+    presetSelector && presets.length > 0
+      ? {
+          kind: 'select',
+          id: CUSTOM_PRESET_ID,
+          label: presetSelector.label,
+          defaultValue: activePresetId,
+          options: [
+            ...(activePresetId === CUSTOM_PRESET_ID
+              ? [{ value: CUSTOM_PRESET_ID, label: presetSelector.customLabel }]
+              : []),
+            ...presets.map(preset => ({ value: preset.id, label: preset.label })),
+          ],
+        }
+      : undefined;
   const panelRef = useRef<HTMLElement>(null);
   const visibilityKey = buildPreviewControlVisibilityKey(definition.sections, controlState.values);
   const visibilityValues = useMemo<PreviewControlValues>(() => JSON.parse(visibilityKey), [visibilityKey]);
@@ -130,6 +179,25 @@ const PreviewControlPanelComponent: FC<PreviewControlPanelProps> = props => {
               <Separator data-slot="preview-control-column-separator" orientation="vertical" className="self-stretch" />
             ) : null}
             <div data-slot="preview-control-column" className="min-w-0">
+              {columnIndex === 0 && presetSelector && presetField ? (
+                <div data-slot="preview-preset-selector" className="mb-3 flex min-h-7 w-full items-center gap-2">
+                  <Label className="max-w-16 shrink-0 truncate text-xs whitespace-nowrap" title={presetSelector.label}>
+                    {presetSelector.label}
+                  </Label>
+                  <div className="flex min-w-0 flex-1 justify-end">
+                    <PreviewControlFieldInput
+                      field={presetField}
+                      value={activePresetId}
+                      compact={compact}
+                      onValueChange={value => {
+                        if (typeof value !== 'string') return;
+                        const preset = presets.find(candidate => candidate.id === value);
+                        if (preset) controlState.applyValues(preset.values);
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : null}
               {columnSections.map(section => {
                 const collapsed = section.label ? collapsedSectionIndexes.has(section.sourceIndex) : false;
                 const controlsId = `${controlPanelId}-preview-control-section-${section.sourceIndex}-${columnIndex}`;

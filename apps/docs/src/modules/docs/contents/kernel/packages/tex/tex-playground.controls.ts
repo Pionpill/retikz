@@ -117,6 +117,10 @@ export const previewControlContract = {
     shape: 'none',
     padding: 14,
   },
+  presetSelector: {
+    label: '公式示例',
+    customLabel: '自定义',
+  },
   presets: [
     {
       id: 'inline-energy',
@@ -135,7 +139,7 @@ export const previewControlContract = {
       label: 'Display 求和',
       values: {
         source: TexPlaygroundFormula.DisplaySum,
-        profile: 'base',
+        profile: 'math',
         displayMode: 'display',
         fontSize: 22,
         shape: 'none',
