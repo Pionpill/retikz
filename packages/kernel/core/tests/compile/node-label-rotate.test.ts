@@ -4,12 +4,11 @@ import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text';
 import { NodeLabelSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
-// core emit alphabetic 基线，按字体度量从基线还原单行文本视觉中心（= label 旋转中心 ly）
-const visualMiddle = (t: TextPrim): number => t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
+// fallback measurer 不提供 ascent / descent，Node label 规范化为上下对称视觉盒
+const visualMiddle = (t: TextPrim): number => t.y;
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 const silent = { onWarn: () => {} };
@@ -73,6 +72,24 @@ describe('Node label rotate', () => {
     ]);
     // radial 指向 +x 即 0°，自旋是 no-op，不产生 rotate group
     expect(findLabelRotateGroup(compileToScene(ir, silent).primitives, 'L')).toBeUndefined();
+  });
+
+  it('radial：boundary fraction 使用所选边的外法向，不使用 node center → label center', () => {
+    const ir = scene([
+      {
+        type: 'node',
+        position: [0, 0],
+        text: 'A',
+        label: {
+          text: 'L',
+          position: { boundary: 'top', fraction: 0.25 },
+          rotate: 'radial',
+        },
+      },
+    ]);
+    const g = findLabelRotateGroup(compileToScene(ir, silent).primitives, 'L')!;
+    const rot = g.transforms!.find(t => t.kind === 'rotate')!;
+    expect(rot.degrees).toBeCloseTo(-90);
   });
 
   it("tangent = radial + 90：position='right' → ≈ 90", () => {
@@ -151,7 +168,7 @@ describe('Node label rotate', () => {
     expect(lr.y).toBeCloseTo(lb.y);
   });
 
-  it('既有 node-label 定位语义不变：不旋转 Node label rotate 不改 TextPrim 位置', () => {
+  it('label 自旋通过最终 OBB 投影改变 center offset', () => {
     const noRot = scene([
       { type: 'node', position: [0, 0], text: 'A', label: { text: 'L', position: 'right', distance: 10 } },
     ]);
@@ -165,8 +182,7 @@ describe('Node label rotate', () => {
     ]);
     const a = labelText(compileToScene(noRot, silent).primitives, 'L')!;
     const b = labelText(compileToScene(withRot, silent).primitives, 'L')!;
-    // rotate 只改朝向（包 rotate group），不二次位移 label → TextPrim 中心不变
-    expect(b.x).toBeCloseTo(a.x);
+    expect(b.x - a.x).toBeCloseTo(5.5, 1);
     expect(b.y).toBeCloseTo(a.y);
   });
 });

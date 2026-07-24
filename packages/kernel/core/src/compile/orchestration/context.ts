@@ -78,6 +78,10 @@ export type CompileContext = {
 /** 创建 compile 编排所需的不可变依赖上下文 */
 export const createCompileContext = (ir: IRScene, options: CompileOptions): CompileContext => {
   const round = createRound(options.precision ?? DEFAULT_PRECISION);
+  const labelDistance = options.labelDistance ?? DEFAULT_LABEL_DISTANCE;
+  if (!Number.isFinite(labelDistance) || labelDistance < 0) {
+    throw new Error(`CompileOptions.labelDistance '${labelDistance}' must be a non-negative finite number`);
+  }
 
   const defaultWarnDispatcher = (warning: CompileWarning): void => {
     if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') return;
@@ -100,7 +104,7 @@ export const createCompileContext = (ir: IRScene, options: CompileOptions): Comp
     round,
     layoutPadding: options.padding ?? DEFAULT_LAYOUT_PADDING,
     nodeDistance: options.nodeDistance ?? DEFAULT_NODE_DISTANCE,
-    labelDistance: options.labelDistance ?? DEFAULT_LABEL_DISTANCE,
+    labelDistance,
     rootFontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
     shapes: resolveShapeRegistry(options.shapes),
     boundaries: resolveBoundaryRegistry(options.boundaries),

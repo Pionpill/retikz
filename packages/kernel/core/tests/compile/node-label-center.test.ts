@@ -5,7 +5,6 @@ import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { DEFAULT_LABEL_DISTANCE } from '../../src/compile/constants';
-import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text';
 
 const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrim> => {
   const out: Array<TextPrim> = [];
@@ -16,7 +15,7 @@ const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrim> => {
   return out;
 };
 
-const visualMiddle = (t: TextPrim): number => t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
+const visualMiddle = (t: TextPrim): number => t.y;
 
 describe('Node label position center', () => {
   it('draws the label at the node center', () => {

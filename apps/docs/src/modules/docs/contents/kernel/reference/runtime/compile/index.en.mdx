@@ -34,13 +34,13 @@ The `@retikz/core` compile layer turns JSON-serializable IR into a laid-out `Sce
 
 ### Layout And Output
 
-| Option          | Type     | Default | Notes                                                                                                                       |
-| --------------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `padding`       | `number` | `10`    | Extra layout padding in user units                                                                                          |
-| `precision`     | `number` | `2`     | Decimal precision for Scene coordinates, structured path commands, and layout values; internal geometry is double precision |
-| `nodeDistance`  | `number` | `24`    | Default distance for `AtPosition` when `distance` is omitted                                                                |
-| `labelDistance` | `number` | `12`    | Default distance between a node label and the node boundary when `Node.label.distance` is omitted                           |
-| `fontSize`      | `number` | `16`    | Default font size; also the root size for presets and `rem`; explicit numeric font sizes are unchanged                      |
+| Option          | Type     | Default | Notes                                                                                                                                         |
+| --------------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `padding`       | `number` | `10`    | Extra layout padding in user units                                                                                                            |
+| `precision`     | `number` | `2`     | Decimal precision for Scene coordinates, structured path commands, and layout values; internal geometry is double precision                   |
+| `nodeDistance`  | `number` | `24`    | Default distance for `AtPosition` when `distance` is omitted                                                                                  |
+| `labelDistance` | `number` | `12`    | Default net gap from the node boundary to the rotated label visual box when `Node.label.distance` is omitted; must be finite and non-negative |
+| `fontSize`      | `number` | `16`    | Default font size; also the root size for presets and `rem`; explicit numeric font sizes are unchanged                                        |
 
 ### Provider Registries
 
@@ -78,6 +78,8 @@ type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
 | `TextMetrics` | `width` / `height` / `ascent?` / `descent?` | Text box metrics; ascent / descent are optional       |
 
 When `measureText` is omitted, `fallbackMeasurer` estimates width as `text.length * size * 0.55` and height as `size * 1.2`. It keeps compilation runnable, but it is not meant for precise typography.
+
+Node labels normalize the `width` / `height` / `ascent` / `descent` produced during one measurement phase into one visual box. When both baseline metrics are absent, `height` is split evenly. When only one is present, `height` supplies the remainder. When both are present, spare leading is split evenly if their sum is smaller than `height`; otherwise the visual box expands to their sum. The same box drives the baseline, rotated spacing, pin endpoint, and automatic viewBox, with no remeasurement after the node rectangle is known. Any non-finite or negative Node-label metric throws directly; an invalid TeX box keeps the existing `TEX_INVALID` warning degradation.
 
 ## Warnings
 

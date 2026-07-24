@@ -39,7 +39,7 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 | `padding`       | `number` | `10`    | layout 外围留白，单位为 user units                                                        |
 | `precision`     | `number` | `2`     | 输出 Scene 图元坐标、结构化 path command 与 layout 数值的小数位；内部几何保持 double 精度 |
 | `nodeDistance`  | `number` | `24`    | `AtPosition` 未写 `distance` 时使用的默认距离                                             |
-| `labelDistance` | `number` | `12`    | `Node.label.distance` 未设置时，节点 label 与节点边界的默认距离                           |
+| `labelDistance` | `number` | `12`    | `Node.label.distance` 未设置时，节点边界到旋转后标签视觉框的默认净距；必须为有限非负数    |
 | `fontSize`      | `number` | `16`    | 默认字号；同时作为字号 preset 与 `rem` 的根字号，不改变显式数字字号                       |
 
 ### 扩展注册表
@@ -78,6 +78,8 @@ type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
 | `TextMetrics` | `width` / `height` / `ascent?` / `descent?` | 文本盒尺寸；ascent / descent 可选     |
 
 如果不传 `measureText`，`fallbackMeasurer` 用 `text.length * size * 0.55` 估算宽度、`size * 1.2` 估算高度。它能保证编译可跑，但不适合做精确排版。
+
+Node label 会把一次测量阶段得到的 `width` / `height` / `ascent` / `descent` 规范成唯一视觉框：两项基线指标都缺省时上下平分 `height`；只给一项时由 `height` 补齐另一项；两项都给时若二者之和小于 `height`，剩余 leading 上下平分，若大于 `height` 则视觉框扩到二者之和。该视觉框同时决定标签基线、旋转后间距、pin 终点与自动 viewBox，布局节点矩形后不会重新测量。Node label 的任何度量值若不是有限非负数会直接抛错；非法 TeX 盒仍按既有 `TEX_INVALID` warning 降级。
 
 ## 警告
 

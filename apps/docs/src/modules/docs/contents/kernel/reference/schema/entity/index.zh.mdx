@@ -130,18 +130,18 @@ Core 只解析确定的 named / hex / `rgb()` / `hsl()` 颜色，不读取 DOM �
     position:
       '标签相对节点边界的位置：8 向枚举、center、数字角度，或 `{ boundary, fraction }` 矩形边界比例点；默认 top；center 直接画在节点中心',
     placement: '标签相对附着点的偏移方向：outside（默认）向外，inside 向节点内部偏移；inside 不支持 pin',
-    distance: '节点边界到标签中心的间距（用户单位），默认 12',
+    distance: '节点边界到旋转后标签视觉框的净距（用户单位），默认 12；必须为有限非负数；center 位置忽略此值',
     textColor: '标签文字颜色，省略时使用 currentColor',
     opacity: '标签自身不透明度 0..1；会与节点 opacity 相乘',
     font: '标签字体覆盖；缺省字段继承父节点 font，再回退到渲染器默认',
     rotate:
-      '绕标签自身中心旋转文字：`none`（默认）水平 / `radial` 沿「节点中心→标签中心」方向 / `tangent`（radial + 90°）/ 数字角度（屏幕 y 向下：0=+x、90=+y）；只改文字朝向不改位置',
+      '绕标签自身中心旋转文字：`none`（默认）水平 / `radial` 沿 position 定义的方向（边界比例位置取所选边的外法向）/ `tangent`（radial + 90°）/ 数字角度（屏幕 y 向下：0=+x、90=+y）；inside 只反转标签偏移，不反转朝向；旋转会改变视觉框投影，编译器同步调整中心以保持 distance 净距',
     keepUpright: '为 true 时若旋转后文字会倒着读（偏离正立超 90°）则翻转 180°；默认 false（严格几何角度）',
-    pin: '从节点边界到标签画一条引线（TikZ `pin`）：`true` = 默认细实线；对象 = 带样式覆盖的引线（`stroke` / `strokeWidth` / `dashPattern` / `dashOffset`）；省略 / `false` = 无引线。标签位置不受影响',
+    pin: '从节点边界到标签旋转视觉框画一条引线（TikZ `pin`）：`true` = 默认细实线；对象 = 带样式覆盖的引线（`stroke` / `strokeWidth` / `dashPattern` / `dashOffset`）；省略 / `false` = 无引线；仅支持 outside',
   }}
 />
 
-`position: { boundary, fraction }` 目前用于 box-like 节点边界：`boundary` 取 `'top'` / `'right'` / `'bottom'` / `'left'`，`fraction` 是该边上的 0..1 比例位置，缺省 `0.5`。
+`position: { boundary, fraction }` 目前用于 box-like 节点边界：`boundary` 取 `'top'` / `'right'` / `'bottom'` / `'left'`，`fraction` 是该边上的 0..1 比例位置，缺省 `0.5`。非 `center` 标签沿摆放方向用 `distance + 旋转视觉框投影半径` 求中心；pin 终点则是同一射线与旋转视觉框的精确交点。
 
 <span id="textblock"></span>
 

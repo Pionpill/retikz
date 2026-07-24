@@ -1045,6 +1045,36 @@ after`;
       });
     });
 
+    it('<Node label> 组合透传 boundary position、distance、rotate、keepUpright 与 pin', () => {
+      const ir = buildIR(
+        <Node
+          id="A"
+          position={[0, 0]}
+          label={{
+            text: 'L',
+            position: { boundary: 'right', fraction: 0.25 },
+            distance: 6,
+            rotate: 'radial',
+            keepUpright: true,
+            pin: { stroke: 'red', strokeWidth: 2 },
+          }}
+        >
+          A
+        </Node>,
+      );
+      expect(ir.children[0]).toMatchObject({
+        type: 'node',
+        label: {
+          text: 'L',
+          position: { boundary: 'right', fraction: 0.25 },
+          distance: 6,
+          rotate: 'radial',
+          keepUpright: true,
+          pin: { stroke: 'red', strokeWidth: 2 },
+        },
+      });
+    });
+
     it('<Path color> 主色透传到 IR', () => {
       const ir = buildIR(
         <Path color="crimson">

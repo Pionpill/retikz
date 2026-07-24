@@ -101,12 +101,14 @@ export const NodeLabelSchema = z
       .nonnegative()
       .optional()
       .describe(
-        'Gap between the node border and the label center, in user units. Omitted fields use compile labelDistance.',
+        'Gap between the node border and the rotated label visual box, in user units. Omitted fields use compile labelDistance.',
       ),
     rotate: z
       .union([z.enum(NodeLabelRotateMode), AngleDegreesSchema])
       .optional()
-      .describe('Label self-rotation: none, radial, tangent, or an explicit angle in degrees.'),
+      .describe(
+        'Label self-rotation: none, radial along the position direction, tangent to it, or an explicit angle in degrees. Boundary-fraction positions use the selected side outward normal.',
+      ),
     keepUpright: z
       .boolean()
       .optional()

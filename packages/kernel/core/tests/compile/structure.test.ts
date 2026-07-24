@@ -120,6 +120,7 @@ describe('compile source structure', () => {
       'resolveBoxSize',
       'resolveBoxSpacing',
       'resolveLabelRotateDeg',
+      'resolveNodeLabelGeometry',
     ]);
 
     const layout: Partial<NodeLayout> = {};

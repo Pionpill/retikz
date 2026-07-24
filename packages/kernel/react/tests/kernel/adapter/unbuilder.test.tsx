@@ -1043,7 +1043,14 @@ describe('convertIRToReactNode', () => {
             id: 'A',
             position: [0, 0],
             text: 'A',
-            label: { text: 'tag', position: 'top', distance: 5 },
+            label: {
+              text: 'tag',
+              position: { boundary: 'top', fraction: 0.25 },
+              distance: 5,
+              rotate: 'radial',
+              keepUpright: true,
+              pin: { stroke: 'red', strokeWidth: 2 },
+            },
           },
         ],
       };

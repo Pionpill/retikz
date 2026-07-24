@@ -114,8 +114,8 @@ export type CompileLayoutOptions = {
    */
   nodeDistance?: number;
   /**
-   * 节点 label 与节点边界的默认距离
-   * @description `Node.label.distance` 未设置时取此值
+   * 节点 label 视觉盒与节点边界的默认净距
+   * @description `Node.label.distance` 未设置时取此值，必须是 finite nonnegative number
    * @default DEFAULT_LABEL_DISTANCE (12)
    */
   labelDistance?: number;

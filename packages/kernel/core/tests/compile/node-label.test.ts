@@ -4,10 +4,8 @@ import type { ScenePrimitive, TextPrim } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text';
-
-// core emit alphabetic 基线，按字体度量从基线还原单行文本视觉中心，验证垂直居中落点
-const visualMiddle = (t: TextPrim): number => t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
+// fallback measurer 不提供 ascent / descent，Node label 规范化为上下对称视觉盒
+const visualMiddle = (t: TextPrim): number => t.y;
 
 /** 收集 scene 里所有 TextPrim（包括 group 嵌套里的） */
 const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrim> => {
@@ -83,7 +81,7 @@ describe('Node label', () => {
       };
       const scene = compileToScene(ir);
       const labelText = findLabel(scene.primitives, 'L')!;
-      // node center 是 [0, 0]；矩形 top 边界 y < 0；label 再 -10
+      // node center 是 [0, 0]；label 视觉盒与矩形 top 边界保持 10 units 净距
       expect(labelText.y).toBeLessThan(-10);
     });
 

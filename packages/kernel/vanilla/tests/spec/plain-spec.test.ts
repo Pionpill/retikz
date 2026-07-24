@@ -96,6 +96,24 @@ describe('@retikz/vanilla plain spec', () => {
     expect(node('B', { position })).toEqual({ type: 'node', id: 'B', position });
   });
 
+  it('node helper 组合透传 label position、distance、rotate、keepUpright 与 pin', () => {
+    const label = {
+      text: 'L',
+      position: { boundary: 'right' as const, fraction: 0.25 },
+      distance: 6,
+      rotate: 'radial' as const,
+      keepUpright: true,
+      pin: { stroke: 'red', strokeWidth: 2 },
+    };
+
+    expect(node('labelled', { position: [0, 0], label })).toEqual({
+      type: 'node',
+      id: 'labelled',
+      position: [0, 0],
+      label,
+    });
+  });
+
   it('scope helper 直接透传 placement 与 transform pivot，不物化默认值', () => {
     const config = {
       id: 'cluster',

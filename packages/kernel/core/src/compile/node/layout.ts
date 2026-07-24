@@ -20,7 +20,7 @@ import { inverseTransformChain, isTransformChainInvertible, projectLayoutToGloba
 import { resolveAxisScale, resolveBoxSize, resolveBoxSpacing } from './box';
 import { layoutNodeContent } from './content/layout';
 import { DEFAULT_LINE_HEIGHT_FACTOR, resolveDashPattern } from './content/text';
-import { layoutNodeLabels } from './label/layout';
+import { layoutNodeLabels, measureNodeLabels } from './label/layout';
 import { resolveNodeShape } from './shape';
 
 const DEFAULT_PADDING = 8;
@@ -224,7 +224,7 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
   const rectCenterX = center[0] + paddingOffsetX + (aabbOffset?.[0] ?? 0);
   const rectCenterY = center[1] + paddingOffsetY + (aabbOffset?.[1] ?? 0);
   const contentCenter: [number, number] = [rectCenterX - paddingOffsetX, rectCenterY - paddingOffsetY];
-  const labels = layoutNodeLabels({
+  const measuredLabels = measureNodeLabels({
     node,
     measureText,
     texLowering,
@@ -278,7 +278,6 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
     opacity: node.opacity,
     shadow: resolveShadow(node.shadow),
     blendMode: node.blendMode,
-    labels,
     boundary: node.boundary,
     meta: node.meta,
     animations: node.animations,
@@ -288,7 +287,11 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
     connectionEnvelopeWarnings: new Set(),
     warn,
   };
+  const resolved: NodeLayout = {
+    ...provisional,
+    labels: layoutNodeLabels(provisional, measuredLabels),
+  };
   return anchorPosition
-    ? placeAnchorPositionedLayout(node, anchorPosition, provisional, namespaceStack, scopeChain)
-    : provisional;
+    ? placeAnchorPositionedLayout(node, anchorPosition, resolved, namespaceStack, scopeChain)
+    : resolved;
 };
