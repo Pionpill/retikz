@@ -17,11 +17,17 @@ const fakeLowerTex: LowerTex = (content, style) => {
   const width = Math.max(content.tex.length, 1) * style.fontSize * 0.5;
   const height = style.fontSize * (content.displayMode ? 2 : 1);
   return {
-    commands: [
-      { kind: 'move', to: [0, 0] },
-      { kind: 'line', to: [width, 0] },
-      { kind: 'line', to: [width, height] },
-      { kind: 'close' },
+    paths: [
+      {
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [width, 0] },
+          { kind: 'line', to: [width, height] },
+          { kind: 'close' },
+        ],
+        fill: { kind: 'currentColor' },
+        stroke: { kind: 'none' },
+      },
     ],
     width,
     height,

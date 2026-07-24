@@ -2,7 +2,15 @@ export { compileToScene } from './compile';
 export { CompileWarningCode } from './constants';
 export * from './lower';
 export { computeLayout } from './scene';
-export type { FontSpec, LoweredTex, LowerTex, TextMeasurer, TextMetrics } from './text';
+export type {
+  FontSpec,
+  LoweredTex,
+  LoweredTexPaint,
+  LoweredTexPath,
+  LowerTex,
+  TextMeasurer,
+  TextMetrics,
+} from './text';
 export { fallbackMeasurer } from './text';
 export type {
   CompileCompositeOptions,

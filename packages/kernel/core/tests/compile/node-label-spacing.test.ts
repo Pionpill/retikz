@@ -242,7 +242,7 @@ describe('Node label resolved metrics', () => {
 
   it('warns and skips malformed LoweredTex only on the Node label path', () => {
     const lowerTex: LowerTex = () => ({
-      commands: [],
+      paths: [],
       width: -1,
       height: 20,
       depth: 2,

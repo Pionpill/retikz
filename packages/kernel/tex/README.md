@@ -22,7 +22,7 @@ import { Layout, Node } from '@retikz/react';
 import { useLowerTex } from '@retikz/tex/react';
 
 export const Diagram = () => {
-  const lowerTex = useLowerTex();
+  const lowerTex = useLowerTex({ profile: 'math' });
 
   return (
     <Layout lowerTex={lowerTex}>
@@ -32,42 +32,42 @@ export const Diagram = () => {
 };
 ```
 
-`useLowerTex()` starts MathJax asynchronously and returns `LowerTex | undefined`. While it is `undefined`, core treats formula-bearing text as missing a lowerer and emits its normal diagnostics instead of crashing. If MathJax startup fails, the hook reports the original error to `console.error` once for that shared attempt and clears the failed cache, so a later mount can retry.
+`useLowerTex()` starts MathJax asynchronously and returns `LowerTex | undefined`. Engines are shared by canonical `profile` / `extensions`; switching configuration clears the old lowerer until the new engine is ready. Pass `onDiagnostic` to observe startup and lowering failures.
 
 ## Vanilla / core injection
 
 ```ts
 import { figure, node, renderToSvgString } from '@retikz/vanilla';
-import { createLowerTex, createMathJaxEngine } from '@retikz/tex';
+import { createMathJaxLowerTex } from '@retikz/tex';
 
-const engine = await createMathJaxEngine({ packages: ['base'] });
-const lowerTex = createLowerTex(engine);
+const lowerTex = await createMathJaxLowerTex({ profile: 'math' });
 
 const fig = figure([node('eq', { position: [0, 0], text: '$\\frac{a}{b}=c$' })]);
 const svg = renderToSvgString(fig, { compile: { lowerTex } });
 ```
 
-`createMathJaxEngine(options?)` defaults to `packages: ['base']`. Pass additional MathJax TeX packages only when the app needs them.
+The default `base` profile keeps MathJax minimal. `math` adds `ams`, `newcommand`, `boldsymbol`, `braket`, `cancel`, `cases`, `centernot`, `mathtools`, and `color`. Individual entries can be appended through `extensions`.
 
 ## API
 
-| API                    | Type                                                            | Description                                                                                              |
-| ---------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `createMathJaxEngine`  | `(options?: MathJaxEngineOptions) => Promise<MathJaxSvgEngine>` | Dynamically imports the optional `mathjax-full` SVG stack and creates a synchronous TeX-to-SVG engine.   |
-| `MathJaxEngineOptions` | `{ packages?: Array<string> }`                                  | Options for MathJax TeX input. `packages` defaults to `['base']`.                                        |
-| `MathJaxSvgEngine`     | `{ convert(tex, options): string }`                             | Minimal engine contract consumed by this package. Custom engines can implement it directly.              |
-| `createLowerTex`       | `(engine: MathJaxSvgEngine) => LowerTex`                        | Converts an engine into core's `lowerTex` injection function and caches by `fontSize \| display \| tex`. |
-| `useLowerTex`          | `() => LowerTex \| undefined`                                   | React hook from `@retikz/tex/react`; creates and caches the default MathJax engine.                      |
+| API                     | Type                                                                        | Description                                                                                           |
+| ----------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `createMathJaxEngine`   | `(options?: MathJaxEngineOptions) => Promise<MathJaxSvgEngine>`             | Dynamically imports the optional MathJax stack and selected configurations.                           |
+| `createMathJaxLowerTex` | `(options?: MathJaxLowerTexOptions) => Promise<LowerTex>`                   | Creates the built-in engine and lowerer in one step.                                                  |
+| `MathJaxEngineOptions`  | `{ profile?: 'base' \| 'math'; extensions?: Array<MathJaxExtensionValue> }` | Selects a built-in profile and optional extensions.                                                   |
+| `MathJaxSvgEngine`      | `{ convert(tex, options): string }`                                         | Minimal engine contract consumed by this package. Custom engines can implement it directly.           |
+| `createLowerTex`        | `(engine: MathJaxSvgEngine, options?: LowerTexOptions) => LowerTex`         | Adapts an engine and caches deterministic results by source, display mode, font size, and host color. |
+| `useLowerTex`           | `(options?: MathJaxLowerTexOptions) => LowerTex \| undefined`               | React hook from `@retikz/tex/react`; shares engines by canonical configuration.                       |
 
 Parser helpers such as `parseMathJaxSvg`, `parsePathD`, and `parseTransform` are implementation details and are not exported from the root package entry.
 
 ## Failure semantics
 
 - Missing `mathjax-full` makes `createMathJaxEngine()` reject with an install hint.
-- `useLowerTex()` reports that startup error once per shared attempt and retries when a later mount requests the engine.
+- `useLowerTex()` reports that startup error as `engine-error` once per shared attempt and retries on a later mount.
 - MathJax `<merror>` output lowers to `null`.
-- Engine conversion or SVG parsing failures lower to `null`; core then reports `TEX_INVALID`.
-- Unsupported or malformed SVG transforms are treated as parser failures instead of silently applying identity transforms.
+- Engine conversion, unsupported SVG, and malformed SVG failures lower to `null`; `onDiagnostic` preserves their category and core reports `TEX_INVALID`.
+- `<text>`, `<foreignObject>`, nested `<svg>`, unsupported visual styles, and non-similarity transforms on visible strokes reject the whole formula.
 - Without an injected `lowerTex`, core leaves ordinary `$` text compatible and reports missing-lowerer diagnostics only for content that needs formula lowering.
 
 ## License

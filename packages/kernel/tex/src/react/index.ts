@@ -1,1 +1,1 @@
-export * from './useLowerTex';
+export * from './use-lower-tex';

@@ -22,6 +22,16 @@ export const texPlaygroundControls = definePreviewControls({
         },
         {
           kind: 'select',
+          id: TexPlaygroundControlId.Profile,
+          label: 'Syntax profile',
+          defaultValue: 'math',
+          options: [
+            { value: 'base', label: 'Base' },
+            { value: 'math', label: 'Math extensions' },
+          ],
+        },
+        {
+          kind: 'select',
           id: TexPlaygroundControlId.DisplayMode,
           label: 'Metrics',
           defaultValue: 'display',
@@ -75,6 +85,7 @@ export const previewControlContract = {
   controls: texPlaygroundControls,
   canonicalValues: {
     source: TexPlaygroundFormula.DisplaySum,
+    profile: 'math',
     displayMode: 'display',
     fontSize: 22,
     shape: 'none',
@@ -86,6 +97,7 @@ export const previewControlContract = {
       label: 'Inline mass-energy',
       values: {
         source: TexPlaygroundFormula.InlineEnergy,
+        profile: 'base',
         displayMode: 'inline',
         fontSize: 24,
         shape: 'none',
@@ -97,6 +109,7 @@ export const previewControlContract = {
       label: 'Display summation',
       values: {
         source: TexPlaygroundFormula.DisplaySum,
+        profile: 'base',
         displayMode: 'display',
         fontSize: 22,
         shape: 'none',
@@ -108,6 +121,7 @@ export const previewControlContract = {
       label: 'Multiline derivatives',
       values: {
         source: TexPlaygroundFormula.MultilineDerivatives,
+        profile: 'base',
         displayMode: 'display',
         fontSize: 18,
         shape: 'rectangle',
@@ -119,12 +133,33 @@ export const previewControlContract = {
       label: 'Framed contour integral',
       values: {
         source: TexPlaygroundFormula.FramedContour,
+        profile: 'base',
         displayMode: 'display',
         fontSize: 22,
         shape: 'circle',
         padding: 18,
       },
     },
+    {
+      id: 'colored-cancellation',
+      label: 'Colored cancellation',
+      values: {
+        source: TexPlaygroundFormula.ColoredCancellation,
+        profile: 'math',
+        displayMode: 'display',
+        fontSize: 24,
+        shape: 'none',
+        padding: 14,
+      },
+    },
   ],
-  relatedApis: ['Node.text', 'IRTexContent.tex', 'IRTexContent.displayMode', 'Node.font', 'Node.shape', 'Node.padding'],
+  relatedApis: [
+    'MathJaxEngineOptions.profile',
+    'Node.text',
+    'IRTexContent.tex',
+    'IRTexContent.displayMode',
+    'Node.font',
+    'Node.shape',
+    'Node.padding',
+  ],
 } satisfies PreviewControlContract;

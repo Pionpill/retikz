@@ -25,11 +25,17 @@ const fractionalMeasureText: TextMeasurer = () => ({
 const lowerTex: LowerTex = (content, style) => {
   if (content.tex === 'INVALID') return null;
   return {
-    commands: [
-      { kind: 'move', to: [0, 0] },
-      { kind: 'line', to: [style.fontSize * 2, 0] },
-      { kind: 'line', to: [style.fontSize * 2, style.fontSize] },
-      { kind: 'close' },
+    paths: [
+      {
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [style.fontSize * 2, 0] },
+          { kind: 'line', to: [style.fontSize * 2, style.fontSize] },
+          { kind: 'close' },
+        ],
+        fill: { kind: 'currentColor' },
+        stroke: { kind: 'none' },
+      },
     ],
     width: style.fontSize * 2,
     height: style.fontSize,

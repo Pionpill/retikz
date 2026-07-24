@@ -40,7 +40,14 @@ describe('@retikz/tex package playground controls', () => {
     expect(texPlaygroundContract.controls.presentation).toBe('panel');
     expect(texPlaygroundEnContract.controls.presentation).toBe('panel');
     expect(enFields).toEqual(zhFields);
-    expect(zhFields.map(field => field.id)).toEqual(['source', 'displayMode', 'fontSize', 'shape', 'padding']);
+    expect(zhFields.map(field => field.id)).toEqual([
+      'source',
+      'profile',
+      'displayMode',
+      'fontSize',
+      'shape',
+      'padding',
+    ]);
     expect(zhFields.find(field => field.id === 'padding')?.visibleWhen).toEqual({
       controlId: 'shape',
       oneOf: ['rectangle', 'circle'],
@@ -52,9 +59,11 @@ describe('@retikz/tex package playground controls', () => {
       'display-sum',
       'multiline-derivatives',
       'framed-contour',
+      'colored-cancellation',
     ]);
-    expect(texPlaygroundContract.presets.every(preset => Object.keys(preset.values).length === 5)).toBe(true);
+    expect(texPlaygroundContract.presets.every(preset => Object.keys(preset.values).length === 6)).toBe(true);
     expect(texPlaygroundContract.relatedApis).toEqual([
+      'MathJaxEngineOptions.profile',
       'Node.text',
       'IRTexContent.tex',
       'IRTexContent.displayMode',
