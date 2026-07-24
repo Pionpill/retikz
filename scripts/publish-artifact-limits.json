@@ -31,16 +31,28 @@
     "maxFiles": 180,
     "maxPackedBytes": 112640
   },
-  "@retikz/table": {
-    "maxFiles": 10,
+  "@retikz/standard": {
+    "maxFiles": 110,
+    "maxPackedBytes": 40960
+  },
+  "@retikz/standard-react": {
+    "maxFiles": 30,
     "maxPackedBytes": 10240
+  },
+  "@retikz/standard-vanilla": {
+    "maxFiles": 20,
+    "maxPackedBytes": 10240
+  },
+  "@retikz/table": {
+    "maxFiles": 210,
+    "maxPackedBytes": 40960
   },
   "@retikz/table-react": {
-    "maxFiles": 10,
-    "maxPackedBytes": 10240
+    "maxFiles": 50,
+    "maxPackedBytes": 20480
   },
   "@retikz/table-vanilla": {
-    "maxFiles": 10,
+    "maxFiles": 30,
     "maxPackedBytes": 10240
   },
   "@retikz/tex": {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type {
   PreviewControlsDefinition,
@@ -78,35 +78,44 @@ export const usePreviewControlState = (
     return () => window.cancelAnimationFrame(animationFrame);
   }, [rangePlayback]);
 
-  const stopRangePlayback = () => setRangePlayback(undefined);
-  const startRangePlayback = (field: PreviewRangeControlField) => {
-    if (field.min >= field.max) return;
+  const stopRangePlayback = useCallback(() => setRangePlayback(undefined), []);
+  const startRangePlayback = useCallback(
+    (field: PreviewRangeControlField) => {
+      if (field.min >= field.max) return;
 
-    const duration = resolveRangePlaybackDuration(field.playDuration ?? rangePlaybackDuration);
-    setValues(current => ({ ...current, [field.id]: field.min }));
-    setRangePlayback({ field, duration });
-  };
-  const setValue = (id: string, value: PreviewControlValues[string]) => {
+      const duration = resolveRangePlaybackDuration(field.playDuration ?? rangePlaybackDuration);
+      setValues(current => ({ ...current, [field.id]: field.min }));
+      setRangePlayback({ field, duration });
+    },
+    [rangePlaybackDuration],
+  );
+  const setValue = useCallback((id: string, value: PreviewControlValues[string]) => {
     setRangePlayback(current => (current?.field.id === id ? undefined : current));
     setValues(current => ({ ...current, [id]: value }));
-  };
-  const applyValues = (nextValues: Readonly<PreviewControlValues>) => {
-    setRangePlayback(undefined);
-    setValues({ ...baseline, ...nextValues });
-  };
-  const reset = () => {
+  }, []);
+  const applyValues = useCallback(
+    (nextValues: Readonly<PreviewControlValues>) => {
+      setRangePlayback(undefined);
+      setValues({ ...baseline, ...nextValues });
+    },
+    [baseline],
+  );
+  const reset = useCallback(() => {
     setRangePlayback(undefined);
     setValues(baseline);
-  };
+  }, [baseline]);
 
-  return {
-    canonicalValues: baseline,
-    values,
-    setValue,
-    applyValues,
-    reset,
-    rangePlaybackId: rangePlayback?.field.id,
-    startRangePlayback,
-    stopRangePlayback,
-  };
+  return useMemo(
+    () => ({
+      canonicalValues: baseline,
+      values,
+      setValue,
+      applyValues,
+      reset,
+      rangePlaybackId: rangePlayback?.field.id,
+      startRangePlayback,
+      stopRangePlayback,
+    }),
+    [applyValues, baseline, rangePlayback?.field.id, reset, setValue, startRangePlayback, stopRangePlayback, values],
+  );
 };

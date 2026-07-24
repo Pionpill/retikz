@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type {
   PreviewControlRuntime,
@@ -98,6 +98,37 @@ describe('DemoRenderer', () => {
     const markup = renderToStaticMarkup(<DemoRenderer Component={ExplicitSvgDemo} rendererMode="canvas" />);
     expect(markup).toContain('<svg');
     expect(markup).not.toContain('<canvas');
+  });
+
+  it('父级无关状态更新时不重复渲染 demo', () => {
+    const renderDemo = vi.fn();
+    const CountingDemo: FC = () => {
+      renderDemo();
+      return <span>counted demo</span>;
+    };
+    const DemoRendererStabilityHarness: FC = () => {
+      const [, setParentRevision] = useState(0);
+
+      return (
+        <>
+          <button type="button" onClick={() => setParentRevision(revision => revision + 1)}>
+            rerender parent
+          </button>
+          <DemoRenderer Component={CountingDemo} rendererMode="svg" />
+        </>
+      );
+    };
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    act(() => root.render(<DemoRendererStabilityHarness />));
+    expect(renderDemo).toHaveBeenCalledTimes(1);
+
+    act(() => container.querySelector('button')?.click());
+    expect(renderDemo).toHaveBeenCalledTimes(1);
+
+    act(() => root.unmount());
   });
 });
 

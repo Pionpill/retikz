@@ -1,5 +1,3 @@
-import type { ValueOf } from '@retikz/core';
-
 /** Table structure 的内置与保留判别值 */
 export const TableStructureKind = {
   /** 显式二维 Cell 结构 */
@@ -14,8 +12,15 @@ export const TableStructureKind = {
   Custom: 'custom',
 } as const;
 
-/** Table structure 判别值 */
-export type TableStructureKindValue = ValueOf<typeof TableStructureKind>;
-
 /** v0.1 内置或保留的 Table structure kind */
-export const RESERVED_TABLE_STRUCTURE_KINDS: ReadonlyArray<TableStructureKindValue> = Object.values(TableStructureKind);
+export const RESERVED_TABLE_STRUCTURE_KINDS: ReadonlyArray<
+  (typeof TableStructureKind)[keyof typeof TableStructureKind]
+> = Object.values(TableStructureKind);
+
+/** canonical Table row 类型 */
+export const TableRowKind = {
+  /** 列表头行 */
+  ColumnHeader: 'columnHeader',
+  /** 明细数据行 */
+  Body: 'body',
+} as const;

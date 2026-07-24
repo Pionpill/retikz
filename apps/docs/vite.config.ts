@@ -21,9 +21,9 @@ const llmsTxtPlugin = (): Plugin => ({
  * - base: 仅 build 模式注入 `/retikz/` 前缀，匹配 GH Pages 项目页 URL；dev 仍走 `/`
  * - llmsTxtPlugin: 由导航树 + frontmatter 派生 public/llms.txt、manifest 与原始 MDX
  */
-export default defineConfig(({ command }) => ({
+export default defineConfig(({ command, mode }) => ({
   base: command === 'build' ? '/retikz/' : '/',
-  plugins: [react(), tailwindcss(), llmsTxtPlugin()],
+  plugins: [react(), tailwindcss(), ...(mode === 'test' ? [] : [llmsTxtPlugin()])],
   build: {
     rollupOptions: {
       output: {

@@ -99,6 +99,7 @@ const svg = renderTable(spec, { data: { scores: rows } });
 | `header?`                  | `DetailTableProps['header']`                                     | `true`         | 是否生成列头行                                                    |
 | `id?`                      | `DetailTableProps['id']`                                         | —              | 稳定 Table id；嵌入父级 `Layout` 时必填                           |
 | `layout?`                  | `DetailTableProps['layout']`                                     | 固定轨道默认值 | 列宽、正文/列头行高与行列间距                                     |
+| `meta?`                    | `DetailTableProps['meta']`                                       | —              | 写入 TableSpec 的 JSON 元数据                                     |
 | `structureDefinitions?`    | `DetailTableProps['structureDefinitions']`                       | `[]`           | 自定义结构 definitions                                            |
 | `presentationDefinitions?` | `DetailTableProps['presentationDefinitions']`                    | `[]`           | 自定义 Cell presentation definitions                              |
 | `composites?`              | `DetailTableProps['composites']`                                 | `[]`           | Cell 内嵌 Tier 2 内容所需 definitions                             |

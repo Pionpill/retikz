@@ -2,6 +2,7 @@
 import type { FC } from 'react';
 import type { Root } from 'react-dom/client';
 
+import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
@@ -72,6 +73,23 @@ const Harness: FC<HarnessProps> = props => {
       </button>
       <Consumer definition={definition} state={state} onSnapshot={onSnapshot} />
     </PreviewControlStateContext.Provider>
+  );
+};
+
+type StabilityHarnessProps = {
+  onSnapshot: (state: PreviewControlState) => void;
+};
+
+const StabilityHarness: FC<StabilityHarnessProps> = props => {
+  const { onSnapshot } = props;
+  const [, setParentRevision] = useState(0);
+  const state = usePreviewControlState(appearanceDefinition);
+  onSnapshot(state);
+
+  return (
+    <button type="button" onClick={() => setParentRevision(revision => revision + 1)}>
+      rerender parent
+    </button>
   );
 };
 
@@ -187,5 +205,20 @@ describe('preview control state', () => {
     await act(() => root.render(<Harness definition={contentDefinition} onSnapshot={onSnapshot} />));
     expect(state?.values).toEqual({ text: 'New' });
     expect(values).toEqual({ text: 'New' });
+  });
+
+  it('父级无关状态更新时保持 control state 引用稳定', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    renderedRoots.push(root);
+    const snapshots: Array<PreviewControlState> = [];
+
+    await act(() => root.render(<StabilityHarness onSnapshot={state => snapshots.push(state)} />));
+    const initialState = snapshots.at(-1);
+
+    await act(() => container.querySelector('button')?.click());
+
+    expect(snapshots.at(-1)).toBe(initialState);
   });
 });

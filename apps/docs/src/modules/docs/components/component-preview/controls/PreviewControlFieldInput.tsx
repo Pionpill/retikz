@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 
 import { Pause, Play } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib';
 
-import type { PreviewControlField, PreviewControlValue, PreviewRangeControlField } from '../types';
+import type { PreviewControlValue, PreviewRangeControlField, PreviewStateControlField } from '../types';
 
 import { PreviewPointControlInput } from './PreviewPointControlInput';
 
@@ -48,10 +48,56 @@ const useReleaseSelectDocumentLock = (open: boolean): void => {
   }, [open]);
 };
 
+type AnimationFrameValueChange = {
+  schedule: (value: PreviewControlValue) => void;
+  flush: (value: PreviewControlValue) => void;
+};
+
+/** 把连续控件事件合并为每个 animation frame 最多一次状态提交。 */
+const useAnimationFrameValueChange = (
+  onValueChange: (value: PreviewControlValue) => void,
+): AnimationFrameValueChange => {
+  const onValueChangeRef = useRef(onValueChange);
+  const pendingValueRef = useRef<PreviewControlValue>();
+  const animationFrameRef = useRef<number>();
+
+  useEffect(() => {
+    onValueChangeRef.current = onValueChange;
+  }, [onValueChange]);
+
+  useEffect(
+    () => () => {
+      if (animationFrameRef.current !== undefined) window.cancelAnimationFrame(animationFrameRef.current);
+    },
+    [],
+  );
+
+  const schedule = useCallback((value: PreviewControlValue) => {
+    pendingValueRef.current = value;
+    if (animationFrameRef.current !== undefined) return;
+
+    animationFrameRef.current = window.requestAnimationFrame(() => {
+      animationFrameRef.current = undefined;
+      const pendingValue = pendingValueRef.current;
+      pendingValueRef.current = undefined;
+      if (pendingValue !== undefined) onValueChangeRef.current(pendingValue);
+    });
+  }, []);
+  const flush = useCallback((value: PreviewControlValue) => {
+    const hasPendingValue = pendingValueRef.current !== undefined;
+    if (animationFrameRef.current !== undefined) window.cancelAnimationFrame(animationFrameRef.current);
+    animationFrameRef.current = undefined;
+    pendingValueRef.current = undefined;
+    if (hasPendingValue) onValueChangeRef.current(value);
+  }, []);
+
+  return { schedule, flush };
+};
+
 /** 单个声明式预览字段的渲染属性 */
 export type PreviewControlFieldInputProps = {
   /** 字段定义 */
-  field: PreviewControlField;
+  field: PreviewStateControlField;
   /** 当前字段值 */
   value: PreviewControlValue;
   /** 是否使用适合浮层工具栏的紧凑尺寸
@@ -81,7 +127,9 @@ export const PreviewControlFieldInput: FC<PreviewControlFieldInputProps> = props
   } = props;
   const { t } = useTranslation();
   const [selectOpen, setSelectOpen] = useState(false);
+  const rangePointerActiveRef = useRef(false);
   useReleaseSelectDocumentLock(selectOpen);
+  const frameValueChange = useAnimationFrameValueChange(onValueChange);
 
   switch (field.kind) {
     case 'text':
@@ -169,7 +217,7 @@ export const PreviewControlFieldInput: FC<PreviewControlFieldInputProps> = props
             aria-label={`${field.label} picker`}
             value={colorValue}
             className={cn('h-9 w-12 shrink-0 p-1', compact && 'h-7 w-8')}
-            onChange={event => onValueChange(event.currentTarget.value)}
+            onChange={event => frameValueChange.schedule(event.currentTarget.value)}
           />
           <Input
             type="text"
@@ -193,9 +241,20 @@ export const PreviewControlFieldInput: FC<PreviewControlFieldInputProps> = props
             min={field.min}
             max={field.max}
             step={field.step}
+            onPointerDown={() => {
+              rangePointerActiveRef.current = true;
+            }}
+            onPointerCancel={() => {
+              rangePointerActiveRef.current = false;
+            }}
             onValueChange={nextValues => {
               onRangePlaybackStop?.();
-              onValueChange(nextValues[0]);
+              if (rangePointerActiveRef.current) frameValueChange.schedule(nextValues[0]);
+              else onValueChange(nextValues[0]);
+            }}
+            onValueCommit={nextValues => {
+              frameValueChange.flush(nextValues[0]);
+              rangePointerActiveRef.current = false;
             }}
           />
           <span className="w-6 shrink-0 text-right text-xs tabular-nums text-muted-foreground">{rangeValue}</span>

@@ -2,39 +2,29 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
+import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+
 /** Table 类型共享的结构解析、呈现、布局与下沉管线 */
 const Demo: FC = () => (
   <Layout width={740} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node
-      position={[-55, 0]}
-      minimumSize={{ width: 580, height: 74 }}
-      stroke="lightgray"
-      fill="lightgray"
-      fillOpacity={0.04}
-      dashPattern={[4, 3]}
-      cornerRadius={4}
-    >
-      {' '}
-    </Node>
-    <Node position={[-280, -27]} stroke="none" fill="none" padding={0} textColor="gray" font={{ size: 12 }}>
-      @retikz/table
-    </Node>
-
-    <Node id="spec" position={[-280, 0]} stroke="darkorange" fill="darkorange" fillOpacity={0.08} cornerRadius={4}>
-      TableSpec
-    </Node>
-    <Node id="structure" position={[-175, 0]} stroke="gray" fill="lightgray" fillOpacity={0.16} cornerRadius={4}>
-      Structure
-    </Node>
-    <Node id="semantic" position={[-55, 0]} stroke="gray" fill="lightgray" fillOpacity={0.16} cornerRadius={4}>
-      Semantic model
-    </Node>
-    <Node id="presentation" position={[75, 0]} stroke="gray" fill="lightgray" fillOpacity={0.16} cornerRadius={4}>
-      Presentation
-    </Node>
-    <Node id="layout" position={[180, 0]} stroke="gray" fill="lightgray" fillOpacity={0.16} cornerRadius={4}>
-      Layout
-    </Node>
+    <LogicFrame id="table-group">
+      <LogicFrameTitle>@retikz/table</LogicFrameTitle>
+      <Node id="spec" position={[-280, 0]} stroke="darkorange" fill="darkorange" fillOpacity={0.08} cornerRadius={4}>
+        TableSpec
+      </Node>
+      <Node id="structure" position={[-175, 0]} stroke="gray" fill="lightgray" fillOpacity={0.16} cornerRadius={4}>
+        Structure
+      </Node>
+      <Node id="semantic" position={[-55, 0]} stroke="gray" fill="lightgray" fillOpacity={0.16} cornerRadius={4}>
+        Semantic model
+      </Node>
+      <Node id="presentation" position={[75, 0]} stroke="gray" fill="lightgray" fillOpacity={0.16} cornerRadius={4}>
+        Presentation
+      </Node>
+      <Node id="layout" position={[180, 0]} stroke="gray" fill="lightgray" fillOpacity={0.16} cornerRadius={4}>
+        Layout
+      </Node>
+    </LogicFrame>
     <Node id="core" position={[305, -24]} stroke="dodgerblue" fill="dodgerblue" fillOpacity={0.08} cornerRadius={4}>
       Core IR
     </Node>

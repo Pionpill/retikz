@@ -26,7 +26,7 @@ export const ModuleNav: FC = () => {
           const active = moduleId === m.id;
           return (
             <NavigationMenuItem key={m.id}>
-              <NavigationMenuLink active={active} asChild>
+              <NavigationMenuLink active={active} asChild className={active ? 'text-foreground' : undefined}>
                 <Link to={`/${m.id}`}>{t(m.label)}</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
