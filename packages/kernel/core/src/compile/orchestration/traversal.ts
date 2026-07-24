@@ -8,6 +8,7 @@ import type {
   IRTransform,
 } from '../../schemas';
 import type { NodeLayout } from '../node';
+import type { CompileWarningCodeValue } from '../warning';
 import type { CompileContext } from './context';
 import type { InternalScenePrimitive } from './primitive';
 import type {
@@ -40,6 +41,7 @@ import {
   layoutNode,
   outerRectOf,
 } from '../node';
+import { resolveNodeTextColor } from '../node/text-color';
 import { emitPathPrimitive, emitRibbonPrimitive, refPointOfTarget } from '../path';
 import { resolvePosition } from '../position';
 import { parseProviderPayload } from '../provider-payload';
@@ -180,10 +182,14 @@ export const compileChildrenToPrimitives = (
     const { scopeChain, primitiveSink, locatorPrefix, layoutSink, styleStack } = frame;
     const nodeIrPath = `${locatorPrefix}children[${index}].node`;
     const effectiveNode = resolveNodeStyle(child, styleStack);
+    const labelDefault = resolveLabelDefault(styleStack);
+    const warn = (code: CompileWarningCodeValue, message: string): void =>
+      runtime.context.onWarn({ code, message, path: nodeIrPath });
+    const resolvedNode = resolveNodeTextColor(effectiveNode, labelDefault, warn);
     const layout = layoutNode(
       {
-        ...effectiveNode,
-        animations: filterAnimations(effectiveNode.animations, {
+        ...resolvedNode,
+        animations: filterAnimations(resolvedNode.animations, {
           target: 'element',
           onWarn: runtime.context.onWarn,
           irPath: nodeIrPath,
@@ -196,12 +202,12 @@ export const compileChildrenToPrimitives = (
         labelDistance: runtime.context.labelDistance,
         rootFontSize: runtime.context.rootFontSize,
         scopeChain,
-        labelDefault: resolveLabelDefault(styleStack),
+        labelDefault,
         shapes: runtime.context.shapes,
         boundaries: runtime.context.boundaries,
         resolveBetweenGlobal: refPointOfTarget,
         irPath: nodeIrPath,
-        warn: (code, message) => runtime.context.onWarn({ code, message, path: nodeIrPath }),
+        warn,
         texLowering: {
           lowerTex: runtime.context.lowerTex,
           warn: (code, message) => runtime.context.onWarn({ code, message, path: nodeIrPath }),

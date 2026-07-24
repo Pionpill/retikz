@@ -28,4 +28,5 @@ export const CompileWarningCode = {
   TexTextConflict: 'TEX_TEXT_CONFLICT',
   TextTexParseError: 'TEXT_TEX_PARSE_ERROR',
   BoundaryTightFallback: 'BOUNDARY_TIGHT_FALLBACK',
+  TextAutoContrastUnresolved: 'TEXT_AUTO_CONTRAST_UNRESOLVED',
 } as const;

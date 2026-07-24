@@ -17,6 +17,14 @@ description: Named members placed in a scene — Node and Coordinate
 
 </Comparison>
 
+<span id="node-text-color"></span>
+
+## Node text color keyword
+
+`NodeSchema.textColor` remains a regular string contract. `NodeTextColor.Contrast` is a reserved Node-host keyword that also works in the schema-derived `Scope.nodeDefault.textColor`; it selects pure black or white from the final static opaque fill.
+
+Core parses only deterministic named, hex, `rgb()`, and `hsl()` colors; it never reads DOM or renderer state. Translucent / missing fills, gradients, patterns, images, and dynamic CSS colors use the fixed `currentColor` fallback and emit `TEXT_AUTO_CONTRAST_UNRESOLVED`.
+
 <span id="shaperef"></span>
 
 ## ShapeRef

@@ -109,8 +109,11 @@ Current built-in codes (the machine-readable `CompileWarningCode` constant is pu
 | `TEX_TEXT_CONFLICT`             | Reserved diagnostic for a text / TeX payload conflict; the current compile path does not emit it                                    |
 | `TEXT_TEX_PARSE_ERROR`          | With TeX enabled, a string has an unbalanced `$` / `$$`; the trailing fragment stays literal                                        |
 | `BOUNDARY_TIGHT_FALLBACK`       | A shape lacks the requested tight / ink connection envelope; compile falls back to visual bounds                                    |
+| `TEXT_AUTO_CONTRAST_UNRESOLVED` | A Node auto-contrast keyword has no static opaque fill; fixed `currentColor` is used and compilation continues                      |
 
 Most warnings do not stop compilation. But when a coordinate's / node's own position cannot be resolved, compile **throws directly without emitting a warning** (deliberately: warning then throwing would leave the collector with a dead warning for a Scene that never gets produced), because it is a "position-defining" entity that breaks the contract for later references.
+
+For an auto-contrast warning, `path` is the current Node locator and `message` includes the unresolved fill, reason, and fixed fallback. A Node emits at most one warning even when many body runs, formulas, labels, or pins consume its color. No resolution or warning occurs when no consumer inherits the Node text color.
 
 ## Output
 

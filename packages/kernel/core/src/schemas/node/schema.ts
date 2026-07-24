@@ -228,7 +228,9 @@ export const NodeSchema = z
     scale: AxisScaleValueSchema.optional().describe(
       'Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.',
     ),
-    textColor: CssColorSchema.optional().describe('Text label color; any CSS color. Defaults to `currentColor`.'),
+    textColor: CssColorSchema.optional().describe(
+      'Node text color. The reserved `contrast` keyword selects black or white from a static opaque fill. Defaults to `currentColor`.',
+    ),
     padding: BoxSpacingValueSchema.optional().describe(
       'Inner spacing from content to border. Number applies to all sides; object fields resolve as side > axis > default.',
     ),

@@ -71,4 +71,10 @@ describe('canvas drawText fill 基线', () => {
     drawScene(ctx, textScene('#00ff00'), {});
     expect(captured).toEqual(['#00ff00']);
   });
+
+  it.each(['#000000', '#ffffff'])('Core 已解析的 auto-contrast 颜色 %s 原样进入 Canvas', fill => {
+    const captured: Array<string> = [];
+    drawScene(makeRecordingCtx(captured), textScene(fill), {});
+    expect(captured).toEqual([fill]);
+  });
 });

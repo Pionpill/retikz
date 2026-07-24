@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import type { CompositeDefinition } from '@retikz/core';
 
-import { CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, NodeTextColor } from '@retikz/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
@@ -87,6 +87,23 @@ describe('@retikz/vanilla plain spec', () => {
       ...config,
       children: [node('inside', { position: [0, 0] })],
     });
+  });
+
+  it('node/scope helper 原样透传 auto-contrast textColor，并由 Core 按每个 Node 的 fill 解析', () => {
+    const spec = figure([
+      scope({ nodeDefault: { textColor: NodeTextColor.Contrast } }, [
+        node('light', { position: [-30, 0], text: 'light', fill: '#ffffff' }),
+        node('dark', { position: [30, 0], text: 'dark', fill: '#000000' }),
+      ]),
+    ]);
+
+    expect(spec.children?.[0]).toMatchObject({
+      type: 'scope',
+      nodeDefault: { textColor: NodeTextColor.Contrast },
+    });
+    const svg = renderToSvgString(spec);
+    expect(svg).toContain('fill="#000000"');
+    expect(svg).toContain('fill="#ffffff"');
   });
 
   afterEach(() => {

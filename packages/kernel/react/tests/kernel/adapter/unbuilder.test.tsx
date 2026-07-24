@@ -1,7 +1,7 @@
 import type { IRChild, IRPathBase, IRScene } from '@retikz/core';
 import type { ReactElement } from 'react';
 
-import { CompositeBaseSchema, CURRENT_IR_VERSION, defineComposite, lowerIRToKernel } from '@retikz/core';
+import { CompositeBaseSchema, CURRENT_IR_VERSION, defineComposite, lowerIRToKernel, NodeTextColor } from '@retikz/core';
 import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -934,13 +934,25 @@ describe('convertIRToReactNode', () => {
             stroke: 'red',
             strokeWidth: 2,
             opacity: 0.8,
-            nodeDefault: { shape: 'circle', fill: 'lightblue', font: { size: 12 } },
+            nodeDefault: {
+              shape: 'circle',
+              fill: 'lightblue',
+              textColor: NodeTextColor.Contrast,
+              font: { size: 12 },
+            },
             pathDefault: { stroke: 'green', dashPattern: [4, 2] },
             labelDefault: { textColor: 'gray', font: { size: 10 } },
             arrowDefault: { shape: 'stealth', scale: 1.5 },
             resetStyle: ['label', 'arrow'],
             children: [
-              { type: 'node', id: 'A', position: [0, 0], text: 'A', color: 'navy' },
+              {
+                type: 'node',
+                id: 'A',
+                position: [0, 0],
+                text: 'A',
+                color: 'navy',
+                textColor: NodeTextColor.Contrast,
+              },
               {
                 type: 'path',
                 color: 'crimson',

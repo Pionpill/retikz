@@ -109,8 +109,11 @@ type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
 | `TEX_TEXT_CONFLICT`             | 为 text / TeX 载荷冲突保留的诊断码；当前 compile 路径不发出                                 |
 | `TEXT_TEX_PARSE_ERROR`          | 启用 TeX 时字符串含未闭合 `$` / `$$`；保留尾部字面文本                                      |
 | `BOUNDARY_TIGHT_FALLBACK`       | shape 未提供请求的 tight / ink 连接包络；回退到 visual bounds                               |
+| `TEXT_AUTO_CONTRAST_UNRESOLVED` | Node 自动对比色无法得到静态不透明 fill；使用固定 `currentColor`，Node 继续编译              |
 
 大多数 warning 不会中断编译。但 coordinate / node 自身位置无法解析时**直接抛错、不发 warning**（源码刻意如此：warn 后立即 throw 会让收集器记录一条永不产出 Scene 的死告警），因为它属于「定义位置」的实体，会破坏后续引用合同。
+
+自动对比色 warning 的 `path` 固定为当前 Node locator，`message` 会包含无法解析的 fill、原因与固定 fallback。同一 Node 即使有多段正文、公式、label 或 pin，也最多发一次；没有消费者继承 Node 文字颜色时不会解析关键字或发 warning。
 
 ## 输出
 

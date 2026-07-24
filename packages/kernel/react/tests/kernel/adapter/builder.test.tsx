@@ -1,4 +1,4 @@
-import { compileToScene } from '@retikz/core';
+import { compileToScene, NodeTextColor } from '@retikz/core';
 import { Fragment } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -965,6 +965,21 @@ after`;
         </Node>,
       );
       expect(ir.children[0]).toMatchObject({ type: 'node', cornerRadius: 8 });
+    });
+
+    it('<Node>/<Scope nodeDefault> 透传 auto-contrast textColor 关键字', () => {
+      const ir = buildIR(
+        <Scope nodeDefault={{ textColor: NodeTextColor.Contrast }}>
+          <Node id="A" position={[0, 0]} textColor={NodeTextColor.Contrast}>
+            A
+          </Node>
+        </Scope>,
+      );
+      expect(ir.children[0]).toMatchObject({
+        type: 'scope',
+        nodeDefault: { textColor: NodeTextColor.Contrast },
+        children: [{ type: 'node', textColor: NodeTextColor.Contrast }],
+      });
     });
 
     it('<Node label> 透传 inside placement 与 boundary position', () => {
