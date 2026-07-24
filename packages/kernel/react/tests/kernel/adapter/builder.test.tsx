@@ -13,6 +13,28 @@ import { Draw } from '../../../src/sugar';
 import { EdgeLabel } from '../../../src/sugar';
 
 describe('buildIR', () => {
+  it('构建 axis-line Step 并保留 axis / target / label', () => {
+    const out = buildIR(
+      <Path>
+        <Step kind="move" to={[0, 0]} />
+        <Step kind="axis-line" axis="horizontal" to="target.center" label={{ text: 'x' }} />
+      </Path>,
+    );
+    expect(out.children[0]).toMatchObject({
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        {
+          type: 'step',
+          kind: 'axis-line',
+          axis: 'horizontal',
+          to: { id: 'target', anchor: 'center' },
+          label: { text: 'x' },
+        },
+      ],
+    });
+  });
+
   it('单个 <Node> → IR scene', () => {
     const ir = buildIR(
       <Node id="A" position={[10, 10]}>
@@ -814,6 +836,21 @@ after`;
       );
       const steps = (ir.children[0] as { children: Array<{ label?: { text: string } }> }).children;
       expect(steps.slice(1).map(s => s.label?.text)).toEqual(['f', 'q', 'c', 'b', 'a', 'o', 'e']);
+    });
+
+    it('三段 fold 保留 via / fraction / target / label', () => {
+      const ir = buildIR(
+        <Path>
+          <Step kind="move" to="A" />
+          <Step kind="fold" via="-|-" fraction={0.3} to="B" label={{ text: 'mid' }} />
+        </Path>,
+      );
+      expect(ir.children[0]).toMatchObject({
+        children: [
+          { kind: 'move', to: { id: 'A' } },
+          { kind: 'fold', via: '-|-', fraction: 0.3, to: { id: 'B' }, label: { text: 'mid' } },
+        ],
+      });
     });
 
     it('move / cycle 上的 <EdgeLabel> 静默忽略（schema 不允许）', () => {

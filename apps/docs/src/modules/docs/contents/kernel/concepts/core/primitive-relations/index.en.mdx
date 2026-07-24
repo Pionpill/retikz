@@ -34,6 +34,8 @@ Once an anchor is specified, the endpoint no longer reads the adjacent step's di
 
 The mental rule is simply “omit anchor for dynamic, provide anchor for fixed.” See [Path Schema · Target](/kernel/reference/schema/path#target) for the complete target union, `offset`, angles, and edge proportions; see [Node Geometry](/kernel/components/node/overview) and [Shapes](/kernel/components/shapes) for standard anchors, boundaries, and shape-specific names.
 
+`axis-line` is an intentional exception: it takes the target center or explicit anchor, then projects it onto one local axis, so an omitted anchor does not dynamically attach on the target side. The source still clips normally toward the projected endpoint; see [Step · Orthogonal connections](/kernel/components/draw/step#orthogonal-connections).
+
 ## Lines and routing
 
 Endpoint mode decides where a connection lands; path steps decide how it travels between endpoints. The same pair below uses a straight line, curve, and orthogonal fold:

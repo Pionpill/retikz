@@ -59,6 +59,33 @@ const createCanvasContext = (): CanvasRenderingContext2D => {
 };
 
 describe('@retikz/vanilla plain spec', () => {
+  it('path helper 共享 parseWay 的 axis-line lowering', () => {
+    expect(
+      path('axis', {
+        way: [[0, 0], { horizontalTo: 'target.center' }, { verticalTo: [40, 60] }],
+      }),
+    ).toMatchObject({
+      type: 'path',
+      id: 'axis',
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'axis-line', axis: 'horizontal', to: { id: 'target', anchor: 'center' } },
+        { type: 'step', kind: 'axis-line', axis: 'vertical', to: [40, 60] },
+      ],
+    });
+  });
+
+  it('path helper 共享 parseWay 的三段 fold lowering', () => {
+    expect(path('fold', { way: ['A', { via: '|-|', fraction: 0.25 }, 'B'] })).toMatchObject({
+      type: 'path',
+      id: 'fold',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'A' } },
+        { type: 'step', kind: 'fold', via: '|-|', fraction: 0.25, to: { id: 'B' } },
+      ],
+    });
+  });
+
   it('node helper 透传 anchor-to-anchor position', () => {
     const position = {
       kind: 'anchor' as const,

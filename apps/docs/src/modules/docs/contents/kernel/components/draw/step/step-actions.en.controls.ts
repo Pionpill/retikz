@@ -32,7 +32,19 @@ export const stepActionsEnControls = definePreviewControls({
           options: [
             { value: '-|', label: 'Horizontal then vertical' },
             { value: '|-', label: 'Vertical then horizontal' },
+            { value: '-|-', label: 'Horizontal → vertical → horizontal' },
+            { value: '|-|', label: 'Vertical → horizontal → vertical' },
           ],
+        },
+        {
+          kind: 'range',
+          id: 'fraction',
+          label: 'fraction',
+          defaultValue: 0.5,
+          min: 0,
+          max: 1,
+          step: 0.05,
+          visibleWhen: { controlId: 'via', oneOf: ['-|-', '|-|'] },
         },
         {
           kind: 'range',
@@ -52,6 +64,6 @@ export const stepActionsEnControls = definePreviewControls({
 /** Stable documentation contract for the current controls */
 export const previewControlContract = {
   controls: stepActionsEnControls,
-  canonicalValues: { actionKind: 'line', via: '-|', cornerRadius: 12 },
-  relatedApis: ['Step.kind', 'Step.to'],
+  canonicalValues: { actionKind: 'line', via: '-|', fraction: 0.5, cornerRadius: 12 },
+  relatedApis: ['Step.kind', 'Step.via', 'Step.fraction', 'Step.to'],
 } satisfies PreviewControlContract;

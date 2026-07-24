@@ -10,6 +10,8 @@ import type {
 } from './constants';
 import type {
   ArcStepSchema,
+  AxisLineStepSchema,
+  AxisLineTargetSchema,
   BendStepSchema,
   CirclePathStepSchema,
   ControlPointSchema,
@@ -60,6 +62,12 @@ export type IRMoveStep = z.infer<typeof MoveStepSchema>;
 /** Line step：从游标到目标画直线 */
 export type IRLineStep = z.infer<typeof LineStepSchema>;
 
+/** 单轴连接目标：笛卡尔坐标或节点目标 */
+export type IRAxisLineTarget = z.infer<typeof AxisLineTargetSchema>;
+
+/** Axis-line step：投影目标后只沿当前 host 的一个局部轴画直线 */
+export type IRAxisLineStep = z.infer<typeof AxisLineStepSchema>;
+
 /** Fold step：折角段，经一个直角中间点（TikZ `-|`/`|-`） */
 export type IRFoldStep = z.infer<typeof FoldStepSchema>;
 
@@ -94,8 +102,8 @@ export type IRSmoothStep = z.infer<typeof SmoothStepSchema>;
 export type IRGeneratorStep = z.infer<typeof GeneratorStepSchema>;
 
 /**
- * 路径上的一个动作（十三种 kind）
- * @description 十三种 kind：move / line / fold（折角）/ cycle / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle（矩形）/ smooth（过点平滑曲线）/ generator（注册生成器）；`to` 字段支持 relative / relativeAccumulate 变体；除 move/cycle/rectangle/smooth 外可挂 `label?` 边标注（smooth 用 `points` 而非 `to`，自身亦可挂 `label?`）
+ * 路径上的一个动作（十四种 kind）
+ * @description 十四种 kind：move / line / axis-line（单轴投影连接）/ fold（折角）/ cycle / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle（矩形）/ smooth（过点平滑曲线）/ generator（注册生成器）；普通 `to` 字段支持 relative / relativeAccumulate 变体，axis-line 的 `to` 仅支持笛卡尔坐标 / NodeTarget；除 move/cycle/rectangle/smooth 外可挂 `label?` 边标注（smooth 用 `points` 而非 `to`，自身亦可挂 `label?`）
  */
 export type IRStep = z.infer<typeof StepSchema>;
 

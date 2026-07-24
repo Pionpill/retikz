@@ -1129,6 +1129,34 @@ describe('label.position adversarial：构造让实现挂的输入', () => {
     expect(t.x).toBe(40);
     expect(visualBottom(t)).toBeCloseTo(0 - 4, 2);
   });
+  it.each([
+    { position: 1 / 3, x: 30, bottom: -4 },
+    { position: 2 / 3, x: 30, bottom: 56 },
+  ])('三段 fold position=$position 落在分界转折点', ({ position, x, bottom }) => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            {
+              type: 'step',
+              kind: 'fold',
+              via: '-|-',
+              fraction: 0.3,
+              to: [100, 60],
+              label: { text: 'F', position },
+            },
+          ],
+        },
+      ],
+    };
+    const label = findTextPrims(compileToScene(ir).primitives)[0];
+    expect(label.x).toBeCloseTo(x, 6);
+    expect(visualBottom(label)).toBeCloseTo(bottom, 2);
+  });
   it('adv_line_keyword_vs_number_consistency：每个 keyword 与对应数值 t 落点完全相同', () => {
     const pairs: Array<[string, number]> = [
       ['at-start', 0],

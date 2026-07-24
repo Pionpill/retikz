@@ -23,6 +23,24 @@ import { Draw } from '@retikz/react';
 
 <ComponentPreview files="draw-basic" size="xs" />
 
+### Orthogonal connections
+
+Draw provides three orthogonal connection choices in `way`. Single-axis forms project to only one target coordinate and do not necessarily reach the target; fold forms connect to it completely.
+
+<ComponentPreview
+  files="draw-orthogonal"
+  size="sm"
+  caption="Switch connection types and follow the blue path; the gray dotted line only hints at the direct direction between the nodes."
+/>
+
+| Need                | `way` form                                                              | Behavior                                                        |
+| ------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Single-axis project | `{ horizontalTo: 'b' }`<br />`{ verticalTo: 'b' }`                      | Take only target x or y along the current Scope's local axes    |
+| One corner          | `'-\|'`<br />`'\|-'`                                                    | Reach the next target through one orthogonal corner             |
+| Middle leg          | `{ via: '-\|-', fraction: 0.5 }`<br />`{ via: '\|-\|', fraction: 0.5 }` | Use two orthogonal corners; `fraction` positions the middle leg |
+
+See [Way](/kernel/components/draw/way#single-axis-connections) for syntax constraints and interactive examples, and [Step](/kernel/components/draw/step#orthogonal-connections) for the underlying path actions.
+
 ### Curves
 
 Draw has two curve families: `curve` / `cubic` / `bend` connect the previous target to the next target, while `arc` draws a circular arc around the previous point. In Bezier curves, control points are not necessarily points the curve passes through; they are handles that pull the curve's direction and amount of bend.

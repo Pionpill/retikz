@@ -61,6 +61,29 @@ const toElements = (node: ReturnType<typeof convertIRToReactNode>): Array<ReactE
 };
 
 describe('convertIRToReactNode', () => {
+  it('axis-line IR → React → IR 保留 axis / target / label', () => {
+    const input: IRScene = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            {
+              type: 'step',
+              kind: 'axis-line',
+              axis: 'vertical',
+              to: { id: 'target', anchor: 'left' },
+              label: { text: 'y' },
+            },
+          ],
+        },
+      ],
+    };
+    expect(buildIR(convertIRToReactNode(input))).toEqual(input);
+  });
+
   it('空 scene → 空数组', () => {
     const out = convertIRToReactNode(emptyScene);
     expect(toElements(out)).toHaveLength(0);
@@ -537,6 +560,24 @@ describe('convertIRToReactNode', () => {
               },
               { type: 'step', kind: 'circlePath', radius: 4, label: { text: 'O' } },
               { type: 'step', kind: 'ellipsePath', radius: { x: 6, y: 3 }, label: { text: 'E' } },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
+    it('三段 fold round-trip 保留显式 fraction 与省略状态', () => {
+      const ir: IRScene = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'fold', via: '-|-', fraction: 0.3, to: [20, 10] },
+              { type: 'step', kind: 'fold', via: '|-|', to: [40, 20] },
             ],
           },
         ],

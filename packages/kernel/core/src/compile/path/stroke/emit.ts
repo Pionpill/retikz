@@ -1,17 +1,21 @@
+import { isFinitePoint } from '@retikz/math';
+
 import type { ScenePrimitive } from '../../../contract';
-import type { IRPathBase } from '../../../schemas';
+import type { IRAxisLineStep, IRPathBase, IRPosition, IRTarget } from '../../../schemas';
 import type { NamespaceStack } from '../../namespace';
 import type { PaintResolver } from '../../resource';
 import type { TextMeasurer } from '../../text';
 import type { PathEmitOptions, PathPrimitiveEmitResult } from '../types';
 
 import { resolveArrowRegistry } from '../../../providers';
+import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
 import { CompileWarningCode } from '../../constants';
 import { fallbackMeasurer } from '../../text';
 import { normalizePathSteps } from '../host/relative';
 import { resolvePathBaseProps } from '../host/resolve';
+import { localPointOfTarget } from '../host/target';
 import { createPathCommandEmitter } from './commands';
-import { createStrokeCursor } from './cursor';
+import { createStrokeCursor, isStrokeTargetStep } from './cursor';
 import { emitInlineMarkPrimitives, pathEndpointArrowSpecs, resolvePathEndpointDecorations } from './decorations';
 import { assertArrowCanInheritStroke } from './marks';
 import { wrapPathPrimitiveOutput } from './output';
@@ -87,8 +91,107 @@ export const emitPathPrimitive = (
   for (let i = 0; i < steps.length; i++) {
     cursor.advance(i);
 
-    const step = steps[i];
+    let step = steps[i];
+    const originalStep = path.children[i];
     currentStepKind = step.kind;
+
+    if (
+      cursor.relativeBaseline &&
+      isStrokeTargetStep(step) &&
+      'to' in originalStep &&
+      (isRelativeTargetLike(originalStep.to) || isRelativeAccumulateTargetLike(originalStep.to))
+    ) {
+      const offset = isRelativeTargetLike(originalStep.to)
+        ? originalStep.to.relative
+        : originalStep.to.relativeAccumulate;
+      const resolved: IRPosition = [cursor.relativeBaseline[0] + offset[0], cursor.relativeBaseline[1] + offset[1]];
+      if (!isFinitePoint(resolved)) {
+        throw new Error('Relative target produced a non-finite endpoint.');
+      }
+      const resolvedStep = { ...step, to: resolved };
+      cursor.setTargetAt(i, resolvedStep, resolved);
+      step = resolvedStep;
+      if (isRelativeAccumulateTargetLike(originalStep.to)) {
+        cursor.relativeBaseline = resolved;
+      }
+    }
+    if (
+      cursor.relativeBaseline &&
+      isStrokeTargetStep(step) &&
+      step.kind !== 'axis-line' &&
+      'to' in originalStep &&
+      !isRelativeTargetLike(originalStep.to) &&
+      !isRelativeAccumulateTargetLike(originalStep.to)
+    ) {
+      const absoluteAnchor = cursor.anchorAt(i);
+      if (absoluteAnchor) cursor.relativeBaseline = absoluteAnchor;
+    }
+    if (
+      cursor.relativeBaseline &&
+      step.kind === 'generator' &&
+      originalStep.kind === 'generator' &&
+      originalStep.to !== undefined
+    ) {
+      let generatorTarget: IRPosition | null;
+      let updatesBaseline = true;
+      if (isRelativeTargetLike(originalStep.to)) {
+        generatorTarget = [
+          cursor.relativeBaseline[0] + originalStep.to.relative[0],
+          cursor.relativeBaseline[1] + originalStep.to.relative[1],
+        ];
+        updatesBaseline = false;
+      } else if (isRelativeAccumulateTargetLike(originalStep.to)) {
+        generatorTarget = [
+          cursor.relativeBaseline[0] + originalStep.to.relativeAccumulate[0],
+          cursor.relativeBaseline[1] + originalStep.to.relativeAccumulate[1],
+        ];
+      } else {
+        generatorTarget = localPointOfTarget(originalStep.to, namespaceStack, scopeChain);
+      }
+      if (generatorTarget) {
+        if (!isFinitePoint(generatorTarget)) {
+          throw new Error('Generator target produced a non-finite endpoint.');
+        }
+        step = { ...step, to: generatorTarget };
+        if (updatesBaseline) cursor.relativeBaseline = generatorTarget;
+      }
+    }
+    if (cursor.relativeBaseline && step.kind === 'smooth' && originalStep.kind === 'smooth') {
+      let smoothBaseline: IRPosition = cursor.relativeBaseline;
+      const points: Array<IRTarget> = [];
+      for (const originalPoint of originalStep.points) {
+        if (isRelativeTargetLike(originalPoint)) {
+          const resolved: IRPosition = [
+            smoothBaseline[0] + originalPoint.relative[0],
+            smoothBaseline[1] + originalPoint.relative[1],
+          ];
+          if (!isFinitePoint(resolved)) throw new Error('Smooth relative target produced a non-finite endpoint.');
+          points.push(resolved);
+          continue;
+        }
+        if (isRelativeAccumulateTargetLike(originalPoint)) {
+          const resolved: IRPosition = [
+            smoothBaseline[0] + originalPoint.relativeAccumulate[0],
+            smoothBaseline[1] + originalPoint.relativeAccumulate[1],
+          ];
+          if (!isFinitePoint(resolved)) {
+            throw new Error('Smooth relativeAccumulate target produced a non-finite endpoint.');
+          }
+          points.push(resolved);
+          smoothBaseline = resolved;
+          continue;
+        }
+        const resolved = localPointOfTarget(originalPoint, namespaceStack, scopeChain);
+        if (!resolved) {
+          points.push(originalPoint);
+          continue;
+        }
+        points.push(resolved);
+        smoothBaseline = resolved;
+      }
+      step = { ...step, points };
+      cursor.relativeBaseline = smoothBaseline;
+    }
 
     // move 自身不绘制；其 to 仅供下个绘制段的 findPrev 引用。
     // 显式 move 开启新游标，必须切断 arc/circle/ellipse/rectangle/generator 留给下一绘制段的 penOverride。
@@ -110,6 +213,14 @@ export const emitPathPrimitive = (
         sampling,
       });
       if (!lowered) return null;
+      if (
+        cursor.relativeBaseline &&
+        step.kind === 'arc' &&
+        step.center === undefined &&
+        typeof step.radius === 'number'
+      ) {
+        cursor.relativeBaseline = cursor.getPenOverride() ?? cursor.relativeBaseline;
+      }
       continue;
     }
 
@@ -121,6 +232,23 @@ export const emitPathPrimitive = (
         `children[${i}]`,
       );
       return null;
+    }
+
+    if (step.kind === 'axis-line' && originalStep.kind === 'axis-line') {
+      const targetReference = localPointOfTarget(originalStep.to, namespaceStack, scopeChain);
+      if (!targetReference) return null;
+      const currentReference = cursor.getPenOverride() ?? prev.anchor;
+      const projected: IRPosition =
+        step.axis === 'horizontal'
+          ? [targetReference[0], currentReference[1]]
+          : [currentReference[0], targetReference[1]];
+      if (!isFinitePoint(projected)) {
+        throw new Error('Axis-line produced a non-finite projected endpoint.');
+      }
+      const projectedStep: IRAxisLineStep = { ...step, to: projected };
+      cursor.setTargetAt(i, projectedStep, projected);
+      step = projectedStep;
+      cursor.relativeBaseline = projected;
     }
 
     const currAnchor = cursor.anchorAt(i);

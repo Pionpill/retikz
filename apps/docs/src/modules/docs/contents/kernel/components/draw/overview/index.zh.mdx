@@ -23,6 +23,24 @@ import { Draw } from '@retikz/react';
 
 <ComponentPreview files="draw-basic" size="xs" />
 
+### 正交连接
+
+Draw 在 `way` 中提供三类正交连接。单轴写法只投影到目标的一个坐标，不保证到达目标；折角写法则会完整连接目标。
+
+<ComponentPreview
+  files="draw-orthogonal"
+  size="sm"
+  caption="切换连接方式并观察蓝色实际路径；灰色 dotted 线只提示两个节点的直接方向。"
+/>
+
+| 需求     | `way` 写法                                                              | 行为                                            |
+| -------- | ----------------------------------------------------------------------- | ----------------------------------------------- |
+| 单轴投影 | `{ horizontalTo: 'b' }`<br />`{ verticalTo: 'b' }`                      | 只取目标 x 或 y，沿当前 Scope 的局部坐标轴连接  |
+| 一次转折 | `'-\|'`<br />`'\|-'`                                                    | 经过一个正交转折点，完整连接下一项目标          |
+| 中间转折 | `{ via: '-\|-', fraction: 0.5 }`<br />`{ via: '\|-\|', fraction: 0.5 }` | 经过两个正交转折点；`fraction` 调整中间腿的位置 |
+
+语法约束和交互示例见 [Way](/kernel/components/draw/way#单轴连接)，对应的底层路径动作见 [Step](/kernel/components/draw/step#正交连接)。
+
 ### 曲线
 
 Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标点，`arc` 则以上一个点为圆心画一段圆弧。贝塞尔曲线里的控制点不是曲线必须经过的点，而是用来"拉动"曲线方向和弯曲程度的手柄。

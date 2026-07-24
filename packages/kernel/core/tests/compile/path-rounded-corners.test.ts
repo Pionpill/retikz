@@ -221,6 +221,19 @@ describe('roundedCorners 交互', () => {
     expect(arcs).toHaveLength(1);
   });
 
+  it('三段 fold 的两个内部转折都保持尖角，外围 line-line 圆角不回归', () => {
+    const ir = pathWith(
+      { roundedCorners: 1 },
+      { type: 'step', kind: 'move', to: [0, 0] },
+      { type: 'step', kind: 'line', to: [10, 0] },
+      { type: 'step', kind: 'line', to: [10, 10] },
+      { type: 'step', kind: 'fold', via: '-|-', fraction: 0.4, to: [30, 30] },
+    );
+    const commands = findPathPrim(compileToScene(ir, silent).primitives).commands;
+    expect(commands.filter(command => command.kind === 'arc')).toHaveLength(1);
+    expect(commands.filter(command => command.kind === 'line')).toHaveLength(5);
+  });
+
   it('roundedCorners + marks → mark 按倒角后新弧长重定位（倒角与尖角下 mark 落点/产物不同）', () => {
     const steps = [
       { type: 'step', kind: 'move', to: [0, 0] },

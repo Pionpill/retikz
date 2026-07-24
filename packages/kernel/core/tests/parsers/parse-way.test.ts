@@ -9,6 +9,45 @@ import { DrawWay, parseWay } from '../../src/parsers/way';
 const toOf = (s: IRStep): IRTarget | undefined => ('to' in s ? s.to : undefined);
 
 describe('parseWay', () => {
+  describe('单轴连接算子', () => {
+    it('horizontalTo / verticalTo 降级为 axis-line step', () => {
+      expect(parseWay([[0, 0], { horizontalTo: 'target.center' }, { verticalTo: [40, 60] }] as WayDSL)).toEqual([
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'axis-line', axis: 'horizontal', to: { id: 'target', anchor: 'center' } },
+        { type: 'step', kind: 'axis-line', axis: 'vertical', to: [40, 60] },
+      ]);
+    });
+
+    it.each([
+      { horizontalTo: '+10,0' },
+      { verticalTo: '++0,10' },
+      { horizontalTo: { angle: 30, radius: 10 } },
+      { verticalTo: { relative: [0, 10] } },
+      { horizontalTo: { relativeAccumulate: [10, 0] } },
+      {
+        verticalTo: {
+          between: [
+            [0, 0],
+            [10, 10],
+          ],
+          fraction: 0.5,
+        },
+      },
+    ] as Array<Record<string, unknown>>)('拒绝收窄范围外的 target：%j', operator => {
+      expect(() => parseWay([[0, 0], operator] as WayDSL)).toThrow(/^parseWay:/);
+    });
+
+    it.each([
+      { horizontalTo: [10, 0], verticalTo: [0, 10] },
+      { horizontalTo: [10, 0], label: 'x' },
+      { verticalTo: [0, 10], curve: [5, 5] },
+      { horizontalTo: [10, 0], bend: 'left' },
+      { verticalTo: [0, 10], circle: { radius: 5 } },
+    ] as Array<Record<string, unknown>>)('拒绝含多个 operator 字段的对象：%j', operator => {
+      expect(() => parseWay([[0, 0], operator] as WayDSL)).toThrow(/multiple Way operators/);
+    });
+  });
+
   describe('基本形态', () => {
     it('两个节点 id 产出 [move, line]', () => {
       expect(parseWay(['A', 'B'])).toEqual([
@@ -122,6 +161,37 @@ describe('parseWay', () => {
   });
 
   describe('折角算子 (infix)', () => {
+    it.each(['-|-', '|-|'] as const)('三段裸算子 %s 使用默认 fraction', via => {
+      expect(parseWay(['A', via, 'B'])).toEqual([
+        { type: 'step', kind: 'move', to: { id: 'A' } },
+        { type: 'step', kind: 'fold', via, to: { id: 'B' } },
+      ]);
+    });
+
+    it('三段配置对象保留显式 fraction', () => {
+      expect(parseWay(['A', { via: '-|-', fraction: 0.25 }, 'B'])).toEqual([
+        { type: 'step', kind: 'move', to: { id: 'A' } },
+        { type: 'step', kind: 'fold', via: '-|-', fraction: 0.25, to: { id: 'B' } },
+      ]);
+    });
+
+    it.each([
+      { via: '-|', fraction: 0.25 },
+      { via: '-|-', fraction: -0.01 },
+      { via: '|-|', fraction: 1.01 },
+      { via: '-|-', fracton: 0.25 },
+      { via: '-|-', fraction: 0.25, unknown: true },
+      { via: 'diagonal', fraction: 0.25 },
+    ])('三段配置对象 strict fail-loud：%j', operator => {
+      expect(() => parseWay(['A', operator, 'B'] as WayDSL)).toThrow(/^parseWay:/);
+    });
+
+    it('三段配置对象参与多 operator 冲突检测', () => {
+      expect(() => parseWay(['A', { via: '-|-', fraction: 0.25, curve: [5, 5] }, 'B'] as WayDSL)).toThrow(
+        /multiple Way operators/,
+      );
+    });
+
     it("'-|' 在两个 target 之间产出 step 折角", () => {
       expect(parseWay(['A', '-|', 'B'])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },

@@ -17,7 +17,7 @@ import type {
 } from '@retikz/core';
 import type { ReactElement, ReactNode } from 'react';
 
-import { CURRENT_IR_VERSION, parsePathThickness, parseTargetSugar } from '@retikz/core';
+import { AxisLineTargetSchema, CURRENT_IR_VERSION, parsePathThickness, parseTargetSugar } from '@retikz/core';
 import { Children, createElement, Fragment, isValidElement } from 'react';
 
 import type { CoordinateProps } from '../components';
@@ -342,6 +342,18 @@ const resolveStepLabel = (props: LabelableStepProps): IRStepLabel | undefined =>
   return readEdgeLabel(props.children);
 };
 
+/** 解析并校验 axis-line 收窄 target */
+const parseAxisLineTarget = (target: Parameters<typeof parseTargetSugar>[0]) => {
+  const parsed = parseTargetSugar(target);
+  const result = AxisLineTargetSchema.safeParse(parsed);
+  if (!result.success) {
+    throw new Error('<Step kind="axis-line"> target must resolve to a Cartesian position or NodeTarget', {
+      cause: result.error,
+    });
+  }
+  return result.data;
+};
+
 /**
  * 扫描 <Path> children 收集 <Step> 序列
  * @description 至少 2 段（例外：单个自包含 rectangle step 自带两对角，可独立成 path）；首段不是 move 时强制改为 move；cycle/arc/circlePath/ellipsePath 首段降级到 (0,0)；
@@ -366,11 +378,35 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
     const label = kind === 'move' ? undefined : resolveStepLabel(props as LabelableStepProps);
     if (kind === 'fold') {
       const p = props as Extract<StepProps, { kind: 'fold' }>;
+      if (p.via === '-|-' || p.via === '|-|') {
+        const step: Extract<IRStep, { kind: 'fold' }> = {
+          type: 'step',
+          kind: 'fold',
+          via: p.via,
+          ...(p.fraction !== undefined && { fraction: p.fraction }),
+          to: parseTargetSugar(p.to),
+        };
+        if (label) step.label = label;
+        out.push(step);
+        return;
+      }
       const step: Extract<IRStep, { kind: 'fold' }> = {
         type: 'step',
         kind: 'fold',
         via: p.via,
         to: parseTargetSugar(p.to),
+      };
+      if (label) step.label = label;
+      out.push(step);
+      return;
+    }
+    if (kind === 'axis-line') {
+      const p = props as Extract<StepProps, { kind: 'axis-line' }>;
+      const step: Extract<IRStep, { kind: 'axis-line' }> = {
+        type: 'step',
+        kind: 'axis-line',
+        axis: p.axis,
+        to: parseAxisLineTarget(p.to),
       };
       if (label) step.label = label;
       out.push(step);

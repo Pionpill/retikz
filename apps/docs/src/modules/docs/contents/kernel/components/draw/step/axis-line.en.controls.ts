@@ -2,17 +2,34 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
-/** English property panel for the Way fold direction */
-export const wayFoldControls = definePreviewControls({
+/** English property panel for Step orthogonal connections */
+export const axisLineControls = definePreviewControls({
   presentation: 'panel',
-  title: 'Fold',
+  title: 'Orthogonal connections',
   sections: [
     {
-      label: 'Path',
+      label: 'Connection',
       controls: [
         {
           kind: 'select',
-          id: 'direction',
+          id: 'connection',
+          label: 'Connection type',
+          defaultValue: 'horizontal',
+          options: [
+            { value: 'horizontal', label: 'Horizontal axis' },
+            { value: 'vertical', label: 'Vertical axis' },
+            { value: 'fold', label: 'Fold connection' },
+          ],
+        },
+      ],
+    },
+    {
+      label: 'Fold',
+      visibleWhen: { controlId: 'connection', oneOf: ['fold'] },
+      controls: [
+        {
+          kind: 'select',
+          id: 'via',
           label: 'Fold direction',
           defaultValue: '-|',
           options: [
@@ -30,7 +47,7 @@ export const wayFoldControls = definePreviewControls({
           min: 0,
           max: 1,
           step: 0.05,
-          visibleWhen: { controlId: 'direction', oneOf: ['-|-', '|-|'] },
+          visibleWhen: { controlId: 'via', oneOf: ['-|-', '|-|'] },
         },
       ],
     },
@@ -39,7 +56,7 @@ export const wayFoldControls = definePreviewControls({
 
 /** Stable documentation contract for the current controls */
 export const previewControlContract = {
-  controls: wayFoldControls,
-  canonicalValues: { direction: '-|', fraction: 0.5 },
-  relatedApis: ['Draw.way', 'WayFoldOp.fraction'],
+  controls: axisLineControls,
+  canonicalValues: { connection: 'horizontal', via: '-|', fraction: 0.5 },
+  relatedApis: ['Step.kind', 'Step.axis', 'Step.via', 'Step.fraction'],
 } satisfies PreviewControlContract;

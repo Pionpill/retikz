@@ -22,9 +22,24 @@ import { Path, Step } from '@retikz/react';
 
 ### 基本动作
 
-在同一个面板中切换 `line`、多次 `move`、`fold`、`cycle` 与 `rectangle`。多次 `move` 可以在同一个 `<Path>` 中开始彼此独立的子路径；`fold` 可改变折角方向，`rectangle` 可调圆角，`cycle` 会闭合回最近一次 `move` 的起点。
+在同一个面板中切换 `line`、多次 `move`、`fold`、`cycle` 与 `rectangle`。多次 `move` 可以在同一个 `<Path>` 中开始彼此独立的子路径；`fold` 可在两段与三段正交连接间切换，三段模式还能用 `fraction` 调整中间腿；`rectangle` 可调圆角，`cycle` 会闭合回最近一次 `move` 的起点。
 
 <ComponentPreview files="step-actions" size="sm" />
+
+### 正交连接
+
+在同一组节点间切换两种单轴投影与折线连接：`horizontal` 取目标 x、保留当前 y，`vertical` 保留当前 x、取目标 y；选择 `fold` 后，“折线方向”可切换 `-\|`、`\|-`、`-\|-` 与 `\|-\|`，三段模式还可用 `fraction` 调整中间腿的位置。蓝色实线是实际路径，灰色 dotted 线只提示两个节点的直接方向。
+
+<ComponentPreview files="axis-line" size="sm" />
+
+| 连接方式 | Step 写法                                                                             | 行为                                                      |
+| -------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| 水平单轴 | `kind="axis-line" axis="horizontal"`                                                  | 沿当前 Scope 的局部水平轴投影，只取目标 x                 |
+| 垂直单轴 | `kind="axis-line" axis="vertical"`                                                    | 沿当前 Scope 的局部垂直轴投影，只取目标 y                 |
+| 两段折线 | `kind="fold" via="-\|"`<br />`kind="fold" via="\|-"`                                  | 经过一个转折点，完整连接目标                              |
+| 三段折线 | `kind="fold" via="-\|-" fraction={0.5}`<br />`kind="fold" via="\|-\|" fraction={0.5}` | 经过两个转折点；`fraction` 调整中间腿位置，默认值为 `0.5` |
+
+在两种 `axis-line` 模式中，省略 target `anchor` 时固定投影到节点中心，不执行 target 端自动边界裁切；source 节点仍按投影后的方向贴边。它只接受笛卡尔坐标或 NodeTarget，不接受 polar、relative、offset 或 between。
 
 ### 目标定位
 
@@ -80,6 +95,7 @@ import { Path, Step } from '@retikz/react';
 | retikz                                    | TikZ 对照                             |
 | ----------------------------------------- | ------------------------------------- |
 | `kind="fold"` + `via="-\|"` / `"\|-"`     | `(A) -\| (B)` / `(A) \|- (B)`         |
+| `kind="fold"` + `via="-\|-"` / `"\|-\|"`  | 流程图常见的三段正交连接              |
 | `kind="cycle"`                            | `cycle`                               |
 | `{ of, offset }` target                   | calc library 的 `($(of) + (dx, dy)$)` |
 | `{ relative }` / `{ relativeAccumulate }` | `(+x, +y)` / `(++x, ++y)`             |
@@ -106,20 +122,20 @@ import { Path, Step } from '@retikz/react';
     {
       label: 'Step 标记组件',
       path: 'packages/kernel/react/src/kernel/components/Step.tsx',
-      startLine: 235,
-      endLine: 240,
+      startLine: 254,
+      endLine: 274,
     },
     {
       label: 'Path 收集 Step 与标签优先级',
       path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
-      startLine: 294,
-      endLine: 367,
+      startLine: 363,
+      endLine: 576,
     },
     {
       label: '首段与最短序列规范化',
       path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
-      startLine: 525,
-      endLine: 539,
+      startLine: 561,
+      endLine: 576,
     },
   ]}
 />
@@ -130,14 +146,14 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview files="step-compile-flow" size="xs" hideCode />
 
-| Step 家族                                                        | 编译行为                                                   | 用户可见结果                                             |
-| ---------------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------- |
-| `move` / `cycle`                                                 | 维护游标与最近一次子路径起点                               | `move` 不画线；`cycle` 闭合回最近一次 `move`             |
-| `line` / `curve` / `cubic`<br />`fold` / `bend`                  | 解析前后目标并按节点边界裁切<br />再发射直线或 Bezier 命令 | 节点 id 自动接到边界；`fold` / `bend` 最终仍是普通路径段 |
-| `smooth` / `generator`<br />`arc` / `circlePath` / `ellipsePath` | 生成一组路径命令，并记录画完后的真实笔位                   | 下一段从生成结果的终点续接；整圆 / 整椭圆画完回到圆心    |
-| `rectangle`                                                      | 独立解析 `from` / `to`，不要求前置游标                     | 可以作为 Path 中唯一的 Step                              |
+| Step 家族                                                        | 编译行为                                                   | 用户可见结果                                                       |
+| ---------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------ |
+| `move` / `cycle`                                                 | 维护游标与最近一次子路径起点                               | `move` 不画线；`cycle` 闭合回最近一次 `move`                       |
+| `line` / `axis-line` / `curve` / `cubic`<br />`fold` / `bend`    | 解析前后目标并按节点边界裁切<br />再发射直线或 Bezier 命令 | `axis-line` 先沿局部轴投影且不裁切目标端；其余节点 id 自动接到边界 |
+| `smooth` / `generator`<br />`arc` / `circlePath` / `ellipsePath` | 生成一组路径命令，并记录画完后的真实笔位                   | 下一段从生成结果的终点续接；整圆 / 整椭圆画完回到圆心              |
+| `rectangle`                                                      | 独立解析 `from` / `to`，不要求前置游标                     | 可以作为 Path 中唯一的 Step                                        |
 
-这套顺序让 JSX、直接写 IR 和 `<Draw>` sugar 最终复用同一条几何编译路径；renderer 只消费降级后的命令，不需要理解十三种 Step 写法。
+这套顺序让 JSX、直接写 IR 和 `<Draw>` sugar 最终复用同一条几何编译路径；renderer 只消费降级后的命令，不需要理解十四种 Step 写法。
 
 <SourceLinks
   sources={[
@@ -151,13 +167,13 @@ import { Path, Step } from '@retikz/react';
       label: '目标归一化与逐段编译主循环',
       path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
       startLine: 54,
-      endLine: 147,
+      endLine: 260,
     },
     {
       label: '普通连线 Step 的几何降级',
       path: 'packages/kernel/core/src/compile/path/stroke/segments.ts',
       startLine: 41,
-      endLine: 125,
+      endLine: 158,
     },
     {
       label: '生成器、闭合与矩形 Step 的几何降级',
@@ -178,17 +194,17 @@ import { Path, Step } from '@retikz/react';
 
 `label.position` 会先换算成 `0..1` 的参数 t。编译器再向当前 kind 的几何采样器索取该处的坐标与切线：`side` 根据坐标偏移，`sloped` 根据切线旋转。因此 t 表示的是“该 kind 的参数进度”，不一定是视觉弧长进度。
 
-| Step kind             | t 的参数化方式                                             | `t=0.5` 的含义                        |
-| --------------------- | ---------------------------------------------------------- | ------------------------------------- |
-| `'line'`              | 归一化弧长                                                 | 直线中点                              |
-| `'fold'`              | 两段折线各占一半 `t`，与各段长度无关                       | `t=0.5` 正好落在拐角                  |
-| `'curve'` / `'cubic'` | Bezier 参数，**不是弧长**                                  | 通常不是视觉中点                      |
-| `'bend'`              | 降级成 cubic 后使用 Bezier 参数                            | 与 cubic 相同                         |
-| `'smooth'`            | 每个生成的 cubic 等分 t 区间<br />区间内再使用 Bezier 参数 | 取决于生成段数，不按整条曲线弧长      |
-| `'generator'`         | 当前按进入 step 时的游标到最终笔位做直线插值               | 两端点的中点，不跟随中间命令          |
-| `'arc'`               | 在 `startAngle..endAngle` 间线性插值                       | 起末角的中间角度                      |
-| `'circlePath'`        | 整圆按角度 0→360；0 在 +x                                  | 180°（-x）                            |
-| `'ellipsePath'`       | 同 circlePath，按参数角而非等弧长采样                      | 180°（-x）；任意 `t` 不按弧长均匀分布 |
+| Step kind                | t 的参数化方式                                             | `t=0.5` 的含义                        |
+| ------------------------ | ---------------------------------------------------------- | ------------------------------------- |
+| `'line'` / `'axis-line'` | 归一化弧长                                                 | 投影后直线段的中点                    |
+| `'fold'`                 | 按腿数均分 `t`，与各腿长度无关：两段各 `1/2`，三段各 `1/3` | 分界点归前一腿                        |
+| `'curve'` / `'cubic'`    | Bezier 参数，**不是弧长**                                  | 通常不是视觉中点                      |
+| `'bend'`                 | 降级成 cubic 后使用 Bezier 参数                            | 与 cubic 相同                         |
+| `'smooth'`               | 每个生成的 cubic 等分 t 区间<br />区间内再使用 Bezier 参数 | 取决于生成段数，不按整条曲线弧长      |
+| `'generator'`            | 当前按进入 step 时的游标到最终笔位做直线插值               | 两端点的中点，不跟随中间命令          |
+| `'arc'`                  | 在 `startAngle..endAngle` 间线性插值                       | 起末角的中间角度                      |
+| `'circlePath'`           | 整圆按角度 0→360；0 在 +x                                  | 180°（-x）                            |
+| `'ellipsePath'`          | 同 circlePath，按参数角而非等弧长采样                      | 180°（-x）；任意 `t` 不按弧长均匀分布 |
 
 整圆和椭圆的角度递增遵循屏幕坐标，因此 90° 位于视觉下方。
 
@@ -217,42 +233,51 @@ import { Path, Step } from '@retikz/react';
 
 ## API 参考
 
-| 属性           | 类型                                                                                                                                                                                | 默认值   | 描述                                                                                                                                                                                                                                                                                                                                   |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `kind`         | `'move'` \| `'line'` \| `'fold'` \| `'cycle'` \| `'curve'` \| `'cubic'` \| `'bend'` \| `'smooth'` \| `'generator'` \| `'arc'` \| `'circlePath'` \| `'ellipsePath'` \| `'rectangle'` | `'line'` | 见下方"十三种取值"表                                                                                                                                                                                                                                                                                                                   |
-| `via`          | <ApiValues name="FoldStepVia" />                                                                                                                                                    | —        | 仅 `kind="fold"` 必填：`-\|` 先水平后垂直；`\|-` 先垂直后水平                                                                                                                                                                                                                                                                          |
-| `from`         | `IRTarget`                                                                                                                                                                          | —        | 仅 `kind="rectangle"` 必填：矩形一个角点                                                                                                                                                                                                                                                                                               |
-| `to`           | `IRTarget`                                                                                                                                                                          | —        | `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'` 时不需要；`kind="rectangle"` 与其它会推进游标的 kind 必填——目标点：节点 id、笛卡尔 `[x, y]`、极坐标对象、偏移定位对象 `{ of, offset }`、比例定位 `{ between, fraction }`、相对偏移对象 `{ relative }` / `{ relativeAccumulate }`，或 sugar 字符串 `'+dx,dy'` / `'++dx,dy'` |
-| `name`         | `string`                                                                                                                                                                            | —        | 仅 `kind="generator"` 必填：内置或 `<Layout pathGenerators>` 注册的路径生成器名称                                                                                                                                                                                                                                                      |
-| `params`       | `IRJsonObject`                                                                                                                                                                      | —        | 仅 `kind="generator"` 必填：传给路径生成器的 JSON-safe 参数；如内置 `parabola` 使用 `{ control }`                                                                                                                                                                                                                                      |
-| `cornerRadius` | `number`                                                                                                                                                                            | —        | 仅 `kind="rectangle"` 可选：矩形圆角半径                                                                                                                                                                                                                                                                                               |
+| 属性           | 类型                                                                                                                                                                                                 | 默认值   | 描述                                                                                                                                                                                                                                                                                                                                   |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `kind`         | `'move'` \| `'line'` \| `'axis-line'` \| `'fold'` \| `'cycle'` \| `'curve'` \| `'cubic'` \| `'bend'` \| `'smooth'` \| `'generator'` \| `'arc'` \| `'circlePath'` \| `'ellipsePath'` \| `'rectangle'` | `'line'` | 见下方"十四种取值"表                                                                                                                                                                                                                                                                                                                   |
+| `axis`         | `'horizontal'` \| `'vertical'`                                                                                                                                                                       | —        | 仅 `kind="axis-line"` 必填：选择当前 host 的局部水平轴或垂直轴                                                                                                                                                                                                                                                                         |
+| `via`          | <ApiValues name="FoldStepVia" />                                                                                                                                                                     | —        | 仅 `kind="fold"` 必填：`-\|` 先水平后垂直；`\|-` 先垂直后水平                                                                                                                                                                                                                                                                          |
+| `fraction`     | `number`                                                                                                                                                                                             | `0.5`    | 仅三段 fold `-\|-` / `\|-\|` 可用：中间垂直或水平腿在起终 reference 间的归一化位置，范围 `0..1`                                                                                                                                                                                                                                        |
+| `from`         | `IRTarget`                                                                                                                                                                                           | —        | 仅 `kind="rectangle"` 必填：矩形一个角点                                                                                                                                                                                                                                                                                               |
+| `to`           | `IRTarget`                                                                                                                                                                                           | —        | `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'` 时不需要；`kind="rectangle"` 与其它会推进游标的 kind 必填——目标点：节点 id、笛卡尔 `[x, y]`、极坐标对象、偏移定位对象 `{ of, offset }`、比例定位 `{ between, fraction }`、相对偏移对象 `{ relative }` / `{ relativeAccumulate }`，或 sugar 字符串 `'+dx,dy'` / `'++dx,dy'` |
+| `name`         | `string`                                                                                                                                                                                             | —        | 仅 `kind="generator"` 必填：内置或 `<Layout pathGenerators>` 注册的路径生成器名称                                                                                                                                                                                                                                                      |
+| `params`       | `IRJsonObject`                                                                                                                                                                                       | —        | 仅 `kind="generator"` 必填：传给路径生成器的 JSON-safe 参数；如内置 `parabola` 使用 `{ control }`                                                                                                                                                                                                                                      |
+| `cornerRadius` | `number`                                                                                                                                                                                             | —        | 仅 `kind="rectangle"` 可选：矩形圆角半径                                                                                                                                                                                                                                                                                               |
 
-### kind 的十三种取值
+`kind="axis-line"` 的 `to` 使用更窄的 `IRAxisLineTarget | string`：只接受笛卡尔坐标、NodeTarget 与对应字符串 shorthand。
 
-| kind            | 行为                                              | 底层路径类比    |
-| --------------- | ------------------------------------------------- | --------------- |
-| `'move'`        | 移动游标，**不画线**                              | path "M"        |
-| `'line'`        | 从当前游标画直线到目标点                          | path "L"        |
-| `'fold'`        | 经一个直角拐点折到目标点                          | 两段 path "L"   |
-| `'cycle'`       | 闭合回最近一次 move 起点（无 `to`）               | path "Z"        |
-| `'curve'`       | 二次贝塞尔（一个控制点）                          | path "Q"        |
-| `'cubic'`       | 三次贝塞尔（两个控制点）                          | path "C"        |
-| `'bend'`        | 弧形简记（方向 + 角度），编译期退到 cubic         | path "C"        |
-| `'smooth'`      | 过游标 + `points` 的平滑曲线，编译期退到 cubic 链 | path "C"×N      |
-| `'generator'`   | 调用内置或注册的路径生成器                        | provider 产命令 |
-| `'arc'`         | 以游标为圆心，按起末角度 + 半径画弧               | path "A"        |
-| `'circlePath'`  | 以游标为圆心画整圆，画完回到圆心                  | path "A"×2      |
-| `'ellipsePath'` | 以游标为圆心画整椭圆，画完回到圆心                | path "A"×2      |
-| `'rectangle'`   | 用 `from` 和 `to` 作为两对角画矩形                | 独立矩形子路径  |
+### kind 的十四种取值
 
-### via 的两种取值
+| kind            | 行为                                              | 底层路径类比      |
+| --------------- | ------------------------------------------------- | ----------------- |
+| `'move'`        | 移动游标，**不画线**                              | path "M"          |
+| `'line'`        | 从当前游标画直线到目标点                          | path "L"          |
+| `'axis-line'`   | 投影目标后只沿一个局部轴画单段直线                | path "L"          |
+| `'fold'`        | 经一个或两个直角拐点折到目标点                    | 两或三段 path "L" |
+| `'cycle'`       | 闭合回最近一次 move 起点（无 `to`）               | path "Z"          |
+| `'curve'`       | 二次贝塞尔（一个控制点）                          | path "Q"          |
+| `'cubic'`       | 三次贝塞尔（两个控制点）                          | path "C"          |
+| `'bend'`        | 弧形简记（方向 + 角度），编译期退到 cubic         | path "C"          |
+| `'smooth'`      | 过游标 + `points` 的平滑曲线，编译期退到 cubic 链 | path "C"×N        |
+| `'generator'`   | 调用内置或注册的路径生成器                        | provider 产命令   |
+| `'arc'`         | 以游标为圆心，按起末角度 + 半径画弧               | path "A"          |
+| `'circlePath'`  | 以游标为圆心画整圆，画完回到圆心                  | path "A"×2        |
+| `'ellipsePath'` | 以游标为圆心画整椭圆，画完回到圆心                | path "A"×2        |
+| `'rectangle'`   | 用 `from` 和 `to` 作为两对角画矩形                | 独立矩形子路径    |
 
-仅 `kind="fold"` 时生效，决定折角中间点的位置。设当前游标 `(px, py)`，目标 `(tx, ty)`：
+### via 的四种取值
 
-| via     | 中间点     | 走向                         |
-| ------- | ---------- | ---------------------------- |
-| `'-\|'` | `(tx, py)` | 先水平到 `tx`，再垂直到 `ty` |
-| `'\|-'` | `(px, ty)` | 先垂直到 `ty`，再水平到 `tx` |
+仅 `kind="fold"` 时生效。设裁剪前 source reference 为 `(px, py)`、target reference 为 `(tx, ty)`，`f = fraction ?? 0.5`：
+
+| via       | 转折点                                 | 走向               |
+| --------- | -------------------------------------- | ------------------ |
+| `'-\|'`   | `(tx, py)`                             | 水平 → 垂直        |
+| `'\|-'`   | `(px, ty)`                             | 垂直 → 水平        |
+| `'-\|-'`  | `(x, py)`、`(x, ty)`，`x=px+(tx-px)·f` | 水平 → 垂直 → 水平 |
+| `'\|-\|'` | `(px, y)`、`(tx, y)`，`y=py+(ty-py)·f` | 垂直 → 水平 → 垂直 |
+
+`fraction=0` / `1` 合法，首腿或末腿退化为零长度；节点端点仍朝路由内最近的非重合点自动贴边，不会画到节点中心。fold label 的 `position` 按腿数均分参数：两段各占 `1/2`，三段各占 `1/3`，与各腿实际长度无关。
 
 ### to 的形态
 
@@ -270,24 +295,24 @@ import { Path, Step } from '@retikz/react';
 
 ### 曲线与圆弧
 
-| 属性            | 类型                                                                                                                                                                                | 默认值   | 描述                                                                                                                                                                                                      |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `kind`          | `'move'` \| `'line'` \| `'fold'` \| `'cycle'` \| `'curve'` \| `'cubic'` \| `'bend'` \| `'smooth'` \| `'generator'` \| `'arc'` \| `'circlePath'` \| `'ellipsePath'` \| `'rectangle'` | `'line'` | 见下方"十三种取值"表                                                                                                                                                                                      |
-| `control`       | `[number, number]`                                                                                                                                                                  | —        | 仅 `kind="curve"` 必填：二次贝塞尔的单个控制点                                                                                                                                                            |
-| `control1`      | `[number, number]`                                                                                                                                                                  | —        | 仅 `kind="cubic"` 必填：三次贝塞尔的第一控制点（影响起点切线）                                                                                                                                            |
-| `control2`      | `[number, number]`                                                                                                                                                                  | —        | 仅 `kind="cubic"` 必填：三次贝塞尔的第二控制点（影响终点切线）                                                                                                                                            |
-| `points`        | `Array<IRTarget>`（≥1）                                                                                                                                                             | —        | 仅 `kind="smooth"` 必填：游标之后依次穿过的点（顺序敏感）。游标是隐式首 knot，单点 = 一段曲线，游标终于末点。元素形态同 `to`                                                                              |
-| `tension`       | `number`（>0）                                                                                                                                                                      | `1`      | 仅 `kind="smooth"` 可选：切线长度乘子；缺省 1（标准 centripetal Catmull-Rom），`<1` 更紧、`>1` 更鼓                                                                                                       |
-| `bendDirection` | <ApiValues name="BendDirection" />                                                                                                                                                  | —        | 仅 `kind="bend"` 可选：相对 from→to 路径方向的视觉左 / 右；配 `bendAngle` 画对称弯。**给定 `outAngle` / `inAngle` 时它们优先**，此项被忽略                                                                |
-| `bendAngle`     | `number`                                                                                                                                                                            | `30`     | 仅 `kind="bend"` 可选：弯角度（度），限 (-180, 180)                                                                                                                                                       |
-| `outAngle`      | `number`                                                                                                                                                                            | —        | 仅 `kind="bend"` 可选：起点出射角（度）；配 `inAngle` 画非对称曲线 / 自环，优先于 `bendDirection` / `bendAngle`                                                                                           |
-| `inAngle`       | `number`                                                                                                                                                                            | —        | 仅 `kind="bend"` 可选：终点入射角（度）；与 `outAngle` 配套                                                                                                                                               |
-| `looseness`     | `number`                                                                                                                                                                            | `≈1`     | 仅 `kind="bend"` 可选：控制点距离的松紧因子，越大曲线越松；`from == to` 时同时缩放默认自环大小                                                                                                            |
-| `startAngle`    | `number`                                                                                                                                                                            | —        | `kind="arc"` 必填；`'circlePath'` / `'ellipsePath'` 可选（与 `endAngle` 配套画部分圆 / 椭圆）：起始角度（度，0° 朝 +x，90° 视觉朝下）                                                                     |
-| `endAngle`      | `number`                                                                                                                                                                            | —        | `kind="arc"` 必填；`'circlePath'` / `'ellipsePath'` 可选：终止角度（度），扫向由起末角度推断                                                                                                              |
-| `radius`        | `IRStepRadius`                                                                                                                                                                      | —        | `kind="arc"`（圆弧）/ `'circlePath'` 时给：圆 / 弧半径。arc 上 `radius` 与 `radius: { x, y }` **二选一**（互斥）；circlePath 必填                                                                         |
-| `center`        | `IRTarget`                                                                                                                                                                          | 游标     | 仅 `kind="arc"` 可选：显式弧心，缺省取游标（前一 step 终点）；显式给定可让弧脱离游标独立定位（`<Sector>` 借此画正确扇形）                                                                                 |
-| `closed`        | <ApiValues name="PathCloseMode" />                                                                                                                                                  | 见下     | 仅 `kind="circlePath"` / `'ellipsePath'` 可选：闭合方式。无角度时 `'closed'`（整圆 / 整椭圆，默认）；有角度时 `'chord'`（两弧端连弦，默认）/ `'sector'`（两弧端连到圆心再闭合）/ `'open'`（不闭合的纯弧） |
+| 属性            | 类型                                                                                                                                                                                                 | 默认值   | 描述                                                                                                                                                                                                      |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `kind`          | `'move'` \| `'line'` \| `'axis-line'` \| `'fold'` \| `'cycle'` \| `'curve'` \| `'cubic'` \| `'bend'` \| `'smooth'` \| `'generator'` \| `'arc'` \| `'circlePath'` \| `'ellipsePath'` \| `'rectangle'` | `'line'` | 见下方"十四种取值"表                                                                                                                                                                                      |
+| `control`       | `[number, number]`                                                                                                                                                                                   | —        | 仅 `kind="curve"` 必填：二次贝塞尔的单个控制点                                                                                                                                                            |
+| `control1`      | `[number, number]`                                                                                                                                                                                   | —        | 仅 `kind="cubic"` 必填：三次贝塞尔的第一控制点（影响起点切线）                                                                                                                                            |
+| `control2`      | `[number, number]`                                                                                                                                                                                   | —        | 仅 `kind="cubic"` 必填：三次贝塞尔的第二控制点（影响终点切线）                                                                                                                                            |
+| `points`        | `Array<IRTarget>`（≥1）                                                                                                                                                                              | —        | 仅 `kind="smooth"` 必填：游标之后依次穿过的点（顺序敏感）。游标是隐式首 knot，单点 = 一段曲线，游标终于末点。元素形态同 `to`                                                                              |
+| `tension`       | `number`（>0）                                                                                                                                                                                       | `1`      | 仅 `kind="smooth"` 可选：切线长度乘子；缺省 1（标准 centripetal Catmull-Rom），`<1` 更紧、`>1` 更鼓                                                                                                       |
+| `bendDirection` | <ApiValues name="BendDirection" />                                                                                                                                                                   | —        | 仅 `kind="bend"` 可选：相对 from→to 路径方向的视觉左 / 右；配 `bendAngle` 画对称弯。**给定 `outAngle` / `inAngle` 时它们优先**，此项被忽略                                                                |
+| `bendAngle`     | `number`                                                                                                                                                                                             | `30`     | 仅 `kind="bend"` 可选：弯角度（度），限 (-180, 180)                                                                                                                                                       |
+| `outAngle`      | `number`                                                                                                                                                                                             | —        | 仅 `kind="bend"` 可选：起点出射角（度）；配 `inAngle` 画非对称曲线 / 自环，优先于 `bendDirection` / `bendAngle`                                                                                           |
+| `inAngle`       | `number`                                                                                                                                                                                             | —        | 仅 `kind="bend"` 可选：终点入射角（度）；与 `outAngle` 配套                                                                                                                                               |
+| `looseness`     | `number`                                                                                                                                                                                             | `≈1`     | 仅 `kind="bend"` 可选：控制点距离的松紧因子，越大曲线越松；`from == to` 时同时缩放默认自环大小                                                                                                            |
+| `startAngle`    | `number`                                                                                                                                                                                             | —        | `kind="arc"` 必填；`'circlePath'` / `'ellipsePath'` 可选（与 `endAngle` 配套画部分圆 / 椭圆）：起始角度（度，0° 朝 +x，90° 视觉朝下）                                                                     |
+| `endAngle`      | `number`                                                                                                                                                                                             | —        | `kind="arc"` 必填；`'circlePath'` / `'ellipsePath'` 可选：终止角度（度），扫向由起末角度推断                                                                                                              |
+| `radius`        | `IRStepRadius`                                                                                                                                                                                       | —        | `kind="arc"`（圆弧）/ `'circlePath'` 时给：圆 / 弧半径。arc 上 `radius` 与 `radius: { x, y }` **二选一**（互斥）；circlePath 必填                                                                         |
+| `center`        | `IRTarget`                                                                                                                                                                                           | 游标     | 仅 `kind="arc"` 可选：显式弧心，缺省取游标（前一 step 终点）；显式给定可让弧脱离游标独立定位（`<Sector>` 借此画正确扇形）                                                                                 |
+| `closed`        | <ApiValues name="PathCloseMode" />                                                                                                                                                                   | 见下     | 仅 `kind="circlePath"` / `'ellipsePath'` 可选：闭合方式。无角度时 `'closed'`（整圆 / 整椭圆，默认）；有角度时 `'chord'`（两弧端连弦，默认）/ `'sector'`（两弧端连到圆心再闭合）/ `'open'`（不闭合的纯弧） |
 
 ### 边标注
 
