@@ -1,15 +1,47 @@
 ---
 title: Channels
-description: 'Channels bind fields or constants to visual roles such as position, color, and size, giving coordinates, marks, and guides a shared value source.'
+description: 'Channels connect fields or fixed values to visual results such as position, color, and size.'
 ---
 
-A channel describes two things: where a value comes from and which visual role it belongs to. For example, `x="gdp"` reads the `gdp` field for position, while `color="region"` reads the `region` field for color. Data owns field preparation; Core and the renderer still own the final drawing semantics and output.
+A channel describes two things: where a value comes from and which visual result it controls. For example, `x="gdp"` uses the `gdp` field for position, while `color="region"` uses the `region` field for color.
 
-Mark props in the React DSL become JSON-safe field or constant bindings in PlotSpec. At runtime, coordinate-definition roles read position bindings; other visual channels look up a matching definition in the channel registry and resolve into mark properties or guide descriptors.
+## Responsibilities
+
+| Topic             | Problem it solves                                        | Reach for it when                                                        |
+| ----------------- | -------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Channel binding   | How fields or fixed values are written on mark props     | You want to confirm what `x="date"`, `color="region"`, or `y={80}` means |
+| Built-in channels | Which options control position, color, size, text, paths | You want to choose channels such as `color`, `size`, or `strokeWidth`    |
+
+## In This Section
+
+For a first read, start with how fields and constants bind, then look up built-in channels by visual goal.
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/channel/binding">
+    <span className="font-semibold">Channel Binding</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Bind fields or fixed values to position, color, size, and related channels
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/channel/builtin">
+    <span className="font-semibold">Built-In Channels</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Look up channels for position, color, size, text, and paths
+    </span>
+  </LinkedCard>
+</div>
+
+To add a project-specific visual channel, continue to [Custom Channels](/viz/plot/extend/channel).
+
+Channels decide which value to read; [Scales](/viz/plot/scale) decide how values map, and [Coordinates](/viz/plot/coordinate) decide how positional roles project.
+
+## How It Works (Optional On A First Read)
+
+React mark props are assembled into PlotSpec, a serializable drawing configuration. Position channels are interpreted by the coordinate system. Other channels use a shared channel registry to find their handling rules, then resolve into visible properties or legend information.
 
 <ComponentPreview files="channel-flow" size="lg" hideCode />
 
-PlotSpec stores bindings, not functions. Position roles follow the coordinate definition; other built-in and custom definitions enter the same registry, then meet bindings at the resolver. Extending a visual channel therefore does not require a parallel IR or consumption path.
+PlotSpec stores field or constant bindings, not functions. Built-ins and custom channels injected through `channelDefinitions` share the same registration, resolution, and delivery path, so extending channels does not require another configuration format.
 
 <SourceLinks
   sources={[
@@ -20,44 +52,16 @@ PlotSpec stores bindings, not functions. Position roles follow the coordinate de
       endLine: 256,
     },
     {
-      label: 'Built-in and custom definitions merge into one registry',
+      label: 'Built-in and custom channels merge into one registry',
       path: 'packages/viz/plot/src/providers/channel/registry.ts',
       startLine: 77,
       endLine: 114,
     },
     {
-      label: 'Bindings resolve and dispatch by definition kind',
+      label: 'Bindings resolve and dispatch by channel type',
       path: 'packages/viz/plot/src/providers/channel/registry.ts',
       startLine: 120,
       endLine: 190,
     },
   ]}
 />
-
-## Responsibilities
-
-| Topic             | Responsibility                                                           | Reach for it when                                                        |
-| ----------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| Channel binding   | Explain how fields or constants enter mark props and PlotSpec            | You want to confirm what `x="date"`, `color="region"`, or `y={80}` means |
-| Built-in channels | List available channels, default scales, and destinations by visual task | You want to choose channels such as `color`, `size`, or `strokeWidth`    |
-
-To add a project-specific visual channel, continue to [Custom Channels](/viz/plot/extend/channel). Custom capabilities enter through `channelDefinitions` and share the same registry, resolution, and delivery paths as built-ins.
-
-## In This Section
-
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/channel/binding">
-    <span className="font-semibold">Channel Binding</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Bind fields or constants to x, y, color, size, text, and related channels
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/channel/builtin">
-    <span className="font-semibold">Built-In Channels</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Understand mark / scope / node / path channels, default scales, and legend forms
-    </span>
-  </LinkedCard>
-</div>
-
-Channels decide which value to read; [Scales](/viz/plot/scale) decide how values map, and [Coordinates](/viz/plot/coordinate) decide how positional roles project.

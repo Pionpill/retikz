@@ -1,6 +1,6 @@
 ---
 title: Channel Binding
-description: Channel binding describes how fields or constants enter channels such as x, y, color, size, and text; React props expand into Plot IR encoding internally.
+description: Channel binding explains how fields or fixed values control visual results such as position, color, size, shape, and text.
 ---
 
 The data model says what fields are. Data processing says how real data gets in. Channel binding says **where fields are used**. In React there is no separate `<Encoding>` component; channels are usually written directly as mark props.
@@ -10,9 +10,7 @@ The data model says what fields are. Data processing says how real data gets in.
 <PointMark x="gdp" y="life" text="abbr" />
 ```
 
-Those props are the user-facing surface of channels: `x` is a position channel, `color` is a paint channel, and `size` is a style channel. Users write props; Plot internally assembles them into JSON-safe channel bindings.
-
-Internally, that becomes the mark's `encoding`: `x` and `y` are positional channels, `color` and `size` are style channels, and `text` is the text-content channel.
+Those props are the user-facing channel entry points: `x` is a position channel, `color` is a paint channel, and `size` is a style channel. One mark can use several channels at once to turn a row into position, appearance, and text.
 
 ## Fields And Constants
 
@@ -28,9 +26,7 @@ Some channels also accept constants. `ReferenceMark` is the clearest example:
 <ReferenceMark y={80} color="crimson" />
 ```
 
-In IR, fields become `{ field: 'gdp' }`, while constants become `{ value: 80 }`. A channel must choose exactly one: field-driven or constant.
-
-Field lookup follows the same rule as the model: first check whether the whole field name is a direct key on the row, then fall back to `.` traversal. Because canonical rows write normalized values back under logical field names, marks only reference logical fields and do not need to know the physical source name or storage format.
+A channel must choose exactly one: read a field from every row or always use the same fixed value.
 
 ## Binding Playground
 
@@ -44,25 +40,27 @@ Use the panel to switch the `x` / `y` fields and change color, size, or shape fr
 
 One row can bind to several channels at once: `gdp` and `life` determine position, `region` determines color and shape, `population` determines point radius, and `abbr` supplies labels. When a style switches to a constant, that data field no longer participates in the corresponding visual calculation.
 
-Channels read canonical values produced by data preparation—the normalized values written back under logical field names after `fieldMap`, `format`, and `resolveField` run. Plot then derives scales from field types and explicit scale configuration. `Axis` consumes scales from position channels; only field-driven color and size bindings produce their corresponding `Legend`.
-
-Each GOG layer consumes the channels it understands. `PathMark` can use `x` / `y` / `order` / `series` / `color` / `strokeWidth` to produce lines, while `PointMark` reads position and node style from the same binding model. A channel says which value to read and which semantic entry it belongs to; it does not own a rendered result.
-
-## How It Works
-
-In React, mark props are converted into channel configuration while building the Plot spec. Field channels enter `encoding`, constant channels stay as fixed values, and lowering later reads field values from canonical rows.
-
-| Form                           | Internal Meaning                                                                    |
-| ------------------------------ | ----------------------------------------------------------------------------------- |
-| `<PointMark x="gdp" />`        | `x` is a field channel that reads `gdp` from the canonical row                      |
-| `<PointMark color="region" />` | `color` is a field channel, and its field type derives the color scale              |
-| `<ReferenceMark y={80} />`     | `y` is a constant channel and does not read data rows                               |
-| `<PathMark order="month" />`   | `order` is not inside the `encoding` object, but still reads a field to sort datums |
-
-A channel only answers "which value to read"; scales map that value into drawing space or visual attributes, and coordinates interpret positional channel roles.
+`Axis` uses position channels to display coordinate ticks. This playground only mounts color and size legends, so switching either channel to a constant removes its `Legend`. The full API can also add legends for field-driven opacity and shape channels.
 
 ## Scale And Coordinate
 
 Channels only say “which value to read”. Scales map values into drawing space or visual attributes. Coordinates interpret the roles of positional channels. For example, the same `x="quarter"` and `y="value"` means horizontal category + vertical value under `cartesian2D`, but angular category + radial value under `polar2D`.
 
 Continue with [Built-In Channels](/viz/plot/channel/builtin) to see how style channels land on core element attributes, [Scales](/viz/plot/scale) to see how field types derive scales, or [Coordinates](/viz/plot/coordinate) to see how position channels are reinterpreted.
+
+## How It Works (Optional On A First Read)
+
+React mark props become serializable channel configuration while PlotSpec is built. A field is represented internally as `{ field: 'gdp' }`, while a constant becomes `{ value: 80 }`.
+
+Field lookup follows the data model rule: first check whether the complete field name is a direct property on the row, then fall back to `.` traversal. Data preparation applies `fieldMap`, `format`, and `resolveField` before writing normalized results under logical field names; the prepared result is called a canonical row.
+
+Each mark reads only the channels it supports. `PathMark` can use `x` / `y` / `order` / `series` / `color` / `strokeWidth` to produce lines, while `PointMark` reads position and node style. A channel says which value to read and which visual result it controls; it does not store the rendered result.
+
+| Form                           | Internal Meaning                                                                  |
+| ------------------------------ | --------------------------------------------------------------------------------- |
+| `<PointMark x="gdp" />`        | `x` is a field channel that reads `gdp` from the canonical row                    |
+| `<PointMark color="region" />` | `color` is a field channel, and its field type derives the color scale            |
+| `<ReferenceMark y={80} />`     | `y` is a constant channel and does not read data rows                             |
+| `<PathMark order="month" />`   | `order` is not inside the `encoding` object, but still reads a field to sort rows |
+
+A channel only answers "which value to read"; scales map that value into drawing space or visual attributes, and coordinates interpret positional channel roles.

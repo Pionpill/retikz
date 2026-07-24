@@ -1,19 +1,21 @@
 ﻿---
 title: 内置通道
-description: 按通道类型说明 plot 内置通道、通道值写法、底层落点和图例能力。
+description: 按视觉目标查询 plot 内置通道，以及字段、固定值和图例的支持情况。
 ---
 
-内置通道把数据映射为位置、样式、文本和路径等视觉结果。在 React DSL 中，直接通过 mark props 声明通道，例如 `<PointMark x="gdp" color="region" />`；先按下面的视觉目标选择通道，再到对应小节查看取值方式、落点和图例支持。
+内置通道把数据映射为位置、样式、文本和路径等视觉结果。在 React DSL 中，直接通过 mark props 声明通道，例如 `<PointMark x="gdp" color="region" />`；先按下面的视觉目标选择通道，再到对应小节查看取值方式、视觉结果和图例支持。
 
-| 类型     | 通道                                                                         | 说明                             |
-| -------- | ---------------------------------------------------------------------------- | -------------------------------- |
-| 位置     | `x` / `y` / `z`                                                              | 字段决定坐标角色                 |
-| 样式     | `color` / `fill` / `stroke` / `textColor`<br />`opacity` / `size` / `shape`  | 颜色、透明度、大小和形状         |
-| 节点几何 | `padding` / `cornerRadius`<br />`rotate` / `minimumSize`                     | node 尺寸、间距和变换            |
-| 文本     | `text` / `label`                                                             | 节点内文本和节点外 label         |
-| 路径     | `strokeWidth` / `lineCap` / `lineJoin`<br />`roundedCorners` / `dashPattern` | 路径描边、端点、连接、圆角和虚线 |
-| 效果     | `shadow` / `blendMode`                                                       | 阴影和混合模式                   |
-| 其他     | `zIndex` / `order` / `series`                                                | 绘制顺序、排序和系列拆分         |
+各表先列使用方式和可见含义，最后一列再给内部属性落点；第一次阅读可以跳过落点。
+
+| 类型     | 通道                                                                                                    | 说明                             |
+| -------- | ------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| 位置     | `x` / `y` / `z`                                                                                         | 字段决定坐标角色                 |
+| 样式     | `color` / `fill` / `stroke` / `textColor`<br />`opacity` / `size` / `shape`                             | 颜色、透明度、大小和形状         |
+| 节点几何 | `padding` / `cornerRadius`<br />`rotate` / `minimumSize`                                                | 节点尺寸、间距和变换             |
+| 文本     | `text` / `label`                                                                                        | 节点内文字和节点外标签           |
+| 路径     | `strokeWidth` / `thickness` / `lineCap` / `lineJoin`<br />`roundedCorners` / `fillRule` / `dashPattern` | 路径描边、端点、连接、填充和虚线 |
+| 效果     | `shadow` / `blendMode`                                                                                  | 阴影和混合模式                   |
+| 其他     | `zIndex` / `order` / `series`                                                                           | 绘制顺序、排序和系列拆分         |
 
 ## 位置
 
@@ -21,15 +23,15 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 <ComponentPreview files="builtin-position" size="md" />
 
-| 通道 | 通道值              | 含义         | 落点            |
-| ---- | ------------------- | ------------ | --------------- |
-| `x`  | 字段：`x = "field"` | 第一位置角色 | coordinate role |
-| `y`  | 字段：`y = "field"` | 第二位置角色 | coordinate role |
-| `z`  | 字段：`z = "field"` | 第三位置角色 | coordinate role |
+| 通道 | 通道值              | 含义         | 落点                 |
+| ---- | ------------------- | ------------ | -------------------- |
+| `x`  | 字段：`x = "field"` | 第一位置角色 | 坐标系的第一位置角色 |
+| `y`  | 字段：`y = "field"` | 第二位置角色 | 坐标系的第二位置角色 |
+| `z`  | 字段：`z = "field"` | 第三位置角色 | 坐标系的第三位置角色 |
 
 ## 样式
 
-样式通道控制 mark 的可见外观。颜色、透明度、大小和形状都属于样式；在面板中切换作用通道并调整数值，可以直接比较它们在同一组点上的差异。
+样式通道控制图元的可见外观。颜色、透明度、大小和形状都属于样式；在面板中切换作用通道并调整数值，可以直接比较它们在同一组点上的差异。
 
 <ComponentPreview
   files="builtin-point-style"
@@ -42,8 +44,8 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 | 通道        | 通道值                                                     | 含义       | 落点 / 图例                                                   |
 | ----------- | ---------------------------------------------------------- | ---------- | ------------------------------------------------------------- |
 | `color`     | 字段：`color = "field"`<br />常量：`color = "red"`         | 主语义颜色 | mark 选择 fill / stroke / text color；字段值支持 color legend |
-| `fill`      | 字段：`fill = "field"`<br />常量：`fill = "red"`           | 填充颜色   | mark fill；node-backed mark 可写 node `fill`                  |
-| `stroke`    | 字段：`stroke = "field"`<br />常量：`stroke = "red"`       | 描边颜色   | mark stroke；path-backed mark 可写 path stroke                |
+| `fill`      | 字段：`fill = "field"`<br />常量：`fill = "red"`           | 填充颜色   | 图元填充；节点类图元写入 node `fill`                          |
+| `stroke`    | 字段：`stroke = "field"`<br />常量：`stroke = "red"`       | 描边颜色   | 图元描边；路径类图元写入 path `stroke`                        |
 | `textColor` | 字段：`textColor = "field"`<br />常量：`textColor = "red"` | 文本颜色   | core node `textColor`                                         |
 
 ### 透明度
@@ -58,23 +60,23 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 ### 大小
 
-`size` 通道适合表达数量大小。字段值默认走 sqrt scale，让面积感更接近数据差异。
+`size` 通道适合表达数量大小。字段值默认走平方根比例尺，让图形面积更接近数据差异。
 
-| 通道   | 通道值                                         | 含义       | 落点 / 图例                                                 |
-| ------ | ---------------------------------------------- | ---------- | ----------------------------------------------------------- |
-| `size` | 字段：`size = "field"`<br />常量：`size = {8}` | glyph 大小 | node `minimumSize`；字段值默认 sqrt scale，支持 size legend |
+| 通道   | 通道值                                         | 含义       | 落点 / 图例                                              |
+| ------ | ---------------------------------------------- | ---------- | -------------------------------------------------------- |
+| `size` | 字段：`size = "field"`<br />常量：`size = {8}` | 点符号大小 | node `minimumSize`；字段值默认平方根比例尺，支持大小图例 |
 
 ### 形状
 
-`shape` 通道适合表达分类。分类字段会映射到内置 glyph 形状，并可以生成 symbol legend。
+`shape` 通道适合表达分类。分类字段会映射到内置点符号形状，并可以生成符号图例。
 
-| 通道    | 通道值                                                | 含义       | 落点 / 图例                            |
-| ------- | ----------------------------------------------------- | ---------- | -------------------------------------- |
-| `shape` | 字段：`shape = "field"`<br />常量：`shape = "circle"` | glyph 形状 | node `shape`；字段值支持 symbol legend |
+| 通道    | 通道值                                                | 含义       | 落点 / 图例                      |
+| ------- | ----------------------------------------------------- | ---------- | -------------------------------- |
+| `shape` | 字段：`shape = "field"`<br />常量：`shape = "circle"` | 点符号形状 | node `shape`；字段值支持符号图例 |
 
 ## 节点、文本与效果
 
-这一组通道都作用在 mark 生成的 node 上。面板固定同一组文本节点，让尺寸、排版、外侧标签和效果可以连续调整，而不再拆成四张静态图。
+这一组通道都作用在图元生成的节点上。面板固定同一组文本节点，让尺寸、排版、外侧标签和效果可以连续调整，而不再拆成四张静态图。
 
 <ComponentPreview
   files="builtin-node-text"
@@ -84,7 +86,7 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 ### 节点几何
 
-节点几何通道控制 node 自身的尺寸约束、内边距、圆角和旋转。它们更像 core node 属性下沉，而不是数据可视化中的颜色或大小 encoding。
+节点几何通道直接控制节点自身的尺寸约束、内外间距、圆角和旋转，不负责颜色或大小这类数据映射。
 
 | 通道                 | 通道值                                                                              | 含义          | 落点                       |
 | -------------------- | ----------------------------------------------------------------------------------- | ------------- | -------------------------- |
@@ -95,7 +97,7 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 ### 节点内文本
 
-`text` 会让 point mark 生成文本 node。`textColor`、`align`、`lineHeight`、`maxTextWidth`、`font` 控制这个文本 node 的排版和颜色。
+`text` 会让点图元显示字段中的文字。`textColor`、`align`、`lineHeight`、`maxTextWidth`、`font` 控制文字的排版和颜色。
 
 | 通道                                                | 通道值                                                                                             | 含义                         | 落点                                |
 | --------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------- | ----------------------------------- |
@@ -104,12 +106,12 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 ### 节点 label
 
-`label` 不替代节点内容，而是给 datum host node 挂外侧标签。`labelPosition`、`labelDistance`、`labelPin` 决定标签的位置和引线。
+`label` 不替代节点内容，而是给每个数据点对应的节点添加外侧标签。`labelPosition`、`labelDistance`、`labelPin` 决定标签的位置和引线。
 
-| 通道                                              | 通道值                                                          | 含义            | 落点                   |
-| ------------------------------------------------- | --------------------------------------------------------------- | --------------- | ---------------------- |
-| `label`                                           | 字段：`label = "field"`                                         | datum host 标签 | core node `label`      |
-| `labelPosition` / `labelDistance`<br />`labelPin` | 常量：`labelPosition = "top"`<br />常量：`labelDistance = {16}` | label 布局      | core node label fields |
+| 通道                                              | 通道值                                                          | 含义           | 落点                   |
+| ------------------------------------------------- | --------------------------------------------------------------- | -------------- | ---------------------- |
+| `label`                                           | 字段：`label = "field"`                                         | 数据点外侧标签 | core node `label`      |
+| `labelPosition` / `labelDistance`<br />`labelPin` | 常量：`labelPosition = "top"`<br />常量：`labelDistance = {16}` | label 布局     | core node label fields |
 
 ### 效果
 
@@ -123,33 +125,39 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 ## 路径
 
-路径通道作用在下沉为 core path 的 mark 上，例如折线、relation、区域边界和参考线。端点箭头不是 plot channel；需要箭头时在对应 path 配置中写 `marks`。
+路径通道作用在生成路径的图元上，例如折线、关系线、区域边界和参考线。端点箭头不是通道；需要箭头时，在对应路径配置中写 `marks`。
 
 <ComponentPreview
   files="builtin-path-style"
   size="md"
-  caption="描边、端点、连接和虚线模式都作用在同一条路径上，便于直接比较。"
+  caption="描边、端点、连接、圆角和虚线模式都作用在同一条路径上，便于直接比较。"
 />
 
 ### 路径样式
 
-| 通道                                   | 通道值                                                             | 含义           | 落点 / 图例                                                  |
-| -------------------------------------- | ------------------------------------------------------------------ | -------------- | ------------------------------------------------------------ |
-| `strokeWidth`                          | 字段：`strokeWidth = "field"`<br />常量：`strokeWidth = {4}`       | 描边宽度       | scope / node / path `strokeWidth`；字段值默认范围 `[0.5, 4]` |
-| `roundedCorners`                       | 字段：`roundedCorners = "field"`<br />常量：`roundedCorners = {8}` | path 圆角提示  | core path `roundedCorners`                                   |
-| `lineCap`<br />`lineJoin`              | 字段：`lineCap = "field"`<br />常量：`lineCap = "round"`           | 线端和连接样式 | core path line fields                                        |
-| `dashPattern` / `dashed`<br />`dotted` | 字段：`dashPattern = "field"`<br />常量：`dashPattern = {[7, 4]}`  | 描边虚线样式   | core node/path dash fields                                   |
+| 通道                                   | 通道值                                                             | 含义             | 落点 / 图例                                                  |
+| -------------------------------------- | ------------------------------------------------------------------ | ---------------- | ------------------------------------------------------------ |
+| `strokeWidth`                          | 字段：`strokeWidth = "field"`<br />常量：`strokeWidth = {4}`       | 描边宽度         | scope / node / path `strokeWidth`；字段值默认范围 `[0.5, 4]` |
+| `thickness`                            | 字段：`thickness = "field"`<br />常量：`thickness = "thick"`       | 语义线宽预设     | 转换为 core path `strokeWidth`                               |
+| `roundedCorners`                       | 字段：`roundedCorners = "field"`<br />常量：`roundedCorners = {8}` | path 圆角提示    | core path `roundedCorners`                                   |
+| `fillRule`                             | 字段：`fillRule = "field"`<br />常量：`fillRule = "evenodd"`       | 闭合路径填充规则 | core path `fillRule`                                         |
+| `lineCap`<br />`lineJoin`              | 字段：`lineCap = "field"`<br />常量：`lineCap = "round"`           | 线端和连接样式   | core path line fields                                        |
+| `dashPattern` / `dashed`<br />`dotted` | 字段：`dashPattern = "field"`<br />常量：`dashPattern = {[7, 4]}`  | 描边虚线样式     | core node/path dash fields                                   |
 
 ## 其他
 
 其他通道不直接描述颜色、位置或路径形状，而是控制绘制顺序、数据排序和系列拆分。
 
-<ComponentPreview files="builtin-other" size="md" />
+<ComponentPreview
+  files="builtin-other"
+  size="md"
+  caption="输入行被刻意打乱：series 拆成两条线，order 再按 step 恢复连接顺序；点以更高 zIndex 显示在线条上方。"
+/>
 
 | 通道     | 通道值                                             | 含义             | 落点                         |
 | -------- | -------------------------------------------------- | ---------------- | ---------------------------- |
 | `zIndex` | 字段：`zIndex = "field"`<br />常量：`zIndex = {1}` | 绘制顺序提示     | scope / node / path `zIndex` |
-| `order`  | 字段：`order = "field"`                            | path 的连接顺序  | mark 读取字段后排序 datum    |
-| `series` | 字段：`series = "field"`                           | 多系列拆分或分组 | mark 读取字段后拆分图元      |
+| `order`  | 字段：`order = "field"`                            | 路径的连接顺序   | 图元读取字段后排序数据行     |
+| `series` | 字段：`series = "field"`                           | 多系列拆分或分组 | 图元读取字段后拆分图形       |
 
 `order` 和 `series` 不属于 `encoding` 对象，但它们仍然是字段驱动的通道入口。用户在 React DSL 里同样把它们写成 mark props。
