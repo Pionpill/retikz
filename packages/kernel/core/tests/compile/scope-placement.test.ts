@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompiledNodeLayout, GroupPrim, IRScene, ScenePrimitive } from '../../src';
+import type { GroupPrim, IRScene, ScenePrimitive } from '../../src';
 
-import { compileToScene } from '../../src';
+import { compileToScene, isNodeLayoutCompileArtifact } from '../../src';
 import { applyTransformChain } from '../../src/compile/transform';
 
 const scene = (children: IRScene['children']): IRScene => ({
@@ -37,7 +37,7 @@ describe('Scope placement 两阶段布局', () => {
           children: [node('inside', [10, 20])],
         },
       ]),
-    );
+    ).scene;
 
     expect(firstGroup(compiled.primitives).transforms).toEqual([{ kind: 'translate', x: 90, y: 30 }]);
   });
@@ -51,7 +51,7 @@ describe('Scope placement 两阶段布局', () => {
           children: [{ ...node('inside', [10, 20]), margin: 2 }],
         },
       ]),
-    );
+    ).scene;
 
     expect(firstGroup(compiled.primitives).transforms).toEqual([{ kind: 'translate', x: 102, y: 37 }]);
   });
@@ -69,7 +69,7 @@ describe('Scope placement 两阶段布局', () => {
           children: [node('inside', [10, 20])],
         },
       ]),
-    );
+    ).scene;
 
     expect(firstGroup(compiled.primitives).transforms).toEqual([{ kind: 'translate', x: 106, y: 78 }]);
   });
@@ -94,7 +94,7 @@ describe('Scope placement 两阶段布局', () => {
           children: [],
         },
       ]),
-    );
+    ).scene;
     const groups = compiled.primitives.filter((primitive): primitive is GroupPrim => primitive.type === 'group');
 
     expect(groups[0]?.transforms).toEqual([{ kind: 'translate', x: 50, y: 10 }]);
@@ -114,7 +114,7 @@ describe('Scope placement 两阶段布局', () => {
           children: [node('inside', [10, 20])],
         },
       ]),
-    );
+    ).scene;
 
     expect(firstGroup(compiled.primitives).transforms).toEqual([
       { kind: 'translate', x: 90, y: 30 },
@@ -142,7 +142,7 @@ describe('Scope placement 两阶段布局', () => {
           ],
         },
       ]),
-    );
+    ).scene;
     const path = compiled.primitives.find(
       (primitive): primitive is Extract<ScenePrimitive, { type: 'path' }> => primitive.type === 'path',
     );
@@ -161,7 +161,7 @@ describe('Scope placement 两阶段布局', () => {
           children: [node('left', [-10, 0]), node('right', [10, 0])],
         },
       ]),
-    );
+    ).scene;
 
     expect(firstGroup(compiled.primitives).transforms?.[0]).toMatchObject({ kind: 'translate', y: 0 });
     expect(firstGroup(compiled.primitives).transforms?.[0]).toHaveProperty('x', 100 - Math.hypot(20, 5));
@@ -197,7 +197,7 @@ describe('Scope placement 两阶段布局', () => {
       ],
     ],
   ] as const)('%s Scope target fail-loud，不读取未完成 placeholder', (_name, children) => {
-    expect(() => compileToScene(scene(children as unknown as IRScene['children']))).toThrow(/scope placement target/i);
+    expect(() => compileToScene(scene(children as unknown as IRScene['children'])).scene).toThrow(/scope placement target/i);
   });
 
   it('空 Scope 的 {side,fraction} selfAnchor 沿用零尺寸 fail-loud', () => {
@@ -213,13 +213,12 @@ describe('Scope placement 两阶段布局', () => {
             children: [],
           },
         ]),
-      ),
+      ).scene,
     ).toThrow(/zero-size target/);
   });
 
   it('Group、namespace target、observer 与 auto viewBox 只看到 own chain 应用一次后的最终几何', () => {
-    const observed: Array<CompiledNodeLayout> = [];
-    const compiled = compileToScene(
+    const result = compileToScene(
       scene([
         {
           type: 'scope',
@@ -236,8 +235,10 @@ describe('Scope placement 两阶段布局', () => {
           ],
         },
       ]),
-      { padding: 0, onNodeLayout: layout => observed.push(layout) },
+      { padding: 0, artifacts: { nodeLayouts: true } },
     );
+    const compiled = result.scene;
+    const observed = result.artifacts.filter(isNodeLayoutCompileArtifact).map(artifact => artifact.value);
     const group = firstGroup(compiled.primitives);
     const expectedCenter = applyTransformChain([10, 20], group.transforms ?? []);
     const path = compiled.primitives.find(
@@ -251,8 +252,7 @@ describe('Scope placement 两阶段布局', () => {
   });
 
   it('嵌套 Scope 各自完成 pivot / placement，descendant namespace 与 observer 不重复应用 ancestor chain', () => {
-    const observed: Array<CompiledNodeLayout> = [];
-    const compiled = compileToScene(
+    const result = compileToScene(
       scene([
         {
           type: 'scope',
@@ -277,8 +277,10 @@ describe('Scope placement 两阶段布局', () => {
           ],
         },
       ]),
-      { onNodeLayout: layout => observed.push(layout) },
+      { artifacts: { nodeLayouts: true } },
     );
+    const compiled = result.scene;
+    const observed = result.artifacts.filter(isNodeLayoutCompileArtifact).map(artifact => artifact.value);
     const path = compiled.primitives.find(
       (primitive): primitive is Extract<ScenePrimitive, { type: 'path' }> => primitive.type === 'path',
     );
@@ -314,7 +316,7 @@ describe('Scope placement 两阶段布局', () => {
           ],
         },
       ]),
-    );
+    ).scene;
     const path = compiled.primitives.find(
       (primitive): primitive is Extract<ScenePrimitive, { type: 'path' }> => primitive.type === 'path',
     );
@@ -334,7 +336,7 @@ describe('Scope zero-scale 反投影契约', () => {
             children: [node('inside', [10, 20])],
           },
         ]),
-      ),
+      ).scene,
     ).not.toThrow();
   });
 
@@ -355,7 +357,7 @@ describe('Scope zero-scale 反投影契约', () => {
             ],
           },
         ]),
-      ),
+      ).scene,
     ).toThrow('non-invertible scope transform');
   });
 });

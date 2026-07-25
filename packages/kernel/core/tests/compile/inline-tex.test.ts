@@ -46,7 +46,7 @@ const compile = (
   const out = compileToScene(scene(children), {
     onWarn: w => warnings.push(w),
     ...(withTex ? { lowerTex: fakeLowerTex } : {}),
-  });
+  }).scene;
   return { primitives: out.primitives, warnings, width: out.layout.width };
 };
 

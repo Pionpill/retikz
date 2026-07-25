@@ -24,7 +24,7 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
       ],
     };
     // (10,0) prevEnd 锚定；两条 rel 都从 (10,0) 出发
-    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
       move([0, 0]),
       line([10, 0]),
       line([15, 0]),
@@ -48,7 +48,7 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
       move([0, 0]),
       line([10, 0]),
       line([15, 0]),
@@ -72,7 +72,7 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
       move([0, 0]),
       line([10, 0]),
       line([5, 5]),
@@ -101,7 +101,7 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
       ],
     };
     // 曲线后 prevEnd = (10,0)；rel 解析到 (15,0)
-    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
       move([0, 0]),
       quad([5, -5], [10, 0]),
       line([15, 0]),
@@ -130,7 +130,7 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
       ],
     };
     // arc endpoint (polar y-down) = (0, 10)；relative 解析到 (5, 10)
-    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
       move([10, 0]),
       arc([0, 0], 10, 0, 90),
       line([5, 10]),
@@ -155,7 +155,7 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
     // circle 画完 prevEnd 仍是 (0,0)；relative 解析到 (5,5)
     // ellipseArc 后 lastEnd 是 (10,0)（弧终点）；line 起点是
     // penOverride = center = (0,0)，所以会发 move 然后 line
-    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
       move([10, 0]),
       ellipseArc([0, 0], 10, 10, 0, 360),
       move([0, 0]),
@@ -178,7 +178,7 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([move([5, 3]), line([10, 3])]);
+    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([5, 3]), line([10, 3])]);
   });
 
   it('relative 与等价绝对坐标产 IR 不同但 SVG d 相同', () => {
@@ -211,8 +211,8 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
       ],
     };
     // 注意：relative [10,5] 后 prevEnd 留 (0,0)；relativeAccumulate [5,0] 解析到 (0+5, 0+0) = (5,0)
-    expect(findPathPrim(compileToScene(irRel).primitives).commands).toEqual(
-      findPathPrim(compileToScene(irAbs).primitives).commands,
+    expect(findPathPrim(compileToScene(irRel).scene.primitives).commands).toEqual(
+      findPathPrim(compileToScene(irAbs).scene.primitives).commands,
     );
   });
 });

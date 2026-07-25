@@ -62,7 +62,7 @@ Walk inward from both ends: input contract (IR) first, then output contract (Sce
    Pure functions + plain data, no classes. Pure compute primitives (vectors / affine / `arc` / intersections / circles / hull) live in the standalone [`@retikz/math`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/math) package, re-exported by core; reusable shape / boundary / path geometry helpers live in [`shared/geometry/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/shared/geometry), and `geometry/` remains only as compatibility re-exports.
 
 6. **[`compile/compile.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/compile.ts) — Compiler entry**<br />
-   `compileToScene(ir, options): Scene`. The main flow recursively processes children, lays out nodes and scopes, resolves paths, and collects paint / clip / marker resources. Reading it shows how an IR becomes a Scene.
+   `compileToScene(ir, options): CompileResult`. The main flow recursively processes children, lays out nodes and scopes, resolves paths, and collects Scene resources plus typed artifacts in the same compile. Reading it shows how IR becomes `result.scene` and `result.artifacts`.
 
 7. **[`compile/node/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/compile/node) / [`path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/compile/path) / [`position.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/position.ts) — Sub-compilers**<br />
    Drill in as needed: node layout / path stepping / position resolution. [`text/metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text/metrics.ts) ships a fallback measurer; adapters can inject a more accurate one.
@@ -80,12 +80,12 @@ Keep these constraints in mind when reading core; they explain why some implemen
 - **Zero React, zero DOM** — core must not `import 'react'` / `import 'react-dom'`; browser-specific capabilities (text measurement, events) are injected by the adapter.
 - **IR data is 100% JSON-serializable** — no functions, class instances, refs, or Symbols in the IR schema.
 - **Geometry uses pure functions + plain data only** — no classes; function bundles are exposed as `const ns = { method1, method2 }` namespaces.
-- **`compileToScene` is a pure function** — same IR + same options ⇒ identical Scene; no `Math.random()`, `Date.now()`, or module-level mutable state.
+- **`compileToScene` is a pure function** — same IR + same options ⇒ identical Scene and artifacts; no `Math.random()`, `Date.now()`, or module-level mutable state.
 - **Runtime dependency allowlist** — `zod` only; new runtime deps must be justified in the PR description.
 
 ## @retikz/react
 
-`peerDependencies: react / react-dom`. The whole package does three things: turn JSX into an IR, call `compileToScene` to obtain a Scene, and render the Scene into SVG elements.
+`peerDependencies: react / react-dom`. The package turns JSX into IR, calls `compileToScene` for Scene plus artifacts, and renders the Scene through SVG or Canvas.
 
 ### Package Layout
 
@@ -102,7 +102,7 @@ Keep these constraints in mind when reading core; they explain why some implemen
    See which Kernel / Sugar components, types, and bridges are exposed. `WayDSL` and related constants from core are re-exported here so React users can import from a single package.
 
 2. **[`kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/runtime/Layout.tsx) — Top-level orchestrator**<br />
-   `<Layout>` is the entry point of the whole pipeline: children → `buildIR` → `compileToScene` → `renderPrim` → `<svg>`. One file gives you the adapter's overall shape.
+   `<Layout>` is the entry point of the whole pipeline: children → `buildIRWithContributions` → `compileToScene` → `result.scene` → renderer, with `result.artifacts` published after commit. One file gives you the adapter's overall shape.
 
 3. **[`kernel/builder.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/builder.ts) — JSX → IR**<br />
    Dispatches by child `displayName` to construct IRNode / IRPath / IRStep / IRScope, etc. The companion [`unbuilder.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/unbuilder.ts) goes the other way (IR → React element tree), useful for editor / AI workflows that "feed IR, render components".

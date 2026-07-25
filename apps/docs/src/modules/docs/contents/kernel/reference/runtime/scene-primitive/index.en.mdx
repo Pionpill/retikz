@@ -3,7 +3,7 @@ title: Scene Primitives
 description: Look up the Scene, resources, structured primitives, and renderer boundary produced by compile
 ---
 
-Scene primitives are the output contract of `compileToScene`: after IR is laid out, the result no longer contains React, JSX, or Zod schemas. It is a structured drawing model that renderers can consume directly.
+Scene primitives are the output contract of `compileToScene(...).scene`: after IR is laid out, the result no longer contains React, JSX, or Zod schemas. It is a structured drawing model that renderers can consume directly.
 
 ## Scene
 
@@ -62,6 +62,12 @@ Element-level visual effects only live on renderable main geometry primitives:
 | `blendMode?` | `RectPrim` / `EllipsePrim` / `PathPrim` | `BlendModeValue`; renderers map it to the target platform's blend mode       |
 
 `TextPrim` does not support element-level `shadow` / `blendMode`. `GroupPrim` currently only carries `transforms`, `clipRef`, `children`, and the common `id` / `meta` / `animations`; it has no group-level effect fields. Visual effects do not change a primitive's hit area; interaction should still use `id` / `meta` plus an external hit-test / hydration layer.
+
+### Canonical visual bounds
+
+A layout-aware composite's `layoutChild().visualBounds` is computed from the final static primitive tree; it is not an alias for a Node allocation box. It covers rectangles, rotated ellipses, text, complete path-command hulls, arrow markers, shadows, clips, and recursive group transforms. A paint contributes no geometry when its `fillOpacity` / `strokeOpacity` is explicitly `0`; CSS colors whose alpha cannot be resolved statically remain conservatively visible. Stroke joins use the canonical miter upper bound of `10`, which covers current renderer defaults and avoids backend- or composite-specific bounds guesses.
+
+Static / settled here means the static Scene state produced by compile. Animation does not expand this envelope; a capability that needs whole-animation bounds must solve that separately.
 
 ## Text
 
@@ -148,6 +154,18 @@ For platform materialization behavior, continue to the [SVG renderer](/kernel/pa
       path: 'packages/kernel/core/src/contract/scene/marker.ts',
       startLine: 141,
       endLine: 162,
+    },
+    {
+      label: 'Canonical stroke and shadow bounds',
+      path: 'packages/kernel/core/src/compile/orchestration/visual-bounds.ts',
+      startLine: 101,
+      endLine: 127,
+    },
+    {
+      label: 'Primitive, marker, clip, and group visual bounds',
+      path: 'packages/kernel/core/src/compile/orchestration/visual-bounds.ts',
+      startLine: 235,
+      endLine: 350,
     },
   ]}
 />

@@ -18,7 +18,7 @@ const compile = (
   spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options?: LowerPlotsOptions,
-) => compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) });
+) => compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) }).scene;
 
 const specWithModel = (): IRPlotSpec =>
   PlotSpecSchema.parse({

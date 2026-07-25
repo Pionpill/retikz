@@ -20,7 +20,9 @@ describe('compile source structure', () => {
       'compileToScene',
       'computeLayout',
       'fallbackMeasurer',
+      'formatCompileOccurrence',
       'formatCompileWarning',
+      'isNodeLayoutCompileArtifact',
       'lowerIRToKernel',
     ]);
   });
@@ -101,6 +103,7 @@ describe('compile source structure', () => {
       'boundaryKey',
       'boundaryPointOf',
       'boxInsets',
+      'chooseBlackOrWhiteForLuminance',
       'computeCompiledNodeLayout',
       'createScopeCircleLayout',
       'createScopePlaceholderLayout',
@@ -115,12 +118,14 @@ describe('compile source structure', () => {
       'layoutNode',
       'normalizeLabelPosition',
       'outerRectOf',
+      'parseStaticCssColor',
       'resolveAxisScale',
       'resolveBoundary',
       'resolveBoxSize',
       'resolveBoxSpacing',
       'resolveLabelRotateDeg',
       'resolveNodeLabelGeometry',
+      'resolveNodeTextColor',
     ]);
 
     const layout: Partial<NodeLayout> = {};

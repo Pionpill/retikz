@@ -1,4 +1,4 @@
-import type { CompositeDefinition, IRChild, IRJsonObject, IRNode, IRScope } from '@retikz/core';
+import type { ExpandCompositeDefinition, IRChild, IRJsonObject, IRNode, IRScope } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 
 import { defineComposite } from '@retikz/core';
@@ -725,7 +725,10 @@ const expandPlot = (node: IRPlotSpec, datasets: ExternalDatasets, options: Lower
  * 构造 plot 的 Tier 2 下沉逻辑，供 core `CompileOptions.composites` 注入
  * @description 数据闭进函数、不进 IR；返回的 CompositeDefinition 把 plot composite 节点展开成 core Scope/Node/Path
  */
-export const lowerPlots = (datasets: ExternalDatasets, options: LowerPlotsOptions = {}): Array<CompositeDefinition> => [
+export const lowerPlots = (
+  datasets: ExternalDatasets,
+  options: LowerPlotsOptions = {},
+): Array<ExpandCompositeDefinition<IRPlotSpec, 'plot', 'plot'>> => [
   defineComposite({
     namespace: 'plot',
     type: 'plot',

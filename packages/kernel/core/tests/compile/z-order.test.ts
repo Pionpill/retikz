@@ -50,19 +50,19 @@ const silent = { onWarn: () => {} };
 describe('compile primitives 顺序严格等于 IR 声明顺序', () => {
   it('顶层 node / path 交错时 primitives 顺序等于 IR 声明顺序', () => {
     const ir = scene([node([0, 0]), line([10, 0]), node([20, 0]), line([30, 0]), node([40, 0])]);
-    const types = compileToScene(ir, silent).primitives.map(p => p.type);
+    const types = compileToScene(ir, silent).scene.primitives.map(p => p.type);
     expect(types).toEqual(['rect', 'path', 'rect', 'path', 'rect']);
   });
 
   it('夹在两个 node 之间的 path 不再被顶到末尾', () => {
     const ir = scene([node([0, 0]), line([10, 0]), node([20, 0])]);
-    const types = compileToScene(ir, silent).primitives.map(p => p.type);
+    const types = compileToScene(ir, silent).scene.primitives.map(p => p.type);
     expect(types).toEqual(['rect', 'path', 'rect']);
   });
 
   it('无 transform 的 scope 内部 node / path 交错时 group 子序等于 IR 声明顺序', () => {
     const ir = scene([{ type: 'scope', children: [node([0, 0]), line([10, 0]), node([20, 0])] }]);
-    const result = compileToScene(ir, silent);
+    const result = compileToScene(ir, silent).scene;
     expect(result.primitives.filter(p => p.type === 'group')).toHaveLength(1);
     const group = firstGroup(result);
     expect(group.children.map(p => p.type)).toEqual(['rect', 'path', 'rect']);
@@ -76,13 +76,13 @@ describe('compile primitives 顺序严格等于 IR 声明顺序', () => {
 describe('compile 占位回填的边界场景', () => {
   it('顶层仅一条 path 时占位回填后 primitives 为单元素 path', () => {
     const ir = scene([line([10, 0])]);
-    const types = compileToScene(ir, silent).primitives.map(p => p.type);
+    const types = compileToScene(ir, silent).scene.primitives.map(p => p.type);
     expect(types).toEqual(['path']);
   });
 
   it('无 transform 的 scope 仅含一条可解析 path 时不被剪枝且 group 含该 path', () => {
     const ir = scene([{ type: 'scope', children: [line([10, 0])] }]);
-    const result = compileToScene(ir, silent);
+    const result = compileToScene(ir, silent).scene;
     // scope 未被 prune：顶层仍得到一个 GroupPrim
     expect(result.primitives.filter(p => p.type === 'group')).toHaveLength(1);
     const group = firstGroup(result);
@@ -103,7 +103,7 @@ describe('compile 占位回填的边界场景', () => {
         ],
       },
     ]);
-    const result = compileToScene(ir, silent);
+    const result = compileToScene(ir, silent).scene;
     const outer = firstGroup(result);
     // 外层：node、内层 scope（group）、path → ['rect', 'group', 'path']
     expect(outer.children.map(p => p.type)).toEqual(['rect', 'group', 'path']);
@@ -132,7 +132,7 @@ describe('compile path 解析失败时占位被移除且不泄漏', () => {
       node([20, 0]),
     ]);
     const warnings: Array<CompileWarning> = [];
-    const result = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const result = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
 
     // 仍发出原有 warning
     expect(warnings.some(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toBe(true);
@@ -168,7 +168,7 @@ describe('compile path 解析失败时占位被移除且不泄漏', () => {
       ]),
     ];
     for (const ir of cases) {
-      const result = compileToScene(ir, silent);
+      const result = compileToScene(ir, silent).scene;
       expect(collectTypes(result.primitives)).not.toContain('path-placeholder');
     }
   });
@@ -187,7 +187,7 @@ describe('compile transformed scope 保留 path 所有权', () => {
         children: [node([0, 0]), line([10, 0])],
       },
     ]);
-    const result = compileToScene(ir, silent);
+    const result = compileToScene(ir, silent).scene;
 
     expect(result.primitives.map(p => p.type)).toEqual(['group']);
     const group = firstGroup(result);
@@ -213,7 +213,7 @@ describe('compile transformed scope 保留 path 所有权', () => {
         children: [node([0, 0]), line([10, 0])],
       },
     ]);
-    const result = compileToScene(ir, silent);
+    const result = compileToScene(ir, silent).scene;
     expect(result.primitives.map(p => p.type)).toEqual(['group']);
     const group = firstGroup(result);
     const path = group.children.find(primitive => primitive.type === 'path');
@@ -263,9 +263,9 @@ describe('compile transformed scope 保留 path 所有权', () => {
       },
       node([20, 0]),
     ]);
-    const types = compileToScene(ir, silent).primitives.map(p => p.type);
+    const types = compileToScene(ir, silent).scene.primitives.map(p => p.type);
     expect(types).toEqual(['rect', 'group', 'rect']);
-    const group = firstGroup(compileToScene(ir, silent));
+    const group = firstGroup(compileToScene(ir, silent).scene);
     expect(group.children.map(p => p.type)).toEqual(['path']);
   });
 });

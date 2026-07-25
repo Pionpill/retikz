@@ -5,6 +5,7 @@ import type { CompileWarning } from '../../src/compile/warning';
 import type { PathPrim, ScenePrimitive, TextPrim } from '../../src/contract';
 import type { IRNode, IRNodeLabel, IRScene } from '../../src/schemas';
 
+import { isNodeLayoutCompileArtifact } from '../../src/compile/artifact';
 import { compileToScene } from '../../src/compile/compile';
 import { CompileWarningCode } from '../../src/compile/constants';
 import { normalizeTextMetrics } from '../../src/compile/text';
@@ -62,7 +63,7 @@ describe('Node label visual-box spacing', () => {
     const scene = compileToScene(sceneWithLabel({ text: 'L', position: 'right', distance: 8 }), {
       measureText: fixedMeasure,
       padding: 0,
-    });
+    }).scene;
     const label = labelText(scene.primitives);
 
     expect(label.x).toBeCloseTo(78);
@@ -73,7 +74,7 @@ describe('Node label visual-box spacing', () => {
     const scene = compileToScene(sceneWithLabel({ text: 'L', position: 'top', distance: 8, rotate: 90 }), {
       measureText: fixedMeasure,
       padding: 0,
-    });
+    }).scene;
     const label = labelText(scene.primitives);
 
     expect(label.x).toBeCloseTo(0);
@@ -84,7 +85,7 @@ describe('Node label visual-box spacing', () => {
     const scene = compileToScene(sceneWithLabel({ text: 'L', position: 'right', placement: 'inside', distance: 0 }), {
       measureText: fixedMeasure,
       padding: 0,
-    });
+    }).scene;
 
     expect(labelText(scene.primitives).x).toBeCloseTo(30);
   });
@@ -96,7 +97,7 @@ describe('Node label visual-box spacing', () => {
         { padding: { left: 0, right: 20, top: 0, bottom: 0 }, minimumSize: 0 },
       ),
       { measureText: fixedMeasure, padding: 0 },
-    );
+    ).scene;
     const label = labelText(scene.primitives);
 
     expect(label.x).toBeCloseTo(10);
@@ -110,7 +111,7 @@ describe('Node label visual-box spacing', () => {
         { padding: { left: 0, right: 20, top: 0, bottom: 0 }, minimumSize: 0 },
       ),
       { measureText: fixedMeasure, padding: 0 },
-    );
+    ).scene;
 
     expect(labelText(scene.primitives).x).toBeCloseTo(48);
   });
@@ -129,7 +130,7 @@ describe('Node label visual-box spacing', () => {
         },
       ],
     };
-    const scene = compileToScene(ir, { measureText: fixedMeasure, padding: 0 });
+    const scene = compileToScene(ir, { measureText: fixedMeasure, padding: 0 }).scene;
 
     expect(labelText(scene.primitives).x).toBeCloseTo(178);
   });
@@ -138,7 +139,7 @@ describe('Node label visual-box spacing', () => {
     const scene = compileToScene(
       sceneWithLabel({ text: 'L', position: 'right', distance: 8 }, { scale: { x: 2, y: 1 } }),
       { measureText: fixedMeasure, padding: 0 },
-    );
+    ).scene;
 
     expect(labelText(scene.primitives).x).toBeCloseTo(128);
   });
@@ -155,7 +156,7 @@ describe('Node label visual-box spacing', () => {
         },
       ],
     };
-    const scene = compileToScene(ir, { measureText: fixedMeasure, padding: 0 });
+    const scene = compileToScene(ir, { measureText: fixedMeasure, padding: 0 }).scene;
 
     expect(scene.layout.width).toBeCloseTo(296);
     expect(scene.layout.height).toBeCloseTo(180);
@@ -194,7 +195,7 @@ describe('Node label resolved metrics', () => {
   it('uses normalized ascent/descent for alphabetic baseline and measuredHeight', () => {
     const metrics: TextMetrics = { width: 40, height: 30, ascent: 8, descent: 2 };
     const measureText = vi.fn<TextMeasurer>(() => metrics);
-    const scene = compileToScene(sceneWithLabel({ text: 'L', position: 'center' }), { measureText, padding: 0 });
+    const scene = compileToScene(sceneWithLabel({ text: 'L', position: 'center' }), { measureText, padding: 0 }).scene;
     const label = labelText(scene.primitives);
 
     expect(measureText).toHaveBeenCalledTimes(1);
@@ -210,7 +211,7 @@ describe('Node label resolved metrics', () => {
     ['descent', { width: 40, height: 20, descent: -1 }],
   ] satisfies Array<[string, TextMetrics]>)('fails loud for invalid %s metrics', (_field, metrics) => {
     expect(() =>
-      compileToScene(sceneWithLabel({ text: 'L', position: 'center' }), { measureText: () => metrics, padding: 0 }),
+      compileToScene(sceneWithLabel({ text: 'L', position: 'center' }), { measureText: () => metrics, padding: 0 }).scene,
     ).toThrow(/normalizeTextMetrics: invalid/);
   });
 
@@ -223,7 +224,7 @@ describe('Node label resolved metrics', () => {
           ascent: 1e308,
           descent: 1e308,
         }),
-      }),
+      }).scene,
     ).toThrow(/normalizeTextMetrics: invalid/);
   });
 
@@ -236,8 +237,8 @@ describe('Node label resolved metrics', () => {
       children: [{ type: 'node', position: [0, 0], text: [{ runs: [{ text: 'body' }] }] }],
     };
 
-    expect(() => compileToScene(labelScene, { measureText: invalidHeight })).toThrow(/normalizeTextMetrics: invalid/);
-    expect(() => compileToScene(nodeTextScene, { measureText: invalidHeight })).not.toThrow();
+    expect(() => compileToScene(labelScene, { measureText: invalidHeight }).scene).toThrow(/normalizeTextMetrics: invalid/);
+    expect(() => compileToScene(nodeTextScene, { measureText: invalidHeight }).scene).not.toThrow();
   });
 
   it('warns and skips malformed LoweredTex only on the Node label path', () => {
@@ -252,7 +253,7 @@ describe('Node label resolved metrics', () => {
       lowerTex,
       measureText: fixedMeasure,
       onWarn: warning => warnings.push(warning),
-    });
+    }).scene;
 
     expect(warnings.some(warning => warning.code === CompileWarningCode.TexInvalid)).toBe(true);
     expect(flattenPrims(scene.primitives).some(primitive => primitive.type === 'path' && primitive.fillRule)).toBe(
@@ -266,7 +267,7 @@ describe('Node label pin and bounds', () => {
     const scene = compileToScene(
       sceneWithLabel({ text: 'L', position: 'right', distance: 10, rotate: 45, pin: true }),
       { measureText: fixedMeasure, padding: 0, precision: 4 },
-    );
+    ).scene;
     const pin = pinLine(scene.primitives);
     const end = pin.commands[1];
 
@@ -282,7 +283,7 @@ describe('Node label pin and bounds', () => {
       measureText: fixedMeasure,
       padding: 0,
       precision: 4,
-    });
+    }).scene;
 
     expect(scene.layout.width).toBeCloseTo(150.4264, 3);
     expect(scene.layout.height).toBeCloseTo(60);
@@ -314,15 +315,17 @@ describe('Node label pin and bounds', () => {
         },
       ],
     };
-    let markerX: number | undefined;
-
-    compileToScene(ir, {
+    const result = compileToScene(ir, {
       measureText: fixedMeasure,
       padding: 0,
-      onNodeLayout: layout => {
-        if (layout.id === 'marker') markerX = layout.rect.x;
-      },
+      artifacts: { nodeLayouts: true },
     });
+    const markerX = result.artifacts
+      .find(
+        artifact =>
+          isNodeLayoutCompileArtifact(artifact) && artifact.value.id === 'marker',
+      )
+      ?.value.rect.x;
 
     expect(markerX).toBeCloseTo(50);
   });
@@ -337,9 +340,9 @@ describe('Node label distance contracts', () => {
   it('validates CompileOptions.labelDistance before any layout', () => {
     const empty: IRScene = { version: 1, type: 'scene', children: [] };
 
-    expect(() => compileToScene(empty, { labelDistance: 0 })).not.toThrow();
+    expect(() => compileToScene(empty, { labelDistance: 0 }).scene).not.toThrow();
     for (const invalid of [-1, Number.NaN, Number.POSITIVE_INFINITY]) {
-      expect(() => compileToScene(empty, { labelDistance: invalid })).toThrow(
+      expect(() => compileToScene(empty, { labelDistance: invalid }).scene).toThrow(
         /labelDistance.*non-negative finite number/,
       );
     }

@@ -61,7 +61,7 @@ describe('手搓非 finite / 退化 viewBox 经 compileToScene 必抛（逐字�
   ];
   for (const { name, vb } of cases) {
     it(`${name} → throw（脏值不进 Scene）`, () => {
-      expect(() => compileToScene(sceneWithViewBox([circleNode('o', [0, 0])], vb))).toThrow();
+      expect(() => compileToScene(sceneWithViewBox([circleNode('o', [0, 0])], vb)).scene).toThrow();
     });
   }
 });
@@ -77,7 +77,7 @@ describe('round 不得把合法 viewBox 弄成非 finite / 退化（守卫盲区
     let layout: { x: number; y: number; width: number; height: number } | undefined;
     let threw = false;
     try {
-      layout = compileToScene(ir, { precision: 400 }).layout;
+      layout = compileToScene(ir, { precision: 400 }).scene.layout;
     } catch {
       threw = true;
     }
@@ -91,7 +91,7 @@ describe('round 不得把合法 viewBox 弄成非 finite / 退化（守卫盲区
     let layout: { x: number; y: number; width: number; height: number } | undefined;
     let threw = false;
     try {
-      layout = compileToScene(ir, { precision: 350 }).layout;
+      layout = compileToScene(ir, { precision: 350 }).scene.layout;
     } catch {
       threw = true;
     }
@@ -105,7 +105,7 @@ describe('round 不得把合法 viewBox 弄成非 finite / 退化（守卫盲区
     let layout: { x: number; y: number; width: number; height: number } | undefined;
     let threw = false;
     try {
-      layout = compileToScene(ir, { precision: -3 }).layout;
+      layout = compileToScene(ir, { precision: -3 }).scene.layout;
     } catch {
       threw = true;
     }
@@ -122,7 +122,7 @@ describe('round 不得把合法 viewBox 弄成非 finite / 退化（守卫盲区
     let layout: { x: number; y: number; width: number; height: number } | undefined;
     let threw = false;
     try {
-      layout = compileToScene(ir).layout; // 默认 precision 2 → 1e-10 round 成 0
+      layout = compileToScene(ir).scene.layout; // 默认 precision 2 → 1e-10 round 成 0
     } catch {
       threw = true;
     }
@@ -137,7 +137,7 @@ describe('round 不得把合法 viewBox 弄成非 finite / 退化（守卫盲区
     let layout: { x: number; y: number; width: number; height: number } | undefined;
     let threw = false;
     try {
-      layout = compileToScene(ir).layout; // 1e308 * 100 = Infinity → /100 = Infinity
+      layout = compileToScene(ir).scene.layout; // 1e308 * 100 = Infinity → /100 = Infinity
     } catch {
       threw = true;
     }
@@ -149,7 +149,7 @@ describe('round 不得把合法 viewBox 弄成非 finite / 退化（守卫盲区
 
   it('需进位的小数 + precision 0：四字段被正确取整', () => {
     const ir = sceneWithViewBox([circleNode('o', [0, 0])], { x: -12.7, y: 3.4, width: 100.6, height: 50.5 });
-    const layout = compileToScene(ir, { precision: 0 }).layout;
+    const layout = compileToScene(ir, { precision: 0 }).scene.layout;
     const r = createRound(0);
     expect(layout).toEqual({ x: r(-12.7), y: r(3.4), width: r(100.6), height: r(50.5) });
   });
@@ -162,7 +162,7 @@ describe('Scene round-trip：layout JSON 序列化等价', () => {
   it('合法 viewBox：JSON.parse(JSON.stringify(scene)) 的 layout 与原等价', () => {
     const scene = compileToScene(
       sceneWithViewBox([circleNode('o', [0, 0])], { x: -100, y: -100, width: 200, height: 200 }),
-    );
+    ).scene;
     const roundTripped = JSON.parse(JSON.stringify(scene)) as typeof scene;
     expect(roundTripped.layout).toEqual(scene.layout);
   });
@@ -170,7 +170,7 @@ describe('Scene round-trip：layout JSON 序列化等价', () => {
   it('小数 viewBox：序列化后 layout 仍等价（无 NaN/Infinity 被 JSON 写成 null）', () => {
     const scene = compileToScene(
       sceneWithViewBox([circleNode('o', [0, 0])], { x: -12.555, y: 3.214, width: 100.128, height: 50.501 }),
-    );
+    ).scene;
     const json = JSON.stringify(scene);
     // JSON.stringify 把 NaN/Infinity 写成 null——若 layout 含脏值这里会出现 "null"
     expect(json).not.toContain('null');
@@ -186,19 +186,19 @@ describe('Scene round-trip：layout JSON 序列化等价', () => {
 describe('override 绝对：内容再脏 layout 仍只用 viewBox', () => {
   it('内容空 + viewBox → layout = viewBox（不走兜底 100×100）', () => {
     const viewBox = { x: -30, y: -30, width: 60, height: 60 };
-    const result = compileToScene(sceneWithViewBox([], viewBox));
+    const result = compileToScene(sceneWithViewBox([], viewBox)).scene;
     expect(result.layout).toEqual(viewBox);
   });
 
   it('内容远溢出（位置 1e6）+ viewBox → layout 不被撑大', () => {
     const viewBox = { x: -100, y: -100, width: 200, height: 200 };
-    const result = compileToScene(sceneWithViewBox([circleNode('far', [1_000_000, 1_000_000], 80)], viewBox));
+    const result = compileToScene(sceneWithViewBox([circleNode('far', [1_000_000, 1_000_000], 80)], viewBox)).scene;
     expect(result.layout).toEqual(viewBox);
   });
 
   it('viewBox 与 padding=999 共存 → layout 用 viewBox，padding 不叠加', () => {
     const viewBox = { x: -100, y: -100, width: 200, height: 200 };
-    const result = compileToScene(sceneWithViewBox([circleNode('o', [0, 0])], viewBox), { padding: 999 });
+    const result = compileToScene(sceneWithViewBox([circleNode('o', [0, 0])], viewBox), { padding: 999 }).scene;
     expect(result.layout).toEqual(viewBox);
   });
 });
@@ -221,7 +221,7 @@ describe('viewBox 与 clip / paint 资源正交共存', () => {
       ],
       viewBox,
     };
-    const result = compileToScene(ir);
+    const result = compileToScene(ir).scene;
     expect(result.layout).toEqual(viewBox);
     // clip 资源独立于 viewBox 生成
     const clipResources = (result.resources ?? []).filter(r => r.kind === 'clip');
@@ -251,7 +251,7 @@ describe('viewBox 与 clip / paint 资源正交共存', () => {
       ],
       viewBox,
     };
-    const result = compileToScene(ir);
+    const result = compileToScene(ir).scene;
     expect(result.layout).toEqual(viewBox);
     const paintResources = (result.resources ?? []).filter(r => r.kind === 'paint');
     expect(paintResources.length).toBeGreaterThan(0);

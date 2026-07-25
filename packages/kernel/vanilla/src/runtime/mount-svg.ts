@@ -1,4 +1,4 @@
-import type { Scene } from '@retikz/core';
+import type { CompileArtifact, Scene } from '@retikz/core';
 import type { AnimationControls } from '@retikz/render/animation';
 
 import {
@@ -44,13 +44,15 @@ export const mountSvg = (container: Element, input: RenderInput, options: MountO
   const animate = resolveAnimationEnabled(animation.enabled, prefersReducedMotion());
   let animationControls: AnimationControls | undefined;
   let currentScene: Scene;
+  let currentArtifacts: ReadonlyArray<CompileArtifact> = Object.freeze([]);
   let currentRuntimeMeta: VanillaRuntimeMeta = createEmptyRuntimeMeta();
   // 存活水合的解绑句柄：view.dispose 时统一解绑（未手动 dispose 的水合也随 view 卸载干净）
   const liveHydrationDisposers = new Set<() => void>();
 
   const renderInto = (next: RenderInput): void => {
-    const { scene, runtimeMeta } = toSceneResult(next, options);
+    const { scene, artifacts, runtimeMeta } = toSceneResult(next, options);
     currentScene = scene;
+    currentArtifacts = artifacts;
     currentRuntimeMeta = runtimeMeta;
     const doc = buildSvgDocument(scene, {
       idPrefix,
@@ -120,6 +122,9 @@ export const mountSvg = (container: Element, input: RenderInput, options: MountO
     },
     get runtimeMeta() {
       return currentRuntimeMeta;
+    },
+    get artifacts() {
+      return currentArtifacts;
     },
   };
 };

@@ -201,7 +201,7 @@ import { NodeTextColor } from '@retikz/core';
 
 节点尺寸按固定顺序收敛：文本先测量与折行，`padding` 再形成内容内框，shape definition 根据内框与 params 算出视觉外接盒，`minimumSize` 只负责托底。`scale` 从前面开始同步影响字体、间距和形状参数，`rotate` 最后附着到几何结果。
 
-锚点对齐在这份 provisional 布局完成后才计算目标与自身 anchor，再整体平移 Node。`onNodeLayout`、id 注册、Scene 输出、Scope bbox 与自动 viewBox 都只会看到平移后的最终几何。
+锚点对齐在这份 provisional 布局完成后才计算目标与自身 anchor，再整体平移 Node。opt-in `nodeLayout` artifact、id 注册、Scene 输出、Scope bbox 与自动 viewBox 都只会看到平移后的最终几何。
 
 `label` 不参与视觉形状尺寸计算，而是作为附属图元单独布局；它不会撑大节点边框，但会与 `margin`、阴影一起进入自动 viewBox 的内容范围。编译器先在一个测量阶段收敛标签视觉框，再用最终节点矩形、标签旋转视觉框与 `distance` 求中心偏移，不会因矩形完成而重新测量；同一份盒几何同时决定文字基线、pin 终点与 viewBox。`Node.scale` 不缩放 `distance` 这个用户单位值，外层 `Scope` transform 则会连同节点、标签与间距一起变换。
 
@@ -210,8 +210,8 @@ import { NodeTextColor } from '@retikz/core';
     {
       label: '内容与几何收敛为 Node 布局',
       path: 'packages/kernel/core/src/compile/node/layout.ts',
-      startLine: 129,
-      endLine: 293,
+      startLine: 131,
+      endLine: 313,
     },
     {
       label: '形状、内容与标签输出为 Scene 图元',
@@ -228,8 +228,8 @@ import { NodeTextColor } from '@retikz/core';
     {
       label: '命名注册与自动视框收集',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 177,
-      endLine: 229,
+      startLine: 211,
+      endLine: 286,
     },
   ]}
 />
@@ -294,20 +294,20 @@ Path / Draw 的端点采用另一种时机。路径先保留绘制顺序占位�
     {
       label: 'Node 布局后注册 id',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 177,
-      endLine: 229,
+      startLine: 211,
+      endLine: 286,
     },
     {
       label: 'Path 加入延迟输出队列',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 255,
-      endLine: 278,
+      startLine: 318,
+      endLine: 343,
     },
     {
       label: '命名注册完成后解析 Path',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 147,
-      endLine: 175,
+      startLine: 183,
+      endLine: 209,
     },
   ]}
 />

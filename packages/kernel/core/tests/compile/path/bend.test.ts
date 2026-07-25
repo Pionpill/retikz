@@ -24,7 +24,7 @@ describe("compile path: 'bend'", () => {
     // offset =（chord/2）× tan(15°) × 4/3（apexOffset 为圆弧 sagitta，chord=12 → 6）
     const offset = (6 * Math.tan((15 * Math.PI) / 180) * 4) / 3;
     const r = (n: number) => Math.round(n * 100) / 100;
-    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
       move([0, 0]),
       cubic([4, r(-offset)], [8, r(-offset)], [12, 0]),
     ]);
@@ -57,8 +57,8 @@ describe("compile path: 'bend'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(irImplicit).primitives).commands).toEqual(
-      findPathPrim(compileToScene(irExplicit).primitives).commands,
+    expect(findPathPrim(compileToScene(irImplicit).scene.primitives).commands).toEqual(
+      findPathPrim(compileToScene(irExplicit).scene.primitives).commands,
     );
   });
 
@@ -89,8 +89,8 @@ describe("compile path: 'bend'", () => {
         },
       ],
     };
-    const cmdsL = findPathPrim(compileToScene(irL).primitives).commands;
-    const cmdsR = findPathPrim(compileToScene(irR).primitives).commands;
+    const cmdsL = findPathPrim(compileToScene(irL).scene.primitives).commands;
+    const cmdsR = findPathPrim(compileToScene(irR).scene.primitives).commands;
     // 期望第二个 command 是 cubic：control 点 y 关于 chord 对称
     const cubL = cmdsL[1];
     const cubR = cmdsR[1];
@@ -116,7 +116,7 @@ describe("compile path: 'bend'", () => {
         },
       ],
     };
-    const commands = findPathPrim(compileToScene(ir).primitives).commands;
+    const commands = findPathPrim(compileToScene(ir).scene.primitives).commands;
     // 起头是 move(0,0) → cubic ...，结尾是 line(20, 0)
     expect(commands[0]).toEqual(move([0, 0]));
     expect(commands[1].kind).toBe('cubic');

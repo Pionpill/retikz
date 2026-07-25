@@ -13,7 +13,7 @@ const scene = (children: IRScene['children']): IRScene => ({
 
 const compileWithWarnings = (ir: IRScene): { compiled: Scene; warnings: Array<CompileWarning> } => {
   const warnings: Array<CompileWarning> = [];
-  const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+  const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
   return { compiled, warnings };
 };
 
@@ -280,7 +280,7 @@ describe('GroupPrim 形态仍随 localNamespace 不变（仅命名空间隔离�
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const group = compiled.primitives.find(p => p.type === 'group');
     expect(group?.transforms).toEqual([{ kind: 'translate', x: 30, y: 0 }]);
   });

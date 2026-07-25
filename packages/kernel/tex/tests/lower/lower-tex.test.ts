@@ -108,7 +108,7 @@ describe('[lower-tex] MathJax integration', () => {
         type: 'scene',
         children: [{ type: 'node', id: 'eq', position: [0, 0], text: '$$\\frac{a}{b}$$' }],
       };
-      const scene = compileToScene(ir, { lowerTex });
+      const scene = compileToScene(ir, { lowerTex }).scene;
       expect(JSON.stringify(scene.primitives)).toContain('"fillRule":"evenodd"');
     },
     MATHJAX_INTEGRATION_TIMEOUT,

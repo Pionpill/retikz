@@ -68,8 +68,8 @@ describe('[ADV] JSON 可序列化护栏', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'gen', params: {} },
     ]);
-    expect(() => compileToScene(ir, { pathGenerators: [gen] })).toThrow(/non-finite coordinate/i);
-    expect(() => compileToScene(ir, { pathGenerators: [gen] })).toThrow(/'gen'/);
+    expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).toThrow(/non-finite coordinate/i);
+    expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).toThrow(/'gen'/);
   });
 
   it('generate_returns_Infinity_coord：generate 产 Infinity 坐标 → 抛', () => {
@@ -82,7 +82,7 @@ describe('[ADV] JSON 可序列化护栏', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'gen', params: {} },
     ]);
-    expect(() => compileToScene(ir, { pathGenerators: [gen] })).toThrow(/non-finite coordinate/i);
+    expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).toThrow(/non-finite coordinate/i);
   });
 
   it('infinity_param_rejected_before_generate：Infinity param 在双 parse 即被拦（不进 generate）', () => {
@@ -98,7 +98,7 @@ describe('[ADV] JSON 可序列化护栏', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'gen', params: { k: Infinity } },
     ]);
-    expect(() => compileToScene(ir, { pathGenerators: [gen] })).toThrow();
+    expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).toThrow();
   });
 
   it('scene_roundtrip_finite：干净 generator 产物 Scene round-trip 无损 + 全 finite', () => {
@@ -116,7 +116,7 @@ describe('[ADV] JSON 可序列化护栏', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'gen', params: { n: 5 } },
     ]);
-    const scene = compileToScene(ir, { pathGenerators: [gen] });
+    const scene = compileToScene(ir, { pathGenerators: [gen] }).scene;
     expect(JSON.parse(JSON.stringify(scene))).toEqual(scene);
     expect(collectNumbers(scene as unknown).every(Number.isFinite)).toBe(true);
   });
@@ -162,7 +162,7 @@ describe('[ADV] generate 输出校验', () => {
       { type: 'step', kind: 'generator', name: 'gen', params: {} },
       { type: 'step', kind: 'line', to: [10, 10] },
     ]);
-    expect(() => compileToScene(ir, { pathGenerators: [gen] })).not.toThrow();
+    expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).not.toThrow();
   });
 
   const expectNonArrayThrows = (generate: () => Array<PathCommand>): void => {
@@ -195,7 +195,7 @@ describe('[ADV] generate 输出校验', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'gen', params: {} },
     ]);
-    expect(() => compileToScene(ir, { pathGenerators: [gen] })).toThrow(/unknown kind 'bogus'/);
+    expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).toThrow(/unknown kind 'bogus'/);
   });
 
   it('cmd_missing_field：cubic 缺 control2 → 抛 non-finite（含 cubic + generator 名）', () => {
@@ -223,7 +223,7 @@ describe('[ADV] generate 输出校验', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'gen', params: {} },
     ]);
-    expect(() => compileToScene(ir, { pathGenerators: [gen] })).toThrow(/non-finite coordinate/i);
+    expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).toThrow(/non-finite coordinate/i);
   });
 
   it('throws_inside：generate 内部抛错 → 包成 "path generator \'X\' threw: ..."（含名 + 原因）', () => {
@@ -258,7 +258,7 @@ describe('[ADV] generate 输出校验', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'gen', params: {} },
     ]);
-    const drawn = firstDrawnPath(compileToScene(ir, { pathGenerators: [gen] }).primitives);
+    const drawn = firstDrawnPath(compileToScene(ir, { pathGenerators: [gen] }).scene.primitives);
     expect(drawn?.commands.length ?? 0).toBeGreaterThanOrEqual(N);
   });
 });
@@ -282,7 +282,7 @@ describe('[ADV] targetParams resolve 边角', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'gen', to: [50, 0], params: { bend: { id: 'NOPE' } } },
     ]);
-    expect(() => compileToScene(ir, { pathGenerators: [gen] })).not.toThrow();
+    expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).not.toThrow();
     expect(seen && 'bend' in seen).toBe(false);
   });
 
@@ -297,7 +297,7 @@ describe('[ADV] targetParams resolve 边角', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'gen', to: [50, 0], params: { other: 1 } },
     ]);
-    expect(() => compileToScene(ir, { pathGenerators: [gen] })).not.toThrow();
+    expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).not.toThrow();
   });
 
   it.each([
@@ -374,7 +374,7 @@ describe('[ADV] targetParams resolve 边角', () => {
       ],
       [{ type: 'coordinate', id: 'C', position: [1, 2] }],
     );
-    expect(() => compileToScene(ir, { pathGenerators: [gen] })).not.toThrow();
+    expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).not.toThrow();
   });
 });
 
@@ -415,7 +415,7 @@ describe('[ADV] 未注册 / 名称边角', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'custom-curve', params: {} },
     ]);
-    expect(() => compileToScene(ir, { pathGenerators: [{ ...gen, name: 'Custom-Curve' }] })).toThrow(/custom-curve/);
+    expect(() => compileToScene(ir, { pathGenerators: [{ ...gen, name: 'Custom-Curve' }] }).scene).toThrow(/custom-curve/);
   });
 
   it('name_proto_pollution：原型链 key 经 hasOwnProperty 守门 → throw', () => {
@@ -429,7 +429,7 @@ describe('[ADV] 未注册 / 名称边角', () => {
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'generator', name: evil, params: {} },
       ]);
-      expect(() => compileToScene(ir, { pathGenerators: [gen] })).toThrow();
+      expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).toThrow();
     }
   });
 
@@ -462,7 +462,7 @@ describe('[ADV] cursor / 衔接', () => {
       { type: 'step', kind: 'generator', name: 'gen', to: [5, 5], params: {} },
       { type: 'step', kind: 'line', to: [20, 20] },
     ]);
-    expect(() => compileToScene(ir, { pathGenerators: [gen] })).not.toThrow();
+    expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).not.toThrow();
   });
 
   it('generator_then_generator：两个 generator 串联 cursor 衔接', () => {
@@ -476,7 +476,7 @@ describe('[ADV] cursor / 衔接', () => {
       { type: 'step', kind: 'generator', name: 'g1', params: {} },
       { type: 'step', kind: 'generator', name: 'g1', params: {} },
     ]);
-    const drawn = firstDrawnPath(compileToScene(ir, { pathGenerators: [g1] }).primitives);
+    const drawn = firstDrawnPath(compileToScene(ir, { pathGenerators: [g1] }).scene.primitives);
     const lines = drawn?.commands.filter(c => c.kind === 'line') ?? [];
     expect(lines[lines.length - 1].to[0]).toBe(20);
   });
@@ -488,7 +488,7 @@ describe('[ADV] cursor / 衔接', () => {
       { type: 'step', kind: 'generator', name: 'empty', to: [99, 99], params: {} },
       { type: 'step', kind: 'line', to: [50, 50] },
     ]);
-    expect(() => compileToScene(ir, { pathGenerators: [empty] })).not.toThrow();
+    expect(() => compileToScene(ir, { pathGenerators: [empty] }).scene).not.toThrow();
   });
 
   it('generator_only_move_no_draw：generator 只产 move 后接 line 不崩', () => {
@@ -502,7 +502,7 @@ describe('[ADV] cursor / 衔接', () => {
       { type: 'step', kind: 'generator', name: 'gen', params: {} },
       { type: 'step', kind: 'line', to: [30, 30] },
     ]);
-    expect(() => compileToScene(ir, { pathGenerators: [gen] })).not.toThrow();
+    expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).not.toThrow();
   });
 });
 
@@ -535,7 +535,7 @@ describe('[ADV] 与既有交叉 / round-trip', () => {
         },
       ],
     } as unknown as IRScene;
-    const drawn = firstDrawnPath(compileToScene(ir, { pathGenerators: [gen] }).primitives);
+    const drawn = firstDrawnPath(compileToScene(ir, { pathGenerators: [gen] }).scene.primitives);
     const move = drawn?.commands.find(c => c.kind === 'move');
     const line = drawn?.commands.find(c => c.kind === 'line');
     if (move) expect(move.to).toEqual([5, 5]);
@@ -577,7 +577,7 @@ describe('[ADV] 与既有交叉 / round-trip', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'gen', params: {}, label: { text: 'gen', position: 'midway' } },
     ]);
-    const scene = compileToScene(ir, { pathGenerators: [gen] });
+    const scene = compileToScene(ir, { pathGenerators: [gen] }).scene;
     expect(flattenPrims(scene.primitives).some(p => p.type === 'text')).toBe(true);
   });
 });

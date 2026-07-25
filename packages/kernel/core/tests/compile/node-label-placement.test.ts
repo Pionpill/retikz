@@ -107,7 +107,7 @@ describe('Node label placement', () => {
       const scene = compileToScene(
         sceneWithLabel({ text: 'L', position: 'top', placement: 'inside', distance: 6 }),
         silent,
-      );
+      ).scene;
       const label = labelText(scene.primitives, 'L')!;
 
       expect(label.x).toBeCloseTo(0);
@@ -118,7 +118,7 @@ describe('Node label placement', () => {
       const scene = compileToScene(
         sceneWithLabel({ text: 'L', position: 0, placement: 'inside', distance: 8 }),
         silent,
-      );
+      ).scene;
       const label = labelText(scene.primitives, 'L')!;
 
       expect(label.x).toBeCloseTo(37.6);
@@ -136,7 +136,7 @@ describe('Node label placement', () => {
           distance: 6,
         }),
         silent,
-      );
+      ).scene;
       const label = labelText(scene.primitives, 'L')!;
 
       expect(label.x).toBeCloseTo(-25);
@@ -152,7 +152,7 @@ describe('Node label placement', () => {
           distance: 8,
         }),
         silent,
-      );
+      ).scene;
       const label = labelText(scene.primitives, 'L')!;
 
       expect(label.x).toBeCloseTo(37.6);
@@ -163,11 +163,11 @@ describe('Node label placement', () => {
       const start = compileToScene(
         sceneWithLabel({ text: 'S', position: { boundary: 'bottom', fraction: 0 }, distance: 0 }),
         silent,
-      );
+      ).scene;
       const end = compileToScene(
         sceneWithLabel({ text: 'E', position: { boundary: 'bottom', fraction: 1 }, distance: 0 }),
         silent,
-      );
+      ).scene;
       const startLabel = labelText(start.primitives, 'S')!;
       const endLabel = labelText(end.primitives, 'E')!;
 
@@ -189,7 +189,7 @@ describe('Node label placement', () => {
             'circle',
           ),
           silent,
-        ),
+        ).scene,
       ).toThrow(/boundary.*box-like|box-like.*boundary/i);
     });
   });
@@ -202,14 +202,14 @@ describe('Node label placement', () => {
         placement: 'inside',
         distance: 6,
       };
-      const base = compileToScene(sceneWithLabel(label), silent);
+      const base = compileToScene(sceneWithLabel(label), silent).scene;
       const rotated = compileToScene(
         {
           ...sceneWithLabel(label),
           children: [{ ...sceneWithLabel(label).children[0], rotate: 90 }],
         },
         silent,
-      );
+      ).scene;
       const baseLabel = labelText(base.primitives, 'L')!;
       const rotatedLabel = labelText(rotated.primitives, 'L')!;
 
@@ -227,7 +227,7 @@ describe('Node label placement', () => {
           pin: true,
         }),
         silent,
-      );
+      ).scene;
 
       expect(flattenPrims(scene.primitives).some(p => p.type === 'path')).toBe(true);
     });

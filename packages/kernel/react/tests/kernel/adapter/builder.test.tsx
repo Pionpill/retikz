@@ -616,7 +616,7 @@ after`;
         </Path>
       </>,
     );
-    expect(() => compileToScene(ir)).not.toThrow();
+    expect(() => compileToScene(ir).scene).not.toThrow();
   });
 
   it('<Draw way={[..., { bend }, ...]}> 等价于 Kernel bend step（含 / 不含 angle 两种）', () => {

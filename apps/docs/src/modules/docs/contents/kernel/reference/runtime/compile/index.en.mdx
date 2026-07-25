@@ -3,21 +3,23 @@ title: Compile
 description: The IR-to-Scene compile entry point, layout options, text measuring, and warning contract
 ---
 
-The `@retikz/core` compile layer turns JSON-serializable IR into a laid-out `Scene`. React and Vanilla adapters, server-side export flows, and custom renderers share the same compile semantics at this boundary.
+The `@retikz/core` compile layer turns JSON-serializable IR into a `Scene` and typed artifacts produced by the same canonical compile. React and Vanilla adapters, server-side export flows, and custom renderers share the same compile semantics at this boundary.
 
 ## Functions
 
-| API                    | Signature                                                           | Purpose                                                                                         |
-| ---------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `compileToScene`       | `(ir: IRScene, options?: CompileOptions) => Scene`                  | Main compile entry point; handles nodes, coordinates, paths, and returns primitives plus layout |
-| `lowerIRToKernel`      | `(ir: IRScene, options?: LowerIRToKernelOptions) => LoweredIRScene` | Recursively expands composites and returns Kernel IR with no Tier 2 nodes                       |
-| `computeLayout`        | `(points, padding, round) => Layout`                                | Computes the scene bounds from bbox candidate points; usually called inside `compileToScene`    |
-| `fallbackMeasurer`     | `(text, font) => TextMetrics`                                       | Default text measurer; approximate but runnable, useful as a no-DOM fallback                    |
-| `formatCompileWarning` | `(warning: CompileWarning) => string`                               | Formats a structured warning into the standard readable message                                 |
+| API                           | Signature                                                              | Purpose                                                                                      |
+| ----------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `compileToScene`              | `(ir: IRScene, options?: CompileOptions) => CompileResult`             | Main compile entry point; returns `scene` and immutable `artifacts` together                 |
+| `lowerIRToKernel`             | `(ir: IRScene, options?: LowerIRToKernelOptions) => LoweredIRScene`    | Recursively expands composites and returns Kernel IR with no Tier 2 nodes                    |
+| `computeLayout`               | `(points, padding, round) => Layout`                                   | Computes the scene bounds from bbox candidate points; usually called inside `compileToScene` |
+| `fallbackMeasurer`            | `(text, font) => TextMetrics`                                          | Default text measurer; approximate but runnable, useful as a no-DOM fallback                 |
+| `formatCompileWarning`        | `(warning: CompileWarning) => string`                                  | Formats a structured warning into the standard readable message                              |
+| `formatCompileOccurrence`     | `(locator: CompileOccurrenceLocator) => string`                        | Formats an artifact occurrence locator                                                       |
+| `isNodeLayoutCompileArtifact` | `(artifact: CompileArtifact) => artifact is NodeLayoutCompileArtifact` | Narrows an opt-in Node-layout artifact                                                       |
 
 `compileToScene` traverses and registers nodes and coordinates in the current scope before filling deferred path slots. A path can therefore reference a target declared later in that scope. Output is then stably sorted by ascending `zIndex`; only primitives with the same `zIndex` retain declaration order.
 
-`lowerIRToKernel` performs no layout or Scene emission; it only consumes `composites` and `maxCompositeDepth`. An unregistered composite throws, while full `compileToScene` emits `COMPOSITE_NOT_REGISTERED` and skips that node. Both paths throw on a nesting limit or cycle.
+`lowerIRToKernel` performs no layout or Scene emission; it only consumes `composites` and `maxCompositeDepth`. An unregistered composite throws. A layout-aware composite with a `compile` branch also throws explicitly because standalone lowering has no text measurement, providers, reference environment, or parent constraint. Full `compileToScene` emits `COMPOSITE_NOT_REGISTERED` and skips an unregistered node. Both paths throw on a nesting limit or cycle.
 
 ## CompileOptions
 
@@ -25,22 +27,22 @@ The `@retikz/core` compile layer turns JSON-serializable IR into a laid-out `Sce
 
 ### Host Services
 
-| Option         | Type                    | Default                                     | Notes                                                                                                                                             |
-| -------------- | ----------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `measureText`  | `TextMeasurer`          | `fallbackMeasurer`                          | Injects text measurement; React can use browser APIs                                                                                              |
-| `lowerTex`     | `LowerTex`              | `undefined`                                 | Injects TeX rendering; missing or failed rendering warns and degrades                                                                             |
-| `onWarn`       | `(warning) => void`     | dev: `console.warn`<br />production: silent | Collects recoverable compile-time warnings                                                                                                        |
-| `onNodeLayout` | `CompileLayoutObserver` | `undefined`                                 | Synchronous node-layout observer; receives plain `CompiledNodeLayout` data, including content-box `content.size` and global AABB `content.bounds` |
+| Option        | Type                | Default                                     | Notes                                                    |
+| ------------- | ------------------- | ------------------------------------------- | -------------------------------------------------------- |
+| `measureText` | `TextMeasurer`      | `fallbackMeasurer`                          | Injects text measurement; React can use browser APIs     |
+| `lowerTex`    | `LowerTex`          | `undefined`                                 | Injects TeX rendering; missing or failed rendering warns |
+| `onWarn`      | `(warning) => void` | dev: `console.warn`<br />production: silent | Collects recoverable compile-time warnings               |
 
 ### Layout And Output
 
-| Option          | Type     | Default | Notes                                                                                                                                         |
-| --------------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `padding`       | `number` | `10`    | Extra layout padding in user units                                                                                                            |
-| `precision`     | `number` | `2`     | Decimal precision for Scene coordinates, structured path commands, and layout values; internal geometry is double precision                   |
-| `nodeDistance`  | `number` | `24`    | Default distance for `AtPosition` when `distance` is omitted                                                                                  |
-| `labelDistance` | `number` | `12`    | Default net gap from the node boundary to the rotated label visual box when `Node.label.distance` is omitted; must be finite and non-negative |
-| `fontSize`      | `number` | `16`    | Default font size; also the root size for presets and `rem`; explicit numeric font sizes are unchanged                                        |
+| Option          | Type                     | Default | Notes                                                                                                                                         |
+| --------------- | ------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `padding`       | `number`                 | `10`    | Extra layout padding in user units                                                                                                            |
+| `precision`     | `number`                 | `2`     | Decimal precision for Scene coordinates, structured path commands, and layout values; internal geometry is double precision                   |
+| `nodeDistance`  | `number`                 | `24`    | Default distance for `AtPosition` when `distance` is omitted                                                                                  |
+| `labelDistance` | `number`                 | `12`    | Default net gap from the node boundary to the rotated label visual box when `Node.label.distance` is omitted; must be finite and non-negative |
+| `fontSize`      | `number`                 | `16`    | Default font size; also the root size for presets and `rem`; explicit numeric font sizes are unchanged                                        |
+| `artifacts`     | `CompileArtifactOptions` | `{}`    | Opt-in generic outputs; `{ nodeLayouts: true }` includes real Node `CompiledNodeLayout` snapshots                                             |
 
 ### Provider Registries
 
@@ -57,12 +59,21 @@ The `@retikz/core` compile layer turns JSON-serializable IR into a laid-out `Sce
 
 Definitions passed here are appended to the corresponding `BUILTIN_*` collection. An empty key or a name that duplicates a built-in or another custom item throws immediately; providers are never overwritten.
 
-### Composite Expansion
+### Composites
 
-| Option              | Type                                 | Default | Notes                                                                                                            |
-| ------------------- | ------------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------- |
-| `composites`        | `ReadonlyArray<CompositeDefinition>` | `—`     | Inject Tier 2 composite expansion logic; unregistered composites emit `COMPOSITE_NOT_REGISTERED` and are skipped |
-| `maxCompositeDepth` | `number`                             | `32`    | Max depth for nested composite expansion; exceeding it or a cycle throws                                         |
+| Option              | Type                                    | Default | Notes                                                                                                      |
+| ------------------- | --------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------- |
+| `composites`        | `ReadonlyArray<AnyCompositeDefinition>` | `—`     | Inject Tier 2 `expand` or layout-aware `compile` definitions; unregistered composites warn and are skipped |
+| `maxCompositeDepth` | `number`                                | `32`    | Maximum nested composite depth; exceeding it or a cycle throws                                             |
+
+The two `CompositeDefinition` branches are mutually exclusive:
+
+- `expand(node)` performs context-free structural expansion;
+- `compile(node, context)` can use `context.constraint` and `layoutChild(child, constraint)` to lay out real child content in the complete compile environment.
+
+`layoutChild` accepts `{ kind: 'intrinsic' }` or `{ kind: 'constrained', maxWidth }`. It returns allocation bounds, conservative visual bounds that include stroke / markers / shadow / clipping / transforms, and a one-use compile-local replay token. After solving its parent layout, the composite places that token as `{ kind: 'replay', replay, transforms? }`. Final Scene emission reuses the saved layout without expanding, measuring, or laying it out again. Tokens cannot cross compiles, be replayed twice, be serialized, or be forged.
+
+A layout-aware definition with `artifactSchema` may return a JSON-safe `artifact` from the same `compile` call. `compileToScene` wraps it as `{ kind:'composite', namespace, type, occurrence, value }`. The occurrence uses an original `sourcePath` plus a structured `expansionPath`; it does not depend on a global Map or captured callback. A precise definition tuple lets `CompileResult` infer the corresponding artifact union.
 
 ## Text Measuring
 
@@ -119,7 +130,14 @@ For an auto-contrast warning, `path` is the current Node locator and `message` i
 
 ## Output
 
-`compileToScene` returns:
+`compileToScene` returns a `CompileResult`:
+
+| Field       | Type                             | Notes                                                                |
+| ----------- | -------------------------------- | -------------------------------------------------------------------- |
+| `scene`     | `Scene`                          | The laid-out scene consumed by renderers                             |
+| `artifacts` | `ReadonlyArray<CompileArtifact>` | Immutable typed artifacts from the same canonical compile as `scene` |
+
+Its `scene` contains:
 
 | Field         | Type                      | Notes                                                                                                                                                   |
 | ------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -135,14 +153,32 @@ A custom renderer must consume `resources` and `animations`, otherwise gradients
     {
       label: 'Assemble Scene, resources, and root animations at the compile entry point',
       path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 18,
-      endLine: 42,
+      startLine: 25,
+      endLine: 53,
+    },
+    {
+      label: 'Public CompileResult, artifact, and occurrence contracts',
+      path: 'packages/kernel/core/src/compile/types.ts',
+      startLine: 70,
+      endLine: 128,
+    },
+    {
+      label: 'Occurrence formatter and Node-artifact type guard',
+      path: 'packages/kernel/core/src/compile/artifact.ts',
+      startLine: 3,
+      endLine: 10,
+    },
+    {
+      label: 'Measure, publish artifacts, and emit a layout-aware composite',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 885,
+      endLine: 1025,
     },
     {
       label: 'Resolve deferred paths and fill their original output slots',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 147,
-      endLine: 161,
+      startLine: 183,
+      endLine: 209,
     },
     {
       label: 'Stably sort Scene primitives by zIndex',

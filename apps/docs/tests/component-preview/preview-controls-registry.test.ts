@@ -1,7 +1,7 @@
 import type { CompiledNodeLayout, IRScene, TextMeasurer } from '@retikz/core';
 import type { ReactNode } from 'react';
 
-import { compileToScene, fallbackMeasurer } from '@retikz/core';
+import { compileToScene, fallbackMeasurer, isNodeLayoutCompileArtifact } from '@retikz/core';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, expectTypeOf, it } from 'vitest';
@@ -139,9 +139,8 @@ type NodeGeometryValues = {
 const compileGeometryNode = (
   values: NodeGeometryValues,
   measureText: TextMeasurer = fallbackMeasurer,
-): { layout: CompiledNodeLayout; bounds: ReturnType<typeof compileToScene>['layout'] } => {
-  let layout: CompiledNodeLayout | undefined;
-  const scene = compileToScene(
+): { layout: CompiledNodeLayout; bounds: ReturnType<typeof compileToScene>['scene']['layout'] } => {
+  const result = compileToScene(
     {
       type: 'scene',
       version: 1,
@@ -162,13 +161,14 @@ const compileGeometryNode = (
     } satisfies IRScene,
     {
       measureText,
-      onNodeLayout: nextLayout => {
-        layout = nextLayout;
-      },
+      artifacts: { nodeLayouts: true },
       padding: 0,
       precision: 6,
     },
   );
+  const scene = result.scene;
+  const artifact = result.artifacts.find(isNodeLayoutCompileArtifact);
+  const layout = artifact?.value;
   if (!layout) throw new Error('Missing compiled Node geometry layout');
   return { layout, bounds: scene.layout };
 };

@@ -5,7 +5,7 @@ import { boundsOf, expandBounds, mergeBounds } from '@retikz/math';
 import type { IRPosition, ResolvedDropShadow } from '../../schemas';
 
 /** 返回 shadow 影响后的外溢 bbox */
-const expandBoundsForShadow = (
+export const expandBoundsForShadow = (
   bounds: AxisAlignedBounds | undefined,
   shadow: ResolvedDropShadow | undefined,
 ): AxisAlignedBounds | undefined => {

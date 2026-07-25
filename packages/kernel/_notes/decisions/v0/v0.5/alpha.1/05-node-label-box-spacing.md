@@ -79,7 +79,7 @@ type NodeLabelLayout = {
 - mixed / TeX 仍 emit 既有 Group + 子 primitives；Group 不新增 measured fields，整体 label box 只存在于内部 resolved geometry，子 primitive 保留各自 metrics。
 - center、pin 终点、Scene emit、label extent / bbox 和 auto viewBox 全部读取这份 resolved geometry。
 - pin 从 Node border 指向最终旋转 OBB 朝向 border 的精确交点；移除既有额外 2 user-units 内缩，不新增独立 pin padding，outside label 才允许 pin。
-- 本 ADR 不先增加公开 observer label bbox。若 ADR-07 manifest 需要 label region，应消费同一内部 resolved geometry；不能建立另一个估算 DTO。
+- 本 ADR 不先增加公开 observer label bbox。若后续 interaction manifest 需要 label region，应消费同一内部 resolved geometry；不能建立另一个估算 DTO。
 
 Node rotate 在局部 label geometry 完成后应用一次；Scope transform 由 Group chain 再应用。这里的 bbox 只指 automatic Scene layout / viewBox bounds：必须把 label OBB 四角经过 Node rotate 和完整 Scope transform chain 投影，不能只依赖 `projectLayoutToGlobal` 的 AABB width / height。`scope.id` 的 synthetic rectangle / circle bbox 仍只收集 child `outerRect`，明确排除 label / pin，不改变 Scope target anchors。anchor-position 只移动 Node rect center，centerOffset 不变。
 

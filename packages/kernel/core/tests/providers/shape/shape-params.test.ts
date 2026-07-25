@@ -97,7 +97,7 @@ describe('ShapeRefSchema / Node.shape — happy path 解析', () => {
     const parsed = def.paramsSchema.parse({ r: 30 });
     expect(parsed).toEqual({ r: 30 });
     const ir = scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'ring', params: { r: 30 } } }]);
-    const compiled = compileToScene(ir, { shapes: [{ ...def, name: 'ring' }] });
+    const compiled = compileToScene(ir, { shapes: [{ ...def, name: 'ring' }] }).scene;
     expect(findByType(compiled.primitives, 'ellipse')).toBeDefined();
   });
 });
@@ -108,18 +108,18 @@ describe('ShapeRefSchema / shape 桥接 — 边界', () => {
   it('no_params_empty_object：{type:"rectangle"}（无 params）经 strictObject({}) 通过、行为同裸 string', () => {
     const stringIr = scene([{ type: 'node', id: 'A', position: [0, 0], shape: 'rectangle' }]);
     const nestedIr = scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'rectangle' } }]);
-    const stringScene = compileToScene(stringIr);
-    const nestedScene = compileToScene(nestedIr);
+    const stringScene = compileToScene(stringIr).scene;
+    const nestedScene = compileToScene(nestedIr).scene;
     expect(findByType(nestedScene.primitives, 'rect')).toEqual(findByType(stringScene.primitives, 'rect'));
   });
 
   it('string_equals_nested："rectangle" 与 {type:"rectangle"} 编译产物逐字段相等', () => {
     const stringScene = compileToScene(
       scene([{ type: 'node', id: 'A', position: [0, 0], shape: 'rectangle', text: 'X' }]),
-    );
+    ).scene;
     const nestedScene = compileToScene(
       scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'rectangle' }, text: 'X' }]),
-    );
+    ).scene;
     expect(nestedScene.primitives).toEqual(stringScene.primitives);
   });
 });
@@ -129,12 +129,12 @@ describe('ShapeRefSchema / shape 桥接 — 边界', () => {
 describe('shape 错误路径', () => {
   it('unregistered_type_throws：{type:"nope"} 编译期 throw', () => {
     const ir = scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'nope' } }]);
-    expect(() => compileToScene(ir)).toThrow();
+    expect(() => compileToScene(ir).scene).toThrow();
   });
 
   it('params_schema_violation_rejected：paramsSchema 要 r:number，给 {r:"a"} → 第一道 parse reject', () => {
     const ir = scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'ring', params: { r: 'a' } } }]);
-    expect(() => compileToScene(ir, { shapes: [{ ...ringShape(), name: 'ring' }] })).toThrow();
+    expect(() => compileToScene(ir, { shapes: [{ ...ringShape(), name: 'ring' }] }).scene).toThrow();
   });
 
   it('non_json_params_caught_by_second_guard：宽松 paramsSchema 放过 undefined → 第二道 JsonObjectSchema.parse 拦下', () => {
@@ -143,12 +143,12 @@ describe('shape 错误路径', () => {
     const dirtyParams: IRJsonObject = {};
     (dirtyParams as Record<string, unknown>).v = undefined;
     const ir = scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'loose', params: dirtyParams } }]);
-    expect(() => compileToScene(ir, { shapes: [{ ...looseShape(), name: 'loose' }] })).toThrow();
+    expect(() => compileToScene(ir, { shapes: [{ ...looseShape(), name: 'loose' }] }).scene).toThrow();
   });
 
   it('strict_params_reject_extra_field：无参形状给 {params:{foo:1}} → strictObject reject', () => {
     const ir = scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'rectangle', params: { foo: 1 } } }]);
-    expect(() => compileToScene(ir)).toThrow();
+    expect(() => compileToScene(ir).scene).toThrow();
   });
 
   it('shape_neither_string_nor_object：shape:42 → schema reject', () => {
@@ -168,7 +168,7 @@ describe('shape × Node 变换 / bbox 交互', () => {
     const ir = scene([
       { type: 'node', id: 'A', position: [0, 0], shape: { type: 'rectangle' }, rotate: 30, text: 'X' },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     expect(findByType(compiled.primitives, 'rect') ?? findByType(compiled.primitives, 'group')).toBeDefined();
   });
 
@@ -176,11 +176,11 @@ describe('shape × Node 变换 / bbox 交互', () => {
     const base = compileToScene(
       scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'ring', params: { r: 30 } } }]),
       { shapes: [{ ...ringShape(), name: 'ring' }] },
-    );
+    ).scene;
     const scaled = compileToScene(
       scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'ring', params: { r: 30 } }, scale: 2 }]),
       { shapes: [{ ...ringShape(), name: 'ring' }] },
-    );
+    ).scene;
     expect(findByType(scaled.primitives, 'ellipse')).not.toEqual(findByType(base.primitives, 'ellipse'));
   });
 
@@ -188,11 +188,11 @@ describe('shape × Node 变换 / bbox 交互', () => {
     const small = compileToScene(
       scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'ring', params: { r: 10 } } }]),
       { shapes: [{ ...ringShape(), name: 'ring' }] },
-    );
+    ).scene;
     const large = compileToScene(
       scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'ring', params: { r: 100 } } }]),
       { shapes: [{ ...ringShape(), name: 'ring' }] },
-    );
+    ).scene;
     // r 越大 → circumscribe 返回的 AABB 越大 → layout bbox 越大（compile.ts 只累积 layout.rect 四角）
     expect(large.layout.width).toBeGreaterThan(small.layout.width);
   });

@@ -35,7 +35,7 @@ describe('compile path: axis-line', () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([move([10, 20]), line([100, 20])]);
+    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([10, 20]), line([100, 20])]);
   });
 
   it('source NodeTarget 仍以 projected endpoint 为 toward 做现有 boundary clipping', () => {
@@ -53,7 +53,7 @@ describe('compile path: axis-line', () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([move([8, 0]), line([100, 0])]);
+    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([8, 0]), line([100, 0])]);
   });
 
   it('target NodeTarget 的隐式边界与 arrow inset 始终禁用', () => {
@@ -73,7 +73,7 @@ describe('compile path: axis-line', () => {
               ],
             },
           ],
-        }).primitives,
+        }).scene.primitives,
       ).commands;
     expect(compile({ id: 'target' })).toEqual(compile({ id: 'target', anchor: 'center' }));
   });
@@ -99,7 +99,7 @@ describe('compile path: axis-line', () => {
               ],
             },
           ],
-        }).primitives,
+        }).scene.primitives,
       );
       const last = path.commands[path.commands.length - 1];
       if (last.kind !== 'line') throw new Error('expected line command');
@@ -140,7 +140,7 @@ describe('compile path: axis-line', () => {
           ],
         },
       ],
-    });
+    }).scene;
     const path = flattenPrims(scene.primitives).find(primitive => primitive.type === 'path');
     expect(path?.type === 'path' ? path.commands : undefined).toEqual([move([10, 20]), line([25, 20])]);
   });
@@ -159,7 +159,7 @@ describe('compile path: axis-line', () => {
         },
         { type: 'coordinate', id: 'later-coordinate', position: [80, 90] },
       ],
-    });
+    }).scene;
     const scopeScene = compileToScene({
       version: 1,
       type: 'scene',
@@ -177,7 +177,7 @@ describe('compile path: axis-line', () => {
           children: [{ type: 'node', id: 'scope-node', position: [120, 140] }],
         },
       ],
-    });
+    }).scene;
     expect(findPathPrim(coordinateScene.primitives).commands).toEqual([move([10, 20]), line([80, 20])]);
     expect(findPathPrim(scopeScene.primitives).commands).toEqual([move([10, 20]), line([120, 20])]);
   });
@@ -240,7 +240,7 @@ describe('compile path: axis-line', () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir, { pathGenerators: [generator] }).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir, { pathGenerators: [generator] }).scene.primitives).commands).toEqual([
       move([0, 0]),
       line([30, 15]),
       line([30, 50]),
@@ -269,7 +269,7 @@ describe('compile path: axis-line', () => {
         },
       ],
     };
-    const commands = findPathPrim(compileToScene(ir, { pathGenerators: [generator] }).primitives).commands;
+    const commands = findPathPrim(compileToScene(ir, { pathGenerators: [generator] }).scene.primitives).commands;
     const last = commands[commands.length - 1];
     expect(last).toMatchObject({ kind: 'cubic', to: [35, 55] });
   });
@@ -295,7 +295,7 @@ describe('compile path: axis-line', () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir, { pathGenerators: [generator] }).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir, { pathGenerators: [generator] }).scene.primitives).commands).toEqual([
       move([0, 10]),
       line([20, 10]),
       line([60, 40]),
@@ -325,7 +325,7 @@ describe('compile path: axis-line', () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir, { pathGenerators: [generator] }).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir, { pathGenerators: [generator] }).scene.primitives).commands).toEqual([
       move([0, 0]),
       line([30, 15]),
       line([30, 50]),
@@ -377,7 +377,7 @@ describe('compile path: axis-line', () => {
       version: 1,
       type: 'scene',
       children: [{ type: 'path', children }],
-    });
+    }).scene;
     const commands = findPathPrim(scene.primitives).commands;
     const last = commands[commands.length - 1];
     expect(last).toEqual(line(expectedEnd));
@@ -400,7 +400,7 @@ describe('compile path: axis-line', () => {
         ],
       },
       { onWarn: warning => warnings.push(warning) },
-    );
+    ).scene;
     expect(scene.primitives).toEqual([]);
     expect(warnings).toContainEqual(expect.objectContaining({ code: 'PATH_TOO_SHORT' }));
   });
@@ -422,7 +422,7 @@ describe('compile path: axis-line', () => {
         ],
       },
       { onWarn: warning => warnings.push(warning) },
-    );
+    ).scene;
     expect(scene.primitives).toEqual([]);
     expect(warnings).toContainEqual(expect.objectContaining({ code: 'UNRESOLVED_NODE_REFERENCE' }));
   });
@@ -447,7 +447,7 @@ describe('compile path: axis-line', () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([move([0, 0]), line([100, 0])]);
+    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([0, 0]), line([100, 0])]);
   });
 
   it('连续零长度投影保留合法 line commands', () => {
@@ -479,7 +479,7 @@ describe('compile path: axis-line', () => {
         },
       ],
     } as unknown as IRScene;
-    expect(() => compileToScene(ir)).toThrow(/non-finite/i);
+    expect(() => compileToScene(ir).scene).toThrow(/non-finite/i);
   });
 
   it('label sampler 使用投影后的真实 segment', () => {
@@ -501,7 +501,7 @@ describe('compile path: axis-line', () => {
           ],
         },
       ],
-    });
+    }).scene;
     const label = flattenPrims(scene.primitives).find(primitive => primitive.type === 'text');
     expect(label).toMatchObject({ type: 'text', x: 30 });
   });
@@ -520,7 +520,7 @@ describe('compile path: axis-line', () => {
           ],
         },
       ],
-    });
+    }).scene;
     const markerPoints: Array<[number, number]> = [];
     const visit = (primitives: ReadonlyArray<ScenePrimitive>): void => {
       for (const primitive of primitives) {

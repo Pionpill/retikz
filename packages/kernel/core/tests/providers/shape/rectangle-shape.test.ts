@@ -28,14 +28,14 @@ const rectNode = (extra: Record<string, unknown> = {}): IRScene['children'][numb
 
 describe('rectangle — cornerRadius 入 params', () => {
   it('rectangle_rounded_from_params：{type:"rectangle", params:{cornerRadius:6}} → 圆角矩形（cornerRadius=6）', () => {
-    const compiled = compileToScene(scene([rectNode({ shape: { type: 'rectangle', params: { cornerRadius: 6 } } })]));
+    const compiled = compileToScene(scene([rectNode({ shape: { type: 'rectangle', params: { cornerRadius: 6 } } })])).scene;
     const r = findByType(compiled.primitives, 'rect');
     expect(r).toBeDefined();
     expect(r!.cornerRadius).toBe(6);
   });
 
   it('rectangle_rounded_zero_sharp：params.cornerRadius:0 → 直角（cornerRadius=0）', () => {
-    const compiled = compileToScene(scene([rectNode({ shape: { type: 'rectangle', params: { cornerRadius: 0 } } })]));
+    const compiled = compileToScene(scene([rectNode({ shape: { type: 'rectangle', params: { cornerRadius: 0 } } })])).scene;
     const r = findByType(compiled.primitives, 'rect');
     expect(r).toBeDefined();
     expect(r!.cornerRadius).toBe(0);
@@ -47,7 +47,7 @@ describe('rectangle — cornerRadius 入 params', () => {
 describe('rectangle — 错误路径（strictObject）', () => {
   it('rectangle_extra_params_rejected：{type:"rectangle", params:{foo:1}} → strictObject reject（编译期 throw）', () => {
     const ir = scene([rectNode({ shape: { type: 'rectangle', params: { foo: 1 } } })]);
-    expect(() => compileToScene(ir)).toThrow();
+    expect(() => compileToScene(ir).scene).toThrow();
     // 裸 schema 同样拒
     expect(() => rectangle.paramsSchema.parse({ foo: 1 })).toThrow();
   });
@@ -62,7 +62,7 @@ describe('rectangle — 错误路径（strictObject）', () => {
 describe('rectangle — 顶层 cornerRadius 迁移期兼容', () => {
   it('rectangle_rounded_toplevel_compat：顶层 cornerRadius 无 params 时仍生效', () => {
     // 迁移期：未给 params.cornerRadius 时，顶层 Node.cornerRadius 仍画圆角（回退）。
-    const compiled = compileToScene(scene([rectNode({ cornerRadius: 5 })]));
+    const compiled = compileToScene(scene([rectNode({ cornerRadius: 5 })])).scene;
     const r = findByType(compiled.primitives, 'rect');
     expect(r).toBeDefined();
     expect(r!.cornerRadius).toBe(5);
@@ -71,7 +71,7 @@ describe('rectangle — 顶层 cornerRadius 迁移期兼容', () => {
   it('rectangle_params_over_toplevel：params.cornerRadius 与顶层并存 → params 优先', () => {
     const compiled = compileToScene(
       scene([rectNode({ cornerRadius: 5, shape: { type: 'rectangle', params: { cornerRadius: 9 } } })]),
-    );
+    ).scene;
     const r = findByType(compiled.primitives, 'rect');
     expect(r).toBeDefined();
     expect(r!.cornerRadius).toBe(9);
@@ -107,7 +107,7 @@ describe('rectangle — round-trip / scaleParams', () => {
     // 端到端：compile scale:2 → emit cornerRadius ×2
     const compiled = compileToScene(
       scene([rectNode({ shape: { type: 'rectangle', params: { cornerRadius: 6 } }, scale: 2 })]),
-    );
+    ).scene;
     const r = findByType(compiled.primitives, 'rect');
     expect(r).toBeDefined();
     expect(r!.cornerRadius).toBe(12);

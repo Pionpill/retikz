@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { CompositeDefinition } from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
 
 import { CompositeBaseSchema, defineComposite, NodeTextColor } from '@retikz/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -238,7 +238,9 @@ describe('@retikz/vanilla plain spec', () => {
 
   it('embed-special-reference：特殊原型键同引用复用并作为 own property 传给 maker', () => {
     const sharedData = { rows: [1] };
-    const makeComposites = vi.fn<(mergedDatasets: Record<string, unknown>) => Array<CompositeDefinition>>(() => [
+    const makeComposites = vi.fn<
+      (mergedDatasets: Record<string, unknown>) => Array<AnyCompositeDefinition>
+    >(() => [
       boxComposite,
     ]);
     const adapter: VanillaTier2Adapter<{ text: string; data: object }> = {

@@ -64,7 +64,7 @@ const compileArrow = (detail: Record<string, unknown>, arrows: Record<string, Te
   compileToScene(horizontalPathIR('->', detail), {
     arrows: Object.entries(arrows).map(([name, definition]) => ({ ...definition, name })),
     onWarn: () => {},
-  });
+  }).scene;
 
 // ───────────────────────────────────────────────────────────────────────────
 // 攻击面 1：def 几何非有限 → 不放任 NaN/Infinity 污染 path 坐标，抛清晰错
@@ -141,7 +141,7 @@ describe('ADV — def 几何 finite 守卫', () => {
   });
 
   it('length_huge_scale_huge：length=1e10 scale=1e10（有限）→ markerWidth finite，不抛', () => {
-    const scene = compileToScene(horizontalPathIR('->', { shape: 'normal', length: 1e10, scale: 1e10 }));
+    const scene = compileToScene(horizontalPathIR('->', { shape: 'normal', length: 1e10, scale: 1e10 })).scene;
     const path = firstPath(scene.primitives);
     expect(Number.isFinite(path?.arrowEnd?.markerWidth)).toBe(true);
   });
@@ -238,7 +238,7 @@ describe('ADV — override 缺字段', () => {
       compileToScene(horizontalPathIR('->', { shape: 'stealth' }), {
         arrows: [{ ...def, name: 'stealth' }],
         onWarn: () => {},
-      }),
+      }).scene,
     ).toThrow(/duplicate arrow registration: "stealth"/);
   });
 
@@ -253,7 +253,7 @@ describe('ADV — override 缺字段', () => {
     expect(() =>
       compileToScene(horizontalPathIR('->', { shape: 'stealth' }), {
         arrows: [{ name: 'stealth', lineContactX: 0, emit: () => [] }],
-      }),
+      }).scene,
     ).toThrow(/duplicate arrow registration: "stealth"/);
   });
 });
@@ -263,12 +263,12 @@ describe('ADV — override 缺字段', () => {
 // ───────────────────────────────────────────────────────────────────────────
 describe('ADV — 未注册 shape 错误质量', () => {
   it('case_mismatch：shape="Stealth"（大写）→ throw，消息含可用名列表（LLM 可看出大小写错）', () => {
-    expect(() => compileToScene(horizontalPathIR('->', { shape: 'Stealth' }))).toThrow(/Unknown arrow shape 'Stealth'/);
-    expect(() => compileToScene(horizontalPathIR('->', { shape: 'Stealth' }))).toThrow(/stealth/);
+    expect(() => compileToScene(horizontalPathIR('->', { shape: 'Stealth' })).scene).toThrow(/Unknown arrow shape 'Stealth'/);
+    expect(() => compileToScene(horizontalPathIR('->', { shape: 'Stealth' })).scene).toThrow(/stealth/);
   });
 
   it('trailing_space：shape="stealth " → throw（带引号可见尾空格）', () => {
-    expect(() => compileToScene(horizontalPathIR('->', { shape: 'stealth ' }))).toThrow(
+    expect(() => compileToScene(horizontalPathIR('->', { shape: 'stealth ' })).scene).toThrow(
       /Unknown arrow shape 'stealth '/,
     );
   });
@@ -277,7 +277,7 @@ describe('ADV — 未注册 shape 错误质量', () => {
     const scene = compileToScene(horizontalPathIR('->', { shape: 'stealth' }), {
       arrows: [],
       onWarn: () => {},
-    });
+    }).scene;
     expect(firstPath(scene.primitives)?.arrowEnd?.shape).toBe('stealth');
   });
 
@@ -290,7 +290,7 @@ describe('ADV — 未注册 shape 错误质量', () => {
     const scene = compileToScene(horizontalPathIR('<->', { start: { shape: 'myTip' }, end: { shape: 'stealth' } }), {
       arrows: [{ ...def, name: 'myTip' }],
       onWarn: () => {},
-    });
+    }).scene;
     const path = firstPath(scene.primitives);
     expect(path?.arrowStart?.shape).toBe('myTip');
     expect(path?.arrowEnd?.shape).toBe('stealth');
@@ -302,7 +302,7 @@ describe('ADV — 未注册 shape 错误质量', () => {
 // ───────────────────────────────────────────────────────────────────────────
 describe('ADV — 极端几何 / 功能交叉', () => {
   it('path_shorter_than_shrink：path 极短（长 1）< shrink 量 → 端点穿过起点（finite，parser sugar 同不 clamp）', () => {
-    const scene = compileToScene(horizontalPathIR('->', { shape: 'normal' }, [1, 0]));
+    const scene = compileToScene(horizontalPathIR('->', { shape: 'normal' }, [1, 0])).scene;
     const path = firstPath(scene.primitives);
     const end = path && endpointTo(path);
     expect(end && allFinite(end)).toBe(true);
@@ -310,7 +310,7 @@ describe('ADV — 极端几何 / 功能交叉', () => {
   });
 
   it('zero_length_path：起点==终点 → shiftToward len=0 短路、不 NaN', () => {
-    const scene = compileToScene(horizontalPathIR('->', { shape: 'normal' }, [0, 0]));
+    const scene = compileToScene(horizontalPathIR('->', { shape: 'normal' }, [0, 0])).scene;
     const path = firstPath(scene.primitives);
     const end = path && endpointTo(path);
     expect(end && allFinite(end)).toBe(true);
@@ -329,7 +329,7 @@ describe('ADV — 极端几何 / 功能交叉', () => {
   });
 
   it('length_zero：length=0 合法 → markerWidth=0、shrink=0（端点不缩）', () => {
-    const scene = compileToScene(horizontalPathIR('->', { shape: 'normal', length: 0 }));
+    const scene = compileToScene(horizontalPathIR('->', { shape: 'normal', length: 0 })).scene;
     const path = firstPath(scene.primitives);
     expect(path?.arrowEnd?.markerWidth).toBe(0);
     expect(path && endpointTo(path)).toEqual([100, 0]);
@@ -356,7 +356,7 @@ describe('ADV — 极端几何 / 功能交叉', () => {
         } as never,
       ],
     };
-    const path = firstPath(compileToScene(ir, { onWarn: () => {} }).primitives);
+    const path = firstPath(compileToScene(ir, { onWarn: () => {} }).scene.primitives);
     expect(path).toBeDefined();
     expect(allFinite(allCoords(path!.commands))).toBe(true);
   });
@@ -369,20 +369,20 @@ describe('ADV — Scene round-trip / contextStroke', () => {
   it('scene_roundtrip_builtin_8：每个内置 8 compile 产物 JSON round-trip 等价', () => {
     const shapes = ['normal', 'open', 'stealth', 'openStealth', 'diamond', 'openDiamond', 'circle', 'openCircle'];
     for (const shape of shapes) {
-      const scene = compileToScene(horizontalPathIR('<->', { shape }));
+      const scene = compileToScene(horizontalPathIR('<->', { shape })).scene;
       expect(JSON.parse(JSON.stringify(scene))).toEqual(scene);
     }
   });
 
   it('scene_roundtrip_color_override：color override 后 marker fill 纯色 round-trip', () => {
-    const scene = compileToScene(horizontalPathIR('->', { shape: 'stealth', color: 'red' }));
+    const scene = compileToScene(horizontalPathIR('->', { shape: 'stealth', color: 'red' })).scene;
     expect(JSON.parse(JSON.stringify(scene))).toEqual(scene);
     const mp = firstPath(scene.primitives)?.arrowEnd?.marker[0] as { fill?: unknown };
     expect(mp.fill).toBe('red');
   });
 
   it('contextStroke_no_color：默认 stealth marker fill 是 contextStroke 对象（主题不冻结）', () => {
-    const spec = firstPath(compileToScene(horizontalPathIR('->', { shape: 'stealth' })).primitives)?.arrowEnd;
+    const spec = firstPath(compileToScene(horizontalPathIR('->', { shape: 'stealth' })).scene.primitives)?.arrowEnd;
     const mp = spec?.marker[0] as { fill?: unknown };
     expect(mp.fill).toEqual({ kind: 'contextStroke' });
     expect(JSON.parse(JSON.stringify(spec))).toEqual(spec);
@@ -390,7 +390,7 @@ describe('ADV — Scene round-trip / contextStroke', () => {
 
   it('hollow_fill_override_color：hollow + fill override（应丢）+ color → 只 color 进 stroke', () => {
     const spec = firstPath(
-      compileToScene(horizontalPathIR('->', { shape: 'open', fill: 'red', color: 'green' })).primitives,
+      compileToScene(horizontalPathIR('->', { shape: 'open', fill: 'red', color: 'green' })).scene.primitives,
     )?.arrowEnd;
     const mp = spec?.marker[0] as { fill?: unknown; stroke?: unknown };
     expect(mp.fill).not.toBe('red');
@@ -399,7 +399,7 @@ describe('ADV — Scene round-trip / contextStroke', () => {
 
   it('opacity_zero：arrowDetail.opacity=0 合法 → ResolvedArrowEndSpec.opacity=0 不被吞', () => {
     const spec = firstPath(
-      compileToScene(horizontalPathIR('->', { shape: 'stealth', opacity: 0 })).primitives,
+      compileToScene(horizontalPathIR('->', { shape: 'stealth', opacity: 0 })).scene.primitives,
     )?.arrowEnd;
     expect(spec?.opacity).toBe(0);
   });

@@ -202,7 +202,7 @@ describe('custom coordinate — 一维曲线（projectRoles 沿正弦）', () =>
 
   it('下沉产物是合法 core IR（compileToScene 不抛）', () => {
     const layer = firstLayer(sineSpec(), { d: [{ v: 0 }, { v: 6 }, { v: 12 }] }, opts([sineCoordinate]));
-    expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] })).not.toThrow();
+    expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] }).scene).not.toThrow();
   });
 
   it('custom 坐标系 IR JSON round-trip（投影函数不在 IR）', () => {

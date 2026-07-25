@@ -72,7 +72,7 @@ const clipIr: IRScene = {
 
 describe('@retikz/vanilla renderToSvgString', () => {
   it('render-string-matches-svg：与 @retikz/render/svg 输出逐字一致（薄包、未另写序列化）', () => {
-    const scene = compileToScene(nodeIr);
+    const scene = compileToScene(nodeIr).scene;
     // vanilla 缺省 idPrefix='r'，与显式 'r' 的 svg 输出应逐字相同
     expect(renderToSvgString(scene)).toBe(svgRenderToString(scene, { idPrefix: 'r' }));
   });
@@ -92,7 +92,7 @@ describe('@retikz/vanilla renderToSvgString', () => {
   });
 
   it('inject-size：给 width/height 时结构化写进根 <svg>（不做正则后处理），缺省不写', () => {
-    const scene = compileToScene(nodeIr);
+    const scene = compileToScene(nodeIr).scene;
     // render 侧直接接受 width/height（vanilla 不做正则注入）
     const sized = svgRenderToString(scene, { idPrefix: 'r', width: 200, height: 100 });
     expect(sized).toMatch(/^<svg width="200" height="100" viewBox=/);

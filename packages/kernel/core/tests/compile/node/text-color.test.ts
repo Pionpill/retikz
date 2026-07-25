@@ -18,7 +18,7 @@ const sceneOf = (node: Record<string, unknown>): IRScene =>
   }) as unknown as IRScene;
 
 const textPrimitives = (ir: IRScene, warnings: Array<CompileWarning> = []): Array<TextPrim> =>
-  flattenPrims(compileToScene(ir, { onWarn: warning => warnings.push(warning) }).primitives).filter(
+  flattenPrims(compileToScene(ir, { onWarn: warning => warnings.push(warning) }).scene.primitives).filter(
     (primitive): primitive is TextPrim => primitive.type === 'text',
   );
 
@@ -195,7 +195,7 @@ describe('Node auto-contrast consumers and warnings', () => {
         pin: true,
       },
     });
-    const paths = flattenPrims(compileToScene(ir).primitives).filter(primitive => primitive.type === 'path');
+    const paths = flattenPrims(compileToScene(ir).scene.primitives).filter(primitive => primitive.type === 'path');
     expect(paths.some(path => path.stroke === '#ffffff')).toBe(true);
   });
 });
@@ -226,7 +226,7 @@ describe('Node auto-contrast cascade and precedence', () => {
       text: [{ runs: [{ text: 'inherited' }, { text: 'explicit', fill: 'red' }] }],
       label: [{ text: 'node-color' }, { text: 'label-color', textColor: 'blue' }],
     });
-    const fills = flattenPrims(compileToScene(ir).primitives)
+    const fills = flattenPrims(compileToScene(ir).scene.primitives)
       .filter(primitive => primitive.type === 'text' || primitive.type === 'path')
       .map(primitive => primitive.fill);
     expect(fills).toContain('#ffffff');

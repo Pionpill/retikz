@@ -124,6 +124,8 @@ export type LayoutNodeContext = {
   irPath?: string;
   /** 当前 node 的 compile warning 分发函数 */
   warn?: (code: CompileWarningCodeValue, message: string) => void;
+  /** 父级给 allocation box 的有限非负宽度上限 */
+  maxAllocationWidth?: number;
 };
 
 export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout => {
@@ -141,6 +143,7 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
     texLowering,
     irPath,
     warn,
+    maxAllocationWidth,
   } = context;
   // 缩放影响节点尺寸与字体。
   // 字号取 min(sx,sy) 保 glyph 形状，避免非均匀缩放下文字被拉变形。
@@ -173,7 +176,20 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
   const align = node.align ?? 'middle';
 
   // 折行阈值受 x 缩放。
-  const maxTextWidth = node.maxTextWidth !== undefined ? node.maxTextWidth * sx : undefined;
+  const explicitMaxTextWidth = node.maxTextWidth !== undefined ? node.maxTextWidth * sx : undefined;
+  const constrainedTextWidth =
+    maxAllocationWidth === undefined
+      ? undefined
+      : Math.max(
+          0,
+          maxAllocationWidth - margin.left - margin.right - paddingLeft - paddingRight,
+        );
+  const maxTextWidth =
+    explicitMaxTextWidth === undefined
+      ? constrainedTextWidth
+      : constrainedTextWidth === undefined
+        ? explicitMaxTextWidth
+        : Math.min(explicitMaxTextWidth, constrainedTextWidth);
   const { textWidth, textHeight, lines, inlineBlock } = layoutNodeContent({
     node,
     measureText,

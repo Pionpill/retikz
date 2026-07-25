@@ -76,7 +76,7 @@ IR 是这三件事的公约数。一旦它存在，JSX 就是 IR 的一种"输�
 
 为什么要两 pass？因为节点和路径互相引用——节点位置可能依赖另一个节点的锚点，路径终点可能引用某个节点的方位。先把节点全部布完，路径再消费就不会撞上未定义引用。
 
-编译产物 `Scene` 由 5 种 primitive 组成：`RectPrim` / `EllipsePrim` / `TextPrim` / `PathPrim` / `GroupPrim`，外加一张渲染目标无关的资源表（渐变 / 图案 / 裁剪去重后挂稳定 id，primitive 用 `paintRef` / `clipRef` 引用，由 adapter 物化成 `<defs>` / `<clipPath>`）。这是矢量图形的最大公约子集——SVG、Canvas、PDF、原生绘图都能直接消费，不依赖任何 runtime 特性。文字度量必须在此阶段完成（`measuredWidth` / `measuredHeight` 已填好），所以 adapter 不再需要碰 `canvas.measureText` 这类副作用 API。
+编译产物 `CompileResult` 同时包含 `scene` 与 immutable `artifacts`。`Scene` 由 5 种 primitive 组成：`RectPrim` / `EllipsePrim` / `TextPrim` / `PathPrim` / `GroupPrim`，外加一张渲染目标无关的资源表（渐变 / 图案 / 裁剪去重后挂稳定 id，由 adapter 物化成 `<defs>` / `<clipPath>`）。这是矢量图形的最大公约子集——SVG、Canvas、PDF、原生绘图都能直接消费，不依赖任何 runtime 特性。文字度量必须在此阶段完成（`measuredWidth` / `measuredHeight` 已填好）；artifact 也从同一次 canonical compile 产出，不靠第二次遍历。
 
 ```text
 IR (JSON)
@@ -108,21 +108,21 @@ Kernel 是 IR 的 React 直接映射，1:1 对应；Sugar 是 Kernel 的语法�
 
 铁律：**Sugar 不引入新能力**。任何 Sugar 能表达的，Kernel 都能表达——这条线一旦破，Sugar-only 的能力就无法持久化、不能跨平台、无法被 AI 消费，整个分层就假掉。
 
-### Tier 2：domain 包（规划中，未来支持）
+### Tier 2：domain 包
 
-Tier 2 目前还没在 core 里实装，规划中由 `@retikz/flow` / `@retikz/plot` 等 domain 包承担：
+Tier 2 由 `@retikz/plot`、`@retikz/table` 等 domain 包承担：
 
 | 层     | 例子                                       | 进 IR 形态   | 展开时机            |
 | ------ | ------------------------------------------ | ------------ | ------------------- |
 | Tier 2 | `<Axis>` `<BarPlot>` `<Tree>`（domain 包） | 高层形态保留 | `compileToScene` 内 |
 
-它们的共同特征是有算法决策（dagre 布局、自动刻度、scale 计算），需要在编译流水线里以高层形态保留到 `compileToScene` 阶段，再由 lowerComposites 钩子下沉成 Kernel primitive。这样 core schema 不膨胀，LLM 学习成本不涨，新增 chart 类型也不用改 core——等 core 1.0 稳定后再启动这层。
+它们的共同特征是有算法决策，需要在编译流水线里以高层形态保留到 `compileToScene`。只做结构变换时使用 composite `expand`；需要真实子内容反馈布局时使用 layout-aware `compile`，在同次 Core compile 中完成测量、求解、约束与 replay。这样 core schema 不为具体 domain 膨胀，新增 chart / table 布局也不用另造编译通道。
 
 ## Framework adapter：刻意保持薄
 
 `@retikz/react` 是当前唯一发出来的 adapter，整套架构反复强调它要"薄"：
 
-- 顶层 `<Layout>` 容器（`packages/kernel/react/src/kernel/runtime/Layout.tsx`）只做三件事：拿到 `ir` prop 或 `useMemo(buildIR(children))`、调 `compileToScene`、把 Scene primitive 翻成 `<svg>` 子元素。
+- 顶层 `<Layout>` 容器（`packages/kernel/react/src/kernel/runtime/Layout.tsx`）只编排输入适配、`compileToScene` 与 renderer，并在 commit 后发布同次 compile 的 artifacts。
 - Builder（`packages/kernel/react/src/kernel/adapter/builder.ts`）做 JSX → IR 的同步转换，靠共享字段表（`NODE_FIELDS` / `PATH_FIELDS`）和组件 `displayName` 识别；它不调 hook、不进 React render 调用栈。
 - 文字度量用 `browserMeasurer`（canvas.measureText），作为 `TextMeasurer` 注入 compile——后续 SSR adapter 可换成 satori / sharp 之类的实现，compile 本身零改动。
 

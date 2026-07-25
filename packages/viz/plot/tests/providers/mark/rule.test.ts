@@ -295,7 +295,7 @@ describe('rule cartesian band 几何（projectCell rect）', () => {
   it('rule-band-compiles-to-scene', () => {
     const mark: IRPlotReferenceMark = { type: 'reference', encoding: { y: { value: 70 } }, yTo: 90 };
     const layer = lowerMark(mark, [{}], cartFrame()) as IRScope;
-    expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] })).not.toThrow();
+    expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] }).scene).not.toThrow();
   });
 });
 
@@ -513,7 +513,7 @@ describe('rule polar', () => {
     expect(shape.params.startAngle).toBe(0);
     expect(shape.params.endAngle).toBe(360);
 
-    const scene = compileToScene({ version: 1, type: 'scene', children: [layer] });
+    const scene = compileToScene({ version: 1, type: 'scene', children: [layer] }).scene;
     const filledRing = flattenPrimitives(scene.primitives).find(
       (p): p is Extract<ScenePrimitive, { type: 'path' }> => p.type === 'path' && p.fill === '#fde68a',
     );
@@ -594,7 +594,7 @@ describe('rule polar', () => {
         },
       ],
     };
-    expect(() => compileToScene(scene)).not.toThrow();
+    expect(() => compileToScene(scene).scene).not.toThrow();
   });
 });
 

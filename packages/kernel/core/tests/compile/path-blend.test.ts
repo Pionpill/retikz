@@ -21,8 +21,8 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
 const move = (to: [number, number]): unknown => ({ type: 'step', kind: 'move', to });
 const line = (to: [number, number]): unknown => ({ type: 'step', kind: 'line', to });
 
-const compilePath = (extra: Record<string, unknown>): ReturnType<typeof compileToScene> =>
-  compileToScene(scene([{ type: 'path', children: [move([0, 0]), line([10, 0])], ...extra } as never]), silent);
+const compilePath = (extra: Record<string, unknown>): ReturnType<typeof compileToScene>['scene'] =>
+  compileToScene(scene([{ type: 'path', children: [move([0, 0]), line([10, 0])], ...extra } as never]), silent).scene;
 
 // ════════════════ Happy ════════════════
 

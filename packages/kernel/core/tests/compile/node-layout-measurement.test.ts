@@ -5,7 +5,7 @@ import type { CompileWarning } from '../../src/compile/warning';
 import type { TextPrim } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 
-import { compileToScene, CompileWarningCode } from '../../src/compile';
+import { compileToScene, CompileWarningCode, isNodeLayoutCompileArtifact } from '../../src/compile';
 import { flattenPrims } from '../helpers/flatten';
 
 const measureText: TextMeasurer = (text, font) => ({
@@ -53,20 +53,21 @@ const collectLayouts = (
     precision?: number;
   } = {},
 ): { layouts: Array<CompiledNodeLayout>; warnings: Array<CompileWarning>; textPrims: Array<TextPrim> } => {
-  const layouts: Array<CompiledNodeLayout> = [];
   const warnings: Array<CompileWarning> = [];
-  const out = compileToScene(ir, {
+  const result = compileToScene(ir, {
     measureText: options.measurer ?? measureText,
     precision: options.precision,
     onWarn: warning => warnings.push(warning),
-    onNodeLayout: layout => layouts.push(layout),
+    artifacts: { nodeLayouts: true },
     ...(options.withTex === true ? { lowerTex } : {}),
   });
+  const out = result.scene;
+  const layouts = result.artifacts.filter(isNodeLayoutCompileArtifact).map(artifact => artifact.value);
   const textPrims = flattenPrims(out.primitives).filter((prim): prim is TextPrim => prim.type === 'text');
   return { layouts, warnings, textPrims };
 };
 
-describe('CompileOptions.onNodeLayout', () => {
+describe('CompileOptions.artifacts.nodeLayouts', () => {
   it('reports plain node content size from text metrics', () => {
     const { layouts, textPrims } = collectLayouts(
       scene([{ type: 'node', id: 'plain', position: [0, 0], text: 'abc', font: { size: 10 } }]),
@@ -142,24 +143,17 @@ describe('CompileOptions.onNodeLayout', () => {
     expect(warnings.some(warning => warning.code === CompileWarningCode.TexInvalid)).toBe(true);
   });
 
-  it('throws through observer errors', () => {
-    const ir = scene([{ type: 'node', id: 'boom', position: [0, 0], text: 'x' }]);
+  it('locates anonymous nodes in the artifact envelope', () => {
+    const result = compileToScene(scene([{ type: 'node', position: [0, 0], text: 'x' }]), {
+      artifacts: { nodeLayouts: true },
+    });
+    const artifact = result.artifacts.find(isNodeLayoutCompileArtifact);
 
-    expect(() =>
-      compileToScene(ir, {
-        measureText,
-        onNodeLayout: () => {
-          throw new Error('observer failed');
-        },
-      }),
-    ).toThrow('observer failed');
-  });
-
-  it('reports diagnostic irPath for anonymous nodes without locking exact locator text', () => {
-    const { layouts } = collectLayouts(scene([{ type: 'node', position: [0, 0], text: 'x' }]));
-
-    expect(layouts[0].id).toBeUndefined();
-    expect(layouts[0].irPath).toContain('node');
+    expect(artifact?.value.id).toBeUndefined();
+    expect(artifact?.occurrence).toEqual({
+      sourcePath: 'children[0].node',
+      expansionPath: [],
+    });
   });
 
   it('keeps content.size on node axes and projects scope scale into content.bounds', () => {

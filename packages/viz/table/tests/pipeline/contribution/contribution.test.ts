@@ -1,6 +1,6 @@
-import type { CompositeDefinition } from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
 
-import { CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -45,7 +45,7 @@ const presentationOf = (name: string) =>
     present: input => ({ type: 'node', position: [0, 0], text: String(input.value) }),
   });
 
-const compositeOf = (namespace: string, type: string): CompositeDefinition => {
+const compositeOf = (namespace: string, type: string): AnyCompositeDefinition => {
   const schema = CompositeBaseSchema.extend({ namespace: z.literal(namespace), type: z.literal(type) });
   return defineComposite({
     namespace,
@@ -110,14 +110,26 @@ describe('Table runtime contribution', () => {
       `${TABLE_NAMESPACE}.${TableComposite.Table}`,
       'fixture.badge',
     ]);
-    const table = definitions[0];
-    const node = table.expand({
-      namespace: TABLE_NAMESPACE,
-      type: TableComposite.Table,
-      data: { reference: 'people' },
-      structure: { kind: 'detail', header: false, columns: [{ id: 'name', field: 'name' }] },
-    });
-    expect(JSON.stringify(node)).toContain('Ada');
+    const result = compileToScene(
+      {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            namespace: TABLE_NAMESPACE,
+            type: TableComposite.Table,
+            data: { reference: 'people' },
+            structure: {
+              kind: 'detail',
+              header: false,
+              columns: [{ id: 'name', field: 'name' }],
+            },
+          },
+        ],
+      },
+      { composites: definitions },
+    );
+    expect(JSON.stringify(result.scene)).toContain('Ada');
   });
 
   it('merges definitions and composites in first-contribution order and deduplicates the same objects', () => {

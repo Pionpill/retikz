@@ -1,4 +1,4 @@
-import type { Scene } from '@retikz/core';
+import type { IRScene, Scene } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
@@ -18,5 +18,27 @@ describe('toSceneResult runtime metadata', () => {
     expect(first.runtimeMeta.layers).not.toBe(second.runtimeMeta.layers);
     expect(first.runtimeMeta.identityIndex).not.toBe(second.runtimeMeta.identityIndex);
     expect(first.runtimeMeta.parentIndex).not.toBe(second.runtimeMeta.parentIndex);
+  });
+
+  it('同次返回 compile artifacts，Scene 输入固定为空 immutable 数组', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'a', position: [0, 0], text: 'A' }],
+    };
+
+    const compiled = toSceneResult(ir, { compile: { artifacts: { nodeLayouts: true } } });
+    const passedScene = toSceneResult(scene, { compile: { artifacts: { nodeLayouts: true } } });
+
+    expect(compiled.artifacts).toMatchObject([
+      {
+        kind: 'nodeLayout',
+        occurrence: { sourcePath: 'children[0].node', expansionPath: [] },
+        value: { id: 'a' },
+      },
+    ]);
+    expect(Object.isFrozen(compiled.artifacts)).toBe(true);
+    expect(passedScene.artifacts).toEqual([]);
+    expect(Object.isFrozen(passedScene.artifacts)).toBe(true);
   });
 });

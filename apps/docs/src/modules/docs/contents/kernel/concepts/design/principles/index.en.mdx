@@ -17,7 +17,7 @@ Start with two stable artifacts: **IR is the description boundary, and Scene is 
 
 <ComponentPreview files="principles-packages" size="sm" hideCode />
 
-Solid arrows show data flow: author input becomes IR, `compileToScene` creates Scene, and a renderer emits SVG or Canvas. Dashed arrows show capability dependencies: `@retikz/math` supplies pure geometry, while `@retikz/tex` enters as an optional lowerer instead of creating a special IR or renderer branch.
+Solid arrows show data flow: author input becomes IR, `compileToScene` creates Scene and typed artifacts together, and a renderer emits the Scene as SVG or Canvas. Dashed arrows show capability dependencies: `@retikz/math` supplies pure geometry, while `@retikz/tex` enters as an optional lowerer instead of creating a special IR or renderer branch.
 
 | Package           | First responsibility                              | Explicitly does not own               |
 | ----------------- | ------------------------------------------------- | ------------------------------------- |
@@ -114,14 +114,14 @@ This order defines the boundaries: parsers do not read provider registries, rend
     {
       label: 'Create the compile-local context and resolve registries centrally',
       path: 'packages/kernel/core/src/compile/orchestration/context.ts',
-      startLine: 78,
-      endLine: 115,
+      startLine: 83,
+      endLine: 124,
     },
     {
       label: 'Compile shared IR into a renderer-agnostic Scene',
       path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 18,
-      endLine: 42,
+      startLine: 25,
+      endLine: 53,
     },
   ]}
 />

@@ -33,7 +33,7 @@ describe('Node label position center', () => {
       ],
     };
 
-    const scene = compileToScene(ir);
+    const scene = compileToScene(ir).scene;
     const label = collectTexts(scene.primitives).find(t =>
       t.lines.some(l => (typeof l === 'string' ? l : l.text) === 'center label'),
     );
@@ -57,11 +57,11 @@ describe('Node label position center', () => {
       ],
     };
 
-    const defaultLabel = collectTexts(compileToScene(ir).primitives).find(t =>
+    const defaultLabel = collectTexts(compileToScene(ir).scene.primitives).find(t =>
       t.lines.some(l => (typeof l === 'string' ? l : l.text) === 'right label'),
     );
     const customDistance = 40;
-    const customLabel = collectTexts(compileToScene(ir, { labelDistance: customDistance }).primitives).find(t =>
+    const customLabel = collectTexts(compileToScene(ir, { labelDistance: customDistance }).scene.primitives).find(t =>
       t.lines.some(l => (typeof l === 'string' ? l : l.text) === 'right label'),
     );
 

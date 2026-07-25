@@ -6,7 +6,11 @@ import { JsonObjectSchema } from '../../schemas';
 import { parseProviderPayload } from '../provider-payload';
 
 export type ClipRegistry = {
+  /** 解析 IR clip 为 canonical ClipShape，不登记资源 */
+  resolve: (clip: IRClipSpec) => ClipShape;
   register: (clip: IRClipSpec) => string;
+  /** 提交 probe 已解析的 clip shape，不再次调用 clip provider */
+  importResolved: (shape: ClipShape) => string;
   resources: () => Array<ClipResource>;
 };
 
@@ -174,8 +178,7 @@ export const createClipRegistry = (
     JsonObjectSchema.parse(parsed);
     return guardAndRoundShape(definition.resolve(parsed, { round, resolve: resolveShape }), round);
   };
-  const register = (clip: IRClipSpec): string => {
-    const shape = resolveShape(clip);
+  const importResolved = (shape: ClipShape): string => {
     const key = JSON.stringify(shape);
     let id = idByKey.get(key);
     if (id === undefined) {
@@ -186,5 +189,6 @@ export const createClipRegistry = (
     }
     return id;
   };
-  return { register, resources: () => list };
+  const register = (clip: IRClipSpec): string => importResolved(resolveShape(clip));
+  return { resolve: resolveShape, register, importResolved, resources: () => list };
 };

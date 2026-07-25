@@ -1,4 +1,4 @@
-import type { CompositeDefinition, IRChild } from '@retikz/core';
+import type { AnyCompositeDefinition, IRChild } from '@retikz/core';
 
 /** 嵌入组件可附带的外部数据集表：reference 键 → 任意载荷 */
 export type EmbeddableDatasets = Record<string, unknown>;
@@ -8,7 +8,7 @@ export type EmbeddableContribution = {
   node: IRChild;
   datasets: EmbeddableDatasets;
   /** 使用同一 namespace 的贡献必须稳定复用同一个函数引用 */
-  makeComposites: (mergedDatasets: EmbeddableDatasets) => Array<CompositeDefinition>;
+  makeComposites: (mergedDatasets: EmbeddableDatasets) => Array<AnyCompositeDefinition>;
 };
 
 /** 可嵌入 Tier2 适配器，用于让高层领域组件接入 `<Layout>` */
@@ -23,7 +23,7 @@ export type EmbeddableContributionRecord = {
   namespace: string;
   datasets: EmbeddableDatasets;
   /** 使用同一 namespace 的贡献必须稳定复用同一个函数引用 */
-  makeComposites: (mergedDatasets: EmbeddableDatasets) => Array<CompositeDefinition>;
+  makeComposites: (mergedDatasets: EmbeddableDatasets) => Array<AnyCompositeDefinition>;
 };
 
 /** 组件 type 上可读取的可嵌入静态属性形状 */

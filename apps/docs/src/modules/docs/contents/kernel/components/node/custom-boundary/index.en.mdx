@@ -83,7 +83,7 @@ The React host accepts definitions through `<Layout boundaries>`, while each nod
 When compiling core IR directly, pass the same array through `CompileOptions.boundaries`:
 
 ```ts
-const scene = compileToScene(ir, { boundaries: [horizontalPorts] });
+const { scene } = compileToScene(ir, { boundaries: [horizontalPorts] });
 ```
 
 Application code owns the definitions; serialized figures keep only names or parameter objects. React and direct compilation therefore share one registration and resolution model.

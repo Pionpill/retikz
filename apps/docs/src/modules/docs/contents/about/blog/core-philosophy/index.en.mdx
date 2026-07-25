@@ -76,7 +76,7 @@ These 12 are the result of repeated trimming — TikZ has dozens of native path 
 
 Why two passes? Because nodes and paths reference each other — a node's position may depend on another node's anchor, and a path endpoint may reference some node's compass direction. Lay out all nodes first, and paths can consume the result without hitting undefined references.
 
-The compile output `Scene` consists of 5 primitive types: `RectPrim` / `EllipsePrim` / `TextPrim` / `PathPrim` / `GroupPrim`, plus a render-target-agnostic resource table (gradients / patterns / clips are deduped behind stable ids; primitives reference them via `paintRef` / `clipRef`, which adapters materialize into `<defs>` / `<clipPath>`). That's the greatest-common subset of vector graphics — SVG, Canvas, PDF, native drawing can all consume it directly, without depending on any runtime feature. Text measurement must complete at this stage (`measuredWidth` / `measuredHeight` already filled), so adapters never need to touch side-effecting APIs like `canvas.measureText`.
+The compile output `CompileResult` contains both `scene` and immutable `artifacts`. Its `Scene` consists of 5 primitive types: `RectPrim` / `EllipsePrim` / `TextPrim` / `PathPrim` / `GroupPrim`, plus a render-target-agnostic resource table that adapters materialize. That's the greatest-common subset of vector graphics — SVG, Canvas, PDF, and native drawing can all consume it directly. Text measurement completes at this stage (`measuredWidth` / `measuredHeight` already filled), and artifacts come from the same canonical compile rather than a second traversal.
 
 ```text
 IR (JSON)
@@ -108,21 +108,21 @@ Kernel is the React-direct mapping of IR, 1:1; Sugar is syntactic sugar over Ker
 
 The iron rule: **Sugar introduces no new capability**. Anything Sugar can express, Kernel can express too — once that line breaks, Sugar-only capabilities can't be persisted, can't cross platforms, can't be consumed by AI, and the whole layering becomes a lie.
 
-### Tier 2: domain packages (planned)
+### Tier 2: domain packages
 
-Tier 2 isn't implemented in core yet; the plan is for `@retikz/flow` / `@retikz/plot` and other domain packages to carry it:
+Tier 2 is carried by domain packages such as `@retikz/plot` and `@retikz/table`:
 
 | Layer  | Examples                                        | IR form                   | Expansion time          |
 | ------ | ----------------------------------------------- | ------------------------- | ----------------------- |
 | Tier 2 | `<Axis>` `<BarPlot>` `<Tree>` (domain packages) | High-level form preserved | Inside `compileToScene` |
 
-The shared trait is that they involve algorithmic decisions (dagre layout, auto-ticks, scale calculation) and must be preserved as high-level forms through the compile pipeline until `compileToScene`, where a `lowerComposites` hook lowers them into Kernel primitives. That keeps core's schema slim, the LLM learning surface flat, and adding a new chart type doesn't require core changes — this tier kicks off once core 1.0 stabilizes.
+Their shared trait is algorithmic decision-making, so high-level intent remains through `compileToScene`. A composite uses `expand` for structural transformation or layout-aware `compile` when real child content must feed back into parent layout. The latter measures, solves, constrains, and replays within one Core compile. Core therefore does not need a separate compile channel for every chart or table layout.
 
 ## Framework adapter: deliberately thin
 
 `@retikz/react` is currently the only shipped adapter, and the whole architecture insists it stay "thin":
 
-- The top-level `<Layout>` container (`packages/kernel/react/src/kernel/runtime/Layout.tsx`) does three things only: receive an `ir` prop or `useMemo(buildIR(children))`, call `compileToScene`, and translate Scene primitives into `<svg>` children.
+- The top-level `<Layout>` container (`packages/kernel/react/src/kernel/runtime/Layout.tsx`) orchestrates input adaptation, `compileToScene`, and the renderer, then publishes same-compile artifacts after commit.
 - The builder (`packages/kernel/react/src/kernel/adapter/builder.ts`) does synchronous JSX → IR conversion, using a shared field table (`NODE_FIELDS` / `PATH_FIELDS`) and component `displayName` to recognize types; it doesn't call hooks and isn't part of the React render call stack.
 - Text measurement uses `browserMeasurer` (canvas.measureText), injected into compile as a `TextMeasurer` — later SSR adapters can swap in satori / sharp etc., with zero changes to compile itself.
 

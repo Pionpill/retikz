@@ -52,7 +52,7 @@ Table 的三个宿主入口共享一条运行时：React 组件和 Vanilla helpe
 | -------------------------- | ---------------------------------------------- | ------- | ------------------------------------- |
 | `structureDefinitions?`    | `ReadonlyArray<AnyTableStructureDefinition>`   | `[]`    | 自定义 Structure definitions          |
 | `presentationDefinitions?` | `ReadonlyArray<AnyCellPresentationDefinition>` | `[]`    | 自定义 Cell presentation definitions  |
-| `composites?`              | `ReadonlyArray<CompositeDefinition>`           | `[]`    | Cell 内嵌 Tier 2 内容所需 definitions |
+| `composites?`              | `ReadonlyArray<AnyCompositeDefinition>`        | `[]`    | Cell 内嵌 Tier 2 内容所需 definitions |
 | `onManifest?`              | `(manifest: TableLayoutManifest) => void`      | —       | standalone 布局产物通知；嵌入时不支持 |
 | `renderer?`                | `'svg' \| 'canvas'`                            | `'svg'` | renderer backend                      |
 | `width?` / `height?`       | `number \| string`                             | —       | 宿主显示尺寸；不改变 Table 固定轨道   |
@@ -110,13 +110,13 @@ Vanilla 不使用 fluent builder。浏览器组合由 `embedTable()` 产生 embe
 
 ### Runtime options
 
-| 属性           | 类型                                 | 默认值  | 描述                                           |
-| -------------- | ------------------------------------ | ------- | ---------------------------------------------- |
-| `data`         | `ExternalDatasets`                   | `{}`    | 按 spec reference 索引的外部 datasets          |
-| `lowerOptions` | `LowerTablesOptions`                 | `{}`    | Structure 与 Presentation definitions          |
-| `composites`   | `ReadonlyArray<CompositeDefinition>` | `[]`    | Cell 内嵌 Tier 2 definitions                   |
-| `output`       | `RenderToStringOptions['output']`    | —       | 仅 `renderTable`：SVG 宿主尺寸与 id prefix     |
-| `artifacts`    | `true \| false`                      | `false` | 仅 `renderTable`：是否返回 `{ svg, manifest }` |
+| 属性           | 类型                                    | 默认值  | 描述                                           |
+| -------------- | --------------------------------------- | ------- | ---------------------------------------------- |
+| `data`         | `ExternalDatasets`                      | `{}`    | 按 spec reference 索引的外部 datasets          |
+| `lowerOptions` | `LowerTablesOptions`                    | `{}`    | Structure 与 Presentation definitions          |
+| `composites`   | `ReadonlyArray<AnyCompositeDefinition>` | `[]`    | Cell 内嵌 Tier 2 definitions                   |
+| `output`       | `RenderToStringOptions['output']`       | —       | 仅 `renderTable`：SVG 宿主尺寸与 id prefix     |
+| `artifacts`    | `true \| false`                         | `false` | 仅 `renderTable`：是否返回 `{ svg, manifest }` |
 
 ## Lowering 与扩展
 

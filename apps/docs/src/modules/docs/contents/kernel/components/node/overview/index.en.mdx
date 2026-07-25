@@ -201,7 +201,7 @@ The compiler first resolves the style-inherited `position`, content, and geometr
 
 Node sizing converges in a fixed order: text is measured and wrapped first; `padding` forms the content box; the shape definition computes a visual circumscribed box from that box and its params; then `minimumSize` applies a floor. `scale` affects fonts, spacing, and shape params from the start, while `rotate` is attached to the resolved geometry.
 
-Anchor placement runs only after that provisional layout exists. It resolves both anchors and translates the whole Node; `onNodeLayout`, id registration, Scene output, Scope bbox, and automatic viewBox observe only the final translated geometry.
+Anchor placement runs only after that provisional layout exists. It resolves both anchors and translates the whole Node; opt-in `nodeLayout` artifacts, id registration, Scene output, Scope bbox, and automatic viewBox observe only the final translated geometry.
 
 `label` does not participate in visual shape sizing. Labels are laid out as separate attached primitives, so they do not enlarge the node border, but their extents join `margin` and shadow when the automatic viewBox is collected. The compiler resolves each label visual box in one measurement phase, then uses the final node rectangle, rotated box, and `distance` to resolve its center offset without remeasuring after the rectangle is known. The same box geometry drives the text baseline, pin endpoint, and viewBox. `Node.scale` does not scale the user-unit `distance`; an outer `Scope` transform scales the node, label, and gap together.
 
@@ -210,8 +210,8 @@ Anchor placement runs only after that provisional layout exists. It resolves bot
     {
       label: 'Resolve content and geometry into a Node layout',
       path: 'packages/kernel/core/src/compile/node/layout.ts',
-      startLine: 129,
-      endLine: 293,
+      startLine: 131,
+      endLine: 313,
     },
     {
       label: 'Emit shape, content, and labels as Scene primitives',
@@ -228,8 +228,8 @@ Anchor placement runs only after that provisional layout exists. It resolves bot
     {
       label: 'Register names and collect automatic viewBox bounds',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 177,
-      endLine: 229,
+      startLine: 211,
+      endLine: 286,
     },
   ]}
 />
@@ -294,20 +294,20 @@ Path / Draw endpoints use a different phase. A path first reserves its drawing-o
     {
       label: 'Register ids after Node layout',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 177,
-      endLine: 229,
+      startLine: 211,
+      endLine: 286,
     },
     {
       label: 'Queue paths for deferred emission',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 255,
-      endLine: 278,
+      startLine: 318,
+      endLine: 343,
     },
     {
       label: 'Resolve paths after name registration',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 147,
-      endLine: 175,
+      startLine: 183,
+      endLine: 209,
     },
   ]}
 />
