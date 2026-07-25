@@ -25,6 +25,10 @@ export const indexPreviewControlSections = (
 ): Array<PreviewControlColumnSection> =>
   sections.map((section, sourceIndex) => ({ ...section, sourceIndex, showTitle: true }));
 
+/** 收集初始收起的带标题分组索引 */
+export const getDefaultCollapsedSectionIndexes = (sections: ReadonlyArray<PreviewControlSection>): Set<number> =>
+  new Set(sections.flatMap((section, sourceIndex) => (section.label && section.defaultCollapsed ? [sourceIndex] : [])));
+
 /** 将属性面板分组按控件数量均衡拆成左右两列 */
 export const splitPreviewControlSections = (
   sections: ReadonlyArray<PreviewControlSection>,

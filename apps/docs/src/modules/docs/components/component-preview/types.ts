@@ -242,6 +242,10 @@ export type PreviewOverlayControlField = PreviewStateControlField & {
 export type PreviewControlSection = {
   /** 分组标题 */
   label?: string;
+  /** 初始是否收起；仅带标题的分组可启用
+   * @default false
+   */
+  defaultCollapsed?: boolean;
   /** 整个分组的可选显示条件 */
   visibleWhen?: PreviewControlCondition;
   /** 分组内字段 */

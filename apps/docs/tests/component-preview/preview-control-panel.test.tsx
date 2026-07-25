@@ -195,6 +195,18 @@ const alternateDefinition = definePreviewControls({
   ],
 });
 
+const initiallyCollapsedDefinition = definePreviewControls({
+  presentation: 'panel',
+  title: 'Collapsed Properties',
+  sections: [
+    {
+      label: 'Data',
+      defaultCollapsed: true,
+      controls: [{ kind: 'table', id: 'rows', label: 'Rows', rows: [{ x: 1, y: 2 }] }],
+    },
+  ],
+});
+
 const conditionalDefinition = definePreviewControls({
   presentation: 'panel',
   title: 'Conditional Properties',
@@ -752,6 +764,30 @@ describe('PreviewControlPanel', () => {
     await flushAnimationFrames();
     expect(container.querySelectorAll('button[aria-label="Appearance"]')).toHaveLength(1);
     expect(container.querySelectorAll('[data-control-id]')).toHaveLength(6);
+  });
+
+  it('defaultCollapsed section 默认收起并允许用户展开', async () => {
+    const container = await mount(
+      <PreviewControlPanel
+        definition={initiallyCollapsedDefinition}
+        controlState={emptyControlState}
+        onClose={() => undefined}
+      />,
+    );
+    const expandButton = container.querySelector<HTMLButtonElement>('button[aria-label="Data"]');
+
+    expect(expandButton?.getAttribute('aria-expanded')).toBe('false');
+    expect(expandButton?.hasAttribute('aria-controls')).toBe(false);
+    expect(container.querySelectorAll('.lucide-plus')).toHaveLength(1);
+    expect(container.querySelector('[data-control-id="rows"]')).toBeNull();
+
+    await act(() => expandButton?.click());
+
+    expect(container.querySelector<HTMLButtonElement>('button[aria-label="Data"]')?.getAttribute('aria-expanded')).toBe(
+      'true',
+    );
+    expect(container.querySelectorAll('.lucide-minus')).toHaveLength(1);
+    expect(container.querySelector('[data-control-id="rows"]')).not.toBeNull();
   });
 
   it('Reset 不改变 section 折叠状态', async () => {
