@@ -74,6 +74,7 @@ export const builtinPathStyleControls = definePreviewControls({
           id: 'lineJoin',
           label: '连接样式',
           defaultValue: PathLineJoin.Round,
+          visibleWhen: { controlId: 'roundedCorners', oneOf: [0] },
           options: [
             { value: PathLineJoin.Miter, label: '尖角' },
             { value: PathLineJoin.Round, label: '圆角' },
@@ -84,7 +85,7 @@ export const builtinPathStyleControls = definePreviewControls({
           kind: 'range',
           id: 'roundedCorners',
           label: '路径圆角',
-          defaultValue: 8,
+          defaultValue: 0,
           min: 0,
           max: 20,
           step: 1,
@@ -104,7 +105,7 @@ export const previewControlContract = {
     dashMode: 'solid',
     lineCap: PathLineCap.Round,
     lineJoin: PathLineJoin.Round,
-    roundedCorners: 8,
+    roundedCorners: 0,
   },
   presets: [
     {

@@ -1,4 +1,4 @@
-import type { CompiledNodeLayout, IRScene, TextMeasurer } from '@retikz/core';
+import type { CompiledNodeLayout, IRScene, ScenePrimitive, TextMeasurer, TextPrim } from '@retikz/core';
 import type { ReactNode } from 'react';
 
 import { compileToScene, fallbackMeasurer } from '@retikz/core';
@@ -59,6 +59,7 @@ import {
   irToVanillaCode,
 } from '../../src/modules/docs/components/component-preview/utils';
 import { nodeGeometryFrame } from '../../src/modules/docs/contents/kernel/components/node/overview/node-geometry.controls';
+import { nodeTextRows } from '../../src/modules/docs/contents/viz/plot/channel/builtin/builtin-node-text.data';
 
 const privateExportKeys = [
   'ComponentPreviewDialog',
@@ -172,6 +173,52 @@ const compileGeometryNode = (
   );
   if (!layout) throw new Error('Missing compiled Node geometry layout');
   return { layout, bounds: scene.layout };
+};
+
+/** 递归查找节点正文 Text primitive */
+const findTextPrimitive = (primitives: ReadonlyArray<ScenePrimitive>): TextPrim | undefined => {
+  for (const primitive of primitives) {
+    if (primitive.type === 'text') return primitive;
+    if (primitive.type === 'group') {
+      const nested = findTextPrimitive(primitive.children);
+      if (nested) return nested;
+    }
+  }
+  return undefined;
+};
+
+/** 用 Core 真实文本布局链路编译内置通道 playground 的文字 */
+const compileBuiltinText = (
+  text: string,
+  values: { align: 'start' | 'middle' | 'end'; fontSize: number; lineHeight: number; maxTextWidth: number },
+): { layout: CompiledNodeLayout; text: TextPrim } => {
+  let layout: CompiledNodeLayout | undefined;
+  const scene = compileToScene(
+    {
+      type: 'scene',
+      version: 1,
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          text,
+          align: values.align,
+          font: { size: values.fontSize, weight: 'bold' },
+          lineHeight: values.lineHeight,
+          maxTextWidth: values.maxTextWidth,
+        },
+      ],
+    } satisfies IRScene,
+    {
+      onNodeLayout: nextLayout => {
+        layout = nextLayout;
+      },
+      padding: 0,
+    },
+  );
+  const textPrimitive = findTextPrimitive(scene.primitives);
+  if (!layout || !textPrimitive) throw new Error('Missing compiled builtin text layout');
+  return { layout, text: textPrimitive };
 };
 
 describe('preview controls registry', () => {
@@ -1310,6 +1357,171 @@ describe('preview controls registry', () => {
       'builtin-text-node',
     ]) {
       expect(demoSources[buildKey(builtinSegments, removedDemo)], removedDemo).toBeUndefined();
+    }
+  });
+
+  it('内置节点 playground 的 padding 从默认值上调一步即可改变空节点尺寸', () => {
+    const segments = ['viz', 'plot', 'channel', 'builtin'];
+
+    for (const language of ['zh', 'en'] as const) {
+      const definition = resolvePreviewControls(
+        controlModules[
+          language === 'zh'
+            ? buildControlsKey(segments, 'builtin-node-text')
+            : buildLangControlsKey(segments, 'builtin-node-text', 'en')
+        ],
+      );
+      expect(definition?.presentation, language).toBe('panel');
+      if (!definition || definition.presentation !== 'panel') continue;
+
+      const fields = getPreviewControlFields(definition);
+      const padding = fields.find(field => field.id === 'padding');
+      const minimumSize = fields.find(field => field.id === 'minimumSize');
+      expect(padding?.kind, language).toBe('range');
+      expect(minimumSize?.kind, language).toBe('range');
+      if (padding?.kind !== 'range' || minimumSize?.kind !== 'range') continue;
+
+      const compileGlyph = (paddingValue: number): CompiledNodeLayout => {
+        let layout: CompiledNodeLayout | undefined;
+        compileToScene(
+          {
+            type: 'scene',
+            version: 1,
+            children: [
+              {
+                type: 'node',
+                position: [0, 0],
+                shape: 'rectangle',
+                padding: paddingValue,
+                minimumSize: minimumSize.defaultValue,
+              },
+            ],
+          } satisfies IRScene,
+          {
+            onNodeLayout: nextLayout => {
+              layout = nextLayout;
+            },
+            padding: 0,
+          },
+        );
+        if (!layout) throw new Error('Missing compiled point glyph layout');
+        return layout;
+      };
+
+      const current = compileGlyph(padding.defaultValue);
+      const increased = compileGlyph(padding.defaultValue + (padding.step ?? 1));
+
+      expect(increased.rect.width, language).toBeGreaterThan(current.rect.width);
+      expect(increased.rect.height, language).toBeGreaterThan(current.rect.height);
+    }
+  });
+
+  it('内置节点 playground 的文本默认形成宽度不同的多行，使文字对齐可见', () => {
+    const segments = ['viz', 'plot', 'channel', 'builtin'];
+    const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-node-text')]);
+    expect(definition?.presentation).toBe('panel');
+    if (!definition || definition.presentation !== 'panel') return;
+
+    const defaults = Object.fromEntries(
+      getPreviewControlFields(definition).map(field => [field.id, field.defaultValue]),
+    );
+    const compiled = compileBuiltinText(nodeTextRows[0].word, {
+      align: defaults.align as 'start' | 'middle' | 'end',
+      fontSize: defaults.fontSize as number,
+      lineHeight: defaults.lineHeight as number,
+      maxTextWidth: defaults.maxTextWidth as number,
+    });
+    const lineLengths = new Set(compiled.text.lines.map(line => line.text.length));
+
+    expect(compiled.layout.text.lineCount).toBeGreaterThan(1);
+    expect(lineLengths.size).toBeGreaterThan(1);
+  });
+
+  it('内置节点 playground 的默认行高不会让多行文字重叠', () => {
+    const segments = ['viz', 'plot', 'channel', 'builtin'];
+    const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-node-text')]);
+    expect(definition?.presentation).toBe('panel');
+    if (!definition || definition.presentation !== 'panel') return;
+
+    const defaults = Object.fromEntries(
+      getPreviewControlFields(definition).map(field => [field.id, field.defaultValue]),
+    );
+    const compiled = compileBuiltinText(nodeTextRows[0].word, {
+      align: defaults.align as 'start' | 'middle' | 'end',
+      fontSize: defaults.fontSize as number,
+      lineHeight: defaults.lineHeight as number,
+      maxTextWidth: defaults.maxTextWidth as number,
+    });
+
+    expect(compiled.layout.text.lineCount).toBeGreaterThan(1);
+    expect(compiled.layout.content.size.height / compiled.layout.text.lineCount).toBeGreaterThanOrEqual(
+      defaults.fontSize as number,
+    );
+  });
+
+  it('内置节点 playground 的文字宽度范围会改变实际折行数', () => {
+    const segments = ['viz', 'plot', 'channel', 'builtin'];
+    const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-node-text')]);
+    expect(definition?.presentation).toBe('panel');
+    if (!definition || definition.presentation !== 'panel') return;
+
+    const fields = getPreviewControlFields(definition);
+    const align = fields.find(field => field.id === 'align');
+    const fontSize = fields.find(field => field.id === 'fontSize');
+    const lineHeight = fields.find(field => field.id === 'lineHeight');
+    const maxTextWidth = fields.find(field => field.id === 'maxTextWidth');
+    expect(align?.kind).toBe('select');
+    expect(fontSize?.kind).toBe('range');
+    expect(lineHeight?.kind).toBe('range');
+    expect(maxTextWidth?.kind).toBe('range');
+    if (
+      align?.kind !== 'select' ||
+      fontSize?.kind !== 'range' ||
+      lineHeight?.kind !== 'range' ||
+      maxTextWidth?.kind !== 'range'
+    ) {
+      return;
+    }
+
+    const common = {
+      align: align.defaultValue as 'start' | 'middle' | 'end',
+      fontSize: fontSize.defaultValue,
+      lineHeight: lineHeight.defaultValue,
+    };
+    const narrow = compileBuiltinText(nodeTextRows[0].word, {
+      ...common,
+      maxTextWidth: maxTextWidth.min,
+    });
+    const wide = compileBuiltinText(nodeTextRows[0].word, {
+      ...common,
+      maxTextWidth: maxTextWidth.max,
+    });
+
+    expect(narrow.layout.text.lineCount).toBeGreaterThan(wide.layout.text.lineCount);
+  });
+
+  it('内置路径 playground 仅在尖折点下显示连接样式', () => {
+    const segments = ['viz', 'plot', 'channel', 'builtin'];
+    const definitions = [
+      resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-path-style')]),
+      resolvePreviewControls(controlModules[buildLangControlsKey(segments, 'builtin-path-style', 'en')]),
+    ];
+    const visibleIds = (definition: PreviewControlsDefinition | undefined, roundedCorners: number) =>
+      definition?.presentation === 'panel'
+        ? resolveVisiblePreviewControlSections(definition.sections, { roundedCorners }).flatMap(section =>
+            section.controls.map(field => field.id),
+          )
+        : [];
+
+    for (const definition of definitions) {
+      expect(definition?.presentation).toBe('panel');
+      if (!definition || definition.presentation !== 'panel') continue;
+
+      const roundedCorners = getPreviewControlFields(definition).find(field => field.id === 'roundedCorners');
+      expect(roundedCorners?.kind).toBe('range');
+      expect(roundedCorners?.defaultValue).toBe(0);
+      expect(visibleIds(definition, 0)).toContain('lineJoin');
+      expect(visibleIds(definition, 8)).not.toContain('lineJoin');
     }
   });
 
