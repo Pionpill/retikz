@@ -4,12 +4,30 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { pathStyleRows } from './builtin-path-style.data';
+
 /** 路径样式通道的中文属性面板 */
 export const builtinPathStyleControls = definePreviewControls({
   presentation: 'panel',
   title: '路径样式通道',
   defaultSize: 36,
   sections: [
+    {
+      label: '数据',
+      defaultCollapsed: true,
+      controls: [
+        {
+          kind: 'table',
+          id: 'rows',
+          label: '路径数据',
+          rows: pathStyleRows,
+          columns: [
+            { key: 'step', label: '步骤' },
+            { key: 'value', label: '数值' },
+          ],
+        },
+      ],
+    },
     {
       label: '描边',
       controls: [

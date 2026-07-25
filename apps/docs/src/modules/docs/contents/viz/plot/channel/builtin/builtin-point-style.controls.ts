@@ -4,12 +4,30 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { pointStyleRows } from './builtin-point-style.data';
+
 /** 点样式通道的中文属性面板 */
 export const builtinPointStyleControls = definePreviewControls({
   presentation: 'panel',
   title: '点样式通道',
   defaultSize: 36,
   sections: [
+    {
+      label: '数据',
+      defaultCollapsed: true,
+      controls: [
+        {
+          kind: 'table',
+          id: 'rows',
+          label: '点数据',
+          rows: pointStyleRows,
+          columns: [
+            { key: 'x', label: '横轴值' },
+            { key: 'y', label: '纵轴值' },
+          ],
+        },
+      ],
+    },
     {
       label: '颜色',
       controls: [

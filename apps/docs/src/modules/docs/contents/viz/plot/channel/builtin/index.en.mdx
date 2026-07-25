@@ -21,7 +21,11 @@ Each table gives the form and visible meaning first, then the internal property 
 
 Position channels say which row fields participate in coordinate projection. `x` / `y` / `z` are not fixed screen directions; the coordinate system reinterprets them. `cartesian2D` treats `x` / `y` as horizontal / vertical, while `polar2D` treats them as angle / radius.
 
-<ComponentPreview files="builtin-position" size="md" />
+<ComponentPreview
+  files={['builtin-position', 'builtin-position.data.ts']}
+  size="md"
+  caption="This playground keeps Cartesian coordinates fixed and only changes the x / y bindings; the data and chart size stay fixed."
+/>
 
 | Channel | Channel Value        | Meaning                | Delivery                        |
 | ------- | -------------------- | ---------------------- | ------------------------------- |
@@ -34,7 +38,7 @@ Position channels say which row fields participate in coordinate projection. `x`
 Style channels control the visible appearance of a mark. Color, opacity, size, and shape are style channels. Use the panel to change the target channel and values while the same points and data remain fixed.
 
 <ComponentPreview
-  files="builtin-point-style"
+  files={['builtin-point-style', 'builtin-point-style.data.ts']}
   size="md"
   caption="The target chooses whether paint enters color, fill, or stroke; the remaining controls keep the subject and data fixed."
 />
@@ -79,7 +83,7 @@ The `shape` channel is for categories. Categorical values map to built-in glyph 
 These channels all act on nodes produced by a mark. The panel keeps the same text nodes in place so size, typography, outside labels, and effects can be adjusted continuously instead of split across four static figures.
 
 <ComponentPreview
-  files="builtin-node-text"
+  files={['builtin-node-text', 'builtin-node-text.data.ts']}
   size="lg"
   caption="The lower rectangles show node geometry, labels, and effects; the upper text shows textColor and layout while both subjects stay fixed."
 />
@@ -128,7 +132,7 @@ Effect channels are shared visual hints. `shadow` changes the node projection, w
 Path channels apply to marks that produce paths, such as line marks, relation lines, region boundaries, and reference lines. Endpoint arrows are not channels; configure them with `marks` on the relevant path.
 
 <ComponentPreview
-  files="builtin-path-style"
+  files={['builtin-path-style', 'builtin-path-style.data.ts']}
   size="md"
   caption="Stroke, cap, join, corner, and dash controls all act on one fixed path for direct comparison."
 />
@@ -149,7 +153,7 @@ Path channels apply to marks that produce paths, such as line marks, relation li
 Other channels do not directly describe color, position, or path shape. They control drawing order, row ordering, and series splitting.
 
 <ComponentPreview
-  files="builtin-other"
+  files={['builtin-other', 'builtin-other.data.ts']}
   size="md"
   caption="The input rows are intentionally shuffled: series splits two lines, order restores their step sequence, and points use a higher zIndex to stay above the lines."
 />

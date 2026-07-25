@@ -2,19 +2,17 @@ import type { FC } from 'react';
 
 import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
 
-// 输入顺序故意打乱，用于展示 order 会在每个 series 内恢复连接顺序
-const rows = [
-  { step: 3, value: 18, series: 'B' },
-  { step: 2, value: 16, series: 'A' },
-  { step: 1, value: 7, series: 'B' },
-  { step: 3, value: 13, series: 'A' },
-  { step: 2, value: 12, series: 'B' },
-  { step: 1, value: 10, series: 'A' },
-];
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-const Demo: FC = () => (
+import { builtinOtherControls, previewControlContract } from './builtin-other.controls';
+import { otherRows } from './builtin-other.data';
+
+/** 注册回退使用的其他通道数据面板 */
+export const previewControls = builtinOtherControls;
+
+const controlledPreview = defineControlledPreview(previewControlContract, () => (
   <Plot
-    data={rows}
+    data={otherRows}
     model={[
       { name: 'step', type: 'continuous' },
       { name: 'value', type: 'continuous' },
@@ -29,6 +27,12 @@ const Demo: FC = () => (
     <Axis dimension="x" />
     <Axis dimension="y" grid />
   </Plot>
-);
+));
+
+/** canonical 状态派生的稳定源码配置 */
+export const previewSource = controlledPreview.source;
+
+/** 排序、系列拆分与绘制顺序 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

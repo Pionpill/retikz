@@ -26,6 +26,9 @@ description: Use when a retikz ComponentPreview has controls, a *.controls.ts co
 - 按能力所有者、职责层级或视觉对象分 section，不按字段类型机械分组
 - 双节点、多层对象分别分组，如“节点 A / 节点 B”“主体 / 标签 / 阴影”
 - controls 包含只读 `table` 数据时，数据 section 默认作为首个 section，先展示输入再操作绑定、变换或样式
+- Plot demo 使用行数据绘图时，默认在 controls 首个 section 展示只读 `table`；没有可写字段时也使用仅含数据表的 panel。叙述图或无需数据即可理解的固定示意除外
+- Plot demo 的行数据放在同级 `*.data.ts`，由 demo 与 controls 共用，并在 `<ComponentPreview files>` 中列出
+- 数据只是不变量或观察背景时，数据 section 设置 `defaultCollapsed: true`；理解绑定、排序或分组必须依赖原始数据时保持展开
 - `table` 滚动视口默认完整展示 5 行正文，header 不计入；更多行继续滚动，渲染行数上限单独控制
 - 用 `visibleWhen` 隐藏当前分支无效的字段；不要让用户操作没有效果的 control
 - 中文页面的 controls 面板必须提供完整中文文案：title、section、字段 label、option label、preset label 与帮助文字都使用中文；API 名可按需作为补充，但不得充当唯一 label

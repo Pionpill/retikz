@@ -21,7 +21,11 @@ description: 按视觉目标查询 plot 内置通道，以及字段、固定值�
 
 位置通道声明数据行里的哪些字段参与坐标投影。`x` / `y` / `z` 不等于固定屏幕方向；坐标系会重新解释它们，例如 `cartesian2D` 把 `x` / `y` 当水平 / 垂直，`polar2D` 把它们当角度 / 半径。
 
-<ComponentPreview files="builtin-position" size="md" />
+<ComponentPreview
+  files={['builtin-position', 'builtin-position.data.ts']}
+  size="md"
+  caption="本试验场固定使用笛卡尔坐标，仅切换 x / y 绑定；数据与图表尺寸保持不变。"
+/>
 
 | 通道 | 通道值              | 含义         | 落点                 |
 | ---- | ------------------- | ------------ | -------------------- |
@@ -34,7 +38,7 @@ description: 按视觉目标查询 plot 内置通道，以及字段、固定值�
 样式通道控制图元的可见外观。颜色、透明度、大小和形状都属于样式；在面板中切换作用通道并调整数值，可以直接比较它们在同一组点上的差异。
 
 <ComponentPreview
-  files="builtin-point-style"
+  files={['builtin-point-style', 'builtin-point-style.data.ts']}
   size="md"
   caption="作用通道决定颜色写入 color、fill 还是 stroke；其余控件保持主体与数据不变。"
 />
@@ -79,7 +83,7 @@ description: 按视觉目标查询 plot 内置通道，以及字段、固定值�
 这一组通道都作用在图元生成的节点上。面板固定同一组文本节点，让尺寸、排版、外侧标签和效果可以连续调整，而不再拆成四张静态图。
 
 <ComponentPreview
-  files="builtin-node-text"
+  files={['builtin-node-text', 'builtin-node-text.data.ts']}
   size="lg"
   caption="下排矩形展示节点几何、label 与效果；上排文字展示 textColor 和排版，两个主体的位置保持固定。"
 />
@@ -128,7 +132,7 @@ description: 按视觉目标查询 plot 内置通道，以及字段、固定值�
 路径通道作用在生成路径的图元上，例如折线、关系线、区域边界和参考线。端点箭头不是通道；需要箭头时，在对应路径配置中写 `marks`。
 
 <ComponentPreview
-  files="builtin-path-style"
+  files={['builtin-path-style', 'builtin-path-style.data.ts']}
   size="md"
   caption="描边、端点、连接、圆角和虚线模式都作用在同一条路径上，便于直接比较。"
 />
@@ -149,7 +153,7 @@ description: 按视觉目标查询 plot 内置通道，以及字段、固定值�
 其他通道不直接描述颜色、位置或路径形状，而是控制绘制顺序、数据排序和系列拆分。
 
 <ComponentPreview
-  files="builtin-other"
+  files={['builtin-other', 'builtin-other.data.ts']}
   size="md"
   caption="输入行被刻意打乱：series 拆成两条线，order 再按 step 恢复连接顺序；点以更高 zIndex 显示在线条上方。"
 />

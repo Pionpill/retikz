@@ -4,12 +4,30 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { pathStyleRows } from './builtin-path-style.data';
+
 /** English control panel for path style channels */
 export const builtinPathStyleControls = definePreviewControls({
   presentation: 'panel',
   title: 'Path style channels',
   defaultSize: 36,
   sections: [
+    {
+      label: 'Data',
+      defaultCollapsed: true,
+      controls: [
+        {
+          kind: 'table',
+          id: 'rows',
+          label: 'Path data',
+          rows: pathStyleRows,
+          columns: [
+            { key: 'step', label: 'Step' },
+            { key: 'value', label: 'Value' },
+          ],
+        },
+      ],
+    },
     {
       label: 'Stroke',
       controls: [

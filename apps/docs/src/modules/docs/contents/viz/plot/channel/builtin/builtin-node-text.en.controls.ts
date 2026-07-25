@@ -4,12 +4,33 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { nodeTextRows } from './builtin-node-text.data';
+
 /** English control panel for node, text, label, and effect channels */
 export const builtinNodeTextControls = definePreviewControls({
   presentation: 'panel',
   title: 'Node and text channels',
   defaultSize: 38,
   sections: [
+    {
+      label: 'Data',
+      defaultCollapsed: true,
+      controls: [
+        {
+          kind: 'table',
+          id: 'rows',
+          label: 'Node and text data',
+          rows: nodeTextRows,
+          columns: [
+            { key: 'x', label: 'X position' },
+            { key: 'nodeY', label: 'Node Y' },
+            { key: 'textY', label: 'Text Y' },
+            { key: 'word', label: 'Text' },
+            { key: 'tag', label: 'Label' },
+          ],
+        },
+      ],
+    },
     {
       label: 'Node geometry',
       controls: [

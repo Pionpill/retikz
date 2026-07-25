@@ -6,19 +6,14 @@ import { Axis, Plot, PointMark } from '@retikz/plot-react';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { builtinNodeTextControls, previewControlContract } from './builtin-node-text.controls';
-
-const rows = [
-  { x: 1, nodeY: 12, textY: 21, word: 'Alpha', tag: 'A' },
-  { x: 2, nodeY: 12, textY: 21, word: 'Beta', tag: 'B' },
-  { x: 3, nodeY: 12, textY: 21, word: 'Gamma', tag: 'C' },
-];
+import { nodeTextRows } from './builtin-node-text.data';
 
 /** 注册回退使用的节点与文本 controls */
 export const previewControls = builtinNodeTextControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Plot
-    data={rows}
+    data={nodeTextRows}
     model={[
       { name: 'x', type: 'continuous' },
       { name: 'nodeY', type: 'continuous' },

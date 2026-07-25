@@ -4,12 +4,33 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { nodeTextRows } from './builtin-node-text.data';
+
 /** 节点、文本、标签与效果通道的中文属性面板 */
 export const builtinNodeTextControls = definePreviewControls({
   presentation: 'panel',
   title: '节点与文本通道',
   defaultSize: 38,
   sections: [
+    {
+      label: '数据',
+      defaultCollapsed: true,
+      controls: [
+        {
+          kind: 'table',
+          id: 'rows',
+          label: '节点与文本数据',
+          rows: nodeTextRows,
+          columns: [
+            { key: 'x', label: '横轴位置' },
+            { key: 'nodeY', label: '节点纵轴' },
+            { key: 'textY', label: '文本纵轴' },
+            { key: 'word', label: '文字' },
+            { key: 'tag', label: '标签' },
+          ],
+        },
+      ],
+    },
     {
       label: '节点几何',
       controls: [

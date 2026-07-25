@@ -109,6 +109,7 @@ const controlDefinitionContractOf = (definition: PreviewControlsDefinition) => {
         presentation: definition.presentation,
         slots,
         sections: definition.sections.map(section => ({
+          defaultCollapsed: section.defaultCollapsed,
           visibleWhen: section.visibleWhen,
           fields: section.controls.map(controlFieldContractOf),
         })),
@@ -189,6 +190,12 @@ describe('preview controls registry', () => {
 
   it('从 registry owner 暴露本地化 controls key resolver', () => {
     expect(resolveControlsKey).toBeTypeOf('function');
+  });
+
+  it('ComponentPreview 使用已解析语言选择本地化 controls', () => {
+    const source = readFileSync(resolve('src/modules/docs/components/component-preview/ComponentPreview.tsx'), 'utf8');
+
+    expect(source).toContain("const lang = (i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en';");
   });
 
   it('registry helper 不通过组件预览根 barrel 转发', () => {
@@ -1129,15 +1136,22 @@ describe('preview controls registry', () => {
     }
   });
 
-  it('Channel 文档把参数型静态示例收敛为四个双语 controls playground', () => {
+  it('Channel 文档把参数型静态示例收敛为六个双语 controls playground', () => {
     const bindingSegments = ['viz', 'plot', 'channel', 'binding'];
     const builtinSegments = ['viz', 'plot', 'channel', 'builtin'];
     const expectedControls = [
       { segments: bindingSegments, name: 'channel-binding' },
+      { segments: builtinSegments, name: 'builtin-position' },
       { segments: builtinSegments, name: 'builtin-point-style' },
       { segments: builtinSegments, name: 'builtin-node-text' },
       { segments: builtinSegments, name: 'builtin-path-style' },
+      { segments: builtinSegments, name: 'builtin-other' },
     ];
+
+    expect(Object.keys(controlModules).filter(key => key.includes('builtin-position'))).toEqual([
+      buildControlsKey(builtinSegments, 'builtin-position'),
+      buildLangControlsKey(builtinSegments, 'builtin-position', 'en'),
+    ]);
 
     for (const { segments, name } of expectedControls) {
       const controlKey = `../../contents/${segments.join('/')}/${name}.controls.ts`;
@@ -1188,6 +1202,62 @@ describe('preview controls registry', () => {
       ]);
     }
 
+    const builtinDataTables = [
+      {
+        name: 'builtin-position',
+        rowCount: 5,
+        columnKeys: ['month', 'sales', 'profit', 'orders', 'averageOrder'],
+        defaultCollapsed: false,
+      },
+      { name: 'builtin-point-style', rowCount: 5, columnKeys: ['x', 'y'], defaultCollapsed: true },
+      {
+        name: 'builtin-node-text',
+        rowCount: 3,
+        columnKeys: ['x', 'nodeY', 'textY', 'word', 'tag'],
+        defaultCollapsed: true,
+      },
+      { name: 'builtin-path-style', rowCount: 5, columnKeys: ['step', 'value'], defaultCollapsed: true },
+      { name: 'builtin-other', rowCount: 6, columnKeys: ['step', 'value', 'series'], defaultCollapsed: false },
+    ];
+
+    for (const { name, rowCount, columnKeys, defaultCollapsed } of builtinDataTables) {
+      for (const language of ['zh', 'en'] as const) {
+        const definition = resolvePreviewControls(
+          controlModules[
+            language === 'zh'
+              ? buildControlsKey(builtinSegments, name)
+              : buildLangControlsKey(builtinSegments, name, 'en')
+          ],
+        );
+        const tables =
+          definition?.presentation === 'panel'
+            ? definition.sections.flatMap(section =>
+                section.controls.flatMap(field =>
+                  field.kind === 'table'
+                    ? [
+                        {
+                          id: field.id,
+                          rowCount: field.rows.length,
+                          columnKeys: field.columns?.map(column => column.key),
+                        },
+                      ]
+                    : [],
+                ),
+              )
+            : [];
+
+        expect(
+          definition?.presentation === 'panel' ? definition.sections[0]?.controls.map(control => control.id) : [],
+          `${name}:${language}`,
+        ).toEqual(['rows']);
+        expect(
+          definition?.presentation === 'panel' ? Boolean(definition.sections[0]?.defaultCollapsed) : false,
+          `${name}:${language}`,
+        ).toBe(defaultCollapsed);
+        expect(tables, `${name}:${language}`).toEqual([{ id: 'rows', rowCount, columnKeys }]);
+      }
+    }
+
     const nodeTextSource = demoSources[buildKey(builtinSegments, 'builtin-node-text')];
     expect(nodeTextSource).toContain('<PointMark\n      x="x"\n      y="nodeY"');
     expect(nodeTextSource).toContain('<PointMark\n      x="x"\n      y="textY"\n      text="word"');
@@ -1200,11 +1270,24 @@ describe('preview controls registry', () => {
       const fieldsHeading = locale === 'zh' ? '## 字段与常量' : '## Fields And Constants';
       const playgroundHeading = locale === 'zh' ? '## 绑定试验场' : '## Binding Playground';
       const builtinPreviews = Array.from(
-        builtinPage.matchAll(/<ComponentPreview\b[^>]*\bfiles="([^"]+)"/gu),
-        match => match[1],
+        builtinPage.matchAll(/<ComponentPreview\b[^>]*\bfiles=(?:"([^"]+)"|\{\['([^']+)'[^\]]*\]\})/gu),
+        match => {
+          const stringFile = Reflect.get(match, 1);
+          const arrayFile = Reflect.get(match, 2);
+          return typeof stringFile === 'string' ? stringFile : typeof arrayFile === 'string' ? arrayFile : '';
+        },
       );
 
       expect(bindingPage).toContain("files={['channel-binding', 'channel-binding.data.ts']}");
+      for (const previewName of [
+        'builtin-position',
+        'builtin-point-style',
+        'builtin-node-text',
+        'builtin-path-style',
+        'builtin-other',
+      ]) {
+        expect(builtinPage).toContain(`files={['${previewName}', '${previewName}.data.ts']}`);
+      }
       expect(bindingPage.indexOf(fieldsHeading), locale).toBeLessThan(bindingPage.indexOf(playgroundHeading));
       expect(builtinPreviews).toEqual([
         'builtin-position',
