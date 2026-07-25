@@ -1,9 +1,24 @@
-import path from 'node:path';
+import type { Plugin } from 'vitest/config';
+
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { defineConfig, type Plugin } from 'vitest/config';
+import path from 'node:path';
+import { loadEnv } from 'vite';
+import { defineConfig } from 'vitest/config';
 
 import { writeLlmsTxt } from './scripts/gen-llms-txt';
+
+/** 读取并校验当前工作区的 docs 开发服务端口 */
+const resolveDocsPort = (mode: string): number => {
+  const rawPort = loadEnv(mode, __dirname, '').RETIKZ_DOCS_PORT || '5173';
+  const port = Number(rawPort);
+
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error(`RETIKZ_DOCS_PORT must be an integer between 1 and 65535, received "${rawPort}"`);
+  }
+
+  return port;
+};
 
 /** 在 dev 启动 / build 开始时写出 llms.txt、manifest 与原始 MDX，让 dev 直接服务、build 自动 copy 到 dist/ */
 const llmsTxtPlugin = (): Plugin => ({
@@ -59,8 +74,9 @@ export default defineConfig(({ command, mode }) => ({
     ],
   },
   server: {
-    port: 5173,
-    open: true,
+    port: resolveDocsPort(mode),
+    strictPort: true,
+    open: false,
   },
   test: {
     environment: 'node',
