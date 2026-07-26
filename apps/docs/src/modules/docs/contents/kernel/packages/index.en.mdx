@@ -1,14 +1,15 @@
 ---
 title: Packages
-description: Choose the React, framework-free, formula, geometry, or rendering entry by its real package name and see how it works around core.
+description: Choose the Runtime, React, framework-free, formula, geometry, or rendering entry by its real package name and see how it works around core.
 ---
 
-The packages section helps when choosing an installation entry or understanding package ownership. `@retikz/core` is the shared subject of the full Kernel documentation, so it is not duplicated here. This section uses real npm package names for the React, framework-free, formula, pure computational geometry, and rendering entries that share the same core contract.
+The packages section helps when choosing an installation entry or understanding package ownership. `@retikz/core` is the shared subject of the full Kernel documentation, so it is not duplicated here. This section uses real npm package names for the Runtime, React, framework-free, formula, pure computational geometry, and rendering entries that share the same core contract.
 
 ## Responsibilities
 
 | Package           | Responsibility                         | Reach for it when                                |
 | ----------------- | -------------------------------------- | ------------------------------------------------ |
+| `@retikz/runtime` | Identity, ownership, execution tracing | Defining state ownership across revisions        |
 | `@retikz/react`   | JSX components, IR adapter, React host | Authoring and rendering figures in React         |
 | `@retikz/vanilla` | Plain specs, browser mounts, SSR       | Working without React or rendering strings       |
 | `@retikz/tex`     | Lower formulas into glyph paths        | Rendering mathematics inside node text           |
@@ -18,6 +19,10 @@ The packages section helps when choosing an installation entry or understanding 
 ## Chapters
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/packages/runtime">
+    <span className="font-semibold">@retikz/runtime</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Identity, owner registry, and traces</span>
+  </LinkedCard>
   <LinkedCard href="/kernel/packages/react">
     <span className="font-semibold">@retikz/react</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">

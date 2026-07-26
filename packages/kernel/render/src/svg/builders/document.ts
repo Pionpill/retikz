@@ -1,9 +1,11 @@
 import type { IRDropShadow, ResolvedArrowEndSpec, Scene, ScenePrimitive } from '@retikz/core';
+import type { RuntimeTraceReporter } from '@retikz/runtime';
 
 import type { EasingRegistry } from '../../animation/types';
 import type { SvgNode } from '../types';
 import type { BuildContext } from './prim';
 
+import { countScenePrimitiveOccurrences } from '../../shared';
 import { createSvgAnimationCollector } from '../animation/keyframes';
 import { toSafeSvgToken } from '../safe-token';
 import { formatViewBox } from '../view-box';
@@ -36,6 +38,8 @@ export type BuildDocumentOptions = {
    * @description SSR 海报帧 / 缩略图 / 截图用。覆盖 `animate`（截帧本就是静态产物，复用 `evaluateTrack` 求值）
    */
   snapshotAt?: number;
+  /** 记录完整 SVG document build 消费的 Scene primitive occurrence */
+  trace?: RuntimeTraceReporter<'@retikz/render:svg'>;
 };
 
 /** 按 idPrefix 派生确定性的资源 id / 引用回调，并组装 builder context */
@@ -149,8 +153,22 @@ export const buildSvgFragment = (scene: Scene, options: BuildDocumentOptions): A
  * @description `@retikz/render/svg` 的核心总装入口。width / height / className / 框架级 style 等 svg 元素附加由
  *   framework adapter 自理（非本包职责）
  */
-export const buildSvgDocument = (scene: Scene, options: BuildDocumentOptions): SvgNode => ({
-  tag: 'svg',
-  attrs: { viewBox: formatViewBox(scene.layout) },
-  children: buildSvgFragment(scene, options),
-});
+export const buildSvgDocument = (scene: Scene, options: BuildDocumentOptions): SvgNode => {
+  const document: SvgNode = {
+    tag: 'svg',
+    attrs: { viewBox: formatViewBox(scene.layout) },
+    children: buildSvgFragment(scene, options),
+  };
+  if (options.trace !== undefined) {
+    const visited = countScenePrimitiveOccurrences(scene.primitives);
+    options.trace.report({
+      phase: 'commit',
+      unit: 'scene-primitive',
+      outcome: 'full',
+      visited,
+      reused: 0,
+      changed: visited,
+    });
+  }
+  return document;
+};
