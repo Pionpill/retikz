@@ -21,7 +21,7 @@ import { IntervalMark, Plot } from '@retikz/plot-react';
 
 A basic bar only needs `x` / `y`. Variable-width bars use `width` for proportional intervals; histograms use `x0` / `x1` for continuous intervals; heatmaps use `bounds` for double-band cells; pies and donuts use `angle` so the React DSL can accumulate angular extents.
 
-## Presentation Layer
+### When to Use
 
 IntervalMark is the low-level cell mark: it turns each data row into an orthogonal interval cell, then the coordinate system projects that cell into a rectangle, sector, or contour. Bars, histograms, heatmaps, radial bars, pies, and donuts are not separate low-level marks; they are presentation forms of the same IntervalMark under different `bounds`, `series`, `stack`, and `coordinate` settings.
 
@@ -39,158 +39,155 @@ IntervalMark is the low-level cell mark: it turns each data row into an orthogon
 
 ## Examples
 
-### Position Props
+### Configure Basic Bars
 
 `x` / `y` are the smallest bar form: `x` binds a categorical field, and `y` binds a numeric field. The coordinate system interprets the categorical field as a band and the numeric field as a span from `0` to the value.
 
 `direction="horizontal"` swaps the bar roles: `x` still binds the numeric field, but it is interpreted as the length from `0` to the value; `y` binds the categorical field and is inferred as a band. Multi-series horizontal arrangement is handled by the arrangement API.
-`width` is the proportional-width shortcut: it accumulates a non-negative numeric field into contiguous intervals on the band role, so the bar width can represent another measure while `y` still controls height. When `x` is also provided, that field labels the center of each proportional interval on the axis.
 
-<ComponentPreview files={['bar-position', 'bar-basic.data.ts']} />
+Direction, bar gap, and common cell appearance share one playground: switch direction to observe how the `x` / `y` roles swap, then adjust corner radius, opacity, stroke, labels, or shadow. Vertical bars use `<Scale type="band" paddingInner={gap} paddingOuter={0.15} />` on the categorical x axis. Horizontal bars use `paddingOuter={0}` on the categorical y axis and obtain left/right space from `domainPadding` on the continuous x axis. Every bar playground on this page starts with a bar gap of `0`. These styles lower onto the core `Node` for each cell.
 
-### Continuous Intervals
+<ComponentPreview files={['bar-position', 'bar-basic.data.ts']} controls={{ name: 'bar-basic' }} size="md" />
 
-`x0` / `x1` are the continuous-interval form. The left histogram below first lets the bin transform produce `binStart` / `binEnd`, then IntervalMark uses them as `bounds.x=extent(x0,x1)`; the right example uses `width` to allocate bar width proportionally by GDP and `x` to show country labels.
+### Use Continuous Intervals
 
-<ComponentPreview files={['interval-histogram', 'interval-histogram.data.ts', 'bar-variable-width.data.ts']} />
+`x0` / `x1` are the continuous-interval form. Histogram mode first lets the bin transform produce `binStart` / `binEnd`, then IntervalMark uses them as `bounds.x=extent(x0,x1)`; proportional-width mode uses `width` to allocate bar width by GDP and `x` to show country labels. Switch the interval source in the controls; bin count only appears in histogram mode. Horizontal and vertical padding adjust the x / y continuous scales' `domainPadding`, and both default to `0`.
 
-### Bounds Prop
+<ComponentPreview
+  files={['interval-histogram', 'interval-histogram.data.ts', 'bar-variable-width.data.ts']}
+  size="md"
+/>
+
+### Describe 2D Cells Explicitly
 
 `bounds` overrides the default inference. A heatmap needs both directions to be bands, so it explicitly writes `bounds={{ x: { kind: 'band' }, y: { kind: 'band' } }}`.
 
-Without `color`, the same double-band interval draws a fixed grid. It is still IntervalMark; it just does not map a cell value to fill color.
+When color mapping is disabled, the same double-band interval draws a fixed grid. It is still IntervalMark; it just does not map a cell value to fill color.
 
-<ComponentPreview files={['rect-bounds', 'rect-heatmap.data.ts', 'rect-grid.data.ts']} />
+<ComponentPreview files={['rect-bounds', 'rect-heatmap.data.ts']} size="md" />
 
-### Series Props
+### Dodge and Stack Series
 
-`arrangement` controls how multiple interval segments share one category slot: `dodge` places them side by side, `stack` accumulates them, and `normalize-stack` builds a percentage stack. `group` is the arrangement field used for sub-bands or stack segments; `color` is the visual color field and can be the same field or a separate one. `series` remains as a compatibility shortcut: when `group` / `color` are omitted, it acts as the default arrangement and color field.
+`arrangement` controls how multiple interval segments share one category slot: `dodge` places them side by side, `stack` accumulates them, and `normalize-stack` builds a percentage stack. `group` is the arrangement field used for sub-bands or stack segments; `color` is the visual color field and can be the same field or a separate one. `series` remains as a compatibility shortcut: when `group` / `color` are omitted, it acts as the default arrangement and color field. Bar gap still belongs to the categorical dimension's band scale.
 `arrangement="stack"` can use `stackOffset`: `zero` accumulates from 0, `normalize` scales each stack to 0..1, `diverging` separates positive and negative values, `center` centers the full stack, and `overlap` draws every segment from 0. For percentage stacks, use `percent` or `arrangement="normalize-stack"`; that path normalizes values within each category to 0..100 before stacking.
 
-<ComponentPreview files={['bar-series', 'bar-grouped.data.ts']} />
+<ComponentPreview files={['bar-series', 'bar-grouped.data.ts']} controls={{ name: 'bar-grouped' }} size="md" />
 
-### Mark-Local Transforms
+### Transform Only the Interval Layer
 
 IntervalMark can also derive fields through its own `transform`. The gray points show raw store revenue, while the bar layer runs `derive-interval` only inside this mark and turns each `revenue` value into an interval from 0 to that value.
 
-<ComponentPreview files={['bar-transform', 'bar-transform.data.ts']} />
+<ComponentPreview files={['bar-transform', 'bar-transform.data.ts']} size="md" />
 
-### Angle Prop
+### Build Intervals in Polar Coordinates
 
 The same `x` / `y` interval under `coordinate="polar2D"` maps the `x` band to an angular band and the `y` span to radial length.
 
-<ComponentPreview files={['bar-radial', 'bar-radial.data.ts']} size="sm" />
+<ComponentPreview files={['bar-radial', 'bar-radial.data.ts']} size="md" />
 
 `angle` is the shortcut for pies and donuts: it accumulates a share field into angular extents, and the radial role uses full. A donut is not a new mark; it is a polar coordinate with `innerRadius`.
 
-<ComponentPreview files={['bar-pie-donut', 'bar-pie.data.ts']} size="sm" />
+`padAngle` creates a real angular gap, while `pull` statically offsets a sector along its midline in canvas user units. A number affects every sector; a string binds a data field. The Pie, Donut, and Exploded presets below share one scene.
 
-`pull` is a static radial offset for polar sectors, measured in canvas user units. A number applies the same offset to every sector, while a string binds a data field; it only applies to polar sector geometry and is not a hover / selected interaction state.
+<ComponentPreview files={['interval-sector', 'interval-sector.data.ts']} size="md" />
 
-<ComponentPreview files={['interval-pull', 'interval-pull.data.ts']} size="sm" />
+## How it works
 
-### Style Props
+<ComponentAlert
+  type="tip"
+  title="You can skip this section at first"
+  description="Return when debugging how convenience props become bounds, group and stack ordering, or how coordinate frames create cell geometry."
+/>
 
-IntervalMark visual styles lower onto the core `Node` for each cell. Common entries include `cornerRadius`, `stroke`, `strokeWidth`, `fillOpacity`, `shadow`, and label styling; polar sectors can also use `padAngle` for a real angular gap and `pull` to move along the sector midline. The left chart is cartesian, and the right chart switches the same data into a rounded polar donut.
+`<IntervalMark>` is not a bar-chart-only component. It describes intervals on each position role, then asks the active coordinate frame to project those intervals through `projectCell` into a rectangle, sector, or contour. Frames without cell projection support fail loudly.
 
-<ComponentPreview files={['bar-style', 'bar-basic.data.ts']} />
+The main path below stops at the IntervalMark boundary: convenience props or explicit `bounds` first normalize into intervals for each role, then position-scale outputs build a logical Cell. The active coordinate frame owns the resulting geometry.
 
-## How It Works
+<ComponentPreview files="interval-cell-flow" hideCode size="sm" />
 
-`IntervalMark` is a built-in registered mark. The React `<IntervalMark>` does not render DOM by itself; `<Plot>` collects it into a `type: 'interval'` mark IR while filling in `bounds`, automatic stack transforms, and color scales from the shortcut props.
+`series` / `group` and `arrangement` prepare the fields and bounds needed for dodge, stack, or normalized stack before this path begins. After `projectCell`, cartesian coordinates commonly produce rects, polar coordinates produce sectors, and custom frames reuse the same Cell projection contract; only then does the geometry become a core `Node` layer.
 
-At compile time, `lowerMark` looks up `MARK_REGISTRY` by `mark.type`. `IntervalMark` hits the `PlotMark.Interval` entry and calls `lowerIntervalLayer`; that function requires the current coordinate frame to provide `projectCell`, then calls `markCell` and the frame's `projectCell` for each row. cartesian2D / polar2D also build an `IntervalContext` for bands, grouped sub-bands, and proportional intervals; a custom coordinate that wants interval support must provide both `roleScales` and `projectCell` on its frame. The coordinate frame decides whether the cell becomes a rectangle, sector, or contour; IntervalMark only applies sector-only visual parameters such as `padAngle` / `pull`, and runtime locating reuses the same geometry helper.
+`padAngle` shrinks a sector's angular bounds, while `pull` moves its center along the final bisector. Both affect projected visual geometry without rewriting source data.
 
-The important registration line and lowering excerpt are:
+<SourceLinks
+  sources={[
+    {
+      label: 'Accumulate angle values into polar intervals',
+      path: 'packages/viz/plot-react/src/components/build-plot-spec.ts',
+      startLine: 1339,
+      endLine: 1375,
+    },
+    {
+      label: 'Resolve role constraints for continuous intervals and proportional widths',
+      path: 'packages/viz/plot-react/src/components/build-plot-spec.ts',
+      startLine: 1421,
+      endLine: 1475,
+    },
+    {
+      label: 'Expand dodge or stack settings into transforms and bounds',
+      path: 'packages/viz/plot-react/src/components/build-plot-spec.ts',
+      startLine: 1477,
+      endLine: 1511,
+    },
+    {
+      label: 'Resolve effective bounds for each role',
+      path: 'packages/viz/plot/src/providers/mark/features/interval.ts',
+      startLine: 56,
+      endLine: 60,
+    },
+    {
+      label: 'Build a logical Cell from role intervals',
+      path: 'packages/viz/plot/src/providers/mark/features/interval.ts',
+      startLine: 271,
+      endLine: 293,
+    },
+    {
+      label: 'Build generic Cells from custom-coordinate role scales',
+      path: 'packages/viz/plot/src/providers/mark/features/interval.ts',
+      startLine: 301,
+      endLine: 404,
+    },
+    {
+      label: 'Project Cell geometry through projectCell',
+      path: 'packages/viz/plot/src/providers/mark/features/interval.ts',
+      startLine: 457,
+      endLine: 466,
+    },
+    {
+      label: 'Assemble Cell geometry into a Core Node layer',
+      path: 'packages/viz/plot/src/providers/mark/features/interval.ts',
+      startLine: 488,
+      endLine: 537,
+    },
+  ]}
+/>
 
-```ts
-[PlotMark.Interval]: { type: PlotMark.Interval, buildCell: (mark, row, frame, ctx) => markCell(mark, row, frame, ctx), lower: lowerIntervalLayer },
+## API Reference
 
-const lowerIntervalLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
-  if (mark.type !== PlotMark.Interval) return null;
-  if (!hasProjectCell(frame)) {
-    throw new Error(failLoudMessage(mark.type, frame.type));
-  }
-  const ctx = buildIntervalContext(mark, frame, rows);
-  const layer = lowerCells(mark, rows, frame, ctx, channels.colorOf, channels.defaultColor, markProvenance, channels.labelOf);
-  return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
-};
+This table keeps only IntervalMark-specific props and props whose meaning is redefined here. See [channel bindings](/viz/plot/channel/binding) for field and constant inputs, [transforms](/viz/plot/transform) for local `transform` and layer props, and [coordinates](/viz/plot/coordinate) for coordinate-view props. Shared fill, stroke, opacity, corner, font, and shadow appearance follows the [Node visual style API](/kernel/components/node/overview#visual-style-api); label position, distance, leader lines, and rotation follow [Node labels](/kernel/components/node/overview#node-labels). They are not duplicated here.
 
-const intervalCellGeometry = (mark: IntervalMark, row: ExternalRow, frame: CoordinateFrame, ctx: IntervalContext | undefined): CellGeometry | null => {
-  if (!hasProjectCell(frame)) return null;
-  const cell = markCell(mark, row, frame, ctx);
-  return cell === null ? null : applyIntervalCellVisualParams(frame.projectCell(cell), mark, row);
-};
-
-const lowerCells = (...): IRScope | null => {
-  const placed: Array<{ color: string | undefined; node: IRNode }> = [];
-  let kind: CellGeometry['kind'] | undefined;
-  for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
-    const row = rows[transformedIndex];
-    const geometry = intervalCellGeometry(mark, row, frame, ctx);
-    if (!geometry) continue;
-    if (!isRenderableCellGeometry(geometry)) continue;
-    kind = geometry.kind;
-    const node = attachDatumLabel(
-      decorateDatum(cellGeometryNode(geometry), row, transformedIndex, mark.type, markProvenance, cellSeriesValue(mark, row)),
-      mark,
-      row,
-      labelOf,
-    );
-    placed.push({ color: colorOf?.(row), node });
-  }
-  return placed.length === 0 || kind === undefined ? null : cellLayer(placed, kind, colorOf, defaultColor);
-};
-```
-
-| Step                     | Meaning                                                                                                                                       |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Coordinate guard         | IntervalMark needs the coordinate frame to provide `projectCell`; frames without cell projection fail loudly                                  |
-| Interval construction    | `markCell` builds the logical cell from `bounds`, position channels, `series`, and stack-derived fields; custom frames also need `roleScales` |
-| Projection               | `frame.projectCell` projects the logical cell into `rect`, `sector`, or `contour` geometry                                                    |
-| Sector visual parameters | `padAngle` shrinks sector angles; `pull` moves the sector center along the final mid angle; locators read the same geometry                   |
-| Core lowering            | `cellGeometryNode` turns renderable geometry into a core Node, skips empty contours, and groups color channels upward into Scopes             |
-
-## API
-
-`IntervalMark` props are grouped as Position, Specific, Node, Label, General, and Custom: position fields define cell role values, specific fields build intervals and series relationships, and node fields lower onto core `Node`. `FieldName` means a data field name or field path, such as `quarter` / `sales.revenue`.
-
-| Prop                                                    | Type                                                                                                                | Default                                    | Description                                                                                                                                    |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `x?` / `y?`                                             | `IntervalMarkProps['x']`<br />`IntervalMarkProps['y']`                                                              | —                                          | Coordinate role fields for cartesian2D / polar2D                                                                                               |
-| `color?`                                                | `IntervalMarkProps['color']`                                                                                        | `series`                                   | Color field; field bindings create a color channel and legend                                                                                  |
-| `x0?` / `x1?`                                           | `IntervalMarkProps['x0']`<br />`IntervalMarkProps['x1']`                                                            | —                                          | Lower / upper x interval fields; component props create `bounds.x = extent(x0, x1)`                                                            |
-| `width?`                                                | `IntervalMarkProps['width']`                                                                                        | —                                          | Proportional-width field; component props create `bounds.<bandRole> = proportional(width)`; the same-role `x` / `y` field can label axis ticks |
-| `direction?`                                            | `IntervalMarkProps['direction']`                                                                                    | `vertical`                                 | Ordinary bar direction; `horizontal` uses an x value span and y categorical band                                                               |
-| `angle?`                                                | `IntervalMarkProps['angle']`                                                                                        | —                                          | Pie / donut shortcut: share field accumulated into angular intervals                                                                           |
-| `padAngle?`                                             | `IntervalMarkProps['padAngle']`                                                                                     | —                                          | Angular gap in degrees for polar sectors; each sector shrinks by half the gap on each side                                                     |
-| `pull?`                                                 | `IntervalMarkProps['pull']`                                                                                         | `0`                                        | Static radial offset for polar sectors; numbers are constants, strings bind fields, and only sector geometry supports it                       |
-| `bounds?`                                               | `IntervalMarkProps['bounds']`                                                                                       | inferred by role                           | Explicit band / span / extent / proportional / full source for each role                                                                       |
-| `group?`                                                | `IntervalMarkProps['group']`                                                                                        | `series`                                   | Arrangement grouping field; dodge cuts sub-bands by it, stack uses it for segments                                                             |
-| `arrangement?`                                          | `IntervalMarkProps['arrangement']`                                                                                  | inferred from `group` / `series` / `stack` | Multi-segment interval arrangement                                                                                                             |
-| `stackOffset?`                                          | <ApiValues name="StackOffset" />                                                                                    | `zero`                                     | Baseline offset passed to the stack transform; only applies directly to `arrangement="stack"`                                                  |
-| `percent?`                                              | `IntervalMarkProps['percent']`                                                                                      | `false`                                    | Percentage-stack shortcut; equivalent to `arrangement="normalize-stack"`                                                                       |
-| `series?`                                               | `IntervalMarkProps['series']`                                                                                       | —                                          | Compatibility shortcut; used as the default arrangement and color field when `group` / `color` are omitted                                     |
-| `stack?`                                                | `IntervalMarkProps['stack']`                                                                                        | `false`                                    | Compatibility shortcut; `true` is equivalent to `arrangement="stack"`                                                                          |
-| `fill?` / `stroke?`                                     | `IntervalMarkProps['fill']`<br />`IntervalMarkProps['stroke']`                                                      | `currentColor` / —                         | Cell Node fill and stroke paint                                                                                                                |
-| `opacity?` / `fillOpacity?`                             | `IntervalMarkProps['opacity']`<br />`IntervalMarkProps['fillOpacity']`                                              | —                                          | Cell Node whole and fill opacity                                                                                                               |
-| `strokeWidth?`                                          | `IntervalMarkProps['strokeWidth']`                                                                                  | —                                          | Cell Node stroke width                                                                                                                         |
-| `align?`<br />`lineHeight?` / `maxTextWidth?`           | `IntervalMarkProps['align']`<br />`IntervalMarkProps['lineHeight']`<br />`IntervalMarkProps['maxTextWidth']`        | —<br />—                                   | Text layout channels                                                                                                                           |
-| `cornerRadius?`<br />`scale?`                           | `IntervalMarkProps['cornerRadius']`<br />`IntervalMarkProps['scale']`                                               | —<br />—                                   | Cell Node corner radius and scaling                                                                                                            |
-| `padding?` / `margin?`                                  | `IntervalMarkProps['padding']`<br />`IntervalMarkProps['margin']`                                                   | —                                          | Cell Node spacing channels                                                                                                                     |
-| `dashed?` / `dotted?`<br />`dashPattern?`               | `IntervalMarkProps['dashed']`<br />`IntervalMarkProps['dotted']`<br />`IntervalMarkProps['dashPattern']`            | —<br />—                                   | Cell Node stroke dash channels                                                                                                                 |
-| `font?`                                                 | `IntervalMarkProps['font']`                                                                                         | —                                          | Cell Node font                                                                                                                                 |
-| `boundary?`                                             | `IntervalMarkProps['boundary']`                                                                                     | —                                          | Cell Node boundary                                                                                                                             |
-| `shadow?`                                               | `IntervalMarkProps['shadow']`                                                                                       | —                                          | Cell Node shadow                                                                                                                               |
-| `blendMode?`                                            | `IntervalMarkProps['blendMode']`                                                                                    | —                                          | Cell Node blend mode                                                                                                                           |
-| `label?` / `labelDisplayFormat?`                        | `IntervalMarkProps['label']`<br />`IntervalMarkProps['labelDisplayFormat']`                                         | —<br />—                                   | Attach datum labels to each cell                                                                                                               |
-| `labelPosition?`<br />`labelDistance?`<br />`labelPin?` | `IntervalMarkProps['labelPosition']`<br />`IntervalMarkProps['labelDistance']`<br />`IntervalMarkProps['labelPin']` | `top`<br />`12`<br />`false`               | Label side, spacing, and leader line                                                                                                           |
-| `id?`                                                   | `IntervalMarkProps['id']`                                                                                           | —                                          | Optional mark handle for layer ids / runtime label resolution                                                                                  |
-| `transform?`                                            | `IntervalMarkProps['transform']`                                                                                    | —                                          | Mark-local data transform; runs after the plot-level transform and only changes the rows seen by this layer                                    |
-| `channels?`                                             | `IntervalMarkProps['channels']`                                                                                     | —                                          | Custom channel bindings; resolved by registered channel definitions                                                                            |
+| Prop                  | Type                                                                                                                                                                                                                                       | Default                                                                                                                                                | Description                                                                                                                                                                                                                                                                                                                                                                 |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id?`                 | `string`                                                                                                                                                                                                                                   | —                                                                                                                                                      | Mark handle; required with `resolveLabel`                                                                                                                                                                                                                                                                                                                                   |
+| `x?` / `y?`           | `FieldName`                                                                                                                                                                                                                                | —                                                                                                                                                      | Category and numeric position roles; `direction` selects the value role                                                                                                                                                                                                                                                                                                     |
+| `direction?`          | `'vertical'` / `'horizontal'`                                                                                                                                                                                                              | `vertical`                                                                                                                                             | Bar direction; horizontal mode treats `x` as numeric and `y` as categorical                                                                                                                                                                                                                                                                                                 |
+| `x0?` / `x1?`         | `FieldName`                                                                                                                                                                                                                                | —                                                                                                                                                      | Lower and upper fields for a continuous x interval; set them together                                                                                                                                                                                                                                                                                                       |
+| `angle?`              | `FieldName`                                                                                                                                                                                                                                | —                                                                                                                                                      | Share field for polar pie / donut geometry, accumulated into angular intervals                                                                                                                                                                                                                                                                                              |
+| `width?`              | `FieldName`                                                                                                                                                                                                                                | —                                                                                                                                                      | Proportional interval width derived in row order                                                                                                                                                                                                                                                                                                                            |
+| `color?`              | `FieldName`                                                                                                                                                                                                                                | `series`                                                                                                                                               | Cell color field; reuses the series field when omitted                                                                                                                                                                                                                                                                                                                      |
+| `series?` / `group?`  | `FieldName`                                                                                                                                                                                                                                | —                                                                                                                                                      | Series and multi-series arrangement fields                                                                                                                                                                                                                                                                                                                                  |
+| `arrangement?`        | `'dodge'` / `'stack'` / `'normalize-stack'`                                                                                                                                                                                                | —                                                                                                                                                      | Dodge, stack, or normalized-stack strategy                                                                                                                                                                                                                                                                                                                                  |
+| `stackOffset?`        | `'zero'` / `'normalize'` / `'diverging'` / `'center'` / `'overlap'`                                                                                                                                                                        | `zero`                                                                                                                                                 | Stack baseline strategy                                                                                                                                                                                                                                                                                                                                                     |
+| `stack?` / `percent?` | `boolean`                                                                                                                                                                                                                                  | `false`                                                                                                                                                | Convenience forms for stack and normalized stack                                                                                                                                                                                                                                                                                                                            |
+| `bounds?`             | `IRPlotIntervalBounds`<br />- `[role: string]?: IRPlotIntervalBound`<br />- `kind: IntervalBoundKindValue`<br />- `group?: FieldName`<br />- `baseline?: number`<br />- `from: FieldName`<br />- `to: FieldName`<br />- `field: FieldName` | —<br />Inferred by role<br />Required per bound<br />—<br />`0`<br />Required for `extent`<br />Required for `extent`<br />Required for `proportional` | Explicit bound source for each position role<br />Built-ins use `x` / `y`; custom coordinates may add roles<br />`band`, `span`, `extent`, `proportional`, or `full`<br />Sub-band grouping field used only by `band`<br />Starting baseline used only by `span`<br />Lower field for `extent`<br />Upper field for `extent`<br />Contiguous-width field for `proportional` |
+| `padAngle?`           | `number`                                                                                                                                                                                                                                   | `0`                                                                                                                                                    | Angular gap between polar sectors                                                                                                                                                                                                                                                                                                                                           |
+| `pull?`               | `FieldName \| number \| IRPlotPointNonnegativeNumberStyle`                                                                                                                                                                                 | `0`                                                                                                                                                    | Non-negative sector offset along the bisector, driven by a field or constant                                                                                                                                                                                                                                                                                                |
+| `label?`              | `FieldName`                                                                                                                                                                                                                                | —                                                                                                                                                      | Attach field content to each cell through `Node.label`                                                                                                                                                                                                                                                                                                                      |
+| `resolveLabel?`       | `(row: ExternalRow) => string`                                                                                                                                                                                                             | —                                                                                                                                                      | Runtime label resolver; excluded from IR and requires `id`                                                                                                                                                                                                                                                                                                                  |
+| `anchorId?`           | `IRPlotAnchorIdSpec`                                                                                                                                                                                                                       | —                                                                                                                                                      | Generate a stable id for every valid cell Node                                                                                                                                                                                                                                                                                                                              |
 
 ## Related
 
-- [PathMark](/viz/plot/mark/path) — ordered points connected into a line, without cell or area fill
-- [Coordinates](/viz/plot/coordinate) — how coordinates interpret interval roles and `projectCell`
-- [Scales](/viz/plot/scale) — how band, linear, sequential, and ordinal scales affect intervals and colors
+- [PathMark](/viz/plot/mark/path) — draw an interval edge or area boundary
+- [Transforms](/viz/plot/transform) — bin, stack, and other data-preparation flows
+- [Coordinates](/viz/plot/coordinate) — how cartesian, polar, and custom frames project cells

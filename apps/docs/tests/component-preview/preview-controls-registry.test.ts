@@ -383,16 +383,31 @@ describe('preview controls registry', () => {
 
     const controls = resolvePreviewControls(controlModules[englishKey]);
     expect(controls).toMatchObject({
-      presentation: 'overlay',
-      controls: [
+      presentation: 'panel',
+      sections: [
         {
-          kind: 'select',
-          id: 'path-curve',
+          label: 'Data',
+          controls: [{ kind: 'table', id: 'curveSamples', label: 'Curve samples' }],
+        },
+        {
           label: 'Connection',
-          options: expect.arrayContaining([
-            { value: 'linear', label: 'Linear' },
-            { value: 'step', label: 'Step' },
-          ]),
+          controls: [
+            {
+              kind: 'select',
+              id: 'path-curve',
+              label: 'Connection',
+              options: expect.arrayContaining([
+                { value: 'linear', label: 'Linear' },
+                { value: 'step', label: 'Step' },
+              ]),
+            },
+            {
+              kind: 'switch',
+              id: 'path-curve-show-points',
+              label: 'Show data points',
+              defaultValue: true,
+            },
+          ],
         },
       ],
     });
@@ -439,14 +454,416 @@ describe('preview controls registry', () => {
     ).toThrow('Unknown preview control id in canonicalValues: "missing".');
   });
 
-  it('仅收集 canonical controls，不要求复用方提供转发模块', () => {
+  it('Path curve 只保留 canonical 可写控件，复用示例提供独立数据面板', () => {
     const segments = ['viz', 'plot', 'mark', 'path'];
 
-    expect(resolvePreviewControls(controlModules[buildControlsKey(segments, 'line-curve')])).toBeDefined();
-    expect(controlModules[buildControlsKey(segments, 'line-closure')]).toBeUndefined();
-    expect(controlModules[buildLangControlsKey(segments, 'line-closure', 'en')]).toBeUndefined();
-    expect(controlModules[buildControlsKey(segments, 'line-stack-area')]).toBeUndefined();
-    expect(controlModules[buildLangControlsKey(segments, 'line-stack-area', 'en')]).toBeUndefined();
+    for (const key of [buildControlsKey(segments, 'line-curve'), buildLangControlsKey(segments, 'line-curve', 'en')]) {
+      const controls = resolvePreviewControls(controlModules[key]);
+      expect(controls?.presentation, key).toBe('panel');
+      if (!controls || controls.presentation !== 'panel') continue;
+
+      expect(controls.sections[0].controls[0].kind, key).toBe('table');
+      expect(Boolean(controls.sections[0].defaultCollapsed), key).toBe(false);
+      expect(
+        controls.sections.flatMap(section => section.controls.map(control => control.id)),
+        key,
+      ).toContain('path-curve');
+    }
+
+    const dataOnlyKeys = [
+      buildControlsKey(segments, 'line-closure'),
+      buildLangControlsKey(segments, 'line-closure', 'en'),
+      buildControlsKey(segments, 'line-stack-area'),
+      buildLangControlsKey(segments, 'line-stack-area', 'en'),
+    ];
+
+    for (const key of dataOnlyKeys) {
+      const controls = resolvePreviewControls(controlModules[key]);
+      expect(controls?.presentation, key).toBe('panel');
+      if (!controls || controls.presentation !== 'panel') continue;
+
+      expect(controls.sections[0].controls[0].kind, key).toBe('table');
+      expect(
+        controls.sections.flatMap(section => section.controls.map(control => control.id)),
+        key,
+      ).not.toContain('path-curve');
+    }
+  });
+
+  it('Mark 外观 playground 默认收起作为背景的数据分组', () => {
+    const cases = [
+      { segments: ['viz', 'plot', 'mark', 'point'], name: 'point-style' },
+      { segments: ['viz', 'plot', 'mark', 'path'], name: 'line-paint' },
+      { segments: ['viz', 'plot', 'mark', 'interval'], name: 'bar-basic' },
+    ];
+
+    for (const { segments, name } of cases) {
+      for (const key of [buildControlsKey(segments, name), buildLangControlsKey(segments, name, 'en')]) {
+        const controls = resolvePreviewControls(controlModules[key]);
+        expect(controls?.presentation, key).toBe('panel');
+        if (!controls || controls.presentation !== 'panel') continue;
+
+        expect(controls.sections[0].controls[0].kind, key).toBe('table');
+        expect(Boolean(controls.sections[0].defaultCollapsed), key).toBe(true);
+      }
+    }
+  });
+
+  it('Mark paint playground 隐藏当前模式不会消费的颜色字段', () => {
+    const visibleFieldIds = (segments: Array<string>, name: string, values: PreviewControlValues) => {
+      const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, name)]);
+      if (definition?.presentation !== 'panel') throw new Error(`${name} must use panel controls`);
+      return resolveVisiblePreviewControlSections(definition.sections, values).flatMap(section =>
+        section.controls.map(control => control.id),
+      );
+    };
+
+    expect(
+      visibleFieldIds(['viz', 'plot', 'mark', 'point'], 'point-style', { 'point-paint-mode': 'field' }),
+    ).not.toContain('point-fill');
+    expect(visibleFieldIds(['viz', 'plot', 'mark', 'point'], 'point-style', { 'point-paint-mode': 'solid' })).toContain(
+      'point-fill',
+    );
+    expect(
+      visibleFieldIds(['viz', 'plot', 'mark', 'path'], 'line-paint', { 'line-paint-mode': 'gradient' }),
+    ).not.toContain('line-stroke');
+    expect(visibleFieldIds(['viz', 'plot', 'mark', 'path'], 'line-paint', { 'line-paint-mode': 'area' })).toContain(
+      'line-stroke',
+    );
+  });
+
+  it('PointMark 每个 demo 都提供与示例职责对应的可写控件并消费实时值', () => {
+    const segments = ['viz', 'plot', 'mark', 'point'];
+    const cases = [
+      { name: 'point-position', writableIds: ['point-position-x-field', 'point-position-y-field'] },
+      { name: 'point-transform', writableIds: ['point-jitter-amount', 'point-jitter-seed'] },
+      { name: 'point-style', writableIds: ['point-paint-mode', 'point-size'] },
+      { name: 'point-text', writableIds: ['point-text-mode', 'point-label-position', 'point-label-distance'] },
+      { name: 'point-coordinate-1d', writableIds: ['point-coordinate-x-field'] },
+    ];
+
+    for (const { name, writableIds } of cases) {
+      for (const key of [buildControlsKey(segments, name), buildLangControlsKey(segments, name, 'en')]) {
+        const controls = resolvePreviewControls(controlModules[key]);
+        expect(controls?.presentation, key).toBe('panel');
+        if (!controls || controls.presentation !== 'panel') continue;
+
+        const actualIds = controls.sections
+          .flatMap(section => section.controls)
+          .filter(control => control.kind !== 'table')
+          .map(control => control.id);
+        expect(actualIds, key).toEqual(expect.arrayContaining(writableIds));
+      }
+
+      expect(demoSources[buildKey(segments, name)], name).toContain('defineControlledPreview(previewControlContract');
+    }
+  });
+
+  it('PointMark 标签 controls 覆盖中心、四边与四角位置', () => {
+    const values = ['center', 'top', 'top-right', 'right', 'bottom-right', 'bottom', 'bottom-left', 'left', 'top-left'];
+
+    for (const key of [
+      buildControlsKey(['viz', 'plot', 'mark', 'point'], 'point-text'),
+      buildLangControlsKey(['viz', 'plot', 'mark', 'point'], 'point-text', 'en'),
+    ]) {
+      const definition = resolvePreviewControls(controlModules[key]);
+      if (definition?.presentation !== 'panel') throw new Error(`${key} must use panel controls`);
+      const position = definition.sections
+        .flatMap(section => section.controls)
+        .find(control => control.id === 'point-label-position');
+
+      expect(position?.kind, key).toBe('select');
+      if (position?.kind !== 'select') continue;
+      expect(
+        position.options.map(option => option.value),
+        key,
+      ).toEqual(values);
+    }
+  });
+
+  it('PointMark 居中标签隐藏无效的距离与引线 controls', () => {
+    const segments = ['viz', 'plot', 'mark', 'point'];
+
+    for (const key of [buildControlsKey(segments, 'point-text'), buildLangControlsKey(segments, 'point-text', 'en')]) {
+      const definition = resolvePreviewControls(controlModules[key]);
+      if (definition?.presentation !== 'panel') throw new Error(`${key} must use panel controls`);
+      const visibleFieldIds = (values: PreviewControlValues) =>
+        resolveVisiblePreviewControlSections(definition.sections, values).flatMap(section =>
+          section.controls.map(control => control.id),
+        );
+      const visibleAtCenter = visibleFieldIds({
+        'point-text-mode': 'label',
+        'point-label-position': 'center',
+      });
+      const visibleAtTop = visibleFieldIds({
+        'point-text-mode': 'label',
+        'point-label-position': 'top',
+      });
+
+      expect(visibleAtCenter, key).not.toContain('point-label-distance');
+      expect(visibleAtCenter, key).not.toContain('point-label-pin');
+      expect(visibleAtTop, key).toEqual(expect.arrayContaining(['point-label-distance', 'point-label-pin']));
+    }
+  });
+
+  it('Mark controlled demo 模块显式导出 previewControls 作为 registry 回退', () => {
+    const cases = {
+      point: ['point-position', 'point-transform', 'point-style', 'point-text', 'point-coordinate-1d'],
+      path: [
+        'line-basic',
+        'line-series',
+        'line-color-split',
+        'line-transform',
+        'line-paint',
+        'line-radar',
+        'line-curve',
+        'line-closure',
+        'line-stack-area',
+        'line-interruption',
+      ],
+      interval: [
+        ['bar-position', 'bar-basic'],
+        ['bar-series', 'bar-grouped'],
+        ['bar-radial', 'bar-radial'],
+        ['bar-transform', 'bar-transform'],
+        ['interval-histogram', 'interval-histogram'],
+        ['interval-sector', 'interval-sector'],
+        ['rect-bounds', 'rect-bounds'],
+      ],
+      reference: ['rule-threshold', 'rule-band', 'rule-region', 'rule-per-datum', 'rule-extent'],
+    } as const;
+
+    for (const [page, names] of Object.entries(cases)) {
+      for (const entry of names) {
+        const [name, controlsName] = Array.isArray(entry) ? entry : [entry, entry];
+        const key = buildKey(['viz', 'plot', 'mark', page], name);
+        const demoModule = demoModules[key] as Record<string, unknown> | undefined;
+        const controls = resolvePreviewControls(
+          controlModules[buildControlsKey(['viz', 'plot', 'mark', page], controlsName)],
+        );
+
+        expect(demoModule?.previewControls, key).toBe(controls);
+      }
+    }
+  });
+
+  it('PathMark 每个 demo 都提供与示例职责对应的可写控件并消费实时值', () => {
+    const segments = ['viz', 'plot', 'mark', 'path'];
+    const cases = [
+      {
+        name: 'line-basic',
+        writableIds: ['line-basic-x-field', 'line-basic-y-field', 'line-basic-order-source'],
+      },
+      { name: 'line-series', writableIds: ['line-series-field'] },
+      { name: 'line-color-split', writableIds: ['line-color-field'] },
+      { name: 'line-transform', writableIds: ['line-transform-grouping'] },
+      { name: 'line-paint', writableIds: ['line-paint-mode', 'line-stroke-width'] },
+      { name: 'line-radar', writableIds: ['line-radar-closed'] },
+      { name: 'line-curve', writableIds: ['path-curve', 'path-curve-show-points'] },
+      {
+        name: 'line-closure',
+        writableIds: ['line-closure-baseline', 'line-closure-horizontal-padding', 'line-closure-vertical-padding'],
+      },
+      { name: 'line-stack-area', writableIds: ['line-stack-area-curve'] },
+      { name: 'line-interruption', writableIds: ['line-interruption-connect-nulls'] },
+    ];
+
+    for (const { name, writableIds } of cases) {
+      for (const key of [buildControlsKey(segments, name), buildLangControlsKey(segments, name, 'en')]) {
+        const controls = resolvePreviewControls(controlModules[key]);
+        expect(controls?.presentation, key).toBe('panel');
+        if (!controls || controls.presentation !== 'panel') continue;
+
+        const actualIds = controls.sections
+          .flatMap(section => section.controls)
+          .filter(control => control.kind !== 'table')
+          .map(control => control.id);
+        expect(actualIds, key).toEqual(expect.arrayContaining(writableIds));
+      }
+
+      expect(demoSources[buildKey(segments, name)], name).toContain('defineControlledPreview(previewControlContract');
+    }
+  });
+
+  it('PathMark 面积 demo 默认移除笛卡尔外侧留白，并保留极坐标角向间距', () => {
+    const segments = ['viz', 'plot', 'mark', 'path'];
+    const stackAreaSource = demoSources[buildKey(segments, 'line-stack-area')];
+    const interruptionSource = demoSources[buildKey(segments, 'line-interruption')];
+
+    expect(stackAreaSource).toBeDefined();
+    expect(interruptionSource).toBeDefined();
+    if (stackAreaSource === undefined || interruptionSource === undefined) return;
+
+    expect(stackAreaSource).toContain('<Scale dimension="x" type="point" padding={0} />');
+    expect(stackAreaSource.match(/<Scale dimension="y" type="linear" domainPadding=\{0\} \/>/g)).toHaveLength(2);
+    expect(interruptionSource).toContain('<Scale dimension="x" type="linear" domainPadding={0} />');
+    expect(interruptionSource).toContain('<Scale dimension="y" type="linear" domainPadding={0} />');
+  });
+
+  it('构造可填充区域默认以横向和纵向零留白作为 canonical 状态', () => {
+    const segments = ['viz', 'plot', 'mark', 'path'];
+
+    for (const key of [
+      buildControlsKey(segments, 'line-closure'),
+      buildLangControlsKey(segments, 'line-closure', 'en'),
+    ]) {
+      const contract = resolvePreviewControlContract(controlModules[key]);
+      expect(contract?.canonicalValues['line-closure-horizontal-padding'], key).toBe(0);
+      expect(contract?.canonicalValues['line-closure-vertical-padding'], key).toBe(0);
+    }
+  });
+
+  it('连续区间默认不保留左右或上下留白', () => {
+    const segments = ['viz', 'plot', 'mark', 'interval'];
+
+    for (const key of [
+      buildControlsKey(segments, 'interval-histogram'),
+      buildLangControlsKey(segments, 'interval-histogram', 'en'),
+    ]) {
+      const contract = resolvePreviewControlContract(controlModules[key]);
+      expect(contract?.canonicalValues['interval-continuous-horizontal-padding'], key).toBe(0);
+      expect(contract?.canonicalValues['interval-continuous-vertical-padding'], key).toBe(0);
+    }
+  });
+
+  it('IntervalMark demo 统一保留左右外侧空间，且不改变默认柱间距', () => {
+    const segments = ['viz', 'plot', 'mark', 'interval'];
+    const bandCases = ['bar-series', 'bar-transform', 'rect-bounds'];
+
+    for (const name of bandCases) {
+      expect(demoSources[buildKey(segments, name)], name).toContain('paddingOuter={0.15}');
+    }
+
+    const positionSource = demoSources[buildKey(segments, 'bar-position')];
+    expect(positionSource).toContain('paddingOuter={isHorizontal ? 0 : 0.15}');
+    expect(positionSource).toContain('domainPadding={isHorizontal ? 0.05 : 0}');
+
+    const radialSource = demoSources[buildKey(segments, 'bar-radial')];
+    const sectorSource = demoSources[buildKey(segments, 'interval-sector')];
+    expect(radialSource).toContain('width={260}');
+    expect(radialSource).toContain('height={220}');
+    expect(sectorSource).toContain('width={340}');
+    expect(sectorSource).toContain('height={270}');
+
+    for (const key of [
+      buildControlsKey(segments, 'bar-basic'),
+      buildLangControlsKey(segments, 'bar-basic', 'en'),
+      buildControlsKey(segments, 'bar-grouped'),
+      buildLangControlsKey(segments, 'bar-grouped', 'en'),
+      buildControlsKey(segments, 'bar-transform'),
+      buildLangControlsKey(segments, 'bar-transform', 'en'),
+      buildControlsKey(segments, 'bar-radial'),
+      buildLangControlsKey(segments, 'bar-radial', 'en'),
+    ]) {
+      const contract = resolvePreviewControlContract(controlModules[key]);
+      const gapEntry = Object.entries(contract?.canonicalValues ?? {}).find(([id]) => id.endsWith('-gap'));
+      expect(gapEntry?.[1], key).toBe(0);
+    }
+  });
+
+  it('IntervalMark 每个 demo 都提供与示例职责对应的可写控件并消费实时值', () => {
+    const segments = ['viz', 'plot', 'mark', 'interval'];
+    const cases = [
+      {
+        name: 'bar-position',
+        controlsName: 'bar-basic',
+        writableIds: ['bar-position-direction', 'bar-position-gap', 'bar-position-corner-radius'],
+      },
+      {
+        name: 'interval-histogram',
+        writableIds: [
+          'interval-continuous-mode',
+          'interval-histogram-thresholds',
+          'interval-continuous-horizontal-padding',
+          'interval-continuous-vertical-padding',
+        ],
+      },
+      { name: 'rect-bounds', writableIds: ['rect-bounds-mode', 'rect-bounds-show-color'] },
+      {
+        name: 'bar-series',
+        controlsName: 'bar-grouped',
+        writableIds: ['bar-series-mode', 'bar-series-stack-offset', 'bar-series-gap'],
+      },
+      { name: 'bar-transform', writableIds: ['bar-transform-offset', 'bar-transform-gap'] },
+      { name: 'bar-radial', writableIds: ['bar-radial-inner-radius', 'bar-radial-gap'] },
+      {
+        name: 'interval-sector',
+        writableIds: ['interval-sector-inner-radius', 'interval-sector-pull-distance'],
+      },
+    ];
+
+    for (const { name, controlsName = name, writableIds } of cases) {
+      for (const key of [
+        buildControlsKey(segments, controlsName),
+        buildLangControlsKey(segments, controlsName, 'en'),
+      ]) {
+        const controls = resolvePreviewControls(controlModules[key]);
+        expect(controls?.presentation, key).toBe('panel');
+        if (!controls || controls.presentation !== 'panel') continue;
+
+        const actualIds = controls.sections
+          .flatMap(section => section.controls)
+          .filter(control => control.kind !== 'table')
+          .map(control => control.id);
+        expect(actualIds, key).toEqual(expect.arrayContaining(writableIds));
+      }
+
+      expect(demoSources[buildKey(segments, name)], name).toContain('defineControlledPreview(previewControlContract');
+    }
+  });
+
+  it('ReferenceMark 每个 demo 都提供与示例职责对应的可写控件并消费实时值', () => {
+    const segments = ['viz', 'plot', 'mark', 'reference'];
+    const cases = [
+      { name: 'rule-threshold', writableIds: ['rule-threshold-value'] },
+      { name: 'rule-band', writableIds: ['rule-band-start', 'rule-band-end'] },
+      { name: 'rule-region', writableIds: ['rule-region-x-start', 'rule-region-x-end'] },
+      { name: 'rule-per-datum', writableIds: ['rule-per-datum-offset'] },
+      { name: 'rule-extent', writableIds: ['rule-extent-inset'] },
+    ];
+
+    for (const { name, writableIds } of cases) {
+      for (const key of [buildControlsKey(segments, name), buildLangControlsKey(segments, name, 'en')]) {
+        const controls = resolvePreviewControls(controlModules[key]);
+        expect(controls?.presentation, key).toBe('panel');
+        if (!controls || controls.presentation !== 'panel') continue;
+
+        const actualIds = controls.sections
+          .flatMap(section => section.controls)
+          .filter(control => control.kind !== 'table')
+          .map(control => control.id);
+        expect(actualIds, key).toEqual(expect.arrayContaining(writableIds));
+      }
+
+      expect(demoSources[buildKey(segments, name)], name).toContain('defineControlledPreview(previewControlContract');
+    }
+  });
+
+  it('RelationMark 每个 demo 都提供与示例职责对应的可写控件并消费实时值', () => {
+    const segments = ['viz', 'plot', 'mark', 'relation'];
+    const cases = [
+      { name: 'relation-scatter', writableIds: ['relation-scatter-routing'] },
+      { name: 'relation-sankey', writableIds: ['relation-sankey-samples', 'relation-sankey-opacity'] },
+      { name: 'relation-bubble', writableIds: ['relation-bubble-stroke-width'] },
+      { name: 'relation-path-extremes', writableIds: ['relation-path-anchor'] },
+      { name: 'relation-interval', writableIds: ['relation-interval-offset'] },
+    ];
+
+    for (const { name, writableIds } of cases) {
+      for (const key of [buildControlsKey(segments, name), buildLangControlsKey(segments, name, 'en')]) {
+        const controls = resolvePreviewControls(controlModules[key]);
+        expect(controls?.presentation, key).toBe('panel');
+        if (!controls || controls.presentation !== 'panel') continue;
+
+        const actualIds = controls.sections
+          .flatMap(section => section.controls)
+          .filter(control => control.kind !== 'table')
+          .map(control => control.id);
+        expect(actualIds, key).toEqual(expect.arrayContaining(writableIds));
+      }
+
+      expect(demoSources[buildKey(segments, name)], name).toContain('defineControlledPreview(previewControlContract');
+    }
   });
 
   it('Node playground 的中英文 panel definition 保持运行时契约一致', () => {
