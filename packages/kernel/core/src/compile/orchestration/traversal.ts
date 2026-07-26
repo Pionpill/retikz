@@ -1038,6 +1038,7 @@ export const compileChildrenToPrimitives = (
     compositeDepth: number,
     generated: boolean,
   ): void => {
+    if (context.trace !== undefined) context.trace.visited += 1;
     if ('namespace' in child) {
       compileCompositeChild(child, index, frame, occurrence, compositeDepth);
       return;

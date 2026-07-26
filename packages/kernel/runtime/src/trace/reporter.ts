@@ -94,7 +94,9 @@ const resolveDiagnosticPhase = (
 };
 
 /** 创建一个固定 owner 且失败隔离的同步 trace reporter */
-export const createRuntimeTraceReporter = (input: CreateRuntimeTraceReporterInput): RuntimeTraceReporter => {
+export const createRuntimeTraceReporter = <const TOwner extends string>(
+  input: CreateRuntimeTraceReporterInput<TOwner>,
+): RuntimeTraceReporter<TOwner> => {
   const owner = input.owner;
   const sink = input.sink;
   if (typeof owner !== 'string' || owner.length === 0) {

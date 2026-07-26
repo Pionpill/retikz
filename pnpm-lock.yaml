@@ -462,6 +462,9 @@ importers:
       '@retikz/math':
         specifier: workspace:*
         version: link:../math
+      '@retikz/runtime':
+        specifier: workspace:*
+        version: link:../runtime
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -554,6 +557,9 @@ importers:
       '@retikz/math':
         specifier: workspace:*
         version: link:../math
+      '@retikz/runtime':
+        specifier: workspace:*
+        version: link:../runtime
       csstype:
         specifier: 'catalog:'
         version: 3.2.3

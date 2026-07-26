@@ -49,9 +49,9 @@ export type RuntimeTracePhaseDefinition = Readonly<{
 }>;
 
 /** 由 Runtime 固定 owner 的同步 trace reporter */
-export type RuntimeTraceReporter = Readonly<{
+export type RuntimeTraceReporter<TOwner extends string = string> = Readonly<{
   /** reporter 绑定的 owner */
-  owner: string;
+  owner: TOwner;
   /** 校验并报告一条不含 owner 的性能记录 */
   report: (record: Omit<PerformanceTraceRecord, 'owner'>) => void;
   /** 返回并清空 reporter-local 诊断 */
@@ -59,9 +59,9 @@ export type RuntimeTraceReporter = Readonly<{
 }>;
 
 /** 创建 trace reporter 的配置 */
-export type CreateRuntimeTraceReporterInput = Readonly<{
+export type CreateRuntimeTraceReporterInput<TOwner extends string = string> = Readonly<{
   /** reporter 固定绑定的 owner */
-  owner: string;
+  owner: TOwner;
   /** owner 可以报告的阶段定义 */
   phases: ReadonlyArray<RuntimeTracePhaseDefinition>;
   /** 接收合法记录的同步回调 */
