@@ -32,7 +32,7 @@
     "maxPackedBytes": 112640
   },
   "@retikz/standard": {
-    "maxFiles": 110,
+    "maxFiles": 130,
     "maxPackedBytes": 40960
   },
   "@retikz/standard-react": {

@@ -1,0 +1,23 @@
+---
+title: 扩展
+description: 为直接 IR、工具链和不同宿主显式选择 Standard 能力，同时继续复用 Core 的 definition 与 registry。
+---
+
+Standard 扩展层解决“宿主应加载哪些官方能力”，不重新定义 composite，也不建立第二套 registry。能力 module 只分组 Core definitions；bundle 再把选定 definitions 交给既有 Core 编译入口。
+
+## 职责一览
+
+| 主题     | 职责                                         | 何时查阅                                     |
+| -------- | -------------------------------------------- | -------------------------------------------- |
+| 能力装载 | 组合 module、注入 bundle，并区分宿主 adapter | 直接编译持久化 IR，或管理部分 / 全量能力集合 |
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/standard/extension/capability-loading">
+    <span className="font-semibold">能力装载</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      按项、部分或全量组合 Standard definitions，并接入 React 与 Vanilla
+    </span>
+  </LinkedCard>
+</div>

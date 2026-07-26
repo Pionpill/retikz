@@ -120,7 +120,12 @@
     "composite": "复合",
     "grid": "网格",
     "axes": "坐标轴",
-    "frame": "分组框"
+    "frame": "分组框",
+    "extension": "扩展",
+    "capabilityLoading": "能力装载",
+    "releases": "发布",
+    "changelog": "更新日志",
+    "changelogV01": "v0.1"
   },
   "viz": {
     "label": "可视化",
