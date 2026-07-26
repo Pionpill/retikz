@@ -321,8 +321,8 @@ const expandPlot = (node: IRPlotSpec, datasets: ExternalDatasets, options: Lower
     const facetLabelScopes: Array<IRScope> = facetLabelsEnabled
       ? facets.flatMap(facet => {
           const facetPanels = panels.filter(panel => panel.facet.id === facet.id);
-          const rowLevels = facetDimensionsOf(facet.row).length;
-          const columnLevels = facetDimensionsOf(facet.column).length;
+          const rowLevels = isFacetHeaderVisible(facet, 'row') ? facetDimensionsOf(facet.row).length : 0;
+          const columnLevels = isFacetHeaderVisible(facet, 'column') ? facetDimensionsOf(facet.column).length : 0;
           const labels: Array<IRScope> = [];
           for (let level = columnLevels - 1; level >= 0; level -= 1) {
             const bandIndex = columnLevels - 1 - level;

@@ -153,7 +153,6 @@ export const vizSection: Array<Section> = [
         children: [
           { id: '2d', label: 'viz.grammarCoordinate2d' },
           { id: '1d', label: 'viz.grammarCoordinate1d' },
-          { id: 'ternary', label: 'viz.grammarCoordinateTernary' },
           { id: 'composition', label: 'viz.grammarCoordinateComposition' },
           {
             id: 'custom-coordinate',

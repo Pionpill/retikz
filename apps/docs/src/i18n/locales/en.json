@@ -168,7 +168,6 @@
     "grammarCoordinate": "Coordinates",
     "grammarCoordinate2d": "2D Coordinates",
     "grammarCoordinate1d": "1D Coordinates",
-    "grammarCoordinateTernary": "Ternary Coordinates",
     "grammarCoordinateComposition": "Coordinate Composition",
     "grammarCoordinateCustom": "Custom Coordinates",
     "grammarMark": "Marks",

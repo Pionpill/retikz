@@ -1,49 +1,66 @@
 ---
 title: 1D Coordinates
-description: 1D coordinates bind one position channel: cartesian1D places values on a line, while polar1D wraps them around a circle for rugs, timelines, and cyclic events.
+description: '1D coordinates place one positional field on a line or circle for axis events, timelines, and cyclic events.'
 ---
 
-Sometimes data has only one positional dimension: a list of samples, event times within a day, or a distribution along one axis. A 2D chart wastes one axis; a 1D coordinate binds one position channel and collapses the other screen dimension to a baseline or wraps it into a circle.
+When data only needs positioning along one path, you do not need to invent a second positional field. “1D” describes how many dimensions participate in positioning, not whether an axis is visible: `cartesian1D` reads `x` and places values on a line, while `polar1D` wraps them around a circle.
 
-## Two Forms
+## Try It
 
-| coordinate      | Shape  | Binding                       | Typical use                               |
-| --------------- | ------ | ----------------------------- | ----------------------------------------- |
-| `"cartesian1D"` | Line   | binds `x` only                | rug ticks, timeline, 1D strip             |
-| `"polar1D"`     | Circle | binds `x` only (as the angle) | 24-hour clock, weekday wheel, cyclic data |
+Switch between the line and circle in the control panel. In the circular form, you can also adjust the outer radius and angular range.
 
-1D coordinates are scale-agnostic: like a 2D axis they accept linear / log / time. Below, left is a `cartesian1D` rug, and right is `polar1D` wrapping a day of event times into a circle.
+<ComponentPreview
+  files={['coordinate-1d-playground', 'coordinate-1d-playground.data.ts']}
+  size="sm"
+  caption="Both forms use the same event times on a fixed 0–24 hour domain. The square canvas stays fixed so the line and circle can be compared directly."
+/>
+
+## Compose After Mapping
+
+A 1D coordinate does not have to be the final graphic. It can first arrange objects along a line and let the mapped results participate in links. The figure places 12 objects on the upper line; every four connect to one shared summary point below, producing three groups.
+
+Within the same Plot, `PointMark` first uses `thingX` to map the single positional field into core Nodes, then a mark-local `summarize` collapses repeated target fields into three lower Nodes. `anchorId` gives these results stable ids, so `RelationMark` can make every four source Nodes reference the same target Node. Mapped results can therefore continue into converging links, annotations, and other follow-up operations.
+
+<ComponentPreview
+  files={['coordinate-1d-composition', 'coordinate-1d-composition.en.data.ts']}
+  size="sm"
+  caption="The horizontal axis handles only 1D positioning. After projection, 12 source Nodes form three stable-id groups, and each set of four connections converges on the same target Node."
+/>
+
+## Choose and Configure
+
+| Goal            | Coordinate configuration                              | Key configuration                     |
+| --------------- | ----------------------------------------------------- | ------------------------------------- |
+| Horizontal line | `coordinate="cartesian1D"`                            | `orientation: 'horizontal'`           |
+| Vertical line   | `{ type: 'cartesian1D', orientation: 'vertical' }`    | `orientation: 'vertical'`             |
+| Full circle     | `coordinate="polar1D"`                                | `radius: 1`, angles from `0` to `360` |
+| Partial circle  | `{ type: 'polar1D', startAngle: 180, endAngle: 360 }` | Set `startAngle` and `endAngle`       |
+
+Both object forms belong to `CoordinateInput`, exported by `@retikz/plot-react`. `cartesian1D` is horizontal by default. For `polar1D`, `radius` defaults to `1`, meaning the full available outer radius; its range is `0 < radius <= 1`, not a pixel value. Angles use degrees and default to `0` through `360`.
+
+The playground's “Sweep angle” is a teaching control, not a `CoordinateInput` field. Internally it becomes `endAngle = startAngle + sweepAngle`.
+
+The number of coordinate dimensions does not restrict the scale type. The position field can still use linear, log, time, and other scales. This example explicitly fixes the hour domain to `[0, 24]`, so hour `22` lands at `330°` on a full circle.
+
+`<PointMark>` is currently the only mark whose position can be projected directly by a 1D coordinate, covering axis events, timeline nodes, and circular event points. `RelationMark` can still reference already positioned targets, as in the figure above. Bars, sectors, and areas require a 2D region and report an error in a 1D coordinate.
+
+## Further Reading
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <ComponentPreview files={['coordinate-rug', 'coordinate-rug.data.ts']} size="sm" />
-  <ComponentPreview files={['coordinate-polar1d', 'coordinate-polar1d.data.ts']} size="sm" />
+  <LinkedCard href="/viz/plot/coordinate/2d">
+    <span className="font-semibold">2D Coordinates</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Use two positional dimensions for bars, areas, or sectors
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/scale">
+    <span className="font-semibold">Scales</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Control how field values become drawable positions
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/mark/relation">
+    <span className="font-semibold">RelationMark</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Connect mapped nodes through stable ids</span>
+  </LinkedCard>
 </div>
-
-<p className="text-sm text-muted-foreground">
-  Left: <code>cartesian1D</code> line rug; right: <code>polar1D</code> wrapping 24 hours around a circle.
-</p>
-
-## Options
-
-`cartesian1D` can use the object form to control orientation:
-
-```tsx
-<Plot coordinate={{ type: 'cartesian1D', orientation: 'horizontal' }}>
-```
-
-`polar1D` can control the circle radius fraction and angular range:
-
-```tsx
-<Plot coordinate={{ type: 'polar1D', radius: 0.8, startAngle: 180, endAngle: 360 }}>
-```
-
-Both object branches belong to `CoordinateInput`, exported from the `@retikz/plot-react` package root.
-
-| Coordinate    | Type                                                                                                                                                      | Default                                       | Description                                                                                                                            |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `cartesian1D` | `Extract<CoordinateInput, { type: 'cartesian1D' }>`<br />- `type: 'cartesian1D'`<br />- `orientation?:` <ApiValues name="Cartesian1DOrientation" />       | —<br />- —<br />- `'horizontal'`              | One-dimensional line<br />- Discriminator<br />- Horizontal or vertical orientation                                                    |
-| `polar1D`     | `Extract<CoordinateInput, { type: 'polar1D' }>`<br />- `type: 'polar1D'`<br />- `radius?: number`<br />- `startAngle?: number`<br />- `endAngle?: number` | —<br />- —<br />- `1`<br />- `0`<br />- `360` | One-dimensional circle<br />- Discriminator<br />- Available-radius fraction<br />- Start angle in degrees<br />- End angle in degrees |
-
-## Limits
-
-This round, 1D coordinates support `<PointMark>` only, for rug ticks, timeline points, or circular event points. Bars, sectors, areas, and other marks that need a 2D cell or region have no 1D geometry and fail loudly instead of drawing a misleading chart.

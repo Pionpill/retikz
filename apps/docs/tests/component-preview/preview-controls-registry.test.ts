@@ -1543,6 +1543,381 @@ describe('preview controls registry', () => {
     }
   });
 
+  it('一维坐标组合 demo 用双语折叠数据表说明 12 个来源 Node 汇聚为 3 个目标 Node', () => {
+    const segments = ['viz', 'plot', 'coordinate', '1d'];
+    const name = 'coordinate-1d-composition';
+
+    for (const language of ['zh', 'en'] as const) {
+      const controlsKey =
+        language === 'zh' ? buildControlsKey(segments, name) : buildLangControlsKey(segments, name, 'en');
+      const definition = resolvePreviewControls(controlModules[controlsKey]);
+
+      expect(definition?.presentation, language).toBe('panel');
+      if (!definition || definition.presentation !== 'panel') continue;
+
+      const firstSection = definition.sections[0];
+      const firstControl = firstSection.controls[0];
+      const visibleIds = (values: PreviewControlValues) =>
+        resolveVisiblePreviewControlSections(definition.sections, values).flatMap(section =>
+          section.controls.map(control => control.id),
+        );
+      expect(Boolean(firstSection.defaultCollapsed), language).toBe(true);
+      expect(firstControl.kind, language).toBe('table');
+      if (firstControl.kind !== 'table') continue;
+
+      expect(firstControl.rows, language).toHaveLength(12);
+      const targetGroupSizes = firstControl.rows.reduce<Record<string, number>>((groupSizes, row) => {
+        const practiceId = Reflect.get(row, 'practiceId');
+        expect(typeof practiceId, `${language}: practiceId`).toBe('string');
+        if (typeof practiceId !== 'string') return groupSizes;
+
+        groupSizes[practiceId] = (groupSizes[practiceId] ?? 0) + 1;
+        return groupSizes;
+      }, {});
+      expect(Object.values(targetGroupSizes).sort(), language).toEqual([4, 4, 4]);
+      expect(
+        firstControl.columns?.map(column => column.key),
+        language,
+      ).toEqual(['thingLabel', 'practiceLabel', 'relationColor']);
+      expect(definition.sections, language).toHaveLength(4);
+      expect(visibleIds({ routing: 'bend', sourceLabelVisible: true, targetLabelVisible: true }), language).toEqual(
+        expect.arrayContaining(['bendDirection', 'bendAngle']),
+      );
+      expect(visibleIds({ routing: 'line', sourceLabelVisible: true, targetLabelVisible: true }), language).not.toEqual(
+        expect.arrayContaining(['bendDirection', 'bendAngle', 'orthogonalVia']),
+      );
+      expect(
+        visibleIds({ routing: 'orthogonal', sourceLabelVisible: false, targetLabelVisible: false }),
+        language,
+      ).toEqual(expect.arrayContaining(['orthogonalVia']));
+      expect(
+        visibleIds({ routing: 'orthogonal', sourceLabelVisible: false, targetLabelVisible: false }),
+        language,
+      ).not.toEqual(
+        expect.arrayContaining(['sourceLabelSize', 'sourceLabelRotate', 'sourceLabelDistance', 'targetLabelSize']),
+      );
+      expect(
+        visibleIds({
+          routing: 'bend',
+          sourceLabelVisible: true,
+          targetLabelVisible: true,
+          axisVisible: true,
+        }),
+        language,
+      ).toEqual(expect.arrayContaining(['axisVisible', 'axisStroke', 'axisStrokeWidth']));
+      expect(
+        visibleIds({
+          routing: 'bend',
+          sourceLabelVisible: true,
+          targetLabelVisible: true,
+          axisVisible: false,
+        }),
+        language,
+      ).toEqual(expect.arrayContaining(['axisVisible']));
+      expect(
+        visibleIds({
+          routing: 'bend',
+          sourceLabelVisible: true,
+          targetLabelVisible: true,
+          axisVisible: false,
+        }),
+        language,
+      ).not.toEqual(expect.arrayContaining(['axisStroke', 'axisStrokeWidth']));
+
+      const source = demoSources[resolveDemoKey(segments, name, language)];
+      expect(source, language).toContain('defineControlledPreview(previewControlContract');
+      expect(source, language).toContain("anchorId={{ prefix: 'thing', field: 'thingId' }}");
+      expect(source, language).toContain("anchorId={{ prefix: 'practice', field: 'practiceId' }}");
+      expect(source, language).toContain("kind: 'summarize'");
+      expect(source, language).toContain("'practiceGlyph'");
+      expect(source, language).toContain('text="practiceGlyph"');
+      expect(source, language).toContain('path={{ routing }}');
+      expect(source, language).toContain('COORDINATE_1D_COMPOSITION_CONTROL_IDS.relationStrokeWidth');
+      expect(source, language).toContain('COORDINATE_1D_COMPOSITION_CONTROL_IDS.axisVisible');
+      expect(source, language).toContain('COORDINATE_1D_COMPOSITION_CONTROL_IDS.axisStroke');
+      expect(source, language).toContain('COORDINATE_1D_COMPOSITION_CONTROL_IDS.axisStrokeWidth');
+      expect(source, language).toContain('<RelationMark');
+      expect(source, language).toContain('<Axis');
+    }
+  });
+
+  it('坐标系 Plot demo 都以本地化数据表作为 control 首个分组', () => {
+    const cases = [
+      {
+        segments: ['viz', 'plot', 'coordinate', '1d'],
+        name: 'coordinate-1d-playground',
+        rowCount: 8,
+        columnKeys: ['hour'],
+        defaultCollapsed: true,
+      },
+      {
+        segments: ['viz', 'plot', 'coordinate', '2d'],
+        name: 'coordinate-switch',
+        rowCount: 6,
+        columnKeys: ['month', 'value'],
+        defaultCollapsed: true,
+      },
+      {
+        segments: ['viz', 'plot', 'coordinate', '2d'],
+        name: 'coordinate-pie',
+        rowCount: 5,
+        columnKeys: ['label', 'value'],
+        defaultCollapsed: true,
+      },
+      {
+        segments: ['viz', 'plot', 'coordinate', '2d'],
+        name: 'coordinate-radar',
+        rowCount: 5,
+        columnKeys: ['dim', 'value'],
+        defaultCollapsed: true,
+      },
+      {
+        segments: ['viz', 'plot', 'coordinate', '2d'],
+        name: 'coordinate-polar-line',
+        rowCount: 8,
+        columnKeys: ['angle', 'speed'],
+        defaultCollapsed: true,
+      },
+      {
+        segments: ['viz', 'plot', 'coordinate', 'composition'],
+        name: 'coordinate-composition-scopes',
+        rowCount: 6,
+        columnKeys: ['day', 'temperature', 'rainfall'],
+        defaultCollapsed: true,
+      },
+      {
+        segments: ['viz', 'plot', 'coordinate', 'composition'],
+        name: 'coordinate-composition-x-axis',
+        rowCount: 7,
+        columnKeys: ['elapsedDay', 'calendarDay', 'completed', 'forecast'],
+        defaultCollapsed: true,
+      },
+      {
+        segments: ['viz', 'plot', 'coordinate', 'composition'],
+        name: 'coordinate-composition-facet',
+        rowCount: 20,
+        columnKeys: ['product', 'tier', 'month', 'accounts'],
+        defaultCollapsed: true,
+      },
+      {
+        segments: ['viz', 'plot', 'coordinate', 'composition'],
+        name: 'coordinate-composition-facet-multilevel',
+        rowCount: 64,
+        columnKeys: ['business', 'metric', 'region', 'channel', 'month', 'value'],
+        defaultCollapsed: true,
+      },
+      {
+        segments: ['viz', 'plot', 'coordinate', 'composition'],
+        name: 'coordinate-composition-tracks',
+        rowCount: 18,
+        columnKeys: ['day', 'trend', 'drawdown', 'signal'],
+        defaultCollapsed: true,
+      },
+      {
+        segments: ['viz', 'plot', 'coordinate', 'composition'],
+        name: 'coordinate-composition-tracks-polar',
+        rowCount: 6,
+        columnKeys: ['area', 'order', 'signal', 'capacity', 'outer'],
+        defaultCollapsed: true,
+      },
+    ];
+
+    for (const { segments, name, rowCount, columnKeys, defaultCollapsed } of cases) {
+      for (const language of ['zh', 'en'] as const) {
+        const key = language === 'zh' ? buildControlsKey(segments, name) : buildLangControlsKey(segments, name, 'en');
+        const definition = resolvePreviewControls(controlModules[key]);
+
+        expect(definition?.presentation, `${name}:${language}`).toBe('panel');
+        if (!definition || definition.presentation !== 'panel') continue;
+
+        const firstSection = definition.sections[0];
+        const firstControl = firstSection.controls[0];
+        expect(firstControl.kind, `${name}:${language}`).toBe('table');
+        expect(Boolean(firstSection.defaultCollapsed), `${name}:${language}`).toBe(defaultCollapsed);
+        if (firstControl.kind !== 'table') continue;
+
+        expect(firstControl.rows, `${name}:${language}`).toHaveLength(rowCount);
+        expect(
+          firstControl.columns?.map(column => column.key),
+          `${name}:${language}`,
+        ).toEqual(columnKeys);
+        expect(demoSources[buildKey(segments, name)], name).toContain('defineControlledPreview(previewControlContract');
+      }
+    }
+  });
+
+  it('坐标组合 demo 提供结构优先的双语 controls', () => {
+    const segments = ['viz', 'plot', 'coordinate', 'composition'];
+    const cases = [
+      {
+        name: 'coordinate-composition-scopes',
+        ids: [
+          'rows',
+          'rainfallAxis',
+          'secondaryAxisSide',
+          'xGridVisible',
+          'yGridVisible',
+          'temperatureLineWidth',
+          'rainfallLineWidth',
+          'rainfallPointsVisible',
+          'rainfallPointSize',
+        ],
+      },
+      {
+        name: 'coordinate-composition-x-axis',
+        ids: [
+          'rows',
+          'forecastAxis',
+          'secondaryAxisSide',
+          'xGridVisible',
+          'yGridVisible',
+          'completedLineWidth',
+          'forecastLineWidth',
+          'forecastPointsVisible',
+          'forecastPointSize',
+        ],
+      },
+      {
+        name: 'coordinate-composition-facet',
+        ids: [
+          'rows',
+          'layout',
+          'scale',
+          'empty',
+          'headers',
+          'panelGap',
+          'xGridVisible',
+          'yGridVisible',
+          'lineWidth',
+          'pointSize',
+        ],
+      },
+      {
+        name: 'coordinate-composition-facet-multilevel',
+        ids: [
+          'rows',
+          'rowHierarchy',
+          'columnHierarchy',
+          'rowHeaders',
+          'columnHeaders',
+          'scale',
+          'panelGap',
+          'xGridVisible',
+          'yGridVisible',
+          'lineWidth',
+          'pointSize',
+        ],
+      },
+      {
+        name: 'coordinate-composition-tracks',
+        ids: [
+          'rows',
+          'bandProfile',
+          'trackGap',
+          'xGridVisible',
+          'yGridVisible',
+          'localAxes',
+          'lineWidth',
+          'drawdownAreaVisible',
+          'signalPointSize',
+        ],
+      },
+      {
+        name: 'coordinate-composition-tracks-polar',
+        ids: [
+          'rows',
+          'innerRadius',
+          'startAngle',
+          'sweepAngle',
+          'trackGap',
+          'xGridVisible',
+          'yGridVisible',
+          'localAxes',
+          'lineWidth',
+          'pointSize',
+          'sectorPadAngle',
+          'sectorOpacity',
+        ],
+      },
+    ];
+
+    for (const { name, ids } of cases) {
+      for (const language of ['zh', 'en'] as const) {
+        const key = language === 'zh' ? buildControlsKey(segments, name) : buildLangControlsKey(segments, name, 'en');
+        const definition = resolvePreviewControls(controlModules[key]);
+
+        expect(definition?.presentation, `${name}:${language}`).toBe('panel');
+        if (!definition || definition.presentation !== 'panel') continue;
+
+        expect(definition.sections.length, `${name}:${language}`).toBeGreaterThan(1);
+        expect(
+          definition.sections.flatMap(section => section.controls.map(control => control.id)),
+          `${name}:${language}`,
+        ).toEqual(ids);
+      }
+    }
+  });
+
+  it('坐标系试验场只显示当前形态相关的配置', () => {
+    const oneDimensionalSegments = ['viz', 'plot', 'coordinate', '1d'];
+    const facetSegments = ['viz', 'plot', 'coordinate', 'composition'];
+    const oneDimensional = resolvePreviewControls(
+      controlModules[buildControlsKey(oneDimensionalSegments, 'coordinate-1d-playground')],
+    );
+    const facet = resolvePreviewControls(
+      controlModules[buildControlsKey(facetSegments, 'coordinate-composition-facet')],
+    );
+
+    const visibleIds = (definition: PreviewControlsDefinition | undefined, values: PreviewControlValues) =>
+      definition?.presentation === 'panel'
+        ? resolveVisiblePreviewControlSections(definition.sections, values).flatMap(section =>
+            section.controls.map(control => control.id),
+          )
+        : [];
+
+    expect(visibleIds(oneDimensional, { coordinate: 'cartesian1D', axisVisible: true })).toEqual([
+      'rows',
+      'coordinate',
+      'orientation',
+      'pointSize',
+      'pointFill',
+      'pointStroke',
+      'pointStrokeWidth',
+      'pointOpacity',
+      'axisVisible',
+      'axisStroke',
+      'axisStrokeWidth',
+    ]);
+    expect(visibleIds(oneDimensional, { coordinate: 'polar1D', axisVisible: true })).toEqual([
+      'rows',
+      'coordinate',
+      'radius',
+      'startAngle',
+      'sweepAngle',
+      'pointSize',
+      'pointFill',
+      'pointStroke',
+      'pointStrokeWidth',
+      'pointOpacity',
+      'axisVisible',
+      'axisStroke',
+      'axisStrokeWidth',
+    ]);
+    expect(visibleIds(oneDimensional, { coordinate: 'cartesian1D', axisVisible: false })).toEqual([
+      'rows',
+      'coordinate',
+      'orientation',
+      'pointSize',
+      'pointFill',
+      'pointStroke',
+      'pointStrokeWidth',
+      'pointOpacity',
+      'axisVisible',
+    ]);
+    expect(visibleIds(facet, { layout: 'columns' })).not.toContain('empty');
+    expect(visibleIds(facet, { layout: 'grid' })).toContain('empty');
+  });
+
   it('所有 controls 显式声明完整且双语一致的文档契约', () => {
     const prefix = '../../contents/';
     const entries = Object.entries(controlModules).filter(
