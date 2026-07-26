@@ -2,8 +2,9 @@ import type { AxisAlignedBounds, BoundsRect } from '@retikz/math';
 
 import type {
   ChildLayoutConstraint,
+  CompositeCompileChild,
+  CompositeCompileScopeProps,
   CompositeReplay,
-  CompositeReplayPlacement,
   ScenePrimitive,
   SceneResource,
   Transform,
@@ -57,6 +58,10 @@ export type TraversalResult = {
 
 /** layout-aware child probe 保存的全部可提交贡献 */
 export type CompositeReplayTransaction = {
+  /** 创建 transaction 的 layout-aware composite callback owner */
+  owner: CompositeCompileOwner;
+  /** probe 根 occurrence，用于 replay 时保留 probe 内部路径后缀 */
+  originOccurrence: CompileOccurrenceLocator;
   /** 防止同一个 token 重复 placement */
   used: boolean;
   /** probe 完成的 primitive tree */
@@ -73,6 +78,8 @@ export type CompositeReplayTransaction = {
   observations: Array<PendingNodeLayoutObservation>;
   /** probe namespace 当前 frame 变更 */
   namespaceChanges: Array<NamespaceFrameChange>;
+  /** probe 中由 fork baseline collision 产生的 duplicate warning */
+  namespaceBaselineWarnings: Array<{ id: string; warning: CompileWarning }>;
   /** probe 已解析资源 */
   resources: Array<SceneResource>;
   /** 仅在 replay 时发布的 warning */
@@ -81,12 +88,37 @@ export type CompositeReplayTransaction = {
   artifacts: Array<CompositeCompileArtifact | NodeLayoutCompileArtifact>;
 };
 
-/** 同一次 compile 独占的 replay token 表 */
+/** runtime output tree 中的递归节点 */
+export type CompositeRuntimeOutputChild =
+  | Readonly<{
+      kind: 'replay';
+      replay: CompositeReplay;
+      transforms?: ReadonlyArray<Transform>;
+    }>
+  | Readonly<{
+      kind: 'scope';
+      props: CompositeCompileScopeProps;
+      children: ReadonlyArray<IRChild | CompositeCompileChild>;
+    }>;
+
+/** 单个 layout-aware composite callback 的 runtime owner */
+export type CompositeCompileOwner = Readonly<{
+  /** 错误消息使用的 composite key 与 occurrence */
+  label: string;
+}>;
+
+/** opaque output handle 对应的 callback-local runtime entry */
+export type CompositeRuntimeOutputEntry = Readonly<{
+  owner: CompositeCompileOwner;
+  child: CompositeRuntimeOutputChild;
+}>;
+
+/** 同一次 compile 独占的 replay 与 runtime output handle 表 */
 export type CompositeCompileSession = {
   /** token → 隔离 probe 结果；不跨 compile 共享 */
   replayTransactions: WeakMap<object, CompositeReplayTransaction>;
-  /** 当前 compile 接受的 token 所有者标识 */
-  owner: object;
+  /** opaque handle → runtime output 节点；不跨 compile 共享 */
+  outputChildren: WeakMap<object, CompositeRuntimeOutputEntry>;
 };
 
 /** 单次 traversal 的可选隔离输入 */
@@ -247,9 +279,21 @@ export type CallableLayoutCompositeDefinition = {
         visualBounds: Readonly<BoundsRect>;
         replay: CompositeReplay;
       };
+      replay: (
+        result: {
+          allocationBounds: Readonly<BoundsRect>;
+          visualBounds: Readonly<BoundsRect>;
+          replay: CompositeReplay;
+        },
+        transforms?: ReadonlyArray<Transform>,
+      ) => CompositeCompileChild;
+      scope: (
+        props: CompositeCompileScopeProps,
+        children: ReadonlyArray<IRChild | CompositeCompileChild>,
+      ) => CompositeCompileChild;
     },
   ) => {
-    children: ReadonlyArray<IRChild | CompositeReplayPlacement>;
+    children: ReadonlyArray<IRChild | CompositeCompileChild>;
     artifact?: JsonValue;
   };
 };

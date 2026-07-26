@@ -4,8 +4,9 @@ import { boundsToRect } from '@retikz/math';
 
 import type {
   ChildLayoutConstraint,
+  CompositeCompileChild,
+  CompositeCompileScopeProps,
   CompositeReplay,
-  CompositeReplayPlacement,
   GroupPrim,
   PaintValue,
   PathKindCompileResult,
@@ -28,6 +29,8 @@ import type { CompileContext } from './context';
 import type { InternalScenePrimitive } from './primitive';
 import type {
   CallableLayoutCompositeDefinition,
+  CompositeCompileOwner,
+  CompositeRuntimeOutputChild,
   CoordinateChild,
   EmitScopeGroupContext,
   NodeChild,
@@ -72,6 +75,7 @@ import { applyTransformChain, inverseTransformChain, projectLayoutToGlobal } fro
 import { filterAnimations } from './animation';
 import { cloneAndFreezeJson, freezeCompileArtifact, orderCompileArtifacts } from './artifact';
 import { collectLayoutBounds } from './bounds';
+import { createCompositeReplayChild, createCompositeScopeChild, resolveCompositeOutputChild } from './composite-output';
 import { createDuplicateWarning, transformWarnCode } from './diagnostics';
 import {
   collectPlaceholderLocators,
@@ -88,7 +92,7 @@ export const compileChildrenToPrimitives = (
   context: CompileContext,
   options: TraversalCompileOptions = {},
 ): TraversalResult => {
-  const session = options.session ?? { owner: {}, replayTransactions: new WeakMap() };
+  const session = options.session ?? { replayTransactions: new WeakMap(), outputChildren: new WeakMap() };
   /** 编译运行时环境 */
   const runtime: TraversalRuntime = {
     context: {
@@ -598,10 +602,16 @@ export const compileChildrenToPrimitives = (
     frame: TraversalFrame,
     generatedOccurrence?: CompileOccurrenceLocator,
     compositeDepth = options.compositeDepth ?? 0,
+    compileNested?: (scopeFrame: TraversalFrame) => void,
+    preLoweredTransforms?: ReadonlyArray<Transform>,
   ): void => {
     const { locatorPrefix, styleStack } = frame;
-    const placementTarget = resolveScopePlacementTarget(child, index, frame);
-    const preliminaryTransforms = resolvePreliminaryScopeTransforms(child, index, frame);
+    const placementTarget =
+      preLoweredTransforms === undefined ? resolveScopePlacementTarget(child, index, frame) : undefined;
+    // runtime Scope 可能包住在当前 frame 外完成的 replay probe，因此它的数值 transform
+    // 必须在 Scope 收尾时统一投影到普通 child 与 replay 导入的 publication/observation
+    const preliminaryTransforms =
+      preLoweredTransforms === undefined ? resolvePreliminaryScopeTransforms(child, index, frame) : undefined;
     const preliminaryScopeChain =
       preliminaryTransforms === undefined ? frame.scopeChain : [...frame.scopeChain, ...preliminaryTransforms];
     const layoutPlaceholder = registerScopeLayoutPlaceholder(child, { index, frame });
@@ -618,35 +628,30 @@ export const compileChildrenToPrimitives = (
     const scopeArtifacts: TraversalFrame['artifactSink'] = [];
     let scopeTransforms: Array<Transform> = [];
     try {
-      compileChildren(
-        child.children,
-        {
-          scopeChain: preliminaryScopeChain,
-          primitiveSink: scopePrimitiveSink,
-          locatorPrefix: `${locatorPrefix}children[${index}].scope.`,
-          layoutSink: scopeLayouts,
-          pathSink: scopePendingPaths,
-          styleStack: [...styleStack, createStyleFrame(child)],
-          publicationSink: scopePublications,
-          boundsSink: scopeBounds,
-          allocationSink: scopeAllocations,
-          observationSink: scopeObservations,
-          artifactSink: scopeArtifacts,
-        },
-        false,
-        generatedOccurrence,
-        compositeDepth,
-      );
+      const scopeFrame: TraversalFrame = {
+        scopeChain: preliminaryScopeChain,
+        primitiveSink: scopePrimitiveSink,
+        locatorPrefix: `${locatorPrefix}children[${index}].scope.`,
+        layoutSink: scopeLayouts,
+        pathSink: scopePendingPaths,
+        styleStack: [...styleStack, createStyleFrame(child)],
+        publicationSink: scopePublications,
+        boundsSink: scopeBounds,
+        allocationSink: scopeAllocations,
+        observationSink: scopeObservations,
+        artifactSink: scopeArtifacts,
+      };
+      if (compileNested === undefined) {
+        compileChildren(child.children, scopeFrame, false, generatedOccurrence, compositeDepth);
+      } else {
+        compileNested(scopeFrame);
+      }
 
       const intrinsicLayout = createIntrinsicScopeLayout(child, scopeLayouts);
-      scopeTransforms = resolveFinalScopeTransforms(
-        child,
-        index,
-        frame,
-        intrinsicLayout,
-        placementTarget,
-        preliminaryTransforms,
-      );
+      scopeTransforms =
+        preLoweredTransforms === undefined
+          ? resolveFinalScopeTransforms(child, index, frame, intrinsicLayout, placementTarget, preliminaryTransforms)
+          : [...preLoweredTransforms];
       const postTransforms =
         preliminaryTransforms === undefined
           ? scopeTransforms
@@ -779,13 +784,14 @@ export const compileChildrenToPrimitives = (
   const replayOccurrence = (
     parent: CompileOccurrenceLocator,
     index: number,
+    origin: CompileOccurrenceLocator,
     child: CompileOccurrenceLocator,
   ): CompileOccurrenceLocator => ({
     sourcePath: parent.sourcePath,
     expansionPath: [
       ...parent.expansionPath,
       { kind: 'replay', index },
-      ...child.expansionPath.slice(parent.expansionPath.length),
+      ...child.expansionPath.slice(origin.expansionPath.length),
     ],
   });
 
@@ -835,11 +841,16 @@ export const compileChildrenToPrimitives = (
       });
     }
 
+    const suppressedNamespaceWarnings = new Set<CompileWarning>();
     for (const change of transaction.namespaceChanges) {
       if (transforms !== undefined && transforms.length > 0) {
         applyOwnTransformsToPublishedLayout(change.entry.layout, frame.scopeChain, transforms);
       }
-      runtime.state.namespaceStack.commitForkChange(change);
+      const committedAgainstBaseline = runtime.state.namespaceStack.commitForkChange(change);
+      if (change.overwroteBaseline && !committedAgainstBaseline) {
+        const baselineWarning = transaction.namespaceBaselineWarnings.find(candidate => candidate.id === change.id);
+        if (baselineWarning !== undefined) suppressedNamespaceWarnings.add(baselineWarning.warning);
+      }
       frame.publicationSink.push(change.entry.layout);
     }
     for (const layout of transaction.layouts) {
@@ -870,22 +881,87 @@ export const compileChildrenToPrimitives = (
       }
       frame.observationSink.push({
         ...observation,
-        occurrence: replayOccurrence(occurrence, outputIndex, observation.occurrence),
+        occurrence: replayOccurrence(occurrence, outputIndex, transaction.originOccurrence, observation.occurrence),
       });
     }
-    for (const warning of transaction.warnings) runtime.context.onWarn(warning);
+    for (const warning of transaction.warnings) {
+      if (!suppressedNamespaceWarnings.has(warning)) runtime.context.onWarn(warning);
+    }
     for (const artifact of transaction.artifacts) {
       frame.artifactSink.push(
         freezeCompileArtifact({
           ...artifact,
-          occurrence: replayOccurrence(occurrence, outputIndex, artifact.occurrence),
+          occurrence: replayOccurrence(occurrence, outputIndex, transaction.originOccurrence, artifact.occurrence),
         }),
       );
     }
   };
 
-  const isReplayPlacement = (output: IRChild | CompositeReplayPlacement): output is CompositeReplayPlacement =>
-    !('type' in output);
+  /** opaque handle 没有 IR discriminator；普通 child 继续走既有 compile dispatch */
+  const isIRChild = (output: IRChild | CompositeCompileChild): output is IRChild =>
+    'type' in output || 'namespace' in output;
+
+  /** 把 runtime Scope props 投影到普通 Scope orchestration 接受的结构 child */
+  const runtimeScopeChildOf = (props: CompositeCompileScopeProps): ScopeChild => ({
+    type: 'scope',
+    ...(props.id === undefined ? {} : { id: props.id }),
+    ...(props.localNamespace === undefined ? {} : { localNamespace: props.localNamespace }),
+    ...(props.clip === undefined ? {} : { clip: props.clip }),
+    ...(props.zIndex === undefined ? {} : { zIndex: props.zIndex }),
+    ...(props.boundingShape === undefined ? {} : { boundingShape: props.boundingShape }),
+    ...(props.meta === undefined ? {} : { meta: props.meta }),
+    ...(props.animations === undefined ? {} : { animations: [...props.animations] }),
+    children: [],
+  });
+
+  /** 递归提交当前 callback 的 runtime output child */
+  const compileRuntimeOutputChild = (
+    output: CompositeRuntimeOutputChild,
+    index: number,
+    frame: TraversalFrame,
+    parentOccurrence: CompileOccurrenceLocator,
+    scopeSegment: 'output' | 'scopeChild',
+    compositeDepth: number,
+    owner: CompositeCompileOwner,
+  ): void => {
+    if (output.kind === 'replay') {
+      commitReplay(output.replay, output.transforms, frame, parentOccurrence, index);
+      return;
+    }
+    const scopeOccurrence: CompileOccurrenceLocator = {
+      sourcePath: parentOccurrence.sourcePath,
+      expansionPath: [...parentOccurrence.expansionPath, { kind: scopeSegment, index }],
+    };
+    compileScopeChild(
+      runtimeScopeChildOf(output.props),
+      index,
+      frame,
+      scopeOccurrence,
+      compositeDepth,
+      scopeFrame => {
+        for (const [childIndex, child] of output.children.entries()) {
+          if (isIRChild(child)) {
+            const childOccurrence: CompileOccurrenceLocator = {
+              sourcePath: scopeOccurrence.sourcePath,
+              expansionPath: [...scopeOccurrence.expansionPath, { kind: 'scopeChild' as const, index: childIndex }],
+            };
+            compileChild(child, childIndex, scopeFrame, childOccurrence, compositeDepth, true);
+            continue;
+          }
+          compileRuntimeOutputChild(
+            resolveCompositeOutputChild(runtime.context.session, owner, child),
+            childIndex,
+            scopeFrame,
+            scopeOccurrence,
+            'scopeChild',
+            compositeDepth,
+            owner,
+          );
+        }
+      },
+      output.props.transforms,
+    );
+  };
 
   const compileCompositeChild = (
     child: Extract<IRChild, { namespace: string }>,
@@ -939,11 +1015,15 @@ export const compileChildrenToPrimitives = (
       return;
     }
     const callable = callableLayoutDefinition(definition);
+    const owner: CompositeCompileOwner = Object.freeze({
+      label: `Composite '${key}' at ${formatCompileOccurrence(occurrence)}`,
+    });
     const result = callable.compile(parsed, {
       constraint: frame.childConstraint ?? { kind: 'intrinsic' },
       layoutChild: (nextChild, constraint) => {
         validateConstraint(constraint, key, occurrence);
         const warnings: Array<CompileWarning> = [];
+        const namespaceBaselineWarnings: Array<{ id: string; warning: CompileWarning }> = [];
         const captureWarning = (warning: CompileWarning): void => {
           if (
             warning.code === CompileWarningCode.UnresolvedNodeReference ||
@@ -960,7 +1040,11 @@ export const compileChildrenToPrimitives = (
         const paint = createPaintRegistry(context.patterns, context.round);
         const clip = createClipRegistry(context.round, context.clips);
         const namespaceStack = runtime.state.namespaceStack.fork({
-          onDuplicate: info => warnings.push(createDuplicateWarning(info)),
+          onDuplicate: info => {
+            const warning = createDuplicateWarning(info);
+            warnings.push(warning);
+            if (info.overwroteForkBaseline) namespaceBaselineWarnings.push({ id: info.id, warning });
+          },
         });
         const sandboxContext: CompileContext = {
           ...context,
@@ -981,6 +1065,8 @@ export const compileChildrenToPrimitives = (
         const token = Object.freeze({}) as CompositeReplay;
         const resources: Array<SceneResource> = [...paint.resources(), ...clip.resources()];
         runtime.context.session.replayTransactions.set(token, {
+          owner,
+          originOccurrence: occurrence,
           used: false,
           primitives: laid.primitives,
           primitiveZIndices: laid.primitiveZIndices,
@@ -989,6 +1075,7 @@ export const compileChildrenToPrimitives = (
           allocations: laid.allocations,
           observations: laid.observations,
           namespaceChanges: namespaceStack.diffTopFrame(runtime.state.namespaceStack),
+          namespaceBaselineWarnings,
           resources,
           warnings,
           artifacts: laid.artifacts,
@@ -1000,6 +1087,9 @@ export const compileChildrenToPrimitives = (
           replay: token,
         });
       },
+      replay: (layoutResult, transforms) =>
+        createCompositeReplayChild(runtime.context.session, owner, layoutResult, transforms),
+      scope: (props, children) => createCompositeScopeChild(runtime.context.session, owner, props, children),
     });
 
     if (result.artifact !== undefined) {
@@ -1018,15 +1108,23 @@ export const compileChildrenToPrimitives = (
       );
     }
     for (const [outputIndex, output] of result.children.entries()) {
-      if (isReplayPlacement(output)) {
-        commitReplay(output.replay, output.transforms, frame, occurrence, outputIndex);
+      if (isIRChild(output)) {
+        const outputOccurrence: CompileOccurrenceLocator = {
+          sourcePath: occurrence.sourcePath,
+          expansionPath: [...occurrence.expansionPath, { kind: 'output', index: outputIndex }],
+        };
+        compileChild(output, outputIndex, frame, outputOccurrence, compositeDepth + 1, true);
         continue;
       }
-      const outputOccurrence: CompileOccurrenceLocator = {
-        sourcePath: occurrence.sourcePath,
-        expansionPath: [...occurrence.expansionPath, { kind: 'output', index: outputIndex }],
-      };
-      compileChild(output, outputIndex, frame, outputOccurrence, compositeDepth + 1, true);
+      compileRuntimeOutputChild(
+        resolveCompositeOutputChild(runtime.context.session, owner, output),
+        outputIndex,
+        frame,
+        occurrence,
+        'output',
+        compositeDepth + 1,
+        owner,
+      );
     }
   };
 
