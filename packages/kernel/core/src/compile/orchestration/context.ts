@@ -48,6 +48,8 @@ export type CompileContext = {
   maxCompositeDepth: number;
   /** 本次请求的 artifact 开关 */
   artifacts: CompileOptions['artifacts'];
+  /** 本次 full compile 共享的可选 trace 计数器 */
+  trace: { reporter: NonNullable<CompileOptions['trace']>; visited: number } | undefined;
   /** Scene 输出 rounder */
   round: (n: number) => number;
   /** 自动 layout padding */
@@ -106,6 +108,7 @@ export const createCompileContext = (ir: IRScene, options: CompileOptions): Comp
     composites,
     maxCompositeDepth: options.maxCompositeDepth ?? DEFAULT_MAX_COMPOSITE_DEPTH,
     artifacts: options.artifacts,
+    trace: options.trace === undefined ? undefined : { reporter: options.trace, visited: 0 },
     round,
     layoutPadding: options.padding ?? DEFAULT_LAYOUT_PADDING,
     nodeDistance: options.nodeDistance ?? DEFAULT_NODE_DISTANCE,

@@ -1,3 +1,4 @@
+import type { RuntimeTraceReporter } from '@retikz/runtime';
 import type { ZodType } from 'zod';
 
 import type {
@@ -111,9 +112,7 @@ export type CompileArtifactOptions = Readonly<{
 }>;
 
 /** `compileToScene()` 的显式 Scene + artifact 结果 */
-export type CompileResult<
-  TCompositeArtifact extends CompositeCompileArtifact = CompositeCompileArtifact,
-> = Readonly<{
+export type CompileResult<TCompositeArtifact extends CompositeCompileArtifact = CompositeCompileArtifact> = Readonly<{
   scene: Scene;
   artifacts: ReadonlyArray<TCompositeArtifact | NodeLayoutCompileArtifact>;
 }>;
@@ -275,4 +274,6 @@ export type CompileOptions<
   CompileCompositeOptions<TComposites> & {
     /** 本次 compile 请求的 opt-in artifacts */
     artifacts?: CompileArtifactOptions;
+    /** 记录本次 full compile 的确定性 IRChild dispatch 工作量 */
+    trace?: RuntimeTraceReporter<'@retikz/core'>;
   };
