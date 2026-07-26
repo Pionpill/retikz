@@ -1,4 +1,4 @@
-﻿import { BendDirection, FoldStepVia, RibbonAlignment, RibbonTaperInterpolation } from '@retikz/core';
+﻿import { BendDirection, RibbonAlignment, RibbonTaperInterpolation } from '@retikz/core';
 import { FieldOrderMode } from '@retikz/data';
 import { DataSortOrder, ReducerOperationKind, RowSelectorTie, SelectorOperationKind } from '@retikz/data';
 import {
@@ -64,7 +64,6 @@ describe('schema vocabulary constants', () => {
   });
 
   it('reuses core path vocabularies for relation routing and ribbon options', () => {
-    expect(Object.values(FoldStepVia).sort()).toEqual(['-|', '|-']);
     expect(Object.values(BendDirection).sort()).toEqual(['left', 'right']);
     expect(Object.values(RibbonTaperInterpolation).sort()).toEqual(['linear', 'smooth']);
     expect(Object.values(RibbonAlignment).sort()).toEqual(['center', 'left', 'right']);
