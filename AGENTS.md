@@ -91,6 +91,7 @@ pnpm --filter <pkg> test:run # 仅大范围重构或功能大改
 
 - 当前项目首次执行 `git commit` 前，必须读取并向用户确认实际生效的 `user.name` / `user.email`（优先仓库 local 配置）；身份未变化时，当前对话后续提交无需重复确认。
 - AI 执行 `git commit` / `git push` / `git tag` / `npm publish` 前，必须在当前对话拿到用户明确授权；push / tag / publish 始终单独授权。
+- 发布 tag 必须是 annotated tag，统一命名为 `<release-group>-v<version>`；release group 以 `scripts/release-groups.config.mjs` 为准，历史 tag 保持不变，已发布 tag 不得移动、复用或覆盖，细则见 `package-publish`。
 - 计划、skill、自称会提交、lint/build 通过、auto mode、历史会话授权都不算授权。
 - 多块改动按 commit 粒度分块 staging；无授权时展示暂存文件和拟用 message，等待确认。
 - 派子 agent / 外部模型评审前必须征求用户确认。唯一常驻例外是 `flow-alpha` 的 ADR Architecture Gate 与 `flow-beta` 的入口 / 出口 completeness audit：两者自动派遣新的只读 subagent，最多 3 轮，无需逐次授权；该例外不授权产品修改、其它 review、commit 或任何外部写操作。长任务执行前同时询问：plan 写完是否评审、代码写完是否评审。非明确功能类代码完工并提交或准备提交后，也询问是否需要子 agent review；改动面大、核心功能或高风险提交仍需询问；小任务且用户已明确认可本次单次 commit 时不再额外询问。

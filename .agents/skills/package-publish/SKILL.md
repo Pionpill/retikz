@@ -1,6 +1,6 @@
 ---
 name: package-publish
-description: '发布或准备发布 retikz npm 包时使用。覆盖版本号 bump、结构化 changelog、roadmap 状态、验证、dry-run、tag / npm publish / push 授权、发版前 ADR 检查与预 bump。当前发布组以 scripts/release-groups.config.mjs 为准。'
+description: 'Use when 发布或准备发布 retikz npm 包、核对发布版本与 git tag，或执行 alpha、beta、rc、stable 发版'
 ---
 
 # 发布 retikz 包
@@ -22,7 +22,7 @@ description: '发布或准备发布 retikz npm 包时使用。覆盖版本号 bu
 
 | 组       | 包                                                                                                  | 发布顺序                                          | tag                   |
 | -------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------- | --------------------- |
-| kernel   | `@retikz/math`, `@retikz/core`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla`, `@retikz/tex` | math -> core -> render -> react -> vanilla -> tex | `v<version>`          |
+| kernel   | `@retikz/math`, `@retikz/core`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla`, `@retikz/tex` | math -> core -> render -> react -> vanilla -> tex | `kernel-v<version>`   |
 | data     | `@retikz/data`                                                                                      | data                                              | `data-v<version>`     |
 | plot     | `@retikz/plot`, `@retikz/plot-vanilla`, `@retikz/plot-react`                                        | plot -> plot-vanilla -> plot-react                | `plot-v<version>`     |
 | table    | `@retikz/table`, `@retikz/table-vanilla`, `@retikz/table-react`                                     | table -> table-vanilla -> table-react             | `table-v<version>`    |
@@ -31,6 +31,17 @@ description: '发布或准备发布 retikz npm 包时使用。覆盖版本号 bu
 不发布：`@retikz/docs`、`@retikz/eval` 是 private app。
 
 同组 lockstep：同组所有 publishable package 必须写同一个 version 并同次发布。不同发布组版本线独立。目录只表达 domain，不表达发布组；例如 `packages/viz/data` 与 `packages/viz/plot` 同属 viz 领域，但发布组独立。
+
+## Git tag 规范
+
+- 规范格式统一为 `<release-group>-v<version>`，其中 release group 必须是 `scripts/release-groups.config.mjs` 的键；tag 与 npm 发布组一一对应，不用 domain、目录名或单个包名代替。
+- Kernel、Plot 分别使用 `kernel-v<version>`、`plot-v<version>`。`chart-v<version>` 只有在配置中正式新增 `chart` 发布组且 `pnpm run check:release-groups` 通过后才能启用；当前不得先创建 chart tag。
+- 历史 Kernel 裸 `v<version>` tag 保持原样，不得迁移或补打同版本前缀 tag；新版本从本规范生效后改用 `kernel-v<version>`。
+- 必须创建 annotated tag：`git tag -a <release-group>-v<version> -m "<release-group> <version>"`，不得创建 lightweight tag。
+- tag 只指向已提交且工作树干净的发布提交；创建前确认组内版本、npm registry 连续性，以及本地和远端均不存在同名 tag。
+- 已发布 tag 不得移动、复用、删除或强制覆盖；tag 名冲突时停止并让用户决定新版本。
+- 汇报 tag 状态时必须分别说明本地是否存在、远端是否存在和各自指向；“本地已创建”不等于“已 push”。
+- 创建 tag 与 push tag 分别获取授权；默认在 npm publish 全部成功后才 push commit 和 tag。
 
 依赖范围表达版本耦合：
 
@@ -43,7 +54,7 @@ description: '发布或准备发布 retikz npm 包时使用。覆盖版本号 bu
 改文件前先向用户确认：
 
 - 发布组：`kernel` / `data` / `plot` / `table` / `standard`；
-- 目标版本、npm dist-tag、git tag；
+- 目标版本、npm dist-tag，以及按 `<release-group>-v<version>` 推导的 git tag；
 - 包列表与每个包的 `old -> target`；
 - `apps/docs/src/modules/docs/data/changelog/*.ts` 中对应 release 文件的 note 范围；
 - 是否需要同步 module badge 或 roadmap milestone 状态。
@@ -159,7 +170,7 @@ rg --files packages | rg 'packages/.*/src/.*\.(d\.ts|d\.ts\.map|js)$'
 2. 按根 AGENTS 的 commit 格式提交，常用 `🔖 <scope>: 发布 <version>` 或 `🔖 <scope>: 准备发布 <version>`。
 3. 确认 HEAD 中发布组每个包都是目标版本。
 4. 确认 `git status --short` 没有意外发布文件改动。
-5. 创建 tag：kernel 用 `v<version>`，其余发布组用 `<group>-v<version>`。
+5. 再次确认本地和远端不存在同名 tag，创建 annotated tag：`git tag -a <release-group>-v<version> -m "<release-group> <version>"`。
 6. 确认 npm 登录：`npm whoami --registry=https://registry.npmjs.org/`。
 7. 按组内顺序发布：
 
@@ -182,7 +193,8 @@ pnpm --filter @retikz/<pkg> publish --access public --tag <tag> --no-git-checks 
 
 ## 快速清单
 
-- [ ] 目标版本、发布组、dist-tag、git tag 已确认。
+- [ ] 目标版本、发布组、dist-tag、`<release-group>-v<version>` git tag 已确认。
+- [ ] release group 存在于 `scripts/release-groups.config.mjs`；未配置的 chart 等组没有提前创建 tag。
 - [ ] 已按 npm registry 校验版本连续性。
 - [ ] `scripts/release-groups.config.mjs`、`package.json` 的 `retikz` 元信息和目标发布组一致。
 - [ ] 发布组内包版本全部等于目标版本。
@@ -201,5 +213,7 @@ pnpm --filter @retikz/<pkg> publish --access public --tag <tag> --no-git-checks 
 - [ ] 已检查 tarball、`workspace:*` 精确版本解析和 `workspace:^` 兼容范围解析。
 - [ ] 当前对话已授权 commit / tag / publish / push。
 - [ ] tag 前已确认 HEAD 版本。
+- [ ] tag 为 annotated tag，本地和远端均无同名 tag，历史或已发布 tag 未被移动、复用或覆盖。
+- [ ] tag 状态已分别汇报本地与远端指向。
 - [ ] npm publish 使用官方 registry。
 - [ ] 已完成发布后汇报。
