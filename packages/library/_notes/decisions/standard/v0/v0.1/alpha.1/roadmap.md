@@ -8,4 +8,4 @@
 | [ADR-02](./02-axes-composite.md)           | Axes 坐标轴 composite               | Accepted |
 | [ADR-03](./03-frame-composite.md)          | Frame 可视分组 composite            | Accepted |
 | [ADR-04](./04-frame-header-composition.md) | Frame header 组合与 Node-like 部件  | Proposed |
-| ADR-05                                     | Capability module、bundle 与 preset | Planned  |
+| [ADR-05](./05-capability-loading.md)       | Capability module、bundle 与 preset | Accepted |

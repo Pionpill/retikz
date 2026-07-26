@@ -18,4 +18,21 @@ export const standardSection: Array<Section> = [
       { id: 'frame', label: 'standard.frame' },
     ],
   },
+  {
+    id: 'extension',
+    label: 'standard.extension',
+    document: true,
+    pages: [
+      {
+        id: 'capability-loading',
+        label: 'standard.capabilityLoading',
+        meta: {
+          pageType: 'extension',
+          audience: 'extension-author',
+          capability: 'standard.capability-loading',
+          sourceOfTruth: 'runtime',
+        },
+      },
+    ],
+  },
 ];

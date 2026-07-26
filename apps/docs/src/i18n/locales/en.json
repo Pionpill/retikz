@@ -122,7 +122,9 @@
     "composite": "Composite",
     "grid": "Grid",
     "axes": "Axes",
-    "frame": "Frame"
+    "frame": "Frame",
+    "extension": "Extensions",
+    "capabilityLoading": "Capability Loading"
   },
   "viz": {
     "label": "Visualization",

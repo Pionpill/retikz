@@ -122,7 +122,9 @@
     "composite": "复合",
     "grid": "网格",
     "axes": "坐标轴",
-    "frame": "分组框"
+    "frame": "分组框",
+    "extension": "扩展",
+    "capabilityLoading": "能力装载"
   },
   "viz": {
     "label": "可视化",

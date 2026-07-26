@@ -8,7 +8,7 @@
 
 1. 初始化 `@retikz/standard`、`@retikz/standard-react`、`@retikz/standard-vanilla`，建立独立 `standard` release group 和可发布的包边界
 2. 将 React `Grid` 迁为宿主无关的 Standard Tier 2 composite，并新增 Axes 与 Frame，使 React 与 Vanilla 对同一 JSON-safe 输入得到等价的 composite IR 与 lowering 结果
-3. 建立 Standard capability module / preset 机制：用户可显式选择全部或部分首批标准能力，并通过单一 bundle 接入 Core compile options 与对应 adapter
+3. 建立 Standard capability module / preset 机制：用户可显式选择全部或部分首批标准能力，并通过单一 bundle 接入 Core compile options；React 保持组件静态 adapter，Vanilla 提供全量 adapter 数组便利入口
 4. 固化 Standard 按 Core 可扩展机制横向分域的代码范式，为后续 definition、composite 与 Sugar 增长留出稳定位置，不预建空目录或平行机制
 5. 增加 Stack、Align / Distribute 等不理解领域模型的通用布局 composite；确需测量任意 children 时先补齐并复用 Core layout-aware composite，不在 Standard 私造测量或 replay 管线
 6. 增加 `Stage`、`Decision`、`Terminal`、`Junction`、`Connector` 与 `Callout` 等 JSON-safe Tier 2 语义，使持久化文档、工具链和 LLM 不必从 shape、颜色或坐标反推逻辑角色
@@ -24,23 +24,23 @@
 
 ## Milestones
 
-| Milestone                       | 主题                                                     | 主要产出                                                                                                                                                                                                                           | ADR / Gate                                                                                                                                                 |
-| ------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [alpha.1](./alpha.1/roadmap.md) | **首批 Tier 2 composite、包初始化与 capability loading** | 三个 package manifest、Grid / Axes / Frame 的 schema / definition / lowering / React / Vanilla authoring、Grid 迁移、capability module、不可变 bundle、全量与按需 preset、adapter bundle 接线与公开二级入口、双语 docs / migration | 首批 composite 的输入、Core definition 注册与跨 adapter 等价证据；确认无全局注册、Core 不反向依赖 Standard，且全量 / 部分加载进入同一 Core option 合并路径 |
-| alpha.2                         | **通用布局 composite**                                   | Stack、Align / Distribute 的宿主无关输入、定位、lowering 与诊断；复核 Frame 与后续任意 child 布局的 Core 能力需求                                                                                                                  | 现有 Core anchor / composite 可组合；需要测量时先完成 Core layout-aware composite                                                                          |
-| alpha.3                         | **逻辑语义节点**                                         | `Stage`、`Decision`、`Terminal`、`Junction` 的 schema、definition、纯展开 lowering 与稳定 identity                                                                                                                                 | alpha.1 loading 主链；语义不由 diamond / capsule / fork bar 等 shape 代替                                                                                  |
-| alpha.4                         | **逻辑关系与注释**                                       | `Connector`、`Callout`、结构化 Target、关系 role、label 与诊断                                                                                                                                                                     | alpha.2 children 布局能力、alpha.3 stable identity                                                                                                         |
-| alpha.5                         | **跨入口与文档收口**                                     | React / Vanilla 等价 authoring、LLM 友好 schema 描述、文档逻辑图 dogfood、完整诊断                                                                                                                                                 | alpha.1～4；JSON round-trip、adapter 等价和真实文档消费闭环                                                                                                |
-| beta.1                          | **收口与发布准备**                                       | public API 审查、bundle 组合与冲突诊断、tree-shaking / side-effect、adversarial tests、双语 docs、release / package checks                                                                                                         | Beta completeness audit；alpha completeness 全部闭环且无其它 Kernel 迁移遗留                                                                               |
+| Milestone                       | 主题                                                     | 主要产出                                                                                                                                                                                                                   | ADR / Gate                                                                                                                                                 |
+| ------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [alpha.1](./alpha.1/roadmap.md) | **首批 Tier 2 composite、包初始化与 capability loading** | 三个 package manifest、Grid / Axes / Frame 的 schema / definition / lowering / React / Vanilla authoring、Grid 迁移、capability module、不可变 bundle、全量与按需 preset、Vanilla 全量 adapter 数组、双语 docs / migration | 首批 composite 的输入、Core definition 注册与跨 adapter 等价证据；确认无全局注册、Core 不反向依赖 Standard，且全量 / 部分加载进入同一 Core option 合并路径 |
+| alpha.2                         | **通用布局 composite**                                   | Stack、Align / Distribute 的宿主无关输入、定位、lowering 与诊断；复核 Frame 与后续任意 child 布局的 Core 能力需求                                                                                                          | 现有 Core anchor / composite 可组合；需要测量时先完成 Core layout-aware composite                                                                          |
+| alpha.3                         | **逻辑语义节点**                                         | `Stage`、`Decision`、`Terminal`、`Junction` 的 schema、definition、纯展开 lowering 与稳定 identity                                                                                                                         | alpha.1 loading 主链；语义不由 diamond / capsule / fork bar 等 shape 代替                                                                                  |
+| alpha.4                         | **逻辑关系与注释**                                       | `Connector`、`Callout`、结构化 Target、关系 role、label 与诊断                                                                                                                                                             | alpha.2 children 布局能力、alpha.3 stable identity                                                                                                         |
+| alpha.5                         | **跨入口与文档收口**                                     | React / Vanilla 等价 authoring、LLM 友好 schema 描述、文档逻辑图 dogfood、完整诊断                                                                                                                                         | alpha.1～4；JSON round-trip、adapter 等价和真实文档消费闭环                                                                                                |
+| beta.1                          | **收口与发布准备**                                       | public API 审查、bundle 组合与冲突诊断、tree-shaking / side-effect、adversarial tests、双语 docs、Standard changelog 数据切片、release / package checks                                                                    | Beta completeness audit；alpha completeness 全部闭环且无其它 Kernel 迁移遗留                                                                               |
 
 ## Standard loading 机制
 
 v0.1 必须同时提供细粒度和快捷接入，但不能建立隐式全局 registry：
 
-- **按项使用**：每项 capability 都有独立、tree-shakeable 的公开入口。Grid 作为 composite capability，调用者显式取得其 definition module 或通过对应 adapter 组件构造 Grid composite input
-- **部分加载**：调用者可选择一组 Standard capability module，由 `@retikz/standard` 组装为不可变 bundle；bundle 只包含该组需要的 Core compile contribution 与 adapter 可消费元数据
+- **按项使用**：每项 capability 都从包根入口提供独立 named export。Grid 调用者显式取得其 definition module 或通过对应 adapter 组件构造 Grid composite input；三个包保持 `sideEffects: false`，由消费方 bundler 对未使用导出做 tree-shaking
+- **部分加载**：调用者可选择一组 Standard capability module，由 `@retikz/standard` 组装为不可变 bundle；bundle 只包含该组需要的 Core composite definitions，不携带宿主 adapter 元数据
 - **全量加载**：提供一个显式 all preset，等价于传入本版本所有 Standard module；不得依赖 import 副作用、单例 registry 或自动改写其它 Layout / render 调用
-- **adapter 接线**：React / Vanilla 对同一 bundle 必须得到等价的 Core compile options。adapter 只转发 / 组合，不重新解析 module、不维护第二份 registry
+- **adapter 接线**：React JSX 继续由组件静态 adapter 按实际使用项贡献 definition；Vanilla embed 继续显式传 adapter 数组，并提供当前版本全量数组便利入口。直接 IR 在两种宿主下都显式传 `bundle.compile`；adapter 不解析 module，也不维护第二份 registry
 - **冲突模型**：bundle 合并沿 Core 的 provider key / diagnostics 语义处理；不在 Standard 另造“内置优先”或静默覆盖规则
 
 Grid、Axes 与 Frame 都通过 Core 既有 `CompositeDefinition` 机制注册；后续布局与语义组件仍将每项 definition 贡献给同一 bundle。调用者选择 capability module、部分 preset 或 all preset 后，bundle 才会把相应 definition 接入 `CompileOptions.composites`；不选择时，未注册 composite 必须保持 Core 的明确诊断。
@@ -64,7 +64,8 @@ Grid、Axes 与 Frame 都通过 Core 既有 `CompositeDefinition` 机制注册�
 
 ```text
 packages/library/standard/src/
-  shared/                  # bundle、capability module 等跨域纯词汇
+  capability/              # capability module、bundle 类型与 Core definition 纯组合
+  shared/                  # 经两个以上 owner 证明复用的 dependency-free 纯词汇
   arrows/                  # Core ArrowDefinition 的官方实现与 preset
   shapes/                  # Core ShapeDefinition 的官方实现与 preset
   boundaries/              # Core BoundaryDefinition 的官方实现与 preset
@@ -94,14 +95,13 @@ packages/library/standard-react/src/
   grid/                   # React props -> Standard Grid composite input
   axes/                   # React props -> Standard Axes composite input
   frame/                  # React children -> Standard Frame composite input
-  bundle/                 # Standard bundle -> @retikz/react Layout 接线
   index.ts
 
 packages/library/standard-vanilla/src/
   grid/                   # Vanilla builder -> Standard Grid composite input
   axes/                   # Vanilla builder -> Standard Axes composite input
   frame/                  # Vanilla builder -> Standard Frame composite input
-  bundle/                 # Standard bundle -> @retikz/vanilla render / mount 接线
+  preset/                 # 当前版本全量 Vanilla adapter 数组便利入口
   index.ts
 ```
 
@@ -110,7 +110,7 @@ adapter 不持有 Standard schema、几何 helper、provider table 或 lowering�
 ## 测试与文档基线
 
 - `standard`：Grid、Axes、Frame 与后续布局 / 语义组件的 schema、JSON round-trip、输入错误、identity / Target、composite lowering 输出与 bundle 合并不变量
-- `standard-react` / `standard-vanilla`：同一 composite input 的 IR 与 lowering 结果等价；同图多 capability 的稳定 contribution key / maker、部分 / all bundle 与直接 Core compile options 的等价；无副作用、重复 module 和 provider key 冲突的诊断
+- `standard-react` / `standard-vanilla`：同一 composite input 的 IR 与 lowering 结果等价；同图多 capability 的稳定 contribution key / maker、React 静态按需贡献、Vanilla 部分 / 全量 adapter 数组与直接 IR bundle 的接线；无副作用、重复 module 和 provider key 冲突的诊断
 - Kernel 回归：`Path` / `Step`、Core compile 与 renderer 不因未安装 Standard 改变；`@retikz/react` 不再导出 Grid
 - Docs：zh/en 同步 Standard 包说明、组件页面、React / Vanilla 示例、从 `@retikz/react` 迁移 Grid 的指引；用真实逻辑图 dogfood Frame、Decision、Connector、Junction 与 Callout，并检查导航、source preview、import 生成和 desktop / 500px 页面
 
