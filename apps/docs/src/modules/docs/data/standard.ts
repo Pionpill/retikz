@@ -35,4 +35,15 @@ export const standardSection: Array<Section> = [
       },
     ],
   },
+  {
+    id: 'releases',
+    label: 'standard.releases',
+    pages: [
+      {
+        id: 'changelog',
+        label: 'standard.changelog',
+        children: [{ id: 'v0-1', label: 'standard.changelogV01' }],
+      },
+    ],
+  },
 ];

@@ -124,7 +124,10 @@
     "axes": "Axes",
     "frame": "Frame",
     "extension": "Extensions",
-    "capabilityLoading": "Capability Loading"
+    "capabilityLoading": "Capability Loading",
+    "releases": "Releases",
+    "changelog": "Changelog",
+    "changelogV01": "v0.1"
   },
   "viz": {
     "label": "Visualization",
