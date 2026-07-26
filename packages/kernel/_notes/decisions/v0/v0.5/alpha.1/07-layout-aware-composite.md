@@ -2,9 +2,10 @@
 
 - 状态：Accepted
 - 决策日期：2026-07-23
+- 接受日期：2026-07-25
 - 关联：[alpha.1 roadmap](./roadmap.md) · [v0.5 roadmap](../roadmap.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [Table v0.1 roadmap](../../../../../../viz/_notes/decisions/table/v0/v0.1/roadmap.md)
 
-> 人工确认：2026-07-25。Architecture Gate 已执行三轮但未取得自动 PASS；人工接受修订后的设计并冻结实现契约，随后授权实现、验证与本次提交。实现、自测、双语文档和 changelog 已完成，因此本 ADR 转为 Accepted；该人工 override 不追记 Gate PASS，也不授权 push 或发布。
+> Architecture Gate 三轮未取得自动 PASS；本 ADR 由人工接受修订后的设计，该结论不追记为 Gate PASS。
 
 ## 背景
 
@@ -395,16 +396,9 @@ const { scene, artifacts } = result;
 - React 通过 `artifacts` / `onArtifacts` 在 commit 后通知，Vanilla view 同步持有与 Scene 同次生成的 artifacts
 - Render、TeX、Plot、Table、Eval 与 docs 调用方只消费 `CompileResult`，没有新增 renderer 或领域私有布局语义
 
-正式验证覆盖：
+正式验证覆盖 Core contract、artifact、类型推导、visual bounds 与对抗场景，以及受影响的 Kernel / Viz adapter、Render、TeX、Table、Eval、类型检查、lint 和 docs integrity。中英文 Layout artifact demo 的独立浏览器验证均无 warning / error。
 
-- Core contract、adversarial、artifact、类型推导与 visual bounds 测试
-- Core 全量 190 files / 2691 tests
-- 受影响 Kernel / Viz adapters、Render、TeX、Table、Eval 的定向测试与 `tsc --noEmit`
-- Core、React 与 docs ESLint；Kernel docs integrity 80 pages
-- 中英文 Layout artifact demo 的全新浏览器 session，均无 warning / error
-- `git diff --check`
-
-测试契约矩阵保留在 ignored `notes/plans/kernel-v0.5-alpha.1-scope/TEST_CONTRACT_ADR_07.md`，Table alpha.2 仍需为真实 auto / minmax、wrap、fit / overflow 与 manifest integration 提供独立上层证据。
+Table alpha.2 仍需为真实 auto / minmax、wrap、fit / overflow 与 manifest integration 提供独立上层证据。
 
 ## 影响
 
