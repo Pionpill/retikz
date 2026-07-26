@@ -47,6 +47,7 @@ catalog:
   lucide-react: ^1.11.0
   mathjax-full: ^3.2.2
   prettier: ^3.8.3
+  playwright: 1.62.0
   radix-ui: 1.6.0
   react: ~18.2
   react-dom: ~18.2
