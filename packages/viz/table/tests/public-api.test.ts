@@ -49,10 +49,58 @@ describe('@retikz/table public API', () => {
     expect(Table).not.toHaveProperty('resolveTableLayoutSpec');
     expect(Table).not.toHaveProperty('resolveTableTrackSizes');
     expect(Table).not.toHaveProperty('solveTableTracks');
+    expect(Table).not.toHaveProperty('propagateTableSpanContributions');
+    expect(Table).not.toHaveProperty('computeTableCellOuterSize');
+    expect(Table).not.toHaveProperty('computeTableCellBox');
+    expect(Table).not.toHaveProperty('computeTableCellContentBox');
+    expect(Table).not.toHaveProperty('computeTableCellTranslation');
   });
 
   it('keeps public contract types while hiding pipeline stage types', () => {
     expectTypeOf<PublicContractTypes>().toBeArray();
     expectTypeOf<RemovedStageTypes>().toBeArray();
+  });
+
+  it('rejects unsupported Cell span and layout schema fields', () => {
+    expect(() =>
+      Table.TableStructureSchema.parse({
+        kind: 'manual',
+        rows: 1,
+        columns: 1,
+        cells: [
+          {
+            address: { row: 0, column: 0 },
+            payload: { kind: 'value', value: 'x' },
+            span: { columns: 1 },
+          },
+        ],
+      }),
+    ).toThrow();
+    expect(() =>
+      Table.TableStructureSchema.parse({
+        kind: 'manual',
+        rows: 1,
+        columns: 1,
+        cells: [
+          {
+            address: { row: 0, column: 0 },
+            payload: { kind: 'value', value: 'x' },
+            layout: { horizontalAlign: 'center' },
+          },
+        ],
+      }),
+    ).toThrow();
+    expect(() =>
+      Table.TableStructureSchema.parse({
+        kind: 'detail',
+        columns: [{ id: 'value', field: 'value', headerLayout: { padding: 1 } }],
+      }),
+    ).toThrow();
+    expect(() =>
+      Table.TableStructureSchema.parse({
+        kind: 'detail',
+        columns: [{ id: 'value', field: 'value', bodyLayout: { padding: 1 } }],
+      }),
+    ).toThrow();
   });
 });
