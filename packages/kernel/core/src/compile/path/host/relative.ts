@@ -74,6 +74,12 @@ export const normalizePathSteps = (
       continue;
     }
 
+    if (step.kind === 'axis-line') {
+      // 单轴投影依赖真实运行时笔位，必须留到 stroke emit 按声明顺序解析。
+      out.push(step);
+      continue;
+    }
+
     // 有 to 字段的 step：move/line/step(fold)/curve/cubic/bend
     const original = step.to;
     let resolvedTo: IRTarget = original;

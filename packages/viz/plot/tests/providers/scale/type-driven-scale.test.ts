@@ -24,7 +24,7 @@ const assertScaleFieldCompatible = (
 ) => assertScaleFieldCompatibleOp(role, scaleType, fieldType, scaleName, scaleRegistry);
 
 const compile = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>) =>
-  compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets) });
+  compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets) }).scene;
 
 /** cartesian spec，可选省略 coordinate 的 x/y 绑定（触发派生） */
 const spec = (

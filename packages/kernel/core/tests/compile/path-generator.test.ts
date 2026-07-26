@@ -73,7 +73,7 @@ describe('Path generator 注册面 — happy path', () => {
         },
       ],
     };
-    const scene = compileToScene(ir, { pathGenerators: [customQuad] });
+    const scene = compileToScene(ir, { pathGenerators: [customQuad] }).scene;
     const drawn = firstDrawnPath(scene.primitives);
     expect(drawn?.commands.some(c => c.kind === 'quad')).toBe(true);
   });
@@ -98,7 +98,7 @@ describe('Path generator 注册面 — happy path', () => {
         },
       ],
     };
-    const scene = compileToScene(ir, { pathGenerators: [sin] });
+    const scene = compileToScene(ir, { pathGenerators: [sin] }).scene;
     const drawn = firstDrawnPath(scene.primitives);
     expect(drawn?.commands.filter(c => c.kind === 'line').length).toBeGreaterThan(1);
     expect(drawn?.commands.some(c => c.kind === 'move')).toBe(true);
@@ -159,7 +159,7 @@ describe('Path generator 注册面 — happy path', () => {
         },
       ],
     };
-    const scene = compileToScene(ir, { pathGenerators: [fixedSegment] });
+    const scene = compileToScene(ir, { pathGenerators: [fixedSegment] }).scene;
     const drawn = firstDrawnPath(scene.primitives);
     // generator 产 line 到 [30,0]，cursor 落此，后续 line 不应重发 move（续接 [30,0]→[30,50]）
     const moves = drawn?.commands.filter(c => c.kind === 'move') ?? [];
@@ -182,7 +182,7 @@ describe('Path generator 注册面 — 边界', () => {
         },
       ],
     };
-    const scene = compileToScene(ir, { pathGenerators: [fixedSegment] });
+    const scene = compileToScene(ir, { pathGenerators: [fixedSegment] }).scene;
     expect(firstDrawnPath(scene.primitives)).toBeDefined();
   });
 
@@ -200,8 +200,8 @@ describe('Path generator 注册面 — 边界', () => {
         },
       ],
     };
-    const a = compileToScene(ir, { pathGenerators: [sin] });
-    const b = compileToScene(ir, { pathGenerators: [sin] });
+    const a = compileToScene(ir, { pathGenerators: [sin] }).scene;
+    const b = compileToScene(ir, { pathGenerators: [sin] }).scene;
     expect(a).toEqual(b);
   });
 
@@ -228,7 +228,7 @@ describe('Path generator 注册面 — 边界', () => {
         },
       ],
     };
-    const scene = compileToScene(ir, { pathGenerators: [multi] });
+    const scene = compileToScene(ir, { pathGenerators: [multi] }).scene;
     const drawn = firstDrawnPath(scene.primitives);
     expect(drawn?.commands.filter(c => c.kind === 'move').length).toBeGreaterThanOrEqual(2);
   });
@@ -249,8 +249,8 @@ describe('Path generator 注册面 — 错误路径', () => {
         },
       ],
     };
-    expect(() => compileToScene(ir, { pathGenerators: [customQuad] })).toThrow(/nope/);
-    expect(() => compileToScene(ir, { pathGenerators: [customQuad] })).toThrow(/customQuad/);
+    expect(() => compileToScene(ir, { pathGenerators: [customQuad] }).scene).toThrow(/nope/);
+    expect(() => compileToScene(ir, { pathGenerators: [customQuad] }).scene).toThrow(/customQuad/);
   });
 
   it('params_non_json_rejected：params 含 function → 编译期被拒（双 parse 第二道）', () => {
@@ -274,7 +274,7 @@ describe('Path generator 注册面 — 错误路径', () => {
         },
       ],
     } as unknown as IRScene;
-    expect(() => compileToScene(ir, { pathGenerators: [passthrough] })).toThrow();
+    expect(() => compileToScene(ir, { pathGenerators: [passthrough] }).scene).toThrow();
   });
 
   it('custom_generator_params_error_contains_provider_and_ir_path', () => {
@@ -297,8 +297,8 @@ describe('Path generator 注册面 — 错误路径', () => {
       ],
     };
 
-    expect(() => compileToScene(ir, { pathGenerators: [strictGen] })).toThrow(/path generator 'strictGen'/);
-    expect(() => compileToScene(ir, { pathGenerators: [strictGen] })).toThrow(
+    expect(() => compileToScene(ir, { pathGenerators: [strictGen] }).scene).toThrow(/path generator 'strictGen'/);
+    expect(() => compileToScene(ir, { pathGenerators: [strictGen] }).scene).toThrow(
       /children\[0\]\.path\.children\[1\]\.params/,
     );
   });
@@ -325,7 +325,7 @@ describe('Path generator 注册面 — 错误路径', () => {
       ],
     } as unknown as IRScene;
     // z.any() 第一道放行 { fn }，但 compile 第二道 JsonObjectSchema.parse 必须拦下 function
-    expect(() => compileToScene(ir, { pathGenerators: [anyGen] })).toThrow();
+    expect(() => compileToScene(ir, { pathGenerators: [anyGen] }).scene).toThrow();
     // 同时直接证明第二道护栏对 z.any() 放行后的对象有效（护栏逻辑可独立验证）
     const passedByAny = z.any().parse({ fn: () => 2, ok: 1 });
     expect(JsonObjectSchema.safeParse(passedByAny).success).toBe(false);
@@ -390,7 +390,7 @@ describe('Path generator 注册面 — 交互', () => {
         },
       ],
     };
-    const scene = compileToScene(ir, { pathGenerators: [fixedSegment] });
+    const scene = compileToScene(ir, { pathGenerators: [fixedSegment] }).scene;
     const text = flattenPrims(scene.primitives).find(p => p.type === 'text');
     expect(text).toBeDefined();
   });
@@ -415,7 +415,7 @@ describe('Path generator 注册面 — 交互', () => {
         },
       ],
     };
-    const scene = compileToScene(ir, { pathGenerators: [fixedSegment] });
+    const scene = compileToScene(ir, { pathGenerators: [fixedSegment] }).scene;
     const drawn = firstDrawnPath(scene.primitives);
     const move = drawn?.commands.find(c => c.kind === 'move');
     if (move) expect(move.to).toEqual([0, 0]);
@@ -436,7 +436,7 @@ describe('Path generator 注册面 — 交互', () => {
         },
       ],
     };
-    const scene = compileToScene(ir, { pathGenerators: [fixedSegment] });
+    const scene = compileToScene(ir, { pathGenerators: [fixedSegment] }).scene;
     const drawn = firstDrawnPath(scene.primitives);
     const lastLine = [...(drawn?.commands ?? [])].reverse().find(c => c.kind === 'line');
     if (lastLine) expect(lastLine.to).toEqual([30, 40]);

@@ -1,7 +1,7 @@
 import type { IRChild, IRPathBase, IRScene } from '@retikz/core';
 import type { ReactElement } from 'react';
 
-import { CompositeBaseSchema, CURRENT_IR_VERSION, defineComposite, lowerIRToKernel } from '@retikz/core';
+import { CompositeBaseSchema, CURRENT_IR_VERSION, defineComposite, lowerIRToKernel, NodeTextColor } from '@retikz/core';
 import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -61,6 +61,29 @@ const toElements = (node: ReturnType<typeof convertIRToReactNode>): Array<ReactE
 };
 
 describe('convertIRToReactNode', () => {
+  it('axis-line IR → React → IR 保留 axis / target / label', () => {
+    const input: IRScene = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            {
+              type: 'step',
+              kind: 'axis-line',
+              axis: 'vertical',
+              to: { id: 'target', anchor: 'left' },
+              label: { text: 'y' },
+            },
+          ],
+        },
+      ],
+    };
+    expect(buildIR(convertIRToReactNode(input))).toEqual(input);
+  });
+
   it('空 scene → 空数组', () => {
     const out = convertIRToReactNode(emptyScene);
     expect(toElements(out)).toHaveLength(0);
@@ -544,6 +567,24 @@ describe('convertIRToReactNode', () => {
       expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
     });
 
+    it('三段 fold round-trip 保留显式 fraction 与省略状态', () => {
+      const ir: IRScene = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'fold', via: '-|-', fraction: 0.3, to: [20, 10] },
+              { type: 'step', kind: 'fold', via: '|-|', to: [40, 20] },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
     it('IR 中没有 label 字段时 round-trip 不会凭空多出 label', () => {
       const ir: IRScene = {
         version: CURRENT_IR_VERSION,
@@ -848,7 +889,7 @@ describe('convertIRToReactNode', () => {
       expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
     });
 
-    it('round-trips IRScope：含 id / localNamespace / 6 种 transform 变体复合', () => {
+    it('round-trips IRScope：含 placement / pivot / id / localNamespace 的 transform 复合', () => {
       const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
@@ -858,13 +899,17 @@ describe('convertIRToReactNode', () => {
             type: 'scope',
             id: 'cluster',
             localNamespace: true,
+            placement: {
+              target: { id: 'hub', anchor: 'top-right', offset: [4, -2] },
+              selfAnchor: 'top-left',
+            },
             transforms: [
               { kind: 'translate', x: 5, y: 5 },
               { kind: 'polar-translate', origin: 'hub', angle: 30, radius: 20 },
               { kind: 'at-translate', direction: 'right', of: 'hub', distance: 10 },
               { kind: 'offset-translate', of: 'hub', offset: [3, 0] },
-              { kind: 'rotate', degrees: 45, cx: 1, cy: 2 },
-              { kind: 'scale', x: 2, y: 1.5 },
+              { kind: 'rotate', degrees: 45, pivot: [1, 2] },
+              { kind: 'scale', x: 2, y: 1.5, pivot: 'center' },
             ],
             children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
           },
@@ -930,13 +975,25 @@ describe('convertIRToReactNode', () => {
             stroke: 'red',
             strokeWidth: 2,
             opacity: 0.8,
-            nodeDefault: { shape: 'circle', fill: 'lightblue', font: { size: 12 } },
+            nodeDefault: {
+              shape: 'circle',
+              fill: 'lightblue',
+              textColor: NodeTextColor.Contrast,
+              font: { size: 12 },
+            },
             pathDefault: { stroke: 'green', dashPattern: [4, 2] },
             labelDefault: { textColor: 'gray', font: { size: 10 } },
             arrowDefault: { shape: 'stealth', scale: 1.5 },
             resetStyle: ['label', 'arrow'],
             children: [
-              { type: 'node', id: 'A', position: [0, 0], text: 'A', color: 'navy' },
+              {
+                type: 'node',
+                id: 'A',
+                position: [0, 0],
+                text: 'A',
+                color: 'navy',
+                textColor: NodeTextColor.Contrast,
+              },
               {
                 type: 'path',
                 color: 'crimson',
@@ -986,7 +1043,14 @@ describe('convertIRToReactNode', () => {
             id: 'A',
             position: [0, 0],
             text: 'A',
-            label: { text: 'tag', position: 'top', distance: 5 },
+            label: {
+              text: 'tag',
+              position: { boundary: 'top', fraction: 0.25 },
+              distance: 5,
+              rotate: 'radial',
+              keepUpright: true,
+              pin: { stroke: 'red', strokeWidth: 2 },
+            },
           },
         ],
       };

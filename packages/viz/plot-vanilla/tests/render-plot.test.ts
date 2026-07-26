@@ -93,7 +93,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots(data, { width: 480, height: 300 }) },
-    );
+    ).scene;
     expect(viaRenderPlot).toBe(renderToSvgString(scene, { output: { width: 480, height: 300 } }));
   });
 
@@ -131,7 +131,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [layeredSpec] },
       { composites: lowerPlots(datasets, { width: 480, height: 300, provenance: true }) },
-    );
+    ).scene;
     const semanticIds = ['audit.points', 'audit.x-axis.grid', 'audit.x-axis', 'audit.legend.color'];
     expect(collectSceneGroupIds(scene.primitives as Array<ScenePrimLike>)).toEqual(expect.arrayContaining(semanticIds));
 
@@ -188,7 +188,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         ],
       },
       { composites: lowerPlots(datasets, { width: 300, height: 220, provenance: true }) },
-    );
+    ).scene;
 
     expect(scene.primitives.map(primitive => primitive.type)).toEqual(['group']);
     const primitives = scene.primitives as Array<ScenePrimLike>;

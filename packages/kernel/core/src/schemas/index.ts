@@ -15,6 +15,7 @@ export * from './position';
 export * from './scalar';
 export * from './scene';
 export * from './scope';
+export * from './scope-point';
 export * from './shape';
 export * from './style';
 export * from './tex';

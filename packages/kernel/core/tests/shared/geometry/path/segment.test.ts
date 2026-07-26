@@ -83,6 +83,63 @@ describe('foldSegmentSample', () => {
     expect(foldSegmentSample(from, corner, to, 0.25).tangent).toEqual([1, 0]);
     expect(foldSegmentSample(from, corner, to, 0.75).tangent).toEqual([0, 1]);
   });
+
+  it('三段平均分配 t，1/3 与 2/3 分界归前一腿', () => {
+    const corners: Array<[number, number]> = [
+      [3, 0],
+      [3, 6],
+    ];
+    expect(foldSegmentSample([0, 0], corners, [9, 6], 1 / 6).point).toEqual([1.5, 0]);
+    expect(foldSegmentSample([0, 0], corners, [9, 6], 1 / 3)).toEqual({
+      point: [3, 0],
+      tangent: [1, 0],
+    });
+    expect(foldSegmentSample([0, 0], corners, [9, 6], 0.5)).toEqual({
+      point: [3, 3],
+      tangent: [0, 1],
+    });
+    expect(foldSegmentSample([0, 0], corners, [9, 6], 2 / 3)).toEqual({
+      point: [3, 6],
+      tangent: [0, 1],
+    });
+    expect(foldSegmentSample([0, 0], corners, [9, 6], 5 / 6).point).toEqual([6, 6]);
+  });
+
+  it('零长腿保留常量 point，并借用最近非零腿 tangent', () => {
+    expect(
+      foldSegmentSample(
+        [0, 0],
+        [
+          [0, 0],
+          [0, 6],
+        ],
+        [9, 6],
+        1 / 6,
+      ),
+    ).toEqual({ point: [0, 0], tangent: [0, 1] });
+    expect(
+      foldSegmentSample(
+        [0, 0],
+        [
+          [3, 0],
+          [3, 6],
+        ],
+        [3, 6],
+        5 / 6,
+      ),
+    ).toEqual({ point: [3, 6], tangent: [0, 1] });
+    expect(
+      foldSegmentSample(
+        [2, 2],
+        [
+          [2, 2],
+          [2, 2],
+        ],
+        [2, 2],
+        0.5,
+      ).tangent,
+    ).toEqual([1, 0]);
+  });
 });
 
 describe('arcSegmentSample', () => {

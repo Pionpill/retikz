@@ -1,4 +1,4 @@
-import type { CompositeDefinition, IRChild, IRScene, IRScope } from '@retikz/core';
+import type { AnyCompositeDefinition, IRChild, IRScene, IRScope } from '@retikz/core';
 
 import type {
   VanillaChildSpec,
@@ -21,7 +21,7 @@ type ContributionRecord = {
   /** 该嵌入节点带来的外部数据集表 */
   datasets: Record<string, unknown>;
   /** 命名空间级 composite 生成器；同一命名空间必须保持同一个函数引用 */
-  makeComposites: (mergedDatasets: Record<string, unknown>) => Array<CompositeDefinition>;
+  makeComposites: (mergedDatasets: Record<string, unknown>) => Array<AnyCompositeDefinition>;
 };
 
 /** 规范化递归过程共享的上下文 */
@@ -95,10 +95,10 @@ const readIdentity = (child: IRChild): string | undefined =>
   'id' in child && typeof child.id === 'string' ? child.id : undefined;
 
 /** 按命名空间合并 Tier2 数据集，再生成 core composite definitions */
-const aggregateComposites = (contributions: ReadonlyArray<ContributionRecord>): Array<CompositeDefinition> => {
+const aggregateComposites = (contributions: ReadonlyArray<ContributionRecord>): Array<AnyCompositeDefinition> => {
   const groups = new Map<
     string,
-    { merged: Map<string, unknown>; maker: (merged: Record<string, unknown>) => Array<CompositeDefinition> }
+    { merged: Map<string, unknown>; maker: (merged: Record<string, unknown>) => Array<AnyCompositeDefinition> }
   >();
   for (const contribution of contributions) {
     let group = groups.get(contribution.namespace);
@@ -118,7 +118,7 @@ const aggregateComposites = (contributions: ReadonlyArray<ContributionRecord>): 
       group.merged.set(reference, value);
     }
   }
-  const out: Array<CompositeDefinition> = [];
+  const out: Array<AnyCompositeDefinition> = [];
   for (const group of groups.values()) out.push(...group.maker(Object.fromEntries(group.merged)));
   return out;
 };

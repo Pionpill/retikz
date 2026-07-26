@@ -108,7 +108,7 @@ Children mode has an explicit limitation: JSX children commonly receive a new re
 
 The project will not introduce a public incremental API merely because JSON Patch exists. Kernel will first measure full compilation in real large-figure or interaction scenarios and evaluate whether bailouts, caching, or domain lowering are sufficient. Only with supporting performance evidence will it design IR diffing, local compilation, Scene patches, concurrent scheduling, and whether SVG and Canvas can share the same update semantics.
 
-Progressive IR / incremental compilation is currently an evidence-gated v0.5 candidate, not scheduled work or a frozen API.
+Progressive IR / incremental compilation still requires evidence-based scheduling in a future version and is not a frozen API.
 
 <SourceLinks
   sources={[
@@ -130,12 +130,6 @@ Progressive IR / incremental compilation is currently an evidence-gated v0.5 can
       startLine: 3,
       endLine: 27,
     },
-    {
-      label: 'v0.5 Progressive IR candidate status',
-      path: 'packages/kernel/_notes/decisions/v0/v0.5/roadmap.md',
-      startLine: 1,
-      endLine: 23,
-    },
   ]}
 />
 
@@ -145,15 +139,15 @@ Progressive IR / incremental compilation is currently an evidence-gated v0.5 can
 
 <ComponentPreview files="react-to-scene" size="xs" hideCode />
 
-| Stage                      | Owner           | Responsibility                                                                                    |
-| -------------------------- | --------------- | ------------------------------------------------------------------------------------------------- |
-| Kernel / Sugar JSX         | `@retikz/react` | Collect props and children; expand Sugar into Kernel first                                        |
-| `buildIRWithContributions` | `@retikz/react` | Walk the component tree, produce `IRScene`, collect embeddable Tier 2 input                       |
-| `IRScene`                  | `@retikz/core`  | JSON-serializable drawing contract with no React element, hook, or DOM                            |
-| `compileToScene`           | `@retikz/core`  | Lower composites; resolve registries, references, geometry,<br />layout, resources, and animation |
-| `Scene`                    | `@retikz/core`  | Backend-neutral primitives, layout, resources, and optional root animation                        |
+| Stage                      | Owner           | Responsibility                                                                                 |
+| -------------------------- | --------------- | ---------------------------------------------------------------------------------------------- |
+| Kernel / Sugar JSX         | `@retikz/react` | Collect props and children; expand Sugar into Kernel first                                     |
+| `buildIRWithContributions` | `@retikz/react` | Walk the component tree, produce `IRScene`, collect embeddable Tier 2 input                    |
+| `IRScene`                  | `@retikz/core`  | JSON-serializable drawing contract with no React element, hook, or DOM                         |
+| `compileToScene`           | `@retikz/core`  | Process composites; resolve registries, references, geometry, layout, resources, and animation |
+| `CompileResult`            | `@retikz/core`  | Return a backend-neutral `scene` and immutable typed `artifacts` from the same compile         |
 
-`Layout` injects host capabilities such as text measurement, Definition registries, and the TeX lowerer as compile options, but those options do not put React into IR or Scene. Passing the `ir` prop skips the JSX builder and continues through the same `compileToScene` entry.
+`Layout` injects host capabilities such as text measurement, Definition registries, and the TeX lowerer as compile options, but those options do not put React into IR or Scene. Passing the `ir` prop skips the JSX builder and continues through the same `compileToScene` entry. The `artifacts` prop requests opt-in outputs, while `onArtifacts` receives immutable same-compile artifacts after React commit; notification does not trigger another compile.
 
 <SourceLinks
   sources={[
@@ -178,8 +172,8 @@ Progressive IR / incremental compilation is currently an evidence-gated v0.5 can
     {
       label: 'Core IR to Scene compiler',
       path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 18,
-      endLine: 42,
+      startLine: 25,
+      endLine: 53,
     },
   ]}
 />
@@ -200,8 +194,8 @@ Event handlers are functions and cannot enter JSON IR. In children mode, React s
     {
       label: 'Layout SVG / Canvas routing',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 479,
-      endLine: 527,
+      startLine: 487,
+      endLine: 544,
     },
     {
       label: 'Thin SvgNode to React element mapping',

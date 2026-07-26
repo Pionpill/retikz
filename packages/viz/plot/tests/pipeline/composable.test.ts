@@ -147,7 +147,7 @@ describe('contract L1-b · 外部可见面板 anchor（gated on id）', () => {
         },
       ],
     };
-    const compiled = compileToScene(scene, { composites: lowerPlots({ sales: SALES }, opts) });
+    const compiled = compileToScene(scene, { composites: lowerPlots({ sales: SALES }, opts) }).scene;
     const path = compiled.primitives.find((p): p is Extract<ScenePrimitive, { type: 'path' }> => p.type === 'path');
     if (!path) return undefined;
     for (const cmd of path.commands) if (cmd.kind === 'line') return cmd.to;

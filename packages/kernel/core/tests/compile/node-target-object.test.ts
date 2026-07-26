@@ -32,7 +32,7 @@ const endOf = (target: IRTarget): [number, number] => {
       },
     ],
   };
-  const scene = compileToScene(ir);
+  const scene = compileToScene(ir).scene;
   const prim = findPathPrim(scene.primitives);
   if (!prim) throw new Error('expected PathPrim');
   return lastLineEnd(prim);
@@ -106,7 +106,7 @@ describe('错误路径', () => {
         },
       ],
     };
-    const scene = compileToScene(ir);
+    const scene = compileToScene(ir).scene;
     expect(scene.primitives.find(p => p.type === 'path')).toBeUndefined();
   });
 });
@@ -128,7 +128,7 @@ describe('Coordinate（零尺寸）anchor 退化', () => {
         },
       ],
     };
-    const scene = compileToScene(ir);
+    const scene = compileToScene(ir).scene;
     const prim = findPathPrim(scene.primitives);
     if (!prim) throw new Error('expected PathPrim');
     return lastLineEnd(prim);

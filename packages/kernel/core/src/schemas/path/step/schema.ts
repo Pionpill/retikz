@@ -5,7 +5,7 @@ import { JsonObjectSchema } from '../../json';
 import { PositionSchema } from '../../position';
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
 import { createLabelVisualStyleShape, LabelTextContentSchema } from '../../text';
-import { TargetSchema } from '../target';
+import { NodeTargetSchema, TargetSchema } from '../target';
 import { BendDirection, FoldStepVia, GeometryLabelPlacement, GeometryLabelPosition, PathCloseMode } from './constants';
 
 export const GeometryLabelSchema = z
@@ -60,21 +60,49 @@ export const LineStepSchema = z
   })
   .describe('Line action: straight-line segment from cursor to target');
 
-export const FoldStepSchema = z
+export const AxisLineTargetSchema = z
+  .union([PositionSchema, NodeTargetSchema])
+  .describe('Axis-line target. Supports only a Cartesian position or a node target.');
+
+export const AxisLineStepSchema = z
   .strictObject({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
-    kind: z
-      .literal('fold')
-      .describe('Folded right-angle segment from cursor to target through one intermediate point.'),
-    via: z
-      .enum(FoldStepVia)
-      .describe('Folding direction: `-|` first horizontal then vertical; `|-` first vertical then horizontal'),
-    to: TargetSchema.describe('Destination point of the folded segment'),
-    label: StepLabelSchema.optional().describe(
-      'Edge label attached to this folded segment; positioned along the corresponding leg by `position`.',
-    ),
+    kind: z.literal('axis-line').describe('Draw one horizontal or vertical segment by projecting a target.'),
+    axis: z.enum(['horizontal', 'vertical']).describe('Local host axis preserved by the projected segment.'),
+    to: AxisLineTargetSchema.describe('Target reference projected onto the selected local host axis.'),
+    label: StepLabelSchema.optional().describe('Edge label attached to this projected line segment'),
   })
-  .describe('Fold action: right-angle segment with a single intermediate point chosen by `via`.');
+  .describe('Axis-line action: project a target to one local host axis and draw one straight segment.');
+
+const FoldStepCommonShape = {
+  type: z.literal('step').describe('Discriminator marking this as a path step node'),
+  kind: z.literal('fold').describe('Folded orthogonal segment from cursor to target.'),
+  to: TargetSchema.describe('Destination point of the folded segment'),
+  label: StepLabelSchema.optional().describe(
+    'Edge label attached to this folded segment; positioned along the corresponding leg by `position`.',
+  ),
+};
+
+const TwoLegFoldStepSchema = z.strictObject({
+  ...FoldStepCommonShape,
+  via: z
+    .enum([FoldStepVia.HorizontalThenVertical, FoldStepVia.VerticalThenHorizontal])
+    .describe('Two-leg direction: `-|` is horizontal then vertical; `|-` is vertical then horizontal.'),
+});
+
+const ThreeLegFoldStepSchema = z.strictObject({
+  ...FoldStepCommonShape,
+  via: z
+    .enum([FoldStepVia.HorizontalVerticalHorizontal, FoldStepVia.VerticalHorizontalVertical])
+    .describe('Three-leg direction: `-|-` is H-V-H; `|-|` is V-H-V.'),
+  fraction: NormalizedFractionSchema.optional().describe(
+    'Normalized position of the middle leg. Omitted fields compile as 0.5.',
+  ),
+});
+
+export const FoldStepSchema = z
+  .discriminatedUnion('via', [TwoLegFoldStepSchema, ThreeLegFoldStepSchema])
+  .describe('Fold action: a strict two-leg or three-leg orthogonal segment selected by `via`.');
 
 export const CycleStepSchema = z
   .strictObject({
@@ -330,6 +358,7 @@ export const StepSchema = z
   .discriminatedUnion('kind', [
     MoveStepSchema,
     LineStepSchema,
+    AxisLineStepSchema,
     FoldStepSchema,
     CycleStepSchema,
     CurveStepSchema,

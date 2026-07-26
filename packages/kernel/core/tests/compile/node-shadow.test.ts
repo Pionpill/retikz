@@ -17,8 +17,8 @@ const findByType = <T extends ScenePrimitive['type']>(
 ): Extract<ScenePrimitive, { type: T }> | undefined =>
   flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: T }> => p.type === type);
 
-const compileNode = (n: Record<string, unknown>): ReturnType<typeof compileToScene> =>
-  compileToScene(scene([{ type: 'node', position: [0, 0], ...n }]), silent);
+const compileNode = (n: Record<string, unknown>): ReturnType<typeof compileToScene>['scene'] =>
+  compileToScene(scene([{ type: 'node', position: [0, 0], ...n }]), silent).scene;
 
 const bottomOf = (layout: { y: number; height: number }): number => layout.y + layout.height;
 
@@ -182,7 +182,7 @@ describe('[shadow] 交互', () => {
         children: [{ type: 'node', position: [0, 0], shape: 'rectangle', text: 'x', shadow: 'lg' }],
       },
       silent,
-    );
+    ).scene;
     expect(compiled.layout).toEqual({ x: -1, y: -2, width: 3, height: 4 });
   });
 });

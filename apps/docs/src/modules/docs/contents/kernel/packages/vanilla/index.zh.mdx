@@ -92,8 +92,8 @@ plain spec 路径会先由 `normalizeFigureSpec` 生成 Core IR，再由 `compil
     {
       label: 'plain spec、IR 与 Scene 的统一入口',
       path: 'packages/kernel/vanilla/src/runtime/to-scene.ts',
-      startLine: 26,
-      endLine: 45,
+      startLine: 29,
+      endLine: 52,
     },
   ]}
 />
@@ -110,9 +110,11 @@ plain spec 路径会先由 `normalizeFigureSpec` 生成 Core IR，再由 `compil
 
 `view.update(nextInput)` 当前是后端整图重渲染，但 root 元素 identity 保持稳定：SVG 会清空并重建 root 的属性与子节点，Canvas 会用新 Scene 重绘并重新绑定存活的水合。传入预编译 `Scene` 可以跳过 plain spec 归一和 Core 编译，但不会把这次 backend update 变成局部 patch。
 
+`VanillaView` 与 `CanvasView` 的只读 `artifacts` getter 暴露当前 IR / plain spec 与 Scene 同次编译得到的 immutable artifacts；`update()` 会同步替换 `scene`、`artifacts` 与 `runtimeMeta`。直接传入预编译 `Scene` 时没有对应 compile，`artifacts` 固定为空数组。需要 Node 布局产物时可在 `compile.artifacts` 中启用 `nodeLayouts`。
+
 plain spec 的 layer 顺序、layer id、`cache` hint 与子节点 identity 会保存在 `view.runtimeMeta`。这些 metadata 只是为后续失效判断预留稳定边界，并不代表当前已经有 layer cache、局部 DOM diff、Canvas dirty layer 或增量编译。
 
-后续性能工作会从真实大图或高频交互的测量结果出发，先判断 bailout、缓存或 domain lowering 能否解决问题；证据成立后，才会继续设计 IR diff、局部 compile、Scene patch、SVG DOM diff、Canvas dirty layer 与调度策略。Progressive IR / 增量编译目前只是待证据候选，不代表已排期或已经冻结公开 API。
+后续性能工作会从真实大图或高频交互的测量结果出发，先判断 bailout、缓存或 domain lowering 能否解决问题；证据成立后，才会继续设计 IR diff、局部 compile、Scene patch、SVG DOM diff、Canvas dirty layer 与调度策略。Progressive IR / 增量编译仍需未来版本另行排期，不代表已经冻结公开 API。
 
 <SourceLinks
   sources={[
@@ -133,12 +135,6 @@ plain spec 的 layer 顺序、layer id、`cache` hint 与子节点 identity 会�
       path: 'packages/kernel/_notes/decisions/v0/v0.4/backlog.md',
       startLine: 3,
       endLine: 27,
-    },
-    {
-      label: 'v0.5 Progressive IR 候选状态',
-      path: 'packages/kernel/_notes/decisions/v0/v0.5/roadmap.md',
-      startLine: 1,
-      endLine: 23,
     },
   ]}
 />

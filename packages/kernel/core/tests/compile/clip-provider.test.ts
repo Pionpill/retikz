@@ -55,7 +55,7 @@ describe('clip providers', () => {
   it('custom clip kind compiles through options.clips into a path clip resource', () => {
     const scene = compileToScene(clippedIr({ kind: 'roundedRect', x: 0, y: 0, width: 40, height: 30, r: 5 }), {
       clips: [roundedRectClip()],
-    });
+    }).scene;
     expect(scene.resources ?? []).toHaveLength(1);
     expect((scene.resources ?? [])[0]).toMatchObject({
       kind: 'clip',
@@ -69,7 +69,7 @@ describe('clip providers', () => {
   });
 
   it('custom clip kind is rejected at compile time when no provider is registered', () => {
-    expect(() => compileToScene(clippedIr({ kind: 'roundedRect', x: 0, y: 0, width: 40, height: 30, r: 5 }))).toThrow(
+    expect(() => compileToScene(clippedIr({ kind: 'roundedRect', x: 0, y: 0, width: 40, height: 30, r: 5 })).scene).toThrow(
       /options\.clips/i,
     );
   });
@@ -81,7 +81,7 @@ describe('clip providers', () => {
       resolve: () => ({ kind: 'circle', cx: 0, cy: 0, r: 1 }),
     });
     expect(() =>
-      compileToScene(clippedIr({ kind: 'rect', x: 0, y: 0, width: 10, height: 10 }), { clips: [rectOverride] }),
+      compileToScene(clippedIr({ kind: 'rect', x: 0, y: 0, width: 10, height: 10 }), { clips: [rectOverride] }).scene,
     ).toThrow(/duplicate clip registration/i);
   });
 
@@ -104,7 +104,7 @@ describe('clip providers', () => {
         ],
       },
       { clips: [roundedRectClip()] },
-    );
+    ).scene;
     expect(scene.resources ?? []).toHaveLength(1);
     expect((scene.resources ?? [])[0]).toMatchObject({
       kind: 'clip',

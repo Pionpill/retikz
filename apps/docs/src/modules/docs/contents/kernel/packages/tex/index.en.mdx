@@ -22,7 +22,7 @@ import { Layout, Node } from '@retikz/react';
 import { useLowerTex } from '@retikz/tex/react';
 
 const Diagram = () => {
-  const lowerTex = useLowerTex();
+  const lowerTex = useLowerTex({ profile: 'math' });
 
   return (
     <Layout lowerTex={lowerTex}>
@@ -47,7 +47,7 @@ Core therefore defines only `LowerTex`: it receives TeX source, inline/display m
 | Stage               | Owner            | Output                                                  |
 | ------------------- | ---------------- | ------------------------------------------------------- |
 | Formula authoring   | Core text IR     | String sugar or a `{ tex, displayMode }` math run       |
-| Formula lowering    | `@retikz/tex`    | Renderer-agnostic glyph commands and metrics            |
+| Formula lowering    | `@retikz/tex`    | Glyph paths with independent fill / stroke and metrics  |
 | Text layout / Scene | `@retikz/core`   | Baseline-aligned `PathPrim` / `GroupPrim`               |
 | Backend output      | `@retikz/render` | SVG, Canvas, or another renderer sharing the same Scene |
 
@@ -58,27 +58,27 @@ Before entering Scene, formulas are already Core path primitives. SVG and Canvas
     {
       label: 'Minimal MathJax engine and optional-peer boundary',
       path: 'packages/kernel/tex/src/mathjax/engine.ts',
-      startLine: 1,
-      endLine: 16,
+      startLine: 15,
+      endLine: 40,
     },
     {
       label: 'Core LoweredTex and LowerTex contracts',
       path: 'packages/kernel/core/src/compile/text/tex.ts',
       startLine: 4,
-      endLine: 17,
+      endLine: 40,
     },
     {
       label: 'Formula glyphs enter Scene as path primitives',
       path: 'packages/kernel/core/src/compile/text/layout.ts',
-      startLine: 234,
-      endLine: 248,
+      startLine: 241,
+      endLine: 269,
     },
   ]}
 />
 
 ## Formula Playground
 
-Edit TeX source without `$` delimiters, then switch inline/display metrics, font size, and the Node container. The camera and formula center remain fixed, while presets reproduce standalone, display, multiline, and framed formula tasks.
+Choose a complete state from Formula example, then keep editing the TeX source without `$` delimiters or adjust the syntax profile, inline/display metrics, font size, and Node container. The camera and formula center remain fixed. Colored cancellation contrasts extension macros and independent paint paths from the `math` profile.
 
 <ComponentPreview
   files="tex-playground"
@@ -87,6 +87,19 @@ Edit TeX source without `$` delimiters, then switch inline/display metrics, font
 />
 
 `$...$` uses inline metrics on the text baseline. `$$...$$` uses display metrics with more vertical room for fractions, sums, and integrals. A multiline LaTeX environment still belongs to one Node with one bbox and connection target. Enabling `shape` continues to use regular Node padding and boundary calculation.
+
+## Syntax Profiles
+
+The default `base` profile enables only MathJax base syntax. `math` adds a curated set of common mathematical extensions. You can also append individual entries from the closed `extensions` set:
+
+| Profile | Includes                              | Use for                                                                  |
+| ------- | ------------------------------------- | ------------------------------------------------------------------------ |
+| `base`  | MathJax base                          | Ordinary operators, fractions, roots, and scripts                        |
+| `math`  | <ApiValues name="MathJaxExtension" /> | AMS, commands, brackets, cancellation, cases, colors, and related syntax |
+
+Profile values come from <ApiValues name="MathJaxProfile" />. `cases` automatically loads its internal `empheq` dependency; that dependency is not part of the public extension set.
+
+`upgreek`, `unicode`, and `extpfeil` are outside this profile. The first two emit text atoms, while `extpfeil` relies on nested SVG clipping. The parser rejects a whole formula containing `<text>`, `<foreignObject>`, or nested `<svg>` instead of returning missing or unclipped fragments.
 
 ## Mixed Text And Math
 
@@ -121,16 +134,19 @@ Use explicit `runs` when individual segments need their own color, opacity, or t
 
 ### Manual Construction
 
-For non-React startup or custom MathJax packages, create the engine and lowerer from the main entry:
+For non-React startup, use the one-step factory:
 
 ```ts
-import { createLowerTex, createMathJaxEngine } from '@retikz/tex';
+import { createMathJaxLowerTex } from '@retikz/tex';
 
-const engine = await createMathJaxEngine({ packages: ['base'] });
-const lowerTex = createLowerTex(engine);
+const lowerTex = await createMathJaxLowerTex({
+  profile: 'math',
+  extensions: ['color'],
+  onDiagnostic: diagnostic => console.warn(diagnostic),
+});
 ```
 
-`options.packages` is passed to MathJax TeX input and defaults to `['base']`. You can also implement `MathJaxSvgEngine` directly, provided its synchronous `convert(tex, { display })` returns supported MathJax SVG.
+For a custom engine, implement `MathJaxSvgEngine` and call `createLowerTex(engine, options)`. Custom engines and built-in profiles enter the same Core `LowerTex` consumer.
 
 ### Vanilla
 
@@ -152,30 +168,31 @@ const svg = renderToSvgString(spec, { compile: { lowerTex } });
   sources={[
     {
       label: 'Shared React startup and retry boundary',
-      path: 'packages/kernel/tex/src/react/useLowerTex.ts',
-      startLine: 10,
-      endLine: 38,
+      path: 'packages/kernel/tex/src/react/use-lower-tex.ts',
+      startLine: 16,
+      endLine: 73,
     },
     {
-      label: 'MathJax engine creation and package injection',
+      label: 'MathJax engine creation and profile injection',
       path: 'packages/kernel/tex/src/mathjax/engine.ts',
-      startLine: 29,
-      endLine: 73,
+      startLine: 23,
+      endLine: 61,
     },
   ]}
 />
 
 ## Failure And Performance Boundaries
 
-| Condition                                 | Observable behavior                                                                                  |
-| ----------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| String sugar without `lowerTex`           | Preserve `$...$` / `$$...$$` as ordinary text without parsing                                        |
-| Explicit math run without `lowerTex`      | Skip the formula segment and emit `TEX_LOWERER_MISSING`; text runs on the same line still render     |
-| Unclosed delimiter                        | Preserve content from the unclosed `$` literally and emit `TEXT_TEX_PARSE_ERROR`                     |
-| Invalid engine output or conversion error | Return `null`; Core skips the formula and emits `TEX_INVALID`                                        |
-| Failed `mathjax-full` startup             | Keep `useLowerTex` undefined and preserve the original error; clear the failed cache so mounts retry |
+| Condition                                 | Observable behavior                                                                                |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| String sugar without `lowerTex`           | Preserve `$...$` / `$$...$$` as ordinary text without parsing                                      |
+| Explicit math run without `lowerTex`      | Skip the formula segment and emit `TEX_LOWERER_MISSING`; text runs on the same line still render   |
+| Unclosed delimiter                        | Preserve content from the unclosed `$` literally and emit `TEXT_TEX_PARSE_ERROR`                   |
+| Invalid engine output or conversion error | Return `null` with a detailed diagnostic; Core skips it and emits one `TEX_INVALID`                |
+| Unsupported SVG element or style          | Return `unsupported-svg`; partial success is not allowed                                           |
+| Failed `mathjax-full` startup             | Keep `useLowerTex` undefined and emit `engine-error`; clear the failed cache so later mounts retry |
 
-`createLowerTex` caches successful and failed lowering results by `fontSize | displayMode | tex source`, avoiding repeated MathJax conversion and SVG glyph parsing inside one lowerer. This cache covers only the pure TeX-to-glyph conversion. It does not cache Core IR, Scene, Node layout, or renderer output, and it does not provide incremental compilation or DOM / Canvas patching.
+`createLowerTex` caches successful results and deterministic failures by TeX source, display mode, font size, and host color. Every failed public call still forwards its diagnostic to the latest callback. Engine exceptions are transient and are not cached, so the next call can retry. This cache covers only the pure TeX-to-glyph conversion; it does not cache Core IR, Scene, Node layout, or renderer output.
 
 <SourceLinks
   sources={[
@@ -188,14 +205,14 @@ const svg = renderToSvgString(spec, { compile: { lowerTex } });
     {
       label: 'Missing lowerer and invalid formula warning branches',
       path: 'packages/kernel/core/src/compile/text/layout.ts',
-      startLine: 145,
-      endLine: 180,
+      startLine: 159,
+      endLine: 187,
     },
     {
       label: 'TeX lowering cache key and failed results',
       path: 'packages/kernel/tex/src/lower/lower-tex.ts',
-      startLine: 7,
-      endLine: 23,
+      startLine: 8,
+      endLine: 49,
     },
   ]}
 />
@@ -211,10 +228,13 @@ const svg = renderToSvgString(spec, { compile: { lowerTex } });
 
 ## API Reference
 
-| API                                 | Type                                      | Description                                                                                   |
-| ----------------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `useLowerTex` (`@retikz/tex/react`) | `typeof useLowerTex`                      | Start and share the MathJax engine; return `undefined` while unavailable                      |
-| `createMathJaxEngine`               | `(options?) => Promise<MathJaxSvgEngine>` | Create the MathJax SVG engine; `packages` defaults to `['base']`                              |
-| `createLowerTex`                    | `(engine) => LowerTex`                    | Adapt an engine to Core and cache by font size, display mode, and TeX source                  |
-| `MathJaxSvgEngine`                  | `MathJaxSvgEngine`                        | Minimal synchronous engine abstraction consumed by this package                               |
-| `LowerTex` (`@retikz/core`)         | `LowerTex`                                | Core injection point returning renderer-neutral glyph paths and metrics, or `null` on failure |
+| API                                 | Type                                                                                                                             | Description                                                                                                                            |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `useLowerTex` (`@retikz/tex/react`) | `(options?: MathJaxLowerTexOptions) => LowerTex \| undefined`                                                                    | Share an engine by canonical profile; return `undefined` while a new configuration loads                                               |
+| `createMathJaxLowerTex`             | `(options?: MathJaxLowerTexOptions) => Promise<LowerTex>`                                                                        | Create the built-in MathJax engine and lowerer in one step                                                                             |
+| `createMathJaxEngine`               | `(options?: MathJaxEngineOptions) => Promise<MathJaxSvgEngine>`                                                                  | Create a synchronous SVG engine; defaults to `base`                                                                                    |
+| `createLowerTex`                    | `(engine: MathJaxSvgEngine, options?: LowerTexOptions) => LowerTex`                                                              | Adapt a custom engine and manage result caching and diagnostics                                                                        |
+| `MathJaxEngineOptions`              | `MathJaxEngineOptions`<br />- `profile?:` <ApiValues name="MathJaxProfile" /><br />- `extensions?: Array<MathJaxExtensionValue>` | Engine configuration<br />- Built-in syntax set, defaulting to `base`<br />- Append entries from <ApiValues name="MathJaxExtension" /> |
+| `LowerTexOptions`                   | `LowerTexOptions`<br />- `onDiagnostic?: (diagnostic: TexLoweringDiagnostic) => void`                                            | Lowerer configuration<br />- Receives `engine-error`, `mathjax-error`, `unsupported-svg`, or `malformed-svg`                           |
+| `MathJaxSvgEngine`                  | `MathJaxSvgEngine`                                                                                                               | Minimal synchronous engine abstraction consumed by this package                                                                        |
+| `LowerTex` (`@retikz/core`)         | `LowerTex`                                                                                                                       | Core injection point returning renderer-neutral paths and metrics, or `null` on failure                                                |

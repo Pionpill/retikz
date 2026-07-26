@@ -163,7 +163,7 @@ describe('lowerPlots 笛卡尔面积路径', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [areaSpec({ order: 'month' })] },
       { composites: lowerPlots({ sales: SALES }, cartOpts) },
-    );
+    ).scene;
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 
@@ -539,7 +539,7 @@ describe('lowerPlots 雷达图', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [radarSpec()] },
       { composites: lowerPlots({ m: METRICS }, polarOpts) },
-    );
+    ).scene;
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 });
@@ -678,7 +678,7 @@ describe('lowerPlots 极坐标面积路径', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [polarAreaSpec()] },
       { composites: lowerPlots({ m: METRICS }, polarOpts) },
-    );
+    ).scene;
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 });

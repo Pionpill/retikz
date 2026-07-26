@@ -100,7 +100,7 @@ export type NodeProps = HydrationEventProps & {
   scale?: number | IRAxisScale;
   /** 横向缩放，优先于 `scale` */
   /** 纵向缩放，优先于 `scale` */
-  /** 文字颜色（块级默认；行级 LineSpec.fill 可覆盖）；不填走 `currentColor` */
+  /** 文字颜色（块级默认；行级 LineSpec.fill 可覆盖）；`NodeTextColor.Contrast` 按静态不透明 fill 选黑 / 白，不填走 `currentColor` */
   textColor?: string;
   /** 整节点透明度 0~1（同时作用于 shape 与 text） */
   opacity?: number;

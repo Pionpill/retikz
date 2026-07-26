@@ -181,8 +181,8 @@ export type NodeLayout = {
   warn?: (code: CompileWarningCodeValue, message: string) => void;
 };
 
-/** 节点附属标签 layout */
-export type NodeLabelLayout = {
+/** 已完成内容与视觉盒测量、尚未绑定 Node rect 的附属标签 */
+export type MeasuredNodeLabel = {
   /** 纯文本内容 */
   text: string;
   /** 含公式时的混排行布局 */
@@ -191,7 +191,7 @@ export type NodeLabelLayout = {
   position: NodeLabelPositionValue | number | IRNodeLabelBoundaryPosition;
   /** label 相对附着点向外或向内偏移 */
   placement: NodeLabelPlacementValue;
-  /** label 距离 */
+  /** Node border 到 label 视觉盒的净距 */
   distance: number;
   /**
    * label 文本颜色
@@ -229,13 +229,27 @@ export type NodeLabelLayout = {
    * @default false
    */
   keepUpright?: boolean;
-  /** label 文本测量宽度 */
+  /** label 文本视觉盒宽度 */
   measuredWidth: number;
+  /** label 文本视觉盒高度 */
+  measuredHeight: number;
+  /** label 规范化后的基线上伸 */
+  ascent: number;
+  /** label 规范化后的基线下伸 */
+  descent: number;
   /**
    * pin 引线配置
    * @default false
    */
   pin?: boolean | { stroke?: string; strokeWidth?: number; dashPattern?: Array<number>; dashOffset?: number };
+};
+
+/** 节点附属标签的最终局部布局 */
+export type NodeLabelLayout = MeasuredNodeLabel & {
+  /** 最终 label 自旋角 */
+  rotateDeg: number;
+  /** 相对最终 Node rect 几何中心的局部偏移 */
+  centerOffset: [number, number];
 };
 
 /** 公式渲染上下文 */

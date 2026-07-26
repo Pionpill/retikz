@@ -127,6 +127,9 @@ Object.assign(globalThis, {
     animationFrames.delete(frameId);
   },
 });
+Object.assign(HTMLElement.prototype, {
+  scrollIntoView: () => undefined,
+});
 
 const definition = definePreviewControls({
   presentation: 'panel',
@@ -233,6 +236,39 @@ const conditionalDefinition = definePreviewControls({
     },
   ],
 });
+
+const presetDefinition = definePreviewControls({
+  presentation: 'panel',
+  title: 'Formula',
+  sections: [
+    {
+      controls: [
+        { kind: 'text', id: 'source', label: 'TeX source', defaultValue: 'sum', multiline: true },
+        {
+          kind: 'select',
+          id: 'profile',
+          label: 'Profile',
+          defaultValue: 'math',
+          options: [
+            { value: 'base', label: 'Base' },
+            { value: 'math', label: 'Math' },
+          ],
+        },
+      ],
+    },
+  ],
+});
+
+const presetContract = {
+  controls: presetDefinition,
+  canonicalValues: { source: 'sum', profile: 'math' },
+  presetSelector: { label: 'Formula example', customLabel: 'Custom' },
+  presets: [
+    { id: 'display-sum', label: 'Display sum', values: { source: 'sum', profile: 'math' } },
+    { id: 'colored-cancellation', label: 'Colored cancellation', values: { source: 'cancel', profile: 'base' } },
+  ],
+  relatedApis: [],
+} as PreviewControlContract;
 
 const adaptiveSections = [
   {
@@ -381,9 +417,51 @@ const ConditionalPanelHarness: FC = () => {
   );
 };
 
+const PresetPanelHarness: FC = () => {
+  const controlState = usePreviewControlState(presetDefinition, presetContract.canonicalValues);
+
+  return (
+    <>
+      <button type="button" aria-label="Customize source" onClick={() => controlState.setValue('source', 'custom')} />
+      <PreviewControlPanel
+        definition={presetDefinition}
+        controlContract={presetContract}
+        controlState={controlState}
+        onClose={() => undefined}
+      />
+      <output data-slot="preset-values">{JSON.stringify(controlState.values)}</output>
+    </>
+  );
+};
+
 describe('PreviewControlPanel', () => {
   beforeEach(async () => {
     await i18n.changeLanguage('en');
+  });
+
+  it('选择完整 preset，编辑后显示 Custom，Reset 恢复 canonical preset', async () => {
+    const container = await mount(<PresetPanelHarness />);
+    const selector = container.querySelector('[data-slot="preview-preset-selector"]');
+    const trigger = selector?.querySelector<HTMLElement>('[data-slot="select-trigger"]');
+
+    expect(selector?.textContent).toContain('Formula example');
+    expect(trigger?.textContent).toContain('Display sum');
+
+    await act(() => trigger?.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true })));
+    const options = Array.from(document.body.querySelectorAll<HTMLElement>('[data-slot="select-item"]'));
+    const cancellation = options.find(option => option.textContent.includes('Colored cancellation'));
+    await act(() => cancellation?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })));
+
+    expect(container.querySelector('[data-slot="preset-values"]')?.textContent).toBe(
+      JSON.stringify({ source: 'cancel', profile: 'base' }),
+    );
+    expect(trigger?.textContent).toContain('Colored cancellation');
+
+    await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Customize source"]')?.click());
+    expect(trigger?.textContent).toContain('Custom');
+
+    await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Reset controls"]')?.click());
+    expect(trigger?.textContent).toContain('Display sum');
   });
 
   it('根据当前值显示匹配字段与分组，并保留隐藏字段的状态', async () => {

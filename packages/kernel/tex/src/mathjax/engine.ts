@@ -1,20 +1,6 @@
-/**
- * 同步 tex→SVG 引擎接口（`@retikz/tex` 只吃这个抽象，不硬依赖 MathJax）
- * @description 由调用方在 await MathJax startup 后构造（见 `createMathJaxEngine`），或自备等价实现。
- *   `convert` 返回 MathJax SVG 标记串（`fontCache:'none'` 内联字形）
- */
-export type MathJaxSvgEngine = {
-  convert: (tex: string, options: { display: boolean }) => string;
-};
+import type { MathJaxEngineOptions, MathJaxSvgEngine } from './types';
 
-/**
- * `createMathJaxEngine` 的配置项
- * @description `packages` 会透传给 MathJax TeX input，默认只启用 `base` 包
- */
-export type MathJaxEngineOptions = {
-  /** MathJax TeX input packages。@default ['base'] */
-  packages?: Array<string>;
-};
+import { loadMathJaxConfigurations, resolveMathJaxEngineOptions } from './profiles';
 
 type LiteAdaptor = { outerHTML: (node: unknown) => string };
 type MathDocument = { convert: (tex: string, options: { display: boolean }) => unknown };
@@ -35,6 +21,7 @@ type HandlerModule = { RegisterHTMLHandler: (adaptor: LiteAdaptor) => void };
  *   的错误（同 `@napi-rs/canvas` optional peer 口径）。startup 异步故本工厂 async；引擎 `convert` 同步
  */
 export const createMathJaxEngine = async (options?: MathJaxEngineOptions): Promise<MathJaxSvgEngine> => {
+  const resolved = resolveMathJaxEngineOptions(options);
   let mods: {
     mj: MathjaxModule;
     tex: TexModule;
@@ -50,6 +37,7 @@ export const createMathJaxEngine = async (options?: MathJaxEngineOptions): Promi
       import('mathjax-full/js/adaptors/liteAdaptor.js') as Promise<unknown>,
       import('mathjax-full/js/handlers/html.js') as Promise<unknown>,
     ]);
+    await loadMathJaxConfigurations(resolved.extensions);
     mods = {
       mj: mj as MathjaxModule,
       tex: tex as TexModule,
@@ -65,7 +53,7 @@ export const createMathJaxEngine = async (options?: MathJaxEngineOptions): Promi
   }
   const adaptor = mods.ad.liteAdaptor();
   mods.hd.RegisterHTMLHandler(adaptor);
-  const texInput = new mods.tex.TeX({ packages: options?.packages ?? ['base'] });
+  const texInput = new mods.tex.TeX({ packages: resolved.packages });
   const svgOutput = new mods.svg.SVG({ fontCache: 'none' });
   const doc = mods.mj.mathjax.document('', { InputJax: texInput, OutputJax: svgOutput });
   return {

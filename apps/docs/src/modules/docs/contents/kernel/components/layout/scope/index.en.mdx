@@ -3,7 +3,7 @@ title: Scope
 description: Scope is Kernel's local-context container: a group shares coordinate transforms, style defaults, namespaces, group references, and clipping without gaining drawing or automatic-layout behavior.
 ---
 
-`<Scope>` places a group of children in one local context. It does not draw a new primitive or calculate plot / table layout; it only controls how the group transforms, how it can be referenced, and how it enters Scene.
+`<Scope>` places a group of children in one local context. It does not draw a new primitive or calculate plot / table layout; it controls how the group transforms, aligns by its own envelope, can be referenced, and enters Scene.
 
 Treat Scope as a _sub-figure boundary_. Use it only when the group genuinely shares geometry or runtime semantics. For JSX organization alone, extract an ordinary React component.
 
@@ -24,6 +24,7 @@ import { Scope } from '@retikz/react';
 | Task                  | Entry point            | Scope stops at                  |
 | --------------------- | ---------------------- | ------------------------------- |
 | Transform a subfigure | `transforms`           | It does not place raw children  |
+| Align a subfigure     | `placement`            | Only completed targets are seen |
 | Reference a group     | `id` + `boundingShape` | Path routes do not enter bounds |
 | Isolate reusable ids  | `localNamespace`       | `scope.id` stays in the parent  |
 | Share defaults        | `color` / `*Default`   | Explicit element values win     |
@@ -40,25 +41,37 @@ import { Scope } from '@retikz/react';
 
 Five translation forms mirror Node's relative-position model; `rotate` and `scale` set the local axes and scale. Array order follows an SVG transform list, so the last item acts on a local point first.
 
-| kind                | Key fields                     | Effect                             |
-| ------------------- | ------------------------------ | ---------------------------------- |
-| `translate`         | `x`, `y`                       | Fixed Cartesian translation        |
-| `polar-translate`   | `origin?`, `angle`, `radius`   | Polar placement from an origin     |
-| `at-translate`      | `direction`, `of`, `distance?` | Place in a referent direction      |
-| `offset-translate`  | `of`, `offset?`                | Add a local offset to a referent   |
-| `between-translate` | `between`, `fraction`          | Interpolate between two endpoints  |
-| `rotate`            | `degrees`, `cx?`, `cy?`        | Rotate the local coordinate system |
-| `scale`             | `x`, `y?`                      | Uniform or per-axis scaling        |
+| kind                | Key fields                     | Effect                            |
+| ------------------- | ------------------------------ | --------------------------------- |
+| `translate`         | `x`, `y`                       | Fixed Cartesian translation       |
+| `polar-translate`   | `origin?`, `angle`, `radius`   | Polar placement from an origin    |
+| `at-translate`      | `direction`, `of`, `distance?` | Place in a referent direction     |
+| `offset-translate`  | `of`, `offset?`                | Add a local offset to a referent  |
+| `between-translate` | `between`, `fraction`          | Interpolate between two endpoints |
+| `rotate`            | `degrees`, `pivot?`            | Rotate around a Scope self point  |
+| `scale`             | `x`, `y?`, `pivot?`            | Scale around a Scope self point   |
 
 ## Examples
 
 ### Local coordinates
 
-`O` / `T` are fixed referents outside the Scope. Switch among all seven transform inputs and adjust their parameters in the panel: only the local axes and point `q` move as a group, while the two dotted guide projections preserve `q`'s position in the local coordinate system.
+`O` / `T` are fixed referents outside the Scope, while `q` provides its intrinsic envelope. The panel selects one of seven transforms and independently toggles `placement` in every mode; `placement` is not a transform kind, but the outer placement applied after transforms.
 
-<ComponentPreview files="scope-translate-basic" size="sm" />
+<ComponentPreview
+  files="scope-translate-basic"
+  size="sm"
+  caption="Square q is the only envelope subject; the small dot only marks the local origin. Self placement is off by default. When enabled, choose O or T as the placement target; selfAnchor locks the square's selected anchor to it. Final placement then cancels the five translate-only transforms, so the panel hides their ineffective transform referent."
+/>
 
-Relative directions are interpreted in the current local coordinate system, so rotating Scope also rotates the visual direction of `right` with the axes.
+`placement.target` accepts only a parent-frame `[x, y]` or a previously completed `{ id, anchor?, offset? }`. `selfAnchor` defaults to `center` and also accepts standard anchors, numeric angles, `{ side, fraction }`, `origin`, or an explicit local point.
+
+`rotate.pivot` and `scale.pivot` use the same self-point vocabulary and default to `origin`. A pivot reads the intrinsic envelope before placement, so moving a Scope cannot feed back into its rotation or scale center. Other relative directions remain local: rotating Scope also rotates the visual direction of `right` with the axes.
+
+<ComponentAlert
+  type="warn"
+  title="v0.5 rotate migration"
+  description="IR Scope transforms no longer accept rotate.cx / rotate.cy; use pivot: [cx, cy]. Scene Transform keeps cx / cy as Core lowering output."
+/>
 
 ### Group references and namespaces
 
@@ -104,19 +117,21 @@ This section covers only Scope behavior visible to users. See [Architecture](/ke
 
 ### Transforms and relative positions
 
-Seven inputs converge into Scene's `translate` / `rotate` / `scale`. Relative placement follows the current Scope chain: global referent → inverse-project into local space → add the relative value → project back to global space.
+Scope first completes intrinsic child layout and its rectangle / circle envelope, resolves pivots on that envelope, lowers transforms, and finally computes the outermost `placement` translation. Index 0 is the outer transform and the last item acts first; placement is prepended at index 0 and therefore acts last.
 
 <ComponentPreview files="scope-coordinate-flow" size="sm" hideCode />
 
-That is why rotate changes the visible direction of `right`, while scale changes the visible length of an offset. A Path waits until ids are available, resolves its endpoints, and backfills the original Group placeholder; deferred resolution preserves declaration order, Scope ownership, and clipping.
+Existing transforms that do not depend on the envelope retain the global referent → inverse-project → add relative value → project-to-global behavior. Anchor pivots resolve only after the intrinsic envelope is complete. One final chain drives Group output, namespace layouts, layout observers, and automatic viewBox geometry without baking own transforms into children twice.
+
+A zero scale remains legal as a purely visual transform. Any operation that must inverse-project across that chain throws `non-invertible scope transform`. A Scope-placement NodeTarget sees only completed Nodes, Coordinates, or Scopes before the current traversal point; forward, self, descendant, and unresolved Scope-placeholder references fail loudly.
 
 <SourceLinks
   sources={[
     {
       label: 'Converge transform inputs',
       path: 'packages/kernel/core/src/compile/scope.ts',
-      startLine: 34,
-      endLine: 112,
+      startLine: 52,
+      endLine: 163,
     },
     {
       label: 'Relative placement and Scope-chain projection',
@@ -127,8 +142,8 @@ That is why rotate changes the visible direction of `right`, while scale changes
     {
       label: 'Deferred Path resolution and in-place backfill',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 147,
-      endLine: 161,
+      startLine: 152,
+      endLine: 179,
     },
   ]}
 />
@@ -152,8 +167,8 @@ Equal ids in different frames are valid shadowing. A duplicate in one frame emit
     {
       label: 'Parent and child frame orchestration',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 312,
-      endLine: 415,
+      startLine: 300,
+      endLine: 627,
     },
   ]}
 />
@@ -171,8 +186,8 @@ The Scope envelope collects node, coordinate, and nested-Scope layouts, not path
     {
       label: 'Scope envelope and Group output',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 312,
-      endLine: 394,
+      startLine: 331,
+      endLine: 627,
     },
     {
       label: 'Rectangle and circle synthetic layouts',
@@ -197,6 +212,7 @@ The Scope envelope collects node, coordinate, and nested-Scope layouts, not path
 | ---------------- | --------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `children`       | `ReactNode`                             | —             | Node / Path / Coordinate / nested Scope                                                                            |
 | `transforms`     | `Array<IRTransformInput>`               | —             | Seven local transforms; the last acts first                                                                        |
+| `placement`      | `IRScopePlacement`                      | —             | Align transformed `selfAnchor` (center by default) with a target in the parent frame                               |
 | `id`             | `string`                                | —             | Register the Scope envelope as a group handle                                                                      |
 | `localNamespace` | `boolean`                               | `false`       | Isolate child ids; `scope.id` remains visible                                                                      |
 | `boundingShape`  | <ApiValues name="ScopeBoundingShape" /> | `'rectangle'` | Rectangle or circle envelope for `scope.id`                                                                        |

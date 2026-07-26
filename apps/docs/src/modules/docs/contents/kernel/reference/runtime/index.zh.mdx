@@ -3,7 +3,7 @@ title: 运行时
 description: 查询从宿主规格到 Core IR、Scene 与渲染后端的运行时合同，以及可复用解析和扩展入口。
 ---
 
-这一分组描述一份图如何穿过运行时边界：React / Vanilla adapter 先把宿主规格整理成 Core IR，`compileToScene` 完成下沉、布局与解析，再由 `@retikz/render` 把 Scene 物化为 SVG 或 Canvas。解析工具只是 adapter 可复用的 Sugar → IR 辅助入口，并不是每份 IR 都必须经过的独立阶段。
+这一分组描述一份图如何穿过运行时边界：React / Vanilla adapter 先把宿主规格整理成 Core IR，`compileToScene` 完成下沉、布局与解析并返回 `{ scene, artifacts }`，再由 `@retikz/render` 把 Scene 物化为 SVG 或 Canvas。解析工具只是 adapter 可复用的 Sugar → IR 辅助入口，并不是每份 IR 都必须经过的独立阶段。
 
 <ComponentPreview files="runtime-flow" size="xs" hideCode />
 

@@ -28,4 +28,4 @@
 
 ## 当前状态
 
-当前仅初始化组与包职责边界。尚未创建 npm manifest、源码、公开 API、发布组配置、用户文档或测试。具体首批能力和现有 `@retikz/react` Sugar 的迁移范围必须由后续 ADR 冻结。
+Standard v0.1 alpha.1 已初始化三个 npm 包与独立 release group，并提供 Grid、Axes、Frame 三个 Tier 2 composite、capability module / bundle / preset、React JSX 与 Vanilla authoring。新增能力继续由对应 milestone ADR 冻结 schema、definition、lowering、adapter、测试与文档闭环。

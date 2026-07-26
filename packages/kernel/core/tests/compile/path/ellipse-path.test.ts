@@ -21,7 +21,7 @@ describe("compile path: 'ellipsePath'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
       move([15, 0]),
       ellipseArc([0, 0], 15, 10, 0, 360),
     ]);
@@ -54,8 +54,8 @@ describe("compile path: 'ellipsePath'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(fromEllipse).primitives).commands).toEqual(
-      findPathPrim(compileToScene(fromCircle).primitives).commands,
+    expect(findPathPrim(compileToScene(fromEllipse).scene.primitives).commands).toEqual(
+      findPathPrim(compileToScene(fromCircle).scene.primitives).commands,
     );
   });
 });

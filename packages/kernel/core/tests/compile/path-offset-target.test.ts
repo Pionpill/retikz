@@ -70,7 +70,7 @@ describe('OffsetPosition: step.to compile resolve', () => {
           },
         ],
       };
-      const scene = compileToScene(ir);
+      const scene = compileToScene(ir).scene;
       const pathPrim = findPathPrim(scene.primitives);
       // 末端无 node 引用 → 直接落 (50, 0)
       const [ex, ey] = lastLineEnd(pathPrim);
@@ -96,7 +96,7 @@ describe('OffsetPosition: step.to compile resolve', () => {
           },
         ],
       };
-      const scene = compileToScene(ir);
+      const scene = compileToScene(ir).scene;
       const pathPrim = findPathPrim(scene.primitives);
       const [mx, my] = firstMove(pathPrim);
       expect(mx).toBeCloseTo(0);
@@ -128,7 +128,7 @@ describe('OffsetPosition: step.to compile resolve', () => {
           },
         ],
       };
-      const scene = compileToScene(ir);
+      const scene = compileToScene(ir).scene;
       const pathPrim = findPathPrim(scene.primitives);
       // polar(A=(0,0), 0, 30) = (30, 0); + (0, 5) = (30, 5)
       const [ex, ey] = lastLineEnd(pathPrim);
@@ -168,7 +168,7 @@ describe('OffsetPosition: step.to compile resolve', () => {
           },
         ],
       };
-      const scene = compileToScene(ir);
+      const scene = compileToScene(ir).scene;
       const pathPrim = findPathPrim(scene.primitives);
       const [ex, ey] = lastLineEnd(pathPrim);
       expect(ex).toBeCloseTo(-5);
@@ -195,7 +195,7 @@ describe('OffsetPosition: step.to compile resolve', () => {
           },
         ],
       };
-      const scene = compileToScene(ir);
+      const scene = compileToScene(ir).scene;
       // 未定义 id 让 resolvePosition 返回 null，emitPathPrimitive 返回 null
       const pathPrim = scene.primitives.find(p => p.type === 'path');
       expect(pathPrim).toBeUndefined();

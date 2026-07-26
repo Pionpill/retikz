@@ -26,13 +26,21 @@ import { Draw } from '@retikz/react';
 
 <ComponentPreview files="draw-way-types" size="sm" />
 
+### 单轴连接
+
+`{ horizontalTo }` 只连接到目标 x，`{ verticalTo }` 只连接到目标 y；两者各自产生一个 `axis-line` Step，不像 `-\|` / `\|-` 那样发出两段。方向按当前 Scope 的局部坐标轴解释。
+
+<ComponentPreview files="axis-line" size="sm" />
+
+算子值只接受笛卡尔坐标、NodeTarget 或对应字符串 shorthand。relative、polar、offset、between，以及同时含多个 Way operator 的对象会由 `parseWay` 直接拒绝。
+
 ### 折角
 
-切换折角方向，观察蓝色路径在哪个正交投影点转弯。灰色 dotted 直线只标出两个端点的直接连接。
+切换四种折角方向，观察蓝色路径经过一个或两个正交转折点。选择 `-\|-` / `\|-\|` 后可用 `fraction` 在 `0..1` 内移动中间腿，默认 `0.5`；灰色 dotted 直线只标出两个端点的直接连接。
 
 <Comparison target="tikz" title="折角写法">
 
-这两个裸字面量沿用 TikZ path 的 `(A) -| (B)` / `(A) |- (B)` 写法：`'-|'` 先水平后垂直，`'|-'` 先垂直后水平。
+`'-|'` / `'|-'` 沿用 TikZ path 的 `(A) -| (B)` / `(A) |- (B)` 两段写法。`'-|-'` / `'|-|'` 是流程图常见的三段扩展；裸 token 使用中点，`{ via: '-|-', fraction: 0.3 }` 可配置中间腿位置。
 
 </Comparison>
 
@@ -66,13 +74,14 @@ import { Draw } from '@retikz/react';
 
 <ComponentPreview files="way-parser-flow" size="sm" hideCode />
 
-| 类别                           | 扫描如何前进           | 产出                          |
-| ------------------------------ | ---------------------- | ----------------------------- |
-| target                         | 消费当前项             | 首项 `move`，其余 `line`      |
-| `-\|` / `\|-`、curve / bend 等 | 消费算子 + 下一 target | 一个对应的折角或曲线 Step     |
-| arc / circle / ellipse         | 只消费当前算子         | 一个形状 Step；下一项仍会扫描 |
-| `{ label }`                    | 暂存到下一段           | 自身不产出 Step               |
-| `DrawWay.Cycle`                | 消费当前项             | `cycle`，且不能挂 label       |
+| 类别                              | 扫描如何前进           | 产出                          |
+| --------------------------------- | ---------------------- | ----------------------------- |
+| target                            | 消费当前项             | 首项 `move`，其余 `line`      |
+| horizontalTo / verticalTo         | 消费当前项             | 一个 `axis-line` Step         |
+| 两段 / 三段 fold、curve / bend 等 | 消费算子 + 下一 target | 一个对应的折角或曲线 Step     |
+| arc / circle / ellipse            | 只消费当前算子         | 一个形状 Step；下一项仍会扫描 |
+| `{ label }`                       | 暂存到下一段           | 自身不产出 Step               |
+| `DrawWay.Cycle`                   | 消费当前项             | `cycle`，且不能挂 label       |
 
 因此，折角和曲线算子后面必须紧跟 target；形状算子不会吞掉下一项。`{ label }` 则先进入一个待挂状态，由下一个真正产出路径段的 item 消费，所以它要写在 target 或段算子之前。连续 label、末尾 label，以及给 cycle 挂 label 都会被拒绝。
 
@@ -83,20 +92,20 @@ import { Draw } from '@retikz/react';
     {
       label: 'WayItem 分类与相邻 target 校验',
       path: 'packages/kernel/core/src/parsers/way.ts',
-      startLine: 181,
-      endLine: 230,
+      startLine: 240,
+      endLine: 333,
     },
     {
       label: 'way 按序归约与 label 状态',
       path: 'packages/kernel/core/src/parsers/way.ts',
-      startLine: 344,
-      endLine: 409,
+      startLine: 450,
+      endLine: 511,
     },
     {
       label: 'Draw 展开为 Path + Step',
       path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
-      startLine: 88,
-      endLine: 157,
+      startLine: 66,
+      endLine: 165,
     },
   ]}
 />
@@ -112,8 +121,8 @@ import { Draw } from '@retikz/react';
     {
       label: '对象相对坐标归一',
       path: 'packages/kernel/core/src/parsers/way.ts',
-      startLine: 168,
-      endLine: 179,
+      startLine: 229,
+      endLine: 240,
     },
     {
       label: '字符串相对坐标归一',
@@ -144,7 +153,9 @@ import { Draw } from '@retikz/react';
 | 比例定位           | `{ between: [{ id: 'a' }, { id: 'b' }], fraction: 0.5 }`                                        | A 到 B 连线上的比例点                                      |
 | Relative           | `{ position: [10, 0], type: DrawWay.Relative }` 或 `'+10,0'`                                    | 基于前一 step 终点偏移，不更新 prevEnd                     |
 | Accumulate         | `{ position: [10, 0], type: DrawWay.Accumulate }` 或 `'++10,0'`                                 | 基于前一 step 终点偏移，并更新 prevEnd                     |
-| 折角算子           | `'-\|'` / `'\|-'`                                                                               | 把上一项到下一项改成折角                                   |
+| 单轴连接算子       | `{ horizontalTo: 'a' }` / `{ verticalTo: [120, 0] }`                                            | 只沿当前 host 的一个局部轴连接目标                         |
+| 两段折角算子       | `'-\|'` / `'\|-'`                                                                               | 把上一项到下一项改成两段折角                               |
+| 三段折角算子       | `'-\|-'` / `'\|-\|'` / `{ via: '-\|-', fraction: 0.3 }`                                         | 三段正交连接；对象形式 strict，fraction 范围 `0..1`        |
 | 闭合               | `DrawWay.Cycle`                                                                                 | 闭合回 way 起点                                            |
 | 曲线 / 形状 / 标注 | `{ curve }` / `{ cubic }` / `{ bend }` / `{ arc }` / `{ circle }` / `{ ellipse }` / `{ label }` | 详见 [Draw](/kernel/components/draw/overview)              |
 
@@ -155,6 +166,8 @@ import { Draw } from '@retikz/react';
 | `DrawWay.Cycle`      | 仅常量       | 闭合关键字；避免与节点 id 撞车 |
 | `DrawWay.Hv`         | `'-\|'`      | 先水平后垂直                   |
 | `DrawWay.Vh`         | `'\|-'`      | 先垂直后水平                   |
+| `DrawWay.Hvh`        | `'-\|-'`     | 水平 → 垂直 → 水平             |
+| `DrawWay.Vhv`        | `'\|-\|'`    | 垂直 → 水平 → 垂直             |
 | `DrawWay.Relative`   | 仅常量       | 非累积相对偏移                 |
 | `DrawWay.Accumulate` | 仅常量       | 累积相对偏移                   |
 

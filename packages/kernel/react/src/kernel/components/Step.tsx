@@ -1,4 +1,5 @@
 import type {
+  IRAxisLineTarget,
   IRControlPoint,
   IRGeneratorStep,
   IRJsonObject,
@@ -37,12 +38,24 @@ export type LineStepProps = {
   children?: ReactNode;
 };
 
-/** Fold action：经一个直角中间点的折角段（TikZ `(A) -| (B)` / `(A) |- (B)`） */
-export type FoldStepProps = {
+/** Axis-line action：把目标投影到当前 host 的一个局部轴并画单段直线 */
+export type AxisLineStepProps = {
+  /** 单轴连接 step 鉴别字面量 */
+  kind: 'axis-line';
+  /** 保持的当前 host 局部轴 */
+  axis: 'horizontal' | 'vertical';
+  /** 投影目标，仅支持笛卡尔坐标、NodeTarget 或对应字符串 shorthand */
+  to: IRAxisLineTarget | string;
+  /** 边标注 */
+  label?: IRStepLabelInput;
+  /** sugar 形态 */
+  children?: ReactNode;
+};
+
+/** Fold action 共享属性 */
+type FoldStepBaseProps = {
   /** 折角 step 鉴别字面量 */
   kind: 'fold';
-  /** 折角走向：`-|` 先水平后垂直；`|-` 先垂直后水平 */
-  via: '-|' | '|-';
   /** 折角终点 */
   to: DslTarget;
   /** 边标注 */
@@ -50,6 +63,27 @@ export type FoldStepProps = {
   /** sugar 形态 */
   children?: ReactNode;
 };
+
+/**
+ * Fold action：两段或三段正交折线
+ * @description `-|` / `|-` 使用一个转折点；`-|-` / `|-|` 使用两个转折点，并可用归一化 `fraction` 调整中间腿位置
+ */
+export type FoldStepProps = FoldStepBaseProps &
+  (
+    | {
+        /** 两段折角走向 */
+        via: '-|' | '|-';
+      }
+    | {
+        /** 三段折角走向 */
+        via: '-|-' | '|-|';
+        /**
+         * 中间腿的归一化位置
+         * @default 0.5
+         */
+        fraction?: number;
+      }
+  );
 
 /** Cycle action：把当前子路径闭合回最近一次 move 起点（TikZ `cycle`） */
 export type CycleStepProps = {
@@ -215,11 +249,12 @@ export type GeneratorStepProps = {
 };
 
 /**
- * @description 十三种 kind：'move' / 'line'（默认） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形） / 'smooth'（过点平滑曲线） / 'generator'（内置或注册路径生成器）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）；'smooth' 用 `points` 而非 `to`，'generator' 用 `name` + JSON-safe `params`。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生
+ * @description 十四种 kind：'move' / 'line'（默认） / 'axis-line'（单轴投影连接） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形） / 'smooth'（过点平滑曲线） / 'generator'（内置或注册路径生成器）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）；'smooth' 用 `points` 而非 `to`，'generator' 用 `name` + JSON-safe `params`。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生
  */
 export type StepProps =
   | MoveStepProps
   | LineStepProps
+  | AxisLineStepProps
   | FoldStepProps
   | CycleStepProps
   | CurveStepProps

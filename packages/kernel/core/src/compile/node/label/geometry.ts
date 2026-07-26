@@ -1,15 +1,15 @@
 import type { Position } from '@retikz/math';
 
-import { arcEndPoint, DEFAULT_EPSILON } from '@retikz/math';
+import { DEFAULT_EPSILON } from '@retikz/math';
 
 import type { IRNodeLabel, IRNodeLabelBoundaryPosition } from '../../../schemas';
-import type { NodeLabelLayout, NodeLayout } from '../types';
+import type { MeasuredNodeLabel, NodeLabelLayout, NodeLayout } from '../types';
 
 import { AnchorUnitVectorByAnchor } from '../../../shared';
 import { DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from '../../../shared/geometry';
 import { anchorOf, angleBoundaryOf } from '../anchors';
 
-const isLabelBoundaryPosition = (position: NodeLabelLayout['position']): position is IRNodeLabelBoundaryPosition =>
+const isLabelBoundaryPosition = (position: MeasuredNodeLabel['position']): position is IRNodeLabelBoundaryPosition =>
   typeof position === 'object';
 
 const normalizeLabelBoundaryPosition = (position: IRNodeLabelBoundaryPosition): IRNodeLabelBoundaryPosition => ({
@@ -54,10 +54,21 @@ const labelBoundaryDirection = (position: IRNodeLabelBoundaryPosition): Position
   return [-1, 0];
 };
 
-const labelPlacementSign = (label: NodeLabelLayout): number => (label.placement === 'inside' ? -1 : 1);
+/** 从 attachment 直接解析 label 放置单位向量 */
+const labelPlacementVector = (position: MeasuredNodeLabel['position']): Position => {
+  if (position === 'center') return [1, 0];
+  if (isLabelBoundaryPosition(position)) return labelBoundaryDirection(position);
+  if (typeof position === 'number') {
+    const rad = position * DEG_TO_RAD;
+    return [Math.cos(rad), Math.sin(rad)];
+  }
+  return AnchorUnitVectorByAnchor[position];
+};
+
+const labelPlacementSign = (label: MeasuredNodeLabel): number => (label.placement === 'inside' ? -1 : 1);
 
 /** label 在 node 边界上的附着点 */
-export const labelBorderPoint = (layout: NodeLayout, label: NodeLabelLayout): Position => {
+export const labelBorderPoint = (layout: NodeLayout, label: Pick<MeasuredNodeLabel, 'position'>): Position => {
   if (label.position === 'center') return [layout.rect.x, layout.rect.y];
   const aaLayout: NodeLayout = { ...layout, rect: { ...layout.rect, rotate: 0 } };
   if (isLabelBoundaryPosition(label.position)) {
@@ -70,18 +81,7 @@ export const labelBorderPoint = (layout: NodeLayout, label: NodeLabelLayout): Po
 };
 
 export const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Position => {
-  if (label.position === 'center') return [layout.rect.x, layout.rect.y];
-  const [bx, by] = labelBorderPoint(layout, label);
-  const sign = labelPlacementSign(label);
-  if (isLabelBoundaryPosition(label.position)) {
-    const vec = labelBoundaryDirection(label.position);
-    return [bx + vec[0] * label.distance * sign, by + vec[1] * label.distance * sign];
-  }
-  if (typeof label.position === 'number') {
-    return arcEndPoint([bx, by], label.distance * sign, label.position);
-  }
-  const vec = AnchorUnitVectorByAnchor[label.position];
-  return [bx + vec[0] * label.distance * sign, by + vec[1] * label.distance * sign];
+  return [layout.rect.x + label.centerOffset[0], layout.rect.y + label.centerOffset[1]];
 };
 
 /** 从 label 中心朝 border 方向，求 label 框边界交点 */
@@ -90,40 +90,49 @@ export type LabelBoxEdgeTowardInput = {
   border: Position;
   halfWidth: number;
   halfHeight: number;
+  /** label 视觉盒自旋角 */
+  rotateDeg: number;
 };
 
-export const labelBoxEdgeToward = ({ center, border, halfWidth, halfHeight }: LabelBoxEdgeTowardInput): Position => {
+export const labelBoxEdgeToward = ({
+  center,
+  border,
+  halfWidth,
+  halfHeight,
+  rotateDeg,
+}: LabelBoxEdgeTowardInput): Position => {
   const dx = border[0] - center[0];
   const dy = border[1] - center[1];
   const len = Math.hypot(dx, dy);
   if (len < DEFAULT_EPSILON) return center;
   const ux = dx / len;
   const uy = dy / len;
-  const sx = Math.abs(ux) > DEFAULT_EPSILON ? halfWidth / Math.abs(ux) : Number.POSITIVE_INFINITY;
-  const sy = Math.abs(uy) > DEFAULT_EPSILON ? halfHeight / Math.abs(uy) : Number.POSITIVE_INFINITY;
-  const s = Math.min(sx, sy, len); // 不越过 border 本身
+  const rad = rotateDeg * DEG_TO_RAD;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  const alongX = Math.abs(ux * cos + uy * sin);
+  const alongY = Math.abs(ux * -sin + uy * cos);
+  const sx = alongX > DEFAULT_EPSILON ? halfWidth / alongX : Number.POSITIVE_INFINITY;
+  const sy = alongY > DEFAULT_EPSILON ? halfHeight / alongY : Number.POSITIVE_INFINITY;
+  const s = Math.min(sx, sy);
   return [center[0] + ux * s, center[1] + uy * s];
-};
-
-/** label 自旋角计算输入 */
-export type ResolveLabelRotateDegInput = {
-  label: NodeLabelLayout;
-  labelPosition: Position;
-  nodeCenter: Position;
 };
 
 /**
  * 算 label 文本自旋角度
  * @description keepUpright 会翻转倒置文本
  */
-export const resolveLabelRotateDeg = ({ label, labelPosition, nodeCenter }: ResolveLabelRotateDegInput): number => {
+export const resolveLabelRotateDeg = (
+  label: Pick<MeasuredNodeLabel, 'position' | 'rotate' | 'keepUpright'>,
+): number => {
   const mode = label.rotate;
   if (mode === undefined || mode === 'none') return 0;
   let deg: number;
   if (typeof mode === 'number') {
     deg = mode;
   } else {
-    const radial = Math.atan2(labelPosition[1] - nodeCenter[1], labelPosition[0] - nodeCenter[0]) * RAD_TO_DEG;
+    const vector = labelPlacementVector(label.position);
+    const radial = Math.atan2(vector[1], vector[0]) * RAD_TO_DEG;
     deg = mode === 'tangent' ? radial + 90 : radial;
   }
   if (label.keepUpright) {
@@ -131,6 +140,40 @@ export const resolveLabelRotateDeg = ({ label, labelPosition, nodeCenter }: Reso
     if (norm > 90 && norm < 270) deg += 180;
   }
   return deg;
+};
+
+/** label 视觉盒沿给定放置方向的投影半径 */
+const labelProjectedHalfExtent = (
+  vector: Position,
+  measuredWidth: number,
+  measuredHeight: number,
+  rotateDeg: number,
+): number => {
+  const rad = rotateDeg * DEG_TO_RAD;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  return (
+    Math.abs(vector[0] * cos + vector[1] * sin) * (measuredWidth / 2) +
+    Math.abs(vector[0] * -sin + vector[1] * cos) * (measuredHeight / 2)
+  );
+};
+
+/** 把已测量 label 解析为相对最终 Node rect 的局部几何 */
+export const resolveNodeLabelGeometry = (layout: NodeLayout, label: MeasuredNodeLabel): NodeLabelLayout => {
+  const rotateDeg = resolveLabelRotateDeg(label);
+  if (label.position === 'center') {
+    return { ...label, rotateDeg, centerOffset: [0, 0] };
+  }
+
+  const border = labelBorderPoint(layout, label);
+  const vector = labelPlacementVector(label.position);
+  const extent = labelProjectedHalfExtent(vector, label.measuredWidth, label.measuredHeight, rotateDeg);
+  const offset = labelPlacementSign(label) * (label.distance + extent);
+  return {
+    ...label,
+    rotateDeg,
+    centerOffset: [border[0] - layout.rect.x + vector[0] * offset, border[1] - layout.rect.y + vector[1] * offset],
+  };
 };
 
 /**
@@ -148,14 +191,19 @@ export const labelExtentPoints = (layout: NodeLayout): Array<Position> => {
   for (const lab of layout.labels) {
     const [lx, ly] = labelCenter(layout, lab);
     const halfW = lab.measuredWidth / 2;
-    const halfH = lab.fontSize / 2;
-    const corners: Array<Position> = [
-      [lx - halfW, ly - halfH],
-      [lx + halfW, ly - halfH],
-      [lx - halfW, ly + halfH],
-      [lx + halfW, ly + halfH],
+    const halfH = lab.measuredHeight / 2;
+    const labelRad = lab.rotateDeg * DEG_TO_RAD;
+    const labelCos = Math.cos(labelRad);
+    const labelSin = Math.sin(labelRad);
+    const cornerOffsets: Array<Position> = [
+      [-halfW, -halfH],
+      [halfW, -halfH],
+      [-halfW, halfH],
+      [halfW, halfH],
     ];
-    for (const [px, py] of corners) {
+    for (const [offsetX, offsetY] of cornerOffsets) {
+      const px = lx + offsetX * labelCos - offsetY * labelSin;
+      const py = ly + offsetX * labelSin + offsetY * labelCos;
       if (layout.rotateDeg === 0) {
         pts.push([px, py]);
       } else {

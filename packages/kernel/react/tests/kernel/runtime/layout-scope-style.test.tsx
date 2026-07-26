@@ -40,7 +40,7 @@ const layoutIR = (style: ScopeStyleProps, children: ReactNode): IRScene => build
 
 /** Layout 流水线编译后的全部叶子 primitive */
 const layoutPrims = (style: ScopeStyleProps, children: ReactNode): Array<ScenePrimitive> =>
-  flatten(compileToScene(layoutIR(style, children)).primitives);
+  flatten(compileToScene(layoutIR(style, children)).scene.primitives);
 
 const rectOf = (prims: Array<ScenePrimitive>): RectPrim | undefined =>
   prims.find((p): p is RectPrim => p.type === 'rect');
@@ -158,7 +158,7 @@ describe('边界：无样式 / 空 children / 单通道', () => {
     const ir = layoutIR({ stroke: 'red' }, undefined);
     const scope = ir.children[0];
     expect(scope).toMatchObject({ type: 'scope', stroke: 'red', children: [] });
-    expect(() => compileToScene(ir)).not.toThrow();
+    expect(() => compileToScene(ir).scene).not.toThrow();
   });
 
   it('layout_empty_object_default_no_wrap：空对象 default（nodeDefault={{}}）不携带样式指令 → 不包合成 scope', () => {

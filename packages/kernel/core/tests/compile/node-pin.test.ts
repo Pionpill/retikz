@@ -15,7 +15,7 @@ const compileNode = (label: unknown): Array<PathPrim> => {
     type: 'scene',
     children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A', label } as never],
   };
-  return findPaths(compileToScene(ir).primitives);
+  return findPaths(compileToScene(ir).scene.primitives);
 };
 
 const lineEnds = (p: PathPrim): { from: [number, number]; to: [number, number] } => {
@@ -78,7 +78,7 @@ describe('label / pin 进 bbox（不被 viewBox 裁切）', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A', ...node } as never],
     };
-    return compileToScene(ir).layout;
+    return compileToScene(ir).scene.layout;
   };
 
   it('远处 label 撑大 scene.layout（与无 label 比）', () => {

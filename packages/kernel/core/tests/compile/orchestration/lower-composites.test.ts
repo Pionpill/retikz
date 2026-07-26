@@ -74,7 +74,7 @@ describe('lowerComposites — happy path', () => {
       type: 'scene',
       children: [{ namespace: 'example', type: 'labeledBox', text: 'Hi' }],
     };
-    expect(findByType(compileToScene(ir, { composites: [labeledBox] }).primitives, 'rect')).toBeDefined();
+    expect(findByType(compileToScene(ir, { composites: [labeledBox] }).scene.primitives, 'rect')).toBeDefined();
   });
 
   it('expand-is-ir-to-ir: 展开后与手写等价 tier1 IR 同 Scene', () => {
@@ -88,7 +88,7 @@ describe('lowerComposites — happy path', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: 'Hi' }],
     };
-    expect(compileToScene(irComposite, { composites: [labeledBox] })).toEqual(compileToScene(irManual));
+    expect(compileToScene(irComposite, { composites: [labeledBox] }).scene).toEqual(compileToScene(irManual).scene);
   });
 
   it('object-union-schema: 相同 composite key 的变体共用一次注册与展开', () => {
@@ -121,7 +121,7 @@ describe('lowerComposites — happy path', () => {
       ],
     };
 
-    expect(() => compileToScene(ir, { composites: [variantBox] })).not.toThrow();
+    expect(() => compileToScene(ir, { composites: [variantBox] }).scene).not.toThrow();
   });
 });
 
@@ -133,7 +133,7 @@ describe('lowerComposites — 边界', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: 'inner' }],
     };
-    expect(compileToScene(ir, { composites: [panel, labeledBox] })).toEqual(compileToScene(irDirect));
+    expect(compileToScene(ir, { composites: [panel, labeledBox] }).scene).toEqual(compileToScene(irDirect).scene);
   });
 
   it('empty-expand: expand 返回 [] → 节点消失、不抛、与无该节点等价', () => {
@@ -150,8 +150,8 @@ describe('lowerComposites — 边界', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
     };
-    expect(() => compileToScene(ir, { composites: [vanishing] })).not.toThrow();
-    expect(compileToScene(ir, { composites: [vanishing] })).toEqual(compileToScene(irOnlyA));
+    expect(() => compileToScene(ir, { composites: [vanishing] }).scene).not.toThrow();
+    expect(compileToScene(ir, { composites: [vanishing] }).scene).toEqual(compileToScene(irOnlyA).scene);
   });
 
   it('namespace-discriminates: 无 namespace 走 tier1（core4 不受影响）；有 namespace 走 tier2', () => {
@@ -161,14 +161,14 @@ describe('lowerComposites — 边界', () => {
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
     };
     // tier1 IR 不传 composites 也正常（不受 lowering 影响）
-    expect(compileToScene(tier1Ir)).toEqual(compileToScene(tier1Ir, { composites: [labeledBox] }));
+    expect(compileToScene(tier1Ir).scene).toEqual(compileToScene(tier1Ir, { composites: [labeledBox] }).scene);
     // 有 namespace 的节点被当 tier2 展开
     const tier2Ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ namespace: 'example', type: 'labeledBox', text: 'x' }],
     };
-    expect(findByType(compileToScene(tier2Ir, { composites: [labeledBox] }).primitives, 'rect')).toBeDefined();
+    expect(findByType(compileToScene(tier2Ir, { composites: [labeledBox] }).scene.primitives, 'rect')).toBeDefined();
   });
 });
 
@@ -183,14 +183,14 @@ describe('lowerComposites — 错误路径', () => {
         { type: 'node', id: 'A', position: [0, 0], text: 'A' },
       ],
     };
-    const scene = compileToScene(ir, { composites: [], onWarn: w => warnings.push(w) });
+    const scene = compileToScene(ir, { composites: [], onWarn: w => warnings.push(w) }).scene;
     expect(warnings.some(w => w.code === 'COMPOSITE_NOT_REGISTERED')).toBe(true);
     expect(findByType(scene.primitives, 'rect')).toBeDefined(); // node A 照常
   });
 
   it('cycle-guard: tier2 展开出自身 → 深度守卫 throw、非死循环', () => {
     const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'example', type: 'loop' }] };
-    expect(() => compileToScene(ir, { composites: [loop] })).toThrow(/COMPOSITE_NEST_TOO_DEEP/);
+    expect(() => compileToScene(ir, { composites: [loop] }).scene).toThrow(/COMPOSITE_NEST_TOO_DEEP/);
   });
 
   it('bad-node-throws: 字段不过注册 schema → 展开时 schema.parse throw', () => {
@@ -199,8 +199,8 @@ describe('lowerComposites — 错误路径', () => {
       type: 'scene',
       children: [{ namespace: 'example', type: 'labeledBox', text: 123 as unknown as string }],
     };
-    expect(() => compileToScene(ir, { composites: [labeledBox] })).toThrow(/composite 'example\.labeledBox'/);
-    expect(() => compileToScene(ir, { composites: [labeledBox] })).toThrow(/children\[0\]/);
+    expect(() => compileToScene(ir, { composites: [labeledBox] }).scene).toThrow(/composite 'example\.labeledBox'/);
+    expect(() => compileToScene(ir, { composites: [labeledBox] }).scene).toThrow(/children\[0\]/);
   });
 });
 
@@ -222,7 +222,7 @@ describe('lowerComposites — 交互', () => {
         { type: 'node', id: 'z', position: [0, 0], shape: 'rectangle', text: 'z', zIndex: 10 },
       ],
     };
-    expect(compileToScene(irComposite, { composites: [zbox] })).toEqual(compileToScene(irManual));
+    expect(compileToScene(irComposite, { composites: [zbox] }).scene).toEqual(compileToScene(irManual).scene);
   });
 
   it('anchor-into-tier2-output: kernel 引用 tier2 展开产物的 anchor → 解析成功（展开在 anchor 之前）', () => {
@@ -240,7 +240,7 @@ describe('lowerComposites — 交互', () => {
         },
       ],
     };
-    expect(() => compileToScene(ir, { composites: [boxWithId] })).not.toThrow();
-    expect(compileToScene(ir, { composites: [boxWithId] }).primitives.some(p => p.type === 'path')).toBe(true);
+    expect(() => compileToScene(ir, { composites: [boxWithId] }).scene).not.toThrow();
+    expect(compileToScene(ir, { composites: [boxWithId] }).scene.primitives.some(p => p.type === 'path')).toBe(true);
   });
 });

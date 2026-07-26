@@ -21,7 +21,7 @@ describe('lineCap / lineJoin', () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).strokeLinecap).toBe('round');
+    expect(findPathPrim(compileToScene(ir).scene.primitives).strokeLinecap).toBe('round');
   });
 
   it('lineJoin 透传到 PathPrim.strokeLinejoin', () => {
@@ -40,7 +40,7 @@ describe('lineCap / lineJoin', () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).strokeLinejoin).toBe('bevel');
+    expect(findPathPrim(compileToScene(ir).scene.primitives).strokeLinejoin).toBe('bevel');
   });
 
   it('未指定时 PathPrim 字段为 undefined（不写 SVG 默认值）', () => {
@@ -57,7 +57,7 @@ describe('lineCap / lineJoin', () => {
         },
       ],
     };
-    const p = findPathPrim(compileToScene(ir).primitives);
+    const p = findPathPrim(compileToScene(ir).scene.primitives);
     expect(p.strokeLinecap).toBeUndefined();
     expect(p.strokeLinejoin).toBeUndefined();
   });

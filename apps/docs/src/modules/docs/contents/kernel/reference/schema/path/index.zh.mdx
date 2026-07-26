@@ -138,21 +138,40 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
   }}
 />
 
+<span id="axis-line"></span>
+
+### 单轴直线
+
+<ZodSchema
+  name="AxisLineStepSchema"
+  description="单轴直线动作：解析目标参考点后，只沿当前 host 的一个局部轴绘制单段直线。"
+  descriptions={{
+    type: '判别字段，标记本节点为 path step',
+    kind: '动作种类：`axis-line` —— 投影目标后只画一段水平或垂直直线',
+    axis: '当前 host 的局部轴：horizontal 取目标 x；vertical 取目标 y',
+    to: '投影目标：仅支持笛卡尔坐标或 NodeTarget',
+    label: '边标注：按投影后的真实线段采样',
+  }}
+/>
+
 <span id="fold"></span>
 
 ### 折角
 
 <ZodSchema
   name="FoldStepSchema"
-  description="折角动作：按 `-|` 或 `|-` 经一个直角中间点连接目标。"
+  description="折角动作：按 via 经一个或两个直角中间点连接目标。"
   descriptions={{
     type: '判别字段，标记本节点为 path step',
-    kind: '动作种类：`fold`（折角段，从光标到目标点经一个直角中间点）',
-    via: '折角方向：`-|` 先横后竖；`|-` 先竖后横',
+    kind: '动作种类：`fold`（两段或三段正交折线）',
+    via: '折角方向：`-|` / `|-` 为两段；`-|-` / `|-|` 为三段',
+    fraction: '仅三段 via 可用：中间腿的归一化位置 0..1，省略时编译为 0.5',
     to: '折线段的目标点',
     label: '边标注：附在本段上的文字标签（按 position 落在对应支段）',
   }}
 />
+
+两段变体与三段变体都是 strict object：`-|` / `|-` 不接受 `fraction`。三段转折点基于裁剪前 reference 插值，端点再朝路由内最近的非重合点执行既有 NodeTarget 裁剪；最终仍只 lower 为 line commands。
 
 <span id="cycle"></span>
 
@@ -402,7 +421,7 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
 | -------------------------------------------- | ------------------------------------------------------ |
 | `lineCap` / `lineJoin`                       | `line cap` / `line join`                               |
 | `strokeOpacity`                              | 描边透明度                                             |
-| `kind: 'fold'`                               | `-\|` / `\|-`                                          |
+| `kind: 'fold'`                               | `-\|` / `\|-` / `-\|-` / `\|-\|`                       |
 | `kind: 'cycle'`                              | `cycle`                                                |
 | `kind: 'bend'`                               | `to[bend left=N]` / `to[bend right=N]`                 |
 | `kind: 'arc'`                                | `arc[start angle=…, end angle=…, radius=…]`            |

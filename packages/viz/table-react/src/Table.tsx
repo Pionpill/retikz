@@ -1,4 +1,4 @@
-import type { CompositeDefinition } from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { EmbeddableTier2Adapter, LayoutProps } from '@retikz/react';
 import type { IRTableSpec, LowerTablesOptions, TableLayoutManifest } from '@retikz/table';
@@ -12,7 +12,7 @@ import { TableRuntimeView } from './table-view';
 export type TableCommonProps = Pick<LayoutProps, 'width' | 'height' | 'className' | 'style' | 'renderer'> &
   LowerTablesOptions & {
     /** Cell 内嵌 Tier 2 内容所需的额外 composite definitions */
-    composites?: ReadonlyArray<CompositeDefinition>;
+    composites?: ReadonlyArray<AnyCompositeDefinition>;
     /** standalone 渲染后接收 Table layout manifest */
     onManifest?: (manifest: TableLayoutManifest) => void;
   };

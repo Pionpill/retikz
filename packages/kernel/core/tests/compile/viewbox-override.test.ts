@@ -31,15 +31,15 @@ describe('IR 根带 viewBox 时直接用作 Scene.layout', () => {
       width: 200,
       height: 200,
     });
-    const result = compileToScene(ir);
+    const result = compileToScene(ir).scene;
     expect(result.layout).toEqual({ x: -100, y: -100, width: 200, height: 200 });
   });
 
   it('视框忽略 padding：不同 padding 下 layout 都等于 viewBox', () => {
     const viewBox = { x: -100, y: -100, width: 200, height: 200 };
     const ir = scene([circleNode('o', [0, 0])], viewBox);
-    const withSmallPadding = compileToScene(ir, { padding: 10 });
-    const withLargePadding = compileToScene(ir, { padding: 50 });
+    const withSmallPadding = compileToScene(ir, { padding: 10 }).scene;
+    const withLargePadding = compileToScene(ir, { padding: 50 }).scene;
     expect(withSmallPadding.layout).toEqual(viewBox);
     expect(withLargePadding.layout).toEqual(viewBox);
   });
@@ -48,7 +48,7 @@ describe('IR 根带 viewBox 时直接用作 Scene.layout', () => {
     // 内容画在 [500,500] 远超出 200×200 的视框范围
     const viewBox = { x: -100, y: -100, width: 200, height: 200 };
     const ir = scene([circleNode('far', [500, 500], 80)], viewBox);
-    const result = compileToScene(ir);
+    const result = compileToScene(ir).scene;
     expect(result.layout).toEqual(viewBox);
   });
 });
@@ -61,7 +61,7 @@ describe('IR 根含小数 viewBox 按精度 round', () => {
       width: 100.128,
       height: 50.501,
     });
-    const result = compileToScene(ir);
+    const result = compileToScene(ir).scene;
     const r = createRound(2);
     expect(result.layout).toEqual({
       x: r(-12.555),
@@ -78,7 +78,7 @@ describe('IR 根含小数 viewBox 按精度 round', () => {
       width: 100.6,
       height: 50.5,
     });
-    const result = compileToScene(ir, { precision: 0 });
+    const result = compileToScene(ir, { precision: 0 }).scene;
     const r = createRound(0);
     expect(result.layout).toEqual({
       x: r(-12.7),
@@ -92,14 +92,14 @@ describe('IR 根含小数 viewBox 按精度 round', () => {
 describe('IR 根无 viewBox 时回退自动算 layout', () => {
   it('空场景无 viewBox → 回退 computeLayout 兜底框', () => {
     const ir = scene([]);
-    const result = compileToScene(ir);
+    const result = compileToScene(ir).scene;
     expect(result.layout).toEqual(computeLayout([], 10, createRound(2)));
   });
 
   it('带内容无 viewBox → padding 影响 layout（回退行为，与既有一致）', () => {
     const content = [circleNode('o', [0, 0])];
-    const withSmallPadding = compileToScene(scene(content), { padding: 10 });
-    const withLargePadding = compileToScene(scene(content), { padding: 50 });
+    const withSmallPadding = compileToScene(scene(content), { padding: 10 }).scene;
+    const withLargePadding = compileToScene(scene(content), { padding: 50 }).scene;
     // 回退到 computeLayout：padding 越大 layout 越大（证明未走 override 分支）
     expect(withLargePadding.layout.width).toBeGreaterThan(withSmallPadding.layout.width);
     expect(withLargePadding.layout.height).toBeGreaterThan(withSmallPadding.layout.height);
@@ -108,8 +108,8 @@ describe('IR 根无 viewBox 时回退自动算 layout', () => {
   it('同一 IR：有 viewBox 与无 viewBox 的 layout 不同（override 真生效）', () => {
     const content = [circleNode('o', [0, 0])];
     const viewBox = { x: -100, y: -100, width: 200, height: 200 };
-    const withViewBox = compileToScene(scene(content, viewBox));
-    const withoutViewBox = compileToScene(scene(content));
+    const withViewBox = compileToScene(scene(content, viewBox)).scene;
+    const withoutViewBox = compileToScene(scene(content)).scene;
     expect(withViewBox.layout).toEqual(viewBox);
     expect(withoutViewBox.layout).not.toEqual(viewBox);
   });
@@ -123,7 +123,7 @@ describe('手搓非法 viewBox 经 compileToScene 抛清晰错', () => {
       width: Infinity,
       height: 200,
     });
-    expect(() => compileToScene(ir)).toThrow();
+    expect(() => compileToScene(ir).scene).toThrow();
   });
 
   it('height = NaN → throw', () => {
@@ -133,7 +133,7 @@ describe('手搓非法 viewBox 经 compileToScene 抛清晰错', () => {
       width: 200,
       height: NaN,
     });
-    expect(() => compileToScene(ir)).toThrow();
+    expect(() => compileToScene(ir).scene).toThrow();
   });
 
   it('width = 0 → throw（退化视框不进 Scene）', () => {
@@ -143,6 +143,6 @@ describe('手搓非法 viewBox 经 compileToScene 抛清晰错', () => {
       width: 0,
       height: 200,
     });
-    expect(() => compileToScene(ir)).toThrow();
+    expect(() => compileToScene(ir).scene).toThrow();
   });
 });

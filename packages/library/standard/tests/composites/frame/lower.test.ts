@@ -1,6 +1,6 @@
 import type { CompiledNodeLayout, IRNode, IRPath, IRScope } from '@retikz/core';
 
-import { compileToScene, rect as rectOps } from '@retikz/core';
+import { compileToScene, isNodeLayoutCompileArtifact, rect as rectOps } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { createFrame, FrameDefinition, FrameHeaderDirection, lowerFrame } from '../../../src';
@@ -298,7 +298,7 @@ describe('lowerFrame', () => {
 
   it('uses actual header Node layouts and includes them in the padded border without moving body', () => {
     const layouts = new Map<string, CompiledNodeLayout>();
-    const scene = compileToScene(
+    const result = compileToScene(
       {
         type: 'scene',
         version: 1,
@@ -315,11 +315,15 @@ describe('lowerFrame', () => {
       },
       {
         composites: [FrameDefinition],
-        onNodeLayout: layout => {
-          if (layout.id !== undefined) layouts.set(layout.id, layout);
-        },
+        artifacts: { nodeLayouts: true },
       },
     );
+    const scene = result.scene;
+    for (const artifact of result.artifacts) {
+      if (isNodeLayoutCompileArtifact(artifact) && artifact.value.id !== undefined) {
+        layouts.set(artifact.value.id, artifact.value);
+      }
+    }
 
     const body = layouts.get('body');
     const description = layouts.get('group/description');

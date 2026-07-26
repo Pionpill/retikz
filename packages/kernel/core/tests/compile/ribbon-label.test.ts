@@ -152,7 +152,7 @@ describe('Ribbon label compile', () => {
   it('在 centerline midpoint 发出 label，并保留 ribbon path 作为第一个 primitive', () => {
     const compiled = compileToScene(scene([ribbon({ label: { text: 'mid', position: 'midway' } })]), {
       padding: 0,
-    });
+    }).scene;
 
     const paths = pathPrims(compiled.primitives);
     const label = textOf(compiled.primitives, 'mid');
@@ -173,7 +173,7 @@ describe('Ribbon label compile', () => {
         }),
       ]),
       { padding: 0 },
-    );
+    ).scene;
 
     expect(textOf(compiled.primitives, 'start')?.x).toBeCloseTo(0);
     expect(textOf(compiled.primitives, 'near')?.x).toBeCloseTo(75);
@@ -191,7 +191,7 @@ describe('Ribbon label compile', () => {
         }),
       ]),
       { padding: 0 },
-    );
+    ).scene;
 
     expect(textOf(compiled.primitives, 'top')?.y).toBeLessThan(0);
     expect(textOf(compiled.primitives, 'bottom')?.y).toBeGreaterThan(0);
@@ -208,7 +208,7 @@ describe('Ribbon label compile', () => {
         }),
       ]),
       { padding: 0 },
-    );
+    ).scene;
 
     expect(visualBottom(textOf(compiled.primitives, 'default')!)).toBeCloseTo(-9, 2);
     expect(visualBottom(textOf(compiled.primitives, 'far')!)).toBeCloseTo(-15, 2);
@@ -222,7 +222,7 @@ describe('Ribbon label compile', () => {
         }),
       ]),
       { padding: 0 },
-    );
+    ).scene;
 
     expect(visualMiddle(textOf(compiled.primitives, 'inside')!)).toBeCloseTo(0, 2);
   });
@@ -239,7 +239,7 @@ describe('Ribbon label compile', () => {
         }),
       ]),
       { padding: 0 },
-    );
+    ).scene;
 
     const group = slopedGroupOf(compiled.primitives, 'flow');
     expect(group?.transforms?.[0]).toMatchObject({ kind: 'rotate', degrees: 90 });
@@ -257,7 +257,7 @@ describe('Ribbon label compile', () => {
         }),
       ]),
       { padding: 0 },
-    );
+    ).scene;
 
     const group = slopedGroupOf(compiled.primitives, 'legacy');
     expect(group?.transforms?.[0]).toMatchObject({ kind: 'rotate', degrees: 90 });
@@ -277,7 +277,7 @@ describe('Ribbon label compile', () => {
         }),
       ]),
       { padding: 0 },
-    );
+    ).scene;
 
     const label = textOf(compiled.primitives, 'styled');
     expect(label?.fill).toBe('crimson');
@@ -300,6 +300,6 @@ describe('Ribbon label compile', () => {
       ],
     });
 
-    expect(() => compileToScene(scene([boundary]))).toThrow(/centerline ribbon labels/i);
+    expect(() => compileToScene(scene([boundary])).scene).toThrow(/centerline ribbon labels/i);
   });
 });

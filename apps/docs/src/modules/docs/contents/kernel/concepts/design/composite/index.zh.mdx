@@ -1,11 +1,11 @@
 ---
 title: 复合
-description: composite 让 domain 包用可序列化的 Tier 2 节点保留领域意图，再通过注册的 lowering 在 compile 期下沉为 core Tier 1 图元。
+description: composite 让 domain 包保留可序列化的 Tier 2 意图，并通过无上下文展开或布局感知编译下沉为 core Tier 1 图元。
 ---
 
 retikz 的 IR 子节点分两层：**Tier 1** 是 core 内置的 `node` / `path` / `coordinate` / `scope`；**Tier 2 composite** 是 domain 包提供的高层节点，例如 `@retikz/plot` 的整张统计图 spec。
 
-Tier 2 节点用 `namespace + type` 判别，拥有完整 schema，并在 compile 开始时下沉为 Tier 1。下沉之后，布局、anchor、zIndex 与 renderer 都复用 core 的现有能力；core 不需要认识 chart、tree 等领域语义。
+Tier 2 节点用 `namespace + type` 判别，拥有完整 schema，并由同一套 composite registry 在 compile 中处理。只需结构变换时使用 `expand`；需要真实子内容反馈布局时使用布局感知的 `compile`。两条路径最终都产出 Tier 1，布局、anchor、zIndex 与 renderer 继续复用 core 能力；core 不需要认识 table、chart、tree 等领域语义。
 
 <ComponentAlert
   type="tip"
@@ -19,7 +19,7 @@ Tier 2 节点用 `namespace + type` 判别，拥有完整 schema，并在 compil
 
 <ComponentPreview files="composite-pipeline" size="xs" hideCode />
 
-图中的 `lower` 是关键边界：上游仍能存储、传输、diff 或由 AI 生成高层节点；下游只接收统一的 Tier 1，因此所有 renderer 共享同一份展开结果。
+图中的 `lower` 是关键边界：上游仍能存储、传输、diff 或由 AI 生成高层节点；下游只接收统一的 Tier 1，因此所有 renderer 共享同一次 Core compile 的结果。
 
 适合 composite 的能力通常同时满足三点：
 
@@ -27,30 +27,55 @@ Tier 2 节点用 `namespace + type` 判别，拥有完整 schema，并在 compil
 - 领域 schema 比展开后的几何更能表达用户意图；
 - 展开结果应被 React、Vanilla、SVG、Canvas 等入口共同复用。
 
-## 最小注册与下沉
+## 两种互斥分支
 
-`defineComposite({ namespace, type, schema, expand })` 把 schema 和展开函数注册为同一项；`schema` 可以是单个 object，也可以是共享同一 `namespace` / `type` literal 的直接 object union。每个分支的 literal 都必须与 definition key 一致，`expand` 接收校验后的节点并返回 Tier 1。union 中出现非 object 分支、空 literal 或混合 key 时会立即报错。
+`defineComposite` 把 schema 与一个处理分支注册为同一项。definition 必须且只能提供 `expand` 或 `compile`；`schema` 可以是单个 object，也可以是共享同一 `namespace` / `type` literal 的直接 object union。每个 schema 分支的 literal 都必须与 definition key 一致，union 中出现非 object 分支、空 literal 或混合 key 时会立即报错。
 
 Core 只按顶层 `namespace + type` 路由 composite，不读取领域 schema 内部的判别字段。例如 Table 可以在同一个 `table.table` composite 下定义多种 spec 分支，但 `structure.kind` 的解释与缩窄仍由 Table 包负责。
 
 <ComponentPreview files="composite-basic" size="sm" />
 
-| 字段        | 职责                                       | 约束                                  |
-| ----------- | ------------------------------------------ | ------------------------------------- |
-| `namespace` | 划分 domain                                | 与 schema literal 一致                |
-| `type`      | 标识 domain 内的节点类型                   | 与 schema literal 一致                |
-| `schema`    | 校验完整高层节点并填充默认值               | object 或共享 key 的直接 object union |
-| `expand`    | 生成一个或多个 Tier 1，也可继续生成 Tier 2 | 最终必须收敛到 Tier 1                 |
+| 字段             | 职责                                   | 约束                                  |
+| ---------------- | -------------------------------------- | ------------------------------------- |
+| `namespace`      | 划分 domain                            | 与 schema literal 一致                |
+| `type`           | 标识 domain 内的节点类型               | 与 schema literal 一致                |
+| `schema`         | 校验完整高层节点并填充默认值           | object 或共享 key 的直接 object union |
+| `expand`         | 无上下文生成一个或多个 Tier 1 / Tier 2 | 与 `compile` 互斥，最终收敛到 Tier 1  |
+| `compile`        | 在完整编译环境中测量、约束并放置子内容 | 与 `expand` 互斥                      |
+| `artifactSchema` | 校验 `compile` 同次返回的领域 artifact | 有 artifact 类型时必填                |
 
-编译器按 `${namespace}.${type}` 查注册表，校验节点后调用 `expand`；嵌套 composite 会继续展开，直到只剩 Tier 1。未注册节点产生 warning 并跳过，循环或超过深度限制则报错。完整字段、诊断与独立 lowering 入口见[扩展运行时](/kernel/reference/runtime/extensions)。
+编译器按 `${namespace}.${type}` 查注册表，校验节点后调用对应分支。嵌套 composite 会继续处理，直到最终输出只含 Tier 1 与已提交 replay。未注册节点产生 warning 并跳过，循环或超过深度限制则报错。完整字段、诊断与独立 lowering 入口见[编译](/kernel/reference/runtime/compile)。
+
+## 布局感知编译
+
+`CompositeDefinition.expand()` 拿不到文字测量、provider、引用环境或父级约束，因此不能表达“先看真实子内容，再求解父布局”的反馈过程。`compile(node, context)` 为这类 Tier 2 组件提供通用闭环：
+
+<ComponentPreview files="layout-aware-compile" size="xl" hideCode />
+
+图中的两次 probe 都返回 allocation bounds、visual bounds 与 replay，但不会立即发布结果。自然尺寸 probe 的 replay A 只参与求解；父 composite 选定约束后，只有 replay B 沿最后一条边进入单次提交，并与领域 artifact 一起汇入同一个 `CompileResult`。
+
+1. `layoutChild(child, { kind:'intrinsic' })` 测量子内容的自然尺寸；
+2. 父 composite 据 allocation bounds 求解列、行或其它约束；
+3. `layoutChild(child, { kind:'constrained', maxWidth })` 让文本按最终宽度重新换行；
+4. 用 `{ kind:'replay', replay, transforms? }` 放置选中的结果。
+
+每次 `layoutChild` 都返回 allocation bounds、保守 visual bounds 与 opaque replay token。allocation bounds 表示父布局应预留的空间；visual bounds 反映最终静态绘制，包括 transform、clip、描边、marker 和 shadow。replay 只在创建它的同一次 compile 中可用一次，最终发出直接提交保存的 primitive、资源、引用、warning 与 artifact，不会第三次展开或布局。
+
+这不是 Table 专用接口。任何需要“测量子内容 → 求解父布局 → 约束子内容 → 放置最终结果”的 Tier 2 composite 都可以复用它。
+
+### 同次类型化产物
+
+布局感知定义可以声明 `artifactSchema` 并从 `compile` 返回 JSON-safe `artifact`。Core 在 `CompileResult.artifacts` 中用 `namespace`、`type` 和 occurrence locator 封装它；locator 由原始 `sourcePath` 与结构化 expansion / output / replay 路径组成，不依赖全局 Map、回调捕获或第二次遍历。宿主因而能从同一次 compile 同时得到 Scene 与领域产物。
+
+`lowerIRToKernel()` 只支持可独立执行的 `expand` 分支。它遇到布局感知 composite 会明确报错，因为正确结果依赖完整 compile 环境。
 
 ## 与 Sugar 的区别
 
-|          | Sugar（如 `<Draw>`） | Tier 2 composite                |
-| -------- | -------------------- | ------------------------------- |
-| IR 中    | 构建期已展平         | 保留高层节点                    |
-| 下沉时机 | adapter 构建期       | core compile 期                 |
-| 适合     | 可直接映射的便捷写法 | 含布局、scale、聚合等算法的结构 |
+|          | Sugar（如 `<Draw>`） | Tier 2 composite                                |
+| -------- | -------------------- | ----------------------------------------------- |
+| IR 中    | 构建期已展平         | 保留高层节点                                    |
+| 下沉时机 | adapter 构建期       | core compile 期                                 |
+| 适合     | 可直接映射的便捷写法 | 结构生成，或依赖真实子内容反馈的布局 / 聚合算法 |
 
 <Comparison target="tikz" title="Tier 2 与 PGFPlots">
 
@@ -69,20 +94,26 @@ PGFPlots 位于 TikZ 基础图元之上；同样地，`@retikz/plot` 通过 comp
     {
       label: '校验 definition key 与 schema literal',
       path: 'packages/kernel/core/src/contract/composite/define.ts',
-      startLine: 21,
-      endLine: 32,
+      startLine: 30,
+      endLine: 90,
     },
     {
-      label: '递归下沉 Tier 2 composite',
-      path: 'packages/kernel/core/src/compile/orchestration/composite.ts',
-      startLine: 23,
-      endLine: 72,
+      label: 'layout constraint 校验与 replay 提交',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 717,
+      endLine: 884,
+    },
+    {
+      label: '布局感知 composite 的测量与输出',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 885,
+      endLine: 1025,
     },
     {
       label: '在 compile 上下文注入 composite 与 provider',
       path: 'packages/kernel/core/src/compile/orchestration/context.ts',
-      startLine: 88,
-      endLine: 115,
+      startLine: 83,
+      endLine: 124,
     },
   ]}
 />

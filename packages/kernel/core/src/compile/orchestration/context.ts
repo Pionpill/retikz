@@ -1,4 +1,5 @@
 ﻿import type {
+  AnyCompositeDefinition,
   ArrowDefinition,
   BoundaryDefinition,
   ClipDefinition,
@@ -26,14 +27,14 @@ import { createClipRegistry, createPaintRegistry } from '../resource';
 import { createRound, DEFAULT_PRECISION } from '../scene';
 import { fallbackMeasurer } from '../text';
 import { formatCompileWarning } from '../warning';
-import { lowerComposites } from './composite';
+import { DEFAULT_MAX_COMPOSITE_DEPTH } from './composite';
 
 /**
  * 标准化后的 compile 依赖上下文
  * @description compileToScene 入口把选项、内置 provider、自定义 provider、资源表和 rounding 规则集中解析到这里；
  */
 export type CompileContext = {
-  /** composite lowering 后的 Tier 1 IR */
+  /** canonical 输入 IR；composite 分支在 traversal 中保留 occurrence provenance 后处理 */
   loweredIr: IRScene;
   /** 文字度量函数 */
   measureText: NonNullable<CompileOptions['measureText']>;
@@ -41,8 +42,12 @@ export type CompileContext = {
   lowerTex: CompileOptions['lowerTex'];
   /** 编译 warning dispatcher */
   onWarn: (warning: CompileWarning) => void;
-  /** 节点 layout 观测回调 */
-  onNodeLayout: CompileOptions['onNodeLayout'];
+  /** layout-aware composite 注册表 */
+  composites: ReadonlyMap<string, AnyCompositeDefinition>;
+  /** expand 与 layout-aware compile 共用的嵌套深度上限 */
+  maxCompositeDepth: number;
+  /** 本次请求的 artifact 开关 */
+  artifacts: CompileOptions['artifacts'];
   /** Scene 输出 rounder */
   round: (n: number) => number;
   /** 自动 layout padding */
@@ -78,6 +83,10 @@ export type CompileContext = {
 /** 创建 compile 编排所需的不可变依赖上下文 */
 export const createCompileContext = (ir: IRScene, options: CompileOptions): CompileContext => {
   const round = createRound(options.precision ?? DEFAULT_PRECISION);
+  const labelDistance = options.labelDistance ?? DEFAULT_LABEL_DISTANCE;
+  if (!Number.isFinite(labelDistance) || labelDistance < 0) {
+    throw new Error(`CompileOptions.labelDistance '${labelDistance}' must be a non-negative finite number`);
+  }
 
   const defaultWarnDispatcher = (warning: CompileWarning): void => {
     if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') return;
@@ -87,20 +96,20 @@ export const createCompileContext = (ir: IRScene, options: CompileOptions): Comp
 
   const clips = resolveClipRegistry(options.clips);
   const patterns = resolvePatternRegistry(options.patterns);
+  const composites = resolveCompositeRegistry(options.composites);
 
   return {
-    loweredIr: lowerComposites(ir, resolveCompositeRegistry(options.composites), {
-      onWarn,
-      maxDepth: options.maxCompositeDepth,
-    }),
+    loweredIr: ir,
     measureText: options.measureText ?? fallbackMeasurer,
     lowerTex: options.lowerTex,
     onWarn,
-    onNodeLayout: options.onNodeLayout,
+    composites,
+    maxCompositeDepth: options.maxCompositeDepth ?? DEFAULT_MAX_COMPOSITE_DEPTH,
+    artifacts: options.artifacts,
     round,
     layoutPadding: options.padding ?? DEFAULT_LAYOUT_PADDING,
     nodeDistance: options.nodeDistance ?? DEFAULT_NODE_DISTANCE,
-    labelDistance: options.labelDistance ?? DEFAULT_LABEL_DISTANCE,
+    labelDistance,
     rootFontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
     shapes: resolveShapeRegistry(options.shapes),
     boundaries: resolveBoundaryRegistry(options.boundaries),

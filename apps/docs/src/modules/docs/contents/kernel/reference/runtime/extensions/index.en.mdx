@@ -9,11 +9,11 @@ This page is an extension-point dictionary. Use it to decide which mechanism own
 
 ## Extension models
 
-| Model               | Capability families                                    | Stage                      |
-| ------------------- | ------------------------------------------------------ | -------------------------- |
-| Definition registry | shape, boundary, clip, arrow, pattern, path, composite | compile                    |
-| Runtime registry    | easing, animation property                             | render / animation runtime |
-| Host lowerer        | optional heavy lowering such as TeX                    | compile-time text layout   |
+| Model               | Capability families                                    | Stage                          |
+| ------------------- | ------------------------------------------------------ | ------------------------------ |
+| Definition registry | shape, boundary, clip, arrow, pattern, path, composite | compile / layout-aware compile |
+| Runtime registry    | easing, animation property                             | render / animation runtime     |
+| Host lowerer        | optional heavy lowering such as TeX                    | compile-time text layout       |
 
 Definition capabilities use `XxxDefinition` and `defineXxx`; built-ins and custom definitions merge into a compile-local registry. Runtime registries hold host functions outside the compile contract. A host lowerer supplies an optional integration without expanding the general primitive model.
 
@@ -40,6 +40,7 @@ Definition capabilities use `XxxDefinition` and `defineXxx`; built-ins and custo
 - Runtime registries such as easings and animation properties use the host-provided `Record` directly and do not run that Definition merge diagnostic. A renderer warns and skips unknown custom animation properties.
 - Missing ordinary Definition keys fail loudly and list registered items.
 - Missing composites warn and skip the node during full compile; standalone lowering promotes the condition to an error.
+- The Composite registry accepts mutually exclusive `expand` and `compile` branches; `lowerIRToKernel` fails explicitly on a `compile` branch that requires the complete environment.
 - Schema and payload validation run before consuming a definition, and diagnostics identify the capability family and lookup key.
 
 ## Guides
@@ -94,7 +95,7 @@ Definition capabilities use `XxxDefinition` and `defineXxx`; built-ins and custo
   <LinkedCard href="/kernel/concepts/design/composite">
     <span className="font-semibold">Tier 2 Composites</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      CompositeDefinition: lower high-level nodes into Tier 1
+      CompositeDefinition: context-free expansion or layout-aware compile
     </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/effects/custom-animation">
@@ -128,8 +129,8 @@ Definition capabilities use `XxxDefinition` and `defineXxx`; built-ins and custo
     {
       label: 'Pass animationProperties only to the Canvas host in React',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 482,
-      endLine: 519,
+      startLine: 487,
+      endLine: 544,
     },
   ]}
 />

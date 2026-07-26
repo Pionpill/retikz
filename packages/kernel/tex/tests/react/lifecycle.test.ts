@@ -6,7 +6,8 @@ import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { MathJaxSvgEngine } from '../../src';
+import type { MathJaxSvgEngine, TexLoweringDiagnostic } from '../../src';
+import type * as MathJaxModule from '../../src/mathjax';
 
 const { createLowerTexMock, createMathJaxEngineMock } = vi.hoisted(() => ({
   createLowerTexMock: vi.fn(),
@@ -14,7 +15,10 @@ const { createLowerTexMock, createMathJaxEngineMock } = vi.hoisted(() => ({
 }));
 
 vi.mock('../../src/lower', () => ({ createLowerTex: createLowerTexMock }));
-vi.mock('../../src/mathjax', () => ({ createMathJaxEngine: createMathJaxEngineMock }));
+vi.mock('../../src/mathjax', async importOriginal => ({
+  ...(await importOriginal<typeof MathJaxModule>()),
+  createMathJaxEngine: createMathJaxEngineMock,
+}));
 
 import { useLowerTex } from '../../src/react';
 
@@ -47,5 +51,86 @@ describe('useLowerTex lifecycle', () => {
     });
 
     expect(createLowerTexMock).not.toHaveBeenCalled();
+  });
+
+  it('options A→B 立即清空旧 lowerer，且晚完成的 A 不覆盖 B', async () => {
+    const resolvers = new Map<string, (engine: MathJaxSvgEngine) => void>();
+    createMathJaxEngineMock.mockImplementation((options?: { profile?: string }) => {
+      const profile = options?.profile ?? 'base';
+      return new Promise<MathJaxSvgEngine>(resolve => {
+        resolvers.set(profile, resolve);
+      });
+    });
+    const lowers = {
+      base: (() => null) as never,
+      math: (() => null) as never,
+    };
+    createLowerTexMock.mockImplementation((engine: MathJaxSvgEngine) =>
+      engine.convert('', { display: false }) === 'base' ? lowers.base : lowers.math,
+    );
+
+    const values: Array<unknown> = [];
+    const Probe = ({ profile }: { profile: 'base' | 'math' }) => {
+      values.push(useLowerTex({ profile, extensions: profile === 'base' ? ['ams'] : ['cancel'] }));
+      return null;
+    };
+    const container = document.createElement('div');
+    const root = createRoot(container);
+
+    await act(() => root.render(createElement(Probe, { profile: 'base' })));
+    await act(async () => {
+      resolvers.get('base')?.({ convert: () => 'base' });
+      await Promise.resolve();
+    });
+    expect(values.at(-1)).toBe(lowers.base);
+
+    await act(() => root.render(createElement(Probe, { profile: 'math' })));
+    expect(values.at(-1)).toBeUndefined();
+
+    await act(async () => {
+      resolvers.get('math')?.({ convert: () => 'math' });
+      await Promise.resolve();
+    });
+    expect(values.at(-1)).toBe(lowers.math);
+
+    await act(async () => {
+      resolvers.get('base')?.({ convert: () => 'late-base' });
+      await Promise.resolve();
+    });
+    expect(values.at(-1)).toBe(lowers.math);
+    await act(() => root.unmount());
+  });
+
+  it('callback 更新不重建 engine/lowerer，并把后续诊断交给最新 callback', async () => {
+    createMathJaxEngineMock.mockResolvedValue({ convert: () => 'math' });
+    let forwardDiagnostic: ((diagnostic: TexLoweringDiagnostic) => void) | undefined;
+    const lower = (() => null) as never;
+    createLowerTexMock.mockImplementation(
+      (_engine: MathJaxSvgEngine, options?: { onDiagnostic?: typeof forwardDiagnostic }) => {
+        forwardDiagnostic = options?.onDiagnostic;
+        return lower;
+      },
+    );
+    const first = vi.fn();
+    const second = vi.fn();
+    const Probe = ({ onDiagnostic }: { onDiagnostic: (diagnostic: TexLoweringDiagnostic) => void }) => {
+      useLowerTex({ profile: 'base', extensions: ['color'], onDiagnostic });
+      return null;
+    };
+    const container = document.createElement('div');
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(createElement(Probe, { onDiagnostic: first }));
+      await Promise.resolve();
+    });
+    await act(() => root.render(createElement(Probe, { onDiagnostic: second })));
+    forwardDiagnostic?.({ kind: 'engine-error', source: 'x', message: 'boom' });
+
+    expect(createMathJaxEngineMock).toHaveBeenCalledTimes(1);
+    expect(createLowerTexMock).toHaveBeenCalledTimes(1);
+    expect(first).not.toHaveBeenCalled();
+    expect(second).toHaveBeenCalledTimes(1);
+    await act(() => root.unmount());
   });
 });

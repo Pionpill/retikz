@@ -51,6 +51,8 @@ description: 查询 adapter 可复用的路径、目标点、锚点、线宽与�
 | `DrawWay.Cycle`      | cycle               | 闭合回 path 起点                 |
 | `DrawWay.Hv`         | `'-\|'`             | 折角：先水平后垂直               |
 | `DrawWay.Vh`         | `'\|-'`             | 折角：先垂直后水平               |
+| `DrawWay.Hvh`        | `'-\|-'`            | 三段折角：水平、垂直、水平       |
+| `DrawWay.Vhv`        | `'\|-\|'`           | 三段折角：垂直、水平、垂直       |
 | `DrawWay.Relative`   | relative 类型标记   | 对象式相对偏移，不更新 prevEnd   |
 | `DrawWay.Accumulate` | accumulate 类型标记 | 对象式累积相对偏移，更新 prevEnd |
 
@@ -62,7 +64,8 @@ description: 查询 adapter 可复用的路径、目标点、锚点、线宽与�
 | ----------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------- |
 | `IRTarget` / 字符串 shorthand | `move` / `line`                          | 第一项成为 move，后续 target 成为 line；字符串会经 `parseTargetSugar` 转成 IR 对象 |
 | `{ position, type }`          | `relative` / `relativeAccumulate` target | TS-friendly 的相对偏移对象                                                         |
-| `DrawWay.Hv` / `DrawWay.Vh`   | `kind: 'fold'`                           | 与下一项 target 合并成折角 step                                                    |
+| 四种 `DrawWay.*v*` fold 常量  | `kind: 'fold'`                           | 与下一项 target 合并成两段或三段折角 step                                          |
+| `{ via, fraction? }`          | `kind: 'fold'`                           | strict 三段折角对象；via 只接受 `-\|-` / `\|-\|`，fraction 为 `0..1`               |
 | `DrawWay.Cycle`               | `kind: 'cycle'`                          | 闭合当前子路径                                                                     |
 | `{ curve }`                   | `kind: 'curve'`                          | 与下一项 target 合并成二次贝塞尔                                                   |
 | `{ cubic }`                   | `kind: 'cubic'`                          | 与下一项 target 合并成三次贝塞尔                                                   |
@@ -79,11 +82,14 @@ description: 查询 adapter 可复用的路径、目标点、锚点、线宽与�
 | 最少长度                    | `way.length < 2` 抛错                                                                                                                                  |
 | 第一项                      | 必须是 target（move 起点）；`way[0]` 是 label 算子或任何其他算子都直接抛错，不降级（`[0,0]` 回退是相对 target 作首项时的基准语义，不是首项算子的降级） |
 | target                      | 首项转 `move`，后续 target 转 `line`                                                                                                                   |
+| horizontalTo / verticalTo   | 当前项转 `axis-line`；target 只接受笛卡尔坐标或 NodeTarget，不消费下一项                                                                               |
 | fold / curve / cubic / bend | 必须跟随 target；解析后会消费下一项                                                                                                                    |
+| 三段 fold 配置对象          | 只允许 `via` / `fraction`；旧 via、未知字段、非法 fraction 以 `parseWay:` 抛错                                                                         |
 | arc / circle / ellipse      | 以上一项为中心，不消费下一项                                                                                                                           |
 | label                       | 修饰下一个产生绘制段的 item                                                                                                                            |
 | label + cycle               | 抛错；cycle 不承载 label                                                                                                                               |
 | 连续 label / 末尾 label     | 抛错                                                                                                                                                   |
+| 多 operator 对象            | 同一对象含 horizontalTo / verticalTo 或其它多个 Way operator 时抛错                                                                                    |
 
 `parseWay` 的输出是 IR step 数组，可以直接放入 `PathSchema.children`。
 

@@ -5,6 +5,7 @@ import type { IRComposite } from '../composite';
 import type { IRCoordinate } from '../coordinate';
 import type { ScopeBoundingShape, ScopeStyleChannel } from './constants';
 import type { ArrowDefaultSchema, LabelDefaultSchema, NodeDefaultSchema, PathDefaultSchema } from './schema';
+import type { ScopePlacementSchema, ScopePlacementTargetSchema } from './schema';
 
 import { type IRAnimationTrack } from '../animation';
 import { type IRClipSpec } from '../clip';
@@ -25,6 +26,12 @@ export type IRLabelDefault = z.infer<typeof LabelDefaultSchema>;
 
 /** every arrow 默认样式（= ArrowDetail） */
 export type IRArrowDefault = z.infer<typeof ArrowDefaultSchema>;
+
+/** Scope placement 允许的闭合 target */
+export type IRScopePlacementTarget = z.infer<typeof ScopePlacementTargetSchema>;
+
+/** Scope 最终锚点对齐放置 */
+export type IRScopePlacement = z.infer<typeof ScopePlacementSchema>;
 
 /** 样式继承通道标识——resetStyle 按通道切外层继承 */
 export type StyleChannel = ValueOf<typeof ScopeStyleChannel>;
@@ -47,6 +54,11 @@ export type IRScope = {
    * @default []
    */
   transforms?: Array<IRTransform>;
+  /**
+   * own transforms 完成后的最终锚点对齐定位
+   * @default 不额外平移
+   */
+  placement?: IRScopePlacement;
   /**
    * 级联主色
    * @default 继承外层 color

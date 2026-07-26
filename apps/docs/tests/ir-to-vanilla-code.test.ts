@@ -68,6 +68,58 @@ describe('irToVanillaCode', () => {
     expect(code).toContain("import { DrawWay } from '@retikz/core'");
   });
 
+  it('draw-way-three-leg-fold：默认用裸 token，显式 fraction 用 strict 对象且可还原', () => {
+    const scene = ir([
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: [0, 0] },
+          { type: 'step', kind: 'fold', via: '-|-', to: [40, 20] },
+          { type: 'step', kind: 'fold', via: '|-|', fraction: 0.3, to: [80, 40] },
+        ],
+      },
+    ]);
+    const code = irToVanillaCode(scene);
+    expect(code).toContain("'-|-'");
+    expect(code).toContain("{ via: '|-|', fraction: 0.3 }");
+    const path = scene.children[0];
+    if (path.type !== 'path') throw new Error('expected path fixture');
+    expect(parseWay([[0, 0], '-|-', [40, 20], { via: '|-|', fraction: 0.3 }, [80, 40]])).toEqual(path.children);
+  });
+
+  it('draw-way-axis-line：保留 horizontalTo / verticalTo 与 label 并可由 parseWay 还原', () => {
+    const scene = ir([
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: [0, 0] },
+          {
+            type: 'step',
+            kind: 'axis-line',
+            axis: 'horizontal',
+            to: { id: 'target', anchor: 'center' },
+            label: { text: 'x' },
+          },
+          { type: 'step', kind: 'axis-line', axis: 'vertical', to: [40, 60] },
+        ],
+      },
+    ]);
+    const code = irToVanillaCode(scene);
+    expect(code).toContain("{ label: { text: 'x' } }");
+    expect(code).toContain("{ horizontalTo: { id: 'target', anchor: 'center' } }");
+    expect(code).toContain('{ verticalTo: [40, 60] }');
+    const path = scene.children[0];
+    if (path.type !== 'path') throw new Error('expected path fixture');
+    expect(
+      parseWay([
+        [0, 0],
+        { label: { text: 'x' } },
+        { horizontalTo: { id: 'target', anchor: 'center' } },
+        { verticalTo: [40, 60] },
+      ]),
+    ).toEqual(path.children);
+  });
+
   it('draw-way-curve：curve → { curve: control } 算子', () => {
     const code = irToVanillaCode(
       ir([

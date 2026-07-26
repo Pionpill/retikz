@@ -75,7 +75,7 @@ After creating the definition, inject it through core's `CompileOptions.shapes` 
 ```ts
 import { compileToScene } from '@retikz/core';
 
-const scene = compileToScene(ir, { shapes: [badge] });
+const { scene } = compileToScene(ir, { shapes: [badge] });
 ```
 
 ```tsx
@@ -168,8 +168,8 @@ By default, `scaleParams` deep-scales every numeric leaf by `Math.sqrt(sx * sy)`
     {
       label: 'React Layout shapes injection point',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 203,
-      endLine: 208,
+      startLine: 208,
+      endLine: 213,
     },
   ]}
 />

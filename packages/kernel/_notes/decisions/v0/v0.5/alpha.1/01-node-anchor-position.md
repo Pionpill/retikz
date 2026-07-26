@@ -61,7 +61,7 @@ provisional 快照不注册、不 emit，也不进入 anchor `WeakMap` cache。�
 - `resolveAnchorRefUncached` 供仍会整体平移的 provisional layout 使用。
 - `resolveAnchorRef`、`resolveAnchor` 与 `resolveEdgePoint` 保留现有 `WeakMap` 缓存，供已经稳定的 target / path 读取。
 
-两条路径都复用 `compile/node/anchors` 的 `anchorOf`、`angleBoundaryOf`、boundary registry 与 shape `edgePoint`。未缓存组合逻辑不从 `compile/node` barrel 新增导出，保持该内部兼容面不扩张。零尺寸目标的 `{ side, fraction }` 继续 fail-loud，诊断改为通用 zero-size target；center 与标准方向 anchor 在 Coordinate / 空 Scope 上退化为中心。
+两条路径都复用 `compile/node/anchors` 的 `anchorOf`、`angleBoundaryOf`、boundary registry 与 shape `edgePoint`。未缓存组合逻辑不从 `compile/node` barrel 新增导出，保持内部边界不扩张。零尺寸目标的 `{ side, fraction }` fail-loud，诊断为通用 zero-size target；center 与标准方向 anchor 在 Coordinate / 空 Scope 上退化为中心。
 
 该能力不新增 registry。自定义 shape 与 boundary 继续通过既有 definitions、registries 与 compile options 接入。
 
@@ -155,12 +155,12 @@ node('current', {
 - 在 emit 或 Scene 阶段二次修补位置：会产生 namespace、observer、bbox 与 renderer 之间的多份几何真源。
 - 为 anchor position 新建 registry：anchor / shape / boundary 已有开放 definition 链，无需平行扩展面。
 
-## 公开影响与兼容性
+## 公开影响
 
-- `IRNode.position`、React `NodeProps.position` additive 增加一个结构化分支；既有五种共享 position 语义不变。
+- `IRNode.position`、React `NodeProps.position` 包含 anchor position 结构化分支与五种共享 position 分支。
 - `NodeTargetSchema` 结构不变，只把说明扩展到 resolved Scope，并明确省略 anchor 由消费上下文解释。
 - Coordinate schema、Scope schema、Scene、renderer、math、render 与 composite contract 无新字段。
-- 混合 `kind` 与旧 position 字段的对象现在 fail-loud，避免此前新增分支可能造成的 silent semantic rewrite；合法旧 position 不受影响。
+- 同一对象混合 `kind` 与共享 position 字段时 fail-loud，避免 silent semantic rewrite。
 
 ## 最终实现与验证摘要
 
@@ -170,7 +170,7 @@ node('current', {
 - Core 全量验证：177 个测试文件、2463 个测试通过。
 - React builder / unbuilder：144 个测试通过；Vanilla plain spec：15 个测试通过。
 - docs 类型检查与 kernel 80 页完整性检查通过。
-- Bug Hunter 最终 BLOCKING / WARNING 均为 0；JSON round-trip + Unicode id、negative non-uniform scale + rotate + global offset、Unicode self / shadowing、resolved zero-size Scope 等临时 adversarial case 通过并已自动删除。
+- 对抗验证覆盖 JSON round-trip、Unicode id、negative non-uniform scale + rotate + global offset、Unicode self / shadowing 与 resolved zero-size Scope，最终无 BLOCKING / WARNING。
 
 ## 遗留边界
 

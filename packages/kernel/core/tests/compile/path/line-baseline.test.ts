@@ -21,7 +21,7 @@ describe('compile path: line baseline', () => {
         },
       ],
     };
-    const scene = compileToScene(ir);
+    const scene = compileToScene(ir).scene;
     expect(findPathPrim(scene.primitives).commands).toEqual([move([0, 0]), line([10, 5])]);
   });
 });

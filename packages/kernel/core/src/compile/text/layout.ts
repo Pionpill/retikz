@@ -1,9 +1,9 @@
-import type { GroupPrim, PathCommand, PathPrim, ScenePrimitive, TextPrim } from '../../contract';
+import type { GroupPrim, PathPrim, ScenePrimitive, TextPrim } from '../../contract';
 import type { IRFont, IRLineSpec } from '../../schemas';
 import type { CompileWarningCodeValue } from '../warning';
 import type { IRInlineRun } from './inline';
 import type { FontSpec, TextMeasurer } from './metrics';
-import type { LowerTex } from './tex';
+import type { LoweredTexPaint, LoweredTexPath, LowerTex } from './tex';
 
 import { CompileWarningCode, DEFAULT_FONT_SIZE } from '../constants';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from './baseline';
@@ -124,7 +124,7 @@ type TextPiece = {
 type MathPiece = {
   kind: 'math';
   x: number;
-  commands: Array<PathCommand>;
+  paths: Array<LoweredTexPath>;
   width: number;
   height: number;
   depth: number;
@@ -140,6 +140,13 @@ type MathPiece = {
   opacity?: number;
 };
 type Piece = TextPiece | MathPiece;
+
+/** 把 TeX paint 三态解析为 Scene paint */
+const resolveTexPaint = (paint: LoweredTexPaint, hostColor: string | undefined): string | undefined => {
+  if (paint.kind === 'none') return undefined;
+  if (paint.kind === 'color') return paint.value;
+  return hostColor ?? 'currentColor';
+};
 
 /** 度量一行 inline run，并返回可 emit 的行布局 */
 export const layoutInlineLine = (runs: Array<IRInlineRun>, ctx: LineLayoutContext): LaidLine => {
@@ -171,7 +178,7 @@ export const layoutInlineLine = (runs: Array<IRInlineRun>, ctx: LineLayoutContex
       pieces.push({
         kind: 'math',
         x,
-        commands: lowered.commands,
+        paths: lowered.paths,
         width: lowered.width,
         height: lowered.height,
         depth: lowered.depth,
@@ -232,18 +239,33 @@ export const layoutInlineLine = (runs: Array<IRInlineRun>, ctx: LineLayoutContex
           if (op !== undefined) tp.opacity = op;
           out.push(tp);
         } else {
-          const glyph: PathPrim = {
-            type: 'path',
-            commands: p.commands,
-            fill: p.fill ?? 'currentColor',
-            fillRule: 'evenodd',
-          };
-          const gop = combineOpacity(p.opacity, ctx.opacity);
-          if (gop !== undefined) glyph.opacity = gop;
+          const hostColor = p.fill ?? ctx.color;
+          const children = p.paths.map((path): PathPrim => {
+            const glyph: PathPrim = {
+              type: 'path',
+              commands: path.commands,
+              fillRule: path.fillRule ?? 'evenodd',
+            };
+            const fill = resolveTexPaint(path.fill, hostColor);
+            if (fill !== undefined) {
+              glyph.fill = fill;
+              if (path.fillOpacity !== undefined) glyph.fillOpacity = path.fillOpacity;
+            }
+            const stroke = resolveTexPaint(path.stroke, hostColor);
+            if (stroke !== undefined) {
+              glyph.stroke = stroke;
+              if (path.strokeWidth !== undefined) glyph.strokeWidth = path.strokeWidth;
+              if (path.strokeOpacity !== undefined) glyph.strokeOpacity = path.strokeOpacity;
+            }
+            const hostOpacity = combineOpacity(p.opacity, ctx.opacity);
+            const opacity = combineOpacity(path.opacity, hostOpacity);
+            if (opacity !== undefined) glyph.opacity = opacity;
+            return glyph;
+          });
           const group: GroupPrim = {
             type: 'group',
             transforms: [{ kind: 'translate', x: round(originX + p.x), y: round(baselineY - (p.height - p.depth)) }],
-            children: [glyph],
+            children,
           };
           out.push(group);
         }

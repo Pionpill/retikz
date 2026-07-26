@@ -26,10 +26,29 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
     return createElement(Step, { key, kind: 'cycle' });
   }
   if (step.kind === 'fold') {
+    if (step.via === '-|-' || step.via === '|-|') {
+      return createElement(Step, {
+        key,
+        kind: 'fold',
+        via: step.via,
+        to: step.to,
+        ...(step.fraction !== undefined && { fraction: step.fraction }),
+        ...(step.label !== undefined && { label: step.label }),
+      });
+    }
     return createElement(Step, {
       key,
       kind: 'fold',
       via: step.via,
+      to: step.to,
+      ...(step.label !== undefined && { label: step.label }),
+    });
+  }
+  if (step.kind === 'axis-line') {
+    return createElement(Step, {
+      key,
+      kind: 'axis-line',
+      axis: step.axis,
       to: step.to,
       ...(step.label !== undefined && { label: step.label }),
     });

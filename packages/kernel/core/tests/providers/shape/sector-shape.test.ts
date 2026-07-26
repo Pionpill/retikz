@@ -46,7 +46,7 @@ describe('sector — happy path 几何', () => {
   it('sector_emit_outline：innerRadius>0 → emit 出闭合 path（外弧 + 两径向边 + 内弧）', () => {
     const compiled = compileToScene(
       scene([wedgeNode({ innerRadius: 20, outerRadius: 60, startAngle: 0, endAngle: 90 })]),
-    );
+    ).scene;
     const path = findByType(compiled.primitives, 'path');
     expect(path).toBeDefined();
     // 环楔轮廓应是闭合 path（含 close 命令）
@@ -84,7 +84,7 @@ describe('sector — happy path 几何', () => {
   it('sector_pie_slice：innerRadius=0 → 实心扇片（径向边交于圆心、无内弧段）', () => {
     const compiled = compileToScene(
       scene([wedgeNode({ innerRadius: 0, outerRadius: 60, startAngle: 0, endAngle: 90 })]),
-    );
+    ).scene;
     const path = findByType(compiled.primitives, 'path');
     expect(path).toBeDefined();
     // 扇片只有一段外弧 + 两径向边到圆心，弧命令应只有 1 段（内弧不存在）
@@ -138,7 +138,7 @@ describe('sector — 边界 AABB / 角度', () => {
   it('sector_full_annulus_keeps_inner_arc：innerRadius>0 且 0→360 → 输出外弧与反向内弧', () => {
     const compiled = compileToScene(
       scene([wedgeNode({ innerRadius: 20, outerRadius: 60, startAngle: 0, endAngle: 360 })]),
-    );
+    ).scene;
     const path = findByType(compiled.primitives, 'path');
     expect(path).toBeDefined();
     expect(path!.fillRule).toBe('evenodd');
@@ -152,7 +152,7 @@ describe('sector — 边界 AABB / 角度', () => {
   it('sector_end_before_start：endAngle<startAngle → 按约定产合法环楔（emit 不抛、AABB 非退化）', () => {
     const compiled = compileToScene(
       scene([wedgeNode({ innerRadius: 20, outerRadius: 60, startAngle: 120, endAngle: 30 })]),
-    );
+    ).scene;
     const path = findByType(compiled.primitives, 'path');
     expect(path).toBeDefined();
     expect(compiled.layout.width).toBeGreaterThan(0);
@@ -165,7 +165,7 @@ describe('sector — 边界 AABB / 角度', () => {
     const start = Date.now();
     const compiled = compileToScene(
       scene([wedgeNode({ innerRadius: 20, outerRadius: 60, startAngle: 1e9, endAngle: 1e9 + 90 })]),
-    );
+    ).scene;
     expect(Date.now() - start).toBeLessThan(1000);
     expect(Number.isFinite(compiled.layout.width)).toBe(true);
     expect(Number.isFinite(compiled.layout.height)).toBe(true);
@@ -174,7 +174,7 @@ describe('sector — 边界 AABB / 角度', () => {
   it('sector_huge_radius_finite_guard：outerRadius:1e308 → AABB 聚合溢出 Infinity 被 finite 守卫拦截（throw）', () => {
     // 半轴 5e307 finite，但 center ± halfWidth 聚合溢出 Infinity；自动 layout 守卫应抛清晰错而非把 Infinity 漏进 Scene。
     const ir = scene([wedgeNode({ innerRadius: 20, outerRadius: 1e308, startAngle: 0, endAngle: 90 })]);
-    expect(() => compileToScene(ir)).toThrow(/non-finite|overflow|bounds/);
+    expect(() => compileToScene(ir).scene).toThrow(/non-finite|overflow|bounds/);
   });
 });
 
@@ -183,7 +183,7 @@ describe('sector — 边界 AABB / 角度', () => {
 describe('sector — 错误路径（paramsSchema 拒绝）', () => {
   it('sector_outer_le_inner_rejected：outerRadius ≤ innerRadius → 编译期拒绝', () => {
     const ir = scene([wedgeNode({ innerRadius: 60, outerRadius: 60, startAngle: 0, endAngle: 90 })]);
-    expect(() => compileToScene(ir)).toThrow();
+    expect(() => compileToScene(ir).scene).toThrow();
   });
 
   it('sector_non_finite_angle_rejected：startAngle:Infinity → paramsSchema reject', () => {
@@ -203,7 +203,7 @@ describe('sector — 交互（rotate / Path 连接 / position）', () => {
   it('sector_with_rotate：Node rotate × sector → 仍 emit、外层 group 带 rotate transform（绕 AABB 中心）', () => {
     const compiled = compileToScene(
       scene([wedgeNode({ innerRadius: 20, outerRadius: 60, startAngle: 0, endAngle: 90 }, { rotate: 30 })]),
-    );
+    ).scene;
     const group = findByType(compiled.primitives, 'group');
     expect(group).toBeDefined();
     expect(group!.transforms?.some(t => t.kind === 'rotate' && t.degrees === 30)).toBe(true);
@@ -224,7 +224,7 @@ describe('sector — 交互（rotate / Path 连接 / position）', () => {
     } as unknown as IRScene['children'][number];
     const compiled = compileToScene(
       scene([wedgeNode({ innerRadius: 20, outerRadius: 60, startAngle: 0, endAngle: 90 }), connectPath]),
-    );
+    ).scene;
     const paths = allByType(compiled.primitives, 'path');
     // 找到那条 from→to 连接线（含两个命令、起点在外弧中点附近）
     const connector = paths.find(p => p.commands.length === 2 && p.commands[0].kind === 'move');
@@ -242,7 +242,7 @@ describe('sector — 交互（rotate / Path 连接 / position）', () => {
     const PAD = 10;
     const compiled = compileToScene(
       scene([wedgeNode({ innerRadius: 20, outerRadius: 60, startAngle: 45, endAngle: 135 })]),
-    );
+    ).scene;
     // bbox 高度 = 弧顶极值跨度 60（不被裁成端点跨度 2·30=60... 端点 y=60sin45≈42.43，弧顶 60）。
     expect(compiled.layout.height - 2 * PAD).toBeCloseTo(60 - 20 * Math.SQRT1_2, 1);
     // bbox 宽度 = 2×30√2（两侧端点 ±60cos45）含两侧端点
@@ -284,10 +284,10 @@ describe('sector — round-trip / schema / scaleParams', () => {
     const PAD = 10;
     const base = compileToScene(
       scene([wedgeNode({ innerRadius: 20, outerRadius: 60, startAngle: 45, endAngle: 135 })]),
-    );
+    ).scene;
     const big = compileToScene(
       scene([wedgeNode({ innerRadius: 20, outerRadius: 60, startAngle: 45, endAngle: 135 }, { scale: 2 })]),
-    );
+    ).scene;
     expect(big.layout.height - 2 * PAD).toBeCloseTo((base.layout.height - 2 * PAD) * 2, 1);
     expect(big.layout.width - 2 * PAD).toBeCloseTo((base.layout.width - 2 * PAD) * 2, 1);
   });

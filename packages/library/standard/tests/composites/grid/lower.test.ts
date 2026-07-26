@@ -117,7 +117,7 @@ describe('GridDefinition', () => {
         children: [createGrid({ bounds: { min: [0, 0], max: [10, 10] }, spacing: 10 })],
       },
       { composites: [GridDefinition], onWarn: warning => warnings.push(warning.code) },
-    );
+    ).scene;
 
     expect(warnings).toEqual([]);
     expect(scene.primitives.filter(primitive => primitive.type === 'path')).toHaveLength(4);

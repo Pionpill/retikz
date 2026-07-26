@@ -339,7 +339,7 @@ describe('lowerAxes', () => {
         children: [createAxes({ extent: { x: 20, y: 20 }, x: { label: false }, y: { label: false } })],
       },
       { composites: [AxesDefinition], onWarn: warning => warnings.push(warning.code) },
-    );
+    ).scene;
 
     expect(warnings).toEqual([]);
     expect(scene.primitives.filter(primitive => primitive.type === 'path')).toHaveLength(2);

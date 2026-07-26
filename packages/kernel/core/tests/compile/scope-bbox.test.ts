@@ -125,7 +125,7 @@ describe('scope.id bbox happy path', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
     // g bbox 中心 ≈ (40, 30)（A、B、C 4 角 AABB 的中心：x 范围含 A.left~B.right、y 范围含 A.top~C.bottom）；
     // orbit = (40 + 200, 30) = (240, 30)；end 经 boundary clip 后 x 接近 240
@@ -153,7 +153,7 @@ describe('scope.id bbox happy path', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
     // bbox.top = (40, top) — top 来自 A 的 top-most 边（y 较小一侧）
@@ -179,7 +179,7 @@ describe('scope.id bbox happy path', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
     // right 的 x 应大于 100（B 中心），y ≈ 25（垂直中点）
@@ -205,7 +205,7 @@ describe('scope.id bbox happy path', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
     // 30°（+x +y 局部）→ bbox 右下方向（screen y-down 下 +y 是下方）；x > 0、y > 0
@@ -231,7 +231,7 @@ describe('scope.id bbox happy path', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
     // -45°（+x -y 局部）→ 右上方向；x > 0、y < 0
@@ -264,7 +264,7 @@ describe('scope.id bbox happy path', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     expect(warnings.filter(w => w.code === 'POLAR_ORIGIN_UNRESOLVED')).toHaveLength(0);
     // g bbox 中心 ≈ (30, 0)，orbit = (30, 0) + (100, 0) = (130, 0)
     const end = lineTo(topPath(compiled.primitives));
@@ -297,7 +297,7 @@ describe('scope.id bbox happy path', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     expect(warnings.filter(w => w.code === 'AT_TARGET_UNRESOLVED')).toHaveLength(0);
     // g 中心 ≈ (20, 0)，follower = (20 + 80, 0) = (100, 0)
     const end = lineTo(topPath(compiled.primitives));
@@ -329,7 +329,7 @@ describe('scope.id bbox happy path', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     expect(warnings.filter(w => w.code === 'OFFSET_BASE_UNRESOLVED')).toHaveLength(0);
     // g 中心 ≈ (20, 0)，anchor-pt = (30, 0)
     const end = lineTo(topPath(compiled.primitives));
@@ -355,7 +355,7 @@ describe('scope.id bbox happy path', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
     // boundaryPoint clip → 端点贴 bbox 边界、不是中心；但 x 应接近中心 20
@@ -387,7 +387,7 @@ describe('scope.id bbox 边界', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     expect(warnings.filter(w => w.code === 'OFFSET_BASE_UNRESOLVED')).toHaveLength(0);
     // g bbox 退化为 (50, 50) 0×0 → rel = (50+10, 50) = (60, 50)
     const end = lineTo(topPath(compiled.primitives));
@@ -414,7 +414,7 @@ describe('scope.id bbox 边界', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     expect(warnings.filter(w => w.code === 'OFFSET_BASE_UNRESOLVED')).toHaveLength(0);
     // rel = (0 + 25, 0) = (25, 0)
     const end = lineTo(topPath(compiled.primitives));
@@ -437,7 +437,7 @@ describe('scope.id bbox 边界', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
     // bbox 中心 ≈ A 的中心 (80, 40)；boundary clip 后 x 应接近 80
@@ -462,7 +462,7 @@ describe('scope.id bbox 边界', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
     // bbox 含 (200, 0) coordinate 点 → right 的 x 应接近 200
@@ -481,7 +481,7 @@ describe('scope.id bbox 错误路径', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    expect(() => compileToScene(ir, { onWarn: w => warnings.push(w) })).not.toThrow();
+    expect(() => compileToScene(ir, { onWarn: w => warnings.push(w) }).scene).not.toThrow();
     const dups = warnings.filter(w => w.code === 'DUPLICATE_NODE_ID');
     expect(dups.length).toBeGreaterThanOrEqual(1);
   });
@@ -505,7 +505,7 @@ describe('scope.id bbox 错误路径', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     const end = lineTo(topPath(compiled.primitives));
     expect(warnings.filter(w => w.code === 'DUPLICATE_NODE_ID')).toHaveLength(1);
     expect(end).toBeDefined();
@@ -518,7 +518,7 @@ describe('scope.id bbox 错误路径', () => {
       { type: 'scope', id: 'g', children: [{ type: 'node', id: 'b', position: [50, 0], text: 'b' }] },
     ]);
     const warnings: Array<CompileWarning> = [];
-    expect(() => compileToScene(ir, { onWarn: w => warnings.push(w) })).not.toThrow();
+    expect(() => compileToScene(ir, { onWarn: w => warnings.push(w) }).scene).not.toThrow();
     const dups = warnings.filter(w => w.code === 'DUPLICATE_NODE_ID');
     expect(dups.length).toBeGreaterThanOrEqual(1);
   });
@@ -539,7 +539,7 @@ describe('scope.id bbox 错误路径', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    expect(() => compileToScene(ir, { onWarn: w => warnings.push(w) })).not.toThrow();
+    expect(() => compileToScene(ir, { onWarn: w => warnings.push(w) }).scene).not.toThrow();
     const dups = warnings.filter(w => w.code === 'DUPLICATE_NODE_ID');
     expect(dups.length).toBeGreaterThanOrEqual(1);
   });
@@ -550,7 +550,7 @@ describe('scope.id bbox 错误路径', () => {
       { type: 'coordinate', id: 'A', position: [100, 0] },
     ]);
     const warnings: Array<CompileWarning> = [];
-    expect(() => compileToScene(ir, { onWarn: w => warnings.push(w) })).not.toThrow();
+    expect(() => compileToScene(ir, { onWarn: w => warnings.push(w) }).scene).not.toThrow();
     const dups = warnings.filter(w => w.code === 'DUPLICATE_NODE_ID');
     expect(dups.length).toBeGreaterThanOrEqual(1);
   });
@@ -569,7 +569,7 @@ describe('scope.id bbox 错误路径', () => {
         children: [{ type: 'node', id: 'inner', position: [0, 0], text: 'i' }],
       },
     ]);
-    expect(() => compileToScene(ir, { onWarn: () => {} })).toThrow();
+    expect(() => compileToScene(ir, { onWarn: () => {} }).scene).toThrow();
   });
 
   it('scope_id_unknown_anchor_name：path to={ id:"g", anchor:"invalid" } → compile 抛 Unknown anchor', () => {
@@ -588,7 +588,7 @@ describe('scope.id bbox 错误路径', () => {
         ],
       },
     ]);
-    expect(() => compileToScene(ir)).toThrow(/Unknown anchor/);
+    expect(() => compileToScene(ir).scene).toThrow(/Unknown anchor/);
   });
 });
 
@@ -615,7 +615,7 @@ describe('scope.id bbox 交互', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
     // 4 个 node 旋转 45 后中心仍在距原点 50 的位置；bbox 中心 ≈ (0, 0)；端点 boundary clip 后不应离 (0,0) 过远
     const end = lineTo(topPath(compiled.primitives));
@@ -660,7 +660,7 @@ describe('scope.id bbox 交互', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
     // outer.right 与 inner.right 都应有 x 接近 150（C 全局位置）
     const paths = compiled.primitives.filter(p => p.type === 'path');
@@ -701,7 +701,7 @@ describe('scope.id bbox 交互', () => {
     const compiled = compileToScene(ir, {
       nodeDistance: 200,
       onWarn: w => warnings.push(w),
-    });
+    }).scene;
     expect(warnings.filter(w => w.code === 'AT_TARGET_UNRESOLVED')).toHaveLength(0);
     // g 中心 ≈ (20, 0)，distance 200 → follower 中心 (220, 0)
     const end = lineTo(topPath(compiled.primitives));
@@ -725,7 +725,7 @@ describe('scope.id bbox 交互', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
     // polar-translate angle 0 radius 50 → translate(50, 0)；A 全局 (50, 0)；g bbox 中心 ≈ A 中心
@@ -763,8 +763,8 @@ describe('scope.id bbox 交互', () => {
         ],
       },
     ]);
-    const eBase = lineTo(topPath(compileToScene(irBase, { measureText }).primitives));
-    const eRot = lineTo(topPath(compileToScene(irRot, { measureText }).primitives));
+    const eBase = lineTo(topPath(compileToScene(irBase, { measureText }).scene.primitives));
+    const eRot = lineTo(topPath(compileToScene(irRot, { measureText }).scene.primitives));
     expect(eBase).toBeDefined();
     expect(eRot).toBeDefined();
     // 旋转 30 后 A 的 4 角点投到全局后 AABB 应比未旋转更大（rotate 让 4 角点偏离主轴）
@@ -792,7 +792,7 @@ describe('scope.id bbox 交互', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     // scope id='g' 无 transform：其内部 path 回填到该 scope 的 group.children（不再 hoist 到顶层）
     const group = compiled.primitives.find(p => p.type === 'group');
     const end = lineTo(group?.type === 'group' ? topPath(group.children) : undefined);

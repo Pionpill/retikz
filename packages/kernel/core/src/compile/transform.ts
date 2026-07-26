@@ -54,9 +54,7 @@ export const inverseTransformChain = (global: IRPosition, chain: ReadonlyArray<T
     } else {
       const sy = t.y ?? t.x;
       if (t.x === 0 || sy === 0) {
-        x = 0;
-        y = 0;
-        continue;
+        throw new Error('non-invertible scope transform');
       }
       x /= t.x;
       y /= sy;

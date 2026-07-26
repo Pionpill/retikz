@@ -75,7 +75,7 @@ const badge = defineShape({
 ```ts
 import { compileToScene } from '@retikz/core';
 
-const scene = compileToScene(ir, { shapes: [badge] });
+const { scene } = compileToScene(ir, { shapes: [badge] });
 ```
 
 ```tsx
@@ -168,8 +168,8 @@ IR 只写注册名或带参引用；宿主负责在每次编译时提供相同�
     {
       label: 'React Layout 的 shapes 注入入口',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 203,
-      endLine: 208,
+      startLine: 208,
+      endLine: 213,
     },
   ]}
 />

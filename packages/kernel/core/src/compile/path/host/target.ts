@@ -112,9 +112,31 @@ export const localPointOfTarget = (
   return resolvePosition(target, { namespaceStack, scopeChain });
 };
 
-/** 根据 fold step 的方向计算正交折角中间点 */
-export const cornerOf = (prev: IRPosition, curr: IRPosition, via: FoldStepViaValue): IRPosition =>
-  via === FoldStepVia.HorizontalThenVertical ? [curr[0], prev[1]] : [prev[0], curr[1]];
+/**
+ * 根据 fold step 的方向计算正交折角点
+ * @description 两段 fold 返回一个角点；三段 fold 返回两个共享中间轴的角点
+ */
+export const foldCornersOf = (
+  prev: IRPosition,
+  curr: IRPosition,
+  via: FoldStepViaValue,
+  fraction = 0.5,
+): Array<IRPosition> => {
+  if (via === FoldStepVia.HorizontalThenVertical) return [[curr[0], prev[1]]];
+  if (via === FoldStepVia.VerticalThenHorizontal) return [[prev[0], curr[1]]];
+  if (via === FoldStepVia.HorizontalVerticalHorizontal) {
+    const x = prev[0] + (curr[0] - prev[0]) * fraction;
+    return [
+      [x, prev[1]],
+      [x, curr[1]],
+    ];
+  }
+  const y = prev[1] + (curr[1] - prev[1]) * fraction;
+  return [
+    [prev[0], y],
+    [curr[0], y],
+  ];
+};
 
 /** target 裁剪解析所需上下文 */
 export type ClipForTargetContext = {

@@ -104,7 +104,7 @@ describe('scope boundingShape="circle" 集成测试', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
@@ -142,7 +142,7 @@ describe('scope boundingShape="circle" 集成测试', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
     // right anchor of ellipse with circumscribe:equal at (cx, cy) with diameter d → (cx + d/2, cy)
@@ -171,7 +171,7 @@ describe('scope boundingShape="circle" 集成测试', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
     // MEC center ≈ (30, 0)；boundary clip 后 x 应在合理范围内
@@ -198,7 +198,7 @@ describe('scope boundingShape 缺省（矩形 AABB）向后兼容', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
     // 矩形 AABB right x 应接近 B 的位置（60），y 接近 0
@@ -242,8 +242,8 @@ describe('scope boundingShape 缺省（矩形 AABB）向后兼容', () => {
         ],
       },
     ]);
-    const endDefault = lineTo(topPath(compileToScene(irDefault).primitives));
-    const endExplicit = lineTo(topPath(compileToScene(irExplicit).primitives));
+    const endDefault = lineTo(topPath(compileToScene(irDefault).scene.primitives));
+    const endExplicit = lineTo(topPath(compileToScene(irExplicit).scene.primitives));
     expect(endDefault).toBeDefined();
     expect(endExplicit).toBeDefined();
     // x 坐标应非常接近（同一矩形 AABB right）

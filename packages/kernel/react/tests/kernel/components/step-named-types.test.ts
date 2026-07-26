@@ -1,5 +1,7 @@
 import type {
   IRArcStep,
+  IRAxisLineStep,
+  IRAxisLineTarget,
   IRBendStep,
   IRCirclePathStep,
   IRCubicStep,
@@ -19,6 +21,7 @@ import { describe, expectTypeOf, it } from 'vitest';
 
 import type {
   ArcStepProps,
+  AxisLineStepProps,
   BendStepProps,
   CirclePathStepProps,
   CubicStepProps,
@@ -58,6 +61,14 @@ type DslStepProps<T> = CoreStepProps<T> & LabelChildren<T>;
 
 type LineStepPropsFromCore = Omit<DslStepProps<IRLineStep>, 'kind'> & { kind?: 'line' };
 
+type AxisLineStepPropsFromCore = Omit<DslStepProps<IRAxisLineStep>, 'to'> & {
+  to: IRAxisLineTarget | string;
+};
+
+type FoldStepPropsFromCore<TStep extends IRFoldStep = IRFoldStep> = TStep extends IRFoldStep
+  ? DslStepProps<TStep>
+  : never;
+
 type IsNever<T> = [T] extends [never] ? true : false;
 
 type IsAssignable<TActual, TExpected> = [TActual] extends [TExpected] ? true : false;
@@ -75,6 +86,7 @@ describe('StepProps named types', () => {
   it('每个 named type 的 kind 字面量与命名对照一致', () => {
     expectTypeOf<MoveStepProps['kind']>().toEqualTypeOf<'move'>();
     expectTypeOf<LineStepProps['kind']>().toEqualTypeOf<'line' | undefined>();
+    expectTypeOf<AxisLineStepProps['kind']>().toEqualTypeOf<'axis-line'>();
     expectTypeOf<FoldStepProps['kind']>().toEqualTypeOf<'fold'>();
     expectTypeOf<CycleStepProps['kind']>().toEqualTypeOf<'cycle'>();
     expectTypeOf<CurveStepProps['kind']>().toEqualTypeOf<'curve'>();
@@ -88,10 +100,11 @@ describe('StepProps named types', () => {
     expectTypeOf<GeneratorStepProps['kind']>().toEqualTypeOf<'generator'>();
   });
 
-  it('StepProps 是 13 个 named type 的并集', () => {
+  it('StepProps 是 14 个 named type 的并集', () => {
     expectTypeOf<StepProps>().toEqualTypeOf<
       | MoveStepProps
       | LineStepProps
+      | AxisLineStepProps
       | FoldStepProps
       | CycleStepProps
       | CurveStepProps
@@ -112,10 +125,17 @@ describe('StepProps named types', () => {
     expectTypeOf<BendDir>().toEqualTypeOf<{ bendDirection?: 'left' | 'right' }>();
   });
 
+  it('两段 fold 在 props 层拒绝 fraction', () => {
+    // @ts-expect-error `fraction` 只属于 `-|-` / `|-|` 三段 fold
+    const invalid: FoldStepProps = { kind: 'fold', via: '-|', fraction: 0.5, to: [0, 0] };
+    void invalid;
+  });
+
   it('each StepProps branch matches the core IR step after DSL target mapping', () => {
     expectTypeOf<IsBranchParity<MoveStepProps, DslStepProps<IRMoveStep>>>().toEqualTypeOf<true>();
     expectTypeOf<IsBranchParity<LineStepProps, LineStepPropsFromCore>>().toEqualTypeOf<true>();
-    expectTypeOf<IsBranchParity<FoldStepProps, DslStepProps<IRFoldStep>>>().toEqualTypeOf<true>();
+    expectTypeOf<IsBranchParity<AxisLineStepProps, AxisLineStepPropsFromCore>>().toEqualTypeOf<true>();
+    expectTypeOf<IsBranchParity<FoldStepProps, FoldStepPropsFromCore>>().toEqualTypeOf<true>();
     expectTypeOf<IsBranchParity<CycleStepProps, DslStepProps<IRCycleStep>>>().toEqualTypeOf<true>();
     expectTypeOf<IsBranchParity<CurveStepProps, DslStepProps<IRCurveStep>>>().toEqualTypeOf<true>();
     expectTypeOf<IsBranchParity<CubicStepProps, DslStepProps<IRCubicStep>>>().toEqualTypeOf<true>();

@@ -103,8 +103,21 @@ const stepsToWay = (steps: ReadonlyArray<IRStep>, ctx: Ctx, indent: number): Arr
       case 'line':
         frags.push({ text: formatValue(step.to, indent) });
         break;
-      case 'fold': // -| / |-
-        frags.push({ text: formatString(step.via) });
+      case 'axis-line':
+        frags.push({
+          text:
+            step.axis === 'horizontal'
+              ? `{ horizontalTo: ${formatValue(step.to, indent)} }`
+              : `{ verticalTo: ${formatValue(step.to, indent)} }`,
+        });
+        break;
+      case 'fold':
+        frags.push({
+          text:
+            'fraction' in step && step.fraction !== undefined
+              ? `{ via: ${formatString(step.via)}, fraction: ${formatValue(step.fraction, indent)} }`
+              : formatString(step.via),
+        });
         frags.push({ text: formatValue(step.to, indent) });
         break;
       case 'cycle':
@@ -193,6 +206,7 @@ const isWayRepresentableStep = (step: IRStep): boolean => {
   switch (step.kind) {
     case 'move':
     case 'line':
+    case 'axis-line':
     case 'fold':
     case 'cycle':
     case 'curve':

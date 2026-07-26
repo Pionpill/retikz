@@ -1,4 +1,4 @@
-import type { CompositeDefinition } from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 
 import type { LowerTablesOptions } from '../types';
@@ -12,7 +12,7 @@ export type TableRuntimeContributionInput = Readonly<{
   /** Table definitions 与其它 lowering 选项 */
   lowerOptions?: LowerTablesOptions;
   /** Cell 内嵌 Tier 2 内容所需的额外 composite definitions */
-  composites?: ReadonlyArray<CompositeDefinition>;
+  composites?: ReadonlyArray<AnyCompositeDefinition>;
 }>;
 
 /** 可由 React 与 Vanilla 宿主统一聚合的 Table runtime contribution */
@@ -20,5 +20,5 @@ export type TableRuntimeContribution = Readonly<{
   /** 普通 datasets 与一个 runtime-only envelope */
   datasets: Record<string, unknown>;
   /** Table namespace 共用的稳定 composite 生成器 */
-  makeComposites: (mergedDatasets: Record<string, unknown>) => Array<CompositeDefinition>;
+  makeComposites: (mergedDatasets: Record<string, unknown>) => Array<AnyCompositeDefinition>;
 }>;
