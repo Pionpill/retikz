@@ -117,7 +117,7 @@ resolver 按 scale 类型解析 domain、分档边界与 scheme / range，得到
 | `threshold`  | 必填升序 `breakpoints`           | 色档数为断点数加一，`range` 长度必须匹配     |
 | `quantile`   | 按数据分位切分；`count` 默认 `5` | scheme 采样或显式离散 `range`                |
 
-`range` 同时出现时会覆盖 `scheme`；`quantize` / `quantile` 同时提供 `count` 与 `range` 时长度必须一致。完整 schema 与自定义 scale operation 见 [Plot IR](/viz/reference/plot-ir)。
+`range` 同时出现时会覆盖 `scheme`；`quantize` / `quantile` 同时提供 `count` 与 `range` 时长度必须一致。自定义 scale operation 也遵循同一套公开 IR 契约。
 
 <SourceLinks
   sources={[

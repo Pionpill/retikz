@@ -183,29 +183,6 @@ export const vizSection: Array<Section> = [
     ],
   },
   {
-    id: 'examples',
-    label: 'viz.examples',
-    pages: [{ id: 'iteration', label: 'viz.exampleIteration' }],
-  },
-  {
-    id: 'reference',
-    label: 'viz.reference',
-    pages: [
-      { id: 'plot-ir', label: 'viz.refPlotIr' },
-      { id: 'lowering', label: 'viz.refLowering' },
-      {
-        id: 'extensions',
-        label: 'viz.refExtensions',
-        meta: {
-          pageType: 'reference',
-          audience: 'extension-author',
-          capability: 'plot.extensions',
-          sourceOfTruth: 'runtime',
-        },
-      },
-    ],
-  },
-  {
     id: 'releases',
     label: 'viz.releases',
     pages: [

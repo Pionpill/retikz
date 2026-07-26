@@ -182,13 +182,7 @@
     "compReferenceMark": "ReferenceMark",
     "compRelationMark": "RelationMark",
     "compAxis": "Axis",
-    "compLegend": "Legend",
-    "examples": "Examples",
-    "exampleIteration": "Iteration Analysis",
-    "reference": "Reference",
-    "refPlotIr": "Plot IR",
-    "refLowering": "Lowering",
-    "refExtensions": "Extension Mechanisms"
+    "compLegend": "Legend"
   },
   "blog": {
     "notTranslatedYet": "This article is not yet translated; the Chinese version is shown below",

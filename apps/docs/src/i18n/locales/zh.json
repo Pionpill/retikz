@@ -182,13 +182,7 @@
     "compReferenceMark": "参考",
     "compRelationMark": "关系",
     "compAxis": "坐标轴",
-    "compLegend": "图例",
-    "examples": "示例",
-    "exampleIteration": "迭代分析",
-    "reference": "参考",
-    "refPlotIr": "Plot IR",
-    "refLowering": "下沉",
-    "refExtensions": "扩展机制"
+    "compLegend": "图例"
   },
   "blog": {
     "notTranslatedYet": "本文尚未提供英文版，以下为中文原文",

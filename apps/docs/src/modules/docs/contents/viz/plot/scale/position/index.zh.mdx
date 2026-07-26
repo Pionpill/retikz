@@ -141,7 +141,7 @@ React `<Scale>` 是常用位置类型的声明入口；`band` 通常由 interval
 | `padding?`         | `number`                                         | `0.5`       | 仅用于 `point`；首尾外侧留白占 step 的比例，范围 `0..1`        |
 | `align?`           | `number`                                         | `0.5`       | 仅用于 `point`；控制首尾留白在范围两端的分配，范围 `0..1`      |
 
-完整 `IRPlotScale` 还允许给 scale 命名、显式设置输出 `range`，并配置 React DSL 没有暴露的 `pow.exponent`、`band.paddingInner` / `paddingOuter`、`nice` 与 `clamp`。各变体的完整字段和自定义 scale operation 统一见 [Plot IR](/viz/reference/plot-ir)，避免在概念页维护第二份 schema 字典。
+完整 `IRPlotScale` 还允许给 scale 命名、显式设置输出 `range`，并配置 React DSL 没有暴露的 `pow.exponent`、`band.paddingInner` / `paddingOuter`、`nice` 与 `clamp`。各变体和自定义 scale operation 都遵循这一公开 IR 契约。
 
 <SourceLinks
   sources={[

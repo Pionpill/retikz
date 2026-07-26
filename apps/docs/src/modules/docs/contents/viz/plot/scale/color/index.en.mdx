@@ -117,7 +117,7 @@ Every color scale in a full spec needs a `name`, which a mark's color field bind
 | `threshold`  | required ascending `breakpoints`             | one more color than breakpoints                   |
 | `quantile`   | data-derived quantiles; `count` defaults `5` | sampled scheme or explicit discrete `range`       |
 
-An explicit `range` overrides `scheme`. When `quantize` / `quantile` provide both `count` and `range`, their lengths must agree. See [Plot IR](/viz/reference/plot-ir) for the complete schemas and custom scale operations.
+An explicit `range` overrides `scheme`. When `quantize` / `quantile` provide both `count` and `range`, their lengths must agree. Custom scale operations follow the same public IR contract.
 
 <SourceLinks
   sources={[

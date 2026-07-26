@@ -141,7 +141,7 @@ React `<Scale>` is the declaration surface for common positional types. A `band`
 | `padding?`         | `number`                                         | `0.5`         | `point` only; outer padding as a fraction of step, from `0` to `1`          |
 | `align?`           | `number`                                         | `0.5`         | `point` only; distributes outer padding across both ends, from `0` to `1`   |
 
-The complete `IRPlotScale` surface can also name a scale, set an output `range`, and configure fields that the React DSL does not expose, including `pow.exponent`, `band.paddingInner` / `paddingOuter`, `nice`, and `clamp`. The [Plot IR](/viz/reference/plot-ir) remains the single reference for every variant and custom scale operation.
+The complete `IRPlotScale` surface can also name a scale, set an output `range`, and configure fields that the React DSL does not expose, including `pow.exponent`, `band.paddingInner` / `paddingOuter`, `nice`, and `clamp`. Every variant and custom scale operation follows this public IR contract.
 
 <SourceLinks
   sources={[
