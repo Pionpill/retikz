@@ -111,6 +111,60 @@ describe('createRuntimeTraceReporter', () => {
     expect(reporter.diagnostics()).toEqual([{ code: 'invalid-record', owner: '@retikz/program', phase: 'update' }]);
   });
 
+  it('允许同一 phase 声明不同 unit，并分别校验 outcome', () => {
+    const records: Array<PerformanceTraceRecord> = [];
+    const reporter = createRuntimeTraceReporter({
+      owner: '@retikz/program',
+      phases: [
+        { phase: 'update', unit: 'program', outcomes: ['incremental'] },
+        { phase: 'update', unit: 'scene-change', outcomes: ['commit'] },
+      ],
+      sink: record => records.push(record),
+    });
+
+    reporter.report({
+      phase: 'update',
+      unit: 'program',
+      outcome: 'incremental',
+      visited: 2,
+      reused: 1,
+      changed: 1,
+    });
+    reporter.report({
+      phase: 'update',
+      unit: 'scene-change',
+      outcome: 'commit',
+      visited: 1,
+      reused: 0,
+      changed: 1,
+    });
+    reporter.report({
+      phase: 'update',
+      unit: 'program',
+      outcome: 'commit',
+      visited: 1,
+      reused: 0,
+      changed: 1,
+    });
+    reporter.report({
+      phase: 'update',
+      unit: 'scene-change',
+      outcome: 'incremental',
+      visited: 1,
+      reused: 0,
+      changed: 1,
+    });
+
+    expect(records.map(record => [record.unit, record.outcome])).toEqual([
+      ['program', 'incremental'],
+      ['scene-change', 'commit'],
+    ]);
+    expect(reporter.diagnostics()).toEqual([
+      { code: 'invalid-record', owner: '@retikz/program', phase: 'update' },
+      { code: 'invalid-record', owner: '@retikz/program', phase: 'update' },
+    ]);
+  });
+
   it('非法 record phase 不会泄漏到封闭 diagnostic', () => {
     const reporter = createCompileReporter(vi.fn());
     const invalidRecord = {

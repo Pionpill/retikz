@@ -8,6 +8,7 @@ const runtimeOwnerRegistryExecutors = new WeakMap<
   RuntimeOwnerRegistry,
   ReadonlyMap<RuntimeOwnerToken, RuntimeOwnerErasedExecutor>
 >();
+const runtimeOwnerRegistries = new WeakSet<object>();
 
 const readOwnerKey = (value: unknown): string => {
   if (typeof value !== 'object' || value === null || !('key' in value)) return '';
@@ -19,6 +20,10 @@ const compareCodeUnits = (left: RuntimeOwnerToken, right: RuntimeOwnerToken): nu
   if (left.key > right.key) return 1;
   return 0;
 };
+
+/** 判断动态值是否是当前 Runtime 实例创建的 owner registry */
+export const isRuntimeOwnerRegistry = (value: unknown): value is RuntimeOwnerRegistry =>
+  typeof value === 'object' && value !== null && runtimeOwnerRegistries.has(value);
 
 /** 合并 builtin/custom Definition 并拒绝无效 token 与重复 key */
 export const createRuntimeOwnerRegistry = (input: RuntimeOwnerRegistryInput): RuntimeOwnerRegistry => {
@@ -60,6 +65,7 @@ export const createRuntimeOwnerRegistry = (input: RuntimeOwnerRegistryInput): Ru
     definitions: () => Object.freeze([...sorted]),
   });
   runtimeOwnerRegistryExecutors.set(registry, executors);
+  runtimeOwnerRegistries.add(registry);
   return registry;
 };
 

@@ -1,4 +1,11 @@
-import type { RuntimeOwnerErrorCode, RuntimeOwnerLifecycleDiagnostic, RuntimeOwnerPhase } from './types';
+import type { RuntimeDiagnostic } from '../diagnostic';
+import type { RuntimeProgramId } from '../identity';
+import type {
+  RuntimeErrorCode,
+  RuntimeOwnerErrorCode,
+  RuntimeOwnerLifecycleDiagnostic,
+  RuntimeOwnerPhase,
+} from './types';
 
 type RuntimeOwnerLifecycleErrorCode = Extract<
   RuntimeOwnerErrorCode,
@@ -8,6 +15,41 @@ type RuntimeOwnerLifecycleErrorCode = Extract<
   | 'RUNTIME_OWNER_COMPARE_FAILED'
   | 'RUNTIME_OWNER_CHANGESET_VALIDATION_FAILED'
 >;
+
+/** Runtime 公共契约或 transaction 失败的结构化错误 */
+export class RuntimeError extends Error {
+  /** 稳定错误分类 */
+  readonly code: RuntimeErrorCode;
+  /** 发生失败的 Runtime 阶段 */
+  readonly phase: string;
+  /** 原始错误或无效输入 */
+  override readonly cause: unknown;
+  /** 可选 owner context */
+  readonly owner?: string;
+  /** 可选 Program context */
+  readonly program?: RuntimeProgramId;
+  /** cleanup 等 secondary diagnostics */
+  readonly diagnostics: ReadonlyArray<RuntimeDiagnostic>;
+
+  /** 创建保留稳定 code、context 与 secondary diagnostics 的 Runtime 错误 */
+  constructor(input: {
+    code: RuntimeErrorCode;
+    phase: string;
+    cause?: unknown;
+    owner?: string;
+    program?: RuntimeProgramId;
+    diagnostics?: ReadonlyArray<RuntimeDiagnostic>;
+  }) {
+    super(`${input.code}: Runtime failed during ${input.phase}`, { cause: input.cause });
+    this.name = 'RuntimeError';
+    this.code = input.code;
+    this.phase = input.phase;
+    this.cause = input.cause;
+    this.owner = input.owner;
+    this.program = input.program;
+    this.diagnostics = Object.freeze([...(input.diagnostics ?? [])]);
+  }
+}
 
 /** owner lifecycle callback 失败的稳定错误 */
 export class RuntimeOwnerError extends Error {

@@ -1,5 +1,12 @@
-export * from './error';
-export * from './identity';
+export type {
+  RuntimeOwnerErrorCode,
+  RuntimeOwnerExecutionResult,
+  RuntimeOwnerLifecycleDiagnostic,
+  RuntimeOwnerPhase,
+} from './error';
+export { RuntimeIdentityError, RuntimeOwnerError, RuntimeOwnerRegistryError } from './error';
+export type { RuntimeIdentity, RuntimeIdentityIndex } from './identity';
+export { createRuntimeIdentity, createRuntimeIdentityIndex, runtimeIdentityEquals } from './identity';
 export type {
   RuntimeChangeSet,
   RuntimeOwnedValueDefinitionInput,

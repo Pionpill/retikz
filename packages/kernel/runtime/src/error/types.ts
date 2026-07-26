@@ -40,3 +40,17 @@ export type RuntimeOwnerExecutionResult<T> = Readonly<{
   /** 执行过程中隔离的非致命诊断 */
   diagnostics: ReadonlyArray<RuntimeOwnerLifecycleDiagnostic>;
 }>;
+
+/** Runtime transaction、Program 与 registry 的稳定错误分类 */
+export type RuntimeErrorCode =
+  | RuntimeOwnerErrorCode
+  | 'RUNTIME_PROGRAM_ID_INVALID'
+  | 'RUNTIME_PROGRAM_DUPLICATE'
+  | 'RUNTIME_PROGRAM_UNKNOWN'
+  | 'RUNTIME_PROGRAM_TOKEN_INVALID'
+  | 'RUNTIME_PROGRAM_CYCLE'
+  | 'RUNTIME_TRACE_DEFINITION_INVALID'
+  | 'RUNTIME_REGISTRY_MISMATCH'
+  | 'RUNTIME_REVISION_INVALID'
+  | 'RUNTIME_CHANGESET_INVALID'
+  | 'RUNTIME_OWNER_COMMAND_INVALID';

@@ -6,6 +6,14 @@ export type RuntimeIdentity = Readonly<{
   path: ReadonlyArray<string>;
 }>;
 
+/** Runtime Program 的结构化 identity */
+export type RuntimeProgramId = Readonly<{
+  /** Program 归属的领域 owner */
+  owner: string;
+  /** owner 内精确匹配的 Program key */
+  key: string;
+}>;
+
 /** 单个 owner 的 validated identity index */
 export type RuntimeIdentityIndex = Readonly<{
   /** index 绑定的 owner */
