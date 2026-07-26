@@ -1,6 +1,6 @@
 ---
 title: Contract - Table
-description: Look up the TableSpec root, Cell payloads, fixed-track layout, and precise manual/custom JSON variants.
+description: Look up the TableSpec root, Cell payloads, current fixed layout, and alpha.2 track-size primitives.
 ---
 
 Base Table contracts define the top-level identity, Cell content, and layout fields shared by every table type, plus precise manual and custom root variants. See [Detail Table contracts](/viz/table/reference/contract-detail) for the detail-only data reference and column structure.
@@ -54,6 +54,48 @@ In `{ kind: 'value', value: 'Score' }`, `kind: 'value'` selects the scalar-prese
 <ZodSchema name="TableLayoutSchema" />
 
 Omitted fields resolve to `120` for `columnWidth`, `32` for `rowHeight`, the body height for `headerHeight`, and `0` for row and column gaps. Cell content never feeds back into track size.
+
+## Track size primitives
+
+Alpha.2 publishes the standalone primitives below for fixed sizes, intrinsic content sizes, remaining-space fractions, and bounded tracks. They are not wired into the root Table layout yet: `TableLayoutSchema` still accepts only `columnWidth`, `rowHeight`, `headerHeight`, `columnGap`, and `rowGap` as documented above. A later migration will switch the root schema, layout pipeline, and manifest atomically. Do not place these objects in `TableSpec.layout` yet.
+
+Track size discriminators are <ApiValues name="TableTrackSizeKind" />.
+
+### TableFixedTrackSizeSchema
+
+<ZodSchema name="TableFixedTrackSizeSchema" />
+
+A fixed value may be `0` to represent an explicitly collapsed track.
+
+### TableAutoTrackSizeSchema
+
+<ZodSchema name="TableAutoTrackSizeSchema" />
+
+### TableFractionTrackSizeSchema
+
+<ZodSchema name="TableFractionTrackSizeSchema" />
+
+The runtime materializes an omitted `weight` as `1`.
+
+### TableMinmaxTrackSizeSchema
+
+<ZodSchema name="TableMinmaxTrackSizeSchema" />
+
+When both bounds are fixed, `min.value` cannot exceed `max.value`. The minimum accepts fixed or auto sizing; the maximum accepts fixed, auto, or fraction sizing.
+
+### TableTrackSizeSchema
+
+<ZodSchema name="TableTrackSizeSchema" />
+
+### TableTrackOverrideSchema
+
+<ZodSchema name="TableTrackOverrideSchema" />
+
+### TableTrackOverridesSchema
+
+<ZodSchema name="TableTrackOverridesSchema" />
+
+The list is sparse, so callers declare only the canonical indexes they need to replace. The schema rejects duplicate indexes. The later layout resolver checks indexes against the actual row or column count.
 
 ## Related
 

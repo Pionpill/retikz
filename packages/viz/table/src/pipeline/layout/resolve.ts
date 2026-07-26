@@ -1,8 +1,52 @@
-import type { IRTableLayout } from '../../schemas';
-import type { ResolvedTableLayoutSpec } from './types';
+import type { IRTableLayout, IRTableTrackOverride, IRTableTrackSize } from '../../schemas';
+import type { ResolvedTableLayoutSpec, ResolvedTableTrackSize } from './types';
 
-import { TableLayoutSchema } from '../../schemas';
+import { TableLayoutSchema, TableTrackOverridesSchema, TableTrackSizeKind, TableTrackSizeSchema } from '../../schemas';
 import { DEFAULT_TABLE_COLUMN_WIDTH, DEFAULT_TABLE_ROW_HEIGHT, DEFAULT_TABLE_TRACK_GAP } from '../../shared';
+
+/** 物化单个轨道尺寸的运行时默认值并递归冻结 */
+export const resolveTableTrackSize = (size: IRTableTrackSize): ResolvedTableTrackSize => {
+  const parsed = TableTrackSizeSchema.parse(size);
+  switch (parsed.kind) {
+    case TableTrackSizeKind.Fixed:
+      return Object.freeze({ kind: parsed.kind, value: parsed.value });
+    case TableTrackSizeKind.Auto:
+      return Object.freeze({ kind: parsed.kind });
+    case TableTrackSizeKind.Fraction:
+      return Object.freeze({ kind: parsed.kind, weight: parsed.weight ?? 1 });
+    case TableTrackSizeKind.Minmax:
+      return Object.freeze({
+        kind: parsed.kind,
+        min: resolveTableTrackSize(parsed.min) as ResolvedTableTrackSize & ({ kind: 'fixed' } | { kind: 'auto' }),
+        max: resolveTableTrackSize(parsed.max) as ResolvedTableTrackSize &
+          ({ kind: 'fixed' } | { kind: 'auto' } | { kind: 'fraction' }),
+      });
+  }
+};
+
+/** 按 canonical index 应用稀疏覆盖并解析同序轨道尺寸 */
+export const resolveTableTrackSizes = (
+  defaults: ReadonlyArray<IRTableTrackSize>,
+  overrides: ReadonlyArray<IRTableTrackOverride> = [],
+): ReadonlyArray<ResolvedTableTrackSize> => {
+  const indexes = new Set<number>();
+  for (const override of overrides) {
+    if (!Number.isInteger(override.index) || override.index < 0) {
+      throw new Error(`table: track override index ${String(override.index)} must be a nonnegative integer`);
+    }
+    if (indexes.has(override.index)) {
+      throw new Error(`table: duplicate track override index ${override.index}`);
+    }
+    if (override.index >= defaults.length) {
+      throw new Error(`table: track override index ${override.index} is out of range for ${defaults.length} tracks`);
+    }
+    indexes.add(override.index);
+  }
+
+  const parsedOverrides = TableTrackOverridesSchema.parse(overrides);
+  const overrideByIndex = new Map(parsedOverrides.map(override => [override.index, override.size]));
+  return Object.freeze(defaults.map((size, index) => resolveTableTrackSize(overrideByIndex.get(index) ?? size)));
+};
 
 /** 解析固定轨道 layout 并物化稳定默认值 */
 export const resolveTableLayoutSpec = (spec?: IRTableLayout): ResolvedTableLayoutSpec => {

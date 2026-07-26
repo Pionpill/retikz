@@ -861,6 +861,30 @@ export const vizV01: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.2',
+          date: '2026-07-26',
+          summary: {
+            zh: '开始二维约束布局升级：先公开确定性的轨道尺寸原语与单轴求解基础，根 Table layout 仍保持 alpha.1 固定字段。',
+            en: 'Begins the constrained two-dimensional layout upgrade with deterministic track-size primitives and a single-axis solver foundation while the root Table layout retains its alpha.1 fixed fields.',
+          },
+          items: [
+            {
+              label: { zh: '轨道尺寸原语', en: 'Track-size primitives' },
+              content: {
+                zh: '`@retikz/table` 公开 fixed / auto / fraction / minmax 判别 schema、类型与 canonical index 稀疏覆盖。它们当前是独立原语，尚不能写入 `TableSpec.layout`；根 schema、layout pipeline 与 manifest 将在后续步骤原子切换。',
+                en: '`@retikz/table` now exposes discriminated fixed / auto / fraction / minmax schemas and types plus sparse canonical-index overrides. These are currently standalone primitives and cannot yet be placed in `TableSpec.layout`; a later step will switch the root schema, layout pipeline, and manifest atomically.',
+              },
+            },
+            {
+              label: { zh: '确定性尺寸求解基础', en: 'Deterministic sizing foundation' },
+              content: {
+                zh: '内部轴无关 solver 统一处理自然尺寸 contribution、gap、bounded water-fill、弹性权重、空间不足 overflow 与非法数值诊断，为后续 Cell、span 和约束内容接线提供同一几何语义。',
+                en: 'An internal axis-agnostic solver now handles intrinsic contributions, gaps, bounded water-filling, flex weights, insufficient-space overflow, and invalid-number diagnostics as one geometry contract for later Cell, span, and constrained-content integration.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.1',
           date: '2026-07-21',
           summary: {

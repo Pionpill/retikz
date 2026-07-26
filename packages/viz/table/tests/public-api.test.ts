@@ -37,6 +37,9 @@ describe('@retikz/table public API', () => {
     expect(Table).toHaveProperty('makeTableRuntimeComposites');
     expect(Table).toHaveProperty('lowerTables');
     expect(Table).toHaveProperty('lowerTableWithArtifacts');
+    expect(Table).toHaveProperty('TableTrackSizeKind');
+    expect(Table).toHaveProperty('TableTrackSizeSchema');
+    expect(Table).toHaveProperty('TableTrackOverridesSchema');
 
     expect(Table).not.toHaveProperty('emitTable');
     expect(Table).not.toHaveProperty('layoutTable');
@@ -44,6 +47,8 @@ describe('@retikz/table public API', () => {
     expect(Table).not.toHaveProperty('presentCellPayload');
     expect(Table).not.toHaveProperty('presentTable');
     expect(Table).not.toHaveProperty('resolveTableLayoutSpec');
+    expect(Table).not.toHaveProperty('resolveTableTrackSizes');
+    expect(Table).not.toHaveProperty('solveTableTracks');
   });
 
   it('keeps public contract types while hiding pipeline stage types', () => {

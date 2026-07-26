@@ -354,6 +354,41 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'TableLayout',
     url: '/viz/table/reference/contract-table#tablelayoutschema',
   },
+  TableFixedTrackSizeSchema: {
+    schema: TableIR.TableFixedTrackSizeSchema,
+    label: 'TableFixedTrackSize',
+    url: '/viz/table/reference/contract-table#tablefixedtracksizeschema',
+  },
+  TableAutoTrackSizeSchema: {
+    schema: TableIR.TableAutoTrackSizeSchema,
+    label: 'TableAutoTrackSize',
+    url: '/viz/table/reference/contract-table#tableautotracksizeschema',
+  },
+  TableFractionTrackSizeSchema: {
+    schema: TableIR.TableFractionTrackSizeSchema,
+    label: 'TableFractionTrackSize',
+    url: '/viz/table/reference/contract-table#tablefractiontracksizeschema',
+  },
+  TableMinmaxTrackSizeSchema: {
+    schema: TableIR.TableMinmaxTrackSizeSchema,
+    label: 'TableMinmaxTrackSize',
+    url: '/viz/table/reference/contract-table#tableminmaxtracksizeschema',
+  },
+  TableTrackSizeSchema: {
+    schema: TableIR.TableTrackSizeSchema,
+    label: 'TableTrackSize',
+    url: '/viz/table/reference/contract-table#tabletracksizeschema',
+  },
+  TableTrackOverrideSchema: {
+    schema: TableIR.TableTrackOverrideSchema,
+    label: 'TableTrackOverride',
+    url: '/viz/table/reference/contract-table#tabletrackoverrideschema',
+  },
+  TableTrackOverridesSchema: {
+    schema: TableIR.TableTrackOverridesSchema,
+    label: 'TableTrackOverrides',
+    url: '/viz/table/reference/contract-table#tabletrackoverridesschema',
+  },
   DetailTableStructureSchema: {
     schema: TableIR.DetailTableStructureSchema,
     label: 'DetailTableStructure',

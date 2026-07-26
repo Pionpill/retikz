@@ -56,7 +56,7 @@ import {
   AxesTickSourceKind,
   GridBorderOrder,
 } from '@retikz/standard';
-import { TableComposite, TableStructureKind } from '@retikz/table';
+import { TableComposite, TableStructureKind, TableTrackSizeKind } from '@retikz/table';
 import { MathJaxExtension, MathJaxProfile } from '@retikz/tex';
 
 /** API 值集合注册项 */
@@ -240,6 +240,9 @@ export const API_VALUE_REGISTRY = {
   },
   TableStructureKind: {
     values: Object.values(TableStructureKind),
+  },
+  TableTrackSizeKind: {
+    values: Object.values(TableTrackSizeKind),
   },
   WebFontSizePreset: {
     values: Object.values(WebFontSizePreset),

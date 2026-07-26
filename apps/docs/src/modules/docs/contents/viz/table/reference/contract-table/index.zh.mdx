@@ -1,6 +1,6 @@
 ---
 title: 契约 - 表格
-description: 查询 TableSpec 根、Cell payload、固定轨道布局及 manual/custom 精确变体的 JSON schema。
+description: 查询 TableSpec 根、Cell payload、当前固定布局与 alpha.2 轨道尺寸原语的 JSON schema。
 ---
 
 基础表格契约定义所有表型共享的顶层身份、Cell 内容和布局字段，并提供 manual / custom 精确根变体。detail 专有的数据引用与列结构见[明细表契约](/viz/table/reference/contract-detail)。
@@ -114,6 +114,84 @@ description: 查询 TableSpec 根、Cell payload、固定轨道布局及 manual/
 />
 
 省略字段时，`columnWidth` 为 `120`、`rowHeight` 为 `32`、`headerHeight` 跟随正文行高，行列 gap 为 `0`。Cell 内容不会反向改变轨道尺寸。
+
+## 轨道尺寸原语
+
+alpha.2 公开以下独立尺寸原语，用于表达固定尺寸、内容自然尺寸、剩余空间份额和带上下界的轨道。它们目前尚未接入 Table 根布局：`TableLayoutSchema` 仍只接受上面的 `columnWidth`、`rowHeight`、`headerHeight`、`columnGap` 与 `rowGap`。根 schema、layout pipeline 与 manifest 会在后续迁移中原子切换；现阶段不要把这些对象写入 `TableSpec.layout`。
+
+轨道尺寸的判别值为 <ApiValues name="TableTrackSizeKind" />。
+
+### TableFixedTrackSizeSchema
+
+<ZodSchema
+  name="TableFixedTrackSizeSchema"
+  description="显式固定轨道尺寸；允许 0 表达折叠轨道。"
+  descriptions={{
+    kind: '固定轨道尺寸的判别值。',
+    value: '有限非负的固定尺寸。',
+  }}
+/>
+
+### TableAutoTrackSizeSchema
+
+<ZodSchema
+  name="TableAutoTrackSizeSchema"
+  description="从 canonical 内容贡献确定自然尺寸的轨道。"
+  descriptions={{
+    kind: '内容自然尺寸轨道的判别值。',
+  }}
+/>
+
+### TableFractionTrackSizeSchema
+
+<ZodSchema
+  name="TableFractionTrackSizeSchema"
+  description="在有限轴约束下按权重分配剩余空间的轨道。"
+  descriptions={{
+    kind: '弹性份额轨道的判别值。',
+    weight: '有限正权重；省略时运行时使用 1。',
+  }}
+/>
+
+### TableMinmaxTrackSizeSchema
+
+<ZodSchema
+  name="TableMinmaxTrackSizeSchema"
+  description="由下界和上界变体约束的轨道尺寸。"
+  descriptions={{
+    kind: '带上下界轨道的判别值。',
+    min: '固定或内容自然下界。',
+    'min.kind': '下界尺寸的判别值。',
+    'min.value': '固定下界的有限非负尺寸。',
+    max: '固定、内容自然或弹性份额上界。',
+    'max.kind': '上界尺寸的判别值。',
+    'max.value': '固定上界的有限非负尺寸。',
+    'max.weight': '弹性上界的有限正权重；省略时运行时使用 1。',
+  }}
+/>
+
+当上下界都是 fixed 时，`min.value` 不能大于 `max.value`。`min` 不接受 fraction；`max` 接受 fixed、auto 或 fraction。
+
+### TableTrackSizeSchema
+
+<ZodSchema name="TableTrackSizeSchema" description="fixed、auto、fraction 与 minmax 四种轨道尺寸的判别联合。" />
+
+### TableTrackOverrideSchema
+
+<ZodSchema
+  name="TableTrackOverrideSchema"
+  description="通过 canonical 零基索引覆盖单个轨道的尺寸。"
+  descriptions={{
+    index: '要覆盖的 canonical 零基轨道索引。',
+    size: '替换该索引轴默认值的轨道尺寸。',
+  }}
+/>
+
+### TableTrackOverridesSchema
+
+<ZodSchema name="TableTrackOverridesSchema" description="canonical 索引必须唯一的稀疏轨道尺寸覆盖列表。" />
+
+列表允许只声明需要覆盖的索引，不要求复制其余轨道。同一列表中的重复索引会被 schema 拒绝；相对于实际行列数量的越界检查由后续 layout resolve 执行。
 
 ## 相关
 
