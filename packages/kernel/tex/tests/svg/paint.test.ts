@@ -46,6 +46,10 @@ describe('[parse-svg] drawable paint contract', () => {
     ['nested svg', '<svg viewBox="0 0 10 10"><svg viewBox="0 0 1 1"><path d="M0 0"/></svg></svg>'],
     ['text', '<svg viewBox="0 0 10 10"><text>x</text></svg>'],
     [
+      'clip-path presentation attribute',
+      '<svg viewBox="0 0 10 10"><defs><clipPath id="clip"><path d="M0 0H5V5Z"/></clipPath></defs><g clip-path="url(#clip)"><path d="M0 0H10V10Z"/></g></svg>',
+    ],
+    [
       'multi-child group opacity',
       '<svg viewBox="0 0 10 10"><g opacity=".5"><path d="M0 0"/><path d="M1 1"/></g></svg>',
     ],

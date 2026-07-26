@@ -136,6 +136,9 @@ const resolvePaintContext = (
   parent: PaintContext,
   node: SvgNode,
 ): { paint: PaintContext; opacity?: number; hasOpacity: boolean } => {
+  if (attribute(node, 'clip-path') !== undefined) {
+    unsupported('SVG clip-path is not supported');
+  }
   const style = parseStyle(attribute(node, 'style'));
   const colorValue = presentationValue(node, style, 'color');
   let color = parent.color;
