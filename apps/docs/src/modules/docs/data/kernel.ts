@@ -171,6 +171,7 @@ export const kernelSection: Array<Section> = [
     label: 'kernel.packages',
     document: true,
     pages: [
+      { id: 'runtime', label: 'kernel.pkgRuntime', meta: extensionGuide('kernel.runtime-owner') },
       { id: 'react', label: 'kernel.pkgReact' },
       { id: 'vanilla', label: 'kernel.pkgVanilla' },
       { id: 'tex', label: 'kernel.pkgTex' },

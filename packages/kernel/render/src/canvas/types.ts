@@ -1,3 +1,5 @@
+import type { RuntimeTraceReporter } from '@retikz/runtime';
+
 import type { AnimationPropertyRegistry } from '../animation/registry';
 import type { EasingRegistry } from '../animation/types';
 
@@ -21,6 +23,8 @@ export type PrimAnimationResolution = { mode: 'skip' } | { mode: 'at'; time: num
 
 /** Canvas Scene 绘制选项 */
 export type DrawOptions = {
+  /** 记录完整 Canvas draw 消费的 Scene primitive occurrence */
+  trace?: RuntimeTraceReporter<'@retikz/render:canvas'>;
   /** 接收未支持能力的诊断告警；缺省写入 `console.warn` */
   warnUnsupported?: (warning: CanvasWarning) => void;
   /** 文本 primitive 未指定 fontFamily 时的默认 CSS font-family */

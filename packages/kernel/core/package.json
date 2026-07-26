@@ -66,6 +66,7 @@
   },
   "dependencies": {
     "@retikz/math": "workspace:*",
+    "@retikz/runtime": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {
