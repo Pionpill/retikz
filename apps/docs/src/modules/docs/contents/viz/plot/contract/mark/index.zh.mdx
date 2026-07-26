@@ -1,0 +1,335 @@
+---
+title: 图元契约
+description: 查询 Plot 点、路径、区间、参考、关系与自定义图元 schema。
+---
+
+图元是图形语法的几何输出层。内置图元使用精确判别联合，自定义图元则保留 JSON-safe 开放配置，并在 lowering 时由对应 `MarkDefinition` 校验。
+
+## MarkSchema
+
+<ZodSchema name="MarkSchema" description="Point、Path、Interval、Reference 与 Relation 内置图元的判别联合。" />
+
+## MarkOperationSchema
+
+<ZodSchema name="MarkOperationSchema" description="内置图元或运行时注册自定义图元的联合。" />
+
+## PointMarkSchema
+
+<ZodSchema
+  name="PointMarkSchema"
+  description="每条数据生成一个 glyph，或在 encoding.text 存在时生成无边框文本 Node。"
+  descriptions={{
+    type: '点图元判别值。',
+    color: '数据绑定或常量 glyph 主颜色，优先于常量 fill。',
+    textColor: '文本点的 Core Node textColor，仅 encoding.text 存在时生效。',
+    size: '经 sqrt 半径比例尺映射的字段，或最终半径常量。',
+    shape: '分类映射或常量 Core Node 形状名。',
+    fill: 'glyph 填充 paint。',
+    stroke: 'glyph 描边 paint。',
+    strokeWidth: 'glyph 描边宽度。',
+    fillOpacity: 'glyph 填充不透明度。',
+    strokeOpacity: 'glyph 描边不透明度。',
+    opacity: 'glyph 整体不透明度。',
+    rotate: 'glyph 旋转角度。',
+    minimumSize: '最小可视尺寸，会被每数据 size 覆盖。',
+    zIndex: '每数据 Node 的绘制顺序提示。',
+    align: 'Core Node 多行文本对齐。',
+    lineHeight: 'Core Node 行高。',
+    maxTextWidth: 'Core Node 文本最大换行宽度。',
+    cornerRadius: 'Core Node 圆角半径。',
+    scale: 'Core Node 缩放。',
+    padding: 'Core Node 内边距。',
+    margin: 'Core Node 外边距。',
+    dashed: 'Core Node 虚线快捷开关。',
+    dotted: 'Core Node 点线快捷开关。',
+    dashPattern: 'Core Node 虚线数组。',
+    font: 'Core Node 字体覆盖。',
+    boundary: 'Core Node 边界覆盖。',
+    shadow: 'Core Node 阴影。',
+    blendMode: 'Core Node 混合模式。',
+    dx: '相对投影锚点的水平微调，正值向右。',
+    dy: '相对投影锚点的垂直微调，正值向屏幕下方。',
+    anchorId: '写入每个生成 Node 的稳定 id 规则。',
+    id: '用于生成 Scope 和锚点目标的可选图元 id。',
+    layer: '外层图元 Scope 的语义图层覆盖。',
+    coordinateView: '投影该图元的坐标视图 id；省略时使用组合默认视图。',
+    transform: '仅影响该图元的局部变换链。',
+    label: '附着在每数据 Node.label 上的标签。',
+    encoding: '点图元的位置、文本与扩展通道。',
+  }}
+/>
+
+## PathMarkSchema
+
+<ZodSchema
+  name="PathMarkSchema"
+  description="按顺序连接数据点形成一条或多条一维路径。"
+  descriptions={{
+    type: '路径图元判别值。',
+    order: '连接顺序字段；省略时使用数组顺序。',
+    series: '按不同值拆分多条路径的 series 字段。',
+    closed: '是否把末点连回起点。',
+    connectNulls: '是否跳过无效投影点并跨空连接。',
+    closure: '循环、常量基线或每行堆叠基线的闭合策略。',
+    curve: '相邻有序点的连接曲线。',
+    strokeWidth: '路径描边宽度。',
+    opacity: '路径整体不透明度。',
+    lineCap: '路径端点样式。',
+    lineJoin: '路径连接处样式。',
+    roundedCorners: '几何圆角半径。',
+    fill: 'Core Path 填充 paint。',
+    stroke: 'Core Path 描边 paint。',
+    strokeOpacity: 'Core Path 描边不透明度。',
+    zIndex: 'Core Path 叠放顺序。',
+    rotate: 'Core Path 旋转角度。',
+    scale: 'Core Path 缩放。',
+    fillRule: 'Core Path 填充规则。',
+    thickness: 'Core Path 轮廓粗细预设。',
+    marks: '沿 lowering 路径放置的静态 Core Path marks。',
+    dashPattern: 'Core Path 虚线数组。',
+    shadow: 'Core Path 阴影。',
+    blendMode: 'Core Path 混合模式。',
+    anchorId: '为路径上每数据 Coordinate 生成稳定 id 的规则。',
+    id: '可选图元 id。',
+    layer: '外层 Scope 图层覆盖。',
+    coordinateView: '用于投影的坐标视图 id。',
+    transform: '图元局部变换链。',
+    label: '附着在路径几何上的标签。',
+    encoding: '路径的位置与颜色通道。',
+  }}
+/>
+
+### PathClosureSchema
+
+<ZodSchema name="PathClosureSchema" description="直接回到起点、回到常量基线，或回到每行堆叠基线的闭合联合。" />
+
+## IntervalMarkSchema
+
+<ZodSchema
+  name="IntervalMarkSchema"
+  description="把正交区间乘积投影为线段、矩形、扇区或 cell。"
+  descriptions={{
+    type: '区间图元判别值。',
+    series: '颜色分组和带内子分组的 series 字段。',
+    bounds: '按坐标角色声明的区间边界；省略时从角色比例尺推断。',
+    strokeWidth: '区间 cell 描边宽度。',
+    fill: '区间 cell 填充 paint。',
+    stroke: '区间 cell 描边 paint。',
+    opacity: '区间 cell 整体不透明度。',
+    fillOpacity: '区间 cell 填充不透明度。',
+    padAngle: '极坐标扇区之间的角度间隔，直角 cell 忽略。',
+    pull: '极坐标扇区沿中角的静态径向偏移。',
+    anchorId: '写入每个生成 interval Node 的稳定 id 规则。',
+    align: 'Core Node 文本对齐。',
+    lineHeight: 'Core Node 行高。',
+    maxTextWidth: 'Core Node 文本最大宽度。',
+    cornerRadius: 'Core Node 圆角。',
+    scale: 'Core Node 缩放。',
+    padding: 'Core Node 内边距。',
+    margin: 'Core Node 外边距。',
+    dashed: 'Core Node 虚线开关。',
+    dotted: 'Core Node 点线开关。',
+    dashPattern: 'Core Node 虚线数组。',
+    font: 'Core Node 字体。',
+    boundary: 'Core Node 边界。',
+    shadow: 'Core Node 阴影。',
+    blendMode: 'Core Node 混合模式。',
+    id: '可选图元 id。',
+    layer: '外层 Scope 图层覆盖。',
+    coordinateView: '用于投影的坐标视图 id。',
+    transform: '图元局部变换链。',
+    label: '附着在每个 interval Node 上的标签。',
+    encoding: '区间的位置与颜色通道。',
+  }}
+/>
+
+### IntervalBoundsSchema
+
+<ZodSchema
+  name="IntervalBoundsSchema"
+  description="按坐标角色指定的区间边界映射。"
+  descriptions={{ x: '第一位置角色的区间边界。', y: '第二位置角色的区间边界。' }}
+/>
+
+### IntervalBoundSchema
+
+<ZodSchema name="IntervalBoundSchema" description="Band、Span、Extent、Proportional 或 Full 单角色区间边界联合。" />
+
+## ReferenceMarkSchema
+
+<ZodSchema
+  name="ReferenceMarkSchema"
+  description="用常量或每数据位置表达参考线、单轴 band 或有界 region。"
+  descriptions={{
+    type: '参考图元判别值。',
+    kind: '显式 region 形态；省略时从编码推断参考线或单轴 band。',
+    yTo: 'y 方向上界；与 encoding.y 组成水平 band 或 region 边界。',
+    xTo: 'x 方向上界；与 encoding.x 组成垂直 band 或 region 边界。',
+    extentField: '局部长度参考的对侧起点字段。',
+    extentToField: '局部长度参考的对侧终点字段。',
+    strokeWidth: '参考线描边宽度。',
+    opacity: '参考图元整体不透明度。',
+    fillOpacity: '参考 band / region 填充不透明度。',
+    label: '线使用 geometry label，band / region 使用 node label。',
+    align: 'Core Node 文本对齐。',
+    lineHeight: 'Core Node 行高。',
+    maxTextWidth: 'Core Node 文本最大宽度。',
+    cornerRadius: 'Core Node 圆角。',
+    scale: 'Core Node 或 Path 缩放。',
+    padding: 'Core Node 内边距。',
+    margin: 'Core Node 外边距。',
+    dashed: 'Core Node 虚线开关。',
+    dotted: 'Core Node 点线开关。',
+    dashPattern: 'Core Node / Path 虚线数组。',
+    font: 'Core Node 字体。',
+    boundary: 'Core Node 边界。',
+    shadow: 'Core Node / Path 阴影。',
+    blendMode: 'Core Node / Path 混合模式。',
+    fill: 'Core Path 填充 paint。',
+    stroke: 'Core Path 描边 paint。',
+    strokeOpacity: 'Core Path 描边不透明度。',
+    zIndex: 'Core Path 叠放顺序。',
+    rotate: 'Core Path 旋转角度。',
+    fillRule: 'Core Path 填充规则。',
+    thickness: 'Core Path 轮廓粗细预设。',
+    marks: 'Core Path marks。',
+    id: '可选图元 id。',
+    layer: '外层 Scope 图层覆盖。',
+    coordinateView: '用于投影的坐标视图 id。',
+    transform: '图元局部变换链。',
+    encoding: '参考线、band 或 region 的位置绑定。',
+  }}
+/>
+
+## RelationMarkSchema
+
+<ZodSchema
+  name="RelationMarkSchema"
+  description="把 source 与 target 目标通过 Core Path 连接，kind 选择描边或 ribbon 语义。"
+  descriptions={{
+    type: '关系图元判别值。',
+    kind: '关系几何类型，省略时为 path。',
+    source: '关系源目标。',
+    target: '关系目标目标。',
+    style: 'path 与 ribbon 共享的视觉字段。',
+    path: '描边路径专用的路由、途经点和 Core Path 选项。',
+    ribbon: 'ribbon 专用的宽度、渐变与采样选项。',
+    label: '附着在关系几何上的标签。',
+    id: '可选图元 id。',
+    layer: '外层 Scope 图层覆盖。',
+    coordinateView: '用于投影的坐标视图 id。',
+    transform: '图元局部变换链。',
+    encoding: '可选非位置关系通道；几何由 source / target 承载。',
+    'encoding.color': '关系颜色通道，lowering 为 Core Path color。',
+    'encoding.channels': '由 mark / scope / path Definition 消费的自定义通道。',
+  }}
+/>
+
+### PlotTargetRefSchema
+
+<ZodSchema name="PlotTargetRefSchema" description="直接 Core id、每行生成的锚点 id，或在当前坐标视图中投影的目标。" />
+
+### RelationPathGeometrySchema
+
+<ZodSchema
+  name="RelationPathGeometrySchema"
+  description="RelationMark 的途经点、显式路由或算法路由配置。"
+  descriptions={{
+    via: '可选中间目标，投影后可生成 Core Coordinate。',
+    route: '初始 move(source) 之后的显式路由 step。',
+    routing: '算法路由策略；省略时直线连接。',
+    label: '附着在默认路由或最后一个可绘制 step 上的标签。',
+    options: '仅 path 关系使用的 Core Path 选项。',
+  }}
+/>
+
+### RelationRibbonOptionsSchema
+
+<ZodSchema
+  name="RelationRibbonOptionsSchema"
+  description="RelationMark ribbon 的源端、目标端宽度与采样选项。"
+  descriptions={{
+    width: '源端宽度；省略 endWidth 时也是全程宽度。',
+    endWidth: '可选目标端宽度，与 width 组成渐变 ribbon。',
+    options: '仅 ribbon 关系使用的 Core Path kind=ribbon 选项。',
+  }}
+/>
+
+### RelationPrimitiveStyleSchema
+
+<ZodSchema
+  name="RelationPrimitiveStyleSchema"
+  description="描边与 ribbon 关系共享的视觉字段。"
+  descriptions={{
+    color: '关系主颜色。',
+    fill: '关系填充 paint。',
+    fillOpacity: '填充不透明度。',
+    stroke: '描边 paint。',
+    strokeWidth: '描边宽度。',
+    strokeOpacity: '描边不透明度。',
+    opacity: '整体不透明度。',
+    shadow: '阴影。',
+    blendMode: '混合模式。',
+    zIndex: '每数据关系的叠放顺序。',
+  }}
+/>
+
+### RelationRoutingSpecSchema
+
+<ZodSchema name="RelationRoutingSpecSchema" description="直线、弯曲或正交关系路由策略。" />
+
+### RelationRouteStepSchema
+
+<ZodSchema
+  name="RelationRouteStepSchema"
+  description="在 source / target 解析后 lowering 为 Core path step 的显式关系路由段。"
+  descriptions={{
+    kind: 'Core path step 类型。',
+    to: '该 step 的目标；最后一个可绘制 step 省略时回退到 RelationMark.target。',
+    via: 'fold step 的折转方向。',
+    control: '二次贝塞尔控制点。',
+    control1: '三次贝塞尔第一控制点。',
+    control2: '三次贝塞尔第二控制点。',
+    bendDirection: 'bend step 弯曲方向。',
+    bendAngle: 'bend step 弯曲角。',
+    outAngle: 'bend step 离开角。',
+    inAngle: 'bend step 进入角。',
+    looseness: 'bend step 曲线松紧系数。',
+    label: '附着在该可绘制 step 上的标签。',
+  }}
+/>
+
+## CustomMarkSchema
+
+<ZodSchema
+  name="CustomMarkSchema"
+  description="由运行时 MarkDefinition 校验和 lowering 的开放 JSON 图元操作。"
+  descriptions={{
+    type: '已注册的自定义图元类型，不得与内置类型冲突。',
+    transform: '在 Plot 根变换之后执行的图元局部变换。',
+    layer: '自定义图元外层 Scope 的语义图层覆盖。',
+    coordinateView: '用于投影的坐标视图 id。',
+    encoding: '用于比例尺推断与 Definition 消费的位置、非位置通道。',
+  }}
+/>
+
+## 共享辅助契约
+
+### MarkTransformSchema
+
+<ZodSchema name="MarkTransformSchema" description="在 Plot 根变换后执行、且只影响当前图元的变换数组。" />
+
+### AnchorIdSpecSchema
+
+<ZodSchema
+  name="AnchorIdSpecSchema"
+  description="为图元生成的 Core Node / Coordinate 建立稳定 id 的规则。"
+  descriptions={{
+    prefix: '当前 Plot 下的可选 id namespace；省略时回退到 mark id 或 mark.<index>。',
+    field: '其值被 slug 进锚点 id 的数据字段。',
+    template: '支持 plotId、markId、markIndex、index 和 field 占位符的 JSON-safe 模板。',
+    generator: '从 LowerPlotsOptions.anchorIdGenerators 解析的运行时生成器键。',
+  }}
+/>
+
+`field`、`template` 与 `generator` 必须且只能出现一个。

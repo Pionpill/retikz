@@ -1,0 +1,104 @@
+---
+title: 规格
+description: 查询 PlotSpec 根、坐标视图、Facet 与 Tracks 组合的 JSON schema。
+---
+
+`PlotSpecSchema` 是 Plot Tier 2 composite 的根契约。它引用外部 dataset，声明变换、比例尺、坐标系、图元和辅助层；lowering 再将其展开为 Kernel IR。
+
+## PlotSpecSchema
+
+<ZodSchema
+  name="PlotSpecSchema"
+  description="Plot IR 根：只保存 JSON-safe 语法与数据引用的 plot composite。"
+  descriptions={{
+    namespace: '固定为 plot，用于把 Tier 2 节点路由到 Plot lowering。',
+    type: '固定为顶层 plot composite 类型。',
+    id: '可选稳定 Plot id，同时用作外层 Scope id 和锚点目标。',
+    data: '外部 dataset 引用与可选数据模型；实际数据不进入 IR。',
+    'data.reference': '在 lowering 时从 datasets 中解析的数据集名。',
+    'data.model': '可选字段模型，为通道、比例尺与辅助提供类型信息。',
+    transform: '在比例尺推断和图元 lowering 前按顺序执行的数据变换。',
+    scales: '具名比例尺操作；内置变体在此校验，自定义变体在 lowering 时校验。',
+    colors: '兼容性调色板简写；显式 theme palette 或 scale range / scheme 优先级更高。',
+    theme: 'Plot lowering 消费的 JSON-safe 视觉默认值。',
+    layout: 'Plot 标签、图例和辅助预留空间的布局策略。',
+    labels: '标题、说明、来源等静态 Plot 文本。',
+    width: '图区内在宽度；省略时回退到 lowering 全局宽度和内置默认值。',
+    height: '图区内在高度；省略时回退到 lowering 全局高度和内置默认值。',
+    coordinate: '单坐标系简写；未使用 composition 时必需。',
+    composition: '为图元和坐标轴注册多个坐标视图及其组合。',
+    marks: '图元层，数组顺序就是稳定的绘制顺序。',
+    guides: '坐标轴和图例辅助层；省略表示不生成辅助。',
+    meta: '原样复制到 Kernel IR 的 JSON-safe 源元数据。',
+  }}
+/>
+
+`coordinate` 与 `composition` 必须且只能出现一个。同一 Plot 中的 scale name 、view id 和 arrangement id 必须唯一，图元或坐标轴引用的 `coordinateView` 必须已注册。
+
+## CoordinateCompositionSchema
+
+<ZodSchema
+  name="CoordinateCompositionSchema"
+  description="Plot 内部的坐标视图注册表及组合策略。"
+  descriptions={{
+    defaultView: '图元或坐标轴未指定 coordinateView 时使用的视图 id。',
+    views: '显式注册的坐标视图，id 必须唯一。',
+    arrangements: '派生额外坐标视图的 Facet 或 Tracks 组合。',
+    spacing: '组合层统一间距、标签距离和外边距。',
+    resolve: '各坐标角色的比例尺、坐标轴和网格解析策略。',
+  }}
+/>
+
+## CoordinateViewSchema
+
+<ZodSchema
+  name="CoordinateViewSchema"
+  description="Plot 组合中的具名坐标视图。"
+  descriptions={{
+    id: '被图元和坐标轴引用的稳定视图 id。',
+    coordinate: '该视图拥有的坐标操作。',
+    placement: '在 Plot 组合中的根、slot 或 overlay 放置；省略时归一为根放置。',
+    meta: '该坐标视图的自由 JSON-safe 元数据。',
+  }}
+/>
+
+## FacetArrangementSchema
+
+<ZodSchema
+  name="FacetArrangementSchema"
+  description="按数据字段派生分面 panel 坐标视图的组合。"
+  descriptions={{
+    kind: '固定为 facet 的组合判别值。',
+    id: '用于派生 panel view id 和溯源的稳定组合 id。',
+    view: '被所有分面 panel 复用的模板坐标视图 id。',
+    row: '行分面字段或有序的多级行分面维度。',
+    column: '列分面字段或有序的多级列分面维度。',
+    empty: '空 panel 策略；省略时丢弃无数据的行列组合。',
+    header: '分面行、列标签的可见性和文本样式。',
+    resolve: '分面内的比例尺、坐标轴与网格解析策略。',
+    spacing: '分面局部间距覆盖。',
+    coordinate: '所有派生 panel 使用的坐标操作；省略时继承模板视图。',
+    viewIdTemplate: '支持 arrangement、row、column 和 panel 占位符的视图 id 模板。',
+  }}
+/>
+
+`row` 与 `column` 至少声明一个。
+
+## TrackArrangementSchema
+
+<ZodSchema
+  name="TrackArrangementSchema"
+  description="派生共享角色比例尺的多 track 坐标视图组合。"
+  descriptions={{
+    kind: '固定为 tracks 的组合判别值。',
+    id: '用于派生 track view id 和溯源的稳定组合 id。',
+    coordinate: '该 tracks 组合拥有的基础坐标操作。',
+    sharedRoles: '在各 track 之间共享 domain 与 range 的坐标角色。',
+    frame: '各 track 的 frame 共享方式。',
+    tracks: '挂载在该组合下的 track 列表。',
+    header: 'track 标签的可见性。',
+    resolve: 'track 局部的比例尺、坐标轴与网格解析策略。',
+    spacing: 'track 局部间距覆盖。',
+    viewIdTemplate: '支持 arrangement 和 track 占位符的视图 id 模板。',
+  }}
+/>

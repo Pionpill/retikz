@@ -43,13 +43,14 @@ export const DocPage: FC<DocPageProps> = props => {
   const { source, segments: sourceSegments, notFound, resolvedLang } = useMdxSource();
   const tocOpen = useTocStore(state => state.tocOpen);
 
-  /** changelog 页走数据驱动渲染,不走 mdx 管线（releases/changelog 分组下的概览与各中版本详情子页） */
+  /** changelog 页走数据驱动渲染，不走 mdx 管线。 */
   const isChangelog = isChangelogLocation(loc);
   const moduleId = loc?.moduleId;
-  /** 当前模块的 changelog 切片（core / plot 各取自己包组）；非 changelog 页为空 */
+  const sectionId = loc?.sectionId;
+  /** 当前模块与分组的 changelog 切片；非 changelog 页为空。 */
   const changelogReleases = useMemo(
-    () => (isChangelog && moduleId ? changelogForModule(moduleId) : []),
-    [isChangelog, moduleId],
+    () => (isChangelog && moduleId ? changelogForModule(moduleId, sectionId ?? undefined) : []),
+    [isChangelog, moduleId, sectionId],
   );
   /** 分组节点本身（无 subPage）为精简概览；带 subPage 时按 slug 命中某中版本详情 */
   const isChangelogOverview = isChangelog && loc?.subPageId == null;
@@ -136,7 +137,11 @@ export const DocPage: FC<DocPageProps> = props => {
           <div className="[&_p]:[overflow-wrap:anywhere] [&_li]:[overflow-wrap:anywhere] [&_h1]:[overflow-wrap:anywhere] [&_h2]:[overflow-wrap:anywhere] [&_h3]:[overflow-wrap:anywhere] [&_h4]:[overflow-wrap:anywhere]">
             {isChangelog ? (
               isChangelogOverview ? (
-                <ChangelogOverview releases={changelogReleases} moduleId={loc.moduleId} />
+                <ChangelogOverview
+                  releases={changelogReleases}
+                  moduleId={loc.moduleId}
+                  sectionId={loc.sectionId ?? 'releases'}
+                />
               ) : changelogVersion ? (
                 <ChangelogVersionDetail release={changelogVersion} />
               ) : (

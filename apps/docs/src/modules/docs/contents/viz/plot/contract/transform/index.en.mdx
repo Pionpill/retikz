@@ -1,0 +1,58 @@
+---
+title: Transform Contract
+description: Query the Plot schemas for stack, bin, relate, normalize, interval derivation, jitter, density, and trend transforms.
+---
+
+`TransformSchema` executes in array order and combines shared `@retikz/data` transforms, Plot-only built-ins, and runtime-registered extensions. Row-count-changing operations must precede marks that consume their output fields.
+
+## TransformSchema
+
+<ZodSchema name="PlotTransformSchema" />
+
+## StackTransformSchema
+
+<ZodSchema name="StackTransformSchema" />
+
+## BinTransformSchema
+
+<ZodSchema name="BinTransformSchema" />
+
+## RelateTransformSchema
+
+<ZodSchema name="RelateTransformSchema" />
+
+### EndpointProjectionSchema
+
+<ZodSchema name="EndpointProjectionSchema" />
+
+### PairMeasureOperationSchema
+
+<ZodSchema name="PairMeasureOperationSchema" />
+
+## NormalizeTransformSchema
+
+<ZodSchema name="NormalizeTransformSchema" />
+
+## DeriveIntervalTransformSchema
+
+<ZodSchema name="DeriveIntervalTransformSchema" />
+
+## JitterTransformSchema
+
+<ZodSchema name="JitterTransformSchema" />
+
+## DensityTransformSchema
+
+<ZodSchema name="DensityTransformSchema" />
+
+### DensityBandwidthSpecSchema
+
+<ZodSchema name="DensityBandwidthSpecSchema" />
+
+## SmoothTransformSchema
+
+<ZodSchema name="SmoothTransformSchema" />
+
+### SmoothMethodSpecSchema
+
+<ZodSchema name="SmoothMethodSpecSchema" />

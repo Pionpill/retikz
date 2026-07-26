@@ -1,0 +1,159 @@
+---
+title: 变换契约
+description: 查询 Plot 的堆叠、分箱、关联、归一化、区间派生、抖动、密度与趋势 schema。
+---
+
+`TransformSchema` 按数组顺序执行，联合通用 `@retikz/data` 变换、Plot 专用内置变换和运行时注册的扩展变换。会改变行数的操作应放在依赖其输出字段的图元之前。
+
+## TransformSchema
+
+<ZodSchema name="PlotTransformSchema" description="通用数据变换、Plot 内置变换与已注册扩展变换的联合。" />
+
+## StackTransformSchema
+
+<ZodSchema
+  name="StackTransformSchema"
+  description="在每个 x 分组内按 series 累加 y，为每行派生区间上下界。"
+  descriptions={{
+    kind: '堆叠变换判别值。',
+    x: '分组键字段；省略时把所有行累加为一条链，可用于饼图扇区。',
+    y: '在每个分组内累加的数值字段。',
+    groupBy: '决定各堆叠分段和顺序的 series 字段；省略时按数据行顺序。',
+    startField: '每个分段下界输出字段，默认 y0。',
+    endField: '每个分段上界输出字段，默认 y1。',
+    offset: '基线偏移：zero、normalize、diverging、center 或 overlap。',
+  }}
+/>
+
+## BinTransformSchema
+
+<ZodSchema
+  name="BinTransformSchema"
+  description="把连续字段划分为区间，每个 bin 输出一行边界与聚合指标。"
+  descriptions={{
+    kind: '分箱变换判别值。',
+    field: '要分箱的连续字段。',
+    count: '目标 bin 数；与 step / thresholds 互斥，默认 10。',
+    step: '数据单位中的固定 bin 宽度；与 count / thresholds 互斥。',
+    thresholds: '显式内部边界；K 个阈值形成 K+1 个 bin。',
+    extent: '覆盖分箱 domain 的 [min, max]；省略时使用观测范围。',
+    nice: '仅 count 策略中把边界取整为易读数值，默认 true。',
+    startField: '每个 bin 下边界输出字段，默认 binStart。',
+    endField: '每个 bin 上边界输出字段，默认 binEnd。',
+    metrics: '每个 bin 的 reducer 指标，默认输出 binCount。',
+  }}
+/>
+
+## RelateTransformSchema
+
+<ZodSchema
+  name="RelateTransformSchema"
+  description="在每个分组中选取 source / target 行，输出 RelationMark 可消费的关系行。"
+  descriptions={{
+    kind: '关联变换判别值。',
+    groupBy: '定义独立关系组的一个或多个字段。',
+    source: '源端点行选择器与字段投影。',
+    target: '目标端点行选择器与字段投影。',
+    measures: '基于选中 source / target 计算的可选成对指标。',
+  }}
+/>
+
+### EndpointProjectionSchema
+
+<ZodSchema
+  name="EndpointProjectionSchema"
+  description="选择每组中的一行，并把源字段投影到关系端点输出。"
+  descriptions={{ selector: '选择端点源行的 selector 操作。', fields: '输出字段后缀到源行字段的非空映射。' }}
+/>
+
+### PairMeasureOperationSchema
+
+<ZodSchema name="PairMeasureOperationSchema" description="从选中 source / target 行计算的成对指标操作。" />
+
+## NormalizeTransformSchema
+
+<ZodSchema
+  name="NormalizeTransformSchema"
+  description="用分组总和除以每行数值，产生分组占比。"
+  descriptions={{
+    kind: '归一化变换判别值。',
+    field: '计算组内占比的非负数值字段。',
+    groupBy: '形成归一化组的复合键字段；省略时对全部行归一化。',
+    basis: '输出 fraction 0..1 或 percent 0..100，默认 fraction。',
+    as: '占比输出字段；省略时就地覆盖输入字段。',
+  }}
+/>
+
+## DeriveIntervalTransformSchema
+
+<ZodSchema
+  name="DeriveIntervalTransformSchema"
+  description="从单个数值字段或两个显式字段派生每行 [start, end] 区间。"
+  descriptions={{
+    kind: '区间派生变换判别值。',
+    from: '从 baseline 到字段值的区间模式中的数值字段。',
+    baseline: '单字段模式的区间起点，默认 0。',
+    startFrom: '显式双字段模式的区间起点字段。',
+    endFrom: '显式双字段模式的区间终点字段。',
+    startField: '派生区间起点的输出字段，默认 y0。',
+    endField: '派生区间终点的输出字段，默认 y1。',
+  }}
+/>
+
+## JitterTransformSchema
+
+<ZodSchema
+  name="JitterTransformSchema"
+  description="使用可复现 PRNG 对连续位置字段添加数据空间偏移。"
+  descriptions={{
+    kind: '抖动变换判别值。',
+    axis: '要扰动的位置字段，默认 x。',
+    xField: 'axis 包含 x 时扰动的连续数值字段，默认 x。',
+    yField: 'axis 包含 y 时扰动的连续数值字段，默认 y。',
+    amount: '缩放前数据单位中的最大绝对偏移，默认 1。',
+    seed: '确定性 PRNG 整数种子，默认 0。',
+  }}
+/>
+
+## DensityTransformSchema
+
+<ZodSchema
+  name="DensityTransformSchema"
+  description="按组对一维高斯 KDE 采样，输出 PathMark 可消费的密度行。"
+  descriptions={{
+    kind: '密度变换判别值。',
+    field: '一维 KDE 样本的连续源字段。',
+    groupBy: '独立拟合密度的分组键。',
+    bandwidth: 'KDE 带宽策略，默认 Silverman 经验法。',
+    sampleCount: '每组均匀输出的密度样本数，默认 64。',
+    extent: '可选采样范围 [min, max]；省略时在观测范围外补三个带宽。',
+    xAs: '密度样本位置输出字段。',
+    densityAs: 'KDE 密度值输出字段。',
+  }}
+/>
+
+### DensityBandwidthSpecSchema
+
+<ZodSchema name="DensityBandwidthSpecSchema" description="Silverman 经验带宽或显式正数带宽的联合。" />
+
+## SmoothTransformSchema
+
+<ZodSchema
+  name="SmoothTransformSchema"
+  description="拟合趋势模型并按组输出 PathMark 可消费的趋势行。"
+  descriptions={{
+    kind: '趋势平滑变换判别值。',
+    x: '自变量的连续字段。',
+    y: '因变量的连续字段。',
+    groupBy: '独立拟合趋势的分组键。',
+    method: '平滑方法，当前默认普通最小二乘线性回归。',
+    sampleCount: '每组均匀输出的趋势样本数，默认 64。',
+    extent: '可选采样范围 [min, max]；省略时使用有限 x 观测范围。',
+    xAs: '趋势样本 x 位置输出字段。',
+    yAs: '预测 y 值输出字段。',
+  }}
+/>
+
+### SmoothMethodSpecSchema
+
+<ZodSchema name="SmoothMethodSpecSchema" description="趋势拟合方法联合，当前为线性回归。" />

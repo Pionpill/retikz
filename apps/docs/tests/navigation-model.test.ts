@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { Section } from '@/modules/docs/data';
 
+import { vizSection } from '@/modules/docs/data';
 import { buildSidebarCategories, flattenLeaves } from '@/modules/docs/layout';
 
 const sections: Array<Section> = [
@@ -42,5 +43,25 @@ describe('layout utils', () => {
     expect(categories[1]?.value).toBe('guide');
     expect(categories[1]?.path).toBe('/kernel/guide');
     expect(categories[1]?.modules[0]?.children?.map(child => child.value)).toEqual(['a', 'b']);
+  });
+
+  it('Plot 末尾注册契约与更新日志路由', () => {
+    const plotPaths = flattenLeaves('viz', vizSection)
+      .map(node => node.path)
+      .filter(path => path.startsWith('/viz/plot/'));
+
+    expect(plotPaths.slice(-11)).toEqual([
+      '/viz/plot/contract/plot',
+      '/viz/plot/contract/encoding',
+      '/viz/plot/contract/transform',
+      '/viz/plot/contract/mark',
+      '/viz/plot/contract/scale',
+      '/viz/plot/contract/coordinate',
+      '/viz/plot/contract/guide',
+      '/viz/plot/contract/layout',
+      '/viz/plot/contract/layer',
+      '/viz/plot/contract/theme',
+      '/viz/plot/changelog/v0-1',
+    ]);
   });
 });

@@ -1,0 +1,70 @@
+---
+title: Contract
+description: Query the public @retikz/plot JSON schemas for the Plot root, encoding, transforms, marks, scales, coordinates, guides, layout, layers, and themes.
+---
+
+This section is the data contract for Plot Tier 2 IR. Each page is sourced directly from the Zod schemas exported by `@retikz/plot`, for JSON generation, external-input validation, LLM tool schemas, and custom Definition implementations.
+
+> Plot IR stores only JSON-safe grammar declarations and data references. Dataset values are injected during lowering and never enter the IR.
+
+## Responsibilities
+
+| Topic      | Responsibility                                  | Consult it when                                 |
+| ---------- | ----------------------------------------------- | ----------------------------------------------- |
+| Plot       | Root spec, coordinate views, and composition    | Generating or validating a complete PlotSpec    |
+| Encoding   | Field, constant, and channel bindings           | Mapping data columns to position and appearance |
+| Transform  | Ordered Plot-domain data transforms             | Declaring stack, bin, density, or trend steps   |
+| Mark       | Marks, relations, references, and path closure  | Selecting geometry and its exact configuration  |
+| Scale      | Positional, ordinal, radial, and color scales   | Validating domains, ranges, and scale options   |
+| Coordinate | 1D, 2D, and custom coordinate operations        | Defining positional roles and scale ownership   |
+| Guide      | Axes, grids, ticks, titles, and legends         | Configuring guides and precise subcomponents    |
+| Layout     | Padding, label placement, and space reservation | Controlling the plot frame and static text      |
+| Layer      | Semantic-layer zIndex override                  | Adjusting generated primitive stacking          |
+| Theme      | Background, text, axes, legends, and palettes   | Defining JSON-safe visual defaults              |
+
+## Pages
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/contract/plot">
+    <span className="font-semibold">Plot spec</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Root spec, coordinate views, and composition</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/contract/encoding">
+    <span className="font-semibold">Encoding</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Field, constant, and channel bindings</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/contract/transform">
+    <span className="font-semibold">Transform</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Stack, bin, derive, density, and trend</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/contract/mark">
+    <span className="font-semibold">Mark</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Point, path, interval, reference, and relation
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/contract/scale">
+    <span className="font-semibold">Scale</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Position, ordinal, radial, and color mapping</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/contract/coordinate">
+    <span className="font-semibold">Coordinate</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Cartesian, polar, 1D, and custom operations</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/contract/guide">
+    <span className="font-semibold">Guide</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Axes, grids, ticks, titles, and legends</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/contract/layout">
+    <span className="font-semibold">Layout</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Padding, static labels, and placement</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/contract/layer">
+    <span className="font-semibold">Layer</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Semantic-layer stacking override</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/contract/theme">
+    <span className="font-semibold">Theme</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Plot-wide visual defaults and palettes</span>
+  </LinkedCard>
+</div>
