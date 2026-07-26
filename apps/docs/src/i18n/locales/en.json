@@ -73,6 +73,7 @@
     "effectsCustomPattern": "Custom Patterns",
     "effectsAnimation": "Animation",
     "effectsCustomAnimation": "Custom Animation",
+    "pkgRuntime": "@retikz/runtime",
     "pkgReact": "@retikz/react",
     "pkgVanilla": "@retikz/vanilla",
     "pkgTex": "@retikz/tex",

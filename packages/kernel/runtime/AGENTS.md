@@ -23,8 +23,9 @@
 ```text
 src/
   trace/      领域中立执行计数、owner-bound reporter 与诊断
-  identity/   owner / program token 与稳定 identity
-  registry/   typed definition registry 与重复 key 诊断
+  identity/   稳定结构化 identity 与 owner index
+  owner/      owner typed token、author contract 与 registry-bound lifecycle executor
+  registry/   owner / program typed definition registry 与重复 key 诊断
   session/    Snapshot、revision 与同步 transaction 生命周期
   program/    program graph、artifact 和 dependency read view
 ```
