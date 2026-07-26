@@ -29,22 +29,22 @@ const linePathIR = (marks?: IRPath['marks']): IRScene => ({
 
 describe('marks → 中段 marker primitive', () => {
   it('单个中点 mark 比无 mark 多产 primitive', () => {
-    const without = leafCount(compileToScene(linePathIR()).primitives);
+    const without = leafCount(compileToScene(linePathIR()).scene.primitives);
     const withMark = leafCount(
-      compileToScene(linePathIR([{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }])).primitives,
+      compileToScene(linePathIR([{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }])).scene.primitives,
     );
     expect(withMark).toBeGreaterThan(without);
   });
 
   it('两个 mark 比一个 mark 再多产 primitive', () => {
-    const one = leafCount(compileToScene(linePathIR([{ pos: 0.5, mark: { kind: 'arrow' } }])).primitives);
+    const one = leafCount(compileToScene(linePathIR([{ pos: 0.5, mark: { kind: 'arrow' } }])).scene.primitives);
     const two = leafCount(
       compileToScene(
         linePathIR([
           { pos: 0.25, mark: { kind: 'arrow' } },
           { pos: 0.75, mark: { kind: 'arrow' } },
         ]),
-      ).primitives,
+      ).scene.primitives,
     );
     expect(two).toBeGreaterThan(one);
   });
@@ -68,9 +68,9 @@ describe('marks → 中段 marker primitive', () => {
         ],
       },
     };
-    const without = leafCount(compileToScene(linePathIR()).primitives);
+    const without = leafCount(compileToScene(linePathIR()).scene.primitives);
     const withMark = leafCount(
-      compileToScene(ir, { arrows: Object.entries(customArrow).map(([name, definition]) => ({ ...definition, name })) })
+      compileToScene(ir, { arrows: Object.entries(customArrow).map(([name, definition]) => ({ ...definition, name })) }).scene
         .primitives,
     );
     expect(withMark).toBeGreaterThan(without);
@@ -107,7 +107,7 @@ describe('marks → 中段 marker 随 strokeWidth 缩放（与端点箭头一致
       }
       return undefined;
     };
-    const x = find(compileToScene(ir).primitives);
+    const x = find(compileToScene(ir).scene.primitives);
     if (x === undefined) throw new Error('no mark scale group found');
     return x;
   };

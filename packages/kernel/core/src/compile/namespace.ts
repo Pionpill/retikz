@@ -32,6 +32,18 @@ export type NamespaceStackOptions = {
   onDuplicate?: (info: DuplicateRegisterInfo) => void;
 };
 
+/** probe 相对父 namespace 当前 frame 的可提交变更 */
+export type NamespaceFrameChange = {
+  /** 注册或覆盖的 id */
+  id: string;
+  /** probe 完成后的 entry */
+  entry: NamespaceEntry;
+  /** probe 中首次注册该 id 的诊断路径 */
+  irPath?: string;
+  /** probe 首次注册该 id 时是否已覆盖创建 fork 时的 baseline */
+  overwroteBaseline: boolean;
+};
+
 /**
  * 栈式 namespace frame
  * @description register 写入栈顶，lookup 按 inside-out 查找；同 frame 重名 last-wins 并触发诊断
@@ -49,6 +61,63 @@ export class NamespaceStack {
     this.frames = [new Map()];
     this.firstIrPaths = [new Map()];
     this.onDuplicate = options.onDuplicate;
+  }
+
+  /**
+   * 创建只读快照语义的独立分支
+   * @description frame 容器会复制，既有 layout 只共享读取；后续 register / replace 不回写父栈
+   */
+  fork(options: NamespaceStackOptions = {}): NamespaceStack {
+    const fork = new NamespaceStack(options);
+    fork.frames.splice(0, fork.frames.length, ...this.frames.map(frame => new Map(frame)));
+    fork.firstIrPaths.splice(0, fork.firstIrPaths.length, ...this.firstIrPaths.map(paths => new Map(paths)));
+    fork.currentPhase = this.currentPhase;
+    return fork;
+  }
+
+  /** 返回当前顶层 frame 相对 base 的新增或覆盖项 */
+  diffTopFrame(base: NamespaceStack): Array<NamespaceFrameChange> {
+    if (this.frames.length !== base.frames.length) {
+      throw new Error('NamespaceStack.diffTopFrame: frame depth mismatch after isolated layout');
+    }
+    const frameIndex = this.frames.length - 1;
+    const current = this.frames[frameIndex];
+    const baseline = base.frames[frameIndex];
+    const paths = this.firstIrPaths[frameIndex];
+    const changes: Array<NamespaceFrameChange> = [];
+    for (const [id, entry] of current) {
+      if (baseline.get(id) === entry) continue;
+      changes.push({
+        id,
+        entry,
+        ...(paths.get(id) !== undefined ? { irPath: paths.get(id) } : {}),
+        overwroteBaseline: baseline.has(id),
+      });
+    }
+    return changes;
+  }
+
+  /**
+   * 提交 fork 顶层 frame 的单项变更
+   * @description baseline 冲突已由 fork 捕获时静默覆盖；否则按当前最终顺序执行普通注册
+   */
+  commitForkChange(change: NamespaceFrameChange): void {
+    if (this.currentPhase !== 'registering') {
+      throw new Error(
+        `NamespaceStack.commitForkChange('${change.id}'): only allowed during registering; current phase is '${this.currentPhase}'`,
+      );
+    }
+    if (!change.overwroteBaseline) {
+      this.register(change.id, change.entry.layout, change.irPath, change.entry.state);
+      return;
+    }
+    const topFrame = this.frames[this.frames.length - 1];
+    if (!topFrame.has(change.id)) {
+      throw new Error(
+        `NamespaceStack.commitForkChange('${change.id}'): baseline entry is missing from the current top frame`,
+      );
+    }
+    topFrame.set(change.id, change.entry);
   }
 
   /** 当前栈深（≥ 1；根 frame 永远存在） */

@@ -1,4 +1,4 @@
-import type { CompositeDefinition, IRChild, IRJsonObject, IRScope } from '@retikz/core';
+import type { ExpandCompositeDefinition, IRChild, IRJsonObject, IRScope } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 
 import { defineComposite } from '@retikz/core';
@@ -68,7 +68,13 @@ export const lowerTableWithArtifacts = (
 export const lowerTables = (
   datasets: ExternalDatasets,
   options: LowerTablesOptions = {},
-): Array<CompositeDefinition> => [
+): Array<
+  ExpandCompositeDefinition<
+    IRTableSpec,
+    typeof TABLE_NAMESPACE,
+    typeof TableComposite.Table
+  >
+> => [
   defineComposite({
     namespace: TABLE_NAMESPACE,
     type: TableComposite.Table,

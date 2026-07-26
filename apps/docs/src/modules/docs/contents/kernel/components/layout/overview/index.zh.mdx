@@ -47,6 +47,14 @@ children 直接放 Kernel / Sugar 组件树即可，没有额外的固定组合�
 
 `ir` 与 `children` 是两种入口；同时传入时采用 `ir`。需要生成、持久化或转换 IR 时，继续阅读[架构](/kernel/concepts/design/principles)与[复合](/kernel/concepts/design/composite)。
 
+### 读取编译产物
+
+这里的 DTO 是 Data Transfer Object（数据传输对象）：`CompiledNodeLayout` 是 Core 完成 Node 布局后复制并冻结的数据快照。它记录 Node id、正文盒的中心 / 尺寸 / 全局边界、外框的位置 / 尺寸 / 旋转，以及正文行数和是否包含 TeX；artifact 外层的 `occurrence` 另行标识该 Node 在本次编译中的来源。
+
+它不是 IR、Scene 图元或实时 DOM 测量对象，也不暴露编译器内部的可变状态。用 `artifacts={{ nodeLayouts: true }}` 按需请求这些快照，再通过 `onArtifacts` 在 React commit 后读取同次编译结果；下面的回调把真实 Node 数量和正文宽度显示在图外。
+
+<ComponentPreview files="layout-artifacts" size="sm" />
+
 ### 输出边界
 
 `viewBox` 决定内部坐标范围，`width` / `height` 决定页面显示尺寸。用面板分别调整这两类输出参数，观察它们不会改变 JSX 图形结构。
@@ -84,20 +92,20 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
     {
       label: 'React 输入与编译接线',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 410,
-      endLine: 455,
+      startLine: 420,
+      endLine: 494,
     },
     {
       label: 'React 渲染宿主接线',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 479,
-      endLine: 527,
+      startLine: 496,
+      endLine: 545,
     },
     {
       label: 'Core IR 编译 Scene',
       path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 18,
-      endLine: 42,
+      startLine: 25,
+      endLine: 53,
     },
   ]}
 />
@@ -115,14 +123,14 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
     {
       label: 'viewBox 注入 IR',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 420,
-      endLine: 429,
+      startLine: 430,
+      endLine: 439,
     },
     {
       label: '显式与自动 layout 决策',
       path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 22,
-      endLine: 37,
+      startLine: 29,
+      endLine: 46,
     },
     {
       label: '内容边界与 padding',
@@ -146,14 +154,14 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
     {
       label: 'renderer 与动画模式解析',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 350,
-      endLine: 370,
+      startLine: 360,
+      endLine: 380,
     },
     {
       label: '后端分流与静态截帧',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 479,
-      endLine: 520,
+      startLine: 496,
+      endLine: 545,
     },
     {
       label: '系统动画偏好回退',
@@ -180,11 +188,12 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
 
 这些 props 统一进入 `CompileOptions`；具体 definition 的定义、注册与错误契约见对应自定义指南。
 
-| 属性            | 类型                                                  | 默认值 | 描述                                    |
-| --------------- | ----------------------------------------------------- | ------ | --------------------------------------- |
-| `nodeDistance`  | `number`                                              | `24`   | 相对定位默认距离；节点自带值优先        |
-| `fontSize`      | `number`                                              | `16`   | 默认字号，也是 preset 与 `rem` 的根字号 |
-| `onNodeLayouts` | `(layouts:`<br />`Array<CompiledNodeLayout>) => void` | —      | commit 后返回节点内容盒与全局边界       |
+| 属性           | 类型                                                         | 默认值 | 描述                                                                    |
+| -------------- | ------------------------------------------------------------ | ------ | ----------------------------------------------------------------------- |
+| `nodeDistance` | `number`                                                     | `24`   | 相对定位默认距离；节点自带值优先                                        |
+| `fontSize`     | `number`                                                     | `16`   | 默认字号，也是 preset 与 `rem` 的根字号                                 |
+| `artifacts`    | `CompileArtifactOptions`                                     | `{}`   | 请求 opt-in 产物；`nodeLayouts:true` 返回 `CompiledNodeLayout` 布局快照 |
+| `onArtifacts`  | `(artifacts:`<br />`ReadonlyArray<CompileArtifact>) => void` | —      | React commit 后通知同次 compile 的 immutable artifacts                  |
 
 ### 图元与资源注入
 
@@ -198,14 +207,14 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
 
 ### 高级能力与宿主接入
 
-| 属性                  | 类型                                                  | 默认值 | 描述                                                                   |
-| --------------------- | ----------------------------------------------------- | ------ | ---------------------------------------------------------------------- |
-| `pathGenerators`      | `ReadonlyArray`<br />`<PathGeneratorDefinition>`      | —      | 注入路径生成器；见[路径生成器](/kernel/components/draw/path-generator) |
-| `pathKinds`           | `ReadonlyArray`<br />`<PathKindDefinition>`           | —      | 注入 Path kind；见[自定义路径](/kernel/components/draw/custom-path)    |
-| `ribbonWidthProfiles` | `ReadonlyArray`<br />`<RibbonWidthProfileDefinition>` | —      | 注入 ribbon 宽度曲线；见[编译选项](/kernel/reference/runtime/compile)  |
-| `composites`          | `ReadonlyArray`<br />`<CompositeDefinition>`          | —      | 注入 Tier 2 展开逻辑；见[复合](/kernel/concepts/design/composite)      |
-| `lowerTex`            | `LowerTex`                                            | —      | 注入公式 lowering；见[TeX 公式](/kernel/packages/tex)                  |
-| `embeddables`         | `Array`<br />`<EmbeddableTier2Adapter>`               | —      | 显式注入 Tier 2 adapter；主路径使用组件静态标记                        |
+| 属性                  | 类型                                                  | 默认值 | 描述                                                                                   |
+| --------------------- | ----------------------------------------------------- | ------ | -------------------------------------------------------------------------------------- |
+| `pathGenerators`      | `ReadonlyArray`<br />`<PathGeneratorDefinition>`      | —      | 注入路径生成器；见[路径生成器](/kernel/components/draw/path-generator)                 |
+| `pathKinds`           | `ReadonlyArray`<br />`<PathKindDefinition>`           | —      | 注入 Path kind；见[自定义路径](/kernel/components/draw/custom-path)                    |
+| `ribbonWidthProfiles` | `ReadonlyArray`<br />`<RibbonWidthProfileDefinition>` | —      | 注入 ribbon 宽度曲线；见[编译选项](/kernel/reference/runtime/compile)                  |
+| `composites`          | `ReadonlyArray`<br />`<AnyCompositeDefinition>`       | —      | 注入 Tier 2 expand / layout-aware compile；见[复合](/kernel/concepts/design/composite) |
+| `lowerTex`            | `LowerTex`                                            | —      | 注入公式 lowering；见[TeX 公式](/kernel/packages/tex)                                  |
+| `embeddables`         | `Array`<br />`<EmbeddableTier2Adapter>`               | —      | 显式注入 Tier 2 adapter；主路径使用组件静态标记                                        |
 
 ### 全图默认值
 

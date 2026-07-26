@@ -22,7 +22,7 @@ export const sceneIr = (children: Array<IRChild>): IRScene => ({
 });
 
 export const pathScene = (children: Array<IRStep>, overrides: Omit<IRPathBase, 'type' | 'children'> = {}): Scene =>
-  compileToScene(pathIr(children, overrides));
+  compileToScene(pathIr(children, overrides)).scene;
 
 export const pathCommands = (
   children: Array<IRStep>,

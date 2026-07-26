@@ -45,7 +45,7 @@ const roundedRectClip = defineClip({
 Core 与 React 只是两个注入入口，消费的是同一份 Definition：
 
 ```ts
-const scene = compileToScene(ir, {
+const { scene } = compileToScene(ir, {
   clips: [roundedRectClip],
 });
 ```
@@ -88,14 +88,14 @@ const scene = compileToScene(ir, {
     {
       label: '查找、校验与解析 clip spec',
       path: 'packages/kernel/core/src/compile/resource/clip.ts',
-      startLine: 156,
-      endLine: 189,
+      startLine: 160,
+      endLine: 194,
     },
     {
       label: 'React clips 注入入口',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 215,
-      endLine: 216,
+      startLine: 220,
+      endLine: 221,
     },
   ]}
 />

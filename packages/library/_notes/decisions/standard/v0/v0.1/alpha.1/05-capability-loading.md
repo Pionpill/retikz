@@ -17,13 +17,13 @@ Grid、Axes、Frame 都通过 Core `CompositeDefinition` 注册。React 组件�
 ```ts
 type StandardCapabilityModule = Readonly<{
   name: string;
-  composites: ReadonlyArray<CompositeDefinition>;
+  composites: ReadonlyArray<AnyCompositeDefinition>;
 }>;
 
 type StandardBundle = Readonly<{
   modules: ReadonlyArray<string>;
   compile: Readonly<{
-    composites: ReadonlyArray<CompositeDefinition>;
+    composites: ReadonlyArray<AnyCompositeDefinition>;
   }>;
 }>;
 
@@ -75,7 +75,7 @@ Vanilla 公开浅冻结的 `StandardVanillaAdapters`，按 Grid、Axes、Frame �
 
 ## 最终实现与验证摘要
 
-- bundle 只组合 Core `CompositeDefinition`；按序、空 bundle、浅冻结、第三方结构 module、重复 module name 与 Core provider 冲突边界均已实现
+- bundle 只用 Core `AnyCompositeDefinition` 承载异构 definitions；按序、空 bundle、浅冻结、第三方结构 module、重复 module name 与 Core provider 冲突边界均已实现
 - React 按使用项贡献、React IR 显式 bundle、Vanilla 部分 / 全量 adapters 与直接 IR bundle 路径均有自动化证据
 - 三包 manifest 已由精确测试锁定为 root-only exports；未引入 wildcard 或逐组件 subpath
 - 双语 introduction、get-start 与 capability loading 扩展页已同步按项、部分、全量及宿主接线方式

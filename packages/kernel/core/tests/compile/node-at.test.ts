@@ -13,7 +13,7 @@ const rects = (prims: Array<ScenePrimitive>): Array<RectPrim> =>
 
 /** 给定一组 IR Node + at，编译后取每个 rect 的几何中心 [cx, cy] */
 const centers = (ir: IRScene): Array<[number, number]> =>
-  rects(compileToScene(ir).primitives).map(r => [r.x + r.width / 2, r.y + r.height / 2]);
+  rects(compileToScene(ir).scene.primitives).map(r => [r.x + r.width / 2, r.y + r.height / 2]);
 
 describe('Node at relative positioning', () => {
   describe('schema aliases', () => {
@@ -133,7 +133,7 @@ describe('Node at relative positioning', () => {
         ],
       };
       // nodeDistance=99 但 node 自带 7，应该用 7
-      const scene = compileToScene(ir, { nodeDistance: 99 });
+      const scene = compileToScene(ir, { nodeDistance: 99 }).scene;
       const [, b] = rects(scene.primitives).map(r => [r.x + r.width / 2, r.y + r.height / 2]);
       expect(b[0]).toBeCloseTo(7);
     });
@@ -147,7 +147,7 @@ describe('Node at relative positioning', () => {
           { type: 'node', id: 'B', position: { direction: 'right', of: 'A' } },
         ],
       };
-      const scene = compileToScene(ir, { nodeDistance: 12 });
+      const scene = compileToScene(ir, { nodeDistance: 12 }).scene;
       const [, b] = rects(scene.primitives).map(r => [r.x + r.width / 2, r.y + r.height / 2]);
       expect(b[0]).toBeCloseTo(12);
     });
@@ -161,7 +161,7 @@ describe('Node at relative positioning', () => {
           { type: 'node', id: 'B', position: { direction: 'right', of: 'A' } },
         ],
       };
-      const scene = compileToScene(ir);
+      const scene = compileToScene(ir).scene;
       const [, b] = rects(scene.primitives).map(r => [r.x + r.width / 2, r.y + r.height / 2]);
       expect(b[0]).toBeCloseTo(24);
     });
@@ -193,7 +193,7 @@ describe('Node at relative positioning', () => {
         type: 'scene',
         children: [{ type: 'node', id: 'B', position: { direction: 'right', of: 'A' } }],
       };
-      expect(() => compileToScene(ir)).toThrow(/Cannot resolve position/);
+      expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position/);
     });
 
     it('前向引用同样不允许（B 在 A 前）→ 抛错', () => {
@@ -205,7 +205,7 @@ describe('Node at relative positioning', () => {
           { type: 'node', id: 'A', position: [0, 0], text: 'A' },
         ],
       };
-      expect(() => compileToScene(ir)).toThrow(/Cannot resolve position/);
+      expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position/);
     });
   });
 
@@ -226,7 +226,7 @@ describe('Node at relative positioning', () => {
           },
         ],
       };
-      const scene = compileToScene(ir);
+      const scene = compileToScene(ir).scene;
       const path = scene.primitives.find(p => p.type === 'path');
       expect(path).toBeDefined();
       // 至少有 move 和 line 两条命令

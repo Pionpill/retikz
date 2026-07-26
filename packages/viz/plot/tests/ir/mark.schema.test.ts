@@ -846,6 +846,28 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
 
+  it('mark_relation_explicit_route_accepts_three_leg_core_fold', () => {
+    const mark = {
+      type: 'relation',
+      source: { id: 'A' },
+      target: { id: 'B' },
+      path: { route: [{ kind: 'fold', via: '-|-' }] },
+    };
+
+    expect(MarkSchema.parse(mark)).toEqual(mark);
+  });
+
+  it('mark_relation_algorithmic_orthogonal_routing_rejects_three_leg_fold', () => {
+    expect(() =>
+      MarkSchema.parse({
+        type: 'relation',
+        source: { id: 'A' },
+        target: { id: 'B' },
+        path: { routing: { kind: 'orthogonal', via: '-|-' } },
+      }),
+    ).toThrow();
+  });
+
   it('mark_point_accepts_local_transform', () => {
     const m = {
       type: 'point',

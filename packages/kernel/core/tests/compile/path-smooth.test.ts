@@ -35,7 +35,7 @@ describe('smooth step：happy path', () => {
         ],
       },
     );
-    const commands = findPathPrim(compileToScene(ir, silent).primitives).commands;
+    const commands = findPathPrim(compileToScene(ir, silent).scene.primitives).commands;
     expect(commands[0]).toEqual(move([0, 0]));
     const cubics = commands.filter((c): c is CubicPathCommand => c.kind === 'cubic');
     expect(cubics).toHaveLength(2);
@@ -58,7 +58,7 @@ describe('smooth step：happy path', () => {
         ],
       },
     );
-    const commands = findPathPrim(compileToScene(ir, silent).primitives).commands;
+    const commands = findPathPrim(compileToScene(ir, silent).scene.primitives).commands;
     const cubics = commands.filter((c): c is CubicPathCommand => c.kind === 'cubic');
     expect(cubics).toHaveLength(4);
     expect(cubics.map(c => c.to)).toEqual([
@@ -93,10 +93,10 @@ describe('smooth step：happy path', () => {
         tension: 2,
       },
     );
-    const baseCubics = findPathPrim(compileToScene(base, silent).primitives).commands.filter(
+    const baseCubics = findPathPrim(compileToScene(base, silent).scene.primitives).commands.filter(
       (c): c is CubicPathCommand => c.kind === 'cubic',
     );
-    const looseCubics = findPathPrim(compileToScene(loose, silent).primitives).commands.filter(
+    const looseCubics = findPathPrim(compileToScene(loose, silent).scene.primitives).commands.filter(
       (c): c is CubicPathCommand => c.kind === 'cubic',
     );
     // .to 与 tension 无关
@@ -109,7 +109,7 @@ describe('smooth step：happy path', () => {
 describe('smooth step：边界', () => {
   it('cursor + 1 point（2 knot）→ 1 cubic，.to = 该点', () => {
     const ir = path({ type: 'step', kind: 'move', to: [0, 0] }, { type: 'step', kind: 'smooth', points: [[4, 3]] });
-    const commands = findPathPrim(compileToScene(ir, silent).primitives).commands;
+    const commands = findPathPrim(compileToScene(ir, silent).scene.primitives).commands;
     const cubics = commands.filter((c): c is CubicPathCommand => c.kind === 'cubic');
     expect(cubics).toHaveLength(1);
     expect(cubics[0].to).toEqual([4, 3]);
@@ -139,8 +139,8 @@ describe('smooth step：边界', () => {
         tension: 1,
       },
     );
-    expect(findPathPrim(compileToScene(explicit, silent).primitives).commands).toEqual(
-      findPathPrim(compileToScene(omitted, silent).primitives).commands,
+    expect(findPathPrim(compileToScene(explicit, silent).scene.primitives).commands).toEqual(
+      findPathPrim(compileToScene(omitted, silent).scene.primitives).commands,
     );
   });
 });
@@ -212,7 +212,7 @@ describe('smooth step：错误路径', () => {
       },
       { type: 'step', kind: 'line', to: [20, 20] },
     );
-    const result = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const result = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     expect(result.primitives.find(p => p.type === 'path')).toBeUndefined();
     expect(warnings.find(w => w.code === 'PATH_TOO_SHORT')).toBeDefined();
   });
@@ -232,7 +232,7 @@ describe('smooth step：交互', () => {
         label: { text: 'flow' },
       },
     );
-    const prims = compileToScene(ir, silent).primitives;
+    const prims = compileToScene(ir, silent).scene.primitives;
     const labels = prims.filter((p): p is TextPrim => p.type === 'text');
     expect(labels.length).toBeGreaterThan(0);
     expect(labels.some(l => l.lines.some(line => line.text === 'flow'))).toBe(true);
@@ -251,7 +251,7 @@ describe('smooth step：交互', () => {
       },
       { type: 'step', kind: 'line', to: [20, 20] },
     );
-    const commands = findPathPrim(compileToScene(ir, silent).primitives).commands;
+    const commands = findPathPrim(compileToScene(ir, silent).scene.primitives).commands;
     // 末 cubic .to = smooth 末点；其后无 move（line 复用 cursor），末命令为 line→(20,20)
     const lastCubicIdx = commands.map(c => c.kind).lastIndexOf('cubic');
     expect(commands[lastCubicIdx].kind).toBe('cubic');
@@ -272,7 +272,7 @@ describe('smooth step：交互', () => {
       },
       { type: 'step', kind: 'cycle' },
     );
-    const commands = findPathPrim(compileToScene(ir, silent).primitives).commands;
+    const commands = findPathPrim(compileToScene(ir, silent).scene.primitives).commands;
     // cycle 收尾：末命令为 close 或一条回到 (0,0) 的 line
     const last = commands[commands.length - 1];
     expect(last.kind === 'close' || (last.kind === 'line' && last.to[0] === 0 && last.to[1] === 0)).toBe(true);
@@ -307,8 +307,8 @@ describe('smooth step：交互', () => {
         ],
       } as never,
     ]);
-    const baseCount = compileToScene(without, silent).primitives.length;
-    const markCount = compileToScene(withMark, silent).primitives.length;
+    const baseCount = compileToScene(without, silent).scene.primitives.length;
+    const markCount = compileToScene(withMark, silent).scene.primitives.length;
     expect(markCount).toBeGreaterThan(baseCount);
   });
 
@@ -326,7 +326,7 @@ describe('smooth step：交互', () => {
         ],
       } as never,
     ]);
-    const commands = findPathPrim(compileToScene(ir, silent).primitives).commands;
+    const commands = findPathPrim(compileToScene(ir, silent).scene.primitives).commands;
     const last = commands[commands.length - 1];
     expect(last.kind).toBe('line');
     if (last.kind === 'line') expect(last.to[0]).toBeGreaterThan(0);

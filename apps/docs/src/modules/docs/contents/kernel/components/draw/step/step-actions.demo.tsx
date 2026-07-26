@@ -6,7 +6,7 @@ import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract,stepActionsControls } from './step-actions.controls';
+import { previewControlContract, stepActionsControls } from './step-actions.controls';
 
 export const previewControls = stepActionsControls;
 
@@ -32,8 +32,16 @@ const actionOf = (values: StepActionValues): ReactNode => {
         </Path>
       );
     case 'fold':
+      if (values.via === '-|-' || values.via === '|-|') {
+        return (
+          <Path stroke="dodgerblue" strokeWidth={2}>
+            <Step kind="move" to="A" />
+            <Step kind="fold" via={values.via} fraction={values.fraction} to="B" />
+          </Path>
+        );
+      }
       return (
-        <Path>
+        <Path stroke="dodgerblue" strokeWidth={2}>
           <Step kind="move" to="A" />
           <Step kind="fold" via={values.via} to="B" />
         </Path>
@@ -73,6 +81,12 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
             </Node>
           )}
         </>
+      )}
+      {values.actionKind === 'fold' && (
+        <Path stroke="gray" dashPattern={[1, 4]} lineCap="round">
+          <Step kind="move" to="A.center" />
+          <Step kind="line" to="B.center" />
+        </Path>
       )}
       {actionOf(values)}
     </Layout>

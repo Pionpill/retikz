@@ -5,7 +5,7 @@ description: Declare everyday links, folds, curves, cycles, and edge labels in o
 
 `<Draw>` is the default entry point for most connections. It accepts a `way` array and expands targets, folds, cycles, curves, shapes, and edge labels into Kernel `<Path>` + `<Step>`. Stroke, fill, arrow, and opacity props match `<Path>`.
 
-Choosing rule: use `<Draw>` for ordinary relationship lines, flowchart edges, and arrowed connections; switch to `<Path>` + `<Step>` when you need multiple `move`s, precise per-segment `kind` control, or IR-close debugging; use the **shape sugar** below to draw a single geometric shape (circle / rectangle / sector, etc.); use Standard [Grid](/standard/composite/grid) for background reference lines. Work with IR directly only at AI / persistence boundaries.
+Choosing rule: use `<Draw>` for ordinary relationship lines, flowchart edges, and arrowed connections; switch to `<Path>` + `<Step>` when you need multiple `move`s, precise per-segment `kind` control, or IR-close debugging; use the **shape sugar** below to draw a single geometric shape (circle / rectangle / sector, etc.). Work with IR directly only at AI / persistence boundaries.
 
 ## Usage
 
@@ -22,6 +22,24 @@ import { Draw } from '@retikz/react';
 ### Basic
 
 <ComponentPreview files="draw-basic" size="xs" />
+
+### Orthogonal connections
+
+Draw provides three orthogonal connection choices in `way`. Single-axis forms project to only one target coordinate and do not necessarily reach the target; fold forms connect to it completely.
+
+<ComponentPreview
+  files="draw-orthogonal"
+  size="sm"
+  caption="Switch connection types and follow the blue path; the gray dotted line only hints at the direct direction between the nodes."
+/>
+
+| Need                | `way` form                                                              | Behavior                                                        |
+| ------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Single-axis project | `{ horizontalTo: 'b' }`<br />`{ verticalTo: 'b' }`                      | Take only target x or y along the current Scope's local axes    |
+| One corner          | `'-\|'`<br />`'\|-'`                                                    | Reach the next target through one orthogonal corner             |
+| Middle leg          | `{ via: '-\|-', fraction: 0.5 }`<br />`{ via: '\|-\|', fraction: 0.5 }` | Use two orthogonal corners; `fraction` positions the middle leg |
+
+See [Way](/kernel/components/draw/way#single-axis-connections) for syntax constraints and interactive examples, and [Step](/kernel/components/draw/step#orthogonal-connections) for the underlying path actions.
 
 ### Curves
 
@@ -79,8 +97,6 @@ When you need a geometric shape rather than a relationship, use the one-line sug
 | `<Rectangle>`      | rectangle / rounded rectangle     |
 | `<RegularPolygon>` | regular polygon                   |
 | `<Star>`           | star                              |
-
-Background grids are not geometric shapes; repeated reference lines are an optional Standard capability. Start geometric shapes with [Circle and Ellipse](/kernel/components/shapes/circle-ellipse), or see [Grid](/standard/composite/grid) for regular reference lines.
 
 ## How it works
 
@@ -212,4 +228,3 @@ Draw forwards whole-path properties such as stroke, fill, arrows, and stacking t
 - [Step](/kernel/components/draw/step): the Kernel step semantics behind each Draw segment
 - [Arrow](/kernel/components/draw/arrow): Arrow shape, size, color, and per-end overrides
 - [Shapes](/kernel/components/shapes): geometric shortcut forms such as Circle / Ellipse / Arc / Sector / Rectangle / RegularPolygon / Star
-- [Grid](/standard/composite/grid): optional background reference lines

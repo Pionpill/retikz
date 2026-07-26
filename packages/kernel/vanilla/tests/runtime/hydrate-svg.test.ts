@@ -129,7 +129,7 @@ describe('@retikz/vanilla hydrate（SVG 水合）', () => {
           },
         },
       },
-      scene: compileToScene(metaIr),
+      scene: compileToScene(metaIr).scene,
     });
     findById(richRoot, 'a')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(richCtx?.renderer).toBe('svg');

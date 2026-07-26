@@ -101,12 +101,14 @@ export const NodeLabelSchema = z
       .nonnegative()
       .optional()
       .describe(
-        'Gap between the node border and the label center, in user units. Omitted fields use compile labelDistance.',
+        'Gap between the node border and the rotated label visual box, in user units. Omitted fields use compile labelDistance.',
       ),
     rotate: z
       .union([z.enum(NodeLabelRotateMode), AngleDegreesSchema])
       .optional()
-      .describe('Label self-rotation: none, radial, tangent, or an explicit angle in degrees.'),
+      .describe(
+        'Label self-rotation: none, radial along the position direction, tangent to it, or an explicit angle in degrees. Boundary-fraction positions use the selected side outward normal.',
+      ),
     keepUpright: z
       .boolean()
       .optional()
@@ -228,7 +230,9 @@ export const NodeSchema = z
     scale: AxisScaleValueSchema.optional().describe(
       'Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.',
     ),
-    textColor: CssColorSchema.optional().describe('Text label color; any CSS color. Defaults to `currentColor`.'),
+    textColor: CssColorSchema.optional().describe(
+      'Node text color. The reserved `contrast` keyword selects black or white from a static opaque fill. Defaults to `currentColor`.',
+    ),
     padding: BoxSpacingValueSchema.optional().describe(
       'Inner spacing from content to border. Number applies to all sides; object fields resolve as side > axis > default.',
     ),

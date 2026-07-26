@@ -19,7 +19,7 @@ const compileNode = (node: Record<string, unknown>): TextPrim => {
     type: 'scene',
     children: [{ type: 'node', id: 'A', position: [0, 0], ...node }] as never,
   };
-  const t = findText(compileToScene(ir, opts).primitives);
+  const t = findText(compileToScene(ir, opts).scene.primitives);
   if (!t) throw new Error('expected TextPrim');
   return t;
 };

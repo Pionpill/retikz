@@ -17,8 +17,8 @@ const findByType = <T extends ScenePrimitive['type']>(
 ): Extract<ScenePrimitive, { type: T }> | undefined =>
   flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: T }> => p.type === type);
 
-const compileNode = (n: Record<string, unknown>): ReturnType<typeof compileToScene> =>
-  compileToScene(scene([{ type: 'node', position: [0, 0], ...n }]), silent);
+const compileNode = (n: Record<string, unknown>): ReturnType<typeof compileToScene>['scene'] =>
+  compileToScene(scene([{ type: 'node', position: [0, 0], ...n }]), silent).scene;
 
 // ════════════════ Happy ════════════════
 

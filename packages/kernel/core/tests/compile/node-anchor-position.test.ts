@@ -6,7 +6,7 @@ import type { RectPrim } from '../../src/contract';
 import type { IRNode, IRScene } from '../../src/schemas';
 import type { Rect } from '../../src/shared/geometry';
 
-import { compileToScene } from '../../src/compile';
+import { compileToScene, isNodeLayoutCompileArtifact } from '../../src/compile';
 import { defineBoundary } from '../../src/contract';
 import { rect as rectOps } from '../../src/shared/geometry';
 import { flattenPrims } from '../helpers/flatten';
@@ -15,12 +15,13 @@ const scene = (children: IRScene['children']): IRScene => ({ type: 'scene', vers
 
 const compileLayouts = (ir: IRScene, options: CompileOptions = {}): Map<string, CompiledNodeLayout> => {
   const layouts = new Map<string, CompiledNodeLayout>();
-  compileToScene(ir, {
+  const result = compileToScene(ir, {
     ...options,
-    onNodeLayout: layout => {
-      if (layout.id !== undefined) layouts.set(layout.id, layout);
-    },
+    artifacts: { nodeLayouts: true },
   });
+  for (const artifact of result.artifacts.filter(isNodeLayoutCompileArtifact)) {
+    if (artifact.value.id !== undefined) layouts.set(artifact.value.id, artifact.value);
+  }
   return layouts;
 };
 
@@ -265,8 +266,7 @@ describe('Node anchor-to-anchor position', () => {
   });
 
   it('当前 Node 无 id 时仍可对齐已完成 target', () => {
-    const observed: Array<CompiledNodeLayout> = [];
-    compileToScene(
+    const result = compileToScene(
       scene([
         { type: 'node', id: 'target', position: [18, 27], minimumSize: 20, padding: 0 },
         {
@@ -276,8 +276,9 @@ describe('Node anchor-to-anchor position', () => {
           padding: 0,
         },
       ]),
-      { onNodeLayout: layout => observed.push(layout) },
+      { artifacts: { nodeLayouts: true } },
     );
+    const observed = result.artifacts.filter(isNodeLayoutCompileArtifact).map(artifact => artifact.value);
 
     expect(observed[1].id).toBeUndefined();
     expect(observed[1].rect).toMatchObject({ x: 18, y: 27 });
@@ -308,8 +309,7 @@ describe('Node anchor-to-anchor position', () => {
   });
 
   it('Scene primitive、observer 与自动 viewBox 只看到最终几何', () => {
-    const observed: Array<CompiledNodeLayout> = [];
-    const output = compileToScene(
+    const result = compileToScene(
       scene([
         { type: 'node', id: 'target', position: [100, 50], minimumSize: 20, padding: 0 },
         {
@@ -320,8 +320,10 @@ describe('Node anchor-to-anchor position', () => {
           padding: 0,
         },
       ]),
-      { padding: 0, onNodeLayout: layout => observed.push(layout) },
+      { padding: 0, artifacts: { nodeLayouts: true } },
     );
+    const output = result.scene;
+    const observed = result.artifacts.filter(isNodeLayoutCompileArtifact).map(artifact => artifact.value);
     const currentPrimitive = flattenPrims(output.primitives).find(
       (primitive): primitive is RectPrim => primitive.type === 'rect' && primitive.id === 'current',
     );
@@ -335,7 +337,7 @@ describe('Node anchor-to-anchor position', () => {
 describe('Node anchor-to-anchor position fail-loud', () => {
   it('拒绝 undefined target', () => {
     expect(() =>
-      compileToScene(scene([{ type: 'node', id: 'current', position: { kind: 'anchor', target: { id: 'missing' } } }])),
+      compileToScene(scene([{ type: 'node', id: 'current', position: { kind: 'anchor', target: { id: 'missing' } } }])).scene,
     ).toThrow(/anchor position target 'missing'.*undefined or defined later/i);
   });
 
@@ -346,13 +348,13 @@ describe('Node anchor-to-anchor position fail-loud', () => {
           { type: 'node', id: 'current', position: { kind: 'anchor', target: { id: 'later' } } },
           { type: 'node', id: 'later', position: [0, 0] },
         ]),
-      ),
+      ).scene,
     ).toThrow(/anchor position target 'later'.*undefined or defined later/i);
   });
 
   it('拒绝 self target', () => {
     expect(() =>
-      compileToScene(scene([{ type: 'node', id: 'self', position: { kind: 'anchor', target: { id: 'self' } } }])),
+      compileToScene(scene([{ type: 'node', id: 'self', position: { kind: 'anchor', target: { id: 'self' } } }])).scene,
     ).toThrow(/anchor position.*cannot reference itself/i);
   });
 
@@ -366,7 +368,7 @@ describe('Node anchor-to-anchor position fail-loud', () => {
             children: [{ type: 'node', id: 'current', position: { kind: 'anchor', target: { id: 'open' } } }],
           },
         ]),
-      ),
+      ).scene,
     ).toThrow(/anchor position target 'open'.*Scope.*still being laid out/i);
   });
 
@@ -381,7 +383,7 @@ describe('Node anchor-to-anchor position fail-loud', () => {
             children: [{ type: 'node', id: 'current', position: { kind: 'anchor', target: { id: 'target' } } }],
           },
         ]),
-      ),
+      ).scene,
     ).toThrow(/anchor position.*zero scale axis/i);
   });
 
@@ -399,7 +401,7 @@ describe('Node anchor-to-anchor position fail-loud', () => {
             },
           },
         ]),
-      ),
+      ).scene,
     ).toThrow(/zero-size target/i);
   });
 
@@ -414,7 +416,7 @@ describe('Node anchor-to-anchor position fail-loud', () => {
             position: { kind: 'anchor', target: { id: 'target', anchor: 'missing-anchor' } },
           },
         ]),
-      ),
+      ).scene,
     ).toThrow(/Unknown anchor 'missing-anchor'/);
 
     expect(() =>
@@ -429,7 +431,7 @@ describe('Node anchor-to-anchor position fail-loud', () => {
             },
           },
         ]),
-      ),
+      ).scene,
     ).toThrow(/Unknown connection surface provider 'missing-boundary'/);
   });
 });

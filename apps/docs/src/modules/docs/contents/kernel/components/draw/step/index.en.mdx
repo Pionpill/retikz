@@ -22,9 +22,24 @@ Use `<Step>` when you need exact control over Kernel path actions: multiple `mov
 
 ### Basic actions
 
-Switch between `line`, repeated `move`s, `fold`, `cycle`, and `rectangle` in one panel. Repeated `move`s begin independent subpaths inside one `<Path>`; `fold` exposes its corner direction, `rectangle` exposes its corner radius, and `cycle` closes back to the most recent `move` target.
+Switch between `line`, repeated `move`s, `fold`, `cycle`, and `rectangle` in one panel. Repeated `move`s begin independent subpaths inside one `<Path>`; `fold` switches between two- and three-leg orthogonal connections, with `fraction` positioning the middle leg in three-leg modes; `rectangle` exposes its corner radius, and `cycle` closes back to the most recent `move` target.
 
 <ComponentPreview files="step-actions" size="sm" />
+
+### Orthogonal connections
+
+Switch between two single-axis projections and fold connections over the same nodes: `horizontal` takes the target x while preserving the current y, and `vertical` preserves the current x while taking the target y; after choosing `fold`, “Fold direction” switches among `-\|`, `\|-`, `-\|-`, and `\|-\|`, while `fraction` positions the middle leg in three-leg modes. The blue solid line is the actual path, while the gray dotted line only hints at the direct direction between the nodes.
+
+<ComponentPreview files="axis-line" size="sm" />
+
+| Connection      | Step syntax                                                                           | Behavior                                                                    |
+| --------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Horizontal axis | `kind="axis-line" axis="horizontal"`                                                  | Project on the current Scope's local horizontal axis and take only target x |
+| Vertical axis   | `kind="axis-line" axis="vertical"`                                                    | Project on the current Scope's local vertical axis and take only target y   |
+| Two-leg fold    | `kind="fold" via="-\|"`<br />`kind="fold" via="\|-"`                                  | Reach the target through one corner                                         |
+| Three-leg fold  | `kind="fold" via="-\|-" fraction={0.5}`<br />`kind="fold" via="\|-\|" fraction={0.5}` | Reach it through two corners; `fraction` positions the middle leg           |
+
+In either `axis-line` mode, omitting the target `anchor` projects to the node center and disables target-side automatic boundary clipping; a source node still clips toward the projected endpoint. The target is restricted to Cartesian coordinates or NodeTarget, excluding polar, relative, offset, and between forms.
 
 ### Target positioning
 
@@ -77,13 +92,14 @@ The panel adjusts `position`, `side`, `sloped`, and text color together. `positi
 
 <Comparison target="tikz" title="Basic Step Path Syntax">
 
-| retikz                                    | TikZ mapping                       |
-| ----------------------------------------- | ---------------------------------- |
-| `kind="fold"` + `via="-\|"` / `"\|-"`     | `(A) -\| (B)` / `(A) \|- (B)`      |
-| `kind="cycle"`                            | `cycle`                            |
-| `{ of, offset }` target                   | calc-library `($(of) + (dx, dy)$)` |
-| `{ relative }` / `{ relativeAccumulate }` | `(+x, +y)` / `(++x, ++y)`          |
-| `kind="rectangle"`                        | `(a) rectangle (b)`                |
+| retikz                                    | TikZ mapping                         |
+| ----------------------------------------- | ------------------------------------ |
+| `kind="fold"` + `via="-\|"` / `"\|-"`     | `(A) -\| (B)` / `(A) \|- (B)`        |
+| `kind="fold"` + `via="-\|-"` / `"\|-\|"`  | Common three-leg flowchart connector |
+| `kind="cycle"`                            | `cycle`                              |
+| `{ of, offset }` target                   | calc-library `($(of) + (dx, dy)$)`   |
+| `{ relative }` / `{ relativeAccumulate }` | `(+x, +y)` / `(++x, ++y)`            |
+| `kind="rectangle"`                        | `(a) rectangle (b)`                  |
 
 </Comparison>
 
@@ -106,20 +122,20 @@ Except for a single self-contained `rectangle`, a Path needs at least two Steps.
     {
       label: 'Step marker component',
       path: 'packages/kernel/react/src/kernel/components/Step.tsx',
-      startLine: 235,
-      endLine: 240,
+      startLine: 254,
+      endLine: 274,
     },
     {
       label: 'Path Step collection and label precedence',
       path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
-      startLine: 294,
-      endLine: 367,
+      startLine: 363,
+      endLine: 576,
     },
     {
       label: 'First-step and minimum-sequence normalization',
       path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
-      startLine: 525,
-      endLine: 539,
+      startLine: 561,
+      endLine: 576,
     },
   ]}
 />
@@ -130,14 +146,14 @@ Once core compilation begins for the default `kind="stroke"`, Steps do not rende
 
 <ComponentPreview files="step-compile-flow" size="xs" hideCode />
 
-| Step family                                                      | Compile behavior                                                                   | Observable result                                                                                  |
-| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `move` / `cycle`                                                 | Maintain the cursor and latest subpath start                                       | `move` draws nothing; `cycle` closes to the latest `move`                                          |
-| `line` / `curve` / `cubic`<br />`fold` / `bend`                  | Resolve both targets, clip node boundaries,<br />then emit line or Bezier commands | Node ids attach to their borders; `fold` / `bend` still become ordinary path segments              |
-| `smooth` / `generator`<br />`arc` / `circlePath` / `ellipsePath` | Generate path commands and record the actual pen position afterward                | The next segment continues from the generated result; full circles / ellipses return to the center |
-| `rectangle`                                                      | Resolve `from` / `to` independently of a preceding cursor                          | It may be the only Step in a Path                                                                  |
+| Step family                                                      | Compile behavior                                                                   | Observable result                                                                                    |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `move` / `cycle`                                                 | Maintain the cursor and latest subpath start                                       | `move` draws nothing; `cycle` closes to the latest `move`                                            |
+| `line` / `axis-line` / `curve` / `cubic`<br />`fold` / `bend`    | Resolve both targets, clip node boundaries,<br />then emit line or Bezier commands | `axis-line` projects on a local axis without target clipping; other node ids attach to their borders |
+| `smooth` / `generator`<br />`arc` / `circlePath` / `ellipsePath` | Generate path commands and record the actual pen position afterward                | The next segment continues from the generated result; full circles / ellipses return to the center   |
+| `rectangle`                                                      | Resolve `from` / `to` independently of a preceding cursor                          | It may be the only Step in a Path                                                                    |
 
-This ordering lets JSX, direct IR, and `<Draw>` sugar reuse the same geometry compiler. A renderer consumes the lowered commands and does not need to understand all thirteen Step forms.
+This ordering lets JSX, direct IR, and `<Draw>` sugar reuse the same geometry compiler. A renderer consumes the lowered commands and does not need to understand all fourteen Step forms.
 
 <SourceLinks
   sources={[
@@ -151,13 +167,13 @@ This ordering lets JSX, direct IR, and `<Draw>` sugar reuse the same geometry co
       label: 'Target normalization and the per-Step compile loop',
       path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
       startLine: 54,
-      endLine: 147,
+      endLine: 260,
     },
     {
       label: 'Geometry lowering for ordinary segment Steps',
       path: 'packages/kernel/core/src/compile/path/stroke/segments.ts',
       startLine: 41,
-      endLine: 125,
+      endLine: 158,
     },
     {
       label: 'Geometry lowering for generator, cycle, and rectangle Steps',
@@ -178,17 +194,17 @@ This ordering lets JSX, direct IR, and `<Draw>` sugar reuse the same geometry co
 
 `label.position` first maps to a `0..1` parameter t. The compiler then asks the current kind's geometry sampler for a point and tangent: `side` offsets from that point, while `sloped` rotates by the tangent. Consequently, t means “progress through this kind's parametrization,” which is not always visual arc-length progress.
 
-| Step kind             | Parametrization of t                                                           | Meaning of `t=0.5`                                                    |
-| --------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
-| `'line'`              | Normalized arc length                                                          | Straight-line midpoint                                                |
-| `'fold'`              | Each of the two legs gets half of `t`, regardless of leg length                | The corner at `t=0.5`                                                 |
-| `'curve'` / `'cubic'` | Bezier parameter, **not arc length**                                           | Usually not the visual midpoint                                       |
-| `'bend'`              | Bezier parameter after lowering to cubic                                       | Same as cubic                                                         |
-| `'smooth'`            | Generated cubic segments split t evenly;<br />each interval then uses Bezier t | Depends on segment count, not full-curve arc length                   |
-| `'generator'`         | Linear interpolation from the cursor on entry to the final pen position        | Midpoint of those endpoints; it does not follow intermediate commands |
-| `'arc'`               | Linear interpolation across `startAngle..endAngle`                             | Mid angle                                                             |
-| `'circlePath'`        | Full-circle angle 0→360, with 0 at +x                                          | 180° (−x)                                                             |
-| `'ellipsePath'`       | Same as circlePath; parameter angle rather than uniform arc-length sampling    | 180° (−x); arbitrary `t` is not uniformly distributed by arc length   |
+| Step kind                | Parametrization of t                                                           | Meaning of `t=0.5`                                                    |
+| ------------------------ | ------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| `'line'` / `'axis-line'` | Normalized arc length                                                          | Midpoint of the projected straight segment                            |
+| `'fold'`                 | `t` is split by leg count, independent of length: halves or thirds             | Breakpoints belong to the preceding leg                               |
+| `'curve'` / `'cubic'`    | Bezier parameter, **not arc length**                                           | Usually not the visual midpoint                                       |
+| `'bend'`                 | Bezier parameter after lowering to cubic                                       | Same as cubic                                                         |
+| `'smooth'`               | Generated cubic segments split t evenly;<br />each interval then uses Bezier t | Depends on segment count, not full-curve arc length                   |
+| `'generator'`            | Linear interpolation from the cursor on entry to the final pen position        | Midpoint of those endpoints; it does not follow intermediate commands |
+| `'arc'`                  | Linear interpolation across `startAngle..endAngle`                             | Mid angle                                                             |
+| `'circlePath'`           | Full-circle angle 0→360, with 0 at +x                                          | 180° (−x)                                                             |
+| `'ellipsePath'`          | Same as circlePath; parameter angle rather than uniform arc-length sampling    | 180° (−x); arbitrary `t` is not uniformly distributed by arc length   |
 
 Circle and ellipse angles increase in screen coordinates, so 90° is visually downward.
 
@@ -217,42 +233,51 @@ Circle and ellipse angles increase in screen coordinates, so 90° is visually do
 
 ## API Reference
 
-| Prop           | Type                                                                                                                                                                                | Default  | Description                                                                                                                                                                                                                                                                                                                                                                               |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `kind`         | `'move'` \| `'line'` \| `'fold'` \| `'cycle'` \| `'curve'` \| `'cubic'` \| `'bend'` \| `'smooth'` \| `'generator'` \| `'arc'` \| `'circlePath'` \| `'ellipsePath'` \| `'rectangle'` | `'line'` | See the "Thirteen kinds" table above                                                                                                                                                                                                                                                                                                                                                      |
-| `via`          | <ApiValues name="FoldStepVia" />                                                                                                                                                    | —        | Required for `kind="fold"`: `-\|` horizontal-then-vertical; `\|-` vertical-then-horizontal                                                                                                                                                                                                                                                                                                |
-| `from`         | `IRTarget`                                                                                                                                                                          | —        | Required only for `kind="rectangle"`: one rectangle corner                                                                                                                                                                                                                                                                                                                                |
-| `to`           | `IRTarget`                                                                                                                                                                          | —        | Not used for `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'`; required for `kind="rectangle"` and other cursor-advancing kinds. Target: node id, Cartesian `[x, y]`, polar object, offset object `{ of, offset }`, proportional placement `{ between, fraction }`, relative-offset object `{ relative }` / `{ relativeAccumulate }`, or sugar string `'+dx,dy'` / `'++dx,dy'` |
-| `name`         | `string`                                                                                                                                                                            | —        | Required only for `kind="generator"`: the built-in or `<Layout pathGenerators>`-registered path generator name                                                                                                                                                                                                                                                                            |
-| `params`       | `IRJsonObject`                                                                                                                                                                      | —        | Required only for `kind="generator"`: JSON-safe params passed to the path generator; the built-in `parabola` uses `{ control }`                                                                                                                                                                                                                                                           |
-| `cornerRadius` | `number`                                                                                                                                                                            | —        | Optional for `kind="rectangle"`: corner radius                                                                                                                                                                                                                                                                                                                                            |
+| Prop           | Type                                                                                                                                                                                                 | Default  | Description                                                                                                                                                                                                                                                                                                                                                                               |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `kind`         | `'move'` \| `'line'` \| `'axis-line'` \| `'fold'` \| `'cycle'` \| `'curve'` \| `'cubic'` \| `'bend'` \| `'smooth'` \| `'generator'` \| `'arc'` \| `'circlePath'` \| `'ellipsePath'` \| `'rectangle'` | `'line'` | See the "Fourteen kinds" table above                                                                                                                                                                                                                                                                                                                                                      |
+| `axis`         | `'horizontal'` \| `'vertical'`                                                                                                                                                                       | —        | Required for `kind="axis-line"`: select the current host's local horizontal or vertical axis                                                                                                                                                                                                                                                                                              |
+| `via`          | <ApiValues name="FoldStepVia" />                                                                                                                                                                     | —        | Required for `kind="fold"`: `-\|` horizontal-then-vertical; `\|-` vertical-then-horizontal                                                                                                                                                                                                                                                                                                |
+| `fraction`     | `number`                                                                                                                                                                                             | `0.5`    | Three-leg folds `-\|-` / `\|-\|` only: normalized middle-leg position between source and target references, in `0..1`                                                                                                                                                                                                                                                                     |
+| `from`         | `IRTarget`                                                                                                                                                                                           | —        | Required only for `kind="rectangle"`: one rectangle corner                                                                                                                                                                                                                                                                                                                                |
+| `to`           | `IRTarget`                                                                                                                                                                                           | —        | Not used for `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'`; required for `kind="rectangle"` and other cursor-advancing kinds. Target: node id, Cartesian `[x, y]`, polar object, offset object `{ of, offset }`, proportional placement `{ between, fraction }`, relative-offset object `{ relative }` / `{ relativeAccumulate }`, or sugar string `'+dx,dy'` / `'++dx,dy'` |
+| `name`         | `string`                                                                                                                                                                                             | —        | Required only for `kind="generator"`: the built-in or `<Layout pathGenerators>`-registered path generator name                                                                                                                                                                                                                                                                            |
+| `params`       | `IRJsonObject`                                                                                                                                                                                       | —        | Required only for `kind="generator"`: JSON-safe params passed to the path generator; the built-in `parabola` uses `{ control }`                                                                                                                                                                                                                                                           |
+| `cornerRadius` | `number`                                                                                                                                                                                             | —        | Optional for `kind="rectangle"`: corner radius                                                                                                                                                                                                                                                                                                                                            |
 
-### Thirteen kinds
+For `kind="axis-line"`, `to` narrows to `IRAxisLineTarget | string`: Cartesian coordinates, NodeTarget, or the corresponding string shorthand only.
 
-| kind            | Behavior                                                         | Path analogue                 |
-| --------------- | ---------------------------------------------------------------- | ----------------------------- |
-| `'move'`        | Move cursor, **no draw**                                         | path "M"                      |
-| `'line'`        | Straight line from cursor to target                              | path "L"                      |
-| `'fold'`        | Right-angle fold through one corner                              | two path "L" segments         |
-| `'cycle'`       | Close back to most recent `move` (no `to`)                       | path "Z"                      |
-| `'curve'`       | Quadratic Bezier (one control point)                             | path "Q"                      |
-| `'cubic'`       | Cubic Bezier (two control points)                                | path "C"                      |
-| `'bend'`        | Arc shorthand (direction + angle), lowered to cubic              | path "C"                      |
-| `'smooth'`      | Smooth curve through cursor + `points`, lowered to a cubic chain | path "C"×N                    |
-| `'generator'`   | Invoke a built-in or registered path generator                   | provider commands             |
-| `'arc'`         | Cursor as center; arc by start / end angle + radius              | path "A"                      |
-| `'circlePath'`  | Cursor as center; full circle, pen returns to center             | path "A"×2                    |
-| `'ellipsePath'` | Cursor as center; full ellipse, pen returns to center            | path "A"×2                    |
-| `'rectangle'`   | Draw a rectangle using `from` and `to` as opposite corners       | independent rectangle subpath |
+### Fourteen kinds
 
-### Two via values
+| kind            | Behavior                                                         | Path analogue                  |
+| --------------- | ---------------------------------------------------------------- | ------------------------------ |
+| `'move'`        | Move cursor, **no draw**                                         | path "M"                       |
+| `'line'`        | Straight line from cursor to target                              | path "L"                       |
+| `'axis-line'`   | Project the target and draw one segment on a local axis          | path "L"                       |
+| `'fold'`        | Right-angle fold through one or two corners                      | two or three path "L" segments |
+| `'cycle'`       | Close back to most recent `move` (no `to`)                       | path "Z"                       |
+| `'curve'`       | Quadratic Bezier (one control point)                             | path "Q"                       |
+| `'cubic'`       | Cubic Bezier (two control points)                                | path "C"                       |
+| `'bend'`        | Arc shorthand (direction + angle), lowered to cubic              | path "C"                       |
+| `'smooth'`      | Smooth curve through cursor + `points`, lowered to a cubic chain | path "C"×N                     |
+| `'generator'`   | Invoke a built-in or registered path generator                   | provider commands              |
+| `'arc'`         | Cursor as center; arc by start / end angle + radius              | path "A"                       |
+| `'circlePath'`  | Cursor as center; full circle, pen returns to center             | path "A"×2                     |
+| `'ellipsePath'` | Cursor as center; full ellipse, pen returns to center            | path "A"×2                     |
+| `'rectangle'`   | Draw a rectangle using `from` and `to` as opposite corners       | independent rectangle subpath  |
 
-Only meaningful when `kind="fold"`. Given cursor `(px, py)` and target `(tx, ty)`:
+### Four via values
 
-| via     | Corner     | Path                                      |
-| ------- | ---------- | ----------------------------------------- |
-| `'-\|'` | `(tx, py)` | Horizontal to `tx`, then vertical to `ty` |
-| `'\|-'` | `(px, ty)` | Vertical to `ty`, then horizontal to `tx` |
+Only meaningful when `kind="fold"`. Let the unclipped source reference be `(px, py)`, the target reference be `(tx, ty)`, and `f = fraction ?? 0.5`:
+
+| via       | Corners                                | Path                               |
+| --------- | -------------------------------------- | ---------------------------------- |
+| `'-\|'`   | `(tx, py)`                             | Horizontal → vertical              |
+| `'\|-'`   | `(px, ty)`                             | Vertical → horizontal              |
+| `'-\|-'`  | `(x, py)`, `(x, ty)`, `x=px+(tx-px)·f` | Horizontal → vertical → horizontal |
+| `'\|-\|'` | `(px, y)`, `(tx, y)`, `y=py+(ty-py)·f` | Vertical → horizontal → vertical   |
+
+`fraction=0` and `1` are valid, producing a zero-length first or last leg. Node endpoints still auto-clip toward the nearest non-coincident route point instead of drawing to the node center. Fold-label `position` divides the parameter evenly by leg count: halves for two legs and thirds for three, independent of physical leg lengths.
 
 ### Forms of `to`
 
@@ -270,24 +295,24 @@ Only meaningful when `kind="fold"`. Given cursor `(px, py)` and target `(tx, ty)
 
 ### Curves and arcs
 
-| Prop            | Type                                                                                                                                                                                | Default   | Description                                                                                                                                                                                                                                                                             |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `kind`          | `'move'` \| `'line'` \| `'fold'` \| `'cycle'` \| `'curve'` \| `'cubic'` \| `'bend'` \| `'smooth'` \| `'generator'` \| `'arc'` \| `'circlePath'` \| `'ellipsePath'` \| `'rectangle'` | `'line'`  | See the "Thirteen kinds" table above                                                                                                                                                                                                                                                    |
-| `control`       | `[number, number]`                                                                                                                                                                  | —         | Required for `kind="curve"`: single control point of the quadratic Bezier                                                                                                                                                                                                               |
-| `control1`      | `[number, number]`                                                                                                                                                                  | —         | Required for `kind="cubic"`: first control point (shapes start tangent)                                                                                                                                                                                                                 |
-| `control2`      | `[number, number]`                                                                                                                                                                  | —         | Required for `kind="cubic"`: second control point (shapes end tangent)                                                                                                                                                                                                                  |
-| `points`        | `Array<IRTarget>` (≥1)                                                                                                                                                              | —         | Required for `kind="smooth"`: the points the curve passes through after the cursor, in order. The cursor is the implicit first knot; a single point = one segment; the cursor ends at the last point. Element form is the same as `to`                                                  |
-| `tension`       | `number` (>0)                                                                                                                                                                       | `1`       | Optional for `kind="smooth"`: tangent-length multiplier; default 1 (standard centripetal Catmull-Rom), `<1` tauter, `>1` loopier                                                                                                                                                        |
-| `bendDirection` | <ApiValues name="BendDirection" />                                                                                                                                                  | —         | Optional for `kind="bend"`: visual left / right relative to from→to direction; pairs with `bendAngle` for a symmetric bend. **`outAngle` / `inAngle` take precedence** and this is ignored when they are given                                                                          |
-| `bendAngle`     | `number`                                                                                                                                                                            | `30`      | Optional for `kind="bend"`: bend angle in degrees, restricted to (-180, 180)                                                                                                                                                                                                            |
-| `outAngle`      | `number`                                                                                                                                                                            | —         | Optional for `kind="bend"`: out-angle at the start (degrees); pairs with `inAngle` for an asymmetric curve / self-loop, taking precedence over `bendDirection` / `bendAngle`                                                                                                            |
-| `inAngle`       | `number`                                                                                                                                                                            | —         | Optional for `kind="bend"`: in-angle at the end (degrees); pairs with `outAngle`                                                                                                                                                                                                        |
-| `looseness`     | `number`                                                                                                                                                                            | `≈1`      | Optional for `kind="bend"`: control-point distance factor; larger = slacker curve; also scales the default self-loop size when `from == to`                                                                                                                                             |
-| `startAngle`    | `number`                                                                                                                                                                            | —         | Required for `kind="arc"`; optional for `'circlePath'` / `'ellipsePath'` (pair with `endAngle` for a partial circle / ellipse): start angle in degrees (0° → +x, 90° → visually down)                                                                                                   |
-| `endAngle`      | `number`                                                                                                                                                                            | —         | Required for `kind="arc"`; optional for `'circlePath'` / `'ellipsePath'`: end angle in degrees; sweep direction inferred from start vs end                                                                                                                                              |
-| `radius`        | `IRStepRadius`                                                                                                                                                                      | —         | Given for `kind="arc"` (circular) / `'circlePath'`: radius of the circle / arc. On arc, `radius` and `radius: { x, y }` are **mutually exclusive** (one or the other); required on circlePath                                                                                           |
-| `center`        | `IRTarget`                                                                                                                                                                          | cursor    | Optional for `kind="arc"`: explicit arc center, defaults to the cursor (previous step endpoint); set it to anchor the arc independently of the cursor (used by `<Sector>` to draw a correct wedge)                                                                                      |
-| `closed`        | <ApiValues name="PathCloseMode" />                                                                                                                                                  | see below | Optional for `kind="circlePath"` / `'ellipsePath'`: closing mode. Without angles `'closed'` (full circle / ellipse, default); with angles `'chord'` (chord between the two arc ends, default) / `'sector'` (connect both ends to the center, then close) / `'open'` (pure unclosed arc) |
+| Prop            | Type                                                                                                                                                                                                 | Default   | Description                                                                                                                                                                                                                                                                             |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `kind`          | `'move'` \| `'line'` \| `'axis-line'` \| `'fold'` \| `'cycle'` \| `'curve'` \| `'cubic'` \| `'bend'` \| `'smooth'` \| `'generator'` \| `'arc'` \| `'circlePath'` \| `'ellipsePath'` \| `'rectangle'` | `'line'`  | See the "Fourteen kinds" table above                                                                                                                                                                                                                                                    |
+| `control`       | `[number, number]`                                                                                                                                                                                   | —         | Required for `kind="curve"`: single control point of the quadratic Bezier                                                                                                                                                                                                               |
+| `control1`      | `[number, number]`                                                                                                                                                                                   | —         | Required for `kind="cubic"`: first control point (shapes start tangent)                                                                                                                                                                                                                 |
+| `control2`      | `[number, number]`                                                                                                                                                                                   | —         | Required for `kind="cubic"`: second control point (shapes end tangent)                                                                                                                                                                                                                  |
+| `points`        | `Array<IRTarget>` (≥1)                                                                                                                                                                               | —         | Required for `kind="smooth"`: the points the curve passes through after the cursor, in order. The cursor is the implicit first knot; a single point = one segment; the cursor ends at the last point. Element form is the same as `to`                                                  |
+| `tension`       | `number` (>0)                                                                                                                                                                                        | `1`       | Optional for `kind="smooth"`: tangent-length multiplier; default 1 (standard centripetal Catmull-Rom), `<1` tauter, `>1` loopier                                                                                                                                                        |
+| `bendDirection` | <ApiValues name="BendDirection" />                                                                                                                                                                   | —         | Optional for `kind="bend"`: visual left / right relative to from→to direction; pairs with `bendAngle` for a symmetric bend. **`outAngle` / `inAngle` take precedence** and this is ignored when they are given                                                                          |
+| `bendAngle`     | `number`                                                                                                                                                                                             | `30`      | Optional for `kind="bend"`: bend angle in degrees, restricted to (-180, 180)                                                                                                                                                                                                            |
+| `outAngle`      | `number`                                                                                                                                                                                             | —         | Optional for `kind="bend"`: out-angle at the start (degrees); pairs with `inAngle` for an asymmetric curve / self-loop, taking precedence over `bendDirection` / `bendAngle`                                                                                                            |
+| `inAngle`       | `number`                                                                                                                                                                                             | —         | Optional for `kind="bend"`: in-angle at the end (degrees); pairs with `outAngle`                                                                                                                                                                                                        |
+| `looseness`     | `number`                                                                                                                                                                                             | `≈1`      | Optional for `kind="bend"`: control-point distance factor; larger = slacker curve; also scales the default self-loop size when `from == to`                                                                                                                                             |
+| `startAngle`    | `number`                                                                                                                                                                                             | —         | Required for `kind="arc"`; optional for `'circlePath'` / `'ellipsePath'` (pair with `endAngle` for a partial circle / ellipse): start angle in degrees (0° → +x, 90° → visually down)                                                                                                   |
+| `endAngle`      | `number`                                                                                                                                                                                             | —         | Required for `kind="arc"`; optional for `'circlePath'` / `'ellipsePath'`: end angle in degrees; sweep direction inferred from start vs end                                                                                                                                              |
+| `radius`        | `IRStepRadius`                                                                                                                                                                                       | —         | Given for `kind="arc"` (circular) / `'circlePath'`: radius of the circle / arc. On arc, `radius` and `radius: { x, y }` are **mutually exclusive** (one or the other); required on circlePath                                                                                           |
+| `center`        | `IRTarget`                                                                                                                                                                                           | cursor    | Optional for `kind="arc"`: explicit arc center, defaults to the cursor (previous step endpoint); set it to anchor the arc independently of the cursor (used by `<Sector>` to draw a correct wedge)                                                                                      |
+| `closed`        | <ApiValues name="PathCloseMode" />                                                                                                                                                                   | see below | Optional for `kind="circlePath"` / `'ellipsePath'`: closing mode. Without angles `'closed'` (full circle / ellipse, default); with angles `'chord'` (chord between the two arc ends, default) / `'sector'` (connect both ends to the center, then close) / `'open'` (pure unclosed arc) |
 
 ### Edge labels
 

@@ -3,7 +3,7 @@ title: Runtime
 description: Look up the runtime contracts from host specifications through Core IR and Scene to rendering, plus reusable parsing and extension entry points.
 ---
 
-This group follows a figure across runtime boundaries. React and Vanilla adapters normalize host specifications into Core IR, `compileToScene` performs lowering, layout, and resolution, and `@retikz/render` materializes the resulting Scene as SVG or Canvas. Parsing helpers are reusable Sugar-to-IR utilities for adapters, not a mandatory stage for every IR input.
+This group follows a figure across runtime boundaries. React and Vanilla adapters normalize host specifications into Core IR, `compileToScene` performs lowering, layout, and resolution and returns `{ scene, artifacts }`, and `@retikz/render` materializes the Scene as SVG or Canvas. Parsing helpers are reusable Sugar-to-IR utilities for adapters, not a mandatory stage for every IR input.
 
 <ComponentPreview files="runtime-flow" size="xs" hideCode />
 

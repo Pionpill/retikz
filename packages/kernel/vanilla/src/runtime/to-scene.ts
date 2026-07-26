@@ -1,4 +1,4 @@
-import type { CompileOptions, Scene } from '@retikz/core';
+import type { CompileArtifact, CompileOptions, Scene } from '@retikz/core';
 
 import { compileToScene } from '@retikz/core';
 
@@ -20,8 +20,11 @@ const toCompileOptions = (options: CommonOptions): CompileOptions => ({ ...(opti
 /** Render input 归一结果 */
 export type SceneResult = {
   scene: Scene;
+  artifacts: ReadonlyArray<CompileArtifact>;
   runtimeMeta: VanillaRuntimeMeta;
 };
+
+const EMPTY_ARTIFACTS: ReadonlyArray<CompileArtifact> = Object.freeze([]);
 
 /**
  * 入参归一成 `Scene`
@@ -30,16 +33,20 @@ export type SceneResult = {
  *   `fallbackMeasurer`，Node 下确定可跑）
  */
 export const toSceneResult = (input: RenderInput, options: CommonOptions): SceneResult => {
-  if ('primitives' in input) return { scene: input, runtimeMeta: createEmptyRuntimeMeta() };
+  if ('primitives' in input) {
+    return { scene: input, artifacts: EMPTY_ARTIFACTS, runtimeMeta: createEmptyRuntimeMeta() };
+  }
   if (isVanillaFigureSpec(input)) {
     const normalized = normalizeFigureSpec(input, {
       adapters: options.adapters,
       composites: options.compile?.composites,
     });
     const compileOptions = { ...toCompileOptions(options), composites: normalized.composites };
-    return { scene: compileToScene(normalized.ir, compileOptions), runtimeMeta: normalized.runtimeMeta };
+    const result = compileToScene(normalized.ir, compileOptions);
+    return { ...result, runtimeMeta: normalized.runtimeMeta };
   }
-  return { scene: compileToScene(input, toCompileOptions(options)), runtimeMeta: createEmptyRuntimeMeta() };
+  const result = compileToScene(input, toCompileOptions(options));
+  return { ...result, runtimeMeta: createEmptyRuntimeMeta() };
 };
 
 export const toScene = (input: RenderInput, options: CommonOptions): Scene => toSceneResult(input, options).scene;

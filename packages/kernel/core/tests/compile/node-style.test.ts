@@ -9,18 +9,18 @@ import { flattenPrims } from '../helpers/flatten';
 import { line, move } from '../helpers/path-command-factory';
 
 const findRect = (ir: IRScene): RectPrim | undefined =>
-  flattenPrims(compileToScene(ir).primitives).find((p): p is RectPrim => p.type === 'rect');
+  flattenPrims(compileToScene(ir).scene.primitives).find((p): p is RectPrim => p.type === 'rect');
 
 const findEllipse = (ir: IRScene): EllipsePrim | undefined =>
-  flattenPrims(compileToScene(ir).primitives).find((p): p is EllipsePrim => p.type === 'ellipse');
+  flattenPrims(compileToScene(ir).scene.primitives).find((p): p is EllipsePrim => p.type === 'ellipse');
 
 const findShapePath = (ir: IRScene): PathPrim | undefined =>
-  flattenPrims(compileToScene(ir).primitives).find(
+  flattenPrims(compileToScene(ir).scene.primitives).find(
     (p): p is PathPrim => p.type === 'path' && p.commands.some(c => c.kind === 'close'),
   );
 
 const findText = (ir: IRScene): TextPrim | undefined =>
-  flattenPrims(compileToScene(ir).primitives).find((p): p is TextPrim => p.type === 'text');
+  flattenPrims(compileToScene(ir).scene.primitives).find((p): p is TextPrim => p.type === 'text');
 
 describe('Node 颜色 / 不透明度', () => {
   it('textColor 透传到 TextPrim.fill', () => {
@@ -351,7 +351,7 @@ describe('Node 缩放', () => {
         },
       ],
     };
-    const linePath = flattenPrims(compileToScene(ir).primitives).find(p => p.type === 'path');
+    const linePath = flattenPrims(compileToScene(ir).scene.primitives).find(p => p.type === 'path');
     if (linePath?.type === 'path') {
       expect(linePath.commands).toEqual([move([16, 0]), line([100, 0])]);
     }

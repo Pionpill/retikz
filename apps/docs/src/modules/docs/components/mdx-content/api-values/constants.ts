@@ -57,6 +57,7 @@ import {
   GridBorderOrder,
 } from '@retikz/standard';
 import { TableComposite, TableStructureKind } from '@retikz/table';
+import { MathJaxExtension, MathJaxProfile } from '@retikz/tex';
 
 /** API 值集合注册项 */
 export type ApiValueRegistryEntry = {
@@ -158,6 +159,12 @@ export const API_VALUE_REGISTRY = {
   },
   LegendSymbolFit: {
     values: Object.values(LegendSymbolFit),
+  },
+  MathJaxExtension: {
+    values: Object.values(MathJaxExtension),
+  },
+  MathJaxProfile: {
+    values: Object.values(MathJaxProfile),
   },
   NodeTextAlign: {
     values: Object.values(NodeTextAlign),

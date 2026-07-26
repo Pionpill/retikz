@@ -41,7 +41,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const group = findTopScopeGroup(compiled.primitives);
     expect(group?.transforms).toEqual([{ kind: 'translate', x: 50, y: 30 }]);
   });
@@ -54,7 +54,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const group = findTopScopeGroup(compiled.primitives);
     expect(group?.transforms).toHaveLength(1);
     const t = group?.transforms?.[0] as { x: number; y: number; kind: string };
@@ -72,7 +72,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
         children: [{ type: 'node', id: 'inside', position: [0, 0], text: 'I' }],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const group = findScopeStyleGroup(compiled.primitives, ts => ts[0]?.kind === 'translate');
     const t = group?.transforms?.[0] as { x: number; y: number };
     expect(t.x).toBeCloseTo(40, 6);
@@ -87,7 +87,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const group = findTopScopeGroup(compiled.primitives);
     const t = group?.transforms?.[0] as { x: number; y: number };
     expect(t.x).toBeCloseTo(10, 6);
@@ -103,7 +103,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
         children: [{ type: 'node', id: 'inside', position: [0, 0], text: 'I' }],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const group = findScopeStyleGroup(compiled.primitives, ts => ts[0]?.kind === 'translate');
     expect(group?.transforms?.[0]).toEqual({ kind: 'translate', x: 20, y: 0 });
   });
@@ -117,7 +117,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
         children: [{ type: 'node', id: 'inside', position: [0, 0], text: 'I' }],
       },
     ]);
-    const compiled = compileToScene(ir, { nodeDistance: 15 });
+    const compiled = compileToScene(ir, { nodeDistance: 15 }).scene;
     const group = findScopeStyleGroup(compiled.primitives, ts => ts[0]?.kind === 'translate');
     // top direction = y -15
     expect(group?.transforms?.[0]).toEqual({ kind: 'translate', x: 0, y: -15 });
@@ -132,7 +132,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
         children: [{ type: 'node', id: 'inside', position: [0, 0], text: 'I' }],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const group = findScopeStyleGroup(compiled.primitives, ts => ts[0]?.kind === 'translate');
     expect(group?.transforms?.[0]).toEqual({ kind: 'translate', x: 10, y: 5 });
   });
@@ -146,7 +146,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
         children: [{ type: 'node', id: 'inside', position: [0, 0], text: 'I' }],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const group = findScopeStyleGroup(compiled.primitives, ts => ts[0]?.kind === 'translate');
     expect(group?.transforms?.[0]).toEqual({ kind: 'translate', x: 100, y: 100 });
   });
@@ -161,7 +161,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
         children: [{ type: 'node', id: 'inside', position: [0, 0], text: 'I' }],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const group = findScopeStyleGroup(compiled.primitives, ts => ts[0]?.kind === 'translate' && ts[0].x === 50);
     expect(group?.transforms?.[0]).toEqual({ kind: 'translate', x: 50, y: 20 });
   });
@@ -174,7 +174,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const group = findTopScopeGroup(compiled.primitives);
     expect(group?.transforms).toEqual([{ kind: 'rotate', degrees: 45 }]);
   });
@@ -187,7 +187,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const group = findTopScopeGroup(compiled.primitives);
     expect(group?.transforms).toEqual([{ kind: 'scale', x: 2 }]);
   });
@@ -208,7 +208,7 @@ describe('scope nested compose', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const outer = findTopScopeGroup(compiled.primitives);
     expect(outer?.transforms).toEqual([{ kind: 'translate', x: 50, y: 0 }]);
     const inner = outer?.children.find(c => c.type === 'group');
@@ -238,7 +238,7 @@ describe('scope nested compose', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const l1 = findTopScopeGroup(compiled.primitives);
     expect(l1?.transforms?.[0]).toEqual({ kind: 'translate', x: 100, y: 0 });
     const l2 = l1?.children.find(c => c.type === 'group');
@@ -270,7 +270,7 @@ describe('scope nested compose', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     // 顶层有 path（path 在顶层 scope 外面）
     const topPath = compiled.primitives.find(p => p.type === 'path');
     expect(topPath).toBeDefined();
@@ -296,7 +296,7 @@ describe('scope GroupPrim emit 形态', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const groups = compiled.primitives.filter(p => p.type === 'group');
     expect(groups).toHaveLength(1);
     const rects = flattenPrims(groups[0].children).filter(c => c.type === 'rect');
@@ -321,7 +321,7 @@ describe('scope GroupPrim emit 形态', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const topPath = compiled.primitives.find(p => p.type === 'path');
     expect(topPath).toBeUndefined();
     const group = compiled.primitives.find(p => p.type === 'group');
@@ -349,7 +349,7 @@ describe('scope GroupPrim emit 形态', () => {
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const group = findTopScopeGroup(compiled.primitives);
     if (group?.type === 'group') {
       const rect = flattenPrims(group.children).find(c => c.type === 'rect');
@@ -371,7 +371,7 @@ describe('scope GroupPrim emit 形态', () => {
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const group = findTopScopeGroup(compiled.primitives);
     expect(group?.transforms).toHaveLength(1);
     expect(group?.transforms?.[0].kind).toBe('translate');
@@ -397,7 +397,7 @@ describe('scope GroupPrim emit 形态', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const group = findTopScopeGroup(compiled.primitives);
     const path = group === undefined ? undefined : flattenPrims(group.children).find(p => p.type === 'path');
     expect(path).toBeDefined();
@@ -438,7 +438,7 @@ describe('scope GroupPrim emit 形态', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const path = compiled.primitives.find(p => p.type === 'path');
     expect(path).toBeDefined();
     if (path?.type === 'path') {
@@ -469,7 +469,7 @@ describe('scope 跨 scope path 引用', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const path = compiled.primitives.find(p => p.type === 'path');
     expect(path).toBeDefined();
     if (path?.type === 'path') {
@@ -497,7 +497,7 @@ describe('scope 跨 scope path 引用', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const path = compiled.primitives.find(p => p.type === 'path');
     if (path?.type === 'path') {
       const lineCmd = path.commands.find(c => c.kind === 'line');
@@ -516,7 +516,7 @@ describe('scope empty / prune 行为', () => {
       // 纯几何节点（无文本、无 rotate）不外裹 group——隔离出"空 scope 是否产 group"的判定
       { type: 'node', id: 'A', position: [0, 0] },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const groups = compiled.primitives.filter(p => p.type === 'group');
     // 空 scope 不产 group；纯几何 node 平铺不产 group，所以总数 = 0
     expect(groups).toHaveLength(0);
@@ -530,7 +530,7 @@ describe('scope empty / prune 行为', () => {
         children: [],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const group = compiled.primitives.find(p => {
       if (p.type !== 'group') return false;
       const t = p.transforms?.[0];
@@ -550,7 +550,7 @@ describe('scope empty / prune 行为', () => {
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const groups = compiled.primitives.filter(p => p.type === 'group');
     // 空 transforms + 非空 children → 仍 emit；transforms 字段缺省
     const scopeGroup = groups.find(g => g.transforms === undefined || g.transforms.length === 0);
@@ -564,7 +564,7 @@ describe('scope empty / prune 行为', () => {
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const group = compiled.primitives.find(p => p.type === 'group');
     expect(group).toBeDefined();
     if (group?.type === 'group') {
@@ -632,7 +632,7 @@ describe('scope.id synthetic bbox 注册', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
     // path 端点应被解析为 cluster bbox 中心（≈ 子 node A 的全局中心，即 translate(10,0)）
     const path = compiled.primitives.find(p => p.type === 'path');
@@ -654,7 +654,7 @@ describe('同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + last-wins', () => 
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     const dups = warnings.filter(w => w.code === 'DUPLICATE_NODE_ID');
     expect(dups).toHaveLength(1);
     expect(dups[0].message).toContain("'A'");
@@ -711,7 +711,7 @@ describe('同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + last-wins', () => 
       { type: 'node', id: 'A', position: [0, 0], text: 'first' },
       { type: 'node', id: 'A', position: [50, 0], text: 'second' },
     ]);
-    expect(() => compileToScene(ir, { onWarn: () => {} })).not.toThrow();
+    expect(() => compileToScene(ir, { onWarn: () => {} }).scene).not.toThrow();
   });
 });
 
@@ -726,6 +726,6 @@ describe('scope 内前向引用规则', () => {
         ],
       },
     ]);
-    expect(() => compileToScene(ir, { onWarn: () => {} })).toThrow();
+    expect(() => compileToScene(ir, { onWarn: () => {} }).scene).toThrow();
   });
 });

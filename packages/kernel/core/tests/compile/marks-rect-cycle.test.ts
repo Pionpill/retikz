@@ -50,7 +50,7 @@ describe('G4：中段 mark 空心箭头的 contextStroke 拍平进 Scene 时解�
         },
       ],
     };
-    const ellipse = findEllipse(compileToScene(ir).primitives);
+    const ellipse = findEllipse(compileToScene(ir).scene.primitives);
     expect(ellipse).toBeDefined();
     // contextStroke 在独立 Scene group 里无引用上下文 → 解析为 path 的已解析描边色
     expect(ellipse!.stroke).toBe('red');
@@ -71,7 +71,7 @@ describe('G4：中段 mark 空心箭头的 contextStroke 拍平进 Scene 时解�
         },
       ],
     };
-    const ellipse = findEllipse(compileToScene(ir).primitives);
+    const ellipse = findEllipse(compileToScene(ir).scene.primitives);
     expect(ellipse!.stroke).toBe('currentColor');
   });
 });
@@ -114,7 +114,7 @@ describe('C7：cycle 闭合段可承载 mark', () => {
     };
     // 3 个采样段（line, line, cycle）；pos=5/6 → segIdx=2(cycle) localT=0.5
     // → 闭合段 (5,8)→(0,0) 中点 (2.5, 4)
-    const pt = findMarkPoint(compileToScene(ir).primitives);
+    const pt = findMarkPoint(compileToScene(ir).scene.primitives);
     expect(pt).toBeDefined();
     expect(pt![0]).toBeCloseTo(2.5, 5);
     expect(pt![1]).toBeCloseTo(4, 5);
@@ -135,14 +135,14 @@ describe('C7：rectangle 段计入段数并可承载 mark', () => {
   });
 
   it('pos=0.5 → 矩形周长右下角 (40, 20)', () => {
-    const pt = findMarkPoint(compileToScene(rectPath(0.5)).primitives);
+    const pt = findMarkPoint(compileToScene(rectPath(0.5)).scene.primitives);
     expect(pt).toBeDefined();
     expect(pt![0]).toBeCloseTo(40, 5);
     expect(pt![1]).toBeCloseTo(20, 5);
   });
 
   it('pos=0.25 → 矩形周长右上角 (40, 0)', () => {
-    const pt = findMarkPoint(compileToScene(rectPath(0.25)).primitives);
+    const pt = findMarkPoint(compileToScene(rectPath(0.25)).scene.primitives);
     expect(pt).toBeDefined();
     expect(pt![0]).toBeCloseTo(40, 5);
     expect(pt![1]).toBeCloseTo(0, 5);

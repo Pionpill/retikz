@@ -45,7 +45,7 @@ const roundedRectClip = defineClip({
 Core and React are two injection entries for the same Definition:
 
 ```ts
-const scene = compileToScene(ir, {
+const { scene } = compileToScene(ir, {
   clips: [roundedRectClip],
 });
 ```
@@ -88,14 +88,14 @@ Built-in and custom Definitions first merge into one registry. Every `clip.kind`
     {
       label: 'Look up, validate, and resolve clip specs',
       path: 'packages/kernel/core/src/compile/resource/clip.ts',
-      startLine: 156,
-      endLine: 189,
+      startLine: 160,
+      endLine: 194,
     },
     {
       label: 'React clips injection entry',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 215,
-      endLine: 216,
+      startLine: 220,
+      endLine: 221,
     },
   ]}
 />

@@ -9,9 +9,14 @@ import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type * as MathJaxModule from '../../src/mathjax';
+
 const { createMathJaxEngineMock } = vi.hoisted(() => ({ createMathJaxEngineMock: vi.fn() }));
 
-vi.mock('../../src/mathjax', () => ({ createMathJaxEngine: createMathJaxEngineMock }));
+vi.mock('../../src/mathjax', async importOriginal => ({
+  ...(await importOriginal<typeof MathJaxModule>()),
+  createMathJaxEngine: createMathJaxEngineMock,
+}));
 
 import { useLowerTex } from '../../src/react';
 
@@ -44,22 +49,40 @@ afterEach(async () => {
 });
 
 describe('useLowerTex', () => {
+  it('共享初始化失败不会被无诊断回调的首个订阅者吞掉', async () => {
+    const installError = new Error('@retikz/tex: install the optional peer dependency "mathjax-full".');
+    createMathJaxEngineMock.mockRejectedValueOnce(installError);
+    const diagnostics: Array<{ kind: string; message: string }> = [];
+    const SilentProbe = () => {
+      useLowerTex();
+      return null;
+    };
+    const DiagnosticProbe = () => {
+      useLowerTex({ onDiagnostic: diagnostic => diagnostics.push(diagnostic) });
+      return null;
+    };
+
+    await mount(createElement(Fragment, null, createElement(SilentProbe), createElement(DiagnosticProbe)));
+
+    expect(createMathJaxEngineMock).toHaveBeenCalledTimes(1);
+    expect(diagnostics).toEqual([{ kind: 'engine-error', source: '', message: installError.message }]);
+  });
+
   it('共享初始化失败只报告一次原始错误，后续挂载会重试', async () => {
     const installError = new Error('@retikz/tex: install the optional peer dependency "mathjax-full".');
     const engine = { convert: vi.fn(() => '<svg />') };
     createMathJaxEngineMock.mockRejectedValueOnce(installError).mockResolvedValueOnce(engine);
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const diagnostics: Array<{ kind: string; message: string }> = [];
     const values: Array<LowerTex | undefined> = [];
     const Probe = () => {
-      values.push(useLowerTex());
+      values.push(useLowerTex({ onDiagnostic: diagnostic => diagnostics.push(diagnostic) }));
       return null;
     };
 
     const failedRoot = await mount(createElement(Fragment, null, createElement(Probe), createElement(Probe)));
 
     expect(createMathJaxEngineMock).toHaveBeenCalledTimes(1);
-    expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
-    expect(consoleErrorSpy).toHaveBeenCalledWith('[retikz/tex] Failed to initialize MathJax.', installError);
+    expect(diagnostics).toEqual([{ kind: 'engine-error', source: '', message: installError.message }]);
 
     await act(() => failedRoot.unmount());
     roots.delete(failedRoot);

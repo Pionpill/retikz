@@ -1,4 +1,4 @@
-import type { IRTransformInput } from '@retikz/core';
+import type { IRScopePlacement, IRScopeSelfPoint, IRTransformInput } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Circle, Draw, Layout, Node, Scope } from '@retikz/react';
@@ -7,16 +7,31 @@ import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract,scopeTranslateBasicControls } from './scope-translate-basic.controls';
+import { previewControlContract, scopeTranslateBasicControls } from './scope-translate-basic.controls';
 
 /** controls registry 未刷新时供 ComponentPreview 从 demo 模块直接解析的兜底定义 */
 export const previewControls = scopeTranslateBasicControls;
 
 type ScopeTransformValues = PreviewControlValuesFor<typeof scopeTranslateBasicControls>;
 
+/** 把面板中的闭合选项转换为 Scope 自身点 */
+const selfPointOf = (
+  value: ScopeTransformValues['selfAnchor'] | ScopeTransformValues['pivot'],
+  explicitPoint: ScopeTransformValues['selfPoint'] | ScopeTransformValues['pivotPoint'],
+): IRScopeSelfPoint => (value === 'explicit' ? explicitPoint : value);
+
+/** 把自身定位面板值转换为 Scope placement */
+const placementOf = (values: ScopeTransformValues): IRScopePlacement | undefined =>
+  values.placementEnabled
+    ? {
+        target: { id: values.placementTarget },
+        selfAnchor: selfPointOf(values.selfAnchor, values.selfPoint),
+      }
+    : undefined;
+
 /** 把面板值转换为当前选中的 Scope transform 输入 */
 const transformOf = (values: ScopeTransformValues): IRTransformInput => {
-  switch (values.transformKind) {
+  switch (values.operation) {
     case 'translate':
       return { kind: 'translate', x: values.translateX, y: values.translateY };
     case 'polar-translate':
@@ -49,17 +64,21 @@ const transformOf = (values: ScopeTransformValues): IRTransformInput => {
       return {
         kind: 'rotate',
         degrees: values.rotateDegrees,
-        cx: values.rotateCenterX,
-        cy: values.rotateCenterY,
+        pivot: selfPointOf(values.pivot, values.pivotPoint),
       };
     case 'scale':
-      return { kind: 'scale', x: values.scaleX, y: values.scaleY };
+      return {
+        kind: 'scale',
+        x: values.scaleX,
+        y: values.scaleY,
+        pivot: selfPointOf(values.pivot, values.pivotPoint),
+      };
   }
 };
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={400} height={217} viewBox={{ x: -240, y: -130, width: 480, height: 260 }}>
+    <Layout width={400} height={230} viewBox={{ x: -260, y: -150, width: 520, height: 300 }}>
       <Node id="O" position={[-100, 0]} shape="circle" padding={4} stroke="none" fill="none">
         o
       </Node>
@@ -68,44 +87,13 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       </Node>
       <Circle center={{ id: 'O' }} radius={14} stroke="gray" fill="none" dashPattern={[1, 4]} lineCap="round" />
       <Circle center={{ id: 'T' }} radius={14} stroke="gray" fill="none" dashPattern={[1, 4]} lineCap="round" />
-      <Draw way={['O', 'T']} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" />
+      <Draw way={['O', 'T']} stroke="gray" dashPattern={[1, 4]} lineCap="round" />
 
-      <Scope transforms={[transformOf(values)]}>
-        <Draw
-          way={[
-            [0, 0],
-            [80, 0],
-          ]}
-          arrow="->"
-        />
-        <Draw
-          way={[
-            [0, 0],
-            [0, -80],
-          ]}
-          arrow="->"
-        />
-        <Node id="Q" position={[45, -40]} shape="circle" padding={4}>
+      <Scope placement={placementOf(values)} transforms={[transformOf(values)]}>
+        <Circle center={[0, 0]} radius={3} fill="gray" stroke="none" />
+        <Node id="Q" position={[30, -20]} minimumSize={{ width: 80, height: 80 }} padding={0} fill="none">
           q
         </Node>
-        <Draw
-          way={[
-            [45, 0],
-            [45, -40],
-          ]}
-          stroke="lightgray"
-          dashPattern={[1, 4]}
-          lineCap="round"
-        />
-        <Draw
-          way={[
-            [0, -40],
-            [45, -40],
-          ]}
-          stroke="lightgray"
-          dashPattern={[1, 4]}
-          lineCap="round"
-        />
       </Scope>
     </Layout>
   );
@@ -114,8 +102,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /**
- * Scope 局部 transform playground
- * @description O / T 是 Scope 外的固定参照点；局部坐标轴与 Q 共享面板选中的 transform，调整时只改变 Scope 子图
+ * Scope 局部坐标 playground
+ * @description O / T 是 Scope 外的固定参照点；偏心方形 Q 提供固有包络，小圆点只标记局部原点
  */
 const Demo: FC = controlledPreview.Component;
 

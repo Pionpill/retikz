@@ -11,7 +11,7 @@ import { point as pointOps } from '../point';
  *
  * 参数化约定：
  * - 直线/贝塞尔：标准参数（line t·(to-from)+from；Bezier 标准式）
- * - fold：t∈[0,0.5] 走第一段（参数 2t），t∈(0.5,1] 走第二段（参数 2t-1）；t=0.5 落 corner 切线取第一段方向
+ * - fold：各腿均分 t，分界点归前一腿；零长腿借用最近非零腿切线
  * - arc：angle(t) = startAngle + t·(end-start)；切线沿扫描方向
  * - circle/ellipse：angle = t·360°，从 0°(east) 开始
  */
@@ -89,12 +89,39 @@ export const cubicSegmentSample = (
 };
 
 /**
- * 折角段 from → corner → to
- * @description t∈[0,0.5] 走第一段（参数 2t）；t∈(0.5,1] 走第二段（参数 2t-1）；t=0.5 落 corner 切线取第一段方向
+ * 折角段 from → corners → to
+ * @description 每条腿均分 t；精确分界归前一腿。零长腿保持常量 point，tangent 借用最近非零腿，
+ *   等距时优先前一腿；全部零长时回退 `[1, 0]`
  */
-export const foldSegmentSample = (from: Position, corner: Position, to: Position, t: number): SegmentSample => {
-  if (t <= 0.5) return lineSegmentSample(from, corner, t * 2);
-  return lineSegmentSample(corner, to, t * 2 - 1);
+export const foldSegmentSample = (
+  from: Position,
+  cornerOrCorners: Position | ReadonlyArray<Position>,
+  to: Position,
+  t: number,
+): SegmentSample => {
+  const corners = Array.isArray(cornerOrCorners[0])
+    ? (cornerOrCorners as ReadonlyArray<Position>)
+    : [cornerOrCorners as Position];
+  const points = [from, ...corners, to];
+  const legCount = points.length - 1;
+  const clamped = Math.min(1, Math.max(0, t));
+  const scaled = clamped * legCount;
+  const legIndex = scaled === 0 ? 0 : Math.min(Math.ceil(scaled) - 1, legCount - 1);
+  const localT = scaled - legIndex;
+  const sample = lineSegmentSample(points[legIndex], points[legIndex + 1], localT);
+  if (!pointOps.equal(points[legIndex], points[legIndex + 1])) return sample;
+
+  for (let distance = 1; distance < legCount; distance += 1) {
+    const previous = legIndex - distance;
+    if (previous >= 0 && !pointOps.equal(points[previous], points[previous + 1])) {
+      return { point: sample.point, tangent: lineSegmentSample(points[previous], points[previous + 1], 0).tangent };
+    }
+    const next = legIndex + distance;
+    if (next < legCount && !pointOps.equal(points[next], points[next + 1])) {
+      return { point: sample.point, tangent: lineSegmentSample(points[next], points[next + 1], 0).tangent };
+    }
+  }
+  return sample;
 };
 
 /** 弧段（角度度数，与 ir/path arc 同约定）；切线沿扫描方向：endAngle ≥ start 取 (-sin,cos)，否则反向 */

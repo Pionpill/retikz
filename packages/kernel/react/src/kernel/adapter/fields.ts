@@ -93,6 +93,7 @@ export const SCOPE_FIELDS = [
   'id',
   'localNamespace',
   'transforms',
+  'placement',
   'color',
   'stroke',
   'fill',

@@ -15,10 +15,10 @@ import {
   outInControlPoints,
   quadSegmentSample,
 } from '../../../shared/geometry';
-import { clipForTarget, cornerOf, isAutoBoundaryTarget } from '../host/target';
+import { clipForTarget, foldCornersOf, isAutoBoundaryTarget, samePoint } from '../host/target';
 
 /** 连接前驱目标与当前目标的普通 path segment step */
-export type StrokeSegmentStep = Extract<IRStep, { kind: 'line' | 'curve' | 'cubic' | 'bend' | 'fold' }>;
+export type StrokeSegmentStep = Extract<IRStep, { kind: 'line' | 'axis-line' | 'curve' | 'cubic' | 'bend' | 'fold' }>;
 
 /** 普通 segment step 降级所需的共享上下文 */
 export type LowerSegmentStepContext = {
@@ -41,6 +41,7 @@ export type LowerSegmentStepContext = {
 /** 判断 step 是否属于普通 segment family */
 export const isStrokeSegmentStep = (step: IRStep): step is StrokeSegmentStep =>
   step.kind === 'line' ||
+  step.kind === 'axis-line' ||
   step.kind === 'curve' ||
   step.kind === 'cubic' ||
   step.kind === 'bend' ||
@@ -62,6 +63,15 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
     startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
     emitLine(toClip, isAutoBoundaryTarget(step.to));
     sampling.collect(step, t => lineSegmentSample(fromClip, toClip, t));
+    return true;
+  }
+
+  if (step.kind === 'axis-line') {
+    const fromClip = penOverride ?? clipForTarget(previous.step.to, currentAnchor, targetContext);
+    if (!fromClip) return false;
+    startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
+    emitLine(currentAnchor);
+    sampling.collect(step, t => lineSegmentSample(fromClip, currentAnchor, t));
     return true;
   }
 
@@ -113,13 +123,36 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
     return true;
   }
 
-  const corner = cornerOf(penOverride ?? previous.anchor, currentAnchor, step.via);
-  const fromClip = penOverride ?? clipForTarget(previous.step.to, corner, targetContext);
-  const toClip = clipForTarget(step.to, corner, targetContext);
+  const fromReference = penOverride ?? previous.anchor;
+  const corners = foldCornersOf(fromReference, currentAnchor, step.via, 'fraction' in step ? step.fraction : undefined);
+  if (corners.length === 1) {
+    const corner = corners[0];
+    const fromClip = penOverride ?? clipForTarget(previous.step.to, corner, targetContext);
+    const toClip = clipForTarget(step.to, corner, targetContext);
+    if (!fromClip || !toClip) return false;
+    startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
+    emitLine(corner);
+    emitLine(toClip, isAutoBoundaryTarget(step.to));
+    sampling.collect(step, t => foldSegmentSample(fromClip, corner, toClip, t));
+    return true;
+  }
+  const fromToward =
+    [...corners, currentAnchor].find(candidate => !samePoint(candidate, fromReference)) ?? currentAnchor;
+  const toToward =
+    [fromReference, ...corners].findLast(candidate => !samePoint(candidate, currentAnchor)) ?? fromReference;
+  const fromClip = penOverride ?? clipForTarget(previous.step.to, fromToward, targetContext);
+  const toClip = clipForTarget(step.to, toToward, targetContext);
   if (!fromClip || !toClip) return false;
+  const emittedCorners = corners.map(corner => [...corner] as IRPosition);
+  for (let index = 0; index < emittedCorners.length && samePoint(corners[index], fromReference); index += 1) {
+    emittedCorners[index] = fromClip;
+  }
+  for (let index = emittedCorners.length - 1; index >= 0 && samePoint(corners[index], currentAnchor); index -= 1) {
+    emittedCorners[index] = toClip;
+  }
   startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
-  emitLine(corner);
+  for (const corner of emittedCorners) emitLine(corner);
   emitLine(toClip, isAutoBoundaryTarget(step.to));
-  sampling.collect(step, t => foldSegmentSample(fromClip, corner, toClip, t));
+  sampling.collect(step, t => foldSegmentSample(fromClip, emittedCorners, toClip, t));
   return true;
 };

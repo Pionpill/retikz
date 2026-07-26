@@ -24,7 +24,7 @@ describe('部分 circlePath', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'circlePath', radius: 10, startAngle: 0, endAngle: 180 },
     );
-    expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
       move([10, 0]),
       ellipseArc([0, 0], 10, 10, 0, 180),
       close(),
@@ -36,7 +36,7 @@ describe('部分 circlePath', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'circlePath', radius: 10, startAngle: 0, endAngle: 180, closed: 'open' },
     );
-    expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
       move([10, 0]),
       ellipseArc([0, 0], 10, 10, 0, 180),
     ]);
@@ -47,7 +47,7 @@ describe('部分 circlePath', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'circlePath', radius: 10, startAngle: 0, endAngle: 90, closed: 'sector' },
     );
-    expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
       move([10, 0]),
       ellipseArc([0, 0], 10, 10, 0, 90),
       line([0, 0]),
@@ -57,7 +57,7 @@ describe('部分 circlePath', () => {
 
   it('整圆（无角度）输出与改造前一致', () => {
     const ir = path({ type: 'step', kind: 'move', to: [0, 0] }, { type: 'step', kind: 'circlePath', radius: 10 });
-    expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
       move([10, 0]),
       ellipseArc([0, 0], 10, 10, 0, 360),
     ]);
@@ -68,7 +68,7 @@ describe('部分 circlePath', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'circlePath', radius: 10, startAngle: 90, endAngle: 0 },
     );
-    expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
       move([0, 10]),
       ellipseArc([0, 0], 10, 10, 90, 0),
       close(),
@@ -82,7 +82,7 @@ describe('部分 ellipsePath', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'ellipsePath', radius: { x: 15, y: 10 }, startAngle: 0, endAngle: 90 },
     );
-    expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
       move([15, 0]),
       ellipseArc([0, 0], 15, 10, 0, 90),
       close(),
@@ -94,7 +94,7 @@ describe('部分 ellipsePath', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'ellipsePath', radius: { x: 15, y: 10 }, startAngle: 0, endAngle: 90, closed: 'sector' },
     );
-    expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
       move([15, 0]),
       ellipseArc([0, 0], 15, 10, 0, 90),
       line([0, 0]),
@@ -107,7 +107,7 @@ describe('部分 ellipsePath', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'ellipsePath', radius: { x: 15, y: 10 } },
     );
-    expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
       move([15, 0]),
       ellipseArc([0, 0], 15, 10, 0, 360),
     ]);
@@ -122,7 +122,7 @@ describe('pen 语义（逐模式，后接 line 验起点）', () => {
       { type: 'step', kind: 'line', to: [50, 50] },
     );
     // arcEnd = (-10, 0)；line 从 arcEnd 直接续，无中间 move
-    expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
       move([10, 0]),
       ellipseArc([0, 0], 10, 10, 0, 180),
       line([50, 50]),
@@ -135,7 +135,7 @@ describe('pen 语义（逐模式，后接 line 验起点）', () => {
       { type: 'step', kind: 'circlePath', radius: 10, startAngle: 0, endAngle: 180 },
       { type: 'step', kind: 'line', to: [50, 50] },
     );
-    expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
       move([10, 0]),
       ellipseArc([0, 0], 10, 10, 0, 180),
       close(),
@@ -151,7 +151,7 @@ describe('pen 语义（逐模式，后接 line 验起点）', () => {
     );
     // sector 闭合后笔位经 close 回子路径起点 [10,0]；penOverride=center 让续接 line 从 center 起，
     // 故 close 与 line 间需一个 move([0,0])（与 full 同语义）。
-    expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
       move([10, 0]),
       ellipseArc([0, 0], 10, 10, 0, 90),
       line([0, 0]),
@@ -167,7 +167,7 @@ describe('pen 语义（逐模式，后接 line 验起点）', () => {
       { type: 'step', kind: 'circlePath', radius: 10 },
       { type: 'step', kind: 'line', to: [50, 50] },
     );
-    expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
+    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
       move([10, 0]),
       ellipseArc([0, 0], 10, 10, 0, 360),
       move([0, 0]),
@@ -183,7 +183,7 @@ describe('错误 / 回退（sugar+compile 而非 safeParse）', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'circlePath', radius: 10, startAngle: 0 },
     );
-    const cmds = findPathPrim(compileToScene(ir, { onWarn: w => warnings.push(w.code) }).primitives).commands;
+    const cmds = findPathPrim(compileToScene(ir, { onWarn: w => warnings.push(w.code) }).scene.primitives).commands;
     expect(cmds).toEqual([move([10, 0]), ellipseArc([0, 0], 10, 10, 0, 360)]);
     expect(warnings).toContain('PARTIAL_ARC_NEEDS_BOTH_ANGLES');
   });
@@ -194,7 +194,7 @@ describe('错误 / 回退（sugar+compile 而非 safeParse）', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'circlePath', radius: 10, startAngle: 0, endAngle: 180, closed: 'closed' },
     );
-    const cmds = findPathPrim(compileToScene(ir, { onWarn: w => warnings.push(w.code) }).primitives).commands;
+    const cmds = findPathPrim(compileToScene(ir, { onWarn: w => warnings.push(w.code) }).scene.primitives).commands;
     expect(cmds).toEqual([move([10, 0]), ellipseArc([0, 0], 10, 10, 0, 180), close()]);
     expect(warnings).toContain('PARTIAL_ARC_CLOSED_INVALID');
   });

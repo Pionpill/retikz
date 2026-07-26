@@ -17,6 +17,14 @@ description: Named members placed in a scene — Node and Coordinate
 
 </Comparison>
 
+<span id="node-text-color"></span>
+
+## Node text color keyword
+
+`NodeSchema.textColor` remains a regular string contract. `NodeTextColor.Contrast` is a reserved Node-host keyword that also works in the schema-derived `Scope.nodeDefault.textColor`; it selects pure black or white from the final static opaque fill.
+
+Core parses only deterministic named, hex, `rgb()`, and `hsl()` colors; it never reads DOM or renderer state. Translucent / missing fills, gradients, patterns, images, and dynamic CSS colors use the fixed `currentColor` fallback and emit `TEXT_AUTO_CONTRAST_UNRESOLVED`.
+
 <span id="shaperef"></span>
 
 ## ShapeRef
@@ -56,19 +64,20 @@ description: Named members placed in a scene — Node and Coordinate
     position:
       'Label position relative to the node border: 8-direction enum, center, numeric angle, or `{ boundary, fraction }` on a rectangle boundary; defaults to top; center draws at the node center',
     placement: 'Offset direction from the attachment point: outside (default) or inside; inside labels cannot use pin',
-    distance: 'Distance from the node boundary to the label center, in user units; defaults to 12',
+    distance:
+      'Net gap from the node boundary to the rotated label visual box, in user units; defaults to 12; must be finite and non-negative; center ignores it',
     textColor: 'Label text color; defaults to currentColor',
     opacity: 'Label opacity 0..1; multiplied with the node opacity',
     font: 'Label font override; omitted fields inherit from the parent node font, then renderer defaults',
     rotate:
-      'Rotates label text around its own center: none (default), radial, tangent, or an explicit degree value; changes orientation only',
+      "Rotates label text around its own center: none (default), radial along the position direction (the selected side's outward normal for a boundary fraction), tangent to it, or an explicit degree value; inside reverses only the label offset, not its orientation; rotation changes the visual-box projection, so the compiler adjusts the center to preserve the distance gap",
     keepUpright:
       'When true, flips rotated text by 180 degrees if it would otherwise read upside down; defaults to false',
-    pin: 'Draws a leader line from node border to label: true = default thin line; object = styled leader with stroke / strokeWidth / dashPattern / dashOffset; omitted / false = none. Only supported for outside labels',
+    pin: 'Draws a leader from the node border to the rotated label visual box: true = default thin line; object = styled leader with stroke / strokeWidth / dashPattern / dashOffset; omitted / false = none. Only supported for outside labels',
   }}
 />
 
-`position: { boundary, fraction }` currently targets box-like node boundaries: `boundary` is `'top'` / `'right'` / `'bottom'` / `'left'`, and `fraction` is the 0..1 proportional position on that side, defaulting to `0.5`.
+`position: { boundary, fraction }` currently targets box-like node boundaries: `boundary` is `'top'` / `'right'` / `'bottom'` / `'left'`, and `fraction` is the 0..1 proportional position on that side, defaulting to `0.5`. For non-`center` labels, the center offset is `distance + rotated visual-box projection radius` along the placement direction. A pin ends at the exact intersection of the same ray and rotated visual box.
 
 ## TextBlock
 

@@ -16,7 +16,7 @@ const collectTexts = (primitives: Array<ScenePrimitive>): Array<TextPrim> => {
 
 const lineText = (line: string | TextLine): string => (typeof line === 'string' ? line : line.text);
 
-const findText = (scene: ReturnType<typeof compileToScene>, text: string): TextPrim => {
+const findText = (scene: ReturnType<typeof compileToScene>['scene'], text: string): TextPrim => {
   const primitive = collectTexts(scene.primitives).find(candidate =>
     candidate.lines.some(line => lineText(line) === text),
   );
@@ -32,7 +32,7 @@ describe('compile font size presets and relative units', () => {
       children: [{ type: 'node', position: [0, 0], text: 'default' }],
     };
 
-    expect(findText(compileToScene(ir), 'default').fontSize).toBe(16);
+    expect(findText(compileToScene(ir).scene, 'default').fontSize).toBe(16);
   });
 
   it('resolves web presets with the default root font size', () => {
@@ -42,7 +42,7 @@ describe('compile font size presets and relative units', () => {
       children: [{ type: 'node', position: [0, 0], text: 'web', font: { size: 'sm' } }],
     };
 
-    expect(findText(compileToScene(ir), 'web').fontSize).toBe(14);
+    expect(findText(compileToScene(ir).scene, 'web').fontSize).toBe(14);
   });
 
   it('rejects TikZ presets in core schema', () => {
@@ -54,7 +54,7 @@ describe('compile font size presets and relative units', () => {
         { type: 'node', position: [40, 0], text: 'tikz', font: { size: 'small' } },
       ],
     };
-    expect(() => compileToScene(ir)).toThrow();
+    expect(() => compileToScene(ir).scene).toThrow();
   });
 
   it('resolves rem from CompileOptions.fontSize', () => {
@@ -64,7 +64,7 @@ describe('compile font size presets and relative units', () => {
       children: [{ type: 'node', position: [0, 0], text: 'rem', font: { size: '1.25rem' } }],
     };
 
-    expect(findText(compileToScene(ir, { fontSize: 20 }), 'rem').fontSize).toBe(25);
+    expect(findText(compileToScene(ir, { fontSize: 20 }).scene, 'rem').fontSize).toBe(25);
   });
 
   it('resolves path label presets', () => {
@@ -82,7 +82,7 @@ describe('compile font size presets and relative units', () => {
       ],
     };
 
-    expect(findText(compileToScene(ir), 'label').fontSize).toBe(18);
+    expect(findText(compileToScene(ir).scene, 'label').fontSize).toBe(18);
   });
 
   it('resolves line em from the node font size', () => {
@@ -99,7 +99,7 @@ describe('compile font size presets and relative units', () => {
       ],
     };
 
-    const text = findText(compileToScene(ir), 'line');
+    const text = findText(compileToScene(ir).scene, 'line');
     expect(text.lines[0].fontSize).toBe(9);
   });
 
@@ -110,7 +110,7 @@ describe('compile font size presets and relative units', () => {
       children: [{ type: 'node', position: [0, 0], text: 'scaled', font: { size: 'lg' }, scale: 2 }],
     };
 
-    expect(findText(compileToScene(ir), 'scaled').fontSize).toBe(36);
+    expect(findText(compileToScene(ir).scene, 'scaled').fontSize).toBe(36);
   });
 
   it('passes resolved font size to lowerTex', () => {
@@ -138,6 +138,6 @@ describe('compile font size presets and relative units', () => {
       children: [{ type: 'node', position: [0, 0], text: 'bad' }],
     };
 
-    expect(() => compileToScene(ir, { fontSize: 0 })).toThrow(/fontSize/);
+    expect(() => compileToScene(ir, { fontSize: 0 }).scene).toThrow(/fontSize/);
   });
 });

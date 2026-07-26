@@ -52,7 +52,7 @@ All three components share these runtime props:
 | -------------------------- | ---------------------------------------------- | ------- | ------------------------------------------------------- |
 | `structureDefinitions?`    | `ReadonlyArray<AnyTableStructureDefinition>`   | `[]`    | Custom Structure definitions                            |
 | `presentationDefinitions?` | `ReadonlyArray<AnyCellPresentationDefinition>` | `[]`    | Custom Cell presentation definitions                    |
-| `composites?`              | `ReadonlyArray<CompositeDefinition>`           | `[]`    | Definitions required by Tier 2 Cell content             |
+| `composites?`              | `ReadonlyArray<AnyCompositeDefinition>`        | `[]`    | Definitions required by Tier 2 Cell content             |
 | `onManifest?`              | `(manifest: TableLayoutManifest) => void`      | —       | Standalone layout callback; unsupported when embedded   |
 | `renderer?`                | `'svg' \| 'canvas'`                            | `'svg'` | Renderer backend                                        |
 | `width?` / `height?`       | `number \| string`                             | —       | Host display size; does not change Table's fixed tracks |
@@ -110,13 +110,13 @@ The `embedTable()` embed id must be non-empty. TableSpec itself may stay anonymo
 
 ### Runtime options
 
-| Prop           | Type                                 | Default | Description                                               |
-| -------------- | ------------------------------------ | ------- | --------------------------------------------------------- |
-| `data`         | `ExternalDatasets`                   | `{}`    | External datasets indexed by spec reference               |
-| `lowerOptions` | `LowerTablesOptions`                 | `{}`    | Structure and Presentation definitions                    |
-| `composites`   | `ReadonlyArray<CompositeDefinition>` | `[]`    | Definitions required by Tier 2 Cell content               |
-| `output`       | `RenderToStringOptions['output']`    | —       | `renderTable` only: SVG host dimensions and id prefix     |
-| `artifacts`    | `true \| false`                      | `false` | `renderTable` only: whether to return `{ svg, manifest }` |
+| Prop           | Type                                    | Default | Description                                               |
+| -------------- | --------------------------------------- | ------- | --------------------------------------------------------- |
+| `data`         | `ExternalDatasets`                      | `{}`    | External datasets indexed by spec reference               |
+| `lowerOptions` | `LowerTablesOptions`                    | `{}`    | Structure and Presentation definitions                    |
+| `composites`   | `ReadonlyArray<AnyCompositeDefinition>` | `[]`    | Definitions required by Tier 2 Cell content               |
+| `output`       | `RenderToStringOptions['output']`       | —       | `renderTable` only: SVG host dimensions and id prefix     |
+| `artifacts`    | `true \| false`                         | `false` | `renderTable` only: whether to return `{ svg, manifest }` |
 
 ## Lowering and extensions
 

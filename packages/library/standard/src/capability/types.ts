@@ -1,4 +1,4 @@
-import type { CompositeDefinition } from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
 
 /**
  * Standard 能力的结构化组合单元
@@ -8,7 +8,7 @@ export type StandardCapabilityModule = Readonly<{
   /** bundle 内用于去重和诊断的非空名称 */
   name: string;
   /** 按声明顺序贡献给 Core compile options 的 composite definitions */
-  composites: ReadonlyArray<CompositeDefinition>;
+  composites: ReadonlyArray<AnyCompositeDefinition>;
 }>;
 
 /**
@@ -21,6 +21,6 @@ export type StandardBundle = Readonly<{
   /** 可直接合并或传递给 Core 的编译选项片段 */
   compile: Readonly<{
     /** bundle 按 module 与 definition 声明顺序组合的必填 composite 列表 */
-    composites: ReadonlyArray<CompositeDefinition>;
+    composites: ReadonlyArray<AnyCompositeDefinition>;
   }>;
 }>;

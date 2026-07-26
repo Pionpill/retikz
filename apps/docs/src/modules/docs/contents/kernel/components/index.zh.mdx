@@ -1,9 +1,9 @@
 ---
 title: 组件
-description: 按布局、图元、关系、形状、辅助与效果组织 Kernel 的组件和常用写法。
+description: 按布局、图元、关系、形状与效果组织 Kernel 的组件和常用写法。
 ---
 
-组件分组是日常写图的主要入口。先用布局建立画布和局部坐标语境，再放置节点与坐标、绘制路径关系；形状、辅助和效果页面用于补充更具体的表达能力。各领域的自定义能力放在对应分组末尾，跨领域机制则集中在[扩展机制](/kernel/reference/runtime/extensions)。
+组件分组是日常写图的主要入口。先用布局建立画布和局部坐标语境，再放置节点与坐标、绘制路径关系；形状和效果页面用于补充更具体的表达能力。各领域的自定义能力放在对应分组末尾，跨领域机制则集中在[扩展机制](/kernel/reference/runtime/extensions)。
 
 ## 职责一览
 
@@ -13,7 +13,6 @@ description: 按布局、图元、关系、形状、辅助与效果组织 Kernel
 | 节点 | Node、Text、Coordinate、Boundary   | 描述可见对象与可引用位置   |
 | 绘制 | Draw、Way、Path、Arrow、Step       | 描述连接方式与路径动作     |
 | 形状 | Circle、Arc、Rectangle、Polygon 等 | 用高层参数生成常见几何路径 |
-| 辅助 | Grid                               | 提供可复用的辅助绘制能力   |
 | 效果 | Shadow、Blend、Pattern、Animation  | 控制视觉合成与动态表现     |
 
 ## 章节内容
@@ -34,10 +33,6 @@ description: 按布局、图元、关系、形状、辅助与效果组织 Kernel
   <LinkedCard href="/kernel/components/shapes">
     <span className="font-semibold">形状</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">圆、弧、矩形、多边形与轮廓</span>
-  </LinkedCard>
-  <LinkedCard href="/standard/composite/grid">
-    <span className="font-semibold">辅助</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">辅助绘制组件与常用构造</span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/effects">
     <span className="font-semibold">效果</span>

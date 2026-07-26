@@ -1,11 +1,11 @@
 ---
 title: Tier 2 Composites
-description: Composites preserve domain intent as serializable Tier 2 nodes, then lower them to core Tier 1 primitives through registered compile-time expansion.
+description: Composites preserve serializable Tier 2 intent, then lower through either context-free expansion or layout-aware compile into core Tier 1 primitives.
 ---
 
 retikz IR has two child tiers: **Tier 1** is core's built-in `node` / `path` / `coordinate` / `scope`; a **Tier 2 composite** is a high-level node supplied by a domain package, such as a complete chart spec from `@retikz/plot`.
 
-A Tier 2 node is discriminated by `namespace + type`, owns a complete schema, and lowers to Tier 1 at the start of compilation. Layout, anchors, zIndex, and renderers then reuse core's existing capabilities, while core remains unaware of chart, tree, or other domain semantics.
+A Tier 2 node is discriminated by `namespace + type`, owns a complete schema, and is handled by the same composite registry during compile. Use `expand` for structural transformation and layout-aware `compile` when parent layout depends on real child content. Both paths eventually emit Tier 1, so layout, anchors, zIndex, and renderers reuse core capabilities while core remains unaware of table, chart, tree, or other domain semantics.
 
 <ComponentAlert
   type="tip"
@@ -19,7 +19,7 @@ Saving dozens of rectangles and lines loses the higher-level fact that the resul
 
 <ComponentPreview files="composite-pipeline" size="xs" hideCode />
 
-The `lower` edge in the figure is the key boundary. Upstream systems can store, transfer, diff, or generate a high-level node; downstream systems receive uniform Tier 1 output, so every renderer shares the same expansion.
+The `lower` edge in the figure is the key boundary. Upstream systems can store, transfer, diff, or generate a high-level node; downstream systems receive uniform Tier 1 output, so every renderer shares one canonical Core compile result.
 
 A capability usually belongs in a composite when all three are true:
 
@@ -27,30 +27,55 @@ A capability usually belongs in a composite when all three are true:
 - the domain schema expresses user intent better than expanded geometry;
 - React, Vanilla, SVG, Canvas, and other entries should share the same result.
 
-## Minimal registration and lowering
+## Two mutually exclusive branches
 
-`defineComposite({ namespace, type, schema, expand })` registers a schema and expansion as one definition. `schema` may be one object or a direct object union whose branches share the same `namespace` / `type` literals. Every branch must match the definition key, and `expand` receives the validated node and returns Tier 1. Non-object branches, blank literals, and mixed keys fail immediately.
+`defineComposite` registers a schema and one processing branch as a single definition. A definition must provide exactly one of `expand` or `compile`. `schema` may be one object or a direct object union whose branches share the same `namespace` / `type` literals. Every schema branch must match the definition key; non-object branches, blank literals, and mixed keys fail immediately.
 
 Core routes composites only by the top-level `namespace + type`; it does not interpret discriminators inside a domain schema. Table, for example, can define several spec branches under one `table.table` composite, while the Table package remains responsible for interpreting and narrowing `structure.kind`.
 
 <ComponentPreview files="composite-basic" size="sm" />
 
-| Field       | Responsibility                            | Constraint                                        |
-| ----------- | ----------------------------------------- | ------------------------------------------------- |
-| `namespace` | Partition the domain                      | Matches the schema literal                        |
-| `type`      | Identify a node type inside the domain    | Matches the schema literal                        |
-| `schema`    | Validate the full node and apply defaults | Object or direct object union with one shared key |
-| `expand`    | Emit one or more Tier 1 or nested Tier 2  | Must eventually reach Tier 1                      |
+| Field            | Responsibility                                         | Constraint                                        |
+| ---------------- | ------------------------------------------------------ | ------------------------------------------------- |
+| `namespace`      | Partition the domain                                   | Matches the schema literal                        |
+| `type`           | Identify a node type inside the domain                 | Matches the schema literal                        |
+| `schema`         | Validate the full node and apply defaults              | Object or direct object union with one shared key |
+| `expand`         | Context-free emission of Tier 1 or nested Tier 2       | Exclusive with `compile`; must reach Tier 1       |
+| `compile`        | Measure, constrain, and place children in full compile | Exclusive with `expand`                           |
+| `artifactSchema` | Validate a domain artifact returned by `compile`       | Required when the definition has an artifact type |
 
-The compiler looks up `${namespace}.${type}`, validates the node, and calls `expand`. Nested composites continue lowering until only Tier 1 remains. An unregistered node warns and is skipped; cycles or excess depth throw. See [Runtime Extensions](/kernel/reference/runtime/extensions) for complete fields, diagnostics, and standalone lowering entry points.
+The compiler looks up `${namespace}.${type}`, validates the node, and calls the selected branch. Nested composites continue until final output contains only Tier 1 and committed replay results. An unregistered node warns and is skipped; cycles or excess depth throw. See [Compile](/kernel/reference/runtime/compile) for complete fields, diagnostics, and standalone lowering behavior.
+
+## Layout-aware compile
+
+`CompositeDefinition.expand()` has no text measurement, providers, reference environment, or parent constraint, so it cannot express a parent layout that feeds back from real child content. `compile(node, context)` provides the general loop needed by those Tier 2 components:
+
+<ComponentPreview files="layout-aware-compile" size="xl" hideCode />
+
+Both probes in the figure return allocation bounds, visual bounds, and a replay token without publishing their results. Replay A from the intrinsic probe only informs the solve; after the parent composite chooses its constraint, only replay B follows the final edge into a single commit and joins the domain artifact in the same `CompileResult`.
+
+1. call `layoutChild(child, { kind:'intrinsic' })` to measure natural content;
+2. solve columns, rows, or another parent constraint from allocation bounds;
+3. call `layoutChild(child, { kind:'constrained', maxWidth })` to reflow text at its final width;
+4. place the chosen result with `{ kind:'replay', replay, transforms? }`.
+
+Each `layoutChild` call returns allocation bounds, conservative visual bounds, and an opaque replay token. Allocation bounds describe the space reserved by the parent; visual bounds describe settled drawing, including transforms, clipping, stroke, markers, and shadow. A replay token is valid once in the compile that created it. Final emission commits the saved primitives, resources, references, warnings, and artifacts without a third expansion or layout.
+
+This is not a Table-specific interface. Any Tier 2 composite that needs “measure child content → solve parent layout → constrain child content → place the final result” can reuse it.
+
+### Typed artifacts from the same compile
+
+A layout-aware definition can declare `artifactSchema` and return a JSON-safe `artifact` from `compile`. Core wraps it in `CompileResult.artifacts` with `namespace`, `type`, and an occurrence locator. The locator combines the original `sourcePath` with structured expansion / output / replay segments, without a global Map, callback capture, or second traversal. Hosts therefore receive the Scene and domain artifacts from one canonical compile.
+
+`lowerIRToKernel()` only supports independently executable `expand` branches. It fails explicitly on a layout-aware composite because the correct result depends on the full compile environment.
 
 ## Compared with Sugar
 
-|         | Sugar (such as `<Draw>`)  | Tier 2 composite                     |
-| ------- | ------------------------- | ------------------------------------ |
-| In IR   | Already flattened         | Preserves the high-level node        |
-| Lowered | During adapter building   | During core compilation              |
-| For     | Directly mapped shorthand | Algorithmic layout, scales, grouping |
+|         | Sugar (such as `<Draw>`)  | Tier 2 composite                                            |
+| ------- | ------------------------- | ----------------------------------------------------------- |
+| In IR   | Already flattened         | Preserves the high-level node                               |
+| Lowered | During adapter building   | During core compilation                                     |
+| For     | Directly mapped shorthand | Structural generation or content-aware layout / aggregation |
 
 <Comparison target="tikz" title="Tier 2 and PGFPlots">
 
@@ -69,20 +94,26 @@ If you are implementing a domain adapter, injecting `composites` / `embeddables`
     {
       label: 'Validate the definition key against schema literals',
       path: 'packages/kernel/core/src/contract/composite/define.ts',
-      startLine: 21,
-      endLine: 32,
+      startLine: 30,
+      endLine: 90,
     },
     {
-      label: 'Recursively lower Tier 2 composites',
-      path: 'packages/kernel/core/src/compile/orchestration/composite.ts',
-      startLine: 23,
-      endLine: 72,
+      label: 'Validate layout constraints and commit replay',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 717,
+      endLine: 884,
+    },
+    {
+      label: 'Measure and emit a layout-aware composite',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 885,
+      endLine: 1025,
     },
     {
       label: 'Inject composites and providers into compile context',
       path: 'packages/kernel/core/src/compile/orchestration/context.ts',
-      startLine: 88,
-      endLine: 115,
+      startLine: 83,
+      endLine: 124,
     },
   ]}
 />

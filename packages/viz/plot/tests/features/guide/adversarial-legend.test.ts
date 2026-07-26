@@ -194,7 +194,7 @@ describe('[adversarial] legend — JSON round-trip / 非有限数泄漏（攻击
       },
       { width: 480, height: 300 },
     );
-    expect(() => compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites })).not.toThrow();
+    expect(() => compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites }).scene).not.toThrow();
   });
 });
 

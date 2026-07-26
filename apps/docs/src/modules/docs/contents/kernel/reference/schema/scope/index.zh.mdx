@@ -24,6 +24,7 @@ description: Scope 的分组、局部命名空间、样式默认值、变换、�
     id: '可选引用 id；始终注册到父级命名空间',
     localNamespace: '为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级',
     transforms: '依次作用于所有 children 的局部变换；相对位移在编译期解析',
+    placement: '在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target',
     nodeDefault: '只作用于 node 的默认样式；不包含 id、position、text 等结构字段',
     pathDefault: '只作用于 path-like drawable 的默认样式；箭头使用独立 arrowDefault 通道',
     labelDefault: 'node label 与 step / geometry label 共用的默认文字样式',
@@ -37,6 +38,31 @@ description: Scope 的分组、局部命名空间、样式默认值、变换、�
     children: '可递归包含 node、path、coordinate、scope 或 Tier 2 composite',
   }}
 />
+
+<span id="scopeposition"></span>
+
+## Scope 定位
+
+`ScopePlacementSchema` 是 Scope 自身锚点到父坐标系 target 的闭合定位契约。`target` 只允许笛卡尔 `[x, y]` 或此前已完成的 `NodeTarget`；Polar、Offset、Between 与 path-relative target 不进入该字段。
+
+<ZodSchema
+  name="ScopePlacementSchema"
+  description="把 transforms 后的 Scope 自身点对齐父坐标系 target。"
+  descriptions={{
+    target: '父坐标系笛卡尔点，或此前已完成的 Node / Coordinate / Scope target',
+    selfAnchor: 'Scope 自身点；缺省 center',
+  }}
+/>
+
+NodeTarget 的 `offset` 先按世界 user-units 叠加，再投影回父 frame。forward、self、descendant 或未闭合 Scope placeholder 会同步失败，不进行拓扑排序。
+
+<span id="scopeselfpoint"></span>
+
+### Scope 自身点
+
+<ZodSchema name="ScopeSelfPointSchema" description="Scope 固有局部原点、包络 anchor 或显式局部坐标。" />
+
+`origin` 固定为固有局部 `[0, 0]`；其它 anchor 复用标准名称、数字角度和 `{ side, fraction }`。空 Scope 的 origin、center、边、角与数字角度都退化到 `[0, 0]`，但 `{ side, fraction }` 在零尺寸包络上仍 fail-loud。
 
 <span id="default-channels"></span>
 
@@ -55,7 +81,7 @@ Scope 把默认值拆成四个互不混用的通道。它们只覆盖对应宿�
 
 ## 变换
 
-`TransformSchema` 是 `Scope.transforms` 的联合类型。数组顺序就是应用顺序：位移类在编译期解析为笛卡尔 translate，rotate 与 scale 保留为 renderer-agnostic 变换。
+`TransformSchema` 是 `Scope.transforms` 的联合类型。数组第 0 项最外层、最后一项先作用。位移类在编译期解析为笛卡尔 translate；rotate pivot lower 为 Scene `cx/cy`，非原点 scale pivot lower 为 `translate(p) → scale → translate(-p)`。
 
 <ZodSchema name="TransformSchema" description="Scope 局部变换：位移、旋转或缩放。" />
 
@@ -66,8 +92,10 @@ Scope 把默认值拆成四个互不混用的通道。它们只覆盖对应宿�
 | `at-translate`      | `direction`、`of`、`distance?` | 相对已命名实体求位移         |
 | `offset-translate`  | `of`、`offset?`                | 基准点加二维偏移             |
 | `between-translate` | `between`、`fraction`          | 两个绝对端点之间按比例求位移 |
-| `rotate`            | `degrees`、`cx?`、`cy?`        | 绕局部点旋转                 |
-| `scale`             | `x`、`y?`                      | 等比或非等比缩放             |
+| `rotate`            | `degrees`、`pivot?`            | 绕 Scope 自身点旋转          |
+| `scale`             | `x`、`y?`、`pivot?`            | 绕 Scope 自身点缩放          |
+
+`pivot` 缺省 `origin`，接受 [Scope 自身点](#scopeselfpoint)。v0.5 已移除 IR rotate 的 `cx` / `cy`；旧写法迁移为 `pivot: [cx, cy]`。Scene transform 的 `cx` / `cy` 仍是 lowering 输出。
 
 <span id="clipspec"></span>
 

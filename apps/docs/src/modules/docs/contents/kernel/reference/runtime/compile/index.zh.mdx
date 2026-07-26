@@ -3,21 +3,23 @@ title: 编译
 description: IR 到 Scene 的编译入口、布局选项、文字度量与 warning 合同
 ---
 
-`@retikz/core` 的 compile 层把 JSON 化的 IR 转成已布局的 `Scene`。React / Vanilla adapter、服务端导出流程和自定义 renderer 都在这条边界上共享同一份编译语义。
+`@retikz/core` 的 compile 层把 JSON 化的 IR 转成同次产出的 `Scene` 与 typed artifacts。React / Vanilla adapter、服务端导出流程和自定义 renderer 都在这条边界上共享同一份编译语义。
 
 ## 函数
 
-| API                    | Signature                                                           | 用途                                                                    |
-| ---------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `compileToScene`       | `(ir: IRScene, options?: CompileOptions) => Scene`                  | 主编译入口；处理 node / coordinate / path，输出 primitive 列表和 layout |
-| `lowerIRToKernel`      | `(ir: IRScene, options?: LowerIRToKernelOptions) => LoweredIRScene` | 只递归展开 composite，返回不含 Tier 2 节点的 Kernel IR                  |
-| `computeLayout`        | `(points, padding, round) => Layout`                                | 从 bbox 候选点计算场景边界；通常由 `compileToScene` 内部调用            |
-| `fallbackMeasurer`     | `(text, font) => TextMetrics`                                       | 默认文字度量；不准但可运行，适合无 DOM 环境的兜底                       |
-| `formatCompileWarning` | `(warning: CompileWarning) => string`                               | 把结构化 warning 格式化为统一的可读消息                                 |
+| API                           | Signature                                                              | 用途                                                         |
+| ----------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `compileToScene`              | `(ir: IRScene, options?: CompileOptions) => CompileResult`             | 主编译入口；同次返回 `scene` 与 immutable `artifacts`        |
+| `lowerIRToKernel`             | `(ir: IRScene, options?: LowerIRToKernelOptions) => LoweredIRScene`    | 只递归展开 composite，返回不含 Tier 2 节点的 Kernel IR       |
+| `computeLayout`               | `(points, padding, round) => Layout`                                   | 从 bbox 候选点计算场景边界；通常由 `compileToScene` 内部调用 |
+| `fallbackMeasurer`            | `(text, font) => TextMetrics`                                          | 默认文字度量；不准但可运行，适合无 DOM 环境的兜底            |
+| `formatCompileWarning`        | `(warning: CompileWarning) => string`                                  | 把结构化 warning 格式化为统一的可读消息                      |
+| `formatCompileOccurrence`     | `(locator: CompileOccurrenceLocator) => string`                        | 格式化 artifact 的 occurrence locator                        |
+| `isNodeLayoutCompileArtifact` | `(artifact: CompileArtifact) => artifact is NodeLayoutCompileArtifact` | 缩窄 opt-in Node layout artifact                             |
 
 `compileToScene` 先遍历并注册当前作用域内的 node / coordinate，再回填延迟发出的 path，因此路径可以引用同一作用域中写在它后面的目标。输出随后按 `zIndex` 升序稳定排序；只有 `zIndex` 相同的图元才保持声明顺序。
 
-`lowerIRToKernel` 不做布局或 Scene 发出，只消费 `composites` 与 `maxCompositeDepth`。未注册 composite 会直接抛错；完整 `compileToScene` 则发出 `COMPOSITE_NOT_REGISTERED` 并跳过该节点。两条路径遇到嵌套超限或环都会抛错。
+`lowerIRToKernel` 不做布局或 Scene 发出，只消费 `composites` 与 `maxCompositeDepth`。未注册 composite 会直接抛错；遇到带 `compile` 分支的 layout-aware composite 也会明确报错，因为独立 lowering 没有文字测量、provider、引用环境和父级约束。完整 `compileToScene` 对未注册 composite 发出 `COMPOSITE_NOT_REGISTERED` 并跳过；两条路径遇到嵌套超限或环都会抛错。
 
 ## 编译选项
 
@@ -25,22 +27,22 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 ### 宿主能力
 
-| Option         | Type                    | Default                                     | 说明                                                                                                                        |
-| -------------- | ----------------------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `measureText`  | `TextMeasurer`          | `fallbackMeasurer`                          | 注入文字度量函数；React adapter 使用浏览器能力                                                                              |
-| `lowerTex`     | `LowerTex`              | `undefined`                                 | 注入公式渲染能力；未注入或解析失败时会 warning 并降级                                                                       |
-| `onWarn`       | `(warning) => void`     | dev: `console.warn`<br />production: silent | 收集可恢复的编译期 warning                                                                                                  |
-| `onNodeLayout` | `CompileLayoutObserver` | `undefined`                                 | 节点 layout 完成后的同步观测回调；接收纯数据 `CompiledNodeLayout`，可读取内容盒 `content.size` 与全局 AABB `content.bounds` |
+| Option        | Type                | Default                                     | 说明                                                  |
+| ------------- | ------------------- | ------------------------------------------- | ----------------------------------------------------- |
+| `measureText` | `TextMeasurer`      | `fallbackMeasurer`                          | 注入文字度量函数；React adapter 使用浏览器能力        |
+| `lowerTex`    | `LowerTex`          | `undefined`                                 | 注入公式渲染能力；未注入或解析失败时会 warning 并降级 |
+| `onWarn`      | `(warning) => void` | dev: `console.warn`<br />production: silent | 收集可恢复的编译期 warning                            |
 
 ### 布局与输出
 
-| Option          | Type     | Default | 说明                                                                                      |
-| --------------- | -------- | ------- | ----------------------------------------------------------------------------------------- |
-| `padding`       | `number` | `10`    | layout 外围留白，单位为 user units                                                        |
-| `precision`     | `number` | `2`     | 输出 Scene 图元坐标、结构化 path command 与 layout 数值的小数位；内部几何保持 double 精度 |
-| `nodeDistance`  | `number` | `24`    | `AtPosition` 未写 `distance` 时使用的默认距离                                             |
-| `labelDistance` | `number` | `12`    | `Node.label.distance` 未设置时，节点 label 与节点边界的默认距离                           |
-| `fontSize`      | `number` | `16`    | 默认字号；同时作为字号 preset 与 `rem` 的根字号，不改变显式数字字号                       |
+| Option          | Type                     | Default | 说明                                                                                      |
+| --------------- | ------------------------ | ------- | ----------------------------------------------------------------------------------------- |
+| `padding`       | `number`                 | `10`    | layout 外围留白，单位为 user units                                                        |
+| `precision`     | `number`                 | `2`     | 输出 Scene 图元坐标、结构化 path command 与 layout 数值的小数位；内部几何保持 double 精度 |
+| `nodeDistance`  | `number`                 | `24`    | `AtPosition` 未写 `distance` 时使用的默认距离                                             |
+| `labelDistance` | `number`                 | `12`    | `Node.label.distance` 未设置时，节点边界到旋转后标签视觉框的默认净距；必须为有限非负数    |
+| `fontSize`      | `number`                 | `16`    | 默认字号；同时作为字号 preset 与 `rem` 的根字号，不改变显式数字字号                       |
+| `artifacts`     | `CompileArtifactOptions` | `{}`    | opt-in 通用产物；`{ nodeLayouts: true }` 返回真实 Node 的 `CompiledNodeLayout` 布局快照   |
 
 ### 扩展注册表
 
@@ -57,12 +59,21 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 传入的 definitions 会追加到对应 `BUILTIN_*` 集合；空 key 或与内置 / 同批自定义项重名都会立即抛错，不会覆盖已有 provider。
 
-### 组合展开
+### Composite
 
-| Option              | Type                                 | Default | 说明                                                                         |
-| ------------------- | ------------------------------------ | ------- | ---------------------------------------------------------------------------- |
-| `composites`        | `ReadonlyArray<CompositeDefinition>` | `—`     | 注入 Tier 2 composite 展开逻辑；未注册时发 `COMPOSITE_NOT_REGISTERED` 并跳过 |
-| `maxCompositeDepth` | `number`                             | `32`    | composite 嵌套展开的最大深度；超限或成环会 throw                             |
+| Option              | Type                                    | Default | 说明                                                                                  |
+| ------------------- | --------------------------------------- | ------- | ------------------------------------------------------------------------------------- |
+| `composites`        | `ReadonlyArray<AnyCompositeDefinition>` | `—`     | 注入 Tier 2 的 `expand` 或 layout-aware `compile` definition；未注册时 warning 并跳过 |
+| `maxCompositeDepth` | `number`                                | `32`    | composite 嵌套的最大深度；超限或成环会 throw                                          |
+
+`CompositeDefinition` 的两个分支互斥：
+
+- `expand(node)` 只做无上下文结构展开；
+- `compile(node, context)` 可用 `context.constraint` 与 `layoutChild(child, constraint)` 在完整 compile 环境中测量真实子内容。
+
+`layoutChild` 支持 `{ kind: 'intrinsic' }` 与 `{ kind: 'constrained', maxWidth }`，返回 allocation bounds、包含描边 / marker / shadow / clip / transform 的保守 visual bounds，以及一次性的 compile-local replay token。父 composite 求解布局后，把 token 放入 `{ kind: 'replay', replay, transforms? }`；最终 Scene 直接复用已布局结果，不再次展开、测量或布局。token 不能跨 compile、重复使用、序列化或伪造。
+
+带 `artifactSchema` 的 layout-aware definition 可在同一次 `compile` 返回 JSON-safe `artifact`。`compileToScene` 会把它封装为 `{ kind:'composite', namespace, type, occurrence, value }`；`occurrence` 由原始 `sourcePath` 和结构化 `expansionPath` 标识，不依赖全局 Map 或 callback capture。精确的 definition tuple 会让 `CompileResult` 推导对应 artifact union。
 
 ## 文字度量
 
@@ -78,6 +89,8 @@ type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
 | `TextMetrics` | `width` / `height` / `ascent?` / `descent?` | 文本盒尺寸；ascent / descent 可选     |
 
 如果不传 `measureText`，`fallbackMeasurer` 用 `text.length * size * 0.55` 估算宽度、`size * 1.2` 估算高度。它能保证编译可跑，但不适合做精确排版。
+
+Node label 会把一次测量阶段得到的 `width` / `height` / `ascent` / `descent` 规范成唯一视觉框：两项基线指标都缺省时上下平分 `height`；只给一项时由 `height` 补齐另一项；两项都给时若二者之和小于 `height`，剩余 leading 上下平分，若大于 `height` 则视觉框扩到二者之和。该视觉框同时决定标签基线、旋转后间距、pin 终点与自动 viewBox，布局节点矩形后不会重新测量。Node label 的任何度量值若不是有限非负数会直接抛错；非法 TeX 盒仍按既有 `TEX_INVALID` warning 降级。
 
 ## 警告
 
@@ -109,12 +122,22 @@ type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
 | `TEX_TEXT_CONFLICT`             | 为 text / TeX 载荷冲突保留的诊断码；当前 compile 路径不发出                                 |
 | `TEXT_TEX_PARSE_ERROR`          | 启用 TeX 时字符串含未闭合 `$` / `$$`；保留尾部字面文本                                      |
 | `BOUNDARY_TIGHT_FALLBACK`       | shape 未提供请求的 tight / ink 连接包络；回退到 visual bounds                               |
+| `TEXT_AUTO_CONTRAST_UNRESOLVED` | Node 自动对比色无法得到静态不透明 fill；使用固定 `currentColor`，Node 继续编译              |
 
 大多数 warning 不会中断编译。但 coordinate / node 自身位置无法解析时**直接抛错、不发 warning**（源码刻意如此：warn 后立即 throw 会让收集器记录一条永不产出 Scene 的死告警），因为它属于「定义位置」的实体，会破坏后续引用合同。
 
+自动对比色 warning 的 `path` 固定为当前 Node locator，`message` 会包含无法解析的 fill、原因与固定 fallback。同一 Node 即使有多段正文、公式、label 或 pin，也最多发一次；没有消费者继承 Node 文字颜色时不会解析关键字或发 warning。
+
 ## 输出
 
-`compileToScene` 返回：
+`compileToScene` 返回 `CompileResult`：
+
+| Field       | Type                             | 说明                                                                 |
+| ----------- | -------------------------------- | -------------------------------------------------------------------- |
+| `scene`     | `Scene`                          | 已布局、可直接交给 renderer 的场景                                   |
+| `artifacts` | `ReadonlyArray<CompileArtifact>` | 与 `scene` 同一次 canonical compile 产生的 immutable typed artifacts |
+
+其中 `scene` 包含：
 
 | Field         | Type                      | 说明                                                                                                  |
 | ------------- | ------------------------- | ----------------------------------------------------------------------------------------------------- |
@@ -130,14 +153,32 @@ type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
     {
       label: '编译入口组装 Scene、资源与根动画',
       path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 18,
-      endLine: 42,
+      startLine: 25,
+      endLine: 53,
+    },
+    {
+      label: 'CompileResult、artifact 与 occurrence 公共合同',
+      path: 'packages/kernel/core/src/compile/types.ts',
+      startLine: 70,
+      endLine: 128,
+    },
+    {
+      label: 'occurrence formatter 与 Node artifact type guard',
+      path: 'packages/kernel/core/src/compile/artifact.ts',
+      startLine: 3,
+      endLine: 10,
+    },
+    {
+      label: 'layout-aware composite 的测量、artifact 与输出',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 885,
+      endLine: 1025,
     },
     {
       label: '延迟解析 path 并回填原始输出位置',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 147,
-      endLine: 161,
+      startLine: 183,
+      endLine: 209,
     },
     {
       label: '按 zIndex 稳定排序 Scene 图元',

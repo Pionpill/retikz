@@ -1,9 +1,10 @@
 import type {
+  AnyCompositeDefinition,
   ArrowDefinition,
   BoundaryDefinition,
   ClipDefinition,
-  CompiledNodeLayout,
-  CompositeDefinition,
+  CompileArtifact,
+  CompileArtifactOptions,
   IRAnimationTrack,
   IRScene,
   IRViewBox,
@@ -12,6 +13,7 @@ import type {
   PathKindDefinition,
   PatternDefinition,
   RibbonWidthProfileDefinition,
+  Scene,
   ShapeDefinition,
   TextMeasurer,
 } from '@retikz/core';
@@ -78,12 +80,15 @@ const assignRef = <T,>(ref: Ref<T> | undefined, value: T): void => {
  */
 const aggregateEmbeddableComposites = (
   contributions: ReadonlyArray<EmbeddableContributionRecord>,
-): Array<CompositeDefinition> => {
+): Array<AnyCompositeDefinition> => {
   // 按 namespace 分组（保持首次出现顺序）：merged 合并 datasets，同组必须复用同一个 maker。
   const order: Array<string> = [];
   const groups = new Map<
     string,
-    { merged: Map<string, unknown>; maker: (merged: Record<string, unknown>) => Array<CompositeDefinition> }
+    {
+      merged: Map<string, unknown>;
+      maker: (merged: Record<string, unknown>) => Array<AnyCompositeDefinition>;
+    }
   >();
   for (const contribution of contributions) {
     const { namespace, datasets, makeComposites } = contribution;
@@ -105,7 +110,7 @@ const aggregateEmbeddableComposites = (
       group.merged.set(ref, value);
     }
   }
-  const out: Array<CompositeDefinition> = [];
+  const out: Array<AnyCompositeDefinition> = [];
   for (const namespace of order) {
     const group = groups.get(namespace);
     if (group === undefined) continue;
@@ -243,7 +248,7 @@ export type LayoutProps = ScopeStyleProps & {
    * 运行时注入的 Tier 2 composite 展开逻辑
    * @description 带 `namespace` / `type` 的高层节点通过本 prop 注册并展开；未注册时会发出 warning 并跳过
    */
-  composites?: ReadonlyArray<CompositeDefinition>;
+  composites?: ReadonlyArray<AnyCompositeDefinition>;
   /**
    * 运行时注入的公式渲染能力
    * @description `<Node>` 文本中的 `$...$`、`$$...$$` 或显式 tex run 会通过它转成可渲染字形。
@@ -251,10 +256,14 @@ export type LayoutProps = ScopeStyleProps & {
    */
   lowerTex?: LowerTex;
   /**
-   * 节点 layout 完成后的批量观测回调
-   * @description React 在 commit 后通过 effect 通知本次 compile 产出的节点布局，避免在 render 阶段触发用户副作用
+   * 本次 compile 请求的 opt-in artifacts
    */
-  onNodeLayouts?: (layouts: Array<CompiledNodeLayout>) => void;
+  artifacts?: CompileArtifactOptions;
+  /**
+   * compile artifacts 的 commit 后通知
+   * @description 接收 Core 同次 compile 返回的 immutable artifact 数组，不在 render 阶段触发用户副作用
+   */
+  onArtifacts?: (artifacts: ReadonlyArray<CompileArtifact>) => void;
   /**
    * 可选：显式注入的可嵌入 Tier2 适配器列表（逃生舱）
    * @description 主路径是子组件静态属性（Component.isTier2Embeddable + embeddableAdapter）自动识别；
@@ -271,7 +280,7 @@ export type LayoutProps = ScopeStyleProps & {
  */
 const useSvgRootBinding = (
   handlers: HydrationHandlers,
-  scene: ReturnType<typeof compileToScene>,
+  scene: Scene,
   hasAnimations: boolean,
   publishAnimation: (controls: AnimationControls | null) => void,
 ): ((element: SVGSVGElement | null) => void) => {
@@ -343,7 +352,8 @@ export const Layout: FC<LayoutProps> = props => {
     ribbonWidthProfiles,
     composites,
     lowerTex,
-    onNodeLayouts,
+    artifacts,
+    onArtifacts,
     embeddables,
     handlers,
   } = props;
@@ -434,9 +444,30 @@ export const Layout: FC<LayoutProps> = props => {
   }, [built.contributions, composites]);
   const defaultFontFamily = styleFontFamily(style);
   const measureText = useMemo(() => withDefaultFontFamily(browserMeasurer, defaultFontFamily), [defaultFontFamily]);
-  const compiledLayout = useMemo(() => {
-    const nodeLayouts: Array<CompiledNodeLayout> = [];
-    const scene = compileToScene(ir, {
+  const compileArtifacts = useMemo<CompileArtifactOptions | undefined>(
+    () => (artifacts?.nodeLayouts === true ? { nodeLayouts: true } : undefined),
+    [artifacts?.nodeLayouts],
+  );
+  const compiledLayout = useMemo(
+    () =>
+      compileToScene(ir, {
+        measureText,
+        nodeDistance,
+        fontSize,
+        shapes,
+        boundaries,
+        clips,
+        arrows,
+        patterns,
+        pathGenerators,
+        pathKinds,
+        ribbonWidthProfiles,
+        composites: aggregatedComposites,
+        lowerTex,
+        artifacts: compileArtifacts,
+      }),
+    [
+      ir,
       measureText,
       nodeDistance,
       fontSize,
@@ -448,33 +479,19 @@ export const Layout: FC<LayoutProps> = props => {
       pathGenerators,
       pathKinds,
       ribbonWidthProfiles,
-      composites: aggregatedComposites,
+      aggregatedComposites,
       lowerTex,
-      ...(onNodeLayouts !== undefined ? { onNodeLayout: layout => nodeLayouts.push(layout) } : {}),
-    });
-    return { nodeLayouts, scene };
-  }, [
-    ir,
-    measureText,
-    nodeDistance,
-    fontSize,
-    shapes,
-    boundaries,
-    clips,
-    arrows,
-    patterns,
-    pathGenerators,
-    pathKinds,
-    ribbonWidthProfiles,
-    aggregatedComposites,
-    lowerTex,
-    onNodeLayouts,
-  ]);
+      compileArtifacts,
+    ],
+  );
   const scene = compiledLayout.scene;
+  const onArtifactsRef = useRef(onArtifacts);
   useEffect(() => {
-    if (onNodeLayouts === undefined) return;
-    onNodeLayouts(compiledLayout.nodeLayouts);
-  }, [compiledLayout, onNodeLayouts]);
+    onArtifactsRef.current = onArtifacts;
+  }, [onArtifacts]);
+  useEffect(() => {
+    onArtifactsRef.current?.(compiledLayout.artifacts);
+  }, [compiledLayout.artifacts]);
 
   // useId 返回 ":r0:" 含冒号；SVG `url(#id)` 对冒号兼容性差，剥成纯字母数字。caller 显式 idPrefix 优先（SSR 水合对齐）
   const rawId = useId();

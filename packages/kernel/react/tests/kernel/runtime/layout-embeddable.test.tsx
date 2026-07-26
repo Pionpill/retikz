@@ -1,4 +1,4 @@
-import type { CompositeDefinition } from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
 import type { Mock } from 'vitest';
 
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
@@ -19,7 +19,7 @@ import { Layout } from '../../../src/kernel';
  */
 
 type FixtureProps = { id: string; data: unknown };
-type MakeComposites = (mergedDatasets: Record<string, unknown>) => Array<CompositeDefinition>;
+type MakeComposites = (mergedDatasets: Record<string, unknown>) => Array<AnyCompositeDefinition>;
 type MakeCompositesMock = Mock<MakeComposites>;
 
 /** 可嵌入 fixture 组件类型：函数组件 + 可嵌入静态标记 */
@@ -33,7 +33,7 @@ type EmbeddableFixture = FC<FixtureProps> & {
  * @description schema extend CompositeBaseSchema，namespace / type 为 literal；expand 产出 id=`panel-${panelId}` 的 node，
  *   渲染后 SVG 含 data-retikz-id="panel-..." 供断言
  */
-const makePanelComposite = (namespace: string): CompositeDefinition => {
+const makePanelComposite = (namespace: string): AnyCompositeDefinition => {
   const schema = CompositeBaseSchema.extend({
     namespace: z.literal(namespace),
     type: z.literal('panel'),

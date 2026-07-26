@@ -1,4 +1,4 @@
-import type { CompositeDefinition, IRScene } from '@retikz/core';
+import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
 
 import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -20,7 +20,7 @@ const customDefinition = defineComposite({
 describe('createStandardBundle()', () => {
   it('returns a frozen empty bundle with required composites', () => {
     const bundle = createStandardBundle([]);
-    const composites: ReadonlyArray<CompositeDefinition> = bundle.compile.composites;
+    const composites: ReadonlyArray<AnyCompositeDefinition> = bundle.compile.composites;
 
     expect(bundle.modules).toEqual([]);
     expect(composites).toEqual([]);

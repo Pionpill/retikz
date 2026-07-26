@@ -83,7 +83,7 @@ export const applyRoundedCorners = ({
   let i = 0;
   while (i < commands.length) {
     const cmd = commands[i];
-    const isLineStep = cmd.kind === 'line' && provenance[i] === 'line';
+    const isLineStep = cmd.kind === 'line' && (provenance[i] === 'line' || provenance[i] === 'axis-line');
     if (!isLineStep) {
       out.push(cmd);
       i++;
@@ -100,7 +100,11 @@ export const applyRoundedCorners = ({
     // 收集连续 line-step 命令
     const lineEnds: Array<[number, number]> = [];
     const cmdStart = i;
-    while (i < commands.length && commands[i].kind === 'line' && provenance[i] === 'line') {
+    while (
+      i < commands.length &&
+      commands[i].kind === 'line' &&
+      (provenance[i] === 'line' || provenance[i] === 'axis-line')
+    ) {
       const c = commands[i] as { kind: 'line'; to: [number, number] };
       lineEnds.push(c.to);
       i++;

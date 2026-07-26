@@ -1,6 +1,6 @@
-﻿import type { CompositeDefinition } from '../../contract';
+import type { AnyCompositeDefinition } from '../../contract';
 import type { IRChild, IRScene } from '../../schemas';
-import type { LoweredIRChild, LoweredIRScene } from '../types';
+import type { LoweredIRScene } from '../types';
 import type { CompileWarning } from '../warning';
 
 import { CompileWarningCode } from '../constants';
@@ -20,20 +20,31 @@ type LowerOptions = {
   maxDepth?: number;
 };
 
-/** 把 composite 节点展开为 Tier 1 IR；未注册节点 warning 后跳过 */
-export const lowerComposites = (
+type CallableExpandDefinition = {
+  schema: AnyCompositeDefinition['schema'];
+  expand: (node: unknown) => IRChild | Array<IRChild>;
+};
+
+/** 只在紧邻 schema parse 的边界恢复已擦除 expand callback */
+const callableExpandDefinition = (definition: AnyCompositeDefinition): CallableExpandDefinition => {
+  if (definition.expand === undefined) {
+    throw new Error('internal: callableExpandDefinition received a layout-aware composite');
+  }
+  return definition as unknown as CallableExpandDefinition;
+};
+
+const lowerCompositeTree = (
   ir: IRScene,
-  registry: ReadonlyMap<string, CompositeDefinition>,
+  registry: ReadonlyMap<string, AnyCompositeDefinition>,
   options: LowerOptions,
-): LoweredIRScene => {
+): IRScene => {
   const { onWarn, onUnregistered, maxDepth = DEFAULT_MAX_COMPOSITE_DEPTH } = options;
 
-  const expandList = (children: Array<IRChild>, depth: number, path: string): Array<LoweredIRChild> =>
+  const expandList = (children: Array<IRChild>, depth: number, path: string): Array<IRChild> =>
     children.flatMap((child, index) => expandChild(child, depth, `${path}[${index}]`));
 
-  const expandChild = (child: IRChild, depth: number, path: string): Array<LoweredIRChild> => {
+  const expandChild = (child: IRChild, depth: number, path: string): Array<IRChild> => {
     if ('namespace' in child) {
-      // tier2 composite 节点
       const key = `${child.namespace}.${child.type}`;
       const definition = registry.get(key);
       if (!definition) {
@@ -43,24 +54,29 @@ export const lowerComposites = (
           message: `No composite registered for '${key}'; the node is skipped.`,
           path,
         });
-        return []; // 未注册 → 跳过该节点、继续编译其余（非硬失败）
+        return [];
       }
       if (depth >= maxDepth) {
         throw new Error(
           `COMPOSITE_NEST_TOO_DEEP: composite expansion exceeded ${maxDepth} levels at ${path} (cyclic or runaway expand?)`,
         );
       }
+      if (definition.expand === undefined) {
+        throw new Error(
+          `lowerIRToKernel: composite '${key}' at ${path} requires layout-aware compile and cannot be lowered without the full compile environment.`,
+        );
+      }
+      const callable = callableExpandDefinition(definition);
       const parsed = parseProviderPayload({
         capability: 'composite',
         providerName: key,
         irPath: path,
         payloadName: 'payload',
-        schema: definition.schema,
+        schema: callable.schema,
         value: child,
-      }); // 精确校验 + 强类型（含 default 填充）
-      const produced = definition.expand(parsed);
+      });
+      const produced = callable.expand(parsed);
       const list = Array.isArray(produced) ? produced : [produced];
-      // 展开产物可能仍含 tier2，继续展开。
       return expandList(list, depth + 1, path);
     }
     if (child.type === 'scope') {
@@ -71,3 +87,10 @@ export const lowerComposites = (
 
   return { ...ir, children: expandList(ir.children, 0, 'children') };
 };
+
+/** 把 composite 节点完整展开为 Tier 1 IR；layout-aware 分支 fail-loud */
+export const lowerComposites = (
+  ir: IRScene,
+  registry: ReadonlyMap<string, AnyCompositeDefinition>,
+  options: LowerOptions,
+): LoweredIRScene => lowerCompositeTree(ir, registry, options) as LoweredIRScene;

@@ -33,7 +33,7 @@ const lineEndpoint = (options: CompileOptions, boundary?: IRBoundary): [number, 
       },
     ],
   };
-  const scene = compileToScene(ir, { padding: 0, ...options });
+  const scene = compileToScene(ir, { padding: 0, ...options }).scene;
   const prim = flattenPrims(scene.primitives).find(
     (p): p is Extract<ScenePrimitive, { type: 'path' }> =>
       p.type === 'path' && !p.commands.some(command => command.kind === 'close'),

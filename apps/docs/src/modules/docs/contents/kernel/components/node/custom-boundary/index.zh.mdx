@@ -83,7 +83,7 @@ React 宿主通过 `<Layout boundaries>` 注入定义，节点只保存 registry
 直接使用 core 编译器时，把同一数组传给 `CompileOptions.boundaries`：
 
 ```ts
-const scene = compileToScene(ir, { boundaries: [horizontalPorts] });
+const { scene } = compileToScene(ir, { boundaries: [horizontalPorts] });
 ```
 
 Definition 可以由应用代码持有，序列化的图只保留名字或参数对象。React 与直接编译因此复用同一套注册和解析语义。

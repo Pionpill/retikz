@@ -16,8 +16,8 @@ const findByType = <T extends ScenePrimitive['type']>(
 ): Extract<ScenePrimitive, { type: T }> | undefined =>
   flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: T }> => p.type === type);
 
-const compileNode = (n: Record<string, unknown>): ReturnType<typeof compileToScene> =>
-  compileToScene(scene([{ type: 'node', position: [0, 0], ...n }]));
+const compileNode = (n: Record<string, unknown>): ReturnType<typeof compileToScene>['scene'] =>
+  compileToScene(scene([{ type: 'node', position: [0, 0], ...n }])).scene;
 
 /** 收集 path commands 的 kind 序列 */
 const kindsOf = (path: Extract<ScenePrimitive, { type: 'path' }>): Array<string> => path.commands.map(c => c.kind);
@@ -221,7 +221,7 @@ describe('contour — 交互', () => {
           ],
         },
       ] as IRScene['children']),
-    );
+    ).scene;
     // 连接 line（无 close 的 path）；端点应在轮廓边界（朝 +x 边 x≈20），不是 AABB 角
     const linePath = flattenPrims(compiled.primitives).find(
       (p): p is Extract<ScenePrimitive, { type: 'path' }> =>
@@ -246,7 +246,7 @@ describe('contour — 交互', () => {
             ],
           },
         ] as IRScene['children']),
-      ),
+      ).scene,
     ).not.toThrow();
   });
 });

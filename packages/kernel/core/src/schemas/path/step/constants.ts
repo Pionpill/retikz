@@ -22,8 +22,14 @@ export const GeometryLabelPosition = {
 } as const;
 
 export const FoldStepVia = {
+  /** 先水平后垂直 */
   HorizontalThenVertical: '-|',
+  /** 先垂直后水平 */
   VerticalThenHorizontal: '|-',
+  /** 水平、垂直、水平三段连接 */
+  HorizontalVerticalHorizontal: '-|-',
+  /** 垂直、水平、垂直三段连接 */
+  VerticalHorizontalVertical: '|-|',
 } as const;
 
 /** bend step 相对起终点方向的弯曲侧 */

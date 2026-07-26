@@ -26,7 +26,7 @@ const flatten = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitiv
 };
 
 const pathPrims = (ir: IRScene, options?: Parameters<typeof compileToScene>[1]): Array<PathPrim> =>
-  flatten(compileToScene(ir, { padding: 0, ...options }).primitives).filter(
+  flatten(compileToScene(ir, { padding: 0, ...options }).scene.primitives).filter(
     (primitive): primitive is PathPrim => primitive.type === 'path',
   );
 
@@ -86,7 +86,7 @@ describe('Path kind registry', () => {
     expect(() =>
       compileToScene(
         scene([{ type: 'path', kind: 'missing', kindOptions: {}, children: steps }] as IRScene['children']),
-      ),
+      ).scene,
     ).toThrow(/Unknown path kind 'missing'/);
   });
 
@@ -141,7 +141,7 @@ describe('Path kind registry', () => {
         },
       ] as IRScene['children']),
       { pathKinds: [badge] },
-    );
+    ).scene;
 
     expect(compiled.primitives).toHaveLength(1);
     const [group] = compiled.primitives;
@@ -166,7 +166,7 @@ describe('Path kind registry', () => {
       },
     ] as IRScene['children']);
 
-    expect(() => compileToScene(ir, { pathKinds: [highlight] })).toThrow(/path kind 'highlight'/);
-    expect(() => compileToScene(ir, { pathKinds: [highlight] })).toThrow(/children\[0\]\.path\.kindOptions/);
+    expect(() => compileToScene(ir, { pathKinds: [highlight] }).scene).toThrow(/path kind 'highlight'/);
+    expect(() => compileToScene(ir, { pathKinds: [highlight] }).scene).toThrow(/children\[0\]\.path\.kindOptions/);
   });
 });

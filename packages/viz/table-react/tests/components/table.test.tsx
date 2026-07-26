@@ -1,4 +1,4 @@
-import type { CompositeDefinition } from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
 import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { IRTableSpec, TableStructureOutput } from '@retikz/table';
 
@@ -192,7 +192,7 @@ describe('Table React components', () => {
       type: z.literal('badge'),
       label: z.string(),
     });
-    const badge: CompositeDefinition = defineComposite({
+    const badge: AnyCompositeDefinition = defineComposite({
       namespace: 'fixture',
       type: 'badge',
       schema,

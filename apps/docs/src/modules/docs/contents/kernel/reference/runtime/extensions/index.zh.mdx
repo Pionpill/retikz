@@ -9,11 +9,11 @@ description: 查询 Definition、registry 与 host lowerer 的能力族、注入
 
 ## 扩展模型
 
-| 模型                | 适用能力                                               | 生效阶段                   |
-| ------------------- | ------------------------------------------------------ | -------------------------- |
-| Definition registry | shape、boundary、clip、arrow、pattern、path、composite | compile                    |
-| Runtime registry    | easing、animation property                             | render / animation runtime |
-| Host lowerer        | TeX 等可选重型下沉                                     | compile 期文字布局         |
+| 模型                | 适用能力                                               | 生效阶段                       |
+| ------------------- | ------------------------------------------------------ | ------------------------------ |
+| Definition registry | shape、boundary、clip、arrow、pattern、path、composite | compile / layout-aware compile |
+| Runtime registry    | easing、animation property                             | render / animation runtime     |
+| Host lowerer        | TeX 等可选重型下沉                                     | compile 期文字布局             |
 
 Definition 能力使用 `XxxDefinition` 与 `defineXxx` 描述扩展项，内置和自定义 definitions 合并成一次编译专用的 registry。Runtime registry 保存宿主函数，不进入 compile contract。Host lowerer 是可选宿主能力，不应为了单个集成扩张通用图元契约。
 
@@ -40,6 +40,7 @@ Definition 能力使用 `XxxDefinition` 与 `defineXxx` 描述扩展项，内置
 - Easing / animation property 等 runtime registry 直接使用宿主传入的 `Record`，不经过上述 Definition 合并诊断；未知自定义动画属性由具体 renderer warning 并跳过。
 - 普通 Definition 找不到 key 时 fail-loud，并列出已注册项。
 - 未注册 composite 在完整 compile 中产生 warning 并跳过该节点；独立 lowering 会提升为错误。
+- Composite registry 同时接受互斥的 `expand` 与 `compile` 分支；`lowerIRToKernel` 遇到依赖完整环境的 `compile` 分支会明确报错。
 - schema 或 payload 校验发生在 definition 消费前，错误应包含能力族与 lookup key。
 
 ## 指南入口
@@ -84,7 +85,7 @@ Definition 能力使用 `XxxDefinition` 与 `defineXxx` 描述扩展项，内置
   <LinkedCard href="/kernel/concepts/design/composite">
     <span className="font-semibold">复合</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      CompositeDefinition：Tier 2 高层节点 lowering
+      CompositeDefinition：无上下文展开或 layout-aware compile
     </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/effects/custom-animation">
@@ -116,8 +117,8 @@ Definition 能力使用 `XxxDefinition` 与 `defineXxx` 描述扩展项，内置
     {
       label: 'React 宿主只向 Canvas 传入 animationProperties',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 482,
-      endLine: 519,
+      startLine: 487,
+      endLine: 544,
     },
   ]}
 />

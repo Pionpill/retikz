@@ -1,4 +1,4 @@
-import type { CompositeDefinition } from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
 
 import type { StandardBundle, StandardCapabilityModule } from './types';
 
@@ -8,7 +8,7 @@ import type { StandardBundle, StandardCapabilityModule } from './types';
  */
 export const createStandardBundle = (modules: ReadonlyArray<StandardCapabilityModule>): StandardBundle => {
   const moduleNames: Array<string> = [];
-  const composites: Array<CompositeDefinition> = [];
+  const composites: Array<AnyCompositeDefinition> = [];
   const seenNames = new Set<string>();
 
   for (const module of modules) {

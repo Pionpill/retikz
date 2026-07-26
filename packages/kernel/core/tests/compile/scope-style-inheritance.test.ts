@@ -25,7 +25,7 @@ const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   return out;
 };
 
-const allPrims = (ir: IRScene): Array<ScenePrimitive> => flatten(compileToScene(ir).primitives);
+const allPrims = (ir: IRScene): Array<ScenePrimitive> => flatten(compileToScene(ir).scene.primitives);
 const rectOf = (ir: IRScene): RectPrim | undefined => allPrims(ir).find((p): p is RectPrim => p.type === 'rect');
 const ellipseOf = (ir: IRScene): EllipsePrim | undefined =>
   allPrims(ir).find((p): p is EllipsePrim => p.type === 'ellipse');

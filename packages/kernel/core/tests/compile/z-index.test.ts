@@ -42,22 +42,22 @@ const topGroup = (result: { primitives: Array<ScenePrimitive> }): GroupPrim => {
 describe('compile zIndex 稳定排序', () => {
   it('高 zIndex 的 path 排到所有默认 0 的 node 之后', () => {
     const ir = scene([node([0, 0]), line([10, 0], 5), node([20, 0])]);
-    expect(compileToScene(ir, silent).primitives.map(p => p.type)).toEqual(['rect', 'rect', 'path']);
+    expect(compileToScene(ir, silent).scene.primitives.map(p => p.type)).toEqual(['rect', 'rect', 'path']);
   });
 
   it('负 zIndex 排到默认 0 之前', () => {
     const ir = scene([node([0, 0]), line([10, 0], -1)]);
-    expect(compileToScene(ir, silent).primitives.map(p => p.type)).toEqual(['path', 'rect']);
+    expect(compileToScene(ir, silent).scene.primitives.map(p => p.type)).toEqual(['path', 'rect']);
   });
 
   it('同 zIndex 保持 IR 顺序（稳定）', () => {
     const ir = scene([line([10, 0], 1), node([0, 0], 1), line([20, 0], 1)]);
-    expect(compileToScene(ir, silent).primitives.map(p => p.type)).toEqual(['path', 'rect', 'path']);
+    expect(compileToScene(ir, silent).scene.primitives.map(p => p.type)).toEqual(['path', 'rect', 'path']);
   });
 
   it('scope.zIndex 让整组作为一个单位在父层排序', () => {
     const ir = scene([node([0, 0]), { type: 'scope', zIndex: 5, children: [node([10, 0], 0)] }, node([20, 0])]);
-    expect(compileToScene(ir, silent).primitives.map(p => p.type)).toEqual(['rect', 'rect', 'group']);
+    expect(compileToScene(ir, silent).scene.primitives.map(p => p.type)).toEqual(['rect', 'rect', 'group']);
   });
 
   // =========================================================================
@@ -66,12 +66,12 @@ describe('compile zIndex 稳定排序', () => {
 
   it('全部缺省 zIndex 时输出顺序 = IR 顺序（恒等）', () => {
     const ir = scene([node([0, 0]), line([10, 0]), node([20, 0])]);
-    expect(compileToScene(ir, silent).primitives.map(p => p.type)).toEqual(['rect', 'path', 'rect']);
+    expect(compileToScene(ir, silent).scene.primitives.map(p => p.type)).toEqual(['rect', 'path', 'rect']);
   });
 
   it('单元素 + zIndex 不报错也不改', () => {
     const ir = scene([node([0, 0], 99)]);
-    expect(compileToScene(ir, silent).primitives.map(p => p.type)).toEqual(['rect']);
+    expect(compileToScene(ir, silent).scene.primitives.map(p => p.type)).toEqual(['rect']);
   });
 
   // =========================================================================
@@ -97,7 +97,7 @@ describe('compile zIndex 稳定排序', () => {
 
   it('scope 内独立排序，不跨 group 比较', () => {
     const ir = scene([node([100, 0], 9), { type: 'scope', children: [node([0, 0]), line([10, 0], 5), node([20, 0])] }]);
-    const result = compileToScene(ir, silent);
+    const result = compileToScene(ir, silent).scene;
     // 顶层：scope 的 group（默认 0）排在 node(z=9) 之前
     expect(result.primitives.map(p => p.type)).toEqual(['group', 'rect']);
     // scope 内：line(z=5) 排到两 node 之后
@@ -106,7 +106,7 @@ describe('compile zIndex 稳定排序', () => {
 
   it('scope.zIndex 不影响 scope 内部子元素的相对栈序', () => {
     const baseChildren: IRScene['children'] = [node([0, 0]), line([10, 0], 5), node([20, 0])];
-    const innerOf = (ir: IRScene): Array<string> => topGroup(compileToScene(ir, silent)).children.map(p => p.type);
+    const innerOf = (ir: IRScene): Array<string> => topGroup(compileToScene(ir, silent).scene).children.map(p => p.type);
     const withZ = scene([{ type: 'scope', zIndex: 3, children: baseChildren }]);
     const withoutZ = scene([{ type: 'scope', children: baseChildren }]);
     expect(innerOf(withZ)).toEqual(['rect', 'rect', 'path']);
@@ -122,7 +122,7 @@ describe('compile zIndex 稳定排序', () => {
         children: [node([0, 0]), line([10, 0], 9)],
       },
     ]);
-    const result = compileToScene(ir, silent);
+    const result = compileToScene(ir, silent).scene;
     expect(result.primitives.map(p => p.type)).toEqual(['rect', 'group']);
     expect(topGroup(result).children.map(p => p.type)).toEqual(['rect', 'path']);
   });
