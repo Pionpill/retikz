@@ -7,7 +7,7 @@ import type {
   RuntimePreparedOwnerValue,
   RuntimeRevision,
 } from '../owner';
-import type { RuntimeOwnerInput, RuntimeOwnerUpdate } from './types';
+import type { RuntimeOwnerInput, RuntimeOwnerUpdate, RuntimeSnapshot } from './types';
 
 import { RuntimeError } from '../error';
 
@@ -16,7 +16,10 @@ export type RuntimeOwnerCommandExecutor = Readonly<{
   /** command 关联的具体 owner token */
   owner: RuntimeOwnerToken;
   /** 使用 registry-bound executor 捕获 concrete owner input */
-  prepare: (executor: RuntimeOwnerExecutor) => RuntimeOwnerExecutionResult<RuntimePreparedOwnerValue<unknown, unknown>>;
+  prepare: (
+    executor: RuntimeOwnerExecutor,
+    current?: RuntimePreparedOwnerValue<unknown, unknown>,
+  ) => RuntimeOwnerExecutionResult<RuntimePreparedOwnerValue<unknown, unknown>>;
   /** 比较 previous 与 candidate 的完整 captured value */
   compare: (
     executor: RuntimeOwnerExecutor,
@@ -36,6 +39,16 @@ export type RuntimeOwnerCommandExecutor = Readonly<{
   ) => RuntimeOwnerExecutionResult<void>;
   /** update 携带的 change hint base revision */
   changeSetBaseRevision?: RuntimeRevision;
+  /** 以 concrete owner read 类型创建 revision-bound Snapshot */
+  snapshot: <TInput, TValue, TRead, TChange>(
+    owner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
+    prepared: RuntimePreparedOwnerValue<unknown, unknown>,
+    revision: RuntimeRevision,
+  ) => RuntimeSnapshot<TRead>;
+  /** 读取 concrete owner change hint */
+  changeSet: <TInput, TValue, TRead, TChange>(
+    owner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
+  ) => RuntimeChangeSet<TChange> | undefined;
 }>;
 
 const runtimeChangeSets = new WeakSet<object>();
@@ -45,6 +58,25 @@ const runtimeOwnerCommandExecutors = new WeakMap<object, RuntimeOwnerCommandExec
 /** 判断一个值是否是合法 Runtime revision number */
 export const isRuntimeRevision = (value: unknown): value is RuntimeRevision =>
   typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
+
+/** 把已验证 safe integer 转成 Runtime 内部 revision */
+export const createRuntimeRevision = (value: number): RuntimeRevision => {
+  if (!isRuntimeRevision(value)) {
+    throw new RuntimeError({ code: 'RUNTIME_REVISION_INVALID', phase: 'revision', cause: value });
+  }
+  return value;
+};
+
+/** 为非空 transaction 创建下一 revision，并在 safe integer 上界前 fail-loud */
+export const createNextRuntimeRevision = (current: RuntimeRevision): RuntimeRevision => {
+  if (!isRuntimeRevision(current)) {
+    throw new RuntimeError({ code: 'RUNTIME_REVISION_INVALID', phase: 'revision', cause: current });
+  }
+  if (current === Number.MAX_SAFE_INTEGER) {
+    throw new RuntimeError({ code: 'RUNTIME_REVISION_EXHAUSTED', phase: 'revision', cause: current });
+  }
+  return createRuntimeRevision(current + 1);
+};
 
 /** 判断 change set 是否由当前 Runtime factory 创建 */
 export const isRuntimeChangeSet = (value: unknown): value is RuntimeChangeSet<unknown> =>
@@ -77,7 +109,8 @@ const createRuntimeOwnerCommandExecutor = <TInput, TValue, TRead, TChange>(
 ): RuntimeOwnerCommandExecutor => {
   const typedExecutor = Object.freeze({
     owner,
-    prepare: (runtimeExecutor: RuntimeOwnerExecutor) => runtimeExecutor.prepare(owner, value),
+    prepare: (runtimeExecutor: RuntimeOwnerExecutor, current?: RuntimePreparedOwnerValue<TValue, TRead>) =>
+      runtimeExecutor.prepare(owner, value, current),
     compare: (
       runtimeExecutor: RuntimeOwnerExecutor,
       previous: RuntimePreparedOwnerValue<TValue, TRead>,
@@ -94,6 +127,34 @@ const createRuntimeOwnerCommandExecutor = <TInput, TValue, TRead, TChange>(
     retire: (runtimeExecutor: RuntimeOwnerExecutor, prepared: RuntimePreparedOwnerValue<TValue, TRead>) =>
       runtimeExecutor.retire(owner, prepared),
     changeSetBaseRevision: changeSet?.baseRevision,
+    snapshot: (
+      requestedOwner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
+      prepared: RuntimePreparedOwnerValue<TValue, TRead>,
+      revision: RuntimeRevision,
+    ): RuntimeSnapshot<TRead> => {
+      if (requestedOwner !== owner) {
+        throw new RuntimeError({
+          code: 'RUNTIME_OWNER_COMMAND_INVALID',
+          phase: 'snapshot',
+          owner: requestedOwner.key,
+          cause: requestedOwner,
+        });
+      }
+      return Object.freeze({ revision, value: prepared.read });
+    },
+    changeSet: (
+      requestedOwner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
+    ): RuntimeChangeSet<TChange> | undefined => {
+      if (requestedOwner !== owner) {
+        throw new RuntimeError({
+          code: 'RUNTIME_OWNER_COMMAND_INVALID',
+          phase: 'change-set',
+          owner: requestedOwner.key,
+          cause: requestedOwner,
+        });
+      }
+      return changeSet;
+    },
   });
   return typedExecutor as unknown as RuntimeOwnerCommandExecutor;
 };

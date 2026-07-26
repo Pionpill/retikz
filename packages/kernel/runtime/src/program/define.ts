@@ -1,5 +1,8 @@
+import type { RuntimeDiagnostic } from '../diagnostic';
 import type { RuntimeOwnerToken } from '../owner';
+import type { RuntimeRevision } from '../owner';
 import type { RuntimeTracePhaseDefinition } from '../trace';
+import type { RuntimeSnapshot } from '../transaction';
 import type {
   RuntimeCandidateView,
   RuntimeCommitEvent,
@@ -12,6 +15,16 @@ import type {
 } from './types';
 
 import { RuntimeError } from '../error';
+
+/** Program prepare 完成但尚未发布的 artifact 与双层 read cache */
+export type RuntimePreparedProgramArtifact<TArtifact, TProgramRead, TPublicRead> = Readonly<{
+  /** session-owned captured artifact */
+  artifact: TArtifact;
+  /** 只供本 Program update 使用的 private read */
+  programRead: TProgramRead;
+  /** 依赖 Program 与宿主可见的 public read */
+  publicRead: TPublicRead;
+}>;
 
 /** registry 私有保存的 Program metadata 与 callback 擦除视图 */
 export type RuntimeProgramErasedExecutor = Readonly<{
@@ -29,6 +42,25 @@ export type RuntimeProgramErasedExecutor = Readonly<{
   read: <TArtifact, TPublicRead>(artifact: TArtifact) => TPublicRead;
   /** 释放具体 Definition 捕获的 artifact */
   dispose?: <TArtifact>(artifact: TArtifact) => void;
+  /** capture、拒绝 current alias 并缓存 concrete artifact 的双层 read */
+  prepareArtifact: (
+    input: unknown,
+    current?: RuntimePreparedProgramArtifact<unknown, unknown, unknown>,
+  ) => RuntimePreparedProgramArtifact<unknown, unknown, unknown>;
+  /** 以 concrete public read 类型创建 revision-bound artifact Snapshot */
+  snapshot: <TArtifactInput, TArtifact, TProgramRead, TPublicRead>(
+    definition: RuntimeProgramDefinition<TArtifactInput, TArtifact, TProgramRead, TPublicRead>,
+    prepared: RuntimePreparedProgramArtifact<unknown, unknown, unknown>,
+    revision: RuntimeRevision,
+  ) => RuntimeSnapshot<TPublicRead>;
+  /** 以动态 token 创建 observer 使用的 erased public Snapshot */
+  snapshotToken: (
+    definition: RuntimeProgramToken,
+    prepared: RuntimePreparedProgramArtifact<unknown, unknown, unknown>,
+    revision: RuntimeRevision,
+  ) => RuntimeSnapshot<unknown>;
+  /** 释放 concrete prepared artifact，并隔离 dispose throw */
+  retire: (prepared: RuntimePreparedProgramArtifact<unknown, unknown, unknown>) => ReadonlyArray<RuntimeDiagnostic>;
   /** 执行 full Program callback */
   run: <TArtifactInput>(view: RuntimeCandidateView, context: RuntimeProgramContext) => RuntimeRunResult<TArtifactInput>;
   /** 执行 incremental Program callback */
@@ -46,6 +78,18 @@ const runtimeProgramExecutors = new WeakMap<object, RuntimeProgramErasedExecutor
 const tracePhases: ReadonlySet<unknown> = new Set(['compile', 'commit', 'update']);
 const traceUnits: ReadonlySet<unknown> = new Set(['ir-child', 'scene-primitive', 'program', 'scene-change']);
 const traceOutcomes: ReadonlySet<unknown> = new Set(['full', 'incremental', 'bailout', 'fallback', 'commit']);
+
+/** 创建 artifact dispose 失败的非致命诊断 */
+const artifactDisposeDiagnostic = (program: RuntimeProgramToken, cause: unknown): RuntimeDiagnostic =>
+  Object.freeze({
+    code: 'RUNTIME_ARTIFACT_DISPOSE_FAILED',
+    phase: 'artifact-dispose',
+    severity: 'error',
+    message: cause instanceof Error ? cause.message : String(cause),
+    owner: program.id.owner,
+    program: program.id,
+    cause,
+  });
 
 /** 创建 Program Definition 输入错误 */
 const invalidProgram = (code: 'RUNTIME_PROGRAM_ID_INVALID' | 'RUNTIME_PROGRAM_TOKEN_INVALID', cause: unknown) =>
@@ -140,6 +184,36 @@ export const defineRuntimeProgram = <TArtifactInput, TArtifact, TProgramRead, TP
     TProgramRead,
     TPublicRead
   >;
+  /** 释放一个已捕获 artifact，并把 throw 隔离为 secondary diagnostic */
+  const retireArtifact = (artifact: TArtifact): ReadonlyArray<RuntimeDiagnostic> => {
+    if (dispose === undefined) return Object.freeze([]);
+    try {
+      dispose(artifact);
+      return Object.freeze([]);
+    } catch (cause) {
+      return Object.freeze([artifactDisposeDiagnostic(token, cause)]);
+    }
+  };
+
+  /** 创建带稳定 Program context 的 artifact lifecycle primary error */
+  const artifactError = (
+    code:
+      | 'RUNTIME_ARTIFACT_CAPTURE_FAILED'
+      | 'RUNTIME_ARTIFACT_PROGRAM_READ_FAILED'
+      | 'RUNTIME_ARTIFACT_PUBLIC_READ_FAILED',
+    phase: 'artifact-capture' | 'artifact-program-read' | 'artifact-public-read',
+    cause: unknown,
+    diagnostics: ReadonlyArray<RuntimeDiagnostic> = [],
+  ) =>
+    new RuntimeError({
+      code,
+      phase,
+      owner: copiedId.owner,
+      program: copiedId,
+      cause,
+      diagnostics,
+    });
+
   const typedExecutor = Object.freeze({
     owners: copiedOwners,
     programs: copiedPrograms,
@@ -148,6 +222,89 @@ export const defineRuntimeProgram = <TArtifactInput, TArtifact, TProgramRead, TP
     readForProgram: (value: TArtifact): TProgramRead => readForProgram(value),
     read: (value: TArtifact): TPublicRead => read(value),
     dispose,
+    prepareArtifact: (
+      source: TArtifactInput,
+      current?: RuntimePreparedProgramArtifact<TArtifact, TProgramRead, TPublicRead>,
+    ): RuntimePreparedProgramArtifact<TArtifact, TProgramRead, TPublicRead> => {
+      let artifact: TArtifact;
+      try {
+        artifact = capture(source);
+      } catch (cause) {
+        throw artifactError('RUNTIME_ARTIFACT_CAPTURE_FAILED', 'artifact-capture', cause);
+      }
+      if (current !== undefined && dispose !== undefined && artifact === current.artifact) {
+        throw new RuntimeError({
+          code: 'RUNTIME_ARTIFACT_OWNERSHIP_ALIAS',
+          phase: 'artifact-capture',
+          owner: copiedId.owner,
+          program: copiedId,
+          cause: artifact,
+        });
+      }
+
+      let programRead: TProgramRead;
+      try {
+        programRead = readForProgram(artifact);
+      } catch (cause) {
+        throw artifactError(
+          'RUNTIME_ARTIFACT_PROGRAM_READ_FAILED',
+          'artifact-program-read',
+          cause,
+          retireArtifact(artifact),
+        );
+      }
+
+      let publicRead: TPublicRead;
+      try {
+        publicRead = read(artifact);
+      } catch (cause) {
+        throw artifactError(
+          'RUNTIME_ARTIFACT_PUBLIC_READ_FAILED',
+          'artifact-public-read',
+          cause,
+          retireArtifact(artifact),
+        );
+      }
+
+      return Object.freeze({
+        artifact,
+        programRead,
+        publicRead,
+      });
+    },
+    snapshot: (
+      definition: RuntimeProgramDefinition<TArtifactInput, TArtifact, TProgramRead, TPublicRead>,
+      prepared: RuntimePreparedProgramArtifact<TArtifact, TProgramRead, TPublicRead>,
+      revision: RuntimeRevision,
+    ): RuntimeSnapshot<TPublicRead> => {
+      if (definition !== token) {
+        throw new RuntimeError({
+          code: 'RUNTIME_PROGRAM_TOKEN_INVALID',
+          phase: 'artifact-snapshot',
+          program: definition.id,
+          cause: definition,
+        });
+      }
+      return Object.freeze({ revision, value: prepared.publicRead });
+    },
+    snapshotToken: (
+      definition: RuntimeProgramToken,
+      prepared: RuntimePreparedProgramArtifact<TArtifact, TProgramRead, TPublicRead>,
+      revision: RuntimeRevision,
+    ): RuntimeSnapshot<TPublicRead> => {
+      if (definition !== token) {
+        throw new RuntimeError({
+          code: 'RUNTIME_PROGRAM_TOKEN_INVALID',
+          phase: 'artifact-snapshot',
+          program: definition.id,
+          cause: definition,
+        });
+      }
+      return Object.freeze({ revision, value: prepared.publicRead });
+    },
+    retire: (
+      prepared: RuntimePreparedProgramArtifact<TArtifact, TProgramRead, TPublicRead>,
+    ): ReadonlyArray<RuntimeDiagnostic> => retireArtifact(prepared.artifact),
     run: (view: RuntimeCandidateView, context: RuntimeProgramContext): RuntimeRunResult<TArtifactInput> =>
       run(view, context),
     update,

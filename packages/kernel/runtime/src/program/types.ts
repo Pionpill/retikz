@@ -42,10 +42,13 @@ export type RuntimeProgramWarningInput = Readonly<{
   message: string;
 }>;
 
+/** Program callback 只能写入、不能 drain 的 owner-bound trace facade */
+export type RuntimeProgramTraceReporter = Pick<RuntimeTraceReporter, 'owner' | 'report'>;
+
 /** Program callback 可用的 trace 与 warning context */
 export type RuntimeProgramContext = Readonly<{
   /** 固定绑定 Program owner 的 trace reporter */
-  trace: RuntimeTraceReporter;
+  trace: RuntimeProgramTraceReporter;
   /** 追加由 Runtime 统一归属的 commit-safe warning */
   diagnose: (diagnostic: RuntimeProgramWarningInput) => void;
 }>;
