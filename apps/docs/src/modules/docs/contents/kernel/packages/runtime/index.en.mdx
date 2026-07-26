@@ -1,11 +1,30 @@
 ---
 title: '@retikz/runtime'
-description: Manage state ownership across revisions with structured identities, typed owner Definitions, one registry, and isolated execution traces.
+description: Manage state ownership and incremental execution across revisions with structured identities, typed Owner / Program Definitions, synchronous Sessions, and isolated traces.
 ---
 
 `@retikz/runtime` is the domain-neutral execution foundation. It does not understand Core IR, Scene, the DOM, or Plot data. Each domain declares who owns a complete state value and how that value is read, compared, and released.
 
-The current public surface covers identities, owner Definitions and registries, and execution tracing. Synchronous transactions, incremental Core programs, and retained renderers build on the same foundation instead of creating adapter-specific lifecycles.
+The current public surface covers identities, Owner / Program Definitions, registries, synchronous transactions, and execution tracing. Core programs and retained renderers compose on the same Session contract instead of creating adapter-specific lifecycles.
+
+## Responsibilities At A Glance
+
+| Topic               | Responsibility                                                   | Reach for it when                               |
+| ------------------- | ---------------------------------------------------------------- | ----------------------------------------------- |
+| Identity and Owner  | Define complete-state identity, ownership, reads, and retirement | Integrating domain state or immutable views     |
+| Program and Session | Organize dependency DAGs, revisions, and atomic transactions     | Incrementally updating state and derived output |
+| Trace               | Validate and isolate execution observation from product results  | Measuring work or diagnosing a trace sink       |
+
+## Chapters
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/packages/runtime/session">
+    <span className="font-semibold">Programs & Synchronous Sessions</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Define Program graphs, revision-bound transactions, fallback, diagnostics, and resource lifecycles
+    </span>
+  </LinkedCard>
+</div>
 
 ## Installation & Boundary
 
@@ -13,12 +32,13 @@ The current public surface covers identities, owner Definitions and registries, 
 pnpm add @retikz/runtime
 ```
 
-| Runtime owns                               | Runtime does not own                    |
-| ------------------------------------------ | --------------------------------------- |
-| Stable owners, structured identities/index | Core IR, Scene, geometry, or layout     |
-| Complete Snapshot capture/read/equals      | Inferring next state from domain ops    |
-| Typed Definitions and one registry         | React / Vanilla authoring               |
-| Synchronous trace validation/diagnostics   | Remote telemetry, analytics, or storage |
+| Runtime owns                                 | Runtime does not own                        |
+| -------------------------------------------- | ------------------------------------------- |
+| Stable owners, structured identities/index   | Core IR, Scene, geometry, or layout         |
+| Complete Snapshot capture/read/equals        | Inferring next state from domain ops        |
+| Typed Definitions and one registry           | React / Vanilla authoring                   |
+| Program DAGs, revisions, and atomic Sessions | Domain Diff, Scene Patch, or DOM operations |
+| Synchronous trace validation/diagnostics     | Remote telemetry, analytics, or storage     |
 
 `@retikz/runtime` has no runtime dependencies and never writes callbacks, handles, or trace data into IR or Scene.
 
@@ -103,7 +123,7 @@ The registry first validates Definition object identity, then merges and sorts e
       label: 'Registry-bound lifecycle executor',
       path: 'packages/kernel/runtime/src/owner/executor.ts',
       startLine: 88,
-      endLine: 208,
+      endLine: 218,
     },
   ]}
 />
@@ -135,7 +155,7 @@ When collection, the first read, or change-set validation fails, Runtime release
 | `RUNTIME_OWNER_COMPARE_FAILED`              | `equals` throws                                    |
 | `RUNTIME_OWNER_CHANGESET_VALIDATION_FAILED` | Change-set validator throws                        |
 
-During `0.x`, public types may tighten around a better abstraction without compatibility bridges. This page does not claim that Program graphs, sessions, schedulers, or renderer patches are already available.
+See [Programs & Synchronous Sessions](/kernel/packages/runtime/session) for the main Program graph, revision, transaction, and error contracts. Concurrent schedulers and renderer patches are outside this page.
 
 ## Execution Traces
 
@@ -186,10 +206,11 @@ Definition authors primarily use the following three object contracts. Their gen
 | `PerformanceTraceRecord`           | Phase work-count record                           |
 | `PerformanceTraceDiagnostic`       | Non-fatal trace diagnostic                        |
 
-`RuntimeRevision` and `RuntimeChangeSet<TChange>` are currently branded vocabulary reserved for the synchronous transaction layer. Do not assert or forge their envelopes.
+`RuntimeRevision` and `RuntimeChangeSet<TChange>` come from synchronous Session factories. Do not assert or forge their envelopes. See [Programs & Synchronous Sessions](/kernel/packages/runtime/session) for Program, transaction, and Session APIs.
 
 ## Related
 
 - [Packages overview](/kernel/packages)
+- [Programs & Synchronous Sessions](/kernel/packages/runtime/session)
 - [Extension mechanism reference](/kernel/reference/runtime/extensions)
 - [Compile entry](/kernel/reference/runtime/compile)

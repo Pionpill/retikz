@@ -1,0 +1,217 @@
+---
+title: Program 与同步 Session
+description: 用 typed Program graph、完整 Snapshot 和原子 transaction 在一个 revision 中准备、发布并释放增量执行结果。
+---
+
+同步 Session 解决的是“多份状态和派生产物怎样一起更新”。领域包声明 Owner 与 Program，Runtime 负责依赖顺序、candidate 隔离、revision、fallback、observer 和资源释放。
+
+这套契约不理解 IR、Scene 或 renderer patch。Core、Render、React 和 Vanilla 都可以复用它，但各自的领域输入与 artifact 仍由对应包定义。
+
+## 从完整 Snapshot 到原子发布
+
+| 对象          | 负责什么                          | 不允许什么                       |
+| ------------- | --------------------------------- | -------------------------------- |
+| Owner         | 捕获完整输入，暴露 immutable read | 用 change hint 代替完整状态      |
+| Program       | 声明依赖，产生 owned artifact     | 读取未声明 Owner / Program       |
+| CandidateView | 读取同一 candidate revision       | 取得 disposable value / artifact |
+| Session       | 准备、发布、观测并释放资源        | 在 transaction 中同步重入        |
+
+Session 的同步状态机是：
+
+```text
+idle → preparing → committing → publishing → observing → retiring → idle
+idle → disposing → disposed
+```
+
+只有 pointer publish 会推进 revision。在 active transaction 或 disposing 期间，`update()`、`snapshot()`、`artifact()`、diagnostic drain 与再次 `dispose()` 都拒绝同步重入；`revision()` 始终可以读取当前已经发布的 revision。dispose 只能从 idle 开始；进入 disposed 后仍可读取 revision、drain diagnostics 或重复 no-op dispose。
+
+## 定义并运行 Program
+
+下面的例子把完整计数器 Snapshot 编译成一个数值 artifact。ChangeSet 只是可验证的提示；即使没有提示，Program 仍会收到完整 previous / candidate Snapshot。
+
+```ts
+import {
+  createRuntimeChangeSet,
+  createRuntimeOwnerInput,
+  createRuntimeOwnerRegistry,
+  createRuntimeOwnerUpdate,
+  createRuntimeProgramRegistry,
+  createRuntimeSession,
+  defineRuntimeOwner,
+  defineRuntimeProgram,
+} from '@retikz/runtime';
+
+const counterOwner = defineRuntimeOwner<number, number, number, { delta: number }>({
+  key: 'example/counter',
+  value: {
+    capture: value => value,
+    read: value => value,
+    equals: (left, right) => left === right,
+  },
+  validateChangeSet: (previous, next, changeSet) =>
+    previous + changeSet.changes.reduce((sum, change) => sum + change.delta, 0) === next ? 'valid' : 'fallback',
+});
+
+const owners = createRuntimeOwnerRegistry({ custom: [counterOwner] });
+
+const sumProgram = defineRuntimeProgram<number, number, number, number>({
+  id: { owner: 'example/counter', key: 'sum' },
+  owners: [counterOwner],
+  programs: [],
+  tracePhases: [],
+  artifact: {
+    capture: value => value,
+    readForProgram: value => value,
+    read: value => value,
+  },
+  run: view => ({ kind: 'full', artifact: view.snapshot(counterOwner).value }),
+  update: (_previous, view) => ({
+    kind: 'incremental',
+    artifact: view.snapshot(counterOwner).value,
+  }),
+});
+
+const programs = createRuntimeProgramRegistry({ owners, custom: [sumProgram] });
+const session = createRuntimeSession({
+  owners,
+  programs,
+  initialSnapshots: [createRuntimeOwnerInput(counterOwner, 1)],
+});
+
+const baseRevision = session.revision();
+const result = session.update({
+  baseRevision,
+  owners: [createRuntimeOwnerUpdate(counterOwner, 2, createRuntimeChangeSet(baseRevision, [{ delta: 1 }]))],
+});
+
+result.outcome; // 'incremental'
+session.snapshot(counterOwner); // { revision: 1, value: 2 }
+session.artifact(sumProgram); // { revision: 1, value: 2 }
+session.dispose();
+```
+
+Owner registry 与 Program registry 必须是创建 Session 时传入的同一对实例。Program id、Owner key 和依赖 token 都使用 exact identity；Runtime 不按字符串猜测或恢复 callback。
+
+## Incremental、Bailout 与 Fallback
+
+| Program 结果  | Artifact 行为              | 下游行为                   |
+| ------------- | -------------------------- | -------------------------- |
+| `incremental` | capture 新 artifact        | 下游可以继续 `update()`    |
+| `bailout`     | 复用 current artifact      | 不把 invalidation 传给下游 |
+| `fallback`    | 丢弃增量路径并执行 `run()` | 下游强制 full              |
+| 无 `update()` | 直接执行 `run()`           | 下游强制 full              |
+
+ChangeSet 缺失时仍调用 `update()`，`view.changeSet(owner)` 返回 `undefined`。Owner validator 明确返回 `fallback` 时，Runtime 丢弃不可信提示，当前 Program 和依赖它的下游都走 full 路径。
+
+所有公开 `RuntimeSnapshot.revision` 都表示当前 view 所属的 Session revision。复用的 Owner read 或 Program artifact 只重建 envelope，不复制或提前释放底层值。
+
+## Candidate 隔离与资源所有权
+
+Runtime 先准备所有 changed Owner，再按拓扑顺序执行 Program。所有 read 成功后才发布；publish 前任一步失败都会反向释放 candidate，current Snapshot、artifact 和 revision 保持不变。
+
+有 `dispose` 的 Owner value 或 Program artifact 不能把 current object identity 再作为 candidate 交回 Runtime。该路径分别以 `RUNTIME_OWNER_OWNERSHIP_ALIAS` 或 `RUNTIME_ARTIFACT_OWNERSHIP_ALIAS` fail-loud，current 资源不会进入 rollback。
+
+publish 后，observer 只读取已经发布的 artifact event。observer throw 不回滚，并记录 `RUNTIME_PROGRAM_OBSERVER_FAILED`；旧 artifact 与 Owner value 随后按反向顺序 retire。
+
+## Diagnostics 与失败语义
+
+`session.update()` 返回本次调用的 frozen diagnostic copy；相同顺序的 entries 同时进入 Session queue。`session.diagnostics()` 返回并清空 queue，不去重。
+
+| 来源                       | 成功 transaction     | 失败 transaction                   |
+| -------------------------- | -------------------- | ---------------------------------- |
+| Program warning / fallback | 进入 result 与 queue | candidate 输出丢弃                 |
+| Trace reporter diagnostic  | 进入 result 与 queue | 进入 error 与 queue                |
+| Observer / retire failure  | publish 后追加并继续 | 不适用                             |
+| Rollback dispose failure   | 不适用               | 追加到 primary error，不覆盖 cause |
+
+初始 `createRuntimeSession()` 失败时没有 Session queue，secondary diagnostics 只能从 thrown error 读取。update 失败时，本次 `RuntimeError.diagnostics` 会按相同顺序追加到已有 queue；只有 queue 事先为空时，下一次 drain 才与 error diagnostics 逐项一致。
+
+## 主要稳定错误
+
+下表列出 Session 使用路径里最常见的 code，不是 `RuntimeErrorCode` 的完整闭集。Program graph/token、Owner command、ChangeSet envelope 与 ownership alias 也会使用各自具名的稳定 code。
+
+| Code                                  | 含义                                               |
+| ------------------------------------- | -------------------------------------------------- |
+| `RUNTIME_REGISTRY_MISMATCH`           | Program registry 与 Owner registry 不是同一绑定    |
+| `RUNTIME_INITIAL_OWNER_MISMATCH`      | 初始 commands 未精确覆盖 Owner registry            |
+| `RUNTIME_REVISION_INVALID`            | revision 不是非负 safe integer                     |
+| `RUNTIME_REVISION_STALE`              | update base 不是 current revision                  |
+| `RUNTIME_REVISION_EXHAUSTED`          | 非空 update 无法再推进 safe integer revision       |
+| `RUNTIME_CHANGESET_REVISION_MISMATCH` | ChangeSet base 与 update envelope 不一致           |
+| `RUNTIME_UNDECLARED_DEPENDENCY`       | Program 读取未声明依赖                             |
+| `RUNTIME_SESSION_REENTRANT`           | active transaction 或 disposing 期间重入受保护 API |
+| `RUNTIME_SESSION_DISPOSED`            | disposed Session 被再次读写                        |
+
+| Program lifecycle code                 | 阶段                               |
+| -------------------------------------- | ---------------------------------- |
+| `RUNTIME_PROGRAM_RUN_FAILED`           | `run` callback                     |
+| `RUNTIME_PROGRAM_UPDATE_FAILED`        | `update` callback                  |
+| `RUNTIME_ARTIFACT_CAPTURE_FAILED`      | artifact capture                   |
+| `RUNTIME_ARTIFACT_PROGRAM_READ_FAILED` | private Program read               |
+| `RUNTIME_ARTIFACT_PUBLIC_READ_FAILED`  | public artifact read               |
+| `RUNTIME_ARTIFACT_DISPOSE_FAILED`      | 非致命 artifact cleanup diagnostic |
+| `RUNTIME_PROGRAM_OBSERVER_FAILED`      | 非致命 observer diagnostic         |
+
+原始 callback error 只保存在 `cause`；稳定 code、phase、Owner 与 Program context 不随错误文案变化。
+
+## API 参考
+
+| 类型                                                                                  | 核心字段                                                                                      |
+| ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `RuntimeProgramId`                                                                    | exact identity：`owner` 与 `key`                                                              |
+| `RuntimeProgramDefinitionInput<TArtifactInput, TArtifact, TProgramRead, TPublicRead>` | `id`、`owners`、`programs`、`tracePhases`、`artifact`、`run`、可选 `update` / `observeCommit` |
+| `RuntimeSessionOptions`                                                               | `owners`、`programs`、精确覆盖的 `initialSnapshots`、可选 `trace`                             |
+| `RuntimeSessionUpdate`                                                                | `baseRevision` 与本次完整 Owner update commands                                               |
+| `RuntimeSessionResult`                                                                | 已发布 `revision`、聚合 `outcome` 与 frozen `diagnostics`                                     |
+| `RuntimeSnapshot<TRead>`                                                              | view 所属 `revision` 与 immutable `value`                                                     |
+
+| API                            | 用途                                                          |
+| ------------------------------ | ------------------------------------------------------------- |
+| `defineRuntimeProgram`         | 创建保留四组 artifact 泛型的 opaque Program Definition        |
+| `createRuntimeProgramRegistry` | 合并并校验 builtin/custom Program DAG                         |
+| `createRuntimeChangeSet`       | 创建带 base revision 的 opaque change hint                    |
+| `createRuntimeOwnerInput`      | 创建初始完整 Owner command                                    |
+| `createRuntimeOwnerUpdate`     | 创建更新完整 Owner command                                    |
+| `createRuntimeSession`         | 创建 revision 0 并执行初始 full transaction                   |
+| `RuntimeError`                 | 暴露稳定 code、phase、cause、context 与 secondary diagnostics |
+
+<SourceLinks
+  sources={[
+    {
+      label: '创建并冻结 typed Program Definition',
+      path: 'packages/kernel/runtime/src/program/define.ts',
+      startLine: 139,
+      endLine: 186,
+    },
+    {
+      label: '创建 revision-bound ChangeSet',
+      path: 'packages/kernel/runtime/src/transaction/factories.ts',
+      startLine: 86,
+      endLine: 102,
+    },
+    {
+      label: '创建保留具体 Owner 泛型的 opaque command',
+      path: 'packages/kernel/runtime/src/transaction/factories.ts',
+      startLine: 163,
+      endLine: 193,
+    },
+    {
+      label: '原子发布、observer 隔离与反向 retire',
+      path: 'packages/kernel/runtime/src/session/session.ts',
+      startLine: 779,
+      endLine: 833,
+    },
+    {
+      label: 'Session dispose 与 diagnostic queue',
+      path: 'packages/kernel/runtime/src/session/session.ts',
+      startLine: 854,
+      endLine: 880,
+    },
+  ]}
+/>
+
+## 相关
+
+- [Runtime Owner 与 Trace](/kernel/packages/runtime)
+- [编译入口](/kernel/reference/runtime/compile)
+- [扩展机制参考](/kernel/reference/runtime/extensions)

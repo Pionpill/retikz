@@ -1,11 +1,30 @@
 ---
 title: '@retikz/runtime'
-description: 用结构化 identity、typed owner Definition 与统一 registry 管理跨 revision 状态所有权，并以隔离的 trace 观测执行成本。
+description: 用结构化 identity、typed Owner / Program Definition、同步 Session 与隔离 trace 管理跨 revision 的状态所有权和增量执行。
 ---
 
 `@retikz/runtime` 是零领域依赖的执行底座。它不理解 Core IR、Scene、DOM 或 Plot 数据，而是让各领域声明“谁拥有一份完整状态、怎样读取、怎样比较和怎样释放”。
 
-当前公开能力覆盖 identity、owner Definition / registry 与执行 trace。同步 transaction、增量 Core program 和 retained renderer 会在同一底座上继续组合，不需要各 adapter 自建生命周期。
+当前公开能力覆盖 identity、Owner / Program Definition、registry、同步 transaction 与执行 trace。Core program 和 retained renderer 在同一 Session 契约上组合，不需要各 adapter 自建生命周期。
+
+## 职责一览
+
+| 主题               | 职责                                      | 何时查阅                          |
+| ------------------ | ----------------------------------------- | --------------------------------- |
+| Identity 与 Owner  | 定义完整状态的身份、所有权、读取和释放    | 接入新的领域状态或 immutable view |
+| Program 与 Session | 组织依赖 DAG、revision 与原子 transaction | 增量更新多份状态及其派生产物      |
+| Trace              | 校验并隔离执行观测，不改变产品结果        | 统计工作量或诊断 trace sink       |
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/packages/runtime/session">
+    <span className="font-semibold">Program 与同步 Session</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      定义 Program graph、revision-bound transaction、fallback、diagnostic 与资源生命周期
+    </span>
+  </LinkedCard>
+</div>
 
 ## 安装与边界
 
@@ -13,12 +32,13 @@ description: 用结构化 identity、typed owner Definition 与统一 registry �
 pnpm add @retikz/runtime
 ```
 
-| Runtime 负责                         | Runtime 不负责                   |
-| ------------------------------------ | -------------------------------- |
-| 稳定 owner、结构化 identity 与索引   | Core IR、Scene、几何和 layout    |
-| 完整 Snapshot 的 capture/read/equals | 根据领域 operation 猜测下一状态  |
-| typed Definition 与统一 registry     | React / Vanilla authoring        |
-| 同步 trace 校验与非致命 diagnostic   | 远程 telemetry、analytics 或存储 |
+| Runtime 负责                         | Runtime 不负责                     |
+| ------------------------------------ | ---------------------------------- |
+| 稳定 owner、结构化 identity 与索引   | Core IR、Scene、几何和 layout      |
+| 完整 Snapshot 的 capture/read/equals | 根据领域 operation 猜测下一状态    |
+| typed Definition 与统一 registry     | React / Vanilla authoring          |
+| Program DAG、revision 与原子 Session | 领域 Diff、Scene Patch 或 DOM 操作 |
+| 同步 trace 校验与非致命 diagnostic   | 远程 telemetry、analytics 或存储   |
 
 `@retikz/runtime` 没有运行时依赖，也不把 callback、handle 或 trace 写进 IR / Scene。
 
@@ -103,7 +123,7 @@ Registry 先按 token object identity 验证 Definition，再按 exact key 合�
       label: 'Registry-bound lifecycle executor',
       path: 'packages/kernel/runtime/src/owner/executor.ts',
       startLine: 88,
-      endLine: 208,
+      endLine: 218,
     },
   ]}
 />
@@ -135,7 +155,7 @@ Collector、首次 read 或 change-set validator 失败时，candidate 会立即
 | `RUNTIME_OWNER_COMPARE_FAILED`              | `equals` 抛错                                  |
 | `RUNTIME_OWNER_CHANGESET_VALIDATION_FAILED` | change-set validator 抛错                      |
 
-`0.x` 阶段会为正确抽象收紧公开类型，不提供旧写法兼容桥接。本页不承诺 Program graph、session、scheduler 或 renderer patch 已经可用。
+Program graph、同步 Session、revision 与 transaction 的主要错误见 [Program 与同步 Session](/kernel/packages/runtime/session)。Concurrent scheduler 和 renderer patch 不属于本页契约。
 
 ## 执行 Trace
 
@@ -186,10 +206,11 @@ Definition 作者最常用的三个对象契约如下。函数签名里的泛型
 | `PerformanceTraceRecord`           | phase 工作量记录                                   |
 | `PerformanceTraceDiagnostic`       | 非致命 trace 诊断                                  |
 
-`RuntimeRevision` 与 `RuntimeChangeSet<TChange>` 目前只是后续同步 transaction 复用的 branded vocabulary；不要自行断言或伪造 envelope。
+`RuntimeRevision` 与 `RuntimeChangeSet<TChange>` 由同步 Session factory 产生；不要自行断言或伪造 envelope。Program、transaction 与 Session API 见 [Program 与同步 Session](/kernel/packages/runtime/session)。
 
 ## 相关
 
 - [能力包总览](/kernel/packages)
+- [Program 与同步 Session](/kernel/packages/runtime/session)
 - [扩展机制参考](/kernel/reference/runtime/extensions)
 - [编译入口](/kernel/reference/runtime/compile)

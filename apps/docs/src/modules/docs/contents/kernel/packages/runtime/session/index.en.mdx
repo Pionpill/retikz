@@ -1,0 +1,217 @@
+---
+title: Programs & Synchronous Sessions
+description: Prepare, publish, and retire incremental results in one revision with typed Program graphs, complete Snapshots, and atomic transactions.
+---
+
+A synchronous Session answers how several state values and derived artifacts update together. Domains declare Owners and Programs; Runtime owns dependency order, candidate isolation, revisions, fallback, observers, and resource retirement.
+
+The contract does not understand IR, Scene, or renderer patches. Core, Render, React, and Vanilla can share it while keeping their domain inputs and artifacts in their own packages.
+
+## From Complete Snapshots To Atomic Publish
+
+| Object        | Responsibility                                      | Disallowed shortcut                      |
+| ------------- | --------------------------------------------------- | ---------------------------------------- |
+| Owner         | Capture complete input and expose an immutable read | Treating a change hint as complete state |
+| Program       | Declare dependencies and produce an owned artifact  | Reading undeclared Owners / Programs     |
+| CandidateView | Read one candidate revision                         | Accessing disposable values / artifacts  |
+| Session       | Prepare, publish, observe, and retire resources     | Synchronous transaction reentry          |
+
+The synchronous Session state machine is:
+
+```text
+idle → preparing → committing → publishing → observing → retiring → idle
+idle → disposing → disposed
+```
+
+Only pointer publish advances the revision. During an active transaction or disposal, `update()`, `snapshot()`, `artifact()`, diagnostic drain, and another `dispose()` reject synchronous reentry. `revision()` always returns the revision already published. Disposal starts only from idle; after disposal, callers may still read the revision, drain diagnostics, or repeat the no-op dispose.
+
+## Define And Run A Program
+
+This example compiles a complete counter Snapshot into a numeric artifact. A ChangeSet is only a validated hint; without one, the Program still receives complete previous and candidate Snapshots.
+
+```ts
+import {
+  createRuntimeChangeSet,
+  createRuntimeOwnerInput,
+  createRuntimeOwnerRegistry,
+  createRuntimeOwnerUpdate,
+  createRuntimeProgramRegistry,
+  createRuntimeSession,
+  defineRuntimeOwner,
+  defineRuntimeProgram,
+} from '@retikz/runtime';
+
+const counterOwner = defineRuntimeOwner<number, number, number, { delta: number }>({
+  key: 'example/counter',
+  value: {
+    capture: value => value,
+    read: value => value,
+    equals: (left, right) => left === right,
+  },
+  validateChangeSet: (previous, next, changeSet) =>
+    previous + changeSet.changes.reduce((sum, change) => sum + change.delta, 0) === next ? 'valid' : 'fallback',
+});
+
+const owners = createRuntimeOwnerRegistry({ custom: [counterOwner] });
+
+const sumProgram = defineRuntimeProgram<number, number, number, number>({
+  id: { owner: 'example/counter', key: 'sum' },
+  owners: [counterOwner],
+  programs: [],
+  tracePhases: [],
+  artifact: {
+    capture: value => value,
+    readForProgram: value => value,
+    read: value => value,
+  },
+  run: view => ({ kind: 'full', artifact: view.snapshot(counterOwner).value }),
+  update: (_previous, view) => ({
+    kind: 'incremental',
+    artifact: view.snapshot(counterOwner).value,
+  }),
+});
+
+const programs = createRuntimeProgramRegistry({ owners, custom: [sumProgram] });
+const session = createRuntimeSession({
+  owners,
+  programs,
+  initialSnapshots: [createRuntimeOwnerInput(counterOwner, 1)],
+});
+
+const baseRevision = session.revision();
+const result = session.update({
+  baseRevision,
+  owners: [createRuntimeOwnerUpdate(counterOwner, 2, createRuntimeChangeSet(baseRevision, [{ delta: 1 }]))],
+});
+
+result.outcome; // 'incremental'
+session.snapshot(counterOwner); // { revision: 1, value: 2 }
+session.artifact(sumProgram); // { revision: 1, value: 2 }
+session.dispose();
+```
+
+The Owner registry and Program registry must be the same paired instances passed to the Session. Program ids, Owner keys, and dependency tokens use exact identity; Runtime never guesses strings to recover callbacks.
+
+## Incremental, Bailout, And Fallback
+
+| Program result | Artifact behavior                             | Downstream behavior                      |
+| -------------- | --------------------------------------------- | ---------------------------------------- |
+| `incremental`  | Capture a new artifact                        | Downstream may continue with `update()`  |
+| `bailout`      | Reuse the current artifact                    | Do not propagate invalidation downstream |
+| `fallback`     | Abandon the incremental path and call `run()` | Force downstream full execution          |
+| No `update()`  | Call `run()` directly                         | Force downstream full execution          |
+
+With no ChangeSet, Runtime still calls `update()` and `view.changeSet(owner)` returns `undefined`. When an Owner validator explicitly returns `fallback`, Runtime discards the untrusted hint; the direct Program and its downstream dependents take the full path.
+
+Every public `RuntimeSnapshot.revision` identifies the Session revision of the current view. Reused Owner reads and Program artifacts only receive a new envelope; Runtime does not copy or prematurely retire the underlying value.
+
+## Candidate Isolation & Resource Ownership
+
+Runtime prepares changed Owners first, then executes Programs in topological order. It publishes only after every read succeeds. Any pre-publish failure retires candidates in reverse order while the current Snapshots, artifacts, and revision remain unchanged.
+
+A disposable Owner value or Program artifact cannot return the current object identity as a candidate. Runtime fails loudly with `RUNTIME_OWNER_OWNERSHIP_ALIAS` or `RUNTIME_ARTIFACT_OWNERSHIP_ALIAS`; the current resource never enters rollback.
+
+After publish, observers only read the published artifact event. An observer throw does not roll back and produces `RUNTIME_PROGRAM_OBSERVER_FAILED`. Old artifacts and Owner values retire afterward in reverse order.
+
+## Diagnostics & Failure Semantics
+
+`session.update()` returns a frozen copy of diagnostics produced by that call. The same entries, in the same order, enter the Session queue. `session.diagnostics()` returns and clears the queue without deduplication.
+
+| Source                     | Successful transaction                    | Failed transaction                                        |
+| -------------------------- | ----------------------------------------- | --------------------------------------------------------- |
+| Program warning / fallback | Result and queue                          | Candidate output is discarded                             |
+| Trace reporter diagnostic  | Result and queue                          | Error and queue                                           |
+| Observer / retire failure  | Appended after publish; cleanup continues | Not applicable                                            |
+| Rollback dispose failure   | Not applicable                            | Appended to the primary error without replacing its cause |
+
+When initial `createRuntimeSession()` fails, there is no Session queue; secondary diagnostics are only available on the thrown error. For failed updates, that call's `RuntimeError.diagnostics` entries append to the existing queue in the same order. The next drain matches the error entries item-for-item only when the queue was empty beforehand.
+
+## Key Stable Errors
+
+This table lists the codes most often encountered through Session APIs; it is not the complete `RuntimeErrorCode` set. Program graph/token, Owner command, ChangeSet envelope, and ownership-alias failures also use dedicated stable codes.
+
+| Code                                  | Meaning                                                     |
+| ------------------------------------- | ----------------------------------------------------------- |
+| `RUNTIME_REGISTRY_MISMATCH`           | Program and Owner registries are not the same pair          |
+| `RUNTIME_INITIAL_OWNER_MISMATCH`      | Initial commands do not exactly cover the Owner registry    |
+| `RUNTIME_REVISION_INVALID`            | Revision is not a nonnegative safe integer                  |
+| `RUNTIME_REVISION_STALE`              | Update base is not the current revision                     |
+| `RUNTIME_REVISION_EXHAUSTED`          | A non-empty update cannot advance the safe-integer revision |
+| `RUNTIME_CHANGESET_REVISION_MISMATCH` | ChangeSet base differs from the update envelope             |
+| `RUNTIME_UNDECLARED_DEPENDENCY`       | A Program reads an undeclared dependency                    |
+| `RUNTIME_SESSION_REENTRANT`           | A protected API reenters during a transaction or disposal   |
+| `RUNTIME_SESSION_DISPOSED`            | A disposed Session is read or updated                       |
+
+| Program lifecycle code                 | Phase                                 |
+| -------------------------------------- | ------------------------------------- |
+| `RUNTIME_PROGRAM_RUN_FAILED`           | `run` callback                        |
+| `RUNTIME_PROGRAM_UPDATE_FAILED`        | `update` callback                     |
+| `RUNTIME_ARTIFACT_CAPTURE_FAILED`      | Artifact capture                      |
+| `RUNTIME_ARTIFACT_PROGRAM_READ_FAILED` | Private Program read                  |
+| `RUNTIME_ARTIFACT_PUBLIC_READ_FAILED`  | Public artifact read                  |
+| `RUNTIME_ARTIFACT_DISPOSE_FAILED`      | Non-fatal artifact cleanup diagnostic |
+| `RUNTIME_PROGRAM_OBSERVER_FAILED`      | Non-fatal observer diagnostic         |
+
+The original callback error is only stored in `cause`. Stable code, phase, Owner, and Program context never depend on error text.
+
+## API Reference
+
+| Type                                                                                  | Core fields                                                                                           |
+| ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `RuntimeProgramId`                                                                    | Exact `owner` and `key` identity                                                                      |
+| `RuntimeProgramDefinitionInput<TArtifactInput, TArtifact, TProgramRead, TPublicRead>` | `id`, `owners`, `programs`, `tracePhases`, `artifact`, `run`, and optional `update` / `observeCommit` |
+| `RuntimeSessionOptions`                                                               | `owners`, `programs`, exact `initialSnapshots`, and optional `trace`                                  |
+| `RuntimeSessionUpdate`                                                                | `baseRevision` and complete Owner update commands for this call                                       |
+| `RuntimeSessionResult`                                                                | Published `revision`, aggregate `outcome`, and frozen `diagnostics`                                   |
+| `RuntimeSnapshot<TRead>`                                                              | View `revision` and immutable `value`                                                                 |
+
+| API                            | Purpose                                                                   |
+| ------------------------------ | ------------------------------------------------------------------------- |
+| `defineRuntimeProgram`         | Create an opaque Program Definition retaining four artifact generic types |
+| `createRuntimeProgramRegistry` | Merge and validate a built-in/custom Program DAG                          |
+| `createRuntimeChangeSet`       | Create an opaque change hint bound to a base revision                     |
+| `createRuntimeOwnerInput`      | Create a complete initial Owner command                                   |
+| `createRuntimeOwnerUpdate`     | Create a complete Owner update command                                    |
+| `createRuntimeSession`         | Create revision 0 and execute the initial full transaction                |
+| `RuntimeError`                 | Expose stable code, phase, cause, context, and secondary diagnostics      |
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Create and freeze a typed Program Definition',
+      path: 'packages/kernel/runtime/src/program/define.ts',
+      startLine: 139,
+      endLine: 186,
+    },
+    {
+      label: 'Create a revision-bound ChangeSet',
+      path: 'packages/kernel/runtime/src/transaction/factories.ts',
+      startLine: 86,
+      endLine: 102,
+    },
+    {
+      label: 'Create opaque commands while retaining concrete Owner generics',
+      path: 'packages/kernel/runtime/src/transaction/factories.ts',
+      startLine: 163,
+      endLine: 193,
+    },
+    {
+      label: 'Atomically publish, isolate observers, and retire in reverse order',
+      path: 'packages/kernel/runtime/src/session/session.ts',
+      startLine: 779,
+      endLine: 833,
+    },
+    {
+      label: 'Dispose a Session and queue cleanup diagnostics',
+      path: 'packages/kernel/runtime/src/session/session.ts',
+      startLine: 854,
+      endLine: 880,
+    },
+  ]}
+/>
+
+## Related
+
+- [Runtime Owners & Tracing](/kernel/packages/runtime)
+- [Compile entry](/kernel/reference/runtime/compile)
+- [Extension mechanism reference](/kernel/reference/runtime/extensions)
