@@ -11,7 +11,7 @@ import { Step } from '../../kernel/components';
 export type DrawProps = {
   /**
    * way 数组 DSL
-   * @description 节点 id / 笛卡尔 / 极坐标 / 相对偏移 `{ position, type: DrawWay.Relative | DrawWay.Accumulate }` / 折角算子 `'-|'` `'|-'`（或 `DrawWay.Hv`/`DrawWay.Vh`）/ 闭合 `DrawWay.Cycle` / 曲线算子 `{ curve | cubic | bend }`（infix）/ 形状算子 `{ arc | circle | ellipse }`（infix，以"上一项"为圆心，不消耗下一项）/ 边标注算子 `{ label }`（infix，修饰下一段）
+   * @description 节点 id / 笛卡尔 / 极坐标 / 相对偏移 `{ position, type: DrawWay.Relative | DrawWay.Accumulate }` / 两段或三段折角裸算子 / 可配置三段折角 `{ via, fraction }` / 闭合 `DrawWay.Cycle` / 曲线算子 `{ curve | cubic | bend }`（infix）/ 形状算子 `{ arc | circle | ellipse }`（infix，以上一项为圆心，不消耗下一项）/ 边标注算子 `{ label }`（infix，修饰下一段）
    */
   way: WayDSL;
   /** 描边色，省略时用 currentColor */
@@ -111,7 +111,15 @@ export const Draw: FC<DrawProps> = props => {
       {steps.map((s, i) => {
         if (s.kind === 'cycle') return <Step key={i} kind="cycle" />;
         if (s.kind === 'move') return <Step key={i} kind="move" to={s.to} />;
-        if (s.kind === 'fold') return <Step key={i} kind="fold" via={s.via} to={s.to} label={s.label} />;
+        if (s.kind === 'fold') {
+          if (s.via === '-|-' || s.via === '|-|') {
+            return <Step key={i} kind="fold" via={s.via} fraction={s.fraction} to={s.to} label={s.label} />;
+          }
+          return <Step key={i} kind="fold" via={s.via} to={s.to} label={s.label} />;
+        }
+        if (s.kind === 'axis-line') {
+          return <Step key={i} kind="axis-line" axis={s.axis} to={s.to} label={s.label} />;
+        }
         if (s.kind === 'curve') return <Step key={i} kind="curve" to={s.to} control={s.control} label={s.label} />;
         if (s.kind === 'cubic')
           return <Step key={i} kind="cubic" to={s.to} control1={s.control1} control2={s.control2} label={s.label} />;

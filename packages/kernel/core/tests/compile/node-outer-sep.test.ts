@@ -75,7 +75,7 @@ describe('margin：border 类 anchor 外扩（happy）', () => {
         },
       ],
     };
-    const p = compileToScene(ir).primitives.find(x => x.type === 'path');
+    const p = compileToScene(ir).scene.primitives.find(x => x.type === 'path');
     expect(p?.type === 'path' ? p.commands : undefined).toEqual([move([18, 0]), line([100, 0])]);
   });
 
@@ -85,8 +85,8 @@ describe('margin：border 类 anchor 外扩（happy）', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], margin }],
     });
-    const l0 = compileToScene(mk(0)).layout;
-    const l10 = compileToScene(mk(10)).layout;
+    const l0 = compileToScene(mk(0)).scene.layout;
+    const l10 = compileToScene(mk(10)).scene.layout;
     expect(l10.width - l0.width).toBe(20);
     expect(l10.height - l0.height).toBe(20);
     expect(l10.x - l0.x).toBe(-10);
@@ -152,7 +152,7 @@ describe('margin：不外扩护栏 + 校验', () => {
       ],
     });
     const tipOf = (margin: number) => {
-      const p = compileToScene(mk(margin)).primitives.find(x => x.type === 'path');
+      const p = compileToScene(mk(margin)).scene.primitives.find(x => x.type === 'path');
       return p?.type === 'path' ? p.commands[0] : undefined;
     };
     expect(tipOf(10)).toEqual(tipOf(0));
@@ -181,7 +181,7 @@ describe('margin：不外扩护栏 + 校验', () => {
           else if (p.type === 'group') walk(p.children);
         }
       };
-      walk(compileToScene(mk(margin)).primitives);
+      walk(compileToScene(mk(margin)).scene.primitives);
       const lbl = texts.find(t => t.lines.some(l => (typeof l === 'string' ? l : l.text) === 'L'));
       return lbl?.y;
     };
@@ -207,6 +207,6 @@ describe('margin：交互', () => {
       children: [{ type: 'node', id: 'A', position: [0, 0], margin: 10, boundary }],
     });
     // 借用连接面只改连接点求交，绝不改布局占位。
-    expect(compileToScene(mk('circle')).layout).toEqual(compileToScene(mk('shape')).layout);
+    expect(compileToScene(mk('circle')).scene.layout).toEqual(compileToScene(mk('shape')).scene.layout);
   });
 });

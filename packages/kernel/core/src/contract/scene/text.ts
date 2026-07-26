@@ -78,7 +78,7 @@ export type TextPrim = {
   lineHeight: number;
   /** 编译期算好的整块文字宽度 = max line width */
   measuredWidth: number;
-  /** 编译期算好的整块文字高度 ≈ lines × lineHeight */
+  /** 编译期解析的整块文字视觉盒高度 */
   measuredHeight: number;
   /**
    * 块级文字颜色

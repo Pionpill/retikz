@@ -17,6 +17,8 @@ export type PaintResolver = (paint: string | IRPaintSpec | undefined) => PaintVa
 /** paint 资源登记表：编译期收集 PaintSpec、去重派 id，最后产出 Scene.resources */
 export type PaintRegistry = {
   register: PaintResolver;
+  /** 提交 probe 已解析的 paint 资源，不再次调用 pattern provider */
+  importResolved: (resource: Extract<SceneResource, { kind: 'paint' }>) => PaintValue;
   resources: () => Array<SceneResource>;
 };
 
@@ -89,23 +91,33 @@ export const createPaintRegistry = (
   const idByKey = new Map<string, string>();
   const list: Array<SceneResource> = [];
   let counter = 0;
+  const insert = (key: string, resourceOf: (id: string) => SceneResource): string => {
+    let id = idByKey.get(key);
+    if (id !== undefined) return id;
+    counter += 1;
+    id = `paint-${counter}`;
+    idByKey.set(key, id);
+    list.push(resourceOf(id));
+    return id;
+  };
   const register: PaintResolver = paint => {
     if (paint === undefined) return undefined;
     if (typeof paint === 'string') return paint;
     const key = JSON.stringify(paint);
-    let id = idByKey.get(key);
-    if (id === undefined) {
-      counter += 1;
-      id = `paint-${counter}`;
-      idByKey.set(key, id);
-      const resource: SceneResource = { kind: 'paint', id, spec: paint };
+    const id = insert(key, nextId => {
+      const resource: SceneResource = { kind: 'paint', id: nextId, spec: paint };
       // pattern 资源 emit-in-compile：查表 + 调 emit 产 tile（同 spec → 1 资源 1 tile，因 dedup 已先于此）
       if (paint.kind === 'pattern') {
         resource.tile = resolvePatternTile(paint, effectivePatterns, round);
       }
-      list.push(resource);
-    }
+      return resource;
+    });
     return { kind: 'resourceRef', id };
   };
-  return { register, resources: () => list };
+  const importResolved = (resource: Extract<SceneResource, { kind: 'paint' }>): PaintValue => {
+    const key = JSON.stringify(resource.spec);
+    const id = insert(key, nextId => ({ ...resource, id: nextId }));
+    return { kind: 'resourceRef', id };
+  };
+  return { register, importResolved, resources: () => list };
 };

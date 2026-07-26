@@ -9,9 +9,9 @@ import { mountSvg, renderToSvgString } from '../../src';
 /**
  * @retikz/vanilla mountSvg（无框架浏览器 DOM，jsdom 环境）
  */
-const sceneOf = (text = 'A'): ReturnType<typeof compileToScene> => {
+const sceneOf = (text = 'A'): ReturnType<typeof compileToScene>['scene'] => {
   const ir: IRScene = { version: 1, type: 'scene', children: [{ type: 'node', id: 'a', position: [0, 0], text }] };
-  return compileToScene(ir);
+  return compileToScene(ir).scene;
 };
 
 describe('@retikz/vanilla mountSvg', () => {
@@ -35,6 +35,20 @@ describe('@retikz/vanilla mountSvg', () => {
     expect(view.root.getAttribute('viewBox')).not.toBe(vb1); // root attrs 已更新
   });
 
+  it('view artifacts 与 update 的 Scene 原子切换', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'first', position: [0, 0], text: 'A' }],
+    };
+    const c = document.createElement('div');
+    const view = mountSvg(c, ir, { compile: { artifacts: { nodeLayouts: true } } });
+
+    expect(view.artifacts).toMatchObject([{ kind: 'nodeLayout', value: { id: 'first' } }]);
+    view.update(sceneOf('B'));
+    expect(view.artifacts).toEqual([]);
+  });
+
   it('idprefix-ssr-mount-parity：同 idPrefix 下 SSR 串与 DOM 的资源 id 一致', () => {
     const ir: IRScene = {
       version: 1,
@@ -56,7 +70,7 @@ describe('@retikz/vanilla mountSvg', () => {
         },
       ],
     };
-    const scene = compileToScene(ir);
+    const scene = compileToScene(ir).scene;
     const str = renderToSvgString(scene, { output: { idPrefix: 'fig' } });
     const c = document.createElement('div');
     mountSvg(c, scene, { output: { idPrefix: 'fig' } });

@@ -26,13 +26,21 @@ One `way` can mix node ids, Cartesian coordinates, polar coordinates, and object
 
 <ComponentPreview files="draw-way-types" size="sm" />
 
+### Single-axis connections
+
+`{ horizontalTo }` connects only to the target x, while `{ verticalTo }` connects only to the target y. Each emits one `axis-line` Step, unlike the two segments produced by `-\|` / `\|-`. Directions use the current Scope's local axes.
+
+<ComponentPreview files="axis-line" size="sm" />
+
+The operator value accepts only Cartesian coordinates, NodeTarget, or their string shorthand. `parseWay` rejects relative, polar, offset, and between targets, as well as objects containing multiple Way operators.
+
 ### Folds
 
-Switch the fold direction and watch which orthogonal projection becomes the corner. The gray dotted line only marks the direct connection between the endpoints.
+Switch among four fold directions and watch the blue path pass through one or two orthogonal corners. In `-\|-` / `\|-\|` modes, `fraction` moves the middle leg through `0..1` and defaults to `0.5`; the gray dotted line only marks the direct endpoint connection.
 
 <Comparison target="tikz" title="Fold Syntax">
 
-These raw literals follow TikZ path syntax: `(A) -| (B)` / `(A) |- (B)`. `'-|'` goes horizontal then vertical; `'|-'` goes vertical then horizontal.
+`'-|'` / `'|-'` follow the two-leg TikZ path syntax `(A) -| (B)` / `(A) |- (B)`. `'-|-'` / `'|-|'` add the common three-leg flowchart form. Bare tokens use the midpoint; `{ via: '-|-', fraction: 0.3 }` positions the middle leg explicitly.
 
 </Comparison>
 
@@ -69,6 +77,7 @@ This section zooms in on the local expansion from `way` to `<Path>` / `<Step>`. 
 | Category                         | Scan advance              | Output                          |
 | -------------------------------- | ------------------------- | ------------------------------- |
 | target                           | Current item              | First `move`, then `line`       |
+| horizontalTo / verticalTo        | Current item              | One `axis-line` Step            |
 | `-\|` / `\|-`, curve / bend etc. | Operator + next target    | One matching fold or curve Step |
 | arc / circle / ellipse           | Current operator only     | One shape Step; next item stays |
 | `{ label }`                      | Hold for the next segment | No Step of its own              |
@@ -83,20 +92,20 @@ Finally, `<Draw>` expands the Step sequence into `<Step>` children of `<Path>` a
     {
       label: 'WayItem classification and following-target validation',
       path: 'packages/kernel/core/src/parsers/way.ts',
-      startLine: 181,
-      endLine: 230,
+      startLine: 240,
+      endLine: 333,
     },
     {
       label: 'Sequential way reduction and pending-label state',
       path: 'packages/kernel/core/src/parsers/way.ts',
-      startLine: 344,
-      endLine: 409,
+      startLine: 450,
+      endLine: 511,
     },
     {
       label: 'Draw expansion into Path + Step',
       path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
-      startLine: 88,
-      endLine: 157,
+      startLine: 66,
+      endLine: 165,
     },
   ]}
 />
@@ -112,8 +121,8 @@ Finally, `<Draw>` expands the Step sequence into `<Step>` children of `<Path>` a
     {
       label: 'Object-form relative-coordinate normalization',
       path: 'packages/kernel/core/src/parsers/way.ts',
-      startLine: 168,
-      endLine: 179,
+      startLine: 229,
+      endLine: 240,
     },
     {
       label: 'String-form relative-coordinate normalization',
@@ -134,19 +143,21 @@ Finally, `<Draw>` expands the Step sequence into `<Step>` children of `<Path>` a
 
 ### WayItem
 
-| Form                   | Example                                                                                         | Meaning                                                                                  |
-| ---------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Node id                | `'a'`                                                                                           | Reference a Node in the same diagram; endpoint auto-attaches to border                   |
-| Explicit anchor        | `{ id: 'a', anchor: 'top' }` or `'a.top'`                                                       | Lock to a named anchor / angle / edge proportional point; object form is the IR contract |
-| Cartesian              | `[120, 0]`                                                                                      | Literal coordinate                                                                       |
-| Polar                  | `{ origin: 'a', angle: 60, radius: 80 }`                                                        | Polar coordinate; see [Positioning](/kernel/concepts/basic/position)                     |
-| Offset placement       | `{ of: 'a', offset: [10, 5] }`                                                                  | Base + `(dx, dy)`, same offset form as `<Node position>`                                 |
-| Proportional placement | `{ between: [{ id: 'a' }, { id: 'b' }], fraction: 0.5 }`                                        | Proportional point along A → B                                                           |
-| Relative               | `{ position: [10, 0], type: DrawWay.Relative }` or `'+10,0'`                                    | Offset from the previous step endpoint without updating prevEnd                          |
-| Accumulate             | `{ position: [10, 0], type: DrawWay.Accumulate }` or `'++10,0'`                                 | Offset from the previous step endpoint and update prevEnd                                |
-| Fold operator          | `'-\|'` / `'\|-'`                                                                               | Turn previous-to-next into a folded segment                                              |
-| Cycle                  | `DrawWay.Cycle`                                                                                 | Close back to the way start                                                              |
-| Curve / shape / label  | `{ curve }` / `{ cubic }` / `{ bend }` / `{ arc }` / `{ circle }` / `{ ellipse }` / `{ label }` | Covered by [Draw](/kernel/components/draw/overview)                                      |
+| Form                    | Example                                                                                         | Meaning                                                                                  |
+| ----------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Node id                 | `'a'`                                                                                           | Reference a Node in the same diagram; endpoint auto-attaches to border                   |
+| Explicit anchor         | `{ id: 'a', anchor: 'top' }` or `'a.top'`                                                       | Lock to a named anchor / angle / edge proportional point; object form is the IR contract |
+| Cartesian               | `[120, 0]`                                                                                      | Literal coordinate                                                                       |
+| Polar                   | `{ origin: 'a', angle: 60, radius: 80 }`                                                        | Polar coordinate; see [Positioning](/kernel/concepts/basic/position)                     |
+| Offset placement        | `{ of: 'a', offset: [10, 5] }`                                                                  | Base + `(dx, dy)`, same offset form as `<Node position>`                                 |
+| Proportional placement  | `{ between: [{ id: 'a' }, { id: 'b' }], fraction: 0.5 }`                                        | Proportional point along A → B                                                           |
+| Relative                | `{ position: [10, 0], type: DrawWay.Relative }` or `'+10,0'`                                    | Offset from the previous step endpoint without updating prevEnd                          |
+| Accumulate              | `{ position: [10, 0], type: DrawWay.Accumulate }` or `'++10,0'`                                 | Offset from the previous step endpoint and update prevEnd                                |
+| Single-axis operator    | `{ horizontalTo: 'a' }` / `{ verticalTo: [120, 0] }`                                            | Connect to the target along one local host axis                                          |
+| Two-leg fold operator   | `'-\|'` / `'\|-'`                                                                               | Turn previous-to-next into a two-leg fold                                                |
+| Three-leg fold operator | `'-\|-'` / `'\|-\|'` / `{ via: '-\|-', fraction: 0.3 }`                                         | Three-leg orthogonal connector; object form is strict and fraction is in `0..1`          |
+| Cycle                   | `DrawWay.Cycle`                                                                                 | Close back to the way start                                                              |
+| Curve / shape / label   | `{ curve }` / `{ cubic }` / `{ bend }` / `{ arc }` / `{ circle }` / `{ ellipse }` / `{ label }` | Covered by [Draw](/kernel/components/draw/overview)                                      |
 
 ### DrawWay
 
@@ -155,6 +166,8 @@ Finally, `<Draw>` expands the Step sequence into `<Step>` children of `<Path>` a
 | `DrawWay.Cycle`      | const-only  | Close keyword; avoids collisions with node ids |
 | `DrawWay.Hv`         | `'-\|'`     | Horizontal then vertical                       |
 | `DrawWay.Vh`         | `'\|-'`     | Vertical then horizontal                       |
+| `DrawWay.Hvh`        | `'-\|-'`    | Horizontal → vertical → horizontal             |
+| `DrawWay.Vhv`        | `'\|-\|'`   | Vertical → horizontal → vertical               |
 | `DrawWay.Relative`   | const-only  | Non-accumulating relative offset               |
 | `DrawWay.Accumulate` | const-only  | Accumulating relative offset                   |
 

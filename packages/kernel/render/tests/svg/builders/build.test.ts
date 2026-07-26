@@ -77,6 +77,23 @@ describe('buildPrim —— primitive → SvgNode', () => {
     expect('opacity' in t0.attrs).toBe(false);
   });
 
+  it.each(['#000000', '#ffffff'])('Core 已解析的 auto-contrast 颜色 %s 原样进入 SVG', fill => {
+    const text: TextPrim = {
+      type: 'text',
+      x: 0,
+      y: 0,
+      lines: [{ text: 'status' }],
+      fontSize: 12,
+      align: 'start',
+      baseline: 'top',
+      lineHeight: 14,
+      measuredWidth: 36,
+      measuredHeight: 14,
+      fill,
+    };
+    expect(buildPrim(text).attrs.fill).toBe(fill);
+  });
+
   it('prim-group-transform-clip：group → g + transform + clip-path（url 经 clipRefUrl）', () => {
     const group: GroupPrim = {
       type: 'group',

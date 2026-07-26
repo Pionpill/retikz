@@ -44,8 +44,8 @@ export const previewSource = controlledPreview.source;
 
 /** 在固定取景中比较 TeX 源码、度量模式、字号与 Node 容器 */
 const Demo: FC = () => {
-  const lowerTex = useLowerTex();
   const values = usePreviewControls(texPlaygroundControls);
+  const lowerTex = useLowerTex({ profile: values.profile });
   return renderTexPlayground(values, lowerTex);
 };
 

@@ -21,7 +21,7 @@ describe('path 级 opacity / fillOpacity / strokeOpacity', () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).opacity).toBe(0.5);
+    expect(findPathPrim(compileToScene(ir).scene.primitives).opacity).toBe(0.5);
   });
 
   it('fillOpacity 透传', () => {
@@ -42,7 +42,7 @@ describe('path 级 opacity / fillOpacity / strokeOpacity', () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).fillOpacity).toBe(0.3);
+    expect(findPathPrim(compileToScene(ir).scene.primitives).fillOpacity).toBe(0.3);
   });
 
   it('IR strokeOpacity → PathPrim.strokeOpacity（命名映射，与 Node 一致）', () => {
@@ -60,7 +60,7 @@ describe('path 级 opacity / fillOpacity / strokeOpacity', () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).strokeOpacity).toBe(0.7);
+    expect(findPathPrim(compileToScene(ir).scene.primitives).strokeOpacity).toBe(0.7);
   });
 
   it('未指定时三个 opacity 字段都是 undefined', () => {
@@ -77,7 +77,7 @@ describe('path 级 opacity / fillOpacity / strokeOpacity', () => {
         },
       ],
     };
-    const p = findPathPrim(compileToScene(ir).primitives);
+    const p = findPathPrim(compileToScene(ir).scene.primitives);
     expect(p.opacity).toBeUndefined();
     expect(p.fillOpacity).toBeUndefined();
     expect(p.strokeOpacity).toBeUndefined();

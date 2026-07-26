@@ -31,7 +31,7 @@ describe('compile path: 多节点连线段独立 clip（bugfix tikz-from-ir.demo
         },
       ],
     };
-    const commands = findPathPrim(compileToScene(ir).primitives).commands;
+    const commands = findPathPrim(compileToScene(ir).scene.primitives).commands;
     // 关键：3 个 move（每段独立起点），共 3 个 line
     expect(commands.filter(c => c.kind === 'move')).toHaveLength(3);
     expect(commands.filter(c => c.kind === 'line')).toHaveLength(3);
@@ -56,7 +56,7 @@ describe('compile path: 多节点连线段独立 clip（bugfix tikz-from-ir.demo
         },
       ],
     };
-    const commands = findPathPrim(compileToScene(ir).primitives).commands;
+    const commands = findPathPrim(compileToScene(ir).scene.primitives).commands;
     // 期望单 sub-path：move 一次 + line 三次
     expect(commands.filter(c => c.kind === 'move')).toHaveLength(1);
     expect(commands).toEqual([move([0, 0]), line([10, 0]), line([20, 0]), line([20, 5])]);

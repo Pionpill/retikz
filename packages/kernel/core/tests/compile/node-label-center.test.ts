@@ -5,7 +5,6 @@ import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { DEFAULT_LABEL_DISTANCE } from '../../src/compile/constants';
-import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text';
 
 const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrim> => {
   const out: Array<TextPrim> = [];
@@ -16,7 +15,7 @@ const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrim> => {
   return out;
 };
 
-const visualMiddle = (t: TextPrim): number => t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
+const visualMiddle = (t: TextPrim): number => t.y;
 
 describe('Node label position center', () => {
   it('draws the label at the node center', () => {
@@ -34,7 +33,7 @@ describe('Node label position center', () => {
       ],
     };
 
-    const scene = compileToScene(ir);
+    const scene = compileToScene(ir).scene;
     const label = collectTexts(scene.primitives).find(t =>
       t.lines.some(l => (typeof l === 'string' ? l : l.text) === 'center label'),
     );
@@ -58,11 +57,11 @@ describe('Node label position center', () => {
       ],
     };
 
-    const defaultLabel = collectTexts(compileToScene(ir).primitives).find(t =>
+    const defaultLabel = collectTexts(compileToScene(ir).scene.primitives).find(t =>
       t.lines.some(l => (typeof l === 'string' ? l : l.text) === 'right label'),
     );
     const customDistance = 40;
-    const customLabel = collectTexts(compileToScene(ir, { labelDistance: customDistance }).primitives).find(t =>
+    const customLabel = collectTexts(compileToScene(ir, { labelDistance: customDistance }).scene.primitives).find(t =>
       t.lines.some(l => (typeof l === 'string' ? l : l.text) === 'right label'),
     );
 

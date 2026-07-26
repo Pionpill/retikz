@@ -112,7 +112,7 @@ describe('Table lowering', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerTables({}), padding: 0 },
-    );
+    ).scene;
 
     expect(scene.layout).toEqual({ x: 0, y: 0, width: 310, height: 63 });
   });
@@ -161,7 +161,7 @@ describe('Table lowering', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
       { composites: [...lowerTables({}), badge], padding: 0 },
-    );
+    ).scene;
     expect(JSON.stringify(scene.primitives)).toContain('Nested');
   });
 

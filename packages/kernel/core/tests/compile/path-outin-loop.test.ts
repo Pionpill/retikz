@@ -64,7 +64,7 @@ describe('out/in 角编译为 cubic 控制点方向', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     const from = firstMove(path);
     const cubic = firstCubic(path);
     const to = cubic.to;
@@ -100,7 +100,7 @@ describe('out/in 与 bendDirection 同给 → out/in 优先', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(withOutIn).primitives);
+    const path = findPathPrim(compileToScene(withOutIn).scene.primitives);
     const from = firstMove(path);
     const cubic = firstCubic(path);
     const outDir = angleDeg(cubic.control1[0] - from[0], cubic.control1[1] - from[1]);
@@ -132,8 +132,8 @@ describe('looseness 调控制点距离', () => {
         },
       ],
     });
-    const tight = firstCubic(findPathPrim(compileToScene(mk(0.5)).primitives));
-    const loose = firstCubic(findPathPrim(compileToScene(mk(2)).primitives));
+    const tight = firstCubic(findPathPrim(compileToScene(mk(0.5)).scene.primitives));
+    const loose = firstCubic(findPathPrim(compileToScene(mk(2)).scene.primitives));
     const from = [0, 0];
     const distTight = Math.hypot(tight.control1[0] - from[0], tight.control1[1] - from[1]);
     const distLoose = Math.hypot(loose.control1[0] - from[0], loose.control1[1] - from[1]);
@@ -163,7 +163,7 @@ describe('self-loop（from==to）成环（非退化直线）', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     const cubic = firstCubic(path);
     // 退化判定：两控制点都贴住端点 (5,5) 则是退化直线/点。自环要求至少一个控制点显著偏离
     const off1 = Math.hypot(cubic.control1[0] - 5, cubic.control1[1] - 5);
@@ -193,7 +193,7 @@ describe('self-loop（from==to）成环（非退化直线）', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     const cubic = firstCubic(path);
     // 控制点张角：自环时两控制点不应重合
     const span = Math.hypot(cubic.control1[0] - cubic.control2[0], cubic.control1[1] - cubic.control2[1]);

@@ -98,7 +98,7 @@ describe('stroke dash offset', () => {
       ],
     };
 
-    const scene = compileToScene(ir);
+    const scene = compileToScene(ir).scene;
 
     expect(firstPath(scene.primitives, '#123')?.dashOffset).toBe(-2);
     expect(firstRect(scene.primitives, 'box')?.dashOffset).toBe(5);

@@ -1,4 +1,4 @@
-import type { CompositeDefinition } from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 
 import type { AnyCellPresentationDefinition, AnyTableStructureDefinition } from '../../contract';
@@ -26,7 +26,7 @@ const encodeRuntimeReference = (reference: string): string =>
 type TableRuntimeEnvelope = Readonly<{
   [TableRuntimeEnvelopeMarker]: true;
   lowerOptions: LowerTablesOptions;
-  composites: ReadonlyArray<CompositeDefinition>;
+  composites: ReadonlyArray<AnyCompositeDefinition>;
 }>;
 
 /** 判断聚合值是否为本模块创建的 runtime envelope */
@@ -92,7 +92,7 @@ const mergeLowerOptions = (envelopes: ReadonlyArray<TableRuntimeEnvelope>): Lowe
 };
 
 /** 按 namespace/type 合并额外 composites */
-const mergeExtraComposites = (envelopes: ReadonlyArray<TableRuntimeEnvelope>): Array<CompositeDefinition> =>
+const mergeExtraComposites = (envelopes: ReadonlyArray<TableRuntimeEnvelope>): Array<AnyCompositeDefinition> =>
   mergeByIdentity(
     envelopes.map(envelope => envelope.composites),
     definition => `${definition.namespace}.${definition.type}`,
@@ -103,7 +103,9 @@ const mergeExtraComposites = (envelopes: ReadonlyArray<TableRuntimeEnvelope>): A
  * 聚合 Table runtime envelopes 并生成 Table 与额外 composite definitions
  * @description 该函数引用稳定，供同一宿主内的多个 Table contribution 共享
  */
-export const makeTableRuntimeComposites = (mergedDatasets: Record<string, unknown>): Array<CompositeDefinition> => {
+export const makeTableRuntimeComposites = (
+  mergedDatasets: Record<string, unknown>,
+): Array<AnyCompositeDefinition> => {
   const envelopes: Array<TableRuntimeEnvelope> = [];
   const datasetEntries: Array<[string, unknown]> = [];
   for (const [reference, value] of Object.entries(mergedDatasets)) {

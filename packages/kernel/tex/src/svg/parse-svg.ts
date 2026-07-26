@@ -1,121 +1,411 @@
-import type { LoweredTex, PathCommand } from '@retikz/core';
+import type { LoweredTex, LoweredTexPaint, LoweredTexPath, PathCommand } from '@retikz/core';
 
+import type { TexLoweringDiagnostic, TexLoweringResult } from '../lower/types';
 import type { Matrix } from './matrix';
 import type { PointMapper } from './path-d';
 
-import { IDENTITY, multiply, parseTransform } from './matrix';
+import { IDENTITY, isFiniteNonSingular, multiply, parseTransform, similarityScale, SvgTransformError } from './matrix';
 import { parsePathD, transformCommands } from './path-d';
 
-/**
- * 从标签属性串里取某属性值（双 / 单引号；MathJax 属性值不含引号字符）
- * @description 名字前要求行首或空白边界——否则 `d` 会误命中 `id=`、`href` 会误命中 `xlink:href=`
- */
-const attr = (attrs: string, name: string): string | undefined => {
-  const m = new RegExp(`(?:^|\\s)${name}\\s*=\\s*['"]([^'"]*)['"]`).exec(attrs);
-  return m ? m[1] : undefined;
+type SvgNode = {
+  name: string;
+  attributes: Map<string, string>;
+  children: Array<SvgNode>;
 };
 
-/** `<rect x y width height>` → 矩形子路径（move + 3 line + close），本地坐标 */
-const rectToCommands = (attrs: string): Array<PathCommand> => {
-  const x = Number(attr(attrs, 'x') ?? 0);
-  const y = Number(attr(attrs, 'y') ?? 0);
-  const w = Number(attr(attrs, 'width') ?? 0);
-  const h = Number(attr(attrs, 'height') ?? 0);
+const HOST_COLOR = Symbol('host-color');
+type EffectiveColor = string | typeof HOST_COLOR;
+
+type PaintContext = {
+  color: EffectiveColor;
+  fill: string;
+  stroke: string;
+  fillOpacity?: number;
+  strokeOpacity?: number;
+  strokeWidth?: number;
+  fillRule?: 'nonzero' | 'evenodd';
+};
+
+type ParsedStyle = Partial<Record<string, string>>;
+
+class SvgLoweringError extends Error {
+  readonly kind: TexLoweringDiagnostic['kind'];
+
+  constructor(kind: TexLoweringDiagnostic['kind'], message: string) {
+    super(message);
+    this.kind = kind;
+  }
+}
+
+const unsupported = (message: string): never => {
+  throw new SvgLoweringError('unsupported-svg', message);
+};
+
+const malformed = (message: string): never => {
+  throw new SvgLoweringError('malformed-svg', message);
+};
+
+const attribute = (node: SvgNode, name: string): string | undefined => node.attributes.get(name);
+
+const parseXml = (source: string): SvgNode => {
+  const root: SvgNode = { name: '#root', attributes: new Map(), children: [] };
+  const stack = [root];
+  const tagPattern = /<!--[\s\S]*?-->|<\/?([a-zA-Z][\w:-]*)([^<>]*?)\/?>/g;
+  let match: RegExpExecArray | null;
+  while ((match = tagPattern.exec(source)) !== null) {
+    if (match[0].startsWith('<!--')) continue;
+    const closing = match[0].startsWith('</');
+    const name = match[1];
+    if (closing) {
+      const current = stack.pop();
+      if (!current || current.name !== name) malformed(`Mismatched closing element: ${name}`);
+      continue;
+    }
+    const attributes = new Map<string, string>();
+    const rawAttributes = match[2];
+    const attributePattern = /([:\w-]+)\s*=\s*(["'])(.*?)\2/g;
+    let attributeMatch: RegExpExecArray | null;
+    while ((attributeMatch = attributePattern.exec(rawAttributes)) !== null) {
+      attributes.set(attributeMatch[1], attributeMatch[3]);
+    }
+    const node: SvgNode = { name, attributes, children: [] };
+    stack.at(-1)?.children.push(node);
+    if (!match[0].endsWith('/>')) stack.push(node);
+  }
+  if (stack.length !== 1) malformed(`Unclosed SVG element: ${stack.at(-1)?.name ?? 'unknown'}`);
+  return root;
+};
+
+const findRootSvg = (root: SvgNode): SvgNode | undefined => {
+  const queue = [...root.children];
+  while (queue.length > 0) {
+    const node = queue.shift();
+    if (!node) continue;
+    if (node.name === 'svg') return node;
+    queue.push(...node.children);
+  }
+  return undefined;
+};
+
+const finiteNumber = (value: string | undefined, fallback?: number): number => {
+  if (value === undefined && fallback !== undefined) return fallback;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) malformed(`Invalid SVG number: ${String(value)}`);
+  return parsed;
+};
+
+const unitInterval = (value: string | undefined): number | undefined => {
+  if (value === undefined) return undefined;
+  const parsed = finiteNumber(value);
+  if (parsed < 0 || parsed > 1) malformed(`SVG opacity must be within 0..1: ${value}`);
+  return parsed;
+};
+
+const parseStyle = (value: string | undefined): ParsedStyle => {
+  const style: ParsedStyle = {};
+  if (!value) return style;
+  for (const declaration of value.split(';')) {
+    const trimmed = declaration.trim();
+    if (!trimmed) continue;
+    const separator = trimmed.indexOf(':');
+    if (separator < 1) malformed(`Malformed SVG style declaration: ${trimmed}`);
+    const property = trimmed.slice(0, separator).trim();
+    const propertyValue = trimmed.slice(separator + 1).trim();
+    if (property === 'vertical-align' || property === 'border') continue;
+    if (
+      property !== 'color' &&
+      property !== 'fill' &&
+      property !== 'stroke' &&
+      property !== 'fill-opacity' &&
+      property !== 'stroke-opacity' &&
+      property !== 'stroke-width' &&
+      property !== 'fill-rule' &&
+      property !== 'opacity'
+    ) {
+      unsupported(`Unsupported SVG style property: ${property}`);
+    }
+    style[property] = propertyValue;
+  }
+  return style;
+};
+
+const presentationValue = (node: SvgNode, style: ParsedStyle, name: string): string | undefined =>
+  style[name] ?? attribute(node, name);
+
+const resolvePaintContext = (
+  parent: PaintContext,
+  node: SvgNode,
+): { paint: PaintContext; opacity?: number; hasOpacity: boolean } => {
+  if (attribute(node, 'clip-path') !== undefined) {
+    unsupported('SVG clip-path is not supported');
+  }
+  const style = parseStyle(attribute(node, 'style'));
+  const colorValue = presentationValue(node, style, 'color');
+  let color = parent.color;
+  if (colorValue !== undefined && colorValue !== 'currentColor') color = colorValue;
+  const fill = presentationValue(node, style, 'fill') ?? parent.fill;
+  const stroke = presentationValue(node, style, 'stroke') ?? parent.stroke;
+  const fillOpacity = unitInterval(presentationValue(node, style, 'fill-opacity')) ?? parent.fillOpacity;
+  const strokeOpacity = unitInterval(presentationValue(node, style, 'stroke-opacity')) ?? parent.strokeOpacity;
+  const strokeWidthValue = presentationValue(node, style, 'stroke-width');
+  const strokeWidth = strokeWidthValue === undefined ? parent.strokeWidth : finiteNumber(strokeWidthValue);
+  if (strokeWidth !== undefined && strokeWidth < 0) malformed(`SVG stroke-width must be non-negative: ${strokeWidth}`);
+  const fillRuleValue = presentationValue(node, style, 'fill-rule') ?? parent.fillRule;
+  if (fillRuleValue !== undefined && fillRuleValue !== 'nonzero' && fillRuleValue !== 'evenodd') {
+    unsupported(`Unsupported SVG fill-rule: ${fillRuleValue}`);
+  }
+  const fillRule = fillRuleValue as PaintContext['fillRule'];
+  const opacityValue = presentationValue(node, style, 'opacity');
+  return {
+    paint: { color, fill, stroke, fillOpacity, strokeOpacity, strokeWidth, fillRule },
+    opacity: unitInterval(opacityValue),
+    hasOpacity: opacityValue !== undefined,
+  };
+};
+
+const materializePaint = (value: string, color: EffectiveColor): LoweredTexPaint => {
+  if (value === 'none') return { kind: 'none' };
+  if (value !== 'currentColor') return { kind: 'color', value };
+  return color === HOST_COLOR ? { kind: 'currentColor' } : { kind: 'color', value: color };
+};
+
+const drawableCount = (node: SvgNode, insideDefs = false): number => {
+  const defs = insideDefs || node.name === 'defs';
+  if (defs) return 0;
+  if (
+    node.name === 'path' ||
+    node.name === 'use' ||
+    node.name === 'rect' ||
+    node.name === 'line' ||
+    node.name === 'polygon'
+  ) {
+    return 1;
+  }
+  return node.children.reduce((count, child) => count + drawableCount(child, false), 0);
+};
+
+const collectDefinitionPaths = (
+  node: SvgNode,
+  insideDefs = false,
+  output = new Map<string, SvgNode>(),
+): Map<string, SvgNode> => {
+  const defs = insideDefs || node.name === 'defs';
+  if (defs && node.name === 'path') {
+    const id = attribute(node, 'id');
+    if (id) output.set(id, node);
+  }
+  for (const child of node.children) collectDefinitionPaths(child, defs, output);
+  return output;
+};
+
+const rectCommands = (node: SvgNode): Array<PathCommand> => {
+  const x = finiteNumber(attribute(node, 'x'), 0);
+  const y = finiteNumber(attribute(node, 'y'), 0);
+  const width = finiteNumber(attribute(node, 'width'), 0);
+  const height = finiteNumber(attribute(node, 'height'), 0);
+  if (width < 0 || height < 0) malformed('SVG rect dimensions must be non-negative');
   return [
     { kind: 'move', to: [x, y] },
-    { kind: 'line', to: [x + w, y] },
-    { kind: 'line', to: [x + w, y + h] },
-    { kind: 'line', to: [x, y + h] },
+    { kind: 'line', to: [x + width, y] },
+    { kind: 'line', to: [x + width, y + height] },
+    { kind: 'line', to: [x, y + height] },
     { kind: 'close' },
   ];
 };
 
-/** 预扫描所有带 id 的 `<path id d>`（`<defs>` 模板字形），供 `<use>` 解引用 */
-const collectDefsPaths = (svg: string): Map<string, string> => {
-  const map = new Map<string, string>();
-  const re = /<path\b([^>]*?)\/?>/g;
-  let hit: RegExpExecArray | null;
-  while ((hit = re.exec(svg)) !== null) {
-    const id = attr(hit[1], 'id');
-    const d = attr(hit[1], 'd');
-    if (id !== undefined && d !== undefined) map.set(id, d);
+const lineCommands = (node: SvgNode): Array<PathCommand> => [
+  { kind: 'move', to: [finiteNumber(attribute(node, 'x1'), 0), finiteNumber(attribute(node, 'y1'), 0)] },
+  { kind: 'line', to: [finiteNumber(attribute(node, 'x2'), 0), finiteNumber(attribute(node, 'y2'), 0)] },
+];
+
+const polygonCommands = (node: SvgNode): Array<PathCommand> => {
+  const numbers = (attribute(node, 'points') ?? '')
+    .trim()
+    .split(/[\s,]+/)
+    .filter(Boolean)
+    .map(Number);
+  if (numbers.length < 4 || numbers.length % 2 !== 0 || numbers.some(value => !Number.isFinite(value))) {
+    malformed('Invalid SVG polygon points');
   }
-  return map;
+  const commands: Array<PathCommand> = [{ kind: 'move', to: [numbers[0], numbers[1]] }];
+  for (let index = 2; index < numbers.length; index += 2) {
+    commands.push({ kind: 'line', to: [numbers[index], numbers[index + 1]] });
+  }
+  commands.push({ kind: 'close' });
+  return commands;
 };
 
-/**
- * 解析 MathJax SVG 为 renderer-agnostic 字形 `LoweredTex`（支持内联字形与 `<defs>`/`<use>` 两种 fontCache）
- * @description 读 viewBox（字体单位，1000/em）；累积嵌套 `<g transform>`（含全局 `scale(1,-1)` y 翻转 + 字形
- *   `translate`）到每个 `<path>` / `<rect>` / `<use>`；坐标经矩阵变换后归一到「左上角原点、y-down、user 单位」：
- *   `(p - viewBoxOrigin) × fontSize/1000`。`fontCache:'none'`：字形 `<path>` 内联（直接 emit）；`'local'`/`'global'`：
- *   字形在 `<defs><path id>`、由 `<use xlink:href="#id">` 引用——`<defs>` 内 path 不直接 emit，经 `<use>` 解引用 emit。
- *   width/height = viewBox × scale；depth = `(viewBox.y + viewBox.height) × scale`。无 viewBox / 解析失败 → null
- */
-export const parseMathJaxSvg = (svg: string, fontSize: number): LoweredTex | null => {
-  const vbMatch = /viewBox\s*=\s*"([^"]+)"/.exec(svg);
-  if (!vbMatch) return null;
-  const vb = vbMatch[1].split(/[\s,]+/).map(Number);
-  if (vb.length < 4 || vb.some(Number.isNaN)) return null;
-  const [vbX, vbY, vbW, vbH] = vb;
-  const scale = fontSize / 1000;
-  const normalize: PointMapper = (x, y) => [(x - vbX) * scale, (y - vbY) * scale];
+const multiplyOpacity = (parent: number | undefined, own: number | undefined): number | undefined => {
+  if (own === undefined) return parent;
+  return parent === undefined ? own : parent * own;
+};
 
-  const defsPaths = collectDefsPaths(svg);
-  const stack: Array<Matrix> = [IDENTITY];
-  const top = (): Matrix => stack[stack.length - 1] ?? IDENTITY;
-  const commands: Array<PathCommand> = [];
-  let defsDepth = 0;
+type EmitContext = {
+  matrix: Matrix;
+  paint: PaintContext;
+  opacity?: number;
+  normalize: PointMapper;
+  fontScale: number;
+  definitions: Map<string, SvgNode>;
+  rootSvg: SvgNode;
+  paths: Array<LoweredTexPath>;
+};
 
-  const tagRe = /<(\/?)([a-zA-Z][\w-]*)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/?)>/g;
-  let hit: RegExpExecArray | null;
-  try {
-    while ((hit = tagRe.exec(svg)) !== null) {
-      const isClose = hit[1] === '/';
-      const name = hit[2];
-      const attrs = hit[3];
-      const selfClose = hit[4] === '/';
-      if (isClose) {
-        if (name === 'defs' && defsDepth > 0) defsDepth--;
-        if (stack.length > 1) stack.pop();
-        continue;
-      }
-      if (name === 'path') {
-        // `<defs>` 内的 id 模板不直接 emit（经 `<use>` 解引用）；内联字形（非 defs）直接 emit
-        const d = attr(attrs, 'd');
-        if (d !== undefined && defsDepth === 0) {
-          const m = multiply(top(), parseTransform(attr(attrs, 'transform')));
-          commands.push(...transformCommands(parsePathD(d), m, normalize));
-        }
-        if (!selfClose) stack.push(top());
-      } else if (name === 'use') {
-        const href = attr(attrs, 'xlink:href') ?? attr(attrs, 'href');
-        const d = href !== undefined ? defsPaths.get(href.replace(/^#/, '')) : undefined;
-        if (d !== undefined) {
-          let m = multiply(top(), parseTransform(attr(attrs, 'transform')));
-          const ux = Number(attr(attrs, 'x') ?? 0);
-          const uy = Number(attr(attrs, 'y') ?? 0);
-          if (ux !== 0 || uy !== 0) m = multiply(m, [1, 0, 0, 1, ux, uy]);
-          commands.push(...transformCommands(parsePathD(d), m, normalize));
-        }
-        if (!selfClose) stack.push(top());
-      } else if (name === 'rect') {
-        const m = multiply(top(), parseTransform(attr(attrs, 'transform')));
-        commands.push(...transformCommands(rectToCommands(attrs), m, normalize));
-        if (!selfClose) stack.push(top());
-      } else if (!selfClose) {
-        if (name === 'defs') defsDepth++;
-        // g / svg / mjx-container / defs：组合 transform（无则不变）压栈，供子节点累积
-        stack.push(multiply(top(), parseTransform(attr(attrs, 'transform'))));
-      }
-    }
-  } catch {
-    return null;
+const emitDrawable = (
+  node: SvgNode,
+  context: EmitContext,
+  matrix: Matrix,
+  paint: PaintContext,
+  opacity: number | undefined,
+): void => {
+  let commands: Array<PathCommand> = [];
+  let effectiveNode = node;
+  let effectiveOpacity = opacity;
+  matrix = multiply(matrix, parseTransform(attribute(node, 'transform')));
+  if (node.name === 'use') {
+    const href = attribute(node, 'href') ?? attribute(node, 'xlink:href');
+    const definition = href ? context.definitions.get(href.replace(/^#/, '')) : undefined;
+    if (definition === undefined)
+      throw new SvgLoweringError('malformed-svg', `Unknown SVG use reference: ${String(href)}`);
+    effectiveNode = definition;
+    const x = finiteNumber(attribute(node, 'x'), 0);
+    const y = finiteNumber(attribute(node, 'y'), 0);
+    matrix = multiply(matrix, [1, 0, 0, 1, x, y]);
+    matrix = multiply(matrix, parseTransform(attribute(effectiveNode, 'transform')));
   }
-
-  return {
-    commands,
-    width: vbW * scale,
-    height: vbH * scale,
-    depth: (vbY + vbH) * scale,
+  if (!isFiniteNonSingular(matrix)) unsupported('SVG drawable transform must be finite and non-singular');
+  if (effectiveNode.name === 'path') {
+    const data = attribute(effectiveNode, 'd');
+    if (data === undefined) throw new SvgLoweringError('malformed-svg', 'SVG path is missing d');
+    commands = parsePathD(data);
+  } else if (effectiveNode.name === 'rect') {
+    commands = rectCommands(effectiveNode);
+  } else if (effectiveNode.name === 'line') {
+    commands = lineCommands(effectiveNode);
+  } else if (effectiveNode.name === 'polygon') {
+    commands = polygonCommands(effectiveNode);
+  } else {
+    unsupported(`Unsupported SVG drawable: ${effectiveNode.name}`);
+  }
+  let definitionPaint = paint;
+  if (effectiveNode !== node) {
+    const definition = resolvePaintContext(paint, effectiveNode);
+    definitionPaint = definition.paint;
+    effectiveOpacity = multiplyOpacity(effectiveOpacity, definition.opacity);
+  }
+  const fill =
+    effectiveNode.name === 'line'
+      ? { kind: 'none' as const }
+      : materializePaint(definitionPaint.fill, definitionPaint.color);
+  let stroke = materializePaint(definitionPaint.stroke, definitionPaint.color);
+  if (definitionPaint.strokeWidth === 0) stroke = { kind: 'none' };
+  const path: LoweredTexPath = {
+    commands: transformCommands(commands, matrix, context.normalize),
+    fill,
+    stroke,
   };
+  if (fill.kind !== 'none' && definitionPaint.fillOpacity !== undefined) path.fillOpacity = definitionPaint.fillOpacity;
+  if (stroke.kind !== 'none') {
+    const scale = similarityScale(matrix);
+    if (scale === undefined)
+      throw new SvgLoweringError('unsupported-svg', 'Visible SVG stroke requires a similarity transform');
+    path.strokeWidth = (definitionPaint.strokeWidth ?? 1) * scale * context.fontScale;
+    if (definitionPaint.strokeOpacity !== undefined) path.strokeOpacity = definitionPaint.strokeOpacity;
+  }
+  if (effectiveOpacity !== undefined) path.opacity = effectiveOpacity;
+  if (definitionPaint.fillRule !== undefined) path.fillRule = definitionPaint.fillRule;
+  context.paths.push(path);
+};
+
+const emitNode = (node: SvgNode, context: EmitContext): void => {
+  if (node.name === 'defs') return;
+  if (node.name === 'svg' && node !== context.rootSvg) unsupported('Nested SVG viewport is not supported');
+  if (node.name === 'text' || node.name === 'foreignObject') unsupported(`Unsupported SVG element: ${node.name}`);
+  const supportedContainer = node.name === 'svg' || node.name === 'g' || node.name === 'mjx-container';
+  const supportedDrawable =
+    node.name === 'path' ||
+    node.name === 'use' ||
+    node.name === 'rect' ||
+    node.name === 'line' ||
+    node.name === 'polygon';
+  if (!supportedContainer && !supportedDrawable) unsupported(`Unsupported SVG element: ${node.name}`);
+
+  const resolved = resolvePaintContext(context.paint, node);
+  if (resolved.hasOpacity && drawableCount(node) > 1) {
+    unsupported('Container opacity with multiple drawables is not supported');
+  }
+  const opacity = multiplyOpacity(context.opacity, resolved.opacity);
+  const matrix = multiply(context.matrix, parseTransform(attribute(node, 'transform')));
+  if (supportedDrawable) {
+    emitDrawable(node, context, context.matrix, resolved.paint, opacity);
+    return;
+  }
+  const childContext = { ...context, matrix, paint: resolved.paint, opacity };
+  for (const child of node.children) emitNode(child, childContext);
+};
+
+/** 解析 MathJax SVG，并保留失败分类 */
+export const parseMathJaxSvgResult = (svg: string, fontSize: number, source = ''): TexLoweringResult<LoweredTex> => {
+  try {
+    if (!Number.isFinite(fontSize) || fontSize <= 0) malformed(`Invalid font size: ${fontSize}`);
+    const document = parseXml(svg);
+    const rootSvg = findRootSvg(document);
+    if (!rootSvg) throw new SvgLoweringError('malformed-svg', 'MathJax SVG root is missing');
+    const viewBox = (attribute(rootSvg, 'viewBox') ?? '')
+      .trim()
+      .split(/[\s,]+/)
+      .map(Number);
+    if (viewBox.length !== 4 || viewBox.some(value => !Number.isFinite(value)) || viewBox[2] <= 0 || viewBox[3] <= 0) {
+      malformed('MathJax SVG requires a positive finite viewBox');
+    }
+    const [viewBoxX, viewBoxY, viewBoxWidth, viewBoxHeight] = viewBox;
+    const fontScale = fontSize / 1000;
+    const normalize: PointMapper = (x, y) => [(x - viewBoxX) * fontScale, (y - viewBoxY) * fontScale];
+    const paths: Array<LoweredTexPath> = [];
+    const initialPaint: PaintContext = {
+      color: HOST_COLOR,
+      fill: 'currentColor',
+      stroke: 'none',
+    };
+    emitNode(rootSvg, {
+      matrix: IDENTITY,
+      paint: initialPaint,
+      normalize,
+      fontScale,
+      definitions: collectDefinitionPaths(rootSvg),
+      rootSvg,
+      paths,
+    });
+    return {
+      ok: true,
+      value: {
+        paths,
+        width: viewBoxWidth * fontScale,
+        height: viewBoxHeight * fontScale,
+        depth: (viewBoxY + viewBoxHeight) * fontScale,
+      },
+    };
+  } catch (error) {
+    const kind =
+      error instanceof SvgLoweringError
+        ? error.kind
+        : error instanceof SvgTransformError && error.kind === 'unsupported'
+          ? 'unsupported-svg'
+          : 'malformed-svg';
+    return {
+      ok: false,
+      diagnostic: {
+        kind,
+        source,
+        message: error instanceof Error ? error.message : String(error),
+      },
+      cacheable: true,
+    };
+  }
+};
+
+/** 把 MathJax SVG 降解为 renderer-agnostic 多路径结果 */
+export const parseMathJaxSvg = (svg: string, fontSize: number): LoweredTex | null => {
+  const result = parseMathJaxSvgResult(svg, fontSize);
+  return result.ok ? result.value : null;
 };

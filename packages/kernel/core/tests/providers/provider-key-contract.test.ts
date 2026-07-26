@@ -37,7 +37,7 @@ describe('provider key contract', () => {
       children: [{ type: 'node', id: 'A', shape: 'ring', position: [0, 0], text: '' }],
     };
 
-    expect(() => compileToScene(ir, { shapes: [ring] })).not.toThrow();
+    expect(() => compileToScene(ir, { shapes: [ring] }).scene).not.toThrow();
   });
 
   it('custom_shape_cannot_override_a_builtin_name', () => {
@@ -55,7 +55,7 @@ describe('provider key contract', () => {
       children: [{ type: 'node', id: 'A', shape: 'rectangle', position: [0, 0], text: '' }],
     };
 
-    expect(() => compileToScene(ir, { shapes: [rectangle] })).toThrow(/duplicate shape registration: "rectangle"/);
+    expect(() => compileToScene(ir, { shapes: [rectangle] }).scene).toThrow(/duplicate shape registration: "rectangle"/);
   });
 
   it('path_generator_definition_declares_name_and_compiles_from_array_options', () => {
@@ -78,7 +78,7 @@ describe('provider key contract', () => {
       ],
     };
 
-    expect(() => compileToScene(ir, { pathGenerators: [segment] })).not.toThrow();
+    expect(() => compileToScene(ir, { pathGenerators: [segment] }).scene).not.toThrow();
   });
 
   it('path_kind_definitions_are_keyed_by_schema_literal_kind', () => {
@@ -100,7 +100,7 @@ describe('provider key contract', () => {
     });
     const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'demo', type: 'badge' }] };
 
-    expect(() => compileToScene(ir, { composites: [badge] })).not.toThrow();
+    expect(() => compileToScene(ir, { composites: [badge] }).scene).not.toThrow();
   });
 
   it('composite_schema_literal_must_match_declared_provider_key', () => {
@@ -153,7 +153,7 @@ describe('provider key contract', () => {
       ],
     };
 
-    expect(() => compileToScene(ir, { composites: [badge] })).not.toThrow();
+    expect(() => compileToScene(ir, { composites: [badge] }).scene).not.toThrow();
   });
 
   it('composite_object_union_rejects_unreadable_or_mixed_provider_keys', () => {

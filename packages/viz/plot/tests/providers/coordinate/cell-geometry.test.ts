@@ -190,7 +190,7 @@ describe('cartesian interval → rect 产物（byte-equal 回归基线）', () =
       { m: 'B', v: 6 },
     ];
     const layer = firstLayer(cartesianBarSpec(), { d: rows }, cartOpts);
-    expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] })).not.toThrow();
+    expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] }).scene).not.toThrow();
   });
 });
 
@@ -380,7 +380,7 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
         },
       ],
     };
-    const compiled = compileToScene(scene);
+    const compiled = compileToScene(scene).scene;
     expect(compiled).toBeTruthy();
   });
 });
@@ -562,7 +562,7 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
     const nodes = nodesOf(layer);
     // step 2、域 [0,5] → 箱 [0,2),[2,4),[4,6] → 3 箱（含空箱可能）；至少有柱、且可编译
     expect(nodes.length).toBeGreaterThanOrEqual(1);
-    expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] })).not.toThrow();
+    expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] }).scene).not.toThrow();
   });
 });
 

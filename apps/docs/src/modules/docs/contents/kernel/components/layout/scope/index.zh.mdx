@@ -3,7 +3,7 @@ title: Scope
 description: Scope 是 Kernel 的局部上下文容器：让一组图元共享坐标变换、样式默认、命名空间、整体引用和裁剪，但不负责绘制或自动布局。
 ---
 
-`<Scope>` 把一组 children 放进同一个局部上下文。它不画新的图元，也不替你计算 plot / table 布局；它只管理这组内容怎样变换、怎样被引用，以及怎样进入 Scene。
+`<Scope>` 把一组 children 放进同一个局部上下文。它不画新的图元，也不替你计算 plot / table 布局；它只管理这组内容怎样变换、怎样按自身包络定位、怎样被引用，以及怎样进入 Scene。
 
 把 Scope 当作「子图边界」：只有一组内容确实需要共享几何或运行时语义时才使用。单纯为了整理 JSX，请拆普通 React 组件。
 
@@ -21,14 +21,15 @@ import { Scope } from '@retikz/react';
 
 ### 何时使用
 
-| 任务              | 使用入口               | Scope 的边界             |
-| ----------------- | ---------------------- | ------------------------ |
-| 整体变换一个子图  | `transforms`           | 不计算子元素原始位置     |
-| 从外部引用整组    | `id` + `boundingShape` | 不把 path 走线计入包络   |
-| 隔离可复用子图 id | `localNamespace`       | `scope.id` 仍注册到外层  |
-| 统一默认值        | `color` / `*Default`   | 元素显式值仍然优先       |
-| 限制可见区域      | `clip`                 | 不定义 renderer 专属语义 |
-| 调整整组栈序      | `zIndex`               | 不重排组内 children      |
+| 任务               | 使用入口               | Scope 的边界             |
+| ------------------ | ---------------------- | ------------------------ |
+| 整体变换一个子图   | `transforms`           | 不计算子元素原始位置     |
+| 按自身锚点对齐子图 | `placement`            | 只引用此前完成的目标     |
+| 从外部引用整组     | `id` + `boundingShape` | 不把 path 走线计入包络   |
+| 隔离可复用子图 id  | `localNamespace`       | `scope.id` 仍注册到外层  |
+| 统一默认值         | `color` / `*Default`   | 元素显式值仍然优先       |
+| 限制可见区域       | `clip`                 | 不定义 renderer 专属语义 |
+| 调整整组栈序       | `zIndex`               | 不重排组内 children      |
 
 <ComponentAlert
   type="warn"
@@ -40,25 +41,37 @@ import { Scope } from '@retikz/react';
 
 五种平移写法与 Node 的相对定位模型一致；`rotate` 与 `scale` 负责局部坐标系的方向和尺度。数组顺序沿用 SVG transform list：最后一项先作用到局部点。
 
-| kind                | 核心字段                       | 作用                         |
-| ------------------- | ------------------------------ | ---------------------------- |
-| `translate`         | `x`, `y`                       | 固定笛卡尔平移               |
-| `polar-translate`   | `origin?`, `angle`, `radius`   | 从原点或 referent 极坐标落点 |
-| `at-translate`      | `direction`, `of`, `distance?` | 落到 referent 的某个方向     |
-| `offset-translate`  | `of`, `offset?`                | 在 referent 上叠加局部偏移   |
-| `between-translate` | `between`, `fraction`          | 落到两个端点的比例位置       |
-| `rotate`            | `degrees`, `cx?`, `cy?`        | 旋转局部坐标系               |
-| `scale`             | `x`, `y?`                      | 等比或分轴缩放               |
+| kind                | 核心字段                       | 作用                          |
+| ------------------- | ------------------------------ | ----------------------------- |
+| `translate`         | `x`, `y`                       | 固定笛卡尔平移                |
+| `polar-translate`   | `origin?`, `angle`, `radius`   | 从原点或 referent 极坐标落点  |
+| `at-translate`      | `direction`, `of`, `distance?` | 落到 referent 的某个方向      |
+| `offset-translate`  | `of`, `offset?`                | 在 referent 上叠加局部偏移    |
+| `between-translate` | `between`, `fraction`          | 落到两个端点的比例位置        |
+| `rotate`            | `degrees`, `pivot?`            | 绕 Scope 自身点旋转           |
+| `scale`             | `x`, `y?`, `pivot?`            | 绕 Scope 自身点等比或分轴缩放 |
 
 ## 例子
 
 ### 局部坐标
 
-`O` / `T` 是 Scope 外的固定参照点。用面板切换七种 transform 输入并调整对应参数时，只有中间的局部坐标轴与点 `q` 整体变化；两条点状辅助投影始终保留 `q` 在局部坐标系中的位置关系。
+`O` / `T` 是 Scope 外的固定参照点，`q` 提供 Scope 的固有包络。面板选择七种 transform 之一，并可在任意模式下独立开关 `placement`；`placement` 不是 transform kind，而是 transforms 完成后的最外层定位。
 
-<ComponentPreview files="scope-translate-basic" size="sm" />
+<ComponentPreview
+  files="scope-translate-basic"
+  size="sm"
+  caption="正方形 q 是唯一包络主体，小圆点只标记局部原点。“自身定位”默认关闭；开启后可在 O / T 间切换定位目标，selfAnchor 会把方形的对应锚点锁定到该目标。此时五种纯平移 transform 的位移会被最终定位抵消，因此面板隐藏无效的 transform 引用点。"
+/>
 
-相对方向始终在当前局部坐标系中解释，因此 Scope 旋转后，`right` 的视觉方向也会随坐标轴旋转。
+`placement.target` 只接受父坐标系 `[x, y]` 或此前完成的 `{ id, anchor?, offset? }`；`selfAnchor` 缺省为 `center`，也可写标准 anchor、数字角度、`{ side, fraction }`、`origin` 或显式局部坐标。
+
+`rotate.pivot` 与 `scale.pivot` 使用同一套自身点并缺省为 `origin`。pivot 只读取 placement 之前的固有包络，因此移动 Scope 不会反过来改变旋转或缩放中心。其它相对方向仍在当前局部坐标系中解释，Scope 旋转后，`right` 的视觉方向会随坐标轴旋转。
+
+<ComponentAlert
+  type="warn"
+  title="v0.5 rotate 写法迁移"
+  description="IR Scope transform 不再接受 rotate.cx / rotate.cy；请改成 pivot: [cx, cy]。Scene Transform 的 cx / cy 仍是 Core lowering 输出，不受影响。"
+/>
 
 ### 整体引用与命名空间
 
@@ -100,19 +113,21 @@ Scope 同时提供 `color`、共享 graphic state 与 `nodeDefault` / `pathDefau
 
 ### 变换与相对定位
 
-七种输入先收敛为 Scene 可消费的 `translate` / `rotate` / `scale`。相对定位则沿当前 Scope chain 做「全局 referent → 反投影到局部 → 叠加 relative → 投影回全局」。
+Scope 先完成 children 的固有局部布局和 rectangle / circle 包络，再在该包络上解析 pivot、lower transforms，最后计算 `placement` 的最外层平移。数组第 0 项最外层、最后一项先作用；placement 会插到第 0 项，成为最后作用的变换。
 
 <ComponentPreview files="scope-coordinate-flow" size="sm" hideCode />
 
-因此 rotate 会改变 `right` 的视觉方向，scale 会改变 offset 的视觉长度。Path 会等 id 可查后再解析端点，并回填到原来的 Group 占位位置；声明顺序、Scope 归属与 clip 约束都不会因为延迟解析而丢失。
+不依赖包络的既有 transform 仍保持「全局 referent → 反投影到局部 → 叠加 relative → 投影回全局」语义；anchor pivot 则在固有包络完成后解析。最终同一条 chain 同时驱动 Group、namespace、layout observer 与自动 viewBox，children 不重复应用 own transform。
+
+zero scale 作为纯视觉变换合法；需要跨该 chain 反投影目标时会同步抛出 `non-invertible scope transform`。Scope placement 的 NodeTarget 只能引用遍历到当前位置以前已完成的 Node、Coordinate 或 Scope；forward、self、descendant 和未闭合 Scope placeholder 都会 fail-loud。
 
 <SourceLinks
   sources={[
     {
       label: 'transform 输入收敛',
       path: 'packages/kernel/core/src/compile/scope.ts',
-      startLine: 34,
-      endLine: 112,
+      startLine: 52,
+      endLine: 163,
     },
     {
       label: '相对定位与 scope chain 投影',
@@ -123,8 +138,8 @@ Scope 同时提供 `color`、共享 graphic state 与 `nodeDefault` / `pathDefau
     {
       label: 'path 延迟解析与原位回填',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 147,
-      endLine: 161,
+      startLine: 152,
+      endLine: 179,
     },
   ]}
 />
@@ -148,8 +163,8 @@ Scope 同时提供 `color`、共享 graphic state 与 `nodeDefault` / `pathDefau
     {
       label: 'Scope 父子 frame 编排',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 312,
-      endLine: 415,
+      startLine: 300,
+      endLine: 627,
     },
   ]}
 />
@@ -167,8 +182,8 @@ Scope 包络只收集 node、coordinate 与嵌套 Scope layout，不包含 path 
     {
       label: 'Scope 包络与 Group 输出',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 312,
-      endLine: 394,
+      startLine: 331,
+      endLine: 627,
     },
     {
       label: '矩形与圆形 synthetic layout',
@@ -193,6 +208,7 @@ Scope 包络只收集 node、coordinate 与嵌套 Scope layout，不包含 path 
 | ---------------- | --------------------------------------- | ------------- | --------------------------------------------------------------------------------------- |
 | `children`       | `ReactNode`                             | —             | Node / Path / Coordinate / 嵌套 Scope                                                   |
 | `transforms`     | `Array<IRTransformInput>`               | —             | 七种局部变换；数组最后一项先作用                                                        |
+| `placement`      | `IRScopePlacement`                      | —             | 把 transforms 后的 `selfAnchor`（缺省 center）对齐父坐标系 target                       |
 | `id`             | `string`                                | —             | 把 Scope 包络注册成外部可引用句柄                                                       |
 | `localNamespace` | `boolean`                               | `false`       | 隔离内部 id；`scope.id` 仍对外可见                                                      |
 | `boundingShape`  | <ApiValues name="ScopeBoundingShape" /> | `'rectangle'` | `scope.id` 的矩形或圆形包络                                                             |

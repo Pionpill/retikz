@@ -4,13 +4,12 @@ import type { ScenePrimitive, TextPrim } from '../../src/contract';
 import type { IRNode, IRNodeLabel, IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text';
 import { NodeLabelSchema, SceneSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 const silent = { onWarn: () => {} };
 
-const visualMiddle = (t: TextPrim): number => t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
+const visualMiddle = (t: TextPrim): number => t.y;
 
 const labelText = (prims: Array<ScenePrimitive>, text: string): TextPrim | undefined =>
   flattenPrims(prims).find(
@@ -108,21 +107,21 @@ describe('Node label placement', () => {
       const scene = compileToScene(
         sceneWithLabel({ text: 'L', position: 'top', placement: 'inside', distance: 6 }),
         silent,
-      );
+      ).scene;
       const label = labelText(scene.primitives, 'L')!;
 
       expect(label.x).toBeCloseTo(0);
-      expect(visualMiddle(label)).toBeCloseTo(-24);
+      expect(visualMiddle(label)).toBeCloseTo(-14.4);
     });
 
     it('数字角度 + inside 沿径向向内偏移', () => {
       const scene = compileToScene(
         sceneWithLabel({ text: 'L', position: 0, placement: 'inside', distance: 8 }),
         silent,
-      );
+      ).scene;
       const label = labelText(scene.primitives, 'L')!;
 
-      expect(label.x).toBeCloseTo(42);
+      expect(label.x).toBeCloseTo(37.6);
       expect(visualMiddle(label)).toBeCloseTo(0);
     });
   });
@@ -137,11 +136,11 @@ describe('Node label placement', () => {
           distance: 6,
         }),
         silent,
-      );
+      ).scene;
       const label = labelText(scene.primitives, 'L')!;
 
       expect(label.x).toBeCloseTo(-25);
-      expect(visualMiddle(label)).toBeCloseTo(-24);
+      expect(visualMiddle(label)).toBeCloseTo(-14.4);
     });
 
     it('right boundary 缺省 fraction=0.5 并向内偏移', () => {
@@ -153,10 +152,10 @@ describe('Node label placement', () => {
           distance: 8,
         }),
         silent,
-      );
+      ).scene;
       const label = labelText(scene.primitives, 'L')!;
 
-      expect(label.x).toBeCloseTo(42);
+      expect(label.x).toBeCloseTo(37.6);
       expect(visualMiddle(label)).toBeCloseTo(0);
     });
 
@@ -164,18 +163,18 @@ describe('Node label placement', () => {
       const start = compileToScene(
         sceneWithLabel({ text: 'S', position: { boundary: 'bottom', fraction: 0 }, distance: 0 }),
         silent,
-      );
+      ).scene;
       const end = compileToScene(
         sceneWithLabel({ text: 'E', position: { boundary: 'bottom', fraction: 1 }, distance: 0 }),
         silent,
-      );
+      ).scene;
       const startLabel = labelText(start.primitives, 'S')!;
       const endLabel = labelText(end.primitives, 'E')!;
 
       expect(startLabel.x).toBeCloseTo(-50);
       expect(endLabel.x).toBeCloseTo(50);
-      expect(visualMiddle(startLabel)).toBeCloseTo(30);
-      expect(visualMiddle(endLabel)).toBeCloseTo(30);
+      expect(visualMiddle(startLabel)).toBeCloseTo(39.6);
+      expect(visualMiddle(endLabel)).toBeCloseTo(39.6);
     });
 
     it('非 box-like shape 使用 boundary position 时抛出诊断', () => {
@@ -190,7 +189,7 @@ describe('Node label placement', () => {
             'circle',
           ),
           silent,
-        ),
+        ).scene,
       ).toThrow(/boundary.*box-like|box-like.*boundary/i);
     });
   });
@@ -203,14 +202,14 @@ describe('Node label placement', () => {
         placement: 'inside',
         distance: 6,
       };
-      const base = compileToScene(sceneWithLabel(label), silent);
+      const base = compileToScene(sceneWithLabel(label), silent).scene;
       const rotated = compileToScene(
         {
           ...sceneWithLabel(label),
           children: [{ ...sceneWithLabel(label).children[0], rotate: 90 }],
         },
         silent,
-      );
+      ).scene;
       const baseLabel = labelText(base.primitives, 'L')!;
       const rotatedLabel = labelText(rotated.primitives, 'L')!;
 
@@ -228,7 +227,7 @@ describe('Node label placement', () => {
           pin: true,
         }),
         silent,
-      );
+      ).scene;
 
       expect(flattenPrims(scene.primitives).some(p => p.type === 'path')).toBe(true);
     });

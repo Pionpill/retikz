@@ -18,7 +18,19 @@ export const wayFoldControls = definePreviewControls({
           options: [
             { value: '-|', label: 'Horizontal → vertical' },
             { value: '|-', label: 'Vertical → horizontal' },
+            { value: '-|-', label: 'Horizontal → vertical → horizontal' },
+            { value: '|-|', label: 'Vertical → horizontal → vertical' },
           ],
+        },
+        {
+          kind: 'range',
+          id: 'fraction',
+          label: 'Middle position',
+          defaultValue: 0.5,
+          min: 0,
+          max: 1,
+          step: 0.05,
+          visibleWhen: { controlId: 'direction', oneOf: ['-|-', '|-|'] },
         },
       ],
     },
@@ -28,6 +40,6 @@ export const wayFoldControls = definePreviewControls({
 /** Stable documentation contract for the current controls */
 export const previewControlContract = {
   controls: wayFoldControls,
-  canonicalValues: { direction: '-|' },
-  relatedApis: ['Draw.way'],
+  canonicalValues: { direction: '-|', fraction: 0.5 },
+  relatedApis: ['Draw.way', 'WayFoldOp.fraction'],
 } satisfies PreviewControlContract;

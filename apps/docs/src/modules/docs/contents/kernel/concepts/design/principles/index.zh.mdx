@@ -17,7 +17,7 @@ retikz 把“描述图形”“解释能力”和“执行输出”分开：作�
 
 <ComponentPreview files="principles-packages" size="sm" hideCode />
 
-图中的实线是数据流：作者输入进入 IR，`compileToScene` 生成 Scene，renderer 再输出 SVG 或 Canvas。虚线是能力依赖：`@retikz/math` 提供纯几何底座，`@retikz/tex` 作为可选 lowerer 接入编译，而不是成为 IR 或 renderer 的特殊分支。
+图中的实线是数据流：作者输入进入 IR，`compileToScene` 同次生成 Scene 与 typed artifacts，renderer 再把 Scene 输出为 SVG 或 Canvas。虚线是能力依赖：`@retikz/math` 提供纯几何底座，`@retikz/tex` 作为可选 lowerer 接入编译，而不是成为 IR 或 renderer 的特殊分支。
 
 | 包                | 第一职责                                     | 明确不拥有                    |
 | ----------------- | -------------------------------------------- | ----------------------------- |
@@ -114,14 +114,14 @@ retikz 把“描述图形”“解释能力”和“执行输出”分开：作�
     {
       label: '创建 compile-local context 并集中解析 registries',
       path: 'packages/kernel/core/src/compile/orchestration/context.ts',
-      startLine: 78,
-      endLine: 115,
+      startLine: 83,
+      endLine: 124,
     },
     {
       label: '把共享 IR 编译为 renderer-agnostic Scene',
       path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 18,
-      endLine: 42,
+      startLine: 25,
+      endLine: 53,
     },
   ]}
 />

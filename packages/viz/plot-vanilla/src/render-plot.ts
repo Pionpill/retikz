@@ -53,7 +53,7 @@ const renderPlotImpl = (
   const scene = compileToScene(
     { version: 1, type: 'scene', children: [validated] },
     { composites: lowerPlots(data, options) },
-  );
+  ).scene;
   const svg = renderToSvgString(scene, { output: { width: options.width, height: options.height } });
   if (!isLineageOptions(options)) return svg;
   const { lineage } = lowerPlotWithLineage(validated, data, options);

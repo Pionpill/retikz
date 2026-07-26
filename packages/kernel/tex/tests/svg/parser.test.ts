@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseMathJaxSvg, parsePathD } from '../../src/svg';
+import { parseMathJaxSvg, parseMathJaxSvgResult, parsePathD } from '../../src/svg';
 
 /**
  * SVG path-d 解析 + MathJax SVG → renderer-agnostic 字形 LoweredTex
@@ -67,7 +67,7 @@ describe('[parse-svg] parseMathJaxSvg', () => {
 
   it('坐标：scale(1,-1) 翻转 + viewBox 归一到左上原点 y-down', () => {
     const r = parseMathJaxSvg(svg, 1000)!;
-    expect(r.commands).toEqual([
+    expect(r.paths[0].commands).toEqual([
       { kind: 'move', to: [0, 0] },
       { kind: 'line', to: [200, 0] },
       { kind: 'line', to: [200, 150] },
@@ -91,7 +91,7 @@ describe('[parse-svg] parseMathJaxSvg', () => {
   it('嵌套 translate 字形偏移累积', () => {
     const s = '<svg viewBox="0 0 100 100"><g transform="translate(10,20)">' + '<path d="M0 0 L5 0"></path></g></svg>';
     const r = parseMathJaxSvg(s, 1000)!;
-    expect(r.commands).toEqual([
+    expect(r.paths[0].commands).toEqual([
       { kind: 'move', to: [10, 20] },
       { kind: 'line', to: [15, 20] },
     ]);
@@ -100,8 +100,8 @@ describe('[parse-svg] parseMathJaxSvg', () => {
   it('rect（分数线）→ 矩形子路径', () => {
     const s = '<svg viewBox="0 0 100 100"><g><rect x="0" y="0" width="50" height="4"></rect></g></svg>';
     const r = parseMathJaxSvg(s, 1000)!;
-    expect(r.commands.filter(c => c.kind === 'move')).toHaveLength(1);
-    expect(r.commands.some(c => c.kind === 'close')).toBe(true);
+    expect(r.paths[0].commands.filter(c => c.kind === 'move')).toHaveLength(1);
+    expect(r.paths[0].commands.some(c => c.kind === 'close')).toBe(true);
   });
 
   it('<defs>/<use> 解引用（fontCache local）：defs path 不直接 emit，use 引用 + 偏移', () => {
@@ -111,9 +111,21 @@ describe('[parse-svg] parseMathJaxSvg', () => {
       '<g><use data-c="67" xlink:href="#g1" x="5" y="20"></use></g></svg>';
     const r = parseMathJaxSvg(s, 1000)!;
     // defs 内的 path 不直接 emit；仅经 use 解引用一次（+ x/y 偏移）
-    expect(r.commands).toEqual([
+    expect(r.paths[0].commands).toEqual([
       { kind: 'move', to: [5, 20] },
       { kind: 'line', to: [15, 20] },
+    ]);
+  });
+
+  it('<use> 同时应用自身 transform 与 x/y 偏移', () => {
+    const s =
+      '<svg viewBox="0 0 100 100" xmlns:xlink="http://www.w3.org/1999/xlink">' +
+      '<defs><path id="g1" d="M0 0 L10 0"></path></defs>' +
+      '<use xlink:href="#g1" x="5" y="10" transform="scale(2)"></use></svg>';
+    const r = parseMathJaxSvg(s, 1000)!;
+    expect(r.paths[0].commands).toEqual([
+      { kind: 'move', to: [10, 20] },
+      { kind: 'line', to: [30, 20] },
     ]);
   });
 
@@ -121,14 +133,20 @@ describe('[parse-svg] parseMathJaxSvg', () => {
     expect(parseMathJaxSvg('<svg><path d="M0 0"></path></svg>', 14)).toBeNull();
   });
 
-  it('未知 transform 不静默按 identity 解析', () => {
+  it('合法但未支持的 transform 归为 unsupported-svg', () => {
     const s = '<svg viewBox="0 0 100 100"><g transform="rotate(90)"><path d="M0 0 L5 0"></path></g></svg>';
-    expect(parseMathJaxSvg(s, 1000)).toBeNull();
+    expect(parseMathJaxSvgResult(s, 1000)).toMatchObject({
+      ok: false,
+      diagnostic: { kind: 'unsupported-svg' },
+    });
   });
 
-  it('transform 参数为 NaN 时返回 null', () => {
+  it('transform 参数为 NaN 时归为 malformed-svg', () => {
     const s = '<svg viewBox="0 0 100 100"><g transform="translate(foo,20)"><path d="M0 0 L5 0"></path></g></svg>';
-    expect(parseMathJaxSvg(s, 1000)).toBeNull();
+    expect(parseMathJaxSvgResult(s, 1000)).toMatchObject({
+      ok: false,
+      diagnostic: { kind: 'malformed-svg' },
+    });
   });
 
   it('matrix transform 参数不足时返回 null', () => {
@@ -136,9 +154,7 @@ describe('[parse-svg] parseMathJaxSvg', () => {
     expect(parseMathJaxSvg(s, 1000)).toBeNull();
   });
 
-  it('空（无 path）→ 合法零尺寸结果（非 null）', () => {
-    const r = parseMathJaxSvg('<svg viewBox="0 0 0 0"></svg>', 14);
-    expect(r).not.toBeNull();
-    expect(r!.commands).toEqual([]);
+  it('非正尺寸 viewBox → null', () => {
+    expect(parseMathJaxSvg('<svg viewBox="0 0 0 0"></svg>', 14)).toBeNull();
   });
 });

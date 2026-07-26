@@ -56,8 +56,8 @@
     "maxPackedBytes": 10240
   },
   "@retikz/tex": {
-    "maxFiles": 40,
-    "maxPackedBytes": 20480
+    "maxFiles": 60,
+    "maxPackedBytes": 30720
   },
   "@retikz/vanilla": {
     "maxFiles": 60,

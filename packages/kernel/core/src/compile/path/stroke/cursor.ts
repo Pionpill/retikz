@@ -28,12 +28,16 @@ export type StrokePreviousTarget = {
 
 /** path stroke step 循环共享的游标状态 */
 export type StrokeCursor = {
+  /** axis-line 激活后的相对坐标基线；null 表示继续使用预归一化结果 */
+  relativeBaseline: IRPosition | null;
   /** 只消费当前索引的前一个 step，推进 previous 与最近 move */
   advance: (index: number) => void;
   /** 读取最近一个有效目标 step，不包含当前 step */
   previous: () => StrokePreviousTarget | null;
   /** 读取指定 step 预解析后的目标 anchor */
   anchorAt: (index: number) => IRPosition | null;
+  /** 用运行时解析结果替换指定 target step 与 anchor */
+  setTargetAt: (index: number, step: StrokeTargetStep, anchor: IRPosition) => void;
   /** 读取最近 move 的原始目标，供 cycle 闭合 */
   lastMoveTarget: () => IRTarget | null;
   /** 读取但不消费特殊形状留下的笔位覆盖 */
@@ -59,7 +63,7 @@ export type CreateStrokeCursorInput = {
 };
 
 /** 判断 step 是否具有普通 `to` 目标 */
-const hasTarget = (step: IRStep): step is StrokeTargetStep =>
+export const isStrokeTargetStep = (step: IRStep): step is StrokeTargetStep =>
   step.kind !== 'cycle' &&
   step.kind !== 'arc' &&
   step.kind !== 'circlePath' &&
@@ -79,7 +83,7 @@ export const createStrokeCursor = ({
   warn,
 }: CreateStrokeCursorInput): StrokeCursor => {
   const anchors: Array<IRPosition | null> = steps.map((step, index) => {
-    if (!hasTarget(step)) return null;
+    if (!isStrokeTargetStep(step)) return null;
     const anchor = localPointOfTarget(step.to, namespaceStack, scopeChain);
     const targetId = nodeIdFromResolvableTarget(step.to);
     if (!anchor && targetId !== undefined) {
@@ -99,23 +103,28 @@ export const createStrokeCursor = ({
   const advance = (index: number): void => {
     if (index <= 0) return;
     const previousStep = steps[index - 1];
-    if (hasTarget(previousStep)) lastTargetIndex = index - 1;
+    if (isStrokeTargetStep(previousStep)) lastTargetIndex = index - 1;
     if (previousStep.kind === 'move') lastMoveTarget = previousStep.to;
   };
 
   const previous = (): StrokePreviousTarget | null => {
     if (lastTargetIndex === -1) return null;
     const step = steps[lastTargetIndex];
-    if (!hasTarget(step)) return null;
+    if (!isStrokeTargetStep(step)) return null;
     const anchor = anchors[lastTargetIndex];
     if (!anchor) return null;
     return { step, anchor };
   };
 
   return {
+    relativeBaseline: null,
     advance,
     previous,
     anchorAt: index => anchors[index] ?? null,
+    setTargetAt: (index, step, anchor) => {
+      steps[index] = step;
+      anchors[index] = anchor;
+    },
     lastMoveTarget: () => lastMoveTarget,
     getPenOverride: () => penOverride,
     takePenOverride: () => {

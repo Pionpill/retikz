@@ -222,7 +222,7 @@ describe('render ⟺ locator parity + scale 兼容', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots(datasets, { resolveField }) },
-    );
+    ).scene;
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 
@@ -258,7 +258,7 @@ describe('render ⟺ locator parity + scale 兼容', () => {
             { resolveField: field => (field === 'x' ? { type: 'categorical' } : undefined) },
           ),
         },
-      ),
+      ).scene,
     ).toThrow(/incompatible/i);
   });
 });

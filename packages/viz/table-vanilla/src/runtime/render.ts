@@ -22,7 +22,7 @@ const renderTableImpl = (
   const scene = compileToScene(
     { version: 1, type: 'scene', children: [parsed] },
     { composites: [...lowerTables(data, lowerOptions), ...(options.composites ?? [])] },
-  );
+  ).scene;
   const svg = renderToSvgString(scene, { output: options.output });
   if (!requestsArtifacts(options)) return svg;
   const manifest = lowerTableWithArtifacts(parsed, data, lowerOptions).manifest;

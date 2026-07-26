@@ -7,6 +7,7 @@ import type {
   NodeLabelPosition,
   NodeLabelRotateMode,
   NodeTextAlign,
+  NodeTextColor,
 } from './constants';
 import type {
   AxisScaleSchema,
@@ -62,6 +63,8 @@ export type BuiltinShapeValue = ValueOf<typeof BuiltinShape>;
 export type NodeShape = BuiltinShapeValue | (string & {});
 
 export type NodeTextAlignValue = ValueOf<typeof NodeTextAlign>;
+
+export type NodeTextColorValue = ValueOf<typeof NodeTextColor>;
 
 export type NodeLabelPositionValue = ValueOf<typeof NodeLabelPosition>;
 

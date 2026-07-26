@@ -53,7 +53,7 @@ const endSpecOf = (
   detail: Record<string, unknown> = {},
   opts?: CompileOptions,
 ): ResolvedArrowEndSpec | undefined => {
-  const path = firstPath(compileToScene(horizontalPathIR(arrow, detail), opts).primitives);
+  const path = firstPath(compileToScene(horizontalPathIR(arrow, detail), opts).scene.primitives);
   return path?.arrowEnd;
 };
 
@@ -117,16 +117,16 @@ const customArrow = (name = 'myTip'): ArrowDefinition =>
 describe('Arrow registry — happy path', () => {
   it('builtin_8_via_registry：内置 8 经 compileToScene 末端坐标 shrink 后逐一等价旧行为', () => {
     // stealth shrink 4.2 × strokeWidth 1 → 末端 [100,0] 朝 [0,0] 缩到 [95.8, 0]
-    const stealth = firstPath(compileToScene(horizontalPathIR('->', { shape: 'stealth' })).primitives);
+    const stealth = firstPath(compileToScene(horizontalPathIR('->', { shape: 'stealth' })).scene.primitives);
     expect(stealth && endpointTo(stealth)).toEqual([95.8, 0]);
     // normal shrink 6 → [94, 0]
-    const normal = firstPath(compileToScene(horizontalPathIR('->', { shape: 'normal' })).primitives);
+    const normal = firstPath(compileToScene(horizontalPathIR('->', { shape: 'normal' })).scene.primitives);
     expect(normal && endpointTo(normal)).toEqual([94, 0]);
     // open shrink 5.25 → [94.75, 0]
-    const open = firstPath(compileToScene(horizontalPathIR('->', { shape: 'open' })).primitives);
+    const open = firstPath(compileToScene(horizontalPathIR('->', { shape: 'open' })).scene.primitives);
     expect(open && endpointTo(open)).toEqual([94.75, 0]);
     // openStealth: tipX 9, contactX 3 - 0.75 → shrink 4.05 → [95.95, 0]
-    const openStealth = firstPath(compileToScene(horizontalPathIR('->', { shape: 'openStealth' })).primitives);
+    const openStealth = firstPath(compileToScene(horizontalPathIR('->', { shape: 'openStealth' })).scene.primitives);
     expect(openStealth && endpointTo(openStealth)).toEqual([95.95, 0]);
   });
 
@@ -195,7 +195,7 @@ describe('Arrow registry — happy path', () => {
   it('custom_arrow_register：注册自定义 ArrowDefinition → compile 不抛、marker 几何进 arrowEnd', () => {
     const ir = horizontalPathIR('->', { shape: 'myTip' });
     const opts: CompileOptions = { arrows: [{ ...customArrow(), name: 'myTip' }] };
-    expect(() => compileToScene(ir, opts)).not.toThrow();
+    expect(() => compileToScene(ir, opts).scene).not.toThrow();
     const spec = endSpecOf('->', { shape: 'myTip' }, opts);
     expect(spec?.shape).toBe('myTip');
     // 自定义 def.emit 几何进 marker
@@ -205,12 +205,12 @@ describe('Arrow registry — happy path', () => {
 
   it('shape_open_string：arrowDetail.shape=myTip（已注册）合法编译', () => {
     const ir = horizontalPathIR('->', { shape: 'myTip' });
-    const scene = compileToScene(ir, { arrows: [{ ...customArrow(), name: 'myTip' }] });
+    const scene = compileToScene(ir, { arrows: [{ ...customArrow(), name: 'myTip' }] }).scene;
     expect(firstPath(scene.primitives)).toBeDefined();
   });
 
   it('marker_renderer_agnostic：core 输出 ResolvedArrowEndSpec、无 SVG <marker> 元素', () => {
-    const scene = compileToScene(horizontalPathIR('->', { shape: 'stealth' }));
+    const scene = compileToScene(horizontalPathIR('->', { shape: 'stealth' })).scene;
     const path = firstPath(scene.primitives);
     expect(path?.arrowEnd).toBeDefined();
     expect(path?.arrowEnd?.shape).toBe('stealth');
@@ -228,7 +228,7 @@ describe('Arrow registry — happy path', () => {
 describe('Arrow registry — boundary', () => {
   it('hollow_linewidth：空心箭头 lineWidth 影响 shrink（open lineWidth 1 → 末端 95.1）', () => {
     // open: tipX 9, lineContactX = 1 - lineWidth/2; lineWidth 1 → lineContactX 0.5 → shrink (9-0.5)*6/10 = 5.1
-    const path = firstPath(compileToScene(horizontalPathIR('->', { shape: 'open', lineWidth: 1 })).primitives);
+    const path = firstPath(compileToScene(horizontalPathIR('->', { shape: 'open', lineWidth: 1 })).scene.primitives);
     expect(path && endpointTo(path)).toEqual([94.9, 0]);
   });
 
@@ -241,18 +241,18 @@ describe('Arrow registry — boundary', () => {
 
   it('scale_length_width：scale 乘 length → markerWidth + shrink 翻倍', () => {
     // normal length 10 → shrink 10 → 末端 90
-    const longPath = firstPath(compileToScene(horizontalPathIR('->', { shape: 'normal', length: 10 })).primitives);
+    const longPath = firstPath(compileToScene(horizontalPathIR('->', { shape: 'normal', length: 10 })).scene.primitives);
     expect(longPath && endpointTo(longPath)).toEqual([90, 0]);
     // stealth default length 6 × scale 2 → shrink 8.4 → 末端 91.6；markerWidth = 6×2 = 12
     const scaled = endSpecOf('->', { shape: 'stealth', scale: 2 });
     expect(scaled?.markerWidth).toBeCloseTo(12, 5);
-    const scaledPath = firstPath(compileToScene(horizontalPathIR('->', { shape: 'stealth', scale: 2 })).primitives);
+    const scaledPath = firstPath(compileToScene(horizontalPathIR('->', { shape: 'stealth', scale: 2 })).scene.primitives);
     expect(scaledPath && endpointTo(scaledPath)).toEqual([91.6, 0]);
   });
 
   it('start_end_override：<-> 起末端 def 各自 resolve（不同 shape）', () => {
     const path = firstPath(
-      compileToScene(horizontalPathIR('<->', { start: { shape: 'open' }, end: { shape: 'stealth' } })).primitives,
+      compileToScene(horizontalPathIR('<->', { start: { shape: 'open' }, end: { shape: 'stealth' } })).scene.primitives,
     );
     expect(path?.arrowStart?.shape).toBe('open');
     expect(path?.arrowEnd?.shape).toBe('stealth');
@@ -262,7 +262,7 @@ describe('Arrow registry — boundary', () => {
   });
 
   it('start_end_override：<-> compile 末端两端都缩（start [4.2,0] / end [95.8,0]，shape stealth）', () => {
-    const path = firstPath(compileToScene(horizontalPathIR('<->', { shape: 'stealth' })).primitives);
+    const path = firstPath(compileToScene(horizontalPathIR('<->', { shape: 'stealth' })).scene.primitives);
     expect(path?.arrowStart).toBeDefined();
     expect(path?.arrowEnd).toBeDefined();
     // 首段 move 端点缩到 [4.2, 0]，末端 line 缩到 [95.8, 0]
@@ -275,9 +275,9 @@ describe('Arrow registry — boundary', () => {
 describe('Arrow registry — error path', () => {
   it('unregistered_shape_throws：未注册 shape 名 → 编译期 throw（带可用名列表）', () => {
     const ir = horizontalPathIR('->', { shape: 'nope' });
-    expect(() => compileToScene(ir)).toThrow(/Unknown arrow shape 'nope'/);
+    expect(() => compileToScene(ir).scene).toThrow(/Unknown arrow shape 'nope'/);
     // 可用名排序列表（内置 8 字母序）
-    expect(() => compileToScene(ir)).toThrow(
+    expect(() => compileToScene(ir).scene).toThrow(
       /circle, diamond, normal, open, openCircle, openDiamond, openStealth, stealth/,
     );
   });
@@ -287,7 +287,7 @@ describe('Arrow registry — error path', () => {
     expect(() =>
       compileToScene(ir, {
         arrows: [{ ...customArrow('stealth'), name: 'stealth' }],
-      }),
+      }).scene,
     ).toThrow(/duplicate arrow registration: "stealth"/);
   });
 
@@ -348,7 +348,7 @@ describe('Arrow registry — interaction', () => {
         ],
       },
       { arrows: [{ ...customArrow(), name: 'myTip' }] },
-    );
+    ).scene;
     const path = firstPath(scene.primitives);
     expect(path?.stroke).toBe('crimson');
     // 箭头未给 color override → emit 收 contextStroke，customArrow fill 落 contextStroke
@@ -358,7 +358,7 @@ describe('Arrow registry — interaction', () => {
 
   it('arrow_with_shrink：自定义 lineContactX → path 端点收缩量正确（lineContactX 2 → shrink 4.8）', () => {
     const ir = horizontalPathIR('->', { shape: 'myTip' });
-    const path = firstPath(compileToScene(ir, { arrows: [{ ...customArrow(), name: 'myTip' }] }).primitives);
+    const path = firstPath(compileToScene(ir, { arrows: [{ ...customArrow(), name: 'myTip' }] }).scene.primitives);
     // myTip tipX 缺省 10, lineContactX 2 → shrink (10-2)*6/10 = 4.8 → 末端 [100-4.8, 0] = [95.2, 0]
     expect(path && endpointTo(path)).toEqual([95.2, 0]);
   });
@@ -375,7 +375,7 @@ describe('Arrow registry — interaction', () => {
     expect(() =>
       compileToScene(horizontalPathIR('->', { shape: 'stealth' }), {
         arrows: [{ ...overridden, name: 'stealth' }],
-      }),
+      }).scene,
     ).toThrow(/duplicate arrow registration: "stealth"/);
   });
 });

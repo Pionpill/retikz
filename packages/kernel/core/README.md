@@ -15,21 +15,23 @@ This package is ESM-only and requires Node.js 24 or newer.
 
 ## Usage
 
-`@retikz/core` is renderer-agnostic: it turns an IR into a serializable `Scene`. A backend (`@retikz/render`) or runtime (`@retikz/react` / `@retikz/vanilla`) then renders that Scene.
+`@retikz/core` is renderer-agnostic: it compiles IR into a serializable `Scene` plus typed compile artifacts. A backend (`@retikz/render`) or runtime (`@retikz/react` / `@retikz/vanilla`) then renders the Scene.
 
 ```ts
 import { compileToScene } from '@retikz/core';
 
-const scene = compileToScene(ir);
+const { scene, artifacts } = compileToScene(ir);
 // optional: compileToScene(ir, { measureText, shapes, arrows, clips, pathKinds, padding, ... })
 // hand `scene` to @retikz/render/svg, @retikz/render/canvas, or a runtime
+// inspect `artifacts` when composite definitions or node layout collection publish compile DTOs
 ```
 
 Most users consume core indirectly through [`@retikz/react`](https://www.npmjs.com/package/@retikz/react) or [`@retikz/vanilla`](https://www.npmjs.com/package/@retikz/vanilla). Use core directly when you build IR programmatically, persist/transport scenes, or write a custom renderer.
 
 ## Exports
 
-- `compileToScene` / `computeLayout` / `fallbackMeasurer` — IR → `Scene`
+- `compileToScene` — IR → `CompileResult` (`Scene` + typed artifacts)
+- `computeLayout` — bounds points → `BoundsRect`; `fallbackMeasurer` — dependency-free default `TextMeasurer`
 - `lowerIRToKernel` — Tier 2 composite IR → JSON-serializable Tier 1 Kernel IR; accepts `composites` and `maxCompositeDepth`
 - IR & `Scene` zod schemas + inferred types
 - `parseWay` / `parseNodeTarget` / `parseTargetSugar` — pure parsers

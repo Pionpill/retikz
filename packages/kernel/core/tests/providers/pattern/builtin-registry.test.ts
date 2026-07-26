@@ -36,7 +36,7 @@ const firstPatternResource = (resources: Array<SceneResource> | undefined): Pain
 
 /** 从 Scene.resources 取首个 pattern 资源的 tile（已解析 motif） */
 const tileOf = (spec: IRPaintSpec, opts?: CompileOptions): ResolvedPatternTile | undefined =>
-  firstPatternResource(compileToScene(patternNodeIR(spec), opts).resources)?.tile;
+  firstPatternResource(compileToScene(patternNodeIR(spec), opts).scene.resources)?.tile;
 
 /** 取 tile.motif 里首个 path 原语 */
 const firstMotifPath = (tile: ResolvedPatternTile | undefined): MarkerPathPrim | undefined =>
@@ -117,8 +117,8 @@ describe('Pattern registry — happy path', () => {
   it('custom_pattern_register：注册自定义 PatternDefinition → tile.motif 进资源', () => {
     const opts: CompileOptions = { patterns: [{ ...customPattern(), name: 'cross' }] };
     const ir = patternNodeIR({ kind: 'pattern', shape: 'cross' });
-    expect(() => compileToScene(ir, opts)).not.toThrow();
-    const tile = firstPatternResource(compileToScene(ir, opts).resources)?.tile;
+    expect(() => compileToScene(ir, opts).scene).not.toThrow();
+    const tile = firstPatternResource(compileToScene(ir, opts).scene.resources)?.tile;
     // 自定义 def.emit 几何进 tile.motif（size 缺省 = defaultSize 10）
     const mp = firstMotifPath(tile);
     expect(mp && pathD(mp)).toBe('M0,0 L10,10');
@@ -126,13 +126,13 @@ describe('Pattern registry — happy path', () => {
 
   it('shape_open_string：pattern.shape=myMotif（已注册）合法编译', () => {
     const ir = patternNodeIR({ kind: 'pattern', shape: 'myMotif' });
-    const scene = compileToScene(ir, { patterns: [{ ...customPattern(), name: 'myMotif' }] });
+    const scene = compileToScene(ir, { patterns: [{ ...customPattern(), name: 'myMotif' }] }).scene;
     expect(firstPatternResource(scene.resources)).toBeDefined();
   });
 
   it('pattern_dedup：同 pattern spec 多处 → 1 资源 1 tile', () => {
     const spec: IRPaintSpec = { kind: 'pattern', shape: 'lines', size: 6 };
-    const scene = compileToScene(patternNodeIR(spec, spec));
+    const scene = compileToScene(patternNodeIR(spec, spec)).scene;
     const patternResources = (scene.resources ?? []).filter(
       (r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern',
     );
@@ -170,7 +170,7 @@ describe('Pattern registry — boundary', () => {
       ],
     };
     const pat: IRPaintSpec = { kind: 'pattern', shape: 'grid' };
-    const scene = compileToScene(patternNodeIR(grad, pat));
+    const scene = compileToScene(patternNodeIR(grad, pat)).scene;
     expect(scene.resources).toHaveLength(2);
     const ids = (scene.resources ?? []).map(r => r.id);
     expect(new Set(ids).size).toBe(2);
@@ -189,9 +189,9 @@ describe('Pattern registry — boundary', () => {
 describe('Pattern registry — error path', () => {
   it('unregistered_pattern_throws：未注册 pattern 名 → 编译期 throw（带可用名）', () => {
     const ir = patternNodeIR({ kind: 'pattern', shape: 'nope' });
-    expect(() => compileToScene(ir)).toThrow(/nope/);
+    expect(() => compileToScene(ir).scene).toThrow(/nope/);
     // 可用名（内置 3 字母序）出现在错误消息里
-    expect(() => compileToScene(ir)).toThrow(/dots, grid, lines/);
+    expect(() => compileToScene(ir).scene).toThrow(/dots, grid, lines/);
   });
 
   it('same_name_duplicate_rejected：patterns 覆盖内置名 → duplicate error（不静默）', () => {
@@ -199,7 +199,7 @@ describe('Pattern registry — error path', () => {
     expect(() =>
       compileToScene(ir, {
         patterns: [{ ...customPattern(), name: 'lines' }],
-      }),
+      }).scene,
     ).toThrow(/duplicate pattern shape registration: "lines"/);
   });
 
@@ -212,7 +212,7 @@ describe('Pattern registry — error path', () => {
     ];
     const badPattern: PatternDefinition = { name: 'bad', emit: () => badMotif };
     const ir = patternNodeIR({ kind: 'pattern', shape: 'bad' });
-    expect(() => compileToScene(ir, { patterns: [{ ...badPattern, name: 'bad' }] })).toThrow();
+    expect(() => compileToScene(ir, { patterns: [{ ...badPattern, name: 'bad' }] }).scene).toThrow();
   });
 });
 
@@ -227,7 +227,7 @@ describe('Pattern registry — interaction', () => {
   it('custom_motif_multiple_prims：emit 产多 MarkerPrimitive（背景 rect + 多 motif 元素）', () => {
     const opts: CompileOptions = { patterns: [{ ...multiPrimPattern(), name: 'multi' }] };
     const tile = firstPatternResource(
-      compileToScene(patternNodeIR({ kind: 'pattern', shape: 'multi', background: '#fff' }), opts).resources,
+      compileToScene(patternNodeIR({ kind: 'pattern', shape: 'multi', background: '#fff' }), opts).scene.resources,
     )?.tile;
     // 背景 rect + ellipse + path = 3 个 motif 元素
     expect(tile?.motif).toHaveLength(3);
@@ -252,7 +252,7 @@ describe('Pattern registry — interaction', () => {
   });
 
   it('round_trip_scene：Scene 的 pattern tile 纯 JSON 无函数（序列化往返不丢）', () => {
-    const scene = compileToScene(patternNodeIR({ kind: 'pattern', shape: 'grid' }));
+    const scene = compileToScene(patternNodeIR({ kind: 'pattern', shape: 'grid' })).scene;
     const tile = firstPatternResource(scene.resources)?.tile;
     expect(tile).toBeDefined();
     // tile.motif 纯 JSON 数据（无函数）：序列化往返等价

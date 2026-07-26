@@ -17,8 +17,8 @@ const findByType = <T extends ScenePrimitive['type']>(
 ): Extract<ScenePrimitive, { type: T }> | undefined =>
   flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: T }> => p.type === type);
 
-const compileNode = (n: Record<string, unknown>): ReturnType<typeof compileToScene> =>
-  compileToScene(scene([{ type: 'node', position: [0, 0], ...n }]));
+const compileNode = (n: Record<string, unknown>): ReturnType<typeof compileToScene>['scene'] =>
+  compileToScene(scene([{ type: 'node', position: [0, 0], ...n }])).scene;
 
 /** 收集 path primitive 的数值坐标，检测 NaN / Infinity 是否进入 Scene */
 const numericLeaves = (v: unknown, out: Array<number> = []): Array<number> => {
@@ -122,7 +122,7 @@ describe('[adversarial] 几何极端：角度环绕死循环 / DoS', () => {
           ],
         },
       ]),
-    );
+    ).scene;
     const path = findByType(compiled.primitives, 'path');
     const move = path!.commands[0];
     // minimumSize=40 floor 外接框 → rx=ry=20；top-right 真实周长点 =(20/√2, −20/√2)≈(14.14, −14.14)；
@@ -444,7 +444,7 @@ describe('[adversarial] boundaryPoint / AABB 数值稳定', () => {
           ],
         },
       ] as IRScene['children']),
-    );
+    ).scene;
     const nums = numericLeaves(compiled.primitives);
     expect(nums.filter(n => !Number.isFinite(n))).toEqual([]);
   });
@@ -477,7 +477,7 @@ describe('[adversarial] boundaryPoint / AABB 数值稳定', () => {
           ],
         },
       ] as IRScene['children']),
-    );
+    ).scene;
     expect(numericLeaves(compiled.primitives).every(Number.isFinite)).toBe(true);
   });
 });
@@ -498,7 +498,7 @@ describe('[adversarial] shape preset × anchor / scale 交叉', () => {
             ],
           },
         ] as IRScene['children']),
-      ),
+      ).scene,
     ).not.toThrow();
   });
 

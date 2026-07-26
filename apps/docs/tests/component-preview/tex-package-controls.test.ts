@@ -38,21 +38,41 @@ describe('@retikz/tex package playground controls', () => {
     expect(texPlaygroundContract.controls.presentation).toBe('panel');
     expect(texPlaygroundEnContract.controls.presentation).toBe('panel');
     expect(enFields).toEqual(zhFields);
-    expect(zhFields.map(field => field.id)).toEqual(['source', 'displayMode', 'fontSize', 'shape', 'padding']);
+    expect(zhFields.map(field => field.id)).toEqual([
+      'source',
+      'profile',
+      'displayMode',
+      'fontSize',
+      'shape',
+      'padding',
+    ]);
     expect(zhFields.find(field => field.id === 'padding')?.visibleWhen).toEqual({
       controlId: 'shape',
       oneOf: ['rectangle', 'circle'],
     });
     expect(texPlaygroundEnContract.canonicalValues).toEqual(texPlaygroundContract.canonicalValues);
+    expect(texPlaygroundContract.presetSelector).toEqual({
+      label: '公式示例',
+      customLabel: '自定义',
+    });
+    expect(texPlaygroundEnContract.presetSelector).toEqual({
+      label: 'Formula example',
+      customLabel: 'Custom',
+    });
     expect(presetContractOf(texPlaygroundEnContract)).toEqual(presetContractOf(texPlaygroundContract));
     expect(presetContractOf(texPlaygroundContract).map(preset => preset.id)).toEqual([
       'inline-energy',
       'display-sum',
       'multiline-derivatives',
       'framed-contour',
+      'colored-cancellation',
     ]);
-    expect(texPlaygroundContract.presets.every(preset => Object.keys(preset.values).length === 5)).toBe(true);
+    expect(texPlaygroundContract.presets.every(preset => Object.keys(preset.values).length === 6)).toBe(true);
+    expect(texPlaygroundContract.presets.find(preset => preset.id === 'display-sum')?.values).toEqual(
+      texPlaygroundContract.canonicalValues,
+    );
     expect(texPlaygroundContract.relatedApis).toEqual([
+      'MathJaxEngineOptions.profile',
       'Node.text',
       'IRTexContent.tex',
       'IRTexContent.displayMode',

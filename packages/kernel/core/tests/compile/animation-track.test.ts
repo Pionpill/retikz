@@ -67,7 +67,7 @@ describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
     const prims = compileToScene(
       scene([{ type: 'node', id: 'a', position: [0, 0], animations: [FADE] }]),
       silent,
-    ).primitives;
+    ).scene.primitives;
     const rects = allOfType(prims, 'rect');
     expect(rects.length).toBeGreaterThanOrEqual(1);
     for (const rect of rects) expect(rect.animations).toEqual([FADE]);
@@ -77,7 +77,7 @@ describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
     const prims = compileToScene(
       scene([{ type: 'node', id: 'n', position: [0, 0], text: 'A', animations: [FADE, SPIN] }]),
       silent,
-    ).primitives;
+    ).scene.primitives;
     if (prims[0].type !== 'group') throw new Error('expected group');
     expect(prims[0].animations).toEqual([FADE, SPIN]);
     for (const child of prims[0].children) expect(child.animations).toBeUndefined();
@@ -97,7 +97,7 @@ describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
         },
       ]),
       silent,
-    ).primitives;
+    ).scene.primitives;
     const paths = allOfType(prims, 'path');
     expect(paths.length).toBeGreaterThanOrEqual(1);
     for (const path of paths) expect(path.animations).toEqual([FADE]);
@@ -107,7 +107,7 @@ describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
     const prims = compileToScene(
       scene([{ type: 'scope', id: 's', animations: [FADE], children: [{ type: 'node', id: 'a', position: [0, 0] }] }]),
       silent,
-    ).primitives;
+    ).scene.primitives;
     const groups = prims.filter(p => p.type === 'group');
     expect(groups).toHaveLength(1);
     expect(groups[0].animations).toEqual([FADE]);
@@ -118,7 +118,7 @@ describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
     const built = compileToScene(
       scene([{ type: 'node', id: 'a', position: [0, 0] }], { animations: [CAMERA] }),
       silent,
-    );
+    ).scene;
     expect(built.animations).toEqual([CAMERA]);
   });
 
@@ -144,7 +144,7 @@ describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
     const prims = compileToScene(
       scene([{ type: 'node', id: 'a', position: [0, 0], animations: [custom, objectValued] }]),
       silent,
-    ).primitives;
+    ).scene.primitives;
     for (const rect of allOfType(prims, 'rect')) expect(rect.animations).toEqual([custom, objectValued]);
   });
 });
@@ -154,7 +154,7 @@ describe('非均匀缩放 scaleX / scaleY + origin 支点', () => {
     const prims = compileToScene(
       scene([{ type: 'node', id: 'bar', position: [0, 0], animations: [GROW_UP] }]),
       silent,
-    ).primitives;
+    ).scene.primitives;
     const rects = allOfType(prims, 'rect');
     expect(rects.length).toBeGreaterThanOrEqual(1);
     for (const rect of rects) expect(rect.animations).toEqual([GROW_UP]);
@@ -188,7 +188,7 @@ describe('非均匀缩放 scaleX / scaleY + origin 支点', () => {
 describe('边界', () => {
   it('省略 animations → 图元无 animations 键（settled 等价现状）', () => {
     const rects = allOfType(
-      compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0] }]), silent).primitives,
+      compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0] }]), silent).scene.primitives,
       'rect',
     );
     for (const rect of rects) expect('animations' in rect).toBe(false);
@@ -252,7 +252,7 @@ describe('compile 校验：viewBox ⇔ 根', () => {
     const prims = compileToScene(
       scene([{ type: 'node', id: 'a', position: [0, 0], animations: [CAMERA] }]),
       c,
-    ).primitives;
+    ).scene.primitives;
     expect(c.warnings.some(w => w.code === 'ANIMATION_INVALID_PROPERTY')).toBe(true);
     for (const rect of allOfType(prims, 'rect')) expect(rect.animations).toBeUndefined();
   });
@@ -262,14 +262,14 @@ describe('compile 校验：viewBox ⇔ 根', () => {
     const prims = compileToScene(
       scene([{ type: 'node', id: 'a', position: [0, 0], animations: [CAMERA, FADE] }]),
       c,
-    ).primitives;
+    ).scene.primitives;
     for (const rect of allOfType(prims, 'rect')) expect(rect.animations).toEqual([FADE]);
     expect(c.warnings.filter(w => w.code === 'ANIMATION_INVALID_PROPERTY')).toHaveLength(1);
   });
 
   it('scene 根非 viewBox track → warn + drop（Scene.animations 省略）', () => {
     const c = collector();
-    const built = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0] }], { animations: [FADE] }), c);
+    const built = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0] }], { animations: [FADE] }), c).scene;
     expect(c.warnings.some(w => w.code === 'ANIMATION_INVALID_PROPERTY')).toBe(true);
     expect(built.animations).toBeUndefined();
   });
@@ -280,7 +280,7 @@ describe('交互', () => {
     const prims = compileToScene(
       scene([{ type: 'node', id: 'a', position: [0, 0], meta: { s: 'plot' }, animations: [FADE] }]),
       silent,
-    ).primitives;
+    ).scene.primitives;
     for (const rect of allOfType(prims, 'rect')) {
       expect(rect.id).toBe('a');
       expect(rect.meta).toEqual({ s: 'plot' });
@@ -289,11 +289,11 @@ describe('交互', () => {
   });
 
   it('layout 中立：加 / 删 animations 不改 layout / 几何', () => {
-    const without = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0], text: 'A' }]), silent);
+    const without = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0], text: 'A' }]), silent).scene;
     const withAnim = compileToScene(
       scene([{ type: 'node', id: 'a', position: [0, 0], text: 'A', animations: [FADE, SPIN] }]),
       silent,
-    );
+    ).scene;
     expect(withAnim.layout).toEqual(without.layout);
     const strip = (prims: ReadonlyArray<ScenePrimitive>): Array<Record<string, unknown>> =>
       flattenPrims(prims).map(p => {

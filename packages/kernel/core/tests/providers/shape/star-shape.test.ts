@@ -46,7 +46,7 @@ describe('star — happy path 几何', () => {
     // rect 用精确 AABB（emit 收轴对齐 rect），star 关于中心对称 → 几何中心 = 顶点均值。precision 高避免 round 抖动。
     const compiled = compileToScene(scene([starNode({ points: 5, innerRadius: 16, outerRadius: 40 })]), {
       precision: 6,
-    });
+    }).scene;
     const path = findByType(compiled.primitives, 'path');
     expect(path).toBeDefined();
     const verts = vertexPoints(path!.commands);
@@ -65,7 +65,7 @@ describe('star — happy path 几何', () => {
   });
 
   it('star_emit_closed：emit 产闭合星形 path（首 move、末 close、中间 line × 9）', () => {
-    const compiled = compileToScene(scene([starNode({ points: 5, innerRadius: 16, outerRadius: 40 })]));
+    const compiled = compileToScene(scene([starNode({ points: 5, innerRadius: 16, outerRadius: 40 })])).scene;
     const path = findByType(compiled.primitives, 'path');
     expect(path).toBeDefined();
     const cmds = path!.commands;
@@ -123,7 +123,7 @@ describe('star — happy path 几何', () => {
 
 describe('star — 边界', () => {
   it('star_points_3_minimum：points:3 → 三角星（6 顶点 + close）', () => {
-    const compiled = compileToScene(scene([starNode({ points: 3, innerRadius: 10, outerRadius: 30 })]));
+    const compiled = compileToScene(scene([starNode({ points: 3, innerRadius: 10, outerRadius: 30 })])).scene;
     const path = findByType(compiled.primitives, 'path');
     expect(path).toBeDefined();
     expect(vertexPoints(path!.commands).length).toBe(6);
@@ -134,7 +134,7 @@ describe('star — 边界', () => {
     // innerRadius 接近 outerRadius → 凹角几乎与尖角同半径 → 轮廓近正 2·points 边形。
     const compiled = compileToScene(scene([starNode({ points: 5, innerRadius: 39.5, outerRadius: 40 })]), {
       precision: 6,
-    });
+    }).scene;
     const path = findByType(compiled.primitives, 'path');
     expect(path).toBeDefined();
     const verts = vertexPoints(path!.commands);
@@ -170,12 +170,12 @@ describe('star — 错误路径（paramsSchema 拒绝）', () => {
   it('star_points_lt_3_rejected：points:2 → paramsSchema reject', () => {
     expect(() => star.paramsSchema.parse({ points: 2, innerRadius: 16, outerRadius: 40 })).toThrow();
     // 端到端：compile 同样在 paramsSchema.parse 抛
-    expect(() => compileToScene(scene([starNode({ points: 2, innerRadius: 16, outerRadius: 40 })]))).toThrow();
+    expect(() => compileToScene(scene([starNode({ points: 2, innerRadius: 16, outerRadius: 40 })])).scene).toThrow();
   });
 
   it('star_outer_le_inner_rejected：outerRadius ≤ innerRadius → refine reject', () => {
     expect(() => star.paramsSchema.parse({ points: 5, innerRadius: 40, outerRadius: 40 })).toThrow();
-    expect(() => compileToScene(scene([starNode({ points: 5, innerRadius: 50, outerRadius: 40 })]))).toThrow();
+    expect(() => compileToScene(scene([starNode({ points: 5, innerRadius: 50, outerRadius: 40 })])).scene).toThrow();
   });
 
   it('star_missing_field_rejected：缺 outerRadius → strictObject reject', () => {
@@ -197,7 +197,7 @@ describe('star — 交互（self-rotate / scale / Path 连接）', () => {
     const compiled = compileToScene(
       scene([starNode({ points: 5, innerRadius: 16, outerRadius: 40, rotate: 18 }, { rotate: 12 })]),
       { precision: 6 },
-    );
+    ).scene;
     const group = findByType(compiled.primitives, 'group');
     expect(group).toBeDefined();
     expect(group!.transforms?.some(t => t.kind === 'rotate' && t.degrees === 12)).toBe(true);
@@ -222,8 +222,8 @@ describe('star — 交互（self-rotate / scale / Path 连接）', () => {
     });
     // 端到端：scale:2 的 star → AABB 半轴随半径×2。去掉常量 padding（10/边）后 bbox 跨度严格翻倍。
     const PAD = 10;
-    const base = compileToScene(scene([starNode({ points: 5, innerRadius: 16, outerRadius: 40 })]));
-    const big = compileToScene(scene([starNode({ points: 5, innerRadius: 16, outerRadius: 40 }, { scale: 2 })]));
+    const base = compileToScene(scene([starNode({ points: 5, innerRadius: 16, outerRadius: 40 })])).scene;
+    const big = compileToScene(scene([starNode({ points: 5, innerRadius: 16, outerRadius: 40 }, { scale: 2 })])).scene;
     expect(big.layout.width - 2 * PAD).toBeCloseTo((base.layout.width - 2 * PAD) * 2, 1);
     expect(big.layout.height - 2 * PAD).toBeCloseTo((base.layout.height - 2 * PAD) * 2, 1);
   });
@@ -239,7 +239,7 @@ describe('star — 交互（self-rotate / scale / Path 连接）', () => {
         { type: 'step', kind: 'line', to: [100, -20] },
       ],
     };
-    const compiled = compileToScene(scene([starNode({ points: 5, innerRadius: 16, outerRadius: 40 }), connectPath]));
+    const compiled = compileToScene(scene([starNode({ points: 5, innerRadius: 16, outerRadius: 40 }), connectPath])).scene;
     const paths = allByType(compiled.primitives, 'path');
     const connector = paths.find(p => p.commands.length === 2 && p.commands[0].kind === 'move');
     expect(connector).toBeDefined();

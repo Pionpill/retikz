@@ -50,7 +50,7 @@ describe('builtin path generator and ribbon width profile', () => {
         },
       ]),
       { padding: 0 },
-    );
+    ).scene;
     const prim = firstPathPrim(compiled.primitives);
 
     expect(prim.commands).toEqual([
@@ -78,7 +78,7 @@ describe('builtin path generator and ribbon width profile', () => {
         },
       ]),
       { padding: 0 },
-    );
+    ).scene;
     const prim = firstPathPrim(compiled.primitives);
 
     expect(prim.commands[1]).toEqual({ kind: 'quad', control: [60, 0], to: [120, 40] });
@@ -103,7 +103,7 @@ describe('builtin path generator and ribbon width profile', () => {
         },
       ]),
       { padding: 0 },
-    );
+    ).scene;
     const prim = firstPathPrim(compiled.primitives);
 
     expect(prim.commands).toEqual([
@@ -136,7 +136,7 @@ describe('builtin path generator and ribbon width profile', () => {
             },
           ]),
           { padding: 0 },
-        ).primitives,
+        ).scene.primitives,
       ).commands;
 
     expect(commandsFor(6, 6)[1]).toEqual({ kind: 'line', to: [5, 3] });
@@ -155,7 +155,7 @@ describe('builtin path generator and ribbon width profile', () => {
             ],
           },
         ]),
-      ),
+      ).scene,
     ).toThrow(/parabola.*to/s);
 
     expect(() =>
@@ -169,7 +169,7 @@ describe('builtin path generator and ribbon width profile', () => {
             ],
           },
         ]),
-      ),
+      ).scene,
     ).toThrow();
   });
 
@@ -189,7 +189,7 @@ describe('builtin path generator and ribbon width profile', () => {
             ],
           },
         ]),
-      ),
+      ).scene,
     ).toThrow();
 
     expect(() =>
@@ -207,7 +207,7 @@ describe('builtin path generator and ribbon width profile', () => {
             ],
           },
         ]),
-      ),
+      ).scene,
     ).toThrow();
   });
 
@@ -229,7 +229,7 @@ describe('builtin path generator and ribbon width profile', () => {
         },
       ]),
       { padding: 0 },
-    );
+    ).scene;
     const prim = firstPathPrim(compiled.primitives);
 
     expect(prim.commands.length).toBeGreaterThan(5);
@@ -253,12 +253,12 @@ describe('builtin path generator and ribbon width profile', () => {
     expect(() =>
       compileToScene(scene([{ type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] }]), {
         pathGenerators: [parabola],
-      }),
+      }).scene,
     ).toThrow(/duplicate path generator registration: "parabola"/);
     expect(() =>
       compileToScene(scene([{ type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] }]), {
         ribbonWidthProfiles: [bulge],
-      }),
+      }).scene,
     ).toThrow(/duplicate ribbon width profile registration: "bulge"/);
   });
 
@@ -287,7 +287,7 @@ describe('builtin path generator and ribbon width profile', () => {
         },
       ]),
       { padding: 0 },
-    );
+    ).scene;
     const prim = firstPathPrim(compiled.primitives);
 
     expect(commandPoint(prim.commands[0])).toEqual([0, 0]);

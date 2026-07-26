@@ -43,9 +43,15 @@ React `<Path thickness>` is component / builder sugar that becomes `strokeWidth`
 
 <ZodSchema name="LineStepSchema" />
 
+### Axis line
+
+<ZodSchema name="AxisLineStepSchema" />
+
 ### Fold
 
 <ZodSchema name="FoldStepSchema" />
+
+The strict two-leg variants `-|` / `|-` reject `fraction`. Three-leg `-|-` / `|-|` accepts an optional normalized `fraction` in `0..1`, compiled as `0.5` when omitted. Corners are interpolated from unclipped references before NodeTarget endpoint clipping, and the result still lowers only to line commands.
 
 ### Cycle
 
@@ -124,7 +130,7 @@ For the endpoint rules of proportional placement, see [Placement](/kernel/refere
 | -------------------------------------------- | ------------------------------------------------------ |
 | `lineCap` / `lineJoin`                       | `line cap` / `line join`                               |
 | `strokeOpacity`                              | stroke-only opacity                                    |
-| `kind: 'fold'`                               | `-\|` / `\|-`                                          |
+| `kind: 'fold'`                               | `-\|` / `\|-` / `-\|-` / `\|-\|`                       |
 | `kind: 'cycle'`                              | `cycle`                                                |
 | `kind: 'bend'`                               | `to[bend left=N]` / `to[bend right=N]`                 |
 | `kind: 'arc'`                                | `arc[start angle=…, end angle=…, radius=…]`            |

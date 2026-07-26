@@ -10,7 +10,7 @@ import { line, move } from '../helpers/path-command-factory';
 const findRect = (prims: Array<ScenePrimitive>) => prims.find(p => p.type === 'rect');
 
 const rectSize = (ir: IRScene) => {
-  const r = findRect(compileToScene(ir).primitives);
+  const r = findRect(compileToScene(ir).scene.primitives);
   return r?.type === 'rect' ? { w: r.width, h: r.height } : undefined;
 };
 
@@ -112,7 +112,7 @@ describe('Node spacing（CSS-like padding / margin）', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], padding: { left: 30, right: 10 } }],
     } as unknown as IRScene;
-    const rect = findRect(compileToScene(ir).primitives);
+    const rect = findRect(compileToScene(ir).scene.primitives);
     expect(
       rect?.type === 'rect' ? { left: rect.x, center: rect.x + rect.width / 2, width: rect.width } : undefined,
     ).toEqual({ left: -30, center: -10, width: 40 });
@@ -133,7 +133,7 @@ describe('Node spacing（CSS-like padding / margin）', () => {
         },
       ],
     } as unknown as IRScene;
-    const linePath = compileToScene(ir).primitives.find(p => p.type === 'path');
+    const linePath = compileToScene(ir).scene.primitives.find(p => p.type === 'path');
     if (linePath?.type === 'path') {
       // margin.x=10 → 横向端点 = 默认 padding 8 + 10 = 18
       expect(linePath.commands).toEqual([move([18, 0]), line([100, 0])]);
@@ -155,7 +155,7 @@ describe('Node spacing（CSS-like padding / margin）', () => {
         },
       ],
     } as IRScene;
-    const linePath = compileToScene(ir).primitives.find(p => p.type === 'path');
+    const linePath = compileToScene(ir).scene.primitives.find(p => p.type === 'path');
     if (linePath?.type === 'path') {
       // right 方向取 margin.right=10，端点 = 默认 padding 8 + 10 = 18
       expect(linePath.commands).toEqual([move([18, 0]), line([100, 0])]);

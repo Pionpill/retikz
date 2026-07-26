@@ -94,7 +94,7 @@ describe('Shape registry — injection (happy path)', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'hexagon', position: [0, 0] }],
     };
-    const scene = compileToScene(ir, { shapes: [{ ...radialShape(), name: 'hexagon' }] });
+    const scene = compileToScene(ir, { shapes: [{ ...radialShape(), name: 'hexagon' }] }).scene;
     expect(findByType(scene.primitives, 'ellipse')).toBeDefined();
   });
 
@@ -113,7 +113,7 @@ describe('Shape registry — injection (happy path)', () => {
         },
       ],
     };
-    const scene = compileToScene(ir, { shapes: [{ ...radialShape(), name: 'hexagon' }] });
+    const scene = compileToScene(ir, { shapes: [{ ...radialShape(), name: 'hexagon' }] }).scene;
     const linePath = scene.primitives.find(p => p.type === 'path');
     // r = √(8²+8²) = 11.31; 30° → (9.8, 5.66)
     if (linePath?.type === 'path') expect(linePath.commands[0]).toEqual({ kind: 'move', to: [9.8, 5.66] });
@@ -125,7 +125,7 @@ describe('Shape registry — injection (happy path)', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'chip', position: [0, 0] }],
     };
-    const scene = compileToScene(ir, { shapes: [{ ...chipShape(), name: 'chip' }] });
+    const scene = compileToScene(ir, { shapes: [{ ...chipShape(), name: 'chip' }] }).scene;
     expect(scene.primitives.filter(p => p.type === 'rect' || p.type === 'path')).toHaveLength(3);
   });
 
@@ -152,7 +152,7 @@ describe('Shape registry — injection (happy path)', () => {
         { type: 'node', id: 'B', shape: 'cached', position: [20, 0] },
       ],
     };
-    const scene = compileToScene(ir, { shapes: [{ ...cachedShape, name: 'cached' }] });
+    const scene = compileToScene(ir, { shapes: [{ ...cachedShape, name: 'cached' }] }).scene;
     const rects = scene.primitives.filter((p): p is Extract<ScenePrimitive, { type: 'rect' }> => p.type === 'rect');
     expect(rects).toHaveLength(2);
     expect(rects[0]).not.toBe(rects[1]);
@@ -177,7 +177,7 @@ describe('Shape registry — boundary', () => {
         },
       ],
     };
-    expect(compileToScene(ir, { shapes: [] })).toEqual(compileToScene(ir));
+    expect(compileToScene(ir, { shapes: [] }).scene).toEqual(compileToScene(ir).scene);
   });
 
   it('default_rectangle_when_shape_absent: no shape → RectPrim', () => {
@@ -186,7 +186,7 @@ describe('Shape registry — boundary', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
     };
-    expect(findByType(compileToScene(ir).primitives, 'rect')).toBeDefined();
+    expect(findByType(compileToScene(ir).scene.primitives, 'rect')).toBeDefined();
   });
 
   it('synthetic_layouts_have_rectangle_shapedef: coordinate + scope.id resolve via rectangle geometry', () => {
@@ -211,7 +211,7 @@ describe('Shape registry — boundary', () => {
         },
       ],
     };
-    const scene = compileToScene(ir);
+    const scene = compileToScene(ir).scene;
     const linePath = scene.primitives.find(
       (p): p is Extract<ScenePrimitive, { type: 'path' }> =>
         p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
@@ -246,7 +246,7 @@ describe('Shape registry — boundary', () => {
     expect(() =>
       compileToScene(ir, {
         shapes: [{ ...sentinelRect, name: 'rectangle' }],
-      }),
+      }).scene,
     ).toThrow(/duplicate shape registration: "rectangle"/);
   });
 });
@@ -258,10 +258,10 @@ describe('Shape registry — error path', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'cloud', position: [0, 0] }],
     };
-    expect(() => compileToScene(ir)).toThrow(/Unknown shape 'cloud'/);
+    expect(() => compileToScene(ir).scene).toThrow(/Unknown shape 'cloud'/);
     // circle 是内置 shape preset，不在 provider 注册表（裸 'circle' 由 compile 解析到 ellipse，不走查表）
     // 注册表含 polygon：排序后落在 ellipse 与 rectangle 之间。
-    expect(() => compileToScene(ir)).toThrow(/ellipse, polygon, rectangle/);
+    expect(() => compileToScene(ir).scene).toThrow(/ellipse, polygon, rectangle/);
   });
 
   it('unknown_shape_string_in_schema_passes_validation: schema accepts any non-empty string', () => {
@@ -293,8 +293,8 @@ describe('Shape registry — error path', () => {
       children: [{ type: 'node', shape: { type: 'scaledBox', params: { scale: 'wide' } }, position: [0, 0] }],
     };
 
-    expect(() => compileToScene(ir, { shapes: [strictShape] })).toThrow(/shape 'scaledBox'/);
-    expect(() => compileToScene(ir, { shapes: [strictShape] })).toThrow(/children\[0\]\.node\.shape\.params/);
+    expect(() => compileToScene(ir, { shapes: [strictShape] }).scene).toThrow(/shape 'scaledBox'/);
+    expect(() => compileToScene(ir, { shapes: [strictShape] }).scene).toThrow(/children\[0\]\.node\.shape\.params/);
   });
 
   it('custom_shape_anchor_only_center: canonical anchor (top) 通过 AABB 上提不再 throw', () => {
@@ -315,7 +315,7 @@ describe('Shape registry — error path', () => {
       ],
     };
     // top 是 canonical 名，上提后走 AABB rectangle，不再 throw
-    expect(() => compileToScene(ir, { shapes: [{ ...radialShape(), name: 'dot' }] })).not.toThrow();
+    expect(() => compileToScene(ir, { shapes: [{ ...radialShape(), name: 'dot' }] }).scene).not.toThrow();
   });
 
   it('custom_shape_anchor_only_center: 非 canonical 专属 anchor (tip) 仍然 throw', () => {
@@ -334,7 +334,7 @@ describe('Shape registry — error path', () => {
         },
       ],
     };
-    expect(() => compileToScene(ir, { shapes: [{ ...radialShape(), name: 'dot' }] })).toThrow(
+    expect(() => compileToScene(ir, { shapes: [{ ...radialShape(), name: 'dot' }] }).scene).toThrow(
       /Unknown anchor 'tip' for shape 'dot'/,
     );
   });
@@ -363,7 +363,7 @@ describe('Shape registry — interaction', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
     };
-    expect(() => compileToScene(ir, { shapes: [{ ...ovalRect, name: 'rectangle' }] })).toThrow(
+    expect(() => compileToScene(ir, { shapes: [{ ...ovalRect, name: 'rectangle' }] }).scene).toThrow(
       /duplicate shape registration: "rectangle"/,
     );
   });
@@ -380,7 +380,7 @@ describe('Shape registry — interaction', () => {
         },
       };
       const ir: IRScene = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', position: [0, 0] }] };
-      expect(() => compileToScene(ir, { shapes: [{ ...ovalRect, name: 'rectangle' }] })).toThrow(
+      expect(() => compileToScene(ir, { shapes: [{ ...ovalRect, name: 'rectangle' }] }).scene).toThrow(
         /duplicate shape registration: "rectangle"/,
       );
     } finally {
@@ -394,7 +394,7 @@ describe('Shape registry — interaction', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'diamond', position: [0, 0], text: 'D', rotate: 45 }],
     };
-    const group = findByType(compileToScene(ir).primitives, 'group');
+    const group = findByType(compileToScene(ir).scene.primitives, 'group');
     expect(group).toBeDefined();
     expect(group?.transforms?.[0]).toMatchObject({ kind: 'rotate', degrees: 45 });
     expect(group?.children.some(c => c.type === 'path')).toBe(true);
@@ -415,7 +415,7 @@ describe('Shape registry — interaction', () => {
         },
       ],
     };
-    const scene = compileToScene(ir, { shapes: [{ ...radialShape(), name: 'hexagon' }] });
+    const scene = compileToScene(ir, { shapes: [{ ...radialShape(), name: 'hexagon' }] }).scene;
     const linePath = scene.primitives.find(p => p.type === 'path');
     // r = √(8²+8²)=11.31, + margin 10 → 21.31
     if (linePath?.type === 'path' && linePath.commands[0].kind === 'move') {

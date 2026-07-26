@@ -40,7 +40,7 @@ const flatten = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitiv
 };
 
 const pathPrims = (ir: IRScene): Array<PathPrim> =>
-  flatten(compileToScene(ir, { padding: 0 }).primitives).filter(
+  flatten(compileToScene(ir, { padding: 0 }).scene.primitives).filter(
     (primitive): primitive is PathPrim => primitive.type === 'path',
   );
 

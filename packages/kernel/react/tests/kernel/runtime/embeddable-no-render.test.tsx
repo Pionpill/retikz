@@ -1,4 +1,4 @@
-import type { CompositeDefinition } from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
 import type { FC } from 'react';
 
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
@@ -38,7 +38,7 @@ type EmbeddableFixture = FC<FixtureProps> & {
  * 为某 namespace 造一个 composite 定义：节点带 panelId，展开成 id=`panel-${panelId}` 的 Tier1 <Node>，
  *   渲染后 SVG 含 data-retikz-id="panel-..." 供断言
  */
-const makePanelComposite = (namespace: string): CompositeDefinition => {
+const makePanelComposite = (namespace: string): AnyCompositeDefinition => {
   const schema = CompositeBaseSchema.extend({
     namespace: z.literal(namespace),
     type: z.literal('panel'),

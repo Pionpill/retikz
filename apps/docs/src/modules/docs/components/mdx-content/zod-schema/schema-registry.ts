@@ -32,6 +32,16 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
 
   ScopeSchema: { schema: IR.ScopeSchema, label: 'Scope', url: '/kernel/reference/schema/scope#scope' },
+  ScopePlacementSchema: {
+    schema: IR.ScopePlacementSchema,
+    label: 'ScopePlacement',
+    url: '/kernel/reference/schema/scope#scopeplacement',
+  },
+  ScopeSelfPointSchema: {
+    schema: IR.ScopeSelfPointSchema,
+    label: 'ScopeSelfPoint',
+    url: '/kernel/reference/schema/scope#scopeselfpoint',
+  },
   NodeDefaultSchema: {
     schema: IR.NodeDefaultSchema,
     label: 'NodeDefault',
@@ -245,6 +255,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
 
   MoveStepSchema: { schema: IR.MoveStepSchema, label: 'MoveStep', url: '/kernel/reference/schema/path#move' },
   LineStepSchema: { schema: IR.LineStepSchema, label: 'LineStep', url: '/kernel/reference/schema/path#line' },
+  AxisLineStepSchema: {
+    schema: IR.AxisLineStepSchema,
+    label: 'AxisLineStep',
+    url: '/kernel/reference/schema/path#axis-line',
+  },
   FoldStepSchema: { schema: IR.FoldStepSchema, label: 'FoldStep', url: '/kernel/reference/schema/path#fold' },
   CycleStepSchema: { schema: IR.CycleStepSchema, label: 'CycleStep', url: '/kernel/reference/schema/path#cycle' },
   CurveStepSchema: { schema: IR.CurveStepSchema, label: 'CurveStep', url: '/kernel/reference/schema/path#curve' },

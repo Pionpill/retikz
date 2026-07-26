@@ -13,7 +13,7 @@ describe('Coordinate placeholder', () => {
       type: 'scene',
       children: [{ type: 'coordinate', id: 'm', position: [3, 2] }],
     };
-    const scene = compileToScene(ir);
+    const scene = compileToScene(ir).scene;
     expect(scene.primitives).toHaveLength(0);
   });
 
@@ -26,7 +26,7 @@ describe('Coordinate placeholder', () => {
       children: [{ type: 'coordinate', id: 'far', position: [9999, 9999] }],
     };
     const emptyIR: IRScene = { version: 1, type: 'scene', children: [] };
-    expect(compileToScene(farIR).layout).toEqual(compileToScene(emptyIR).layout);
+    expect(compileToScene(farIR).scene.layout).toEqual(compileToScene(emptyIR).scene.layout);
   });
 
   it('path target 字符串可命中 coordinate id', () => {
@@ -45,7 +45,7 @@ describe('Coordinate placeholder', () => {
         },
       ],
     };
-    const scene = compileToScene(ir);
+    const scene = compileToScene(ir).scene;
     const path = scene.primitives.find(p => p.type === 'path');
     expect(path).toBeDefined();
     if (path?.type === 'path') {
@@ -68,7 +68,7 @@ describe('Coordinate placeholder', () => {
         },
       ],
     };
-    const scene = compileToScene(ir);
+    const scene = compileToScene(ir).scene;
     const rect = flattenPrims(scene.primitives).find(p => p.type === 'rect');
     expect(rect).toBeDefined();
     if (rect?.type === 'rect') {
@@ -100,7 +100,7 @@ describe('Coordinate placeholder', () => {
         },
       ],
     };
-    const scene = compileToScene(ir);
+    const scene = compileToScene(ir).scene;
     const path = scene.primitives.find(p => p.type === 'path');
     expect(path).toBeDefined();
     if (path?.type === 'path') {
@@ -115,7 +115,7 @@ describe('Coordinate placeholder', () => {
       type: 'scene',
       children: [{ type: 'coordinate', id: 'b', position: { direction: 'right', of: 'a' } }],
     };
-    expect(() => compileToScene(ir)).toThrow(/Cannot resolve position for coordinate/);
+    expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position for coordinate/);
   });
 
   it('coordinate 在 IR children 顺序里——前向引用不允许', () => {
@@ -128,6 +128,6 @@ describe('Coordinate placeholder', () => {
         { type: 'coordinate', id: 'a', position: [0, 0] },
       ],
     };
-    expect(() => compileToScene(ir)).toThrow(/Cannot resolve position for coordinate/);
+    expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position for coordinate/);
   });
 });

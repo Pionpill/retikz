@@ -1,4 +1,4 @@
-import type { CompileOptions, CompositeDefinition, IRChild, IRScene, IRViewBox, ValueOf } from '@retikz/core';
+import type { AnyCompositeDefinition, CompileOptions, IRChild, IRScene, IRViewBox, ValueOf } from '@retikz/core';
 
 import type { VanillaLayerCache } from './constants';
 
@@ -69,7 +69,7 @@ export type VanillaTier2Contribution = {
   /** 由引用键索引的外部数据集表；不进入 IR */
   datasets: Record<string, unknown>;
   /** 合并同命名空间数据集后生成组合定义；同命名空间贡献必须稳定复用同一个函数引用 */
-  makeComposites: (mergedDatasets: Record<string, unknown>) => Array<CompositeDefinition>;
+  makeComposites: (mergedDatasets: Record<string, unknown>) => Array<AnyCompositeDefinition>;
 };
 
 /** Vanilla Tier2 适配器 */
@@ -118,7 +118,7 @@ export type VanillaNormalizedFigure = {
   /** 可交给核心编译的 IR */
   ir: IRScene;
   /** 适配器贡献聚合出的组合定义 */
-  composites: Array<CompositeDefinition>;
+  composites: Array<AnyCompositeDefinition>;
   /** 运行时元数据，不进入核心 IR */
   runtimeMeta: VanillaRuntimeMeta;
 };

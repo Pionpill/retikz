@@ -1,9 +1,12 @@
 import { z } from 'zod';
 
-import type { CompositeDefinition } from './types';
+import type { JsonValue } from '../../schemas';
+import type {
+  CompositeDefinition,
+} from './types';
 
 /** 把 composite registration schema 规范化为可读取 provider key 的对象分支 */
-const objectSchemasOf = (schema: CompositeDefinition['schema']): Array<z.ZodObject> => {
+const objectSchemasOf = (schema: z.ZodType): Array<z.ZodObject> => {
   if (schema instanceof z.ZodObject) return [schema];
   if (!(schema instanceof z.ZodUnion)) {
     throw new Error(
@@ -25,7 +28,7 @@ const objectSchemasOf = (schema: CompositeDefinition['schema']): Array<z.ZodObje
 };
 
 /** 从 composite 对象分支中读取并校验共同 namespace / type literal */
-const literalValueOf = (schema: CompositeDefinition['schema'], field: 'namespace' | 'type'): string => {
+const literalValueOf = (schema: z.ZodType, field: 'namespace' | 'type'): string => {
   const objects = objectSchemasOf(schema);
   const values = objects.map((object, index) => {
     const node = object.shape[field];
@@ -49,9 +52,31 @@ const literalValueOf = (schema: CompositeDefinition['schema'], field: 'namespace
 
 /**
  * 定义 Tier 2 composite 注册项
- * @remarks 保留 `expand` 的节点泛型，并校验 definition key 与 schema literal 一致
+ * @remarks 保留精确 key、节点、artifact 与互斥执行分支，并校验 definition key 与 schema literal 一致
  */
-export const defineComposite = <T>(definition: CompositeDefinition<T>): CompositeDefinition => {
+export const defineComposite = <
+  const TNamespace extends string,
+  const TType extends string,
+  TNode,
+  TArtifact extends JsonValue = never,
+  const TDefinition extends CompositeDefinition<
+    TNode,
+    TNamespace,
+    TType,
+    TArtifact
+  > = CompositeDefinition<TNode, TNamespace, TType, TArtifact>,
+>(
+  definition: CompositeDefinition<TNode, TNamespace, TType, TArtifact> & TDefinition,
+): TDefinition => {
+  const hasExpand = typeof definition.expand === 'function';
+  const hasCompile = typeof definition.compile === 'function';
+  if (hasExpand === hasCompile) {
+    throw new Error('defineComposite: exactly one of expand or compile must be provided.');
+  }
+  const runtimeArtifactSchema = (definition as { artifactSchema?: unknown }).artifactSchema;
+  if (hasExpand && runtimeArtifactSchema !== undefined) {
+    throw new Error('defineComposite: artifactSchema is only valid for the compile branch.');
+  }
   const namespace = literalValueOf(definition.schema, 'namespace');
   const type = literalValueOf(definition.schema, 'type');
   if (definition.namespace !== namespace) {
@@ -62,5 +87,5 @@ export const defineComposite = <T>(definition: CompositeDefinition<T>): Composit
   if (definition.type !== type) {
     throw new Error(`defineComposite: declared type "${definition.type}" does not match schema literal "${type}".`);
   }
-  return definition as CompositeDefinition;
+  return definition;
 };

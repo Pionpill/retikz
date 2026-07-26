@@ -104,6 +104,24 @@ Enter multiple lines directly in the panel. Newlines create hard lines, while li
 
 `text` wins over `children` whenever both are supplied. Block-level `font` is `{ family?, size?, weight?, style? }`; the other shared visual properties remain in the [styling playground](#styling) at the end of this page.
 
+#### Automatic black-or-white contrast
+
+Set `textColor` to `NodeTextColor.Contrast` and Core selects pure black or white, whichever has higher contrast against the Node's final static opaque `fill`. The keyword resolves after style cascading and independently for each Node, so it can also live in `Scope.nodeDefault`.
+
+<ComponentPreview files="node-auto-contrast" size="sm" />
+
+```tsx
+import { NodeTextColor } from '@retikz/core';
+
+<Node fill="#1e293b" textColor={NodeTextColor.Contrast}>
+  Status
+</Node>;
+```
+
+- Core statically supports CSS named colors, 3/4/6/8-digit hex, and legacy / modern `rgb()` and `hsl()`; it never reads DOM styles, theme variables, or page pixels
+- Translucent / missing fills, `fillOpacity < 1`, gradients, patterns, images, `var()`, and `currentColor` use the fixed `currentColor` fallback and emit `TEXT_AUTO_CONTRAST_UNRESOLVED`
+- Per-line / run `fill`, explicit label colors, and `labelDefault` still win. The keyword affects only body text, labels, and pins that ultimately inherit the Node text color
+
 ### Node labels
 
 `label` attaches extra text to the node border. Single object or array form; `position` accepts the 8-direction enum (default `'top'`), `'center'`, a numeric angle, or a `{ boundary, fraction }` proportional boundary point; `placement` chooses whether the label is offset outside or inside the attachment point and defaults to `'outside'`; `'center'` draws the label directly at the node center with no collision avoidance; `font` / `textColor` inherit from the node when omitted, and `opacity` controls the label's own opacity (0..1, multiplied with the node `opacity`).
@@ -123,15 +141,15 @@ To attach multiple labels, place the same object form in an array:
 />
 ```
 
-`distance` controls the offset from the node border and defaults to `12`. `placement: 'inside'` turns that offset toward the node interior; rectangle nodes can also use `position: { boundary, fraction }` to attach to a proportional point on a specific side.
+`distance` is the net gap, along the placement direction, between the node boundary and the **rotated label visual box**. It defaults to `12`; `0` makes the visual box touch the boundary. `placement: 'inside'` turns the direction inward and preserves the same gap on the inner side. Rectangle nodes can also use `position: { boundary, fraction }` to attach to a proportional point on a specific side. `position: 'center'` always uses the final node rectangle center and ignores `placement` and `distance`.
 
 - `boundary` accepts `'top'` / `'right'` / `'bottom'` / `'left'`
 - `fraction` is the 0..1 proportional position on that side and defaults to `0.5`
 - `placement: 'inside'` cannot be combined with `pin`; keep labels outside when a leader line is needed
 
-`label.rotate` spins the label text around **its own center**: `'radial'` along the node-center → label-center direction, `'tangent'` is its tangent (radial + 90°), a number is an explicit angle (degrees); `keepUpright` flips it 180° when it would otherwise read upside-down. `rotate` only changes orientation, not the placement determined by `position` / `distance`.
+`label.rotate` spins the label text around **its own center**: `'radial'` follows the direction defined by `position`, using the selected side's outward normal for a boundary-fraction position; `'tangent'` is its tangent (radial + 90°), and a number is an explicit angle in degrees. `placement: 'inside'` reverses only the label offset, not this orientation. `keepUpright` flips it 180° when it would otherwise read upside-down. Rotation changes the visual box projection along the placement direction, so the compiler adjusts the label center to preserve the same `distance` gap.
 
-`label.pin` adds a **leader line** from the node border to the label: `pin: true` is a default thin solid line (inherits the label color); `pin: { stroke, strokeWidth, dashPattern, dashOffset }` customizes it; omitted / `false` = no leader. The label is still placed by `position` / `distance` — pin only adds the leader.
+`label.pin` adds a **leader line** from the node border to the label: `pin: true` is a default thin solid line (inherits the label color); `pin: { stroke, strokeWidth, dashPattern, dashOffset }` customizes it; omitted / `false` = no leader. Its endpoint is the exact intersection of the placement ray and the rotated visual box, with no hidden padding; the preceding box geometry still owns label placement.
 
 <Comparison target="tikz" title="Node Content Syntax">
 
@@ -183,29 +201,35 @@ The compiler first resolves the style-inherited `position`, content, and geometr
 
 Node sizing converges in a fixed order: text is measured and wrapped first; `padding` forms the content box; the shape definition computes a visual circumscribed box from that box and its params; then `minimumSize` applies a floor. `scale` affects fonts, spacing, and shape params from the start, while `rotate` is attached to the resolved geometry.
 
-Anchor placement runs only after that provisional layout exists. It resolves both anchors and translates the whole Node; `onNodeLayout`, id registration, Scene output, Scope bbox, and automatic viewBox observe only the final translated geometry.
+Anchor placement runs only after that provisional layout exists. It resolves both anchors and translates the whole Node; opt-in `nodeLayout` artifacts, id registration, Scene output, Scope bbox, and automatic viewBox observe only the final translated geometry.
 
-`label` does not participate in visual shape sizing. Labels are laid out as separate attached primitives, so they do not enlarge the node border, but their extents join `margin` and shadow when the automatic viewBox is collected.
+`label` does not participate in visual shape sizing. Labels are laid out as separate attached primitives, so they do not enlarge the node border, but their extents join `margin` and shadow when the automatic viewBox is collected. The compiler resolves each label visual box in one measurement phase, then uses the final node rectangle, rotated box, and `distance` to resolve its center offset without remeasuring after the rectangle is known. The same box geometry drives the text baseline, pin endpoint, and viewBox. `Node.scale` does not scale the user-unit `distance`; an outer `Scope` transform scales the node, label, and gap together.
 
 <SourceLinks
   sources={[
     {
       label: 'Resolve content and geometry into a Node layout',
       path: 'packages/kernel/core/src/compile/node/layout.ts',
-      startLine: 129,
-      endLine: 293,
+      startLine: 131,
+      endLine: 313,
     },
     {
       label: 'Emit shape, content, and labels as Scene primitives',
       path: 'packages/kernel/core/src/compile/node/emit.ts',
-      startLine: 235,
-      endLine: 256,
+      startLine: 225,
+      endLine: 244,
+    },
+    {
+      label: 'Resolve the rotated visual box and distance into a label center',
+      path: 'packages/kernel/core/src/compile/node/label/geometry.ts',
+      startLine: 150,
+      endLine: 176,
     },
     {
       label: 'Register names and collect automatic viewBox bounds',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 177,
-      endLine: 229,
+      startLine: 211,
+      endLine: 286,
     },
   ]}
 />
@@ -270,20 +294,20 @@ Path / Draw endpoints use a different phase. A path first reserves its drawing-o
     {
       label: 'Register ids after Node layout',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 177,
-      endLine: 229,
+      startLine: 211,
+      endLine: 286,
     },
     {
       label: 'Queue paths for deferred emission',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 255,
-      endLine: 278,
+      startLine: 318,
+      endLine: 343,
     },
     {
       label: 'Resolve paths after name registration',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 147,
-      endLine: 175,
+      startLine: 183,
+      endLine: 209,
     },
   ]}
 />
@@ -328,16 +352,16 @@ The four API sections below document the remaining props with their defaults and
 
 ### Content
 
-| Prop           | Type                                                                                                                                                                                                                                | Default           | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `children`     | `NodeProps['children']`                                                                                                                                                                                                             | —                 | JSX children; without an explicit `text`, strings, numbers, arrays, Fragments, and `<Text>` are normalized in source order                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `text`         | `NodeProps['text']`                                                                                                                                                                                                                 | —                 | Explicit node text; `'\n'` in a string is a hard line break, array = one element per line, and `IRLineSpec` entries provide per-line overrides; wins over `children`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `align`        | <ApiValues name="NodeTextAlign" />                                                                                                                                                                                                  | `'middle'`        | Horizontal alignment of lines within the multi-line text block                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `lineHeight`   | `number`                                                                                                                                                                                                                            | `font.size × 1.2` | Line height of the multi-line block (user units)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `maxTextWidth` | `number`                                                                                                                                                                                                                            | —                 | Wrap threshold (user units); text wraps past it (Western per word / CJK per char) and the box shrinks for short text; not a fixed paragraph width                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `font`         | `IRFont`<br />- `family?: string`<br />- `size?: number` \| <ApiValues name="WebFontSizePreset" /> \| `string`<br />- `weight?:` <ApiValues name="FontWeightKeyword" /> \| `number`<br />- `style?:` <ApiValues name="FontStyle" /> | —                 | Font spec<br />- CSS font family<br />- Size preset, positive `em` / `rem`, or numeric user units<br />- Font weight<br />- Font style                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `textColor`    | `string`                                                                                                                                                                                                                            | `currentColor`    | Text color (block default; per-line override via `IRLineSpec['fill']`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `label`        | `IRNodeLabelInput` \| `Array<IRNodeLabelInput>`                                                                                                                                                                                     | —                 | Extra label(s) attached to the node border; single object or array; `position` accepts the 8-direction enum (default `'top'`), `'center'`, a numeric angle, or `{ boundary, fraction }` on a rectangle boundary; `placement` defaults to `'outside'` and can be `'inside'`; `distance` defaults to 12, `font` / `textColor` inherit from the node, `opacity` controls the label's own opacity 0..1; `rotate` (`'none'` / `'radial'` / `'tangent'` / a number of degrees) + `keepUpright` control label spin; `pin` (`true` default line / `{ stroke, strokeWidth, dashPattern, dashOffset }` styled / omitted = none) draws a leader and is only supported for outside labels |
+| Prop           | Type                                                                                                                                                                                                                                | Default           | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `children`     | `NodeProps['children']`                                                                                                                                                                                                             | —                 | JSX children; without an explicit `text`, strings, numbers, arrays, Fragments, and `<Text>` are normalized in source order                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `text`         | `NodeProps['text']`                                                                                                                                                                                                                 | —                 | Explicit node text; `'\n'` in a string is a hard line break, array = one element per line, and `IRLineSpec` entries provide per-line overrides; wins over `children`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `align`        | <ApiValues name="NodeTextAlign" />                                                                                                                                                                                                  | `'middle'`        | Horizontal alignment of lines within the multi-line text block                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `lineHeight`   | `number`                                                                                                                                                                                                                            | `font.size × 1.2` | Line height of the multi-line block (user units)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `maxTextWidth` | `number`                                                                                                                                                                                                                            | —                 | Wrap threshold (user units); text wraps past it (Western per word / CJK per char) and the box shrinks for short text; not a fixed paragraph width                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `font`         | `IRFont`<br />- `family?: string`<br />- `size?: number` \| <ApiValues name="WebFontSizePreset" /> \| `string`<br />- `weight?:` <ApiValues name="FontWeightKeyword" /> \| `number`<br />- `style?:` <ApiValues name="FontStyle" /> | —                 | Font spec<br />- CSS font family<br />- Size preset, positive `em` / `rem`, or numeric user units<br />- Font weight<br />- Font style                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `textColor`    | `string`                                                                                                                                                                                                                            | `currentColor`    | Text color (block default; per-line override via `IRLineSpec['fill']`); `NodeTextColor.Contrast` selects black / white from a static opaque fill and uses `currentColor` with a warning when resolution is impossible                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `label`        | `IRNodeLabelInput` \| `Array<IRNodeLabelInput>`                                                                                                                                                                                     | —                 | Extra label(s) attached to the node border; single object or array; `position` accepts the 8-direction enum (default `'top'`), `'center'`, a numeric angle, or `{ boundary, fraction }` on a rectangle boundary; `placement` defaults to `'outside'` and can be `'inside'`; `distance` is the boundary-to-rotated-visual-box gap, defaults to 12, and must be finite and non-negative; `center` ignores it; `font` / `textColor` inherit from the node, `opacity` controls the label's own opacity 0..1; `rotate` (`'none'` / `'radial'` / `'tangent'` / a number of degrees) + `keepUpright` control label spin; `pin` (`true` default line / `{ stroke, strokeWidth, dashPattern, dashOffset }` styled / omitted = none) ends exactly on the rotated visual box and is only supported for outside labels |
 
 ### Visual style API
 

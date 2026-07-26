@@ -1,9 +1,9 @@
 import type { IRLabelDefault, IRNodeLabel } from '../../../schemas';
-import type { FontSpec } from '../../text';
-import type { NodeLabelLayout, NodeTextLayoutContext } from '../types';
+import type { FontSpec, LowerTex, TextMeasurer } from '../../text';
+import type { MeasuredNodeLabel, NodeLabelLayout, NodeLayout, NodeTextLayoutContext } from '../types';
 
-import { layoutInlineLine, resolveFontSize, resolveLineRunsWithWarning } from '../../text';
-import { normalizeLabelPosition } from './geometry';
+import { layoutInlineLine, normalizeTextMetrics, resolveFontSize, resolveLineRunsWithWarning } from '../../text';
+import { normalizeLabelPosition, resolveNodeLabelGeometry } from './geometry';
 
 /** 节点附属 label 布局输入 */
 export type LayoutNodeLabelsInput = NodeTextLayoutContext & {
@@ -17,8 +17,35 @@ export type LayoutNodeLabelsInput = NodeTextLayoutContext & {
   rootFontSize: number;
 };
 
-/** 布局节点附属 label */
-export const layoutNodeLabels = (input: LayoutNodeLabelsInput): Array<NodeLabelLayout> | undefined => {
+/** 只为 Node label 包装规范化文字度量 */
+const nodeLabelMeasurer =
+  (measureText: TextMeasurer): TextMeasurer =>
+  (text, font) =>
+    normalizeTextMetrics(measureText(text, font));
+
+/** 只为 Node label 过滤非法 TeX 度量 */
+const nodeLabelLowerTex = (lowerTex: LowerTex | undefined): LowerTex | undefined =>
+  lowerTex === undefined
+    ? undefined
+    : (content, style) => {
+        const lowered = lowerTex(content, style);
+        if (lowered === null) return null;
+        if (
+          !Number.isFinite(lowered.width) ||
+          lowered.width < 0 ||
+          !Number.isFinite(lowered.height) ||
+          lowered.height < 0 ||
+          !Number.isFinite(lowered.depth) ||
+          lowered.depth < 0 ||
+          lowered.depth > lowered.height
+        ) {
+          return null;
+        }
+        return lowered;
+      };
+
+/** 测量节点附属 label，不读取 Node rect */
+export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredNodeLabel> | undefined => {
   const {
     node,
     measureText,
@@ -36,6 +63,8 @@ export const layoutNodeLabels = (input: LayoutNodeLabelsInput): Array<NodeLabelL
     node.label === undefined ? undefined : Array.isArray(node.label) ? node.label : [node.label];
   const texGatingOn = texLowering?.lowerTex !== undefined;
   const inlineWarn = texLowering?.warn ?? ((): void => {});
+  const measureLabelText = nodeLabelMeasurer(measureText);
+  const lowerLabelTex = nodeLabelLowerTex(texLowering?.lowerTex);
   return rawLabels?.map(lab => {
     const labFont = lab.font;
     const labelBaseFontSize = resolveFontSize(labelDefault?.font?.size, {
@@ -62,8 +91,8 @@ export const layoutNodeLabels = (input: LayoutNodeLabelsInput): Array<NodeLabelL
     const isMixed = resolved.hasMath || typeof lab.text === 'object';
     const laid = isMixed
       ? layoutInlineLine(resolved.runs, {
-          measureText,
-          lowerTex: texLowering?.lowerTex,
+          measureText: measureLabelText,
+          lowerTex: lowerLabelTex,
           font: labFontSpec,
           rootFontSize,
           color: labTextColor,
@@ -71,6 +100,14 @@ export const layoutNodeLabels = (input: LayoutNodeLabelsInput): Array<NodeLabelL
           warn: inlineWarn,
         })
       : undefined;
+    const metrics = laid
+      ? {
+          width: laid.width,
+          height: laid.ascent + laid.descent,
+          ascent: laid.ascent,
+          descent: laid.descent,
+        }
+      : normalizeTextMetrics(measureText(plainText, labFontSpec));
     return {
       text: plainText,
       laid,
@@ -85,8 +122,17 @@ export const layoutNodeLabels = (input: LayoutNodeLabelsInput): Array<NodeLabelL
       fontStyle: labStyle,
       rotate: lab.rotate,
       keepUpright: lab.keepUpright,
-      measuredWidth: laid ? laid.width : measureText(plainText, labFontSpec).width,
+      measuredWidth: metrics.width,
+      measuredHeight: metrics.height,
+      ascent: metrics.ascent,
+      descent: metrics.descent,
       pin: lab.pin,
     };
   });
 };
+
+/** 把已测量 label 绑定到最终 Node rect */
+export const layoutNodeLabels = (
+  layout: NodeLayout,
+  labels: Array<MeasuredNodeLabel> | undefined,
+): Array<NodeLabelLayout> | undefined => labels?.map(label => resolveNodeLabelGeometry(layout, label));

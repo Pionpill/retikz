@@ -1,4 +1,4 @@
-import type { CompositeDefinition, ValueOf } from '@retikz/core';
+import type { AnyCompositeDefinition, ValueOf } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { LayoutProps } from '@retikz/react';
 import type {
@@ -42,7 +42,7 @@ export type ReactTableRuntime = Readonly<{
   /** Table definitions 与其它 lowering 选项 */
   lowerOptions: LowerTablesOptions;
   /** Cell 内嵌 Tier 2 内容所需的额外 composites */
-  composites: ReadonlyArray<CompositeDefinition>;
+  composites: ReadonlyArray<AnyCompositeDefinition>;
   /** standalone 模式的 manifest observer */
   onManifest?: (manifest: TableLayoutManifest) => void;
   /** 透传给 Layout 的展示 props */
