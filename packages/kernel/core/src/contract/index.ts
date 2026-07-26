@@ -1,5 +1,6 @@
 export * from './arrow';
 export * from './boundary';
+export * from './box-spacing';
 export * from './clip';
 export * from './composite';
 export * from './path-generator';

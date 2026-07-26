@@ -12,6 +12,7 @@ The `@retikz/core` compile layer turns JSON-serializable IR into a `Scene` and t
 | `compileToScene`              | `(ir: IRScene, options?: CompileOptions) => CompileResult`             | Main compile entry point; returns `scene` and immutable `artifacts` together                 |
 | `lowerIRToKernel`             | `(ir: IRScene, options?: LowerIRToKernelOptions) => LoweredIRScene`    | Recursively expands composites and returns Kernel IR with no Tier 2 nodes                    |
 | `computeLayout`               | `(points, padding, round) => Layout`                                   | Computes the scene bounds from bbox candidate points; usually called inside `compileToScene` |
+| `resolveBoxSpacing`           | `(value, fallback) => BoundsInsets`                                    | Normalizes a uniform or side-specific value into complete four-side spacing                  |
 | `fallbackMeasurer`            | `(text, font) => TextMetrics`                                          | Default text measurer; approximate but runnable, useful as a no-DOM fallback                 |
 | `formatCompileWarning`        | `(warning: CompileWarning) => string`                                  | Formats a structured warning into the standard readable message                              |
 | `formatCompileOccurrence`     | `(locator: CompileOccurrenceLocator) => string`                        | Formats an artifact occurrence locator                                                       |
@@ -20,6 +21,12 @@ The `@retikz/core` compile layer turns JSON-serializable IR into a `Scene` and t
 `compileToScene` traverses and registers nodes and coordinates in the current scope before filling deferred path slots. A path can therefore reference a target declared later in that scope. Output is then stably sorted by ascending `zIndex`; only primitives with the same `zIndex` retain declaration order.
 
 `lowerIRToKernel` performs no layout or Scene emission; it only consumes `composites` and `maxCompositeDepth`. An unregistered composite throws. A layout-aware composite with a `compile` branch also throws explicitly because standalone lowering has no text measurement, providers, reference environment, or parent constraint. Full `compileToScene` emits `COMPOSITE_NOT_REGISTERED` and skips an unregistered node. Both paths throw on a nesting limit or cycle.
+
+### Box Spacing Normalization
+
+`resolveBoxSpacing(value, fallback)` accepts a non-negative number, an `IRBoxSpacing` object, or `undefined`, and returns `BoundsInsets` in `{ top, right, bottom, left }` form. A number applies to every side; each object side selects the first available value in `side > axis > default > fallback` order.
+
+Callers validate `value` with their owning schema first. `fallback` must be finite and non-negative and is checked even when `value` already supplies every side; an invalid fallback throws. Every call returns a detached object.
 
 ## CompileOptions
 

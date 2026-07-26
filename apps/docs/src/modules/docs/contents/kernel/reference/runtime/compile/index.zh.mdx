@@ -12,6 +12,7 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 | `compileToScene`              | `(ir: IRScene, options?: CompileOptions) => CompileResult`             | 主编译入口；同次返回 `scene` 与 immutable `artifacts`        |
 | `lowerIRToKernel`             | `(ir: IRScene, options?: LowerIRToKernelOptions) => LoweredIRScene`    | 只递归展开 composite，返回不含 Tier 2 节点的 Kernel IR       |
 | `computeLayout`               | `(points, padding, round) => Layout`                                   | 从 bbox 候选点计算场景边界；通常由 `compileToScene` 内部调用 |
+| `resolveBoxSpacing`           | `(value, fallback) => BoundsInsets`                                    | 把统一值或按边覆盖值归一化为完整四边间距                     |
 | `fallbackMeasurer`            | `(text, font) => TextMetrics`                                          | 默认文字度量；不准但可运行，适合无 DOM 环境的兜底            |
 | `formatCompileWarning`        | `(warning: CompileWarning) => string`                                  | 把结构化 warning 格式化为统一的可读消息                      |
 | `formatCompileOccurrence`     | `(locator: CompileOccurrenceLocator) => string`                        | 格式化 artifact 的 occurrence locator                        |
@@ -20,6 +21,12 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 `compileToScene` 先遍历并注册当前作用域内的 node / coordinate，再回填延迟发出的 path，因此路径可以引用同一作用域中写在它后面的目标。输出随后按 `zIndex` 升序稳定排序；只有 `zIndex` 相同的图元才保持声明顺序。
 
 `lowerIRToKernel` 不做布局或 Scene 发出，只消费 `composites` 与 `maxCompositeDepth`。未注册 composite 会直接抛错；遇到带 `compile` 分支的 layout-aware composite 也会明确报错，因为独立 lowering 没有文字测量、provider、引用环境和父级约束。完整 `compileToScene` 对未注册 composite 发出 `COMPOSITE_NOT_REGISTERED` 并跳过；两条路径遇到嵌套超限或环都会抛错。
+
+### 盒间距归一化
+
+`resolveBoxSpacing(value, fallback)` 接受一个非负数、`IRBoxSpacing` 对象或 `undefined`，并返回 `{ top, right, bottom, left }` 形式的 `BoundsInsets`。统一数值会应用到四边；对象中的每一边按 `side > axis > default > fallback` 选择首个已提供的值。
+
+调用方应先通过自身 schema 校验 `value`。`fallback` 必须是有限非负数，即使 `value` 已提供完整值也会检查；非法 fallback 会直接抛错。每次调用都返回独立的新对象。
 
 ## 编译选项
 
