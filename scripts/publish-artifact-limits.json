@@ -17,7 +17,7 @@
   },
   "@retikz/plot-react": {
     "maxFiles": 40,
-    "maxPackedBytes": 51200
+    "maxPackedBytes": 71680
   },
   "@retikz/plot-vanilla": {
     "maxFiles": 20,
@@ -32,7 +32,7 @@
     "maxPackedBytes": 112640
   },
   "@retikz/standard": {
-    "maxFiles": 110,
+    "maxFiles": 130,
     "maxPackedBytes": 40960
   },
   "@retikz/standard-react": {

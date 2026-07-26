@@ -5,8 +5,6 @@
 - 接受日期：2026-07-26
 - 关联：[alpha.1 roadmap](./roadmap.md) · [v0.5 roadmap](../roadmap.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [ADR-01 Node 锚点定位](./01-node-anchor-position.md)
 
-> Architecture Gate PASS 后于 2026-07-23 获得实现授权；实现、对抗测试与双语文档完成后，于 2026-07-26 获得收尾确认。本记录不授权 commit、tag、publish 或 push。
-
 ## 背景
 
 Scope 只能绕局部原点变换，上层必须知道子图原点与尺寸，才能把其中心、边或角对齐外部目标；rotate / scale 也无法绑定最终内容包络。该能力需要在 Core 中统一处理固有布局、self point、transform 与最终 placement，不能由 parser 或 renderer 补丁实现。
@@ -111,7 +109,7 @@ placement 不反向改变 pivot。既有 Scope placeholder + pending path 仍可
 - namespace、observer、GroupPrim、bbox 与自动 viewBox 共用最终 Scope 几何；不可逆反投影、forward/self/descendant reference 均 fail-loud。
 - React `ScopeProps` / builder / unbuilder 与 Vanilla plain spec 直接复用同一 IR，没有 adapter 私有 shorthand。
 - Scope 组件页、schema reference 与交互 demo 已完成 zh / en 同步。
-- ignored 测试契约矩阵逐行回填 schema、compile、adapter、renderer 与 docs 的具名正式证据；主线程 Bug Hunter 的 JSON round-trip、非 finite、Unicode id、负缩放、深层嵌套与 `-0` 用例均通过，最终无 BLOCKING。
+- 正式验证覆盖 schema、compile、adapter、renderer 与 docs，并通过 JSON round-trip、非 finite、Unicode id、负缩放、深层嵌套与 `-0` 等对抗用例，最终无 BLOCKING。
 
 ## 遗留边界
 

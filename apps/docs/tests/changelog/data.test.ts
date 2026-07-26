@@ -1,7 +1,14 @@
 ﻿import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { changelog, changelogForModule, changelogVersionSlug, kernelSection, PACKAGE_IDS } from '@/modules/docs/data';
+import {
+  changelog,
+  changelogForModule,
+  changelogVersionSlug,
+  kernelSection,
+  PACKAGE_IDS,
+  standardSection,
+} from '@/modules/docs/data';
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const Localized = z.object({ zh: z.string().min(1), en: z.string().min(1) });
@@ -42,6 +49,16 @@ describe('changelog data', () => {
     const currentKernelRelease = changelogForModule('kernel')[0];
     expect(currentKernelRelease).toBeDefined();
     const currentReleaseId = changelogVersionSlug(currentKernelRelease.minor);
+
+    expect(changelogPage?.children?.some(page => page.id === currentReleaseId)).toBe(true);
+  });
+
+  it('当前 standard 里程碑注册详情路由', () => {
+    const releases = standardSection.find(section => section.id === 'releases');
+    const changelogPage = releases?.pages.find(page => page.id === 'changelog');
+    const currentStandardRelease = changelogForModule('standard')[0];
+    expect(currentStandardRelease).toBeDefined();
+    const currentReleaseId = changelogVersionSlug(currentStandardRelease.minor);
 
     expect(changelogPage?.children?.some(page => page.id === currentReleaseId)).toBe(true);
   });

@@ -170,7 +170,7 @@ node('current', {
 - Core 全量验证：177 个测试文件、2463 个测试通过。
 - React builder / unbuilder：144 个测试通过；Vanilla plain spec：15 个测试通过。
 - docs 类型检查与 kernel 80 页完整性检查通过。
-- Bug Hunter 最终 BLOCKING / WARNING 均为 0；JSON round-trip + Unicode id、negative non-uniform scale + rotate + global offset、Unicode self / shadowing、resolved zero-size Scope 等临时 adversarial case 通过并已自动删除。
+- 对抗验证覆盖 JSON round-trip、Unicode id、negative non-uniform scale + rotate + global offset、Unicode self / shadowing 与 resolved zero-size Scope，最终无 BLOCKING / WARNING。
 
 ## 遗留边界
 

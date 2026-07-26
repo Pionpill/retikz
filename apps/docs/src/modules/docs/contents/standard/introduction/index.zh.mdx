@@ -27,10 +27,10 @@ description: 了解标准库如何以可选、可动态加载的 Tier 2 能力�
 
 ## 加载方式
 
-| 场景      | 加载方式                                                                |
-| --------- | ----------------------------------------------------------------------- |
-| React     | 组件在当前 `Layout` 局部贡献对应 Definition                             |
-| Vanilla   | helper 生成 embed，宿主通过 `adapters` 传入对应 Adapter                 |
-| 持久化 IR | schema 校验 JSON，宿主通过 `compile.composites` 显式注入对应 Definition |
+| 场景      | 加载方式                                                                                          |
+| --------- | ------------------------------------------------------------------------------------------------- |
+| React     | 组件在当前 `Layout` 局部贡献对应 Definition；`ir` 模式显式传 bundle composites                    |
+| Vanilla   | helper 生成 embed，宿主传入部分 adapter 或 `StandardVanillaAdapters`；直接 IR 改用 bundle.compile |
+| 持久化 IR | schema 校验 JSON，宿主通过 `createStandardBundle()` 选择并注入 definitions                        |
 
-从 [快速开始](/standard/get-start) 查看三条完整路径；从 [复合](/standard/composite) 选择具体能力。
+从 [快速开始](/standard/get-start) 查看三条完整路径，从 [复合](/standard/composite) 选择具体能力，或在 [能力装载](/standard/extension/capability-loading) 中管理部分与全量目录。

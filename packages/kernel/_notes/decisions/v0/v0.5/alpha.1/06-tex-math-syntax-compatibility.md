@@ -5,8 +5,6 @@
 - 接受日期：2026-07-26
 - 关联：[alpha.1 roadmap](./roadmap.md) · [v0.5 roadmap](../roadmap.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
-> Architecture Gate 第 3 轮 PASS 后获得实现授权；实现、对抗测试与双语文档完成后，于 2026-07-26 获得收尾确认。目标仍是选定的 MathJax TeX 数学 profile，不是完整 LaTeX 文档编译器。本记录不授权 commit、tag、publish 或 push。
-
 ## 背景
 
 `@retikz/tex` 当前 engine 默认只注册 base configuration；仅把额外 package 名传给 TeX constructor 并不会加载对应 configuration。`LoweredTex` 又只有一组统一 `commands`，SVG parser 忽略内部 fill / stroke / opacity，因此 `\color`、`\colorbox` 等视觉语义无法进入 renderer-agnostic Scene。
@@ -190,7 +188,7 @@ Vanilla 继续通过 `compile.lowerTex` 注入同一个 `LowerTex`。
 - MathJax SVG lowering 保留 drawable 顺序、paint / opacity / transform，并对 `<text>`、`<foreignObject>`、nested SVG、clip、不可表达 group opacity 与 transform 整次 fail-loud。
 - React / Vanilla 透传同一 `LowerTex`；SVG / Canvas 只消费普通 `PathPrim`，没有 renderer 私有 MathJax 路径。
 - README、TeX 包页面、API 表、边界说明与 profile demo 已完成 zh / en 同步。
-- ignored 测试契约矩阵逐行回填 Core / Tex / adapter / renderer / docs 的具名正式证据；主线程 Bug Hunter 发现并修复 `clip-path` presentation attribute 被静默忽略的问题，正式回归测试通过，最后一轮无 BLOCKING。
+- 正式验证覆盖 Core、Tex、adapter、renderer 与 docs；`clip-path` presentation attribute 被静默忽略的问题已修复并加入回归测试，最终无 BLOCKING。
 
 ## 遗留边界
 

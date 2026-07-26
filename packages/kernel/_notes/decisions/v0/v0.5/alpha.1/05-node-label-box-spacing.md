@@ -5,8 +5,6 @@
 - 接受日期：2026-07-26
 - 关联：[alpha.1 roadmap](./roadmap.md) · [v0.5 roadmap](../roadmap.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
-> Architecture Gate PASS 后获得实现授权；实现、两轮对抗测试与双语文档完成后，于 2026-07-26 获得收尾确认。本记录不授权 commit、tag、publish 或 push。
-
 ## 背景
 
 当前 `NodeLabel.distance` 是节点边界到 label 中心的距离。长文本在左右位置会穿入节点，上下位置的可见净距随字体高度变化；pin、Scene measured height、bbox 和 auto viewBox 又分别用 `fontSize / 2` 等近似，无法保证同一视觉几何。
@@ -140,7 +138,7 @@ React / Vanilla 无新 authoring 字段，继续传递同一 IR。
 - plain、multiline、mixed 与 TeX label 的 center、baseline、pin、Scene bounds 与自动 viewBox 共用同一 resolved geometry，不再二次测量。
 - React / Vanilla 产品入口保持同一 IR；renderer 不参与重新布局。
 - Node overview、controls、schema entity、runtime compile reference 与 changelog 已完成 zh / en 同步。
-- ignored 测试契约矩阵逐行回填具名正式证据；两轮主线程 Bug Hunter 修复 ascent + descent 聚合溢出后，最后一轮无 BLOCKING。
+- 正式验证覆盖 label metrics、定位、pin、Scene bounds、adapter 与 docs；ascent + descent 聚合溢出已修复并加入回归测试，最终无 BLOCKING。
 
 ## 遗留边界
 

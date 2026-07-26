@@ -1,16 +1,19 @@
 # library 内部文档
 
-这里放 Library 分组的内部协作文档。`@retikz/standard`、`@retikz/standard-react` 与 `@retikz/standard-vanilla` 计划作为独立 `standard` release group 维护；在 npm package 初始化前，它们不是当前发布配置的一部分。
+这里放 Library 分组的内部协作文档。`@retikz/standard`、`@retikz/standard-react` 与 `@retikz/standard-vanilla` 已初始化，并按独立 `standard` release group lockstep 维护。
 
 ## 目录
 
 - [`architecture/`](./architecture)：Standard Drawing Library 的长期边界与准入标准
-- [`decisions/standard/v0/v0.1/`](./decisions/standard/v0/v0.1/)：Standard v0.1 的 milestone 与 ADR
+- [`decisions/`](./decisions)：Standard 版本路线、milestone roadmap 与后续 ADR
 
 ## 当前入口
 
 - [`architecture/standard-library-design.md`](./architecture/standard-library-design.md)：Standard 包家族、Core 扩展机制与领域包的边界
+- [`decisions/standard/v0/roadmap.md`](./decisions/standard/v0/roadmap.md)：Standard v0 总路线
+- [`decisions/standard/v0/v0.1/roadmap.md`](./decisions/standard/v0/v0.1/roadmap.md)：Standard v0.1 milestone 与能力边界
+- [`decisions/standard/v0/v0.1/alpha.1/roadmap.md`](./decisions/standard/v0/v0.1/alpha.1/roadmap.md)：首批 Grid / Axes / Frame ADR 索引
 
-具体能力、package manifest、版本、release group 与公开 API 由对应能力 ADR 决定；分组初始化本身不建立 milestone 或 ADR。
+roadmap 只安排能力顺序；既有 package / release group 以 Accepted ADR 与当前实现为准，后续新增 schema、公开 API 与实现契约仍由对应能力 ADR 冻结。
 
 跨包能力边界以根 [`notes/architecture/capability-design.md`](../../../notes/architecture/capability-design.md) 为准。
