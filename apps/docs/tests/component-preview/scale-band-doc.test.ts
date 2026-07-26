@@ -27,8 +27,8 @@ describe('分类位置比例尺文档 playground', () => {
     expect(fieldIdsOf(englishScaleBandControls)).toEqual(expectedIds);
     expect(previewControlContract.canonicalValues).toEqual({
       scaleType: 'band',
-      paddingInner: 0.1,
-      paddingOuter: 0.05,
+      paddingInner: 0,
+      paddingOuter: 0,
       padding: 0.5,
     });
     expect(englishPreviewControlContract.canonicalValues).toEqual(previewControlContract.canonicalValues);
@@ -38,9 +38,11 @@ describe('分类位置比例尺文档 playground', () => {
 
   it('用不同消费者直接显出格宽与点位语义', () => {
     expect(demoSource).toContain("values.scaleType === 'band'");
-    expect(demoSource).toContain("type: 'interval'");
-    expect(demoSource).toContain("type: 'path'");
-    expect(demoSource).toContain("type: 'point'");
+    expect(demoSource).toContain('<IntervalMark x="segment" y="revenue" />');
+    expect(demoSource).toContain('<PathMark x="segment" y="revenue" />');
+    expect(demoSource).toContain('<PointMark x="segment" y="revenue" size={6} />');
+    expect(demoSource).toContain('type="band"');
+    expect(demoSource).toContain('paddingInner={values.paddingInner}');
     expect(demoSource).not.toContain('values.showPath');
     expect(chinesePage).toContain('band 为 interval 提供格宽');
     expect(englishPage).toContain('band supplies bandwidth to intervals');

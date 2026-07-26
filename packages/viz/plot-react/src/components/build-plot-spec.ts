@@ -1690,14 +1690,16 @@ const buildColorScale = (
   return { type: PlotScale.Ordinal, name: AUTO_COLOR, ...(colors !== undefined ? { range: colors } : {}) };
 };
 
-type ContinuousScaleProps = Extract<ScaleProps, { type: Exclude<PositionScaleType, 'point'> }>;
+type ContinuousScaleProps = Extract<ScaleProps, { type: Exclude<PositionScaleType, 'band' | 'point'> }>;
+type BandScaleProps = Extract<ScaleProps, { type: 'band' }>;
+type PointScaleProps = Extract<ScaleProps, { type: 'point' }>;
 type PositionScaleOptions = Pick<
   ContinuousScaleProps,
   'base' | 'constant' | 'domain' | 'domainPadding' | 'singleValueSpan'
 >;
 
 const isContinuousScaleProps = (options: ScaleProps | undefined): options is ContinuousScaleProps =>
-  options !== undefined && options.type !== 'point';
+  options !== undefined && options.type !== 'band' && options.type !== 'point';
 
 const continuousPositionScaleOptions = (options: PositionScaleOptions | undefined): PositionScaleOptions => ({
   ...(options?.base !== undefined ? { base: options.base } : {}),
@@ -1707,15 +1709,36 @@ const continuousPositionScaleOptions = (options: PositionScaleOptions | undefine
   ...(options?.singleValueSpan !== undefined ? { singleValueSpan: options.singleValueSpan } : {}),
 });
 
+const pointPositionScaleOptions = (
+  options: PointScaleProps | undefined,
+): Pick<PointScaleProps, 'align' | 'domain' | 'padding'> => ({
+  ...(options?.domain !== undefined ? { domain: options.domain } : {}),
+  ...(options?.padding !== undefined ? { padding: options.padding } : {}),
+  ...(options?.align !== undefined ? { align: options.align } : {}),
+});
+
+const bandPositionScaleOptions = (
+  options: BandScaleProps | undefined,
+): Pick<BandScaleProps, 'align' | 'domain' | 'paddingInner' | 'paddingOuter'> => ({
+  ...(options?.domain !== undefined ? { domain: options.domain } : {}),
+  ...(options?.paddingInner !== undefined ? { paddingInner: options.paddingInner } : {}),
+  ...(options?.paddingOuter !== undefined ? { paddingOuter: options.paddingOuter } : {}),
+  ...(options?.align !== undefined ? { align: options.align } : {}),
+});
+
 const buildPositionScale = (name: string, type: PositionScaleType, options?: ScaleProps): IRPlotScale => {
   const scaleOptions = continuousPositionScaleOptions(isContinuousScaleProps(options) ? options : undefined);
+  const bandOptions = bandPositionScaleOptions(options?.type === 'band' ? options : undefined);
+  const pointOptions = pointPositionScaleOptions(options?.type === 'point' ? options : undefined);
   switch (type) {
     case 'linear':
       return { type: PlotScale.Linear, name, ...scaleOptions };
     case 'time':
       return { type: PlotScale.Time, name, ...scaleOptions };
+    case 'band':
+      return { type: PlotScale.Band, name, ...bandOptions };
     case 'point':
-      return { type: PlotScale.Point, name };
+      return { type: PlotScale.Point, name, ...pointOptions };
     case 'log':
       return { type: PlotScale.Log, name, ...scaleOptions };
     case 'sqrt':
@@ -1734,23 +1757,23 @@ const buildPositionScale = (name: string, type: PositionScaleType, options?: Sca
 
 /** cartesian x scale 类型：含 <IntervalMark> 或 <IntervalMark> → band；否则按 <Scale dimension="x"> 或缺省 linear */
 const buildCartesianXScale = (forceBand: boolean, explicit: ScaleProps | undefined): IRPlotScale => {
-  if (forceBand && explicit !== undefined) {
+  if (forceBand && explicit !== undefined && explicit.type !== 'band') {
     throw new Error(
-      'buildPlotSpec: <IntervalMark> (bar / heatmap) requires a band x scale; omit <Scale dimension="x" /> for automatic band inference',
+      'buildPlotSpec: <IntervalMark> (bar / heatmap) requires a band x scale; omit <Scale dimension="x" /> or set type="band"',
     );
   }
-  if (forceBand) return { type: PlotScale.Band, name: AUTO_X };
+  if (forceBand) return buildPositionScale(AUTO_X, 'band', explicit);
   return buildPositionScale(AUTO_X, explicit?.type ?? 'linear', explicit);
 };
 
 /** cartesian y（值轴）scale 类型：含 <IntervalMark>（heatmap 双 band）→ band；否则按 <Scale dimension="y"> 或缺省 linear；log / sqrt 由 lowering L1 守住仅 point/line */
 const buildCartesianYScale = (hasRect: boolean, explicit: ScaleProps | undefined): IRPlotScale => {
-  if (hasRect && explicit !== undefined) {
+  if (hasRect && explicit !== undefined && explicit.type !== 'band') {
     throw new Error(
-      'buildPlotSpec: <IntervalMark> (heatmap) requires a band y scale; omit <Scale dimension="y" /> for automatic band inference',
+      'buildPlotSpec: <IntervalMark> (heatmap) requires a band y scale; omit <Scale dimension="y" /> or set type="band"',
     );
   }
-  if (hasRect) return { type: PlotScale.Band, name: AUTO_Y };
+  if (hasRect) return buildPositionScale(AUTO_Y, 'band', explicit);
   return buildPositionScale(AUTO_Y, explicit?.type ?? 'linear', explicit);
 };
 
@@ -1759,9 +1782,9 @@ const buildCartesianYScale = (hasRect: boolean, explicit: ScaleProps | undefined
  *   闭合 line（雷达）→ point（类别落等距点）；否则 linear（极坐标折线）
  */
 const buildAngleScale = (collected: Collected, explicit: ScaleProps | undefined): IRPlotScale => {
-  if (collected.hasBar && explicit !== undefined) {
+  if (collected.hasBar && explicit !== undefined && explicit.type !== 'band') {
     throw new Error(
-      'buildPlotSpec: <IntervalMark> in polar coordinates requires a band angle scale; omit <Scale dimension="angle" /> for automatic band inference',
+      'buildPlotSpec: <IntervalMark> in polar coordinates requires a band angle scale; omit <Scale dimension="x" /> or set type="band"',
     );
   }
   if (collected.hasSector && explicit !== undefined && explicit.type !== 'linear') {

@@ -1,6 +1,4 @@
-import type { IRPlotScale, IRPlotSpec } from '@retikz/plot';
-
-import { Plot } from '@retikz/plot-react';
+import { Axis, IntervalMark, PathMark, Plot, PointMark, Scale } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -11,51 +9,24 @@ import { segments } from './scale-band.data';
 export const previewControls = scaleBandControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const xScale: IRPlotScale =
-    values.scaleType === 'band'
-      ? {
-          type: 'band',
-          name: 'x',
-          paddingInner: values.paddingInner,
-          paddingOuter: values.paddingOuter,
-        }
-      : { type: 'point', name: 'x', padding: values.padding };
-
-  const marks: IRPlotSpec['marks'] =
-    values.scaleType === 'band'
-      ? [
-          {
-            type: 'interval',
-            encoding: { x: { field: 'segment' }, y: { field: 'revenue' } },
-          },
-        ]
-      : [
-          {
-            type: 'path',
-            encoding: { x: { field: 'segment' }, y: { field: 'revenue' } },
-          },
-          {
-            type: 'point',
-            size: { kind: 'constant', value: 6 },
-            encoding: { x: { field: 'segment' }, y: { field: 'revenue' } },
-          },
-        ];
-
-  const spec: IRPlotSpec = {
-    namespace: 'plot',
-    type: 'plot',
-    data: { reference: 'd' },
-    scales: [xScale, { type: 'linear', name: 'y' }],
-    coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks,
-    guides: [
-      { type: 'axis', dimension: 'x' },
-      { type: 'axis', dimension: 'y', grid: true },
-    ],
-  };
-
   return (
-    <Plot spec={spec} data={{ d: segments }} width={400} height={270} style={{ maxWidth: '100%', height: 'auto' }} />
+    <Plot data={segments} width={400} height={270} style={{ maxWidth: '100%', height: 'auto' }}>
+      {values.scaleType === 'band' ? (
+        <IntervalMark x="segment" y="revenue" />
+      ) : (
+        <>
+          <PathMark x="segment" y="revenue" />
+          <PointMark x="segment" y="revenue" size={6} />
+        </>
+      )}
+      {values.scaleType === 'band' ? (
+        <Scale dimension="x" type="band" paddingInner={values.paddingInner} paddingOuter={values.paddingOuter} />
+      ) : (
+        <Scale dimension="x" type="point" padding={values.padding} />
+      )}
+      <Axis dimension="x" />
+      <Axis dimension="y" grid />
+    </Plot>
   );
 });
 

@@ -127,21 +127,23 @@ description: 位置比例尺把数值、时间和分类字段映射成坐标、�
 
 ## API 参考
 
-React `<Scale>` 是常用位置类型的声明入口；`band` 通常由 interval 结构自动派生，`pow` 和完整 IR 字段则写入 `IRPlotSpec.scales`。`Axis.scale` 是同维度常用类型的快捷入口。
+React `<Scale>` 是常用位置类型的声明入口；`band` 可以由 interval 结构自动派生，也可以显式配置柱间距与外侧留白。`pow` 和完整 IR 字段写入 `IRPlotSpec.scales`。`Axis.scale` 是同维度常用类型的快捷入口。
 
-| 属性               | 类型                                             | 默认值      | 说明                                                           |
-| ------------------ | ------------------------------------------------ | ----------- | -------------------------------------------------------------- |
-| `dimension`        | `'x' \| 'y'`                                     | —           | 坐标维度；polar 中仍用 `x` / `y` 表示角向 / 径向               |
-| `type`             | `PositionScaleType`                              | —           | `linear`、`time`、`point`、`log`、`sqrt`、`symlog` 或 `radial` |
-| `domain?`          | `[number, number] \| IRPlotPointScale['domain']` | 从数据推断  | 连续输入范围，或 `point` 的有序分类列表                        |
-| `domainPadding?`   | `number \| { lower?; upper? }`                   | 推断时 `5%` | 连续 domain 两端的比例留白；显式 domain 默认不留白             |
-| `singleValueSpan?` | `number`                                         | 按类型推断  | 单值 domain 展开时使用的最小跨度                               |
-| `base?`            | `IRPlotLogScale['base']`                         | `10`        | 仅用于 `log`，必须大于 `1`                                     |
-| `constant?`        | `IRPlotSymlogScale['constant']`                  | `1`         | 仅用于 `symlog`，控制零附近线性区宽度                          |
-| `padding?`         | `number`                                         | `0.5`       | 仅用于 `point`；首尾外侧留白占 step 的比例，范围 `0..1`        |
-| `align?`           | `number`                                         | `0.5`       | 仅用于 `point`；控制首尾留白在范围两端的分配，范围 `0..1`      |
+| 属性               | 类型                                                                          | 默认值            | 说明                                                                   |
+| ------------------ | ----------------------------------------------------------------------------- | ----------------- | ---------------------------------------------------------------------- |
+| `dimension`        | `'x' \| 'y'`                                                                  | —                 | 坐标维度；polar 中仍用 `x` / `y` 表示角向 / 径向                       |
+| `type`             | `PositionScaleType`                                                           | —                 | `linear`、`time`、`band`、`point`、`log`、`sqrt`、`symlog` 或 `radial` |
+| `domain?`          | `[number, number] \| IRPlotBandScale['domain'] \| IRPlotPointScale['domain']` | 从数据推断        | 连续输入范围，或 `band` / `point` 的有序分类列表                       |
+| `domainPadding?`   | `number \| { lower?; upper? }`                                                | 推断时 `5%`       | 连续 domain 两端的比例留白；显式 domain 默认不留白                     |
+| `singleValueSpan?` | `number`                                                                      | 按类型推断        | 单值 domain 展开时使用的最小跨度                                       |
+| `base?`            | `IRPlotLogScale['base']`                                                      | `10`              | 仅用于 `log`，必须大于 `1`                                             |
+| `constant?`        | `IRPlotSymlogScale['constant']`                                               | `1`               | 仅用于 `symlog`，控制零附近线性区宽度                                  |
+| `paddingInner?`    | `number`                                                                      | `0.1`             | 仅用于 `band`；相邻 band 间距占 step 的比例，范围 `0..1`               |
+| `paddingOuter?`    | `number`                                                                      | 同 `paddingInner` | 仅用于 `band`；首尾外侧留白占 step 的比例，范围 `0..1`                 |
+| `padding?`         | `number`                                                                      | `0.5`             | 仅用于 `point`；首尾外侧留白占 step 的比例，范围 `0..1`                |
+| `align?`           | `number`                                                                      | `0.5`             | 用于 `band` / `point`；控制首尾留白在范围两端的分配，范围 `0..1`       |
 
-完整 `IRPlotScale` 还允许给 scale 命名、显式设置输出 `range`，并配置 React DSL 没有暴露的 `pow.exponent`、`band.paddingInner` / `paddingOuter`、`nice` 与 `clamp`。各变体和自定义 scale operation 都遵循这一公开 IR 契约。
+完整 `IRPlotScale` 还允许给 scale 命名、显式设置输出 `range`，并配置 React DSL 没有暴露的 `pow.exponent`、`nice` 与 `clamp`。各变体和自定义 scale operation 都遵循这一公开 IR 契约。
 
 <SourceLinks
   sources={[
@@ -149,7 +151,7 @@ React `<Scale>` 是常用位置类型的声明入口；`band` 通常由 interval
       label: 'React Scale 的公开类型与参数',
       path: 'packages/viz/plot-react/src/components/scales.tsx',
       startLine: 4,
-      endLine: 72,
+      endLine: 86,
     },
     {
       label: '位置 scale 的 IR schema',
