@@ -671,6 +671,7 @@ const expandPlot = (node: IRPlotSpec, datasets: ExternalDatasets, options: Lower
         legendGuides,
         options.fontSize ?? DEFAULT_FONT_SIZE,
         bands,
+        channelRegistry,
         scaleRegistry,
         resolvedTheme,
       ),
