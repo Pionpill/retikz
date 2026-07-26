@@ -1,0 +1,84 @@
+---
+title: 分箱
+description: 用 bin 把连续字段切成区间，并为直方图生成箱边与每箱统计字段。
+---
+
+`bin` 把连续字段切成区间，每个区间输出一行。它适合为直方图生成箱下界、箱上界、频数和其它组内统计字段。
+
+普通分组汇总、代表行选择和箱线图统计属于[数据变换](/viz/data/transform)，不由 Plot 的 `bin` 负责。
+
+## 分箱
+
+`bin` 先确定连续域上的箱边，再把有限数值分配进区间。输出行数取决于箱边数量，而不是输入行数，因此通常是 N → M。
+
+### 动态示例
+
+切换 `count`、`step` 和 `thresholds` 三种互斥策略。示例固定 `extent` 为 `[0, 20]`，并使用双峰且带稀疏尾部的数据，让边界变化不会同时改变取景，策略差异也更容易观察。
+
+<ComponentPreview files={['transform-histogram', 'transform-histogram.data.ts']} size="md" />
+
+`IntervalMark` 用 `x0` / `x1` 读取箱边，在连续 x 轴上绘制真实宽度的相邻区间柱；`y` 读取默认的 `binCount`。
+
+### API 参考
+
+`IRPlotBinTransform` 的 `kind` 固定为 `'bin'`。`count`、`step`、`thresholds` 是三种可选策略；都省略时默认使用 `count: 10`。
+
+| prop          | 类型                   | 默认值             | 说明                                     |
+| ------------- | ---------------------- | ------------------ | ---------------------------------------- |
+| `field`       | `string`               | —                  | 被分箱的连续源字段                       |
+| `count?`      | `number`               | `10`               | 目标箱数；与 `step` / `thresholds` 互斥  |
+| `step?`       | `number`               | —                  | 常规箱宽；末箱钉到域上界；与其它策略互斥 |
+| `thresholds?` | `Array<number>`        | —                  | 显式内部边界；与 `count` / `step` 互斥   |
+| `extent?`     | `[number, number]`     | 观测 min/max       | 覆盖分箱域                               |
+| `nice?`       | `boolean`              | `true`             | count 策略下取整边界                     |
+| `startField?` | `string`               | `binStart`         | 箱下边界输出字段名                       |
+| `endField?`   | `string`               | `binEnd`           | 箱上边界输出字段名                       |
+| `metrics?`    | `IRDataReducerMetrics` | `count → binCount` | 每箱统计指标，复用 data reducer          |
+
+### 技术原理
+
+图中的“唯一分箱策略”表示互斥配置，不是按顺序尝试的候选。策略解析完成后，主链依次求箱边、分桶、规约并输出每箱一行。
+
+<ComponentPreview files="transform-bin-logic" hideCode size="xl" />
+
+三种策略产生边界的方式不同：
+
+1. `thresholds` 排序后只保留 `extent` 内部边界，并用域的两端补齐首尾。
+2. `step` 从域下界按固定宽度铺箱，最后一箱钉到域上界，因此可能短于 `step`。
+3. `count` 把域等分；未显式设置 `extent` 且 `nice` 为真时，先把观测域扩展为便于阅读的边界。
+
+箱采用半开区间 `[start, end)`，只有最后一箱包含上界。非有限值和 `extent` 外数值不进入任何箱；空箱仍会输出一行。每行包含箱边、箱中点和 `metrics` 结果，并保留组来源追踪。
+
+同时设置多个策略会在 lowering 时抛错。`nice` 只影响 `count`，不会改写显式 `step` 或 `thresholds`。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'bin 的 schema 与默认语义',
+      path: 'packages/viz/plot/src/schemas/transform/schema.ts',
+      startLine: 51,
+      endLine: 96,
+    },
+    {
+      label: '箱边、分桶与每箱输出',
+      path: 'packages/viz/plot/src/providers/transform/group.ts',
+      startLine: 34,
+      endLine: 128,
+    },
+  ]}
+/>
+
+## 相关
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/transform">
+    <span className="font-semibold">作用域与管线</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">选择根级或图元局部变换入口。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/transform/statistics">
+    <span className="font-semibold">统计子算子</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      查看 metrics 复用的 reducer，以及箱线图所需的统计能力。
+    </span>
+  </LinkedCard>
+</div>

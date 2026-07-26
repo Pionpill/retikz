@@ -104,6 +104,32 @@ describe('applyTransforms (contract)', () => {
     ]);
   });
 
+  it('stack_offset_normalize_rejects_negative_values', () => {
+    const rows = [
+      { x: 'a', s: 'A', v: 3 },
+      { x: 'a', s: 'B', v: -1 },
+    ];
+
+    expect(() => applyTransforms(rows, [{ kind: 'stack', x: 'x', y: 'v', groupBy: 's', offset: 'normalize' }])).toThrow(
+      /stack.*normalize.*negative.*v/i,
+    );
+  });
+
+  it('stack_offset_normalize_treats_non_finite_values_as_zero', () => {
+    const rows = [
+      { x: 'a', s: 'A', v: Number.NaN },
+      { x: 'a', s: 'B', v: Number.POSITIVE_INFINITY },
+      { x: 'a', s: 'C', v: 2 },
+    ];
+    const out = applyTransforms(rows, [{ kind: 'stack', x: 'x', y: 'v', groupBy: 's', offset: 'normalize' }]);
+
+    expect(out.map(row => [row.y0, row.y1])).toEqual([
+      [0, 0],
+      [0, 0],
+      [0, 1],
+    ]);
+  });
+
   it('stack_offset_diverging', () => {
     const rows = [
       { x: 'a', s: 'A', v: 3 },
@@ -206,6 +232,16 @@ describe('applyBin (contract)', () => {
     expect(out.length).toBe(2);
     expect(out[0]).toMatchObject({ binStart: 0, binEnd: 5, binCount: 2 });
     expect(out[1]).toMatchObject({ binStart: 5, binEnd: 10, binCount: 2 });
+  });
+
+  it('bin_step_clamps_last_bin_to_explicit_extent', () => {
+    const rows = [{ m: 0 }, { m: 5 }, { m: 6 }, { m: 10 }, { m: 11 }];
+    const out = applyTransforms(rows, [{ kind: 'bin', field: 'm', step: 6, extent: [0, 10] }]);
+
+    expect(out.map(row => [row.binStart, row.binEnd, row.binCount])).toEqual([
+      [0, 6, 2],
+      [6, 10, 2],
+    ]);
   });
 
   it('bin_thresholds_strategy_k_plus_one_bins', () => {
@@ -444,6 +480,28 @@ describe('applyNormalize (contract)', () => {
   it('normalize_fraction_default', () => {
     const out = applyTransforms(REVENUE, [{ kind: 'normalize', field: 'amount', groupBy: ['quarter'], as: 'frac' }]);
     expect(out[0].frac).toBeCloseTo(0.75, 9);
+  });
+
+  it('normalize_rejects_negative_values', () => {
+    const rows = [
+      { g: 'x', v: 3 },
+      { g: 'x', v: -1 },
+    ];
+
+    expect(() => applyTransforms(rows, [{ kind: 'normalize', field: 'v', groupBy: ['g'], as: 'share' }])).toThrow(
+      /normalize.*negative.*v/i,
+    );
+  });
+
+  it('normalize_treats_non_finite_values_as_zero', () => {
+    const rows = [
+      { g: 'x', v: Number.NaN },
+      { g: 'x', v: Number.NEGATIVE_INFINITY },
+      { g: 'x', v: 2 },
+    ];
+    const out = applyTransforms(rows, [{ kind: 'normalize', field: 'v', groupBy: ['g'], as: 'share' }]);
+
+    expect(out.map(row => row.share)).toEqual([0, 0, 1]);
   });
 
   it('normalize_overwrite_in_place', () => {

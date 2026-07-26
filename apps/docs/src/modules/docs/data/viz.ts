@@ -100,7 +100,7 @@ export const vizSection: Array<Section> = [
         children: [
           { id: 'row', label: 'viz.grammarTransformRow' },
           { id: 'annotation', label: 'viz.grammarTransformAnnotation' },
-          { id: 'summary', label: 'viz.grammarTransformSummary' },
+          { id: 'bin', label: 'viz.grammarTransformBin' },
           { id: 'statistics', label: 'viz.grammarTransformStatistics' },
           { id: 'relate', label: 'viz.grammarTransformRelate' },
         ],

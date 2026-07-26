@@ -57,7 +57,7 @@ const binEdges = (operation: IRPlotBinTransform, values: Array<number>): Array<n
     const span = domainMax - domainMin;
     const binCount = Math.max(1, Math.ceil(span / step - DEFAULT_EPSILON));
     const edges = Array.from({ length: binCount + 1 }, (_, i) => domainMin + i * step);
-    if (edges[binCount] < domainMax) edges[binCount] = domainMax;
+    if (span > 0) edges[binCount] = domainMax;
     return edges;
   }
   const count = operation.count ?? DEFAULT_BIN_COUNT;
