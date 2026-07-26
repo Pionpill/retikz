@@ -107,6 +107,8 @@ pnpm --filter @retikz/docs build
 pnpm --filter @retikz/docs lint
 ```
 
+本地开发端口由 `apps/docs/.env.local` 中的 `RETIKZ_DOCS_PORT` 指定，缺省为 `5173`。每个 clone / worktree 使用独立端口；启动前先检查并复用当前工作区已有服务。Vite 必须保持 `strictPort: true`，端口被占用时不得自动改用其它端口。
+
 `apps/docs` 不发布 npm 包，可以用包内 build 脚本；packages 下仍按根 AGENTS 避免会污染源码树的 tsc 调用。
 
 ## 验证分级
