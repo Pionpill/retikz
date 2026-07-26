@@ -1,10 +1,11 @@
 # ADR-04：Node 文本自动对比色
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-07-23
+- 接受日期：2026-07-26
 - 关联：[alpha.1 roadmap](./roadmap.md) · [v0.5 roadmap](../roadmap.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
-> Architecture Gate 第 2 轮 PASS；人工实现授权已于 2026-07-23 获得。
+> Architecture Gate 第 2 轮 PASS 后于 2026-07-23 获得实现授权；实现、正式测试与双语文档完成后，于 2026-07-26 获得收尾确认。本记录不授权 commit、tag、publish 或 push。
 
 ## 背景
 
@@ -80,33 +81,20 @@ import { NodeTextColor } from '@retikz/core';
 - 从 renderer / DOM 求 computed style，或估算 gradient / image：缺少确定、后端中立的真源
 - 独立 backdrop / fallback 字段或 definition registry：比固定关键字复杂，且本轮无需扩展分派
 
-## 公开影响与兼容性
+## 公开影响
 
 新增 `NodeTextColor.Contrast` 常量并保留字符串 IR；既有 CSS color、Scene、PaintSpec 与 renderer 契约不变。透明背景不猜测 backdrop，固定 warning + `currentColor`。
 
-## 测试设计
+## 最终实现与验证摘要
 
-ignored 矩阵：`notes/plans/kernel-v0.5-alpha.1-scope/TEST_CONTRACT_ADR_04.md`。覆盖关键字 / JSON round-trip、对象拒绝、静态颜色 grammar、透明边界、WCAG tie-break、级联 / 显式覆盖、消费者判定、warning / locator、React / Vanilla parity 与 SVG / Canvas 同源消费。
+- Core 新增 `NodeTextColor.Contrast` 保留值，在 style cascade 后只对静态不透明 fill 计算 WCAG 相对明度与黑 / 白对比度。
+- Node 正文、mixed / TeX 与继承的 label / pin 在 emit 前得到普通 CSS color；显式 run color 优先，无法静态求值时固定 warning 并回退 `currentColor`。
+- React 与 Vanilla 只透传同一字符串 IR，SVG / Canvas 只消费 Core 已解析的 Scene paint。
+- Node overview、Text、schema entity、compile warning reference 与双语 demo 已同步。
+- ignored 测试契约矩阵覆盖 JSON round-trip、strict schema、颜色 grammar、alpha 边界、tie-break、级联优先级、warning locator、adapter 与 renderer parity 的具名正式证据。
 
-## 绘图完备性检查
+## 遗留边界
 
-- 能力域 / 面：Drawing；Style / Resource、Primitive / Scene
-- 主责：Core Node schema vocabulary、style 后求值和 warning；adapter 只透传，render 只消费
-- 表达：扩展 Node textColor 的保留字符串语义，不修改 PaintSpec / resource registry，不建 definition
-- 闭环：正文、mixed / TeX、继承 label / pin 在 emit 前得到普通颜色；结论为扩展当前 Core Node text style 域
-
-## 不在范围
-
-透明背景合成、动态背景采样、DOM computed style、图片 / gradient 分析、自定义候选色 / fallback / 算法、非文本 paint 及 Path / edge / step label 自动对比。
-
-## 实现契约
-
-- Level：`red`
-- Schema：`schemas/node/constants.ts` 新增 `NodeTextColor.Contrast`；`NodeSchema.textColor` 仍为 `CssColorSchema`，types 派生 `NodeTextColorValue`
-- 文件 scope：
-  - Core：上述 schema vocabulary；`compile/node/text-color/{constants,types,parse,resolve,index}.ts`；`compile/orchestration/traversal.ts`、warning constants
-  - React：`kernel/components/Node.tsx` JSDoc 与 Node / Scope default round-trip tests
-  - Vanilla / render：无产品源码改动，只补 parity / contract tests
-  - Docs：Node overview、schema entity、runtime warning 的 zh / en 与 demo
-- 测试契约矩阵：`notes/plans/kernel-v0.5-alpha.1-scope/TEST_CONTRACT_ADR_04.md`
-- 依赖：现有 style cascade、IRPaintSpec / effective fill、text run / label 颜色优先级、Scene TextPrim / PathPrim、compile warning locator
+- 不合成透明背景，不采样动态背景、DOM computed style、gradient、pattern 或 image。
+- 不开放自定义候选色、fallback 或算法 registry。
+- 非文本 paint 与 Path / edge / step label 不启用自动对比。

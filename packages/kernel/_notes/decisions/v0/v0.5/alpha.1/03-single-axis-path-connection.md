@@ -1,10 +1,11 @@
 # ADR-03：单轴路径连接
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-07-23
+- 接受日期：2026-07-26
 - 关联：[alpha.1 roadmap](./roadmap.md) · [v0.5 roadmap](../roadmap.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
-> 本 ADR 冻结设计。实现仍以 Architecture Gate PASS 为前置条件；本轮人工实现授权已于 2026-07-23 获得。
+> Architecture Gate PASS 后于 2026-07-23 获得实现授权；实现、正式测试与双语文档完成后，于 2026-07-26 获得收尾确认。本记录不授权 commit、tag、publish 或 push。
 
 ## 背景
 
@@ -79,7 +80,7 @@ type IRFoldStepShape =
 ```
 
 - `-|-` 按 horizontal → vertical → horizontal 发出三段；`|-|` 按 vertical → horizontal → vertical 发出三段。
-- `fraction` 是闭区间 `0..1` 的归一化位置，仅三段变体允许；省略时 compile 使用 `0.5`，旧 `-|` / `|-` 携带该字段必须被 strict schema 拒绝。
+- `fraction` 是闭区间 `0..1` 的归一化位置，仅三段变体允许；省略时 compile 使用 `0.5`，两段 `-|` / `|-` 携带该字段会被 strict schema 拒绝。
 - 转折点基于裁剪前 source / target reference 计算：`-|-` 的共同 x 为 `sx + (tx - sx) * fraction`；`|-|` 的共同 y 为 `sy + (ty - sy) * fraction`。`0` 与 `1` 合法，允许首段或末段退化为零长度。
 - `FoldStepSchema` 是结构单一真源，公开 `IRFoldStep` 必须由它推导；schema 自身不写入默认 `fraction`，只由 compile 在消费省略值时取 `0.5`。
 - clipping 在 reference 路由 `[source, ...corners, target]` 上选方向：source 朝后查找第一个不与 source reference 重合的点，target 朝前查找最后一个不与 target reference 重合的点；shape pen override 继续直接作为 source。若整条 reference 路由只有同一点，则沿用既有零长度 target 行为。
@@ -154,41 +155,22 @@ React `FoldStepProps` 同步使用严格 union：`-|` / `|-` 不接受 `fraction
 - 用百分数字面量或 `50` 表示中间位置：与现有归一化参数习惯不一致，也不利于直接插值。
 - step registry：这是成对、闭合、确定性的基础几何操作，没有第三方算法 dispatch 或 fallback。
 
-## 公开影响与兼容性
+## 公开影响
 
-- `IRStep` 与 `WayDSL` 增加 `axis-line` / horizontalTo / verticalTo，并扩展 fold `via` 与 Way fold operator。JSON 数据是 additive，但 TypeScript exhaustive consumer 必须迁移；本仓 React builder / unbuilder / Draw 与 docs codegen / schema registry 同步更新。`0.x` 接受该源码兼容面变更。
-- 既有 `|-` / `-|`、普通 line、target auto-clip 和 delayed path 生命周期不变；auto-clip 禁用只属于 axis-line。
+- `IRStep` 与 `WayDSL` 包含 `axis-line` / horizontalTo / verticalTo，并扩展 fold `via` 与 Way fold operator；TypeScript exhaustive consumer 必须覆盖这些分支。本仓 React builder / unbuilder / Draw 与 docs codegen / schema registry 已同步更新。
+- 两段 `|-` / `-|`、普通 line、target auto-clip 和 delayed path 使用原有生命周期；auto-clip 禁用只属于 axis-line。
 - JSON round-trip 保留结构化 step；sugar 只存在 authoring parser。
 
-## 测试设计
+## 最终实现与验证摘要
 
-详细矩阵见 ignored `notes/plans/kernel-v0.5-alpha.1-scope/TEST_CONTRACT_ADR_03.md`。至少覆盖 schema / parser、两轴投影、各 target 类型、anchor / offset / boundary、Scope transform、cursor 连续性、零长度、错误路径、两段 / 三段 fold 几何与 clipping、fraction 边界、sampling、Scene command 与 adapter parity。
+- Core `IRStep` 新增 strict `axis-line`，并把同一 fold family 扩展为两段 / 三段 `via`；Scene 仍只输出既有 move / line command。
+- target lookup、host-local 轴投影、cursor / relative baseline、source clipping、sampling、marks、label、rounded corner 与 provenance 共用同一最终 path state。
+- Way parser、React `Step` / `Draw`、builder / unbuilder 与 Vanilla plain spec 保留同一结构化 IR、默认值和失败语义。
+- Step、Way、path schema / parser reference、双语 controls 与 demo 已同步。
+- ignored 测试契约矩阵覆盖 schema、parser、compile、geometry、adapter 与 docs 的具名正式证据；包括 delayed target、non-finite、零长度、Scope transform、三段 fold fraction / clipping / sampling 等反例。
 
-## 绘图完备性检查
+## 遗留边界
 
-- 能力域 / 能力面：Drawing；Target / Coordinate、Geometry、Composition。
-- 主责：Core schema、parser 与 path compile；React / Vanilla 仅共享 authoring；renderer 无新语义。
-- 内部表达：扩展现有 step union，在 host target resolver 后投影；扩展既有 fold `via` 变体并统一 lower 为 line。
-- 外部扩展：step kind 是闭合 Kernel 语法，不按名称选择第三方算法，故不建 definition / registry。
-- 下游闭环：同一 runtime cursor state 与 projected endpoint 驱动 relative baseline、path command、close/source、label、mark、sampling 和 provenance。
-- 结论：扩展当前 Core path operation 域；不扩 target、Scene 或 renderer。
-
-## 不在范围
-
-- 自动正交路由、避障、通用约束求解。
-- 数据坐标 / plot scale 投影。
-- 自动选择 `via` / `fraction`、多次任意转折或按障碍物路由。
-- 修改普通 target 的隐式 clipping 语义。
-
-## 实现契约
-
-- Level：`red`
-- Schema 改动：`schemas/path/step/{constants,schema,types}.ts` 新增 strict `axis-line`，并把 fold 按 `via` 拆为 strict 两段 / 三段 union；三段变体独占可选 `fraction`
-- 文件 scope：
-  - Core：上述 schema / barrel、`parsers/way.ts`、`compile/path/host/{target,relative}.ts`、`compile/path/stroke/{cursor,segments,emit,rounded-corners}.ts`、`shared/geometry/path/segment.ts`
-  - React：`kernel/components/Step.tsx`、`kernel/adapter/{builder,unbuilder}.ts`、`sugar/path/Draw.tsx`
-  - Vanilla：产品 helper 不加私有逻辑；`tests/spec/plain-spec.test.ts` 增加共享 parser parity
-  - Docs：Step / Draw way 双语 API 与现有 fold demo、path schema / parser / primitive relations 双语 reference、`schema-registry.ts`、`component-preview/utils/ir-to-vanilla-code.ts`
-  - 正式测试：`core/tests/schemas/path/{axis-line,fold-step}.schema.test.ts`、`core/tests/parsers/parse-way.test.ts`、`core/tests/compile/path/{axis-line,fold-step}.test.ts`、现有 relative / rounded-corners / label / marks 回归文件、`core/tests/shared/geometry/path/segment.test.ts`、`react/tests/kernel/adapter/{builder,unbuilder}.test.tsx`、`react/tests/kernel/components/step-named-types.test.ts`、`react/tests/sugar/path/draw.test.tsx`、`vanilla/tests/spec/plain-spec.test.ts`、`apps/docs/tests/{registry,ir-to-vanilla-code}.test.ts`
-- 测试契约矩阵：`notes/plans/kernel-v0.5-alpha.1-scope/TEST_CONTRACT_ADR_03.md`
-- 依赖现有元素：Way parser、`IRTarget`、path host resolver、pending path、line emitter、sampling / provenance
+- 不提供自动正交路由、避障、通用约束求解或数据坐标投影。
+- 不自动选择 `via` / `fraction`，也不支持任意次数转折。
+- 普通 target 的隐式 clipping 语义保持不变；axis-line 的 target 不启用 toward auto-clip。

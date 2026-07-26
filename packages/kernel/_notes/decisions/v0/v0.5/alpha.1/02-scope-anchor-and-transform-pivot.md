@@ -1,10 +1,11 @@
 # ADR-02：Scope 自身锚点与变换基点
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-07-23
+- 接受日期：2026-07-26
 - 关联：[alpha.1 roadmap](./roadmap.md) · [v0.5 roadmap](../roadmap.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [ADR-01 Node 锚点定位](./01-node-anchor-position.md)
 
-> 本 ADR 冻结设计，不授权实现。进入实现前仍需 Architecture Gate PASS 与人工确认。
+> Architecture Gate PASS 后于 2026-07-23 获得实现授权；实现、对抗测试与双语文档完成后，于 2026-07-26 获得收尾确认。本记录不授权 commit、tag、publish 或 push。
 
 ## 背景
 
@@ -45,7 +46,7 @@ type IRScaleTransform = {
 - `placement.selfAnchor` 缺省 `center`；`pivot` 缺省 `origin`；`scale.y` 缺省 `x`。
 - `placement.target` 只接受父坐标系 `IRPosition` 或此前完成的 Node / Coordinate / Scope `IRNodeTarget`。target anchor 缺省 `center`，offset 保持世界 user-units；Polar、Offset、Between 和 path-relative target 被 schema 拒绝。
 - `ScopePlacementSchema`、`ScopeSelfPointSchema` 和 Scope 字段均为 strict / 闭合契约。`schemas/scope-point` 是 self point 的无环 owner，由 Scope 与 Transform 单向复用。
-- pivot 只能引用当前 Scope 的 self point，不能引用外部 id。v0.5 移除 IR rotate 的 `cx` / `cy`，不保留别名；Scene rotate 的 `cx` / `cy` 仍是 lowering 产物。非原点 scale pivot lower 为既有 translate / scale 组合，不扩展 Scene。
+- pivot 只能引用当前 Scope 的 self point，不能引用外部 id。IR rotate 与 scale 使用 `pivot`；Scene rotate 的 `cx` / `cy` 是 lowering 产物。非原点 scale pivot lower 为 translate / scale 组合，不扩展 Scene。
 - React `ScopeProps` 等价暴露该契约；Vanilla `scope()` 直接接收 `IRScope`，不增加平行 helper 或物化默认值。
 
 ### 包络
@@ -96,35 +97,24 @@ placement 不反向改变 pivot。既有 Scope placeholder + pending path 仍可
 - renderer 重算 pivot：会分裂 SVG / Canvas、namespace 与 viewBox 的几何真源。
 - 允许 pivot 引用任意 id 或新增 self-anchor registry：前者引入循环求解，后者重复现有 anchor / shape / boundary 扩展链。
 
-## 公开影响与兼容性
+## 公开影响
 
 - `IRScope.placement`、`ScopeProps.placement` 与 transform `pivot` 是 additive API。
-- IR rotate `cx/cy` → `pivot: [cx, cy]` 是 v0.5 breaking change；Scene contract 不变。
+- IR rotate 与 scale 统一使用 `pivot`；Scene contract 不变。
 - 无 placement / pivot 的 Scope 保持原点变换语义；空 Scope 仍是合法 resolved target。
 - transform array 顺序不变；pivot 展开和 placement prepend 由数值测试锁定。
-- zero scale 仅在需要反投影时从静默退化改为 fail-loud。
+- zero scale 在需要反投影时 fail-loud。
 
-## 验证与完备性
+## 最终实现与验证摘要
 
-详细矩阵见 ignored `notes/plans/kernel-v0.5-alpha.1-scope/TEST_CONTRACT_ADR_02.md`，至少覆盖：
+- Core 新增 strict Scope self point / placement schema，并以 children 固有包络、pivot transforms、最终 placement 的两阶段顺序完成 lowering。
+- namespace、observer、GroupPrim、bbox 与自动 viewBox 共用最终 Scope 几何；不可逆反投影、forward/self/descendant reference 均 fail-loud。
+- React `ScopeProps` / builder / unbuilder 与 Vanilla plain spec 直接复用同一 IR，没有 adapter 私有 shorthand。
+- Scope 组件页、schema reference 与交互 demo 已完成 zh / en 同步。
+- ignored 测试契约矩阵逐行回填 schema、compile、adapter、renderer 与 docs 的具名正式证据；主线程 Bug Hunter 的 JSON round-trip、非 finite、Unicode id、负缩放、深层嵌套与 `-0` 用例均通过，最终无 BLOCKING。
 
-- strict schema、默认值、旧 rotate 拒绝、JSON round-trip 与 React / Vanilla 等价。
-- rectangle / circle、margin、空 Scope、各类 self point、pivot / placement 数值顺序和嵌套 Scope。
-- Node / Coordinate / Scope target、offset、不可逆 chain、引用错误，以及 Group / namespace / observer / viewBox 单一最终几何。
+## 遗留边界
 
-`@retikz/core` 拥有 schema、固有布局、包络、lowering 与 target layout；React / Vanilla 只负责等价 authoring，render 只执行既有 transforms。实现复用 synthetic layout、anchor resolver 和 transform chain，不建立平行 bbox 或 registry。
-
-## 不在范围
-
-- 自动布局、碰撞避让、通用约束求解或 forward-reference 拓扑排序。
-- 重新定义 Node anchor-to-anchor。
-- 修复 non-uniform scale + rotate 的 projected Rect 精度边界。
-
-## 实现契约
-
-- Level：`red`
-- Schema：新增 `schemas/scope-point`；Scope 新增 strict `placement` / `IRScopePlacement` / `IRScopePlacementTarget`；Transform 复用 self point，删除 rotate `cx/cy` 并增加 pivot。
-- Core：`compile/{scope,transform}.ts`、`compile/orchestration/{traversal,types}.ts`、`compile/node/synthetic.ts`。
-- Adapters：React `Scope.tsx` / `adapter/fields.ts`；Vanilla 仅需 plain-spec 等价测试。
-- 同步 Core / React / Vanilla tests 与 Kernel Scope / placement 中英文文档。
-- 依赖 ADR-01 namespace lifecycle、Scope synthetic bbox / `boundingShape`、`IRNodeTarget`、anchor / boundary resolver、transform projection / inverse 与 GroupPrim。
+- 不支持自动布局、碰撞避让、通用约束求解或 forward-reference 拓扑排序。
+- Node anchor-to-anchor 仍由 ADR-01 独立拥有，Scope placement 不建立第二套 target 或 bbox registry。
+- non-uniform scale + rotate 的 projected Rect 精度边界保持现状。

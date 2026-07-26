@@ -281,13 +281,13 @@ Artifact 契约：
 5. 未注册 composite 继续按现有 `compileToScene()` warning + skip 契约处理，不产 artifact。definition `compile`、artifact schema 或 replay 失败时 fail-loud，不返回部分 `CompileResult`。
 6. 没有 artifact 时仍返回 `artifacts: []`。Scene 结构本身不增加 artifact 字段，renderer 只消费 `result.scene`。
 
-`CompositeDefinition<TNode, TNamespace, TType, TArtifact>` 只表示一个 definition 的精确作者类型，不再承担裸类型的异构容器语义。`AnyCompositeDefinition` 是 registry / adapter 使用的显式擦除类型：callback 参数使用 `never` 保持严格函数方差安全，artifact payload 擦除为 `JsonValue`；resolver 只能在对应 schema parse 后调用 callback。`defineComposite()` 返回完整 literal key / payload 泛型，不再像当前实现一样擦除。`CompositeArtifactOf` 对 `expand` 或无 `artifactSchema` definition 映射为 `never`，对 artifact definition 生成精确 envelope。直接把 definitions 作为 `as const` tuple 传入时，调用方得到精确 artifact union；经 `ReadonlyArray<AnyCompositeDefinition>` registry 或 adapter 聚合后安全退化为 `CompositeCompileArtifact<string, string, JsonValue>`，不使用 `any`。当前 `BUILTIN_COMPOSITES` 为空；以后内置 artifact 必须进入同一个 `BuiltinCompositeArtifact` 推导，不得另加返回通道。
+`CompositeDefinition<TNode, TNamespace, TType, TArtifact>` 表示一个 definition 的精确作者类型。`AnyCompositeDefinition` 是 registry / adapter 使用的显式擦除类型：callback 参数使用 `never` 保持严格函数方差安全，artifact payload 擦除为 `JsonValue`；resolver 只能在对应 schema parse 后调用 callback。`defineComposite()` 返回完整 literal key / payload 泛型。`CompositeArtifactOf` 对 `expand` 或无 `artifactSchema` definition 映射为 `never`，对 artifact definition 生成精确 envelope。直接把 definitions 作为 `as const` tuple 传入时，调用方得到精确 artifact union；经 `ReadonlyArray<AnyCompositeDefinition>` registry 或 adapter 聚合后安全退化为 `CompositeCompileArtifact<string, string, JsonValue>`，不使用 `any`。当前 `BUILTIN_COMPOSITES` 为空；以后内置 artifact 必须进入同一个 `BuiltinCompositeArtifact` 推导，不得另加返回通道。
 
-迁移规则是明确 breaking 而不是兼容别名：
+类型边界：
 
-- `defineComposite({...})` 的 definition 作者写法保持不变，并得到更精确返回类型。
-- 单个 definition 的显式注解必须填写 `CompositeDefinition<TNode, TNamespace, TType, TArtifact>`；不允许继续把裸 `CompositeDefinition` 当宽类型。
-- registry、adapter props、贡献收集器和 normalize options 中原来的 `Array<CompositeDefinition>` / `ReadonlyArray<CompositeDefinition>` 统一改为 `Array<AnyCompositeDefinition>` / `ReadonlyArray<AnyCompositeDefinition>`。
+- `defineComposite({...})` 返回精确的 definition 类型。
+- 单个 definition 的显式注解使用 `CompositeDefinition<TNode, TNamespace, TType, TArtifact>`，裸 `CompositeDefinition` 不表示宽类型。
+- registry、adapter props、贡献收集器和 normalize options 使用 `Array<AnyCompositeDefinition>` / `ReadonlyArray<AnyCompositeDefinition>`。
 - 只有紧邻 schema parse 的 resolver 可以把 erased definition 恢复为内部可调用形态；其它 consumer 不得对 `never` callback 做 assertion 后调用。
 
 ### occurrence locator 递归生成算法
@@ -318,11 +318,11 @@ children[2]::output[0]::scopeChild[1]
 children[2]::replay[3]::scopeChild[0]::replay[1]
 ```
 
-`CompiledNodeLayout.irPath` 的迁移按来源区分：直接输入 Node / 输入 Scope 内 Node 的新 `sourcePath` 与旧 `irPath` 逐字相同且 expansion 为空；由 composite 生成的 Node 不再保留旧 lowered-tree 临时 index，而改为“原始 composite sourcePath + 结构化 expansionPath”。这是明确的 breaking locator 修正，docs 与 tests 必须分别锁定两类迁移。
+`NodeLayoutCompileArtifact.occurrence` 按来源区分：直接输入 Node / 输入 Scope 内 Node 使用实体 `sourcePath` 且 `expansionPath` 为空；由 composite 生成的 Node 使用原始 composite `sourcePath` + 结构化 `expansionPath`。docs 与 tests 分别锁定两类 locator。
 
-### typed artifacts 取代 Core node layout callback
+### Node layout typed artifacts
 
-`CompileOptions.onNodeLayout` 与 `CompileLayoutObserver` 删除。`CompiledNodeLayout.irPath` 删除，定位统一放在 artifact envelope 的 occurrence 中。需要 Node layout 的调用方显式开启：
+Node layout 作为 opt-in typed artifact 提供，定位统一放在 artifact envelope 的 occurrence 中。需要 Node layout 的调用方显式开启：
 
 ```ts
 const result = compileToScene(ir, {
@@ -336,7 +336,7 @@ const nodeLayouts = result.artifacts.filter(
 
 `artifacts.nodeLayouts` 默认 `false`，避免大图无条件复制全部 Node layout DTO。Composite artifacts 是 definition 的正式输出，不能由宿主关闭；不需要 artifact 的 definition 不返回该字段。
 
-`onWarn` 仍是宿主即时诊断通道，不承担产物传递。React `<Layout>` 增加 `artifacts?: CompileArtifactOptions` 与通用 `onArtifacts`；前者原样声明 Node layout 等 opt-in artifact，后者只在 commit 后通知 Core 已返回并冻结的 artifact 数组。通知不能影响 compile，也不是 definition 捕获 artifact 的隐藏通道。现有 `onNodeLayouts` 删除，调用方改为：
+`onWarn` 是宿主即时诊断通道，不承担产物传递。React `<Layout>` 通过 `artifacts?: CompileArtifactOptions` 声明 Node layout 等 opt-in artifact，通过通用 `onArtifacts` 在 commit 后通知 Core 已返回并冻结的 artifact 数组。通知不能影响 compile，也不是 definition 捕获 artifact 的隐藏通道：
 
 ```tsx
 <Layout
@@ -393,7 +393,7 @@ const { scene, artifacts } = result;
 - compile traversal 增加隔离 child layout、compile-local replay transaction、canonical visual bounds、typed artifact 与 occurrence 分配
 - `compileToScene()` 统一返回 `{ scene, artifacts }`；`lowerIRToKernel()` 对 layout-aware definition fail-loud
 - React 通过 `artifacts` / `onArtifacts` 在 commit 后通知，Vanilla view 同步持有与 Scene 同次生成的 artifacts
-- Render、TeX、Plot、Table、Eval 与 docs 调用方只迁移 `CompileResult`，没有新增 renderer 或领域私有布局语义
+- Render、TeX、Plot、Table、Eval 与 docs 调用方只消费 `CompileResult`，没有新增 renderer 或领域私有布局语义
 
 正式验证覆盖：
 
@@ -408,13 +408,13 @@ const { scene, artifacts } = result;
 
 ## 影响
 
-- ⚠️ BREAKING：`compileToScene()` 从 `Scene` 改为 `CompileResult`；所有直接调用方改取 `.scene`。
-- ⚠️ BREAKING：删除 Core `onNodeLayout` / `CompileLayoutObserver` 与 React `onNodeLayouts`；改用 typed artifacts / `onArtifacts`。
-- `CompositeDefinition` 成为 `expand | compile` 互斥的精确 definition union；现有 `defineComposite({...})` 作者写法保持不变，裸 `CompositeDefinition` registry 注解必须迁移到 `AnyCompositeDefinition`。
+- `compileToScene()` 返回包含 `scene` 与 `artifacts` 的 `CompileResult`。
+- Node layout 由 opt-in typed artifacts 提供，React 通过 `onArtifacts` 在 commit 后通知。
+- `CompositeDefinition` 是 `expand | compile` 互斥的精确 definition union；registry 使用 `AnyCompositeDefinition`。
 - Core compile 从“先全部 lower composite 再 traversal”调整为“预展开 `expand` 分支，traversal 调度 `compile` 分支”；Scene schema 与 renderer primitive 不变。
-- React / Vanilla runtime、Plot / Table SSR convenience、eval 与 docs 示例必须适配新的返回形态；React `LayoutProps` 与 Vanilla view 增加显式 artifact surface，renderer API 不改。
+- React / Vanilla runtime、Plot / Table SSR convenience、eval 与 docs 示例消费同一返回形态；React `LayoutProps` 与 Vanilla view 提供显式 artifact surface，renderer API 不改。
 - Table alpha.2 可以把固定轨道替换为内容反馈求解，并从同一次 Core compile 取得 manifest；Table 具体 schema / solver / adapter 改动不属于本 ADR 实现。
-- 文档站需同步 zh/en compile reference、CompositeDefinition API、React Layout artifacts、Vanilla compile 示例和迁移说明。
+- 文档站需同步 zh/en compile reference、CompositeDefinition API、React Layout artifacts 与 Vanilla compile 示例，只描述当前公开面。
 
 ## 绘图完备性检查
 
@@ -436,12 +436,12 @@ const { scene, artifacts } = result;
 - 跨 compile replay、memoization、dependency / invalidation graph、patch 与 renderer 局部更新。
 - 异步 `measureText` / TeX、DOM / CSS layout、ReactNode 或 renderer 反向测量。
 - 可替换全局 layout solver registry；领域 solver 仍归各 Tier 2 package。
-- 稳定 interaction target、跨 IR 编辑 locator、Composite source identity 与 Plot datum locator 迁移。
+- 稳定 interaction target、跨 IR 编辑 locator、Composite source identity 与 Plot datum locator 设计。
 - arbitrary forward-reference fixpoint、父子循环约束或多 pass 全图求解；不可形成有向布局顺序时 fail-loud。
 
 ## 遗留风险与后续
 
-- 本次更改是 v0.5 alpha 间 breaking；直接调用方必须读取 `result.scene`，Node layout observer 必须迁移到 opt-in artifact
+- `CompileResult`、opt-in artifacts 与 occurrence locator 是本版唯一公开编译结果契约
 - occurrence locator 只保证同一次 canonical compile 内确定，不是 interaction target 或跨编辑稳定 identity
 - visual bounds 是 renderer-agnostic 的保守 settled AABB，不覆盖 glyph ink、逐像素 alpha 或动画全时域
 - Table alpha.2 solver / manifest、跨次缓存、增量 compile、异步测量与 forward-reference fixpoint 均需独立设计和验收

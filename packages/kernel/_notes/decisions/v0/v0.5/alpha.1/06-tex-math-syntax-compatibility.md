@@ -1,10 +1,11 @@
 # ADR-06：TeX 数学语法兼容
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-07-23
+- 接受日期：2026-07-26
 - 关联：[alpha.1 roadmap](./roadmap.md) · [v0.5 roadmap](../roadmap.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
-> 本 ADR 冻结设计，不授权实现。目标是选定的 MathJax TeX 数学 profile，不是完整 LaTeX 文档编译器。
+> Architecture Gate 第 3 轮 PASS 后获得实现授权；实现、对抗测试与双语文档完成后，于 2026-07-26 获得收尾确认。目标仍是选定的 MathJax TeX 数学 profile，不是完整 LaTeX 文档编译器。本记录不授权 commit、tag、publish 或 push。
 
 ## 背景
 
@@ -116,7 +117,7 @@ type LoweredTex = {
 };
 ```
 
-- 删除 `LoweredTex.commands`，不保留双形态桥接；0.x custom lowerer 需迁移到 `paths`。
+- `LoweredTex` 以 `paths` 作为唯一的 drawable 输出结构。
 - MathJax SVG parser 为每个 drawable 物化 fill / stroke 三态：`none` 禁用通道，`currentColor` 请求宿主颜色，`color` 保留内部显式色。禁止用 `undefined` 同时表示“无 paint”和“继承宿主”。
 - SVG cascade 的初始 `color` 是内部宿主哨兵，`color` 属性按 SVG 规则继承。effective fill / stroke 为 `currentColor` 时，若 effective `color` 已被内部 style / attribute 设为显式色，则物化为 `{ kind: 'color', value }`；只有 effective `color` 仍是宿主哨兵时才物化 `{ kind: 'currentColor' }`。`color: currentColor` 保留当前继承结果，不把已解析的内部色重新退回宿主。
 - Core 把 `currentColor` 解析为 MathRun.fill > Node 已解析 textColor（含 ADR-04）> `'currentColor'`；内部 `color` 不受宿主覆盖，`none` 不 emit 对应 PathPrim paint。
@@ -175,47 +176,25 @@ Vanilla 继续通过 `compile.lowerTex` 注入同一个 `LowerTex`。
 - 为 `extpfeil` 引入 nested viewport / clip：会扩大 Core Scene、renderer 与 `LoweredTexPath` contract，只为单个宏引入不成比例的能力面。
 - 为 extension 建通用 registry：MathJax 配置是 `@retikz/tex` 的闭合静态 profile；custom engine 已是扩展口。
 
-## 公开影响与兼容性
+## 公开影响
 
 - 默认 base profile 的普通公式保持行为。
-- `LoweredTex.commands` → `paths` 是 red-level breaking change；自定义 lowerer需迁移。
+- `LoweredTex.paths` 是自定义 lowerer 的唯一多路径输出结构。
 - `createMathJaxLowerTex(options)`、`useLowerTex(options)`、profile / extensions / diagnostics 是 additive。
 - renderer 无新 API；Scene 中可能由一个 math run 发出多个 styled PathPrim。
 
-## 测试设计
+## 最终实现与验证摘要
 
-详细矩阵见 ignored `notes/plans/kernel-v0.5-alpha.1-scope/TEST_CONTRACT_ADR_06.md`。覆盖 9 个 extension 的 MathJax 3.2.2 golden、内部 `empheq` 依赖、paint/style cascade、多 path 样式、优先级、失败诊断、cache / concurrency / retry、宿主通道、自定义注入、SSR / browser 与 SVG / Canvas parity。
+- Core 以 `LoweredTexPath` / paint 三态替换单一 `commands`，正文、Node label 与 edge label 共用多 path consumer。
+- `@retikz/tex` 提供 base / math profile、9 个公开 extension、字面量 dynamic import、一次性 factory、细分 diagnostics、确定失败 cache 与 React hook 生命周期。
+- MathJax SVG lowering 保留 drawable 顺序、paint / opacity / transform，并对 `<text>`、`<foreignObject>`、nested SVG、clip、不可表达 group opacity 与 transform 整次 fail-loud。
+- React / Vanilla 透传同一 `LowerTex`；SVG / Canvas 只消费普通 `PathPrim`，没有 renderer 私有 MathJax 路径。
+- README、TeX 包页面、API 表、边界说明与 profile demo 已完成 zh / en 同步。
+- ignored 测试契约矩阵逐行回填 Core / Tex / adapter / renderer / docs 的具名正式证据；主线程 Bug Hunter 发现并修复 `clip-path` presentation attribute 被静默忽略的问题，正式回归测试通过，最后一轮无 BLOCKING。
 
-## 绘图完备性检查
+## 遗留边界
 
-- 能力域 / 能力面：Drawing；Primitive / Scene、Style / Resource。
-- 主责：Core 拥有 LowerTex / LoweredTexPath 和 Scene 组合；tex 拥有 MathJax；render 执行普通 PathPrim。
-- 内部表达：扩展通用 lowering result，不把 engine、SVG string、DOM 或 class 放入 IR / Scene。
-- 外部扩展：custom `LowerTex` / `MathJaxSvgEngine` 已是统一注入口；内置 profile 与自定义均经同一 Core consumer。
-- 下游闭环：Node text / label / edge label、React / Vanilla 和 SVG / Canvas 共用多 path 结果。
-- 结论：扩展现有 Core TeX lowering contract 与 tex integration，拒绝把 TeX engine 下沉 Core。
-
-## 不在范围
-
-- 完整 LaTeX 文档、任意宏包、分页、表格、文档布局。
-- `<text>` / `<foreignObject>` 转字形轮廓；因此 `upgreek`、`unicode` 不进入公开 profile。
-- 通用 SVG importer、nested viewport / clip、任意 CSS cascade；因此 `extpfeil` 不进入公开 profile，parser 只覆盖冻结的 MathJax 3.2.2 golden。
-- renderer 直接调用 MathJax。
-- 把 MathJax font family / weight 映射为普通文本字体。
-
-## 实现契约
-
-- Level：`red`
-- Schema 改动：IR schema 无改动；Core `compile/text/tex.ts` 新增 `LoweredTexPaint` / `LoweredTexPath`，并以 `paths` 替换 `commands`
-- 文件 scope：
-  - Core：`compile/text/{tex,layout,index}.ts`、`compile/index.ts`；新增独立 TeX contract / host tests，不修改 ADR-05 正在占用的 Node label 测试
-  - Tex MathJax：`mathjax/{constants,types,profiles,engine,index}.ts`；`profiles.ts` 持有字符串字面量 dynamic import loaders、canonicalization 与 `cases -> empheq + cases` 展开，根入口不得 eager load optional peer
-  - Tex lower：`lower/{types,lower-tex,create-mathjax,index}.ts`；`create-mathjax.ts` 拥有并导出 `createMathJaxLowerTex`
-  - Tex SVG：`svg/{parse-svg,matrix,paint,index}.ts` 与既有 path parser；paint 只负责 cascade / 三态，parser 遇到 nested `<svg>` 时整次拒绝
-  - Tex React / exports：`react/{useLowerTex,index}.ts`、根 `src/index.ts`、public export tests
-  - Tex tests：`tests/{mathjax,lower,svg,react,exports}/**`，覆盖真实 MathJax 3.2.2 golden、one-shot factory、diagnostic forwarding、literal dynamic imports，以及无 optional peer 时的根入口 / custom engine smoke
-  - React / Vanilla parity：新增 `packages/kernel/react/tests/kernel/runtime/layout-lower-tex.test.tsx` 与 `packages/kernel/vanilla/tests/runtime/lower-tex.test.ts`，只证明既有 `Layout.lowerTex` / `compile.lowerTex` 透传多 path custom lowerer，原则上不改 adapter 产品代码
-  - Render：`tests/svg/**`、`tests/canvas/**` 的多 PathPrim paint / opacity parity；原则上无 renderer 产品改动
-  - Docs / migration：`packages/kernel/tex/README.md`、`apps/docs/.../kernel/packages/tex/**`、必要 ComponentPreview registry tests
-- 测试契约矩阵：`notes/plans/kernel-v0.5-alpha.1-scope/TEST_CONTRACT_ADR_06.md`
-- 依赖现有元素：`LowerTex`、text layout、Scene PathPrim、MathJaxSvgEngine、liteAdaptor、custom lowerer injection、ADR-04 resolved text color
+- 不支持完整 LaTeX 文档、任意宏包、分页、表格或文档布局。
+- 不把 `<text>` / `<foreignObject>` 转为轮廓，因此 `upgreek`、`unicode` 不进入公开 profile。
+- 不提供通用 SVG importer、nested viewport / clip 或任意 CSS cascade，因此 `extpfeil` 不进入公开 profile。
+- renderer 不直接调用 MathJax，也不映射 MathJax font family / weight 为普通文本字体。
