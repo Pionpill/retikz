@@ -25,6 +25,7 @@ describe('runtime Program execution', () => {
     const owners = createRuntimeOwnerRegistry({ builtins: [primaryOwner, unrelatedOwner] });
     const directRun = vi.fn(view => ({ kind: 'full' as const, artifact: view.snapshot(primaryOwner).value }));
     const directCapture = vi.fn((value: number) => value);
+    const directObserver = vi.fn();
     const directUpdate = vi.fn((_previous: number, view) => ({
       kind: 'incremental' as const,
       artifact: view.snapshot(primaryOwner).value,
@@ -37,9 +38,11 @@ describe('runtime Program execution', () => {
       artifact: { capture: directCapture, readForProgram: value => value, read: value => value },
       run: directRun,
       update: directUpdate,
+      observeCommit: directObserver,
     });
     const transitiveRun = vi.fn(view => ({ kind: 'full' as const, artifact: view.artifact(direct).value * 10 }));
     const transitiveCapture = vi.fn((value: number) => value);
+    const transitiveObserver = vi.fn();
     const transitiveUpdate = vi.fn((_previous: number, view) => ({
       kind: 'incremental' as const,
       artifact: view.artifact(direct).value * 10,
@@ -52,9 +55,11 @@ describe('runtime Program execution', () => {
       artifact: { capture: transitiveCapture, readForProgram: value => value, read: value => value },
       run: transitiveRun,
       update: transitiveUpdate,
+      observeCommit: transitiveObserver,
     });
     const unrelatedRun = vi.fn(view => ({ kind: 'full' as const, artifact: view.snapshot(unrelatedOwner).value }));
     const unrelatedCapture = vi.fn((value: number) => value);
+    const unrelatedObserver = vi.fn();
     const unrelatedUpdate = vi.fn((_previous: number, view) => ({
       kind: 'incremental' as const,
       artifact: view.snapshot(unrelatedOwner).value,
@@ -67,6 +72,7 @@ describe('runtime Program execution', () => {
       artifact: { capture: unrelatedCapture, readForProgram: value => value, read: value => value },
       run: unrelatedRun,
       update: unrelatedUpdate,
+      observeCommit: unrelatedObserver,
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [transitive, unrelated, direct] });
     const session = createRuntimeSession({
@@ -89,6 +95,9 @@ describe('runtime Program execution', () => {
     expect(directCapture).toHaveBeenCalledTimes(2);
     expect(transitiveCapture).toHaveBeenCalledTimes(2);
     expect(unrelatedCapture).toHaveBeenCalledTimes(1);
+    expect(directObserver).toHaveBeenCalledTimes(2);
+    expect(transitiveObserver).toHaveBeenCalledTimes(2);
+    expect(unrelatedObserver).toHaveBeenCalledTimes(1);
     expect(session.artifact(direct)).toEqual({ revision: 1, value: 2 });
     expect(session.artifact(transitive)).toEqual({ revision: 1, value: 20 });
     expect(session.artifact(unrelated)).toEqual({ revision: 1, value: 7 });
@@ -107,6 +116,9 @@ describe('runtime Program execution', () => {
     expect(directCapture).toHaveBeenCalledTimes(2);
     expect(transitiveCapture).toHaveBeenCalledTimes(2);
     expect(unrelatedCapture).toHaveBeenCalledTimes(2);
+    expect(directObserver).toHaveBeenCalledTimes(2);
+    expect(transitiveObserver).toHaveBeenCalledTimes(2);
+    expect(unrelatedObserver).toHaveBeenCalledTimes(2);
     expect(session.artifact(direct)).toEqual({ revision: 2, value: 2 });
     expect(session.artifact(transitive)).toEqual({ revision: 2, value: 20 });
     expect(session.artifact(unrelated)).toEqual({ revision: 2, value: 8 });
@@ -185,10 +197,57 @@ describe('runtime Program execution', () => {
     expect(session.artifact(program)).toEqual({ revision: 1, value: 2 });
   });
 
+  it('upstream full 强制 downstream full，不调用 downstream update', () => {
+    const owner = defineCounterOwner();
+    const owners = createRuntimeOwnerRegistry({ builtins: [owner] });
+    const upstreamRun = vi.fn(view => ({ kind: 'full' as const, artifact: view.snapshot(owner).value }));
+    const upstream = defineRuntimeProgram<number, number, number, number>({
+      id: { owner: 'counter', key: 'upstream' },
+      owners: [owner],
+      programs: [],
+      tracePhases: [],
+      artifact: { capture: value => value, readForProgram: value => value, read: value => value },
+      run: upstreamRun,
+    });
+    const downstreamRun = vi.fn(view => ({ kind: 'full' as const, artifact: view.artifact(upstream).value * 10 }));
+    const downstreamUpdate = vi.fn((_previous, view) => ({
+      kind: 'incremental' as const,
+      artifact: view.artifact(upstream).value * 10,
+    }));
+    const downstream = defineRuntimeProgram<number, number, number, number>({
+      id: { owner: 'counter', key: 'downstream' },
+      owners: [],
+      programs: [upstream],
+      tracePhases: [],
+      artifact: { capture: value => value, readForProgram: value => value, read: value => value },
+      run: downstreamRun,
+      update: downstreamUpdate,
+    });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [downstream, upstream] });
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      initialSnapshots: [createRuntimeOwnerInput(owner, 1)],
+    });
+
+    const result = session.update({
+      baseRevision: session.revision(),
+      owners: [createRuntimeOwnerUpdate(owner, 2)],
+    });
+
+    expect(result.outcome).toBe('full');
+    expect(upstreamRun).toHaveBeenCalledTimes(2);
+    expect(downstreamRun).toHaveBeenCalledTimes(2);
+    expect(downstreamUpdate).not.toHaveBeenCalled();
+    expect(session.artifact(upstream)).toEqual({ revision: 1, value: 2 });
+    expect(session.artifact(downstream)).toEqual({ revision: 1, value: 20 });
+  });
+
   it('Program fallback 调用 full run并归属 warning；upstream bailout 不触发下游', () => {
     const owner = defineCounterOwner();
     const owners = createRuntimeOwnerRegistry({ builtins: [owner] });
     const upstreamRun = vi.fn(view => ({ kind: 'full' as const, artifact: view.snapshot(owner).value }));
+    const upstreamObserver = vi.fn();
     const upstreamUpdate = vi
       .fn()
       .mockReturnValueOnce({
@@ -204,8 +263,10 @@ describe('runtime Program execution', () => {
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
       run: upstreamRun,
       update: upstreamUpdate,
+      observeCommit: upstreamObserver,
     });
     const downstreamRun = vi.fn(view => ({ kind: 'full' as const, artifact: view.artifact(upstream).value * 10 }));
+    const downstreamObserver = vi.fn();
     const downstreamUpdate = vi.fn((_previous, view) => ({
       kind: 'incremental' as const,
       artifact: view.artifact(upstream).value * 10,
@@ -218,6 +279,7 @@ describe('runtime Program execution', () => {
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
       run: downstreamRun,
       update: downstreamUpdate,
+      observeCommit: downstreamObserver,
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [downstream, upstream] });
     const session = createRuntimeSession({
@@ -244,6 +306,8 @@ describe('runtime Program execution', () => {
     ]);
     expect(downstreamRun).toHaveBeenCalledTimes(2);
     expect(downstreamUpdate).not.toHaveBeenCalled();
+    expect(upstreamObserver).toHaveBeenCalledTimes(2);
+    expect(downstreamObserver).toHaveBeenCalledTimes(2);
     expect(session.artifact(downstream)).toEqual({ revision: 1, value: 20 });
 
     const bailout = session.update({
@@ -257,5 +321,7 @@ describe('runtime Program execution', () => {
     expect(session.artifact(downstream)).toEqual({ revision: 2, value: 20 });
     expect(downstreamRun).toHaveBeenCalledTimes(2);
     expect(downstreamUpdate).not.toHaveBeenCalled();
+    expect(upstreamObserver).toHaveBeenCalledTimes(2);
+    expect(downstreamObserver).toHaveBeenCalledTimes(2);
   });
 });
