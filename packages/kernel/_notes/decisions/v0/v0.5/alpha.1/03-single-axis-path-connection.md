@@ -5,8 +5,6 @@
 - 接受日期：2026-07-26
 - 关联：[alpha.1 roadmap](./roadmap.md) · [v0.5 roadmap](../roadmap.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
-> Architecture Gate PASS 后于 2026-07-23 获得实现授权；实现、正式测试与双语文档完成后，于 2026-07-26 获得收尾确认。本记录不授权 commit、tag、publish 或 push。
-
 ## 背景
 
 `|-` / `-|` 表达先后沿两个轴到达目标的两段正交折线。用户只想从当前点水平连接到目标 x，或垂直连接到目标 y 时，现有 fold 必然多发一段；流程图又常用 `-|-` / `|-|` 在连接中间插入一条可调位置的垂直或水平段。parser 没有 namespace，无法在 authoring 阶段把命名 target 预计算为投影点或转折点。
@@ -167,7 +165,7 @@ React `FoldStepProps` 同步使用严格 union：`-|` / `|-` 不接受 `fraction
 - target lookup、host-local 轴投影、cursor / relative baseline、source clipping、sampling、marks、label、rounded corner 与 provenance 共用同一最终 path state。
 - Way parser、React `Step` / `Draw`、builder / unbuilder 与 Vanilla plain spec 保留同一结构化 IR、默认值和失败语义。
 - Step、Way、path schema / parser reference、双语 controls 与 demo 已同步。
-- ignored 测试契约矩阵覆盖 schema、parser、compile、geometry、adapter 与 docs 的具名正式证据；包括 delayed target、non-finite、零长度、Scope transform、三段 fold fraction / clipping / sampling 等反例。
+- 正式验证覆盖 schema、parser、compile、geometry、adapter 与 docs，包括 delayed target、non-finite、零长度、Scope transform、三段 fold fraction / clipping / sampling 等反例。
 
 ## 遗留边界
 

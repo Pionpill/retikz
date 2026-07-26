@@ -125,6 +125,9 @@ export const PACKAGE_IDS = [
   '@retikz/table',
   '@retikz/table-react',
   '@retikz/table-vanilla',
+  '@retikz/standard',
+  '@retikz/standard-react',
+  '@retikz/standard-vanilla',
   'docs',
 ] as const;
 export type PackageId = (typeof PACKAGE_IDS)[number];
@@ -144,12 +147,15 @@ export const PACKAGE_LABEL: Record<PackageId, Localized> = {
   '@retikz/table': { zh: '@retikz/table', en: '@retikz/table' },
   '@retikz/table-react': { zh: '@retikz/table-react', en: '@retikz/table-react' },
   '@retikz/table-vanilla': { zh: '@retikz/table-vanilla', en: '@retikz/table-vanilla' },
+  '@retikz/standard': { zh: '@retikz/standard', en: '@retikz/standard' },
+  '@retikz/standard-react': { zh: '@retikz/standard-react', en: '@retikz/standard-react' },
+  '@retikz/standard-vanilla': { zh: '@retikz/standard-vanilla', en: '@retikz/standard-vanilla' },
   docs: { zh: '文档站', en: 'Docs' },
 };
 
-/** 包的类别分组：kernel 基础设施 / viz 可视化层 / other（文档站等非 npm 包）；用于把包映射到对应文档模块的 changelog 切片 */
+/** 包的类别分组：kernel 基础设施 / standard 绘图库 / viz 可视化层 / other；用于映射模块 changelog 切片 */
 export type PackageGroup = {
-  id: 'kernel' | 'viz' | 'other';
+  id: 'kernel' | 'standard' | 'viz' | 'other';
   /** 该组按序包含的包标识 */
   members: ReadonlyArray<PackageId>;
 };
@@ -157,6 +163,10 @@ export const PACKAGE_GROUPS: ReadonlyArray<PackageGroup> = [
   {
     id: 'kernel',
     members: ['@retikz/math', '@retikz/core', '@retikz/render', '@retikz/react', '@retikz/vanilla', '@retikz/tex'],
+  },
+  {
+    id: 'standard',
+    members: ['@retikz/standard', '@retikz/standard-react', '@retikz/standard-vanilla'],
   },
   {
     id: 'viz',

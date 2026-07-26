@@ -5,8 +5,6 @@
 - 接受日期：2026-07-26
 - 关联：[alpha.1 roadmap](./roadmap.md) · [v0.5 roadmap](../roadmap.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
-> Architecture Gate 第 2 轮 PASS 后于 2026-07-23 获得实现授权；实现、正式测试与双语文档完成后，于 2026-07-26 获得收尾确认。本记录不授权 commit、tag、publish 或 push。
-
 ## 背景
 
 `currentColor` 不根据 Node fill 保证可读性，而由 adapter / renderer 求值会破坏 React / Vanilla、SVG / Canvas 与 SSR 的一致性。Core 又无法解析动态背景，因此本能力只处理静态不透明 fill，其余情况确定降级。
@@ -91,7 +89,7 @@ import { NodeTextColor } from '@retikz/core';
 - Node 正文、mixed / TeX 与继承的 label / pin 在 emit 前得到普通 CSS color；显式 run color 优先，无法静态求值时固定 warning 并回退 `currentColor`。
 - React 与 Vanilla 只透传同一字符串 IR，SVG / Canvas 只消费 Core 已解析的 Scene paint。
 - Node overview、Text、schema entity、compile warning reference 与双语 demo 已同步。
-- ignored 测试契约矩阵覆盖 JSON round-trip、strict schema、颜色 grammar、alpha 边界、tie-break、级联优先级、warning locator、adapter 与 renderer parity 的具名正式证据。
+- 正式验证覆盖 JSON round-trip、strict schema、颜色 grammar、alpha 边界、tie-break、级联优先级、warning locator、adapter 与 renderer parity。
 
 ## 遗留边界
 

@@ -64,6 +64,8 @@ mountSvg(container, figure, {
 });
 ```
 
+只加载 Grid 时保留这个部分数组；需要当前 Standard 的全部 Vanilla embeds 时，可从同一根入口导入并传入 `StandardVanillaAdapters`。
+
 ## 从持久化 JSON 加载
 
 直接读写 IR 时，安装 Standard 真源、Core schema 与所选 runtime：
@@ -74,7 +76,7 @@ mountSvg(container, figure, {
 
 ```ts
 import { SceneSchema } from '@retikz/core';
-import { createGrid, GridDefinition, GridSchema } from '@retikz/standard';
+import { createGrid, createStandardBundle, GridModule, GridSchema } from '@retikz/standard';
 import { mountSvg } from '@retikz/vanilla';
 
 const storageKey = 'retikz:grid';
@@ -100,22 +102,24 @@ const scene = SceneSchema.parse({
   viewBox: { x: 0, y: 0, width: 280, height: 170 },
   children: [storedGrid],
 });
+const gridBundle = createStandardBundle([GridModule]);
 
 const container = document.querySelector('#diagram');
 if (container === null) throw new Error('Missing #diagram container');
 
 mountSvg(container, scene, {
-  compile: { composites: [GridDefinition] },
+  compile: gridBundle.compile,
   output: { width: 280, height: 170 },
 });
 ```
 
-如果省略 `GridDefinition`，Core 会产生 `COMPOSITE_NOT_REGISTERED` 诊断并跳过 Grid；其它已注册或 Core 原生 child 仍会继续编译。
+如果 bundle 没有选择 `GridModule`，Core 会产生 `COMPOSITE_NOT_REGISTERED` 诊断并跳过 Grid；其它已注册或 Core 原生 child 仍会继续编译。需要当前全部 Standard 能力时，可以直接使用 `StandardAllPreset.compile`。
 
 ## 接下来
 
-| 页面                                | 继续了解什么                  |
-| ----------------------------------- | ----------------------------- |
-| [网格](/standard/composite/grid)    | 格距、主线、边界和边框        |
-| [坐标轴](/standard/composite/axes)  | 箭头、刻度、轴名和分方向网格  |
-| [分组框](/standard/composite/frame) | 自动 bounds、间距、边框和标签 |
+| 页面                                               | 继续了解什么                               |
+| -------------------------------------------------- | ------------------------------------------ |
+| [网格](/standard/composite/grid)                   | 格距、主线、边界和边框                     |
+| [坐标轴](/standard/composite/axes)                 | 箭头、刻度、轴名和分方向网格               |
+| [分组框](/standard/composite/frame)                | 自动 bounds、间距、边框和标签              |
+| [能力装载](/standard/extension/capability-loading) | module、部分 bundle、all preset 与宿主边界 |

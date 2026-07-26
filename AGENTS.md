@@ -28,6 +28,7 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 - 写 `apps/docs` 正文、demo、导航、i18n、schema registry 前，先读 `docs-doc-principle`；组件页 / 示例页 / 分组页 / 概念页 / blog 再读对应 docs skill。
 - 大任务、批量执行、多 commit 或可能跨上下文压缩的任务先读 `.agents/skills/flow-long-task/SKILL.md`，再分流到具体 flow / develop skill。
 - 发包、alpha/beta/rc 流程、跨模型评审、文档外站转换等长流程按对应 skill 执行，不把步骤复制进 AGENTS。
+- 所有发布组发包前都必须按 `package-publish` 逐篇阅读全文审计本次 milestone ADR 的压缩、状态与当前公开契约；不得以状态字段、roadmap 勾选或 commit message 代替内容检查。
 - 重构优先走 `.agents/skills/develop-refactor/SKILL.md`；纯审计仍走 `develop-review`。
 - 问答中若发现用户新偏好、流程调整或规则适合沉淀进 `AGENTS.md` / skill，完成当前任务后主动告知并征求同意；用户不同意时不得自行修改。
 - 向 `AGENTS.md` / skill 添加规则必须简洁干练，只写可执行约束，不扩写背景、不放长例子，优先节省 token。
@@ -90,6 +91,7 @@ pnpm --filter <pkg> test:run # 仅大范围重构或功能大改
 
 - 当前项目首次执行 `git commit` 前，必须读取并向用户确认实际生效的 `user.name` / `user.email`（优先仓库 local 配置）；身份未变化时，当前对话后续提交无需重复确认。
 - AI 执行 `git commit` / `git push` / `git tag` / `npm publish` 前，必须在当前对话拿到用户明确授权；push / tag / publish 始终单独授权。
+- 发布 tag 必须是 annotated tag，统一命名为 `<release-group>-v<version>`；release group 以 `scripts/release-groups.config.mjs` 为准，历史 tag 保持不变，已发布 tag 不得移动、复用或覆盖，细则见 `package-publish`。
 - 计划、skill、自称会提交、lint/build 通过、auto mode、历史会话授权都不算授权。
 - 多块改动按 commit 粒度分块 staging；无授权时展示暂存文件和拟用 message，等待确认。
 - 派子 agent / 外部模型评审前必须征求用户确认。唯一常驻例外是 `flow-alpha` 的 ADR Architecture Gate 与 `flow-beta` 的入口 / 出口 completeness audit：两者自动派遣新的只读 subagent，最多 3 轮，无需逐次授权；该例外不授权产品修改、其它 review、commit 或任何外部写操作。长任务执行前同时询问：plan 写完是否评审、代码写完是否评审。非明确功能类代码完工并提交或准备提交后，也询问是否需要子 agent review；改动面大、核心功能或高风险提交仍需询问；小任务且用户已明确认可本次单次 commit 时不再额外询问。

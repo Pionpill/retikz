@@ -61,3 +61,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路：�
 ## 授权边界
 
 本 roadmap 与 Proposed ADR 只授权设计审查，不授权实现、commit、tag、publish 或 push。
+
+## 历史设计记录
+
+本目录中的 [上下文化 Composite 布局事务](./01-contextual-composite-layout.md) 曾以 alpha.2 ADR-01 立项，现已由 [alpha.1 ADR-07](../alpha.1/07-layout-aware-composite.md) 取代并完成实现、测试、文档与 Accepted 收尾。该文件仅保留为 Superseded 设计记录，不属于本 milestone 的现行 ADR 序列。
