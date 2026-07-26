@@ -170,7 +170,7 @@
     "grammarCoordinateComposition": "坐标组合",
     "grammarMark": "图元",
     "grammarGuide": "辅助",
-    "plotLineage": "图元链路",
+    "plotLineage": "溯源",
     "grammarExtend": "扩展",
     "grammarExtendChannel": "自定义通道",
     "grammarExtendScale": "自定义比例尺",

@@ -188,6 +188,17 @@ describe('plot lineage runtime', () => {
     expect(nodeChildrenOf(children[0]).some(node => 'lineage' in (node.meta ?? {}))).toBe(false);
   });
 
+  it('keeps the required identity skeleton when markIdentity is disabled', () => {
+    const { lineage } = lowerPlotWithLineage(pointSpec(), datasets, { lineage: { markIdentity: false } });
+
+    expect(lineage).toMatchObject({
+      plotId: 'salesPlot',
+      dataReference: 'sales',
+      marks: [{ markIndex: 0, markType: 'point' }],
+    });
+    expect(lineage.marks[0]).not.toHaveProperty('markId');
+  });
+
   it('keeps root and mark-local transform scopes separate', () => {
     const { lineage } = lowerPlotWithLineage(summarySpec(), datasets, { lineage: {} });
 
