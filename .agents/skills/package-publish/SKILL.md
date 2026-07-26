@@ -13,6 +13,7 @@ description: '发布或准备发布 retikz npm 包时使用。覆盖版本号 bu
 - 不替用户猜目标版本。版本号、发布组或 changelog 范围不清楚时先问。
 - 目标版本必须先写入仓库、验证并提交，再 tag / publish。
 - 必须按 npm registry 校验版本连续性；不要把仓库里的预 bump 开发版本当成已发布版本。
+- ADR 压缩审计是所有发布组不可跳过的前置门槛；必须逐篇阅读全文，不得以状态字段、roadmap 勾选或 commit message 代替。
 - `npm view` / login / dry-run / publish 都显式使用 `--registry https://registry.npmjs.org/`。
 
 ## 发布组
@@ -79,8 +80,18 @@ npm view @retikz/standard dist-tags --registry=https://registry.npmjs.org/
 2. **changelog 数据**：更新 `apps/docs/src/modules/docs/data/changelog/*.ts` 中对应 release 文件，结构以 `apps/docs/src/modules/docs/data/types.ts` 为准；不要改旧 changelog MDX。
 3. **模块徽章**：只有可见模块版本变化时才改 `apps/docs/src/modules/docs/data/module.ts`，例如 minor / major 切档或 alpha -> beta -> rc -> stable。
 4. **roadmap**：按发布组当前 roadmap 的既有格式更新。
-5. **ADR 检查**：确认本次发版覆盖的已完成 ADR 已在 `develop-wrapup` 阶段压缩并置为 `Accepted`；发现未压缩 ADR 时停下，先走 wrapup 修正。
+5. **ADR 检查**：按下方“ADR 压缩门禁”逐篇审计本次 milestone 的全部 ADR；发现未压缩、状态错误或契约不一致时停下，先走 `develop-wrapup` 修正。
 6. **lockfile**：package metadata 或依赖图变化导致 lockfile 漂移时，运行 `pnpm install`。
+
+### ADR 压缩门禁
+
+全仓验证和 dry-run 前必须完成，适用于 kernel / data / plot / table / standard 全部发布组：
+
+1. 从本次 milestone roadmap 枚举全部 ADR，并逐篇阅读全文。
+2. 按 `develop-wrapup` 的“ADR 压缩”标准检查长期记录；不得只检查状态、文件长度、roadmap 或提交说明。
+3. 最终生效 ADR 必须为 `Accepted`；被替代记录必须为 `Superseded`，并明确链接替代 ADR 与被替代原因。
+4. 对账 ADR 中的公开契约、类型示例、兼容性与最终实现、changelog、docs；任一陈旧描述都算阻断。
+5. 向用户逐篇汇报 ADR、状态、压缩、契约一致性与结论。任一项未通过时停止发布流程，不进入全仓门禁、dry-run、commit、tag 或 publish。
 
 Changelog 规则：
 
@@ -178,7 +189,9 @@ pnpm --filter @retikz/<pkg> publish --access public --tag <tag> --no-git-checks 
 - [ ] 用户可见行为变化已更新对应 changelog 数据文件。
 - [ ] 只有需要改变可见徽章时才更新 `module.ts`。
 - [ ] roadmap 已按既有格式更新。
-- [ ] 发版范围内已完成 ADR 已压缩并为 `Accepted`。
+- [ ] 已从 milestone roadmap 枚举并逐篇阅读全文审计全部 ADR，未用状态、roadmap 或提交说明替代。
+- [ ] 生效 ADR 已压缩并为 `Accepted`；被替代 ADR 已压缩并为 `Superseded`，且替代关系明确。
+- [ ] ADR 公开契约、类型示例与最终实现、changelog、docs 一致。
 - [ ] lockfile 可能漂移时已跑 `pnpm install`。
 - [ ] `pnpm run check:full` 通过。
 - [ ] `pnpm run check:release-groups` 通过。
