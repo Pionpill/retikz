@@ -1,0 +1,81 @@
+---
+title: 自定义比例尺
+description: 用 defineScale 定义位置或视觉通道比例尺，通过 scaleDefinitions 注入；命名配色通过 colorSchemes 注入。
+---
+
+当内置比例尺无法表达品牌色阶、领域映射或特殊离散化规则时，可以注册运行时 `ScaleDefinition`。Plot IR 只保存 `{ type, name, ...config }` 的 JSON operation；求值函数和字段兼容性规则留在 definition 中。
+
+## 适用边界
+
+- 需要新的“值 → 坐标”规则时，定义 `position` family scale。
+- 需要新的“值 → 视觉量”规则时，定义 `channel` family scale。
+- 只需为现有颜色比例尺补充一套命名色板时，注入 `colorSchemes`，无需定义新 scale type。
+- 新映射仍应产出 Plot 已支持的位置或视觉通道值；renderer 专属逻辑不属于 scale。
+
+## 定义能力
+
+`defineScale` 按 `family` 区分两套输出契约：
+
+| family     | 输入与输出        | 关键契约                                                                                                             |
+| ---------- | ----------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `position` | 值 → 坐标         | `resolve` 返回 `PositionScale`；`isFieldCompatible` 限定字段类型，`allowsBaseline` 声明能否作为 interval / area 值轴 |
+| `channel`  | 值 → 颜色等视觉量 | `resolve` 单次返回 `of`、`legendForm`、`domain`、`range` 与可选 `edges`，保证实绘与图例同源                          |
+
+下面的 `brand` channel scale 把分类 `tier` 映射到固定品牌色板：
+
+<ComponentPreview files={['scale-custom', 'scale-custom.data.ts']} />
+
+## 注入宿主
+
+通过 `<Plot scaleDefinitions={[brandColor]}>` 注入 definition；Vanilla 入口通过 `renderPlot` options 注入。自定义 type 在 `spec.scales` 中显式引用：
+
+```tsx
+const spec = {
+  // ...
+  scales: [{ type: 'brand', name: 'tier-color' }],
+};
+
+<Plot spec={spec} scaleDefinitions={[brandColor]} />;
+```
+
+命名配色使用独立的 `colorSchemes` 注入点：
+
+```tsx
+<Plot colorSchemes={{ brand: t => `hsl(210, 80%, ${100 - t * 60}%)` }} />
+```
+
+IR 只保存 scheme 名称；interpolator 函数留在宿主运行时。
+
+## 执行机制
+
+1. 宿主合并内置与自定义 scale definitions，并检查 family 与 type 冲突。
+2. lowering 按 `spec.scales[].type` 找到 definition，用其 schema 校验 JSON 配置。
+3. 数据域和输出 range 交给 `resolve`，得到位置 scale 或通道 evaluator。
+4. mark、coordinate 与 guide 消费同一解析结果，因此实绘、坐标轴和图例保持一致。
+
+channel scale 的 resolve context 提供数值 / 时间强转和 `resolveColorScheme`；position scale 则通过统一 `PositionScale` 接口参与坐标投影与 ticks。
+
+## 错误与限制
+
+- 自定义 `type` 不能覆盖内置 scale，也不能重复注册。
+- 未注册 type 或 scheme 名会在 lowering 时直接报错。
+- definition schema 必须只描述 JSON 可序列化配置，函数不能进入 IR。
+- 自定义 scale 不参与 React 字段类型自动派生，只在完整 spec 中显式引用。
+- 声明式 `<Scale>` 当前只覆盖内置 type；自定义 type 使用 `spec` + `scaleDefinitions`，或 Vanilla options。
+
+## API 参考
+
+| API                | 用途                                                   |
+| ------------------ | ------------------------------------------------------ |
+| `defineScale`      | 从 family、schema 与 resolve 行为构造 scale definition |
+| `ScaleDefinition`  | 自定义比例尺的字段兼容性与求值契约                     |
+| `scaleDefinitions` | React / Vanilla 宿主的 scale definition 注入点         |
+| `colorSchemes`     | 命名配色 interpolator 注入点                           |
+| `PositionScale`    | 位置比例尺统一输出接口                                 |
+
+## 相关
+
+- [位置比例尺](/viz/plot/scale/position) —— position family 的内置语义
+- [颜色比例尺](/viz/plot/scale/color) —— channel family 与图例契约
+- [自定义通道](/viz/plot/channel/custom-channel) —— 自定义视觉属性的交付路径
+- [扩展机制](/viz/reference/extensions) —— Plot runtime definitions 的共同模型

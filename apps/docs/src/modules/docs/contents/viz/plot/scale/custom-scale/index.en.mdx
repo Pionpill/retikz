@@ -1,0 +1,81 @@
+---
+title: Custom Scales
+description: Define positional or visual-channel scales with defineScale and inject them through scaleDefinitions; inject named palettes through colorSchemes.
+---
+
+When built-in scales cannot express a brand ramp, domain-specific mapping, or special discretization rule, register a runtime `ScaleDefinition`. Plot IR stores only the JSON operation `{ type, name, ...config }`; evaluation functions and field-compatibility rules stay in the definition.
+
+## Applicability
+
+- Define a `position` family scale for a new value-to-coordinate rule.
+- Define a `channel` family scale for a new value-to-visual-quantity rule.
+- If an existing color scale only needs another named palette, inject `colorSchemes` instead of defining a new scale type.
+- A custom mapping must still produce positions or visual-channel values supported by Plot; renderer-specific logic does not belong in a scale.
+
+## Define the capability
+
+`defineScale` selects one of two output contracts through `family`:
+
+| Family     | Input and output                         | Key contract                                                                                                                                                       |
+| ---------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `position` | value → coordinate                       | `resolve` returns a `PositionScale`; `isFieldCompatible` restricts field types and `allowsBaseline` declares whether it can serve as an interval / area value axis |
+| `channel`  | value → color or another visual quantity | One `resolve` call returns `of`, `legendForm`, `domain`, `range`, and optional `edges`, keeping rendering and legends on the same result                           |
+
+The `brand` channel scale below maps categorical `tier` values to a fixed brand palette:
+
+<ComponentPreview files={['scale-custom', 'scale-custom.data.ts']} />
+
+## Inject into the host
+
+Inject a definition with `<Plot scaleDefinitions={[brandColor]}>`; the Vanilla entry accepts it through `renderPlot` options. Reference the custom type explicitly in `spec.scales`:
+
+```tsx
+const spec = {
+  // ...
+  scales: [{ type: 'brand', name: 'tier-color' }],
+};
+
+<Plot spec={spec} scaleDefinitions={[brandColor]} />;
+```
+
+Named color schemes use the separate `colorSchemes` injection point:
+
+```tsx
+<Plot colorSchemes={{ brand: t => `hsl(210, 80%, ${100 - t * 60}%)` }} />
+```
+
+The IR stores only the scheme name; the interpolator remains in the host runtime.
+
+## Execution
+
+1. The host merges built-in and custom scale definitions and checks family and type conflicts.
+2. Lowering finds the definition through `spec.scales[].type` and validates its JSON config with the definition schema.
+3. The data domain and output range are passed to `resolve`, producing a positional scale or channel evaluator.
+4. Marks, coordinates, and guides consume the same result, keeping rendering, axes, and legends aligned.
+
+The channel-scale resolve context provides number / timestamp coercion and `resolveColorScheme`; positional scales participate in coordinate projection and ticks through the shared `PositionScale` interface.
+
+## Errors and limits
+
+- A custom `type` cannot override a built-in scale or be registered twice.
+- An unregistered type or scheme name fails during lowering.
+- The definition schema must contain only JSON-serializable config; functions cannot enter the IR.
+- Custom scales do not participate in React field-type auto-derivation and must be referenced explicitly from a full spec.
+- The declarative `<Scale>` currently covers built-in types; use `spec` + `scaleDefinitions` or Vanilla options for custom types.
+
+## API reference
+
+| API                | Use                                                                       |
+| ------------------ | ------------------------------------------------------------------------- |
+| `defineScale`      | Constructs a scale definition from a family, schema, and resolve behavior |
+| `ScaleDefinition`  | Field compatibility and evaluation contract for a custom scale            |
+| `scaleDefinitions` | Scale-definition injection point for React and Vanilla hosts              |
+| `colorSchemes`     | Named color-scheme interpolator injection point                           |
+| `PositionScale`    | Shared output interface for positional scales                             |
+
+## Related
+
+- [Positional Scales](/viz/plot/scale/position) — built-in semantics for the position family
+- [Color Scales](/viz/plot/scale/color) — channel-family and legend contracts
+- [Custom Channels](/viz/plot/channel/custom-channel) — delivery paths for custom visual properties
+- [Extension Mechanisms](/viz/reference/extensions) — the shared model for Plot runtime definitions

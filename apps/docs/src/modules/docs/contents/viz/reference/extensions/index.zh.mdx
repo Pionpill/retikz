@@ -1,0 +1,35 @@
+---
+title: 扩展机制
+description: Plot 扩展点索引：按能力归属找到自定义通道、图元、比例尺和坐标系，并理解 definition、registry 与 lowering 的共同边界。
+---
+
+Plot 的扩展能力分散在各个绘图语法 owner 下。这一页只负责索引和说明共同机制；具体契约、注入方式与限制由对应能力页面维护。
+
+扩展 definition 是**宿主运行时能力**，不会直接进入 Plot IR。IR 只保存可序列化的 `type`、字段绑定和 JSON 配置；函数、求值器、投影与 lower 行为通过 React props 或 Vanilla options 注入。
+
+## 选择扩展点
+
+| 目标                           | 扩展点                          | 指南                                                   |
+| ------------------------------ | ------------------------------- | ------------------------------------------------------ |
+| 增加新的字段到视觉属性交付路径 | channel definition              | [自定义通道](/viz/plot/channel/custom-channel)         |
+| 把数据行下沉成新的几何组合     | mark definition                 | [自定义图元](/viz/plot/mark/custom-mark)               |
+| 增加值到坐标或视觉量的映射     | scale definition / color scheme | [自定义比例尺](/viz/plot/scale/custom-scale)           |
+| 增加位置 role、投影或自定义轴  | coordinate definition           | [自定义坐标系](/viz/plot/coordinate/custom-coordinate) |
+
+## 共同运行时模型
+
+1. **定义能力**：用 `defineChannel`、`defineMark`、`defineScale` 或 `defineCoordinate` 声明 schema 与行为。
+2. **注入宿主**：通过 `<Plot>` 的 definitions props，或 `renderPlot` options，合并到运行时 registry。
+3. **解析 IR**：IR 中的判别字段和 JSON 配置由命中的 definition schema 校验。
+4. **统一下沉**：内置与自定义能力进入同一条 lowering 管线，最终产出 Core IR。
+
+自定义判别名不能覆盖内置能力，也不能在同一次编译中重复注册。找不到 definition 或配置校验失败时，lowering 会直接报错，而不是静默降级。
+
+## 不属于 Plot 扩展的能力
+
+字段格式、解析函数和数据 transform 属于数据层。字段能力见[数据模型扩展](/viz/data/model/extensions)，transform、reducer 与 selector 见[数据变换扩展](/viz/data/transform/extensions)。
+
+## 相关
+
+- [Plot IR](/viz/reference/plot-ir) —— IR 中可以持久化的绘图契约
+- [下沉](/viz/reference/lowering) —— definitions 如何进入 Plot 到 Core 的编译流程

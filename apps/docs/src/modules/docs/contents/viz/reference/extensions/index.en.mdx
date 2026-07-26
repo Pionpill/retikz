@@ -1,0 +1,35 @@
+---
+title: Extension Mechanisms
+description: 'An index of Plot extension points: find custom channels, marks, scales, and coordinates by owner and understand their shared definition, registry, and lowering boundaries.'
+---
+
+Plot extension guides live with the drawing-grammar capability that owns them. This page is only an index and a description of their shared mechanism; each capability page owns its contract, injection path, and limits.
+
+An extension definition is a **host runtime capability**, not part of Plot IR. The IR stores only serializable `type` discriminators, field bindings, and JSON config; functions, evaluators, projections, and lowerers are injected through React props or Vanilla options.
+
+## Choose an extension point
+
+| Goal                                                          | Extension point                 | Guide                                                        |
+| ------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------ |
+| Deliver a new field-driven value to a visual property         | channel definition              | [Custom Channels](/viz/plot/channel/custom-channel)          |
+| Lower rows into a new geometry assembly                       | mark definition                 | [Custom Marks](/viz/plot/mark/custom-mark)                   |
+| Add a mapping from values to coordinates or visual quantities | scale definition / color scheme | [Custom Scales](/viz/plot/scale/custom-scale)                |
+| Add position roles, projections, or custom axes               | coordinate definition           | [Custom Coordinates](/viz/plot/coordinate/custom-coordinate) |
+
+## Shared runtime model
+
+1. **Define the capability** with `defineChannel`, `defineMark`, `defineScale`, or `defineCoordinate`, including its schema and behavior.
+2. **Inject it into the host** through the definitions props on `<Plot>` or the corresponding `renderPlot` options.
+3. **Parse the IR** by validating its discriminator and JSON config against the matched definition schema.
+4. **Lower through one pipeline** so built-in and custom capabilities both end as Core IR.
+
+A custom discriminator cannot override a built-in capability or be registered twice for one compilation. A missing definition or invalid config fails during lowering instead of silently falling back.
+
+## Capabilities outside Plot
+
+Field formats, parsers, and data transforms belong to the data layer. See [Data Model Extensions](/viz/data/model/extensions) for field capabilities and [Data Transform Extensions](/viz/data/transform/extensions) for transforms, reducers, and selectors.
+
+## Related
+
+- [Plot IR](/viz/reference/plot-ir) — the drawing contract that can be persisted in IR
+- [Lowering](/viz/reference/lowering) — how definitions enter the Plot-to-Core compilation flow

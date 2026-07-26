@@ -1,0 +1,75 @@
+---
+title: Custom Channels
+description: Define and inject a channel definition so custom channels share field binding, registry, legend descriptor, and Core-property delivery paths with built-ins.
+---
+
+A custom channel delivers field-driven values to existing Core `Scope`, `Node`, or `Path` properties, such as mapping `score` to node opacity. It extends the **data-to-visual-property delivery path**, not the rendering foundation itself.
+
+## Applicability
+
+- Define a custom channel when you need a new `encoding.channels.<name>` that participates in field binding, evaluation, and legend descriptors.
+- When only the mapping from values to colors, radii, or coordinates changes, prefer a [Custom Scale](/viz/plot/scale/custom-scale).
+- If Core does not expose the target visual property, add the capability to Core first; a channel definition should not create parallel rendering semantics.
+- Field parsing and data mutation belong to [Data Extensions](/viz/data/model/extensions), not a channel resolver.
+
+## Define the capability
+
+Use `defineScopeChannel`, `defineNodeChannel`, `definePathChannel`, or the generic `defineChannel`:
+
+| Field     | Purpose                                                                         |
+| --------- | ------------------------------------------------------------------------------- |
+| `channel` | Unique registry name used by `encoding.channels.<name>`                         |
+| `output`  | Describes the output type, range, clamp behavior, and related value constraints |
+| `legend?` | Declares the legend form                                                        |
+| `resolve` | Builds a per-row resolver and descriptor from rows and field types              |
+| `deliver` | Writes each resolved value to an existing Core property                         |
+
+The `intensity` channel below reads `score`, maps it to `[0.3, 1]`, and delivers it to `IRNode.opacity`:
+
+<ComponentPreview files="custom-channel" size="md" />
+
+## Inject into the host
+
+Inject the definition with `<Plot channelDefinitions={[intensity]}>`; the Vanilla entry accepts the same definitions through `renderPlot` options.
+
+In the React DSL, custom bindings live on the mark's `channels` prop:
+
+```tsx
+<PointMark channels={{ intensity: 'score' }} />
+```
+
+This assembles to `encoding.channels.intensity = { field: 'score' }`. A string means a field name; write `{ value: 'literal' }` or `{ kind: 'constant', value: 'literal' }` for a string constant. The definition itself stays at runtime and never enters the IR.
+
+## Execution
+
+1. The host merges built-in and custom definitions into one channel registry.
+2. The resolver reads the binding and rows, returning a per-row evaluator; the descriptor and rendered values come from the same result.
+3. The mark definition declares which definition kinds it consumes.
+4. Lowering calls `deliver` through the scope / node / path delivery surface and writes the result into Core IR.
+
+A channel definition should not inspect `mark.type`. It owns resolution and delivery; the mark definition decides whether a mark consumes node, path, or scope channels, so custom marks can reuse the same path.
+
+## Errors and limits
+
+- A custom `channel` cannot override a built-in name or be registered twice.
+- Binding an unregistered channel fails during lowering.
+- `resolve` should build evaluators, not mutate data or generate geometry.
+- `deliver` may only write properties already supported by the corresponding Core primitive.
+- IR stores only field or JSON-constant bindings, never functions or definitions.
+
+## API reference
+
+| API                  | Use                                                                   |
+| -------------------- | --------------------------------------------------------------------- |
+| `defineScopeChannel` | Defines a channel delivered to a Core Scope                           |
+| `defineNodeChannel`  | Defines a channel delivered to a Core Node                            |
+| `definePathChannel`  | Defines a channel delivered to a Core Path                            |
+| `defineChannel`      | Defines a generic channel with an explicit kind and delivery contract |
+| `channelDefinitions` | Definition injection point for React and Vanilla hosts                |
+
+## Related
+
+- [Channel Binding](/viz/plot/channel/binding) — how field and constant bindings enter Plot IR
+- [Built-In Channels](/viz/plot/channel/builtin) — built-in definition delivery surfaces
+- [Custom Marks](/viz/plot/mark/custom-mark) — how marks declare and consume channel kinds
+- [Extension Mechanisms](/viz/reference/extensions) — the shared model for Plot runtime definitions

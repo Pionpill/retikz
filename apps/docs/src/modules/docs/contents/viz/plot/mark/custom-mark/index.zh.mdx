@@ -1,0 +1,82 @@
+---
+title: 自定义图元
+description: 用 defineMark 声明自定义图元 schema、字段收集与 lower 行为，并通过 markDefinitions 注入 Plot lowering。
+---
+
+自定义图元把数据行下沉成自己的 Core IR 组合。Plot IR 只保存自定义 `type`、`encoding`、`transform` 和其他 JSON 配置；字段收集、通道消费与几何生成留在运行时 `MarkDefinition` 中。
+
+## 适用边界
+
+- 内置图元无法表达目标几何，但目标仍可组合为 Core Node、Path、Scope 等图元时，定义自定义 mark。
+- 只需新增视觉属性时，优先使用[自定义通道](/viz/plot/channel/custom-channel)。
+- 数据准备应写成 plot-level 或 mark-local transform；不要把聚合、筛选等数据变换藏在 `lower` 中。
+- Core 无法表达目标渲染语义时，应先补 Core 能力，再由 mark lowering 消费。
+
+## 定义能力
+
+`defineMark<TMark>` 接收完整 operation schema 和下沉行为：
+
+| 字段             | 作用                                                               |
+| ---------------- | ------------------------------------------------------------------ |
+| `schema`         | 校验自定义 operation；非空字面量 `type` 是唯一注册键               |
+| `collectFields?` | 登记 schema 通用收集之外的源字段                                   |
+| `channelKinds?`  | 声明 lower 产物消费的 channel definition kind                      |
+| `buildCell?`     | 为区间类图元构造逐行逻辑 Cell                                      |
+| `lower`          | 把已经准备好的 rows、coordinate frame 与通道解析结果下沉成 Core IR |
+
+下面的 `diamond` 图元通过 `frame.projectRoles` 投影每行的 `x` / `y`，再生成 Core diamond Node：
+
+<ComponentPreview files={['mark-custom', 'mark-custom.data.ts']} />
+
+## 注入宿主
+
+通过 `<Plot markDefinitions={[diamondMark]}>` 注入 definition；Vanilla 入口通过 `renderPlot` options 注入。
+
+自定义图元没有专属 React 组件，使用完整 spec 入口创作：
+
+```tsx
+<Plot
+  spec={{
+    namespace: 'plot',
+    type: 'plot',
+    marks: [{ type: 'diamond', encoding: { x: { field: 'month' }, y: { field: 'sales' } } }],
+  }}
+  markDefinitions={[diamondMark]}
+/>
+```
+
+definition 不进入 spec，因此 spec 仍可 JSON round-trip。
+
+## 执行机制
+
+1. Plot 先执行 plot-level transform，再执行当前 mark 的 local transform。
+2. 字段收集和 active coordinate roles 为位置通道贡献数据域并解析 scale。
+3. runtime registry 按 `type` 找到 definition，并用其 schema 校验 operation。
+4. `lower(mark, rows, frame, channels, context)` 消费变换后的 rows，通过 `frame.projectRoles` 或 `frame.projectCell` 生成 Core IR。
+
+内置与自定义图元通过同一个 mark registry 分派。坐标系负责解释位置 role，比例尺负责值映射，mark 只负责几何装配。
+
+## 错误与限制
+
+- 自定义 `type` 不能覆盖内置图元，也不能重复注册。
+- 找不到 definition、schema 校验失败或写入当前坐标系不支持的 encoding key 时，lowering 会直接报错。
+- `lower` 应返回 Core `IRChild` 或 `null`，不能返回 renderer 专属对象。
+- 需要特殊位置域或区间几何的图元，应显式实现相应字段收集、`buildCell` 与 coordinate capability，不能依赖默认点投影。
+- React DSL 当前没有通用 `<Mark type="...">` 入口；自定义图元通过 `spec.marks` 创作。
+
+## API 参考
+
+| API                            | 用途                                     |
+| ------------------------------ | ---------------------------------------- |
+| `defineMark`                   | 从 schema 与行为构造 `MarkDefinition`    |
+| `MarkDefinition`               | 自定义图元的字段收集、通道消费与下沉契约 |
+| `markDefinitions`              | React / Vanilla 宿主的 definition 注入点 |
+| `CoordinateFrame.projectRoles` | 把位置 role 值投影为屏幕点               |
+| `CoordinateFrame.projectCell`  | 把逻辑 Cell 投影为区间几何               |
+
+## 相关
+
+- [图元](/viz/plot/mark) —— 内置图元与 lowering 的共同模型
+- [坐标系](/viz/plot/coordinate) —— frame 如何解释位置 role 与 Cell
+- [比例尺](/viz/plot/scale) —— 字段值如何先解析成位置或视觉量
+- [扩展机制](/viz/reference/extensions) —— Plot runtime definitions 的共同模型

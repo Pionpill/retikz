@@ -66,6 +66,8 @@ const sunsetStroke = {
 
 渐变、图案和图片填充都由 core 资源表处理；plot 不拼接 renderer 私有的 `url(#...)`，因此 SVG 和 Canvas 后端会复用同一份语义。
 
+需要注册新的图元类型时，从[自定义图元](/viz/plot/mark/custom-mark)开始。
+
 ## 注册图元
 
 <div className="grid gap-3 sm:grid-cols-2">

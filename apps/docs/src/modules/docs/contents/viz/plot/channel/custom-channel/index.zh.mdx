@@ -1,0 +1,75 @@
+---
+title: 自定义通道
+description: 定义并注入新的 channel definition，让自定义通道与内置通道共用字段绑定、registry、图例描述和 Core 属性交付路径。
+---
+
+自定义通道适合把字段值交付到现有的 Core `Scope`、`Node` 或 `Path` 属性，例如把 `score` 映射为节点透明度。它扩展的是**数据到视觉属性的交付路径**，不是新的底层渲染能力。
+
+## 适用边界
+
+- 需要新的 `encoding.channels.<name>`，并希望它参与字段绑定、求值和图例描述时，定义自定义通道。
+- 只想改变值到颜色、半径或坐标的映射时，优先使用[自定义比例尺](/viz/plot/scale/custom-scale)。
+- Core 还没有目标视觉属性时，应先补 Core 能力；channel definition 不应绕开 Core 建立平行渲染语义。
+- 字段解析与数据变换属于[数据扩展](/viz/data/model/extensions)，不放在通道 resolver 中。
+
+## 定义能力
+
+用 `defineScopeChannel`、`defineNodeChannel`、`definePathChannel` 或通用 `defineChannel` 声明 definition：
+
+| 字段      | 作用                                                |
+| --------- | --------------------------------------------------- |
+| `channel` | 唯一注册名，对应 `encoding.channels.<name>`         |
+| `output`  | 描述输出类型、范围与 clamp 等值域约束               |
+| `legend?` | 声明图例形态                                        |
+| `resolve` | 基于 rows 和字段类型构造逐行 resolver 与 descriptor |
+| `deliver` | 把解析后的值写入既有 Core 属性                      |
+
+下面的 `intensity` 通道读取 `score`，映射到 `[0.3, 1]`，再交付给 `IRNode.opacity`：
+
+<ComponentPreview files="custom-channel" size="md" />
+
+## 注入宿主
+
+通过 `<Plot channelDefinitions={[intensity]}>` 注入 definition；Vanilla 入口在 `renderPlot` options 中注入同一组 definitions。
+
+React DSL 的自定义绑定写在 mark 的 `channels` prop 上：
+
+```tsx
+<PointMark channels={{ intensity: 'score' }} />
+```
+
+这会装配成 `encoding.channels.intensity = { field: 'score' }`。字符串默认表示字段名；字符串常量写成 `{ value: 'literal' }` 或 `{ kind: 'constant', value: 'literal' }`。definition 本身始终留在运行时，不进入 IR。
+
+## 执行机制
+
+1. 宿主把内置与自定义 definitions 合并为同一个 channel registry。
+2. resolver 读取绑定和数据行，返回逐行求值器；descriptor 与实绘值来自同一份解析结果。
+3. mark definition 声明自己消费哪些 definition kind。
+4. lowering 按 scope / node / path 交付面调用 `deliver`，把结果写入 Core IR。
+
+channel definition 不应检查 `mark.type`。它只负责解析和交付；某个 mark 是否消费 node、path 或 scope 通道，由 mark definition 决定，因此自定义 mark 也能复用同一条通道路径。
+
+## 错误与限制
+
+- 自定义 `channel` 不能覆盖内置名，也不能重复注册。
+- 绑定未注册通道时，lowering 会直接报错。
+- `resolve` 应只构造求值器，不应修改数据或生成几何。
+- `deliver` 只能写入对应 Core 图元已经支持的属性。
+- IR 中只保存字段或 JSON 常量绑定，不能包含函数或 definition。
+
+## API 参考
+
+| API                  | 用途                                     |
+| -------------------- | ---------------------------------------- |
+| `defineScopeChannel` | 定义交付到 Core Scope 的通道             |
+| `defineNodeChannel`  | 定义交付到 Core Node 的通道              |
+| `definePathChannel`  | 定义交付到 Core Path 的通道              |
+| `defineChannel`      | 定义需要显式 kind 与交付契约的通用通道   |
+| `channelDefinitions` | React / Vanilla 宿主的 definition 注入点 |
+
+## 相关
+
+- [通道绑定](/viz/plot/channel/binding) —— 字段与常量绑定如何进入 Plot IR
+- [内置通道](/viz/plot/channel/builtin) —— 内置 definition 的交付面
+- [自定义图元](/viz/plot/mark/custom-mark) —— mark 如何声明和消费通道 kind
+- [扩展机制](/viz/reference/extensions) —— Plot runtime definitions 的共同模型

@@ -1,0 +1,82 @@
+---
+title: Custom Marks
+description: Use defineMark to declare a custom mark schema, field collection, and lower behavior, then inject it into Plot lowering through markDefinitions.
+---
+
+A custom mark lowers rows into its own Core IR assembly. Plot IR stores only the custom `type`, `encoding`, `transform`, and other JSON config; field collection, channel consumption, and geometry generation stay in a runtime `MarkDefinition`.
+
+## Applicability
+
+- Define a custom mark when built-in marks cannot express the target geometry but Core Nodes, Paths, Scopes, and related primitives can.
+- When you only need a new visual property, prefer a [Custom Channel](/viz/plot/channel/custom-channel).
+- Prepare data with plot-level or mark-local transforms; do not hide aggregation, filtering, or other data mutation inside `lower`.
+- If Core cannot express the target rendering semantics, add the capability to Core before consuming it from mark lowering.
+
+## Define the capability
+
+`defineMark<TMark>` receives a complete operation schema and lowering behavior:
+
+| Field            | Purpose                                                                                 |
+| ---------------- | --------------------------------------------------------------------------------------- |
+| `schema`         | Validates the custom operation; its non-empty literal `type` is the unique registry key |
+| `collectFields?` | Registers source fields beyond the fields collected from the common schema              |
+| `channelKinds?`  | Declares the channel-definition kinds consumed by the lowered result                    |
+| `buildCell?`     | Builds a per-row logical Cell for interval-like marks                                   |
+| `lower`          | Lowers prepared rows, the coordinate frame, and resolved channels into Core IR          |
+
+The `diamond` mark below projects each row's `x` / `y` through `frame.projectRoles`, then emits Core diamond Nodes:
+
+<ComponentPreview files={['mark-custom', 'mark-custom.data.ts']} />
+
+## Inject into the host
+
+Inject the definition with `<Plot markDefinitions={[diamondMark]}>`; the Vanilla entry accepts it through `renderPlot` options.
+
+Custom marks have no dedicated React component, so author them through the full spec entry:
+
+```tsx
+<Plot
+  spec={{
+    namespace: 'plot',
+    type: 'plot',
+    marks: [{ type: 'diamond', encoding: { x: { field: 'month' }, y: { field: 'sales' } } }],
+  }}
+  markDefinitions={[diamondMark]}
+/>
+```
+
+The definition does not enter the spec, so the spec remains JSON-round-trippable.
+
+## Execution
+
+1. Plot runs plot-level transforms, then the current mark's local transforms.
+2. Field collection and active coordinate roles contribute position domains and resolve scales.
+3. The runtime registry finds the definition by `type` and validates the operation with its schema.
+4. `lower(mark, rows, frame, channels, context)` consumes transformed rows and uses `frame.projectRoles` or `frame.projectCell` to emit Core IR.
+
+Built-in and custom marks dispatch through one mark registry. Coordinates interpret position roles, scales map values, and the mark owns geometry assembly.
+
+## Errors and limits
+
+- A custom `type` cannot override a built-in mark or be registered twice.
+- A missing definition, invalid schema config, or encoding key unsupported by the active coordinate fails during lowering.
+- `lower` must return a Core `IRChild` or `null`, not renderer-specific objects.
+- Marks with special position domains or interval geometry must explicitly provide the required field collection, `buildCell`, and coordinate capabilities instead of relying on default point projection.
+- The React DSL currently has no generic `<Mark type="...">` entry; custom marks are authored through `spec.marks`.
+
+## API reference
+
+| API                            | Use                                                                            |
+| ------------------------------ | ------------------------------------------------------------------------------ |
+| `defineMark`                   | Constructs a `MarkDefinition` from a schema and behavior                       |
+| `MarkDefinition`               | Field collection, channel consumption, and lowering contract for a custom mark |
+| `markDefinitions`              | Definition injection point for React and Vanilla hosts                         |
+| `CoordinateFrame.projectRoles` | Projects position-role values into a screen point                              |
+| `CoordinateFrame.projectCell`  | Projects a logical Cell into interval geometry                                 |
+
+## Related
+
+- [Marks](/viz/plot/mark) — the shared model for built-in marks and lowering
+- [Coordinates](/viz/plot/coordinate) — how a frame interprets position roles and Cells
+- [Scales](/viz/plot/scale) — how field values first resolve into positions or visual quantities
+- [Extension Mechanisms](/viz/reference/extensions) — the shared model for Plot runtime definitions

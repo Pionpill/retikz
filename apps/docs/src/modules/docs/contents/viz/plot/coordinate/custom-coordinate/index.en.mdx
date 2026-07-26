@@ -1,0 +1,76 @@
+---
+title: Custom Coordinates
+description: Use defineCoordinate to declare position roles, scale construction, and projection behavior, then inject it into Plot lowering through coordinates.
+---
+
+A coordinate maps position values into screen geometry. When built-in coordinates cannot express the target space, use `defineCoordinate` to declare a runtime projection; Plot IR still stores only the custom `type` and JSON config.
+
+## Applicability
+
+- Define a custom coordinate for new position roles, projection functions, curved axes, or a special space.
+- When only the domain mapping changes and the spatial projection stays the same, prefer a [Custom Scale](/viz/plot/scale/custom-scale).
+- When only mark geometry changes, use a [Custom Mark](/viz/plot/mark/custom-mark).
+- A coordinate definition owns the frame and guides; it should not generate business marks or renderer-specific objects.
+
+## Define the capability
+
+`defineCoordinate<TCoordinateOperation>` receives this contract:
+
+| Field     | Purpose                                                                                      |
+| --------- | -------------------------------------------------------------------------------------------- |
+| `schema`  | Validates the custom coordinate operation; a non-built-in literal `type` is its registry key |
+| `roles`   | Declares the coordinate's required position channels and their order                         |
+| `resolve` | Builds a `CoordinateResolution` from the operation, data domains, scales, canvas, and guides |
+
+The returned `frame` projects points and logical Cells; `plotArea` describes the drawing region; `axisLayers` and `gridLayers` deliver guide output.
+
+The "bridge" coordinate below arches the x-axis into a parabola while y stays vertical. Its complete definition and host injection are available in the demo source:
+
+<ComponentPreview files={['coordinate-custom-bridge', 'coordinate-custom-bridge.data.ts']} />
+
+## Inject into the host
+
+Inject the definition through `<Plot coordinates={[bridge]}>` and reference it from the `coordinate` operation:
+
+```tsx
+<Plot coordinate={{ type: 'bridge', archHeight: 60 }} coordinates={[bridge]}>
+  <PointMark x="x" y="y" />
+</Plot>
+```
+
+The Vanilla entry accepts the same definitions through `renderPlot` options. Roles and projection functions stay in the host; the IR stores only `{ type: 'bridge', archHeight: 60 }`.
+
+## Execution
+
+1. The host merges built-in and custom coordinate definitions into one registry.
+2. Lowering finds the definition through `coordinate.type` and validates the operation with its schema.
+3. `CoordinateResolveContext` collects each role's domain, resolves positional scales, and exposes canvas and guide information.
+4. `resolve` constructs a frame with `createCoordinateFrame`, then returns the `plotArea`, axis layers, and grid layers.
+5. Marks project through `frame.projectRoles` or `frame.projectCell` without depending on the concrete coordinate implementation.
+
+Capabilities passed to `createCoordinateFrame` can include `roleScales` and `projectCell`. The former lets custom axes and interval marks read each role's scale; the latter projects a logical Cell into rect, sector, contour, or related geometry.
+
+## Errors and limits
+
+- A custom `type` cannot override a built-in coordinate or be registered twice.
+- Missing required roles, encoding keys unsupported by the coordinate, or invalid definition config fail during lowering.
+- Point-like marks only require `projectRoles`; interval-like marks also require matching `roleScales` and `projectCell`.
+- A custom coordinate uses the `plotArea` returned by its definition and does not automatically inherit cartesian margin and legend reservation.
+- Curved axes can be generated through `lowerCustomAxis`; grids, 3D spaces, and multi-plot composition require explicit definition capabilities.
+
+## API reference
+
+| API                        | Use                                                                           |
+| -------------------------- | ----------------------------------------------------------------------------- |
+| `defineCoordinate`         | Constructs a coordinate definition from a schema, roles, and resolve behavior |
+| `CoordinateDefinition`     | Runtime contract for a custom coordinate                                      |
+| `CoordinateResolveContext` | Resolution context for domains, scales, canvas, and guides                    |
+| `createCoordinateFrame`    | Constructs the shared point / Cell projection frame                           |
+| `coordinates`              | Definition injection point for React and Vanilla hosts                        |
+
+## Related
+
+- [Coordinates](/viz/plot/coordinate) — the shared model for built-in projections and frames
+- [Coordinate Composition](/viz/plot/coordinate/composition) — coordinate-domain boundaries across panels and tracks
+- [Custom Marks](/viz/plot/mark/custom-mark) — how marks consume a coordinate frame
+- [Extension Mechanisms](/viz/reference/extensions) — the shared model for Plot runtime definitions
