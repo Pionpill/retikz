@@ -35,7 +35,6 @@ Data + Transform + Channel(Encoding):
 
 - 一维坐标可视化：rug、timeline、histogram、pie / donut（value → angle interval）。
 - 二维坐标可视化：line、scatter、bar、area、heatmap、gantt；也包括用极坐标表达的二维坐标图，如 radar、rose、polar bar。
-- 约束三维投影：ternary / barycentric plot（`a + b + c = 1` 投影到二维平面）。
 - 关系 / 流量可视化：sankey / alluvial。flow 是数据记录，value → ribbon 宽度，两端 → 位置通道（stage 为 ordinal 位置 + value 的 stack）；其几何由通道决定，故可描述（复用 §3.7 ribbon mark）。节点排序的交叉最小化只是可选 transform 启发式，不是外部 layout 引擎。
 
 不适合直接用普通位置通道描述、但适合作为 plot layout transform：
@@ -78,7 +77,7 @@ Dimension 描述字段的语义类型，不等于视觉坐标轴。常见维度�
 | nominal      | 无序分类 | country、owner           |
 | ordinal      | 有序分类 | rank、stage              |
 | interval     | 区间     | start/end、low/high      |
-| proportion   | 归一比例 | pie value、ternary a/b/c |
+| proportion   | 归一比例 | pie value                |
 
 维度数量不是看图形占据几何空间几维，而是看有多少独立数据变量参与空间定位或空间区间生成。
 
@@ -132,7 +131,6 @@ CoordinateSystem 定义一组 scale 如何组合为局部坐标空间。**坐标
 | polar1D     | angle          | 环形 / 周期数据（钟面、星期轮）；一维圆周                             |
 | cartesian2D | x / y          | line、scatter、bar、area、heatmap、gantt                              |
 | polar2D     | angle / radius | radar、rose、polar bar、pie、donut                                    |
-| ternary2D   | a / b / c      | 三元图，约束三维投影到二维                                            |
 
 > 命名注：早期草拟过 `linear1D`，已改 `cartesian1D`——坐标系名描述空间几何而非 scale，「linear」错误暗示仅线性 scale（实际一维直线轴同样可配 log / time）。一维有直线（cartesian1D）/ 圆周（polar1D）两种载体，分别是 cartesian2D / polar2D 的降维。详见 alpha.9。
 
@@ -148,7 +146,6 @@ Encoding 把字段、常量或派生值绑定到视觉通道。
 - xStart / xEnd、yStart / yEnd。
 - angle / radius。
 - startAngle / endAngle。
-- a / b / c（ternary）。
 
 非空间通道：
 
@@ -268,7 +265,7 @@ Annotation 不应被 plot 黑盒吞掉。它应该能直接混用 retikz core �
 1. **数据 + Transform（§3.1 / §3.3）**：原始数据先过 transform——filter / sort、groupBy / aggregate、bin、stack、cumulative sum（饼图 value → 角度区间）、derive interval（甘特 start/end）。没有这步，饼图 / 堆叠 / 直方图无法表达。
 2. **通道 / Encoding（§3.6）**：把字段、常量或派生值绑定到通道，并区分由坐标系消费的 **位置通道**（x/y、angle/radius、a/b/c…）与直接作用于视觉属性的 **非位置通道**（color/size/shape/text…）。
 3. **Scale（§3.4）**：每个通道各有一个 scale 做 `domain → range`（linear/log/time/band/ordinal/color/size…）。位置通道与非位置通道 **都要过 scale**——位置 scale 喂坐标系，颜色 / 大小 scale 喂 mark 视觉属性。
-4. **坐标系（§3.5）**：选预提供的坐标系（cartesian / polar / ternary …），它只消费 **位置通道（已过 scale）**，把它们组合解析为绘图空间坐标。坐标系是位置通道的消费者，不是底座。
+4. **坐标系（§3.5）**：选预提供的坐标系（cartesian / polar）或注册自定义坐标系，它只消费 **位置通道（已过 scale）**，把它们组合解析为绘图空间坐标。坐标系是位置通道的消费者，不是底座。
 5. **Mark 构造（§3.7 + §3.8）**：mark 几何 = 位置（来自 4）+ 视觉属性（来自 3）+ Relation（order / group / series / stack / dodge）。**注意**：折线 / 面积 / sector / ribbon 都是 **mark 本身**，由有序数据直接生成几何，**不是「先画点再事后连线」**；「怎么连 / 怎么堆 / 怎么分组」属 Relation，是 mark 构造的输入，而非后处理步骤。
 6. **Guide（§3.9）**：由 scale + 坐标系派生坐标轴 / 网格 / 刻度 / 图例 / 参考线。guide 是一等输出，与 mark 并列，不是某个 mark 的内部细节。
 7. **Layer / 合成（§3.10）**：按稳定 z-order 叠加多组 mark / guide / annotation；多坐标信息图则是多个 coordinate scope 的组合（§7）。
@@ -667,7 +664,7 @@ intent
 | 1        | `transform`       | filter / sort、groupBy / aggregate、bin、stack、cumulative sum、dodge、derive interval                |
 | 2        | `encoding`        | 通道声明与解析；位置通道 / 非位置通道分流（§1）                                                       |
 | 3        | `scale`           | domain → range：linear / log / pow / time、band / point、ordinal / color / size；nice / clamp / ticks |
-| 4        | `coordinate`      | 默认 cartesian + polar，可注册自定义；polar / ternary 投影几何                                        |
+| 4        | `coordinate`      | 默认 cartesian + polar，可注册自定义；coordinate definition 提供投影几何                              |
 | 5        | `mark`            | point / line / area / interval(bar) / rect / sector / rule / text / ribbon；曲线插值与 path 生成      |
 | 5        | `relation`        | order / group / series / stack / dodge / connect / facet                                              |
 | 6        | `guide`           | axis / grid / tick / tick-label / legend / reference line / band                                      |
@@ -694,7 +691,7 @@ intent
 
 首批不做（留待后续）：
 
-- polar / ternary 坐标系与 sector / ribbon mark（极坐标族第二批）。
+- polar 坐标系与 sector / ribbon mark（极坐标族第二批）。
 - facet 多坐标 scope、connector / sankey。
 - chart preset 层（属于 `@retikz/chart`，见 §5.1 / §6）。
 - `theme` 高级配色、注册表对外开放（先内置，后开放自定义）。

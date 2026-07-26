@@ -263,21 +263,4 @@ describe('same-panel multi-axis overlay lowering', () => {
     const xAxes = axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'x');
     expect(xAxes).toHaveLength(1);
   });
-
-  it('ternary_rejects_explicit_cardinal_side', () => {
-    const spec = {
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: 'weather' },
-      scales: [
-        { type: 'linear', name: 'tx' },
-        { type: 'linear', name: 'ty' },
-        { type: 'linear', name: 'tz' },
-      ],
-      coordinate: { type: 'ternary2D', x: 'tx', y: 'ty', z: 'tz' },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, z: { field: 'z' } } }],
-      guides: [{ type: 'axis', dimension: 'y', placement: { kind: 'side', side: 'right' } }],
-    };
-    expect(() => expandOf(parsePlotSpec(spec))).toThrow(/ternary.*side|side.*ternary/i);
-  });
 });

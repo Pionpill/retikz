@@ -567,18 +567,6 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_reference_region_ternary_zTo_valid', () => {
-    const m = {
-      type: 'reference',
-      kind: 'region',
-      xTo: 0.8,
-      yTo: 0.6,
-      zTo: 0.7,
-      encoding: { x: { value: 0.1 }, y: { value: 0.1 }, z: { value: 0.1 } },
-    };
-    expect(MarkSchema.parse(m)).toEqual(m);
-  });
-
   it('mark_reference_minimal_omits_optionals', () => {
     // xTo / yTo / extent 省略：schema 不写入默认值，仅解析通过（line 形态由 lowering 判别）
     const m = { type: 'reference', encoding: { y: { value: 50 } } };
@@ -632,8 +620,7 @@ describe('MarkSchema (contract)', () => {
       kind: 'region',
       xTo: 'x1',
       yTo: 'hi',
-      zTo: 'z1',
-      encoding: { x: { field: 'x0' }, y: { field: 'lo' }, z: { field: 'z0' }, color: { field: 'cat', scale: 'c' } },
+      encoding: { x: { field: 'x0' }, y: { field: 'lo' }, color: { field: 'cat', scale: 'c' } },
     };
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });

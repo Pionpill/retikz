@@ -292,24 +292,6 @@ describe('lowerGuide (contract)', () => {
     expect((title.position as [number, number])[0]).toBeGreaterThan(170);
   });
 
-  it('ternary_axis_title_placement_samples_axis_edge', () => {
-    const { axisLayer } = lowerGuide(
-      { type: 'axis', dimension: 'x', title: { text: 'x', placement: 'at-end' } },
-      {
-        ...ctx,
-        ternaryVertices: [
-          [50, 0],
-          [0, 100],
-          [100, 100],
-        ],
-        ternaryTicks: { values: [0, 1], labels: ['0', '1'] },
-      },
-    );
-    const title = nodeByText(axisLayer as IRScope, 'x');
-
-    expect((title.position as [number, number])[1]).toBeLessThan(20);
-  });
-
   it('custom_axis_title_placement_samples_numeric_axis_range', () => {
     const scale = fakeTickScale(value => value * 10, [0, 5, 10]);
     const frame = createCoordinateFrame(
@@ -479,30 +461,6 @@ describe('lowerGuide (contract)', () => {
     expect(majorGrid.children.every(step => step.kind !== 'arc')).toBe(true);
     expect(minorGrid.children).toHaveLength(2);
     expect(minorGrid.dashPattern).toEqual([2, 2]);
-  });
-
-  it('ternary_grid_source_and_minor_keep_iso_line_paths', () => {
-    const { gridLayer } = lowerGuide(
-      {
-        type: 'axis',
-        dimension: 'x',
-        grid: { ticks: { values: [0.25, 0.75] }, minor: { ticks: { values: [0.25, 0.5, 0.75] }, stroke: '#cbd5e1' } },
-      },
-      {
-        ...ctx,
-        ternaryVertices: [
-          [50, 0],
-          [0, 100],
-          [100, 100],
-        ],
-        ternaryTicks: { values: [0, 1], labels: ['0', '1'] },
-      },
-    );
-    const [majorGrid, minorGrid] = (gridLayer as IRScope).children as Array<IRPath>;
-
-    expect(majorGrid.children).toHaveLength(4);
-    expect(minorGrid.children).toHaveLength(2);
-    expect(minorGrid.stroke).toBe('#cbd5e1');
   });
 
   it('tick_pixels_match_projector', () => {
@@ -768,28 +726,6 @@ describe('lowerGuide (contract)', () => {
     expect((label.position as [number, number])[1]).toBeGreaterThan(310);
   });
 
-  it('single_generic_tick_label_still_applies_fixed_rotate_without_endpoint_alignment', () => {
-    const { axisLayer } = lowerGuide(
-      {
-        type: 'axis',
-        dimension: 'x',
-        tickLabels: { rotate: -45, layout: false },
-      },
-      {
-        ...ctx,
-        ternaryVertices: [
-          [0, 100],
-          [100, 100],
-          [50, 0],
-        ],
-        ternaryTicks: { values: [0.5], labels: ['50%'] },
-      },
-    );
-    const label = nodeByText(axisLayer as IRScope, '50%');
-
-    expect(label.rotate).toBe(-45);
-  });
-
   it('auto_rotated_tick_labels_use_endpoint_alignment_before_overlap_hiding', () => {
     const labels = ['January revenue', 'February revenue', 'March revenue'];
     const { axisLayer } = lowerGuide(
@@ -942,17 +878,36 @@ describe('lowerGuide (contract)', () => {
     expect(((gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(6);
   });
 
-  it('non_cartesian_axis_rejects_structural_line_geometry', () => {
+  it('polar_axis_rejects_structural_line_geometry', () => {
     expect(() =>
       lowerGuide(
         { type: 'axis', dimension: 'x', line: { arrow: { positive: true } } },
         {
           ...ctx,
-          ternaryVertices: [
-            [0, 0],
-            [1, 0],
-            [0, 1],
-          ],
+          frame: {
+            type: 'polar2D',
+            roles: ['x', 'y'],
+            center: [100, 100],
+            innerRadius: 20,
+            outerRadius: 80,
+            startAngle: 0,
+            endAngle: 360,
+            continuousAngle: true,
+            primary: fakeScale(value => value),
+            secondary: fakeScale(value => value),
+            roleScales: { x: fakeScale(value => value), y: fakeScale(value => value) },
+            project: () => null,
+            projectRoles: () => null,
+            projectPolar: () => null,
+            projectCell: () => ({
+              kind: 'sector',
+              center: [100, 100],
+              innerRadius: 0,
+              outerRadius: 1,
+              startAngle: 0,
+              endAngle: 1,
+            }),
+          },
         },
       ),
     ).toThrow(/axis line/);
@@ -1013,28 +968,6 @@ describe('lowerGuide (contract)', () => {
         ]),
       ),
     ).toThrow(/duplicate axis/);
-  });
-
-  it('ternary_axis_rejects_custom_tick_source_or_density', () => {
-    const specOf = (ticks: { count?: number; density?: { kind: 'sample'; maxCount: number } }) =>
-      PlotSpecSchema.parse({
-        namespace: 'plot',
-        type: 'plot',
-        data: { reference: 'sales' },
-        scales: [
-          { type: 'linear', name: 'x' },
-          { type: 'linear', name: 'y' },
-          { type: 'linear', name: 'z' },
-        ],
-        coordinate: { type: 'ternary2D' },
-        marks: [
-          { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, z: { field: 'revenue' } } },
-        ],
-        guides: [{ type: 'axis', dimension: 'x', ticks }],
-      });
-
-    expect(() => expandOf(specOf({ density: { kind: 'sample', maxCount: 3 } }))).toThrow(/ternary2D axis/);
-    expect(() => expandOf(specOf({ count: 3 }))).toThrow(/ternary2D axis/);
   });
 });
 

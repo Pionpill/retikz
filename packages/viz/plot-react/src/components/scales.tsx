@@ -2,7 +2,7 @@ import type { IRPlotBandScale, IRPlotLogScale, IRPlotPointScale, IRPlotSymlogSca
 import type { FC } from 'react';
 
 /** 位置 scale 可配置的坐标维度 */
-export type ScaleDimension = 'x' | 'y' | 'z';
+export type ScaleDimension = 'x' | 'y';
 
 /** React DSL 里当前暴露的位置 scale 类型 */
 export type PositionScaleType = 'linear' | 'time' | 'band' | 'point' | 'log' | 'sqrt' | 'symlog' | 'radial';

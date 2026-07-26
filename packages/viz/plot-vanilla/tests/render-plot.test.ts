@@ -276,7 +276,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect(renderPlot(createPolarRadialBarSpec(), polarShareData, { width: 360, height: 360 })).toContain('<path');
   });
 
-  // 1D / ternary 坐标系 IRPlotSpec → renderPlot 透传（vanilla 直接消费 core IR，与 react 对等）
+  // 1D 坐标系 IRPlotSpec → renderPlot 透传（vanilla 直接消费 core IR，与 react 对等）
   const samples: ExternalDatasets = {
     samples: [{ v: 1 }, { v: 5 }, { v: 9 }],
   };
@@ -311,37 +311,6 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       { width: 320, height: 320 },
     );
     expect(svg).toContain('<ellipse');
-  });
-
-  it('ternary2D 三元散点 spec → SVG 含散点 + 三角轴 path', () => {
-    const ternarySpec: IRPlotSpec = {
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: 'soils' },
-      scales: [{ type: 'ordinal', name: 'col' }],
-      coordinate: { type: 'ternary2D' },
-      marks: [
-        {
-          type: 'point',
-          color: { kind: 'field', value: 'region', scale: 'col' },
-          encoding: { x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' } },
-        },
-      ],
-      guides: [
-        { type: 'axis', dimension: 'x' },
-        { type: 'axis', dimension: 'y' },
-        { type: 'axis', dimension: 'z' },
-      ],
-    };
-    const soils: ExternalDatasets = {
-      soils: [
-        { sand: 60, silt: 30, clay: 10, region: 'north' },
-        { sand: 20, silt: 50, clay: 30, region: 'south' },
-      ],
-    };
-    const svg = renderPlot(ternarySpec, soils, { width: 360, height: 360 });
-    expect(svg).toContain('<ellipse');
-    expect(svg).toContain('<path');
   });
 
   // rect heatmap spec → renderPlot 透传，纯 spec 驱动出每格 <rect>

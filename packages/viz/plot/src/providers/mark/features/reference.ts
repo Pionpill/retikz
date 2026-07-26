@@ -24,7 +24,7 @@ import { hasProjectCell, isRenderableCellGeometry } from '../../../contract';
 import { ChannelDefinitionKind } from '../../../contract';
 import { PlotMark, ReferenceMarkKind, ReferenceMarkSchema } from '../../../schemas';
 import { channelValue } from '../../channel/shared';
-import { isCartesianCoordinateFrame, isPolarCoordinateFrame, isTernary2DCoordinateFrame } from '../../coordinate';
+import { isCartesianCoordinateFrame, isPolarCoordinateFrame } from '../../coordinate';
 import { cellGeometryNode, cellLayer, styleForGeometry } from '../private';
 import {
   applyNodeChannelDeliveries,
@@ -145,7 +145,6 @@ const referenceShape = (mark: IRPlotReferenceMark): ReferenceShape => {
 const referenceRegionUpperRaw = (mark: IRPlotReferenceMark, role: string): number | string | undefined => {
   if (role === 'x') return mark.xTo;
   if (role === 'y') return mark.yTo;
-  if (role === 'z') return mark.zTo;
   return undefined;
 };
 
@@ -163,8 +162,6 @@ const referenceRegionCoordinate = (
   scale: PositionScale | undefined,
   frame: CoordinateFrame,
 ): number => {
-  if (isTernary2DCoordinateFrame(frame))
-    return typeof value === 'number' && Number.isFinite(value) ? value : Number.NaN;
   if (scale === undefined) {
     throw new Error(
       `lowerPlots: reference region under the ${frame.type} coordinate system requires roleScales.${role} to build cells`,
@@ -482,7 +479,6 @@ export const lowerReferenceLayer = (
 const collectReferenceEncodingFields = (mark: IRPlotReferenceMark, fields: FieldCollector): void => {
   fields.addChannel(mark.encoding.x);
   fields.addChannel(mark.encoding.y);
-  fields.addChannel(mark.encoding.z);
   fields.addChannel(mark.encoding.color);
   for (const channel of Object.values(mark.encoding.channels ?? {})) {
     fields.addChannel(channel);
@@ -494,7 +490,6 @@ const collectReferenceChannelFields = (mark: IRPlotReferenceMark, fields: FieldC
   fields.addFields(
     typeof mark.xTo === 'string' ? mark.xTo : undefined,
     typeof mark.yTo === 'string' ? mark.yTo : undefined,
-    typeof mark.zTo === 'string' ? mark.zTo : undefined,
     mark.extentField,
     mark.extentToField,
   );
