@@ -21,6 +21,7 @@ import {
   commandEndpoint,
   commandEndTangent,
   commandStartTangent,
+  countScenePrimitiveOccurrences,
   firstLineDy,
   parseHexColor,
   pathBounds,
@@ -853,4 +854,15 @@ export const drawScene = (ctx: CanvasRenderingContext2D, scene: Scene, options: 
   }
   for (const primitive of scene.primitives) drawPrim(ctx, primitive, options, resources, state);
   if (hasCamera) ctx.restore();
+  if (options.trace !== undefined) {
+    const visited = countScenePrimitiveOccurrences(scene.primitives);
+    options.trace.report({
+      phase: 'commit',
+      unit: 'scene-primitive',
+      outcome: 'full',
+      visited,
+      reused: 0,
+      changed: visited,
+    });
+  }
 };

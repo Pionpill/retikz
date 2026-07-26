@@ -128,7 +128,7 @@ SVG、Canvas 与未来 renderer 共享 Scene Patch 语义，但各自拥有 reta
 - **原子呈现**：完整结果准备并物化后一次显示，适合 SSR、导出、截图、严格一致性视图以及不希望出现搭建过程的场景。
 - **渐进呈现**：首屏或大型更新按合法 presentation batch 显示，适合交互式浏览和强调尽快反馈的场景。
 
-首屏与后续更新是否渐进应允许分别选择。渐进策略只有在调用方启用且相关 program / renderer 声明支持时生效，否则回退到原子呈现并提供可观察诊断；具体开关、默认值、诊断和 `auto` 策略由 runtime / renderer ADR 冻结。
+首屏与后续更新是否渐进应允许分别选择。Program 仍只产出完整 Scene；渐进策略只有在调用方启用且 renderer / Scene 边界声明支持时生效，否则回退到原子呈现并提供可观察诊断；具体开关、默认值、诊断和 `auto` 策略由 runtime / renderer ADR 冻结。
 
 逻辑 transaction 的 semantic revision 仍然原子提交。渐进模式可以在最终 semantic commit 前显示可回滚的候选 presentation batch，也可以在 commit 后继续物化同一 Scene；这些 batch 都不构成 document、contribution 或 Scene 的部分提交。
 

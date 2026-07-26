@@ -1,0 +1,16 @@
+{
+  "node": "24.x",
+  "browser": "chromium",
+  "playwright": "1.62.0",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "devicePixelRatio": 1
+  },
+  "animations": false,
+  "font": "Arial",
+  "locale": "en-US",
+  "timezone": "UTC",
+  "warmupRuns": 5,
+  "sampleRuns": 30
+}

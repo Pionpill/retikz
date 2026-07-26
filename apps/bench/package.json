@@ -1,0 +1,32 @@
+{
+  "name": "@retikz/bench",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "retikz deterministic work and wall-clock benchmark harness.",
+  "scripts": {
+    "bench:check": "tsx src/cli.ts check",
+    "bench:report": "tsx src/cli.ts report",
+    "bench:update-baseline": "tsx src/cli.ts update-baseline",
+    "bench:install-browser": "playwright install chromium",
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:changed": "vitest run --changed --passWithNoTests"
+  },
+  "dependencies": {
+    "@retikz/core": "workspace:*",
+    "@retikz/render": "workspace:*",
+    "@retikz/runtime": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "playwright": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}
