@@ -4,7 +4,7 @@ import type { PackageId } from '@/modules/docs/data';
 
 import { changelogForModule, changelogVersionSlug, PACKAGE_GROUPS } from '@/modules/docs/data';
 
-const membersOf = (id: 'kernel' | 'viz' | 'other'): Set<PackageId> =>
+const membersOf = (id: 'kernel' | 'standard' | 'viz' | 'other'): Set<PackageId> =>
   new Set(PACKAGE_GROUPS.find(g => g.id === id)?.members ?? []);
 
 describe('changelogForModule', () => {
@@ -22,8 +22,15 @@ describe('changelogForModule', () => {
     for (const r of releases) for (const b of r.packages) expect(plot.has(b.pkg), b.pkg).toBe(true);
   });
 
+  it('standard 模块只含 standard 组包', () => {
+    const releases = changelogForModule('standard');
+    expect(releases.length).toBeGreaterThan(0);
+    const standard = membersOf('standard');
+    for (const r of releases) for (const b of r.packages) expect(standard.has(b.pkg), b.pkg).toBe(true);
+  });
+
   it('过滤后无包块的里程碑被丢弃（每个里程碑至少一个包）', () => {
-    for (const moduleId of ['kernel', 'viz']) {
+    for (const moduleId of ['kernel', 'standard', 'viz']) {
       for (const r of changelogForModule(moduleId)) expect(r.packages.length).toBeGreaterThan(0);
     }
   });
@@ -40,7 +47,7 @@ describe('changelogVersionSlug', () => {
   });
 
   it('每个模块内各中版本 slug 唯一（保证侧边栏子页 id 不撞）', () => {
-    for (const moduleId of ['kernel', 'viz']) {
+    for (const moduleId of ['kernel', 'standard', 'viz']) {
       const slugs = changelogForModule(moduleId).map(r => changelogVersionSlug(r.minor));
       expect(new Set(slugs).size).toBe(slugs.length);
     }

@@ -1,0 +1,141 @@
+---
+title: Capability Loading
+description: Select Standard definitions for direct IR, React, and Vanilla through capability modules and explicit bundles without global registration.
+---
+
+When compiling persisted Standard IR directly, combine the modules required by the task and pass the bundle's compile fragment to Core:
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { createStandardBundle, FrameModule, GridModule } from '@retikz/standard';
+
+const drawingBundle = createStandardBundle([GridModule, FrameModule]);
+const scene = compileToScene(persistedIR, drawingBundle.compile);
+```
+
+Modules and bundles are runtime configuration. They contain definition functions and cannot be persisted in JSON IR.
+
+## Scope
+
+Use a bundle for server-side compilation, file restoration, LLM-generated IR, and tooling that needs a stable capability catalog. React JSX already contributes definitions through component static adapters, so JSX-only figures do not need a preset.
+
+A bundle only combines `CompositeDefinition` values. It does not merge renderer settings, layout policy, warning handlers, React Context, or Vanilla lifecycle state, and importing it never mutates global state.
+
+## Define a Capability
+
+The built-in modules are `GridModule`, `AxesModule`, and `FrameModule`. Third-party composites still use Core `defineComposite()` as their source of truth. Wrap a definition in an ordinary structural module only when it needs to participate in the same composition step:
+
+```ts
+import { CompositeBaseSchema, defineComposite } from '@retikz/core';
+import type { StandardCapabilityModule } from '@retikz/standard';
+import { z } from 'zod';
+
+const BadgeDefinition = defineComposite({
+  namespace: 'example',
+  type: 'badge',
+  schema: CompositeBaseSchema.extend({
+    namespace: z.literal('example'),
+    type: z.literal('badge'),
+    text: z.string(),
+  }),
+  expand: node => ({ type: 'node', position: [0, 0], text: node.text }),
+});
+
+const BadgeModule = {
+  name: 'example.badge',
+  composites: [BadgeDefinition],
+} satisfies StandardCapabilityModule;
+```
+
+`name` is only a bundle-level identity and diagnostic key. Composite lookup still uses each definition's `namespace` and `type`.
+
+## Inject into a Host
+
+### Direct IR and React IR mode
+
+Core, React `ir` mode, and Vanilla direct IR all consume the same definitions:
+
+```tsx
+import { Layout } from '@retikz/react';
+import { StandardAllPreset } from '@retikz/standard';
+
+<Layout ir={persistedIR} composites={StandardAllPreset.compile.composites} />;
+```
+
+`StandardAllPreset` contains every Standard module published by the current version. Use `createStandardBundle([GridModule, FrameModule])` for a smaller selection.
+
+### React JSX
+
+`<Grid>`, `<Axes>`, and `<Frame>` continue to contribute definitions through their static adapters. Do not also pass the same capability through bundle composites to that `Layout`; Core fails loudly when both paths register the same definition.
+
+### Vanilla
+
+Vanilla embeds use adapters for authoring lowering. Pass a partial adapter list explicitly, or use the shallow-frozen `StandardVanillaAdapters` array for the current complete catalog:
+
+```ts
+import { StandardVanillaAdapters } from '@retikz/standard-vanilla';
+import { mountSvg } from '@retikz/vanilla';
+
+mountSvg(container, figure, { adapters: StandardVanillaAdapters });
+```
+
+Direct Standard IR does not use adapters. Put `bundle.compile` in the runtime `compile` option instead.
+
+## Execution Model
+
+1. A capability module contributes Core definitions in declaration order.
+2. `createStandardBundle()` validates module names, copies names and definition references, and shallow-freezes returned containers.
+3. The host passes `bundle.compile.composites` to the Core composite registry.
+4. Core looks up provider keys, validates nodes, and expands Standard IR.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Public module and bundle contracts',
+      path: 'packages/library/standard/src/capability/types.ts',
+      startLine: 3,
+      endLine: 26,
+    },
+    {
+      label: 'Bundle ordering, validation, and freezing',
+      path: 'packages/library/standard/src/capability/create.ts',
+      startLine: 5,
+      endLine: 32,
+    },
+  ]}
+/>
+
+## Errors and Limits
+
+| Situation                                  | Result                                                                |
+| ------------------------------------------ | --------------------------------------------------------------------- |
+| Module name is empty or whitespace-only    | `createStandardBundle()` throws immediately                           |
+| A bundle contains a duplicate module name  | Standard throws instead of silently deduplicating                     |
+| Definition provider keys collide           | Core reports `duplicate composite registration`                       |
+| IR references an unselected composite      | Core emits `COMPOSITE_NOT_REGISTERED`, skips that node, and continues |
+| JSX or embed injection duplicates a bundle | Core preserves the duplicate-registration diagnostic                  |
+
+Modules, bundles, and adapters cannot enter persisted IR. `StandardAllPreset` and `StandardVanillaAdapters` grow with the capabilities published by a Standard version; they are not fixed across versions.
+
+## API Reference
+
+| Export                     | Package                    | Responsibility                                    |
+| -------------------------- | -------------------------- | ------------------------------------------------- |
+| `StandardCapabilityModule` | `@retikz/standard`         | Group Core composite definitions under one name   |
+| `StandardBundle`           | `@retikz/standard`         | Hold module names and a required compile fragment |
+| `createStandardBundle()`   | `@retikz/standard`         | Validate, combine, and freeze selected modules    |
+| `GridModule`               | `@retikz/standard`         | Official Grid module                              |
+| `AxesModule`               | `@retikz/standard`         | Official Axes module                              |
+| `FrameModule`              | `@retikz/standard`         | Official Frame module                             |
+| `StandardAllPreset`        | `@retikz/standard`         | Bundle of all current Standard modules            |
+| `StandardVanillaAdapters`  | `@retikz/standard-vanilla` | All current Standard Vanilla adapters             |
+
+`StandardCapabilityModule` contains `name: string` and `composites: ReadonlyArray<CompositeDefinition>`. `StandardBundle` contains `modules: ReadonlyArray<string>` and required `compile.composites`; even an empty bundle returns an empty array without an optional branch.
+
+All three packages expose only their root package entry. Capabilities are named exports from that root; there are no per-component package subpaths such as `/grid` or `/axes` to maintain.
+
+## Related
+
+- [Get Started](/standard/get-start): run one Grid through React, Vanilla, and persisted JSON
+- [Composites](/standard/composite): browse the current Standard composite catalog
+- [Core Extension Mechanisms](/kernel/reference/runtime/extensions): define and register third-party Core definitions
