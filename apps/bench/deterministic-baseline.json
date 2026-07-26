@@ -1,0 +1,56 @@
+[
+  {
+    "id": "canvas-full-100",
+    "oracle": "853ed559",
+    "visited": 100,
+    "changed": 100
+  },
+  {
+    "id": "canvas-full-1000",
+    "oracle": "268567a5",
+    "visited": 1000,
+    "changed": 1000
+  },
+  {
+    "id": "canvas-full-5000",
+    "oracle": "fa470145",
+    "visited": 5000,
+    "changed": 5000
+  },
+  {
+    "id": "core-full-100",
+    "oracle": "ab5339d2",
+    "visited": 100,
+    "changed": 100
+  },
+  {
+    "id": "core-full-1000",
+    "oracle": "4c817751",
+    "visited": 1000,
+    "changed": 1000
+  },
+  {
+    "id": "core-full-5000",
+    "oracle": "fde39da8",
+    "visited": 5000,
+    "changed": 5000
+  },
+  {
+    "id": "svg-full-100",
+    "oracle": "1b31b1b3",
+    "visited": 100,
+    "changed": 100
+  },
+  {
+    "id": "svg-full-1000",
+    "oracle": "45dd69ee",
+    "visited": 1000,
+    "changed": 1000
+  },
+  {
+    "id": "svg-full-5000",
+    "oracle": "426b220b",
+    "visited": 5000,
+    "changed": 5000
+  }
+]

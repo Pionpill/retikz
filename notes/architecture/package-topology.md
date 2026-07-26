@@ -6,11 +6,11 @@ retikz 将包的代码归属和发布节奏分开管理。
 
 文件目录按领域组织：
 
-| 领域    | 目录                 | 职责                                                 |
-| ------- | -------------------- | ---------------------------------------------------- |
-| kernel  | `packages/kernel/*`  | 核心绘图、渲染、adapter 和可选 Kernel 集成（如 TeX） |
-| library | `packages/library/*` | 官方可选、跨领域复用的绘图能力库                     |
-| viz     | `packages/viz/*`     | 可视化底座和 plot 等上层功能包                       |
+| 领域    | 目录                 | 职责                                                         |
+| ------- | -------------------- | ------------------------------------------------------------ |
+| kernel  | `packages/kernel/*`  | 运行时、核心绘图、渲染、adapter 和可选 Kernel 集成（如 TeX） |
+| library | `packages/library/*` | 官方可选、跨领域复用的绘图能力库                             |
+| viz     | `packages/viz/*`     | 可视化底座和 plot 等上层功能包                               |
 
 领域目录只表达代码归属和依赖方向，不表示同目录下所有包必须共享版本。
 
@@ -20,11 +20,11 @@ retikz 将包的代码归属和发布节奏分开管理。
 
 `scripts/release-groups.config.mjs` 是机器可读的发布组真源。
 
-| 发布组 | 包                                                                                                  | 版本策略        |
-| ------ | --------------------------------------------------------------------------------------------------- | --------------- |
-| kernel | `@retikz/math`, `@retikz/core`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla`, `@retikz/tex` | 组内 lockstep   |
-| data   | `@retikz/data`                                                                                      | 独立底座包      |
-| plot   | `@retikz/plot`, `@retikz/plot-react`, `@retikz/plot-vanilla`                                        | plot 组内同步发 |
+| 发布组 | 包                                                                                                                     | 版本策略        |
+| ------ | ---------------------------------------------------------------------------------------------------------------------- | --------------- |
+| kernel | `@retikz/math`, `@retikz/runtime`, `@retikz/core`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla`, `@retikz/tex` | 组内 lockstep   |
+| data   | `@retikz/data`                                                                                                         | 独立底座包      |
+| plot   | `@retikz/plot`, `@retikz/plot-react`, `@retikz/plot-vanilla`                                                           | plot 组内同步发 |
 
 未来 table 等功能家族即使放在 `packages/viz/*` 下，也应该拥有独立发布组。
 

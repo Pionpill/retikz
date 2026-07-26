@@ -27,6 +27,10 @@
     "maxFiles": 150,
     "maxPackedBytes": 81920
   },
+  "@retikz/runtime": {
+    "maxFiles": 40,
+    "maxPackedBytes": 20480
+  },
   "@retikz/render": {
     "maxFiles": 180,
     "maxPackedBytes": 112640

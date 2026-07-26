@@ -7,7 +7,15 @@ export const releaseGroups = {
   kernel: {
     domain: 'kernel',
     kind: 'foundation',
-    packages: ['@retikz/math', '@retikz/core', '@retikz/render', '@retikz/react', '@retikz/vanilla', '@retikz/tex'],
+    packages: [
+      '@retikz/math',
+      '@retikz/runtime',
+      '@retikz/core',
+      '@retikz/render',
+      '@retikz/react',
+      '@retikz/vanilla',
+      '@retikz/tex',
+    ],
   },
   data: {
     domain: 'viz',

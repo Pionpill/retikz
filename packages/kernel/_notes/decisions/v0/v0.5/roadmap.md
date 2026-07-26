@@ -1,6 +1,6 @@
 # v0.5 路线总计划
 
-> 状态：`v0.5.0-alpha.1` 已完成 ADR-01～07 的实现、测试、双语文档与 Accepted 收尾；`check:full`、`check:release-groups`、`test:full`、全仓 build、`test:publish-artifacts` 与 Kernel 六包 dry-run 已通过，commit 与 tag 已获授权，等待 npm publish 与 push 授权。Headless interaction 与 progressive compile 已退出 alpha.1，等待后续版本重新启动设计与实现。
+> 状态：`v0.5.0-alpha.1` 已完成 ADR-01～07 的实现、测试、双语文档与 Accepted 收尾；alpha.2 / alpha.3 已进入 Proposed 设计，分别承接增量性能闭环与 Concurrent + generation；alpha.4 仅登记 Headless Interaction 候选边界。
 >
 > 每条 Proposed ADR 必须按 `flow-alpha` 独立完成能力完备性、包边界、define-registry、测试契约与端到端闭环检查，不能因共用同一 milestone 跳过 Gate。
 
@@ -20,8 +20,10 @@ v0.5 继续补充跨图元、跨 adapter 或影响 IR / compile 的纵向机制�
 | Node 文本自动对比色      | 根据实际填充明度选择黑色或白色文字，保持可读性                | [ADR-04 Accepted](./alpha.1/04-node-text-auto-contrast.md)          |
 | Node label 包围盒间距    | 长标签按自身尺寸离开节点边界，避免左右标签与节点重叠          | [ADR-05 Accepted](./alpha.1/05-node-label-box-spacing.md)           |
 | TeX 数学语法兼容         | 正确解析 MathJax 支持的 TeX 语法并保留跨后端视觉语义          | [ADR-06 Accepted](./alpha.1/06-tex-math-syntax-compatibility.md)    |
-| Headless interaction     | 补齐 renderer-agnostic 的 target / intent / manifest          | 后续 alpha（版本待定）                                              |
 | 布局感知 Composite       | 让 Tier 2 在同次 compile 内测量、约束、replay 并返回 artifact | [ADR-07 Accepted](./alpha.1/07-layout-aware-composite.md)           |
+| 增量性能闭环             | 用 Diff、局部 compile 与 retained renderer 减少持续更新成本   | [alpha.2 Proposed](./alpha.2/roadmap.md)                            |
+| Concurrent 与渐进生成    | 可让出、取消地准备候选结果，并支持渐进物化与 generation       | [alpha.3 Proposed](./alpha.3/roadmap.md)                            |
+| Headless Interaction     | 补齐 renderer-agnostic target、behavior、intent 与 ownership  | [alpha.4 候选](./alpha.4/roadmap.md)                                |
 
 ## alpha.1 执行批次
 
@@ -35,6 +37,16 @@ v0.5 继续补充跨图元、跨 adapter 或影响 IR / compile 的纵向机制�
 批次只规定设计与集成顺序，不授权实现、commit 或发布。单条 ADR 未通过 Gate 时保持 Proposed，不得以“同属 alpha.1”为由绕过。
 
 Headless interaction 与 progressive compile 的 ADR、实现、测试与文档已于 2026-07-25 撤回。后续版本若重新承接，必须重新建立 Proposed ADR、测试契约并通过独立 Architecture Gate，不沿用本轮实现授权。
+
+## 后续 Alpha 排期
+
+| 版本    | 交付边界                                                                      | 上位设计                                                                           |
+| ------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| alpha.2 | `sync + atomic + incremental`：基线、Runtime 基础、Diff、增量 compile/render  | [性能与增量运行时设计](../../../../../../notes/architecture/performance-design.md) |
+| alpha.3 | `concurrent + atomic/progressive`：调度、取消、渐进物化、generation session   | [性能与增量运行时设计](../../../../../../notes/architecture/performance-design.md) |
+| alpha.4 | Headless Interaction：事件、ownership routing、behavior、presentation、intent | [交互与增量运行时设计](../../../../../../notes/architecture/interaction-design.md) |
+
+三段共享 identity、revision、ownership、transaction 与 retained Scene，不建立平行 Runtime。alpha.2 的 transaction 即使只同步执行，也必须隔离候选 revision 与当前状态；alpha.3 在同一契约上增加调度能力；alpha.4 只消费基础契约，不反向重定义它们。
 
 ## Node 锚点对齐定位
 
