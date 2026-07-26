@@ -7,6 +7,12 @@ description: Manage state ownership and incremental execution across revisions w
 
 The current public surface covers identities, Owner / Program Definitions, registries, synchronous transactions, and execution tracing. Core programs and retained renderers compose on the same Session contract instead of creating adapter-specific lifecycles.
 
+The diagram separates the boundary first: domain packages supply complete inputs and Definitions, Runtime registries constrain ownership and the dependency graph, the Session owns transactions and revisions, and only Snapshots and artifacts are published.
+
+<ComponentPreview files="runtime-architecture" size="xl" hideCode />
+
+The solid `commands → Session → publish` path is product data flow. Registries are execution dependencies, while trace and diagnostics form the dashed observation side path. Observation failures do not rewrite published results.
+
 ## Responsibilities At A Glance
 
 | Topic               | Responsibility                                                   | Reach for it when                               |
@@ -14,17 +20,6 @@ The current public surface covers identities, Owner / Program Definitions, regis
 | Identity and Owner  | Define complete-state identity, ownership, reads, and retirement | Integrating domain state or immutable views     |
 | Program and Session | Organize dependency DAGs, revisions, and atomic transactions     | Incrementally updating state and derived output |
 | Trace               | Validate and isolate execution observation from product results  | Measuring work or diagnosing a trace sink       |
-
-## Chapters
-
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/packages/runtime/session">
-    <span className="font-semibold">Programs & Synchronous Sessions</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Define Program graphs, revision-bound transactions, fallback, diagnostics, and resource lifecycles
-    </span>
-  </LinkedCard>
-</div>
 
 ## Installation & Boundary
 
@@ -130,6 +125,12 @@ The registry first validates Definition object identity, then merges and sorts e
 
 ## Lifecycle & Mutable Alias Contract
 
+An Owner does more than retain an input: it isolates the candidate from the current value until publish. In the diagram, `Current value` participates only in complete-semantic comparison. A candidate is retired after a pre-publish failure, while the previous value is retired only after publish succeeds.
+
+<ComponentPreview files="owner-lifecycle" size="xl" hideCode />
+
+A change hint may therefore participate in `validate`, but it cannot bypass `read`, `equals`, or the complete Snapshot. Runtime owns both retirement paths and calls `dispose` exactly once for a resource on every legal path.
+
 | Callback             | Definition author must guarantee                                              |
 | -------------------- | ----------------------------------------------------------------------------- |
 | `capture(input)`     | No mutable caller alias; copy nested Array / Map / Set or use persistent data |
@@ -214,3 +215,14 @@ Definition authors primarily use the following three object contracts. Their gen
 - [Programs & Synchronous Sessions](/kernel/packages/runtime/session)
 - [Extension mechanism reference](/kernel/reference/runtime/extensions)
 - [Compile entry](/kernel/reference/runtime/compile)
+
+## Chapters
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/packages/runtime/session">
+    <span className="font-semibold">Programs & Synchronous Sessions</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Define Program graphs, revision-bound transactions, fallback, diagnostics, and resource lifecycles
+    </span>
+  </LinkedCard>
+</div>

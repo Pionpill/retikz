@@ -7,6 +7,12 @@ description: 用结构化 identity、typed Owner / Program Definition、同步 S
 
 当前公开能力覆盖 identity、Owner / Program Definition、registry、同步 transaction 与执行 trace。Core program 和 retained renderer 在同一 Session 契约上组合，不需要各 adapter 自建生命周期。
 
+下图先把边界拆开：领域包提供完整输入与 Definition，Runtime registry 约束所有权和依赖图，Session 负责 transaction 与 revision，最终只发布 Snapshot 和 artifact。
+
+<ComponentPreview files="runtime-architecture" size="xl" hideCode />
+
+主链上的 `commands → Session → publish` 是产品数据流；registry 是执行依赖，trace 与 diagnostics 则是虚线表示的观测旁路。观测失败不会改写已发布结果。
+
 ## 职责一览
 
 | 主题               | 职责                                      | 何时查阅                          |
@@ -14,17 +20,6 @@ description: 用结构化 identity、typed Owner / Program Definition、同步 S
 | Identity 与 Owner  | 定义完整状态的身份、所有权、读取和释放    | 接入新的领域状态或 immutable view |
 | Program 与 Session | 组织依赖 DAG、revision 与原子 transaction | 增量更新多份状态及其派生产物      |
 | Trace              | 校验并隔离执行观测，不改变产品结果        | 统计工作量或诊断 trace sink       |
-
-## 章节内容
-
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/packages/runtime/session">
-    <span className="font-semibold">Program 与同步 Session</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      定义 Program graph、revision-bound transaction、fallback、diagnostic 与资源生命周期
-    </span>
-  </LinkedCard>
-</div>
 
 ## 安装与边界
 
@@ -130,6 +125,12 @@ Registry 先按 token object identity 验证 Definition，再按 exact key 合�
 
 ## 生命周期与 Mutable Alias 契约
 
+Owner 的关键不是保存一次输入，而是把 candidate 与 current 隔离到发布点。下图中 `Current value` 只参与完整语义比较；candidate 在 publish 前失败时释放自己，publish 成功后才释放 previous。
+
+<ComponentPreview files="owner-lifecycle" size="xl" hideCode />
+
+因此 change hint 只能参与 `validate`，不能跳过 `read`、`equals` 或完整 Snapshot。两个 retire 路径都由 Runtime 管理，合法路径中的同一资源只会 `dispose` 一次。
+
 | 回调                 | 作者必须保证                                                   |
 | -------------------- | -------------------------------------------------------------- |
 | `capture(input)`     | 不与调用方共享可变引用；复制 nested Array / Map / Set 或持久化 |
@@ -214,3 +215,14 @@ Definition 作者最常用的三个对象契约如下。函数签名里的泛型
 - [Program 与同步 Session](/kernel/packages/runtime/session)
 - [扩展机制参考](/kernel/reference/runtime/extensions)
 - [编译入口](/kernel/reference/runtime/compile)
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/packages/runtime/session">
+    <span className="font-semibold">Program 与同步 Session</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      定义 Program graph、revision-bound transaction、fallback、diagnostic 与资源生命周期
+    </span>
+  </LinkedCard>
+</div>

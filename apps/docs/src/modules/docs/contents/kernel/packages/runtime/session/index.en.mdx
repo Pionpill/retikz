@@ -16,14 +16,13 @@ The contract does not understand IR, Scene, or renderer patches. Core, Render, R
 | CandidateView | Read one candidate revision                         | Accessing disposable values / artifacts  |
 | Session       | Prepare, publish, observe, and retire resources     | Synchronous transaction reentry          |
 
-The synchronous Session state machine is:
+The diagram puts the atomic boundary at publish. The solid central path is one transaction, the left branch handles pre-publish rollback, and the right branch isolates observer or retirement failures as diagnostics. Disposal at the bottom is an independent state machine, not a transaction failure branch.
 
-```text
-idle → preparing → committing → publishing → observing → retiring → idle
-idle → disposing → disposed
-```
+<ComponentPreview files="transaction-boundary" size="xxl" hideCode />
 
-Only pointer publish advances the revision. During an active transaction or disposal, `update()`, `snapshot()`, `artifact()`, diagnostic drain, and another `dispose()` reject synchronous reentry. `revision()` always returns the revision already published. Disposal starts only from idle; after disposal, callers may still read the revision, drain diagnostics, or repeat the no-op dispose.
+Only `Publish pointer` advances the revision. A pre-publish failure retires candidates in reverse order while the current Snapshot and revision remain unchanged. Post-publish failures only enter the diagnostic queue; they never roll back the published result.
+
+During an active transaction or disposal, `update()`, `snapshot()`, `artifact()`, diagnostic drain, and another `dispose()` reject synchronous reentry. `revision()` always returns the revision already published. Disposal starts only from idle; after disposal, callers may still read the revision, drain diagnostics, or repeat the no-op dispose.
 
 ## Define And Run A Program
 
@@ -100,6 +99,12 @@ The Owner registry and Program registry must be the same paired instances passed
 | `bailout`      | Reuse the current artifact                    | Do not propagate invalidation downstream |
 | `fallback`     | Abandon the incremental path and call `run()` | Force downstream full execution          |
 | No `update()`  | Call `run()` directly                         | Force downstream full execution          |
+
+Each row below is an independent case for the same dependency edge in the Program DAG, not a top-to-bottom fallback sequence. A Program enters `update()` or `run()` only when dependency changes actually reach it.
+
+<ComponentPreview files="program-propagation" size="xl" hideCode />
+
+`bailout` stops invalidation at the current edge. `fallback / full` forces downstream dependents onto their full path, while an unrelated branch with no dependency change reuses its current artifact.
 
 With no ChangeSet, Runtime still calls `update()` and `view.changeSet(owner)` returns `undefined`. When an Owner validator explicitly returns `fallback`, Runtime discards the untrusted hint; the direct Program and its downstream dependents take the full path.
 

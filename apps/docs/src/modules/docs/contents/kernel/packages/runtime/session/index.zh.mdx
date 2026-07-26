@@ -16,14 +16,13 @@ description: 用 typed Program graph、完整 Snapshot 和原子 transaction 在
 | CandidateView | 读取同一 candidate revision       | 取得 disposable value / artifact |
 | Session       | 准备、发布、观测并释放资源        | 在 transaction 中同步重入        |
 
-Session 的同步状态机是：
+下图把原子边界画在 publish 上：中央实线是一次 transaction，左侧是发布前失败的 rollback，右侧是发布后 observer / retire failure 的 diagnostic 旁路。最下方 dispose 是独立状态机，不是 transaction 的失败分支。
 
-```text
-idle → preparing → committing → publishing → observing → retiring → idle
-idle → disposing → disposed
-```
+<ComponentPreview files="transaction-boundary" size="xxl" hideCode />
 
-只有 pointer publish 会推进 revision。在 active transaction 或 disposing 期间，`update()`、`snapshot()`、`artifact()`、diagnostic drain 与再次 `dispose()` 都拒绝同步重入；`revision()` 始终可以读取当前已经发布的 revision。dispose 只能从 idle 开始；进入 disposed 后仍可读取 revision、drain diagnostics 或重复 no-op dispose。
+只有 `Publish pointer` 会推进 revision。发布前失败时 candidate 反向释放，current Snapshot 与 revision 保持不变；发布后失败只进入 diagnostic queue，已经发布的结果不会回滚。
+
+在 active transaction 或 disposing 期间，`update()`、`snapshot()`、`artifact()`、diagnostic drain 与再次 `dispose()` 都拒绝同步重入；`revision()` 始终可以读取当前已经发布的 revision。dispose 只能从 idle 开始；进入 disposed 后仍可读取 revision、drain diagnostics 或重复 no-op dispose。
 
 ## 定义并运行 Program
 
@@ -100,6 +99,12 @@ Owner registry 与 Program registry 必须是创建 Session 时传入的同一�
 | `bailout`     | 复用 current artifact      | 不把 invalidation 传给下游 |
 | `fallback`    | 丢弃增量路径并执行 `run()` | 下游强制 full              |
 | 无 `update()` | 直接执行 `run()`           | 下游强制 full              |
+
+下图每一行都是 Program DAG 中同一条依赖边的独立情形，不是从上到下依次尝试。只有依赖变化实际传播到某个 Program 时，它才进入 `update()` 或 `run()`。
+
+<ComponentPreview files="program-propagation" size="xl" hideCode />
+
+`bailout` 在当前边终止 invalidation；`fallback / full` 则沿依赖边强制下游走 full。没有依赖变化的无关分支会直接复用 current artifact。
 
 ChangeSet 缺失时仍调用 `update()`，`view.changeSet(owner)` 返回 `undefined`。Owner validator 明确返回 `fallback` 时，Runtime 丢弃不可信提示，当前 Program 和依赖它的下游都走 full 路径。
 
