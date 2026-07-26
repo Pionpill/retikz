@@ -30,6 +30,18 @@ type RemovedTableCellFitScale = TableTypes.TableCellFitScale;
 type RemovedTableCellOverflow = TableTypes.TableCellOverflow;
 // @ts-expect-error 阶段级 Cell content placement 不从包根导出
 type RemovedTableCellContentPlacement = TableTypes.TableCellContentPlacement;
+// @ts-expect-error preparatory border output type 不从包根导出
+type RemovedResolvedTableBorderLine = TableTypes.ResolvedTableBorderLine;
+// @ts-expect-error preparatory border provenance type 不从包根导出
+type RemovedTableBorderContribution = TableTypes.TableBorderContribution;
+// @ts-expect-error preparatory border manifest entry 不从包根导出
+type RemovedTableBorderManifestEntry = TableTypes.TableBorderManifestEntry;
+// @ts-expect-error preparatory border Path meta 不从包根导出
+type RemovedTableBorderPathMeta = TableTypes.TableBorderPathMeta;
+// @ts-expect-error preparatory Border Graph input 不从包根导出
+type RemovedBuildTableBorderGraphInput = TableTypes.BuildTableBorderGraphInput;
+// @ts-expect-error preparatory Border Graph result 不从包根导出
+type RemovedTableBorderGraph = TableTypes.TableBorderGraph;
 
 type RemovedStageTypes = [
   RemovedResolvedTableLayoutSpec,
@@ -41,6 +53,12 @@ type RemovedStageTypes = [
   RemovedTableCellFitScale,
   RemovedTableCellOverflow,
   RemovedTableCellContentPlacement,
+  RemovedResolvedTableBorderLine,
+  RemovedTableBorderContribution,
+  RemovedTableBorderManifestEntry,
+  RemovedTableBorderPathMeta,
+  RemovedBuildTableBorderGraphInput,
+  RemovedTableBorderGraph,
 ];
 
 describe('@retikz/table public API', () => {
@@ -68,6 +86,11 @@ describe('@retikz/table public API', () => {
     expect(Table).not.toHaveProperty('computeTableCellTranslation');
     expect(Table).not.toHaveProperty('computeTableCellFitScale');
     expect(Table).not.toHaveProperty('computeTableCellContentPlacement');
+    expect(Table).not.toHaveProperty('buildTableBorderGraph');
+    expect(Table).not.toHaveProperty('resolveTableBorderAtoms');
+    expect(Table).not.toHaveProperty('mergeTableBorderAtoms');
+    expect(Table).not.toHaveProperty('ResolvedTableBorderLineSchema');
+    expect(Table).not.toHaveProperty('TableBorderContributionSchema');
   });
 
   it('keeps public contract types while hiding pipeline stage types', () => {
@@ -88,6 +111,25 @@ describe('@retikz/table public API', () => {
             span: { columns: 1 },
           },
         ],
+      }),
+    ).toThrow();
+    expect(() =>
+      Table.TableStructureSchema.parse({
+        kind: 'manual',
+        rows: 1,
+        columns: 1,
+        cells: [
+          {
+            address: { row: 0, column: 0 },
+            payload: { kind: 'value', value: 'x' },
+            layout: { borders: { top: { kind: 'line' } } },
+          },
+        ],
+      }),
+    ).toThrow();
+    expect(() =>
+      Table.TableLayoutSchema.parse({
+        borders: { mode: 'collapse', outer: { kind: 'line' } },
       }),
     ).toThrow();
     for (const layout of [{ wrap: true }, { fit: 'contain' }, { overflow: 'clip' }]) {
