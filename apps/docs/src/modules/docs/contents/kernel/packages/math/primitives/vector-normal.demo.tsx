@@ -5,7 +5,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract,vectorNormalControls } from './vector-normal.controls';
+import { previewControlContract, vectorNormalControls } from './vector-normal.controls';
 
 export const previewControls = vectorNormalControls;
 
