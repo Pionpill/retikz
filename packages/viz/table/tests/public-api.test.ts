@@ -22,6 +22,14 @@ type RemovedTableCellLayout = TableTypes.TableCellLayout;
 type RemovedTableLayout = TableTypes.TableLayout;
 // @ts-expect-error 阶段级 normalize options 不从包根导出
 type RemovedNormalizeTableStructureOptions = TableTypes.NormalizeTableStructureOptions;
+// @ts-expect-error 阶段级 Cell fit 策略不从包根导出
+type RemovedTableCellFit = TableTypes.TableCellFit;
+// @ts-expect-error 阶段级 Cell fit scale 不从包根导出
+type RemovedTableCellFitScale = TableTypes.TableCellFitScale;
+// @ts-expect-error 阶段级 Cell overflow 策略不从包根导出
+type RemovedTableCellOverflow = TableTypes.TableCellOverflow;
+// @ts-expect-error 阶段级 Cell content placement 不从包根导出
+type RemovedTableCellContentPlacement = TableTypes.TableCellContentPlacement;
 
 type RemovedStageTypes = [
   RemovedResolvedTableLayoutSpec,
@@ -29,6 +37,10 @@ type RemovedStageTypes = [
   RemovedTableCellLayout,
   RemovedTableLayout,
   RemovedNormalizeTableStructureOptions,
+  RemovedTableCellFit,
+  RemovedTableCellFitScale,
+  RemovedTableCellOverflow,
+  RemovedTableCellContentPlacement,
 ];
 
 describe('@retikz/table public API', () => {
@@ -54,6 +66,8 @@ describe('@retikz/table public API', () => {
     expect(Table).not.toHaveProperty('computeTableCellBox');
     expect(Table).not.toHaveProperty('computeTableCellContentBox');
     expect(Table).not.toHaveProperty('computeTableCellTranslation');
+    expect(Table).not.toHaveProperty('computeTableCellFitScale');
+    expect(Table).not.toHaveProperty('computeTableCellContentPlacement');
   });
 
   it('keeps public contract types while hiding pipeline stage types', () => {
@@ -76,6 +90,22 @@ describe('@retikz/table public API', () => {
         ],
       }),
     ).toThrow();
+    for (const layout of [{ wrap: true }, { fit: 'contain' }, { overflow: 'clip' }]) {
+      expect(() =>
+        Table.TableStructureSchema.parse({
+          kind: 'manual',
+          rows: 1,
+          columns: 1,
+          cells: [
+            {
+              address: { row: 0, column: 0 },
+              payload: { kind: 'value', value: 'x' },
+              layout,
+            },
+          ],
+        }),
+      ).toThrow();
+    }
     expect(() =>
       Table.TableStructureSchema.parse({
         kind: 'manual',

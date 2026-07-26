@@ -1,4 +1,6 @@
 export * from './cell';
+export * from './content';
+export * from './fit';
 export * from './layout';
 export * from './resolve';
 export * from './span';
