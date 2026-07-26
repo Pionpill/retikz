@@ -1,6 +1,6 @@
 # v0.5 路线总计划
 
-> 状态：`v0.5.0-alpha.1` 已完成 ADR-01～07 的实现、测试、双语文档与 Accepted 收尾；Kernel 定向验证、全仓测试 / build 与六包 dry-run 已通过。全仓 `check:full` 与 publish-artifacts 广域检查仍分别受 ignored 临时文件、Plot React 跨组预算阻塞。Headless interaction 与 progressive compile 已退出 alpha.1，等待后续版本重新启动设计与实现。
+> 状态：`v0.5.0-alpha.1` 已完成 ADR-01～07 的实现、测试、双语文档与 Accepted 收尾；`check:full`、`check:release-groups`、`test:full`、全仓 build、`test:publish-artifacts` 与 Kernel 六包 dry-run 已通过，commit 与 tag 已获授权，等待 npm publish 与 push 授权。Headless interaction 与 progressive compile 已退出 alpha.1，等待后续版本重新启动设计与实现。
 >
 > 每条 Proposed ADR 必须按 `flow-alpha` 独立完成能力完备性、包边界、define-registry、测试契约与端到端闭环检查，不能因共用同一 milestone 跳过 Gate。
 

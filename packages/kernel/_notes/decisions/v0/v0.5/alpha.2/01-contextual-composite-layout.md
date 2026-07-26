@@ -1,8 +1,10 @@
 # ADR-01：上下文化 Composite 布局事务
 
-- 状态：Proposed
+- 状态：Superseded（由 [alpha.1 ADR-07](../alpha.1/07-layout-aware-composite.md) 取代）
 - 决策日期：2026-07-23
 - 关联：[v0.5 roadmap](../roadmap.md) · [alpha.2 roadmap](./roadmap.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [Table Core gate](../../../../../../viz/_notes/decisions/table/v0/v0.1/alpha.2/01-core-constrained-layout-gate.md) · [Table transaction](../../../../../../viz/_notes/decisions/table/v0/v0.1/alpha.2/06-layout-lowering-manifest-and-migration.md)
+
+> 本文保留 2026-07-23 的前置设计记录，不再代表当前 Kernel 契约。最终实现采用 alpha.1 ADR-07 的 layout-aware composite、compile-local replay、typed artifacts 与 occurrence locator 设计
 
 ## 背景
 

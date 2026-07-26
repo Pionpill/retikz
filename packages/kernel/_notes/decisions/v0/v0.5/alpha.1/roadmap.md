@@ -1,6 +1,6 @@
 # v0.5.0-alpha.1 Roadmap：Kernel v0.5 机制收口
 
-> 状态：收尾中。ADR-01～07 的实现、测试与双语文档已完成并 Accepted；Kernel 定向验证、全仓测试 / build 与六包 dry-run 已通过。全仓 `check:full` 受 ignored 临时文件阻塞，publish-artifacts 广域检查只剩 Plot React 跨组预算超限；不授权 commit、tag、publish 或 push。
+> 状态：发布准备完成。ADR-01～07 的实现、测试、双语文档与 Accepted 收尾已完成；`check:full`、`check:release-groups`、`test:full`、全仓 build、`test:publish-artifacts` 与 Kernel 六包 dry-run 已通过；commit 与 tag 已获授权，npm publish 与 push 尚未授权。
 
 ## 目标
 
@@ -54,5 +54,6 @@ Headless interaction 与 progressive compile 不再属于 alpha.1；其 ADR、�
 - [x] ADR-07 已于 2026-07-25 获得单独实现授权；不含 commit、push 或发布。
 - [x] ADR-07 implementation / adversarial test / 双语 docs / changelog 已完成并获提交授权。
 - [x] ADR-02 至 ADR-06 完成 implementation / adversarial test / docs，并于 2026-07-26 获得统一收尾确认。
-- [ ] alpha.1 全部 ADR 集成后执行整体 contract / release-group 验证。
-- [ ] alpha.1 全部 ADR 的 changelog / roadmap 统一收尾并获得 commit 授权。
+- [x] alpha.1 全部 ADR 集成后执行整体 contract / release-group 验证。
+- [x] alpha.1 全部 ADR 的 changelog / roadmap 统一收尾。
+- [x] 发版准备改动获得 commit 授权。

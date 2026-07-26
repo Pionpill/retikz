@@ -1,6 +1,6 @@
 # v0.5.0-alpha.2 Roadmap：上下文化 Composite 布局
 
-> 状态：Proposed，Architecture Gate 已通过，等待人工确认。
+> 状态：Superseded。该候选路线已由 [alpha.1 ADR-07](../alpha.1/07-layout-aware-composite.md) 重新设计并在 `v0.5.0-alpha.1` 完成实现、测试、文档与 Accepted 收尾；本目录仅保留历史设计记录
 
 ## 目标
 
@@ -8,9 +8,9 @@
 
 ## 决策列表
 
-| ADR                                           | 状态     | 主题                        | 说明                                                                   |
-| --------------------------------------------- | -------- | --------------------------- | ---------------------------------------------------------------------- |
-| [ADR-01](./01-contextual-composite-layout.md) | Proposed | 上下文化 Composite 布局事务 | 双形态 definition、child layout/replay、occurrence、artifact 与 bounds |
+| ADR                                           | 状态       | 主题                        | 说明                             |
+| --------------------------------------------- | ---------- | --------------------------- | -------------------------------- |
+| [ADR-01](./01-contextual-composite-layout.md) | Superseded | 上下文化 Composite 布局事务 | 由 alpha.1 ADR-07 的最终契约取代 |
 
 ## 范围
 
