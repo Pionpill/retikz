@@ -33,6 +33,7 @@ import type {
   NodeChild,
   PathChild,
   PendingPathEmission,
+  RuntimeSemanticOwner,
   ScopeChild,
   ScopeLayoutPlaceholder,
   ScopeLayoutPlaceholderContext,
@@ -71,9 +72,15 @@ import { collectScopeCornerPoints, computeScopeBoundingBox, lowerScopeTransforms
 import { createStyleFrame, resolveEffectivePath, resolveLabelDefault, resolveNodeStyle, resolveShadow } from '../style';
 import { applyTransformChain, inverseTransformChain, projectLayoutToGlobal } from '../transform';
 import { filterAnimations } from './animation';
-import { freezeCompileArtifact, orderCompileArtifacts } from './artifact';
+import { freezeCompileArtifact, freezeOccurrence, orderCompileArtifacts } from './artifact';
 import { collectLayoutBounds } from './bounds';
-import { createDuplicateWarning, transformWarnCode } from './diagnostics';
+import {
+  compileWarningOccurrenceOf,
+  createDuplicateWarning,
+  replaceCompileWarningOccurrence,
+  transformWarnCode,
+  withCompileWarningOccurrence,
+} from './diagnostics';
 import {
   collectPlaceholderLocators,
   makePathPlaceholder,
@@ -81,6 +88,7 @@ import {
   sealSink,
   stableSortByZIndex,
 } from './primitive';
+import { createRuntimeTopologyTracker } from './runtime-topology';
 import { visualBoundsOfPrimitives } from './visual-bounds';
 
 /** 编译 child 树，完成 namespace 注册、延迟 path 回填、zIndex 排序和自动 layout bbox 收集 */
@@ -90,12 +98,27 @@ export const compileChildrenToPrimitives = (
   options: TraversalCompileOptions = {},
 ): TraversalResult => {
   const session = options.session ?? { owner: {}, replayTransactions: new WeakMap() };
+  const warningOccurrences: Array<CompileOccurrenceLocator> = [];
+  const dispatchWarning = (warning: CompileWarning): void => {
+    context.onWarn(withCompileWarningOccurrence(warning, warningOccurrences.at(-1)));
+  };
+  /** 在同步 child 编译或延迟 emit 期间绑定当前 warning occurrence */
+  const withWarningOccurrence = <T>(occurrence: CompileOccurrenceLocator, execute: () => T): T => {
+    warningOccurrences.push(occurrence);
+    options.observeWarningOccurrence?.(occurrence);
+    try {
+      return execute();
+    } finally {
+      warningOccurrences.pop();
+      options.observeWarningOccurrence?.(warningOccurrences.at(-1));
+    }
+  };
   /** 编译运行时环境 */
   const runtime: TraversalRuntime = {
     context: {
       measureText: context.measureText,
       lowerTex: context.lowerTex,
-      onWarn: context.onWarn,
+      onWarn: dispatchWarning,
       round: context.round,
       nodeDistance: context.nodeDistance,
       labelDistance: context.labelDistance,
@@ -120,10 +143,11 @@ export const compileChildrenToPrimitives = (
       namespaceStack:
         options.namespaceStack ??
         new NamespaceStack({
-          onDuplicate: info => context.onWarn(createDuplicateWarning(info)),
+          onDuplicate: info => dispatchWarning(createDuplicateWarning(info)),
         }),
       zIndexOf: new WeakMap(),
       placeholderBalance: 0,
+      ...(options.identityTracker === undefined ? {} : { identityTracker: options.identityTracker }),
     },
   };
 
@@ -187,13 +211,19 @@ export const compileChildrenToPrimitives = (
     runtime.state.namespaceStack.enterResolvingPhase();
     try {
       for (const pendingPath of pendingPaths) {
-        const result = emitPathKindPrimitive(pendingPath.path, pendingPath.irPath, pendingPath.scopeChain);
-        const primitives = result?.primitives ?? [];
+        const result = withWarningOccurrence(pendingPath.occurrence, () =>
+          emitPathKindPrimitive(pendingPath.path, pendingPath.irPath, pendingPath.scopeChain),
+        );
+        const rawPrimitives = result?.primitives ?? [];
+        const primitives = runtime.state.identityTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
         const idx = pendingPath.placeholderSlot.primitiveSink.indexOf(pendingPath.placeholderSlot.placeholder);
         if (idx === -1) {
           throw new Error('internal: path placeholder missing from its sink');
         }
         pendingPath.placeholderSlot.primitiveSink.splice(idx, 1, ...primitives);
+        if (pendingPath.semanticOwner !== undefined) {
+          runtime.state.identityTracker?.recordPrimitives(primitives, pendingPath.semanticOwner, 'path');
+        }
         runtime.state.placeholderBalance--;
         for (const prim of primitives) recordPrimitiveZIndex(runtime.state.zIndexOf, prim, pendingPath.zIndex);
         if (result !== null) {
@@ -215,6 +245,7 @@ export const compileChildrenToPrimitives = (
     index: number,
     frame: TraversalFrame,
     occurrence?: CompileOccurrenceLocator,
+    semanticOwner?: RuntimeSemanticOwner,
   ): void => {
     const { scopeChain, primitiveSink, locatorPrefix, layoutSink, styleStack } = frame;
     const nodeIrPath = `${locatorPrefix}children[${index}].node`;
@@ -269,7 +300,12 @@ export const compileChildrenToPrimitives = (
           expansionPath: Object.freeze([]),
         }),
     });
-    for (const prim of emitNodePrimitives(layout, runtime.context.round, runtime.context.paint.register)) {
+    const rawPrimitives = emitNodePrimitives(layout, runtime.context.round, runtime.context.paint.register);
+    const emittedPrimitives = runtime.state.identityTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
+    if (semanticOwner !== undefined) {
+      runtime.state.identityTracker?.recordPrimitives(emittedPrimitives, semanticOwner, 'node');
+    }
+    for (const prim of emittedPrimitives) {
       primitiveSink.push(prim);
       recordPrimitiveZIndex(runtime.state.zIndexOf, prim, child.zIndex);
     }
@@ -317,7 +353,13 @@ export const compileChildrenToPrimitives = (
   };
 
   /** 合并 path 样式并加入延迟 emit 队列，保留顶层绘制顺序占位 */
-  const queuePathChild = (child: PathChild, index: number, frame: TraversalFrame): void => {
+  const queuePathChild = (
+    child: PathChild,
+    index: number,
+    frame: TraversalFrame,
+    occurrence: CompileOccurrenceLocator,
+    semanticOwner?: RuntimeSemanticOwner,
+  ): void => {
     const { scopeChain, primitiveSink, locatorPrefix, pathSink, styleStack } = frame;
     const pathIrPath = `${locatorPrefix}children[${index}].path`;
     const effectivePath = resolveEffectivePath(child, styleStack);
@@ -337,6 +379,8 @@ export const compileChildrenToPrimitives = (
       boundsSink: frame.boundsSink,
       allocationSink: frame.allocationSink,
       placeholderSlot: { primitiveSink, placeholder },
+      occurrence,
+      ...(semanticOwner === undefined ? {} : { semanticOwner }),
       zIndex: child.zIndex,
     };
     runtime.state.placeholderBalance++;
@@ -566,7 +610,7 @@ export const compileChildrenToPrimitives = (
 
   /** 在需要可见输出时 emit scope group，并挂载 transform、clip 和动画 */
   const emitScopeGroup = (child: ScopeChild, input: EmitScopeGroupContext): void => {
-    const { index, scopeTransforms, scopePrimitiveSink, frame } = input;
+    const { index, scopeTransforms, scopePrimitiveSink, frame, semanticOwner } = input;
     const { primitiveSink, locatorPrefix } = frame;
     const scopeIrPath = `${locatorPrefix}children[${index}].scope`;
     const hasScopeTransforms = scopeTransforms.length > 0;
@@ -589,6 +633,7 @@ export const compileChildrenToPrimitives = (
     if (hasScopeTransforms) group.transforms = [...scopeTransforms];
     if (child.clip !== undefined) group.clipRef = runtime.context.clip.register(child.clip);
     primitiveSink.push(group);
+    if (semanticOwner !== undefined) runtime.state.identityTracker?.recordPrimitives([group], semanticOwner, 'scope');
     recordPrimitiveZIndex(runtime.state.zIndexOf, group, child.zIndex);
   };
 
@@ -599,6 +644,7 @@ export const compileChildrenToPrimitives = (
     frame: TraversalFrame,
     generatedOccurrence?: CompileOccurrenceLocator,
     compositeDepth = options.compositeDepth ?? 0,
+    semanticOwner?: RuntimeSemanticOwner,
   ): void => {
     const { locatorPrefix, styleStack } = frame;
     const placementTarget = resolveScopePlacementTarget(child, index, frame);
@@ -608,7 +654,10 @@ export const compileChildrenToPrimitives = (
     const layoutPlaceholder = registerScopeLayoutPlaceholder(child, { index, frame });
 
     const didPushNamespaceFrame = child.localNamespace === true;
-    if (didPushNamespaceFrame) runtime.state.namespaceStack.pushFrame();
+    if (didPushNamespaceFrame) {
+      runtime.state.namespaceStack.pushFrame();
+      runtime.state.identityTracker?.pushNamespaceFrame();
+    }
     const scopePrimitiveSink: Array<InternalScenePrimitive> = [];
     const scopeLayouts: Array<NodeLayout> = [];
     const scopePendingPaths: Array<PendingPathEmission> = [];
@@ -633,6 +682,7 @@ export const compileChildrenToPrimitives = (
           allocationSink: scopeAllocations,
           observationSink: scopeObservations,
           artifactSink: scopeArtifacts,
+          ...(semanticOwner === undefined ? {} : { semanticOwner }),
         },
         false,
         generatedOccurrence,
@@ -697,10 +747,19 @@ export const compileChildrenToPrimitives = (
       }
       flushPendingPathEmissions(scopePendingPaths);
     } finally {
-      if (didPushNamespaceFrame) runtime.state.namespaceStack.popFrame();
+      if (didPushNamespaceFrame) {
+        runtime.state.namespaceStack.popFrame();
+        runtime.state.identityTracker?.popNamespaceFrame();
+      }
     }
 
-    emitScopeGroup(child, { index, scopeTransforms, scopePrimitiveSink, frame });
+    emitScopeGroup(child, {
+      index,
+      scopeTransforms,
+      scopePrimitiveSink,
+      frame,
+      ...(semanticOwner === undefined ? {} : { semanticOwner }),
+    });
   };
 
   const emptyBounds = (): Readonly<BoundsRect> => Object.freeze({ x: 0, y: 0, width: 0, height: 0 });
@@ -769,7 +828,7 @@ export const compileChildrenToPrimitives = (
         children: primitive.children.map(child => remapPrimitiveResources(child, ids)),
       };
     }
-    if (primitive.type === 'text') return primitive;
+    if (primitive.type === 'text') return { ...primitive };
     return {
       ...primitive,
       fill: remapPaint(primitive.fill, ids),
@@ -796,6 +855,7 @@ export const compileChildrenToPrimitives = (
     frame: TraversalFrame,
     occurrence: CompileOccurrenceLocator,
     outputIndex: number,
+    semanticOwner?: RuntimeSemanticOwner,
   ): void => {
     const transaction = runtime.context.session.replayTransactions.get(token);
     if (transaction === undefined) {
@@ -819,9 +879,11 @@ export const compileChildrenToPrimitives = (
       }
     }
     const replayedPrimitives = transaction.primitives.map(primitive => remapPrimitiveResources(primitive, resourceIds));
+    const committedPrimitives: Array<ScenePrimitive> = [];
     if (transforms === undefined || transforms.length === 0) {
       replayedPrimitives.forEach((primitive, index) => {
         frame.primitiveSink.push(primitive);
+        committedPrimitives.push(primitive);
         recordPrimitiveZIndex(runtime.state.zIndexOf, primitive, transaction.primitiveZIndices[index]);
       });
     } else {
@@ -832,15 +894,25 @@ export const compileChildrenToPrimitives = (
           children: [primitive],
         };
         frame.primitiveSink.push(group);
+        committedPrimitives.push(group);
         recordPrimitiveZIndex(runtime.state.zIndexOf, group, transaction.primitiveZIndices[index]);
       });
     }
+    if (semanticOwner !== undefined) {
+      runtime.state.identityTracker?.recordPrimitives(committedPrimitives, semanticOwner, 'composite-replay');
+      transaction.topologyIdentityIds.forEach(id =>
+        runtime.state.identityTracker?.registerGeneratedIdentity(id, semanticOwner),
+      );
+    }
 
-    for (const change of transaction.namespaceChanges) {
+    for (const [changeIndex, change] of transaction.namespaceChanges.entries()) {
       if (transforms !== undefined && transforms.length > 0) {
         applyOwnTransformsToPublishedLayout(change.entry.layout, frame.scopeChain, transforms);
       }
-      runtime.state.namespaceStack.commitForkChange(change);
+      const changeOccurrence = transaction.namespaceChangeOccurrences[changeIndex] ?? occurrence;
+      withWarningOccurrence(replayOccurrence(occurrence, outputIndex, changeOccurrence), () =>
+        runtime.state.namespaceStack.commitForkChange(change),
+      );
       frame.publicationSink.push(change.entry.layout);
     }
     for (const layout of transaction.layouts) {
@@ -874,7 +946,14 @@ export const compileChildrenToPrimitives = (
         occurrence: replayOccurrence(occurrence, outputIndex, observation.occurrence),
       });
     }
-    for (const warning of transaction.warnings) runtime.context.onWarn(warning);
+    for (const warning of transaction.warnings) {
+      runtime.context.onWarn(
+        replaceCompileWarningOccurrence(
+          warning,
+          replayOccurrence(occurrence, outputIndex, compileWarningOccurrenceOf(warning)),
+        ),
+      );
+    }
     for (const artifact of transaction.artifacts) {
       frame.artifactSink.push(
         freezeCompileArtifact({
@@ -894,6 +973,7 @@ export const compileChildrenToPrimitives = (
     frame: TraversalFrame,
     occurrence: CompileOccurrenceLocator,
     compositeDepth: number,
+    semanticOwner?: RuntimeSemanticOwner,
   ): void => {
     const key = `${child.namespace}.${child.type}`;
     const definition = runtime.context.composites.get(key);
@@ -935,6 +1015,9 @@ export const compileChildrenToPrimitives = (
           },
           compositeDepth + 1,
           true,
+          semanticOwner === undefined
+            ? undefined
+            : runtime.state.identityTracker?.createGeneratedOwner(output, outputIndex, semanticOwner),
         );
       }
       return;
@@ -960,8 +1043,21 @@ export const compileChildrenToPrimitives = (
         };
         const paint = createPaintRegistry(context.patterns, context.round);
         const clip = createClipRegistry(context.round, context.clips);
+        const probeIdentityTracker =
+          runtime.state.identityTracker === undefined
+            ? undefined
+            : createRuntimeTopologyTracker(runtime.state.identityTracker.revision);
+        let probeWarningOccurrence = occurrence;
+        const registrationOccurrences = new Map<string, CompileOccurrenceLocator>();
+        const registrationKey = (frameDepth: number, id: string): string => `${frameDepth}\u0000${id}`;
         const namespaceStack = runtime.state.namespaceStack.fork({
-          onDuplicate: info => warnings.push(createDuplicateWarning(info)),
+          onDuplicate: info =>
+            captureWarning(withCompileWarningOccurrence(createDuplicateWarning(info), probeWarningOccurrence)),
+          onRegister: info =>
+            registrationOccurrences.set(
+              registrationKey(info.frameDepth, info.id),
+              freezeOccurrence(probeWarningOccurrence),
+            ),
         });
         const sandboxContext: CompileContext = {
           ...context,
@@ -978,9 +1074,15 @@ export const compileChildrenToPrimitives = (
           generated: true,
           constraint,
           session: runtime.context.session,
+          ...(probeIdentityTracker === undefined ? {} : { identityTracker: probeIdentityTracker }),
+          observeWarningOccurrence: current => {
+            probeWarningOccurrence = current ?? occurrence;
+          },
         });
         const token = Object.freeze({}) as CompositeReplay;
         const resources: Array<SceneResource> = [...paint.resources(), ...clip.resources()];
+        const namespaceChanges = namespaceStack.diffTopFrame(runtime.state.namespaceStack);
+        const probeFrameDepth = namespaceStack.depth - 1;
         runtime.context.session.replayTransactions.set(token, {
           used: false,
           primitives: laid.primitives,
@@ -989,7 +1091,11 @@ export const compileChildrenToPrimitives = (
           bounds: laid.bounds,
           allocations: laid.allocations,
           observations: laid.observations,
-          namespaceChanges: namespaceStack.diffTopFrame(runtime.state.namespaceStack),
+          namespaceChanges,
+          namespaceChangeOccurrences: namespaceChanges.map(
+            change => registrationOccurrences.get(registrationKey(probeFrameDepth, change.id)) ?? occurrence,
+          ),
+          topologyIdentityIds: [...(probeIdentityTracker?.rootIdentityRegistrations() ?? [])],
           resources,
           warnings,
           artifacts: laid.artifacts,
@@ -1020,14 +1126,24 @@ export const compileChildrenToPrimitives = (
     }
     for (const [outputIndex, output] of result.children.entries()) {
       if (isReplayPlacement(output)) {
-        commitReplay(output.replay, output.transforms, frame, occurrence, outputIndex);
+        commitReplay(output.replay, output.transforms, frame, occurrence, outputIndex, semanticOwner);
         continue;
       }
       const outputOccurrence: CompileOccurrenceLocator = {
         sourcePath: occurrence.sourcePath,
         expansionPath: [...occurrence.expansionPath, { kind: 'output', index: outputIndex }],
       };
-      compileChild(output, outputIndex, frame, outputOccurrence, compositeDepth + 1, true);
+      compileChild(
+        output,
+        outputIndex,
+        frame,
+        outputOccurrence,
+        compositeDepth + 1,
+        true,
+        semanticOwner === undefined
+          ? undefined
+          : runtime.state.identityTracker?.createGeneratedOwner(output, outputIndex, semanticOwner),
+      );
     }
   };
 
@@ -1038,26 +1154,28 @@ export const compileChildrenToPrimitives = (
     occurrence: CompileOccurrenceLocator,
     compositeDepth: number,
     generated: boolean,
-  ): void => {
-    if (context.trace !== undefined) context.trace.visited += 1;
-    if ('namespace' in child) {
-      compileCompositeChild(child, index, frame, occurrence, compositeDepth);
-      return;
-    }
-    switch (child.type) {
-      case 'node':
-        emitNodeChild(child, index, frame, occurrence);
-        break;
-      case 'coordinate':
-        registerCoordinateChild(child, index, frame);
-        break;
-      case 'scope':
-        compileScopeChild(child, index, frame, generated ? occurrence : undefined, compositeDepth);
-        break;
-      default:
-        queuePathChild(child, index, frame);
-    }
-  };
+    semanticOwner?: RuntimeSemanticOwner,
+  ): void =>
+    withWarningOccurrence(occurrence, () => {
+      if (context.trace !== undefined) context.trace.visited += 1;
+      if ('namespace' in child) {
+        compileCompositeChild(child, index, frame, occurrence, compositeDepth, semanticOwner);
+        return;
+      }
+      switch (child.type) {
+        case 'node':
+          emitNodeChild(child, index, frame, occurrence, semanticOwner);
+          break;
+        case 'coordinate':
+          registerCoordinateChild(child, index, frame);
+          break;
+        case 'scope':
+          compileScopeChild(child, index, frame, generated ? occurrence : undefined, compositeDepth, semanticOwner);
+          break;
+        default:
+          queuePathChild(child, index, frame, occurrence, semanticOwner);
+      }
+    });
 
   const compileChildren = (
     children: ReadonlyArray<IRChild>,
@@ -1066,6 +1184,12 @@ export const compileChildrenToPrimitives = (
     generatedScopeOccurrence?: CompileOccurrenceLocator,
     compositeDepth = options.compositeDepth ?? 0,
   ): void => {
+    const generated =
+      generatedScopeOccurrence !== undefined || (useProvidedOccurrence ? (options.generated ?? false) : false);
+    const semanticOwners =
+      runtime.state.identityTracker === undefined || frame.semanticOwner === undefined
+        ? undefined
+        : runtime.state.identityTracker.createChildOwners(children, frame.semanticOwner, generated);
     for (const [i, child] of children.entries()) {
       const entityPath = `${frame.locatorPrefix}children[${i}]`;
       const occurrence = generatedScopeOccurrence
@@ -1079,14 +1203,7 @@ export const compileChildrenToPrimitives = (
               sourcePath: 'namespace' in child ? entityPath : `${entityPath}.${child.type}`,
               expansionPath: [],
             };
-      compileChild(
-        child,
-        i,
-        frame,
-        occurrence,
-        compositeDepth,
-        generatedScopeOccurrence !== undefined || (useProvidedOccurrence ? (options.generated ?? false) : false),
-      );
+      compileChild(child, i, frame, occurrence, compositeDepth, generated, semanticOwners?.[i]);
     }
   };
 
@@ -1111,6 +1228,9 @@ export const compileChildrenToPrimitives = (
       allocationSink: rootAllocations,
       observationSink: rootObservations,
       artifactSink: rootArtifacts,
+      ...(options.semanticOwner === undefined && runtime.state.identityTracker === undefined
+        ? {}
+        : { semanticOwner: options.semanticOwner ?? runtime.state.identityTracker?.root }),
     },
     true,
   );
@@ -1131,7 +1251,7 @@ export const compileChildrenToPrimitives = (
           value: cloneAndFreezeJson(
             computeCompiledNodeLayout(observation.layout, observation.scopeChain),
             'Node layout artifact',
-          ) as unknown as ReturnType<typeof computeCompiledNodeLayout>,
+          ),
         }),
       );
     }
