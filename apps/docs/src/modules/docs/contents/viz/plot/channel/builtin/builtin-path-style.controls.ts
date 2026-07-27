@@ -4,6 +4,8 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { pathStyleRows } from './builtin-path-style.data';
+
 /** 路径样式通道的中文属性面板 */
 export const builtinPathStyleControls = definePreviewControls({
   presentation: 'panel',
@@ -11,23 +13,39 @@ export const builtinPathStyleControls = definePreviewControls({
   defaultSize: 36,
   sections: [
     {
+      label: '数据',
+      defaultCollapsed: true,
+      controls: [
+        {
+          kind: 'table',
+          id: 'rows',
+          label: '路径数据',
+          rows: pathStyleRows,
+          columns: [
+            { key: 'step', label: '步骤' },
+            { key: 'value', label: '数值' },
+          ],
+        },
+      ],
+    },
+    {
       label: '描边',
       controls: [
-        { kind: 'color', id: 'stroke', label: 'stroke', defaultValue: '#2563eb' },
+        { kind: 'color', id: 'stroke', label: '描边颜色', defaultValue: '#2563eb' },
         {
           kind: 'range',
           id: 'strokeWidth',
-          label: 'strokeWidth',
+          label: '描边宽度',
           defaultValue: 4,
           min: 0.5,
           max: 10,
           step: 0.5,
         },
-        { kind: 'range', id: 'opacity', label: 'opacity', defaultValue: 0.9, min: 0.1, max: 1, step: 0.1 },
+        { kind: 'range', id: 'opacity', label: '整体透明度', defaultValue: 0.9, min: 0.1, max: 1, step: 0.1 },
         {
           kind: 'select',
           id: 'dashMode',
-          label: 'dashPattern',
+          label: '虚线模式',
           defaultValue: 'solid',
           options: [
             { value: 'solid', label: '实线' },
@@ -43,30 +61,31 @@ export const builtinPathStyleControls = definePreviewControls({
         {
           kind: 'select',
           id: 'lineCap',
-          label: 'lineCap',
+          label: '端点样式',
           defaultValue: PathLineCap.Round,
           options: [
-            { value: PathLineCap.Butt, label: 'butt' },
-            { value: PathLineCap.Round, label: 'round' },
-            { value: PathLineCap.Square, label: 'square' },
+            { value: PathLineCap.Butt, label: '平直' },
+            { value: PathLineCap.Round, label: '圆头' },
+            { value: PathLineCap.Square, label: '方头' },
           ],
         },
         {
           kind: 'select',
           id: 'lineJoin',
-          label: 'lineJoin',
+          label: '连接样式',
           defaultValue: PathLineJoin.Round,
+          visibleWhen: { controlId: 'roundedCorners', oneOf: [0] },
           options: [
-            { value: PathLineJoin.Miter, label: 'miter' },
-            { value: PathLineJoin.Round, label: 'round' },
-            { value: PathLineJoin.Bevel, label: 'bevel' },
+            { value: PathLineJoin.Miter, label: '尖角' },
+            { value: PathLineJoin.Round, label: '圆角' },
+            { value: PathLineJoin.Bevel, label: '斜角' },
           ],
         },
         {
           kind: 'range',
           id: 'roundedCorners',
-          label: 'roundedCorners',
-          defaultValue: 8,
+          label: '路径圆角',
+          defaultValue: 0,
           min: 0,
           max: 20,
           step: 1,
@@ -86,7 +105,7 @@ export const previewControlContract = {
     dashMode: 'solid',
     lineCap: PathLineCap.Round,
     lineJoin: PathLineJoin.Round,
-    roundedCorners: 8,
+    roundedCorners: 0,
   },
   presets: [
     {

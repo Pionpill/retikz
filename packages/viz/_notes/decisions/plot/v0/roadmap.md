@@ -36,16 +36,16 @@
 
 经典 grammar of graphics（Wilkinson / ggplot 分层语法）的 8 组件，retikz 全部纳入 v0.1；**交互 / 动画不在 8 组件内**，属 v0.1 之后的能力轴。
 
-| GoG 组件                                         | retikz 概念                                                     | alpha.1–5 最小骨架            | 阶段二补全（alpha.6+）                                                                                                    |
-| ------------------------------------------------ | --------------------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| **Data** 数据                                    | `data.ref` + `data.model` + field accessor                      | ref / accessor ✓              | **数据模型（字段语义类型层）**                                                                                            |
-| **Aesthetics** 美学映射                          | encoding 通道                                                   | position(x/y) ✓、color 半成品 | **size / opacity / shape + color 真通道 + series 一等化**                                                                 |
-| **Geometry** 几何对象                            | mark                                                            | point/line/area/bar/sector ✓  | **rect / rule / text / ribbon / boxplot**                                                                                 |
-| **Statistics** 统计变换                          | transform                                                       | sort/groupBy/stack ✓          | **bin / aggregate / density / smooth / quartile**                                                                         |
-| **Scales** 标度                                  | scale                                                           | linear/band/time/ordinal ✓    | **log/pow/sqrt/quantize/threshold/color gradient + type-driven 选型**（横切 Data/Aesthetics 两轮，非独立 alpha）          |
-| **Coordinates** 坐标系统                         | coordinate                                                      | cartesian2D / polar2D ✓       | **cartesian1D / polar1D / ternary2D**（地图坐标是否独立为 geo domain 仍待决策，也可能作为 plot projection / layout 扩展） |
-| **Coordinate composition** 坐标复合（含 Facets） | coordinate scope / facet / shared scaffold（复用 core `Scope`） | —                             | **全新：分面小多图 + 同 panel 多坐标轴 / 多 scale 叠加 + 共享坐标骨架的 tracks / rings / lanes**                          |
-| **Theme** 主题样式                               | theme                                                           | —                             | **全新：标题 / 字体 / 背景 / 网格 / 图例外观 / 调色板**                                                                   |
+| GoG 组件                                         | retikz 概念                                                     | alpha.1–5 最小骨架            | 阶段二补全（alpha.6+）                                                                                           |
+| ------------------------------------------------ | --------------------------------------------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **Data** 数据                                    | `data.ref` + `data.model` + field accessor                      | ref / accessor ✓              | **数据模型（字段语义类型层）**                                                                                   |
+| **Aesthetics** 美学映射                          | encoding 通道                                                   | position(x/y) ✓、color 半成品 | **size / opacity / shape + color 真通道 + series 一等化**                                                        |
+| **Geometry** 几何对象                            | mark                                                            | point/line/area/bar/sector ✓  | **rect / rule / text / ribbon / boxplot**                                                                        |
+| **Statistics** 统计变换                          | transform                                                       | sort/groupBy/stack ✓          | **bin / aggregate / density / smooth / quartile**                                                                |
+| **Scales** 标度                                  | scale                                                           | linear/band/time/ordinal ✓    | **log/pow/sqrt/quantize/threshold/color gradient + type-driven 选型**（横切 Data/Aesthetics 两轮，非独立 alpha） |
+| **Coordinates** 坐标系统                         | coordinate                                                      | cartesian2D / polar2D ✓       | **cartesian1D / polar1D**（地图坐标是否独立为 geo domain 仍待决策，也可能作为 plot projection / layout 扩展）    |
+| **Coordinate composition** 坐标复合（含 Facets） | coordinate scope / facet / shared scaffold（复用 core `Scope`） | —                             | **全新：分面小多图 + 同 panel 多坐标轴 / 多 scale 叠加 + 共享坐标骨架的 tracks / rings / lanes**                 |
+| **Theme** 主题样式                               | theme                                                           | —                             | **全新：标题 / 字体 / 背景 / 网格 / 图例外观 / 调色板**                                                          |
 
 阶段二把 8 组件按依赖拆成 **alpha.6–9 / 11–15**（薄片拆，每 alpha 一个可渲染薄片，延续「纵向薄片 + 三包 lockstep」）——**每个 alpha 具体做什么见内层 [v0.1/roadmap](./v0.1/roadmap.md) Milestones**（本外层只到版本 / 组件粒度，不复述 alpha 细节）。
 
@@ -79,7 +79,7 @@ plot 聚焦坐标语法本身：transform / encoding / scale / coordinate / mark
 
 以下能力暂不进 v0，除非后续阶段证明价值：
 
-- ternary / 更多专门坐标系与 sankey / alluvial 完整支持；
+- 更多专门坐标系与 sankey / alluvial 完整支持；
 - 大数据专用 lowering / 采样 / Canvas / WebGL 热路径（先保证语法正确，性能后续优化）；
 - plot 内坐标复合之外的复杂跨域多图编排。
 

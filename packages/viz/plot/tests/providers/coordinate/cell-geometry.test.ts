@@ -20,7 +20,7 @@ import {
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { buildIntervalContext, datumAnchor } from '../../../src/providers';
 import { lowerMark } from '../../../src/providers';
-import { createCartesianCoordinate, createPolarCoordinate, createTernary2DCoordinate } from '../../../src/providers';
+import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/providers';
 import { isBuiltinMark, PlotSpecSchema } from '../../../src/schemas';
 
 /**
@@ -464,35 +464,6 @@ describe('datumAnchor 三态与 CellGeometry 同源', () => {
     expect(anchor![0]).toBeCloseTo(position[0], 9);
     expect(anchor![1]).toBeCloseTo(position[1], 9);
   });
-
-  it('datum_anchor_ternary_empty_contour_is_null', () => {
-    const mark: IRPlotIntervalMark = {
-      type: 'interval',
-      bounds: {
-        x: { kind: 'extent', from: 'x0', to: 'x1' },
-        y: { kind: 'extent', from: 'y0', to: 'y1' },
-        z: { kind: 'full' },
-      },
-      encoding: { x: { field: 'x' }, y: { field: 'y' }, z: { field: 'z' } },
-    };
-    const rows = [{ x: 0.2, y: 0.3, z: 0.5, x0: 0.8, x1: 0.9, y0: 0.8, y1: 0.9 }];
-    const spec = PlotSpecSchema.parse({
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: 'd' },
-      coordinate: { type: 'ternary2D' },
-      scales: [],
-      marks: [mark],
-    });
-    const root = expandOf(spec, { d: rows }, cartOpts);
-    expect(nodesOf(root)).toHaveLength(0);
-    const frame = createTernary2DCoordinate([
-      [200, 0],
-      [0, 200],
-      [400, 200],
-    ]);
-    expect(datumAnchor(mark, rows[0], frame)).toBeNull();
-  });
 });
 
 // ── contract：histogram 连续 x 区间柱（interval x0Field / x1Field）──────────────────
@@ -578,18 +549,6 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
       marks: [{ type: 'interval', encoding: { x: { field: 'm' }, y: { field: 'v' } } }],
     });
     expect(() => expandOf(spec, { d: [{ m: 'A', v: 3 }] }, cartOpts)).toThrow(/cartesian1D|not supported|interval/i);
-  });
-
-  it('interval_ternary_default_band_bound_fails_loud', () => {
-    const spec = PlotSpecSchema.parse({
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: 'd' },
-      coordinate: { type: 'ternary2D' },
-      scales: [],
-      marks: [{ type: 'interval', encoding: { x: { field: 'x' }, y: { field: 'y' }, z: { field: 'z' } } }],
-    });
-    expect(() => expandOf(spec, { d: [{ x: 1, y: 1, z: 1 }] }, cartOpts)).toThrow(/ternary|band bounds/i);
   });
 
   it('interval_custom_without_projectcell_fails_loud', () => {

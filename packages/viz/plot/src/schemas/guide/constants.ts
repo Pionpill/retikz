@@ -20,7 +20,7 @@ export const AxisPlacementKind = {
   Auto: 'auto',
   /** 放在 plotArea 的四个方向之一 */
   Side: 'side',
-  /** 放在坐标系原生 edge 上，供 ternary / custom coordinate 使用 */
+  /** 放在坐标系原生 edge 上，供 custom coordinate 使用 */
   Edge: 'edge',
   /** 穿过另一维指定数据值，仅 cartesian axis 支持 */
   Origin: 'origin',

@@ -25,12 +25,7 @@ import type { MarkPaint } from '../shared';
 import { hasProjectCell, isRenderableCellGeometry } from '../../../contract';
 import { IntervalBoundKind, IntervalMarkSchema, PlotCoordinate, PlotMark } from '../../../schemas';
 import { channelValue } from '../../channel/shared';
-import {
-  isCartesianCoordinateFrame,
-  isGenericCoordinateFrame,
-  isPolarCoordinateFrame,
-  isTernary2DCoordinateFrame,
-} from '../../coordinate';
+import { isCartesianCoordinateFrame, isGenericCoordinateFrame, isPolarCoordinateFrame } from '../../coordinate';
 import { cellGeometryNode, cellLayer } from '../private';
 import { channelForRole } from '../shared';
 import {
@@ -295,75 +290,6 @@ export const intervalCell = (
 };
 
 /**
- * 读取 ternary interval 的 x/y/z 分量并归一化。
- * @description 三元坐标要求三项齐全、非负且和大于 0；缺通道或非法数值 fail-loud / 跳过，
- *   这样后续 bound 计算只面对 0..1 的稳定 barycentric 分量。
- */
-const normalizedTernaryComponents = (
-  mark: IRPlotIntervalMark,
-  row: ExternalRow,
-): Record<'x' | 'y' | 'z', number> | null => {
-  if (mark.encoding.x === undefined || mark.encoding.y === undefined || mark.encoding.z === undefined) {
-    throw new Error('lowerPlots: ternary2D interval requires x, y, and z position channels');
-  }
-  const x = channelValue(mark.encoding.x, row);
-  const y = channelValue(mark.encoding.y, row);
-  const z = channelValue(mark.encoding.z, row);
-  if (!isFiniteNumber(x) || !isFiniteNumber(y) || !isFiniteNumber(z)) return null;
-  if (x < 0 || y < 0 || z < 0) {
-    throw new Error(`lowerPlots: ternary interval requires non-negative components (got x=${x}, y=${y}, z=${z})`);
-  }
-  const sum = x + y + z;
-  if (sum <= 0) {
-    throw new Error(`lowerPlots: ternary interval requires x+y+z > 0 (got x=${x}, y=${y}, z=${z})`);
-  }
-  if (!Number.isFinite(sum)) {
-    throw new Error(
-      `lowerPlots: ternary interval components overflow when summed (got x=${x}, y=${y}, z=${z}); use proportions or smaller magnitudes`,
-    );
-  }
-  return { x: x / sum, y: y / sum, z: z / sum };
-};
-
-/**
- * ternary interval 的单 role bound → 归一化分量区间。
- * @description ternary 没有 band 宽度语义，因此拒绝 band；span 从 baseline 到当前归一化分量；
- *   extent 直接读取用户字段，full 覆盖 0..1。非数值 extent fail-loud，避免生成不可解释的三元区域。
- */
-const ternaryBoundOutputInterval = (
-  bound: IRPlotIntervalBound,
-  role: 'x' | 'y' | 'z',
-  mark: IRPlotIntervalMark,
-  row: ExternalRow,
-  components: Record<'x' | 'y' | 'z', number>,
-): [number, number] | null => {
-  switch (bound.kind) {
-    case IntervalBoundKind.Band:
-      throw new Error(
-        `lowerPlots: ternary interval does not support band bounds on ${role}; use span, extent, or full`,
-      );
-    case IntervalBoundKind.Span:
-      return [bound.baseline ?? 0, components[role]];
-    case IntervalBoundKind.Extent: {
-      const lo = resolveFieldPath(row, bound.from);
-      const hi = resolveFieldPath(row, bound.to);
-      if (!isFiniteNumber(lo) || !isFiniteNumber(hi)) {
-        throw new Error(
-          `lowerPlots: ternary interval extent bound requires numeric ${bound.from} / ${bound.to} fields`,
-        );
-      }
-      return [lo, hi];
-    }
-    case IntervalBoundKind.Proportional:
-      throw new Error(
-        `lowerPlots: ternary interval does not support proportional bounds on ${role}; use span, extent, or full`,
-      );
-    case IntervalBoundKind.Full:
-      return [0, 1];
-  }
-};
-
-/**
  * 通用坐标帧的 interval bound → role 输出空间区间。
  * @description 自定义 frame 若要支持 interval，必须同时提供 projectCell 与 roleScales；
  *   mark 侧只负责把 encoding/bounds 解析成正交 cell，最终几何仍交给 frame.projectCell。
@@ -456,25 +382,8 @@ const genericIntervalCell = (
 };
 
 /**
- * ternary2D interval mark 的行 → 三元 cell。
- * @description 先把 x/y/z 原始分量归一化成和为 1 的 barycentric 分量，再按每个 role 的 bound 生成 cell intervals；
- *   返回的 cell 仍是坐标无关的逻辑区间，最终几何由 ternary frame.projectCell 决定。
- */
-export const ternaryIntervalCell = (mark: IRPlotIntervalMark, row: ExternalRow): Cell | null => {
-  const components = normalizedTernaryComponents(mark, row);
-  if (components === null) return null;
-  return {
-    intervals: {
-      x: ternaryBoundOutputInterval(resolveIntervalBound(mark, 'x'), 'x', mark, row, components) ?? [0, 0],
-      y: ternaryBoundOutputInterval(resolveIntervalBound(mark, 'y'), 'y', mark, row, components) ?? [0, 0],
-      z: ternaryBoundOutputInterval(resolveIntervalBound(mark, 'z'), 'z', mark, row, components) ?? [0, 0],
-    },
-  };
-};
-
-/**
  * 某 mark 的某行 → cell（坐标系相关）；非 interval mark / 退化行 → null。
- * @description interval → intervalCell（cartesian / polar）或 ternaryIntervalCell；其余 mark → null（非 cell 类）。
+ * @description interval → intervalCell（cartesian / polar）或通用 coordinate cell；其余 mark → null（非 cell 类）。
  *   interval 在无对应正交 cell 的坐标系（1D / 无 projectCell 的 custom）返回 null，由 mark.ts fail-loud。
  */
 export const markCell = (
@@ -484,7 +393,6 @@ export const markCell = (
   ctx?: IntervalContext,
 ): Cell | null => {
   if (mark.type !== PlotMark.Interval) return null;
-  if (isTernary2DCoordinateFrame(frame)) return ternaryIntervalCell(mark, row);
   if (isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame))
     return ctx ? intervalCell(mark, row, frame, ctx) : null;
   if (isGenericCoordinateFrame(frame) && hasProjectCell(frame)) return genericIntervalCell(mark, row, frame, ctx);

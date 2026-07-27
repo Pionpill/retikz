@@ -83,9 +83,10 @@ describe('compileToScene performance trace', () => {
         namespace: z.literal('trace'),
         type: z.literal('replay'),
       }),
-      compile: (_node, { layoutChild }) => {
+      compile: (_node, context) => {
+        const { layoutChild } = context;
         const child = layoutChild({ type: 'node', id: 'replayed', position: [0, 0] }, { kind: 'intrinsic' });
-        return { children: [{ kind: 'replay', replay: child.replay }] };
+        return { children: [context.replay(child)] };
       },
     });
 

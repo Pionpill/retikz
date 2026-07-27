@@ -83,7 +83,7 @@ const svg = renderChart({ data: rows, marks: [...], title: 'Sales' });
 - `decorateChartSpec` 等价性：装饰产物 = 薄 `<Plot>` + 手写默认轴 / 图例 / 网格
 - `<Chart>` 复用 `<Plot>` DSL props（coordinate / scaleX / model…）+ title/theme
 - vanilla `renderChart` 与 react `<Chart>` 同 spec 产物 parity
-- color scale → 自动 legend；polar / 1D / ternary 下 `<Chart>` 行为（按支持矩阵）
+- color scale → 自动 legend；polar / 1D / custom coordinate 下 `<Chart>` 行为（按支持矩阵）
 - 主题接缝：theme 占位不破坏装饰（gate 于 alpha.15 前）
 
 具体 case 见「实现契约 § 测试象限」。
@@ -151,7 +151,7 @@ const svg = renderChart({ data: rows, marks: [...], title: 'Sales' });
 
 **边界**：
 
-- `chart_polar_support_matrix`：polar / 1D / ternary 下 `<Chart>` 按支持矩阵补对应轴或 fail-loud（不静默出怪图）
+- `chart_polar_support_matrix`：polar / 1D / custom coordinate 下 `<Chart>` 按支持矩阵补对应轴或 fail-loud（不静默出怪图）
 - `chart_theme_placeholder_noop`：theme 占位（alpha.15 前）不破坏装饰
 
 **错误路径**：

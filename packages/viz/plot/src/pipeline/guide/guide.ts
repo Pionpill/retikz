@@ -11,7 +11,6 @@ import type {
   LoweredGuide,
   PolarCoordinateFrame,
   PositionScale,
-  TernaryVertices,
   TickSet,
 } from '../../contract';
 import type { ProvenanceContext } from '../../contract';
@@ -716,21 +715,6 @@ const filterOverlappingGridTicks = (
   };
 };
 
-const unitGridScale = (fallbackTicks: TickSet): PositionScale => ({
-  coordinate: value => Number(value),
-  domain: () => [0, 1],
-  bandwidth: 0,
-  ticks: count => {
-    if (count === undefined) return fallbackTicks;
-    if (count <= 1) return { values: [0], labels: ['0'] };
-    const values = Array.from({ length: count }, (_unused, index) => index / (count - 1));
-    return { values, labels: values.map(value => String(value)) };
-  },
-  tickKind: 'number',
-  range: () => [0, 1],
-  setRange: () => {},
-});
-
 /** 把若干直线段拼成一条多子路径 Path（每段一对 move/line）；空段返回 null */
 const segmentsToPath = (segments: Array<Segment>, style?: GuideLineStyle): IRPath | null => {
   if (segments.length === 0) return null;
@@ -1384,170 +1368,6 @@ const lowerRadialAxis = (
   return { gridLayer, axisLayer };
 };
 
-/** 两点线性插值（t∈[0,1]）：三角轴刻度 / 等值线几何 */
-const lerp2 = (from: readonly [number, number], to: readonly [number, number], t: number): [number, number] => [
-  from[0] + (to[0] - from[0]) * t,
-  from[1] + (to[1] - from[1]) * t,
-];
-
-/**
- * 某 ternary 分量轴的三角角色：顶点 + 该分量 0 边的两端
- * @description x：顶点 Vx、0 边 = Vy–Vz；y：顶点 Vy、0 边 = Vx–Vz；z：顶点 Vz、0 边 = Vx–Vy。
- *   刻度沿 baseP→apex 边（= 三角一条边）；等值线（iso）= lerp(baseP,apex,t)–lerp(baseQ,apex,t)，平行 0 边
- */
-const ternaryAxisRoles = (
-  dimension: string,
-  vertices: TernaryVertices,
-): { apex: readonly [number, number]; baseP: readonly [number, number]; baseQ: readonly [number, number] } => {
-  const [vx, vy, vz] = vertices;
-  if (dimension === 'x') return { apex: vx, baseP: vz, baseQ: vy };
-  if (dimension === 'y') return { apex: vy, baseP: vx, baseQ: vz };
-  return { apex: vz, baseP: vy, baseQ: vx }; // 'z'
-};
-
-/**
- * ternary 三角轴：沿一条边的刻度轴（0→100%）+ 平行对边的等值网格线
- * @description 轴线 = baseP→apex 三角边（三条 x/y/z 轴合起来 = 完整三角外框）；刻度沿该边、标签外法向偏移；
- *   grid:true → 内部刻度处画平行 0 边的等值线（lerp(baseP,apex,t)–lerp(baseQ,apex,t)）
- */
-const lowerTernaryGuide = (
-  guide: IRPlotAxisGuide,
-  ctx: GuideContext,
-  vertices: TernaryVertices,
-  context: ProvenanceContext | undefined,
-): LoweredGuide => {
-  const { fontSize } = ctx;
-  const labelGap = ctx.labelGap ?? DEFAULT_AXIS_LABEL_GAP;
-  const ticks = ctx.ternaryTicks ?? { values: [], labels: [] };
-  const tickLength = axisTickLengthOf(guide);
-  const tickLabelGap = axisTickLabelGapOf(guide);
-  const tickLabelStyle = axisTickLabelStyleOf(guide);
-  const showLabels = tickLabelStyle !== false;
-  const { apex, baseP, baseQ } = ternaryAxisRoles(guide.dimension, vertices);
-  const [vx, vy, vz] = vertices;
-  const centroid: [number, number] = [(vx[0] + vy[0] + vz[0]) / 3, (vx[1] + vy[1] + vz[1]) / 3];
-
-  // 外法向单位向量（远离重心）：刻度短线 / 标签朝外摆
-  const outwardAt = (point: [number, number]): [number, number] => {
-    const dx = point[0] - centroid[0];
-    const dy = point[1] - centroid[1];
-    const length = Math.hypot(dx, dy) || 1;
-    return [dx / length, dy / length];
-  };
-
-  // ---- 轴层：baseP→apex 边 + 沿边刻度 + 外侧标签 ----
-  const axisLine: Segment = [baseP, apex];
-  const tickSegments: Array<Segment> = [];
-  const tickShapePlacements: Array<TickShapePlacement> = [];
-  const tickLabelNodes: Array<IRNode> = [];
-  const axisTangentLength = Math.hypot(apex[0] - baseP[0], apex[1] - baseP[1]) || 1;
-  const axisTangent: [number, number] = [
-    (apex[0] - baseP[0]) / axisTangentLength,
-    (apex[1] - baseP[1]) / axisTangentLength,
-  ];
-  ticks.values.forEach((value, index) => {
-    const t = Number(value);
-    const point = lerp2(baseP, apex, t);
-    const out = outwardAt(point);
-    tickSegments.push([point, [point[0] + out[0] * tickLength, point[1] + out[1] * tickLength]]);
-    tickShapePlacements.push({ point, normal: out, tangent: axisTangent });
-    if (showLabels) {
-      const offset = tickLength + tickLabelGap + fontSize / 2;
-      tickLabelNodes.push({
-        type: 'node',
-        position: [point[0] + out[0] * offset, point[1] + out[1] * offset],
-        text: ticks.labels[index],
-        ...tickLabelStyle,
-      });
-    }
-  });
-  const labels: Array<IRNode> = layoutTickLabelNodes(guide, tickLabelNodes, {
-    fontSize,
-    mode: 'generic',
-    axis: 'both',
-  });
-  const title = axisTitleOf(guide);
-  if (title !== null) {
-    const placementRatio = axisTitlePlacementRatioOf(title.placement);
-    const point = lerp2(baseP, apex, placementRatio);
-    const out = outwardAt(point);
-    const rotate = axisTitleRotateOf(title, undefined, axisTangent);
-    const offset = tickLength + tickLabelGap + fontSize + (title.padding ?? labelGap) + fontSize / 2;
-    const basePosition: [number, number] = [point[0] + out[0] * offset, point[1] + out[1] * offset];
-    const titleStyle = axisTitleTextStyleOf(title, axisTangent);
-    labels.push({
-      type: 'node',
-      position: shiftedAxisTitlePosition(basePosition, axisTangent, out, title.shift),
-      text: title.text,
-      ...titleStyle,
-      ...(rotate !== undefined ? { rotate } : {}),
-    });
-  }
-  const axisLineStyle = axisLineStyleOf(guide);
-  const tickLineStyle = axisTickLineStyleOf(guide);
-  const axisLinePath = axisLineStyle === false ? null : segmentsToPath([axisLine], axisLineStyle);
-  const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
-  const tickShapeNodes = axisTickShapeNodesOf(guide, tickShapePlacements);
-  const axisChildren: Array<IRPath | IRNode> = [
-    ...([axisLinePath, tickPath].filter(Boolean) as Array<IRPath>),
-    ...tickShapeNodes,
-    ...labels,
-  ];
-  const axisLayer: IRScope | null =
-    axisChildren.length > 0
-      ? {
-          type: 'scope',
-          ...guideScopeProps(guide, 'axis', context),
-          pathDefault: { stroke: 'currentColor' },
-          nodeDefault: { font: { size: fontSize }, stroke: 'none', fill: 'none', padding: 0 },
-          children: axisChildren,
-        }
-      : null;
-
-  // ---- 网格层（grid:true → 内部刻度处平行 0 边的等值线）----
-  let gridLayer: IRScope | null = null;
-  if (guide.grid) {
-    const grid = axisGridTokenOf(guide);
-    const gridScale = unitGridScale(ticks);
-    const majorTicks = resolveAxisGridTicks(gridScale, ticks, grid, value => Number(value));
-    const isoSegments: Array<Segment> = [];
-    for (const value of majorTicks.values) {
-      const t = Number(value);
-      if (t <= 0 || t >= 1) continue; // 0（0 边）/ 1（顶点）退化，不画
-      isoSegments.push([lerp2(baseP, apex, t), lerp2(baseQ, apex, t)]);
-    }
-    const gridPath = segmentsToPath(isoSegments, { drawOpacity: 0.15, ...axisGridStyleOf(grid) });
-    const minorGrid = axisMinorGridTokenOf(grid);
-    const minorTicks =
-      minorGrid === undefined
-        ? null
-        : filterOverlappingGridTicks(
-            resolveAxisGridTicks(gridScale, ticks, minorGrid, value => Number(value)),
-            majorTicks,
-            value => Number(value),
-          );
-    const minorIsoSegments: Array<Segment> = [];
-    if (minorTicks !== null) {
-      for (const value of minorTicks.values) {
-        const t = Number(value);
-        if (t <= 0 || t >= 1) continue;
-        minorIsoSegments.push([lerp2(baseP, apex, t), lerp2(baseQ, apex, t)]);
-      }
-    }
-    const minorGridPath = segmentsToPath(minorIsoSegments, { drawOpacity: 0.08, ...axisGridStyleOf(minorGrid) });
-    const gridChildren = [gridPath, minorGridPath].filter((path): path is IRPath => path !== null);
-    if (gridChildren.length > 0) {
-      gridLayer = {
-        type: 'scope',
-        ...guideScopeProps(guide, 'grid', context),
-        pathDefault: { stroke: 'currentColor' },
-        children: gridChildren,
-      };
-    }
-  }
-  return { gridLayer, axisLayer };
-};
-
 /** 把一串屏幕点连成一条折线 Path（move + line steps）；点数 < 2 返回 null */
 const polylinePath = (points: ReadonlyArray<readonly [number, number]>): IRPath | null => {
   if (points.length < 2) return null;
@@ -1699,19 +1519,16 @@ export const lowerCustomAxis = (
 
 /**
  * 把一个 axis guide 下沉成网格层 + 轴层（各自一层 core scope；样式上提到 scope）
- * @description 按坐标帧分支：ternary（ctx.ternaryVertices 存在）走三角轴；polar（ctx.frame 存在）按维度角色走 angular
- *   （外圆弧 + 圆周刻度 / 标签 + 角向辐条 grid）或 radial（辐条轴 + 同心环 grid）；否则走 cartesian 直线轴 / 网格。
+ * @description 按坐标帧分支：polar（ctx.frame 存在）按维度角色走 angular（外圆弧 + 圆周刻度 / 标签 + 角向辐条 grid）
+ *   或 radial（辐条轴 + 同心环 grid）；否则走 cartesian 直线轴 / 网格。
  *   下沉目标统一是 core Node（标签）+ Path（直段 / arc step）。id → 轴层 scope.id（anchor 预留）
  */
 export const lowerGuide = (guide: IRPlotAxisGuide, ctx: GuideContext, context?: ProvenanceContext): LoweredGuide => {
-  if (ctx.ternaryVertices || ctx.frame) {
+  if (ctx.frame) {
     assertNoCartesianOnlyAxisLineGeometry(guide);
   }
-  if (guide.placement?.kind === AxisPlacementKind.Origin && (ctx.ternaryVertices || ctx.frame)) {
+  if (guide.placement?.kind === AxisPlacementKind.Origin && ctx.frame) {
     throw new Error('lowerPlots: origin axis placement is only supported for cartesian axes');
-  }
-  if (ctx.ternaryVertices) {
-    return lowerTernaryGuide(guide, ctx, ctx.ternaryVertices, context);
   }
   if (ctx.frame) {
     return isPrimaryDimension(guide.dimension)

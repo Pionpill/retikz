@@ -1,4 +1,4 @@
-import { JsonObjectSchema } from '@retikz/core';
+import { JsonObjectSchema, resolveBoxSpacing } from '@retikz/core';
 
 import type { SemanticTableModel, TableStructureOutput } from '../../contract';
 import type { IRTableStructureOperation } from '../../schemas';
@@ -6,7 +6,13 @@ import type { NormalizeTableStructureOptions } from './types';
 
 import { TableStructureOutputSchema } from '../../contract/structure';
 import { resolveTableStructureRegistry, tableStructureDefinitionOf } from '../../providers';
-import { TableStructureSchema } from '../../schemas';
+import {
+  TableCellFit,
+  TableCellOverflow,
+  TableHorizontalAlignment,
+  TableStructureSchema,
+  TableVerticalAlignment,
+} from '../../schemas';
 import { deepFreeze } from '../../shared';
 import { createTableStructureContext } from './context';
 import { validateTableStructureOutput } from './validate';
@@ -26,6 +32,19 @@ const createSemanticTableModel = (output: TableStructureOutput): SemanticTableMo
       location: cell.location,
       roles: cell.roles,
       payload: cell.payload,
+      span: {
+        rows: cell.span?.rows ?? 1,
+        columns: cell.span?.columns ?? 1,
+      },
+      layout: {
+        padding: resolveBoxSpacing(cell.layout?.padding, 0),
+        horizontalAlign: cell.layout?.horizontalAlign ?? TableHorizontalAlignment.Center,
+        verticalAlign: cell.layout?.verticalAlign ?? TableVerticalAlignment.Center,
+        wrap: cell.layout?.wrap ?? false,
+        fit: cell.layout?.fit ?? TableCellFit.None,
+        overflow: cell.layout?.overflow ?? TableCellOverflow.Visible,
+        ...(cell.layout?.borders === undefined ? {} : { borders: cell.layout.borders }),
+      },
       ...(cell.source === undefined ? {} : { source: cell.source }),
     })),
   });

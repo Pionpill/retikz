@@ -53,6 +53,15 @@ describe('normalizeTableStructure', () => {
         location: TableCellLocation.Body,
         roles: [TableCellRole.Data],
         payload: { kind: 'value', value: 'A' },
+        span: { rows: 1, columns: 1 },
+        layout: {
+          padding: { top: 0, right: 0, bottom: 0, left: 0 },
+          horizontalAlign: 'center',
+          verticalAlign: 'center',
+          wrap: false,
+          fit: 'none',
+          overflow: 'visible',
+        },
         source: { kind: 'manual', cellIndex: 0 },
       },
       {
@@ -64,6 +73,15 @@ describe('normalizeTableStructure', () => {
         location: TableCellLocation.Body,
         roles: [TableCellRole.Data],
         payload: { kind: 'value', value: 2 },
+        span: { rows: 1, columns: 1 },
+        layout: {
+          padding: { top: 0, right: 0, bottom: 0, left: 0 },
+          horizontalAlign: 'center',
+          verticalAlign: 'center',
+          wrap: false,
+          fit: 'none',
+          overflow: 'visible',
+        },
         source: { kind: 'manual', cellIndex: 1 },
       },
     ]);
@@ -106,7 +124,7 @@ describe('normalizeTableStructure', () => {
         columns: 1,
         cells: [bodyCell(0, 0, 1), bodyCell(0, 0, 2)],
       }),
-    ).toThrow(/address/i);
+    ).toThrow(/overlaps/i);
     expect(() => normalizeTableStructure({ kind: 'manual', rows: 1, columns: 1, cells: [bodyCell(1, 0, 1)] })).toThrow(
       /row/i,
     );

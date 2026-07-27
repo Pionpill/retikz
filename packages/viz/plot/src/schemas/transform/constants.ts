@@ -25,7 +25,7 @@ export const PlotTransform = {
 export const StackOffset = {
   /** 从 0 开始按系列顺序累加各段，生成普通堆叠区间 */
   Zero: 'zero',
-  /** 按组总和缩放各段后从 0 累加，使整组堆叠范围归一到 0..1 */
+  /** 按组总和缩放非负段后从 0 累加，使整组堆叠范围归一到 0..1；有限负值会报错 */
   Normalize: 'normalize',
   /** 从 0 开始分别累加正值与负值，使两类区间向基线两侧延伸 */
   Diverging: 'diverging',
@@ -43,9 +43,9 @@ export const PairMeasureOperationKind = {
 
 /** 归一化结果的数值基准 */
 export const NormalizeBasis = {
-  /** 输出 0..1 范围的比例 */
+  /** 将非负输入输出为 0..1 范围的比例；有限负值会报错 */
   Fraction: 'fraction',
-  /** 输出 0..100 范围的百分比 */
+  /** 将非负输入输出为 0..100 范围的百分比；有限负值会报错 */
   Percent: 'percent',
 } as const;
 

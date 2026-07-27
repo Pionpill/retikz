@@ -11,7 +11,7 @@ description: 理解不同表格类型共享的 Structure、Cell、Presentation�
 
 <ComponentPreview files="table-model-pipeline" hideCode size="xs" />
 
-`Structure` 决定有哪些行、列和 Cell；语义模型统一 Cell 的身份、位置、角色和来源；`Presentation` 把 Cell payload 变成 Core child；`Layout` 计算固定轨道与 Cell box。最后，同一次解析既产生可渲染的 Core IR，也产生可追踪的 manifest。
+`Structure` 决定有哪些行、列和 Cell；语义模型统一 Cell 的身份、位置、角色和来源；`Presentation` 把 Cell payload 变成 Core child；`Layout` 在同一次 Core compile 中测量内容、求解轨道、回放选中内容并生成 manifest。
 
 ## Structure：表格如何产生 Cell
 
@@ -36,19 +36,20 @@ React 中也可以用嵌套的 `Row` / `Cell` 按声明顺序生成地址：
 ```tsx
 import { Cell, ManualTable, Row } from '@retikz/table-react';
 
-<ManualTable rows={2} columns={2}>
+<ManualTable rows={2} columns={3}>
   <Row kind="columnHeader">
-    <Cell>姓名</Cell>
+    <Cell span={{ columns: 2 }}>身份</Cell>
     <Cell>分数</Cell>
   </Row>
   <Row>
     <Cell>Alice</Cell>
+    <Cell>研发</Cell>
     <Cell value={95} />
   </Row>
 </ManualTable>;
 ```
 
-根上的 `rows` 与 `columns` 必须显式声明，嵌套 `Row` 数量必须等于 `rows`。每个 Row 可少写尾部 Cell，未声明位置保持稀疏；需要任意零基地址的稀疏 Cell 时，改用完整 `cells` props。`Cell` 的 children、`value` 与 `content` 三者只能选一个：children / `value` 只能是 JSON 标量，`content` 必须是 JSON-safe 的 Core 或 Tier 2 child。
+根上的 `rows` 与 `columns` 必须显式声明，嵌套 `Row` 数量必须等于 `rows`。marker 按当前行最小未占用位置放置，`span` 会预占完整矩形和未来行；span 不能越界、重叠或跨越不同 row kind。需要任意零基地址的稀疏 Cell 时，改用完整 `cells` props。`Cell` 的 children、`value` 与 `content` 三者只能选一个。
 
 ## Cell 与 Presentation
 
@@ -65,9 +66,9 @@ Presentation 只负责把值变成 Core 内容，不决定 Cell 属于哪一行�
 
 ## Layout 与 Manifest
 
-v0.1 的布局是固定轨道模型：所有列共用 `columnWidth`，正文行共用 `rowHeight`，列头可以单独设置 `headerHeight`，行列之间可以设置 gap。Cell 内容不会反向改变轨道尺寸。
+Table 先对每个 Cell 内容做自然尺寸测量，再按 fixed / auto / fraction / minmax、gap 与 span contribution 求解列；`wrap: true` 的内容随后收到列宽约束，行轨道再依据最终高度求解。padding 划出 content box，fit 与对齐只变换选中的 replay，overflow 决定可见范围，Border Graph 最后解析共享边冲突。
 
-`TableLayoutManifest` 保存表格 bounds、行列轨道的 offset/size，以及每个 Cell 的 box、语义位置、角色和可选来源。它让命中测试、调试、导出或上层交互读取布局结果，而不必从 SVG 反推几何。
+`TableLayoutManifest` 与 Scene 来自同一次 compile。根同时记录 `allocationBounds` 与 `visualOverflowBounds`；每个 Cell 记录 span、box/content box、内容变换前后的 allocation/visual bounds、语义位置、角色和来源；可见 border 还保留 winner 与 contributors。命中测试、调试、导出或交互不必从 SVG 反推几何。
 
 ## 扩展边界
 

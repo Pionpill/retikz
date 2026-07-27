@@ -26,7 +26,8 @@ const createLayoutDefinition = () =>
       intrinsicWidth: z.number(),
       constrainedWidth: z.number(),
     }),
-    compile: (node, { constraint, layoutChild }) => {
+    compile: (node, context) => {
+      const { constraint, layoutChild } = context;
       expect(constraint).toEqual({ kind: 'intrinsic' });
       const intrinsic = layoutChild(node.child, { kind: 'intrinsic' });
       const constrained = layoutChild(node.child, {
@@ -34,7 +35,7 @@ const createLayoutDefinition = () =>
         maxWidth: node.width,
       });
       return {
-        children: [{ kind: 'replay', replay: constrained.replay }],
+        children: [context.replay(constrained)],
         artifact: {
           intrinsicWidth: intrinsic.allocationBounds.width,
           constrainedWidth: constrained.allocationBounds.width,
@@ -107,7 +108,8 @@ describe('layout-aware composite', () => {
         namespace: z.literal('test'),
         type: z.literal('scopeConstraint'),
       }),
-      compile: (_node, { layoutChild }) => {
+      compile: (_node, context) => {
+        const { layoutChild } = context;
         const laid = layoutChild(
           {
             type: 'scope',
@@ -115,7 +117,7 @@ describe('layout-aware composite', () => {
           },
           { kind: 'constrained', maxWidth: 40 },
         );
-        return { children: [{ kind: 'replay', replay: laid.replay }] };
+        return { children: [context.replay(laid)] };
       },
     });
 
@@ -149,13 +151,11 @@ describe('layout-aware composite', () => {
         type: z.literal('duplicateReplay'),
         child: ChildSchema,
       }),
-      compile: (node, { layoutChild }) => {
+      compile: (node, context) => {
+        const { layoutChild } = context;
         const laid = layoutChild(node.child, { kind: 'intrinsic' });
         return {
-          children: [
-            { kind: 'replay', replay: laid.replay },
-            { kind: 'replay', replay: laid.replay },
-          ],
+          children: [context.replay(laid), context.replay(laid)],
         };
       },
     });

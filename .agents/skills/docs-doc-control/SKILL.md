@@ -26,9 +26,14 @@ description: Use when a retikz ComponentPreview has controls, a *.controls.ts co
 - 按能力所有者、职责层级或视觉对象分 section，不按字段类型机械分组
 - 双节点、多层对象分别分组，如“节点 A / 节点 B”“主体 / 标签 / 阴影”
 - controls 包含只读 `table` 数据时，数据 section 默认作为首个 section，先展示输入再操作绑定、变换或样式
+- Plot demo 使用行数据绘图时，默认在 controls 首个 section 展示只读 `table`；没有可写字段时也使用仅含数据表的 panel。叙述图或无需数据即可理解的固定示意除外
+- Plot demo 的行数据放在同级 `*.data.ts`，由 demo 与 controls 共用，并在 `<ComponentPreview files>` 中列出
+- 数据只是不变量或观察背景时，数据 section 设置 `defaultCollapsed: true`；理解绑定、排序或分组必须依赖原始数据时保持展开
 - `table` 滚动视口默认完整展示 5 行正文，header 不计入；更多行继续滚动，渲染行数上限单独控制
 - 用 `visibleWhen` 隐藏当前分支无效的字段；不要让用户操作没有效果的 control
-- label 简短，直接使用公开 API 名或用户能判断的中文，不重复括号说明
+- 中文页面的 controls 面板必须提供完整中文文案：title、section、字段 label、option label、preset label 与帮助文字都使用中文；API 名可按需作为补充，但不得充当唯一 label
+- API、枚举和数据字段的 `value` 保持原值；只本地化用户可见 label，不翻译代码中的标识符
+- label 简短，让用户能直接判断控制目标，不重复括号说明
 - 范围覆盖有意义的最小值、最大值和代表性极值；默认值保持可读、可比较
 - 复杂组件允许较多 controls，但所有字段必须可滚动到达，源码栏不得遮挡面板
 
@@ -49,7 +54,7 @@ export const previewControlContract = {
 - `canonicalValues` 是截图、测试、Reset 与无交互环境的稳定基线；列出全部字段
 - `relatedApis` 只列 controls 直接解释的公开 API，不列宿主 actions 或间接实现
 - `presets` 只收录有用户语义的完整状态，不把任意排列包装成 preset
-- zh / en 的 id、kind、默认值、范围、option value、条件和 canonical 状态保持一致；只本地化 title、section、label 与 preset label
+- zh / en 的 id、kind、默认值、范围、option value、条件和 canonical 状态保持一致；本地化 title、section、字段与 option label、preset label 及帮助文字
 - demo 同时显式导出注册回退；使用 `defineControlledPreview` 复用一份 JSX，交互视图读取实时值，IR / Vanilla 源码视图读取 canonical 状态：
 
 ```tsx

@@ -1,51 +1,85 @@
 ---
 title: 行配对
-description: relate 会从每个分组中选择 source 和 target 行，并投影成普通关系行，供 RelationMark 或其它 mark 消费。
+description: 用 relate 从每个分组选择 source 和 target 行，并投影成 RelationMark 或其它图元可消费的关系行。
 ---
 
-`relate` 用 selector 先选出 source 行和 target 行，再把这些行上的字段投影成 `sourceXxx` / `targetXxx`。它常放在 `RelationMark.transform` 里，但不是 RelationMark 私有能力；输出字段只是普通 transform 派生字段，可以继续被任意 mark 使用。
+需要从每个分组中挑出两个代表行并建立关系时用 `relate`。它为 source 和 target 分别运行 selector，再投影端点字段并计算可选度量；每个分组输出零行或一行。
 
-| 步骤        | 配置                              | 输出                               |
-| ----------- | --------------------------------- | ---------------------------------- |
-| 选择 source | `source.selector`                 | 一个源端原始行                     |
-| 选择 target | `target.selector`                 | 一个目标端原始行                   |
-| 投影字段    | `source.fields` / `target.fields` | `sourceId` / `targetId` 等端点字段 |
-| 计算度量    | `measures`                        | `delta` / `deltaLabel` 等关系字段  |
+`relate` 常放在 `RelationMark.transform` 中，但不是 RelationMark 私有能力。它产生普通派生字段，也可以交给其它图元。
 
-## 极值配对 relate
+## 行配对
 
-下面的例子从一条趋势线里选择最小值点和最大值点，投影出 `sourceId` / `targetId`，再计算 `value` 的差值作为标签。
+`relate` 把“选择哪两行”和“输出哪些端点字段”拆成两个独立端点配置。source 与 target 可以使用不同 selector，但都在同一个 `groupBy` 分组内运行。
 
-<ComponentPreview files={['transform-relate', 'transform-relate.data.ts']} />
+### 动态示例
 
-`relate` 的输入仍然是普通数据行。demo 中 `PathMark` 和 `PointMark` 消费原始行；`RelationMark` 的局部 transform 只为当前关系层生成一行配对数据。
-source / target 使用的 selector 与 `select` 共用同一套[统计子算子](/viz/data/transform/statistics)，因此也可以选择 top-N、排序后的首尾行或自定义代表行。
+切换全局或按系列配对，并为 source 与 target 独立选择首行、末行、最低值或最高值。数据表保持展开，便于直接对照箭头端点、方向和差值标签。
+
+<ComponentPreview files={['transform-relate', 'transform-relate.data.ts']} size="md" />
+
+按系列配对时，每条序列各输出一条关系；切到全部数据时，只输出一条全局关系。示例投影 `sourceId` / `targetId`，再计算 `target.value - source.value`。`PathMark` 和 `PointMark` 继续读取源数据，只有 `RelationMark` 的局部 transform 读取配对结果。
+
+### API 参考
 
 `IRPlotRelateTransform` 的 `kind` 固定为 `'relate'`。
 
-| prop                | 类型                                                                                                                                                                                              | 默认值   | 说明                                                                                                                   |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `groupBy?`          | `Array<string>`                                                                                                                                                                                   | 全局单组 | 每组独立生成一条或多条配对行                                                                                           |
-| `source` / `target` | `IRPlotEndpointProjection`<br />- `selector: IRDataSelectorOperation`<br />- `fields: Record<string, string>`                                                                                     | —        | 端点投影<br />- 组内代表行选择规则<br />- 输出字段后缀到端点行字段的非空映射                                           |
-| `measures?`         | `Array<IRPlotPairMeasureOperation>`<br />- `op:` <ApiValues name="PairMeasureOperationKind" /><br />- `field: string`<br />- `as: string`<br />- `labelAs?: string`<br />- `labelPrefix?: string` | —        | source / target 间派生度量<br />- 度量类型<br />- 输入数值字段<br />- 输出字段<br />- 可选文字字段<br />- 非负文字前缀 |
+| prop        | 类型                                | 默认值   | 说明                                |
+| ----------- | ----------------------------------- | -------- | ----------------------------------- |
+| `groupBy?`  | `Array<string>`                     | 全局单组 | 每组独立生成零个或一个关系行        |
+| `source`    | `IRPlotEndpointProjection`          | —        | source 端点 selector 与非空字段映射 |
+| `target`    | `IRPlotEndpointProjection`          | —        | target 端点 selector 与非空字段映射 |
+| `measures?` | `Array<IRPlotPairMeasureOperation>` | —        | source 与 target 之间的派生度量     |
 
-```tsx
-<RelationMark
-  transform={[
+`IRPlotEndpointProjection` 包含：
+
+| prop       | 类型                      | 说明                            |
+| ---------- | ------------------------- | ------------------------------- |
+| `selector` | `IRDataSelectorOperation` | 在当前组内选择端点候选行        |
+| `fields`   | `Record<string, string>`  | 非空“输出后缀 → 端点行字段”映射 |
+
+例如 `source.fields: { id: 'id', x: 'month' }` 会输出 `sourceId` 和 `sourceX`。`measures` 当前内置 <ApiValues name="PairMeasureOperationKind" />；`difference` 计算 `target[field] - source[field]`，并可写出数值字段和标签字段。
+
+### 技术原理
+
+图中的 source 与 target 是并行选择，不是先后过滤。两端都选中后才汇合投影字段和计算度量，因此每组最多输出一条关系行。
+
+<ComponentPreview files="transform-relate-logic" hideCode size="xl" />
+
+执行过程分为四步：
+
+1. `groupBy` 先建立独立分组；省略时所有输入行属于同一组。
+2. source 与 target 各自调用共享 data selector，并各取 selector 结果的第一行。
+3. `fields` 把端点字段写成 `sourceXxx` / `targetXxx`；`measures` 再读取两端原始行计算派生值。
+4. 两端都存在时输出一行并记录二者来源；任一端点没有选中行时直接跳过该组，不输出空字段占位。
+
+每个端点的 `fields` 必须是非空映射。`labelPrefix` 只在差值非负时添加到标签文本，不改变数值字段。
+
+<SourceLinks
+  sources={[
     {
-      kind: 'relate',
-      source: { selector: { kind: 'min', by: 'value' }, fields: { id: 'id' } },
-      target: { selector: { kind: 'max', by: 'value' }, fields: { id: 'id' } },
-      measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+      label: '端点投影、度量与 relate schema',
+      path: 'packages/viz/plot/src/schemas/transform/schema.ts',
+      startLine: 98,
+      endLine: 145,
+    },
+    {
+      label: '双端点选择、投影与零行规则',
+      path: 'packages/viz/plot/src/providers/transform/group.ts',
+      startLine: 129,
+      endLine: 188,
     },
   ]}
-  source={{ anchorId: { prefix: 'trend', field: 'sourceId' } }}
-  target={{ anchorId: { prefix: 'trend', field: 'targetId' } }}
 />
-```
 
-## 字段命名
+## 相关
 
-`fields` 的 key 会作为输出后缀，并自动加上 `source` 或 `target` 前缀。比如 `source.fields: { id: 'id', x: 'month' }` 会输出 `sourceId` 和 `sourceX`。
-
-`measures` 当前内置 `difference`，语义是 `target[field] - source[field]`。如果需要更复杂的配对度量，可以用自定义 transform 先产出关系行，或后续扩展 pair measure definition。
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/transform">
+    <span className="font-semibold">作用域与管线</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">用图元局部 transform 隔离关系层的数据视图。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/transform/statistics">
+    <span className="font-semibold">统计子算子</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">查看 source 和 target 共用的 selector 规则。</span>
+  </LinkedCard>
+</div>

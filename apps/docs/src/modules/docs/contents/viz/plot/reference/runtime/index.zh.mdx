@@ -1,0 +1,137 @@
+---
+title: 运行时总览
+description: 查询 React、Vanilla 与直接 Plot IR 如何汇入同一 lowering，在 Core 编译后输出 Scene、渲染结果与独立运行时产物。
+---
+
+Plot 运行时把“怎样声明图”和“怎样执行图”分开：React、Vanilla 或生成式工具先形成同一份 `IRPlotSpec`，datasets 与带函数的 Definition 在执行时注入，`@retikz/plot` 再把高层图表语义下沉为 Core IR。Core 负责编译 Scene，renderer 只消费 Scene。
+
+> 这里解释整体运行契约，不重复 schema 字段。JSON 形状请查本组的契约页；完整 Kernel 编译边界见[设计原则](/kernel/concepts/design/principles)。
+
+## 宿主与包边界
+
+<ComponentPreview files="plot-runtime-architecture" size="xxl" hideCode />
+
+React 与 Vanilla 提供不同的 authoring 和宿主接线，但不复制 Plot 算法。Standalone `<Plot>` 把规格包装成 Scene IR 并向 `<Layout>` 注入 `lowerPlots`；嵌入父级 `<Layout>` 时，adapter 先聚合同一宿主内的 datasets 与 lowering 选项。`renderPlot` 则在无 DOM 路径中校验规格、调用 Core 编译，并序列化 SVG。
+
+三条入口最终都委托 `@retikz/plot` 解析数据、比例尺、坐标系、图元与辅助，再把 Core IR 交还统一编译链。SVG、Canvas 与 SVG 字符串是输出形态；SSR 是 Vanilla 可运行的宿主场景，不是另一套 Plot 语义。
+
+## 声明与运行时边界
+
+<ComponentPreview files="plot-authoring-convergence" size="xxl" hideCode />
+
+React DSL 通过 `buildPlotSpec` 组装规格；`spec` prop 直接接收完整 Plot IR。Vanilla 的 `plotBuilder(...).build()` 会展开 builder-only 绑定字段，直接生成的 JSON 则作为 plain spec 进入。所有入口都在执行前通过 `PlotSpecSchema`，因此下游只处理 schema-valid 的 `IRPlotSpec`。
+
+`IRPlotSpec` 只保存 JSON-safe 语法与 `data.reference`。真实数据行、字段 resolver、label 函数以及自定义 transform、scale、channel、coordinate、mark 等 Definition 属于运行时输入；它们与 IR 在执行节点汇合，但不会被写回 IR。
+
+| 输入层     | 典型入口                                         | 进入 `IRPlotSpec`  |
+| ---------- | ------------------------------------------------ | ------------------ |
+| React DSL  | `<Plot>`、mark / guide / scale 子组件            | 组装后进入         |
+| React spec | `<Plot spec={...} data={...}>`                   | `spec` 进入        |
+| Vanilla    | `plotBuilder(...).build()`、plain spec           | build / 校验后进入 |
+| 运行时依赖 | datasets、field maps、resolver、各类 Definitions | 不进入             |
+
+## Lowering 与产物
+
+<ComponentPreview files="plot-lowering-flow" size="xxl" hideCode />
+
+主 lowering 在 `prepareRows()` 内解析 transform、statistics、row selector、scale、mark 与 format registry，并按 data model、field map 和 resolver 归一化数据。随后执行 transform、解析 frame 并建立 channel registry；channel 与 mark Definition 生成图元，guide、theme、composition 与 layout 补齐辅助和空间关系，最终展开为 `Scope`、`Node`、`Path` 等 Core IR。
+
+`lowerPlots()` 返回供 Core composite 编译使用的 Definition；它不直接创建 DOM，也不直接选择 renderer。`compileToScene()` 消费下沉后的 Core IR 并产生 Scene，React `<Layout>` 或 Vanilla renderer 再决定 SVG、Canvas 或字符串输出。
+
+溯源与定位是基于共享输入的独立重算路径，而不是主 lowering 直接吐出的旁路产物：`lowerPlotWithLineage()` 返回 Core IR children 与 `PlotLineageRun`，`createPlotLocator()` 复用数据准备与 frame 解析来计算 datum / series anchor。它们接收同一份 spec、datasets 与 lowering 配置，但不会把整份运行记录写进 `IRPlotSpec` 或 Scene meta。完整开关与数据边界见[溯源](/viz/plot/lineage)。
+
+## 入口与输出
+
+| 场景             | 入口                                            | 主要输出                        |
+| ---------------- | ----------------------------------------------- | ------------------------------- |
+| React standalone | `<Plot>`                                        | `<Layout>` 管理的 SVG / Canvas  |
+| React embedded   | `<Layout><Plot /></Layout>`                     | 与其它 Tier 2 内容合编的 Scene  |
+| Vanilla / SSR    | `renderPlot(spec, datasets, options)`           | SVG 字符串或 `{ svg, lineage }` |
+| 自定义宿主       | `lowerPlots(datasets, options)` + Core compile  | Core IR → Scene                 |
+| 审计与交互       | `lowerPlotWithLineage()`、`createPlotLocator()` | runtime-only lineage / anchor   |
+
+<SourceLinks
+  sources={[
+    {
+      label: 'React props 到规格、datasets 与 lowering 选项',
+      path: 'packages/viz/plot-react/src/plot-runtime.ts',
+      startLine: 126,
+      endLine: 167,
+    },
+    {
+      label: 'React standalone 与嵌入式宿主接线',
+      path: 'packages/viz/plot-react/src/Plot.tsx',
+      startLine: 119,
+      endLine: 177,
+    },
+    {
+      label: '嵌入式 Plot 数据与 lowering 选项聚合',
+      path: 'packages/viz/plot-react/src/embedded-runtime.ts',
+      startLine: 55,
+      endLine: 104,
+    },
+    {
+      label: 'Vanilla builder 生成 plain IRPlotSpec',
+      path: 'packages/viz/plot-vanilla/src/plot-builder.ts',
+      startLine: 717,
+      endLine: 733,
+    },
+    {
+      label: 'Vanilla 校验、Core 编译与 SVG 输出',
+      path: 'packages/viz/plot-vanilla/src/render-plot.ts',
+      startLine: 47,
+      endLine: 71,
+    },
+    {
+      label: 'Plot lowering 的运行时选项',
+      path: 'packages/viz/plot/src/pipeline/expand/types.ts',
+      startLine: 56,
+      endLine: 121,
+    },
+    {
+      label: 'Plot 主链的数据准备与 transform',
+      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
+      startLine: 111,
+      endLine: 167,
+    },
+    {
+      label: 'frame 解析与 channel registry 建立',
+      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
+      startLine: 194,
+      endLine: 225,
+    },
+    {
+      label: 'channel、mark 与 guide 生成 Core IR',
+      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
+      startLine: 610,
+      endLine: 699,
+    },
+    {
+      label: '独立的 Plot 溯源下沉入口',
+      path: 'packages/viz/plot/src/pipeline/lineage.ts',
+      startLine: 328,
+      endLine: 336,
+    },
+    {
+      label: 'Locator 复用数据准备与 frame 语义',
+      path: 'packages/viz/plot/src/pipeline/locator/locate.ts',
+      startLine: 130,
+      endLine: 186,
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/lineage">
+    <span className="font-semibold">溯源</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">理解运行审计、宿主元数据与交互回查。</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/concepts/design/principles">
+    <span className="font-semibold">Kernel 设计原则</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      继续理解 Core IR、Scene 与 renderer 的全局边界。
+    </span>
+  </LinkedCard>
+</div>

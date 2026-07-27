@@ -1,0 +1,85 @@
+---
+title: API Reference
+description: Query Plot's JSON contracts and how React, Vanilla, lowering, and runtime artifacts connect to one execution pipeline.
+---
+
+API Reference is for stable contracts, not introductory teaching. Ten contract pages cover the public schemas of Plot Tier 2 IR, while Runtime Overview explains how hosts construct specs, inject data and Definitions, lower to Core IR, and receive rendered or side-channel results.
+
+> This is the reference layer. Start with [Plot Grammar](/viz/plot) to build a plot, or read [Plot Lineage](/viz/plot/lineage) for runtime auditing.
+
+## Responsibilities
+
+| Topic                 | Responsibility                                   | Consult it when                               |
+| --------------------- | ------------------------------------------------ | --------------------------------------------- |
+| Contract - Plot Spec  | Root spec, coordinate views, and composition     | Generating or validating an `IRPlotSpec`      |
+| Contract - Encoding   | Field, constant, and channel bindings            | Mapping data columns to position and style    |
+| Contract - Transform  | Ordered Plot-domain data transforms              | Declaring stack, bin, density, or trend steps |
+| Contract - Mark       | Marks, relations, references, and path closure   | Selecting geometry and exact configuration    |
+| Contract - Scale      | Positional, ordinal, radial, and color scales    | Validating domains, ranges, and scale options |
+| Contract - Coordinate | 1D, 2D, and custom coordinate operations         | Defining positional roles and scale ownership |
+| Contract - Guide      | Axes, grids, ticks, titles, and legends          | Configuring guides and precise subcomponents  |
+| Contract - Layout     | Padding, label placement, and space reservation  | Controlling the plot frame and static text    |
+| Contract - Layer      | Semantic-layer zIndex override                   | Adjusting lowered primitive stacking          |
+| Contract - Theme      | Background, text, axes, legends, and palettes    | Defining JSON-safe visual defaults            |
+| Runtime Overview      | Host entry points, lowering, Scene, and sidecars | Integrating React, Vanilla, SSR, or tools     |
+
+## Pages
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/reference/plot">
+    <span className="font-semibold">Contract - Plot Spec</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Root spec, coordinate views, and composition schemas
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/reference/encoding">
+    <span className="font-semibold">Contract - Encoding</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Field, constant, and channel binding schemas</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/reference/transform">
+    <span className="font-semibold">Contract - Transform</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Stack, bin, derive, density, and trend schemas
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/reference/mark">
+    <span className="font-semibold">Contract - Mark</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Point, path, interval, reference, and relation schemas
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/reference/scale">
+    <span className="font-semibold">Contract - Scale</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Position, ordinal, radial, and color scale schemas
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/reference/coordinate">
+    <span className="font-semibold">Contract - Coordinate</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Cartesian, polar, 1D, and custom schemas</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/reference/guide">
+    <span className="font-semibold">Contract - Guide</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Axis, grid, tick, title, and legend schemas</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/reference/layout">
+    <span className="font-semibold">Contract - Layout</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Padding, static label, and placement schemas</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/reference/layer">
+    <span className="font-semibold">Contract - Layer</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Semantic-layer stacking schema</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/reference/theme">
+    <span className="font-semibold">Contract - Theme</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Plot-wide visual defaults and palette schemas
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/reference/runtime">
+    <span className="font-semibold">Runtime Overview</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Host entry points, lowering, Core compilation, and sidecars
+    </span>
+  </LinkedCard>
+</div>

@@ -26,7 +26,7 @@ const Demo: FC = () => (
       </Node>
     </LogicFrame>
     <Node id="core" position={[305, -24]} stroke="dodgerblue" fill="dodgerblue" fillOpacity={0.08} cornerRadius={4}>
-      Core IR
+      Scene
     </Node>
     <Node id="manifest" position={[305, 24]} stroke="dodgerblue" fill="dodgerblue" fillOpacity={0.08} cornerRadius={4}>
       Manifest
@@ -41,7 +41,7 @@ const Demo: FC = () => (
         'layout',
         {
           label: {
-            text: 'lower',
+            text: 'compile',
             position: 'midway',
             side: 'top',
             sloped: false,

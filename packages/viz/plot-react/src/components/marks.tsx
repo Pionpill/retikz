@@ -239,17 +239,17 @@ export type PointMarkProps = MarkTransformProps &
   CoreNodeChannelProps & {
     /**
      * 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值；cartesian1D / polar1D 单维亦用 x）。
-     * 可选：一维用 x，二维用 x/y，ternary2D 用 x/y/z；必填性由坐标系在 lowering 校验
+     * 可选：一维用 x，二维用 x/y；必填性由坐标系在 lowering 校验
      */
     x?: FieldName;
     /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值；cartesian2D / polar2D 必填，1D 省略） */
     y?: FieldName;
+    /** 自定义坐标系可消费的第三位置 role；内置坐标系不使用 */
+    z?: FieldName;
     /** 适配器专用糖：把图元绑定到命名 x 轴；输出 PlotSpec 前会展开为 `coordinateView` */
     xAxisId?: string;
     /** 适配器专用糖：把图元绑定到命名 y 轴；输出 PlotSpec 前会展开为 `coordinateView` */
     yAxisId?: string;
-    /** 三元坐标第三分量字段；ternary2D 下与 x / y 一起使用 */
-    z?: FieldName;
     /** 颜色字段（→ color 通道 + 自动 ordinal 色 scale） */
     color?: FieldName | IRPlotPointColorStyle;
     textColor?: FieldName | IRPlotPointColorStyle;
@@ -394,14 +394,10 @@ export type ReferenceMarkProps = MarkTransformProps &
     x?: number | FieldName;
     /** 水平参考的常量轴绑定（y=const 跨满 x 域）：数字 → 常量 value、字符串 → 字段 field（每行一条） */
     y?: number | FieldName;
-    /** 三元坐标 z role 的区域下界；仅 kind="region" 且坐标系消费 z 时使用 */
-    z?: number | FieldName;
     /** 竖直 band 上界（与 x 配对 → x∈[x,xTo] 填充带）：数字 → 常量、字符串 → 字段；缺 → line */
     xTo?: number | FieldName;
     /** 水平 band 上界（与 y 配对 → y∈[y,yTo] 填充带）：数字 → 常量、字符串 → 字段；缺 → line */
     yTo?: number | FieldName;
-    /** 与 z 配对的三元坐标 z role 区域上界 */
-    zTo?: number | FieldName;
     /** 对侧维部分长度起点字段（与 extentToField 成对）；缺 → 满铺对侧轴域 */
     extentField?: FieldName;
     /** 对侧维部分长度终点字段（与 extentField 成对）；缺 → 满铺对侧轴域 */

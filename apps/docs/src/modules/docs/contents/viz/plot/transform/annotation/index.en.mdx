@@ -3,46 +3,123 @@ title: Stacking & Shares
 description: Stacking and share transforms preserve detail rows while adding plot-specific stack intervals or normalized share fields.
 ---
 
-This group contains plot-registered row-preserving drawing transforms. Marks still draw detail rows, but each row receives extra fields for visual layout. These transforms do not reduce groups or discard original rows.
-
-Group statistic broadcasting is a data capability; see [Data Transforms / annotate](/viz/data/transform/operations#annotate).
+Use `stack` to generate cumulative intervals for detail rows. Use `normalize` to rewrite values as within-group shares. Both preserve N -> N while adding or rewriting drawing fields.
 
 | kind        | rows   | common output                     |
 | ----------- | ------ | --------------------------------- |
 | `stack`     | N -> N | `y0` / `y1`                       |
 | `normalize` | N -> N | Share fields or overwritten input |
 
-## stack
+## Stack
 
-`stack` accumulates values within each `x` group by series, adding lower and upper bounds to every row. The default output is `y0` / `y1`, matching `IntervalMark` interval consumption.
+`stack` accumulates values by series within each `x` group, adding lower and upper bounds to every row. The default output is `y0` / `y1`, matching `IntervalMark` interval consumption.
 
-<ComponentPreview files={['transform-stack', 'transform-stack.data.ts']} />
+### Dynamic Demo
 
-`<IntervalMark stack>` / `<IntervalMark angle>` auto-stacking is shorthand. When a matching explicit `stack` already exists in the pipeline, auto-stacking is suppressed to avoid stacking twice.
+Switch `offset` to compare standard accumulation, normalization, centering, and overlapping intervals. Normalize mode uses 0–1, center mode uses −60–60, and the other modes use a 0–120 y-axis.
+
+<ComponentPreview files={['transform-stack', 'transform-stack.data.ts']} size="md" />
+
+### Diverging Values
+
+`diverging` is for data containing both positive and negative values. Positive segments accumulate upward from 0, while negative segments accumulate downward. This signed input must not be passed to `normalize`, whose share contract is non-negative.
+
+<ComponentPreview files={['transform-stack-diverging', 'transform-stack-diverging.data.ts']} size="md" />
+
+### API Reference
 
 `IRPlotStackTransform` fixes `kind` to `'stack'`.
 
-| prop                        | type                             | default        | description                                           |
-| --------------------------- | -------------------------------- | -------------- | ----------------------------------------------------- |
-| `x?`                        | `string`                         | one group      | Group key; values stack within the same key           |
-| `y`                         | `string`                         | —              | Numeric field to accumulate                           |
-| `groupBy?`                  | `string`                         | data row order | Series field; appearance order controls segment order |
-| `startField?` / `endField?` | `string`                         | `y0` / `y1`    | Output bound field names                              |
-| `offset?`                   | <ApiValues name="StackOffset" /> | `'zero'`       | Stack baseline and normalization strategy             |
+| prop          | type                             | default        | description                                                      |
+| ------------- | -------------------------------- | -------------- | ---------------------------------------------------------------- |
+| `x?`          | `string`                         | one group      | Group key; each value forms an independent stack                 |
+| `y`           | `string`                         | —              | Numeric field to accumulate                                      |
+| `groupBy?`    | `string`                         | data row order | Series field ordered by first appearance                         |
+| `startField?` | `string`                         | `y0`           | Output lower-bound field name                                    |
+| `endField?`   | `string`                         | `y1`           | Output upper-bound field name                                    |
+| `offset?`     | <ApiValues name="StackOffset" /> | `'zero'`       | Accumulation, non-negative normalization, divergence, or overlap |
 
-## normalize
+### How It Works
 
-`normalize` divides each row's value by the total of its group, yielding a within-group share. `basis` can be `fraction` (0 to 1) or `percent` (0 to 100); when `as` is omitted, the input field is overwritten.
+`stack` first partitions independent stacks by `x`, then orders series by the first global appearance of each `groupBy` value. The `offset` node in the figure only changes bound calculation, not grouping or output row order.
 
-<ComponentPreview files={['transform-normalize', 'transform-normalize.data.ts']} />
+<ComponentPreview files="transform-stack-logic" hideCode size="xl" />
 
-Normalize followed by stack gives a percent stack: first convert every group to shares, then stack those shares.
+Each group calculates bounds according to `offset`:
+
+1. `zero` accumulates from 0; `center` shifts the full stack so it is centered on 0.
+2. `normalize` accepts only non-negative segments and scales them by the group total to span 0–1. A finite negative value throws; a zero total makes every segment length 0.
+3. `diverging` accumulates positive and negative values separately; `overlap` starts every segment at 0.
+4. Missing or non-finite `y` values count as 0. Bounds are written back to the original rows, preserving order and row count.
+
+`<IntervalMark stack>` and `<IntervalMark angle>` generate ordinary `stack` shortcuts. A matching explicit transform already in the pipeline suppresses duplicate automatic stacking.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'stack grouping, ordering, and bounds',
+      path: 'packages/viz/plot/src/providers/transform/row.ts',
+      startLine: 35,
+      endLine: 118,
+    },
+  ]}
+/>
+
+## Normalize
+
+`normalize` divides each non-negative row value by its group total. It only writes share values; compose it before `stack` when you need a percentage stack. Handle signed data first, or use `diverging` when stacking it.
+
+### Dynamic Demo
+
+Switch `basis` and grouping scope to compare 0–1 fractions, 0–100 percentages, per-quarter normalization, and global normalization.
+
+<ComponentPreview files={['transform-normalize', 'transform-normalize.data.ts']} size="md" />
+
+### API Reference
 
 `IRPlotNormalizeTransform` fixes `kind` to `'normalize'`.
 
-| prop       | type                                | default          | description                         |
-| ---------- | ----------------------------------- | ---------------- | ----------------------------------- |
-| `field`    | `string`                            | —                | Numeric field to normalize          |
-| `groupBy?` | `Array<string>`                     | one global group | Group keys; supports composite keys |
-| `basis?`   | <ApiValues name="NormalizeBasis" /> | `'fraction'`     | Output scale                        |
-| `as?`      | `string`                            | overwrite input  | Output field name                   |
+| prop       | type                                | default          | description                             |
+| ---------- | ----------------------------------- | ---------------- | --------------------------------------- |
+| `field`    | `string`                            | —                | Non-negative numeric field to normalize |
+| `groupBy?` | `Array<string>`                     | one global group | Group keys; supports composite keys     |
+| `basis?`   | <ApiValues name="NormalizeBasis" /> | `'fraction'`     | Output scale                            |
+| `as?`      | `string`                            | overwrite input  | Output field name                       |
+
+### How It Works
+
+`normalize` makes one pass to reject finite negative values and build group totals, then a second pass to write each row's share. The negative-value branch throws; the zero-sum guard is a normal output rule.
+
+<ComponentPreview files="transform-normalize-logic" hideCode size="xl" />
+
+When `groupBy` is omitted, every row shares one total. Multiple group fields form a composite key. Finite negative values throw; missing and non-finite values contribute 0 to both the total and the numerator.
+
+`basis="fraction"` uses a scale of 1, while `basis="percent"` uses 100. A zero group total emits 0 instead of `NaN`. Omitting `as` overwrites `field`; otherwise the share is written to a new field. Both forms preserve all other row data.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'normalize negative-value validation, grouping, zero-sum guard, and output',
+      path: 'packages/viz/plot/src/providers/transform/row.ts',
+      startLine: 124,
+      endLine: 150,
+    },
+  ]}
+/>
+
+## Related
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/transform">
+    <span className="font-semibold">Scopes & Pipeline</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Understand the order of explicit transforms and mark shortcuts.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/transform/row">
+    <span className="font-semibold">Derive & Jitter</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Derive each interval independently when no cross-row accumulation is needed.
+    </span>
+  </LinkedCard>
+</div>

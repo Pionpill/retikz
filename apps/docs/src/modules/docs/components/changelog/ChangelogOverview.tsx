@@ -11,20 +11,24 @@ import { InlineMdx } from '@/modules/docs/components';
 import { changelogVersionSlug } from '@/modules/docs/data';
 
 export type ChangelogOverviewProps = {
-  /** 当前模块的 changelog 切片（倒序） */
+  /** 当前模块与分组的 changelog 切片（倒序）。 */
   releases: Array<Release>;
-  /** 当前模块 id，用于拼各中版本详情页链接、定位主包 */
+  /** 当前模块 id，用于拼各中版本详情页链接。 */
   moduleId: string;
+  /** 当前分组 id，用于拼各中版本详情页链接并定位主包。 */
+  sectionId: string;
 };
 
 /**
  * 更新日志概览:各中版本一行,版本号 + 发布日期 / 状态 + 该版本内容简述,整行链接到详情页。
  * @description 简述取该模块主包(`@retikz/<module>`)在该中版本的 description;详情页(changelog/<version>)给逐包明细。列表形态,非时间线。
  */
-export const ChangelogOverview: FC<ChangelogOverviewProps> = ({ releases, moduleId }) => {
+export const ChangelogOverview: FC<ChangelogOverviewProps> = ({ releases, moduleId, sectionId }) => {
   const { i18n, t } = useTranslation();
   const lang: Lang = (i18n.resolvedLanguage ?? 'zh').startsWith('en') ? 'en' : 'zh';
-  const leadPkg = (moduleId === 'viz' ? '@retikz/plot' : `@retikz/${moduleId}`) as PackageId;
+  const leadPkg = (
+    moduleId === 'viz' ? (sectionId === 'plot' ? '@retikz/plot' : '@retikz/data') : `@retikz/${moduleId}`
+  ) as PackageId;
 
   return (
     <ul className="flex flex-col gap-2.5">
@@ -33,7 +37,7 @@ export const ChangelogOverview: FC<ChangelogOverviewProps> = ({ releases, module
         return (
           <li key={release.minor}>
             <Link
-              to={`/${moduleId}/releases/changelog/${changelogVersionSlug(release.minor)}`}
+              to={`/${moduleId}/${sectionId}/changelog/${changelogVersionSlug(release.minor)}`}
               className="group flex items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-accent/40"
             >
               <div className="min-w-0 flex-1">

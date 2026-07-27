@@ -2,9 +2,12 @@ import type { FC } from 'react';
 
 import { Axis, Plot, PointMark } from '@retikz/plot-react';
 
+import { defineControlledPreview } from '@/modules/docs/preview';
+
+import { POINT_TRANSFORM_CONTROL_IDS, previewControlContract } from './point-transform.controls';
 import { regionOrders } from './point-transform.data';
 
-const Demo: FC = () => (
+const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Plot data={regionOrders} width={620} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
     <PointMark x="region" y="orders" fill="#94a3b8" opacity={0.35} minimumSize={6} />
     <PointMark
@@ -13,11 +16,28 @@ const Demo: FC = () => (
       size="orders"
       color="region"
       label="rep"
-      transform={[{ kind: 'jitter', axis: 'y', yField: 'orders', amount: 1.2, seed: 12 }]}
+      transform={[
+        {
+          kind: 'jitter',
+          axis: 'y',
+          yField: 'orders',
+          amount: values[POINT_TRANSFORM_CONTROL_IDS.amount],
+          seed: values[POINT_TRANSFORM_CONTROL_IDS.seed],
+        },
+      ]}
     />
     <Axis dimension="x" />
     <Axis dimension="y" grid />
   </Plot>
-);
+));
+
+/** canonical 状态派生的稳定源码配置 */
+export const previewSource = controlledPreview.source;
+
+/** controls registry 缺失时使用的显式回退 */
+export const previewControls = previewControlContract.controls;
+
+/** 调整当前 PointMark 内 jitter 的最大偏移与随机种子 */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

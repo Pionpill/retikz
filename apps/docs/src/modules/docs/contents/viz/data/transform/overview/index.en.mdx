@@ -40,7 +40,7 @@ All three forms belong to the Plot application layer, but their scope differs.
 | `dataTransforms={[...]}` | Programmatically generated operation arrays | Shared pipeline, before component declarations   |
 | mark-local `transform`   | A local data view for one mark              | That mark only; other mark inputs stay unchanged |
 
-Plot-registered drawing kinds use the same component; see [Drawing Grammar transforms](/viz/plot/transform). The four Data built-ins live under [Transform Operations](/viz/data/transform/operations).
+Plot-registered drawing kinds use the same component; see [Plot Grammar transforms](/viz/plot/transform). The four Data built-ins live under [Transform Operations](/viz/data/transform/operations).
 
 ## How it works
 
@@ -98,7 +98,7 @@ When an explicit `stack` has the same signature as an automatic `stack`, the aut
 | Owner  | kinds                                                                                   | Documentation                                          |
 | ------ | --------------------------------------------------------------------------------------- | ------------------------------------------------------ |
 | Data   | `sort`, `summarize`, `select`, `annotate`                                               | [Transform Operations](/viz/data/transform/operations) |
-| Plot   | `stack`, `bin`, `normalize`, `derive-interval`, `relate`, `jitter`, `density`, `smooth` | [Drawing Grammar transforms](/viz/plot/transform)      |
+| Plot   | `stack`, `bin`, `normalize`, `derive-interval`, `relate`, `jitter`, `density`, `smooth` | [Plot Grammar transforms](/viz/plot/transform)         |
 | Custom | A registered string that does not collide with a built-in name                          | [Extension Mechanisms](/viz/data/transform/extensions) |
 
 ### Exports

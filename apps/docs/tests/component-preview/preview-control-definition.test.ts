@@ -141,6 +141,20 @@ describe('preview controls definition', () => {
     ).toThrow('Duplicate preview table column key "city" in control "cities".');
   });
 
+  it('拒绝无标题 section 默认收起', () => {
+    expect(() =>
+      definePreviewControls({
+        presentation: 'panel',
+        sections: [
+          {
+            defaultCollapsed: true,
+            controls: [{ kind: 'text', id: 'title', label: 'Title', defaultValue: 'Node' }],
+          },
+        ],
+      }),
+    ).toThrow('Preview control section must define a label when defaultCollapsed is true.');
+  });
+
   it('拒绝重复字段 id', () => {
     expect(() =>
       definePreviewControls({

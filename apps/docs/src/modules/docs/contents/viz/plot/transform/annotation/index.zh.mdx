@@ -3,46 +3,119 @@ title: 堆叠与占比
 description: 堆叠与占比保留每一条明细行，同时补出 plot 绘图需要的堆叠区间或占比字段。
 ---
 
-这一组是 plot 注册的保行绘图变换：图元仍然画明细行，但每行会多出一组为图形服务的派生字段。它们不会把多行压成一行，也不会丢掉原始行。
-
-组统计广播属于数据能力，见[数据变换 / annotate](/viz/data/transform/operations#统计标注-annotate)。
+需要为每条明细行生成累计区间时用 `stack`；需要把组内数值改写成占比时用 `normalize`。两者都保持 N → N，只补充或改写绘图字段。
 
 | kind        | 行数  | 常见输出             |
 | ----------- | ----- | -------------------- |
 | `stack`     | N → N | `y0` / `y1`          |
 | `normalize` | N → N | 占比字段或覆盖原字段 |
 
-## 堆叠 stack
+## 堆叠
 
 `stack` 在每个 `x` 分组内按系列累加数值，给每行补出下界和上界。默认输出是 `y0` / `y1`，正好对接 `IntervalMark` 的区间消费方式。
 
-<ComponentPreview files={['transform-stack', 'transform-stack.data.ts']} />
+### 动态示例
 
-`<IntervalMark stack>` / `<IntervalMark angle>` 的自动堆叠只是快捷写法；当管线里已经存在匹配的显式 `stack` 时，自动堆叠会被抑制，避免二次堆叠。
+切换 `offset`，比较普通累加、归一化、居中与重叠区间。归一化模式使用 0–1，居中模式使用 −60–60，其余模式使用 0–120 的纵轴范围。
+
+<ComponentPreview files={['transform-stack', 'transform-stack.data.ts']} size="md" />
+
+### 正负分流
+
+`diverging` 面向同时含正值和负值的数据：正值从 0 向上累加，负值从 0 向下累加。它需要单独的有符号数据示例；这类输入不能交给只定义非负占比的 `normalize`。
+
+<ComponentPreview files={['transform-stack-diverging', 'transform-stack-diverging.data.ts']} size="md" />
+
+### API 参考
 
 `IRPlotStackTransform` 的 `kind` 固定为 `'stack'`。
 
-| prop                        | 类型                             | 默认值      | 说明                             |
-| --------------------------- | -------------------------------- | ----------- | -------------------------------- |
-| `x?`                        | `string`                         | 单组累积    | 分组键；同一值内累积             |
-| `y`                         | `string`                         | —           | 被累加的数值字段                 |
-| `groupBy?`                  | `string`                         | 数据行顺序  | 系列字段，按系列出现序决定段顺序 |
-| `startField?` / `endField?` | `string`                         | `y0` / `y1` | 输出上下界字段                   |
-| `offset?`                   | <ApiValues name="StackOffset" /> | `'zero'`    | 堆叠基线与归一化策略             |
+| prop          | 类型                             | 默认值     | 说明                               |
+| ------------- | -------------------------------- | ---------- | ---------------------------------- |
+| `x?`          | `string`                         | 单组累积   | 分组键；同一值内独立堆叠           |
+| `y`           | `string`                         | —          | 被累加的数值字段                   |
+| `groupBy?`    | `string`                         | 数据行顺序 | 系列字段，按首次出现顺序排列分段   |
+| `startField?` | `string`                         | `y0`       | 输出下界字段                       |
+| `endField?`   | `string`                         | `y1`       | 输出上界字段                       |
+| `offset?`     | <ApiValues name="StackOffset" /> | `'zero'`   | 累加、非负归一、正负分流或重叠策略 |
 
-## 归一化 normalize
+### 技术原理
 
-`normalize` 把每行的数值除以所在组的总和，得到组内占比。`basis` 可以是 `fraction`（0 到 1）或 `percent`（0 到 100）；`as` 省略时原位覆盖输入字段。
+`stack` 先按 `x` 划分独立堆栈，再按 `groupBy` 的全局首次出现顺序排列系列。图中的 `offset` 是边界计算的辅助策略，不改变分组和输出行顺序。
 
-<ComponentPreview files={['transform-normalize', 'transform-normalize.data.ts']} />
+<ComponentPreview files="transform-stack-logic" hideCode size="xl" />
 
-normalize 和 stack 组合就是百分比堆叠：先把每组转成占比，再对占比做堆叠。
+每个分组的边界计算按 `offset` 分支执行：
+
+1. `zero` 从 0 开始连续累加；`center` 先把整组平移到以 0 为中心。
+2. `normalize` 只接受非负段，按组总和缩放到 0–1；有限负值会抛错，总和为 0 时每段长度为 0。
+3. `diverging` 分别累加正值与负值；`overlap` 则让每段都从 0 开始。
+4. 缺失或非有限 `y` 按 0 参与计算，最后把边界写回原行，因此输入顺序和行数保持不变。
+
+`<IntervalMark stack>` 与 `<IntervalMark angle>` 会生成普通 `stack` 快捷配置；管线里已有匹配的显式 transform 时，不会重复自动堆叠。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'stack 的分组、排序与边界计算',
+      path: 'packages/viz/plot/src/providers/transform/row.ts',
+      startLine: 35,
+      endLine: 118,
+    },
+  ]}
+/>
+
+## 归一化
+
+`normalize` 把每行非负数值除以所在组的总和，得到组内占比。它只负责写出占比字段；需要百分比堆叠时，再把结果交给 `stack`。有符号数据应先处理，或在堆叠时改用 `diverging`。
+
+### 动态示例
+
+切换 `basis` 和分组范围，对比 0–1 比例、0–100 百分比，以及“每季度归一”与“全局归一”。
+
+<ComponentPreview files={['transform-normalize', 'transform-normalize.data.ts']} size="md" />
+
+### API 参考
 
 `IRPlotNormalizeTransform` 的 `kind` 固定为 `'normalize'`。
 
-| prop       | 类型                                | 默认值       | 说明                 |
-| ---------- | ----------------------------------- | ------------ | -------------------- |
-| `field`    | `string`                            | —            | 求组内占比的数值字段 |
-| `groupBy?` | `Array<string>`                     | 全行单组     | 分组键，支持复合键   |
-| `basis?`   | <ApiValues name="NormalizeBasis" /> | `'fraction'` | 输出比例尺度         |
-| `as?`      | `string`                            | 原位覆盖     | 输出字段名           |
+| prop       | 类型                                | 默认值       | 说明                     |
+| ---------- | ----------------------------------- | ------------ | ------------------------ |
+| `field`    | `string`                            | —            | 求组内占比的非负数值字段 |
+| `groupBy?` | `Array<string>`                     | 全行单组     | 分组键，支持复合键       |
+| `basis?`   | <ApiValues name="NormalizeBasis" /> | `'fraction'` | 输出比例尺度             |
+| `as?`      | `string`                            | 原位覆盖     | 输出字段名               |
+
+### 技术原理
+
+`normalize` 要先遍历一次数据校验有限负值并建立各组总和，再遍历第二次写回每一行的占比。图中的负值分支会抛错；零和保护则是正常输出规则。
+
+<ComponentPreview files="transform-normalize-logic" hideCode size="xl" />
+
+`groupBy` 省略时所有行共享一个总和；设置多个字段时，字段值组合成复合分组键。有限负值会抛错，缺失或非有限数值按 0 参与求和和除法。
+
+`basis="fraction"` 使用倍率 1，`basis="percent"` 使用倍率 100。组总和为 0 时直接输出 0，避免产生 `NaN`；`as` 省略时覆盖 `field`，否则写入新字段。两种方式都保留原行和其它字段。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'normalize 的负值校验、分组、零和保护与写回',
+      path: 'packages/viz/plot/src/providers/transform/row.ts',
+      startLine: 124,
+      endLine: 150,
+    },
+  ]}
+/>
+
+## 相关
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/transform">
+    <span className="font-semibold">作用域与管线</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">了解显式变换与图元快捷写法的顺序。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/transform/row">
+    <span className="font-semibold">派生与抖动</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">不需要跨行累计时，为每行独立派生区间。</span>
+  </LinkedCard>
+</div>

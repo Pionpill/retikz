@@ -2,49 +2,79 @@ import type { FC } from 'react';
 
 import { Axis, PathMark, Plot, PointMark, RelationMark } from '@retikz/plot-react';
 
+import { defineControlledPreview } from '@/modules/docs/preview';
+
+import {
+  previewControlContract,
+  RELATION_PATH_CONTROL_IDS,
+  relationPathExtremesControls,
+} from './relation-path-extremes.controls';
 import { pathExtremeRelations } from './relation-path-extremes.data';
 
-const Demo: FC = () => (
-  <Plot data={pathExtremeRelations} width={620} height={320} style={{ maxWidth: '100%', height: 'auto' }}>
-    <PathMark
-      x="x"
-      y="y"
-      order="order"
-      stroke="#0f766e"
-      strokeWidth={2.2}
-      anchorId={{ prefix: 'trend', field: 'id' }}
-    />
-    <PointMark x="x" y="y" fill="#ffffff" stroke="#0f766e" strokeWidth={1} size={4.5} />
-    <RelationMark
-      transform={[
-        {
-          kind: 'relate',
-          source: { selector: { kind: 'min', by: 'y' }, fields: { id: 'id' } },
-          target: { selector: { kind: 'max', by: 'y' }, fields: { id: 'id' } },
-          measures: [{ op: 'difference', field: 'y', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
-        },
-      ]}
-      source={{ anchorId: { prefix: 'trend', field: 'sourceId' } }}
-      target={{ anchorId: { prefix: 'trend', field: 'targetId' } }}
-      style={{
-        color: { kind: 'constant', value: '#f97316' },
-        strokeWidth: { kind: 'constant', value: 1.6 },
-      }}
-      path={{
-        routing: { kind: 'bend', bendDirection: 'left', bendAngle: 32 },
-        label: {
-          text: { field: 'deltaLabel' },
-          position: 0.5,
-          sloped: true,
-          textColor: '#ea580c',
-          font: { size: 11, weight: 'bold' },
-        },
-        options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] },
-      }}
-    />
-    <Axis dimension="x" grid />
-    <Axis dimension="y" grid />
-  </Plot>
-);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
+  const labelSide = values[RELATION_PATH_CONTROL_IDS.labelSide];
+
+  return (
+    <Plot data={pathExtremeRelations} width={620} height={320} style={{ maxWidth: '100%', height: 'auto' }}>
+      <PathMark
+        x="x"
+        y="y"
+        order="order"
+        stroke="#0f766e"
+        strokeWidth={2.2}
+        anchorId={{ prefix: 'trend', field: 'id' }}
+      />
+      <PointMark x="x" y="y" fill="#ffffff" stroke="#0f766e" strokeWidth={1} size={4.5} />
+      <RelationMark
+        transform={[
+          {
+            kind: 'relate',
+            source: {
+              selector: { kind: 'min', by: values[RELATION_PATH_CONTROL_IDS.anchor] },
+              fields: { id: 'id' },
+            },
+            target: {
+              selector: { kind: 'max', by: values[RELATION_PATH_CONTROL_IDS.anchor] },
+              fields: { id: 'id' },
+            },
+            measures: [{ op: 'difference', field: 'y', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+          },
+        ]}
+        source={{ anchorId: { prefix: 'trend', field: 'sourceId' } }}
+        target={{ anchorId: { prefix: 'trend', field: 'targetId' } }}
+        style={{
+          color: { kind: 'constant', value: values[RELATION_PATH_CONTROL_IDS.color] },
+          strokeWidth: { kind: 'constant', value: values[RELATION_PATH_CONTROL_IDS.strokeWidth] },
+        }}
+        path={{
+          routing: {
+            kind: 'bend',
+            bendDirection: values[RELATION_PATH_CONTROL_IDS.bendDirection],
+            bendAngle: values[RELATION_PATH_CONTROL_IDS.bendAngle],
+          },
+          label: {
+            text: { field: 'deltaLabel' },
+            position: values[RELATION_PATH_CONTROL_IDS.labelPosition],
+            ...(labelSide === 'center' ? { placement: 'inside' as const } : { side: labelSide }),
+            sloped: true,
+            textColor: '#ea580c',
+            font: { size: 11, weight: 'bold' },
+          },
+          options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] },
+        }}
+      />
+      <Axis dimension="x" grid />
+      <Axis dimension="y" grid />
+    </Plot>
+  );
+});
+
+/** canonical 状态派生的稳定源码配置 */
+export const previewSource = controlledPreview.source;
+
+/** controls registry 缺失时使用的显式回退 */
+export const previewControls = relationPathExtremesControls;
+
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

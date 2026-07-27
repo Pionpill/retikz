@@ -1,177 +1,136 @@
 ---
 title: Coordinate Composition
-description: composition lets one Plot express dual axes, facets, and shared tracks.
+description: Coordinate composition organizes dual axes, data facets, and shared tracks inside one Plot while preserving clear relationships between regions.
 ---
 
-When a chart has one projection, `coordinate` is enough. When the same Plot needs several coordinate regions, panels, or aligned tracks, the result still uses the same `composition` model, but everyday JSX does not need a hand-written `composition` object: dual axes use `Axis id` plus `xAxisId` / `yAxisId`, while facets and shared tracks place axes and marks inside the matching container.
+A chart sometimes needs different units in one plot area, small multiples split by category, or several metric tracks aligned to one time axis. Coordinate composition provides three direct structures: extra axes, `<Facet>`, and `<Scaffold>` with shared tracks.
 
-`composition` organizes coordinate regions; it is not a new mark type. Marks are still `PathMark`, `PointMark`, and `IntervalMark`; scales still come from fields and explicit `<Scale>` children; guides are still declared with `<Axis>`.
+## Choose a Structure First
+
+| Relationship in your data                  | Recommended structure | Why it fits                                           |
+| ------------------------------------------ | --------------------- | ----------------------------------------------------- |
+| Layers overlap but use different units     | Dual axes             | Keep one plot area and select an axis per layer       |
+| Rows split by region, product, or category | Facet                 | Group rows and generate panels automatically          |
+| Metrics align along one time/category axis | Shared tracks         | Share one direction and divide the other into bands   |
+| Charts are independent                     | Multiple Plots        | Let an outer layout place them; no composition needed |
 
 ## Dual Axes
 
-Dual-axis charts are the most common multi-view case: one side is shared, while the other side has two sets of ticks. The axis-id shortcut currently targets `cartesian2D`, the usual x / y Cartesian coordinate system.
+Each direction has one default axis. Only an extra axis needs an `id`; a mark selects it with `xAxisId` or `yAxisId`. Layers can then share one direction while using different units in the other.
 
-Each dimension starts with one default axis. An `<Axis dimension="x">` or `<Axis dimension="y">` without an `id` belongs to that dimension's default axis; when a mark omits `xAxisId` / `yAxisId`, it also uses the default axis for that dimension. Only extra axes need explicit ids, then marks select them with `xAxisId` or `yAxisId`.
+This axis-id shortcut only supports `cartesian2D`. Polar angle and radius are not independent top/bottom or left/right axes; use the `<Scaffold>` / `<Track>` structure below when composing several polar regions.
 
-### Multiple Y-Axes
+### Two Y-Axes
 
-Multiple y-axes fit charts where x positions are shared but y units differ. In the weather example below, temperature uses the default y-axis and rainfall binds to the right-side y-axis.
+Temperature uses the default y-axis, while rainfall uses the right-side `rainfall` axis. Use the data panel to compare their different magnitudes.
 
-<ComponentPreview files={['coordinate-composition-scopes', 'coordinate-composition-scopes.data.ts']} size="md" />
+<ComponentPreview
+  files={['coordinate-composition-scopes', 'coordinate-composition-scopes.data.ts']}
+  size="md"
+  caption="Both lines share the day x-axis; the rainfall layer selects the right y-axis with yAxisId."
+/>
 
-`rainfall` is the id of the extra y-axis. The temperature line omits `yAxisId`; the rainfall line and points use `yAxisId="rainfall"` to choose the right-side axis.
+| Goal                   | Configuration                                 | Result                         |
+| ---------------------- | --------------------------------------------- | ------------------------------ |
+| Declare another y-axis | `<Axis id="rainfall" dimension="y" ... />`    | Create a selectable y-axis     |
+| Place it on the right  | `placement={{ kind: 'side', side: 'right' }}` | Render it beside the plot area |
+| Use it for a layer     | `yAxisId="rainfall"`                          | Draw that layer in its range   |
 
-| JSX                                           | Role                                |
-| --------------------------------------------- | ----------------------------------- |
-| `<Axis id="rainfall" dimension="y">`          | Declare the extra rainfall y-axis   |
-| `yAxisId="rainfall"`                          | Make a mark use the rainfall axis   |
-| `placement={{ kind: 'side', side: 'right' }}` | Place the extra y-axis on the right |
+### Two X-Axes
 
-### Multiple X-Axes
+The completion line uses elapsed days at the bottom, while the forecast line uses calendar days at the top. Both still share the completion y-axis.
 
-Multiple x-axes fit charts where the y metric is shared but horizontal positions have two interpretations. The example below shows elapsed release day at the bottom and calendar day at the top; both lines share the y-axis.
-
-<ComponentPreview files={['coordinate-composition-x-axis', 'coordinate-composition-x-axis.data.ts']} size="md" />
-
-`calendar` is the id of the extra x-axis. The completed line uses the default x-axis; the forecast line and points use `xAxisId="calendar"` to choose the top axis.
-
-| JSX                                         | Role                                  |
-| ------------------------------------------- | ------------------------------------- |
-| `<Axis id="calendar" dimension="x">`        | Declare the extra calendar-day x-axis |
-| `xAxisId="calendar"`                        | Make a mark use the calendar-day axis |
-| `placement={{ kind: 'side', side: 'top' }}` | Place the extra x-axis on top         |
+<ComponentPreview
+  files={['coordinate-composition-x-axis', 'coordinate-composition-x-axis.data.ts']}
+  size="md"
+  caption="The extra x-axis is calendar; the forecast layer binds to the top date axis with xAxisId."
+/>
 
 ## Facets
 
-A facet splits one chart into panels from data fields. The common JSX form places axes and marks inside `<Facet>`; each panel receives the rows that match its row / column value.
+A facet splits data into panels by field values. Put axes and marks inside `<Facet>` to reuse them in every panel; each panel receives only its matching rows.
 
-### Basic Column Facet
+### Facet Playground
 
-Passing only `column` creates one row of panels. This example splits the chart into three `segment` columns; by default every panel shares the x / y domains, so line heights can be compared across panels.
-
-<ComponentPreview
-  files={['coordinate-composition-facet-basic', 'coordinate-composition-facet-basic.data.ts']}
-  size="md"
-/>
-
-This demo has a single `<Facet column="segment">`. `Axis`, `PathMark`, and `PointMark` are written inside `<Facet>`, so they automatically enter every segment panel without a `facetId`.
-
-### Shared Scales
-
-By default, facets synchronize the domain for the same coordinate role across panels. The two panels below cover `0-100` and `0-50`, but the right panel still uses the overall `0-100` y domain, so its height can be compared directly with the left panel.
+Start with a single row of facets, then switch to a row-column grid. In grid mode, you can keep missing combinations and compare a shared y range with independent panel ranges.
 
 <ComponentPreview
-  files={['coordinate-composition-facet-shared-scale', 'coordinate-composition-facet-shared-scale.data.ts']}
-  size="md"
+  files={['coordinate-composition-facet', 'coordinate-composition-facet.data.ts']}
+  size="lg"
+  caption="The data omits P2 + T2; change the empty-panel policy to hide or keep that panel."
 />
 
-This example does not set `resolve.scale`, because shared domains are the default. Set y to `independent` only when the `0-50` panel should fill its own height.
+| Goal                            | Configuration                               | Effect                                       |
+| ------------------------------- | ------------------------------------------- | -------------------------------------------- |
+| Split into columns only         | `column={{ field: 'product' }}`             | Create one row of small charts               |
+| Split into rows and columns     | Add `row={{ field: 'tier' }}`               | Create a two-dimensional panel grid          |
+| Keep combinations without data  | `empty="show"`                              | Preserve empty panels from explicit order    |
+| Give each panel its own y range | `resolve={{ scale: { y: 'independent' } }}` | Fill each panel despite different magnitudes |
+| Show row and column headers     | `header={{ row: true, column: true }}`      | Label each panel's groups                    |
+
+By default, combinations without rows are hidden and the same direction shares one range across panels, making heights directly comparable.
 
 ### Multi-Level Facets
 
-`row` and `column` can receive an array of fields, so several fields define the panel hierarchy on the same direction. The example below groups columns by `region` first and then by `channel`; rows are grouped by `business` first and then by `metric`.
+`row` and `column` can also receive arrays of field configurations. Array order defines the hierarchy from outer to inner, which fits nested dimensions such as region then channel.
 
 <ComponentPreview
   files={['coordinate-composition-facet-multilevel', 'coordinate-composition-facet-multilevel.data.ts']}
   size="lg"
+  caption="Columns group first by region and then channel; rows group first by business and then metric."
 />
-
-The array order is the facet hierarchy order. When `header={{ row: true, column: true }}` is enabled, inner labels stay next to the panels and outer labels merge consecutive panels with the same parent value.
-
-### Row And Column Grid
-
-Passing both `row` and `column` creates a two-dimensional grid. The chart below splits columns by `region` and rows by `channel`; `Axis grid` is still declared by the axis itself, and facet defaults draw that grid inside every panel.
-
-<ComponentPreview files={['coordinate-composition-facet', 'coordinate-composition-facet.data.ts']} size="lg" />
-
-Here `<Facet row="channel" column="region">` defines the panel matrix. `grid` still belongs on `<Axis dimension="x">` / `<Axis dimension="y">`; the facet only projects those guides into each panel.
-
-### Empty Panels And Independent Scales
-
-Empty panels are dropped by default, and scale domains are shared across panels by default. The next example keeps empty panels and computes the y-axis independently inside each panel, which helps when groups differ by order of magnitude.
-
-<ComponentPreview
-  files={['coordinate-composition-facet-independent', 'coordinate-composition-facet-independent.data.ts']}
-  size="lg"
-/>
-
-`empty="show"` keeps panels listed by the order even when no rows match them. `resolve={{ scale: { y: 'independent' } }}` computes a separate y domain per panel, while the x-axis stays shared for month alignment.
-
-### API
-
-`FacetProps` and `FacetDimensionInput` are exported from `@retikz/plot-react`; facet values reuse `IRDataScalarValue` from `@retikz/data`.
-
-| Property           | Type                                                                                                                                                                                                                                                                                                   | Default                                                                                                                      | Description                                                                                                                                                          |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`               | `FacetProps['id']`                                                                                                                                                                                                                                                                                     | Required                                                                                                                     | Facet identity referenced by `facetId`                                                                                                                               |
-| `row?` / `column?` | `FacetDimensionInput`<br />`string` \|<br />`Extract<FacetDimensionInput, Array<unknown>>` \|<br />`Exclude<FacetDimensionInput, string \| Array<unknown>>`<br />- `field: string`<br />- `order?: Array<IRDataScalarValue>`<br />- `labels?: Array<{ value: IRDataScalarValue; label: IRTextBlock }>` | Omitted                                                                                                                      | Split dimension<br />Field shorthand<br />Ordered hierarchy of full configs<br />One full config<br />- Facet field<br />- Panel order<br />- Header-label overrides |
-| `facetId?`         | `PointMarkProps['facetId']`<br />`AxisProps['facetId']`                                                                                                                                                                                                                                                | Omitted                                                                                                                      | Explicitly bind a mark or axis outside the container to facet panels                                                                                                 |
-| `empty?`           | <ApiValues name="FacetEmptyPolicy" />                                                                                                                                                                                                                                                                  | `'drop'`                                                                                                                     | Drop or keep empty panels                                                                                                                                            |
-| `resolve?`         | `FacetProps['resolve']`<br />- `scale?: Record<string, CompositionScaleResolveValue>`<br />- `axis?: Record<string, CompositionAxisResolveValue>`<br />- `grid?: Record<string, CompositionGridResolveValue>`                                                                                          | Omitted<br />- `shared`<br />- `outer`<br />- `all`                                                                          | Composition policy<br />- Scale domains<br />- Axis output<br />- Grid projection                                                                                    |
-| `spacing?`         | `FacetProps['spacing']`<br />- `panelGap?: number`<br />- `trackGap?: number`<br />- `axisGap?: number`<br />- `labelGap?: number`<br />- `padding?: NonNullable<FacetProps['spacing']>['padding']`                                                                                                    | Omitted<br />- `0`<br />- `0`<br />- `0`<br />- Axis guides use `4`; facet headers use dynamic `facetLabelBandSize`<br />- — | Facet spacing<br />- Panel gap<br />- Track gap<br />- Outside-axis gap<br />- Axis-title and facet-header label gap<br />- Outer padding                            |
-| `header?`          | `FacetProps['header']`<br />- `row?: NonNullable<FacetProps['header']>['row']`<br />- `column?: NonNullable<FacetProps['header']>['column']`                                                                                                                                                           | Omitted<br />- `false`<br />- `false`                                                                                        | Facet-label config; multi-level facets group labels by hierarchy<br />- Render or style row labels<br />- Render or style column labels                              |
 
 ## Shared Tracks
 
-Shared tracks use one coordinate scaffold to manage several tracks. The common case is a set of aligned small plots: one role is shared, while the other role is split into multiple bands. The common JSX form wraps several `<Track>` declarations in one `<Scaffold>`: shared axes live in `<Scaffold>`, while local axes and marks live in the matching `<Track>`.
+Shared tracks fix the scale and axis for one direction, then divide the other direction into bands. `<Scaffold>` owns the shared parts, while each `<Track>` contains its local axis and marks.
 
 ### Cartesian Tracks
 
-<ComponentPreview files={['coordinate-composition-tracks', 'coordinate-composition-tracks.data.ts']} size="lg" />
+Three metrics share the trading-day x-axis and draw in separate vertical spaces, which fits operational metrics that must stay time-aligned.
 
-Here all three tracks share the `trading day` x position. The shared x-axis is written directly in `<Scaffold>`; `trend` draws a line, `drawdown` uses baseline closure as an area, and `signal` draws a line with points.
+<ComponentPreview
+  files={['coordinate-composition-tracks', 'coordinate-composition-tracks.data.ts']}
+  size="lg"
+  caption="Trend, drawdown, and signal align to the same day; supporting data starts collapsed to keep the track structure prominent."
+/>
 
-Each track keeps its own y-axis and marks inside its own `<Track>`, so the tracks align horizontally while keeping separate vertical space. The x-axis enables `grid`; shared-track defaults project the same x ticks into every shared track.
+The key declaration is `<Scaffold sharedRoles={['x']}>`. Put the shared x-axis in `Scaffold`, each local y-axis and mark in its `<Track>`, and use the band's `start` / `end` values to assign vertical space.
 
 ### Polar Tracks
+
+Shared tracks also work with `polar2D`. Several radial tracks then share angular categories, while each track occupies a different radius band.
 
 <ComponentPreview
   files={['coordinate-composition-tracks-polar', 'coordinate-composition-tracks-polar.data.ts']}
   size="lg"
+  caption="Journey areas share angular positions; signal, capacity, and outer sectors use separate radial bands."
 />
 
-Shared tracks also work under `polar2D`. Here the coordinate system interprets `x` as the angular role and `y` as the radial role. `sharedRoles={['x']}` lets several radial tracks share the same angular ticks while each track keeps its own radius band.
+The container relationship stays the same after changing coordinates: the shared axis remains in `<Scaffold>`, and local marks remain in their `<Track>`.
 
-The JSX shape is still `<Scaffold>` containing `<Track>`: the angular axis lives at scaffold level, the `signal` and `capacity` radial lines live in inner tracks, and the outermost `sector` track uses `IntervalMark` to draw a ring of sectors. Changing the coordinate system changes how roles are interpreted, not the container binding rule.
+## Public Types
 
-### API
+All three Props types are public exports of `@retikz/plot-react`. This table keeps only the fields most useful when assembling coordinate structures.
 
-| Property               | Type                                                                                                                                                                                                             | Default                                                                      | Description                                                                                                               |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `Scaffold.id`          | `ScaffoldProps['id']`                                                                                                                                                                                            | Required                                                                     | Scaffold identity referenced by `scaffoldId` and generated track views                                                    |
-| `Scaffold.sharedRoles` | `ScaffoldProps['sharedRoles']`                                                                                                                                                                                   | Required                                                                     | Coordinate roles managed by the Scaffold                                                                                  |
-| `Scaffold.coordinate?` | `ScaffoldProps['coordinate']`                                                                                                                                                                                    | Inherits `<Plot coordinate>`                                                 | Coordinate system used by the Scaffold                                                                                    |
-| `Scaffold.frame?`      | <ApiValues name="ScaffoldFrameMode" />                                                                                                                                                                           | `'shared'`                                                                   | Whether tracks share the Scaffold frame                                                                                   |
-| `Scaffold.resolve?`    | `ScaffoldProps['resolve']`<br />- `scale?: Record<string, CompositionScaleResolveValue>`<br />- `axis?: Record<string, CompositionAxisResolveValue>`<br />- `grid?: Record<string, CompositionGridResolveValue>` | Omitted<br />- `shared`<br />- `outer`<br />- `all`                          | Shared-track resolution policy<br />- Scale domains<br />- Axis output<br />- Grid projection                             |
-| `Scaffold.spacing?`    | `ScaffoldProps['spacing']`<br />- `panelGap?: number`<br />- `trackGap?: number`<br />- `axisGap?: number`<br />- `labelGap?: number`<br />- `padding?: NonNullable<ScaffoldProps['spacing']>['padding']`        | Omitted<br />- `0`<br />- `0`<br />- `0`<br />- Axis guides use `4`<br />- — | Shared-track spacing<br />- Panel gap<br />- Track gap<br />- Outside-axis gap<br />- Axis-title gap<br />- Outer padding |
-| `Track.id`             | `TrackProps['id']`                                                                                                                                                                                               | Required                                                                     | Track identity referenced by `trackId`                                                                                    |
-| `Track.band`           | `TrackProps['band']`<br />- `role: string`<br />- `start: number`<br />- `end: number`                                                                                                                           | Required                                                                     | Non-shared role band<br />- Role<br />- Start fraction<br />- End fraction                                                |
-| `Track.order?`         | `TrackProps['order']`                                                                                                                                                                                            | Declaration order                                                            | Track ordering hint                                                                                                       |
-| `trackId?`             | `PointMarkProps['trackId']`<br />`AxisProps['trackId']`                                                                                                                                                          | Omitted                                                                      | Explicitly place an outside mark or axis into one track                                                                   |
-| `scaffoldId?`          | `AxisProps['scaffoldId']`                                                                                                                                                                                        | Omitted                                                                      | Bind an outside axis to the full Scaffold                                                                                 |
-
-## Choosing A Shape
-
-| Situation                                                   | Recommended structure                                                      |
-| ----------------------------------------------------------- | -------------------------------------------------------------------------- |
-| One line plus one bar layer, shared x but different y units | Dual axes                                                                  |
-| Split by region / category into rows or columns             | Facet                                                                      |
-| Several metrics aligned along one time axis                 | Shared tracks                                                              |
-| Several independent charts placed on one large canvas       | Multiple `<Plot>` panels inside a parent `<Layout>`; no composition needed |
+| Type            | Key fields                                                                   | Responsibility                                |
+| --------------- | ---------------------------------------------------------------------------- | --------------------------------------------- |
+| `FacetProps`    | `id`, `row`, `column`, `empty`, `header`, `resolve`, `spacing`, `children`   | Declare facet panels generated from data      |
+| `ScaffoldProps` | `id`, `coordinate`, `sharedRoles`, `frame`, `resolve`, `spacing`, `children` | Declare shared roles, coordinates, and tracks |
+| `TrackProps`    | `id`, `band`, `view`, `order`, `coordinate`, `header`, `children`            | Declare one track's band and local content    |
 
 ## Related
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/viz/plot/guide/axis">
-    <span className="font-semibold">Axis</span>
+    <span className="font-semibold">Axes</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      See `placement`, `title`, and grid guide configuration
+      See placement, titles, and grid configuration
     </span>
   </LinkedCard>
   <LinkedCard href="/viz/plot/lineage">
-    <span className="font-semibold">Plot Lineage</span>
+    <span className="font-semibold">Data Lineage</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      See source, facet, and track context in multi-region charts
+      Inspect data ownership inside facets and tracks
     </span>
   </LinkedCard>
 </div>

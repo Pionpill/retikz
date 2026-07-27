@@ -550,7 +550,6 @@ describe('buildPlotSpec 装配', () => {
     const spec = buildPlotSpec(
       <>
         <PathMark x="m" y="r" />
-        {/* @ts-expect-error 故意传非法 dimension，验证 lowering 按坐标系角色拒绝 */}
         <Axis dimension="q" />
       </>,
       '__plot',

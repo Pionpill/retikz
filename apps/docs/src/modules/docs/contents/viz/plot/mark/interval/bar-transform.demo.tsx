@@ -1,10 +1,13 @@
 import type { FC } from 'react';
 
-import { Axis, IntervalMark, Plot, PointMark } from '@retikz/plot-react';
+import { Axis, IntervalMark, Plot, PointMark, Scale } from '@retikz/plot-react';
 
+import { defineControlledPreview } from '@/modules/docs/preview';
+
+import { BAR_TRANSFORM_BASELINE_ID, BAR_TRANSFORM_GAP_ID, previewControlContract } from './bar-transform.controls';
 import { storeRevenue } from './bar-transform.data';
 
-const Demo: FC = () => (
+const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Plot data={storeRevenue} width={620} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
     <PointMark x="segment" y="revenue" fill="#94a3b8" opacity={0.45} minimumSize={6} />
     <IntervalMark
@@ -12,11 +15,27 @@ const Demo: FC = () => (
       bounds={{ y: { kind: 'extent', from: 'y0', to: 'y1' } }}
       color="segment"
       label="store"
-      transform={[{ kind: 'derive-interval', from: 'revenue', baseline: 0 }]}
+      transform={[
+        {
+          kind: 'derive-interval',
+          from: 'revenue',
+          baseline: values[BAR_TRANSFORM_BASELINE_ID],
+        },
+      ]}
     />
+    <Scale dimension="x" type="band" paddingInner={values[BAR_TRANSFORM_GAP_ID]} paddingOuter={0.15} />
+    <Scale dimension="y" type="linear" domainPadding={0} />
     <Axis dimension="x" />
     <Axis dimension="y" grid />
   </Plot>
-);
+));
+
+/** canonical 状态派生的稳定源码配置 */
+export const previewSource = controlledPreview.source;
+
+/** controls registry 缺失时使用的显式回退 */
+export const previewControls = previewControlContract.controls;
+
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

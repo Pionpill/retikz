@@ -41,6 +41,7 @@ Definition 能力使用 `XxxDefinition` 与 `defineXxx` 描述扩展项，内置
 - 普通 Definition 找不到 key 时 fail-loud，并列出已注册项。
 - 未注册 composite 在完整 compile 中产生 warning 并跳过该节点；独立 lowering 会提升为错误。
 - Composite registry 同时接受互斥的 `expand` 与 `compile` 分支；`lowerIRToKernel` 遇到依赖完整环境的 `compile` 分支会明确报错。
+- layout-aware composite 只能用 callback 提供的 `replay()` / `scope()` builder 创建 compile-local output child；重复 replay、伪造 handle、跨 compile 或跨 callback 使用都会 fail-loud。
 - schema 或 payload 校验发生在 definition 消费前，错误应包含能力族与 lookup key。
 
 ## 指南入口

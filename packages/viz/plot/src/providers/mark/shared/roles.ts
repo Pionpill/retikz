@@ -6,7 +6,7 @@ import { channelValue } from '../../channel/shared';
 
 /**
  * 取某 mark 在某位置角色下的 encoding 通道（投影时按 frame.roles 序逐角色取值）。
- * @description polar 在坐标系内部把 x/y 解释为角向/径向；ternary 直接消费 x/y/z
+ * @description polar 在坐标系内部把 x/y 解释为角向/径向；自定义坐标系按 definition.roles 消费位置通道
  */
 export const channelForRole = (mark: IRPlotMark, role: DimensionRole): IRPlotChannel | undefined => {
   return (mark.encoding as Record<string, IRPlotChannel | undefined>)[role];

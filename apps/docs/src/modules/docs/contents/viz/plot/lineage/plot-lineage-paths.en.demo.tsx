@@ -4,11 +4,11 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** Independent Plot paths for lowered metadata and runtime lineage */
 const Demo: FC = () => (
-  <Layout width={720} height={290} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={560} height={200} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
       id="lower-options"
-      position={[-260, -65]}
-      minimumSize={{ width: 180, height: 64 }}
+      position={[-185, -50]}
+      minimumSize={{ width: 145, height: 64 }}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}
@@ -16,15 +16,15 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Lowering provenance</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Provenance</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        provenance · datumIdField
+        provenance · datum id
       </Text>
     </Node>
     <Node
       id="lower"
-      position={[0, -65]}
-      minimumSize={{ width: 170, height: 64 }}
+      position={[0, -50]}
+      minimumSize={{ width: 140, height: 64 }}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -32,15 +32,15 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Normal lowering</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Core lowering</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        Generate Core primitives
+        Generate primitives
       </Text>
     </Node>
     <Node
       id="scene"
-      position={[260, -65]}
-      minimumSize={{ width: 180, height: 64 }}
+      position={[185, -50]}
+      minimumSize={{ width: 150, height: 64 }}
       stroke="gray"
       fill="gray"
       fillOpacity={0.06}
@@ -48,16 +48,16 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Primitive ids / meta</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Scene metadata</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        Used by Scene and locator
+        Primitive id · meta
       </Text>
     </Node>
 
     <Node
       id="lineage-options"
-      position={[-260, 65]}
-      minimumSize={{ width: 180, height: 64 }}
+      position={[-185, 50]}
+      minimumSize={{ width: 145, height: 64 }}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}
@@ -65,15 +65,15 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Lineage options</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Runtime lineage</Text>
       <Text fill="gray" font={{ size: 12 }}>
         lineage · host metadata
       </Text>
     </Node>
     <Node
       id="record"
-      position={[0, 65]}
-      minimumSize={{ width: 170, height: 64 }}
+      position={[0, 50]}
+      minimumSize={{ width: 140, height: 64 }}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -81,15 +81,15 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Runtime recording</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Semantic summary</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        Combine Data and Plot semantics
+        Data · Plot
       </Text>
     </Node>
     <Node
       id="artifact"
-      position={[260, 65]}
-      minimumSize={{ width: 180, height: 64 }}
+      position={[185, 50]}
+      minimumSize={{ width: 150, height: 64 }}
       stroke="darkviolet"
       fill="darkviolet"
       fillOpacity={0.07}
@@ -99,7 +99,7 @@ const Demo: FC = () => (
     >
       <Text font={{ size: 14, weight: 'bold' }}>PlotLineageRun</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        Exposed only by return or callback
+        Return · callback
       </Text>
     </Node>
 

@@ -67,8 +67,8 @@ describe('ChannelSchema / EncodingSchema (contract)', () => {
     expect(() => ChannelSchema.parse({ field: 'c', value: '#000', scale: 'col' })).toThrow();
   });
 
-  // x / y 在 schema 层可选，必填性下放到 coordinate 级校验（cartesian2D 需 x+y、
-  // cartesian1D 仅需单维、ternary2D 需 x/y/z）。schema 层放宽，缺角色由 lowering fail-loud（见 coordinate-frame.test.ts）
+  // x / y 在 schema 层可选，必填性下放到 coordinate 级校验（cartesian2D 需 x+y、cartesian1D 仅需单维）。
+  // schema 层放宽，缺角色由 lowering fail-loud（见 coordinate-frame.test.ts）
   it('encoding_missing_x_accepted', () => {
     expect(EncodingSchema.parse({ y: { field: 'value' } })).toEqual({ y: { field: 'value' } });
   });
@@ -88,27 +88,6 @@ describe('ChannelSchema / EncodingSchema (contract)', () => {
       y: { field: 'value' },
       color: { field: 'g', scale: 'col' },
     });
-    expect(EncodingSchema.parse(JSON.parse(JSON.stringify(e)))).toEqual(e);
-  });
-
-  // contract：ternary 的 x/y/z 位置角色通道（可选；ternary 必填由 lowering 校验）
-  it('encoding_xyz_channels_valid', () => {
-    const e = { x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' } };
-    expect(EncodingSchema.parse(e)).toEqual(e);
-  });
-
-  it('encoding_xyz_with_color_valid', () => {
-    const e = {
-      x: { field: 'sand' },
-      y: { field: 'silt' },
-      z: { field: 'clay' },
-      color: { field: 'region', scale: 'col' },
-    };
-    expect(EncodingSchema.parse(e)).toEqual(e);
-  });
-
-  it('encoding_xyz_json_round_trip', () => {
-    const e = EncodingSchema.parse({ x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' } });
     expect(EncodingSchema.parse(JSON.parse(JSON.stringify(e)))).toEqual(e);
   });
 

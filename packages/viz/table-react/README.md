@@ -15,9 +15,10 @@ import { DetailTable } from '@retikz/table-react';
   dataRef="scores"
   data={rows}
   columns={[
-    { id: 'name', field: 'name', header: 'Name' },
-    { id: 'score', field: 'score', header: 'Score' },
+    { id: 'name', field: 'name', header: 'Name', bodyLayout: { padding: 6, wrap: true } },
+    { id: 'score', field: 'score', header: 'Score', bodyLayout: { horizontalAlign: 'end' } },
   ]}
+  layout={{ columnSize: { kind: 'auto' }, rowSize: { kind: 'auto' } }}
 />;
 ```
 
@@ -34,18 +35,20 @@ import { DetailColumn, DetailTable } from '@retikz/table-react';
 ```
 
 `ManualTable` likewise accepts the complete `cells` / `rowKinds` props or nested `Row` and `Cell`
-markers. Dimensions always remain explicit on the root component:
+markers. Dimensions always remain explicit on the root component, while spans reserve occupied slots
+across later rows:
 
 ```tsx
 import { Cell, ManualTable, Row } from '@retikz/table-react';
 
-<ManualTable rows={2} columns={2}>
+<ManualTable rows={2} columns={3}>
   <Row kind="columnHeader">
-    <Cell>Name</Cell>
+    <Cell span={{ columns: 2 }}>Identity</Cell>
     <Cell>Score</Cell>
   </Row>
   <Row>
     <Cell>Alice</Cell>
+    <Cell>Engineering</Cell>
     <Cell value={95} />
   </Row>
 </ManualTable>;
@@ -55,9 +58,11 @@ import { Cell, ManualTable, Row } from '@retikz/table-react';
 forms as their respective plain props. `<Table>` remains the entry for callers that already hold a
 complete TableSpec.
 
-All three root components work standalone or as Tier 2 children of `@retikz/react` `Layout`. Embedded
-usage requires a stable spec id. `onManifest` is standalone-only; datasets, custom definitions, and
-extra composites remain runtime inputs outside Table IR.
+All three root components work standalone or as Tier 2 children of `@retikz/react` `Layout`.
+Standalone roots reuse the supported `Layout` host surface and observe `onManifest` from the same
+compile artifact. Embedded usage requires a stable spec id and rejects standalone host props or local
+`onManifest`; move them to the outer `Layout`. Datasets, custom definitions, and extra composites
+remain runtime inputs outside Table IR.
 
 ## Install
 

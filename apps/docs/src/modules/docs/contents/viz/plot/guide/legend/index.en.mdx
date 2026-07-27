@@ -1,20 +1,18 @@
 ---
 title: Legend
-description: 'Visualize non-positional channels (color / size / opacity / shape) as a legend with <Legend>; channel picks which channel, form follows the scale type.'
+description: Use <Legend> to explain color, size, opacity, shape, and custom non-positional channels; a color scale or channel definition determines the form.
 ---
 
-`<Legend>` is the visual counterpart of a scale. An axis (`<Axis>`) explains the two positional channels x / y; a legend explains the rest — the non-positional channels `color`, `size`, `opacity`, and `shape`. Both are chart guides, side by side.
+`<Legend>` is the visual counterpart of a non-positional scale. `channel` selects the visual channel to explain. Built-in channels include `color`, `size`, `opacity`, and `shape`; registered custom channels use the same component.
 
-`channel` picks which channel the legend explains. You don't pick its form — it follows the type of the scale bound to that channel: categorical color → one swatch per category; continuous color → a smooth ramp + ticks; binned color → one block per bin + range labels; size → a few representative circles (graduated symbols).
+`<Legend>` does not select its own form. Color channels derive it from the bound scale; other built-in or custom channels use the registered definition's `legend` declaration. Categorical color produces item swatches, continuous color and opacity produce smooth ramps, binned color produces interval blocks, and size / shape produce graduated-size or shape entries.
 
-For a legend to explain a channel, that channel must first have a data-driven scale. So bind a field to the channel on `<PointMark>` (`color="region"` / `size="pop"`), then add `<Legend channel="..." />`. Continuous fields (continuous color ramps, size gradients) also need `model` to declare the field type, otherwise they are treated as categorical.
-
-`<Legend>` and `<Axis>` are independent: adding `<Legend>` only controls the legend, while axes come from the `<Axis>` you write explicitly (`<Plot>` draws none on its own).
+A legend only explains an existing data mapping. Bind a field to a channel on the mark before declaring `<Legend>`. Also mark continuous fields as `continuous` through `model` so they are not treated as categories. Axes remain independent and still require explicit `<Axis>` declarations.
 
 ## Usage
 
 ```tsx
-import { Plot, PointMark, Legend } from '@retikz/plot-react';
+import { Legend, Plot, PointMark } from '@retikz/plot-react';
 ```
 
 ```tsx
@@ -27,71 +25,116 @@ import { Plot, PointMark, Legend } from '@retikz/plot-react';
 
 ## Examples
 
-### Categorical color swatches
+### Color forms
 
-`color` bound to a categorical field → an ordinal color scale, one swatch per category. The x / y axes come from explicit `<Axis>`.
+Categorical fields use ordinal scales and item swatches; continuous values use sequential scales and smooth ramps; discretizing scales such as quantize split continuous values into interval blocks. After switching forms, the controls only expose parameters relevant to the active legend.
 
-<ComponentPreview files={['legend-color-swatch', 'legend.data.ts']} />
+<ComponentPreview
+  files={['legend-color-forms', 'legend.data.ts']}
+  size="md"
+  caption="Switch legend forms and tune the active branch to see how the bound scale determines the color legend structure."
+/>
 
-<p className="text-sm text-muted-foreground">One swatch per region; the legend sits in the reserved band on the right; x / y axes drawn by explicit `<Axis>`.</p>
+### Symbols and opacity
 
-### Continuous color ramp
+#### Graduated size
 
-`color` bound to a continuous numeric field (declared `continuous` via `model`) → a sequential color scale, drawn as a smooth ramp + ticks. Use `ticks` for tick source and `tickLabels.format` for display format.
+Binding `size` to a continuous field maps radius through a square-root scale. The legend selects representative values for graduated symbols. Use `position="bottom"` to move it below the plot.
 
-<ComponentPreview files={['legend-color-ramp', 'legend.data.ts']} />
+<ComponentPreview
+  files={['legend-size', 'legend.data.ts']}
+  size="md"
+  caption="Change position, orientation, target size, and fit mode to compare representative-symbol layout and rendered size."
+/>
 
-<p className="text-sm text-muted-foreground">Continuous values form a smooth ramp with a few tick values beside it.</p>
+#### Shape and opacity
 
-### Size graduated symbols
+`shape` suits categorical fields, while `opacity` suits continuous fields. Each `<Legend>` explains one channel, so a plot can contain several independent legends.
 
-`size` bound to a continuous field → radius via a square-root scale; the legend draws a few representative sizes as circles + values (graduated symbols). `position="bottom"` puts the legend at the bottom.
+<ComponentPreview
+  files={['legend-shape-opacity', 'legend.data.ts']}
+  size="md"
+  caption="Show, hide, and move the shape and opacity legends independently, then change the opacity tick count."
+/>
 
-<ComponentPreview files={['legend-size', 'legend.data.ts']} />
+## How it works
 
-<p className="text-sm text-muted-foreground">
-  A few representative sizes map size to value; the legend sits at the bottom.
-</p>
+<ComponentAlert
+  type="tip"
+  title="Bind a channel before generating its legend"
+  description="For everyday use, make sure the mark has a data-driven channel binding. This section explains how Legend reuses descriptors already produced by the channel and scale."
+/>
 
-### Theme and local style
+Legend resolves a channel descriptor and an optional named scale from `channel` and `scale`. Color forms come from the scale; other channel forms come from `ChannelDefinition.legend` in the same registry, so custom channels do not need a separate Legend branch. `Plot.theme.legend` provides visual defaults, and one legend can override them locally with `style`.
 
-Legend defaults come from `Plot.theme.legend` and `Plot.theme.palette`. A single `<Legend>` can still override its own layout and text tokens with `style`; semantic fields such as `channel`, `position`, `orient`, `ticks`, and `tickLabels.format` stay on the root `<Legend>`.
+<ComponentPreview files="legend-lowering-flow" size="sm" hideCode />
 
-```tsx
-<Plot
-  theme={{
-    palette: { sequential: 'magma' },
-    legend: { rampLength: 120, label: { textColor: '#475569' } },
-  }}
->
-  <Legend
-    channel="color"
-    ticks={{ count: 4 }}
-    tickLabels={{ format: '~s' }}
-    style={{ title: { font: { weight: 600 } } }}
-  />
-</Plot>
-```
+The selected form lowers into an independent Legend scope inside the band reserved by `position`. Legends use zIndex `500` by default, above axes, marks, and plot-level labels; `layer={{ zIndex }}` moves the whole scope without changing entry order inside it.
 
-### Layer Order
+<SourceLinks
+  sources={[
+    {
+      label: 'Legend descriptor selection and form branching',
+      path: 'packages/viz/plot/src/pipeline/expand/legend.ts',
+      startLine: 325,
+      endLine: 477,
+    },
+    {
+      label: 'Legend forms lowered into a core scope',
+      path: 'packages/viz/plot/src/pipeline/guide/guide.ts',
+      startLine: 1639,
+      endLine: 1762,
+    },
+    {
+      label: 'Default Plot semantic layer values',
+      path: 'packages/viz/plot/src/schemas/layer/constants.ts',
+      startLine: 1,
+      endLine: 22,
+    },
+  ]}
+/>
 
-Legends are drawn above axes, marks, and plot-level labels by default, with zIndex `500`. Use `layer={{ zIndex }}` on `<Legend>` to move the whole legend scope up or down; it does not change the order of entries inside the legend.
+## API Reference
 
-## API
+| Prop          | Type                                | Default       | Description                                                                                                                                                                   |
+| ------------- | ----------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `channel`     | `LegendProps['channel']`            | —             | Non-positional channel to explain; built-ins are color / size / opacity / shape, and registered custom channels work the same way                                             |
+| `scale?`      | `LegendProps['scale']`              | unique scale  | Named scale used to disambiguate when one channel has several scales; failure to resolve one uniquely is an error                                                             |
+| `title?`      | `LegendProps['title']`              | none          | Legend title; accepts strings, multiple lines, and structured text                                                                                                            |
+| `position?`   | <ApiValues name="LegendPosition" /> | `'right'`     | Edge that contains the legend; layout reserves a legend band on that edge                                                                                                     |
+| `orient?`     | <ApiValues name="LegendOrient" />   | by `position` | Item direction; left/right default to vertical, while top/bottom default to horizontal                                                                                        |
+| `ticks?`      | `LegendProps['ticks']`              | by form       | Ramps support the complete tick source; size currently reads `count` only; categorical swatches and shape ignore it                                                           |
+| `tickLabels?` | `LegendProps['tickLabels']`         | `true`        | Hide labels with `false`; `format` applies to ramp tick labels                                                                                                                |
+| `style?`      | `LegendProps['style']`              | theme legend  | Local visual tokens for swatch / ramp size, gaps, and text. Size symbols default to `symbolFit:'fit'` inside the `symbolSize` box; use `'preserve'` to retain rendered radius |
+| `layer?`      | `LegendProps['layer']`              | legend layer  | Override the semantic layer of the whole legend scope                                                                                                                         |
 
-| Prop          | Type                                | Default       | Description                                                                                                                                |
-| ------------- | ----------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `channel`     | `LegendProps['channel']`            | —             | Non-positional channel the legend explains; built-ins are color / size / opacity / shape, and registered custom channels are also accepted |
-| `scale?`      | `LegendProps['scale']`              | —             | Disambiguating scale name when one channel is driven by several scales; omit = the channel's only scale                                    |
-| `title?`      | `LegendProps['title']`              | none          | Legend title content; accepts the same text-block form as core text nodes                                                                  |
-| `position?`   | <ApiValues name="LegendPosition" /> | `'right'`     | Which edge the legend sits on (a band is reserved there)                                                                                   |
-| `orient?`     | <ApiValues name="LegendOrient" />   | by `position` | Item layout direction; left/right default to vertical, top/bottom to horizontal                                                            |
-| `ticks?`      | `LegendProps['ticks']`              | scale default | Tick source for continuous ramps; explicit `values` win over `count`; ignored for discrete swatches                                        |
-| `tickLabels?` | `LegendProps['tickLabels']`         | `true`        | Hide labels with `false`, or format ramp tick labels with a declarative format string                                                      |
-| `style?`      | `LegendProps['style']`              | theme legend  | Local legend visual tokens: swatch / ramp size, gaps, and title / label text style                                                         |
+### Tick support matrix
+
+| Legend form                              | `ticks` support                            | `tickLabels.format` |
+| ---------------------------------------- | ------------------------------------------ | ------------------- |
+| Continuous color / opacity / custom ramp | `values > interval > count`                | supported           |
+| size                                     | `count` only; 3 representatives by default | ignored             |
+| Categorical or binned swatches, shape    | ignored                                    | ignored             |
+
+### Key object fields
+
+| Object field          | Type                                             | Default            | Purpose                                                      |
+| --------------------- | ------------------------------------------------ | ------------------ | ------------------------------------------------------------ |
+| `ticks.values`        | `Array<string \| number>`                        | —                  | Explicit ramp tick values                                    |
+| `ticks.interval`      | `{ kind:'number' \| 'time' \| 'category'; ... }` | —                  | Fixed numeric, temporal, or categorical ramp interval        |
+| `ticks.count`         | `number`                                         | scale/form default | Target ramp tick count or number of size representatives     |
+| `tickLabels.format`   | `string`                                         | automatic format   | Numeric or UTC temporal ramp format                          |
+| `style.swatchSize`    | `number`                                         | `14`               | Baseline swatch side length                                  |
+| `style.rampLength`    | `number`                                         | `100`              | Ramp long edge                                               |
+| `style.rampThickness` | `number`                                         | `12`               | Ramp short edge                                              |
+| `style.symbolSize`    | `number`                                         | `14`               | Target visual box for shape and size legends                 |
+| `style.symbolFit`     | <ApiValues name="LegendSymbolFit" />             | `'fit'`            | Fit a size radius into the box or preserve its original size |
+| `style.symbolScale`   | `number`                                         | `1`                | Additional scale applied after symbol fitting                |
+| `layer.zIndex`        | `number`                                         | `500`              | Override the whole legend scope's semantic layer             |
 
 ## Related
 
-- [Axis](/viz/plot/guide/axis) — the guide for the x / y positional channels
-- [Scale](/viz/plot/scale) — the legend form follows the channel's scale type
-- [Point](/viz/plot/mark/point) — binding the color / size / shape channels
+- [Axis](/viz/plot/guide/axis) — explains x / y positional channels
+- [Scale](/viz/plot/scale) — supplies the legend domain/range and determines color legend forms
+- [Channel binding](/viz/plot/channel/binding) — connects fields or constants to visual channels
+- [Custom channels](/viz/plot/channel/custom-channel) — registers project-specific channels that reuse Legend

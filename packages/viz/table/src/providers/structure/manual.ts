@@ -19,6 +19,8 @@ export const MANUAL_TABLE_STRUCTURE = defineTableStructure({
           payload: cell.payload,
           location: cell.location ?? (isHeader ? TableCellLocation.ColumnHeader : TableCellLocation.Body),
           roles: cell.roles ?? [isHeader ? TableCellRole.ColumnHeader : TableCellRole.Data],
+          ...(cell.span === undefined ? {} : { span: cell.span }),
+          ...(cell.layout === undefined ? {} : { layout: cell.layout }),
           source: { kind: TableCellSourceKind.Manual, cellIndex },
         };
       }),

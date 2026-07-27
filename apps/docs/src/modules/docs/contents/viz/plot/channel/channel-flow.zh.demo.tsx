@@ -3,8 +3,8 @@ import type { FC } from 'react';
 import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /**
- * 通道绑定与 definition 汇入统一解析器的插图
- * @description PlotSpec 的位置绑定由坐标角色读取，其余绑定与内置 / 自定义 definition 在解析器处汇合
+ * 通道绑定与处理规则汇入统一解析器的插图
+ * @description PlotSpec 的位置绑定进入坐标投影，其余绑定与内置 / 自定义通道规则在解析器处汇合
  */
 const Demo: FC = () => (
   <Layout width={440} height={360} style={{ maxWidth: '100%', height: 'auto' }}>
@@ -35,9 +35,9 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>内置 definition</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>内置通道</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        内置通道
+        内置处理规则
       </Text>
     </Node>
     <Node
@@ -51,7 +51,7 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>自定义 definition</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>自定义通道</Text>
       <Text fill="gray" font={{ size: 12 }}>
         channelDefinitions
       </Text>
@@ -67,7 +67,7 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Channel registry</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>通道注册表</Text>
       <Text fill="gray" font={{ size: 12 }}>
         按通道名合并
       </Text>
@@ -85,13 +85,13 @@ const Demo: FC = () => (
     >
       <Text font={{ size: 14, weight: 'bold' }}>解析绑定</Text>
       <Text fill="gray" font={{ size: 11 }}>
-        按 definition kind 分派
+        按通道类型分派
       </Text>
     </Node>
     <Node
       id="position"
       position={[-145, 55]}
-      minimumSize={{ width: 118, height: 54 }}
+      minimumSize={{ width: 148, height: 54 }}
       stroke="gray"
       fill="gray"
       fillOpacity={0.06}
@@ -99,9 +99,9 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>位置绑定</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>坐标投影</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        coordinate role
+        x / y / z → 屏幕
       </Text>
     </Node>
     <Node
@@ -117,7 +117,7 @@ const Demo: FC = () => (
     >
       <Text font={{ size: 14, weight: 'bold' }}>可见属性</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        mark / scope / node / path
+        图元 / 容器 / 节点 / 路径
       </Text>
     </Node>
     <Node
@@ -131,9 +131,9 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>图例描述</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>图例信息</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        guide descriptor
+        生成 Legend
       </Text>
     </Node>
 
