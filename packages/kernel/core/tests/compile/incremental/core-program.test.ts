@@ -1,6 +1,8 @@
 import type { PerformanceTraceRecord } from '@retikz/runtime';
 
 import {
+  createRuntimeChangeSet,
+  createRuntimeIdentity,
   createRuntimeOwnerInput,
   createRuntimeOwnerRegistry,
   createRuntimeOwnerUpdate,
@@ -398,5 +400,262 @@ describe('Core Runtime Program full fallback update', () => {
 
     expect(ownersAtRevision0.every(identity => identity.path.includes('candidate'))).toBe(true);
     expect(ownersAtRevision0.some(identity => identity.path.join('/') === 'root/node/duplicate')).toBe(false);
+  });
+
+  it('接受与前后 Snapshot 一致的 update hint，且缺少 hint 时不误报 mismatch', () => {
+    const program = createCoreProgram({ onWarn: () => {} });
+    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, sceneWithText('A'))],
+    });
+    const nodeIdentity = createRuntimeIdentity(CORE_OWNER_KEY, ['root', 'node', 'node-a']);
+    const baseRevision = session.revision();
+
+    const hinted = session.update({
+      baseRevision,
+      owners: [
+        createRuntimeOwnerUpdate(
+          CoreOwnerDefinition,
+          sceneWithText('B'),
+          createRuntimeChangeSet(baseRevision, [{ kind: 'update', identity: nodeIdentity }]),
+        ),
+      ],
+    });
+    const snapshotOnly = session.update({
+      baseRevision: session.revision(),
+      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, sceneWithText('C'))],
+    });
+
+    expect(hinted.outcome).toBe('fallback');
+    expect(hinted.diagnostics).toEqual([]);
+    expect(snapshotOnly.outcome).toBe('fallback');
+    expect(snapshotOnly.diagnostics).toEqual([]);
+  });
+
+  it('hint 指向错误 identity 或漏掉真实变化时只提交一条 mismatch diagnostic', () => {
+    const program = createCoreProgram({ onWarn: () => {} });
+    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const initial: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'node-a', position: [0, 0], text: 'A' },
+        { type: 'node', id: 'node-b', position: [80, 0], text: 'B' },
+      ],
+    };
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, initial)],
+    });
+    const next: IRScene = {
+      ...initial,
+      children: [
+        { type: 'node', id: 'node-a', position: [0, 0], text: 'A2' },
+        { type: 'node', id: 'node-b', position: [80, 0], text: 'B2' },
+      ],
+    };
+    const baseRevision = session.revision();
+    const result = session.update({
+      baseRevision,
+      owners: [
+        createRuntimeOwnerUpdate(
+          CoreOwnerDefinition,
+          next,
+          createRuntimeChangeSet(baseRevision, [
+            {
+              kind: 'update',
+              identity: createRuntimeIdentity(CORE_OWNER_KEY, ['root', 'node', 'node-a']),
+            },
+          ]),
+        ),
+      ],
+    });
+
+    expect(result.outcome).toBe('fallback');
+    expect(result.diagnostics).toEqual([
+      {
+        code: 'CORE_CHANGESET_MISMATCH',
+        phase: 'update',
+        severity: 'warning',
+        message: 'Core ChangeSet does not match the previous and next canonical Snapshots; using full fallback',
+        owner: CORE_OWNER_KEY,
+        program: CORE_PROGRAM_ID,
+      },
+    ]);
+    expect(session.diagnostics()).toEqual(result.diagnostics);
+  });
+
+  it('实体同时重排与更新时不把 update hints 误判为完整 change set', () => {
+    const program = createCoreProgram({ onWarn: () => {} });
+    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const initial: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'node-a', position: [0, 0], text: 'A' },
+        { type: 'node', id: 'node-b', position: [80, 0], text: 'B' },
+      ],
+    };
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, initial)],
+    });
+    const baseRevision = session.revision();
+    const result = session.update({
+      baseRevision,
+      owners: [
+        createRuntimeOwnerUpdate(
+          CoreOwnerDefinition,
+          {
+            ...initial,
+            children: [
+              { type: 'node', id: 'node-b', position: [80, 0], text: 'B2' },
+              { type: 'node', id: 'node-a', position: [0, 0], text: 'A2' },
+            ],
+          },
+          createRuntimeChangeSet(baseRevision, [
+            {
+              kind: 'update',
+              identity: createRuntimeIdentity(CORE_OWNER_KEY, ['root', 'node', 'node-a']),
+            },
+            {
+              kind: 'update',
+              identity: createRuntimeIdentity(CORE_OWNER_KEY, ['root', 'node', 'node-b']),
+            },
+          ]),
+        ),
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([expect.objectContaining({ code: 'CORE_CHANGESET_MISMATCH' })]);
+  });
+
+  it.each([
+    {
+      name: 'viewBox',
+      rootChange: { viewBox: { x: 0, y: 0, width: 160, height: 90 } },
+    },
+    {
+      name: 'animations',
+      rootChange: {
+        animations: [
+          {
+            property: 'viewBox',
+            keyframes: [
+              { at: 0, value: [0, 0, 160, 90] },
+              { at: 1, value: [10, 10, 120, 70] },
+            ],
+            duration: 400,
+          },
+        ],
+      },
+    },
+  ] satisfies Array<{ name: string; rootChange: Partial<IRScene> }>)(
+    '仅修改 Scene 根 $name 时拒绝空 change hint',
+    ({ rootChange }) => {
+      const program = createCoreProgram({ onWarn: () => {} });
+      const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
+      const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+      const initial = sceneWithText('A');
+      const session = createRuntimeSession({
+        owners,
+        programs,
+        initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, initial)],
+      });
+      const baseRevision = session.revision();
+
+      const result = session.update({
+        baseRevision,
+        owners: [
+          createRuntimeOwnerUpdate(
+            CoreOwnerDefinition,
+            { ...initial, ...rootChange },
+            createRuntimeChangeSet(baseRevision, []),
+          ),
+        ],
+      });
+
+      expect(result.diagnostics).toEqual([expect.objectContaining({ code: 'CORE_CHANGESET_MISMATCH' })]);
+    },
+  );
+
+  it('Scene 根与 child 同时变化时拒绝只覆盖 child 的 update hint', () => {
+    const program = createCoreProgram({ onWarn: () => {} });
+    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const initial = sceneWithText('A');
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, initial)],
+    });
+    const baseRevision = session.revision();
+
+    const result = session.update({
+      baseRevision,
+      owners: [
+        createRuntimeOwnerUpdate(
+          CoreOwnerDefinition,
+          {
+            ...sceneWithText('B'),
+            viewBox: { x: 0, y: 0, width: 160, height: 90 },
+          },
+          createRuntimeChangeSet(baseRevision, [
+            {
+              kind: 'update',
+              identity: createRuntimeIdentity(CORE_OWNER_KEY, ['root', 'node', 'node-a']),
+            },
+          ]),
+        ),
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([expect.objectContaining({ code: 'CORE_CHANGESET_MISMATCH' })]);
+  });
+
+  it('mismatch 后 full fallback 失败时不发布 diagnostic 或替换 committed artifact', () => {
+    const program = createCoreProgram({ onWarn: () => {} });
+    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, sceneWithText('A'))],
+    });
+    const before = session.artifact(program);
+    const baseRevision = session.revision();
+    const broken: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'node-a', position: [0, 0], text: 'B', shape: 'missing-shape' }],
+    };
+
+    expect(() =>
+      session.update({
+        baseRevision,
+        owners: [
+          createRuntimeOwnerUpdate(
+            CoreOwnerDefinition,
+            broken,
+            createRuntimeChangeSet(baseRevision, [
+              {
+                kind: 'update',
+                identity: createRuntimeIdentity(CORE_OWNER_KEY, ['root', 'node', 'missing']),
+              },
+            ]),
+          ),
+        ],
+      }),
+    ).toThrow();
+    expect(session.revision()).toBe(baseRevision);
+    expect(session.artifact(program).value).toBe(before.value);
+    expect(session.diagnostics()).toEqual([]);
   });
 });

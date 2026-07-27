@@ -157,6 +157,47 @@ describe('runtime Program execution', () => {
     expect(session.artifact(program)).toEqual({ revision: 1, value: 2 });
   });
 
+  it('owner 未提供领域 validator 时把 branded change hint 透传给 Program', () => {
+    const owner = defineRuntimeOwner<number, number, number, { delta: number }>({
+      key: 'program-validated',
+      value: {
+        capture: value => value,
+        read: value => value,
+        equals: (left, right) => left === right,
+      },
+    });
+    const owners = createRuntimeOwnerRegistry({ builtins: [owner] });
+    const hints: Array<unknown> = [];
+    const program = defineRuntimeProgram<number, number, number, number>({
+      id: { owner: 'program-validated', key: 'program' },
+      owners: [owner],
+      programs: [],
+      tracePhases: [],
+      artifact: { capture: value => value, readForProgram: value => value, read: value => value },
+      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
+      update: (_previous, view) => {
+        hints.push(view.changeSet(owner));
+        return { kind: 'incremental', artifact: view.snapshot(owner).value };
+      },
+    });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      initialSnapshots: [createRuntimeOwnerInput(owner, 1)],
+    });
+    const baseRevision = session.revision();
+    const changeSet = createRuntimeChangeSet(baseRevision, [{ delta: 1 }]);
+
+    const result = session.update({
+      baseRevision,
+      owners: [createRuntimeOwnerUpdate(owner, 2, changeSet)],
+    });
+
+    expect(result).toEqual({ revision: 1, outcome: 'incremental', diagnostics: [] });
+    expect(hints).toEqual([changeSet]);
+  });
+
   it('invalid change hint 跳过 update、执行 full，并提交 fallback diagnostic', () => {
     const owner = defineCounterOwner();
     const owners = createRuntimeOwnerRegistry({ builtins: [owner] });

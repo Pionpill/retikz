@@ -59,7 +59,7 @@ export type RuntimeCandidateLookup = Readonly<{
   snapshot: <TInput, TValue, TRead, TChange>(
     owner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
   ) => RuntimeSnapshot<TRead>;
-  /** 读取已声明 owner 的 validated change hint */
+  /** 读取已通过 Runtime envelope/revision 校验的 change hint；领域完整性由 Owner validator 或 Program 校验 */
   changeSet: <TInput, TValue, TRead, TChange>(
     owner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
   ) => RuntimeChangeSet<TChange> | undefined;

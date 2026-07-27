@@ -60,6 +60,12 @@ const { output, snapshot, patch } = session.artifact(coreProgram).value;
 
 初始运行执行完整编译。update 无法安全局部证明时，Program 会 full fallback，并在 `patch.operations` 中发布唯一的 `replaceScene`；调用方仍只消费同一个 Snapshot / Patch envelope，不需要切换协议。
 
+Core 会把可选 ChangeSet 与 previous / next 完整 Snapshot 交叉校验。前后 stable identity 顺序必须完全一致，Scene 根与 stable root child 的每一项 value 变化都必须由唯一 `update` hint 恰好覆盖；漏报、重排、anonymous / duplicate / Scope / Composite 或 add/remove/move hint 都会被判定为不匹配。
+
+当前实现对匹配与不匹配的 update 都执行 full fallback；精确匹配只表示不发布 mismatch diagnostic，不代表已经进入局部增量编译。
+
+不匹配时，`CORE_CHANGESET_MISMATCH` 只作为 Runtime diagnostic 在 fallback 成功 commit 后发布一次，不进入 `output.diagnostics` 或 `onWarn`。fallback compile 失败时不会发布该 diagnostic，也不会推进 revision 或替换 committed artifact。
+
 Core Program 的 private read 当前保存下一次 update 使用的 immutable source Snapshot。dependency Program、participant 与 `session.artifact()` 只能看到上表中的 public read，不会取得这份内部 source state。
 
 ## 不可变 Program options
@@ -109,6 +115,18 @@ Core Program 的 private read 当前保存下一次 update 使用的 immutable s
       path: 'packages/kernel/core/src/compile/incremental/program.ts',
       startLine: 23,
       endLine: 120,
+    },
+    {
+      label: 'Snapshot index 与 ChangeSet 交叉校验',
+      path: 'packages/kernel/core/src/compile/incremental/diff.ts',
+      startLine: 11,
+      endLine: 109,
+    },
+    {
+      label: 'Mismatch fallback diagnostic',
+      path: 'packages/kernel/core/src/compile/incremental/program.ts',
+      startLine: 118,
+      endLine: 137,
     },
     {
       label: 'canonical Scene topology',

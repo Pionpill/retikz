@@ -10,6 +10,7 @@ import type { CoreProgramArtifact, CoreProgramArtifactInput, CoreProgramRead } f
 import { CoreOwnerDefinition } from '../../contract';
 import { compileCoreSnapshot } from '../compile';
 import { formatCompileWarning } from '../warning';
+import { coreChangeSetMatchesSnapshots, createCoreSnapshotIndex } from './diff';
 import { copyCoreProgramOptions } from './options';
 import { CORE_PROGRAM_ID } from './public';
 import { createFullSceneRuntimeSnapshot, freezeProgramOutput } from './snapshot';
@@ -108,10 +109,29 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
       }
       return {
         kind: 'full',
-        artifact: Object.freeze({ publicRead, state: Object.freeze({ source }) }),
+        artifact: Object.freeze({
+          publicRead,
+          state: Object.freeze({ source, index: createCoreSnapshotIndex(source) }),
+        }),
       };
     },
-    update: () => ({ kind: 'fallback' }),
+    update: (previous, view) => {
+      const changeSet = view.changeSet(CoreOwnerDefinition);
+      if (changeSet === undefined) return { kind: 'fallback' };
+      const nextIndex = createCoreSnapshotIndex(view.snapshot(CoreOwnerDefinition).value);
+      return coreChangeSetMatchesSnapshots(previous.state.index, nextIndex, changeSet)
+        ? { kind: 'fallback' }
+        : {
+            kind: 'fallback',
+            diagnostics: [
+              {
+                code: 'CORE_CHANGESET_MISMATCH',
+                phase: 'update',
+                message: 'Core ChangeSet does not match the previous and next canonical Snapshots; using full fallback',
+              },
+            ],
+          };
+    },
     observeCommit: event => {
       event.artifact.value.output.diagnostics.forEach(warningSink);
     },

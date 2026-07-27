@@ -250,7 +250,7 @@ describe('runtime owner executor', () => {
     }
   });
 
-  it('validator 成功返回 valid，缺省 validator 明确 fallback', () => {
+  it('validator 成功返回 valid，缺省 validator 允许 Program 继续校验', () => {
     const validating = defineRuntimeOwner<number, number, number, string>({
       key: 'validating',
       value: { capture: value => value, read: value => value, equals: (left, right) => left === right },
@@ -279,7 +279,7 @@ describe('runtime owner executor', () => {
         executor.prepare(withoutValidator, 2).value,
         changeSet,
       ).value,
-    ).toBe('fallback');
+    ).toBe('valid');
   });
 
   it('retire 隔离 dispose throw 并拒绝重复 retire', () => {

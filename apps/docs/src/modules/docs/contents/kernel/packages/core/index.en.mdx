@@ -60,6 +60,12 @@ The fixed identities are `CORE_OWNER_KEY = '@retikz/core/document'` and `CORE_PR
 
 The initial run performs a full compile. When an update cannot be proven locally safe, the Program falls back to a full compile and publishes one `replaceScene` in `patch.operations`. Callers still consume the same Snapshot / Patch envelope instead of switching protocols.
 
+Core cross-checks an optional ChangeSet against the complete previous and next Snapshots. The stable identity order must be identical, and one unique `update` hint must cover each changed value owned by the Scene root or a stable root child. Missing changes, reordering, anonymous or duplicate entities, Scopes, Composites, and add/remove/move hints are mismatches.
+
+The current implementation takes the full fallback path for both matching and mismatching updates. An exact match only suppresses the mismatch diagnostic; it does not mean local incremental compilation has started.
+
+On a mismatch, `CORE_CHANGESET_MISMATCH` is published once as a Runtime diagnostic only after the fallback commits successfully. It never enters `output.diagnostics` or `onWarn`. A failed fallback compile publishes neither that diagnostic nor a new revision or artifact.
+
 The private Core Program read currently stores the immutable source Snapshot used by the next update. Dependency Programs, participants, and `session.artifact()` only receive the public read above; they cannot access that internal source state.
 
 ## Immutable Program Options
@@ -109,6 +115,18 @@ To replace a measurer, lowerer, provider callback, or external state captured by
       path: 'packages/kernel/core/src/compile/incremental/program.ts',
       startLine: 23,
       endLine: 120,
+    },
+    {
+      label: 'Snapshot index and ChangeSet cross-check',
+      path: 'packages/kernel/core/src/compile/incremental/diff.ts',
+      startLine: 11,
+      endLine: 109,
+    },
+    {
+      label: 'Mismatch fallback diagnostic',
+      path: 'packages/kernel/core/src/compile/incremental/program.ts',
+      startLine: 118,
+      endLine: 137,
     },
     {
       label: 'Canonical Scene topology',

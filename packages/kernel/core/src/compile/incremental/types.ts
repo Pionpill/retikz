@@ -1,11 +1,14 @@
 import type { AnyCompositeDefinition } from '../../contract';
 import type { IRScene } from '../../schemas';
+import type { CoreSnapshotIndexRead } from './diff';
 import type { CoreProgramPublicRead } from './public';
 
 /** 只供同一 Core Program 下一次 update 使用的状态 */
 export type CoreProgramStateRead = Readonly<{
   /** 当前 artifact 对应的 immutable Core IR Snapshot */
   source: Readonly<IRScene>;
+  /** 当前 Snapshot 的 conservative stable identity index */
+  index: CoreSnapshotIndexRead;
 }>;
 
 /** Core Program 自身可见的 private read */

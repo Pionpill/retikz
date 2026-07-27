@@ -41,12 +41,8 @@ describe('Core Runtime Program types', () => {
     const publicRead = session.artifact(program).value;
 
     expectTypeOf(publicRead).toEqualTypeOf<CoreProgramPublicRead<readonly []>>();
-    expectTypeOf<ProgramReadOf<typeof program>>().toEqualTypeOf<
-      CoreProgramPublicRead<readonly []> &
-        Readonly<{
-          state: Readonly<{ source: Readonly<IRScene> }>;
-        }>
-    >();
+    expectTypeOf<ProgramReadOf<typeof program>>().toMatchTypeOf<CoreProgramPublicRead<readonly []>>();
+    expectTypeOf<ProgramReadOf<typeof program>['state']['source']>().toEqualTypeOf<Readonly<IRScene>>();
     expectTypeOf(session.snapshot(CoreOwnerDefinition).value).toEqualTypeOf<Readonly<IRScene>>();
     expectTypeOf<CoreChange['kind']>().toEqualTypeOf<'add' | 'update' | 'remove' | 'move'>();
   });
