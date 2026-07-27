@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { CompileWarning, CompositeReplay, IRChild, IRScene, JsonValue, TextMeasurer } from '../../src';
+import type {
+  CompileWarning,
+  CompositeReplay,
+  IRChild,
+  IRScene,
+  JsonValue,
+  LayoutChildResult,
+  TextMeasurer,
+} from '../../src';
 
 import {
   ChildSchema,
@@ -48,13 +56,14 @@ const createBoundsProbe = () =>
       allocation: BoundsSchema,
       visual: BoundsSchema,
     }),
-    compile: (node, { layoutChild }) => {
+    compile: (node, context) => {
+      const { layoutChild } = context;
       const laid = layoutChild(
         node.child,
         node.maxWidth === undefined ? { kind: 'intrinsic' } : { kind: 'constrained', maxWidth: node.maxWidth },
       );
       return {
-        children: [{ kind: 'replay', replay: laid.replay }],
+        children: [context.replay(laid)],
         artifact: {
           allocation: laid.allocationBounds,
           visual: laid.visualBounds,
@@ -215,12 +224,13 @@ describe('layout-aware composite constraints and bounds', () => {
         namespace: z.literal('test'),
         type: z.literal('constraintParent'),
       }),
-      compile: (_, { layoutChild }) => {
+      compile: (_, context) => {
+        const { layoutChild } = context;
         const child = layoutChild(
           { namespace: 'test', type: 'nestedConstraint' },
           { kind: 'constrained', maxWidth: 25 },
         );
-        return { children: [{ kind: 'replay', replay: child.replay }] };
+        return { children: [context.replay(child)] };
       },
     });
 
@@ -381,9 +391,9 @@ describe('layout-aware composite replay ownership', () => {
         namespace: z.literal('test'),
         type: z.literal('duplicateReplayId'),
       }),
-      compile: (_, { layoutChild }) => {
-        const replay = layoutChild({ type: 'coordinate', id: 'same', position: [20, 0] }, { kind: 'intrinsic' }).replay;
-        return { children: [{ kind: 'replay', replay }] };
+      compile: (_, context) => {
+        const laid = context.layoutChild({ type: 'coordinate', id: 'same', position: [20, 0] }, { kind: 'intrinsic' });
+        return { children: [context.replay(laid)] };
       },
     });
     const warnings: Array<CompileWarning> = [];
@@ -421,13 +431,10 @@ describe('layout-aware composite replay ownership', () => {
         namespace: z.literal('test'),
         type: z.literal('rawBeforeReplayId'),
       }),
-      compile: (_, { layoutChild }) => {
-        const replay = layoutChild({ type: 'coordinate', id: 'same', position: [20, 0] }, { kind: 'intrinsic' }).replay;
+      compile: (_, context) => {
+        const laid = context.layoutChild({ type: 'coordinate', id: 'same', position: [20, 0] }, { kind: 'intrinsic' });
         return {
-          children: [
-            { type: 'coordinate', id: 'same', position: [10, 0] },
-            { kind: 'replay', replay },
-          ],
+          children: [{ type: 'coordinate', id: 'same', position: [10, 0] }, context.replay(laid)],
         };
       },
     });
@@ -465,11 +472,11 @@ describe('layout-aware composite replay ownership', () => {
         namespace: z.literal('test'),
         type: z.literal('mixedZIndex'),
       }),
-      compile: (_, { layoutChild }) => {
-        const replay = layoutChild({ type: 'node', position: [0, 0], zIndex: 10 }, { kind: 'intrinsic' }).replay;
+      compile: (_, context) => {
+        const laid = context.layoutChild({ type: 'node', position: [0, 0], zIndex: 10 }, { kind: 'intrinsic' });
         return {
           children: [
-            { kind: 'replay', replay },
+            context.replay(laid),
             {
               type: 'path',
               zIndex: 5,
@@ -498,15 +505,11 @@ describe('layout-aware composite replay ownership', () => {
         namespace: z.literal('test'),
         type: z.literal('transformedZIndex'),
       }),
-      compile: (_, { layoutChild }) => {
-        const replay = layoutChild({ type: 'node', position: [0, 0], zIndex: 10 }, { kind: 'intrinsic' }).replay;
+      compile: (_, context) => {
+        const laid = context.layoutChild({ type: 'node', position: [0, 0], zIndex: 10 }, { kind: 'intrinsic' });
         return {
           children: [
-            {
-              kind: 'replay',
-              replay,
-              transforms: [{ kind: 'translate', x: 10, y: 0 }],
-            },
+            context.replay(laid, [{ kind: 'translate', x: 10, y: 0 }]),
             {
               type: 'path',
               zIndex: 5,
@@ -528,7 +531,7 @@ describe('layout-aware composite replay ownership', () => {
   });
 
   it('rejects a replay token retained from a previous compile', () => {
-    let retained: CompositeReplay | undefined;
+    let retained: LayoutChildResult | undefined;
     let reuse = false;
     const definition = defineComposite({
       namespace: 'test',
@@ -537,11 +540,11 @@ describe('layout-aware composite replay ownership', () => {
         namespace: z.literal('test'),
         type: z.literal('retainedReplay'),
       }),
-      compile: (_, { layoutChild }) => {
+      compile: (_, context) => {
         if (reuse) {
-          return { children: [{ kind: 'replay', replay: retained! }] };
+          return { children: [context.replay(retained!)] };
         }
-        retained = layoutChild({ type: 'node', position: [0, 0], text: 'first' }, { kind: 'intrinsic' }).replay;
+        retained = context.layoutChild({ type: 'node', position: [0, 0], text: 'first' }, { kind: 'intrinsic' });
         return { children: [] };
       },
     });
@@ -565,12 +568,13 @@ describe('layout-aware composite replay ownership', () => {
         namespace: z.literal('test'),
         type: z.literal('forgedReplay'),
       }),
-      compile: () => ({
+      compile: (_node, context) => ({
         children: [
-          {
-            kind: 'replay',
+          context.replay({
+            allocationBounds: { x: 0, y: 0, width: 0, height: 0 },
+            visualBounds: { x: 0, y: 0, width: 0, height: 0 },
             replay: Object.freeze({}) as CompositeReplay,
-          },
+          }),
         ],
       }),
     });
@@ -590,8 +594,8 @@ describe('layout-aware composite replay ownership', () => {
         namespace: z.literal('test'),
         type: z.literal('moved'),
       }),
-      compile: (_, { layoutChild }) => {
-        const child = layoutChild(
+      compile: (_, context) => {
+        const child = context.layoutChild(
           {
             type: 'node',
             id: 'moved-node',
@@ -603,13 +607,7 @@ describe('layout-aware composite replay ownership', () => {
           { kind: 'intrinsic' },
         );
         return {
-          children: [
-            {
-              kind: 'replay',
-              replay: child.replay,
-              transforms: [{ kind: 'translate', x: 20, y: 30 }],
-            },
-          ],
+          children: [context.replay(child, [{ kind: 'translate', x: 20, y: 30 }])],
         };
       },
     });
@@ -621,10 +619,10 @@ describe('layout-aware composite replay ownership', () => {
         type: z.literal('outer'),
       }),
       artifactSchema: BoundsSchema,
-      compile: (_, { layoutChild }) => {
-        const child = layoutChild({ namespace: 'test', type: 'moved' }, { kind: 'intrinsic' });
+      compile: (_, context) => {
+        const child = context.layoutChild({ namespace: 'test', type: 'moved' }, { kind: 'intrinsic' });
         return {
-          children: [{ kind: 'replay', replay: child.replay }],
+          children: [context.replay(child)],
           artifact: child.allocationBounds,
         };
       },

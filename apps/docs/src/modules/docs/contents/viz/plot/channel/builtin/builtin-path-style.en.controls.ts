@@ -4,12 +4,30 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { pathStyleRows } from './builtin-path-style.data';
+
 /** English control panel for path style channels */
 export const builtinPathStyleControls = definePreviewControls({
   presentation: 'panel',
   title: 'Path style channels',
   defaultSize: 36,
   sections: [
+    {
+      label: 'Data',
+      defaultCollapsed: true,
+      controls: [
+        {
+          kind: 'table',
+          id: 'rows',
+          label: 'Path data',
+          rows: pathStyleRows,
+          columns: [
+            { key: 'step', label: 'Step' },
+            { key: 'value', label: 'Value' },
+          ],
+        },
+      ],
+    },
     {
       label: 'Stroke',
       controls: [
@@ -56,6 +74,7 @@ export const builtinPathStyleControls = definePreviewControls({
           id: 'lineJoin',
           label: 'lineJoin',
           defaultValue: PathLineJoin.Round,
+          visibleWhen: { controlId: 'roundedCorners', oneOf: [0] },
           options: [
             { value: PathLineJoin.Miter, label: 'miter' },
             { value: PathLineJoin.Round, label: 'round' },
@@ -66,7 +85,7 @@ export const builtinPathStyleControls = definePreviewControls({
           kind: 'range',
           id: 'roundedCorners',
           label: 'roundedCorners',
-          defaultValue: 8,
+          defaultValue: 0,
           min: 0,
           max: 20,
           step: 1,
@@ -86,7 +105,7 @@ export const previewControlContract = {
     dashMode: 'solid',
     lineCap: PathLineCap.Round,
     lineJoin: PathLineJoin.Round,
-    roundedCorners: 8,
+    roundedCorners: 0,
   },
   presets: [
     {

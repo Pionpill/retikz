@@ -3,7 +3,7 @@ title: 表格
 description: 从明细表开始，将数据组织成可阅读、可持久化并能接入 Kernel 渲染的表格。
 ---
 
-Table 是独立的 Tier 2 能力：它负责行列结构、Cell 语义、确定性布局和 lowering，而[数据](/viz/data)负责记录、字段模型与数据变换。表格不是 Plot 上再包一层的“图表类型”，也不需要为每种表型复制一套底层语法。
+Table 是独立的 Tier 2 能力：它负责行列结构、Cell 语义、内容驱动轨道、span、fit/overflow、border 与 typed manifest，而[数据](/viz/data)负责记录、字段模型与数据变换。表格不是 Plot 上再包一层的“图表类型”。
 
 使用 `DetailTable` 可以把一条记录映射为一行。
 
@@ -12,7 +12,7 @@ Table 是独立的 Tier 2 能力：它负责行列结构、Cell 语义、确定�
 | 你想做什么                          | 从哪里开始                       |
 | ----------------------------------- | -------------------------------- |
 | 展示名单、流水或逐行记录            | [明细表](/viz/table/detail)      |
-| 理解 Structure、Cell、布局和下沉    | [表格模型](/viz/table/model)     |
+| 理解 Structure、Cell 与约束布局     | [表格模型](/viz/table/model)     |
 | 查询完整 spec、React 或 Vanilla API | [API 参考](/viz/table/reference) |
 
 ## 章节内容
@@ -25,13 +25,13 @@ Table 是独立的 Tier 2 能力：它负责行列结构、Cell 语义、确定�
   <LinkedCard href="/viz/table/model">
     <span className="font-semibold">表格模型</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      理解不同表型共享的结构、Cell、呈现、布局与下沉管线。
+      理解共享结构、内容测量、轨道求解、replay 与 manifest 管线。
     </span>
   </LinkedCard>
   <LinkedCard href="/viz/table/reference">
     <span className="font-semibold">API 参考</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      查询 TableSpec、React、Vanilla、lowering 与 manifest 契约。
+      查询 TableSpec、React、Vanilla、compile 与 manifest 契约。
     </span>
   </LinkedCard>
 </div>

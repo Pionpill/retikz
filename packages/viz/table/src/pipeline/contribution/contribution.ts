@@ -103,9 +103,7 @@ const mergeExtraComposites = (envelopes: ReadonlyArray<TableRuntimeEnvelope>): A
  * 聚合 Table runtime envelopes 并生成 Table 与额外 composite definitions
  * @description 该函数引用稳定，供同一宿主内的多个 Table contribution 共享
  */
-export const makeTableRuntimeComposites = (
-  mergedDatasets: Record<string, unknown>,
-): Array<AnyCompositeDefinition> => {
+export const makeTableRuntimeComposites = (mergedDatasets: Record<string, unknown>): Array<AnyCompositeDefinition> => {
   const envelopes: Array<TableRuntimeEnvelope> = [];
   const datasetEntries: Array<[string, unknown]> = [];
   for (const [reference, value] of Object.entries(mergedDatasets)) {

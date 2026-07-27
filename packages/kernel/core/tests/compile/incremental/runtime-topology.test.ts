@@ -264,17 +264,11 @@ describe('Core canonical Runtime topology', () => {
         namespace: z.literal('test'),
         type: z.literal('topologyReplay'),
       }),
-      compile: (_, { layoutChild }) => {
-        layoutChild({ type: 'node', position: [-100, 0] }, { kind: 'intrinsic' });
-        const selected = layoutChild({ type: 'node', position: [0, 0] }, { kind: 'intrinsic' });
+      compile: (_, context) => {
+        context.layoutChild({ type: 'node', position: [-100, 0] }, { kind: 'intrinsic' });
+        const selected = context.layoutChild({ type: 'node', position: [0, 0] }, { kind: 'intrinsic' });
         return {
-          children: [
-            {
-              kind: 'replay',
-              replay: selected.replay,
-              transforms: [{ kind: 'translate', x: 20, y: 30 }],
-            },
-          ],
+          children: [context.replay(selected, [{ kind: 'translate', x: 20, y: 30 }])],
         };
       },
     });
@@ -376,9 +370,12 @@ describe('Core canonical Runtime topology', () => {
         namespace: z.literal('test'),
         type: z.literal('replayedDuplicate'),
       }),
-      compile: (_, { layoutChild }) => {
-        const selected = layoutChild({ type: 'node', id: 'duplicate', position: [20, 0] }, { kind: 'intrinsic' });
-        return { children: [{ kind: 'replay', replay: selected.replay }] };
+      compile: (_, context) => {
+        const selected = context.layoutChild(
+          { type: 'node', id: 'duplicate', position: [20, 0] },
+          { kind: 'intrinsic' },
+        );
+        return { children: [context.replay(selected)] };
       },
     });
     const compiled = compileCoreSnapshot(
@@ -422,9 +419,9 @@ describe('Core canonical Runtime topology', () => {
         namespace: z.literal('test'),
         type: z.literal('replayedPathDuplicate'),
       }),
-      compile: (_, { layoutChild }) => {
-        const selected = layoutChild(path(20), { kind: 'intrinsic' });
-        return { children: [{ kind: 'replay', replay: selected.replay }] };
+      compile: (_, context) => {
+        const selected = context.layoutChild(path(20), { kind: 'intrinsic' });
+        return { children: [context.replay(selected)] };
       },
     });
     const compiled = compileCoreSnapshot(
@@ -459,8 +456,8 @@ describe('Core compile warning collection', () => {
         namespace: z.literal('test'),
         type: z.literal('outputReplayDuplicateOrder'),
       }),
-      compile: (_, { layoutChild }) => {
-        const replay = layoutChild({ type: 'node', id: 'duplicate', position: [20, 0] }, { kind: 'intrinsic' }).replay;
+      compile: (_, context) => {
+        const replay = context.layoutChild({ type: 'node', id: 'duplicate', position: [20, 0] }, { kind: 'intrinsic' });
         return {
           children: [
             {
@@ -468,7 +465,7 @@ describe('Core compile warning collection', () => {
               children: [{ type: 'step', kind: 'move', to: [0, 0] }],
             },
             { type: 'node', id: 'duplicate', position: [10, 0] },
-            { kind: 'replay', replay },
+            context.replay(replay),
           ],
         };
       },
@@ -495,17 +492,17 @@ describe('Core compile warning collection', () => {
         namespace: z.literal('test'),
         type: z.literal('replayReplayDuplicateOrder'),
       }),
-      compile: (_, { layoutChild }) => {
-        const first = layoutChild({ type: 'node', id: 'duplicate', position: [20, 0] }, { kind: 'intrinsic' }).replay;
-        const second = layoutChild({ type: 'node', id: 'duplicate', position: [40, 0] }, { kind: 'intrinsic' }).replay;
+      compile: (_, context) => {
+        const first = context.layoutChild({ type: 'node', id: 'duplicate', position: [20, 0] }, { kind: 'intrinsic' });
+        const second = context.layoutChild({ type: 'node', id: 'duplicate', position: [40, 0] }, { kind: 'intrinsic' });
         return {
           children: [
             {
               type: 'path',
               children: [{ type: 'step', kind: 'move', to: [0, 0] }],
             },
-            { kind: 'replay', replay: first },
-            { kind: 'replay', replay: second },
+            context.replay(first),
+            context.replay(second),
           ],
         };
       },
@@ -532,8 +529,8 @@ describe('Core compile warning collection', () => {
         namespace: z.literal('test'),
         type: z.literal('replayedScopeWarningOrder'),
       }),
-      compile: (_, { layoutChild }) => {
-        const replay = layoutChild(
+      compile: (_, context) => {
+        const replay = context.layoutChild(
           {
             type: 'scope',
             localNamespace: true,
@@ -547,8 +544,8 @@ describe('Core compile warning collection', () => {
             ],
           },
           { kind: 'intrinsic' },
-        ).replay;
-        return { children: [{ kind: 'replay', replay }] };
+        );
+        return { children: [context.replay(replay)] };
       },
     });
     const warnings: Array<CompileWarning> = [];
@@ -573,14 +570,14 @@ describe('Core compile warning collection', () => {
         namespace: z.literal('test'),
         type: z.literal('replayedWarningOrder'),
       }),
-      compile: (_, { layoutChild }) => {
-        const replay = layoutChild(
+      compile: (_, context) => {
+        const replay = context.layoutChild(
           {
             type: 'path',
             children: [{ type: 'step', kind: 'move', to: [20, 0] }],
           },
           { kind: 'intrinsic' },
-        ).replay;
+        );
         return {
           children: [
             {
@@ -590,7 +587,7 @@ describe('Core compile warning collection', () => {
                 { type: 'step', kind: 'line', to: [10, 0] },
               ],
             },
-            { kind: 'replay', replay },
+            context.replay(replay),
           ],
         };
       },

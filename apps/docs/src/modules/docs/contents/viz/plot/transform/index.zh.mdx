@@ -1,64 +1,57 @@
 ---
 title: 变换
-description: 绘图语法里的 transform 是 plot 在共享数据流之上注册的绘图变换，用来生成区间、堆叠、分箱、密度、趋势线和关系行。
+description: 了解 Plot 变换的能力边界，并按输出行形态选择区间、堆叠、分箱、密度、趋势或关系变换。
 ---
 
-plot 的变换运行在[数据](/viz/data)整理出的 canonical 行之后、比例尺和图元之前。这里讲的是 plot 额外注册的绘图能力：它们服务于“怎么画”，例如区间柱、百分比堆叠、直方图、密度面积、趋势线和关系边。
+Plot 变换把规范化后的数据行改造成适合绘图的行。它们生成区间、堆叠边界、分箱、密度采样、趋势采样或关系字段，随后由比例尺和图元消费。
 
-`@retikz/data` 自带的数据变换（`sort`、`summarize`、`select`、`annotate`、`defineTransform`）放在[数据 / 数据变换](/viz/data/transform)说明。plot 可以消费它们，但不在本分组重复定义。
+排序、汇总、筛选、注解和自定义数据变换属于[数据变换](/viz/data/transform)。本分组说明 Plot 注册的绘图变换及其作用域和管线语义，也演示怎样在 Plot 中注入并消费 Data 自定义变换。
 
-<ComponentPreview files="transform-pipeline" size="sm" hideCode />
+<ComponentPreview files="transform-pipeline" size="md" hideCode />
+
+## 作用域与管线
+
+根级变换改写整张 Plot 共享的数据；图元局部变换只为当前图元建立数据视图。先确定作用域，再选择具体的 transform kind。
+
+| 入口                     | 作用域    | 何时使用                     |
+| ------------------------ | --------- | ---------------------------- |
+| `<Transform ... />`      | Plot 根级 | 在 JSX 中按顺序声明共享变换  |
+| `dataTransforms={[...]}` | Plot 根级 | 程序化生成共享变换数组       |
+| mark 的 `transform`      | 当前图元  | 只为一层图元派生、汇总或采样 |
+
+根级变换先运行，所有图元都读取它的结果；图元局部变换随后运行，只替换当前图元看到的行。图元快捷写法生成的自动变换也会进入同一条根级管线。
+
+变换读取的输入字段仍需符合 `model`，派生输出字段不需要预先写进 strict model。图元局部变换的最终数据视图仍会参与共享比例尺和图例推断。
+
+`<Transform>` API 与根级入口的完整装配顺序见[数据变换组件](/viz/data/transform/overview)；需要追踪变换前后的行与图元输出时，见[溯源](/viz/plot/lineage)。
+
+<SourceLinks
+  sources={[
+    {
+      label: '根级显式变换与图元快捷变换的装配顺序',
+      path: 'packages/viz/plot-react/src/components/build-plot-spec.ts',
+      startLine: 2417,
+      endLine: 2442,
+    },
+    {
+      label: '根级结果与图元局部数据视图',
+      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
+      startLine: 163,
+      endLine: 167,
+    },
+  ]}
+/>
 
 ## 职责一览
 
-| 分类       | plot 注册的成员              | 行数  | 适合场景                          |
-| ---------- | ---------------------------- | ----- | --------------------------------- |
-| 区间与抖动 | `derive-interval` / `jitter` | N → N | 甘特条、非零基线柱、散点抖开      |
-| 堆叠与占比 | `stack` / `normalize`        | N → N | 堆叠柱、堆叠面积、百分比堆叠      |
-| 分箱统计   | `bin`                        | N → B | 直方图、箱线图统计字段组合        |
-| 采样统计   | `density` / `smooth`         | N → S | 密度曲线、密度面积、趋势线        |
-| 行配对     | `relate`                     | N → P | 从 source / target 行生成关系字段 |
-
-这些变换的输出仍然是普通数据行。变换产生的字段（如 `y0` / `y1`、`binStart` / `binEnd`、`density`、`sourceId` / `targetId`）不需要提前写进 model；被变换读取的输入字段仍然要走数据模型和校验。
-
-## 声明方式
-
-用 `<Transform kind="...">` 声明 plot 级变换，`kind` 判别类型，其它 props 对应该变换字段。多个 `<Transform>` 按声明顺序折叠成管线：
-
-```tsx
-<Plot data={rows} model={model}>
-  <Transform kind="bin" field="value" count={12} />
-  <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
-</Plot>
-```
-
-同样的 transform 数组也可以写到任意 mark 上，让这一层图元拿到自己的局部数据视图：
-
-```tsx
-<Plot data={rows} model={model}>
-  <PointMark x="x" y="y" />
-  <PathMark
-    x="trendX"
-    y="trendY"
-    order="trendX"
-    transform={[{ kind: 'smooth', x: 'x', y: 'y', xAs: 'trendX', yAs: 'trendY' }]}
-  />
-</Plot>
-```
-
-程序化构造时，也可以用 `<Plot dataTransforms={[...]}>` 直传 transform 数组。它和 `<Transform>` 子组件共用同一管线；直传数组排在子组件之前。
-
-> 用 `dataTransforms` 而不是 `transforms`，是为了和 core 容器的几何 `transforms`（平移 / 旋转）区分。
-
-React DSL 里的高级快捷写法也会落成普通 transform。例如 `IntervalMark` 的 `angle` / `stack` / `percent` 会生成 `stack` 或 `normalize + stack`；自定义创作层语法可以通过 `markTransformShortcuts` 生成同样的 transform operation。快捷入口不引入新的数据语义，只是少写样板。
-
-## 技术原理
-
-lowering 时，Plot 先收集 transform 读取的源字段，同时登记 transform 派生出来的输出字段。这样 strict model 只校验真实输入字段，不要求你把派生字段提前声明。
-
-plot 级 transform 会影响整张图的 scale、guide 和所有 mark。mark-local transform 只影响当前图元看到的 rows，适合派生局部统计层或 relation 行。
-
-`bin`、`density`、`smooth` 和 `relate` 会复用 data 包提供的 reducer / selector 等统计子能力；完整数据 transform 和自定义 transform definition 见[数据变换](/viz/data/transform)。
+| 页面       | Plot 成员或入口             | 输出形态                         |
+| ---------- | --------------------------- | -------------------------------- |
+| 派生与抖动 | `derive-interval`、`jitter` | 每个输入行对应一个输出行         |
+| 堆叠与占比 | `stack`、`normalize`        | 保留明细行并补充边界或占比字段   |
+| 分箱       | `bin`                       | 每个分箱对应一个输出行           |
+| 密度与趋势 | `density`、`smooth`         | 每个分组生成一批连续采样行       |
+| 行配对     | `relate`                    | 每个分组生成零个或一个关系输出行 |
+| 自定义变换 | `transformDefinitions`      | 由运行时 Definition 决定         |
 
 ## 章节内容
 
@@ -73,11 +66,9 @@ plot 级 transform 会影响整张图的 scale、guide 和所有 mark。mark-loc
     <span className="font-semibold">堆叠与占比</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">保留明细行，同时补出堆叠区间或占比字段。</span>
   </LinkedCard>
-  <LinkedCard href="/viz/plot/transform/summary">
-    <span className="font-semibold">分箱与统计图层</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      把明细行变成直方图区间，或组合成箱线图统计层。
-    </span>
+  <LinkedCard href="/viz/plot/transform/bin">
+    <span className="font-semibold">分箱</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">把连续数值明细行归入区间并生成计数。</span>
   </LinkedCard>
   <LinkedCard href="/viz/plot/transform/statistics">
     <span className="font-semibold">密度与趋势</span>
@@ -86,5 +77,11 @@ plot 级 transform 会影响整张图的 scale、guide 和所有 mark。mark-loc
   <LinkedCard href="/viz/plot/transform/relate">
     <span className="font-semibold">行配对</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">选择 source / target 行并投影出关系字段。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/transform/custom-transform">
+    <span className="font-semibold">自定义变换</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      用 Data Definition 派生 Plot 区间、位置或关系编码需要的字段。
+    </span>
   </LinkedCard>
 </div>

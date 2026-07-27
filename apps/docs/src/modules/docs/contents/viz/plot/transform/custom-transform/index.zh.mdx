@@ -1,0 +1,111 @@
+---
+title: 自定义变换
+description: 用 Data 的 TransformDefinition 定义瀑布累计操作，并通过 Plot 的 transformDefinitions 注入后生成区间图元需要的字段。
+---
+
+原子的自定义数据变换能力属于 [Data 变换扩展](/viz/data/transform/extensions)；本页只基于 Plot 领域演示怎样注入并消费它，不为 Plot 另建一套变换契约。
+
+示例中的 `waterfall` operation 把每行增减值转换为累计区间 `from` / `to` 和方向字段 `direction`，再交给 `IntervalMark` 绘制瀑布图。
+
+## 适用边界
+
+- 新逻辑本质上是纯粹、确定的数据行变换，但输出字段专门服务 Plot 的位置、区间或关系编码时，可以在 Plot 场景中定义并注入。
+- 排序、筛选、汇总等通用语义优先使用 [Data 内置变换](/viz/data/transform/operations)，可跨宿主复用的扩展说明也以 Data 页面为准。
+- 只改变图元下沉或坐标投影时，分别使用[自定义图元](/viz/plot/mark/custom-mark)或[自定义坐标系](/viz/plot/coordinate/custom-coordinate)，不要塞进 transform。
+
+`waterfall` 是本文档的示例 kind，不是 Plot 内置变换。
+
+## 定义能力
+
+`defineTransform` 的 Definition 只处理数据行；它不知道 `IntervalMark`、颜色或 renderer：
+
+| 字段           | 本例职责                                     |
+| -------------- | -------------------------------------------- |
+| `schema`       | 校验 `kind`、增减字段名与可选初始值          |
+| `inputFields`  | 声明读取 `delta` 对应的源字段                |
+| `outputFields` | 声明派生 `from`、`to`、`direction`           |
+| `apply`        | 按行累加并返回展开原行的新对象，不修改输入行 |
+
+下面的面板只改变 operation 的 `initialValue`。数据、Definition 和 Plot 注入可以从源码切换器中查看：
+
+<ComponentPreview
+  files={['waterfall', 'waterfall.definition.ts', 'waterfall.data.ts']}
+  size="md"
+  caption="初始值只改变累计区间的起点；固定 y 域和 viewBox 让柱体移动不会带动相机缩放。绿色表示增加，红色表示减少。"
+/>
+
+## 注入宿主
+
+Definition 通过 `transformDefinitions` 留在运行时；`<Transform>` 只把 JSON-safe operation 装入 Plot IR：
+
+```tsx
+<Plot data={rows} transformDefinitions={[waterfallTransform]}>
+  <Transform kind="waterfall" field="delta" initialValue={60} />
+  <IntervalMark x="period" color="direction" bounds={{ y: { kind: 'extent', from: 'from', to: 'to' } }} />
+</Plot>
+```
+
+同一个 operation 也可以放进 `dataTransforms`；只希望当前图元读取派生结果时，可以放进该 mark 的 `transform`。三种入口最终共用同一个 Plot transform registry。
+
+## 执行机制
+
+1. Plot 先把 Data 内置、Plot 内置和宿主注入的 Definitions 合并成一个 registry。
+2. 字段收集阶段按 `kind` 找到 `waterfall`，用同一个 schema 校验 operation，并登记输入与派生字段。
+3. 根级数据管线按声明顺序执行 `apply`，得到 `from`、`to` 和 `direction`。
+4. `IntervalMark` 只消费这些普通字段；它不需要知道字段来自自定义 transform。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Data TransformDefinition 与 defineTransform 契约',
+      path: 'packages/viz/data/src/contract/transform.ts',
+      startLine: 29,
+      endLine: 61,
+    },
+    {
+      label: 'Plot 合并 Data、Plot 与自定义 transform Definitions',
+      path: 'packages/viz/plot/src/providers/transform/definitions.ts',
+      startLine: 144,
+      endLine: 167,
+    },
+    {
+      label: '构建 Plot transform registry 并用于字段收集',
+      path: 'packages/viz/plot/src/pipeline/expand/data.ts',
+      startLine: 82,
+      endLine: 96,
+    },
+    {
+      label: '根级与图元局部执行消费同一 registry',
+      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
+      startLine: 145,
+      endLine: 167,
+    },
+  ]}
+/>
+
+## 错误与限制
+
+- `kind` 不能覆盖 Data 或 Plot 内置项，也不能与另一自定义 Definition 重复。
+- 未注入 `waterfallTransform`、operation 不满足 schema，或包含非 JSON 值时，都会在绘图前失败。
+- 本例要求增减字段能转为有限数；遇到无效值会报告对应行与字段，而不是静默跳过。
+- 保持行数的变换应展开原行以保留来源标记；改变行数时要按 [Data 变换扩展](/viz/data/transform/extensions#来源追溯)使用 `TransformContext.groupProvenance`。
+- Definition 不应写颜色、图元或 renderer 逻辑；`direction` 只是普通分类字段，颜色仍由 Plot 通道决定。
+
+## API 参考
+
+原子 Definition 的完整字段契约见 [Data 变换扩展](/viz/data/transform/extensions#api-参考)。本页直接使用的公开入口：
+
+| 入口                                      | 用途                                       |
+| ----------------------------------------- | ------------------------------------------ |
+| `defineTransform` / `TransformDefinition` | 从 `@retikz/data` 定义运行时变换能力       |
+| `<Transform>`                             | 从 `@retikz/plot-react` 声明根级 operation |
+| `PlotProps.transformDefinitions`          | React 宿主注入 Definitions                 |
+| `RenderPlotOptions.transformDefinitions`  | Vanilla 宿主从 `@retikz/plot-vanilla` 注入 |
+| `LowerPlotsOptions.transformDefinitions`  | 直接调用 Plot lowering 时注入              |
+
+## 相关
+
+- [Data 变换扩展](/viz/data/transform/extensions) —— 原子 Definition、统计子算子与来源追溯的权威说明
+- [变换](/viz/plot/transform) —— 根级与图元局部作用域，以及 Plot 内置变换索引
+- [区间图元](/viz/plot/mark/interval) —— 消费 `from` / `to` 区间字段
+- [溯源](/viz/plot/lineage) —— 检查自定义变换前后的数据行与图元输出

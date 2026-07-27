@@ -24,6 +24,8 @@ export type DuplicateRegisterInfo = {
   firstIrPath?: string;
   /** 后注册（本次触发覆盖）的那一条的 IR locator */
   secondIrPath?: string;
+  /** 本次覆盖的 entry 是否来自创建 fork 时的同一 frame baseline */
+  overwroteForkBaseline: boolean;
 };
 
 /** namespace 单次 register 的内部观测信息 */
@@ -56,6 +58,8 @@ export type NamespaceFrameChange = {
   irPath?: string;
   /** probe 首次注册该 id 时是否已覆盖创建 fork 时的 baseline */
   overwroteBaseline: boolean;
+  /** 创建 fork 时顶层 frame 的原始 entry，用于识别 replay 是否仍提交到同一 frame */
+  baselineEntry?: NamespaceEntry;
 };
 
 /**
@@ -67,6 +71,8 @@ export class NamespaceStack {
   private readonly frames: Array<Map<string, NamespaceEntry>>;
   /** 与每个 frame 对应的"已注册 id → 首次 register 时的 irPath"映射，用于 duplicate warn 复述位置 */
   private readonly firstIrPaths: Array<Map<string, string | undefined>>;
+  /** fork 创建时的 frame 快照，只用于区分 baseline collision 与 probe 内部 duplicate */
+  private forkBaselineFrames?: Array<Map<string, NamespaceEntry>>;
   private readonly onDuplicate?: (info: DuplicateRegisterInfo) => void;
   private readonly onRegister?: (info: NamespaceRegisterInfo) => void;
   /** 当前阶段；registering 允许写入，resolving 只允许 lookup */
@@ -87,6 +93,7 @@ export class NamespaceStack {
     const fork = new NamespaceStack(options);
     fork.frames.splice(0, fork.frames.length, ...this.frames.map(frame => new Map(frame)));
     fork.firstIrPaths.splice(0, fork.firstIrPaths.length, ...this.firstIrPaths.map(paths => new Map(paths)));
+    fork.forkBaselineFrames = this.frames.map(frame => new Map(frame));
     fork.currentPhase = this.currentPhase;
     return fork;
   }
@@ -108,6 +115,7 @@ export class NamespaceStack {
         entry,
         ...(paths.get(id) !== undefined ? { irPath: paths.get(id) } : {}),
         overwroteBaseline: baseline.has(id),
+        ...(baseline.get(id) === undefined ? {} : { baselineEntry: baseline.get(id) }),
       });
     }
     return changes;
@@ -115,25 +123,22 @@ export class NamespaceStack {
 
   /**
    * 提交 fork 顶层 frame 的单项变更
-   * @description baseline 冲突已由 fork 捕获时静默覆盖；否则按当前最终顺序执行普通注册
+   * @description 目标 frame 仍含原 baseline 时静默覆盖；进入其它 frame 时按当地顺序执行普通注册
+   * @returns 是否提交到了创建 fork 时的原 baseline
    */
-  commitForkChange(change: NamespaceFrameChange): void {
+  commitForkChange(change: NamespaceFrameChange): boolean {
     if (this.currentPhase !== 'registering') {
       throw new Error(
         `NamespaceStack.commitForkChange('${change.id}'): only allowed during registering; current phase is '${this.currentPhase}'`,
       );
     }
-    if (!change.overwroteBaseline) {
-      this.register(change.id, change.entry.layout, change.irPath, change.entry.state);
-      return;
-    }
     const topFrame = this.frames[this.frames.length - 1];
-    if (!topFrame.has(change.id)) {
-      throw new Error(
-        `NamespaceStack.commitForkChange('${change.id}'): baseline entry is missing from the current top frame`,
-      );
+    if (change.overwroteBaseline && topFrame.get(change.id) === change.baselineEntry) {
+      topFrame.set(change.id, change.entry);
+      return true;
     }
-    topFrame.set(change.id, change.entry);
+    this.register(change.id, change.entry.layout, change.irPath, change.entry.state);
+    return false;
   }
 
   /** 当前栈深（≥ 1；根 frame 永远存在） */
@@ -150,6 +155,7 @@ export class NamespaceStack {
   pushFrame(): void {
     this.frames.push(new Map());
     this.firstIrPaths.push(new Map());
+    this.forkBaselineFrames?.push(new Map());
   }
 
   /** 弹出栈顶 frame；根 frame 不可弹出 */
@@ -159,6 +165,7 @@ export class NamespaceStack {
     }
     this.frames.pop();
     this.firstIrPaths.pop();
+    this.forkBaselineFrames?.pop();
   }
 
   /** 切换到 resolving 阶段；切换后 register / replaceLayout 一律抛 internal error */
@@ -182,11 +189,13 @@ export class NamespaceStack {
     const topFirstPaths = this.firstIrPaths[this.firstIrPaths.length - 1];
     const wasOverwritten = topFrame.has(id);
     if (wasOverwritten) {
+      const baselineFrame = this.forkBaselineFrames?.[this.frames.length - 1];
       this.onDuplicate?.({
         id,
         frameDepth: this.frames.length - 1,
         firstIrPath: topFirstPaths.get(id),
         secondIrPath: irPath,
+        overwroteForkBaseline: baselineFrame?.get(id) === topFrame.get(id),
       });
     } else {
       topFirstPaths.set(id, irPath);

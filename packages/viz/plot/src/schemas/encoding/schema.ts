@@ -36,13 +36,10 @@ export const PositionEncodingSchema = z
     y: ChannelSchema.optional().describe(
       'Secondary position role channel; optional at the schema level. Required by cartesian2D / polar2D, omitted by 1D coordinates, validated during lowering. The coordinate maps it to its second role: cartesian2D vertical, polar2D radius. Its scale comes from the coordinate system',
     ),
-    z: ChannelSchema.optional().describe(
-      'Third position role channel; optional at the schema level, required with x / y under ternary2D and validated during lowering. Auto-normalized with x+y+z at the coordinate',
-    ),
   })
   .catchall(ChannelSchema)
   .describe(
-    'Positional channel bindings. Built-ins use x for 1D, x / y for 2D, and x / y / z for ternary2D; custom CoordinateDefinition roles may add arbitrary non-empty role keys. All are optional at the schema level, and the coordinate system decides which roles are required during lowering',
+    'Positional channel bindings. Built-ins use x for 1D and x / y for 2D; custom CoordinateDefinition roles may add arbitrary non-empty role keys. All are optional at the schema level, and the coordinate system decides which roles are required during lowering',
   );
 
 export const MarkChannelEncodingSchema = z
@@ -66,7 +63,7 @@ export const EncodingSchema = z
   })
   .catchall(ChannelSchema)
   .describe(
-    'Channel bindings for a mark: built-in keys cover x / y / z and shared mark channels; unknown non-empty keys are treated as custom coordinate position roles',
+    'Channel bindings for a mark: built-in keys cover x / y and shared mark channels; unknown non-empty keys are treated as custom coordinate position roles',
   );
 
 export const SizeChannelSchema = z

@@ -1,6 +1,17 @@
 import type { IRChild } from '@retikz/core';
+import type { BoundsInsets } from '@retikz/math';
 
-import type { IRTableCellPayload, TableCellLocationValue, TableCellRoleValue, TableRowKindValue } from '../../schemas';
+import type {
+  IRTableCellBorders,
+  IRTableCellPayload,
+  TableCellFitValue,
+  TableCellLocationValue,
+  TableCellOverflowValue,
+  TableCellRoleValue,
+  TableHorizontalAlignmentValue,
+  TableRowKindValue,
+  TableVerticalAlignmentValue,
+} from '../../schemas';
 import type { DeepReadonly } from '../../shared';
 import type { TableCellSource } from '../structure';
 
@@ -26,6 +37,32 @@ export type SemanticTableColumn = Readonly<{
   field?: string;
 }>;
 
+/** 已物化默认值的 Cell 矩形跨度 */
+export type ResolvedTableCellSpan = Readonly<{
+  /** 连续覆盖的 row 数量 */
+  rows: number;
+  /** 连续覆盖的 column 数量 */
+  columns: number;
+}>;
+
+/** 已物化默认值的 Cell 布局策略 */
+export type ResolvedTableCellLayout = Readonly<{
+  /** Core 同源的四边 padding */
+  padding: Readonly<BoundsInsets>;
+  /** content box 内横向对齐 */
+  horizontalAlign: TableHorizontalAlignmentValue;
+  /** content box 内纵向对齐 */
+  verticalAlign: TableVerticalAlignmentValue;
+  /** 是否请求宽度约束重排 */
+  wrap: boolean;
+  /** 最终内容缩放策略 */
+  fit: TableCellFitValue;
+  /** 最终内容溢出策略 */
+  overflow: TableCellOverflowValue;
+  /** 可选 Cell 四侧 border 候选 */
+  borders?: DeepReadonly<IRTableCellBorders>;
+}>;
+
 /** canonical Table Cell */
 export type SemanticTableCell = Readonly<{
   /** 稳定 Cell id */
@@ -44,6 +81,10 @@ export type SemanticTableCell = Readonly<{
   roles: ReadonlyArray<TableCellRoleValue>;
   /** Cell value 或直接内容 */
   payload: DeepReadonly<IRTableCellPayload>;
+  /** 已解析的矩形跨度 */
+  span: ResolvedTableCellSpan;
+  /** 已解析的 Cell 布局策略 */
+  layout: ResolvedTableCellLayout;
   /** 可用的最小来源信息 */
   source?: TableCellSource;
 }>;

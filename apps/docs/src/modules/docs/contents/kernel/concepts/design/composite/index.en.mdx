@@ -57,9 +57,47 @@ Both probes in the figure return allocation bounds, visual bounds, and a replay 
 1. call `layoutChild(child, { kind:'intrinsic' })` to measure natural content;
 2. solve columns, rows, or another parent constraint from allocation bounds;
 3. call `layoutChild(child, { kind:'constrained', maxWidth })` to reflow text at its final width;
-4. place the chosen result with `{ kind:'replay', replay, transforms? }`.
+4. place the chosen result with `context.replay(result, transforms?)`; when structural wrapping is needed, compose it recursively with `context.scope(props, children)`.
 
-Each `layoutChild` call returns allocation bounds, conservative visual bounds, and an opaque replay token. Allocation bounds describe the space reserved by the parent; visual bounds describe settled drawing, including transforms, clipping, stroke, markers, and shadow. A replay token is valid once in the compile that created it. Final emission commits the saved primitives, resources, references, warnings, and artifacts without a third expansion or layout.
+Each `layoutChild` call returns allocation bounds, conservative visual bounds, and an opaque replay token. Allocation bounds describe the space reserved by the parent; visual bounds describe settled drawing, including transforms, clipping, stroke, markers, and shadow. `context.replay()` turns the selected result into an output child. A replay is valid once in the compile and composite callback that created it. Final emission commits the saved primitives, resources, references, warnings, and artifacts without a third expansion or layout.
+
+### Compile-local wrapper trees
+
+After layout is solved, a parent composite may still need local identity, clipping, metadata, or numeric transforms around a replay. `context.scope()` builds that recursive runtime Scope tree. Its children can mix ordinary `IRChild` values, `context.replay()` results, and nested `context.scope()` results:
+
+```ts
+compile: (node, context) => {
+  const constrained = context.layoutChild(node.child, {
+    kind: 'constrained',
+    maxWidth: node.width,
+  });
+
+  const placed = context.scope(
+    {
+      transforms: [
+        { kind: 'scale', x: 0.8 },
+        { kind: 'translate', x: 12, y: 8 },
+      ],
+    },
+    [context.replay(constrained)],
+  );
+
+  return {
+    children: [
+      context.scope(
+        {
+          id: 'cell',
+          clip: { kind: 'rect', x: 0, y: 0, width: 80, height: 32 },
+          meta: { role: 'cell' },
+        },
+        [placed],
+      ),
+    ],
+  };
+};
+```
+
+Builders return opaque handles that cannot be inspected, forged, or serialized; they exist only in the current `compileToScene()` session. Cross-compile or cross-callback use, duplicate replay, and forged handles all fail loudly. Core still emits the existing Tier 1 Scene, resources, and occurrence locators, so wrappers add no IR, Scene, or renderer contract.
 
 This is not a Table-specific interface. Any Tier 2 composite that needs “measure child content → solve parent layout → constrain child content → place the final result” can reuse it.
 
@@ -98,16 +136,16 @@ If you are implementing a domain adapter, injecting `composites` / `embeddables`
       endLine: 90,
     },
     {
-      label: 'Validate layout constraints and commit replay',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 717,
-      endLine: 884,
+      label: 'Build compile-local replay and Scope children',
+      path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
+      startLine: 1,
+      endLine: 196,
     },
     {
-      label: 'Measure and emit a layout-aware composite',
+      label: 'Measure and recursively emit a layout-aware composite',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 885,
-      endLine: 1025,
+      startLine: 784,
+      endLine: 1116,
     },
     {
       label: 'Inject composites and providers into compile context',

@@ -88,14 +88,13 @@ const CORE_TEXT_DISPLAY_NAME = '@retikz/Text';
 
 /**
  * <Plot coordinate> 入口形态：字符串简写或对象配置；缺省 cartesian2D
- * @description 简写 / 判别串与 IR 一致（含维度命名）：polar2D / cartesian1D / polar1D / ternary2D；cartesian2D 为缺省态不必写。
- *   对象形态承载各坐标系几何：polar2D 角向区间 + 环图内半径、cartesian1D 轴向、polar1D 半径占比 + 角向区间、ternary2D 无额外配置
+ * @description 简写 / 判别串与 IR 一致（含维度命名）：polar2D / cartesian1D / polar1D；cartesian2D 为缺省态不必写。
+ *   对象形态承载各坐标系几何：polar2D 角向区间 + 环图内半径、cartesian1D 轴向、polar1D 半径占比 + 角向区间
  */
 export type CoordinateInput =
   | 'polar2D'
   | 'cartesian1D'
   | 'polar1D'
-  | 'ternary2D'
   | {
       /** 2D 极坐标 */
       type: 'polar2D';
@@ -121,10 +120,6 @@ export type CoordinateInput =
       startAngle?: number;
       /** 角向终止角（度）；缺省 360 */
       endAngle?: number;
-    }
-  | {
-      /** 2D 三元（重心坐标） */
-      type: 'ternary2D';
     }
   | ({ type: string } & Record<string, unknown>);
 
@@ -680,8 +675,7 @@ const canonicalGeometryLabel = (
 ): IRPlotMarkGeometryLabelList => MarkGeometryLabelListSchema.parse(label);
 
 const canonicalReferenceLabel = (props: ReferenceMarkProps): IRPlotMarkNodeLabelList | IRPlotMarkGeometryLabelList => {
-  const usesNodeHost =
-    props.kind === 'region' || props.xTo !== undefined || props.yTo !== undefined || props.zTo !== undefined;
+  const usesNodeHost = props.kind === 'region' || props.xTo !== undefined || props.yTo !== undefined;
   return usesNodeHost ? MarkNodeLabelListSchema.parse(props.label) : MarkGeometryLabelListSchema.parse(props.label);
 };
 
@@ -709,10 +703,8 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
     kind,
     x,
     y,
-    z,
     xTo,
     yTo,
-    zTo,
     extentField,
     extentToField,
     color,
@@ -729,16 +721,10 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
   const region = kind === 'region';
   const hasX = x !== undefined;
   const hasY = y !== undefined;
-  const hasZ = z !== undefined;
   if (region) {
     if (!hasX || !hasY || xTo === undefined || yTo === undefined) {
       throw new Error(
         'buildPlotSpec: <ReferenceMark kind="region"> requires x, xTo, y, and yTo to define a bounded reference area',
-      );
-    }
-    if (hasZ !== (zTo !== undefined)) {
-      throw new Error(
-        'buildPlotSpec: <ReferenceMark kind="region"> z and zTo must be set together for z-role reference areas',
       );
     }
     if (extentField !== undefined || extentToField !== undefined) {
@@ -761,9 +747,6 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
       'buildPlotSpec: <ReferenceMark> binds y (horizontal) but sets xTo; the band upper bound must match the bound dimension (use yTo)',
     );
   }
-  if (!region && (hasZ || zTo !== undefined)) {
-    throw new Error('buildPlotSpec: <ReferenceMark> z / zTo are only valid with kind="region"');
-  }
   if ((extentField === undefined) !== (extentToField === undefined)) {
     throw new Error(
       'buildPlotSpec: <ReferenceMark> extentField / extentToField must be set together (a partial-length span needs both start and end)',
@@ -771,11 +754,7 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
   }
   // 常量 rule（数字常量轴）→ color 作 value；per-datum（字段串）→ color 作 field（AUTO_COLOR）
   const constantRule = region
-    ? typeof x === 'number' &&
-      typeof y === 'number' &&
-      typeof xTo === 'number' &&
-      typeof yTo === 'number' &&
-      (!hasZ || (typeof z === 'number' && typeof zTo === 'number'))
+    ? typeof x === 'number' && typeof y === 'number' && typeof xTo === 'number' && typeof yTo === 'number'
     : typeof (hasX ? x : y) === 'number';
   let colorEnc: { color: { value: string } | { field: string; scale: string } } | undefined;
   if (color !== undefined) {
@@ -788,13 +767,9 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
   if (hasY) {
     positional.y = ruleChannel(y);
   }
-  if (hasZ) {
-    positional.z = ruleChannel(z);
-  }
   const upper = {
     ...(xTo !== undefined ? { xTo } : {}),
     ...(yTo !== undefined ? { yTo } : {}),
-    ...(zTo !== undefined ? { zTo } : {}),
   };
   const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
   const fillOpacityStyle = numberStyleOf<IRPlotPointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
@@ -1245,7 +1220,7 @@ const collectInto = (
       const paddingStyle = boxSpacingStyleOf(padding, 'padding', styleContext);
       const minimumSizeStyle = nodeBoxSizeStyleOf(minimumSize, 'minimumSize', styleContext);
       const zIndexStyle = numberStyleOf<IRPlotPointZIndexStyle>(zIndex, 'zIndex', styleContext);
-      // text 设 → point 下沉为无边框文本 Node（内容走 encoding.text）；否则散点 glyph。位置通道按坐标系角色（x / x/y / x/y/z）
+      // text 设 → point 下沉为无边框文本 Node（内容走 encoding.text）；否则散点 glyph。内置坐标使用 x 或 x/y，自定义坐标可继续消费 z role
       const textEnc: { text: IRPlotTextChannel } | undefined =
         text !== undefined
           ? { text: { field: text, ...(displayFormat !== undefined ? { displayFormat } : {}) } }
@@ -1623,6 +1598,11 @@ const collectInto = (
         id,
       } = child.props as AxisProps;
       if (scale !== undefined) {
+        if (dimension !== 'x' && dimension !== 'y') {
+          throw new Error(
+            `buildPlotSpec: <Axis scale> only supports built-in x / y dimensions; custom coordinate role "${dimension}" must provide its scale through CoordinateDefinition`,
+          );
+        }
         into.scales.push({ dimension, type: scale });
       }
       const effectiveFacetId = facetId ?? context.facetId;
@@ -1690,14 +1670,16 @@ const buildColorScale = (
   return { type: PlotScale.Ordinal, name: AUTO_COLOR, ...(colors !== undefined ? { range: colors } : {}) };
 };
 
-type ContinuousScaleProps = Extract<ScaleProps, { type: Exclude<PositionScaleType, 'point'> }>;
+type ContinuousScaleProps = Extract<ScaleProps, { type: Exclude<PositionScaleType, 'band' | 'point'> }>;
+type BandScaleProps = Extract<ScaleProps, { type: 'band' }>;
+type PointScaleProps = Extract<ScaleProps, { type: 'point' }>;
 type PositionScaleOptions = Pick<
   ContinuousScaleProps,
   'base' | 'constant' | 'domain' | 'domainPadding' | 'singleValueSpan'
 >;
 
 const isContinuousScaleProps = (options: ScaleProps | undefined): options is ContinuousScaleProps =>
-  options !== undefined && options.type !== 'point';
+  options !== undefined && options.type !== 'band' && options.type !== 'point';
 
 const continuousPositionScaleOptions = (options: PositionScaleOptions | undefined): PositionScaleOptions => ({
   ...(options?.base !== undefined ? { base: options.base } : {}),
@@ -1707,15 +1689,36 @@ const continuousPositionScaleOptions = (options: PositionScaleOptions | undefine
   ...(options?.singleValueSpan !== undefined ? { singleValueSpan: options.singleValueSpan } : {}),
 });
 
+const pointPositionScaleOptions = (
+  options: PointScaleProps | undefined,
+): Pick<PointScaleProps, 'align' | 'domain' | 'padding'> => ({
+  ...(options?.domain !== undefined ? { domain: options.domain } : {}),
+  ...(options?.padding !== undefined ? { padding: options.padding } : {}),
+  ...(options?.align !== undefined ? { align: options.align } : {}),
+});
+
+const bandPositionScaleOptions = (
+  options: BandScaleProps | undefined,
+): Pick<BandScaleProps, 'align' | 'domain' | 'paddingInner' | 'paddingOuter'> => ({
+  ...(options?.domain !== undefined ? { domain: options.domain } : {}),
+  ...(options?.paddingInner !== undefined ? { paddingInner: options.paddingInner } : {}),
+  ...(options?.paddingOuter !== undefined ? { paddingOuter: options.paddingOuter } : {}),
+  ...(options?.align !== undefined ? { align: options.align } : {}),
+});
+
 const buildPositionScale = (name: string, type: PositionScaleType, options?: ScaleProps): IRPlotScale => {
   const scaleOptions = continuousPositionScaleOptions(isContinuousScaleProps(options) ? options : undefined);
+  const bandOptions = bandPositionScaleOptions(options?.type === 'band' ? options : undefined);
+  const pointOptions = pointPositionScaleOptions(options?.type === 'point' ? options : undefined);
   switch (type) {
     case 'linear':
       return { type: PlotScale.Linear, name, ...scaleOptions };
     case 'time':
       return { type: PlotScale.Time, name, ...scaleOptions };
+    case 'band':
+      return { type: PlotScale.Band, name, ...bandOptions };
     case 'point':
-      return { type: PlotScale.Point, name };
+      return { type: PlotScale.Point, name, ...pointOptions };
     case 'log':
       return { type: PlotScale.Log, name, ...scaleOptions };
     case 'sqrt':
@@ -1734,23 +1737,23 @@ const buildPositionScale = (name: string, type: PositionScaleType, options?: Sca
 
 /** cartesian x scale 类型：含 <IntervalMark> 或 <IntervalMark> → band；否则按 <Scale dimension="x"> 或缺省 linear */
 const buildCartesianXScale = (forceBand: boolean, explicit: ScaleProps | undefined): IRPlotScale => {
-  if (forceBand && explicit !== undefined) {
+  if (forceBand && explicit !== undefined && explicit.type !== 'band') {
     throw new Error(
-      'buildPlotSpec: <IntervalMark> (bar / heatmap) requires a band x scale; omit <Scale dimension="x" /> for automatic band inference',
+      'buildPlotSpec: <IntervalMark> (bar / heatmap) requires a band x scale; omit <Scale dimension="x" /> or set type="band"',
     );
   }
-  if (forceBand) return { type: PlotScale.Band, name: AUTO_X };
+  if (forceBand) return buildPositionScale(AUTO_X, 'band', explicit);
   return buildPositionScale(AUTO_X, explicit?.type ?? 'linear', explicit);
 };
 
 /** cartesian y（值轴）scale 类型：含 <IntervalMark>（heatmap 双 band）→ band；否则按 <Scale dimension="y"> 或缺省 linear；log / sqrt 由 lowering L1 守住仅 point/line */
 const buildCartesianYScale = (hasRect: boolean, explicit: ScaleProps | undefined): IRPlotScale => {
-  if (hasRect && explicit !== undefined) {
+  if (hasRect && explicit !== undefined && explicit.type !== 'band') {
     throw new Error(
-      'buildPlotSpec: <IntervalMark> (heatmap) requires a band y scale; omit <Scale dimension="y" /> for automatic band inference',
+      'buildPlotSpec: <IntervalMark> (heatmap) requires a band y scale; omit <Scale dimension="y" /> or set type="band"',
     );
   }
-  if (hasRect) return { type: PlotScale.Band, name: AUTO_Y };
+  if (hasRect) return buildPositionScale(AUTO_Y, 'band', explicit);
   return buildPositionScale(AUTO_Y, explicit?.type ?? 'linear', explicit);
 };
 
@@ -1759,9 +1762,9 @@ const buildCartesianYScale = (hasRect: boolean, explicit: ScaleProps | undefined
  *   闭合 line（雷达）→ point（类别落等距点）；否则 linear（极坐标折线）
  */
 const buildAngleScale = (collected: Collected, explicit: ScaleProps | undefined): IRPlotScale => {
-  if (collected.hasBar && explicit !== undefined) {
+  if (collected.hasBar && explicit !== undefined && explicit.type !== 'band') {
     throw new Error(
-      'buildPlotSpec: <IntervalMark> in polar coordinates requires a band angle scale; omit <Scale dimension="angle" /> for automatic band inference',
+      'buildPlotSpec: <IntervalMark> in polar coordinates requires a band angle scale; omit <Scale dimension="x" /> or set type="band"',
     );
   }
   if (collected.hasSector && explicit !== undefined && explicit.type !== 'linear') {
@@ -1792,11 +1795,10 @@ const scaleRoleOf = (
   dimension: ScaleDimension,
   coordKind: ReturnType<typeof coordinateTypeOf>,
 ): ScaleRole | undefined => {
-  if (coordKind === 'cartesian2D') return dimension === 'x' || dimension === 'y' ? dimension : undefined;
+  if (coordKind === 'cartesian2D') return dimension;
   if (coordKind === 'polar2D') {
     if (dimension === 'x') return 'angle';
-    if (dimension === 'y') return 'radius';
-    return undefined;
+    return 'radius';
   }
   if (coordKind === 'cartesian1D') return dimension === 'x' ? 'x' : undefined;
   if (coordKind === 'polar1D') return dimension === 'x' ? 'angle' : undefined;
@@ -1842,15 +1844,15 @@ const POLAR_DEFAULT_END_ANGLE = 360;
 const POLAR_DEFAULT_INNER_RADIUS = 0;
 
 /** coordinate 入口判别串（缺省 cartesian2D）；字符串简写与对象 .type 统一取值 */
-const BUILTIN_COORDINATE_INPUT_TYPES = new Set(['cartesian2D', 'polar2D', 'cartesian1D', 'polar1D', 'ternary2D']);
+const BUILTIN_COORDINATE_INPUT_TYPES = new Set(['cartesian2D', 'polar2D', 'cartesian1D', 'polar1D']);
 
 const coordinateTypeOf = (
   input: CoordinateInput | undefined,
-): 'cartesian2D' | 'polar2D' | 'cartesian1D' | 'polar1D' | 'ternary2D' | 'custom' => {
+): 'cartesian2D' | 'polar2D' | 'cartesian1D' | 'polar1D' | 'custom' => {
   if (input === undefined) return 'cartesian2D';
   const type = typeof input === 'string' ? input : input.type;
   return BUILTIN_COORDINATE_INPUT_TYPES.has(type)
-    ? (type as 'cartesian2D' | 'polar2D' | 'cartesian1D' | 'polar1D' | 'ternary2D')
+    ? (type as 'cartesian2D' | 'polar2D' | 'cartesian1D' | 'polar1D')
     : 'custom';
 };
 
@@ -2525,10 +2527,6 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
       ? { type: PlotCoordinate.Polar1D, ...(explicitScales.angle !== undefined ? { angle: AUTO_ANGLE } : {}), ...geom }
       : { type: PlotCoordinate.Polar1D, angle: AUTO_ANGLE, ...geom };
     scales = !shouldDeferPositionScales || explicitScales.angle !== undefined ? [angleScale] : [];
-  } else if (coordKind === 'ternary2D') {
-    // 三元：coordinate 内自动归一化，无独立位置 scale
-    coordinate = { type: PlotCoordinate.Ternary2D };
-    scales = [];
   } else if (coordKind === 'custom') {
     // 自定义坐标系：IR 直接存 { type:<customType>, ...config }；roles / 投影函数来自运行时 CoordinateDefinition。
     if (
@@ -2603,7 +2601,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
 /**
  * 给薄 <Plot> 产物补默认坐标轴：cartesian2D 且无任何显式 axis 时，前置 x 轴 + y 轴（带网格）。
  * @description 框架无关的 IRPlotSpec 纯函数，供需要默认轴的上层组件复用；薄 <Plot> 本身不调用。
- *   非 cartesian2D（polar / 1D / ternary）的专门轴仍需显式声明，原样返回；已有显式 <Axis> 时不补。
+ *   非 cartesian2D（polar / 1D）的专门轴仍需显式声明，原样返回；已有显式 <Axis> 时不补。
  */
 export const decorateDefaultGuides = (spec: IRPlotSpec): IRPlotSpec => {
   if (spec.coordinate === undefined) return spec;

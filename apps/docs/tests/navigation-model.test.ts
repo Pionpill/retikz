@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { Section } from '@/modules/docs/data';
 
+import { vizSection } from '@/modules/docs/data';
 import { buildSidebarCategories, flattenLeaves } from '@/modules/docs/layout';
 
 const sections: Array<Section> = [
@@ -42,5 +43,26 @@ describe('layout utils', () => {
     expect(categories[1]?.value).toBe('guide');
     expect(categories[1]?.path).toBe('/kernel/guide');
     expect(categories[1]?.modules[0]?.children?.map(child => child.value)).toEqual(['a', 'b']);
+  });
+
+  it('Plot 末尾注册 API 参考与更新日志路由', () => {
+    const plotPaths = flattenLeaves('viz', vizSection)
+      .map(node => node.path)
+      .filter(path => path.startsWith('/viz/plot/'));
+
+    expect(plotPaths.slice(-12)).toEqual([
+      '/viz/plot/reference/plot',
+      '/viz/plot/reference/encoding',
+      '/viz/plot/reference/transform',
+      '/viz/plot/reference/mark',
+      '/viz/plot/reference/scale',
+      '/viz/plot/reference/coordinate',
+      '/viz/plot/reference/guide',
+      '/viz/plot/reference/layout',
+      '/viz/plot/reference/layer',
+      '/viz/plot/reference/theme',
+      '/viz/plot/reference/runtime',
+      '/viz/plot/changelog/v0-1',
+    ]);
   });
 });

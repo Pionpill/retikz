@@ -1,6 +1,6 @@
 ---
 title: Contract - Table
-description: Look up the TableSpec root, Cell payloads, fixed-track layout, and precise manual/custom JSON variants.
+description: Look up the TableSpec root, Cell spans/layout, track sizing, and border JSON schemas.
 ---
 
 Base Table contracts define the top-level identity, Cell content, and layout fields shared by every table type, plus precise manual and custom root variants. See [Detail Table contracts](/viz/table/reference/contract-detail) for the detail-only data reference and column structure.
@@ -9,15 +9,15 @@ Base Table contracts define the top-level identity, Cell content, and layout fie
 
 `IRTableSpec` aggregates `IRDetailTableSpec | IRManualTableSpec | IRCustomTableSpec`. The three variants share `namespace + type` fields and constrain `data` and `structure` independently.
 
-| Field       | Type                                | Default              | Description                                              |
-| ----------- | ----------------------------------- | -------------------- | -------------------------------------------------------- |
-| `namespace` | `'table'`                           | —                    | Tier 2 composite namespace                               |
-| `type`      | <ApiValues name="TableComposite" /> | —                    | Top-level Table node type                                |
-| `id?`       | `string`                            | —                    | Optional stable id                                       |
-| `layout?`   | `IRTableLayout`                     | fixed-track defaults | Widths, body/header heights, and row/column gaps         |
-| `meta?`     | `IRJsonObject`                      | —                    | JSON-safe metadata preserved by lowering                 |
-| `data?`     | `IRDataReference`                   | —                    | Required by detail, forbidden by manual, optional custom |
-| `structure` | `IRTableStructureOperation`         | —                    | Detail, manual, or custom Structure                      |
+| Field       | Type                                | Default        | Description                                              |
+| ----------- | ----------------------------------- | -------------- | -------------------------------------------------------- |
+| `namespace` | `'table'`                           | —              | Tier 2 composite namespace                               |
+| `type`      | <ApiValues name="TableComposite" /> | —              | Top-level Table node type                                |
+| `id?`       | `string`                            | —              | Optional stable id                                       |
+| `layout?`   | `IRTableLayout`                     | track defaults | Tracks, sparse overrides, gaps, and borders              |
+| `meta?`     | `IRJsonObject`                      | —              | JSON-safe metadata preserved by lowering                 |
+| `data?`     | `IRDataReference`                   | —              | Required by detail, forbidden by manual, optional custom |
+| `structure` | `IRTableStructureOperation`         | —              | Detail, manual, or custom Structure                      |
 
 ### TableSpecSchema
 
@@ -47,13 +47,101 @@ An LLM or tool that emits one table type should retain its precise schema. Use `
 
 In `{ kind: 'value', value: 'Score' }`, `kind: 'value'` selects the scalar-presentation branch; it is not an alias for the JavaScript string type. Use `kind: 'content'` to place a Node, Path, or Tier 2 child directly.
 
+### TableCellSpanSchema
+
+<ZodSchema name="TableCellSpanSchema" />
+
+A span cannot leave the row/column range, overlap another Cell, or cross row kinds.
+
+### TableCellLayoutSchema
+
+<ZodSchema name="TableCellLayoutSchema" />
+
+Horizontal alignment values are <ApiValues name="TableHorizontalAlignment" />, vertical alignment values are <ApiValues name="TableVerticalAlignment" />, fit values are <ApiValues name="TableCellFit" />, and overflow values are <ApiValues name="TableCellOverflow" />.
+
+### TableCellFitSchema
+
+<ZodSchema name="TableCellFitSchema" />
+
+### TableCellOverflowSchema
+
+<ZodSchema name="TableCellOverflowSchema" />
+
 ## Layout
 
 ### TableLayoutSchema
 
 <ZodSchema name="TableLayoutSchema" />
 
-Omitted fields resolve to `120` for `columnWidth`, `32` for `rowHeight`, the body height for `headerHeight`, and `0` for row and column gaps. Cell content never feeds back into track size.
+Omitted fields resolve to fixed `120` columns, fixed `32` body rows, header rows that follow the body default, and zero gaps. `auto` and `minmax` consume content contributions; fractions expand columns only under a finite parent-width constraint, while rows currently use natural contributions.
+
+## Track size primitives
+
+The following primitives are used directly by `TableLayoutSchema.columnSize` / `rowSize` / `headerRowSize` and sparse overrides. They express fixed sizes, intrinsic content sizes, remaining-space fractions, and bounded tracks.
+
+Track size discriminators are <ApiValues name="TableTrackSizeKind" />.
+
+### TableFixedTrackSizeSchema
+
+<ZodSchema name="TableFixedTrackSizeSchema" />
+
+A fixed value may be `0` to represent an explicitly collapsed track.
+
+### TableAutoTrackSizeSchema
+
+<ZodSchema name="TableAutoTrackSizeSchema" />
+
+### TableFractionTrackSizeSchema
+
+<ZodSchema name="TableFractionTrackSizeSchema" />
+
+The runtime materializes an omitted `weight` as `1`.
+
+### TableMinmaxTrackSizeSchema
+
+<ZodSchema name="TableMinmaxTrackSizeSchema" />
+
+When both bounds are fixed, `min.value` cannot exceed `max.value`. The minimum accepts fixed or auto sizing; the maximum accepts fixed, auto, or fraction sizing.
+
+### TableTrackSizeSchema
+
+<ZodSchema name="TableTrackSizeSchema" />
+
+### TableTrackOverrideSchema
+
+<ZodSchema name="TableTrackOverrideSchema" />
+
+### TableTrackOverridesSchema
+
+<ZodSchema name="TableTrackOverridesSchema" />
+
+The list is sparse, so callers declare only the canonical indexes they need to replace. The schema rejects duplicate indexes. The later layout resolver checks indexes against the actual row or column count.
+
+## Border
+
+Border candidate kinds are <ApiValues name="TableBorderKind" />; table-wide topology modes are <ApiValues name="TableBorderMode" />. `collapse` resolves shared-edge candidates together, while `separate` retains each real Cell side.
+
+### TableNoBorderSchema
+
+<ZodSchema name="TableNoBorderSchema" />
+
+### TableLineBorderSchema
+
+<ZodSchema name="TableLineBorderSchema" />
+
+### TableBorderSchema
+
+<ZodSchema name="TableBorderSchema" />
+
+### TableCellBordersSchema
+
+<ZodSchema name="TableCellBordersSchema" />
+
+### TableBordersSchema
+
+<ZodSchema name="TableBordersSchema" />
+
+Cell-side candidates outrank table defaults. Shared atomic edges compare `priority`, source specificity, and canonical source order. `kind: 'none'` explicitly suppresses lower-priority lines.
 
 ## Related
 

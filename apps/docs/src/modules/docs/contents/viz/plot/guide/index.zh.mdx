@@ -1,19 +1,28 @@
 ---
-title: 导引
-description: 导引把 scale 与 coordinate 的结果解释给读者，例如坐标轴、网格和图例；它们不是数据图形本身，而是读图辅助。
+title: 辅助
+description: 辅助组件把 scale 与 coordinate 的结果解释给读者；Axis 解释位置，Legend 解释颜色、大小、透明度和形状，它们不负责绘制数据 mark。
 ---
 
-Guide 是图形语法的解释层。Mark 负责画数据，Guide 负责让读者知道这些位置、颜色、大小或形状代表什么。
+辅助组件是图形语法的解释层。Mark 负责画数据，Axis 和 Legend 负责让读者知道这些位置、颜色、大小或形状代表什么。
+
+## 职责一览
+
+| 组件   | 职责                                   | 何时使用                               |
+| ------ | -------------------------------------- | -------------------------------------- |
+| Axis   | 解释位置 scale，绘制轴线、刻度和网格   | 需要说明 x / y 位置或展示坐标网格时    |
+| Legend | 解释非位置 scale，展示颜色或符号的含义 | 需要说明颜色、大小、透明度或形状映射时 |
 
 ## 章节内容
 
-<div className="grid gap-3 sm:grid-cols-2">
+先按要解释的视觉通道选择页面：位置通道查坐标轴，其他视觉通道查图例。
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/viz/plot/guide/axis">
-    <strong>坐标轴</strong>
-    <span>解释位置通道，绘制刻度、标签和网格；不同坐标系可用的维度不同。</span>
+    <span className="font-semibold">坐标轴</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">解释位置通道，绘制刻度、标签和网格</span>
   </LinkedCard>
   <LinkedCard href="/viz/plot/guide/legend">
-    <strong>图例</strong>
-    <span>解释颜色、大小、透明度和形状等非位置通道。</span>
+    <span className="font-semibold">图例</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">解释颜色、大小、透明度和形状等非位置通道</span>
   </LinkedCard>
 </div>

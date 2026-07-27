@@ -7,7 +7,7 @@ import type { DocLocation, LeafNode } from './types';
 
 /** 是否为数据驱动渲染的 changelog 页面。 */
 export const isChangelogLocation = (loc: DocLocation | null): boolean =>
-  loc?.sectionId === 'releases' && loc.pageId === 'changelog';
+  loc?.pageId === 'changelog' && (loc.sectionId === 'releases' || (loc.moduleId === 'viz' && loc.sectionId === 'plot'));
 
 /** location -> URL / 文件路径所需的 segment 数组。 */
 export const docPathSegments = (loc: DocLocation): Array<string> => {

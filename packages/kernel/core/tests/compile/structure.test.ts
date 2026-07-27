@@ -132,7 +132,6 @@ describe('compile source structure', () => {
       'resolveAxisScale',
       'resolveBoundary',
       'resolveBoxSize',
-      'resolveBoxSpacing',
       'resolveLabelRotateDeg',
       'resolveNodeLabelGeometry',
       'resolveNodeTextColor',

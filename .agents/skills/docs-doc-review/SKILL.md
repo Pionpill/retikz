@@ -12,9 +12,9 @@ description: Use when independently reviewing retikz docs pages or docs diffs fo
 - `develop-document` 阶段完成后，进入 wrapup 前
 - `docs-doc-principle` / `docs-doc-component` / `docs-doc-extension` / `docs-doc-example` / `docs-doc-group` 产出初稿后
 - 用户单独说“审一下这篇文档 / 这个 docs 改动 / 这些 demo”
-- 大规模文档重构后，想确认没有把页面写成作者自嗨的内部说明
+- 新增页面或大规模文档重构后，确认没有把页面写成作者自嗨的内部说明
 
-本 skill 可以由主 AI 直接执行，也可以作为另一个写作 skill 的后置评审。默认**只评审、不改文件**；用户明确要求“顺手修掉”时，才按评审结果改稿。
+普通文档审查可以由主 AI 直接执行。新增页面或命中 `docs-doc-principle`“大改”条件时，必须由一个新的只读 subagent 在改稿与机械验证完成后独立执行；主 agent 自评不能替代。默认**只评审、不改文件**；用户明确要求“顺手修掉”时，才按评审结果改稿。
 
 ## 输入
 
@@ -47,11 +47,15 @@ description: Use when independently reviewing retikz docs pages or docs diffs fo
 
 检查：
 
+- 按首次阅读顺序逐段走读，不用作者已知背景替读者补齐省略的前提
 - 页面开头是否先回答“这个能力解决什么问题 / 什么时候用”，而不是先抛内部名词
-- 专业词是否过多；必要术语是否先用普通话解释，再给 API / schema 名
+- 专业词是否过多；逐项列出未解释或解释过晚的术语，必要术语是否先用普通话解释，再给 API / schema 名
+- 相邻段落或小节之间是否存在概念跳跃；读者是否需要提前知道尚未介绍的类型、机制或项目约定
+- 顺序是否从场景与可观察结果进入用法和概念，再深入机制、落点与 API；内部实现是否过早打断主线
 - 句子是否被内部词堆满，如“renderer-agnostic resource table / emit-in-compile / synthetic bbox”这类内容是否放进可选 deepdive
 - 进阶内容是否用 `ComponentAlert` / tip / `How it works` 标出，并提示初次阅读可跳过
 - API 表描述是否能独立读懂，还是只有作者才懂的关键词
+- 读者沿主线是否能完成第一个可运行结果；示例、图和表是否在抽象概念出现时及时提供支撑
 - `frontmatter.description` 是否能脱离页面独立说明根问题与核心职责或使用入口，供 manifest / `llms.txt` 直接作为机器摘要使用
 
 ### 3. 核心设计与内容权重
@@ -157,6 +161,8 @@ INFO（做得好的地方 / 可保留）：
 - **BLOCKING**：结构不符合页型、zh/en 明显不一致、中文 `<ZodSchema>` 字段缺少翻译而回退英文、API / demo 与实际行为冲突、必要 demo 缺失、核心职责或边界缺失导致读者无法理解主线、链接 404 / 锚点失效 / 源码路径或行号错误
 - **WARNING**：术语偏多但还能读、进阶内容位置不佳、Related 不够好、通用样式挤占正文、controls 与静态 demo 分工不清
 - **INFO**：可保留的写法、已经满足规范的地方、适合进入 changelog / review summary 的亮点
+
+每个读者视角问题都要定位到首次造成困难的位置，并给出可执行的替代表达、补充解释或章节移动建议；不要只写“术语太多”“顺序不好”。
 
 ## 常见问题
 

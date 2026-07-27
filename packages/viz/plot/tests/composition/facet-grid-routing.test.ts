@@ -315,6 +315,30 @@ describe('facet grid data routing lowering', () => {
     ]);
   });
 
+  it.each([
+    { header: { row: false, column: true }, expectedDimension: 'column' },
+    { header: { row: true, column: false }, expectedDimension: 'row' },
+  ] as const)('facet_header_visibility_is_independent_per_dimension', ({ header, expectedDimension }) => {
+    const spec = {
+      ...baseFacetSpec,
+      composition: {
+        ...baseFacetSpec.composition,
+        arrangements: [
+          facetArrangement({
+            id: 'region-channel',
+            header,
+            row: { field: 'channel', order: ['online', 'store'] },
+            column: { field: 'region', order: ['north', 'south'] },
+          }),
+        ],
+      },
+    };
+
+    const labels = facetLabelsOf(expandOf(parsePlotSpec(spec)));
+
+    expect(labels.map(label => label.meta?.dimension)).toEqual([expectedDimension, expectedDimension]);
+  });
+
   it('facet_label_bands_reserve_label_gap_from_panel_grid', () => {
     const spec = {
       ...baseFacetSpec,

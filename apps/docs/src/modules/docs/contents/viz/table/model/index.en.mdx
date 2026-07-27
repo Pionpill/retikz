@@ -11,7 +11,7 @@ This pipeline is Table's internal model; users do not need to author it stage by
 
 <ComponentPreview files="table-model-pipeline" hideCode size="xs" />
 
-`Structure` determines rows, columns, and Cells. The semantic model gives every Cell a stable identity, location, role, and source. `Presentation` turns Cell payloads into Core children, and `Layout` computes fixed tracks and Cell boxes. One resolution produces both renderable Core IR and a traceable manifest.
+`Structure` determines rows, columns, and Cells. The semantic model gives every Cell a stable identity, location, role, and source. `Presentation` turns Cell payloads into Core children. `Layout` measures content, solves tracks, replays selected content, and emits the manifest inside one Core compile.
 
 ## Structure: how a table produces Cells
 
@@ -36,19 +36,20 @@ React can also generate addresses in declaration order with nested `Row` / `Cell
 ```tsx
 import { Cell, ManualTable, Row } from '@retikz/table-react';
 
-<ManualTable rows={2} columns={2}>
+<ManualTable rows={2} columns={3}>
   <Row kind="columnHeader">
-    <Cell>Name</Cell>
+    <Cell span={{ columns: 2 }}>Identity</Cell>
     <Cell>Score</Cell>
   </Row>
   <Row>
     <Cell>Alice</Cell>
+    <Cell>Engineering</Cell>
     <Cell value={95} />
   </Row>
 </ManualTable>;
 ```
 
-The root `rows` and `columns` are always explicit, and nested Row count must equal `rows`. Each Row may omit trailing Cells, leaving those positions sparse; use the complete `cells` prop for arbitrary sparse zero-based addresses. A `Cell` accepts exactly one of scalar children, `value`, or `content`: children / `value` must be JSON scalars, while `content` must be a JSON-safe Core or Tier 2 child.
+The root `rows` and `columns` are always explicit, and nested Row count must equal `rows`. Markers occupy the lowest free column in the current row, while `span` reserves its full rectangle across future rows. Spans cannot overflow, overlap, or cross row kinds. Use the complete `cells` prop for arbitrary sparse zero-based addresses. A `Cell` accepts exactly one of scalar children, `value`, or `content`.
 
 ## Cells and Presentation
 
@@ -65,9 +66,9 @@ Presentation only turns a value into Core content; it does not decide which row 
 
 ## Layout and Manifest
 
-v0.1 uses fixed tracks. Every column shares `columnWidth`, body rows share `rowHeight`, headers may use `headerHeight`, and row or column gaps are configurable. Cell content never feeds back into track size.
+Table first measures every Cell intrinsically, then solves columns from fixed / auto / fraction / minmax rules, gaps, and span contributions. Content with `wrap: true` receives the solved column constraint before rows resolve from final heights. Padding defines the content box, fit and alignment transform the selected replay, overflow controls visibility, and the Border Graph resolves shared-edge conflicts last.
 
-`TableLayoutManifest` records table bounds, row and column offsets/sizes, and each Cell's box, semantic location, roles, and optional source. Hit testing, debugging, export, or higher-level interaction can consume layout results without reverse-engineering SVG geometry.
+`TableLayoutManifest` and Scene come from one compile. The root records both `allocationBounds` and `visualOverflowBounds`; each Cell records its span, box/content box, pre- and post-transform allocation/visual bounds, semantic location, roles, and source. Visible borders retain winner and contributor provenance, so hit testing, debugging, export, and interaction do not reverse-engineer SVG geometry.
 
 ## Extension boundary
 

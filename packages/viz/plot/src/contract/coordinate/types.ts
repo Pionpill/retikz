@@ -6,7 +6,7 @@ import type { Cell, CellGeometry } from './cell';
 
 /**
  * 坐标系位置角色：mark 按 frame.roles 序从 encoding 取对应通道值喂 projectRoles。
- * @description 内置坐标系使用 x / y / z；自定义 CoordinateDefinition 可声明任意非空字符串角色。
+ * @description 内置坐标系使用 x / y；自定义 CoordinateDefinition 可声明任意非空字符串角色。
  *   schema 只保留 JSON 形状，角色是否被坐标系支持由 definition.roles 在 lowering 阶段校验
  */
 export type DimensionRole = string;
@@ -14,7 +14,7 @@ export type DimensionRole = string;
 /**
  * 运行时坐标帧的能力契约（抽象基座）。
  * @description grammar of graphics 的 coordinate 层：scale 把值归一化后，frame 负责归一化→2D 点。
- *   内置坐标系（cartesian / polar / ternary…）与自定义注册坐标系都满足这一契约——内置帧是它的结构子类型，
+ *   内置坐标系（cartesian / polar）与自定义注册坐标系都满足这一契约——内置帧是它的结构子类型，
  *   带各自专属字段（如 primary/secondary scale），需要时由 providers 的 `isXxxCoordinateFrame` 守卫收窄。
  *   lowering 算一次，mark / guide / locator 共享同一帧；投影函数由实现/注册 definition 提供，不进入 JSON IR。
  *   `type` 保持 definition 注册的真实判别串；非有限值返回 null（跳过该点）
@@ -88,9 +88,6 @@ export type PolarCoordinateFrame = {
 export type CellProjectableCoordinate = CoordinateFrame & {
   projectCell: (cell: Cell) => CellGeometry;
 };
-
-/** 三元坐标三角顶点顺序（屏幕坐标）：[Vx(x=100%), Vy(y=100%), Vz(z=100%)] */
-export type TernaryVertices = [Position, Position, Position];
 
 /**
  * 某角色轴曲线在某参数点的局部标架：原点 + 切向，均在屏幕空间。

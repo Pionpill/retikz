@@ -1,146 +1,213 @@
 ---
 title: 运行时
-description: 查询 React、Vanilla 与 SSR 如何构造 TableSpec、注入运行时输入、下沉 Core IR 并取得 manifest。
+description: 查询 React、Vanilla 与直接编译入口如何共享一次 Table layout transaction、Scene 与 manifest artifact。
 ---
 
-Table 的三个宿主入口共享一条运行时：React 组件和 Vanilla helper 先得到同一类 JSON TableSpec，外部 datasets、带函数的 Definitions 与额外 composites 在运行时注入；Table pipeline 再解析 Structure、呈现 Cell、计算布局并下沉为 Core IR，同时生成 layout manifest。
+TableSpec 只保存 JSON-safe 结构；datasets、Definitions、Core compile options 与宿主能力在运行时注入。所有 standalone 入口都让 Table 在同一次 Core compile 中完成内容测量、轨道求解、replay、Scene 与 manifest，不再为了 sidecar 执行第二次 lowering。
 
-## 整体管线
+<ComponentPreview files="table-runtime-flow" hideCode size="xs" />
 
-<ComponentPreview files="table-runtime-flow" size="sm" hideCode />
+## React
 
-> 这里描述整体运行时合同，不重复 schema 字段。JSON 形状请查[表格契约](/viz/table/reference/contract-table)与[明细表契约](/viz/table/reference/contract-detail)。
+`@retikz/table-react` 提供三个根入口：`Table` 接受完整 `IRTableSpec`，`DetailTable` 生成 record-per-row spec，`ManualTable` 生成显式网格 spec。三者共享 `TableCommonProps` 与同一 runtime。
 
-## 职责一览
+| 入口          | 核心输入                     | 结构 authoring                       |
+| ------------- | ---------------------------- | ------------------------------------ |
+| `Table`       | `spec`、可选 `data`          | 已构造的精确 TableSpec               |
+| `DetailTable` | `dataRef`、`data`、`columns` | `columns` 或 `DetailColumn` children |
+| `ManualTable` | `rows`、`columns`、`cells`   | `cells` 或 `Row` / `Cell` children   |
 
-| 主题          | 职责                                        | 何时查阅                         |
-| ------------- | ------------------------------------------- | -------------------------------- |
-| 规格构造      | 从 detail/manual 作者输入得到精确 TableSpec | 不直接手写完整 IR                |
-| React         | standalone 或嵌入父级 `Layout` 渲染 Table   | React 页面与组件组合             |
-| Vanilla / SSR | 嵌入 figure/layer，或一次性输出 SVG         | 非 React 宿主、服务端导出        |
-| Lowering      | 合并 Definition registry，输出 Core IR      | 自己接入 Core compile 或实现宿主 |
-| Manifest      | 暴露表格、轨道与 Cell 的语义几何            | 命中测试、调试、导出或上层交互   |
+`TableLayoutHostProps` 精确复用 Kernel `<Layout ir>` 当前支持的宿主字段：handlers、输出尺寸/viewBox、renderer、动画、资源 id、Core provider definitions 与 TeX lowerer。完整字段与语义见 [Layout API](/kernel/components/layout/overview)；Scope style、完整 `compile`、`artifacts/onArtifacts` 与 `embeddables` 不属于 Table 根组件公共面。
 
-## 规格构造
+| 共享属性                   | 类型                                            | 默认值 | 描述                                               |
+| -------------------------- | ----------------------------------------------- | ------ | -------------------------------------------------- |
+| `structureDefinitions?`    | `LowerTablesOptions['structureDefinitions']`    | `[]`   | 自定义 Structure definitions                       |
+| `presentationDefinitions?` | `LowerTablesOptions['presentationDefinitions']` | `[]`   | 自定义 Cell presentation definitions               |
+| `composites?`              | `ReadonlyArray<AnyCompositeDefinition>`         | `[]`   | Cell 内嵌 Tier 2 内容使用的额外 definitions        |
+| `onManifest?`              | `(manifest: TableLayoutManifest) => void`       | —      | standalone commit 后接收同次 compile 的根 manifest |
 
-构造 helper 只生成并校验 JSON-safe spec，不绑定 renderer，也不把 datasets 或 Definitions 写入 IR。
+standalone runtime 构造 canonical `children[0]` 根 Scene，并从 `Layout.onArtifacts` 只选择 definition key 为 `table.table`、`sourcePath: 'children[0]'`、`expansionPath: []` 的 artifact。回调按 manifest 的序列化内容去重；SSR render 不触发副作用。
 
-| API                            | 类型                                          | 描述                                     |
-| ------------------------------ | --------------------------------------------- | ---------------------------------------- |
-| `createDetailTableSpec(input)` | `(DetailTableSpecInput) => IRDetailTableSpec` | 构造 detail spec，并规范化字符串列头     |
-| `createManualTableSpec(input)` | `(ManualTableSpecInput) => IRManualTableSpec` | 从显式行列与 Cell 构造 manual spec       |
-| `detailTable(input)`           | `(DetailTableSpecInput) => IRDetailTableSpec` | Vanilla 对 detail 构造 helper 的直接委托 |
-| `manualTable(input)`           | `(ManualTableSpecInput) => IRManualTableSpec` | Vanilla 对 manual 构造 helper 的直接委托 |
+### Embedded
 
-## React runtime
+Table 作为父级 `<Layout>` child 时必须有非空稳定 id。datasets、Table definitions 与 `composites` 会贡献给外层宿主；局部 `onManifest` 和任一 standalone host prop 都会 fail-loud，并在同一错误中提示把字段移动到外层 `<Layout>`。宿主需要 artifact 时使用外层 `onArtifacts`。
 
-### 入口
+## Vanilla
 
-| 组件          | spec 来源                                      | 运行时数据                 |
-| ------------- | ---------------------------------------------- | -------------------------- |
-| `Table`       | 调用方传入完整 `IRTableSpec`                   | `data?: ExternalDatasets`  |
-| `DetailTable` | 从 `DetailTableSpecInput` 构造精确 detail spec | `data: Array<ExternalRow>` |
-| `ManualTable` | 从 `ManualTableSpecInput` 构造精确 manual spec | 无外部 dataset             |
+`detailTable()` / `manualTable()` 构造 plain spec；`embedTable()` 与 `createTableAdapter()` 接入 figure/mount；`renderTable()` 是一次性 SSR 入口。
 
-`Table` 始终接收完整的 `spec`。`DetailTable` 可在完整 `columns` props 与 `DetailColumn` children 间二选一；`ManualTable` 可在完整 `cells` / `rowKinds` props 与嵌套 `Row` / `Cell` 间二选一。三个 marker 只收集 React authoring 输入，最终仍进入相同的 detail 或 manual TableSpec。
+```ts
+const result = renderTable(spec, {
+  data: { scores: rows },
+  lowerOptions: { presentationDefinitions },
+  compile: {
+    composites: [customCellComposite],
+    shapes: [customShape],
+  },
+  animation: { enabled: false },
+  output: { width: 640, height: 360 },
+  artifacts: true,
+});
 
-嵌套 manual 写法仍要求根上显式 `rows` / `columns`；Row 数必须等于 `rows`，每行尾部可省略 Cell。任意稀疏地址使用 `cells` props；`Cell` 的标量 children、`value` 与 JSON-safe `content` 三种 payload 来源互斥。
+result.svg;
+result.manifest;
+```
 
-三个组件共享这些运行时属性：
+| `renderTable` 选项 | 类型                                 | 默认值  | 描述                                           |
+| ------------------ | ------------------------------------ | ------- | ---------------------------------------------- |
+| `data?`            | `ExternalDatasets`                   | `{}`    | Table 数据集                                   |
+| `lowerOptions?`    | `LowerTablesOptions`                 | `{}`    | Structure / Presentation 扩展定义              |
+| `compile?`         | `RenderToStringOptions['compile']`   | `{}`    | Core compile options；额外 composites 写在这里 |
+| `animation?`       | `RenderToStringOptions['animation']` | `{}`    | SSR 动画/截帧/easing 选项                      |
+| `output?`          | `RenderToStringOptions['output']`    | `{}`    | SVG id 前缀与显示尺寸                          |
+| `artifacts?`       | `boolean`                            | `false` | `true` 返回 `{ svg, manifest }`                |
 
-| 属性                       | 类型                                           | 默认值  | 描述                                  |
-| -------------------------- | ---------------------------------------------- | ------- | ------------------------------------- |
-| `structureDefinitions?`    | `ReadonlyArray<AnyTableStructureDefinition>`   | `[]`    | 自定义 Structure definitions          |
-| `presentationDefinitions?` | `ReadonlyArray<AnyCellPresentationDefinition>` | `[]`    | 自定义 Cell presentation definitions  |
-| `composites?`              | `ReadonlyArray<AnyCompositeDefinition>`        | `[]`    | Cell 内嵌 Tier 2 内容所需 definitions |
-| `onManifest?`              | `(manifest: TableLayoutManifest) => void`      | —       | standalone 布局产物通知；嵌入时不支持 |
-| `renderer?`                | `'svg' \| 'canvas'`                            | `'svg'` | renderer backend                      |
-| `width?` / `height?`       | `number \| string`                             | —       | 宿主显示尺寸；不改变 Table 固定轨道   |
-| `className?` / `style?`    | `string`<br />`CSSProperties`                  | —       | 透传给渲染宿主                        |
+顶层 `composites` 已删除；使用 `compile.composites`。无论 `artifacts` 是否为 true，`renderTable()` 都只调用一次 `compileTable()`；false 只忽略 sidecar，不改变 Scene 或 transaction。
 
-Standalone 组件可以省略 TableSpec `id`；嵌入父级 `Layout` 时必须提供稳定 id。嵌入模式不能使用 `onManifest`，需要显式调用 `lowerTableWithArtifacts()` 读取 sidecar。
+## Table compile API
 
-### ManualTable
+| 导出                   | 作用                                                                 |
+| ---------------------- | -------------------------------------------------------------------- |
+| `lowerTables()`        | 创建 layout-aware `table.table` composite definition，供宿主 compile |
+| `compileTable()`       | 编译 canonical 单根 Table，返回 Scene、完整 artifacts 与根 manifest  |
+| `CompileTableOptions`  | 分开承载 `lower` 与 `compile` 选项                                   |
+| `CompileTableResult`   | `CompileResult` 加 exact root `manifest`                             |
+| `TableCompileArtifact` | `CompositeCompileArtifact<'table', 'table', TableLayoutManifest>`    |
 
-| 属性        | 类型                           | 默认值         | 描述                                                   |
-| ----------- | ------------------------------ | -------------- | ------------------------------------------------------ |
-| `rows`      | `ManualTableProps['rows']`     | —              | 显式行数；Row children 数量必须与其一致                |
-| `columns`   | `ManualTableProps['columns']`  | —              | 显式列数；每个 Row 声明的 Cell 数量不得超过它          |
-| `cells?`    | `ManualTableProps['cells']`    | —              | 带地址的完整 Cell 集合；与 `children` 互斥             |
-| `rowKinds?` | `ManualTableProps['rowKinds']` | 全部为 `body`  | 每行的语义类型；与 Row children 互斥                   |
-| `children?` | `ManualTableProps['children']` | —              | 按顺序排列的 Row markers；与 `cells` / `rowKinds` 互斥 |
-| `id?`       | `ManualTableProps['id']`       | —              | 稳定 Table id；嵌入父级 `Layout` 时必填                |
-| `layout?`   | `ManualTableProps['layout']`   | 固定轨道默认值 | 列宽、行高与行列间距                                   |
-| `meta?`     | `ManualTableProps['meta']`     | —              | 写入 TableSpec 的 JSON 元数据                          |
+`compileTable(spec, datasets, options?)` 合并 `lowerTables()` 与 `compile.composites` 后只调用一次 `compileToScene()`。返回的 `manifest` 与 exact root artifact 的 `value` 是同一 immutable 引用；nested Table、重复 table id 或其它 composite artifacts 不会误选。
 
-`ManualTable` 同时接受上面的共享运行时属性。
+layout-aware Table 不能通过纯 Tier 1 `lowerIRToKernel()` 保存 compile-local replay tree。需要 standalone 结果时使用 `compileTable()`；嵌入其它 Scene 时把 `lowerTables()` definitions 交给宿主 `compileToScene()`、React `<Layout>` 或 Vanilla adapter。
 
-### Row
+## TableLayoutManifestSchema
 
-| 属性        | 类型                   | 默认值 | 描述                        |
-| ----------- | ---------------------- | ------ | --------------------------- |
-| `kind?`     | `RowProps['kind']`     | `body` | 当前行的语义类型            |
-| `children?` | `RowProps['children']` | —      | 按列顺序排列的 Cell markers |
+`TableLayoutManifest` 是 JSON-safe、detached、递归冻结的 typed artifact payload。
 
-### Cell
+<ZodSchema
+  name="TableLayoutManifestSchema"
+  description="同次 Table compile 产出的布局、可见范围与可追溯条目集合。"
+  descriptions={{
+    tableId: '可选的公开 Table id；不能作为实例 selector。',
+    allocationBounds: 'tracks 与 gaps 在 Table-local 坐标中的分配范围。',
+    'allocationBounds.x': '分配范围左边界的有限 Table-local x 坐标。',
+    'allocationBounds.y': '分配范围上边界的有限 Table-local y 坐标。',
+    'allocationBounds.width': '分配范围的有限非负宽度。',
+    'allocationBounds.height': '分配范围的有限非负高度。',
+    visualOverflowBounds: '可见 Cell 与 border 在 Table-local 坐标中的 union。',
+    'visualOverflowBounds.x': '可见范围左边界的有限 Table-local x 坐标。',
+    'visualOverflowBounds.y': '可见范围上边界的有限 Table-local y 坐标。',
+    'visualOverflowBounds.width': '可见范围的有限非负宽度。',
+    'visualOverflowBounds.height': '可见范围的有限非负高度。',
+    rows: '按 canonical 顺序保存的行轨道几何。',
+    columns: '按 canonical 顺序保存的列轨道几何。',
+    cells: '按 canonical 顺序保存的 Cell 几何与来源。',
+    borders: '可见 border edge 的几何与冲突解析来源。',
+  }}
+/>
 
-| 属性            | 类型                        | 默认值       | 描述                                                         |
-| --------------- | --------------------------- | ------------ | ------------------------------------------------------------ |
-| `id?`           | `CellProps['id']`           | 由地址派生   | 稳定 Cell id                                                 |
-| `children?`     | `CellProps['children']`     | —            | 作为 value payload 的 JSON 标量；与 `value` / `content` 互斥 |
-| `value?`        | `CellProps['value']`        | —            | 显式 value payload；与 `children` / `content` 互斥           |
-| `content?`      | `CellProps['content']`      | —            | 直接使用的 JSON-safe Core `IRChild`；与其它 payload 来源互斥 |
-| `presentation?` | `CellProps['presentation']` | 内置 `text`  | value 或标量 children 使用的 presentation；不适用于 content  |
-| `location?`     | `CellProps['location']`     | 由行语义派生 | Cell 所在的语义区域                                          |
-| `roles?`        | `CellProps['roles']`        | 由行语义派生 | 非空语义角色集合                                             |
+### TableTrackManifestEntrySchema
 
-`children`、`value` 与 `content` 必须且只能提供一个。`presentation` 只适用于 value payload，包括标量 children 语法。
+<ZodSchema
+  name="TableTrackManifestEntrySchema"
+  description="一条 resolved 行或列轨道的稳定身份与 Table-local 几何。"
+  descriptions={{
+    id: '稳定语义轨道 id。',
+    index: 'canonical 零基轨道索引。',
+    offset: '有限 Table-local 轴向偏移。',
+    size: '有限非负轨道尺寸。',
+  }}
+/>
 
-## Vanilla runtime
+### TableCellManifestEntrySchema
 
-Vanilla 不使用 fluent builder。浏览器组合由 `embedTable()` 产生 embed spec，`createTableAdapter()` 创建可复用的无状态 adapter；一次性 SSR 由 `renderTable()` 完成。
+<ZodSchema
+  name="TableCellManifestEntrySchema"
+  description="一个 resolved Cell 的身份、span、各坐标空间 bounds、语义与来源。"
+  descriptions={{
+    cellId: '稳定语义 Cell id。',
+    rowId: '所属起始行的稳定语义 id。',
+    columnId: '所属起始列的稳定语义 id。',
+    rowIndex: 'Cell 起点的 canonical 零基行索引。',
+    columnIndex: 'Cell 起点的 canonical 零基列索引。',
+    span: 'resolved 矩形 Cell span。',
+    'span.rows': 'resolved 正行跨度。',
+    'span.columns': 'resolved 正列跨度。',
+    box: 'Table-local Cell box。',
+    'box.x': 'Cell box 左边界的有限 Table-local x 坐标。',
+    'box.y': 'Cell box 上边界的有限 Table-local y 坐标。',
+    'box.width': 'Cell box 的有限非负宽度。',
+    'box.height': 'Cell box 的有限非负高度。',
+    contentBox: 'Table-local padding-reduced content box。',
+    'contentBox.x': 'content box 左边界的有限 Table-local x 坐标。',
+    'contentBox.y': 'content box 上边界的有限 Table-local y 坐标。',
+    'contentBox.width': 'content box 的有限非负宽度。',
+    'contentBox.height': 'content box 的有限非负高度。',
+    sourceAllocationBounds: 'replay-root local 的源 allocation bounds。',
+    'sourceAllocationBounds.x': '源 allocation bounds 左边界的有限局部 x 坐标。',
+    'sourceAllocationBounds.y': '源 allocation bounds 上边界的有限局部 y 坐标。',
+    'sourceAllocationBounds.width': '源 allocation bounds 的有限非负宽度。',
+    'sourceAllocationBounds.height': '源 allocation bounds 的有限非负高度。',
+    sourceVisualOverflowBounds: 'replay-root local 的源可见 bounds。',
+    'sourceVisualOverflowBounds.x': '源可见 bounds 左边界的有限局部 x 坐标。',
+    'sourceVisualOverflowBounds.y': '源可见 bounds 上边界的有限局部 y 坐标。',
+    'sourceVisualOverflowBounds.width': '源可见 bounds 的有限非负宽度。',
+    'sourceVisualOverflowBounds.height': '源可见 bounds 的有限非负高度。',
+    contentAllocationBounds: 'fit 与 alignment 后的 Table-local allocation bounds。',
+    'contentAllocationBounds.x': '内容 allocation bounds 左边界的有限 Table-local x 坐标。',
+    'contentAllocationBounds.y': '内容 allocation bounds 上边界的有限 Table-local y 坐标。',
+    'contentAllocationBounds.width': '内容 allocation bounds 的有限非负宽度。',
+    'contentAllocationBounds.height': '内容 allocation bounds 的有限非负高度。',
+    visualOverflowBounds: 'overflow 策略后的 Table-local 可见 bounds。',
+    'visualOverflowBounds.x': 'Cell 可见 bounds 左边界的有限 Table-local x 坐标。',
+    'visualOverflowBounds.y': 'Cell 可见 bounds 上边界的有限 Table-local y 坐标。',
+    'visualOverflowBounds.width': 'Cell 可见 bounds 的有限非负宽度。',
+    'visualOverflowBounds.height': 'Cell 可见 bounds 的有限非负高度。',
+    location: 'Cell 所在的语义区域。',
+    roles: 'Cell 承担的非空语义角色。',
+    source: '可选的稳定 Cell 来源身份。',
+  }}
+/>
 
-| API                              | 类型                                         | 描述                                     |
-| -------------------------------- | -------------------------------------------- | ---------------------------------------- |
-| `embedTable(id, spec, options?)` | `(...) => VanillaEmbedSpec<TableEmbedProps>` | 将 Table 嵌入 Kernel figure / layer      |
-| `createTableAdapter()`           | `() => VanillaTier2Adapter<TableEmbedProps>` | 创建无状态 Table adapter                 |
-| `renderTable`                    | `RenderTable`                                | 输出 SVG；artifact 模式同时返回 manifest |
+### TableBorderManifestEntrySchema
 
-`embedTable()` 的 embed id 必须非空。TableSpec 本身可以匿名，此时下沉根 id 使用 `${embedId}/table`。
+<ZodSchema
+  name="TableBorderManifestEntrySchema"
+  description="一条可见 merged border edge 的几何、resolved line style 与逐 atom 来源。"
+  descriptions={{
+    edgeKey: 'canonical merged edge key。',
+    orientation: 'edge 的水平或垂直方向。',
+    start: 'Table-local edge 起点。',
+    'start.x': 'edge 起点的有限 Table-local x 坐标。',
+    'start.y': 'edge 起点的有限 Table-local y 坐标。',
+    end: 'Table-local edge 终点。',
+    'end.x': 'edge 终点的有限 Table-local x 坐标。',
+    'end.y': 'edge 终点的有限 Table-local y 坐标。',
+    style: '最终 emit 的 resolved line style。',
+    'style.stroke': 'border line 的非 none Core paint。',
+    'style.width': 'resolved 非负 border 宽度。',
+    'style.strokeOpacity': 'resolved border stroke opacity。',
+    'style.dashPattern': '可选非空正数 dash pattern；省略表示实线。',
+    'style.dashOffset': 'resolved 有限 dash offset。',
+    'style.lineCap': 'canonical border line cap。',
+    'style.lineJoin': 'canonical border line join。',
+    atoms: '按 edge 顺序保存的 canonical atomic provenance。',
+    pathId: '可选的已 emit Core Path id。',
+  }}
+/>
 
-### Runtime options
+根 artifact occurrence 由 Core compile traversal 生成，不进入 TableSpec 或 manifest。`tableId` 不是实例 selector；匿名根、nested Table 与重复 id 都由 exact occurrence 区分。
 
-| 属性           | 类型                                    | 默认值  | 描述                                           |
-| -------------- | --------------------------------------- | ------- | ---------------------------------------------- |
-| `data`         | `ExternalDatasets`                      | `{}`    | 按 spec reference 索引的外部 datasets          |
-| `lowerOptions` | `LowerTablesOptions`                    | `{}`    | Structure 与 Presentation definitions          |
-| `composites`   | `ReadonlyArray<AnyCompositeDefinition>` | `[]`    | Cell 内嵌 Tier 2 definitions                   |
-| `output`       | `RenderToStringOptions['output']`       | —       | 仅 `renderTable`：SVG 宿主尺寸与 id prefix     |
-| `artifacts`    | `true \| false`                         | `false` | 仅 `renderTable`：是否返回 `{ svg, manifest }` |
+## Breaking migration
 
-## Lowering 与扩展
-
-| API                                                 | 描述                                                   |
-| --------------------------------------------------- | ------------------------------------------------------ |
-| `defineTableStructure(definition)`                  | 定义由 `structure.kind` 解析的 Structure provider      |
-| `defineCellPresentation(definition)`                | 定义把 value payload 转为 Core child 的 presentation   |
-| `lowerTables(datasets, options?)`                   | 生成供 Core compile 注册的 Table composite definitions |
-| `lowerTableWithArtifacts(spec, datasets, options?)` | 返回同源的 Core child 与 `TableLayoutManifest`         |
-
-`LowerTablesOptions` 包含 `structureDefinitions` 与 `presentationDefinitions`。内置和自定义 Definitions 进入同一个 registry；重复 kind / name 会报错。Definition 含函数，只能作为运行时依赖传入，不能持久化到 TableSpec。
-
-## Manifest
-
-`TableLayoutManifest` 与本次 Core IR 同源，包含：
-
-- `tableId?` 与表格 `bounds`
-- 按语义顺序排列的 `rows` / `columns`，每项含 `id`、`index`、`offset`、`size`
-- 按语义 Cell 顺序排列的 `cells`，每项含 `cellId`、`box`、`location`、`roles` 与可选 `source`
-
-Standalone React 通过 `onManifest` 接收布局更新；嵌入模式调用 `lowerTableWithArtifacts()`；SSR 使用 `renderTable(spec, { artifacts: true })`。
+| 旧写法                                       | 当前写法                                                       |
+| -------------------------------------------- | -------------------------------------------------------------- |
+| `columnWidth` / `rowHeight` / `headerHeight` | `columnSize` / `rowSize` / `headerRowSize` 轨道对象            |
+| `manifest.bounds`                            | `manifest.allocationBounds`；可见范围用 `visualOverflowBounds` |
+| `lowerTableWithArtifacts()`                  | `compileTable()`                                               |
+| `renderTable(..., { composites })`           | `renderTable(..., { compile: { composites } })`                |
+| embedded Table 的 `onManifest`               | 外层 `<Layout onArtifacts>`                                    |
 
 ## 相关
 
-- [表格契约](/viz/table/reference/contract-table)：共享 TableSpec、Cell 与 Layout schema
-- [明细表契约](/viz/table/reference/contract-detail)：data reference 与 detail columns
-- [Composite](/kernel/concepts/design/composite)：Tier 2 如何进入 Core compile
+- [表格契约](/viz/table/reference/contract-table)：Cell、轨道与 border schema
+- [明细表契约](/viz/table/reference/contract-detail)：columns 与 detail Structure
+- [Kernel compile](/kernel/reference/runtime/compile)：Core options、typed artifacts 与 composite registry

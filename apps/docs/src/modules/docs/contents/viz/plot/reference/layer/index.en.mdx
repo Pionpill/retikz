@@ -1,0 +1,10 @@
+---
+title: Contract - Layer
+description: Query the zIndex override schema for Plot semantic layers.
+---
+
+Plot lowering assigns stable default layers to backgrounds, grids, marks, axes, and decorations. `PlotLayerSchema` explicitly overrides the resulting Core `zIndex` only when content must cross those defaults.
+
+## PlotLayerSchema
+
+<ZodSchema name="PlotLayerSchema" />

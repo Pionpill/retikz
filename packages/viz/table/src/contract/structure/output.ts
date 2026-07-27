@@ -5,9 +5,11 @@ import { z } from 'zod';
 import type { DeepReadonly } from '../../shared';
 
 import {
+  TableCellLayoutSchema,
   TableCellLocationSchema,
   TableCellPayloadSchema,
   TableCellRoleSchema,
+  TableCellSpanSchema,
   TableRowKindSchema,
 } from '../../schemas';
 
@@ -84,6 +86,8 @@ export const TableStructureOutputSchema = z
           payload: TableCellPayloadSchema.describe('Validated Cell value or direct Core content.'),
           location: TableCellLocationSchema.describe('Semantic Cell location.'),
           roles: z.array(TableCellRoleSchema).min(1).describe('Non-empty semantic Cell roles.'),
+          span: TableCellSpanSchema.optional().describe('Optional rectangular Cell span normalized by the pipeline.'),
+          layout: TableCellLayoutSchema.optional().describe('Optional Cell layout normalized by the pipeline.'),
           source: TableCellSourceSchema.optional().describe('Optional runtime-only Cell source identity.'),
         }),
       )

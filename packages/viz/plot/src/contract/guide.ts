@@ -2,15 +2,14 @@ import type { IRScope } from '@retikz/core';
 
 import type { IRPlotAxisGuide } from '../schemas';
 import type { Rect } from '../shared';
-import type { PolarCoordinateFrame, TernaryVertices } from './coordinate';
+import type { PolarCoordinateFrame } from './coordinate';
 import type { ProvenanceContext } from './provenance';
 import type { PositionScale, TickSet } from './scale';
 
 /**
  * lowerGuide 上下文。
- * @description cartesian 使用 plotArea / projectX / projectY / ticks；polar 由 frame 驱动圆心、半径和角度几何；
- *   ternary 由三角顶点和共享刻度驱动三边轴几何。该类型只描述 coordinate provider 与 pipeline guide lowering
- *   之间的协议，不承载具体下沉实现
+ * @description cartesian 使用 plotArea / projectX / projectY / ticks；polar 由 frame 驱动圆心、半径和角度几何。
+ *   该类型只描述 coordinate provider 与 pipeline guide lowering 之间的协议，不承载具体下沉实现
  */
 export type GuideContext = {
   /** 缩进后的绘图区矩形（cartesian 轴线 / 网格框） */
@@ -38,10 +37,6 @@ export type GuideContext = {
   angularTicks?: TickSet;
   /** radial 维刻度集（polar：radius / y 维） */
   radialTicks?: TickSet;
-  /** 三角顶点（仅 ternary2D 给）：[Va, Vb, Vc]，存在即走三角轴几何 */
-  ternaryVertices?: TernaryVertices;
-  /** 三角轴共享刻度集（仅 ternary2D；values 为 0..1 占比） */
-  ternaryTicks?: TickSet;
 };
 
 /** lowerGuide 返回：网格层（仅 grid:true 时非空）与轴层 */

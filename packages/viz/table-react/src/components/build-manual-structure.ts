@@ -82,6 +82,7 @@ export const buildManualStructure = (children: ReactNode, rows: number, columns:
 
   const hasExplicitRowKind = rowElements.some(rowElement => rowElement.props.kind !== undefined);
   const rowKinds: Array<TableRowKindValue> = rowElements.map(rowElement => rowElement.props.kind ?? TableRowKind.Body);
+  const occupancy = Array.from({ length: rows }, () => Array.from<boolean>({ length: columns }).fill(false));
   const cells: Array<IRTableCell> = [];
   rowElements.forEach((rowElement, rowIndex) => {
     const { children: rowChildren } = rowElement.props;
@@ -96,7 +97,35 @@ export const buildManualStructure = (children: ReactNode, rows: number, columns:
     if (rowCells.length > columns) {
       throw new Error(`table react: Row ${rowIndex} received ${rowCells.length} Cell children, columns is ${columns}`);
     }
-    rowCells.forEach((cell, columnIndex) => cells.push(buildCell(cell, rowIndex, columnIndex)));
+    rowCells.forEach(cell => {
+      const columnIndex = occupancy[rowIndex].findIndex(occupied => !occupied);
+      if (columnIndex < 0) {
+        throw new Error(`table react: Row ${rowIndex} has no unoccupied Cell slot`);
+      }
+      const rowSpan = cell.props.span?.rows ?? 1;
+      const columnSpan = cell.props.span?.columns ?? 1;
+      if (rowIndex + rowSpan > rows || columnIndex + columnSpan > columns) {
+        throw new Error(`table react: Cell at row ${rowIndex}, column ${columnIndex} span is out of bounds`);
+      }
+      for (let occupiedRow = rowIndex; occupiedRow < rowIndex + rowSpan; occupiedRow += 1) {
+        if (rowKinds[occupiedRow] !== rowKinds[rowIndex]) {
+          throw new Error(`table react: Cell at row ${rowIndex}, column ${columnIndex} span crosses row kind`);
+        }
+        for (let occupiedColumn = columnIndex; occupiedColumn < columnIndex + columnSpan; occupiedColumn += 1) {
+          if (occupancy[occupiedRow][occupiedColumn]) {
+            throw new Error(
+              `table react: Cell at row ${rowIndex}, column ${columnIndex} span overlaps an occupied slot`,
+            );
+          }
+        }
+      }
+      for (let occupiedRow = rowIndex; occupiedRow < rowIndex + rowSpan; occupiedRow += 1) {
+        for (let occupiedColumn = columnIndex; occupiedColumn < columnIndex + columnSpan; occupiedColumn += 1) {
+          occupancy[occupiedRow][occupiedColumn] = true;
+        }
+      }
+      cells.push(buildCell(cell, rowIndex, columnIndex));
+    });
   });
 
   return {

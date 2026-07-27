@@ -4,6 +4,8 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { nodeTextRows } from './builtin-node-text.data';
+
 /** English control panel for node, text, label, and effect channels */
 export const builtinNodeTextControls = definePreviewControls({
   presentation: 'panel',
@@ -11,9 +13,28 @@ export const builtinNodeTextControls = definePreviewControls({
   defaultSize: 38,
   sections: [
     {
+      label: 'Data',
+      defaultCollapsed: true,
+      controls: [
+        {
+          kind: 'table',
+          id: 'rows',
+          label: 'Node and text data',
+          rows: nodeTextRows,
+          columns: [
+            { key: 'x', label: 'X position' },
+            { key: 'nodeY', label: 'Node Y' },
+            { key: 'textY', label: 'Text Y' },
+            { key: 'word', label: 'Text' },
+            { key: 'tag', label: 'Label' },
+          ],
+        },
+      ],
+    },
+    {
       label: 'Node geometry',
       controls: [
-        { kind: 'range', id: 'padding', label: 'padding', defaultValue: 8, min: 0, max: 20, step: 1 },
+        { kind: 'range', id: 'padding', label: 'padding', defaultValue: 18, min: 0, max: 36, step: 1 },
         {
           kind: 'range',
           id: 'cornerRadius',
@@ -28,8 +49,8 @@ export const builtinNodeTextControls = definePreviewControls({
           kind: 'range',
           id: 'minimumSize',
           label: 'minimumSize',
-          defaultValue: 64,
-          min: 36,
+          defaultValue: 36,
+          min: 0,
           max: 108,
           step: 4,
         },
@@ -56,10 +77,10 @@ export const builtinNodeTextControls = definePreviewControls({
           kind: 'range',
           id: 'lineHeight',
           label: 'lineHeight',
-          defaultValue: 1.2,
-          min: 0.8,
-          max: 2,
-          step: 0.1,
+          defaultValue: 18,
+          min: 12,
+          max: 32,
+          step: 1,
         },
         {
           kind: 'range',
@@ -152,15 +173,15 @@ export const builtinNodeTextControls = definePreviewControls({
 export const previewControlContract = {
   controls: builtinNodeTextControls,
   canonicalValues: {
-    padding: 8,
+    padding: 18,
     cornerRadius: 8,
     rotate: 0,
-    minimumSize: 64,
+    minimumSize: 36,
     scale: 1,
     textColor: '#1e3a8a',
     align: NodeTextAlign.Middle,
     fontSize: 14,
-    lineHeight: 1.2,
+    lineHeight: 18,
     maxTextWidth: 96,
     showLabel: true,
     labelPosition: 'top',
@@ -175,15 +196,15 @@ export const previewControlContract = {
       id: 'card',
       label: 'Info card',
       values: {
-        padding: 8,
+        padding: 18,
         cornerRadius: 8,
         rotate: 0,
-        minimumSize: 64,
+        minimumSize: 36,
         scale: 1,
         textColor: '#1e3a8a',
         align: NodeTextAlign.Middle,
         fontSize: 14,
-        lineHeight: 1.2,
+        lineHeight: 18,
         maxTextWidth: 96,
         showLabel: true,
         labelPosition: 'top',
@@ -198,15 +219,15 @@ export const previewControlContract = {
       id: 'tilted',
       label: 'Tilted emphasis',
       values: {
-        padding: 12,
+        padding: 24,
         cornerRadius: 16,
         rotate: -18,
-        minimumSize: 84,
+        minimumSize: 48,
         scale: 1.1,
         textColor: '#7c2d12',
         align: NodeTextAlign.Middle,
         fontSize: 16,
-        lineHeight: 1.3,
+        lineHeight: 22,
         maxTextWidth: 112,
         showLabel: false,
         labelPosition: 'top',

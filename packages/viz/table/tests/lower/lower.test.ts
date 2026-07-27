@@ -1,17 +1,17 @@
-import type { IRChild, IRScope } from '@retikz/core';
-
-import { ChildSchema, compileToScene, CompileWarningCode, CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { IRTableSpec, PresentedTableModel } from '../../src';
-import type { TableLayout } from '../../src/pipeline/layout';
+import type { IRTableSpec } from '../../src';
 
-import { defineTableStructure, lowerTables, lowerTableWithArtifacts, TABLE_NAMESPACE, TableComposite } from '../../src';
-import { layoutTable } from '../../src/pipeline/layout';
-import { emitTable } from '../../src/pipeline/lower';
-import { normalizeTableStructure } from '../../src/pipeline/normalize';
-import { presentTable } from '../../src/pipeline/presentation';
+import {
+  compileTable,
+  defineTableStructure,
+  lowerTables,
+  TABLE_NAMESPACE,
+  TableComposite,
+  TableLayoutManifestSchema,
+} from '../../src';
 
 const manualSpec = (id?: string): IRTableSpec => ({
   namespace: TABLE_NAMESPACE,
@@ -25,99 +25,42 @@ const manualSpec = (id?: string): IRTableSpec => ({
   },
 });
 
-const scopeOf = (child: IRChild): IRScope => {
-  if ('namespace' in child || child.type !== 'scope') throw new Error('expected Core Scope');
-  return child;
-};
-
-describe('Table lowering', () => {
-  it('emits valid Core scopes with a bounds sentinel and translated Cell content', () => {
-    const result = lowerTableWithArtifacts(manualSpec(), {});
-    const root = scopeOf(result.node);
-    const sentinel = root.children[0];
-    const cell = scopeOf(root.children[1]);
-
-    expect(ChildSchema.parse(result.node)).toEqual(result.node);
-    expect(root.localNamespace).toBe(true);
-    expect(sentinel).toMatchObject({
-      type: 'node',
-      position: [60, 16],
-      shape: 'rectangle',
-      minimumSize: { width: 120, height: 32 },
-      padding: 0,
-      fill: 'none',
-      stroke: 'none',
-      opacity: 0,
-      meta: { role: 'tableBounds' },
-    });
-    expect(cell).toMatchObject({
-      type: 'scope',
-      transforms: [{ kind: 'translate', x: 60, y: 16 }],
-      meta: { role: 'tableCell', cellId: 'cell.r0.c0', location: 'body' },
-    });
-    expect(cell.children[0]).toMatchObject({ type: 'node', position: [0, 0], text: 'Ada' });
-  });
-
-  it('maps a Table id and metadata to an outer Scope while retaining an inner local namespace', () => {
-    const spec = { ...manualSpec('people'), meta: { source: 'fixture' } };
-    const result = lowerTableWithArtifacts(spec, {});
-    const outer = scopeOf(result.node);
-    const inner = scopeOf(outer.children[0]);
-
-    expect(outer).toMatchObject({ id: 'people', meta: { source: 'fixture' } });
-    expect(outer.localNamespace).toBeUndefined();
-    expect(inner.localNamespace).toBe(true);
-    expect(result.manifest.tableId).toBe('people');
-  });
-
-  it('lowers detail values, null text, and source metadata from external datasets', () => {
-    const spec: IRTableSpec = {
-      namespace: TABLE_NAMESPACE,
-      type: TableComposite.Table,
-      data: { reference: 'people' },
-      structure: { kind: 'detail', header: false, columns: [{ id: 'name', field: 'name' }] },
-    };
-    const result = lowerTableWithArtifacts(spec, { people: [{ name: null }] });
-    const inner = scopeOf(result.node);
-    const bodyCell = scopeOf(inner.children[1]);
-
-    expect(bodyCell.meta).toMatchObject({
-      role: 'tableCell',
-      cellId: 'cell.r0.cname',
-      location: 'body',
-      reference: 'people',
-      sourceIndex: 0,
-      field: 'name',
-    });
-    expect(bodyCell.children[0]).toMatchObject({ type: 'node', text: '' });
-  });
-
-  it('keeps composite and artifact entry points node-equivalent', () => {
-    const spec = manualSpec('same');
-    const artifact = lowerTableWithArtifacts(spec, {});
+describe('Table layout-aware lowering', () => {
+  it('registers a compile branch with the public manifest artifact schema', () => {
     const definition = lowerTables({})[0];
 
-    expect(definition.namespace).toBe(TABLE_NAMESPACE);
-    expect(definition.type).toBe(TableComposite.Table);
-    expect(definition.expand(spec)).toEqual(artifact.node);
-  });
-
-  it('makes an empty fixed-track Table contribute its complete bounds to Core Scene layout', () => {
-    const spec: IRTableSpec = {
+    expect(definition).toMatchObject({
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
-      structure: { kind: 'manual', rows: 2, columns: 3, cells: [] },
-      layout: { columnWidth: 100, rowHeight: 30, columnGap: 5, rowGap: 3 },
-    };
-    const scene = compileToScene(
-      { version: 1, type: 'scene', children: [spec] },
-      { composites: lowerTables({}), padding: 0 },
-    ).scene;
-
-    expect(scene.layout).toEqual({ x: 0, y: 0, width: 310, height: 63 });
+      artifactSchema: TableLayoutManifestSchema,
+    });
+    expect(definition.compile).toBeTypeOf('function');
+    expect('expand' in definition).toBe(false);
   });
 
-  it('preserves nested composites for recursive Core lowering', () => {
+  it('compiles one canonical root and returns its exact typed artifact value', () => {
+    const result = compileTable(manualSpec('people'), {}, { compile: { padding: 0 } });
+    const tableArtifacts = result.artifacts.filter(artifact => artifact.kind === 'composite');
+
+    expect(result.scene.layout).toEqual({ x: 0, y: 0, width: 120, height: 32 });
+    expect(tableArtifacts).toHaveLength(1);
+    expect(tableArtifacts[0]).toMatchObject({
+      kind: 'composite',
+      namespace: TABLE_NAMESPACE,
+      type: TableComposite.Table,
+      occurrence: { sourcePath: 'children[0]', expansionPath: [] },
+    });
+    expect(result.manifest).toBe(tableArtifacts[0]?.value);
+    expect(result.manifest).toMatchObject({
+      tableId: 'people',
+      allocationBounds: { x: 0, y: 0, width: 120, height: 32 },
+      rows: [{ id: 'row.0', index: 0, offset: 0, size: 32 }],
+      columns: [{ id: 'column.0', index: 0, offset: 0, size: 120 }],
+      cells: [{ cellId: 'cell.r0.c0', rowId: 'row.0', columnId: 'column.0' }],
+    });
+  });
+
+  it('uses extra composite definitions in the same Core environment', () => {
     const BadgeSchema = CompositeBaseSchema.extend({
       namespace: z.literal('fixture'),
       type: z.literal('badge'),
@@ -127,7 +70,7 @@ describe('Table lowering', () => {
       namespace: 'fixture',
       type: 'badge',
       schema: BadgeSchema,
-      expand: node => ({ type: 'node', position: [0, 0], text: node.label }),
+      expand: node => ({ type: 'node' as const, position: [0, 0] as [number, number], text: node.label }),
     });
     const spec: IRTableSpec = {
       namespace: TABLE_NAMESPACE,
@@ -144,28 +87,33 @@ describe('Table lowering', () => {
         ],
       },
     };
-    const result = lowerTableWithArtifacts(spec, {});
-    const warnings: Array<string> = [];
 
-    expect(JSON.stringify(result.node)).toContain('"namespace":"fixture"');
-    compileToScene(
-      { version: 1, type: 'scene', children: [spec] },
-      {
-        composites: lowerTables({}),
-        padding: 0,
-        onWarn: warning => warnings.push(warning.code),
-      },
-    );
-    expect(warnings).toContain(CompileWarningCode.CompositeNotRegistered);
+    const result = compileTable(spec, {}, { compile: { composites: [badge], padding: 0 } });
 
-    const scene = compileToScene(
-      { version: 1, type: 'scene', children: [spec] },
-      { composites: [...lowerTables({}), badge], padding: 0 },
-    ).scene;
-    expect(JSON.stringify(scene.primitives)).toContain('Nested');
+    expect(JSON.stringify(result.scene.primitives)).toContain('Nested');
+    expect(result.manifest.cells).toHaveLength(1);
   });
 
-  it('fails loud for missing runtime capabilities', () => {
+  it('keeps empty fixed tracks observable through the allocation sentinel', () => {
+    const spec: IRTableSpec = {
+      namespace: TABLE_NAMESPACE,
+      type: TableComposite.Table,
+      structure: { kind: 'manual', rows: 2, columns: 3, cells: [] },
+      layout: {
+        columnSize: { kind: 'fixed', value: 100 },
+        rowSize: { kind: 'fixed', value: 30 },
+        columnGap: 5,
+        rowGap: 3,
+      },
+    };
+    const result = compileTable(spec, {}, { compile: { padding: 0 } });
+
+    expect(result.manifest.allocationBounds).toEqual({ x: 0, y: 0, width: 310, height: 63 });
+    expect(result.manifest.visualOverflowBounds).toEqual({ x: 0, y: 0, width: 0, height: 0 });
+    expect(result.scene.layout).toEqual({ x: 0, y: 0, width: 310, height: 63 });
+  });
+
+  it('fails loud for missing data, custom structure, and duplicate composite keys', () => {
     const detail: IRTableSpec = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
@@ -177,27 +125,6 @@ describe('Table lowering', () => {
       type: TableComposite.Table,
       structure: { kind: 'unknownStructure' },
     };
-    const presentation: IRTableSpec = {
-      ...manualSpec(),
-      structure: {
-        kind: 'manual',
-        rows: 1,
-        columns: 1,
-        cells: [
-          {
-            address: { row: 0, column: 0 },
-            payload: { kind: 'value', value: 1, presentation: { name: 'unknownPresentation' } },
-          },
-        ],
-      },
-    };
-
-    expect(() => lowerTableWithArtifacts(detail, {})).toThrow(/dataset.*missing/i);
-    expect(() => lowerTableWithArtifacts(custom, {})).toThrow(/structure.*unknownStructure/i);
-    expect(() => lowerTableWithArtifacts(presentation, {})).toThrow(/presentation.*unknownPresentation/i);
-  });
-
-  it('preserves the custom structure kind when a provider rejects missing data', () => {
     const dataRequired = defineTableStructure({
       schema: z.strictObject({ kind: z.literal('requiresData') }),
       build: (_spec, context) => {
@@ -205,28 +132,19 @@ describe('Table lowering', () => {
         return { rows: [], columns: [], cells: [] };
       },
     });
-    const spec: IRTableSpec = {
+    const requiresData: IRTableSpec = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       structure: { kind: 'requiresData' },
     };
 
-    expect(() => lowerTableWithArtifacts(spec, {}, { structureDefinitions: [dataRequired] })).toThrow(
-      /table: lower: table: structure "requiresData": external data is required/,
+    expect(() => compileTable(detail, {})).toThrow(/dataset.*missing/i);
+    expect(() => compileTable(custom, {})).toThrow(/structure.*unknownStructure/i);
+    expect(() => compileTable(requiresData, {}, { lower: { structureDefinitions: [dataRequired] } })).toThrow(
+      /requiresData.*external data is required/i,
     );
-  });
-
-  it('rejects Presented/Layout cell alignment drift before emit', () => {
-    const model = normalizeTableStructure(manualSpec().structure);
-    const presented = presentTable(model);
-    const layout = layoutTable(model);
-    const missingPresentedCell: PresentedTableModel = { ...presented, cells: [] };
-    const wrongLayoutCell: TableLayout = {
-      ...layout,
-      cells: [{ ...layout.cells[0], cellId: 'different' }],
-    };
-
-    expect(() => emitTable(missingPresentedCell, layout)).toThrow(/table: internal cell alignment/i);
-    expect(() => emitTable(presented, wrongLayoutCell)).toThrow(/table: internal cell alignment/i);
+    expect(() => compileTable(manualSpec(), {}, { compile: { composites: lowerTables({}) } })).toThrow(
+      /duplicate composite (definition|registration)/i,
+    );
   });
 });

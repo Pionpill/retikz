@@ -115,5 +115,5 @@ export type IRPlotGuide = z.infer<typeof GuideSchema>;
 /** 坐标轴 guide（轴线 + 刻度 + 标签 + 可选网格） */
 export type IRPlotAxisGuide = z.infer<typeof AxisGuideSchema>;
 
-/** 图例 guide（swatch / 色带 ramp / 分箱 / 梯度符号，由绑定 scale 类型决定形态） */
+/** 图例 guide（swatch / 色带 ramp / 分箱 / 梯度符号，由 color scale 或 channel definition 决定形态） */
 export type IRPlotLegendGuide = z.infer<typeof LegendGuideSchema>;

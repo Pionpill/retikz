@@ -1,0 +1,122 @@
+---
+title: 自定义通道
+description: 用 ChannelDefinition 把字段或常量解析为既有 Core 属性，并通过 channelDefinitions 注入 Plot 的统一通道注册表。
+---
+
+自定义通道负责把数据值交付到已有的 Core `Scope`、`Node` 或 `Path` 属性。例如，`intensity` 可以把 `score` 映射为节点透明度。它扩展的是**数据到视觉属性的交付路径**，不是新的渲染能力。
+
+## 适用边界
+
+- 需要新的 `encoding.channels.<name>`，并希望它参与字段 / 常量绑定、逐行求值和图例描述时，定义自定义通道。
+- 只改变“值 → 坐标”或“值 → 颜色”规则时，使用[自定义比例尺](/viz/plot/scale/custom-scale)；大小、透明度等其它视觉属性仍由对应通道负责求值和交付。
+- Core 还没有目标视觉属性时，应先补 Core 能力；channel definition 不应绕开 Core 建立平行渲染语义。
+- 字段准备、聚合或筛选属于[数据扩展](/viz/data/model/extensions)，不放进通道 resolver。
+
+## 定义能力
+
+用 `defineScopeChannel`、`defineNodeChannel`、`definePathChannel` 或通用 `defineChannel` 声明 definition：
+
+| 字段      | 作用                                                                            |
+| --------- | ------------------------------------------------------------------------------- |
+| `channel` | 唯一注册名，对应 `encoding.channels.<name>`                                     |
+| `output`  | 声明输出类型及可选的 range / palette / clamp 元数据；不会自动映射或截断值       |
+| `legend?` | 声明图例形态                                                                    |
+| `resolve` | 读取字段或常量绑定，自行完成映射与 clamp，并返回逐行 resolver 和可选 descriptor |
+| `deliver` | 把解析后的值写入既有 Core 属性                                                  |
+
+下面的 `intensity` 通道把字段值映射到 `[0.3, 1]`，也接受直接表示透明度的数值常量。用面板切换字段与常量绑定；definition、数据和宿主注入都可以从源码切换器中查看：
+
+<ComponentPreview
+  files={['custom-channel', 'custom-channel.definition.ts', 'custom-channel.data.ts']}
+  size="md"
+  caption="字段绑定会保留各行 score 的强弱差异；常量绑定会让所有点使用同一透明度。"
+/>
+
+## 注入宿主
+
+通过 `<Plot channelDefinitions={[intensityChannel]}>` 注入 definition；Vanilla 源码使用 `renderPlot` options 注入同一 definition。
+
+React DSL 的字符串值表示字段名；常量使用 `{ value }` 或 `MarkValueType`：
+
+```tsx
+<PointMark channels={{ intensity: 'score' }} />
+<PointMark channels={{ intensity: { value: 0.65 } }} />
+<PointMark channels={{ intensity: { kind: 'constant', value: 0.65 } }} />
+```
+
+它们分别装配为 `{ field: 'score' }` 和 `{ value: 0.65 }`。definition 始终留在运行时，不进入 Plot IR。
+
+## 执行机制
+
+1. 宿主把内置与自定义 definitions 合并到同一个 channel registry，并拒绝内置名冲突或重复注册。
+2. lowering 校验绑定的通道已经注册，再调用 definition 的 `resolve` 读取绑定和数据行。
+3. mark definition 用 `channelKinds` 声明自己消费哪些交付面。
+4. lowering 调用 scope / node / path definition 的 `deliver`，把 resolver 结果写入 Core IR。
+
+channel definition 不应检查 `mark.type`。它只负责解析和交付；某个 mark 是否消费 node、path 或 scope 通道，由 mark definition 决定，因此自定义 mark 也能复用同一条通道路径。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'ChannelDefinition 与 define helper 契约',
+      path: 'packages/viz/plot/src/contract/channel.ts',
+      startLine: 222,
+      endLine: 331,
+    },
+    {
+      label: '内置与自定义通道合并到统一注册表',
+      path: 'packages/viz/plot/src/providers/channel/registry.ts',
+      startLine: 77,
+      endLine: 114,
+    },
+    {
+      label: '通道 lookup、resolve 与交付分派',
+      path: 'packages/viz/plot/src/providers/channel/registry.ts',
+      startLine: 120,
+      endLine: 190,
+    },
+  ]}
+/>
+
+## 错误与限制
+
+- 自定义 `channel` 不能覆盖内置名，也不能重复注册；绑定未注册通道时 lowering 会直接报错。
+- 每个 binding 必须在 `field` 与 `value` 中恰好选择一个；常量还必须是 JSON value。
+- definition 决定接受哪些值类型。示例的 `intensity` 常量只接受有限数，并在自己的 `resolve` 中执行 clamp。
+- `resolve` 不应修改数据或生成几何；`deliver` 只能写入对应 Core 图元已经支持的属性。
+- IR 中只保存字段或 JSON 常量绑定，不能包含函数或 definition。
+
+下面的 binding 会在 schema 校验时失败，因为同时设置了字段和常量：
+
+```ts
+encoding: {
+  channels: { intensity: { field: 'score', value: 0.65 } },
+}
+```
+
+## API 参考
+
+公开导出：
+
+| 从 `@retikz/plot` 导入 | 用途                                                                                    |
+| ---------------------- | --------------------------------------------------------------------------------------- |
+| `defineScopeChannel`   | 定义交付到 Core Scope 的通道                                                            |
+| `defineNodeChannel`    | 定义交付到 Core Node 的通道                                                             |
+| `definePathChannel`    | 定义交付到 Core Path 的通道                                                             |
+| `defineChannel`        | 定义需要显式 kind 与交付契约的通用通道                                                  |
+| `ChannelDefinition`    | 查询 channel、output、resolve 与 deliver 的完整契约                                     |
+| `ChannelContext`       | 查询 rows、字段类型和 scale registry 等公共解析上下文；Node / Scope / Path 提供同构别名 |
+
+宿主注入：
+
+| 宿主                                   | 公开契约            | 注入字段                                    |
+| -------------------------------------- | ------------------- | ------------------------------------------- |
+| `@retikz/plot-react` 的 `<Plot>`       | `PlotProps`         | `channelDefinitions`                        |
+| `@retikz/plot-vanilla` 的 `renderPlot` | `RenderPlotOptions` | 继承 `LowerPlotsOptions.channelDefinitions` |
+
+## 相关
+
+- [通道绑定](/viz/plot/channel/binding) —— 字段与常量绑定如何进入 Plot IR
+- [内置通道](/viz/plot/channel/builtin) —— 内置 definition 的交付面
+- [自定义图元](/viz/plot/mark/custom-mark) —— mark 如何声明和消费 channel kind
+- [运行时扩展索引](/kernel/reference/runtime/extensions) —— 跨能力查询 Definition、registry 与错误边界
