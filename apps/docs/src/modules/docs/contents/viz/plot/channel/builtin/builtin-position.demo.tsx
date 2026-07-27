@@ -1,29 +1,41 @@
 import type { FC } from 'react';
 
+import { DataFieldType } from '@retikz/data';
 import { Axis, Plot, PointMark } from '@retikz/plot-react';
 
-const rows = [
-  { month: 'Jan', sales: 12 },
-  { month: 'Feb', sales: 18 },
-  { month: 'Mar', sales: 15 },
-  { month: 'Apr', sales: 24 },
-];
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-const Demo: FC = () => (
+import { builtinPositionControls, previewControlContract } from './builtin-position.controls';
+import { positionRows } from './builtin-position.data';
+
+/** 注册回退使用的内置位置通道 controls */
+export const previewControls = builtinPositionControls;
+
+const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Plot
-    data={rows}
+    data={positionRows}
     model={[
-      { name: 'month', type: 'categorical' },
-      { name: 'sales', type: 'continuous' },
+      { name: 'month', type: DataFieldType.Categorical },
+      { name: 'sales', type: DataFieldType.Continuous },
+      { name: 'profit', type: DataFieldType.Continuous },
+      { name: 'orders', type: DataFieldType.Continuous },
+      { name: 'averageOrder', type: DataFieldType.Continuous },
     ]}
-    width={360}
-    height={220}
+    coordinate={{ type: 'cartesian2D' }}
+    width={400}
+    height={260}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <PointMark x="month" y="sales" size={7} fill="#2563eb" />
+    <PointMark x={values.xField} y={values.yField} size={8} fill="#2563eb" />
     <Axis dimension="x" />
     <Axis dimension="y" grid />
   </Plot>
-);
+));
+
+/** canonical 状态派生的稳定源码配置 */
+export const previewSource = controlledPreview.source;
+
+/** 可切换横纵轴字段的内置位置通道试验场 */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

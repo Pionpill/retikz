@@ -25,6 +25,7 @@ import {
 } from '../controls';
 import { usePreviewControlLayout } from './hooks';
 import { PreviewTableControl } from './PreviewTableControl';
+import { getDefaultCollapsedSectionIndexes } from './utils';
 
 type PreviewCollapsedSectionsState = {
   definition: PreviewPanelControlsDefinition;
@@ -105,11 +106,14 @@ const PreviewControlPanelComponent: FC<PreviewControlPanelProps> = props => {
   );
   const [collapsedSections, setCollapsedSections] = useState<PreviewCollapsedSectionsState>(() => ({
     definition: visibleDefinition,
-    indexes: new Set(),
+    indexes: getDefaultCollapsedSectionIndexes(visibleDefinition.sections),
   }));
 
   if (collapsedSections.definition !== visibleDefinition) {
-    setCollapsedSections({ definition: visibleDefinition, indexes: new Set() });
+    setCollapsedSections({
+      definition: visibleDefinition,
+      indexes: getDefaultCollapsedSectionIndexes(visibleDefinition.sections),
+    });
   }
 
   const collapsedSectionIndexes =

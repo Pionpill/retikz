@@ -3,8 +3,8 @@ import type { FC } from 'react';
 import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /**
- * 通道绑定与 definition 汇入统一解析器的英文插图
- * @description PlotSpec 的位置绑定由坐标角色读取，其余绑定与内置 / 自定义 definition 在解析器处汇合
+ * 通道绑定与处理规则汇入统一解析器的英文插图
+ * @description PlotSpec 的位置绑定进入坐标投影，其余绑定与内置 / 自定义通道规则在解析器处汇合
  */
 const Demo: FC = () => (
   <Layout width={440} height={360} style={{ maxWidth: '100%', height: 'auto' }}>
@@ -35,9 +35,9 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Built-in definitions</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Built-in channels</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        built-in channels
+        built-in rules
       </Text>
     </Node>
     <Node
@@ -51,7 +51,7 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Custom definitions</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Custom channels</Text>
       <Text fill="gray" font={{ size: 12 }}>
         channelDefinitions
       </Text>
@@ -85,13 +85,13 @@ const Demo: FC = () => (
     >
       <Text font={{ size: 14, weight: 'bold' }}>Resolve binding</Text>
       <Text fill="gray" font={{ size: 11 }}>
-        dispatch by definition kind
+        dispatch by channel type
       </Text>
     </Node>
     <Node
       id="position"
       position={[-145, 55]}
-      minimumSize={{ width: 118, height: 54 }}
+      minimumSize={{ width: 148, height: 54 }}
       stroke="gray"
       fill="gray"
       fillOpacity={0.06}
@@ -99,9 +99,9 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Position binding</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Coordinate projection</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        coordinate roles
+        x / y / z → screen
       </Text>
     </Node>
     <Node
@@ -117,13 +117,13 @@ const Demo: FC = () => (
     >
       <Text font={{ size: 14, weight: 'bold' }}>Visible properties</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        mark / scope / node / path
+        mark / container / node / path
       </Text>
     </Node>
     <Node
       id="descriptor"
       position={[145, 145]}
-      minimumSize={{ width: 118, height: 54 }}
+      minimumSize={{ width: 138, height: 54 }}
       stroke="gray"
       fill="gray"
       fillOpacity={0.06}
@@ -131,7 +131,7 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Guide descriptor</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Legend information</Text>
       <Text fill="gray" font={{ size: 12 }}>
         legend input
       </Text>

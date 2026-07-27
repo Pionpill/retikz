@@ -7,9 +7,9 @@ import type { PositionScaleType } from './scales';
 export type AxisProps = {
   /**
    * 装饰哪个定位维度：cartesian 的 x（水平）/ y（垂直）；polar 的 x（角向）/ y（径向）；
-   * ternary 的 x / y / z（三角三边）。维度须匹配坐标系合法集，否则 lowering fail-loud
+   * custom coordinate 使用 definition 声明的 role。维度须匹配坐标系合法集，否则 lowering fail-loud
    */
-  dimension: 'x' | 'y' | 'z';
+  dimension: string;
   /** 位置 scale 快捷配置；对可缩放维度等价于同维度的 <Scale dimension={dimension} type={scale} /> */
   scale?: PositionScaleType;
   /** 轴线样式；false 隐藏轴线但保留 ticks / labels / grid */
@@ -40,7 +40,7 @@ export type AxisProps = {
  */
 export const Axis: FC<AxisProps> = () => null;
 
-/** <Legend> props：图例配置；可视化哪个非位置通道由 channel 指定，形态（swatch / 色带 / 分箱 / 梯度符号）据绑定 scale 类型自动选 */
+/** <Legend> props：图例配置；channel 指定非位置通道，颜色形态来自 scale，其它形态来自 ChannelDefinition.legend */
 export type LegendProps = {
   /** 可视化哪个非位置通道：color（颜色）/ size（尺寸）/ opacity（透明度）/ shape（形状） */
   channel: string;
@@ -52,9 +52,9 @@ export type LegendProps = {
   position?: 'right' | 'left' | 'top' | 'bottom';
   /** 条目排布方向；省略 = 按 position（左右→vertical、上下→horizontal） */
   orient?: 'vertical' | 'horizontal';
-  /** 连续色带刻度来源；离散图例忽略 tick source */
+  /** ramp 的完整刻度来源；size 只读取 count，离散色块和 shape 忽略 */
   ticks?: IRPlotLegendGuide['ticks'];
-  /** 是否出 swatch / 刻度旁标签，以及连续 ramp 的标签格式；缺省 = true */
+  /** 是否显示条目 / 刻度标签，以及 ramp 的标签格式；缺省 = true */
   tickLabels?: IRPlotLegendGuide['tickLabels'];
   /** 图例本地视觉 token；覆盖 Plot theme.legend */
   style?: IRPlotLegendGuide['style'];

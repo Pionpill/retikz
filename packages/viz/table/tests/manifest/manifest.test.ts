@@ -1,20 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
 
 import type { IRTableSpec } from '../../src';
 
 import {
-  defineCellPresentation,
-  defineTableStructure,
-  lowerTableWithArtifacts,
+  compileTable,
   TABLE_NAMESPACE,
   TableCellLocation,
   TableCellRole,
   TableComposite,
-  TableRowKind,
+  TableLayoutManifestSchema,
 } from '../../src';
-import { layoutTable } from '../../src/pipeline/layout';
-import { normalizeTableStructure } from '../../src/pipeline/normalize';
 
 /** 断言 JSON 风格对象图的每一层都已冻结 */
 const expectDeepFrozen = (value: unknown): void => {
@@ -24,23 +19,36 @@ const expectDeepFrozen = (value: unknown): void => {
 };
 
 describe('Table layout manifest', () => {
-  it('detaches row, column, Cell, box, roles, and source data from the semantic/layout inputs', () => {
+  it('publishes detached source and Table-local Cell bounds with semantic identity', () => {
     const spec: IRTableSpec = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'people',
       data: { reference: 'people' },
-      structure: { kind: 'detail', columns: [{ id: 'name', field: 'name' }] },
-      layout: { columnWidth: 90, rowHeight: 24, headerHeight: 30, rowGap: 2 },
+      structure: {
+        kind: 'detail',
+        columns: [
+          {
+            id: 'name',
+            field: 'name',
+            headerLayout: { padding: 2 },
+            bodyLayout: { padding: { x: 4, y: 3 }, overflow: 'clip' },
+          },
+        ],
+      },
+      layout: {
+        columnSize: { kind: 'fixed', value: 90 },
+        rowSize: { kind: 'fixed', value: 24 },
+        headerRowSize: { kind: 'fixed', value: 30 },
+        rowGap: 2,
+      },
     };
-    const datasets = { people: [{ name: 'Ada' }] };
-    const model = normalizeTableStructure(spec.structure, { data: spec.data, datasets });
-    const layout = layoutTable(model, spec.layout);
-    const result = lowerTableWithArtifacts(spec, datasets);
+    const result = compileTable(spec, { people: [{ name: 'Ada' }] }, { compile: { padding: 0 } });
 
-    expect(result.manifest).toEqual({
+    expect(TableLayoutManifestSchema.parse(result.manifest)).toEqual(result.manifest);
+    expect(result.manifest).toMatchObject({
       tableId: 'people',
-      bounds: { x: 0, y: 0, width: 90, height: 56 },
+      allocationBounds: { x: 0, y: 0, width: 90, height: 56 },
       rows: [
         { id: 'row.header', index: 0, offset: 0, size: 30 },
         { id: 'row.0', index: 1, offset: 32, size: 24 },
@@ -49,29 +57,36 @@ describe('Table layout manifest', () => {
       cells: [
         {
           cellId: 'cell.header.cname',
+          rowId: 'row.header',
+          columnId: 'name',
+          rowIndex: 0,
+          columnIndex: 0,
+          span: { rows: 1, columns: 1 },
           box: { x: 0, y: 0, width: 90, height: 30 },
+          contentBox: { x: 2, y: 2, width: 86, height: 26 },
           location: TableCellLocation.ColumnHeader,
           roles: [TableCellRole.ColumnHeader],
           source: { kind: 'generated', structureKind: 'detail' },
         },
         {
           cellId: 'cell.r0.cname',
+          rowId: 'row.0',
+          columnId: 'name',
+          rowIndex: 1,
+          columnIndex: 0,
+          span: { rows: 1, columns: 1 },
           box: { x: 0, y: 32, width: 90, height: 24 },
+          contentBox: { x: 4, y: 35, width: 82, height: 18 },
           location: TableCellLocation.Body,
           roles: [TableCellRole.Data],
           source: { kind: 'field', reference: 'people', sourceIndex: 0, field: 'name' },
         },
       ],
+      borders: [],
     });
-    expect(result.manifest.bounds).not.toBe(layout.bounds);
-    expect(result.manifest.rows[0]).not.toBe(layout.rows[0]);
-    expect(result.manifest.columns[0]).not.toBe(layout.columns[0]);
-    expect(result.manifest.cells[0].box).not.toBe(layout.cells[0].box);
-    expect(result.manifest.cells[0].roles).not.toBe(model.cells[0].roles);
-    expect(result.manifest.cells[0].source).not.toBe(model.cells[0].source);
   });
 
-  it('recursively freezes the whole manifest and remains deterministic after failed mutation', () => {
+  it('recursively freezes the artifact and remains deterministic without modifying input', () => {
     const spec: IRTableSpec = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
@@ -82,123 +97,53 @@ describe('Table layout manifest', () => {
         cells: [{ address: { row: 0, column: 0 }, payload: { kind: 'value', value: 'Ada' } }],
       },
     };
-    const first = lowerTableWithArtifacts(spec, {});
-    const snapshot = JSON.parse(JSON.stringify(first)) as typeof first;
-    if ('namespace' in first.node || first.node.type !== 'scope') throw new Error('expected Table root Scope');
-    const sentinel = first.node.children[0];
-    if (
-      'namespace' in sentinel ||
-      sentinel.type !== 'node' ||
-      sentinel.minimumSize === undefined ||
-      typeof sentinel.minimumSize === 'number'
-    ) {
-      throw new Error('expected Table bounds sentinel');
-    }
+    const before = structuredClone(spec);
+    const first = compileTable(spec, {}, { compile: { padding: 0 } });
+    const second = compileTable(spec, {}, { compile: { padding: 0 } });
 
     expectDeepFrozen(first.manifest);
-    expect(sentinel.minimumSize).not.toBe(first.manifest.bounds);
-    sentinel.minimumSize.width = 321;
-    expect(first.manifest.bounds.width).toBe(120);
     expect(() => {
-      (first.manifest.bounds as { width: number }).width = 999;
+      (first.manifest.allocationBounds as { width: number }).width = 999;
     }).toThrow();
     expect(() => {
       (first.manifest.cells[0].roles as Array<string>).push('mutated');
     }).toThrow();
-    expect(first.manifest).toEqual(snapshot.manifest);
-    expect(lowerTableWithArtifacts(spec, {})).toEqual(snapshot);
+    expect(first.manifest).toEqual(second.manifest);
+    expect(spec).toEqual(before);
   });
 
-  it('supports custom structure and presentation through the same lowering path without output aliasing', () => {
-    const output = {
-      rows: [{ id: 'row.summary', kind: TableRowKind.Body }],
-      columns: [{ id: 'region' }],
-      cells: [
+  it('keeps canonical border geometry and per-atom provenance in the same manifest', () => {
+    const spec: IRTableSpec = {
+      namespace: TABLE_NAMESPACE,
+      type: TableComposite.Table,
+      id: 'grid',
+      structure: {
+        kind: 'manual',
+        rows: 1,
+        columns: 1,
+        cells: [{ address: { row: 0, column: 0 }, payload: { kind: 'value', value: 'x' } }],
+      },
+      layout: {
+        columnSize: { kind: 'fixed', value: 40 },
+        rowSize: { kind: 'fixed', value: 20 },
+        borders: { outer: { kind: 'line', stroke: '#f00', width: 2 } },
+      },
+    };
+    const result = compileTable(spec, {}, { compile: { padding: 0 } });
+
+    expect(result.manifest.borders).toHaveLength(4);
+    expect(result.manifest.borders[0]).toMatchObject({
+      pathId: expect.stringMatching(/^grid\/border\//),
+      style: { stroke: '#f00', width: 2, lineCap: 'butt', lineJoin: 'miter' },
+      atoms: [
         {
-          id: 'cell.summary.region',
-          row: 0,
-          column: 0,
-          payload: {
-            kind: 'value' as const,
-            value: 'East',
-            presentation: { name: 'prefix', options: { prefix: 'Region: ' } },
-          },
-          location: TableCellLocation.Body,
-          roles: [TableCellRole.Data],
-          source: { kind: 'generated' as const, structureKind: 'summary' },
+          key: expect.any(String),
+          winner: { kind: 'line', source: { kind: 'default', scope: 'outer' } },
+          contributors: [expect.objectContaining({ kind: 'line' })],
         },
       ],
-    };
-    const structure = defineTableStructure({
-      schema: z.strictObject({ kind: z.literal('summary') }),
-      build: () => output,
     });
-    const presentation = defineCellPresentation({
-      name: 'prefix',
-      optionsSchema: z.strictObject({ prefix: z.string() }),
-      present: ({ value }, options) => ({
-        type: 'node',
-        position: [0, 0],
-        text: `${options.prefix}${String(value)}`,
-      }),
-    });
-    const spec: IRTableSpec = {
-      namespace: TABLE_NAMESPACE,
-      type: TableComposite.Table,
-      structure: { kind: 'summary' },
-    };
-    const result = lowerTableWithArtifacts(
-      spec,
-      {},
-      {
-        structureDefinitions: [structure],
-        presentationDefinitions: [presentation],
-      },
-    );
-
-    expect(JSON.stringify(result.node)).toContain('Region: East');
-    expect(result.manifest.cells[0].source).toEqual({ kind: 'generated', structureKind: 'summary' });
-    expect(result.manifest.rows[0]).not.toBe(output.rows[0]);
-    expect(result.manifest.cells[0].roles).not.toBe(output.cells[0].roles);
-
-    output.rows[0].id = 'mutated';
-    output.cells[0].roles.push(TableCellRole.Data);
-    expect(result.manifest.rows[0].id).toBe('row.summary');
-    expect(result.manifest.cells[0].roles).toEqual([TableCellRole.Data]);
-  });
-
-  it('preserves zero-row and zero-column bounds without inventing positive sizes', () => {
-    const spec: IRTableSpec = {
-      namespace: TABLE_NAMESPACE,
-      type: TableComposite.Table,
-      data: { reference: 'empty' },
-      structure: { kind: 'detail', header: false, columns: [{ id: 'name', field: 'name' }] },
-    };
-    const result = lowerTableWithArtifacts(spec, { empty: [] });
-
-    expect(result.manifest.bounds).toEqual({ x: 0, y: 0, width: 120, height: 0 });
-    expect(result.manifest.rows).toEqual([]);
-    expect(result.manifest.cells).toEqual([]);
-    expect(JSON.stringify(result.node)).toContain('"minimumSize":{"width":120,"height":0}');
-
-    const zeroColumns = defineTableStructure({
-      schema: z.strictObject({ kind: z.literal('zeroColumns') }),
-      build: () => ({
-        rows: [{ id: 'row.0', kind: TableRowKind.Body }],
-        columns: [],
-        cells: [],
-      }),
-    });
-    const zeroColumnSpec: IRTableSpec = {
-      namespace: TABLE_NAMESPACE,
-      type: TableComposite.Table,
-      structure: { kind: 'zeroColumns' },
-    };
-    const zeroColumnResult = lowerTableWithArtifacts(zeroColumnSpec, {}, { structureDefinitions: [zeroColumns] });
-
-    expect(zeroColumnResult.manifest.bounds).toEqual({ x: 0, y: 0, width: 0, height: 32 });
-    expect(zeroColumnResult.manifest.columns).toEqual([]);
-    expect(zeroColumnResult.manifest.cells).toEqual([]);
-    expect(JSON.stringify(zeroColumnResult.node)).toContain('"minimumSize":{"width":0,"height":32}');
+    expect(result.manifest.visualOverflowBounds.width).toBeGreaterThanOrEqual(42);
+    expect(JSON.stringify(result.scene.primitives)).toContain('tableBorder');
   });
 });

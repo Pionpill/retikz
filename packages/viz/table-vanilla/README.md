@@ -22,8 +22,20 @@ const adapter = createTableAdapter();
 const view = mount(container, figure([embedTable('scores-panel', spec, { data: { scores: rows } })]), {
   adapters: [adapter],
 });
-const svg = renderTable(spec, { data: { scores: rows } });
+const result = renderTable(spec, {
+  data: { scores: rows },
+  compile: { composites: [] },
+  animation: { enabled: false },
+  artifacts: true,
+});
+
+result.svg;
+result.manifest;
 ```
+
+`renderTable()` calls `compileTable()` once and derives SVG plus the optional manifest from that same
+compile result. Core options live under `compile`, including extra composite definitions; the removed
+top-level `composites` option is not retained as an alias.
 
 The API is based on plain functions and data, not a fluent builder. The adapter is SSR-safe and does
 not own table structure, presentation, layout, lowering, a renderer, or a private Table IR.

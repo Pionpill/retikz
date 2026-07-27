@@ -5,14 +5,7 @@ import { Axis, Plot, PointMark } from '@retikz/plot-react';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { builtinPointStyleControls, previewControlContract } from './builtin-point-style.controls';
-
-const rows = [
-  { x: 1, y: 12 },
-  { x: 2, y: 18 },
-  { x: 3, y: 14 },
-  { x: 4, y: 22 },
-  { x: 5, y: 17 },
-];
+import { pointStyleRows } from './builtin-point-style.data';
 
 /** 注册回退使用的点样式 controls */
 export const previewControls = builtinPointStyleControls;
@@ -24,7 +17,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Plot
-      data={rows}
+      data={pointStyleRows}
       model={[
         { name: 'x', type: 'continuous' },
         { name: 'y', type: 'continuous' },

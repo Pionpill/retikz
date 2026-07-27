@@ -102,4 +102,23 @@ describe('buildPlotSpec model → type-driven 派生（alpha.6 ADR-03，评审 P
     expect(spec.scales).toContainEqual({ type: 'symlog', name: '__y', constant: 50 });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
+
+  it('显式 point <Scale> 会把分类 domain、padding 与 align 转发到 PlotSpec', () => {
+    const spec = buildPlotSpec(
+      <>
+        <PathMark x="month" y="revenue" />
+        <Scale dimension="x" type="point" domain={['Jan', 'Feb', 'Mar']} padding={0} align={0} />
+      </>,
+      '__plot',
+    );
+
+    expect(spec.scales).toContainEqual({
+      type: 'point',
+      name: '__x',
+      domain: ['Jan', 'Feb', 'Mar'],
+      padding: 0,
+      align: 0,
+    });
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
 });

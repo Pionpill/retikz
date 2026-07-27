@@ -5,9 +5,15 @@ description: Plot lineage enriches Data provenance and transform records with ma
 
 Data explains where a row came from and which transforms it passed through. Plot must additionally explain how that row became a mark, which channels and scales it used, and which layout contained it. Plot lineage combines both layers into a `PlotLineageRun` for inspectors, audit panels, and interaction trace-back.
 
+<ComponentAlert
+  type="tip"
+  title="When lineage is useful"
+  description="Rendering a chart does not require lineage. Configure lineage or onLineage only when a host must audit one run, explain a mark's origin, or trace a hit back to data."
+/>
+
 ## From Data to Marks
 
-<ComponentPreview files="plot-lineage-flow" size="sm" hideCode />
+<ComponentPreview files="plot-lineage-flow" size="xs" hideCode />
 
 Plot lineage reuses [Data Provenance](/viz/data/provenance), then adds Plot-owned semantics: root versus mark-local transform scopes, mark identity and encoding, declared scales, coordinate layout, and host-approved query or AI metadata.
 
@@ -19,10 +25,10 @@ Plot lineage reuses [Data Provenance](/viz/data/provenance), then adds Plot-owne
 
 Plot has two similarly named source capabilities with different jobs:
 
-| Path                        | Entry options                                   | Output location                           | Typical use                          |
-| --------------------------- | ----------------------------------------------- | ----------------------------------------- | ------------------------------------ |
-| Lowered provenance metadata | `provenance`, `datumProvenance`, `datumIdField` | Core primitive ids / meta in the Scene    | Locators, stable anchors, inspection |
-| Runtime Plot lineage        | `lineage`, `hostLineageMetadata`                | `PlotLineageRun` return value or callback | Audit, explanation, host inspectors  |
+| Path                        | Entry options                                   | Output and use                                                                             |
+| --------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Lowered provenance metadata | `provenance`, `datumProvenance`, `datumIdField` | Core primitive ids / meta in the Scene<br />For locators, stable anchors, and inspection   |
+| Runtime Plot lineage        | `lineage`, `hostLineageMetadata`                | `PlotLineageRun` return value or callback<br />For audit, explanation, and host inspectors |
 
 Lowered provenance can change the ids and metadata carried by generated primitives. Plot lineage only records one run on a side channel. Enabling `lineage` does not copy the artifact into the Scene, and enabling `datumProvenance` does not create a `PlotLineageRun`.
 
@@ -31,44 +37,42 @@ Lowered provenance can change the ids and metadata carried by generated primitiv
 Author the chart with the normal `<Plot>` entry. Pass `lineage` when the host needs the artifact and receive it through `onLineage`:
 
 ```tsx
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
-import type { PlotLineageOptions, PlotLineageRun } from '@retikz/plot';
+import type { PlotLineageRun } from '@retikz/plot';
 
-export function SalesPlot({ sales, queryId }: { sales: Array<Record<string, unknown>>; queryId: string }) {
-  const [, setAuditLineage] = useState<PlotLineageRun | null>(null);
-  const lineage = useMemo<PlotLineageOptions>(
-    () => ({
-      scaleMappings: true,
-      layoutContext: true,
-      rowValues: { maxRows: 3, fields: ['region', 'revenue'] },
-      hostMetadata: { query: true },
-    }),
-    [],
-  );
+type AuditSummary = {
+  dataReference: string;
+  marks: Array<{ markIndex: number; markId?: string; markType: string }>;
+};
+
+export function SalesPlot({ sales }: { sales: Array<Record<string, unknown>> }) {
+  const [auditSummary, setAuditSummary] = useState<AuditSummary | null>(null);
   const handleLineage = useCallback((run: PlotLineageRun) => {
-    setAuditLineage(run);
+    setAuditSummary({
+      dataReference: run.dataReference,
+      marks: run.marks.map(({ markIndex, markId, markType }) => ({
+        markIndex,
+        ...(markId === undefined ? {} : { markId }),
+        markType,
+      })),
+    });
   }, []);
 
   return (
-    <Plot
-      id="salesPlot"
-      data={sales}
-      width={420}
-      height={260}
-      lineage={lineage}
-      hostLineageMetadata={{ queryId, datasetVersion: 'sales-v3' }}
-      onLineage={handleLineage}
-    >
-      <IntervalMark id="revenueBars" x="region" y="revenue" color="month" />
-      <Axis dimension="x" />
-      <Axis dimension="y" grid />
-    </Plot>
+    <div>
+      <Plot id="salesPlot" dataRef="sales" data={sales} width={420} height={260} lineage={{}} onLineage={handleLineage}>
+        <IntervalMark id="revenueBars" x="region" y="revenue" color="month" />
+        <Axis dimension="x" />
+        <Axis dimension="y" grid />
+      </Plot>
+      <pre>{auditSummary === null ? 'Waiting for lineage' : JSON.stringify(auditSummary, null, 2)}</pre>
+    </div>
   );
 }
 ```
 
-The presence of `onLineage` enables the minimal default configuration even when `lineage` is omitted. Pass `lineage={false}` to disable it explicitly. Use the React adapter's `resolvePlotLineage` when lineage is needed outside rendering.
+The example displays only the data reference and mark identity summary; a host can select the fields it actually needs from `PlotLineageRun` in the same way. The presence of `onLineage` enables the minimal default configuration even when `lineage` is omitted. Pass `lineage={false}` to disable it explicitly. Use the React adapter's `resolvePlotLineage` when lineage is needed outside rendering.
 
 ## Vanilla and SSR
 
@@ -94,12 +98,7 @@ const { svg, lineage } = renderPlot(
   {
     width: 420,
     height: 260,
-    lineage: {
-      scaleMappings: true,
-      rowValues: { maxRows: 3, fields: ['region', 'revenue'] },
-      hostMetadata: { query: true },
-    },
-    hostLineageMetadata: { queryId: 'q-sales', datasetVersion: 'sales-v3' },
+    lineage: {},
   },
 );
 ```
@@ -108,32 +107,36 @@ const { svg, lineage } = renderPlot(
 
 `lineage: {}` keeps a lightweight summary sufficient to identify marks and transform scopes. Higher-cost or sensitive details are independent opt-ins:
 
-| Option            | Default | Records                                                   |
-| ----------------- | ------- | --------------------------------------------------------- |
-| `data`            | `{}`    | Data source summaries and transform steps                 |
-| `markIdentity`    | `true`  | Plot id, data reference, and mark id / type / index       |
-| `markEncoding`    | `true`  | Fields consumed by mark channels and their scale bindings |
-| `transformScopes` | `true`  | Root and mark-local transform segmentation                |
-| `scaleMappings`   | `false` | Declared `spec.scales` and their channel bindings         |
-| `layoutContext`   | `false` | Coordinate, view, facet, and track summaries              |
-| `locatorAnchors`  | `false` | Locator addresses and resolved anchors                    |
-| `rowValues`       | `false` | Final row samples with required row and field limits      |
-| `hostMetadata`    | `false` | Selected host query, AI, permission, and extra metadata   |
+| Option            | Default | Records                                                             |
+| ----------------- | ------- | ------------------------------------------------------------------- |
+| `data`            | `{}`    | Data source summaries and transform steps                           |
+| `markIdentity`    | `true`  | Adds mark id; Plot id, data reference, and mark index / type remain |
+| `markEncoding`    | `true`  | Fields consumed by mark channels and their scale bindings           |
+| `transformScopes` | `true`  | Root and mark-local transform segmentation                          |
+| `scaleMappings`   | `false` | Declared `spec.scales` and their channel bindings                   |
+| `layoutContext`   | `false` | Coordinate, view, facet, and track summaries                        |
+| `locatorAnchors`  | `false` | Locator addresses and resolved anchors                              |
+| `rowValues`       | `false` | Final row samples with required row and field limits                |
+| `hostMetadata`    | `false` | Selected host query, AI, permission, and extra metadata             |
 
-`scaleMappings` records only scales declared in `spec.scales` and their mark-channel bindings. Temporary scales derived inside lowering are not a stable contract. `rowValues` is off by default so an audit artifact never copies complete business rows accidentally.
+`markIdentity: false` omits only the optional mark id. `plotId` when present, `dataReference`, `markIndex`, and `markType` form the minimal artifact skeleton and remain available. `scaleMappings` records only scales declared in `spec.scales` and their mark-channel bindings. Temporary scales derived inside lowering are not a stable contract. `rowValues` is off by default so an audit artifact never copies complete business rows accidentally.
 
 ## Interaction Trace-Back
 
-Use `createPlotLineageLocator` to trace a hit datum or series back to its source. It returns `markIndex`, `transformedIndex`, a source summary, and optional mark lineage beside the ordinary locator anchor:
+Use `createPlotLineageLocator` to trace a hit datum or series back to its source. Reuse the `spec` and `sales` data above, then create the dataset table explicitly. The result may be `null`; read the anchor and lineage summary only after a hit:
 
 ```ts
 import { createPlotLineageLocator } from '@retikz/plot';
 
+const datasets = { sales };
 const locator = createPlotLineageLocator(spec, datasets, {
   lineage: { locatorAnchors: true },
 });
 
-const result = locator.datum(4);
+const result = locator.datum(0);
+if (result !== null) {
+  console.log(result.anchor, result.lineage.sourceIdentity, result.lineage.mark);
+}
 ```
 
 This entry is suitable for tooltips, AI explanation panels, or audit navigation. The host still decides what is displayed.
@@ -165,6 +168,12 @@ This entry is suitable for tooltips, AI explanation panels, or audit navigation.
       endLine: 48,
     },
     {
+      label: 'React lineage calculation and callback',
+      path: 'packages/viz/plot-react/src/Plot.tsx',
+      startLine: 145,
+      endLine: 164,
+    },
+    {
       label: 'Vanilla lineage return contract',
       path: 'packages/viz/plot-vanilla/src/render-plot.ts',
       startLine: 13,
@@ -183,7 +192,7 @@ This entry is suitable for tooltips, AI explanation panels, or audit navigation.
     </span>
   </LinkedCard>
   <LinkedCard href="/viz/plot">
-    <span className="font-semibold">Drawing Grammar</span>
+    <span className="font-semibold">Plot Grammar</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Understand the overall Plot flow and module boundaries.
     </span>

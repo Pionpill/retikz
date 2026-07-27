@@ -1,8 +1,10 @@
-/** demo 自造数据集：用户量逐年增长，跨多个数量级（适合对比 linear / log / sqrt），不进 IR */
-export const growth: Array<Record<string, number>> = [
-  { year: 2018, users: 12 },
-  { year: 2019, users: 90 },
-  { year: 2020, users: 640 },
-  { year: 2021, users: 4200 },
-  { year: 2022, users: 28000 },
+/** 连续位置 scale playground 数据：同一 period 下同时提供正值序列与跨零序列，不进 IR */
+export const continuousValues: Array<Record<string, number>> = [
+  { period: 1, positive: 1, signed: -100_000 },
+  { period: 2, positive: 10, signed: -1_000 },
+  { period: 3, positive: 100, signed: -10 },
+  { period: 4, positive: 1_000, signed: 0 },
+  { period: 5, positive: 10_000, signed: 10 },
+  { period: 6, positive: 100_000, signed: 1_000 },
+  { period: 7, positive: 1_000_000, signed: 100_000 },
 ];

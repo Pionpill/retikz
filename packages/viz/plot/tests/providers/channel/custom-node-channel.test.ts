@@ -53,6 +53,35 @@ const intensityChannel = defineNodeChannel<number>({
   },
 });
 
+/** 自定义 categoryColor 通道：分类值映射为颜色色块并落到 node.fill */
+const categoryColorChannel = defineNodeChannel<string>({
+  channel: 'categoryColor',
+  output: { outputKind: 'color' },
+  legend: 'swatch',
+  resolve: ctx => mark => {
+    const binding = extensionChannelsOf(mark).categoryColor;
+    if (binding?.field === undefined) return undefined;
+    const field = binding.field;
+    const domain = [...new Set(ctx.rows.map(row => String(row[field])))];
+    const range = ['#dc2626', '#2563eb'];
+    const colorByCategory = new Map(domain.map((category, index) => [category, range[index]] as const));
+    return {
+      resolver: row => colorByCategory.get(String(row[field])),
+      descriptor: {
+        channel: 'categoryColor',
+        scaleType: 'ordinal',
+        domain,
+        range,
+        field,
+        fieldType: ctx.fieldTypes.get(field),
+      },
+    };
+  },
+  deliver: (node, value) => {
+    node.fill = value;
+  },
+});
+
 const scopeTintChannel = defineScopeChannel<string>({
   channel: 'scopeTint',
   output: { outputKind: 'color' },
@@ -313,6 +342,79 @@ describe('custom node channel registry', () => {
     const root = expandOf(spec, { d: rows }, opts([intensityChannel]));
     const legend = scopesOf(root).find(scope => scope.id === 'legend.intensity');
     expect(legend).toBeDefined();
+    const ramp = legend
+      ? nodesOf(legend).find(
+          node => typeof node.fill === 'object' && 'kind' in node.fill && node.fill.kind === 'linearGradient',
+        )
+      : undefined;
+    expect(ramp).toBeDefined();
+  });
+
+  it('custom_color_channel_swatch_uses_descriptor_colors', () => {
+    const colorRows = [
+      { x: 0, y: 0, tone: 'warm' },
+      { x: 1, y: 1, tone: 'cool' },
+    ];
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        {
+          type: 'point',
+          encoding: { x: { field: 'x' }, y: { field: 'y' }, channels: { categoryColor: { field: 'tone' } } },
+        },
+      ],
+      guides: [{ type: 'legend', channel: 'categoryColor' }],
+    });
+    const root = expandOf(spec, { d: colorRows }, opts([categoryColorChannel]));
+    const legend = scopesOf(root).find(scope => scope.id === 'legend.categoryColor');
+    expect(legend).toBeDefined();
+    const fills = legend
+      ? nodesOf(legend)
+          .filter(node => node.text === undefined)
+          .map(node => node.fill)
+      : [];
+    expect(fills).toEqual(['#dc2626', '#2563eb']);
+  });
+
+  it('custom_channel_legend_rejects_incompatible_output_kind', () => {
+    const invalidChannel = defineNodeChannel<number>({
+      channel: 'invalidSymbol',
+      output: { outputKind: 'number', range: [1, 2] },
+      legend: 'symbol',
+      resolve: ctx => mark => {
+        const binding = extensionChannelsOf(mark).invalidSymbol;
+        if (binding?.field === undefined) return undefined;
+        const field = binding.field;
+        return {
+          resolver: row => Number(row[field]),
+          descriptor: {
+            channel: 'invalidSymbol',
+            scaleType: 'linear',
+            domain: [0, 1],
+            range: [1, 2],
+            field,
+            fieldType: ctx.fieldTypes.get(field),
+          },
+        };
+      },
+      deliver: (node, value) => {
+        node.minimumSize = value;
+      },
+    });
+    const spec = PlotSpecSchema.parse({
+      ...scatterSpec({ invalidSymbol: { field: 'score' } }),
+      guides: [{ type: 'legend', channel: 'invalidSymbol' }],
+    });
+    expect(() => expandOf(spec, { d: rows }, opts([invalidChannel]))).toThrow(
+      /legend form "symbol" requires outputKind "symbol"/,
+    );
   });
 
   // JSON round-trip：encoding.channels 进 IR 不丢

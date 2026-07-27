@@ -22,6 +22,27 @@ describe('changelogForModule', () => {
     for (const r of releases) for (const b of r.packages) expect(plot.has(b.pkg), b.pkg).toBe(true);
   });
 
+  it('Plot 更新日志只含三个 Plot 包', () => {
+    const releases = changelogForModule('viz', 'plot');
+    expect(releases).toHaveLength(1);
+    expect(releases[0]?.packages.map(block => block.pkg)).toEqual([
+      '@retikz/plot',
+      '@retikz/plot-react',
+      '@retikz/plot-vanilla',
+    ]);
+  });
+
+  it('Viz 发布更新日志排除已迁移的 Plot 包', () => {
+    const releases = changelogForModule('viz', 'releases');
+    expect(releases).toHaveLength(1);
+    expect(releases[0]?.packages.map(block => block.pkg)).toEqual([
+      '@retikz/data',
+      '@retikz/table',
+      '@retikz/table-react',
+      '@retikz/table-vanilla',
+    ]);
+  });
+
   it('standard 模块只含 standard 组包', () => {
     const releases = changelogForModule('standard');
     expect(releases.length).toBeGreaterThan(0);

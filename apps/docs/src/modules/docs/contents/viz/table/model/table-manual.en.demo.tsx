@@ -11,7 +11,14 @@ const Demo: FC = () => (
     columns={2}
     rowKinds={['columnHeader', 'body', 'body']}
     cells={manualCells}
-    layout={{ columnWidth: 120, rowHeight: 34, headerHeight: 38, columnGap: 8, rowGap: 4 }}
+    layout={{
+      columnSize: { kind: 'auto' },
+      rowSize: { kind: 'auto' },
+      columns: [{ index: 1, size: { kind: 'fixed', value: 72 } }],
+      columnGap: 8,
+      rowGap: 4,
+      borders: { outer: { kind: 'line', stroke: 'gray' } },
+    }}
     width={288}
     height={126}
     style={{ maxWidth: '100%', height: 'auto' }}

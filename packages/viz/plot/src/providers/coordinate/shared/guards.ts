@@ -1,5 +1,5 @@
 import type { CoordinateFrame, PolarCoordinateFrame } from '../../../contract';
-import type { CartesianCoordinateFrame, Ternary2DCoordinateFrame } from '../features';
+import type { CartesianCoordinateFrame } from '../features';
 
 import { PlotCoordinate } from '../../../schemas';
 
@@ -18,13 +18,6 @@ export const isPolarCoordinateFrame = (coordinate: CoordinateFrame): coordinate 
   coordinate.type === PlotCoordinate.Polar2D;
 
 /**
- * 判断运行时坐标帧是否为内置三元坐标帧。
- * @description ternary2D 虽然提供 projectCell，但其 cell 构造和 simplex 裁剪不同于通用 roleScales 路径，需单独收窄
- */
-export const isTernary2DCoordinateFrame = (coordinate: CoordinateFrame): coordinate is Ternary2DCoordinateFrame =>
-  coordinate.type === PlotCoordinate.Ternary2D;
-
-/**
  * 判断运行时坐标帧是否为注册 definition 返回的通用坐标帧。
  * @description 该分支代表非内置 definition 的运行时 frame；它保留真实注册 type，并通过可选 roleScales / projectCell 声明能力
  */
@@ -32,5 +25,4 @@ export const isGenericCoordinateFrame = (coordinate: CoordinateFrame): boolean =
   coordinate.type !== PlotCoordinate.Cartesian2D &&
   coordinate.type !== PlotCoordinate.Polar2D &&
   coordinate.type !== PlotCoordinate.Cartesian1D &&
-  coordinate.type !== PlotCoordinate.Polar1D &&
-  coordinate.type !== PlotCoordinate.Ternary2D;
+  coordinate.type !== PlotCoordinate.Polar1D;

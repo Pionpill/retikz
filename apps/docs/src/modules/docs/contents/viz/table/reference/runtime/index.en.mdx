@@ -1,146 +1,115 @@
 ---
 title: Runtime
-description: Look up how React, Vanilla, and SSR construct TableSpec, inject runtime inputs, lower Core IR, and expose the manifest.
+description: Look up how React, Vanilla, and direct compile entries share one Table layout transaction, Scene, and manifest artifact.
 ---
 
-Table's three host entries share one runtime. React components and Vanilla helpers first produce the same JSON TableSpec variants. External datasets, function-bearing Definitions, and extra composites arrive as runtime inputs. The Table pipeline resolves Structure, presents Cells, computes layout, lowers Core IR, and produces a matching layout manifest.
+TableSpec stores only JSON-safe structure. Datasets, Definitions, Core compile options, and host capabilities arrive at runtime. Every standalone entry measures content, solves tracks, replays selected content, and produces both Scene and manifest inside one Core compile; sidecar observation no longer runs a second lowering pass.
 
-## Overall pipeline
+<ComponentPreview files="table-runtime-flow" hideCode size="xs" />
 
-<ComponentPreview files="table-runtime-flow" size="sm" hideCode />
+## React
 
-> This page describes the overall runtime contract without repeating schema fields. See [Table contracts](/viz/table/reference/contract-table) and [Detail Table contracts](/viz/table/reference/contract-detail) for JSON shapes.
+`@retikz/table-react` exposes three roots: `Table` accepts a complete `IRTableSpec`, `DetailTable` creates record-per-row specs, and `ManualTable` creates explicit-grid specs. All three share `TableCommonProps` and one runtime.
 
-## Responsibilities
+| Entry         | Core input                       | Structure authoring                      |
+| ------------- | -------------------------------- | ---------------------------------------- |
+| `Table`       | `spec`, optional `data`          | An already constructed precise TableSpec |
+| `DetailTable` | `dataRef`, `data`, and `columns` | `columns` or `DetailColumn` children     |
+| `ManualTable` | `rows`, `columns`, and `cells`   | `cells` or `Row` / `Cell` children       |
 
-| Topic          | Responsibility                                             | Reach for it when                           |
-| -------------- | ---------------------------------------------------------- | ------------------------------------------- |
-| Spec authoring | Produce precise TableSpec from detail/manual author inputs | Avoiding hand-written complete IR           |
-| React          | Render standalone or inside a parent `Layout`              | React pages and component composition       |
-| Vanilla / SSR  | Embed into a figure/layer or emit one-shot SVG             | Non-React hosts and server export           |
-| Lowering       | Merge Definition registries and emit Core IR               | Integrating Core compile or a custom host   |
-| Manifest       | Expose semantic geometry for tables, tracks, and Cells     | Hit testing, debugging, export, interaction |
+`TableLayoutHostProps` precisely reuses the host fields currently supported by Kernel `<Layout ir>`: handlers, output size/viewBox, renderer, animation, resource ids, Core provider definitions, and the TeX lowerer. See the authoritative [Layout API](/kernel/components/layout/overview) for the complete field semantics. Scope styles, full `compile`, `artifacts/onArtifacts`, and `embeddables` are not part of the Table-root public surface.
 
-## Spec authoring
+| Shared prop                | Type                                            | Default | Description                                           |
+| -------------------------- | ----------------------------------------------- | ------- | ----------------------------------------------------- |
+| `structureDefinitions?`    | `LowerTablesOptions['structureDefinitions']`    | `[]`    | Custom Structure definitions                          |
+| `presentationDefinitions?` | `LowerTablesOptions['presentationDefinitions']` | `[]`    | Custom Cell presentation definitions                  |
+| `composites?`              | `ReadonlyArray<AnyCompositeDefinition>`         | `[]`    | Extra definitions required by Tier 2 Cell content     |
+| `onManifest?`              | `(manifest: TableLayoutManifest) => void`       | —       | Reports the same compile's root manifest after commit |
 
-Authoring helpers only produce and validate JSON-safe specs. They do not bind a renderer or write datasets and Definitions into IR.
+The standalone runtime builds a canonical `children[0]` Scene. From `Layout.onArtifacts` it selects exactly one artifact with definition key `table.table`, `sourcePath: 'children[0]'`, and `expansionPath: []`. Notifications are deduplicated by serialized manifest content, and SSR render causes no callback side effect.
 
-| API                            | Type                                          | Description                                         |
-| ------------------------------ | --------------------------------------------- | --------------------------------------------------- |
-| `createDetailTableSpec(input)` | `(DetailTableSpecInput) => IRDetailTableSpec` | Builds a detail spec and normalizes string headers  |
-| `createManualTableSpec(input)` | `(ManualTableSpecInput) => IRManualTableSpec` | Builds a manual spec from explicit dimensions/Cells |
-| `detailTable(input)`           | `(DetailTableSpecInput) => IRDetailTableSpec` | Vanilla's direct delegation to the detail helper    |
-| `manualTable(input)`           | `(ManualTableSpecInput) => IRManualTableSpec` | Vanilla's direct delegation to the manual helper    |
+### Embedded
 
-## React runtime
+A Table used as a parent `<Layout>` child requires a non-empty stable id. Datasets, Table definitions, and `composites` contribute to the outer host. Local `onManifest` and every standalone host prop fail loudly in one diagnostic that asks callers to move them to the outer `<Layout>`. Use the host's `onArtifacts` when embedded artifacts are needed.
 
-### Entries
+## Vanilla
 
-| Component     | Spec source                                              | Runtime data               |
-| ------------- | -------------------------------------------------------- | -------------------------- |
-| `Table`       | Caller-provided complete `IRTableSpec`                   | `data?: ExternalDatasets`  |
-| `DetailTable` | Builds a precise detail spec from `DetailTableSpecInput` | `data: Array<ExternalRow>` |
-| `ManualTable` | Builds a precise manual spec from `ManualTableSpecInput` | No external dataset        |
+`detailTable()` / `manualTable()` construct plain specs; `embedTable()` with `createTableAdapter()` enters figure/mount composition; `renderTable()` is the one-shot SSR entry.
 
-`Table` always receives a complete `spec`. `DetailTable` chooses between the complete `columns` prop and `DetailColumn` children; `ManualTable` chooses between complete `cells` / `rowKinds` props and nested `Row` / `Cell` markers. The three markers only collect React authoring input and still produce the same detail or manual TableSpec.
+```ts
+const result = renderTable(spec, {
+  data: { scores: rows },
+  lowerOptions: { presentationDefinitions },
+  compile: {
+    composites: [customCellComposite],
+    shapes: [customShape],
+  },
+  animation: { enabled: false },
+  output: { width: 640, height: 360 },
+  artifacts: true,
+});
 
-Nested manual authoring still requires explicit root `rows` / `columns`; Row count must equal `rows`, and each row may omit trailing Cells. Use the `cells` prop for arbitrary sparse addresses. A `Cell` accepts mutually exclusive scalar children, `value`, or JSON-safe `content` payload sources.
+result.svg;
+result.manifest;
+```
 
-All three components share these runtime props:
+| `renderTable` option | Type                                 | Default | Description                                      |
+| -------------------- | ------------------------------------ | ------- | ------------------------------------------------ |
+| `data?`              | `ExternalDatasets`                   | `{}`    | Table datasets                                   |
+| `lowerOptions?`      | `LowerTablesOptions`                 | `{}`    | Structure / Presentation definitions             |
+| `compile?`           | `RenderToStringOptions['compile']`   | `{}`    | Core compile options; extra composites live here |
+| `animation?`         | `RenderToStringOptions['animation']` | `{}`    | SSR animation, snapshot, and easing options      |
+| `output?`            | `RenderToStringOptions['output']`    | `{}`    | SVG id prefix and display dimensions             |
+| `artifacts?`         | `boolean`                            | `false` | Return `{ svg, manifest }` when true             |
 
-| Prop                       | Type                                           | Default | Description                                             |
-| -------------------------- | ---------------------------------------------- | ------- | ------------------------------------------------------- |
-| `structureDefinitions?`    | `ReadonlyArray<AnyTableStructureDefinition>`   | `[]`    | Custom Structure definitions                            |
-| `presentationDefinitions?` | `ReadonlyArray<AnyCellPresentationDefinition>` | `[]`    | Custom Cell presentation definitions                    |
-| `composites?`              | `ReadonlyArray<AnyCompositeDefinition>`        | `[]`    | Definitions required by Tier 2 Cell content             |
-| `onManifest?`              | `(manifest: TableLayoutManifest) => void`      | —       | Standalone layout callback; unsupported when embedded   |
-| `renderer?`                | `'svg' \| 'canvas'`                            | `'svg'` | Renderer backend                                        |
-| `width?` / `height?`       | `number \| string`                             | —       | Host display size; does not change Table's fixed tracks |
-| `className?` / `style?`    | `string`<br />`CSSProperties`                  | —       | Passed to the rendering host                            |
+Top-level `composites` has been removed; use `compile.composites`. `renderTable()` calls `compileTable()` exactly once whether `artifacts` is true or false. False only ignores the sidecar and does not change the Scene or transaction.
 
-Standalone components may omit their TableSpec `id`; embedding in a parent `Layout` requires a stable id. Embedded mode cannot use `onManifest`, so consume the sidecar through `lowerTableWithArtifacts()` explicitly.
+## Table compile API
 
-### ManualTable
+| Export                 | Purpose                                                                   |
+| ---------------------- | ------------------------------------------------------------------------- |
+| `lowerTables()`        | Creates the layout-aware `table.table` definition for a host compile      |
+| `compileTable()`       | Compiles one canonical root Table into Scene, all artifacts, and manifest |
+| `CompileTableOptions`  | Separates `lower` options from Core `compile` options                     |
+| `CompileTableResult`   | `CompileResult` plus the exact-root `manifest`                            |
+| `TableCompileArtifact` | `CompositeCompileArtifact<'table', 'table', TableLayoutManifest>`         |
 
-| Prop        | Type                           | Default              | Description                                                         |
-| ----------- | ------------------------------ | -------------------- | ------------------------------------------------------------------- |
-| `rows`      | `ManualTableProps['rows']`     | —                    | Explicit row count; must equal the number of Row children           |
-| `columns`   | `ManualTableProps['columns']`  | —                    | Explicit column count; each Row may declare at most this many Cells |
-| `cells?`    | `ManualTableProps['cells']`    | —                    | Complete addressed Cell set; exclusive with `children`              |
-| `rowKinds?` | `ManualTableProps['rowKinds']` | all `body`           | Semantic kind for each row; exclusive with Row children             |
-| `children?` | `ManualTableProps['children']` | —                    | Ordered Row markers; exclusive with `cells` / `rowKinds`            |
-| `id?`       | `ManualTableProps['id']`       | —                    | Stable Table id; required inside a parent `Layout`                  |
-| `layout?`   | `ManualTableProps['layout']`   | fixed-track defaults | Column width, row height, and row/column gaps                       |
-| `meta?`     | `ManualTableProps['meta']`     | —                    | JSON metadata stored in TableSpec                                   |
+`compileTable(spec, datasets, options?)` merges `lowerTables()` with `compile.composites`, then calls `compileToScene()` once. Its `manifest` is the same immutable reference as the exact root artifact's `value`; nested Tables, repeated table ids, and unrelated composite artifacts cannot be mistaken for the root.
 
-`ManualTable` also accepts the shared runtime props above.
+A layout-aware Table cannot persist its compile-local replay tree through pure Tier 1 `lowerIRToKernel()`. Use `compileTable()` for a standalone result. For an embedded Scene, pass `lowerTables()` definitions to host `compileToScene()`, React `<Layout>`, or the Vanilla adapter.
 
-### Row
+## TableLayoutManifestSchema
 
-| Prop        | Type                   | Default | Description                      |
-| ----------- | ---------------------- | ------- | -------------------------------- |
-| `kind?`     | `RowProps['kind']`     | `body`  | Semantic kind of the current row |
-| `children?` | `RowProps['children']` | —       | Cell markers in column order     |
+`TableLayoutManifest` is a JSON-safe, detached, recursively frozen typed-artifact payload.
 
-### Cell
+<ZodSchema name="TableLayoutManifestSchema" />
 
-| Prop            | Type                        | Default                    | Description                                                           |
-| --------------- | --------------------------- | -------------------------- | --------------------------------------------------------------------- |
-| `id?`           | `CellProps['id']`           | derived from the address   | Stable Cell id                                                        |
-| `children?`     | `CellProps['children']`     | —                          | JSON scalar value payload; exclusive with `value` / `content`         |
-| `value?`        | `CellProps['value']`        | —                          | Explicit value payload; exclusive with `children` / `content`         |
-| `content?`      | `CellProps['content']`      | —                          | Direct JSON-safe Core `IRChild`; exclusive with other payload sources |
-| `presentation?` | `CellProps['presentation']` | built-in `text`            | Presentation for value or scalar children; unavailable with content   |
-| `location?`     | `CellProps['location']`     | derived from row semantics | Semantic region occupied by the Cell                                  |
-| `roles?`        | `CellProps['roles']`        | derived from row semantics | Non-empty semantic role set                                           |
+### TableTrackManifestEntrySchema
 
-Provide exactly one of `children`, `value`, or `content`. `presentation` only applies to value payloads, including scalar children.
+<ZodSchema name="TableTrackManifestEntrySchema" />
 
-## Vanilla runtime
+### TableCellManifestEntrySchema
 
-Vanilla does not use a fluent builder. `embedTable()` produces an embed spec for browser composition, `createTableAdapter()` creates a reusable stateless adapter, and `renderTable()` handles one-shot SSR.
+<ZodSchema name="TableCellManifestEntrySchema" />
 
-| API                              | Type                                         | Description                                        |
-| -------------------------------- | -------------------------------------------- | -------------------------------------------------- |
-| `embedTable(id, spec, options?)` | `(...) => VanillaEmbedSpec<TableEmbedProps>` | Embeds Table into a Kernel figure / layer          |
-| `createTableAdapter()`           | `() => VanillaTier2Adapter<TableEmbedProps>` | Creates a stateless Table adapter                  |
-| `renderTable`                    | `RenderTable`                                | Emits SVG; artifact mode also returns the manifest |
+### TableBorderManifestEntrySchema
 
-The `embedTable()` embed id must be non-empty. TableSpec itself may stay anonymous, in which case the lowered root id is `${embedId}/table`.
+<ZodSchema name="TableBorderManifestEntrySchema" />
 
-### Runtime options
+Core compile traversal creates the root artifact occurrence; it never enters TableSpec or the manifest. `tableId` is not an instance selector. Exact occurrences distinguish anonymous roots, nested Tables, and repeated ids.
 
-| Prop           | Type                                    | Default | Description                                               |
-| -------------- | --------------------------------------- | ------- | --------------------------------------------------------- |
-| `data`         | `ExternalDatasets`                      | `{}`    | External datasets indexed by spec reference               |
-| `lowerOptions` | `LowerTablesOptions`                    | `{}`    | Structure and Presentation definitions                    |
-| `composites`   | `ReadonlyArray<AnyCompositeDefinition>` | `[]`    | Definitions required by Tier 2 Cell content               |
-| `output`       | `RenderToStringOptions['output']`       | —       | `renderTable` only: SVG host dimensions and id prefix     |
-| `artifacts`    | `true \| false`                         | `false` | `renderTable` only: whether to return `{ svg, manifest }` |
+## Breaking migration
 
-## Lowering and extensions
-
-| API                                                 | Description                                                 |
-| --------------------------------------------------- | ----------------------------------------------------------- |
-| `defineTableStructure(definition)`                  | Defines a Structure provider selected by `structure.kind`   |
-| `defineCellPresentation(definition)`                | Defines value-payload presentation into a Core child        |
-| `lowerTables(datasets, options?)`                   | Produces Table composite definitions for Core compile       |
-| `lowerTableWithArtifacts(spec, datasets, options?)` | Returns a Core child and its matching `TableLayoutManifest` |
-
-`LowerTablesOptions` contains `structureDefinitions` and `presentationDefinitions`. Built-in and custom Definitions enter the same registry; duplicate kinds or names fail. Definitions contain functions, so they are runtime dependencies rather than persistable TableSpec fields.
-
-## Manifest
-
-`TableLayoutManifest` comes from the same resolution as Core IR and contains:
-
-- optional `tableId` and table `bounds`
-- semantic-order `rows` / `columns`, each with `id`, `index`, `offset`, and `size`
-- semantic-order `cells`, each with `cellId`, `box`, `location`, `roles`, and optional `source`
-
-Standalone React receives layout updates through `onManifest`. Embedded callers use `lowerTableWithArtifacts()` explicitly, while SSR uses `renderTable(spec, { artifacts: true })`.
+| Previous form                                | Current form                                                           |
+| -------------------------------------------- | ---------------------------------------------------------------------- |
+| `columnWidth` / `rowHeight` / `headerHeight` | `columnSize` / `rowSize` / `headerRowSize` track objects               |
+| `manifest.bounds`                            | `manifest.allocationBounds`; use `visualOverflowBounds` for visibility |
+| `lowerTableWithArtifacts()`                  | `compileTable()`                                                       |
+| `renderTable(..., { composites })`           | `renderTable(..., { compile: { composites } })`                        |
+| Embedded Table `onManifest`                  | Outer `<Layout onArtifacts>`                                           |
 
 ## Related
 
-- [Table contracts](/viz/table/reference/contract-table) — shared TableSpec, Cell, and Layout schemas
-- [Detail Table contracts](/viz/table/reference/contract-detail) — data references and detail columns
-- [Composite](/kernel/concepts/design/composite) — how Tier 2 enters Core compile
+- [Table contracts](/viz/table/reference/contract-table) — Cell, track, and border schemas
+- [Detail Table contracts](/viz/table/reference/contract-detail) — columns and the detail Structure
+- [Kernel compile](/kernel/reference/runtime/compile) — Core options, typed artifacts, and the composite registry

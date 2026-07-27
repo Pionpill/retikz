@@ -4,7 +4,7 @@ import { AxisCardinalSide, AxisPlacementKind } from '../../../schemas';
 
 /**
  * guide 维度到坐标角色的映射函数。
- * @description cartesian / ternary 的 guide.dimension 可直接作为角色；polar 会把 x/y 分别映射为 angular/radial，
+ * @description cartesian / custom coordinate 的 guide.dimension 可直接作为角色；polar 会把 x/y 分别映射为 angular/radial，
  *   从而禁止同时声明两个指向同一极坐标角色的 axis
  */
 export type AxisRoleOf = (dimension: string) => string;

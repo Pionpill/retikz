@@ -93,13 +93,6 @@ describe('GuideSchema contract', () => {
     expect(GuideSchema.parse(guide)).toEqual(guide);
   });
 
-  // contract：ternary 三角轴维度 x / y / z
-  it('axis_ternary_xyz_dimensions_valid', () => {
-    for (const dimension of ['x', 'y', 'z']) {
-      expect(AxisGuideSchema.parse({ type: 'axis', dimension })).toEqual({ type: 'axis', dimension });
-    }
-  });
-
   it('axis_tick_count_non_positive_rejected', () => {
     expect(() => GuideSchema.parse({ type: 'axis', dimension: 'x', ticks: { count: 0 } })).toThrow();
     expect(() => GuideSchema.parse({ type: 'axis', dimension: 'x', ticks: { count: -1 } })).toThrow();

@@ -3,45 +3,122 @@ title: Derive & Jitter
 description: Derive and jitter transforms preserve row count, adding per-row interval fields or deterministic data-space offsets.
 ---
 
-This group contains plot-registered row-preserving drawing transforms. They do not compute group statistics or select representative rows; use them when a later mark needs normalized interval fields or deterministic point offsets.
-
-Row sorting is a data capability; see [Data Transforms / sort](/viz/data/transform/operations#sort).
+Use `derive-interval` to add an interval to each input row. Use `jitter` to spread overlapping points in continuous numeric space. Both preserve row count and do not compute group statistics or select representative rows.
 
 | kind              | rows   | common use                                       |
 | ----------------- | ------ | ------------------------------------------------ |
 | `derive-interval` | N -> N | Turn per-row values into `[start,end]` intervals |
 | `jitter`          | N -> N | Spread overlapping points in data space          |
 
-## derive-interval
+## Derive Intervals
 
 `derive-interval` computes an interval independently for each row. It does not inspect neighboring rows, so it fits Gantt bars, explicit intervals, and non-zero-baseline bars.
 
-<ComponentPreview files={['transform-derive-interval', 'transform-derive-interval.data.ts']} />
+### Interactive Demo
 
-Both `derive-interval` and `stack` default to `y0` / `y1`, but their meaning differs: `derive-interval` is per-row derivation, while `stack` is cross-row accumulation.
+Switch the interval source to compare explicit `startFrom` / `endFrom` fields with the `from` / `baseline` mode.
 
-`IRPlotDeriveIntervalTransform` fixes `kind` to `'derive-interval'`.
+<ComponentPreview files={['transform-derive-interval', 'transform-derive-interval.data.ts']} size="md" />
 
-| prop                        | type     | default     | description                                    |
-| --------------------------- | -------- | ----------- | ---------------------------------------------- |
-| `from?`                     | `string` | —           | Value field in baseline-to-value mode          |
-| `baseline?`                 | `number` | `0`         | Start value in `from` mode                     |
-| `startFrom?` / `endFrom?`   | `string` | —           | Two-field interval mode; must appear as a pair |
-| `startField?` / `endField?` | `string` | `y0` / `y1` | Output field names                             |
+### API Reference
 
-## jitter
+`IRPlotDeriveIntervalTransform` fixes `kind` to `'derive-interval'`. Both input modes share the same output-field configuration.
 
-`jitter` adds a pseudo-random offset to continuous position fields so overlapping points spread apart. The offset happens in data space before scales; `seed` is an integer so SSR and browser hydration agree.
+| prop          | type     | default | description                                           |
+| ------------- | -------- | ------- | ----------------------------------------------------- |
+| `from?`       | `string` | —       | Value field in baseline-to-value mode                 |
+| `baseline?`   | `number` | `0`     | Start value in `from` mode                            |
+| `startFrom?`  | `string` | —       | Interval start in two-field mode; pair with `endFrom` |
+| `endFrom?`    | `string` | —       | Interval end in two-field mode; pair with `startFrom` |
+| `startField?` | `string` | `y0`    | Output field for the interval start                   |
+| `endField?`   | `string` | `y1`    | Output field for the interval end                     |
 
-<ComponentPreview files={['transform-jitter', 'transform-jitter.data.ts']} />
+### How It Works
 
-`jitter` currently applies only to continuous numeric fields. Screen-space jitter inside categorical bands is not part of this transform layer.
+`derive-interval` chooses one configuration mode first, then applies the same derivation rule to every row. Orange nodes in the figure represent row data, blue nodes represent per-row processing, and only the red branch terminates lowering.
+
+<ComponentPreview files="transform-derive-interval-logic" hideCode size="xl" />
+
+Mode selection and field writes follow four steps:
+
+1. When both `startFrom` and `endFrom` are present, two-field mode takes precedence. A configured `from` field is not read.
+2. An incomplete pair falls back to `from` mode. If `from` is also absent, lowering throws before iterating over the data.
+3. Each row is read through `resolveFieldPath`. When a source is not a finite number, `finiteOr` substitutes `baseline`.
+4. The result spreads the original row and then writes `startField` / `endField`. Fields may be added or overwritten, while row cardinality remains N → N.
+
+Both `derive-interval` and `stack` default to `y0` / `y1`, but their meaning differs: `derive-interval` is per-row derivation, while `stack` accumulates across rows.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'derive-interval mode selection and error',
+      path: 'packages/viz/plot/src/providers/transform/row.ts',
+      startLine: 156,
+      endLine: 179,
+    },
+  ]}
+/>
+
+## Jitter Points
+
+`jitter` adds a pseudo-random offset to continuous position fields so overlapping points spread apart. It fits coincident observations on continuous numeric axes, not screen-space placement within categorical bands.
+
+### Interactive Demo
+
+Adjust the maximum offset and random seed. The left plot preserves the original positions; the right plot uses a fixed data domain so parameter changes remain directly comparable.
+
+<ComponentPreview files={['transform-jitter', 'transform-jitter.data.ts']} size="md" />
+
+### API Reference
 
 `IRPlotJitterTransform` fixes `kind` to `'jitter'`.
 
-| prop                  | type                            | default   | description                           |
-| --------------------- | ------------------------------- | --------- | ------------------------------------- |
-| `axis?`               | <ApiValues name="JitterAxis" /> | `'x'`     | Axis to jitter                        |
-| `xField?` / `yField?` | `string`                        | `x` / `y` | Continuous numeric field to offset    |
-| `amount?`             | `number`                        | `1`       | Maximum absolute offset in data units |
-| `seed?`               | `number`                        | `0`       | Deterministic PRNG seed               |
+| prop      | type                            | default | description                           |
+| --------- | ------------------------------- | ------- | ------------------------------------- |
+| `axis?`   | <ApiValues name="JitterAxis" /> | `'x'`   | Axis to jitter                        |
+| `xField?` | `string`                        | `x`     | Continuous numeric x field to offset  |
+| `yField?` | `string`                        | `y`     | Continuous numeric y field to offset  |
+| `amount?` | `number`                        | `1`     | Maximum absolute offset in data units |
+| `seed?`   | `number`                        | `0`     | Deterministic PRNG seed               |
+
+### How It Works
+
+The `jitter` main chain is “select fields → generate offsets → write rows → scale.” The `mulberry32(seed)` node above the chain is an auxiliary input: it does not change cardinality, but supplies one deterministic `u` for every field perturbation.
+
+<ComponentPreview files="transform-jitter-logic" hideCode size="xl" />
+
+`axis` chooses x, y, or both, while `xField` / `yField` identify the actual fields. For each selected field, the PRNG advances once to produce `u ∈ [0,1)`, then computes:
+
+`δ = (2u - 1) × amount`
+
+Finite values are written back as `value + δ`. A non-finite value remains unchanged but still consumes that random number, preventing later rows from shifting in the sequence. The same `seed`, field selection, and row order therefore reproduce the same offsets across SSR and browser hydration.
+
+The offset is applied before Scale, so `amount` is measured in data units rather than pixels. The transform only copies and updates row fields, preserving N → N cardinality.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Deterministic data-space jitter',
+      path: 'packages/viz/plot/src/providers/transform/row.ts',
+      startLine: 181,
+      endLine: 219,
+    },
+  ]}
+/>
+
+## Related
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/transform">
+    <span className="font-semibold">Scopes & Pipeline</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Decide whether a transform affects the plot or one mark.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/transform/annotation">
+    <span className="font-semibold">Stacking & Shares</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Use stack when interval bounds require cross-row accumulation.
+    </span>
+  </LinkedCard>
+</div>

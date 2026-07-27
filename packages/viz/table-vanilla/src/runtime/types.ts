@@ -1,16 +1,13 @@
-import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRTableSpec, LowerTablesOptions, TableLayoutManifest } from '@retikz/table';
 import type { RenderToStringOptions } from '@retikz/vanilla';
 
 /** renderTable 共享选项 */
-export type RenderTableCommonOptions = Pick<RenderToStringOptions, 'output'> & {
+export type RenderTableCommonOptions = Pick<RenderToStringOptions, 'output' | 'compile' | 'animation'> & {
   /** Table lowering 消费的外部 datasets */
   data?: ExternalDatasets;
   /** Table definitions 与其它 lowering 选项 */
   lowerOptions?: LowerTablesOptions;
-  /** Cell 内嵌 Tier 2 内容所需的额外 composites */
-  composites?: ReadonlyArray<AnyCompositeDefinition>;
 };
 
 /** renderTable 普通 SVG string 模式 */

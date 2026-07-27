@@ -201,36 +201,10 @@ describe('CoordinateSchema 一维坐标系族 cartesian1D / polar1D (contract)',
   });
 });
 
-describe('CoordinateSchema ternary2D (contract)', () => {
-  // Happy path
-  it('ternary2d_minimal_valid', () => {
-    expect(CoordinateSchema.parse({ type: 'ternary2D' })).toEqual({ type: 'ternary2D' });
-  });
-
-  // ternary2D 本轮无几何配置字段：分量绑定走 mark 的 x/y/z 通道，coordinate 内自动归一化
-  // 多余的 x/y/z key（per-component scale 未来才做）被 zod 剥离（同 polar2D 剥离 cartesian x/y）
-  it('ternary2d_strips_unsupported_scale_keys', () => {
-    expect(CoordinateSchema.parse({ type: 'ternary2D', x: 'xs', y: 'ys', z: 'zs' })).toEqual({ type: 'ternary2D' });
-  });
-
-  // 回归 + round-trip
-  it('ternary2d_union_regression', () => {
-    expect(CoordinateSchema.parse({ type: 'cartesian1D' }).type).toBe('cartesian1D');
-    expect(CoordinateSchema.parse({ type: 'ternary2D' }).type).toBe('ternary2D');
-  });
-
-  it('ternary2d_json_round_trip', () => {
-    const ir = CoordinateSchema.parse({ type: 'ternary2D', x: 'xs', y: 'ys', z: 'zs' });
-    expect(CoordinateSchema.parse(JSON.parse(JSON.stringify(ir)))).toEqual(ir);
-  });
-});
-
 describe('CoordinateOperationSchema coordinate registry 占位（contract）', () => {
-  it('CoordinateSchema 保持内置 5-union，不接收旧 custom 判别', () => {
-    expect(Object.values(PlotCoordinate)).toEqual(['cartesian2D', 'polar2D', 'cartesian1D', 'polar1D', 'ternary2D']);
-    expect([...BUILTIN_COORDINATE_TYPES].sort()).toEqual(
-      ['cartesian1D', 'cartesian2D', 'polar1D', 'polar2D', 'ternary2D'].sort(),
-    );
+  it('CoordinateSchema 保持内置 4-union，不接收旧 custom 判别', () => {
+    expect(Object.values(PlotCoordinate)).toEqual(['cartesian2D', 'polar2D', 'cartesian1D', 'polar1D']);
+    expect([...BUILTIN_COORDINATE_TYPES].sort()).toEqual(['cartesian1D', 'cartesian2D', 'polar1D', 'polar2D'].sort());
     expect(() => CoordinateSchema.parse({ type: 'custom', name: 'arch', roles: ['x'] })).toThrow();
   });
 

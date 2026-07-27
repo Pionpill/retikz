@@ -1,0 +1,55 @@
+import type { PreviewControlContract } from '@/modules/docs/preview';
+
+import { definePreviewControls } from '@/modules/docs/preview';
+
+import { waterfallRows } from './waterfall.data';
+
+/** Stable control ids for the custom waterfall-transform playground */
+export const CUSTOM_TRANSFORM_CONTROL_IDS = {
+  initialValue: 'custom-transform-initial-value',
+} as const;
+
+/** English panel for the custom waterfall transform */
+export const waterfallControls = definePreviewControls({
+  presentation: 'panel',
+  title: 'Custom transform',
+  sections: [
+    {
+      label: 'Data',
+      defaultCollapsed: true,
+      controls: [
+        {
+          kind: 'table',
+          id: 'custom-transform-waterfall-rows',
+          label: 'Quarterly changes',
+          rows: waterfallRows,
+          columns: [
+            { key: 'period', label: 'Quarter' },
+            { key: 'delta', label: 'Change' },
+          ],
+        },
+      ],
+    },
+    {
+      label: 'waterfall config',
+      controls: [
+        {
+          kind: 'range',
+          id: CUSTOM_TRANSFORM_CONTROL_IDS.initialValue,
+          label: 'Initial value',
+          defaultValue: 60,
+          min: 0,
+          max: 100,
+          step: 10,
+        },
+      ],
+    },
+  ],
+});
+
+/** Stable documentation contract for the custom waterfall transform */
+export const previewControlContract = {
+  controls: waterfallControls,
+  canonicalValues: { [CUSTOM_TRANSFORM_CONTROL_IDS.initialValue]: 60 },
+  relatedApis: ['Transform'],
+} satisfies PreviewControlContract;

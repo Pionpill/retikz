@@ -4,8 +4,12 @@ import { z } from 'zod';
 import type {
   AnyCompositeDefinition,
   CompositeCompileArtifact,
+  CompositeCompileChild,
+  CompositeCompileScopeProps,
+  IRChild,
   IRScene,
   JsonValue,
+  LayoutCompositeCompileResult,
   NodeLayoutCompileArtifact,
 } from '../../src';
 
@@ -35,6 +39,48 @@ const beta = defineComposite({
   compile: () => ({ children: [], artifact: { value: 1 } }),
 });
 
+const wrapped = defineComposite({
+  namespace: 'test',
+  type: 'wrapped',
+  schema: CompositeBaseSchema.extend({
+    namespace: z.literal('test'),
+    type: z.literal('wrapped'),
+    child: z.custom<IRChild>(),
+  }),
+  artifactSchema: z.strictObject({ value: z.literal('wrapped') }),
+  compile: (node, context) => {
+    const laid = context.layoutChild(node.child, { kind: 'intrinsic' });
+    const placed = context.replay(laid, [{ kind: 'translate', x: 4, y: 6 }]);
+    const scopeProps = {
+      id: 'cell',
+      clip: { kind: 'rect', x: 0, y: 0, width: 20, height: 10 },
+      meta: { role: 'cell' },
+    } satisfies CompositeCompileScopeProps;
+    const wrapper = context.scope(scopeProps, [placed]);
+
+    expectTypeOf(wrapper).toEqualTypeOf<CompositeCompileChild>();
+
+    const directPlacement: LayoutCompositeCompileResult = {
+      children: [
+        // @ts-expect-error layout-aware output 不再接受调用方直接构造 replay placement
+        { kind: 'replay', replay: laid.replay },
+      ],
+    };
+    void directPlacement;
+
+    // @ts-expect-error replay 后的 runtime Scope 不开放 placement
+    context.scope({ placement: { target: [0, 0] } }, []);
+    // @ts-expect-error replay 后的 runtime Scope 不开放样式默认
+    context.scope({ fill: 'red' }, []);
+    // @ts-expect-error replay token 不能作为 output child
+    context.scope({}, [laid.replay]);
+    // @ts-expect-error 任意对象不能作为 output child
+    context.scope({}, [{}]);
+
+    return { children: [wrapper], artifact: { value: 'wrapped' } };
+  },
+});
+
 describe('layout-aware composite type contracts', () => {
   it('preserves exact definition literals and callable branch types', () => {
     expectTypeOf(alpha.namespace).toEqualTypeOf<'test'>();
@@ -43,13 +89,14 @@ describe('layout-aware composite type contracts', () => {
   });
 
   it('infers a precise composite artifact union from a const tuple', () => {
-    const result = compileToScene(scene, { composites: [alpha, beta] as const });
+    const result = compileToScene(scene, { composites: [alpha, beta, wrapped] as const });
     type Artifact = (typeof result.artifacts)[number];
     type DomainArtifact = Extract<Artifact, { kind: 'composite' }>;
 
     expectTypeOf<DomainArtifact>().toEqualTypeOf<
       | CompositeCompileArtifact<'test', 'alpha', { value: 'alpha' }>
       | CompositeCompileArtifact<'test', 'beta', { value: number }>
+      | CompositeCompileArtifact<'test', 'wrapped', { value: 'wrapped' }>
     >();
   });
 

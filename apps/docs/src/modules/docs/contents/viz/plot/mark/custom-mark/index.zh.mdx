@@ -1,0 +1,146 @@
+---
+title: 自定义图元
+description: 用 MarkDefinition 登记源字段、声明通道消费并把数据行下沉为 Core IR，再通过 markDefinitions 注入 Plot 图元注册表。
+---
+
+自定义图元把数据行下沉成自己的 Core IR 组合。Plot IR 只保存自定义 `type`、`encoding`、`transform` 和其它 JSON 配置；字段收集、通道消费与几何生成留在运行时 `MarkDefinition` 中。
+
+## 适用边界
+
+- 内置图元无法表达目标几何，但目标仍可组合为 Core Node、Path、Scope 等图元时，定义自定义 mark。
+- 只需新增视觉属性时，优先使用[自定义通道](/viz/plot/channel/custom-channel)。
+- 数据准备应写成 plot-level 或 mark-local transform；不要把聚合、筛选等数据变换藏在 `lower` 中。
+- Core 无法表达目标渲染语义时，应先补 Core 能力，再由 mark lowering 消费。
+
+## 定义能力
+
+`defineMark<TMark>` 接收完整 operation schema 和下沉行为：
+
+| 字段             | 作用                                                                                          |
+| ---------------- | --------------------------------------------------------------------------------------------- |
+| `schema`         | 校验自定义 operation；非空字面量 `type` 是唯一注册键                                          |
+| `collectFields?` | 登记自定义 mark 消费的**全部**源字段；框架不会自动遍历自定义 schema 或 encoding               |
+| `channelKinds?`  | 声明 lower 产物消费的 channel definition kind                                                 |
+| `buildCell?`     | 给内置 datum-anchor 路径复用逻辑 Cell；当前不是自定义 mark 的渲染入口，也不会自动接入 locator |
+| `lower`          | 把准备好的 rows、coordinate frame 与通道解析结果下沉成 Core IR                                |
+
+下面的 `diamond` 图元通过 `frame.projectRoles` 投影每行的 `x` / `y`，再按 operation 中的尺寸和填充配置生成 Core diamond Node。用面板修改这两个 JSON 参数；definition、数据和宿主注入可以从源码切换器中查看：
+
+<ComponentPreview
+  files={['mark-custom', 'mark-custom.definition.ts', 'mark-custom.data.ts']}
+  size="md"
+  caption="definition 为纯 glyph Node 设置 padding: 0，因此 minimumSize 直接控制 diamond 的可见外接尺寸；数据字段、坐标投影和注入保持不变。"
+/>
+
+## 注入宿主
+
+通过 `<Plot markDefinitions={[diamondMark]}>` 注入 definition；Vanilla 源码通过 `renderPlot` options 注入同一 definition。
+
+自定义图元没有专属 React 组件，使用完整 spec 入口创作：
+
+```tsx
+import type { IRPlotSpec } from '@retikz/plot';
+
+const spec: IRPlotSpec = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'glyphs' },
+  coordinate: { type: 'cartesian2D', x: 'month', y: 'sales' },
+  scales: [
+    { type: 'linear', name: 'month' },
+    { type: 'linear', name: 'sales' },
+  ],
+  marks: [
+    {
+      type: 'diamond',
+      minimumSize: 16,
+      fill: '#f59e0b',
+      encoding: { x: { field: 'month' }, y: { field: 'sales' } },
+    },
+  ],
+};
+
+<Plot spec={spec} data={{ glyphs: glyphRows }} markDefinitions={[diamondMark]} />;
+```
+
+definition 不进入 spec，因此 spec 仍可 JSON round-trip。
+
+## 执行机制
+
+1. 宿主把内置与自定义 mark definitions 合并为 registry，并拒绝重复或内置 type 冲突。
+2. 数据准备阶段按 `type` lookup definition，用 schema 校验 operation，再调用 `collectFields` 收集源字段。
+3. Plot 执行 plot-level transform 和当前 mark 的 local transform，并按 active coordinate roles 解析位置 scale 与通道。
+4. `lower(mark, rows, frame, channels, context)` 消费准备好的 rows，通过 `frame.projectRoles` 或 mark 自己检查后的 `frame.projectCell` 生成 Core IR。
+
+内置与自定义图元通过同一个 mark registry 分派。坐标系负责解释位置 role，比例尺负责值映射，mark 负责几何装配。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'MarkDefinition 的字段收集、通道与 lower 契约',
+      path: 'packages/viz/plot/src/contract/mark.ts',
+      startLine: 42,
+      endLine: 70,
+    },
+    {
+      label: 'mark registry 合并、lookup 与 schema 校验',
+      path: 'packages/viz/plot/src/providers/mark/registry.ts',
+      startLine: 52,
+      endLine: 91,
+    },
+    {
+      label: '字段收集与 channel kind 分派',
+      path: 'packages/viz/plot/src/providers/mark/registry.ts',
+      startLine: 94,
+      endLine: 110,
+    },
+    {
+      label: '统一 mark lowering 分派',
+      path: 'packages/viz/plot/src/providers/mark/registry.ts',
+      startLine: 151,
+      endLine: 164,
+    },
+  ]}
+/>
+
+## 错误与限制
+
+- 自定义 `type` 不能覆盖内置图元，也不能重复注册；缺少 definition 时 lowering 会直接报错。
+- `defineMark` 只保留类型关系；registry 要求 schema 是带非空 `z.literal(type)` 的对象，并在解析前后检查 JSON object。
+- `collectFields` 必须登记 mark 读取的全部源字段；只有完全不读取数据字段时才能省略。
+- `lower` 应返回 Core `IRChild` 或 `null`，不能返回 renderer 对象、函数、`Date`、`NaN` 等非 JSON 值。
+- 区间类自定义 mark 必须在 `lower` 中自行构造 Cell，并先检查 `frame.projectCell`；只实现 `buildCell` 不会生成几何。
+- locator 当前只把内置 mark 视为 datum-bearing；自定义 mark 不自动获得 `datumIdField`、datum anchor 或 series locator 行为。
+- React DSL 当前没有通用 `<Mark type="...">` 入口；自定义图元通过 `spec.marks` 创作。
+
+下面的 operation 会在 JSON 检查阶段失败：
+
+```ts
+marks: [{ type: 'diamond', renderer: () => 'svg' }];
+```
+
+## API 参考
+
+公开导出：
+
+| 从 `@retikz/plot` 导入 | 用途                                                 |
+| ---------------------- | ---------------------------------------------------- |
+| `defineMark`           | 从 schema 与行为构造 `MarkDefinition`                |
+| `MarkDefinition`       | 查询字段收集、通道消费、Cell helper 与 lowering 契约 |
+| `FieldCollector`       | 通过 `addField` / `addChannel` 登记源字段            |
+| `MarkChannels`         | 查询 resolver、默认值和 scope / node / path 交付结果 |
+| `CoordinateFrame`      | 使用 `projectRoles` 与可选的 `projectCell` 投影几何  |
+
+宿主注入：
+
+| 宿主                                   | 公开契约            | 注入字段                                 |
+| -------------------------------------- | ------------------- | ---------------------------------------- |
+| `@retikz/plot-react` 的 `<Plot>`       | `PlotProps`         | `markDefinitions`                        |
+| `@retikz/plot-vanilla` 的 `renderPlot` | `RenderPlotOptions` | 继承 `LowerPlotsOptions.markDefinitions` |
+
+## 相关
+
+- [图元](/viz/plot/mark) —— 内置图元与 lowering 的共同模型
+- [自定义通道](/viz/plot/channel/custom-channel) —— 为内置或自定义图元增加视觉属性
+- [自定义坐标系](/viz/plot/coordinate/custom-coordinate) —— frame 如何解释位置 role 与 Cell
+- [运行时扩展索引](/kernel/reference/runtime/extensions) —— 跨能力查询 Definition、registry 与错误边界

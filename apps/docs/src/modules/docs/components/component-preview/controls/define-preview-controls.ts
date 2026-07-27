@@ -180,6 +180,9 @@ const validatePreviewControls = (definition: PreviewControlsDefinition): void =>
       throw new Error(`Preview panel defaultSize must be between ${MIN_PANEL_SIZE} and ${MAX_PANEL_SIZE}.`);
     }
     for (const section of definition.sections) {
+      if (section.defaultCollapsed && !section.label) {
+        throw new Error('Preview control section must define a label when defaultCollapsed is true.');
+      }
       if (section.visibleWhen) validateControlCondition(section.visibleWhen, stateFieldIds);
     }
   }

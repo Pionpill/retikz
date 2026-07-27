@@ -1,14 +1,14 @@
-import type { IRPlotLogScale, IRPlotSymlogScale } from '@retikz/plot';
+import type { IRPlotBandScale, IRPlotLogScale, IRPlotPointScale, IRPlotSymlogScale } from '@retikz/plot';
 import type { FC } from 'react';
 
 /** 位置 scale 可配置的坐标维度 */
-export type ScaleDimension = 'x' | 'y' | 'z';
+export type ScaleDimension = 'x' | 'y';
 
 /** React DSL 里当前暴露的位置 scale 类型 */
-export type PositionScaleType = 'linear' | 'time' | 'point' | 'log' | 'sqrt' | 'symlog' | 'radial';
+export type PositionScaleType = 'linear' | 'time' | 'band' | 'point' | 'log' | 'sqrt' | 'symlog' | 'radial';
 
 /** 支持连续 domain 配置的位置 scale 类型 */
-export type ContinuousPositionScaleType = Exclude<PositionScaleType, 'point'>;
+export type ContinuousPositionScaleType = Exclude<PositionScaleType, 'band' | 'point'>;
 
 /** React DSL 中暴露的 position scale domain padding 输入 */
 export type DomainPaddingInput = number | { lower?: number; upper?: number };
@@ -54,10 +54,30 @@ type ContinuousScaleProps = ScaleBaseProps & {
 type PointScaleProps = ScaleBaseProps & {
   /** 分类点位 scale 类型；不接受连续 domain 配置 */
   type: 'point';
+  /** 显式分类 domain；省略时按数据出现顺序推断 */
+  domain?: IRPlotPointScale['domain'];
+  /** 首尾外侧留白占 step 的比例；省略时为 0.5 */
+  padding?: IRPlotPointScale['padding'];
+  /** 首尾留白在范围两端的分配方式；省略时为 0.5 */
+  align?: IRPlotPointScale['align'];
+};
+
+/** 分类带宽 scale props */
+type BandScaleProps = ScaleBaseProps & {
+  /** 分类带宽 scale 类型 */
+  type: 'band';
+  /** 显式分类 domain；省略时按数据出现顺序推断 */
+  domain?: IRPlotBandScale['domain'];
+  /** 相邻 band 间距占 step 的比例；省略时为 0.1 */
+  paddingInner?: IRPlotBandScale['paddingInner'];
+  /** 首尾外侧留白占 step 的比例；省略时等于 paddingInner */
+  paddingOuter?: IRPlotBandScale['paddingOuter'];
+  /** 首尾留白在范围两端的分配方式；省略时为 0.5 */
+  align?: IRPlotBandScale['align'];
 };
 
 /** <Scale> props：声明某个坐标维度使用的 scale 类型 */
-export type ScaleProps = ContinuousScaleProps | PointScaleProps;
+export type ScaleProps = ContinuousScaleProps | BandScaleProps | PointScaleProps;
 
 /**
  * 位置 scale 声明组件

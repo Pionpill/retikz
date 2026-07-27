@@ -1,7 +1,7 @@
 import type { AnyCoordinateDefinition } from '../../../contract';
 
 import { extractCoordinateType } from '../../../contract';
-import { CARTESIAN_COORDINATES, POLAR_COORDINATES, TERNARY_COORDINATES } from '../features';
+import { CARTESIAN_COORDINATES, POLAR_COORDINATES } from '../features';
 
 /**
  * 内置坐标系的 registry 元数据。
@@ -11,7 +11,6 @@ import { CARTESIAN_COORDINATES, POLAR_COORDINATES, TERNARY_COORDINATES } from '.
 export const BUILTIN_COORDINATES: ReadonlyArray<AnyCoordinateDefinition> = [
   ...CARTESIAN_COORDINATES,
   ...POLAR_COORDINATES,
-  ...TERNARY_COORDINATES,
 ];
 
 /**

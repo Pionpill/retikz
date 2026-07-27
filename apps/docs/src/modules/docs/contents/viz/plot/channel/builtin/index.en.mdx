@@ -1,38 +1,44 @@
 ﻿---
 title: Built-In Channels
-description: Explains plot built-in channels by channel type, channel value forms, delivery surfaces, and guide support.
+description: Look up plot built-in channels by visual goal, including their field, fixed-value, and legend support.
 ---
 
-Built-in channels are easiest to read by intent, not by the lower-level `Node` / `Path` / `Scope` surface. In React DSL, a channel appears as a mark prop such as `<PointMark x="gdp" color="region" />`; the mark then decides which channels land on the core elements it produces.
+Built-in channels map data to visual results such as position, style, text, and paths. In React DSL, declare channels directly as mark props, such as `<PointMark x="gdp" color="region" />`. Start with a visual goal in the overview below, then use the corresponding section to check value forms, visual results, and legend support.
 
-| Type          | Channels                                                                     | Meaning                                        |
-| ------------- | ---------------------------------------------------------------------------- | ---------------------------------------------- |
-| Position      | `x` / `y`<br />`z`                                                           | Fields determine coordinate roles              |
-| Style         | `color` / `fill` / `stroke` / `textColor`<br />`opacity` / `size` / `shape`  | Color, opacity, size, and shape                |
-| Node geometry | `padding` / `cornerRadius`<br />`rotate` / `minimumSize`                     | Node size, spacing, and transforms             |
-| Text          | `text`<br />`label`                                                          | Text inside nodes and labels attached to nodes |
-| Paths         | `strokeWidth` / `lineCap` / `lineJoin`<br />`roundedCorners` / `dashPattern` | Path stroke, caps, joins, corners, and dashes  |
-| Effects       | `shadow`<br />`blendMode`                                                    | Shadows and compositing                        |
-| Other         | `zIndex` / `order`<br />`series`                                             | Drawing order, ordering, and series splitting  |
+Each table gives the form and visible meaning first, then the internal property destination in its last column. You can skip destinations on a first read.
+
+| Type          | Channels                                                                                                | Meaning                                        |
+| ------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Position      | `x` / `y` / `z`                                                                                         | Fields determine coordinate roles              |
+| Style         | `color` / `fill` / `stroke` / `textColor`<br />`opacity` / `size` / `shape`                             | Color, opacity, size, and shape                |
+| Node geometry | `padding` / `cornerRadius`<br />`rotate` / `minimumSize`                                                | Node size, spacing, and transforms             |
+| Text          | `text` / `label`                                                                                        | Text inside nodes and labels attached to nodes |
+| Paths         | `strokeWidth` / `thickness` / `lineCap` / `lineJoin`<br />`roundedCorners` / `fillRule` / `dashPattern` | Path stroke, caps, joins, fill, and dashes     |
+| Effects       | `shadow` / `blendMode`                                                                                  | Shadows and compositing                        |
+| Other         | `zIndex` / `order` / `series`                                                                           | Drawing order, ordering, and series splitting  |
 
 ## Position
 
 Position channels say which row fields participate in coordinate projection. `x` / `y` / `z` are not fixed screen directions; the coordinate system reinterprets them. `cartesian2D` treats `x` / `y` as horizontal / vertical, while `polar2D` treats them as angle / radius.
 
-<ComponentPreview files="builtin-position" size="md" />
+<ComponentPreview
+  files={['builtin-position', 'builtin-position.data.ts']}
+  size="md"
+  caption="This playground keeps Cartesian coordinates fixed and only changes the x / y bindings; the data and chart size stay fixed."
+/>
 
-| Channel | Channel Value        | Meaning                | Delivery        |
-| ------- | -------------------- | ---------------------- | --------------- |
-| `x`     | Field: `x = "field"` | First positional role  | coordinate role |
-| `y`     | Field: `y = "field"` | Second positional role | coordinate role |
-| `z`     | Field: `z = "field"` | Third positional role  | coordinate role |
+| Channel | Channel Value        | Meaning                | Delivery                        |
+| ------- | -------------------- | ---------------------- | ------------------------------- |
+| `x`     | Field: `x = "field"` | First positional role  | first coordinate position role  |
+| `y`     | Field: `y = "field"` | Second positional role | second coordinate position role |
+| `z`     | Field: `z = "field"` | Third positional role  | third coordinate position role  |
 
 ## Style
 
 Style channels control the visible appearance of a mark. Color, opacity, size, and shape are style channels. Use the panel to change the target channel and values while the same points and data remain fixed.
 
 <ComponentPreview
-  files="builtin-point-style"
+  files={['builtin-point-style', 'builtin-point-style.data.ts']}
   size="md"
   caption="The target chooses whether paint enters color, fill, or stroke; the remaining controls keep the subject and data fixed."
 />
@@ -77,14 +83,14 @@ The `shape` channel is for categories. Categorical values map to built-in glyph 
 These channels all act on nodes produced by a mark. The panel keeps the same text nodes in place so size, typography, outside labels, and effects can be adjusted continuously instead of split across four static figures.
 
 <ComponentPreview
-  files="builtin-node-text"
+  files={['builtin-node-text', 'builtin-node-text.data.ts']}
   size="lg"
   caption="The lower rectangles show node geometry, labels, and effects; the upper text shows textColor and layout while both subjects stay fixed."
 />
 
 ### Node Geometry
 
-Node geometry channels control the node's own size constraints, spacing, corner radius, and rotation. They are closer to core node properties than to color or size encoding.
+Node geometry channels directly control a node's size constraints, spacing, corner radius, and rotation. They do not map data to color or visual size.
 
 | Channel              | Channel Value                                                                            | Meaning                 | Delivery                   |
 | -------------------- | ---------------------------------------------------------------------------------------- | ----------------------- | -------------------------- |
@@ -95,7 +101,7 @@ Node geometry channels control the node's own size constraints, spacing, corner 
 
 ### Text inside nodes
 
-`text` makes a point mark produce text nodes. `textColor`, `align`, `lineHeight`, `maxTextWidth`, and `font` control the text node's layout and color.
+`text` makes a point mark display text from a field. `textColor`, `align`, `lineHeight`, `maxTextWidth`, and `font` control its layout and color.
 
 | Channel                                             | Channel Value                                                                                               | Meaning                                | Delivery                           |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------- | ---------------------------------- |
@@ -104,7 +110,7 @@ Node geometry channels control the node's own size constraints, spacing, corner 
 
 ### Node labels
 
-`label` does not replace node content. It attaches an outside label to the datum host node. `labelPosition`, `labelDistance`, and `labelPin` control placement and leader line.
+`label` does not replace node content. It adds an outside label to the node for each data point. `labelPosition`, `labelDistance`, and `labelPin` control placement and the leader line.
 
 | Channel                                           | Channel Value                                                           | Meaning          | Delivery               |
 | ------------------------------------------------- | ----------------------------------------------------------------------- | ---------------- | ---------------------- |
@@ -123,28 +129,34 @@ Effect channels are shared visual hints. `shadow` changes the node projection, w
 
 ## Paths
 
-Path channels apply to marks that lower to core paths, such as line marks, relation marks, region boundaries, and reference lines. Endpoint arrows are not plot channels; configure them with `marks` on the relevant path config.
+Path channels apply to marks that produce paths, such as line marks, relation lines, region boundaries, and reference lines. Endpoint arrows are not channels; configure them with `marks` on the relevant path.
 
 <ComponentPreview
-  files="builtin-path-style"
+  files={['builtin-path-style', 'builtin-path-style.data.ts']}
   size="md"
-  caption="Stroke, cap, join, corner, and dash controls all act on one fixed path for direct comparison."
+  caption="With roundedCorners at 0, compare miter, round, and bevel joins. Raising roundedCorners replaces sharp joints with geometric curves, so the join control is hidden."
 />
 
 ### Path styling
 
-| Channel                                | Channel Value                                                           | Meaning             | Delivery / guide                                                            |
-| -------------------------------------- | ----------------------------------------------------------------------- | ------------------- | --------------------------------------------------------------------------- |
-| `strokeWidth`                          | Field: `strokeWidth = "field"`<br />Constant: `strokeWidth = {4}`       | Stroke width        | scope / node / path `strokeWidth`; field values default to range `[0.5, 4]` |
-| `roundedCorners`                       | Field: `roundedCorners = "field"`<br />Constant: `roundedCorners = {8}` | Path corner hint    | core path `roundedCorners`                                                  |
-| `lineCap`<br />`lineJoin`              | Field: `lineCap = "field"`<br />Constant: `lineCap = "round"`           | Stroke cap and join | core path line fields                                                       |
-| `dashPattern` / `dashed`<br />`dotted` | Field: `dashPattern = "field"`<br />Constant: `dashPattern = {[7, 4]}`  | Stroke pattern      | core node/path dash fields                                                  |
+| Channel                                | Channel Value                                                           | Meaning               | Delivery / guide                                                            |
+| -------------------------------------- | ----------------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------------- |
+| `strokeWidth`                          | Field: `strokeWidth = "field"`<br />Constant: `strokeWidth = {4}`       | Stroke width          | scope / node / path `strokeWidth`; field values default to range `[0.5, 4]` |
+| `thickness`                            | Field: `thickness = "field"`<br />Constant: `thickness = "thick"`       | Semantic width preset | converted to core path `strokeWidth`                                        |
+| `roundedCorners`                       | Field: `roundedCorners = "field"`<br />Constant: `roundedCorners = {8}` | Path corner hint      | core path `roundedCorners`                                                  |
+| `fillRule`                             | Field: `fillRule = "field"`<br />Constant: `fillRule = "evenodd"`       | Closed-path fill rule | core path `fillRule`                                                        |
+| `lineCap`<br />`lineJoin`              | Field: `lineCap = "field"`<br />Constant: `lineCap = "round"`           | Stroke cap and join   | core path line fields                                                       |
+| `dashPattern` / `dashed`<br />`dotted` | Field: `dashPattern = "field"`<br />Constant: `dashPattern = {[7, 4]}`  | Stroke pattern        | core node/path dash fields                                                  |
 
 ## Other
 
-Other channels do not directly describe color, position, or path shape. They control drawing order, datum ordering, and series splitting.
+Other channels do not directly describe color, position, or path shape. They control drawing order, row ordering, and series splitting.
 
-<ComponentPreview files="builtin-other" size="md" />
+<ComponentPreview
+  files={['builtin-other', 'builtin-other.data.ts']}
+  size="md"
+  caption="The input rows are intentionally shuffled: series splits two lines, order restores their step sequence, and points use a higher zIndex to stay above the lines."
+/>
 
 | Channel  | Channel Value                                           | Meaning                            | Delivery                                 |
 | -------- | ------------------------------------------------------- | ---------------------------------- | ---------------------------------------- |

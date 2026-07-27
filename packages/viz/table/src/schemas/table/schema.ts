@@ -13,7 +13,7 @@ const TableSpecBaseSchema = CompositeBaseSchema.extend({
   type: z.literal(TableComposite.Table).describe('Composite type for the top-level Table specification.'),
   id: z.string().min(1).optional().describe('Optional stable Table id used by the lowered root Scope.'),
   layout: TableLayoutSchema.optional().describe(
-    'Fixed-track Table layout options. Omitted fields use the pipeline defaults.',
+    'Two-dimensional Table track, gap, and border layout options. Omitted fields use the pipeline defaults.',
   ),
   meta: JsonObjectSchema.optional().describe('Opaque JSON-safe metadata preserved by Table lowering.'),
 });

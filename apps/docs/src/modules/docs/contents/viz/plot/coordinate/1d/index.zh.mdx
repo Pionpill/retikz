@@ -1,49 +1,62 @@
 ---
 title: 一维坐标系
-description: 一维坐标系只绑定一个位置通道：cartesian1D 把值落到直线，polar1D 把值绕到圆周，适合 rug、timeline 与周期事件。
+description: 一维坐标系把一个位置字段放到直线或圆周上，适合沿轴事件点、时间线与周期事件。
 ---
 
-有时数据只有一个位置维度：一串采样值、一天里的事件时刻、某条轴上的分布。二维图会浪费一条轴；一维坐标系只绑定一个位置通道，另一维塌缩成基线或绕成圆。
+当数据只需要沿一条路径定位时，不必再补一个没有意义的第二位置字段。一维说的是参与定位的维度数量，不是坐标轴是否可见：`cartesian1D` 读取 `x` 并把值放到直线上，`polar1D` 则把值绕到圆周上。
 
-## 两种形态
+## 尝试操作
 
-| coordinate      | 形状 | 绑定               | 典型用途                      |
-| --------------- | ---- | ------------------ | ----------------------------- |
-| `"cartesian1D"` | 直线 | 只绑 `x`           | rug 刻记、timeline、一维散布  |
-| `"polar1D"`     | 圆周 | 只绑 `x`（作角向） | 24 小时钟面、星期轮等周期数据 |
+在控件面板中切换直线与圆周。使用圆周时，还可以调整外半径和角度区间。
 
-一维坐标系与 scale 无关：和二维轴一样可以配 linear / log / time。下面左边是 `cartesian1D` rug，右边是 `polar1D` 把一天的事件时刻绕成圆。
+<ComponentPreview
+  files={['coordinate-1d-playground', 'coordinate-1d-playground.data.ts']}
+  size="sm"
+  caption="两种形态使用同一组事件时刻和固定的 0–24 小时 domain。方形画布保持不变，便于直接比较直线与圆周的空间排列。"
+/>
+
+## 映射之后继续组合
+
+一维坐标不必成为最终图形，它也可以先把对象排到一条线上，再让这些结果参与连线。下图把 12 个上层对象排到横线上，每 4 个对象连接到下方同一个汇总点，最终形成 3 组。
+
+在同一个 Plot 内，`PointMark` 先用 `thingX` 把单个位置字段映射为 core Node，再用局部 `summarize` 将重复的目标字段折叠成 3 个下层 Node。`anchorId` 为这些映射结果提供稳定 id，`RelationMark` 因而能让每 4 个来源 Node 引用同一个目标 Node。映射后的结果还可以继续参与汇聚连线、标注等二次操作。
+
+<ComponentPreview
+  files={['coordinate-1d-composition', 'coordinate-1d-composition.zh.data.ts']}
+  size="sm"
+  caption="横轴只负责一维定位；12 个来源 Node 在投影后按稳定 id 分成 3 组，每组 4 条连接线汇聚到同一个目标 Node。"
+/>
+
+## 选择与配置
+
+| 目标     | 坐标配置                                              | 关键配置                        |
+| -------- | ----------------------------------------------------- | ------------------------------- |
+| 横向直线 | `coordinate="cartesian1D"`                            | `orientation: 'horizontal'`     |
+| 纵向直线 | `{ type: 'cartesian1D', orientation: 'vertical' }`    | `orientation: 'vertical'`       |
+| 完整圆周 | `coordinate="polar1D"`                                | `radius: 1`、角度 `0` 到 `360`  |
+| 部分圆周 | `{ type: 'polar1D', startAngle: 180, endAngle: 360 }` | 使用 `startAngle` 和 `endAngle` |
+
+两种对象写法都属于 `@retikz/plot-react` 导出的 `CoordinateInput`。`cartesian1D` 默认横向；`polar1D` 的 `radius` 默认是 `1`，表示占满可用外半径，取值范围是 `0 < radius <= 1`，不是像素值。角度使用度数，默认从 `0` 到 `360`。
+
+试验场中的“扫过角度”是便于探索的教学控件，不是 `CoordinateInput` 字段。它在内部换算为 `endAngle = startAngle + sweepAngle`。
+
+坐标维度的数量不会限制比例尺类型；这个位置字段仍可使用 linear、log 或 time 等比例尺。示例显式把小时 domain 固定为 `[0, 24]`，因此 `22` 小时会落在完整圆周的 `330°`。
+
+需要一维坐标直接投影位置的 mark 目前只有 `<PointMark>`，适合沿轴事件点、时间线节点或圆周事件点；`RelationMark` 可以像上图一样引用已经定位的目标。柱、扇区和面积需要二维区域，在一维坐标中会报错。
+
+## 延伸阅读
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <ComponentPreview files={['coordinate-rug', 'coordinate-rug.data.ts']} size="sm" />
-  <ComponentPreview files={['coordinate-polar1d', 'coordinate-polar1d.data.ts']} size="sm" />
+  <LinkedCard href="/viz/plot/coordinate/2d">
+    <span className="font-semibold">二维坐标系</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">需要柱、面积或扇区时使用两个位置维度</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/scale">
+    <span className="font-semibold">比例尺</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">控制字段值如何转换为可绘制的位置</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/mark/relation">
+    <span className="font-semibold">RelationMark</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">用稳定 id 连接映射后的节点</span>
+  </LinkedCard>
 </div>
-
-<p className="text-sm text-muted-foreground">
-  左：<code>cartesian1D</code> 直线 rug；右：<code>polar1D</code> 24 小时绕圆。
-</p>
-
-## 配置项
-
-`cartesian1D` 可以用对象形态控制轴向：
-
-```tsx
-<Plot coordinate={{ type: 'cartesian1D', orientation: 'horizontal' }}>
-```
-
-`polar1D` 可以控制圆周半径占比与角向区间：
-
-```tsx
-<Plot coordinate={{ type: 'polar1D', radius: 0.8, startAngle: 180, endAngle: 360 }}>
-```
-
-两种对象分支都属于 `@retikz/plot-react` 包根公开的 `CoordinateInput`。
-
-| 坐标系        | 类型                                                                                                                                                      | 默认值                                        | 说明                                                                                 |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `cartesian1D` | `Extract<CoordinateInput, { type: 'cartesian1D' }>`<br />- `type: 'cartesian1D'`<br />- `orientation?:` <ApiValues name="Cartesian1DOrientation" />       | —<br />- —<br />- `'horizontal'`              | 一维直线<br />- 判别字段<br />- 横放或竖放                                           |
-| `polar1D`     | `Extract<CoordinateInput, { type: 'polar1D' }>`<br />- `type: 'polar1D'`<br />- `radius?: number`<br />- `startAngle?: number`<br />- `endAngle?: number` | —<br />- —<br />- `1`<br />- `0`<br />- `360` | 一维圆周<br />- 判别字段<br />- 可用半径占比<br />- 起始角（度）<br />- 终止角（度） |
-
-## 限制
-
-本轮一维坐标系只支持 `<PointMark>`，用来画 rug 刻记、timeline 点或圆周事件点。柱、扇形、面积等需要二维 cell 或区域的 mark 在一维下没有对应几何，会直接报错而不是画出误导性的图。

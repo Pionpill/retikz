@@ -1,0 +1,144 @@
+---
+title: 自定义比例尺
+description: 用 ScaleDefinition 扩展值到坐标或颜色的映射，并通过 scaleDefinitions 或 colorSchemes 注入 Plot runtime。
+---
+
+当内置比例尺无法表达领域映射、特殊位置分布或品牌色阶时，可以注册运行时 `ScaleDefinition`。Plot IR 只保存 `{ type, name, ...config }` 的 JSON operation；求值函数和字段兼容规则留在 definition 中。
+
+## 适用边界
+
+- 需要新的“值 → 坐标”规则时，定义 `family: 'position'` 的 scale。
+- 需要新的“值 → 颜色”规则时，定义 `family: 'channel'` 的 scale。当前 channel family 只被 color / paint 通道和颜色图例消费，不是任意视觉属性比例尺。
+- 只需为现有颜色比例尺补一套命名色板时，注入 `colorSchemes`，无需定义新 scale type。
+- 大小、透明度、形状等非颜色视觉属性由对应[自定义通道](/viz/plot/channel/custom-channel)求值和交付；renderer 专属逻辑不属于 scale。
+
+## 定义能力
+
+`defineScale` 按 `family` 区分两套输出契约：
+
+| family     | 输入与输出 | 关键契约                                                                                                                    |
+| ---------- | ---------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `position` | 值 → 坐标  | `resolve` 接收 raw values 与 fallback range，返回完整 `PositionScale`；`isFieldCompatible` 与 `allowsBaseline` 声明消费限制 |
+| `channel`  | 值 → 颜色  | `resolve` 接收 raw values 与 `ChannelResolveContext`，返回颜色 evaluator、`legendForm`、`domain`、`range` 与可选 `edges`    |
+
+下面的 demo 同时注册 `ease-position` 和 `brand`：前者让 x 坐标按指数重新分布，后者把分类 `tier` 映射到品牌色板。拖动指数可以比较位置映射，颜色映射保持不变；两种 definition、数据和宿主注入都可以从源码切换器中查看：
+
+<ComponentPreview
+  files={['scale-custom', 'scale-custom.definition.ts', 'scale-custom.data.ts']}
+  size="md"
+  caption="指数小于 1 时中间点向右展开，指数大于 1 时向左聚拢；tier 品牌色不随该参数变化。"
+/>
+
+## 注入宿主
+
+通过 `<Plot scaleDefinitions={[easePositionScale, brandColorScale]}>` 注入 definitions；Vanilla 源码通过 `renderPlot` options 注入同一数组。自定义 type 只能在完整 `spec.scales` 中显式引用：
+
+```ts
+scales: [
+  { type: 'ease-position', name: 'x', exponent: 1.8 },
+  { type: 'brand', name: 'tier-color' },
+];
+```
+
+命名配色使用独立的 `colorSchemes` 注入点。IR 保存 scheme 名称，runtime 才把它解析成 interpolator：
+
+```tsx
+import type { IRPlotSpec } from '@retikz/plot';
+
+const points = [
+  { x: 0, y: 1, score: 0.2 },
+  { x: 1, y: 3, score: 0.9 },
+];
+
+const spec: IRPlotSpec = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'points' },
+  scales: [
+    { type: 'linear', name: 'x' },
+    { type: 'linear', name: 'y' },
+    { type: 'sequential', name: 'brand-color', scheme: 'brand' },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    {
+      type: 'point',
+      color: { kind: 'field', value: 'score', scale: 'brand-color' },
+      encoding: { x: { field: 'x' }, y: { field: 'y' } },
+    },
+  ],
+};
+
+<Plot spec={spec} data={{ points }} colorSchemes={{ brand: t => `hsl(210, 80%, ${100 - t * 60}%)` }} />;
+```
+
+## 执行机制
+
+1. 宿主合并内置与自定义 scale definitions，并拒绝重复或内置 type 冲突；family 错配在实际消费时检查。
+2. lowering 按 `spec.scales[].type` lookup definition，用其 schema 校验 JSON operation，并再次确认解析结果仍可 JSON 序列化。
+3. position definition 接收 raw values 与 fallback range，产出坐标、ticks 和 range；channel definition 接收 raw values 与颜色解析上下文，产出实绘与图例共用的结果。
+4. coordinate / axis 消费 position scale；color / paint channel 与 legend 消费 channel scale。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'position 与 channel scale 的完整公开契约',
+      path: 'packages/viz/plot/src/contract/scale.ts',
+      startLine: 21,
+      endLine: 121,
+    },
+    {
+      label: 'registry、JSON 校验与 family 消费分派',
+      path: 'packages/viz/plot/src/providers/scale/registry.ts',
+      startLine: 22,
+      endLine: 109,
+    },
+    {
+      label: '内置优先的命名配色解析器',
+      path: 'packages/viz/plot/src/providers/scale/shared/common.ts',
+      startLine: 89,
+      endLine: 108,
+    },
+  ]}
+/>
+
+## 错误与限制
+
+- 自定义 `type` 不能覆盖内置 scale，也不能重复注册；未注册 type 会在 lookup 阶段直接报错。
+- position scale 不能驱动颜色通道，channel scale 也不能驱动位置 role；family 错配会 fail-loud。
+- definition schema 应使用闭合 JSON object。示例用 `z.strictObject`，避免拼错配置后被静默剥离。
+- position definition 必须实现 `coordinate`、`domain`、`bandwidth`、`ticks`、`range` 和 `setRange`；channel definition 的 `of` 当前只能返回颜色字符串或 `undefined`。
+- 自定义 scale 不参与 React 字段类型自动派生；声明式 `<Scale>` 也只覆盖内置 type。
+- 自定义 `colorSchemes` 不能覆盖同名内置 scheme；resolver 先查内置集合，再查宿主注入。
+
+下面的 operation 会因未知键而被示例的 strict schema 拒绝：
+
+```ts
+scales: [{ type: 'ease-position', name: 'x', exponnent: 1.8 }];
+```
+
+## API 参考
+
+公开导出：
+
+| 从 `@retikz/plot` 导入   | 用途                                                   |
+| ------------------------ | ------------------------------------------------------ |
+| `defineScale`            | 从 family、schema 与 resolve 行为构造 scale definition |
+| `ScaleDefinition`        | 查询 position / channel union 的完整 Definition 契约   |
+| `PositionScale`          | position family 必须返回的坐标、ticks 与 range 接口    |
+| `ChannelResolveContext`  | channel family 的字段类型、强转与配色解析上下文        |
+| `ChannelScaleResolution` | channel family 的颜色 evaluator 与图例同源结果         |
+
+宿主注入：
+
+| 宿主                                   | 公开契约            | 注入字段                                                    |
+| -------------------------------------- | ------------------- | ----------------------------------------------------------- |
+| `@retikz/plot-react` 的 `<Plot>`       | `PlotProps`         | `scaleDefinitions`、`colorSchemes`                          |
+| `@retikz/plot-vanilla` 的 `renderPlot` | `RenderPlotOptions` | 继承 `LowerPlotsOptions.scaleDefinitions` 与 `colorSchemes` |
+
+## 相关
+
+- [位置比例尺](/viz/plot/scale/position) —— position family 的内置语义
+- [颜色比例尺](/viz/plot/scale/color) —— channel family 与颜色图例契约
+- [自定义通道](/viz/plot/channel/custom-channel) —— 非颜色视觉属性的求值与交付路径
+- [运行时扩展索引](/kernel/reference/runtime/extensions) —— 跨能力查询 Definition、registry 与错误边界

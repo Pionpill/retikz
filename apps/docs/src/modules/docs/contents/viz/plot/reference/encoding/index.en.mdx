@@ -1,0 +1,66 @@
+---
+title: Contract - Encoding
+description: Query the Plot schemas for fields, constants, positional and visual channels, and mark-label encoding.
+---
+
+Encoding maps data rows to positional roles or visual variables. A generic `ChannelSchema` must set exactly one of `field` and `value`. Coordinates own positional scales; non-positional channels usually reference a scale explicitly.
+
+## EncodingSchema
+
+<ZodSchema name="EncodingSchema" />
+
+## ChannelSchema
+
+<ZodSchema name="ChannelSchema" />
+
+## PositionEncodingSchema
+
+<ZodSchema name="PositionEncodingSchema" />
+
+## MarkChannelEncodingSchema
+
+<ZodSchema name="MarkChannelEncodingSchema" />
+
+## PointEncodingSchema
+
+<ZodSchema name="PointEncodingSchema" />
+
+## Point-specific channels
+
+### SizeChannelSchema
+
+<ZodSchema name="SizeChannelSchema" />
+
+### OpacityChannelSchema
+
+<ZodSchema name="OpacityChannelSchema" />
+
+### ShapeChannelSchema
+
+<ZodSchema name="ShapeChannelSchema" />
+
+### TextChannelSchema
+
+<ZodSchema name="TextChannelSchema" />
+
+## Mark labels
+
+### MarkLabelSchema
+
+<ZodSchema name="MarkLabelSchema" />
+
+### MarkLabelContentSchema
+
+<ZodSchema name="MarkLabelContentSchema" />
+
+### MarkNodeLabelSchema
+
+<ZodSchema name="MarkNodeLabelSchema" />
+
+### MarkGeometryLabelSchema
+
+<ZodSchema name="MarkGeometryLabelSchema" />
+
+### LabelPinStyleSchema
+
+<ZodSchema name="LabelPinStyleSchema" />

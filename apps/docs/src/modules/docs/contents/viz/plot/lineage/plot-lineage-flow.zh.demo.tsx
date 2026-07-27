@@ -4,11 +4,11 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** Plot 在 Data 链路上补充图形语义的运行时流程 */
 const Demo: FC = () => (
-  <Layout width={720} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={600} height={120} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
       id="data"
-      position={[-270, 0]}
-      minimumSize={{ width: 146, height: 64 }}
+      position={[-230, 0]}
+      minimumSize={{ width: 116, height: 64 }}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}
@@ -16,15 +16,15 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={17}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Data 链路</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Data 来源</Text>
       <Text fill="gray" font={{ size: 12 }}>
         来源 · transform
       </Text>
     </Node>
     <Node
       id="plot"
-      position={[-55, 0]}
-      minimumSize={{ width: 180, height: 76 }}
+      position={[-70, 0]}
+      minimumSize={{ width: 160, height: 76 }}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -32,7 +32,7 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Plot 语义补全</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Plot 语义</Text>
       <Text fill="gray" font={{ size: 12 }}>
         图元 · 编码 · 比例尺
       </Text>
@@ -42,8 +42,8 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="run"
-      position={[165, 0]}
-      minimumSize={{ width: 150, height: 64 }}
+      position={[100, 0]}
+      minimumSize={{ width: 145, height: 64 }}
       stroke="darkviolet"
       fill="darkviolet"
       fillOpacity={0.07}
@@ -58,8 +58,8 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="tools"
-      position={[320, 0]}
-      minimumSize={{ width: 105, height: 64 }}
+      position={[240, 0]}
+      minimumSize={{ width: 92, height: 64 }}
       stroke="gray"
       fill="gray"
       fillOpacity={0.06}
@@ -76,10 +76,6 @@ const Demo: FC = () => (
     <Draw way={['data', 'plot']} arrow="->" stroke="gray" />
     <Draw way={['plot', 'run']} arrow="->" stroke="gray" />
     <Draw way={['run', 'tools']} arrow="->" stroke="gray" />
-
-    <Node position={[15, 78]} stroke="none" fill="none" padding={0} textColor="gray" font={{ size: 12 }}>
-      Plot 读取 Data 来源，但图元、比例尺和布局语义由 Plot 自己拥有
-    </Node>
   </Layout>
 );
 

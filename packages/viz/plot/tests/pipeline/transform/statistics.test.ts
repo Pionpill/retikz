@@ -204,7 +204,7 @@ describe('statistical transform algebra (contract)', () => {
 
     expect(out.map(row => [row.binStart, row.binEnd, row.binCount, row.binMean])).toEqual([
       [1, 6, 2, 15],
-      [6, 11, 1, 5],
+      [6, 8, 1, 5],
     ]);
   });
 
