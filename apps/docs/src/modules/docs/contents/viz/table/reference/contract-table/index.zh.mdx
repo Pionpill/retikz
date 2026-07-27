@@ -61,8 +61,6 @@ description: 查询 TableSpec 根、Cell span/布局、轨道尺寸、border 与
     layout: '轨道、gap 与 border 布局配置；省略字段使用 pipeline 默认值。',
     meta: '由 lowering 原样保留的 JSON-safe 元数据。',
     data: '可选外部数据引用，运行时会把对应 dataset 暴露给自定义 Structure definition。',
-    'data.reference': '外部 dataset 名称；实际数据值不写入 IR。',
-    'data.model': '可选字段声明；字段名必须唯一。',
     structure: '由 registry 解析的自定义 Table Structure operation。',
     'structure.kind': '自定义 Table Structure provider 的名称。',
   }}
