@@ -11,7 +11,7 @@ import {
   defineComposite,
   lowerIRToKernel,
 } from '../../src';
-import { cloneAndFreezeJson } from '../../src/compile/orchestration/artifact';
+import { cloneAndFreezeJson } from '../../src/shared/json';
 import { arrowMarks } from '../helpers/arrow-marks';
 
 const fixedMeasurer: TextMeasurer = text => ({
