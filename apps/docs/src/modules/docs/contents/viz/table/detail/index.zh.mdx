@@ -45,30 +45,25 @@ import { DetailColumn, DetailTable } from '@retikz/table-react';
 
 <ComponentPreview files={['table-detail', 'table-detail.data.ts']} size="sm" />
 
-### 内容驱动的轨道与 Cell 布局
+### 布局实验台
 
-`auto` 轨道读取 Cell 的自然尺寸，`fixed` 固定尺寸，`fraction` 在父级提供有限宽度约束时分配剩余空间，`minmax` 组合上下界。还可以按 canonical 索引用 `columns` / `rows` 覆盖单条轨道。
+固定数据和列顺序后，轨道决定 Cell box，Cell 策略再决定内容如何进入 box。操作面板中的“轨道”“备注 Cell”和“Border Graph”，观察备注列宽、文字位置、裁剪范围与蓝色共享边如何变化。
 
-```tsx
-<DetailTable
-  dataRef="scores"
-  data={rows}
-  columns={columns}
-  layout={{
-    columnSize: { kind: 'auto' },
-    rowSize: { kind: 'auto' },
-    columns: [{ index: 1, size: { kind: 'fixed', value: 96 } }],
-    columnGap: 8,
-    rowGap: 4,
-    borders: {
-      outer: { kind: 'line', stroke: 'currentColor' },
-      horizontal: { kind: 'line', stroke: 'lightgray' },
-    },
-  }}
+<ComponentPreview
+  files={['table-layout-playground', 'table-layout-playground.zh.data.ts']}
+  size="md"
+  caption="先切换“内容优先 / 固定紧凑”场景，再调整单个字段；点击“重置”会回到固定列宽、换行、裁剪和合并共享边的标准状态。"
 />
-```
 
-`DetailColumn.headerLayout` / `bodyLayout` 可以分别设置 padding、对齐、wrap、fit、overflow 与四边 border。`wrap: true` 会在列宽确定后请求受约束内容布局；`overflow: 'clip'` 把可见结果裁进 content box。宿主 `width` / `height` 仍只控制输出尺寸，不冒充 Table 的父级宽度约束。
+`auto` 读取内容自然尺寸，`fixed` 使用明确尺寸，`minmax` 在上下界之间吸收内容贡献。`fraction` 只有在父级 compile 提供有限 `maxWidth` 约束时才分配剩余宽度；standalone `DetailTable` 的 `width` / `height` 只控制输出尺寸，不是布局约束。
+
+`DetailColumn.headerLayout` / `bodyLayout` 分别控制列头与正文 Cell。padding 先缩出 content box；wrap 使用已求解列宽重新布局内容；fit 与对齐放置选中的 replay；overflow 最后决定内容框外的部分是否可见。
+
+<ComponentAlert
+  type="tip"
+  title="DetailTable 保持 record-per-row"
+  description="每条记录固定生成一行，DetailColumn 不 author 任意 span。需要显式跨行或跨列时，使用 Manual Table / TableSpec；span 的求解规则见表格模型与契约参考。"
+/>
 
 ### Vanilla 与 SSR
 
@@ -88,6 +83,127 @@ const spec = detailTable({
 
 const svg = renderTable(spec, { data: { scores: rows } });
 ```
+
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可以跳过本节"
+  description="想理解 controls 为什么会同时改变轨道、Cell 可见范围和 manifest 时再回来读。"
+/>
+
+### 一次布局事务
+
+一次 Table compile 会按固定顺序完成下面的工作；所有步骤共享同一份规范化表格输入。读取 manifest 只观察这次编译的结果，不会另跑一次 lowering。
+
+| 阶段         | 输入与处理                                       | 用户可见结果                           |
+| ------------ | ------------------------------------------------ | -------------------------------------- |
+| 结构与呈现   | records + columns 生成 value Cell                | 列顺序、列头与正文语义稳定             |
+| 测量与轨道   | 先测内容，再汇总轨道贡献并按已解列宽换行         | 最终行列尺寸和每个 Cell 的占位框       |
+| 内容放置     | 应用 padding、fit、alignment 与 overflow         | 内容占位范围与实际可见范围             |
+| Border Graph | Table 默认边与 Cell 边按优先级解决冲突           | 每条共享边只留下确定结果及来源         |
+| 编译输出     | replay Cell 与边框，产出 Scene 和已校验 artifact | 同次编译返回 Scene 与根 Table manifest |
+
+<SourceLinks
+  sources={[
+    {
+      label: '结构规范化与 Cell presentation',
+      path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
+      startLine: 236,
+      endLine: 244,
+    },
+    {
+      label: '内容测量、轨道求解与 wrap 重排',
+      path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
+      startLine: 246,
+      endLine: 305,
+    },
+    {
+      label: 'Cell box 与内容放置',
+      path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
+      startLine: 306,
+      endLine: 336,
+    },
+    {
+      label: 'Border Graph 构建与 replay',
+      path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
+      startLine: 338,
+      endLine: 369,
+    },
+    {
+      label: '布局范围、replay root 与 manifest 构造',
+      path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
+      startLine: 371,
+      endLine: 405,
+    },
+    {
+      label: 'Table composite 校验 typed artifact',
+      path: 'packages/viz/table/src/pipeline/resolve.ts',
+      startLine: 28,
+      endLine: 39,
+    },
+    {
+      label: 'Core compile 生成 Scene 并选择根 Table artifact',
+      path: 'packages/viz/table/src/pipeline/compile.ts',
+      startLine: 25,
+      endLine: 34,
+    },
+  ]}
+/>
+
+### 从同次 compile 读取 manifest
+
+React standalone 入口从 `<Layout onArtifacts>` 选择 exact root Table artifact，并按 manifest 内容去重后调用 `onManifest`。嵌入外层 `<Layout>` 时，本地 `onManifest` 不受支持，应由宿主读取 `onArtifacts`。
+
+```tsx
+<DetailTable
+  dataRef="scores"
+  data={rows}
+  columns={columns}
+  onManifest={manifest => console.log(manifest.allocationBounds)}
+/>
+```
+
+Vanilla SSR 的 `artifacts: true` 只决定是否返回 sidecar；SVG 与 manifest 仍来自一次 `compileTable()`：
+
+```ts
+const result = renderTable(spec, {
+  data: { scores: rows },
+  artifacts: true,
+});
+
+result.svg;
+result.manifest;
+```
+
+<SourceLinks
+  sources={[
+    {
+      label: 'compileTable 选择 exact root artifact',
+      path: 'packages/viz/table/src/pipeline/compile.ts',
+      startLine: 25,
+      endLine: 34,
+    },
+    {
+      label: 'React standalone manifest observer',
+      path: 'packages/viz/table-react/src/table-view.tsx',
+      startLine: 40,
+      endLine: 63,
+    },
+    {
+      label: 'React embedded 入口拒绝 standalone props',
+      path: 'packages/viz/table-react/src/table-runtime.ts',
+      startLine: 204,
+      endLine: 212,
+    },
+    {
+      label: 'Vanilla 按 artifacts 选项返回 manifest sidecar',
+      path: 'packages/viz/table-vanilla/src/runtime/render.ts',
+      startLine: 23,
+      endLine: 26,
+    },
+  ]}
+/>
 
 ## API 参考
 
@@ -130,5 +246,7 @@ const svg = renderTable(spec, { data: { scores: rows } });
 ## 相关
 
 - [表格模型](/viz/table/model)：Structure、Cell、Presentation、Layout 与 lowering 如何协作
+- [表格契约](/viz/table/reference/contract-table)：轨道、Cell layout、span 与 border schema
+- [运行时参考](/viz/table/reference/runtime)：React、Vanilla、compile 与 typed manifest
 - [API 参考](/viz/table/reference)：完整 TableSpec、React、Vanilla 与 manifest 契约
 - [数据模型](/viz/data/model)：外部记录、字段类型与引用
