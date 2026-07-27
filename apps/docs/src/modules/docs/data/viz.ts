@@ -116,6 +116,11 @@ export const vizSection: Array<Section> = [
           { id: 'bin', label: 'viz.grammarTransformBin' },
           { id: 'statistics', label: 'viz.grammarTransformStatistics' },
           { id: 'relate', label: 'viz.grammarTransformRelate' },
+          {
+            id: 'custom-transform',
+            label: 'viz.grammarTransformCustom',
+            meta: extensionGuide('plot.transform.extensions'),
+          },
         ],
       },
       {

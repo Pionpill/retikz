@@ -173,6 +173,7 @@
     "grammarTransformBin": "Binning",
     "grammarTransformStatistics": "Density & Trend",
     "grammarTransformRelate": "Row Pairing",
+    "grammarTransformCustom": "Custom Transforms",
     "grammarScale": "Scales",
     "grammarScalePosition": "Positional Scales",
     "grammarScaleColor": "Color Scales",

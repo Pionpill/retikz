@@ -1,6 +1,6 @@
 ---
 title: Custom Coordinates
-description: Use defineCoordinate to declare position roles, scale construction, and projection behavior, then inject it into Plot lowering through coordinates.
+description: Use a CoordinateDefinition to declare position roles, scales, and a projection frame, then inject it into Plot's shared coordinate registry through coordinates.
 ---
 
 A coordinate maps position values into screen geometry. When built-in coordinates cannot express the target space, use `defineCoordinate` to declare a runtime projection; Plot IR still stores only the custom `type` and JSON config.
@@ -8,68 +8,127 @@ A coordinate maps position values into screen geometry. When built-in coordinate
 ## Applicability
 
 - Define a custom coordinate for new position roles, projection functions, curved axes, or a special space.
-- When only the domain mapping changes and the spatial projection stays the same, prefer a [Custom Scale](/viz/plot/scale/custom-scale).
-- When only mark geometry changes, use a [Custom Mark](/viz/plot/mark/custom-mark).
+- React `<PointMark>` currently exposes `x` / `y` / `z` directly. Express arbitrary `u` / `v` roles through full-spec or Vanilla `encoding`.
+- Use a [Custom Scale](/viz/plot/scale/custom-scale) when only domain mapping changes, or a [Custom Mark](/viz/plot/mark/custom-mark) when only mark geometry changes.
 - A coordinate definition owns the frame and guides; it should not generate business marks or renderer-specific objects.
 
 ## Define the capability
 
 `defineCoordinate<TCoordinateOperation>` receives this contract:
 
-| Field     | Purpose                                                                                      |
-| --------- | -------------------------------------------------------------------------------------------- |
-| `schema`  | Validates the custom coordinate operation; a non-built-in literal `type` is its registry key |
-| `roles`   | Declares the coordinate's required position channels and their order                         |
-| `resolve` | Builds a `CoordinateResolution` from the operation, data domains, scales, canvas, and guides |
+| Field     | Purpose                                                                                 |
+| --------- | --------------------------------------------------------------------------------------- |
+| `schema`  | Validates the custom coordinate operation; a non-built-in literal `type` is its key     |
+| `roles`   | Declares the required position channels and their order                                 |
+| `resolve` | Builds a `CoordinateResolution` from the operation, domains, scales, canvas, and guides |
 
-The returned `frame` projects points and logical Cells; `plotArea` describes the drawing region; `axisLayers` and `gridLayers` deliver guide output.
+The returned `frame` projects points and optional Cells; `plotArea` describes the drawing region; `axisLayers` and `gridLayers` deliver guide output.
 
-The "bridge" coordinate below arches the x-axis into a parabola while y stays vertical. Its complete definition and host injection are available in the demo source:
+The bridge coordinate below arches the x-axis into a parabola while y stays vertical. Drag the arch-height control to see how an operation parameter changes projection; its definition uses a closed schema, and the source switcher exposes the data and host injection:
 
-<ComponentPreview files={['coordinate-custom-bridge', 'coordinate-custom-bridge.data.ts']} />
+<ComponentPreview
+  files={['coordinate-custom-bridge', 'coordinate-custom-bridge.definition.ts', 'coordinate-custom-bridge.data.ts']}
+  size="md"
+  caption="An arch height of 0 degenerates to a Cartesian projection; increasing it adds a vertical offset that varies with x, while screen x coordinates and the y scale stay fixed."
+/>
 
 ## Inject into the host
 
-Inject the definition through `<Plot coordinates={[bridge]}>` and reference it from the `coordinate` operation:
+Inject the definition with `<Plot coordinates={[bridgeCoordinate]}>` and reference it from the coordinate operation:
 
 ```tsx
-<Plot coordinate={{ type: 'bridge', archHeight: 60 }} coordinates={[bridge]}>
+<Plot coordinate={{ type: 'bridge', archHeight: 60 }} coordinates={[bridgeCoordinate]}>
   <PointMark x="x" y="y" />
 </Plot>
 ```
 
-The Vanilla entry accepts the same definitions through `renderPlot` options. Roles and projection functions stay in the host; the IR stores only `{ type: 'bridge', archHeight: 60 }`.
+Arbitrary position roles are not limited by the React mark-prop name set, but they require a full spec:
+
+```ts
+const spec = {
+  // ...
+  coordinate: { type: 'uv' },
+  marks: [{ type: 'point', encoding: { u: { field: 'u' }, v: { field: 'v' } } }],
+};
+```
+
+The definition with `roles: ['u', 'v']` must still be injected through `<Plot coordinates>` or `renderPlot` options. Projection functions stay in the host; IR stores only the type, config, and bindings.
 
 ## Execution
 
-1. The host merges built-in and custom coordinate definitions into one registry.
-2. Lowering finds the definition through `coordinate.type` and validates the operation with its schema.
-3. `CoordinateResolveContext` collects each role's domain, resolves positional scales, and exposes canvas and guide information.
-4. `resolve` constructs a frame with `createCoordinateFrame`, then returns the `plotArea`, axis layers, and grid layers.
-5. Marks project through `frame.projectRoles` or `frame.projectCell` without depending on the concrete coordinate implementation.
+1. The host merges built-in and custom coordinate definitions into one registry and validates role names and duplicate types.
+2. Lowering looks up `coordinate.type`; a miss fails immediately, while a hit validates the JSON operation with the definition schema.
+3. `CoordinateResolveContext` collects each role's domain, resolves position scales, and exposes canvas and guide information.
+4. `resolve` builds a frame with `createCoordinateFrame`, then returns the `plotArea`, axis layers, and grid layers.
+5. Marks project through `frame.projectRoles` or optional `frame.projectCell` without depending on the concrete coordinate implementation.
 
-Capabilities passed to `createCoordinateFrame` can include `roleScales` and `projectCell`. The former lets custom axes and interval marks read each role's scale; the latter projects a logical Cell into rect, sector, contour, or related geometry.
+`createCoordinateFrame` can receive `roleScales`, `frameAlong`, and `projectCell`. The first supports custom axes and interval role scales; the last projects a logical Cell into rect, sector, contour, or related geometry.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'CoordinateDefinition and createCoordinateFrame contracts',
+      path: 'packages/viz/plot/src/contract/coordinate/define.ts',
+      startLine: 117,
+      endLine: 166,
+    },
+    {
+      label: 'Merge built-in and custom coordinates into one registry',
+      path: 'packages/viz/plot/src/providers/coordinate/registry.ts',
+      startLine: 20,
+      endLine: 43,
+    },
+    {
+      label: 'Coordinate lookup and unregistered-type error',
+      path: 'packages/viz/plot/src/pipeline/expand/frame/resolve.ts',
+      startLine: 238,
+      endLine: 244,
+    },
+    {
+      label: 'Operation JSON and definition-schema validation',
+      path: 'packages/viz/plot/src/pipeline/expand/frame/resolve.ts',
+      startLine: 437,
+      endLine: 440,
+    },
+  ]}
+/>
 
 ## Errors and limits
 
-- A custom `type` cannot override a built-in coordinate or be registered twice.
-- Missing required roles, encoding keys unsupported by the coordinate, or invalid definition config fail during lowering.
+- A custom `type` cannot override a built-in coordinate or be registered twice. Referencing an unregistered type asks the current host options to inject its definition.
+- Missing required roles, encoding keys unsupported by the coordinate, or schema validation failures all fail immediately.
+- The example uses `z.strictObject`; an unknown key such as `archHeigth` is not silently stripped or replaced by a default.
 - Point-like marks only require `projectRoles`; interval-like marks also require matching `roleScales` and `projectCell`.
 - A custom coordinate uses the `plotArea` returned by its definition and does not automatically inherit cartesian margin and legend reservation.
 - Curved axes can be generated through `lowerCustomAxis`; grids, 3D spaces, and multi-plot composition require explicit definition capabilities.
 
+This operation fails because its config key is misspelled:
+
+```ts
+coordinate: { type: 'bridge', archHeigth: 60 }
+```
+
 ## API reference
 
-| API                        | Use                                                                           |
-| -------------------------- | ----------------------------------------------------------------------------- |
-| `defineCoordinate`         | Constructs a coordinate definition from a schema, roles, and resolve behavior |
-| `CoordinateDefinition`     | Runtime contract for a custom coordinate                                      |
-| `CoordinateResolveContext` | Resolution context for domains, scales, canvas, and guides                    |
-| `createCoordinateFrame`    | Constructs the shared point / Cell projection frame                           |
-| `coordinates`              | Definition injection point for React and Vanilla hosts                        |
+Public exports:
+
+| Import from `@retikz/plot` | Use                                                        |
+| -------------------------- | ---------------------------------------------------------- |
+| `defineCoordinate`         | Builds a coordinate definition from schema, roles, resolve |
+| `CoordinateDefinition`     | Full role and resolve runtime contract                     |
+| `CoordinateResolveContext` | Domain, scale, canvas, and guide resolution entry points   |
+| `createCoordinateFrame`    | Builds point, tangent, and optional Cell projection frame  |
+
+Host injection:
+
+| Host                                     | Public contract     | Injection field                           |
+| ---------------------------------------- | ------------------- | ----------------------------------------- |
+| `<Plot>` from `@retikz/plot-react`       | `PlotProps`         | `coordinates`                             |
+| `renderPlot` from `@retikz/plot-vanilla` | `RenderPlotOptions` | Inherited `LowerPlotsOptions.coordinates` |
 
 ## Related
 
 - [Coordinates](/viz/plot/coordinate) — the shared model for built-in projections and frames
 - [Coordinate Composition](/viz/plot/coordinate/composition) — coordinate-domain boundaries across panels and tracks
 - [Custom Marks](/viz/plot/mark/custom-mark) — how marks consume a coordinate frame
+- [Runtime Extension Index](/kernel/reference/runtime/extensions) — cross-capability Definition, registry, and error boundaries

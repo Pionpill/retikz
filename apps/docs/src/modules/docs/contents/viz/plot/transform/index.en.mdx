@@ -5,7 +5,7 @@ description: Understand the boundary of Plot transforms and choose interval, sta
 
 Plot transforms reshape normalized data rows for drawing. They produce intervals, stack boundaries, bins, density samples, trend samples, or relation fields for scales and marks to consume.
 
-Sorting, summarizing, selecting, annotating, and custom data transforms belong to [Data Transforms](/viz/data/transform). This group covers only Plot-registered drawing transforms and their scope and pipeline semantics in Plot.
+Sorting, summarizing, selecting, annotating, and custom data transforms belong to [Data Transforms](/viz/data/transform). This group covers Plot-registered drawing transforms and their scope and pipeline semantics, plus how Plot injects and consumes a custom Data transform.
 
 <ComponentPreview files="transform-pipeline" size="md" hideCode />
 
@@ -44,13 +44,14 @@ See the [Data Transform Component](/viz/data/transform/overview) for the `<Trans
 
 ## Responsibilities
 
-| page              | Plot members                | output shape                            |
+| page              | Plot members or entry point | output shape                            |
 | ----------------- | --------------------------- | --------------------------------------- |
 | Derive & Jitter   | `derive-interval`, `jitter` | One output row for each input row       |
 | Stacking & Shares | `stack`, `normalize`        | Detail rows plus bounds or share fields |
 | Binning           | `bin`                       | One output row for each bin             |
 | Density & Trend   | `density`, `smooth`         | A batch of sampled rows for each group  |
 | Row Pairing       | `relate`                    | Zero or one relation row for each group |
+| Custom Transforms | `transformDefinitions`      | Defined by the runtime Definition       |
 
 ## Pages
 
@@ -83,6 +84,12 @@ See the [Data Transform Component](/viz/data/transform/overview) for the `<Trans
     <span className="font-semibold">Row Pairing</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Select source / target rows and project relation fields.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/transform/custom-transform">
+    <span className="font-semibold">Custom Transforms</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Use Data Definitions to derive fields for Plot interval, position, or relation encodings.
     </span>
   </LinkedCard>
 </div>

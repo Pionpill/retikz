@@ -5,7 +5,7 @@ description: 了解 Plot 变换的能力边界，并按输出行形态选择区�
 
 Plot 变换把规范化后的数据行改造成适合绘图的行。它们生成区间、堆叠边界、分箱、密度采样、趋势采样或关系字段，随后由比例尺和图元消费。
 
-排序、汇总、筛选、注解和自定义数据变换属于[数据变换](/viz/data/transform)。本分组只说明 Plot 注册的绘图变换，以及它们在 Plot 中的作用域和管线语义。
+排序、汇总、筛选、注解和自定义数据变换属于[数据变换](/viz/data/transform)。本分组说明 Plot 注册的绘图变换及其作用域和管线语义，也演示怎样在 Plot 中注入并消费 Data 自定义变换。
 
 <ComponentPreview files="transform-pipeline" size="md" hideCode />
 
@@ -44,13 +44,14 @@ Plot 变换把规范化后的数据行改造成适合绘图的行。它们生成
 
 ## 职责一览
 
-| 页面       | Plot 成员                   | 输出形态                         |
+| 页面       | Plot 成员或入口             | 输出形态                         |
 | ---------- | --------------------------- | -------------------------------- |
 | 派生与抖动 | `derive-interval`、`jitter` | 每个输入行对应一个输出行         |
 | 堆叠与占比 | `stack`、`normalize`        | 保留明细行并补充边界或占比字段   |
 | 分箱       | `bin`                       | 每个分箱对应一个输出行           |
 | 密度与趋势 | `density`、`smooth`         | 每个分组生成一批连续采样行       |
 | 行配对     | `relate`                    | 每个分组生成零个或一个关系输出行 |
+| 自定义变换 | `transformDefinitions`      | 由运行时 Definition 决定         |
 
 ## 章节内容
 
@@ -76,5 +77,11 @@ Plot 变换把规范化后的数据行改造成适合绘图的行。它们生成
   <LinkedCard href="/viz/plot/transform/relate">
     <span className="font-semibold">行配对</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">选择 source / target 行并投影出关系字段。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/transform/custom-transform">
+    <span className="font-semibold">自定义变换</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      用 Data Definition 派生 Plot 区间、位置或关系编码需要的字段。
+    </span>
   </LinkedCard>
 </div>

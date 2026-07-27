@@ -173,6 +173,7 @@
     "grammarTransformBin": "分箱",
     "grammarTransformStatistics": "密度与趋势",
     "grammarTransformRelate": "行配对",
+    "grammarTransformCustom": "自定义变换",
     "grammarScale": "比例尺",
     "grammarScalePosition": "位置比例尺",
     "grammarScaleColor": "颜色比例尺",

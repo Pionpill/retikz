@@ -1,0 +1,111 @@
+---
+title: Custom Transforms
+description: Define a waterfall accumulation operation with Data's TransformDefinition, inject it through Plot transformDefinitions, and produce fields consumed by interval marks.
+---
+
+The atomic custom-transform capability belongs to [Data Transform Extensions](/viz/data/transform/extensions). This page only demonstrates its injection and consumption in the Plot domain; Plot does not introduce a parallel transform contract.
+
+The example `waterfall` operation turns each change into cumulative `from` / `to` intervals plus a `direction` field, which an `IntervalMark` then draws as a waterfall chart.
+
+## Applicability
+
+- Define and inject a transform in a Plot scenario when the logic is a pure, deterministic row operation whose outputs serve Plot position, interval, or relation encodings.
+- Prefer [Data Built-In Transforms](/viz/data/transform/operations) for sorting, filtering, summarizing, and other general semantics. Data remains the source of truth for reusable extensions.
+- Use [Custom Marks](/viz/plot/mark/custom-mark) or [Custom Coordinates](/viz/plot/coordinate/custom-coordinate) when the change belongs to mark lowering or projection instead of row processing.
+
+`waterfall` is a documentation example kind, not a Plot built-in transform.
+
+## Define the Capability
+
+The Definition passed to `defineTransform` processes rows only. It does not know about `IntervalMark`, colors, or renderers:
+
+| field          | responsibility in this example                                         |
+| -------------- | ---------------------------------------------------------------------- |
+| `schema`       | Validate `kind`, the change field name, and the optional initial value |
+| `inputFields`  | Declare the source field corresponding to `delta`                      |
+| `outputFields` | Declare derived `from`, `to`, and `direction` fields                   |
+| `apply`        | Accumulate rows and return new objects that spread each input row      |
+
+The panel changes only the operation's `initialValue`. Switch source files to inspect the data, Definition, and Plot injection:
+
+<ComponentPreview
+  files={['waterfall', 'waterfall.definition.ts', 'waterfall.data.ts']}
+  size="md"
+  caption="The initial value changes only where cumulative intervals start. A fixed y domain and viewBox prevent camera scaling while bars move. Green means an increase; red means a decrease."
+/>
+
+## Inject the Host
+
+The Definition stays at runtime through `transformDefinitions`; `<Transform>` adds only a JSON-safe operation to Plot IR:
+
+```tsx
+<Plot data={rows} transformDefinitions={[waterfallTransform]}>
+  <Transform kind="waterfall" field="delta" initialValue={60} />
+  <IntervalMark x="period" color="direction" bounds={{ y: { kind: 'extent', from: 'from', to: 'to' } }} />
+</Plot>
+```
+
+The same operation can be passed through `dataTransforms`. Put it on a mark's `transform` when only that mark should read the derived view. All three entry points use the same Plot transform registry.
+
+## Execution
+
+1. Plot merges Data built-ins, Plot built-ins, and host-injected Definitions into one registry.
+2. Field collection looks up `waterfall`, validates the operation with the same schema, and registers source and derived fields.
+3. The root data pipeline runs `apply` in declaration order and produces `from`, `to`, and `direction`.
+4. `IntervalMark` consumes ordinary fields and does not need to know they came from a custom transform.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Data TransformDefinition and defineTransform contracts',
+      path: 'packages/viz/data/src/contract/transform.ts',
+      startLine: 29,
+      endLine: 61,
+    },
+    {
+      label: 'Merge Data, Plot, and custom transform Definitions',
+      path: 'packages/viz/plot/src/providers/transform/definitions.ts',
+      startLine: 144,
+      endLine: 167,
+    },
+    {
+      label: 'Build the Plot transform registry and use it for field collection',
+      path: 'packages/viz/plot/src/pipeline/expand/data.ts',
+      startLine: 82,
+      endLine: 96,
+    },
+    {
+      label: 'Consume the same registry for root and mark-local execution',
+      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
+      startLine: 145,
+      endLine: 167,
+    },
+  ]}
+/>
+
+## Errors and Limits
+
+- A custom `kind` cannot override a Data or Plot built-in or duplicate another injected Definition.
+- Rendering fails before drawing when `waterfallTransform` is missing, the operation fails its schema, or the operation contains a non-JSON value.
+- This example requires every change field to coerce to a finite number. Invalid values report their row and field instead of being skipped.
+- A row-preserving transform should spread the input row to retain provenance. When row counts change, use `TransformContext.groupProvenance` as described in [Data Transform Extensions](/viz/data/transform/extensions#provenance).
+- A Definition should not write color, mark, or renderer logic. `direction` is an ordinary categorical field; Plot channels still choose its colors.
+
+## API Reference
+
+See [Data Transform Extensions](/viz/data/transform/extensions#api-reference) for the complete atomic Definition contract. This page directly uses these public entry points:
+
+| entry point                               | use                                                |
+| ----------------------------------------- | -------------------------------------------------- |
+| `defineTransform` / `TransformDefinition` | Define the runtime capability from `@retikz/data`  |
+| `<Transform>`                             | Declare a root operation from `@retikz/plot-react` |
+| `PlotProps.transformDefinitions`          | Inject Definitions into the React host             |
+| `RenderPlotOptions.transformDefinitions`  | Inject from the `@retikz/plot-vanilla` host        |
+| `LowerPlotsOptions.transformDefinitions`  | Inject when calling Plot lowering directly         |
+
+## Related
+
+- [Data Transform Extensions](/viz/data/transform/extensions) — authoritative Definition, statistical sub-operator, and provenance guidance
+- [Transforms](/viz/plot/transform) — root and mark-local scopes plus the Plot built-in index
+- [Interval Marks](/viz/plot/mark/interval) — consume `from` / `to` interval fields
+- [Plot Lineage](/viz/plot/lineage) — inspect rows and mark outputs around a custom transform
