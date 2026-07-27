@@ -1,13 +1,19 @@
 ---
-title: 图元链路
+title: 溯源
 description: 图元链路在 Data 来源与变换记录上补充图元、编码、比例尺和布局语义，生成宿主可消费的运行时审计产物。
 ---
 
 Data 能解释一行来自哪里、经过哪些 transform；Plot 还需要解释这行怎样成为某个图元、使用了哪些通道和比例尺、位于哪种布局中。图元链路把两层信息组合成 `PlotLineageRun`，供检查器、审计面板和交互回查使用。
 
+<ComponentAlert
+  type="tip"
+  title="什么时候需要溯源"
+  description="只想渲染图表时无需开启溯源。只有宿主需要审计一次运行、解释图元来源，或把命中结果回查到数据时，才配置 lineage 或 onLineage。"
+/>
+
 ## 从数据到图元
 
-<ComponentPreview files="plot-lineage-flow" size="sm" hideCode />
+<ComponentPreview files="plot-lineage-flow" size="xs" hideCode />
 
 图元链路复用 [Data 来源追溯](/viz/data/provenance)，再补充 Plot 自己拥有的语义：root 与 mark-local transform 的分段、mark 身份与编码、声明式比例尺、坐标布局，以及宿主允许透传的查询或 AI 元数据。
 
@@ -19,10 +25,10 @@ Data 能解释一行来自哪里、经过哪些 transform；Plot 还需要解释
 
 Plot 中有两类名字相近但用途不同的来源能力：
 
-| 路径           | 入口选项                                        | 输出位置                          | 典型用途                    |
-| -------------- | ----------------------------------------------- | --------------------------------- | --------------------------- |
-| 下沉来源元数据 | `provenance`、`datumProvenance`、`datumIdField` | Core 图元的 id / meta，进入 Scene | locator、稳定锚点、图元检查 |
-| 运行时图元链路 | `lineage`、`hostLineageMetadata`                | `PlotLineageRun` 返回值或回调     | 审计、解释、宿主检查器      |
+| 路径           | 入口选项                                        | 输出与用途                                                              |
+| -------------- | ----------------------------------------------- | ----------------------------------------------------------------------- |
+| 下沉来源元数据 | `provenance`、`datumProvenance`、`datumIdField` | Core 图元的 id / meta，进入 Scene<br />用于 locator、稳定锚点和图元检查 |
+| 运行时图元链路 | `lineage`、`hostLineageMetadata`                | `PlotLineageRun` 返回值或回调<br />用于审计、解释和宿主检查器           |
 
 下沉来源元数据会影响生成图元携带的 id 或 meta；图元链路只旁路记录一次运行。开启 `lineage` 不等于把整份链路塞进 Scene，开启 `datumProvenance` 也不会自动生成 `PlotLineageRun`。
 
@@ -31,44 +37,42 @@ Plot 中有两类名字相近但用途不同的来源能力：
 仍然按普通 `<Plot>` 声明图表。宿主需要链路时传入 `lineage`，并通过 `onLineage` 接收运行结果：
 
 ```tsx
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
-import type { PlotLineageOptions, PlotLineageRun } from '@retikz/plot';
+import type { PlotLineageRun } from '@retikz/plot';
 
-export function SalesPlot({ sales, queryId }: { sales: Array<Record<string, unknown>>; queryId: string }) {
-  const [, setAuditLineage] = useState<PlotLineageRun | null>(null);
-  const lineage = useMemo<PlotLineageOptions>(
-    () => ({
-      scaleMappings: true,
-      layoutContext: true,
-      rowValues: { maxRows: 3, fields: ['region', 'revenue'] },
-      hostMetadata: { query: true },
-    }),
-    [],
-  );
+type AuditSummary = {
+  dataReference: string;
+  marks: Array<{ markIndex: number; markId?: string; markType: string }>;
+};
+
+export function SalesPlot({ sales }: { sales: Array<Record<string, unknown>> }) {
+  const [auditSummary, setAuditSummary] = useState<AuditSummary | null>(null);
   const handleLineage = useCallback((run: PlotLineageRun) => {
-    setAuditLineage(run);
+    setAuditSummary({
+      dataReference: run.dataReference,
+      marks: run.marks.map(({ markIndex, markId, markType }) => ({
+        markIndex,
+        ...(markId === undefined ? {} : { markId }),
+        markType,
+      })),
+    });
   }, []);
 
   return (
-    <Plot
-      id="salesPlot"
-      data={sales}
-      width={420}
-      height={260}
-      lineage={lineage}
-      hostLineageMetadata={{ queryId, datasetVersion: 'sales-v3' }}
-      onLineage={handleLineage}
-    >
-      <IntervalMark id="revenueBars" x="region" y="revenue" color="month" />
-      <Axis dimension="x" />
-      <Axis dimension="y" grid />
-    </Plot>
+    <div>
+      <Plot id="salesPlot" dataRef="sales" data={sales} width={420} height={260} lineage={{}} onLineage={handleLineage}>
+        <IntervalMark id="revenueBars" x="region" y="revenue" color="month" />
+        <Axis dimension="x" />
+        <Axis dimension="y" grid />
+      </Plot>
+      <pre>{auditSummary === null ? '等待溯源结果' : JSON.stringify(auditSummary, null, 2)}</pre>
+    </div>
   );
 }
 ```
 
-只要存在 `onLineage`，省略 `lineage` 也会按最小默认配置计算链路；显式传 `lineage={false}` 才关闭。需要在渲染之外主动获取链路时，可以使用 React adapter 导出的 `resolvePlotLineage`。
+示例只展示数据引用和图元身份摘要，宿主可以按同样方式选择 `PlotLineageRun` 中真正需要的字段。只要存在 `onLineage`，省略 `lineage` 也会按最小默认配置计算链路；显式传 `lineage={false}` 才关闭。需要在渲染之外主动获取链路时，可以使用 React adapter 导出的 `resolvePlotLineage`。
 
 ## Vanilla 与服务端渲染
 
@@ -94,12 +98,7 @@ const { svg, lineage } = renderPlot(
   {
     width: 420,
     height: 260,
-    lineage: {
-      scaleMappings: true,
-      rowValues: { maxRows: 3, fields: ['region', 'revenue'] },
-      hostMetadata: { query: true },
-    },
-    hostLineageMetadata: { queryId: 'q-sales', datasetVersion: 'sales-v3' },
+    lineage: {},
   },
 );
 ```
@@ -108,32 +107,36 @@ const { svg, lineage } = renderPlot(
 
 `lineage: {}` 默认保留足够识别图元与变换分段的轻量摘要，其余高成本或敏感信息独立开启：
 
-| 开关              | 默认值  | 记录内容                                      |
-| ----------------- | ------- | --------------------------------------------- |
-| `data`            | `{}`    | Data 来源摘要与 transform 阶段                |
-| `markIdentity`    | `true`  | plot id、数据引用、mark id / type / index     |
-| `markEncoding`    | `true`  | mark channel 消费的字段与绑定比例尺           |
-| `transformScopes` | `true`  | root 与 mark-local transform 的分段           |
-| `scaleMappings`   | `false` | `spec.scales` 中声明的比例尺及其 channel 绑定 |
-| `layoutContext`   | `false` | coordinate、view、facet 与 track 摘要         |
-| `locatorAnchors`  | `false` | locator address 与最终 anchor                 |
-| `rowValues`       | `false` | 最终行样本，必须限制 `maxRows` 和字段白名单   |
-| `hostMetadata`    | `false` | 宿主查询、AI、权限与 extra 元数据的选择性透传 |
+| 开关              | 默认值  | 记录内容                                                    |
+| ----------------- | ------- | ----------------------------------------------------------- |
+| `data`            | `{}`    | Data 来源摘要与 transform 阶段                              |
+| `markIdentity`    | `true`  | 补充 mark id；plot id、数据引用、mark index / type 始终保留 |
+| `markEncoding`    | `true`  | mark channel 消费的字段与绑定比例尺                         |
+| `transformScopes` | `true`  | root 与 mark-local transform 的分段                         |
+| `scaleMappings`   | `false` | `spec.scales` 中声明的比例尺及其 channel 绑定               |
+| `layoutContext`   | `false` | coordinate、view、facet 与 track 摘要                       |
+| `locatorAnchors`  | `false` | locator address 与最终 anchor                               |
+| `rowValues`       | `false` | 最终行样本，必须限制 `maxRows` 和字段白名单                 |
+| `hostMetadata`    | `false` | 宿主查询、AI、权限与 extra 元数据的选择性透传               |
 
-`scaleMappings` 只记录 `spec.scales` 中显式声明的 scale 与 mark channel 绑定，不把 lowering 内部派生的临时 scale 当成稳定契约。`rowValues` 默认关闭，避免审计产物意外复制完整业务数据。
+`markIdentity: false` 只省略可选的 mark id；`plotId`（存在时）、`dataReference`、`markIndex` 和 `markType` 是定位产物所需的最小骨架，始终保留。`scaleMappings` 只记录 `spec.scales` 中显式声明的 scale 与 mark channel 绑定，不把 lowering 内部派生的临时 scale 当成稳定契约。`rowValues` 默认关闭，避免审计产物意外复制完整业务数据。
 
 ## 交互回查
 
-需要从命中的 datum 或 series 回查来源时，使用 `createPlotLineageLocator`。它在普通 locator anchor 之外返回 `markIndex`、`transformedIndex`、来源摘要与可选图元链路：
+需要从命中的 datum 或 series 回查来源时，使用 `createPlotLineageLocator`。沿用上面的 `spec` 和 `sales` 数据，先显式建立数据集表；返回值可能为 `null`，命中后再读取 anchor 与溯源摘要：
 
 ```ts
 import { createPlotLineageLocator } from '@retikz/plot';
 
+const datasets = { sales };
 const locator = createPlotLineageLocator(spec, datasets, {
   lineage: { locatorAnchors: true },
 });
 
-const result = locator.datum(4);
+const result = locator.datum(0);
+if (result !== null) {
+  console.log(result.anchor, result.lineage.sourceIdentity, result.lineage.mark);
+}
 ```
 
 这个入口适合 tooltip、AI 解释面板或审计跳转；实际显示什么内容仍由宿主决定。
@@ -163,6 +166,12 @@ const result = locator.datum(4);
       path: 'packages/viz/plot-react/src/Plot.tsx',
       startLine: 32,
       endLine: 48,
+    },
+    {
+      label: 'React 链路计算与回调',
+      path: 'packages/viz/plot-react/src/Plot.tsx',
+      startLine: 145,
+      endLine: 164,
     },
     {
       label: 'Vanilla 图元链路返回契约',

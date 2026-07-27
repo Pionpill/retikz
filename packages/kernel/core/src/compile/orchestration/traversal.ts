@@ -49,6 +49,7 @@ import { providerDefinitionOf } from '../../providers/registry';
 import { ScopeBoundingShape } from '../../schemas';
 import { Anchor } from '../../shared';
 import { rect as rectOps } from '../../shared/geometry';
+import { cloneAndFreezeJson } from '../../shared/json';
 import { formatCompileOccurrence } from '../artifact';
 import { CompileWarningCode } from '../constants';
 import { NamespaceStack } from '../namespace';
@@ -73,7 +74,7 @@ import { collectScopeCornerPoints, computeScopeBoundingBox, lowerScopeTransforms
 import { createStyleFrame, resolveEffectivePath, resolveLabelDefault, resolveNodeStyle, resolveShadow } from '../style';
 import { applyTransformChain, inverseTransformChain, projectLayoutToGlobal } from '../transform';
 import { filterAnimations } from './animation';
-import { cloneAndFreezeJson, freezeCompileArtifact, orderCompileArtifacts } from './artifact';
+import { freezeCompileArtifact, orderCompileArtifacts } from './artifact';
 import { collectLayoutBounds } from './bounds';
 import { createCompositeReplayChild, createCompositeScopeChild, resolveCompositeOutputChild } from './composite-output';
 import { createDuplicateWarning, transformWarnCode } from './diagnostics';
@@ -1228,7 +1229,7 @@ export const compileChildrenToPrimitives = (
           value: cloneAndFreezeJson(
             computeCompiledNodeLayout(observation.layout, observation.scopeChain),
             'Node layout artifact',
-          ) as unknown as ReturnType<typeof computeCompiledNodeLayout>,
+          ),
         }),
       );
     }

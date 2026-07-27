@@ -413,18 +413,6 @@ describe('rule fail-loud', () => {
     });
     expect(() => expandOf(spec, { d: [{}] }, cartOpts)).toThrow(/cartesian1D|not supported|rule/i);
   });
-
-  it('rule-coord-ternary-fail-loud', () => {
-    const spec = PlotSpecSchema.parse({
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: 'd' },
-      coordinate: { type: 'ternary2D' },
-      scales: [],
-      marks: [{ type: 'reference', encoding: { x: { value: 5 } } }],
-    });
-    expect(() => expandOf(spec, { d: [{}] }, cartOpts)).toThrow(/ternary2D|not supported|rule/i);
-  });
 });
 
 // ── 交互：polar line / band + z-order ────────────────────────────────────────────────────
@@ -599,31 +587,6 @@ describe('rule polar', () => {
 });
 
 describe('rule region projectCell 坐标系', () => {
-  it('rule-region-ternary-contour', () => {
-    const spec = PlotSpecSchema.parse({
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: 'd' },
-      coordinate: { type: 'ternary2D' },
-      scales: [],
-      marks: [
-        {
-          type: 'reference',
-          kind: 'region',
-          xTo: 0.75,
-          yTo: 0.55,
-          zTo: 0.7,
-          encoding: { x: { value: 0.15 }, y: { value: 0.1 }, z: { value: 0.1 } },
-        },
-      ],
-    });
-    const layer = expandOf(spec, { d: [{}] }, cartOpts).children[0] as IRScope;
-    const node = nodesOf(layer)[0];
-    const shape = node.shape as { type?: string; params?: { points?: Array<[number, number]> } } | undefined;
-    expect(shape?.type).toBe('contour');
-    expect(shape?.params?.points?.length ?? 0).toBeGreaterThanOrEqual(3);
-  });
-
   it('rule-region-custom-projectcell-contour', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
@@ -675,20 +638,6 @@ describe('rule region projectCell 坐标系', () => {
     const shape = node.shape as { type?: string; params?: { points?: Array<[number, number]> } } | undefined;
     expect(shape?.type).toBe('contour');
     expect(shape?.params?.points?.length ?? 0).toBeGreaterThanOrEqual(4);
-  });
-
-  it('rule-region-ternary-missing-z-fails-loud', () => {
-    const spec = PlotSpecSchema.parse({
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: 'd' },
-      coordinate: { type: 'ternary2D' },
-      scales: [],
-      marks: [
-        { type: 'reference', kind: 'region', xTo: 0.8, yTo: 0.7, encoding: { x: { value: 0.1 }, y: { value: 0.1 } } },
-      ],
-    });
-    expect(() => expandOf(spec, { d: [{}] }, cartOpts)).toThrow(/reference region|encoding\.z|zTo/i);
   });
 });
 

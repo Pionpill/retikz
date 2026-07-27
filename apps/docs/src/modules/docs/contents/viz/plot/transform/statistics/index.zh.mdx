@@ -1,52 +1,144 @@
 ---
 title: 密度与趋势
-description: 密度与趋势是 plot 注册的采样统计变换，把原始样本变成可由 PathMark 绘制的曲线或面积。
+description: 用 density 和 smooth 把原始样本转换成可由 PathMark 绘制的密度或趋势采样行。
 ---
 
-有些统计不是“给每组一个值”，而是直接生成一批新的采样行。`density` 读取一维连续字段，用 KDE 生成 `xAs` / `densityAs` 输出字段；`smooth` 读取 `(x, y)` 样本，用回归模型生成 `xAs` / `yAs` 预测字段。它们都输出普通 rows，再交给 `PathMark` 画曲线或面积。
+需要从一维样本估计分布曲线时用 `density`；需要从 `(x, y)` 样本拟合线性趋势时用 `smooth`。两者都按组生成一批新行，而不是只返回一个统计值。
 
-通用 reducer / selector、`summarize`、`select` 和自定义 transform definition 见[数据变换](/viz/data/transform)。
+通用 reducer、selector 和分组汇总属于[数据变换](/viz/data/transform)。
 
-## 密度 density
+## 密度
 
-<ComponentPreview files={['transform-density', 'transform-density.data.ts']} />
+`density` 对每组一维有限样本执行 Gaussian KDE（高斯核密度估计），输出等距采样位置及其密度。`PathMark` 再把采样行连成曲线或面积。
+
+### 动态示例
+
+切换 Silverman 自动带宽和显式带宽，并调整 `sampleCount`。固定坐标域让曲线宽窄和采样稠密度可以直接比较。
+
+<ComponentPreview files={['transform-density', 'transform-density.data.ts']} size="md" />
+
+带宽决定每个样本在横轴上影响多远：较小带宽保留更多局部峰谷，曲线更起伏；较大带宽混合更宽的邻域，曲线更平滑。`sampleCount` 只改变输出曲线的采样密度，不改变平滑强度。
+
+### API 参考
 
 `IRPlotDensityTransform` 的 `kind` 固定为 `'density'`。
 
-`bandwidth.kind` 的公开闭合集合由 <ApiValues name="DensityBandwidthKind" /> 提供。
+| prop           | 类型                         | 默认值       | 说明                         |
+| -------------- | ---------------------------- | ------------ | ---------------------------- |
+| `field`        | `string`                     | —            | 一维连续输入字段             |
+| `groupBy?`     | `Array<string>`              | 全局单组     | 按组分别估计密度             |
+| `bandwidth?`   | `IRPlotDensityBandwidthSpec` | `silverman`  | KDE 带宽策略                 |
+| `sampleCount?` | `number`                     | `64`         | 每组输出的采样行数，至少为 2 |
+| `extent?`      | `[number, number]`           | 观测范围外扩 | 采样区间                     |
+| `xAs`          | `string`                     | —            | 密度采样位置输出字段         |
+| `densityAs`    | `string`                     | —            | 密度值输出字段               |
 
-| prop                | 类型                                                                                                                                                                                                                                                                                                                                                 | 默认值       | 说明                                                                                                         |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------ |
-| `field`             | `string`                                                                                                                                                                                                                                                                                                                                             | —            | 用来估计密度的一维连续字段                                                                                   |
-| `groupBy?`          | `Array<string>`                                                                                                                                                                                                                                                                                                                                      | 全局单组     | 按组分别估计 density                                                                                         |
-| `bandwidth?`        | `IRPlotDensityBandwidthSpec`<br />`Extract<IRPlotDensityBandwidthSpec, { kind: typeof DensityBandwidthKind.Silverman }>`<br />- `kind:` `typeof DensityBandwidthKind.Silverman`<br />\| `Extract<IRPlotDensityBandwidthSpec, { kind: typeof DensityBandwidthKind.Value }>`<br />- `kind:` `typeof DensityBandwidthKind.Value`<br />- `value: number` | `silverman`  | KDE 带宽策略<br />经验规则分支<br />- Silverman 判别值<br />显式带宽分支<br />- value 判别值<br />- 正数带宽 |
-| `sampleCount?`      | `number`                                                                                                                                                                                                                                                                                                                                             | `64`         | 每组输出的采样点数量，至少为 2                                                                               |
-| `extent?`           | `[number, number]`                                                                                                                                                                                                                                                                                                                                   | 观测范围外扩 | 采样区间                                                                                                     |
-| `xAs` / `densityAs` | `string`                                                                                                                                                                                                                                                                                                                                             | —            | 输出采样位置和 density 值的字段名                                                                            |
+`bandwidth.kind` 使用 <ApiValues name="DensityBandwidthKind" />；`value` 分支还需要正数 `value`。
 
-`density` 输出的是普通 rows。密度曲线用 `PathMark`；密度面积用同一个 `PathMark` 加 `closure={{ kind: 'baseline' }}` 和 `fill`。不要为了 density 新增专用 mark。
+### 技术原理
 
-## 趋势 smooth
+`density` 的主链是“分组有限样本 → 确定带宽 → 逐点求核函数均值 → 输出采样行”。带宽策略与采样配置都是辅助输入，不是额外的数据处理阶段。
 
-`smooth` 把散点或时间序列中的 `(x, y)` 样本拟合成趋势线采样行。首轮 `method` 只有 `{ kind: 'linear' }`，默认不外推；输出行通常交给 `PathMark` 按 `order` 连接。
+<ComponentPreview files="transform-density-logic" hideCode size="xl" />
 
-<ComponentPreview files={['transform-smooth', 'transform-smooth.data.ts']} />
+每组先忽略 `field` 中的非有限值并排序。Silverman 策略结合标准差与四分位距估算正带宽；显式策略直接使用 `bandwidth.value`。
+
+未设置 `extent` 时，采样域会在观测最小值和最大值两侧各扩展 3 个带宽。`linearSamplesOf` 在域内生成 `sampleCount` 个等距位置，每个位置的密度是所有样本 Gaussian 核值的平均：
+
+`f(x) = (1 / n h) × Σ K((x - xᵢ) / h)`
+
+没有有限样本时会抛错。Silverman 策略还要求至少两个有限样本，且必须能得到正带宽；单值组或全相同值组应使用显式正带宽。每组最终输出 `sampleCount` 行，并携带分组字段和来源追踪。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'density 的 schema 与字段约束',
+      path: 'packages/viz/plot/src/schemas/transform/schema.ts',
+      startLine: 255,
+      endLine: 323,
+    },
+    {
+      label: '带宽、采样域与 KDE 输出',
+      path: 'packages/viz/plot/src/providers/transform/density.ts',
+      startLine: 32,
+      endLine: 108,
+    },
+  ]}
+/>
+
+## 趋势
+
+`smooth` 当前用普通最小二乘法拟合每组 `(x, y)`，再输出一批预测采样行。原始点和趋势结果通常分成不同图元：实心点读取源数据；路径与空心点复用同一份 transform 配置，但各自执行局部变换并建立数据视图。
+
+### 动态示例
+
+调整预测点数，并切换观测范围与显式外推范围。空心点逐行显示预测采样，坐标域保持不变；因此 `sampleCount` 改变点的疏密，`extent` 只改变趋势线的采样区间。
+
+<ComponentPreview files={['transform-smooth', 'transform-smooth.data.ts']} size="md" />
+
+### API 参考
 
 `IRPlotSmoothTransform` 的 `kind` 固定为 `'smooth'`。
 
-`method.kind` 的公开闭合集合由 <ApiValues name="SmoothMethodKind" /> 提供。
+| prop           | 类型                     | 默认值          | 说明                             |
+| -------------- | ------------------------ | --------------- | -------------------------------- |
+| `x`            | `string`                 | —               | 回归自变量字段                   |
+| `y`            | `string`                 | —               | 回归因变量字段                   |
+| `groupBy?`     | `Array<string>`          | 全局单组        | 按组分别拟合趋势                 |
+| `method?`      | `IRPlotSmoothMethodSpec` | `linear`        | 平滑方法                         |
+| `sampleCount?` | `number`                 | `64`            | 每组输出的预测采样行数，至少为 2 |
+| `extent?`      | `[number, number]`       | 有限 x 观测范围 | 采样区间；显式设置可外推         |
+| `xAs`          | `string`                 | —               | 预测位置输出字段                 |
+| `yAs`          | `string`                 | —               | 预测数值输出字段                 |
 
-| prop           | 类型                                                                                                                                                      | 默认值          | 说明                                            |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | ----------------------------------------------- |
-| `x` / `y`      | `string`                                                                                                                                                  | —               | 回归输入字段                                    |
-| `groupBy?`     | `Array<string>`                                                                                                                                           | 全局单组        | 按组分别拟合趋势线                              |
-| `method?`      | `IRPlotSmoothMethodSpec`<br />`Extract<IRPlotSmoothMethodSpec, { kind: typeof SmoothMethodKind.Linear }>`<br />- `kind:` `typeof SmoothMethodKind.Linear` | `linear`        | 平滑方法<br />线性回归分支<br />- linear 判别值 |
-| `sampleCount?` | `number`                                                                                                                                                  | `64`            | 每组输出的预测采样点数量，至少为 2              |
-| `extent?`      | `[number, number]`                                                                                                                                        | 有限 x 观测范围 | 采样区间；显式传入可做外推                      |
-| `xAs` / `yAs`  | `string`                                                                                                                                                  | —               | 输出预测采样位置和 y 值的字段名                 |
+`method.kind` 使用 <ApiValues name="SmoothMethodKind" />；当前只有无需附加字段的 `linear`。
 
-`smooth` 对不可拟合输入会 fail-loud：每组至少需要两个有限 `(x, y)` 点，并且 x 不能全相同。原始散点和趋势线应分成两层 mark：散点继续读源数据，趋势线读 `smooth` 生成的采样行。
+### 技术原理
 
-## 与数据流的关系
+`smooth` 先过滤出有限 `(x, y)` 对，再为每组拟合一个线性模型。`extent` 和 `sampleCount` 只控制模型拟合完成后的预测采样。
 
-`density` 和 `smooth` 之所以留在绘图语法中，是因为它们的主要输出就是给 plot 曲线 / 面积图消费的采样字段。它们仍然运行在 data canonical 行之上，也会沿用数据层的字段解析、校验与 provenance 规则。
+<ComponentPreview files="transform-smooth-logic" hideCode size="xl" />
+
+普通最小二乘先计算 `meanX`、`meanY`、x 方差与 xy 协方差，再得到：
+
+`slope = covarianceXY / varianceX`
+
+`intercept = meanY - slope × meanX`
+
+未设置 `extent` 时使用有限 x 的观测最小值和最大值；显式范围可以向观测域外推。每个等距采样 x 都写出 `intercept + slope × x`，所以每组输出 `sampleCount` 行。
+
+每组至少需要两个有限点，且 x 方差必须大于 0；垂直线无法表示为 `y = a + bx`。`extent` 下界必须小于上界，输出字段不能同名，也不能覆盖 `groupBy` 字段。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'smooth 的 schema 与字段约束',
+      path: 'packages/viz/plot/src/schemas/transform/schema.ts',
+      startLine: 325,
+      endLine: 384,
+    },
+    {
+      label: 'OLS 拟合、采样域与预测输出',
+      path: 'packages/viz/plot/src/providers/transform/smooth.ts',
+      startLine: 20,
+      endLine: 92,
+    },
+  ]}
+/>
+
+## 相关
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/transform">
+    <span className="font-semibold">作用域与管线</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      用图元局部 transform 同时保留原始点和统计曲线。
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/transform/statistics">
+    <span className="font-semibold">统计子算子</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      查看分组汇总和代表行选择复用的 reducer 与 selector。
+    </span>
+  </LinkedCard>
+</div>

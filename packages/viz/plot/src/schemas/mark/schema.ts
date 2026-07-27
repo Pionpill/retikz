@@ -797,13 +797,10 @@ export const IntervalBoundsSchema = z
     y: IntervalBoundSchema.optional().describe(
       'Secondary-role interval bound (coordinate maps y→secondary: cartesian2D vertical, polar2D radius); omit to infer (continuous scale → span from 0)',
     ),
-    z: IntervalBoundSchema.optional().describe(
-      'z-role interval bound for ternary2D; omit to infer a span from 0 to the z component when the coordinate consumes z',
-    ),
   })
   .catchall(IntervalBoundSchema)
   .describe(
-    'Per-role interval bounds keyed by coordinate role; built-ins use x / y / z, custom coordinates may add role keys',
+    'Per-role interval bounds keyed by coordinate role; built-ins use x / y, custom coordinates may add role keys',
   );
 
 export const IntervalMarkSchema = z
@@ -886,12 +883,6 @@ export const ReferenceMarkSchema = z
       .describe(
         'Upper bound along x: number → constant, string → per-datum field. With encoding.x alone it creates a vertical band x∈[x,xTo]; with kind=region it is the region x upper bound',
       ),
-    zTo: z
-      .union([z.number(), z.string().min(1)])
-      .optional()
-      .describe(
-        'Upper bound along z: number → constant, string → per-datum field. Used by kind=region when the active coordinate consumes a z role, such as ternary2D',
-      ),
     extentField: z
       .string()
       .min(1)
@@ -928,11 +919,7 @@ export const ReferenceMarkSchema = z
   })
   .superRefine((mark, ctx) => {
     if (mark.label === undefined) return;
-    const usesNodeHost =
-      mark.kind === ReferenceMarkKind.Region ||
-      mark.xTo !== undefined ||
-      mark.yTo !== undefined ||
-      mark.zTo !== undefined;
+    const usesNodeHost = mark.kind === ReferenceMarkKind.Region || mark.xTo !== undefined || mark.yTo !== undefined;
     const result = usesNodeHost
       ? MarkNodeLabelListSchema.safeParse(mark.label)
       : MarkGeometryLabelListSchema.safeParse(mark.label);

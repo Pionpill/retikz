@@ -43,7 +43,7 @@ export const StackTransformSchema = z
       .enum(StackOffset)
       .optional()
       .describe(
-        'Stack baseline offset: zero accumulates from 0; normalize scales each stack to 0..1; diverging separates positive/negative values; center centers the full stack; overlap draws every segment from 0',
+        'Stack baseline offset: zero accumulates from 0; normalize scales non-negative values to 0..1 and rejects finite negative values; diverging separates positive/negative values; center centers the full stack; overlap draws every segment from 0',
       ),
   })
   .describe('Stack transform: within each x group, accumulate y across series and derive [start, end] bounds per row');
@@ -148,7 +148,12 @@ export const RelateTransformSchema = z
 export const NormalizeTransformSchema = z
   .object({
     kind: z.literal(PlotTransform.Normalize).describe('Discriminator: within-group percentage normalization'),
-    field: z.string().min(1).describe('Numeric field whose within-group share is computed'),
+    field: z
+      .string()
+      .min(1)
+      .describe(
+        'Non-negative numeric field whose within-group share is computed; finite negative values are rejected and non-finite values count as zero',
+      ),
     groupBy: z
       .array(z.string().min(1))
       .min(1)

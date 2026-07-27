@@ -1,21 +1,32 @@
 ---
 title: Guides
-description: Guides explain scale and coordinate results to readers, such as axes, grids, and legends; they help read the plot but are not data marks themselves.
+description: Guides explain scale and coordinate results; Axis explains position, while Legend explains color, size, opacity, and shape without drawing data marks.
 ---
 
-Guides are the explanatory layer of the graphic grammar. Marks draw the data; guides tell readers what positions, colors, sizes, or shapes mean.
+Guides are the explanatory layer of the graphic grammar. Marks draw the data; Axis and Legend tell readers what those positions, colors, sizes, or shapes mean.
+
+## Responsibilities
+
+| Component | Responsibility                                                 | When to use it                                     |
+| --------- | -------------------------------------------------------------- | -------------------------------------------------- |
+| Axis      | Explain positional scales with lines, ticks, labels, and grids | To explain x / y positions or show a grid          |
+| Legend    | Explain non-positional scales with colors or graduated symbols | To explain color, size, opacity, or shape mappings |
 
 ## Topics
 
-<div className="grid gap-3 sm:grid-cols-2">
+Choose the page by the visual channel you need to explain: axes for position, legends for other visual channels.
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/viz/plot/guide/axis">
-    <strong>Axis</strong>
-    <span>
-      Explain positional channels with ticks, labels, and grids; available dimensions depend on the coordinate system.
+    <span className="font-semibold">Axis</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Explain positional channels with ticks, labels, and grids
     </span>
   </LinkedCard>
   <LinkedCard href="/viz/plot/guide/legend">
-    <strong>Legend</strong>
-    <span>Explain non-positional channels such as color, size, opacity, and shape.</span>
+    <span className="font-semibold">Legend</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Explain non-positional channels such as color, size, opacity, and shape
+    </span>
   </LinkedCard>
 </div>

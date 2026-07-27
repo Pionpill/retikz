@@ -4,7 +4,7 @@ import type { RuntimeOwnerRegistry } from '../registry';
 import type { RuntimeOwnerErasedExecutor } from './define';
 import type { RuntimeChangeSet, RuntimeOwnerDefinition, RuntimeOwnerToken } from './types';
 
-import { RuntimeOwnerError } from '../error';
+import { RuntimeError, RuntimeOwnerError } from '../error';
 import { createRuntimeIdentityIndex } from '../identity';
 import { getRuntimeOwnerRegistryExecutor } from '../registry';
 
@@ -24,6 +24,7 @@ export type RuntimeOwnerExecutor = Readonly<{
   prepare: <TInput, TValue, TRead, TChange>(
     definition: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
     input: TInput,
+    current?: RuntimePreparedOwnerValue<TValue, TRead>,
   ) => RuntimeOwnerExecutionResult<RuntimePreparedOwnerValue<TValue, TRead>>;
   /** 比较两个完整 captured value */
   compare: <TInput, TValue, TRead, TChange>(
@@ -119,6 +120,7 @@ export const createRuntimeOwnerExecutor = (registry: RuntimeOwnerRegistry): Runt
     prepare: <TInput, TValue, TRead, TChange>(
       definition: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
       source: TInput,
+      current?: RuntimePreparedOwnerValue<TValue, TRead>,
     ): RuntimeOwnerExecutionResult<RuntimePreparedOwnerValue<TValue, TRead>> => {
       const executor = getRuntimeOwnerRegistryExecutor(registry, definition);
       let value: TValue;
@@ -126,6 +128,14 @@ export const createRuntimeOwnerExecutor = (registry: RuntimeOwnerRegistry): Runt
         value = executor.capture<TInput, TValue>(source);
       } catch (cause) {
         throw createLifecycleError('RUNTIME_OWNER_CAPTURE_FAILED', definition.key, 'capture', cause);
+      }
+      if (current !== undefined && executor.dispose !== undefined && value === current.value) {
+        throw new RuntimeError({
+          code: 'RUNTIME_OWNER_OWNERSHIP_ALIAS',
+          phase: 'capture',
+          owner: definition.key,
+          cause: value,
+        });
       }
 
       let identities: RuntimeIdentityIndex | undefined;

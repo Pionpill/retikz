@@ -1,62 +1,9 @@
-import type { JsonValue } from '../../schemas';
 import type {
   CompileArtifact,
   CompileOccurrenceLocator,
   CompositeCompileArtifact,
   NodeLayoutCompileArtifact,
 } from '../types';
-
-/** 递归冻结只由 plain JSON data 组成的值 */
-const freezeJson = (value: JsonValue): JsonValue => {
-  if (Array.isArray(value)) {
-    for (const item of value) freezeJson(item);
-    Object.freeze(value);
-    return value;
-  }
-  if (value !== null && typeof value === 'object') {
-    for (const item of Object.values(value)) freezeJson(item);
-    Object.freeze(value);
-    return value;
-  }
-  return value;
-};
-
-/** 校验 JSON-safe plain data 并创建 detached copy */
-export const cloneAndFreezeJson = (value: unknown, path = 'artifact'): JsonValue => {
-  const seen = new Set<object>();
-  const clone = (input: unknown, currentPath: string): JsonValue => {
-    if (input === null || typeof input === 'string' || typeof input === 'boolean') return input;
-    if (typeof input === 'number') {
-      if (!Number.isFinite(input)) throw new Error(`${currentPath} must contain only finite JSON numbers`);
-      return input;
-    }
-    if (typeof input !== 'object') {
-      throw new Error(`${currentPath} must be JSON-safe plain data`);
-    }
-    if (seen.has(input)) throw new Error(`${currentPath} must not contain cyclic references`);
-    seen.add(input);
-    try {
-      if (Array.isArray(input)) {
-        return input.map((item, index) => clone(item, `${currentPath}[${index}]`));
-      }
-      const prototype = Object.getPrototypeOf(input);
-      if (prototype !== Object.prototype && prototype !== null) {
-        throw new Error(`${currentPath} must contain only plain objects and arrays`);
-      }
-      if (Object.getOwnPropertySymbols(input).length > 0) {
-        throw new Error(`${currentPath} must not contain symbol keys`);
-      }
-      const output = Object.create(null) as Record<string, JsonValue>;
-      for (const [key, item] of Object.entries(input)) {
-        output[key] = clone(item, `${currentPath}.${key}`);
-      }
-      return output;
-    } finally {
-      seen.delete(input);
-    }
-  };
-  return freezeJson(clone(value, path));
-};
 
 /** 创建递归冻结的 occurrence locator */
 export const freezeOccurrence = (occurrence: CompileOccurrenceLocator): CompileOccurrenceLocator =>

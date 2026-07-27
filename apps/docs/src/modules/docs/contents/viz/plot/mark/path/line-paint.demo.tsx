@@ -2,11 +2,13 @@ import type { IRPaintSpec } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Axis, PathMark, Plot } from '@retikz/plot-react';
-import { Layout } from '@retikz/react';
+
+import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { revenue } from './line-basic.data';
+import { LINE_PAINT_CONTROL_IDS, previewControlContract } from './line-paint.controls';
 
-const strokePaint: IRPaintSpec = {
+const strokeGradient: IRPaintSpec = {
   kind: 'linearGradient',
   angle: 0,
   stops: [
@@ -16,7 +18,7 @@ const strokePaint: IRPaintSpec = {
   ],
 };
 
-const fillPaint: IRPaintSpec = {
+const fillGradient: IRPaintSpec = {
   kind: 'linearGradient',
   angle: 90,
   stops: [
@@ -26,36 +28,47 @@ const fillPaint: IRPaintSpec = {
   ],
 };
 
-const Demo: FC = () => (
-  <Layout width={700} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Plot data={revenue} width={315} height={220} x={0} y={30}>
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
+  const mode = values[LINE_PAINT_CONTROL_IDS.mode];
+  const stroke =
+    mode === 'gradient' ? strokeGradient : { kind: 'constant' as const, value: values[LINE_PAINT_CONTROL_IDS.stroke] };
+
+  return (
+    <Plot data={revenue} width={560} height={240} style={{ maxWidth: '100%', height: 'auto' }}>
+      {mode === 'area' ? (
+        <PathMark
+          x="month"
+          y="revenue"
+          order="month"
+          closure={{ kind: 'baseline' }}
+          fill={fillGradient}
+          stroke="none"
+          opacity={values[LINE_PAINT_CONTROL_IDS.opacity]}
+        />
+      ) : null}
       <PathMark
         x="month"
         y="revenue"
         order="month"
-        stroke={strokePaint}
-        strokeWidth={5}
+        stroke={stroke}
+        strokeWidth={values[LINE_PAINT_CONTROL_IDS.strokeWidth]}
+        opacity={values[LINE_PAINT_CONTROL_IDS.opacity]}
         lineCap="round"
         lineJoin="round"
       />
       <Axis dimension="x" />
       <Axis dimension="y" grid />
     </Plot>
-    <Plot data={revenue} width={315} height={220} x={370} y={30}>
-      <PathMark x="month" y="revenue" order="month" closure={{ kind: 'baseline' }} fill={fillPaint} stroke="none" />
-      <PathMark
-        x="month"
-        y="revenue"
-        order="month"
-        stroke="#0284c7"
-        strokeWidth={2.5}
-        lineCap="round"
-        lineJoin="round"
-      />
-      <Axis dimension="x" />
-      <Axis dimension="y" grid />
-    </Plot>
-  </Layout>
-);
+  );
+});
+
+/** canonical 状态派生的稳定源码配置 */
+export const previewSource = controlledPreview.source;
+
+/** controls registry 缺失时使用的显式回退 */
+export const previewControls = previewControlContract.controls;
+
+/** 路径描边、渐变 paint 与闭合面积 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

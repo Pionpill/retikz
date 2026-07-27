@@ -1,0 +1,62 @@
+import type { IRPlotTransform } from '@retikz/plot';
+
+import { Axis, PathMark, Plot, PointMark, Scale } from '@retikz/plot-react';
+
+import { defineControlledPreview } from '@/modules/docs/preview';
+
+import { previewControlContract, smoothControls } from './transform-smooth.controls';
+import { trendSamples } from './transform-smooth.data';
+
+/** 注册回退使用的趋势控件 */
+export const previewControls = smoothControls;
+
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
+  const extent: [number, number] | undefined = values.extentMode === 'extend' ? [-1, 5] : undefined;
+  const smoothTransform: Array<IRPlotTransform> = [
+    {
+      kind: 'smooth',
+      x: 'time',
+      y: 'value',
+      groupBy: ['series'],
+      method: { kind: 'linear' },
+      sampleCount: values.sampleCount,
+      ...(extent !== undefined ? { extent } : {}),
+      xAs: 'trendX',
+      yAs: 'trendY',
+    },
+  ];
+
+  return (
+    <Plot data={trendSamples} width={440} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Scale dimension="x" type="linear" domain={[-1, 5]} />
+      <Scale dimension="y" type="linear" domain={[0, 10]} />
+      <PointMark color="series" fillOpacity={0.72} x="time" y="value" />
+      <PathMark
+        color="series"
+        order="trendX"
+        series="series"
+        strokeWidth={2.4}
+        transform={smoothTransform}
+        x="trendX"
+        y="trendY"
+      />
+      <PointMark
+        fill={{ kind: 'constant', value: 'white' }}
+        size={3.5}
+        stroke="series"
+        strokeWidth={1}
+        transform={smoothTransform}
+        x="trendX"
+        y="trendY"
+      />
+      <Axis dimension="x" title="时间" />
+      <Axis dimension="y" title="数值" grid />
+    </Plot>
+  );
+});
+
+/** canonical 状态派生的稳定源码配置 */
+export const previewSource = controlledPreview.source;
+
+/** 调整预测点数和外推范围的线性趋势试验场 */
+export default controlledPreview.Component;

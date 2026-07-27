@@ -184,6 +184,13 @@ export const vizV01: Release = {
           items: [
             esmOnlyChangeItem,
             {
+              label: { zh: 'BREAKING：移除内置 ternary2D 坐标系', en: 'BREAKING: Built-in ternary2D removed' },
+              content: {
+                zh: '`ternary2D` IR、三角轴、重心投影与专用 interval / reference 下沉已移除；三变量投影如仍有需求，应通过自定义 `CoordinateDefinition` 明确提供角色、投影和 guide 行为。',
+                en: 'The `ternary2D` IR, triangular axes, barycentric projection, and dedicated interval / reference lowering have been removed. Three-variable projections should use a custom `CoordinateDefinition` with explicit roles, projection, and guide behavior.',
+              },
+            },
+            {
               label: { zh: '顶层入口只保留公开渲染契约', en: 'Root entry keeps only public rendering contracts' },
               content: {
                 zh: '`@retikz/plot` 顶层继续导出 `lowerPlots`、`LowerPlotsOptions`、locator、schema 与 contract；内部 pipeline / layout helper 不再经顶层 barrel 暴露。',
@@ -443,6 +450,13 @@ export const vizV01: Release = {
           items: [
             esmOnlyChangeItem,
             {
+              label: { zh: 'BREAKING：移除 ternary2D authoring', en: 'BREAKING: ternary2D authoring removed' },
+              content: {
+                zh: '`<Plot coordinate="ternary2D">`、`<Axis dimension="z">` 与 `ReferenceMark` 的 `z` / `zTo` 表面已移除；`PointMark.z` 仅保留为自定义坐标角色入口。',
+                en: '`<Plot coordinate="ternary2D">`, `<Axis dimension="z">`, and the `ReferenceMark` `z` / `zTo` surface have been removed. `PointMark.z` remains only as a custom-coordinate role entry.',
+              },
+            },
+            {
               label: { zh: 'spec 入口支持 layout 覆盖', en: 'Spec entry supports layout overrides' },
               content: {
                 zh: '使用 `<Plot spec={...} layout={...}>` 时，layout 与 colors / theme 一样合并进传入的 PlotSpec，再交给 lowering。',
@@ -660,6 +674,13 @@ export const vizV01: Release = {
           },
           items: [
             esmOnlyChangeItem,
+            {
+              label: { zh: 'BREAKING：停止渲染 ternary2D', en: 'BREAKING: ternary2D rendering removed' },
+              content: {
+                zh: '`renderPlot` 不再接受内置 `ternary2D` Plot IR；一维、笛卡尔、极坐标与自定义坐标系继续复用同一 Plot lowering。',
+                en: '`renderPlot` no longer accepts built-in `ternary2D` Plot IR. One-dimensional, Cartesian, polar, and custom coordinates continue to share the same Plot lowering path.',
+              },
+            },
             {
               label: { zh: 'builder-only 字段边界更清楚', en: 'Clearer builder-only field boundary' },
               content: {

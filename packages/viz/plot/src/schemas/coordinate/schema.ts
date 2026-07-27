@@ -124,18 +124,6 @@ export const Polar1DSchema = z
     '1D polar coordinate system: a single angular dimension mapped onto a fixed-radius circle (clock face / weekday wheel / periodic rug); reuses the polar angular projection',
   );
 
-export const Ternary2DSchema = z
-  .object({
-    type: z
-      .literal(PlotCoordinate.Ternary2D)
-      .describe(
-        'Discriminator: 2D ternary space; three components x + y + z normalized to barycentric coordinates inside an equilateral triangle',
-      ),
-  })
-  .describe(
-    '2D ternary coordinate system: normalizes x / y / z position channels into barycentric coordinates inside an equilateral triangle',
-  );
-
 const RESERVED_CUSTOM_COORDINATE_TYPES = new Set<string>([...BUILTIN_COORDINATE_TYPES, 'custom']);
 
 export const CustomCoordinateSchema = z
@@ -165,8 +153,8 @@ export const CustomCoordinateSchema = z
   );
 
 export const CoordinateSchema = z
-  .discriminatedUnion('type', [Cartesian2DSchema, Polar2DSchema, Cartesian1DSchema, Polar1DSchema, Ternary2DSchema])
-  .describe('Built-in coordinate-system union: cartesian2D | polar2D | cartesian1D | polar1D | ternary2D');
+  .discriminatedUnion('type', [Cartesian2DSchema, Polar2DSchema, Cartesian1DSchema, Polar1DSchema])
+  .describe('Built-in coordinate-system union: cartesian2D | polar2D | cartesian1D | polar1D');
 
 export const CoordinateOperationSchema = z
   .union([CoordinateSchema, CustomCoordinateSchema])

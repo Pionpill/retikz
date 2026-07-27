@@ -5,7 +5,7 @@ description: 'PointMark is the simplest mark: it positions each row in a coordin
 
 `<PointMark>` is the simplest mark: it first positions each data row in the active coordinate system, then draws one core `Node` at that position. That Node can be a default dot, shape marker, bubble, text, or a dot with a label; scatter plots, bubble plots, and text points are presentation-level wrappers around the same base mark.
 
-Which position channels you bind depends on the [coordinate system](/viz/plot/coordinate): 1D uses `x`, 2D uses `x` / `y`, and ternary uses `x` / `y` / `z`. The props are optional at the component level; the active coordinate validates the required dimensions at compile time.
+Which position channels you bind depends on the [coordinate system](/viz/plot/coordinate): built-in 1D coordinates use `x`, built-in 2D coordinates use `x` / `y`, and custom coordinates may declare additional roles. The props are optional at the component level; the active coordinate validates the required dimensions at compile time.
 
 ## Usage
 
@@ -21,7 +21,7 @@ import { Plot, PointMark } from '@retikz/plot-react';
 
 PointMark often overlays PathMark — draw `<PathMark>` first, then layer `<PointMark>` on the same data to mark each observation.
 
-## Presentation Layer
+### When to Use
 
 PointMark is a low-level point mark: it only projects each data row into one coordinate position, then writes style and text channels onto the Node for that position. What the presentation layer calls a scatter plot, bubble plot, or text point is not a different low-level mark; it is the same PointMark with different channels configured.
 
@@ -35,179 +35,125 @@ This is why PointMark usually does not need coordinate-specific adapters. The co
 
 ## Examples
 
-### Position Props
+### Position Rows in a Coordinate
 
 `x` / `y` define the anchor for each row. The left plot uses cartesian2D, and the right plot uses polar2D; the same fields become different geometry under different coordinates.
 
-<ComponentPreview files={['point-position', 'point-api.data.ts']} />
+<ComponentPreview files={['point-position', 'point-api.data.ts']} controls={{ name: 'point-position' }} size="md" />
 
-### Mark-Local Transforms
+### Transform Only the Point Layer
 
 `transform` can live directly on the current PointMark. In the example below, the gray points still read the original rows, while the colored bubble layer runs `jitter` only inside this mark and slightly spreads overlapping `orders` points along y.
 
-<ComponentPreview files={['point-transform', 'point-transform.data.ts']} />
+<ComponentPreview files={['point-transform', 'point-transform.data.ts']} size="md" />
 
-### Style Props
+### Adjust Point Appearance
 
-`color` / `size` / `opacity` / `shape` / `stroke` / `strokeWidth` can all act as built-in channels for a point. They change the point's visible form without changing its projected position.
+`color` / `size` / `opacity` / `shape` / `stroke` / `strokeWidth` change a point's visible form without changing its projected position. Field bindings encode appearance from data, while constant colors and `IRPaintSpec` apply one solid or gradient paint to the layer.
 
 Node style props such as `stroke`, `strokeWidth`, `opacity`, `fillOpacity`, and `rotate` can all bind to data fields. At the component layer, strings and numbers are syntax sugar: a string becomes `{ kind: 'field', value: FieldName }` when it matches a data field; if it does not match a field but is a valid constant, it becomes `{ kind: 'constant', value }`; otherwise it is skipped with a warning. Use the explicit form when you need to remove ambiguity.
 
-<ComponentPreview files={['point-style', 'point-api.data.ts']} />
+<ComponentPreview files={['point-style', 'point-api.data.ts']} size="md" />
 
-### Paint Styles
+### Show Labels or Text Points
 
-Besides solid colors, `fill` / `stroke` can take `IRPaintSpec` objects. Constant paint lowers into the core `Node` default style; use `color` or field-bound paint when the color should be data-driven.
+For text attached to dots, prefer `label`: it writes to the core `Node.label` on each point, so a single `PointMark` can draw the dot and its label. The playground covers center, four sides, and four corners; `labelPosition` also accepts an angle or `{ boundary, fraction }` for precise placement along the real boundary. Use `labelTextColor`, `labelOpacity`, `labelFont`, `labelRotate`, and `labelKeepUpright` for label appearance and orientation. `text` is a different mode: it replaces the point itself with a borderless text Node. `dx` / `dy` apply a small screen-space offset.
 
-<ComponentPreview files={['point-paint', 'point-api.data.ts']} />
+<ComponentPreview files={['point-text', 'point-api.data.ts']} controls={{ name: 'point-text' }} size="md" />
 
-### Text Props
+### Reuse Position Roles
 
-For text attached to dots, prefer `label`: it writes to the core `Node.label` on each point, so a single `PointMark` can draw the dot and its label. `labelPosition`, `labelDistance`, and `labelPin` mirror core Node label placement, spacing, and leader lines. `text` is a different mode: it replaces the point itself with a borderless text Node, useful when the mark itself should be text. `dx` / `dy` apply a small screen-space offset.
-
-<ComponentPreview files={['point-text', 'point-api.data.ts']} />
-
-### Different Coordinates
-
-The examples below focus on how coordinates interpret position roles: PointMark itself stays unchanged, while `x` / `y` / `z` project to a line, ring, or triangle.
+The example below focuses on how coordinates interpret position roles: PointMark itself stays unchanged, while position fields project to a line, ring, or plane.
 
 #### 1D: Line And Polar
 
 1D coordinates consume only `x`. In cartesian1D it lands on a straight axis; in polar1D the same values land on a ring.
 
-<ComponentPreview files={['point-coordinate-1d', 'point-coordinates.data.ts']} />
+<ComponentPreview
+  files={['point-coordinate-1d', 'point-coordinates.data.ts']}
+  controls={{ name: 'point-coordinate-1d' }}
+  size="md"
+/>
 
-#### Ternary: Ternary Plot
+## How it works
 
-Ternary coordinates consume `x` / `y` / `z`, normalize each row, and project the result into a triangle.
+<ComponentAlert
+  type="tip"
+  title="You can skip this section at first"
+  description="Return when debugging skipped invalid rows, text points replacing glyphs, or how color groups lower into core IR."
+/>
 
-<ComponentPreview files={['point-coordinate-ternary', 'point-coordinates.data.ts']} />
+`<PointMark>` declares a data-to-point mapping; it does not render DOM. Once collected into `PlotSpec`, the mark registry dispatches it to point lowering, which reuses the active coordinate frame and core `Node`.
 
-## How It Works
+| Stage    | Observable behavior                                                                                                                 |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Project  | Each row is projected through the `x` / `y` / `z` roles required by the coordinate frame; rows without a valid position are skipped |
+| Generate | Ordinary mode creates one core `Node` per row; setting `text` creates a text Node instead and applies `dx` / `dy`                   |
+| Decorate | `size`, `shape`, color, and Node styles decorate the datum Node; `label` preserves the point and attaches `Node.label`              |
+| Layer    | Rows share `nodeDefault` without a color channel; field-driven colors form color groups before mark layer metadata is attached      |
 
-`PointMark` is a built-in registered mark. The React `<PointMark>` component does not render DOM or draw points by itself; `<Plot>` collects it into mark IR with `type: 'point'` and records field channels such as `x` / `y` / `z`.
+The coordinate frame decides where the point is, PointMark decides which Node is generated per row, and shape, text, and visual styling reuse [Node](/kernel/components/node/overview). Each mark lowers into its own layer. Use `layer={{ zIndex }}` to move the whole mark relative to axes and legends; the `zIndex` prop orders datum Nodes only inside this mark.
 
-At compile time, `lowerMark` looks up `MARK_REGISTRY` by `mark.type`. `PointMark` resolves to the `PlotMark.Point` entry, which calls `lowerPoint`. For each row, `lowerPoint` reads the position-channel values, asks the current coordinate frame to `projectRoles(...)`, then lowers the projected point into a core `Node`.
+<SourceLinks
+  sources={[
+    {
+      label: 'Register built-in mark definitions',
+      path: 'packages/viz/plot/src/providers/mark/registry.ts',
+      startLine: 35,
+      endLine: 46,
+    },
+    {
+      label: 'Resolve definitions by mark type and dispatch uniformly',
+      path: 'packages/viz/plot/src/providers/mark/registry.ts',
+      startLine: 146,
+      endLine: 166,
+    },
+    {
+      label: 'Point projection, Node creation, and color grouping',
+      path: 'packages/viz/plot/src/providers/mark/features/point.ts',
+      startLine: 82,
+      endLine: 168,
+    },
+  ]}
+/>
 
-This means scatter points ultimately reuse [@retikz/core Node](/kernel/components/node/overview); `PointMark` only computes positions from data and coordinates, while shape, size, fill, and text still come from core Node.
+## API Reference
 
-For registration, focus on the `PointMark` registry entry and the `lowerPoint` function that performs the lowering:
+This table keeps only PointMark-specific props and props whose meaning is redefined here. See [channel bindings](/viz/plot/channel/binding) for field and explicit field / constant inputs, [transforms](/viz/plot/transform) for `transform` and `layer`, and [coordinates](/viz/plot/coordinate) for coordinate-view props. Shared `fill`, `stroke`, opacity, corner, font, shadow, and related visual props follow [Node styling](/kernel/components/node/overview#visual-style-api) and are not duplicated here.
 
-```ts
-[PlotMark.Point]: { type: PlotMark.Point, lower: lowerPoint },
-
-const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
-  if (mark.type !== PlotMark.Point) return null;
-  const { colorOf, defaultColor = DEFAULT_FILL, sizeOf, opacityOf, shapeOf, strokeOf, strokeWidthOf, labelOf } = channels;
-  const isText = mark.encoding.text !== undefined;
-  const dx = mark.dx ?? 0;
-  const dy = mark.dy ?? 0;
-  const placed: Array<{ color: string | undefined; node: IRNode }> = [];
-  for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
-    const row = rows[transformedIndex];
-    if (isText) {
-      // 文本点：投影同 point（roleValues + projectRoles，坐标系无关）；内容缺失跳过；dx/dy 锚点像素微调
-      const point = frame.projectRoles(roleValues(mark, row, frame));
-      if (!point) continue;
-      const text = labelOf?.(row);
-      if (text === undefined) continue;
-      const position: [number, number] = dx === 0 && dy === 0 ? point : [point[0] + dx, point[1] + dy];
-      const base: IRNode = { type: 'node', position, text };
-      if (mark.zIndex !== undefined) base.zIndex = mark.zIndex;
-      placed.push({ color: colorOf?.(row), node: decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined) });
-      continue;
-    }
-    // 散点：锚点与 locator 共享同一 datumAnchor（point → frame.projectRoles），杜绝两套投影漂移
-    const point = datumAnchor(mark, row, frame);
-    if (!point) continue;
-    const base: IRNode = { type: 'node', position: point };
-    if (mark.zIndex !== undefined) base.zIndex = mark.zIndex;
-    const radius = sizeOf?.(row);
-    if (radius !== undefined) base.minimumSize = radius * Math.SQRT2;
-    const opacity = opacityOf?.(row);
-    if (opacity !== undefined) base.opacity = opacity;
-    const shape = shapeOf?.(row);
-    if (shape !== undefined) base.shape = shape;
-    const stroke = strokeOf?.(row);
-    if (stroke !== undefined) base.stroke = stroke;
-    const strokeWidth = strokeWidthOf?.(row);
-    if (strokeWidth !== undefined) base.strokeWidth = strokeWidth;
-    const node = attachDatumLabel(decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined), mark, row, labelOf);
-    placed.push({ color: colorOf?.(row), node });
-  }
-  if (placed.length === 0) return null;
-  const layer: IRScope = !colorOf
-    ? {
-        type: 'scope',
-        nodeDefault: isText ? textStyle(typeof mark.fill === 'string' ? mark.fill : defaultColor, mark) : pointStyle(mark.fill ?? defaultColor, mark),
-        children: placed.map(p => p.node),
-      }
-    : colorGroupedScope(placed, fill => (isText ? textStyle(fill, mark) : pointStyle(fill, mark)));
-  return attachMarkLayer(layer, mark, markProvenance);
-};
-```
-
-The function runs in four steps:
-
-1. Check that the mark is `PlotMark.Point`; otherwise return `null`.
-2. For each row, project the position through `datumAnchor` or `frame.projectRoles(...)`; rows that cannot be projected are skipped.
-3. Regular points become core `Node`s with optional `size`, `opacity`, `shape`, `stroke`, `strokeWidth`, or constant Node style; points with `label` fill `Node.label`, while text points become text Nodes.
-4. Finally, choose the layer structure from the `color` channel: without color encoding, all nodes share one `nodeDefault`; with color encoding, nodes are split into child `Scope`s by color before mark-layer metadata is attached.
-
-| Trait               | Behavior                                                                                                                         |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Coordinate-agnostic | The mark only consumes position roles; cartesian, polar, ternary, or custom coordinates decide how those roles are interpreted   |
-| One Node per row    | A regular scatter point becomes one datum Node; rows whose position cannot project to a screen point are skipped                 |
-| Shared styling      | Without color encoding, an outer `nodeDefault` shares default style; with `color`, nodes are grouped by color to keep IR compact |
-| Point-only channels | `size` / `opacity` / `shape` / `stroke` / `strokeWidth` only apply to `PointMark`, and are written onto each datum Node          |
-| Text variant        | Set `text` and the mark produces borderless text Nodes instead of dots, while reusing the same position projection               |
-
-### Layer Order
-
-Each mark lowers into its own scope by default, above grid lines and below axes, with zIndex `0`. `zIndex` remains the draw-order hint for datum Nodes inside the point layer; use `layer={{ zIndex }}` when you want to move the whole mark layer relative to axes, legends, or plot-level labels.
-
-## API
-
-`PointMark` props are grouped as Position, Specific, Node, Text, Label, General, and Custom: position fields decide the projected location, specific fields are consumed by PointMark itself, and node fields lower onto core `Node`. `FieldName` means a data field name or field path, such as `region` / `user.age`.
-
-Style bindings use one shared `MarkValueType<T>` type: `{ kind: 'field', value: FieldName } | { kind: 'constant', value: T }`. When a binding needs an explicit scale, use `MarkValueType<T> & { scale?: string }`. Single values such as `FieldName`, `number`, or `string` are component-level sugar that lowers into this structure.
-
-| Prop                                                     | Type                                                                                                        | Default                      | Description                                                                                                 |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `x?` / `y?` / `z?`                                       | `PointMarkProps['x']`<br />`PointMarkProps['y']`<br />`PointMarkProps['z']`                                 | —                            | Coordinate role fields; the active coordinate validates required roles                                      |
-| `color?`                                                 | `PointMarkProps['color']`                                                                                   | —                            | Mark semantic color; field bindings create a color channel and legend                                       |
-| `fill?`                                                  | `PointMarkProps['fill']`                                                                                    | `currentColor`               | Point fill; `color` takes over when bound                                                                   |
-| `stroke?`                                                | `PointMarkProps['stroke']`                                                                                  | —                            | Point stroke paint; field bindings still go through a color scale                                           |
-| `size?`                                                  | `PointMarkProps['size']`                                                                                    | —                            | Point-only radius channel; field values use a sqrt scale                                                    |
-| `shape?`                                                 | `PointMarkProps['shape']`                                                                                   | —                            | Point-only shape channel; categorical fields map to point shapes                                            |
-| `textColor?`                                             | `PointMarkProps['textColor']`                                                                               | —                            | Text color for text points                                                                                  |
-| `opacity?` / `fillOpacity?`<br />`strokeOpacity?`        | `PointMarkProps['opacity']`<br />`PointMarkProps['fillOpacity']`<br />`PointMarkProps['strokeOpacity']`     | —                            | Whole-node, fill, and stroke opacity                                                                        |
-| `strokeWidth?`                                           | `PointMarkProps['strokeWidth']`                                                                             | —                            | Stroke width for point or cell nodes                                                                        |
-| `rotate?` / `zIndex?`                                    | `PointMarkProps['rotate']`<br />`PointMarkProps['zIndex']`                                                  | —                            | Rotation and draw-order hint                                                                                |
-| `minimumSize?`                                           | `PointMarkProps['minimumSize']`                                                                             | —                            | Minimum visual size                                                                                         |
-| `align?`<br />`lineHeight?` / `maxTextWidth?`            | `PointMarkProps['align']`<br />`PointMarkProps['lineHeight']`<br />`PointMarkProps['maxTextWidth']`         | —<br />—                     | Text layout channels                                                                                        |
-| `cornerRadius?`<br />`scale?`                            | `PointMarkProps['cornerRadius']`<br />`PointMarkProps['scale']`                                             | —<br />—                     | Node corner radius and scaling                                                                              |
-| `padding?` / `margin?`                                   | `PointMarkProps['padding']`<br />`PointMarkProps['margin']`                                                 | —                            | Node spacing channels                                                                                       |
-| `dashed?` / `dotted?`<br />`dashPattern?`                | `PointMarkProps['dashed']`<br />`PointMarkProps['dotted']`<br />`PointMarkProps['dashPattern']`             | —<br />—                     | Node stroke dash channels                                                                                   |
-| `font?`                                                  | `PointMarkProps['font']`                                                                                    | —                            | Node font                                                                                                   |
-| `boundary?`                                              | `PointMarkProps['boundary']`                                                                                | —                            | Node boundary                                                                                               |
-| `shadow?`                                                | `PointMarkProps['shadow']`                                                                                  | —                            | Node shadow                                                                                                 |
-| `blendMode?`                                             | `PointMarkProps['blendMode']`                                                                               | —                            | Node blend mode                                                                                             |
-| `text?`                                                  | `PointMarkProps['text']`                                                                                    | —                            | Field bound to text content; replaces the point itself with a text Node                                     |
-| `displayFormat?`                                         | `PointMarkProps['displayFormat']`                                                                           | —                            | Format string for `text`                                                                                    |
-| `dx?` / `dy?`                                            | `PointMarkProps['dx']`<br />`PointMarkProps['dy']`                                                          | `0`                          | Screen-space offset from the projected anchor                                                               |
-| `label?`                                                 | `PointMarkProps['label']`                                                                                   | —                            | Field bound to host `Node.label`; keeps the point itself                                                    |
-| `labelDisplayFormat?`                                    | `PointMarkProps['labelDisplayFormat']`                                                                      | —                            | Display format string for `label`                                                                           |
-| `labelPosition?`<br />`labelDistance?`<br />`labelPin?`  | `PointMarkProps['labelPosition']`<br />`PointMarkProps['labelDistance']`<br />`PointMarkProps['labelPin']`  | `top`<br />`12`<br />`false` | Label side, spacing, and leader line                                                                        |
-| `labelTextColor?`<br />`labelOpacity?`<br />`labelFont?` | `PointMarkProps['labelTextColor']`<br />`PointMarkProps['labelOpacity']`<br />`PointMarkProps['labelFont']` | —<br />—<br />—              | Label text color, opacity, and font                                                                         |
-| `labelRotate?`<br />`labelKeepUpright?`                  | `PointMarkProps['labelRotate']`<br />`PointMarkProps['labelKeepUpright']`                                   | —<br />—                     | Label rotation and upright handling                                                                         |
-| `resolveLabel?`                                          | `PointMarkProps['resolveLabel']`                                                                            | —                            | Runtime label resolver; not in IR, requires `id`                                                            |
-| `id?`                                                    | `PointMarkProps['id']`                                                                                      | —                            | Optional mark handle for layer ids / runtime label resolution                                               |
-| `transform?`                                             | `PointMarkProps['transform']`                                                                               | —                            | Mark-local data transform; runs after the plot-level transform and only changes the rows seen by this layer |
-| `channels?`                                              | `PointMarkProps['channels']`                                                                                | —                            | Custom channel bindings; resolved by registered channel definitions                                         |
+| Prop                                 | Type                                                                                                                                                                            | Default                                                     | Description                                                                 |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `id?`                                | `string`                                                                                                                                                                        | —                                                           | Mark handle; required with `resolveLabel`                                   |
+| `x?` / `y?` / `z?`                   | `FieldName`                                                                                                                                                                     | —                                                           | Position-role fields; the coordinate frame decides which roles are required |
+| `color?`                             | `PointMarkProps['color']`                                                                                                                                                       | —                                                           | Semantic point color; a field binding creates a color channel and scale     |
+| `size?`                              | `PointMarkProps['size']`                                                                                                                                                        | —                                                           | Point-glyph size; numeric fields use a sqrt scale for radius                |
+| `shape?`                             | `PointMarkProps['shape']`                                                                                                                                                       | —                                                           | Point-glyph shape; categorical fields map through the shape palette         |
+| `text?`                              | `FieldName`                                                                                                                                                                     | —                                                           | Replace the point glyph with a borderless text Node                         |
+| `displayFormat?`                     | `string`                                                                                                                                                                        | —                                                           | d3 numeric or time format for `text`                                        |
+| `textColor?`                         | `PointMarkProps['textColor']`                                                                                                                                                   | —                                                           | Text color for text points                                                  |
+| `dx?` / `dy?`                        | `number`                                                                                                                                                                        | `0`                                                         | Screen-direction offset from the projected anchor for text points           |
+| `label?`                             | `FieldName`                                                                                                                                                                     | —                                                           | Keep the point glyph and attach field content through `Node.label`          |
+| `labelDisplayFormat?`                | `string`                                                                                                                                                                        | —                                                           | d3 numeric or time format for `label`                                       |
+| `labelPosition?`                     | `NodeLabelPositionInput`                                                                                                                                                        | `top`                                                       | Center, four sides, four corners, angle, or a boundary-position object      |
+| `labelPosition.boundary`             | `'top' \| 'right' \| 'bottom' \| 'left'`                                                                                                                                        | Required in object form                                     | Select the box boundary in `{ boundary, fraction? }`                        |
+| `labelPosition.fraction?`            | `number`                                                                                                                                                                        | `0.5`                                                       | Normalized position from `0` to `1` along the selected boundary             |
+| `labelDistance?`                     | `number`                                                                                                                                                                        | `12`                                                        | Gap from the host boundary; unused by centered labels                       |
+| `labelPin?`                          | `boolean \| { stroke?, strokeWidth?, dashPattern? }`                                                                                                                            | `false`                                                     | Outside-label leader line; `true` uses default styling                      |
+| `labelPin.stroke?`                   | `string`                                                                                                                                                                        | Label color                                                 | Leader-line color                                                           |
+| `labelPin.strokeWidth?`              | `number`                                                                                                                                                                        | `1`                                                         | Positive leader-line width                                                  |
+| `labelPin.dashPattern?`              | `Array<number>`                                                                                                                                                                 | Solid                                                       | Leader-line dash segment lengths                                            |
+| `labelTextColor?` / `labelOpacity?`  | `string` / `number`                                                                                                                                                             | Inherit / Inherit                                           | Label text color and opacity                                                |
+| `labelFont?`                         | `PointMarkProps['labelFont']`<br />- `family?: string`<br />- `size?: number`<br />- `weight?: 'normal' \| 'bold' \| number`<br />- `style?: 'normal' \| 'italic' \| 'oblique'` | Inherit<br />Inherit<br />Inherit<br />Inherit<br />Inherit | Label font overrides<br />Font family<br />Size<br />Weight<br />Style      |
+| `labelRotate?` / `labelKeepUpright?` | `'none' \| 'radial' \| 'tangent' \| number` / `boolean`                                                                                                                         | `none` / `false`                                            | Label rotation mode or angle, plus automatic upright correction             |
+| `resolveLabel?`                      | `(row: ExternalRow) => string`                                                                                                                                                  | —                                                           | Runtime label resolver; excluded from IR and requires `id`                  |
+| `anchorId?`                          | `IRPlotAnchorIdSpec`                                                                                                                                                            | —                                                           | Generate a stable core Node id; choose exactly one source below             |
+| `anchorId.prefix?`                   | `string`                                                                                                                                                                        | Mark id or `mark.<index>`                                   | Id namespace inside the current Plot                                        |
+| `anchorId.field?`                    | `FieldName`                                                                                                                                                                     | —                                                           | Slug a field value; mutually exclusive with `template` and `generator`      |
+| `anchorId.template?`                 | `string`                                                                                                                                                                        | —                                                           | JSON-safe id template with plot, mark, index, and field placeholders        |
+| `anchorId.generator?`                | `string`                                                                                                                                                                        | —                                                           | Runtime generator key resolved from `LowerPlotsOptions.anchorIdGenerators`  |
 
 ## Related
 
-- [PathMark](/viz/plot/mark/path) — a trend line under the dots
-- [Coordinates](/viz/plot/coordinate) — how PointMark draws a rug (cartesian1D) / ring (polar1D) / ternary scatter (ternary2D)
-- [Scales](/viz/plot/scale) — the square-root scale size uses, and the continuous scale family
+- [PathMark](/viz/plot/mark/path) — connect observations into a trend line
+- [Coordinates](/viz/plot/coordinate) — how 1D, 2D, and polar frames interpret position roles
+- [Scales](/viz/plot/scale) — sqrt size scales and continuous scale families

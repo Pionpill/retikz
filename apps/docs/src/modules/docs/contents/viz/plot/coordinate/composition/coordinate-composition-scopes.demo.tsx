@@ -1,18 +1,65 @@
-import type { FC } from 'react';
-
 import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
 
+import { defineControlledPreview } from '@/modules/docs/preview';
+
+import {
+  COORDINATE_COMPOSITION_SCOPES_CONTROL_IDS,
+  coordinateCompositionScopesControls,
+  previewControlContract,
+} from './coordinate-composition-scopes.controls';
 import { weatherRows } from './coordinate-composition-scopes.data';
 
-const Demo: FC = () => (
-  <Plot data={weatherRows} width={520} height={250}>
-    <Axis dimension="x" title="day" />
-    <Axis dimension="y" title="temperature" />
-    <Axis id="rainfall" dimension="y" placement={{ kind: 'side', side: 'right' }} title="rainfall" />
-    <PathMark x="day" y="temperature" order="day" stroke="darkorange" strokeWidth={2.5} />
-    <PathMark x="day" y="rainfall" order="day" yAxisId="rainfall" stroke="steelblue" strokeWidth={2} />
-    <PointMark x="day" y="rainfall" yAxisId="rainfall" fill="lightblue" stroke="steelblue" strokeWidth={1} />
-  </Plot>
-);
+/** 注册回退使用的双纵轴数据面板 */
+export const previewControls = coordinateCompositionScopesControls;
 
-export default Demo;
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
+  const rainfallAxisId =
+    values[COORDINATE_COMPOSITION_SCOPES_CONTROL_IDS.rainfallAxis] === 'rainfall' ? 'rainfall' : undefined;
+  const xGridVisible = values[COORDINATE_COMPOSITION_SCOPES_CONTROL_IDS.xGridVisible];
+  const yGridVisible = values[COORDINATE_COMPOSITION_SCOPES_CONTROL_IDS.yGridVisible];
+
+  return (
+    <Plot data={weatherRows} width={520} height={250}>
+      <Axis dimension="x" grid={xGridVisible} />
+      <Axis dimension="y" grid={yGridVisible} title="°C" />
+      <Axis
+        id="rainfall"
+        dimension="y"
+        placement={{ kind: 'side', side: values[COORDINATE_COMPOSITION_SCOPES_CONTROL_IDS.secondaryAxisSide] }}
+        title="mm"
+      />
+      <PathMark
+        x="day"
+        y="temperature"
+        order="day"
+        stroke="darkorange"
+        strokeWidth={values[COORDINATE_COMPOSITION_SCOPES_CONTROL_IDS.temperatureLineWidth]}
+      />
+      <PathMark
+        x="day"
+        y="rainfall"
+        order="day"
+        yAxisId={rainfallAxisId}
+        stroke="steelblue"
+        strokeWidth={values[COORDINATE_COMPOSITION_SCOPES_CONTROL_IDS.rainfallLineWidth]}
+      />
+      {values[COORDINATE_COMPOSITION_SCOPES_CONTROL_IDS.rainfallPointsVisible] ? (
+        <PointMark
+          x="day"
+          y="rainfall"
+          yAxisId={rainfallAxisId}
+          fill="lightblue"
+          stroke="steelblue"
+          strokeWidth={1}
+          size={values[COORDINATE_COMPOSITION_SCOPES_CONTROL_IDS.rainfallPointSize]}
+        />
+      ) : null}
+    </Plot>
+  );
+});
+
+/** canonical 状态派生的稳定源码配置 */
+export const previewSource = controlledPreview.source;
+
+/** 两个纵轴分别绑定温度与降雨量 */
+export default controlledPreview.Component;

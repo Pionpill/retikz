@@ -42,6 +42,24 @@ describe('buildPlotSpec polar coordinate / sector / area / closed / angle·radiu
     expect(spec).toEqual(expected);
   });
 
+  it('radial_bar_explicit_band_scale_forwards_gap_options', () => {
+    const spec = buildPlotSpec(
+      <>
+        <IntervalMark x="month" y="amount" />
+        <Scale dimension="x" type="band" paddingInner={0.15} paddingOuter={0} />
+      </>,
+      '__plot',
+      { coordinate: 'polar2D' },
+    );
+
+    expect(spec.scales[0]).toEqual({
+      type: 'band',
+      name: '__angle',
+      paddingInner: 0.15,
+      paddingOuter: 0,
+    });
+  });
+
   it('pie_equivalence：coordinate="polar2D" + <IntervalMark angle> → polar2D + linear 角向 + stack transform + interval mark', () => {
     const spec = buildPlotSpec(<IntervalMark angle="value" color="label" />, '__plot', { coordinate: 'polar2D' });
     const expected = createPolarPieSpec('__plot', { angle: '__angle', radius: '__radius', color: '__color' });

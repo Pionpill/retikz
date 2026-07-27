@@ -1,14 +1,38 @@
 import type { FC } from 'react';
 
-import { IntervalMark, Plot } from '@retikz/plot-react';
+import { IntervalMark, Plot, Scale } from '@retikz/plot-react';
 
+import { defineControlledPreview } from '@/modules/docs/preview';
+
+import { BAR_RADIAL_GAP_ID, BAR_RADIAL_INNER_RADIUS_ID, previewControlContract } from './bar-radial.controls';
 import { rainfall } from './bar-radial.data';
 
 /** 径向柱：仅 coordinate="polar2D"，同一 IntervalMark 角向自动 band、径向是值 */
-const Demo: FC = () => (
-  <Plot data={rainfall} width={220} height={220} coordinate="polar2D" style={{ maxWidth: '100%', height: 'auto' }}>
+const controlledPreview = defineControlledPreview(previewControlContract, values => (
+  <Plot
+    data={rainfall}
+    width={260}
+    height={220}
+    coordinate={{ type: 'polar2D', innerRadius: values[BAR_RADIAL_INNER_RADIUS_ID] }}
+    style={{ maxWidth: '100%', height: 'auto' }}
+  >
     <IntervalMark x="month" y="value" color="month" />
+    <Scale
+      dimension="x"
+      type="band"
+      paddingInner={values[BAR_RADIAL_GAP_ID]}
+      paddingOuter={values[BAR_RADIAL_GAP_ID] / 2}
+    />
+    <Scale dimension="y" type="linear" domainPadding={0} />
   </Plot>
-);
+));
+
+/** canonical 状态派生的稳定源码配置 */
+export const previewSource = controlledPreview.source;
+
+/** controls registry 缺失时使用的显式回退 */
+export const previewControls = previewControlContract.controls;
+
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

@@ -32,26 +32,16 @@ const xOf = (screenX: number): number => (screenX / PLOT_WIDTH) * X_DOMAIN_MAX;
 
 const yOf = (screenY: number): number => ((PLOT_HEIGHT - screenY) / PLOT_HEIGHT) * Y_DOMAIN_MAX;
 
-const nodeRows = (nodes: Array<PositionedNode>): Array<SankeyDatum> =>
+const buildNodeRows = (nodes: Array<PositionedNode>): Array<SankeyDatum> =>
   nodes.map(node => ({
     id: node.id,
-    nodeX: xOf(node.x),
-    nodeY: yOf(node.y),
-    nodeHeight: node.value,
+    nodeX0: xOf(node.x - NODE_WIDTH / 2),
+    nodeX1: xOf(node.x + NODE_WIDTH / 2),
+    nodeY0: yOf(node.top + node.value),
+    nodeY1: yOf(node.top),
     nodeFill: node.fill,
     nodeLabel: node.label,
   }));
-
-const domainSentinels = (): Array<SankeyDatum> => [
-  {
-    sourceX: xOf(0),
-    sourceY: yOf(PLOT_HEIGHT),
-    targetX: xOf(PLOT_WIDTH),
-    targetY: yOf(0),
-    width: 0,
-    flowFill: 'transparent',
-  },
-];
 
 const stackColumn = (specs: Array<NodeSpec>, x: number, top: number, gap: number): Array<PositionedNode> => {
   let cursor = top;
@@ -147,10 +137,26 @@ const positionedNodes = [
 
 const nodesById = new Map(positionedNodes.map(node => [node.id, node]));
 
-export const sankeyNodeColors: Array<string> = positionedNodes.map(node => node.fill);
+export const sankeyRelations: Array<SankeyDatum> = buildFlowRows(flows, nodesById);
 
-export const sankeyRelations: Array<SankeyDatum> = [
-  ...domainSentinels(),
-  ...nodeRows(positionedNodes),
-  ...buildFlowRows(flows, nodesById),
+/** ribbon 关系与固定宽度节点共用的 Plot 数据 */
+export const sankeyData: Array<SankeyDatum> = [
+  ...sankeyRelations.map(row => ({
+    ...row,
+    nodeX0: 0,
+    nodeX1: 0,
+    nodeY0: 0,
+    nodeY1: 0,
+    nodeFill: 'transparent',
+    nodeLabel: '',
+  })),
+  ...buildNodeRows(positionedNodes).map(row => ({
+    ...row,
+    sourceX: 0,
+    sourceY: 0,
+    targetX: 1,
+    targetY: 0,
+    width: 0,
+    flowFill: 'transparent',
+  })),
 ];

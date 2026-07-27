@@ -1,109 +1,90 @@
 ---
-title: Positional scales
-description: Positional scales map a data value to a coordinate / length / radius — numeric axes (linear / log / sqrt / pow / symlog / radial), the time axis, and categorical axes (band / point).
+title: Positional Scales
+description: Positional scales map numeric, temporal, and categorical fields to coordinates, lengths, or radii, with logarithmic, symmetric-log, area-aware, and categorical choices when the default linear mapping is not enough.
 ---
 
-Positional scales map a data value to a **coordinate / length / radius** on the canvas: the `x` / `y` position (`angle` / `radius` under polar) and the `size` channel's radius. By input field they fall into three kinds — continuous numbers, time, and categories. `<Plot>` auto-picks one from the field's measurement type, so common charts need none by hand.
+A positional scale answers where a field lands on the canvas, how long it is, or what radius it takes. `<Plot>` derives `linear`, `time`, or `band` defaults from the field type; switch scales explicitly when data spans magnitudes, crosses zero, encodes area, or needs categorical points instead of slots.
 
-## Positional scale types
+## Choosing a scale
 
-| Type     | For                                      | Notes                                                                                           |
-| -------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `linear` | Continuous numbers                       | Evenly-spaced linear mapping (default)                                                          |
-| `log`    | Positive values across magnitudes        | Logarithmic; `base` defaults to 10; point / line only                                           |
-| `sqrt`   | Area-perceptual                          | Square-root; point / line only (the `size` channel's default)                                   |
-| `pow`    | Custom power                             | Power mapping (needs `exponent`; via a full spec)                                               |
-| `symlog` | Wide-range data crossing zero / negative | Symmetric log; `constant` defaults to 1; point / line only                                      |
-| `radial` | Polar / rose chart radius                | Radial: output radius makes area proportional to value; usable as an interval / area value axis |
-| `time`   | Temporal field                           | Continuous time mapping; ticks land on human-readable time boundaries                           |
-| `band`   | Categorical (bars)                       | Each category gets an equal-width slot; marks sit in the center and can fill it                 |
-| `point`  | Categorical (lines / scatter)            | Each category lands on an evenly-spaced point, no slot width                                    |
+| Data and task                                   | Recommended scale | Key distinction                               |
+| ----------------------------------------------- | ----------------- | --------------------------------------------- |
+| Ordinary continuous numbers                     | `linear`          | Evenly spaced and the default                 |
+| All-positive values spanning magnitudes         | `log`             | Equal distance per order of magnitude         |
+| Non-negative values where large values dominate | `sqrt`            | Compress large differences with a square root |
+| Wide-range values crossing zero                 | `symlog`          | Linear near zero, logarithmic in the tails    |
+| Polar radius whose area represents value        | `radial`          | Allows interval / closed-area baselines       |
+| Temporal field                                  | `time`            | Ticks land on human-readable boundaries       |
+| Categorical bars / categorical lines            | `band` / `point`  | A slot with width / a single point            |
 
-## Domain Padding
+`pow` supplies a custom exponent, but the current React `<Scale>` does not expose that type; configure it through the full `IRPlotSpec.scales` surface.
 
-When a continuous positional scale (`linear` / `time` / `log` / `pow` / `sqrt` / `symlog` / `radial`) has no explicit `domain`, Plot infers the data min / max and pads both ends by 5% by default. That keeps single-point charts, all-positive scatter, and corner extrema from sitting directly on the coordinate frame.
+## Continuous numbers
 
-Use `domainPadding={0}` to restore edge-to-edge behavior, or `domainPadding={{ lower: 0, upper: 0.1 }}` when only the upper side needs room. `singleValueSpan` controls the minimum span when all values are equal.
+`linear`, `log`, `sqrt`, and `symlog` share one interactive chart. Choose a dataset in the controls, then switch the scale and tune its parameters to inspect the mapping directly.
 
-## Linear vs log
+<ComponentPreview
+  size="md"
+  files={['scale-continuous', 'scale-continuous.data.ts']}
+  caption="Switch between positive and zero-crossing data to compare four continuous positional scales. Tune the log base, symlog linear region, and domain padding."
+/>
 
-When data spans several orders of magnitude, a linear axis crushes the small values against the bottom. A log axis (`<Scale dimension="y" type="log" />`) gives every magnitude equal height, so small values stay legible. The default base is 10; set `base={Math.E}` for the natural logarithm. `base` must be greater than 1. Both charts use the same yearly user counts.
+| Type                | Suited data                                | Key behavior and options                                                                                |
+| ------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `linear`<br />`log` | ordinary values; positive values by orders | `log` spaces each order evenly; `base` defaults to `10`, must be greater than `1`, and accepts `Math.E` |
+| `sqrt`<br />`pow`   | reduce large values; custom exponent       | `sqrt` uses a fixed square root; configure `pow.exponent` in the full spec                              |
+| `symlog`            | wide-range values that cross zero          | stays linear near zero; `constant` defaults to `1`, and larger values widen the linear region           |
 
-<ComponentPreview files={['scale-linear-log', 'scale-continuous.data.ts']} />
+The `size` channel also uses `sqrt` so point area tracks magnitude, but that mapping belongs to [Built-in Channels](/viz/plot/channel/builtin) and is not configured by the positional `<Scale dimension>` API.
 
-<p className="text-sm text-muted-foreground">
-  Left: default linear, early years hug the floor; right: just add <code>{'<Scale dimension="y" type="log" />'}</code>{' '}
-  and the range spreads out.
-</p>
+### Radial
 
-## Square root
+`radial` maps values to radii so the **area** of a sector or ring stays proportional to the value. It starts from a zero baseline and is designed for the polar radial value axis, so it can be used with intervals and path closures; the square-root-style `sqrt` scale cannot.
 
-`<Scale dimension="y" type="sqrt" />` maps by square root, taming the visual exaggeration of large values; it is also the default scale for the `size` channel (point radius), so a dot's **area** stays proportional to the data.
+<ComponentPreview
+  size="md"
+  files={['scale-radial', 'scale-radial.data.ts']}
+  caption="Choose a data distribution, then compare linear radius and area-proportional radial mapping side by side; both plots share the same maximum radius."
+/>
 
-<ComponentPreview files={['scale-sqrt', 'scale-continuous.data.ts']} />
+### Non-linear scales and baselines
 
-## Point / line only
-
-`log` / `pow` / `sqrt` apply only to points and lines. Bars and areas start from a 0 baseline, and 0 is undefined on a log / power axis — pairing a non-linear scale with a bar / area errors out and tells you to use point / line instead.
+`log`, `pow`, `sqrt`, and `symlog` cannot be the value axis for bars, areas, or path closures because those marks also map a baseline. Use an open point / line mark or retain a linear value axis. `radial` is the explicit exception because it owns an area-aware zero baseline.
 
 <ComponentAlert
   type="warn"
-  title="Domain of non-linear scales"
-  description="log requires all-positive data, sqrt requires non-negative; out-of-range values cannot be projected. An explicit domain with illegal bounds errors at compile time."
+  title="Check the valid domain first"
+  description="log requires all-positive data, sqrt requires non-negative values, and pow with a non-integer exponent also requires non-negative values. An explicit domain with illegal bounds fails during lowering."
 />
 
-## Symlog
+## Time
 
-`log` cannot handle zero or negatives, yet profit/loss, temperature deltas, and growth rates often cross zero _and_ span magnitudes. `<Scale dimension="y" type="symlog" />` uses a **symmetric log** — a linear region near zero with logarithmic tails on either side — so zero and negative values are defined. The width of the linear region is set by `constant` (default `1`; raise it to keep more of the center linear). On the positive side, `constant={50}` is equivalent to `ln(1 + x / 50)`. Like `log` / `sqrt` / `pow`, `symlog` is a non-linear scale and applies to point / line only.
+A `temporal` field defaults to `time` on positional channels. It remains continuous, but ticks land on month starts, quarters, whole hours, and other readable boundaries, while labels are formatted as time. Declare the field as `temporal` in the model and no `<Scale>` is needed.
 
-<ComponentPreview files={['scale-symlog', 'scale-symlog.data.ts']} />
+<ComponentPreview
+  size="md"
+  files={['scale-time', 'scale-time.data.ts']}
+  caption="The x channel does not declare Scale explicitly; the temporal model field derives a time scale and formats quarterly dates at readable time boundaries."
+/>
 
-<p className="text-sm text-muted-foreground">
-  The same zero-crossing monthly net cash flow. Left: default linear, the near-zero months collapse onto the 0 line;
-  right: add <code>{'<Scale dimension="y" type="symlog" />'}</code> and they spread out legibly.
-</p>
+Dates can be ISO strings or timestamps. See [Data Intake](/viz/data/model/intake) for parsing rules. Binding a temporal field to `color` derives a continuous `sequential` band; see [Color Scales](/viz/plot/scale/color).
 
-## Radial
+## Categories: band and point
 
-`radial` maps a value to a radius such that the **area** of a sector / ring (not the radius length) stays proportional to the value — exactly how a polar rose chart (Nightingale chart) encodes magnitude. It is a square-root-style mapping, but unlike `sqrt` it starts from a 0 baseline and is meant for the radius value axis, so it **is** allowed with interval / path-closure marks (rose-chart sectors or closed areas), whereas `sqrt` is not.
+Categorical fields have no continuous numeric order. The default `band` scale gives each category a slot with width, which suits bars. Categorical lines and scatter need positions rather than slots, so switch explicitly to `point`.
 
-<ComponentPreview files={['scale-radial', 'scale-radial.data.ts']} />
+| Type    | Placement                                   | Suited marks                  |
+| ------- | ------------------------------------------- | ----------------------------- |
+| `band`  | One slot per category, with available width | bars and heatmap cells        |
+| `point` | One evenly spaced point, with no slot width | categorical lines and scatter |
 
-<p className="text-sm text-muted-foreground">
-  Polar coordinate + <code>IntervalMark</code> draws one sector per season, radius on a radial scale: each sector's area
-  is proportional to its rainfall.
-</p>
+<ComponentPreview
+  size="md"
+  files={['scale-band', 'scale-band.data.ts']}
+  caption="Switch scales: band supplies bandwidth to intervals, while point provides evenly spaced positions for lines and points; the panel only shows padding for the current type."
+/>
 
-## Time axis
-
-A temporal field (`temporal`) defaults to `time` on positional channels. It is a continuous mapping at heart, but ticks land on **human-readable time boundaries** (month starts, quarters, whole hours…) rather than evenly-spaced numbers, and labels are formatted as time instead of treating dates as raw numbers. Declare the field as `temporal` in the model and x goes through the time scale automatically — no `<Scale>` by hand.
-
-<ComponentPreview files={['scale-time', 'scale-time.data.ts']} />
-
-<p className="text-sm text-muted-foreground">
-  date declared as temporal → x goes through time; ticks land on quarter boundaries, labels are formatted as time.
-</p>
-
-Date values can be ISO strings (e.g. `'2024-01-01'`) or timestamps; the time scale parses them into positions on the axis. See [Data Intake](/viz/data/model/intake) for date field parsing details. Time is continuous too, so binding `color` to a temporal field derives the continuous band `sequential` — see [Color scales](/viz/plot/scale/color).
-
-## Categorical axes: band and point
-
-A categorical field (`categorical`) has no continuous numeric order; the positional scale's job is to spread a finite set of categories **evenly across position**. Position defaults to `band` (bars); lines and scatter use `point`.
-
-| Type    | Placement                                                                                   | For                                    |
-| ------- | ------------------------------------------------------------------------------------------- | -------------------------------------- |
-| `band`  | Each category gets an equal-width slot; marks sit in the center and can fill the slot width | Bar charts (default)                   |
-| `point` | Each category lands on an evenly-spaced point, no slot width                                | Categorical lines, categorical scatter |
-
-Declare the field as `categorical` and the positional channel defaults to `band`: each category gets an equal slot, with the bar centered in it.
-
-<ComponentPreview files={['scale-band', 'scale-band.data.ts']} />
-
-<p className="text-sm text-muted-foreground">
-  segment declared as categorical → x goes through band; five plan tiers split into equal slots.
-</p>
-
-Lines and scatter want points, not slots — there is no "width" between categories, so switch to `point` explicitly to land each category on an evenly-spaced point:
+A categorical line can opt into point positions:
 
 ```tsx
 <Plot data={rows} model={[{ name: 'segment', type: 'categorical' }]}>
@@ -113,4 +94,99 @@ Lines and scatter want points, not slots — there is no "width" between categor
 </Plot>
 ```
 
-Binding a categorical field to `color` goes through `ordinal` discrete coloring — see [Color scales](/viz/plot/scale/color).
+## How it works
+
+A positional scale gains its full context during lowering. In the figure, `derive` combines the field type, mark structure, and an explicit `<Scale>` to select a type. `validate` then checks field compatibility, valid domains, and baseline constraints. The resolver takes a domain from bound data or explicit configuration and a range from the available coordinate extent.
+
+<ComponentPreview files="scale-position-flow" size="xs" hideCode />
+
+The resolved scale serves both marks and guides: continuous scales output numeric coordinates, `band` also supplies bandwidth, and `point` supplies discrete positions only. Axis ticks come from that same resolved scale, so mark positions, bandwidth, and axes do not maintain separate mappings.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Default type derivation and baseline validation',
+      path: 'packages/viz/plot/src/providers/scale/registry.ts',
+      startLine: 132,
+      endLine: 170,
+    },
+    {
+      label: 'Single-value expansion and padding for continuous domains',
+      path: 'packages/viz/plot/src/providers/scale/shared/domain.ts',
+      startLine: 126,
+      endLine: 152,
+    },
+    {
+      label: 'Resolution entry points for positional scale definitions',
+      path: 'packages/viz/plot/src/providers/scale/features/position.ts',
+      startLine: 503,
+      endLine: 625,
+    },
+  ]}
+/>
+
+## API Reference
+
+React `<Scale>` is the declaration surface for common positional types. A `band` scale can be derived from interval structure or configured explicitly for bar gaps and outer padding. `pow` and complete IR fields belong in `IRPlotSpec.scales`. `Axis.scale` is a shortcut for common types on the same dimension.
+
+| Prop               | Type                                                                          | Default        | Description                                                                    |
+| ------------------ | ----------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------ |
+| `dimension`        | `'x' \| 'y'`                                                                  | —              | Coordinate dimension; polar uses `x` / `y` for angular / radial roles          |
+| `type`             | `PositionScaleType`                                                           | —              | `linear`, `time`, `band`, `point`, `log`, `sqrt`, `symlog`, or `radial`        |
+| `domain?`          | `[number, number] \| IRPlotBandScale['domain'] \| IRPlotPointScale['domain']` | inferred       | Continuous input extent, or an ordered category list for `band` / `point`      |
+| `domainPadding?`   | `number \| { lower?; upper? }`                                                | `5%` inferred  | Fractional padding around continuous domains; explicit domains default to 0    |
+| `singleValueSpan?` | `number`                                                                      | type-derived   | Minimum span used to expand a single-value domain                              |
+| `base?`            | `IRPlotLogScale['base']`                                                      | `10`           | `log` only; must be greater than `1`                                           |
+| `constant?`        | `IRPlotSymlogScale['constant']`                                               | `1`            | `symlog` only; controls the width of the linear region around zero             |
+| `paddingInner?`    | `number`                                                                      | `0.1`          | `band` only; gap between adjacent bands as a fraction of step, from `0` to `1` |
+| `paddingOuter?`    | `number`                                                                      | `paddingInner` | `band` only; outer padding as a fraction of step, from `0` to `1`              |
+| `padding?`         | `number`                                                                      | `0.5`          | `point` only; outer padding as a fraction of step, from `0` to `1`             |
+| `align?`           | `number`                                                                      | `0.5`          | `band` / `point`; distributes outer padding across both ends, from `0` to `1`  |
+
+The complete `IRPlotScale` surface can also name a scale, set an output `range`, and configure fields that the React DSL does not expose, including `pow.exponent`, `nice`, and `clamp`. Every variant and custom scale operation follows this public IR contract.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Public React Scale types and props',
+      path: 'packages/viz/plot-react/src/components/scales.tsx',
+      startLine: 4,
+      endLine: 86,
+    },
+    {
+      label: 'Positional scale IR schemas',
+      path: 'packages/viz/plot/src/schemas/scale/schema.ts',
+      startLine: 10,
+      endLine: 280,
+    },
+  ]}
+/>
+
+## Related
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/scale/color">
+    <span className="font-semibold">Color Scales</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Map categorical, continuous, and temporal fields to color
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/guide/axis">
+    <span className="font-semibold">Axis</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Explain a positional scale with ticks, labels, and grids
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/model/contract">
+    <span className="font-semibold">Field Contract</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Declare continuous, temporal, and categorical field types
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/scale/custom-scale">
+    <span className="font-semibold">Custom scales</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Register a scale definition for domain-specific mappings
+    </span>
+  </LinkedCard>
+</div>

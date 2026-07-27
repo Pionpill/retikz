@@ -775,7 +775,7 @@ export const LegendGuideSchema = z
     type: z
       .literal(PlotGuide.Legend)
       .describe(
-        'Discriminator: a legend that visualizes a non-positional scale (color / size / opacity / shape) as swatches, a continuous color ramp, binned classes, or graduated symbols',
+        'Discriminator: a legend that visualizes a non-positional channel as swatches, a ramp, binned classes, or graduated symbols',
       ),
     channel: z
       .string()
@@ -807,7 +807,7 @@ export const LegendGuideSchema = z
         'How legend entries are laid out; omit to derive from position (left/right -> vertical, top/bottom -> horizontal, applied during lowering)',
       ),
     ticks: GuideTickSourceSchema.optional().describe(
-      'Legend ramp tick source. Discrete legends ignore tick source but still honor tickLabels=false',
+      'Legend ramp tick source; size legends read count only. Discrete legends ignore tick source but still honor tickLabels=false',
     ),
     tickLabels: z
       .union([z.literal(false), GuideTickLabelFormatSchema])
@@ -818,7 +818,7 @@ export const LegendGuideSchema = z
     ),
   })
   .describe(
-    'Legend guide: visualizes a non-positional scale (color / size / opacity / shape), with form derived from the bound scale type',
+    'Legend guide: visualizes a non-positional channel, with form derived from the color scale or channel definition',
   );
 
 export const GuideSchema = z.discriminatedUnion('type', [AxisGuideSchema, LegendGuideSchema]);

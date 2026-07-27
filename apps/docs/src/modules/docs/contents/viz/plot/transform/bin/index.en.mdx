@@ -1,0 +1,86 @@
+---
+title: Binning
+description: Use bin to cut a continuous field into intervals and produce bin edges and per-bin metrics for histograms.
+---
+
+`bin` cuts a continuous field into intervals and emits one row per interval. Use it to produce lower edges, upper edges, counts, and other per-bin metrics for a histogram.
+
+General grouped summaries, representative-row selection, and boxplot statistics belong to [Data Transforms](/viz/data/transform), not to Plot's `bin`.
+
+## Bin
+
+`bin` first determines edges on a continuous domain, then assigns finite values to intervals. Its output row count follows the edge count rather than the input row count, so it is usually N -> M.
+
+### Dynamic Demo
+
+Switch among the mutually exclusive `count`, `step`, and `thresholds` strategies. The demo fixes `extent` to `[0, 20]` and uses a bimodal sample with a sparse tail, so edge changes do not also change the viewport and the strategy differences remain visible.
+
+<ComponentPreview files={['transform-histogram', 'transform-histogram.data.ts']} size="md" />
+
+`IntervalMark` reads `x0` / `x1` for bin edges and draws adjacent intervals at their true width on a continuous x-axis. `y` reads the default `binCount`.
+
+### API Reference
+
+`IRPlotBinTransform` fixes `kind` to `'bin'`. `count`, `step`, and `thresholds` are alternative strategies. When all three are omitted, the default is `count: 10`.
+
+| prop          | type                   | default             | description                                                                            |
+| ------------- | ---------------------- | ------------------- | -------------------------------------------------------------------------------------- |
+| `field`       | `string`               | —                   | Continuous source field to bin                                                         |
+| `count?`      | `number`               | `10`                | Target bin count; mutually exclusive with `step` / `thresholds`                        |
+| `step?`       | `number`               | —                   | Regular width; final bin clamps to the domain maximum; exclusive with other strategies |
+| `thresholds?` | `Array<number>`        | —                   | Explicit internal boundaries; mutually exclusive with `count` / `step`                 |
+| `extent?`     | `[number, number]`     | observed min/max    | Override the binning domain                                                            |
+| `nice?`       | `boolean`              | `true`              | Round count-strategy edges                                                             |
+| `startField?` | `string`               | `binStart`          | Output field for the lower bin edge                                                    |
+| `endField?`   | `string`               | `binEnd`            | Output field for the upper bin edge                                                    |
+| `metrics?`    | `IRDataReducerMetrics` | `count -> binCount` | Per-bin statistics, reusing data reducers                                              |
+
+### How It Works
+
+The “one bin strategy” node represents mutually exclusive configuration, not a fallback sequence. Once the strategy resolves, the main chain derives edges, assigns buckets, reduces metrics, and emits one row per bin.
+
+<ComponentPreview files="transform-bin-logic" hideCode size="xl" />
+
+The three strategies derive edges differently:
+
+1. `thresholds` sorts its values, keeps only interior edges inside `extent`, and adds the domain endpoints.
+2. `step` tiles from the domain's lower bound at a fixed width, then clamps the final bin to the upper bound, so that bin may be shorter than `step`.
+3. `count` divides the domain evenly. When `extent` is omitted and `nice` is true, it first expands the observed domain to readable edges.
+
+Bins are half-open `[start, end)`, except that the final bin includes the upper bound. Non-finite and out-of-extent values enter no bin; empty bins still emit a row. Each output includes edges, the bin midpoint, reducer metrics, and grouped provenance.
+
+Providing more than one strategy throws during lowering. `nice` only affects `count`; it never rewrites explicit `step` or `thresholds`.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'bin schema and defaults',
+      path: 'packages/viz/plot/src/schemas/transform/schema.ts',
+      startLine: 51,
+      endLine: 96,
+    },
+    {
+      label: 'bin edges, buckets, and per-bin output',
+      path: 'packages/viz/plot/src/providers/transform/group.ts',
+      startLine: 34,
+      endLine: 128,
+    },
+  ]}
+/>
+
+## Related
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/transform">
+    <span className="font-semibold">Scopes & Pipeline</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Choose root or mark-local transform entry points.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/transform/statistics">
+    <span className="font-semibold">Statistical Sub-operators</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      See the reducers reused by metrics and the statistics needed for boxplots.
+    </span>
+  </LinkedCard>
+</div>

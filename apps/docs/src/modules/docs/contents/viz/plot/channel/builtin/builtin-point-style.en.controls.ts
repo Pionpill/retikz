@@ -4,12 +4,30 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { pointStyleRows } from './builtin-point-style.data';
+
 /** English control panel for point style channels */
 export const builtinPointStyleControls = definePreviewControls({
   presentation: 'panel',
   title: 'Point style channels',
   defaultSize: 36,
   sections: [
+    {
+      label: 'Data',
+      defaultCollapsed: true,
+      controls: [
+        {
+          kind: 'table',
+          id: 'rows',
+          label: 'Point data',
+          rows: pointStyleRows,
+          columns: [
+            { key: 'x', label: 'X value' },
+            { key: 'y', label: 'Y value' },
+          ],
+        },
+      ],
+    },
     {
       label: 'Paint',
       controls: [

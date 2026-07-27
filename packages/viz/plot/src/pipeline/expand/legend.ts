@@ -319,7 +319,7 @@ const legendLayerId = (plotId: string | undefined, channel: string, index: numbe
 /**
  * 解析所有 legend guide → core legend scope（据通道 + 绑定 scale 类型选 swatch / ramp / 分箱 / 梯度符号）
  * @description color descriptor 从 PlotSpec.scales 具名 color scale 取（多于一个且未消歧 → fail-loud）；
- *   size / opacity / shape 从 resolver descriptor 注册表取。形态由 scale 类型决定，标签复用 axis formatter 链（决策 ⑨）。
+ *   其它通道从 resolver descriptor 与 channel definition 取值。形态由 definition.legend 决定，标签复用 axis formatter 链。
  *   每个 legend 下沉成归属当前 plot owner 的稳定 id 独立 scope，落在传入的预留带内。
  */
 export const buildLegendLayers = (
@@ -328,6 +328,7 @@ export const buildLegendLayers = (
   legendGuides: Array<IRPlotLegendGuide>,
   fontSize: number,
   bands: Array<Rect>,
+  channelRegistry: ReadonlyMap<string, AnyChannelDefinition>,
   scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
   resolvedTheme: ReturnType<typeof resolvePlotTheme>,
 ): Array<IRScope> => {
@@ -360,15 +361,28 @@ export const buildLegendLayers = (
         'lowerPlots: legend channel "color" has no bound color scale; bind a color encoding with a scale or give the legend an explicit scale',
       );
     }
-    // size / opacity / shape：从 resolver descriptor 取
+    // 非 color 通道：descriptor 提供 domain / range，definition.legend 决定可视形态
     if (!descriptor) {
       throw new Error(
         `lowerPlots: legend channel "${guide.channel}" has no bound scale (no mark encodes ${guide.channel} by field); cannot derive a legend`,
       );
     }
+    const channelDefinition = channelRegistry.get(guide.channel);
+    const legendForm =
+      channelDefinition !== undefined && 'legend' in channelDefinition ? channelDefinition.legend : undefined;
+    const channelOutput =
+      channelDefinition !== undefined && 'output' in channelDefinition ? channelDefinition.output : undefined;
+    if (legendForm === undefined) {
+      throw new Error(`lowerPlots: channel "${guide.channel}" does not declare a legend form`);
+    }
     // 标题只在用户显式给时渲染（见 resolveColorLegend 同注）
     const title = guide.title;
-    if (guide.channel === 'shape') {
+    if (legendForm === 'symbol') {
+      if (channelOutput?.outputKind !== 'symbol') {
+        throw new Error(
+          `lowerPlots: channel "${guide.channel}" legend form "symbol" requires outputKind "symbol"; received "${channelOutput?.outputKind ?? 'unknown'}"`,
+        );
+      }
       const entries: Array<LegendEntry> = descriptor.domain.map((category, index) => ({
         label: showLabels ? String(category) : '',
         shape: String(descriptor.range[index]),
@@ -377,7 +391,12 @@ export const buildLegendLayers = (
       }));
       return lowerLegend({ ...baseInput, form: 'swatch', title, entries });
     }
-    if (guide.channel === 'size') {
+    if (legendForm === 'size') {
+      if (channelOutput?.outputKind !== 'number') {
+        throw new Error(
+          `lowerPlots: channel "${guide.channel}" legend form "size" requires outputKind "number"; received "${channelOutput?.outputKind ?? 'unknown'}"`,
+        );
+      }
       const [lo, hi] = [Number(descriptor.domain[0]), Number(descriptor.domain[descriptor.domain.length - 1])];
       const ticks = niceNumericTicks([lo, hi], guide.ticks?.count ?? 3).filter(tick => tick.value > 0);
       const reps = ticks.length > 0 ? ticks : [{ value: hi, offset: 1, label: String(hi) }];
@@ -398,7 +417,53 @@ export const buildLegendLayers = (
       }));
       return lowerLegend({ ...baseInput, form: 'swatch', title, entries });
     }
-    // opacity：梯度透明度块（nice 几档 + 透明度）
+    if (legendForm === 'ramp') {
+      if (channelOutput?.outputKind !== 'color' && channelOutput?.outputKind !== 'number') {
+        throw new Error(
+          `lowerPlots: channel "${guide.channel}" legend form "ramp" requires outputKind "color" or "number"; received "${channelOutput?.outputKind ?? 'unknown'}"`,
+        );
+      }
+      const [lo, hi] = [Number(descriptor.domain[0]), Number(descriptor.domain[descriptor.domain.length - 1])];
+      const stops =
+        channelOutput.outputKind === 'color'
+          ? descriptor.range.map((color, index) => ({
+              offset: descriptor.range.length === 1 ? 0 : index / (descriptor.range.length - 1),
+              color: String(color),
+            }))
+          : descriptor.range.map((opacity, index) => ({
+              offset: descriptor.range.length === 1 ? 0 : index / (descriptor.range.length - 1),
+              color: 'currentColor',
+              opacity: Math.max(0, Math.min(1, Number(opacity))),
+            }));
+      const normalizedStops =
+        stops.length === 1
+          ? [
+              { ...stops[0], offset: 0 },
+              { ...stops[0], offset: 1 },
+            ]
+          : stops;
+      const ticks = showLabels ? legendRampTicks(descriptor, guide, [lo, hi]) : [];
+      return lowerLegend({
+        ...baseInput,
+        form: 'ramp',
+        title,
+        entries: [],
+        ramp: { stops: normalizedStops, ticks },
+      });
+    }
+    if (channelOutput?.outputKind === 'color') {
+      const entries: Array<LegendEntry> = descriptor.domain.map((category, index) => ({
+        label: showLabels ? String(category) : '',
+        color: String(descriptor.range[index]),
+      }));
+      return lowerLegend({ ...baseInput, form: 'swatch', title, entries });
+    }
+    if (channelOutput?.outputKind !== 'number') {
+      throw new Error(
+        `lowerPlots: channel "${guide.channel}" legend form "swatch" requires outputKind "color" or "number"; received "${channelOutput?.outputKind ?? 'unknown'}"`,
+      );
+    }
+    // number swatch 用透明度表达
     const [lo, hi] = [Number(descriptor.domain[0]), Number(descriptor.domain[descriptor.domain.length - 1])];
     const ticks = niceNumericTicks([lo, hi], guide.ticks?.count ?? 3);
     const [oMin, oMax] = [Number(descriptor.range[0]), Number(descriptor.range[descriptor.range.length - 1])];

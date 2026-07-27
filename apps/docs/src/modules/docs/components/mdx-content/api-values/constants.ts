@@ -31,20 +31,16 @@ import {
 import { DataFieldFormat, DataFieldType, DataSortOrder, FieldOrderMode } from '@retikz/data';
 import {
   AxisPlacementKind,
-  Cartesian1DOrientation,
   DensityBandwidthKind,
-  FacetEmptyPolicy,
   JitterAxis,
   LegendOrient,
   LegendPosition,
   LegendSymbolFit,
   NormalizeBasis,
   PairMeasureOperationKind,
-  PathClosureKind,
   PathCurve,
   ReferenceMarkKind,
   RelationGeometryKind,
-  ScaffoldFrameMode,
   SmoothMethodKind,
   StackOffset,
 } from '@retikz/plot';
@@ -122,9 +118,6 @@ export const API_VALUE_REGISTRY = {
   BuiltinShape: {
     values: Object.values(BuiltinShape),
   },
-  Cartesian1DOrientation: {
-    values: Object.values(Cartesian1DOrientation),
-  },
   DataFieldFormat: {
     values: Object.values(DataFieldFormat),
   },
@@ -136,9 +129,6 @@ export const API_VALUE_REGISTRY = {
   },
   DensityBandwidthKind: {
     values: Object.values(DensityBandwidthKind),
-  },
-  FacetEmptyPolicy: {
-    values: Object.values(FacetEmptyPolicy),
   },
   FieldOrderMode: {
     values: Object.values(FieldOrderMode),
@@ -188,9 +178,6 @@ export const API_VALUE_REGISTRY = {
   PathCloseMode: {
     values: Object.values(PathCloseMode),
   },
-  PathClosureKind: {
-    values: Object.values(PathClosureKind),
-  },
   PathCurve: {
     values: Object.values(PathCurve),
   },
@@ -226,9 +213,6 @@ export const API_VALUE_REGISTRY = {
   },
   RibbonTaperInterpolation: {
     values: Object.values(RibbonTaperInterpolation),
-  },
-  ScaffoldFrameMode: {
-    values: Object.values(ScaffoldFrameMode),
   },
   ScopeBoundingShape: {
     values: Object.values(ScopeBoundingShape),

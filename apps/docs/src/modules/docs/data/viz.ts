@@ -1,4 +1,12 @@
-import type { Section } from './types';
+import type { DocPageMetadataOverride, Section } from './types';
+
+/** 标记以 Definition / registry 为主线的 Plot 扩展指南。 */
+const extensionGuide = (capability: string): DocPageMetadataOverride => ({
+  pageType: 'extension',
+  audience: 'extension-author',
+  capability,
+  sourceOfTruth: 'runtime',
+});
 
 /** viz module sections + pages tree. */
 export const vizSection: Array<Section> = [
@@ -92,6 +100,11 @@ export const vizSection: Array<Section> = [
         children: [
           { id: 'binding', label: 'viz.grammarChannelBinding' },
           { id: 'builtin', label: 'viz.grammarChannelBuiltin' },
+          {
+            id: 'custom-channel',
+            label: 'viz.grammarChannelCustom',
+            meta: extensionGuide('plot.channel.extensions'),
+          },
         ],
       },
       {
@@ -100,9 +113,14 @@ export const vizSection: Array<Section> = [
         children: [
           { id: 'row', label: 'viz.grammarTransformRow' },
           { id: 'annotation', label: 'viz.grammarTransformAnnotation' },
-          { id: 'summary', label: 'viz.grammarTransformSummary' },
+          { id: 'bin', label: 'viz.grammarTransformBin' },
           { id: 'statistics', label: 'viz.grammarTransformStatistics' },
           { id: 'relate', label: 'viz.grammarTransformRelate' },
+          {
+            id: 'custom-transform',
+            label: 'viz.grammarTransformCustom',
+            meta: extensionGuide('plot.transform.extensions'),
+          },
         ],
       },
       {
@@ -114,6 +132,11 @@ export const vizSection: Array<Section> = [
           { id: 'interval', label: 'viz.compIntervalMark' },
           { id: 'reference', label: 'viz.compReferenceMark' },
           { id: 'relation', label: 'viz.compRelationMark' },
+          {
+            id: 'custom-mark',
+            label: 'viz.grammarMarkCustom',
+            meta: extensionGuide('plot.mark.extensions'),
+          },
         ],
       },
       {
@@ -122,6 +145,11 @@ export const vizSection: Array<Section> = [
         children: [
           { id: 'position', label: 'viz.grammarScalePosition' },
           { id: 'color', label: 'viz.grammarScaleColor' },
+          {
+            id: 'custom-scale',
+            label: 'viz.grammarScaleCustom',
+            meta: extensionGuide('plot.scale.extensions'),
+          },
         ],
       },
       {
@@ -130,8 +158,12 @@ export const vizSection: Array<Section> = [
         children: [
           { id: '2d', label: 'viz.grammarCoordinate2d' },
           { id: '1d', label: 'viz.grammarCoordinate1d' },
-          { id: 'ternary', label: 'viz.grammarCoordinateTernary' },
           { id: 'composition', label: 'viz.grammarCoordinateComposition' },
+          {
+            id: 'custom-coordinate',
+            label: 'viz.grammarCoordinateCustom',
+            meta: extensionGuide('plot.coordinate.extensions'),
+          },
         ],
       },
       {
@@ -153,28 +185,39 @@ export const vizSection: Array<Section> = [
         },
       },
       {
-        id: 'extend',
-        label: 'viz.grammarExtend',
+        id: 'reference',
+        label: 'viz.plotReference',
         children: [
-          { id: 'channel', label: 'viz.grammarExtendChannel' },
-          { id: 'mark', label: 'viz.grammarExtendMark' },
-          { id: 'scale', label: 'viz.grammarExtendScale' },
-          { id: 'coordinate', label: 'viz.grammarExtendCoordinate' },
+          { id: 'plot', label: 'viz.plotReferenceContractPlot' },
+          { id: 'encoding', label: 'viz.plotReferenceContractEncoding' },
+          { id: 'transform', label: 'viz.plotReferenceContractTransform' },
+          { id: 'mark', label: 'viz.plotReferenceContractMark' },
+          { id: 'scale', label: 'viz.plotReferenceContractScale' },
+          { id: 'coordinate', label: 'viz.plotReferenceContractCoordinate' },
+          { id: 'guide', label: 'viz.plotReferenceContractGuide' },
+          { id: 'layout', label: 'viz.plotReferenceContractLayout' },
+          { id: 'layer', label: 'viz.plotReferenceContractLayer' },
+          { id: 'theme', label: 'viz.plotReferenceContractTheme' },
+          { id: 'runtime', label: 'viz.plotReferenceRuntime' },
         ],
+        meta: {
+          pageType: 'reference',
+          audience: 'integrator',
+          capability: 'plot.contract',
+          sourceOfTruth: 'schema',
+        },
       },
-    ],
-  },
-  {
-    id: 'examples',
-    label: 'viz.examples',
-    pages: [{ id: 'iteration', label: 'viz.exampleIteration' }],
-  },
-  {
-    id: 'reference',
-    label: 'viz.reference',
-    pages: [
-      { id: 'plot-ir', label: 'viz.refPlotIr' },
-      { id: 'lowering', label: 'viz.refLowering' },
+      {
+        id: 'changelog',
+        label: 'viz.changelog',
+        children: [{ id: 'v0-1', label: 'viz.changelogV01' }],
+        meta: {
+          pageType: 'release',
+          audience: 'user',
+          capability: 'plot.release',
+          sourceOfTruth: 'changelog',
+        },
+      },
     ],
   },
   {

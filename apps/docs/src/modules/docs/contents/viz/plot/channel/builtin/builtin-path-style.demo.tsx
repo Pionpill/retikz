@@ -6,14 +6,7 @@ import { Axis, PathMark, Plot } from '@retikz/plot-react';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { builtinPathStyleControls, previewControlContract } from './builtin-path-style.controls';
-
-const rows = [
-  { step: 1, value: 10 },
-  { step: 2, value: 18 },
-  { step: 3, value: 13 },
-  { step: 4, value: 24 },
-  { step: 5, value: 19 },
-];
+import { pathStyleRows } from './builtin-path-style.data';
 
 /** 注册回退使用的路径样式 controls */
 export const previewControls = builtinPathStyleControls;
@@ -23,7 +16,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Plot
-      data={rows}
+      data={pathStyleRows}
       model={[
         { name: 'step', type: DataFieldType.Continuous },
         { name: 'value', type: DataFieldType.Continuous },
