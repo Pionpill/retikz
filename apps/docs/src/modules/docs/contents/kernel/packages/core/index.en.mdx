@@ -1,0 +1,126 @@
+---
+title: '@retikz/core'
+description: Compile complete Core IR into a deterministic Scene, then publish compile results, Scene Snapshots, and Patch envelopes in one Session revision through the Core Runtime Program.
+---
+
+`@retikz/core` owns IR, Definitions, registries, compilation, and Scene semantics. `compileToScene()` remains the stateless full-compile entry; for state across revisions, `CoreOwnerDefinition` and `createCoreProgram()` connect the same compile semantics to `@retikz/runtime`.
+
+## Complete Snapshots And The Core Program
+
+Callers always submit a complete IR Snapshot. The Core owner copies, freezes, and compares the document. The Core Program reads that typed Snapshot, produces a complete `CompileResult`, `SceneRuntimeSnapshot`, and optional `ScenePatch`, then lets the Runtime Session publish them atomically.
+
+<ComponentPreview files="core-runtime-program" size="xxl" hideCode />
+
+Runtime does not interpret Nodes, Paths, Scopes, Composites, or Scenes. Core decides domain identities, compile diagnostics, and full-fallback `replaceScene` Patches; Runtime only constrains dependency order, candidate isolation, revisions, and publication.
+
+## Basic Wiring
+
+`CoreOwnerDefinition` and `createCoreProgram()` are ordinary Runtime Definitions, so they can share one Session with other domain Owners and Programs. The initial full run has no `patch`; a renderer mounts from the complete `snapshot`.
+
+```ts
+import { CORE_OWNER_KEY, CORE_PROGRAM_ID, CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
+import {
+  createRuntimeOwnerInput,
+  createRuntimeOwnerRegistry,
+  createRuntimeProgramRegistry,
+  createRuntimeSession,
+} from '@retikz/runtime';
+
+const ir = {
+  version: 1,
+  type: 'scene',
+  children: [{ type: 'node', id: 'hello', position: [0, 0], text: 'Hello' }],
+} as const;
+
+const coreProgram = createCoreProgram({ padding: 16 });
+const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
+const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
+const session = createRuntimeSession({
+  owners,
+  programs,
+  initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, ir)],
+});
+
+const { output, snapshot, patch } = session.artifact(coreProgram).value;
+// output.result: complete CompileResult
+// snapshot.revision: 0
+// patch: undefined
+```
+
+The fixed identities are `CORE_OWNER_KEY = '@retikz/core/document'` and `CORE_PROGRAM_ID = { owner: CORE_OWNER_KEY, key: 'compile' }`. Do not copy the strings into a parallel owner.
+
+## Artifact Contract
+
+| Field                | Role                                                                                              |
+| -------------------- | ------------------------------------------------------------------------------------------------- |
+| `output.result`      | Complete Scene and typed artifacts equivalent to fresh `compileToScene()` for the same IR/options |
+| `output.diagnostics` | Core compile warnings in canonical order; dispatched to `onWarn` only after a successful commit   |
+| `snapshot`           | Deeply immutable Scene, document root identity, and topology for the current Session revision     |
+| `patch`              | Atomic Scene Patch relative to the base revision; absent on the initial full run                  |
+
+The initial run performs a full compile. When an update cannot be proven locally safe, the Program falls back to a full compile and publishes one `replaceScene` in `patch.operations`. Callers still consume the same Snapshot / Patch envelope instead of switching protocols.
+
+The private Core Program read currently stores the immutable source Snapshot used by the next update. Dependency Programs, participants, and `session.artifact()` only receive the public read above; they cannot access that internal source state.
+
+## Immutable Program Options
+
+`createCoreProgram(options)` copies the option record, registry arrays, and Definition records at factory time while fixing callback references. Later mutations to the original arrays or Definition fields do not alter an existing Program.
+
+To replace a measurer, lowerer, provider callback, or external state captured by one, dispose the old Session and create a new Program with new options. A new Program always starts with a full run. Runtime injects tracing through the Program context, so `trace` is not part of `CoreProgramOptions`.
+
+## Public API
+
+| Export                                                 | Role                                                                         |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| `CORE_OWNER_KEY` / `CORE_PROGRAM_ID`                   | Fixed identities for the Core document owner and compile Program             |
+| `CoreOwnerDefinition`                                  | Capture/read/equality Definition for complete IR Snapshots                   |
+| `createCoreProgram(options)`                           | Create a Runtime Program Definition while preserving composite artifacts     |
+| `CoreChange`                                           | `add` / `update` / `remove` / `move` change-hint union                       |
+| `CoreProgramOptions<TComposites>`                      | Program-lifetime `CompileOptions` without `trace`                            |
+| `CoreProgramOutput<TComposites>`                       | Complete compile result and warnings                                         |
+| `CoreProgramPublicRead<TComposites>`                   | Public `output`, `snapshot`, and optional `patch`                            |
+| `CoreProgramDefinition<TComposites>`                   | Artifact-input, owned-artifact, and private/public read generic relationship |
+| `RuntimeScene` / `SceneRuntimeSnapshot` / `ScenePatch` | Deeply readonly Scene and atomic Patch DTOs                                  |
+
+## Source
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Core owner identity and change hints',
+      path: 'packages/kernel/core/src/contract/runtime/types.ts',
+      startLine: 3,
+      endLine: 39,
+    },
+    {
+      label: 'Core owner Snapshot lifecycle',
+      path: 'packages/kernel/core/src/contract/runtime/owner.ts',
+      startLine: 11,
+      endLine: 24,
+    },
+    {
+      label: 'Core Program public contract',
+      path: 'packages/kernel/core/src/compile/incremental/public.ts',
+      startLine: 10,
+      endLine: 42,
+    },
+    {
+      label: 'Core Program full run and public artifact',
+      path: 'packages/kernel/core/src/compile/incremental/program.ts',
+      startLine: 23,
+      endLine: 120,
+    },
+    {
+      label: 'Canonical Scene topology',
+      path: 'packages/kernel/core/src/compile/orchestration/runtime-topology.ts',
+      startLine: 44,
+      endLine: 172,
+    },
+  ]}
+/>
+
+## Related
+
+- [Programs & Synchronous Sessions](/kernel/packages/runtime/session)
+- [Layers](/kernel/concepts/design/layers)
+- [Compile entry](/kernel/reference/runtime/compile)
