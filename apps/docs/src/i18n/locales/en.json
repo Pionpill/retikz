@@ -66,8 +66,6 @@
     "shapesStar": "Star",
     "shapesContour": "Contour",
     "shapesCustomShape": "Custom Shapes",
-    "helpers": "Helpers",
-    "helpersGrid": "Grid",
     "effects": "Effects",
     "effectsShadow": "Shadow",
     "effectsBlend": "Blend",
@@ -75,6 +73,7 @@
     "effectsCustomPattern": "Custom Patterns",
     "effectsAnimation": "Animation",
     "effectsCustomAnimation": "Custom Animation",
+    "pkgRuntime": "@retikz/runtime",
     "pkgReact": "@retikz/react",
     "pkgVanilla": "@retikz/vanilla",
     "pkgTex": "@retikz/tex",
@@ -122,7 +121,12 @@
     "composite": "Composite",
     "grid": "Grid",
     "axes": "Axes",
-    "frame": "Frame"
+    "frame": "Frame",
+    "extension": "Extensions",
+    "capabilityLoading": "Capability Loading",
+    "releases": "Releases",
+    "changelog": "Changelog",
+    "changelogV01": "v0.1"
   },
   "viz": {
     "label": "Visualization",

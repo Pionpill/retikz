@@ -318,6 +318,14 @@ export type PreviewControlPreset = {
   values: Readonly<PreviewControlValues>;
 };
 
+/** preset 下拉框的本地化文案 */
+export type PreviewPresetSelectorConfig = {
+  /** 下拉框字段名 */
+  label: string;
+  /** 当前状态不匹配任何 preset 时显示的文本 */
+  customLabel: string;
+};
+
 /** 可交互 demo 的稳定文档契约 */
 export type PreviewControlContract = {
   /** 声明式控件定义 */
@@ -326,6 +334,8 @@ export type PreviewControlContract = {
   canonicalValues: Readonly<PreviewControlValues>;
   /** 可选的语义化状态组合 */
   presets?: ReadonlyArray<PreviewControlPreset>;
+  /** 显式启用 preset 下拉框 */
+  presetSelector?: PreviewPresetSelectorConfig;
   /** 这些控件直接解释的公开 API */
   relatedApis: ReadonlyArray<string>;
 };

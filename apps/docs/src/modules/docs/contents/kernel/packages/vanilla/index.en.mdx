@@ -92,8 +92,8 @@ The plain-spec path first uses `normalizeFigureSpec` to produce Core IR. `compil
     {
       label: 'Shared plain spec, IR, and Scene input dispatch',
       path: 'packages/kernel/vanilla/src/runtime/to-scene.ts',
-      startLine: 26,
-      endLine: 45,
+      startLine: 29,
+      endLine: 52,
     },
   ]}
 />
@@ -110,9 +110,11 @@ The plain-spec path first uses `normalizeFigureSpec` to produce Core IR. `compil
 
 `view.update(nextInput)` currently rerenders the full backend while preserving root element identity. SVG clears and rebuilds the root's attributes and children; Canvas redraws from the new Scene and rebinds live hydration. Passing a precompiled `Scene` skips plain-spec normalization and Core compilation, but it does not turn the backend update into a local patch.
 
+The readonly `artifacts` getter on `VanillaView` and `CanvasView` exposes immutable artifacts produced with the current IR / plain spec's Scene. `update()` replaces `scene`, `artifacts`, and `runtimeMeta` synchronously. A precompiled `Scene` has no corresponding compile, so `artifacts` is the shared empty array. Enable `nodeLayouts` under `compile.artifacts` when Node layout outputs are needed.
+
 Layer order, layer ids, the `cache` hint, and child identities are retained in `view.runtimeMeta`. This metadata only reserves stable boundaries for future invalidation decisions. It does not mean that layer caching, local DOM diffing, Canvas dirty layers, or incremental compilation exist today.
 
-Future performance work starts with measurements from real large figures or high-frequency interaction. The first question is whether bailouts, caching, or domain lowering solve the cost. Only supporting evidence would justify designing IR diffing, local compilation, Scene patches, SVG DOM diffing, Canvas dirty layers, and scheduling. Progressive IR / incremental compilation remains an evidence-gated candidate, not a scheduled feature or a frozen public API.
+Future performance work starts with measurements from real large figures or high-frequency interaction. The first question is whether bailouts, caching, or domain lowering solve the cost. Only supporting evidence would justify designing IR diffing, local compilation, Scene patches, SVG DOM diffing, Canvas dirty layers, and scheduling. Progressive IR / incremental compilation still requires scheduling in a future version and is not a frozen public API.
 
 <SourceLinks
   sources={[
@@ -133,12 +135,6 @@ Future performance work starts with measurements from real large figures or high
       path: 'packages/kernel/_notes/decisions/v0/v0.4/backlog.md',
       startLine: 3,
       endLine: 27,
-    },
-    {
-      label: 'v0.5 Progressive IR candidate status',
-      path: 'packages/kernel/_notes/decisions/v0/v0.5/roadmap.md',
-      startLine: 1,
-      endLine: 23,
     },
   ]}
 />

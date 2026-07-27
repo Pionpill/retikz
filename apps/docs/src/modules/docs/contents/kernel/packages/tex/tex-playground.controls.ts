@@ -5,6 +5,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 /** Tex playground 使用的稳定字段 id */
 export const TexPlaygroundControlId = {
   Source: 'source',
+  Profile: 'profile',
   DisplayMode: 'displayMode',
   FontSize: 'fontSize',
   Shape: 'shape',
@@ -21,6 +22,7 @@ f'(x) &= 2ax + b\\
 f''(x) &= 2a
 \end{array}`,
   FramedContour: String.raw`\oint_C \vec{F} \cdot d\vec{r}`,
+  ColoredCancellation: String.raw`\color{crimson}{\cancel{x}} + \colorbox{gold}{y}`,
 } as const;
 
 /** 只有启用 Node 容器时才显示 padding */
@@ -43,6 +45,16 @@ export const texPlaygroundControls = definePreviewControls({
           defaultValue: TexPlaygroundFormula.DisplaySum,
           placeholder: String.raw`\frac{a}{b} = c`,
           multiline: true,
+        },
+        {
+          kind: 'select',
+          id: TexPlaygroundControlId.Profile,
+          label: '语法配置',
+          defaultValue: 'math',
+          options: [
+            { value: 'base', label: '基础' },
+            { value: 'math', label: '数学扩展' },
+          ],
         },
         {
           kind: 'select',
@@ -99,10 +111,15 @@ export const previewControlContract = {
   controls: texPlaygroundControls,
   canonicalValues: {
     source: TexPlaygroundFormula.DisplaySum,
+    profile: 'math',
     displayMode: 'display',
     fontSize: 22,
     shape: 'none',
     padding: 14,
+  },
+  presetSelector: {
+    label: '公式示例',
+    customLabel: '自定义',
   },
   presets: [
     {
@@ -110,6 +127,7 @@ export const previewControlContract = {
       label: '行内质能方程',
       values: {
         source: TexPlaygroundFormula.InlineEnergy,
+        profile: 'base',
         displayMode: 'inline',
         fontSize: 24,
         shape: 'none',
@@ -121,6 +139,7 @@ export const previewControlContract = {
       label: 'Display 求和',
       values: {
         source: TexPlaygroundFormula.DisplaySum,
+        profile: 'math',
         displayMode: 'display',
         fontSize: 22,
         shape: 'none',
@@ -132,6 +151,7 @@ export const previewControlContract = {
       label: '多行导数',
       values: {
         source: TexPlaygroundFormula.MultilineDerivatives,
+        profile: 'base',
         displayMode: 'display',
         fontSize: 18,
         shape: 'rectangle',
@@ -143,12 +163,33 @@ export const previewControlContract = {
       label: '带框环路积分',
       values: {
         source: TexPlaygroundFormula.FramedContour,
+        profile: 'base',
         displayMode: 'display',
         fontSize: 22,
         shape: 'circle',
         padding: 18,
       },
     },
+    {
+      id: 'colored-cancellation',
+      label: '彩色消去',
+      values: {
+        source: TexPlaygroundFormula.ColoredCancellation,
+        profile: 'math',
+        displayMode: 'display',
+        fontSize: 24,
+        shape: 'none',
+        padding: 14,
+      },
+    },
   ],
-  relatedApis: ['Node.text', 'IRTexContent.tex', 'IRTexContent.displayMode', 'Node.font', 'Node.shape', 'Node.padding'],
+  relatedApis: [
+    'MathJaxEngineOptions.profile',
+    'Node.text',
+    'IRTexContent.tex',
+    'IRTexContent.displayMode',
+    'Node.font',
+    'Node.shape',
+    'Node.padding',
+  ],
 } satisfies PreviewControlContract;

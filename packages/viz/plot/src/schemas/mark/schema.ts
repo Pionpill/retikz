@@ -204,13 +204,19 @@ const RelationBendRoutingSchema = z
   })
   .describe('Bend relation routing strategy');
 
+/** 关系标记算法式正交路由支持的两段折线方向 */
+const RelationOrthogonalRoutingVia = {
+  HorizontalThenVertical: FoldStepVia.HorizontalThenVertical,
+  VerticalThenHorizontal: FoldStepVia.VerticalThenHorizontal,
+} as const;
+
 const RelationOrthogonalRoutingSchema = z
   .strictObject({
     kind: z
       .literal(RelationRoutingKind.Orthogonal)
       .describe('Discriminator: connect each segment with right-angle orthogonal line steps'),
     via: z
-      .enum(FoldStepVia)
+      .enum(RelationOrthogonalRoutingVia)
       .optional()
       .describe('Orthogonal direction: -| first horizontal then vertical; |- first vertical then horizontal'),
     labelStep: z

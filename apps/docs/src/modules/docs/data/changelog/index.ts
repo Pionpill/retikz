@@ -6,6 +6,7 @@ import { kernelV02 } from './kernel-0-2';
 import { kernelV03 } from './kernel-0-3';
 import { kernelV04 } from './kernel-0-4';
 import { kernelV05 } from './kernel-0-5';
+import { standardV01 } from './standard-0-1';
 import { vizV01 } from './viz-0-1';
 
 /** changelog 概览页副标题(替代原 mdx frontmatter description) */
@@ -14,11 +15,12 @@ export const changelogPageDescription: Localized = {
   en: 'Release history for this documentation group by minor version, newest first; click a version for detailed per-package changes.',
 };
 
-export const changelog: Array<Release> = [kernelV05, kernelV04, kernelV03, vizV01, kernelV02, kernelV01];
+export const changelog: Array<Release> = [standardV01, kernelV05, kernelV04, kernelV03, vizV01, kernelV02, kernelV01];
 
-/** 文档模块 id → changelog 包组：kernel / viz 模块各对应同名包组 */
-const MODULE_GROUP = new Map<string, 'kernel' | 'viz' | 'other'>([
+/** 文档模块 id → changelog 包组 */
+const MODULE_GROUP = new Map<string, 'kernel' | 'standard' | 'viz' | 'other'>([
   ['kernel', 'kernel'],
+  ['standard', 'standard'],
   ['viz', 'viz'],
 ]);
 
@@ -29,7 +31,7 @@ const PLOT_PACKAGES = new Set<PackageId>(['@retikz/plot', '@retikz/plot-react', 
 export const changelogVersionSlug = (minor: string): string => minor.replaceAll('.', '-');
 
 /** 包标识 → 所属包组 */
-const groupOfPackage = (pkg: PackageId): 'kernel' | 'viz' | 'other' | undefined =>
+const groupOfPackage = (pkg: PackageId): 'kernel' | 'standard' | 'viz' | 'other' | undefined =>
   PACKAGE_GROUPS.find(group => group.members.includes(pkg))?.id;
 
 /**

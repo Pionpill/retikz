@@ -54,8 +54,7 @@ export const computeCompiledNodeLayout = (
   const globalLayout = scopeChain.length === 0 ? layout : projectLayoutToGlobal(layout, scopeChain);
   return {
     kind: 'node',
-    id: layout.id,
-    irPath: layout.irPath ?? '',
+    ...(layout.id === undefined ? {} : { id: layout.id }),
     content: {
       center: applyTransformChain(layout.contentCenter, nodeTransformChain(layout, scopeChain)),
       size: {

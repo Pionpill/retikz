@@ -16,6 +16,7 @@ import { cn } from '@/lib';
 
 import type { PreviewPanelState } from '../preview-panel';
 import type {
+  PreviewControlContract,
   PreviewControlsDefinition,
   PreviewControlSlot,
   PreviewControlState,
@@ -34,6 +35,8 @@ import { PreviewResizeHandle } from './PreviewResizeHandle';
 export type PreviewWorkspaceProps = {
   /** 当前 demo 的声明式控件定义 */
   definition?: PreviewControlsDefinition;
+  /** 当前 demo 的完整 controls contract */
+  controlContract?: PreviewControlContract;
   /** 工作区容器附加样式 */
   workspaceClassName?: string;
   /** Card/Dialog 共享的字段值状态 */
@@ -121,6 +124,7 @@ const usePreviewWorkspaceDirection = (): {
 export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
   const {
     definition,
+    controlContract,
     workspaceClassName,
     controlState,
     showContextBar,
@@ -271,6 +275,7 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
             >
               <PreviewControlPanel
                 definition={definition}
+                controlContract={controlContract}
                 controlState={controlState}
                 density={controlDensity}
                 onClose={closeControlPanel}
@@ -321,6 +326,7 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
               >
                 <PreviewControlPanel
                   definition={definition}
+                  controlContract={controlContract}
                   controlState={controlState}
                   density={controlDensity}
                   onClose={closeControlPanel}

@@ -14,12 +14,12 @@ const fakeSvg = (tex: string): string =>
   `<path d="M0 100 L${tex.length * 100} 100 L${tex.length * 100} -10 Z"></path></g></svg>`;
 
 describe('[lower-tex] createLowerTex with a fake engine', () => {
-  it('returns commands and a bbox', () => {
+  it('returns paths and a bbox', () => {
     const lower = createLowerTex({ convert: tex => fakeSvg(tex) });
     const result = lower({ tex: 'ab' }, { fontSize: 1000 });
     expect(result).not.toBeNull();
     expect(result!.width).toBe(200);
-    expect(result!.commands.length).toBeGreaterThan(0);
+    expect(result!.paths.length).toBeGreaterThan(0);
   });
 
   it('caches by source, display mode, and font size', () => {
@@ -68,13 +68,13 @@ describe('[lower-tex] MathJax integration', () => {
       const lower = createLowerTex(engine);
       const x = lower({ tex: 'x' }, { fontSize: 14 });
       expect(x).not.toBeNull();
-      expect(x!.commands.length).toBeGreaterThan(0);
+      expect(x!.paths.length).toBeGreaterThan(0);
       expect(x!.width).toBeGreaterThan(0);
       expect(x!.height).toBeGreaterThan(0);
 
       const frac = lower({ tex: '\\frac{a}{b}', displayMode: true }, { fontSize: 14 });
       expect(frac).not.toBeNull();
-      expect(frac!.commands.length).toBeGreaterThan(x!.commands.length);
+      expect(frac!.paths.length).toBeGreaterThanOrEqual(x!.paths.length);
     },
     MATHJAX_INTEGRATION_TIMEOUT,
   );
@@ -108,7 +108,7 @@ describe('[lower-tex] MathJax integration', () => {
         type: 'scene',
         children: [{ type: 'node', id: 'eq', position: [0, 0], text: '$$\\frac{a}{b}$$' }],
       };
-      const scene = compileToScene(ir, { lowerTex });
+      const scene = compileToScene(ir, { lowerTex }).scene;
       expect(JSON.stringify(scene.primitives)).toContain('"fillRule":"evenodd"');
     },
     MATHJAX_INTEGRATION_TIMEOUT,

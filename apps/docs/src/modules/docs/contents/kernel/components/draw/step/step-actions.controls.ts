@@ -32,7 +32,19 @@ export const stepActionsControls = definePreviewControls({
           options: [
             { value: '-|', label: '先水平后垂直' },
             { value: '|-', label: '先垂直后水平' },
+            { value: '-|-', label: '水平 → 垂直 → 水平' },
+            { value: '|-|', label: '垂直 → 水平 → 垂直' },
           ],
+        },
+        {
+          kind: 'range',
+          id: 'fraction',
+          label: 'fraction',
+          defaultValue: 0.5,
+          min: 0,
+          max: 1,
+          step: 0.05,
+          visibleWhen: { controlId: 'via', oneOf: ['-|-', '|-|'] },
         },
         {
           kind: 'range',
@@ -52,6 +64,6 @@ export const stepActionsControls = definePreviewControls({
 /** 当前 controls 面板的稳定文档契约 */
 export const previewControlContract = {
   controls: stepActionsControls,
-  canonicalValues: { actionKind: 'line', via: '-|', cornerRadius: 12 },
-  relatedApis: ['Step.kind', 'Step.to'],
+  canonicalValues: { actionKind: 'line', via: '-|', fraction: 0.5, cornerRadius: 12 },
+  relatedApis: ['Step.kind', 'Step.via', 'Step.fraction', 'Step.to'],
 } satisfies PreviewControlContract;

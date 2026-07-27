@@ -25,6 +25,7 @@ import type {
   AlignKey,
   ComponentRenderSource,
   PreviewActionSlot,
+  PreviewControlContract,
   PreviewControlsDefinition,
   PreviewControlSlot,
   PreviewControlState,
@@ -63,6 +64,8 @@ export type ComponentPreviewDialogProps = {
   controlState: PreviewControlState;
   /** 与所属 Card 共享的声明式 controls definition */
   controlDefinition?: PreviewControlsDefinition;
+  /** 与所属 Card 共享的完整 controls contract */
+  controlContract?: PreviewControlContract;
   /** 是否显示预览上下文栏 */
   showContextBar: boolean;
   /** 与所属 Card 共享的局部主题 */
@@ -137,6 +140,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
     initialSize,
     controlState,
     controlDefinition,
+    controlContract,
     showContextBar,
     themeMode,
     onThemeModeChange,
@@ -179,6 +183,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
   const previewPanel = (
     <PreviewWorkspace
       definition={controlDefinition}
+      controlContract={controlContract}
       controlState={controlState}
       showContextBar={showContextBar}
       themeMode={themeMode}

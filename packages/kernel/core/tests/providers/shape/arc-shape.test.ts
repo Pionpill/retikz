@@ -32,14 +32,14 @@ const arcNode = (params: {
 
 describe('arc — happy path', () => {
   it('arc_open_stroke：close:false（默认）→ 开放描边弧（path 无 close 命令）', () => {
-    const compiled = compileToScene(scene([arcNode({ radius: 50, startAngle: 30, endAngle: 150 })]));
+    const compiled = compileToScene(scene([arcNode({ radius: 50, startAngle: 30, endAngle: 150 })])).scene;
     const path = findByType(compiled.primitives, 'path');
     expect(path).toBeDefined();
     expect(path!.commands.some(c => c.kind === 'close')).toBe(false);
   });
 
   it('arc_close：close:true → 闭合弓形（path 含 close 命令、可填充）', () => {
-    const compiled = compileToScene(scene([arcNode({ radius: 50, startAngle: 30, endAngle: 150, close: true })]));
+    const compiled = compileToScene(scene([arcNode({ radius: 50, startAngle: 30, endAngle: 150, close: true })])).scene;
     const path = findByType(compiled.primitives, 'path');
     expect(path).toBeDefined();
     expect(path!.commands.some(c => c.kind === 'close')).toBe(true);
@@ -49,7 +49,7 @@ describe('arc — happy path', () => {
     // 巨型起始角下旧 while 循环（end += 360）退化成数百万次迭代（1e308 时浮点 end+360===end 直接挂死）；
     // O(1) 规范化 + axisAngles 守卫下编译应在毫秒级返回，且 layout 四值全 finite。
     const start = Date.now();
-    const compiled = compileToScene(scene([arcNode({ radius: 50, startAngle: 1e9, endAngle: 1e9 + 90 })]));
+    const compiled = compileToScene(scene([arcNode({ radius: 50, startAngle: 1e9, endAngle: 1e9 + 90 })])).scene;
     expect(Date.now() - start).toBeLessThan(1000);
     expect(Number.isFinite(compiled.layout.width)).toBe(true);
     expect(Number.isFinite(compiled.layout.height)).toBe(true);
@@ -58,7 +58,7 @@ describe('arc — happy path', () => {
   it('arc_huge_radius_finite_guard：radius:1e308 → AABB 聚合溢出 Infinity 被 finite 守卫拦截（throw）', () => {
     // 半轴 finite 但 center ± halfWidth 聚合溢出 Infinity；自动 layout 守卫应抛清晰错而非把 Infinity 漏进 Scene。
     const ir = scene([arcNode({ radius: 1e308, startAngle: 0, endAngle: 90 })]);
-    expect(() => compileToScene(ir)).toThrow(/non-finite|overflow|bounds/);
+    expect(() => compileToScene(ir).scene).toThrow(/non-finite|overflow|bounds/);
   });
 });
 

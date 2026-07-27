@@ -8,7 +8,7 @@ const ir = SceneSchema.parse({
   type: 'scene',
   children: [{ type: 'node', position: [0, 0], text: 'Hello', shape: 'rectangle' }],
 });
-const scene = compileToScene(ir);
+const scene = compileToScene(ir).scene;
 
 describe('scoreL2', () => {
   it('全部断言通过 → total=passed', () => {

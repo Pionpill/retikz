@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
-import type { CompositeDefinition } from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
 
-import { CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, NodeTextColor } from '@retikz/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
 import type { VanillaTier2Adapter } from '../../src';
 
-import { embed, figure, layer, mount, node, path, renderToSvgString, VanillaLayerCache } from '../../src';
+import { embed, figure, layer, mount, node, path, renderToSvgString, scope, VanillaLayerCache } from '../../src';
 import { normalizeFigureSpec } from '../../src/spec';
 
 const boxComposite = defineComposite({
@@ -59,6 +59,33 @@ const createCanvasContext = (): CanvasRenderingContext2D => {
 };
 
 describe('@retikz/vanilla plain spec', () => {
+  it('path helper 共享 parseWay 的 axis-line lowering', () => {
+    expect(
+      path('axis', {
+        way: [[0, 0], { horizontalTo: 'target.center' }, { verticalTo: [40, 60] }],
+      }),
+    ).toMatchObject({
+      type: 'path',
+      id: 'axis',
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'axis-line', axis: 'horizontal', to: { id: 'target', anchor: 'center' } },
+        { type: 'step', kind: 'axis-line', axis: 'vertical', to: [40, 60] },
+      ],
+    });
+  });
+
+  it('path helper 共享 parseWay 的三段 fold lowering', () => {
+    expect(path('fold', { way: ['A', { via: '|-|', fraction: 0.25 }, 'B'] })).toMatchObject({
+      type: 'path',
+      id: 'fold',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'A' } },
+        { type: 'step', kind: 'fold', via: '|-|', fraction: 0.25, to: { id: 'B' } },
+      ],
+    });
+  });
+
   it('node helper 透传 anchor-to-anchor position', () => {
     const position = {
       kind: 'anchor' as const,
@@ -67,6 +94,61 @@ describe('@retikz/vanilla plain spec', () => {
     };
 
     expect(node('B', { position })).toEqual({ type: 'node', id: 'B', position });
+  });
+
+  it('node helper 组合透传 label position、distance、rotate、keepUpright 与 pin', () => {
+    const label = {
+      text: 'L',
+      position: { boundary: 'right' as const, fraction: 0.25 },
+      distance: 6,
+      rotate: 'radial' as const,
+      keepUpright: true,
+      pin: { stroke: 'red', strokeWidth: 2 },
+    };
+
+    expect(node('labelled', { position: [0, 0], label })).toEqual({
+      type: 'node',
+      id: 'labelled',
+      position: [0, 0],
+      label,
+    });
+  });
+
+  it('scope helper 直接透传 placement 与 transform pivot，不物化默认值', () => {
+    const config = {
+      id: 'cluster',
+      placement: {
+        target: { id: 'panel', anchor: 'top-right' as const, offset: [4, -2] as [number, number] },
+        selfAnchor: 'top-left' as const,
+      },
+      transforms: [
+        { kind: 'scale' as const, x: 1.2, pivot: 'center' as const },
+        { kind: 'rotate' as const, degrees: 12, pivot: [8, 12] as [number, number] },
+      ],
+    };
+
+    expect(scope(config, [node('inside', { position: [0, 0] })])).toEqual({
+      type: 'scope',
+      ...config,
+      children: [node('inside', { position: [0, 0] })],
+    });
+  });
+
+  it('node/scope helper 原样透传 auto-contrast textColor，并由 Core 按每个 Node 的 fill 解析', () => {
+    const spec = figure([
+      scope({ nodeDefault: { textColor: NodeTextColor.Contrast } }, [
+        node('light', { position: [-30, 0], text: 'light', fill: '#ffffff' }),
+        node('dark', { position: [30, 0], text: 'dark', fill: '#000000' }),
+      ]),
+    ]);
+
+    expect(spec.children?.[0]).toMatchObject({
+      type: 'scope',
+      nodeDefault: { textColor: NodeTextColor.Contrast },
+    });
+    const svg = renderToSvgString(spec);
+    expect(svg).toContain('fill="#000000"');
+    expect(svg).toContain('fill="#ffffff"');
   });
 
   afterEach(() => {
@@ -156,7 +238,9 @@ describe('@retikz/vanilla plain spec', () => {
 
   it('embed-special-reference：特殊原型键同引用复用并作为 own property 传给 maker', () => {
     const sharedData = { rows: [1] };
-    const makeComposites = vi.fn<(mergedDatasets: Record<string, unknown>) => Array<CompositeDefinition>>(() => [
+    const makeComposites = vi.fn<
+      (mergedDatasets: Record<string, unknown>) => Array<AnyCompositeDefinition>
+    >(() => [
       boxComposite,
     ]);
     const adapter: VanillaTier2Adapter<{ text: string; data: object }> = {

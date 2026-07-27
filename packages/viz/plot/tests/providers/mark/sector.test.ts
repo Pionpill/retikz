@@ -220,7 +220,7 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [roseSpec()] },
       { composites: lowerPlots({ sales: SALES }, opts) },
-    );
+    ).scene;
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 });
@@ -337,7 +337,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [pieSpec()] },
       { composites: lowerPlots({ share: SHARE }, opts) },
-    );
+    ).scene;
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 

@@ -1,4 +1,4 @@
-import type { CompileOptions, IRScene, Scene } from '@retikz/core';
+import type { CompileArtifact, CompileOptions, IRScene, Scene } from '@retikz/core';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 
@@ -79,6 +79,8 @@ export type VanillaView = {
   animation?: AnimationControls;
   /** 当前 plain spec normalization metadata；IR / Scene 输入时为空 metadata */
   readonly runtimeMeta: VanillaRuntimeMeta;
+  /** 当前输入同次 compile 产出的 immutable artifacts；Scene 输入固定为空数组 */
+  readonly artifacts: ReadonlyArray<CompileArtifact>;
 };
 
 /** `hydrate` / `view.hydrate` 返回的解绑句柄 */
@@ -96,7 +98,7 @@ export type HydrationHandle = {
 export type HydrateOptions = {
   /** id → 事件名 → handler 的注册表（透传给 `@retikz/render/hydration` 控制器） */
   handlers: HydrationHandlers;
-  /** 富 context 来源 Scene（仅 standalone `hydrate` 用；不传则最小 context）；可经 `compileToScene(ir)` 得到 */
+  /** 富 context 来源 Scene（仅 standalone `hydrate` 用；不传则最小 context）；可经 `compileToScene(ir).scene` 得到 */
   scene?: Scene;
 };
 
@@ -132,6 +134,8 @@ export type CanvasView = {
   animation?: AnimationControls;
   /** 当前 plain spec normalization metadata；IR / Scene 输入时为空 metadata */
   readonly runtimeMeta: VanillaRuntimeMeta;
+  /** 当前输入同次 compile 产出的 immutable artifacts；Scene 输入固定为空数组 */
+  readonly artifacts: ReadonlyArray<CompileArtifact>;
 };
 
 /** `mountCanvas` 选项：继承 SSR / compile 公共项，外加 canvas 显示 / dpr 透传 */

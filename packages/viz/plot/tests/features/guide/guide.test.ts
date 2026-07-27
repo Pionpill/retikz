@@ -1021,7 +1021,7 @@ describe('lowerPlots guide orchestration (contract)', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, { width: 480, height: 300 }) },
-    );
+    ).scene;
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 

@@ -1,6 +1,6 @@
 {
   "name": "@retikz/standard-vanilla",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "retikz": {
     "domain": "library",
     "releaseGroup": "standard",
@@ -12,7 +12,23 @@
   "engines": {
     "node": ">=24"
   },
+  "author": "Pionpill",
+  "homepage": "https://pionpill.github.io/retikz/",
+  "keywords": [
+    "tikz",
+    "diagram",
+    "vanilla",
+    "standard-drawing"
+  ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pionpill/retikz.git",
+    "directory": "packages/library/standard-vanilla"
+  },
+  "bugs": {
+    "url": "https://github.com/Pionpill/retikz/issues"
+  },
   "sideEffects": false,
   "main": "./src/index.ts",
   "module": "./src/index.ts",

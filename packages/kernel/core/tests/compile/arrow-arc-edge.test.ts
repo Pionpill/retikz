@@ -53,7 +53,7 @@ describe('arrow + arc 端点收缩', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives)!;
+    const path = findPathPrim(compileToScene(ir).scene.primitives)!;
     const arc = findArcCommand(path);
     const expectedAngle = 90 - (6 / 10) * (180 / Math.PI);
 
@@ -76,7 +76,7 @@ describe('arrow + arc 端点收缩', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives)!;
+    const path = findPathPrim(compileToScene(ir).scene.primitives)!;
     const arc = findArcCommand(path)!;
     const move = path.commands.find(command => command.kind === 'move');
     const expectedAngle = (5.25 / 10) * (180 / Math.PI);
@@ -107,7 +107,7 @@ describe('arrow + arc 端点收缩', () => {
       ],
     };
 
-    const path = findPathPrim(compileToScene(ir).primitives)!;
+    const path = findPathPrim(compileToScene(ir).scene.primitives)!;
     const arc = findEllipseArcCommand(path)!;
 
     expect(arc.endAngle).toBeLessThan(90);
@@ -130,7 +130,7 @@ describe('arrow + arc 端点收缩', () => {
       ],
     };
 
-    const path = findPathPrim(compileToScene(ir).primitives)!;
+    const path = findPathPrim(compileToScene(ir).scene.primitives)!;
     const arc = findArcCommand(path)!;
 
     expect(arc.startAngle).toBeGreaterThan(0);
@@ -154,7 +154,7 @@ describe('arrow + arc 端点收缩', () => {
       ],
     };
 
-    const path = findPathPrim(compileToScene(ir).primitives)!;
+    const path = findPathPrim(compileToScene(ir).scene.primitives)!;
     const arc = findArcCommand(path)!;
 
     expect(arc.startAngle).toBeCloseTo(arc.endAngle, 8);
@@ -179,7 +179,7 @@ describe('cycle + close 在 commands 数组中', () => {
         },
       ],
     };
-    const p = findPathPrim(compileToScene(ir).primitives)!;
+    const p = findPathPrim(compileToScene(ir).scene.primitives)!;
     expect(p.commands.at(-1)).toEqual({ kind: 'close' });
   });
 });

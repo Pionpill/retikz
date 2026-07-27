@@ -288,7 +288,7 @@ describe('rect 缺 color', () => {
   it('rect-compiles-to-scene', () => {
     const rows = [{ rk: 'r0', ck: 'c0' }];
     const layer = firstLayer(heatmapSpec(), { d: rows }, cartOpts);
-    expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] })).not.toThrow();
+    expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] }).scene).not.toThrow();
   });
 });
 

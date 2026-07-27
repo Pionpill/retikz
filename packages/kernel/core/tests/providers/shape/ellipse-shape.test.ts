@@ -85,7 +85,7 @@ describe('ellipse shape — equal × Node 变换交互', () => {
         text: 'long text',
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const el = findByType(compiled.primitives, 'ellipse');
     expect(el).toBeDefined();
     // equal 策略 → 等轴外接 → rx == ry，即使内框非正方
@@ -102,7 +102,7 @@ describe('ellipse shape — equal × Node 变换交互', () => {
         text: 'long text',
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const el = findByType(compiled.primitives, 'ellipse');
     expect(el).toBeDefined();
     expect(el!.rx).toBeGreaterThan(el!.ry);

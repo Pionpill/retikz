@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>retikz browser benchmark</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="bench-root" aria-label="retikz browser benchmark"></main>
+    <script type="module" src="/src/browser.ts"></script>
+  </body>
+</html>

@@ -65,7 +65,7 @@ const compile = (
   compileToScene(
     { version: 1, type: 'scene', children: [spec] },
     { composites: lowerPlots(datasets, { transformDefinitions: definitions }) },
-  );
+  ).scene;
 
 const pointSpec = (transform: IRPlotSpec['transform']): IRPlotSpec =>
   PlotSpecSchema.parse({

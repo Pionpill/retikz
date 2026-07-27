@@ -1,4 +1,4 @@
-import { compileToScene } from '@retikz/core';
+import { compileToScene, NodeTextColor } from '@retikz/core';
 import { Fragment } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -13,6 +13,28 @@ import { Draw } from '../../../src/sugar';
 import { EdgeLabel } from '../../../src/sugar';
 
 describe('buildIR', () => {
+  it('构建 axis-line Step 并保留 axis / target / label', () => {
+    const out = buildIR(
+      <Path>
+        <Step kind="move" to={[0, 0]} />
+        <Step kind="axis-line" axis="horizontal" to="target.center" label={{ text: 'x' }} />
+      </Path>,
+    );
+    expect(out.children[0]).toMatchObject({
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        {
+          type: 'step',
+          kind: 'axis-line',
+          axis: 'horizontal',
+          to: { id: 'target', anchor: 'center' },
+          label: { text: 'x' },
+        },
+      ],
+    });
+  });
+
   it('单个 <Node> → IR scene', () => {
     const ir = buildIR(
       <Node id="A" position={[10, 10]}>
@@ -594,7 +616,7 @@ after`;
         </Path>
       </>,
     );
-    expect(() => compileToScene(ir)).not.toThrow();
+    expect(() => compileToScene(ir).scene).not.toThrow();
   });
 
   it('<Draw way={[..., { bend }, ...]}> 等价于 Kernel bend step（含 / 不含 angle 两种）', () => {
@@ -816,6 +838,21 @@ after`;
       expect(steps.slice(1).map(s => s.label?.text)).toEqual(['f', 'q', 'c', 'b', 'a', 'o', 'e']);
     });
 
+    it('三段 fold 保留 via / fraction / target / label', () => {
+      const ir = buildIR(
+        <Path>
+          <Step kind="move" to="A" />
+          <Step kind="fold" via="-|-" fraction={0.3} to="B" label={{ text: 'mid' }} />
+        </Path>,
+      );
+      expect(ir.children[0]).toMatchObject({
+        children: [
+          { kind: 'move', to: { id: 'A' } },
+          { kind: 'fold', via: '-|-', fraction: 0.3, to: { id: 'B' }, label: { text: 'mid' } },
+        ],
+      });
+    });
+
     it('move / cycle 上的 <EdgeLabel> 静默忽略（schema 不允许）', () => {
       const ir = buildIR(
         <Path>
@@ -873,9 +910,17 @@ after`;
       expect(fromSugar.children[0]).toMatchObject({ strokeWidth: 3 });
     });
 
-    it('<Scope> emit IRScope：transforms / id / localNamespace 透传', () => {
+    it('<Scope> emit IRScope：placement / pivot / id / localNamespace 透传', () => {
       const ir = buildIR(
-        <Scope id="cluster" localNamespace transforms={[{ kind: 'translate', x: 50, y: 0 }]}>
+        <Scope
+          id="cluster"
+          localNamespace
+          placement={{ target: { id: 'panel', anchor: 'top-right', offset: [4, -2] }, selfAnchor: 'top-left' }}
+          transforms={[
+            { kind: 'scale', x: 1.2, pivot: 'center' },
+            { kind: 'rotate', degrees: 12, pivot: [8, 12] },
+          ]}
+        >
           <Node id="A" position={[0, 0]}>
             A
           </Node>
@@ -886,7 +931,14 @@ after`;
         type: 'scope',
         id: 'cluster',
         localNamespace: true,
-        transforms: [{ kind: 'translate', x: 50, y: 0 }],
+        placement: {
+          target: { id: 'panel', anchor: 'top-right', offset: [4, -2] },
+          selfAnchor: 'top-left',
+        },
+        transforms: [
+          { kind: 'scale', x: 1.2, pivot: 'center' },
+          { kind: 'rotate', degrees: 12, pivot: [8, 12] },
+        ],
       });
     });
 
@@ -952,6 +1004,21 @@ after`;
       expect(ir.children[0]).toMatchObject({ type: 'node', cornerRadius: 8 });
     });
 
+    it('<Node>/<Scope nodeDefault> 透传 auto-contrast textColor 关键字', () => {
+      const ir = buildIR(
+        <Scope nodeDefault={{ textColor: NodeTextColor.Contrast }}>
+          <Node id="A" position={[0, 0]} textColor={NodeTextColor.Contrast}>
+            A
+          </Node>
+        </Scope>,
+      );
+      expect(ir.children[0]).toMatchObject({
+        type: 'scope',
+        nodeDefault: { textColor: NodeTextColor.Contrast },
+        children: [{ type: 'node', textColor: NodeTextColor.Contrast }],
+      });
+    });
+
     it('<Node label> 透传 inside placement 与 boundary position', () => {
       const ir = buildIR(
         <Node
@@ -974,6 +1041,36 @@ after`;
           position: { boundary: 'top', fraction: 0.25 },
           placement: 'inside',
           distance: 6,
+        },
+      });
+    });
+
+    it('<Node label> 组合透传 boundary position、distance、rotate、keepUpright 与 pin', () => {
+      const ir = buildIR(
+        <Node
+          id="A"
+          position={[0, 0]}
+          label={{
+            text: 'L',
+            position: { boundary: 'right', fraction: 0.25 },
+            distance: 6,
+            rotate: 'radial',
+            keepUpright: true,
+            pin: { stroke: 'red', strokeWidth: 2 },
+          }}
+        >
+          A
+        </Node>,
+      );
+      expect(ir.children[0]).toMatchObject({
+        type: 'node',
+        label: {
+          text: 'L',
+          position: { boundary: 'right', fraction: 0.25 },
+          distance: 6,
+          rotate: 'radial',
+          keepUpright: true,
+          pin: { stroke: 'red', strokeWidth: 2 },
         },
       });
     });
@@ -1133,13 +1230,13 @@ after`;
       expect(ir.children.map(c => (c as { id?: string }).id)).toEqual(['A', 'B']);
     });
 
-    it('混合 .map(Fragment) + 直接子节点 + 再 .map(Fragment) 保持 JSX 顺序（回归 karl-circle 网格→圆→刻度 模式）', () => {
+    it('混合 .map(Fragment) + 直接子节点 + 再 .map(Fragment) 保持 JSX 顺序', () => {
       const ir = buildIR(
         <>
           {[1, 2].map(i => (
-            <Fragment key={`g${i}`}>
-              <Node id={`grid${i}`} position={[i, 0]}>
-                g
+            <Fragment key={`before${i}`}>
+              <Node id={`before${i}`} position={[i, 0]}>
+                b
               </Node>
             </Fragment>
           ))}
@@ -1155,7 +1252,7 @@ after`;
           ))}
         </>,
       );
-      expect(ir.children.map(c => (c as { id?: string }).id)).toEqual(['grid1', 'grid2', 'circle', 'tick3']);
+      expect(ir.children.map(c => (c as { id?: string }).id)).toEqual(['before1', 'before2', 'circle', 'tick3']);
     });
   });
 

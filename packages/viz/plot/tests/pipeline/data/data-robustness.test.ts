@@ -18,7 +18,7 @@ type RobustOptions = LowerPlotsOptions & { invalid?: 'skip' | 'error' };
 
 /** 跑一次完整下沉（抛错路径用 expect(fn).toThrow） */
 const compile = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options?: RobustOptions) =>
-  compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) });
+  compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) }).scene;
 
 /** 无 model：纯推断路径（point mark，x/y 绑 a/b） */
 const specNoModel = (): IRPlotSpec =>

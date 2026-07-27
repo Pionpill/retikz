@@ -6,7 +6,7 @@ import type { NodeLabelLayout, NodeLayout } from './types';
 
 import { toAlphabeticBaselineY } from '../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
-import { labelBorderPoint, labelBoxEdgeToward, labelCenter, resolveLabelRotateDeg } from './label/geometry';
+import { labelBorderPoint, labelBoxEdgeToward, labelCenter } from './label/geometry';
 
 /** 空 shape params */
 const EMPTY_SHAPE_PARAMS: IRJsonObject = {};
@@ -108,12 +108,12 @@ const emitNodeLabelPinPrimitive = (
   const style = typeof label.pin === 'object' ? label.pin : undefined;
   const [lx, ly] = labelCenterPosition;
   const [bx, by] = labelBorderPoint(layout, label);
-  const pad = 2;
   const [nx, ny] = labelBoxEdgeToward({
     center: [lx, ly],
     border: [bx, by],
-    halfWidth: label.measuredWidth / 2 + pad,
-    halfHeight: label.fontSize / 2 + pad,
+    halfWidth: label.measuredWidth / 2,
+    halfHeight: label.measuredHeight / 2,
+    rotateDeg: label.rotateDeg,
   });
   return {
     type: 'path',
@@ -148,15 +148,7 @@ const emitNodeLabelContentPrimitive = (
   return {
     type: 'text',
     x: round(lx),
-    y: round(
-      toAlphabeticBaselineY({
-        y: ly,
-        baseline: 'middle',
-        lineCount: 1,
-        lineHeight: labelLineHeight,
-        fontSize: label.fontSize,
-      }),
-    ),
+    y: round(ly + (label.ascent - label.descent) / 2),
     lines: [{ text: label.text }],
     fontSize: label.fontSize,
     fontFamily: label.fontFamily,
@@ -168,7 +160,7 @@ const emitNodeLabelContentPrimitive = (
     fill: label.textColor ?? 'currentColor',
     opacity: label.opacity ?? layout.opacity,
     measuredWidth: round(label.measuredWidth),
-    measuredHeight: round(label.fontSize),
+    measuredHeight: round(label.measuredHeight),
   };
 };
 
@@ -181,11 +173,7 @@ const emitNodeLabelPrimitives = (layout: NodeLayout, label: NodeLabelLayout, rou
   if (pinPrimitive !== undefined) primitives.push(pinPrimitive);
 
   const labelContent = emitNodeLabelContentPrimitive(layout, label, labelCenterPosition, round);
-  const deg = resolveLabelRotateDeg({
-    label,
-    labelPosition: [lx, ly],
-    nodeCenter: [layout.rect.x, layout.rect.y],
-  });
+  const deg = label.rotateDeg;
   primitives.push(
     deg === 0
       ? labelContent

@@ -35,7 +35,7 @@ describe('跨 scope anchor keyword', () => {
           ],
         },
       ]);
-      return lineTo(topPath(compileToScene(ir).primitives));
+      return lineTo(topPath(compileToScene(ir).scene.primitives));
     };
 
     expect(endFor('top-left')).toEqual(endFor('top-left'));
@@ -57,7 +57,7 @@ describe('跨 scope anchor keyword', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
     // A.top 全局 x ≈ 100；y 应小于 0（top = -y 方向）
@@ -96,8 +96,8 @@ describe('跨 scope anchor keyword', () => {
         ],
       },
     ]);
-    const eBase = lineTo(topPath(compileToScene(irBase).primitives));
-    const eScale = lineTo(topPath(compileToScene(irScale).primitives));
+    const eBase = lineTo(topPath(compileToScene(irBase).scene.primitives));
+    const eScale = lineTo(topPath(compileToScene(irScale).scene.primitives));
     expect(eBase).toBeDefined();
     expect(eScale).toBeDefined();
     // scale=2 时 right 在 x 方向应大于无 scale 版本
@@ -137,8 +137,8 @@ describe('跨 scope 数字角度', () => {
         ],
       },
     ]);
-    const eBase = lineTo(topPath(compileToScene(irBase).primitives));
-    const eRot = lineTo(topPath(compileToScene(irRot).primitives));
+    const eBase = lineTo(topPath(compileToScene(irBase).scene.primitives));
+    const eRot = lineTo(topPath(compileToScene(irRot).scene.primitives));
     expect(eBase).toBeDefined();
     expect(eRot).toBeDefined();
     // 无 rotate：A.0 局部 +x 方向；rotate 45 度 → 视觉方向 (+x, +y) 各 cos/sin 45°——y 应明显 > 0
@@ -165,7 +165,7 @@ describe('scope.id synthetic bbox 注册到父 frame，外部可 lookup', () => 
       },
     ]);
     const warnings: Array<{ code: string }> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
     // bbox 中心 ≈ A 的全局中心 (60, 0)（A 是唯一子 node，bbox = A 的 4 角 AABB，中心即 A 中心）
     const end = lineTo(topPath(compiled.primitives));
@@ -199,7 +199,7 @@ describe('跨 scope 位置引用（polar.origin / AtPosition.of / OffsetPosition
       },
     ]);
     const warnings: Array<{ code: string }> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     // referent hub_global=(0,0); inverseTranslate(100,0) → 局部 (-100,0); +(30,0) → 局部 (-70,0); applyTranslate(100,0) → 全局 (30,0)
     // 几何上：scope translate 不改 relative 矢量方向 / 长度——orbit 视觉在 hub 全局右 30
     expect(warnings.filter(w => w.code === 'POLAR_ORIGIN_UNRESOLVED')).toHaveLength(0);
@@ -232,7 +232,7 @@ describe('跨 scope 位置引用（polar.origin / AtPosition.of / OffsetPosition
       },
     ]);
     const warnings: Array<{ code: string }> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     expect(warnings.filter(w => w.code === 'AT_TARGET_UNRESOLVED')).toHaveLength(0);
     // hub_global=(0,0)；scope translate 不改 right 方向 / 距离 → 视觉 = hub 全局右 40 = 全局 (40, 0)
     const end = lineTo(topPath(compiled.primitives));
@@ -264,7 +264,7 @@ describe('跨 scope 位置引用（polar.origin / AtPosition.of / OffsetPosition
       },
     ]);
     const warnings: Array<{ code: string }> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     expect(warnings.filter(w => w.code === 'OFFSET_BASE_UNRESOLVED')).toHaveLength(0);
     // hub_global=(0,0) + offset(20,10) 经 scope translate 后视觉 = hub 全局 +(20,10) = (20, 10)
     const end = lineTo(topPath(compiled.primitives));
@@ -290,7 +290,7 @@ describe('跨 scope anchor 边界', () => {
       },
     ]);
     const warnings: Array<{ code: string }> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
@@ -324,8 +324,8 @@ describe('跨 scope anchor 边界', () => {
         ],
       },
     ]);
-    const eFlat = lineTo(topPath(compileToScene(irNoScope).primitives));
-    const eScope = lineTo(topPath(compileToScene(irZeroScope).primitives));
+    const eFlat = lineTo(topPath(compileToScene(irNoScope).scene.primitives));
+    const eScope = lineTo(topPath(compileToScene(irZeroScope).scene.primitives));
     expect(eFlat).toBeDefined();
     expect(eScope).toBeDefined();
     expect(Math.abs(eFlat![0] - eScope![0])).toBeLessThan(0.01);
@@ -354,7 +354,7 @@ describe('跨 scope anchor 边界', () => {
       },
     ]);
     const warnings: Array<{ code: string }> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
@@ -401,7 +401,7 @@ describe('跨 scope anchor 错误路径', () => {
       },
     ]);
     // 对象形态：compile 端 anchorOf（shapeDef.anchor 返回 undefined）抛错（避免静默吞拼写错误）
-    expect(() => compileToScene(ir)).toThrow(/Unknown anchor/);
+    expect(() => compileToScene(ir).scene).toThrow(/Unknown anchor/);
   });
 });
 
@@ -434,8 +434,8 @@ describe('跨 scope anchor 交互场景', () => {
         ],
       },
     ]);
-    const eBase = lineTo(topPath(compileToScene(irBase).primitives));
-    const eRot = lineTo(topPath(compileToScene(irRot).primitives));
+    const eBase = lineTo(topPath(compileToScene(irBase).scene.primitives));
+    const eRot = lineTo(topPath(compileToScene(irRot).scene.primitives));
     expect(eBase).toBeDefined();
     expect(eRot).toBeDefined();
     // 无 rotate：A.45 在 +x +y 局部方向；scope 30 + node 15 = 45 度额外旋转 → 视觉端点位置应明显不同
@@ -469,7 +469,7 @@ describe('跨 scope anchor 交互场景', () => {
       },
     ]);
     const warnings: Array<{ code: string }> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
@@ -506,7 +506,7 @@ describe('跨 scope anchor 交互场景', () => {
       },
     ]);
     const warnings: Array<{ code: string }> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     expect(warnings.filter(w => w.code === 'POLAR_ORIGIN_UNRESOLVED')).toHaveLength(0);
     // A 全局 (40, 0)；scope2 translate 不改 relative 矢量方向 / 长度；
     // B 视觉 = A 全局 + (30, 0) = (70, 0)（不再 + scope2 的 y=40 偏移——translate 不重复 apply 到 relative）
@@ -531,7 +531,7 @@ describe('跨 scope anchor 交互场景', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir);
+    const compiled = compileToScene(ir).scene;
     // 顶层 GroupPrim 含 transforms translate(120, 0)；其 children 中 A 的 rect.x = 10（局部坐标）
     const group = compiled.primitives.find(p => p.type === 'group');
     expect(group).toBeDefined();

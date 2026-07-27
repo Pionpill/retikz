@@ -28,7 +28,7 @@ describe('conicGradient PaintSpec compile', () => {
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A', fill: conicGrad }],
     };
 
-    const scene = compileToScene(ir);
+    const scene = compileToScene(ir).scene;
 
     expect(rectsOf(scene.primitives)[0].fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: conicGrad }]);

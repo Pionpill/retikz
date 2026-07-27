@@ -47,6 +47,14 @@ For everyday authoring, pass children directly. `<Layout>` converts the componen
 
 `ir` and `children` are two entry modes; if both are present, `ir` is used. For IR generation, persistence, and conversion, continue with [Architecture](/kernel/concepts/design/principles) and [Composite](/kernel/concepts/design/composite).
 
+### Reading Compile Artifacts
+
+DTO means Data Transfer Object here: `CompiledNodeLayout` is a detached, frozen snapshot produced after Core finishes laying out a Node. It records the Node id, content-box center / size / global bounds, frame position / size / rotation, line count, and whether the content contains TeX; the artifact envelope's `occurrence` separately identifies where that Node came from in the current compile.
+
+It is not IR, a Scene primitive, or a live DOM measurement object, and it exposes no mutable compiler state. Opt into these snapshots with `artifacts={{ nodeLayouts: true }}`, then read the same compile's result from `onArtifacts` after the React commit. The callback below displays the real Node count and content width outside the figure.
+
+<ComponentPreview files="layout-artifacts" size="sm" />
+
 ### Output Boundary
 
 `viewBox` controls the internal coordinate range, while `width` / `height` control display size. Use the panel to vary these two output boundaries without changing the JSX structure.
@@ -88,20 +96,20 @@ Semantic ownership does not drift with the entry point: React does not invent a 
     {
       label: 'React input and compile wiring',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 410,
-      endLine: 455,
+      startLine: 420,
+      endLine: 494,
     },
     {
       label: 'React render-host wiring',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 479,
-      endLine: 527,
+      startLine: 496,
+      endLine: 545,
     },
     {
       label: 'Core IR to Scene compilation',
       path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 18,
-      endLine: 42,
+      startLine: 25,
+      endLine: 53,
     },
   ]}
 />
@@ -119,14 +127,14 @@ If a figure is clipped or has too much empty space, inspect **View Code → IR**
     {
       label: 'viewBox injection into IR',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 420,
-      endLine: 429,
+      startLine: 430,
+      endLine: 439,
     },
     {
       label: 'explicit versus automatic layout',
       path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 22,
-      endLine: 37,
+      startLine: 29,
+      endLine: 46,
     },
     {
       label: 'content bounds and padding',
@@ -150,14 +158,14 @@ The renderer Provider fills only an omitted renderer, so an explicit descendant 
     {
       label: 'renderer and animation mode resolution',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 350,
-      endLine: 370,
+      startLine: 360,
+      endLine: 380,
     },
     {
       label: 'backend branching and snapshots',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 479,
-      endLine: 520,
+      startLine: 496,
+      endLine: 545,
     },
     {
       label: 'system motion fallback',
@@ -184,11 +192,12 @@ The renderer Provider fills only an omitted renderer, so an explicit descendant 
 
 These props enter `CompileOptions` together. See each extension guide for definition, registration, and error contracts.
 
-| Prop            | Type                                                  | Default | Description                                                   |
-| --------------- | ----------------------------------------------------- | ------- | ------------------------------------------------------------- |
-| `nodeDistance`  | `number`                                              | `24`    | Default relative-position distance; the node's own value wins |
-| `fontSize`      | `number`                                              | `16`    | Default font size and root size for presets and `rem`         |
-| `onNodeLayouts` | `(layouts:`<br />`Array<CompiledNodeLayout>) => void` | —       | Reports node content boxes and global bounds after commit     |
+| Prop           | Type                                                         | Default | Description                                                                         |
+| -------------- | ------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------- |
+| `nodeDistance` | `number`                                                     | `24`    | Default relative-position distance; the node's own value wins                       |
+| `fontSize`     | `number`                                                     | `16`    | Default font size and root size for presets and `rem`                               |
+| `artifacts`    | `CompileArtifactOptions`                                     | `{}`    | Requests opt-in outputs; `nodeLayouts:true` includes `CompiledNodeLayout` snapshots |
+| `onArtifacts`  | `(artifacts:`<br />`ReadonlyArray<CompileArtifact>) => void` | —       | Reports same-compile immutable artifacts after React commit                         |
 
 ### Primitive and Resource Injection
 
@@ -202,14 +211,14 @@ These props enter `CompileOptions` together. See each extension guide for defini
 
 ### Higher-Level Capabilities and Host Integration
 
-| Prop                  | Type                                                  | Default | Description                                                                           |
-| --------------------- | ----------------------------------------------------- | ------- | ------------------------------------------------------------------------------------- |
-| `pathGenerators`      | `ReadonlyArray`<br />`<PathGeneratorDefinition>`      | —       | Inject path generators; see [Path Generators](/kernel/components/draw/path-generator) |
-| `pathKinds`           | `ReadonlyArray`<br />`<PathKindDefinition>`           | —       | Inject Path kinds; see [Custom Paths](/kernel/components/draw/custom-path)            |
-| `ribbonWidthProfiles` | `ReadonlyArray`<br />`<RibbonWidthProfileDefinition>` | —       | Inject ribbon profiles; see [Compile Options](/kernel/reference/runtime/compile)      |
-| `composites`          | `ReadonlyArray`<br />`<CompositeDefinition>`          | —       | Inject Tier 2 lowering; see [Composite](/kernel/concepts/design/composite)            |
-| `lowerTex`            | `LowerTex`                                            | —       | Inject formula lowering; see [TeX](/kernel/packages/tex)                              |
-| `embeddables`         | `Array`<br />`<EmbeddableTier2Adapter>`               | —       | Explicit Tier 2 adapter injection; static component markers are primary               |
+| Prop                  | Type                                                  | Default | Description                                                                                     |
+| --------------------- | ----------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------- |
+| `pathGenerators`      | `ReadonlyArray`<br />`<PathGeneratorDefinition>`      | —       | Inject path generators; see [Path Generators](/kernel/components/draw/path-generator)           |
+| `pathKinds`           | `ReadonlyArray`<br />`<PathKindDefinition>`           | —       | Inject Path kinds; see [Custom Paths](/kernel/components/draw/custom-path)                      |
+| `ribbonWidthProfiles` | `ReadonlyArray`<br />`<RibbonWidthProfileDefinition>` | —       | Inject ribbon profiles; see [Compile Options](/kernel/reference/runtime/compile)                |
+| `composites`          | `ReadonlyArray`<br />`<AnyCompositeDefinition>`       | —       | Inject Tier 2 expand / layout-aware compile; see [Composite](/kernel/concepts/design/composite) |
+| `lowerTex`            | `LowerTex`                                            | —       | Inject formula lowering; see [TeX](/kernel/packages/tex)                                        |
+| `embeddables`         | `Array`<br />`<EmbeddableTier2Adapter>`               | —       | Explicit Tier 2 adapter injection; static component markers are primary                         |
 
 ### Whole-Figure Defaults
 

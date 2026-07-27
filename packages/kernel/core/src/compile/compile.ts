@@ -1,43 +1,58 @@
-import type { Scene } from '../contract';
+import type { AnyCompositeDefinition, Scene } from '../contract';
 import type { IRScene } from '../schemas';
-import type { CompileOptions } from './types';
+import type { CompileOptions, CompileResult, CompositeArtifactOf } from './types';
 
 import { compileChildrenToPrimitives, createCompileContext, filterAnimations } from './orchestration';
 import { assertFiniteLayout, computeLayoutFromBounds, viewBoxToLayout } from './scene';
 
 export { CompileWarningCode } from './constants';
 export type {
+  CompileArtifact,
+  CompileArtifactOptions,
   CompileCompositeOptions,
   CompileHostOptions,
   CompileLayoutOptions,
   CompileOptions,
   CompileProviderOptions,
+  CompileResult,
 } from './types';
 export type { CompileWarning } from './warning';
 
 /**
  * IR → Scene 纯函数转换，所有 adapter 共享
- * @description 解析节点、scope、path、资源和动画，并输出 renderer-agnostic 的 Scene
+ * @description 解析节点、scope、path、资源、动画与 layout-aware composite，并显式返回 Scene 和 typed artifacts
  */
-export const compileToScene = (ir: IRScene, options?: CompileOptions): Scene => {
+export const compileToScene = <const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []>(
+  ir: IRScene,
+  options?: CompileOptions<TComposites>,
+): CompileResult<CompositeArtifactOf<TComposites[number]>> => {
   const context = createCompileContext(ir, options ?? {});
   const { loweredIr, layoutPadding, round, onWarn, paint, clip } = context;
-  const { primitives, layoutBounds } = compileChildrenToPrimitives(loweredIr.children, context);
+  const { primitives, layoutBounds, artifacts } = compileChildrenToPrimitives(loweredIr.children, context);
 
-  // paint 与 clip 资源同表。
   const resources = [...paint.resources(), ...clip.resources()];
-  // scene 根动画先做 camera 约束校验。
   const rootAnimations = filterAnimations(loweredIr.animations, { target: 'root', onWarn, irPath: 'scene' });
-  return {
+  const scene: Scene = {
     primitives,
-    // 显式 viewBox 覆盖自动 layout。
     layout:
       loweredIr.viewBox !== undefined
         ? viewBoxToLayout(loweredIr.viewBox, round)
         : assertFiniteLayout(computeLayoutFromBounds(layoutBounds, layoutPadding, round)),
-    // 无资源时省略字段。
     ...(resources.length > 0 ? { resources } : {}),
-    // 无根动画时省略字段。
     ...(rootAnimations !== undefined ? { animations: rootAnimations } : {}),
   };
+  if (context.trace !== undefined) {
+    context.trace.reporter.report({
+      phase: 'compile',
+      unit: 'ir-child',
+      outcome: 'full',
+      visited: context.trace.visited,
+      reused: 0,
+      changed: context.trace.visited,
+    });
+  }
+  return Object.freeze({
+    scene,
+    artifacts: Object.freeze(artifacts),
+  }) as CompileResult<CompositeArtifactOf<TComposites[number]>>;
 };

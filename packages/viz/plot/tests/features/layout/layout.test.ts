@@ -146,7 +146,7 @@ describe('plot label layout', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ d: rows }, { width: 420, height: 260 }) },
-    );
+    ).scene;
     const title = flattenPrimitives(scene.primitives).find(
       primitive =>
         primitive.type === 'text' &&

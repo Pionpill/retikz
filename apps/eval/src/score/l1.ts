@@ -27,7 +27,7 @@ export const scoreL1 = (candidate: unknown): L1Result => {
   }
 
   try {
-    const scene = compileToScene(parsed.data);
+    const scene = compileToScene(parsed.data).scene;
     return { zodOk: true, compileOk: true, scene };
   } catch (err) {
     return {

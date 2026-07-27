@@ -102,14 +102,30 @@ This also explains both boundaries: `<Text>` only works inside `<Node>`, and it 
   ]}
 />
 
-### Styling and layout responsibilities
+### Line color resolution
 
-After normalization, the `<Text>` marker no longer exists; `<Node>` text layout handles every line uniformly. Missing `font` fields inherit the Node block font, while `fill` / `opacity` apply only to the current line. Measurement, wrapping, alignment, and line height remain block-level Node responsibilities.
+After normalization, every line enters Core through the same color precedence. An explicit `<Text fill>` overrides the Node default; only lines without `fill` inherit `Node.textColor`:
 
-That is why `<Text>` exposes only per-line visual fields. A per-line font participates in that line's width measurement, but `<Text>` cannot split the line into differently styled spans or override `align` or `lineHeight` by itself. Use a `{ runs }` LineSpec through `text` when one line needs multiple styles.
+<ComponentPreview files="text-contrast-flow" size="sm" hideCode />
+
+When a Node uses `NodeTextColor.Contrast`, Core reads the final `fill` after style cascading. Only a static color with effective opacity 1 enters the WCAG relative-luminance comparison and resolves to `#000000` or `#ffffff`. Missing, translucent, gradient, `var()`, and other unresolved backgrounds use the fixed `currentColor` fallback and emit `TEXT_AUTO_CONTRAST_UNRESOLVED`. The Node's overall `opacity` does not participate in this background decision.
+
+A per-line `font` still participates in that line's width measurement; wrapping, `align`, and `lineHeight` remain Node block-level responsibilities. Use a `{ runs }` LineSpec through `text` when one line needs multiple styles.
 
 <SourceLinks
   sources={[
+    {
+      label: 'Resolve after style cascading',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 184,
+      endLine: 189,
+    },
+    {
+      label: 'Node contrast resolution',
+      path: 'packages/kernel/core/src/compile/node/text-color/resolve.ts',
+      startLine: 55,
+      endLine: 113,
+    },
     {
       label: 'Node body text layout',
       path: 'packages/kernel/core/src/compile/node/content/layout.ts',

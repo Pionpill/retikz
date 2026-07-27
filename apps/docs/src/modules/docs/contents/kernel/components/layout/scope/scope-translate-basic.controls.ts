@@ -2,10 +2,14 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
-/** Scope transform playground 使用的稳定字段 id */
+/** Scope 局部坐标 playground 使用的稳定字段 id */
 export const ScopeTransformControlId = {
-  Kind: 'transformKind',
+  Operation: 'operation',
+  PlacementEnabled: 'placementEnabled',
+  PlacementTarget: 'placementTarget',
   Referent: 'referent',
+  SelfAnchor: 'selfAnchor',
+  SelfPoint: 'selfPoint',
   TranslateX: 'translateX',
   TranslateY: 'translateY',
   PolarAngle: 'polarAngle',
@@ -15,40 +19,45 @@ export const ScopeTransformControlId = {
   OffsetY: 'offsetY',
   Fraction: 'fraction',
   RotateDegrees: 'rotateDegrees',
-  RotateCenterX: 'rotateCenterX',
-  RotateCenterY: 'rotateCenterY',
   ScaleX: 'scaleX',
   ScaleY: 'scaleY',
+  Pivot: 'pivot',
+  PivotPoint: 'pivotPoint',
 } as const;
 
-/** Scope transform 字段按 kind 显示的共享条件 */
+/** Scope 局部坐标字段按演示能力显示的共享条件 */
 export const ScopeTransformVisibleWhen = {
+  Placement: { controlId: ScopeTransformControlId.PlacementEnabled, oneOf: [true] },
+  PlacementDisabled: { controlId: ScopeTransformControlId.PlacementEnabled, oneOf: [false] },
   Referent: {
-    controlId: ScopeTransformControlId.Kind,
+    controlId: ScopeTransformControlId.Operation,
     oneOf: ['polar-translate', 'at-translate', 'offset-translate'],
   },
-  Translate: { controlId: ScopeTransformControlId.Kind, oneOf: ['translate'] },
-  PolarTranslate: { controlId: ScopeTransformControlId.Kind, oneOf: ['polar-translate'] },
-  AtTranslate: { controlId: ScopeTransformControlId.Kind, oneOf: ['at-translate'] },
-  OffsetTranslate: { controlId: ScopeTransformControlId.Kind, oneOf: ['offset-translate'] },
-  BetweenTranslate: { controlId: ScopeTransformControlId.Kind, oneOf: ['between-translate'] },
-  Distance: { controlId: ScopeTransformControlId.Kind, oneOf: ['polar-translate', 'at-translate'] },
-  Rotate: { controlId: ScopeTransformControlId.Kind, oneOf: ['rotate'] },
-  Scale: { controlId: ScopeTransformControlId.Kind, oneOf: ['scale'] },
+  Translate: { controlId: ScopeTransformControlId.Operation, oneOf: ['translate'] },
+  PolarTranslate: { controlId: ScopeTransformControlId.Operation, oneOf: ['polar-translate'] },
+  AtTranslate: { controlId: ScopeTransformControlId.Operation, oneOf: ['at-translate'] },
+  OffsetTranslate: { controlId: ScopeTransformControlId.Operation, oneOf: ['offset-translate'] },
+  BetweenTranslate: { controlId: ScopeTransformControlId.Operation, oneOf: ['between-translate'] },
+  Distance: { controlId: ScopeTransformControlId.Operation, oneOf: ['polar-translate', 'at-translate'] },
+  Rotate: { controlId: ScopeTransformControlId.Operation, oneOf: ['rotate'] },
+  Scale: { controlId: ScopeTransformControlId.Operation, oneOf: ['scale'] },
+  Pivot: { controlId: ScopeTransformControlId.Operation, oneOf: ['rotate', 'scale'] },
+  ExplicitSelfPoint: { controlId: ScopeTransformControlId.SelfAnchor, oneOf: ['explicit'] },
+  ExplicitPivot: { controlId: ScopeTransformControlId.Pivot, oneOf: ['explicit'] },
 } as const;
 
-/** Scope 七种 transform 输入的中文属性面板 */
+/** Scope placement 与七种 transform 输入的中文属性面板 */
 export const scopeTranslateBasicControls = definePreviewControls({
   presentation: 'panel',
-  title: 'Scope transform',
+  title: 'Scope 局部坐标',
   sections: [
     {
-      label: '变换类型',
+      label: '演示能力',
       controls: [
         {
           kind: 'select',
-          id: ScopeTransformControlId.Kind,
-          label: 'kind',
+          id: ScopeTransformControlId.Operation,
+          label: '能力',
           defaultValue: 'translate',
           options: [
             { value: 'translate', label: '笛卡尔平移' },
@@ -61,15 +70,67 @@ export const scopeTranslateBasicControls = definePreviewControls({
           ],
         },
         {
+          kind: 'switch',
+          id: ScopeTransformControlId.PlacementEnabled,
+          label: '自身定位',
+          defaultValue: false,
+        },
+      ],
+    },
+    {
+      label: '变换参照',
+      visibleWhen: ScopeTransformVisibleWhen.Referent,
+      controls: [
+        {
           kind: 'select',
           id: ScopeTransformControlId.Referent,
           label: '引用点',
           defaultValue: 'O',
-          visibleWhen: ScopeTransformVisibleWhen.Referent,
+          visibleWhen: ScopeTransformVisibleWhen.PlacementDisabled,
           options: [
             { value: 'O', label: 'O（左）' },
             { value: 'T', label: 'T（右）' },
           ],
+        },
+      ],
+    },
+    {
+      label: '自身定位',
+      visibleWhen: ScopeTransformVisibleWhen.Placement,
+      controls: [
+        {
+          kind: 'select',
+          id: ScopeTransformControlId.PlacementTarget,
+          label: '定位目标',
+          defaultValue: 'T',
+          options: [
+            { value: 'O', label: 'O（左）' },
+            { value: 'T', label: 'T（右）' },
+          ],
+        },
+        {
+          kind: 'select',
+          id: ScopeTransformControlId.SelfAnchor,
+          label: '自身锚点',
+          defaultValue: 'center',
+          options: [
+            { value: 'origin', label: '局部原点' },
+            { value: 'center', label: '包络中心' },
+            { value: 'right', label: '右侧中心' },
+            { value: 'top-left', label: '左上角' },
+            { value: 'bottom-right', label: '右下角' },
+            { value: 'explicit', label: '显式局部坐标' },
+          ],
+        },
+        {
+          kind: 'point',
+          id: ScopeTransformControlId.SelfPoint,
+          label: '自身点',
+          defaultValue: [0, 0],
+          min: [-40, -60],
+          max: [80, 40],
+          step: 5,
+          visibleWhen: ScopeTransformVisibleWhen.ExplicitSelfPoint,
         },
       ],
     },
@@ -184,26 +245,6 @@ export const scopeTranslateBasicControls = definePreviewControls({
           visibleWhen: ScopeTransformVisibleWhen.Rotate,
         },
         {
-          kind: 'number',
-          id: ScopeTransformControlId.RotateCenterX,
-          label: '旋转中心 x',
-          defaultValue: 0,
-          min: -40,
-          max: 40,
-          step: 5,
-          visibleWhen: ScopeTransformVisibleWhen.Rotate,
-        },
-        {
-          kind: 'number',
-          id: ScopeTransformControlId.RotateCenterY,
-          label: '旋转中心 y',
-          defaultValue: 0,
-          min: -40,
-          max: 40,
-          step: 5,
-          visibleWhen: ScopeTransformVisibleWhen.Rotate,
-        },
-        {
           kind: 'range',
           id: ScopeTransformControlId.ScaleX,
           label: 'scale x',
@@ -225,15 +266,49 @@ export const scopeTranslateBasicControls = definePreviewControls({
         },
       ],
     },
+    {
+      label: '变换基点',
+      visibleWhen: ScopeTransformVisibleWhen.Pivot,
+      controls: [
+        {
+          kind: 'select',
+          id: ScopeTransformControlId.Pivot,
+          label: 'pivot',
+          defaultValue: 'origin',
+          options: [
+            { value: 'origin', label: '局部原点' },
+            { value: 'center', label: '包络中心' },
+            { value: 'right', label: '右侧中心' },
+            { value: 'top-left', label: '左上角' },
+            { value: 'bottom-right', label: '右下角' },
+            { value: 'explicit', label: '显式局部坐标' },
+          ],
+        },
+        {
+          kind: 'point',
+          id: ScopeTransformControlId.PivotPoint,
+          label: 'pivot 坐标',
+          defaultValue: [0, 0],
+          min: [-40, -60],
+          max: [80, 40],
+          step: 5,
+          visibleWhen: ScopeTransformVisibleWhen.ExplicitPivot,
+        },
+      ],
+    },
   ],
 });
 
-/** Scope 变换面板的稳定文档契约 */
+/** Scope 局部坐标面板的稳定文档契约 */
 export const previewControlContract = {
   controls: scopeTranslateBasicControls,
   canonicalValues: {
-    transformKind: 'translate',
+    operation: 'translate',
+    placementEnabled: false,
+    placementTarget: 'T',
     referent: 'O',
+    selfAnchor: 'center',
+    selfPoint: [0, 0],
     translateX: 0,
     translateY: 0,
     offsetX: 100,
@@ -243,10 +318,10 @@ export const previewControlContract = {
     direction: 'right',
     fraction: 0.5,
     rotateDegrees: 0,
-    rotateCenterX: 0,
-    rotateCenterY: 0,
     scaleX: 1,
     scaleY: 1,
+    pivot: 'origin',
+    pivotPoint: [0, 0],
   },
-  relatedApis: ['Scope.transforms'],
+  relatedApis: ['Scope.placement', 'Scope.transforms'],
 } satisfies PreviewControlContract;

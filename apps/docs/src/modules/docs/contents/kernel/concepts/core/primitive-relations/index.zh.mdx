@@ -34,6 +34,8 @@ boundary 决定“线停在哪一层表面”，`margin` 与 shape 如何影响�
 
 概念上只需记住“省略 anchor 是动态，提供 anchor 是固定”。完整 target union、`offset`、角度与边比例写法见 [Path schema · 目标点](/kernel/reference/schema/path#目标点)；标准 anchor、boundary 与各 shape 专属名称见 [Node 几何](/kernel/components/node/overview)和 [Shapes](/kernel/components/shapes)。
 
+`axis-line` 是一个有意的例外：它取 target 中心或显式 anchor 后投影到单个局部轴，所以省略 anchor 也不会在 target 端动态贴边。source 端仍朝投影后的终点正常裁切；详见 [Step · 正交连接](/kernel/components/draw/step#正交连接)。
+
 ## 连线与路由
 
 端点模式决定“连到哪里”，path step 决定“中间怎么走”。下面用同一对端点比较直线、曲线与折线：

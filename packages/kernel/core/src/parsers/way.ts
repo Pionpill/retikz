@@ -1,5 +1,9 @@
+import { z } from 'zod';
+
 import type {
   IRArcStep,
+  IRAxisLineStep,
+  IRAxisLineTarget,
   IRBendStep,
   IRCirclePathStep,
   IRControlPoint,
@@ -17,12 +21,13 @@ import type {
   IRTarget,
 } from '../schemas';
 
+import { AxisLineTargetSchema, FoldStepVia, NormalizedFractionSchema } from '../schemas';
 import { parseSideAlias } from './anchor-alias';
 import { parseTargetSugar } from './target-sugar';
 
 /**
  * Sugar 层 way 数组的关键字常量
- * @description Cycle 闭合到 way 起点（底层字符串故意写丑避节点 id 冲突，只通过 DrawWay.Cycle 引用）；Hv/Vh 折角算子（裸字面量 `-|`/`|-` 与常量等价）；Relative/Accumulate 相对偏移 way item 的 type 鉴别值（Relative=TikZ `(+x,+y)` 不推进 prevEnd，Accumulate=TikZ `(++x,++y)` 累积更新）。用 const + as const 而非 TS enum 避免 reverse-mapping 与字面量不互通
+ * @description Cycle 闭合到 way 起点（底层字符串故意写丑避节点 id 冲突，只通过 DrawWay.Cycle 引用）；Hv/Vh/Hvh/Vhv 是两段或三段折角算子；Relative/Accumulate 相对偏移 way item 的 type 鉴别值（Relative=TikZ `(+x,+y)` 不推进 prevEnd，Accumulate=TikZ `(++x,++y)` 累积更新）。用 const + as const 而非 TS enum 避免 reverse-mapping 与字面量不互通
  */
 export const DrawWay = {
   /** 闭合到起点（TikZ `cycle` / SVG `Z`），底层字符串刻意写丑，不要硬编码 */
@@ -31,6 +36,10 @@ export const DrawWay = {
   Hv: '-|',
   /** 折角：先垂直后水平（TikZ `|-`） */
   Vh: '|-',
+  /** 三段折角：水平、垂直、水平 */
+  Hvh: '-|-',
+  /** 三段折角：垂直、水平、垂直 */
+  Vhv: '|-|',
   /** 相对偏移 type：非累积（TikZ `(+x,+y)`），不推进 prevEnd */
   Relative: 'retikz-keyword_relative',
   /** 相对偏移 type：累积（TikZ `(++x,++y)`），每段更新 prevEnd */
@@ -38,7 +47,15 @@ export const DrawWay = {
 } as const;
 
 /** way 折角算子字面量类型 */
-export type WayVia = typeof DrawWay.Hv | typeof DrawWay.Vh;
+export type WayVia = typeof DrawWay.Hv | typeof DrawWay.Vh | typeof DrawWay.Hvh | typeof DrawWay.Vhv;
+
+/** 可配置的三段折角 Way 算子 */
+export type WayFoldOp = {
+  /** 三段折角走向 */
+  via: typeof DrawWay.Hvh | typeof DrawWay.Vhv;
+  /** 中间腿的归一化位置 */
+  fraction?: number;
+};
 
 /** way 闭合关键字字面量类型 */
 export type WayCycle = typeof DrawWay.Cycle;
@@ -96,9 +113,12 @@ export type WayLabel = IRStepLabelInput | string;
  */
 export type WayLabelOp = { label: WayLabel };
 
+/** 单轴连接算子：把目标投影到当前 host 的水平或垂直轴 */
+export type WayAxisLineOp = { horizontalTo: IRAxisLineTarget | string } | { verticalTo: IRAxisLineTarget | string };
+
 /**
- * Sugar 层 way 数组 DSL 元素（十二种形态）
- * @description 节点 id 字符串/笛卡尔/极坐标 → line（首项 move）；`{position,type}` 相对偏移对象 → IR relative/relativeAccumulate；`-|`/`|-` 与下一项合并 fold；DrawWay.Cycle → cycle；curve/cubic/bend infix 与下一项合并；arc/circle/ellipse infix 以上一项为圆心不消耗下一项。Cycle/Relative/Accumulate 底层字符串刻意写丑避节点 id 撞结构
+ * Sugar 层 way 数组 DSL 元素
+ * @description 节点 id 字符串/笛卡尔/极坐标 → line（首项 move）；`{position,type}` 相对偏移对象 → IR relative/relativeAccumulate；horizontalTo/verticalTo → axis-line；四种裸 via 或 `{via,fraction}` 与下一项合并 fold；DrawWay.Cycle → cycle；curve/cubic/bend infix 与下一项合并；arc/circle/ellipse infix 以上一项为圆心不消耗下一项。Cycle/Relative/Accumulate 底层字符串刻意写丑避节点 id 撞结构
  */
 export type WayItem =
   | IRTarget
@@ -106,6 +126,7 @@ export type WayItem =
   | string
   | WayRelativeItem
   | WayVia
+  | WayFoldOp
   | WayCycle
   | WayCurveOp
   | WayCubicOp
@@ -113,14 +134,16 @@ export type WayItem =
   | WayArcOp
   | WayCircleOp
   | WayEllipseOp
-  | WayLabelOp;
+  | WayLabelOp
+  | WayAxisLineOp;
 
 /** way DSL 数组：sugar `<Draw way={...}>` 输入形态 */
 export type WayDSL = Array<WayItem>;
 
 const isWayCycle = (item: WayItem): item is WayCycle => item === DrawWay.Cycle;
 
-const isWayVia = (item: WayItem): item is WayVia => item === DrawWay.Hv || item === DrawWay.Vh;
+const isWayVia = (item: WayItem): item is WayVia =>
+  item === DrawWay.Hv || item === DrawWay.Vh || item === DrawWay.Hvh || item === DrawWay.Vhv;
 
 const isPlainObject = (item: unknown): item is Record<string, unknown> =>
   typeof item === 'object' && item !== null && !Array.isArray(item);
@@ -147,6 +170,43 @@ const isWayShapeOp = (item: WayItem): item is WayArcOp | WayCircleOp | WayEllips
   isWayArcOp(item) || isWayCircleOp(item) || isWayEllipseOp(item);
 
 const isWayLabelOp = (item: WayItem): item is WayLabelOp => isPlainObject(item) && 'label' in item;
+
+const isWayAxisLineOp = (item: WayItem): item is WayAxisLineOp =>
+  isPlainObject(item) && ('horizontalTo' in item || 'verticalTo' in item);
+
+type WayFoldOpInput = Record<string, unknown> & { via: unknown };
+
+const isWayFoldOpInput = (item: unknown): item is WayFoldOpInput => isPlainObject(item) && 'via' in item;
+
+const WayFoldOpSchema = z.strictObject({
+  via: z.enum([FoldStepVia.HorizontalVerticalHorizontal, FoldStepVia.VerticalHorizontalVertical]),
+  fraction: NormalizedFractionSchema.optional(),
+});
+
+const wayOperatorNamesOf = (item: WayItem): Array<string> => {
+  if (!isPlainObject(item)) return [];
+  const names = [
+    'horizontalTo',
+    'verticalTo',
+    'via',
+    'label',
+    'curve',
+    'cubic',
+    'bend',
+    'arc',
+    'circle',
+    'ellipse',
+  ].filter(key => key in item);
+  if ('position' in item && 'type' in item) names.push('relative');
+  return names;
+};
+
+const assertSingleWayOperator = (item: WayItem): void => {
+  const names = wayOperatorNamesOf(item);
+  if (names.length > 1) {
+    throw new Error(`parseWay: object contains multiple Way operators: ${names.join(', ')}`);
+  }
+};
 
 /** sugar 字符串/对象 → IR step.label（字符串 = `{text:s}`） */
 const normalizeLabel = (l: WayLabel): IRStepLabel => {
@@ -180,16 +240,20 @@ const desugarRelativeItem = (item: WayItem): WayItem => {
 
 type ClassifiedWayItem =
   | { kind: 'label'; item: WayLabelOp }
+  | { kind: 'axis'; item: WayAxisLineOp }
   | { kind: 'cycle'; item: WayCycle }
-  | { kind: 'via'; item: WayVia }
+  | { kind: 'via'; item: WayVia | WayFoldOpInput }
   | { kind: 'curve'; item: WayCurveOp | WayCubicOp | WayBendOp }
   | { kind: 'shape'; item: WayArcOp | WayCircleOp | WayEllipseOp }
   | { kind: 'target'; item: WayItem };
 
 const classifyWayItem = (item: WayItem): ClassifiedWayItem => {
+  assertSingleWayOperator(item);
   if (isWayLabelOp(item)) return { kind: 'label', item };
+  if (isWayAxisLineOp(item)) return { kind: 'axis', item };
   if (isWayCycle(item)) return { kind: 'cycle', item };
   if (isWayVia(item)) return { kind: 'via', item };
+  if (isWayFoldOpInput(item)) return { kind: 'via', item };
   if (isWayCurveLike(item)) return { kind: 'curve', item };
   if (isWayShapeOp(item)) return { kind: 'shape', item };
   return { kind: 'target', item };
@@ -205,6 +269,7 @@ const targetOf = (item: WayItem): IRTarget | null => {
 
 type LabelAttachableStep =
   | IRArcStep
+  | IRAxisLineStep
   | IRBendStep
   | IRCirclePathStep
   | IRCubicStep
@@ -230,21 +295,38 @@ const parseFollowingTarget = (
   return parseTargetSugar(desugarRelativeItem(next));
 };
 
-const buildViaStep = (way: WayDSL, index: number, item: WayVia, label: IRStepLabel | undefined): IRFoldStep =>
-  attachLabel(
+const buildViaStep = (
+  way: WayDSL,
+  index: number,
+  item: WayVia | WayFoldOpInput,
+  label: IRStepLabel | undefined,
+): IRFoldStep => {
+  const parsed =
+    typeof item === 'string'
+      ? { via: item }
+      : (() => {
+          const result = WayFoldOpSchema.safeParse(item);
+          if (!result.success) {
+            throw new Error(`parseWay: invalid fold operator: ${result.error.issues[0]?.message ?? 'invalid object'}`);
+          }
+          return result.data;
+        })();
+  return attachLabel(
     {
       type: 'step',
       kind: 'fold',
-      via: item,
+      via: parsed.via,
+      ...('fraction' in parsed && parsed.fraction !== undefined && { fraction: parsed.fraction }),
       to: parseFollowingTarget(
         way,
         index,
-        `parseWay: via operator '${item}' at end of way must be followed by a target`,
-        next => `parseWay: via operator '${item}' must be followed by a target, got '${String(next)}'`,
+        `parseWay: via operator '${parsed.via}' at end of way must be followed by a target`,
+        next => `parseWay: via operator '${parsed.via}' must be followed by a target, got '${String(next)}'`,
       ),
     },
     label,
   );
+};
 
 const buildCurveLikeStep = (
   way: WayDSL,
@@ -337,9 +419,33 @@ const buildLineStep = (item: WayItem, label: IRStepLabel | undefined): IRLineSte
     label,
   );
 
+const axisLineTargetOf = (item: WayAxisLineOp): IRAxisLineTarget => {
+  const raw = 'horizontalTo' in item ? item.horizontalTo : item.verticalTo;
+  const parsed = parseTargetSugar(raw);
+  const result = AxisLineTargetSchema.safeParse(parsed);
+  if (!result.success) {
+    throw new Error(
+      'parseWay: axis-line target must resolve to a Cartesian position or NodeTarget; polar, relative, offset, and between targets are not supported',
+      { cause: result.error },
+    );
+  }
+  return result.data;
+};
+
+const buildAxisLineStep = (item: WayAxisLineOp, label: IRStepLabel | undefined): IRAxisLineStep =>
+  attachLabel(
+    {
+      type: 'step',
+      kind: 'axis-line',
+      axis: 'horizontalTo' in item ? 'horizontal' : 'vertical',
+      to: axisLineTargetOf(item),
+    },
+    label,
+  );
+
 /**
  * way 数组 → IRStep 序列
- * @description 首元素必须是 move 目标（way[0] 是算子 / label 算子时抛错，不降级）；后续元素按各自规则：target/RelItem→line；Cycle→cycle；-|/|- 与下一项合并 fold；curve/cubic/bend 与下一项合并；arc/circle/ellipse 单独成 step；label 算子修饰下一段。连续 label/末尾 label/cycle 上的 label 抛错。纯函数，各框架 adapter Sugar 组件复用
+ * @description 首元素必须是 move 目标（way[0] 是算子 / label 算子时抛错，不降级）；后续元素按各自规则：target/RelItem→line；Cycle→cycle；两段 / 三段 via 与下一项合并 fold；curve/cubic/bend 与下一项合并；arc/circle/ellipse 单独成 step；label 算子修饰下一段。连续 label/末尾 label/cycle 上的 label 抛错。纯函数，各框架 adapter Sugar 组件复用
  */
 export const parseWay = (way: WayDSL): Array<IRStep> => {
   if (way.length < 2) {
@@ -374,6 +480,10 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
           throw new Error(`parseWay: label operator at index ${index} cannot directly follow another label operator`);
         }
         pendingLabel = normalizeLabel(classified.item.label);
+        index += 1;
+        break;
+      case 'axis':
+        out.push(buildAxisLineStep(classified.item, consumeLabel()));
         index += 1;
         break;
       case 'cycle':

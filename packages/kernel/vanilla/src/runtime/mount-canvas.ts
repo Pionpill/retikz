@@ -1,4 +1,4 @@
-import type { Scene } from '@retikz/core';
+import type { CompileArtifact, Scene } from '@retikz/core';
 import type { AnimationControls, IdClockRegistry } from '@retikz/render/animation';
 import type { PrimAnimationResolution } from '@retikz/render/canvas';
 import type { HydrationController } from '@retikz/render/hydration';
@@ -60,6 +60,7 @@ export const mountCanvas = (container: Element, input: RenderInput, options: Mou
   let visibleTeardown: (() => void) | undefined;
 
   let currentScene: Scene;
+  let currentArtifacts: ReadonlyArray<CompileArtifact> = Object.freeze([]);
   let currentRuntimeMeta: VanillaRuntimeMeta = createEmptyRuntimeMeta();
 
   // 存活的水合：onEvent 触发的 handler 表按「绑定时的 scene」合成（新增 / 移除的 onEvent track 决定注册哪些
@@ -136,8 +137,9 @@ export const mountCanvas = (container: Element, input: RenderInput, options: Mou
   };
 
   const renderInto = (next: RenderInput): void => {
-    const { scene, runtimeMeta } = toSceneResult(next, options);
+    const { scene, artifacts, runtimeMeta } = toSceneResult(next, options);
     currentScene = scene;
+    currentArtifacts = artifacts;
     currentRuntimeMeta = runtimeMeta;
     const hasNominalSize =
       typeof output.width === 'number' &&
@@ -300,6 +302,9 @@ export const mountCanvas = (container: Element, input: RenderInput, options: Mou
     },
     get runtimeMeta() {
       return currentRuntimeMeta;
+    },
+    get artifacts() {
+      return currentArtifacts;
     },
   };
 };

@@ -149,6 +149,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
       <div className="overflow-hidden rounded-xl border">
         <PreviewWorkspace
           definition={resolvedControlDefinition}
+          controlContract={controlContract}
           controlState={controlState}
           showContextBar={showContextBar}
           themeMode={themeMode}
@@ -188,6 +189,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
             initialSize={size}
             controlState={controlState}
             controlDefinition={resolvedControlDefinition}
+            controlContract={controlContract}
             showContextBar={showContextBar}
             themeMode={themeMode}
             onThemeModeChange={setThemeMode}

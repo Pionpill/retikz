@@ -17,4 +17,4 @@
 
 ## 当前状态
 
-当前目录只建立包职责边界，尚未初始化 npm package、builder、公开 API 或测试。
+v0.1 alpha.1 已提供 Grid、Axes、Frame builders / adapters 与 `StandardVanillaAdapters`。package exports 只保留根入口，能力继续通过根入口 named exports 公开。

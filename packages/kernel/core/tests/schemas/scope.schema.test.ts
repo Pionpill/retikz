@@ -96,6 +96,59 @@ describe('ScopeSchema 合法形态', () => {
       expect(parsed.data.boundingShape).toBeUndefined();
     }
   });
+
+  it('scope placement 接受闭合 target / selfAnchor，并保持省略默认不物化', () => {
+    const explicit = ScopeSchema.safeParse({
+      type: 'scope',
+      placement: {
+        target: { id: 'panel', anchor: 'top-right', offset: [4, -2] },
+        selfAnchor: 'top-left',
+      },
+      children: [],
+    });
+    const implicit = ScopeSchema.safeParse({
+      type: 'scope',
+      placement: { target: [100, 80] },
+      children: [],
+    });
+
+    expect(explicit.success).toBe(true);
+    expect(explicit.success && explicit.data.placement).toEqual({
+      target: { id: 'panel', anchor: 'top-right', offset: [4, -2] },
+      selfAnchor: 'top-left',
+    });
+    expect(implicit.success).toBe(true);
+    expect(implicit.success && implicit.data.placement?.selfAnchor).toBeUndefined();
+  });
+
+  it('scope self point 接受 origin、数字角度、边上比例与显式局部坐标', () => {
+    for (const selfAnchor of ['origin', 30, { side: 'top', fraction: 0.25 }, [8, 12]] as const) {
+      expect(
+        ScopeSchema.safeParse({
+          type: 'scope',
+          placement: { target: [0, 0], selfAnchor },
+          children: [],
+        }).success,
+      ).toBe(true);
+    }
+  });
+
+  it('scope placement 与 pivot 可 JSON round-trip', () => {
+    const input = {
+      type: 'scope' as const,
+      placement: {
+        target: { id: 'panel', anchor: { side: 'right' as const, fraction: 0.5 }, offset: [6, 2] },
+        selfAnchor: [8, 12],
+      },
+      transforms: [
+        { kind: 'scale' as const, x: 1.2, pivot: 'center' as const },
+        { kind: 'rotate' as const, degrees: 12, pivot: [8, 12] },
+      ],
+      children: [],
+    };
+
+    expect(ScopeSchema.parse(JSON.parse(JSON.stringify(input)))).toEqual(input);
+  });
 });
 
 describe('ScopeSchema 拒绝非法形态', () => {
@@ -164,6 +217,52 @@ describe('ScopeSchema 拒绝非法形态', () => {
       children: [],
     });
     expect(parsed.success).toBe(false);
+  });
+
+  it('placement 与 NodeTarget 都严格拒绝未知字段', () => {
+    expect(
+      ScopeSchema.safeParse({
+        type: 'scope',
+        placement: { target: [0, 0], bogus: true },
+        children: [],
+      }).success,
+    ).toBe(false);
+    expect(
+      ScopeSchema.safeParse({
+        type: 'scope',
+        placement: { target: { id: 'A', bogus: true } },
+        children: [],
+      }).success,
+    ).toBe(false);
+  });
+
+  it('placement target 拒绝 Polar / Offset / Between 与 path-relative 形态', () => {
+    const invalidTargets = [
+      { angle: 0, radius: 10 },
+      { of: 'A', offset: [1, 2] },
+      { between: ['A', 'B'], fraction: 0.5 },
+      { relative: [1, 2] },
+    ];
+
+    for (const target of invalidTargets) {
+      expect(
+        ScopeSchema.safeParse({
+          type: 'scope',
+          placement: { target },
+          children: [],
+        }).success,
+      ).toBe(false);
+    }
+  });
+
+  it('旧 position 字段被 strict schema 拒绝', () => {
+    expect(
+      ScopeSchema.safeParse({
+        type: 'scope',
+        position: { target: [0, 0] },
+        children: [],
+      }).success,
+    ).toBe(false);
   });
 });
 
@@ -277,29 +376,33 @@ describe('TransformSchema 各变体合法形态', () => {
     expect(parsed.success).toBe(true);
   });
 
-  it('rotate 含 cx/cy', () => {
+  it('rotate 接受统一 pivot', () => {
     const parsed = TransformSchema.safeParse({
       kind: 'rotate',
       degrees: 45,
-      cx: 10,
-      cy: 5,
+      pivot: 'center',
     });
     expect(parsed.success).toBe(true);
   });
 
-  it('rotate 缺省 cx/cy', () => {
+  it('rotate 缺省 pivot', () => {
     const parsed = TransformSchema.safeParse({ kind: 'rotate', degrees: 90 });
     expect(parsed.success).toBe(true);
   });
 
-  it('scale 含 y', () => {
-    const parsed = TransformSchema.safeParse({ kind: 'scale', x: 2, y: 3 });
+  it('scale 含 y 与 pivot', () => {
+    const parsed = TransformSchema.safeParse({ kind: 'scale', x: 2, y: 3, pivot: [4, 5] });
     expect(parsed.success).toBe(true);
   });
 
   it('scale 缺省 y', () => {
     const parsed = TransformSchema.safeParse({ kind: 'scale', x: 2 });
     expect(parsed.success).toBe(true);
+  });
+
+  it('rotate 旧 cx/cy 写法被严格拒绝', () => {
+    const parsed = TransformSchema.safeParse({ kind: 'rotate', degrees: 45, cx: 10, cy: 5 });
+    expect(parsed.success).toBe(false);
   });
 });
 

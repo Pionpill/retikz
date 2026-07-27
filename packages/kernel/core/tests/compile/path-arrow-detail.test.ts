@@ -60,7 +60,7 @@ describe('compile arrowDetail：默认行为（不传 arrowDetail）', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(path.arrowEnd?.shape).toBe('stealth');
     // 默认 baseSize 10、length/width 默认 6（scale 1）
     expect(path.arrowEnd?.baseSize).toBe(10);
@@ -90,7 +90,7 @@ describe('compile arrowDetail：默认行为（不传 arrowDetail）', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(path.arrowStart?.shape).toBe('stealth');
     expect(path.arrowEnd?.shape).toBe('stealth');
   });
@@ -124,8 +124,8 @@ describe('compile arrowDetail：默认行为（不传 arrowDetail）', () => {
         },
       ],
     };
-    const a = findPathPrim(compileToScene(irEmpty).primitives);
-    const b = findPathPrim(compileToScene(irNone).primitives);
+    const a = findPathPrim(compileToScene(irEmpty).scene.primitives);
+    const b = findPathPrim(compileToScene(irNone).scene.primitives);
     expect(a.arrowEnd).toEqual(b.arrowEnd);
   });
 
@@ -144,7 +144,7 @@ describe('compile arrowDetail：默认行为（不传 arrowDetail）', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(path.arrowStart).toBeUndefined();
     expect(path.arrowEnd).toBeUndefined();
   });
@@ -166,7 +166,7 @@ describe('compile arrowDetail：顶层默认 + start/end merge', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(path.arrowStart?.shape).toBe('stealth');
     expect(path.arrowEnd?.shape).toBe('stealth');
   });
@@ -186,7 +186,7 @@ describe('compile arrowDetail：顶层默认 + start/end merge', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     // shape 标识 + opacity 落 wrapper；scale 乘进 markerWidth（默认 length 6 × 1.5 = 9）
     expect(path.arrowStart).toMatchObject({ shape: 'stealth', opacity: 0.7 });
     expect(path.arrowEnd).toMatchObject({ shape: 'stealth', opacity: 0.7 });
@@ -215,7 +215,7 @@ describe('compile arrowDetail：顶层默认 + start/end merge', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(path.arrowStart?.shape).toBe('normal');
     expect(path.arrowEnd?.shape).toBe('stealth');
     // 异形 → refX 不同（normal 实心 0 / stealth 实心 3）
@@ -238,7 +238,7 @@ describe('compile arrowDetail：顶层默认 + start/end merge', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(path.arrowStart?.shape).toBe('stealth');
     expect(markerPaint(path.arrowStart)).toBe('red');
     expect(path.arrowEnd?.shape).toBe('stealth');
@@ -265,7 +265,7 @@ describe('compile arrowDetail：顶层默认 + start/end merge', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(path.arrowStart?.shape).toBe('stealth');
     expect(markerPaint(path.arrowStart)).toBe('red');
     expect(path.arrowEnd?.shape).toBe('stealth');
@@ -287,7 +287,7 @@ describe('compile arrowDetail：顶层默认 + start/end merge', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(path.arrowStart?.shape).toBe('stealth');
     expect(path.arrowEnd).toBeUndefined(); // arrow direction 不含 end → end 配置静默丢
   });
@@ -309,7 +309,7 @@ describe('compile arrowDetail：空心 shape silent fill ignore', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(path.arrowEnd?.shape).toBe('open');
     // 空心 shape 上 fill 被丢 → marker 无纯色 fill（red 不进 marker）
     expect(markerPaint(path.arrowEnd)).not.toBe('red');
@@ -330,7 +330,7 @@ describe('compile arrowDetail：空心 shape silent fill ignore', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(path.arrowEnd?.shape).toBe('open');
     // color 主导：blue 进 marker；fill='red' 被丢
     expect(markerPaint(path.arrowEnd)).toBe('blue');
@@ -353,7 +353,7 @@ describe('compile arrowDetail：空心 shape silent fill ignore', () => {
           },
         ],
       };
-      const path = findPathPrim(compileToScene(ir).primitives);
+      const path = findPathPrim(compileToScene(ir).scene.primitives);
       expect(markerPaint(path.arrowEnd)).not.toBe('red');
     },
   );
@@ -373,7 +373,7 @@ describe('compile arrowDetail：空心 shape silent fill ignore', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(markerPaint(path.arrowEnd)).toBe('red');
   });
 });
@@ -394,7 +394,7 @@ describe('compile arrowDetail：scale × length / width 解析进 wrapper 参数
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(path.arrowEnd?.markerWidth).toBeCloseTo(15, 5);
   });
 
@@ -413,7 +413,7 @@ describe('compile arrowDetail：scale × length / width 解析进 wrapper 参数
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(path.arrowEnd?.markerHeight).toBeCloseTo(16, 5);
   });
 });
@@ -434,7 +434,7 @@ describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lin
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     // 默认 length=6, scale=1, lineWidth=1.5：shrink = (8 + 0.75) × 6 / 10 = 5.25
     const last = path.commands[path.commands.length - 1];
     if (last.kind !== 'line') throw new Error('expected last to be line');
@@ -456,7 +456,7 @@ describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lin
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     const last = path.commands[path.commands.length - 1];
     if (last.kind !== 'line') throw new Error('expected last to be line');
     expect(last.to[0]).toBe(94.15);
@@ -477,7 +477,7 @@ describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lin
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     const last = path.commands[path.commands.length - 1];
     if (last.kind !== 'line') throw new Error('expected last to be line');
     expect(last.to[0]).toBe(94.75);
@@ -500,7 +500,7 @@ describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lin
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     const first = path.commands[0];
     const last = path.commands[path.commands.length - 1];
     if (first.kind !== 'move') throw new Error('expected first to be move');
@@ -547,7 +547,7 @@ describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lin
             ],
           },
         ],
-      }).primitives,
+      }).scene.primitives,
     );
     const last = path.commands[path.commands.length - 1];
     if (last.kind !== 'line') throw new Error('expected last to be line');

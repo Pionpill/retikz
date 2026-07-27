@@ -276,7 +276,7 @@ describe('lowerPlots (contract)', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [lineSpec] },
       { composites: lowerPlots({ sales: SALES }, opts) },
-    );
+    ).scene;
     expect(scene).toBeTruthy();
     expect(Array.isArray(scene.primitives)).toBe(true);
     expect(scene.primitives.length).toBeGreaterThan(0);
@@ -287,7 +287,7 @@ describe('lowerPlots (contract)', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [pointSpec()] },
       { composites: lowerPlots({ sales: SALES }, opts) },
-    );
+    ).scene;
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 
@@ -530,7 +530,7 @@ describe('lowerPlots interval/bar (contract)', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [barSpec()] },
       { composites: lowerPlots({ sales: SALES }, opts) },
-    );
+    ).scene;
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 
@@ -757,7 +757,7 @@ describe('lowerPlots mark paint', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, opts) },
-    );
+    ).scene;
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
@@ -786,7 +786,7 @@ describe('lowerPlots mark paint', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, opts) },
-    );
+    ).scene;
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
@@ -816,7 +816,7 @@ describe('lowerPlots mark paint', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, opts) },
-    );
+    ).scene;
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
@@ -848,7 +848,7 @@ describe('lowerPlots mark paint', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, opts) },
-    );
+    ).scene;
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
@@ -879,7 +879,7 @@ describe('lowerPlots mark paint', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, opts) },
-    );
+    ).scene;
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 });
@@ -1066,7 +1066,7 @@ describe('lowerPlots relation (contract)', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ s: SALES2 }, opts) },
-    );
+    ).scene;
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 });

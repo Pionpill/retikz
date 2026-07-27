@@ -30,12 +30,12 @@ const ir: IRScene = {
 
 describe('Tier 2 composite —— renderer 对照', () => {
   it('composite IR → Scene → svg 渲染出 rect', () => {
-    const scene = compileToScene(ir, { composites: [labeledBox] });
+    const scene = compileToScene(ir, { composites: [labeledBox] }).scene;
     expect(renderToSvgString(scene, { idPrefix: 'r' })).toContain('<rect');
   });
 
   it('同 Scene → canvas drawScene 消费、不抛、产绘制调用（svg / canvas 同 Scene）', () => {
-    const scene = compileToScene(ir, { composites: [labeledBox] });
+    const scene = compileToScene(ir, { composites: [labeledBox] }).scene;
     const calls: Array<string> = [];
     const ctx = new Proxy({} as CanvasRenderingContext2D, {
       get: () => () => {

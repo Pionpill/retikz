@@ -1,6 +1,6 @@
 # v0 Roadmap
 
-> 更新于 2026-07-19。本文件只记录总体路线，不再承载 alpha 级任务清单。
+> 更新于 2026-07-26。本文件只记录总体路线，不再承载 alpha 级任务清单。
 > 具体执行计划放在同目录 `v0.*.md`，设计决策放在 `packages/kernel/_notes/decisions/v0/`。
 
 ## 定位
@@ -17,7 +17,7 @@ v0 是 retikz 走向 1.0 前的验证期：证明它可以成为一个实用的�
 | v0.2 | 能力完善，支持扩展             | 补齐 Scope、样式继承、shape registry、结构化 target、Layout 命名、path shape sugar、paint resources、文本换行、pin、自定义箭头、path generator、path transform、marking、clipping、viewBox override、partway positioning 等能力。                         |
 | v0.3 | renderer 架构 + runtime + 交互 | renderer 拆分进 `@retikz/render`（子路径 `./svg` / `./canvas`）、新增 `@retikz/vanilla` 原生 runtime、React 双渲染模式、水合（SVG + Canvas 统一事件绑定）、Tier 2 支撑（可注册 composite 展开管线，`@retikz/plot` 为首个消费者）、时间轴动画（alpha.4）。 |
 | v0.4 | 纵向底座深化                   | math / tex、可嵌入 Tier 2、路径与 Scene 视觉、provider contract、Drawing Complete 和 adapter 公共面收敛；RC 阶段冻结公开 API。                                                                                                                            |
-| v0.5 | 下一轮机制候选                 | Scope 自身锚点、单轴路径连接、Node 文本自动对比色、Node label 包围盒间距、官方 Extension 包，以及 headless interaction / 增量编译等候选；进入实现前逐项完成 ADR 与完备性检查。                                                                            |
+| v0.5 | 跨图元布局与编译机制           | alpha.1 交付 Scope 自身锚点、单轴路径连接、Node 文本自动对比色、Node label 视觉盒间距、TeX 数学 profile、布局感知 Composite 与 typed artifacts；headless interaction 和 progressive compile 延期至后续版本重新立项。                                      |
 | v1+  | 领域包与更广生态               | plot（已起步，独立 `plot/` 版本线）/ graph / flow / math / advanced shape packs、更多 renderer / adapter、工具链与编辑体验放到核心契约稳定之后。                                                                                                          |
 
 ## 参考来源
@@ -26,7 +26,7 @@ v0 是 retikz 走向 1.0 前的验证期：证明它可以成为一个实用的�
 - v0.2 细节：`packages/kernel/_notes/decisions/v0/v0.2/roadmap.md` 与 `v0.2/*/roadmap.md`
 - v0.3 细节：`packages/kernel/_notes/decisions/v0/v0.3/roadmap.md` 与 `v0.3/*/roadmap.md`
 - v0.4 细节：`packages/kernel/_notes/decisions/v0/v0.4/roadmap.md` 与 `v0.4/*/roadmap.md`
-- v0.5 候选：`packages/kernel/_notes/decisions/v0/v0.5/roadmap.md`
+- v0.5 细节：`packages/kernel/_notes/decisions/v0/v0.5/roadmap.md`
 - ADR：`packages/kernel/_notes/decisions/v0/`
 - 底座对比分析：`packages/kernel/_notes/analysis/core-compare-analysis.md`
 

@@ -102,14 +102,30 @@ import { Node, Text } from '@retikz/react';
   ]}
 />
 
-### 样式与布局分工
+### 行颜色解析
 
-归一完成后，`<Text>` 标记就不再存在；后续由 `<Node>` 的文本布局统一处理所有行。缺省的 `font` 子字段继承 Node 块级字体，`fill` / `opacity` 只作用于当前行；测量、换行、对齐与行高仍由 Node 的块级配置负责。
+归一完成后，每一行沿同一套颜色优先级进入 Core。`<Text fill>` 是显式行色，直接覆盖 Node 默认；没有 `fill` 的行才继承 `Node.textColor`：
 
-因此 `<Text>` 只提供行级视觉字段。行级字体会参与该行宽度测量，但 `<Text>` 本身不能把一行拆成多个不同样式的片段，也不能单独覆盖 `align` 或 `lineHeight`；同一行需要多段样式时，使用 `text` prop 的 `{ runs }` LineSpec。
+<ComponentPreview files="text-contrast-flow" size="sm" hideCode />
+
+当 Node 使用 `NodeTextColor.Contrast` 时，Core 在样式级联后读取最终 `fill`。只有静态且有效不透明度为 1 的颜色参与 WCAG 相对明度比较，并解析成 `#000000` 或 `#ffffff`；缺省、半透明、gradient、`var()` 等无法闭合求值的背景使用固定 `currentColor`，同时发出 `TEXT_AUTO_CONTRAST_UNRESOLVED`。Node 的整体 `opacity` 不参与背景判断。
+
+行级 `font` 仍参与当前行的宽度测量；换行、`align` 与 `lineHeight` 继续由 Node 的块级配置负责。同一行需要多段样式时，使用 `text` prop 的 `{ runs }` LineSpec。
 
 <SourceLinks
   sources={[
+    {
+      label: '样式级联后解析',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 184,
+      endLine: 189,
+    },
+    {
+      label: 'Node 对比色解析',
+      path: 'packages/kernel/core/src/compile/node/text-color/resolve.ts',
+      startLine: 55,
+      endLine: 113,
+    },
     {
       label: 'Node 正文文本布局',
       path: 'packages/kernel/core/src/compile/node/content/layout.ts',

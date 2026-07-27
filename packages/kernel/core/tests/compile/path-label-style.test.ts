@@ -15,7 +15,7 @@ const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
 };
 /** 取首个 step label TextPrim（拍平 group，找 text） */
 const labelOf = (ir: IRScene): TextPrim | undefined =>
-  flatten(compileToScene(ir).primitives).find((p): p is TextPrim => p.type === 'text');
+  flatten(compileToScene(ir).scene.primitives).find((p): p is TextPrim => p.type === 'text');
 
 /** 构造单 line 段 path（可选 path 级字段 + label 字段） */
 const pathWithLabel = (pathProps: Record<string, unknown>, label: Record<string, unknown>): IRScene => ({

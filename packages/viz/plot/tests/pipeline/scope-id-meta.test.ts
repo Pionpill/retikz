@@ -479,7 +479,7 @@ describe('scope id/meta — interaction', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, { ...opts, provenance: true, datumProvenance: true }) },
-    );
+    ).scene;
     const sceneMetas = scene.primitives.flatMap(p => collectSceneMeta(p as ScenePrimLike));
     // 至少 datum node 的 meta 被 stamp 进 Scene 图元
     const datumMetas = sceneMetas.filter(
@@ -498,11 +498,11 @@ describe('scope id/meta — interaction', () => {
     const sceneOff = compileToScene(
       { version: 1, type: 'scene', children: [spec()] },
       { composites: lowerPlots({ sales: SALES }, opts) },
-    );
+    ).scene;
     const sceneOn = compileToScene(
       { version: 1, type: 'scene', children: [spec()] },
       { composites: lowerPlots({ sales: SALES }, { ...opts, provenance: true, datumProvenance: true }) },
-    );
+    ).scene;
     // 图元数量与 viewBox 不因 meta 改变
     const countPrims = (prims: Array<ScenePrimLike>): number =>
       prims.reduce((n, p) => n + 1 + (Array.isArray(p.children) ? countPrims(p.children) : 0), 0);
@@ -521,7 +521,7 @@ describe('scope id/meta — interaction', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [barSpec({ id: 'sales' })] },
       { composites: lowerPlots({ sales: SALES }, { ...opts, provenance: true }) },
-    );
+    ).scene;
     const groups: Array<ScenePrimLike> = [];
     const walk = (p: ScenePrimLike): void => {
       if (p.type === 'group') groups.push(p);
@@ -604,7 +604,7 @@ describe('scope id/meta — interaction', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [left, right] },
       { composites: lowerPlots(datasets, { ...opts, provenance: true }) },
-    );
+    ).scene;
     const ids = scene.primitives.flatMap(primitive => collectSceneIds(primitive as ScenePrimLike));
     expect(ids.filter(id => id.endsWith('legend.color'))).toEqual(['left.legend.color', 'right.legend.color']);
   });

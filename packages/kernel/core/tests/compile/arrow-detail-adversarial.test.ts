@@ -58,7 +58,7 @@ describe('adv 1: 字段名 = arrowDetail（旧字段 arrowShape 不偷偷生效�
         },
       ],
     } as unknown as IRScene;
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(path.arrowEnd?.shape).toBe('stealth');
   });
 });
@@ -79,7 +79,7 @@ describe('adv 2: merge 语义 = 逐字段（不是"完全替换"）', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     // start.shape 继承顶层 stealth；color=red 物化进 marker
     expect(path.arrowStart?.shape).toBe('stealth');
     expect(markerPaint(path.arrowStart)).toBe('red');
@@ -103,7 +103,7 @@ describe('adv 2: merge 语义 = 逐字段（不是"完全替换"）', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     // start.shape=diamond（显式）；scale=2 继承顶层 → markerWidth = 默认 6 × 2 = 12；color=blue 进 marker
     expect(path.arrowStart?.shape).toBe('diamond');
     expect(path.arrowStart?.markerWidth).toBeCloseTo(12, 5);
@@ -125,7 +125,7 @@ describe('adv 2: merge 语义 = 逐字段（不是"完全替换"）', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     // end={} 继承全部顶层：shape stealth、scale 1.5（→ markerWidth 9）、color red（进 marker）
     expect(path.arrowEnd?.shape).toBe('stealth');
     expect(path.arrowEnd?.markerWidth).toBeCloseTo(9, 5);
@@ -147,7 +147,7 @@ describe('adv 2: merge 语义 = 逐字段（不是"完全替换"）', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(path.arrowStart?.shape).toBe('stealth');
     expect(path.arrowEnd?.shape).toBe('circle');
   });
@@ -169,7 +169,7 @@ describe('adv 3: scale × length / width 关系（compile 已乘进 markerWidth 
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(path.arrowEnd?.markerWidth).toBeCloseTo(15, 5);
   });
 
@@ -188,7 +188,7 @@ describe('adv 3: scale × length / width 关系（compile 已乘进 markerWidth 
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(path.arrowEnd?.markerHeight).toBeCloseTo(16, 5);
   });
 });
@@ -211,7 +211,7 @@ describe('adv 4: 空心 shape silent fill no-op（4 子象限：实/空 × 有/�
           },
         ],
       };
-      const path = findPathPrim(compileToScene(ir).primitives);
+      const path = findPathPrim(compileToScene(ir).scene.primitives);
       // 空心 fill 被丢：red 不进 marker
       expect(markerPaint(path.arrowEnd)).not.toBe('red');
       expect(path.arrowEnd?.shape).toBe(shape);
@@ -233,7 +233,7 @@ describe('adv 4: 空心 shape silent fill no-op（4 子象限：实/空 × 有/�
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(markerPaint(path.arrowEnd)).toBe('red');
   });
 
@@ -252,7 +252,7 @@ describe('adv 4: 空心 shape silent fill no-op（4 子象限：实/空 × 有/�
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(path.arrowEnd?.shape).toBe('open');
     expect(markerPaint(path.arrowEnd)).not.toBe('red');
   });
@@ -276,7 +276,7 @@ describe('adv 4: 空心 shape silent fill no-op（4 子象限：实/空 × 有/�
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     // start 实心 → fill 保留进 marker
     expect(markerPaint(path.arrowStart)).toBe('red');
     // end 空心 → fill silent drop（red 不进 marker）
@@ -300,7 +300,7 @@ describe('adv 5: 起末异形产 2 不同 marker spec', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(path.arrowStart?.shape).not.toBe(path.arrowEnd?.shape);
   });
 
@@ -323,7 +323,7 @@ describe('adv 5: 起末异形产 2 不同 marker spec', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     // 解析后的颜色物化进各自 marker 几何
     expect(markerPaint(path.arrowStart)).toBe('red');
     expect(markerPaint(path.arrowEnd)).toBe('blue');
@@ -375,7 +375,7 @@ describe('adv 7: arrowDetail 与 arrow direction 交互（单端配置不漏到�
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(path.arrowStart).toBeUndefined();
     // end 走顶层默认（顶层无 shape 字段 → 默认 stealth）
     expect(path.arrowEnd?.shape).toBe('stealth');
@@ -396,7 +396,7 @@ describe('adv 7: arrowDetail 与 arrow direction 交互（单端配置不漏到�
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(path.arrowStart).toBeUndefined();
     expect(path.arrowEnd).toBeUndefined();
   });
@@ -415,7 +415,7 @@ describe('adv 7: arrowDetail 与 arrow direction 交互（单端配置不漏到�
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).primitives);
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
     expect(path.arrowStart).toBeUndefined();
     expect(path.arrowEnd).toBeUndefined();
   });

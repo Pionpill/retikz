@@ -108,7 +108,7 @@ children 模式有一个明确边界：JSX children 经常在每次 React render
 
 后续不会仅凭“支持 JSON Patch”就引入公开的增量 API。Kernel 会先从真实大图或交互场景量化全量编译成本，优先评估 bailout、缓存或 domain lowering 是否足够；只有性能证据成立后，才进一步设计 IR diff、局部 compile、Scene patch、concurrent 调度，以及 SVG / Canvas 能否共享同一更新语义。
 
-Progressive IR / 增量编译目前只是 v0.5 的待证据候选，不代表已排期或已经冻结 API。
+Progressive IR / 增量编译仍需未来版本基于真实性能证据另行排期，不代表已经冻结 API。
 
 <SourceLinks
   sources={[
@@ -130,12 +130,6 @@ Progressive IR / 增量编译目前只是 v0.5 的待证据候选，不代表已
       startLine: 3,
       endLine: 27,
     },
-    {
-      label: 'v0.5 Progressive IR 候选状态',
-      path: 'packages/kernel/_notes/decisions/v0/v0.5/roadmap.md',
-      startLine: 1,
-      endLine: 23,
-    },
   ]}
 />
 
@@ -145,15 +139,15 @@ Progressive IR / 增量编译目前只是 v0.5 的待证据候选，不代表已
 
 <ComponentPreview files="react-to-scene" size="xs" hideCode />
 
-| 阶段                       | 所有者          | 做什么                                                                  |
-| -------------------------- | --------------- | ----------------------------------------------------------------------- |
-| Kernel / Sugar JSX         | `@retikz/react` | 收集 props 与 children；Sugar 先展开为 Kernel                           |
-| `buildIRWithContributions` | `@retikz/react` | 遍历组件树，生成 `IRScene`，同时收集可嵌入 Tier 2 的贡献                |
-| `IRScene`                  | `@retikz/core`  | JSON 可序列化的绘图契约，不包含 React element、hook 或 DOM              |
-| `compileToScene`           | `@retikz/core`  | lowering composite，解析 registry、引用、几何、布局、资源与动画         |
-| `Scene`                    | `@retikz/core`  | 后端中立的 primitives、layout、resources 与可选根动画，交给 render 消费 |
+| 阶段                       | 所有者          | 做什么                                                      |
+| -------------------------- | --------------- | ----------------------------------------------------------- |
+| Kernel / Sugar JSX         | `@retikz/react` | 收集 props 与 children；Sugar 先展开为 Kernel               |
+| `buildIRWithContributions` | `@retikz/react` | 遍历组件树，生成 `IRScene`，同时收集可嵌入 Tier 2 的贡献    |
+| `IRScene`                  | `@retikz/core`  | JSON 可序列化的绘图契约，不包含 React element、hook 或 DOM  |
+| `compileToScene`           | `@retikz/core`  | 处理 composite，解析 registry、引用、几何、布局、资源与动画 |
+| `CompileResult`            | `@retikz/core`  | 同次返回后端中立 `scene` 与 immutable typed `artifacts`     |
 
-`Layout` 会把文本测量器、Definition registries、TeX lowerer 等宿主能力作为 compile options 注入，但这些选项不会把 React 写进 IR 或 Scene。直接传 `ir` prop 时会跳过 JSX builder，从同一个 `compileToScene` 入口继续。
+`Layout` 会把文本测量器、Definition registries、TeX lowerer 等宿主能力作为 compile options 注入，但这些选项不会把 React 写进 IR 或 Scene。直接传 `ir` prop 时会跳过 JSX builder，从同一个 `compileToScene` 入口继续。`artifacts` prop 请求 opt-in 产物，`onArtifacts` 在 React commit 后接收同次 compile 的 immutable artifacts；不会为通知再编译一次。
 
 <SourceLinks
   sources={[
@@ -178,8 +172,8 @@ Progressive IR / 增量编译目前只是 v0.5 的待证据候选，不代表已
     {
       label: 'Core IR 编译为 Scene',
       path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 18,
-      endLine: 42,
+      startLine: 25,
+      endLine: 53,
     },
   ]}
 />
@@ -200,8 +194,8 @@ Scene 已经没有 React 组件语义。`@retikz/render` 负责把它执行到�
     {
       label: 'Layout 的 SVG / Canvas 分流',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 479,
-      endLine: 527,
+      startLine: 487,
+      endLine: 544,
     },
     {
       label: 'SvgNode 到 React element 的薄映射',

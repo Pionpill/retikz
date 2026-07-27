@@ -1,4 +1,4 @@
-import { CoordinateSchema, MoveStepSchema, RelativeTargetSchema, SceneSchema } from '@retikz/core';
+import { AxisLineStepSchema, CoordinateSchema, MoveStepSchema, RelativeTargetSchema, SceneSchema } from '@retikz/core';
 import {
   CoordinateSchema as PlotCoordinateSchema,
   EncodingSchema,
@@ -49,6 +49,7 @@ describe('SCHEMA_REGISTRY', () => {
     expect(lookupSchema(SceneSchema)?.label).toBe('Scene');
     expect(lookupSchema(CoordinateSchema)?.url).toBe('/kernel/reference/schema/entity#coordinate');
     expect(lookupSchema(MoveStepSchema)?.url).toBe('/kernel/reference/schema/path#move');
+    expect(lookupSchema(AxisLineStepSchema)?.url).toBe('/kernel/reference/schema/path#axis-line');
     expect(lookupSchema(RelativeTargetSchema)?.url).toBe('/kernel/reference/schema/path#relative');
     expect(lookupSchema(TableSpecSchema)?.url).toBe('/viz/table/reference/contract-table#tablespecschema');
   });

@@ -140,7 +140,7 @@ describe('compile ribbon', () => {
   });
 
   it('fixed-width ribbon lowers a straight centerline to one filled closed path', () => {
-    const compiled = compileToScene(scene([ribbon()]), { padding: 0 });
+    const compiled = compileToScene(scene([ribbon()]), { padding: 0 }).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.fill).toBe('currentColor');
@@ -155,7 +155,7 @@ describe('compile ribbon', () => {
   });
 
   it('omitted samples lowers a straight centerline through path commands instead of default sampling', () => {
-    const compiled = compileToScene(scene([ribbonWithoutSamples()]), { padding: 0 });
+    const compiled = compileToScene(scene([ribbonWithoutSamples()]), { padding: 0 }).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.commands).toEqual([
@@ -178,7 +178,7 @@ describe('compile ribbon', () => {
         }),
       ]),
       { padding: 0 },
-    );
+    ).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.commands.map(command => command.kind)).toEqual(['move', 'quad', 'line', 'quad', 'close']);
@@ -186,7 +186,7 @@ describe('compile ribbon', () => {
 
   it('samples true uses the default fixed sampling count', () => {
     const parsed = RibbonSchema.parse(ribbon({ samples: true }));
-    const compiled = compileToScene(scene([parsed]), { padding: 0 });
+    const compiled = compileToScene(scene([parsed]), { padding: 0 }).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.commands).toHaveLength(129);
@@ -208,7 +208,7 @@ describe('compile ribbon', () => {
         }),
       ]),
       { padding: 0 },
-    );
+    ).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.commands).toHaveLength(129);
@@ -218,7 +218,7 @@ describe('compile ribbon', () => {
     const compiled = compileToScene(
       scene([ribbon({ width: undefined, start: { width: 4 }, end: { width: 2 }, samples: 2 })]),
       { padding: 0 },
-    );
+    ).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.commands).toEqual([
@@ -246,7 +246,7 @@ describe('compile ribbon', () => {
         }),
       ]),
       { padding: 0 },
-    );
+    ).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.commands).toEqual([
@@ -275,7 +275,7 @@ describe('compile ribbon', () => {
         }),
       ]),
       { padding: 0 },
-    );
+    ).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.commands[0]).toEqual({ kind: 'move', to: [0, 2] });
@@ -297,7 +297,7 @@ describe('compile ribbon', () => {
         }),
       ]),
       { padding: 0 },
-    );
+    ).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.commands[0]).toEqual({ kind: 'move', to: [0, 2] });
@@ -316,7 +316,7 @@ describe('compile ribbon', () => {
         }),
       ]),
       { padding: 0 },
-    );
+    ).scene;
     const prim = pathPrim(compiled.primitives[0]);
     const points = prim.commands.flatMap(command => ('to' in command ? [command.to] : []));
 
@@ -337,7 +337,7 @@ describe('compile ribbon', () => {
         }),
       ]),
       { padding: 0 },
-    );
+    ).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.commands[0]).toEqual({ kind: 'move', to: [0, 2] });
@@ -353,7 +353,7 @@ describe('compile ribbon', () => {
         }),
       ]),
       { padding: 0 },
-    );
+    ).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.commands).toEqual([
@@ -374,7 +374,7 @@ describe('compile ribbon', () => {
         }),
       ]),
       { padding: 0 },
-    );
+    ).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.commands).toEqual([
@@ -387,8 +387,8 @@ describe('compile ribbon', () => {
   });
 
   it('aligns centerline ribbons to the left or right side', () => {
-    const left = pathPrim(compileToScene(scene([ribbon({ align: 'left' })]), { padding: 0 }).primitives[0]);
-    const right = pathPrim(compileToScene(scene([ribbon({ align: 'right' })]), { padding: 0 }).primitives[0]);
+    const left = pathPrim(compileToScene(scene([ribbon({ align: 'left' })]), { padding: 0 }).scene.primitives[0]);
+    const right = pathPrim(compileToScene(scene([ribbon({ align: 'right' })]), { padding: 0 }).scene.primitives[0]);
 
     expect(left.commands).toEqual([
       { kind: 'move', to: [0, 4] },
@@ -410,7 +410,7 @@ describe('compile ribbon', () => {
     const prim = pathPrim(
       compileToScene(scene([ribbon({ start: { cap: 'square' }, end: { cap: 'square' } })]), {
         padding: 0,
-      }).primitives[0],
+      }).scene.primitives[0],
     );
 
     expect(prim.commands).toEqual([
@@ -433,7 +433,7 @@ describe('compile ribbon', () => {
           }),
         ]),
         { padding: 0 },
-      ).primitives[0],
+      ).scene.primitives[0],
     );
 
     expect(prim.commands[9]).toEqual({ kind: 'line', to: [10, -4] });
@@ -449,7 +449,7 @@ describe('compile ribbon', () => {
       start: { cap: { type: 'arc', center: [0, 0], radius: 2, sweep: 'long' } },
       end: { cap: { type: 'arc', center: [10, 0], radius: 2 } },
     });
-    const prim = pathPrim(compileToScene(scene([parsed]), { padding: 0 }).primitives[0]);
+    const prim = pathPrim(compileToScene(scene([parsed]), { padding: 0 }).scene.primitives[0]);
 
     expect(prim.commands).toEqual([
       { kind: 'move', to: [0, 2] },
@@ -481,14 +481,14 @@ describe('compile ribbon', () => {
       start: { cap: { type: 'arc', center: [0, 0], radius: 3 } },
     });
 
-    expect(() => compileToScene(scene([parsed]), { padding: 0 })).toThrow(/arc cap/);
+    expect(() => compileToScene(scene([parsed]), { padding: 0 }).scene).toThrow(/arc cap/);
   });
 
   it('uses fixed sampling config as the samples shorthand replacement', () => {
     const prim = pathPrim(
       compileToScene(scene([ribbon({ samples: undefined, sampling: { kind: 'fixed', samples: 3 } })]), {
         padding: 0,
-      }).primitives[0],
+      }).scene.primitives[0],
     );
 
     expect(prim.commands).toHaveLength(7);
@@ -514,7 +514,7 @@ describe('compile ribbon', () => {
             }),
           ]),
           { padding: 0 },
-        ).primitives[0],
+        ).scene.primitives[0],
       ).commands;
 
     expect(commandsFor([0, 1], [0, 1])).toEqual(commandsFor(90, 90));
@@ -527,12 +527,12 @@ describe('compile ribbon', () => {
       { type: 'step', kind: 'curve', control: [30, -40], to: [80, 20] },
     ];
     const withoutDirection = pathPrim(
-      compileToScene(scene([ribbon({ children, samples: 5 })]), { padding: 0 }).primitives[0],
+      compileToScene(scene([ribbon({ children, samples: 5 })]), { padding: 0 }).scene.primitives[0],
     );
     const withDirection = pathPrim(
       compileToScene(scene([ribbon({ children, samples: 5, start: { direction: 0 }, end: { direction: 0 } })]), {
         padding: 0,
-      }).primitives[0],
+      }).scene.primitives[0],
     );
 
     expect(ribbonCenterAt(withoutDirection, 5, 1)[1]).toBeLessThan(0);
@@ -554,7 +554,7 @@ describe('compile ribbon', () => {
           }),
         ]),
         { padding: 0 },
-      ).primitives[0],
+      ).scene.primitives[0],
     );
 
     expect(ribbonCenterAt(prim, 5, 1)[1]).toBe(0);
@@ -574,7 +574,7 @@ describe('compile ribbon', () => {
         }),
       ]),
       { padding: 0 },
-    );
+    ).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.commands).toEqual([
@@ -599,7 +599,7 @@ describe('compile ribbon', () => {
         }),
       ]),
       { padding: 0 },
-    );
+    ).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.commands[1]).toEqual({ kind: 'line', to: [14.04, 1.98] });
@@ -621,7 +621,7 @@ describe('compile ribbon', () => {
         }),
       ]),
       { ribbonWidthProfiles: [taper], padding: 0 },
-    );
+    ).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.commands[1]).toEqual({ kind: 'line', to: [10, 0] });
@@ -629,7 +629,7 @@ describe('compile ribbon', () => {
   });
 
   it('throws for an unregistered width profile', () => {
-    expect(() => compileToScene(scene([ribbon({ width: { kind: 'profile', name: 'missing' } })]))).toThrow(/missing/);
+    expect(() => compileToScene(scene([ribbon({ width: { kind: 'profile', name: 'missing' } })])).scene).toThrow(/missing/);
   });
 
   it('throws when a registered width profile returns a non-finite width', () => {
@@ -641,7 +641,7 @@ describe('compile ribbon', () => {
     expect(() =>
       compileToScene(scene([ribbon({ width: { kind: 'profile', name: 'bad' } })]), {
         ribbonWidthProfiles: [bad],
-      }),
+      }).scene,
     ).toThrow(/profile "bad"/);
   });
 
@@ -662,7 +662,7 @@ describe('compile ribbon', () => {
     expect(RibbonSchema.parse(boundary)).toEqual(boundary);
     expect(() => RibbonSchema.parse({ ...boundary, width: 4 })).toThrow(/Boundary/);
 
-    const prim = pathPrim(compileToScene(scene([boundary]), { padding: 0 }).primitives[0]);
+    const prim = pathPrim(compileToScene(scene([boundary]), { padding: 0 }).scene.primitives[0]);
 
     expect(prim.commands).toEqual([
       { kind: 'move', to: [0, 0] },
@@ -686,7 +686,7 @@ describe('compile ribbon', () => {
             ],
           }),
         ]),
-      ),
+      ).scene,
     ).toThrow(/open/);
   });
 
@@ -701,7 +701,7 @@ describe('compile ribbon', () => {
             ],
           }),
         ]),
-      ),
+      ).scene,
     ).toThrow(/zero length/);
   });
 
@@ -719,7 +719,7 @@ describe('compile ribbon', () => {
           fill: conic,
         }),
       ]),
-    );
+    ).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
@@ -743,7 +743,7 @@ describe('compile ribbon', () => {
         }),
       ]),
       { padding: 0 },
-    );
+    ).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.fill).toBe('#60a5fa');
@@ -757,7 +757,7 @@ describe('compile ribbon', () => {
   it('uses ribbon zIndex when sorting lowered path primitives', () => {
     const compiled = compileToScene(scene([ribbon({ id: 'front', zIndex: 2 }), ribbon({ id: 'back', zIndex: 0 })]), {
       padding: 0,
-    });
+    }).scene;
 
     expect(compiled.primitives.map(prim => prim.id)).toEqual(['back', 'front']);
   });

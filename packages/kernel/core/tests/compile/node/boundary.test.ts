@@ -231,7 +231,7 @@ const lineEndpointWithNode = (
       },
     ],
   };
-  const compiled = compileToScene(ir);
+  const compiled = compileToScene(ir).scene;
   // star emit 产含 close 的多边形 PathPrim；连接线无 close，以此区分
   const prim = findConnectionPath(compiled.primitives);
   if (!prim) throw new Error('expected connection PathPrim');
@@ -349,8 +349,8 @@ describe('public export + remaining quadrants', () => {
         },
       ],
     });
-    const sceneShape = core.compileToScene(makeIr('shape'));
-    const sceneCircle = core.compileToScene(makeIr('circle'));
+    const sceneShape = core.compileToScene(makeIr('shape')).scene;
+    const sceneCircle = core.compileToScene(makeIr('circle')).scene;
     // 取连接线的 line 端点（无 close 的路径）
     const endpointOf = (prims: ReadonlyArray<core.ScenePrimitive>): [number, number] => {
       const path = prims
@@ -383,9 +383,9 @@ describe('public export + remaining quadrants', () => {
         },
       ],
     });
-    const layoutDefault = core.compileToScene(makeIr(undefined)).layout;
-    const layoutShape = core.compileToScene(makeIr('shape')).layout;
-    const layoutCircle = core.compileToScene(makeIr('circle')).layout;
+    const layoutDefault = core.compileToScene(makeIr(undefined)).scene.layout;
+    const layoutShape = core.compileToScene(makeIr('shape')).scene.layout;
+    const layoutCircle = core.compileToScene(makeIr('circle')).scene.layout;
     // layout 由视觉 shape 决定，boundary 只影响连接面路由，与 layout 无关
     expect(layoutShape).toEqual(layoutDefault);
     expect(layoutCircle).toEqual(layoutDefault);
@@ -453,7 +453,7 @@ describe('public export + remaining quadrants', () => {
       ],
     };
     expect(() => core.compileToScene(ir)).not.toThrow();
-    const scene = core.compileToScene(ir);
+    const scene = core.compileToScene(ir).scene;
     // 产出包含路径
     const paths = scene.primitives.filter(p => p.type === 'path');
     expect(paths.length).toBeGreaterThan(0);

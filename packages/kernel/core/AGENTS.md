@@ -16,7 +16,7 @@
 
 - 不准 import `react` / `react-dom`；React 内容属于 `@retikz/react`。
 - 不准依赖 DOM API（`document` / `window` / `canvas` / `HTMLElement` 等）；浏览器能力由 adapter 或 render 包注入。
-- 运行时依赖只允许 `@retikz/math` 与 `zod`；新增依赖必须先说明理由。
+- 运行时依赖只允许 `@retikz/runtime`、`@retikz/math` 与 `zod`；新增依赖必须先说明理由。
 - 任何可能进入 IR 的数据都必须 JSON 可序列化，禁止函数、ref、closure、class 实例。
 - `compileToScene` 必须保持纯函数：相同 IR + options 产生相同 Scene；禁止 `Math.random()`、`Date.now()`、module-level mutable state。
 

@@ -99,6 +99,18 @@ describe('Draw: 基础展开', () => {
 });
 
 describe('Draw: 各 step kind 分派', () => {
+  it('horizontalTo / verticalTo 显式映射为等价 axis-line Step', () => {
+    const sugarIR = ir(<Draw way={[[0, 0], { horizontalTo: 'target.center' }, { verticalTo: [40, 60] }]} />);
+    const kernelIR = ir(
+      <Path>
+        <Step kind="move" to={[0, 0]} />
+        <Step kind="axis-line" axis="horizontal" to="target.center" />
+        <Step kind="axis-line" axis="vertical" to={[40, 60]} />
+      </Path>,
+    );
+    expect(sugarIR.children).toEqual(kernelIR.children);
+  });
+
   it('cycle 算子 → kind=cycle', () => {
     const out = ir(<Draw way={['a', 'b', DrawWay.Cycle]} />);
     const steps = (out.children[0] as { children: Array<{ kind: string }> }).children;
@@ -109,6 +121,17 @@ describe('Draw: 各 step kind 分派', () => {
     const out = ir(<Draw way={['a', '-|', 'b']} />);
     const steps = (out.children[0] as { children: Array<{ kind: string; via?: string }> }).children;
     expect(steps[1]).toMatchObject({ kind: 'fold', via: '-|', to: { id: 'b' } });
+  });
+
+  it('三段折角配置对象与手写 Kernel Step 等价', () => {
+    const sugarIR = ir(<Draw way={['a', { via: '-|-', fraction: 0.3 }, 'b']} />);
+    const kernelIR = ir(
+      <Path>
+        <Step kind="move" to="a" />
+        <Step kind="fold" via="-|-" fraction={0.3} to="b" />
+      </Path>,
+    );
+    expect(sugarIR.children).toEqual(kernelIR.children);
   });
 
   it('curve 算子 → kind=curve + control', () => {

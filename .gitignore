@@ -137,6 +137,7 @@ temp/
 TODO.md
 local/
 index.html
+!apps/bench/index.html
 
 # 本地分析 / 报告 / 计划产物，不入库
 notes/reports/
@@ -161,3 +162,6 @@ apps/docs/public/llms/
 
 # eval 运行产物（报告不入库，目录结构靠 .gitkeep 保留）
 apps/eval/results/*.md
+
+# bench 运行产物（时间报告与 baseline 候选不入库）
+apps/bench/results/

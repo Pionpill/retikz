@@ -15,6 +15,12 @@ export const NodeTextAlign = {
   End: 'end',
 } as const;
 
+/** Node 文字颜色的宿主专用关键字 */
+export const NodeTextColor = {
+  /** 根据静态不透明 fill 自动选择黑色或白色 */
+  Contrast: 'contrast',
+} as const;
+
 /** 节点标签相对节点的位置关键字 */
 export const NodeLabelPosition = {
   ...Anchor,
