@@ -43,7 +43,7 @@ export type PlotHostLineageMetadataOptions = {
 export type PlotLineageOptions = {
   /** 数据层链路；默认只启用 data sourceIdentity + transformSteps */
   data?: DataLineageOptions;
-  /** 记录 plot id、data reference、mark id / type / index */
+  /** 是否补充 mark id；plot id、data reference、mark index / type 属于最小骨架，始终记录 */
   markIdentity?: boolean;
   /** 记录 mark encoding 消费的字段和 channel，不记录每行值 */
   markEncoding?: boolean;

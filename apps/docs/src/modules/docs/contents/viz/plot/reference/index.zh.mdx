@@ -1,0 +1,73 @@
+---
+title: API 参考
+description: 查询 Plot 的 JSON 契约，以及 React、Vanilla、lowering 与运行时产物如何接入同一条执行管线。
+---
+
+API 参考用于查询稳定契约，不承担入门教学。十个契约页分别覆盖 Plot Tier 2 IR 的公开 schema；运行时总览说明宿主如何构造规格、注入数据与 Definition、下沉 Core IR，并取得渲染结果或旁路产物。
+
+> 这里是参考层。开始绘图请阅读[绘图语法](/viz/plot)，理解运行审计请阅读[溯源](/viz/plot/lineage)。
+
+## 职责一览
+
+| 主题          | 职责                             | 何时查阅                          |
+| ------------- | -------------------------------- | --------------------------------- |
+| 契约 - 规格   | 根规格、坐标视图与组合           | 生成或校验整份 `IRPlotSpec`       |
+| 契约 - 编码   | 字段、常量与通道绑定             | 把数据列映射到位置和视觉变量      |
+| 契约 - 变换   | Plot 领域的有序数据变换          | 声明堆叠、分箱、密度或趋势操作    |
+| 契约 - 图元   | 图元、关系、参考线与路径闭合     | 选择几何输出及其精确配置          |
+| 契约 - 比例尺 | 位置、序数、径向和颜色比例尺     | 校验 domain、range 与比例尺参数   |
+| 契约 - 坐标系 | 一维、二维与自定义坐标操作       | 确定位置角色与比例尺归属          |
+| 契约 - 辅助   | 坐标轴、网格、刻度、标题与图例   | 配置辅助信息和精确组件            |
+| 契约 - 布局   | 外边距、标签放置与空间预留       | 控制 Plot 外框及静态文本          |
+| 契约 - 图层   | 语义图层的 zIndex 覆盖           | 调整下沉图元的叠放顺序            |
+| 契约 - 主题   | 背景、字体、轴、图例与色板默认值 | 创建 JSON-safe 的整图视觉默认值   |
+| 运行时总览    | 宿主入口、lowering、Scene 与旁路 | 集成 React、Vanilla、SSR 或工具链 |
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/reference/plot">
+    <span className="font-semibold">契约 - 规格</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">根规格、坐标视图与组合 schema</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/reference/encoding">
+    <span className="font-semibold">契约 - 编码</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">字段、常量与通道绑定 schema</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/reference/transform">
+    <span className="font-semibold">契约 - 变换</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">堆叠、分箱、派生、密度与趋势 schema</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/reference/mark">
+    <span className="font-semibold">契约 - 图元</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">点、路径、区间、参考与关系 schema</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/reference/scale">
+    <span className="font-semibold">契约 - 比例尺</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">位置、序数、径向与颜色映射 schema</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/reference/coordinate">
+    <span className="font-semibold">契约 - 坐标系</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">直角、极坐标、一维与自定义 schema</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/reference/guide">
+    <span className="font-semibold">契约 - 辅助</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">坐标轴、网格、刻度、标题与图例 schema</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/reference/layout">
+    <span className="font-semibold">契约 - 布局</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">外边距、静态标签和放置 schema</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/reference/layer">
+    <span className="font-semibold">契约 - 图层</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">语义图层叠放顺序 schema</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/reference/theme">
+    <span className="font-semibold">契约 - 主题</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">整图视觉默认值与色板 schema</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/reference/runtime">
+    <span className="font-semibold">运行时总览</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">宿主入口、lowering、Core 编译与旁路产物</span>
+  </LinkedCard>
+</div>

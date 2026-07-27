@@ -1,84 +1,130 @@
 import type { FC } from 'react';
 
-import { Axis, IntervalMark, Plot, RelationMark } from '@retikz/plot-react';
+import { Axis, IntervalMark, Plot, RelationMark, Scale } from '@retikz/plot-react';
 
+import { defineControlledPreview } from '@/modules/docs/preview';
+
+import {
+  previewControlContract,
+  RELATION_INTERVAL_CONTROL_IDS,
+  relationIntervalControls,
+} from './relation-interval.controls';
 import { intervalRelations } from './relation-interval.data';
 
-const Demo: FC = () => (
-  <Plot data={intervalRelations} width={620} height={320} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Axis dimension="x" tickLabels={false} />
-    <Axis dimension="y" grid ticks={{ count: 4 }} />
-    <IntervalMark
-      x="slot"
-      y="value"
-      color="phase"
-      stroke="#ffffff"
-      strokeWidth={0.8}
-      label="label"
-      labelPosition="top"
-      labelDistance={4}
-      labelTextColor="#0f172a"
-      labelFont={{ size: 10, weight: 'bold' }}
-    />
-    <RelationMark
-      transform={[
-        {
-          kind: 'relate',
-          groupBy: ['pair'],
-          source: { selector: { kind: 'min', by: 'decreaseOrder' }, fields: { x: 'slot', y: 'value', viaY: 'routeY' } },
-          target: { selector: { kind: 'max', by: 'decreaseOrder' }, fields: { x: 'slot', y: 'value' } },
-          measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
-        },
-      ]}
-      source={{ project: { x: 'sourceX', y: 'sourceY' } }}
-      target={{ project: { x: 'targetX', y: 'targetY' } }}
-      style={{
-        color: { kind: 'constant', value: '#b91c1c' },
-        strokeWidth: { kind: 'constant', value: 1.1 },
-      }}
-      path={{
-        via: [{ project: { x: 'sourceX', y: 'sourceViaY' } }],
-        routing: { kind: 'orthogonal', via: '-|', labelStep: 'main' },
-        label: {
-          text: { field: 'deltaLabel' },
-          position: 0.5,
-          sloped: true,
-          textColor: '#7f1d1d',
-          font: { size: 10, weight: 'bold' },
-        },
-        options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], dashPattern: [5, 4] },
-      }}
-    />
-    <RelationMark
-      transform={[
-        {
-          kind: 'relate',
-          groupBy: ['pair'],
-          source: { selector: { kind: 'min', by: 'increaseOrder' }, fields: { x: 'slot', y: 'value', viaY: 'routeY' } },
-          target: { selector: { kind: 'max', by: 'increaseOrder' }, fields: { x: 'slot', y: 'value' } },
-          measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
-        },
-      ]}
-      source={{ project: { x: 'sourceX', y: 'sourceY' } }}
-      target={{ project: { x: 'targetX', y: 'targetY' } }}
-      style={{
-        color: { kind: 'constant', value: '#15803d' },
-        strokeWidth: { kind: 'constant', value: 1.1 },
-      }}
-      path={{
-        via: [{ project: { x: 'sourceX', y: 'sourceViaY' } }],
-        routing: { kind: 'orthogonal', via: '-|', labelStep: 'main' },
-        label: {
-          text: { field: 'deltaLabel' },
-          position: 0.5,
-          sloped: true,
-          textColor: '#166534',
-          font: { size: 10, weight: 'bold' },
-        },
-        options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], dashPattern: [5, 4] },
-      }}
-    />
-  </Plot>
-);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
+  const lineStyle = values[RELATION_INTERVAL_CONTROL_IDS.lineStyle];
+  const labelSide = values[RELATION_INTERVAL_CONTROL_IDS.labelSide];
+  const lineOptions =
+    lineStyle === 'dashed'
+      ? { dashPattern: [5, 4] }
+      : lineStyle === 'dotted'
+        ? { dashPattern: [1, 4], lineCap: 'round' as const }
+        : {};
+  const data = intervalRelations.map(row => ({
+    ...row,
+    routeY: Number(row.routeY) + values[RELATION_INTERVAL_CONTROL_IDS.offset],
+  }));
+
+  return (
+    <Plot data={data} width={620} height={320} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Scale dimension="x" type="band" paddingOuter={0} />
+      <Scale dimension="y" type="linear" domainPadding={{ lower: 0 }} />
+      <Axis dimension="x" tickLabels={false} />
+      <Axis dimension="y" grid ticks={{ count: 4 }} />
+      <IntervalMark
+        x="slot"
+        y="value"
+        color="phase"
+        stroke="#ffffff"
+        strokeWidth={0.8}
+        label="label"
+        labelPosition={values[RELATION_INTERVAL_CONTROL_IDS.barLabelPosition]}
+        labelDistance={4}
+        labelTextColor={values[RELATION_INTERVAL_CONTROL_IDS.barLabelColor]}
+        labelFont={{ size: 10, weight: 'bold' }}
+      />
+      <RelationMark
+        transform={[
+          {
+            kind: 'relate',
+            groupBy: ['pair'],
+            source: {
+              selector: { kind: 'min', by: 'decreaseOrder' },
+              fields: { x: 'slot', y: 'value', viaY: 'routeY' },
+            },
+            target: { selector: { kind: 'max', by: 'decreaseOrder' }, fields: { x: 'slot', y: 'value' } },
+            measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+          },
+        ]}
+        source={{ project: { x: 'sourceX', y: 'sourceY' } }}
+        target={{ project: { x: 'targetX', y: 'targetY' } }}
+        style={{
+          color: { kind: 'constant', value: '#b91c1c' },
+          strokeWidth: { kind: 'constant', value: values[RELATION_INTERVAL_CONTROL_IDS.strokeWidth] },
+        }}
+        path={{
+          via: [{ project: { x: 'sourceX', y: 'sourceViaY' } }],
+          routing: { kind: 'orthogonal', via: '-|', labelStep: 'main' },
+          label: {
+            text: { field: 'deltaLabel' },
+            position: values[RELATION_INTERVAL_CONTROL_IDS.labelPosition],
+            ...(labelSide === 'center' ? { placement: 'inside' as const } : { side: labelSide }),
+            sloped: values[RELATION_INTERVAL_CONTROL_IDS.labelSloped],
+            textColor: '#7f1d1d',
+            font: { size: 10, weight: 'bold' },
+          },
+          options: {
+            marks: [{ pos: 1, mark: { kind: 'arrow' } }],
+            ...lineOptions,
+          },
+        }}
+      />
+      <RelationMark
+        transform={[
+          {
+            kind: 'relate',
+            groupBy: ['pair'],
+            source: {
+              selector: { kind: 'min', by: 'increaseOrder' },
+              fields: { x: 'slot', y: 'value', viaY: 'routeY' },
+            },
+            target: { selector: { kind: 'max', by: 'increaseOrder' }, fields: { x: 'slot', y: 'value' } },
+            measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+          },
+        ]}
+        source={{ project: { x: 'sourceX', y: 'sourceY' } }}
+        target={{ project: { x: 'targetX', y: 'targetY' } }}
+        style={{
+          color: { kind: 'constant', value: '#15803d' },
+          strokeWidth: { kind: 'constant', value: values[RELATION_INTERVAL_CONTROL_IDS.strokeWidth] },
+        }}
+        path={{
+          via: [{ project: { x: 'sourceX', y: 'sourceViaY' } }],
+          routing: { kind: 'orthogonal', via: '-|', labelStep: 'main' },
+          label: {
+            text: { field: 'deltaLabel' },
+            position: values[RELATION_INTERVAL_CONTROL_IDS.labelPosition],
+            ...(labelSide === 'center' ? { placement: 'inside' as const } : { side: labelSide }),
+            sloped: values[RELATION_INTERVAL_CONTROL_IDS.labelSloped],
+            textColor: '#166534',
+            font: { size: 10, weight: 'bold' },
+          },
+          options: {
+            marks: [{ pos: 1, mark: { kind: 'arrow' } }],
+            ...lineOptions,
+          },
+        }}
+      />
+    </Plot>
+  );
+});
+
+/** canonical 状态派生的稳定源码配置 */
+export const previewSource = controlledPreview.source;
+
+/** controls registry 缺失时使用的显式回退 */
+export const previewControls = relationIntervalControls;
+
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

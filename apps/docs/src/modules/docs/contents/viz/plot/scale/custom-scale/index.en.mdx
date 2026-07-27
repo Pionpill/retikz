@@ -1,0 +1,144 @@
+---
+title: Custom Scales
+description: Use a ScaleDefinition to extend value-to-coordinate or value-to-color mapping, then inject it into Plot runtime through scaleDefinitions or colorSchemes.
+---
+
+When built-in scales cannot express a domain mapping, special position distribution, or brand ramp, register a runtime `ScaleDefinition`. Plot IR stores only the JSON operation `{ type, name, ...config }`; evaluation functions and field compatibility stay in the definition.
+
+## Applicability
+
+- Define a `family: 'position'` scale for a new value-to-coordinate rule.
+- Define a `family: 'channel'` scale for a new value-to-color rule. The current channel family is consumed only by color / paint channels and color legends; it is not a general visual-property scale.
+- If an existing color scale only needs another named palette, inject `colorSchemes` instead of defining a new scale type.
+- Non-color properties such as size, opacity, and shape are evaluated and delivered by their [Custom Channels](/viz/plot/channel/custom-channel); renderer-specific logic does not belong in a scale.
+
+## Define the capability
+
+`defineScale` selects one of two output contracts through `family`:
+
+| family     | Input and output   | Key contract                                                                                                                                            |
+| ---------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `position` | value → coordinate | `resolve` receives raw values and a fallback range, returns a full `PositionScale`; `isFieldCompatible` and `allowsBaseline` declare consumption limits |
+| `channel`  | value → color      | `resolve` receives raw values and `ChannelResolveContext`, returns a color evaluator, `legendForm`, `domain`, `range`, and optional `edges`             |
+
+The demo registers both `ease-position` and `brand`: the first redistributes x coordinates with an exponent, while the second maps categorical `tier` values to a brand palette. Drag the exponent to compare position mapping while color mapping stays fixed; switch source files to inspect both definitions, data, and host injection:
+
+<ComponentPreview
+  files={['scale-custom', 'scale-custom.definition.ts', 'scale-custom.data.ts']}
+  size="md"
+  caption="An exponent below 1 spreads middle points to the right; an exponent above 1 gathers them to the left. The tier palette does not change."
+/>
+
+## Inject into the host
+
+Inject definitions with `<Plot scaleDefinitions={[easePositionScale, brandColorScale]}>`; the Vanilla source injects the same array through `renderPlot` options. Custom types can only be referenced explicitly from full `spec.scales`:
+
+```ts
+scales: [
+  { type: 'ease-position', name: 'x', exponent: 1.8 },
+  { type: 'brand', name: 'tier-color' },
+];
+```
+
+Named palettes use the separate `colorSchemes` injection point. IR stores the scheme name, while runtime resolves it into an interpolator:
+
+```tsx
+import type { IRPlotSpec } from '@retikz/plot';
+
+const points = [
+  { x: 0, y: 1, score: 0.2 },
+  { x: 1, y: 3, score: 0.9 },
+];
+
+const spec: IRPlotSpec = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'points' },
+  scales: [
+    { type: 'linear', name: 'x' },
+    { type: 'linear', name: 'y' },
+    { type: 'sequential', name: 'brand-color', scheme: 'brand' },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    {
+      type: 'point',
+      color: { kind: 'field', value: 'score', scale: 'brand-color' },
+      encoding: { x: { field: 'x' }, y: { field: 'y' } },
+    },
+  ],
+};
+
+<Plot spec={spec} data={{ points }} colorSchemes={{ brand: t => `hsl(210, 80%, ${100 - t * 60}%)` }} />;
+```
+
+## Execution
+
+1. The host merges built-in and custom scale definitions and rejects duplicate or built-in type collisions; consumers check family mismatches later.
+2. Lowering looks up `spec.scales[].type`, validates its JSON operation with the definition schema, then verifies that the parsed result remains JSON-serializable.
+3. A position definition receives raw values and a fallback range to produce coordinates, ticks, and range behavior. A channel definition receives raw values and color-resolution context to produce one rendering-and-legend result.
+4. Coordinates and axes consume position scales; color / paint channels and legends consume channel scales.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Complete public position and channel scale contracts',
+      path: 'packages/viz/plot/src/contract/scale.ts',
+      startLine: 21,
+      endLine: 121,
+    },
+    {
+      label: 'Registry, JSON validation, and family dispatch',
+      path: 'packages/viz/plot/src/providers/scale/registry.ts',
+      startLine: 22,
+      endLine: 109,
+    },
+    {
+      label: 'Built-in-first named color-scheme resolver',
+      path: 'packages/viz/plot/src/providers/scale/shared/common.ts',
+      startLine: 89,
+      endLine: 108,
+    },
+  ]}
+/>
+
+## Errors and limits
+
+- A custom `type` cannot override a built-in scale or be registered twice; an unregistered type fails during lookup.
+- Position scales cannot drive color channels, and channel scales cannot drive position roles; family mismatches fail loud.
+- A definition schema should be a closed JSON object. The examples use `z.strictObject` so misspelled config is not silently stripped.
+- A position definition must implement `coordinate`, `domain`, `bandwidth`, `ticks`, `range`, and `setRange`; channel `of` currently returns only a color string or `undefined`.
+- Custom scales do not participate in React field-type auto-derivation, and declarative `<Scale>` covers built-in types only.
+- Custom `colorSchemes` cannot override a built-in scheme with the same name; the resolver checks built-ins before host injection.
+
+This operation is rejected by the example's strict schema because the config key is unknown:
+
+```ts
+scales: [{ type: 'ease-position', name: 'x', exponnent: 1.8 }];
+```
+
+## API reference
+
+Public exports:
+
+| Import from `@retikz/plot` | Use                                                         |
+| -------------------------- | ----------------------------------------------------------- |
+| `defineScale`              | Builds a scale definition from family, schema, and resolve  |
+| `ScaleDefinition`          | Full position / channel Definition union                    |
+| `PositionScale`            | Coordinate, ticks, and range interface returned by position |
+| `ChannelResolveContext`    | Field type, coercion, and color-scheme resolution context   |
+| `ChannelScaleResolution`   | Color evaluator and legend source returned by channel       |
+
+Host injection:
+
+| Host                                     | Public contract     | Injection field                                                   |
+| ---------------------------------------- | ------------------- | ----------------------------------------------------------------- |
+| `<Plot>` from `@retikz/plot-react`       | `PlotProps`         | `scaleDefinitions`, `colorSchemes`                                |
+| `renderPlot` from `@retikz/plot-vanilla` | `RenderPlotOptions` | Inherited `LowerPlotsOptions.scaleDefinitions` and `colorSchemes` |
+
+## Related
+
+- [Positional Scales](/viz/plot/scale/position) — built-in semantics for the position family
+- [Color Scales](/viz/plot/scale/color) — channel-family and color-legend contracts
+- [Custom Channels](/viz/plot/channel/custom-channel) — evaluation and delivery for non-color visual properties
+- [Runtime Extension Index](/kernel/reference/runtime/extensions) — cross-capability Definition, registry, and error boundaries

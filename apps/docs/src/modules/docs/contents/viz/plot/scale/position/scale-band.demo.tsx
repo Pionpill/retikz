@@ -1,25 +1,37 @@
-import type { FC } from 'react';
+import { Axis, IntervalMark, PathMark, Plot, PointMark, Scale } from '@retikz/plot-react';
 
-import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
+import { previewControlContract, scaleBandControls } from './scale-band.controls';
 import { segments } from './scale-band.data';
 
-/** segment 声明为 categorical，x 自动走 band：每个类别占等宽一格，柱落在格中央 */
-const Demo: FC = () => (
-  <Plot
-    data={segments}
-    model={[
-      { name: 'segment', type: 'categorical' },
-      { name: 'revenue', type: 'continuous' },
-    ]}
-    width={380}
-    height={220}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
-    <IntervalMark x="segment" y="revenue" color="segment" />
-    <Axis dimension="x" />
-    <Axis dimension="y" grid />
-  </Plot>
-);
+/** 注册回退使用的分类位置比例尺 controls */
+export const previewControls = scaleBandControls;
 
-export default Demo;
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
+  return (
+    <Plot data={segments} width={400} height={270} style={{ maxWidth: '100%', height: 'auto' }}>
+      {values.scaleType === 'band' ? (
+        <IntervalMark x="segment" y="revenue" />
+      ) : (
+        <>
+          <PathMark x="segment" y="revenue" />
+          <PointMark x="segment" y="revenue" size={6} />
+        </>
+      )}
+      {values.scaleType === 'band' ? (
+        <Scale dimension="x" type="band" paddingInner={values.paddingInner} paddingOuter={values.paddingOuter} />
+      ) : (
+        <Scale dimension="x" type="point" padding={values.padding} />
+      )}
+      <Axis dimension="x" />
+      <Axis dimension="y" grid />
+    </Plot>
+  );
+});
+
+/** canonical 状态派生的稳定源码配置 */
+export const previewSource = controlledPreview.source;
+
+/** 用对应图元直接比较 band 格宽与 point 点位 */
+export default controlledPreview.Component;

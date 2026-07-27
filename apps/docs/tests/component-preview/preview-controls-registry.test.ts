@@ -1,4 +1,4 @@
-import type { CompiledNodeLayout, IRScene, TextMeasurer } from '@retikz/core';
+import type { CompiledNodeLayout, IRScene, ScenePrimitive, TextMeasurer, TextPrim } from '@retikz/core';
 import type { ReactNode } from 'react';
 
 import { compileToScene, fallbackMeasurer, isNodeLayoutCompileArtifact } from '@retikz/core';
@@ -59,6 +59,7 @@ import {
   irToVanillaCode,
 } from '../../src/modules/docs/components/component-preview/utils';
 import { nodeGeometryFrame } from '../../src/modules/docs/contents/kernel/components/node/overview/node-geometry.controls';
+import { nodeTextRows } from '../../src/modules/docs/contents/viz/plot/channel/builtin/builtin-node-text.data';
 
 const privateExportKeys = [
   'ComponentPreviewDialog',
@@ -109,6 +110,7 @@ const controlDefinitionContractOf = (definition: PreviewControlsDefinition) => {
         presentation: definition.presentation,
         slots,
         sections: definition.sections.map(section => ({
+          defaultCollapsed: section.defaultCollapsed,
           visibleWhen: section.visibleWhen,
           fields: section.controls.map(controlFieldContractOf),
         })),
@@ -173,6 +175,52 @@ const compileGeometryNode = (
   return { layout, bounds: scene.layout };
 };
 
+/** 递归查找节点正文 Text primitive */
+const findTextPrimitive = (primitives: ReadonlyArray<ScenePrimitive>): TextPrim | undefined => {
+  for (const primitive of primitives) {
+    if (primitive.type === 'text') return primitive;
+    if (primitive.type === 'group') {
+      const nested = findTextPrimitive(primitive.children);
+      if (nested) return nested;
+    }
+  }
+  return undefined;
+};
+
+/** 用 Core 真实文本布局链路编译内置通道 playground 的文字 */
+const compileBuiltinText = (
+  text: string,
+  values: { align: 'start' | 'middle' | 'end'; fontSize: number; lineHeight: number; maxTextWidth: number },
+): { layout: CompiledNodeLayout; text: TextPrim } => {
+  let layout: CompiledNodeLayout | undefined;
+  const scene = compileToScene(
+    {
+      type: 'scene',
+      version: 1,
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          text,
+          align: values.align,
+          font: { size: values.fontSize, weight: 'bold' },
+          lineHeight: values.lineHeight,
+          maxTextWidth: values.maxTextWidth,
+        },
+      ],
+    } satisfies IRScene,
+    {
+      onNodeLayout: nextLayout => {
+        layout = nextLayout;
+      },
+      padding: 0,
+    },
+  );
+  const textPrimitive = findTextPrimitive(scene.primitives);
+  if (!layout || !textPrimitive) throw new Error('Missing compiled builtin text layout');
+  return { layout, text: textPrimitive };
+};
+
 describe('preview controls registry', () => {
   it('锁定 ComponentPreview 完整公开 props', () => {
     expectTypeOf<ComponentPreviewProps>().toEqualTypeOf<{
@@ -189,6 +237,12 @@ describe('preview controls registry', () => {
 
   it('从 registry owner 暴露本地化 controls key resolver', () => {
     expect(resolveControlsKey).toBeTypeOf('function');
+  });
+
+  it('ComponentPreview 使用已解析语言选择本地化 controls', () => {
+    const source = readFileSync(resolve('src/modules/docs/components/component-preview/ComponentPreview.tsx'), 'utf8');
+
+    expect(source).toContain("const lang = (i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en';");
   });
 
   it('registry helper 不通过组件预览根 barrel 转发', () => {
@@ -337,16 +391,31 @@ describe('preview controls registry', () => {
 
     const controls = resolvePreviewControls(controlModules[englishKey]);
     expect(controls).toMatchObject({
-      presentation: 'overlay',
-      controls: [
+      presentation: 'panel',
+      sections: [
         {
-          kind: 'select',
-          id: 'path-curve',
+          label: 'Data',
+          controls: [{ kind: 'table', id: 'curveSamples', label: 'Curve samples' }],
+        },
+        {
           label: 'Connection',
-          options: expect.arrayContaining([
-            { value: 'linear', label: 'Linear' },
-            { value: 'step', label: 'Step' },
-          ]),
+          controls: [
+            {
+              kind: 'select',
+              id: 'path-curve',
+              label: 'Connection',
+              options: expect.arrayContaining([
+                { value: 'linear', label: 'Linear' },
+                { value: 'step', label: 'Step' },
+              ]),
+            },
+            {
+              kind: 'switch',
+              id: 'path-curve-show-points',
+              label: 'Show data points',
+              defaultValue: true,
+            },
+          ],
         },
       ],
     });
@@ -393,14 +462,416 @@ describe('preview controls registry', () => {
     ).toThrow('Unknown preview control id in canonicalValues: "missing".');
   });
 
-  it('仅收集 canonical controls，不要求复用方提供转发模块', () => {
+  it('Path curve 只保留 canonical 可写控件，复用示例提供独立数据面板', () => {
     const segments = ['viz', 'plot', 'mark', 'path'];
 
-    expect(resolvePreviewControls(controlModules[buildControlsKey(segments, 'line-curve')])).toBeDefined();
-    expect(controlModules[buildControlsKey(segments, 'line-closure')]).toBeUndefined();
-    expect(controlModules[buildLangControlsKey(segments, 'line-closure', 'en')]).toBeUndefined();
-    expect(controlModules[buildControlsKey(segments, 'line-stack-area')]).toBeUndefined();
-    expect(controlModules[buildLangControlsKey(segments, 'line-stack-area', 'en')]).toBeUndefined();
+    for (const key of [buildControlsKey(segments, 'line-curve'), buildLangControlsKey(segments, 'line-curve', 'en')]) {
+      const controls = resolvePreviewControls(controlModules[key]);
+      expect(controls?.presentation, key).toBe('panel');
+      if (!controls || controls.presentation !== 'panel') continue;
+
+      expect(controls.sections[0].controls[0].kind, key).toBe('table');
+      expect(Boolean(controls.sections[0].defaultCollapsed), key).toBe(false);
+      expect(
+        controls.sections.flatMap(section => section.controls.map(control => control.id)),
+        key,
+      ).toContain('path-curve');
+    }
+
+    const dataOnlyKeys = [
+      buildControlsKey(segments, 'line-closure'),
+      buildLangControlsKey(segments, 'line-closure', 'en'),
+      buildControlsKey(segments, 'line-stack-area'),
+      buildLangControlsKey(segments, 'line-stack-area', 'en'),
+    ];
+
+    for (const key of dataOnlyKeys) {
+      const controls = resolvePreviewControls(controlModules[key]);
+      expect(controls?.presentation, key).toBe('panel');
+      if (!controls || controls.presentation !== 'panel') continue;
+
+      expect(controls.sections[0].controls[0].kind, key).toBe('table');
+      expect(
+        controls.sections.flatMap(section => section.controls.map(control => control.id)),
+        key,
+      ).not.toContain('path-curve');
+    }
+  });
+
+  it('Mark 外观 playground 默认收起作为背景的数据分组', () => {
+    const cases = [
+      { segments: ['viz', 'plot', 'mark', 'point'], name: 'point-style' },
+      { segments: ['viz', 'plot', 'mark', 'path'], name: 'line-paint' },
+      { segments: ['viz', 'plot', 'mark', 'interval'], name: 'bar-basic' },
+    ];
+
+    for (const { segments, name } of cases) {
+      for (const key of [buildControlsKey(segments, name), buildLangControlsKey(segments, name, 'en')]) {
+        const controls = resolvePreviewControls(controlModules[key]);
+        expect(controls?.presentation, key).toBe('panel');
+        if (!controls || controls.presentation !== 'panel') continue;
+
+        expect(controls.sections[0].controls[0].kind, key).toBe('table');
+        expect(Boolean(controls.sections[0].defaultCollapsed), key).toBe(true);
+      }
+    }
+  });
+
+  it('Mark paint playground 隐藏当前模式不会消费的颜色字段', () => {
+    const visibleFieldIds = (segments: Array<string>, name: string, values: PreviewControlValues) => {
+      const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, name)]);
+      if (definition?.presentation !== 'panel') throw new Error(`${name} must use panel controls`);
+      return resolveVisiblePreviewControlSections(definition.sections, values).flatMap(section =>
+        section.controls.map(control => control.id),
+      );
+    };
+
+    expect(
+      visibleFieldIds(['viz', 'plot', 'mark', 'point'], 'point-style', { 'point-paint-mode': 'field' }),
+    ).not.toContain('point-fill');
+    expect(visibleFieldIds(['viz', 'plot', 'mark', 'point'], 'point-style', { 'point-paint-mode': 'solid' })).toContain(
+      'point-fill',
+    );
+    expect(
+      visibleFieldIds(['viz', 'plot', 'mark', 'path'], 'line-paint', { 'line-paint-mode': 'gradient' }),
+    ).not.toContain('line-stroke');
+    expect(visibleFieldIds(['viz', 'plot', 'mark', 'path'], 'line-paint', { 'line-paint-mode': 'area' })).toContain(
+      'line-stroke',
+    );
+  });
+
+  it('PointMark 每个 demo 都提供与示例职责对应的可写控件并消费实时值', () => {
+    const segments = ['viz', 'plot', 'mark', 'point'];
+    const cases = [
+      { name: 'point-position', writableIds: ['point-position-x-field', 'point-position-y-field'] },
+      { name: 'point-transform', writableIds: ['point-jitter-amount', 'point-jitter-seed'] },
+      { name: 'point-style', writableIds: ['point-paint-mode', 'point-size'] },
+      { name: 'point-text', writableIds: ['point-text-mode', 'point-label-position', 'point-label-distance'] },
+      { name: 'point-coordinate-1d', writableIds: ['point-coordinate-x-field'] },
+    ];
+
+    for (const { name, writableIds } of cases) {
+      for (const key of [buildControlsKey(segments, name), buildLangControlsKey(segments, name, 'en')]) {
+        const controls = resolvePreviewControls(controlModules[key]);
+        expect(controls?.presentation, key).toBe('panel');
+        if (!controls || controls.presentation !== 'panel') continue;
+
+        const actualIds = controls.sections
+          .flatMap(section => section.controls)
+          .filter(control => control.kind !== 'table')
+          .map(control => control.id);
+        expect(actualIds, key).toEqual(expect.arrayContaining(writableIds));
+      }
+
+      expect(demoSources[buildKey(segments, name)], name).toContain('defineControlledPreview(previewControlContract');
+    }
+  });
+
+  it('PointMark 标签 controls 覆盖中心、四边与四角位置', () => {
+    const values = ['center', 'top', 'top-right', 'right', 'bottom-right', 'bottom', 'bottom-left', 'left', 'top-left'];
+
+    for (const key of [
+      buildControlsKey(['viz', 'plot', 'mark', 'point'], 'point-text'),
+      buildLangControlsKey(['viz', 'plot', 'mark', 'point'], 'point-text', 'en'),
+    ]) {
+      const definition = resolvePreviewControls(controlModules[key]);
+      if (definition?.presentation !== 'panel') throw new Error(`${key} must use panel controls`);
+      const position = definition.sections
+        .flatMap(section => section.controls)
+        .find(control => control.id === 'point-label-position');
+
+      expect(position?.kind, key).toBe('select');
+      if (position?.kind !== 'select') continue;
+      expect(
+        position.options.map(option => option.value),
+        key,
+      ).toEqual(values);
+    }
+  });
+
+  it('PointMark 居中标签隐藏无效的距离与引线 controls', () => {
+    const segments = ['viz', 'plot', 'mark', 'point'];
+
+    for (const key of [buildControlsKey(segments, 'point-text'), buildLangControlsKey(segments, 'point-text', 'en')]) {
+      const definition = resolvePreviewControls(controlModules[key]);
+      if (definition?.presentation !== 'panel') throw new Error(`${key} must use panel controls`);
+      const visibleFieldIds = (values: PreviewControlValues) =>
+        resolveVisiblePreviewControlSections(definition.sections, values).flatMap(section =>
+          section.controls.map(control => control.id),
+        );
+      const visibleAtCenter = visibleFieldIds({
+        'point-text-mode': 'label',
+        'point-label-position': 'center',
+      });
+      const visibleAtTop = visibleFieldIds({
+        'point-text-mode': 'label',
+        'point-label-position': 'top',
+      });
+
+      expect(visibleAtCenter, key).not.toContain('point-label-distance');
+      expect(visibleAtCenter, key).not.toContain('point-label-pin');
+      expect(visibleAtTop, key).toEqual(expect.arrayContaining(['point-label-distance', 'point-label-pin']));
+    }
+  });
+
+  it('Mark controlled demo 模块显式导出 previewControls 作为 registry 回退', () => {
+    const cases = {
+      point: ['point-position', 'point-transform', 'point-style', 'point-text', 'point-coordinate-1d'],
+      path: [
+        'line-basic',
+        'line-series',
+        'line-color-split',
+        'line-transform',
+        'line-paint',
+        'line-radar',
+        'line-curve',
+        'line-closure',
+        'line-stack-area',
+        'line-interruption',
+      ],
+      interval: [
+        ['bar-position', 'bar-basic'],
+        ['bar-series', 'bar-grouped'],
+        ['bar-radial', 'bar-radial'],
+        ['bar-transform', 'bar-transform'],
+        ['interval-histogram', 'interval-histogram'],
+        ['interval-sector', 'interval-sector'],
+        ['rect-bounds', 'rect-bounds'],
+      ],
+      reference: ['rule-threshold', 'rule-band', 'rule-region', 'rule-per-datum', 'rule-extent'],
+    } as const;
+
+    for (const [page, names] of Object.entries(cases)) {
+      for (const entry of names) {
+        const [name, controlsName] = Array.isArray(entry) ? entry : [entry, entry];
+        const key = buildKey(['viz', 'plot', 'mark', page], name);
+        const demoModule = demoModules[key] as Record<string, unknown> | undefined;
+        const controls = resolvePreviewControls(
+          controlModules[buildControlsKey(['viz', 'plot', 'mark', page], controlsName)],
+        );
+
+        expect(demoModule?.previewControls, key).toBe(controls);
+      }
+    }
+  });
+
+  it('PathMark 每个 demo 都提供与示例职责对应的可写控件并消费实时值', () => {
+    const segments = ['viz', 'plot', 'mark', 'path'];
+    const cases = [
+      {
+        name: 'line-basic',
+        writableIds: ['line-basic-x-field', 'line-basic-y-field', 'line-basic-order-source'],
+      },
+      { name: 'line-series', writableIds: ['line-series-field'] },
+      { name: 'line-color-split', writableIds: ['line-color-field'] },
+      { name: 'line-transform', writableIds: ['line-transform-grouping'] },
+      { name: 'line-paint', writableIds: ['line-paint-mode', 'line-stroke-width'] },
+      { name: 'line-radar', writableIds: ['line-radar-closed'] },
+      { name: 'line-curve', writableIds: ['path-curve', 'path-curve-show-points'] },
+      {
+        name: 'line-closure',
+        writableIds: ['line-closure-baseline', 'line-closure-horizontal-padding', 'line-closure-vertical-padding'],
+      },
+      { name: 'line-stack-area', writableIds: ['line-stack-area-curve'] },
+      { name: 'line-interruption', writableIds: ['line-interruption-connect-nulls'] },
+    ];
+
+    for (const { name, writableIds } of cases) {
+      for (const key of [buildControlsKey(segments, name), buildLangControlsKey(segments, name, 'en')]) {
+        const controls = resolvePreviewControls(controlModules[key]);
+        expect(controls?.presentation, key).toBe('panel');
+        if (!controls || controls.presentation !== 'panel') continue;
+
+        const actualIds = controls.sections
+          .flatMap(section => section.controls)
+          .filter(control => control.kind !== 'table')
+          .map(control => control.id);
+        expect(actualIds, key).toEqual(expect.arrayContaining(writableIds));
+      }
+
+      expect(demoSources[buildKey(segments, name)], name).toContain('defineControlledPreview(previewControlContract');
+    }
+  });
+
+  it('PathMark 面积 demo 默认移除笛卡尔外侧留白，并保留极坐标角向间距', () => {
+    const segments = ['viz', 'plot', 'mark', 'path'];
+    const stackAreaSource = demoSources[buildKey(segments, 'line-stack-area')];
+    const interruptionSource = demoSources[buildKey(segments, 'line-interruption')];
+
+    expect(stackAreaSource).toBeDefined();
+    expect(interruptionSource).toBeDefined();
+    if (stackAreaSource === undefined || interruptionSource === undefined) return;
+
+    expect(stackAreaSource).toContain('<Scale dimension="x" type="point" padding={0} />');
+    expect(stackAreaSource.match(/<Scale dimension="y" type="linear" domainPadding=\{0\} \/>/g)).toHaveLength(2);
+    expect(interruptionSource).toContain('<Scale dimension="x" type="linear" domainPadding={0} />');
+    expect(interruptionSource).toContain('<Scale dimension="y" type="linear" domainPadding={0} />');
+  });
+
+  it('构造可填充区域默认以横向和纵向零留白作为 canonical 状态', () => {
+    const segments = ['viz', 'plot', 'mark', 'path'];
+
+    for (const key of [
+      buildControlsKey(segments, 'line-closure'),
+      buildLangControlsKey(segments, 'line-closure', 'en'),
+    ]) {
+      const contract = resolvePreviewControlContract(controlModules[key]);
+      expect(contract?.canonicalValues['line-closure-horizontal-padding'], key).toBe(0);
+      expect(contract?.canonicalValues['line-closure-vertical-padding'], key).toBe(0);
+    }
+  });
+
+  it('连续区间默认不保留左右或上下留白', () => {
+    const segments = ['viz', 'plot', 'mark', 'interval'];
+
+    for (const key of [
+      buildControlsKey(segments, 'interval-histogram'),
+      buildLangControlsKey(segments, 'interval-histogram', 'en'),
+    ]) {
+      const contract = resolvePreviewControlContract(controlModules[key]);
+      expect(contract?.canonicalValues['interval-continuous-horizontal-padding'], key).toBe(0);
+      expect(contract?.canonicalValues['interval-continuous-vertical-padding'], key).toBe(0);
+    }
+  });
+
+  it('IntervalMark demo 统一保留左右外侧空间，且不改变默认柱间距', () => {
+    const segments = ['viz', 'plot', 'mark', 'interval'];
+    const bandCases = ['bar-series', 'bar-transform', 'rect-bounds'];
+
+    for (const name of bandCases) {
+      expect(demoSources[buildKey(segments, name)], name).toContain('paddingOuter={0.15}');
+    }
+
+    const positionSource = demoSources[buildKey(segments, 'bar-position')];
+    expect(positionSource).toContain('paddingOuter={isHorizontal ? 0 : 0.15}');
+    expect(positionSource).toContain('domainPadding={isHorizontal ? 0.05 : 0}');
+
+    const radialSource = demoSources[buildKey(segments, 'bar-radial')];
+    const sectorSource = demoSources[buildKey(segments, 'interval-sector')];
+    expect(radialSource).toContain('width={260}');
+    expect(radialSource).toContain('height={220}');
+    expect(sectorSource).toContain('width={340}');
+    expect(sectorSource).toContain('height={270}');
+
+    for (const key of [
+      buildControlsKey(segments, 'bar-basic'),
+      buildLangControlsKey(segments, 'bar-basic', 'en'),
+      buildControlsKey(segments, 'bar-grouped'),
+      buildLangControlsKey(segments, 'bar-grouped', 'en'),
+      buildControlsKey(segments, 'bar-transform'),
+      buildLangControlsKey(segments, 'bar-transform', 'en'),
+      buildControlsKey(segments, 'bar-radial'),
+      buildLangControlsKey(segments, 'bar-radial', 'en'),
+    ]) {
+      const contract = resolvePreviewControlContract(controlModules[key]);
+      const gapEntry = Object.entries(contract?.canonicalValues ?? {}).find(([id]) => id.endsWith('-gap'));
+      expect(gapEntry?.[1], key).toBe(0);
+    }
+  });
+
+  it('IntervalMark 每个 demo 都提供与示例职责对应的可写控件并消费实时值', () => {
+    const segments = ['viz', 'plot', 'mark', 'interval'];
+    const cases = [
+      {
+        name: 'bar-position',
+        controlsName: 'bar-basic',
+        writableIds: ['bar-position-direction', 'bar-position-gap', 'bar-position-corner-radius'],
+      },
+      {
+        name: 'interval-histogram',
+        writableIds: [
+          'interval-continuous-mode',
+          'interval-histogram-thresholds',
+          'interval-continuous-horizontal-padding',
+          'interval-continuous-vertical-padding',
+        ],
+      },
+      { name: 'rect-bounds', writableIds: ['rect-bounds-mode', 'rect-bounds-show-color'] },
+      {
+        name: 'bar-series',
+        controlsName: 'bar-grouped',
+        writableIds: ['bar-series-mode', 'bar-series-stack-offset', 'bar-series-gap'],
+      },
+      { name: 'bar-transform', writableIds: ['bar-transform-offset', 'bar-transform-gap'] },
+      { name: 'bar-radial', writableIds: ['bar-radial-inner-radius', 'bar-radial-gap'] },
+      {
+        name: 'interval-sector',
+        writableIds: ['interval-sector-inner-radius', 'interval-sector-pull-distance'],
+      },
+    ];
+
+    for (const { name, controlsName = name, writableIds } of cases) {
+      for (const key of [
+        buildControlsKey(segments, controlsName),
+        buildLangControlsKey(segments, controlsName, 'en'),
+      ]) {
+        const controls = resolvePreviewControls(controlModules[key]);
+        expect(controls?.presentation, key).toBe('panel');
+        if (!controls || controls.presentation !== 'panel') continue;
+
+        const actualIds = controls.sections
+          .flatMap(section => section.controls)
+          .filter(control => control.kind !== 'table')
+          .map(control => control.id);
+        expect(actualIds, key).toEqual(expect.arrayContaining(writableIds));
+      }
+
+      expect(demoSources[buildKey(segments, name)], name).toContain('defineControlledPreview(previewControlContract');
+    }
+  });
+
+  it('ReferenceMark 每个 demo 都提供与示例职责对应的可写控件并消费实时值', () => {
+    const segments = ['viz', 'plot', 'mark', 'reference'];
+    const cases = [
+      { name: 'rule-threshold', writableIds: ['rule-threshold-value'] },
+      { name: 'rule-band', writableIds: ['rule-band-start', 'rule-band-end'] },
+      { name: 'rule-region', writableIds: ['rule-region-x-start', 'rule-region-x-end'] },
+      { name: 'rule-per-datum', writableIds: ['rule-per-datum-offset'] },
+      { name: 'rule-extent', writableIds: ['rule-extent-inset'] },
+    ];
+
+    for (const { name, writableIds } of cases) {
+      for (const key of [buildControlsKey(segments, name), buildLangControlsKey(segments, name, 'en')]) {
+        const controls = resolvePreviewControls(controlModules[key]);
+        expect(controls?.presentation, key).toBe('panel');
+        if (!controls || controls.presentation !== 'panel') continue;
+
+        const actualIds = controls.sections
+          .flatMap(section => section.controls)
+          .filter(control => control.kind !== 'table')
+          .map(control => control.id);
+        expect(actualIds, key).toEqual(expect.arrayContaining(writableIds));
+      }
+
+      expect(demoSources[buildKey(segments, name)], name).toContain('defineControlledPreview(previewControlContract');
+    }
+  });
+
+  it('RelationMark 每个 demo 都提供与示例职责对应的可写控件并消费实时值', () => {
+    const segments = ['viz', 'plot', 'mark', 'relation'];
+    const cases = [
+      { name: 'relation-scatter', writableIds: ['relation-scatter-routing'] },
+      { name: 'relation-sankey', writableIds: ['relation-sankey-samples', 'relation-sankey-opacity'] },
+      { name: 'relation-bubble', writableIds: ['relation-bubble-stroke-width'] },
+      { name: 'relation-path-extremes', writableIds: ['relation-path-anchor'] },
+      { name: 'relation-interval', writableIds: ['relation-interval-offset'] },
+    ];
+
+    for (const { name, writableIds } of cases) {
+      for (const key of [buildControlsKey(segments, name), buildLangControlsKey(segments, name, 'en')]) {
+        const controls = resolvePreviewControls(controlModules[key]);
+        expect(controls?.presentation, key).toBe('panel');
+        if (!controls || controls.presentation !== 'panel') continue;
+
+        const actualIds = controls.sections
+          .flatMap(section => section.controls)
+          .filter(control => control.kind !== 'table')
+          .map(control => control.id);
+        expect(actualIds, key).toEqual(expect.arrayContaining(writableIds));
+      }
+
+      expect(demoSources[buildKey(segments, name)], name).toContain('defineControlledPreview(previewControlContract');
+    }
   });
 
   it('Node playground 的中英文 panel definition 保持运行时契约一致', () => {
@@ -1137,15 +1608,22 @@ describe('preview controls registry', () => {
     }
   });
 
-  it('Channel 文档把参数型静态示例收敛为四个双语 controls playground', () => {
+  it('Channel 文档把参数型静态示例收敛为六个双语 controls playground', () => {
     const bindingSegments = ['viz', 'plot', 'channel', 'binding'];
     const builtinSegments = ['viz', 'plot', 'channel', 'builtin'];
     const expectedControls = [
       { segments: bindingSegments, name: 'channel-binding' },
+      { segments: builtinSegments, name: 'builtin-position' },
       { segments: builtinSegments, name: 'builtin-point-style' },
       { segments: builtinSegments, name: 'builtin-node-text' },
       { segments: builtinSegments, name: 'builtin-path-style' },
+      { segments: builtinSegments, name: 'builtin-other' },
     ];
+
+    expect(Object.keys(controlModules).filter(key => key.includes('builtin-position'))).toEqual([
+      buildControlsKey(builtinSegments, 'builtin-position'),
+      buildLangControlsKey(builtinSegments, 'builtin-position', 'en'),
+    ]);
 
     for (const { segments, name } of expectedControls) {
       const controlKey = `../../contents/${segments.join('/')}/${name}.controls.ts`;
@@ -1196,6 +1674,62 @@ describe('preview controls registry', () => {
       ]);
     }
 
+    const builtinDataTables = [
+      {
+        name: 'builtin-position',
+        rowCount: 5,
+        columnKeys: ['month', 'sales', 'profit', 'orders', 'averageOrder'],
+        defaultCollapsed: false,
+      },
+      { name: 'builtin-point-style', rowCount: 5, columnKeys: ['x', 'y'], defaultCollapsed: true },
+      {
+        name: 'builtin-node-text',
+        rowCount: 3,
+        columnKeys: ['x', 'nodeY', 'textY', 'word', 'tag'],
+        defaultCollapsed: true,
+      },
+      { name: 'builtin-path-style', rowCount: 5, columnKeys: ['step', 'value'], defaultCollapsed: true },
+      { name: 'builtin-other', rowCount: 6, columnKeys: ['step', 'value', 'series'], defaultCollapsed: false },
+    ];
+
+    for (const { name, rowCount, columnKeys, defaultCollapsed } of builtinDataTables) {
+      for (const language of ['zh', 'en'] as const) {
+        const definition = resolvePreviewControls(
+          controlModules[
+            language === 'zh'
+              ? buildControlsKey(builtinSegments, name)
+              : buildLangControlsKey(builtinSegments, name, 'en')
+          ],
+        );
+        const tables =
+          definition?.presentation === 'panel'
+            ? definition.sections.flatMap(section =>
+                section.controls.flatMap(field =>
+                  field.kind === 'table'
+                    ? [
+                        {
+                          id: field.id,
+                          rowCount: field.rows.length,
+                          columnKeys: field.columns?.map(column => column.key),
+                        },
+                      ]
+                    : [],
+                ),
+              )
+            : [];
+
+        expect(
+          definition?.presentation === 'panel' ? definition.sections[0]?.controls.map(control => control.id) : [],
+          `${name}:${language}`,
+        ).toEqual(['rows']);
+        expect(
+          definition?.presentation === 'panel' ? Boolean(definition.sections[0]?.defaultCollapsed) : false,
+          `${name}:${language}`,
+        ).toBe(defaultCollapsed);
+        expect(tables, `${name}:${language}`).toEqual([{ id: 'rows', rowCount, columnKeys }]);
+      }
+    }
+
     const nodeTextSource = demoSources[buildKey(builtinSegments, 'builtin-node-text')];
     expect(nodeTextSource).toContain('<PointMark\n      x="x"\n      y="nodeY"');
     expect(nodeTextSource).toContain('<PointMark\n      x="x"\n      y="textY"\n      text="word"');
@@ -1205,12 +1739,28 @@ describe('preview controls registry', () => {
     for (const locale of ['zh', 'en']) {
       const bindingPage = readFileSync(resolve(bindingRoot, `index.${locale}.mdx`), 'utf8');
       const builtinPage = readFileSync(resolve(builtinRoot, `index.${locale}.mdx`), 'utf8');
+      const fieldsHeading = locale === 'zh' ? '## 字段与常量' : '## Fields And Constants';
+      const playgroundHeading = locale === 'zh' ? '## 绑定试验场' : '## Binding Playground';
       const builtinPreviews = Array.from(
-        builtinPage.matchAll(/<ComponentPreview\b[^>]*\bfiles="([^"]+)"/gu),
-        match => match[1],
+        builtinPage.matchAll(/<ComponentPreview\b[^>]*\bfiles=(?:"([^"]+)"|\{\['([^']+)'[^\]]*\]\})/gu),
+        match => {
+          const stringFile = Reflect.get(match, 1);
+          const arrayFile = Reflect.get(match, 2);
+          return typeof stringFile === 'string' ? stringFile : typeof arrayFile === 'string' ? arrayFile : '';
+        },
       );
 
       expect(bindingPage).toContain("files={['channel-binding', 'channel-binding.data.ts']}");
+      for (const previewName of [
+        'builtin-position',
+        'builtin-point-style',
+        'builtin-node-text',
+        'builtin-path-style',
+        'builtin-other',
+      ]) {
+        expect(builtinPage).toContain(`files={['${previewName}', '${previewName}.data.ts']}`);
+      }
+      expect(bindingPage.indexOf(fieldsHeading), locale).toBeLessThan(bindingPage.indexOf(playgroundHeading));
       expect(builtinPreviews).toEqual([
         'builtin-position',
         'builtin-point-style',
@@ -1233,6 +1783,564 @@ describe('preview controls registry', () => {
     ]) {
       expect(demoSources[buildKey(builtinSegments, removedDemo)], removedDemo).toBeUndefined();
     }
+  });
+
+  it('内置节点 playground 的 padding 从默认值上调一步即可改变空节点尺寸', () => {
+    const segments = ['viz', 'plot', 'channel', 'builtin'];
+
+    for (const language of ['zh', 'en'] as const) {
+      const definition = resolvePreviewControls(
+        controlModules[
+          language === 'zh'
+            ? buildControlsKey(segments, 'builtin-node-text')
+            : buildLangControlsKey(segments, 'builtin-node-text', 'en')
+        ],
+      );
+      expect(definition?.presentation, language).toBe('panel');
+      if (!definition || definition.presentation !== 'panel') continue;
+
+      const fields = getPreviewControlFields(definition);
+      const padding = fields.find(field => field.id === 'padding');
+      const minimumSize = fields.find(field => field.id === 'minimumSize');
+      expect(padding?.kind, language).toBe('range');
+      expect(minimumSize?.kind, language).toBe('range');
+      if (padding?.kind !== 'range' || minimumSize?.kind !== 'range') continue;
+
+      const compileGlyph = (paddingValue: number): CompiledNodeLayout => {
+        let layout: CompiledNodeLayout | undefined;
+        compileToScene(
+          {
+            type: 'scene',
+            version: 1,
+            children: [
+              {
+                type: 'node',
+                position: [0, 0],
+                shape: 'rectangle',
+                padding: paddingValue,
+                minimumSize: minimumSize.defaultValue,
+              },
+            ],
+          } satisfies IRScene,
+          {
+            onNodeLayout: nextLayout => {
+              layout = nextLayout;
+            },
+            padding: 0,
+          },
+        );
+        if (!layout) throw new Error('Missing compiled point glyph layout');
+        return layout;
+      };
+
+      const current = compileGlyph(padding.defaultValue);
+      const increased = compileGlyph(padding.defaultValue + (padding.step ?? 1));
+
+      expect(increased.rect.width, language).toBeGreaterThan(current.rect.width);
+      expect(increased.rect.height, language).toBeGreaterThan(current.rect.height);
+    }
+  });
+
+  it('内置节点 playground 的文本默认形成宽度不同的多行，使文字对齐可见', () => {
+    const segments = ['viz', 'plot', 'channel', 'builtin'];
+    const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-node-text')]);
+    expect(definition?.presentation).toBe('panel');
+    if (!definition || definition.presentation !== 'panel') return;
+
+    const defaults = Object.fromEntries(
+      getPreviewControlFields(definition).map(field => [field.id, field.defaultValue]),
+    );
+    const compiled = compileBuiltinText(nodeTextRows[0].word, {
+      align: defaults.align as 'start' | 'middle' | 'end',
+      fontSize: defaults.fontSize as number,
+      lineHeight: defaults.lineHeight as number,
+      maxTextWidth: defaults.maxTextWidth as number,
+    });
+    const lineLengths = new Set(compiled.text.lines.map(line => line.text.length));
+
+    expect(compiled.layout.text.lineCount).toBeGreaterThan(1);
+    expect(lineLengths.size).toBeGreaterThan(1);
+  });
+
+  it('内置节点 playground 的默认行高不会让多行文字重叠', () => {
+    const segments = ['viz', 'plot', 'channel', 'builtin'];
+    const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-node-text')]);
+    expect(definition?.presentation).toBe('panel');
+    if (!definition || definition.presentation !== 'panel') return;
+
+    const defaults = Object.fromEntries(
+      getPreviewControlFields(definition).map(field => [field.id, field.defaultValue]),
+    );
+    const compiled = compileBuiltinText(nodeTextRows[0].word, {
+      align: defaults.align as 'start' | 'middle' | 'end',
+      fontSize: defaults.fontSize as number,
+      lineHeight: defaults.lineHeight as number,
+      maxTextWidth: defaults.maxTextWidth as number,
+    });
+
+    expect(compiled.layout.text.lineCount).toBeGreaterThan(1);
+    expect(compiled.layout.content.size.height / compiled.layout.text.lineCount).toBeGreaterThanOrEqual(
+      defaults.fontSize as number,
+    );
+  });
+
+  it('内置节点 playground 的文字宽度范围会改变实际折行数', () => {
+    const segments = ['viz', 'plot', 'channel', 'builtin'];
+    const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-node-text')]);
+    expect(definition?.presentation).toBe('panel');
+    if (!definition || definition.presentation !== 'panel') return;
+
+    const fields = getPreviewControlFields(definition);
+    const align = fields.find(field => field.id === 'align');
+    const fontSize = fields.find(field => field.id === 'fontSize');
+    const lineHeight = fields.find(field => field.id === 'lineHeight');
+    const maxTextWidth = fields.find(field => field.id === 'maxTextWidth');
+    expect(align?.kind).toBe('select');
+    expect(fontSize?.kind).toBe('range');
+    expect(lineHeight?.kind).toBe('range');
+    expect(maxTextWidth?.kind).toBe('range');
+    if (
+      align?.kind !== 'select' ||
+      fontSize?.kind !== 'range' ||
+      lineHeight?.kind !== 'range' ||
+      maxTextWidth?.kind !== 'range'
+    ) {
+      return;
+    }
+
+    const common = {
+      align: align.defaultValue as 'start' | 'middle' | 'end',
+      fontSize: fontSize.defaultValue,
+      lineHeight: lineHeight.defaultValue,
+    };
+    const narrow = compileBuiltinText(nodeTextRows[0].word, {
+      ...common,
+      maxTextWidth: maxTextWidth.min,
+    });
+    const wide = compileBuiltinText(nodeTextRows[0].word, {
+      ...common,
+      maxTextWidth: maxTextWidth.max,
+    });
+
+    expect(narrow.layout.text.lineCount).toBeGreaterThan(wide.layout.text.lineCount);
+  });
+
+  it('内置路径 playground 仅在尖折点下显示连接样式', () => {
+    const segments = ['viz', 'plot', 'channel', 'builtin'];
+    const definitions = [
+      resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-path-style')]),
+      resolvePreviewControls(controlModules[buildLangControlsKey(segments, 'builtin-path-style', 'en')]),
+    ];
+    const visibleIds = (definition: PreviewControlsDefinition | undefined, roundedCorners: number) =>
+      definition?.presentation === 'panel'
+        ? resolveVisiblePreviewControlSections(definition.sections, { roundedCorners }).flatMap(section =>
+            section.controls.map(field => field.id),
+          )
+        : [];
+
+    for (const definition of definitions) {
+      expect(definition?.presentation).toBe('panel');
+      if (!definition || definition.presentation !== 'panel') continue;
+
+      const roundedCorners = getPreviewControlFields(definition).find(field => field.id === 'roundedCorners');
+      expect(roundedCorners?.kind).toBe('range');
+      expect(roundedCorners?.defaultValue).toBe(0);
+      expect(visibleIds(definition, 0)).toContain('lineJoin');
+      expect(visibleIds(definition, 8)).not.toContain('lineJoin');
+    }
+  });
+
+  it('内置通道总览仅为长通道组主动换行', () => {
+    const builtinRoot = resolve('src/modules/docs/contents/viz/plot/channel/builtin');
+    const compactChannelGroups = [
+      '`x` / `y` / `z`',
+      '`text` / `label`',
+      '`shadow` / `blendMode`',
+      '`zIndex` / `order` / `series`',
+    ];
+
+    for (const locale of ['zh', 'en']) {
+      const builtinPage = readFileSync(resolve(builtinRoot, `index.${locale}.mdx`), 'utf8');
+
+      for (const channels of compactChannelGroups) {
+        expect(builtinPage, `${locale}: ${channels}`).toContain(channels);
+      }
+    }
+  });
+
+  it('一维坐标组合 demo 用双语折叠数据表说明 12 个来源 Node 汇聚为 3 个目标 Node', () => {
+    const segments = ['viz', 'plot', 'coordinate', '1d'];
+    const name = 'coordinate-1d-composition';
+
+    for (const language of ['zh', 'en'] as const) {
+      const controlsKey =
+        language === 'zh' ? buildControlsKey(segments, name) : buildLangControlsKey(segments, name, 'en');
+      const definition = resolvePreviewControls(controlModules[controlsKey]);
+
+      expect(definition?.presentation, language).toBe('panel');
+      if (!definition || definition.presentation !== 'panel') continue;
+
+      const firstSection = definition.sections[0];
+      const firstControl = firstSection.controls[0];
+      const visibleIds = (values: PreviewControlValues) =>
+        resolveVisiblePreviewControlSections(definition.sections, values).flatMap(section =>
+          section.controls.map(control => control.id),
+        );
+      expect(Boolean(firstSection.defaultCollapsed), language).toBe(true);
+      expect(firstControl.kind, language).toBe('table');
+      if (firstControl.kind !== 'table') continue;
+
+      expect(firstControl.rows, language).toHaveLength(12);
+      const targetGroupSizes = firstControl.rows.reduce<Record<string, number>>((groupSizes, row) => {
+        const practiceId = Reflect.get(row, 'practiceId');
+        expect(typeof practiceId, `${language}: practiceId`).toBe('string');
+        if (typeof practiceId !== 'string') return groupSizes;
+
+        groupSizes[practiceId] = (groupSizes[practiceId] ?? 0) + 1;
+        return groupSizes;
+      }, {});
+      expect(Object.values(targetGroupSizes).sort(), language).toEqual([4, 4, 4]);
+      expect(
+        firstControl.columns?.map(column => column.key),
+        language,
+      ).toEqual(['thingLabel', 'practiceLabel', 'relationColor']);
+      expect(definition.sections, language).toHaveLength(4);
+      expect(visibleIds({ routing: 'bend', sourceLabelVisible: true, targetLabelVisible: true }), language).toEqual(
+        expect.arrayContaining(['bendDirection', 'bendAngle']),
+      );
+      expect(visibleIds({ routing: 'line', sourceLabelVisible: true, targetLabelVisible: true }), language).not.toEqual(
+        expect.arrayContaining(['bendDirection', 'bendAngle', 'orthogonalVia']),
+      );
+      expect(
+        visibleIds({ routing: 'orthogonal', sourceLabelVisible: false, targetLabelVisible: false }),
+        language,
+      ).toEqual(expect.arrayContaining(['orthogonalVia']));
+      expect(
+        visibleIds({ routing: 'orthogonal', sourceLabelVisible: false, targetLabelVisible: false }),
+        language,
+      ).not.toEqual(
+        expect.arrayContaining(['sourceLabelSize', 'sourceLabelRotate', 'sourceLabelDistance', 'targetLabelSize']),
+      );
+      expect(
+        visibleIds({
+          routing: 'bend',
+          sourceLabelVisible: true,
+          targetLabelVisible: true,
+          axisVisible: true,
+        }),
+        language,
+      ).toEqual(expect.arrayContaining(['axisVisible', 'axisStroke', 'axisStrokeWidth']));
+      expect(
+        visibleIds({
+          routing: 'bend',
+          sourceLabelVisible: true,
+          targetLabelVisible: true,
+          axisVisible: false,
+        }),
+        language,
+      ).toEqual(expect.arrayContaining(['axisVisible']));
+      expect(
+        visibleIds({
+          routing: 'bend',
+          sourceLabelVisible: true,
+          targetLabelVisible: true,
+          axisVisible: false,
+        }),
+        language,
+      ).not.toEqual(expect.arrayContaining(['axisStroke', 'axisStrokeWidth']));
+
+      const source = demoSources[resolveDemoKey(segments, name, language)];
+      expect(source, language).toContain('defineControlledPreview(previewControlContract');
+      expect(source, language).toContain("anchorId={{ prefix: 'thing', field: 'thingId' }}");
+      expect(source, language).toContain("anchorId={{ prefix: 'practice', field: 'practiceId' }}");
+      expect(source, language).toContain("kind: 'summarize'");
+      expect(source, language).toContain("'practiceGlyph'");
+      expect(source, language).toContain('text="practiceGlyph"');
+      expect(source, language).toContain('path={{ routing }}');
+      expect(source, language).toContain('COORDINATE_1D_COMPOSITION_CONTROL_IDS.relationStrokeWidth');
+      expect(source, language).toContain('COORDINATE_1D_COMPOSITION_CONTROL_IDS.axisVisible');
+      expect(source, language).toContain('COORDINATE_1D_COMPOSITION_CONTROL_IDS.axisStroke');
+      expect(source, language).toContain('COORDINATE_1D_COMPOSITION_CONTROL_IDS.axisStrokeWidth');
+      expect(source, language).toContain('<RelationMark');
+      expect(source, language).toContain('<Axis');
+    }
+  });
+
+  it('坐标系 Plot demo 都以本地化数据表作为 control 首个分组', () => {
+    const cases = [
+      {
+        segments: ['viz', 'plot', 'coordinate', '1d'],
+        name: 'coordinate-1d-playground',
+        rowCount: 8,
+        columnKeys: ['hour'],
+        defaultCollapsed: true,
+      },
+      {
+        segments: ['viz', 'plot', 'coordinate', '2d'],
+        name: 'coordinate-switch',
+        rowCount: 6,
+        columnKeys: ['month', 'value'],
+        defaultCollapsed: true,
+      },
+      {
+        segments: ['viz', 'plot', 'coordinate', '2d'],
+        name: 'coordinate-pie',
+        rowCount: 5,
+        columnKeys: ['label', 'value'],
+        defaultCollapsed: true,
+      },
+      {
+        segments: ['viz', 'plot', 'coordinate', '2d'],
+        name: 'coordinate-radar',
+        rowCount: 5,
+        columnKeys: ['dim', 'value'],
+        defaultCollapsed: true,
+      },
+      {
+        segments: ['viz', 'plot', 'coordinate', '2d'],
+        name: 'coordinate-polar-line',
+        rowCount: 8,
+        columnKeys: ['angle', 'speed'],
+        defaultCollapsed: true,
+      },
+      {
+        segments: ['viz', 'plot', 'coordinate', 'composition'],
+        name: 'coordinate-composition-scopes',
+        rowCount: 6,
+        columnKeys: ['day', 'temperature', 'rainfall'],
+        defaultCollapsed: true,
+      },
+      {
+        segments: ['viz', 'plot', 'coordinate', 'composition'],
+        name: 'coordinate-composition-x-axis',
+        rowCount: 7,
+        columnKeys: ['elapsedDay', 'calendarDay', 'completed', 'forecast'],
+        defaultCollapsed: true,
+      },
+      {
+        segments: ['viz', 'plot', 'coordinate', 'composition'],
+        name: 'coordinate-composition-facet',
+        rowCount: 20,
+        columnKeys: ['product', 'tier', 'month', 'accounts'],
+        defaultCollapsed: true,
+      },
+      {
+        segments: ['viz', 'plot', 'coordinate', 'composition'],
+        name: 'coordinate-composition-facet-multilevel',
+        rowCount: 64,
+        columnKeys: ['business', 'metric', 'region', 'channel', 'month', 'value'],
+        defaultCollapsed: true,
+      },
+      {
+        segments: ['viz', 'plot', 'coordinate', 'composition'],
+        name: 'coordinate-composition-tracks',
+        rowCount: 18,
+        columnKeys: ['day', 'trend', 'drawdown', 'signal'],
+        defaultCollapsed: true,
+      },
+      {
+        segments: ['viz', 'plot', 'coordinate', 'composition'],
+        name: 'coordinate-composition-tracks-polar',
+        rowCount: 6,
+        columnKeys: ['area', 'order', 'signal', 'capacity', 'outer'],
+        defaultCollapsed: true,
+      },
+    ];
+
+    for (const { segments, name, rowCount, columnKeys, defaultCollapsed } of cases) {
+      for (const language of ['zh', 'en'] as const) {
+        const key = language === 'zh' ? buildControlsKey(segments, name) : buildLangControlsKey(segments, name, 'en');
+        const definition = resolvePreviewControls(controlModules[key]);
+
+        expect(definition?.presentation, `${name}:${language}`).toBe('panel');
+        if (!definition || definition.presentation !== 'panel') continue;
+
+        const firstSection = definition.sections[0];
+        const firstControl = firstSection.controls[0];
+        expect(firstControl.kind, `${name}:${language}`).toBe('table');
+        expect(Boolean(firstSection.defaultCollapsed), `${name}:${language}`).toBe(defaultCollapsed);
+        if (firstControl.kind !== 'table') continue;
+
+        expect(firstControl.rows, `${name}:${language}`).toHaveLength(rowCount);
+        expect(
+          firstControl.columns?.map(column => column.key),
+          `${name}:${language}`,
+        ).toEqual(columnKeys);
+        expect(demoSources[buildKey(segments, name)], name).toContain('defineControlledPreview(previewControlContract');
+      }
+    }
+  });
+
+  it('坐标组合 demo 提供结构优先的双语 controls', () => {
+    const segments = ['viz', 'plot', 'coordinate', 'composition'];
+    const cases = [
+      {
+        name: 'coordinate-composition-scopes',
+        ids: [
+          'rows',
+          'rainfallAxis',
+          'secondaryAxisSide',
+          'xGridVisible',
+          'yGridVisible',
+          'temperatureLineWidth',
+          'rainfallLineWidth',
+          'rainfallPointsVisible',
+          'rainfallPointSize',
+        ],
+      },
+      {
+        name: 'coordinate-composition-x-axis',
+        ids: [
+          'rows',
+          'forecastAxis',
+          'secondaryAxisSide',
+          'xGridVisible',
+          'yGridVisible',
+          'completedLineWidth',
+          'forecastLineWidth',
+          'forecastPointsVisible',
+          'forecastPointSize',
+        ],
+      },
+      {
+        name: 'coordinate-composition-facet',
+        ids: [
+          'rows',
+          'layout',
+          'scale',
+          'empty',
+          'headers',
+          'panelGap',
+          'xGridVisible',
+          'yGridVisible',
+          'lineWidth',
+          'pointSize',
+        ],
+      },
+      {
+        name: 'coordinate-composition-facet-multilevel',
+        ids: [
+          'rows',
+          'rowHierarchy',
+          'columnHierarchy',
+          'rowHeaders',
+          'columnHeaders',
+          'scale',
+          'panelGap',
+          'xGridVisible',
+          'yGridVisible',
+          'lineWidth',
+          'pointSize',
+        ],
+      },
+      {
+        name: 'coordinate-composition-tracks',
+        ids: [
+          'rows',
+          'bandProfile',
+          'trackGap',
+          'xGridVisible',
+          'yGridVisible',
+          'localAxes',
+          'lineWidth',
+          'drawdownAreaVisible',
+          'signalPointSize',
+        ],
+      },
+      {
+        name: 'coordinate-composition-tracks-polar',
+        ids: [
+          'rows',
+          'innerRadius',
+          'startAngle',
+          'sweepAngle',
+          'trackGap',
+          'xGridVisible',
+          'yGridVisible',
+          'localAxes',
+          'lineWidth',
+          'pointSize',
+          'sectorPadAngle',
+          'sectorOpacity',
+        ],
+      },
+    ];
+
+    for (const { name, ids } of cases) {
+      for (const language of ['zh', 'en'] as const) {
+        const key = language === 'zh' ? buildControlsKey(segments, name) : buildLangControlsKey(segments, name, 'en');
+        const definition = resolvePreviewControls(controlModules[key]);
+
+        expect(definition?.presentation, `${name}:${language}`).toBe('panel');
+        if (!definition || definition.presentation !== 'panel') continue;
+
+        expect(definition.sections.length, `${name}:${language}`).toBeGreaterThan(1);
+        expect(
+          definition.sections.flatMap(section => section.controls.map(control => control.id)),
+          `${name}:${language}`,
+        ).toEqual(ids);
+      }
+    }
+  });
+
+  it('坐标系试验场只显示当前形态相关的配置', () => {
+    const oneDimensionalSegments = ['viz', 'plot', 'coordinate', '1d'];
+    const facetSegments = ['viz', 'plot', 'coordinate', 'composition'];
+    const oneDimensional = resolvePreviewControls(
+      controlModules[buildControlsKey(oneDimensionalSegments, 'coordinate-1d-playground')],
+    );
+    const facet = resolvePreviewControls(
+      controlModules[buildControlsKey(facetSegments, 'coordinate-composition-facet')],
+    );
+
+    const visibleIds = (definition: PreviewControlsDefinition | undefined, values: PreviewControlValues) =>
+      definition?.presentation === 'panel'
+        ? resolveVisiblePreviewControlSections(definition.sections, values).flatMap(section =>
+            section.controls.map(control => control.id),
+          )
+        : [];
+
+    expect(visibleIds(oneDimensional, { coordinate: 'cartesian1D', axisVisible: true })).toEqual([
+      'rows',
+      'coordinate',
+      'orientation',
+      'pointSize',
+      'pointFill',
+      'pointStroke',
+      'pointStrokeWidth',
+      'pointOpacity',
+      'axisVisible',
+      'axisStroke',
+      'axisStrokeWidth',
+    ]);
+    expect(visibleIds(oneDimensional, { coordinate: 'polar1D', axisVisible: true })).toEqual([
+      'rows',
+      'coordinate',
+      'radius',
+      'startAngle',
+      'sweepAngle',
+      'pointSize',
+      'pointFill',
+      'pointStroke',
+      'pointStrokeWidth',
+      'pointOpacity',
+      'axisVisible',
+      'axisStroke',
+      'axisStrokeWidth',
+    ]);
+    expect(visibleIds(oneDimensional, { coordinate: 'cartesian1D', axisVisible: false })).toEqual([
+      'rows',
+      'coordinate',
+      'orientation',
+      'pointSize',
+      'pointFill',
+      'pointStroke',
+      'pointStrokeWidth',
+      'pointOpacity',
+      'axisVisible',
+    ]);
+    expect(visibleIds(facet, { layout: 'columns' })).not.toContain('empty');
+    expect(visibleIds(facet, { layout: 'grid' })).toContain('empty');
   });
 
   it('所有 controls 显式声明完整且双语一致的文档契约', () => {

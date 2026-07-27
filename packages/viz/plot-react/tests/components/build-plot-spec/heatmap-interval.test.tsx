@@ -34,6 +34,23 @@ describe('buildPlotSpec heatmap interval mark（ADR-02 双 band，显式 bounds�
     expect(spec.scales).toContainEqual({ type: 'band', name: '__y' });
   });
 
+  it('heatmap_explicit_band_scale_forwards_padding_on_forced_dimension', () => {
+    const spec = buildPlotSpec(
+      <>
+        <IntervalMark x="rowKey" y="colKey" bounds={bandBounds} />
+        <Scale dimension="y" type="band" paddingInner={0.2} paddingOuter={0} />
+      </>,
+      '__plot',
+    );
+
+    expect(spec.scales).toContainEqual({
+      type: 'band',
+      name: '__y',
+      paddingInner: 0.2,
+      paddingOuter: 0,
+    });
+  });
+
   it('heatmap + 显式 <Scale dimension="y"> → fail-loud（y 由 band bounds 强制 band）', () => {
     expect(() =>
       buildPlotSpec(

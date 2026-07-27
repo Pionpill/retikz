@@ -11,8 +11,6 @@ export const PlotCoordinate = {
   Cartesian1D: 'cartesian1D',
   /** 1D 极坐标圆周（单角向维落固定半径圆周；周期 / 循环数据） */
   Polar1D: 'polar1D',
-  /** 2D 三元坐标（三个位置通道 x/y/z 归一化的重心坐标，投影到等边三角内；成分 / 配比 / 得票） */
-  Ternary2D: 'ternary2D',
 } as const;
 
 /**

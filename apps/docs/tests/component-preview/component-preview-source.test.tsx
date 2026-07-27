@@ -178,6 +178,20 @@ describe('ComponentPreview Vanilla source', () => {
     expect(vanilla?.files[0]?.code).not.toContain('Failed to generate vanilla code');
     expect(vanilla?.render).toBeTypeOf('function');
   });
+
+  it.each([
+    [['viz', 'plot', 'channel', 'custom-channel'], 'custom-channel'],
+    [['viz', 'plot', 'coordinate', 'custom-coordinate'], 'coordinate-custom-bridge'],
+    [['viz', 'plot', 'mark', 'custom-mark'], 'mark-custom'],
+    [['viz', 'plot', 'scale', 'custom-scale'], 'scale-custom'],
+    [['viz', 'plot', 'transform', 'custom-transform'], 'waterfall'],
+  ] as const)('%s 的运行时 Definition 生成可执行 Vanilla 预览', (segments, name) => {
+    const props = renderPreview([...segments], <ComponentPreview files={name} />);
+    const vanilla = props.source?.vanilla;
+
+    expect(vanilla?.files[0]?.code).not.toContain('Failed to generate Vanilla preview');
+    expect(vanilla?.render).toBeTypeOf('function');
+  });
 });
 
 describe('ComponentPreview localized controls', () => {

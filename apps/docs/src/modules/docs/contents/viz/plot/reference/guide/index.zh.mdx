@@ -1,0 +1,331 @@
+---
+title: 契约 - 辅助
+description: 查询 Plot 坐标轴、刻度、网格、标题、图例及其精确子组件 schema。
+---
+
+辅助层从已解析比例尺和坐标角色派生可读的坐标轴、网格和图例。样式字段只控制外观；刻度源、放置、投影目标和通道引用仍属于 guide 语义。
+
+## GuideSchema
+
+<ZodSchema name="GuideSchema" description="AxisGuide 与 LegendGuide 的判别联合。" />
+
+## AxisGuideSchema
+
+<ZodSchema
+  name="AxisGuideSchema"
+  description="绑定某个坐标角色的坐标轴，可含基线、刻度、标签、标题与对齐网格。"
+  descriptions={{
+    type: '坐标轴 guide 判别值。',
+    dimension: '该轴可视化的坐标位置角色，在 lowering 时从 CoordinateDefinition.roles 解析。',
+    id: '用作轴 Scope id 和锚点目标的可选 guide id。',
+    coordinateView: '该轴绑定的坐标视图 id；省略时使用组合默认视图。',
+    layer: '生成轴 Scope 的语义图层覆盖；网格仍保持 grid 图层。',
+    placement: '自动、图区侧边、坐标原生边或直角原点放置。',
+    line: '坐标轴基线；false 只隐藏基线，不隐藏刻度、标签与网格。',
+    ticks: '刻度源与刻度 mark 样式。',
+    crossing: '两轴交点处刻度和标签的冲突策略。',
+    tickLabels: '刻度标签开关、格式、样式与自适应布局。',
+    title: '轴标题字符串或结构化标题配置。',
+    grid: '是否在刻度位置绘制网格，及其投影目标。',
+  }}
+/>
+
+### AxisPlacementSchema
+
+<ZodSchema name="AxisPlacementSchema" description="自动、图区侧边、坐标原生边或直角原点轴放置联合。" />
+
+### AxisLineSchema
+
+<ZodSchema
+  name="AxisLineSchema"
+  description="坐标轴基线的线样式、可见 extent 与两端箭头。"
+  descriptions={{
+    stroke: '基线描边 paint。',
+    strokeWidth: '基线描边宽度。',
+    drawOpacity: '基线描边不透明度。',
+    dashPattern: '基线虚线数组。',
+    dashOffset: '基线虚线偏移。',
+    lineCap: '基线端点样式。',
+    extent: '基线沿所绑定维度的范围；省略或 plotArea 表示整个可见图区。',
+    arrow: '按轴的负向 / 正向端点指定箭头。',
+  }}
+/>
+
+### AxisTicksSchema
+
+<ZodSchema
+  name="AxisTicksSchema"
+  description="坐标轴刻度源、密度、端点策略与 mark 样式。"
+  descriptions={{
+    count: '目标刻度数；values 或 interval 存在时忽略。',
+    values: '显式刻度值，优先级最高。',
+    interval: '固定数值、时间或分类间隔。',
+    length: '线状刻度 mark 长度。',
+    line: '刻度线样式；false 隐藏 mark 但保留标签。',
+    density: '候选刻度的可见密度策略。',
+    endpoint: '轴箭头附近的端点刻度隐藏策略。',
+    mark: '统一刻度 mark slot；设置后不得再使用 length / line 简写。',
+  }}
+/>
+
+### AxisTickDensitySchema
+
+<ZodSchema name="AxisTickDensitySchema" description="显示全部候选刻度，或按最大数量与最小投影间隔确定性采样。" />
+
+### AxisTickMarkSchema
+
+<ZodSchema
+  name="AxisTickMarkSchema"
+  description="隐藏刻度 mark、使用线 mark、内置 shape mark 或自定义 Core shape mark。"
+/>
+
+### AxisTickLabelsSchema
+
+<ZodSchema
+  name="AxisTickLabelsSchema"
+  description="刻度标签格式、位置、文本样式与自适应布局。"
+  descriptions={{
+    format: '数值 d3-format 或 UTC d3-time-format 格式字符串。',
+    gap: '刻度末端到标签中心的距离。',
+    rotate: '标签绕中心的旋转角。',
+    anchor: '供主题 / 布局 resolver 消费的语义锚点提示。',
+    layout: '自动旋转、重叠隐藏与轴范围边界处理。',
+    font: '刻度标签字体。',
+    textColor: '刻度标签颜色。',
+    opacity: '刻度标签不透明度。',
+    align: '多行刻度标签对齐。',
+    lineHeight: '刻度标签行高。',
+    maxTextWidth: '刻度标签换行前的最大行宽。',
+  }}
+/>
+
+### AxisTickLabelLayoutSchema
+
+<ZodSchema name="AxisTickLabelLayoutSchema" description="关闭自适应处理，或声明旋转、隐藏、边界与采样策略。" />
+
+#### AxisTickLabelAutoRotateSchema
+
+<ZodSchema
+  name="AxisTickLabelAutoRotateSchema"
+  description="从候选角度中选择减少重叠的旋转角。"
+  descriptions={{
+    angles: '按顺序尝试的标签旋转角。',
+    recoverWhenFailed: '所有候选都重叠时是否回退到原始角度，默认 true。',
+  }}
+/>
+
+#### AxisTickLabelAutoHideSchema
+
+<ZodSchema
+  name="AxisTickLabelAutoHideSchema"
+  description="根据标签包围盒重叠隐藏部分刻度标签。"
+  descriptions={{
+    strategy: '重叠隐藏策略，默认 greedy。',
+    preserveEnds: '在可能时是否保留首尾标签，默认 true。',
+    separation: '标签包围盒的最小间距。',
+  }}
+/>
+
+#### AxisTickLabelBoundsSchema
+
+<ZodSchema
+  name="AxisTickLabelBoundsSchema"
+  description="刻度标签超出轴范围时的处理。"
+  descriptions={{ overflow: '超出轴跨度的标签处理方式，默认 flush。', tolerance: '边界容差，默认 1 个用户单位。' }}
+/>
+
+### AxisTitleSchema
+
+<ZodSchema
+  name="AxisTitleSchema"
+  description="坐标轴标题文本、位置、锚点、偏移与样式。"
+  descriptions={{
+    text: '不得为空的标题文本块。',
+    padding: '刻度标签带到标题中心的距离。',
+    placement: '标题沿轴基线的关键词或归一化位置。',
+    orientation: '标题旋转策略。',
+    rotate: '绕标题中心的显式旋转角。',
+    anchor: '相对标题位置的锚点。',
+    shift: '轴切向 / 法向局部偏移。',
+    layout: '标题空间预留与避让策略。',
+    font: '轴标题字体。',
+    textColor: '轴标题颜色。',
+    opacity: '轴标题不透明度。',
+    align: '多行轴标题对齐。',
+    lineHeight: '轴标题行高。',
+    maxTextWidth: '轴标题换行前的最大行宽。',
+  }}
+/>
+
+### AxisGridSchema
+
+<ZodSchema
+  name="AxisGridSchema"
+  description="网格投影范围与显式目标选择器。"
+  descriptions={{
+    applyTo: '网格投影到的视图范围；省略时使用组合解析默认值。',
+    select: 'applyTo=selected 时必需的显式目标选择器。',
+  }}
+/>
+
+### AxisGridComponentSchema
+
+<ZodSchema
+  name="AxisGridComponentSchema"
+  description="坐标网格的投影、刻度源、次网格与线样式。"
+  descriptions={{
+    applyTo: '网格投影范围。',
+    select: '显式目标选择器。',
+    ticks: '网格自身刻度源；省略时复用可见轴刻度。',
+    density: '可见网格刻度密度策略。',
+    bandPosition: '在 band 比例尺内绘制网格的归一化位置。',
+    minor: '次网格刻度源与样式；false 关闭次网格。',
+    stroke: '网格描边 paint。',
+    strokeWidth: '网格描边宽度。',
+    drawOpacity: '网格描边不透明度。',
+    dashPattern: '网格虚线数组。',
+    dashOffset: '网格虚线偏移。',
+    lineCap: '网格线端点样式。',
+  }}
+/>
+
+### GuideTargetSelectorSchema
+
+<ZodSchema
+  name="GuideTargetSelectorSchema"
+  description="为轴网格选择坐标视图、分面 panel 或 track。"
+  descriptions={{
+    view: '要匹配的坐标视图 id 或 id 列表。',
+    facet: '分面 panel 选择器。',
+    'facet.arrangement': '要匹配的 facet arrangement id；省略时匹配任意分面。',
+    'facet.row': '要匹配的分面行值或值 tuple。',
+    'facet.column': '要匹配的分面列值或值 tuple。',
+    track: 'track arrangement 选择器。',
+    'track.arrangement': '要匹配的 track arrangement id。',
+    'track.id': '要匹配的 track id 或 id 列表。',
+  }}
+/>
+
+## LegendGuideSchema
+
+<ZodSchema
+  name="LegendGuideSchema"
+  description="把非位置通道可视化为色块、连续 ramp、分箱 class 或渐变 symbol。"
+  descriptions={{
+    type: '图例 guide 判别值。',
+    channel: '图例要可视化的非位置通道名。',
+    scale: '同一通道由多个比例尺驱动时用于消歧的比例尺名。',
+    layer: '生成图例 Scope 的语义图层覆盖。',
+    title: '图例条目上方的非空标题文本块。',
+    position: '图例预留空间的图区侧边，默认 right。',
+    orient: '图例条目排列方向；省略时从 position 派生。',
+    ticks: '连续 ramp 刻度源；size 图例只读取 count。',
+    tickLabels: '图例标签开关或 ramp 刻度格式。',
+    style: '图例局部视觉 token，不改变通道、比例尺、位置与刻度语义。',
+  }}
+/>
+
+### LegendGuideStyleSchema
+
+<ZodSchema
+  name="LegendGuideStyleSchema"
+  description="图例色块、条目、ramp、symbol 和文本的视觉默认值。"
+  descriptions={{
+    swatchSize: '离散图例色块基准尺寸。',
+    swatchGap: '色块与标签的间距。',
+    entryGap: '相邻图例条目的间距。',
+    titleGap: '标题与第一条目的间距。',
+    rampLength: '连续图例 ramp 长边。',
+    rampThickness: '连续图例 ramp 短边厚度。',
+    symbolSize: 'symbol 图例条目的目标视觉框尺寸。',
+    symbolScale: '经 fit 后应用于 symbol 的缩放系数。',
+    symbolFit: 'size 图例 symbol 把 descriptor 半径映射到视觉框的方式。',
+    title: '图例标题文本样式。',
+    label: '图例条目标签文本样式。',
+  }}
+/>
+
+## 共享样式与刻度
+
+### GuideLineStyleSchema
+
+<ZodSchema
+  name="GuideLineStyleSchema"
+  description="映射到 Core Path 的共享 guide 线样式。"
+  descriptions={{
+    stroke: '线描边 paint。',
+    strokeWidth: '线宽。',
+    drawOpacity: '描边不透明度。',
+    dashPattern: '虚线长度数组。',
+    dashOffset: '虚线偏移。',
+  }}
+/>
+
+### AxisLineStyleSchema
+
+<ZodSchema
+  name="AxisLineStyleSchema"
+  description="坐标轴基线的纯线视觉字段。"
+  descriptions={{
+    stroke: '基线描边 paint。',
+    strokeWidth: '基线线宽。',
+    drawOpacity: '基线不透明度。',
+    dashPattern: '基线虚线数组。',
+    dashOffset: '基线虚线偏移。',
+    lineCap: '基线端点样式。',
+  }}
+/>
+
+### AxisGridLineStyleSchema
+
+<ZodSchema
+  name="AxisGridLineStyleSchema"
+  description="坐标网格的纯线视觉字段。"
+  descriptions={{
+    stroke: '网格描边 paint。',
+    strokeWidth: '网格线宽。',
+    drawOpacity: '网格不透明度。',
+    dashPattern: '网格虚线数组。',
+    dashOffset: '网格虚线偏移。',
+    lineCap: '网格线端点样式。',
+  }}
+/>
+
+### GuideTextStyleSchema
+
+<ZodSchema
+  name="GuideTextStyleSchema"
+  description="映射到 Core Node 文本词汇的共享 guide 文本样式。"
+  descriptions={{
+    font: '文本字体，未指定字段继承 Plot 文本默认值。',
+    textColor: '文本颜色，省略时继承 currentColor。',
+    opacity: '文本不透明度。',
+    align: '多行文本对齐。',
+    lineHeight: '文本行高。',
+    maxTextWidth: '换行前的最大文本行宽。',
+  }}
+/>
+
+### GuideTickSourceSchema
+
+<ZodSchema
+  name="GuideTickSourceSchema"
+  description="显式 values、固定 interval 或 count 提示的共享刻度源。"
+  descriptions={{ count: '目标刻度数。', values: '显式刻度值。', interval: '固定数值、时间或分类间隔。' }}
+/>
+
+### GuideTickIntervalSchema
+
+<ZodSchema name="GuideTickIntervalSchema" description="数值步长、UTC 时间单位或分类步长刻度间隔联合。" />
+
+### GuideTickLabelFormatSchema
+
+<ZodSchema
+  name="GuideTickLabelFormatSchema"
+  description="数值或 UTC 时间刻度的显示格式。"
+  descriptions={{ format: 'd3-format 数值格式或 UTC d3-time-format 时间格式。' }}
+/>
+
+### AxisGuideValueSchema
+
+<ZodSchema name="AxisGuideValueSchema" description="坐标轴刻度、原点或 extent 中使用的 JSON-safe 字符串 / 数值。" />

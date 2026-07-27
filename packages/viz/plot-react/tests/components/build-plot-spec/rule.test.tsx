@@ -65,22 +65,6 @@ describe('buildPlotSpec rule 装配（alpha.11 ADR-03）', () => {
     });
   });
 
-  it('rulemark-region-ternary：kind=region + z/zTo → 三元区域边界', () => {
-    const spec = buildPlotSpec(
-      <ReferenceMark kind="region" x={0.1} xTo={0.8} y={0.1} yTo={0.6} z={0.1} zTo={0.7} color="amber" />,
-      '__plot',
-      { coordinate: 'ternary2D' },
-    );
-    expect(spec.marks[0]).toEqual({
-      type: 'reference',
-      kind: 'region',
-      xTo: 0.8,
-      yTo: 0.6,
-      zTo: 0.7,
-      encoding: { x: { value: 0.1 }, y: { value: 0.1 }, z: { value: 0.1 }, color: { value: 'amber' } },
-    });
-  });
-
   it('rulemark-region-field：region 字符串边界 → field + color field', () => {
     const spec = buildPlotSpec(<ReferenceMark kind="region" x="x0" xTo="x1" y="y0" yTo="y1" color="tier" />, '__plot');
     expect(spec.marks[0]).toEqual({
@@ -121,12 +105,6 @@ describe('buildPlotSpec rule 装配（alpha.11 ADR-03）', () => {
   it('rulemark-region-missing-bound：region 缺 yTo → fail-loud', () => {
     expect(() => buildPlotSpec(<ReferenceMark kind="region" x={1} xTo={2} y={3} />, '__plot')).toThrow(
       /region|xTo|yTo/i,
-    );
-  });
-
-  it('rulemark-region-z-unpaired：region z/zTo 须成对 → fail-loud', () => {
-    expect(() => buildPlotSpec(<ReferenceMark kind="region" x={1} xTo={2} y={3} yTo={4} z={0.1} />, '__plot')).toThrow(
-      /z|zTo|together/i,
     );
   });
 

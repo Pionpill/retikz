@@ -25,6 +25,24 @@ describe('buildPlotSpec IntervalMark / color / series / stack / Scale', () => {
     expect(spec).toEqual(expected);
   });
 
+  it('bar_explicit_band_scale_forwards_gap_options', () => {
+    const spec = buildPlotSpec(
+      <>
+        <IntervalMark x="month" y="revenue" />
+        <Scale dimension="x" type="band" paddingInner={0} paddingOuter={0} align={0.25} />
+      </>,
+      '__plot',
+    );
+
+    expect(spec.scales[0]).toEqual({
+      type: 'band',
+      name: '__x',
+      paddingInner: 0,
+      paddingOuter: 0,
+      align: 0.25,
+    });
+  });
+
   it('point_color_builds_ordinal_scale_and_ref', () => {
     const spec = buildPlotSpec(<PointMark x="gdp" y="life" color="continent" />, '__plot', {
       dataFieldNames: new Set(['continent']),

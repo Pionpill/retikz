@@ -4,6 +4,8 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { nodeTextRows } from './builtin-node-text.data';
+
 /** 节点、文本、标签与效果通道的中文属性面板 */
 export const builtinNodeTextControls = definePreviewControls({
   presentation: 'panel',
@@ -11,39 +13,58 @@ export const builtinNodeTextControls = definePreviewControls({
   defaultSize: 38,
   sections: [
     {
+      label: '数据',
+      defaultCollapsed: true,
+      controls: [
+        {
+          kind: 'table',
+          id: 'rows',
+          label: '节点与文本数据',
+          rows: nodeTextRows,
+          columns: [
+            { key: 'x', label: '横轴位置' },
+            { key: 'nodeY', label: '节点纵轴' },
+            { key: 'textY', label: '文本纵轴' },
+            { key: 'word', label: '文字' },
+            { key: 'tag', label: '标签' },
+          ],
+        },
+      ],
+    },
+    {
       label: '节点几何',
       controls: [
-        { kind: 'range', id: 'padding', label: 'padding', defaultValue: 8, min: 0, max: 20, step: 1 },
+        { kind: 'range', id: 'padding', label: '内边距', defaultValue: 18, min: 0, max: 36, step: 1 },
         {
           kind: 'range',
           id: 'cornerRadius',
-          label: 'cornerRadius',
+          label: '圆角半径',
           defaultValue: 8,
           min: 0,
           max: 24,
           step: 1,
         },
-        { kind: 'range', id: 'rotate', label: 'rotate', defaultValue: 0, min: -30, max: 30, step: 1 },
+        { kind: 'range', id: 'rotate', label: '旋转角度', defaultValue: 0, min: -30, max: 30, step: 1 },
         {
           kind: 'range',
           id: 'minimumSize',
-          label: 'minimumSize',
-          defaultValue: 64,
-          min: 36,
+          label: '最小尺寸',
+          defaultValue: 36,
+          min: 0,
           max: 108,
           step: 4,
         },
-        { kind: 'range', id: 'scale', label: 'scale', defaultValue: 1, min: 0.7, max: 1.4, step: 0.1 },
+        { kind: 'range', id: 'scale', label: '缩放比例', defaultValue: 1, min: 0.7, max: 1.4, step: 0.1 },
       ],
     },
     {
       label: '节点内文本',
       controls: [
-        { kind: 'color', id: 'textColor', label: 'textColor', defaultValue: '#1e3a8a' },
+        { kind: 'color', id: 'textColor', label: '文字颜色', defaultValue: '#1e3a8a' },
         {
           kind: 'select',
           id: 'align',
-          label: 'align',
+          label: '文字对齐',
           defaultValue: NodeTextAlign.Middle,
           options: [
             { value: NodeTextAlign.Start, label: '左对齐' },
@@ -51,20 +72,20 @@ export const builtinNodeTextControls = definePreviewControls({
             { value: NodeTextAlign.End, label: '右对齐' },
           ],
         },
-        { kind: 'range', id: 'fontSize', label: 'font.size', defaultValue: 14, min: 10, max: 24, step: 1 },
+        { kind: 'range', id: 'fontSize', label: '字号', defaultValue: 14, min: 10, max: 24, step: 1 },
         {
           kind: 'range',
           id: 'lineHeight',
-          label: 'lineHeight',
-          defaultValue: 1.2,
-          min: 0.8,
-          max: 2,
-          step: 0.1,
+          label: '行高',
+          defaultValue: 18,
+          min: 12,
+          max: 32,
+          step: 1,
         },
         {
           kind: 'range',
           id: 'maxTextWidth',
-          label: 'maxTextWidth',
+          label: '最大文字宽度',
           defaultValue: 96,
           min: 48,
           max: 144,
@@ -75,11 +96,11 @@ export const builtinNodeTextControls = definePreviewControls({
     {
       label: '节点标签',
       controls: [
-        { kind: 'switch', id: 'showLabel', label: '显示 label', defaultValue: true },
+        { kind: 'switch', id: 'showLabel', label: '显示外侧标签', defaultValue: true },
         {
           kind: 'select',
           id: 'labelPosition',
-          label: 'labelPosition',
+          label: '标签位置',
           defaultValue: 'top',
           options: [
             { value: 'top', label: '上' },
@@ -92,7 +113,7 @@ export const builtinNodeTextControls = definePreviewControls({
         {
           kind: 'range',
           id: 'labelDistance',
-          label: 'labelDistance',
+          label: '标签距离',
           defaultValue: 14,
           min: 4,
           max: 28,
@@ -102,14 +123,14 @@ export const builtinNodeTextControls = definePreviewControls({
         {
           kind: 'switch',
           id: 'labelPin',
-          label: 'labelPin',
+          label: '显示引线',
           defaultValue: true,
           visibleWhen: { controlId: 'showLabel', oneOf: [true] },
         },
         {
           kind: 'color',
           id: 'labelTextColor',
-          label: 'labelTextColor',
+          label: '标签文字颜色',
           defaultValue: '#475569',
           visibleWhen: { controlId: 'showLabel', oneOf: [true] },
         },
@@ -121,26 +142,26 @@ export const builtinNodeTextControls = definePreviewControls({
         {
           kind: 'select',
           id: 'shadow',
-          label: 'shadow',
+          label: '阴影',
           defaultValue: ShadowPreset.Md,
           options: [
             { value: ShadowPreset.None, label: '无' },
-            { value: ShadowPreset.Sm, label: 'sm' },
-            { value: ShadowPreset.Md, label: 'md' },
-            { value: ShadowPreset.Lg, label: 'lg' },
-            { value: ShadowPreset.Xl, label: 'xl' },
+            { value: ShadowPreset.Sm, label: '小' },
+            { value: ShadowPreset.Md, label: '中' },
+            { value: ShadowPreset.Lg, label: '大' },
+            { value: ShadowPreset.Xl, label: '超大' },
           ],
         },
         {
           kind: 'select',
           id: 'blendMode',
-          label: 'blendMode',
+          label: '混合模式',
           defaultValue: BlendMode.Normal,
           options: [
-            { value: BlendMode.Normal, label: 'normal' },
-            { value: BlendMode.Multiply, label: 'multiply' },
-            { value: BlendMode.Screen, label: 'screen' },
-            { value: BlendMode.Overlay, label: 'overlay' },
+            { value: BlendMode.Normal, label: '正常' },
+            { value: BlendMode.Multiply, label: '正片叠底' },
+            { value: BlendMode.Screen, label: '滤色' },
+            { value: BlendMode.Overlay, label: '叠加' },
           ],
         },
       ],
@@ -152,15 +173,15 @@ export const builtinNodeTextControls = definePreviewControls({
 export const previewControlContract = {
   controls: builtinNodeTextControls,
   canonicalValues: {
-    padding: 8,
+    padding: 18,
     cornerRadius: 8,
     rotate: 0,
-    minimumSize: 64,
+    minimumSize: 36,
     scale: 1,
     textColor: '#1e3a8a',
     align: NodeTextAlign.Middle,
     fontSize: 14,
-    lineHeight: 1.2,
+    lineHeight: 18,
     maxTextWidth: 96,
     showLabel: true,
     labelPosition: 'top',
@@ -175,15 +196,15 @@ export const previewControlContract = {
       id: 'card',
       label: '信息卡片',
       values: {
-        padding: 8,
+        padding: 18,
         cornerRadius: 8,
         rotate: 0,
-        minimumSize: 64,
+        minimumSize: 36,
         scale: 1,
         textColor: '#1e3a8a',
         align: NodeTextAlign.Middle,
         fontSize: 14,
-        lineHeight: 1.2,
+        lineHeight: 18,
         maxTextWidth: 96,
         showLabel: true,
         labelPosition: 'top',
@@ -198,15 +219,15 @@ export const previewControlContract = {
       id: 'tilted',
       label: '旋转强调',
       values: {
-        padding: 12,
+        padding: 24,
         cornerRadius: 16,
         rotate: -18,
-        minimumSize: 84,
+        minimumSize: 48,
         scale: 1.1,
         textColor: '#7c2d12',
         align: NodeTextAlign.Middle,
         fontSize: 16,
-        lineHeight: 1.3,
+        lineHeight: 22,
         maxTextWidth: 112,
         showLabel: false,
         labelPosition: 'top',

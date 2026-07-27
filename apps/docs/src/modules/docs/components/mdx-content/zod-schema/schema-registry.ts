@@ -1,13 +1,14 @@
 import type { core, z } from 'zod';
 
 import * as IR from '@retikz/core';
+import * as PlotIR from '@retikz/plot';
 import * as TableIR from '@retikz/table';
 
 export type SchemaRegistryEntry = {
   schema: z.ZodType;
   /** 渲染类型签名时使用的名字（去掉 "Schema" 后缀） */
   label: string;
-  /** Reference 页面 URL（含可选 #anchor） */
+  /** Reference / contract 页面 URL（含可选 #anchor） */
   url: string;
 };
 
@@ -363,6 +364,572 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: TableIR.TableDetailColumnSchema,
     label: 'TableDetailColumn',
     url: '/viz/table/reference/contract-detail#tabledetailcolumnschema',
+  },
+
+  PlotSpecSchema: {
+    schema: PlotIR.PlotSpecSchema,
+    label: 'PlotSpec',
+    url: '/viz/plot/reference/plot#plotspecschema',
+  },
+  CoordinateCompositionSchema: {
+    schema: PlotIR.CoordinateCompositionSchema,
+    label: 'CoordinateComposition',
+    url: '/viz/plot/reference/plot#coordinatecompositionschema',
+  },
+  CoordinateViewSchema: {
+    schema: PlotIR.CoordinateViewSchema,
+    label: 'CoordinateView',
+    url: '/viz/plot/reference/plot#coordinateviewschema',
+  },
+  FacetArrangementSchema: {
+    schema: PlotIR.FacetArrangementSchema,
+    label: 'FacetArrangement',
+    url: '/viz/plot/reference/plot#facetarrangementschema',
+  },
+  TrackArrangementSchema: {
+    schema: PlotIR.TrackArrangementSchema,
+    label: 'TrackArrangement',
+    url: '/viz/plot/reference/plot#trackarrangementschema',
+  },
+  EncodingSchema: {
+    schema: PlotIR.EncodingSchema,
+    label: 'Encoding',
+    url: '/viz/plot/reference/encoding#encodingschema',
+  },
+  ChannelSchema: {
+    schema: PlotIR.ChannelSchema,
+    label: 'Channel',
+    url: '/viz/plot/reference/encoding#channelschema',
+  },
+  PositionEncodingSchema: {
+    schema: PlotIR.PositionEncodingSchema,
+    label: 'PositionEncoding',
+    url: '/viz/plot/reference/encoding#positionencodingschema',
+  },
+  MarkChannelEncodingSchema: {
+    schema: PlotIR.MarkChannelEncodingSchema,
+    label: 'MarkChannelEncoding',
+    url: '/viz/plot/reference/encoding#markchannelencodingschema',
+  },
+  SizeChannelSchema: {
+    schema: PlotIR.SizeChannelSchema,
+    label: 'SizeChannel',
+    url: '/viz/plot/reference/encoding#sizechannelschema',
+  },
+  OpacityChannelSchema: {
+    schema: PlotIR.OpacityChannelSchema,
+    label: 'OpacityChannel',
+    url: '/viz/plot/reference/encoding#opacitychannelschema',
+  },
+  ShapeChannelSchema: {
+    schema: PlotIR.ShapeChannelSchema,
+    label: 'ShapeChannel',
+    url: '/viz/plot/reference/encoding#shapechannelschema',
+  },
+  TextChannelSchema: {
+    schema: PlotIR.TextChannelSchema,
+    label: 'TextChannel',
+    url: '/viz/plot/reference/encoding#textchannelschema',
+  },
+  LabelPinStyleSchema: {
+    schema: PlotIR.LabelPinStyleSchema,
+    label: 'LabelPinStyle',
+    url: '/viz/plot/reference/encoding#labelpinstyleschema',
+  },
+  MarkLabelContentSchema: {
+    schema: PlotIR.MarkLabelContentSchema,
+    label: 'MarkLabelContent',
+    url: '/viz/plot/reference/encoding#marklabelcontentschema',
+  },
+  PointEncodingSchema: {
+    schema: PlotIR.PointEncodingSchema,
+    label: 'PointEncoding',
+    url: '/viz/plot/reference/encoding#pointencodingschema',
+  },
+  MarkLabelSchema: {
+    schema: PlotIR.MarkLabelSchema,
+    label: 'MarkLabel',
+    url: '/viz/plot/reference/encoding#marklabelschema',
+  },
+  MarkNodeLabelSchema: {
+    schema: PlotIR.MarkNodeLabelSchema,
+    label: 'MarkNodeLabel',
+    url: '/viz/plot/reference/encoding#marknodelabelschema',
+  },
+  MarkGeometryLabelSchema: {
+    schema: PlotIR.MarkGeometryLabelSchema,
+    label: 'MarkGeometryLabel',
+    url: '/viz/plot/reference/encoding#markgeometrylabelschema',
+  },
+  PlotTransformSchema: {
+    schema: PlotIR.TransformSchema,
+    label: 'PlotTransform',
+    url: '/viz/plot/reference/transform#transformschema',
+  },
+  StackTransformSchema: {
+    schema: PlotIR.StackTransformSchema,
+    label: 'StackTransform',
+    url: '/viz/plot/reference/transform#stacktransformschema',
+  },
+  BinTransformSchema: {
+    schema: PlotIR.BinTransformSchema,
+    label: 'BinTransform',
+    url: '/viz/plot/reference/transform#bintransformschema',
+  },
+  RelateTransformSchema: {
+    schema: PlotIR.RelateTransformSchema,
+    label: 'RelateTransform',
+    url: '/viz/plot/reference/transform#relatetransformschema',
+  },
+  EndpointProjectionSchema: {
+    schema: PlotIR.EndpointProjectionSchema,
+    label: 'EndpointProjection',
+    url: '/viz/plot/reference/transform#endpointprojectionschema',
+  },
+  PairMeasureOperationSchema: {
+    schema: PlotIR.PairMeasureOperationSchema,
+    label: 'PairMeasureOperation',
+    url: '/viz/plot/reference/transform#pairmeasureoperationschema',
+  },
+  NormalizeTransformSchema: {
+    schema: PlotIR.NormalizeTransformSchema,
+    label: 'NormalizeTransform',
+    url: '/viz/plot/reference/transform#normalizetransformschema',
+  },
+  DeriveIntervalTransformSchema: {
+    schema: PlotIR.DeriveIntervalTransformSchema,
+    label: 'DeriveIntervalTransform',
+    url: '/viz/plot/reference/transform#deriveintervaltransformschema',
+  },
+  JitterTransformSchema: {
+    schema: PlotIR.JitterTransformSchema,
+    label: 'JitterTransform',
+    url: '/viz/plot/reference/transform#jittertransformschema',
+  },
+  DensityTransformSchema: {
+    schema: PlotIR.DensityTransformSchema,
+    label: 'DensityTransform',
+    url: '/viz/plot/reference/transform#densitytransformschema',
+  },
+  DensityBandwidthSpecSchema: {
+    schema: PlotIR.DensityBandwidthSpecSchema,
+    label: 'DensityBandwidthSpec',
+    url: '/viz/plot/reference/transform#densitybandwidthspecschema',
+  },
+  SmoothTransformSchema: {
+    schema: PlotIR.SmoothTransformSchema,
+    label: 'SmoothTransform',
+    url: '/viz/plot/reference/transform#smoothtransformschema',
+  },
+  SmoothMethodSpecSchema: {
+    schema: PlotIR.SmoothMethodSpecSchema,
+    label: 'SmoothMethodSpec',
+    url: '/viz/plot/reference/transform#smoothmethodspecschema',
+  },
+  MarkSchema: {
+    schema: PlotIR.MarkSchema,
+    label: 'Mark',
+    url: '/viz/plot/reference/mark#markschema',
+  },
+  MarkOperationSchema: {
+    schema: PlotIR.MarkOperationSchema,
+    label: 'MarkOperation',
+    url: '/viz/plot/reference/mark#markoperationschema',
+  },
+  MarkTransformSchema: {
+    schema: PlotIR.MarkTransformSchema,
+    label: 'MarkTransform',
+    url: '/viz/plot/reference/mark#marktransformschema',
+  },
+  AnchorIdSpecSchema: {
+    schema: PlotIR.AnchorIdSpecSchema,
+    label: 'AnchorIdSpec',
+    url: '/viz/plot/reference/mark#anchoridspecschema',
+  },
+  PointMarkSchema: {
+    schema: PlotIR.PointMarkSchema,
+    label: 'PointMark',
+    url: '/viz/plot/reference/mark#pointmarkschema',
+  },
+  PathMarkSchema: {
+    schema: PlotIR.PathMarkSchema,
+    label: 'PathMark',
+    url: '/viz/plot/reference/mark#pathmarkschema',
+  },
+  IntervalMarkSchema: {
+    schema: PlotIR.IntervalMarkSchema,
+    label: 'IntervalMark',
+    url: '/viz/plot/reference/mark#intervalmarkschema',
+  },
+  IntervalBoundSchema: {
+    schema: PlotIR.IntervalBoundSchema,
+    label: 'IntervalBound',
+    url: '/viz/plot/reference/mark#intervalboundschema',
+  },
+  IntervalBoundsSchema: {
+    schema: PlotIR.IntervalBoundsSchema,
+    label: 'IntervalBounds',
+    url: '/viz/plot/reference/mark#intervalboundsschema',
+  },
+  ReferenceMarkSchema: {
+    schema: PlotIR.ReferenceMarkSchema,
+    label: 'ReferenceMark',
+    url: '/viz/plot/reference/mark#referencemarkschema',
+  },
+  RelationMarkSchema: {
+    schema: PlotIR.RelationMarkSchema,
+    label: 'RelationMark',
+    url: '/viz/plot/reference/mark#relationmarkschema',
+  },
+  RelationPrimitiveStyleSchema: {
+    schema: PlotIR.RelationPrimitiveStyleSchema,
+    label: 'RelationPrimitiveStyle',
+    url: '/viz/plot/reference/mark#relationprimitivestyleschema',
+  },
+  RelationPathGeometrySchema: {
+    schema: PlotIR.RelationPathGeometrySchema,
+    label: 'RelationPathGeometry',
+    url: '/viz/plot/reference/mark#relationpathgeometryschema',
+  },
+  RelationRibbonOptionsSchema: {
+    schema: PlotIR.RelationRibbonOptionsSchema,
+    label: 'RelationRibbonOptions',
+    url: '/viz/plot/reference/mark#relationribbonoptionsschema',
+  },
+  RelationRouteStepSchema: {
+    schema: PlotIR.RelationRouteStepSchema,
+    label: 'RelationRouteStep',
+    url: '/viz/plot/reference/mark#relationroutestepschema',
+  },
+  CustomMarkSchema: {
+    schema: PlotIR.CustomMarkSchema,
+    label: 'CustomMark',
+    url: '/viz/plot/reference/mark#custommarkschema',
+  },
+  PlotTargetRefSchema: {
+    schema: PlotIR.PlotTargetRefSchema,
+    label: 'PlotTargetRef',
+    url: '/viz/plot/reference/mark#plottargetrefschema',
+  },
+  RelationRoutingSpecSchema: {
+    schema: PlotIR.RelationRoutingSpecSchema,
+    label: 'RelationRoutingSpec',
+    url: '/viz/plot/reference/mark#relationroutingspecschema',
+  },
+  PathClosureSchema: {
+    schema: PlotIR.PathClosureSchema,
+    label: 'PathClosure',
+    url: '/viz/plot/reference/mark#pathclosureschema',
+  },
+  ScaleSchema: {
+    schema: PlotIR.ScaleSchema,
+    label: 'Scale',
+    url: '/viz/plot/reference/scale#scaleschema',
+  },
+  ScaleOperationSchema: {
+    schema: PlotIR.ScaleOperationSchema,
+    label: 'ScaleOperation',
+    url: '/viz/plot/reference/scale#scaleoperationschema',
+  },
+  ColorSchemeNameSchema: {
+    schema: PlotIR.ColorSchemeNameSchema,
+    label: 'ColorSchemeName',
+    url: '/viz/plot/reference/scale#colorschemenameschema',
+  },
+  CategoryValueSchema: {
+    schema: PlotIR.CategoryValueSchema,
+    label: 'CategoryValue',
+    url: '/viz/plot/reference/scale#categoryvalueschema',
+  },
+  DomainPaddingSchema: {
+    schema: PlotIR.DomainPaddingSchema,
+    label: 'DomainPadding',
+    url: '/viz/plot/reference/scale#domainpaddingschema',
+  },
+  LinearScaleSchema: {
+    schema: PlotIR.LinearScaleSchema,
+    label: 'LinearScale',
+    url: '/viz/plot/reference/scale#linearscaleschema',
+  },
+  BandScaleSchema: {
+    schema: PlotIR.BandScaleSchema,
+    label: 'BandScale',
+    url: '/viz/plot/reference/scale#bandscaleschema',
+  },
+  PointScaleSchema: {
+    schema: PlotIR.PointScaleSchema,
+    label: 'PointScale',
+    url: '/viz/plot/reference/scale#pointscaleschema',
+  },
+  OrdinalScaleSchema: {
+    schema: PlotIR.OrdinalScaleSchema,
+    label: 'OrdinalScale',
+    url: '/viz/plot/reference/scale#ordinalscaleschema',
+  },
+  TimeScaleSchema: {
+    schema: PlotIR.TimeScaleSchema,
+    label: 'TimeScale',
+    url: '/viz/plot/reference/scale#timescaleschema',
+  },
+  LogScaleSchema: {
+    schema: PlotIR.LogScaleSchema,
+    label: 'LogScale',
+    url: '/viz/plot/reference/scale#logscaleschema',
+  },
+  PowScaleSchema: {
+    schema: PlotIR.PowScaleSchema,
+    label: 'PowScale',
+    url: '/viz/plot/reference/scale#powscaleschema',
+  },
+  SqrtScaleSchema: {
+    schema: PlotIR.SqrtScaleSchema,
+    label: 'SqrtScale',
+    url: '/viz/plot/reference/scale#sqrtscaleschema',
+  },
+  SymlogScaleSchema: {
+    schema: PlotIR.SymlogScaleSchema,
+    label: 'SymlogScale',
+    url: '/viz/plot/reference/scale#symlogscaleschema',
+  },
+  RadialScaleSchema: {
+    schema: PlotIR.RadialScaleSchema,
+    label: 'RadialScale',
+    url: '/viz/plot/reference/scale#radialscaleschema',
+  },
+  SequentialColorScaleSchema: {
+    schema: PlotIR.SequentialColorScaleSchema,
+    label: 'SequentialColorScale',
+    url: '/viz/plot/reference/scale#sequentialcolorscaleschema',
+  },
+  DivergingColorScaleSchema: {
+    schema: PlotIR.DivergingColorScaleSchema,
+    label: 'DivergingColorScale',
+    url: '/viz/plot/reference/scale#divergingcolorscaleschema',
+  },
+  QuantizeColorScaleSchema: {
+    schema: PlotIR.QuantizeColorScaleSchema,
+    label: 'QuantizeColorScale',
+    url: '/viz/plot/reference/scale#quantizecolorscaleschema',
+  },
+  ThresholdColorScaleSchema: {
+    schema: PlotIR.ThresholdColorScaleSchema,
+    label: 'ThresholdColorScale',
+    url: '/viz/plot/reference/scale#thresholdcolorscaleschema',
+  },
+  QuantileColorScaleSchema: {
+    schema: PlotIR.QuantileColorScaleSchema,
+    label: 'QuantileColorScale',
+    url: '/viz/plot/reference/scale#quantilecolorscaleschema',
+  },
+  CustomScaleSchema: {
+    schema: PlotIR.CustomScaleSchema,
+    label: 'CustomScale',
+    url: '/viz/plot/reference/scale#customscaleschema',
+  },
+  PlotCoordinateSchema: {
+    schema: PlotIR.CoordinateSchema,
+    label: 'PlotCoordinate',
+    url: '/viz/plot/reference/coordinate#coordinateschema',
+  },
+  Cartesian2DSchema: {
+    schema: PlotIR.Cartesian2DSchema,
+    label: 'Cartesian2D',
+    url: '/viz/plot/reference/coordinate#cartesian2dschema',
+  },
+  Polar2DSchema: {
+    schema: PlotIR.Polar2DSchema,
+    label: 'Polar2D',
+    url: '/viz/plot/reference/coordinate#polar2dschema',
+  },
+  Cartesian1DSchema: {
+    schema: PlotIR.Cartesian1DSchema,
+    label: 'Cartesian1D',
+    url: '/viz/plot/reference/coordinate#cartesian1dschema',
+  },
+  Polar1DSchema: {
+    schema: PlotIR.Polar1DSchema,
+    label: 'Polar1D',
+    url: '/viz/plot/reference/coordinate#polar1dschema',
+  },
+  CustomCoordinateSchema: {
+    schema: PlotIR.CustomCoordinateSchema,
+    label: 'CustomCoordinate',
+    url: '/viz/plot/reference/coordinate#customcoordinateschema',
+  },
+  PlotCoordinateOperationSchema: {
+    schema: PlotIR.CoordinateOperationSchema,
+    label: 'PlotCoordinateOperation',
+    url: '/viz/plot/reference/coordinate#coordinateoperationschema',
+  },
+  GuideSchema: {
+    schema: PlotIR.GuideSchema,
+    label: 'Guide',
+    url: '/viz/plot/reference/guide#guideschema',
+  },
+  AxisGuideValueSchema: {
+    schema: PlotIR.AxisGuideValueSchema,
+    label: 'AxisGuideValue',
+    url: '/viz/plot/reference/guide#axisguidevalueschema',
+  },
+  GuideLineStyleSchema: {
+    schema: PlotIR.GuideLineStyleSchema,
+    label: 'GuideLineStyle',
+    url: '/viz/plot/reference/guide#guidelinestyleschema',
+  },
+  AxisLineStyleSchema: {
+    schema: PlotIR.AxisLineStyleSchema,
+    label: 'AxisLineStyle',
+    url: '/viz/plot/reference/guide#axislinestyleschema',
+  },
+  AxisGridLineStyleSchema: {
+    schema: PlotIR.AxisGridLineStyleSchema,
+    label: 'AxisGridLineStyle',
+    url: '/viz/plot/reference/guide#axisgridlinestyleschema',
+  },
+  GuideTextStyleSchema: {
+    schema: PlotIR.GuideTextStyleSchema,
+    label: 'GuideTextStyle',
+    url: '/viz/plot/reference/guide#guidetextstyleschema',
+  },
+  GuideTickIntervalSchema: {
+    schema: PlotIR.GuideTickIntervalSchema,
+    label: 'GuideTickInterval',
+    url: '/viz/plot/reference/guide#guidetickintervalschema',
+  },
+  GuideTickSourceSchema: {
+    schema: PlotIR.GuideTickSourceSchema,
+    label: 'GuideTickSource',
+    url: '/viz/plot/reference/guide#guideticksourceschema',
+  },
+  GuideTickLabelFormatSchema: {
+    schema: PlotIR.GuideTickLabelFormatSchema,
+    label: 'GuideTickLabelFormat',
+    url: '/viz/plot/reference/guide#guideticklabelformatschema',
+  },
+  AxisGuideSchema: {
+    schema: PlotIR.AxisGuideSchema,
+    label: 'AxisGuide',
+    url: '/viz/plot/reference/guide#axisguideschema',
+  },
+  LegendGuideSchema: {
+    schema: PlotIR.LegendGuideSchema,
+    label: 'LegendGuide',
+    url: '/viz/plot/reference/guide#legendguideschema',
+  },
+  GuideTargetSelectorSchema: {
+    schema: PlotIR.GuideTargetSelectorSchema,
+    label: 'GuideTargetSelector',
+    url: '/viz/plot/reference/guide#guidetargetselectorschema',
+  },
+  AxisPlacementSchema: {
+    schema: PlotIR.AxisPlacementSchema,
+    label: 'AxisPlacement',
+    url: '/viz/plot/reference/guide#axisplacementschema',
+  },
+  AxisLineSchema: {
+    schema: PlotIR.AxisLineSchema,
+    label: 'AxisLine',
+    url: '/viz/plot/reference/guide#axislineschema',
+  },
+  AxisTicksSchema: {
+    schema: PlotIR.AxisTicksSchema,
+    label: 'AxisTicks',
+    url: '/viz/plot/reference/guide#axisticksschema',
+  },
+  AxisTickDensitySchema: {
+    schema: PlotIR.AxisTickDensitySchema,
+    label: 'AxisTickDensity',
+    url: '/viz/plot/reference/guide#axistickdensityschema',
+  },
+  AxisTickMarkSchema: {
+    schema: PlotIR.AxisTickMarkSchema,
+    label: 'AxisTickMark',
+    url: '/viz/plot/reference/guide#axistickmarkschema',
+  },
+  AxisTickLabelAutoRotateSchema: {
+    schema: PlotIR.AxisTickLabelAutoRotateSchema,
+    label: 'AxisTickLabelAutoRotate',
+    url: '/viz/plot/reference/guide#axisticklabelautorotateschema',
+  },
+  AxisTickLabelAutoHideSchema: {
+    schema: PlotIR.AxisTickLabelAutoHideSchema,
+    label: 'AxisTickLabelAutoHide',
+    url: '/viz/plot/reference/guide#axisticklabelautohideschema',
+  },
+  AxisTickLabelBoundsSchema: {
+    schema: PlotIR.AxisTickLabelBoundsSchema,
+    label: 'AxisTickLabelBounds',
+    url: '/viz/plot/reference/guide#axisticklabelboundsschema',
+  },
+  AxisTickLabelLayoutSchema: {
+    schema: PlotIR.AxisTickLabelLayoutSchema,
+    label: 'AxisTickLabelLayout',
+    url: '/viz/plot/reference/guide#axisticklabellayoutschema',
+  },
+  AxisTickLabelsSchema: {
+    schema: PlotIR.AxisTickLabelsSchema,
+    label: 'AxisTickLabels',
+    url: '/viz/plot/reference/guide#axisticklabelsschema',
+  },
+  AxisTitleSchema: {
+    schema: PlotIR.AxisTitleSchema,
+    label: 'AxisTitle',
+    url: '/viz/plot/reference/guide#axistitleschema',
+  },
+  AxisGridSchema: {
+    schema: PlotIR.AxisGridSchema,
+    label: 'AxisGrid',
+    url: '/viz/plot/reference/guide#axisgridschema',
+  },
+  AxisGridComponentSchema: {
+    schema: PlotIR.AxisGridComponentSchema,
+    label: 'AxisGridComponent',
+    url: '/viz/plot/reference/guide#axisgridcomponentschema',
+  },
+  LegendGuideStyleSchema: {
+    schema: PlotIR.LegendGuideStyleSchema,
+    label: 'LegendGuideStyle',
+    url: '/viz/plot/reference/guide#legendguidestyleschema',
+  },
+  BoxPaddingSchema: {
+    schema: PlotIR.BoxPaddingSchema,
+    label: 'BoxPadding',
+    url: '/viz/plot/reference/layout#boxpaddingschema',
+  },
+  LayoutPlacementSchema: {
+    schema: PlotIR.LayoutPlacementSchema,
+    label: 'LayoutPlacement',
+    url: '/viz/plot/reference/layout#layoutplacementschema',
+  },
+  PlotLayoutSchema: {
+    schema: PlotIR.PlotLayoutSchema,
+    label: 'PlotLayout',
+    url: '/viz/plot/reference/layout#plotlayoutschema',
+  },
+  PlotLabelSchema: {
+    schema: PlotIR.PlotLabelSchema,
+    label: 'PlotLabel',
+    url: '/viz/plot/reference/layout#plotlabelschema',
+  },
+  PlotLayerSchema: {
+    schema: PlotIR.PlotLayerSchema,
+    label: 'PlotLayer',
+    url: '/viz/plot/reference/layer#plotlayerschema',
+  },
+  PlotAxisThemeSchema: {
+    schema: PlotIR.PlotAxisThemeSchema,
+    label: 'PlotAxisTheme',
+    url: '/viz/plot/reference/theme#plotaxisthemeschema',
+  },
+  PlotPaletteThemeSchema: {
+    schema: PlotIR.PlotPaletteThemeSchema,
+    label: 'PlotPaletteTheme',
+    url: '/viz/plot/reference/theme#plotpalettethemeschema',
+  },
+  PlotThemeSchema: {
+    schema: PlotIR.PlotThemeSchema,
+    label: 'PlotTheme',
+    url: '/viz/plot/reference/theme#plotthemeschema',
   },
 };
 

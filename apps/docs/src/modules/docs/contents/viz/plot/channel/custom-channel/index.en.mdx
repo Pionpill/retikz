@@ -1,0 +1,122 @@
+---
+title: Custom Channels
+description: Use a ChannelDefinition to resolve fields or constants into existing Core properties, then inject it into Plot's shared channel registry through channelDefinitions.
+---
+
+A custom channel delivers data values to existing Core `Scope`, `Node`, or `Path` properties. For example, `intensity` can map `score` to node opacity. It extends the **data-to-visual-property delivery path**, not the rendering foundation.
+
+## Applicability
+
+- Define a custom channel when you need a new `encoding.channels.<name>` that participates in field / constant binding, per-row evaluation, and legend descriptors.
+- Use a [Custom Scale](/viz/plot/scale/custom-scale) only when changing value-to-coordinate or value-to-color mapping. Other visual properties such as size and opacity are still evaluated and delivered by their channels.
+- If Core does not expose the target visual property, add the capability to Core first; a channel definition should not create parallel rendering semantics.
+- Field preparation, aggregation, and filtering belong to [Data Extensions](/viz/data/model/extensions), not a channel resolver.
+
+## Define the capability
+
+Use `defineScopeChannel`, `defineNodeChannel`, `definePathChannel`, or the generic `defineChannel`:
+
+| Field     | Purpose                                                                                                    |
+| --------- | ---------------------------------------------------------------------------------------------------------- |
+| `channel` | Unique registry name used by `encoding.channels.<name>`                                                    |
+| `output`  | Declares output type and optional range / palette / clamp metadata; it does not map or clamp values itself |
+| `legend?` | Declares the legend form                                                                                   |
+| `resolve` | Reads a field or constant binding, performs mapping and clamp, and returns a resolver plus descriptor      |
+| `deliver` | Writes each resolved value to an existing Core property                                                    |
+
+The `intensity` channel below maps field values into `[0.3, 1]` and also accepts a numeric constant that directly represents opacity. Use the panel to switch between field and constant bindings; switch source files to inspect the definition, data, and host injection:
+
+<ComponentPreview
+  files={['custom-channel', 'custom-channel.definition.ts', 'custom-channel.data.ts']}
+  size="md"
+  caption="A field binding preserves per-row score differences; a constant binding gives every point the same opacity."
+/>
+
+## Inject into the host
+
+Inject the definition with `<Plot channelDefinitions={[intensityChannel]}>`; the Vanilla source injects the same definition through `renderPlot` options.
+
+A string in the React DSL means a field name. Use `{ value }` or `MarkValueType` for a constant:
+
+```tsx
+<PointMark channels={{ intensity: 'score' }} />
+<PointMark channels={{ intensity: { value: 0.65 } }} />
+<PointMark channels={{ intensity: { kind: 'constant', value: 0.65 } }} />
+```
+
+These assemble to `{ field: 'score' }` and `{ value: 0.65 }`. The definition always stays in the runtime and never enters Plot IR.
+
+## Execution
+
+1. The host merges built-in and custom definitions into one channel registry and rejects built-in collisions or duplicate registrations.
+2. Lowering verifies that every bound channel is registered, then calls the definition's `resolve` with the binding and rows.
+3. A mark definition uses `channelKinds` to declare which delivery surfaces it consumes.
+4. Lowering calls `deliver` on scope / node / path definitions and writes resolver results into Core IR.
+
+A channel definition should not inspect `mark.type`. It owns resolution and delivery; the mark definition decides whether a mark consumes node, path, or scope channels, so custom marks can reuse the same path.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'ChannelDefinition and define-helper contracts',
+      path: 'packages/viz/plot/src/contract/channel.ts',
+      startLine: 222,
+      endLine: 331,
+    },
+    {
+      label: 'Merge built-in and custom channels into one registry',
+      path: 'packages/viz/plot/src/providers/channel/registry.ts',
+      startLine: 77,
+      endLine: 114,
+    },
+    {
+      label: 'Channel lookup, resolve, and delivery dispatch',
+      path: 'packages/viz/plot/src/providers/channel/registry.ts',
+      startLine: 120,
+      endLine: 190,
+    },
+  ]}
+/>
+
+## Errors and limits
+
+- A custom `channel` cannot override a built-in name or be registered twice; binding an unregistered channel fails during lowering.
+- Each binding must select exactly one of `field` and `value`, and constants must be JSON values.
+- The definition decides which value types it accepts. The example `intensity` constant accepts only finite numbers and performs its own clamp in `resolve`.
+- `resolve` should not mutate data or generate geometry; `deliver` may only write properties supported by the corresponding Core primitive.
+- IR stores only field or JSON-constant bindings, never functions or definitions.
+
+This binding fails schema validation because it sets both a field and a constant:
+
+```ts
+encoding: {
+  channels: { intensity: { field: 'score', value: 0.65 } },
+}
+```
+
+## API reference
+
+Public exports:
+
+| Import from `@retikz/plot` | Use                                                                                                 |
+| -------------------------- | --------------------------------------------------------------------------------------------------- |
+| `defineScopeChannel`       | Defines a channel delivered to a Core Scope                                                         |
+| `defineNodeChannel`        | Defines a channel delivered to a Core Node                                                          |
+| `definePathChannel`        | Defines a channel delivered to a Core Path                                                          |
+| `defineChannel`            | Defines a generic channel with explicit kind and delivery                                           |
+| `ChannelDefinition`        | Full channel, output, resolve, and deliver contract                                                 |
+| `ChannelContext`           | Shared rows, field types, and scale-registry context; Node / Scope / Path expose equivalent aliases |
+
+Host injection:
+
+| Host                                     | Public contract     | Injection field                                  |
+| ---------------------------------------- | ------------------- | ------------------------------------------------ |
+| `<Plot>` from `@retikz/plot-react`       | `PlotProps`         | `channelDefinitions`                             |
+| `renderPlot` from `@retikz/plot-vanilla` | `RenderPlotOptions` | Inherited `LowerPlotsOptions.channelDefinitions` |
+
+## Related
+
+- [Channel Binding](/viz/plot/channel/binding) — how field and constant bindings enter Plot IR
+- [Built-In Channels](/viz/plot/channel/builtin) — built-in definition delivery surfaces
+- [Custom Marks](/viz/plot/mark/custom-mark) — how marks declare and consume channel kinds
+- [Runtime Extension Index](/kernel/reference/runtime/extensions) — cross-capability Definition, registry, and error boundaries

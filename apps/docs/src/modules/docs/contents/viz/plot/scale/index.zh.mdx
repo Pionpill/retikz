@@ -1,49 +1,35 @@
 ---
 title: 比例尺
-description: 比例尺（scale）把数据值映射成视觉量。按产出分两族——位置比例尺产坐标 / 长度 / 半径，颜色比例尺产颜色，外加自定义比例尺。
+description: 比例尺连接字段语义与视觉输出：位置与颜色是主要选型入口，size、opacity 可自动合成或显式引用映射，shape 当前只自动生成 ordinal glyph 映射。
 ---
 
-比例尺决定「数据值 → 视觉量」怎么算。位置通道（`x` / `y`，polar 下对应 `angle` / `radius`）的值要变成画布坐标、`size` 通道要变成半径、`color` 通道要变成颜色——中间都隔着一个 scale。`<Plot>` 会按字段的测量类型自动选 scale，常见图表不用手写。
+比例尺决定「一个数据值最终画成什么」。位置通道把字段变成坐标、长度或半径，颜色和其它视觉通道把字段变成颜色、大小、透明度或形状；`<Plot>` 会先按字段类型和图元结构选择常用默认，特殊语义再显式指定。
 
-坐标轴是位置比例尺最常见的配置入口，但 scale 与 axis 分层：scale 负责映射，axis 负责显示刻度。把颜色 scale 解释给读者看则是[图例](/viz/plot/guide/legend)的活。
+scale 只负责映射，不负责把映射解释给读者：位置刻度由[坐标轴](/viz/plot/guide/axis)显示，颜色、大小、透明度和形状可由[图例](/viz/plot/guide/legend)解释。内置映射以外的品牌色阶或领域规则走[自定义比例尺](/viz/plot/scale/custom-scale)。
 
-## 两族：位置与颜色
+## 职责一览
 
-比例尺按**产出**分两族，也是本组的分页依据：
+| 家族         | 负责的映射                            | 配置入口                              |
+| ------------ | ------------------------------------- | ------------------------------------- |
+| 位置比例尺   | 数值 / 时间 / 分类 → 坐标、长度、半径 | 本组的位置页；`<Scale dimension>`     |
+| 颜色比例尺   | 分类 / 连续 / 时间 → 离散色或色带     | 本组的颜色页；color field binding     |
+| 其它视觉通道 | 数值 / 分类 → 大小、透明度、形状      | [内置通道](/viz/plot/channel/builtin) |
 
-- [位置比例尺](/viz/plot/scale/position)产**坐标 / 长度 / 半径**，喂坐标投影与 `size` 通道——数值轴（`linear` / `log` / `sqrt` / `pow` / `symlog` / `radial`）、时间轴（`time`）、分类轴（`band` / `point`）。
-- [颜色比例尺](/viz/plot/scale/color)产**颜色**，喂 `color` 通道与图例——分类一类一色（`ordinal`）、连续色带（`sequential` / `diverging`）、离散化分箱（`quantize` / `threshold` / `quantile`）。
+三类入口共享同一条思路：先确认字段的测量类型，再决定默认映射是否足够；scale 的产物随后交给坐标投影、图元通道和 guide。React 的 `<Scale dimension>` 只配置位置维度；`size` 可引用 `sqrt`、`opacity` 可引用 `linear`，二者也可由 mark 通道自动合成。`shape` 当前只使用通道自动生成的 `ordinal` glyph 映射，不开放显式 scale 引用。
 
-两族下具体选哪种，`<Plot>` 按字段的测量类型自动决定：
+常用自动默认如下：
 
-| 字段类型      | 位置默认                                                      | 颜色（按 datum 着色）                   |
-| ------------- | ------------------------------------------------------------- | --------------------------------------- |
-| `continuous`  | `linear`（可换 `log` / `sqrt` / `pow` / `symlog` / `radial`） | `sequential` / `diverging` + 离散化色阶 |
-| `temporal`    | `time`                                                        | `sequential`（时间也是连续量）          |
-| `categorical` | `band`（折线用 `point`）                                      | `ordinal`                               |
+| 字段类型      | 位置自动默认 | 颜色自动默认（按 datum 着色） |
+| ------------- | ------------ | ----------------------------- |
+| `continuous`  | `linear`     | `sequential`                  |
+| `temporal`    | `time`       | `sequential`                  |
+| `categorical` | `band`       | `ordinal`                     |
 
-字段类型怎么声明见[字段契约](/viz/data/model/contract)。内置 15 个 scale 之外的长尾（品牌色阶、领域专用映射……）走[自定义比例尺](/viz/plot/extend/scale)。
+自动默认只覆盖最常见的路径。分类折线或散点需要把位置换成 `point`；跨数量级、跨零或面积感知的位置映射分别选择 `log`、`symlog`、`sqrt` / `radial`。带意义中点的颜色使用 `diverging`，业务断点或数据分位使用 `threshold` / `quantile` 等显式色阶。
 
-## 显式覆盖
+其它视觉通道中，连续 `size` 默认使用面积感知的 `sqrt`，连续 `opacity` 使用 `linear`，分类 `shape` 使用 `ordinal`。这些映射属于通道解析，不表示 `<Scale dimension>` 可以配置大小、透明度或形状。
 
-`<Scale>` 是 `<Plot>` 的声明式子组件，覆盖对应坐标维度的默认选型；也可以把最常用的位置 scale 直接写在坐标轴上：
-
-```tsx
-<Plot data={rows}>
-  <PathMark x="date" y="value" order="date" />
-  <Scale dimension="x" type="time" />
-  {/* 或快捷写法：<Axis dimension="x" scale="time" /> */}
-  <Axis dimension="x" />
-</Plot>
-```
-
-polar 图里用 `dimension="angle"` / `dimension="radius"`，也可用 `x` / `y` 作为别名。`Axis.scale` 支持 `linear` / `time` / `point` / `log` / `sqrt` / `symlog` / `radial` 这类位置 scale 快捷类型。`log` 默认以 10 为底，需要自然对数时写 `<Scale dimension="y" type="log" base={Math.E} />`；`symlog` 的线性区宽度可用 `constant` 调整。幂指数等其它细参数仍写在完整 spec 的 `scales` 中。
-
-连续位置 scale 推断 domain 时会默认在上下界各留 5% 弹性，避免只有一个点或极值点贴到笛卡尔坐标系边角。需要精确贴边时写 `domainPadding={0}`；只想放大一侧时写对象：
-
-```tsx
-<Scale dimension="y" type="linear" domainPadding={{ lower: 0, upper: 0.12 }} />
-```
+React DSL 的 polar 维度仍写 `x` / `y`：`x` 在极坐标中解释为角向，`y` 解释为径向。完整选型、合法输入和 React / full spec 的能力边界分别见下面两页；字段类型声明见[字段契约](/viz/data/model/contract)。
 
 ## 章节内容
 
@@ -51,13 +37,11 @@ polar 图里用 `dimension="angle"` / `dimension="radius"`，也可用 `x` / `y`
   <LinkedCard href="/viz/plot/scale/position">
     <span className="font-semibold">位置比例尺</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      数值轴 linear / log / sqrt / pow / symlog / radial、时间轴 time、分类轴 band / point
+      数值、时间与分类字段如何映射成坐标、长度和半径
     </span>
   </LinkedCard>
   <LinkedCard href="/viz/plot/scale/color">
     <span className="font-semibold">颜色比例尺</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      ordinal 一类一色、sequential / diverging 连续色带、quantize / threshold / quantile 离散化分箱
-    </span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">分类色、连续色带、发散色与离散化分箱怎么选择</span>
   </LinkedCard>
 </div>

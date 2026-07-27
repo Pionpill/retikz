@@ -30,7 +30,7 @@ export const DEFAULT_JITTER_Y_FIELD = 'y';
 
 /**
  * 堆叠：每个 x 分组内按系列顺序累加 y，给每行派生 [y0, y1]。
- * @description 系列顺序取 groupBy 值的全局出现序；缺 y / 非有限值按 0 计入，避免后续累计错位
+ * @description 系列顺序取 groupBy 值的全局出现序；缺 y / 非有限值按 0 计入；normalize offset 拒绝有限负值
  */
 export const applyStack = (rows: Array<ExternalRow>, operation: IRPlotStackTransform): Array<ExternalRow> => {
   const startField = operation.startField ?? DEFAULT_START_FIELD;
@@ -62,6 +62,12 @@ export const applyStack = (rows: Array<ExternalRow>, operation: IRPlotStackTrans
       return isFiniteNumber(value) ? value : 0;
     });
     const out = new Map<ExternalRow, [number, number]>();
+
+    if (offset === StackOffset.Normalize && values.some(value => value < 0)) {
+      throw new Error(
+        `lowerPlots: stack transform offset "normalize" does not support negative values in field "${operation.y}"; use offset "diverging" for signed data`,
+      );
+    }
 
     if (offset === StackOffset.Overlap) {
       ordered.forEach((row, index) => out.set(row, [0, values[index] ?? 0]));
@@ -113,7 +119,7 @@ export const applyStack = (rows: Array<ExternalRow>, operation: IRPlotStackTrans
 
 /**
  * normalize：同组内各行 field / 组总和 -> 组内占比，保持行数。
- * @description groupBy 缺省时全行单组；basis percent 输出 0..100，组和为 0 时输出 0
+ * @description groupBy 缺省时全行单组；有限负值会报错，缺失 / 非有限值按 0；basis percent 输出 0..100，组和为 0 时输出 0
  */
 export const applyNormalize = (rows: Array<ExternalRow>, operation: IRPlotNormalizeTransform): Array<ExternalRow> => {
   const outField = operation.as ?? operation.field;
@@ -125,6 +131,11 @@ export const applyNormalize = (rows: Array<ExternalRow>, operation: IRPlotNormal
       : JSON.stringify(operation.groupBy.map(field => resolveFieldPath(row, field) ?? null));
   for (const row of rows) {
     const value = resolveFieldPath(row, operation.field);
+    if (isFiniteNumber(value) && value < 0) {
+      throw new Error(
+        `lowerPlots: normalize transform does not support negative values in field "${operation.field}"; handle signed data before normalization`,
+      );
+    }
     const segment = isFiniteNumber(value) ? value : 0;
     const key = keyOf(row);
     sums.set(key, (sums.get(key) ?? 0) + segment);

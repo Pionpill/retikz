@@ -1,127 +1,161 @@
 ---
 title: Axis
-description: Customize ticks, labels, and grid with <Axis>; dimension picks which dimension to decorate — cartesian x / y or polar x / y.
+description: Use <Axis> to explain positional scales with lines, ticks, labels, and grids under Cartesian or polar coordinates.
 ---
 
-`<Axis>` declares one axis. `dimension` picks which dimension it decorates: under cartesian it's `x` (horizontal) / `y` (vertical), under polar it still uses `x` (angular) / `y` (radial), under ternary it's `x` / `y` / `z` (the three triangle edges). The dimension must match the current coordinate system — a wrong one errors (no silent empty axis). Axis line, ticks, tick labels, title, and grid are slots on the same Axis guide.
+`<Axis>` is the visual counterpart of a positional scale. `dimension` selects the coordinate dimension to explain: Cartesian uses `x` / `y`, while polar uses `x` (angular) / `y` (radial). A dimension that does not belong to the current coordinate system fails loudly.
 
-`<Plot>` is a thin container and draws no axes on its own — without `<Axis>` there are no axes, and only the `<Axis>` you list get drawn. When you only need to switch an axis to a log, time, or square-root scale, put `scale` on the same `<Axis>` instead of adding a separate `<Scale>`.
+`<Plot>` does not add axes automatically. Declare one `<Axis>` for every axis you need. The line, ticks, tick labels, title, and grid are configuration slots on that same Axis guide.
 
 ## Usage
 
-The smallest structure is to list the x / y axes you want inside `<Plot>`. In the demo below, the y axis adds a grid and a target tick count; use the preview panel to inspect the source, IR, and Vanilla form.
+```tsx
+import { Axis, PathMark, Plot } from '@retikz/plot-react';
+```
 
-<ComponentPreview files={['axis-cartesian', 'axis-cartesian.data.ts']} />
+```tsx
+<Plot data={rows}>
+  <PathMark x="month" y="revenue" order="month" />
+  <Axis dimension="x" />
+  <Axis dimension="y" grid />
+</Plot>
+```
+
+<ComponentAlert
+  type="tip"
+  title="Reference lines and bands are not axes"
+  description="Use <ReferenceMark> for thresholds, means, or tolerance bands. Those are data annotations in mark draw order; <Axis> only explains a positional scale."
+/>
 
 ## Examples
 
-### Plot Text
+### Coordinate system and axis roles
 
-Axis titles stay on `<Axis>` because they follow a scale direction and placement. Plot-level static text, such as a chart title or caption, is declared with `<TitleLabel>` and `<CaptionLabel>`; content can come from the `text` prop or from core-style `<Text>` children for styled lines, and `layout.autoPadding` decides whether those labels reserve space automatically.
+Start with the same data and the same `<PathMark>`. When switching between `cartesian2D` and `polar2D`, `dimension="x"` explains horizontal or angular position, while `dimension="y"` explains vertical or radial position. A `grid` still belongs to the Axis that creates it.
 
-<ComponentPreview files={['axis-plot-labels', 'axis-plot-labels.data.ts']} />
+<ComponentPreview
+  files={['axis-coordinate-basics', 'axis-coordinate-basics.data.ts']}
+  size="md"
+  caption="Switch the coordinate system, axis visibility, grid, and target tick count to compare x / y roles across both projections."
+/>
 
-### Style Slots
+### Cartesian Axis playground
 
-`line` controls the axis line; `ticks` controls the tick source, length, and tick-line style; `tickLabels` controls whether tick text renders and how it is styled; `title` is the axis title and accepts a string or structured text; `grid` can be a boolean, a line-style object, or an object with its own tick source. `dashOffset` pairs with `dashPattern` when you need to shift the dash phase.
+After the basic roles are clear, tune the complete configuration in a Cartesian coordinate system. The continuous scenes cover `ticks.interval`, `ticks.density`, `ticks.mark`, and independent major / minor grid sources. The categorical scene isolates rotation, hiding, and boundary handling under `tickLabels.layout`.
 
-<ComponentPreview files={['axis-style-slots', 'axis-style-slots.data.ts']} />
+In the origin scene, both axes use `placement.kind="origin"` to cross the other dimension at 0. Placement does not expand the domain; `crossing` controls the intersection label, while `line.arrow` and `ticks.endpoint` control endpoint arrows and nearby tick avoidance.
 
-### Grid Source
+<ComponentPreview
+  files={['axis-cartesian-playground', 'axis-cartesian-playground.data.ts']}
+  size="md"
+  caption="Switch among continuous-edge, continuous-origin, and categorical-label scenes, then tune only the active Axis controls."
+/>
 
-By default, `grid: true` reuses the current axis's visible ticks. When the axis should keep sparse labels but the background needs denser guides, set `grid.ticks` with `values`, `interval`, or `count`; `grid.density` samples only grid lines and does not change axis ticks. Use `grid.minor` for minor grid lines; positions that overlap the major grid are skipped automatically.
+## How it works
 
-<ComponentPreview files={['axis-grid-source', 'axis-grid-source.data.ts']} />
+<ComponentAlert
+  type="tip"
+  title="Learn the API before the generation order"
+  description="For everyday configuration, the examples and API table above are enough. This section explains why tick, grid, and semantic layer controls remain independent."
+/>
 
-### Tick Density
+### Tick and grid sources
 
-`ticks.count` is a target hint for the scale, not a guaranteed final count. Use `ticks.interval` for fixed-step candidates, `ticks.density` to sample visible ticks, and `ticks.mark` to replace line ticks with builtin shapes or a custom core shape.
+Axis creates candidate ticks with the priority `ticks.values > ticks.interval > ticks.count`, then applies `density` to obtain visible ticks. The grid reuses those results unless `grid.ticks` requests a separate candidate source, so its density can remain independent from axis labels. Minor-grid positions come from `grid.minor.ticks`, then drop positions that overlap the major grid.
 
-| Config     | Main forms                                                                                                                                      | Purpose                                   |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| `interval` | `{ kind:'number', step, anchor? }` / `{ kind:'time', unit, step?, anchor? }` / `{ kind:'category', step, offset? }`                             | Generate fixed-step candidate ticks       |
-| `density`  | `{ kind:'all' }` / `{ kind:'sample', maxCount?, minGap?, preserveEnds? }`                                                                       | Sample candidate ticks into visible ticks |
-| `mark`     | `false` / `{ kind:'line', length?, line? }` / `{ kind:'circle' \| 'square' \| 'triangle' \| 'diamond', ... }` / `{ kind:'custom', shape, ... }` | Control tick marker appearance            |
+<ComponentPreview files="axis-tick-grid-flow" size="sm" hideCode />
 
-<ComponentPreview files={['axis-tick-density', 'axis-tick-density.data.ts']} />
+<SourceLinks
+  sources={[
+    {
+      label: 'Axis tick source priority and formatting',
+      path: 'packages/viz/plot/src/providers/scale/shared/guide-ticks.ts',
+      startLine: 226,
+      endLine: 303,
+    },
+    {
+      label: 'Grid tick reuse, independent resolution, and minor-grid deduplication',
+      path: 'packages/viz/plot/src/pipeline/guide/guide.ts',
+      startLine: 685,
+      endLine: 716,
+    },
+    {
+      label: 'Cartesian minor-grid deduplication call',
+      path: 'packages/viz/plot/src/pipeline/guide/guide.ts',
+      startLine: 1024,
+      endLine: 1037,
+    },
+  ]}
+/>
 
-### Tick Label Layout
+### Semantic layers
 
-`tickLabels.layout` only adjusts label nodes; it does not change ticks, tick marks, or grid lines. Omit it to use the builtin adaptive strategy, or set `layout: false` when exact label placement is more important than automatic rotation, hiding, and boundary handling.
+Axes sit above marks by default, while grids stay below them. `layer={{ zIndex }}` overrides only the axis scope; grid always uses its separate background layer so lines do not cover the data. The default order is grid `-300`, marks `0`, axis `200`, plot labels `400`, and legend `500`.
 
-| Config              | Main forms                                                                | Purpose                                                                                  |
-| ------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `layout.rotate`     | `false` / `{ angles?, recoverWhenFailed? }`                               | Pick an automatic tick-label rotation angle; explicit `tickLabels.rotate` takes priority |
-| `layout.hide`       | `false` / `{ strategy:'greedy' \| 'parity', preserveEnds?, separation? }` | Hide overlapping labels while keeping ticks, tick marks, and grid lines                  |
-| `layout.bounds`     | `false` / `{ overflow:'allow' \| 'hide' \| 'flush', tolerance? }`         | Handle labels that overflow the axis span                                                |
-| `layout.sampleSize` | `number`                                                                  | Limit how many labels are scanned while estimating auto rotation                         |
+<ComponentPreview files="axis-semantic-layers" size="sm" hideCode />
 
-<ComponentPreview files={['axis-tick-label-layout', 'axis-tick-label-layout.data.ts']} />
+<SourceLinks
+  sources={[
+    {
+      label: 'Separate zIndex selection for axis and grid',
+      path: 'packages/viz/plot/src/pipeline/guide/guide.ts',
+      startLine: 801,
+      endLine: 809,
+    },
+    {
+      label: 'Default Plot semantic layer values',
+      path: 'packages/viz/plot/src/schemas/layer/constants.ts',
+      startLine: 1,
+      endLine: 22,
+    },
+  ]}
+/>
 
-### Origin Axes
+## API Reference
 
-Under cartesian coordinates, an axis can cross a data value from the other dimension. `placement.kind="origin"` only changes where the axis baseline sits; it does not expand the domain automatically. Configure `domain` or `domainPadding` when the origin needs to be visible. `crossing` controls the tick and label at the crossing value, `line.arrow` uses `positive` / `negative` for axis-direction endpoints, `ticks.endpoint` hides tick marks near arrows, and `title.placement` places the title along the visible baseline.
+| Prop          | Type                      | Default       | Description                                                                                                                                    |
+| ------------- | ------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dimension`   | `AxisProps['dimension']`  | —             | Dimension to explain: Cartesian / polar use x / y; it must belong to the current coordinate system                                             |
+| `scale?`      | `PositionScaleType`       | auto-derived  | Positional scale shortcut; equivalent to `<Scale dimension="..." type="..." />` for the same dimension                                         |
+| `placement?`  | `AxisProps['placement']`  | inferred      | Baseline placement; branch `kind` values are listed by <ApiValues name="AxisPlacementKind" />; `origin` only applies to Cartesian axes         |
+| `line?`       | `AxisProps['line']`       | default line  | Axis-line style and endpoint geometry; `extent` and `arrow` currently apply only to Cartesian axes                                             |
+| `crossing?`   | `AxisProps['crossing']`   | normal ticks  | Tick / label policy at a crossing value; `label:'corner'` can move a shared origin label to a corner                                           |
+| `ticks?`      | `AxisProps['ticks']`      | default ticks | Candidate source, visible density, endpoint avoidance, and tick-marker appearance                                                              |
+| `tickLabels?` | `AxisProps['tickLabels']` | `true`        | Tick-label visibility, format, and style; explicit `rotate` wins over `layout.rotate`, and `layout:false` disables adaptive collision handling |
+| `title?`      | `AxisProps['title']`      | —             | Axis-title content, spacing, placement along the axis, orientation, and local offset                                                           |
+| `grid?`       | `AxisProps['grid']`       | `false`       | Grid visibility, style, and independent tick source; `minor` adds minor lines, while `applyTo/select` targets composition or facet views       |
+| `layer?`      | `AxisProps['layer']`      | axis layer    | Override the semantic layer of the axis scope without changing the grid's background layer                                                     |
+| `id?`         | `AxisProps['id']`         | —             | Optional guide handle used to identify the axis and its derived grid consistently                                                              |
 
-| Config              | Common values                                                                   | Purpose                                                                                                                                 |
-| ------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `crossing.tick`     | `'show' \| 'hide'`                                                              | Show or hide the tick mark at the crossing value                                                                                        |
-| `crossing.label`    | `'show' \| 'hide' \| 'corner'`                                                  | Show, hide, or move the crossing label to a corner                                                                                      |
-| `crossing.corner`   | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'`                  | Corner used when `label:'corner'`                                                                                                       |
-| `ticks.endpoint`    | `false \| { hideWhenArrow?, distance?, affect? }`                               | Control tick avoidance near arrow endpoints; `false` disables the default avoidance, and `affect:'mark-and-label'` also hides the label |
-| `title.placement`   | `'at-start'` / `'near-start'` / `'midway'` / `'near-end'` / `'at-end'` / `0..1` | Place the title from negative to positive axis direction                                                                                |
-| `title.orientation` | `'auto'` / `'horizontal'` / `'axis'`                                            | Control title rotation; math axes often use `horizontal` for the y title                                                                |
+### Key object fields
 
-<ComponentPreview files={['axis-math-origin', 'axis-math-origin.data.ts']} />
+| Object field        | Type                                                | Default               | Purpose                                                                                             |
+| ------------------- | --------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------- |
+| `placement.kind`    | <ApiValues name="AxisPlacementKind" />              | inferred              | Select automatic, cardinal-side, coordinate-native-edge, or Cartesian-origin placement              |
+| `placement.side`    | `'top' \| 'right' \| 'bottom' \| 'left'`            | —                     | Required cardinal side for `kind:'side'`                                                            |
+| `placement.edge`    | `string`                                            | —                     | Required coordinate-native edge id for `kind:'edge'`                                                |
+| `placement.origin`  | `string \| number`                                  | `0`                   | Cross-dimension data value for `kind:'origin'`                                                      |
+| `ticks.values`      | `Array<string \| number>`                           | —                     | Explicit candidates; higher priority than `interval` and `count`                                    |
+| `ticks.interval`    | `{ kind:'number' \| 'time' \| 'category'; ... }`    | —                     | Fixed numeric step, UTC time unit, or category-index stride                                         |
+| `ticks.count`       | `number`                                            | scale default         | Target candidate count when `values` and `interval` are absent                                      |
+| `ticks.density`     | `{ kind:'all' \| 'sample'; ... }`                   | all candidates        | The sample branch thins visible ticks by `maxCount` or `minGap`                                     |
+| `ticks.mark`        | `false \| { kind; ... }`                            | line mark             | Select a line, built-in shape, or custom mark; do not combine it with `ticks.length` / `ticks.line` |
+| `ticks.endpoint`    | `false \| { hideWhenArrow?; distance?; affect? }`   | avoid arrow endpoints | Hide tick marks near endpoint arrows; `affect` can hide labels too                                  |
+| `tickLabels.format` | `string`                                            | automatic format      | d3-format for numbers or UTC d3-time-format for temporal ticks                                      |
+| `tickLabels.rotate` | `number`                                            | adaptive              | Fixed rotation angle; an explicit value wins over `layout.rotate`                                   |
+| `tickLabels.layout` | `false \| { rotate?; hide?; bounds?; sampleSize? }` | adaptive layout       | Control auto rotation, overlap hiding, and axis-span boundary handling                              |
+| `grid.ticks`        | `{ values?; interval?; count? }`                    | visible axis ticks    | Give the major grid an independent candidate source                                                 |
+| `grid.density`      | `{ kind:'all' \| 'sample'; ... }`                   | all grid candidates   | Thin grid positions without changing axis ticks                                                     |
+| `grid.minor`        | `false \| { ticks; density?; bandPosition?; ... }`  | `false`               | Generate minor lines from a separate source and remove positions overlapping the major grid         |
+| `grid.applyTo`      | `'local' \| 'all' \| 'none' \| 'selected'`          | composition policy    | Project the grid to the current, shared, or explicitly selected targets                             |
+| `grid.select`       | `{ view?; facet?; track? }`                         | —                     | Required with `applyTo:'selected'`; matches view, facet, or track targets                           |
 
-### Polar axes
+`coordinateView`, `facetId`, `scaffoldId`, and `trackId` are advanced fields used by composition and facet flows to locate axis ownership. Ordinary single plots do not need them; see [coordinate composition](/viz/plot/coordinate/composition) when building composed axes.
 
-Under polar, use `dimension="x"` (angular tick labels) and `dimension="y"` (radial ticks + concentric grid rings). Radar / polar charts usually use both together.
-
-<ComponentPreview files={['axis-polar', 'axis-polar.data.ts']} />
-
-<p className="text-sm text-muted-foreground">
-  The x axis labels angular dimensions; the y axis with grid draws concentric rings.
-</p>
-
-### Layer Order
-
-Axes are drawn above marks by default, but below legends and plot-level labels. Use `layer={{ zIndex }}` on `<Axis>` when you need to override that semantic layer. The override applies to the axis scope only; `grid` stays in the grid layer so grid lines do not cover data marks. The default order is grid `-300`, marks `0`, axis `200`, plot labels `400`, and legend `500`.
-
-## API
-
-| Prop          | Type                      | Default       | Description                                                                                                                                                                                                                                    |
-| ------------- | ------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dimension`   | `AxisProps['dimension']`  | —             | Which dimension to decorate: cartesian x / y, polar x / y, ternary x / y / z (triangle edges); must match the coordinate's valid set or it errors                                                                                              |
-| `scale?`      | `PositionScaleType`       | auto-derived  | Positional scale shortcut; equivalent to `<Scale dimension="..." type="..." />` for the same dimension, and only applies to x / y / z                                                                                                          |
-| `placement?`  | `AxisProps['placement']`  | inferred      | Axis placement; branch `kind` values come from <ApiValues name="AxisPlacementKind" />. `origin` only supports cartesian axes. For an x axis, `origin` is a y value; for a y axis, it is an x value                                             |
-| `line?`       | `AxisProps['line']`       | default line  | Axis-line style and endpoint geometry; `extent` controls the data span, and `arrow.positive/negative` controls axis-direction arrows; `extent` / `arrow` currently only support cartesian axes                                                 |
-| `crossing?`   | `AxisProps['crossing']`   | normal ticks  | Tick and label policy at an axis crossing value; `label:'corner'` can move a shared origin label to one corner                                                                                                                                 |
-| `ticks?`      | `AxisProps['ticks']`      | default ticks | `values > interval > count` creates candidate ticks; `density` samples visible ticks; `endpoint` hides tick artifacts near arrows without changing grid source; `mark` controls line / shape marks                                             |
-| `tickLabels?` | `AxisProps['tickLabels']` | `true`        | Tick-label config; `format` accepts d3-format / d3-time-format; `rotate` is fixed rotation and takes priority over `layout.rotate`; `layout:false` disables adaptive layout                                                                    |
-| `title?`      | `AxisProps['title']`      | —             | Axis title; `padding` controls distance from the tick-label band, `placement` supports path-label-like keywords or a `0..1` ratio, `anchor` / `shift` fine-tune endpoint alignment and local offset, and explicit `rotate` takes priority      |
-| `grid?`       | `AxisProps['grid']`       | `false`       | Draw grid lines; by default it reuses the axis's visible ticks, while `grid.ticks` gives the grid its own source. `minor` draws minor lines; `applyTo/select` controls composition / facet projection; `bandPosition` only affects band scales |
-| `id?`         | `AxisProps['id']`         | —             | Optional guide handle; with provenance, the axis uses `<plotId>.<id>` and the grid uses `<plotId>.<id>.grid` from the same owner; anonymous composed axes use coordinate-view structural ids, extended with panel identity inside facets       |
-
-`layout` is a `<Plot>` prop; `labels` is a PlotSpec field collected from declarations such as `TitleLabel` and `CaptionLabel`. Neither belongs to `<Axis>`:
-
-| Field     | Type                   | Default     | Description                                                                                                                                      |
-| --------- | ---------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `layout?` | `PlotProps['layout']`  | auto layout | Controls whether plot labels reserve space automatically; `mode:'fixed'` or `autoPadding:false` places text without shrinking the plot area      |
-| `labels?` | `IRPlotSpec['labels']` | `[]`        | Static plot text; `role:'title'/'caption'/'source'` reserves space by default, while `role:'note'` and `kind:'point'` only place text by default |
-
-Legend `style` also controls size legend symbols. By default, `symbolFit:'fit'` keeps size symbols inside the `symbolSize` box so large radius values do not overlap neighboring legend entries. Use `symbolFit:'preserve'` when the legend must keep the rendered radius.
-
-| Field                | Type                                 | Default            | Description                                                                                                                       |
-| -------------------- | ------------------------------------ | ------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| `style.symbolSize?`  | `number`                             | `style.swatchSize` | Target visual box for symbol-like legends such as size and shape                                                                  |
-| `style.symbolScale?` | `number`                             | `1`                | Scale factor applied to legend symbols                                                                                            |
-| `style.symbolFit?`   | <ApiValues name="LegendSymbolFit" /> | `'fit'`            | `fit` maps size symbols into `symbolSize`; `preserve` keeps descriptor radius and reserves entry space from the final symbol size |
+Visual styling belongs to `line`, `ticks`, `tickLabels`, `title`, and `grid`. For example, `dashPattern` / `dashOffset` configure dashed lines, while text styles stay on their respective text slots; no separate styling component is needed.
 
 ## Related
 
-- [Coordinates](/viz/plot/coordinate) — the polar switch and channel roles
-
-<ComponentAlert
-  title="Reference lines / bands are not axes"
-  description="To draw a threshold line, mean line, or tolerance band at a value / interval, use <ReferenceMark> (a data-driven annotation that joins mark draw order), not <Axis>. <Axis> only renders the tick body of a scale."
-/>
+- [Scale](/viz/plot/scale) — maps positional values and generates ticks
+- [Legend](/viz/plot/guide/legend) — explains non-positional channels such as color, size, opacity, and shape
+- [Coordinate composition](/viz/plot/coordinate/composition) — targets Axis output in compositions and facets

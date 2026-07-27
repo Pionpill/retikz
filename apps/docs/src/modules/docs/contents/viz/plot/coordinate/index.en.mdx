@@ -1,20 +1,20 @@
 ---
 title: Coordinates
-description: Coordinates decide how data values land on the canvas: 2D covers cartesian and polar charts, 1D covers single-axis data, ternary handles three-part mixtures, and custom coordinates inject projection functions at runtime.
+description: 'Coordinates place data on a line, plane, or circle and can combine several coordinate regions in one chart.'
 ---
 
-The coordinate system is the last step `<Plot>` takes to place field values on the canvas. Scales first map data values into continuous or discrete spaces; the coordinate then decides whether those values become points on a plane, points around a circle, sectors, points inside a triangle, or positions under a custom projection.
+Coordinates determine the spatial shape of a chart. Scales first convert field values into drawable positions; the coordinate system then projects those positions onto a line, plane, or circle.
 
-If you only need ticks, labels, or grid lines, see [Axis](/viz/plot/guide/axis). If you want to understand how `coordinate` turns the same mark into a flat chart, radial chart, rug, or ternary plot, start here.
+If you only need to adjust ticks, labels, or grid lines, see [Axis](/viz/plot/guide/axis). To add a new projection, see [Custom Coordinates](/viz/plot/coordinate/custom-coordinate).
 
-## What each part covers
+## Responsibilities
 
-| Topic               | Coordinates                     | Responsibility                           | Use it when                                           |
-| ------------------- | ------------------------------- | ---------------------------------------- | ----------------------------------------------------- |
-| 2D coordinates      | `cartesian2D` / `polar2D`       | Regular x/y charts and polar charts      | Bars, lines, areas, pies, donuts, radar               |
-| 1D coordinates      | `cartesian1D` / `polar1D`       | Project one position channel             | Rug plots, timelines, cyclic event dots               |
-| Ternary coordinates | `ternary2D`                     | Project three components into a triangle | Compositions and three-way trade-offs                 |
-| Custom coordinates  | `{ type: 'bridge', ...config }` | Inject your own runtime definition       | Curved axes, special spaces, experimental projections |
+| Topic                  | Responsibility                                      | Use it for                               |
+| ---------------------- | --------------------------------------------------- | ---------------------------------------- |
+| 2D coordinates         | Project x / y positional dimensions onto a plane    | Bars, lines, pies, and radar charts      |
+| 1D coordinates         | Project one positional dimension onto a line/circle | Rugs, timelines, and cyclic events       |
+| Coordinate composition | Organize several coordinate regions in one Plot     | Dual axes, facets, and shared tracks     |
+| Custom coordinates     | Register new roles, projections, and capabilities   | Spatial mappings beyond built-in systems |
 
 ## In This Section
 
@@ -22,25 +22,25 @@ If you only need ticks, labels, or grid lines, see [Axis](/viz/plot/guide/axis).
   <LinkedCard href="/viz/plot/coordinate/2d">
     <span className="font-semibold">2D Coordinates</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      cartesian2D and polar2D, including radial bars, pies, donuts, and radar
+      Draw cartesian or polar charts from x / y fields
     </span>
   </LinkedCard>
   <LinkedCard href="/viz/plot/coordinate/1d">
     <span className="font-semibold">1D Coordinates</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      cartesian1D and polar1D place one position channel on a line or circle
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/coordinate/ternary">
-    <span className="font-semibold">Ternary Coordinates</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      x / y / z channels are normalized and projected into a triangle
+      Place one positional field on a line or circle
     </span>
   </LinkedCard>
   <LinkedCard href="/viz/plot/coordinate/composition">
     <span className="font-semibold">Coordinate Composition</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Multiple coordinate scopes, facets, and shared tracks inside one Plot
+      Organize dual axes, facets, and shared tracks
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/coordinate/custom-coordinate">
+    <span className="font-semibold">Custom Coordinates</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Extend positional roles and projection behavior
     </span>
   </LinkedCard>
 </div>

@@ -70,7 +70,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const { name, diffFrom, sourceFiles } = useMemo(() => normalizeComponentPreviewFiles(files), [files]);
   const loc = useDocLocation();
   const { i18n } = useTranslation();
-  const lang = i18n.language.startsWith('zh') ? 'zh' : 'en';
+  const lang = (i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en';
 
   const ctxSegments = useDemoLocationContext();
   const segments = useMemo(() => ctxSegments ?? (loc ? docPathSegments(loc) : null), [ctxSegments, loc]);
