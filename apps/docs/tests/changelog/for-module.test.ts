@@ -32,15 +32,24 @@ describe('changelogForModule', () => {
     ]);
   });
 
-  it('Viz 发布更新日志排除已迁移的 Plot 包', () => {
-    const releases = changelogForModule('viz', 'releases');
+  it('Data 更新日志只含 Data 包', () => {
+    const releases = changelogForModule('viz', 'data');
+    expect(releases).toHaveLength(1);
+    expect(releases[0]?.packages.map(block => block.pkg)).toEqual(['@retikz/data']);
+  });
+
+  it('Table 更新日志只含三个 Table 包', () => {
+    const releases = changelogForModule('viz', 'table');
     expect(releases).toHaveLength(1);
     expect(releases[0]?.packages.map(block => block.pkg)).toEqual([
-      '@retikz/data',
       '@retikz/table',
       '@retikz/table-react',
       '@retikz/table-vanilla',
     ]);
+  });
+
+  it('旧 Viz 发布分区不再返回更新日志', () => {
+    expect(changelogForModule('viz', 'releases')).toEqual([]);
   });
 
   it('standard 模块只含 standard 组包', () => {
