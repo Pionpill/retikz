@@ -65,7 +65,7 @@ const spec = plot({
 
 ## 兼容性与遗留风险
 
-这是 Vanilla authoring 的 breaking 迁移；Plot IR schema、lowering 几何、Scene schema、React JSX API 与 `renderPlot()` 行为不变。外部 Vanilla 消费方必须把链式 builder 改为 plain `plot({ marks, guides, facets, scaffolds })`。增量更新与 lineage 重复 lowering 是已明确延期的性能能力，不构成 v0.1 RC 契约。
+这是 Vanilla authoring 的 breaking 迁移；Plot IR schema、lowering 几何、Scene schema、React JSX API 与 `renderPlot()` 行为不变。外部 Vanilla 消费方必须把链式 builder 改为 plain `plot({ marks, guides, facets, scaffolds })`。增量更新与 lineage 重复 lowering 是已明确延期的性能能力，不构成 v0.1-beta.2 契约。
 
 ## 验证
 
@@ -89,4 +89,4 @@ const spec = plot({
 - 用户说明：Plot 总览、runtime reference、三包 README 与 viz v0.1 changelog
 - 完成提交：`89a56d7d7`、`e30d5ec69`、`87fcd3c66`、`429ef8d2f`
 
-> 本 ADR 已在 plot v0.1 RC 收尾时压缩；完整施工契约保留在该 ADR 的 Proposed 历史版本中。
+> 本 ADR 已在 plot v0.1-beta.2 收尾时压缩；完整施工契约保留在该 ADR 的 Proposed 历史版本中。

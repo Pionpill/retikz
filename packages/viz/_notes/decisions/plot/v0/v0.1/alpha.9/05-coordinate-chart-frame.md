@@ -39,4 +39,4 @@ alpha.12 证明“内置坐标系走 bespoke 分支、自定义坐标系走 cust
 - 当前 guide 消费：`packages/viz/plot/src/pipeline/guide/guide.ts`
 - 用户文档：`/viz/plot/coordinate/custom-coordinate`
 
-> 本 ADR 已在 plot v0.1 RC 收尾时压缩；完整实验性方案保留在本文件的 Proposed 历史版本中。
+> 本 ADR 已在 plot v0.1-beta.2 收尾时压缩；完整实验性方案保留在本文件的 Proposed 历史版本中。

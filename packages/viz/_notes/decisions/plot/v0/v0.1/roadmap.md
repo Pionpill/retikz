@@ -1,6 +1,6 @@
 # plot v0.1 Roadmap
 
-> 状态：Done
+> 状态：In Progress
 > 本文件汇总 plot v0.1 minor 的路线与 milestone 索引。具体执行记录放在各 milestone 的 `roadmap.md`，长期决策放在同目录的 `NN-*.md` ADR。
 > 关联：[`plot v0 roadmap`](../roadmap.md) · [`plot-design.md §11 / §13.1`](../../../../architecture/plot-design.md)
 
@@ -19,11 +19,11 @@
 
 **三包 lockstep 协同（改原计划）**：`@retikz/plot`（IR + lowering）/ `@retikz/plot-react`（`<Plot>` 组件 + 组合 DSL）/ `@retikz/plot-vanilla`（plain authoring + Tier2 + SSR）**从 alpha.1 起一起迭代**——每加一个 plot 能力（mark / scale / coordinate…），同步在 react / vanilla 表面与文档 demo 露出。原计划把框架绑定整体推到 v0.3，现废除：否则文档站只能写 `<Layout ir={{...}} composites={lowerPlots(...)}/>` 这种低可读性示例，对用户极不友好。**注意区分**：authoring 绑定（构图 + 渲染）随 plot 同步；**交互能力**（tooltip / hover / 事件回调）留到 v0.2——那依赖 core runtime / 水合，不只是 authoring 表面。
 
-## Beta 与 RC 收尾
+## Beta 收尾与 RC 计划
 
 - **beta.1**：抽出 `@retikz/data`，Plot 改为消费共享数据 schema、contract、provider 与 pipeline。
 - **beta.2**：补齐 runtime-only Plot lineage；以 `createPlotSpec()` / `normalizePlotBindings()` 统一 React 与 Vanilla authoring；Vanilla 迁移为 `plot()`、`embedPlot()`、`createPlotAdapter()` 与独立 `renderPlot()` runtime。
-- **RC**：冻结 Plot IR、Definition / registry、authoring、lowering、lineage、locator 与三包 adapter 公共面。增量更新、依赖失效、按需物化和 renderer diff 进入 v0.2。
+- **下一阶段 RC**：beta.2 收尾后冻结 Plot IR、Definition / registry、authoring、lowering、lineage、locator 与三包 adapter 公共面。增量更新、依赖失效、按需物化和 renderer diff 进入 v0.2。
 
 ## Milestones
 

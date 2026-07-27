@@ -189,11 +189,11 @@ export const vizV01: Release = {
       ],
       subVersions: [
         {
-          version: 'rc.1',
+          version: 'beta.2',
           date: '2026-07-27',
           summary: {
-            zh: '冻结 Plot v0.1 公共面：补齐 runtime lineage 与共享 plain authoring，收窄顶层导出和未实现契约，并归并未发布的 beta.2 修正。',
-            en: 'Freezes the Plot v0.1 public surface: adds runtime lineage and shared plain authoring, narrows root exports and unimplemented contracts, and rolls the unpublished beta.2 fixes into this RC.',
+            zh: '收口 Plot v0.1-beta.2：补齐 runtime lineage 与共享 plain authoring，收窄顶层导出和未实现契约，并修正数据字典的原型链读取。',
+            en: 'Closes out Plot v0.1-beta.2 by adding runtime lineage and shared plain authoring, narrowing root exports and unimplemented contracts, and fixing prototype-chain reads in data dictionaries.',
           },
           items: [
             esmOnlyChangeItem,
@@ -476,7 +476,7 @@ export const vizV01: Release = {
       ],
       subVersions: [
         {
-          version: 'rc.1',
+          version: 'beta.2',
           date: '2026-07-27',
           summary: {
             zh: 'React `<Plot>` 复用共享 authoring normalization，补齐 spec layout 透传，并让空 mark 的组合 DSL 也走完整 PlotSpec 校验。',
@@ -715,7 +715,7 @@ export const vizV01: Release = {
       ],
       subVersions: [
         {
-          version: 'rc.1',
+          version: 'beta.2',
           date: '2026-07-27',
           summary: {
             zh: 'Vanilla 收敛为 plain authoring，复用共享 binding normalization，并接入 Kernel Vanilla Tier 2 adapter。',
