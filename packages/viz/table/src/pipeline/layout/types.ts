@@ -73,7 +73,7 @@ export type ResolvedTableLayoutSpec = Readonly<{
   borders?: IRTableBorders;
 }>;
 
-/** canonical row 或 column 的固定轨道几何 */
+/** canonical row 或 column 的已求解轨道几何 */
 export type TableTrackLayout = Readonly<{
   /** semantic track id */
   id: string;

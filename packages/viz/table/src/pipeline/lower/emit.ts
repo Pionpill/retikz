@@ -8,7 +8,7 @@ import type { TableLayout } from '../layout';
 import { TableBorderPathMetaSchema } from '../../contract';
 import { tableBorderPathMetaOf } from './meta';
 
-/** 让固定轨道 Table bounds 参与 Core Scene AABB */
+/** 让 Table allocation bounds 参与 Core Scene AABB */
 export const emitTableBoundsSentinel = (layout: Pick<TableLayout, 'allocationBounds'>): IRNode => ({
   type: 'node',
   position: [
