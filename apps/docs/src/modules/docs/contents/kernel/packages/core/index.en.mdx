@@ -60,7 +60,9 @@ The fixed identities are `CORE_OWNER_KEY = '@retikz/core/document'` and `CORE_PR
 
 The initial run performs a full compile. When an update cannot be proven locally safe, the Program falls back to a full compile and publishes one `replaceScene` in `patch.operations`. Callers still consume the same Snapshot / Patch envelope instead of switching protocols.
 
-Core cross-checks an optional ChangeSet against the complete previous and next Snapshots. The stable identity order must be identical, and one unique `update` hint must cover each changed value owned by the Scene root or a stable root child. Missing changes, reordering, anonymous or duplicate entities, Scopes, Composites, and add/remove/move hints are mismatches.
+Core cross-checks an optional ChangeSet against the complete previous and next Snapshots. One unique `update` hint must cover each changed value owned by the Scene root or a unique-id root child. Root-child add/remove/move hints must completely explain the next identity set and order, with `parent` and `before` pointing to final positions in the next Snapshot.
+
+Structural hints are checked as a set; their array order is not Patch execution order, and the move set must be a minimum reorder. Anonymous or duplicate entities, Scopes, Composites, missing or redundant hints, invalid parents or `before` identities, and hints that cannot rebuild the next root order are mismatches.
 
 The current implementation takes the full fallback path for both matching and mismatching updates. An exact match only suppresses the mismatch diagnostic; it does not mean local incremental compilation has started.
 
@@ -117,10 +119,16 @@ To replace a measurer, lowerer, provider callback, or external state captured by
       endLine: 120,
     },
     {
-      label: 'Snapshot index and ChangeSet cross-check',
+      label: 'Snapshot stable-root index',
       path: 'packages/kernel/core/src/compile/incremental/diff.ts',
       startLine: 11,
-      endLine: 109,
+      endLine: 64,
+    },
+    {
+      label: 'ChangeSet structural cross-check',
+      path: 'packages/kernel/core/src/compile/incremental/diff.ts',
+      startLine: 132,
+      endLine: 271,
     },
     {
       label: 'Mismatch fallback diagnostic',

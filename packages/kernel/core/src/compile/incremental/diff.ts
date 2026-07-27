@@ -1,6 +1,6 @@
 import type { RuntimeChangeSet, RuntimeIdentity } from '@retikz/runtime';
 
-import { createRuntimeIdentity, runtimeIdentityEquals } from '@retikz/runtime';
+import { createRuntimeIdentity, createRuntimeIdentityIndex, runtimeIdentityEquals } from '@retikz/runtime';
 
 import type { CoreChange } from '../../contract';
 import type { IRChild, IRScene } from '../../schemas';
@@ -63,46 +63,208 @@ export const createCoreSnapshotIndex = (source: Readonly<IRScene>): CoreSnapshot
   return Object.freeze({ complete, entries: Object.freeze(entries) });
 };
 
-const findEntry = (
-  entries: ReadonlyArray<CoreSnapshotIndexEntry>,
-  identity: RuntimeIdentity,
-): CoreSnapshotIndexEntry | undefined => entries.find(entry => runtimeIdentityEquals(entry.identity, identity));
+type CoreSnapshotEntryLookup = Readonly<{
+  root: CoreSnapshotIndexEntry;
+  childrenById: ReadonlyMap<string, CoreSnapshotIndexEntry>;
+}>;
 
-/** 校验 update-only hint 是否完整覆盖前后 Snapshot 的稳定实体变化 */
+/** 为 stable-root index 建立不编码 identity path 的常数时间定位表 */
+const createSnapshotEntryLookup = (index: CoreSnapshotIndexRead): CoreSnapshotEntryLookup | undefined => {
+  const root = index.entries[0];
+  const childrenById = new Map<string, CoreSnapshotIndexEntry>();
+  for (const entry of index.entries.slice(1)) {
+    const id = entry.identity.path.length === 3 ? entry.identity.path[2] : undefined;
+    if (id === undefined || childrenById.has(id)) return undefined;
+    childrenById.set(id, entry);
+  }
+  return { root, childrenById };
+};
+
+/** 先按 canonical child id 定位，再用 Runtime identity equality 确认完整 path */
+const lookupSnapshotEntry = (
+  lookup: CoreSnapshotEntryLookup,
+  identity: RuntimeIdentity,
+): CoreSnapshotIndexEntry | undefined => {
+  if (runtimeIdentityEquals(lookup.root.identity, identity)) return lookup.root;
+  const id = identity.path.length === 3 ? identity.path[2] : undefined;
+  if (id === undefined) return undefined;
+  const entry = lookup.childrenById.get(id);
+  return entry !== undefined && runtimeIdentityEquals(entry.identity, identity) ? entry : undefined;
+};
+
+/** 计算唯一位置序列的严格最长递增子序列长度 */
+const longestIncreasingSubsequenceLength = (positions: ReadonlyArray<number>): number => {
+  const tails: Array<number> = [];
+  for (const position of positions) {
+    let start = 0;
+    let end = tails.length;
+    while (start < end) {
+      const middle = Math.floor((start + end) / 2);
+      if (tails[middle] < position) start = middle + 1;
+      else end = middle;
+    }
+    tails[start] = position;
+  }
+  return tails.length;
+};
+
+/** 比较两组 stable-root entry 的 identity 顺序 */
+const sameIdentityOrder = (
+  left: ReadonlyArray<CoreSnapshotIndexEntry>,
+  right: ReadonlyArray<CoreSnapshotIndexEntry>,
+): boolean =>
+  left.length === right.length &&
+  left.every((entry, index) => runtimeIdentityEquals(entry.identity, right[index].identity));
+
+/** 比较 before identity，并区分双方都缺省与单侧缺省 */
+const sameOptionalIdentity = (left: RuntimeIdentity | undefined, right: RuntimeIdentity | undefined): boolean =>
+  left === undefined || right === undefined
+    ? left === undefined && right === undefined
+    : runtimeIdentityEquals(left, right);
+
+/** 在运行时拒绝 TypeScript 联合类型之外的 change kind */
+const hasKnownCoreChangeKind = (value: unknown): boolean => {
+  if (typeof value !== 'object' || value === null || !('kind' in value)) return false;
+  return value.kind === 'add' || value.kind === 'update' || value.kind === 'remove' || value.kind === 'move';
+};
+
+/** 校验 stable-root hint 是否完整解释前后 Snapshot 的结构与 value 变化 */
 export const coreChangeSetMatchesSnapshots = (
   previous: CoreSnapshotIndexRead,
   next: CoreSnapshotIndexRead,
   changeSet: RuntimeChangeSet<CoreChange>,
 ): boolean => {
-  if (!previous.complete || !next.complete || previous.entries.length !== next.entries.length) return false;
+  if (!previous.complete || !next.complete) return false;
   try {
-    for (let index = 0; index < previous.entries.length; index += 1) {
-      if (!runtimeIdentityEquals(previous.entries[index].identity, next.entries[index].identity)) return false;
+    const rootIdentity = createRuntimeIdentity(CORE_OWNER_KEY, ['root']);
+    const previousLookup = createSnapshotEntryLookup(previous);
+    const nextLookup = createSnapshotEntryLookup(next);
+    if (
+      previousLookup === undefined ||
+      nextLookup === undefined ||
+      !runtimeIdentityEquals(previousLookup.root.identity, rootIdentity) ||
+      !runtimeIdentityEquals(nextLookup.root.identity, rootIdentity)
+    ) {
+      return false;
     }
-    const changed = previous.entries.filter((entry, index) => {
-      const nextEntry = next.entries[index];
-      return (
-        !runtimeIdentityEquals(entry.identity, nextEntry.identity) ||
-        !jsonStructuralEquals(entry.value, nextEntry.value)
-      );
-    });
-    if (changed.length !== changeSet.changes.length) return false;
-    const matched = new Set<CoreSnapshotIndexEntry>();
+
+    const previousChildren = previous.entries.slice(1);
+    const nextChildren = next.entries.slice(1);
+    const previousIdentities = createRuntimeIdentityIndex(
+      CORE_OWNER_KEY,
+      previous.entries.map(entry => entry.identity),
+    );
+    const nextIdentities = createRuntimeIdentityIndex(
+      CORE_OWNER_KEY,
+      next.entries.map(entry => entry.identity),
+    );
+    const matchedUpdates = new Set<CoreSnapshotIndexEntry>();
+    const added = new Set<CoreSnapshotIndexEntry>();
+    const removed = new Set<CoreSnapshotIndexEntry>();
+    const movedPrevious = new Set<CoreSnapshotIndexEntry>();
+    const movedNext = new Set<CoreSnapshotIndexEntry>();
+    const previousCommon = previousChildren.filter(entry => nextIdentities.has(entry.identity));
+    const nextCommon = nextChildren.filter(entry => previousIdentities.has(entry.identity));
+    const nextPositions = new Map(nextChildren.map((entry, index) => [entry, index]));
+    const previousCommonPositions = new Map(previousCommon.map((entry, index) => [entry, index]));
+    const previousPositionsInNextOrder: Array<number> = [];
+    for (const entry of nextCommon) {
+      const previousEntry = lookupSnapshotEntry(previousLookup, entry.identity);
+      if (previousEntry === undefined) return false;
+      const previousPosition = previousCommonPositions.get(previousEntry);
+      if (previousPosition === undefined) return false;
+      previousPositionsInNextOrder.push(previousPosition);
+    }
+    const minimumMoveCount = previousCommon.length - longestIncreasingSubsequenceLength(previousPositionsInNextOrder);
+
     for (const change of changeSet.changes) {
-      if (change.kind !== 'update') return false;
-      const previousEntry = findEntry(previous.entries, change.identity);
-      const nextEntry = findEntry(next.entries, change.identity);
+      if (!hasKnownCoreChangeKind(change)) return false;
+      if (change.kind === 'update') {
+        const previousEntry = lookupSnapshotEntry(previousLookup, change.identity);
+        const nextEntry = lookupSnapshotEntry(nextLookup, change.identity);
+        if (
+          previousEntry === undefined ||
+          nextEntry === undefined ||
+          matchedUpdates.has(previousEntry) ||
+          jsonStructuralEquals(previousEntry.value, nextEntry.value)
+        ) {
+          return false;
+        }
+        matchedUpdates.add(previousEntry);
+        continue;
+      }
+
+      if (change.kind === 'remove') {
+        const previousEntry = lookupSnapshotEntry(previousLookup, change.identity);
+        if (
+          runtimeIdentityEquals(change.identity, rootIdentity) ||
+          previousEntry === undefined ||
+          lookupSnapshotEntry(nextLookup, change.identity) !== undefined ||
+          removed.has(previousEntry)
+        ) {
+          return false;
+        }
+        removed.add(previousEntry);
+        continue;
+      }
+
+      if (change.kind === 'add') {
+        const nextEntry = lookupSnapshotEntry(nextLookup, change.identity);
+        if (
+          runtimeIdentityEquals(change.identity, rootIdentity) ||
+          !runtimeIdentityEquals(change.parent, rootIdentity) ||
+          lookupSnapshotEntry(previousLookup, change.identity) !== undefined ||
+          nextEntry === undefined ||
+          added.has(nextEntry)
+        ) {
+          return false;
+        }
+        const nextIndex = nextPositions.get(nextEntry);
+        if (nextIndex === undefined) return false;
+        const expectedBefore = nextChildren[nextIndex + 1]?.identity;
+        if (!sameOptionalIdentity(change.before, expectedBefore)) return false;
+        added.add(nextEntry);
+        continue;
+      }
+
+      const previousEntry = lookupSnapshotEntry(previousLookup, change.identity);
+      const nextEntry = lookupSnapshotEntry(nextLookup, change.identity);
       if (
+        runtimeIdentityEquals(change.identity, rootIdentity) ||
+        !runtimeIdentityEquals(change.parent, rootIdentity) ||
         previousEntry === undefined ||
         nextEntry === undefined ||
-        matched.has(previousEntry) ||
-        jsonStructuralEquals(previousEntry.value, nextEntry.value)
+        movedPrevious.has(previousEntry)
       ) {
         return false;
       }
-      matched.add(previousEntry);
+      const nextIndex = nextPositions.get(nextEntry);
+      if (nextIndex === undefined) return false;
+      const expectedBefore = nextChildren[nextIndex + 1]?.identity;
+      if (!sameOptionalIdentity(change.before, expectedBefore)) return false;
+      movedPrevious.add(previousEntry);
+      movedNext.add(nextEntry);
     }
-    return matched.size === changed.length;
+
+    const expectedAdded = nextChildren.filter(entry => !previousIdentities.has(entry.identity));
+    const expectedRemoved = previousChildren.filter(entry => !nextIdentities.has(entry.identity));
+    if (
+      expectedAdded.length !== added.size ||
+      !expectedAdded.every(entry => added.has(entry)) ||
+      expectedRemoved.length !== removed.size ||
+      !expectedRemoved.every(entry => removed.has(entry))
+    ) {
+      return false;
+    }
+    if (movedPrevious.size !== minimumMoveCount) return false;
+    const unmovedPrevious = previousCommon.filter(entry => !movedPrevious.has(entry));
+    const unmovedNext = nextCommon.filter(entry => !movedNext.has(entry));
+    if (!sameIdentityOrder(unmovedPrevious, unmovedNext)) return false;
+    const changedValues = previous.entries.filter(entry => {
+      const nextEntry = lookupSnapshotEntry(nextLookup, entry.identity);
+      return nextEntry !== undefined && !jsonStructuralEquals(entry.value, nextEntry.value);
+    });
+    return matchedUpdates.size === changedValues.length && changedValues.every(entry => matchedUpdates.has(entry));
   } catch {
     return false;
   }
