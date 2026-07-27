@@ -36,6 +36,12 @@ Plot 不拥有数据底座或渲染器：[Data](/viz/data)负责字段模型与�
       endLine: 2084,
     },
     {
+      label: '共享 authoring input 规范化为 canonical PlotSpec',
+      path: 'packages/viz/plot/src/contract/authoring/create-plot-spec.ts',
+      startLine: 7,
+      endLine: 28,
+    },
+    {
       label: 'Plot composite 的统一下沉入口',
       path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
       startLine: 724,
@@ -52,13 +58,15 @@ Plot 不拥有数据底座或渲染器：[Data](/viz/data)负责字段模型与�
 
 ## 三个包怎样分工
 
-| 包                     | 拥有的职责                                      | 典型入口                                |
-| ---------------------- | ----------------------------------------------- | --------------------------------------- |
-| `@retikz/plot`         | Plot IR、Definition / registry、解析与 lowering | `PlotSpecSchema`、`lowerPlots`          |
-| `@retikz/plot-react`   | React 声明式入口与运行时接线                    | `<Plot>`、`buildPlotSpec`               |
-| `@retikz/plot-vanilla` | plain spec、Vanilla Tier 2 与 SSR 接线          | `plot()`、`embedPlot()`、`renderPlot()` |
+| 包                     | 拥有的职责                                                      | 典型入口                                           |
+| ---------------------- | --------------------------------------------------------------- | -------------------------------------------------- |
+| `@retikz/plot`         | Plot IR、共享 authoring、Definition / registry、解析与 lowering | `createPlotSpec()`、`PlotSpecSchema`、`lowerPlots` |
+| `@retikz/plot-react`   | React 声明式入口与运行时接线                                    | `<Plot>`、`buildPlotSpec`                          |
+| `@retikz/plot-vanilla` | plain spec、Vanilla Tier 2 与 SSR 接线                          | `plot()`、`embedPlot()`、`renderPlot()`            |
 
 三包共享 `@retikz/plot` 的 IR 与 lowering 真源。adapter 可以提供适合框架的 authoring sugar，但不能复制或改变 scale、coordinate、mark、guide 的语义。
+
+`createPlotSpec()` 是 framework-neutral 的 authoring 收口入口：它把 `facets`、`scaffolds` 与 axis / topology binding 展开成 canonical `IRPlotSpec`，再执行完整 schema 校验。React 与 Vanilla 都复用这条规范化路径；已经持有完整 `IRPlotSpec` 时，可以直接交给运行时，无需再次套 authoring helper。
 
 ## Plot 负责与不负责什么
 

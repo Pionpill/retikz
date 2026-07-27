@@ -93,4 +93,4 @@ plot contract 新增图元链路类型；pipeline 新增 `lowerPlotWithLineage()
 
 ## 实现指针
 
-本 ADR 已随 viz `0.1.0-beta.2` 收尾压缩；当前真源以代码、测试、文档站和 changelog 为准。
+本 ADR 已在 plot v0.1 RC 收尾时压缩；当前真源以代码、测试、文档站和 changelog 为准。完整施工契约保留在该 ADR 的 Accepted 历史版本中。

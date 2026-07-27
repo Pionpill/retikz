@@ -189,14 +189,28 @@ export const vizV01: Release = {
       ],
       subVersions: [
         {
-          version: 'beta.2',
-          date: '2026-07-07',
+          version: 'rc.1',
+          date: '2026-07-27',
           summary: {
-            zh: '收窄 plot 顶层导出与未实现的 layout 契约，并把 provenance / layout 相关 helper 归到稳定 owner，降低误用风险。',
-            en: 'Narrows plot root exports and unimplemented layout contracts, while moving provenance / layout helpers under stable owners to reduce misuse.',
+            zh: '冻结 Plot v0.1 公共面：补齐 runtime lineage 与共享 plain authoring，收窄顶层导出和未实现契约，并归并未发布的 beta.2 修正。',
+            en: 'Freezes the Plot v0.1 public surface: adds runtime lineage and shared plain authoring, narrows root exports and unimplemented contracts, and rolls the unpublished beta.2 fixes into this RC.',
           },
           items: [
             esmOnlyChangeItem,
+            {
+              label: { zh: 'runtime-only Plot lineage', en: 'Runtime-only Plot lineage' },
+              content: {
+                zh: '`lowerPlotWithLineage()`、`PlotLineageRun` 与 locator lineage 把 Data 来源补充为 mark、encoding、scale 和 layout 语义；结果通过返回值或 adapter callback 交给宿主，不写入 `IRPlotSpec` 或 Scene meta。',
+                en: '`lowerPlotWithLineage()`, `PlotLineageRun`, and locator lineage enrich Data origins with mark, encoding, scale, and layout semantics. Hosts receive the result through return values or adapter callbacks; it is not written into `IRPlotSpec` or Scene metadata.',
+              },
+            },
+            {
+              label: { zh: '共享 plain authoring', en: 'Shared plain authoring' },
+              content: {
+                zh: '`createPlotSpec()` 与 `normalizePlotBindings()` 统一 React / Vanilla 的 axis、facet、scaffold 和 track binding，展开 authoring-only 字段后返回 schema-valid `IRPlotSpec`；核心错误统一使用 `plot authoring:`。',
+                en: '`createPlotSpec()` and `normalizePlotBindings()` unify React and Vanilla axis, facet, scaffold, and track bindings, expand authoring-only fields, and return schema-valid `IRPlotSpec` values with shared `plot authoring:` diagnostics.',
+              },
+            },
             {
               label: { zh: 'BREAKING：移除内置 ternary2D 坐标系', en: 'BREAKING: Built-in ternary2D removed' },
               content: {
@@ -243,6 +257,13 @@ export const vizV01: Release = {
               content: {
                 zh: 'Plot layout 暂不接受 `maxIterations`、`collision`、label `priority` / `overflow` 或 `placement.target:"view"`；当前稳定契约保留 frame / plotArea 定位、基础占位与 autoPadding，完整 solver 延后到 v0.2。',
                 en: 'Plot layout no longer accepts `maxIterations`, `collision`, label `priority` / `overflow`, or `placement.target:"view"`. The stable contract keeps frame / plotArea placement, basic reservation, and autoPadding; the complete solver moves to v0.2.',
+              },
+            },
+            {
+              label: { zh: '数据字典只读取自有键', en: 'Data dictionaries read own keys only' },
+              content: {
+                zh: 'datasets 与 fieldMaps 不再把原型链上的 `constructor`、`toString` 或 `__proto__` 当成数据集或映射；显式同名自有键仍可正常使用，lowering 与 locator 保持一致。',
+                en: 'Datasets and field maps no longer treat inherited `constructor`, `toString`, or `__proto__` properties as datasets or mappings. Explicit own properties with those names remain valid, with matching lowering and locator behavior.',
               },
             },
           ],
@@ -455,14 +476,21 @@ export const vizV01: Release = {
       ],
       subVersions: [
         {
-          version: 'beta.2',
-          date: '2026-07-07',
+          version: 'rc.1',
+          date: '2026-07-27',
           summary: {
-            zh: 'React `<Plot>` 的 spec 入口补齐 layout 透传，并让空 mark 的组合 DSL 也走完整 PlotSpec 校验。',
-            en: 'The React `<Plot>` spec entry now forwards layout, and empty-mark composition DSL output also goes through full PlotSpec validation.',
+            zh: 'React `<Plot>` 复用共享 authoring normalization，补齐 spec layout 透传，并让空 mark 的组合 DSL 也走完整 PlotSpec 校验。',
+            en: 'React `<Plot>` reuses shared authoring normalization, forwards spec layout, and sends empty-mark composition DSL output through full PlotSpec validation.',
           },
           items: [
             esmOnlyChangeItem,
+            {
+              label: { zh: 'React / Vanilla binding parity', en: 'React / Vanilla binding parity' },
+              content: {
+                zh: 'React JSX 继续负责组件收集与 style sugar，但 axis / facet / scaffold / track binding 改由 `@retikz/plot` 的共享 normalization 处理；公开 JSX props 不变，冲突输入与 Vanilla 获得同一核心诊断。',
+                en: 'React JSX still collects components and style sugar, while shared normalization in `@retikz/plot` now handles axis, facet, scaffold, and track bindings. Public JSX props stay unchanged, and conflicts receive the same core diagnostics as Vanilla.',
+              },
+            },
             {
               label: { zh: 'BREAKING：移除 ternary2D authoring', en: 'BREAKING: ternary2D authoring removed' },
               content: {
@@ -687,7 +715,7 @@ export const vizV01: Release = {
       ],
       subVersions: [
         {
-          version: 'beta.2',
+          version: 'rc.1',
           date: '2026-07-27',
           summary: {
             zh: 'Vanilla 收敛为 plain authoring，复用共享 binding normalization，并接入 Kernel Vanilla Tier 2 adapter。',

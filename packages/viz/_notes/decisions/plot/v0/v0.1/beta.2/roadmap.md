@@ -1,6 +1,6 @@
 # @retikz/plot v0.1-beta.2 roadmap
 
-> 状态：In Progress · 关联：[plot v0.1 roadmap](../roadmap.md)
+> 状态：Done · 关联：[plot v0.1 roadmap](../roadmap.md)
 
 beta.2 收敛 Plot 的 runtime provenance 与无框架 authoring 公共面。Plot IR、Core IR、Scene schema、mark / guide / scale / coordinate / transform 能力保持不变；breaking authoring 迁移不保留 legacy alias。
 
@@ -15,13 +15,15 @@ beta.2 收敛 Plot 的 runtime provenance 与无框架 authoring 公共面。Plo
 ## ADR
 
 - [x] [ADR-01：plot 提供图元链路](./01-plot-mark-lineage-trace.md) — Accepted
-- [x] [ADR-02：Plot Vanilla plain authoring 与 Tier2 adapter 边界](./02-plot-vanilla-plain-api.md) — Proposed
+- [x] [ADR-02：Plot Vanilla plain authoring 与 Tier2 adapter 边界](./02-plot-vanilla-plain-api.md) — Accepted
 
 ## 实现记录
 
 - `89a56d7d7`：收敛 `@retikz/plot` 共享 authoring normalization
 - `e30d5ec69`：让 `@retikz/plot-react` 复用共享 normalization
 - `87fcd3c66`：迁移 `@retikz/plot-vanilla` plain helper、Tier2 adapter 与 runtime
+- `429ef8d2f`：同步三包 README、双语 docs 与 Vanilla 迁移示例
+- `e775a6946`：RC 修正 datasets / fieldMaps 的 own-key 读取
 
 ## 完成条件
 
@@ -31,3 +33,8 @@ beta.2 收敛 Plot 的 runtime provenance 与无框架 authoring 公共面。Plo
 4. Plot / Plot React / Plot Vanilla 测试覆盖 plain object、输入不变性、adapter parity、错误路径、SSR 与 lineage；既有断言不因迁移而弱化。
 5. package README、docs zh/en、demo、BREAKING changelog 与 plot v0.2 deferred optimization 边界同步。
 6. 受影响包 lint、`tsc --noEmit`、测试和 docs 校验通过；与本 milestone 无关的既有基线失败单独记录，不伪装成 ADR 回归或完成。
+
+## RC 冻结
+
+- v0.1 RC 冻结 Plot IR、Definition / registry、authoring、lowering、lineage、locator 与三包 adapter 公共面，只接收兼容性 bug、诊断、文档和发布修正。
+- cache、patch、invalidate、增量 lowering / compile、依赖失效、按需物化与 renderer diff 进入 plot v0.2，不在 RC 扩展公共面。
