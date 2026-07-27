@@ -1,0 +1,120 @@
+---
+title: 运行时
+description: 查询 @retikz/data 如何注入外部 rows 与 Definition、解析 registry、规范化字段、执行 transform 并返回 lineage。
+---
+
+Data schema 只保存配置；外部 rows、字段 parser、Definition、registry 与事件 sink 都是运行时对象。`@retikz/data` 保持纯计算和宿主无关，输出 canonical rows、字段信息、provenance 标记或 lineage 事件，不生成 Scene 或视觉图元。
+
+沿实线看 rows 的主处理路径：宿主数据先完成字段解析与规范化，再依次执行 transform。虚线表示 Definition、registry 与 JSON 契约提供的运行时依赖，以及可选的诊断输出。
+
+<ComponentPreview files="data-runtime-flow" hideCode size="lg" />
+
+因此，JSON-safe 契约决定允许保存什么配置，Definition 与 registry 决定这些配置如何执行。处理后的 rows 可按需携带 Symbol provenance；lineage 则作为独立运行记录返回或发送给事件 sink。
+
+## 运行阶段
+
+| 阶段       | 主要公开入口                                                                                                          | 产物                                            |
+| ---------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| 定义扩展   | `defineFieldFormat`、`defineTransform`、`defineStatisticsReducer`、`defineRowSelector`                                | 带注册键或 schema 与纯函数实现的 Definition     |
+| 解析注册表 | `resolveFormatRegistry`、`resolveTransformRegistry`、`resolveStatisticsReducerRegistry`、`resolveRowSelectorRegistry` | 内置与自定义 Definition 合并后的 `Map`          |
+| 字段准备   | `resolveFieldTypes`、`applyFieldResolver`、`collectFormatFields`、`normalizeRows`                                     | 字段类型、parser 与 canonical rows              |
+| 执行变换   | `collectTransformFields`、`applyTransforms`、`applyTransformsWithLineage`                                             | 变换后的 rows，可选 `DataLineageRun`            |
+| 来源追踪   | `tagSourceIndex`、`withGroupProvenance`、`createDataLineageRecorder`                                                  | Symbol provenance 与可消费的结构化 lineage 事件 |
+
+宿主负责收集自己会读取的字段、选择数据集，并把自定义 Definition 传给 resolver。Data 负责按 schema 校验 operation、阻止注册键冲突、按顺序执行纯函数，并把结果交回宿主。
+
+## Definition 与 registry
+
+| 契约                          | 注册键                   | 实现职责                                  |
+| ----------------------------- | ------------------------ | ----------------------------------------- |
+| `FieldFormatDefinition`       | `name`                   | 声明蕴含类型并把原始值解析为 canonical 值 |
+| `TransformDefinition`         | schema 的 `kind` literal | 声明输入/输出字段并把 rows 变换为 rows    |
+| `StatisticsReducerDefinition` | schema 的 `kind` literal | 对一组 rows 计算输出字段片段              |
+| `RowSelectorDefinition`       | schema 的 `kind` literal | 从一组 rows 选择原始行及可选排名          |
+
+四类 resolver 都先装入内置 Definition，再合并调用方数组；自定义键不能覆盖内置键，也不能重复。校验路径按 Definition 类型区分：format 直接校验 `name` 并使用其 parser；transform 先确认 operation 是 JSON object，再用命中的 Definition schema 解析；reducer 与 selector 先通过公开 operation schema，再用命中的 Definition schema 精确解析。未知 transform、reducer 或 selector `kind` 会 fail-loud 并提示对应注入入口。
+
+内置集合可通过 `BUILTIN_FORMATS`、`BUILTIN_TRANSFORMS`、`BUILTIN_STATISTICS_REDUCERS` 与 `BUILTIN_ROW_SELECTORS` 检查。完整自定义流程见[数据模型扩展](/viz/data/model/extensions)和[数据变换扩展](/viz/data/transform/extensions)。
+
+## 字段准备
+
+| 入口                     | 职责                                                             |
+| ------------------------ | ---------------------------------------------------------------- |
+| `resolveFieldTypes()`    | 合并 `model` 声明与样本推断，并校验严格字段集合                  |
+| `applyFieldResolver()`   | 应用宿主提供的逐字段类型/parse 覆盖                              |
+| `collectFormatFields()`  | 从具名 format Definition 补出蕴含类型与 parser                   |
+| `normalizeRows()`        | 按 field map、最终类型与 parser 写回逻辑字段名，保留其它原始字段 |
+| `validateBoundData()`    | 抽样解释某字段为何没有有效值                                     |
+| `assertAllValuesValid()` | 对 canonical rows 执行全量严格校验                               |
+
+`normalizeRows()` 不执行 transform。消费方先完成字段收集、类型解析与规范化，再把 canonical rows 交给 transform pipeline；这种边界让 Plot、Table 与其它宿主复用同一套 Data 处理语义。
+
+## Transform 与 lineage
+
+`applyTransforms(rows, operations?, registry?, context?)` 按声明顺序执行 operation，只返回 rows。`applyTransformsWithLineage(rows, operations?, options?)` 会先给输入行添加不可序列化到 JSON 的 Symbol 来源标记，再返回：
+
+| 字段      | 类型                 | 说明                                                       |
+| --------- | -------------------- | ---------------------------------------------------------- |
+| `rows`    | `Array<ExternalRow>` | 变换后的调用方输入 rows；上游已规范化时保持 canonical 语义 |
+| `lineage` | `DataLineageRun`     | 本次运行保留的结构化事件；使用 sink 时默认不重复留存事件   |
+
+`DataLineageOptions` 默认只记录轻量 source 与 transform-step 摘要。`rowSamples` 和 `calculationDetails` 必须显式给出 `maxRows` 与字段白名单；完整来源索引也必须通过 `sourceIdentity: { mode: 'full' }` 显式开启。它们是诊断能力，不会回写 Data IR。
+
+<SourceLinks
+  sources={[
+    {
+      label: '字段类型解析',
+      path: 'packages/viz/data/src/providers/data/field.ts',
+      startLine: 122,
+      endLine: 152,
+    },
+    {
+      label: 'canonical row 规范化',
+      path: 'packages/viz/data/src/providers/data/normalize.ts',
+      startLine: 30,
+      endLine: 45,
+    },
+    {
+      label: 'format registry 合并',
+      path: 'packages/viz/data/src/providers/format/definitions.ts',
+      startLine: 130,
+      endLine: 144,
+    },
+    {
+      label: 'transform registry 合并',
+      path: 'packages/viz/data/src/providers/transform/definitions.ts',
+      startLine: 93,
+      endLine: 105,
+    },
+    {
+      label: 'statistics 与 selector registry 合并',
+      path: 'packages/viz/data/src/providers/statistics/registry.ts',
+      startLine: 32,
+      endLine: 55,
+    },
+    {
+      label: 'transform 执行与 lineage 入口',
+      path: 'packages/viz/data/src/pipeline/transform.ts',
+      startLine: 64,
+      endLine: 129,
+    },
+    {
+      label: 'lineage 选项与事件契约',
+      path: 'packages/viz/data/src/contract/lineage.ts',
+      startLine: 18,
+      endLine: 52,
+    },
+    {
+      label: 'lineage 默认值与安全限制',
+      path: 'packages/viz/data/src/pipeline/lineage.ts',
+      startLine: 54,
+      endLine: 92,
+    },
+  ]}
+/>
+
+## 相关
+
+- [契约](/viz/data/reference/contract)：运行时消费的 JSON-safe schema
+- [来源追溯](/viz/data/provenance)：provenance 与 lineage 的使用场景和可视化解释
+- [数据变换扩展](/viz/data/transform/extensions)：自定义 transform、reducer 与 selector

@@ -70,6 +70,14 @@ export const vizSection: Array<Section> = [
       },
       { id: 'provenance', label: 'viz.dataProvenance' },
       {
+        id: 'reference',
+        label: 'viz.dataReference',
+        children: [
+          { id: 'contract', label: 'viz.dataReferenceContract' },
+          { id: 'runtime', label: 'viz.dataReferenceRuntime' },
+        ],
+      },
+      {
         id: 'changelog',
         label: 'viz.changelog',
         children: [{ id: 'v0-1', label: 'viz.changelogV01' }],

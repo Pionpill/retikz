@@ -1,6 +1,7 @@
 import type { core, z } from 'zod';
 
 import * as IR from '@retikz/core';
+import * as DataIR from '@retikz/data';
 import * as PlotIR from '@retikz/plot';
 import * as TableIR from '@retikz/table';
 
@@ -519,6 +520,67 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: TableIR.TableDetailColumnSchema,
     label: 'TableDetailColumn',
     url: '/viz/table/reference/contract-detail#tabledetailcolumnschema',
+  },
+
+  DataReferenceSchema: {
+    schema: DataIR.DataReferenceSchema,
+    label: 'DataReference',
+    url: '/viz/data/reference/contract#datareferenceschema',
+  },
+  DataModelSchema: {
+    schema: DataIR.DataModelSchema,
+    label: 'DataModel',
+    url: '/viz/data/reference/contract#datamodelschema',
+  },
+  FieldDefinitionSchema: {
+    schema: DataIR.FieldDefinitionSchema,
+    label: 'FieldDefinition',
+    url: '/viz/data/reference/contract#fielddefinitionschema',
+  },
+  DataTransformSchema: {
+    schema: DataIR.TransformSchema,
+    label: 'DataTransform',
+    url: '/viz/data/reference/contract#transformschema',
+  },
+  SortTransformSchema: {
+    schema: DataIR.SortTransformSchema,
+    label: 'SortTransform',
+    url: '/viz/data/reference/contract#sorttransformschema',
+  },
+  SummarizeTransformSchema: {
+    schema: DataIR.SummarizeTransformSchema,
+    label: 'SummarizeTransform',
+    url: '/viz/data/reference/contract#summarizetransformschema',
+  },
+  SelectTransformSchema: {
+    schema: DataIR.SelectTransformSchema,
+    label: 'SelectTransform',
+    url: '/viz/data/reference/contract#selecttransformschema',
+  },
+  AnnotateTransformSchema: {
+    schema: DataIR.AnnotateTransformSchema,
+    label: 'AnnotateTransform',
+    url: '/viz/data/reference/contract#annotatetransformschema',
+  },
+  ReducerMetricsSchema: {
+    schema: DataIR.ReducerMetricsSchema,
+    label: 'ReducerMetrics',
+    url: '/viz/data/reference/contract#reducermetricsschema',
+  },
+  ReducerOperationSchema: {
+    schema: DataIR.ReducerOperationSchema,
+    label: 'ReducerOperation',
+    url: '/viz/data/reference/contract#reduceroperationschema',
+  },
+  SelectorOperationSchema: {
+    schema: DataIR.SelectorOperationSchema,
+    label: 'SelectorOperation',
+    url: '/viz/data/reference/contract#selectoroperationschema',
+  },
+  AnnotateSelectorSchema: {
+    schema: DataIR.AnnotateSelectorSchema,
+    label: 'AnnotateSelector',
+    url: '/viz/data/reference/contract#annotateselectorschema',
   },
 
   PlotSpecSchema: {
