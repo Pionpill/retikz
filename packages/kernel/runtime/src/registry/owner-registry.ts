@@ -70,12 +70,17 @@ export const createRuntimeOwnerRegistry = (input: RuntimeOwnerRegistryInput): Ru
 };
 
 /** 从具体 registry 读取与已注册 token 一一对应的 erased executor */
-export const getRuntimeOwnerRegistryExecutor = <TInput, TValue, TRead, TChange>(
+export const getRuntimeOwnerRegistryExecutor = (
   registry: RuntimeOwnerRegistry,
-  definition: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
+  definition: RuntimeOwnerToken,
 ): RuntimeOwnerErasedExecutor => {
-  const resolved = registry.resolve(definition);
-  const executor = runtimeOwnerRegistryExecutors.get(registry)?.get(resolved);
+  if (!isRuntimeOwnerDefinition(definition)) {
+    throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_TOKEN_INVALID', readOwnerKey(definition), definition);
+  }
+  if (registry.find(definition.key) !== definition) {
+    throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_UNKNOWN', definition.key, definition);
+  }
+  const executor = runtimeOwnerRegistryExecutors.get(registry)?.get(definition);
   if (executor === undefined) throw new Error(`runtime owner registry: missing executor for "${definition.key}"`);
   return executor;
 };

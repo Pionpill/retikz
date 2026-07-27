@@ -74,6 +74,7 @@
     "effectsAnimation": "Animation",
     "effectsCustomAnimation": "Custom Animation",
     "pkgRuntime": "@retikz/runtime",
+    "pkgRuntimeSession": "Programs & Synchronous Sessions",
     "pkgReact": "@retikz/react",
     "pkgVanilla": "@retikz/vanilla",
     "pkgTex": "@retikz/tex",

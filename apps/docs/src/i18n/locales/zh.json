@@ -74,6 +74,7 @@
     "effectsAnimation": "动画",
     "effectsCustomAnimation": "自定义动画",
     "pkgRuntime": "@retikz/runtime",
+    "pkgRuntimeSession": "Program 与同步 Session",
     "pkgReact": "@retikz/react",
     "pkgVanilla": "@retikz/vanilla",
     "pkgTex": "@retikz/tex",
