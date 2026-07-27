@@ -3,7 +3,7 @@
 - 状态：Accepted
 - 决策日期：2026-07-08
 - 完成日期：2026-07-08
-- 关联：[plot v0.1 roadmap](../roadmap.md) · [data beta.2 ADR-01](../../../../data/v0/v0.1/beta.2/01-data-lineage-trace.md) · [plot beta.1 ADR-01](../beta.1/01-data-package-adapter.md) · [plot-design.md §3.3 Transform / §8 lowering](../../../../../architecture/plot-design.md)
+- 关联：[plot v0.1 roadmap](../roadmap.md) · [data beta.2 ADR-02](../../../../data/v0/v0.1/beta.2/02-data-lineage-trace.md) · [plot beta.1 ADR-01](../beta.1/01-data-package-adapter.md) · [plot-design.md §3.3 Transform / §8 lowering](../../../../../architecture/plot-design.md)
 
 ## 背景
 

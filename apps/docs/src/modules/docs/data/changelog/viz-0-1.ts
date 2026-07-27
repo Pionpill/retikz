@@ -31,11 +31,11 @@ export const vizV01: Release = {
       ],
       subVersions: [
         {
-          version: 'beta.2',
-          date: '2026-07-11',
+          version: 'rc.1',
+          date: '2026-07-27',
           summary: {
-            zh: '收紧 data IR 与统计 selector 边界，统一 schema 派生公开类型命名，并修正日期解析和 top / bottom 并列处理。',
-            en: 'Tightens data IR and statistic selector boundaries, unifies schema-derived public type names, and fixes date parsing plus top / bottom tie handling.',
+            zh: '冻结 data v0.1 公共面：收紧 data IR 与统计 selector 边界，统一 schema 派生类型命名，补齐 runtime lineage，并归并未发布的 beta.2 修正。',
+            en: 'Freezes the data v0.1 public surface: tightens data IR and statistic selector boundaries, unifies schema-derived type names, adds runtime lineage, and rolls the unpublished beta.2 fixes into this RC.',
           },
           items: [
             esmOnlyChangeItem,
@@ -73,8 +73,15 @@ export const vizV01: Release = {
             {
               label: { zh: 'IRDataXxx 公开类型命名', en: 'Owner-qualified IRDataXxx types' },
               content: {
-                zh: '`FieldDef`、`DataModel`、`DataRef`、`Transform` 等 schema 派生类型统一改为 `IRDataXxx`，旧名不保留兼容别名；JSON schema 与运行时行为不变。',
-                en: 'Schema-derived types such as `FieldDef`, `DataModel`, `DataRef`, and `Transform` now use owner-qualified `IRDataXxx` names without compatibility aliases; JSON schemas and runtime behavior are unchanged.',
+                zh: '`FieldDef` / `DataModel` / `DataRef` / `ScalarValue` 分别迁移为 `IRDataFieldDefinition` / `IRDataModel` / `IRDataReference` / `IRDataScalarValue`；transform、reducer、selector 与 annotate 的 schema 派生类型同样增加 `IRData` owner 前缀。旧名不保留兼容别名；JSON schema 与运行时行为不变。',
+                en: '`FieldDef` / `DataModel` / `DataRef` / `ScalarValue` move to `IRDataFieldDefinition` / `IRDataModel` / `IRDataReference` / `IRDataScalarValue`; schema-derived transform, reducer, selector, and annotate types likewise gain the `IRData` owner prefix. Old names have no compatibility aliases; JSON schemas and runtime behavior are unchanged.',
+              },
+            },
+            {
+              label: { zh: '可配置的数据链路追踪', en: 'Configurable data lineage' },
+              content: {
+                zh: '新增 `applyTransformsWithLineage()` 与 runtime-only recorder contract，可按需记录 source identity、transform step、字段流与受白名单约束的计算细节；`applyTransforms()` 的返回值和默认成本不变。',
+                en: 'Adds `applyTransformsWithLineage()` and a runtime-only recorder contract for opt-in source identity, transform steps, field flow, and allowlisted calculation details; `applyTransforms()` keeps its return value and default cost.',
               },
             },
             {
@@ -110,6 +117,13 @@ export const vizV01: Release = {
               content: {
                 zh: 'mean / median 在有限大数上不再因中间运算溢出；极值、quantile-band 与 provenance / lineage 不再把大数组展开成函数参数；分类域会跳过非有限数字，重复 model 字段在 schema 入口直接报错。',
                 en: 'Mean / median no longer overflow on finite large values; extrema, quantile-band, and provenance / lineage no longer expand large arrays into call arguments; category domains skip non-finite numbers, and duplicate model fields fail at the schema boundary.',
+              },
+            },
+            {
+              label: { zh: '分段 lineage 保留原始来源身份', en: 'Segmented lineage preserves source identity' },
+              content: {
+                zh: '已带单行或分组 provenance 的数据再次进入 lineage 管线时会保留原始来源索引，不再用中间结果的当前位置覆盖来源身份。',
+                en: 'Rows that already carry single-row or grouped provenance preserve their original source indices when entering another lineage pipeline instead of being overwritten by intermediate positions.',
               },
             },
           ],
