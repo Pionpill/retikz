@@ -192,8 +192,7 @@ const compileBuiltinText = (
   text: string,
   values: { align: 'start' | 'middle' | 'end'; fontSize: number; lineHeight: number; maxTextWidth: number },
 ): { layout: CompiledNodeLayout; text: TextPrim } => {
-  let layout: CompiledNodeLayout | undefined;
-  const scene = compileToScene(
+  const result = compileToScene(
     {
       type: 'scene',
       version: 1,
@@ -210,13 +209,12 @@ const compileBuiltinText = (
       ],
     } satisfies IRScene,
     {
-      onNodeLayout: nextLayout => {
-        layout = nextLayout;
-      },
+      artifacts: { nodeLayouts: true },
       padding: 0,
     },
   );
-  const textPrimitive = findTextPrimitive(scene.primitives);
+  const layout = result.artifacts.find(isNodeLayoutCompileArtifact)?.value;
+  const textPrimitive = findTextPrimitive(result.scene.primitives);
   if (!layout || !textPrimitive) throw new Error('Missing compiled builtin text layout');
   return { layout, text: textPrimitive };
 };
@@ -1807,8 +1805,7 @@ describe('preview controls registry', () => {
       if (padding?.kind !== 'range' || minimumSize?.kind !== 'range') continue;
 
       const compileGlyph = (paddingValue: number): CompiledNodeLayout => {
-        let layout: CompiledNodeLayout | undefined;
-        compileToScene(
+        const result = compileToScene(
           {
             type: 'scene',
             version: 1,
@@ -1823,12 +1820,11 @@ describe('preview controls registry', () => {
             ],
           } satisfies IRScene,
           {
-            onNodeLayout: nextLayout => {
-              layout = nextLayout;
-            },
+            artifacts: { nodeLayouts: true },
             padding: 0,
           },
         );
+        const layout = result.artifacts.find(isNodeLayoutCompileArtifact)?.value;
         if (!layout) throw new Error('Missing compiled point glyph layout');
         return layout;
       };

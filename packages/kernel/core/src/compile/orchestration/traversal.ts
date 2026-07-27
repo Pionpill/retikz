@@ -1229,7 +1229,7 @@ export const compileChildrenToPrimitives = (
           value: cloneAndFreezeJson(
             computeCompiledNodeLayout(observation.layout, observation.scopeChain),
             'Node layout artifact',
-          ) as unknown as ReturnType<typeof computeCompiledNodeLayout>,
+          ),
         }),
       );
     }
