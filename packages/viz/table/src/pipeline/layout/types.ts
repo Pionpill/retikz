@@ -1,6 +1,12 @@
-import type { BoundsRect, Position } from '@retikz/math';
+import type { BoundsRect } from '@retikz/math';
 
-import type { IRTableAutoTrackSize, IRTableFixedTrackSize, IRTableFractionTrackSize } from '../../schemas';
+import type {
+  IRTableAutoTrackSize,
+  IRTableBorders,
+  IRTableFixedTrackSize,
+  IRTableFractionTrackSize,
+  IRTableTrackOverride,
+} from '../../schemas';
 
 /** 已物化运行时默认值的弹性轨道尺寸 */
 export type ResolvedTableFractionTrackSize = Readonly<
@@ -47,18 +53,24 @@ export type SolveTableTracksInput = Readonly<{
   availableSize?: number;
 }>;
 
-/** 已物化默认值的固定轨道 layout 配置 */
+/** 已物化默认值的 Table layout 配置 */
 export type ResolvedTableLayoutSpec = Readonly<{
-  /** 统一列宽 */
-  columnWidth: number;
-  /** body row 统一高度 */
-  rowHeight: number;
-  /** columnHeader row 统一高度 */
-  headerHeight: number;
+  /** 默认 column 轨道尺寸 */
+  columnSize: ResolvedTableTrackSize;
+  /** 默认 body row 轨道尺寸 */
+  rowSize: ResolvedTableTrackSize;
+  /** 默认 columnHeader row 轨道尺寸 */
+  headerRowSize: ResolvedTableTrackSize;
+  /** canonical column 覆盖 */
+  columns: ReadonlyArray<IRTableTrackOverride>;
+  /** canonical row 覆盖 */
+  rows: ReadonlyArray<IRTableTrackOverride>;
   /** 相邻列间距 */
   columnGap: number;
   /** 相邻行间距 */
   rowGap: number;
+  /** 可选 Table border 模式与默认候选 */
+  borders?: IRTableBorders;
 }>;
 
 /** canonical row 或 column 的固定轨道几何 */
@@ -73,20 +85,30 @@ export type TableTrackLayout = Readonly<{
   size: number;
 }>;
 
-/** 单个 Cell 的固定轨道几何 */
+/** 单个 Cell 的完整布局几何 */
 export type TableCellLayout = Readonly<{
   /** semantic Cell id */
   cellId: string;
   /** Cell 左上角 bounds */
   box: BoundsRect;
-  /** 固定轨道内容局部原点的目标中心 */
-  contentCenter: Position;
+  /** padding 收缩后的 content box */
+  contentBox: BoundsRect;
+  /** replay-root local 的 source allocation bounds */
+  sourceAllocationBounds: BoundsRect;
+  /** replay-root local 的 source visual bounds */
+  sourceVisualOverflowBounds: BoundsRect;
+  /** fit/alignment 后的 Table-local allocation bounds */
+  contentAllocationBounds: BoundsRect;
+  /** overflow policy 后的 Table-local visual bounds */
+  visualOverflowBounds: BoundsRect;
 }>;
 
-/** Table 固定轨道布局结果 */
+/** Table 完整轨道与 Cell 布局结果 */
 export type TableLayout = Readonly<{
-  /** Table 左上角 bounds */
-  bounds: BoundsRect;
+  /** tracks + gaps 的 Table allocation bounds */
+  allocationBounds: BoundsRect;
+  /** 可见 Cell / border 的 Table-local union */
+  visualOverflowBounds: BoundsRect;
   /** 与 semantic rows 同序的轨道 */
   rows: ReadonlyArray<TableTrackLayout>;
   /** 与 semantic columns 同序的轨道 */

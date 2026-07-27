@@ -23,7 +23,7 @@ description: 查询外部数据引用、detail columns 与 record-per-row Struct
     namespace: 'Table Tier 2 composite 的固定命名空间，用于把节点路由到 Table composite definition。',
     type: '顶层 Table 规格的 composite 类型判别值。',
     id: '可选稳定 Table id；省略时由 lowering 生成根 Scope id。',
-    layout: '固定轨道布局配置；省略字段使用 pipeline 默认值。',
+    layout: '轨道、gap 与 border 布局配置；省略字段使用 pipeline 默认值。',
     meta: '由 lowering 原样保留的 JSON-safe 元数据。',
     data: '明细表必需的外部数据引用；实际记录不写入 IR。',
     'data.reference': '外部 dataset 名称；实际数据值不写入 IR。',
@@ -57,7 +57,7 @@ description: 查询外部数据引用、detail columns 与 record-per-row Struct
 
 <ZodSchema
   name="TableDetailColumnSchema"
-  description="明细列：稳定 id、数据字段路径、可选列头 payload 与正文 presentation 引用。"
+  description="明细列：稳定 id、字段路径、列头、正文 presentation 与列头/正文 Cell 布局。"
   descriptions={{
     id: '稳定的明细列 id；同一 Structure 中不能重复。',
     field: '从每条源记录读取的数据字段名或点路径。',
@@ -65,10 +65,13 @@ description: 查询外部数据引用、detail columns 与 record-per-row Struct
     presentation: '应用于该列正文值的可选 presentation provider 引用。',
     'presentation.name': '精确的已注册 Cell presentation provider 名称；保留首尾空白。',
     'presentation.options': '交给所选 presentation provider 校验的 JSON options。',
+    headerLayout: '应用于该列列头 Cell 的可选布局与四边 border 策略。',
+    bodyLayout: '应用于该列所有正文 Cell 的可选布局与四边 border 策略。',
   }}
 />
 
 作者侧 `TableDetailColumnInput` 额外允许把 `header` 写成字符串；`createDetailTableSpec()`、`DetailTable` 和 `detailTable()` 会把它规范化为 `{ kind: 'value', value: header }`。
+`headerLayout` / `bodyLayout` 共用 [TableCellLayoutSchema](/viz/table/reference/contract-table#tablecelllayoutschema)，可分别设置 padding、对齐、wrap、fit、overflow 与 border。
 
 ## 精确 schema 的使用边界
 

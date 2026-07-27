@@ -48,15 +48,22 @@ export const resolveTableTrackSizes = (
   return Object.freeze(defaults.map((size, index) => resolveTableTrackSize(overrideByIndex.get(index) ?? size)));
 };
 
-/** 解析固定轨道 layout 并物化稳定默认值 */
+/** 解析 Table layout 并物化稳定默认值 */
 export const resolveTableLayoutSpec = (spec?: IRTableLayout): ResolvedTableLayoutSpec => {
   const parsed = TableLayoutSchema.parse(spec ?? {});
-  const rowHeight = parsed.rowHeight ?? DEFAULT_TABLE_ROW_HEIGHT;
+  const rowSize = resolveTableTrackSize(
+    parsed.rowSize ?? { kind: TableTrackSizeKind.Fixed, value: DEFAULT_TABLE_ROW_HEIGHT },
+  );
   return Object.freeze({
-    columnWidth: parsed.columnWidth ?? DEFAULT_TABLE_COLUMN_WIDTH,
-    rowHeight,
-    headerHeight: parsed.headerHeight ?? rowHeight,
+    columnSize: resolveTableTrackSize(
+      parsed.columnSize ?? { kind: TableTrackSizeKind.Fixed, value: DEFAULT_TABLE_COLUMN_WIDTH },
+    ),
+    rowSize,
+    headerRowSize: parsed.headerRowSize === undefined ? rowSize : resolveTableTrackSize(parsed.headerRowSize),
+    columns: Object.freeze([...(parsed.columns ?? [])]),
+    rows: Object.freeze([...(parsed.rows ?? [])]),
     columnGap: parsed.columnGap ?? DEFAULT_TABLE_TRACK_GAP,
     rowGap: parsed.rowGap ?? DEFAULT_TABLE_TRACK_GAP,
+    ...(parsed.borders === undefined ? {} : { borders: parsed.borders }),
   });
 };

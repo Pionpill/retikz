@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
+import { TableBordersSchema } from '../border';
 import { TableTrackSizeKind } from './constants';
 
-const PositiveTrackSchema = z.number().positive();
 const NonnegativeGapSchema = z.number().nonnegative();
 
 export const TableTrackSizeKindSchema = z
@@ -92,20 +92,19 @@ export const TableTrackOverridesSchema = z
 
 export const TableLayoutSchema = z
   .strictObject({
-    columnWidth: PositiveTrackSchema.optional().describe(
-      'Uniform positive finite column width. Omitted fields use 120.',
+    columnSize: TableTrackSizeSchema.optional().describe('Default column track size. Omitted fields use fixed 120.'),
+    rowSize: TableTrackSizeSchema.optional().describe('Default body row track size. Omitted fields use fixed 32.'),
+    headerRowSize: TableTrackSizeSchema.optional().describe(
+      'Default column-header row size. Omitted fields use the resolved rowSize.',
     ),
-    rowHeight: PositiveTrackSchema.optional().describe(
-      'Uniform positive finite body row height. Omitted fields use 32.',
-    ),
-    headerHeight: PositiveTrackSchema.optional().describe(
-      'Uniform positive finite column-header row height. Omitted fields use the resolved rowHeight.',
-    ),
+    columns: TableTrackOverridesSchema.optional().describe('Sparse canonical column-size overrides.'),
+    rows: TableTrackOverridesSchema.optional().describe('Sparse canonical row-size overrides.'),
     columnGap: NonnegativeGapSchema.optional().describe(
       'Nonnegative finite gap between adjacent columns. Omitted fields use 0.',
     ),
     rowGap: NonnegativeGapSchema.optional().describe(
       'Nonnegative finite gap between adjacent rows. Omitted fields use 0.',
     ),
+    borders: TableBordersSchema.optional().describe('Optional Table border topology and defaults.'),
   })
-  .describe('Fixed-track Table layout options without materialized defaults.');
+  .describe('Table track sizing, gaps, and border layout options without materialized defaults.');

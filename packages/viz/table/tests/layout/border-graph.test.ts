@@ -95,7 +95,7 @@ describe('Table Border Graph', () => {
     expect(TableBorderContributionSchema.parse(winner)).toEqual(winner);
     expect(
       TableBorderManifestEntrySchema.parse({
-        key: `m:horizontal:${atomKey}:${atomKey}`,
+        edgeKey: `m:horizontal:${atomKey}:${atomKey}`,
         orientation: 'horizontal',
         start: { x: 0, y: 0 },
         end: { x: 20, y: 0 },

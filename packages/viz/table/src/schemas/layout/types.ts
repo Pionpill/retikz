@@ -37,5 +37,5 @@ export type IRTableTrackOverride = z.infer<typeof TableTrackOverrideSchema>;
 /** 稀疏轨道覆盖列表 IR */
 export type IRTableTrackOverrides = z.infer<typeof TableTrackOverridesSchema>;
 
-/** 固定轨道 Table layout IR */
+/** Table 轨道与边框布局 IR */
 export type IRTableLayout = z.infer<typeof TableLayoutSchema>;

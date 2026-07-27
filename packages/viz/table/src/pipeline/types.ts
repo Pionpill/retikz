@@ -1,6 +1,18 @@
-import type { IRChild } from '@retikz/core';
+import type {
+  AnyCompositeDefinition,
+  CompileOptions,
+  CompileResult,
+  CompositeArtifactOf,
+  CompositeCompileArtifact,
+} from '@retikz/core';
+import type { z } from 'zod';
 
-import type { AnyCellPresentationDefinition, AnyTableStructureDefinition, TableLayoutManifest } from '../contract';
+import type {
+  AnyCellPresentationDefinition,
+  AnyTableStructureDefinition,
+  TableLayoutManifest,
+  TableLayoutManifestSchema,
+} from '../contract';
 
 /** Table lowering 的运行时扩展选项 */
 export type LowerTablesOptions = Readonly<{
@@ -10,10 +22,25 @@ export type LowerTablesOptions = Readonly<{
   presentationDefinitions?: ReadonlyArray<AnyCellPresentationDefinition>;
 }>;
 
-/** Table lowering 的 Core IR 与显式 sidecar 产物 */
-export type TableLoweringResult = Readonly<{
-  /** renderer 可消费的 Core IR */
-  node: IRChild;
-  /** 与本次 Core IR 同源的最小布局 manifest */
-  manifest: TableLayoutManifest;
+/** Table layout-aware composite 的 typed artifact */
+export type TableCompileArtifact = CompositeCompileArtifact<
+  'table',
+  'table',
+  z.output<typeof TableLayoutManifestSchema>
+>;
+
+/** 直接编译单个 Table 的分层选项 */
+export type CompileTableOptions<TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []> = Readonly<{
+  /** Table structure 与 presentation definitions */
+  lower?: LowerTablesOptions;
+  /** 其余 Core compile options 与额外 composite definitions */
+  compile?: CompileOptions<TComposites>;
 }>;
+
+/** 单次 Table compile 的 Scene、完整 artifacts 与精确根 manifest */
+export type CompileTableResult<TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []> = Readonly<
+  CompileResult<TableCompileArtifact | CompositeArtifactOf<TComposites[number]>> & {
+    /** exact root Table artifact 的同一 immutable value 引用 */
+    manifest: TableLayoutManifest;
+  }
+>;

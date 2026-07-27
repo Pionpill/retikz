@@ -349,6 +349,26 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'TableCellPayload',
     url: '/viz/table/reference/contract-table#tablecellpayloadschema',
   },
+  TableCellSpanSchema: {
+    schema: TableIR.TableCellSpanSchema,
+    label: 'TableCellSpan',
+    url: '/viz/table/reference/contract-table#tablecellspanschema',
+  },
+  TableCellLayoutSchema: {
+    schema: TableIR.TableCellLayoutSchema,
+    label: 'TableCellLayout',
+    url: '/viz/table/reference/contract-table#tablecelllayoutschema',
+  },
+  TableCellFitSchema: {
+    schema: TableIR.TableCellFitSchema,
+    label: 'TableCellFit',
+    url: '/viz/table/reference/contract-table#tablecellfitschema',
+  },
+  TableCellOverflowSchema: {
+    schema: TableIR.TableCellOverflowSchema,
+    label: 'TableCellOverflow',
+    url: '/viz/table/reference/contract-table#tablecelloverflowschema',
+  },
   TableLayoutSchema: {
     schema: TableIR.TableLayoutSchema,
     label: 'TableLayout',
@@ -388,6 +408,51 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: TableIR.TableTrackOverridesSchema,
     label: 'TableTrackOverrides',
     url: '/viz/table/reference/contract-table#tabletrackoverridesschema',
+  },
+  TableNoBorderSchema: {
+    schema: TableIR.TableNoBorderSchema,
+    label: 'TableNoBorder',
+    url: '/viz/table/reference/contract-table#tablenoborderschema',
+  },
+  TableLineBorderSchema: {
+    schema: TableIR.TableLineBorderSchema,
+    label: 'TableLineBorder',
+    url: '/viz/table/reference/contract-table#tablelineborderschema',
+  },
+  TableBorderSchema: {
+    schema: TableIR.TableBorderSchema,
+    label: 'TableBorder',
+    url: '/viz/table/reference/contract-table#tableborderschema',
+  },
+  TableCellBordersSchema: {
+    schema: TableIR.TableCellBordersSchema,
+    label: 'TableCellBorders',
+    url: '/viz/table/reference/contract-table#tablecellbordersschema',
+  },
+  TableBordersSchema: {
+    schema: TableIR.TableBordersSchema,
+    label: 'TableBorders',
+    url: '/viz/table/reference/contract-table#tablebordersschema',
+  },
+  TableLayoutManifestSchema: {
+    schema: TableIR.TableLayoutManifestSchema,
+    label: 'TableLayoutManifest',
+    url: '/viz/table/reference/runtime#tablelayoutmanifestschema',
+  },
+  TableTrackManifestEntrySchema: {
+    schema: TableIR.TableTrackManifestEntrySchema,
+    label: 'TableTrackManifestEntry',
+    url: '/viz/table/reference/runtime#tabletrackmanifestentryschema',
+  },
+  TableCellManifestEntrySchema: {
+    schema: TableIR.TableCellManifestEntrySchema,
+    label: 'TableCellManifestEntry',
+    url: '/viz/table/reference/runtime#tablecellmanifestentryschema',
+  },
+  TableBorderManifestEntrySchema: {
+    schema: TableIR.TableBorderManifestEntrySchema,
+    label: 'TableBorderManifestEntry',
+    url: '/viz/table/reference/runtime#tablebordermanifestentryschema',
   },
   DetailTableStructureSchema: {
     schema: TableIR.DetailTableStructureSchema,

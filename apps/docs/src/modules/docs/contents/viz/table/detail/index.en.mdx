@@ -45,9 +45,9 @@ Header strings become value Cells automatically. The three external records belo
 
 <ComponentPreview files={['table-detail', 'table-detail.data.ts']} size="sm" />
 
-### Adjust fixed tracks
+### Content-sized tracks and Cell layout
 
-The current release uses uniform `columnWidth`, `rowHeight`, and optional `headerHeight`. Cell content does not resize columns or rows. Defaults are `120` for column width, `32` for body row height, and `0` for row and column gaps.
+`auto` reads intrinsic Cell size, `fixed` pins a size, `fraction` distributes remaining space under a finite parent width constraint, and `minmax` combines lower and upper bounds. `columns` / `rows` can override individual tracks by canonical index.
 
 ```tsx
 <DetailTable
@@ -55,16 +55,20 @@ The current release uses uniform `columnWidth`, `rowHeight`, and optional `heade
   data={rows}
   columns={columns}
   layout={{
-    columnWidth: 144,
-    rowHeight: 36,
-    headerHeight: 40,
+    columnSize: { kind: 'auto' },
+    rowSize: { kind: 'auto' },
+    columns: [{ index: 1, size: { kind: 'fixed', value: 96 } }],
     columnGap: 8,
     rowGap: 4,
+    borders: {
+      outer: { kind: 'line', stroke: 'currentColor' },
+      horizontal: { kind: 'line', stroke: 'lightgray' },
+    },
   }}
 />
 ```
 
-Content measurement, intrinsic row height, spans, and complete border rules are outside v0.1. Host `width` / `height` only changes the displayed SVG or Canvas size; it does not rewrite track sizes.
+`DetailColumn.headerLayout` / `bodyLayout` independently configure padding, alignment, wrapping, fit, overflow, and four-sided borders. `wrap: true` requests constrained content layout after the column width is known; `overflow: 'clip'` clips visible output to the content box. Host `width` / `height` still controls output size and does not become a Table parent-width constraint.
 
 ### Vanilla and SSR
 
@@ -89,24 +93,26 @@ const svg = renderTable(spec, { data: { scores: rows } });
 
 ### DetailTable
 
-| Prop                       | Type                                                             | Default              | Description                                                              |
-| -------------------------- | ---------------------------------------------------------------- | -------------------- | ------------------------------------------------------------------------ |
-| `dataRef`                  | `DetailTableProps['dataRef']`                                    | —                    | External dataset reference stored in the spec                            |
-| `data`                     | `DetailTableProps['data']`                                       | —                    | Current detail records; excluded from the spec                           |
-| `columns?`                 | `DetailTableProps['columns']`                                    | —                    | Programmatic fields, headers, and presentations; exclusive with children |
-| `children?`                | `DetailTableProps['children']`                                   | —                    | `DetailColumn` declarations in order; exclusive with `columns`           |
-| `model?`                   | `DetailTableProps['model']`                                      | —                    | Optional field model                                                     |
-| `header?`                  | `DetailTableProps['header']`                                     | `true`               | Whether to generate a column-header row                                  |
-| `id?`                      | `DetailTableProps['id']`                                         | —                    | Stable Table id; required inside a parent `Layout`                       |
-| `layout?`                  | `DetailTableProps['layout']`                                     | fixed-track defaults | Column width, body/header heights, and row/column gaps                   |
-| `meta?`                    | `DetailTableProps['meta']`                                       | —                    | JSON metadata stored in TableSpec                                        |
-| `structureDefinitions?`    | `DetailTableProps['structureDefinitions']`                       | `[]`                 | Custom structure definitions                                             |
-| `presentationDefinitions?` | `DetailTableProps['presentationDefinitions']`                    | `[]`                 | Custom Cell presentation definitions                                     |
-| `composites?`              | `DetailTableProps['composites']`                                 | `[]`                 | Definitions required by Tier 2 Cell content                              |
-| `onManifest?`              | `DetailTableProps['onManifest']`                                 | —                    | Standalone layout artifact callback; unsupported when embedded           |
-| `width?` / `height?`       | `DetailTableProps['width']`                                      | —                    | Host size; does not change fixed tracks                                  |
-| `renderer?`                | `DetailTableProps['renderer']`                                   | `'svg'`              | Rendering backend                                                        |
-| `className?` / `style?`    | `DetailTableProps['className']`<br />`DetailTableProps['style']` | —                    | Passed to the rendering host                                             |
+| Prop                       | Type                                                             | Default        | Description                                                              |
+| -------------------------- | ---------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------ |
+| `dataRef`                  | `DetailTableProps['dataRef']`                                    | —              | External dataset reference stored in the spec                            |
+| `data`                     | `DetailTableProps['data']`                                       | —              | Current detail records; excluded from the spec                           |
+| `columns?`                 | `DetailTableProps['columns']`                                    | —              | Programmatic fields, headers, and presentations; exclusive with children |
+| `children?`                | `DetailTableProps['children']`                                   | —              | `DetailColumn` declarations in order; exclusive with `columns`           |
+| `model?`                   | `DetailTableProps['model']`                                      | —              | Optional field model                                                     |
+| `header?`                  | `DetailTableProps['header']`                                     | `true`         | Whether to generate a column-header row                                  |
+| `id?`                      | `DetailTableProps['id']`                                         | —              | Stable Table id; required inside a parent `Layout`                       |
+| `layout?`                  | `DetailTableProps['layout']`                                     | track defaults | Default/indexed track sizes, gaps, and Table borders                     |
+| `meta?`                    | `DetailTableProps['meta']`                                       | —              | JSON metadata stored in TableSpec                                        |
+| `structureDefinitions?`    | `DetailTableProps['structureDefinitions']`                       | `[]`           | Custom structure definitions                                             |
+| `presentationDefinitions?` | `DetailTableProps['presentationDefinitions']`                    | `[]`           | Custom Cell presentation definitions                                     |
+| `composites?`              | `DetailTableProps['composites']`                                 | `[]`           | Definitions required by Tier 2 Cell content                              |
+| `onManifest?`              | `DetailTableProps['onManifest']`                                 | —              | Standalone layout artifact callback; unsupported when embedded           |
+| `width?` / `height?`       | `DetailTableProps['width']`                                      | —              | Host size; does not change Table constraints                             |
+| `viewBox?`                 | `DetailTableProps['viewBox']`                                    | —              | Scene camera; does not affect track solving                              |
+| `animate?` / `snapshotAt?` | `DetailTableProps['animate']`                                    | —              | Reuses the Kernel Layout animation host contract                         |
+| `renderer?`                | `DetailTableProps['renderer']`                                   | `'svg'`        | Rendering backend                                                        |
+| `className?` / `style?`    | `DetailTableProps['className']`<br />`DetailTableProps['style']` | —              | Passed to the rendering host                                             |
 
 ### DetailColumn
 
@@ -116,6 +122,8 @@ const svg = renderTable(spec, { data: { scores: rows } });
 | `field`         | `DetailColumnProps['field']`        | —       | Field read from each record                          |
 | `header?`       | `DetailColumnProps['header']`       | —       | Header payload; strings normalize to value Cells     |
 | `presentation?` | `DetailColumnProps['presentation']` | —       | Optional presentation reference for body value Cells |
+| `headerLayout?` | `DetailColumnProps['headerLayout']` | —       | Header Cell layout and four-sided border policy      |
+| `bodyLayout?`   | `DetailColumnProps['bodyLayout']`   | —       | Body Cell layout and four-sided border policy        |
 
 `detailTable(input)` accepts the same spec inputs and returns `IRDetailTableSpec`. See [API Reference](/viz/table/reference) for complete `Table`, `ManualTable`, schema, adapter, and lowering contracts.
 

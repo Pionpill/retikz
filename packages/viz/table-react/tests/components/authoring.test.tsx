@@ -41,26 +41,26 @@ describe('Table React composition authoring collectors', () => {
   it('collects ordered DetailColumn markers through Fragments, arrays, and empty nodes', () => {
     const columns = buildDetailColumns(
       <>
-        <DetailColumn id="name" field="name" header="Name" />
+        <DetailColumn id="name" field="name" header="Name" headerLayout={{ padding: 2 }} />
         <Fragment>
           {null}
-          {[false, <DetailColumn key="score" id="score" field="score" />]}
+          {[false, <DetailColumn key="score" id="score" field="score" bodyLayout={{ wrap: true }} />]}
         </Fragment>
         {undefined}
       </>,
     );
 
     expect(columns).toEqual([
-      { id: 'name', field: 'name', header: 'Name' },
-      { id: 'score', field: 'score' },
+      { id: 'name', field: 'name', header: 'Name', headerLayout: { padding: 2 } },
+      { id: 'score', field: 'score', bodyLayout: { wrap: true } },
     ]);
     expect(createDetailTableSpec({ dataRef: 'scores', header: false, columns })).toEqual(
       createDetailTableSpec({
         dataRef: 'scores',
         header: false,
         columns: [
-          { id: 'name', field: 'name', header: 'Name' },
-          { id: 'score', field: 'score' },
+          { id: 'name', field: 'name', header: 'Name', headerLayout: { padding: 2 } },
+          { id: 'score', field: 'score', bodyLayout: { wrap: true } },
         ],
       }),
     );
@@ -130,6 +130,70 @@ describe('Table React composition authoring collectors', () => {
     ).toEqual({
       cells: [{ address: { row: 1, column: 0 }, payload: { kind: 'value', value: 1 } }],
     });
+  });
+
+  it('places span-aware markers in the first unoccupied slot across future rows', () => {
+    expect(
+      buildManualStructure(
+        <>
+          <Row>
+            <Cell span={{ rows: 2, columns: 2 }}>A</Cell>
+            <Cell>B</Cell>
+          </Row>
+          <Row>
+            <Cell>C</Cell>
+          </Row>
+        </>,
+        2,
+        3,
+      ).cells.map(cell => ({
+        address: cell.address,
+        span: cell.span,
+        value: cell.payload.kind === 'value' ? cell.payload.value : null,
+      })),
+    ).toEqual([
+      { address: { row: 0, column: 0 }, span: { rows: 2, columns: 2 }, value: 'A' },
+      { address: { row: 0, column: 2 }, span: undefined, value: 'B' },
+      { address: { row: 1, column: 2 }, span: undefined, value: 'C' },
+    ]);
+  });
+
+  it('rejects marker spans that overflow, cross row kinds, or leave no free slot', () => {
+    expect(() =>
+      buildManualStructure(
+        <Row>
+          <Cell span={{ columns: 2 }}>wide</Cell>
+        </Row>,
+        1,
+        1,
+      ),
+    ).toThrow(/span.*out of bounds/i);
+    expect(() =>
+      buildManualStructure(
+        <>
+          <Row kind="columnHeader">
+            <Cell span={{ rows: 2 }}>header</Cell>
+          </Row>
+          <Row kind="body" />
+        </>,
+        2,
+        1,
+      ),
+    ).toThrow(/span.*row kind/i);
+    expect(() =>
+      buildManualStructure(
+        <>
+          <Row>
+            <Cell span={{ rows: 2 }}>occupied</Cell>
+          </Row>
+          <Row>
+            <Cell>extra</Cell>
+          </Row>
+        </>,
+        2,
+        1,
+      ),
+    ).toThrow(/no unoccupied Cell slot/i);
   });
 
   it('rejects invalid DetailTable children', () => {
@@ -241,7 +305,7 @@ describe('Table React composition root integration', () => {
       data: [{ name: 'Ada' }],
       header: false,
       model: [{ name: 'name' }],
-      layout: { columnWidth: 96 },
+      layout: { columnSize: { kind: 'fixed' as const, value: 96 } },
       meta: { source: 'authoring-test' },
       columns: [{ id: 'name', field: 'name', header: 'Name' }],
     };
@@ -251,7 +315,7 @@ describe('Table React composition root integration', () => {
       data: [{ name: 'Ada' }],
       header: false,
       model: [{ name: 'name' }],
-      layout: { columnWidth: 96 },
+      layout: { columnSize: { kind: 'fixed' as const, value: 96 } },
       meta: { source: 'authoring-test' },
       children: <DetailColumn id="name" field="name" header="Name" />,
     };
@@ -302,7 +366,7 @@ describe('Table React composition root integration', () => {
       data: [{ name: 'Ada' }],
       model: [{ name: 'name' }],
       header: false,
-      layout: { columnWidth: 96 },
+      layout: { columnSize: { kind: 'fixed', value: 96 } },
       meta: { source: 'root-props-test' },
       children: <DetailColumn id="name" field="name" />,
       structureDefinitions,
@@ -314,13 +378,19 @@ describe('Table React composition root integration', () => {
       className: 'table-fixture',
       style,
       renderer: 'svg',
+      viewBox: { x: 0, y: 0, width: 320, height: 180 },
+      animate: false,
+      snapshotAt: 120,
+      idPrefix: 'table-test',
+      nodeDistance: 28,
+      fontSize: 14,
     });
 
     expect(runtime.spec).toMatchObject({
       id: 'detail-root-props',
       data: { reference: 'people', model: [{ name: 'name' }] },
       structure: { kind: 'detail', header: false, columns: [{ id: 'name', field: 'name' }] },
-      layout: { columnWidth: 96 },
+      layout: { columnSize: { kind: 'fixed', value: 96 } },
       meta: { source: 'root-props-test' },
     });
     expect(runtime.datasets).toMatchObject({ people: [{ name: 'Ada' }] });
@@ -336,6 +406,12 @@ describe('Table React composition root integration', () => {
       className: 'table-fixture',
       style,
       renderer: 'svg',
+      viewBox: { x: 0, y: 0, width: 320, height: 180 },
+      animate: false,
+      snapshotAt: 120,
+      idPrefix: 'table-test',
+      nodeDistance: 28,
+      fontSize: 14,
     });
   });
 

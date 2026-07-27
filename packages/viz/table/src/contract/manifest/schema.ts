@@ -1,6 +1,9 @@
 import { OpacitySchema, PaintValueSchema } from '@retikz/core';
 import { z } from 'zod';
 
+import { TableCellLocationSchema, TableCellRoleSchema } from '../../schemas';
+import { TableCellSourceSchema } from '../structure';
+
 const TableBorderSideSchema = z.enum(['top', 'right', 'bottom', 'left']);
 const TableBorderOrientationSchema = z.enum(['horizontal', 'vertical']);
 const TableBorderPrioritySchema = z
@@ -86,7 +89,7 @@ export const TableBorderManifestAtomSchema = z.strictObject({
 });
 
 export const TableBorderManifestEntrySchema = z.strictObject({
-  key: z.string().min(1).describe('Canonical merged edge key.'),
+  edgeKey: z.string().min(1).describe('Canonical merged edge key.'),
   orientation: TableBorderOrientationSchema.describe('Edge orientation.'),
   start: TableBorderVertexSchema.describe('Table-local edge start.'),
   end: TableBorderVertexSchema.describe('Table-local edge end.'),
@@ -106,3 +109,58 @@ export const TableBorderLocatorEntrySchema = z.strictObject({
   edgeKey: z.string().min(1).describe('Canonical merged edge key.'),
   pathId: z.string().min(1).optional().describe('Optional emitted Core Path id.'),
 });
+
+const TableManifestBoundsSchema = z
+  .strictObject({
+    x: z.number().describe('Finite Table-local left coordinate.'),
+    y: z.number().describe('Finite Table-local top coordinate.'),
+    width: z.number().nonnegative().describe('Finite nonnegative bounds width.'),
+    height: z.number().nonnegative().describe('Finite nonnegative bounds height.'),
+  })
+  .describe('Detached Table-local axis-aligned bounds.');
+
+export const TableTrackManifestEntrySchema = z
+  .strictObject({
+    id: z.string().min(1).describe('Stable semantic track id.'),
+    index: z.number().int().nonnegative().describe('Canonical track index.'),
+    offset: z.number().describe('Finite Table-local axis offset.'),
+    size: z.number().nonnegative().describe('Finite nonnegative track size.'),
+  })
+  .describe('Resolved Table row or column track geometry.');
+
+export const TableCellManifestEntrySchema = z
+  .strictObject({
+    cellId: z.string().min(1).describe('Stable semantic Cell id.'),
+    rowId: z.string().min(1).describe('Stable semantic row id.'),
+    columnId: z.string().min(1).describe('Stable semantic column id.'),
+    rowIndex: z.number().int().nonnegative().describe('Canonical origin row index.'),
+    columnIndex: z.number().int().nonnegative().describe('Canonical origin column index.'),
+    span: z
+      .strictObject({
+        rows: z.number().int().positive().describe('Resolved positive row span.'),
+        columns: z.number().int().positive().describe('Resolved positive column span.'),
+      })
+      .describe('Resolved rectangular Cell span.'),
+    box: TableManifestBoundsSchema.describe('Table-local Cell box.'),
+    contentBox: TableManifestBoundsSchema.describe('Table-local padding-reduced content box.'),
+    sourceAllocationBounds: TableManifestBoundsSchema.describe('Replay-root local source allocation bounds.'),
+    sourceVisualOverflowBounds: TableManifestBoundsSchema.describe('Replay-root local source visual bounds.'),
+    contentAllocationBounds: TableManifestBoundsSchema.describe('Table-local fit and alignment allocation bounds.'),
+    visualOverflowBounds: TableManifestBoundsSchema.describe('Table-local visible bounds after overflow policy.'),
+    location: TableCellLocationSchema.describe('Semantic Cell location.'),
+    roles: z.array(TableCellRoleSchema).min(1).describe('Semantic Cell roles.'),
+    source: TableCellSourceSchema.optional().describe('Optional stable Cell source identity.'),
+  })
+  .describe('Resolved Table Cell geometry, identity, and provenance.');
+
+export const TableLayoutManifestSchema = z
+  .strictObject({
+    tableId: z.string().min(1).optional().describe('Optional public Table id.'),
+    allocationBounds: TableManifestBoundsSchema.describe('Tracks and gaps allocation bounds.'),
+    visualOverflowBounds: TableManifestBoundsSchema.describe('Visible Cell and border union in Table-local space.'),
+    rows: z.array(TableTrackManifestEntrySchema).describe('Canonical row track geometry.'),
+    columns: z.array(TableTrackManifestEntrySchema).describe('Canonical column track geometry.'),
+    cells: z.array(TableCellManifestEntrySchema).describe('Canonical Cell geometry and provenance.'),
+    borders: z.array(TableBorderManifestEntrySchema).describe('Visible border edge geometry and provenance.'),
+  })
+  .describe('Detached immutable Table layout manifest emitted as a composite artifact.');

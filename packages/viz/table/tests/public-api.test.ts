@@ -6,10 +6,16 @@ import * as Table from '../src';
 
 type PublicContractTypes = [
   TableTypes.LowerTablesOptions,
-  TableTypes.TableLoweringResult,
+  TableTypes.CompileTableOptions,
+  TableTypes.CompileTableResult,
+  TableTypes.TableCompileArtifact,
   TableTypes.TableRuntimeContributionInput,
   TableTypes.TableRuntimeContribution,
   TableTypes.TableLayoutManifest,
+  TableTypes.ResolvedTableBorderLine,
+  TableTypes.TableBorderContribution,
+  TableTypes.TableBorderManifestEntry,
+  TableTypes.TableBorderPathMeta,
 ];
 
 // @ts-expect-error 阶段级 resolved layout 不从包根导出
@@ -30,17 +36,9 @@ type RemovedTableCellFitScale = TableTypes.TableCellFitScale;
 type RemovedTableCellOverflow = TableTypes.TableCellOverflow;
 // @ts-expect-error 阶段级 Cell content placement 不从包根导出
 type RemovedTableCellContentPlacement = TableTypes.TableCellContentPlacement;
-// @ts-expect-error preparatory border output type 不从包根导出
-type RemovedResolvedTableBorderLine = TableTypes.ResolvedTableBorderLine;
-// @ts-expect-error preparatory border provenance type 不从包根导出
-type RemovedTableBorderContribution = TableTypes.TableBorderContribution;
-// @ts-expect-error preparatory border manifest entry 不从包根导出
-type RemovedTableBorderManifestEntry = TableTypes.TableBorderManifestEntry;
-// @ts-expect-error preparatory border Path meta 不从包根导出
-type RemovedTableBorderPathMeta = TableTypes.TableBorderPathMeta;
-// @ts-expect-error preparatory Border Graph input 不从包根导出
+// @ts-expect-error 私有 Border Graph input 不从包根导出
 type RemovedBuildTableBorderGraphInput = TableTypes.BuildTableBorderGraphInput;
-// @ts-expect-error preparatory Border Graph result 不从包根导出
+// @ts-expect-error 私有 Border Graph result 不从包根导出
 type RemovedTableBorderGraph = TableTypes.TableBorderGraph;
 
 type RemovedStageTypes = [
@@ -53,23 +51,26 @@ type RemovedStageTypes = [
   RemovedTableCellFitScale,
   RemovedTableCellOverflow,
   RemovedTableCellContentPlacement,
-  RemovedResolvedTableBorderLine,
-  RemovedTableBorderContribution,
-  RemovedTableBorderManifestEntry,
-  RemovedTableBorderPathMeta,
   RemovedBuildTableBorderGraphInput,
   RemovedTableBorderGraph,
 ];
 
 describe('@retikz/table public API', () => {
-  it('exports stable runtime entries without exposing pipeline stages', () => {
+  it('exports the alpha.2 compile, schema, and manifest surface without pipeline stages', () => {
     expect(Table).toHaveProperty('createTableRuntimeContribution');
     expect(Table).toHaveProperty('makeTableRuntimeComposites');
     expect(Table).toHaveProperty('lowerTables');
-    expect(Table).toHaveProperty('lowerTableWithArtifacts');
+    expect(Table).toHaveProperty('compileTable');
+    expect(Table).not.toHaveProperty('lowerTableWithArtifacts');
     expect(Table).toHaveProperty('TableTrackSizeKind');
     expect(Table).toHaveProperty('TableTrackSizeSchema');
     expect(Table).toHaveProperty('TableTrackOverridesSchema');
+    expect(Table).toHaveProperty('TableCellSpanSchema');
+    expect(Table).toHaveProperty('TableCellLayoutSchema');
+    expect(Table).toHaveProperty('TableBorderSchema');
+    expect(Table).toHaveProperty('TableLayoutManifestSchema');
+    expect(Table).toHaveProperty('ResolvedTableBorderLineSchema');
+    expect(Table).toHaveProperty('TableBorderContributionSchema');
 
     expect(Table).not.toHaveProperty('emitTable');
     expect(Table).not.toHaveProperty('layoutTable');
@@ -89,8 +90,6 @@ describe('@retikz/table public API', () => {
     expect(Table).not.toHaveProperty('buildTableBorderGraph');
     expect(Table).not.toHaveProperty('resolveTableBorderAtoms');
     expect(Table).not.toHaveProperty('mergeTableBorderAtoms');
-    expect(Table).not.toHaveProperty('ResolvedTableBorderLineSchema');
-    expect(Table).not.toHaveProperty('TableBorderContributionSchema');
   });
 
   it('keeps public contract types while hiding pipeline stage types', () => {
@@ -98,81 +97,32 @@ describe('@retikz/table public API', () => {
     expectTypeOf<RemovedStageTypes>().toBeArray();
   });
 
-  it('rejects unsupported Cell span and layout schema fields', () => {
-    expect(() =>
-      Table.TableStructureSchema.parse({
-        kind: 'manual',
-        rows: 1,
-        columns: 1,
-        cells: [
-          {
-            address: { row: 0, column: 0 },
-            payload: { kind: 'value', value: 'x' },
-            span: { columns: 1 },
+  it('accepts alpha.2 Cell and border fields and rejects removed alpha.1 fields', () => {
+    const parsed = Table.TableStructureSchema.parse({
+      kind: 'manual',
+      rows: 1,
+      columns: 2,
+      cells: [
+        {
+          address: { row: 0, column: 0 },
+          payload: { kind: 'value', value: 'x' },
+          span: { columns: 2 },
+          layout: {
+            padding: { x: 4, y: 2 },
+            horizontalAlign: 'end',
+            verticalAlign: 'start',
+            wrap: true,
+            fit: 'contain',
+            overflow: 'clip',
+            borders: { top: { kind: 'line', width: 2 } },
           },
-        ],
-      }),
-    ).toThrow();
-    expect(() =>
-      Table.TableStructureSchema.parse({
-        kind: 'manual',
-        rows: 1,
-        columns: 1,
-        cells: [
-          {
-            address: { row: 0, column: 0 },
-            payload: { kind: 'value', value: 'x' },
-            layout: { borders: { top: { kind: 'line' } } },
-          },
-        ],
-      }),
-    ).toThrow();
-    expect(() =>
-      Table.TableLayoutSchema.parse({
-        borders: { mode: 'collapse', outer: { kind: 'line' } },
-      }),
-    ).toThrow();
-    for (const layout of [{ wrap: true }, { fit: 'contain' }, { overflow: 'clip' }]) {
-      expect(() =>
-        Table.TableStructureSchema.parse({
-          kind: 'manual',
-          rows: 1,
-          columns: 1,
-          cells: [
-            {
-              address: { row: 0, column: 0 },
-              payload: { kind: 'value', value: 'x' },
-              layout,
-            },
-          ],
-        }),
-      ).toThrow();
-    }
-    expect(() =>
-      Table.TableStructureSchema.parse({
-        kind: 'manual',
-        rows: 1,
-        columns: 1,
-        cells: [
-          {
-            address: { row: 0, column: 0 },
-            payload: { kind: 'value', value: 'x' },
-            layout: { horizontalAlign: 'center' },
-          },
-        ],
-      }),
-    ).toThrow();
-    expect(() =>
-      Table.TableStructureSchema.parse({
-        kind: 'detail',
-        columns: [{ id: 'value', field: 'value', headerLayout: { padding: 1 } }],
-      }),
-    ).toThrow();
-    expect(() =>
-      Table.TableStructureSchema.parse({
-        kind: 'detail',
-        columns: [{ id: 'value', field: 'value', bodyLayout: { padding: 1 } }],
-      }),
-    ).toThrow();
+        },
+      ],
+    });
+    expect(parsed).toMatchObject({ kind: 'manual', cells: [{ span: { columns: 2 } }] });
+    expect(Table.TableLayoutSchema.parse({ borders: { mode: 'collapse', outer: { kind: 'line' } } })).toEqual({
+      borders: { mode: 'collapse', outer: { kind: 'line' } },
+    });
+    expect(() => Table.TableLayoutSchema.parse({ columnWidth: 120 })).toThrow();
   });
 });

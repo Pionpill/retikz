@@ -1,3 +1,4 @@
+export * from './border';
 export * from './cell';
 export * from './layout';
 export * from './presentation';

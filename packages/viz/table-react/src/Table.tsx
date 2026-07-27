@@ -8,8 +8,38 @@ import { tableEmbeddableAdapter } from './embedded-runtime';
 import { ReactTableRuntimeKind, resolveReactTableRuntime } from './table-runtime';
 import { TableRuntimeView } from './table-view';
 
+/** Table standalone 入口复用的 Kernel Layout 宿主 props */
+export type TableLayoutHostProps = Pick<
+  LayoutProps,
+  | 'handlers'
+  | 'width'
+  | 'height'
+  | 'viewBox'
+  | 'className'
+  | 'style'
+  | 'renderer'
+  | 'animate'
+  | 'snapshotAt'
+  | 'animationRef'
+  | 'animations'
+  | 'easings'
+  | 'animationProperties'
+  | 'idPrefix'
+  | 'nodeDistance'
+  | 'fontSize'
+  | 'shapes'
+  | 'boundaries'
+  | 'clips'
+  | 'arrows'
+  | 'patterns'
+  | 'pathGenerators'
+  | 'pathKinds'
+  | 'ribbonWidthProfiles'
+  | 'lowerTex'
+>;
+
 /** 三个 Table 组件共享的宿主展示与 lowering props */
-export type TableCommonProps = Pick<LayoutProps, 'width' | 'height' | 'className' | 'style' | 'renderer'> &
+export type TableCommonProps = TableLayoutHostProps &
   LowerTablesOptions & {
     /** Cell 内嵌 Tier 2 内容所需的额外 composite definitions */
     composites?: ReadonlyArray<AnyCompositeDefinition>;
