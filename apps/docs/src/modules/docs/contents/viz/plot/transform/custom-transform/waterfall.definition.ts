@@ -4,7 +4,7 @@ import { z } from 'zod';
 const WaterfallTransformSchema = z.strictObject({
   kind: z.literal('waterfall').describe('Discriminator: derive cumulative intervals for a waterfall plot'),
   field: z.string().min(1).describe('Numeric delta field read from each input row'),
-  initialValue: z.number().finite().optional().describe('Cumulative value before the first row'),
+  initialValue: z.number().optional().describe('Cumulative value before the first row'),
 });
 
 /** 文档示例的瀑布累计变换：把增减值派生为区间与方向字段 */

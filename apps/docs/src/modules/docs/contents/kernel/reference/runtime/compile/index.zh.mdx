@@ -12,6 +12,7 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 | `compileToScene`              | `(ir: IRScene, options?: CompileOptions) => CompileResult`             | 主编译入口；同次返回 `scene` 与 immutable `artifacts`        |
 | `lowerIRToKernel`             | `(ir: IRScene, options?: LowerIRToKernelOptions) => LoweredIRScene`    | 只递归展开 composite，返回不含 Tier 2 节点的 Kernel IR       |
 | `computeLayout`               | `(points, padding, round) => Layout`                                   | 从 bbox 候选点计算场景边界；通常由 `compileToScene` 内部调用 |
+| `resolveBoxSpacing`           | `(value, fallback) => BoundsInsets`                                    | 把统一值或按边覆盖值归一化为完整四边间距                     |
 | `fallbackMeasurer`            | `(text, font) => TextMetrics`                                          | 默认文字度量；不准但可运行，适合无 DOM 环境的兜底            |
 | `formatCompileWarning`        | `(warning: CompileWarning) => string`                                  | 把结构化 warning 格式化为统一的可读消息                      |
 | `formatCompileOccurrence`     | `(locator: CompileOccurrenceLocator) => string`                        | 格式化 artifact 的 occurrence locator                        |
@@ -20,6 +21,12 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 `compileToScene` 先遍历并注册当前作用域内的 node / coordinate，再回填延迟发出的 path，因此路径可以引用同一作用域中写在它后面的目标。输出随后按 `zIndex` 升序稳定排序；只有 `zIndex` 相同的图元才保持声明顺序。
 
 `lowerIRToKernel` 不做布局或 Scene 发出，只消费 `composites` 与 `maxCompositeDepth`。未注册 composite 会直接抛错；遇到带 `compile` 分支的 layout-aware composite 也会明确报错，因为独立 lowering 没有文字测量、provider、引用环境和父级约束。完整 `compileToScene` 对未注册 composite 发出 `COMPOSITE_NOT_REGISTERED` 并跳过；两条路径遇到嵌套超限或环都会抛错。
+
+### 盒间距归一化
+
+`resolveBoxSpacing(value, fallback)` 接受一个非负数、`IRBoxSpacing` 对象或 `undefined`，并返回 `{ top, right, bottom, left }` 形式的 `BoundsInsets`。统一数值会应用到四边；对象中的每一边按 `side > axis > default > fallback` 选择首个已提供的值。
+
+调用方应先通过自身 schema 校验 `value`。`fallback` 必须是有限非负数，即使 `value` 已提供完整值也会检查；非法 fallback 会直接抛错。每次调用都返回独立的新对象。
 
 ## 编译选项
 
@@ -71,7 +78,24 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 - `expand(node)` 只做无上下文结构展开；
 - `compile(node, context)` 可用 `context.constraint` 与 `layoutChild(child, constraint)` 在完整 compile 环境中测量真实子内容。
 
-`layoutChild` 支持 `{ kind: 'intrinsic' }` 与 `{ kind: 'constrained', maxWidth }`，返回 allocation bounds、包含描边 / marker / shadow / clip / transform 的保守 visual bounds，以及一次性的 compile-local replay token。父 composite 求解布局后，把 token 放入 `{ kind: 'replay', replay, transforms? }`；最终 Scene 直接复用已布局结果，不再次展开、测量或布局。token 不能跨 compile、重复使用、序列化或伪造。
+`layoutChild` 支持 `{ kind: 'intrinsic' }` 与 `{ kind: 'constrained', maxWidth }`，返回 allocation bounds、包含描边 / marker / shadow / clip / transform 的保守 visual bounds，以及一次性的 compile-local replay token。父 composite 求解布局后，用 `context.replay(result, transforms?)` 创建 output child；最终 Scene 直接复用已布局结果，不再次展开、测量或布局。
+
+`context.scope(props, children)` 可以递归包装普通 `IRChild`、replay child 与其它 runtime Scope child。它只开放 replay 后仍有确定语义的八个结构字段：
+
+| 字段             | 作用                                    |
+| ---------------- | --------------------------------------- |
+| `id`             | 把 Scope identity 注册到父 namespace    |
+| `localNamespace` | 隔离 Scope 子树命名                     |
+| `transforms`     | 应用已 lowering 的数值 Scene transforms |
+| `clip`           | 在 Scope 局部坐标裁剪                   |
+| `zIndex`         | 让 Scope 作为同层单元排序               |
+| `boundingShape`  | 声明带 id Scope 的包络形状              |
+| `meta`           | 透传 JSON metadata                      |
+| `animations`     | 透传 Group 动画轨道                     |
+
+`context.replay()` / `context.scope()` 返回 runtime-only opaque handle，不进入 IR、Scene 或 renderer 合同。handle 与 layout result 都不能跨 compile、跨 composite callback、序列化或伪造；同一个 replay 只能提交一次。Scope props 会在 builder 调用时 detached、校验并冻结。样式默认、`resetStyle`、引用式 transform 与 `placement` 不被接受，因为 replayed content 已经完成样式解析与布局；再次施加这些语义会造成第二套编译结果。
+
+最终 occurrence 继续使用既有 `output` / `scopeChild` / `replay` segment；嵌套 wrapper 不新增 locator kind。resource、namespace、warning、bounds 与 artifact 仍在选中 replay 的一次提交中原子发布。
 
 带 `artifactSchema` 的 layout-aware definition 可在同一次 `compile` 返回 JSON-safe `artifact`。`compileToScene` 会把它封装为 `{ kind:'composite', namespace, type, occurrence, value }`；`occurrence` 由原始 `sourcePath` 和结构化 `expansionPath` 标识，不依赖全局 Map 或 callback capture。精确的 definition tuple 会让 `CompileResult` 推导对应 artifact union。
 
@@ -169,10 +193,16 @@ Node label 会把一次测量阶段得到的 `width` / `height` / `ascent` / `de
       endLine: 10,
     },
     {
-      label: 'layout-aware composite 的测量、artifact 与输出',
+      label: 'compile-local replay 与 Scope builder',
+      path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
+      startLine: 1,
+      endLine: 196,
+    },
+    {
+      label: 'layout-aware composite 的测量、artifact 与递归输出',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 885,
-      endLine: 1025,
+      startLine: 784,
+      endLine: 1116,
     },
     {
       label: '延迟解析 path 并回填原始输出位置',

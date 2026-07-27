@@ -14,6 +14,8 @@ export type RuntimeDiagnostic = Readonly<{
   owner?: string;
   /** 关联的 Program identity */
   program?: RuntimeProgramId;
+  /** 隔离的原始非致命错误 */
+  cause?: unknown;
 }>;
 
 /** 不会阻止 transaction 提交的 Runtime warning */

@@ -25,6 +25,48 @@ export const kernelV05: Release = {
       ],
     },
     {
+      pkg: '@retikz/runtime',
+      version: 'v0.5',
+      description: {
+        zh: 'v0.5 alpha.2 建立零领域依赖的增量执行底座：结构化 trace、typed Owner / Program registry、revision-bound transaction 与同步 Session。',
+        en: 'v0.5 alpha.2 establishes the domain-neutral incremental execution foundation: structured traces, typed Owner/Program registries, revision-bound transactions, and synchronous Sessions.',
+      },
+      highlights: [
+        {
+          label: { zh: 'Typed Program graph', en: 'Typed Program graphs' },
+          content: {
+            zh: '`defineRuntimeProgram()` 保留 artifact input / owned value / private read / public read 四组泛型；builtin/custom Definition 共用一个 registry，依赖按稳定拓扑顺序执行。',
+            en: '`defineRuntimeProgram()` retains artifact-input, owned-value, private-read, and public-read generics. Built-in and custom Definitions share one registry and execute in stable topological order.',
+          },
+        },
+        {
+          label: { zh: '原子同步 Session', en: 'Atomic synchronous Sessions' },
+          content: {
+            zh: '完整 Owner Snapshot 先在隔离 candidate 中 capture/read/compare，再执行 incremental、bailout 或 fallback Program；所有 read 成功后才一次发布 revision。',
+            en: 'Complete Owner Snapshots are captured, read, and compared in an isolated candidate before Programs choose incremental, bailout, or fallback execution. The revision publishes only after every read succeeds.',
+          },
+        },
+        {
+          label: { zh: '稳定诊断与资源回滚', en: 'Stable diagnostics and resource rollback' },
+          content: {
+            zh: 'Program callback、artifact lifecycle、observer、trace 与 dispose 使用稳定 code/context；publish 前失败反向清理 candidate，publish 后 observer/retire failure 进入 drain queue 而不回滚。',
+            en: 'Program callbacks, artifact lifecycle, observers, traces, and disposal use stable codes and context. Pre-publish failures retire candidates in reverse order, while post-publish observer and retire failures enter the drain queue without rollback.',
+          },
+        },
+      ],
+      subVersions: [
+        {
+          version: 'alpha.2',
+          date: '2026-07-26',
+          summary: {
+            zh: '交付 performance trace、Owner / Program typed identity、同步 transaction、fallback、diagnostic queue 与 exactly-once lifecycle。',
+            en: 'Ships performance traces, typed Owner/Program identity, synchronous transactions, fallback, diagnostic queues, and exactly-once lifecycle management.',
+          },
+          items: [],
+        },
+      ],
+    },
+    {
       pkg: '@retikz/core',
       version: 'v0.5',
       description: {

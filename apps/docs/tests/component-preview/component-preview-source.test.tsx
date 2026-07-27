@@ -8,7 +8,6 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import type { ComponentPreviewCardProps } from '../../src/modules/docs/components/component-preview/ComponentPreviewCard';
 import type {
   PreviewControlContract,
-  PreviewControlRuntime,
   PreviewControlSlot,
 } from '../../src/modules/docs/components/component-preview/types';
 
@@ -93,19 +92,6 @@ const capture = vi.hoisted(() => {
     },
   };
 });
-const previewControlRuntime: PreviewControlRuntime = {
-  remount: () => undefined,
-  rendererMode: 'svg',
-  renderPane: null,
-  hovered: false,
-  pinned: true,
-  expanded: false,
-  active: () => false,
-  setActive: () => undefined,
-  value: () => undefined,
-  setValue: () => undefined,
-};
-
 vi.mock('../../src/modules/docs/components/component-preview/ComponentPreviewCard', () => ({
   ComponentPreviewCard: (props: ComponentPreviewCardProps) => {
     capture.set(props);
@@ -381,13 +367,24 @@ describe('ComponentPreview localized controls', () => {
 
     try {
       const props = renderPreview(['viz', 'plot', 'mark', 'path'], <ComponentPreview files="line-curve" />);
-      const control = props.controlSlots?.[0];
 
-      expect(control).toBeDefined();
-      const markup = renderToStaticMarkup(control?.render(previewControlRuntime));
-      expect(markup).toContain('aria-label="Connection"');
-      expect(markup).toContain('Linear');
-      expect(markup).not.toContain('连接方式');
+      expect(props.controlDefinition).toMatchObject({
+        presentation: 'panel',
+        title: 'Path connection',
+        sections: [
+          { label: 'Data' },
+          {
+            label: 'Connection',
+            controls: expect.arrayContaining([
+              expect.objectContaining({
+                id: 'path-curve',
+                label: 'Connection',
+                options: expect.arrayContaining([{ value: 'linear', label: 'Linear' }]),
+              }),
+            ]),
+          },
+        ],
+      });
     } finally {
       await i18n.changeLanguage('zh');
     }
@@ -401,12 +398,17 @@ describe('ComponentPreview localized controls', () => {
         ['viz', 'plot', 'mark', 'path'],
         <ComponentPreview files="line-basic" controls={{ name: 'line-curve' }} />,
       );
-      const control = props.controlSlots?.[0];
 
-      expect(control).toBeDefined();
-      const markup = renderToStaticMarkup(control?.render(previewControlRuntime));
-      expect(markup).toContain('aria-label="Connection"');
-      expect(markup).not.toContain('连接方式');
+      expect(props.controlDefinition).toMatchObject({
+        presentation: 'panel',
+        title: 'Path connection',
+        sections: expect.arrayContaining([
+          expect.objectContaining({
+            label: 'Connection',
+            controls: expect.arrayContaining([expect.objectContaining({ id: 'path-curve', label: 'Connection' })]),
+          }),
+        ]),
+      });
     } finally {
       await i18n.changeLanguage('zh');
     }
@@ -418,10 +420,11 @@ describe('ComponentPreview localized controls', () => {
       <ComponentPreview files="line-curve" controls={{ name: false }} />,
     );
 
-    expect(props.controlSlots?.map(slot => slot.id)).not.toContain('path-curve');
+    expect(props.controlContract).toBeUndefined();
+    expect(props.controlDefinition).toBeUndefined();
   });
 
-  it('拒绝局部 slot 与内容 controls 使用重复 id', () => {
+  it('拒绝局部 slots 使用重复 id', () => {
     const localSlot: PreviewControlSlot = {
       id: 'path-curve',
       visibility: 'always',
@@ -431,7 +434,7 @@ describe('ComponentPreview localized controls', () => {
     expect(() =>
       renderPreview(
         ['viz', 'plot', 'mark', 'path'],
-        <ComponentPreview files="line-curve" controls={{ slots: [localSlot] }} />,
+        <ComponentPreview files="line-curve" controls={{ slots: [localSlot, localSlot] }} />,
       ),
     ).toThrow('Duplicate preview control slot id: "path-curve".');
   });

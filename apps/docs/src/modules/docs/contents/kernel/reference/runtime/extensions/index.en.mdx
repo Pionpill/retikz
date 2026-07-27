@@ -41,6 +41,7 @@ Definition capabilities use `XxxDefinition` and `defineXxx`; built-ins and custo
 - Missing ordinary Definition keys fail loudly and list registered items.
 - Missing composites warn and skip the node during full compile; standalone lowering promotes the condition to an error.
 - The Composite registry accepts mutually exclusive `expand` and `compile` branches; `lowerIRToKernel` fails explicitly on a `compile` branch that requires the complete environment.
+- A layout-aware composite can create compile-local output children only through the callback's `replay()` and `scope()` builders. Duplicate replay, forged handles, and cross-compile or cross-callback use fail loudly.
 - Schema and payload validation run before consuming a definition, and diagnostics identify the capability family and lookup key.
 
 ## Guides

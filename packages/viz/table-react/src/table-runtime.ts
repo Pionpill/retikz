@@ -1,6 +1,5 @@
-import type { AnyCompositeDefinition, ValueOf } from '@retikz/core';
-import type { ExternalDatasets } from '@retikz/data';
-import type { LayoutProps } from '@retikz/react';
+import type { AnyCompositeDefinition, AssertEqual, ValueOf } from '@retikz/core';
+import type { ExternalDatasets, ExternalRow } from '@retikz/data';
 import type {
   IRDetailTableSpec,
   IRManualTableSpec,
@@ -15,7 +14,7 @@ import { createDetailTableSpec, createManualTableSpec, TableSpecSchema } from '@
 
 import type { DetailTableProps } from './DetailTable';
 import type { ManualTableProps } from './ManualTable';
-import type { TableCommonProps, TableProps } from './Table';
+import type { TableCommonProps, TableLayoutHostProps, TableProps } from './Table';
 
 import { buildDetailColumns } from './components/build-detail-columns';
 import { buildManualStructure } from './components/build-manual-structure';
@@ -33,20 +32,63 @@ export const ReactTableRuntimeKind = {
 /** React Table runtime 入口类型取值 */
 export type ReactTableRuntimeKindValue = ValueOf<typeof ReactTableRuntimeKind>;
 
+/** Table standalone 入口允许透传给 Layout 的宿主字段 */
+export const TABLE_LAYOUT_HOST_PROP_KEYS = [
+  'handlers',
+  'width',
+  'height',
+  'viewBox',
+  'className',
+  'style',
+  'renderer',
+  'animate',
+  'snapshotAt',
+  'animationRef',
+  'animations',
+  'easings',
+  'animationProperties',
+  'idPrefix',
+  'nodeDistance',
+  'fontSize',
+  'shapes',
+  'boundaries',
+  'clips',
+  'arrows',
+  'patterns',
+  'pathGenerators',
+  'pathKinds',
+  'ribbonWidthProfiles',
+  'lowerTex',
+] as const satisfies ReadonlyArray<keyof TableLayoutHostProps>;
+
+type _TableLayoutHostPropKeysCheck = AssertEqual<
+  (typeof TABLE_LAYOUT_HOST_PROP_KEYS)[number],
+  keyof TableLayoutHostProps
+>;
+const _assertTableLayoutHostPropKeys: _TableLayoutHostPropKeysCheck = true;
+void _assertTableLayoutHostPropKeys;
+
+const EMPTY_COMPOSITES: ReadonlyArray<AnyCompositeDefinition> = Object.freeze([]);
+const EMPTY_DATASETS: ExternalDatasets = Object.freeze({});
+
 /** 三个 React Table 组件共享的规范化运行时输入 */
 export type ReactTableRuntime = Readonly<{
   /** 已通过 Table schema 的根 spec */
   spec: IRTableSpec;
   /** Table lowering 消费的外部 datasets */
   datasets: ExternalDatasets;
+  /** 保留原始引用的 dataset 输入，用于 standalone compile memo */
+  datasetSource: ExternalDatasets | Array<ExternalRow>;
+  /** detail datasetSource 对应的 runtime reference */
+  datasetReference?: string;
   /** Table definitions 与其它 lowering 选项 */
   lowerOptions: LowerTablesOptions;
   /** Cell 内嵌 Tier 2 内容所需的额外 composites */
   composites: ReadonlyArray<AnyCompositeDefinition>;
   /** standalone 模式的 manifest observer */
   onManifest?: (manifest: TableLayoutManifest) => void;
-  /** 透传给 Layout 的展示 props */
-  display: Pick<LayoutProps, 'width' | 'height' | 'className' | 'style' | 'renderer'>;
+  /** 透传给 Layout 的选定宿主 props */
+  display: TableLayoutHostProps;
 }>;
 
 type AnyTableProps = TableProps | DetailTableProps | ManualTableProps;
@@ -57,14 +99,18 @@ const lowerOptionsOf = (props: TableCommonProps): LowerTablesOptions => ({
   presentationDefinitions: props.presentationDefinitions,
 });
 
-/** 从共享 props 提取 React Layout 展示选项 */
-const displayOf = (props: TableCommonProps): ReactTableRuntime['display'] => ({
-  width: props.width,
-  height: props.height,
-  className: props.className,
-  style: props.style,
-  renderer: props.renderer,
-});
+/** 从共享 props 精确提取 React Layout 宿主选项 */
+const hostPropsOf = (props: TableCommonProps): ReactTableRuntime['display'] =>
+  Object.fromEntries(TABLE_LAYOUT_HOST_PROP_KEYS.flatMap(key => (props[key] === undefined ? [] : [[key, props[key]]])));
+
+/** 收集 embedded Table 不支持的 standalone-only props */
+const unsupportedEmbeddedPropsOf = (props: TableCommonProps): Array<string> => {
+  const unsupported: Array<string> = TABLE_LAYOUT_HOST_PROP_KEYS.filter(key => Object.hasOwn(props, key));
+  if (Object.hasOwn(props, 'onManifest')) unsupported.push('onManifest');
+  const plainProps = props as TableCommonProps & { embeddables?: unknown };
+  if (Object.hasOwn(plainProps, 'embeddables')) unsupported.push('embeddables');
+  return unsupported;
+};
 
 /** 统一 DetailTable 的 columns props 与 marker children authoring */
 const detailColumnsOf = (props: DetailTableProps): Array<TableDetailColumnInput> => {
@@ -134,36 +180,47 @@ export const resolveReactTableRuntime = (
 ): ReactTableRuntime => {
   let spec: IRTableSpec;
   let datasets: ExternalDatasets;
+  let datasetSource: ExternalDatasets | Array<ExternalRow>;
+  let datasetReference: string | undefined;
   if (kind === ReactTableRuntimeKind.Table) {
     const tableProps = props as TableProps;
     spec = TableSpecSchema.parse(tableProps.spec);
-    datasets = tableProps.data ?? {};
+    datasets = tableProps.data ?? EMPTY_DATASETS;
+    datasetSource = datasets;
   } else if (kind === ReactTableRuntimeKind.Detail) {
     const detailProps = props as DetailTableProps;
     const detailSpec = detailSpecOf(detailProps);
     spec = detailSpec;
     datasets = { [detailSpec.data.reference]: detailProps.data };
+    datasetSource = detailProps.data;
+    datasetReference = detailSpec.data.reference;
   } else {
     const manualProps = props as ManualTableProps;
     spec = manualSpecOf(manualProps);
-    datasets = {};
+    datasets = EMPTY_DATASETS;
+    datasetSource = EMPTY_DATASETS;
   }
 
   if (options.embedded) {
     if (spec.id === undefined || spec.id.trim().length === 0) {
       throw new Error(`table react: embedded ${kind} Table spec id must be non-empty`);
     }
-    if (props.onManifest !== undefined) {
-      throw new Error('table react: embedded onManifest is unsupported; call lowerTableWithArtifacts explicitly');
+    const unsupportedProps = unsupportedEmbeddedPropsOf(props);
+    if (unsupportedProps.length > 0) {
+      throw new Error(
+        `table react: embedded Table does not support standalone props: ${unsupportedProps.join(', ')}; move them to the outer <Layout>`,
+      );
     }
   }
 
   return {
     spec,
     datasets,
+    datasetSource,
+    ...(datasetReference === undefined ? {} : { datasetReference }),
     lowerOptions: lowerOptionsOf(props),
-    composites: props.composites ?? [],
+    composites: props.composites ?? EMPTY_COMPOSITES,
     onManifest: props.onManifest,
-    display: displayOf(props),
+    display: hostPropsOf(props),
   };
 };

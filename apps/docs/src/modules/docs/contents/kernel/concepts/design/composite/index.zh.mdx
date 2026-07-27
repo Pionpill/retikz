@@ -57,11 +57,49 @@ Core 只按顶层 `namespace + type` 路由 composite，不读取领域 schema �
 1. `layoutChild(child, { kind:'intrinsic' })` 测量子内容的自然尺寸；
 2. 父 composite 据 allocation bounds 求解列、行或其它约束；
 3. `layoutChild(child, { kind:'constrained', maxWidth })` 让文本按最终宽度重新换行；
-4. 用 `{ kind:'replay', replay, transforms? }` 放置选中的结果。
+4. 用 `context.replay(result, transforms?)` 放置选中的结果；需要结构包装时，再用 `context.scope(props, children)` 递归组合。
 
-每次 `layoutChild` 都返回 allocation bounds、保守 visual bounds 与 opaque replay token。allocation bounds 表示父布局应预留的空间；visual bounds 反映最终静态绘制，包括 transform、clip、描边、marker 和 shadow。replay 只在创建它的同一次 compile 中可用一次，最终发出直接提交保存的 primitive、资源、引用、warning 与 artifact，不会第三次展开或布局。
+每次 `layoutChild` 都返回 allocation bounds、保守 visual bounds 与 opaque replay token。allocation bounds 表示父布局应预留的空间；visual bounds 反映最终静态绘制，包括 transform、clip、描边、marker 和 shadow。`context.replay()` 把选中结果转为 output child；replay 只在创建它的同一次 compile、同一个 composite callback 中可用一次，最终发出直接提交保存的 primitive、资源、引用、warning 与 artifact，不会第三次展开或布局。
 
-这不是 Table 专用接口。任何需要“测量子内容 → 求解父布局 → 约束子内容 → 放置最终结果”的 Tier 2 composite 都可以复用它。
+### 编译期局部包装树
+
+布局求解完成后，父 composite 往往还需要在 replay 外层增加局部 identity、clip、metadata 或数值变换。`context.scope()` 为此建立递归的 runtime Scope tree；它的 children 可以混合普通 `IRChild`、`context.replay()` 和其它 `context.scope()` 结果：
+
+```ts
+compile: (node, context) => {
+  const constrained = context.layoutChild(node.child, {
+    kind: 'constrained',
+    maxWidth: node.width,
+  });
+
+  const placed = context.scope(
+    {
+      transforms: [
+        { kind: 'scale', x: 0.8 },
+        { kind: 'translate', x: 12, y: 8 },
+      ],
+    },
+    [context.replay(constrained)],
+  );
+
+  return {
+    children: [
+      context.scope(
+        {
+          id: 'cell',
+          clip: { kind: 'rect', x: 0, y: 0, width: 80, height: 32 },
+          meta: { role: 'cell' },
+        },
+        [placed],
+      ),
+    ],
+  };
+};
+```
+
+builder 返回的是不可读取、不可伪造或序列化的 opaque handle；它只存在于当前 `compileToScene()` 的内存 session 中。跨 compile、跨 callback、重复 replay 或伪造 handle 都会报错。Core 最终仍输出既有 Tier 1 Scene、resource 与 occurrence；wrapper 不新增 IR、Scene 或 renderer 合同。
+
+任何需要“测量子内容 → 求解父布局 → 约束子内容 → 放置最终结果”的 Tier 2 composite 都可以复用它。
 
 ### 同次类型化产物
 
@@ -98,16 +136,16 @@ PGFPlots 位于 TikZ 基础图元之上；同样地，`@retikz/plot` 通过 comp
       endLine: 90,
     },
     {
-      label: 'layout constraint 校验与 replay 提交',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 717,
-      endLine: 884,
+      label: 'compile-local replay 与 Scope builder',
+      path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
+      startLine: 1,
+      endLine: 196,
     },
     {
-      label: '布局感知 composite 的测量与输出',
+      label: '布局感知 composite 的测量与递归输出',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 885,
-      endLine: 1025,
+      startLine: 784,
+      endLine: 1116,
     },
     {
       label: '在 compile 上下文注入 composite 与 provider',

@@ -1,7 +1,7 @@
 import { JsonValueSchema } from '@retikz/core';
 import { z } from 'zod';
 
-import { TableCellPayloadSchema, TableCellSchema } from '../cell';
+import { TableCellLayoutSchema, TableCellPayloadSchema, TableCellSchema } from '../cell';
 import { TablePresentationRefSchema } from '../presentation';
 import { RESERVED_TABLE_STRUCTURE_KINDS, TableRowKind, TableStructureKind } from './constants';
 
@@ -34,6 +34,8 @@ export const TableDetailColumnSchema = z
     presentation: TablePresentationRefSchema.optional().describe(
       'Optional presentation applied to body values in this column.',
     ),
+    headerLayout: TableCellLayoutSchema.optional().describe('Optional layout applied to this column header Cell.'),
+    bodyLayout: TableCellLayoutSchema.optional().describe('Optional layout applied to body Cells in this column.'),
   })
   .describe('Detail Table column bound to one external data field.');
 

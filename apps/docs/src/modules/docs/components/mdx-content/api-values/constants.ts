@@ -31,20 +31,16 @@ import {
 import { DataFieldFormat, DataFieldType, DataSortOrder, FieldOrderMode } from '@retikz/data';
 import {
   AxisPlacementKind,
-  Cartesian1DOrientation,
   DensityBandwidthKind,
-  FacetEmptyPolicy,
   JitterAxis,
   LegendOrient,
   LegendPosition,
   LegendSymbolFit,
   NormalizeBasis,
   PairMeasureOperationKind,
-  PathClosureKind,
   PathCurve,
   ReferenceMarkKind,
   RelationGeometryKind,
-  ScaffoldFrameMode,
   SmoothMethodKind,
   StackOffset,
 } from '@retikz/plot';
@@ -56,7 +52,17 @@ import {
   AxesTickSourceKind,
   GridBorderOrder,
 } from '@retikz/standard';
-import { TableComposite, TableStructureKind } from '@retikz/table';
+import {
+  TableBorderKind,
+  TableBorderMode,
+  TableCellFit,
+  TableCellOverflow,
+  TableComposite,
+  TableHorizontalAlignment,
+  TableStructureKind,
+  TableTrackSizeKind,
+  TableVerticalAlignment,
+} from '@retikz/table';
 import { MathJaxExtension, MathJaxProfile } from '@retikz/tex';
 
 /** API 值集合注册项 */
@@ -112,9 +118,6 @@ export const API_VALUE_REGISTRY = {
   BuiltinShape: {
     values: Object.values(BuiltinShape),
   },
-  Cartesian1DOrientation: {
-    values: Object.values(Cartesian1DOrientation),
-  },
   DataFieldFormat: {
     values: Object.values(DataFieldFormat),
   },
@@ -126,9 +129,6 @@ export const API_VALUE_REGISTRY = {
   },
   DensityBandwidthKind: {
     values: Object.values(DensityBandwidthKind),
-  },
-  FacetEmptyPolicy: {
-    values: Object.values(FacetEmptyPolicy),
   },
   FieldOrderMode: {
     values: Object.values(FieldOrderMode),
@@ -178,9 +178,6 @@ export const API_VALUE_REGISTRY = {
   PathCloseMode: {
     values: Object.values(PathCloseMode),
   },
-  PathClosureKind: {
-    values: Object.values(PathClosureKind),
-  },
   PathCurve: {
     values: Object.values(PathCurve),
   },
@@ -217,9 +214,6 @@ export const API_VALUE_REGISTRY = {
   RibbonTaperInterpolation: {
     values: Object.values(RibbonTaperInterpolation),
   },
-  ScaffoldFrameMode: {
-    values: Object.values(ScaffoldFrameMode),
-  },
   ScopeBoundingShape: {
     values: Object.values(ScopeBoundingShape),
   },
@@ -238,8 +232,29 @@ export const API_VALUE_REGISTRY = {
   TableComposite: {
     values: Object.values(TableComposite),
   },
+  TableBorderKind: {
+    values: Object.values(TableBorderKind),
+  },
+  TableBorderMode: {
+    values: Object.values(TableBorderMode),
+  },
+  TableCellFit: {
+    values: Object.values(TableCellFit),
+  },
+  TableCellOverflow: {
+    values: Object.values(TableCellOverflow),
+  },
+  TableHorizontalAlignment: {
+    values: Object.values(TableHorizontalAlignment),
+  },
   TableStructureKind: {
     values: Object.values(TableStructureKind),
+  },
+  TableTrackSizeKind: {
+    values: Object.values(TableTrackSizeKind),
+  },
+  TableVerticalAlignment: {
+    values: Object.values(TableVerticalAlignment),
   },
   WebFontSizePreset: {
     values: Object.values(WebFontSizePreset),

@@ -183,7 +183,41 @@ describe('Table React components', () => {
           <ManualTable id="manifest" rows={1} columns={1} cells={[]} onManifest={vi.fn()} />
         </Layout>,
       ),
-    ).toThrow(/onManifest.*lowerTableWithArtifacts/i);
+    ).toThrow(/onManifest.*outer.*Layout/i);
+  });
+
+  it('rejects standalone-only host props together in embedded mode', () => {
+    expect(() =>
+      renderToStaticMarkup(
+        <Layout>
+          <ManualTable
+            id="embedded-host"
+            rows={1}
+            columns={1}
+            cells={[]}
+            width={320}
+            viewBox={{ x: 0, y: 0, width: 100, height: 100 }}
+            onManifest={vi.fn()}
+          />
+        </Layout>,
+      ),
+    ).toThrow(/width.*viewBox.*onManifest.*outer.*Layout/i);
+
+    expect(() =>
+      renderToStaticMarkup(
+        <Layout>
+          <ManualTable
+            id="embedded-explicit-undefined"
+            rows={1}
+            columns={1}
+            cells={[]}
+            width={undefined}
+            onManifest={undefined}
+            {...({ embeddables: undefined } as { embeddables?: unknown })}
+          />
+        </Layout>,
+      ),
+    ).toThrow(/width.*onManifest.*embeddables.*outer.*Layout/i);
   });
 
   it('passes nested composite definitions through standalone Table runtime', () => {
