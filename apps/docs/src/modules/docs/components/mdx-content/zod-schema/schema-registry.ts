@@ -350,6 +350,21 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'TableCellPayload',
     url: '/viz/table/reference/contract-table#tablecellpayloadschema',
   },
+  TableCellValuePayloadSchema: {
+    schema: TableIR.TableCellValuePayloadSchema,
+    label: 'TableCellValuePayload',
+    url: '/viz/table/reference/contract-table#tablecellvaluepayloadschema',
+  },
+  TableCellContentPayloadSchema: {
+    schema: TableIR.TableCellContentPayloadSchema,
+    label: 'TableCellContentPayload',
+    url: '/viz/table/reference/contract-table#tablecellcontentpayloadschema',
+  },
+  TablePresentationRefSchema: {
+    schema: TableIR.TablePresentationRefSchema,
+    label: 'TablePresentationRef',
+    url: '/viz/table/reference/contract-table#tablepresentationrefschema',
+  },
   TableCellSpanSchema: {
     schema: TableIR.TableCellSpanSchema,
     label: 'TableCellSpan',
@@ -450,10 +465,50 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'TableCellManifestEntry',
     url: '/viz/table/reference/runtime#tablecellmanifestentryschema',
   },
+  ResolvedTableBorderLineSchema: {
+    schema: TableIR.ResolvedTableBorderLineSchema,
+    label: 'ResolvedTableBorderLine',
+    url: '/viz/table/reference/runtime#resolvedtableborderlineschema',
+  },
+  TableBorderSourceSchema: {
+    schema: TableIR.TableBorderSourceSchema,
+    label: 'TableBorderSource',
+    url: '/viz/table/reference/runtime#tablebordersourceschema',
+  },
+  TableNoBorderContributionSchema: {
+    schema: TableIR.TableNoBorderContributionSchema,
+    label: 'TableNoBorderContribution',
+    url: '/viz/table/reference/runtime#tablenobordercontributionschema',
+  },
+  TableLineBorderContributionSchema: {
+    schema: TableIR.TableLineBorderContributionSchema,
+    label: 'TableLineBorderContribution',
+    url: '/viz/table/reference/runtime#tablelinebordercontributionschema',
+  },
+  TableBorderContributionSchema: {
+    schema: TableIR.TableBorderContributionSchema,
+    label: 'TableBorderContribution',
+    url: '/viz/table/reference/runtime#tablebordercontributionschema',
+  },
+  TableBorderManifestAtomSchema: {
+    schema: TableIR.TableBorderManifestAtomSchema,
+    label: 'TableBorderManifestAtom',
+    url: '/viz/table/reference/runtime#tablebordermanifestatomschema',
+  },
   TableBorderManifestEntrySchema: {
     schema: TableIR.TableBorderManifestEntrySchema,
     label: 'TableBorderManifestEntry',
     url: '/viz/table/reference/runtime#tablebordermanifestentryschema',
+  },
+  TableBorderPathMetaSchema: {
+    schema: TableIR.TableBorderPathMetaSchema,
+    label: 'TableBorderPathMeta',
+    url: '/viz/table/reference/runtime#tableborderpathmetaschema',
+  },
+  TableBorderLocatorEntrySchema: {
+    schema: TableIR.TableBorderLocatorEntrySchema,
+    label: 'TableBorderLocatorEntry',
+    url: '/viz/table/reference/runtime#tableborderlocatorentryschema',
   },
   DetailTableStructureSchema: {
     schema: TableIR.DetailTableStructureSchema,

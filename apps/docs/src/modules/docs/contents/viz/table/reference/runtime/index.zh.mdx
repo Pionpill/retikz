@@ -167,6 +167,85 @@ layout-aware Table 不能通过纯 Tier 1 `lowerIRToKernel()` 保存 compile-loc
   }}
 />
 
+border manifest 把最终可见 edge 与原子边冲突来源一起保存。以下 schema 从 resolved line 和候选 contribution 逐层组成 atom，再组成 merged edge。
+
+### ResolvedTableBorderLineSchema
+
+<ZodSchema
+  name="ResolvedTableBorderLineSchema"
+  description="完成默认值解析、可直接 lowering 为 Core Path 的 border line style。"
+  descriptions={{
+    stroke: '非 none 的 resolved Core paint。',
+    width: 'resolved 非负 border 宽度。',
+    strokeOpacity: 'resolved border stroke opacity。',
+    dashPattern: '可选非空正数 dash pattern；省略表示实线。',
+    dashOffset: 'resolved 有限 dash offset。',
+    lineCap: 'canonical border line cap。',
+    lineJoin: 'canonical border line join。',
+  }}
+/>
+
+### TableBorderSourceSchema
+
+<ZodSchema
+  name="TableBorderSourceSchema"
+  description="border 候选的 canonical 来源：Cell side、Table outer 默认边或内部 grid 默认边。"
+/>
+
+Cell 来源保留 `cellId + row + column + side`；Table 默认来源使用 `scope + side` 或 `scope + boundaryIndex`，不依赖对象遍历顺序决定冲突结果。
+
+### TableNoBorderContributionSchema
+
+<ZodSchema
+  name="TableNoBorderContributionSchema"
+  description="参与冲突解析的显式隐藏 border 候选。"
+  descriptions={{
+    kind: '显式隐藏候选的判别值。',
+    key: '当前 layout transaction 内唯一的 contribution key。',
+    source: 'canonical border 候选来源。',
+    priority: 'resolved 有限整数冲突优先级。',
+    specificity: 'Table 默认边或 Cell side 的来源精确度等级。',
+    ownerSideRank: 'canonical 物理 owner side 排序值。',
+    sourceOrderKey: '不依赖 Cell id 的 canonical 来源排序 key。',
+  }}
+/>
+
+### TableLineBorderContributionSchema
+
+<ZodSchema
+  name="TableLineBorderContributionSchema"
+  description="携带完整 resolved line、可见性仍由 resolved width 与 opacity 决定的 border 候选。"
+  descriptions={{
+    kind: 'resolved line 候选的判别值。',
+    key: '当前 layout transaction 内唯一的 contribution key。',
+    source: 'canonical border 候选来源。',
+    priority: 'resolved 有限整数冲突优先级。',
+    specificity: 'Table 默认边或 Cell side 的来源精确度等级。',
+    ownerSideRank: 'canonical 物理 owner side 排序值。',
+    sourceOrderKey: '不依赖 Cell id 的 canonical 来源排序 key。',
+    line: '完成默认值解析的 Core-compatible border line。',
+  }}
+/>
+
+### TableBorderContributionSchema
+
+<ZodSchema
+  name="TableBorderContributionSchema"
+  description="显式隐藏或 resolved line 两类 border contribution 的判别联合。"
+/>
+
+### TableBorderManifestAtomSchema
+
+<ZodSchema
+  name="TableBorderManifestAtomSchema"
+  description="一条不可再分的 canonical border atom，以及胜出候选和完整候选顺序。"
+  descriptions={{
+    key: 'canonical atomic border key。',
+    winner: '冲突解析后的 atom 胜出候选。',
+    contributors: '按 canonical source 顺序保存的非空候选列表。',
+  }}
+/>
+
 ### TableBorderManifestEntrySchema
 
 <ZodSchema
@@ -182,17 +261,36 @@ layout-aware Table 不能通过纯 Tier 1 `lowerIRToKernel()` 保存 compile-loc
     'end.x': 'edge 终点的有限 Table-local x 坐标。',
     'end.y': 'edge 终点的有限 Table-local y 坐标。',
     style: '最终 emit 的 resolved line style。',
-    'style.stroke': 'border line 的非 none Core paint。',
-    'style.width': 'resolved 非负 border 宽度。',
-    'style.strokeOpacity': 'resolved border stroke opacity。',
-    'style.dashPattern': '可选非空正数 dash pattern；省略表示实线。',
-    'style.dashOffset': 'resolved 有限 dash offset。',
-    'style.lineCap': 'canonical border line cap。',
-    'style.lineJoin': 'canonical border line join。',
     atoms: '按 edge 顺序保存的 canonical atomic provenance。',
     pathId: '可选的已 emit Core Path id。',
   }}
 />
+
+### TableBorderPathMetaSchema
+
+<ZodSchema
+  name="TableBorderPathMetaSchema"
+  description="lowering 写入每条 emitted border Core Path 的 JSON-safe Table 来源元数据。"
+  descriptions={{
+    kind: 'Table border Path metadata 的判别值。',
+    tableId: '可选的 owning Table id。',
+    edgeKey: '该 Path 对应的 canonical merged edge key。',
+    atomicKeys: '该 Path 合并表示的非空 canonical atom key 列表。',
+  }}
+/>
+
+### TableBorderLocatorEntrySchema
+
+<ZodSchema
+  name="TableBorderLocatorEntrySchema"
+  description="把 canonical merged edge 映射到可选 emitted Core Path id 的独立 locator DTO。"
+  descriptions={{
+    edgeKey: 'canonical merged edge key。',
+    pathId: '可选的已 emit Core Path id。',
+  }}
+/>
+
+`TableBorderLocatorEntrySchema` 是独立的 JSON-safe 索引条目；当前 `TableLayoutManifestSchema` 不内嵌 locator 列表。
 
 根 artifact occurrence 由 Core compile traversal 生成，不进入 TableSpec 或 manifest。`tableId` 不是实例 selector；匿名根、nested Table 与重复 id 都由 exact occurrence 区分。
 

@@ -99,6 +99,42 @@ description: 查询 TableSpec 根、Cell span/布局、轨道尺寸与 border �
 
 `{ kind: 'value', value: 'Score' }` 中的 `kind: 'value'` 表示“标量值呈现”分支；它不是 JavaScript 字符串类型的别名。直接放置 Node、Path 或 Tier 2 child 时使用 `kind: 'content'`。
 
+### TableCellValuePayloadSchema
+
+<ZodSchema
+  name="TableCellValuePayloadSchema"
+  description="交给 presentation registry 的标量值 Cell payload。"
+  descriptions={{
+    kind: '标量值 payload 的判别值。',
+    value: '交给 presentation provider 的 JSON scalar。',
+    presentation: '可选 presentation provider 引用；省略时使用内置 text presentation。',
+  }}
+/>
+
+### TableCellContentPayloadSchema
+
+<ZodSchema
+  name="TableCellContentPayloadSchema"
+  description="绕过 value presentation、直接保存 Core 或 Tier 2 child 的 Cell payload。"
+  descriptions={{
+    kind: '直接内容 payload 的判别值。',
+    content: '在 Cell 局部坐标中 author 的 JSON-safe Core 或 Tier 2 child。',
+  }}
+/>
+
+### TablePresentationRefSchema
+
+<ZodSchema
+  name="TablePresentationRefSchema"
+  description="通过注册名选择 Cell presentation provider，并携带由该 provider 校验的 JSON options。"
+  descriptions={{
+    name: '精确的已注册 Cell presentation provider 名称；首尾空白不会自动移除。',
+    options: '交给所选 presentation provider 精确 schema 校验的 JSON options。',
+  }}
+/>
+
+`presentation.name` 必须命中 runtime 注入的 definition；未注册名称或不符合该 provider `optionsSchema` 的 options 会 fail-loud。
+
 ### TableCellSpanSchema
 
 <ZodSchema

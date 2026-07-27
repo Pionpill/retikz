@@ -92,9 +92,47 @@ A layout-aware Table cannot persist its compile-local replay tree through pure T
 
 <ZodSchema name="TableCellManifestEntrySchema" />
 
+The border manifest preserves final visible edges together with their atomic conflict provenance. The following schemas build from resolved lines and candidate contributions to atoms and merged edges.
+
+### ResolvedTableBorderLineSchema
+
+<ZodSchema name="ResolvedTableBorderLineSchema" />
+
+### TableBorderSourceSchema
+
+<ZodSchema name="TableBorderSourceSchema" />
+
+Cell sources retain `cellId + row + column + side`. Table defaults use `scope + side` or `scope + boundaryIndex`, so conflict resolution does not depend on object traversal order.
+
+### TableNoBorderContributionSchema
+
+<ZodSchema name="TableNoBorderContributionSchema" />
+
+### TableLineBorderContributionSchema
+
+<ZodSchema name="TableLineBorderContributionSchema" />
+
+### TableBorderContributionSchema
+
+<ZodSchema name="TableBorderContributionSchema" />
+
+### TableBorderManifestAtomSchema
+
+<ZodSchema name="TableBorderManifestAtomSchema" />
+
 ### TableBorderManifestEntrySchema
 
 <ZodSchema name="TableBorderManifestEntrySchema" />
+
+### TableBorderPathMetaSchema
+
+<ZodSchema name="TableBorderPathMetaSchema" />
+
+### TableBorderLocatorEntrySchema
+
+<ZodSchema name="TableBorderLocatorEntrySchema" />
+
+`TableBorderLocatorEntrySchema` is an independent JSON-safe index entry; the current `TableLayoutManifestSchema` does not embed a locator list.
 
 Core compile traversal creates the root artifact occurrence; it never enters TableSpec or the manifest. `tableId` is not an instance selector. Exact occurrences distinguish anonymous roots, nested Tables, and repeated ids.
 
