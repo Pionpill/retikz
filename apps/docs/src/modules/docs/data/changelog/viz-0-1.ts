@@ -840,8 +840,8 @@ export const vizV01: Release = {
       pkg: '@retikz/table',
       version: 'v0.1',
       description: {
-        zh: 'renderer-agnostic 的静态表格核心：用 JSON-safe TableSpec 表达结构、Cell 与固定轨道布局，再下沉为 Core IR，并保留布局 manifest。',
-        en: 'The renderer-agnostic static-table core: JSON-safe TableSpecs describe structure, Cells, and fixed tracks before lowering to Core IR with a layout manifest.',
+        zh: 'renderer-agnostic 的静态表格核心：用 JSON-safe TableSpec 表达结构、Cell、约束轨道与 border，并在同次 Core compile 中产出 Scene 与 typed manifest。',
+        en: 'The renderer-agnostic static-table core: JSON-safe TableSpecs describe structure, Cells, constrained tracks, and borders, producing Scene and a typed manifest in one Core compile.',
       },
       highlights: [
         {
@@ -852,34 +852,41 @@ export const vizV01: Release = {
           },
         },
         {
-          label: { zh: 'Core lowering 与 manifest', en: 'Core lowering and manifests' },
+          label: { zh: '同次 compile 与 manifest', en: 'Same-compile manifests' },
           content: {
-            zh: '`lowerTables()` 让 renderer 只消费 Core IR；`lowerTableWithArtifacts()` 额外返回递归冻结的行列与 Cell 布局 manifest。',
-            en: '`lowerTables()` keeps renderers on Core IR, while `lowerTableWithArtifacts()` also returns an immutable row, column, and Cell layout manifest.',
+            zh: '`lowerTables()` 提供 layout-aware composite definition；`compileTable()` 从同一次 compile 返回 Scene、完整 artifacts 与精确根 `TableLayoutManifest`。',
+            en: '`lowerTables()` provides a layout-aware composite definition, while `compileTable()` returns Scene, all artifacts, and the exact-root `TableLayoutManifest` from one compile.',
           },
         },
       ],
       subVersions: [
         {
           version: 'alpha.2',
-          date: '2026-07-26',
+          date: '2026-07-27',
           summary: {
-            zh: '开始二维约束布局升级：先公开确定性的轨道尺寸原语与单轴求解基础，根 Table layout 仍保持 alpha.1 固定字段。',
-            en: 'Begins the constrained two-dimensional layout upgrade with deterministic track-size primitives and a single-axis solver foundation while the root Table layout retains its alpha.1 fixed fields.',
+            zh: '完成内容驱动的二维约束布局：轨道、span、Cell box、wrap/fit/overflow、Border Graph 与 typed manifest 在同一次 Core compile 中闭环。',
+            en: 'Completes content-driven two-dimensional layout: tracks, spans, Cell boxes, wrap/fit/overflow, the Border Graph, and typed manifests now close in one Core compile.',
           },
           items: [
             {
-              label: { zh: '轨道尺寸原语', en: 'Track-size primitives' },
+              label: { zh: 'BREAKING：约束轨道与 span', en: 'BREAKING: Constrained tracks and spans' },
               content: {
-                zh: '`@retikz/table` 公开 fixed / auto / fraction / minmax 判别 schema、类型与 canonical index 稀疏覆盖。它们当前是独立原语，尚不能写入 `TableSpec.layout`；根 schema、layout pipeline 与 manifest 将在后续步骤原子切换。',
-                en: '`@retikz/table` now exposes discriminated fixed / auto / fraction / minmax schemas and types plus sparse canonical-index overrides. These are currently standalone primitives and cannot yet be placed in `TableSpec.layout`; a later step will switch the root schema, layout pipeline, and manifest atomically.',
+                zh: '`TableSpec.layout` 现在接受 fixed / auto / fraction / minmax 默认轨道与 canonical index 稀疏覆盖；矩形 Cell span 参与 contribution、占位与 row-kind 校验。旧 `columnWidth` / `rowHeight` / `headerHeight` 分别迁移到 `columnSize` / `rowSize` / `headerRowSize`。',
+                en: '`TableSpec.layout` now accepts fixed / auto / fraction / minmax defaults and sparse canonical-index overrides. Rectangular Cell spans participate in contributions, occupancy, and row-kind validation. Migrate the old `columnWidth` / `rowHeight` / `headerHeight` fields to `columnSize` / `rowSize` / `headerRowSize`, respectively.',
               },
             },
             {
-              label: { zh: '确定性尺寸求解基础', en: 'Deterministic sizing foundation' },
+              label: { zh: 'Cell 内容策略与 Border Graph', en: 'Cell content policies and Border Graph' },
               content: {
-                zh: '内部轴无关 solver 统一处理自然尺寸 contribution、gap、bounded water-fill、弹性权重、空间不足 overflow 与非法数值诊断，为后续 Cell、span 和约束内容接线提供同一几何语义。',
-                en: 'An internal axis-agnostic solver now handles intrinsic contributions, gaps, bounded water-filling, flex weights, insufficient-space overflow, and invalid-number diagnostics as one geometry contract for later Cell, span, and constrained-content integration.',
+                zh: 'Cell 可配置 padding、bounds-aware 对齐、wrap、contain/cover/stretch、visible/clip 与四边 border；共享边通过 priority、specificity 和 canonical source order 确定性解析并保留 contributor provenance。',
+                en: 'Cells configure padding, bounds-aware alignment, wrapping, contain/cover/stretch, visible/clip, and four-sided borders. Shared edges resolve deterministically by priority, specificity, and canonical source order while retaining contributor provenance.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：单次 compile artifact', en: 'BREAKING: Single-compile artifacts' },
+              content: {
+                zh: '`lowerTableWithArtifacts()` 已删除，改用 `compileTable()`；manifest 根字段 `bounds` 改为 `allocationBounds`，并新增 `visualOverflowBounds`、Cell 双坐标空间 bounds 与 border entries。',
+                en: '`lowerTableWithArtifacts()` is removed in favor of `compileTable()`. Manifest root `bounds` becomes `allocationBounds`, with new `visualOverflowBounds`, dual-space Cell bounds, and border entries.',
               },
             },
           ],
@@ -949,6 +956,33 @@ export const vizV01: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.2',
+          date: '2026-07-27',
+          summary: {
+            zh: 'React Table 接入完整 alpha.2 authoring、span-aware marker、选定 Layout host props 与同次 compile manifest observer。',
+            en: 'Connects React Table to complete alpha.2 authoring, span-aware markers, selected Layout host props, and same-compile manifest observation.',
+          },
+          items: [
+            {
+              label: { zh: '完整 props 与 span-aware markers', en: 'Complete props and span-aware markers' },
+              content: {
+                zh: '`DetailColumn` 透传 header/body Cell layout；`Row` / `Cell` 按首个未占用槽位放置并让 span 预占未来行。完整 `columns` / `cells` props 仍是 JSON authoring 真源。',
+                en: '`DetailColumn` forwards header/body Cell layout, while `Row` / `Cell` place markers in the first unoccupied slot and reserve future rows for spans. Complete `columns` / `cells` props remain the JSON authoring source of truth.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：同次 artifact 与 embedded 诊断',
+                en: 'BREAKING: Same-compile artifacts and embedded diagnostics',
+              },
+              content: {
+                zh: 'standalone `onManifest` 从 `<Layout onArtifacts>` 的 exact root occurrence 读取并按内容去重；embedded Table 对 `onManifest` 或 standalone host props fail-loud，并提示移到外层 Layout。',
+                en: 'Standalone `onManifest` reads the exact root occurrence from `<Layout onArtifacts>` and deduplicates by content. Embedded Tables fail loudly on local `onManifest` or standalone host props and direct callers to the outer Layout.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.1',
           date: '2026-07-21',
           summary: {
@@ -1005,6 +1039,30 @@ export const vizV01: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.2',
+          date: '2026-07-27',
+          summary: {
+            zh: '`renderTable()` 改为一次 `compileTable()` 取得 SVG 与 manifest，并对齐 Kernel Vanilla 的 compile / animation 选项。',
+            en: '`renderTable()` now uses one `compileTable()` call for SVG and manifest, aligned with Kernel Vanilla compile and animation options.',
+          },
+          items: [
+            {
+              label: { zh: 'BREAKING：composites 进入 compile', en: 'BREAKING: Composites move under compile' },
+              content: {
+                zh: 'standalone `renderTable` 删除顶层 `composites`；额外 Tier 2 definitions 使用 `compile.composites`，其余 Core options 与 `animation` 原样透传。embedded `TableEmbedProps.composites` 保持不变。',
+                en: 'Standalone `renderTable` removes top-level `composites`; extra Tier 2 definitions use `compile.composites`, while other Core options and `animation` pass through unchanged. Embedded `TableEmbedProps.composites` remains.',
+              },
+            },
+            {
+              label: { zh: 'SSR 与 manifest 同源', en: 'Same-source SSR and manifest' },
+              content: {
+                zh: '`artifacts: true` 只决定是否返回 manifest sidecar，不增加 layout 或 compile 次数；`false` 与 `true` 使用同一 Scene。',
+                en: '`artifacts: true` only controls whether the manifest sidecar is returned and adds no layout or compile pass; false and true use the same Scene.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.1',
           date: '2026-07-21',
