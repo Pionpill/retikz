@@ -17,6 +17,6 @@ beta.2 收紧 data IR 与 statistics 边界，收敛 schema 派生公开 TypeScr
 4. `applyTransformsWithLineage()` 可按需记录 source identity、transform step 与受控细节，不改变 `applyTransforms()` 默认行为。
 5. 受影响包的 lint、tsc、测试、构建与 docs 校验通过。
 
-## RC 边界
+## 延期边界
 
-宿主无关的 canonical data-view preparation contract 会新增公共能力与跨宿主消费边界，不作为 v0.1 RC bugfix 处理；延期到后续 Alpha milestone 单独设计、契约测试与实现。
+宿主无关的 canonical data-view preparation contract 会新增公共能力与跨宿主消费边界，不作为 beta.2 cleanup 处理；延期到后续 Alpha milestone 单独设计、契约测试与实现。

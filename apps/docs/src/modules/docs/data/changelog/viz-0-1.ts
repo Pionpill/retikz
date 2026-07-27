@@ -31,11 +31,11 @@ export const vizV01: Release = {
       ],
       subVersions: [
         {
-          version: 'rc.1',
+          version: 'beta.2',
           date: '2026-07-27',
           summary: {
-            zh: '冻结 data v0.1 公共面：收紧 data IR 与统计 selector 边界，统一 schema 派生类型命名，补齐 runtime lineage，并归并未发布的 beta.2 修正。',
-            en: 'Freezes the data v0.1 public surface: tightens data IR and statistic selector boundaries, unifies schema-derived type names, adds runtime lineage, and rolls the unpublished beta.2 fixes into this RC.',
+            zh: '收口 data v0.1-beta.2：收紧 data IR 与统计 selector 边界，统一 schema 派生类型命名，并补齐 runtime lineage 与来源身份兼容修正。',
+            en: 'Closes out data v0.1-beta.2 by tightening data IR and statistic selector boundaries, unifying schema-derived type names, and adding runtime lineage with source-identity compatibility fixes.',
           },
           items: [
             esmOnlyChangeItem,
