@@ -1,0 +1,139 @@
+---
+title: Runtime Overview
+description: Query how React, Vanilla, and direct Plot IR converge on one lowering path that produces Scene, rendered output, and separate runtime artifacts through Core.
+---
+
+The Plot runtime separates how a chart is authored from how it executes. React, Vanilla, or generated tools first produce the same `IRPlotSpec`; datasets and function-bearing Definitions are injected at execution time; then `@retikz/plot` lowers high-level chart semantics to Core IR. Core compiles the Scene, and renderers consume only the Scene.
+
+> This page explains the overall runtime contract rather than repeating schema fields. Use the contract pages in this group for JSON shapes, and see [Design Principles](/kernel/concepts/design/principles) for the complete Kernel compilation boundary.
+
+## Hosts and Package Boundaries
+
+<ComponentPreview files="plot-runtime-architecture" size="xxl" hideCode />
+
+React and Vanilla provide different authoring and host wiring without duplicating Plot algorithms. Standalone `<Plot>` wraps the spec in Scene IR and injects `lowerPlots` into `<Layout>`. When embedded in a parent `<Layout>`, the adapter first aggregates datasets and lowering options across plots in that host. `renderPlot` validates a spec, invokes Core compilation on a DOM-free path, and serializes SVG.
+
+All three entries delegate data, scale, coordinate, mark, and guide semantics to `@retikz/plot`, then return Core IR to the shared compilation path. SVG, Canvas, and SVG strings are output forms; SSR is a host scenario supported by Vanilla, not a separate Plot semantics path.
+
+## Authoring and Runtime Boundary
+
+<ComponentPreview files="plot-authoring-convergence" size="xxl" hideCode />
+
+The React DSL assembles a spec through `buildPlotSpec`, while the `spec` prop accepts complete Plot IR. Vanilla's `plotBuilder(...).build()` expands builder-only bindings, and generated JSON enters as a plain spec. Every entry passes through `PlotSpecSchema` before execution, so downstream code receives a schema-valid `IRPlotSpec`.
+
+`IRPlotSpec` stores only JSON-safe grammar and `data.reference`. Actual rows, field resolvers, label functions, and custom transform, scale, channel, coordinate, or mark Definitions are runtime inputs. They meet the IR at execution, but are never written back into it.
+
+| Input layer          | Typical entry                                    | Enters `IRPlotSpec`      |
+| -------------------- | ------------------------------------------------ | ------------------------ |
+| React DSL            | `<Plot>` plus mark, guide, and scale children    | After assembly           |
+| React spec           | `<Plot spec={...} data={...}>`                   | The `spec` does          |
+| Vanilla              | `plotBuilder(...).build()` or a plain spec       | After build / validation |
+| Runtime dependencies | datasets, field maps, resolvers, and Definitions | No                       |
+
+## Lowering and Outputs
+
+<ComponentPreview files="plot-lowering-flow" size="xxl" hideCode />
+
+The main lowering path resolves transform, statistics, row-selector, scale, mark, and format registries inside `prepareRows()`, then normalizes data from the data model, field maps, and resolver. It next applies transforms, resolves the frame, and builds the channel registry. Channel and mark Definitions produce primitives; guides, themes, composition, and layout add explanatory and spatial structure. The result expands into Core `Scope`, `Node`, and `Path` IR.
+
+`lowerPlots()` returns the Definition consumed by Core composite compilation. It does not create DOM and does not select a renderer. `compileToScene()` consumes the lowered Core IR and produces a Scene; React `<Layout>` or a Vanilla renderer then chooses SVG, Canvas, or string output.
+
+Lineage and location are independent recomputation paths over shared inputs, not sidecars emitted directly by the main lowering path. `lowerPlotWithLineage()` returns Core IR children with a `PlotLineageRun`, while `createPlotLocator()` reuses data preparation and frame resolution to calculate datum and series anchors. Both accept the same spec, datasets, and lowering configuration without writing a complete runtime record into `IRPlotSpec` or Scene metadata. See [Plot Lineage](/viz/plot/lineage) for its options and data boundary.
+
+## Entries and Results
+
+| Scenario            | Entry                                              | Primary result                      |
+| ------------------- | -------------------------------------------------- | ----------------------------------- |
+| React standalone    | `<Plot>`                                           | SVG / Canvas managed by `<Layout>`  |
+| React embedded      | `<Layout><Plot /></Layout>`                        | Scene compiled with other Tier 2 IR |
+| Vanilla / SSR       | `renderPlot(spec, datasets, options)`              | SVG string or `{ svg, lineage }`    |
+| Custom host         | `lowerPlots(datasets, options)` plus Core compile  | Core IR → Scene                     |
+| Audit / interaction | `lowerPlotWithLineage()` and `createPlotLocator()` | Runtime-only lineage / anchor       |
+
+<SourceLinks
+  sources={[
+    {
+      label: 'React props to spec, datasets, and lowering options',
+      path: 'packages/viz/plot-react/src/plot-runtime.ts',
+      startLine: 126,
+      endLine: 167,
+    },
+    {
+      label: 'React standalone and embedded host wiring',
+      path: 'packages/viz/plot-react/src/Plot.tsx',
+      startLine: 119,
+      endLine: 177,
+    },
+    {
+      label: 'Embedded Plot dataset and lowering-option aggregation',
+      path: 'packages/viz/plot-react/src/embedded-runtime.ts',
+      startLine: 55,
+      endLine: 104,
+    },
+    {
+      label: 'Vanilla builder produces a plain IRPlotSpec',
+      path: 'packages/viz/plot-vanilla/src/plot-builder.ts',
+      startLine: 717,
+      endLine: 733,
+    },
+    {
+      label: 'Vanilla validation, Core compilation, and SVG output',
+      path: 'packages/viz/plot-vanilla/src/render-plot.ts',
+      startLine: 47,
+      endLine: 71,
+    },
+    {
+      label: 'Plot lowering runtime options',
+      path: 'packages/viz/plot/src/pipeline/expand/types.ts',
+      startLine: 56,
+      endLine: 121,
+    },
+    {
+      label: 'Main Plot data preparation and transform path',
+      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
+      startLine: 111,
+      endLine: 167,
+    },
+    {
+      label: 'Frame resolution and channel registry construction',
+      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
+      startLine: 194,
+      endLine: 225,
+    },
+    {
+      label: 'Channel, mark, and guide output as Core IR',
+      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
+      startLine: 610,
+      endLine: 699,
+    },
+    {
+      label: 'Independent Plot lineage lowering entry',
+      path: 'packages/viz/plot/src/pipeline/lineage.ts',
+      startLine: 328,
+      endLine: 336,
+    },
+    {
+      label: 'Locator reuses data preparation and frame semantics',
+      path: 'packages/viz/plot/src/pipeline/locator/locate.ts',
+      startLine: 130,
+      endLine: 186,
+    },
+  ]}
+/>
+
+## Further Reading
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/lineage">
+    <span className="font-semibold">Plot Lineage</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Understand runtime audits, host metadata, and interaction trace-back.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/concepts/design/principles">
+    <span className="font-semibold">Kernel Design Principles</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Continue into the global boundaries between Core IR, Scene, and renderers.
+    </span>
+  </LinkedCard>
+</div>

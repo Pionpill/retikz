@@ -1,0 +1,14 @@
+---
+title: 契约 - 图层
+description: 查询 Plot 语义图层的 zIndex 覆盖 schema。
+---
+
+Plot lowering 为背景、网格、图元、坐标轴和装饰分配稳定的默认层级。`PlotLayerSchema` 只在需要穿越这套默认时显式覆盖 Core `zIndex`。
+
+## PlotLayerSchema
+
+<ZodSchema
+  name="PlotLayerSchema"
+  description="Plot 语义图层的叠放顺序覆盖。"
+  descriptions={{ zIndex: '传递到 Core 的整数 zIndex；省略时使用该语义图层的默认值。' }}
+/>

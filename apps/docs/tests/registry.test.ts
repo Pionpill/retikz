@@ -54,7 +54,7 @@ describe('SCHEMA_REGISTRY', () => {
   });
 
   it('keeps every Plot contract registry URL on a documented English heading', () => {
-    const entries = Object.entries(SCHEMA_REGISTRY).filter(([, entry]) => entry.url.startsWith('/viz/plot/contract/'));
+    const entries = Object.entries(SCHEMA_REGISTRY).filter(([, entry]) => entry.url.startsWith('/viz/plot/reference/'));
 
     for (const [name, entry] of entries) {
       const [route, anchor] = entry.url.split('#');

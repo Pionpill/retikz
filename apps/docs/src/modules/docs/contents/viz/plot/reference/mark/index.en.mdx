@@ -1,0 +1,86 @@
+---
+title: Contract - Mark
+description: Query the Plot schemas for point, path, interval, reference, relation, and custom marks.
+---
+
+Marks are the geometry-output layer of the graphics grammar. Built-ins form a precise discriminated union; custom marks retain JSON-safe open configuration and are validated by their `MarkDefinition` during lowering.
+
+## MarkSchema
+
+<ZodSchema name="MarkSchema" />
+
+## MarkOperationSchema
+
+<ZodSchema name="MarkOperationSchema" />
+
+## PointMarkSchema
+
+<ZodSchema name="PointMarkSchema" />
+
+## PathMarkSchema
+
+<ZodSchema name="PathMarkSchema" />
+
+### PathClosureSchema
+
+<ZodSchema name="PathClosureSchema" />
+
+## IntervalMarkSchema
+
+<ZodSchema name="IntervalMarkSchema" />
+
+### IntervalBoundsSchema
+
+<ZodSchema name="IntervalBoundsSchema" />
+
+### IntervalBoundSchema
+
+<ZodSchema name="IntervalBoundSchema" />
+
+## ReferenceMarkSchema
+
+<ZodSchema name="ReferenceMarkSchema" />
+
+## RelationMarkSchema
+
+<ZodSchema name="RelationMarkSchema" />
+
+### PlotTargetRefSchema
+
+<ZodSchema name="PlotTargetRefSchema" />
+
+### RelationPathGeometrySchema
+
+<ZodSchema name="RelationPathGeometrySchema" />
+
+### RelationRibbonOptionsSchema
+
+<ZodSchema name="RelationRibbonOptionsSchema" />
+
+### RelationPrimitiveStyleSchema
+
+<ZodSchema name="RelationPrimitiveStyleSchema" />
+
+### RelationRoutingSpecSchema
+
+<ZodSchema name="RelationRoutingSpecSchema" />
+
+### RelationRouteStepSchema
+
+<ZodSchema name="RelationRouteStepSchema" />
+
+## CustomMarkSchema
+
+<ZodSchema name="CustomMarkSchema" />
+
+## Shared helpers
+
+### MarkTransformSchema
+
+<ZodSchema name="MarkTransformSchema" />
+
+### AnchorIdSpecSchema
+
+<ZodSchema name="AnchorIdSpecSchema" />
+
+Exactly one of `field`, `template`, and `generator` must be present.

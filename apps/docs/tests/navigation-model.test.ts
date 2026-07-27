@@ -45,22 +45,23 @@ describe('layout utils', () => {
     expect(categories[1]?.modules[0]?.children?.map(child => child.value)).toEqual(['a', 'b']);
   });
 
-  it('Plot 末尾注册契约与更新日志路由', () => {
+  it('Plot 末尾注册 API 参考与更新日志路由', () => {
     const plotPaths = flattenLeaves('viz', vizSection)
       .map(node => node.path)
       .filter(path => path.startsWith('/viz/plot/'));
 
-    expect(plotPaths.slice(-11)).toEqual([
-      '/viz/plot/contract/plot',
-      '/viz/plot/contract/encoding',
-      '/viz/plot/contract/transform',
-      '/viz/plot/contract/mark',
-      '/viz/plot/contract/scale',
-      '/viz/plot/contract/coordinate',
-      '/viz/plot/contract/guide',
-      '/viz/plot/contract/layout',
-      '/viz/plot/contract/layer',
-      '/viz/plot/contract/theme',
+    expect(plotPaths.slice(-12)).toEqual([
+      '/viz/plot/reference/plot',
+      '/viz/plot/reference/encoding',
+      '/viz/plot/reference/transform',
+      '/viz/plot/reference/mark',
+      '/viz/plot/reference/scale',
+      '/viz/plot/reference/coordinate',
+      '/viz/plot/reference/guide',
+      '/viz/plot/reference/layout',
+      '/viz/plot/reference/layer',
+      '/viz/plot/reference/theme',
+      '/viz/plot/reference/runtime',
       '/viz/plot/changelog/v0-1',
     ]);
   });
