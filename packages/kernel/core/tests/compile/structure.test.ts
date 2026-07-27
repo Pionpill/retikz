@@ -16,15 +16,25 @@ const source = (path: string): string => readFileSync(resolve(root, path), 'utf8
 describe('compile source structure', () => {
   it('compile barrel exposes only stable runtime entries', () => {
     expect(Object.keys(compile).sort()).toEqual([
+      'CORE_PROGRAM_ID',
       'CompileWarningCode',
       'compileToScene',
       'computeLayout',
+      'createCoreProgram',
       'fallbackMeasurer',
       'formatCompileOccurrence',
       'formatCompileWarning',
       'isNodeLayoutCompileArtifact',
       'lowerIRToKernel',
     ]);
+  });
+
+  it('Runtime public contract 与 incremental implementation 分属稳定 owner', () => {
+    expect(source('src/contract/runtime/index.ts')).toContain("export * from './types';");
+    expect(source('src/contract/index.ts')).toContain("export * from './runtime';");
+    expect(source('src/compile/incremental/index.ts')).toContain("export * from './program';");
+    expect(source('src/compile/incremental/index.ts')).not.toContain("export * from './types';");
+    expect(() => source('src/compile/program/index.ts')).toThrow();
   });
 
   it('path index is a barrel, not the path emitter implementation', () => {
