@@ -6,7 +6,7 @@
 
 ## 背景
 
-`@retikz/plot-vanilla` 当前以 `plotBuilder(config).mark(...).axis(...).build()` 作为主要 authoring 入口。`build()` 最终返回 plain `PlotSpec`，但链式对象仍把收集顺序、可变数组和最终规范化隐藏在 builder 内，不利于 LLM 生成、结构化 diff、序列化与直接审查。
+`@retikz/plot-vanilla` 当前以 `plotBuilder(config).mark(...).axis(...).build()` 作为主要 authoring 入口。`build()` 最终返回 plain `IRPlotSpec`，但链式对象仍把收集顺序、可变数组和最终规范化隐藏在 builder 内，不利于 LLM 生成、结构化 diff、序列化与直接审查。
 
 builder 还承担 axis id、facet、scaffold 与 track binding 的展开。相同规则在 `@retikz/plot-react` 的 `buildPlotSpec()` 内再次实现，两侧已有约 480 行同类 helper。继续增加 composition 能力会扩大错误文案、默认值和边界校验的漂移风险。
 
@@ -23,20 +23,29 @@ kernel `@retikz/vanilla` 已把作者模型收敛为 plain spec，并通过 `Van
 公开类型与入口如下：
 
 ```ts
-export type PlotAuthoringMark = MarkOperation & {
-  xAxisId?: string;
-  yAxisId?: string;
+type PlotAxisBindableMark = IRPlotPathMark | IRPlotPointMark | IRPlotIntervalMark;
+type PlotTopologyBindings = {
   facetId?: string;
   trackId?: string;
 };
 
-export type PlotAuthoringGuide = Guide & {
+export type PlotAuthoringMark =
+  | (PlotAxisBindableMark & PlotTopologyBindings & {
+      xAxisId?: string;
+      yAxisId?: string;
+    })
+  | (Exclude<IRPlotMarkOperation, PlotAxisBindableMark> & PlotTopologyBindings & {
+      xAxisId?: never;
+      yAxisId?: never;
+    });
+
+export type PlotAuthoringGuide = IRPlotGuide & {
   facetId?: string;
   scaffoldId?: string;
   trackId?: string;
 };
 
-type PlotComposition = NonNullable<PlotSpec['composition']>;
+type PlotComposition = NonNullable<IRPlotSpec['composition']>;
 
 export type PlotFacetInput = Omit<FacetGridSpec, 'kind' | 'view' | 'row' | 'column'> & {
   row?: string | NonNullable<FacetGridSpec['row']>;
@@ -52,23 +61,46 @@ export type PlotScaffoldInput = Omit<SharedScaffoldSpec, 'kind' | 'coordinate'> 
   resolve?: PlotComposition['resolve'];
 };
 
-export type PlotAuthoringInput = Omit<PlotSpec, 'namespace' | 'type' | 'marks' | 'guides'> & {
+export type PlotAuthoringInput = Omit<IRPlotSpec, 'namespace' | 'type' | 'marks' | 'guides'> & {
   marks: Array<PlotAuthoringMark>;
   guides?: Array<PlotAuthoringGuide>;
   facets?: Array<PlotFacetInput>;
   scaffolds?: Array<PlotScaffoldInput>;
 };
 
-export const createPlotSpec = (input: PlotAuthoringInput): PlotSpec;
+export type NormalizePlotBindingsInput = {
+  marks: ReadonlyArray<PlotAuthoringMark>;
+  guides: ReadonlyArray<PlotAuthoringGuide>;
+  scales: ReadonlyArray<IRPlotScaleOperation>;
+  coordinate?: IRPlotCoordinateOperation;
+  composition?: IRPlotSpec['composition'];
+  facets: ReadonlyArray<PlotFacetInput>;
+  scaffolds: ReadonlyArray<PlotScaffoldInput>;
+};
+
+export type NormalizedPlotBindings = {
+  marks: Array<IRPlotMarkOperation>;
+  guides: Array<IRPlotGuide>;
+  scales: Array<IRPlotScaleOperation>;
+  coordinate?: IRPlotCoordinateOperation;
+  composition?: IRPlotSpec['composition'];
+};
+
+export const normalizePlotBindings = (input: NormalizePlotBindingsInput): NormalizedPlotBindings;
+export const createPlotSpec = (input: PlotAuthoringInput): IRPlotSpec;
 ```
 
-`facets`、`scaffolds`、`xAxisId`、`yAxisId`、`facetId`、`trackId` 与 `scaffoldId` 都是 authoring-only 字段，必须在 `createPlotSpec()` 返回前展开并移除。返回值必须通过 `PlotSpecSchema.parse()`，且不修改输入对象或数组。
+`facets`、`scaffolds`、`xAxisId`、`yAxisId`、`facetId`、`trackId` 与 `scaffoldId` 都是 authoring-only 字段，必须在 `createPlotSpec()` 返回前展开并移除。`xAxisId` / `yAxisId` 只对 path、point 与 interval position mark 开放；reference、relation 或 custom mark 即使通过手写对象绕过类型也必须 fail-loud，不能静默删除同名字段。facets 与 scaffolds 不能在同一个 Plot authoring 输入中混用。返回值必须通过 `PlotSpecSchema.parse()`，且不修改输入对象或数组。
+
+自动生成多轴 composition 时，派生 scale name 必须以有效 cartesian2D coordinate 的显式 `x` / `y` scale name 为基础；仅当角色未显式绑定时才使用 `__x` / `__y`。已有 base scale 配置必须完整复制到各 axis scope，不能留下未被坐标系消费的悬空配置。x/y 共用同一 base scale 时，两角色交叠的同名派生 scale 只生成一次。
+
+scaffold track 的 coordinate view id 按显式 `track.view`、`viewIdTemplate` 中 `{arrangement}` / `{track}` 占位符、authoring 默认 `track.id` 的顺序解析。mark 的 `trackId`、guide 的 `trackId` 与 `scaffoldId`、composition `defaultView` 必须共用同一解析结果。
 
 错误统一使用 `plot authoring:` 前缀，不再根据 React / Vanilla 入口分别写 `buildPlotSpec:` 或 `plotBuilder:`。同一非法输入在两个 adapter 上必须得到同一核心错误语义。
 
 ### 2. `@retikz/plot-vanilla` 以 plain helper 取代 builder
 
-新增 `plot(input)`，只委托 `createPlotSpec(input)` 并返回 plain `PlotSpec`：
+新增 `plot(input)`，只委托 `createPlotSpec(input)` 并返回 plain `IRPlotSpec`：
 
 ```ts
 import { plot, renderPlot } from '@retikz/plot-vanilla';
@@ -104,12 +136,12 @@ const svg = renderPlot(spec, { sales }, { width: 360, height: 200 });
 
 ```ts
 export type PlotEmbedProps = {
-  spec: PlotSpec;
+  spec: IRPlotSpec;
 };
 
 export const embedPlot = (
   id: string,
-  spec: PlotSpec,
+  spec: IRPlotSpec,
 ): VanillaEmbedSpec<PlotEmbedProps>;
 
 export const createPlotAdapter = (
@@ -149,9 +181,9 @@ adapter 规则：
 
 1. `createPlotAdapter(datasets, options)` 每次调用只创建一个稳定的 `makeComposites` 函数；同一 adapter 下多个 plot embed 共享同一 datasets 表。
 2. adapter 必须重新以 `PlotSpecSchema.parse()` 校验传入 spec，手写 `embed()` 不能绕过 plot schema。
-3. adapter 不修改调用方 spec；嵌入副本的 root id 规范化为 `${embedId}/${spec.id ?? 'plot'}`，满足 vanilla adapter 输出 identity 必须从 embed id 派生的契约。
+3. helper 与 adapter 都拒绝空白 embed id；adapter 不修改调用方 spec，嵌入副本的 root id 规范化为 `${embedId}/${spec.id ?? 'plot'}`，满足 vanilla adapter 输出 identity 必须从 embed id 派生的契约。
 4. `spec.data.reference` 与 datasets key 不自动改名。figure 内所有 plot embed 从同一个 adapter datasets 表按 reference 取数；缺失 reference 沿用 `lowerPlots` fail-loud。
-5. datasets 与 `LowerPlotsOptions` 都保留在 `createPlotAdapter()` runtime 闭包中，不进入 `PlotSpec`、`PlotEmbedProps`、Vanilla plain spec 或 core IR。
+5. datasets 与 `LowerPlotsOptions` 都保留在 `createPlotAdapter()` runtime 闭包中，不进入 `IRPlotSpec`、`PlotEmbedProps`、Vanilla plain spec 或 core IR。
 
 ### 4. `renderPlot()` 保持独立 runtime 入口
 
@@ -163,7 +195,7 @@ adapter 规则：
 
 本轮只保证：
 
-- plain authoring input 保留显式 `PlotSpec.id`、mark id 与 guide id；
+- plain authoring input 保留显式 `IRPlotSpec.id`、mark id 与 guide id；
 - 共享规范化不把 identity 改写成数组序号公共契约；
 - plot lowering 继续产出按 mark / guide 组织的 Tier1 Scope，不创建 plot 私有 renderer；
 - `authoring`、`adapter`、`runtime` owner 分离，后续可以把 eager `expandPlot()` 拆为共享解析与分层物化，而不再次改变 authoring API。
@@ -172,7 +204,7 @@ adapter 规则：
 
 理由：
 
-1. PlotSpec 已是 JSON-safe 真源；Vanilla 只需要 plain authoring sugar，不需要第二套可变对象模型。
+1. IRPlotSpec 已是 JSON-safe 真源；Vanilla 只需要 plain authoring sugar，不需要第二套可变对象模型。
 2. axis / facet / scaffold binding 是 plot 语义，React 与 Vanilla 应消费同一纯规范化规则。
 3. Tier2 adapter 让 plot 复用 kernel vanilla 的 figure、layer、SVG / Canvas runtime 和未来优化边界，不在 viz 组另造 renderer。
 4. 先稳定 API 和 identity，再在 v0.2 设计依赖失效与分段 lowering，避免 beta 阶段冻结未经验证的 cache / patch 签名。
@@ -183,7 +215,7 @@ adapter 规则：
 
 ## DSL 表面
 
-普通 SSR 使用 `plot()` + `renderPlot()`；需要与其它 Tier1 / Tier2 内容组合时使用 `embedPlot()` + `createPlotAdapter()`。两条路径消费同一 `PlotSpec`，datasets 始终与 Plot IR 分离。
+普通 SSR 使用 `plot()` + `renderPlot()`；需要与其它 Tier1 / Tier2 内容组合时使用 `embedPlot()` + `createPlotAdapter()`。两条路径消费同一 `IRPlotSpec`，datasets 始终与 Plot IR 分离。
 
 链式迁移：
 
@@ -227,7 +259,7 @@ const spec = plot({
 - 新增 `@retikz/plot-vanilla` 的 `plot()`、`embedPlot()`、`createPlotAdapter(datasets, options?)`、`PlotEmbedProps`。
 - `renderPlot()` API、Plot IR schema、lowering 几何、Scene schema 和 renderer 行为不变。
 - React JSX API 不变；内部改为消费共享 binding normalization，相关错误前缀统一为 `plot authoring:`。
-- docs 需要同步 viz 入门、provenance、introduction、package README 与 v0.1 beta.2 BREAKING changelog。
+- docs 需要同步 Plot 总览、lineage、runtime、transform SourceLinks、Data transform overview、Kernel Plot domain、package README 与 v0.1 beta.2 BREAKING changelog。
 - plot v0.2 roadmap 登记真正的增量 lowering、按需渲染和依赖失效设计，不在本 ADR 实现。
 
 ## 不在本 ADR 范围
@@ -238,7 +270,7 @@ const spec = plot({
 - 不实现 SVG DOM diff、Canvas dirty rectangle / bitmap layer、renderer batching 或 GPU 后端。
 - 不优化 lineage 的重复 lowering。
 - 不修改 React `<Plot>`、mark、guide 组件的公开 props。
-- 不把 datasets 写入 PlotSpec 或 core IR。
+- 不把 datasets 写入 IRPlotSpec 或 core IR。
 
 ---
 
@@ -266,6 +298,8 @@ const spec = plot({
 - `packages/viz/plot-react/tests/components/build-plot-spec/**`
 - `packages/viz/plot-vanilla/package.json`
 - `packages/viz/plot-vanilla/README.md`
+- `packages/viz/AGENTS.md`
+- `packages/viz/plot-vanilla/AGENTS.md`
 - `packages/viz/plot-vanilla/src/index.ts`
 - `packages/viz/plot-vanilla/src/spec/**`（新建）
 - `packages/viz/plot-vanilla/src/adapter/**`（新建）
@@ -274,12 +308,14 @@ const spec = plot({
 - `packages/viz/plot-vanilla/src/render-plot.ts`（移动到 `runtime/`）
 - `packages/viz/plot-vanilla/tests/**`
 - `packages/viz/plot/README.md`
-- `apps/docs/src/modules/docs/contents/viz/get-start/line-scatter.vanilla.ts`
-- `apps/docs/src/modules/docs/contents/viz/introduction/index.zh.mdx`
-- `apps/docs/src/modules/docs/contents/viz/introduction/index.en.mdx`
-- `apps/docs/src/modules/docs/contents/viz/data/provenance/index.zh.mdx`
-- `apps/docs/src/modules/docs/contents/viz/data/provenance/index.en.mdx`
+- `apps/docs/src/modules/docs/contents/viz/plot/index.{zh,en}.mdx`
+- `apps/docs/src/modules/docs/contents/viz/plot/lineage/index.{zh,en}.mdx`
+- `apps/docs/src/modules/docs/contents/viz/plot/reference/runtime/**`
+- `apps/docs/src/modules/docs/contents/viz/plot/transform/index.{zh,en}.mdx`（SourceLinks 行号迁移）
+- `apps/docs/src/modules/docs/contents/viz/data/transform/overview/index.{zh,en}.mdx`（SourceLinks 行号迁移）
+- `apps/docs/src/modules/docs/contents/kernel/reference/domains/plot/index.{zh,en}.mdx`
 - `apps/docs/src/modules/docs/data/changelog/viz-0-1.ts`
+- `packages/viz/_notes/decisions/plot/v0/v0.1/beta.2/roadmap.md`
 - `packages/viz/_notes/decisions/plot/v0/v0.2/roadmap.md`
 
 偏离白名单需要先更新本 ADR 并由人工确认，或另开 ADR。
@@ -288,10 +324,10 @@ const spec = plot({
 
 **Happy path**：
 
-- `plot-helper-returns-plain-spec`：`plot(input)` 返回 schema-valid `PlotSpec`，不带 `build` / `mark` 等方法。
-- `authoring-axis-binding-normalizes`：多 y 轴 binding 展开成稳定 composition、coordinate views 与 scale names。
+- `plot-helper-returns-plain-spec`：`plot(input)` 返回 schema-valid `IRPlotSpec`，不带 `build` / `mark` 等方法。
+- `authoring-axis-binding-normalizes`：多 x/y 轴 binding 以显式 coordinate scale name 为基础展开成稳定 composition、coordinate views 与 scale，并完整复制 base scale 配置。
 - `authoring-facet-normalizes`：plain `facets` + `facetId` 展开成标准 facet arrangement。
-- `authoring-scaffold-normalizes`：plain `scaffolds` + `trackId` / `scaffoldId` 展开成标准 tracks arrangement。
+- `authoring-scaffold-normalizes`：plain `scaffolds` + `trackId` / `scaffoldId` 展开成标准 tracks arrangement，并按 `track.view` / `viewIdTemplate` / `track.id` 顺序解析 scope。
 - `embed-adapter-renders`：`figure(embedPlot(...))` 经 `createPlotAdapter()` 输出 SVG。
 - `render-plot-signature-stays`：普通模式仍返回 string，lineage 模式仍返回 `{ svg, lineage }`。
 
@@ -306,9 +342,11 @@ const spec = plot({
 
 - `multiple-binding-modes-throw`：axis id 与 facet / scaffold binding 混用时，以 `plot authoring:` fail-loud。
 - `missing-axis-binding-throws`：mark 引用不存在或维度错误的 axis id 时 fail-loud。
+- `non-position-axis-binding-throws`：reference、relation 或 custom mark 带 axis binding 字段时 fail-loud。
+- `facet-scaffold-declarations-throw`：同一个 Plot 同时声明 facets 与 scaffolds 时 fail-loud。
 - `composition-and-topology-sugar-throw`：显式 composition 与 facets / scaffolds 同时出现时 fail-loud。
 - `embed-missing-dataset-reference-throws`：spec 引用 adapter datasets 中不存在的 reference 时 fail-loud。
-- `malformed-embedded-spec-throws`：手写 `embed()` 传非法 PlotSpec 时抛 `ZodError`。
+- `malformed-embedded-spec-throws`：手写 `embed()` 传非法 IRPlotSpec 时抛 `ZodError`。
 
 **交互 / 交叉能力**：
 
@@ -316,11 +354,11 @@ const spec = plot({
 - `react-vanilla-single-scaffold-parity`：两 adapter 的 shared tracks 结果深度相等。
 - `react-vanilla-multi-axis-parity`：两 adapter 的 x/y 多轴 composition、scale 与 mark scope 深度相等。
 - `react-vanilla-conflict-parity`：同一冲突输入在两 adapter 上均拒绝，核心错误语义一致。
-- `lineage-remains-runtime-only`：新 helper / adapter 不把 lineage 写入 PlotSpec 或 Scene meta，现有 `renderPlot` lineage 行为不变。
+- `lineage-remains-runtime-only`：新 helper / adapter 不把 lineage 写入 IRPlotSpec 或 Scene meta，现有 `renderPlot` lineage 行为不变。
 
 ### 依赖的现有元素
 
-- `PlotSpecSchema`、`PlotSpec`、`MarkOperation`、`Guide`（`packages/viz/plot/src/schemas/**`）——复用并保持 schema 真源，不新增平行 IR。
+- `PlotSpecSchema`、`IRPlotSpec`、`IRPlotMarkOperation`、`IRPlotGuide`（`packages/viz/plot/src/schemas/**`）——复用并保持 schema 真源，不新增平行 IR。
 - `buildPlotSpec()`（`packages/viz/plot-react/src/components/build-plot-spec.ts`）——保留 JSX 收集与 React sugar，替换重复 binding normalization。
 - `lowerPlots()`、`LowerPlotsOptions`（`packages/viz/plot/src/pipeline/expand/`）——adapter 和 `renderPlot()` 继续复用唯一 lowering 真源。
 - `VanillaEmbedSpec`、`VanillaTier2Adapter`、`embed()`、`figure()`、`layer()`（`packages/kernel/vanilla/src/spec/**`）——复用 kernel vanilla plain spec 与 Tier2 嵌入协议。

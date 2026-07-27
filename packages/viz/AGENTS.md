@@ -9,7 +9,7 @@
 | `@retikz/data`          | 为多个可视化宿主提供统一数据处理底座   | 数据模型、字段解析、通用 transform / statistics、registry、lineage         | channel、scale、mark、可视化布局、renderer           |
 | `@retikz/plot`          | 把数据语义映射成可组合的 Core 图形语义 | Plot IR、channel / scale / coordinate / mark / guide、layout、lowering     | 通用数据算法、Core IR 语义、renderer、框架 authoring |
 | `@retikz/plot-react`    | 用 React JSX authoring 和运行 Plot     | React 组件、composition builder、数据注入和 React runtime 接线             | Data / Plot 算法、Core 编译、renderer                |
-| `@retikz/plot-vanilla`  | 无框架 authoring、SSR 和运行 Plot      | plot builder、数据注入、vanilla / SSR 编排                                 | Data / Plot 算法、Core 编译、renderer                |
+| `@retikz/plot-vanilla`  | 无框架 authoring、SSR 和运行 Plot      | plain helper、Tier 2 adapter、数据注入与 vanilla / SSR 编排                | Data / Plot 算法、Core 编译、renderer                |
 | `@retikz/table`         | 把数据或显式内容组织为二维语义表格     | Table IR、结构/呈现、约束布局、lowering、追溯                              | 通用数据算法、Core 测量、Plot 语义、renderer         |
 | `@retikz/table-react`   | 用 React authoring 和运行 Table        | Table / DetailTable / ManualTable、数据注入、composite 与宿主 runtime 接线 | Table 算法、Core 编译、renderer                      |
 | `@retikz/table-vanilla` | 无框架 authoring、SSR 和运行 Table     | plain helper、Tier 2 adapter、数据注入与 SSR convenience                   | Table 算法、Core 编译、renderer                      |

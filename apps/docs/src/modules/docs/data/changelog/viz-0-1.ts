@@ -652,10 +652,17 @@ export const vizV01: Release = {
       pkg: '@retikz/plot-vanilla',
       version: 'v0.1',
       description: {
-        zh: 'plot 的无框架 / SSR 面：`renderPlot` 把 Plot IR + 数据直接出 SVG 字符串，零 DOM，可在 Node / 构建期跑。',
-        en: 'plot’s framework-free / SSR surface: `renderPlot` turns a Plot IR + data straight into an SVG string, zero DOM, runnable in Node / at build time.',
+        zh: 'Plot 的无框架 authoring、Kernel Vanilla Tier 2 与 SSR 面：plain spec 可组合进 figure / layer，也可在 Node 或构建期直接输出 SVG。',
+        en: 'Plot’s framework-free authoring, Kernel Vanilla Tier 2, and SSR surface: plain specs compose into figures / layers or render directly to SVG in Node and build-time hosts.',
       },
       highlights: [
+        {
+          label: { zh: 'plain authoring 与 Tier 2', en: 'Plain authoring and Tier 2' },
+          content: {
+            zh: '`plot()` 返回无方法的 canonical PlotSpec；`embedPlot()` + `createPlotAdapter()` 复用 Kernel Vanilla figure / layer 与统一 runtime。',
+            en: '`plot()` returns a method-free canonical PlotSpec; `embedPlot()` + `createPlotAdapter()` reuse Kernel Vanilla figures / layers and the shared runtime.',
+          },
+        },
         {
           label: { zh: 'renderPlot SSR', en: 'renderPlot SSR' },
           content: {
@@ -667,10 +674,10 @@ export const vizV01: Release = {
       subVersions: [
         {
           version: 'beta.2',
-          date: '2026-07-07',
+          date: '2026-07-27',
           summary: {
-            zh: 'Vanilla builder 明确 facet / scaffold / axis 绑定的 authoring 契约，并补齐公开类型说明。',
-            en: 'The Vanilla builder documents the facet / scaffold / axis binding authoring contract and fills in public type descriptions.',
+            zh: 'Vanilla 收敛为 plain authoring，复用共享 binding normalization，并接入 Kernel Vanilla Tier 2 adapter。',
+            en: 'Vanilla converges on plain authoring, reuses shared binding normalization, and connects through the Kernel Vanilla Tier 2 adapter.',
           },
           items: [
             esmOnlyChangeItem,
@@ -682,17 +689,17 @@ export const vizV01: Release = {
               },
             },
             {
-              label: { zh: 'builder-only 字段边界更清楚', en: 'Clearer builder-only field boundary' },
+              label: { zh: 'BREAKING：Vanilla 改用 plain authoring', en: 'BREAKING: Vanilla uses plain authoring' },
               content: {
-                zh: '`xAxisId`、`yAxisId`、`facetId`、`trackId`、`scaffoldId` 等字段只在 `build()` 阶段展开，不进入输出的 Plot IR。',
-                en: '`xAxisId`, `yAxisId`, `facetId`, `trackId`, `scaffoldId`, and related fields are expanded during `build()` only and do not enter the emitted Plot IR.',
+                zh: '删除 `plotBuilder()`、`PlotBuilder` 与 `PlotBuilderConfig`；把链式 `.path()` / `.point()` / `.axis()` / `.facet()` / `.scaffold()` 改写为 `plot({ marks, guides, facets, scaffolds })`。`renderPlot()` 签名与 lineage 返回行为保持不变。',
+                en: 'Removes `plotBuilder()`, `PlotBuilder`, and `PlotBuilderConfig`; replace chained `.path()` / `.point()` / `.axis()` / `.facet()` / `.scaffold()` calls with `plot({ marks, guides, facets, scaffolds })`. `renderPlot()` signatures and lineage return behavior stay unchanged.',
               },
             },
             {
-              label: { zh: 'SSR authoring 类型补齐 JSDoc', en: 'SSR authoring types gain JSDoc' },
+              label: { zh: '共享规范化与 Tier 2 嵌入', en: 'Shared normalization and Tier 2 embedding' },
               content: {
-                zh: '`PlotBuilderConfig`、facet / scaffold 输入和链式 builder 方法补齐说明，生成的 spec 仍可直接交给 `renderPlot` 或 `lowerPlots`。',
-                en: '`PlotBuilderConfig`, facet / scaffold inputs, and fluent builder methods now include documentation; the built spec remains directly consumable by `renderPlot` or `lowerPlots`.',
+                zh: '`plot()` 与 React DSL 共享 `@retikz/plot` 的 axis / facet / scaffold binding normalization；`embedPlot()` + `createPlotAdapter()` 可把同一 PlotSpec 放入 Kernel Vanilla figure / layer，datasets 仍留在运行时。',
+                en: '`plot()` and the React DSL share axis / facet / scaffold binding normalization in `@retikz/plot`. `embedPlot()` + `createPlotAdapter()` place the same PlotSpec inside Kernel Vanilla figures / layers while datasets remain runtime-only.',
               },
             },
           ],
