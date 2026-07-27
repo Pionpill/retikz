@@ -21,7 +21,7 @@ describe('Table plain authoring', () => {
         { id: 'name', field: 'name', header: 'Name' },
         { id: 'score', field: 'score', header: { kind: 'value', value: 100 } },
       ],
-      layout: { columnWidth: 96 },
+      layout: { columnSize: { kind: 'fixed', value: 96 } },
       meta: { source: 'fixture' },
     };
 
@@ -41,7 +41,7 @@ describe('Table plain authoring', () => {
           { id: 'score', field: 'score', header: { kind: 'value', value: 100 } },
         ],
       },
-      layout: { columnWidth: 96 },
+      layout: { columnSize: { kind: 'fixed', value: 96 } },
       meta: { source: 'fixture' },
     });
   });

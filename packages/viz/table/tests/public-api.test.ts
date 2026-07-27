@@ -6,10 +6,16 @@ import * as Table from '../src';
 
 type PublicContractTypes = [
   TableTypes.LowerTablesOptions,
-  TableTypes.TableLoweringResult,
+  TableTypes.CompileTableOptions,
+  TableTypes.CompileTableResult,
+  TableTypes.TableCompileArtifact,
   TableTypes.TableRuntimeContributionInput,
   TableTypes.TableRuntimeContribution,
   TableTypes.TableLayoutManifest,
+  TableTypes.ResolvedTableBorderLine,
+  TableTypes.TableBorderContribution,
+  TableTypes.TableBorderManifestEntry,
+  TableTypes.TableBorderPathMeta,
 ];
 
 // @ts-expect-error 阶段级 resolved layout 不从包根导出
@@ -22,6 +28,18 @@ type RemovedTableCellLayout = TableTypes.TableCellLayout;
 type RemovedTableLayout = TableTypes.TableLayout;
 // @ts-expect-error 阶段级 normalize options 不从包根导出
 type RemovedNormalizeTableStructureOptions = TableTypes.NormalizeTableStructureOptions;
+// @ts-expect-error 阶段级 Cell fit 策略不从包根导出
+type RemovedTableCellFit = TableTypes.TableCellFit;
+// @ts-expect-error 阶段级 Cell fit scale 不从包根导出
+type RemovedTableCellFitScale = TableTypes.TableCellFitScale;
+// @ts-expect-error 阶段级 Cell overflow 策略不从包根导出
+type RemovedTableCellOverflow = TableTypes.TableCellOverflow;
+// @ts-expect-error 阶段级 Cell content placement 不从包根导出
+type RemovedTableCellContentPlacement = TableTypes.TableCellContentPlacement;
+// @ts-expect-error 私有 Border Graph input 不从包根导出
+type RemovedBuildTableBorderGraphInput = TableTypes.BuildTableBorderGraphInput;
+// @ts-expect-error 私有 Border Graph result 不从包根导出
+type RemovedTableBorderGraph = TableTypes.TableBorderGraph;
 
 type RemovedStageTypes = [
   RemovedResolvedTableLayoutSpec,
@@ -29,14 +47,30 @@ type RemovedStageTypes = [
   RemovedTableCellLayout,
   RemovedTableLayout,
   RemovedNormalizeTableStructureOptions,
+  RemovedTableCellFit,
+  RemovedTableCellFitScale,
+  RemovedTableCellOverflow,
+  RemovedTableCellContentPlacement,
+  RemovedBuildTableBorderGraphInput,
+  RemovedTableBorderGraph,
 ];
 
 describe('@retikz/table public API', () => {
-  it('exports stable runtime entries without exposing pipeline stages', () => {
+  it('exports the alpha.2 compile, schema, and manifest surface without pipeline stages', () => {
     expect(Table).toHaveProperty('createTableRuntimeContribution');
     expect(Table).toHaveProperty('makeTableRuntimeComposites');
     expect(Table).toHaveProperty('lowerTables');
-    expect(Table).toHaveProperty('lowerTableWithArtifacts');
+    expect(Table).toHaveProperty('compileTable');
+    expect(Table).not.toHaveProperty('lowerTableWithArtifacts');
+    expect(Table).toHaveProperty('TableTrackSizeKind');
+    expect(Table).toHaveProperty('TableTrackSizeSchema');
+    expect(Table).toHaveProperty('TableTrackOverridesSchema');
+    expect(Table).toHaveProperty('TableCellSpanSchema');
+    expect(Table).toHaveProperty('TableCellLayoutSchema');
+    expect(Table).toHaveProperty('TableBorderSchema');
+    expect(Table).toHaveProperty('TableLayoutManifestSchema');
+    expect(Table).toHaveProperty('ResolvedTableBorderLineSchema');
+    expect(Table).toHaveProperty('TableBorderContributionSchema');
 
     expect(Table).not.toHaveProperty('emitTable');
     expect(Table).not.toHaveProperty('layoutTable');
@@ -44,10 +78,51 @@ describe('@retikz/table public API', () => {
     expect(Table).not.toHaveProperty('presentCellPayload');
     expect(Table).not.toHaveProperty('presentTable');
     expect(Table).not.toHaveProperty('resolveTableLayoutSpec');
+    expect(Table).not.toHaveProperty('resolveTableTrackSizes');
+    expect(Table).not.toHaveProperty('solveTableTracks');
+    expect(Table).not.toHaveProperty('propagateTableSpanContributions');
+    expect(Table).not.toHaveProperty('computeTableCellOuterSize');
+    expect(Table).not.toHaveProperty('computeTableCellBox');
+    expect(Table).not.toHaveProperty('computeTableCellContentBox');
+    expect(Table).not.toHaveProperty('computeTableCellTranslation');
+    expect(Table).not.toHaveProperty('computeTableCellFitScale');
+    expect(Table).not.toHaveProperty('computeTableCellContentPlacement');
+    expect(Table).not.toHaveProperty('buildTableBorderGraph');
+    expect(Table).not.toHaveProperty('resolveTableBorderAtoms');
+    expect(Table).not.toHaveProperty('mergeTableBorderAtoms');
   });
 
   it('keeps public contract types while hiding pipeline stage types', () => {
     expectTypeOf<PublicContractTypes>().toBeArray();
     expectTypeOf<RemovedStageTypes>().toBeArray();
+  });
+
+  it('accepts alpha.2 Cell and border fields and rejects removed alpha.1 fields', () => {
+    const parsed = Table.TableStructureSchema.parse({
+      kind: 'manual',
+      rows: 1,
+      columns: 2,
+      cells: [
+        {
+          address: { row: 0, column: 0 },
+          payload: { kind: 'value', value: 'x' },
+          span: { columns: 2 },
+          layout: {
+            padding: { x: 4, y: 2 },
+            horizontalAlign: 'end',
+            verticalAlign: 'start',
+            wrap: true,
+            fit: 'contain',
+            overflow: 'clip',
+            borders: { top: { kind: 'line', width: 2 } },
+          },
+        },
+      ],
+    });
+    expect(parsed).toMatchObject({ kind: 'manual', cells: [{ span: { columns: 2 } }] });
+    expect(Table.TableLayoutSchema.parse({ borders: { mode: 'collapse', outer: { kind: 'line' } } })).toEqual({
+      borders: { mode: 'collapse', outer: { kind: 'line' } },
+    });
+    expect(() => Table.TableLayoutSchema.parse({ columnWidth: 120 })).toThrow();
   });
 });

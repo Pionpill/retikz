@@ -7,6 +7,7 @@ import type { TextMeasurer } from '../text';
 import type { CompileWarningCodeValue } from '../warning';
 import type { NodeLayout, TexLoweringContext } from './types';
 
+import { resolveBoxSpacing } from '../../contract';
 import { resolveBoundaryRegistry } from '../../providers/boundary';
 import { resolveShapeRegistry } from '../../providers/shape';
 import { CenterAnchor } from '../../shared';
@@ -17,7 +18,7 @@ import { resolveAnchorRefUncached } from '../reference';
 import { resolveShadow } from '../style';
 import { resolveFontSize } from '../text';
 import { inverseTransformChain, isTransformChainInvertible, projectLayoutToGlobal } from '../transform';
-import { resolveAxisScale, resolveBoxSize, resolveBoxSpacing } from './box';
+import { resolveAxisScale, resolveBoxSize } from './box';
 import { layoutNodeContent } from './content/layout';
 import { DEFAULT_LINE_HEIGHT_FACTOR, resolveDashPattern } from './content/text';
 import { layoutNodeLabels, measureNodeLabels } from './label/layout';
@@ -180,10 +181,7 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
   const constrainedTextWidth =
     maxAllocationWidth === undefined
       ? undefined
-      : Math.max(
-          0,
-          maxAllocationWidth - margin.left - margin.right - paddingLeft - paddingRight,
-        );
+      : Math.max(0, maxAllocationWidth - margin.left - margin.right - paddingLeft - paddingRight);
   const maxTextWidth =
     explicitMaxTextWidth === undefined
       ? constrainedTextWidth

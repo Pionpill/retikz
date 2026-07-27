@@ -37,13 +37,14 @@ describe('layout-aware composite transactions and artifacts', () => {
         namespace: z.literal('test'),
         type: z.literal('resourceProbe'),
       }),
-      compile: (_, { layoutChild }) => {
+      compile: (_, context) => {
+        const { layoutChild } = context;
         layoutChild({ type: 'node', position: [0, 0], text: 'discarded', fill: discarded }, { kind: 'intrinsic' });
         const final = layoutChild(
           { type: 'node', position: [0, 0], text: 'selected', fill: selected },
           { kind: 'intrinsic' },
         );
-        return { children: [{ kind: 'replay', replay: final.replay }] };
+        return { children: [context.replay(final)] };
       },
     });
 
@@ -63,7 +64,8 @@ describe('layout-aware composite transactions and artifacts', () => {
         namespace: z.literal('test'),
         type: z.literal('warningProbe'),
       }),
-      compile: (_, { layoutChild }) => {
+      compile: (_, context) => {
+        const { layoutChild } = context;
         layoutChild(
           {
             type: 'node',
@@ -94,12 +96,12 @@ describe('layout-aware composite transactions and artifacts', () => {
         namespace: z.literal('test'),
         type: z.literal('namedChild'),
       }),
-      compile: (_, { layoutChild }) => {
-        const laid = layoutChild(
+      compile: (_, context) => {
+        const laid = context.layoutChild(
           { type: 'node', id: 'inside', position: [20, 10], minimumSize: 10 },
           { kind: 'intrinsic' },
         );
-        return { children: [{ kind: 'replay', replay: laid.replay }] };
+        return { children: [context.replay(laid)] };
       },
     });
     const result = compileToScene(
@@ -127,7 +129,8 @@ describe('layout-aware composite transactions and artifacts', () => {
         namespace: z.literal('test'),
         type: z.literal('discardedNamespace'),
       }),
-      compile: (_, { layoutChild }) => {
+      compile: (_, context) => {
+        const { layoutChild } = context;
         layoutChild({ type: 'node', id: 'discarded', position: [20, 0] }, { kind: 'intrinsic' });
         return { children: [] };
       },
@@ -162,8 +165,8 @@ describe('layout-aware composite transactions and artifacts', () => {
         namespace: z.literal('test'),
         type: z.literal('currentReferences'),
       }),
-      compile: (_, { layoutChild }) => {
-        const child = layoutChild(
+      compile: (_, context) => {
+        const child = context.layoutChild(
           {
             type: 'path',
             children: [
@@ -173,7 +176,7 @@ describe('layout-aware composite transactions and artifacts', () => {
           },
           { kind: 'intrinsic' },
         );
-        return { children: [{ kind: 'replay', replay: child.replay }] };
+        return { children: [context.replay(child)] };
       },
     });
     const warnings: Array<{ code: string }> = [];
@@ -214,10 +217,11 @@ describe('layout-aware composite transactions and artifacts', () => {
         type: z.literal('parent'),
       }),
       artifactSchema: z.strictObject({ role: z.literal('parent') }),
-      compile: (_, { layoutChild }) => {
+      compile: (_, context) => {
+        const { layoutChild } = context;
         const laid = layoutChild({ namespace: 'test', type: 'child' }, { kind: 'intrinsic' });
         return {
-          children: [{ kind: 'replay', replay: laid.replay }],
+          children: [context.replay(laid)],
           artifact: { role: 'parent' },
         };
       },
@@ -346,7 +350,8 @@ describe('layout-aware composite transactions and artifacts', () => {
         namespace: z.literal('test'),
         type: z.literal('replayedScope'),
       }),
-      compile: (_, { layoutChild }) => {
+      compile: (_, context) => {
+        const { layoutChild } = context;
         layoutChild(
           {
             type: 'scope',
@@ -361,7 +366,7 @@ describe('layout-aware composite transactions and artifacts', () => {
           },
           { kind: 'intrinsic' },
         );
-        return { children: [{ kind: 'replay', replay: selected.replay }] };
+        return { children: [context.replay(selected)] };
       },
     });
     const result = compileToScene(scene([{ namespace: 'test', type: 'replayedScope' }]), {
@@ -418,9 +423,10 @@ describe('layout-aware composite transactions and artifacts', () => {
         namespace: z.literal('test'),
         type: z.literal('replayedNodeLayout'),
       }),
-      compile: (_node, { layoutChild }) => {
+      compile: (_node, context) => {
+        const { layoutChild } = context;
         const laid = layoutChild({ type: 'node', id: 'replayed', position: [0, 0], text: 'N' }, { kind: 'intrinsic' });
-        return { children: [{ kind: 'replay', replay: laid.replay }] };
+        return { children: [context.replay(laid)] };
       },
     });
 

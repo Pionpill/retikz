@@ -41,7 +41,7 @@ const Demo: FC = () => (
         cornerRadius={4}
         font={{ size: 13 }}
       >
-        resolve + lower
+        layout transaction
       </Node>
     </LogicFrame>
 
@@ -54,7 +54,7 @@ const Demo: FC = () => (
       cornerRadius={4}
       font={{ size: 13, weight: 'bold' }}
     >
-      Core IR
+      Core compile
     </Node>
     <Node
       id="compile-render"
@@ -65,7 +65,7 @@ const Demo: FC = () => (
       cornerRadius={4}
       font={{ size: 12 }}
     >
-      compile + render
+      Scene + artifact
     </Node>
     <Node
       id="outputs"

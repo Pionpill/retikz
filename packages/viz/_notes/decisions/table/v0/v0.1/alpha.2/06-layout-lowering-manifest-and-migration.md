@@ -1,438 +1,84 @@
-# ADR-06：Core layout transaction、lowering、manifest 与原子迁移
+# ADR-06：Table layout transaction、lowering、manifest 与迁移
 
 - 状态：Accepted
 - 决策日期：2026-07-23
-- 关联：[alpha.2 roadmap](./roadmap.md) · [Core constrained layout gate](./01-core-constrained-layout-gate.md) · [Kernel contextual composite ADR](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/01-contextual-composite-layout.md) · [轨道 solver](./02-track-sizing-schema-and-solver.md) · [Cell box/span/alignment](./03-cell-box-span-and-alignment.md) · [fit/overflow/wrap](./04-content-fit-overflow-and-wrap.md) · [Border Graph](./05-border-graph-and-conflict-resolution.md) · [alpha.1 lowering](../alpha.1/05-table-lowering.md)
+- 收口日期：2026-07-27
+- 关联：[alpha.2 roadmap](./roadmap.md) · [Core constrained layout gate](./01-core-constrained-layout-gate.md) · [Cell box](./03-cell-box-span-and-alignment.md) · [content policy](./04-content-fit-overflow-and-wrap.md) · [Border Graph](./05-border-graph-and-conflict-resolution.md)
 
 ## 背景
 
-ADR-02～05 分别冻结了 track、Cell、内容 policy 与 border，但这些能力不能逐字段接入现有 pipeline。当前 `resolveTable()` 在 Core compile 前用固定公式 layout，再把 Cell 原始内容移动到中心；它没有 Core constrained-layout environment。当前 React `onManifest` 和 Vanilla `artifacts:true` 还会先通过 `lowerTables()` 为渲染 lowering，再单独调用 `lowerTableWithArtifacts()` 生成 manifest，同一 Table 实际执行两次 lowering。
-
-alpha.2 需要同一次 transaction 共享 Core definitions/options/host capabilities、intrinsic/constrained result、track geometry、replay child、compile output 与 manifest。公开 schema 若先接受新字段，而 compile pipeline 或某个 adapter 仍忽略它，会形成不可接受的半迁移状态。
-
-本 ADR 不替 Kernel 命名通用 `IRChild` layout API。它冻结 Table 如何消费 ADR-01 已要求的 Core 公共合同；上游 Kernel ADR/实现未通过 ADR-01 gate 前，本 ADR 只允许 private pure helpers，不激活公开 alpha.2 行为。
-
-## 决策：一次 Table layout transaction 产出 Core compile output 与同源 manifest
-
-### 上游依赖与环境
-
-Kernel v0.5-alpha.2 ADR-01 必须通过同一个 `CompositeCompileContext` 提供公共 `IRChild` layout/replay 能力，满足：
-
-- 在同一 definitions、compile options、host capabilities 与 reference context 下执行 intrinsic / constrained layout
-- contextual composite compile context 显式携带当前 occurrence 的二维 layout constraint；两个轴分别区分 unconstrained、有限 `0` 与有限正数
-- 返回 replayable laid-out child/result，以及 replay-root 未放置局部坐标系中的 allocation / visual overflow bounds
-- laid-out result 同时持有相对 replay root 的 deferred nested artifacts；probe 不直接发布，只有最终 replay 才能按宿主 occurrence rebase 并提交
-- contextual composite compile context 直接取得同一事务能力，使 embedded Table 不 deep import Core compile
-- contextual composite compile 可以通过显式、typed artifact channel 把 Table manifest 贡献给本次 Core compile result；不得用 closure callback、全局 Map 或 IR meta 充当 side channel
-- Core traversal 为每个 composite 输入 occurrence 分配 JSON-safe、compile-local、确定的 locator，并让 artifact owner 与根输入 selector 使用同一 locator 合同
-- React/Vanilla adapter 可以从同一次 Core compile result 取得 artifact，不需要在 compile 外重建 layout environment
-- replay 不重新选择另一套 expansion/layout 语义
-
-Table 直接消费 Core 公开类型，不声明结构相似的 `TableMeasurementService`、不把环境放进 IR、也不在 `LowerTablesOptions` 增加 renderer/DOM measurer。
+alpha.1 先 direct lowering Table，再单独计算 manifest。进入内容驱动布局后，这会重复 presentation / measurement，且第二次运行可能使用不同 definitions、datasets、host capabilities 或 occurrence identity，导致 Scene 与 manifest 漂移。
 
-概念调用形态：
+Table alpha.2 必须把 normalize、内容 layout、轨道求解、replay、border lowering 与 manifest 绑定到同一次 Core compile。Table 只消费 Kernel v0.5-alpha.1 已发布的 layout-aware composite、compile-local occurrence 与 typed artifact 能力，不修改 Kernel 产品文件。
 
-```ts
-type ResolveTableTransactionInput = Readonly<{
-  spec: IRTableSpec;
-  datasets: ExternalDatasets;
-  tableOptions: LowerTablesOptions;
-  constraint: Readonly<{
-    width?: number;
-    height?: number;
-  }>;
-  core: CompositeCompileContext;
-}>;
+## 决策
 
-type ResolvedTableTransaction = Readonly<{
-  children: ReadonlyArray<IRChild | CompositeCompileChild>;
-  manifest: TableLayoutManifest;
-}>;
+### 一次 layout transaction
 
-type TableCompileArtifactPayload = Readonly<{
-  tableId?: string;
-  manifest: TableLayoutManifest;
-}>;
+`lowerTables()` 注册 layout-aware `table.table` CompositeDefinition。每个 Table occurrence 在同一个 compile context 中执行：
 
-type TableCompileArtifact = CompileArtifact<TableCompileArtifactPayload> &
-  Readonly<{
-    channel: '@retikz/table/layout-manifest';
-  }>;
-```
+1. parse Table spec，resolve Structure 与 Presentation definitions
+2. normalize canonical rows、columns、Cells、span 与 resolved layout
+3. intrinsic layout 所有 Cell 内容并求 columns
+4. 对 `wrap: true` 的 Cell 做 width-constrained layout并求 rows
+5. 计算 Cell/content boxes、fit、alignment、overflow 与 Border Graph
+6. 用选中的 Core replay result 构造最终 Scope wrapper，emit border Paths
+7. 同时返回 Core child 与 `TableLayoutManifest` typed artifact
 
-`CompositeCompileContext`、`CompositeCompileChild`、`CompileArtifact` 与 `CompositeOccurrenceLocator` 使用 Kernel ADR 的正式公共标识符。nested artifacts 封装在选中 Cell 的 compile-local replay result 中，由 Core commit；Table transaction 不复制或公开 deferred bundle。
+阶段之间只传递 detached plain data、Core layout result 与 compile-local replay；不得在 Table 私有 public type 中暴露 opaque replay。intrinsic、constrained 与 Border Scope 失败使用 `TableTransactionStageError` 保留精确 stage、可用的 Table/Cell id 和原始 cause；外层 resolver 不抹除这些信息。
 
-`constraint.width` / `constraint.height` 都只接受有限非负数；字段省略表示该轴 unconstrained，显式 `0` 不能被归一为省略。当前 Table occurrence 的约束由 Core traversal/layout request 提供：
-
-- unconstrained width 让 column solver 的 `availableSize` 省略；有限 width（含 `0`）原样成为 column solver 的 `availableSize`
-- column solve 与 Cell width-constrained layout 完成后，unconstrained height 让 row solver 的 `availableSize` 省略；有限 height（含 `0`）原样成为 row solver 的 `availableSize`
-- constraint 小于 fixed/min/content base 时不压缩这些 base，差额继续走 Table visual overflow / clip
-- standalone 根没有 Core root constraint 时两个轴均 unconstrained；React/Vanilla 的宿主 CSS `width` / `height` 和 `viewBox` 不冒充 Table layout constraint
-- Table 作为 nested `IRChild` 时，父级对该 occurrence 发出的 constraint 使用同一规则；intrinsic probe 传两个轴 unconstrained，constrained probe 只设置父级实际约束的轴
-
-### Transaction 阶段
-
-单个 Table 按固定阶段执行：
-
-```text
-parse
-  → normalize structure
-  → present Cells
-  → intrinsic Core layout
-  → column contributions + spans
-  → solve columns
-  → optional width-constrained Core layout
-  → row contributions + spans
-  → solve rows
-  → Cell/content boxes
-  → fit + alignment + overflow/clip
-  → Border Graph
-  → replay Cell Core results + emit borders
-  → build manifest from the same layout result
-```
-
-transaction 不修改 spec、datasets、definitions 或 Core result。所有数组按 canonical row/column/Cell 顺序输出并递归冻结。
-
-每个 Presented Cell 在一个 transaction 内最多产生一个 intrinsic result 和一个需要时的 constrained result：
-
-- `wrap:false` 复用 intrinsic result 作为 final replay result
-- `wrap:true` 的 constrained result 替代 intrinsic result 成为 final replay result
-- fit、alignment 与 clip 是 replay root 外层 Table transforms/Scope，不重新 layout child
-- 相同 Cell 不因 manifest、border 或 adapter observer 再执行一次 presentation/Core layout
-
-Core child-layout result 必须是已经完成 definition 选择与布局、可直接 replay 的公共结果，并携带相对 replay root 的 deferred artifact bundle。artifact 生命周期固定为：
-
-- intrinsic / constrained 调用都是 probe；probe result 内的 nested artifacts 不直接进入宿主 compile collection
-- `wrap:false` 选择 intrinsic result，`wrap:true` 选择 constrained result；未被选择的 probe bundle直接丢弃
-- final replay 不重新 expand、lookup definition 或 layout；它只 replay 已选结果，并把该结果的 nested artifacts 按“当前 Table owner + canonical Cell occurrence path”rebase 到最终宿主 locator
-- 每个 selected Cell result 的 nested artifacts 恰好提交一次；同一 nested Table spec 放入两个 Cell 时产生两个不同 owner
-- Table 当前 occurrence 自己的 layout-manifest artifact 与所有 selected nested bundles 组合为该 replay result 的 deferred bundle；Core context 的 probe sink 只保存 bundle，commit sink 才把按最终 locator rebase 后的 bundle发布到本次 compile collection，因此任意嵌套层级的 probe 都观察不到临时或重复 artifact
-
-任一阶段失败时整个 Table fail-loud，不返回部分 node 或部分 manifest。错误保留 cause，并至少关联 table id（若有）、阶段和 Cell id（Cell 阶段适用）。
-
-### Lowering
-
-最终 Table compile output 以 local-namespace runtime Scope 为根，稳定顺序为：
-
-1. 透明 allocation-bounds sentinel
-2. canonical Cell replay Scopes
-3. Border Graph Scope/Paths
-
-每个 Cell Scope：
-
-- replay 同一 Core result 中的 laid-out child
-- 外层未变换 Cell Scope 位于 Table-local 坐标系；正宽高 `overflow:'clip'` 在该层持有 content box rectangle clip
-- 内层 replay Scope 应用 replay-root local fit scale，再应用 bounds-aware Table-local alignment/placement translation
-- content box 任一轴为零且 `overflow:'clip'` 时，外层 Cell Scope 保留稳定 identity，children 为空且不生成非法 rectangle clip
-- meta 保留 Cell id、address/span、location、roles 与 source 的稳定 JSON 子集
-
-点变换语义固定为 `p_table = T_table(S_replay(p_local))`；clip 始终位于外层 Table-local content box，不随内层 transform 移动或缩放。布局消费态分别命名 replay-root local 的 source allocation/visual bounds 与 Table-local 的 content allocation/visual bounds，并用中文 JSDoc 标明坐标空间。
-
-Border Paths 使用 ADR-05 resolved/merged graph，不从 emitted Cells 反推。sentinel 只让 Table allocation bounds 在空内容、稀疏 Cell 或 visible overflow 下仍可观察；它不冒充 visual overflow。零尺寸 clip Cell 仍进入 manifest，`visualOverflowBounds` 为零面积矩形；缺失 definition/reference 或 layout failure 继续 fail-loud。
-
-`lowerTables(datasets, options)` 仍是 Core composite definition 入口，但 Table definition 从 structural `expand` 原子迁移到 contextual `compile`。它直接使用 `CompositeCompileContext` 调用同一 transaction，并通过 Core 显式 artifact channel 贡献 `TableLayoutManifest`。普通 `compileToScene` 可以丢弃 artifacts；需要 sidecar 的宿主使用 `compileWithArtifacts`。Table 不捕获 module-level mutable artifact side channel。
-
-compile-local replay 不能跨 compile 保存或伪装成 `IRChild`。因此 alpha.2 ⚠️ BREAKING 删除 `lowerTableWithArtifacts()`，新增一次性 `compileTable(spec, datasets, options?)`：内部构造单根 Table scene、注入 `lowerTables()` 与完整 Core options、只调用一次 `compileWithArtifacts()`，按根 owner选择唯一 manifest，并返回 `{ scene, artifacts, manifest }`。需要纯 JSON Tier 1 IR 的调用方不能对 layout-aware Table 使用 `lowerIRToKernel()`。
-
-每次 contextual composite `compile()` 返回的 typed artifact contribution 都由 Core 附加当前输入 occurrence 的 `owner`。`owner` 由 Core traversal 生成，不进入 Table IR 或 manifest，也不能由 Table id、对象引用、数组位置、module counter 或 adapter 自行重建。相同 spec 在不同 occurrence 中编译时必须得到不同 owner；同一 scene 结构在 React、Vanilla 与 SSR 中得到相同的 owner 语义。
-
-`channel:'@retikz/table/layout-manifest'` 是稳定 runtime discriminator，不只依赖 TypeScript 类型。consumer 先按 channel 过滤，再按 owner 精确匹配；相同 channel + owner 出现两条 artifact 违反 Table 根 manifest 唯一性并 fail-loud。同一 owner 的其它 channel 合法且不得影响 Table 根 manifest 选择。
+### replay wrapper tree
 
-### Manifest
+fit scale、Table-local translation、clip、id 与 meta 通过 `context.replay()` / `context.scope()` 包在选中 replay root 外层。wrapper tree 只重组 compile-local output，不重新 layout child，也不改写 child 自带 transforms。
 
-`TableLayoutManifest` 继续是 JSON-safe、detached、递归冻结的显式 sidecar，升级为：
+因此 selected layout result 的 bounds、artifacts、references 与最终 output 始终同源；discarded intrinsic result 不会泄漏到最终 artifact collection。
 
-```ts
-type TableLayoutManifest = Readonly<{
-  tableId?: string;
-  allocationBounds: Readonly<BoundsRect>;
-  visualOverflowBounds: Readonly<BoundsRect>;
-  rows: ReadonlyArray<TableTrackManifestEntry>;
-  columns: ReadonlyArray<TableTrackManifestEntry>;
-  cells: ReadonlyArray<TableCellManifestEntry>;
-  borders: ReadonlyArray<TableBorderManifestEntry>;
-}>;
-
-type TableCellManifestEntry = Readonly<{
-  cellId: string;
-  rowId: string;
-  columnId: string;
-  rowIndex: number;
-  columnIndex: number;
-  span: Readonly<{ rows: number; columns: number }>;
-  box: Readonly<BoundsRect>;
-  contentBox: Readonly<BoundsRect>;
-  sourceAllocationBounds: Readonly<BoundsRect>;
-  sourceVisualOverflowBounds: Readonly<BoundsRect>;
-  contentAllocationBounds: Readonly<BoundsRect>;
-  visualOverflowBounds: Readonly<BoundsRect>;
-  location: TableCellLocationValue;
-  roles: ReadonlyArray<TableCellRoleValue>;
-  source?: TableCellSource;
-}>;
-
-type TableBorderManifestAtom = Readonly<{
-  key: string;
-  winner: TableBorderContribution;
-  contributors: ReadonlyArray<TableBorderContribution>;
-}>;
-
-type TableBorderManifestEntry = Readonly<{
-  edgeKey: string;
-  pathId?: string;
-  orientation: 'horizontal' | 'vertical';
-  start: Readonly<{ x: number; y: number }>;
-  end: Readonly<{ x: number; y: number }>;
-  style: ResolvedTableBorderLine;
-  atoms: ReadonlyArray<TableBorderManifestAtom>;
-}>;
-
-type TableBorderLocatorEntry = Readonly<{
-  edgeKey: string;
-  pathId?: string;
-}>;
-```
-
-口径：
-
-- root `allocationBounds` 是 tracks + gaps 形成的 Table box，替代 alpha.1 含义模糊的 `bounds`
-- root `visualOverflowBounds` 是 fit/aligned/clipped Cell visible bounds 与 visible borders 的 Table-local union；透明 sentinel 不属于 visual contribution
-- 没有任何 visible Cell/border contribution 时，root `visualOverflowBounds` 固定为 Table-local `{ x: 0, y: 0, width: 0, height: 0 }`；allocation sentinel 仍让最终 Core Scene 的自动 layout 能观察非零 Table allocation
-- Cell `sourceAllocationBounds` / `sourceVisualOverflowBounds` 是 final replay result 在 fit 前、replay-root local 坐标系中的 detached bounds
-- Cell `contentAllocationBounds` 是 final replay allocation bounds 经 fit/alignment 后映射到 Table-local 的结果，不是 Core replay-root source bounds
-- Cell `visualOverflowBounds` 是 overflow policy 后的 Table-local 可见结果；clip 时不超过 content box
-- rows/columns 继续只公开 id/index/offset/size，不泄漏 internal resolved track variant
-- borders 公开 ADR-05 冻结的 edgeKey、可选 pathId、orientation、start/end、resolved line style 与逐 atom winner/contributors；不得压成单数 winner 或无 atom 归属的 contribution 并集
-- Border Core Path meta 使用同一 edgeKey/atomicKeys；transaction 内部 border locator 只以每个 emitted visible atomic key 映射到 `TableBorderLocatorEntry`，hidden atom 只留 resolved diagnostics，完整公开 locator 仍延期 alpha.6
-- hidden border atom 的 resolved diagnostics 是 Table transaction 内部 `ResolvedTableBorderAtom` 集合和直接 Border Graph 测试边界，不进入 public manifest、Core typed artifact 或 adapter API
-- 显式 table id 存在时 pathId 固定为 `<tableId>/border/<edgeKey>`；匿名 standalone Table 的 pathId 省略，不能使用 module/global counter伪造
-
-manifest 必须从 transaction 的 `TableLayout` / Border Graph 直接复制；不得从 Core IR、Scene、SVG DOM 或第二次 lowering 反推。
-
-alpha.1 `bounds` 字段删除，不保留 alias；消费者迁移到 `allocationBounds`，需要完整可见范围时使用 `visualOverflowBounds`。
-
-### Artifact 观察与 adapter 单次 compile
-
-Standalone React：
-
-1. 仍把原始 Table spec 与 `lowerTables()` definition 交给 `<Layout>`
-2. `<Layout>` 在自身 browser measurer、definitions 与完整 Core options 下只 compile 一次，并通过公共 `onCompileResult` bridge 在 commit 后交付 `CompileResult` 与 `sourceRootOwners`
-3. Table 内部 observer 使用 `sourceRootOwners[0]` 作为根 selector，先按 `channel:'@retikz/table/layout-manifest'` 过滤，再只接受 `artifact.owner` 精确相等的一条 manifest
-4. observer 从唯一 artifact 的 `payload.manifest` 读取 sidecar；不按 table id 或 artifact 顺序猜测
-5. 同 channel + owner 匹配为 `0` 条或多条时 fail-loud；其它 channel 不参与计数，不得按 tableId、artifact 顺序或第一条 Table artifact 猜测
-6. React commit 后的 effect 通知 `onManifest`
-
-不得为 `onManifest` 在 React render 期间调用 `compileTable()`；这会重复 transaction，也无法取得 `<Layout>` 内部 browser measurer 的同源 compile result。`onCompileResult` 只由 `@retikz/react` 公共 protocol owner 提供，Table adapter 不 deep import Layout 私有状态。
-
-Standalone Vanilla：
-
-1. parse spec，并保留根 Table 输入 occurrence 的 locator selector
-2. 用 `lowerTables()` 与完整 `CompileOptions` 执行一次 compile-with-artifacts
-3. 从同一 compile result 按 Table channel + owner 精确选择唯一 Table artifact；`0` 条或多条均 fail-loud，其它 channel 不参与计数
-4. 渲染 Scene；`artifacts:true` 返回该 manifest，false 只丢弃 sidecar
-
-匿名根、显式 id 根、Cell 内嵌 Table、并列 Table 和重复 table id 都使用同一 occurrence 规则。nested/并列 artifacts 可以保留在宿主 collection，但不能被 standalone 根 observer/result 误选。
-
-Embedded React/Vanilla 也通过同一 artifact channel 贡献 manifest，但 alpha.2 不为 embedded Table component 新增局部 `onManifest`。宿主可通过 Kernel `CompileResult` 或 React `onCompileResult` 观察全量 artifact；Table 只使用 typed contribution，不用 callback capture 或全局 Map。alpha.2 的 compile-local occurrence locator 只解决 artifact 所有权与根选择；面向用户查询 Cell/fragment 的完整 locator 与 repeated fragment instance 仍由 alpha.6 处理。
-
-### Alpha.1 → alpha.2 原子迁移
-
-单一可观察迁移必须同时完成：
-
-- ADR-02：新增新根 track fields，删除 `columnWidth` / `rowHeight` / `headerHeight`
-- ADR-03：激活 span/padding/alignment，删除 `contentCenter`
-- ADR-04：激活 wrap/fit/overflow、auto row transaction 与 content clip
-- ADR-05：激活 border schema/graph/lowering
-- Core：接入已通过 ADR-01 的公共 child-layout/replay environment
-- pipeline：`resolveTableLayoutSpec`、`layoutTable`/transaction、`resolveTable`、lowering 与 manifest 全部切换
-- adapters：React/Vanilla standalone 单次 transaction；embedded context 同源
-- Core adapters：React Layout / Vanilla compile-with-artifacts 从同一次 compile result 观察 typed Table artifact
-- Core Scene bounds：父 Scope clip 必须参与 clip-aware visual bounds；Table manifest 求交不能代替 Core/renderer 证据
-- Core Scene bounds：Path stroke 必须按 ADR-01 第 6 条参与 replay/最终 auto bounds；outer border half-stroke 不得只在 manifest 手工扩宽
-- docs：zh/en schema/API/demo/迁移说明同步
-
-禁止提交以下中间状态：
-
-- 新 schema 已 parse，但 pipeline 仍读 alpha.1 fields
-- layout 已生成 span/content box，但 emit 仍只用 contentCenter
-- render 与 manifest 来自两次 lowering
-- React 已切换而 Vanilla 仍按固定轨道
-- Core layout environment 只在 standalone 或单一 renderer 可用
-- 零尺寸 content box 生成 Core schema 拒绝的 rectangle clip，或直接丢失 Cell identity/manifest
-- clip 放进 replay transform Scope，导致非中心 bounds、非零 content-box 原点下裁剪区域漂移
-- Border Path centerline 已 emit，但 Core Scene bounds 忽略 stroke width，导致 outer half-stroke 被 viewport 裁切
-- merged Border Path 只保留单数 winner 或 contribution 并集，丢失 atomic key → winner/contributors 映射
-
-理由：
-
-1. measurement、replay、compile output 与 manifest 同一 transaction 才能消除几何漂移和副作用重复
-2. 直接消费 Core environment 保持 Drawing/Table 所有权，不建立 Table 私有测量层
-3. 原子迁移防止公开 JSON 被部分接受、部分忽略
-4. allocation/visual 两种 manifest bounds 让宿主能区分表格占位与真实可见溢出
-
-## 待决策点 🔻
-
-Kernel v0.5-alpha.2 ADR-01 已冻结以下上游名称：
-
-- `CompositeCompileContext`、`ChildLayoutConstraint`、`ChildLayoutResult` 与 `CompositeCompileChild`
-- `CompileArtifactContribution`、`CompileArtifact`、`CompileResult` 与 `compileWithArtifacts`
-- `CompositeOccurrenceLocator` 与 React `sourceRootOwners`
-- `LayoutCompileObservation`、`LayoutCompileObserver` 与 `LayoutProps.onCompileResult`
-
-Table transaction 只能存在于 contextual `compile()` 生命周期；不得把 opaque replay 包装成 IR 或跨 compile 保存。`compileTable()`、adapter 单次 compile、typed artifact 与 manifest 口径必须共用 Kernel 合同。
-
-## DSL 表面
-
-```ts
-const result = compileTable(spec, datasets, {
-  lower: { structureDefinitions, presentationDefinitions },
-  compile: { measureText, composites },
-});
-
-result.scene;
-result.artifacts;
-result.manifest.allocationBounds;
-result.manifest.visualOverflowBounds;
-```
-
-React/Vanilla 的普通用户入口不要求手工构造 environment；adapter 通过同一次 Core compile 的公开 context/artifact 合同取得结果。`compileTable()` 是 renderer-agnostic 的直接 Core Scene + manifest 入口，不是 JSON lowering。
-
-## 测试设计
-
-`packages/viz/table/tests/pipeline/layout-transaction.test.ts`、`lower/lower.test.ts`、`manifest/manifest.test.ts` 与两 adapter integration tests 覆盖：
-
-- ADR-02～05 schema / behavior 原子激活和 alpha.1 fields 精确拒绝
-- intrinsic/constrained layout 调用次数、transaction identity、final replay 同源性
-- occurrence constraint 的 unconstrained/有限宽高/显式零映射，以及 nested Table 的父约束消费
-- track/span/fit/clip/border 联合 compile output 与 renderer 结果；覆盖外层 clip、内层 scale/translation 的顺序
-- allocation/visual bounds、Cell identity/source、border provenance 的 manifest
-- 零尺寸 clip 的空可见 Scope、零 visual bounds、保留 identity，以及父 Scope clip-aware Scene bounds
-- collapse/separate Border Path 的 butt/miter、outer half-stroke Core Scene bounds，以及 Path meta ↔ manifest atoms ↔ border locator
-- React `onManifest` 与 Vanilla artifact 均来自同一次 Core compile 的 typed artifact
-- 匿名/显式 id 根、nested/并列/重复 id Table 通过 owner locator 精确选择根 artifact，`0` 条或多条匹配 fail-loud
-- 同一 owner 的其它 artifact channel 不影响 Table 选择；重复 Table channel + owner fail-loud
-- wrap nested Table 的 probe artifact 不泄漏，final replay只提交selected bundle一次；同 spec多Cell得到不同owner
-- embedded custom composites/measurer/options 使用宿主同一 Core environment，无 Table 类型/renderer 特判或双 lowering
-- `compileTable()` 只 compile 一次，返回 Scene、全量 artifacts 与根 manifest；旧 `lowerTableWithArtifacts()` 不再导出
-- transaction 错误关联、递归冻结、输入不变与重复执行确定
-
-详细行为矩阵见 ignored `notes/plans/table-alpha2-layout-transaction/TEST_CONTRACT.md`。
-
-## 影响
-
-- ⚠️ BREAKING：根 layout schema 删除 alpha.1 固定字段，Cell/schema/layout/manifest 切换到 alpha.2
-- ⚠️ BREAKING：manifest `bounds` 改为 `allocationBounds` + `visualOverflowBounds`
-- ⚠️ BREAKING：删除 direct `lowerTableWithArtifacts`，迁移到单次 `compileTable()` 的 `{ scene, artifacts, manifest }`
-- Core composite context、typed artifact 与 compile-with-artifacts 需要由独立 Kernel ADR 满足，不在 Table 包私建
-- Core traversal occurrence locator 与根 selector 需要由同一 Kernel ADR 满足，Table 不按 id 或 artifact 顺序补选择逻辑
-- Core child-layout result 的 deferred artifact bundle、final replay rebase/commit 与 occurrence constraint 需要由同一 Kernel ADR 满足
-- React/Vanilla standalone 从“双 lowering”改为单次 Core compile；embedded 局部 onManifest 仍不支持
-- renderer 不新增 Table 能力，只消费 Core Scene
-
-## 能力完备性检查
-
-- 所属能力域与能力面：Tabular Visualization Complete / Layout + Lowering + Traceability；依赖 Drawing Complete
-- 解决的问题：把 schema、Core content layout、二维 solver、replay、Core compile output 与 manifest 闭合成一次确定 transaction
-- 主责包与协作包：Table 主责 transaction/geometry/artifact；Core 主责通用 environment/replay；adapters 主责同源 props 接线
-- 是否可由现有能力组合：alpha.1 pipeline 不足；必须扩展 Table 并等待 Core 公共合同，不能 adapter patch
-- 是否需要下沉到 data / core / math：通用 child layout/replay 下沉 Core；Table 事务留当前域；不修改 Data
-- 内部表达链路：spec → semantic/presented → Core results → numeric tracks/Cell/border → replay compile output + manifest
-- 外部扩展链路：custom Structure/Presentation/composite 分别通过既有统一 registries；transaction 不分 builtin/custom
-- pipeline / lowering 与下游消费：contextual composite 与 direct `compileTable` 都进入同一 Core compile transaction；typed artifact 把 manifest 交给 adapters
-- React / Vanilla adapter 等价性：同一 spec/datasets/Table definitions/Core environment 产生等价 compile output/manifest/Scene
-- provenance / lineage / locator 是否适用：Cell source/span/boxes 与 border contributions 显式进 manifest；compile-local occurrence locator只负责artifact所有权，完整Cell/fragment locator与公开embedded查询延期alpha.6
-- 不支持边界与本轮结论：扩展 Table 并下沉 Core 前置；不以私有 fallback 绕过 gate
-
-## 不在本 ADR 范围
-
-- Kernel 公共 child-layout / typed artifact / compile-with-artifacts API 的具体实现
-- embedded Table 的局部实时 manifest observer
-- fragmentation、重复 header、virtual scroll
-- alpha.3 presentation/theme、alpha.4 group、alpha.5 pivot
-- renderer 私有测量、DOM/CSS layout
-
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-本 ADR 自评 level：`red`。它是 ADR-02～05 的公开 schema、pipeline、lowering、manifest 与 adapter 原子激活点，并依赖 Core 公开 compile 能力。
-
-### Schema 改动
-
-本 ADR 原子激活以下已冻结 schema；字段定义以对应 ADR 表为准：
-
-| 文件                                                 | 操作 | 字段                                                                             |
-| ---------------------------------------------------- | ---- | -------------------------------------------------------------------------------- |
-| `packages/viz/table/src/schemas/layout/schema.ts`    | 删除 | `columnWidth`、`rowHeight`、`headerHeight`                                       |
-| 同上                                                 | 新增 | `columnSize`、`rowSize`、`headerRowSize`、`columns`、`rows`、`borders`           |
-| `packages/viz/table/src/schemas/cell/schema.ts`      | 新增 | `span`、`layout.padding/horizontalAlign/verticalAlign/wrap/fit/overflow/borders` |
-| `packages/viz/table/src/schemas/structure/schema.ts` | 新增 | detail column `headerLayout`、`bodyLayout`                                       |
-
-不增加兼容 alias。所有字段 `.describe(...)` 和精确类型见 ADR-02～05。
-
-### 文件 scope
-
-Table 原子迁移允许触碰：
-
-- `packages/viz/table/src/schemas/{cell,layout,border,structure,table}/**`
-- `packages/viz/table/src/contract/{model,structure,authoring}/**`
-- `packages/viz/table/src/contract/manifest.ts`
-- `packages/viz/table/src/providers/structure/**`
-- `packages/viz/table/src/shared/layout.ts`
-- `packages/viz/table/src/pipeline/{normalize,layout,lower,manifest,contribution}/**`
-- `packages/viz/table/src/pipeline/{resolve,types,index}.ts`
-- `packages/viz/table/src/index.ts`（只同步已冻结公共 schema/types/API；默认 `export *`）
-- `packages/viz/table/tests/{ir,structure,layout,pipeline,lower,manifest,deps-guard,public-api}/**`
-- `packages/viz/table-react/src/**` 与 `packages/viz/table-react/tests/**`
-- `packages/viz/table-vanilla/src/**` 与 `packages/viz/table-vanilla/tests/**`
-- alpha.2 对应双语 docs / demo / reference / schema registry 文件
-
-Core 产品文件不在本 ADR scope；必须由独立 Kernel ADR 先实现。偏离上述目录或新增 provider registry 需要回 ADR 重审。
-
-### 测试象限
-
-**Happy path（≥ 3）**：
-
-- `单 transaction 完整布局`：auto/span/wrap/fit/border Table → compile output 与 manifest 来自同一 geometry
-- `父约束进入 solver`：unconstrained、有限 width/height 与显式 `0` 精确映射到两轴 solver
-- `同一 Core environment`：custom composite/shape/clip 在 measure/replay/compile 使用同一 definitions
-- `manifest 双 bounds`：allocation 与 visible overflow 分别精确反映 tracks 和内容/border
-- `adapter 单次 compile`：React observer 与 Vanilla artifact 来自同一 Core compile artifact
-- `根 artifact occurrence`：匿名根、nested/并列 Table 与重复 id 都只选择 owner 匹配的唯一根 artifact
-
-**边界（≥ 2）**：
-
-- `空/稀疏/零面积 Table`：sentinel、空可见 Cell Scope、manifest identity 与 Scene 结果有限确定，不生成非法 rect clip
-- `全空 visual bounds`：无 visible contribution 时固定为 Table-local 零原点矩形，sentinel 只保留 allocation
-- `fixed 空间不足`：tracks 保持 base，visible/clip policy 处理 overflow
-- `embedded 无局部 observer`：正常贡献 typed artifact，但组件显式拒绝 onManifest，不创建隐藏 side channel
-
-**错误路径（≥ 2）**：
-
-- `alpha.1 字段拒绝`：旧 width/height 字段在新 strict schema 精确失败
-- `Core compile options 缺失/不一致`：`compileTable` / embedded 入口使用明确默认或 fail-loud，不退回 Table 私有估算
-- `根 artifact 候选错误`：owner 匹配为 `0` 条或多条时 fail-loud，不按 id/顺序猜测
-- `artifact channel 隔离`：同 owner 其它 channel 合法，重复 Table channel + owner fail-loud
-- `Cell layout 失败关联`：缺失 definition/reference/非法 bounds 错误包含 stage 与 Cell id
-- `内部 identity 漂移拒绝`：semantic/presented/Core result/layout/manifest Cell 顺序或 id 不一致
-
-**交互（≥ 2）**：
-
-- `wrap × span × border × clip`：完整 Core compile output、clip-aware Scene bounds、manifest 与 renderer 几何一致
-- `scale × end align × clip`：非中心 source bounds 与非零 content-box 原点下先 local scale、后 Table translate，clip 保持 Table-local
-- `custom Structure × Presentation × composite/measurer/options`：全部使用同一 environment，三个 registry 同路且无内置白名单
-- `wrap nested Table × 多 Cell occurrence`：probe artifacts 不发布，final replay恰好提交一次并rebase为不同owner
-- `React × Vanilla × SSR`：相同输入/environment 得到等价 manifest/Scene
-- `重复执行/冻结`：输出深等、递归冻结且不修改输入
-
-### 依赖的现有元素
-
-- ADR-01 Core public constrained-layout/replay contract—— 硬 gate；未落地不实施
-- ADR-02～05 schema、numeric solver、Cell policy 与 Border Graph—— 本 ADR 原子激活
-- `lowerTables` / `compileTable`（`packages/viz/table/src/pipeline/resolve.ts` 与新增 compile owner）—— contextual definition 与 direct 一次性 compile 共用同一 transaction
-- `createTableRuntimeContribution`—— embedded 合并 Table definitions 与 extra composites，需传入宿主同一 Core environment
-- `TableRuntimeView`—— 删除 render 期 direct lowering，改为观察 Layout 同次 compile artifact
-- Vanilla `renderTable`—— 删除第二次 artifact lowering，改为消费 compile-with-artifacts result
-- Core `defineComposite` / composite context—— 上游扩展后提供公共 layout environment、typed artifact contribution 与 compile-local occurrence locator
+### 编译入口与 artifact 选择
+
+公开 `compileTable(spec, data, options)` 构造 canonical 单根 Scene，并只调用一次 Core `compileToScene()`。结果包含：
+
+- `scene`
+- 同次 compile 的完整 `artifacts`
+- exact root Table artifact 的同一 immutable `manifest` 引用
+
+Table artifact 类型为 `CompositeCompileArtifact<'table', 'table', TableLayoutManifest>`。根实例不按可选 table id、对象引用、数组顺序或“第一条 artifact”选择，而按 definition key 与 `{ sourcePath: 'children[0]', expansionPath: [] }` 精确匹配；0 条或多条都 fail-loud。nested / repeated-id Table artifacts 保留在全量 collection，但不能冒充 standalone 根。
+
+`lowerTableWithArtifacts()` 删除。需要 Scene 与 manifest 的调用方统一使用 `compileTable()`；宿主级组合仍直接使用 `lowerTables()` definition。
+
+### manifest 合同
+
+`TableLayoutManifest` 是递归冻结、JSON-safe、detached 的 schema-derived artifact，包含：
+
+- 可选 `tableId`
+- Table-local `allocationBounds` 与 `visualOverflowBounds`
+- canonical `rows` / `columns` 的 id、index、offset、size
+- Cell identity、source、span、Cell/content box
+- replay-root local 的 `sourceAllocationBounds` / `sourceVisualOverflowBounds`
+- Table-local 的 `contentAllocationBounds` / `visualOverflowBounds`
+- resolved border edges、Path locator 与 atomic contributors
+
+`allocationBounds` 只覆盖 tracks 与 gaps；visible Cell 内容和 border stroke 的 union 写入根 `visualOverflowBounds`。source bounds 与 content bounds 明确属于不同坐标空间，不可互换。
+
+## 不采用的方案
+
+- 不保留 direct lowering + 第二次 artifact 计算：会重复布局并破坏同源性
+- 不把 replay token、Core context 或函数写进 Table IR / manifest
+- 不按 table id 或 artifact 顺序猜根实例
+- 不让 renderer 推导 manifest：renderer 不是 Table layout owner
+- 不保留 `lowerTableWithArtifacts()` 兼容 alias；0.x 按正确分层迁移
+
+## 公开影响与兼容性
+
+- ⚠️ BREAKING：`TableSpec.layout.columnWidth`、`rowHeight`、`headerHeight` 删除，改为 track size、overrides 与 gaps
+- ⚠️ BREAKING：manifest 根 `bounds` 改为 `allocationBounds`，并新增完整 Cell / border 几何
+- ⚠️ BREAKING：`lowerTableWithArtifacts()` 删除，改用 `compileTable()`
+- Structure / Presentation 的 Definition 与 registry 扩展路径不变；built-in 与 custom 继续同路
+- Table lowering 不包含 Node、Path、Plot、renderer 或 DOM 白名单
+
+## 最终实现与验证
+
+实现集中在 `pipeline/compile.ts`、`pipeline/layout/transaction.ts`、layout helpers、lower emit 与 `contract/manifest`。package root 只导出稳定 schema、types、definitions、`lowerTables()` 与 `compileTable()`，不导出阶段 helper。
+
+正式测试覆盖单次 compile、nested Table exact occurrence、同 id 根/嵌套实例、selected replay artifacts、manifest schema / deep-freeze / coordinate spaces、alpha.1 字段拒绝、custom definitions、Border Scope 及 Cell stage diagnostics。关键证据位于 `tests/lower/lower.test.ts`、`tests/pipeline/layout-transaction.test.ts`、`tests/manifest/manifest.test.ts` 与 `tests/public-api.test.ts`。
+
+alpha.2 只接受有限 width constraint；有限高度 row fraction/minmax、fragmentation、完整 locator 暴露与增量 layout 留给后续 milestone，不改变本 ADR 的单次 transaction 和 typed artifact 边界。

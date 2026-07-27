@@ -65,7 +65,10 @@ describe('Table root spec schema', () => {
         kind: 'detail',
         columns: [{ id: 'name', field: 'name' }],
       },
-      layout: { columnWidth: 96, rowHeight: 28 },
+      layout: {
+        columnSize: { kind: 'fixed', value: 96 },
+        rowSize: { kind: 'fixed', value: 28 },
+      },
       meta: { source: 'example', nested: { visible: true }, tags: ['people', null] },
     };
 

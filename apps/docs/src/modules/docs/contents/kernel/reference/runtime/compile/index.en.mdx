@@ -12,6 +12,7 @@ The `@retikz/core` compile layer turns JSON-serializable IR into a `Scene` and t
 | `compileToScene`              | `(ir: IRScene, options?: CompileOptions) => CompileResult`             | Main compile entry point; returns `scene` and immutable `artifacts` together                 |
 | `lowerIRToKernel`             | `(ir: IRScene, options?: LowerIRToKernelOptions) => LoweredIRScene`    | Recursively expands composites and returns Kernel IR with no Tier 2 nodes                    |
 | `computeLayout`               | `(points, padding, round) => Layout`                                   | Computes the scene bounds from bbox candidate points; usually called inside `compileToScene` |
+| `resolveBoxSpacing`           | `(value, fallback) => BoundsInsets`                                    | Normalizes a uniform or side-specific value into complete four-side spacing                  |
 | `fallbackMeasurer`            | `(text, font) => TextMetrics`                                          | Default text measurer; approximate but runnable, useful as a no-DOM fallback                 |
 | `formatCompileWarning`        | `(warning: CompileWarning) => string`                                  | Formats a structured warning into the standard readable message                              |
 | `formatCompileOccurrence`     | `(locator: CompileOccurrenceLocator) => string`                        | Formats an artifact occurrence locator                                                       |
@@ -20,6 +21,12 @@ The `@retikz/core` compile layer turns JSON-serializable IR into a `Scene` and t
 `compileToScene` traverses and registers nodes and coordinates in the current scope before filling deferred path slots. A path can therefore reference a target declared later in that scope. Output is then stably sorted by ascending `zIndex`; only primitives with the same `zIndex` retain declaration order.
 
 `lowerIRToKernel` performs no layout or Scene emission; it only consumes `composites` and `maxCompositeDepth`. An unregistered composite throws. A layout-aware composite with a `compile` branch also throws explicitly because standalone lowering has no text measurement, providers, reference environment, or parent constraint. Full `compileToScene` emits `COMPOSITE_NOT_REGISTERED` and skips an unregistered node. Both paths throw on a nesting limit or cycle.
+
+### Box Spacing Normalization
+
+`resolveBoxSpacing(value, fallback)` accepts a non-negative number, an `IRBoxSpacing` object, or `undefined`, and returns `BoundsInsets` in `{ top, right, bottom, left }` form. A number applies to every side; each object side selects the first available value in `side > axis > default > fallback` order.
+
+Callers validate `value` with their owning schema first. `fallback` must be finite and non-negative and is checked even when `value` already supplies every side; an invalid fallback throws. Every call returns a detached object.
 
 ## CompileOptions
 
@@ -71,7 +78,24 @@ The two `CompositeDefinition` branches are mutually exclusive:
 - `expand(node)` performs context-free structural expansion;
 - `compile(node, context)` can use `context.constraint` and `layoutChild(child, constraint)` to lay out real child content in the complete compile environment.
 
-`layoutChild` accepts `{ kind: 'intrinsic' }` or `{ kind: 'constrained', maxWidth }`. It returns allocation bounds, conservative visual bounds that include stroke / markers / shadow / clipping / transforms, and a one-use compile-local replay token. After solving its parent layout, the composite places that token as `{ kind: 'replay', replay, transforms? }`. Final Scene emission reuses the saved layout without expanding, measuring, or laying it out again. Tokens cannot cross compiles, be replayed twice, be serialized, or be forged.
+`layoutChild` accepts `{ kind: 'intrinsic' }` or `{ kind: 'constrained', maxWidth }`. It returns allocation bounds, conservative visual bounds that include stroke / markers / shadow / clipping / transforms, and a one-use compile-local replay token. After solving its parent layout, the composite creates an output child with `context.replay(result, transforms?)`. Final Scene emission reuses the saved layout without expanding, measuring, or laying it out again.
+
+`context.scope(props, children)` recursively wraps ordinary `IRChild` values, replay children, and other runtime Scope children. It exposes exactly the eight structural fields whose semantics remain deterministic after replay:
+
+| Field            | Purpose                                         |
+| ---------------- | ----------------------------------------------- |
+| `id`             | Register Scope identity in the parent namespace |
+| `localNamespace` | Isolate names inside the Scope subtree          |
+| `transforms`     | Apply lowered numeric Scene transforms          |
+| `clip`           | Clip in the Scope's local coordinate system     |
+| `zIndex`         | Sort the Scope as one sibling unit              |
+| `boundingShape`  | Describe the envelope of an identified Scope    |
+| `meta`           | Pass JSON metadata to the Scene group           |
+| `animations`     | Pass Group animation tracks                     |
+
+`context.replay()` and `context.scope()` return runtime-only opaque handles that never enter IR, Scene, or renderer contracts. Handles and layout results cannot cross compiles or composite callbacks, be serialized, or be forged; one replay can be committed only once. Scope props are detached, validated, and frozen when the builder is called. Style defaults, `resetStyle`, reference-based transforms, and `placement` are rejected because replayed content has already consumed styles and layout; applying them afterward would create a second compile meaning.
+
+Final occurrence locators keep the existing `output` / `scopeChild` / `replay` segments, with no new locator kind for nested wrappers. Resources, namespaces, warnings, bounds, and artifacts are still published atomically by the selected replay's single commit.
 
 A layout-aware definition with `artifactSchema` may return a JSON-safe `artifact` from the same `compile` call. `compileToScene` wraps it as `{ kind:'composite', namespace, type, occurrence, value }`. The occurrence uses an original `sourcePath` plus a structured `expansionPath`; it does not depend on a global Map or captured callback. A precise definition tuple lets `CompileResult` infer the corresponding artifact union.
 
@@ -169,10 +193,16 @@ A custom renderer must consume `resources` and `animations`, otherwise gradients
       endLine: 10,
     },
     {
-      label: 'Measure, publish artifacts, and emit a layout-aware composite',
+      label: 'Build compile-local replay and Scope children',
+      path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
+      startLine: 1,
+      endLine: 196,
+    },
+    {
+      label: 'Measure, publish artifacts, and recursively emit a layout-aware composite',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 885,
-      endLine: 1025,
+      startLine: 784,
+      endLine: 1116,
     },
     {
       label: 'Resolve deferred paths and fill their original output slots',

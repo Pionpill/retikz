@@ -1,7 +1,8 @@
 # @retikz/table
 
 `@retikz/table` is retikz's renderer-agnostic Tier 2 table package. It owns the JSON-safe Table IR,
-table structure and presentation contracts, fixed-track layout, and lowering to `@retikz/core`.
+table structure and presentation contracts, two-dimensional constraint layout, Border Graph
+resolution, and lowering to `@retikz/core`.
 
 `DetailTableSpecSchema`, `ManualTableSpecSchema`, and `CustomTableSpecSchema` define precise public
 variants. `TableSpecSchema` and `IRTableSpec` aggregate them under the same `table.table` composite
@@ -12,9 +13,11 @@ Use `createDetailTableSpec()` for record-per-row tables and `createManualTableSp
 dimensions and Cells. They return plain, JSON-safe `IRDetailTableSpec` and `IRManualTableSpec`
 values, while sharing structure normalization, presentation, layout, and lowering.
 
-Use `lowerTables(datasets, options)` to register Table composite lowering with `@retikz/core`.
-`lowerTableWithArtifacts(spec, datasets, options)` runs the same deterministic pipeline and also
-returns the detached, recursively frozen `TableLayoutManifest` sidecar.
+Use `lowerTables(datasets, options)` to register the layout-aware Table composite definition with
+`@retikz/core`. For a standalone Table, `compileTable(spec, datasets, options)` performs one Core
+compile and returns its `scene`, complete `artifacts`, and the exact root `TableLayoutManifest` from
+the typed `table.table` composite artifact. The manifest is detached, recursively frozen, and comes
+from the same layout transaction as the Scene.
 
 - `@retikz/data` owns shared data models and transforms.
 - `@retikz/table-react` provides `Table`, `DetailTable`, and `ManualTable` React entries.

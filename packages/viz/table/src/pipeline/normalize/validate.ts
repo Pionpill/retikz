@@ -21,7 +21,9 @@ export const validateTableStructureOutput = (
   assertUniqueIds('row', output.rows);
   assertUniqueIds('column', output.columns);
 
-  const addresses = new Set<string>();
+  const occupancy = Array.from({ length: output.rows.length }, () =>
+    Array.from<{ cellId: string } | undefined>({ length: output.columns.length }),
+  );
   const sourceIndices = new Set(context.data?.sourceIndices ?? []);
   const manualOperation = ManualTableStructureSchema.safeParse(operation);
   for (const row of output.rows) {
@@ -38,10 +40,6 @@ export const validateTableStructureOutput = (
     if (cell.column >= output.columns.length) {
       throw new Error(`Cell "${cell.id}" column ${cell.column} is out of range`);
     }
-    const address = `${cell.row}:${cell.column}`;
-    if (addresses.has(address)) throw new Error(`duplicate Cell address (${cell.row}, ${cell.column})`);
-    addresses.add(address);
-
     const row = output.rows[cell.row];
     const isHeader = row.kind === TableRowKind.ColumnHeader;
     const expectedLocation = isHeader ? TableCellLocation.ColumnHeader : TableCellLocation.Body;
@@ -69,6 +67,24 @@ export const validateTableStructureOutput = (
     }
     if (cell.source?.kind === TableCellSourceKind.Generated && cell.source.structureKind !== operation.kind) {
       throw new Error(`Cell "${cell.id}" generated source must match structure kind "${operation.kind}"`);
+    }
+
+    const rowSpan = cell.span?.rows ?? 1;
+    const columnSpan = cell.span?.columns ?? 1;
+    if (cell.row + rowSpan > output.rows.length || cell.column + columnSpan > output.columns.length) {
+      throw new Error(`Cell "${cell.id}" span range is out of bounds`);
+    }
+    for (let rowIndex = cell.row; rowIndex < cell.row + rowSpan; rowIndex += 1) {
+      if (output.rows[rowIndex].kind !== row.kind) {
+        throw new Error(`Cell "${cell.id}" span crosses row kind at row ${rowIndex}`);
+      }
+      for (let columnIndex = cell.column; columnIndex < cell.column + columnSpan; columnIndex += 1) {
+        const occupied = occupancy[rowIndex][columnIndex];
+        if (occupied !== undefined) {
+          throw new Error(`Cell "${cell.id}" overlaps Cell "${occupied.cellId}" at (${rowIndex}, ${columnIndex})`);
+        }
+        occupancy[rowIndex][columnIndex] = { cellId: cell.id };
+      }
     }
   }
   assertUniqueIds('cell', output.cells);

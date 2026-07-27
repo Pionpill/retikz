@@ -1,7 +1,6 @@
 import type { IRTableSpec } from '@retikz/table';
 
-import { compileToScene } from '@retikz/core';
-import { lowerTables, lowerTableWithArtifacts, TableSpecSchema } from '@retikz/table';
+import { compileTable } from '@retikz/table';
 import { renderToSvgString } from '@retikz/vanilla';
 
 import type { RenderTable, RenderTableArtifactOptions, RenderTableArtifactResult, RenderTableOptions } from './types';
@@ -16,17 +15,15 @@ const renderTableImpl = (
   spec: IRTableSpec,
   options: RenderTableOptions | RenderTableArtifactOptions = {},
 ): string | RenderTableArtifactResult => {
-  const parsed = TableSpecSchema.parse(spec);
+  if (Object.hasOwn(options, 'composites')) {
+    throw new Error('table vanilla: top-level composites was removed; use compile.composites');
+  }
   const data = options.data ?? {};
   const lowerOptions = options.lowerOptions ?? {};
-  const scene = compileToScene(
-    { version: 1, type: 'scene', children: [parsed] },
-    { composites: [...lowerTables(data, lowerOptions), ...(options.composites ?? [])] },
-  ).scene;
-  const svg = renderToSvgString(scene, { output: options.output });
+  const result = compileTable(spec, data, { lower: lowerOptions, compile: options.compile });
+  const svg = renderToSvgString(result.scene, { output: options.output, animation: options.animation });
   if (!requestsArtifacts(options)) return svg;
-  const manifest = lowerTableWithArtifacts(parsed, data, lowerOptions).manifest;
-  return Object.freeze({ svg, manifest });
+  return Object.freeze({ svg, manifest: result.manifest });
 };
 
 /** 把单个 Table spec 一次性渲染为 SSR SVG，并可返回 layout manifest */

@@ -34,6 +34,7 @@ export const DETAIL_TABLE_STRUCTURE = defineTableStructure({
             payload: column.header ?? { kind: TableCellPayloadKind.Value, value: column.id },
             location: TableCellLocation.ColumnHeader,
             roles: [TableCellRole.ColumnHeader],
+            ...(column.headerLayout === undefined ? {} : { layout: column.headerLayout }),
             source: { kind: TableCellSourceKind.Generated, structureKind: TableStructureKind.Detail },
           }))
         : []),
@@ -54,6 +55,7 @@ export const DETAIL_TABLE_STRUCTURE = defineTableStructure({
             },
             location: TableCellLocation.Body,
             roles: [TableCellRole.Data],
+            ...(column.bodyLayout === undefined ? {} : { layout: column.bodyLayout }),
             source: {
               kind: TableCellSourceKind.Field,
               reference: context.data?.reference ?? '',

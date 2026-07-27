@@ -45,9 +45,9 @@ import { DetailColumn, DetailTable } from '@retikz/table-react';
 
 <ComponentPreview files={['table-detail', 'table-detail.data.ts']} size="sm" />
 
-### 调整固定轨道
+### 内容驱动的轨道与 Cell 布局
 
-当前版本使用统一的 `columnWidth`、`rowHeight` 和可选 `headerHeight`，Cell 内容不会自动改变列宽或行高。省略时列宽为 `120`、正文行高为 `32`、行列间距为 `0`。
+`auto` 轨道读取 Cell 的自然尺寸，`fixed` 固定尺寸，`fraction` 在父级提供有限宽度约束时分配剩余空间，`minmax` 组合上下界。还可以按 canonical 索引用 `columns` / `rows` 覆盖单条轨道。
 
 ```tsx
 <DetailTable
@@ -55,16 +55,20 @@ import { DetailColumn, DetailTable } from '@retikz/table-react';
   data={rows}
   columns={columns}
   layout={{
-    columnWidth: 144,
-    rowHeight: 36,
-    headerHeight: 40,
+    columnSize: { kind: 'auto' },
+    rowSize: { kind: 'auto' },
+    columns: [{ index: 1, size: { kind: 'fixed', value: 96 } }],
     columnGap: 8,
     rowGap: 4,
+    borders: {
+      outer: { kind: 'line', stroke: 'currentColor' },
+      horizontal: { kind: 'line', stroke: 'lightgray' },
+    },
   }}
 />
 ```
 
-内容测量、自由行高、span 和完整边框规则不属于 v0.1。宿主的 `width` / `height` 只改变 SVG 或 Canvas 的显示尺寸，不会改写轨道尺寸。
+`DetailColumn.headerLayout` / `bodyLayout` 可以分别设置 padding、对齐、wrap、fit、overflow 与四边 border。`wrap: true` 会在列宽确定后请求受约束内容布局；`overflow: 'clip'` 把可见结果裁进 content box。宿主 `width` / `height` 仍只控制输出尺寸，不冒充 Table 的父级宽度约束。
 
 ### Vanilla 与 SSR
 
@@ -89,24 +93,26 @@ const svg = renderTable(spec, { data: { scores: rows } });
 
 ### DetailTable
 
-| 属性                       | 类型                                                             | 默认值         | 描述                                                              |
-| -------------------------- | ---------------------------------------------------------------- | -------------- | ----------------------------------------------------------------- |
-| `dataRef`                  | `DetailTableProps['dataRef']`                                    | —              | spec 中的外部数据引用名                                           |
-| `data`                     | `DetailTableProps['data']`                                       | —              | 当前明细记录；不写入 spec                                         |
-| `columns?`                 | `DetailTableProps['columns']`                                    | —              | 程序化地按展示顺序声明字段、列头与 presentation；与 children 互斥 |
-| `children?`                | `DetailTableProps['children']`                                   | —              | `DetailColumn` 声明顺序；与 `columns` 互斥                        |
-| `model?`                   | `DetailTableProps['model']`                                      | —              | 可选字段模型                                                      |
-| `header?`                  | `DetailTableProps['header']`                                     | `true`         | 是否生成列头行                                                    |
-| `id?`                      | `DetailTableProps['id']`                                         | —              | 稳定 Table id；嵌入父级 `Layout` 时必填                           |
-| `layout?`                  | `DetailTableProps['layout']`                                     | 固定轨道默认值 | 列宽、正文/列头行高与行列间距                                     |
-| `meta?`                    | `DetailTableProps['meta']`                                       | —              | 写入 TableSpec 的 JSON 元数据                                     |
-| `structureDefinitions?`    | `DetailTableProps['structureDefinitions']`                       | `[]`           | 自定义结构 definitions                                            |
-| `presentationDefinitions?` | `DetailTableProps['presentationDefinitions']`                    | `[]`           | 自定义 Cell presentation definitions                              |
-| `composites?`              | `DetailTableProps['composites']`                                 | `[]`           | Cell 内嵌 Tier 2 内容所需 definitions                             |
-| `onManifest?`              | `DetailTableProps['onManifest']`                                 | —              | standalone 布局产物通知；嵌入时不支持                             |
-| `width?` / `height?`       | `DetailTableProps['width']`                                      | —              | 宿主显示尺寸；不改变固定轨道                                      |
-| `renderer?`                | `DetailTableProps['renderer']`                                   | `'svg'`        | 渲染后端                                                          |
-| `className?` / `style?`    | `DetailTableProps['className']`<br />`DetailTableProps['style']` | —              | 透传给渲染宿主                                                    |
+| 属性                       | 类型                                                             | 默认值     | 描述                                                              |
+| -------------------------- | ---------------------------------------------------------------- | ---------- | ----------------------------------------------------------------- |
+| `dataRef`                  | `DetailTableProps['dataRef']`                                    | —          | spec 中的外部数据引用名                                           |
+| `data`                     | `DetailTableProps['data']`                                       | —          | 当前明细记录；不写入 spec                                         |
+| `columns?`                 | `DetailTableProps['columns']`                                    | —          | 程序化地按展示顺序声明字段、列头与 presentation；与 children 互斥 |
+| `children?`                | `DetailTableProps['children']`                                   | —          | `DetailColumn` 声明顺序；与 `columns` 互斥                        |
+| `model?`                   | `DetailTableProps['model']`                                      | —          | 可选字段模型                                                      |
+| `header?`                  | `DetailTableProps['header']`                                     | `true`     | 是否生成列头行                                                    |
+| `id?`                      | `DetailTableProps['id']`                                         | —          | 稳定 Table id；嵌入父级 `Layout` 时必填                           |
+| `layout?`                  | `DetailTableProps['layout']`                                     | 轨道默认值 | 默认/索引轨道尺寸、间距与 Table border                            |
+| `meta?`                    | `DetailTableProps['meta']`                                       | —          | 写入 TableSpec 的 JSON 元数据                                     |
+| `structureDefinitions?`    | `DetailTableProps['structureDefinitions']`                       | `[]`       | 自定义结构 definitions                                            |
+| `presentationDefinitions?` | `DetailTableProps['presentationDefinitions']`                    | `[]`       | 自定义 Cell presentation definitions                              |
+| `composites?`              | `DetailTableProps['composites']`                                 | `[]`       | Cell 内嵌 Tier 2 内容所需 definitions                             |
+| `onManifest?`              | `DetailTableProps['onManifest']`                                 | —          | standalone 布局产物通知；嵌入时不支持                             |
+| `width?` / `height?`       | `DetailTableProps['width']`                                      | —          | 宿主显示尺寸；不改变 Table 约束                                   |
+| `viewBox?`                 | `DetailTableProps['viewBox']`                                    | —          | Scene 相机；不改变轨道求解                                        |
+| `animate?` / `snapshotAt?` | `DetailTableProps['animate']`                                    | —          | 复用 Kernel Layout 的动画宿主合同                                 |
+| `renderer?`                | `DetailTableProps['renderer']`                                   | `'svg'`    | 渲染后端                                                          |
+| `className?` / `style?`    | `DetailTableProps['className']`<br />`DetailTableProps['style']` | —          | 透传给渲染宿主                                                    |
 
 ### DetailColumn
 
@@ -116,6 +122,8 @@ const svg = renderTable(spec, { data: { scores: rows } });
 | `field`         | `DetailColumnProps['field']`        | —      | 从每条记录读取的字段                  |
 | `header?`       | `DetailColumnProps['header']`       | —      | 列头 payload；字符串会转为 value Cell |
 | `presentation?` | `DetailColumnProps['presentation']` | —      | 正文 value Cell 的可选呈现引用        |
+| `headerLayout?` | `DetailColumnProps['headerLayout']` | —      | 列头 Cell 的布局与四边 border 策略    |
+| `bodyLayout?`   | `DetailColumnProps['bodyLayout']`   | —      | 正文 Cell 的布局与四边 border 策略    |
 
 `detailTable(input)` 接收同一组 spec 输入并返回 `IRDetailTableSpec`。完整的 `Table`、`ManualTable`、schema、adapter 和 lowering 契约见 [API 参考](/viz/table/reference)。
 
