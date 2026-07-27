@@ -66,11 +66,11 @@ document root 的 identity path 是 `['root']`。每个拥有唯一非空 `id` �
 
 结构 hint 按集合校验，ChangeSet 数组顺序不是 Patch 执行顺序，每个 parent 内的 move 集合必须构成最小重排。anonymous、同 parent duplicate、Composite、漏报、多余 hint、错误 parent / before 或无法重建 next sibling order 都会被判定为不匹配。
 
-当前实现对匹配与不匹配的 update 都执行 full fallback；精确匹配只表示不发布 mismatch diagnostic，不代表已经进入局部增量编译。
+当前局部增量路径先覆盖一个可证明安全的闭环：root 只含 unique-id、绝对 tuple position 的 Node，结构与顺序不变，只有一个 Node 的纯色 `fill` string 变化，并且没有自定义 shape、资源、artifact 或 compile warning。Program 只重编该 Node contribution，复用其它 committed root contribution，并以一个 emitted-subtree `update` operation 发布 Patch；输出仍与 fresh `compileToScene()` 等价。引用、资源、自定义 shape、Scope、Composite、多 owner 变化或其它无法局部证明的场景继续 full fallback。
 
 不匹配时，`CORE_CHANGESET_MISMATCH` 只作为 Runtime diagnostic 在 fallback 成功 commit 后发布一次，不进入 `output.diagnostics` 或 `onWarn`。fallback compile 失败时不会发布该 diagnostic，也不会推进 revision 或替换 committed artifact。
 
-Core Program 的 private read 当前保存下一次 update 使用的 immutable source Snapshot。dependency Program、participant 与 `session.artifact()` 只能看到上表中的 public read，不会取得这份内部 source state。
+Core Program 的 private read 保存下一次 update 使用的 immutable source Snapshot 与 stable identity index；已提交的完整 Scene Snapshot 同时作为安全子集的 contribution cache。dependency Program、participant 与 `session.artifact()` 只能看到上表中的 public read，不会取得 source/index 私有状态。
 
 ## 不可变 Program options
 
@@ -117,8 +117,8 @@ Core Program 的 private read 当前保存下一次 update 使用的 immutable s
     {
       label: 'Core Program full run 与 public artifact',
       path: 'packages/kernel/core/src/compile/incremental/program.ts',
-      startLine: 23,
-      endLine: 120,
+      startLine: 24,
+      endLine: 118,
     },
     {
       label: 'Snapshot stable identity tree',
@@ -133,10 +133,16 @@ Core Program 的 private read 当前保存下一次 update 使用的 immutable s
       endLine: 322,
     },
     {
+      label: 'root Node contribution 增量复用',
+      path: 'packages/kernel/core/src/compile/incremental/root-node-style.ts',
+      startLine: 49,
+      endLine: 238,
+    },
+    {
       label: 'Mismatch fallback diagnostic',
       path: 'packages/kernel/core/src/compile/incremental/program.ts',
-      startLine: 118,
-      endLine: 137,
+      startLine: 119,
+      endLine: 135,
     },
     {
       label: 'canonical Scene topology',

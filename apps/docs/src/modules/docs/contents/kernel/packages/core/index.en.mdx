@@ -66,11 +66,11 @@ The document root identity path is `['root']`. Each ordinary child with a unique
 
 Structural hints are checked as a set; their array order is not Patch execution order, and each parent's move set must be a minimum reorder. Anonymous entities, same-parent duplicates, Composites, missing or redundant hints, invalid parents or `before` identities, and hints that cannot rebuild the next sibling order are mismatches.
 
-The current implementation takes the full fallback path for both matching and mismatching updates. An exact match only suppresses the mismatch diagnostic; it does not mean local incremental compilation has started.
+The current local incremental path first covers one provably safe closed loop: the root contains only unique-id Nodes with absolute tuple positions, structure and order stay unchanged, exactly one Node changes only its solid-color `fill` string, and there are no custom shapes, resources, artifacts, or compile warnings. The Program recompiles only that Node contribution, reuses the other committed root contributions, and publishes one emitted-subtree `update` operation; the output remains equivalent to a fresh `compileToScene()`. References, resources, custom shapes, Scopes, Composites, multi-owner changes, and every other case without a local proof continue to full fallback.
 
 On a mismatch, `CORE_CHANGESET_MISMATCH` is published once as a Runtime diagnostic only after the fallback commits successfully. It never enters `output.diagnostics` or `onWarn`. A failed fallback compile publishes neither that diagnostic nor a new revision or artifact.
 
-The private Core Program read currently stores the immutable source Snapshot used by the next update. Dependency Programs, participants, and `session.artifact()` only receive the public read above; they cannot access that internal source state.
+The private Core Program read preserves the immutable source Snapshot and stable identity index for the next update; the committed full Scene Snapshot also serves as the contribution cache for the safe subset. Dependency Programs, participants, and `session.artifact()` only receive the public read above and cannot access the private source/index state.
 
 ## Immutable Program Options
 
@@ -117,8 +117,8 @@ To replace a measurer, lowerer, provider callback, or external state captured by
     {
       label: 'Core Program full run and public artifact',
       path: 'packages/kernel/core/src/compile/incremental/program.ts',
-      startLine: 23,
-      endLine: 120,
+      startLine: 24,
+      endLine: 118,
     },
     {
       label: 'Snapshot stable identity tree',
@@ -133,10 +133,16 @@ To replace a measurer, lowerer, provider callback, or external state captured by
       endLine: 322,
     },
     {
+      label: 'root Node contribution reuse',
+      path: 'packages/kernel/core/src/compile/incremental/root-node-style.ts',
+      startLine: 49,
+      endLine: 238,
+    },
+    {
       label: 'Mismatch fallback diagnostic',
       path: 'packages/kernel/core/src/compile/incremental/program.ts',
-      startLine: 118,
-      endLine: 137,
+      startLine: 119,
+      endLine: 135,
     },
     {
       label: 'Canonical Scene topology',

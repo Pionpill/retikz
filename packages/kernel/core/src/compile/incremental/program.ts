@@ -13,6 +13,7 @@ import { formatCompileWarning } from '../warning';
 import { coreChangeSetMatchesSnapshots, createCoreSnapshotIndex } from './diff';
 import { copyCoreProgramOptions } from './options';
 import { CORE_PROGRAM_ID } from './public';
+import { tryCompileRootNodeStyleUpdate } from './root-node-style';
 import { createFullSceneRuntimeSnapshot, freezeProgramOutput } from './snapshot';
 
 /** 缺省 warning sink 与 compileToScene 保持一致 */
@@ -115,22 +116,49 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
         }),
       };
     },
-    update: (previous, view) => {
+    update: (previous, view, context) => {
+      if (view.phase !== 'update') return { kind: 'fallback' };
       const changeSet = view.changeSet(CoreOwnerDefinition);
-      if (changeSet === undefined) return { kind: 'fallback' };
-      const nextIndex = createCoreSnapshotIndex(view.snapshot(CoreOwnerDefinition).value);
-      return coreChangeSetMatchesSnapshots(previous.state.index, nextIndex, changeSet)
-        ? { kind: 'fallback' }
-        : {
-            kind: 'fallback',
-            diagnostics: [
-              {
-                code: 'CORE_CHANGESET_MISMATCH',
-                phase: 'update',
-                message: 'Core ChangeSet does not match the previous and next canonical Snapshots; using full fallback',
-              },
-            ],
-          };
+      const nextSource = view.snapshot(CoreOwnerDefinition).value;
+      const nextIndex = createCoreSnapshotIndex(nextSource);
+      if (changeSet !== undefined && !coreChangeSetMatchesSnapshots(previous.state.index, nextIndex, changeSet)) {
+        return {
+          kind: 'fallback',
+          diagnostics: [
+            {
+              code: 'CORE_CHANGESET_MISMATCH',
+              phase: 'update',
+              message: 'Core ChangeSet does not match the previous and next canonical Snapshots; using full fallback',
+            },
+          ],
+        };
+      }
+      const incremental = tryCompileRootNodeStyleUpdate(
+        previous,
+        nextSource,
+        nextIndex,
+        fixedOptions,
+        view.baseRevision,
+        view.candidateRevision,
+      );
+      if (incremental === undefined) return { kind: 'fallback' };
+      context.trace.report({
+        phase: 'update',
+        unit: 'ir-child',
+        outcome: 'incremental',
+        visited: incremental.reused + 1,
+        reused: incremental.reused,
+        changed: 1,
+      });
+      context.trace.report({
+        phase: 'update',
+        unit: 'scene-change',
+        outcome: 'incremental',
+        visited: incremental.operationCount,
+        reused: 0,
+        changed: incremental.operationCount,
+      });
+      return { kind: 'incremental', artifact: incremental.artifact };
     },
     observeCommit: event => {
       event.artifact.value.output.diagnostics.forEach(warningSink);

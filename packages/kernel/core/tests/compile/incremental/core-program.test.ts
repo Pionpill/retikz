@@ -659,3 +659,161 @@ describe('Core Runtime Program full fallback update', () => {
     expect(session.diagnostics()).toEqual([]);
   });
 });
+
+describe('Core Runtime Program incremental style update', () => {
+  it('只重编单个 stable root Node，并发布原子 primitive update Patch', () => {
+    const records: Array<PerformanceTraceRecord> = [];
+    const initial: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'a', position: [0, 0], text: 'A', fill: '#ef4444' },
+        { type: 'node', id: 'b', position: [80, 0], text: 'B', fill: '#3b82f6' },
+      ],
+    };
+    const next: IRScene = {
+      ...initial,
+      children: [{ type: 'node', id: 'a', position: [0, 0], text: 'A', fill: '#22c55e' }, initial.children[1]],
+    };
+    const program = createCoreProgram({ onWarn: () => {} });
+    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, initial)],
+      trace: record => records.push(record),
+    });
+    const before = session.artifact(program).value.snapshot;
+    const baseRevision = session.revision();
+    records.length = 0;
+
+    const result = session.update({
+      baseRevision,
+      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
+    });
+    const after = session.artifact(program).value;
+
+    expect(result.outcome).toBe('incremental');
+    expect(after.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
+    expect(after.patch?.operations).toHaveLength(1);
+    const operation = after.patch?.operations[0];
+    expect(operation).toMatchObject({ kind: 'update' });
+    if (operation?.kind !== 'update') throw new Error('expected one update operation');
+    expect(operation.identity.path).toEqual(['root', 'node', 'a', 'emission', 'node:group', '0']);
+    expect(operation.subtree.root).toEqual(operation.identity);
+    expect(operation.subtree.topology.map(node => node.primitivePath)).toEqual([[], [0], [1]]);
+    expect(after.snapshot.scene.primitives[1]).toBe(before.scene.primitives[1]);
+    expect(records).toEqual([
+      {
+        owner: CORE_OWNER_KEY,
+        phase: 'update',
+        unit: 'ir-child',
+        outcome: 'incremental',
+        visited: 2,
+        reused: 1,
+        changed: 1,
+      },
+      {
+        owner: CORE_OWNER_KEY,
+        phase: 'update',
+        unit: 'scene-change',
+        outcome: 'incremental',
+        visited: 1,
+        reused: 0,
+        changed: 1,
+      },
+    ]);
+  });
+
+  it('root Node 存在引用 position 时保守 full fallback', () => {
+    const initial: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'a', position: [0, 0], text: 'A', fill: '#ef4444' },
+        { type: 'node', id: 'b', position: { kind: 'anchor', target: { id: 'a' } }, text: 'B' },
+      ],
+    };
+    const next: IRScene = {
+      ...initial,
+      children: [{ ...initial.children[0], fill: '#22c55e' }, initial.children[1]],
+    };
+    const program = createCoreProgram({ onWarn: () => {} });
+    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, initial)],
+    });
+
+    const result = session.update({
+      baseRevision: session.revision(),
+      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
+    });
+
+    expect(result.outcome).toBe('fallback');
+    expect(session.artifact(program).value.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
+
+    const changedReferenceNode: IRScene = {
+      ...next,
+      children: [next.children[0], { ...next.children[1], fill: '#22c55e' }],
+    };
+    const changedReferenceResult = session.update({
+      baseRevision: session.revision(),
+      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, changedReferenceNode)],
+    });
+    expect(changedReferenceResult.outcome).toBe('fallback');
+    expect(session.artifact(program).value.output.result).toEqual(
+      compileToScene(changedReferenceNode, { onWarn: () => {} }),
+    );
+  });
+
+  it('自定义 ShapeDefinition 可读取 fill 时保守 full fallback', () => {
+    const fillSensitiveShape = defineShape({
+      ...BUILTIN_SHAPES.rectangle,
+      name: 'fill-sensitive',
+      *emit(rect, style, round, params) {
+        yield* BUILTIN_SHAPES.rectangle.emit(
+          { ...rect, width: style.fill === '#22c55e' ? rect.width * 2 : rect.width },
+          style,
+          round,
+          params,
+        );
+      },
+    });
+    const initial: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'node',
+          id: 'a',
+          shape: 'fill-sensitive',
+          position: [0, 0],
+          text: 'A',
+          fill: '#ef4444',
+        },
+      ],
+    };
+    const next: IRScene = { ...initial, children: [{ ...initial.children[0], fill: '#22c55e' }] };
+    const options = { shapes: [fillSensitiveShape], onWarn: () => {} } as const;
+    const program = createCoreProgram(options);
+    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, initial)],
+    });
+
+    const result = session.update({
+      baseRevision: session.revision(),
+      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
+    });
+
+    expect(result.outcome).toBe('fallback');
+    expect(session.artifact(program).value.output.result).toEqual(compileToScene(next, options));
+  });
+});
