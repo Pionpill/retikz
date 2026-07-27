@@ -10,7 +10,7 @@
 2. 将 React `Grid` 迁为宿主无关的 Standard Tier 2 composite，并新增 Axes 与 Frame，使 React 与 Vanilla 对同一 JSON-safe 输入得到等价的 composite IR 与 lowering 结果
 3. 建立 Standard capability module / preset 机制：用户可显式选择全部或部分首批标准能力，并通过单一 bundle 接入 Core compile options；React 保持组件静态 adapter，Vanilla 提供全量 adapter 数组便利入口
 4. 固化 Standard 按 Core 可扩展机制横向分域的代码范式，为后续 definition、composite 与 Sugar 增长留出稳定位置，不预建空目录或平行机制
-5. 增加 Stack、Align / Distribute 等不理解领域模型的通用布局 composite；确需测量任意 children 时先补齐并复用 Core layout-aware composite，不在 Standard 私造测量或 replay 管线
+5. 建立 renderer-agnostic Box Layout Profile，补齐 Flex、Grid、Overlay、LayoutItem 与 layout artifact；需要双轴约束、intrinsic contribution、allocated box 或 replay wrapper 时先补齐并复用 Core layout-aware composite，不在 Standard 私造测量或 replay 管线
 6. 增加 `Stage`、`Decision`、`Terminal`、`Junction`、`Connector` 与 `Callout` 等 JSON-safe Tier 2 语义，使持久化文档、工具链和 LLM 不必从 shape、颜色或坐标反推逻辑角色
 
 ## 能力边界
@@ -27,7 +27,7 @@
 | Milestone                       | 主题                                                     | 主要产出                                                                                                                                                                                                                               | ADR / Gate                                                                                                                                                 |
 | ------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [alpha.1](./alpha.1/roadmap.md) | **首批 Tier 2 composite、包初始化与 capability loading** | 三个 package manifest、Grid / Axes / Frame 的 schema / definition / lowering / React / Vanilla authoring、Grid 迁移、capability module、不可变 bundle、全量与按需 preset、Vanilla 全量 adapter 数组、双语 docs / migration / changelog | 首批 composite 的输入、Core definition 注册与跨 adapter 等价证据；确认无全局注册、Core 不反向依赖 Standard，且全量 / 部分加载进入同一 Core option 合并路径 |
-| alpha.2                         | **通用布局 composite**                                   | Stack、Align / Distribute 的宿主无关输入、定位、lowering 与诊断；复核 Frame 与后续任意 child 布局的 Core 能力需求                                                                                                                      | 现有 Core anchor / composite 可组合；需要测量时先完成 Core layout-aware composite                                                                          |
+| [alpha.2](./alpha.2/roadmap.md) | **通用 Box Layout**                                      | Flex、Grid、Overlay、LayoutItem、双轴 constraints、layout artifact、React / Vanilla 等价 authoring 与诊断；Stack / Row / Column 复用 Flex canonical input                                                                              | Core layout-aware composite 主链；双轴约束、intrinsic contributions、allocated box、alignment metrics 与 replay wrapper 先过 Core Gate                     |
 | alpha.3                         | **逻辑语义节点**                                         | `Stage`、`Decision`、`Terminal`、`Junction` 的 schema、definition、纯展开 lowering 与稳定 identity                                                                                                                                     | alpha.1 loading 主链；语义不由 diamond / capsule / fork bar 等 shape 代替                                                                                  |
 | alpha.4                         | **逻辑关系与注释**                                       | `Connector`、`Callout`、结构化 Target、关系 role、label 与诊断                                                                                                                                                                         | alpha.2 children 布局能力、alpha.3 stable identity                                                                                                         |
 | alpha.5                         | **跨入口与文档收口**                                     | React / Vanilla 等价 authoring、LLM 友好 schema 描述、文档逻辑图 dogfood、完整诊断                                                                                                                                                     | alpha.1～4；JSON round-trip、adapter 等价和真实文档消费闭环                                                                                                |
@@ -50,7 +50,7 @@ Grid、Axes 与 Frame 都通过 Core 既有 `CompositeDefinition` 机制注册�
 ## Tier 2 语义约定
 
 - `Stage`、`Decision`、`Terminal`、`Junction`、`Connector` 及固定定位的 `Callout` 以独立 Standard discriminator 保存逻辑角色，并可通过 `expand` 确定性下沉为 Node / Coordinate / Path 等 Core IR
-- Stack、Align / Distribute 及需要测量任意内容的 `Callout` 是否需要 layout-aware composite，由对应 ADR 基于真实 children 测量需求决定；现有 Frame 继续使用已验证的 `expand` 主链，除非 ADR 证明必须迁移
+- Flex、Grid、Overlay 与需要测量任意内容的 `Callout` 使用 Core layout-aware composite；Stack / Row / Column 只作为 Flex 的 convenience authoring，Align / Distribute 由 container / item alignment 与 free-space distribution 持久化表达；现有 Frame 继续使用已验证的 `expand` 主链，除非 ADR 证明必须迁移
 - 即使某个组件可以同步展开，只要其角色需要跨 JSON 持久化、工具链处理或 LLM 编辑保留，就不能仅作为 React / Vanilla Sugar
 - `diamond`、capsule、fork bar 等 shape 只拥有几何或视觉实现，不替代 `Decision`、`Terminal`、`Junction` 的语义 schema
 - `Connector` 表达 flow / branch / dependency / feedback 等局部绘图关系；它不是全局 Edge 集合，也不负责拓扑校验、自动路由或端口规则
@@ -109,7 +109,7 @@ adapter 不持有 Standard schema、几何 helper、provider table 或 lowering�
 
 ## 测试与文档基线
 
-- `standard`：Grid、Axes、Frame 与后续布局 / 语义组件的 schema、JSON round-trip、输入错误、identity / Target、composite lowering 输出与 bundle 合并不变量
+- `standard`：Grid、Axes、Frame、Flex、GridLayout、Overlay 与后续语义组件的 schema、JSON round-trip、输入错误、identity / Target、layout artifact、composite compile / lowering 输出与 bundle 合并不变量
 - `standard-react` / `standard-vanilla`：同一 composite input 的 IR 与 lowering 结果等价；同图多 capability 的稳定 contribution key / maker、React 静态按需贡献、Vanilla 部分 / 全量 adapter 数组与直接 IR bundle 的接线；无副作用、重复 module 和 provider key 冲突的诊断
 - Kernel 回归：`Path` / `Step`、Core compile 与 renderer 不因未安装 Standard 改变；`@retikz/react` 不再导出 Grid
 - Docs：zh/en 同步 Standard 包说明、组件页面、React / Vanilla 示例、从 `@retikz/react` 迁移 Grid 的指引；用真实逻辑图 dogfood Frame、Decision、Connector、Junction 与 Callout，并检查导航、source preview、import 生成和 desktop / 500px 页面
@@ -125,7 +125,7 @@ adapter 不持有 Standard schema、几何 helper、provider table 或 lowering�
 - Table / Plot datum、scale、数据 formatter、业务工作流等领域语义；对应 owner 负责先解析为可绘制输入
 - 从 lowering 后的 Kernel IR 或 Scene 反向推断原始 Standard Tier 2 语义
 - LLM prompt、模型调用、agent runtime 或自然语言解析器；v0.1 只提供稳定、带描述、可生成的语义契约
-- `GridLayout`、`Wrap`、`RadialLayout`、Dimension / BraceLabel 等扩展目录；按真实消费证据进入 v0.2 评估
+- `RadialLayout`、Tree / Layered / Force、subgrid、masonry、Dimension / BraceLabel 等扩展能力；按真实消费证据进入 v0.2 或后续领域版本评估
 - 为兼容旧 import 保留 `@retikz/react` 的 Grid alias；迁移以 v0.x 的正确 owner 为准，并提供文档迁移说明
 
 ## ADR 约定
