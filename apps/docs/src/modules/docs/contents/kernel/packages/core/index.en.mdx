@@ -60,9 +60,11 @@ The fixed identities are `CORE_OWNER_KEY = '@retikz/core/document'` and `CORE_PR
 
 The initial run performs a full compile. When an update cannot be proven locally safe, the Program falls back to a full compile and publishes one `replaceScene` in `patch.operations`. Callers still consume the same Snapshot / Patch envelope instead of switching protocols.
 
-Core cross-checks an optional ChangeSet against the complete previous and next Snapshots. One unique `update` hint must cover each changed value owned by the Scene root or a unique-id root child. Root-child add/remove/move hints must completely explain the next identity set and order, with `parent` and `before` pointing to final positions in the next Snapshot.
+Core cross-checks an optional ChangeSet against the complete previous and next Snapshots. One unique `update` hint must cover each changed value owned by the Scene root or a stable entity. Add/remove/move hints must completely explain the next identity set and order under their parent, with `parent` and `before` pointing to final positions in the next Snapshot.
 
-Structural hints are checked as a set; their array order is not Patch execution order, and the move set must be a minimum reorder. Anonymous or duplicate entities, Scopes, Composites, missing or redundant hints, invalid parents or `before` identities, and hints that cannot rebuild the next root order are mismatches.
+The document root identity path is `['root']`. Each ordinary child with a unique non-empty `id` appends `[type, id]`. An identified Scope continues as a parent boundary and recursively indexes descendants, so a Node inside it can use `['root', 'scope', scopeId, 'node', nodeId]`. `localNamespace` only changes the reference frame, not this identity path. Moving an entity across Scopes changes its old and new paths, so the hint is remove + add rather than a move that retains the old identity. Scope add/remove hints do not cascade: every stable descendant must be covered by its own hint.
+
+Structural hints are checked as a set; their array order is not Patch execution order, and each parent's move set must be a minimum reorder. Anonymous entities, same-parent duplicates, Composites, missing or redundant hints, invalid parents or `before` identities, and hints that cannot rebuild the next sibling order are mismatches.
 
 The current implementation takes the full fallback path for both matching and mismatching updates. An exact match only suppresses the mismatch diagnostic; it does not mean local incremental compilation has started.
 
@@ -119,16 +121,16 @@ To replace a measurer, lowerer, provider callback, or external state captured by
       endLine: 120,
     },
     {
-      label: 'Snapshot stable-root index',
+      label: 'Snapshot stable identity tree',
       path: 'packages/kernel/core/src/compile/incremental/diff.ts',
       startLine: 11,
-      endLine: 64,
+      endLine: 81,
     },
     {
       label: 'ChangeSet structural cross-check',
       path: 'packages/kernel/core/src/compile/incremental/diff.ts',
-      startLine: 132,
-      endLine: 271,
+      startLine: 171,
+      endLine: 322,
     },
     {
       label: 'Mismatch fallback diagnostic',

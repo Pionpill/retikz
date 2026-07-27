@@ -15,6 +15,9 @@ import { CORE_OWNER_KEY, CoreOwnerDefinition, createCoreProgram } from '../../..
 
 const rootIdentity = createRuntimeIdentity(CORE_OWNER_KEY, ['root']);
 const nodeIdentity = (id: string) => createRuntimeIdentity(CORE_OWNER_KEY, ['root', 'node', id]);
+const scopeIdentity = (id: string) => createRuntimeIdentity(CORE_OWNER_KEY, ['root', 'scope', id]);
+const scopedNodeIdentity = (scopeId: string, id: string) =>
+  createRuntimeIdentity(CORE_OWNER_KEY, ['root', 'scope', scopeId, 'node', id]);
 
 const scene = (...nodes: Array<Readonly<{ id: string; text: string }>>): IRScene => ({
   version: 1,
@@ -251,5 +254,190 @@ describe('Core stable-root structural Snapshot Diff', () => {
     expectMismatch(initial, next, [{ kind: 'remove', identity: rootIdentity }]);
     expectMismatch(initial, next, [validAddB, { kind: 'add', identity: rootIdentity, parent: rootIdentity }]);
     expectMismatch(initial, next, [validAddB, { kind: 'move', identity: rootIdentity, parent: rootIdentity }]);
+  });
+});
+
+describe('Core nested stable Scope structural Snapshot Diff', () => {
+  const scopedScene = (
+    scopeId: string,
+    nodes: Array<Readonly<{ id: string; text: string }>>,
+    options: Readonly<{ localNamespace?: boolean; zIndex?: number }> = {},
+  ): IRScene => ({
+    version: 1,
+    type: 'scene',
+    children: [
+      {
+        type: 'scope',
+        id: scopeId,
+        ...options,
+        children: nodes.map(node => ({
+          type: 'node',
+          id: node.id,
+          position: [(node.id.charCodeAt(0) - 'a'.charCodeAt(0)) * 80, 0],
+          text: node.text,
+        })),
+      },
+    ],
+  });
+
+  it('用 nested identity 精确校验 Scope 内实体更新', () => {
+    const initial = scopedScene('group', [
+      { id: 'a', text: 'A' },
+      { id: 'b', text: 'B' },
+    ]);
+    const next = scopedScene('group', [
+      { id: 'a', text: 'A' },
+      { id: 'b', text: 'B2' },
+    ]);
+    const update: CoreChange = { kind: 'update', identity: scopedNodeIdentity('group', 'b') };
+
+    expectMatched(initial, next, [update]);
+    expectMismatch(initial, next, []);
+    expectMismatch(initial, next, [{ kind: 'update', identity: nodeIdentity('b') }]);
+  });
+
+  it('按 Scope parent 校验 nested add、remove 与最小 reorder', () => {
+    const initial = scopedScene('group', [
+      { id: 'a', text: 'A' },
+      { id: 'b', text: 'B' },
+    ]);
+    const withAdd = scopedScene('group', [
+      { id: 'c', text: 'C' },
+      { id: 'a', text: 'A' },
+      { id: 'b', text: 'B' },
+    ]);
+    const addC: CoreChange = {
+      kind: 'add',
+      identity: scopedNodeIdentity('group', 'c'),
+      parent: scopeIdentity('group'),
+      before: scopedNodeIdentity('group', 'a'),
+    };
+    expectMatched(initial, withAdd, [addC]);
+    expectMismatch(initial, withAdd, [{ ...addC, parent: rootIdentity }]);
+
+    const reordered = scopedScene('group', [
+      { id: 'b', text: 'B' },
+      { id: 'a', text: 'A' },
+    ]);
+    expectMatched(initial, reordered, [
+      {
+        kind: 'move',
+        identity: scopedNodeIdentity('group', 'a'),
+        parent: scopeIdentity('group'),
+      },
+    ]);
+
+    expectMatched(withAdd, initial, [{ kind: 'remove', identity: scopedNodeIdentity('group', 'c') }]);
+  });
+
+  it('跨 Scope 移动形成旧 identity remove 与新 identity add', () => {
+    const initial: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'scope', id: 'left', children: [{ type: 'node', id: 'item', position: [0, 0], text: 'A' }] },
+        { type: 'scope', id: 'right', children: [] },
+      ],
+    };
+    const next: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'scope', id: 'left', children: [] },
+        { type: 'scope', id: 'right', children: [{ type: 'node', id: 'item', position: [0, 0], text: 'A' }] },
+      ],
+    };
+
+    expectMatched(initial, next, [
+      { kind: 'remove', identity: scopedNodeIdentity('left', 'item') },
+      {
+        kind: 'add',
+        identity: scopedNodeIdentity('right', 'item'),
+        parent: scopeIdentity('right'),
+      },
+    ]);
+    expectMismatch(initial, next, [
+      {
+        kind: 'move',
+        identity: scopedNodeIdentity('left', 'item'),
+        parent: scopeIdentity('right'),
+      },
+    ]);
+  });
+
+  it('整棵 Scope 子树 add/remove 不级联，必须逐项覆盖 stable descendant', () => {
+    const initial: IRScene = { version: 1, type: 'scene', children: [] };
+    const next = scopedScene('group', [
+      { id: 'a', text: 'A' },
+      { id: 'b', text: 'B' },
+    ]);
+    const additions: Array<CoreChange> = [
+      { kind: 'add', identity: scopeIdentity('group'), parent: rootIdentity },
+      {
+        kind: 'add',
+        identity: scopedNodeIdentity('group', 'a'),
+        parent: scopeIdentity('group'),
+        before: scopedNodeIdentity('group', 'b'),
+      },
+      { kind: 'add', identity: scopedNodeIdentity('group', 'b'), parent: scopeIdentity('group') },
+    ];
+
+    expectMatched(initial, next, additions);
+    expectMismatch(initial, next, additions.slice(0, -1));
+
+    const removals: Array<CoreChange> = [
+      { kind: 'remove', identity: scopeIdentity('group') },
+      { kind: 'remove', identity: scopedNodeIdentity('group', 'a') },
+      { kind: 'remove', identity: scopedNodeIdentity('group', 'b') },
+    ];
+    expectMatched(next, initial, removals);
+    expectMismatch(next, initial, removals.slice(0, -1));
+  });
+
+  it('Scope 自身字段变化与 child 变化使用不同 update identity', () => {
+    const initial = scopedScene('group', [{ id: 'a', text: 'A' }]);
+    const next = scopedScene('group', [{ id: 'a', text: 'A' }], { zIndex: 2 });
+
+    expectMatched(initial, next, [{ kind: 'update', identity: scopeIdentity('group') }]);
+    expectMismatch(initial, next, [{ kind: 'update', identity: scopedNodeIdentity('group', 'a') }]);
+  });
+
+  it.each([
+    {
+      name: 'nested duplicate id',
+      initial: scopedScene('group', [
+        { id: 'duplicate', text: 'A' },
+        { id: 'duplicate', text: 'B' },
+      ]),
+      next: scopedScene('group', [
+        { id: 'duplicate', text: 'A2' },
+        { id: 'duplicate', text: 'B' },
+      ]),
+    },
+    {
+      name: 'nested anonymous child',
+      initial: {
+        version: 1,
+        type: 'scene',
+        children: [{ type: 'scope', id: 'group', children: [{ type: 'node', position: [0, 0], text: 'A' }] }],
+      },
+      next: {
+        version: 1,
+        type: 'scene',
+        children: [{ type: 'scope', id: 'group', children: [{ type: 'node', position: [0, 0], text: 'B' }] }],
+      },
+    },
+  ] satisfies Array<{ name: string; initial: IRScene; next: IRScene }>)(
+    '$name 保持 conservative mismatch',
+    ({ initial, next }) => {
+      expectMismatch(initial, next, []);
+    },
+  );
+
+  it('localNamespace 不改变 stable identity path', () => {
+    const initial = scopedScene('group', [{ id: 'a', text: 'A' }], { localNamespace: true });
+    const next = scopedScene('group', [{ id: 'a', text: 'A2' }], { localNamespace: true });
+
+    expectMatched(initial, next, [{ kind: 'update', identity: scopedNodeIdentity('group', 'a') }]);
   });
 });

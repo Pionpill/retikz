@@ -60,9 +60,11 @@ const { output, snapshot, patch } = session.artifact(coreProgram).value;
 
 初始运行执行完整编译。update 无法安全局部证明时，Program 会 full fallback，并在 `patch.operations` 中发布唯一的 `replaceScene`；调用方仍只消费同一个 Snapshot / Patch envelope，不需要切换协议。
 
-Core 会把可选 ChangeSet 与 previous / next 完整 Snapshot 交叉校验。Scene 根与 unique-id root child 的每一项 value 变化都必须由唯一 `update` hint 恰好覆盖；root child 的 add/remove/move 必须完整解释 next identity 集合与顺序，`parent` / `before` 指向 next 的最终位置。
+Core 会把可选 ChangeSet 与 previous / next 完整 Snapshot 交叉校验。Scene 根和 stable entity 的每一项自身 value 变化都必须由唯一 `update` hint 恰好覆盖；add/remove/move 必须完整解释所属 parent 的 next identity 集合与顺序，`parent` / `before` 指向 next 的最终位置。
 
-结构 hint 按集合校验，ChangeSet 数组顺序不是 Patch 执行顺序，move 集合必须构成最小重排。anonymous / duplicate / Scope / Composite、漏报、多余 hint、错误 parent / before 或无法重建 next root order 都会被判定为不匹配。
+document root 的 identity path 是 `['root']`。每个拥有唯一非空 `id` 的普通 child 追加 `[type, id]`；有 `id` 的 Scope 继续作为 parent boundary 递归索引后代，因此 Scope 内 Node 可以形成 `['root', 'scope', scopeId, 'node', nodeId]`。`localNamespace` 只改变引用 frame，不改变这条 identity path；实体跨 Scope 移动时旧、新 path 不同，使用 remove + add，而不是保留旧 identity 的 move。Scope add/remove 不级联，每个 stable descendant 都必须由自己的 hint 单独覆盖。
+
+结构 hint 按集合校验，ChangeSet 数组顺序不是 Patch 执行顺序，每个 parent 内的 move 集合必须构成最小重排。anonymous、同 parent duplicate、Composite、漏报、多余 hint、错误 parent / before 或无法重建 next sibling order 都会被判定为不匹配。
 
 当前实现对匹配与不匹配的 update 都执行 full fallback；精确匹配只表示不发布 mismatch diagnostic，不代表已经进入局部增量编译。
 
@@ -119,16 +121,16 @@ Core Program 的 private read 当前保存下一次 update 使用的 immutable s
       endLine: 120,
     },
     {
-      label: 'Snapshot stable-root index',
+      label: 'Snapshot stable identity tree',
       path: 'packages/kernel/core/src/compile/incremental/diff.ts',
       startLine: 11,
-      endLine: 64,
+      endLine: 81,
     },
     {
       label: 'ChangeSet 结构交叉校验',
       path: 'packages/kernel/core/src/compile/incremental/diff.ts',
-      startLine: 132,
-      endLine: 271,
+      startLine: 171,
+      endLine: 322,
     },
     {
       label: 'Mismatch fallback diagnostic',
