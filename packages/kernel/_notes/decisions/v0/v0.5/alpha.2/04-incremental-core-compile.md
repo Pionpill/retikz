@@ -2,7 +2,7 @@
 
 - 状态：Proposed
 - 决策日期：2026-07-26
-- 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-03](./03-program-transaction-lifecycle.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
+- 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-03](./03-program-transaction-lifecycle.md) · [ADR-06 Box Layout contract](./06-box-layout-composite-contract.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
 ## 背景
 
@@ -117,6 +117,7 @@ Core owner 按以下规则失效：
 - Path 变化使自身命令、label、mark、arrow/resource 与其引用依赖失效；引用目标变化沿 dependency index 传播。
 - Scope transform/style/default 变化使其 subtree contribution 失效；只改变 zIndex 时允许保留几何并重新排序。
 - layout-aware Composite 的 probe/replay 只在一个 candidate compile 内复用；跨 revision 只缓存已提交 contribution，不缓存一次性 replay token。
+- ADR-06 的双轴 constraint、slot、显式 composite allocation 与 replay wrapper transform / clip 都属于布局 contribution；父 slot变化必须使消费该 constraint 的 nested layout-aware subtree失效。无法证明局部等价时回退到最近的稳定identity boundary，即唯一非空id Scope；不存在则root。anonymous Composite不建立跨revision boundary。
 - root automatic layout、资源 dedupe 或跨 boundary 引用无法局部证明时，扩大到 root full compile。
 
 Incremental update始终接收完整 next canonical Snapshot，并从前后 Snapshot自行建立稳定 identity index。ADR-03在 ChangeSet缺失时仍调用 update，Core走 Snapshot-only Diff；可选 ChangeSet只加速候选定位。stale base已由 Runtime拒绝；若 add/update/remove/move hint与实际前后 index不一致、漏掉变化或指向 anonymous/duplicate identity，Core丢弃 hint并执行 full fallback，不留下半候选。
