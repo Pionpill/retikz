@@ -38,7 +38,7 @@ const Demo: FC = () => (
       >
         <Text font={{ size: 14, weight: 'bold' }}>自然尺寸 probe</Text>
         <Text fill="gray" font={{ size: 12 }}>
-          allocation · visual · replay A
+          allocation · slot · visual · replay A
         </Text>
       </Node>
       <Node
@@ -70,7 +70,7 @@ const Demo: FC = () => (
       >
         <Text font={{ size: 14, weight: 'bold' }}>约束后 probe</Text>
         <Text fill="gray" font={{ size: 12 }}>
-          allocation · visual · replay B
+          allocation · slot · visual · replay B
         </Text>
       </Node>
       <Node
@@ -114,7 +114,7 @@ const Demo: FC = () => (
         'solve',
         {
           label: {
-            text: 'maxWidth',
+            text: '轴约束',
             position: 'midway',
             side: 'right',
             sloped: false,

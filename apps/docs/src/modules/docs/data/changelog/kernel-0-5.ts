@@ -98,8 +98,8 @@ export const kernelV05: Release = {
         {
           label: { zh: '布局感知 Composite 与显式产物', en: 'Layout-aware composites and explicit artifacts' },
           content: {
-            zh: '`defineComposite()` 支持与 `expand` 互斥的 `compile` 分支，可通过 `layoutChild()` 做 intrinsic / constrained 布局并单次 replay。`compileToScene()` 返回 `{ scene, artifacts }`；混合 registry 使用 `AnyCompositeDefinition`，Node layout 通过带 `occurrence` 的 opt-in typed artifact 提供。',
-            en: '`defineComposite()` supports a `compile` branch mutually exclusive with `expand`, enabling intrinsic or constrained `layoutChild()` work followed by one replay. `compileToScene()` returns `{ scene, artifacts }`; mixed registries use `AnyCompositeDefinition`, and Node layouts are exposed as opt-in typed artifacts with an `occurrence`.',
+            zh: '`defineComposite()` 的 `compile` 分支支持双轴 bounded / exact child constraint、独立 `slotSize`、显式 container allocation，以及带 transform / clip wrapper 的单次 replay。迁移时把 `constrained.maxWidth` 改为 `constrained.width` 轴，为自建 `LayoutChildResult` 补齐必填 `slotSize`，并把 replay 的 transform 数组移入 `wrapper.transforms`。`compileToScene()` 同次返回 `{ scene, artifacts }`。',
+            en: '`defineComposite()` compile branches support two-axis bounded or exact child constraints, independent `slotSize`, explicit container allocation, and one replay with a transform/clip wrapper. To migrate, replace `constrained.maxWidth` with a `constrained.width` axis, add the required `slotSize` to manually constructed `LayoutChildResult` values, and move a replay transform array into `wrapper.transforms`. `compileToScene()` returns `{ scene, artifacts }` from the same compile.',
           },
         },
         {
@@ -115,8 +115,8 @@ export const kernelV05: Release = {
           version: 'alpha.2',
           date: '2026-07-28',
           summary: {
-            zh: '交付 Core Runtime Program、canonical Scene topology、stable/nested Diff、ChangeSet 校验、full fallback 与单 root Node fill 局部增量闭环。',
-            en: 'Ships the Core Runtime Program, canonical Scene topology, stable and nested Diff, ChangeSet validation, full fallback, and a local incremental path for one root Node fill.',
+            zh: '交付 Core Runtime Program、单 root Node fill 局部增量闭环，以及布局感知 Composite 的双轴 slot、显式 allocation 与 replay wrapper。',
+            en: 'Ships the Core Runtime Program and one-root Node fill incremental path, plus two-axis slots, explicit allocation, and replay wrappers for layout-aware composites.',
           },
           items: [],
         },

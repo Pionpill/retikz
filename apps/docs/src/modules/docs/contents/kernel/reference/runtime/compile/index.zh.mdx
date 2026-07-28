@@ -78,7 +78,27 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 - `expand(node)` 只做无上下文结构展开；
 - `compile(node, context)` 可用 `context.constraint` 与 `layoutChild(child, constraint)` 在完整 compile 环境中测量真实子内容。
 
-`layoutChild` 支持 `{ kind: 'intrinsic' }` 与 `{ kind: 'constrained', maxWidth }`，返回 allocation bounds、包含描边 / marker / shadow / clip / transform 的保守 visual bounds，以及一次性的 compile-local replay token。父 composite 求解布局后，用 `context.replay(result, transforms?)` 创建 output child；最终 Scene 直接复用已布局结果，不再次展开、测量或布局。
+`layoutChild` 的 `ChildLayoutConstraint` 支持自然布局和可独立省略的双轴约束：
+
+| 分支          | 字段                      | 语义                                                         |
+| ------------- | ------------------------- | ------------------------------------------------------------ |
+| `intrinsic`   | —                         | width / height 都 indefinite，slot 等于真实 allocation size  |
+| `constrained` | `width?` / `height?`      | 至少提供一条轴；省略轴保持 indefinite                        |
+| `bounded` 轴  | `min?`（默认 `0`）/ `max` | 有限非负区间；slot size 是真实 allocation size 的 clamp 结果 |
+| `exact` 轴    | `size`                    | 有限非负固定 slot；不缩放 child，也不改 child local origin   |
+
+公开合同由 `ChildLayoutAxisConstraint`、`ChildLayoutSize`、`CompositeReplayWrapper` 与 `LayoutCompositeCompileResult` 组成；`layoutChild()` 返回 `LayoutChildResult`：
+
+| 字段               | 语义                                                             |
+| ------------------ | ---------------------------------------------------------------- |
+| `allocationBounds` | 约束后 child 的真实局部占用                                      |
+| `slotSize`         | 解析双轴约束后的 `width` / `height`，不包含 x / y 或对齐语义     |
+| `visualBounds`     | 包含描边 / marker / shadow / clip / transform 的保守静态视觉包络 |
+| `replay`           | 一次性的 compile-local opaque token                              |
+
+layout-aware `compile` 可以在结果级返回 `allocationBounds`，把它作为 composite 对父级声明的 container allocation；后代 overflow 不会反向扩大它。省略时，Core 合并最终 children 的 allocation contribution。
+
+父 composite 求解布局后，用 `context.replay(result, wrapper?)` 创建 output child。`wrapper` 只接受 `transforms?` 与 `clip?`：clip 先在 replay local space 生效，再按 transforms 投影；它只收紧最终提交后 Scene 的 compile visual bounds，不改变 allocation，也不回写已有 `LayoutChildResult.visualBounds`。最终 Scene 直接复用已布局结果，不再次展开、测量或布局。
 
 `context.scope(props, children)` 可以递归包装普通 `IRChild`、replay child 与其它 runtime Scope child。它只开放 replay 后仍有确定语义的八个结构字段：
 
@@ -93,7 +113,7 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 | `meta`           | 透传 JSON metadata                      |
 | `animations`     | 透传 Group 动画轨道                     |
 
-`context.replay()` / `context.scope()` 返回 runtime-only opaque handle，不进入 IR、Scene 或 renderer 合同。handle 与 layout result 都不能跨 compile、跨 composite callback、序列化或伪造；同一个 replay 只能提交一次。Scope props 会在 builder 调用时 detached、校验并冻结。样式默认、`resetStyle`、引用式 transform 与 `placement` 不被接受，因为 replayed content 已经完成样式解析与布局；再次施加这些语义会造成第二套编译结果。
+`context.replay()` / `context.scope()` 返回 runtime-only opaque handle，不进入 IR、Scene 或 renderer 合同。handle 与 layout result 都不能跨 compile、跨 composite callback、序列化或伪造；同一个 replay 只能提交一次。Replay wrapper 与 Scope props 都会在 builder 调用时 detached、校验并冻结。样式默认、`resetStyle`、引用式 transform 与 `placement` 不被接受，因为 replayed content 已经完成样式解析与布局；再次施加这些语义会造成第二套编译结果。
 
 最终 occurrence 继续使用既有 `output` / `scopeChild` / `replay` segment；嵌套 wrapper 不新增 locator kind。resource、namespace、warning、bounds 与 artifact 仍在选中 replay 的一次提交中原子发布。
 
@@ -195,14 +215,26 @@ Node label 会把一次测量阶段得到的 `width` / `height` / `ascent` / `de
     {
       label: 'compile-local replay 与 Scope builder',
       path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
-      startLine: 1,
-      endLine: 196,
+      startLine: 115,
+      endLine: 224,
     },
     {
-      label: 'layout-aware composite 的测量、artifact 与递归输出',
+      label: 'replay 的逐 root 原子提交',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 784,
-      endLine: 1116,
+      startLine: 1010,
+      endLine: 1163,
+    },
+    {
+      label: 'runtime Scope 的递归输出',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1165,
+      endLine: 1242,
+    },
+    {
+      label: '子布局结果、artifact 与 container allocation',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1303,
+      endLine: 1456,
     },
     {
       label: '延迟解析 path 并回填原始输出位置',

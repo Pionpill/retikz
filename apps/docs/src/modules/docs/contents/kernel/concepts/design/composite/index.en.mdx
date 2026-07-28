@@ -50,44 +50,51 @@ The compiler looks up `${namespace}.${type}`, validates the node, and calls the 
 
 `CompositeDefinition.expand()` has no text measurement, providers, reference environment, or parent constraint, so it cannot express a parent layout that feeds back from real child content. `compile(node, context)` provides the general loop needed by those Tier 2 components:
 
+Each `layoutChild` call separates child layout into four independent results:
+
+| Result             | Meaning                                                                 |
+| ------------------ | ----------------------------------------------------------------------- |
+| `allocationBounds` | The child's real constrained local occupancy, never forged into a slot  |
+| `slotSize`         | Parent-assigned `width` / `height`, with no x / y position              |
+| `visualBounds`     | Static envelope including stroke, markers, shadow, clip, and transforms |
+| `replay`           | Opaque token for one atomic commit                                      |
+
 <ComponentPreview files="layout-aware-compile" size="xl" hideCode />
 
-Both probes in the figure return allocation bounds, visual bounds, and a replay token without publishing their results. Replay A from the intrinsic probe only informs the solve; after the parent composite chooses its constraint, only replay B follows the final edge into a single commit and joins the domain artifact in the same `CompileResult`.
+Both probes in the figure return allocation bounds, slot size, visual bounds, and a replay token without publishing their results. Replay A from the intrinsic probe only informs the solve; after the parent composite chooses its two-axis constraint, only replay B follows the final edge into a single commit and joins the domain artifact in the same `CompileResult`.
 
 1. call `layoutChild(child, { kind:'intrinsic' })` to measure natural content;
-2. solve columns, rows, or another parent constraint from allocation bounds;
-3. call `layoutChild(child, { kind:'constrained', maxWidth })` to reflow text at its final width;
-4. place the chosen result with `context.replay(result, transforms?)`; when structural wrapping is needed, compose it recursively with `context.scope(props, children)`.
+2. solve columns, rows, and a target slot from allocation bounds;
+3. set independent `bounded` or `exact` axes through `constrained.width` / `constrained.height`;
+4. place and clip the chosen result with `context.replay(result, { transforms, clip })`; use `context.scope(props, children)` when identity or recursive structure is needed.
 
-Each `layoutChild` call returns allocation bounds, conservative visual bounds, and an opaque replay token. Allocation bounds describe the space reserved by the parent; visual bounds describe settled drawing, including transforms, clipping, stroke, markers, and shadow. `context.replay()` turns the selected result into an output child. A replay is valid once in the compile and composite callback that created it. Final emission commits the saved primitives, resources, references, warnings, and artifacts without a third expansion or layout.
+An omitted axis is indefinite. A `bounded` axis clamps real occupancy to finite `min` / `max` when producing the slot; an `exact` axis sets the slot size directly. Neither scales child geometry, so the parent solver still owns alignment and overflow policy.
+
+`compile` may also return an explicit `allocationBounds` as the composite's own container box. This gives an empty container a size and lets descendants overflow without expanding their parent. When omitted, Core unions the final children's allocation instead. `context.replay()` turns the selected result into an output child. A replay is valid once in the compile and composite callback that created it. Final emission commits the saved primitives, resources, references, warnings, and artifacts without a third expansion or layout.
 
 ### Compile-local wrapper trees
 
-After layout is solved, a parent composite may still need local identity, clipping, metadata, or numeric transforms around a replay. `context.scope()` builds that recursive runtime Scope tree. Its children can mix ordinary `IRChild` values, `context.replay()` results, and nested `context.scope()` results:
+After layout is solved, a parent composite may still need to place, clip, or identify a replay. Put numeric transforms and clipping for one replay directly on its replay wrapper. Use `context.scope()` when identity, a local namespace, metadata, zIndex, or recursive structure is required. Scope children can mix ordinary `IRChild` values, `context.replay()` results, and nested `context.scope()` results:
 
 ```ts
 compile: (node, context) => {
   const constrained = context.layoutChild(node.child, {
     kind: 'constrained',
-    maxWidth: node.width,
+    width: { kind: 'exact', size: node.width },
+    height: { kind: 'bounded', max: node.height },
   });
 
-  const placed = context.scope(
-    {
-      transforms: [
-        { kind: 'scale', x: 0.8 },
-        { kind: 'translate', x: 12, y: 8 },
-      ],
-    },
-    [context.replay(constrained)],
-  );
+  const placed = context.replay(constrained, {
+    transforms: [{ kind: 'translate', x: 12, y: 8 }],
+    clip: { kind: 'rect', x: 0, y: 0, width: node.width, height: node.height },
+  });
 
   return {
+    allocationBounds: { x: 0, y: 0, width: node.width, height: node.height },
     children: [
       context.scope(
         {
           id: 'cell',
-          clip: { kind: 'rect', x: 0, y: 0, width: 80, height: 32 },
           meta: { role: 'cell' },
         },
         [placed],
@@ -97,7 +104,7 @@ compile: (node, context) => {
 };
 ```
 
-Builders return opaque handles that cannot be inspected, forged, or serialized; they exist only in the current `compileToScene()` session. Cross-compile or cross-callback use, duplicate replay, and forged handles all fail loudly. Core still emits the existing Tier 1 Scene, resources, and occurrence locators, so wrappers add no IR, Scene, or renderer contract.
+A replay wrapper's clip applies in child-local coordinates before `transforms` project it. Clipping leaves allocation unchanged and only tightens the final committed Scene's compile visual bounds; it does not rewrite an earlier `LayoutChildResult.visualBounds`. Builders return opaque handles that cannot be inspected, forged, or serialized; they exist only in the current `compileToScene()` session. Cross-compile or cross-callback use, duplicate replay, and forged handles all fail loudly. Core still emits the existing Tier 1 Scene, resources, and occurrence locators, so wrappers add no IR, Scene, or renderer contract.
 
 This is not a Table-specific interface. Any Tier 2 composite that needs “measure child content → solve parent layout → constrain child content → place the final result” can reuse it.
 
@@ -138,14 +145,26 @@ If you are implementing a domain adapter, injecting `composites` / `embeddables`
     {
       label: 'Build compile-local replay and Scope children',
       path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
-      startLine: 1,
-      endLine: 196,
+      startLine: 115,
+      endLine: 224,
     },
     {
-      label: 'Measure and recursively emit a layout-aware composite',
+      label: 'Commit replay roots atomically',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 784,
-      endLine: 1116,
+      startLine: 1010,
+      endLine: 1163,
+    },
+    {
+      label: 'Emit recursive runtime Scopes',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1165,
+      endLine: 1242,
+    },
+    {
+      label: 'Produce child layout results and container allocation',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1303,
+      endLine: 1456,
     },
     {
       label: 'Inject composites and providers into compile context',

@@ -1,6 +1,6 @@
 # v0.5.0-alpha.2 增量性能与 Box Layout 基建
 
-- 状态：执行中（ADR-01～04 Accepted；ADR-05～06 Proposed）
+- 状态：执行中（ADR-01～04、ADR-06 Accepted；ADR-05 Proposed）
 - 目标版本：`0.5.0-alpha.2`
 - 关联：[v0.5 roadmap](../roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
@@ -19,14 +19,14 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | [ADR-03](./03-program-transaction-lifecycle.md)      | Accepted | Program / transaction lifecycle  | 冻结依赖图、revision、candidate、fallback、observer 与同步原子提交                         |
 | [ADR-04](./04-incremental-core-compile.md)           | Accepted | Core 增量编译                    | 冻结完整 Program、stable Diff、fallback 与首个安全局部更新闭环                             |
 | [ADR-05](./05-scene-patch-retained-renderer.md)      | Proposed | Scene Patch 与 retained renderer | 冻结 identity topology、commit participant 与 SVG/Canvas retained lifecycle                |
-| [ADR-06](./06-box-layout-composite-contract.md)      | Proposed | Box Layout Composite contract    | 冻结双轴 constraint、allocation / slot-size feedback、nested propagation 与 replay wrapper |
+| [ADR-06](./06-box-layout-composite-contract.md)      | Accepted | Box Layout Composite contract    | 冻结双轴 constraint、allocation / slot-size feedback、nested propagation 与 replay wrapper |
 
 ## 当前进度
 
 - ADR-01～03 已完成实现、自动化验证、Runtime 中英文文档与 changelog，并于 2026-07-27 获人工接受。
 - ADR-04 已完成 canonical Scene topology、Core Program full oracle、ChangeSet/Snapshot 校验、stable/nested Diff、full fallback 与单 root Node fill 局部增量闭环，并于 2026-07-28 按当前安全子集获人工接受；通用 contribution 与其它图元局部失效不属于本次 Accepted 事实。
 - ADR-05 已建立 Scene Patch 数据契约；retained SVG/Canvas commit、adapter session 接线与收益验证尚未完成。
-- ADR-06 已建立 replay runtime output tree 与 Scope wrapper 基础；双轴 constraint、`slotSize`、显式 composite allocation 和完整 wrapper clip 合同尚未完成。
+- ADR-06 已完成双轴 constraint、`slotSize`、显式 composite allocation、完整 replay wrapper、Table consumer 迁移、对抗测试与双语文档，并于 2026-07-28 获人工接受。
 
 ## 执行批次
 

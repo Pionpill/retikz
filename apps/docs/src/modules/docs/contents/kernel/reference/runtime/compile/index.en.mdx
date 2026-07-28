@@ -78,7 +78,27 @@ The two `CompositeDefinition` branches are mutually exclusive:
 - `expand(node)` performs context-free structural expansion;
 - `compile(node, context)` can use `context.constraint` and `layoutChild(child, constraint)` to lay out real child content in the complete compile environment.
 
-`layoutChild` accepts `{ kind: 'intrinsic' }` or `{ kind: 'constrained', maxWidth }`. It returns allocation bounds, conservative visual bounds that include stroke / markers / shadow / clipping / transforms, and a one-use compile-local replay token. After solving its parent layout, the composite creates an output child with `context.replay(result, transforms?)`. Final Scene emission reuses the saved layout without expanding, measuring, or laying it out again.
+`layoutChild` accepts a `ChildLayoutConstraint` with natural layout or independently optional axes:
+
+| Branch         | Fields                       | Meaning                                                                     |
+| -------------- | ---------------------------- | --------------------------------------------------------------------------- |
+| `intrinsic`    | —                            | Both axes are indefinite; the slot equals real allocation size              |
+| `constrained`  | `width?` / `height?`         | At least one axis is required; an omitted axis stays indefinite             |
+| `bounded` axis | `min?` (default `0`) / `max` | Finite non-negative range; slot size is clamped real allocation size        |
+| `exact` axis   | `size`                       | Finite non-negative slot; does not scale the child or move its local origin |
+
+The public contract is expressed by `ChildLayoutAxisConstraint`, `ChildLayoutSize`, `CompositeReplayWrapper`, and `LayoutCompositeCompileResult`; `layoutChild()` returns a `LayoutChildResult`:
+
+| Field              | Meaning                                                                              |
+| ------------------ | ------------------------------------------------------------------------------------ |
+| `allocationBounds` | The child's real constrained local occupancy                                         |
+| `slotSize`         | Resolved axis `width` / `height`, with no x / y position or alignment semantics      |
+| `visualBounds`     | Conservative static envelope including stroke / markers / shadow / clip / transforms |
+| `replay`           | One-use compile-local opaque token                                                   |
+
+A layout-aware `compile` result may declare `allocationBounds` as the composite's container allocation to its parent, so descendant overflow does not expand it. When omitted, Core unions the final children's allocation contributions.
+
+After solving its parent layout, the composite creates an output child with `context.replay(result, wrapper?)`. The wrapper only accepts `transforms?` and `clip?`: clipping happens in replay-local space before transforms project it, tightens the final committed Scene's compile visual bounds, and leaves allocation unchanged without rewriting an existing `LayoutChildResult.visualBounds`. Final Scene emission reuses the saved layout without expanding, measuring, or laying it out again.
 
 `context.scope(props, children)` recursively wraps ordinary `IRChild` values, replay children, and other runtime Scope children. It exposes exactly the eight structural fields whose semantics remain deterministic after replay:
 
@@ -93,7 +113,7 @@ The two `CompositeDefinition` branches are mutually exclusive:
 | `meta`           | Pass JSON metadata to the Scene group           |
 | `animations`     | Pass Group animation tracks                     |
 
-`context.replay()` and `context.scope()` return runtime-only opaque handles that never enter IR, Scene, or renderer contracts. Handles and layout results cannot cross compiles or composite callbacks, be serialized, or be forged; one replay can be committed only once. Scope props are detached, validated, and frozen when the builder is called. Style defaults, `resetStyle`, reference-based transforms, and `placement` are rejected because replayed content has already consumed styles and layout; applying them afterward would create a second compile meaning.
+`context.replay()` and `context.scope()` return runtime-only opaque handles that never enter IR, Scene, or renderer contracts. Handles and layout results cannot cross compiles or composite callbacks, be serialized, or be forged; one replay can be committed only once. Replay wrappers and Scope props are detached, validated, and frozen when their builders are called. Style defaults, `resetStyle`, reference-based transforms, and `placement` are rejected because replayed content has already consumed styles and layout; applying them afterward would create a second compile meaning.
 
 Final occurrence locators keep the existing `output` / `scopeChild` / `replay` segments, with no new locator kind for nested wrappers. Resources, namespaces, warnings, bounds, and artifacts are still published atomically by the selected replay's single commit.
 
@@ -195,14 +215,26 @@ A custom renderer must consume `resources` and `animations`, otherwise gradients
     {
       label: 'Build compile-local replay and Scope children',
       path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
-      startLine: 1,
-      endLine: 196,
+      startLine: 115,
+      endLine: 224,
     },
     {
-      label: 'Measure, publish artifacts, and recursively emit a layout-aware composite',
+      label: 'Commit replay roots atomically',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 784,
-      endLine: 1116,
+      startLine: 1010,
+      endLine: 1163,
+    },
+    {
+      label: 'Emit recursive runtime Scopes',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1165,
+      endLine: 1242,
+    },
+    {
+      label: 'Produce child layout results, artifacts, and container allocation',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1303,
+      endLine: 1456,
     },
     {
       label: 'Resolve deferred paths and fill their original output slots',
