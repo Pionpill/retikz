@@ -1,5 +1,6 @@
 import type { RuntimeDiagnostic } from '../diagnostic';
 import type { RuntimeOwnerDefinition, RuntimeRevision } from '../owner';
+import type { RuntimeCommitParticipant, RuntimeCommitParticipantToken } from '../participant';
 import type { RuntimeProgramDefinition } from '../program';
 import type { RuntimeOwnerRegistry, RuntimeProgramRegistry } from '../registry';
 import type { PerformanceTraceSink } from '../trace';
@@ -15,6 +16,8 @@ export type RuntimeSessionOptions = Readonly<{
   initialSnapshots: ReadonlyArray<RuntimeOwnerInput>;
   /** 可选性能 trace sink */
   trace?: PerformanceTraceSink;
+  /** 可选的领域中立 commit participants */
+  participants?: ReadonlyArray<RuntimeCommitParticipantToken>;
 }>;
 
 /** 原子发布 revision、owner Snapshot 与 Program artifact 的同步 session */
@@ -31,6 +34,8 @@ export type RuntimeSession = Readonly<{
   artifact: <TArtifactInput, TArtifact, TProgramRead, TPublicRead>(
     program: RuntimeProgramDefinition<TArtifactInput, TArtifact, TProgramRead, TPublicRead>,
   ) => RuntimeSnapshot<TPublicRead>;
+  /** 读取 participant 在当前 revision 的 committed public read */
+  participant: <TRead>(participant: RuntimeCommitParticipant<TRead>) => TRead;
   /** 返回并清空累计 diagnostics */
   diagnostics: () => ReadonlyArray<RuntimeDiagnostic>;
   /** 释放所有 committed owner value 与 Program artifact */

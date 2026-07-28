@@ -7,6 +7,8 @@ import type {
   RuntimeTraceReporter,
 } from './types';
 
+import { notifyRuntimeTraceReporterDiagnostic, recordRuntimeTraceReporterDiagnosticDrain } from './internal';
+
 const performanceTracePhases: ReadonlySet<unknown> = new Set<PerformanceTracePhase>(['compile', 'commit', 'update']);
 const performanceTraceUnits: ReadonlySet<unknown> = new Set<PerformanceTraceRecord['unit']>([
   'ir-child',
@@ -21,7 +23,6 @@ const performanceTraceOutcomes: ReadonlySet<unknown> = new Set<PerformanceTraceR
   'fallback',
   'commit',
 ]);
-
 const isValidCount = (value: number): boolean => Number.isSafeInteger(value) && value >= 0;
 
 const isPerformanceTracePhase = (value: unknown): value is PerformanceTracePhase => performanceTracePhases.has(value);
@@ -111,39 +112,49 @@ export const createRuntimeTraceReporter = <const TOwner extends string>(
   const definitions = normalizePhaseDefinitions(input.phases);
   let diagnostics: Array<PerformanceTraceDiagnostic> = [];
   let reporting = false;
+  const reporterRef: { current?: RuntimeTraceReporter<TOwner> } = {};
 
   const appendDiagnostic = (code: PerformanceTraceDiagnostic['code'], phase: PerformanceTracePhase): void => {
-    diagnostics.push(Object.freeze({ code, owner, phase }));
+    const diagnostic = Object.freeze({ code, owner, phase });
+    diagnostics.push(diagnostic);
+    if (reporterRef.current !== undefined) {
+      notifyRuntimeTraceReporterDiagnostic(reporterRef.current, diagnostic);
+    }
   };
 
-  return Object.freeze({
+  const report: RuntimeTraceReporter<TOwner>['report'] = record => {
+    const diagnosticPhase = resolveDiagnosticPhase(record, definitions);
+    if (reporting) {
+      appendDiagnostic('reentrant-report', diagnosticPhase);
+      return;
+    }
+
+    if (!isValidRecord(record, definitions)) {
+      appendDiagnostic('invalid-record', diagnosticPhase);
+      return;
+    }
+
+    const output = Object.freeze({ ...record, owner });
+    reporting = true;
+    try {
+      sink(output);
+    } catch {
+      appendDiagnostic('sink-threw', diagnosticPhase);
+    } finally {
+      reporting = false;
+    }
+  };
+  const drainDiagnostics = (): ReadonlyArray<PerformanceTraceDiagnostic> => {
+    recordRuntimeTraceReporterDiagnosticDrain(report);
+    const output = Object.freeze([...diagnostics]);
+    diagnostics = [];
+    return output;
+  };
+  const reporter: RuntimeTraceReporter<TOwner> = Object.freeze({
     owner,
-    report: (record): void => {
-      const diagnosticPhase = resolveDiagnosticPhase(record, definitions);
-      if (reporting) {
-        appendDiagnostic('reentrant-report', diagnosticPhase);
-        return;
-      }
-
-      if (!isValidRecord(record, definitions)) {
-        appendDiagnostic('invalid-record', diagnosticPhase);
-        return;
-      }
-
-      const output = Object.freeze({ ...record, owner });
-      reporting = true;
-      try {
-        sink(output);
-      } catch {
-        appendDiagnostic('sink-threw', diagnosticPhase);
-      } finally {
-        reporting = false;
-      }
-    },
-    diagnostics: (): ReadonlyArray<PerformanceTraceDiagnostic> => {
-      const output = Object.freeze([...diagnostics]);
-      diagnostics = [];
-      return output;
-    },
+    report,
+    diagnostics: drainDiagnostics,
   });
+  reporterRef.current = reporter;
+  return reporter;
 };

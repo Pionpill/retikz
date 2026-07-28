@@ -18,6 +18,7 @@ export type {
   RuntimeRevision,
 } from './owner';
 export { defineRuntimeOwner } from './owner';
+export * from './participant';
 export type {
   RuntimeCandidateLookup,
   RuntimeCandidateView,
