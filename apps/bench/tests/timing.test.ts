@@ -54,16 +54,41 @@ describe('timing baseline gate', () => {
 
   it('fingerprint 覆盖采样参数、Playwright、Node 与实际 browser 环境', () => {
     const expected = { playwright: '1.62.0', warmupRuns: 5, sampleRuns: 30 };
-    const browser = { browserVersion: '151.0.7922.34', viewport: { width: 1_440, height: 900 } };
-    const fingerprint = createTimingEnvironmentFingerprint(expected, 'v24.18.0', browser);
+    const browser = {
+      browserVersion: '151.0.7922.34',
+      viewport: { width: 1_440, height: 900 },
+      hardwareConcurrency: 16,
+    };
+    const runner = {
+      runnerId: 'workstation-a',
+      platform: 'win32',
+      architecture: 'x64',
+      cpuModels: ['Example CPU'],
+      logicalCpuCount: 16,
+      totalMemoryBytes: 64 * 1_024 ** 3,
+    };
+    const fingerprint = createTimingEnvironmentFingerprint(expected, 'v24.18.0', browser, runner);
 
-    expect(createTimingEnvironmentFingerprint({ ...expected, sampleRuns: 1 }, 'v24.18.0', browser)).not.toBe(
+    expect(createTimingEnvironmentFingerprint({ ...expected, sampleRuns: 1 }, 'v24.18.0', browser, runner)).not.toBe(
       fingerprint,
     );
-    expect(createTimingEnvironmentFingerprint(expected, 'v24.19.0', browser)).not.toBe(fingerprint);
-    expect(createTimingEnvironmentFingerprint(expected, 'v24.18.0', { ...browser, browserVersion: 'other' })).not.toBe(
-      fingerprint,
-    );
+    expect(createTimingEnvironmentFingerprint(expected, 'v24.19.0', browser, runner)).not.toBe(fingerprint);
+    expect(
+      createTimingEnvironmentFingerprint(expected, 'v24.18.0', { ...browser, browserVersion: 'other' }, runner),
+    ).not.toBe(fingerprint);
+    for (const changedRunner of [
+      { ...runner, runnerId: 'workstation-b' },
+      { ...runner, platform: 'linux' },
+      { ...runner, architecture: 'arm64' },
+      { ...runner, cpuModels: ['Other CPU'] },
+      { ...runner, logicalCpuCount: 8 },
+      { ...runner, totalMemoryBytes: 32 * 1_024 ** 3 },
+    ]) {
+      expect(createTimingEnvironmentFingerprint(expected, 'v24.18.0', browser, changedRunner)).not.toBe(fingerprint);
+    }
+    expect(
+      createTimingEnvironmentFingerprint(expected, 'v24.18.0', { ...browser, hardwareConcurrency: 8 }, runner),
+    ).not.toBe(fingerprint);
   });
 
   it('candidate与compare拒绝重复tracked场景', () => {

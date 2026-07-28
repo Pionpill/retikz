@@ -22,7 +22,7 @@
   },
   {
     "id": "canvas-group-update-5000",
-    "oracle": "43724e68",
+    "oracle": "301e65ee",
     "visited": 1,
     "reused": 0,
     "changed": 1
@@ -36,7 +36,7 @@
   },
   {
     "id": "canvas-retained-full-5000",
-    "oracle": "c2b7fa54",
+    "oracle": "f454e9d0",
     "visited": 5000,
     "reused": 0,
     "changed": 5000,
@@ -44,7 +44,7 @@
   },
   {
     "id": "canvas-single-entity-update-5000",
-    "oracle": "b53e884c",
+    "oracle": "308164dd",
     "visited": 1,
     "reused": 0,
     "changed": 1

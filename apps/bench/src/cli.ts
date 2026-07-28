@@ -10,6 +10,7 @@ import { runBrowserBenchmark } from './browser-runner';
 import { compareDeterministicResults, createBaselineCandidate } from './budget';
 import { runCoreWallClockReport } from './report';
 import { runCoreDeterministicBenchmarks } from './run';
+import { readTimingRunnerEnvironment } from './runner-environment';
 import {
   assertTimingGatePassed,
   createTimingBaselineCandidate,
@@ -29,6 +30,7 @@ const environment = JSON.parse(readFileSync(resolve(appRoot, 'bench-environment.
 const baseline = JSON.parse(
   readFileSync(resolve(appRoot, 'deterministic-baseline.json'), 'utf8'),
 ) as ReadonlyArray<DeterministicBenchmarkBudget>;
+const runnerEnvironment = readTimingRunnerEnvironment();
 
 /** 校验 Node 与采样次数是否符合冻结的 benchmark 环境 */
 const assertEnvironment = (): void => {
@@ -86,7 +88,12 @@ const runWallClockAttempt = async (): Promise<WallClockAttempt> => {
     includeWallClock: true,
   });
   return Object.freeze({
-    fingerprint: createTimingEnvironmentFingerprint(environment, process.version, browser.environment),
+    fingerprint: createTimingEnvironmentFingerprint(
+      environment,
+      process.version,
+      browser.environment,
+      runnerEnvironment,
+    ),
     environment: browser.environment,
     scenarios: Object.freeze([
       ...runCoreWallClockReport(environment.warmupRuns, environment.sampleRuns),
@@ -134,6 +141,7 @@ const main = async (): Promise<void> => {
       environment: {
         expected: environment,
         actualNode: process.version,
+        runner: runnerEnvironment,
         browser: first.environment,
         fingerprint: first.fingerprint,
       },
@@ -161,7 +169,13 @@ const main = async (): Promise<void> => {
         expected: environment,
         actualNode: process.version,
         browser: browserEnvironment,
-        fingerprint: createTimingEnvironmentFingerprint(environment, process.version, browserEnvironment),
+        runner: runnerEnvironment,
+        fingerprint: createTimingEnvironmentFingerprint(
+          environment,
+          process.version,
+          browserEnvironment,
+          runnerEnvironment,
+        ),
       },
       budgets: createBaselineCandidate(results),
     });

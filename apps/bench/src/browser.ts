@@ -731,6 +731,7 @@ const readEnvironment = (browserVersion: string): BrowserBenchmarkResult['enviro
     browserVersion,
     userAgent: navigator.userAgent,
     platform: navigator.platform,
+    hardwareConcurrency: navigator.hardwareConcurrency,
     language: navigator.language,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     viewport: Object.freeze({ width: window.innerWidth, height: window.innerHeight }),

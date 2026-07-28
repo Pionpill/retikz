@@ -119,7 +119,7 @@ Resource以canonical descriptor与candidate/committed consumer set staging，新
 
 确定性门禁固定5000实体的Core full/single update、SVG/Canvas initial/entity/group/fallback与dispose live handles。`pnpm bench:check`同时验证Scene/DOM/pixel oracle、Patch/trace基数、未变SVG identity、Canvas index与`liveHandles=0`，wall-clock不能替代确定性证据。
 
-Timing只在完整environment fingerprint一致时比较。Fingerprint覆盖expected Node 24.x、lockfile Chromium、1440×900、DPR 1、动画关闭、Arial、en-US/UTC、5次warm-up/30 samples，以及实际Node/browser。Tracked baseline只含12个5000规模场景；median/p95不得超过同场景baseline 1.20×，max超过2.00×会触发一次同fingerprint完整重跑。
+Timing只在完整environment fingerprint一致时比较。Fingerprint覆盖expected Node 24.x、lockfile Chromium、1440×900、DPR 1、动画关闭、Arial、en-US/UTC、5次warm-up/30 samples，以及实际Node/browser和runner机器identity。Runner identity包含显式id或hostname、platform/architecture、CPU model集合、逻辑处理器数与总内存；browser另记录`hardwareConcurrency`，避免不同机器共享绝对wall-clock baseline；必需硬件字段不可用时fail-loud。Tracked baseline只含12个5000规模场景；median/p95不得超过同场景baseline 1.20×，max超过2.00×会触发一次同fingerprint完整重跑。
 
 相对p95上界冻结为：Core entity update/initial 0.50×；SVG entity/group 0.25×/0.50×；Canvas entity/group 1.50×/1.25×；SVG/Canvas replace fallback与同一`none` factory initial分别2.00×/2.50×。Fingerprint不匹配、重跑fingerprint漂移或连续unstable都不能形成PASS；baseline只能由显式命令生成候选并经人工审查。
 
@@ -130,7 +130,7 @@ Timing只在完整environment fingerprint一致时比较。Fingerprint覆盖expe
 - Render完成validator、capability fallback、lineage、内置SVG/Canvas retained transaction、resource/hydration/animation与Canvas dirty-region路径
 - React完成host-shell、SSR adopt、StrictMode、commit后callback/ref与诊断出口
 - Vanilla完成retained/static判别、atomic update、composite callback transaction、runtimeMeta/artifact与hydration contribution
-- Bench完成5000 deterministic fixture、真实dispose probe、环境fingerprint、tracked timing baseline与机器门禁
+- Bench完成5000 deterministic fixture、真实dispose probe、runner/hardware环境fingerprint、tracked timing baseline与机器门禁
 - Core、Runtime、Render、React、Vanilla双语文档已同步
 
 实现分为 `7f735ff72`、`71dd7ce21`、`e0814e1a6`、`db99688a7`、`46854afe9`、`7db98044a` 六个主要提交，并由 `3c5a252a6` 补强失败契约验收证据。
@@ -139,10 +139,10 @@ Timing只在完整environment fingerprint一致时比较。Fingerprint覆盖expe
 
 - Runtime：169 tests
 - Core：2825 tests
-- Render：52 files / 474 tests
+- Render：52 files / 482 tests
 - React：47 files / 429 tests
-- Vanilla：13 files / 103 tests
-- Bench：8 files / 31 tests；`bench:check` 18项预算PASS；fingerprint `9b28319e` timing compare PASS
+- Vanilla：14 files / 108 tests
+- Bench：9 files / 44 tests；`bench:check` 18项预算PASS；runner fingerprint `e63f16b6` timing compare PASS
 - Docs：kernel integrity 83 pages、ESLint、TypeScript与production build PASS；zh/en真实页面完成浏览器视觉复核
 - 独立Bug Hunter、docs review与逐commit staged review的BLOCKING/WARNING均已清空
 

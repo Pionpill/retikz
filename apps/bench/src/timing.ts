@@ -14,6 +14,22 @@ export type TimingBaseline = Readonly<{
   scenarios: ReadonlyArray<TimingBaselineScenario>;
 }>;
 
+/** 与绝对 wall-clock baseline 绑定的机器与 runner identity */
+export type TimingRunnerEnvironment = Readonly<{
+  /** 显式 runner id；未配置时使用 hostname */
+  runnerId: string;
+  /** Node 报告的操作系统平台 */
+  platform: string;
+  /** Node 报告的处理器架构 */
+  architecture: string;
+  /** 当前机器全部唯一 CPU model */
+  cpuModels: ReadonlyArray<string>;
+  /** Node 可见的逻辑处理器数量 */
+  logicalCpuCount: number;
+  /** Node 可见的物理内存总字节数 */
+  totalMemoryBytes: number;
+}>;
+
 /** 一次 timing gate 对比结果 */
 export type TimingGateComparison = Readonly<{
   status: 'passed' | 'failed' | 'unstable' | 'skipped';
@@ -68,8 +84,12 @@ const duplicateScenarioIds = (ids: ReadonlyArray<string>): ReadonlyArray<string>
 };
 
 /** 用完整 expected/actual 环境生成 timing baseline fingerprint */
-export const createTimingEnvironmentFingerprint = (expected: unknown, actualNode: string, browser: unknown): string =>
-  stableHash({ expected, actualNode, browser });
+export const createTimingEnvironmentFingerprint = (
+  expected: unknown,
+  actualNode: string,
+  browser: unknown,
+  runner: TimingRunnerEnvironment,
+): string => stableHash({ expected, actualNode, browser, runner });
 
 /** 生成只供人工审查的 timing baseline 候选 */
 export const createTimingBaselineCandidate = (
