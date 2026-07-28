@@ -1,6 +1,6 @@
 # kernel 内部文档
 
-这里放 kernel 发布组的内部协作文档。kernel 发布组包含 `@retikz/math`、`@retikz/core`、`@retikz/render`、`@retikz/react`、`@retikz/vanilla`、`@retikz/tex`，版本按发布组 lockstep。
+这里放 kernel 发布组的内部协作文档。kernel 发布组包含 `@retikz/math`、`@retikz/runtime`、`@retikz/core`、`@retikz/render`、`@retikz/react`、`@retikz/vanilla`、`@retikz/tex`，版本按发布组 lockstep。
 
 ## 目录
 

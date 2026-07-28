@@ -1,7 +1,8 @@
 # ADR-01：性能观测与 Baseline
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-07-26
+- 接受日期：2026-07-27
 - 关联：[alpha.2 roadmap](./roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [能力完备性总纲](../../../../../../../notes/architecture/capability-design.md)
 
 ## 背景
@@ -92,22 +93,19 @@ CI 硬门槛使用 visited/reused/changed、发射基数、输出等价、retain
 ## 观测表面
 
 - `@retikz/bench` 是 private app，不发布。
-- trace sink 由 Runtime reporter 注入 Core / Render；alpha.2 不把它暴露为 React props 或 Vanilla plain spec 字段。Batch 0 的 browser harness 直接观测公开 Core/Render full 入口；React / Vanilla 真实 session 接线由 ADR-03～05 回填同一 trace contract。
+- trace sink 由 Runtime reporter 注入 Core / Render；alpha.2 不把它暴露为 React props 或 Vanilla plain spec 字段。Batch 0 的 browser harness 直接观测公开 Core/Render full 入口；React / Vanilla 真实 session 接线由 ADR-05 回填同一 trace contract。
 - benchmark 输出结构化 JSON，包含环境、fixture、revision、指标和结果校验；结果目录默认 ignored，只有基准定义与预算配置入库。
 - 相同 fixture 的功能输出先通过等价校验，再记录性能指标；错误结果没有性能通过资格。
 - sink 在 record 完整构造后同步调用；record 不复用可变对象。sink throw / reentry 进入 reporter-local diagnostic queue，不改变产品输出。
 
-## 测试设计
+## 最终实现与验证
 
-- trace 未注入时不产生 observable side effect。
-- 三个 batch-0 phase 的发射基数、unit 与精确关系可验证；漏报、重复报和越权 owner 都拒绝。
-- benchmark fixture 在 Node 与 browser 运行中可重建且 identity 稳定。
-- deterministic budget 超限时命令非零退出；wall-clock 报告不因单次抖动直接阻断。
-- batch 0 的 Core / SVG / Canvas full baseline 可独立完成；更新、fallback、连续 revision、Tier 2 与 patch 场景标记后继 ADR 并在对应 Gate 前回填。
-- layout-aware Composite fixture 对 source、generated child、sandbox layoutChild 与 replay 使用上述精确 dispatch 口径。
-- sink throw、重入和 record alias 不影响 compile / render 输出。
-
-详细矩阵见 ignored `notes/plans/kernel-v0.5-performance/TEST_CONTRACT_ALPHA2_ADR_01.md`。
+- 新增零领域依赖的 `@retikz/runtime` trace contract、owner-bound reporter 与 reporter-local diagnostic queue。
+- Core compile、SVG build 与 Canvas draw 接入相同工作量口径；未注入 trace 时不改变产品输出。
+- 新增 private `@retikz/bench`，固定 Node/browser fixture、环境描述、结构化报告、deterministic baseline 与预算比较。
+- 自动化验证覆盖 record 校验、owner 越权、sink throw/reentry、Core/Render 发射基数、fixture 重建、预算超限和 browser runner。
+- 2026-07-27 收尾验证通过：Runtime 19 files / 135 tests、Bench 6 files / 15 tests 与 9 项 deterministic budgets、Core trace 3/3、Render trace 2/2。
+- alpha.2 后续 ADR 继续复用该 contract；增量、fallback、Scene Patch 与连续 revision 的预算由各自实现补齐，不回写本 ADR 的 batch-0 baseline。
 
 ## 公开影响
 
@@ -120,7 +118,7 @@ CI 硬门槛使用 visited/reused/changed、发射基数、输出等价、retain
 
 - 所属能力域与能力面：Drawing 横向质量门槛；不新增 Drawing 用户能力。
 - 解决的问题：为 Core compile、Render commit 与 adapter update 提供共同、可验证的性能证据。
-- 主责包与协作包：runtime 拥有 trace contract / owner reporter；`@retikz/bench` 拥有 harness；Core/Render 只报告本 owner 计数；React/Vanilla session 接线由后继 ADR 回填。
+- 主责包与协作包：runtime 拥有 trace contract / owner reporter；`@retikz/bench` 拥有 harness；Core/Render 只报告本 owner 计数；React/Vanilla session 接线由 ADR-05 回填。
 - 是否可由现有能力组合：现有测试可复用 fixture 与等价断言，但没有跨包 benchmark/trace owner，需要新增内部工具边界。
 - 内部表达链路：fixture → owner trace → structured result → baseline compare。
 - 外部扩展链路：第三方 Program 通过注册 Program owner 获得同一 reporter；未声明自定义 phase 时只能使用 `program/update` 与 `program` unit，不能自由扩展预算 key。
@@ -135,46 +133,8 @@ CI 硬门槛使用 visited/reused/changed、发射基数、输出等价、retain
 - 在 IR / Scene 写入性能字段。
 - 为第三方实现承诺稳定的公共 profiling API。
 
----
+## 遗留风险与后续
 
-## 实现契约
-
-### Level
-
-`red`：后续 owner tracing 会触及 Core compile 与 Render commit 热路径，但不得改变功能输出。
-
-### Schema 改动
-
-无 IR / Scene schema 改动。
-
-### 文件 scope
-
-- `apps/bench/**`（新建）
-- `package.json`、`pnpm-workspace.yaml`（bench scripts / catalog）
-- `packages/kernel/runtime/**`（先创建 package、trace contract 与 package-level `AGENTS.md`）
-- 根 / `packages/kernel/{AGENTS.md,_notes/README.md}`、`notes/architecture/package-topology.md`
-- `packages/kernel/{core,render}/AGENTS.md` 与 `packages/kernel/{core,render}/package.json`
-- `scripts/release-groups.config.mjs`、`scripts/publish-artifact-limits.json`
-- `pnpm-workspace.yaml`、`pnpm-lock.yaml`
-- `packages/kernel/core/src/compile/**`（最小 trace 接点）
-- `packages/kernel/render/src/{svg,canvas}/**`（最小 trace 接点）
-- `packages/kernel/{react,vanilla}/tests/**`（只保留后继 session 接线 fixture，不作为 batch-0 Gate）
-- `scripts/**performance**`（仅 benchmark 启动与结果比较）
-- `apps/docs/src/modules/docs/contents/kernel/packages/runtime/**` 与 docs data/i18n（trace 公共 API）
-
-### 测试象限
-
-**Happy path**：100 / 1,000 / 5,000 实体 full baseline；SVG / Canvas full commit 报告；精确发射基数。
-
-**边界**：空 Scene；全局 layout fallback；未注入 trace sink。
-
-**错误路径**：非 safe-integer/负计数、错误 unit、漏报/重复报被 harness 拒绝；sink throw/reentry 不影响输出；fixture 不等价和 deterministic budget 超限时非零退出。
-
-**交互**：SSR 与 browser 分开计量；连续 revision、Tier 2 与增量指标登记为 ADR-03～05 后继证据。
-
-### 依赖的现有元素
-
-- `compileToScene()`（`packages/kernel/core/src/compile/compile.ts`）—— Core 全量 baseline 与 trace 入口。
-- `mountSvg()` / `mountCanvas()`（`packages/kernel/vanilla/src/runtime`）—— browser commit baseline。
-- `VanillaRuntimeMeta`（`packages/kernel/vanilla/src/spec/types.ts`）—— layer / identity fixture 输入，不作为 trace 真源。
-- `test:publish-artifacts` 的预算配置模式——复用“机器可读配置 + 普通验证不改预算”原则。
+- deterministic 工作量预算是共享 CI 的硬证据；wall-clock 仍只在固定环境中比较。
+- trace 是 `0.x` 执行期扩展契约，不进入 IR / Scene，也不承诺 production telemetry 或持久 profiling 服务。
+- ADR-04 与 ADR-05 完成后仍需补齐增量 compile、Scene Patch 和 retained commit 的场景预算。

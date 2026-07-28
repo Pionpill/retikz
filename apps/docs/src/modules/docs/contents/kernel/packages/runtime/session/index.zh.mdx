@@ -108,6 +108,8 @@ Owner registry 与 Program registry 必须是创建 Session 时传入的同一�
 
 ChangeSet 缺失时仍调用 `update()`，`view.changeSet(owner)` 返回 `undefined`。Owner validator 明确返回 `fallback` 时，Runtime 丢弃不可信提示，当前 Program 和依赖它的下游都走 full 路径。
 
+Owner 没有提供领域 validator 时，Runtime 只确认提示由 `createRuntimeChangeSet()` 创建，且 base revision 与 update envelope 一致；随后把提示交给 Program。Program 必须根据完整 previous / candidate Snapshot 自行交叉校验，不能把 Runtime 的 envelope 校验当成领域完整性证明。
+
 所有公开 `RuntimeSnapshot.revision` 都表示当前 view 所属的 Session revision。复用的 Owner read 或 Program artifact 只重建 envelope，不复制或提前释放底层值。
 
 ## Candidate 隔离与资源所有权
@@ -128,6 +130,8 @@ publish 后，observer 只读取已经发布的 artifact event。observer throw 
 | Trace reporter diagnostic  | 进入 result 与 queue | 进入 error 与 queue                |
 | Observer / retire failure  | publish 后追加并继续 | 不适用                             |
 | Rollback dispose failure   | 不适用               | 追加到 primary error，不覆盖 cause |
+
+Program 产生的 warning 属于 candidate：只有 candidate artifact 成功发布后才进入 result 与 queue；compile 或 transaction 失败时，warning 随 candidate 一起丢弃。
 
 初始 `createRuntimeSession()` 失败时没有 Session queue，secondary diagnostics 只能从 thrown error 读取。update 失败时，本次 `RuntimeError.diagnostics` 会按相同顺序追加到已有 queue；只有 queue 事先为空时，下一次 drain 才与 error diagnostics 逐项一致。
 
@@ -199,6 +203,12 @@ publish 后，observer 只读取已经发布的 artifact event。observer throw 
       path: 'packages/kernel/runtime/src/transaction/factories.ts',
       startLine: 163,
       endLine: 193,
+    },
+    {
+      label: 'Owner validator 与 Program 校验边界',
+      path: 'packages/kernel/runtime/src/owner/executor.ts',
+      startLine: 185,
+      endLine: 211,
     },
     {
       label: '原子发布、observer 隔离与反向 retire',

@@ -108,6 +108,8 @@ Each row below is an independent case for the same dependency edge in the Progra
 
 With no ChangeSet, Runtime still calls `update()` and `view.changeSet(owner)` returns `undefined`. When an Owner validator explicitly returns `fallback`, Runtime discards the untrusted hint; the direct Program and its downstream dependents take the full path.
 
+When an Owner provides no domain validator, Runtime only confirms that `createRuntimeChangeSet()` created the hint and that its base revision matches the update envelope. Runtime then passes the hint to the Program. The Program must cross-check it against the complete previous and candidate Snapshots instead of treating Runtime envelope validation as proof of domain completeness.
+
 Every public `RuntimeSnapshot.revision` identifies the Session revision of the current view. Reused Owner reads and Program artifacts only receive a new envelope; Runtime does not copy or prematurely retire the underlying value.
 
 ## Candidate Isolation & Resource Ownership
@@ -128,6 +130,8 @@ After publish, observers only read the published artifact event. An observer thr
 | Trace reporter diagnostic  | Result and queue                          | Error and queue                                           |
 | Observer / retire failure  | Appended after publish; cleanup continues | Not applicable                                            |
 | Rollback dispose failure   | Not applicable                            | Appended to the primary error without replacing its cause |
+
+A Program warning belongs to the candidate. It reaches the result and queue only after the candidate artifact publishes successfully; a compile or transaction failure discards the warning with the candidate.
 
 When initial `createRuntimeSession()` fails, there is no Session queue; secondary diagnostics are only available on the thrown error. For failed updates, that call's `RuntimeError.diagnostics` entries append to the existing queue in the same order. The next drain matches the error entries item-for-item only when the queue was empty beforehand.
 
@@ -199,6 +203,12 @@ The original callback error is only stored in `cause`. Stable code, phase, Owner
       path: 'packages/kernel/runtime/src/transaction/factories.ts',
       startLine: 163,
       endLine: 193,
+    },
+    {
+      label: 'Owner validator and Program validation boundary',
+      path: 'packages/kernel/runtime/src/owner/executor.ts',
+      startLine: 185,
+      endLine: 211,
     },
     {
       label: 'Atomically publish, isolate observers, and retire in reverse order',

@@ -1,8 +1,14 @@
 # Table 表格语法与 lowering 总设计
 
+> **状态：长期模型已确认，alpha.2 纵向基线已实现。** 本文维护 Grammar of Tables、Table Algebra、Constraint Grid Layout 与跨包边界，不冻结具体字段。当前公开契约以 [`packages/viz/table/AGENTS.md`](../../table/AGENTS.md)、Accepted ADR、公开类型和用户文档为准。
+>
+> 关联：[`Table 表格可视化完备设计`](./table-visualization-complete.md) · [`Table 竞品与能力差距分析`](../analysis/table-compare-analysis.md) · [`table v0.1 roadmap`](../decisions/table/v0/v0.1/roadmap.md)
+
+---
+
 本文定义 `@retikz/table`、`@retikz/table-react` 与 `@retikz/table-vanilla` 的长期设计方向。能力边界见 [Table 表格可视化完备设计](./table-visualization-complete.md)，外部参考见 [Table 竞品与能力差距分析](../analysis/table-compare-analysis.md)。
 
-本文只确定指导思想和核心模型。具体 IR 字段、Definition 签名、布局算法、冲突规则、manifest 结构和首版范围均由后续 ADR 决定。
+本文只确定指导思想和核心模型。具体 IR 字段、Definition 签名、算法细节与 manifest payload 由对应 milestone ADR 冻结；alpha.1 / alpha.2 已落地的契约不在本文重新定义。
 
 ## 1. 核心判断
 
@@ -139,26 +145,27 @@ Table layout 是二维约束求解，不是逐 Cell 手工放置，也不是 Cor
 
 任意 `IRChild` 的通用测量与受约束内容布局能力属于 Core；若当前能力不足，应先补 Core 合同，而不是在 Table 内建立私有测量系统或按 Plot 类型特判。
 
-Lowering 最终只输出 Core IR，renderer 不感知 Table。Table 同时需要保留 Cell、数据来源、布局实例和 Core visual contribution 之间的映射；具体 artifact API 与 Core composite 的接线方式由 ADR 决定，不能依赖隐藏 side channel。
+Lowering 最终只输出 Core IR，renderer 不感知 Table。Table 同时保留 Cell、数据来源、布局实例和 Core visual contribution 之间的映射；alpha.2 已通过 Core layout-aware composite 的 typed artifact 公开这条映射，后续只能扩展同一链路，不能依赖隐藏 side channel。
 
-## 9. 待 ADR 决策
+## 9. 已实现基线与后续未决
 
-后续 ADR 至少需要分别讨论：
+alpha.1 / alpha.2 已冻结并实现：
 
-1. Table IR 与外部数据绑定
-2. SemanticTableModel 的公开范围和扩展写入协议
-3. Structure / Operation / Formatter / Presentation / Theme Definition
-4. Selector、Rule、条件视觉编码、legend descriptor 与样式级联
-5. Track sizing、span、内容 intrinsic / constrained measurement、fit 与 overflow 合同
-6. Border Graph 与表线冲突规则
-7. Fragmentation 与重复 Cell instance
-8. Lowering、manifest、lineage、locator 和 diagnostics
-9. React / Vanilla authoring 表面
-10. 大表 windowing、虚拟滚动与 adapter runtime 边界
-11. 首个 Alpha 的能力范围与实现顺序
-12. 层级 header region、spanner / stub / corner 与重复策略
+- Table IR 与外部数据绑定，manual / detail / custom 三种精确 spec 变体与 framework-neutral authoring helpers
+- `SemanticTableModel` 纵向写入链路，以及 formatter / presentation / theme 等统一 Definition / registry 消费方式
+- fixed / auto / fraction / minmax 轨道、矩形 span、真实 `IRChild` intrinsic / constrained measurement、fit / overflow / clip 与 Border Graph
+- layout-aware composite 同次 compile、typed manifest / occurrence，以及 React / Vanilla 共享 runtime contribution 与 artifact contract
 
-这些议题在 ADR 中可以调整或推翻本文的候选方向；本文只提供讨论坐标，不作为实现细节承诺。
+后续 ADR 只处理尚未闭环的能力：
+
+1. 分组、层级、汇总、交叉、矩阵与转置等 Table Algebra
+2. Selector、Rule、条件视觉编码、legend descriptor 与样式级联
+3. Fragmentation、重复 Cell instance 与跨页重复表头
+4. 更完整的 lineage、locator 与 diagnostics 查询面
+5. 大表 windowing、虚拟滚动与 adapter runtime 边界
+6. 层级 header region、spanner / stub / corner 与重复策略
+
+这些议题可以在 ADR 中调整本文的候选方向，但不能绕开已经落定的 schema、Core layout-aware composite、Definition / registry 与 artifact 主链。
 
 ## 10. 非目标
 
@@ -175,4 +182,4 @@ Lowering 最终只输出 Core IR，renderer 不感知 Table。Table 同时需要
 
 `@retikz/table` 是一个 renderer-agnostic 的 Tier 2 表格编译器：它以 Table grammar 描述结构，以 Table Algebra 组合表格形态，以 Constraint Grid Layout 解决二维排版，最终 lowering 为 Core IR。
 
-Cell 是语义和布局槽位，`IRChild` 是统一内容边界，Definition / registry 是扩展机制。除此之外的具体设计留给后续 ADR 逐项验证。
+Cell 是语义和布局槽位，`IRChild` 是统一内容边界，Definition / registry 是扩展机制。未完成的结构、呈现和 runtime 能力继续由后续 ADR 逐项验证，并复用 alpha.2 已建立的布局与产物主链。

@@ -24,8 +24,21 @@ const MODULE_GROUP = new Map<string, 'kernel' | 'standard' | 'viz' | 'other'>([
   ['viz', 'viz'],
 ]);
 
-/** 已迁移到 Plot 分组更新日志的三个 lockstep 包。 */
+/** Data 分组更新日志包含的包 */
+const DATA_PACKAGES = new Set<PackageId>(['@retikz/data']);
+
+/** Table 分组更新日志包含的三个 lockstep 包 */
+const TABLE_PACKAGES = new Set<PackageId>(['@retikz/table', '@retikz/table-react', '@retikz/table-vanilla']);
+
+/** Plot 分组更新日志包含的三个 lockstep 包 */
 const PLOT_PACKAGES = new Set<PackageId>(['@retikz/plot', '@retikz/plot-react', '@retikz/plot-vanilla']);
+
+/** Viz 文档分区到更新日志包集合 */
+const VIZ_SECTION_PACKAGES = new Map<string, ReadonlySet<PackageId>>([
+  ['data', DATA_PACKAGES],
+  ['table', TABLE_PACKAGES],
+  ['plot', PLOT_PACKAGES],
+]);
 
 /** 中版本号 → URL slug（`v0.3` → `v0-3`），概览页链接与详情页 subPage id 共用 */
 export const changelogVersionSlug = (minor: string): string => minor.replaceAll('.', '-');
@@ -36,19 +49,18 @@ const groupOfPackage = (pkg: PackageId): 'kernel' | 'standard' | 'viz' | 'other'
 
 /**
  * 按文档模块与可选分组取 changelog 切片
- * @description Plot 分组只返回三个 Plot 包；Viz 发布分组排除已迁移的 Plot 包；其余位置按模块包组过滤。过滤后无包块的里程碑会被丢弃，入参不会被修改
+ * @description Viz 的 Data / Table / Plot 分区分别只返回所属包；其余位置按模块包组过滤。过滤后无包块的里程碑会被丢弃，入参不会被修改
  */
 export const changelogForModule = (moduleId: string, sectionId?: string): Array<Release> => {
   const group = MODULE_GROUP.get(moduleId);
   if (!group) return [];
+  const vizSectionPackages = moduleId === 'viz' && sectionId ? VIZ_SECTION_PACKAGES.get(sectionId) : undefined;
+  if (moduleId === 'viz' && sectionId && !vizSectionPackages) return [];
   return changelog
     .map(release => ({
       ...release,
       packages: release.packages.filter(block => {
-        if (moduleId === 'viz' && sectionId === 'plot') return PLOT_PACKAGES.has(block.pkg);
-        if (moduleId === 'viz' && sectionId === 'releases') {
-          return groupOfPackage(block.pkg) === group && !PLOT_PACKAGES.has(block.pkg);
-        }
+        if (vizSectionPackages) return vizSectionPackages.has(block.pkg);
         return groupOfPackage(block.pkg) === group;
       }),
     }))

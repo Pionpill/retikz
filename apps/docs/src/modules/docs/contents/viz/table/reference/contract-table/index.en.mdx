@@ -1,6 +1,6 @@
 ---
 title: Contract - Table
-description: Look up the TableSpec root, Cell spans/layout, track sizing, and border JSON schemas.
+description: Look up the TableSpec root, Cell spans/layout, track sizing, border, and layout-manifest JSON schemas.
 ---
 
 Base Table contracts define the top-level identity, Cell content, and layout fields shared by every table type, plus precise manual and custom root variants. See [Detail Table contracts](/viz/table/reference/contract-detail) for the detail-only data reference and column structure.
@@ -46,6 +46,20 @@ An LLM or tool that emits one table type should retain its precise schema. Use `
 <ZodSchema name="TableCellPayloadSchema" />
 
 In `{ kind: 'value', value: 'Score' }`, `kind: 'value'` selects the scalar-presentation branch; it is not an alias for the JavaScript string type. Use `kind: 'content'` to place a Node, Path, or Tier 2 child directly.
+
+### TableCellValuePayloadSchema
+
+<ZodSchema name="TableCellValuePayloadSchema" />
+
+### TableCellContentPayloadSchema
+
+<ZodSchema name="TableCellContentPayloadSchema" />
+
+### TablePresentationRefSchema
+
+<ZodSchema name="TablePresentationRefSchema" />
+
+`presentation.name` must match a definition injected at runtime. An unregistered name or options that fail the selected provider's `optionsSchema` fail loudly.
 
 ### TableCellSpanSchema
 
@@ -143,8 +157,73 @@ Border candidate kinds are <ApiValues name="TableBorderKind" />; table-wide topo
 
 Cell-side candidates outrank table defaults. Shared atomic edges compare `priority`, source specificity, and canonical source order. `kind: 'none'` explicitly suppresses lower-priority lines.
 
+## Layout manifest
+
+`TableLayoutManifest` is the JSON-safe, detached, recursively frozen typed-artifact payload produced by the same Table compile. See [Runtime](/viz/table/reference/runtime#table-compile-api) for exact-root selection; this section lists only the persisted shape and nested DTOs.
+
+### TableLayoutManifestSchema
+
+<ZodSchema name="TableLayoutManifestSchema" />
+
+### TableTrackManifestEntrySchema
+
+<ZodSchema name="TableTrackManifestEntrySchema" />
+
+### TableCellManifestEntrySchema
+
+<ZodSchema name="TableCellManifestEntrySchema" />
+
+The border manifest preserves final visible edges together with their atomic conflict provenance. The following schemas build from resolved lines and candidate contributions to atoms and merged edges.
+
+### ResolvedTableBorderLineSchema
+
+<ZodSchema name="ResolvedTableBorderLineSchema" />
+
+### TableBorderSourceSchema
+
+<ZodSchema name="TableBorderSourceSchema" />
+
+Cell sources retain `cellId + row + column + side`. Table defaults use `scope + side` or `scope + boundaryIndex`, so conflict resolution does not depend on object traversal order.
+
+### TableNoBorderContributionSchema
+
+<ZodSchema name="TableNoBorderContributionSchema" />
+
+### TableLineBorderContributionSchema
+
+<ZodSchema name="TableLineBorderContributionSchema" />
+
+### TableBorderContributionSchema
+
+<ZodSchema name="TableBorderContributionSchema" />
+
+### TableBorderManifestAtomSchema
+
+<ZodSchema name="TableBorderManifestAtomSchema" />
+
+### TableBorderManifestEntrySchema
+
+<ZodSchema name="TableBorderManifestEntrySchema" />
+
+### TableBorderPathMetaSchema
+
+<ZodSchema name="TableBorderPathMetaSchema" />
+
+### TableBorderLocatorEntrySchema
+
+<ZodSchema name="TableBorderLocatorEntrySchema" />
+
+`TableBorderLocatorEntrySchema` is an independent JSON-safe index entry; the current `TableLayoutManifestSchema` does not embed a locator list.
+
+## Contract migration
+
+| Previous field                               | Current field                                                          |
+| -------------------------------------------- | ---------------------------------------------------------------------- |
+| `columnWidth` / `rowHeight` / `headerHeight` | `columnSize` / `rowSize` / `headerRowSize` track objects               |
+| `manifest.bounds`                            | `manifest.allocationBounds`; use `visualOverflowBounds` for visibility |
+
 ## Related
 
 - [Detail Table contracts](/viz/table/reference/contract-detail) — data reference, columns, and the detail Structure
-- [Runtime](/viz/table/reference/runtime) — how these JSON specifications are constructed, lowered, and rendered
+- [Runtime](/viz/table/reference/runtime) — how these contracts are constructed, lowered, compiled, and observed
 - [Table Model](/viz/table/model) — how Structure, Cells, Presentation, and Layout relate

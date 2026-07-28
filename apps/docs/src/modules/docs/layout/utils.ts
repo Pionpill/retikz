@@ -5,9 +5,15 @@ import type { Page, Section, SubPage } from '@/modules/docs/data';
 import type { SidebarCategoryData, SidebarSubModuleData } from './sidebar';
 import type { DocLocation, LeafNode } from './types';
 
-/** 是否为数据驱动渲染的 changelog 页面。 */
+/** Viz 内拥有独立更新日志的分区 */
+const VIZ_CHANGELOG_SECTIONS = new Set(['data', 'table', 'plot']);
+
+/** 是否为数据驱动渲染的 changelog 页面 */
 export const isChangelogLocation = (loc: DocLocation | null): boolean =>
-  loc?.pageId === 'changelog' && (loc.sectionId === 'releases' || (loc.moduleId === 'viz' && loc.sectionId === 'plot'));
+  loc?.pageId === 'changelog' &&
+  (loc.moduleId === 'viz'
+    ? loc.sectionId !== null && VIZ_CHANGELOG_SECTIONS.has(loc.sectionId)
+    : loc.sectionId === 'releases');
 
 /** location -> URL / 文件路径所需的 segment 数组。 */
 export const docPathSegments = (loc: DocLocation): Array<string> => {

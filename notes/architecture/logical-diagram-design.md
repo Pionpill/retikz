@@ -1,6 +1,6 @@
 # 逻辑制图能力域设计
 
-> **状态：方向已确认，当前不实现。** 本文沉淀逻辑关系模型、人工几何、算法布局与交互编辑的长期能力边界，用于后续 Graph / Flow / Workspace 设计与包规划。文中的 `diagram` 与 `workspace` 均是能力组工作名，具体包结构、发布组和公开 API 仍需通过 roadmap / ADR 确认。
+> **状态：Graph / Flow / Workspace 方向已确认，当前不实现。** 本文沉淀逻辑关系模型、人工几何、算法布局与交互编辑的长期能力边界，用于后续 Graph / Flow / Workspace 设计与包规划。文中的 `diagram` 与 `workspace` 均是能力组工作名，具体包结构、发布组和公开 API 仍需通过 roadmap / ADR 确认；文中依赖的 Standard 基础包已完成 alpha.1 基线，不属于待建能力组。
 >
 > 关联：[`能力完备性与模块边界`](./capability-design.md) · [`包拓扑`](./package-topology.md) · [`Standard Drawing Library`](../../packages/library/_notes/architecture/standard-library-design.md)
 
@@ -232,7 +232,7 @@ Workspace 也可以不经过 Graph，直接编辑普通 Core IR / Standard compo
 
 Graph、Flow 和 Workspace 会共享一部分绘图能力，例如根据 children 边界生成带 title、padding、background 和 border 的容器。这类能力不属于 Graph 关系模型或 Workspace 状态，也不应把 Core Scope 扩张成可见 UI 容器。
 
-通用能力进入计划中的 `@retikz/standard`：
+通用能力进入已经建立的 `@retikz/standard`：
 
 ```text
 @retikz/standard
@@ -243,7 +243,7 @@ Graph、Flow 和 Workspace 会共享一部分绘图能力，例如根据 childre
 └─ 其它可选 Drawing Complete 扩展
 ```
 
-其中 Frame 的建议边界是：测量已经布局的 children，应用 padding / minSize，为 title 或 header 预留空间，并生成背景、边框和整体 anchor。Flow 负责 Group 在图中的算法位置，Workspace 负责用户如何移动 Frame；Standard 不理解 Flow 或 Workspace。
+其中 Frame 已验证的边界是：测量已经布局的 children，应用 padding / minSize，为 title 或 header 预留空间，并生成背景、边框和整体 anchor。Flow 负责 Group 在图中的算法位置，Workspace 负责用户如何移动 Frame；Standard 不理解 Flow 或 Workspace。未来 Stack、Align / Distribute 等候选仍按 Standard 自己的 roadmap 与 ADR 演进，不由本文预先冻结。
 
 通用能力进入 Standard 至少满足：
 
@@ -336,7 +336,7 @@ Plot ─────→ Data + Core
 
 ### 阶段 0：沉淀边界
 
-本文即阶段 0。当前不新建包、不改变 capability-design、package-topology 或 release group 真源。
+本文已经完成 Graph / Flow / Workspace 的阶段 0 边界沉淀。当前不为这三个工作名新建包，也不提前改变 package-topology 或 release group 真源；Standard 的既有包与发布组不受此限制。
 
 ### 阶段 1：Graph 最小契约
 
@@ -348,7 +348,7 @@ Plot ─────→ Data + Core
 
 ### 阶段 3：Standard 通用积木
 
-以 Frame 等真实跨域需求验证官方 Standard 包。现有 Core composite / scope boundary 能表达时不新增 Core 契约；不能闭环时只补最小通用底座。
+**已完成基础验证。** Standard alpha.1 已用 Grid、Axes、Frame 验证官方可选能力、Core composite 与 React / Vanilla authoring 闭环。Graph / Flow / Workspace 后续只消费公开 Standard 能力；若出现新的跨域绘图缺口，仍按 Standard 准入规则与独立 ADR 处理。
 
 ### 阶段 4：Workspace 交互闭环
 
@@ -369,7 +369,7 @@ Plot ─────→ Data + Core
 - Workspace 是否作为最终能力组与包名，以及 Graph adapter、React adapter、宿主 UI 的拆分方式。
 - Flow 的 pin / rank / order 等约束是否进入 GraphModel、GraphGeometry，还是独立 LayoutConstraint。
 - Graph / Flow / Workspace 的发布组与版本兼容策略。
-- Standard Frame 能否完全通过现有 composite、Scope synthetic boundary 和相对引用闭环。
+- Graph / Flow / Workspace 是否只需消费现有 Frame，还是会提出新的领域中立 Standard 能力；新增能力必须通过 Standard 自己的准入与 ADR 验证。
 
 ---
 

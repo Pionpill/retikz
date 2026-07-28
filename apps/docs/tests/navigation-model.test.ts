@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import type { Section } from '@/modules/docs/data';
 
 import { vizSection } from '@/modules/docs/data';
-import { buildSidebarCategories, flattenLeaves } from '@/modules/docs/layout';
+import { buildSidebarCategories, flattenLeaves, isChangelogLocation } from '@/modules/docs/layout';
 
 const sections: Array<Section> = [
   { pages: [{ id: 'intro', label: 'common.notFound' }] },
@@ -64,5 +64,21 @@ describe('layout utils', () => {
       '/viz/plot/reference/runtime',
       '/viz/plot/changelog/v0-1',
     ]);
+  });
+
+  it('Data 与 Table 分别在模块末尾注册更新日志，并删除 Viz 发布分区', () => {
+    const paths = flattenLeaves('viz', vizSection).map(node => node.path);
+
+    expect(paths).toContain('/viz/data/changelog/v0-1');
+    expect(paths).toContain('/viz/table/changelog/v0-1');
+    expect(paths.some(path => path.startsWith('/viz/releases/'))).toBe(false);
+  });
+
+  it.each(['data', 'table', 'plot'])('识别 Viz %s 的数据驱动更新日志路由', sectionId => {
+    expect(isChangelogLocation({ moduleId: 'viz', sectionId, pageId: 'changelog' })).toBe(true);
+  });
+
+  it('不再识别旧 Viz 发布更新日志路由', () => {
+    expect(isChangelogLocation({ moduleId: 'viz', sectionId: 'releases', pageId: 'changelog' })).toBe(false);
   });
 });

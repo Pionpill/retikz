@@ -31,6 +31,15 @@ export const vizV01: Release = {
       ],
       subVersions: [
         {
+          version: 'rc.1',
+          date: '2026-07-28',
+          summary: {
+            zh: 'data v0.1 公共契约自此冻结，进入候选发布窗口；无新增 schema、公开 API 或运行时行为。',
+            en: 'The data v0.1 public contract freezes here and enters the release-candidate window; there are no new schemas, public APIs, or runtime behaviors.',
+          },
+          items: [],
+        },
+        {
           version: 'beta.2',
           date: '2026-07-27',
           summary: {
@@ -188,6 +197,15 @@ export const vizV01: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'rc.1',
+          date: '2026-07-28',
+          summary: {
+            zh: 'Plot v0.1 的 IR、Definition / registry、authoring、lowering、lineage 与 locator 公共面自此冻结；无新增功能。',
+            en: 'The Plot v0.1 IR, definition / registry, authoring, lowering, lineage, and locator surfaces freeze here; no features are added.',
+          },
+          items: [],
+        },
         {
           version: 'beta.2',
           date: '2026-07-27',
@@ -476,6 +494,15 @@ export const vizV01: Release = {
       ],
       subVersions: [
         {
+          version: 'rc.1',
+          date: '2026-07-28',
+          summary: {
+            zh: 'React `<Plot>` 的 props、组合 DSL 与 lineage callback 公共面自此冻结；无新增功能。',
+            en: 'The React `<Plot>` props, composition DSL, and lineage callback surface freeze here; no features are added.',
+          },
+          items: [],
+        },
+        {
           version: 'beta.2',
           date: '2026-07-27',
           summary: {
@@ -714,6 +741,15 @@ export const vizV01: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'rc.1',
+          date: '2026-07-28',
+          summary: {
+            zh: 'Vanilla plain authoring、Tier 2 adapter、SSR 与 lineage 公共面自此冻结；无新增功能。',
+            en: 'The Vanilla plain-authoring, Tier 2 adapter, SSR, and lineage surfaces freeze here; no features are added.',
+          },
+          items: [],
+        },
         {
           version: 'beta.2',
           date: '2026-07-27',

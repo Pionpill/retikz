@@ -1,8 +1,8 @@
-# @retikz/plot 坐标语法草案
+# @retikz/plot 坐标语法设计
 
-> 本文是 `@retikz/plot` 的底层设计预研。它只讨论技术语义：坐标系、数据映射、mark、guide、layer 与 lowering 边界；不定义已发布 API，也不承诺实现排期。
+> **状态：长期技术语义参考，当前公开契约以代码、用户文档和 Accepted ADR 为准。** 本文讨论坐标系、数据映射、mark、guide、layer 与 lowering 边界，不定义已发布 API，也不维护实现排期。
 >
-> 另在 §6 补记 viz domain 中 data / plot / table / geo 及各自框架绑定包的结构与命名（属仓库工程约定，非发布 API 承诺）。
+> §6 记录 viz domain 中 data / plot / table / geo 及各自框架绑定包的结构与命名；当前实际包与 release group 以 [`包拓扑`](../../../../notes/architecture/package-topology.md) 和 [`scripts/release-groups.config.mjs`](../../../../scripts/release-groups.config.mjs) 为准。
 
 ## 1. 核心判断
 
@@ -737,49 +737,15 @@ intent
 
 这些 preset 都必须展开成同一套 coordinate / scale / mark / guide 结构（preset 属 `@retikz/chart`，见 §5.1 / §6）。
 
-## 13. 实现计划（里程碑）
+## 13. 路线与版本边界
 
-`@retikz/plot` 有自身独立的版本演进，**不与 core 版本号对齐**；它只消费 core 能力、不反向依赖，因此每个里程碑由「所需 core 能力是否就绪」gating。模块名见 §11，首批细节见 §12。
+`@retikz/plot` 有独立于 kernel 的版本演进，只消费公开 Data / Core / Runtime 能力，不反向改变底座所有权。当前 GoG 基座、独立 Data 层、Definition / registry、coordinate / scale / mark / guide、composition、theme、provenance / lineage 与 React / Vanilla 入口已经形成 v0.1 基线；具体完成状态以 [plot v0.1 roadmap](../decisions/plot/v0/v0.1/roadmap.md) 为准。
 
-> ⚠️ **版本主题真源以 [plot v0 roadmap](../decisions/plot/v0/roadmap.md) 为准**：路线已重组——**v0.1 承载整套图形语法（GoG 8 组件）**，beta 阶段抽出最小 `@retikz/data` 并稳定化；**v0.2 聚焦交互能力 + layout transform / structured visualization**，并与 chart v0.1 并行迭代；**v0.3 聚焦渐进式 AI 生成 + 跨域复合**。下文 §13.1~§13.6 是早期里程碑设计草案，**版本编号已过时**（原按 v0.1–v0.5 多 minor 设想），保留作各组件的**设计参考**；实际 alpha 序列见 [v0.1/roadmap](../decisions/plot/v0/v0.1/roadmap.md)。
+后续版本主题、Chart 候选、交互、layout transform、渐进生成与跨域组合只在各自 roadmap / ADR 中排期，本文不复制版本编号或承诺包名。长期设计只保留三条 gating 原则：
 
-当前主线：GoG 基座 → 交互 + layout transform → 渐进式 AI + 跨域复合。
-
-> **贯穿原则**：v0.1 的 IR 与 lowering 必须预留两样东西，即便功能要到后面才露出——
->
-> - **semantic anchor / datum locator**（v0.2 交互命中要用，§7）；
-> - **scope-aware IR**（v0.3 跨域复合要用，§7）。
->
-> 现在预留近乎零成本，事后补极痛。
-
-### 13.1 v0.1 — GoG 基座
-
-- 目标：完成 GoG 8 组件：Data / Aesthetics / Geometry / Statistics / Scales / Coordinates / Coordinate composition / Theme。
-- 模块：`data.model`、encoding、scale、coordinate、mark、relation、transform/stat、guide/theme、layer、lowering；并埋入 anchor、scope、locator、provenance。
-- 依赖 core 能力：IR / Scene / `compileToScene`、Tier 2 composite 接入与 `lowerComposites` 管线（core v0.3 起的 Tier 2 支撑，现已就绪）。
-- 包：`@retikz/plot`（IR + lowering）、`@retikz/plot-react`（`<Plot>` + 组合 DSL）、`@retikz/plot-vanilla`（builder + SSR）——**三包从 v0.1 起 lockstep 协同**，每加一个 plot 能力同步在 react/vanilla 表面 + 文档 demo 露出（原计划把绑定推到 v0.3 已废除：否则文档只能写 `<Layout ir composites={lowerPlots(...)}/>` 这种低可读示例）。底层渲染仍走 `@retikz/react` / `@retikz/vanilla`（消费 core IR）。**交互**（tooltip/hover/事件）仍留 v0.2（依赖 core runtime / 水合，非 authoring）。
-- beta 收口：抽出最小 `@retikz/data`，只搬迁 plot 已稳定的数据语义，不新增 table / geo / chart 专属能力。
-
-### 13.2 v0.2 — 交互能力 + layout transform
-
-- 目标：补全 tooltip、hover、selection、brush、legend interaction、事件回调与 overlay；同时建立结构化 layout transform 能力。
-- 关键：交互是 **framework runtime** 的事，不是纯 IR。PlotSpec 保持 JSON-safe，只存意图、identity 与可复用配置；命中与事件绑定落在框架绑定包和 core runtime。
-- layout transform 属于 plot：tree、network、wordCloud、treemap、gauge、progress、pictogram 等先产出位置 / 尺寸 / 路由字段，再继续走普通 mark / guide / lowering。
-- 包：`@retikz/plot` / `@retikz/plot-react` / `@retikz/plot-vanilla` lockstep；chart v0.1 并行消费这些能力。
-
-### 13.3 chart v0.1 — Tier 3 ChartSpec
-
-- 目标：提供新手友好的 chart type / config / preset 表面。
-- 约束：chart 可以拥有自己的 JSON-safe `ChartSpec`，但唯一执行出口是 `lowerChartSpec(chartSpec): PlotSpec`。它不直接表达 core Node / Path，不直接 lower 到 core。
-- 范围：首批 line / bar / area / scatter / pie 等常规类型；后续随 plot v0.2 的 interaction 与 layout transform 暴露 tree / network / wordCloud / gauge 等 type。
-- 包：`@retikz/chart` / `@retikz/chart-react` / `@retikz/chart-vanilla` lockstep。
-
-### 13.4 v0.3 — 渐进式 AI 生成 + 跨域复合
-
-- 目标：分层渐进产出 / 渲染（先坐标轴 / guide，再 mark，再 label / annotation），并支持 plot 与 table / diagram / 任意 Tier 2 内容的 attached-space composition。
-- AI 生成优先面向 `ChartSpec`，复杂场景可降到 PlotSpec 或跨域 composition；增量过程依赖稳定 identity、layer 与可局部替换的 spec 片段。
-- 跨域复合不由 plot 自建容器；plot 的义务是 lower 进可引用 Scope、暴露 anchor / bbox / provenance，让通用 composition 能摆放和连接它。
-- 包：plot / chart / table / 其它 Tier 2 共同消费 core Scope 与 attached-space 组合能力。
+1. Plot IR 保持 JSON-safe；runtime 函数、datasets 与宿主状态通过 options / program 注入，不进入 IR。
+2. semantic anchor、datum locator、provenance 与 scope-aware lowering 沿同一 Plot → Core 主链演进，不建立交互或组合旁路。
+3. 缺少通用图形、测量、增量执行或 renderer 能力时，先由 Core / Math / Runtime / Render owner 补齐；Plot 不自建平行底座。
 
 ## 14. 明确不做
 
@@ -829,34 +795,34 @@ intent
 
 ## 16. 架构权衡：固有软肋与处置
 
-> 记于 2026-06-07。本节列**做完功能也甩不掉的架构性软肋**（非功能缺口），及各自处置决策。处置 backlog 同步在 [plot v0 roadmap「后续处理」段](../decisions/plot/v0/roadmap.md)。
+> 记于 2026-06-07。本节保留当时识别的**架构性软肋**（非功能缺口）与候选处置，只作为长期风险检查表，不代表当前排期、性能阈值或已冻结方案。正式立项前应按当前实现重新 benchmark，并由对应 roadmap / ADR 决定是否处理。
 
 最大卖点（§15：下沉到可连接、JSON、后端中立的通用图元）与最大软肋（大数据、响应式交互、动态布局）是**同一决策的两面**。
 
 ### 16.1 六条固有软肋
 
-代码核对于 `packages/viz/plot/src/lower/`：
+当前实现核对入口是 `packages/viz/plot/src/providers/mark/` 与 `packages/viz/plot/src/pipeline/`；下列判断描述结构代价，不把具体 helper 文件当长期契约：
 
-1. **高基数性能天花板**：散点/柱每行下沉成**一个 `IRNode`**（`mark.ts` `lowerPoint` / `intervalRect`），IR 体积 O(数据点数) 个重对象 → Scene O(N) primitive → SVG O(N) DOM。「一切可见物是 Node」直接与「大数据合批渲染」相冲（可连接 ⊥ 合批）。
+1. **高基数性能天花板**：当前 point / interval provider 通常让每行下沉成**一个 `IRNode`**，IR 体积 O(数据点数) 个重对象 → Scene O(N) primitive → SVG O(N) DOM。「一切可见物是 Node」直接与「大数据合批渲染」相冲（可连接 ⊥ 合批）。
    - _已缓解的一半_：颜色不逐 node 写，按色分组到 O(色数) 子 Scope（`colorGroupedScope`），样式不是 O(N)；但 node 数量仍 O(行数)。§8.1 风险备注已点出 datum 逐点绑 id 的同类问题（locator 不预注册即对此的缓解）。
 2. **JSON 可序列化 IR 的物理代价**：禁 typed-array（数值只能 `number[]`/对象，内存/GC 重于 Float64Array）；禁 function（**无 in-spec escape hatch**，自定义 mark/stat 只能改包源码，不能像 Vega 在 spec 塞表达式/lambda）。这是 §3.1「数据不进 IR」+ IR 全 JSON-safe 的必然代价。
-3. **批量急切编译、无响应式/增量**：`compileToScene` 是 spec → 整张 IR → 整张 Scene 的一次性纯函数；改一点数据 → 重跑整条管线。对比 Vega 细粒度响应式。v0.3（§13.4）的数据过滤型交互会撞墙。
-4. **像素尺寸 lower 期钉死**：`lowerPlots` 必须知道 `width/height`（`expand.ts`），scale range 即像素区间 `[0,width]`。plot 不能参与 intrinsic sizing；响应式 resize = 整张重 lower（SVG `viewBox`+CSS 那种纯浏览器缩放默认拿不到）。
+3. **Plot 仍是批量急切 lowering**：Core 已有受限的 incremental program，但 Plot 尚未提供领域 incremental program；数据变化仍重跑 Plot pipeline，再交给 Core compile。对比 Vega 细粒度响应式，数据过滤型交互仍会触及这道墙。
+4. **像素尺寸 lower 期钉死**：`lowerPlots` 必须知道 `width/height`（`pipeline/expand`），scale range 即像素区间 `[0,width]`。plot 不能参与 intrinsic sizing；响应式 resize = 整张重 lower（SVG `viewBox` + CSS 那种纯浏览器缩放默认拿不到）。
 5. **纯函数 lowering 里无文字度量**：`fontSize`/`margin` 是输入参数，管线无 text measurement。做不了测量驱动的 tick label 防重叠/旋转/抽稀、legend 自适应宽度——metrics 依赖字体/后端、不可序列化，永远进不了 JSON IR，axis/legend 排版精度有结构上限。
-6. **Tier1/Tier2 双层 = 表达力被 Kernel 词汇量门控**：plot 每个能力都得能用 Tier 1 图元表达；表达不了就必须**回 core 加原语**（走 `next-core → next → next-plot`）。这是 PGFPlots/TikZ 税——既是表达力上限也是组织延迟。**这是设计原则本身（§1 / §8 / §9），不是 bug。**
+6. **Tier1/Tier2 双层 = 表达力被 Kernel 词汇量门控**：plot 每个能力都得能用 Tier 1 图元表达；表达不了就必须由 core owner 补通用原语，并经 `next-kernel → next → next-viz` 集成。这是 PGFPlots/TikZ 税——既是表达力上限也是组织延迟。**这是设计原则本身（§1 / §8 / §9），不是 bug。**
 
-### 16.2 处置决策（2026-06-07 定）
+### 16.2 候选处置（2026-06-07 快照）
 
-| #   | 软肋             | 处置                                                                                                                                                   | 关键约束                                                                                                                                                                                                                                          |
-| --- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | O(N) Node 物化   | **配置化：不需连接时不物化 N 个 Node，下沉成一个稠密 primitive**（`{type:'points', positions:number[][], style}` / 多段 Path）                         | **「可连接」与「物化成独立 Node」绑成同一开关**——关连接 ⟺ 发稠密 primitive，*不是*只摘 id（只摘 id 几乎不省成本）。需补 core 一个 Tier 1 稠密原语（即第 6 条「补 core」实例）。现实上限：到 Vega-Canvas 档（几万点），到不了 boost WebGL 百万点档 |
-| 2   | JSON IR 物理代价 | typed-array 收益**跟随 #1**（稠密 primitive 的扁平数组即收益）；in-spec 函数**永不做**（自觉取舍），扩展点在创作层（§5.3 Plot API 组件 / 新 mark 包）  | 后续只增内置 mark/stat，不开放 spec 内函数                                                                                                                                                                                                        |
-| 3   | 无响应式/增量    | 后续性能阶段处理（§13.4 交互前）                                                                                                                       | 守住「纯函数 + 稳定 identity 可得」——provenance 的 `transformedIndex`/`sourceIndex`/id 已是 diff 的稳定 key，后续别让任何环节破坏它。**展示类交互（hover/tooltip/高亮/选区）用 locator + overlay，不重 lower**；只有数据过滤型交互才需重 lower    |
-| 4   | 像素尺寸耦合     | 双机制：**viewBox 等比缩放兜底**（免费、纯 resize 不重 lower，代价文字等比缩放）+ **debounce 重 lower**（要文字不变、布局重排时）                      | API/文档讲清「resize 是等比缩放还是重排」                                                                                                                                                                                                         |
-| 5   | 无文字度量       | 后续处理；最终形态 = **`measureText` 作为编译期 option/capability 注入**（像 `width/height` 一样是选项、不是 IR 内容，不破坏 JSON-IR 原则；Vega 同法） | metrics 永不进 IR；别走两遍渲染回灌，别长期停在「字符数×fontSize」估算                                                                                                                                                                            |
-| 6   | Tier1/Tier2 门控 | 不处理——这是设计原则（§1 / §9）                                                                                                                        | 守纪律：缺能力**下沉补 core**，不在 plot 绕开自造（AGENTS.md 已成硬规）                                                                                                                                                                           |
+| #   | 软肋               | 处置                                                                                                                                                   | 关键约束                                                                                                                                                                                                                                   |
+| --- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | O(N) Node 物化     | 评估配置化稠密 primitive 或 renderer batching；不需独立连接时减少 N 个 Node 的物化                                                                     | 「可连接」与「独立物化」的取舍必须显式；若需要新 primitive，先证明其后端中立性并补 Core 契约。可达到的规模由 benchmark 决定，不在本文预设                                                                                                  |
+| 2   | JSON IR 物理代价   | typed-array 收益**跟随 #1**（稠密 primitive 的扁平数组即收益）；in-spec 函数**永不做**（自觉取舍），扩展点在创作层（§5.3 Plot API 组件 / 新 mark 包）  | 后续只增内置 mark/stat，不开放 spec 内函数                                                                                                                                                                                                 |
+| 3   | Plot 无响应式/增量 | 后续性能 milestone 接入 `@retikz/runtime` program                                                                                                      | 守住「纯函数 + 稳定 identity 可得」——provenance 的 `transformedIndex` / `sourceIndex` / id 是 diff 候选 key，后续不能破坏。**展示类交互（hover / tooltip / 高亮 / 选区）用 locator + overlay，不重 lower**；只有数据过滤型交互才需重 lower |
+| 4   | 像素尺寸耦合       | 双机制：**viewBox 等比缩放兜底**（免费、纯 resize 不重 lower，代价文字等比缩放）+ **debounce 重 lower**（要文字不变、布局重排时）                      | API/文档讲清「resize 是等比缩放还是重排」                                                                                                                                                                                                  |
+| 5   | 无文字度量         | 后续处理；最终形态 = **`measureText` 作为编译期 option/capability 注入**（像 `width/height` 一样是选项、不是 IR 内容，不破坏 JSON-IR 原则；Vega 同法） | metrics 永不进 IR；别走两遍渲染回灌，别长期停在「字符数×fontSize」估算                                                                                                                                                                     |
+| 6   | Tier1/Tier2 门控   | 不处理——这是设计原则（§1 / §9）                                                                                                                        | 守纪律：缺能力**下沉补 core**，不在 plot 绕开自造（AGENTS.md 已成硬规）                                                                                                                                                                    |
 
-### 16.3 处置后仍逆风的边界（定位声明）
+### 16.3 候选处置仍逆风的边界（定位声明）
 
 把 §16.2 全部落实后，定位内的架构风险基本覆盖。**唯一仍逆风的组合**：
 
@@ -866,7 +832,7 @@ intent
 
 而这个组合**不是 retikz/plot 的定位**：它是 **publication / 图解层**（中小数据量、强可组合、可嵌入更大图解），**不是** Highcharts/ECharts 那种大数据 + 强交互 dashboard（§14 已明确不做 dashboard 性能引擎）。因此明确划定：
 
-- **目标数据规模**：中小（稠密 primitive 后可到几万点流畅）；百万点 + 实时过滤交互 = **明确不支持/逆风**，不作为「待修」。
+- **目标数据规模**：中小；稠密 primitive 或 batching 能把上限提高到哪里，必须由当前环境 benchmark 决定，不预先承诺“几万点流畅”。百万点 + 实时过滤交互 = **明确不支持 / 逆风**，不作为「待修」。
 - **目标交互档**：展示类（hover/tooltip/高亮，locator+overlay 可做）；重度数据过滤型大数据交互不在目标内。
 
 这条边界写明后，日后有人拿 retikz 去打 dashboard 场景再回头怪架构，可直接指回本声明——边界是自觉取舍，不是缺陷。

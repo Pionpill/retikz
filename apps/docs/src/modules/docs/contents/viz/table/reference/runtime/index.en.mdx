@@ -5,6 +5,8 @@ description: Look up how React, Vanilla, and direct compile entries share one Ta
 
 TableSpec stores only JSON-safe structure. Datasets, Definitions, Core compile options, and host capabilities arrive at runtime. Every standalone entry measures content, solves tracks, replays selected content, and produces both Scene and manifest inside one Core compile; sidecar observation no longer runs a second lowering pass.
 
+> This page explains runtime wiring and execution without repeating schema fields. See [Table contracts](/viz/table/reference/contract-table) for the JSON shapes of TableSpec, Cells, tracks, borders, and manifests.
+
 <ComponentPreview files="table-runtime-flow" hideCode size="xs" />
 
 ## React
@@ -78,38 +80,18 @@ Top-level `composites` has been removed; use `compile.composites`. `renderTable(
 
 A layout-aware Table cannot persist its compile-local replay tree through pure Tier 1 `lowerIRToKernel()`. Use `compileTable()` for a standalone result. For an embedded Scene, pass `lowerTables()` definitions to host `compileToScene()`, React `<Layout>`, or the Vanilla adapter.
 
-## TableLayoutManifestSchema
+The manifest is a JSON-safe, detached, recursively frozen typed-artifact payload. See the [layout manifest contract](/viz/table/reference/contract-table#layout-manifest) for its fields and nested DTOs. Core compile traversal creates the root artifact occurrence; it never enters TableSpec or the manifest. `tableId` is not an instance selector; exact occurrences distinguish anonymous roots, nested Tables, and repeated ids.
 
-`TableLayoutManifest` is a JSON-safe, detached, recursively frozen typed-artifact payload.
+## Runtime migration
 
-<ZodSchema name="TableLayoutManifestSchema" />
-
-### TableTrackManifestEntrySchema
-
-<ZodSchema name="TableTrackManifestEntrySchema" />
-
-### TableCellManifestEntrySchema
-
-<ZodSchema name="TableCellManifestEntrySchema" />
-
-### TableBorderManifestEntrySchema
-
-<ZodSchema name="TableBorderManifestEntrySchema" />
-
-Core compile traversal creates the root artifact occurrence; it never enters TableSpec or the manifest. `tableId` is not an instance selector. Exact occurrences distinguish anonymous roots, nested Tables, and repeated ids.
-
-## Breaking migration
-
-| Previous form                                | Current form                                                           |
-| -------------------------------------------- | ---------------------------------------------------------------------- |
-| `columnWidth` / `rowHeight` / `headerHeight` | `columnSize` / `rowSize` / `headerRowSize` track objects               |
-| `manifest.bounds`                            | `manifest.allocationBounds`; use `visualOverflowBounds` for visibility |
-| `lowerTableWithArtifacts()`                  | `compileTable()`                                                       |
-| `renderTable(..., { composites })`           | `renderTable(..., { compile: { composites } })`                        |
-| Embedded Table `onManifest`                  | Outer `<Layout onArtifacts>`                                           |
+| Previous form                      | Current form                                    |
+| ---------------------------------- | ----------------------------------------------- |
+| `lowerTableWithArtifacts()`        | `compileTable()`                                |
+| `renderTable(..., { composites })` | `renderTable(..., { compile: { composites } })` |
+| Embedded Table `onManifest`        | Outer `<Layout onArtifacts>`                    |
 
 ## Related
 
-- [Table contracts](/viz/table/reference/contract-table) — Cell, track, and border schemas
-- [Detail Table contracts](/viz/table/reference/contract-detail) — columns and the detail Structure
+- [Table contracts](/viz/table/reference/contract-table) — TableSpec, Cell, track, border, and manifest schemas
+- [Detail Table contracts](/viz/table/reference/contract-detail) — columns and the detail Structure schema
 - [Kernel compile](/kernel/reference/runtime/compile) — Core options, typed artifacts, and the composite registry

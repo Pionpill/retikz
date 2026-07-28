@@ -1,5 +1,9 @@
 # 包拓扑
 
+> **状态：当前包与发布组拓扑真源的可读说明。** 机器可读真源是 [`scripts/release-groups.config.mjs`](../../scripts/release-groups.config.mjs)；新增、删除或调整 release group 时必须同步本文。领域职责以根与就近 `AGENTS.md` 为准。
+
+---
+
 retikz 将包的代码归属和发布节奏分开管理。
 
 ## 领域目录
@@ -20,15 +24,15 @@ retikz 将包的代码归属和发布节奏分开管理。
 
 `scripts/release-groups.config.mjs` 是机器可读的发布组真源。
 
-| 发布组 | 包                                                                                                                     | 版本策略        |
-| ------ | ---------------------------------------------------------------------------------------------------------------------- | --------------- |
-| kernel | `@retikz/math`, `@retikz/runtime`, `@retikz/core`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla`, `@retikz/tex` | 组内 lockstep   |
-| data   | `@retikz/data`                                                                                                         | 独立底座包      |
-| plot   | `@retikz/plot`, `@retikz/plot-react`, `@retikz/plot-vanilla`                                                           | plot 组内同步发 |
+| 发布组   | 包                                                                                                                     | 版本策略             |
+| -------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| standard | `@retikz/standard`, `@retikz/standard-react`, `@retikz/standard-vanilla`                                               | Standard 组 lockstep |
+| kernel   | `@retikz/math`, `@retikz/runtime`, `@retikz/core`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla`, `@retikz/tex` | kernel 组 lockstep   |
+| data     | `@retikz/data`                                                                                                         | 独立底座包           |
+| plot     | `@retikz/plot`, `@retikz/plot-react`, `@retikz/plot-vanilla`                                                           | Plot 组 lockstep     |
+| table    | `@retikz/table`, `@retikz/table-react`, `@retikz/table-vanilla`                                                        | Table 组 lockstep    |
 
-未来 table 等功能家族即使放在 `packages/viz/*` 下，也应该拥有独立发布组。
-
-`packages/library/*` 的第一套 Standard 包家族计划使用独立 `standard` release group。该 release group 只在对应具体能力 ADR 确认 package manifest 后进入 `scripts/release-groups.config.mjs`，不能为尚不存在的 package 提前配置。
+未来 chart、geo 等功能家族即使放在 `packages/viz/*` 下，也只有在具体能力 ADR 确认 package manifest 后才进入 release group 真源；领域目录不能替未存在的包预留发布配置。
 
 ## 依赖策略
 

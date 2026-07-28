@@ -1,0 +1,160 @@
+---
+title: '@retikz/core'
+description: 把完整 Core IR 编译为确定性 Scene，并通过 Core Runtime Program 在同一 Session revision 中发布编译结果、Scene Snapshot 与 Patch envelope。
+---
+
+`@retikz/core` 拥有 IR、Definition、registry、编译与 Scene 语义。`compileToScene()` 仍是无状态的完整编译入口；需要跨 revision 管理状态时，`CoreOwnerDefinition` 与 `createCoreProgram()` 把同一编译语义接入 `@retikz/runtime`。
+
+## 完整 Snapshot 与 Core Program
+
+调用方始终提交完整 IR Snapshot。Core owner 负责复制、冻结和比较文档；Core Program 读取 typed Snapshot，产生完整 `CompileResult`、`SceneRuntimeSnapshot` 与可选 `ScenePatch`，最后由 Runtime Session 原子发布。
+
+<ComponentPreview files="core-runtime-program" size="xxl" hideCode />
+
+Runtime 不解释 Node、Path、Scope、Composite 或 Scene。领域 identity、编译诊断和 full-fallback `replaceScene` Patch 都由 Core 决定；Runtime 只约束依赖顺序、candidate 隔离、revision 与发布。
+
+## 基础接线
+
+`CoreOwnerDefinition` 和 `createCoreProgram()` 都是普通 Runtime Definition，可以与其它领域 Owner / Program 注册到同一个 Session。初始 full run 的 `patch` 为 `undefined`，renderer 从完整 `snapshot` mount。
+
+```ts
+import { CORE_OWNER_KEY, CORE_PROGRAM_ID, CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
+import {
+  createRuntimeOwnerInput,
+  createRuntimeOwnerRegistry,
+  createRuntimeProgramRegistry,
+  createRuntimeSession,
+} from '@retikz/runtime';
+
+const ir = {
+  version: 1,
+  type: 'scene',
+  children: [{ type: 'node', id: 'hello', position: [0, 0], text: 'Hello' }],
+} as const;
+
+const coreProgram = createCoreProgram({ padding: 16 });
+const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
+const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
+const session = createRuntimeSession({
+  owners,
+  programs,
+  initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, ir)],
+});
+
+const { output, snapshot, patch } = session.artifact(coreProgram).value;
+// output.result: 完整 CompileResult
+// snapshot.revision: 0
+// patch: undefined
+```
+
+固定 identity 为 `CORE_OWNER_KEY = '@retikz/core/document'` 与 `CORE_PROGRAM_ID = { owner: CORE_OWNER_KEY, key: 'compile' }`。调用方不应复制字符串另建平行 owner。
+
+## Artifact 契约
+
+| 字段                 | 作用                                                                                |
+| -------------------- | ----------------------------------------------------------------------------------- |
+| `output.result`      | 与同一 IR/options 下 fresh `compileToScene()` 等价的完整 Scene 与 typed artifacts   |
+| `output.diagnostics` | canonical 顺序的 Core compile warnings；只在成功 commit 后派发给 `onWarn`           |
+| `snapshot`           | 当前 Session revision 的 deeply immutable Scene、document root identity 与 topology |
+| `patch`              | 相对 base revision 的原子 Scene Patch；initial full run 不提供                      |
+
+初始运行执行完整编译。update 无法安全局部证明时，Program 会 full fallback，并在 `patch.operations` 中发布唯一的 `replaceScene`；调用方仍只消费同一个 Snapshot / Patch envelope，不需要切换协议。
+
+Core 会把可选 ChangeSet 与 previous / next 完整 Snapshot 交叉校验。Scene 根和 stable entity 的每一项自身 value 变化都必须由唯一 `update` hint 恰好覆盖；add/remove/move 必须完整解释所属 parent 的 next identity 集合与顺序，`parent` / `before` 指向 next 的最终位置。
+
+document root 的 identity path 是 `['root']`。每个拥有唯一非空 `id` 的普通 child 追加 `[type, id]`；有 `id` 的 Scope 继续作为 parent boundary 递归索引后代，因此 Scope 内 Node 可以形成 `['root', 'scope', scopeId, 'node', nodeId]`。`localNamespace` 只改变引用 frame，不改变这条 identity path；实体跨 Scope 移动时旧、新 path 不同，使用 remove + add，而不是保留旧 identity 的 move。Scope add/remove 不级联，每个 stable descendant 都必须由自己的 hint 单独覆盖。
+
+结构 hint 按集合校验，ChangeSet 数组顺序不是 Patch 执行顺序，每个 parent 内的 move 集合必须构成最小重排。anonymous、同 parent duplicate、Composite、漏报、多余 hint、错误 parent / before 或无法重建 next sibling order 都会被判定为不匹配。
+
+当前局部增量路径先覆盖一个可证明安全的闭环：root 只含 unique-id、绝对 tuple position 的 Node，结构与顺序不变，只有一个 Node 的纯色 `fill` string 变化，并且没有自定义 shape、资源、artifact 或 compile warning。Program 只重编该 Node contribution，复用其它 committed root contribution，并以一个 emitted-subtree `update` operation 发布 Patch；输出仍与 fresh `compileToScene()` 等价。引用、资源、自定义 shape、Scope、Composite、多 owner 变化或其它无法局部证明的场景继续 full fallback。
+
+不匹配时，`CORE_CHANGESET_MISMATCH` 只作为 Runtime diagnostic 在 fallback 成功 commit 后发布一次，不进入 `output.diagnostics` 或 `onWarn`。fallback compile 失败时不会发布该 diagnostic，也不会推进 revision 或替换 committed artifact。
+
+Core Program 的 private read 保存下一次 update 使用的 immutable source Snapshot 与 stable identity index；已提交的完整 Scene Snapshot 同时作为安全子集的 contribution cache。dependency Program、participant 与 `session.artifact()` 只能看到上表中的 public read，不会取得 source/index 私有状态。
+
+## 不可变 Program options
+
+`createCoreProgram(options)` 在 factory 调用时复制 option record、registry array 与 Definition record，并固定 callback reference。之后修改原数组或 Definition 字段不会改变已创建 Program。
+
+要更换 measurer、lowerer、provider callback 或它们依赖的外部状态，请销毁旧 Session，并用新 options 创建新的 Program。新 Program 的第一轮总是 full run；`trace` 由 Runtime Program context 统一注入，因此不属于 `CoreProgramOptions`。
+
+## 公开 API
+
+| 导出                                                   | 作用                                                          |
+| ------------------------------------------------------ | ------------------------------------------------------------- |
+| `CORE_OWNER_KEY` / `CORE_PROGRAM_ID`                   | Core document owner 与 compile Program 的固定 identity        |
+| `CoreOwnerDefinition`                                  | 完整 IR Snapshot 的 capture/read/equality Definition          |
+| `createCoreProgram(options)`                           | 创建保留 composite artifact 泛型的 Runtime Program Definition |
+| `CoreChange`                                           | `add` / `update` / `remove` / `move` change hint union        |
+| `CoreProgramOptions<TComposites>`                      | `CompileOptions` 去掉 `trace` 后的 Program 生命周期配置       |
+| `CoreProgramOutput<TComposites>`                       | 完整 compile result 与 warnings                               |
+| `CoreProgramPublicRead<TComposites>`                   | public `output` / `snapshot` / optional `patch`               |
+| `CoreProgramDefinition<TComposites>`                   | 保留 artifact input、owned artifact、private/public read 泛型 |
+| `RuntimeScene` / `SceneRuntimeSnapshot` / `ScenePatch` | deeply readonly Scene 与原子 Patch DTO                        |
+
+## 源码
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Core owner identity 与 change hint',
+      path: 'packages/kernel/core/src/contract/runtime/types.ts',
+      startLine: 3,
+      endLine: 39,
+    },
+    {
+      label: 'Core owner Snapshot lifecycle',
+      path: 'packages/kernel/core/src/contract/runtime/owner.ts',
+      startLine: 11,
+      endLine: 24,
+    },
+    {
+      label: 'Core Program public contract',
+      path: 'packages/kernel/core/src/compile/incremental/public.ts',
+      startLine: 10,
+      endLine: 42,
+    },
+    {
+      label: 'Core Program full run 与 public artifact',
+      path: 'packages/kernel/core/src/compile/incremental/program.ts',
+      startLine: 24,
+      endLine: 118,
+    },
+    {
+      label: 'Snapshot stable identity tree',
+      path: 'packages/kernel/core/src/compile/incremental/diff.ts',
+      startLine: 11,
+      endLine: 81,
+    },
+    {
+      label: 'ChangeSet 结构交叉校验',
+      path: 'packages/kernel/core/src/compile/incremental/diff.ts',
+      startLine: 171,
+      endLine: 322,
+    },
+    {
+      label: 'root Node contribution 增量复用',
+      path: 'packages/kernel/core/src/compile/incremental/root-node-style.ts',
+      startLine: 49,
+      endLine: 238,
+    },
+    {
+      label: 'Mismatch fallback diagnostic',
+      path: 'packages/kernel/core/src/compile/incremental/program.ts',
+      startLine: 119,
+      endLine: 135,
+    },
+    {
+      label: 'canonical Scene topology',
+      path: 'packages/kernel/core/src/compile/orchestration/runtime-topology.ts',
+      startLine: 44,
+      endLine: 172,
+    },
+  ]}
+/>
+
+## 相关
+
+- [Program 与同步 Session](/kernel/packages/runtime/session)
+- [分层](/kernel/concepts/design/layers)
+- [编译入口](/kernel/reference/runtime/compile)

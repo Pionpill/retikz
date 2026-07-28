@@ -37,7 +37,8 @@ const compareIndexes = (left: ReadonlyArray<number>, right: ReadonlyArray<number
   return left.length - right.length;
 };
 
-const compareOccurrences = (left: CompileOccurrenceLocator, right: CompileOccurrenceLocator): number => {
+/** 按 canonical 逻辑树 preorder 比较两个 compile occurrence */
+export const compareCompileOccurrences = (left: CompileOccurrenceLocator, right: CompileOccurrenceLocator): number => {
   const sourceDifference = compareIndexes(sourceIndexesOf(left.sourcePath), sourceIndexesOf(right.sourcePath));
   if (sourceDifference !== 0) return sourceDifference;
   const leftIndexes = left.expansionPath.map(segment => segment.index);
@@ -51,6 +52,6 @@ export const orderCompileArtifacts = (artifacts: ReadonlyArray<CompileArtifact>)
     .map((artifact, index) => ({ artifact, index }))
     .sort(
       (left, right) =>
-        compareOccurrences(left.artifact.occurrence, right.artifact.occurrence) || left.index - right.index,
+        compareCompileOccurrences(left.artifact.occurrence, right.artifact.occurrence) || left.index - right.index,
     )
     .map(({ artifact }) => artifact);

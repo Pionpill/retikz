@@ -1,12 +1,14 @@
 # plot 渲染性能分析 + GPU（WebGL/WebGPU）后端可行性
 
-> 目的：回答「`@retikz/plot` 会不会撞性能墙、在哪里撞、要不要上 WebGL」。结论先行：plot 的图元随数据量 `O(N)` 增长，canvas 在 5k–10k 动画图元 / ~5 万静态图元处掉帧，**确会撞墙**；但 GPU 后端不是第一杠杆——canvas batching 与 plot 侧聚合更便宜、且能独立见效，真撞墙时再上 **hybrid GPU（数据层 GPU + 文字/轴留 2D）**。
-> 日期：2026-06-07 · 关联：[`v0.3 roadmap`](../../../../packages/kernel/_notes/decisions/v0/v0.3/roadmap.md)（包拆分图已预留 `./webgl`）· [`plot-compare-analysis`](./plot-compare-analysis.md)（性能维度横向定位）
-> 说明：文中性能阈值为**工程经验量级，非实测**；正式立项前应补 benchmark 把拐点测准（见 §6）。
+> **状态：2026-06-07 的结构分析快照，不是当前实施方案。** 本文回答「`@retikz/plot` 会不会撞性能墙、在哪里撞、何时值得评估 GPU」。plot 图元随数据量 `O(N)` 增长的结构判断仍成立；具体阈值、浏览器表现、后端形态与 package surface 必须在正式立项前重新 benchmark 和 ADR 验证。
+>
+> 结论先行：GPU 后端不是第一杠杆。先测量，再评估 Canvas batching 与 Plot 侧聚合；只有仍存在明确 60fps 墙时才考虑 hybrid GPU（数据层 GPU + 文字 / 轴留 2D）。文中 5k–10k 动画图元、约 5 万静态图元等数字只是工程经验量级，未经本仓 benchmark 坐实。
+>
+> 关联：[`性能与增量运行时设计`](../../../../notes/architecture/performance-design.md) · [`plot v0 roadmap`](../decisions/plot/v0/roadmap.md) · [`plot-compare-analysis`](./plot-compare-analysis.md)
 
 ## 1. plot 的图元随数据量线性爆炸（O(N)，已确认）
 
-探查 `packages/viz/plot/src/lower/mark.ts` 的下沉逻辑，每种 mark 把 N 个数据点下沉成的 Tier 1 节点 / 编译后 Scene primitive：
+当前 mark lowering 分布在 `packages/viz/plot/src/providers/mark/`，由 `src/pipeline/` 编排。结构上，每种 mark 把 N 个数据点下沉成的 Tier 1 节点 / 编译后 Scene primitive：
 
 | mark                    | N 数据点 → Tier 1     | 编译后 Scene primitive  | 量级     | 备注                                                              |
 | ----------------------- | --------------------- | ----------------------- | -------- | ----------------------------------------------------------------- |
@@ -17,13 +19,13 @@
 | area / 面积             | 1 条 Path（2N+1 步）  | 1 个 `PathPrim`         | O(N)     | 上沿 + 下沿回边                                                   |
 | **axis / grid / label** | O(ticks)              | O(ticks)                | **恒定** | **与 N 无关**——刻度线合并成 1 条 Path，标签 O(ticks) 个 text      |
 
-源：`lowerPoint` (`mark.ts:122`)、`lowerInterval` (`mark.ts:151`)、`lowerSector` (`mark.ts:231`)、`lowerLine` (`mark.ts:340`)、`lowerArea` (`mark.ts:392`)、guide `lowerCartesianGuide` (`guide.ts:80`)。
+实现入口：`providers/mark/features/point.ts`、`interval.ts`、`path.ts`、`relation.ts` 与 `pipeline/guide/`。具体函数和行号不是本文契约，立项时应重新采样当前实现。
 
 **关键洞察**：plot 的热点图元是 **点 / 矩形 / 折线**——恰好是 GPU instancing 最擅长的；而 WebGL 最大软肋 **文字** 落在 `O(ticks)` 的轴 / 标签层（十几个），**几乎不吃数据量**。对 plot 这个特定场景，GPU 的强项打在高基数数据层、弱项打在低基数 guide 层——比通用 diagram 场景（文字密集）划算得多。这是「plot 值得考虑 GPU、而 core diagram 不值得」的根本差异。
 
 ## 2. canvas 在哪里断
 
-探查 `packages/kernel/render/src/canvas/drawScene.ts`：
+分析入口现为 `packages/kernel/render/src/canvas/draw-scene.ts`：
 
 ```ts
 export const drawScene = (ctx, scene, options) => {
@@ -49,7 +51,7 @@ export const drawScene = (ctx, scene, options) => {
 
 ### 3.1 canvas batching（最高性价比，不动后端）
 
-plot 的 color grouping 在 IR 层已把同色图元归到 `scope.nodeDefault`（`mark.ts:46` `colorGroupedScope`），但 canvas renderer 把 scope 摊平后**仍逐个 fill**。把同 style 的 `RectPrim` / `EllipsePrim` 合并成单次绘制（一个 `beginPath` + N 个子路径 + 一次 `fill` + 一次 `stroke`），经验上把 canvas 吞吐拉高 5–10×。
+plot 的 color grouping 会通过 `providers/mark/shared/common.ts` 的 `colorGroupedScope` 把同色图元归组，但 Canvas renderer 把 scope 摊平后仍逐个 fill。把同 style 的 `RectPrim` / `EllipsePrim` 合并成单次绘制（一个 `beginPath` + N 个子路径 + 一次 `fill` + 一次 `stroke`）可能显著提高吞吐；具体收益必须由 benchmark 测量，不能沿用快照中的经验倍数作为验收值。
 
 - 范围：`@retikz/render/canvas` 内部优化，**Scene 契约不变、SVG 路径不变、IR 不变**——属「行为等价的性能优化」，无需动文档。
 - 风险：z-order 内同 style 才能合批；跨 style 边界要 flush。需保留逐图元 `id`（hit-test / 动画 per-id 用），合批是绘制层的事、不丢 id 映射。
@@ -60,7 +62,7 @@ plot 的 color grouping 在 IR 层已把同色图元归到 `scope.nodeDefault`�
 10 万点不该 emit 10 万个 Node。成熟库（datashader / deck.gl）在**数据层**做 binning / 密度聚合 / LTTB 抽稀，让图元数有上界。
 
 - 同时干掉 §2 第二道 IR 序列化墙（这是 batching 救不了的）。
-- 归属：`next-plot` 的 Tier 2 工作，**不进 core**（core 运行时只 zod，聚合算法是 plot 包依赖）。
+- 归属：`next-viz` 的 Tier 2 工作，**不进 core**；聚合 / 抽稀依赖数据与可视化语义，不属于 Core 图形表达或 Runtime 执行底座。
 - 与 [`plot-compare-analysis`](./plot-compare-analysis.md) 里「大数据性能非 retikz 目标维度」的定位一致——聚合是把「能画」的上限抬高，不是追 ECharts 的实时百万点。
 
 ### 3.3 hybrid GPU 数据层（真撞墙才上）
@@ -70,11 +72,11 @@ plot 的 color grouping 在 IR 层已把同色图元归到 `scope.nodeDefault`�
 - **GPU 只扛数据层**：instanced 点（EllipsePrim）/ 矩形（RectPrim）+ polyline（折线 PathPrim）。
 - **轴 / 标签 / 文字留 SVG 或 Canvas 2D**（O(ticks) 低基数），叠一层在 GPU 画布之上。**彻底绕开 GPU 文字坑（SDF atlas）。**
 - 技术选型：新立 GPU 后端**优先 WebGPU**（WebGL2 已 legacy、不再演进；WebGPU 在 Chrome/Safari 已可用、Firefox 跟进中），WebGL2 做 fallback 或暂不做。
-- 包归属：`@retikz/render/webgpu`（roadmap 包拆分图已预留 `./webgl` seam）。消费同一 `Scene`，**无需改 Scene 契约**；降级路径回落 canvas。
+- owner 归属：后端执行语义属于 `@retikz/render`。最终是现有包子路径、独立 package 还是宿主私有 backend，必须由立项 ADR 根据发布边界、依赖体积和降级契约决定；本文不预先冻结 `@retikz/render/webgpu` 这一 surface。
 
 ## 4. GPU 友好度清单（若真做 hybrid 后端）
 
-按 `packages/kernel/core/src/primitive/*.ts` 的 primitive 契约逐项评估（探查确认无任何现存 webgl/gpu 占位代码，仅 canvas/svg 两后端）：
+按 `packages/kernel/core/src/contract/scene/` 的 Scene primitive 契约逐项评估（快照时无现存 WebGL / GPU 后端）：
 
 | primitive                 | GPU 难度 | 方案                                             | plot 相关性                                    |
 | ------------------------- | -------- | ------------------------------------------------ | ---------------------------------------------- |
@@ -93,16 +95,16 @@ plot 的 color grouping 在 IR 层已把同色图元归到 `scope.nodeDefault`�
 
 ## 5. 与现有架构的契合
 
-- **Scene 契约无需改**：GPU 后端与 canvas/svg 一样消费已编译 `Scene`（`packages/kernel/core/src/primitive/scene.ts`：`RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim`）。编译期产物（gradient/pattern tile、marker primitives、文本度量）可复用。
+- **优先复用 Scene 契约**：GPU 后端应像 Canvas / SVG 一样消费 `packages/kernel/core/src/contract/scene/` 的 `ScenePrimitive`。若高密度图元需要新增后端中立 primitive，必须先经 Core 能力设计，不能由 Render 或 Plot 私下扩展 Scene。
 - **core 不受影响**：渲染后端是 `@retikz/render` 子路径，core 仍零 React/DOM/GPU 依赖。
 - **降级既有范式**：沿用 canvas「能力声明 + 可诊断降级、不静默」——GPU 不可用 / 不支持的 primitive 子集回落 2D，绝不丢图。与 alpha.5 动画的降级契约同一套思路。
-- **分支流向**：batching（§3.1）属 core 组 → `next-core`；聚合（§3.2）属 plot → `next-plot`；GPU 后端（§3.3）属 render → `next-core`，plot 通过同一 Scene 受益，无需 plot 自造渲染路径（守 AGENTS.md「子组不绕开 core 自造平行机制」）。
+- **分支流向**：batching（§3.1）和 GPU 后端（§3.3）属 kernel / render → `next-kernel`；聚合（§3.2）属 plot → `next-viz`。功能改动最终先合 `next`，不直接进入方向分支；Plot 通过同一 Scene 受益，不自造渲染路径。
 
 ## 6. 建议落地顺序
 
 1. **先 benchmark**：用 point/interval mark 造 1k / 1万 / 10万 点的 fixture，分别测静态渲染、60fps 动画重绘、hit-test 延迟、IR 体积 + 编译耗时，把 §2 的经验拐点测成真数据。这是后续所有取舍的依据。
-2. **canvas batching**（`next-core`）：同 style 图元合批；行为等价优化。多半就够日常 plot 用。
-3. **plot 聚合 / 抽稀**（`next-plot`）：binning / LTTB，给图元数上界，治 IR 墙。
+2. **canvas batching**（kernel / render owner）：同 style 图元合批；行为等价优化。多半就够日常 plot 用。
+3. **plot 聚合 / 抽稀**（plot owner）：binning / LTTB，给图元数上界，治 IR 墙。
 4. **仅当 1–3 后仍撞 60fps 墙**：立项 hybrid GPU 后端（优先 WebGPU + 数据层 only + 文字留 2D），届时走正式 spec（场景规模、目标后端、parity 范围、文字方案）。
 
 ## 7. 不做 / 边界

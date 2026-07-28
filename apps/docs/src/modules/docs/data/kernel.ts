@@ -171,6 +171,7 @@ export const kernelSection: Array<Section> = [
     label: 'kernel.packages',
     document: true,
     pages: [
+      { id: 'core', label: 'kernel.pkgCore' },
       {
         id: 'runtime',
         label: 'kernel.pkgRuntime',
