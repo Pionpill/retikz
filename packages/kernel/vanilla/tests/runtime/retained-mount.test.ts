@@ -12,7 +12,7 @@ import { defineRetainedRenderer, RetainedRenderErrorCode } from '@retikz/render/
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import type { VanillaFigureSpec, VanillaTier2Adapter } from '../../src';
+import type { RetainedSvgUpdateOptions, VanillaFigureSpec, VanillaTier2Adapter } from '../../src';
 
 import { mountCanvas, mountSvg, VanillaLayerCache } from '../../src';
 import { createRetainedCompositeDefinitions } from '../../src/runtime/retained-composites';
@@ -605,6 +605,18 @@ describe('@retikz/vanilla retained mount', () => {
     expect(() => view.update(source('#22c55e'))).toThrow(/RUNTIME_PARTICIPANT_PREPARE_FAILED/);
     expect(view.artifacts).toBe(artifacts);
     expect(view.runtimeMeta).toBe(runtimeMeta);
+  });
+
+  it('SVG retained update 在运行时拒绝 Canvas-only animationProperties 配置', () => {
+    const container = document.createElement('div');
+    const view = mountSvg(container, source('#ef4444'));
+
+    expect(() =>
+      view.update(source('#22c55e'), {
+        canvas: { animationProperties: {} },
+      } as unknown as RetainedSvgUpdateOptions),
+    ).toThrowError(expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid }));
+    view.dispose();
   });
 
   it('预编译 Scene 拒绝 retained renderer factory', () => {

@@ -1,3 +1,5 @@
+export type { VanillaViewModeValue } from './constants';
+export { VanillaViewMode } from './constants';
 export * from './hydrate';
 export * from './mount';
 export * from './mount-canvas';

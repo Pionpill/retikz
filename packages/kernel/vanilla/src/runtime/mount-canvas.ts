@@ -35,7 +35,7 @@ import type {
   StaticCanvasView,
 } from './types';
 
-import { DEFAULT_ID_PREFIX } from './constants';
+import { DEFAULT_ID_PREFIX, VanillaViewMode } from './constants';
 import { createVanillaRetainedSession } from './retained-session';
 import { createEmptyRuntimeMeta, toSceneResult } from './to-scene';
 
@@ -290,7 +290,7 @@ const mountStaticCanvas = (container: Element, input: Scene, options: MountCanva
   };
 
   return {
-    mode: 'static',
+    mode: VanillaViewMode.Static,
     root: canvas,
     update(next) {
       if (disposed) throw new Error('mountCanvas: view already disposed.');
@@ -359,7 +359,7 @@ const mountRetainedCanvas = (
   };
   let disposed = false;
   return {
-    mode: 'retained',
+    mode: VanillaViewMode.Retained,
     root: canvas,
     update: (next, updateOptions) => runtime.update(next, updateOptions),
     hydrate: hydrateOptions => runtime.hydrate(hydrateOptions),

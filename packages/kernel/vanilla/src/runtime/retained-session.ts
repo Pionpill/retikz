@@ -26,7 +26,10 @@ import type {
   HydrateOptions,
   HydrationHandle,
   MountCanvasOptions,
+  MountOptions,
+  RetainedCanvasUpdateOptions,
   RetainedRenderInput,
+  RetainedSvgUpdateOptions,
   RetainedVanillaCanvasUpdateOptions,
   RetainedVanillaUpdateOptions,
   VanillaAnimationOptions,
@@ -135,9 +138,11 @@ type RetainedSessionState = Readonly<{
 }>;
 
 /** Vanilla retained session controller 对外能力 */
-export type RetainedSessionController = Readonly<{
+export type RetainedSessionController<
+  TUpdateOptions extends RetainedVanillaUpdateOptions = RetainedVanillaUpdateOptions,
+> = Readonly<{
   /** 原子更新完整输入与可变 renderer 配置 */
-  update: (next: RetainedRenderInput, options?: RetainedVanillaUpdateOptions) => void;
+  update: (next: RetainedRenderInput, options?: TUpdateOptions) => void;
   /** 向当前 committed Scene 注册 hydration handlers */
   hydrate: (options: HydrateOptions) => HydrationHandle;
   /** exactly-once 释放 Session 与 renderer */
@@ -154,11 +159,24 @@ export type RetainedSessionController = Readonly<{
   runtimeMeta: () => VanillaRuntimeMeta;
 }>;
 
-type CreateRetainedSessionOptions = Readonly<{
+type CreateSvgRetainedSessionOptions = Readonly<{
   /** 要创建的 renderer 后端 */
-  backend: 'svg' | 'canvas';
+  backend: 'svg';
   /** retained renderer 独占的宿主根元素 */
-  host: SVGSVGElement | HTMLCanvasElement;
+  host: SVGSVGElement;
+  /** 初始完整 IR 或 plain spec */
+  input: RetainedRenderInput;
+  /** session-lifetime mount 配置 */
+  options: MountOptions;
+  /** SSR 与资源引用共用的稳定 id 前缀 */
+  idPrefix: string;
+}>;
+
+type CreateCanvasRetainedSessionOptions = Readonly<{
+  /** 要创建的 renderer 后端 */
+  backend: 'canvas';
+  /** retained renderer 独占的宿主根元素 */
+  host: HTMLCanvasElement;
   /** 初始完整 IR 或 plain spec */
   input: RetainedRenderInput;
   /** session-lifetime mount 配置 */
@@ -168,6 +186,15 @@ type CreateRetainedSessionOptions = Readonly<{
   /** Canvas session-lifetime 设备像素比 */
   devicePixelRatio?: number;
 }>;
+
+type CreateRetainedSessionOptions = CreateSvgRetainedSessionOptions | CreateCanvasRetainedSessionOptions;
+
+type CreateVanillaRetainedSession = {
+  /** 创建 SVG retained session */
+  (options: CreateSvgRetainedSessionOptions): RetainedSessionController<RetainedSvgUpdateOptions>;
+  /** 创建 Canvas retained session */
+  (options: CreateCanvasRetainedSessionOptions): RetainedSessionController<RetainedCanvasUpdateOptions>;
+};
 
 /** 捕获一次 revision 的 Render Runtime config */
 const createRenderConfig = (
@@ -187,7 +214,9 @@ const createRenderConfig = (
 });
 
 /** 创建 Vanilla adapter 共用的 Core + Render retained Runtime session */
-export const createVanillaRetainedSession = (options: CreateRetainedSessionOptions): RetainedSessionController => {
+const createVanillaRetainedSessionImplementation = (
+  options: CreateRetainedSessionOptions,
+): RetainedSessionController => {
   const fixedOptions = captureRetainedMountOptions(options.options);
   const initial = prepareRetainedInput(options.input, fixedOptions);
   const compositeDefinitions = createRetainedCompositeDefinitions(initial.coreOptions.composites);
@@ -204,14 +233,14 @@ export const createVanillaRetainedSession = (options: CreateRetainedSessionOptio
     options.backend === 'svg'
       ? createRetainedRenderParticipant({
           backend: 'svg',
-          host: options.host as SVGSVGElement,
+          host: options.host,
           rendererFactory,
           immutableOptions: { backend: 'svg', idPrefix: options.idPrefix },
           coreProgram,
         })
       : createRetainedRenderParticipant({
           backend: 'canvas',
-          host: options.host as HTMLCanvasElement,
+          host: options.host,
           rendererFactory,
           immutableOptions: {
             backend: 'canvas',
@@ -222,13 +251,16 @@ export const createVanillaRetainedSession = (options: CreateRetainedSessionOptio
         });
   const { devicePixelRatio: _devicePixelRatio, ...initialCanvas } = fixedOptions.canvas ?? {};
   void _devicePixelRatio;
-  const initialMutableOptions = captureRetainedUpdateOptions({
-    animation: fixedOptions.animation ?? {},
-    canvas: initialCanvas,
-  });
+  const initialMutableOptions = captureRetainedUpdateOptions(
+    {
+      animation: fixedOptions.animation ?? {},
+      ...(options.backend === 'canvas' ? { canvas: initialCanvas } : {}),
+    },
+    options.backend,
+  );
   let state: RetainedSessionState = Object.freeze({
     animation: initialMutableOptions.animation ?? {},
-    canvas: initialMutableOptions.canvas ?? {},
+    canvas: ('canvas' in initialMutableOptions ? initialMutableOptions.canvas : undefined) ?? {},
     runtimeMeta: initial.runtimeMeta,
   });
   let handlerContributions: ReadonlyArray<RenderHandlerContribution> = Object.freeze([]);
@@ -268,7 +300,7 @@ export const createVanillaRetainedSession = (options: CreateRetainedSessionOptio
 
   return Object.freeze({
     update: (next, updateOptions = {}) => {
-      const capturedOptions = captureRetainedUpdateOptions(updateOptions);
+      const capturedOptions = captureRetainedUpdateOptions(updateOptions, options.backend);
       const prepared = prepareRetainedInput(next, fixedOptions);
       const preparedDefinitions = compositeDefinitions.prepare(prepared.coreOptions.composites);
       const nextCompositeRevision = preparedDefinitions.changed ? compositeRevision + 1 : compositeRevision;
@@ -282,7 +314,7 @@ export const createVanillaRetainedSession = (options: CreateRetainedSessionOptio
       }
       const nextState = Object.freeze({
         animation: capturedOptions.animation ?? state.animation,
-        canvas: capturedOptions.canvas ?? state.canvas,
+        canvas: ('canvas' in capturedOptions ? capturedOptions.canvas : undefined) ?? state.canvas,
         runtimeMeta: prepared.runtimeMeta,
       });
       try {
@@ -346,3 +378,6 @@ export const createVanillaRetainedSession = (options: CreateRetainedSessionOptio
     runtimeMeta: () => state.runtimeMeta,
   });
 };
+
+/** 创建与后端匹配 update options 的 Vanilla retained session */
+export const createVanillaRetainedSession = createVanillaRetainedSessionImplementation as CreateVanillaRetainedSession;

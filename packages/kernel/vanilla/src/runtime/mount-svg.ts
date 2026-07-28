@@ -29,7 +29,7 @@ import type {
   VanillaView,
 } from './types';
 
-import { DEFAULT_ID_PREFIX } from './constants';
+import { DEFAULT_ID_PREFIX, VanillaViewMode } from './constants';
 import { createVanillaRetainedSession } from './retained-session';
 import { applyAttrs, svgNodeToDom } from './svg-dom';
 import { createEmptyRuntimeMeta, toSceneResult } from './to-scene';
@@ -113,7 +113,7 @@ const mountStaticSvg = (container: Element, input: Scene, options: MountOptions)
 
   let disposed = false;
   return {
-    mode: 'static',
+    mode: VanillaViewMode.Static,
     root,
     update(next) {
       if (disposed) throw new Error('mountSvg: view already disposed.');
@@ -159,7 +159,7 @@ const mountRetainedSvg = (container: Element, input: RetainedRenderInput, option
   container.appendChild(root);
   let disposed = false;
   return {
-    mode: 'retained',
+    mode: VanillaViewMode.Retained,
     root,
     update: (next, updateOptions) => runtime.update(next, updateOptions),
     hydrate: hydrateOptions => runtime.hydrate(hydrateOptions),

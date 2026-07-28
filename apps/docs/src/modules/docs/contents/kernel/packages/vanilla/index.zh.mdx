@@ -79,7 +79,7 @@ spec 只描述“画什么”，不持有 DOM、Canvas、时钟或 `update` 方�
 | Core `IRScene` | `@retikz/core`    | 跳过 spec 归一，以 retained Session 编译和更新            |
 | `Scene`        | `@retikz/core`    | 跳过归一与编译，创建完整重绘的 static view                |
 
-plain spec 路径会先由 `normalizeFigureSpec` 生成 Core IR，再由 `compileToScene` 解析 composite、registry、引用、几何、布局、资源与动画。`renderToSvgString`、`mountSvg` 和 `mountCanvas` 都从同一个 `toSceneResult` 入口完成这层分流，因此三种输入不会形成三套渲染语义。
+plain spec 路径会先由 `normalizeFigureSpec` 生成 Core IR，再由 Core Program 解析 composite、registry、引用、几何、布局、资源与动画。`renderToSvgString` 和预编译 `Scene` 的 static mount 通过 `toSceneResult` 完成一次性编译 / 分流；IR / plain spec 的 retained mount 则通过 `createVanillaRetainedSession → prepareRetainedInput` 建立可连续更新的 Core + Render Session。两条入口最终都消费同一 Core Scene 与 Render 后端，不建立平行图形语义。
 
 <SourceLinks
   sources={[
@@ -90,10 +90,22 @@ plain spec 路径会先由 `normalizeFigureSpec` 生成 Core IR，再由 `compil
       endLine: 255,
     },
     {
-      label: 'plain spec、IR 与 Scene 的统一入口',
+      label: 'SSR 与 static mount 的一次性 Scene 入口',
       path: 'packages/kernel/vanilla/src/runtime/to-scene.ts',
       startLine: 26,
       endLine: 46,
+    },
+    {
+      label: 'retained mount 的输入准备',
+      path: 'packages/kernel/vanilla/src/runtime/retained-session.ts',
+      startLine: 99,
+      endLine: 120,
+    },
+    {
+      label: 'retained Core + Render Session 创建入口',
+      path: 'packages/kernel/vanilla/src/runtime/retained-session.ts',
+      startLine: 216,
+      endLine: 285,
     },
   ]}
 />
@@ -108,9 +120,9 @@ plain spec 路径会先由 `normalizeFigureSpec` 生成 Core IR，再由 `compil
 | `mountCanvas`       | 显式挂载 Canvas                      | `CanvasView`                 |
 | `hydrate`           | 对 SSR / 已有 SVG 根节点绑定 handler | `HydrationHandle`            |
 
-`mountSvg` / `mountCanvas` 的返回值可用 `mode` 判别。IR 与 plain spec 创建 `mode: 'retained'` view：`update(next, options?)` 把完整输入与可变 renderer config 放进同一次 transaction，Core 发布 Scene Patch 或 full fallback，Render participant 成功后才原子替换 DOM / bitmap、artifacts、runtime metadata、事件和动画句柄。失败 transaction 不发布新 revision；rollback 成功时旧 view 继续可用，rollback 自身失败时 Session 进入 broken，需要 dispose 后 remount。
+`mountSvg` / `mountCanvas` 的返回值可用 `mode` 或 `VanillaViewMode` 判别。IR 与 plain spec 创建 `VanillaViewMode.Retained` view：`update(next, options?)` 把完整输入与可变 renderer config 放进同一次 transaction，Core 发布 Scene Patch 或 full fallback，Render participant 成功后才原子替换 DOM / bitmap、artifacts、runtime metadata、事件和动画句柄。失败 transaction 不发布新 revision；rollback 成功时旧 view 继续可用，rollback 自身失败时 Session 进入 broken，需要 dispose 后 remount。
 
-预编译 `Scene` 创建 `mode: 'static'` view：`update(nextScene)` 保持 root identity，但完整重绘后端；它没有 Core Program、Patch、Runtime diagnostics 或 compile artifacts。需要 Node 布局产物时，应传 IR / plain spec，并在 `compile.artifacts` 中启用 `nodeLayouts`。
+预编译 `Scene` 创建 `VanillaViewMode.Static` view：`update(nextScene)` 保持 root identity，但完整重绘后端；它没有 Core Program、Patch、Runtime diagnostics 或 compile artifacts。需要 Node 布局产物时，应传 IR / plain spec，并在 `compile.artifacts` 中启用 `nodeLayouts`。
 
 从旧版升级时，IR / plain spec view 的 `update(next)` 必须继续传同层级的 IR / plain spec。若仍需 `Scene → Scene` 完整重绘，请在 mount 时传入预编译 `Scene` 以创建 static view；改变 DPR 或 compile topology 时则应 dispose 后 remount。
 
@@ -124,25 +136,25 @@ SVG retained renderer 会保留未变 DOM identity；Canvas 对安全局部变�
       label: 'SVG static / retained view 分流',
       path: 'packages/kernel/vanilla/src/runtime/mount-svg.ts',
       startLine: 143,
-      endLine: 203,
+      endLine: 207,
     },
     {
       label: 'Vanilla retained Session 创建',
       path: 'packages/kernel/vanilla/src/runtime/retained-session.ts',
-      startLine: 169,
-      endLine: 233,
+      startLine: 216,
+      endLine: 285,
     },
     {
       label: 'Vanilla retained update transaction',
       path: 'packages/kernel/vanilla/src/runtime/retained-session.ts',
-      startLine: 249,
-      endLine: 289,
+      startLine: 301,
+      endLine: 341,
     },
     {
       label: 'Vanilla retained hydration 与公开 read',
       path: 'packages/kernel/vanilla/src/runtime/retained-session.ts',
-      startLine: 290,
-      endLine: 327,
+      startLine: 342,
+      endLine: 379,
     },
   ]}
 />
@@ -166,11 +178,11 @@ mount(canvasRoot, spec, {
 });
 ```
 
-`figure()` 只描述图；`output` 控制显示尺寸和资源 id，`compile` 注入 Core 编译能力，`animation` 控制播放或截帧，`canvas` 只给 Canvas 后端使用，`runtime.rendererFactory` 只在 IR / plain spec retained view 中替换内置 factory。
+`figure()` 只描述图；`output` 控制显示尺寸和资源 id，`compile` 注入 Core 编译能力，`animation` 控制播放或截帧，`canvas` 只给 Canvas mount 使用，`runtime.rendererFactory` 只在 IR / plain spec retained mount 中替换内置 factory。`RenderToStringOptions` 不含 `runtime`，SSR 不接受也不会忽略 retained renderer factory。
 
 `animation.enabled` 省略时跟随系统的“减少动态效果”偏好；显式 `true` 强制开启，显式 `false` 强制关闭。`snapshotAt` 仍会覆盖播放开关并输出静态截帧。
 
-retained `update()` 只接受 closed plain-data options：顶层是 `animation` / `canvas`，Canvas 更新只允许 `animationProperties`。`devicePixelRatio` 在 mount 时固定，热改 DPR、未知字段、symbol 或 accessor 都会抛稳定的 `RETAINED_RUNTIME_INPUT_INVALID`；需要改变 DPR 或 compile capability 时请 dispose 后 remount。
+retained `update()` 只接受与后端匹配的 closed plain-data options：SVG 的 `RetainedSvgUpdateOptions` 顶层只有 `animation`；Canvas 的 `RetainedCanvasUpdateOptions` 另有 `canvas.animationProperties`。`devicePixelRatio` 在 mount 时固定；SVG 传 Canvas-only 配置、热改 DPR、未知字段、symbol 或 accessor 都会抛稳定的 `RETAINED_RUNTIME_INPUT_INVALID`。需要改变 DPR 或 compile capability 时请 dispose 后 remount。
 
 ## 分层与嵌入
 
@@ -210,14 +222,14 @@ plain-spec retained update 可以替换同一 composite key/schema/执行分支�
     {
       label: 'Composite 固定 topology 与 callback transaction',
       path: 'packages/kernel/vanilla/src/runtime/retained-composites.ts',
-      startLine: 93,
-      endLine: 137,
+      startLine: 98,
+      endLine: 150,
     },
     {
       label: 'Composite candidate 接入 Session update',
       path: 'packages/kernel/vanilla/src/runtime/retained-session.ts',
-      startLine: 249,
-      endLine: 289,
+      startLine: 301,
+      endLine: 340,
     },
   ]}
 />
@@ -235,18 +247,21 @@ plain-spec retained update 可以替换同一 composite key/schema/执行分支�
 
 ## API 摘要
 
-| API                   | 类型          | 说明                                         |
-| --------------------- | ------------- | -------------------------------------------- |
-| `figure`              | authoring     | 构造 plain spec 根对象                       |
-| `layer`               | authoring     | 构造带顺序与 metadata 的 layer 边界          |
-| `node`                | authoring     | 构造具名或匿名 node                          |
-| `coordinate`          | authoring     | 构造必须带 id 的具名 coordinate              |
-| `path`                | authoring     | 构造 path，`way` 复用 Draw way DSL           |
-| `scope`               | authoring     | 构造样式与 namespace 作用域                  |
-| `embed`               | authoring     | 构造 Tier 2 嵌入节点                         |
-| `VanillaLayerCache`   | authoring     | 提供未来 layer 失效优化使用的 metadata hint  |
-| `isVanillaFigureSpec` | normalization | 判断输入是否为 version 1 plain spec          |
-| `normalizeFigureSpec` | normalization | 生成 Core IR、composites 与 runtime metadata |
-| `VanillaTier2Adapter` | type          | 定义 `embed()` 的 lowering 适配器            |
-| `RetainedVanillaView` | runtime       | IR / plain spec 的事务式 retained view       |
-| `StaticVanillaView`   | runtime       | 预编译 Scene 的完整重绘 static view          |
+| API                           | 类型          | 说明                                          |
+| ----------------------------- | ------------- | --------------------------------------------- |
+| `figure`                      | authoring     | 构造 plain spec 根对象                        |
+| `layer`                       | authoring     | 构造带顺序与 metadata 的 layer 边界           |
+| `node`                        | authoring     | 构造具名或匿名 node                           |
+| `coordinate`                  | authoring     | 构造必须带 id 的具名 coordinate               |
+| `path`                        | authoring     | 构造 path，`way` 复用 Draw way DSL            |
+| `scope`                       | authoring     | 构造样式与 namespace 作用域                   |
+| `embed`                       | authoring     | 构造 Tier 2 嵌入节点                          |
+| `VanillaLayerCache`           | authoring     | 提供未来 layer 失效优化使用的 metadata hint   |
+| `VanillaViewMode`             | runtime       | retained / static view 的公开 const object    |
+| `isVanillaFigureSpec`         | normalization | 判断输入是否为 version 1 plain spec           |
+| `normalizeFigureSpec`         | normalization | 生成 Core IR、composites 与 runtime metadata  |
+| `VanillaTier2Adapter`         | type          | 定义 `embed()` 的 lowering 适配器             |
+| `RetainedVanillaView`         | runtime       | IR / plain spec 的事务式 retained view        |
+| `StaticVanillaView`           | runtime       | 预编译 Scene 的完整重绘 static view           |
+| `RetainedSvgUpdateOptions`    | type          | SVG retained update 的动画配置                |
+| `RetainedCanvasUpdateOptions` | type          | Canvas retained update 的动画与 property 配置 |

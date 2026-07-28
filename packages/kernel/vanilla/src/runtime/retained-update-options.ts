@@ -6,7 +6,8 @@ const invalidUpdateOptions = (cause: unknown): never => {
   throw new RetainedRenderError({
     code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid,
     cause,
-    message: 'Vanilla retained update options must be closed plain-data records and cannot change Canvas DPR',
+    message:
+      'Vanilla retained update options must match the renderer backend, use closed plain-data records, and cannot change Canvas DPR',
   });
 };
 
@@ -82,9 +83,12 @@ const cloneAndFreeze = <T>(value: T, ancestors = new WeakSet<object>()): T => {
 };
 
 /** 校验并捕获 retained update 可变配置，避免后续 hydrate 读取用户可变别名 */
-export const captureRetainedUpdateOptions = (input: unknown): RetainedVanillaUpdateOptions => {
+export const captureRetainedUpdateOptions = (
+  input: unknown,
+  backend: 'svg' | 'canvas',
+): RetainedVanillaUpdateOptions => {
   try {
-    assertClosedRecord(input, new Set(['animation', 'canvas']));
+    assertClosedRecord(input, new Set(backend === 'svg' ? ['animation'] : ['animation', 'canvas']));
     const animation = input.animation;
     const canvas = input.canvas;
     if (animation !== undefined) assertClosedRecord(animation, new Set(['enabled', 'snapshotAt', 'easings']));

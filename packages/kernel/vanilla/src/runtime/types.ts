@@ -5,6 +5,7 @@ import type { RetainedRendererFactory } from '@retikz/render/runtime';
 import type { RuntimeDiagnostic } from '@retikz/runtime';
 
 import type { AnyVanillaTier2Adapter, VanillaFigureSpec, VanillaRuntimeMeta } from '../spec';
+import type { VanillaViewMode } from './constants';
 
 /** mount / renderToSvgString 的入参：已编译 `Scene`、待编译 `IRScene` 或 Vanilla plain spec */
 export type RenderInput = Scene | IRScene | VanillaFigureSpec;
@@ -50,13 +51,28 @@ export type VanillaCanvasOptions = {
 /** Retained view update 可变的 Canvas 配置；DPR 固定在 mount 生命周期 */
 export type RetainedVanillaCanvasUpdateOptions = Omit<VanillaCanvasOptions, 'devicePixelRatio'>;
 
-/** Retained view 单次 update 可原子提交的 renderer 配置 */
-export type RetainedVanillaUpdateOptions = Readonly<{
+/** Retained view 单次 update 共用的动画配置 */
+type RetainedAnimationUpdateOptions = Readonly<{
   /** 下一 revision 的动画配置 */
   animation?: VanillaAnimationOptions;
-  /** 下一 revision 的可变 Canvas 配置 */
-  canvas?: RetainedVanillaCanvasUpdateOptions;
 }>;
+
+/** Retained SVG view 单次 update 可原子提交的 renderer 配置 */
+export type RetainedSvgUpdateOptions = RetainedAnimationUpdateOptions &
+  Readonly<{
+    /** 显式禁止结构赋值 Canvas-only 配置 */
+    canvas?: never;
+  }>;
+
+/** Retained Canvas view 单次 update 可原子提交的 renderer 配置 */
+export type RetainedCanvasUpdateOptions = RetainedAnimationUpdateOptions &
+  Readonly<{
+    /** 下一 revision 的可变 Canvas 配置 */
+    canvas?: RetainedVanillaCanvasUpdateOptions;
+  }>;
+
+/** 所有 Vanilla retained view 可接受的 update 配置 */
+export type RetainedVanillaUpdateOptions = RetainedSvgUpdateOptions | RetainedCanvasUpdateOptions;
 
 /** Vanilla retained Runtime session 配置 */
 export type VanillaRuntimeOptions = Readonly<{
@@ -65,7 +81,7 @@ export type VanillaRuntimeOptions = Readonly<{
 }>;
 
 /**
- * 两个入口共享的选项
+ * render 与 mount 入口共享的选项
  * @description `output` 管输出资源和显示尺寸；`compile` 只在输入是 IR / plain spec 时传给
  *   `compileToScene`；`animation` 控制 SVG / Canvas runtime 动画；`adapters` 只参与 plain spec normalization
  */
@@ -78,12 +94,16 @@ export type CommonOptions = {
   animation?: VanillaAnimationOptions;
   /** 可嵌入 Tier2 adapter 列表，仅 plain spec normalization 使用 */
   adapters?: ReadonlyArray<AnyVanillaTier2Adapter>;
+};
+
+/** SSR / build-time SVG string options；显式禁止 mount-only runtime 配置 */
+export type RenderToStringOptions = CommonOptions & Readonly<{ runtime?: never }>;
+
+/** DOM / Canvas mount options；retained 输入可注入 renderer factory */
+export type MountOptions = CommonOptions & {
   /** retained Runtime session 配置；仅 IR / plain spec mount 使用 */
   runtime?: VanillaRuntimeOptions;
 };
-
-export type RenderToStringOptions = CommonOptions;
-export type MountOptions = CommonOptions;
 
 /** SVG / Canvas view 共享的 lifecycle 与 committed metadata */
 export type VanillaViewState<TRoot extends SVGSVGElement | HTMLCanvasElement> = Readonly<{
@@ -109,9 +129,9 @@ export type VanillaViewState<TRoot extends SVGSVGElement | HTMLCanvasElement> = 
 export type RetainedSvgView = VanillaViewState<SVGSVGElement> &
   Readonly<{
     /** view 执行模式 */
-    mode: 'retained';
+    mode: typeof VanillaViewMode.Retained;
     /** 原子提交下一份未编译输入与可变 renderer config */
-    update: (next: RetainedRenderInput, options?: RetainedVanillaUpdateOptions) => void;
+    update: (next: RetainedRenderInput, options?: RetainedSvgUpdateOptions) => void;
     /** 返回并清空 Runtime session diagnostics */
     diagnostics: () => ReadonlyArray<RuntimeDiagnostic>;
   }>;
@@ -120,7 +140,7 @@ export type RetainedSvgView = VanillaViewState<SVGSVGElement> &
 export type StaticSvgView = VanillaViewState<SVGSVGElement> &
   Readonly<{
     /** view 执行模式 */
-    mode: 'static';
+    mode: typeof VanillaViewMode.Static;
     /** 完整重绘下一份预编译 Scene */
     update: (next: Scene) => void;
   }>;
@@ -174,9 +194,9 @@ export type CanvasViewState = VanillaViewState<HTMLCanvasElement> &
 export type RetainedCanvasView = CanvasViewState &
   Readonly<{
     /** view 执行模式 */
-    mode: 'retained';
+    mode: typeof VanillaViewMode.Retained;
     /** 原子提交下一份未编译输入与可变 renderer config */
-    update: (next: RetainedRenderInput, options?: RetainedVanillaUpdateOptions) => void;
+    update: (next: RetainedRenderInput, options?: RetainedCanvasUpdateOptions) => void;
     /** 返回并清空 Runtime session diagnostics */
     diagnostics: () => ReadonlyArray<RuntimeDiagnostic>;
   }>;
@@ -185,7 +205,7 @@ export type RetainedCanvasView = CanvasViewState &
 export type StaticCanvasView = CanvasViewState &
   Readonly<{
     /** view 执行模式 */
-    mode: 'static';
+    mode: typeof VanillaViewMode.Static;
     /** 完整重绘下一份预编译 Scene */
     update: (next: Scene) => void;
   }>;
@@ -200,7 +220,7 @@ export type RetainedVanillaView = RetainedSvgView | RetainedCanvasView;
 export type StaticVanillaView = StaticSvgView | StaticCanvasView;
 
 /** `mountCanvas` 选项：继承 SSR / compile 公共项，外加 canvas 显示 / dpr 透传 */
-export type MountCanvasOptions = CommonOptions & {
+export type MountCanvasOptions = MountOptions & {
   /** Canvas 专属 runtime 选项 */
   canvas?: VanillaCanvasOptions;
 };
