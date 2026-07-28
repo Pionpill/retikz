@@ -3,10 +3,12 @@ import type { BoundsRect } from '@retikz/math';
 import { boundsToRect } from '@retikz/math';
 
 import type {
+  ChildLayoutAxisConstraint,
   ChildLayoutConstraint,
   CompositeCompileChild,
   CompositeCompileScopeProps,
   CompositeReplay,
+  CompositeReplayWrapper,
   GroupPrim,
   PaintValue,
   PathKindCompileResult,
@@ -93,7 +95,7 @@ import {
   stableSortByZIndex,
 } from './primitive';
 import { createRuntimeTopologyTracker } from './runtime-topology';
-import { visualBoundsOfPrimitives } from './visual-bounds';
+import { optionalVisualBoundsOfPrimitives, visualBoundsOfPrimitives } from './visual-bounds';
 
 /** 编译 child 树，完成 namespace 注册、延迟 path 回填、zIndex 排序和自动 layout bbox 收集 */
 export const compileChildrenToPrimitives = (
@@ -101,7 +103,11 @@ export const compileChildrenToPrimitives = (
   context: CompileContext,
   options: TraversalCompileOptions = {},
 ): TraversalResult => {
-  const session = options.session ?? { replayTransactions: new WeakMap(), outputChildren: new WeakMap() };
+  const session = options.session ?? {
+    replayTransactions: new WeakMap(),
+    layoutResults: new WeakMap(),
+    outputChildren: new WeakMap(),
+  };
   const warningOccurrences: Array<CompileOccurrenceLocator> = [];
   const dispatchWarning = (warning: CompileWarning): void => {
     context.onWarn(withCompileWarningOccurrence(warning, warningOccurrences.at(-1)));
@@ -209,6 +215,19 @@ export const compileChildrenToPrimitives = (
     });
   };
 
+  /** 把 allocation contribution 绑定到最近的显式 composite allocation boundary */
+  const pushAllocation = (
+    sink: TraversalFrame['allocationSink'],
+    points: Array<IRPosition>,
+    allocationBoundary?: object,
+  ): void => {
+    sink.push({ points, ...(allocationBoundary === undefined ? {} : { allocationBoundary }) });
+  };
+
+  /** 只保留当前 traversal 对外可见的 allocation contribution */
+  const effectiveAllocations = <T extends { allocationBoundary?: object }>(values: ReadonlyArray<T>): Array<T> =>
+    values.filter(value => value.allocationBoundary === undefined);
+
   /** 在命名引用可查阶段 emit 延迟 path，并把结果回填到对应输出容器 */
   const flushPendingPathEmissions = (pendingPaths: ReadonlyArray<PendingPathEmission>): void => {
     if (pendingPaths.length === 0) return;
@@ -235,7 +254,7 @@ export const compileChildrenToPrimitives = (
             points: [...result.boundsPoints],
             shadow: resolveShadow(pendingPath.path.shadow),
           });
-          pendingPath.allocationSink.push({ points: [...result.boundsPoints] });
+          pushAllocation(pendingPath.allocationSink, [...result.boundsPoints], pendingPath.allocationBoundary);
         }
       }
     } finally {
@@ -280,8 +299,13 @@ export const compileChildrenToPrimitives = (
         resolveBetweenGlobal: refPointOfTarget,
         irPath: nodeIrPath,
         warn,
-        ...(frame.childConstraint?.kind === 'constrained'
-          ? { maxAllocationWidth: frame.childConstraint.maxWidth }
+        ...(frame.childConstraint?.kind === 'constrained' && frame.childConstraint.width !== undefined
+          ? {
+              maxAllocationWidth:
+                frame.childConstraint.width.kind === 'bounded'
+                  ? frame.childConstraint.width.max
+                  : frame.childConstraint.width.size,
+            }
           : {}),
         texLowering: {
           lowerTex: runtime.context.lowerTex,
@@ -322,7 +346,7 @@ export const compileChildrenToPrimitives = (
     ];
     frame.boundsSink.push({ points: nodeBoundsPoints, shadow: layout.shadow });
     frame.boundsSink.push({ points: labelExtentPoints(layout) });
-    frame.allocationSink.push({ points: nodeBoundsPoints });
+    pushAllocation(frame.allocationSink, nodeBoundsPoints, frame.allocationBoundary);
     layoutSink.push(layout);
   };
 
@@ -352,7 +376,7 @@ export const compileChildrenToPrimitives = (
     );
     runtime.state.namespaceStack.register(child.id, coordinateLayout, `${coordinateIrPath}.id`);
     frame.publicationSink.push(coordinateLayout);
-    frame.allocationSink.push({ points: [localCenter] });
+    pushAllocation(frame.allocationSink, [localCenter], frame.allocationBoundary);
     layoutSink.push(localCoordinateLayout);
   };
 
@@ -382,6 +406,7 @@ export const compileChildrenToPrimitives = (
       scopeChain: [...scopeChain],
       boundsSink: frame.boundsSink,
       allocationSink: frame.allocationSink,
+      ...(frame.allocationBoundary === undefined ? {} : { allocationBoundary: frame.allocationBoundary }),
       placeholderSlot: { primitiveSink, placeholder },
       occurrence,
       ...(semanticOwner === undefined ? {} : { semanticOwner }),
@@ -688,6 +713,7 @@ export const compileChildrenToPrimitives = (
         publicationSink: scopePublications,
         boundsSink: scopeBounds,
         allocationSink: scopeAllocations,
+        ...(frame.allocationBoundary === undefined ? {} : { allocationBoundary: frame.allocationBoundary }),
         observationSink: scopeObservations,
         artifactSink: scopeArtifacts,
         ...(semanticOwner === undefined ? {} : { semanticOwner }),
@@ -722,10 +748,12 @@ export const compileChildrenToPrimitives = (
           shadow: contribution.shadow,
         });
       }
-      for (const contribution of scopeAllocations) {
-        frame.allocationSink.push({
-          points: contribution.points.map(point => applyTransformChain(point, scopeTransforms)),
-        });
+      for (const contribution of effectiveAllocations(scopeAllocations)) {
+        pushAllocation(
+          frame.allocationSink,
+          contribution.points.map(point => applyTransformChain(point, scopeTransforms)),
+          frame.allocationBoundary,
+        );
       }
       for (const pendingPath of scopePendingPaths) {
         pendingPath.scopeChain.splice(frame.scopeChain.length, 0, ...postTransforms);
@@ -771,12 +799,95 @@ export const compileChildrenToPrimitives = (
 
   const boundsRectOf = (result: TraversalResult): Readonly<BoundsRect> =>
     (() => {
-      const allocation = result.allocations.reduce(
+      const allocation = effectiveAllocations(result.allocations).reduce(
         (current, contribution) => collectLayoutBounds(current, contribution.points),
         undefined as TraversalResult['layoutBounds'],
       );
       return allocation === undefined ? emptyBounds() : Object.freeze(boundsToRect(allocation));
     })();
+
+  /** 把矩形转换为父 allocation collector 使用的四角点 */
+  const allocationPointsOf = (bounds: Readonly<BoundsRect>): Array<IRPosition> => [
+    [bounds.x, bounds.y],
+    [bounds.x + bounds.width, bounds.y],
+    [bounds.x, bounds.y + bounds.height],
+    [bounds.x + bounds.width, bounds.y + bounds.height],
+  ];
+
+  /** 验证 layout-aware composite 显式声明的 container allocation */
+  const validateAllocationBounds = (
+    bounds: unknown,
+    compositeKey: string,
+    occurrence: CompileOccurrenceLocator,
+  ): Readonly<BoundsRect> => {
+    if (bounds === null || typeof bounds !== 'object' || Array.isArray(bounds)) {
+      throw new Error(
+        `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} returned an invalid allocationBounds.`,
+      );
+    }
+    const input = bounds as Record<string, unknown>;
+    const unsupportedKeys = Object.keys(input).filter(key => !['x', 'y', 'width', 'height'].includes(key));
+    const values = [input.x, input.y, input.width, input.height];
+    if (
+      unsupportedKeys.length > 0 ||
+      !values.every(value => typeof value === 'number' && Number.isFinite(value)) ||
+      (input.width as number) < 0 ||
+      (input.height as number) < 0
+    ) {
+      throw new Error(
+        `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} returned invalid allocationBounds; x/y must be finite and width/height must be finite non-negative numbers.`,
+      );
+    }
+    const right = (input.x as number) + (input.width as number);
+    const bottom = (input.y as number) + (input.height as number);
+    if (!Number.isFinite(right) || !Number.isFinite(bottom)) {
+      throw new Error(
+        `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} returned invalid allocationBounds; derived edges must remain finite.`,
+      );
+    }
+    return Object.freeze({
+      x: Object.is(input.x, -0) ? 0 : (input.x as number),
+      y: Object.is(input.y, -0) ? 0 : (input.y as number),
+      width: Object.is(input.width, -0) ? 0 : (input.width as number),
+      height: Object.is(input.height, -0) ? 0 : (input.height as number),
+    });
+  };
+
+  /** 校验单轴约束 */
+  const validateAxisConstraint = (
+    axis: unknown,
+    axisName: 'width' | 'height',
+    compositeKey: string,
+    occurrence: CompileOccurrenceLocator,
+  ): void => {
+    const fail = (detail: string): never => {
+      throw new Error(
+        `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} called layoutChild with an invalid ${axisName} axis constraint; ${detail}.`,
+      );
+    };
+    const finiteNonNegative = (value: unknown, field: string): number => {
+      if (typeof value !== 'number') return fail(`${field} must be finite and non-negative`);
+      if (!Number.isFinite(value) || value < 0) return fail(`${field} must be finite and non-negative`);
+      return value;
+    };
+    if (axis === null || typeof axis !== 'object' || Array.isArray(axis)) fail('expected an object');
+    const input = axis as Record<string, unknown>;
+    if (input.kind === 'bounded') {
+      const unsupportedKeys = Object.keys(input).filter(key => !['kind', 'min', 'max'].includes(key));
+      if (unsupportedKeys.length > 0) fail(`unsupported field(s): ${unsupportedKeys.join(', ')}`);
+      const min = finiteNonNegative(input.min ?? 0, 'min');
+      const max = finiteNonNegative(input.max, 'max');
+      if (min > max) fail(`min must not exceed max`);
+      return;
+    }
+    if (input.kind === 'exact') {
+      const unsupportedKeys = Object.keys(input).filter(key => !['kind', 'size'].includes(key));
+      if (unsupportedKeys.length > 0) fail(`unsupported field(s): ${unsupportedKeys.join(', ')}`);
+      finiteNonNegative(input.size, 'size');
+      return;
+    }
+    fail(`unknown kind '${String(input.kind)}'`);
+  };
 
   /** 只在 definition schema parse 后恢复 erased layout callback */
   const callableLayoutDefinition = (
@@ -788,30 +899,72 @@ export const compileChildrenToPrimitives = (
     return definition as unknown as CallableLayoutCompositeDefinition;
   };
 
-  const validateConstraint = (
-    constraint: ChildLayoutConstraint,
+  /** 校验、脱离、规范化并递归冻结传给 layout provider 的双轴约束 */
+  const cloneConstraint = (
+    constraint: unknown,
     compositeKey: string,
     occurrence: CompileOccurrenceLocator,
-  ): void => {
-    const kind: unknown = constraint.kind;
+  ): ChildLayoutConstraint => {
+    if (constraint === null || typeof constraint !== 'object' || Array.isArray(constraint)) {
+      throw new Error(
+        `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} called layoutChild with an invalid constraint; expected an object.`,
+      );
+    }
+    const kind: unknown = (constraint as { kind?: unknown }).kind;
     if (kind !== 'intrinsic' && kind !== 'constrained') {
       throw new Error(
         `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} called layoutChild with an invalid constraint kind '${String(kind)}'.`,
       );
     }
-    const allowedKeys = constraint.kind === 'intrinsic' ? new Set(['kind']) : new Set(['kind', 'maxWidth']);
+    const input = constraint as
+      | { kind: 'intrinsic' }
+      | { kind: 'constrained'; width?: ChildLayoutAxisConstraint; height?: ChildLayoutAxisConstraint };
+    const allowedKeys = input.kind === 'intrinsic' ? new Set(['kind']) : new Set(['kind', 'width', 'height']);
     const unsupportedKeys = Object.keys(constraint).filter(key => !allowedKeys.has(key));
     if (unsupportedKeys.length > 0) {
       throw new Error(
         `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} called layoutChild with an invalid constraint; unsupported field(s): ${unsupportedKeys.join(', ')}.`,
       );
     }
-    if (constraint.kind === 'intrinsic') return;
-    if (!Number.isFinite(constraint.maxWidth) || constraint.maxWidth < 0) {
+    if (input.kind === 'intrinsic') return Object.freeze({ kind: 'intrinsic' });
+    if (input.width === undefined && input.height === undefined) {
       throw new Error(
-        `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} called layoutChild with an invalid constrained maxWidth; expected a finite non-negative number, got ${String(constraint.maxWidth)}.`,
+        `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} called layoutChild with an invalid constrained constraint; width or height is required.`,
       );
     }
+    if (input.width !== undefined) validateAxisConstraint(input.width, 'width', compositeKey, occurrence);
+    if (input.height !== undefined) validateAxisConstraint(input.height, 'height', compositeKey, occurrence);
+    const cloneAxis = (axis: ChildLayoutAxisConstraint | undefined): ChildLayoutAxisConstraint | undefined => {
+      if (axis === undefined) return undefined;
+      if (axis.kind === 'exact') {
+        return Object.freeze({ kind: 'exact', size: Object.is(axis.size, -0) ? 0 : axis.size });
+      }
+      return Object.freeze({
+        kind: 'bounded',
+        ...(axis.min === undefined ? {} : { min: Object.is(axis.min, -0) ? 0 : axis.min }),
+        max: Object.is(axis.max, -0) ? 0 : axis.max,
+      });
+    };
+    return Object.freeze({
+      kind: 'constrained',
+      ...(input.width === undefined ? {} : { width: cloneAxis(input.width) }),
+      ...(input.height === undefined ? {} : { height: cloneAxis(input.height) }),
+    });
+  };
+
+  /** 按实际 allocation 与父约束得到无位置语义的 slot 尺寸 */
+  const slotSizeOf = (
+    allocation: Readonly<BoundsRect>,
+    constraint: ChildLayoutConstraint,
+  ): Readonly<{ width: number; height: number }> => {
+    const resolveAxis = (actual: number, axis: ChildLayoutAxisConstraint | undefined): number => {
+      if (axis === undefined) return actual;
+      return axis.kind === 'exact' ? axis.size : Math.min(axis.max, Math.max(axis.min ?? 0, actual));
+    };
+    return Object.freeze({
+      width: resolveAxis(allocation.width, constraint.kind === 'constrained' ? constraint.width : undefined),
+      height: resolveAxis(allocation.height, constraint.kind === 'constrained' ? constraint.height : undefined),
+    });
   };
 
   const remapPaint = (paint: PaintValue | undefined, ids: ReadonlyMap<string, string>): PaintValue | undefined => {
@@ -857,21 +1010,31 @@ export const compileChildrenToPrimitives = (
 
   const commitReplay = (
     token: CompositeReplay,
-    transforms: ReadonlyArray<Transform> | undefined,
+    wrapper: CompositeReplayWrapper | undefined,
     frame: TraversalFrame,
     occurrence: CompileOccurrenceLocator,
     outputIndex: number,
+    owner: CompositeCompileOwner,
     semanticOwner?: RuntimeSemanticOwner,
   ): void => {
     const transaction = runtime.context.session.replayTransactions.get(token);
     if (transaction === undefined) {
-      throw new Error('Composite replay token does not belong to this compile or was forged.');
+      throw new Error(`${owner.label} received a replay token that does not belong to this compile or was forged.`);
     }
     if (transaction.used) {
-      throw new Error('Composite replay token may be placed at most once and was already replayed.');
+      throw new Error(`${transaction.owner.label} replay token may be placed at most once and was already replayed.`);
+    }
+    let wrapperClipShape: ReturnType<typeof runtime.context.clip.resolve> | undefined;
+    if (wrapper?.clip !== undefined) {
+      try {
+        wrapperClipShape = runtime.context.clip.resolve(wrapper.clip);
+      } catch (cause) {
+        throw new Error(`${transaction.owner.label} received an invalid replay wrapper clip.`, { cause });
+      }
     }
     transaction.used = true;
 
+    const transforms = wrapper?.transforms;
     const resourceIds = new Map<string, string>();
     for (const resource of transaction.resources) {
       if (resource.kind === 'paint') {
@@ -884,9 +1047,11 @@ export const compileChildrenToPrimitives = (
         resourceIds.set(resource.id, runtime.context.clip.importResolved(resource.shape));
       }
     }
+    const wrapperClipRef =
+      wrapperClipShape === undefined ? undefined : runtime.context.clip.importResolved(wrapperClipShape);
     const replayedPrimitives = transaction.primitives.map(primitive => remapPrimitiveResources(primitive, resourceIds));
     const committedPrimitives: Array<ScenePrimitive> = [];
-    if (transforms === undefined || transforms.length === 0) {
+    if ((transforms === undefined || transforms.length === 0) && wrapperClipRef === undefined) {
       replayedPrimitives.forEach((primitive, index) => {
         frame.primitiveSink.push(primitive);
         committedPrimitives.push(primitive);
@@ -896,7 +1061,8 @@ export const compileChildrenToPrimitives = (
       replayedPrimitives.forEach((primitive, index) => {
         const group: GroupPrim = {
           type: 'group',
-          transforms: [...transforms],
+          ...(transforms === undefined || transforms.length === 0 ? {} : { transforms: [...transforms] }),
+          ...(wrapperClipRef === undefined ? {} : { clipRef: wrapperClipRef }),
           children: [primitive],
         };
         frame.primitiveSink.push(group);
@@ -932,22 +1098,31 @@ export const compileChildrenToPrimitives = (
         transforms === undefined || transforms.length === 0 ? layout : projectLayoutToGlobal(layout, transforms),
       );
     }
-    for (const contribution of transaction.bounds) {
-      frame.boundsSink.push({
-        points:
-          transforms === undefined || transforms.length === 0
-            ? contribution.points
-            : contribution.points.map(point => applyTransformChain(point, transforms)),
-        shadow: contribution.shadow,
-      });
+    if (wrapperClipRef === undefined) {
+      for (const contribution of transaction.bounds) {
+        frame.boundsSink.push({
+          points:
+            transforms === undefined || transforms.length === 0
+              ? contribution.points
+              : contribution.points.map(point => applyTransformChain(point, transforms)),
+          shadow: contribution.shadow,
+        });
+      }
+    } else {
+      const visualBounds = optionalVisualBoundsOfPrimitives(committedPrimitives, [
+        ...runtime.context.paint.resources(),
+        ...runtime.context.clip.resources(),
+      ]);
+      if (visualBounds !== undefined) frame.boundsSink.push({ points: allocationPointsOf(visualBounds) });
     }
-    for (const contribution of transaction.allocations) {
-      frame.allocationSink.push({
-        points:
-          transforms === undefined || transforms.length === 0
-            ? contribution.points
-            : contribution.points.map(point => applyTransformChain(point, transforms)),
-      });
+    for (const contribution of effectiveAllocations(transaction.allocations)) {
+      pushAllocation(
+        frame.allocationSink,
+        transforms === undefined || transforms.length === 0
+          ? contribution.points
+          : contribution.points.map(point => applyTransformChain(point, transforms)),
+        frame.allocationBoundary,
+      );
     }
     for (const observation of transaction.observations) {
       if (transforms !== undefined && transforms.length > 0) {
@@ -1012,7 +1187,7 @@ export const compileChildrenToPrimitives = (
     semanticOwner?: RuntimeSemanticOwner,
   ): void => {
     if (output.kind === 'replay') {
-      commitReplay(output.replay, output.transforms, frame, parentOccurrence, index, semanticOwner);
+      commitReplay(output.replay, output.wrapper, frame, parentOccurrence, index, owner, semanticOwner);
       return;
     }
     const runtimeScopeChild = runtimeScopeChildOf(output.props);
@@ -1127,9 +1302,9 @@ export const compileChildrenToPrimitives = (
       label: `Composite '${key}' at ${formatCompileOccurrence(occurrence)}`,
     });
     const result = callable.compile(parsed, {
-      constraint: frame.childConstraint ?? { kind: 'intrinsic' },
+      constraint: cloneConstraint(frame.childConstraint ?? { kind: 'intrinsic' }, key, occurrence),
       layoutChild: (nextChild, constraint) => {
-        validateConstraint(constraint, key, occurrence);
+        const clonedConstraint = cloneConstraint(constraint, key, occurrence);
         const warnings: Array<CompileWarning> = [];
         const namespaceBaselineWarnings: Array<{ id: string; warning: CompileWarning }> = [];
         const captureWarning = (warning: CompileWarning): void => {
@@ -1179,7 +1354,7 @@ export const compileChildrenToPrimitives = (
           occurrence,
           compositeDepth: compositeDepth + 1,
           generated: true,
-          constraint,
+          constraint: clonedConstraint,
           session: runtime.context.session,
           ...(probeIdentityTracker === undefined ? {} : { identityTracker: probeIdentityTracker }),
           observeWarningOccurrence: current => {
@@ -1211,16 +1386,26 @@ export const compileChildrenToPrimitives = (
           artifacts: laid.artifacts,
         });
         const allocationBounds = boundsRectOf(laid);
-        return Object.freeze({
+        const layoutResult = Object.freeze({
           allocationBounds,
+          slotSize: slotSizeOf(allocationBounds, clonedConstraint),
           visualBounds: visualBoundsOfPrimitives(laid.primitives, resources),
           replay: token,
         });
+        runtime.context.session.layoutResults.set(layoutResult, Object.freeze({ owner, replay: token }));
+        return layoutResult;
       },
-      replay: (layoutResult, transforms) =>
-        createCompositeReplayChild(runtime.context.session, owner, layoutResult, transforms),
+      replay: (layoutResult, wrapper) =>
+        createCompositeReplayChild(runtime.context.session, owner, layoutResult, wrapper),
       scope: (props, children) => createCompositeScopeChild(runtime.context.session, owner, props, children),
     });
+
+    const explicitAllocation =
+      result.allocationBounds === undefined
+        ? undefined
+        : validateAllocationBounds(result.allocationBounds, key, occurrence);
+    const outputFrame: TraversalFrame =
+      explicitAllocation === undefined ? frame : { ...frame, allocationBoundary: Object.freeze({}) };
 
     if (result.artifact !== undefined) {
       if (callable.artifactSchema === undefined) {
@@ -1246,7 +1431,7 @@ export const compileChildrenToPrimitives = (
         compileChild(
           output,
           outputIndex,
-          frame,
+          outputFrame,
           outputOccurrence,
           compositeDepth + 1,
           true,
@@ -1259,13 +1444,16 @@ export const compileChildrenToPrimitives = (
       compileRuntimeOutputChild(
         resolveCompositeOutputChild(runtime.context.session, owner, output),
         outputIndex,
-        frame,
+        outputFrame,
         occurrence,
         'output',
         compositeDepth + 1,
         owner,
         semanticOwner,
       );
+    }
+    if (explicitAllocation !== undefined) {
+      pushAllocation(frame.allocationSink, allocationPointsOf(explicitAllocation), frame.allocationBoundary);
     }
   };
 
@@ -1396,7 +1584,7 @@ export const compileChildrenToPrimitives = (
     layoutBounds: runtime.state.layoutBounds,
     layouts: rootLayouts,
     bounds: rootBounds,
-    allocations: rootAllocations,
+    allocations: effectiveAllocations(rootAllocations),
     observations: rootObservations,
     artifacts: orderCompileArtifacts(rootArtifacts),
   };

@@ -32,7 +32,7 @@ const createLayoutDefinition = () =>
       const intrinsic = layoutChild(node.child, { kind: 'intrinsic' });
       const constrained = layoutChild(node.child, {
         kind: 'constrained',
-        maxWidth: node.width,
+        width: { kind: 'bounded', max: node.width },
       });
       return {
         children: [context.replay(constrained)],
@@ -115,7 +115,7 @@ describe('layout-aware composite', () => {
             type: 'scope',
             children: [{ namespace: 'test', type: 'nestedConstraint' }],
           },
-          { kind: 'constrained', maxWidth: 40 },
+          { kind: 'constrained', width: { kind: 'bounded', max: 40 } },
         );
         return { children: [context.replay(laid)] };
       },
@@ -169,7 +169,7 @@ describe('layout-aware composite', () => {
         }),
         { composites: [definition] },
       ),
-    ).toThrow(/replay.*once|already.*replay/i);
+    ).toThrow(/Composite 'test\.duplicateReplay' at children\[0\].*already replayed/i);
   });
 
   it('makes lowerIRToKernel fail loudly before invoking a layout-aware definition', () => {

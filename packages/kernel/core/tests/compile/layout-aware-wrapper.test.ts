@@ -634,7 +634,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       }),
       compile: (_value, context) => {
         const laid = context.layoutChild(node('content'), { kind: 'intrinsic' });
-        return { children: [context.replay(laid, {} as never)] };
+        return { children: [context.replay(laid, { transforms: {} } as never)] };
       },
     });
 
@@ -642,7 +642,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       compileToScene(scene([{ namespace: 'test', type: 'invalidReplayTransforms' }]), {
         composites: [definition],
       }),
-    ).toThrow(/Composite 'test\.invalidReplayTransforms'.*invalid.*replay transforms/i);
+    ).toThrow(/Composite 'test\.invalidReplayTransforms'.*invalid.*replay.*transforms/i);
   });
 
   it('expresses the Table-like root, Cell placement, content replay, and Border replay in one compile', () => {
@@ -670,7 +670,10 @@ describe('layout-aware composite runtime wrapper tree', () => {
       type: 'tableLike',
       schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('tableLike') }),
       compile: (_value, context) => {
-        const content = context.layoutChild(node('content'), { kind: 'constrained', maxWidth: 40 });
+        const content = context.layoutChild(node('content'), {
+          kind: 'constrained',
+          width: { kind: 'bounded', max: 40 },
+        });
         const border = context.layoutChild({ namespace: 'test', type: 'borderLeaf' }, { kind: 'intrinsic' });
         const cell = context.scope(
           {

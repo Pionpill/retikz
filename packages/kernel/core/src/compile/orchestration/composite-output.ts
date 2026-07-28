@@ -1,4 +1,9 @@
-import type { CompositeCompileChild, CompositeCompileScopeProps, CompositeReplay, Transform } from '../../contract';
+import type {
+  CompositeCompileChild,
+  CompositeCompileScopeProps,
+  CompositeReplayWrapper,
+  Transform,
+} from '../../contract';
 import type { CompositeCompileOwner, CompositeCompileSession, CompositeRuntimeOutputChild } from './types';
 
 import { ChildSchema, ScopeSchema } from '../../schemas';
@@ -106,35 +111,58 @@ const cloneScopeProps = (props: unknown, owner: CompositeCompileOwner): Composit
   });
 };
 
+/** 校验并冻结 replay 专用的 transform / clip 外壳 */
+const cloneReplayWrapper = (wrapper: unknown, owner: CompositeCompileOwner): CompositeReplayWrapper | undefined => {
+  if (wrapper === undefined) return undefined;
+  if (wrapper === null || typeof wrapper !== 'object' || Array.isArray(wrapper)) {
+    throw new Error(`${owner.label} received an invalid replay wrapper.`);
+  }
+  const raw = wrapper as Record<string, unknown>;
+  const unsupportedKeys = Object.keys(raw).filter(key => !['transforms', 'clip'].includes(key));
+  if (unsupportedKeys.length > 0) {
+    throw new Error(
+      `${owner.label} received unsupported replay wrapper fields: ${unsupportedKeys.map(key => `'${key}'`).join(', ')}.`,
+    );
+  }
+  const rawTransforms = raw.transforms;
+  if (rawTransforms !== undefined && !Array.isArray(rawTransforms)) {
+    throw new Error(`${owner.label} received invalid replay wrapper transforms; expected an array.`);
+  }
+  let parsed: ReturnType<typeof ScopeSchema.parse>;
+  try {
+    parsed = ScopeSchema.parse({ type: 'scope', ...(raw.clip === undefined ? {} : { clip: raw.clip }), children: [] });
+  } catch (error) {
+    throw new Error(`${owner.label} received an invalid replay wrapper clip.`, { cause: error });
+  }
+  const transforms = rawTransforms?.map((transform, index) => cloneTransform(transform, owner, index));
+  return deepFreeze({
+    ...(transforms === undefined ? {} : { transforms }),
+    ...(parsed.clip === undefined ? {} : { clip: parsed.clip }),
+  });
+};
+
 /** 创建 callback-local replay output child */
 export const createCompositeReplayChild = (
   session: CompositeCompileSession,
   owner: CompositeCompileOwner,
   result: unknown,
-  transforms?: ReadonlyArray<Transform>,
+  wrapper?: CompositeReplayWrapper,
 ): CompositeCompileChild => {
   if (result === null || typeof result !== 'object') {
     throw new Error(`${owner.label} received an invalid or forged layout result.`);
   }
-  const replay = (result as { replay?: unknown }).replay;
-  if (replay === null || (typeof replay !== 'object' && typeof replay !== 'function')) {
+  const layoutResult = session.layoutResults.get(result);
+  if (layoutResult === undefined) {
     throw new Error(`${owner.label} received an invalid or forged layout result.`);
   }
-  const transaction = session.replayTransactions.get(replay);
-  if (transaction === undefined) {
-    throw new Error(`${owner.label} received a layout result that does not belong to this compile or was forged.`);
-  }
-  if (transaction.owner !== owner) {
+  if (layoutResult.owner !== owner) {
     throw new Error(`${owner.label} received a layout result that does not belong to this composite callback.`);
   }
-  if (transforms !== undefined && !Array.isArray(transforms)) {
-    throw new Error(`${owner.label} received invalid replay transforms; expected an array.`);
-  }
-  const clonedTransforms = transforms?.map((transform, index) => cloneTransform(transform, owner, index));
+  const clonedWrapper = cloneReplayWrapper(wrapper, owner);
   const child: CompositeRuntimeOutputChild = Object.freeze({
     kind: 'replay',
-    replay: replay as CompositeReplay,
-    ...(clonedTransforms === undefined ? {} : { transforms: Object.freeze(clonedTransforms) }),
+    replay: layoutResult.replay,
+    ...(clonedWrapper === undefined ? {} : { wrapper: clonedWrapper }),
   });
   const handle = Object.freeze({}) as CompositeCompileChild;
   session.outputChildren.set(handle, Object.freeze({ owner, child }));

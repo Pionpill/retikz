@@ -334,19 +334,27 @@ const primitiveBounds = (
   return primitive.type === 'path' ? union(geometry, markerBounds(primitive, resources)) : geometry;
 };
 
-/** 从最终 settled Scene primitive tree 计算 canonical visual bounds */
-export const visualBoundsOfPrimitives = (
+/** 从最终 settled Scene primitive tree 计算可选 canonical visual bounds */
+export const optionalVisualBoundsOfPrimitives = (
   primitives: ReadonlyArray<ScenePrimitive>,
   resources: ReadonlyArray<SceneResource>,
-): Readonly<BoundsRect> => {
+): Readonly<BoundsRect> | undefined => {
   const resourceMap = new Map(resources.map(resource => [resource.id, resource]));
   const bounds = primitives.reduce<BoundsRect | undefined>(
     (current, primitive) => union(current, primitiveBounds(primitive, resourceMap)),
     undefined,
   );
-  const output: MutableRect = bounds ?? { x: 0, y: 0, width: 0, height: 0 };
+  if (bounds === undefined) return undefined;
+  const output: MutableRect = bounds;
   if (![output.x, output.y, output.width, output.height].every(Number.isFinite)) {
     throw new Error('Canonical visual bounds must contain only finite numbers');
   }
   return Object.freeze(output);
 };
+
+/** 从最终 settled Scene primitive tree 计算 canonical visual bounds */
+export const visualBoundsOfPrimitives = (
+  primitives: ReadonlyArray<ScenePrimitive>,
+  resources: ReadonlyArray<SceneResource>,
+): Readonly<BoundsRect> =>
+  optionalVisualBoundsOfPrimitives(primitives, resources) ?? Object.freeze({ x: 0, y: 0, width: 0, height: 0 });

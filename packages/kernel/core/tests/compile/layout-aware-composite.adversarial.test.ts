@@ -60,7 +60,9 @@ const createBoundsProbe = () =>
       const { layoutChild } = context;
       const laid = layoutChild(
         node.child,
-        node.maxWidth === undefined ? { kind: 'intrinsic' } : { kind: 'constrained', maxWidth: node.maxWidth },
+        node.maxWidth === undefined
+          ? { kind: 'intrinsic' }
+          : { kind: 'constrained', width: { kind: 'bounded', max: node.maxWidth } },
       );
       return {
         children: [context.replay(laid)],
@@ -213,7 +215,8 @@ describe('layout-aware composite constraints and bounds', () => {
       compile: (_, { constraint }) => ({
         children: [],
         artifact: {
-          maxWidth: constraint.kind === 'constrained' ? constraint.maxWidth : -1,
+          maxWidth:
+            constraint.kind === 'constrained' && constraint.width?.kind === 'bounded' ? constraint.width.max : -1,
         },
       }),
     });
@@ -228,7 +231,7 @@ describe('layout-aware composite constraints and bounds', () => {
         const { layoutChild } = context;
         const child = layoutChild(
           { namespace: 'test', type: 'nestedConstraint' },
-          { kind: 'constrained', maxWidth: 25 },
+          { kind: 'constrained', width: { kind: 'bounded', max: 25 } },
         );
         return { children: [context.replay(child)] };
       },
@@ -291,7 +294,10 @@ describe('layout-aware composite constraints and bounds', () => {
           type: z.literal('invalidConstraint'),
         }),
         compile: (_, { layoutChild }) => {
-          layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, { kind: 'constrained', maxWidth });
+          layoutChild(
+            { type: 'coordinate', id: 'point', position: [0, 0] },
+            { kind: 'constrained', width: { kind: 'bounded', max: maxWidth } },
+          );
           return { children: [] };
         },
       });
@@ -306,7 +312,7 @@ describe('layout-aware composite constraints and bounds', () => {
 
   it.each([
     { kind: 'intrinsic', maxWidth: 10 },
-    { kind: 'constrained', maxWidth: 10, minWidth: 5 },
+    { kind: 'constrained', width: { kind: 'bounded', max: 10 }, minWidth: 5 },
   ])('rejects unsupported layout constraint fields in %o', constraint => {
     const definition = defineComposite({
       namespace: 'test',
@@ -509,7 +515,7 @@ describe('layout-aware composite replay ownership', () => {
         const laid = context.layoutChild({ type: 'node', position: [0, 0], zIndex: 10 }, { kind: 'intrinsic' });
         return {
           children: [
-            context.replay(laid, [{ kind: 'translate', x: 10, y: 0 }]),
+            context.replay(laid, { transforms: [{ kind: 'translate', x: 10, y: 0 }] }),
             {
               type: 'path',
               zIndex: 5,
@@ -528,6 +534,55 @@ describe('layout-aware composite replay ownership', () => {
     });
 
     expect(result.scene.primitives.map(primitive => primitive.type)).toEqual(['path', 'group']);
+  });
+
+  it('wraps multiple replay roots independently around a sibling and deduplicates the wrapper clip', () => {
+    const roots = defineComposite({
+      namespace: 'test',
+      type: 'multipleRoots',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('test'),
+        type: z.literal('multipleRoots'),
+      }),
+      expand: () => [
+        {
+          type: 'path' as const,
+          zIndex: 1,
+          children: [
+            { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
+            { type: 'step' as const, kind: 'line' as const, to: [10, 0] as [number, number] },
+          ],
+        },
+        { type: 'node' as const, position: [0, 0] as [number, number], zIndex: 10 },
+      ],
+    });
+    const parent = defineComposite({
+      namespace: 'test',
+      type: 'wrappedMultipleRoots',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('test'),
+        type: z.literal('wrappedMultipleRoots'),
+      }),
+      compile: (_node, context) => {
+        const laid = context.layoutChild({ namespace: 'test', type: 'multipleRoots' }, { kind: 'intrinsic' });
+        return {
+          children: [
+            context.replay(laid, { clip: { kind: 'rect', x: -20, y: -20, width: 40, height: 40 } }),
+            { type: 'node', position: [20, 0], zIndex: 5 },
+          ],
+        };
+      },
+    });
+
+    const result = compileToScene(sceneOf({ namespace: 'test', type: 'wrappedMultipleRoots' }), {
+      composites: [roots, parent],
+    });
+    const groups = result.scene.primitives.filter(primitive => primitive.type === 'group');
+
+    expect(result.scene.primitives.map(primitive => primitive.type)).toEqual(['group', 'rect', 'group']);
+    expect(groups).toHaveLength(2);
+    expect(groups[0]?.clipRef).toBe(groups[1]?.clipRef);
+    expect(result.scene.resources?.filter(resource => resource.kind === 'clip')).toHaveLength(1);
   });
 
   it('rejects a replay token retained from a previous compile', () => {
@@ -572,6 +627,7 @@ describe('layout-aware composite replay ownership', () => {
         children: [
           context.replay({
             allocationBounds: { x: 0, y: 0, width: 0, height: 0 },
+            slotSize: { width: 0, height: 0 },
             visualBounds: { x: 0, y: 0, width: 0, height: 0 },
             replay: Object.freeze({}) as CompositeReplay,
           }),
@@ -584,6 +640,34 @@ describe('layout-aware composite replay ownership', () => {
         composites: [definition],
       }),
     ).toThrow(/does not belong to this compile|forged/i);
+  });
+
+  it('rejects a copied layout result even when it retains a real replay token', () => {
+    const definition = defineComposite({
+      namespace: 'test',
+      type: 'copiedLayoutResult',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('test'),
+        type: z.literal('copiedLayoutResult'),
+      }),
+      compile: (_node, context) => {
+        const laid = context.layoutChild({ type: 'node', position: [0, 0], text: 'real' }, { kind: 'intrinsic' });
+        return {
+          children: [
+            context.replay({
+              ...laid,
+              allocationBounds: { x: 0, y: 0, width: 999, height: 999 },
+            }),
+          ],
+        };
+      },
+    });
+
+    expect(() =>
+      compileToScene(sceneOf({ namespace: 'test', type: 'copiedLayoutResult' }), {
+        composites: [definition],
+      }),
+    ).toThrow(/test\.copiedLayoutResult.*children\[0\].*(invalid|forged).*layout result/i);
   });
 
   it('applies replay transforms to allocation, Scene, namespace, and Node artifacts', () => {
@@ -607,7 +691,7 @@ describe('layout-aware composite replay ownership', () => {
           { kind: 'intrinsic' },
         );
         return {
-          children: [context.replay(child, [{ kind: 'translate', x: 20, y: 30 }])],
+          children: [context.replay(child, { transforms: [{ kind: 'translate', x: 20, y: 30 }] })],
         };
       },
     });
@@ -733,9 +817,10 @@ describe('layout-aware composite artifacts and lowering errors', () => {
         namespace: z.literal('test'),
         type: z.literal('recursive'),
       }),
-      compile: () => ({
-        children: [{ namespace: 'test', type: 'recursive' }],
-      }),
+      compile: (_node, context) => {
+        const child = context.layoutChild({ namespace: 'test', type: 'recursive' }, { kind: 'intrinsic' });
+        return { children: [context.replay(child)] };
+      },
     });
 
     expect(() =>

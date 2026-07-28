@@ -3,9 +3,12 @@ import { z } from 'zod';
 
 import type {
   AnyCompositeDefinition,
+  ChildLayoutAxisConstraint,
+  ChildLayoutSize,
   CompositeCompileArtifact,
   CompositeCompileChild,
   CompositeCompileScopeProps,
+  CompositeReplayWrapper,
   IRChild,
   IRScene,
   JsonValue,
@@ -49,8 +52,13 @@ const wrapped = defineComposite({
   }),
   artifactSchema: z.strictObject({ value: z.literal('wrapped') }),
   compile: (node, context) => {
-    const laid = context.layoutChild(node.child, { kind: 'intrinsic' });
-    const placed = context.replay(laid, [{ kind: 'translate', x: 4, y: 6 }]);
+    const axis = { kind: 'bounded', min: 4, max: 20 } satisfies ChildLayoutAxisConstraint;
+    const laid = context.layoutChild(node.child, { kind: 'constrained', width: axis });
+    const replayWrapper = {
+      transforms: [{ kind: 'translate', x: 4, y: 6 }],
+      clip: { kind: 'rect', x: 0, y: 0, width: 20, height: 10 },
+    } satisfies CompositeReplayWrapper;
+    const placed = context.replay(laid, replayWrapper);
     const scopeProps = {
       id: 'cell',
       clip: { kind: 'rect', x: 0, y: 0, width: 20, height: 10 },
@@ -59,6 +67,12 @@ const wrapped = defineComposite({
     const wrapper = context.scope(scopeProps, [placed]);
 
     expectTypeOf(wrapper).toEqualTypeOf<CompositeCompileChild>();
+    expectTypeOf(laid.slotSize).toEqualTypeOf<ChildLayoutSize>();
+
+    // @ts-expect-error replay 的第二参数已迁移为 wrapper object
+    context.replay(laid, [{ kind: 'translate', x: 4, y: 6 }]);
+    // @ts-expect-error replay wrapper 只接受 transforms / clip
+    context.replay(laid, { transforms: [], meta: { role: 'cell' } });
 
     const directPlacement: LayoutCompositeCompileResult = {
       children: [

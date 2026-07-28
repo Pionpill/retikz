@@ -268,7 +268,7 @@ describe('Core canonical Runtime topology', () => {
         context.layoutChild({ type: 'node', position: [-100, 0] }, { kind: 'intrinsic' });
         const selected = context.layoutChild({ type: 'node', position: [0, 0] }, { kind: 'intrinsic' });
         return {
-          children: [context.replay(selected, [{ kind: 'translate', x: 20, y: 30 }])],
+          children: [context.replay(selected, { transforms: [{ kind: 'translate', x: 20, y: 30 }] })],
         };
       },
     });

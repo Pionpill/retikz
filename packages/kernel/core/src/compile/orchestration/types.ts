@@ -6,6 +6,7 @@ import type {
   CompositeCompileChild,
   CompositeCompileScopeProps,
   CompositeReplay,
+  CompositeReplayWrapper,
   ScenePrimitive,
   SceneResource,
   Transform,
@@ -31,6 +32,8 @@ export type PendingPathEmission = {
   boundsSink: Array<LayoutBoundsContribution>;
   /** path allocation 几何贡献 */
   allocationSink: Array<LayoutBoundsContribution>;
+  /** path 位于该显式 composite allocation boundary 内 */
+  allocationBoundary?: object;
   /** path 在所属 primitive sink 中的原位回填槽 */
   placeholderSlot: { primitiveSink: Array<InternalScenePrimitive>; placeholder: PathPlaceholder };
   /** path 的完整 canonical occurrence */
@@ -102,7 +105,7 @@ export type CompositeRuntimeOutputChild =
   | Readonly<{
       kind: 'replay';
       replay: CompositeReplay;
-      transforms?: ReadonlyArray<Transform>;
+      wrapper?: CompositeReplayWrapper;
     }>
   | Readonly<{
       kind: 'scope';
@@ -122,10 +125,18 @@ export type CompositeRuntimeOutputEntry = Readonly<{
   child: CompositeRuntimeOutputChild;
 }>;
 
+/** layoutChild 返回对象对应的 callback-local replay identity */
+export type CompositeLayoutResultEntry = Readonly<{
+  owner: CompositeCompileOwner;
+  replay: CompositeReplay;
+}>;
+
 /** 同一次 compile 独占的 replay 与 runtime output handle 表 */
 export type CompositeCompileSession = {
   /** token → 隔离 probe 结果；不跨 compile 共享 */
   replayTransactions: WeakMap<object, CompositeReplayTransaction>;
+  /** LayoutChildResult identity → replay token；拒绝复制或伪造 result */
+  layoutResults: WeakMap<object, CompositeLayoutResultEntry>;
   /** opaque handle → runtime output 节点；不跨 compile 共享 */
   outputChildren: WeakMap<object, CompositeRuntimeOutputEntry>;
 };
@@ -230,6 +241,8 @@ export type TraversalFrame = {
   boundsSink: Array<LayoutBoundsContribution>;
   /** 当前层父布局 allocation 几何贡献 */
   allocationSink: Array<LayoutBoundsContribution>;
+  /** 最近一层显式 composite allocation boundary */
+  allocationBoundary?: object;
   /** 延迟到完整 Scope chain 冻结后发布的 Node layout observer 记录 */
   observationSink: Array<PendingNodeLayoutObservation>;
   /** 最终逻辑树 artifact 输出容器 */
@@ -322,6 +335,8 @@ export type LayoutBoundsContribution = {
   points: Array<IRPosition>;
   /** 与该点集关联的阴影外溢 */
   shadow?: ResolvedDropShadow;
+  /** 位于该显式 composite allocation boundary 内时不直接贡献到外层 */
+  allocationBoundary?: object;
 };
 
 /** 等完整 Scope chain 冻结后再发送的节点布局观测记录 */
@@ -348,16 +363,18 @@ export type CallableLayoutCompositeDefinition = {
         constraint: ChildLayoutConstraint,
       ) => {
         allocationBounds: Readonly<BoundsRect>;
+        slotSize: Readonly<{ width: number; height: number }>;
         visualBounds: Readonly<BoundsRect>;
         replay: CompositeReplay;
       };
       replay: (
         result: {
           allocationBounds: Readonly<BoundsRect>;
+          slotSize: Readonly<{ width: number; height: number }>;
           visualBounds: Readonly<BoundsRect>;
           replay: CompositeReplay;
         },
-        transforms?: ReadonlyArray<Transform>,
+        wrapper?: CompositeReplayWrapper,
       ) => CompositeCompileChild;
       scope: (
         props: CompositeCompileScopeProps,
@@ -366,6 +383,7 @@ export type CallableLayoutCompositeDefinition = {
     },
   ) => {
     children: ReadonlyArray<IRChild | CompositeCompileChild>;
+    allocationBounds?: Readonly<BoundsRect>;
     artifact?: JsonValue;
   };
 };

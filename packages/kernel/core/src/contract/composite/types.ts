@@ -11,14 +11,44 @@ import type {
 } from '../../schemas';
 import type { Transform } from '../scene';
 
-/** 子内容布局约束 */
+/** 父布局分配给 child 单轴的尺寸约束 */
+export type ChildLayoutAxisConstraint =
+  | Readonly<{
+      /** 在有限区间内保留 child 的真实占用，slot 取 clamp 后尺寸 */
+      kind: 'bounded';
+      /**
+       * slot 的有限非负最小尺寸
+       * @default 0
+       */
+      min?: number;
+      /** slot 的有限非负最大尺寸 */
+      max: number;
+    }>
+  | Readonly<{
+      /** 父布局已经分配固定 slot */
+      kind: 'exact';
+      /** slot 的有限非负固定尺寸 */
+      size: number;
+    }>;
+
+/** 父布局传给任意 child 的双轴布局约束 */
 export type ChildLayoutConstraint =
   | Readonly<{ kind: 'intrinsic' }>
   | Readonly<{
       kind: 'constrained';
-      /** allocation box 的有限非负宽度上限 */
-      maxWidth: number;
+      /** width 轴约束；省略表示 indefinite */
+      width?: ChildLayoutAxisConstraint;
+      /** height 轴约束；省略表示 indefinite */
+      height?: ChildLayoutAxisConstraint;
     }>;
+
+/** 父布局为 child 分配的二维 slot 尺寸 */
+export type ChildLayoutSize = Readonly<{
+  /** slot 宽度 */
+  width: number;
+  /** slot 高度 */
+  height: number;
+}>;
 
 declare const replayBrand: unique symbol;
 
@@ -34,6 +64,8 @@ export type CompositeReplay = Readonly<{
 export type LayoutChildResult = Readonly<{
   /** 父布局应为 child 保留的局部坐标包络 */
   allocationBounds: Readonly<BoundsRect>;
+  /** 父布局按双轴约束分配的尺寸，不包含位置或对齐语义 */
+  slotSize: ChildLayoutSize;
   /** 最终静态 primitive tree 的保守局部视觉包络 */
   visualBounds: Readonly<BoundsRect>;
   /** 对应本次布局结果的 opaque replay token */
@@ -70,6 +102,14 @@ export type CompositeCompileScopeProps = Readonly<{
   animations?: ReadonlyArray<IRAnimationTrack>;
 }>;
 
+/** replay 外层允许附加的无 identity Scope 语义 */
+export type CompositeReplayWrapper = Readonly<{
+  /** replay root primitive 共享的已 lowering 数值变换 */
+  transforms?: ReadonlyArray<Transform>;
+  /** replay local space 中的裁剪区域 */
+  clip?: IRClipSpec;
+}>;
+
 /** layout-aware composite 可见的受限编译上下文 */
 export type LayoutCompositeCompileContext = Readonly<{
   /** 当前 composite occurrence 从父级收到的约束 */
@@ -79,9 +119,9 @@ export type LayoutCompositeCompileContext = Readonly<{
   /**
    * 把当前 callback 的一次布局结果转为 one-use output child
    * @param result 当前 callback 的 `layoutChild()` 返回值
-   * @param transforms replay 提交时应用的已 lowering 数值变换
+   * @param wrapper replay 提交时应用的数值变换与裁剪外壳
    */
-  replay: (result: LayoutChildResult, transforms?: ReadonlyArray<Transform>) => CompositeCompileChild;
+  replay: (result: LayoutChildResult, wrapper?: CompositeReplayWrapper) => CompositeCompileChild;
   /**
    * 创建递归 runtime Scope output child
    * @description 只支持结构属性，不重新施加样式默认、引用变换或 placement
@@ -98,6 +138,8 @@ export type LayoutCompositeCompileContext = Readonly<{
 export type LayoutCompositeCompileResult<TArtifact extends JsonValue = never> = Readonly<{
   /** 普通 child 继续编译，opaque child 在当前 callback 的 runtime output tree 中解析 */
   children: ReadonlyArray<IRChild | CompositeCompileChild>;
+  /** composite 对父布局声明的 container allocation box；省略时由最终 children 合并 */
+  allocationBounds?: Readonly<BoundsRect>;
 }> &
   ([TArtifact] extends [never] ? { artifact?: never } : { artifact?: TArtifact });
 
