@@ -34,45 +34,15 @@ Lowered provenance can change the ids and metadata carried by generated primitiv
 
 ## React Integration
 
-Author the chart with the normal `<Plot>` entry. Pass `lineage` when the host needs the artifact and receive it through `onLineage`:
+Author the chart with the normal `<Plot>` entry. Pass `lineage` when the host needs the artifact and receive it through `onLineage`. The panel can enable root sorting and mark-local Top-N independently. The chart shows the transformed rows, while `transformSteps` lists both scopes with their input and output row counts:
 
-```tsx
-import { useCallback, useState } from 'react';
-import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
-import type { PlotLineageRun } from '@retikz/plot';
+<ComponentPreview
+  files={['plot-lineage', 'plot-lineage.data.ts', 'plot-lineage-options.ts']}
+  size="lg"
+  caption="Sort and Top-N change the plotted rows; recording switches change only side-channel lineage fields. root and mark[0] identify the two transform scopes."
+/>
 
-type AuditSummary = {
-  dataReference: string;
-  marks: Array<{ markIndex: number; markId?: string; markType: string }>;
-};
-
-export function SalesPlot({ sales }: { sales: Array<Record<string, unknown>> }) {
-  const [auditSummary, setAuditSummary] = useState<AuditSummary | null>(null);
-  const handleLineage = useCallback((run: PlotLineageRun) => {
-    setAuditSummary({
-      dataReference: run.dataReference,
-      marks: run.marks.map(({ markIndex, markId, markType }) => ({
-        markIndex,
-        ...(markId === undefined ? {} : { markId }),
-        markType,
-      })),
-    });
-  }, []);
-
-  return (
-    <div>
-      <Plot id="salesPlot" dataRef="sales" data={sales} width={420} height={260} lineage={{}} onLineage={handleLineage}>
-        <IntervalMark id="revenueBars" x="region" y="revenue" color="month" />
-        <Axis dimension="x" />
-        <Axis dimension="y" grid />
-      </Plot>
-      <pre>{auditSummary === null ? 'Waiting for lineage' : JSON.stringify(auditSummary, null, 2)}</pre>
-    </div>
-  );
-}
-```
-
-The example displays only the data reference and mark identity summary; a host can select the fields it actually needs from `PlotLineageRun` in the same way. The presence of `onLineage` enables the minimal default configuration even when `lineage` is omitted. Pass `lineage={false}` to disable it explicitly. Use the React adapter's `resolvePlotLineage` when lineage is needed outside rendering.
+The example displays only the lineage summary the host needs. The presence of `onLineage` enables the minimal default configuration even when `lineage` is omitted. Pass `lineage={false}` to disable it explicitly. Use the React adapter's `resolvePlotLineage` when lineage is needed outside rendering.
 
 ## Vanilla and SSR
 
@@ -85,7 +55,7 @@ const spec = plot({
   data: { reference: 'sales' },
   scales: [
     { type: 'band', name: 'x' },
-    { type: 'linear', name: 'y' },
+    { type: 'linear', name: 'y', domainPadding: 0 },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
   marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'revenue' } } }],
