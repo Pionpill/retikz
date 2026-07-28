@@ -5,6 +5,8 @@ description: 查询 React、Vanilla 与直接编译入口如何共享一次 Tabl
 
 TableSpec 只保存 JSON-safe 结构；datasets、Definitions、Core compile options 与宿主能力在运行时注入。所有 standalone 入口都让 Table 在同一次 Core compile 中完成内容测量、轨道求解、replay、Scene 与 manifest，不再为了 sidecar 执行第二次 lowering。
 
+> 这里解释运行时接线与执行逻辑，不重复 schema 字段。TableSpec、Cell、轨道、border 与 manifest 的 JSON 形状请查[表格契约](/viz/table/reference/contract-table)。
+
 <ComponentPreview files="table-runtime-flow" hideCode size="xs" />
 
 ## React
@@ -78,136 +80,18 @@ result.manifest;
 
 layout-aware Table 不能通过纯 Tier 1 `lowerIRToKernel()` 保存 compile-local replay tree。需要 standalone 结果时使用 `compileTable()`；嵌入其它 Scene 时把 `lowerTables()` definitions 交给宿主 `compileToScene()`、React `<Layout>` 或 Vanilla adapter。
 
-## TableLayoutManifestSchema
+manifest 是 JSON-safe、detached、递归冻结的 typed artifact payload；字段与嵌套 DTO 见[表格契约的布局 manifest](/viz/table/reference/contract-table#布局-manifest)。根 artifact occurrence 由 Core compile traversal 生成，不进入 TableSpec 或 manifest；`tableId` 不是实例 selector，匿名根、nested Table 与重复 id 都由 exact occurrence 区分。
 
-`TableLayoutManifest` 是 JSON-safe、detached、递归冻结的 typed artifact payload。
+## 运行时迁移
 
-<ZodSchema
-  name="TableLayoutManifestSchema"
-  description="同次 Table compile 产出的布局、可见范围与可追溯条目集合。"
-  descriptions={{
-    tableId: '可选的公开 Table id；不能作为实例 selector。',
-    allocationBounds: 'tracks 与 gaps 在 Table-local 坐标中的分配范围。',
-    'allocationBounds.x': '分配范围左边界的有限 Table-local x 坐标。',
-    'allocationBounds.y': '分配范围上边界的有限 Table-local y 坐标。',
-    'allocationBounds.width': '分配范围的有限非负宽度。',
-    'allocationBounds.height': '分配范围的有限非负高度。',
-    visualOverflowBounds: '可见 Cell 与 border 在 Table-local 坐标中的 union。',
-    'visualOverflowBounds.x': '可见范围左边界的有限 Table-local x 坐标。',
-    'visualOverflowBounds.y': '可见范围上边界的有限 Table-local y 坐标。',
-    'visualOverflowBounds.width': '可见范围的有限非负宽度。',
-    'visualOverflowBounds.height': '可见范围的有限非负高度。',
-    rows: '按 canonical 顺序保存的行轨道几何。',
-    columns: '按 canonical 顺序保存的列轨道几何。',
-    cells: '按 canonical 顺序保存的 Cell 几何与来源。',
-    borders: '可见 border edge 的几何与冲突解析来源。',
-  }}
-/>
-
-### TableTrackManifestEntrySchema
-
-<ZodSchema
-  name="TableTrackManifestEntrySchema"
-  description="一条 resolved 行或列轨道的稳定身份与 Table-local 几何。"
-  descriptions={{
-    id: '稳定语义轨道 id。',
-    index: 'canonical 零基轨道索引。',
-    offset: '有限 Table-local 轴向偏移。',
-    size: '有限非负轨道尺寸。',
-  }}
-/>
-
-### TableCellManifestEntrySchema
-
-<ZodSchema
-  name="TableCellManifestEntrySchema"
-  description="一个 resolved Cell 的身份、span、各坐标空间 bounds、语义与来源。"
-  descriptions={{
-    cellId: '稳定语义 Cell id。',
-    rowId: '所属起始行的稳定语义 id。',
-    columnId: '所属起始列的稳定语义 id。',
-    rowIndex: 'Cell 起点的 canonical 零基行索引。',
-    columnIndex: 'Cell 起点的 canonical 零基列索引。',
-    span: 'resolved 矩形 Cell span。',
-    'span.rows': 'resolved 正行跨度。',
-    'span.columns': 'resolved 正列跨度。',
-    box: 'Table-local Cell box。',
-    'box.x': 'Cell box 左边界的有限 Table-local x 坐标。',
-    'box.y': 'Cell box 上边界的有限 Table-local y 坐标。',
-    'box.width': 'Cell box 的有限非负宽度。',
-    'box.height': 'Cell box 的有限非负高度。',
-    contentBox: 'Table-local padding-reduced content box。',
-    'contentBox.x': 'content box 左边界的有限 Table-local x 坐标。',
-    'contentBox.y': 'content box 上边界的有限 Table-local y 坐标。',
-    'contentBox.width': 'content box 的有限非负宽度。',
-    'contentBox.height': 'content box 的有限非负高度。',
-    sourceAllocationBounds: 'replay-root local 的源 allocation bounds。',
-    'sourceAllocationBounds.x': '源 allocation bounds 左边界的有限局部 x 坐标。',
-    'sourceAllocationBounds.y': '源 allocation bounds 上边界的有限局部 y 坐标。',
-    'sourceAllocationBounds.width': '源 allocation bounds 的有限非负宽度。',
-    'sourceAllocationBounds.height': '源 allocation bounds 的有限非负高度。',
-    sourceVisualOverflowBounds: 'replay-root local 的源可见 bounds。',
-    'sourceVisualOverflowBounds.x': '源可见 bounds 左边界的有限局部 x 坐标。',
-    'sourceVisualOverflowBounds.y': '源可见 bounds 上边界的有限局部 y 坐标。',
-    'sourceVisualOverflowBounds.width': '源可见 bounds 的有限非负宽度。',
-    'sourceVisualOverflowBounds.height': '源可见 bounds 的有限非负高度。',
-    contentAllocationBounds: 'fit 与 alignment 后的 Table-local allocation bounds。',
-    'contentAllocationBounds.x': '内容 allocation bounds 左边界的有限 Table-local x 坐标。',
-    'contentAllocationBounds.y': '内容 allocation bounds 上边界的有限 Table-local y 坐标。',
-    'contentAllocationBounds.width': '内容 allocation bounds 的有限非负宽度。',
-    'contentAllocationBounds.height': '内容 allocation bounds 的有限非负高度。',
-    visualOverflowBounds: 'overflow 策略后的 Table-local 可见 bounds。',
-    'visualOverflowBounds.x': 'Cell 可见 bounds 左边界的有限 Table-local x 坐标。',
-    'visualOverflowBounds.y': 'Cell 可见 bounds 上边界的有限 Table-local y 坐标。',
-    'visualOverflowBounds.width': 'Cell 可见 bounds 的有限非负宽度。',
-    'visualOverflowBounds.height': 'Cell 可见 bounds 的有限非负高度。',
-    location: 'Cell 所在的语义区域。',
-    roles: 'Cell 承担的非空语义角色。',
-    source: '可选的稳定 Cell 来源身份。',
-  }}
-/>
-
-### TableBorderManifestEntrySchema
-
-<ZodSchema
-  name="TableBorderManifestEntrySchema"
-  description="一条可见 merged border edge 的几何、resolved line style 与逐 atom 来源。"
-  descriptions={{
-    edgeKey: 'canonical merged edge key。',
-    orientation: 'edge 的水平或垂直方向。',
-    start: 'Table-local edge 起点。',
-    'start.x': 'edge 起点的有限 Table-local x 坐标。',
-    'start.y': 'edge 起点的有限 Table-local y 坐标。',
-    end: 'Table-local edge 终点。',
-    'end.x': 'edge 终点的有限 Table-local x 坐标。',
-    'end.y': 'edge 终点的有限 Table-local y 坐标。',
-    style: '最终 emit 的 resolved line style。',
-    'style.stroke': 'border line 的非 none Core paint。',
-    'style.width': 'resolved 非负 border 宽度。',
-    'style.strokeOpacity': 'resolved border stroke opacity。',
-    'style.dashPattern': '可选非空正数 dash pattern；省略表示实线。',
-    'style.dashOffset': 'resolved 有限 dash offset。',
-    'style.lineCap': 'canonical border line cap。',
-    'style.lineJoin': 'canonical border line join。',
-    atoms: '按 edge 顺序保存的 canonical atomic provenance。',
-    pathId: '可选的已 emit Core Path id。',
-  }}
-/>
-
-根 artifact occurrence 由 Core compile traversal 生成，不进入 TableSpec 或 manifest。`tableId` 不是实例 selector；匿名根、nested Table 与重复 id 都由 exact occurrence 区分。
-
-## Breaking migration
-
-| 旧写法                                       | 当前写法                                                       |
-| -------------------------------------------- | -------------------------------------------------------------- |
-| `columnWidth` / `rowHeight` / `headerHeight` | `columnSize` / `rowSize` / `headerRowSize` 轨道对象            |
-| `manifest.bounds`                            | `manifest.allocationBounds`；可见范围用 `visualOverflowBounds` |
-| `lowerTableWithArtifacts()`                  | `compileTable()`                                               |
-| `renderTable(..., { composites })`           | `renderTable(..., { compile: { composites } })`                |
-| embedded Table 的 `onManifest`               | 外层 `<Layout onArtifacts>`                                    |
+| 旧写法                             | 当前写法                                        |
+| ---------------------------------- | ----------------------------------------------- |
+| `lowerTableWithArtifacts()`        | `compileTable()`                                |
+| `renderTable(..., { composites })` | `renderTable(..., { compile: { composites } })` |
+| embedded Table 的 `onManifest`     | 外层 `<Layout onArtifacts>`                     |
 
 ## 相关
 
-- [表格契约](/viz/table/reference/contract-table)：Cell、轨道与 border schema
-- [明细表契约](/viz/table/reference/contract-detail)：columns 与 detail Structure
+- [表格契约](/viz/table/reference/contract-table)：TableSpec、Cell、轨道、border 与 manifest schema
+- [明细表契约](/viz/table/reference/contract-detail)：columns 与 detail Structure schema
 - [Kernel compile](/kernel/reference/runtime/compile)：Core options、typed artifacts 与 composite registry

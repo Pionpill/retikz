@@ -8,6 +8,7 @@ import {
   kernelSection,
   PACKAGE_IDS,
   standardSection,
+  vizSection,
 } from '@/modules/docs/data';
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -59,6 +60,16 @@ describe('changelog data', () => {
     const currentStandardRelease = changelogForModule('standard')[0];
     expect(currentStandardRelease).toBeDefined();
     const currentReleaseId = changelogVersionSlug(currentStandardRelease.minor);
+
+    expect(changelogPage?.children?.some(page => page.id === currentReleaseId)).toBe(true);
+  });
+
+  it.each(['data', 'table', 'plot'] as const)('当前 Viz %s 分区注册独立更新日志详情路由', sectionId => {
+    const section = vizSection.find(entry => entry.id === sectionId);
+    const changelogPage = section?.pages.find(page => page.id === 'changelog');
+    const currentRelease = changelogForModule('viz', sectionId)[0];
+    expect(currentRelease).toBeDefined();
+    const currentReleaseId = changelogVersionSlug(currentRelease.minor);
 
     expect(changelogPage?.children?.some(page => page.id === currentReleaseId)).toBe(true);
   });

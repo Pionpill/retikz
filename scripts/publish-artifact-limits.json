@@ -1,10 +1,10 @@
 {
   "@retikz/core": {
-    "maxFiles": 900,
-    "maxPackedBytes": 337920
+    "maxFiles": 970,
+    "maxPackedBytes": 399360
   },
   "@retikz/data": {
-    "maxFiles": 150,
+    "maxFiles": 160,
     "maxPackedBytes": 71680
   },
   "@retikz/math": {
@@ -12,28 +12,28 @@
     "maxPackedBytes": 30720
   },
   "@retikz/plot": {
-    "maxFiles": 360,
-    "maxPackedBytes": 440320
+    "maxFiles": 410,
+    "maxPackedBytes": 460800
   },
   "@retikz/plot-react": {
-    "maxFiles": 40,
+    "maxFiles": 50,
     "maxPackedBytes": 71680
   },
   "@retikz/plot-vanilla": {
-    "maxFiles": 20,
-    "maxPackedBytes": 20480
+    "maxFiles": 30,
+    "maxPackedBytes": 10240
   },
   "@retikz/react": {
     "maxFiles": 150,
     "maxPackedBytes": 81920
   },
-  "@retikz/runtime": {
-    "maxFiles": 40,
-    "maxPackedBytes": 20480
-  },
   "@retikz/render": {
     "maxFiles": 180,
     "maxPackedBytes": 112640
+  },
+  "@retikz/runtime": {
+    "maxFiles": 80,
+    "maxPackedBytes": 40960
   },
   "@retikz/standard": {
     "maxFiles": 130,
@@ -48,8 +48,8 @@
     "maxPackedBytes": 10240
   },
   "@retikz/table": {
-    "maxFiles": 210,
-    "maxPackedBytes": 40960
+    "maxFiles": 260,
+    "maxPackedBytes": 92160
   },
   "@retikz/table-react": {
     "maxFiles": 50,

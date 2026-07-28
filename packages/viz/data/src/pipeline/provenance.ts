@@ -50,7 +50,11 @@ export const withGroupProvenance = (row: ExternalRow, members: Array<ExternalRow
 
 /**
  * 给每行打源序标记。
- * @description object spread 会保留可枚举 symbol 属性，transform 管线后标记仍可读取；resolveFieldPath / JSON 都忽略它
+ * @description 已有行级或组级来源身份保持不变；未标记行才使用当前数组下标。object spread 会保留可枚举 symbol 属性，resolveFieldPath / JSON 都忽略它
  */
 export const tagSourceIndex = (rows: Array<ExternalRow>): Array<ExternalRow> =>
-  rows.map((row, index) => ({ ...row, [SOURCE_INDEX]: index }));
+  rows.map((row, index) =>
+    readSourceIndex(row) !== undefined || readSourceIndices(row) !== undefined
+      ? { ...row }
+      : { ...row, [SOURCE_INDEX]: index },
+  );

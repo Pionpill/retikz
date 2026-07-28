@@ -10,8 +10,15 @@ import type { PackageId, Release } from '@/modules/docs/data';
 import { InlineMdx } from '@/modules/docs/components';
 import { changelogVersionSlug } from '@/modules/docs/data';
 
+/** Viz 分区的更新日志主包，用于概览摘要 */
+const VIZ_SECTION_LEAD_PACKAGE = new Map<string, PackageId>([
+  ['data', '@retikz/data'],
+  ['table', '@retikz/table'],
+  ['plot', '@retikz/plot'],
+]);
+
 export type ChangelogOverviewProps = {
-  /** 当前模块与分组的 changelog 切片（倒序）。 */
+  /** 当前模块与分组的 changelog 切片（倒序） */
   releases: Array<Release>;
   /** 当前模块 id，用于拼各中版本详情页链接。 */
   moduleId: string;
@@ -21,14 +28,15 @@ export type ChangelogOverviewProps = {
 
 /**
  * 更新日志概览:各中版本一行,版本号 + 发布日期 / 状态 + 该版本内容简述,整行链接到详情页。
- * @description 简述取该模块主包(`@retikz/<module>`)在该中版本的 description;详情页(changelog/<version>)给逐包明细。列表形态,非时间线。
+ * @description 简述取当前模块主包（Viz 按 Data / Table / Plot 分区选择）在该中版本的 description；详情页（changelog/<version>）给逐包明细。列表形态，非时间线
  */
 export const ChangelogOverview: FC<ChangelogOverviewProps> = ({ releases, moduleId, sectionId }) => {
   const { i18n, t } = useTranslation();
   const lang: Lang = (i18n.resolvedLanguage ?? 'zh').startsWith('en') ? 'en' : 'zh';
-  const leadPkg = (
-    moduleId === 'viz' ? (sectionId === 'plot' ? '@retikz/plot' : '@retikz/data') : `@retikz/${moduleId}`
-  ) as PackageId;
+  const leadPkg =
+    moduleId === 'viz'
+      ? (VIZ_SECTION_LEAD_PACKAGE.get(sectionId) ?? '@retikz/data')
+      : (`@retikz/${moduleId}` as PackageId);
 
   return (
     <ul className="flex flex-col gap-2.5">

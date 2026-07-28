@@ -1,6 +1,7 @@
 export { formatCompileOccurrence, isNodeLayoutCompileArtifact } from './artifact';
 export { compileToScene } from './compile';
 export { CompileWarningCode } from './constants';
+export * from './incremental';
 export * from './lower';
 export { computeLayout } from './scene';
 export type {

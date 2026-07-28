@@ -79,18 +79,17 @@ The example displays only the data reference and mark identity summary; a host c
 Vanilla and SSR pass the same options to `renderPlot`. Without lineage options it returns an SVG string; with a `lineage` object it returns `{ svg, lineage }`.
 
 ```ts
-import { plotBuilder, renderPlot } from '@retikz/plot-vanilla';
+import { plot, renderPlot } from '@retikz/plot-vanilla';
 
-const spec = plotBuilder({
+const spec = plot({
   data: { reference: 'sales' },
   scales: [
     { type: 'band', name: 'x' },
     { type: 'linear', name: 'y' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-})
-  .interval({ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'revenue' } } })
-  .build();
+  marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'revenue' } } }],
+});
 
 const { svg, lineage } = renderPlot(
   spec,
@@ -175,9 +174,9 @@ This entry is suitable for tooltips, AI explanation panels, or audit navigation.
     },
     {
       label: 'Vanilla lineage return contract',
-      path: 'packages/viz/plot-vanilla/src/render-plot.ts',
-      startLine: 13,
-      endLine: 60,
+      path: 'packages/viz/plot-vanilla/src/runtime/render-plot.ts',
+      startLine: 14,
+      endLine: 68,
     },
   ]}
 />

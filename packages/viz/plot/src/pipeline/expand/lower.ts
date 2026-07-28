@@ -120,7 +120,7 @@ const expandPlot = (node: IRPlotSpec, datasets: ExternalDatasets, options: Lower
     throw new Error(`lowerPlots: height must be a positive finite number, got ${height}`);
   }
 
-  if (!(node.data.reference in datasets)) {
+  if (!Object.hasOwn(datasets, node.data.reference)) {
     throw new Error(`lowerPlots: dataset "${node.data.reference}" not found in provided datasets`);
   }
 

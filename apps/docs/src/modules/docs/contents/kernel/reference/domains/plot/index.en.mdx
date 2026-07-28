@@ -11,12 +11,12 @@ description: '@retikz/plot is the Tier 2 visualization grammar package in the Vi
 
 Viz is layered as data capabilities, visualization grammar, and host integration. Plot owns only the middle layer: visual mapping and lowering.
 
-| Package                | Responsibility                                                                  |
-| ---------------------- | ------------------------------------------------------------------------------- |
-| `@retikz/data`         | Data models, field resolution, general transforms / statistics, and lineage     |
-| `@retikz/plot`         | Plot IR plus channels, scales, coordinates, marks, guides, layout, and lowering |
-| `@retikz/plot-react`   | React JSX authoring, data injection, and React runtime wiring                   |
-| `@retikz/plot-vanilla` | Framework-free `plotBuilder`, data injection, and Vanilla / SSR orchestration   |
+| Package                | Responsibility                                                                   |
+| ---------------------- | -------------------------------------------------------------------------------- |
+| `@retikz/data`         | Data models, field resolution, general transforms / statistics, and lineage      |
+| `@retikz/plot`         | Plot IR plus channels, scales, coordinates, marks, guides, layout, and lowering  |
+| `@retikz/plot-react`   | React JSX authoring, data injection, and React runtime wiring                    |
+| `@retikz/plot-vanilla` | Plain `plot()`, Tier 2 adapters, data injection, and Vanilla / SSR orchestration |
 
 Plot does not own SVG / Canvas renderers, nor does it store React components or runtime functions. It receives JSON-serializable Plot IR and external data, produces graphical contributions for Core to compile, and optionally provides runtime lineage and diagnostics.
 
@@ -46,7 +46,7 @@ The main flow starts with host authoring, performs data preparation, visual-gram
 
 <ComponentPreview files="plot-pipeline" size="sm" hideCode />
 
-1. **Build the specification**: the React composition DSL, Vanilla builder, or a direct spec produces `IRPlotSpec`; the host keeps datasets separately, outside the IR.
+1. **Build the specification**: the React composition DSL, Vanilla `plot()`, or a direct spec produces `IRPlotSpec`; the host keeps datasets separately, outside the IR.
 2. **Prepare data**: schemas validate Plot IR, the data model resolves fields, and general and Plot-specific transforms produce the row views required by each layer.
 3. **Resolve visual grammar**: registries resolve channel, scale, coordinate, mark, and guide definitions; built-ins and extensions use the same resolution and consumption paths.
 4. **Lower to Core IR**: `lowerPlots(datasets, options)` creates the Plot composite definition. Plot lowering expands grids, marks, axes, labels, and legends into Core `Scope`, `Node`, and `Path` values.

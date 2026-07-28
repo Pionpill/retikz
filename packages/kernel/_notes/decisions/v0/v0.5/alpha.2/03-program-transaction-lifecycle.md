@@ -1,7 +1,8 @@
 # ADR-03：Program Graph 与同步 Transaction Lifecycle
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-07-26
+- 接受日期：2026-07-27
 - 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-02](./02-runtime-identity-owner-registry.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md)
 
 ## 背景
@@ -244,7 +245,7 @@ class RuntimeError extends Error {
 }
 ```
 
-`createRuntimeOwnerInput/Update()` 在 concrete owner泛型仍在作用域时闭包捕获正确 value/change并返回不暴露 callback的 erased command；private `RuntimeOwnerCommandBrand` value与 WeakSet guard使 object literal / foreign command在TypeScript和JavaScript两层均被拒绝，stable code为 `RUNTIME_OWNER_COMMAND_INVALID`。错误 value或 ChangeSet类型在 builder调用点由 TypeScript拒绝。Session只接受这些 command，不接受 `{ owner, value }` object literal。Initial snapshot必须精确覆盖 owner registry，重复/缺失/额外 owner都拒绝。Session创建时 capture initial values、首次 read全部成功后按拓扑 full run Program，再执行 participant initial commit并发布 revision 0；随后每个 Program observer按拓扑恰好调用一次，最后才返回 session。任一步失败都先反向清理已 capture artifact，再反向清理 owner，最终不返回 session。空 Program graph合法。
+`createRuntimeOwnerInput/Update()` 在 concrete owner泛型仍在作用域时闭包捕获正确 value/change并返回不暴露 callback的 erased command；private `RuntimeOwnerCommandBrand` value与 WeakSet guard使 object literal / foreign command在TypeScript和JavaScript两层均被拒绝，stable code为 `RUNTIME_OWNER_COMMAND_INVALID`。错误 value或 ChangeSet类型在 builder调用点由 TypeScript拒绝。Session只接受这些 command，不接受 `{ owner, value }` object literal。Initial snapshot必须精确覆盖 owner registry，重复/缺失/额外 owner都拒绝。Session创建时 capture initial values、首次 read全部成功后按拓扑 full run Program并发布 revision 0；随后每个 Program observer按拓扑恰好调用一次，最后才返回 session。任一步失败都先反向清理已 capture artifact，再反向清理 owner，最终不返回 session。空 Program graph合法。
 
 `RuntimeRevision`在 TypeScript中只能从 Runtime API取得 branded value，但运行时是 `0..Number.MAX_SAFE_INTEGER` integer；JavaScript可传入相同数值，Runtime只验证 safe integer与 current/base equality，不声称鉴别来源。`createRuntimeChangeSet()`对 base做同样数值校验，并以 private brand/WeakSet保证 ChangeSet envelope来自 factory，再复制/冻结 changes容器。current已经是 MAX时，只有 `owners: []`可直接 bailout；任何非空 update都在 capture前以 `RUNTIME_REVISION_EXHAUSTED`拒绝，即使其 value之后可能 semantic equal。
 
@@ -262,21 +263,20 @@ Graph执行算法固定为：
 
 Program 聚合 outcome 优先级为 `fallback > full > incremental > committed > bailout`。Owner validation fallback 与 Program fallback diagnostics 都进入 candidate；只有 full artifact 成功并发布后才成为该次 result diagnostic。
 
-Session状态机为 `idle → preparing → committing → publishing → observing → retiring → idle`；另有 `disposing / disposed / broken`。alpha.2不排队重入：在非 idle阶段同步调用 `update()`、`dispose()`、`snapshot()`、`artifact()` 或 drain `diagnostics()`，统一以 `RUNTIME_SESSION_REENTRANT` 拒绝且不得改变外层 transaction；`revision()`只返回当前已 publish revision。trace sink重入遵守 ADR-01相同规则。observer通过 event读取本次 artifact，不回调 session。rollback无法恢复 participant时由 ADR-05把 session标记 broken；broken session只允许 `revision/diagnostics/dispose`。
+Session update状态机为 `idle → preparing → observing → retiring → idle`；initial create为 `preparing → observing → idle`，另有 `disposing / disposed`。alpha.2不排队重入：在非 idle阶段同步调用 `update()`、`dispose()`、`snapshot()`、`artifact()` 或 drain `diagnostics()`，统一以 `RUNTIME_SESSION_REENTRANT` 拒绝且不得改变外层 transaction；`revision()`只返回当前已 publish revision。trace sink重入遵守 ADR-01相同规则。observer通过 event读取本次 artifact，不回调 session。
 
 生命周期：
 
 1. Capture next owner value；任一步失败反向 dispose 本次已 capture value。
 2. 按拓扑执行 Program；incremental/full artifact input 立即 capture 为 candidate artifact，capture 失败清理整个 candidate。
 3. Bailout 只保留 committed artifact reference，不纳入 candidate dispose；fallback 没有临时 artifact ownership。
-4. 所有 candidate owner/artifact首次 read已在 Program prepare成功；ADR-05 participant随后依次 prepare与 commit。任一 publish前失败都反向 rollback/dispose participant token并清理 candidate，current pointer/revision保持不变。
-5. 全部 participant commit成功后，Runtime才一次原子交换内部 pointer/read cache/revision；pointer publish本身不调用用户 callback。
-6. Publish前已冻结同一份 candidate + successful participant diagnostics前缀。Initial create对所有 Program按拓扑调用 observer，program-local outcome=`full`；update只通知本轮成功生成新 artifact的 Program，event outcome使用该 Program自身的 `full|incremental|fallback`，unaffected/bailout不通知。所有 observer接收完全相同的 frozen diagnostic前缀；任一 observer失败不影响后序 observer且不回滚，observer/retire diagnostics只追加到最终 result/queue，不反向改变任何 event。
-7. 最后反向拓扑 retire被替换的旧 artifact/owner value，并反向 dispose prepared participant token；publish后 dispose error进入 diagnostic并继续清理，不再 rollback已发布 revision。Publish前 primary error保留，rollback/dispose secondary只追加 diagnostic、不覆盖 primary。
+4. 所有 candidate owner/artifact首次 read与 Program prepare成功后，Runtime一次原子交换内部 pointer/read cache/revision；pointer publish本身不调用用户 callback。
+5. Publish前冻结同一份 candidate diagnostic前缀。Initial create对所有 Program按拓扑调用 observer，program-local outcome=`full`；update只通知本轮成功生成新 artifact的 Program，event outcome使用该 Program自身的 `full|incremental|fallback`，unaffected/bailout不通知。所有 observer接收完全相同的 frozen diagnostic前缀；任一 observer失败不影响后序 observer且不回滚，observer/retire diagnostics只追加到最终 result/queue，不反向改变任何 event。
+6. 最后反向拓扑 retire被替换的旧 artifact/owner value；publish后 dispose error进入 diagnostic并继续清理，不再 rollback已发布 revision。Publish前 primary error保留，dispose secondary只追加 diagnostic、不覆盖 primary。
 
-`RuntimeSessionResult.diagnostics` 是本次调用 diagnostics 的 immutable copy；完全相同顺序的 entries在本次调用返回前追加到 session queue。`session.diagnostics()`只在 idle/disposed/broken时返回并清空累计 queue；不去重。observer diagnostics排在 candidate/participant diagnostics后，retire diagnostics最后。再次调用 Definition `read()`只发生在未来新 candidate capture；当前 public snapshot/artifact读取 committed cache，因此不存在“首次 post-commit read failure”。
+`RuntimeSessionResult.diagnostics` 是本次调用 diagnostics 的 immutable copy；完全相同顺序的 entries在本次调用返回前追加到 session queue。`session.diagnostics()`只在 idle/disposed时返回并清空累计 queue；不去重。observer diagnostics排在 candidate diagnostics后，retire diagnostics最后。再次调用 Definition `read()`只发生在未来新 candidate capture；当前 public snapshot/artifact读取 committed cache，因此不存在“首次 post-commit read failure”。
 
-稳定 session/graph错误至少包括 `RUNTIME_PROGRAM_ID_INVALID`、`RUNTIME_PROGRAM_DUPLICATE`、`RUNTIME_PROGRAM_UNKNOWN`、`RUNTIME_PROGRAM_TOKEN_INVALID`、`RUNTIME_PROGRAM_CYCLE`、`RUNTIME_UNDECLARED_DEPENDENCY`、`RUNTIME_REGISTRY_MISMATCH`、`RUNTIME_OWNER_COMMAND_INVALID`、`RUNTIME_INITIAL_OWNER_MISMATCH`、`RUNTIME_REVISION_INVALID`、`RUNTIME_REVISION_STALE`、`RUNTIME_REVISION_EXHAUSTED`、`RUNTIME_CHANGESET_REVISION_MISMATCH`、`RUNTIME_SESSION_REENTRANT`、`RUNTIME_SESSION_DISPOSED`、`RUNTIME_SESSION_BROKEN`、`RUNTIME_OWNER_OWNERSHIP_ALIAS` 与 `RUNTIME_ARTIFACT_OWNERSHIP_ALIAS`。`RuntimeError`公开 `code/phase/message/cause/diagnostics`，可选 `owner/program` context；原 callback error只作为 `cause`，不改变稳定 code。
+稳定 session/graph错误至少包括 `RUNTIME_PROGRAM_ID_INVALID`、`RUNTIME_PROGRAM_DUPLICATE`、`RUNTIME_PROGRAM_UNKNOWN`、`RUNTIME_PROGRAM_TOKEN_INVALID`、`RUNTIME_PROGRAM_CYCLE`、`RUNTIME_UNDECLARED_DEPENDENCY`、`RUNTIME_REGISTRY_MISMATCH`、`RUNTIME_OWNER_COMMAND_INVALID`、`RUNTIME_INITIAL_OWNER_MISMATCH`、`RUNTIME_REVISION_INVALID`、`RUNTIME_REVISION_STALE`、`RUNTIME_REVISION_EXHAUSTED`、`RUNTIME_CHANGESET_REVISION_MISMATCH`、`RUNTIME_SESSION_REENTRANT`、`RUNTIME_SESSION_DISPOSED`、`RUNTIME_OWNER_OWNERSHIP_ALIAS` 与 `RUNTIME_ARTIFACT_OWNERSHIP_ALIAS`。`RuntimeError`公开 `code/phase/message/cause/diagnostics`，可选 `owner/program` context；原 callback error只作为 `cause`，不改变稳定 code。
 
 Program lifecycle primary code固定为 `RUNTIME_PROGRAM_RUN_FAILED`、`RUNTIME_PROGRAM_UPDATE_FAILED`、`RUNTIME_ARTIFACT_CAPTURE_FAILED`、`RUNTIME_ARTIFACT_PROGRAM_READ_FAILED`与 `RUNTIME_ARTIFACT_PUBLIC_READ_FAILED`，phase分别为 `run/update/artifact-capture/artifact-program-read/artifact-public-read`并保留 program/cause。Artifact dispose与 observer throw不改变已确定 primary/publish，分别映射非致命 `RUNTIME_ARTIFACT_DISPOSE_FAILED` / `RUNTIME_PROGRAM_OBSERVER_FAILED` diagnostic并继续反向清理/后序 observer。
 
@@ -284,22 +284,21 @@ Program lifecycle primary code固定为 `RUNTIME_PROGRAM_RUN_FAILED`、`RUNTIME_
 
 `snapshot(definition)` / `artifact(definition)` 返回含 immutable cached `TRead` 的 `RuntimeSnapshot<TRead>`。`dispose()` 从 idle进入 disposing，先阻止重入，再反向释放 committed artifact/value并进入 disposed；重复 dispose no-op，之后除 `revision/diagnostics/dispose` 外的调用具名失败。
 
-ADR-05 可注册 `RuntimeCommitParticipant`，其 prepare/commit/rollback 位于 Program prepare 与 pointer publish 之间；本 ADR 不定义具体 renderer participant。
+Renderer commit participant、prepare/commit/rollback token、不可恢复 rollback与 broken Session均留给 ADR-05；它们不是本 ADR 已接受的 Runtime API或状态。
 
-## 测试设计
+## 最终实现与验证
 
-- Compile-time type tests 用具体非-unknown Program input 验证 CandidateView generic lookup。
-- 必填 envelope base、multi-owner ChangeSet base、校验顺序与 stable error code。
-- 内置/示例 Definition的 immutable read conformance保证未变化 owner/upstream artifact不会被 caller修改。
-- full/incremental/bailout/fallback/empty-program 每条 artifact ownership exactly once。
-- callback phase throw、rollback/retire dispose throw、observer与session API重入不破坏规定状态。
-
-详细矩阵见 ignored `notes/plans/kernel-v0.5-performance/TEST_CONTRACT_ALPHA2_ADR_03.md`。
+- `@retikz/runtime` 公开 typed Program Definition/registry、同步 Session、revision-bound transaction、CandidateView、observer 与 diagnostic queue。
+- initial full、incremental、bailout、fallback 和 empty Program 共用同一稳定拓扑执行；candidate 在 publish 前隔离，成功后一次切换 revision。
+- artifact 与 owner value 按 acquire/rollback/retire/dispose 路径 exactly-once 管理；primary error 保持 code/cause，secondary lifecycle failure 进入 immutable diagnostics。
+- 自动化验证覆盖 graph/cycle/undeclared dependency、stale base、multi-owner ChangeSet、revision exhaustion、callback phase failure、rollback、observer reentry、资源所有权和 compile-time generic lookup。
+- 2026-07-27 收尾验证通过：Runtime `tsc --noEmit` 与 19 files / 135 tests 全部通过。
+- Runtime package/session 中英文文档、执行逻辑图和 alpha.2 changelog 已同步当前同步事务合同。
 
 ## 公开影响
 
 - `@retikz/runtime` 新增 Program Definition / registry、同步 session、typed CandidateView、observer 与 diagnostics。
-- React / Vanilla 持有相同 session contract；不暴露框架 lane。
+- React / Vanilla 后续接线必须持有相同 session contract；本 ADR 不暴露 adapter API 或框架 lane。
 - 不修改 IR / Scene；不提供 concurrent API。
 
 ## 能力完备性检查
@@ -309,7 +308,7 @@ ADR-05 可注册 `RuntimeCommitParticipant`，其 prepare/commit/rollback 位于
 - 内部表达：完整 next Snapshot → read-only candidate → Program → atomic pointer publish。
 - 外部扩展：builtin/custom Program 同一 define/registry/dispatch。
 - define-registry：完整适用；owner 必须来自 ADR-02 registry。
-- 下游闭环：ADR-04 Core Program、ADR-05 renderer participant、React/Vanilla 共用。
+- 下游闭环：ADR-04 提供 Core Program，ADR-05 接入 renderer participant 并让 React/Vanilla 共用 Session。
 - 阶段结论：扩展 runtime；scheduler/Worker 延后 alpha.3。
 
 ## 不在本 ADR 范围
@@ -317,37 +316,8 @@ ADR-05 可注册 `RuntimeCommitParticipant`，其 prepare/commit/rollback 位于
 - Core invalidation / contribution；Scene Patch / DOM/Canvas。
 - Priority、cancel、Promise task、Worker、generation、history。
 
----
+## 遗留风险与后续
 
-## 实现契约
-
-### Level
-
-`red`：新增公共 Program / session contract。
-
-### Schema 改动
-
-无 IR / Scene schema 改动。
-
-### 文件 scope
-
-- `packages/kernel/runtime/src/{program,session,transaction,diagnostic,error}/**`
-- `packages/kernel/runtime/src/index.ts`
-- `packages/kernel/runtime/tests/{program,session,transaction,typing}/**`
-- `apps/docs/src/modules/docs/contents/kernel/packages/runtime/**`（zh/en Program/session API、typed builder示例、graph fallback、状态机、diagnostic/error表；与 ADR-02共建 contents data / i18n）
-
-### 测试象限
-
-**Happy path**：initial full；incremental；fallback；bailout；empty Program owner commit。
-
-**边界**：empty/equal update；multi-owner；revision 0/MAX；Program 无 update。
-
-**错误路径**：stale/mismatched base；unknown/cycle/undeclared dependency；callback/capture/dispose/read/observer failure。
-
-**交互**：Core/Tier2/custom Program；React/Vanilla parity；diagnostic queue；artifact ownership matrix。
-
-### 依赖的现有元素
-
-- ADR-02 Owner Definition / registry / owned value——唯一 state 输入与 lifecycle。
-- ADR-01 trace reporter——Program context 观测。
-- `CompileResult` fixture——首个真实 artifact consumer。
+- alpha.2 Session 只同步执行；优先级、取消、Worker、时间片和 progressive presentation 留给 alpha.3。
+- Runtime 只保证候选隔离和原子 pointer publish；Core contribution 与 renderer commit participant 仍由 ADR-04、ADR-05 完成，participant 与 broken Session 不属于本 ADR 当前公开面。
+- observer 与 retire failure 发生在 publish 之后，只进入 diagnostic queue，不回滚已经公开的 revision。

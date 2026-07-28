@@ -1,4 +1,5 @@
 import type { AxisAlignedBounds, BoundsRect } from '@retikz/math';
+import type { RuntimeIdentity, RuntimeRevision } from '@retikz/runtime';
 
 import type {
   ChildLayoutConstraint,
@@ -32,6 +33,10 @@ export type PendingPathEmission = {
   allocationSink: Array<LayoutBoundsContribution>;
   /** path 在所属 primitive sink 中的原位回填槽 */
   placeholderSlot: { primitiveSink: Array<InternalScenePrimitive>; placeholder: PathPlaceholder };
+  /** path 的完整 canonical occurrence */
+  occurrence: CompileOccurrenceLocator;
+  /** 产生 path primitive 的语义 owner */
+  semanticOwner?: RuntimeSemanticOwner;
   /** 编译期排序用 zIndex，不写入 Scene primitive */
   zIndex?: number;
 };
@@ -78,6 +83,10 @@ export type CompositeReplayTransaction = {
   observations: Array<PendingNodeLayoutObservation>;
   /** probe namespace 当前 frame 变更 */
   namespaceChanges: Array<NamespaceFrameChange>;
+  /** 与 namespaceChanges 对齐的最终注册 occurrence */
+  namespaceChangeOccurrences: Array<CompileOccurrenceLocator>;
+  /** probe root namespace frame 内全部 Kernel identity registrations */
+  topologyIdentityIds: Array<string>;
   /** probe 中由 fork baseline collision 产生的 duplicate warning */
   namespaceBaselineWarnings: Array<{ id: string; warning: CompileWarning }>;
   /** probe 已解析资源 */
@@ -139,6 +148,12 @@ export type TraversalCompileOptions = {
   constraint?: ChildLayoutConstraint;
   /** 根 compile 共享 session */
   session?: CompositeCompileSession;
+  /** Runtime Program full compile 使用的 identity tracker */
+  identityTracker?: RuntimeTopologyTracker;
+  /** 隔离 traversal 继承的 semantic owner */
+  semanticOwner?: RuntimeSemanticOwner;
+  /** 向隔离 namespace callback 暴露当前 warning occurrence */
+  observeWarningOccurrence?: (occurrence: CompileOccurrenceLocator | undefined) => void;
 };
 
 /** 整棵 child 树遍历期间共享的可变状态 */
@@ -153,6 +168,8 @@ export type TraversalState = {
   zIndexOf: PrimitiveZIndexTable;
   /** 尚未回填的 path 占位数量 */
   placeholderBalance: number;
+  /** 可选 Runtime topology identity tracker */
+  identityTracker?: RuntimeTopologyTracker;
 };
 
 /** child 遍历期间使用的 compile 依赖 */
@@ -217,7 +234,60 @@ export type TraversalFrame = {
   observationSink: Array<PendingNodeLayoutObservation>;
   /** 最终逻辑树 artifact 输出容器 */
   artifactSink: Array<CompositeCompileArtifact | NodeLayoutCompileArtifact>;
+  /** 当前 frame 的稳定或 candidate-local semantic owner */
+  semanticOwner?: RuntimeSemanticOwner;
 };
+
+declare const runtimeSemanticOwnerBrand: unique symbol;
+
+/** traversal 内延迟解析的 semantic owner handle */
+export type RuntimeSemanticOwner = Readonly<{
+  [runtimeSemanticOwnerBrand]: never;
+}>;
+
+/** canonical compile 为一个 primitive occurrence 分配的 Runtime identity 元数据 */
+export type RuntimePrimitiveMetadata = Readonly<{
+  /** primitive occurrence identity */
+  identity: RuntimeIdentity;
+  /** 产生 primitive 的语义 owner */
+  semanticOwner: RuntimeIdentity;
+}>;
+
+/** primitive 对象到 Runtime identity 元数据的只读索引 */
+export type RuntimePrimitiveMetadataTable = Readonly<{
+  /** 读取一个 canonical primitive occurrence 的 identity 元数据 */
+  get: (primitive: ScenePrimitive) => RuntimePrimitiveMetadata | undefined;
+}>;
+
+/** canonical traversal 使用的 Runtime topology identity tracker */
+export type RuntimeTopologyTracker = Readonly<{
+  /** document root identity */
+  root: RuntimeSemanticOwner;
+  /** 当前 candidate revision */
+  revision: RuntimeRevision;
+  /** 为同一 parent boundary 的 children 分配 semantic owners */
+  createChildOwners: (
+    children: ReadonlyArray<IRChild>,
+    parent: RuntimeSemanticOwner,
+    generated: boolean,
+  ) => ReadonlyArray<RuntimeSemanticOwner>;
+  /** 为 Composite 直接产出的单个 child 分配 candidate-local owner */
+  createGeneratedOwner: (child: IRChild, index: number, parent: RuntimeSemanticOwner) => RuntimeSemanticOwner;
+  /** 把选中 replay 引入的 id 登记到当前 namespace frame */
+  registerGeneratedIdentity: (id: string, owner: RuntimeSemanticOwner) => void;
+  /** 与 NamespaceStack 同步推入 local namespace frame */
+  pushNamespaceFrame: () => void;
+  /** 与 NamespaceStack 同步弹出 local namespace frame */
+  popNamespaceFrame: () => void;
+  /** 读取 root namespace frame 内按 occurrence 保留的 identity registrations */
+  rootIdentityRegistrations: () => ReadonlyArray<string>;
+  /** 把 provider 输出物化为对象引用互不复用的 primitive occurrences */
+  materializePrimitives: (primitives: ReadonlyArray<ScenePrimitive>) => Array<ScenePrimitive>;
+  /** 记录 owner 产生的 primitive tree，不覆盖已登记的 descendant owner */
+  recordPrimitives: (primitives: ReadonlyArray<ScenePrimitive>, owner: RuntimeSemanticOwner, role: string) => void;
+  /** 完整 compile 后读取 primitive identity 元数据 */
+  metadata: RuntimePrimitiveMetadataTable;
+}>;
 
 export type NodeChild = Extract<IRChild, { type: 'node' }>;
 export type CoordinateChild = Extract<IRChild, { type: 'coordinate' }>;
@@ -242,6 +312,8 @@ export type EmitScopeGroupContext = {
   scopeTransforms: ReadonlyArray<Transform>;
   scopePrimitiveSink: Array<InternalScenePrimitive>;
   frame: TraversalFrame;
+  /** Scope child 的 semantic owner */
+  semanticOwner?: RuntimeSemanticOwner;
 };
 
 /** 自动 viewBox 的当前 frame 几何贡献 */

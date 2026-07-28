@@ -194,7 +194,7 @@ export const createRuntimeOwnerExecutor = (registry: RuntimeOwnerRegistry): Runt
       assertPrepared(definition, candidate);
       const executor = getRuntimeOwnerRegistryExecutor(registry, definition);
       if (executor.validateChangeSet === undefined) {
-        return Object.freeze({ value: 'fallback', diagnostics: Object.freeze([]) });
+        return Object.freeze({ value: 'valid', diagnostics: Object.freeze([]) });
       }
       try {
         return Object.freeze({

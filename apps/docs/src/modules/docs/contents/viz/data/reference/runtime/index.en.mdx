@@ -1,0 +1,120 @@
+---
+title: Runtime
+description: Look up how @retikz/data injects external rows and Definitions, resolves registries, normalizes fields, executes transforms, and returns lineage.
+---
+
+Data schemas store configuration only. External rows, field parsers, Definitions, registries, and event sinks are runtime objects. `@retikz/data` remains pure and host-independent: it returns canonical rows, field information, provenance markers, or lineage events, never a Scene or visual primitives.
+
+Follow the solid row-processing path: host data is resolved and normalized before transforms run in declaration order. Dashed arrows mark runtime dependencies supplied by Definitions, registries, and JSON contracts, plus optional diagnostic output.
+
+<ComponentPreview files="data-runtime-flow" hideCode size="lg" />
+
+JSON-safe contracts therefore determine which configuration can be stored, while Definitions and registries determine how that configuration executes. Processed rows can carry opt-in Symbol provenance; lineage is returned as a separate run or sent to an event sink.
+
+## Runtime stages
+
+| Stage              | Primary public entry points                                                                                           | Result                                                             |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Define extensions  | `defineFieldFormat`, `defineTransform`, `defineStatisticsReducer`, `defineRowSelector`                                | Definitions with registry keys or schemas and pure implementations |
+| Resolve registries | `resolveFormatRegistry`, `resolveTransformRegistry`, `resolveStatisticsReducerRegistry`, `resolveRowSelectorRegistry` | A `Map` merging built-in and custom Definitions                    |
+| Prepare fields     | `resolveFieldTypes`, `applyFieldResolver`, `collectFormatFields`, `normalizeRows`                                     | Field types, parsers, and canonical rows                           |
+| Run transforms     | `collectTransformFields`, `applyTransforms`, `applyTransformsWithLineage`                                             | Transformed rows and optional `DataLineageRun`                     |
+| Track provenance   | `tagSourceIndex`, `withGroupProvenance`, `createDataLineageRecorder`                                                  | Symbol provenance and structured lineage events                    |
+
+The host collects the fields it consumes, chooses the dataset, and passes custom Definitions to the resolvers. Data validates operations against schemas, rejects registry-key conflicts, executes pure functions in order, and returns the result to the host.
+
+## Definitions and registries
+
+| Contract                      | Registry key          | Implementation responsibility                            |
+| ----------------------------- | --------------------- | -------------------------------------------------------- |
+| `FieldFormatDefinition`       | `name`                | Declare an implied type and parse raw values             |
+| `TransformDefinition`         | schema `kind` literal | Declare input/output fields and transform rows into rows |
+| `StatisticsReducerDefinition` | schema `kind` literal | Reduce a row group to an output-field fragment           |
+| `RowSelectorDefinition`       | schema `kind` literal | Select original rows and optional ranks from a row group |
+
+Each resolver starts from built-in Definitions and merges a caller-provided array. A custom key cannot replace a built-in key or appear twice. Validation differs by Definition type: a format validates its `name` and directly uses its parser; a transform first proves that the operation is a JSON object and then parses it with the matched Definition schema; reducers and selectors pass through their public operation schemas before the matched Definition schema. An unknown transform, reducer, or selector `kind` fails loudly and names the corresponding injection point.
+
+Inspect the built-in collections through `BUILTIN_FORMATS`, `BUILTIN_TRANSFORMS`, `BUILTIN_STATISTICS_REDUCERS`, and `BUILTIN_ROW_SELECTORS`. See [Data Model Extensions](/viz/data/model/extensions) and [Data Transform Extensions](/viz/data/transform/extensions) for complete custom-definition flows.
+
+## Field preparation
+
+| Entry point              | Responsibility                                                                     |
+| ------------------------ | ---------------------------------------------------------------------------------- |
+| `resolveFieldTypes()`    | Merge `model` declarations with sample inference and validate the strict field set |
+| `applyFieldResolver()`   | Apply host-provided per-field type and parser overrides                            |
+| `collectFormatFields()`  | Add implied types and parsers from named format Definitions                        |
+| `normalizeRows()`        | Map physical paths and write parsed values under logical field names               |
+| `validateBoundData()`    | Sample-check why a field has no valid values                                       |
+| `assertAllValuesValid()` | Apply full strict validation to canonical rows                                     |
+
+`normalizeRows()` does not execute transforms. A consumer collects fields, resolves types, and normalizes rows before passing canonical rows to the transform pipeline. That boundary lets Plot, Table, and other hosts share one Data-processing contract.
+
+## Transforms and lineage
+
+`applyTransforms(rows, operations?, registry?, context?)` executes operations in declaration order and returns rows only. `applyTransformsWithLineage(rows, operations?, options?)` first tags input rows with Symbol provenance that JSON serialization ignores, then returns:
+
+| Field     | Type                 | Meaning                                                                                        |
+| --------- | -------------------- | ---------------------------------------------------------------------------------------------- |
+| `rows`    | `Array<ExternalRow>` | Transformed caller-input rows; canonical semantics are preserved when the input was normalized |
+| `lineage` | `DataLineageRun`     | Retained structured events; a sink disables duplicate retention by default                     |
+
+`DataLineageOptions` records lightweight source and transform-step summaries by default. `rowSamples` and `calculationDetails` require an explicit `maxRows` and field allowlist; complete source indexes require an explicit `sourceIdentity: { mode: 'full' }`. These are diagnostic outputs and never mutate Data IR.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Field-type resolution',
+      path: 'packages/viz/data/src/providers/data/field.ts',
+      startLine: 122,
+      endLine: 152,
+    },
+    {
+      label: 'Canonical-row normalization',
+      path: 'packages/viz/data/src/providers/data/normalize.ts',
+      startLine: 30,
+      endLine: 45,
+    },
+    {
+      label: 'Format registry merge',
+      path: 'packages/viz/data/src/providers/format/definitions.ts',
+      startLine: 130,
+      endLine: 144,
+    },
+    {
+      label: 'Transform registry merge',
+      path: 'packages/viz/data/src/providers/transform/definitions.ts',
+      startLine: 93,
+      endLine: 105,
+    },
+    {
+      label: 'Statistics and selector registry merge',
+      path: 'packages/viz/data/src/providers/statistics/registry.ts',
+      startLine: 32,
+      endLine: 55,
+    },
+    {
+      label: 'Transform execution and lineage entry points',
+      path: 'packages/viz/data/src/pipeline/transform.ts',
+      startLine: 64,
+      endLine: 129,
+    },
+    {
+      label: 'Lineage options and event contracts',
+      path: 'packages/viz/data/src/contract/lineage.ts',
+      startLine: 18,
+      endLine: 52,
+    },
+    {
+      label: 'Lineage defaults and safety limits',
+      path: 'packages/viz/data/src/pipeline/lineage.ts',
+      startLine: 54,
+      endLine: 92,
+    },
+  ]}
+/>
+
+## Related
+
+- [Contract](/viz/data/reference/contract): JSON-safe schemas consumed by the runtime
+- [Provenance](/viz/data/provenance): usage scenarios and visual explanations for provenance and lineage
+- [Data Transform Extensions](/viz/data/transform/extensions): custom transforms, reducers, and selectors

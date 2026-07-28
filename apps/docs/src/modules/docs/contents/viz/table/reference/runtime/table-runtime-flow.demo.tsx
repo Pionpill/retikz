@@ -47,7 +47,7 @@ const Demo: FC = () => (
 
     <Node
       id="core"
-      position={[53, 8]}
+      position={[78, 8]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}
@@ -58,7 +58,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="compile-render"
-      position={[160, 8]}
+      position={[185, 8]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}

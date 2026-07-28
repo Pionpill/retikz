@@ -54,23 +54,28 @@ describe('SCHEMA_REGISTRY', () => {
     expect(lookupSchema(TableSpecSchema)?.url).toBe('/viz/table/reference/contract-table#tablespecschema');
   });
 
-  it('keeps every Plot contract registry URL on a documented English heading', () => {
-    const entries = Object.entries(SCHEMA_REGISTRY).filter(([, entry]) => entry.url.startsWith('/viz/plot/reference/'));
-
-    for (const [name, entry] of entries) {
-      const [route, anchor] = entry.url.split('#');
-      expect(anchor, name).toBeTruthy();
-      const source = readFileSync(
-        resolve(process.cwd(), 'src/modules/docs/contents', route.slice(1), 'index.en.mdx'),
-        'utf8',
-      );
-      const headingAnchors = Array.from(source.matchAll(/^#{2,6}\s+(.+)$/gm), match =>
-        match[1].toLowerCase().replaceAll(/[^a-z0-9]/g, ''),
+  it.each(['table', 'plot'] as const)(
+    'keeps every Viz %s contract registry URL on a documented English heading',
+    moduleId => {
+      const entries = Object.entries(SCHEMA_REGISTRY).filter(([, entry]) =>
+        entry.url.startsWith(`/viz/${moduleId}/reference/`),
       );
 
-      expect(headingAnchors, `${name} -> ${entry.url}`).toContain(anchor);
-    }
-  });
+      for (const [name, entry] of entries) {
+        const [route, anchor] = entry.url.split('#');
+        expect(anchor, name).toBeTruthy();
+        const source = readFileSync(
+          resolve(process.cwd(), 'src/modules/docs/contents', route.slice(1), 'index.en.mdx'),
+          'utf8',
+        );
+        const headingAnchors = Array.from(source.matchAll(/^#{2,6}\s+(.+)$/gm), match =>
+          match[1].toLowerCase().replaceAll(/[^a-z0-9]/g, ''),
+        );
+
+        expect(headingAnchors, `${name} -> ${entry.url}`).toContain(anchor);
+      }
+    },
+  );
 
   it('returns undefined for unregistered schemas', () => {
     expect(lookupSchema(z.string())).toBeUndefined();

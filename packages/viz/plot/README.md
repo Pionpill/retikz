@@ -10,8 +10,8 @@ JSON-serializable, grammar-of-graphics **Plot IR** and lowers that IR to
 - `@retikz/data` owns the shared JSON data models, field resolution, and transform
   pipeline used by visualization packages.
 - `@retikz/plot-react` provides the `<Plot>` component and JSX authoring DSL.
-- `@retikz/plot-vanilla` provides `plotBuilder()` and `renderPlot()` for
-  framework-free and server-side rendering workflows.
+- `@retikz/plot-vanilla` provides plain `plot()`, Kernel Vanilla embedding, and
+  `renderPlot()` for framework-free and server-side rendering workflows.
 
 ## Install
 

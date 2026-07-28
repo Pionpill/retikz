@@ -1,6 +1,6 @@
 # Plot 可视化完备设计
 
-> 本文定义 Visualization Complete 能力域的长期边界与检测方法，主责包是 `@retikz/plot`。总纲见 [`notes/architecture/capability-design.md`](../../../../notes/architecture/capability-design.md)。通用数据与 transform 能力由 [`@retikz/data`](./data-capability-complete.md) 负责；本文不覆盖 chart preset、table、geo、adapter UI 或具体 renderer。
+> **状态：长期架构真源，不跟随单个版本维护功能清单。** 本文定义 Visualization Complete 能力域的边界与检测方法，主责包是 `@retikz/plot`。总纲见 [`notes/architecture/capability-design.md`](../../../../notes/architecture/capability-design.md)，当前包职责与公开契约以就近 `AGENTS.md`、Accepted ADR 和代码为准。通用数据与 transform 能力由 [`@retikz/data`](./data-capability-complete.md) 负责；本文不覆盖 chart preset、table、geo、adapter UI 或具体 renderer。
 
 ---
 

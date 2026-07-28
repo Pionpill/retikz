@@ -211,6 +211,21 @@ describe('plot lineage runtime', () => {
     expect(lineage.data.marks[0]?.events.filter(event => event.kind === 'transformStep')).toHaveLength(1);
   });
 
+  it('keeps original source identities after root reorder and mark-local transforms', () => {
+    const spec = pointSpec();
+    spec.transform = [{ kind: 'sort', field: 'revenue', order: 'descending' }];
+    spec.marks[0].transform = [{ kind: 'sort', field: 'revenue', order: 'ascending' }];
+
+    const { lineage } = lowerPlotWithLineage(spec, datasets, { lineage: {} });
+    const markSource = lineage.data.marks[0]?.events.find(event => event.kind === 'source');
+
+    expect(markSource).toEqual(
+      expect.objectContaining({
+        sourceIdentity: { mode: 'summary', count: 4, indices: [1, 3, 0, 2], truncated: false },
+      }),
+    );
+  });
+
   it('records host metadata, scale mappings, layout context, and row values only when enabled', () => {
     const { lineage } = lowerPlotWithLineage(pointSpec(), datasets, {
       lineage: {

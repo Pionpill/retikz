@@ -28,10 +28,24 @@ export type DuplicateRegisterInfo = {
   overwroteForkBaseline: boolean;
 };
 
+/** namespace 单次 register 的内部观测信息 */
+export type NamespaceRegisterInfo = {
+  /** 本次注册的 id */
+  id: string;
+  /** 当前 frame 深度 */
+  frameDepth: number;
+  /** register 调用方提供的 IR locator */
+  irPath?: string;
+  /** 是否覆盖同 frame 既有注册 */
+  wasOverwritten: boolean;
+};
+
 /** NamespaceStack 构造选项 */
 export type NamespaceStackOptions = {
   /** 同 frame 重复 register 时的回调 */
   onDuplicate?: (info: DuplicateRegisterInfo) => void;
+  /** 每次 register 完成后的内部观测回调 */
+  onRegister?: (info: NamespaceRegisterInfo) => void;
 };
 
 /** probe 相对父 namespace 当前 frame 的可提交变更 */
@@ -60,6 +74,7 @@ export class NamespaceStack {
   /** fork 创建时的 frame 快照，只用于区分 baseline collision 与 probe 内部 duplicate */
   private forkBaselineFrames?: Array<Map<string, NamespaceEntry>>;
   private readonly onDuplicate?: (info: DuplicateRegisterInfo) => void;
+  private readonly onRegister?: (info: NamespaceRegisterInfo) => void;
   /** 当前阶段；registering 允许写入，resolving 只允许 lookup */
   private currentPhase: NamespacePhase = 'registering';
 
@@ -67,6 +82,7 @@ export class NamespaceStack {
     this.frames = [new Map()];
     this.firstIrPaths = [new Map()];
     this.onDuplicate = options.onDuplicate;
+    this.onRegister = options.onRegister;
   }
 
   /**
@@ -185,6 +201,12 @@ export class NamespaceStack {
       topFirstPaths.set(id, irPath);
     }
     topFrame.set(id, { layout, state });
+    this.onRegister?.({
+      id,
+      frameDepth: this.frames.length - 1,
+      ...(irPath === undefined ? {} : { irPath }),
+      wasOverwritten,
+    });
     return wasOverwritten;
   }
 
