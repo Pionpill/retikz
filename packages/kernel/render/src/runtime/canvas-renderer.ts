@@ -454,7 +454,25 @@ const resolvedDevicePixelRatio = (options: RetainedCanvasRendererImmutableOption
   return typeof ratio === 'number' && Number.isFinite(ratio) && ratio > 0 ? ratio : 1;
 };
 
-/** 复制 committed bitmap，仅清除 dirty clip 并按原 z-order 重放相交项 */
+/** Canvas 增量事务使用的候选像素、回滚像素与设备像素区域 */
+type CanvasDirtyBitmap = Readonly<{
+  kind: 'dirty';
+  /** 与 host 同尺寸、只在 dirty region 内物化候选像素的透明位图 */
+  bitmap: HTMLCanvasElement;
+  /** 只包含提交前 dirty region 像素的 region-size 回滚位图 */
+  rollback: HTMLCanvasElement;
+  /** 在 host 与 full-size bitmap 上使用的 device-pixel 坐标区域 */
+  region: Readonly<{ x: number; y: number; width: number; height: number }>;
+}>;
+
+/** Canvas 增量事务的像素工作；完全离屏时只提交逻辑状态 */
+type CanvasIncrementalBitmap =
+  | CanvasDirtyBitmap
+  | Readonly<{
+      kind: 'offscreen';
+    }>;
+
+/** 只 staging dirty region，并按原 z-order 重放相交项 */
 const createIncrementalBitmap = (
   host: HTMLCanvasElement,
   committedBitmap: HTMLCanvasElement,
@@ -466,18 +484,11 @@ const createIncrementalBitmap = (
   animationFrame: CanvasAnimationFrame | undefined,
   getImage: CanvasImageResolver,
   update: Readonly<{ items: ReadonlyArray<CanvasDisplayItem>; dirty: CanvasBounds }>,
-): HTMLCanvasElement => {
-  const bitmap = host.ownerDocument.createElement('canvas');
-  bitmap.width = host.width;
-  bitmap.height = host.height;
-  const context = bitmap.getContext('2d');
-  if (context === null) throw new Error('Canvas retained renderer cannot acquire an incremental 2D context');
-  context.drawImage(committedBitmap, 0, 0);
-
+): CanvasIncrementalBitmap => {
   const ratio = resolvedDevicePixelRatio(options);
   const layout = snapshot.scene.layout;
-  const cssWidth = bitmap.width / ratio;
-  const cssHeight = bitmap.height / ratio;
+  const cssWidth = host.width / ratio;
+  const cssHeight = host.height / ratio;
   const scale = Math.min(cssWidth / layout.width, cssHeight / layout.height);
   const offsetX = (cssWidth - layout.width * scale) / 2;
   const offsetY = (cssHeight - layout.height * scale) / 2;
@@ -485,14 +496,26 @@ const createIncrementalBitmap = (
   const y = Math.floor((offsetY + (update.dirty.y - layout.y) * scale) * ratio) - 2;
   const maxX = Math.ceil((offsetX + (update.dirty.x + update.dirty.width - layout.x) * scale) * ratio) + 2;
   const maxY = Math.ceil((offsetY + (update.dirty.y + update.dirty.height - layout.y) * scale) * ratio) + 2;
-  const width = maxX - x;
-  const height = maxY - y;
+  const region = Object.freeze({
+    x: Math.max(0, x),
+    y: Math.max(0, y),
+    width: Math.max(0, Math.min(host.width, maxX) - Math.max(0, x)),
+    height: Math.max(0, Math.min(host.height, maxY) - Math.max(0, y)),
+  });
+  if (region.width === 0 || region.height === 0) {
+    return Object.freeze({ kind: 'offscreen' });
+  }
+  const bitmap = host.ownerDocument.createElement('canvas');
+  bitmap.width = host.width;
+  bitmap.height = host.height;
+  const context = bitmap.getContext('2d');
+  if (context === null) throw new Error('Canvas retained renderer cannot acquire an incremental 2D context');
   context.save();
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.beginPath();
-  context.rect(x, y, width, height);
+  context.rect(region.x, region.y, region.width, region.height);
   context.clip();
-  context.clearRect(x, y, width, height);
+  context.clearRect(region.x, region.y, region.width, region.height);
   const primitives = update.items
     .filter(item => boundsIntersect(item.bounds, update.dirty))
     .map(item => item.primitive as unknown as Scene['primitives'][number]);
@@ -517,7 +540,23 @@ const createIncrementalBitmap = (
     },
   );
   context.restore();
-  return bitmap;
+  const rollback = host.ownerDocument.createElement('canvas');
+  rollback.width = region.width;
+  rollback.height = region.height;
+  const rollbackContext = rollback.getContext('2d');
+  if (rollbackContext === null) throw new Error('Canvas retained renderer cannot capture the dirty rollback region');
+  rollbackContext.drawImage(
+    committedBitmap,
+    region.x,
+    region.y,
+    region.width,
+    region.height,
+    0,
+    0,
+    region.width,
+    region.height,
+  );
+  return Object.freeze({ kind: 'dirty', bitmap, rollback, region });
 };
 
 /** 把候选 bitmap 同步交换到 host */
@@ -527,6 +566,32 @@ const paintBitmap = (host: HTMLCanvasElement, bitmap: HTMLCanvasElement | undefi
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.clearRect(0, 0, host.width, host.height);
   if (bitmap !== undefined) context.drawImage(bitmap, 0, 0);
+};
+
+/** 把 full-size candidate 或 region-size rollback 的 dirty pixels 交换到目标 bitmap */
+const paintBitmapRegion = (
+  target: HTMLCanvasElement,
+  source: HTMLCanvasElement,
+  region: CanvasDirtyBitmap['region'],
+  sourceKind: 'full' | 'region',
+): void => {
+  const context = target.getContext('2d');
+  if (context === null) throw new Error('Canvas retained renderer cannot acquire a dirty 2D context');
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.clearRect(region.x, region.y, region.width, region.height);
+  const sourceX = sourceKind === 'full' ? region.x : 0;
+  const sourceY = sourceKind === 'full' ? region.y : 0;
+  context.drawImage(
+    source,
+    sourceX,
+    sourceY,
+    region.width,
+    region.height,
+    region.x,
+    region.y,
+    region.width,
+    region.height,
+  );
 };
 
 /** 捕获 host 当前像素，供 commit 中途失败时回滚 */
@@ -1057,9 +1122,9 @@ export const createBuiltinCanvasRetainedRenderer = (
         runtimeStructuralEquals(currentHostStyle, hostStyle);
       const displayUpdate =
         reuseBitmap || !bitmapSizeStable ? undefined : prepareDisplayListUpdate(currentDisplayList, patch);
-      const bitmap = reuseBitmap
-        ? currentBitmap
-        : displayUpdate !== undefined && currentBitmap !== undefined
+      // display list 会拒绝任意层级的 animation，dirty rollback 因而可安全读取 committed bitmap
+      const incrementalBitmap =
+        displayUpdate !== undefined && currentBitmap !== undefined
           ? createIncrementalBitmap(
               host,
               currentBitmap,
@@ -1072,20 +1137,30 @@ export const createBuiltinCanvasRetainedRenderer = (
               imageStage.getImage,
               displayUpdate,
             )
-          : createBitmap(
-              host,
-              snapshot,
-              config,
-              options,
-              hostStyle,
-              candidateTime,
-              animationCandidate,
-              imageStage.getImage,
-            );
+          : undefined;
+      const bitmap = reuseBitmap
+        ? currentBitmap
+        : incrementalBitmap?.kind === 'dirty'
+          ? incrementalBitmap.bitmap
+          : incrementalBitmap?.kind === 'offscreen'
+            ? currentBitmap
+            : createBitmap(
+                host,
+                snapshot,
+                config,
+                options,
+                hostStyle,
+                candidateTime,
+                animationCandidate,
+                imageStage.getImage,
+              );
       const candidateDisplayList = reuseBitmap
         ? currentDisplayList
         : (displayUpdate?.items ?? buildDisplayList(snapshot));
-      const rollbackBitmap = reuseBitmap || currentSnapshot === undefined ? undefined : captureBitmap(host);
+      const rollbackBitmap =
+        reuseBitmap || currentSnapshot === undefined || incrementalBitmap !== undefined
+          ? undefined
+          : captureBitmap(host);
       const previousSnapshot = currentSnapshot;
       const previousBitmap = currentBitmap;
       const previousAnimation = currentAnimation;
@@ -1101,12 +1176,20 @@ export const createBuiltinCanvasRetainedRenderer = (
       let committed = false;
       let rolledBack = false;
       let hostMutated = false;
+      let committedBitmapMutated = false;
       let previousHydrationDisposed = false;
       return Object.freeze({
         commit: () => {
           if (!reuseBitmap) {
-            hostMutated = true;
-            paintBitmap(host, bitmap);
+            if (incrementalBitmap?.kind === 'dirty' && previousBitmap !== undefined) {
+              committedBitmapMutated = true;
+              paintBitmapRegion(previousBitmap, incrementalBitmap.bitmap, incrementalBitmap.region, 'full');
+              hostMutated = true;
+              paintBitmapRegion(host, incrementalBitmap.bitmap, incrementalBitmap.region, 'full');
+            } else if (incrementalBitmap === undefined) {
+              hostMutated = true;
+              paintBitmap(host, bitmap);
+            }
           }
           animation = reuseAnimation
             ? previousAnimation
@@ -1121,7 +1204,7 @@ export const createBuiltinCanvasRetainedRenderer = (
           previousHydrationDisposed = previousHydration !== undefined;
           hydration = createCanvasHydration(host, snapshot, config, animation);
           currentSnapshot = snapshot;
-          currentBitmap = bitmap;
+          currentBitmap = incrementalBitmap === undefined ? bitmap : previousBitmap;
           currentHydration = hydration;
           currentAnimation = animation;
           currentPaintConfig = config.animation;
@@ -1137,7 +1220,16 @@ export const createBuiltinCanvasRetainedRenderer = (
           hydration?.dispose();
           if (!reuseAnimation) animation?.dispose();
           if (previousAnimationRunning !== undefined) previousAnimation?.resume(previousAnimationRunning);
-          if (hostMutated) paintBitmap(host, rollbackBitmap ?? previousBitmap);
+          if (incrementalBitmap?.kind === 'dirty') {
+            if (committedBitmapMutated && previousBitmap !== undefined) {
+              paintBitmapRegion(previousBitmap, incrementalBitmap.rollback, incrementalBitmap.region, 'region');
+            }
+            if (hostMutated) {
+              paintBitmapRegion(host, incrementalBitmap.rollback, incrementalBitmap.region, 'region');
+            }
+          } else if (incrementalBitmap === undefined && hostMutated) {
+            paintBitmap(host, rollbackBitmap ?? previousBitmap);
+          }
           currentSnapshot = previousSnapshot;
           currentBitmap = previousBitmap;
           currentHydration = previousHydration;

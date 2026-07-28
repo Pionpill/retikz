@@ -1921,6 +1921,175 @@ describe('builtin retained renderers', () => {
     executor.dispose();
   });
 
+  it('Canvas entity update 只复制 dirty region，不做全画布 drawImage', () => {
+    const simpleScene = (fill: string): IRScene => ({
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'changed', position: [20, 20], width: 10, height: 10, fill },
+        { type: 'node', id: 'stable', position: [80, 20], width: 10, height: 10, fill: '#3b82f6' },
+      ],
+    });
+    const pair = createCorePair(simpleScene('#ef4444'), simpleScene('#22c55e'));
+    const drawImageCalls: Array<Readonly<{ target: HTMLCanvasElement; arguments: ReadonlyArray<unknown> }>> = [];
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => {
+          if (key === 'drawImage') {
+            return (...arguments_: Array<unknown>) =>
+              drawImageCalls.push(Object.freeze({ target: this, arguments: Object.freeze(arguments_) }));
+          }
+          if (key in target) return Reflect.get(target, key);
+          return vi.fn();
+        },
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    const host = document.createElement('canvas');
+    host.width = 200;
+    host.height = 100;
+    const renderer = builtinRetainedRendererFactory({
+      backend: 'canvas',
+      host,
+      immutableOptions: { backend: 'canvas', idPrefix: 'dirty-copy', devicePixelRatio: 1 },
+    });
+    const executor = getRetainedRendererExecutor(renderer);
+    if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+    const mount = executor.prepareMount(pair.current, {}, 'create');
+    mount.commit();
+    mount.dispose();
+    drawImageCalls.length = 0;
+
+    const prepared = executor.prepare(pair.patch, pair.next, {});
+    prepared.commit();
+    prepared.rollback();
+    prepared.dispose();
+
+    expect(drawImageCalls.length).toBeGreaterThan(0);
+    expect(drawImageCalls.every(call => call.arguments.length === 9)).toBe(true);
+    const copiedRegions = drawImageCalls.map(call => ({
+      sourceWidth: call.arguments[3],
+      sourceHeight: call.arguments[4],
+      destinationX: call.arguments[5],
+      destinationY: call.arguments[6],
+      destinationWidth: call.arguments[7],
+      destinationHeight: call.arguments[8],
+    }));
+    expect(
+      copiedRegions.every(
+        region =>
+          typeof region.sourceWidth === 'number' &&
+          region.sourceWidth > 0 &&
+          region.sourceWidth < host.width &&
+          typeof region.sourceHeight === 'number' &&
+          region.sourceHeight > 0 &&
+          region.sourceHeight < host.height &&
+          region.destinationWidth === region.sourceWidth &&
+          region.destinationHeight === region.sourceHeight,
+      ),
+    ).toBe(true);
+    const hostRegions = drawImageCalls.filter(call => call.target === host).map(call => call.arguments.slice(5, 9));
+    expect(hostRegions).toHaveLength(2);
+    expect(hostRegions[1]).toEqual(hostRegions[0]);
+    executor.dispose();
+  });
+
+  it('Canvas 完全离屏的 entity update 只提交逻辑状态，不交换像素', () => {
+    const offscreenScene = (fill: string): IRScene => ({
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'offscreen', position: [1_000, 1_000], width: 10, height: 10, fill }],
+    });
+    const pair = createCorePair(offscreenScene('#ef4444'), offscreenScene('#22c55e'));
+    const layout = Object.freeze({ x: 0, y: 0, width: 100, height: 100 });
+    const current = Object.freeze({
+      ...pair.current,
+      scene: Object.freeze({ ...pair.current.scene, layout }),
+    });
+    const next = Object.freeze({
+      ...pair.next,
+      scene: Object.freeze({ ...pair.next.scene, layout }),
+    });
+    const drawImage = vi.fn();
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => {
+          if (key === 'drawImage') return drawImage;
+          if (key in target) return Reflect.get(target, key);
+          return vi.fn();
+        },
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    const host = document.createElement('canvas');
+    host.width = 200;
+    host.height = 100;
+    const renderer = builtinRetainedRendererFactory({
+      backend: 'canvas',
+      host,
+      immutableOptions: { backend: 'canvas', idPrefix: 'offscreen-update', devicePixelRatio: 1 },
+    });
+    const executor = getRetainedRendererExecutor(renderer);
+    if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+    const mount = executor.prepareMount(current, {}, 'create');
+    mount.commit();
+    mount.dispose();
+    drawImage.mockClear();
+
+    const prepared = executor.prepare(pair.patch, next, {});
+    prepared.commit();
+    expect(executor.read().snapshot).toBe(next);
+    expect(drawImage).not.toHaveBeenCalled();
+    prepared.rollback();
+    expect(executor.read().snapshot).toBe(current);
+    expect(drawImage).not.toHaveBeenCalled();
+    prepared.dispose();
+    executor.dispose();
+  });
+
+  it('Canvas primitive animation update 回退 full bitmap，不进入 dirty transaction', () => {
+    const pair = createCorePair(animatedScene('#ef4444', 'manual'), animatedScene('#22c55e', 'manual'));
+    const drawImageArgumentCounts: Array<number> = [];
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => {
+          if (key === 'drawImage') {
+            return (...arguments_: Array<unknown>) => drawImageArgumentCounts.push(arguments_.length);
+          }
+          if (key === 'measureText') return () => ({ width: 0 });
+          if (key === 'createLinearGradient' || key === 'createRadialGradient') {
+            return () => ({ addColorStop: vi.fn() });
+          }
+          if (key in target) return Reflect.get(target, key);
+          return vi.fn();
+        },
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    const host = document.createElement('canvas');
+    host.width = 200;
+    host.height = 100;
+    const renderer = builtinRetainedRendererFactory({
+      backend: 'canvas',
+      host,
+      immutableOptions: { backend: 'canvas', idPrefix: 'animated-full-update', devicePixelRatio: 1 },
+    });
+    const executor = getRetainedRendererExecutor(renderer);
+    if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+    const mount = executor.prepareMount(pair.current, { animation: { snapshotAt: 100 } }, 'create');
+    mount.commit();
+    mount.dispose();
+    drawImageArgumentCounts.length = 0;
+
+    const prepared = executor.prepare(pair.patch, pair.next, { animation: { snapshotAt: 100 } });
+    prepared.commit();
+    prepared.rollback();
+    prepared.dispose();
+    expect(drawImageArgumentCounts.length).toBeGreaterThan(0);
+    expect(drawImageArgumentCounts.every(count => count === 3)).toBe(true);
+    executor.dispose();
+  });
+
   it('Canvas dirty output 与 full oracle 在 overlap、miter path 与 italic text 下逐像素一致', async () => {
     const { createCanvas } = await import('@napi-rs/canvas');
     const backings = new WeakMap<HTMLCanvasElement, NapiCanvas>();
