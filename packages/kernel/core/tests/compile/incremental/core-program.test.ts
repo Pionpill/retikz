@@ -8,6 +8,7 @@ import {
   createRuntimeOwnerUpdate,
   createRuntimeProgramRegistry,
   createRuntimeSession,
+  defineRuntimeOwner,
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 
@@ -52,6 +53,130 @@ const primitivePaths = (
 };
 
 describe('Core Runtime Program initial full run', () => {
+  it('外部失效 owner 变化时即使 Core IR 等价也重新编译', () => {
+    const invalidationOwner = defineRuntimeOwner<number, number, number, never>({
+      key: 'fixture:core-invalidation',
+      value: {
+        capture: value => value,
+        read: value => value,
+        equals: Object.is,
+      },
+    });
+    let measuredWidth = 10;
+    const ir = sceneWithText('stable');
+    const program = createCoreProgram(
+      { measureText: () => ({ width: measuredWidth, height: 10 }) },
+      { invalidationOwners: [invalidationOwner] },
+    );
+    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, invalidationOwner] });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      initialSnapshots: [
+        createRuntimeOwnerInput(CoreOwnerDefinition, ir),
+        createRuntimeOwnerInput(invalidationOwner, 0),
+      ],
+    });
+    const initialWidth = session.artifact(program).value.output.result.scene.layout.width;
+
+    measuredWidth = 100;
+    session.update({
+      baseRevision: session.revision(),
+      owners: [createRuntimeOwnerUpdate(invalidationOwner, 1)],
+    });
+
+    expect(session.artifact(program).value.output.result.scene.layout.width).toBeGreaterThan(initialWidth);
+  });
+
+  it('外部失效 owner 与 Core IR 同 revision 变化时强制 full fallback', () => {
+    const invalidationOwner = defineRuntimeOwner<number, number, number, never>({
+      key: 'fixture:core-invalidation-with-ir-change',
+      value: {
+        capture: value => value,
+        read: value => value,
+        equals: Object.is,
+      },
+    });
+    let measuredWidth = 10;
+    const initial: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'changed', position: [0, 0], text: 'A', fill: '#ef4444' },
+        { type: 'node', id: 'stable', position: [80, 0], text: 'B', fill: '#ffffff' },
+      ],
+    };
+    const next: IRScene = {
+      ...initial,
+      children: [{ ...initial.children[0], fill: '#22c55e' }, initial.children[1]],
+    };
+    const measureText = () => ({ width: measuredWidth, height: 10 });
+    const program = createCoreProgram({ measureText }, { invalidationOwners: [invalidationOwner] });
+    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, invalidationOwner] });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      initialSnapshots: [
+        createRuntimeOwnerInput(CoreOwnerDefinition, initial),
+        createRuntimeOwnerInput(invalidationOwner, 0),
+      ],
+    });
+
+    measuredWidth = 100;
+    session.update({
+      baseRevision: session.revision(),
+      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next), createRuntimeOwnerUpdate(invalidationOwner, 1)],
+    });
+
+    const artifact = session.artifact(program).value;
+    expect(artifact.output.result.scene).toEqual(compileToScene(next, { measureText }).scene);
+    expect(artifact.patch?.operations).toEqual([expect.objectContaining({ kind: 'replaceScene' })]);
+  });
+
+  it('只修改 Core IR 时不会把未变化的外部失效 owner 误判为 invalidation', () => {
+    const invalidationOwner = defineRuntimeOwner<number, number, number, never>({
+      key: 'fixture:core-stable-invalidation',
+      value: {
+        capture: value => value,
+        read: value => value,
+        equals: Object.is,
+      },
+    });
+    const initial: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'changed', position: [0, 0], text: 'A', fill: '#ef4444' },
+        { type: 'node', id: 'stable', position: [80, 0], text: 'B', fill: '#ffffff' },
+      ],
+    };
+    const next: IRScene = {
+      ...initial,
+      children: [{ ...initial.children[0], fill: '#22c55e' }, initial.children[1]],
+    };
+    const program = createCoreProgram({}, { invalidationOwners: [invalidationOwner] });
+    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, invalidationOwner] });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      initialSnapshots: [
+        createRuntimeOwnerInput(CoreOwnerDefinition, initial),
+        createRuntimeOwnerInput(invalidationOwner, 0),
+      ],
+    });
+
+    const result = session.update({
+      baseRevision: session.revision(),
+      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
+    });
+
+    expect(result.outcome).toBe('incremental');
+    expect(session.artifact(program).value.patch?.operations).toEqual([expect.objectContaining({ kind: 'update' })]);
+  });
+
   it('保留固定 Program id，并与 compileToScene 的完整结果等价', () => {
     const ir: IRScene = {
       version: 1,

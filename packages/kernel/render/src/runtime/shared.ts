@@ -137,12 +137,28 @@ export const cloneAndFreezeRuntimeValue = <T>(value: T, ancestors = new WeakSet<
   ancestors.add(value);
   let copied: unknown;
   if (Array.isArray(value)) {
-    copied = value.map(item => cloneAndFreezeRuntimeValue(item, ancestors));
+    const keys = Reflect.ownKeys(value);
+    if (keys.length !== value.length + 1 || keys.some(key => typeof key !== 'string')) {
+      throw new Error('Render runtime config arrays must be dense data-property arrays');
+    }
+    const array: Array<unknown> = [];
+    for (let index = 0; index < value.length; index += 1) {
+      const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
+      if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
+        throw new Error('Render runtime config arrays must be dense data-property arrays');
+      }
+      array.push(cloneAndFreezeRuntimeValue(descriptor.value, ancestors));
+    }
+    copied = array;
   } else {
     const record = Object.create(null) as Record<PropertyKey, unknown>;
     for (const key of Reflect.ownKeys(value)) {
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
+      if (typeof key !== 'string' || descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
+        throw new Error('Render runtime config objects must contain enumerable data properties');
+      }
       Object.defineProperty(record, key, {
-        value: cloneAndFreezeRuntimeValue(Reflect.get(value, key), ancestors),
+        value: cloneAndFreezeRuntimeValue(descriptor.value, ancestors),
         enumerable: true,
         configurable: false,
         writable: false,

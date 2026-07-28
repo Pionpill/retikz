@@ -204,6 +204,7 @@ describe('RenderRuntimeOwnerDefinition', () => {
         },
       ],
       animation: { enabled: true, snapshotAt: 12 },
+      canvas: { width: 320, height: 180 },
       cachePolicy: 'static' as const,
     };
     const owners = createRuntimeOwnerRegistry({ builtins: [RenderRuntimeOwnerDefinition] });
@@ -217,8 +218,10 @@ describe('RenderRuntimeOwnerDefinition', () => {
 
     input.handlerContributions.length = 0;
     input.animation.enabled = false;
+    input.canvas.width = 640;
     expect(config.handlerContributions).toHaveLength(1);
     expect(config.animation?.enabled).toBe(true);
+    expect(config.canvas).toEqual({ width: 320, height: 180 });
     expect(config.handlerContributions?.[0]?.handlers.node?.click).toBe(click);
     expect(config.handlerContributions?.[0]?.handlers['__proto__']?.click).toBe(protoClick);
     expect(Object.isFrozen(config)).toBe(true);
@@ -254,6 +257,8 @@ describe('RenderRuntimeOwnerDefinition', () => {
       },
       { cachePolicy: 'forever' },
       { animation: { snapshotAt: Number.NaN } },
+      { canvas: { width: -1 } },
+      { canvas: { height: Number.POSITIVE_INFINITY } },
       { animation: new Date() },
       { handlerContributions: [{ registration: 0, handlers: new Date() }] },
     ]) {
@@ -274,6 +279,83 @@ describe('RenderRuntimeOwnerDefinition', () => {
         );
       }
     }
+  });
+
+  it('在读取前递归拒绝 config accessor 与非标准数组属性', () => {
+    const owners = createRuntimeOwnerRegistry({ builtins: [RenderRuntimeOwnerDefinition] });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [] });
+    const getter = vi.fn(() => [0, 0, 1, 1]);
+    const easings = Object.defineProperty({}, 'custom', {
+      enumerable: true,
+      get: getter,
+    });
+
+    expect(() =>
+      createRuntimeSession({
+        owners,
+        programs,
+        initialSnapshots: [createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, { animation: { easings } })],
+      }),
+    ).toThrow(
+      expect.objectContaining({
+        cause: expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid }),
+      }),
+    );
+    expect(getter).not.toHaveBeenCalled();
+
+    const tuple = [0, 0, 1, 1];
+    Object.defineProperty(tuple, Symbol('hidden'), { enumerable: true, value: true });
+    expect(() =>
+      createRuntimeSession({
+        owners,
+        programs,
+        initialSnapshots: [
+          createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, {
+            animation: { easings: { custom: tuple } },
+          } as never),
+        ],
+      }),
+    ).toThrow(
+      expect.objectContaining({
+        cause: expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid }),
+      }),
+    );
+
+    const everyGetter = vi.fn(() => Array.prototype.every);
+    const tuplePrototype = Object.create(Array.prototype) as object;
+    Object.defineProperty(tuplePrototype, 'every', { configurable: true, get: everyGetter });
+    const inheritedTuple: [number, number, number, number] = [0, 0, 1, 1];
+    Object.setPrototypeOf(inheritedTuple, tuplePrototype);
+    expect(() =>
+      createRuntimeSession({
+        owners,
+        programs,
+        initialSnapshots: [
+          createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, {
+            animation: { easings: { custom: inheritedTuple } },
+          }),
+        ],
+      }),
+    ).not.toThrow();
+    expect(everyGetter).not.toHaveBeenCalled();
+
+    const mapGetter = vi.fn(() => Array.prototype.map);
+    const contributionPrototype = Object.create(Array.prototype) as object;
+    Object.defineProperty(contributionPrototype, 'map', { configurable: true, get: mapGetter });
+    const inheritedContributions = [{ registration: 0, handlers: {} }];
+    Object.setPrototypeOf(inheritedContributions, contributionPrototype);
+    expect(() =>
+      createRuntimeSession({
+        owners,
+        programs,
+        initialSnapshots: [
+          createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, {
+            handlerContributions: inheritedContributions,
+          }),
+        ],
+      }),
+    ).not.toThrow();
+    expect(mapGetter).not.toHaveBeenCalled();
   });
 });
 

@@ -1,4 +1,17 @@
-import type { CanvasView, MountCanvasOptions, MountOptions, RenderInput, VanillaView } from './types';
+import type { Scene } from '@retikz/core';
+
+import type {
+  CanvasView,
+  MountCanvasOptions,
+  MountOptions,
+  RenderInput,
+  RetainedCanvasView,
+  RetainedRenderInput,
+  RetainedSvgView,
+  StaticCanvasView,
+  StaticSvgView,
+  VanillaView,
+} from './types';
 
 import { mountCanvas } from './mount-canvas';
 import { mountSvg } from './mount-svg';
@@ -14,8 +27,18 @@ export type MountUnifiedOptions = (MountOptions | MountCanvasOptions) & {
 
 /** 按 renderer 选择 SVG 或 Canvas runtime 挂载 */
 type MountFn = {
-  (container: Element, input: RenderInput, options: MountUnifiedOptions & { renderer: 'canvas' }): CanvasView;
-  (container: Element, input: RenderInput, options?: MountUnifiedOptions): VanillaView;
+  (container: Element, input: Scene, options: MountUnifiedOptions & { renderer: 'canvas' }): StaticCanvasView;
+  (
+    container: Element,
+    input: RetainedRenderInput,
+    options: MountUnifiedOptions & { renderer: 'canvas' },
+  ): RetainedCanvasView;
+  (container: Element, input: Scene, options?: MountUnifiedOptions & { renderer?: 'svg' }): StaticSvgView;
+  (
+    container: Element,
+    input: RetainedRenderInput,
+    options?: MountUnifiedOptions & { renderer?: 'svg' },
+  ): RetainedSvgView;
 };
 
 /** 按 renderer 把输入挂载为 SVG 或 Canvas view；缺省使用 SVG */
@@ -24,6 +47,10 @@ export const mount: MountFn = ((
   input: RenderInput,
   options: MountUnifiedOptions = {},
 ): VanillaView | CanvasView => {
+  if ('primitives' in input) {
+    if (options.renderer === 'canvas') return mountCanvas(container, input, options);
+    return mountSvg(container, input, options);
+  }
   if (options.renderer === 'canvas') return mountCanvas(container, input, options);
   return mountSvg(container, input, options);
 }) as MountFn;

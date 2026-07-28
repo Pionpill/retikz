@@ -418,9 +418,26 @@ const prepareDisplayListUpdate = (
   return dirty === undefined ? undefined : Object.freeze({ items: Object.freeze(candidate), dirty });
 };
 
-/** 将完整 snapshot 绘制到与 host 同尺寸的候选离屏 bitmap */
+/** Canvas transaction 的目标设备像素尺寸 */
+type CanvasBitmapSize = Readonly<{ width: number; height: number }>;
+
+/** 按 committed Scene 与 transaction config 解析目标设备像素尺寸 */
+const resolveCanvasBitmapSize = (
+  snapshot: SceneRuntimeSnapshot,
+  config: RenderRuntimeConfig,
+  options: RetainedCanvasRendererImmutableOptions,
+): CanvasBitmapSize => {
+  const ratio = resolvedDevicePixelRatio(options);
+  return Object.freeze({
+    width: Math.max(1, Math.round((config.canvas?.width ?? snapshot.scene.layout.width) * ratio)),
+    height: Math.max(1, Math.round((config.canvas?.height ?? snapshot.scene.layout.height) * ratio)),
+  });
+};
+
+/** 将完整 snapshot 绘制到目标尺寸的候选离屏 bitmap */
 const createBitmap = (
   host: HTMLCanvasElement,
+  size: CanvasBitmapSize,
   snapshot: SceneRuntimeSnapshot,
   config: RenderRuntimeConfig,
   options: RetainedCanvasRendererImmutableOptions,
@@ -430,8 +447,8 @@ const createBitmap = (
   getImage: CanvasImageResolver,
 ): HTMLCanvasElement => {
   const bitmap = host.ownerDocument.createElement('canvas');
-  bitmap.width = host.width;
-  bitmap.height = host.height;
+  bitmap.width = size.width;
+  bitmap.height = size.height;
   renderToCanvas(bitmap, animationFrame?.scene ?? asScene(snapshot), {
     devicePixelRatio: options.devicePixelRatio,
     time,
@@ -1062,6 +1079,10 @@ export const createBuiltinCanvasRetainedRenderer = (
   host: HTMLCanvasElement,
   options: RetainedCanvasRendererImmutableOptions,
 ): RetainedCanvasRenderer => {
+  const immutableOptions = Object.freeze({
+    ...options,
+    devicePixelRatio: resolvedDevicePixelRatio(options),
+  });
   let currentSnapshot: SceneRuntimeSnapshot | undefined;
   let currentBitmap: HTMLCanvasElement | undefined;
   let currentAnimation: CanvasAnimationState | undefined;
@@ -1078,15 +1099,18 @@ export const createBuiltinCanvasRetainedRenderer = (
       (currentConfig.animation?.enabled === false ? undefined : 0);
     const bitmap = createBitmap(
       host,
+      resolveCanvasBitmapSize(currentSnapshot, currentConfig, immutableOptions),
       currentSnapshot,
       currentConfig,
-      options,
+      immutableOptions,
       readCanvasHostStyle(host),
       time,
       undefined,
       imageLoader.getImage,
     );
     currentBitmap = bitmap;
+    host.width = bitmap.width;
+    host.height = bitmap.height;
     paintBitmap(host, bitmap);
     currentAnimation?.renderFrame();
   });
@@ -1111,7 +1135,12 @@ export const createBuiltinCanvasRetainedRenderer = (
         ? currentAnimation?.controls.time
         : (config.animation?.snapshotAt ?? (config.animation?.enabled === false ? undefined : 0));
       const animationCandidate = reuseAnimation ? currentAnimation?.stage(snapshot, config, animationDiff) : undefined;
-      const bitmapSizeStable = currentBitmap?.width === host.width && currentBitmap.height === host.height;
+      const targetSize = resolveCanvasBitmapSize(snapshot, config, immutableOptions);
+      const bitmapSizeStable =
+        currentBitmap?.width === targetSize.width &&
+        currentBitmap.height === targetSize.height &&
+        host.width === targetSize.width &&
+        host.height === targetSize.height;
       const hostStyle = readCanvasHostStyle(host);
       const reuseBitmap =
         patch?.operations.length === 0 &&
@@ -1130,7 +1159,7 @@ export const createBuiltinCanvasRetainedRenderer = (
               currentBitmap,
               snapshot,
               config,
-              options,
+              immutableOptions,
               hostStyle,
               candidateTime,
               animationCandidate,
@@ -1146,9 +1175,10 @@ export const createBuiltinCanvasRetainedRenderer = (
             ? currentBitmap
             : createBitmap(
                 host,
+                targetSize,
                 snapshot,
                 config,
-                options,
+                immutableOptions,
                 hostStyle,
                 candidateTime,
                 animationCandidate,
@@ -1169,6 +1199,7 @@ export const createBuiltinCanvasRetainedRenderer = (
       const previousDisplayList = currentDisplayList;
       const previousConfig = currentConfig;
       const previousHostStyle = currentHostStyle;
+      const previousHostSize = Object.freeze({ width: host.width, height: host.height });
       let animation: CanvasAnimationState | undefined;
       let rollbackAnimationRebind: (() => void) | undefined;
       let previousAnimationRunning: boolean | undefined;
@@ -1188,12 +1219,14 @@ export const createBuiltinCanvasRetainedRenderer = (
               paintBitmapRegion(host, incrementalBitmap.bitmap, incrementalBitmap.region, 'full');
             } else if (incrementalBitmap === undefined) {
               hostMutated = true;
+              host.width = targetSize.width;
+              host.height = targetSize.height;
               paintBitmap(host, bitmap);
             }
           }
           animation = reuseAnimation
             ? previousAnimation
-            : createCanvasAnimation(host, snapshot, config, options, imageLoader.getImage);
+            : createCanvasAnimation(host, snapshot, config, immutableOptions, imageLoader.getImage);
           if (reuseAnimation && animation !== undefined) {
             rollbackAnimationRebind = animationCandidate?.commit();
           }
@@ -1228,6 +1261,8 @@ export const createBuiltinCanvasRetainedRenderer = (
               paintBitmapRegion(host, incrementalBitmap.rollback, incrementalBitmap.region, 'region');
             }
           } else if (incrementalBitmap === undefined && hostMutated) {
+            host.width = previousHostSize.width;
+            host.height = previousHostSize.height;
             paintBitmap(host, rollbackBitmap ?? previousBitmap);
           }
           currentSnapshot = previousSnapshot;

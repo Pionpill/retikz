@@ -45,8 +45,12 @@ describe('@retikz/vanilla mountSvg', () => {
     const view = mountSvg(c, ir, { compile: { artifacts: { nodeLayouts: true } } });
 
     expect(view.artifacts).toMatchObject([{ kind: 'nodeLayout', value: { id: 'first' } }]);
-    view.update(sceneOf('B'));
-    expect(view.artifacts).toEqual([]);
+    view.update({
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'second', position: [0, 0], text: 'B' }],
+    });
+    expect(view.artifacts).toMatchObject([{ kind: 'nodeLayout', value: { id: 'second' } }]);
   });
 
   it('idprefix-ssr-mount-parity：同 idPrefix 下 SSR 串与 DOM 的资源 id 一致', () => {

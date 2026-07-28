@@ -21,10 +21,22 @@ import {
   isCanvasAnimationIdVisible,
   withCanvasAnimationEventHandlers,
 } from '@retikz/render/hydration';
+import { RetainedRenderError, RetainedRenderErrorCode } from '@retikz/render/runtime';
 
 import type { VanillaRuntimeMeta } from '../spec';
-import type { CanvasView, HydrateOptions, MountCanvasOptions, RenderInput, ScenePoint } from './types';
+import type {
+  CanvasView,
+  HydrateOptions,
+  MountCanvasOptions,
+  RenderInput,
+  RetainedCanvasView,
+  RetainedRenderInput,
+  ScenePoint,
+  StaticCanvasView,
+} from './types';
 
+import { DEFAULT_ID_PREFIX } from './constants';
+import { createVanillaRetainedSession } from './retained-session';
 import { createEmptyRuntimeMeta, toSceneResult } from './to-scene';
 
 /** 设备像素比：取有限正数、否则回退 1（镜像 react CanvasHost） */
@@ -41,7 +53,7 @@ const resolveDevicePixelRatio = (override: number | undefined): number => {
  *   进去（镜像 SVG `preserveAspectRatio=meet` + CanvasHost）。返回的 `CanvasView` 暴露 `hydrate`（hitTest 定位）
  *   与 `clientToScene`（逆 meet-fit 坐标映射）。DOM 仅在调用时惰性触碰，`import` 本模块不碰 DOM——守 SSR 导入安全
  */
-export const mountCanvas = (container: Element, input: RenderInput, options: MountCanvasOptions = {}): CanvasView => {
+const mountStaticCanvas = (container: Element, input: Scene, options: MountCanvasOptions): StaticCanvasView => {
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
     throw new Error('mountCanvas: container must be a DOM Element.');
   }
@@ -278,6 +290,7 @@ export const mountCanvas = (container: Element, input: RenderInput, options: Mou
   };
 
   return {
+    mode: 'static',
     root: canvas,
     update(next) {
       if (disposed) throw new Error('mountCanvas: view already disposed.');
@@ -308,3 +321,88 @@ export const mountCanvas = (container: Element, input: RenderInput, options: Mou
     },
   };
 };
+
+/** 把 IR / plain spec 挂成 retained Canvas Runtime session */
+const mountRetainedCanvas = (
+  container: Element,
+  input: RetainedRenderInput,
+  options: MountCanvasOptions,
+): RetainedCanvasView => {
+  if (typeof Element === 'undefined' || !(container instanceof Element)) {
+    throw new Error('mountCanvas: container must be a DOM Element.');
+  }
+  const canvas = document.createElement('canvas');
+  const output = options.output ?? {};
+  const ratio = resolveDevicePixelRatio(options.canvas?.devicePixelRatio);
+  if (output.width !== undefined) canvas.style.width = `${output.width}px`;
+  if (output.height !== undefined) canvas.style.height = `${output.height}px`;
+  canvas.style.objectFit = 'contain';
+  const runtime = createVanillaRetainedSession({
+    backend: 'canvas',
+    host: canvas,
+    input,
+    options,
+    idPrefix: output.idPrefix ?? DEFAULT_ID_PREFIX,
+    devicePixelRatio: ratio,
+  });
+  container.appendChild(canvas);
+  const clientToScene = (clientX: number, clientY: number): ScenePoint => {
+    const { layout } = runtime.scene();
+    const rect = canvas.getBoundingClientRect();
+    const scale = Math.min(rect.width / layout.width, rect.height / layout.height);
+    const offsetX = (rect.width - layout.width * scale) / 2;
+    const offsetY = (rect.height - layout.height * scale) / 2;
+    return {
+      x: (clientX - rect.left - offsetX) / scale + layout.x,
+      y: (clientY - rect.top - offsetY) / scale + layout.y,
+    };
+  };
+  let disposed = false;
+  return {
+    mode: 'retained',
+    root: canvas,
+    update: (next, updateOptions) => runtime.update(next, updateOptions),
+    hydrate: hydrateOptions => runtime.hydrate(hydrateOptions),
+    diagnostics: () => runtime.diagnostics(),
+    clientToScene,
+    dispose: () => {
+      if (disposed) return;
+      disposed = true;
+      runtime.dispose();
+      canvas.remove();
+    },
+    get animation() {
+      return runtime.read().animation;
+    },
+    get runtimeMeta() {
+      return runtime.runtimeMeta();
+    },
+    get artifacts() {
+      return runtime.artifacts();
+    },
+  };
+};
+
+/** `mountCanvas` 的 static / retained 输入重载 */
+type MountCanvas = {
+  (container: Element, input: Scene, options?: MountCanvasOptions): StaticCanvasView;
+  (container: Element, input: RetainedRenderInput, options?: MountCanvasOptions): RetainedCanvasView;
+};
+
+/** 按输入是否已编译，创建 static 或 retained Canvas view */
+export const mountCanvas: MountCanvas = ((
+  container: Element,
+  input: Scene | RetainedRenderInput,
+  options: MountCanvasOptions = {},
+): CanvasView => {
+  if ('primitives' in input) {
+    if (options.runtime?.rendererFactory !== undefined) {
+      throw new RetainedRenderError({
+        code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid,
+        cause: input,
+      });
+    }
+    return mountStaticCanvas(container, input, options);
+  }
+  return mountRetainedCanvas(container, input, options);
+}) as MountCanvas;

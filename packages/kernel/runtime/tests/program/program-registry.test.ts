@@ -91,6 +91,7 @@ describe('runtime program definition and registry', () => {
       snapshot: () => {
         throw new Error('unused owner lookup');
       },
+      changed: () => true,
       changeSet: () => {
         throw new Error('unused change lookup');
       },

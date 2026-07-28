@@ -46,6 +46,13 @@ export type RenderRuntimeConfigInput = Readonly<{
     /** 自定义 animation property registry */
     properties?: AnimationPropertyRegistry;
   }>;
+  /** Canvas CSS user-space 尺寸；省略字段时按 committed Scene layout 推导 */
+  canvas?: Readonly<{
+    /** Canvas CSS user-space 宽度 */
+    width?: number;
+    /** Canvas CSS user-space 高度 */
+    height?: number;
+  }>;
   /** layer cache 策略 */
   cachePolicy?: RenderCachePolicyValue;
 }>;
@@ -57,12 +64,30 @@ const invalidRuntimeInput = (cause: unknown): never => {
   throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid, cause });
 };
 
-const isDenseArray = (value: unknown): value is ReadonlyArray<unknown> => {
-  if (!Array.isArray(value)) return false;
-  for (let index = 0; index < value.length; index += 1) {
-    if (!(index in value)) return false;
+/** 只从 own data descriptors 捕获稠密数组，避免继承方法或 accessor 参与校验 */
+const captureDenseArray = (value: unknown): ReadonlyArray<unknown> | undefined => {
+  if (!Array.isArray(value)) return undefined;
+  const keys = Reflect.ownKeys(value);
+  const lengthDescriptor = Object.getOwnPropertyDescriptor(value, 'length');
+  if (
+    lengthDescriptor === undefined ||
+    lengthDescriptor.enumerable ||
+    !('value' in lengthDescriptor) ||
+    typeof lengthDescriptor.value !== 'number' ||
+    !Number.isSafeInteger(lengthDescriptor.value) ||
+    lengthDescriptor.value < 0 ||
+    keys.length !== lengthDescriptor.value + 1 ||
+    keys.some(key => typeof key !== 'string')
+  ) {
+    return undefined;
   }
-  return true;
+  const captured: Array<unknown> = [];
+  for (let index = 0; index < lengthDescriptor.value; index += 1) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
+    if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) return undefined;
+    captured.push(descriptor.value);
+  }
+  return captured;
 };
 
 const assertPlainRecord: (value: unknown) => asserts value is Record<PropertyKey, unknown> = value => {
@@ -71,9 +96,19 @@ const assertPlainRecord: (value: unknown) => asserts value is Record<PropertyKey
   }
 };
 
+/** 读取已经证明为 enumerable data property 的值，不触发用户 accessor */
+const readDataProperty = (value: object, key: PropertyKey): unknown => {
+  const descriptor = Object.getOwnPropertyDescriptor(value, key);
+  if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
+    return invalidRuntimeInput(value);
+  }
+  return descriptor.value;
+};
+
 const assertAllowedKeys = (value: object, allowed: ReadonlySet<string>): void => {
   for (const key of Reflect.ownKeys(value)) {
     if (typeof key !== 'string' || !allowed.has(key)) return invalidRuntimeInput(value);
+    readDataProperty(value, key);
   }
 };
 
@@ -92,14 +127,15 @@ const captureHandlers = (handlers: unknown): HydrationHandlers => {
   const eventNames = new Set<string>(Object.values(RetikzEvent));
   for (const identifier of Reflect.ownKeys(handlers)) {
     if (typeof identifier !== 'string') return invalidRuntimeInput(handlers);
-    const elementHandlers = Reflect.get(handlers, identifier);
+    const elementHandlers = readDataProperty(handlers, identifier);
     assertPlainRecord(elementHandlers);
     const capturedElement = Object.create(null) as Record<PropertyKey, unknown>;
     for (const eventName of Reflect.ownKeys(elementHandlers)) {
-      const handler = Reflect.get(elementHandlers, eventName);
-      if (typeof eventName !== 'string' || !eventNames.has(eventName) || typeof handler !== 'function') {
+      if (typeof eventName !== 'string' || !eventNames.has(eventName)) {
         return invalidRuntimeInput(elementHandlers);
       }
+      const handler = readDataProperty(elementHandlers, eventName);
+      if (typeof handler !== 'function') return invalidRuntimeInput(elementHandlers);
       defineCapturedValue(capturedElement, eventName, handler);
     }
     defineCapturedValue(captured, identifier, capturedElement);
@@ -116,28 +152,29 @@ const captureRegistry = <TValue>(
   const captured = Object.create(null) as Record<PropertyKey, unknown>;
   for (const key of Reflect.ownKeys(value)) {
     if (typeof key !== 'string') return invalidRuntimeInput(value);
-    defineCapturedValue(captured, key, captureEntry(Reflect.get(value, key)));
+    defineCapturedValue(captured, key, captureEntry(readDataProperty(value, key)));
   }
   return captured as Record<string, TValue>;
 };
 
 const captureEasing = (entry: unknown): EasingRegistry[string] => {
   if (typeof entry === 'function') return entry as EasingRegistry[string];
+  const tuple = captureDenseArray(entry);
   if (
-    !isDenseArray(entry) ||
-    entry.length !== 4 ||
-    !entry.every(item => typeof item === 'number' && Number.isFinite(item))
+    tuple === undefined ||
+    tuple.length !== 4 ||
+    !tuple.every(item => typeof item === 'number' && Number.isFinite(item))
   ) {
     return invalidRuntimeInput(entry);
   }
-  return [...entry] as EasingRegistry[string];
+  return tuple as EasingRegistry[string];
 };
 
 const captureAnimationProperty = (entry: unknown): AnimationPropertyRegistry[string] => {
   assertPlainRecord(entry);
   assertAllowedKeys(entry, new Set(['interpolate', 'applyCanvas']));
-  const interpolate = Reflect.get(entry, 'interpolate');
-  const applyCanvas = Reflect.get(entry, 'applyCanvas');
+  const interpolate = readDataProperty(entry, 'interpolate');
+  const applyCanvas = readDataProperty(entry, 'applyCanvas');
   if (typeof interpolate !== 'function' || typeof applyCanvas !== 'function') return invalidRuntimeInput(entry);
   return {
     interpolate: interpolate as AnimationPropertyRegistry[string]['interpolate'],
@@ -147,13 +184,14 @@ const captureAnimationProperty = (entry: unknown): AnimationPropertyRegistry[str
 
 const normalizeContributions = (value: unknown): ReadonlyArray<RenderHandlerContribution> | undefined => {
   if (value === undefined) return undefined;
-  if (!isDenseArray(value)) return invalidRuntimeInput(value);
+  const captured = captureDenseArray(value);
+  if (captured === undefined) return invalidRuntimeInput(value);
   const registrations = new Set<number>();
-  const contributions = value.map(candidate => {
+  const contributions = captured.map(candidate => {
     assertPlainRecord(candidate);
     assertAllowedKeys(candidate, new Set(['registration', 'handlers']));
-    const registration = Reflect.get(candidate, 'registration');
-    const handlers = Reflect.get(candidate, 'handlers');
+    const registration = readDataProperty(candidate, 'registration');
+    const handlers = readDataProperty(candidate, 'handlers');
     if (
       typeof registration !== 'number' ||
       !Number.isSafeInteger(registration) ||
@@ -172,24 +210,36 @@ const captureRuntimeConfig = (input: RenderRuntimeConfigInput): RenderRuntimeCon
   try {
     const candidate: unknown = input;
     assertPlainRecord(candidate);
-    assertAllowedKeys(candidate, new Set(['handlerContributions', 'animation', 'cachePolicy']));
-    const cachePolicy = Reflect.get(candidate, 'cachePolicy');
+    assertAllowedKeys(candidate, new Set(['handlerContributions', 'animation', 'canvas', 'cachePolicy']));
+    const cachePolicy = Object.hasOwn(candidate, 'cachePolicy')
+      ? readDataProperty(candidate, 'cachePolicy')
+      : undefined;
     if (
       cachePolicy !== undefined &&
       !Object.values(RenderCachePolicy).includes(cachePolicy as RenderCachePolicyValue)
     ) {
       return invalidRuntimeInput(input);
     }
-    const contributions = normalizeContributions(Reflect.get(candidate, 'handlerContributions'));
-    const animation = Reflect.get(candidate, 'animation');
+    const contributions = normalizeContributions(
+      Object.hasOwn(candidate, 'handlerContributions')
+        ? readDataProperty(candidate, 'handlerContributions')
+        : undefined,
+    );
+    const animation = Object.hasOwn(candidate, 'animation') ? readDataProperty(candidate, 'animation') : undefined;
     let normalizedAnimation: RenderRuntimeConfigInput['animation'];
     if (animation !== undefined) {
       assertPlainRecord(animation);
       assertAllowedKeys(animation, new Set(['enabled', 'snapshotAt', 'easings', 'properties']));
-      const enabled = Reflect.get(animation, 'enabled');
-      const snapshotAt = Reflect.get(animation, 'snapshotAt');
-      const easings = captureRegistry(Reflect.get(animation, 'easings'), captureEasing);
-      const properties = captureRegistry(Reflect.get(animation, 'properties'), captureAnimationProperty);
+      const enabled = Object.hasOwn(animation, 'enabled') ? readDataProperty(animation, 'enabled') : undefined;
+      const snapshotAt = Object.hasOwn(animation, 'snapshotAt') ? readDataProperty(animation, 'snapshotAt') : undefined;
+      const easings = captureRegistry(
+        Object.hasOwn(animation, 'easings') ? readDataProperty(animation, 'easings') : undefined,
+        captureEasing,
+      );
+      const properties = captureRegistry(
+        Object.hasOwn(animation, 'properties') ? readDataProperty(animation, 'properties') : undefined,
+        captureAnimationProperty,
+      );
       if (enabled !== undefined && typeof enabled !== 'boolean') return invalidRuntimeInput(animation);
       if (
         snapshotAt !== undefined &&
@@ -204,9 +254,28 @@ const captureRuntimeConfig = (input: RenderRuntimeConfigInput): RenderRuntimeCon
         ...(properties === undefined ? {} : { properties }),
       };
     }
+    const canvas = Object.hasOwn(candidate, 'canvas') ? readDataProperty(candidate, 'canvas') : undefined;
+    let normalizedCanvas: RenderRuntimeConfigInput['canvas'];
+    if (canvas !== undefined) {
+      assertPlainRecord(canvas);
+      assertAllowedKeys(canvas, new Set(['width', 'height']));
+      const width = Object.hasOwn(canvas, 'width') ? readDataProperty(canvas, 'width') : undefined;
+      const height = Object.hasOwn(canvas, 'height') ? readDataProperty(canvas, 'height') : undefined;
+      if (width !== undefined && (typeof width !== 'number' || !Number.isFinite(width) || width < 0)) {
+        return invalidRuntimeInput(canvas);
+      }
+      if (height !== undefined && (typeof height !== 'number' || !Number.isFinite(height) || height < 0)) {
+        return invalidRuntimeInput(canvas);
+      }
+      normalizedCanvas = {
+        ...(width === undefined ? {} : { width }),
+        ...(height === undefined ? {} : { height }),
+      };
+    }
     const normalized = {
       ...(contributions === undefined ? {} : { handlerContributions: contributions }),
       ...(normalizedAnimation === undefined ? {} : { animation: normalizedAnimation }),
+      ...(normalizedCanvas === undefined ? {} : { canvas: normalizedCanvas }),
       ...(cachePolicy === undefined ? {} : { cachePolicy: cachePolicy as RenderCachePolicyValue }),
     };
     return cloneAndFreezeRuntimeValue(normalized);

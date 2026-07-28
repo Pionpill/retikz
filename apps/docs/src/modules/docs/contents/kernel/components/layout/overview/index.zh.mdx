@@ -1,11 +1,11 @@
 ---
 title: Layout
-description: React 绘图入口：把 JSX 或 Core IR 接入统一编译与 SVG / Canvas 渲染链路。
+description: React 绘图入口：把 JSX 或 Core IR 接入 retained Runtime Session，并由 SVG / Canvas renderer 增量更新稳定宿主。
 ---
 
 `<Layout>` 是 React 绘图树的顶层运行时入口，所有 Kernel / Sugar 组件都从这里进入同一条图形管线。
 
-它解决两类输入的汇合：传 children 时由 React adapter 构造 Core IR，传 `ir` 时直接采用已有 IR；随后调用 `@retikz/core` 编译 Scene，再交给 `@retikz/render` 输出 SVG 或 Canvas。
+它解决两类输入的汇合：传 children 时由 React adapter 构造 Core IR，传 `ir` 时直接采用已有 IR；随后在 retained Runtime Session 中由 `@retikz/core` 发布 Scene Snapshot / Patch，再由 `@retikz/render` 更新 SVG 或 Canvas。
 
 `<Layout>` 只拥有 React 侧的构造、能力注入和宿主接线，不定义 IR / Scene 语义、几何规则或自动布局算法。节点定位与通用约束由 core 表达，plot / table 等领域布局属于各自上层能力。
 
@@ -81,25 +81,25 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
 
 ### 职责如何闭环
 
-`<Layout>` 把 JSX children 转成 Core IR，或直接采用 `ir` prop；definitions 与 runtime options 也由这里接入。之后它调用 core 生成后端中立的 Scene，再把 Scene 交给 render 执行，并在 React 宿主上补齐事件、动画和根元素接线。
+`<Layout>` 把 JSX children 转成 Core IR，或直接采用 `ir` prop；definitions 与 runtime options 也由这里接入。每当 `ir` 或 Core options 改变，render 阶段会完整编译一次 SSR-safe Scene seed；React commit 后，Core Program 与 retained Render participant 再在 Runtime Session 中处理同一输入。输入和 renderer 配置在一次 transaction 中提交，成功后才一起发布 Scene、DOM / bitmap、事件、动画句柄与 artifacts。
 
 <ComponentPreview files="layout-input-flow" size="sm" hideCode />
 
-这条链路的语义所有权不会随入口漂移：React 不私造平行 IR，core 不拥有 DOM 或 Canvas 实例，render 不反向定义新的图形语义。
+这条链路的语义所有权不会随入口漂移：React 只声明稳定的 `<svg>` / `<canvas>` host shell，Render participant 独占 SVG descendants 或 Canvas bitmap；core 不拥有 DOM 或 Canvas 实例，render 不反向定义新的图形语义。失败的 transaction 不发布新 revision，并尝试 rollback；rollback 成功时旧宿主继续可用，rollback 自身失败时 Session 进入 broken，调用方应卸载并重新挂载。
 
 <SourceLinks
   sources={[
     {
-      label: 'React 输入与编译接线',
+      label: 'React 输入与 Core options 接线',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 420,
-      endLine: 494,
+      startLine: 410,
+      endLine: 474,
     },
     {
-      label: 'React 渲染宿主接线',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 496,
-      endLine: 545,
+      label: 'React retained host transaction',
+      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
+      startLine: 183,
+      endLine: 291,
     },
     {
       label: 'Core IR 编译 Scene',
@@ -123,8 +123,8 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
     {
       label: 'viewBox 注入 IR',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 430,
-      endLine: 439,
+      startLine: 417,
+      endLine: 426,
     },
     {
       label: '显式与自动 layout 决策',
@@ -154,14 +154,14 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
     {
       label: 'renderer 与动画模式解析',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 360,
-      endLine: 380,
+      startLine: 347,
+      endLine: 367,
     },
     {
-      label: '后端分流与静态截帧',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 496,
-      endLine: 545,
+      label: 'retained host 的后端与静态截帧配置',
+      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
+      startLine: 119,
+      endLine: 180,
     },
     {
       label: '系统动画偏好回退',
@@ -234,6 +234,9 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
 | `style`     | `CSSProperties`           | —       | 透传到 SVG / Canvas 根元素                                                  |
 | `idPrefix`  | `string`                  | —       | 覆盖资源 id 前缀，用于多实例或 SSR 水合稳定性                               |
 | `handlers`  | `LayoutProps['handlers']` | —       | `ir` 模式的事件 handler 注册表；见[水合](/kernel/packages/render/hydration) |
+| `runtime`   | `LayoutRuntimeOptions`    | `{}`    | retained renderer factory 与 Runtime diagnostic 出口                        |
+
+`runtime.rendererFactory` 可注入实现同一 retained renderer contract 的第三方后端；省略时使用内置 SVG / Canvas factory。`runtime.onDiagnostic` 按 Runtime queue 顺序接收成功提交和失败 transaction 的诊断；callback 自身抛错会被隔离，不改变 Runtime 的提交或失败结果。
 
 ### React 宿主导出
 

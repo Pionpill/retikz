@@ -544,7 +544,7 @@ const buildFullElementIndex = (
   };
   snapshot.scene.primitives.forEach((primitive, index) => {
     const primitiveDescriptor: unknown = Reflect.get(plan.primitives, index);
-    const element = contentElement.childNodes[index];
+    const element = contentElement.childNodes[index + (plan.wrappers.length === 0 ? plan.head.length : 0)];
     if (
       typeof primitiveDescriptor !== 'object' ||
       primitiveDescriptor === null ||

@@ -19,6 +19,38 @@ const defineCounterOwner = (key = 'counter') =>
   });
 
 describe('runtime Program execution', () => {
+  it('CandidateView 精确区分同一 Program 已声明 owner 的实际变化', () => {
+    const primaryOwner = defineCounterOwner('primary-changed');
+    const stableOwner = defineCounterOwner('stable-owner');
+    const owners = createRuntimeOwnerRegistry({ builtins: [primaryOwner, stableOwner] });
+    const observations: Array<Readonly<[boolean, boolean]>> = [];
+    const program = defineRuntimeProgram<number, number, number, number>({
+      id: { owner: 'primary-changed', key: 'changed-observer' },
+      owners: [primaryOwner, stableOwner],
+      programs: [],
+      tracePhases: [],
+      artifact: { capture: value => value, readForProgram: value => value, read: value => value },
+      run: view => ({ kind: 'full', artifact: view.snapshot(primaryOwner).value }),
+      update: (_previous, view) => {
+        observations.push(Object.freeze([view.changed(primaryOwner), view.changed(stableOwner)]));
+        return { kind: 'incremental', artifact: view.snapshot(primaryOwner).value };
+      },
+    });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      initialSnapshots: [createRuntimeOwnerInput(primaryOwner, 1), createRuntimeOwnerInput(stableOwner, 7)],
+    });
+
+    session.update({
+      baseRevision: session.revision(),
+      owners: [createRuntimeOwnerUpdate(primaryOwner, 2)],
+    });
+
+    expect(observations).toEqual([[true, false]]);
+  });
+
   it('只执行直接与传递失效分支，并复用无关 Program artifact', () => {
     const primaryOwner = defineCounterOwner('primary');
     const unrelatedOwner = defineCounterOwner('unrelated');

@@ -1,6 +1,6 @@
 ---
 title: '@retikz/react'
-description: 用 JSX 组织 Kernel 与 Sugar 组件，把生成的 core IR 编译后接入 React 的 SVG / Canvas 宿主生命周期。
+description: 用 JSX 组织 Kernel 与 Sugar 组件，把生成的 Core IR 接入 retained Runtime Session 与稳定的 SVG / Canvas 宿主。
 ---
 
 `@retikz/react` 是 React 应用的首选入口。你用 `<Layout>`、`<Node>`、`<Path>`、`<Scope>`、`<Draw>` 等 JSX 组件声明图形；包内 adapter 把 props 与 children 转成 `@retikz/core` IR，再由 `<Layout>` 编译 Scene 并接入 SVG 或 Canvas 宿主。
@@ -55,7 +55,7 @@ retikz 把 React 作为官方支持的一等框架：`@retikz/react` 的组件 A
 
 因此 JSX 只负责组织声明，builder 把它收敛为框架无关的 Core IR。中间过程不创建额外 DOM，也不把 CSS layout 变成图形编译的隐式输入；持久化、传输、SSR 和其它框架适配都可以继续复用同一份 IR → Scene 管线。
 
-React 仍然在合适的边界发挥作用：最终 SVG 描述树会映射为普通 React elements，继续使用 reconciliation、key、ref 和事件生命周期；Canvas 则由 React 管理单个宿主与重绘时机。薄的是图形语义，不是宿主接线。
+React 仍然在合适的边界发挥作用：它声明稳定的 `<svg>` / `<canvas>` host shell，并把 commit、ref 与卸载生命周期接到 Runtime Session。SVG descendants 与 Canvas bitmap 由 `@retikz/render` 的 retained participant 独占，React reconciliation 不会与 renderer 同时改写同一棵子树。薄的是图形语义，不是宿主接线。
 
 `<Node>`、`<Path>`、`<Scope>` 等 Kernel 组件是 **IR 标记**，不是 DOM 组件。它们自身返回 `null`，只用稳定的 `displayName` 告诉 React builder“这是什么图元”；因此 `<Node>` 不会先生成一个 `<div>`，也不会拥有另一套浏览器布局语义。
 
@@ -100,42 +100,36 @@ return (
   ]}
 />
 
-### 性能边界与后续方向
+### Retained 更新边界
 
-标记组件避免了中间 DOM 和重复图形语义，但不代表转换链没有成本。`Layout` 目前分别用 `useMemo` 缓存 JSX → IR、IR → Scene、Scene → SVG 描述树和 handler 收集；当 IR、compile options 与其它依赖引用稳定时，这些阶段可以直接复用结果。
+标记组件避免了中间 DOM 和重复图形语义，但 JSX → IR 仍会在 children 引用变化时重新执行。当前每次 `ir` 或 Core options 改变，React render 阶段还会调用一次 `compileToScene` 生成 SSR-safe seed；客户端 commit 后，Runtime Session 会为 transaction 再编译同一输入。retained 更新降低的是后端提交成本，不会消除这次 render-time full compile。
 
-children 模式有一个明确边界：JSX children 经常在每次 React render 时产生新引用，memo 因而可能失效，重新执行 `buildIRWithContributions` 和整图 `compileToScene`。大图需要频繁重渲染时，现阶段应优先在组件外或 `useMemo` 中持有稳定 IR，并通过 `ir` prop 传给 `<Layout>`；在其它编译选项也稳定时，这会跳过 JSX builder，并让 Scene 编译缓存有机会命中。
+频繁更新的大图可在组件外或 `useMemo` 中持有稳定 IR 与 Core options，再通过 `ir` prop 跳过 builder，并让 seed compile 的 memo 命中。
 
-后续不会仅凭“支持 JSON Patch”就引入公开的增量 API。Kernel 会先从真实大图或交互场景量化全量编译成本，优先评估 bailout、缓存或 domain lowering 是否足够；只有性能证据成立后，才进一步设计 IR diff、局部 compile、Scene patch、concurrent 调度，以及 SVG / Canvas 能否共享同一更新语义。
+客户端 commit 后，`Layout` 会创建一个 Runtime Session，把完整 IR Snapshot 与 renderer config 作为一次 transaction 更新。Core Program 能证明安全的变更会发布局部 Scene Patch；其它合法变更用 `replaceScene` fallback 保持 full oracle 等价。SVG / Canvas retained participant 在 prepare 阶段隔离候选状态，只有 transaction 成功后才把 DOM / bitmap、事件、动画句柄和 artifacts 一起发布。
 
-Progressive IR / 增量编译仍需未来版本基于真实性能证据另行排期，不代表已经冻结 API。
+Definition 数组按有序元素 identity 规范化，因此 render 时重新创建 `[shape]` 这类等价容器不会重建 Session；Definition 本身、renderer backend、`idPrefix` 或 `runtime.rendererFactory` 改变时会重建。并发调度与 progressive materialization 仍不属于当前公开契约。
 
 <SourceLinks
   sources={[
     {
-      label: 'Layout 的 memo 与全量编译边界',
+      label: 'Layout 的 Definition 容器规范化',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 410,
-      endLine: 493,
+      startLine: 48,
+      endLine: 73,
     },
     {
-      label: 'SVG 描述树的 React 薄映射',
-      path: 'packages/kernel/react/src/render/svg/svg-to-react.ts',
-      startLine: 53,
-      endLine: 69,
-    },
-    {
-      label: '增量编译的启动条件与待决问题',
-      path: 'packages/kernel/_notes/decisions/v0/v0.4/backlog.md',
-      startLine: 3,
-      endLine: 27,
+      label: 'Retained Session 的创建与更新',
+      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
+      startLine: 183,
+      endLine: 291,
     },
   ]}
 />
 
 ## 从 JSX 到 Scene
 
-`<Layout>` 是两段纯转换的编排边界：先调用 React builder 把 JSX 适配为 Core IR，再调用 Core 的 `compileToScene`。下图蓝色节点属于 `@retikz/react` 的 authoring / adapter，橙色节点是 `@retikz/core` 拥有的数据契约与编译器。
+`<Layout>` 先调用 React builder 把 JSX 适配为 Core IR；每次输入或 Core options 改变时，render 阶段用 `compileToScene` 生成 SSR-safe seed，客户端 commit 后由同一组 Core options 创建或更新 Core Program。下图蓝色节点属于 `@retikz/react` 的 authoring / adapter，橙色节点是 `@retikz/core` 拥有的数据契约与编译器。
 
 <ComponentPreview files="react-to-scene" size="xs" hideCode />
 
@@ -147,7 +141,7 @@ Progressive IR / 增量编译仍需未来版本基于真实性能证据另行排
 | `compileToScene`           | `@retikz/core`  | 处理 composite，解析 registry、引用、几何、布局、资源与动画 |
 | `CompileResult`            | `@retikz/core`  | 同次返回后端中立 `scene` 与 immutable typed `artifacts`     |
 
-`Layout` 会把文本测量器、Definition registries、TeX lowerer 等宿主能力作为 compile options 注入，但这些选项不会把 React 写进 IR 或 Scene。直接传 `ir` prop 时会跳过 JSX builder，从同一个 `compileToScene` 入口继续。`artifacts` prop 请求 opt-in 产物，`onArtifacts` 在 React commit 后接收同次 compile 的 immutable artifacts；不会为通知再编译一次。
+`Layout` 会把文本测量器、Definition registries、TeX lowerer 等宿主能力作为 compile options 注入，但这些选项不会把 React 写进 IR 或 Scene。直接传 `ir` prop 时会跳过 JSX builder。`artifacts` prop 请求 opt-in 产物，`onArtifacts` 在 Runtime commit 后接收同次 compile 的 immutable artifacts；不会为通知再编译一次。
 
 <SourceLinks
   sources={[
@@ -167,7 +161,7 @@ Progressive IR / 增量编译仍需未来版本基于真实性能证据另行排
       label: 'Layout 串联 builder 与 compile',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
       startLine: 410,
-      endLine: 472,
+      endLine: 474,
     },
     {
       label: 'Core IR 编译为 Scene',
@@ -180,34 +174,28 @@ Progressive IR / 增量编译仍需未来版本基于真实性能证据另行排
 
 ## Scene 之后
 
-Scene 已经没有 React 组件语义。`@retikz/render` 负责把它执行到目标后端，`@retikz/react` 只补 React 宿主生命周期和元素映射：
+Scene 已经没有 React 组件语义。`@retikz/render` 负责把 Snapshot / Patch 执行到目标后端，`@retikz/react` 只补 React 宿主生命周期和 Session 接线：
 
-| 目标   | `@retikz/render`                                        | `@retikz/react`                                       |
-| ------ | ------------------------------------------------------- | ----------------------------------------------------- |
-| SVG    | `buildSvgDocument`：Scene → 中性 `SvgNode` 描述树       | `svgToReact` 薄映射成 React elements，并连接根 ref    |
-| Canvas | `renderToCanvas`：把 Scene 直接绘制到 Canvas 2D context | `CanvasHost` 管理 `<canvas>`、重绘 effect 与 rAF 时钟 |
+| 目标   | `@retikz/render`                                                | `@retikz/react`                                      |
+| ------ | --------------------------------------------------------------- | ---------------------------------------------------- |
+| SVG    | retained renderer 独占 descendants，执行 Patch 或 full fallback | 声明稳定 `<svg>` shell，SSR seed 后以 `adopt` 接管   |
+| Canvas | retained renderer 更新 dirty region 或 full fallback            | 声明稳定 `<canvas>` shell，并固定 mount 生命周期 DPR |
 
 事件 handler 是函数，不能进入 JSON IR。children 模式下，React 侧会用另一条 `collectHydrationHandlers` 扫描按图元 id 收集函数；渲染完成后再绑定到 SVG 定位或 Canvas hit-test。直接传 `ir` prop 时，则通过 `handlers` prop 提供这条运行时旁路。
 
 <SourceLinks
   sources={[
     {
-      label: 'Layout 的 SVG / Canvas 分流',
+      label: 'Layout 接入 retained host',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 487,
-      endLine: 544,
+      startLine: 486,
+      endLine: 508,
     },
     {
-      label: 'SvgNode 到 React element 的薄映射',
-      path: 'packages/kernel/react/src/render/svg/svg-to-react.ts',
-      startLine: 53,
-      endLine: 69,
-    },
-    {
-      label: 'CanvasHost 调用 renderToCanvas',
-      path: 'packages/kernel/react/src/render/canvas/CanvasHost.tsx',
-      startLine: 175,
-      endLine: 230,
+      label: 'Retained host 声明宿主 shell',
+      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
+      startLine: 304,
+      endLine: 331,
     },
     {
       label: 'JSX handler 运行时旁路',

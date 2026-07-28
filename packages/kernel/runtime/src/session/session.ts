@@ -491,6 +491,7 @@ const createCandidateView = (
   baseRevision: RuntimeRevision | undefined,
   candidateRevision: RuntimeRevision,
   ownerStates: ReadonlyMap<RuntimeOwnerToken, RuntimeOwnerState>,
+  changedOwners: ReadonlySet<RuntimeOwnerToken>,
   changeSets: ReadonlyMap<RuntimeOwnerToken, RuntimeOwnerCommandExecutor>,
   programStates: ReadonlyMap<RuntimeProgramToken, RuntimeProgramState>,
   program: RuntimeProgramToken,
@@ -518,6 +519,12 @@ const createCandidateView = (
         throw candidateError('candidate-read', owner, owner.key);
       }
       return state.command.snapshot(owner, state.prepared, candidateRevision);
+    },
+    changed: owner => {
+      if (!declaredOwners.has(owner)) {
+        throw candidateError('candidate-change', owner, owner.key);
+      }
+      return changedOwners.has(owner);
     },
     changeSet: <TInput, TValue, TRead, TChange>(owner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>) => {
       if (!declaredOwners.has(owner)) {
@@ -554,6 +561,7 @@ const runProgram = (
   baseRevision: RuntimeRevision | undefined,
   candidateRevision: RuntimeRevision,
   ownerStates: ReadonlyMap<RuntimeOwnerToken, RuntimeOwnerState>,
+  changedOwners: ReadonlySet<RuntimeOwnerToken>,
   changeSets: ReadonlyMap<RuntimeOwnerToken, RuntimeOwnerCommandExecutor>,
   programStates: ReadonlyMap<RuntimeProgramToken, RuntimeProgramState>,
   definition: RuntimeProgramToken,
@@ -573,6 +581,7 @@ const runProgram = (
     baseRevision,
     candidateRevision,
     ownerStates,
+    changedOwners,
     changeSets,
     programStates,
     definition,
@@ -782,6 +791,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
         undefined,
         currentRevision,
         ownerStates,
+        new Set(options.owners.definitions()),
         new Map(),
         programStates,
         definition,
@@ -1116,6 +1126,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
               currentRevision,
               candidateRevision,
               nextOwnerStates,
+              changedOwners,
               changeSets,
               nextProgramStates,
               definition,

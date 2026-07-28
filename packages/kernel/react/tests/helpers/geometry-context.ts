@@ -157,6 +157,7 @@ export const createGeometryContext = (): CanvasRenderingContext2D => {
     stroke(): void {},
     clearRect(): void {},
     fillRect(): void {},
+    drawImage(): void {},
     measureText(): TextMetrics {
       return { width: 8, actualBoundingBoxAscent: 8, actualBoundingBoxDescent: 2 } as TextMetrics;
     },

@@ -71,6 +71,7 @@ const createSession = (
     ir?: IRScene;
     mountMode?: 'create' | 'adopt';
     participants?: ReadonlyArray<RuntimeCommitParticipantToken>;
+    useAmbientDevicePixelRatio?: boolean;
   }> = {},
 ) => {
   const coreProgram = createCoreProgram({ onWarn: () => undefined });
@@ -88,7 +89,11 @@ const createSession = (
           backend,
           host: host as HTMLCanvasElement,
           rendererFactory: builtinRetainedRendererFactory,
-          immutableOptions: { backend, idPrefix: 'builtin-test', devicePixelRatio: 1 },
+          immutableOptions: {
+            backend,
+            idPrefix: 'builtin-test',
+            ...(options.useAmbientDevicePixelRatio === true ? {} : { devicePixelRatio: 1 }),
+          },
           coreProgram,
           ...(options.mountMode === undefined ? {} : { mountMode: options.mountMode }),
         });
@@ -130,6 +135,33 @@ const createCorePair = (currentSource: IRScene, nextSource: IRScene) => {
 afterEach(() => vi.restoreAllMocks());
 
 describe('builtin retained renderers', () => {
+  it('SVG 完整索引跳过 root resource head 并递归映射 group topology', () => {
+    const host = document.createElementNS(SVG_NAMESPACE, 'svg');
+    const { handle, session } = createSession('svg', host, {
+      ir: {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'scope',
+            clip: { kind: 'rect', x: -20, y: -20, width: 40, height: 40 },
+            children: [
+              {
+                type: 'scope',
+                children: [{ type: 'node', id: 'nested', position: [0, 0], text: 'nested' }],
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    expect(host.querySelector('defs')).not.toBeNull();
+    expect(host.querySelector('[data-retikz-id="nested"]')).not.toBeNull();
+    expect(handle.read(session).snapshot.topology.length).toBeGreaterThan(1);
+    session.dispose();
+  });
+
   it('SVG 只接管 renderer-owned root attr/style，保留 host shell 外部状态', () => {
     const host = document.createElementNS(SVG_NAMESPACE, 'svg');
     host.setAttribute('aria-label', 'external');
@@ -2353,6 +2385,130 @@ describe('builtin retained renderers', () => {
       owners: [createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, { cachePolicy: 'static' })],
     });
     expect(drawImage).toHaveBeenCalledTimes(2);
+    session.dispose();
+  });
+
+  it('Canvas config size 在同一 retained session 内提交并强制 full repaint', () => {
+    const drawImage = vi.fn();
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => {
+          if (key === 'drawImage' && this.isConnected) return drawImage;
+          if (key === 'measureText') return () => ({ width: 0 });
+          if (key === 'createLinearGradient' || key === 'createRadialGradient') {
+            return () => ({ addColorStop: vi.fn() });
+          }
+          if (key in target) return Reflect.get(target, key);
+          return vi.fn();
+        },
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    const host = document.createElement('canvas');
+    document.body.appendChild(host);
+    const { session } = createSession('canvas', host, { config: { canvas: { width: 200, height: 100 } } });
+    expect([host.width, host.height]).toEqual([200, 100]);
+    expect(drawImage).toHaveBeenCalledTimes(1);
+
+    session.update({
+      baseRevision: session.revision(),
+      owners: [createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, { canvas: { width: 300, height: 120 } })],
+    });
+
+    expect([host.width, host.height]).toEqual([300, 120]);
+    expect(drawImage).toHaveBeenCalledTimes(2);
+    session.dispose();
+  });
+
+  it('Canvas 省略 DPR 时在 renderer 创建时捕获 ambient 值', () => {
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'devicePixelRatio');
+    Object.defineProperty(globalThis, 'devicePixelRatio', { configurable: true, value: 1 });
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => {
+          if (key === 'measureText') return () => ({ width: 0 });
+          if (key === 'createLinearGradient' || key === 'createRadialGradient') {
+            return () => ({ addColorStop: vi.fn() });
+          }
+          if (key in target) return Reflect.get(target, key);
+          return vi.fn();
+        },
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    const host = document.createElement('canvas');
+    document.body.appendChild(host);
+    const { session } = createSession('canvas', host, {
+      config: { canvas: { width: 100, height: 50 } },
+      useAmbientDevicePixelRatio: true,
+    });
+    expect([host.width, host.height]).toEqual([100, 50]);
+
+    Object.defineProperty(globalThis, 'devicePixelRatio', { configurable: true, value: 2 });
+    session.update({
+      baseRevision: session.revision(),
+      owners: [
+        createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, {
+          canvas: { width: 100, height: 50 },
+          cachePolicy: 'static',
+        }),
+      ],
+    });
+
+    expect([host.width, host.height]).toEqual([100, 50]);
+    session.dispose();
+    if (descriptor === undefined) Reflect.deleteProperty(globalThis, 'devicePixelRatio');
+    else Object.defineProperty(globalThis, 'devicePixelRatio', descriptor);
+  });
+
+  it('Canvas config size commit 被后序 participant 拒绝时恢复旧尺寸与像素', () => {
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => {
+          if (key === 'measureText') return () => ({ width: 0 });
+          if (key === 'createLinearGradient' || key === 'createRadialGradient') {
+            return () => ({ addColorStop: vi.fn() });
+          }
+          if (key in target) return Reflect.get(target, key);
+          return vi.fn();
+        },
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    let initial = true;
+    const failure = defineRuntimeCommitParticipant<Readonly<{ ok: true }>>({
+      key: 'z:canvas-size-commit-failure',
+      owners: [],
+      programs: [],
+      revisionPolicy: 'continuous',
+      tracePhases: [],
+      prepare: () => ({
+        commit: () => {
+          if (initial) initial = false;
+          else throw new Error('late commit failed');
+        },
+        rollback: () => undefined,
+        dispose: () => undefined,
+      }),
+      read: () => Object.freeze({ ok: true as const }),
+      dispose: () => undefined,
+    });
+    const host = document.createElement('canvas');
+    document.body.appendChild(host);
+    const { handle, session } = createSession('canvas', host, {
+      config: { canvas: { width: 200, height: 100 } },
+      participants: [failure],
+    });
+    const previous = handle.read(session);
+
+    expect(() =>
+      session.update({
+        baseRevision: session.revision(),
+        owners: [createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, { canvas: { width: 300, height: 120 } })],
+      }),
+    ).toThrow();
+    expect([host.width, host.height]).toEqual([200, 100]);
+    expect(handle.read(session)).toBe(previous);
     session.dispose();
   });
 

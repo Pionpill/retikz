@@ -1,11 +1,11 @@
 ---
 title: Layout
-description: The React drawing entry that connects JSX or Core IR to one compile and SVG / Canvas rendering pipeline.
+description: The React drawing entry that connects JSX or Core IR to a retained Runtime Session and incrementally updates a stable SVG or Canvas host.
 ---
 
 `<Layout>` is the top-level runtime entry for a React drawing tree. Every Kernel / Sugar component enters the same graphics pipeline through it.
 
-It converges two input modes: children are converted to Core IR by the React adapter, while `ir` adopts an existing IR. It then asks `@retikz/core` to compile a Scene and hands that Scene to `@retikz/render` for SVG or Canvas output.
+It converges two input modes: children are converted to Core IR by the React adapter, while `ir` adopts an existing IR. A retained Runtime Session then lets `@retikz/core` publish Scene Snapshots / Patches and `@retikz/render` update SVG or Canvas.
 
 `<Layout>` owns React-side construction, capability injection, and host wiring. It does not own IR / Scene semantics, geometry rules, or automatic layout algorithms. Core expresses generic positioning and constraints; plot and table layouts belong to their respective higher-level capabilities.
 
@@ -85,25 +85,25 @@ This section zooms in on React wiring, viewport, and host-policy decisions owned
 
 ### How Responsibilities Close the Loop
 
-`<Layout>` converts JSX children to Core IR or adopts the `ir` prop, while definitions and runtime options enter through the same boundary. It then asks core for a renderer-agnostic Scene, hands the Scene to render, and wires events, animation, and the root element into the React host.
+`<Layout>` converts JSX children to Core IR or adopts the `ir` prop, while definitions and runtime options enter through the same boundary. Whenever `ir` or Core options change, the render phase performs one complete compile for an SSR-safe Scene seed. After React commits, a Core Program and retained Render participant process the same input in a Runtime Session. Input and renderer configuration commit in one transaction, then publish Scene, DOM / bitmap, events, animation handles, and artifacts together.
 
 <ComponentPreview files="layout-input-flow" size="sm" hideCode />
 
-Semantic ownership does not drift with the entry point: React does not invent a parallel IR, core does not own DOM or Canvas instances, and render does not define new graphics semantics in reverse.
+Semantic ownership does not drift with the entry point: React declares only a stable `<svg>` / `<canvas>` host shell, while the Render participant exclusively owns SVG descendants or the Canvas bitmap. Core does not own DOM or Canvas instances, and render does not define graphics semantics in reverse. A failed transaction publishes no new revision and attempts rollback. The old host remains usable when rollback succeeds; if rollback itself fails, the Session becomes broken and the caller must unmount and mount again.
 
 <SourceLinks
   sources={[
     {
-      label: 'React input and compile wiring',
+      label: 'React input and Core options wiring',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 420,
-      endLine: 494,
+      startLine: 410,
+      endLine: 474,
     },
     {
-      label: 'React render-host wiring',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 496,
-      endLine: 545,
+      label: 'React retained-host transaction',
+      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
+      startLine: 183,
+      endLine: 291,
     },
     {
       label: 'Core IR to Scene compilation',
@@ -127,8 +127,8 @@ If a figure is clipped or has too much empty space, inspect **View Code → IR**
     {
       label: 'viewBox injection into IR',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 430,
-      endLine: 439,
+      startLine: 417,
+      endLine: 426,
     },
     {
       label: 'explicit versus automatic layout',
@@ -158,14 +158,14 @@ The renderer Provider fills only an omitted renderer, so an explicit descendant 
     {
       label: 'renderer and animation mode resolution',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 360,
-      endLine: 380,
+      startLine: 347,
+      endLine: 367,
     },
     {
-      label: 'backend branching and snapshots',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 496,
-      endLine: 545,
+      label: 'retained-host backend and snapshot configuration',
+      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
+      startLine: 119,
+      endLine: 180,
     },
     {
       label: 'system motion fallback',
@@ -238,6 +238,9 @@ These props reuse the [`<Scope>`](/kernel/components/layout/scope) cascade contr
 | `style`     | `CSSProperties`           | —       | Forwarded to the SVG / Canvas root                                               |
 | `idPrefix`  | `string`                  | —       | Overrides resource ids for multi-instance or SSR hydration stability             |
 | `handlers`  | `LayoutProps['handlers']` | —       | Event registry for `ir` mode; see [Hydration](/kernel/packages/render/hydration) |
+| `runtime`   | `LayoutRuntimeOptions`    | `{}`    | Retained renderer factory and Runtime diagnostic outlet                          |
+
+`runtime.rendererFactory` can inject a third-party backend that implements the same retained renderer contract; omitting it selects the built-in SVG / Canvas factory. `runtime.onDiagnostic` receives diagnostics for successful commits and failed transactions in Runtime queue order. Callback exceptions are isolated and do not change the Runtime commit or failure result.
 
 ### React host exports
 

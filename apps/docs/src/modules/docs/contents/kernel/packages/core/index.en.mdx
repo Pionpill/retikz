@@ -74,9 +74,74 @@ The private Core Program read preserves the immutable source Snapshot and stable
 
 ## Immutable Program Options
 
-`createCoreProgram(options)` copies the option record, registry arrays, and Definition records at factory time while fixing callback references. Later mutations to the original arrays or Definition fields do not alter an existing Program.
+`createCoreProgram(options, runtimeOptions?)` copies the option record, registry arrays, and Definition records at factory time while fixing callback references. Later mutations to the original arrays or Definition fields do not alter an existing Program.
 
-To replace a measurer, lowerer, provider callback, or external state captured by one, dispose the old Session and create a new Program with new options. A new Program always starts with a full run. Runtime injects tracing through the Program context, so `trace` is not part of `CoreProgramOptions`.
+Changing an ordinary measurer, lowerer, provider callback, or option still requires disposing the old Session and creating a Program with new options. When a fixed Definition callback reads mutable external state, model that state as a Runtime owner and list it in `runtimeOptions.invalidationOwners`; its owner value invalidates the Core Program without entering IR or Scene.
+
+`invalidationOwners` does not replace the fixed Definition topology or update callback references automatically. A new Program always starts with a full run. Runtime injects tracing through the Program context, so `trace` is not part of `CoreProgramOptions`.
+
+The same invalidation owner must appear in the owner registry, Program runtime options, initial Snapshots, and every update transaction that changes its state:
+
+```ts
+import { CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
+import {
+  createRuntimeOwnerInput,
+  createRuntimeOwnerRegistry,
+  createRuntimeOwnerUpdate,
+  createRuntimeProgramRegistry,
+  createRuntimeSession,
+  defineRuntimeOwner,
+} from '@retikz/runtime';
+
+const MeasureRevisionOwner = defineRuntimeOwner({
+  key: 'app:measure-revision',
+  value: {
+    capture: value => value,
+    read: value => value,
+    equals: Object.is,
+  },
+});
+
+const coreProgram = createCoreProgram({}, { invalidationOwners: [MeasureRevisionOwner] });
+const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, MeasureRevisionOwner] });
+const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
+const session = createRuntimeSession({
+  owners,
+  programs,
+  initialSnapshots: [
+    createRuntimeOwnerInput(CoreOwnerDefinition, ir),
+    createRuntimeOwnerInput(MeasureRevisionOwner, 0),
+  ],
+});
+
+session.update({
+  baseRevision: session.revision(),
+  owners: [createRuntimeOwnerUpdate(MeasureRevisionOwner, 1)],
+});
+```
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Program-option isolation and freezing',
+      path: 'packages/kernel/core/src/compile/incremental/options.ts',
+      startLine: 6,
+      endLine: 27,
+    },
+    {
+      label: 'Register extra owners as Core Program dependencies',
+      path: 'packages/kernel/core/src/compile/incremental/program.ts',
+      startLine: 30,
+      endLine: 47,
+    },
+    {
+      label: 'Fall back fully when an extra owner changes',
+      path: 'packages/kernel/core/src/compile/incremental/program.ts',
+      startLine: 126,
+      endLine: 130,
+    },
+  ]}
+/>
 
 ## Public API
 
@@ -84,9 +149,10 @@ To replace a measurer, lowerer, provider callback, or external state captured by
 | ------------------------------------------------------ | ---------------------------------------------------------------------------- |
 | `CORE_OWNER_KEY` / `CORE_PROGRAM_ID`                   | Fixed identities for the Core document owner and compile Program             |
 | `CoreOwnerDefinition`                                  | Capture/read/equality Definition for complete IR Snapshots                   |
-| `createCoreProgram(options)`                           | Create a Runtime Program Definition while preserving composite artifacts     |
+| `createCoreProgram(options, runtimeOptions?)`          | Create a Runtime Program Definition while preserving composite artifacts     |
 | `CoreChange`                                           | `add` / `update` / `remove` / `move` change-hint union                       |
 | `CoreProgramOptions<TComposites>`                      | Program-lifetime `CompileOptions` without `trace`                            |
+| `CoreProgramRuntimeOptions`                            | Extra Runtime owners that invalidate Core without entering IR or Scene       |
 | `CoreProgramOutput<TComposites>`                       | Complete compile result and warnings                                         |
 | `CoreProgramPublicRead<TComposites>`                   | Public `output`, `snapshot`, and optional `patch`                            |
 | `CoreProgramDefinition<TComposites>`                   | Artifact-input, owned-artifact, and private/public read generic relationship |
@@ -141,8 +207,8 @@ To replace a measurer, lowerer, provider callback, or external state captured by
     {
       label: 'Mismatch fallback diagnostic',
       path: 'packages/kernel/core/src/compile/incremental/program.ts',
-      startLine: 119,
-      endLine: 135,
+      startLine: 134,
+      endLine: 144,
     },
     {
       label: 'Canonical Scene topology',

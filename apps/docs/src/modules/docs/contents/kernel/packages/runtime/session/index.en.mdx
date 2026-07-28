@@ -108,6 +108,8 @@ Each row below is an independent case for the same dependency edge in the Progra
 
 With no ChangeSet, Runtime still calls `update()` and `view.changeSet(owner)` returns `undefined`. When an Owner validator explicitly returns `fallback`, Runtime discards the untrusted hint; the direct Program and its downstream dependents take the full path.
 
+When a Program declares multiple Owners, `view.changed(owner)` reports exactly whether that Owner changed in the current candidate transaction. It identifies the invalidation source rather than replacing the complete Snapshot or optional ChangeSet. Reading an undeclared Owner fails loudly at the CandidateView dependency boundary.
+
 When an Owner provides no domain validator, Runtime only confirms that `createRuntimeChangeSet()` created the hint and that its base revision matches the update envelope. Runtime then passes the hint to the Program. The Program must cross-check it against the complete previous and candidate Snapshots instead of treating Runtime envelope validation as proof of domain completeness.
 
 Every public `RuntimeSnapshot.revision` identifies the Session revision of the current view. Reused Owner reads and Program artifacts only receive a new envelope; Runtime does not copy or prematurely retire the underlying value.
@@ -173,6 +175,7 @@ The original callback error is only stored in `cause`. Stable code, phase, Owner
 | `RuntimeSessionUpdate`                                                                | `baseRevision` and complete Owner update commands for this call                                       |
 | `RuntimeSessionResult`                                                                | Published `revision`, aggregate `outcome`, and frozen `diagnostics`                                   |
 | `RuntimeSnapshot<TRead>`                                                              | View `revision` and immutable `value`                                                                 |
+| `RuntimeCandidateView`                                                                | Candidate `snapshot` / `artifact`, Owner `changed`, and optional `changeSet`                          |
 
 | API                            | Purpose                                                                   |
 | ------------------------------ | ------------------------------------------------------------------------- |
@@ -213,14 +216,14 @@ The original callback error is only stored in `cause`. Stable code, phase, Owner
     {
       label: 'Atomically publish, isolate observers, and retire in reverse order',
       path: 'packages/kernel/runtime/src/session/session.ts',
-      startLine: 779,
-      endLine: 833,
+      startLine: 1342,
+      endLine: 1414,
     },
     {
       label: 'Dispose a Session and queue cleanup diagnostics',
       path: 'packages/kernel/runtime/src/session/session.ts',
-      startLine: 854,
-      endLine: 880,
+      startLine: 1446,
+      endLine: 1494,
     },
   ]}
 />

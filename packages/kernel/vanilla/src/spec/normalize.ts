@@ -8,11 +8,11 @@ import type {
   VanillaLayerSpec,
   VanillaNormalizedFigure,
   VanillaNormalizeOptions,
-  VanillaRuntimeMeta,
   VanillaTier2Contribution,
 } from './types';
 
 import { DEFAULT_LAYER_ID, VanillaLayerCache } from './constants';
+import { createRuntimeMetaSnapshot } from './runtime-meta';
 
 /** 单个嵌入节点贡献的待聚合记录 */
 type ContributionRecord = {
@@ -239,7 +239,7 @@ export const normalizeFigureSpec = (
     });
   }
 
-  const runtimeMeta: VanillaRuntimeMeta = { layers: layerMetas, identityIndex, parentIndex };
+  const runtimeMeta = createRuntimeMetaSnapshot({ layers: layerMetas, identityIndex, parentIndex });
   const ir: IRScene = {
     type: 'scene',
     version: 1,
