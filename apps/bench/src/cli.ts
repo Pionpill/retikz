@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 import type { BrowserRunnerEnvironment } from './browser-runner';
 import type { DeterministicBenchmarkBudget, DeterministicBenchmarkResult } from './budget';
-import type { TimingBaseline } from './timing';
+import type { TimingBaseline, TimingRunnerEnvironment } from './timing';
 
 import { runBrowserBenchmark } from './browser-runner';
 import { compareDeterministicResults, createBaselineCandidate } from './budget';
@@ -30,7 +30,6 @@ const environment = JSON.parse(readFileSync(resolve(appRoot, 'bench-environment.
 const baseline = JSON.parse(
   readFileSync(resolve(appRoot, 'deterministic-baseline.json'), 'utf8'),
 ) as ReadonlyArray<DeterministicBenchmarkBudget>;
-const runnerEnvironment = readTimingRunnerEnvironment();
 
 /** 校验 Node 与采样次数是否符合冻结的 benchmark 环境 */
 const assertEnvironment = (): void => {
@@ -81,7 +80,7 @@ type WallClockAttempt = Readonly<{
 }>;
 
 /** 完整运行一次 Node Core + Chromium renderer wall-clock 场景 */
-const runWallClockAttempt = async (): Promise<WallClockAttempt> => {
+const runWallClockAttempt = async (runnerEnvironment: TimingRunnerEnvironment): Promise<WallClockAttempt> => {
   const browser = await runBrowserBenchmark(environment, {
     warmupRuns: environment.warmupRuns,
     sampleRuns: environment.sampleRuns,
@@ -123,15 +122,16 @@ const main = async (): Promise<void> => {
   }
 
   if (command === 'report') {
+    const runnerEnvironment = readTimingRunnerEnvironment();
     const compareBaseline = process.argv.includes('--compare-timing-baseline');
-    const first = await runWallClockAttempt();
+    const first = await runWallClockAttempt(runnerEnvironment);
     const baselineForFirst = compareBaseline ? readTimingBaseline(first.fingerprint) : undefined;
     const gateRun = compareBaseline
       ? await runTimingGateAttempts(
           { fingerprint: first.fingerprint, reports: first.scenarios },
           baselineForFirst,
           async () => {
-            const attempt = await runWallClockAttempt();
+            const attempt = await runWallClockAttempt(runnerEnvironment);
             return { fingerprint: attempt.fingerprint, reports: attempt.scenarios };
           },
         )
@@ -163,6 +163,7 @@ const main = async (): Promise<void> => {
   }
 
   if (command === 'update-baseline') {
+    const runnerEnvironment = readTimingRunnerEnvironment();
     const { browserEnvironment, results } = await runDeterministicBenchmarks();
     const deterministicPath = writeResult('deterministic-baseline.candidate.json', {
       environment: {
@@ -179,7 +180,7 @@ const main = async (): Promise<void> => {
       },
       budgets: createBaselineCandidate(results),
     });
-    const timing = await runWallClockAttempt();
+    const timing = await runWallClockAttempt(runnerEnvironment);
     const timingPath = writeResult(
       `timing-baseline.${timing.fingerprint}.candidate.json`,
       createTimingBaselineCandidate(timing.fingerprint, timing.scenarios),
