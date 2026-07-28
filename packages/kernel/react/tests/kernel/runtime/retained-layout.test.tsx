@@ -109,6 +109,29 @@ describe('React Layout retained Runtime', () => {
     await act(() => root.unmount());
   });
 
+  it('rendererFactory identity 变化时释放旧 instance 并重建 retained session', async () => {
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    const firstDispose = vi.fn();
+    const secondDispose = vi.fn();
+    const firstBaseFactory = createMemoryRendererFactory('entity', firstDispose);
+    const secondBaseFactory = createMemoryRendererFactory('entity', secondDispose);
+    const firstFactory = vi.fn(firstBaseFactory) as unknown as RetainedRendererFactory;
+    const secondFactory = vi.fn(secondBaseFactory) as unknown as RetainedRendererFactory;
+
+    await act(() => root.render(<Layout ir={source('#ef4444')} runtime={{ rendererFactory: firstFactory }} />));
+    await act(() => root.render(<Layout ir={source('#ef4444')} runtime={{ rendererFactory: secondFactory }} />));
+
+    expect(firstFactory).toHaveBeenCalledTimes(1);
+    expect(secondFactory).toHaveBeenCalledTimes(1);
+    expect(firstDispose).toHaveBeenCalledTimes(1);
+    expect(secondDispose).not.toHaveBeenCalled();
+
+    await act(() => root.unmount());
+    expect(firstDispose).toHaveBeenCalledTimes(1);
+    expect(secondDispose).toHaveBeenCalledTimes(1);
+  });
+
   it('等价 inline JSX 与显式 composite Definition 复用 retained session', async () => {
     const container = document.createElement('div');
     const root = createRoot(container);

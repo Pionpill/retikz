@@ -772,6 +772,56 @@ describe('createRetainedRenderParticipant', () => {
     }
   });
 
+  it('保留 renderer prepare 已抛出的 RetainedRenderError identity 与 code', () => {
+    const expected = new RetainedRenderError({
+      code: RetainedRenderErrorCode.ScenePatchInvalid,
+      cause: Object.freeze({ fixture: true }),
+    });
+    const coreProgram = createCoreProgram({ onWarn: () => undefined });
+    const renderer = defineRetainedRenderer({
+      backend: 'svg',
+      host: svgHost,
+      capability: 'entity',
+      prepareMount: () => {
+        throw expected;
+      },
+      prepare: noopToken,
+      read: () => {
+        throw new Error('unused');
+      },
+      dispose: () => undefined,
+    });
+    const handle = createRetainedRenderParticipant({
+      backend: 'svg',
+      host: svgHost,
+      rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
+      immutableOptions: { backend: 'svg', idPrefix: 'retained-error' },
+      coreProgram,
+    });
+    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, RenderRuntimeOwnerDefinition] });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
+
+    try {
+      createRuntimeSession({
+        owners,
+        programs,
+        participants: [handle.participant],
+        initialSnapshots: [
+          createRuntimeOwnerInput(CoreOwnerDefinition, scene('A')),
+          createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, {}),
+        ],
+      });
+      throw new Error('expected create to fail');
+    } catch (error) {
+      expect(error).toBeInstanceOf(RuntimeError);
+      expect((error as RuntimeError).code).toBe('RUNTIME_PARTICIPANT_PREPARE_FAILED');
+      expect((error as RuntimeError).cause).toBe(expected);
+      expect(((error as RuntimeError).cause as RetainedRenderError).code).toBe(
+        RetainedRenderErrorCode.ScenePatchInvalid,
+      );
+    }
+  });
+
   it('把 renderer read getter throw 包装为稳定 snapshot mismatch cause', () => {
     const getterFailure = new Error('read getter failed');
     const coreProgram = createCoreProgram({ onWarn: () => undefined });

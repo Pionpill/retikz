@@ -490,6 +490,57 @@ describe('@retikz/vanilla retained mount', () => {
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
+  it('retained hydrate 添加失败不泄漏 contribution', () => {
+    const container = document.createElement('div');
+    const observedConfigs: Array<RenderRuntimeConfig> = [];
+    let rejectNextUpdate = true;
+    const rendererFactory = createMemoryRendererFactory(
+      'entity',
+      () => {
+        const reject = rejectNextUpdate;
+        rejectNextUpdate = false;
+        return reject;
+      },
+      config => observedConfigs.push(config),
+    );
+    const view = mountSvg(container, source('#ef4444'), { runtime: { rendererFactory } });
+    const rejected = vi.fn();
+    const accepted = vi.fn();
+
+    expect(() => view.hydrate({ handlers: { changed: { click: rejected } } })).toThrow(
+      /RUNTIME_PARTICIPANT_PREPARE_FAILED/,
+    );
+    view.hydrate({ handlers: { changed: { click: accepted } } });
+
+    expect(observedConfigs.at(-1)?.handlerContributions).toEqual([
+      expect.objectContaining({ handlers: { changed: { click: accepted } } }),
+    ]);
+  });
+
+  it('retained hydrate 移除失败时 handle 保持 active 并可重试', () => {
+    const container = document.createElement('div');
+    const observedContributionCounts: Array<number> = [];
+    let rejectNextUpdate = false;
+    const rendererFactory = createMemoryRendererFactory(
+      'entity',
+      () => {
+        const reject = rejectNextUpdate;
+        rejectNextUpdate = false;
+        return reject;
+      },
+      config => observedContributionCounts.push(config.handlerContributions?.length ?? 0),
+    );
+    const view = mountSvg(container, source('#ef4444'), { runtime: { rendererFactory } });
+    const handler = vi.fn();
+    const hydration = view.hydrate({ handlers: { changed: { click: handler } } });
+
+    rejectNextUpdate = true;
+    expect(() => hydration.dispose()).toThrow(/RUNTIME_PARTICIPANT_PREPARE_FAILED/);
+    hydration.dispose();
+
+    expect(observedContributionCounts).toEqual([0, 1, 0, 0]);
+  });
+
   it('hydrate 后修改 handlers record 不改变 committed contribution', () => {
     const container = document.createElement('div');
     const view = mountSvg(container, source('#ef4444'));
