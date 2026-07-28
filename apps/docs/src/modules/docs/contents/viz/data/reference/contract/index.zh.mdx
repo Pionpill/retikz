@@ -33,7 +33,7 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
   }}
 />
 
-## TransformSchema
+## DataTransformSchema
 
 <ZodSchema name="DataTransformSchema" description="内置或运行时注册的通用 Data transform operation 联合。" />
 
@@ -51,7 +51,7 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
 
 <ZodSchema
   name="SummarizeTransformSchema"
-  description="按可选分组键把多行归约成指标行。"
+  description="按可选分组键把多行规约成指标行。"
   descriptions={{
     kind: '汇总 transform 判别值。',
     groupBy: '分组键字段；省略或空数组表示全部行属于一组。',
@@ -78,10 +78,10 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
   name="AnnotateTransformSchema"
   description="把组级指标或代表行结果回填到每个输入行。"
   descriptions={{
-    kind: '注释 transform 判别值。',
+    kind: '标注 transform 判别值。',
     groupBy: '分组键字段；省略或空数组表示全部行属于一组。',
     metrics: '可选 reducer 指标。',
-    selectors: '可选单行 selector 注释；metrics 与 selectors 至少提供一项。',
+    selectors: '可选单行 selector 标注；metrics 与 selectors 至少提供一项。',
   }}
 />
 
@@ -124,11 +124,11 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
   description="为 annotate transform 选择至多一行，并把结果写入具名字段。"
   descriptions={{
     selector: '单行 selector；支持 min、max、first、last、top、bottom 与 nth。',
-    as: '注释输出字段。',
+    as: '标注输出字段。',
   }}
 />
 
-annotate 不接受 `outside-quantile-band`；`top` / `bottom` 的 `n` 固定为 `1`，平局只允许选择第一行或最后一行，确保每个注释字段至多对应一条源行。
+annotate 不接受 `outside-quantile-band`；`top` / `bottom` 的 `n` 固定为 `1`，平局只允许选择第一行或最后一行，确保每个标注字段至多对应一条源行。
 
 <SourceLinks
   sources={[

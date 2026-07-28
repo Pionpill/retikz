@@ -104,7 +104,7 @@ TableSpec
 
 Cell 是 Table 的语义与布局槽位，不是 Core Node。它拥有地址、span、location、role、来源和布局样式，内容统一使用 Core `IRChild`。
 
-这意味着文字、图片、Scope、Plot 或未来其它 Tier 2 composite 都通过同一 Core 内容边界进入 Cell，Table 不建立 `text | image | plot` 之类的封闭内容枚举，也不直接依赖其它 Tier 2 包。
+这意味着文字、图片、Scope、Plot 或未来其它 Tier 2 composite 都通过同一 Core 内容边界进入 Cell，Table 不建立 `text | image | plot` 之类的封闭内容枚举，也不为识别 Cell 内容依赖或特判其它领域 Tier 2 包。Table 可以单向依赖 Standard 的领域无关绘图 capability，这不改变 Cell 的通用 `IRChild` 边界。
 
 Table 的 Cell 拓扑保持正交矩形：地址是行列坐标，span 覆盖连续的矩形行列区间，轨道、Cell box 与 Table 自己的 border conflict 都以此为前提。Presentation 可以在矩形 Cell 内呈现圆角、胶囊、六边形等视觉内容或装饰框，但不能改变 Cell 的分配几何、span 语义或边界拓扑。
 
@@ -112,7 +112,7 @@ Table 的 Cell 拓扑保持正交矩形：地址是行列坐标，span 覆盖连
 
 `Table<PlotCell>` 是合法组合：Table 管理行列语义与 Cell box，Plot 管理 Cell 内部图形。Table 可以测量、放置和裁剪 Plot composite，但不能读取或自动协调多个 Plot Cell 的 scale、axis、grid 和 legend；这些语义由作者显式配置 Plot，或交给 Plot facet / 外部 Figure composition。
 
-Table 只拥有与网格拓扑有关的表头、行头、小计、总计和 Cell 注释关系。标题、caption、来源说明等外围内容优先由通用 Figure / composition 能力承担。
+Table 只拥有与网格拓扑有关的表头、行头、小计、总计和 Cell 注释关系。标题、caption、来源说明等外围内容优先由 Standard 通用容器 / Figure composition 承担；Table 条件视觉编码产生的 Legend descriptor 由 Table 解析为 Standard Legend 输入，通用 Legend 呈现不进入 Table。
 
 ## 7. 扩展机制
 
@@ -159,7 +159,7 @@ alpha.1 / alpha.2 已冻结并实现：
 后续 ADR 只处理尚未闭环的能力：
 
 1. 分组、层级、汇总、交叉、矩阵与转置等 Table Algebra
-2. Selector、Rule、条件视觉编码、legend descriptor 与样式级联
+2. Selector、Rule、条件视觉编码、Legend descriptor、到 Standard Legend 的领域解析与样式级联
 3. Fragmentation、重复 Cell instance 与跨页重复表头
 4. 更完整的 lineage、locator 与 diagnostics 查询面
 5. 大表 windowing、虚拟滚动与 adapter runtime 边界

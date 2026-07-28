@@ -4,29 +4,29 @@
 
 ## 包职责与边界
 
-| 包                      | 解决的问题                             | 拥有                                                                       | 不拥有                                               |
-| ----------------------- | -------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `@retikz/data`          | 为多个可视化宿主提供统一数据处理底座   | 数据模型、字段解析、通用 transform / statistics、registry、lineage         | channel、scale、mark、可视化布局、renderer           |
-| `@retikz/plot`          | 把数据语义映射成可组合的 Core 图形语义 | Plot IR、channel / scale / coordinate / mark / guide、layout、lowering     | 通用数据算法、Core IR 语义、renderer、框架 authoring |
-| `@retikz/plot-react`    | 用 React JSX authoring 和运行 Plot     | React 组件、composition builder、数据注入和 React runtime 接线             | Data / Plot 算法、Core 编译、renderer                |
-| `@retikz/plot-vanilla`  | 无框架 authoring、SSR 和运行 Plot      | plain helper、Tier 2 adapter、数据注入与 vanilla / SSR 编排                | Data / Plot 算法、Core 编译、renderer                |
-| `@retikz/table`         | 把数据或显式内容组织为二维语义表格     | Table IR、结构/呈现、约束布局、lowering、追溯                              | 通用数据算法、Core 测量、Plot 语义、renderer         |
-| `@retikz/table-react`   | 用 React authoring 和运行 Table        | Table / DetailTable / ManualTable、数据注入、composite 与宿主 runtime 接线 | Table 算法、Core 编译、renderer                      |
-| `@retikz/table-vanilla` | 无框架 authoring、SSR 和运行 Table     | plain helper、Tier 2 adapter、数据注入与 SSR convenience                   | Table 算法、Core 编译、renderer                      |
+| 包                      | 解决的问题                             | 拥有                                                                             | 不拥有                                                                 |
+| ----------------------- | -------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `@retikz/data`          | 为多个可视化宿主提供统一数据处理底座   | 数据模型、字段解析、通用 transform / statistics、registry、lineage               | channel、scale、mark、可视化布局、renderer                             |
+| `@retikz/plot`          | 把数据语义映射成可组合的 Core 图形语义 | Plot IR、channel / scale / coordinate / mark / guide 领域解析、layout、lowering  | 通用数据算法、通用 Legend 呈现、Core IR 语义、renderer、框架 authoring |
+| `@retikz/plot-react`    | 用 React JSX authoring 和运行 Plot     | React 组件、composition builder、数据注入和 React runtime 接线                   | Data / Plot 算法、Core 编译、renderer                                  |
+| `@retikz/plot-vanilla`  | 无框架 authoring、SSR 和运行 Plot      | plain helper、Tier 2 adapter、数据注入与 vanilla / SSR 编排                      | Data / Plot 算法、Core 编译、renderer                                  |
+| `@retikz/table`         | 把数据或显式内容组织为二维语义表格     | Table IR、结构/呈现、visual encoding / Legend 领域解析、约束布局、lowering、追溯 | 通用数据算法、通用 Legend 呈现、Core 测量、Plot 语义、renderer         |
+| `@retikz/table-react`   | 用 React authoring 和运行 Table        | Table / DetailTable / ManualTable、数据注入、composite 与宿主 runtime 接线       | Table 算法、Core 编译、renderer                                        |
+| `@retikz/table-vanilla` | 无框架 authoring、SSR 和运行 Table     | plain helper、Tier 2 adapter、数据注入与 SSR convenience                         | Table 算法、Core 编译、renderer                                        |
 
 未来的 chart / geo 等边界只在 ADR 或 roadmap 明确后落包；AGENTS 不为未存在包保留详细规则。
 
 ## 分层约束
 
-- viz 组是 Tier 2 能力层，不向 core 组反向注入实现；通用绘图 / 几何缺口优先补 `@retikz/core` 或 `@retikz/math`。
+- viz 组是领域 Tier 2 能力层，不向 core / library 组反向注入实现；通用机制或几何缺口优先补 `@retikz/core` / `@retikz/math`，移除领域词汇后仍成立且被多个官方 Tier 2 包复用的绘图 composite 进入 `@retikz/standard`。
 - `@retikz/data` 是数据模型、字段与值语义、transform 和通用数据处理契约真源；plot / chart / table 不复制数据处理算法。
-- `@retikz/plot` 是 plot 语义、layout transform 和 lowering 真源；adapter 不复制 data、scale、coordinate、mark、guide 或 lowering 算法。
-- `@retikz/table` 是表格结构、Cell 呈现、约束布局和 lowering 真源；显式 Plot 等 Tier 2 Cell 只通过 Core `IRChild` / composite 进入，Table 不依赖或特判 Plot。
+- `@retikz/plot` 是 plot 语义、layout transform、guide 领域解析和 lowering 真源；adapter 不复制 data、scale、coordinate、mark、guide 或 lowering 算法。通用 Legend 视觉结构、内部布局与 lowering 由 Standard 拥有，Plot 只把 channel / scale / formatter 解析为 Standard 输入。
+- `@retikz/table` 是表格结构、Cell 呈现、visual encoding / Legend 领域解析、约束布局和 lowering 真源；通用 Legend 呈现消费 Standard，显式 Plot 等 Tier 2 Cell 只通过 Core `IRChild` / composite 进入，Table 不依赖或特判 Plot。
 - plot-specific transform 可以在 plot 实现，但必须复用 data 的 definition、registry 与 apply contract；宿主无关的 rows / fields / statistics 算法归 data。
 - viz 内共用几何类型和工具优先来自 `@retikz/math` / `@retikz/core`。例如二维坐标用 `Position`，有限 / 无穷数值判断用既有 helper，不在 plot 内重复定义。
 - 已存在的本包工具应复用；如果工具应上移到 math/core，先迁移再使用。
 
-每个包的输入输出与缺口流向以就近 `AGENTS.md` 为准。宿主无关的数据处理进入 data；可视化映射语义进入 plot；框架 authoring 和生命周期进入对应 adapter；通用图形或几何缺口下沉 core / math。当前实现位置和 adapter 是否能展示都不能改变这条所有权链。
+每个包的输入输出与缺口流向以就近 `AGENTS.md` 为准。宿主无关的数据处理进入 data；可视化映射语义进入 plot；框架 authoring 和生命周期进入对应 adapter；通用图形机制或几何缺口下沉 core / math，跨领域复用的官方绘图 composite 进入 Standard。当前实现位置和 adapter 是否能展示都不能改变这条所有权链。
 
 ## 能力完备性
 

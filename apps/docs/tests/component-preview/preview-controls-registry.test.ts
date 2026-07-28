@@ -27,6 +27,8 @@ import type {
   PreviewControlVisibility,
   PreviewPanelControlItem,
   PreviewSourceConfig,
+  PreviewTableControlField,
+  PreviewTableRows,
   RendererMode,
   SizeKey,
 } from '../../src/modules/docs/components/component-preview';
@@ -61,6 +63,12 @@ import {
 import { nodeGeometryFrame } from '../../src/modules/docs/contents/kernel/components/node/overview/node-geometry.controls';
 import { nodeTextRows } from '../../src/modules/docs/contents/viz/plot/channel/builtin/builtin-node-text.data';
 
+const sourceRowsOf = (field: PreviewTableControlField): PreviewTableRows => {
+  if (field.rows !== undefined) return field.rows;
+  const sourceView = field.views[0];
+  return typeof sourceView.rows !== 'function' ? sourceView.rows : [];
+};
+
 const privateExportKeys = [
   'ComponentPreviewDialog',
   'PreviewPanel',
@@ -80,7 +88,7 @@ const controlFieldContractOf = (field: PreviewPanelControlItem) =>
     ? {
         id: field.id,
         kind: field.kind,
-        rowCount: field.rows.length,
+        rowCount: sourceRowsOf(field).length,
         columnKeys: field.columns?.map(column => column.key),
         visibleWhen: field.visibleWhen,
       }
@@ -223,6 +231,7 @@ describe('preview controls registry', () => {
   it('锁定 ComponentPreview 完整公开 props', () => {
     expectTypeOf<ComponentPreviewProps>().toEqualTypeOf<{
       files: ComponentPreviewFiles;
+      defaultSourceFile?: string;
       controls?: PreviewControlsOptions;
       dialogActions?: Array<PreviewActionSlot>;
       align?: AlignKey;
@@ -1650,7 +1659,7 @@ describe('preview controls registry', () => {
                   ? [
                       {
                         id: field.id,
-                        rowCount: field.rows.length,
+                        rowCount: sourceRowsOf(field).length,
                         columnKeys: field.columns?.map(column => column.key),
                       },
                     ]
@@ -1707,7 +1716,7 @@ describe('preview controls registry', () => {
                     ? [
                         {
                           id: field.id,
-                          rowCount: field.rows.length,
+                          rowCount: sourceRowsOf(field).length,
                           columnKeys: field.columns?.map(column => column.key),
                         },
                       ]
@@ -1986,8 +1995,9 @@ describe('preview controls registry', () => {
       expect(firstControl.kind, language).toBe('table');
       if (firstControl.kind !== 'table') continue;
 
-      expect(firstControl.rows, language).toHaveLength(12);
-      const targetGroupSizes = firstControl.rows.reduce<Record<string, number>>((groupSizes, row) => {
+      const sourceRows = sourceRowsOf(firstControl);
+      expect(sourceRows, language).toHaveLength(12);
+      const targetGroupSizes = sourceRows.reduce<Record<string, number>>((groupSizes, row) => {
         const practiceId = Reflect.get(row, 'practiceId');
         expect(typeof practiceId, `${language}: practiceId`).toBe('string');
         if (typeof practiceId !== 'string') return groupSizes;
@@ -2157,7 +2167,7 @@ describe('preview controls registry', () => {
         expect(Boolean(firstSection.defaultCollapsed), `${name}:${language}`).toBe(defaultCollapsed);
         if (firstControl.kind !== 'table') continue;
 
-        expect(firstControl.rows, `${name}:${language}`).toHaveLength(rowCount);
+        expect(sourceRowsOf(firstControl), `${name}:${language}`).toHaveLength(rowCount);
         expect(
           firstControl.columns?.map(column => column.key),
           `${name}:${language}`,

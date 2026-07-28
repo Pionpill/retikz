@@ -195,18 +195,44 @@ export type PreviewTableColumn = {
   label?: string;
 };
 
+/** 只读二维表格的行集合 */
+export type PreviewTableRows = ReadonlyArray<Readonly<object>>;
+
+/** 根据实时控件值解析只读二维表格行 */
+export type PreviewTableRowsResolver = (values: Readonly<PreviewControlValues>) => PreviewTableRows;
+
+/** 只读二维表格的一个可切换数据视图 */
+export type PreviewTableView = {
+  /** 单个 table 内唯一的稳定标识 */
+  id: string;
+  /** 展示给用户的视图名称 */
+  label: string;
+  /** 静态行或按实时控件值计算的行 */
+  rows: PreviewTableRows | PreviewTableRowsResolver;
+};
+
+type PreviewTableDataSource =
+  | {
+      /** 单视图静态行 */
+      rows: PreviewTableRows;
+      views?: never;
+    }
+  | {
+      rows?: never;
+      /** 至少两个可切换的数据视图 */
+      views: ReadonlyArray<PreviewTableView>;
+    };
+
 /** 只读二维表格预览字段 */
 export type PreviewTableControlField = {
   kind: 'table';
   id: string;
   label: string;
-  /** 按行组织的二维数据 */
-  rows: ReadonlyArray<Readonly<object>>;
   /** 可选的显式列顺序与标题 */
   columns?: ReadonlyArray<PreviewTableColumn>;
   /** 字段的可选显示条件 */
   visibleWhen?: PreviewControlCondition;
-};
+} & PreviewTableDataSource;
 
 /** 进入共享值状态的声明式预览控件字段 */
 export type PreviewControlField = (

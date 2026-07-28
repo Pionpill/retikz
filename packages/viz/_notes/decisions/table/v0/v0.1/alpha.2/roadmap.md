@@ -75,7 +75,7 @@ Gate 的验收要求由 [ADR-01](./01-core-constrained-layout-gate.md) 冻结。
 
 ## 不在 alpha.2 范围
 
-- formatter、条件视觉编码、theme 与 legend；进入 alpha.3
+- formatter、条件视觉编码、theme 与 Legend descriptor；进入 alpha.3，通用 Legend 呈现消费 Standard alpha.3
 - group、hierarchy、subtotal 与 grand total；进入 alpha.4
 - pivot、matrix 与多层 header；进入 alpha.5
 - fragmentation 与重复 header；进入 alpha.6

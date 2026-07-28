@@ -38,7 +38,7 @@ The main lowering path resolves transform, statistics, row-selector, scale, mark
 
 `lowerPlots()` returns the Definition consumed by Core composite compilation. It does not create DOM and does not select a renderer. `compileToScene()` consumes the lowered Core IR and produces a Scene; React `<Layout>` or a Vanilla renderer then chooses SVG, Canvas, or string output.
 
-Lineage and location are independent recomputation paths over shared inputs, not sidecars emitted directly by the main lowering path. `lowerPlotWithLineage()` returns Core IR children with a `PlotLineageRun`, while `createPlotLocator()` reuses data preparation and frame resolution to calculate datum and series anchors. Both accept the same spec, datasets, and lowering configuration without writing a complete runtime record into `IRPlotSpec` or Scene metadata. See [Plot Lineage](/viz/plot/lineage) for its options and data boundary.
+Lineage and location are independent recomputation paths over shared inputs, not sidecars emitted directly by the main lowering path. `lowerPlotWithLineage()` returns Core IR children with a `PlotLineageRun`, while `createPlotLocator()` reuses data preparation and frame resolution to calculate datum and series anchors. Both accept the same spec, datasets, and lowering configuration without writing a complete runtime record into `IRPlotSpec` or Scene metadata. See [Plot Lineage](/viz/data/provenance/plot) for its options and data boundary.
 
 ## Entries and Results
 
@@ -137,7 +137,7 @@ Lineage and location are independent recomputation paths over shared inputs, not
 ## Further Reading
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/lineage">
+  <LinkedCard href="/viz/data/provenance/plot">
     <span className="font-semibold">Plot Lineage</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Understand runtime audits, host metadata, and interaction trace-back.

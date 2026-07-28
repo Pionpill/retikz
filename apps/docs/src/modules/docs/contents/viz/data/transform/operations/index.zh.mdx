@@ -3,7 +3,7 @@ title: 变换操作
 description: 查询 sort、summarize、select 与 annotate 四种 Data 内置变换的行语义、参数和示例。
 ---
 
-`@retikz/data` 内置四种通用 operation。它们只处理规范化行，不知道结果最终会进入图形、表格还是其它消费模块；本页用 Plot 作为默认示例宿主。
+`@retikz/data` 内置四种通用变换操作（operation）。它们只处理规范化行，不知道结果最终会进入图形、表格还是其它消费模块；本页用 Plot 作为默认示例宿主。
 
 ## 能力一览
 
@@ -22,7 +22,12 @@ description: 查询 sort、summarize、select 与 annotate 四种 Data 内置变
 
 注意把它和字段契约里的 [`order`](/viz/data/model/contract#分类顺序) 分开：`sort` 排的是数据行，`order` 排的是分类域。
 
-<ComponentPreview files={['transform-sort', 'transform-sort.data.ts']} />
+<ComponentPreview
+  files={['transform-sort', 'transform-sort-preview.tsx', 'transform-sort.data.ts']}
+  defaultSourceFile="transform-sort-preview.tsx"
+  size="lg"
+  caption="柱子的横向顺序就是当前 sort 输出行序；切换字段或方向后，月份会按对应规则重新排列。"
+/>
 
 `IRDataSortTransform` 的 `kind` 固定为 `'sort'`。
 
@@ -33,18 +38,23 @@ description: 查询 sort、summarize、select 与 annotate 四种 Data 内置变
 
 ## 汇总 summarize
 
-`summarize` 按 `groupBy` 分组，并用 `metrics` 把每组明细规约成一行。输出行保留组键，每个 reducer 都必须显式写 `as` 字段名。
+`summarize` 按 `groupBy` 分组，并用 `metrics` 把每组明细规约成一行。输出行保留组键，每个规约器（reducer）都必须显式写 `as` 字段名。
 
-同一个 operation 内的输出名必须唯一：reducer 输出不能与 `groupBy` 重名，也不能互相重名。内置 reducer 的静态字段冲突会在 schema 解析阶段报错；自定义 reducer 由 Definition `outputFields()` 声明的动态字段冲突会在执行 reducer 前报错。
+同一个变换操作内的输出名必须唯一：规约器输出不能与 `groupBy` 重名，也不能互相重名。内置规约器的静态字段冲突会在 Schema 解析阶段报错；自定义规约器由定义（Definition）的 `outputFields()` 声明动态字段，字段冲突会在执行规约器前报错。
 
-<ComponentPreview files={['transform-summarize', 'transform-summarize.data.ts']} />
+<ComponentPreview
+  files={['transform-summarize', 'transform-summarize-preview.tsx', 'transform-summarize.data.ts']}
+  defaultSourceFile="transform-summarize-preview.tsx"
+  size="lg"
+  caption="数据表是订单明细，柱形是每个 region 规约到统一指标字段后的结果。"
+/>
 
 `IRDataSummarizeTransform` 的 `kind` 固定为 `'summarize'`。
 
-| prop       | 类型                   | 默认值   | 说明                                      |
-| ---------- | ---------------------- | -------- | ----------------------------------------- |
-| `groupBy?` | `Array<string>`        | 全局单组 | 分组键字段，支持复合键                    |
-| `metrics`  | `IRDataReducerMetrics` | —        | 组内统计指标，每个 reducer 必须写输出字段 |
+| prop       | 类型                   | 默认值   | 说明                                   |
+| ---------- | ---------------------- | -------- | -------------------------------------- |
+| `groupBy?` | `Array<string>`        | 全局单组 | 分组键字段，支持复合键                 |
+| `metrics`  | `IRDataReducerMetrics` | —        | 组内统计指标，每个规约器必须写输出字段 |
 
 ```tsx
 <Transform
@@ -60,9 +70,14 @@ description: 查询 sort、summarize、select 与 annotate 四种 Data 内置变
 
 ## 代表行选择 select
 
-`select` 按组运行 selector，并输出被选中的原始行。它不会把数值规约成新的统计对象，因此会保留城市名、id、锚点等原始字段，同时只留下组内极值、top-N 或异常行。
+`select` 按组运行行选择器（selector），并输出被选中的原始行。它不会把数值规约成新的统计对象，因此会保留城市名、ID、锚点等原始字段，同时只留下组内极值、前 N 名或异常行。
 
-<ComponentPreview files={['transform-select', 'transform-select.data.ts']} />
+<ComponentPreview
+  files={['transform-select', 'transform-select-preview.tsx', 'transform-select.data.ts']}
+  defaultSourceFile="transform-select-preview.tsx"
+  size="lg"
+  caption="每个点仍对应一条原始城市行；并列值让 first、last 与 all 的差异可见。"
+/>
 
 `IRDataSelectTransform` 的 `kind` 固定为 `'select'`。
 
@@ -78,11 +93,16 @@ description: 查询 sort、summarize、select 与 annotate 四种 Data 内置变
 
 ## 统计标注 annotate
 
-`annotate` 先按 `groupBy` 分组，再把 reducer 结果或 selector 选中的代表值回填到组内每一行。它适合在明细点旁边画组均值线、组中位数带或分组阈值。
+`annotate` 先按 `groupBy` 分组，再把规约器结果或行选择器选中的代表值回填到组内每一行。它适合在明细点旁边画组均值线、组中位数带或分组阈值。
 
-selector 标注只接受至多选中一行的内置规则：`min` / `max`、`first` / `last` / `nth`，以及固定 `n: 1` 的 `top` / `bottom`。平局策略可以用默认的 `first` 或 `last`，不能用 `all`。多行选择与 `outside-quantile-band` 应改用 `select`，其它单值统计应写成 reducer。
+行选择器标注只接受至多选中一行的内置规则：`min` / `max`、`first` / `last` / `nth`，以及固定 `n: 1` 的 `top` / `bottom`。平局策略可以用默认的 `first` 或 `last`，不能用 `all`。多行选择与 `outside-quantile-band` 应改用 `select`，其它单值统计应写成规约器。
 
-<ComponentPreview files={['transform-annotate', 'transform-annotate.data.ts']} />
+<ComponentPreview
+  files={['transform-annotate', 'transform-annotate-preview.tsx', 'transform-annotate.data.ts']}
+  defaultSourceFile="transform-annotate-preview.tsx"
+  size="lg"
+  caption="明细点始终保留，参考线读取广播回每行的当前基准统计字段。"
+/>
 
 `IRDataAnnotateTransform` 的 `kind` 固定为 `'annotate'`，并且至少提供 `metrics` 或 `selectors`。
 
@@ -101,16 +121,16 @@ selector 标注只接受至多选中一行的内置规则：`min` / `max`、`fir
 />
 ```
 
-`annotate` 的 metric 输出与 selector `as` 也不能重名。reducer 与 selector 的完整子算子范围见[统计子算子](/viz/data/transform/statistics)。
+`annotate` 的指标输出与行选择器的 `as` 字段也不能重名。规约器与行选择器的完整子算子范围见[统计子算子](/viz/data/transform/statistics)。
 
-## TypeScript 类型
+## 公开类型
 
-transform schema 派生类型统一使用 `IRDataXxx`。
+变换 Schema 的派生类型统一使用 `IRDataXxx`。
 
-| 范围       | 类型                                                                                                  |
-| ---------- | ----------------------------------------------------------------------------------------------------- |
-| 整体 union | `IRDataTransform`、`IRDataBuiltinTransform`                                                           |
-| 内置变换   | `IRDataSortTransform`、`IRDataSummarizeTransform`、`IRDataSelectTransform`、`IRDataAnnotateTransform` |
-| 嵌套配置   | `IRDataOrderBy`、`IRDataAnnotateSelector`                                                             |
+| 范围     | 类型                                                                                                  |
+| -------- | ----------------------------------------------------------------------------------------------------- |
+| 整体联合 | `IRDataTransform`、`IRDataBuiltinTransform`                                                           |
+| 内置变换 | `IRDataSortTransform`、`IRDataSummarizeTransform`、`IRDataSelectTransform`、`IRDataAnnotateTransform` |
+| 嵌套配置 | `IRDataOrderBy`、`IRDataAnnotateSelector`                                                             |
 
-需要在 Plot React 中声明这些 operation 时，见 [`Transform`](/viz/data/transform/overview)；需要注册自定义 kind 时，见[扩展机制](/viz/data/transform/extensions)。
+需要在 Plot React 中声明这些操作时，见 [`Transform`](/viz/data/transform/overview)；需要注册自定义 `kind` 时，见[扩展机制](/viz/data/transform/extensions)。

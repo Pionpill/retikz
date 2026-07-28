@@ -22,7 +22,12 @@ description: Look up the row semantics, parameters, and examples for Data's sort
 
 Keep it separate from [`order`](/viz/data/model/contract#category-order) in the field contract: `sort` reorders rows, while `order` reorders a categorical domain.
 
-<ComponentPreview files={['transform-sort', 'transform-sort.data.ts']} />
+<ComponentPreview
+  files={['transform-sort', 'transform-sort-preview.tsx', 'transform-sort.data.ts']}
+  defaultSourceFile="transform-sort-preview.tsx"
+  size="lg"
+  caption="The horizontal bar order is the current sort output; changing the field or direction reorders the months by that rule."
+/>
 
 `IRDataSortTransform` fixes `kind` to `'sort'`.
 
@@ -37,7 +42,12 @@ Keep it separate from [`order`](/viz/data/model/contract#category-order) in the 
 
 Output names must be unique within one operation: reducer outputs cannot collide with `groupBy` or with each other. The schema rejects static field conflicts from built-in reducers; custom reducer fields declared by the Definition's `outputFields()` fail before reducer execution.
 
-<ComponentPreview files={['transform-summarize', 'transform-summarize.data.ts']} />
+<ComponentPreview
+  files={['transform-summarize', 'transform-summarize-preview.tsx', 'transform-summarize.data.ts']}
+  defaultSourceFile="transform-summarize-preview.tsx"
+  size="lg"
+  caption="The table contains detail orders; each bar is one region reduced into the shared metric field."
+/>
 
 `IRDataSummarizeTransform` fixes `kind` to `'summarize'`.
 
@@ -62,7 +72,12 @@ Output names must be unique within one operation: reducer outputs cannot collide
 
 `select` runs a selector per group and outputs the selected original rows. It does not reduce values into new statistical objects, so it preserves city names, ids, anchors, and other original fields while keeping only extremes, top-N rows, or outliers.
 
-<ComponentPreview files={['transform-select', 'transform-select.data.ts']} />
+<ComponentPreview
+  files={['transform-select', 'transform-select-preview.tsx', 'transform-select.data.ts']}
+  defaultSourceFile="transform-select-preview.tsx"
+  size="lg"
+  caption="Every point still represents an original city row; tied values make first, last, and all visibly distinct."
+/>
 
 `IRDataSelectTransform` fixes `kind` to `'select'`.
 
@@ -82,7 +97,12 @@ Output names must be unique within one operation: reducer outputs cannot collide
 
 Selector annotations accept only built-in rules that select at most one row: `min` / `max`, `first` / `last` / `nth`, and `top` / `bottom` with `n: 1`. Tie handling may use the default `first` or `last`, but not `all`. Use `select` for multi-row selection and `outside-quantile-band`; express other scalar annotations as reducers.
 
-<ComponentPreview files={['transform-annotate', 'transform-annotate.data.ts']} />
+<ComponentPreview
+  files={['transform-annotate', 'transform-annotate-preview.tsx', 'transform-annotate.data.ts']}
+  defaultSourceFile="transform-annotate-preview.tsx"
+  size="lg"
+  caption="Detail points remain unchanged while reference lines read the current benchmark statistic broadcast to every row."
+/>
 
 `IRDataAnnotateTransform` fixes `kind` to `'annotate'` and requires at least `metrics` or `selectors`.
 
@@ -103,7 +123,7 @@ Selector annotations accept only built-in rules that select at most one row: `mi
 
 Metric outputs and selector `as` fields must also be unique within an `annotate` operation. See [Statistical Sub-operators](/viz/data/transform/statistics) for the full reducer and selector sets.
 
-## TypeScript Types
+## Public types
 
 Types inferred from transform schemas use the `IRDataXxx` convention.
 

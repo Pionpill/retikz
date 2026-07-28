@@ -1,35 +1,40 @@
 ---
 title: 扩展机制
-description: 用运行时 Definition 扩展数据变换与统计子算子，同时保持 operation 配置可序列化。
+description: 用运行时定义扩展数据变换与统计子算子，同时保持操作配置可序列化。
 ---
 
-数据变换的扩展点负责增加新的行处理 operation，或补充现有统计变换可调用的 reducer 与 selector。operation 只保存 `{ kind, ...config }`；schema 与执行函数保留在运行时 Definition 中，不进入可序列化配置。
+数据变换的扩展点负责增加新的行处理操作（operation），或补充现有统计变换可调用的规约器（reducer）与行选择器（selector）。操作只保存 `{ kind, ...config }`；Schema 与执行函数保留在运行时定义（Definition）中，不进入可序列化配置。
 
 ## 适用边界
 
-优先使用内置 operation。只有新的行处理语义需要稳定名称、配置校验和跨宿主复用时，才注册 Definition。
+优先使用内置操作。只有新的行处理语义需要稳定名称、配置校验和跨宿主复用时，才注册定义。
 
-| 扩展入口                  | 解决什么                         | 配置保存什么       |
-| ------------------------- | -------------------------------- | ------------------ |
-| `defineTransform`         | 重排、过滤、增删行或生成派生字段 | `{ kind, ... }`    |
-| `defineStatisticsReducer` | 把一组行归约为输出字段片段       | reducer operation  |
-| `defineRowSelector`       | 从一组行中选择保留的原始行       | selector operation |
+| 扩展入口                  | 解决什么                         | 配置保存什么    |
+| ------------------------- | -------------------------------- | --------------- |
+| `defineTransform`         | 重排、过滤、增删行或生成派生字段 | `{ kind, ... }` |
+| `defineStatisticsReducer` | 把一组行规约为输出字段片段       | 规约器操作      |
+| `defineRowSelector`       | 从一组行中选择保留的原始行       | 行选择器操作    |
 
-当 `summarize` 或 `annotate` 只缺一种统计计算时，扩展 reducer；当 `select` 或宿主明确支持 selector 的 transform 只缺选行规则时，扩展 selector。Data 的 `annotate` selector 入口只接受内置的单行子集，不接受自定义 selector。需要新的分组方式、多阶段处理或不同的行结构时，应定义完整 transform。
+当 `summarize` 或 `annotate` 只缺一种统计计算时，扩展规约器；当 `select` 或宿主明确支持行选择器的变换只缺选行规则时，扩展行选择器。Data 的 `annotate` 行选择器入口只接受内置的单行子集，不接受自定义行选择器。需要新的分组方式、多阶段处理或不同的行结构时，应定义完整变换。
 
 ## 定义数据操作
 
 `defineTransform` 通过 `schema` 提取唯一 `kind`，用 `inputFields` 与 `outputFields` 声明字段依赖，并在 `apply` 中处理行。`apply` 必须纯且确定，不能修改输入数组或输入行。
 
-下面的 `double-x` operation 读取 `x`、生成 `x2`，再由 Plot 作为示例宿主展示结果：
+下面的 `scale-field` 操作读取 `x`、按可序列化 `factor` 生成 `scaledX`，再由 Plot 作为示例宿主展示原值与派生值：
 
-<ComponentPreview files={['extension-transform', 'extension-transform.data.ts']} />
+<ComponentPreview
+  files={['extension-transform', 'extension-transform-preview.tsx', 'extension-transform.data.ts']}
+  defaultSourceFile="extension-transform-preview.tsx"
+  size="lg"
+  caption="灰色点是固定参照，蓝色点读取 scaledX；固定 x 域让 factor 的效果不会被自动缩放抵消。"
+/>
 
-内置与自定义 transform 会合并到同一个 registry，并按 `kind` 走同一套查找、schema 校验和执行流程。
+内置与自定义变换会合并到同一个注册表（registry），并按 `kind` 走同一套查找、Schema 校验和执行流程。
 
 ### 来源追溯
 
-保留行数的 transform 通常通过展开原行自然保留来源标记。改变行数且输出行代表一组源行时，应使用 `TransformContext.groupProvenance` 关联成员行；全新生成且没有对应源行的结果可以不附加来源。
+保留行数的变换通常通过展开原行自然保留来源标记。改变行数且输出行代表一组源行时，应使用 `TransformContext.groupProvenance` 关联成员行；全新生成且没有对应源行的结果可以不附加来源。
 
 | 场景             | 推荐处理                                      |
 | ---------------- | --------------------------------------------- |
@@ -37,58 +42,63 @@ description: 用运行时 Definition 扩展数据变换与统计子算子，同�
 | 汇总多行生成一行 | 用 `groupProvenance(out, members)` 包装输出行 |
 | 生成无源数据     | 直接返回新行，并接受来源为空                  |
 
-启用来源追溯时，同一个 Definition 可能在普通下沉与记录链路时分别执行。因此随机或有状态逻辑应由宿主先固化输入，或在 Definition 外完成不确定计算。
+启用来源追溯时，同一个定义可能在普通下沉与记录链路时分别执行。因此随机或有状态逻辑应由宿主先固化输入，或在定义外完成不确定计算。
 
 ## 定义统计子算子
 
-reducer 与 selector 不是独立的管线步骤。`summarize`、`annotate` 可调用内置或自定义 reducer；`select` 与明确声明支持它的宿主 transform 可调用内置或自定义 selector。Data `annotate` 的 selector 入口只接受内置单行子集。
+规约器与行选择器不是独立的管线步骤。`summarize`、`annotate` 可调用内置或自定义规约器；`select` 与明确声明支持它的宿主变换可调用内置或自定义行选择器。Data `annotate` 的行选择器入口只接受内置单行子集。
 
 | 子算子   | 核心函数 | 返回值               | 常见用途                 |
 | -------- | -------- | -------------------- | ------------------------ |
-| reducer  | `reduce` | 写入输出行的字段片段 | 自定义统计量、聚合字段   |
-| selector | `select` | 原始行与可选一基排名 | 代表行、极值行、排名选择 |
+| 规约器   | `reduce` | 写入输出行的字段片段 | 自定义统计量、聚合字段   |
+| 行选择器 | `select` | 原始行与可选一基排名 | 代表行、极值行、排名选择 |
 
-下面的示例分别注册中点 reducer 和最接近均值的 selector。左图通过 `summarize` 生成统计行，右图通过 `select` 保留原始代表行：
+下面的示例分别注册中点规约器和最接近均值的行选择器。左图通过 `summarize` 生成统计行，右图通过 `select` 保留原始代表行：
 
-<ComponentPreview files={['extension-statistics', 'extension-statistics.data.ts']} />
+<ComponentPreview
+  files={['extension-statistics', 'extension-statistics-preview.tsx', 'extension-statistics.data.ts']}
+  defaultSourceFile="extension-statistics-preview.tsx"
+  size="lg"
+  caption="左图由自定义规约器生成统计行，右图由自定义行选择器保留原始代表行。"
+/>
 
-reducer 应通过 `inputFields` 与 `outputFields` 声明读写字段；selector 通过 `inputFields` 声明读取字段，并返回选中的原始行。若逻辑需要同时改变多种字段或组合多个阶段，应升级为完整 transform。
+规约器应通过 `inputFields` 与 `outputFields` 声明读写字段；行选择器通过 `inputFields` 声明读取字段，并返回选中的原始行。若逻辑需要同时改变多种字段或组合多个阶段，应升级为完整变换。
 
 ## 注入宿主
 
-消费宿主负责把自定义 Definition 注入数据变换管线。以 Plot 为例：
+消费宿主负责把自定义定义注入数据变换管线。以 Plot 为例：
 
-| 能力             | 注入入口                       | operation 引用方式      |
-| ---------------- | ------------------------------ | ----------------------- |
-| 自定义 transform | `transformDefinitions`         | `kind`                  |
-| 自定义 reducer   | `statisticsReducerDefinitions` | reducer operation.kind  |
-| 自定义 selector  | `rowSelectorDefinitions`       | selector operation.kind |
+| 能力           | 注入入口                       | 操作引用方式          |
+| -------------- | ------------------------------ | --------------------- |
+| 自定义变换     | `transformDefinitions`         | `kind`                |
+| 自定义规约器   | `statisticsReducerDefinitions` | 规约器操作的 `kind`   |
+| 自定义行选择器 | `rowSelectorDefinitions`       | 行选择器操作的 `kind` |
 
-其它消费模块可以在自己的 adapter 中提供等价入口；Definition 与 operation 契约本身属于 Data。
+其它消费模块可以在自己的适配器（adapter）中提供等价入口；定义与操作契约本身属于 Data。
 
 ## 执行机制
 
 ```text
-注入 Definition → 合并内置与自定义 registry → 按 kind 查找 → schema 校验 → 执行
+注入定义 → 合并内置与自定义注册表 → 按 kind 查找 → Schema 校验 → 执行
 ```
 
-字段收集与实际执行使用同一 registry。`inputFields` 让严格数据模型校验扩展操作读取的源字段，`outputFields` 则标记管线生成的派生字段，避免要求它们预先出现在源数据模型中。
+字段收集与实际执行使用同一注册表。`inputFields` 让严格数据模型校验扩展操作读取的源字段，`outputFields` 则标记管线生成的派生字段，避免要求它们预先出现在源数据模型中。
 
 ## 错误与限制
 
-| 情况                                                              | 结果                  |
-| ----------------------------------------------------------------- | --------------------- |
-| `kind` 与内置或另一自定义键重复                                   | registry 构建立即报错 |
-| operation 使用未注册 `kind`                                       | 执行前报未注册错误    |
-| operation 不满足 Definition schema                                | schema 校验失败       |
-| operation 含函数等非 JSON 值                                      | 可序列化校验失败      |
-| 自定义 reducer 的 `outputFields()` 声明与分组键或其它统计输出冲突 | 执行 reducer 前报错   |
+| 情况                                                           | 结果               |
+| -------------------------------------------------------------- | ------------------ |
+| `kind` 与内置或另一自定义键重复                                | 注册表构建立即报错 |
+| 操作使用未注册 `kind`                                          | 执行前报未注册错误 |
+| 操作不满足定义的 Schema                                        | Schema 校验失败    |
+| 操作含函数等非 JSON 值                                         | 可序列化校验失败   |
+| 自定义规约器的 `outputFields()` 声明与分组键或其它统计输出冲突 | 执行规约器前报错   |
 
-Definition 只应实现数据行与统计语义。颜色、图元或布局等消费侧语义应放到对应模块的扩展点。
+定义只应实现数据行与统计语义。颜色、图元或布局等消费侧语义应放到对应模块的扩展点。
 
 ## API 参考
 
-以下 Definition 与定义函数都从 `@retikz/data` 包根导出。
+以下定义与定义函数都从 `@retikz/data` 包根导出。
 
 ### `TransformDefinition`
 
@@ -170,11 +180,11 @@ Definition 只应实现数据行与统计语义。颜色、图元或布局等消
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
   <LinkedCard href="/viz/data/transform/operations">
     <span className="font-semibold">变换操作</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">先确认内置 transform 是否已经覆盖需求。</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">先确认内置变换是否已经覆盖需求。</span>
   </LinkedCard>
   <LinkedCard href="/viz/data/transform/statistics">
     <span className="font-semibold">统计子算子</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">理解 reducer 与 selector 的内置语义。</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">理解规约器与行选择器的内置语义。</span>
   </LinkedCard>
   <LinkedCard href="/viz/data/model/extensions">
     <span className="font-semibold">数据模型扩展</span>

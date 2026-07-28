@@ -3,20 +3,20 @@ title: 数据
 description: '@retikz/data 提供宿主无关的数据模型、字段处理、数据变换与来源追溯，供不同可视化模块复用。'
 ---
 
-`@retikz/data` 是宿主无关的纯数据处理层：声明字段模型、把外部数据整理成 canonical 行、运行数据变换，并保留可追踪的来源信息。它不依赖 Plot，也不决定数据最终怎样展示；Plot、Table 或其它消费模块都可以读取同一份处理结果。
+`@retikz/data` 是宿主无关的纯数据处理层：声明字段模型、把外部数据整理成规范化行（canonical row）、运行数据变换，并保留可追踪的来源信息。它不依赖 Plot，也不决定数据最终怎样展示；Plot、Table 或其它消费模块都可以读取同一份处理结果。
 
 <ComponentAlert
   title="示例宿主"
-  description="本分组默认使用 Plot 展示数据处理前后的可视结果，所以示例中会出现 Plot 组件、mark、scale 与 channel。这些都是 Plot 应用中的消费方式，不属于 Data 自身契约，也不表示 @retikz/data 依赖 @retikz/plot。"
+  description="本分组默认使用 Plot 展示数据处理前后的可视结果，所以示例中会出现 Plot 组件、图元（mark）、比例尺（scale）与通道（channel）。这些都是 Plot 应用中的消费方式，不属于 Data 自身契约，也不表示 @retikz/data 依赖 @retikz/plot。"
 />
 
-真实数据本身**不进入可序列化契约**。配置只描述“读哪些字段、字段是什么类型、怎么解析和变换”；数据行由消费方在运行数据管线时传入，只有 `model`、`format`、transform operation 这类契约会持久化。于是同一份配置能复用到不同数据源，也便于序列化与 AI 生成。
+真实数据本身**不进入可序列化契约**。配置只描述“读哪些字段、字段是什么类型、怎么解析和变换”；数据行由消费方在运行数据管线时传入，只有 `model`、`format`、变换操作（transform operation）这类契约会持久化。于是同一份配置能复用到不同数据源，也便于序列化与 AI 生成。
 
 <ComponentPreview files="data-pipeline" size="sm" hideCode />
 
 ## 处理链路
 
-数据管线会先收集消费方真正用到的字段，再把外部行整理成 canonical 行（规范化行：字段对齐、解析、类型归一后写回逻辑字段名的标准行）。后续数据变换与各类消费模块都读取这份规范化结果，而不是反复直接读原始数据。
+数据管线会先收集消费方真正用到的字段，再把外部行整理成规范化行：字段对齐、解析、类型归一后写回逻辑字段名的标准行。后续数据变换与各类消费模块都读取这份规范化结果，而不是反复直接读原始数据。
 
 | 步骤         | 做什么                                                         | 主要配置                          |
 | ------------ | -------------------------------------------------------------- | --------------------------------- |
@@ -25,15 +25,15 @@ description: '@retikz/data 提供宿主无关的数据模型、字段处理、�
 | 源字段对齐   | 把逻辑字段映射到真实数据路径，支持字段改名与嵌套路径           | `fieldMap` / `fieldMaps`          |
 | 解析与归一化 | 按字段契约与格式解析值，并写回逻辑字段名                       | `model` / `format` / 字段类型     |
 | 数据校验     | 对参与字段做抽样或全量校验，决定非法值跳过还是报错             | `validateData` / `invalid`        |
-| 变换与交付   | 数据变换改写 canonical 行，再把结果交给具体消费模块            | `sort` / `summarize` / 消费方配置 |
+| 变换与交付   | 数据变换改写规范化行，再把结果交给具体消费模块                 | `sort` / `summarize` / 消费方配置 |
 
-`model`、`format` 和数据变换 operation 是可序列化契约，函数只在运行时参与处理，不进入 IR。自定义字段格式与字段解析见[数据模型扩展](/viz/data/model/extensions)，自定义 transform、reducer 与 selector 见[数据变换扩展](/viz/data/transform/extensions)。
+`model`、`format` 和数据变换操作是可序列化契约，函数只在运行时参与处理，不进入 IR。自定义字段格式与字段解析见[数据模型扩展](/viz/data/model/extensions)，自定义变换、规约器（reducer）与行选择器（selector）见[数据变换扩展](/viz/data/transform/extensions)。
 
 ## 消费边界
 
-数据层只负责把外部行整理成 canonical 行，不规定结果必须进入哪一种视图，也不拥有通道、图元或布局语义。
+数据层只负责把外部行整理成规范化行，不规定结果必须进入哪一种视图，也不拥有通道、图元或布局语义。
 
-在 Plot 应用中，mark、transform 与 scale 可以按逻辑字段名读取这些结果，字段或常量如何进入 `x` / `y` / `color` / `size` / `text` 由[绘图语法的通道](/viz/plot/channel)说明。其它消费模块可以用自己的契约读取同一份规范化行。
+在 Plot 应用中，图元、变换与比例尺可以按逻辑字段名读取这些结果，字段或常量如何进入 `x` / `y` / `color` / `size` / `text` 由[绘图语法的通道](/viz/plot/channel)说明。其它消费模块可以用自己的契约读取同一份规范化行。
 
 ## 章节内容
 
@@ -47,11 +47,11 @@ description: '@retikz/data 提供宿主无关的数据模型、字段处理、�
     <span>说明 sort、summarize、select 与 annotate。</span>
   </LinkedCard>
   <LinkedCard href="/viz/data/provenance">
-    <strong>来源追溯</strong>
-    <span>说明 transform 后如何保留行级来源，并按需记录运行时链路事件。</span>
+    <strong>数据溯源</strong>
+    <span>从 Data 行级来源进入 Plot 图元审计与交互回查。</span>
   </LinkedCard>
   <LinkedCard href="/viz/data/reference">
     <strong>API 参考</strong>
-    <span>查询 JSON 契约、Definition、registry、运行管线与 lineage 入口。</span>
+    <span>查询 JSON 契约、定义、注册表、运行管线与计算链路入口。</span>
   </LinkedCard>
 </div>

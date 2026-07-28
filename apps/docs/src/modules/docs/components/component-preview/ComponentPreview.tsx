@@ -38,6 +38,8 @@ import { normalizeComponentPreviewFiles } from './utils';
 export type ComponentPreviewProps = {
   /** 主 demo 与附加源码文件；主 demo id 不含 `.demo.tsx` 后缀。 */
   files: ComponentPreviewFiles;
+  /** React 源码视图默认选中的附加文件；缺省显示主 demo。 */
+  defaultSourceFile?: string;
   /** 预览控制能力与局部插槽。 */
   controls?: PreviewControlsOptions;
   /** 全屏弹窗 header 动作。 */
@@ -58,6 +60,7 @@ export type ComponentPreviewProps = {
 export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const {
     files,
+    defaultSourceFile,
     controls,
     dialogActions,
     align = 'center',
@@ -175,6 +178,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       name={name}
       Component={Component}
       source={sourceResult.source}
+      defaultSourceFile={defaultSourceFile}
       align={align}
       size={size}
       previewClassName={previewClassName}

@@ -554,7 +554,10 @@ describe('PreviewControlPanel', () => {
 
     expect(table).not.toBeNull();
     expect(table?.textContent).toContain('Cities');
-    expect(table?.textContent).toContain('102 rows · 4 columns');
+    expect(table?.textContent).toContain('102x4');
+    expect(table?.querySelector('[data-slot="preview-table-dimensions"]')?.getAttribute('aria-label')).toBe(
+      '102 rows · 4 columns',
+    );
     expect(table?.textContent).toContain('Showing first 100 of 102 rows');
     expect(headers).toEqual(['city', 'GDP', 'life', 'meta']);
     expect(container.querySelectorAll('[data-slot="preview-table-row"]')).toHaveLength(100);
@@ -568,6 +571,123 @@ describe('PreviewControlPanel', () => {
     expect(table?.textContent).toContain('{"region":"Asia"}');
     expect(table?.textContent).toContain('—');
     expect(container.querySelector('[data-control-id="cities"] input')).toBeNull();
+  });
+
+  it('切换 table view 并按实时 control values 重新解析结果行', async () => {
+    const tableDefinition = definePreviewControls({
+      presentation: 'panel',
+      title: 'Transform rows',
+      sections: [
+        {
+          controls: [
+            {
+              kind: 'table',
+              id: 'rows',
+              label: 'Rows',
+              views: [
+                { id: 'source', label: 'Source', rows: [{ x: 2 }] },
+                { id: 'result', label: 'Result', rows: values => [{ x: Number(values.factor) * 2 }] },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    const Harness: FC = () => {
+      const [factor, setFactor] = useState(3);
+      return (
+        <>
+          <button type="button" aria-label="Set factor to four" onClick={() => setFactor(4)} />
+          <PreviewControlPanel
+            definition={tableDefinition}
+            controlState={{ ...emptyControlState, values: { factor } }}
+            onClose={() => undefined}
+          />
+        </>
+      );
+    };
+    const container = await mount(<Harness />);
+    const table = container.querySelector('[data-slot="preview-table-control"]');
+    const resultTrigger = container.querySelector<HTMLButtonElement>(
+      '[data-slot="preview-table-view-trigger"][data-view-id="result"]',
+    );
+
+    expect(container.querySelectorAll('[data-slot="preview-table-view-trigger"]')).toHaveLength(2);
+    expect(table?.querySelector('[data-slot="preview-table-row"]')?.textContent).toBe('2');
+    expect(resultTrigger?.getAttribute('aria-pressed')).toBe('false');
+
+    await act(() => resultTrigger?.click());
+    expect(table?.querySelector('[data-slot="preview-table-row"]')?.textContent).toBe('6');
+    expect(resultTrigger?.getAttribute('aria-pressed')).toBe('true');
+
+    await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Set factor to four"]')?.click());
+    expect(table?.querySelector('[data-slot="preview-table-row"]')?.textContent).toBe('8');
+  });
+
+  it('用紧凑乘积显示尺寸并保留完整悬浮说明', async () => {
+    const tableDefinition = definePreviewControls({
+      presentation: 'panel',
+      sections: [
+        {
+          controls: [
+            {
+              kind: 'table',
+              id: 'rows',
+              label: 'Rows',
+              rows: Array.from({ length: 6 }, (_, index) => ({ x: index + 1, y: index + 2 })),
+            },
+          ],
+        },
+      ],
+    });
+    const container = await mount(
+      <PreviewControlPanel definition={tableDefinition} controlState={emptyControlState} onClose={() => undefined} />,
+    );
+    const dimensions = container.querySelector('[data-slot="preview-table-dimensions"]');
+
+    expect(dimensions?.textContent).toBe('6x2');
+    expect(dimensions?.getAttribute('aria-label')).toBe('6 rows · 2 columns');
+  });
+
+  it('table view 解析失败时保留视图切换并显示局部错误', async () => {
+    const tableDefinition = definePreviewControls({
+      presentation: 'panel',
+      sections: [
+        {
+          controls: [
+            {
+              kind: 'table',
+              id: 'rows',
+              label: 'Rows',
+              views: [
+                { id: 'source', label: 'Source', rows: [{ x: 2 }] },
+                {
+                  id: 'result',
+                  label: 'Result',
+                  rows: () => {
+                    throw new Error('invalid transform');
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const container = await mount(
+      <PreviewControlPanel definition={tableDefinition} controlState={emptyControlState} onClose={() => undefined} />,
+    );
+    const resultTrigger = container.querySelector<HTMLButtonElement>(
+      '[data-slot="preview-table-view-trigger"][data-view-id="result"]',
+    );
+
+    await act(() => resultTrigger?.click());
+
+    expect(container.querySelector('[data-slot="preview-table-view-error"]')?.textContent).toBe(
+      'Unable to display this data view',
+    );
+    expect(container.querySelectorAll('[data-slot="preview-table-view-trigger"]')).toHaveLength(2);
   });
 
   it('推导首次出现的列、显示空数据并为 compact 模式收紧间距', () => {

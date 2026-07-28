@@ -101,7 +101,7 @@ Core layout-aware composite（已交付）
 - ADR-04 必须逐项对照 Table alpha.2 的 track schema 与纯 solver。可复用的 capability-neutral 数值求解只有在包职责和依赖方向成立时才抽取；Standard 不依赖 Table，Table 也不因共享算法被迫采用 Standard composite schema
 - alpha.1 的 `Grid` 是可视格线 composite；alpha.2 的二维布局工作名为 `GridLayout`，不得复用既有 definition key、混淆文档概念或把背景格线迁入 track solver
 - ADR-05 只解决 container-local overlay，不负责全局绝对坐标、port、edge label、自动避让或 selection handles
-- ADR-06 的 item key 是 layout container 内的 authored identity；它不替代 alpha.3 / alpha.4 的全局语义 identity、Target 或 Connector contract
+- ADR-06 的 item key 是 layout container 内的 authored identity；它不替代 alpha.4 / alpha.5 的全局语义 identity、Target 或 Connector contract
 - 每项 capability 都接入 alpha.1 已建立的 module、bundle、all preset 与 adapter 机制；不得使用包根导入副作用或隐式全局注册
 - Frame 默认继续使用现有纯 `expand` 主链；Box Layout 可作为 Frame 的 child 组合使用，除非独立 ADR 证明 Frame 自身必须迁移
 
@@ -162,7 +162,7 @@ Gate 至少证明：
 - 完整 CSS layout、DOM / CSS intrinsic reflow、media / container query、writing mode、百分比链式求值、subgrid、masonry 与浏览器兼容细节
 - Tree、Layered / Dagre、Force、Circular / Radial 等拓扑或图算法布局
 - GraphModel、全局 nodes / edges、rank、cluster、Port / Group 关系、crossing minimization、自动 / 正交路由、避障或编辑器状态
-- Table / Plot datum、scale、border conflict、formatter、legend 或 panel solver；领域 owner 只消费通用 Core / math 能力
+- Table / Plot datum、scale、border conflict、formatter、Legend 领域解析或 panel solver；通用 Legend 呈现进入 Standard alpha.3，领域 owner 消费 Standard Box Layout / Legend 与 Core / Math 底座
 - 新的 Scene primitive、renderer 语义、全局 layout registry 或 Standard 私有 compile pipeline
 - 异步测量、renderer 回读、跨 compile cache、增量布局或 replay 持久化
-- alpha.3 的 Stage、Decision、Terminal、Junction 与 alpha.4 的 Connector、Callout 语义
+- alpha.3 的 Legend，以及 alpha.4 的 Stage、Decision、Terminal、Junction 与 alpha.5 的 Connector、Callout 语义

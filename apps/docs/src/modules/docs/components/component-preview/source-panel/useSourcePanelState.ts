@@ -63,15 +63,26 @@ export type SourcePanelState = {
 };
 
 /** 创建与卡片或弹窗实例隔离的源码面板状态。 */
-export const useSourcePanelState = (source: ComponentRenderSource | undefined): SourcePanelState => {
+export const useSourcePanelState = (
+  source: ComponentRenderSource | undefined,
+  defaultSourceFile?: string,
+): SourcePanelState => {
   const views = useMemo(() => (source ? availableSourceViews(source) : []), [source]);
   const [view, setView] = useState<SourceView>('react');
   const effectiveView: SourceView = views.includes(view) ? view : (views[0] ?? 'react');
   const viewData = source?.[effectiveView];
   const files = viewData?.files ?? EMPTY_SOURCE_FILES;
-  const [fileIndex, setFileIndex] = useState(0);
+  const [fileIndices, setFileIndices] = useState<Partial<Record<SourceView, number>>>(() => {
+    const defaultFileIndex = source?.react?.files.findIndex(file => file.filename === defaultSourceFile) ?? -1;
+    return { react: Math.max(defaultFileIndex, 0) };
+  });
+  const fileIndex = fileIndices[effectiveView] ?? 0;
   const activeFileIndex = Math.min(Math.max(fileIndex, 0), Math.max(files.length - 1, 0));
   const activeFile = files.at(activeFileIndex);
+  const setActiveFileIndex = useCallback(
+    (index: number) => setFileIndices(indices => ({ ...indices, [effectiveView]: index })),
+    [effectiveView],
+  );
   const [selectedDiffMode, setDiffMode] = useState<DiffMode | undefined>(undefined);
   const diffMode: DiffMode = selectedDiffMode ?? (activeFile?.diff ? 'added' : 'off');
 
@@ -125,7 +136,7 @@ export const useSourcePanelState = (source: ComponentRenderSource | undefined): 
       setView,
       files,
       activeFileIndex,
-      setActiveFileIndex: setFileIndex,
+      setActiveFileIndex,
       activeFile,
       activeRender: viewData?.render,
       activeRendererMode: viewData?.rendererMode,
@@ -144,6 +155,7 @@ export const useSourcePanelState = (source: ComponentRenderSource | undefined): 
       display,
       effectiveView,
       files,
+      setActiveFileIndex,
       viewData?.render,
       viewData?.rendererMode,
       views,
