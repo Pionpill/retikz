@@ -39,7 +39,7 @@ Render participant 在调用 renderer 前用纯 validator 将 Patch 重放为 ex
 
 Runtime 新增 nominal `RuntimeCommitParticipant<TRead>`、非泛型 `RuntimeCommitParticipantToken`、`defineRuntimeCommitParticipant()` 与 `session.participant()`。Participant 显式声明 owner/program dependencies、`affected | continuous` revision policy、trace phases，以及私有 `prepare/read/dispose` executor；公开 token 只保留冻结 metadata，不能绕过 session gate直接读取 executor。
 
-Session 创建前对完整 participant 数组完成无 callback preflight：nominal token、key、依赖、重复项与 ownership 必须全部合法。Token 一次性从 unowned 转为 owned，失败 create 或成功 dispose 后永久 consumed，不能跨 session 复用。Candidate view 只允许读取已声明 owner/program 的 public read。
+Session 创建前对完整 participant 数组完成无 callback preflight：nominal token、key、依赖、重复项与 ownership 必须全部合法。Token 一次性从 unowned 转为 owned；失败 create 后永久 consumed，Session dispose 时则在对应 participant cleanup 成功后 consumed，失败期间继续由原 Session 独占，始终不能跨 session 复用。Candidate view 只允许读取已声明 owner/program 的 public read。
 
 Initial 与 update 的共同顺序为：
 
@@ -52,7 +52,9 @@ Initial 与 update 的共同顺序为：
 
 Participant read 与 owner/program public read遵守同一 deeply immutable contract；未 selected participant 沿用旧 read reference。Publish 前 prepare/commit/read 失败时反向 rollback、dispose 并丢弃 candidate cache，旧 revision、logical state 与 committed read保持不变。Update rollback 全部成功后 session 回到 idle并保留原 primary error；首个 rollback 失败时以 `RUNTIME_PARTICIPANT_ROLLBACK_FAILED`作为 primary，冻结 cause `{ trigger, rollback }`，session 进入 broken，只允许 diagnostics/revision/dispose。Initial rollback 失败作为 secondary diagnostic，不返回不可达的 broken session。
 
-Participant context只暴露 owner-bound trace write surface与 `diagnose()`；Runtime在每次 callback返回或抛出后 exactly-once drain内部 reporter。Initial失败 diagnostics随外层 `RuntimeError`返回，update失败 diagnostics同时进入现存 session queue。Prepared token与 participant dispose 均 exactly-once；callback reentry沿用ADR-03的逐API拒绝规则。
+Participant context只暴露 owner-bound trace write surface与 `diagnose()`；Runtime在每次 callback返回或抛出后 exactly-once drain内部 reporter。Initial失败 diagnostics随外层 `RuntimeError`返回，update失败 diagnostics同时进入现存 session queue。Prepared token dispose exactly-once；participant最终cleanup的成功项只完成一次，失败尝试允许重试。callback reentry沿用ADR-03的逐API拒绝规则。
+
+Session 最终 dispose 对 participant 做反向 best-effort cleanup：成功项永久完成，失败项写入 diagnostics 并保留为 pending；owner/program 只 retire 一次，随后同次调用再重试一次 pending participant。仍失败时 Session 只允许 revision、diagnostics 与后续 dispose，update/read 继续以 disposed fail-loud；后续 dispose 只重试 pending 项，全部成功后进入幂等 disposed。
 
 ### Render retained runtime 是内置与第三方 renderer 的共同边界
 
@@ -83,7 +85,7 @@ React只拥有 `<svg>` / `<canvas>` host shell attributes/ref，Render独占 SVG
 
 `LayoutProps.runtime`暴露可选 `rendererFactory`与 `onDiagnostic`。`handlers`、animation config与IR在同一 revision提交；`animationRef`和`onArtifacts`只在成功commit后发布，callback throw仅进入dev warning，不回滚已提交状态。失败transaction先有序drain diagnostics再原样抛 primary error，不能重复从 error与session两路投递。
 
-SSR SVG使用 opaque seed：server与首次client render写入同一稳定 `dangerouslySetInnerHTML`，后续React render不再改写renderer-owned descendants。首次layout effect以adopt模式接管；matching seed保留descendant identity，mismatch在首次committed callback前replace。StrictMode effect replay与最终unmount对每个renderer instance都 exactly-once dispose。
+SSR SVG使用 opaque seed：server与首次client render写入同一稳定 `dangerouslySetInnerHTML`，后续React render不再改写renderer-owned descendants。首次layout effect以adopt模式接管；matching seed保留descendant identity，mismatch在首次committed callback前replace。StrictMode effect replay与最终unmount对每个renderer instance都只启动一次cleanup；成功dispose不重复，失败项可由Session重试。
 
 Vanilla对 IR/plain spec返回 `VanillaViewMode.Retained` view，对预编译 Scene返回 `VanillaViewMode.Static` view。Retained view的 `update()`把下一轮 normalization、runtimeMeta、artifacts、animation与可变Canvas config放进同一session transaction；失败保持全部旧值与对象identity。公开update options按后端收窄：SVG只接受animation，Canvas另接受`canvas.animationProperties`；Canvas DPR只在mount决定，变化必须dispose/remount。`RenderToStringOptions`不暴露retained-only `runtime.rendererFactory`。`view.hydrate()`以可回滚handler contribution transaction添加和移除注册。
 

@@ -357,7 +357,6 @@ const mountRetainedCanvas = (
       y: (clientY - rect.top - offsetY) / scale + layout.y,
     };
   };
-  let disposed = false;
   return {
     mode: VanillaViewMode.Retained,
     root: canvas,
@@ -366,8 +365,6 @@ const mountRetainedCanvas = (
     diagnostics: () => runtime.diagnostics(),
     clientToScene,
     dispose: () => {
-      if (disposed) return;
-      disposed = true;
       runtime.dispose();
       canvas.remove();
     },

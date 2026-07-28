@@ -145,7 +145,7 @@ export type RetainedSessionController<
   update: (next: RetainedRenderInput, options?: TUpdateOptions) => void;
   /** 向当前 committed Scene 注册 hydration handlers */
   hydrate: (options: HydrateOptions) => HydrationHandle;
-  /** exactly-once 释放 Session 与 renderer */
+  /** 释放 Session 与 renderer；失败 cleanup 可由重复调用重试 */
   dispose: () => void;
   /** 按队列顺序返回并清空 Runtime diagnostics */
   diagnostics: () => ReadonlyArray<RuntimeDiagnostic>;
@@ -283,7 +283,7 @@ const createVanillaRetainedSessionImplementation = (
       createRuntimeOwnerInput(VanillaCompositeRevisionOwnerDefinition, 0),
     ],
   });
-  let sessionDisposed = false;
+  let sessionDisposalStarted = false;
   let compositeRevision = 0;
 
   const commitConfig = (
@@ -352,7 +352,7 @@ const createVanillaRetainedSessionImplementation = (
       return Object.freeze({
         dispose: () => {
           if (disposed) return;
-          if (sessionDisposed) {
+          if (sessionDisposalStarted) {
             disposed = true;
             return;
           }
@@ -367,8 +367,7 @@ const createVanillaRetainedSessionImplementation = (
       });
     },
     dispose: () => {
-      if (sessionDisposed) return;
-      sessionDisposed = true;
+      sessionDisposalStarted = true;
       session.dispose();
     },
     diagnostics: () => session.diagnostics(),

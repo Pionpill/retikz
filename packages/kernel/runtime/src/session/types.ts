@@ -38,6 +38,6 @@ export type RuntimeSession = Readonly<{
   participant: <TRead>(participant: RuntimeCommitParticipant<TRead>) => TRead;
   /** 返回并清空累计 diagnostics */
   diagnostics: () => ReadonlyArray<RuntimeDiagnostic>;
-  /** 释放所有 committed owner value 与 Program artifact */
+  /** 反向释放 committed participant、Program artifact 与 owner value；失败 participant 可重复调用重试 */
   dispose: () => void;
 }>;

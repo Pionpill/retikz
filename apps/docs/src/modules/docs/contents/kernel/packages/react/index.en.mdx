@@ -108,6 +108,8 @@ Frequently updated large figures can keep stable IR and Core options outside the
 
 After the client commit, `Layout` creates a Runtime Session and updates the complete IR Snapshot plus renderer configuration in one transaction. When Core can prove an update locally safe it publishes a local Scene Patch; other valid changes use a `replaceScene` fallback while preserving full-oracle equivalence. The SVG / Canvas retained participant isolates candidate state during prepare, then publishes DOM / bitmap, events, animation handles, and artifacts together only after the transaction succeeds.
 
+On unmount, the Session cleans up in reverse order on a best-effort basis, then retries failed renderer cleanup once after logical resources retire. Successful entries never rerun. Persistent failure only enters Runtime diagnostics and does not block React from completing the unmount.
+
 Definition arrays are canonicalized by ordered element identity, so recreating an equivalent container such as `[shape]` does not rebuild the Session. Changing a Definition itself, the renderer backend, `idPrefix`, or `runtime.rendererFactory` does rebuild it. Concurrent scheduling and progressive materialization remain outside the current public contract.
 
 <SourceLinks

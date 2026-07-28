@@ -132,6 +132,25 @@ describe('React Layout retained Runtime', () => {
     expect(secondDispose).toHaveBeenCalledTimes(1);
   });
 
+  it('unmount 会重试失败的 retained renderer cleanup', async () => {
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    const disposeFailure = new Error('dispose failed');
+    let rejectDispose = true;
+    const dispose = vi.fn(() => {
+      if (rejectDispose) {
+        rejectDispose = false;
+        throw disposeFailure;
+      }
+    });
+    const rendererFactory = createMemoryRendererFactory('entity', dispose);
+
+    await act(() => root.render(<Layout ir={source('#ef4444')} runtime={{ rendererFactory }} />));
+    await expect(act(() => root.unmount())).resolves.toBeUndefined();
+
+    expect(dispose).toHaveBeenCalledTimes(2);
+  });
+
   it('等价 inline JSX 与显式 composite Definition 复用 retained session', async () => {
     const container = document.createElement('div');
     const root = createRoot(container);

@@ -109,7 +109,7 @@ export type MountOptions = CommonOptions & {
 export type VanillaViewState<TRoot extends SVGSVGElement | HTMLCanvasElement> = Readonly<{
   /** 挂载出的稳定宿主 root */
   root: TRoot;
-  /** 卸载：解绑本 view 上未手动 dispose 的水合、移除 `root`、置 view 失效（再调 `update` 抛、`dispose` noop） */
+  /** 卸载：解绑水合并移除 `root`；retained cleanup 失败时重复调用只重试 pending 项，成功后 no-op */
   dispose: () => void;
   /**
    * 绑定 handler 到本 view 的 `<svg>`（locateSvg 定位）；handler 收 `(event, context)` 富上下文

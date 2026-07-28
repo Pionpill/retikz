@@ -108,6 +108,8 @@ return (
 
 客户端 commit 后，`Layout` 会创建一个 Runtime Session，把完整 IR Snapshot 与 renderer config 作为一次 transaction 更新。Core Program 能证明安全的变更会发布局部 Scene Patch；其它合法变更用 `replaceScene` fallback 保持 full oracle 等价。SVG / Canvas retained participant 在 prepare 阶段隔离候选状态，只有 transaction 成功后才把 DOM / bitmap、事件、动画句柄和 artifacts 一起发布。
 
+卸载时 Session 会反向 best-effort 清理，并在逻辑资源 retire 后同次重试失败的 renderer cleanup；已成功项不会重复执行。持续失败只进入 Runtime diagnostics，不会阻断 React 完成 unmount。
+
 Definition 数组按有序元素 identity 规范化，因此 render 时重新创建 `[shape]` 这类等价容器不会重建 Session；Definition 本身、renderer backend、`idPrefix` 或 `runtime.rendererFactory` 改变时会重建。并发调度与 progressive materialization 仍不属于当前公开契约。
 
 <SourceLinks

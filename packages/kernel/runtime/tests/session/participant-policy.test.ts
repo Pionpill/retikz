@@ -176,14 +176,42 @@ describe('runtime session participant revision policy', () => {
     session.dispose();
   });
 
-  it('session dispose failure 不阻断反向 cleanup，disposed read 仍 fail-loud', () => {
-    const owner = defineCounterOwner('counter');
+  it('session dispose failure 不阻断反向 cleanup，并只重试失败 participant', () => {
+    let ownerDisposeCalls = 0;
+    let artifactDisposeCalls = 0;
+    const owner = defineRuntimeOwner<number, number, number, never>({
+      key: 'counter',
+      value: {
+        capture: value => value,
+        read: value => value,
+        equals: (left, right) => left === right,
+        dispose: () => {
+          ownerDisposeCalls += 1;
+        },
+      },
+    });
     const owners = createRuntimeOwnerRegistry({ builtins: [owner] });
-    const programs = createRuntimeProgramRegistry({ owners });
+    const program = defineRuntimeProgram<number, number, number, number>({
+      id: { owner: 'counter', key: 'artifact' },
+      owners: [owner],
+      programs: [],
+      tracePhases: [],
+      artifact: {
+        capture: value => value,
+        readForProgram: value => value,
+        read: value => value,
+        dispose: () => {
+          artifactDisposeCalls += 1;
+        },
+      },
+      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
+    });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
     const calls: Array<string> = [];
     const trigger = new Error('dispose failed');
-    const define = (key: string, fail: boolean) =>
-      defineRuntimeCommitParticipant({
+    const define = (key: string, failCount: number) => {
+      let remainingFailures = failCount;
+      return defineRuntimeCommitParticipant({
         key,
         owners: [owner],
         programs: [],
@@ -193,11 +221,15 @@ describe('runtime session participant revision policy', () => {
         read: () => Object.freeze({}),
         dispose: () => {
           calls.push(key);
-          if (fail) throw trigger;
+          if (remainingFailures > 0) {
+            remainingFailures -= 1;
+            throw trigger;
+          }
         },
       });
-    const first = define('a', false);
-    const second = define('b', true);
+    };
+    const first = define('a', 0);
+    const second = define('b', 2);
     const session = createRuntimeSession({
       owners,
       programs,
@@ -206,12 +238,24 @@ describe('runtime session participant revision policy', () => {
     });
 
     expect(() => session.dispose()).not.toThrow();
-    expect(calls).toEqual(['b', 'a']);
+    expect(calls).toEqual(['b', 'a', 'b']);
+    expect(ownerDisposeCalls).toBe(1);
+    expect(artifactDisposeCalls).toBe(1);
     expect(session.diagnostics()).toEqual([
+      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED', cause: trigger, owner: 'b' }),
       expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED', cause: trigger, owner: 'b' }),
     ]);
     expect(() => session.participant(first)).toThrowError(
       expect.objectContaining({ code: 'RUNTIME_SESSION_DISPOSED' }),
     );
+    expect(() => session.dispose()).not.toThrow();
+    expect(calls).toEqual(['b', 'a', 'b', 'b']);
+    expect(ownerDisposeCalls).toBe(1);
+    expect(artifactDisposeCalls).toBe(1);
+    expect(session.diagnostics()).toEqual([]);
+    expect(() => session.dispose()).not.toThrow();
+    expect(calls).toEqual(['b', 'a', 'b', 'b']);
+    expect(ownerDisposeCalls).toBe(1);
+    expect(artifactDisposeCalls).toBe(1);
   });
 });

@@ -51,6 +51,7 @@ const createMemoryRendererFactory = (
   failUpdate: boolean | (() => boolean) = false,
   onConfig?: (config: RenderRuntimeConfig) => void,
   onPatch?: (patch: unknown) => void,
+  onDispose?: () => void,
 ): RetainedRendererFactory =>
   ((input: RetainedRendererFactoryInput) => {
     let current: SceneRuntimeSnapshot | undefined;
@@ -87,6 +88,7 @@ const createMemoryRendererFactory = (
       },
       dispose: () => {
         current = undefined;
+        onDispose?.();
       },
     };
     return input.backend === 'svg'
@@ -617,6 +619,36 @@ describe('@retikz/vanilla retained mount', () => {
       } as unknown as RetainedSvgUpdateOptions),
     ).toThrowError(expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid }));
     view.dispose();
+  });
+
+  it('retained view 重复 dispose 时只重试失败 renderer cleanup', () => {
+    const disposeFailure = new Error('dispose failed');
+    let remainingFailures = 2;
+    const dispose = vi.fn(() => {
+      if (remainingFailures > 0) {
+        remainingFailures -= 1;
+        throw disposeFailure;
+      }
+    });
+    const view = mountSvg(document.createElement('div'), source('#ef4444'), {
+      runtime: {
+        rendererFactory: createMemoryRendererFactory('entity', false, undefined, undefined, dispose),
+      },
+    });
+
+    expect(() => view.dispose()).not.toThrow();
+    expect(dispose).toHaveBeenCalledTimes(2);
+    expect(view.diagnostics()).toEqual([
+      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED', cause: disposeFailure }),
+      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED', cause: disposeFailure }),
+    ]);
+    expect(() => view.update(source('#22c55e'))).toThrowError(
+      expect.objectContaining({ code: 'RUNTIME_SESSION_DISPOSED' }),
+    );
+
+    expect(() => view.dispose()).not.toThrow();
+    expect(() => view.dispose()).not.toThrow();
+    expect(dispose).toHaveBeenCalledTimes(3);
   });
 
   it('预编译 Scene 拒绝 retained renderer factory', () => {

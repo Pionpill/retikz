@@ -22,7 +22,7 @@ description: 用 typed Program graph、完整 Snapshot 和原子 transaction 在
 
 只有 `Publish pointer` 会推进 revision。发布前失败时 candidate 反向释放，current Snapshot 与 revision 保持不变；发布后失败只进入 diagnostic queue，已经发布的结果不会回滚。
 
-在 active transaction 或 disposing 期间，`update()`、`snapshot()`、`artifact()`、diagnostic drain 与再次 `dispose()` 都拒绝同步重入；`revision()` 始终可以读取当前已经发布的 revision。dispose 只能从 idle 开始；进入 disposed 后仍可读取 revision、drain diagnostics 或重复 no-op dispose。
+在 active transaction 或正在执行一次 dispose 期间，`update()`、`snapshot()`、`artifact()`、diagnostic drain 与同步重入的 `dispose()` 都会被拒绝；`revision()` 始终可以读取当前已经发布的 revision。participant cleanup 失败后 Session 进入 cleanup-pending：仍可读取 revision、drain diagnostics 或再次 dispose，但其它 read / update 与 disposed 状态一样 fail-loud；全部清理成功后，重复 dispose 是 no-op。
 
 ## 定义并运行 Program
 
@@ -169,7 +169,7 @@ participantSession.dispose();
 
 一次被选中的 participant 依次经历 `prepare → commit → read → publish`。`prepare()` 只能读取已声明 dependency 的 candidate public read，并返回一次性的 `RuntimePreparedCommit`；`commit()` 只切换已经完成校验的 staging state；`read()` 在全部 commit 之后、Session publish 之前生成 immutable public read。外部调用 `session.participant(token)` 读取的是 Runtime 已发布的 cache，不会现场调用 participant executor。
 
-publish 前失败会按反向顺序 rollback / dispose，并保留旧 revision 与旧 participant read。Update rollback 自身失败时 Session 进入 `broken`：`update()`、Snapshot/artifact/participant read 都继续 fail-loud，只保留 revision、diagnostics 与 dispose 用于收尾。Participant token 在 Session 接管后即一次性消费；失败 create 或 Session dispose 后都不能交给另一个 Session 复用。
+publish 前失败会按反向顺序 rollback / dispose，并保留旧 revision 与旧 participant read。Update rollback 自身失败时 Session 进入 `broken`：`update()`、Snapshot/artifact/participant read 都继续 fail-loud，只保留 revision、diagnostics 与 dispose 用于收尾。Participant token 在 Session 接管后即永久绑定；失败 create 会直接消费，最终 dispose 则在对应 cleanup 成功后消费，失败期间仍不能交给另一个 Session。
 
 ## Diagnostics 与失败语义
 
@@ -185,6 +185,8 @@ publish 前失败会按反向顺序 rollback / dispose，并保留旧 revision �
 Program 产生的 warning 属于 candidate：只有 candidate artifact 成功发布后才进入 result 与 queue；compile 或 transaction 失败时，warning 随 candidate 一起丢弃。
 
 初始 `createRuntimeSession()` 失败时没有 Session queue，secondary diagnostics 只能从 thrown error 读取。update 失败时，本次 `RuntimeError.diagnostics` 会按相同顺序追加到已有 queue；只有 queue 事先为空时，下一次 drain 才与 error diagnostics 逐项一致。
+
+`session.dispose()` 不会因 participant cleanup 失败而抛出。它先反向尝试所有 participant，再只 retire 一次 Program / Owner，随后同次重试失败项；仍失败的项以 `RUNTIME_PARTICIPANT_DISPOSE_FAILED` 进入 queue，后续 dispose 只重试这些 pending 项，已成功项不会重复执行。
 
 ## 主要稳定错误
 
@@ -280,8 +282,8 @@ Program 产生的 warning 属于 candidate：只有 candidate artifact 成功发
     {
       label: 'Session-bound participant read',
       path: 'packages/kernel/runtime/src/session/session.ts',
-      startLine: 1435,
-      endLine: 1447,
+      startLine: 1447,
+      endLine: 1456,
     },
     {
       label: '原子发布、observer 隔离与反向 retire',
@@ -292,8 +294,8 @@ Program 产生的 warning 属于 candidate：只有 candidate artifact 成功发
     {
       label: 'Session dispose 与 diagnostic queue',
       path: 'packages/kernel/runtime/src/session/session.ts',
-      startLine: 1446,
-      endLine: 1494,
+      startLine: 1458,
+      endLine: 1517,
     },
   ]}
 />

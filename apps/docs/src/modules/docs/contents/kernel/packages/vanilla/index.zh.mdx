@@ -122,6 +122,8 @@ plain spec 路径会先由 `normalizeFigureSpec` 生成 Core IR，再由 Core Pr
 
 `mountSvg` / `mountCanvas` 的返回值可用 `mode` 或 `VanillaViewMode` 判别。IR 与 plain spec 创建 `VanillaViewMode.Retained` view：`update(next, options?)` 把完整输入与可变 renderer config 放进同一次 transaction，Core 发布 Scene Patch 或 full fallback，Render participant 成功后才原子替换 DOM / bitmap、artifacts、runtime metadata、事件和动画句柄。失败 transaction 不发布新 revision；rollback 成功时旧 view 继续可用，rollback 自身失败时 Session 进入 broken，需要 dispose 后 remount。
 
+retained `view.dispose()` 会移除宿主并完成一次反向 best-effort cleanup；失败项在逻辑资源 retire 后同次重试。若仍有 pending cleanup，重复调用 `view.dispose()` 只重试失败项；成功项与宿主移除保持幂等。
+
 预编译 `Scene` 创建 `VanillaViewMode.Static` view：`update(nextScene)` 保持 root identity，但完整重绘后端；它没有 Core Program、Patch、Runtime diagnostics 或 compile artifacts。需要 Node 布局产物时，应传 IR / plain spec，并在 `compile.artifacts` 中启用 `nodeLayouts`。
 
 从旧版升级时，IR / plain spec view 的 `update(next)` 必须继续传同层级的 IR / plain spec。若仍需 `Scene → Scene` 完整重绘，请在 mount 时传入预编译 `Scene` 以创建 static view；改变 DPR 或 compile topology 时则应 dispose 后 remount。
@@ -136,7 +138,7 @@ SVG retained renderer 会保留未变 DOM identity；Canvas 对安全局部变�
       label: 'SVG static / retained view 分流',
       path: 'packages/kernel/vanilla/src/runtime/mount-svg.ts',
       startLine: 143,
-      endLine: 207,
+      endLine: 204,
     },
     {
       label: 'Vanilla retained Session 创建',

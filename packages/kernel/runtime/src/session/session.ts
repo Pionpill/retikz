@@ -80,7 +80,15 @@ type NormalizedUpdateResult =
       diagnostics?: ReadonlyArray<Readonly<{ code: string; phase: string; message: string }>>;
     }>;
 
-type RuntimeSessionState = 'preparing' | 'idle' | 'observing' | 'retiring' | 'broken' | 'disposing' | 'disposed';
+type RuntimeSessionState =
+  | 'preparing'
+  | 'idle'
+  | 'observing'
+  | 'retiring'
+  | 'broken'
+  | 'disposing'
+  | 'dispose-pending'
+  | 'disposed';
 
 /** 创建 session contract 错误 */
 const sessionError = (
@@ -781,6 +789,8 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
   const preparedParticipants = new Map<RuntimeCommitParticipantToken, RuntimePreparedParticipantState>();
   const participantDrains = new Map<RuntimeCommitParticipantToken, () => ReadonlyArray<RuntimeDiagnostic>>();
   let participantReads = new Map<RuntimeCommitParticipantToken, unknown>();
+  const pendingParticipantDisposals = new Set(participants);
+  let sessionResourcesRetired = false;
 
   try {
     ownerStates = prepareInitialOwners(options.owners, options.initialSnapshots, ownerExecutor);
@@ -976,7 +986,9 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
   }
 
   const assertIdle = (phase: string): void => {
-    if (state === 'disposed') throw sessionError('RUNTIME_SESSION_DISPOSED', phase, undefined);
+    if (state === 'dispose-pending' || state === 'disposed') {
+      throw sessionError('RUNTIME_SESSION_DISPOSED', phase, undefined);
+    }
     if (state === 'broken') {
       throw sessionError('RUNTIME_PARTICIPANT_ROLLBACK_FAILED', phase, brokenError, brokenError?.owner);
     }
@@ -1444,7 +1456,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
       return participantReads.get(participant) as TRead;
     },
     diagnostics: () => {
-      if (state !== 'idle' && state !== 'broken' && state !== 'disposed') {
+      if (state !== 'idle' && state !== 'broken' && state !== 'dispose-pending' && state !== 'disposed') {
         throw sessionError('RUNTIME_SESSION_REENTRANT', 'diagnostics', state);
       }
       const output = Object.freeze([...diagnosticQueue]);
@@ -1453,44 +1465,56 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
     },
     dispose: () => {
       if (state === 'disposed') return;
-      if (state !== 'broken') assertIdle('dispose');
+      if (state !== 'broken' && state !== 'dispose-pending') assertIdle('dispose');
       state = 'disposing';
-      for (const participant of [...participants].reverse()) {
-        let participantDisposeFailure: Readonly<{ cause: unknown }> | undefined;
-        try {
-          participantExecutors.get(participant)?.dispose();
-        } catch (cause) {
-          participantDisposeFailure = Object.freeze({ cause });
+      /** 反向清理尚未成功的 participant，并只消费已完成的 token */
+      const disposePendingParticipants = (): void => {
+        for (const participant of [...participants].reverse()) {
+          if (!pendingParticipantDisposals.has(participant)) continue;
+          let participantDisposeFailure: Readonly<{ cause: unknown }> | undefined;
+          try {
+            participantExecutors.get(participant)?.dispose();
+          } catch (cause) {
+            participantDisposeFailure = Object.freeze({ cause });
+          }
+          diagnosticQueue.push(...(participantDrains.get(participant)?.() ?? []));
+          if (participantDisposeFailure !== undefined) {
+            diagnosticQueue.push(
+              participantLifecycleDiagnostic(
+                'RUNTIME_PARTICIPANT_DISPOSE_FAILED',
+                'participant-dispose',
+                participant,
+                participantDisposeFailure.cause,
+              ),
+            );
+            continue;
+          }
+          pendingParticipantDisposals.delete(participant);
+          consumeRuntimeCommitParticipant(participant);
         }
-        diagnosticQueue.push(...(participantDrains.get(participant)?.() ?? []));
-        if (participantDisposeFailure !== undefined) {
-          diagnosticQueue.push(
-            participantLifecycleDiagnostic(
-              'RUNTIME_PARTICIPANT_DISPOSE_FAILED',
-              'participant-dispose',
-              participant,
-              participantDisposeFailure.cause,
-            ),
-          );
+      };
+
+      disposePendingParticipants();
+      if (!sessionResourcesRetired) {
+        participantReads.clear();
+        for (const definition of [...options.programs.definitions()].reverse()) {
+          const programState = programStates.get(definition);
+          if (programState !== undefined) diagnosticQueue.push(...programState.executor.retire(programState.prepared));
         }
-        consumeRuntimeCommitParticipant(participant);
-      }
-      participantReads.clear();
-      for (const definition of [...options.programs.definitions()].reverse()) {
-        const programState = programStates.get(definition);
-        if (programState !== undefined) diagnosticQueue.push(...programState.executor.retire(programState.prepared));
-      }
-      for (const owner of [...options.owners.definitions()].reverse()) {
-        const ownerState = ownerStates.get(owner);
-        if (ownerState !== undefined) {
-          diagnosticQueue.push(
-            ...ownerState.command
-              .retire(ownerExecutor, ownerState.prepared)
-              .diagnostics.map(mapOwnerLifecycleDiagnostic),
-          );
+        for (const owner of [...options.owners.definitions()].reverse()) {
+          const ownerState = ownerStates.get(owner);
+          if (ownerState !== undefined) {
+            diagnosticQueue.push(
+              ...ownerState.command
+                .retire(ownerExecutor, ownerState.prepared)
+                .diagnostics.map(mapOwnerLifecycleDiagnostic),
+            );
+          }
         }
+        sessionResourcesRetired = true;
+        if (pendingParticipantDisposals.size > 0) disposePendingParticipants();
       }
-      state = 'disposed';
+      state = pendingParticipantDisposals.size > 0 ? 'dispose-pending' : 'disposed';
     },
   });
 

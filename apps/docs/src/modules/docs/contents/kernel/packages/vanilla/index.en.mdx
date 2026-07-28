@@ -122,6 +122,8 @@ The plain-spec path first uses `normalizeFigureSpec` to produce Core IR. The Cor
 
 `mountSvg` / `mountCanvas` return a view discriminated by `mode` or `VanillaViewMode`. IR and plain specs create a `VanillaViewMode.Retained` view: `update(next, options?)` places the complete input and mutable renderer config in one transaction. Core publishes a Scene Patch or full fallback, and the Render participant atomically replaces DOM / bitmap, artifacts, runtime metadata, events, and animation handles only after success. A failed transaction publishes no new revision. The old view remains usable when rollback succeeds; if rollback itself fails, the Session becomes broken and must be disposed and remounted.
 
+Retained `view.dispose()` removes the host and performs one reverse best-effort cleanup, retrying failed entries in the same call after logical resources retire. If cleanup remains pending, repeated `view.dispose()` calls retry only failed entries; successful work and host removal remain idempotent.
+
 A precompiled `Scene` creates a `VanillaViewMode.Static` view. `update(nextScene)` preserves root identity but fully redraws the backend; there is no Core Program, Patch, Runtime diagnostics, or compile artifacts. Pass IR / a plain spec and enable `nodeLayouts` under `compile.artifacts` when Node layout outputs are needed.
 
 When upgrading, keep `update(next)` for an IR / plain-spec view at the same IR or plain-spec input layer. To retain full-redraw `Scene → Scene` updates, mount a precompiled `Scene` to create a static view instead. Dispose and remount when changing DPR or compile topology.
@@ -136,7 +138,7 @@ The SVG retained renderer preserves unchanged DOM identity. Canvas updates a dir
       label: 'SVG static / retained view dispatch',
       path: 'packages/kernel/vanilla/src/runtime/mount-svg.ts',
       startLine: 143,
-      endLine: 207,
+      endLine: 204,
     },
     {
       label: 'Vanilla retained Session creation',

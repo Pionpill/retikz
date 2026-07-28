@@ -157,7 +157,6 @@ const mountRetainedSvg = (container: Element, input: RetainedRenderInput, option
     idPrefix: output.idPrefix ?? DEFAULT_ID_PREFIX,
   });
   container.appendChild(root);
-  let disposed = false;
   return {
     mode: VanillaViewMode.Retained,
     root,
@@ -165,8 +164,6 @@ const mountRetainedSvg = (container: Element, input: RetainedRenderInput, option
     hydrate: hydrateOptions => runtime.hydrate(hydrateOptions),
     diagnostics: () => runtime.diagnostics(),
     dispose: () => {
-      if (disposed) return;
-      disposed = true;
       runtime.dispose();
       root.remove();
     },
