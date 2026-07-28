@@ -1,6 +1,7 @@
 import type { core, z } from 'zod';
 
 import * as IR from '@retikz/core';
+import * as DataIR from '@retikz/data';
 import * as PlotIR from '@retikz/plot';
 import * as TableIR from '@retikz/table';
 
@@ -350,6 +351,21 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'TableCellPayload',
     url: '/viz/table/reference/contract-table#tablecellpayloadschema',
   },
+  TableCellValuePayloadSchema: {
+    schema: TableIR.TableCellValuePayloadSchema,
+    label: 'TableCellValuePayload',
+    url: '/viz/table/reference/contract-table#tablecellvaluepayloadschema',
+  },
+  TableCellContentPayloadSchema: {
+    schema: TableIR.TableCellContentPayloadSchema,
+    label: 'TableCellContentPayload',
+    url: '/viz/table/reference/contract-table#tablecellcontentpayloadschema',
+  },
+  TablePresentationRefSchema: {
+    schema: TableIR.TablePresentationRefSchema,
+    label: 'TablePresentationRef',
+    url: '/viz/table/reference/contract-table#tablepresentationrefschema',
+  },
   TableCellSpanSchema: {
     schema: TableIR.TableCellSpanSchema,
     label: 'TableCellSpan',
@@ -438,22 +454,62 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   TableLayoutManifestSchema: {
     schema: TableIR.TableLayoutManifestSchema,
     label: 'TableLayoutManifest',
-    url: '/viz/table/reference/runtime#tablelayoutmanifestschema',
+    url: '/viz/table/reference/contract-table#tablelayoutmanifestschema',
   },
   TableTrackManifestEntrySchema: {
     schema: TableIR.TableTrackManifestEntrySchema,
     label: 'TableTrackManifestEntry',
-    url: '/viz/table/reference/runtime#tabletrackmanifestentryschema',
+    url: '/viz/table/reference/contract-table#tabletrackmanifestentryschema',
   },
   TableCellManifestEntrySchema: {
     schema: TableIR.TableCellManifestEntrySchema,
     label: 'TableCellManifestEntry',
-    url: '/viz/table/reference/runtime#tablecellmanifestentryschema',
+    url: '/viz/table/reference/contract-table#tablecellmanifestentryschema',
+  },
+  ResolvedTableBorderLineSchema: {
+    schema: TableIR.ResolvedTableBorderLineSchema,
+    label: 'ResolvedTableBorderLine',
+    url: '/viz/table/reference/contract-table#resolvedtableborderlineschema',
+  },
+  TableBorderSourceSchema: {
+    schema: TableIR.TableBorderSourceSchema,
+    label: 'TableBorderSource',
+    url: '/viz/table/reference/contract-table#tablebordersourceschema',
+  },
+  TableNoBorderContributionSchema: {
+    schema: TableIR.TableNoBorderContributionSchema,
+    label: 'TableNoBorderContribution',
+    url: '/viz/table/reference/contract-table#tablenobordercontributionschema',
+  },
+  TableLineBorderContributionSchema: {
+    schema: TableIR.TableLineBorderContributionSchema,
+    label: 'TableLineBorderContribution',
+    url: '/viz/table/reference/contract-table#tablelinebordercontributionschema',
+  },
+  TableBorderContributionSchema: {
+    schema: TableIR.TableBorderContributionSchema,
+    label: 'TableBorderContribution',
+    url: '/viz/table/reference/contract-table#tablebordercontributionschema',
+  },
+  TableBorderManifestAtomSchema: {
+    schema: TableIR.TableBorderManifestAtomSchema,
+    label: 'TableBorderManifestAtom',
+    url: '/viz/table/reference/contract-table#tablebordermanifestatomschema',
   },
   TableBorderManifestEntrySchema: {
     schema: TableIR.TableBorderManifestEntrySchema,
     label: 'TableBorderManifestEntry',
-    url: '/viz/table/reference/runtime#tablebordermanifestentryschema',
+    url: '/viz/table/reference/contract-table#tablebordermanifestentryschema',
+  },
+  TableBorderPathMetaSchema: {
+    schema: TableIR.TableBorderPathMetaSchema,
+    label: 'TableBorderPathMeta',
+    url: '/viz/table/reference/contract-table#tableborderpathmetaschema',
+  },
+  TableBorderLocatorEntrySchema: {
+    schema: TableIR.TableBorderLocatorEntrySchema,
+    label: 'TableBorderLocatorEntry',
+    url: '/viz/table/reference/contract-table#tableborderlocatorentryschema',
   },
   DetailTableStructureSchema: {
     schema: TableIR.DetailTableStructureSchema,
@@ -464,6 +520,67 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: TableIR.TableDetailColumnSchema,
     label: 'TableDetailColumn',
     url: '/viz/table/reference/contract-detail#tabledetailcolumnschema',
+  },
+
+  DataReferenceSchema: {
+    schema: DataIR.DataReferenceSchema,
+    label: 'DataReference',
+    url: '/viz/data/reference/contract#datareferenceschema',
+  },
+  DataModelSchema: {
+    schema: DataIR.DataModelSchema,
+    label: 'DataModel',
+    url: '/viz/data/reference/contract#datamodelschema',
+  },
+  FieldDefinitionSchema: {
+    schema: DataIR.FieldDefinitionSchema,
+    label: 'FieldDefinition',
+    url: '/viz/data/reference/contract#fielddefinitionschema',
+  },
+  DataTransformSchema: {
+    schema: DataIR.TransformSchema,
+    label: 'DataTransform',
+    url: '/viz/data/reference/contract#transformschema',
+  },
+  SortTransformSchema: {
+    schema: DataIR.SortTransformSchema,
+    label: 'SortTransform',
+    url: '/viz/data/reference/contract#sorttransformschema',
+  },
+  SummarizeTransformSchema: {
+    schema: DataIR.SummarizeTransformSchema,
+    label: 'SummarizeTransform',
+    url: '/viz/data/reference/contract#summarizetransformschema',
+  },
+  SelectTransformSchema: {
+    schema: DataIR.SelectTransformSchema,
+    label: 'SelectTransform',
+    url: '/viz/data/reference/contract#selecttransformschema',
+  },
+  AnnotateTransformSchema: {
+    schema: DataIR.AnnotateTransformSchema,
+    label: 'AnnotateTransform',
+    url: '/viz/data/reference/contract#annotatetransformschema',
+  },
+  ReducerMetricsSchema: {
+    schema: DataIR.ReducerMetricsSchema,
+    label: 'ReducerMetrics',
+    url: '/viz/data/reference/contract#reducermetricsschema',
+  },
+  ReducerOperationSchema: {
+    schema: DataIR.ReducerOperationSchema,
+    label: 'ReducerOperation',
+    url: '/viz/data/reference/contract#reduceroperationschema',
+  },
+  SelectorOperationSchema: {
+    schema: DataIR.SelectorOperationSchema,
+    label: 'SelectorOperation',
+    url: '/viz/data/reference/contract#selectoroperationschema',
+  },
+  AnnotateSelectorSchema: {
+    schema: DataIR.AnnotateSelectorSchema,
+    label: 'AnnotateSelector',
+    url: '/viz/data/reference/contract#annotateselectorschema',
   },
 
   PlotSpecSchema: {

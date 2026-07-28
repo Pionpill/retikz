@@ -1,0 +1,28 @@
+---
+title: API 参考
+description: 查询 @retikz/data 的 JSON 契约，以及 Definition、registry、数据管线与 lineage 运行时入口。
+---
+
+API 参考用于查询稳定契约，不承担入门教学。契约页集中列出可序列化的数据引用、字段模型和 transform schema；运行时页说明外部 rows、函数型 Definition、registry 与 lineage 如何接入同一条纯数据管线。
+
+> 这里是参考层，不是组件文档；开始处理数据请从[数据](/viz/data)阅读，按任务学习字段与变换请查看[数据模型](/viz/data/model)和[数据变换](/viz/data/transform)。
+
+## 职责一览
+
+| 主题   | 职责                                                   | 何时查阅                             |
+| ------ | ------------------------------------------------------ | ------------------------------------ |
+| 契约   | 数据引用、字段模型与内置 transform 的 JSON-safe schema | 生成、持久化或校验 Data 配置         |
+| 运行时 | Definition、registry、规范化、执行与 lineage 结果      | 接入宿主、注册扩展或诊断数据处理链路 |
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/data/reference/contract">
+    <span className="font-semibold">契约</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">数据引用、字段模型与 transform schema</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/reference/runtime">
+    <span className="font-semibold">运行时</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Definition、registry、数据管线与 lineage</span>
+  </LinkedCard>
+</div>

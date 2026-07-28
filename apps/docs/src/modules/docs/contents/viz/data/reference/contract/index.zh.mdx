@@ -1,0 +1,166 @@
+---
+title: 契约
+description: 查询 @retikz/data 的数据引用、字段模型与通用 transform JSON schema。
+---
+
+Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、registry 和回调在运行时注入，不进入这些 schema；字段行为与 transform 用法分别见[字段契约](/viz/data/model/contract)和[变换操作](/viz/data/transform/operations)。
+
+## DataReferenceSchema
+
+<ZodSchema
+  name="DataReferenceSchema"
+  description="用外部数据集名称绑定 rows，并可选声明字段模型。"
+  descriptions={{
+    reference: '外部数据集名称；实际 rows 保留在 IR 之外。',
+    model: '可选字段声明；存在时字段名必须唯一。',
+  }}
+/>
+
+## DataModelSchema
+
+<ZodSchema name="DataModelSchema" description="字段声明数组；同一模型中的 name 必须唯一。" />
+
+### FieldDefinitionSchema
+
+<ZodSchema
+  name="FieldDefinitionSchema"
+  description="单个逻辑字段的名称、测量类型、解析格式与分类顺序。"
+  descriptions={{
+    name: '逻辑字段名或点路径。',
+    type: '字段测量类型；省略时从数据推断。',
+    format: '内置或自定义值解析格式；省略时使用默认 coercion。',
+    order: '分类域顺序；省略时按数据首次出现顺序。',
+  }}
+/>
+
+## TransformSchema
+
+<ZodSchema name="DataTransformSchema" description="内置或运行时注册的通用 Data transform operation 联合。" />
+
+内置 transform 共用 `kind` 判别字段，并按数组声明顺序执行。`metrics` 和 `selector` 的统计子算子契约见[统计子算子](/viz/data/transform/statistics)；自定义 operation 必须保持 JSON 可序列化，并由运行时 Definition 提供精确 schema 与实现。
+
+### SortTransformSchema
+
+<ZodSchema
+  name="SortTransformSchema"
+  description="按一个字段稳定重排行。"
+  descriptions={{ kind: '排序 transform 判别值。', field: '排序字段。', order: '排序方向；默认升序。' }}
+/>
+
+### SummarizeTransformSchema
+
+<ZodSchema
+  name="SummarizeTransformSchema"
+  description="按可选分组键把多行归约成指标行。"
+  descriptions={{
+    kind: '汇总 transform 判别值。',
+    groupBy: '分组键字段；省略或空数组表示全部行属于一组。',
+    metrics: '一个或多个 reducer 指标；输出字段不能重复或覆盖分组字段。',
+  }}
+/>
+
+### SelectTransformSchema
+
+<ZodSchema
+  name="SelectTransformSchema"
+  description="按可选分组键选择代表行。"
+  descriptions={{
+    kind: '选择 transform 判别值。',
+    groupBy: '分组键字段；省略或空数组表示全部行属于一组。',
+    selector: '用于选择代表行的 row selector operation。',
+    rankAs: '可选的一基排名输出字段。',
+  }}
+/>
+
+### AnnotateTransformSchema
+
+<ZodSchema
+  name="AnnotateTransformSchema"
+  description="把组级指标或代表行结果回填到每个输入行。"
+  descriptions={{
+    kind: '注释 transform 判别值。',
+    groupBy: '分组键字段；省略或空数组表示全部行属于一组。',
+    metrics: '可选 reducer 指标。',
+    selectors: '可选单行 selector 注释；metrics 与 selectors 至少提供一项。',
+  }}
+/>
+
+## ReducerMetricsSchema
+
+<ZodSchema name="ReducerMetricsSchema" description="一个或多个 reducer operation；全部输出字段名必须唯一。" />
+
+### ReducerOperationSchema
+
+<ZodSchema name="ReducerOperationSchema" description="内置或运行时注册的 reducer operation 联合。" />
+
+| `kind`          | 字段                                                   | 作用                                            |
+| --------------- | ------------------------------------------------------ | ----------------------------------------------- |
+| `count`         | `as`                                                   | 输出组内行数                                    |
+| `sum` / `mean`  | `field`、`as`                                          | 输出数值字段的总和或算术平均值                  |
+| `median`        | `field`、`as`                                          | 输出数值字段的中位数                            |
+| `min` / `max`   | `field`、`as`                                          | 输出数值字段的最小值或最大值                    |
+| `extent`        | `field`、`as`                                          | 输出数值字段的最小值与最大值区间                |
+| `quantile`      | `field`、`p`、`as`                                     | 输出概率 `p` 对应的分位点                       |
+| `quantile-band` | `field`、`lowerP`、`upperP`、`outputs`、可选 `whisker` | 一次输出分位区间、附加分位点、spread 与 whisker |
+| 自定义 `kind`   | JSON-safe 配置                                         | 由匹配的 `StatisticsReducerDefinition` 解析执行 |
+
+## SelectorOperationSchema
+
+<ZodSchema name="SelectorOperationSchema" description="内置或运行时注册的 row selector operation 联合。" />
+
+| `kind`                  | 字段                                         | 选择结果                                  |
+| ----------------------- | -------------------------------------------- | ----------------------------------------- |
+| `min` / `max`           | `by`、可选 `tie`                             | 选择数值字段最小或最大的行                |
+| `first` / `last`        | 可选 `orderBy`                               | 按当前顺序或显式排序选择首行或末行        |
+| `top` / `bottom`        | `by`、`n`、可选 `tie`                        | 选择最高或最低的 N 行                     |
+| `nth`                   | `orderBy`、`index`                           | 按显式排序选择零基下标行                  |
+| `outside-quantile-band` | `field`、`lowerP`、`upperP`、可选 `boundary` | 选择分位区间或 spread fence 外的行        |
+| 自定义 `kind`           | JSON-safe 配置                               | 由匹配的 `RowSelectorDefinition` 解析执行 |
+
+### AnnotateSelectorSchema
+
+<ZodSchema
+  name="AnnotateSelectorSchema"
+  description="为 annotate transform 选择至多一行，并把结果写入具名字段。"
+  descriptions={{
+    selector: '单行 selector；支持 min、max、first、last、top、bottom 与 nth。',
+    as: '注释输出字段。',
+  }}
+/>
+
+annotate 不接受 `outside-quantile-band`；`top` / `bottom` 的 `n` 固定为 `1`，平局只允许选择第一行或最后一行，确保每个注释字段至多对应一条源行。
+
+<SourceLinks
+  sources={[
+    {
+      label: '数据引用与字段模型 schema',
+      path: 'packages/viz/data/src/schemas/data/schema.ts',
+      startLine: 5,
+      endLine: 43,
+    },
+    {
+      label: '通用 transform schema',
+      path: 'packages/viz/data/src/schemas/transform/schema.ts',
+      startLine: 9,
+      endLine: 145,
+    },
+    {
+      label: 'reducer operation schema',
+      path: 'packages/viz/data/src/schemas/transform/reducer.ts',
+      startLine: 9,
+      endLine: 197,
+    },
+    {
+      label: 'row selector operation schema',
+      path: 'packages/viz/data/src/schemas/transform/selector.ts',
+      startLine: 7,
+      endLine: 141,
+    },
+  ]}
+/>
+
+## 相关
+
+- [字段契约](/viz/data/model/contract)：字段类型、推断、格式与分类顺序的任务型说明
+- [变换操作](/viz/data/transform/operations)：sort、summarize、select 与 annotate 的使用方式
+- [运行时](/viz/data/reference/runtime)：Definition、registry、执行入口与 lineage 结果
