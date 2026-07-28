@@ -48,12 +48,12 @@
 
 ## 4. 当前能力域与包角色
 
-| 能力域                         | 主责包          | 解决的问题                                                      | 主要输入                             | 主要输出                                    | 关键协作包                                    |
-| ------------------------------ | --------------- | --------------------------------------------------------------- | ------------------------------------ | ------------------------------------------- | --------------------------------------------- |
-| Drawing Complete               | `@retikz/core`  | 后端中立的二维图形表达、扩展与编译                              | Core IR、definition、compile options | Scene、headless manifest                    | `math`、`runtime`、`render`、adapters、Tier 2 |
-| Data Complete                  | `@retikz/data`  | 宿主无关的数据、字段、transform、statistics、输入解析与 lineage | Data IR、external data、definition   | data view、lineage / provenance             | plot、table、未来 chart / geo                 |
-| Visualization Complete         | `@retikz/plot`  | 把数据语义映射成 core 图形语义                                  | Plot IR、Data 能力、definitions      | Core IR、visualization provenance / locator | `data`、`core`、plot adapters                 |
-| Tabular Visualization Complete | `@retikz/table` | 把数据或显式内容组织成具有二维语义结构的表格                    | Table IR、Data 能力、definitions     | Core IR、table manifest / lineage           | `data`、`core`、table adapters                |
+| 能力域                         | 主责包          | 解决的问题                                                      | 主要输入                             | 主要输出                                    | 关键协作包                                              |
+| ------------------------------ | --------------- | --------------------------------------------------------------- | ------------------------------------ | ------------------------------------------- | ------------------------------------------------------- |
+| Drawing Complete               | `@retikz/core`  | 后端中立的二维图形表达、扩展与编译                              | Core IR、definition、compile options | Scene、headless manifest                    | `math`、`runtime`、`render`、Standard、adapters、Tier 2 |
+| Data Complete                  | `@retikz/data`  | 宿主无关的数据、字段、transform、statistics、输入解析与 lineage | Data IR、external data、definition   | data view、lineage / provenance             | plot、table、未来 chart / geo                           |
+| Visualization Complete         | `@retikz/plot`  | 把数据语义映射成 core 图形语义                                  | Plot IR、Data 能力、definitions      | Core IR、visualization provenance / locator | `data`、`standard`、`core`、plot adapters               |
+| Tabular Visualization Complete | `@retikz/table` | 把数据或显式内容组织成具有二维语义结构的表格                    | Table IR、Data 能力、definitions     | Core IR、table manifest / lineage           | `data`、`standard`、`core`、table adapters              |
 
 对应设计：
 
@@ -63,6 +63,8 @@
 - [`Table 表格可视化完备设计`](../../packages/viz/_notes/architecture/table-visualization-complete.md)
 
 `@retikz/math`、`@retikz/runtime`、`@retikz/render`、React / Vanilla adapters 当前不定义独立完备目标。它们的职责由就近 `AGENTS.md` 约束，并在所属能力域中分别承担纯计算、领域中立增量执行、Scene 执行、等价暴露或宿主接入义务。未来 geo 等成为独立核心能力域时，必须先定义自己的问题边界和 completeness 文档。
+
+`@retikz/standard` 是 Drawing Complete 在 Core 之上的官方通用 Tier 2 能力层。它相对 Core 保持可选安装，但 Plot、Table 等官方领域包可以把已经去除领域词汇的绘图能力作为声明依赖消费；依赖只能从领域包指向 Standard，Standard 不得读取领域 IR、scale、数据模型、pipeline 或 runtime。领域包仍拥有从自身语义解析到 Standard 输入的过程，以及 provenance、locator、交互意图和领域诊断。
 
 ## 5. 完备性的三个维度
 

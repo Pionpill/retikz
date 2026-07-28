@@ -13,12 +13,12 @@ retikz 将包的代码归属和发布节奏分开管理。
 | 领域    | 目录                 | 职责                                                         |
 | ------- | -------------------- | ------------------------------------------------------------ |
 | kernel  | `packages/kernel/*`  | 运行时、核心绘图、渲染、adapter 和可选 Kernel 集成（如 TeX） |
-| library | `packages/library/*` | 官方可选、跨领域复用的绘图能力库                             |
+| library | `packages/library/*` | 相对 Core 可选、供作者与官方 Tier 2 包跨领域复用的绘图能力库 |
 | viz     | `packages/viz/*`     | 可视化底座和 plot 等上层功能包                               |
 
 领域目录只表达代码归属和依赖方向，不表示同目录下所有包必须共享版本。
 
-跨领域复用的官方可选绘图能力库只归 `packages/library/*`，不再以“可选 kernel 扩展”的名义进入 `packages/kernel/*`。
+跨领域复用的官方绘图能力库只归 `packages/library/*`，不再以“可选 kernel 扩展”的名义进入 `packages/kernel/*`。它相对 Core 保持可选，但 Plot、Table 等官方 Tier 2 包可以使用兼容版本单向依赖所需 Standard capability。
 
 ## 发布组
 
@@ -54,7 +54,7 @@ retikz 将包的代码归属和发布节奏分开管理。
 | 同发布组   | `workspace:*` | 包一起发布，并解析到同一组版本 |
 | 不同发布组 | `workspace:^` | 消费方接受依赖组的兼容版本     |
 
-功能发布组不能依赖其他功能发布组。共享能力应下沉到 `@retikz/data`、`@retikz/core` 或 `@retikz/math` 这类底座包。
+领域功能发布组不能相互依赖；Plot、Table 等官方 Tier 2 组可以单向依赖作为通用绘图服务层的 `standard` 组，Standard 不得反向依赖领域功能组。通用数据、机制或几何能力仍应下沉到 `@retikz/data`、`@retikz/core` 或 `@retikz/math`，跨领域复用的可选绘图 composite 进入 `@retikz/standard`。
 
 运行拓扑检查：
 
