@@ -263,7 +263,12 @@ export const resolveTableTransaction = (
     tracks: columnTracks,
     contributions: columnContributions,
     gap: resolved.columnGap,
-    ...(context.constraint.kind === 'constrained' ? { availableSize: context.constraint.maxWidth } : {}),
+    ...(context.constraint.kind === 'constrained' && context.constraint.width !== undefined
+      ? {
+          availableSize:
+            context.constraint.width.kind === 'bounded' ? context.constraint.width.max : context.constraint.width.size,
+        }
+      : {}),
   });
   const columns = trackLayoutsOf(
     semantic.columns.map(column => column.id),
@@ -279,7 +284,10 @@ export const resolveTableTransaction = (
     );
     const final = cell.layout.wrap
       ? runTableTransactionStage('constrained Cell layout', parsed.id, cell.id, () =>
-          context.layoutChild(presentedCell.content, { kind: 'constrained', maxWidth: contentWidth }),
+          context.layoutChild(presentedCell.content, {
+            kind: 'constrained',
+            width: { kind: 'bounded', max: contentWidth },
+          }),
         )
       : intrinsic[index];
     return { semantic: cell, content: presentedCell.content, intrinsic: intrinsic[index], final };

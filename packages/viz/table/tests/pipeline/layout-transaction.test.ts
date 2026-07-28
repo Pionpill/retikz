@@ -128,7 +128,10 @@ describe('Table layout transaction', () => {
       schema: ProbeSchema,
       artifactSchema: ProbeArtifactSchema,
       compile: (_node, context) => {
-        const maxWidth = context.constraint.kind === 'constrained' ? context.constraint.maxWidth : 100;
+        const maxWidth =
+          context.constraint.kind === 'constrained' && context.constraint.width?.kind === 'bounded'
+            ? context.constraint.width.max
+            : 100;
         calls.push({
           kind: context.constraint.kind,
           ...(context.constraint.kind === 'constrained' ? { maxWidth } : {}),
@@ -178,7 +181,10 @@ describe('Table layout transaction', () => {
     expect(result.manifest.cells[0].contentAllocationBounds.height).toBe(40);
   });
 
-  it('maps an explicit parent maxWidth into the column solver exactly once', () => {
+  it.each([
+    ['exact', { kind: 'exact', size: 60 }],
+    ['bounded', { kind: 'bounded', max: 60 }],
+  ] as const)('maps an explicit parent %s width into the column solver exactly once', (_kind, width) => {
     const OuterSchema = CompositeBaseSchema.extend({
       namespace: z.literal('fixture'),
       type: z.literal('outer'),
@@ -189,7 +195,10 @@ describe('Table layout transaction', () => {
       type: 'outer',
       schema: OuterSchema,
       compile: (node, context) => {
-        const table = context.layoutChild(node.table, { kind: 'constrained', maxWidth: 60 });
+        const table = context.layoutChild(node.table, {
+          kind: 'constrained',
+          width,
+        });
         return { children: [context.replay(table)] };
       },
     });
