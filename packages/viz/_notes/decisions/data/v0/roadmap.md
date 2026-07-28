@@ -7,8 +7,9 @@
 ## v0.1
 
 - beta.1：从 `@retikz/plot` 抽出最小稳定数据层，并让 plot 改为消费 `@retikz/data`。
-- beta.2：收紧 data IR 与 statistics 边界，统一 schema 派生公开类型为 `IRDataXxx`。
-- beta 后续：根据 chart / table 真实需求决定是否补通用数据通道组合 API；不提前创建 React adapter。
+- beta.2：收紧 data IR 与 statistics 边界，统一 schema 派生公开类型为 `IRDataXxx`，并补齐宿主无关的 runtime lineage。
+- RC：冻结 v0.1 公共契约，只接收兼容性 bug、诊断、文档和发布修正。
+- v0.1 后续：canonical data-view preparation 等新公共能力只在 plot / chart / table 出现稳定重复需求后进入新的 Alpha milestone；不提前创建 React adapter。
 
 ## 不在 v0 范围
 

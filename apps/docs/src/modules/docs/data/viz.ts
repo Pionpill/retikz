@@ -69,6 +69,25 @@ export const vizSection: Array<Section> = [
         ],
       },
       { id: 'provenance', label: 'viz.dataProvenance' },
+      {
+        id: 'reference',
+        label: 'viz.dataReference',
+        children: [
+          { id: 'contract', label: 'viz.dataReferenceContract' },
+          { id: 'runtime', label: 'viz.dataReferenceRuntime' },
+        ],
+      },
+      {
+        id: 'changelog',
+        label: 'viz.changelog',
+        children: [{ id: 'v0-1', label: 'viz.changelogV01' }],
+        meta: {
+          pageType: 'release',
+          audience: 'user',
+          capability: 'data.release',
+          sourceOfTruth: 'changelog',
+        },
+      },
     ],
   },
   {
@@ -86,6 +105,17 @@ export const vizSection: Array<Section> = [
           { id: 'contract-detail', label: 'viz.tableReferenceContractDetail' },
           { id: 'runtime', label: 'viz.tableReferenceRuntime' },
         ],
+      },
+      {
+        id: 'changelog',
+        label: 'viz.changelog',
+        children: [{ id: 'v0-1', label: 'viz.changelogV01' }],
+        meta: {
+          pageType: 'release',
+          audience: 'user',
+          capability: 'table.release',
+          sourceOfTruth: 'changelog',
+        },
       },
     ],
   },
@@ -217,17 +247,6 @@ export const vizSection: Array<Section> = [
           capability: 'plot.release',
           sourceOfTruth: 'changelog',
         },
-      },
-    ],
-  },
-  {
-    id: 'releases',
-    label: 'viz.releases',
-    pages: [
-      {
-        id: 'changelog',
-        label: 'viz.changelog',
-        children: [{ id: 'v0-1', label: 'viz.changelogV01' }],
       },
     ],
   },

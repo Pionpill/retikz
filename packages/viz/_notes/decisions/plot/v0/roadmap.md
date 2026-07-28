@@ -1,6 +1,6 @@
 # plot v0 Roadmap
 
-> 更新于 2026-07-05。本文件记录 `@retikz/plot` 的总体路线。**v0.1 承载整套图形语法（GoG 8 组件）**，beta 阶段抽出最小 `@retikz/data` 并稳定化；**v0.2 承载交互能力 + layout transform / structured visualization**；**v0.3 承载渐进式 AI 生成 + 跨域复合**。alpha 级执行细节见对应 `v0.*/roadmap.md`。
+> 更新于 2026-07-27。本文件记录 `@retikz/plot` 的总体路线。**v0.1 承载整套图形语法（GoG 8 组件）**，beta / RC 阶段抽出 `@retikz/data`、补齐 runtime lineage、收敛 plain authoring 并冻结公共面；**v0.2 承载交互能力 + layout transform / structured visualization**；**v0.3 承载渐进式 AI 生成 + 跨域复合**。alpha 级执行细节见对应 `v0.*/roadmap.md`。
 > 具体执行计划放在同目录 `v0.*/roadmap.md`，设计决策放在 `packages/viz/_notes/decisions/`，里程碑详情以 [`plot-design.md §13`](../../../architecture/plot-design.md) 为准。
 
 ## 定位
@@ -22,7 +22,7 @@
 
 - **阶段一 · 基础架构搭建（v0.1 alpha.1–5，✅ 已完成）**：验证 8 段管线 / lowering / 坐标系抽象 / anchor·scope 等**架构能力端到端成立**，并搭起 6 个语法组件（Data / Aesthetics / Geometry / Statistics / Scales / Coordinates）的**最小骨架**（2 个二维坐标系、position + 基础 color、基础 mark）。是「搭骨架」，不求语法完备。
 - **阶段二 · 完善图形语法（v0.1 alpha.6–9 / 11–15）**：在已验证的架构上**补全全部 8 组件**——含两个全新组件 **Coordinate composition / Theme**（Coordinate composition 覆盖 GoG 的 Facets，并向同 panel 多坐标复合扩展）。（**alpha.10 为 2026-06-13 插入的绑定层 milestone**「退化 Plot 为薄容器」、非 GoG 组件，故语法 milestone 顺延 11–15。）
-- **v0.1 发布 = 图形语法完整**；beta 阶段只做最小 `@retikz/data` 抽层、类型 / 注释 / 测试 / docs 稳定化，不新增 table / geo / chart 专属数据能力。
+- **v0.1 发布 = 图形语法完整**；beta / RC 阶段完成 `@retikz/data` 抽层、runtime lineage、plain authoring 收敛与类型 / 注释 / 测试 / docs 稳定化，不新增 table / geo / chart 专属能力。
 
 **v0.1 之后 · 能力轴 minor**：
 

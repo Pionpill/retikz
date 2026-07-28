@@ -18,14 +18,15 @@ const compile = (
   spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options?: LowerPlotsOptions,
-) => compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) }).scene;
+) =>
+  compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) }).scene;
 
-const specWithModel = (): IRPlotSpec =>
+const specWithModel = (reference = 'd'): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: {
-      reference: 'd',
+      reference,
       model: [
         { name: 'month', type: 'temporal' },
         { name: 'revenue', type: 'continuous' },
@@ -39,11 +40,11 @@ const specWithModel = (): IRPlotSpec =>
     marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
   });
 
-const specNoModel = (): IRPlotSpec =>
+const specNoModel = (reference = 'd'): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
-    data: { reference: 'd' },
+    data: { reference },
     scales: [
       { type: 'linear', name: 'x' },
       { type: 'linear', name: 'y' },
@@ -51,6 +52,22 @@ const specNoModel = (): IRPlotSpec =>
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
   });
+
+/** 构造仅含指定自有键的字典，避免 `__proto__` 对对象字面量的特殊语义 */
+const ownRecord = <T>(key: string, value: T): Record<string, T> => {
+  const record = Object.create(null) as Record<string, T>;
+  Object.defineProperty(record, key, {
+    configurable: true,
+    enumerable: true,
+    value,
+    writable: true,
+  });
+  return record;
+};
+
+/** 构造仅从原型继承指定键的字典 */
+const inheritedRecord = <T>(key: string, value: T): Record<string, T> =>
+  Object.create(ownRecord(key, value)) as Record<string, T>;
 
 const doubleDefinition = defineTransform({
   schema: z.object({
@@ -163,7 +180,50 @@ describe('coerce-before-transform 关键回归', () => {
   });
 });
 
-describe('fieldMaps 校验（contract 集成）', () => {
+describe('数据字典 own-key 语义（contract 集成）', () => {
+  it.each(['constructor', 'toString', '__proto__'])('inherited dataset key %s is treated as missing', reference => {
+    expect(() => compile(specNoModel(reference), {})).toThrow(
+      `lowerPlots: dataset "${reference}" not found in provided datasets`,
+    );
+
+    expect(() => createPlotLocator(specNoModel(reference), {})).not.toThrow();
+    expect(createPlotLocator(specNoModel(reference), {}).datum(0)).toBeNull();
+  });
+
+  it.each(['constructor', 'toString', '__proto__'])('own dataset key %s remains usable', reference => {
+    const datasets = ownRecord(reference, [{ a: 1, b: 2 }]);
+
+    expect(() => compile(specNoModel(reference), datasets)).not.toThrow();
+    expect(createPlotLocator(specNoModel(reference), datasets).datum(0)).not.toBeNull();
+  });
+
+  it.each(['constructor', 'toString', '__proto__'])('inherited fieldMaps key %s is ignored', reference => {
+    const datasets = ownRecord(reference, [{ month: '2024-01-01', revenue: 1 }]);
+    const fieldMaps = inheritedRecord(reference, { month: 'missingMonth', revenue: 'missingRevenue' });
+
+    expect(() => compile(specWithModel(reference), datasets, { fieldMaps })).not.toThrow();
+    expect(createPlotLocator(specWithModel(reference), datasets, { fieldMaps }).datum(0)).not.toBeNull();
+  });
+
+  it.each(['constructor', 'toString', '__proto__'])(
+    'own fieldMaps key %s cannot target an inherited dataset',
+    reference => {
+      const fieldMaps = ownRecord(reference, { month: 'period' });
+
+      expect(() => compile(specWithModel(), { d: [{ month: '2024-01-01', revenue: 1 }] }, { fieldMaps })).toThrow(
+        `lowerPlots: fieldMaps references unknown dataset "${reference}"`,
+      );
+    },
+  );
+
+  it.each(['constructor', 'toString', '__proto__'])('own fieldMaps key %s remains usable', reference => {
+    const datasets = ownRecord(reference, [{ period: '2024-01-01', amount: 1 }]);
+    const fieldMaps = ownRecord(reference, { month: 'period', revenue: 'amount' });
+
+    expect(() => compile(specWithModel(reference), datasets, { fieldMaps })).not.toThrow();
+    expect(createPlotLocator(specWithModel(reference), datasets, { fieldMaps }).datum(0)).not.toBeNull();
+  });
+
   it('fieldmap_without_model_throws', () => {
     expect(() => compile(specNoModel(), { d: [{ a: 1, b: 2 }] }, { fieldMaps: { d: { a: 'x' } } })).toThrow(
       /requires data\.model/i,

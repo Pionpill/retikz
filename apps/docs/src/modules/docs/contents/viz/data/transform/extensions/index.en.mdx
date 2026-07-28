@@ -15,7 +15,7 @@ Prefer built-in operations. Register a Definition only when new row-processing s
 | `defineStatisticsReducer` | Reduce a group of rows into a field fragment    | Reducer operation    |
 | `defineRowSelector`       | Select original rows from a group               | Selector operation   |
 
-When the existing `summarize`, `select`, or `annotate` structure already fits and only a calculation or row-selection rule is missing, extend a reducer or selector. Define a complete transform when the feature needs a new grouping strategy, multiple processing stages, or a different row structure.
+Extend a reducer when `summarize` or `annotate` only lacks a statistical calculation. Extend a selector when `select`, or a host transform that explicitly supports selectors, only lacks a row-selection rule. Data's `annotate` selector entry accepts only the built-in single-row subset, not custom selectors. Define a complete transform when the feature needs a new grouping strategy, multiple processing stages, or a different row structure.
 
 ## Defining Data Operations
 
@@ -41,7 +41,7 @@ With provenance enabled, the same Definition may run during ordinary lowering an
 
 ## Defining Statistical Sub-operators
 
-Reducers and selectors are not independent pipeline steps. They are sub-operators invoked by transforms such as `summarize`, `select`, and `annotate`.
+Reducers and selectors are not independent pipeline steps. `summarize` and `annotate` can invoke built-in or custom reducers. `select` and host transforms that explicitly support selectors can invoke built-in or custom selectors. Data's `annotate` selector entry accepts only the built-in single-row subset.
 
 | Sub-operator | Core function | Result                                    | Typical use                      |
 | ------------ | ------------- | ----------------------------------------- | -------------------------------- |
@@ -76,12 +76,13 @@ Field collection and actual execution use the same registry. `inputFields` inclu
 
 ## Errors And Limits
 
-| Condition                                       | Result                                  |
-| ----------------------------------------------- | --------------------------------------- |
-| `kind` duplicates a built-in or custom key      | Registry construction fails immediately |
-| Operation uses an unregistered `kind`           | Execution fails before applying it      |
-| Operation fails its Definition schema           | Schema validation fails                 |
-| Operation contains functions or non-JSON values | Serializability validation fails        |
+| Condition                                                                                               | Result                                  |
+| ------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| `kind` duplicates a built-in or custom key                                                              | Registry construction fails immediately |
+| Operation uses an unregistered `kind`                                                                   | Execution fails before applying it      |
+| Operation fails its Definition schema                                                                   | Schema validation fails                 |
+| Operation contains functions or non-JSON values                                                         | Serializability validation fails        |
+| A custom reducer's `outputFields()` declaration collides with a group key or another statistical output | Execution fails before the reducer runs |
 
 A Definition should implement only data-row and statistical semantics. Color, mark, layout, and other consumer-side semantics belong to the corresponding module extension point.
 
@@ -102,12 +103,12 @@ Use `defineTransform(definition)` to preserve the generic relationship among the
 
 ### `StatisticsReducerDefinition`
 
-| Field           | Type                                                                                                 | Description                                  |
-| --------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| `schema`        | `z.ZodType<TReducerOperation>`                                                                       | Schema with a non-empty literal `kind`       |
-| `inputFields?`  | `(operation: TReducerOperation) => Array<string>`                                                    | Returns source fields read by the reducer    |
-| `outputFields?` | `(operation: TReducerOperation) => Array<string>`                                                    | Returns fields produced by the reducer       |
-| `reduce`        | `(rows: Array<ExternalRow>, operation: TReducerOperation, context: TransformContext) => ExternalRow` | Returns the field fragment written to output |
+| Field           | Type                                                                                                 | Description                                                                                                      |
+| --------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `schema`        | `z.ZodType<TReducerOperation>`                                                                       | Schema with a non-empty literal `kind`                                                                           |
+| `inputFields?`  | `(operation: TReducerOperation) => Array<string>`                                                    | Returns source fields read by the reducer                                                                        |
+| `outputFields?` | `(operation: TReducerOperation) => Array<string>`                                                    | Returns generated fields and drives dynamic conflict checks; it must declare every field that `reduce` may write |
+| `reduce`        | `(rows: Array<ExternalRow>, operation: TReducerOperation, context: TransformContext) => ExternalRow` | Returns the field fragment written to output                                                                     |
 
 Use `defineStatisticsReducer(definition)` to define a reducer.
 
@@ -120,6 +121,8 @@ Use `defineStatisticsReducer(definition)` to define a reducer.
 | `select`       | `(rows: Array<ExternalRow>, operation: TSelectorOperation) => Array<RowSelection>` | Returns original rows and optional one-based ranks |
 
 Use `defineRowSelector(definition)` to define a selector.
+
+A custom selector can be used by `select` or by a host transform that explicitly supports it, such as Plot `relate`. Data `annotate` does not accept custom selectors.
 
 <SourceLinks
   sources={[

@@ -109,6 +109,123 @@ describe('data transform runtime', () => {
     ]);
   });
 
+  it('rejects custom reducer outputs that collide with group or reducer fields', () => {
+    let groupWriterCalls = 0;
+    let firstStatCalls = 0;
+    let secondStatCalls = 0;
+    const groupWriter = defineStatisticsReducer({
+      schema: z.strictObject({ kind: z.literal('group-writer') }),
+      outputFields: () => ['group'],
+      reduce: () => {
+        groupWriterCalls += 1;
+        return { group: 2 };
+      },
+    });
+    const firstStat = defineStatisticsReducer({
+      schema: z.strictObject({ kind: z.literal('first-stat') }),
+      outputFields: () => ['stat'],
+      reduce: () => {
+        firstStatCalls += 1;
+        return { stat: 1 };
+      },
+    });
+    const secondStat = defineStatisticsReducer({
+      schema: z.strictObject({ kind: z.literal('second-stat') }),
+      outputFields: () => ['stat'],
+      reduce: () => {
+        secondStatCalls += 1;
+        return { stat: 2 };
+      },
+    });
+
+    expect(() =>
+      applyTransforms(
+        [{ group: 'A', value: 1 }],
+        [{ kind: 'summarize', groupBy: ['group'], metrics: [{ kind: 'group-writer' }] }],
+        undefined,
+        {
+          ...DEFAULT_TRANSFORM_CONTEXT,
+          statisticsReducerRegistry: resolveStatisticsReducerRegistry([groupWriter]),
+        },
+      ),
+    ).toThrow('data: reducer output field "group" must not collide with a groupBy field');
+    expect(groupWriterCalls).toBe(0);
+
+    expect(() =>
+      applyTransforms(
+        [{ value: 1 }],
+        [{ kind: 'summarize', metrics: [{ kind: 'first-stat' }, { kind: 'second-stat' }] }],
+        undefined,
+        {
+          ...DEFAULT_TRANSFORM_CONTEXT,
+          statisticsReducerRegistry: resolveStatisticsReducerRegistry([firstStat, secondStat]),
+        },
+      ),
+    ).toThrow('data: duplicate reducer output field "stat"');
+    expect(firstStatCalls).toBe(0);
+    expect(secondStatCalls).toBe(0);
+  });
+
+  it('rejects custom reducer outputs that collide with annotate selector fields', () => {
+    let statWriterCalls = 0;
+    const statWriter = defineStatisticsReducer({
+      schema: z.strictObject({ kind: z.literal('stat-writer') }),
+      outputFields: () => ['stat'],
+      reduce: () => {
+        statWriterCalls += 1;
+        return { stat: 1 };
+      },
+    });
+
+    expect(() =>
+      applyTransforms(
+        [{ value: 1 }],
+        [
+          {
+            kind: 'annotate',
+            metrics: [{ kind: 'stat-writer' }],
+            selectors: [{ selector: { kind: 'max', by: 'value' }, as: 'stat' }],
+          },
+        ],
+        undefined,
+        {
+          ...DEFAULT_TRANSFORM_CONTEXT,
+          statisticsReducerRegistry: resolveStatisticsReducerRegistry([statWriter]),
+        },
+      ),
+    ).toThrow('data: reducer output field "stat" must not collide with an annotate selector output field');
+    expect(statWriterCalls).toBe(0);
+  });
+
+  it('allows custom annotate reducer and selector outputs with distinct fields', () => {
+    const meanWriter = defineStatisticsReducer({
+      schema: z.strictObject({ kind: z.literal('mean-writer') }),
+      outputFields: () => ['mean'],
+      reduce: rows => ({ mean: rows.reduce((sum, row) => sum + Number(row.value), 0) / rows.length }),
+    });
+
+    expect(
+      applyTransforms(
+        [{ value: 1 }, { value: 2 }],
+        [
+          {
+            kind: 'annotate',
+            metrics: [{ kind: 'mean-writer' }],
+            selectors: [{ selector: { kind: 'max', by: 'value' }, as: 'peak' }],
+          },
+        ],
+        undefined,
+        {
+          ...DEFAULT_TRANSFORM_CONTEXT,
+          statisticsReducerRegistry: resolveStatisticsReducerRegistry([meanWriter]),
+        },
+      ),
+    ).toEqual([
+      { value: 1, mean: 1.5, peak: 2 },
+      { value: 2, mean: 1.5, peak: 2 },
+    ]);
+  });
+
   it('uses tie last for the final threshold row in top and bottom selectors', () => {
     const rows: Array<ExternalRow> = [
       { id: 'A', score: 10 },

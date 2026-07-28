@@ -1,6 +1,6 @@
 # Data 能力完备设计
 
-> 本文定义 `@retikz/data` 的能力完备目标和检测方法。总纲见 [`notes/architecture/capability-design.md`](../../../../notes/architecture/capability-design.md)。本文只讨论宿主无关的数据能力，不覆盖 plot encoding / scale / mark、业务数据源 SDK、数据库接入或 UI dataflow runtime。
+> **状态：长期架构真源，不跟随单个版本维护功能清单。** 本文定义 `@retikz/data` 的能力完备目标和检测方法。总纲见 [`notes/architecture/capability-design.md`](../../../../notes/architecture/capability-design.md)，当前包职责与公开契约以就近 `AGENTS.md`、Accepted ADR 和代码为准。本文只讨论宿主无关的数据能力，不覆盖 plot encoding / scale / mark、业务数据源 SDK、数据库接入或 UI dataflow runtime。
 
 ---
 

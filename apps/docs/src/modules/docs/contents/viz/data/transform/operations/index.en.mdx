@@ -35,7 +35,7 @@ Keep it separate from [`order`](/viz/data/model/contract#category-order) in the 
 
 `summarize` groups by `groupBy`, then reduces each group into one output row through `metrics`. The output row keeps the group keys, and every reducer must declare an `as` field name.
 
-Output names must be unique within one operation: reducer outputs cannot collide with `groupBy` or with each other. The schema rejects conflicts instead of silently overwriting data.
+Output names must be unique within one operation: reducer outputs cannot collide with `groupBy` or with each other. The schema rejects static field conflicts from built-in reducers; custom reducer fields declared by the Definition's `outputFields()` fail before reducer execution.
 
 <ComponentPreview files={['transform-summarize', 'transform-summarize.data.ts']} />
 

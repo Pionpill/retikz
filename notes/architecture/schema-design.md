@@ -1,8 +1,8 @@
 # IR JSON-Schema 产物设计
 
-> 把各 domain 的 zod IR schema（单一真源）导出成**给 AI / 工具 / MCP / 文档消费的 JSON-Schema 契约**的设计稿。
+> 把各 domain 的 zod IR schema（单一真源）导出成**给 AI / 工具 / MCP / 文档消费的版本化 JSON-Schema 产物**的设计稿。
 >
-> **状态：方向已定，alpha 阶段不实现，后续统一优化。** 本设计已做过可用原型（core + plot 全跑通、测试守门全绿），评估后决定推迟落地、先把设计沉淀在此；后续按本文实现即可，不必重新探索。
+> **状态：直接导出已实现，版本化分片产物未实现。** Core / Plot 已用 `z.toJSONSchema()` 测试锁定 schema 可导出性，eval 也可直接消费；本文设计的分片、索引、漂移守门、package exports 与随包发布尚未落地。设计期原型数据只作参考，正式实现前仍需按当前 schema 图复验。
 >
 > 关联：`packages/kernel/core/src/schemas/**`（IR zod schema，含 `.describe()`）· `packages/viz/plot/src/schemas/**`。
 
@@ -98,7 +98,7 @@ zod schema 仍是唯一真源；JSON-Schema 是**生成物**，随源码 `gen:sc
 
 ---
 
-## 5. 接入新 domain（实现后的操作）
+## 5. 接入新 domain（版本化产物实现后的操作）
 
 在 `scripts/schema/targets.ts` 加一个 target：`{ name, pkg, rootSchema, rootGroup, version, rootDescription, groups: [{ id, modules, primary?, description }], outDir }`；给该包 `package.json` 加 `./schema/*` 导出 + `files: schema`；`pnpm gen:schema` 生成、提交。
 
@@ -110,8 +110,8 @@ zod schema 仍是唯一真源；JSON-Schema 是**生成物**，随源码 `gen:sc
 
 ---
 
-## 7. alpha 不做的原因
+## 7. 暂不实现版本化产物的原因
 
 - 体积问题对当前阶段不是瓶颈（运行时 external + tree-shaking + 消费方自压缩已让 app bundle 可控；describe 体积主要是 npm 安装 / 契约可读性问题，非线上性能）。
 - 工具 + 产物 + 多包导出 + 测试是一套不小的常驻设施，且 §4 仍有待决策（尤其 AI 消费方式），过早固化易返工。
-- 故 alpha 先收敛功能，本能力随设计沉淀，后续随「AI 消费方式」明确后统一落地。
+- 因此当前只保留直接 `z.toJSONSchema()` 能力与测试，不建设常驻分片发布设施；等「AI 消费方式」和实际按需加载需求明确后，再按独立 milestone 统一落地。

@@ -1,10 +1,14 @@
 # Table 表格可视化完备设计
 
-本文定义 Table 能力域的长期边界，回答“什么属于 `@retikz/table`”以及“怎样才算形成表格能力闭环”。它是 [capability-design](../../../../notes/architecture/capability-design.md) 在表格领域的细化，并与 [Data 能力完备设计](./data-capability-complete.md)、[Plot 可视化完备设计](./plot-visualization-complete.md) 和 [Core 绘图能力完备设计](../../../kernel/_notes/architecture/core-drawing-complete.md) 共同用于能力归属判断。
+> **状态：长期能力准入真源，alpha.2 基线已实现。** 本文回答“什么属于 `@retikz/table`”以及“怎样才算形成表格能力闭环”，不维护具体公开字段。当前包职责与实现基线以 [`packages/viz/table/AGENTS.md`](../../table/AGENTS.md)、Accepted ADR 和公开类型为准。
+>
+> 关联：[`能力完备性与模块边界`](../../../../notes/architecture/capability-design.md) · [`Data 能力完备设计`](./data-capability-complete.md) · [`Plot 可视化完备设计`](./plot-visualization-complete.md) · [`Core 绘图完备设计`](../../../kernel/_notes/architecture/core-drawing-complete.md) · [`Table 总设计`](./table-design.md)
 
-本文只确定核心概念，不表示 Table 包已经实现，也不冻结具体 IR、Definition、算法或 API；这些内容由后续 ADR 决定。
+---
 
-## 1. 根定义
+本文只确定长期核心概念、包边界与闭环检查；具体 IR、Definition、算法和 API 由对应 milestone ADR 冻结，已实现能力不能在本文中重新打开为未决设计。
+
+## 1. 定位与问题边界
 
 Table 解决的是：
 
@@ -12,7 +16,27 @@ Table 解决的是：
 
 Table 是与 Plot 平行的 Tier 2 能力，不是 Plot 的封装层，也不是以编辑和公式计算为核心的 data-grid / spreadsheet 引擎。Table 家族以展示为核心，长期可以包含虚拟滚动等大表展示 runtime。
 
-## 2. 能力边界
+## 2. 包角色与端到端管线
+
+| 角色                | 主责包 / 协作包                 | 责任                                                                | 不拥有                                            |
+| ------------------- | ------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------- |
+| 数据底座            | `@retikz/data`                  | 数据模型、字段解析、通用 transform / statistics 与 lineage          | Table 结构、Cell 呈现、表格布局                   |
+| Table 主责          | `@retikz/table`                 | Table IR、结构与呈现、约束布局、lowering、manifest / lineage        | 通用数据算法、Core 测量、renderer                 |
+| 图形与测量底座      | `@retikz/core` / `@retikz/math` | `IRChild` 测量、布局感知 composite、Core IR / Scene 与通用几何      | Table 结构、Table track solver                    |
+| authoring / runtime | table-react / table-vanilla     | 构造 Table 输入、注入数据与 definitions、接入宿主生命周期和滚动容器 | Table schema、布局算法、lowering 或 renderer 语义 |
+
+依赖主链保持：
+
+```text
+Data ──▶ Table ──lowering──▶ Core IR ──▶ Renderer
+           ▲
+           │
+    React / Vanilla adapter
+```
+
+Table 可以消费 Data 与 Core，但不依赖 Plot。Plot 等 Tier 2 内容通过 Core 的通用 `IRChild` / composite 能力进入单元格；Table 负责 Cell box、测量请求、对齐、fit、裁剪和追溯，不解析内容内部的 mark、scale 或 guide。
+
+## 3. 能力边界与能力面
 
 Table 拥有：
 
@@ -34,19 +58,6 @@ Table 不拥有：
 - React / Vanilla 的宿主状态和生命周期
 
 虚拟滚动按“展示算法 + 宿主 runtime”拆分：Table 提供 renderer-agnostic 的 window / overscan / 布局映射合同，React / Vanilla adapter 负责滚动容器、viewport 观测和生命周期。该能力不写入 v0.1，也不把瞬时滚动状态写入 JSON IR。
-
-依赖方向保持：
-
-```text
-Data ──▶ Table ──lowering──▶ Core IR ──▶ Renderer
-           ▲
-           │
-    React / Vanilla adapter
-```
-
-Table 可以消费 Data 与 Core，但不依赖 Plot。Plot 等 Tier 2 内容通过 Core 的通用组合能力进入单元格；Table 负责 Cell box、测量、对齐、fit、裁剪和追溯，不解析内容内部的 mark、scale 或 guide。
-
-## 3. 核心能力面
 
 ### 3.1 Structure
 
@@ -87,9 +98,9 @@ Table 需要拥有表格专用的二维约束布局，统一处理内容 intrins
 
 Table 最终只产生合法 Core IR，renderer 不认识 Table 私有类型。与此同时，Table 需要保留单元格语义、布局位置、数据来源和视觉贡献之间的映射。
 
-Core composite 如何取得 lowering 节点、宿主如何取得 manifest / lineage / diagnostics 等附属产物，由后续 ADR 确定，不能依赖隐藏 side channel。
+Table alpha.2 已通过 Core layout-aware composite 在同一次 compile 内完成 measure、constrain、replay，并以 typed artifact 暴露 manifest；后续 lineage / diagnostics 扩展必须沿同一公开产物链路演进，不能依赖隐藏 side channel。
 
-## 4. 完备性检测
+## 4. 准入原则与完备性检测
 
 一个 Table 能力只有同时回答以下问题，才算形成闭环：
 
@@ -102,7 +113,16 @@ Core composite 如何取得 lowering 节点、宿主如何取得 manifest / line
 
 若能力只能通过 renderer 特判、adapter 私有实现、平行 IR 或私有测量系统完成，说明能力归属或底层合同仍未闭环。
 
-## 5. 完备性的边界
+## 5. 当前基线与完备性边界
+
+当前 alpha.2 已形成以下纵向闭环：
+
+- `TableSpecSchema` / `IRTableSpec` 聚合 manual、detail、custom 三种精确 spec 变体
+- manual / detail / custom 结构共用 `SemanticTableModel`，Cell value / content 经 formatter / presentation contract 进入布局
+- auto / fraction / minmax 轨道、矩形 span、padding、alignment、fit / overflow / clip、文本换行、自动行高与 Border Graph 进入同一确定性约束布局
+- lowering 在同次 Core compile 中产出 Scene 与 typed manifest，React / Vanilla adapter 共用 runtime contribution 与 artifact contract
+
+尚未实现的分组、层级、汇总、交叉、转置、fragmentation、复杂 header region、条件视觉编码和大表 windowing 仍按本能力边界逐项进入后续 ADR；它们不能被 alpha.2 的存在默认为已完成。
 
 “Table 完备”不等于实现所有 data grid 功能，而是保证：
 
@@ -112,4 +132,23 @@ Core composite 如何取得 lowering 节点、宿主如何取得 manifest / line
 - 大表展示能力可以在同一语义模型和布局结果上扩展，由 adapter 承担 runtime 接线
 - 不需要为单个场景建立平行底层机制
 
-竞品取舍见 [Table 竞品与能力差距分析](../analysis/table-compare-analysis.md)，总体指导思想见 [Table 表格语法与 lowering 总设计](./table-design.md)。
+## 6. 设计检查模板
+
+新 Table 能力进入 ADR 前至少填写：
+
+```md
+## Table 完备性检查
+
+- 解决的表格问题：
+- 是否属于 Structure / Cell Semantics / Presentation / Layout / Traceability：
+- Data、Table、Core、adapter 分别负责什么：
+- JSON-safe 表达与 Definition / registry 扩展点：
+- layout、lowering、manifest / lineage 与 diagnostics 闭环：
+- React / Vanilla 等价入口或不适用原因：
+- 与当前 alpha.2 基线的复用关系：
+- 明确反例与最低测试层：
+```
+
+## 7. 与现有设计的关系
+
+竞品取舍见 [Table 竞品与能力差距分析](../analysis/table-compare-analysis.md)，总体指导思想见 [Table 表格语法与 lowering 总设计](./table-design.md)。具体能力状态以 Table roadmap、Accepted ADR、当前公开类型与就近 `AGENTS.md` 为准；本文只维护长期边界与准入方法。

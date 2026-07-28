@@ -1,0 +1,113 @@
+---
+title: Contract
+description: Look up the @retikz/data data-reference, field-model, and shared transform JSON schemas.
+---
+
+Data contracts store JSON-safe configuration only. Real rows, parsers, Definitions, registries, and callbacks are injected at runtime and never enter these schemas. See [Field Contract](/viz/data/model/contract) and [Transform Operations](/viz/data/transform/operations) for task-oriented behavior and usage.
+
+## DataReferenceSchema
+
+<ZodSchema name="DataReferenceSchema" />
+
+## DataModelSchema
+
+<ZodSchema name="DataModelSchema" />
+
+### FieldDefinitionSchema
+
+<ZodSchema name="FieldDefinitionSchema" />
+
+## TransformSchema
+
+<ZodSchema name="DataTransformSchema" />
+
+Built-in transforms share a `kind` discriminator and execute in declaration order. See [Statistical Sub-operators](/viz/data/transform/statistics) for the reducer and selector contracts used by `metrics` and `selector`. A custom operation must stay JSON-serializable, while its runtime Definition supplies the precise schema and implementation.
+
+### SortTransformSchema
+
+<ZodSchema name="SortTransformSchema" />
+
+### SummarizeTransformSchema
+
+<ZodSchema name="SummarizeTransformSchema" />
+
+### SelectTransformSchema
+
+<ZodSchema name="SelectTransformSchema" />
+
+### AnnotateTransformSchema
+
+<ZodSchema name="AnnotateTransformSchema" />
+
+## ReducerMetricsSchema
+
+<ZodSchema name="ReducerMetricsSchema" />
+
+### ReducerOperationSchema
+
+<ZodSchema name="ReducerOperationSchema" />
+
+| `kind`          | Fields                                                     | Result                                                           |
+| --------------- | ---------------------------------------------------------- | ---------------------------------------------------------------- |
+| `count`         | `as`                                                       | Output the row count                                             |
+| `sum` / `mean`  | `field`, `as`                                              | Output a numeric-field sum or arithmetic mean                    |
+| `median`        | `field`, `as`                                              | Output the numeric-field median                                  |
+| `min` / `max`   | `field`, `as`                                              | Output the numeric-field minimum or maximum                      |
+| `extent`        | `field`, `as`                                              | Output the numeric-field minimum/maximum extent                  |
+| `quantile`      | `field`, `p`, `as`                                         | Output the quantile at probability `p`                           |
+| `quantile-band` | `field`, `lowerP`, `upperP`, `outputs`, optional `whisker` | Output a band, extra quantiles, spread, and whiskers             |
+| Custom `kind`   | JSON-safe config                                           | Parse and run through the matching `StatisticsReducerDefinition` |
+
+## SelectorOperationSchema
+
+<ZodSchema name="SelectorOperationSchema" />
+
+| `kind`                  | Fields                                           | Selection result                                           |
+| ----------------------- | ------------------------------------------------ | ---------------------------------------------------------- |
+| `min` / `max`           | `by`, optional `tie`                             | Rows with the minimum or maximum numeric value             |
+| `first` / `last`        | Optional `orderBy`                               | The first or last row in current or explicit order         |
+| `top` / `bottom`        | `by`, `n`, optional `tie`                        | The highest- or lowest-ranked N rows                       |
+| `nth`                   | `orderBy`, `index`                               | The zero-based row after explicit ordering                 |
+| `outside-quantile-band` | `field`, `lowerP`, `upperP`, optional `boundary` | Rows outside a quantile band or spread fence               |
+| Custom `kind`           | JSON-safe config                                 | Parse and run through the matching `RowSelectorDefinition` |
+
+### AnnotateSelectorSchema
+
+<ZodSchema name="AnnotateSelectorSchema" />
+
+Annotate excludes `outside-quantile-band`. For `top` / `bottom`, `n` is fixed to `1`, and ties may select only the first or last row, so each annotation field maps to at most one source row.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Data-reference and field-model schemas',
+      path: 'packages/viz/data/src/schemas/data/schema.ts',
+      startLine: 5,
+      endLine: 43,
+    },
+    {
+      label: 'Shared transform schemas',
+      path: 'packages/viz/data/src/schemas/transform/schema.ts',
+      startLine: 9,
+      endLine: 145,
+    },
+    {
+      label: 'Reducer operation schemas',
+      path: 'packages/viz/data/src/schemas/transform/reducer.ts',
+      startLine: 9,
+      endLine: 197,
+    },
+    {
+      label: 'Row selector operation schemas',
+      path: 'packages/viz/data/src/schemas/transform/selector.ts',
+      startLine: 7,
+      endLine: 141,
+    },
+  ]}
+/>
+
+## Related
+
+- [Field Contract](/viz/data/model/contract): field types, inference, formats, and category order
+- [Transform Operations](/viz/data/transform/operations): using sort, summarize, select, and annotate
+- [Runtime](/viz/data/reference/runtime): Definitions, registries, execution entry points, and lineage results

@@ -35,7 +35,7 @@ description: 查询 sort、summarize、select 与 annotate 四种 Data 内置变
 
 `summarize` 按 `groupBy` 分组，并用 `metrics` 把每组明细规约成一行。输出行保留组键，每个 reducer 都必须显式写 `as` 字段名。
 
-同一个 operation 内的输出名必须唯一：reducer 输出不能与 `groupBy` 重名，也不能互相重名；冲突会在 schema 解析阶段直接报错。
+同一个 operation 内的输出名必须唯一：reducer 输出不能与 `groupBy` 重名，也不能互相重名。内置 reducer 的静态字段冲突会在 schema 解析阶段报错；自定义 reducer 由 Definition `outputFields()` 声明的动态字段冲突会在执行 reducer 前报错。
 
 <ComponentPreview files={['transform-summarize', 'transform-summarize.data.ts']} />
 

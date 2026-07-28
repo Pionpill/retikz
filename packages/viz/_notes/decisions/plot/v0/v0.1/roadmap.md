@@ -1,5 +1,6 @@
 # plot v0.1 Roadmap
 
+> 状态：Done
 > 本文件汇总 plot v0.1 minor 的路线与 milestone 索引。具体执行记录放在各 milestone 的 `roadmap.md`，长期决策放在同目录的 `NN-*.md` ADR。
 > 关联：[`plot v0 roadmap`](../roadmap.md) · [`plot-design.md §11 / §13.1`](../../../../architecture/plot-design.md)
 
@@ -16,7 +17,13 @@
 
 **纵向薄片优先**：先打通最薄的端到端（单 mark · linear · cartesian · 最小 lowering），再逐层加宽。每个 milestone 都应产出可渲染的结果，对齐 [plot-design §13](../../../../architecture/plot-design.md) 主线「纵向闭环」。
 
-**三包 lockstep 协同（改原计划）**：`@retikz/plot`（IR + lowering）/ `@retikz/plot-react`（`<Plot>` 组件 + 组合 DSL）/ `@retikz/plot-vanilla`（builder + SSR）**从 alpha.1 起一起迭代**——每加一个 plot 能力（mark / scale / coordinate…），同步在 react / vanilla 表面与文档 demo 露出。原计划把框架绑定整体推到 v0.3，现废除：否则文档站只能写 `<Layout ir={{...}} composites={lowerPlots(...)}/>` 这种低可读性示例，对用户极不友好。**注意区分**：authoring 绑定（构图 + 渲染）随 plot 同步；**交互能力**（tooltip / hover / 事件回调）留到 v0.2——那依赖 core runtime / 水合，不只是 authoring 表面。
+**三包 lockstep 协同（改原计划）**：`@retikz/plot`（IR + lowering）/ `@retikz/plot-react`（`<Plot>` 组件 + 组合 DSL）/ `@retikz/plot-vanilla`（plain authoring + Tier2 + SSR）**从 alpha.1 起一起迭代**——每加一个 plot 能力（mark / scale / coordinate…），同步在 react / vanilla 表面与文档 demo 露出。原计划把框架绑定整体推到 v0.3，现废除：否则文档站只能写 `<Layout ir={{...}} composites={lowerPlots(...)}/>` 这种低可读性示例，对用户极不友好。**注意区分**：authoring 绑定（构图 + 渲染）随 plot 同步；**交互能力**（tooltip / hover / 事件回调）留到 v0.2——那依赖 core runtime / 水合，不只是 authoring 表面。
+
+## Beta 与 RC 收尾
+
+- **beta.1**：抽出 `@retikz/data`，Plot 改为消费共享数据 schema、contract、provider 与 pipeline。
+- **beta.2**：补齐 runtime-only Plot lineage；以 `createPlotSpec()` / `normalizePlotBindings()` 统一 React 与 Vanilla authoring；Vanilla 迁移为 `plot()`、`embedPlot()`、`createPlotAdapter()` 与独立 `renderPlot()` runtime。
+- **RC**：冻结 Plot IR、Definition / registry、authoring、lowering、lineage、locator 与三包 adapter 公共面。增量更新、依赖失效、按需物化和 renderer diff 进入 v0.2。
 
 ## Milestones
 
@@ -85,7 +92,7 @@
 - **连续色阶 `range` 非法颜色串静默变黑**（alpha.8 ADR-01 adversarial W1）— _【需求驱动 / 颜色校验里程碑】_：`SequentialColorScale` / `DivergingColorScale` 的 `range` 端点给非法颜色串（`'notacolor'` / 拼错色名 / 带空格）时，d3 `scaleLinear` 静默当黑色、不 fail-loud——LLM 打错色名得到全黑图无报错。正确修需引入颜色解析器（破坏 `@retikz/plot` 仅 zod + d3 的依赖白名单）或维护易腐的 CSS 色名表，故未在 ADR-01 内做。落点 `lower/scale.ts` 的 `resolveSequentialColorScale` / `resolveDivergingColorScale`，与 ADR-01 的 domain 有限性 fail-loud 同口径
 - **legend 自定义渲染 + 样式参数**（2026-06-08 记，alpha.8 ADR-03 后续）— _【样式 token 归 alpha.15 Theme；深度自定义另立里程碑】_：当前 `<Legend>` 只有 7 个配置项（channel/scale/title/position/orient/tickCount/tickLabels），**形态据绑定 scale 类型自动选、不可指定**，几何（swatch 尺寸 `LEGEND_SWATCH_SIZE`、ramp 长宽、间距、字号）是 `lower/guide.ts` 硬编码常量、不开放，且无自定义条目模板 / 手动图例项 / 自定义符号 / size 代表值指定。后续要支持：① **样式参数**（swatch 尺寸 / ramp 尺寸 / 间距 / 字体 / 配色 token）——归 **alpha.15 Theme**；② **自定义渲染**（可配几何为 props、自定义条目模板 / render、手动图例项、size 代表值 `values` 字段、自定义 glyph 集）——另立里程碑，遵「先内置 curated，后开放自定义」（同 plot-design §11 channel 注册表立场）。当前逃生舱：用 Kernel `<Node>`/`<Path>` 手搓图例（legend 本就 lower 成 core Node/Path/Scope）。落点 `lower/guide.ts`（lowerLegend 常量 → 可配）+ `ir/guide.ts`（LegendGuideSchema 扩字段）+ React `<Legend>` props
 - **legend 缺省标题（字段名）+ per-dimension 默认轴补齐**（alpha.8 ADR-03 实现校准顺延）— _【需求驱动】_：① ADR-03 决策⑨「省略 title → 用绑定字段名」未物化成自动可见标题（仅显式 title 渲染），可补字段名缺省标题；② 决策⑦的 per-dimension 默认轴（显式 x 轴 → y 默认仍补）未采纳（保留既有「任一显式 Axis 即不补默认」），如需 per-dimension 要同改 React `dsl_explicit_axis_only` 期望
-- **自定义坐标系文档升级为独立分组**（2026-06-09 记，alpha.9 [ADR-05](./alpha.9/05-coordinate-chart-frame.md) 后续）— _【gate 于 frameAlong 下游落地，需求驱动】_：自定义坐标系（`projectRoles` / `frameAlong` / 工厂注入）是扩展点里**难度与拓展性最强**的一个，成熟后体量 ≈ 三页小组（概念：坐标系=投影 γ / 流形、roles=自由度、轴=单 role 曲线、切向·法向；API/how-to：`projectRoles` / `frameAlong` / 工厂 context / `createCustomFrame` options / `coordinates` 注入 + bridge demo；案例 cookbook：曲线一维 / 极坐标变体 / 螺旋 / 弧上图，增长型）。**目标形态 = 方案 2**：在 grammar 段下给它**自己一个分组**（Page-with-children），DG 做脊、先具体需求后术语、不开篇硬上微分几何。**结构约束**：`data/viz.ts` 仅 `Section → Page → SubPage` 两层、SubPage 是叶子——故自定义坐标系须自己当 Page-with-children 才能多页展开，**不能**塞进通用「进阶」组当一个 leaf（会被压成单页、cookbook 发挥不出）。**节奏（已与用户定）**：现在**不拆**——ADR-05 仍 Proposed、本轮仅 point、唯一真例子是 bridge，单拆会是「很强大但只有一个拱形例子」的空架子；暂留 `grammar/coordinate` 页内一段，等 `frameAlong` 下游落地 1–2 个真例子（法丛 / 多 plot 组合 / 螺旋）、cookbook 有料后再升组。落点 `apps/docs/src/modules/docs/contents/viz/plot/`（新增 `custom-coordinate/` 分组）+ `data/viz.ts` grammar section + i18n。
+- ~~**自定义坐标系文档升级为独立分组**~~ — ✅ **alpha.12 与 docs 已完成**：alpha.9 [ADR-05](./alpha.9/05-coordinate-chart-frame.md) 的实验性 custom operation 已由 [alpha.12 coordinate registry](./alpha.12/05-coordinate-registry.md) 取代；当前公开面统一为 `defineCoordinate()`、`CoordinateDefinition`、`createCoordinateFrame()` 与数组形态 `coordinates`。双语 `coordinate/custom-coordinate` 分组已覆盖 registry 契约、bridge demo、`frameAlong` 与 `projectCell`；更多曲线 / 螺旋 / 组合 cookbook 按真实用例需求继续补充。
 - **通用「进阶 / 扩展」分组**（2026-06-09 记）— _【攒够 2–3 个再开，需求驱动】_：给「小而散」的运行时扩展点（`resolveField` 自定义取值、`fieldMaps`、将来自定义 mark / scale 等，每个体量 ≈ 单页）一个归宿分组。**不含自定义坐标系**（它够格自己一个组，见上条）。**不要空开**——攒够 2–3 个这类小页再开，否则是会腐化的「杂项抽屉」。
 - _（后续追加……）_
 

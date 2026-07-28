@@ -48,9 +48,9 @@ export const validateFieldMaps = (
 ): void => {
   if (fieldMaps === undefined) return;
   for (const ref of Object.keys(fieldMaps)) {
-    if (!(ref in datasets)) throw new Error(`lowerPlots: fieldMaps references unknown dataset "${ref}"`);
+    if (!Object.hasOwn(datasets, ref)) throw new Error(`lowerPlots: fieldMaps references unknown dataset "${ref}"`);
   }
-  if (!(spec.data.reference in fieldMaps)) return;
+  if (!Object.hasOwn(fieldMaps, spec.data.reference)) return;
   const fieldMap = fieldMaps[spec.data.reference];
   if (spec.data.model === undefined) {
     throw new Error(
@@ -95,7 +95,10 @@ export const prepareRows = (
   const markRegistry = resolveMarkRegistry(options.markDefinitions);
   const userSourceFields = collectSourceFields(spec, transformRegistry, markRegistry, transformContext);
   const baseTypes = resolveFieldTypes(spec.data.model, ingested, userSourceFields);
-  const fieldMap = options.fieldMaps?.[spec.data.reference];
+  const fieldMap =
+    options.fieldMaps !== undefined && Object.hasOwn(options.fieldMaps, spec.data.reference)
+      ? options.fieldMaps[spec.data.reference]
+      : undefined;
   const formatRegistry = resolveFormatRegistry(options.formatDefinitions);
   const { fieldTypes: formatTypes, parsers: formatParsers } = collectFormatFields(
     spec.data.model,

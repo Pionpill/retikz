@@ -1,6 +1,6 @@
 {
   "name": "@retikz/plot",
-  "version": "0.1.0-beta.2",
+  "version": "0.1.0-rc.1",
   "retikz": {
     "domain": "viz",
     "releaseGroup": "plot",
@@ -70,6 +70,7 @@
     "@retikz/core": "workspace:^",
     "@retikz/data": "workspace:^",
     "@retikz/math": "workspace:^",
+    "@types/d3-scale": "catalog:",
     "d3-array": "catalog:",
     "d3-format": "catalog:",
     "d3-scale": "catalog:",
@@ -80,7 +81,6 @@
   "devDependencies": {
     "@types/d3-array": "catalog:",
     "@types/d3-format": "catalog:",
-    "@types/d3-scale": "catalog:",
     "@types/d3-scale-chromatic": "catalog:",
     "@types/d3-time-format": "catalog:",
     "@types/node": "catalog:",

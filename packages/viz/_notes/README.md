@@ -1,6 +1,6 @@
 # viz 内部文档
 
-这里放 viz 组内部协作文档。`@retikz/plot` / `@retikz/plot-react` / `@retikz/plot-vanilla` 按 plot 发布组 lockstep；`@retikz/data` 独立维护版本，后续 chart、table、geo 按各自家族维护路线与版本。
+这里放 viz 组内部协作文档。`@retikz/data` 独立维护版本；Plot 三包按 plot 发布组 lockstep；Table 三包按 table 发布组 lockstep。未来 chart、geo 只有在具体能力 ADR 确认 package manifest 后才建立各自路线与 release group。
 
 ## 目录
 

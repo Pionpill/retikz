@@ -1,6 +1,6 @@
 # 交互与增量运行时设计
 
-> **状态：架构总则，当前不实现。** 本文只确定 v0.5 后续交互能力的统一方向、跨包契约和职责边界。具体数据结构、公开 API、调度策略、算法与测试用例由各包迭代 ADR 冻结。
+> **状态：架构总则，运行时基础已部分实现，Headless Interaction 尚未实现。** `@retikz/runtime` 已承接 identity、ownership、program 与 transaction 基础；事件、behavior、presentation、intent 和交互 program 仍由后续 ADR 冻结。本文只维护统一方向、跨包契约和职责边界，不替代当前公开类型。
 >
 > 关联：[`性能与增量运行时设计`](./performance-design.md) · [`能力完备性与模块边界`](./capability-design.md) · [`包拓扑`](./package-topology.md) · [`Core 绘图完备设计`](../../packages/kernel/_notes/architecture/core-drawing-complete.md) · [`Kernel v0.5 路线`](../../packages/kernel/_notes/decisions/v0/v0.5/roadmap.md)
 >
@@ -153,9 +153,9 @@ Signal 解决“值如何响应变化”，dataflow 解决“变化沿哪些领�
 
 ## 6. 包职责
 
-### Kernel 基础契约
+### `@retikz/runtime` 基础契约
 
-Kernel 提供 framework-neutral 的 identity、revision、change、program、transaction、contribution 和 ownership 契约。基础契约不理解 Plot、Table、DOM、React 或具体 renderer。
+`@retikz/runtime` 提供 framework-neutral 的 identity、revision、change、program、transaction、contribution 和 ownership 契约。基础契约不理解 Plot、Table、DOM、React 或具体 renderer。
 
 ### `@retikz/core`
 
@@ -164,13 +164,13 @@ Kernel 提供 framework-neutral 的 identity、revision、change、program、tra
 - 提供通用图形能力、manifest 与 ownership 基础。
 - 不拥有 Plot、Table 或 renderer 的领域依赖。
 
-### Kernel Runtime
+### `@retikz/runtime`
 
 - 协调宿主通过通用契约注入的 Data、Tier 2、Core、Render 与 Interaction program，不静态识别或依赖具体 Tier 2。
 - 统一 transaction、调度、revision、提交和生命周期。
 - 只协调 program，不接管各模块的领域语义。
 
-Tier 2 与宿主 adapter 负责装配自己的 program；Kernel 基础契约位于各方都能单向消费的位置。Kernel Runtime 是概念 owner。它最终位于现有包还是独立包，由首个 runtime ADR 根据无环依赖决定。
+Tier 2 与宿主 adapter 负责装配自己的 program；`@retikz/runtime` 是领域中立基础契约与协调机制的 owner，位于各方都能单向消费的位置。Core、Render、Tier 2 和 adapter 只拥有各自 program 与装配逻辑，不重复定义 transaction、revision 或 ownership。
 
 ### `@retikz/render`
 

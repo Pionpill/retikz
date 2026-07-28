@@ -1,6 +1,6 @@
 ---
 title: API 参考
-description: 查询 Table 的 JSON 契约与 React、Vanilla、compile 和 typed artifact 运行时合同。
+description: 查询 Table 的 JSON 契约，以及 React、Vanilla 与 compile 运行时合同。
 ---
 
 API 参考用于查稳定合同，不承担入门教学。基础表格与明细表使用各自的契约页；React、Vanilla、SSR 如何构造、下沉和渲染同一份规格集中在运行时页。
@@ -11,16 +11,18 @@ API 参考用于查稳定合同，不承担入门教学。基础表格与明细�
 
 | 主题          | 职责                                        | 何时查阅                       |
 | ------------- | ------------------------------------------- | ------------------------------ |
-| 契约 - 表格   | TableSpec、Cell、轨道、span 与 border       | 生成通用或显式网格 Table IR    |
+| 契约 - 表格   | TableSpec、Cell、轨道、border 与 manifest   | 生成 Table IR 或读取布局产物   |
 | 契约 - 明细表 | data reference、columns 与 detail Structure | 生成或校验 `IRDetailTableSpec` |
-| 运行时        | React / Vanilla、compile 与 typed manifest  | 集成宿主、SSR 或读取布局产物   |
+| 运行时        | React / Vanilla、compile 与 artifact 接线   | 集成宿主、SSR 或执行 Table     |
 
 ## 章节内容
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
   <LinkedCard href="/viz/table/reference/contract-table">
     <span className="font-semibold">契约 - 表格</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">TableSpec、Cell、轨道与 border schema</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      TableSpec、Cell、轨道、border 与 manifest schema
+    </span>
   </LinkedCard>
   <LinkedCard href="/viz/table/reference/contract-detail">
     <span className="font-semibold">契约 - 明细表</span>
@@ -31,7 +33,7 @@ API 参考用于查稳定合同，不承担入门教学。基础表格与明细�
   <LinkedCard href="/viz/table/reference/runtime">
     <span className="font-semibold">运行时</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      React、Vanilla、单次 compile 与 typed manifest
+      React、Vanilla、单次 compile 与 artifact 接线
     </span>
   </LinkedCard>
 </div>
