@@ -5,7 +5,7 @@ description: Use reducers to produce statistical fields, selectors to preserve r
 
 Reducers and selectors are reusable statistical sub-operators inside data transforms. A reducer collapses a group of rows into a field fragment; a selector returns original rows from the group. Both are JSON-serializable configuration executed by built-in or custom Definitions.
 
-`summarize`, `annotate`, and Plot-registered `bin` reuse reducers. `select`, `annotate`, and Plot-registered `relate` reuse selectors. Plot consumes these capabilities but does not own Data's statistical contract.
+`summarize`, `annotate`, and Plot-registered `bin` reuse built-in or custom reducers. `select` and Plot-registered `relate` reuse built-in or custom selectors. The `annotate` selector entry accepts only the built-in single-row subset. Plot consumes these capabilities but does not own Data's statistical contract.
 
 ## Choose a sub-operator
 
@@ -47,7 +47,7 @@ When a field has no finite numeric values, `sum` keeps the empty-sum identity `0
 
 `tie` defaults to `first` and also accepts `last` or `all`. `orderBy` is an array of `{ field, order? }`, with `order` defaulting to `ascending`. `outside-quantile-band.boundary` defaults to `{ kind: 'band' }`; for conventional boxplot outliers, use `{ kind: 'spread', factor?: 1.5 }`.
 
-`select` accepts the complete selector set. `annotate` accepts only the subset that returns at most one row; see [annotate](/viz/data/transform/operations#annotate) for the exact restriction.
+`select` accepts the complete built-in or custom selector set. `annotate` accepts only the built-in subset that returns at most one row and does not accept custom selectors. See [annotate](/viz/data/transform/operations#annotate) for the exact restriction.
 
 ## Compose boxplot data
 

@@ -9,15 +9,45 @@ import type { ExternalRow } from '../../shared';
 
 import { type TransformContext } from '../../contract';
 import { resolveFieldPath } from '../data';
-import { applyReducerOperation, applySelectorOperation } from '../statistics';
+import { applyReducerOperation, applySelectorOperation, reducerOutputFields } from '../statistics';
 import { groupRowsByFields } from './shared';
+
+/** reducer 动态输出字段的运行时冲突约束 */
+type ReducerOutputConstraints = {
+  /** 不得被 reducer 覆盖的既有输出字段 */
+  reservedFields?: ReadonlySet<string>;
+  /** 冲突诊断中的既有字段来源 */
+  reservedLabel?: string;
+};
+
+/** 在执行 reducer 前校验 definition 声明的动态输出字段 */
+const assertReducerOutputFields = (
+  metrics: ReadonlyArray<IRDataReducerOperation>,
+  context: TransformContext,
+  constraints: ReducerOutputConstraints,
+): void => {
+  const seen = new Set<string>();
+  for (const metric of metrics) {
+    for (const field of reducerOutputFields(metric, context.statisticsReducerRegistry)) {
+      if (constraints.reservedFields?.has(field) === true) {
+        throw new Error(
+          `data: reducer output field "${field}" must not collide with ${constraints.reservedLabel ?? 'a reserved output field'}`,
+        );
+      }
+      if (seen.has(field)) throw new Error(`data: duplicate reducer output field "${field}"`);
+      seen.add(field);
+    }
+  }
+};
 
 /** 对一组 rows 执行多个 reducer，并把每个 reducer 输出字段合并为同一行片段 */
 export const applyReducerMetrics = (
   rows: Array<ExternalRow>,
   metrics: ReadonlyArray<IRDataReducerOperation>,
   context: TransformContext,
+  constraints: ReducerOutputConstraints = {},
 ): ExternalRow => {
+  assertReducerOutputFields(metrics, context, constraints);
   const out: ExternalRow = {};
   for (const metric of metrics) Object.assign(out, applyReducerOperation(rows, metric, context));
   return out;
@@ -57,7 +87,10 @@ export const applySummarize = (
     context.groupProvenance(
       {
         ...group.values,
-        ...applyReducerMetrics(group.rows, operation.metrics, context),
+        ...applyReducerMetrics(group.rows, operation.metrics, context, {
+          reservedFields: new Set(operation.groupBy ?? []),
+          reservedLabel: 'a groupBy field',
+        }),
       },
       group.rows,
     ),
@@ -84,7 +117,12 @@ export const applyAnnotate = (
 ): Array<ExternalRow> =>
   groupRowsByFields(rows, operation.groupBy).flatMap(group => {
     const metricFields =
-      operation.metrics === undefined ? {} : applyReducerMetrics(group.rows, operation.metrics, context);
+      operation.metrics === undefined
+        ? {}
+        : applyReducerMetrics(group.rows, operation.metrics, context, {
+            reservedFields: new Set((operation.selectors ?? []).map(selector => selector.as)),
+            reservedLabel: 'an annotate selector output field',
+          });
     const selectorFields =
       operation.selectors === undefined ? {} : applySelectorAnnotations(group.rows, operation, context);
     return group.rows.map(row => ({ ...row, ...metricFields, ...selectorFields }));

@@ -13,7 +13,7 @@ export type StatisticsReducerDefinition<TReducerOperation extends IRDataReducerO
   schema: z.ZodType<TReducerOperation>;
   /** 该 reducer 消费的源字段名；参与 data.model strict 校验 */
   inputFields?: (operation: TReducerOperation) => Array<string>;
-  /** 该 reducer 产出的派生字段名；从 data.model strict 校验的源字段集中排除 */
+  /** 该 reducer 产出的派生字段名；用于 data.model strict 源字段排除与运行时输出冲突检查，提供时必须完整声明 reduce 可能写入的字段 */
   outputFields?: (operation: TReducerOperation) => Array<string>;
   /** 对一组 rows 执行 reducer；返回要写入输出行 / annotation 行的字段片段 */
   reduce: (rows: Array<ExternalRow>, operation: TReducerOperation, context: TransformContext) => ExternalRow;
@@ -49,7 +49,7 @@ export type RowSelection = {
 
 /**
  * row selector 运行时定义。
- * @description selector 是统计子算子，供 `select` / `annotate` / `relate` 复用；定义对象不进入 JSON IR
+ * @description 自定义 selector 供 `select` 与明确声明支持它的宿主 transform（如 Plot `relate`）复用；Data `annotate` 只接受内置单行 selector 子集。定义对象不进入 JSON IR
  */
 export type RowSelectorDefinition<TSelectorOperation extends IRDataSelectorOperation = IRDataSelectorOperation> = {
   /** 完整 selector operation schema；必须含非空 z.literal('kind') 供注册表提取注册键 */
