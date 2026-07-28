@@ -1,5 +1,5 @@
 ---
-title: 溯源
+title: Plot 溯源
 description: 图元链路在 Data 来源与变换记录上补充图元、编码、比例尺和布局语义，生成宿主可消费的运行时审计产物。
 ---
 
@@ -15,7 +15,7 @@ Data 能解释一行来自哪里、经过哪些 transform；Plot 还需要解释
 
 <ComponentPreview files="plot-lineage-flow" size="xs" hideCode />
 
-图元链路复用 [Data 来源追溯](/viz/data/provenance)，再补充 Plot 自己拥有的语义：root 与 mark-local transform 的分段、mark 身份与编码、声明式比例尺、坐标布局，以及宿主允许透传的查询或 AI 元数据。
+图元链路复用 [Data 来源追溯](/viz/data/provenance/data)，再补充 Plot 自己拥有的语义：root 与 mark-local transform 的分段、mark 身份与编码、声明式比例尺、坐标布局，以及宿主允许透传的查询或 AI 元数据。
 
 `PlotLineageRun` 是运行时产物，不进入 `IRPlotSpec`，也不会写进 Scene meta。绘图结果与链路结果因此可以按不同的存储、权限和保留策略处理。
 
@@ -184,8 +184,8 @@ if (result !== null) {
 ## 延伸阅读
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/data/provenance">
-    <span className="font-semibold">来源追溯</span>
+  <LinkedCard href="/viz/data/provenance/data">
+    <span className="font-semibold">Data 来源追溯</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">理解 Data 的行级来源与运行时事件。</span>
   </LinkedCard>
   <LinkedCard href="/viz/plot">

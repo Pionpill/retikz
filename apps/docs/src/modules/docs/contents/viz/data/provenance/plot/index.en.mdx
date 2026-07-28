@@ -15,7 +15,7 @@ Data explains where a row came from and which transforms it passed through. Plot
 
 <ComponentPreview files="plot-lineage-flow" size="xs" hideCode />
 
-Plot lineage reuses [Data Provenance](/viz/data/provenance), then adds Plot-owned semantics: root versus mark-local transform scopes, mark identity and encoding, declared scales, coordinate layout, and host-approved query or AI metadata.
+Plot lineage reuses [Data Provenance](/viz/data/provenance/data), then adds Plot-owned semantics: root versus mark-local transform scopes, mark identity and encoding, declared scales, coordinate layout, and host-approved query or AI metadata.
 
 `PlotLineageRun` is a runtime artifact. It does not enter `IRPlotSpec` and is not written into Scene metadata, so rendered output and lineage can follow different storage, permission, and retention policies.
 
@@ -184,7 +184,7 @@ This entry is suitable for tooltips, AI explanation panels, or audit navigation.
 ## Further Reading
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/data/provenance">
+  <LinkedCard href="/viz/data/provenance/data">
     <span className="font-semibold">Data Provenance</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Understand row provenance and runtime events in Data.

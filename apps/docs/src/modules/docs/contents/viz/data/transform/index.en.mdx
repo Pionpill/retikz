@@ -26,7 +26,7 @@ Every operation is JSON-serializable configuration backed by a Definition that s
 | Statistical Sub-operators | Reducers, selectors, and quantile-band composition                | You compute metrics, choose extremes, or boxplots |
 | Extension Mechanisms      | Custom transform, reducer, and selector Definitions               | Built-ins cannot express new processing semantics |
 
-Plot-registered `stack`, `bin`, `normalize`, `derive-interval`, `relate`, `jitter`, `density`, and `smooth` remain under [Plot Grammar transforms](/viz/plot/transform). Registration of custom transforms, reducers, and selectors is centralized under [Extension Mechanisms](/viz/data/transform/extensions), while runtime lineage events live under [Provenance](/viz/data/provenance).
+Plot-registered `stack`, `bin`, `normalize`, `derive-interval`, `relate`, `jitter`, `density`, and `smooth` remain under [Plot Grammar transforms](/viz/plot/transform). Registration of custom transforms, reducers, and selectors is centralized under [Extension Mechanisms](/viz/data/transform/extensions), while runtime lineage events live under [Data Provenance](/viz/data/provenance/data).
 
 ## Pages
 
@@ -55,8 +55,8 @@ Plot-registered `stack`, `bin`, `normalize`, `derive-interval`, `relate`, `jitte
       Register custom transform, reducer, and selector Definitions.
     </span>
   </LinkedCard>
-  <LinkedCard href="/viz/data/provenance">
-    <span className="font-semibold">Provenance</span>
+  <LinkedCard href="/viz/data/provenance/data">
+    <span className="font-semibold">Data Provenance</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Record operation order, field flow, and optional calculation details.
     </span>
