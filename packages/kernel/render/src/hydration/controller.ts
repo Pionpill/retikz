@@ -63,6 +63,26 @@ const hydrationTargetEquals = (
   return runtimeIdentityEquals(left.semanticOwner, right.semanticOwner);
 };
 
+/** 执行 listener teardown；成功项立即移除，失败项保留以允许后续重试 */
+const runTeardowns = (teardowns: Array<() => void>, reverse = false): void => {
+  const pending = reverse ? [...teardowns].reverse() : [...teardowns];
+  let failed = false;
+  let firstCause: unknown;
+  for (const teardown of pending) {
+    try {
+      teardown();
+      const index = teardowns.indexOf(teardown);
+      if (index !== -1) teardowns.splice(index, 1);
+    } catch (cause) {
+      if (!failed) {
+        failed = true;
+        firstCause = cause;
+      }
+    }
+  }
+  if (failed) throw firstCause;
+};
+
 /** 判断 root 是否为可挂 pointerleave/pointerout 的 EventTarget（dispatcher 只需 addEventListener，故恒成立） */
 const hasContains = (target: EventTarget): target is Node => typeof (target as Partial<Node>).contains === 'function';
 
@@ -147,13 +167,13 @@ export const createHydrationController = (
       });
     }
   } catch (cause) {
-    for (const teardown of teardowns.splice(0).reverse()) teardown();
+    runTeardowns(teardowns, true);
     throw cause;
   }
 
   return {
     dispose: () => {
-      for (const teardown of teardowns.splice(0)) teardown();
+      runTeardowns(teardowns);
     },
   };
 };

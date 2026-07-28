@@ -163,6 +163,38 @@ describe('Hydration 控制器', () => {
     expect(() => controller.dispose()).not.toThrow(); // 再次 dispose 不抛
   });
 
+  it('dispose-retry：单个 listener 解绑失败时保留失败项并继续清理，其后可重试', () => {
+    const { root, childA1 } = setupRoot();
+    const onClick = vi.fn();
+    const onDoubleClick = vi.fn();
+    const originalRemove = root.removeEventListener.bind(root);
+    let rejectClickRemoval = true;
+    const remove = vi.spyOn(root, 'removeEventListener').mockImplementation((type, listener, options) => {
+      if (type === 'click' && rejectClickRemoval) {
+        rejectClickRemoval = false;
+        throw new Error('click listener removal rejected');
+      }
+      originalRemove(type, listener, options);
+    });
+    const controller = createHydrationController(
+      root,
+      { a: { click: onClick, doubleClick: onDoubleClick } },
+      locateSvg,
+    );
+
+    expect(() => controller.dispose()).toThrow('click listener removal rejected');
+    dispatch(childA1, 'click');
+    dispatch(childA1, 'dblclick');
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(onDoubleClick).not.toHaveBeenCalled();
+    expect(remove.mock.calls.map(([type]) => type)).toEqual(['click', 'dblclick']);
+
+    expect(() => controller.dispose()).not.toThrow();
+    dispatch(childA1, 'click');
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(remove.mock.calls.map(([type]) => type)).toEqual(['click', 'dblclick', 'click']);
+  });
+
   it('no-handler-no-throw：命中 id 但无对应事件 handler → 静默、不抛', () => {
     const { root, nodeB } = setupRoot();
     const handlers: HydrationHandlers = { a: { click: vi.fn() } };

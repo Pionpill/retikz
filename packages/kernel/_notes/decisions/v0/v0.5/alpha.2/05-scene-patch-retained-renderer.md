@@ -139,7 +139,7 @@ Timing只在完整environment fingerprint一致时比较。Fingerprint覆盖expe
 
 - Runtime：169 tests
 - Core：2825 tests
-- Render：52 files / 473 tests
+- Render：52 files / 474 tests
 - React：47 files / 429 tests
 - Vanilla：13 files / 103 tests
 - Bench：8 files / 31 tests；`bench:check` 18项预算PASS；fingerprint `9b28319e` timing compare PASS
