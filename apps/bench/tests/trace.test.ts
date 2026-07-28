@@ -3,7 +3,7 @@ import type { PerformanceTraceRecord } from '@retikz/runtime';
 import { createRuntimeTraceReporter } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 
-import { assertFullTrace } from '../src/trace';
+import { assertFullTrace, assertSingleTraceRecord } from '../src/trace';
 
 const expected = Object.freeze({ phase: 'compile' as const, unit: 'ir-child' as const, visited: 1 });
 
@@ -31,5 +31,33 @@ describe('full trace assertion', () => {
     reporter.report({ phase: 'compile', unit: 'ir-child', outcome: 'full', visited: -1, reused: 0, changed: 0 });
 
     expect(() => assertFullTrace('core-full-1', reporter, records, expected)).toThrow(/diagnostics/i);
+  });
+});
+
+describe('single trace assertion', () => {
+  const incremental: PerformanceTraceRecord = Object.freeze({
+    owner: '@retikz/render:svg',
+    phase: 'update',
+    unit: 'scene-change',
+    outcome: 'incremental',
+    visited: 1,
+    reused: 0,
+    changed: 1,
+  });
+
+  it('允许其它unit记录，但拒绝同unit额外outcome或工作量漂移', () => {
+    const unrelated: PerformanceTraceRecord = Object.freeze({
+      ...incremental,
+      unit: 'ir-child',
+      visited: 5_000,
+      reused: 4_999,
+    });
+    expect(assertSingleTraceRecord('svg-update', [unrelated, incremental], incremental)).toBe(incremental);
+    expect(() =>
+      assertSingleTraceRecord('svg-update', [incremental, { ...incremental, outcome: 'fallback' }], incremental),
+    ).toThrow(/2.*records/i);
+    expect(() => assertSingleTraceRecord('svg-update', [{ ...incremental, changed: 2 }], incremental)).toThrow(
+      /exact expected work/i,
+    );
   });
 });

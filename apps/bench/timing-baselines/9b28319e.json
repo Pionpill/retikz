@@ -1,0 +1,101 @@
+{
+  "fingerprint": "9b28319e",
+  "scenarios": [
+    {
+      "id": "canvas-group-update-5000",
+      "durationMs": {
+        "median": 173.09999999403954,
+        "p95": 213.69999998807907,
+        "max": 223.30000001192093
+      }
+    },
+    {
+      "id": "canvas-none-retained-full-5000",
+      "durationMs": {
+        "median": 114.84999999403954,
+        "p95": 144.19999998807907,
+        "max": 153.5
+      }
+    },
+    {
+      "id": "canvas-replace-fallback-5000",
+      "durationMs": {
+        "median": 182.75,
+        "p95": 214.801,
+        "max": 216.401
+      }
+    },
+    {
+      "id": "canvas-retained-full-5000",
+      "durationMs": {
+        "median": 157.10000002384186,
+        "p95": 190.80000001192093,
+        "max": 225.80000001192093
+      }
+    },
+    {
+      "id": "canvas-single-entity-update-5000",
+      "durationMs": {
+        "median": 165.7000000178814,
+        "p95": 197.39999997615814,
+        "max": 203.5
+      }
+    },
+    {
+      "id": "core-retained-full-5000",
+      "durationMs": {
+        "median": 92.566,
+        "p95": 140.639,
+        "max": 161.398
+      }
+    },
+    {
+      "id": "core-single-entity-update-5000",
+      "durationMs": {
+        "median": 28.272,
+        "p95": 36.99,
+        "max": 38.105
+      }
+    },
+    {
+      "id": "svg-group-update-5000",
+      "durationMs": {
+        "median": 153.14999997615814,
+        "p95": 192.69999998807907,
+        "max": 193.4000000357628
+      }
+    },
+    {
+      "id": "svg-none-retained-full-5000",
+      "durationMs": {
+        "median": 140.59999999403954,
+        "p95": 158.69999998807907,
+        "max": 173.60000002384186
+      }
+    },
+    {
+      "id": "svg-replace-fallback-5000",
+      "durationMs": {
+        "median": 170.25,
+        "p95": 212.0999999642372,
+        "max": 250.701
+      }
+    },
+    {
+      "id": "svg-retained-full-5000",
+      "durationMs": {
+        "median": 1132.151,
+        "p95": 1710.401,
+        "max": 1757.501
+      }
+    },
+    {
+      "id": "svg-single-entity-update-5000",
+      "durationMs": {
+        "median": 119.25,
+        "p95": 158.19999998807907,
+        "max": 170.19999998807907
+      }
+    }
+  ]
+}

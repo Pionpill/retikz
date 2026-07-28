@@ -5,6 +5,8 @@ export type DeterministicBenchmarkResult = Readonly<{
   visited: number;
   reused: number;
   changed: number;
+  /** dispose后仍可观察的listener、handler或resource handle数量 */
+  liveHandles?: number;
 }>;
 
 /** 单个确定性 benchmark 的已审查预算 */
@@ -12,7 +14,10 @@ export type DeterministicBenchmarkBudget = Readonly<{
   id: string;
   oracle: string;
   visited: number;
+  reused: number;
   changed: number;
+  /** 已审查的dispose后live handle精确预算 */
+  liveHandles?: number;
 }>;
 
 /** 对比实际确定性指标与已审查预算，返回全部阻断错误 */
@@ -34,11 +39,14 @@ export const compareDeterministicResults = (
     if (result.visited !== budget.visited) {
       errors.push(`${budget.id}: visited ${result.visited} differs from ${budget.visited}`);
     }
+    if (result.reused !== budget.reused) {
+      errors.push(`${budget.id}: reused ${result.reused} differs from ${budget.reused}`);
+    }
     if (result.changed !== budget.changed) {
       errors.push(`${budget.id}: changed ${result.changed} differs from ${budget.changed}`);
     }
-    if (result.reused !== 0 || result.changed !== result.visited) {
-      errors.push(`${budget.id}: full path must report reused=0 and changed=visited`);
+    if (result.liveHandles !== budget.liveHandles) {
+      errors.push(`${budget.id}: liveHandles ${String(result.liveHandles)} differs from ${String(budget.liveHandles)}`);
     }
   }
 
@@ -60,7 +68,9 @@ export const createBaselineCandidate = (
           id: result.id,
           oracle: result.oracle,
           visited: result.visited,
+          reused: result.reused,
           changed: result.changed,
+          ...(result.liveHandles === undefined ? {} : { liveHandles: result.liveHandles }),
         }),
       ),
   );

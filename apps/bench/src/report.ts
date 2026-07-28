@@ -1,8 +1,15 @@
-import { compileToScene } from '@retikz/core';
+import { compileToScene, CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
+import {
+  createRuntimeOwnerInput,
+  createRuntimeOwnerRegistry,
+  createRuntimeOwnerUpdate,
+  createRuntimeProgramRegistry,
+  createRuntimeSession,
+} from '@retikz/runtime';
 
 import type { SampleSummary } from './stats';
 
-import { createSimpleNodeScene } from './fixtures';
+import { createSimpleNodeScene, updateSimpleNodeFill } from './fixtures';
 import { summarizeSamples } from './stats';
 
 /** 单个 wall-clock 场景报告 */
@@ -42,6 +49,40 @@ export const runCoreWallClockReport = (
         compileToScene(input);
       }),
     );
+  }
+  const first = createSimpleNodeScene(5_000);
+  const second = updateSimpleNodeFill(first, 2_500, '#22c55e');
+  const coreProgram = createCoreProgram({ onWarn: () => undefined });
+  const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
+  const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
+  reports.push(
+    measureScenario('core-retained-full-5000', warmupRuns, sampleRuns, () => {
+      const initial = createRuntimeSession({
+        owners,
+        programs,
+        initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, first)],
+      });
+      initial.dispose();
+    }),
+  );
+  const session = createRuntimeSession({
+    owners,
+    programs,
+    initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, first)],
+  });
+  let next = second;
+  try {
+    reports.push(
+      measureScenario('core-single-entity-update-5000', warmupRuns, sampleRuns, () => {
+        session.update({
+          baseRevision: session.revision(),
+          owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
+        });
+        next = next === first ? second : first;
+      }),
+    );
+  } finally {
+    session.dispose();
   }
   return Object.freeze(reports);
 };
