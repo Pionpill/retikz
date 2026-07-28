@@ -1,5 +1,8 @@
+import { runtimeIdentityEquals } from '@retikz/runtime';
+
 import type { BuildContext, HydrationContext } from './context';
 import type { ElementHandlers, HydrationHandlers, Locate, RetikzEventValue } from './events';
+import type { HydrationTarget } from './events';
 
 import { noopAnimationControls } from './context';
 import { EVENT_DOM_TYPE, RetikzEvent } from './events';
@@ -48,6 +51,18 @@ const invoke = (
   handler(event, context);
 };
 
+const publicIdOf = (target: string | HydrationTarget | null): string | null =>
+  typeof target === 'string' ? target : (target?.publicId ?? null);
+
+const hydrationTargetEquals = (
+  left: string | HydrationTarget | null,
+  right: string | HydrationTarget | null,
+): boolean => {
+  if (typeof left === 'string' || typeof right === 'string') return left === right;
+  if (left === null || right === null) return left === right;
+  return runtimeIdentityEquals(left.semanticOwner, right.semanticOwner);
+};
+
 /** 判断 root 是否为可挂 pointerleave/pointerout 的 EventTarget（dispatcher 只需 addEventListener，故恒成立） */
 const hasContains = (target: EventTarget): target is Node => typeof (target as Partial<Node>).contains === 'function';
 
@@ -56,9 +71,9 @@ const hasContains = (target: EventTarget): target is Node => typeof (target as P
  * @description renderer 无关上层。直接委托的事件（click / rightClick / pointerMove 等）对每个用到的 RetikzEventValue 在
  *   root 注册一个 EVENT_DOM_TYPE 监听器，事件到来时经 locate 定位到图元 id、查 handlers 触发。
  *   pointerEnter / pointerLeave 不直接监听、由 pointermove + 「上一帧命中 id」状态机合成（renderer 无关、经
- *   同一 locate）：仅当 handlers 含任一 enter/leave 时才在 root 挂 pointermove；每次 move 算 currentId = locate(event)，
- *   与 lastHitId 不同则先 fire 旧 id 的 leave、再 fire 新 id 的 enter，更新 lastHitId。离开整图（root pointerleave，
- *   或 pointerout 且 relatedTarget 在 root 外）→ fire lastHitId 的 leave 并清空。SVG（closest）与 Canvas
+ *   同一 locate）：仅当 handlers 含任一 enter/leave 时才在 root 挂 pointermove；每次 move 解析 current target，
+ *   与 last target 的 RuntimeIdentity 不同则先 fire 旧 public id 的 leave、再 fire 新 public id 的 enter。离开整图
+ *   （root pointerleave，或 pointerout 且 relatedTarget 在 root 外）→ fire last target 的 leave 并清空。SVG 与 Canvas
  *   （hitTest 坐标命中）共用此实现 → 双模等价。返回 { dispose } 解绑全部 listener。
  *
  *   命中 id 后恒以 `handler(event, buildContext(event, id))` 调用——`context` 永远传入（绝不 undefined）。
@@ -81,50 +96,59 @@ export const createHydrationController = (
     teardowns.push(() => root.removeEventListener(domType, listener));
   };
 
-  // 直接委托的事件（enter/leave 除外，它们走 pointermove 合成）：locate(event) → 查 handler → 调用。
-  for (const name of used) {
-    if (name === RetikzEvent.PointerEnter || name === RetikzEvent.PointerLeave) continue;
-    listen(EVENT_DOM_TYPE[name], event => invoke(handlers, locate(event), name, event, root, buildContext, renderer));
-  }
+  try {
+    // 直接委托的事件（enter/leave 除外，它们走 pointermove 合成）：locate(event) → 查 handler → 调用。
+    for (const name of used) {
+      if (name === RetikzEvent.PointerEnter || name === RetikzEvent.PointerLeave) continue;
+      listen(EVENT_DOM_TYPE[name], event =>
+        invoke(handlers, publicIdOf(locate(event)), name, event, root, buildContext, renderer),
+      );
+    }
 
-  // enter/leave 合成：仅当注册表里有 enter 或 leave handler 时，才挂 pointermove + 离开整图监听。
-  const hasEnter = used.has(RetikzEvent.PointerEnter);
-  const hasLeave = used.has(RetikzEvent.PointerLeave);
-  if (hasEnter || hasLeave) {
-    let lastHitId: string | null = null;
+    // enter/leave 合成：仅当注册表里有 enter 或 leave handler 时，才挂 pointermove + 离开整图监听
+    const hasEnter = used.has(RetikzEvent.PointerEnter);
+    const hasLeave = used.has(RetikzEvent.PointerLeave);
+    if (hasEnter || hasLeave) {
+      let lastTarget: string | HydrationTarget | null = null;
 
-    // pointermove：算当前命中 id；与上次不同 → 旧 id fire leave、新 id fire enter，各一次。
-    // 先推进 lastHitId 再 invoke：某个 handler 抛出也不会污染命中配对（避免重复 enter / 漏 leave / 卡死）。
-    listen('pointermove', event => {
-      const currentId = locate(event);
-      if (currentId === lastHitId) return;
-      const previousId = lastHitId;
-      lastHitId = currentId;
-      if (previousId !== null)
+      // pointermove：按 semantic owner 比较当前 target；变化时旧 public id fire leave、新 public id fire enter，各一次
+      // 先推进 lastTarget 再 invoke，避免 callback 抛出污染命中配对
+      listen('pointermove', event => {
+        const currentTarget = locate(event);
+        if (hydrationTargetEquals(currentTarget, lastTarget)) return;
+        const previousId = publicIdOf(lastTarget);
+        const currentId = publicIdOf(currentTarget);
+        lastTarget = currentTarget;
+        if (previousId !== null)
+          invoke(handlers, previousId, RetikzEvent.PointerLeave, event, root, buildContext, renderer);
+        if (currentId !== null)
+          invoke(handlers, currentId, RetikzEvent.PointerEnter, event, root, buildContext, renderer);
+      });
+
+      // 离开整图：清空命中态、把 last target 的 leave 补一次（同样先清状态再 invoke）
+      const leaveWhole = (event: Event): void => {
+        if (lastTarget === null) return;
+        const previousId = publicIdOf(lastTarget);
+        lastTarget = null;
+        if (previousId === null) return;
         invoke(handlers, previousId, RetikzEvent.PointerLeave, event, root, buildContext, renderer);
-      if (currentId !== null)
-        invoke(handlers, currentId, RetikzEvent.PointerEnter, event, root, buildContext, renderer);
-    });
-
-    // 离开整图：清空命中态、把 lastHitId 的 leave 补一次（同样先清状态再 invoke）。
-    const leaveWhole = (event: Event): void => {
-      if (lastHitId === null) return;
-      const previousId = lastHitId;
-      lastHitId = null;
-      invoke(handlers, previousId, RetikzEvent.PointerLeave, event, root, buildContext, renderer);
-    };
-    // pointerleave 不冒泡、只在指针真正离开 root 时触发——最干净的「离开整图」信号。
-    listen('pointerleave', leaveWhole);
-    // 退化兜底：某些环境 pointerleave 缺失，用 pointerout 且 relatedTarget 落在 root 外判定离开整图。
-    listen('pointerout', event => {
-      const related = (event as MouseEvent).relatedTarget;
-      const stillInside =
-        related !== null &&
-        related instanceof Node &&
-        hasContains(root) &&
-        (root === related || root.contains(related));
-      if (!stillInside) leaveWhole(event);
-    });
+      };
+      // pointerleave 不冒泡、只在指针真正离开 root 时触发——最干净的「离开整图」信号
+      listen('pointerleave', leaveWhole);
+      // 退化兜底：某些环境 pointerleave 缺失，用 pointerout 且 relatedTarget 落在 root 外判定离开整图
+      listen('pointerout', event => {
+        const related = (event as MouseEvent).relatedTarget;
+        const stillInside =
+          related !== null &&
+          related instanceof Node &&
+          hasContains(root) &&
+          (root === related || root.contains(related));
+        if (!stillInside) leaveWhole(event);
+      });
+    }
+  } catch (cause) {
+    for (const teardown of teardowns.splice(0).reverse()) teardown();
+    throw cause;
   }
 
   return {

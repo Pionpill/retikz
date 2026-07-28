@@ -80,6 +80,55 @@ export const createRuntimeIdentityMap = <TValue>(
   return Object.freeze({ get, has: identity => get(identity) !== undefined, set, delete: remove });
 };
 
+/** 同一 semantic owner 的公开 id 聚合状态 */
+type SemanticOwnerPublicIdState = {
+  /** 首个公开 id */
+  publicId: string;
+  /** 是否观察到相互冲突的公开 id */
+  ambiguous: boolean;
+};
+
+/**
+ * 按 semantic owner 聚合可供匿名 occurrence 继承的唯一公开 id
+ * @description 一个 owner 可发射多个 primitive；重复出现同一公开 id 仍视为唯一，冲突 id 则不提供回退
+ */
+export const createSemanticOwnerPublicIdMap = (
+  topology: ReadonlyArray<Readonly<{ semanticOwner: RuntimeIdentity; publicId?: string }>>,
+): RuntimeIdentityMap<string> => {
+  const stateByOwner = createRuntimeIdentityMap<SemanticOwnerPublicIdState>([]);
+  const states: Array<readonly [RuntimeIdentity, SemanticOwnerPublicIdState]> = [];
+  for (const node of topology) {
+    if (node.publicId === undefined) continue;
+    const existing = stateByOwner.get(node.semanticOwner);
+    if (existing === undefined) {
+      const state = { publicId: node.publicId, ambiguous: false };
+      stateByOwner.set(node.semanticOwner, state);
+      states.push([node.semanticOwner, state]);
+    } else if (existing.publicId !== node.publicId) existing.ambiguous = true;
+  }
+  return createRuntimeIdentityMap(
+    states.flatMap(([identity, state]) => (state.ambiguous ? [] : ([[identity, state.publicId]] as const))),
+  );
+};
+
+/** 按 effective public id 聚合完整 topology primitive paths */
+export const createPublicIdPrimitivePathMap = (
+  topology: ReadonlyArray<
+    Readonly<{ semanticOwner: RuntimeIdentity; primitivePath: ReadonlyArray<number>; publicId?: string }>
+  >,
+): ReadonlyMap<string, ReadonlyArray<ReadonlyArray<number>>> => {
+  const publicIdByOwner = createSemanticOwnerPublicIdMap(topology);
+  const pathsByPublicId = new Map<string, Array<ReadonlyArray<number>>>();
+  for (const node of topology) {
+    const publicId = node.publicId ?? publicIdByOwner.get(node.semanticOwner);
+    if (publicId === undefined) continue;
+    const paths = pathsByPublicId.get(publicId) ?? [];
+    paths.push(node.primitivePath);
+    pathsByPublicId.set(publicId, paths);
+  }
+  return new Map(Array.from(pathsByPublicId, ([publicId, paths]) => [publicId, Object.freeze(paths.slice())] as const));
+};
+
 /** 复制并递归冻结 JSON-like 容器，函数与非普通对象保留稳定 identity */
 export const cloneAndFreezeRuntimeValue = <T>(value: T, ancestors = new WeakSet<object>()): T => {
   if (typeof value !== 'object' || value === null) return value;

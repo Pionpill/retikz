@@ -508,4 +508,29 @@ describe('per-id 虚拟时钟（registry + resolvePrimAnimation）', () => {
     reg.stop('a');
     expect(reg.isActive('a')).toBe(false);
   });
+
+  it('registry：public id 改名保留 clock，descriptor 变化只重启该 timeline', () => {
+    const reg = createIdClockRegistry();
+    reg.restart('before', 100);
+    reg.pause('before', 150);
+    reg.rekey('before', 'after');
+    expect(reg.timeFor('after', 999)).toBe(50);
+    expect(reg.isActive('after')).toBe(true);
+    reg.restartTimeline('after', 200);
+    expect(reg.timeFor('after', 999)).toBe(0);
+    expect(reg.isActive('after')).toBe(true);
+  });
+
+  it('registry：remove 清除旧 public id 状态，capture/restore 可回滚完整 registry', () => {
+    const reg = createIdClockRegistry();
+    reg.restart('stable', 10);
+    reg.stop('removed');
+    const snapshot = reg.capture();
+    reg.remove('removed');
+    expect(reg.isStopped('removed')).toBe(false);
+    reg.restartTimeline('stable', 40);
+    reg.restore(snapshot);
+    expect(reg.timeFor('stable', 50)).toBe(40);
+    expect(reg.isStopped('removed')).toBe(true);
+  });
 });

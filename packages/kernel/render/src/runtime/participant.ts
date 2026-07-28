@@ -205,9 +205,14 @@ const captureAnimationState = <TValue extends number | boolean>(
   };
 };
 
-const freezeAnimationControls = (controls: AnimationControls): AnimationControls => {
+const freezeAnimationControls = (
+  controls: AnimationControls,
+  cache: WeakMap<object, AnimationControls>,
+): AnimationControls => {
   const candidate: unknown = controls;
   if (typeof candidate !== 'object' || candidate === null) return invalidRendererRead(controls);
+  const cached = cache.get(candidate);
+  if (cached !== undefined) return cached;
   const play = Reflect.get(candidate, 'play');
   const pause = Reflect.get(candidate, 'pause');
   const seek = Reflect.get(candidate, 'seek');
@@ -250,12 +255,15 @@ const freezeAnimationControls = (controls: AnimationControls): AnimationControls
       return readRunning();
     },
   };
-  return Object.freeze(wrapper);
+  const frozen = Object.freeze(wrapper);
+  cache.set(candidate, frozen);
+  return frozen;
 };
 
 const normalizeRendererReadUnsafe = (
   value: RetainedRendererRead,
   lineage: SceneRuntimeSnapshot | undefined,
+  animationControlsCache: WeakMap<object, AnimationControls>,
 ): RetainedRendererRead => {
   const candidate: unknown = value;
   if (lineage === undefined || typeof candidate !== 'object' || candidate === null) {
@@ -275,16 +283,17 @@ const normalizeRendererReadUnsafe = (
   }
   return Object.freeze({
     snapshot: lineage,
-    ...(animation === undefined ? {} : { animation: freezeAnimationControls(animation) }),
+    ...(animation === undefined ? {} : { animation: freezeAnimationControls(animation, animationControlsCache) }),
   });
 };
 
 const normalizeRendererRead = (
   value: RetainedRendererRead,
   lineage: SceneRuntimeSnapshot | undefined,
+  animationControlsCache: WeakMap<object, AnimationControls>,
 ): RetainedRendererRead => {
   try {
-    return normalizeRendererReadUnsafe(value, lineage);
+    return normalizeRendererReadUnsafe(value, lineage, animationControlsCache);
   } catch (cause) {
     if (isRetainedRenderError(cause)) throw cause;
     throw new RetainedRenderError({ code: RetainedRenderErrorCode.ScenePatchSnapshotMismatch, cause });
@@ -414,6 +423,7 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
     throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererInvalid, cause: renderer });
   }
   let committedLineage: SceneRuntimeSnapshot | undefined;
+  const animationControlsCache = new WeakMap<object, AnimationControls>();
   const participant = defineRuntimeCommitParticipant<RetainedRendererRead>({
     key: captured.backend === 'svg' ? RETAINED_SVG_PARTICIPANT_KEY : RETAINED_CANVAS_PARTICIPANT_KEY,
     owners: [RenderRuntimeOwnerDefinition],
@@ -496,7 +506,7 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
         dispose: () => rendererToken.dispose(),
       });
     },
-    read: () => normalizeRendererRead(executor.read(), committedLineage),
+    read: () => normalizeRendererRead(executor.read(), committedLineage, animationControlsCache),
     dispose: () => {
       executor.dispose();
       committedLineage = undefined;

@@ -7,9 +7,8 @@
  */
 import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
 
-import type { WaapiDescriptor } from '../svg/animation/waapi';
-
 import { isAutoplayTrigger } from './channels';
+import { bindWaapiDescriptorElements } from './retained';
 
 /** 可能缺席的运行时全局（SSR / 老浏览器）：lib.dom 把它们类型成必有，这里显式放宽成可选以正确降级 */
 type OptionalGlobals = {
@@ -188,96 +187,9 @@ export const sceneAnimationDurationMs = (scene: Scene): number | null => {
   return max;
 };
 
-/**
- * 绑定 SVG 交互 track（读 root 下 `data-retikz-anim`）：按 trigger 经 WAAPI 播放
- * @description visible→IntersectionObserver 进视口播；manual→创建即暂停、句柄控制；{onEvent}→事件委托命中即播。
- *   load track 不在此（已由 CSS 自播）。缺 element.animate / IntersectionObserver 的环境优雅跳过。返回控制句柄。
- *   timing.easing 已由编译期烘焙成 CSS 串（含自定义 easing 的 bezier 形式），本桥直传、无需 easing 注册表
- */
-export const bindWaapiDescriptors = (root: Element): AnimationControls => {
-  const animations: Array<Animation> = [];
-  const observers: Array<IntersectionObserver> = [];
-  const cleanups: Array<() => void> = [];
-  const hasIO = typeof IntersectionObserver !== 'undefined';
-
-  const elements = root.querySelectorAll('[data-retikz-anim]');
-  elements.forEach(element => {
-    const raw = element.getAttribute('data-retikz-anim');
-    if (!raw) return;
-    let descriptors: Array<WaapiDescriptor>;
-    try {
-      descriptors = JSON.parse(raw) as Array<WaapiDescriptor>;
-    } catch {
-      return;
-    }
-    for (const descriptor of descriptors) {
-      if (descriptor.transformOrigin && element instanceof SVGElement) {
-        element.style.transformOrigin = descriptor.transformOrigin;
-        element.style.transformBox = 'view-box';
-      }
-      const timing: KeyframeAnimationOptions = {
-        duration: descriptor.timing.duration,
-        delay: descriptor.timing.delay,
-        easing: descriptor.timing.easing,
-        iterations: descriptor.timing.iterations === 'infinite' ? Infinity : descriptor.timing.iterations,
-        direction: descriptor.timing.direction as PlaybackDirection | undefined,
-        fill: descriptor.timing.fill as FillMode,
-      };
-      const animate = (): Animation | undefined =>
-        (element as unknown as { animate?: (k: unknown, t: unknown) => Animation }).animate?.(
-          descriptor.keyframes,
-          timing,
-        );
-      const trigger = descriptor.trigger;
-      if (trigger === 'manual') {
-        const animation = animate();
-        animation?.pause();
-        if (animation) animations.push(animation);
-      } else if (trigger === 'visible' && hasIO) {
-        const observer = new IntersectionObserver(entries => {
-          for (const entry of entries) {
-            if (entry.isIntersecting) {
-              const animation = animate();
-              if (animation) animations.push(animation);
-              observer.disconnect();
-            }
-          }
-        });
-        observer.observe(element);
-        observers.push(observer);
-      } else if (typeof trigger === 'object') {
-        // 复用单个 Animation：每次事件 cancel + play 从头重播，避免每次触发新建并无界堆积
-        let animation: Animation | undefined;
-        const handler = (): void => {
-          if (animation) {
-            animation.cancel();
-            animation.play();
-            return;
-          }
-          animation = animate();
-          if (animation) animations.push(animation);
-        };
-        element.addEventListener(trigger.onEvent, handler);
-        cleanups.push(() => element.removeEventListener(trigger.onEvent, handler));
-      }
-    }
-  });
-
-  return {
-    play: () => animations.forEach(a => a.play()),
-    pause: () => animations.forEach(a => a.pause()),
-    seek: timeMs => animations.forEach(a => (a.currentTime = timeMs)),
-    dispose: () => {
-      animations.forEach(a => a.cancel());
-      observers.forEach(o => o.disconnect());
-      cleanups.forEach(c => c());
-    },
-    get time() {
-      const first = animations[0] as Animation | undefined;
-      return Number(first?.currentTime ?? 0);
-    },
-    get running() {
-      return animations.some(a => a.playState === 'running');
-    },
-  };
-};
+/** 绑定 root 自身及 descendants 上的全部 WAAPI descriptors */
+export const bindWaapiDescriptors = (root: Element): AnimationControls =>
+  bindWaapiDescriptorElements(
+    [...(root.matches('[data-retikz-anim]') ? [root] : []), ...root.querySelectorAll('[data-retikz-anim]')],
+    () => true,
+  );

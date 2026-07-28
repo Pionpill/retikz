@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
+import { createRuntimeIdentity } from '@retikz/runtime';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { HydrationHandlers } from '../../src/hydration';
+import type { HydrationHandlers, HydrationTarget } from '../../src/hydration';
 
 import { createHydrationController, locateSvg } from '../../src/hydration';
 
@@ -100,6 +101,32 @@ describe('Hydration 控制器', () => {
     controller.dispose();
   });
 
+  it('同一 semantic owner 的多个 occurrence 之间移动不重复触发 enter/leave', () => {
+    const root = document.createElement('div');
+    const owner = createRuntimeIdentity('hydration-owner', ['owner']);
+    const targets: ReadonlyArray<HydrationTarget> = ['shape', 'label'].map(segment => ({
+      identity: createRuntimeIdentity('hydration-owner', ['owner', segment]),
+      semanticOwner: owner,
+      publicId: 'owner',
+    }));
+    let current: HydrationTarget | null = targets[0];
+    const onEnter = vi.fn();
+    const onLeave = vi.fn();
+    const controller = createHydrationController(
+      root,
+      { owner: { pointerEnter: onEnter, pointerLeave: onLeave } },
+      () => current,
+    );
+
+    root.dispatchEvent(new Event('pointermove'));
+    current = targets[1];
+    root.dispatchEvent(new Event('pointermove'));
+
+    expect(onEnter).toHaveBeenCalledTimes(1);
+    expect(onLeave).not.toHaveBeenCalled();
+    controller.dispose();
+  });
+
   it('leave-whole-figure：pointerleave 离开整图 → lastHitId 的 leave 触发并清空命中态', () => {
     const { root, childA1 } = setupRoot();
     const onLeaveA = vi.fn();
@@ -143,6 +170,24 @@ describe('Hydration 控制器', () => {
 
     expect(() => dispatch(nodeB, 'click')).not.toThrow();
     controller.dispose();
+  });
+
+  it('listener 注册中途失败会反向清理已挂载 listener', () => {
+    const added: Array<string> = [];
+    const removed: Array<string> = [];
+    const root = {
+      addEventListener: (type: string) => {
+        if (type === 'dblclick') throw new Error('listener rejected');
+        added.push(type);
+      },
+      removeEventListener: (type: string) => removed.push(type),
+    } as unknown as EventTarget;
+
+    expect(() =>
+      createHydrationController(root, { node: { click: vi.fn(), doubleClick: vi.fn() } }, () => null),
+    ).toThrow('listener rejected');
+    expect(added).toEqual(['click']);
+    expect(removed).toEqual(['click']);
   });
 });
 
