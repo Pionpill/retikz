@@ -4,5 +4,6 @@ export * from './composite';
 export * from './context';
 export * from './diagnostics';
 export * from './primitive';
+export * from './runtime-topology';
 export * from './traversal';
 export * from './types';

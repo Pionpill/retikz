@@ -73,6 +73,7 @@
     "effectsCustomPattern": "自定义图案",
     "effectsAnimation": "动画",
     "effectsCustomAnimation": "自定义动画",
+    "pkgCore": "@retikz/core",
     "pkgRuntime": "@retikz/runtime",
     "pkgRuntimeSession": "Program 与同步 Session",
     "pkgReact": "@retikz/react",

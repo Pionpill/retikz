@@ -1,6 +1,6 @@
 # v0.5.0-alpha.2 增量性能与 Box Layout 基建
 
-- 状态：Proposed
+- 状态：执行中（ADR-01～03 Accepted；ADR-04～06 Proposed）
 - 目标版本：`0.5.0-alpha.2`
 - 关联：[v0.5 roadmap](../roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
@@ -14,12 +14,19 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 
 | ADR                                                  | 状态     | 主题                             | 交付                                                                                       |
 | ---------------------------------------------------- | -------- | -------------------------------- | ------------------------------------------------------------------------------------------ |
-| [ADR-01](./01-performance-observability-baseline.md) | Proposed | 性能观测与 baseline              | 冻结场景、指标、tracing 与回归预算                                                         |
-| [ADR-02](./02-runtime-identity-owner-registry.md)    | Proposed | Runtime identity / owner         | 冻结 identity、Snapshot、owned value、Owner Definition 与 registry                         |
-| [ADR-03](./03-program-transaction-lifecycle.md)      | Proposed | Program / transaction lifecycle  | 冻结依赖图、revision、candidate、fallback、observer 与同步原子提交                         |
+| [ADR-01](./01-performance-observability-baseline.md) | Accepted | 性能观测与 baseline              | 冻结场景、指标、tracing 与回归预算                                                         |
+| [ADR-02](./02-runtime-identity-owner-registry.md)    | Accepted | Runtime identity / owner         | 冻结 identity、Snapshot、owned value、Owner Definition 与 registry                         |
+| [ADR-03](./03-program-transaction-lifecycle.md)      | Accepted | Program / transaction lifecycle  | 冻结依赖图、revision、candidate、fallback、observer 与同步原子提交                         |
 | [ADR-04](./04-incremental-core-compile.md)           | Proposed | Core 增量编译                    | 冻结 contribution、依赖、Diff、局部失效、fallback 与增量/全量等价                          |
 | [ADR-05](./05-scene-patch-retained-renderer.md)      | Proposed | Scene Patch 与 retained renderer | 冻结 identity topology、commit participant 与 SVG/Canvas retained lifecycle                |
 | [ADR-06](./06-box-layout-composite-contract.md)      | Proposed | Box Layout Composite contract    | 冻结双轴 constraint、allocation / slot-size feedback、nested propagation 与 replay wrapper |
+
+## 当前进度
+
+- ADR-01～03 已完成实现、自动化验证、Runtime 中英文文档与 changelog，并于 2026-07-27 获人工接受。
+- ADR-04 已建立 canonical Scene topology、Core Program full oracle、ChangeSet/Snapshot 校验与 stable-root 结构 Diff，但 Program update 仍走完整 fallback，尚未形成 contribution reuse 与增量/完整等价证据。
+- ADR-05 已建立 Scene Patch 数据契约；retained SVG/Canvas commit、adapter session 接线与收益验证尚未完成。
+- ADR-06 已建立 replay runtime output tree 与 Scope wrapper 基础；双轴 constraint、`slotSize`、显式 composite allocation 和完整 wrapper clip 合同尚未完成。
 
 ## 执行批次
 
@@ -64,7 +71,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 
 ## 授权边界
 
-本 roadmap 与 Proposed ADR 只授权设计审查，不授权实现、commit、tag、publish 或 push。
+本 roadmap 的 Accepted 状态只记录已获人工确认的完成事实。其余 Proposed ADR 仍不授权实现；本文件也不授权 commit、tag、publish 或 push。
 
 ## 历史设计记录
 
