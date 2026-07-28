@@ -12,9 +12,16 @@ import { defineRetainedRenderer, RetainedRenderErrorCode } from '@retikz/render/
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import type { RetainedSvgUpdateOptions, StaticMountOptions, VanillaFigureSpec, VanillaTier2Adapter } from '../../src';
+import type {
+  RetainedSvgUpdateOptions,
+  StaticMountCanvasOptions,
+  StaticMountOptions,
+  StaticMountUnifiedOptions,
+  VanillaFigureSpec,
+  VanillaTier2Adapter,
+} from '../../src';
 
-import { mountCanvas, mountSvg, VanillaLayerCache } from '../../src';
+import { mount, mountCanvas, mountSvg, VanillaLayerCache } from '../../src';
 import { createRetainedCompositeDefinitions } from '../../src/runtime/retained-composites';
 
 const source = (fill: string): IRScene => ({
@@ -660,5 +667,29 @@ describe('@retikz/vanilla retained mount', () => {
         runtime: { rendererFactory: createMemoryRendererFactory('entity') },
       } as unknown as StaticMountOptions),
     ).toThrow(expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid }));
+  });
+
+  it('预编译 Scene 的三组 mount 入口拒绝任意 runtime 字段', () => {
+    const scene = compileToScene(source('#ef4444')).scene;
+    const runtimes: ReadonlyArray<unknown> = [undefined, {}, { unknown: true }, 1];
+    const mountStatic = [
+      (runtime: unknown) =>
+        mountSvg(document.createElement('div'), scene, { runtime } as unknown as StaticMountOptions),
+      (runtime: unknown) =>
+        mountCanvas(document.createElement('div'), scene, { runtime } as unknown as StaticMountCanvasOptions),
+      (runtime: unknown) =>
+        mount(document.createElement('div'), scene, {
+          renderer: 'svg',
+          runtime,
+        } as unknown as StaticMountUnifiedOptions & { renderer: 'svg' }),
+    ];
+
+    for (const entry of mountStatic) {
+      for (const runtime of runtimes) {
+        expect(() => entry(runtime)).toThrowError(
+          expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid }),
+        );
+      }
+    }
   });
 });

@@ -138,7 +138,7 @@ SVG retained renderer 会保留未变 DOM identity；Canvas 对安全局部变�
       label: 'SVG static / retained view 分流',
       path: 'packages/kernel/vanilla/src/runtime/mount-svg.ts',
       startLine: 144,
-      endLine: 205,
+      endLine: 200,
     },
     {
       label: 'Vanilla retained Session 创建',
@@ -180,7 +180,7 @@ mount(canvasRoot, spec, {
 });
 ```
 
-`figure()` 只描述图；`output` 控制显示尺寸和资源 id，`compile` 注入 Core 编译能力，`animation` 控制播放或截帧，`canvas` 只给 Canvas mount 使用，`runtime.rendererFactory` 只在 IR / plain spec retained mount 中替换内置 factory。`RenderToStringOptions`、`StaticMountOptions`、`StaticMountCanvasOptions` 与 `StaticMountUnifiedOptions` 都不接受 `runtime`；SSR 与预编译 Scene 的 static mount 在类型层拒绝 retained renderer factory，运行时也不会静默忽略不安全输入。
+`figure()` 只描述图；`output` 控制显示尺寸和资源 id，`compile` 注入 Core 编译能力，`animation` 控制播放或截帧，`canvas` 只给 Canvas mount 使用，`runtime.rendererFactory` 只在 IR / plain spec retained mount 中替换内置 factory。`RenderToStringOptions`、`StaticMountOptions`、`StaticMountCanvasOptions` 与 `StaticMountUnifiedOptions` 都不接受 `runtime`；SSR 与预编译 Scene 的 static mount 在类型层拒绝 retained renderer factory，运行时按字段存在性拒绝任意 `runtime` 输入，不会静默忽略空对象、未知字段或 primitive 值。
 
 `animation.enabled` 省略时跟随系统的“减少动态效果”偏好；显式 `true` 强制开启，显式 `false` 强制关闭。`snapshotAt` 仍会覆盖播放开关并输出静态截帧。
 

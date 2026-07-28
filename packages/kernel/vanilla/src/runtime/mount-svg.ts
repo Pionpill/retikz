@@ -15,7 +15,6 @@ import {
   resolvePointViaLayout,
   resolveSvgElement,
 } from '@retikz/render/hydration';
-import { RetainedRenderError, RetainedRenderErrorCode } from '@retikz/render/runtime';
 import { buildSvgDocument } from '@retikz/render/svg';
 
 import type { VanillaRuntimeMeta } from '../spec';
@@ -32,6 +31,7 @@ import type {
 
 import { DEFAULT_ID_PREFIX, VanillaViewMode } from './constants';
 import { createVanillaRetainedSession } from './retained-session';
+import { assertStaticMountRuntimeExcluded } from './static-mount-options';
 import { applyAttrs, svgNodeToDom } from './svg-dom';
 import { createEmptyRuntimeMeta, toSceneResult } from './to-scene';
 
@@ -193,12 +193,7 @@ export const mountSvg: MountSvg = ((
   options: StaticMountOptions | MountOptions = {},
 ): VanillaView => {
   if ('primitives' in input) {
-    if (options.runtime?.rendererFactory !== undefined) {
-      throw new RetainedRenderError({
-        code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid,
-        cause: input,
-      });
-    }
+    assertStaticMountRuntimeExcluded(options);
     return mountStaticSvg(container, input, options as StaticMountOptions);
   }
   return mountRetainedSvg(container, input, options);

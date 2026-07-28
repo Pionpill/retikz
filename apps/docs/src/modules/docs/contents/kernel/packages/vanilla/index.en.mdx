@@ -138,7 +138,7 @@ The SVG retained renderer preserves unchanged DOM identity. Canvas updates a dir
       label: 'SVG static / retained view dispatch',
       path: 'packages/kernel/vanilla/src/runtime/mount-svg.ts',
       startLine: 144,
-      endLine: 205,
+      endLine: 200,
     },
     {
       label: 'Vanilla retained Session creation',
@@ -180,7 +180,7 @@ mount(canvasRoot, spec, {
 });
 ```
 
-`figure()` only describes the figure. `output` controls display size and resource ids, `compile` injects Core compile capabilities, `animation` controls playback or snapshots, `canvas` is only for Canvas mounts, and `runtime.rendererFactory` replaces the built-in factory only for retained IR / plain-spec mounts. `RenderToStringOptions`, `StaticMountOptions`, `StaticMountCanvasOptions`, and `StaticMountUnifiedOptions` all exclude `runtime`. SSR and precompiled-Scene static mounts reject a retained renderer factory at the type boundary, and runtime validation never silently ignores unsafe input.
+`figure()` only describes the figure. `output` controls display size and resource ids, `compile` injects Core compile capabilities, `animation` controls playback or snapshots, `canvas` is only for Canvas mounts, and `runtime.rendererFactory` replaces the built-in factory only for retained IR / plain-spec mounts. `RenderToStringOptions`, `StaticMountOptions`, `StaticMountCanvasOptions`, and `StaticMountUnifiedOptions` all exclude `runtime`. SSR and precompiled-Scene static mounts reject a retained renderer factory at the type boundary; at runtime, field-presence validation rejects every `runtime` input instead of silently ignoring an empty object, an unknown field, or a primitive value.
 
 Omit `animation.enabled` to follow the system's reduced-motion preference. Explicit `true` forces playback on, and explicit `false` forces it off. `snapshotAt` still overrides playback and produces a static frame.
 

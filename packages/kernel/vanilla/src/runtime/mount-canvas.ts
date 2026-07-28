@@ -21,7 +21,6 @@ import {
   isCanvasAnimationIdVisible,
   withCanvasAnimationEventHandlers,
 } from '@retikz/render/hydration';
-import { RetainedRenderError, RetainedRenderErrorCode } from '@retikz/render/runtime';
 
 import type { VanillaRuntimeMeta } from '../spec';
 import type {
@@ -38,6 +37,7 @@ import type {
 
 import { DEFAULT_ID_PREFIX, VanillaViewMode } from './constants';
 import { createVanillaRetainedSession } from './retained-session';
+import { assertStaticMountRuntimeExcluded } from './static-mount-options';
 import { createEmptyRuntimeMeta, toSceneResult } from './to-scene';
 
 /** 设备像素比：取有限正数、否则回退 1（镜像 react CanvasHost） */
@@ -394,12 +394,7 @@ export const mountCanvas: MountCanvas = ((
   options: StaticMountCanvasOptions | MountCanvasOptions = {},
 ): CanvasView => {
   if ('primitives' in input) {
-    if (options.runtime?.rendererFactory !== undefined) {
-      throw new RetainedRenderError({
-        code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid,
-        cause: input,
-      });
-    }
+    assertStaticMountRuntimeExcluded(options);
     return mountStaticCanvas(container, input, options as StaticMountCanvasOptions);
   }
   return mountRetainedCanvas(container, input, options);
