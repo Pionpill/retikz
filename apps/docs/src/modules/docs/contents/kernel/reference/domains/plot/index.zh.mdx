@@ -16,7 +16,7 @@ Viz 按“数据能力 → 可视化语法 → 宿主接入”分层，Plot 只�
 | `@retikz/data`         | 数据模型、字段解析、通用 transform / statistics 与 lineage                |
 | `@retikz/plot`         | Plot IR，以及 channel、scale、coordinate、mark、guide、layout 与 lowering |
 | `@retikz/plot-react`   | React JSX authoring、数据注入与 React runtime 接线                        |
-| `@retikz/plot-vanilla` | 无框架 `plotBuilder`、数据注入与 Vanilla / SSR 编排                       |
+| `@retikz/plot-vanilla` | plain `plot()`、Tier 2 adapter、数据注入与 Vanilla / SSR 编排             |
 
 Plot 不直接拥有 SVG / Canvas renderer，也不保存 React 组件或运行时函数。它接收 JSON 可序列化的 Plot IR 与外部数据，输出供 Core 编译的图元贡献，并在运行时按需提供 lineage 和 diagnostics。
 
@@ -46,7 +46,7 @@ Plot 不直接拥有 SVG / Canvas renderer，也不保存 React 组件或运行�
 
 <ComponentPreview files="plot-pipeline" size="sm" hideCode />
 
-1. **构造规格**：React 组合 DSL、Vanilla builder 或直接写入的 spec 生成 `IRPlotSpec`；datasets 由宿主单独保存，不进入 IR。
+1. **构造规格**：React 组合 DSL、Vanilla `plot()` 或直接写入的 spec 生成 `IRPlotSpec`；datasets 由宿主单独保存，不进入 IR。
 2. **准备数据**：schema 校验 Plot IR，数据模型解析字段，通用和 Plot 专属 transform 生成各层需要的 row view。
 3. **解析视觉语法**：registry 解析 channel、scale、coordinate、mark 与 guide definition；内置和自定义能力走同一套解析与消费路径。
 4. **下沉为 Core IR**：`lowerPlots(datasets, options)` 创建 Plot composite definition；它调用 Plot lowering，把网格、marks、坐标轴、标签和图例展开为 Core `Scope`、`Node` 与 `Path`。

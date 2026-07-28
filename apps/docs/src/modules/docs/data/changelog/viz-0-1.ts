@@ -32,10 +32,10 @@ export const vizV01: Release = {
       subVersions: [
         {
           version: 'beta.2',
-          date: '2026-07-11',
+          date: '2026-07-27',
           summary: {
-            zh: '收紧 data IR 与统计 selector 边界，统一 schema 派生公开类型命名，并修正日期解析和 top / bottom 并列处理。',
-            en: 'Tightens data IR and statistic selector boundaries, unifies schema-derived public type names, and fixes date parsing plus top / bottom tie handling.',
+            zh: '收口 data v0.1-beta.2：收紧 data IR 与统计 selector 边界，统一 schema 派生类型命名，并补齐 runtime lineage 与来源身份兼容修正。',
+            en: 'Closes out data v0.1-beta.2 by tightening data IR and statistic selector boundaries, unifying schema-derived type names, and adding runtime lineage with source-identity compatibility fixes.',
           },
           items: [
             esmOnlyChangeItem,
@@ -73,8 +73,15 @@ export const vizV01: Release = {
             {
               label: { zh: 'IRDataXxx 公开类型命名', en: 'Owner-qualified IRDataXxx types' },
               content: {
-                zh: '`FieldDef`、`DataModel`、`DataRef`、`Transform` 等 schema 派生类型统一改为 `IRDataXxx`，旧名不保留兼容别名；JSON schema 与运行时行为不变。',
-                en: 'Schema-derived types such as `FieldDef`, `DataModel`, `DataRef`, and `Transform` now use owner-qualified `IRDataXxx` names without compatibility aliases; JSON schemas and runtime behavior are unchanged.',
+                zh: '`FieldDef` / `DataModel` / `DataRef` / `ScalarValue` 分别迁移为 `IRDataFieldDefinition` / `IRDataModel` / `IRDataReference` / `IRDataScalarValue`；transform、reducer、selector 与 annotate 的 schema 派生类型同样增加 `IRData` owner 前缀。旧名不保留兼容别名；JSON schema 与运行时行为不变。',
+                en: '`FieldDef` / `DataModel` / `DataRef` / `ScalarValue` move to `IRDataFieldDefinition` / `IRDataModel` / `IRDataReference` / `IRDataScalarValue`; schema-derived transform, reducer, selector, and annotate types likewise gain the `IRData` owner prefix. Old names have no compatibility aliases; JSON schemas and runtime behavior are unchanged.',
+              },
+            },
+            {
+              label: { zh: '可配置的数据链路追踪', en: 'Configurable data lineage' },
+              content: {
+                zh: '新增 `applyTransformsWithLineage()` 与 runtime-only recorder contract，可按需记录 source identity、transform step、字段流与受白名单约束的计算细节；`applyTransforms()` 的返回值和默认成本不变。',
+                en: 'Adds `applyTransformsWithLineage()` and a runtime-only recorder contract for opt-in source identity, transform steps, field flow, and allowlisted calculation details; `applyTransforms()` keeps its return value and default cost.',
               },
             },
             {
@@ -110,6 +117,13 @@ export const vizV01: Release = {
               content: {
                 zh: 'mean / median 在有限大数上不再因中间运算溢出；极值、quantile-band 与 provenance / lineage 不再把大数组展开成函数参数；分类域会跳过非有限数字，重复 model 字段在 schema 入口直接报错。',
                 en: 'Mean / median no longer overflow on finite large values; extrema, quantile-band, and provenance / lineage no longer expand large arrays into call arguments; category domains skip non-finite numbers, and duplicate model fields fail at the schema boundary.',
+              },
+            },
+            {
+              label: { zh: '分段 lineage 保留原始来源身份', en: 'Segmented lineage preserves source identity' },
+              content: {
+                zh: '已带单行或分组 provenance 的数据再次进入 lineage 管线时会保留原始来源索引，不再用中间结果的当前位置覆盖来源身份。',
+                en: 'Rows that already carry single-row or grouped provenance preserve their original source indices when entering another lineage pipeline instead of being overwritten by intermediate positions.',
               },
             },
           ],
@@ -176,13 +190,27 @@ export const vizV01: Release = {
       subVersions: [
         {
           version: 'beta.2',
-          date: '2026-07-07',
+          date: '2026-07-27',
           summary: {
-            zh: '收窄 plot 顶层导出与未实现的 layout 契约，并把 provenance / layout 相关 helper 归到稳定 owner，降低误用风险。',
-            en: 'Narrows plot root exports and unimplemented layout contracts, while moving provenance / layout helpers under stable owners to reduce misuse.',
+            zh: '收口 Plot v0.1-beta.2：补齐 runtime lineage 与共享 plain authoring，收窄顶层导出和未实现契约，并修正数据字典的原型链读取。',
+            en: 'Closes out Plot v0.1-beta.2 by adding runtime lineage and shared plain authoring, narrowing root exports and unimplemented contracts, and fixing prototype-chain reads in data dictionaries.',
           },
           items: [
             esmOnlyChangeItem,
+            {
+              label: { zh: 'runtime-only Plot lineage', en: 'Runtime-only Plot lineage' },
+              content: {
+                zh: '`lowerPlotWithLineage()`、`PlotLineageRun` 与 locator lineage 把 Data 来源补充为 mark、encoding、scale 和 layout 语义；结果通过返回值或 adapter callback 交给宿主，不写入 `IRPlotSpec` 或 Scene meta。',
+                en: '`lowerPlotWithLineage()`, `PlotLineageRun`, and locator lineage enrich Data origins with mark, encoding, scale, and layout semantics. Hosts receive the result through return values or adapter callbacks; it is not written into `IRPlotSpec` or Scene metadata.',
+              },
+            },
+            {
+              label: { zh: '共享 plain authoring', en: 'Shared plain authoring' },
+              content: {
+                zh: '`createPlotSpec()` 与 `normalizePlotBindings()` 统一 React / Vanilla 的 axis、facet、scaffold 和 track binding，展开 authoring-only 字段后返回 schema-valid `IRPlotSpec`；核心错误统一使用 `plot authoring:`。',
+                en: '`createPlotSpec()` and `normalizePlotBindings()` unify React and Vanilla axis, facet, scaffold, and track bindings, expand authoring-only fields, and return schema-valid `IRPlotSpec` values with shared `plot authoring:` diagnostics.',
+              },
+            },
             {
               label: { zh: 'BREAKING：移除内置 ternary2D 坐标系', en: 'BREAKING: Built-in ternary2D removed' },
               content: {
@@ -229,6 +257,13 @@ export const vizV01: Release = {
               content: {
                 zh: 'Plot layout 暂不接受 `maxIterations`、`collision`、label `priority` / `overflow` 或 `placement.target:"view"`；当前稳定契约保留 frame / plotArea 定位、基础占位与 autoPadding，完整 solver 延后到 v0.2。',
                 en: 'Plot layout no longer accepts `maxIterations`, `collision`, label `priority` / `overflow`, or `placement.target:"view"`. The stable contract keeps frame / plotArea placement, basic reservation, and autoPadding; the complete solver moves to v0.2.',
+              },
+            },
+            {
+              label: { zh: '数据字典只读取自有键', en: 'Data dictionaries read own keys only' },
+              content: {
+                zh: 'datasets 与 fieldMaps 不再把原型链上的 `constructor`、`toString` 或 `__proto__` 当成数据集或映射；显式同名自有键仍可正常使用，lowering 与 locator 保持一致。',
+                en: 'Datasets and field maps no longer treat inherited `constructor`, `toString`, or `__proto__` properties as datasets or mappings. Explicit own properties with those names remain valid, with matching lowering and locator behavior.',
               },
             },
           ],
@@ -442,13 +477,20 @@ export const vizV01: Release = {
       subVersions: [
         {
           version: 'beta.2',
-          date: '2026-07-07',
+          date: '2026-07-27',
           summary: {
-            zh: 'React `<Plot>` 的 spec 入口补齐 layout 透传，并让空 mark 的组合 DSL 也走完整 PlotSpec 校验。',
-            en: 'The React `<Plot>` spec entry now forwards layout, and empty-mark composition DSL output also goes through full PlotSpec validation.',
+            zh: 'React `<Plot>` 复用共享 authoring normalization，补齐 spec layout 透传，并让空 mark 的组合 DSL 也走完整 PlotSpec 校验。',
+            en: 'React `<Plot>` reuses shared authoring normalization, forwards spec layout, and sends empty-mark composition DSL output through full PlotSpec validation.',
           },
           items: [
             esmOnlyChangeItem,
+            {
+              label: { zh: 'React / Vanilla binding parity', en: 'React / Vanilla binding parity' },
+              content: {
+                zh: 'React JSX 继续负责组件收集与 style sugar，但 axis / facet / scaffold / track binding 改由 `@retikz/plot` 的共享 normalization 处理；公开 JSX props 不变，冲突输入与 Vanilla 获得同一核心诊断。',
+                en: 'React JSX still collects components and style sugar, while shared normalization in `@retikz/plot` now handles axis, facet, scaffold, and track bindings. Public JSX props stay unchanged, and conflicts receive the same core diagnostics as Vanilla.',
+              },
+            },
             {
               label: { zh: 'BREAKING：移除 ternary2D authoring', en: 'BREAKING: ternary2D authoring removed' },
               content: {
@@ -652,10 +694,17 @@ export const vizV01: Release = {
       pkg: '@retikz/plot-vanilla',
       version: 'v0.1',
       description: {
-        zh: 'plot 的无框架 / SSR 面：`renderPlot` 把 Plot IR + 数据直接出 SVG 字符串，零 DOM，可在 Node / 构建期跑。',
-        en: 'plot’s framework-free / SSR surface: `renderPlot` turns a Plot IR + data straight into an SVG string, zero DOM, runnable in Node / at build time.',
+        zh: 'Plot 的无框架 authoring、Kernel Vanilla Tier 2 与 SSR 面：plain spec 可组合进 figure / layer，也可在 Node 或构建期直接输出 SVG。',
+        en: 'Plot’s framework-free authoring, Kernel Vanilla Tier 2, and SSR surface: plain specs compose into figures / layers or render directly to SVG in Node and build-time hosts.',
       },
       highlights: [
+        {
+          label: { zh: 'plain authoring 与 Tier 2', en: 'Plain authoring and Tier 2' },
+          content: {
+            zh: '`plot()` 返回无方法的 canonical PlotSpec；`embedPlot()` + `createPlotAdapter()` 复用 Kernel Vanilla figure / layer 与统一 runtime。',
+            en: '`plot()` returns a method-free canonical PlotSpec; `embedPlot()` + `createPlotAdapter()` reuse Kernel Vanilla figures / layers and the shared runtime.',
+          },
+        },
         {
           label: { zh: 'renderPlot SSR', en: 'renderPlot SSR' },
           content: {
@@ -667,10 +716,10 @@ export const vizV01: Release = {
       subVersions: [
         {
           version: 'beta.2',
-          date: '2026-07-07',
+          date: '2026-07-27',
           summary: {
-            zh: 'Vanilla builder 明确 facet / scaffold / axis 绑定的 authoring 契约，并补齐公开类型说明。',
-            en: 'The Vanilla builder documents the facet / scaffold / axis binding authoring contract and fills in public type descriptions.',
+            zh: 'Vanilla 收敛为 plain authoring，复用共享 binding normalization，并接入 Kernel Vanilla Tier 2 adapter。',
+            en: 'Vanilla converges on plain authoring, reuses shared binding normalization, and connects through the Kernel Vanilla Tier 2 adapter.',
           },
           items: [
             esmOnlyChangeItem,
@@ -682,17 +731,17 @@ export const vizV01: Release = {
               },
             },
             {
-              label: { zh: 'builder-only 字段边界更清楚', en: 'Clearer builder-only field boundary' },
+              label: { zh: 'BREAKING：Vanilla 改用 plain authoring', en: 'BREAKING: Vanilla uses plain authoring' },
               content: {
-                zh: '`xAxisId`、`yAxisId`、`facetId`、`trackId`、`scaffoldId` 等字段只在 `build()` 阶段展开，不进入输出的 Plot IR。',
-                en: '`xAxisId`, `yAxisId`, `facetId`, `trackId`, `scaffoldId`, and related fields are expanded during `build()` only and do not enter the emitted Plot IR.',
+                zh: '删除 `plotBuilder()`、`PlotBuilder` 与 `PlotBuilderConfig`；把链式 `.path()` / `.point()` / `.axis()` / `.facet()` / `.scaffold()` 改写为 `plot({ marks, guides, facets, scaffolds })`。`renderPlot()` 签名与 lineage 返回行为保持不变。',
+                en: 'Removes `plotBuilder()`, `PlotBuilder`, and `PlotBuilderConfig`; replace chained `.path()` / `.point()` / `.axis()` / `.facet()` / `.scaffold()` calls with `plot({ marks, guides, facets, scaffolds })`. `renderPlot()` signatures and lineage return behavior stay unchanged.',
               },
             },
             {
-              label: { zh: 'SSR authoring 类型补齐 JSDoc', en: 'SSR authoring types gain JSDoc' },
+              label: { zh: '共享规范化与 Tier 2 嵌入', en: 'Shared normalization and Tier 2 embedding' },
               content: {
-                zh: '`PlotBuilderConfig`、facet / scaffold 输入和链式 builder 方法补齐说明，生成的 spec 仍可直接交给 `renderPlot` 或 `lowerPlots`。',
-                en: '`PlotBuilderConfig`, facet / scaffold inputs, and fluent builder methods now include documentation; the built spec remains directly consumable by `renderPlot` or `lowerPlots`.',
+                zh: '`plot()` 与 React DSL 共享 `@retikz/plot` 的 axis / facet / scaffold binding normalization；`embedPlot()` + `createPlotAdapter()` 可把同一 PlotSpec 放入 Kernel Vanilla figure / layer，datasets 仍留在运行时。',
+                en: '`plot()` and the React DSL share axis / facet / scaffold binding normalization in `@retikz/plot`. `embedPlot()` + `createPlotAdapter()` place the same PlotSpec inside Kernel Vanilla figures / layers while datasets remain runtime-only.',
               },
             },
           ],

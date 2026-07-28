@@ -15,7 +15,7 @@ Plot 不拥有数据底座或渲染器：[Data](/viz/data)负责字段模型与�
 
 ## 从声明到 Scene
 
-1. **形成 Plot IR**：`<Plot>` 子组件、Vanilla builder 与 plain spec 最终都形成同一份 JSON-safe `IRPlotSpec`。React DSL 只是 authoring 入口，不拥有另一套图表语义。
+1. **形成 Plot IR**：`<Plot>` 子组件、Vanilla `plot()` 与完整 plain spec 最终都形成同一份 JSON-safe `IRPlotSpec`。React DSL 只是 authoring 入口，不拥有另一套图表语义。
 2. **接入外部数据**：IR 通过 `data.reference` 指向运行时数据集。字段解析、通用变换与来源追溯由 Data 提供，数据行本身不进入 IR。
 3. **解析绘图语义**：lowering 依次处理数据变换、通道绑定、比例尺和坐标投影，再由 mark 与 guide definition 生成可下沉结果。内置与自定义能力走同一套 registry、resolver 与 consumer 路径。
 4. **下沉到 Core IR**：`lowerPlots` 作为 Tier 2 composite definition，把 Plot 节点展开为 `Scope`、`Node`、`Path` 等 Core IR；lineage、locator 和 diagnostics 作为运行时结果单独返回。
@@ -32,8 +32,14 @@ Plot 不拥有数据底座或渲染器：[Data](/viz/data)负责字段模型与�
     {
       label: 'React 子组件装配为等价 Plot IR',
       path: 'packages/viz/plot-react/src/components/build-plot-spec.ts',
-      startLine: 1948,
-      endLine: 1954,
+      startLine: 2040,
+      endLine: 2084,
+    },
+    {
+      label: '共享 authoring input 规范化为 canonical PlotSpec',
+      path: 'packages/viz/plot/src/contract/authoring/create-plot-spec.ts',
+      startLine: 7,
+      endLine: 28,
     },
     {
       label: 'Plot composite 的统一下沉入口',
@@ -43,22 +49,24 @@ Plot 不拥有数据底座或渲染器：[Data](/viz/data)负责字段模型与�
     },
     {
       label: 'Vanilla 从 Plot IR 到 Scene 与 SVG 的入口',
-      path: 'packages/viz/plot-vanilla/src/render-plot.ts',
-      startLine: 52,
-      endLine: 71,
+      path: 'packages/viz/plot-vanilla/src/runtime/render-plot.ts',
+      startLine: 47,
+      endLine: 68,
     },
   ]}
 />
 
 ## 三个包怎样分工
 
-| 包                     | 拥有的职责                                      | 典型入口                                      |
-| ---------------------- | ----------------------------------------------- | --------------------------------------------- |
-| `@retikz/plot`         | Plot IR、Definition / registry、解析与 lowering | `PlotSpecSchema`、`lowerPlots`                |
-| `@retikz/plot-react`   | React 声明式入口与运行时接线                    | `<Plot>`、`buildPlotSpec`                     |
-| `@retikz/plot-vanilla` | 无框架 / SSR 的 spec 构建与渲染接线             | `plotBuilder(...).build()`、`renderPlot(...)` |
+| 包                     | 拥有的职责                                                      | 典型入口                                           |
+| ---------------------- | --------------------------------------------------------------- | -------------------------------------------------- |
+| `@retikz/plot`         | Plot IR、共享 authoring、Definition / registry、解析与 lowering | `createPlotSpec()`、`PlotSpecSchema`、`lowerPlots` |
+| `@retikz/plot-react`   | React 声明式入口与运行时接线                                    | `<Plot>`、`buildPlotSpec`                          |
+| `@retikz/plot-vanilla` | plain spec、Vanilla Tier 2 与 SSR 接线                          | `plot()`、`embedPlot()`、`renderPlot()`            |
 
 三包共享 `@retikz/plot` 的 IR 与 lowering 真源。adapter 可以提供适合框架的 authoring sugar，但不能复制或改变 scale、coordinate、mark、guide 的语义。
+
+`createPlotSpec()` 是 framework-neutral 的 authoring 收口入口：它把 `facets`、`scaffolds` 与 axis / topology binding 展开成 canonical `IRPlotSpec`，再执行完整 schema 校验。React 与 Vanilla 都复用这条规范化路径；已经持有完整 `IRPlotSpec` 时，可以直接交给运行时，无需再次套 authoring helper。
 
 ## Plot 负责与不负责什么
 

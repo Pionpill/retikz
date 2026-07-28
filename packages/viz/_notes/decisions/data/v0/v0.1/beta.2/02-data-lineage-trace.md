@@ -1,4 +1,4 @@
-# ADR-01：data 提供可配置的数据链路追踪
+# ADR-02：data 提供可配置的数据链路追踪
 
 - 状态：Accepted
 - 决策日期：2026-07-08
@@ -73,4 +73,4 @@ data contract 新增 lineage 类型与 recorder 抽象；pipeline 新增 `create
 
 ## 实现指针
 
-本 ADR 已随 viz `0.1.0-beta.2` 收尾压缩；当前真源以代码、测试、文档站和 changelog 为准。
+本 ADR 已在 data v0.1-beta.2 收尾时压缩；当前真源以代码、测试、文档站和 changelog 为准。完整施工契约保留在该 ADR 的 Accepted 历史版本中。

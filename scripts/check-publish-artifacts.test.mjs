@@ -9,6 +9,7 @@ import {
   exportSpecifiers,
   nextFileLimit,
   nextPackedByteLimit,
+  peerTypePackageName,
   renderFixtureWorkspaceYaml,
   sortArtifactLimits,
   validateDistFiles,
@@ -16,6 +17,11 @@ import {
   validatePackedFiles,
   validatePackedManifestContract,
 } from './check-publish-artifacts.mjs';
+
+test('peer package names map to their DefinitelyTyped package names', () => {
+  assert.equal(peerTypePackageName('react'), '@types/react');
+  assert.equal(peerTypePackageName('@scope/example'), '@types/scope__example');
+});
 
 test('valid single-format dist files have no diagnostics', () => {
   const diagnostics = validateDistFiles('@retikz/example', [

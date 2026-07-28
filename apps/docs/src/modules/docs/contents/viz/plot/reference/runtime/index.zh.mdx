@@ -11,7 +11,7 @@ Plot 运行时把“怎样声明图”和“怎样执行图”分开：React、V
 
 <ComponentPreview files="plot-runtime-architecture" size="xxl" hideCode />
 
-React 与 Vanilla 提供不同的 authoring 和宿主接线，但不复制 Plot 算法。Standalone `<Plot>` 把规格包装成 Scene IR 并向 `<Layout>` 注入 `lowerPlots`；嵌入父级 `<Layout>` 时，adapter 先聚合同一宿主内的 datasets 与 lowering 选项。`renderPlot` 则在无 DOM 路径中校验规格、调用 Core 编译，并序列化 SVG。
+React 与 Vanilla 提供不同的 authoring 和宿主接线，但不复制 Plot 算法。Standalone `<Plot>` 把规格包装成 Scene IR 并向 `<Layout>` 注入 `lowerPlots`；`embedPlot()` 与 `createPlotAdapter()` 把同一规格接入 Kernel Vanilla 的 figure / layer。`renderPlot()` 则保留为独立的无 DOM SSR 与 lineage 入口。
 
 三条入口最终都委托 `@retikz/plot` 解析数据、比例尺、坐标系、图元与辅助，再把 Core IR 交还统一编译链。SVG、Canvas 与 SVG 字符串是输出形态；SSR 是 Vanilla 可运行的宿主场景，不是另一套 Plot 语义。
 
@@ -19,16 +19,16 @@ React 与 Vanilla 提供不同的 authoring 和宿主接线，但不复制 Plot 
 
 <ComponentPreview files="plot-authoring-convergence" size="xxl" hideCode />
 
-React DSL 通过 `buildPlotSpec` 组装规格；`spec` prop 直接接收完整 Plot IR。Vanilla 的 `plotBuilder(...).build()` 会展开 builder-only 绑定字段，直接生成的 JSON 则作为 plain spec 进入。所有入口都在执行前通过 `PlotSpecSchema`，因此下游只处理 schema-valid 的 `IRPlotSpec`。
+React DSL 通过 `buildPlotSpec` 收集 JSX，Vanilla 的 `plot()` 接收 plain object；两者把 axis、facet 与 scaffold binding 交给 `@retikz/plot` 的共享 authoring normalization。`spec` prop 与直接生成的 JSON 仍可提供完整 Plot IR。所有入口都在执行前通过 `PlotSpecSchema`，因此下游只处理 schema-valid 的 `IRPlotSpec`。
 
 `IRPlotSpec` 只保存 JSON-safe 语法与 `data.reference`。真实数据行、字段 resolver、label 函数以及自定义 transform、scale、channel、coordinate、mark 等 Definition 属于运行时输入；它们与 IR 在执行节点汇合，但不会被写回 IR。
 
-| 输入层     | 典型入口                                         | 进入 `IRPlotSpec`  |
-| ---------- | ------------------------------------------------ | ------------------ |
-| React DSL  | `<Plot>`、mark / guide / scale 子组件            | 组装后进入         |
-| React spec | `<Plot spec={...} data={...}>`                   | `spec` 进入        |
-| Vanilla    | `plotBuilder(...).build()`、plain spec           | build / 校验后进入 |
-| 运行时依赖 | datasets、field maps、resolver、各类 Definitions | 不进入             |
+| 输入层     | 典型入口                                         | 进入 `IRPlotSpec`      |
+| ---------- | ------------------------------------------------ | ---------------------- |
+| React DSL  | `<Plot>`、mark / guide / scale 子组件            | 共享规范化后进入       |
+| React spec | `<Plot spec={...} data={...}>`                   | `spec` 进入            |
+| Vanilla    | `plot({...})`、完整 plain spec                   | 共享规范化或校验后进入 |
+| 运行时依赖 | datasets、field maps、resolver、各类 Definitions | 不进入                 |
 
 ## Lowering 与产物
 
@@ -42,13 +42,14 @@ React DSL 通过 `buildPlotSpec` 组装规格；`spec` prop 直接接收完整 P
 
 ## 入口与输出
 
-| 场景             | 入口                                            | 主要输出                        |
-| ---------------- | ----------------------------------------------- | ------------------------------- |
-| React standalone | `<Plot>`                                        | `<Layout>` 管理的 SVG / Canvas  |
-| React embedded   | `<Layout><Plot /></Layout>`                     | 与其它 Tier 2 内容合编的 Scene  |
-| Vanilla / SSR    | `renderPlot(spec, datasets, options)`           | SVG 字符串或 `{ svg, lineage }` |
-| 自定义宿主       | `lowerPlots(datasets, options)` + Core compile  | Core IR → Scene                 |
-| 审计与交互       | `lowerPlotWithLineage()`、`createPlotLocator()` | runtime-only lineage / anchor   |
+| 场景             | 入口                                            | 主要输出                         |
+| ---------------- | ----------------------------------------------- | -------------------------------- |
+| React standalone | `<Plot>`                                        | `<Layout>` 管理的 SVG / Canvas   |
+| React embedded   | `<Layout><Plot /></Layout>`                     | 与其它 Tier 2 内容合编的 Scene   |
+| Vanilla embedded | `embedPlot()` + `createPlotAdapter()`           | Kernel figure / layer 中的 Scene |
+| Vanilla / SSR    | `renderPlot(spec, datasets, options)`           | SVG 字符串或 `{ svg, lineage }`  |
+| 自定义宿主       | `lowerPlots(datasets, options)` + Core compile  | Core IR → Scene                  |
+| 审计与交互       | `lowerPlotWithLineage()`、`createPlotLocator()` | runtime-only lineage / anchor    |
 
 <SourceLinks
   sources={[
@@ -71,16 +72,28 @@ React DSL 通过 `buildPlotSpec` 组装规格；`spec` prop 直接接收完整 P
       endLine: 104,
     },
     {
-      label: 'Vanilla builder 生成 plain IRPlotSpec',
-      path: 'packages/viz/plot-vanilla/src/plot-builder.ts',
-      startLine: 717,
-      endLine: 733,
+      label: '共享 authoring normalization 与 canonical PlotSpec',
+      path: 'packages/viz/plot/src/contract/authoring/create-plot-spec.ts',
+      startLine: 8,
+      endLine: 27,
+    },
+    {
+      label: 'Vanilla plain helper 与 Tier 2 embed',
+      path: 'packages/viz/plot-vanilla/src/spec/helpers.ts',
+      startLine: 10,
+      endLine: 16,
+    },
+    {
+      label: 'Vanilla Tier 2 adapter 校验、identity 与 datasets 接线',
+      path: 'packages/viz/plot-vanilla/src/adapter/plot-adapter.ts',
+      startLine: 10,
+      endLine: 32,
     },
     {
       label: 'Vanilla 校验、Core 编译与 SVG 输出',
-      path: 'packages/viz/plot-vanilla/src/render-plot.ts',
+      path: 'packages/viz/plot-vanilla/src/runtime/render-plot.ts',
       startLine: 47,
-      endLine: 71,
+      endLine: 68,
     },
     {
       label: 'Plot lowering 的运行时选项',

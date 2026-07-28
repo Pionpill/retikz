@@ -7,7 +7,7 @@
     "layer": "adapter",
     "publishable": true
   },
-  "description": "Framework-free bindings for @retikz/plot: renderPlot(spec, data) to SVG string (SSR) lowering to @retikz/core.",
+  "description": "Plain authoring, Kernel Vanilla Tier 2 embedding, and SSR runtime for @retikz/plot.",
   "type": "module",
   "engines": {
     "node": ">=24"

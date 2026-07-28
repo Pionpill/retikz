@@ -16,6 +16,16 @@ const limitsPath = path.join(repoRoot, 'scripts', 'publish-artifact-limits.json'
 
 const toPosixPath = value => value.replaceAll('\\', '/');
 
+/** 把 peer 包名转换为 DefinitelyTyped 包名 */
+export function peerTypePackageName(peerName) {
+  if (peerName.startsWith('@')) {
+    const [scope, name] = peerName.slice(1).split('/');
+    return `@types/${scope}__${name}`;
+  }
+
+  return `@types/${peerName}`;
+}
+
 /**
  * 校验单一 ESM runtime 与声明树的 dist 文件布局。
  *
@@ -372,6 +382,50 @@ async function collectPeerDependencies(records) {
   return peerDependencies;
 }
 
+/** 收集 workspace 中已安装的 peer 类型包，供严格声明消费验证使用 */
+async function collectPeerTypeDependencies(records) {
+  const peerTypeDependencies = {};
+
+  for (const record of records) {
+    for (const peerName of Object.keys(record.manifest.peerDependencies ?? {})) {
+      const typePackageName = peerTypePackageName(peerName);
+      const typePackagePath = path.join(
+        record.directory,
+        'node_modules',
+        ...typePackageName.split('/'),
+        'package.json',
+      );
+
+      if (!existsSync(typePackagePath)) continue;
+
+      const installedVersion = (await readJson(typePackagePath)).version;
+      const previousVersion = peerTypeDependencies[typePackageName];
+
+      if (previousVersion && previousVersion !== installedVersion) {
+        throw new Error(
+          `Peer type ${typePackageName} has conflicting installed versions: ${previousVersion}, ${installedVersion}`,
+        );
+      }
+
+      peerTypeDependencies[typePackageName] = installedVersion;
+    }
+  }
+
+  return peerTypeDependencies;
+}
+
+/** 收集声明消费环境固定提供的 Node 类型 */
+async function collectFixtureTypeDependencies() {
+  const nodeTypesName = '@types/node';
+  const nodeTypesPath = path.join(repoRoot, 'node_modules', ...nodeTypesName.split('/'), 'package.json');
+
+  if (!existsSync(nodeTypesPath)) {
+    throw new Error(`Publish type smoke requires ${nodeTypesName} at ${nodeTypesPath}`);
+  }
+
+  return { [nodeTypesName]: (await readJson(nodeTypesPath)).version };
+}
+
 /** 写入离线 consumer 并返回安装后的 packed manifests。 */
 async function installPackedFixture({ records, tarballsByName, taskDirectory }) {
   const fixtureDirectory = path.join(taskDirectory, 'fixture');
@@ -379,6 +433,8 @@ async function installPackedFixture({ records, tarballsByName, taskDirectory }) 
     records.map(record => [record.manifest.name, `file:${toPosixPath(tarballsByName.get(record.manifest.name))}`]),
   );
   const peerDependencies = await collectPeerDependencies(records);
+  const peerTypeDependencies = await collectPeerTypeDependencies(records);
+  const fixtureTypeDependencies = await collectFixtureTypeDependencies();
   const fixtureManifest = {
     name: 'retikz-esm-publish-smoke',
     private: true,
@@ -389,6 +445,8 @@ async function installPackedFixture({ records, tarballsByName, taskDirectory }) 
     dependencies: {
       ...tarballDependencies,
       ...peerDependencies,
+      ...peerTypeDependencies,
+      ...fixtureTypeDependencies,
     },
   };
 
@@ -415,6 +473,43 @@ async function installPackedFixture({ records, tarballsByName, taskDirectory }) 
   }
 
   return { fixtureDirectory, packedManifests };
+}
+
+/** 用严格 Bundler 配置消费全部公开声明入口 */
+async function runPackedTypeSmoke(fixtureDirectory, specifiers) {
+  const typeSmokePath = path.join(fixtureDirectory, 'type-smoke.ts');
+  const typeSmokeConfigPath = path.join(fixtureDirectory, 'tsconfig.json');
+  const typeSmokeSource = specifiers
+    .map((specifier, index) => `export type Package${index} = typeof import(${JSON.stringify(specifier)});`)
+    .join('\n');
+
+  await writeFile(typeSmokePath, `${typeSmokeSource}\n`, 'utf8');
+  await writeFile(
+    typeSmokeConfigPath,
+    `${JSON.stringify(
+      {
+        compilerOptions: {
+          module: 'ESNext',
+          moduleResolution: 'Bundler',
+          noEmit: true,
+          skipLibCheck: false,
+          strict: true,
+          target: 'ESNext',
+          types: ['node'],
+        },
+        files: ['./type-smoke.ts'],
+      },
+      null,
+      2,
+    )}\n`,
+    'utf8',
+  );
+
+  runCommand(
+    process.execPath,
+    [path.join(repoRoot, 'node_modules', 'typescript', 'bin', 'tsc'), '--project', '.'],
+    fixtureDirectory,
+  );
 }
 
 /** 原子更新 reviewed artifact limits。 */
@@ -517,6 +612,7 @@ async function main() {
 
     const smokeSource = `const specifiers = ${JSON.stringify(specifiers)}; await Promise.all(specifiers.map(specifier => import(specifier)));`;
     runCommand(process.execPath, ['--input-type=module', '--eval', smokeSource], fixtureDirectory);
+    await runPackedTypeSmoke(fixtureDirectory, specifiers);
 
     if (updateLimits) {
       await writeLimitsAtomically(candidateLimits);

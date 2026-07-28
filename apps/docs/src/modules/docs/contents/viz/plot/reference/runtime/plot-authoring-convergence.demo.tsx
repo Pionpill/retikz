@@ -38,7 +38,7 @@ const Demo: FC = () => (
       </Text>
     </Node>
     <Node
-      id="plot-builder"
+      id="plot-helper"
       position={[-130, -70]}
       minimumSize={{ width: 132, height: 50 }}
       stroke="dodgerblue"
@@ -48,7 +48,7 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>plotBuilder</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>plot()</Text>
       <Text fill="gray" font={{ size: 12 }}>
         Vanilla
       </Text>
@@ -71,8 +71,8 @@ const Demo: FC = () => (
     </Node>
 
     <Node
-      id="schema"
-      position={[0, 10]}
+      id="authoring"
+      position={[-95, 10]}
       minimumSize={{ width: 146, height: 58 }}
       stroke="dimgray"
       fill="dimgray"
@@ -81,9 +81,25 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={17}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>PlotSpecSchema</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>binding normalization</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        parse + normalize
+        shared Plot owner
+      </Text>
+    </Node>
+    <Node
+      id="validation"
+      position={[95, 10]}
+      minimumSize={{ width: 146, height: 58 }}
+      stroke="dimgray"
+      fill="dimgray"
+      fillOpacity={0.08}
+      cornerRadius={4}
+      align="middle"
+      lineHeight={17}
+    >
+      <Text font={{ size: 14, weight: 'bold' }}>schema validation</Text>
+      <Text fill="gray" font={{ size: 12 }}>
+        parse complete spec
       </Text>
     </Node>
     <Node
@@ -135,11 +151,12 @@ const Demo: FC = () => (
       </Text>
     </Node>
 
-    <Draw way={['jsx-dsl', 'schema']} arrow="->" stroke="gray" />
-    <Draw way={['spec-prop', 'schema']} arrow="->" stroke="gray" />
-    <Draw way={['plot-builder', 'schema']} arrow="->" stroke="gray" />
-    <Draw way={['plain-ir', 'schema']} arrow="->" stroke="gray" />
-    <Draw way={['schema', 'plot-ir']} arrow="->" stroke="gray" />
+    <Draw way={['jsx-dsl', 'authoring']} arrow="->" stroke="gray" />
+    <Draw way={['plot-helper', 'authoring']} arrow="->" stroke="gray" />
+    <Draw way={['spec-prop', 'validation']} arrow="->" stroke="gray" />
+    <Draw way={['plain-ir', 'validation']} arrow="->" stroke="gray" />
+    <Draw way={['authoring', 'validation']} arrow="->" stroke="gray" />
+    <Draw way={['validation', 'plot-ir']} arrow="->" stroke="gray" />
     <Draw way={['plot-ir', 'runtime']} arrow="->" stroke="gray" />
     <Draw way={['runtime-inputs', 'runtime']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
   </Layout>

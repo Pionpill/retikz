@@ -142,7 +142,7 @@ export const createPlotLocator = (
   const height = options.height ?? DEFAULT_PLOT_HEIGHT;
 
   // 数据集缺失 / 尺寸非法时给出空 locator（解析全 null），而非抛——保 resolve 永不 throw 的契约
-  const dataset = spec.data.reference in datasets ? datasets[spec.data.reference] : undefined;
+  const dataset = Object.hasOwn(datasets, spec.data.reference) ? datasets[spec.data.reference] : undefined;
   const sizeValid = Number.isFinite(width) && width > 0 && Number.isFinite(height) && height > 0;
   if (!dataset || !sizeValid) {
     const empty: PlotLocator = {

@@ -79,18 +79,17 @@ export function SalesPlot({ sales }: { sales: Array<Record<string, unknown>> }) 
 Vanilla / SSR 侧把同一组配置传给 `renderPlot`。不传链路配置时返回 SVG 字符串；传入 `lineage` 对象后返回 `{ svg, lineage }`。
 
 ```ts
-import { plotBuilder, renderPlot } from '@retikz/plot-vanilla';
+import { plot, renderPlot } from '@retikz/plot-vanilla';
 
-const spec = plotBuilder({
+const spec = plot({
   data: { reference: 'sales' },
   scales: [
     { type: 'band', name: 'x' },
     { type: 'linear', name: 'y' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-})
-  .interval({ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'revenue' } } })
-  .build();
+  marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'revenue' } } }],
+});
 
 const { svg, lineage } = renderPlot(
   spec,
@@ -175,9 +174,9 @@ if (result !== null) {
     },
     {
       label: 'Vanilla 图元链路返回契约',
-      path: 'packages/viz/plot-vanilla/src/render-plot.ts',
-      startLine: 13,
-      endLine: 60,
+      path: 'packages/viz/plot-vanilla/src/runtime/render-plot.ts',
+      startLine: 14,
+      endLine: 68,
     },
   ]}
 />
