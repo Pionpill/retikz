@@ -9,6 +9,8 @@ import type {
   RetainedRenderInput,
   RetainedSvgView,
   StaticCanvasView,
+  StaticMountCanvasOptions,
+  StaticMountOptions,
   StaticSvgView,
   VanillaView,
 } from './types';
@@ -25,15 +27,21 @@ export type MountUnifiedOptions = (MountOptions | MountCanvasOptions) & {
   renderer?: MountRenderer;
 };
 
+/** 统一 static mount 入口选项 */
+export type StaticMountUnifiedOptions = (StaticMountOptions | StaticMountCanvasOptions) & {
+  /** 渲染后端；缺省使用 SVG */
+  renderer?: MountRenderer;
+};
+
 /** 按 renderer 选择 SVG 或 Canvas runtime 挂载 */
 type MountFn = {
-  (container: Element, input: Scene, options: MountUnifiedOptions & { renderer: 'canvas' }): StaticCanvasView;
+  (container: Element, input: Scene, options: StaticMountUnifiedOptions & { renderer: 'canvas' }): StaticCanvasView;
   (
     container: Element,
     input: RetainedRenderInput,
     options: MountUnifiedOptions & { renderer: 'canvas' },
   ): RetainedCanvasView;
-  (container: Element, input: Scene, options?: MountUnifiedOptions & { renderer?: 'svg' }): StaticSvgView;
+  (container: Element, input: Scene, options?: StaticMountUnifiedOptions & { renderer?: 'svg' }): StaticSvgView;
   (
     container: Element,
     input: RetainedRenderInput,
@@ -45,12 +53,14 @@ type MountFn = {
 export const mount: MountFn = ((
   container: Element,
   input: RenderInput,
-  options: MountUnifiedOptions = {},
+  options: StaticMountUnifiedOptions | MountUnifiedOptions = {},
 ): VanillaView | CanvasView => {
   if ('primitives' in input) {
-    if (options.renderer === 'canvas') return mountCanvas(container, input, options);
-    return mountSvg(container, input, options);
+    const staticOptions = options as StaticMountUnifiedOptions;
+    if (staticOptions.renderer === 'canvas') return mountCanvas(container, input, staticOptions);
+    return mountSvg(container, input, staticOptions);
   }
-  if (options.renderer === 'canvas') return mountCanvas(container, input, options);
-  return mountSvg(container, input, options);
+  const retainedOptions = options as MountUnifiedOptions;
+  if (retainedOptions.renderer === 'canvas') return mountCanvas(container, input, retainedOptions);
+  return mountSvg(container, input, retainedOptions);
 }) as MountFn;

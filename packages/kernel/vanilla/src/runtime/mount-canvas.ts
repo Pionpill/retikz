@@ -33,6 +33,7 @@ import type {
   RetainedRenderInput,
   ScenePoint,
   StaticCanvasView,
+  StaticMountCanvasOptions,
 } from './types';
 
 import { DEFAULT_ID_PREFIX, VanillaViewMode } from './constants';
@@ -53,7 +54,7 @@ const resolveDevicePixelRatio = (override: number | undefined): number => {
  *   进去（镜像 SVG `preserveAspectRatio=meet` + CanvasHost）。返回的 `CanvasView` 暴露 `hydrate`（hitTest 定位）
  *   与 `clientToScene`（逆 meet-fit 坐标映射）。DOM 仅在调用时惰性触碰，`import` 本模块不碰 DOM——守 SSR 导入安全
  */
-const mountStaticCanvas = (container: Element, input: Scene, options: MountCanvasOptions): StaticCanvasView => {
+const mountStaticCanvas = (container: Element, input: Scene, options: StaticMountCanvasOptions): StaticCanvasView => {
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
     throw new Error('mountCanvas: container must be a DOM Element.');
   }
@@ -382,7 +383,7 @@ const mountRetainedCanvas = (
 
 /** `mountCanvas` 的 static / retained 输入重载 */
 type MountCanvas = {
-  (container: Element, input: Scene, options?: MountCanvasOptions): StaticCanvasView;
+  (container: Element, input: Scene, options?: StaticMountCanvasOptions): StaticCanvasView;
   (container: Element, input: RetainedRenderInput, options?: MountCanvasOptions): RetainedCanvasView;
 };
 
@@ -390,7 +391,7 @@ type MountCanvas = {
 export const mountCanvas: MountCanvas = ((
   container: Element,
   input: Scene | RetainedRenderInput,
-  options: MountCanvasOptions = {},
+  options: StaticMountCanvasOptions | MountCanvasOptions = {},
 ): CanvasView => {
   if ('primitives' in input) {
     if (options.runtime?.rendererFactory !== undefined) {
@@ -399,7 +400,7 @@ export const mountCanvas: MountCanvas = ((
         cause: input,
       });
     }
-    return mountStaticCanvas(container, input, options);
+    return mountStaticCanvas(container, input, options as StaticMountCanvasOptions);
   }
   return mountRetainedCanvas(container, input, options);
 }) as MountCanvas;

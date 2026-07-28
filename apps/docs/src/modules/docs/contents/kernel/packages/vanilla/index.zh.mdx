@@ -137,8 +137,8 @@ SVG retained renderer 会保留未变 DOM identity；Canvas 对安全局部变�
     {
       label: 'SVG static / retained view 分流',
       path: 'packages/kernel/vanilla/src/runtime/mount-svg.ts',
-      startLine: 143,
-      endLine: 204,
+      startLine: 144,
+      endLine: 205,
     },
     {
       label: 'Vanilla retained Session 创建',
@@ -180,7 +180,7 @@ mount(canvasRoot, spec, {
 });
 ```
 
-`figure()` 只描述图；`output` 控制显示尺寸和资源 id，`compile` 注入 Core 编译能力，`animation` 控制播放或截帧，`canvas` 只给 Canvas mount 使用，`runtime.rendererFactory` 只在 IR / plain spec retained mount 中替换内置 factory。`RenderToStringOptions` 不含 `runtime`，SSR 不接受也不会忽略 retained renderer factory。
+`figure()` 只描述图；`output` 控制显示尺寸和资源 id，`compile` 注入 Core 编译能力，`animation` 控制播放或截帧，`canvas` 只给 Canvas mount 使用，`runtime.rendererFactory` 只在 IR / plain spec retained mount 中替换内置 factory。`RenderToStringOptions`、`StaticMountOptions`、`StaticMountCanvasOptions` 与 `StaticMountUnifiedOptions` 都不接受 `runtime`；SSR 与预编译 Scene 的 static mount 在类型层拒绝 retained renderer factory，运行时也不会静默忽略不安全输入。
 
 `animation.enabled` 省略时跟随系统的“减少动态效果”偏好；显式 `true` 强制开启，显式 `false` 强制关闭。`snapshotAt` 仍会覆盖播放开关并输出静态截帧。
 
@@ -265,5 +265,8 @@ plain-spec retained update 可以替换同一 composite key/schema/执行分支�
 | `VanillaTier2Adapter`         | type          | 定义 `embed()` 的 lowering 适配器             |
 | `RetainedVanillaView`         | runtime       | IR / plain spec 的事务式 retained view        |
 | `StaticVanillaView`           | runtime       | 预编译 Scene 的完整重绘 static view           |
+| `StaticMountOptions`          | type          | 预编译 Scene 的 SVG static mount 配置         |
+| `StaticMountCanvasOptions`    | type          | 预编译 Scene 的 Canvas static mount 配置      |
+| `StaticMountUnifiedOptions`   | type          | 预编译 Scene 的统一 static mount 配置         |
 | `RetainedSvgUpdateOptions`    | type          | SVG retained update 的动画配置                |
 | `RetainedCanvasUpdateOptions` | type          | Canvas retained update 的动画与 property 配置 |

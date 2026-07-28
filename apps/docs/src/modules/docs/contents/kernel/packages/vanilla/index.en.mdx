@@ -137,8 +137,8 @@ The SVG retained renderer preserves unchanged DOM identity. Canvas updates a dir
     {
       label: 'SVG static / retained view dispatch',
       path: 'packages/kernel/vanilla/src/runtime/mount-svg.ts',
-      startLine: 143,
-      endLine: 204,
+      startLine: 144,
+      endLine: 205,
     },
     {
       label: 'Vanilla retained Session creation',
@@ -180,7 +180,7 @@ mount(canvasRoot, spec, {
 });
 ```
 
-`figure()` only describes the figure. `output` controls display size and resource ids, `compile` injects Core compile capabilities, `animation` controls playback or snapshots, `canvas` is only for Canvas mounts, and `runtime.rendererFactory` replaces the built-in factory only for retained IR / plain-spec mounts. `RenderToStringOptions` has no `runtime` field, so SSR neither accepts nor silently ignores a retained renderer factory.
+`figure()` only describes the figure. `output` controls display size and resource ids, `compile` injects Core compile capabilities, `animation` controls playback or snapshots, `canvas` is only for Canvas mounts, and `runtime.rendererFactory` replaces the built-in factory only for retained IR / plain-spec mounts. `RenderToStringOptions`, `StaticMountOptions`, `StaticMountCanvasOptions`, and `StaticMountUnifiedOptions` all exclude `runtime`. SSR and precompiled-Scene static mounts reject a retained renderer factory at the type boundary, and runtime validation never silently ignores unsafe input.
 
 Omit `animation.enabled` to follow the system's reduced-motion preference. Explicit `true` forces playback on, and explicit `false` forces it off. `snapshotAt` still overrides playback and produces a static frame.
 
@@ -265,5 +265,8 @@ Prefer [`@retikz/react`](/kernel/packages/react) for JSX authoring and React hos
 | `VanillaTier2Adapter`         | type          | Defines lowering for `embed()`                                      |
 | `RetainedVanillaView`         | runtime       | Transactional retained view for IR / plain specs                    |
 | `StaticVanillaView`           | runtime       | Full-redraw static view for a precompiled Scene                     |
+| `StaticMountOptions`          | type          | SVG static-mount options for a precompiled Scene                    |
+| `StaticMountCanvasOptions`    | type          | Canvas static-mount options for a precompiled Scene                 |
+| `StaticMountUnifiedOptions`   | type          | Unified static-mount options for a precompiled Scene                |
 | `RetainedSvgUpdateOptions`    | type          | Animation config for SVG retained updates                           |
 | `RetainedCanvasUpdateOptions` | type          | Animation and property config for Canvas retained updates           |

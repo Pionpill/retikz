@@ -25,6 +25,7 @@ import type {
   MountOptions,
   RetainedRenderInput,
   RetainedSvgView,
+  StaticMountOptions,
   StaticSvgView,
   VanillaView,
 } from './types';
@@ -42,7 +43,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
  *   `<svg>`；`output.width` / `output.height` 若给则写回根（`@retikz/render/svg` 只产 viewBox，显示尺寸是 adapter 本分）。`update`
  *   原地重渲染、root 元素 identity 跨 update 不变、不失效。DOM 仅在调用时惰性触碰，`import` 本模块不碰 DOM——守 SSR 导入安全
  */
-const mountStaticSvg = (container: Element, input: Scene, options: MountOptions): StaticSvgView => {
+const mountStaticSvg = (container: Element, input: Scene, options: StaticMountOptions): StaticSvgView => {
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
     throw new Error('mountSvg: container must be a DOM Element.');
   }
@@ -181,7 +182,7 @@ const mountRetainedSvg = (container: Element, input: RetainedRenderInput, option
 
 /** `mountSvg` 的 static / retained 输入重载 */
 type MountSvg = {
-  (container: Element, input: Scene, options?: MountOptions): StaticSvgView;
+  (container: Element, input: Scene, options?: StaticMountOptions): StaticSvgView;
   (container: Element, input: RetainedRenderInput, options?: MountOptions): RetainedSvgView;
 };
 
@@ -189,7 +190,7 @@ type MountSvg = {
 export const mountSvg: MountSvg = ((
   container: Element,
   input: Scene | RetainedRenderInput,
-  options: MountOptions = {},
+  options: StaticMountOptions | MountOptions = {},
 ): VanillaView => {
   if ('primitives' in input) {
     if (options.runtime?.rendererFactory !== undefined) {
@@ -198,7 +199,7 @@ export const mountSvg: MountSvg = ((
         cause: input,
       });
     }
-    return mountStaticSvg(container, input, options);
+    return mountStaticSvg(container, input, options as StaticMountOptions);
   }
   return mountRetainedSvg(container, input, options);
 }) as MountSvg;

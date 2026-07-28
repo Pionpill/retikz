@@ -99,7 +99,10 @@ export type CommonOptions = {
 /** SSR / build-time SVG string options；显式禁止 mount-only runtime 配置 */
 export type RenderToStringOptions = CommonOptions & Readonly<{ runtime?: never }>;
 
-/** DOM / Canvas mount options；retained 输入可注入 renderer factory */
+/** 预编译 Scene 的 static DOM mount options；显式禁止 retained-only runtime 配置 */
+export type StaticMountOptions = CommonOptions & Readonly<{ runtime?: never }>;
+
+/** IR / plain spec retained DOM mount options；可注入 renderer factory */
 export type MountOptions = CommonOptions & {
   /** retained Runtime session 配置；仅 IR / plain spec mount 使用 */
   runtime?: VanillaRuntimeOptions;
@@ -219,8 +222,14 @@ export type RetainedVanillaView = RetainedSvgView | RetainedCanvasView;
 /** 所有 static Vanilla view */
 export type StaticVanillaView = StaticSvgView | StaticCanvasView;
 
-/** `mountCanvas` 选项：继承 SSR / compile 公共项，外加 canvas 显示 / dpr 透传 */
+/** IR / plain spec retained Canvas mount 选项 */
 export type MountCanvasOptions = MountOptions & {
   /** Canvas 专属 runtime 选项 */
+  canvas?: VanillaCanvasOptions;
+};
+
+/** 预编译 Scene static Canvas mount 选项 */
+export type StaticMountCanvasOptions = StaticMountOptions & {
+  /** Canvas 专属显示、dpr 与动画插值选项 */
   canvas?: VanillaCanvasOptions;
 };

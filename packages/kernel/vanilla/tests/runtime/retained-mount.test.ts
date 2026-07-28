@@ -12,7 +12,7 @@ import { defineRetainedRenderer, RetainedRenderErrorCode } from '@retikz/render/
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import type { RetainedSvgUpdateOptions, VanillaFigureSpec, VanillaTier2Adapter } from '../../src';
+import type { RetainedSvgUpdateOptions, StaticMountOptions, VanillaFigureSpec, VanillaTier2Adapter } from '../../src';
 
 import { mountCanvas, mountSvg, VanillaLayerCache } from '../../src';
 import { createRetainedCompositeDefinitions } from '../../src/runtime/retained-composites';
@@ -656,7 +656,9 @@ describe('@retikz/vanilla retained mount', () => {
     const scene = compileToScene(source('#ef4444')).scene;
 
     expect(() =>
-      mountSvg(container, scene, { runtime: { rendererFactory: createMemoryRendererFactory('entity') } }),
+      mountSvg(container, scene, {
+        runtime: { rendererFactory: createMemoryRendererFactory('entity') },
+      } as unknown as StaticMountOptions),
     ).toThrow(expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid }));
   });
 });
