@@ -7,6 +7,8 @@ import { describe, expect, it } from 'vitest';
 import type {
   PreviewControlsDefinition,
   PreviewPanelControlItem,
+  PreviewTableControlField,
+  PreviewTableRows,
 } from '../../src/modules/docs/components/component-preview';
 
 import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
@@ -65,13 +67,19 @@ import {
   relationScatterControls as englishRelationScatterControls,
 } from '../../src/modules/docs/contents/viz/plot/mark/relation/relation-scatter.en.controls';
 
+const sourceRowsOf = (field: PreviewTableControlField): PreviewTableRows => {
+  if (field.rows !== undefined) return field.rows;
+  const sourceView = field.views[0];
+  return typeof sourceView.rows !== 'function' ? sourceView.rows : [];
+};
+
 /** 抹平可见文案后比较单个控件的双语运行时结构 */
 const fieldContractOf = (field: PreviewPanelControlItem) =>
   field.kind === 'table'
     ? {
         id: field.id,
         kind: field.kind,
-        rowCount: field.rows.length,
+        rowCount: sourceRowsOf(field).length,
         columnKeys: field.columns?.map(column => column.key),
       }
     : {

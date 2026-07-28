@@ -1,5 +1,3 @@
-import type { FC } from 'react';
-
 import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
 
 import { quarterlyRows } from './extension-resolver.data';
@@ -7,13 +5,11 @@ import { quarterlyRows } from './extension-resolver.data';
 const parseQuarter = (raw: unknown): number | undefined => {
   const match = /^(\d{4})Q([1-4])$/.exec(String(raw));
   if (!match) return undefined;
-  const year = Number(match[1]);
-  const quarter = Number(match[2]);
-  return Date.UTC(year, (quarter - 1) * 3, 1);
+  return Date.UTC(Number(match[1]), (Number(match[2]) - 1) * 3, 1);
 };
 
-/** 用 resolveField 解析声明式格式表之外的季度字符串 */
-const Demo: FC = () => (
+/** 渲染运行时字段 resolver 的完整逃生舱示例 */
+export const renderExtensionResolverPreview = () => (
   <Plot
     data={quarterlyRows}
     model={[
@@ -21,8 +17,8 @@ const Demo: FC = () => (
       { name: 'revenue', type: 'continuous' },
     ]}
     resolveField={field => (field === 'quarter' ? { parse: parseQuarter } : undefined)}
-    width={620}
-    height={260}
+    width={410}
+    height={250}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
     <PathMark x="quarter" y="revenue" order="quarter" />
@@ -31,5 +27,3 @@ const Demo: FC = () => (
     <Axis dimension="y" grid />
   </Plot>
 );
-
-export default Demo;

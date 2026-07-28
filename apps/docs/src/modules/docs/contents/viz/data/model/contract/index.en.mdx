@@ -18,9 +18,14 @@ Each field declaration is an `IRDataFieldDefinition` exported from `@retikz/data
 | `format?` | <ApiValues name="DataFieldFormat" /> \| `string`                      | default parser | Declarative parsing format; a named format may also imply the field type        |
 | `order?`  | <ApiValues name="FieldOrderMode" /> \|<br />`Array<string \| number>` | `'appearance'` | Category-domain order; explicit values take priority and only affect categories |
 
-Both charts below use the same funnel data, with `stage` encoded as the uneven values `10`, `20`, `50`, and `100`. Without `model`, the numeric field is inferred as continuous and spacing follows numeric distance. The explicit contract makes it categorical, so every stage receives equal spacing.
+The playground below keeps one PointMark and axis structure across continuous, temporal, categorical, and numeric-category scenarios. In the funnel scenario, the uneven codes `10`, `20`, `50`, and `100` follow numeric distance when inferred as continuous, then become equally spaced when declared categorical.
 
-<ComponentPreview files={['data-model-custom', 'data-model-custom.data.ts']} />
+<ComponentPreview
+  files={['field-contract-playground', 'field-contract-playground-preview.tsx', 'field-contract-playground.data.ts']}
+  defaultSourceFile="field-contract-playground-preview.tsx"
+  size="lg"
+  caption="The mark structure stays fixed; controls only change the input scenario and x-field type."
+/>
 
 Once `model` exists, every source field referenced by the current data pipeline must be listed. Misspelled references and duplicate declarations fail immediately instead of degrading into an empty result. In a Plot application, the check covers position and color channels, mark ordering, size and shape channels, and transform inputs.
 
@@ -56,7 +61,7 @@ All samples must be temporal to produce `temporal`, and all must be numeric to p
 
 Field types let consumer modules understand data semantics; Data supplies the type without prescribing its presentation. In a Plot application, types affect scales, axes, and legends. When a position channel omits a scale, `continuous`, `temporal`, and `categorical` derive linear, time, and band scales respectively.
 
-<ComponentPreview files={['data-model', 'data-model.data.ts']} size="xxxl" />
+The field-contract playground above covers all three default position scales. Because the PointMark and axes stay fixed between scenarios, the visible difference comes from field type alone.
 
 Within Plot, color behavior depends on the authoring layer. React `<Plot>` can synthesize a default discrete or continuous color scale when the `model` type is known. In low-level Plot IR, categorical fields may default to `ordinal`, while continuous and temporal fields must explicitly reference a continuous color scale. See [Scales](/viz/plot/scale) for the full rules and overrides.
 
@@ -64,7 +69,12 @@ Within Plot, color behavior depends on the authoring layer. React `<Plot>` can s
 
 Categorical fields form their domain in data-appearance order by default. Put `order` on the field when the business order should be `S → M → L → XL`:
 
-<ComponentPreview files={['data-model-order', 'data-model-order.data.ts']} />
+<ComponentPreview
+  files={['data-model-order', 'data-model-order-preview.tsx', 'data-model-order.data.ts']}
+  defaultSourceFile="data-model-order-preview.tsx"
+  size="lg"
+  caption="The source table remains XL, S, L, M; controls change the category domain without reordering rows."
+/>
 
 | `order`                         | Effect                                                         |
 | ------------------------------- | -------------------------------------------------------------- |

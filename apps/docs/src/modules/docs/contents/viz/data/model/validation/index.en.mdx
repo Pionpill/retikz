@@ -3,13 +3,18 @@ title: Validation & Diagnostics
 description: Skip, sample-check, or reject missing and unparseable values while diagnosing blank charts at the field level.
 ---
 
-External data often contains missing fields, mixed types, or parsing failures. Validation considers only fields referenced by the current data pipeline and checks canonical values after intake but before data transforms run. The configuration surface and visible result below use Plot as the example host; Data owns the validation rules.
+External data often contains missing fields, mixed types, or parsing failures. For example, `{ month: 'Feb', revenue: 'bad' }` preserves the month while failing to produce a continuous canonical revenue value. Validation considers only fields referenced by the current data pipeline and checks canonical values after intake but before data transforms run. The configuration surface and visible result below use Plot as the example host; Data owns the validation rules.
 
 ## Default behavior
 
-The default is `invalid="skip"`: a consumer can skip invalid values without fabricating replacements or blocking the whole result because of unrelated dirty columns. In the Plot example below, invalid points do not reach marks; the unparseable string, missing value, and `null` in the right-hand chart are all skipped.
+The default is `invalid="skip"`: a consumer can skip invalid values without fabricating replacements or blocking the whole result because of unrelated dirty columns. The playground below switches real Plot validation between skip, sample, and strict policies. Errors stay inside the preview output so the controls can recover to a valid state.
 
-<ComponentPreview files={['processing-invalid', 'processing-invalid.data.ts']} />
+<ComponentPreview
+  files={['validation-policy', 'validation-policy-preview.tsx', 'validation-policy.data.ts']}
+  defaultSourceFile="validation-policy-preview.tsx"
+  size="lg"
+  caption="A few bad values can be skipped; an all-invalid field triggers sampling diagnostics; strict mode fails on the first bad value."
+/>
 
 | Situation                           | Default behavior                            |
 | ----------------------------------- | ------------------------------------------- |

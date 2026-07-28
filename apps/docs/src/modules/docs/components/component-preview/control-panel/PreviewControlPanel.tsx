@@ -237,7 +237,7 @@ const PreviewControlPanelComponent: FC<PreviewControlPanelProps> = props => {
                             className={field.kind === 'table' ? 'min-w-0' : 'flex min-h-7 w-full items-center gap-2'}
                           >
                             {field.kind === 'table' ? (
-                              <PreviewTableControl field={field} density={density} />
+                              <PreviewTableControl field={field} values={controlState.values} density={density} />
                             ) : (
                               <>
                                 <Label
