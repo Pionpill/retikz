@@ -89,7 +89,7 @@ This section zooms in on React wiring, viewport, and host-policy decisions owned
 
 <ComponentPreview files="layout-input-flow" size="sm" hideCode />
 
-Semantic ownership does not drift with the entry point: React declares only a stable `<svg>` / `<canvas>` host shell, while the Render participant exclusively owns SVG descendants or the Canvas bitmap. Core does not own DOM or Canvas instances, and render does not define graphics semantics in reverse. A failed transaction publishes no new revision and attempts rollback. The old host remains usable when rollback succeeds; if rollback itself fails, the Session becomes broken and the caller must unmount and mount again.
+Semantic ownership does not drift with the entry point: React declares only a stable `<svg>` / `<canvas>` host shell, while the Render participant exclusively owns SVG descendants or the Canvas bitmap. Core does not own DOM or Canvas instances, and render does not define graphics semantics in reverse. A failed transaction publishes no new revision. A successful rollback guarantees only that the host returns to the previous committed revision before the error propagates through React; it does not keep the current React subtree usable. The caller should recover through an Error Boundary and remount `<Layout>`. If rollback itself fails, the Session also becomes broken.
 
 <SourceLinks
   sources={[
@@ -100,10 +100,22 @@ Semantic ownership does not drift with the entry point: React declares only a st
       endLine: 474,
     },
     {
-      label: 'React retained-host transaction',
+      label: 'Create and clean up the React retained Session',
       path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
-      startLine: 183,
-      endLine: 291,
+      startLine: 238,
+      endLine: 296,
+    },
+    {
+      label: 'React retained update and error propagation',
+      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
+      startLine: 298,
+      endLine: 316,
+    },
+    {
+      label: 'Declare the SVG and Canvas host shells',
+      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
+      startLine: 329,
+      endLine: 356,
     },
     {
       label: 'Core IR to Scene compilation',

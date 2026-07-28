@@ -85,7 +85,7 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
 
 <ComponentPreview files="layout-input-flow" size="sm" hideCode />
 
-这条链路的语义所有权不会随入口漂移：React 只声明稳定的 `<svg>` / `<canvas>` host shell，Render participant 独占 SVG descendants 或 Canvas bitmap；core 不拥有 DOM 或 Canvas 实例，render 不反向定义新的图形语义。失败的 transaction 不发布新 revision，并尝试 rollback；rollback 成功时旧宿主继续可用，rollback 自身失败时 Session 进入 broken，调用方应卸载并重新挂载。
+这条链路的语义所有权不会随入口漂移：React 只声明稳定的 `<svg>` / `<canvas>` host shell，Render participant 独占 SVG descendants 或 Canvas bitmap；core 不拥有 DOM 或 Canvas 实例，render 不反向定义新的图形语义。失败的 transaction 不发布新 revision；rollback 成功只保证错误向 React 传播前把宿主恢复到上一 committed revision，不能保证当前 React 子树继续可用。调用方应让 Error Boundary 捕获错误并重新挂载 `<Layout>`；rollback 自身失败时 Session 还会进入 broken。
 
 <SourceLinks
   sources={[
@@ -96,10 +96,22 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
       endLine: 474,
     },
     {
-      label: 'React retained host transaction',
+      label: 'React retained Session 创建与清理',
       path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
-      startLine: 183,
-      endLine: 291,
+      startLine: 238,
+      endLine: 296,
+    },
+    {
+      label: 'React retained update 与错误传播',
+      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
+      startLine: 298,
+      endLine: 316,
+    },
+    {
+      label: 'React 声明 SVG / Canvas host shell',
+      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
+      startLine: 329,
+      endLine: 356,
     },
     {
       label: 'Core IR 编译 Scene',
