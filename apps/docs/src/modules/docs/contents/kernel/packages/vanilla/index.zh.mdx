@@ -14,12 +14,12 @@ pnpm add @retikz/vanilla
 ```
 
 ```ts
-import { figure, layer, mount, node, path, renderToSvgString, VanillaLayerCache } from '@retikz/vanilla';
+import { figure, layer, mount, node, path, renderToSvgString } from '@retikz/vanilla';
 
 const spec = figure({
   id: 'flow',
   layers: [
-    layer('main', { cache: VanillaLayerCache.Static }, [
+    layer('main', [
       node('a', { position: [0, 0], text: 'A' }),
       node('b', { position: [120, 0], text: 'B' }),
       path('edge', {
@@ -112,6 +112,8 @@ plain spec 路径会先由 `normalizeFigureSpec` 生成 Core IR，再由 `compil
 
 预编译 `Scene` 创建 `mode: 'static'` view：`update(nextScene)` 保持 root identity，但完整重绘后端；它没有 Core Program、Patch、Runtime diagnostics 或 compile artifacts。需要 Node 布局产物时，应传 IR / plain spec，并在 `compile.artifacts` 中启用 `nodeLayouts`。
 
+从旧版升级时，IR / plain spec view 的 `update(next)` 必须继续传同层级的 IR / plain spec。若仍需 `Scene → Scene` 完整重绘，请在 mount 时传入预编译 `Scene` 以创建 static view；改变 DPR 或 compile topology 时则应 dispose 后 remount。
+
 retained view 的 `diagnostics()` 按队列顺序返回并清空 Runtime diagnostics。`runtimeMeta` 是 deeply immutable snapshot：layer、`childIds`、identity path 和只读索引都不与内部事务状态 alias；`hydrate()` 读取最新 committed Scene，无需在每次 update 后重新绑定。
 
 SVG retained renderer 会保留未变 DOM identity；Canvas 对安全局部变更更新 dirty region，其余情况走 full fallback。并发调度与 progressive materialization 仍不属于当前公开契约。
@@ -172,7 +174,7 @@ retained `update()` 只接受 closed plain-data options：顶层是 `animation` 
 
 ## 分层与嵌入
 
-`figure({ children })` 会生成默认 layer。需要明确绘制顺序、稳定 layer id 或未来失效提示时，再用 `layers` 分层。`zIndex` 只决定 layer stack 排序，相同值保持声明顺序；`cache` 只进入 runtime metadata，不进入 Core IR。
+`figure({ children })` 会生成默认 layer。需要明确绘制顺序、稳定 layer id 或未来失效提示时，再用 `layers` 分层。`zIndex` 只决定 layer stack 排序，相同值保持声明顺序；`cache` 只进入 runtime metadata，不进入 Core IR。alpha.2 会把它折叠为 retained config hint，但 SVG / Canvas renderer 尚不消费该字段，也不会据此启用 auto / static / dynamic layer 复用。
 
 Tier 2 能力通过 `embed(kind, id, props)` 接入。Vanilla 不解析组件，也不执行 hooks；它只按 `kind` 找到注入的 adapter，把 props 静态 lower 成 Core IR child、datasets 和 composite definitions。
 
@@ -242,7 +244,7 @@ plain-spec retained update 可以替换同一 composite key/schema/执行分支�
 | `path`                | authoring     | 构造 path，`way` 复用 Draw way DSL           |
 | `scope`               | authoring     | 构造样式与 namespace 作用域                  |
 | `embed`               | authoring     | 构造 Tier 2 嵌入节点                         |
-| `VanillaLayerCache`   | authoring     | 提供 layer `cache` metadata 的可选值         |
+| `VanillaLayerCache`   | authoring     | 提供未来 layer 失效优化使用的 metadata hint  |
 | `isVanillaFigureSpec` | normalization | 判断输入是否为 version 1 plain spec          |
 | `normalizeFigureSpec` | normalization | 生成 Core IR、composites 与 runtime metadata |
 | `VanillaTier2Adapter` | type          | 定义 `embed()` 的 lowering 适配器            |

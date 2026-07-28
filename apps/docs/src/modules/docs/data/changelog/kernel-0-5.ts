@@ -53,14 +53,21 @@ export const kernelV05: Release = {
             en: 'Program callbacks, artifact lifecycle, observers, traces, and disposal use stable codes and context. Pre-publish failures retire candidates in reverse order, while post-publish observer and retire failures enter the drain queue without rollback.',
           },
         },
+        {
+          label: { zh: 'Commit participant', en: 'Commit participants' },
+          content: {
+            zh: '`defineRuntimeCommitParticipant()` 让 renderer 等外部状态与 Owner/Program candidate 同一 transaction prepare、commit、read 与 publish；失败反向 rollback，rollback 失败进入可诊断的 broken Session。',
+            en: '`defineRuntimeCommitParticipant()` lets renderer and other external state prepare, commit, read, and publish in the same transaction as Owner/Program candidates. Failures roll back in reverse order, while rollback failures enter a diagnosable broken Session.',
+          },
+        },
       ],
       subVersions: [
         {
           version: 'alpha.2',
-          date: '2026-07-26',
+          date: '2026-07-29',
           summary: {
-            zh: '交付 performance trace、Owner / Program typed identity、同步 transaction、fallback、diagnostic queue 与 exactly-once lifecycle。',
-            en: 'Ships performance traces, typed Owner/Program identity, synchronous transactions, fallback, diagnostic queues, and exactly-once lifecycle management.',
+            zh: '交付 performance trace、Owner / Program / participant typed identity、同步 transaction、fallback、diagnostic queue 与 exactly-once lifecycle。',
+            en: 'Ships performance traces, typed Owner/Program/participant identity, synchronous transactions, fallback, diagnostic queues, and exactly-once lifecycle management.',
           },
           items: [],
         },
@@ -105,8 +112,8 @@ export const kernelV05: Release = {
         {
           label: { zh: 'Core Runtime Program', en: 'Core Runtime Program' },
           content: {
-            zh: '`createCoreProgram()` 让完整 IR Snapshot 在 Runtime transaction 中原子产出完整 CompileResult、Scene Snapshot 与 Patch。ChangeSet 会与前后 Snapshot 交叉校验；当前安全局部路径只重编一个 root Node 的纯色 fill，引用、资源、Scope、Path、Composite 与其它变化保守 full fallback。',
-            en: '`createCoreProgram()` atomically derives a complete CompileResult, Scene Snapshot, and Patch from complete IR Snapshots inside Runtime transactions. ChangeSets are cross-checked against previous and next Snapshots. The current safe local path recompiles only one root Node solid fill, while references, resources, Scopes, Paths, composites, and other changes conservatively use full fallback.',
+            zh: '`createCoreProgram()` 让完整 IR Snapshot 在 Runtime transaction 中原子产出完整 CompileResult、带 canonical identity topology 的 Scene Snapshot 与 Patch。ChangeSet 会与前后 Snapshot 交叉校验；当前安全局部路径只重编一个 root Node 的纯色 fill，引用、资源、Scope、Path、Composite 与其它变化保守 full fallback。',
+            en: '`createCoreProgram()` atomically derives a complete CompileResult, a Scene Snapshot with canonical identity topology, and a Patch from complete IR Snapshots inside Runtime transactions. ChangeSets are cross-checked against previous and next Snapshots. The current safe local path recompiles only one root Node solid fill, while references, resources, Scopes, Paths, composites, and other changes conservatively use full fallback.',
           },
         },
       ],
@@ -135,11 +142,35 @@ export const kernelV05: Release = {
       pkg: '@retikz/render',
       version: 'v0.5',
       description: {
-        zh: 'SVG / Canvas renderer 继续只消费 Scene；alpha.1 验证多路径 TeX paint / opacity 与 CompileResult 不引入 renderer 私有 API。',
-        en: 'SVG and Canvas continue to consume Scene only; alpha.1 verifies multi-path TeX paint and opacity plus CompileResult without renderer-specific APIs.',
+        zh: '静态 SVG / Canvas API 继续只消费 Scene；alpha.2 新增可回滚 retained runtime，以 canonical Scene Patch 原位更新宿主。',
+        en: 'Static SVG and Canvas APIs continue to consume Scene only. Alpha.2 adds a rollback-safe retained runtime that applies canonical Scene Patches in place.',
       },
-      highlights: [],
+      highlights: [
+        {
+          label: { zh: 'Retained renderer runtime', en: 'Retained renderer runtime' },
+          content: {
+            zh: '`@retikz/render/runtime` 提供 nominal renderer factory、`none | group | entity` capability、Patch/Snapshot validator 与 Runtime participant；合法但不受支持的操作在执行前完整 fallback，第三方 renderer 与内置后端共用协议。',
+            en: '`@retikz/render/runtime` provides nominal renderer factories, `none | group | entity` capabilities, Patch/Snapshot validation, and a Runtime participant. Valid unsupported operations fully fall back before execution, and third-party renderers share the built-in protocol.',
+          },
+        },
+        {
+          label: { zh: 'SVG / Canvas 原子提交', en: 'Atomic SVG and Canvas commits' },
+          content: {
+            zh: 'SVG 原位保留未变 DOM identity并支持SSR adopt；Canvas以retained display list/index和保守dirty region提交。Scene、resource、hydration、animation与hit-test在同一revision切换。',
+            en: 'SVG preserves unchanged DOM identity in place and supports SSR adoption. Canvas commits a retained display list/index through conservative dirty regions. Scene, resources, hydration, animation, and hit testing switch in one revision.',
+          },
+        },
+      ],
       subVersions: [
+        {
+          version: 'alpha.2',
+          date: '2026-07-29',
+          summary: {
+            zh: '交付 retained renderer contract、内置SVG/Canvas事务后端、capability fallback、hydration/resource/animation同步提交与5000规模性能门禁。',
+            en: 'Ships the retained renderer contract, transactional built-in SVG/Canvas backends, capability fallback, synchronized hydration/resource/animation commits, and 5,000-entity performance gates.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.1',
           date: '2026-07-26',
@@ -155,8 +186,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/react',
       version: 'v0.5',
       description: {
-        zh: 'React 等价暴露 Core v0.5 的 Node / Scope placement、正交 Step 与文本语义，并让 `<Layout>` 在 commit 后通知同次 compile 的 immutable artifacts。',
-        en: 'React exposes Core v0.5 Node/Scope placement, orthogonal steps, and text semantics, while `<Layout>` reports immutable artifacts from the same compile after commit.',
+        zh: 'React 等价暴露 Core v0.5 authoring，并让 `<Layout>` 以 retained Session 原子提交 Scene、handler、animation与compile artifacts。',
+        en: 'React exposes Core v0.5 authoring and lets `<Layout>` atomically commit Scene, handlers, animation, and compile artifacts through a retained Session.',
       },
       highlights: [
         {
@@ -173,8 +204,24 @@ export const kernelV05: Release = {
             en: '`<Layout>` requests Node layouts through `artifacts={{ nodeLayouts: true }}` and reports immutable artifacts through `onArtifacts` after the React commit; `isNodeLayoutCompileArtifact()` narrows the result.',
           },
         },
+        {
+          label: { zh: 'Layout retained Session', en: 'Layout retained Sessions' },
+          content: {
+            zh: '`<Layout runtime>` 可注入 retained renderer 与 diagnostic callback；React只声明宿主shell，SVG descendants/Canvas bitmap由Render拥有。SSR matching seed原位接管，mismatch在publish前replace，StrictMode按renderer instance exactly-once释放。',
+            en: '`<Layout runtime>` can inject a retained renderer and diagnostic callback. React declares only the host shell while Render owns SVG descendants or the Canvas bitmap. Matching SSR seeds are adopted in place, mismatches replace before publish, and StrictMode disposes each renderer instance exactly once.',
+          },
+        },
       ],
       subVersions: [
+        {
+          version: 'alpha.2',
+          date: '2026-07-29',
+          summary: {
+            zh: '让Layout进入retained Runtime Session，补齐SSR handoff、transaction diagnostic、commit后artifact/ref出口与第三方renderer注入。',
+            en: 'Moves Layout onto retained Runtime Sessions with SSR handoff, transaction diagnostics, post-commit artifact/ref outputs, and third-party renderer injection.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.1',
           date: '2026-07-26',
@@ -190,8 +237,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/vanilla',
       version: 'v0.5',
       description: {
-        zh: 'Vanilla plain spec 直接透传 Core v0.5 IR；SVG / Canvas view 与当前 Scene 原子持有同次 compile 的 artifacts。',
-        en: 'Vanilla plain specs pass Core v0.5 IR through directly, while SVG and Canvas views atomically retain artifacts from the same compile as the current Scene.',
+        zh: 'Vanilla plain spec 直接透传 Core v0.5 IR；IR/plain mount使用retained Session，Scene mount保留static full render。',
+        en: 'Vanilla plain specs pass Core v0.5 IR through directly. IR/plain mounts use retained Sessions, while Scene mounts preserve static full rendering.',
       },
       highlights: [
         {
@@ -201,8 +248,24 @@ export const kernelV05: Release = {
             en: '`VanillaView.artifacts` and `CanvasView.artifacts` update atomically alongside Scene after `update()`. Direct Scene input exposes an empty immutable array, and `toScene()` returns Scene only.',
           },
         },
+        {
+          label: { zh: 'Retained / static 明确判别', en: 'Explicit retained/static modes' },
+          content: {
+            zh: 'IR与plain spec返回`mode: "retained"` view，`update()`原子切换Scene、runtimeMeta、artifacts、animation与renderer config；升级后必须继续传同层IR/plain输入。预编译Scene返回`mode: "static"`，用于保留Scene→Scene完整重绘；DPR、compile或Definition拓扑变化要求dispose后remount。Plain-spec composite callback失败时回滚。',
+            en: 'IR and plain specs return `mode: "retained"` views whose `update()` atomically switches Scene, runtime metadata, artifacts, animation, and renderer config; after upgrading, keep passing input from the same IR/plain layer. Precompiled Scenes return `mode: "static"` for full-redraw Scene-to-Scene updates. DPR, compile, or Definition topology changes require disposal and remounting. Plain-spec composite callbacks roll back on failure.',
+          },
+        },
       ],
       subVersions: [
+        {
+          version: 'alpha.2',
+          date: '2026-07-29',
+          summary: {
+            zh: '交付SVG/Canvas retained view、transactional update/diagnostics/hydration、第三方renderer注入与plain-spec composite callback transaction。',
+            en: 'Ships retained SVG/Canvas views, transactional updates/diagnostics/hydration, third-party renderer injection, and plain-spec composite callback transactions.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.1',
           date: '2026-07-26',

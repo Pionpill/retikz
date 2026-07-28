@@ -122,6 +122,55 @@ Runtime 先准备所有 changed Owner，再按拓扑顺序执行 Program。所�
 
 publish 后，observer 只读取已经发布的 artifact event。observer throw 不回滚，并记录 `RUNTIME_PROGRAM_OBSERVER_FAILED`；旧 artifact 与 Owner value 随后按反向顺序 retire。
 
+## 让外部状态参与原子提交
+
+Program 只管理 Runtime 拥有的 artifact；DOM、Canvas、文件句柄等外部状态需要用 commit participant 进入同一 transaction。继续上一个计数器示例，Participant 必须声明稳定 `key`、可读的 Owner / Program dependencies、trace phases 与 revision policy：
+
+- `affected`：声明的 Owner 变化或 Program 产生新 artifact 时执行
+- `continuous`：每次非 bailout commit 都执行，适合必须连续跟随 Session revision 的宿主
+
+```ts
+import { defineRuntimeCommitParticipant } from '@retikz/runtime';
+
+let committed = 0;
+const hostParticipant = defineRuntimeCommitParticipant<number>({
+  key: 'example/host',
+  owners: [counterOwner],
+  programs: [sumProgram],
+  revisionPolicy: 'affected',
+  tracePhases: [],
+  prepare: candidate => {
+    const previous = committed;
+    const next = candidate.artifact(sumProgram).value;
+    return Object.freeze({
+      commit: () => {
+        committed = next;
+      },
+      rollback: () => {
+        committed = previous;
+      },
+      dispose: () => undefined,
+    });
+  },
+  read: () => committed,
+  dispose: () => undefined,
+});
+
+const participantSession = createRuntimeSession({
+  owners,
+  programs,
+  initialSnapshots: [createRuntimeOwnerInput(counterOwner, 1)],
+  participants: [hostParticipant],
+});
+
+participantSession.participant(hostParticipant); // number；只读 committed cache
+participantSession.dispose();
+```
+
+一次被选中的 participant 依次经历 `prepare → commit → read → publish`。`prepare()` 只能读取已声明 dependency 的 candidate public read，并返回一次性的 `RuntimePreparedCommit`；`commit()` 只切换已经完成校验的 staging state；`read()` 在全部 commit 之后、Session publish 之前生成 immutable public read。外部调用 `session.participant(token)` 读取的是 Runtime 已发布的 cache，不会现场调用 participant executor。
+
+publish 前失败会按反向顺序 rollback / dispose，并保留旧 revision 与旧 participant read。Update rollback 自身失败时 Session 进入 `broken`：`update()`、Snapshot/artifact/participant read 都继续 fail-loud，只保留 revision、diagnostics 与 dispose 用于收尾。Participant token 在 Session 接管后即一次性消费；失败 create 或 Session dispose 后都不能交给另一个 Session 复用。
+
 ## Diagnostics 与失败语义
 
 `session.update()` 返回本次调用的 frozen diagnostic copy；相同顺序的 entries 同时进入 Session queue。`session.diagnostics()` 返回并清空 queue，不去重。
@@ -171,21 +220,24 @@ Program 产生的 warning 属于 candidate：只有 candidate artifact 成功发
 | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | `RuntimeProgramId`                                                                    | exact identity：`owner` 与 `key`                                                              |
 | `RuntimeProgramDefinitionInput<TArtifactInput, TArtifact, TProgramRead, TPublicRead>` | `id`、`owners`、`programs`、`tracePhases`、`artifact`、`run`、可选 `update` / `observeCommit` |
-| `RuntimeSessionOptions`                                                               | `owners`、`programs`、精确覆盖的 `initialSnapshots`、可选 `trace`                             |
+| `RuntimeSessionOptions`                                                               | `owners`、`programs`、精确覆盖的 `initialSnapshots`、可选 `trace` / `participants`            |
 | `RuntimeSessionUpdate`                                                                | `baseRevision` 与本次完整 Owner update commands                                               |
 | `RuntimeSessionResult`                                                                | 已发布 `revision`、聚合 `outcome` 与 frozen `diagnostics`                                     |
 | `RuntimeSnapshot<TRead>`                                                              | view 所属 `revision` 与 immutable `value`                                                     |
 | `RuntimeCandidateView`                                                                | candidate `snapshot` / `artifact`、owner `changed` 与可选 `changeSet`                         |
+| `RuntimeCommitParticipantDefinitionInput<TRead>`                                      | `key`、`owners`、`programs`、`revisionPolicy`、`tracePhases`、`prepare`、`read`、`dispose`    |
+| `RuntimePreparedCommit`                                                               | 单次 transaction 的 `commit`、`rollback` 与 `dispose`                                         |
 
-| API                            | 用途                                                          |
-| ------------------------------ | ------------------------------------------------------------- |
-| `defineRuntimeProgram`         | 创建保留四组 artifact 泛型的 opaque Program Definition        |
-| `createRuntimeProgramRegistry` | 合并并校验 builtin/custom Program DAG                         |
-| `createRuntimeChangeSet`       | 创建带 base revision 的 opaque change hint                    |
-| `createRuntimeOwnerInput`      | 创建初始完整 Owner command                                    |
-| `createRuntimeOwnerUpdate`     | 创建更新完整 Owner command                                    |
-| `createRuntimeSession`         | 创建 revision 0 并执行初始 full transaction                   |
-| `RuntimeError`                 | 暴露稳定 code、phase、cause、context 与 secondary diagnostics |
+| API                              | 用途                                                          |
+| -------------------------------- | ------------------------------------------------------------- |
+| `defineRuntimeProgram`           | 创建保留四组 artifact 泛型的 opaque Program Definition        |
+| `defineRuntimeCommitParticipant` | 创建保留 committed read 类型的一次性 nominal participant      |
+| `createRuntimeProgramRegistry`   | 合并并校验 builtin/custom Program DAG                         |
+| `createRuntimeChangeSet`         | 创建带 base revision 的 opaque change hint                    |
+| `createRuntimeOwnerInput`        | 创建初始完整 Owner command                                    |
+| `createRuntimeOwnerUpdate`       | 创建更新完整 Owner command                                    |
+| `createRuntimeSession`           | 创建 revision 0 并执行初始 full transaction                   |
+| `RuntimeError`                   | 暴露稳定 code、phase、cause、context 与 secondary diagnostics |
 
 <SourceLinks
   sources={[
@@ -212,6 +264,24 @@ Program 产生的 warning 属于 candidate：只有 candidate artifact 成功发
       path: 'packages/kernel/runtime/src/owner/executor.ts',
       startLine: 185,
       endLine: 211,
+    },
+    {
+      label: '定义并冻结 typed commit participant',
+      path: 'packages/kernel/runtime/src/participant/define.ts',
+      startLine: 20,
+      endLine: 72,
+    },
+    {
+      label: 'Participant prepare、commit、read 与 rollback/broken',
+      path: 'packages/kernel/runtime/src/session/session.ts',
+      startLine: 1205,
+      endLine: 1337,
+    },
+    {
+      label: 'Session-bound participant read',
+      path: 'packages/kernel/runtime/src/session/session.ts',
+      startLine: 1435,
+      endLine: 1447,
     },
     {
       label: '原子发布、observer 隔离与反向 retire',

@@ -20,7 +20,7 @@ description: 把渲染目标无关的 Scene 落到 SVG / Canvas，并以 retaine
 
 `createRetainedRenderParticipant()` 把 Core Program、`RenderRuntimeOwnerDefinition` 与一个 retained renderer 接入同一 Runtime Session。首次 transaction 物化完整 Scene，后续 transaction 把 Scene Patch 与 renderer config 一起 prepare；只有所有 participant 都成功 commit 后，DOM / bitmap、事件、动画控制器与公开 read 才推进到同一 revision。失败 transaction 不发布新 revision，并尝试 rollback；rollback 成功时旧宿主继续可用，rollback 自身失败时 Session 进入 broken，需要 dispose 后重新创建。
 
-`RenderRuntimeConfigInput` 是 closed transaction config：`handlerContributions` 按注册序合并水合 handler，`animation` 控制播放、截帧与扩展 registry，`cachePolicy` 传递 layer cache 策略，`canvas.width` / `canvas.height` 声明 Canvas CSS user-space 尺寸。Canvas 尺寸字段省略时从 committed Scene layout 推导，再乘 session-lifetime DPR 得到设备像素；尺寸更新与位图绘制原子 commit，dirty reuse 仅在目标尺寸稳定时成立。
+`RenderRuntimeConfigInput` 是 closed transaction config：`handlerContributions` 按注册序合并水合 handler，`animation` 控制播放、截帧与扩展 registry，`cachePolicy` 保留未来 layer 失效优化的 hint，`canvas.width` / `canvas.height` 声明 Canvas CSS user-space 尺寸。alpha.2 的 SVG / Canvas renderer 只校验和冻结 `cachePolicy`，尚不按 auto / static / dynamic 启用 layer 复用。Canvas 尺寸字段省略时从 committed Scene layout 推导，再乘 session-lifetime DPR 得到设备像素；尺寸更新与位图绘制原子 commit，dirty reuse 仅在目标尺寸稳定时成立。
 
 这些 retained API 从 `@retikz/render/runtime` 导入，不从 `@retikz/render` package root 导出。第三方后端通过 `RetainedRendererFactory` 创建 nominal SVG / Canvas renderer，并声明 `none` / `group` / `entity` capability。Render participant 会校验 Snapshot / Patch lineage；后端无法解释某个 Patch 时，统一降级为完整 Scene replacement 并发布 diagnostic。
 

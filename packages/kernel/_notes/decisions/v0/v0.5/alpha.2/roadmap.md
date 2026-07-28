@@ -1,6 +1,6 @@
 # v0.5.0-alpha.2 增量性能与 Box Layout 基建
 
-- 状态：执行中（ADR-01～04、ADR-06 Accepted；ADR-05 Proposed）
+- 状态：已完成（ADR-01～06 Accepted）
 - 目标版本：`0.5.0-alpha.2`
 - 关联：[v0.5 roadmap](../roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
@@ -18,14 +18,14 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | [ADR-02](./02-runtime-identity-owner-registry.md)    | Accepted | Runtime identity / owner         | 冻结 identity、Snapshot、owned value、Owner Definition 与 registry                         |
 | [ADR-03](./03-program-transaction-lifecycle.md)      | Accepted | Program / transaction lifecycle  | 冻结依赖图、revision、candidate、fallback、observer 与同步原子提交                         |
 | [ADR-04](./04-incremental-core-compile.md)           | Accepted | Core 增量编译                    | 冻结完整 Program、stable Diff、fallback 与首个安全局部更新闭环                             |
-| [ADR-05](./05-scene-patch-retained-renderer.md)      | Proposed | Scene Patch 与 retained renderer | 冻结 identity topology、commit participant 与 SVG/Canvas retained lifecycle                |
+| [ADR-05](./05-scene-patch-retained-renderer.md)      | Accepted | Scene Patch 与 retained renderer | 冻结 identity topology、commit participant 与 SVG/Canvas retained lifecycle                |
 | [ADR-06](./06-box-layout-composite-contract.md)      | Accepted | Box Layout Composite contract    | 冻结双轴 constraint、allocation / slot-size feedback、nested propagation 与 replay wrapper |
 
 ## 当前进度
 
 - ADR-01～03 已完成实现、自动化验证、Runtime 中英文文档与 changelog，并于 2026-07-27 获人工接受。
 - ADR-04 已完成 canonical Scene topology、Core Program full oracle、ChangeSet/Snapshot 校验、stable/nested Diff、full fallback 与单 root Node fill 局部增量闭环，并于 2026-07-28 按当前安全子集获人工接受；通用 contribution 与其它图元局部失效不属于本次 Accepted 事实。
-- ADR-05 已建立 Scene Patch 数据契约；retained SVG/Canvas commit、adapter session 接线与收益验证尚未完成。
+- ADR-05 已完成 Runtime commit participant、Render retained runtime、SVG/Canvas事务后端、React/Vanilla session接线、5000规模确定性/计时门禁与双语文档，并于2026-07-29获人工接受。
 - ADR-06 已完成双轴 constraint、`slotSize`、显式 composite allocation、完整 replay wrapper、Table consumer 迁移、对抗测试与双语文档，并于 2026-07-28 获人工接受。
 
 ## 执行批次
@@ -52,13 +52,19 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 
 ## Milestone 验收
 
-- benchmark 覆盖首次渲染、单实体更新、reorder、全局 layout fallback、快速连续 revision 与至少一个 Tier 2 嵌套场景。
+- benchmark 覆盖5000实体首次渲染、单实体更新、稳定Group update、replace fallback与真实dispose live handles。
 - 至少一个真实持续更新场景贯通 `Snapshot / ChangeSet → Core 增量 compile → Scene Patch → SVG / Canvas retained commit`。
 - 任意合法 `IRChild` 可通过同一 layout-aware composite 主链接受双轴 constraint，返回真实 allocation / slot size / visual bounds，并以 transform / clip wrapper replay；target slot位置与对齐由父solver决定，nested layout与空container不需要Standard私有测量或透明primitive。
 - 每个增量场景都有与完整重建的等价性证据；错误或不安全输入明确 fallback。
-- 同时记录更新延迟、最长阻塞、访问实体数、patch 命中、renderer commit 与 session 内存。
+- 同时记录同环境median/p95/max、访问/复用/变更实体数、Patch/trace基数、renderer commit与live handles。
 - 首次完整渲染和静态 SSR / 导出路径没有超出 ADR-01 冻结的回归预算。
 - React 与 Vanilla 暴露等价的同步 update 语义；不承诺 Concurrent 或 progressive presentation。
+
+## 后续性能遗留
+
+- reorder、全局layout fallback、快速连续revision与真实Tier 2 nested fixture尚未进入正式benchmark门禁。
+- 最长阻塞与session内存尚未形成稳定、可复现的机器预算；alpha.2只冻结wall-clock统计、确定性work与live handle证据。
+- 上述场景需在后续milestone补独立fixture、full oracle和同fingerprint baseline，不能从alpha.2现有结果外推。
 
 ## 不在 alpha.2 范围
 

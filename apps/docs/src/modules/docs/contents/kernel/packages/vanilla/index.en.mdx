@@ -14,12 +14,12 @@ pnpm add @retikz/vanilla
 ```
 
 ```ts
-import { figure, layer, mount, node, path, renderToSvgString, VanillaLayerCache } from '@retikz/vanilla';
+import { figure, layer, mount, node, path, renderToSvgString } from '@retikz/vanilla';
 
 const spec = figure({
   id: 'flow',
   layers: [
-    layer('main', { cache: VanillaLayerCache.Static }, [
+    layer('main', [
       node('a', { position: [0, 0], text: 'A' }),
       node('b', { position: [120, 0], text: 'B' }),
       path('edge', {
@@ -112,6 +112,8 @@ The plain-spec path first uses `normalizeFigureSpec` to produce Core IR. `compil
 
 A precompiled `Scene` creates a `mode: 'static'` view. `update(nextScene)` preserves root identity but fully redraws the backend; there is no Core Program, Patch, Runtime diagnostics, or compile artifacts. Pass IR / a plain spec and enable `nodeLayouts` under `compile.artifacts` when Node layout outputs are needed.
 
+When upgrading, keep `update(next)` for an IR / plain-spec view at the same IR or plain-spec input layer. To retain full-redraw `Scene → Scene` updates, mount a precompiled `Scene` to create a static view instead. Dispose and remount when changing DPR or compile topology.
+
 `diagnostics()` on a retained view returns and drains Runtime diagnostics in queue order. `runtimeMeta` is a deeply immutable snapshot: layers, `childIds`, identity paths, and readonly indexes do not alias internal transaction state. `hydrate()` reads the latest committed Scene, so callers do not rebind after every update.
 
 The SVG retained renderer preserves unchanged DOM identity. Canvas updates a dirty region for safe local changes and otherwise takes the full fallback. Concurrent scheduling and progressive materialization are not part of the current public contract.
@@ -172,7 +174,7 @@ Retained `update()` accepts only closed plain-data options: the top-level keys a
 
 ## Layers And Embeds
 
-`figure({ children })` creates a default layer. Use explicit `layers` when you need draw ordering, stable layer ids, or future invalidation hints. `zIndex` only orders the layer stack, with equal values retaining declaration order. `cache` only enters runtime metadata and does not enter Core IR.
+`figure({ children })` creates a default layer. Use explicit `layers` when you need draw ordering, stable layer ids, or future invalidation hints. `zIndex` only orders the layer stack, with equal values retaining declaration order. `cache` only enters runtime metadata and does not enter Core IR. Alpha.2 folds it into a retained-config hint, but the SVG and Canvas renderers do not consume it yet and do not enable auto, static, or dynamic layer reuse from it.
 
 Tier 2 capabilities enter through `embed(kind, id, props)`. Vanilla does not parse components or run hooks. It finds an injected adapter by `kind` and statically lowers props into a Core IR child, datasets, and composite definitions.
 
@@ -233,18 +235,18 @@ Prefer [`@retikz/react`](/kernel/packages/react) for JSX authoring and React hos
 
 ## API Summary
 
-| API                   | Kind          | Description                                        |
-| --------------------- | ------------- | -------------------------------------------------- |
-| `figure`              | authoring     | Builds the plain spec root                         |
-| `layer`               | authoring     | Builds a layer with ordering and metadata          |
-| `node`                | authoring     | Builds a named or anonymous node                   |
-| `coordinate`          | authoring     | Builds a named coordinate with a required id       |
-| `path`                | authoring     | Builds a path; `way` reuses Draw way DSL           |
-| `scope`               | authoring     | Builds a style and namespace scope                 |
-| `embed`               | authoring     | Builds a Tier 2 embed node                         |
-| `VanillaLayerCache`   | authoring     | Provides the layer `cache` metadata values         |
-| `isVanillaFigureSpec` | normalization | Checks for a version 1 plain spec                  |
-| `normalizeFigureSpec` | normalization | Produces Core IR, composites, and runtime metadata |
-| `VanillaTier2Adapter` | type          | Defines lowering for `embed()`                     |
-| `RetainedVanillaView` | runtime       | Transactional retained view for IR / plain specs   |
-| `StaticVanillaView`   | runtime       | Full-redraw static view for a precompiled Scene    |
+| API                   | Kind          | Description                                                         |
+| --------------------- | ------------- | ------------------------------------------------------------------- |
+| `figure`              | authoring     | Builds the plain spec root                                          |
+| `layer`               | authoring     | Builds a layer with ordering and metadata                           |
+| `node`                | authoring     | Builds a named or anonymous node                                    |
+| `coordinate`          | authoring     | Builds a named coordinate with a required id                        |
+| `path`                | authoring     | Builds a path; `way` reuses Draw way DSL                            |
+| `scope`               | authoring     | Builds a style and namespace scope                                  |
+| `embed`               | authoring     | Builds a Tier 2 embed node                                          |
+| `VanillaLayerCache`   | authoring     | Provides a metadata hint for future layer invalidation optimization |
+| `isVanillaFigureSpec` | normalization | Checks for a version 1 plain spec                                   |
+| `normalizeFigureSpec` | normalization | Produces Core IR, composites, and runtime metadata                  |
+| `VanillaTier2Adapter` | type          | Defines lowering for `embed()`                                      |
+| `RetainedVanillaView` | runtime       | Transactional retained view for IR / plain specs                    |
+| `StaticVanillaView`   | runtime       | Full-redraw static view for a precompiled Scene                     |
