@@ -70,8 +70,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/core',
       version: 'v0.5',
       description: {
-        zh: 'v0.5 alpha.1 补齐跨图元布局与文本语义：Node / Scope 锚点、正交路径、自动对比色、标签视觉盒、布局感知 Composite、typed artifacts 与多路径 TeX lowering。',
-        en: 'v0.5 alpha.1 adds Node/Scope anchors, orthogonal paths, automatic text contrast, visual-box labels, layout-aware composites, typed artifacts, and multi-path TeX lowering.',
+        zh: 'v0.5 补齐跨图元布局与文本语义，并在 alpha.2 以完整 Snapshot、Core Runtime Program、Scene Patch 与保守 fallback 建立首个安全局部增量编译闭环。',
+        en: 'v0.5 adds cross-primitive layout and text semantics. Alpha.2 adds complete Snapshots, a Core Runtime Program, Scene Patches, conservative fallback, and the first safe local incremental path.',
       },
       highlights: [
         {
@@ -102,8 +102,24 @@ export const kernelV05: Release = {
             en: '`defineComposite()` supports a `compile` branch mutually exclusive with `expand`, enabling intrinsic or constrained `layoutChild()` work followed by one replay. `compileToScene()` returns `{ scene, artifacts }`; mixed registries use `AnyCompositeDefinition`, and Node layouts are exposed as opt-in typed artifacts with an `occurrence`.',
           },
         },
+        {
+          label: { zh: 'Core Runtime Program', en: 'Core Runtime Program' },
+          content: {
+            zh: '`createCoreProgram()` 让完整 IR Snapshot 在 Runtime transaction 中原子产出完整 CompileResult、Scene Snapshot 与 Patch。ChangeSet 会与前后 Snapshot 交叉校验；当前安全局部路径只重编一个 root Node 的纯色 fill，引用、资源、Scope、Path、Composite 与其它变化保守 full fallback。',
+            en: '`createCoreProgram()` atomically derives a complete CompileResult, Scene Snapshot, and Patch from complete IR Snapshots inside Runtime transactions. ChangeSets are cross-checked against previous and next Snapshots. The current safe local path recompiles only one root Node solid fill, while references, resources, Scopes, Paths, composites, and other changes conservatively use full fallback.',
+          },
+        },
       ],
       subVersions: [
+        {
+          version: 'alpha.2',
+          date: '2026-07-28',
+          summary: {
+            zh: '交付 Core Runtime Program、canonical Scene topology、stable/nested Diff、ChangeSet 校验、full fallback 与单 root Node fill 局部增量闭环。',
+            en: 'Ships the Core Runtime Program, canonical Scene topology, stable and nested Diff, ChangeSet validation, full fallback, and a local incremental path for one root Node fill.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.1',
           date: '2026-07-26',
