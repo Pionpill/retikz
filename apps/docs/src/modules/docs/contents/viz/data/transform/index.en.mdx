@@ -9,6 +9,12 @@ This site uses Plot as the default example host only because a chart makes chang
 
 ## Overall flow
 
+The following `summarize` example starts with canonical product-level detail. Grouping by `region` returns region-level summary rows, replacing `product` and `revenue` with the derived `total` and `orders` fields.
+
+<ComponentPreview files="data-transform-shape" size="sm" previewClassName="!p-3" hideCode />
+
+This example changes both row grain and the field set, but not every transform changes the column shape: `sort` only reorders rows, `select` primarily changes row count, and `annotate` preserves detail rows while adding statistical fields.
+
 | Stage              | Input                        | Output                     | Responsibility                                  |
 | ------------------ | ---------------------------- | -------------------------- | ----------------------------------------------- |
 | Data model         | External rows + field model  | Canonical rows             | Align fields, parse values, and validate intake |
@@ -53,12 +59,6 @@ Plot-registered `stack`, `bin`, `normalize`, `derive-interval`, `relate`, `jitte
     <span className="font-semibold">Extension Mechanisms</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Register custom transform, reducer, and selector Definitions.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/provenance/data">
-    <span className="font-semibold">Data Provenance</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Record operation order, field flow, and optional calculation details.
     </span>
   </LinkedCard>
 </div>

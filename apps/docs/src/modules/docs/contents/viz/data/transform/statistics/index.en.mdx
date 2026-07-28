@@ -53,11 +53,16 @@ When a field has no finite numeric values, `sum` keeps the empty-sum identity `0
 
 `quantile-band` uses `lowerP` and `upperP` for arbitrary quantile intervals instead of hard-coding q1 / q3. `outside-quantile-band` returns original rows beyond that interval, preserving outlier ids, labels, and provenance.
 
-<ComponentPreview files={['transform-boxplot', 'transform-boxplot.data.ts']} />
+<ComponentPreview
+  files={['transform-boxplot', 'transform-boxplot-preview.tsx', 'transform-boxplot.data.ts']}
+  defaultSourceFile="transform-boxplot-preview.tsx"
+  size="lg"
+  caption="quantile-band produces the box, middle quantile, and whiskers; outside-quantile-band keeps outliers using the same probabilities and factor."
+/>
 
 The boxplot above has no dedicated `BoxPlotMark`. Data transforms produce the box, median, whisker, and outlier rows; the Plot example only consumes those fields through `IntervalMark`, `ReferenceMark`, and `PointMark`.
 
-## TypeScript Types
+## Public types
 
 | Scope     | Types                                                                                  |
 | --------- | -------------------------------------------------------------------------------------- |
