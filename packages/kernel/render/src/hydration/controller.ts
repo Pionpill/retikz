@@ -13,6 +13,27 @@ export type HydrationController = {
   dispose: () => void;
 };
 
+/** Hydration controller 注册失败且初次清理也失败时的可恢复错误 */
+class HydrationControllerSetupError extends Error {
+  /** 原始 listener 注册失败 */
+  override readonly cause: unknown;
+
+  /** 初次反向清理失败 */
+  readonly cleanupCause: unknown;
+
+  /** 保留尚未解绑任务的 controller，供 owner rollback / dispose 重试 */
+  readonly controller: HydrationController;
+
+  /** 创建保留 primary setup cause 与可重试 controller 的错误 */
+  constructor(cause: unknown, cleanupCause: unknown, controller: HydrationController) {
+    super('Hydration controller setup and cleanup failed', { cause });
+    this.name = 'HydrationControllerSetupError';
+    this.cause = cause;
+    this.cleanupCause = cleanupCause;
+    this.controller = controller;
+  }
+}
+
 /** 收集 handlers 注册表中实际用到的 RetikzEventValue 集合（决定要在 root 上挂哪些 DOM listener） */
 const collectUsedEvents = (handlers: HydrationHandlers): Set<RetikzEventValue> => {
   const used = new Set<RetikzEventValue>();
@@ -110,6 +131,11 @@ export const createHydrationController = (
 ): HydrationController => {
   const used = collectUsedEvents(handlers);
   const teardowns: Array<() => void> = [];
+  const controller = Object.freeze({
+    dispose: () => {
+      runTeardowns(teardowns);
+    },
+  });
 
   const listen = (domType: string, listener: (event: Event) => void): void => {
     root.addEventListener(domType, listener);
@@ -167,13 +193,13 @@ export const createHydrationController = (
       });
     }
   } catch (cause) {
-    runTeardowns(teardowns, true);
+    try {
+      runTeardowns(teardowns, true);
+    } catch (cleanupCause) {
+      throw new HydrationControllerSetupError(cause, cleanupCause, controller);
+    }
     throw cause;
   }
 
-  return {
-    dispose: () => {
-      runTeardowns(teardowns);
-    },
-  };
+  return controller;
 };

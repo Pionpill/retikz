@@ -3,6 +3,7 @@ import { createRuntimeIdentity } from '@retikz/runtime';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { HydrationHandlers, HydrationTarget } from '../../src/hydration';
+import type { HydrationController } from '../../src/hydration';
 
 import { createHydrationController, locateSvg } from '../../src/hydration';
 
@@ -220,6 +221,47 @@ describe('Hydration 控制器', () => {
     ).toThrow('listener rejected');
     expect(added).toEqual(['click']);
     expect(removed).toEqual(['click']);
+  });
+
+  it('listener 注册与反向解绑连续失败时暴露可重试的 controller，且保留注册失败为 primary cause', () => {
+    const listeners = new Map<string, EventListener>();
+    let rejectRemoval = true;
+    const setupCause = new Error('listener rejected');
+    const cleanupCause = new Error('listener removal rejected');
+    const root = {
+      addEventListener: (type: string, listener: EventListenerOrEventListenerObject) => {
+        if (type === 'dblclick') throw setupCause;
+        listeners.set(type, listener as EventListener);
+      },
+      removeEventListener: (type: string) => {
+        if (rejectRemoval) {
+          rejectRemoval = false;
+          throw cleanupCause;
+        }
+        listeners.delete(type);
+      },
+    } as unknown as EventTarget;
+
+    let failure: unknown;
+    try {
+      createHydrationController(root, { node: { click: vi.fn(), doubleClick: vi.fn() } }, () => null);
+    } catch (cause) {
+      failure = cause;
+    }
+
+    expect(failure).toBeInstanceOf(Error);
+    expect(failure).toEqual(
+      expect.objectContaining({
+        name: 'HydrationControllerSetupError',
+        cause: setupCause,
+        cleanupCause,
+      }),
+    );
+    expect(listeners.has('click')).toBe(true);
+    if (!(failure instanceof Error)) throw new Error('expected hydration setup error');
+    const controller = Reflect.get(failure, 'controller') as HydrationController;
+    expect(() => controller.dispose()).not.toThrow();
+    expect(listeners.size).toBe(0);
   });
 });
 

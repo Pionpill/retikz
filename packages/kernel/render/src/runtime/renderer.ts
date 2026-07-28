@@ -197,9 +197,9 @@ const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): R
     host,
     capability,
   }) as RetainedRenderer;
-  let disposed = false;
+  let state: 'live' | 'disposing' | 'disposed' = 'live';
   const assertLive = (): void => {
-    if (disposed) throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererDisposed });
+    if (state !== 'live') throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererDisposed });
   };
   retainedRendererExecutors.set(
     token,
@@ -217,9 +217,10 @@ const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): R
         return (read as RetainedRendererDefinitionBase['read'])();
       },
       dispose: () => {
-        if (disposed) return;
-        disposed = true;
+        if (state === 'disposed') return;
+        state = 'disposing';
         (dispose as RetainedRendererDefinitionBase['dispose'])();
+        state = 'disposed';
       },
     }),
   );

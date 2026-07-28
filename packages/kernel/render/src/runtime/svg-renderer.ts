@@ -37,6 +37,8 @@ import {
   createPublicIdPrimitivePathMap,
   createRuntimeIdentityMap,
   createSemanticOwnerPublicIdMap,
+  recoverHydrationSetupFailure,
+  runBestEffortCleanup,
   runtimeStructuralEquals,
 } from './shared';
 
@@ -1181,7 +1183,7 @@ export const createBuiltinSvgRetainedRenderer = (
     let journal: MutationJournal | undefined;
     let committed = false;
     let rolledBack = false;
-    let previousHydrationDisposed = false;
+    let previousHydrationDisposeAttempted = false;
     const animationDiff = diffSceneAnimationDescriptors(currentSnapshot, snapshot);
     const replaceScene = patch?.operations.some(operation => operation.kind === 'replaceScene') === true;
     const preserveAnimation = !replaceScene && runtimeStructuralEquals(currentAnimationConfig, config.animation);
@@ -1315,9 +1317,20 @@ export const createBuiltinSvgRetainedRenderer = (
             ]),
           });
         }
-        previousHydration?.dispose();
-        previousHydrationDisposed = previousHydration !== undefined;
-        hydration = createSvgHydration(host, snapshot, config, currentElements);
+        if (previousHydration !== undefined) {
+          previousHydrationDisposeAttempted = true;
+          previousHydration.dispose();
+        }
+        try {
+          hydration = createSvgHydration(host, snapshot, config, currentElements);
+        } catch (cause) {
+          const setupFailure = recoverHydrationSetupFailure(cause);
+          if (setupFailure !== undefined) {
+            hydration = setupFailure.controller;
+            throw setupFailure.cause;
+          }
+          throw cause;
+        }
         for (const control of animationTransition?.retired ?? []) {
           const suspended = Object.freeze({ control, running: control.controls.running });
           suspendedAnimation.push(suspended);
@@ -1335,30 +1348,61 @@ export const createBuiltinSvgRetainedRenderer = (
       },
       rollback: () => {
         rolledBack = true;
-        hydration?.dispose();
-        animationTransition?.created.forEach(control => control.controls.dispose());
-        journal?.rollback();
-        for (const suspended of suspendedAnimation) {
-          suspended.control.gate.enabled = true;
-          if (suspended.running) suspended.control.controls.play();
-        }
-        currentSnapshot = previousSnapshot;
-        currentHydration = previousHydration;
-        currentAnimation = previousAnimation;
-        currentOwnedAttributes = previousOwnedAttributes;
-        currentOwnedStyles = previousOwnedStyles;
-        currentElements = previousElements;
-        currentAnimationConfig = previousAnimationConfig;
-        currentConfig = previousConfig;
-        currentHydration =
-          !previousHydrationDisposed || previousSnapshot === undefined || previousConfig === undefined
-            ? previousHydration
-            : createSvgHydration(host, previousSnapshot, previousConfig, previousElements);
+        runBestEffortCleanup([
+          () => hydration?.dispose(),
+          ...(animationTransition?.created.map(control => () => control.controls.dispose()) ?? []),
+          () => journal?.rollback(),
+          ...suspendedAnimation.map(suspended => () => {
+            suspended.control.gate.enabled = true;
+            if (suspended.running) suspended.control.controls.play();
+          }),
+          () => {
+            currentSnapshot = previousSnapshot;
+            currentHydration = previousHydration;
+            currentAnimation = previousAnimation;
+            currentOwnedAttributes = previousOwnedAttributes;
+            currentOwnedStyles = previousOwnedStyles;
+            currentElements = previousElements;
+            currentAnimationConfig = previousAnimationConfig;
+            currentConfig = previousConfig;
+          },
+          () => {
+            if (
+              !previousHydrationDisposeAttempted ||
+              previousHydration === undefined ||
+              previousSnapshot === undefined ||
+              previousConfig === undefined
+            ) {
+              return;
+            }
+            previousHydration.dispose();
+            try {
+              currentHydration = createSvgHydration(host, previousSnapshot, previousConfig, previousElements);
+            } catch (cause) {
+              const setupFailure = recoverHydrationSetupFailure(cause);
+              if (setupFailure !== undefined) {
+                currentHydration = setupFailure.controller;
+                throw setupFailure.cause;
+              }
+              throw cause;
+            }
+          },
+        ]);
       },
       dispose: () => {
-        if (committed && !rolledBack) {
-          animationTransition?.retired.forEach(control => control.controls.dispose());
-        }
+        runBestEffortCleanup([
+          ...(rolledBack
+            ? [
+                () => {
+                  hydration?.dispose();
+                  hydration = undefined;
+                },
+              ]
+            : []),
+          ...(committed && !rolledBack
+            ? (animationTransition?.retired.map(control => () => control.controls.dispose()) ?? [])
+            : []),
+        ]);
       },
     });
   };
@@ -1377,15 +1421,26 @@ export const createBuiltinSvgRetainedRenderer = (
       });
     },
     dispose: () => {
-      currentHydration?.dispose();
-      currentAnimation?.controls.dispose();
-      currentHydration = undefined;
-      currentAnimation = undefined;
-      currentSnapshot = undefined;
-      currentOwnedAttributes = new Set();
-      currentOwnedStyles = new Set();
-      currentElements = createRuntimeIdentityMap([]);
-      currentAnimationConfig = undefined;
+      const hydration = currentHydration;
+      const animation = currentAnimation;
+      runBestEffortCleanup([
+        () => {
+          hydration?.dispose();
+          if (currentHydration === hydration) currentHydration = undefined;
+        },
+        () => {
+          animation?.controls.dispose();
+          if (currentAnimation === animation) currentAnimation = undefined;
+        },
+        () => {
+          currentSnapshot = undefined;
+          currentOwnedAttributes = new Set();
+          currentOwnedStyles = new Set();
+          currentElements = createRuntimeIdentityMap([]);
+          currentAnimationConfig = undefined;
+          currentConfig = undefined;
+        },
+      ]);
     },
   });
 };

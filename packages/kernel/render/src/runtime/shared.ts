@@ -2,6 +2,8 @@ import type { RuntimeIdentity } from '@retikz/runtime';
 
 import { createRuntimeIdentityIndex, runtimeIdentityEquals } from '@retikz/runtime';
 
+import type { HydrationController } from '../hydration';
+
 /** 判断动态值是否为普通对象 */
 export const isPlainObject = (value: object): boolean => {
   const prototype = Object.getPrototypeOf(value);
@@ -188,4 +190,37 @@ export const runtimeStructuralEquals = (left: unknown, right: unknown): boolean 
   const rightKeys = Reflect.ownKeys(right);
   if (leftKeys.length !== rightKeys.length || leftKeys.some(key => !rightKeys.includes(key))) return false;
   return leftKeys.every(key => runtimeStructuralEquals(Reflect.get(left, key), Reflect.get(right, key)));
+};
+
+/** 依序执行全部清理任务，并在完成 best-effort 清理后重抛首个失败 */
+export const runBestEffortCleanup = (cleanups: ReadonlyArray<() => void>): void => {
+  let failed = false;
+  let firstCause: unknown;
+  for (const cleanup of cleanups) {
+    try {
+      cleanup();
+    } catch (cause) {
+      if (!failed) {
+        failed = true;
+        firstCause = cause;
+      }
+    }
+  }
+  if (failed) throw firstCause;
+};
+
+/** 从 hydration setup 双重失败中恢复 owner 必须重试清理的 controller 与 primary cause */
+export const recoverHydrationSetupFailure = (
+  cause: unknown,
+): Readonly<{ cause: unknown; controller: HydrationController }> | undefined => {
+  if (!(cause instanceof Error) || cause.name !== 'HydrationControllerSetupError') return undefined;
+  const controller = Reflect.get(cause, 'controller');
+  if (
+    typeof controller !== 'object' ||
+    controller === null ||
+    typeof Reflect.get(controller, 'dispose') !== 'function'
+  ) {
+    return undefined;
+  }
+  return Object.freeze({ cause: Reflect.get(cause, 'cause'), controller: controller as HydrationController });
 };

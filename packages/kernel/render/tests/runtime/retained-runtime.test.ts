@@ -31,6 +31,7 @@ import {
   RetainedRenderError,
   RetainedRenderErrorCode,
 } from '../../src/runtime';
+import { getRetainedRendererExecutor } from '../../src/runtime/renderer';
 
 const scene = (text: string): IRScene => ({
   version: 1,
@@ -672,6 +673,41 @@ describe('createRetainedRenderParticipant', () => {
         }),
       );
     }
+  });
+
+  it('renderer dispose 失败后仅允许重试清理，成功后进入幂等 disposed 状态', () => {
+    const disposeFailure = new Error('dispose rejected');
+    let rejectDispose = true;
+    const dispose = vi.fn(() => {
+      if (rejectDispose) {
+        rejectDispose = false;
+        throw disposeFailure;
+      }
+    });
+    const renderer = defineRetainedRenderer({
+      backend: 'svg',
+      host: svgHost,
+      capability: 'entity',
+      prepareMount: noopToken,
+      prepare: noopToken,
+      read: () => {
+        throw new Error('unused');
+      },
+      dispose,
+    });
+    const executor = getRetainedRendererExecutor(renderer);
+    if (executor === undefined) throw new Error('expected retained renderer executor');
+
+    expect(() => executor.dispose()).toThrow(disposeFailure);
+    expect(() => executor.read()).toThrowError(
+      expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRendererDisposed }),
+    );
+    expect(() => executor.prepareMount({} as SceneRuntimeSnapshot, {}, 'create')).toThrowError(
+      expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRendererDisposed }),
+    );
+    expect(() => executor.dispose()).not.toThrow();
+    expect(() => executor.dispose()).not.toThrow();
+    expect(dispose).toHaveBeenCalledTimes(2);
   });
 
   it('在 factory 前拒绝 backend/host mismatch，并以 Render error 暴露 cause', () => {

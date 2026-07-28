@@ -720,6 +720,291 @@ describe('builtin retained renderers', () => {
     vi.unstubAllGlobals();
   });
 
+  it('旧 hydration 部分解绑失败后 rollback 重建完整 listener 集合', () => {
+    const host = document.createElementNS(SVG_NAMESPACE, 'svg');
+    const onClick = vi.fn();
+    const onDoubleClick = vi.fn();
+    const { session } = createSession('svg', host, {
+      config: {
+        handlerContributions: [
+          { registration: 1, handlers: { 'node-a': { click: onClick, doubleClick: onDoubleClick } } },
+        ],
+      },
+    });
+    const originalRemove = host.removeEventListener.bind(host);
+    let rejectDoubleClickRemoval = true;
+    vi.spyOn(host, 'removeEventListener').mockImplementation((type, listener, options) => {
+      if (type === 'dblclick' && rejectDoubleClickRemoval) {
+        rejectDoubleClickRemoval = false;
+        throw new Error('old dblclick removal rejected');
+      }
+      originalRemove(type, listener, options);
+    });
+
+    expect(() =>
+      session.update({
+        baseRevision: session.revision(),
+        owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, scene('#22c55e'))],
+      }),
+    ).toThrowError(
+      expect.objectContaining({
+        code: 'RUNTIME_PARTICIPANT_COMMIT_FAILED',
+        cause: expect.objectContaining({ message: 'old dblclick removal rejected' }),
+      }),
+    );
+
+    const target = host.querySelector('[data-retikz-id="node-a"]');
+    target?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    target?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(onDoubleClick).toHaveBeenCalledTimes(1);
+    session.dispose();
+  });
+
+  it('旧 hydration 连续解绑失败时仍回滚 DOM，并把 session 置为 broken 而非返回残缺 idle', () => {
+    const host = document.createElementNS(SVG_NAMESPACE, 'svg');
+    const { session } = createSession('svg', host, {
+      config: {
+        handlerContributions: [{ registration: 1, handlers: { 'node-a': { click: vi.fn(), doubleClick: vi.fn() } } }],
+      },
+    });
+    const committedMarkup = host.innerHTML;
+    const originalRemove = host.removeEventListener.bind(host);
+    let rejectedRemovals = 0;
+    vi.spyOn(host, 'removeEventListener').mockImplementation((type, listener, options) => {
+      if (type === 'dblclick' && rejectedRemovals < 2) {
+        rejectedRemovals += 1;
+        throw new Error(`old dblclick removal rejected ${rejectedRemovals.toString()}`);
+      }
+      originalRemove(type, listener, options);
+    });
+
+    expect(() =>
+      session.update({
+        baseRevision: session.revision(),
+        owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, scene('#22c55e'))],
+      }),
+    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_ROLLBACK_FAILED' }));
+    expect(host.innerHTML).toBe(committedMarkup);
+    expect(() =>
+      session.update({
+        baseRevision: session.revision(),
+        owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, scene('#3b82f6'))],
+      }),
+    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_ROLLBACK_FAILED' }));
+    expect(() => session.dispose()).not.toThrow();
+  });
+
+  it('Canvas 旧 hydration 部分解绑失败后 rollback 重建完整 listener 集合', () => {
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => {
+          if (key === 'measureText') return () => ({ width: 0 });
+          if (key === 'createLinearGradient' || key === 'createRadialGradient') {
+            return () => ({ addColorStop: vi.fn() });
+          }
+          if (key in target) return Reflect.get(target, key);
+          return vi.fn();
+        },
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    const pair = createCorePair(scene('#ef4444'), scene('#22c55e'));
+    const host = document.createElement('canvas');
+    host.width = 200;
+    host.height = 100;
+    const add = vi.spyOn(host, 'addEventListener');
+    const renderer = builtinRetainedRendererFactory({
+      backend: 'canvas',
+      host,
+      immutableOptions: { backend: 'canvas', idPrefix: 'canvas-hydration-rollback', devicePixelRatio: 1 },
+    });
+    const executor = getRetainedRendererExecutor(renderer);
+    if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+    const config = {
+      handlerContributions: [{ registration: 1, handlers: { 'node-a': { click: vi.fn(), doubleClick: vi.fn() } } }],
+    };
+    const mount = executor.prepareMount(pair.current, config, 'create');
+    mount.commit();
+    mount.dispose();
+    add.mockClear();
+    const originalRemove = host.removeEventListener.bind(host);
+    let rejectDoubleClickRemoval = true;
+    vi.spyOn(host, 'removeEventListener').mockImplementation((type, listener, options) => {
+      if (type === 'dblclick' && rejectDoubleClickRemoval) {
+        rejectDoubleClickRemoval = false;
+        throw new Error('old Canvas dblclick removal rejected');
+      }
+      originalRemove(type, listener, options);
+    });
+    const prepared = executor.prepare(pair.patch, pair.next, config);
+
+    expect(() => prepared.commit()).toThrow('old Canvas dblclick removal rejected');
+    expect(() => prepared.rollback()).not.toThrow();
+    expect(add.mock.calls.map(([type]) => type)).toEqual(['click', 'dblclick']);
+    prepared.dispose();
+    executor.dispose();
+  });
+
+  it('candidate hydration 注册与清理同时失败时保留注册 primary 并在 rollback 清除 listener', () => {
+    const host = document.createElementNS(SVG_NAMESPACE, 'svg');
+    const previous = vi.fn();
+    const candidateClick = vi.fn();
+    const { session } = createSession('svg', host, {
+      config: { handlerContributions: [{ registration: 1, handlers: { 'node-a': { click: previous } } }] },
+    });
+    const originalAdd = host.addEventListener.bind(host);
+    const originalRemove = host.removeEventListener.bind(host);
+    let rejectCandidateDoubleClick = true;
+    let rejectCandidateClickCleanup = true;
+    let candidateSetupFailed = false;
+    vi.spyOn(host, 'addEventListener').mockImplementation((type, listener, options) => {
+      if (type === 'dblclick' && rejectCandidateDoubleClick) {
+        rejectCandidateDoubleClick = false;
+        candidateSetupFailed = true;
+        throw new Error('candidate dblclick registration rejected');
+      }
+      originalAdd(type, listener, options);
+    });
+    vi.spyOn(host, 'removeEventListener').mockImplementation((type, listener, options) => {
+      if (type === 'click' && candidateSetupFailed && rejectCandidateClickCleanup) {
+        rejectCandidateClickCleanup = false;
+        throw new Error('candidate click cleanup rejected');
+      }
+      originalRemove(type, listener, options);
+    });
+
+    expect(() =>
+      session.update({
+        baseRevision: session.revision(),
+        owners: [
+          createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, {
+            handlerContributions: [
+              {
+                registration: 2,
+                handlers: { 'node-a': { click: candidateClick, doubleClick: vi.fn() } },
+              },
+            ],
+          }),
+        ],
+      }),
+    ).toThrowError(
+      expect.objectContaining({
+        code: 'RUNTIME_PARTICIPANT_COMMIT_FAILED',
+        cause: expect.objectContaining({ message: 'candidate dblclick registration rejected' }),
+      }),
+    );
+
+    host.querySelector('[data-retikz-id="node-a"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(previous).toHaveBeenCalledTimes(1);
+    expect(candidateClick).not.toHaveBeenCalled();
+    session.dispose();
+  });
+
+  it('candidate hydration cleanup 连续失败时仍完成旧 DOM/router 恢复，并把清理失败报告为 rollback failure', () => {
+    const host = document.createElementNS(SVG_NAMESPACE, 'svg');
+    const previous = vi.fn();
+    const candidateClick = vi.fn();
+    const { session } = createSession('svg', host, {
+      config: { handlerContributions: [{ registration: 1, handlers: { 'node-a': { click: previous } } }] },
+    });
+    const committedMarkup = host.innerHTML;
+    const originalAdd = host.addEventListener.bind(host);
+    const originalRemove = host.removeEventListener.bind(host);
+    let candidateSetupFailed = false;
+    let rejectedCandidateCleanups = 0;
+    vi.spyOn(host, 'addEventListener').mockImplementation((type, listener, options) => {
+      if (type === 'dblclick' && !candidateSetupFailed) {
+        candidateSetupFailed = true;
+        throw new Error('candidate dblclick registration rejected');
+      }
+      originalAdd(type, listener, options);
+    });
+    vi.spyOn(host, 'removeEventListener').mockImplementation((type, listener, options) => {
+      if (type === 'click' && candidateSetupFailed && rejectedCandidateCleanups < 2) {
+        rejectedCandidateCleanups += 1;
+        throw new Error(`candidate click cleanup rejected ${rejectedCandidateCleanups.toString()}`);
+      }
+      originalRemove(type, listener, options);
+    });
+
+    expect(() =>
+      session.update({
+        baseRevision: session.revision(),
+        owners: [
+          createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, {
+            handlerContributions: [
+              {
+                registration: 2,
+                handlers: { 'node-a': { click: candidateClick, doubleClick: vi.fn() } },
+              },
+            ],
+          }),
+        ],
+      }),
+    ).toThrowError(
+      expect.objectContaining({
+        code: 'RUNTIME_PARTICIPANT_ROLLBACK_FAILED',
+        cause: expect.objectContaining({
+          trigger: expect.objectContaining({
+            cause: expect.objectContaining({ message: 'candidate dblclick registration rejected' }),
+          }),
+          rollback: expect.objectContaining({ message: 'candidate click cleanup rejected 2' }),
+        }),
+      }),
+    );
+    expect(host.innerHTML).toBe(committedMarkup);
+    host.querySelector('[data-retikz-id="node-a"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(previous).toHaveBeenCalledTimes(1);
+    expect(candidateClick).not.toHaveBeenCalled();
+    expect(() => session.dispose()).not.toThrow();
+  });
+
+  it('SVG renderer dispose 在 hydration 失败后仍释放动画并允许重试 listener cleanup', () => {
+    const snapshot = createCorePair(scene('#ef4444'), animatedScene('#22c55e', { onEvent: 'click' })).next;
+    const host = document.createElementNS(SVG_NAMESPACE, 'svg');
+    const cancel = vi.fn();
+    const previousAnimate = Object.getOwnPropertyDescriptor(SVGElement.prototype, 'animate');
+    Object.defineProperty(SVGElement.prototype, 'animate', {
+      configurable: true,
+      value: () => ({ pause: vi.fn(), play: vi.fn(), cancel, currentTime: 0, playState: 'running' }),
+    });
+    try {
+      const renderer = builtinRetainedRendererFactory({
+        backend: 'svg',
+        host,
+        immutableOptions: { backend: 'svg', idPrefix: 'svg-dispose-failure' },
+      });
+      const executor = getRetainedRendererExecutor(renderer);
+      if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
+      const mount = executor.prepareMount(
+        snapshot,
+        { handlerContributions: [{ registration: 1, handlers: { 'node-a': { click: vi.fn() } } }] },
+        'create',
+      );
+      mount.commit();
+      mount.dispose();
+      host.querySelector('[data-retikz-id="node-a"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      const originalRemove = host.removeEventListener.bind(host);
+      let rejectRemoval = true;
+      const remove = vi.spyOn(host, 'removeEventListener').mockImplementation((type, listener, options) => {
+        if (type === 'click' && rejectRemoval) {
+          rejectRemoval = false;
+          throw new Error('final hydration cleanup rejected');
+        }
+        originalRemove(type, listener, options);
+      });
+
+      expect(() => executor.dispose()).toThrow('final hydration cleanup rejected');
+      expect(cancel).toHaveBeenCalledTimes(1);
+      expect(() => executor.dispose()).not.toThrow();
+      expect(remove.mock.calls.filter(([type]) => type === 'click')).toHaveLength(2);
+    } finally {
+      if (previousAnimate === undefined) delete (SVGElement.prototype as { animate?: unknown }).animate;
+      else Object.defineProperty(SVGElement.prototype, 'animate', previousAnimate);
+    }
+  });
+
   it('SVG prepare 在 commit 前拒绝已缺失的 entity mutation target', () => {
     const pair = createCorePair(scene('#ef4444'), scene('#22c55e'));
     const host = document.createElementNS(SVG_NAMESPACE, 'svg');

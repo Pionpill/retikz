@@ -40,6 +40,8 @@ import {
   createPublicIdPrimitivePathMap,
   createRuntimeIdentityMap,
   createSemanticOwnerPublicIdMap,
+  recoverHydrationSetupFailure,
+  runBestEffortCleanup,
   runtimeStructuralEquals,
 } from './shared';
 
@@ -1208,7 +1210,7 @@ export const createBuiltinCanvasRetainedRenderer = (
       let rolledBack = false;
       let hostMutated = false;
       let committedBitmapMutated = false;
-      let previousHydrationDisposed = false;
+      let previousHydrationDisposeAttempted = false;
       return Object.freeze({
         commit: () => {
           if (!reuseBitmap) {
@@ -1233,9 +1235,20 @@ export const createBuiltinCanvasRetainedRenderer = (
           if (!reuseAnimation && previousAnimation !== undefined) {
             previousAnimationRunning = previousAnimation.suspend();
           }
-          previousHydration?.dispose();
-          previousHydrationDisposed = previousHydration !== undefined;
-          hydration = createCanvasHydration(host, snapshot, config, animation);
+          if (previousHydration !== undefined) {
+            previousHydrationDisposeAttempted = true;
+            previousHydration.dispose();
+          }
+          try {
+            hydration = createCanvasHydration(host, snapshot, config, animation);
+          } catch (cause) {
+            const setupFailure = recoverHydrationSetupFailure(cause);
+            if (setupFailure !== undefined) {
+              hydration = setupFailure.controller;
+              throw setupFailure.cause;
+            }
+            throw cause;
+          }
           currentSnapshot = snapshot;
           currentBitmap = incrementalBitmap === undefined ? bitmap : previousBitmap;
           currentHydration = hydration;
@@ -1249,41 +1262,82 @@ export const createBuiltinCanvasRetainedRenderer = (
         },
         rollback: () => {
           rolledBack = true;
-          rollbackAnimationRebind?.();
-          hydration?.dispose();
-          if (!reuseAnimation) animation?.dispose();
-          if (previousAnimationRunning !== undefined) previousAnimation?.resume(previousAnimationRunning);
-          if (incrementalBitmap?.kind === 'dirty') {
-            if (committedBitmapMutated && previousBitmap !== undefined) {
-              paintBitmapRegion(previousBitmap, incrementalBitmap.rollback, incrementalBitmap.region, 'region');
-            }
-            if (hostMutated) {
-              paintBitmapRegion(host, incrementalBitmap.rollback, incrementalBitmap.region, 'region');
-            }
-          } else if (incrementalBitmap === undefined && hostMutated) {
-            host.width = previousHostSize.width;
-            host.height = previousHostSize.height;
-            paintBitmap(host, rollbackBitmap ?? previousBitmap);
-          }
-          currentSnapshot = previousSnapshot;
-          currentBitmap = previousBitmap;
-          currentHydration = previousHydration;
-          currentAnimation = previousAnimation;
-          currentPaintConfig = previousPaintConfig;
-          currentDisplayList = previousDisplayList;
-          currentConfig = previousConfig;
-          currentHostStyle = previousHostStyle;
-          currentHydration =
-            !previousHydrationDisposed || previousSnapshot === undefined || previousConfig === undefined
-              ? previousHydration
-              : createCanvasHydration(host, previousSnapshot, previousConfig, previousAnimation);
-          imageStage.rollback();
+          runBestEffortCleanup([
+            () => rollbackAnimationRebind?.(),
+            () => hydration?.dispose(),
+            ...(!reuseAnimation ? [() => animation?.dispose()] : []),
+            () => {
+              if (previousAnimationRunning !== undefined) previousAnimation?.resume(previousAnimationRunning);
+            },
+            () => {
+              if (incrementalBitmap?.kind === 'dirty') {
+                if (committedBitmapMutated && previousBitmap !== undefined) {
+                  paintBitmapRegion(previousBitmap, incrementalBitmap.rollback, incrementalBitmap.region, 'region');
+                }
+                if (hostMutated) {
+                  paintBitmapRegion(host, incrementalBitmap.rollback, incrementalBitmap.region, 'region');
+                }
+              } else if (incrementalBitmap === undefined && hostMutated) {
+                host.width = previousHostSize.width;
+                host.height = previousHostSize.height;
+                paintBitmap(host, rollbackBitmap ?? previousBitmap);
+              }
+            },
+            () => {
+              currentSnapshot = previousSnapshot;
+              currentBitmap = previousBitmap;
+              currentHydration = previousHydration;
+              currentAnimation = previousAnimation;
+              currentPaintConfig = previousPaintConfig;
+              currentDisplayList = previousDisplayList;
+              currentConfig = previousConfig;
+              currentHostStyle = previousHostStyle;
+            },
+            () => {
+              if (
+                !previousHydrationDisposeAttempted ||
+                previousHydration === undefined ||
+                previousSnapshot === undefined ||
+                previousConfig === undefined
+              ) {
+                return;
+              }
+              previousHydration.dispose();
+              try {
+                currentHydration = createCanvasHydration(host, previousSnapshot, previousConfig, previousAnimation);
+              } catch (cause) {
+                const setupFailure = recoverHydrationSetupFailure(cause);
+                if (setupFailure !== undefined) {
+                  currentHydration = setupFailure.controller;
+                  throw setupFailure.cause;
+                }
+                throw cause;
+              }
+            },
+            () => imageStage.rollback(),
+          ]);
         },
         dispose: () => {
-          if (committed && !rolledBack) {
-            if (!reuseAnimation) previousAnimation?.dispose();
-          }
-          imageStage.dispose();
+          runBestEffortCleanup([
+            ...(rolledBack
+              ? [
+                  () => {
+                    hydration?.dispose();
+                    hydration = undefined;
+                  },
+                  ...(!reuseAnimation
+                    ? [
+                        () => {
+                          animation?.dispose();
+                          animation = undefined;
+                        },
+                      ]
+                    : []),
+                ]
+              : []),
+            ...(committed && !rolledBack && !reuseAnimation ? [() => previousAnimation?.dispose()] : []),
+            () => imageStage.dispose(),
+          ]);
         },
       });
     } catch (cause) {
@@ -1306,16 +1360,26 @@ export const createBuiltinCanvasRetainedRenderer = (
       });
     },
     dispose: () => {
-      currentHydration?.dispose();
-      currentAnimation?.dispose();
-      currentHydration = undefined;
-      currentAnimation = undefined;
-      currentBitmap = undefined;
-      currentSnapshot = undefined;
-      currentPaintConfig = undefined;
-      currentDisplayList = undefined;
-      currentConfig = undefined;
-      imageLoader.dispose();
+      const hydration = currentHydration;
+      const animation = currentAnimation;
+      runBestEffortCleanup([
+        () => {
+          hydration?.dispose();
+          if (currentHydration === hydration) currentHydration = undefined;
+        },
+        () => {
+          animation?.dispose();
+          if (currentAnimation === animation) currentAnimation = undefined;
+        },
+        () => imageLoader.dispose(),
+        () => {
+          currentBitmap = undefined;
+          currentSnapshot = undefined;
+          currentPaintConfig = undefined;
+          currentDisplayList = undefined;
+          currentConfig = undefined;
+        },
+      ]);
     },
   });
 };
