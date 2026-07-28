@@ -147,6 +147,13 @@ describe('transform schema', () => {
     }
   });
 
+  it('accepts custom selectors for select but not annotate', () => {
+    const selector = { kind: 'custom-selector', field: 'value' };
+
+    expect(SelectTransformSchema.safeParse({ kind: 'select', selector }).success).toBe(true);
+    expect(AnnotateSelectorSchema.safeParse({ selector, as: 'annotation' }).success).toBe(false);
+  });
+
   it('rejects unknown keys on built-in transforms without blocking external config', () => {
     expect(() => TransformSchema.parse({ kind: 'sort', field: 'month', oder: 'descending' })).toThrow();
     expect(() =>

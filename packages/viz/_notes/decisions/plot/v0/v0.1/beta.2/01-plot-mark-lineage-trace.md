@@ -3,7 +3,7 @@
 - 状态：Accepted
 - 决策日期：2026-07-08
 - 完成日期：2026-07-08
-- 关联：[plot v0.1 roadmap](../roadmap.md) · [data beta.2 ADR-01](../../../../data/v0/v0.1/beta.2/01-data-lineage-trace.md) · [plot beta.1 ADR-01](../beta.1/01-data-package-adapter.md) · [plot-design.md §3.3 Transform / §8 lowering](../../../../../architecture/plot-design.md)
+- 关联：[plot v0.1 roadmap](../roadmap.md) · [data beta.2 ADR-02](../../../../data/v0/v0.1/beta.2/02-data-lineage-trace.md) · [plot beta.1 ADR-01](../beta.1/01-data-package-adapter.md) · [plot-design.md §3.3 Transform / §8 lowering](../../../../../architecture/plot-design.md)
 
 ## 背景
 
@@ -93,4 +93,4 @@ plot contract 新增图元链路类型；pipeline 新增 `lowerPlotWithLineage()
 
 ## 实现指针
 
-本 ADR 已随 viz `0.1.0-beta.2` 收尾压缩；当前真源以代码、测试、文档站和 changelog 为准。
+本 ADR 已在 plot v0.1-beta.2 收尾时压缩；当前真源以代码、测试、文档站和 changelog 为准。完整施工契约保留在该 ADR 的 Accepted 历史版本中。

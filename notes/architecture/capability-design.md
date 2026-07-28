@@ -1,6 +1,6 @@
 # 能力完备性与模块边界
 
-> 本文是 retikz 能力性迭代的架构决策总纲。它定义能力域、包角色、完备标准和检查方法；各能力域自己的边界与检查项写在对应 completeness 文档中。
+> **状态：全仓能力性迭代的长期架构总纲。** 本文定义能力域、包角色、完备标准和检查方法，不维护具体功能清单；各能力域自己的边界与检查项写在对应 completeness 文档中，当前包职责以根与就近 `AGENTS.md` 为准。
 
 ---
 
@@ -48,12 +48,12 @@
 
 ## 4. 当前能力域与包角色
 
-| 能力域                         | 主责包          | 解决的问题                                                      | 主要输入                             | 主要输出                                    | 关键协作包                                |
-| ------------------------------ | --------------- | --------------------------------------------------------------- | ------------------------------------ | ------------------------------------------- | ----------------------------------------- |
-| Drawing Complete               | `@retikz/core`  | 后端中立的二维图形表达、扩展与编译                              | Core IR、definition、compile options | Scene、headless manifest                    | `math`、`render`、React / Vanilla、Tier 2 |
-| Data Complete                  | `@retikz/data`  | 宿主无关的数据、字段、transform、statistics、输入解析与 lineage | Data IR、external data、definition   | data view、lineage / provenance             | plot、table、未来 chart / geo             |
-| Visualization Complete         | `@retikz/plot`  | 把数据语义映射成 core 图形语义                                  | Plot IR、Data 能力、definitions      | Core IR、visualization provenance / locator | `data`、`core`、plot adapters             |
-| Tabular Visualization Complete | `@retikz/table` | 把数据或显式内容组织成具有二维语义结构的表格                    | Table IR、Data 能力、definitions     | Core IR、table manifest / lineage           | `data`、`core`、table adapters            |
+| 能力域                         | 主责包          | 解决的问题                                                      | 主要输入                             | 主要输出                                    | 关键协作包                                    |
+| ------------------------------ | --------------- | --------------------------------------------------------------- | ------------------------------------ | ------------------------------------------- | --------------------------------------------- |
+| Drawing Complete               | `@retikz/core`  | 后端中立的二维图形表达、扩展与编译                              | Core IR、definition、compile options | Scene、headless manifest                    | `math`、`runtime`、`render`、adapters、Tier 2 |
+| Data Complete                  | `@retikz/data`  | 宿主无关的数据、字段、transform、statistics、输入解析与 lineage | Data IR、external data、definition   | data view、lineage / provenance             | plot、table、未来 chart / geo                 |
+| Visualization Complete         | `@retikz/plot`  | 把数据语义映射成 core 图形语义                                  | Plot IR、Data 能力、definitions      | Core IR、visualization provenance / locator | `data`、`core`、plot adapters                 |
+| Tabular Visualization Complete | `@retikz/table` | 把数据或显式内容组织成具有二维语义结构的表格                    | Table IR、Data 能力、definitions     | Core IR、table manifest / lineage           | `data`、`core`、table adapters                |
 
 对应设计：
 
@@ -62,7 +62,7 @@
 - [`Plot 可视化完备设计`](../../packages/viz/_notes/architecture/plot-visualization-complete.md)
 - [`Table 表格可视化完备设计`](../../packages/viz/_notes/architecture/table-visualization-complete.md)
 
-`@retikz/math`、`@retikz/render`、React / Vanilla adapters 当前不定义独立完备目标。它们的职责由就近 `AGENTS.md` 约束，并在所属能力域中承担纯计算、Scene 执行、等价暴露或运行时接入义务。未来 geo 等成为独立核心能力域时，必须先定义自己的问题边界和 completeness 文档。
+`@retikz/math`、`@retikz/runtime`、`@retikz/render`、React / Vanilla adapters 当前不定义独立完备目标。它们的职责由就近 `AGENTS.md` 约束，并在所属能力域中分别承担纯计算、领域中立增量执行、Scene 执行、等价暴露或宿主接入义务。未来 geo 等成为独立核心能力域时，必须先定义自己的问题边界和 completeness 文档。
 
 ## 5. 完备性的三个维度
 

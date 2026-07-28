@@ -1,7 +1,8 @@
 # ADR-02：Runtime Identity 与 Owner Registry
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-07-26
+- 接受日期：2026-07-27
 - 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-01](./01-performance-observability-baseline.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [包拓扑](../../../../../../../notes/architecture/package-topology.md)
 
 ## 背景
@@ -172,16 +173,14 @@ Private executor的 `prepare/compare/validateChangeSet`成功返回 `RuntimeOwne
 2. Runtime 只验证结构和生命周期，不理解 Core、Plot、Table 的 value / change。
 3. 把 owner 从 transaction 拆开后，可独立证明类型恢复、identity 唯一性和 mutable alias 隔离。
 
-## 测试设计
+## 最终实现与验证
 
-- builtin/custom owner 走同一 define/merge/resolve，重复 key 具名失败。
-- path 特殊字符、Unicode、不同 segment 组合无碰撞；空 owner/path/segment 拒绝。
-- 内置 capture/read 对 nested Array/Map/Set 和 immutable fixture 遵守 author conformance，不泄漏 committed mutable reference。
-- identity collector 的 owner mismatch、duplicate path 与 invalid segment 具名失败。
-- capture 后 collector/read失败会清理 candidate；capture/read/equals throw 保留 phase/code，dispose throw进入 diagnostic并继续释放其它 value。
-- compile-time tests覆盖 concrete Definition、错误 input/change、异构 builtin/custom registry与 typed resolve；动态 string lookup不能提交 value。
-
-详细矩阵见 ignored `notes/plans/kernel-v0.5-performance/TEST_CONTRACT_ALPHA2_ADR_02.md`。
+- `@retikz/runtime` 公开结构化 identity、typed Owner Definition、owned value executor 与统一 Owner registry。
+- builtin/custom owner 复用同一 define、merge、resolve 和重复 key 诊断；Runtime 只验证结构与生命周期，不读取领域 value/change 语义。
+- capture/read/equals/dispose、identity collector 与 registry 均使用稳定错误 code/phase，并在失败时保持 candidate 隔离和剩余资源清理。
+- 自动化验证覆盖 Unicode/特殊 segment、owner mismatch、duplicate path、mutable alias、异构 typed registry、动态 string lookup 拒绝和 lifecycle failure。
+- 2026-07-27 收尾验证通过：Runtime `tsc --noEmit` 与 19 files / 135 tests 全部通过。
+- 中英文 Runtime package 文档与 alpha.2 changelog 已同步 identity、Owner Definition、registry 和生命周期边界。
 
 ## 公开影响
 
@@ -206,38 +205,8 @@ Private executor的 `prepare/compare/validateChangeSet`成功返回 `RuntimeOwne
 - Core contribution / Scene Patch / retained renderer。
 - concurrent scheduler、generation 或 interaction。
 
----
+## 遗留风险与后续
 
-## 实现契约
-
-### Level
-
-`red`：新增公共 Runtime contract / registry / package exports。
-
-### Schema 改动
-
-无 IR / Scene schema 改动；Runtime contract 不是持久化 schema。
-
-### 文件 scope
-
-- `packages/kernel/runtime/src/{identity,owner,registry,error}/**`
-- `packages/kernel/runtime/src/index.ts`
-- `packages/kernel/runtime/tests/{identity,owner,registry}/**`
-- `packages/kernel/runtime/AGENTS.md`
-- `apps/docs/src/modules/docs/contents/kernel/packages/runtime/**`（zh/en API 表、Definition 扩展示例、identity/lifecycle 不变量、稳定错误与 mutable alias author contract；若目录不存在则同步 contents data / i18n）
-
-### 测试象限
-
-**Happy path**：builtin/custom merge；typed resolve；immutable capture/read；identity index。
-
-**边界**：Unicode/special segments；owner 无 collector；empty identity set；persistent immutable same-reference。
-
-**错误路径**：duplicate/unknown owner；invalid identity；capture/read/equals throw；dispose diagnostic。
-
-**交互**：Core owner fixture；Tier 2 owner fixture；Map/Array alias attack；registry order independence。
-
-### 依赖的现有元素
-
-- ADR-01 `@retikz/runtime` package / trace slice——同一零领域包。
-- `VanillaRuntimeMeta.identity`——只作为 adapter mapping 输入，不提升为真源。
-- `CompileOccurrenceLocator`——只用于说明 compile-local identity 不可复用。
+- Owner author 必须保证 capture/read 返回值满足只读与 alias 隔离合同；Runtime 无法自动证明任意 class 或 closure 的不可变性。
+- identity 只表达 owner-qualified 稳定寻址，不替代 compile-local occurrence、renderer DOM identity 或领域 schema。
+- Program graph、revision commit 和 renderer participant 分别由 ADR-03、ADR-04、ADR-05 继续消费本契约。

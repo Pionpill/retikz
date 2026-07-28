@@ -1,6 +1,6 @@
 # Core 绘图完备设计
 
-> 本文定义 Drawing Complete 能力域的长期边界与检测方法，主责包是 `@retikz/core`。总纲见 [`notes/architecture/capability-design.md`](../../../../notes/architecture/capability-design.md)。本文不覆盖 plot / chart 等数据语义、具体 renderer 的实现便利或 React / Vanilla 的体验封装。
+> **状态：长期架构真源，不跟随单个版本维护功能清单。** 本文定义 Drawing Complete 能力域的边界与检测方法，主责包是 `@retikz/core`。总纲见 [`notes/architecture/capability-design.md`](../../../../notes/architecture/capability-design.md)，当前包职责以 [`packages/kernel/AGENTS.md`](../../AGENTS.md) 及各包就近 `AGENTS.md` 为准。本文不覆盖 plot / chart 等数据语义、具体 renderer 的实现便利或 React / Vanilla 的体验封装。
 
 ---
 
@@ -16,13 +16,14 @@ Drawing Complete 不表示 core 内置所有 shape、diagram preset 或视觉效
 
 ## 2. 包角色与交界面
 
-| 角色                | 包               | 责任                                                                | 不拥有                                |
-| ------------------- | ---------------- | ------------------------------------------------------------------- | ------------------------------------- |
-| 计算底座            | `@retikz/math`   | 零依赖纯几何、向量、仿射、求交和曲线计算                            | IR、Scene、layout 语义                |
-| 主责包              | `@retikz/core`   | Core IR、definition / registry、compile、Scene 与 headless manifest | DOM、renderer 实例、框架状态          |
-| 执行包              | `@retikz/render` | 把 Scene 映射到 SVG / Canvas 等后端，报告能力降级                   | 新图形 IR、上层领域语义               |
-| authoring / runtime | React / Vanilla  | 构造 IR、注入 runtime options、暴露等价入口                         | 平行 IR、adapter 私有图形能力         |
-| 上层消费方          | plot 等 Tier 2   | lowering 到 Core IR，复用 core contract                             | core 的通用图形、几何和 renderer 语义 |
+| 角色           | 包                                  | 责任                                                                                   | 不拥有                                |
+| -------------- | ----------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------- |
+| 计算底座       | `@retikz/math`                      | 零依赖纯几何、向量、仿射、求交和曲线计算                                               | IR、Scene、layout 语义                |
+| 执行底座       | `@retikz/runtime`                   | identity、ownership、program、transaction、revision 与 trace；协调 Core 等领域 program | Core IR、Scene、几何、renderer        |
+| 主责包         | `@retikz/core`                      | Core IR、definition / registry、compile、Scene 与 headless manifest                    | DOM、renderer 实例、框架状态          |
+| Scene 执行包   | `@retikz/render`                    | 把 Scene 映射到 SVG / Canvas 等后端，报告能力降级                                      | 新图形 IR、上层领域语义               |
+| authoring 宿主 | `@retikz/react` / `@retikz/vanilla` | 构造 IR、注入 compile / runtime options、持有宿主生命周期并暴露等价入口                | 平行 IR、adapter 私有图形能力         |
+| 上层消费方     | plot / table / standard 等 Tier 2   | lowering 到 Core IR，复用 Core contract；按需把领域 program 装配到 `@retikz/runtime`   | Core 的通用图形、几何和 renderer 语义 |
 
 完整闭环可以跨包，但语义所有权不能漂移。比如 renderer 负责实现 blur，不等于 blur 可以只存在于 SVG descriptor；React 负责 JSX authoring，不等于 shape extension 可以只存在于组件映射。
 
@@ -34,7 +35,7 @@ Core IR / schema
   -> provider / registry
   -> compile / lowering
   -> Scene / headless manifest
-  -> render execution / adapter integration
+  -> runtime coordination / render execution / adapter integration
 ```
 
 某些封闭字段不需要独立 definition / registry；ADR 必须说明它为何是固定数据契约，而不是可扩展能力。不能为了形式完整凭空增加 registry，也不能用“只有内置项”掩盖真实扩展需求。

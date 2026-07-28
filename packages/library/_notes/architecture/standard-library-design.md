@@ -1,5 +1,11 @@
 # Standard Drawing Library 设计
 
+> **状态：长期边界已确认，alpha.1 基线已实现。** `@retikz/standard`、`@retikz/standard-react` 与 `@retikz/standard-vanilla` 已组成独立 lockstep release group，并以同一公开 Core 扩展路径提供 Grid、Axes、Frame、capability module / bundle / preset、React JSX 与 Vanilla authoring。本文只维护长期准入与依赖边界；具体 schema、API 和新增能力以对应 milestone ADR 与当前公开契约为准。
+>
+> 关联：[`packages/library/AGENTS.md`](../../AGENTS.md) · [`Standard v0.1 roadmap`](../decisions/standard/v0/v0.1/roadmap.md) · [`能力完备性与模块边界`](../../../../notes/architecture/capability-design.md)
+
+---
+
 ## 定位
 
 Library 是 Retikz 的官方可选绘图能力库分组，不是 Core 扩展机制的替代品。Core 保持必要的 IR、definition / registry 契约、compile 与 Scene 真源；`@retikz/standard` 用这些公开契约提供常用、可按需导入的定义和通用绘图 composite。
@@ -22,7 +28,7 @@ Library 的职责是在既有 Drawing Complete 机制上横向增加可复用能
 4. 持久化输入保持 JSON-safe；ReactNode、DOM、renderer 资源和编辑器运行时状态不进入公开输入
 5. React 与 Vanilla 能表达同一宿主无关语义，或 ADR 明确说明某入口不适用
 
-典型候选包括可选箭头 / shape / connector 定义、`Grid` 这类具有 JSON-safe 持久化语义的通用 Tier 2 composite，以及 Frame、Stack、Align / Distribute 等不理解领域模型的 composite。具体候选是否进入、是否需要独立 schema，都由后续 ADR 判断。
+当前已验证 Grid、Axes 与 Frame 这类具有 JSON-safe 持久化语义的通用 Tier 2 composite。后续候选包括可选箭头 / shape / connector 定义，以及 Stack、Align / Distribute 等不理解领域模型的 composite；是否进入 Standard、是否需要独立 schema，仍由对应能力 ADR 判断。
 
 以下内容不得进入 Standard：数据字段与 scale、表格结构、Node / Port / Edge / Group 关系模型、算法布局与路由策略、selection / history / viewport、renderer 执行语义，以及 Core 已不可缺少的基础图元。
 
@@ -42,6 +48,6 @@ Library 的职责是在既有 Drawing Complete 机制上横向增加可复用能
 
 ## 发布与演进
 
-三包使用独立 `standard` release group，并在实际 package 初始化后组内 lockstep。与其它 feature group 的关系使用兼容版本依赖，不引入 feature-to-feature 依赖。
+三包使用独立 `standard` release group 并保持组内 lockstep。与其它 feature group 的关系使用兼容版本依赖，不引入 feature-to-feature 依赖。
 
-当前阶段只确认组与包边界。首个能力 ADR 决定 package manifest、版本起点、首批子路径、迁移的现有 Sugar、发布配置和用户文档闭环。
+alpha.1 已完成 package manifest、版本起点、根入口、首批能力、发布配置和用户文档闭环。新增能力继续由对应 milestone ADR 冻结 schema、definition、lowering、adapter、测试与文档；本文不维护具体功能清单或重复公开字段。

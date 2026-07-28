@@ -5,7 +5,7 @@ description: 用 reducer 生成统计字段，用 selector 保留原始代表行
 
 reducer 与 selector 是数据变换内部复用的统计子算子。reducer 把一组行规约成字段片段；selector 从组内返回原始行。它们都是 JSON 可序列化配置，由内置或自定义 Definition 执行。
 
-`summarize`、`annotate` 以及 Plot 注册的 `bin` 会复用 reducer；`select`、`annotate` 以及 Plot 注册的 `relate` 会复用 selector。Plot 只是这些能力的消费者，不拥有 Data 的统计契约。
+`summarize`、`annotate` 以及 Plot 注册的 `bin` 会复用内置或自定义 reducer；`select` 与 Plot 注册的 `relate` 会复用内置或自定义 selector。`annotate` 的 selector 入口只接受内置单行子集。Plot 只是这些能力的消费者，不拥有 Data 的统计契约。
 
 ## 如何选择
 
@@ -47,7 +47,7 @@ reducer 与 selector 是数据变换内部复用的统计子算子。reducer 把
 
 `tie` 默认 `first`，也可以选 `last` 或 `all`。`orderBy` 是 `{ field, order? }` 数组，`order` 默认 `ascending`。`outside-quantile-band.boundary` 默认 `{ kind: 'band' }`；需要常见箱线图异常点时，使用 `{ kind: 'spread', factor?: 1.5 }`。
 
-`select` 可以使用完整 selector 集合；`annotate` 只接受至多返回一行的子集，具体限制见[统计标注](/viz/data/transform/operations#统计标注-annotate)。
+`select` 可以使用完整的内置或自定义 selector 集合；`annotate` 只接受内置且至多返回一行的子集，不接受自定义 selector。具体限制见[统计标注](/viz/data/transform/operations#统计标注-annotate)。
 
 ## 组合箱线图数据
 

@@ -1,6 +1,6 @@
 # 性能与增量运行时设计
 
-> **状态：架构总则，当前不实现。** 本文只确定 Kernel v0.5 性能重构的统一方向、跨包契约和验收口径。具体数据结构、公开 API、Diff 算法、时间片预算、缓存策略与 renderer 实现由各包迭代 ADR 冻结。
+> **状态：架构总则，基础契约已部分实现。** `@retikz/runtime` 已承接 identity、owner / program registry、同步 transaction、revision 与 trace，Core 已建立受限 incremental program；跨 Tier 增量、cooperative scheduler、retained patch、渐进物化与 generation 仍由后续 ADR 冻结。本文只维护统一方向、跨包契约和验收口径，不替代当前公开类型。
 >
 > 关联：[`交互与增量运行时设计`](./interaction-design.md) · [`能力完备性与模块边界`](./capability-design.md) · [`Kernel v0.5 路线`](../../packages/kernel/_notes/decisions/v0/v0.5/roadmap.md)
 >
@@ -152,9 +152,9 @@ Generation log 可以保留批次 ChangeSet、基础 revision 和恢复 checkpoi
 
 ## 9. 包职责
 
-- **Kernel 基础契约**：identity、revision、ChangeSet、program、transaction、ownership 与执行 capability。
+- **`@retikz/runtime` 基础契约**：identity、revision、ChangeSet、program、transaction、ownership 与执行 capability。
 - **`@retikz/core`**：Core IR / contribution 的增量编译语义，输出 Scene Snapshot / Patch。
-- **Kernel Runtime**：session、调度、取消、revision 校验和原子提交；只协调通过通用契约注入的 program，不静态识别或依赖 Data、Plot、Table；最终包归属由首个 runtime ADR 决定。
+- **`@retikz/runtime`**：session、调度、取消、revision 校验和原子提交；只协调通过通用契约注入的 program，不静态识别或依赖 Data、Plot、Table。当前同步 transaction、owner / program registry 与 trace 已落地，后续 cooperative scheduler 在同一包内扩展。
 - **`@retikz/render`**：Scene Patch、retained view、空间索引、命中与 presentation materialization。
 - **`@retikz/react` / `@retikz/vanilla`**：创建并持有 runtime session，接入宿主调度与生命周期。
 - **Data、Plot、Table 等 Tier 2**：领域 key、依赖、ChangeSet、增量 lowering 和 provenance。

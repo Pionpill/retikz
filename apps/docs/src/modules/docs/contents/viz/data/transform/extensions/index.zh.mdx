@@ -15,7 +15,7 @@ description: 用运行时 Definition 扩展数据变换与统计子算子，同�
 | `defineStatisticsReducer` | 把一组行归约为输出字段片段       | reducer operation  |
 | `defineRowSelector`       | 从一组行中选择保留的原始行       | selector operation |
 
-当现有 `summarize`、`select` 或 `annotate` 的结构已经适用，只缺一种统计计算或选行规则时，扩展 reducer / selector 即可。需要新的分组方式、多阶段处理或不同的行结构时，应定义完整 transform。
+当 `summarize` 或 `annotate` 只缺一种统计计算时，扩展 reducer；当 `select` 或宿主明确支持 selector 的 transform 只缺选行规则时，扩展 selector。Data 的 `annotate` selector 入口只接受内置的单行子集，不接受自定义 selector。需要新的分组方式、多阶段处理或不同的行结构时，应定义完整 transform。
 
 ## 定义数据操作
 
@@ -41,7 +41,7 @@ description: 用运行时 Definition 扩展数据变换与统计子算子，同�
 
 ## 定义统计子算子
 
-reducer 与 selector 不是独立的管线步骤，而是由 `summarize`、`select`、`annotate` 等 transform 调用的子算子。
+reducer 与 selector 不是独立的管线步骤。`summarize`、`annotate` 可调用内置或自定义 reducer；`select` 与明确声明支持它的宿主 transform 可调用内置或自定义 selector。Data `annotate` 的 selector 入口只接受内置单行子集。
 
 | 子算子   | 核心函数 | 返回值               | 常见用途                 |
 | -------- | -------- | -------------------- | ------------------------ |
@@ -76,12 +76,13 @@ reducer 应通过 `inputFields` 与 `outputFields` 声明读写字段；selector
 
 ## 错误与限制
 
-| 情况                               | 结果                  |
-| ---------------------------------- | --------------------- |
-| `kind` 与内置或另一自定义键重复    | registry 构建立即报错 |
-| operation 使用未注册 `kind`        | 执行前报未注册错误    |
-| operation 不满足 Definition schema | schema 校验失败       |
-| operation 含函数等非 JSON 值       | 可序列化校验失败      |
+| 情况                                                              | 结果                  |
+| ----------------------------------------------------------------- | --------------------- |
+| `kind` 与内置或另一自定义键重复                                   | registry 构建立即报错 |
+| operation 使用未注册 `kind`                                       | 执行前报未注册错误    |
+| operation 不满足 Definition schema                                | schema 校验失败       |
+| operation 含函数等非 JSON 值                                      | 可序列化校验失败      |
+| 自定义 reducer 的 `outputFields()` 声明与分组键或其它统计输出冲突 | 执行 reducer 前报错   |
 
 Definition 只应实现数据行与统计语义。颜色、图元或布局等消费侧语义应放到对应模块的扩展点。
 
@@ -102,12 +103,12 @@ Definition 只应实现数据行与统计语义。颜色、图元或布局等消
 
 ### `StatisticsReducerDefinition`
 
-| 字段            | 类型                                                                                                 | 描述                          |
-| --------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------- |
-| `schema`        | `z.ZodType<TReducerOperation>`                                                                       | 含非空字面量 `kind` 的 schema |
-| `inputFields?`  | `(operation: TReducerOperation) => Array<string>`                                                    | 返回读取的源字段              |
-| `outputFields?` | `(operation: TReducerOperation) => Array<string>`                                                    | 返回生成的字段                |
-| `reduce`        | `(rows: Array<ExternalRow>, operation: TReducerOperation, context: TransformContext) => ExternalRow` | 返回写入输出行的字段片段      |
+| 字段            | 类型                                                                                                 | 描述                                                                     |
+| --------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `schema`        | `z.ZodType<TReducerOperation>`                                                                       | 含非空字面量 `kind` 的 schema                                            |
+| `inputFields?`  | `(operation: TReducerOperation) => Array<string>`                                                    | 返回读取的源字段                                                         |
+| `outputFields?` | `(operation: TReducerOperation) => Array<string>`                                                    | 返回生成字段并作为动态冲突检查依据；必须完整声明 `reduce` 可能写入的字段 |
+| `reduce`        | `(rows: Array<ExternalRow>, operation: TReducerOperation, context: TransformContext) => ExternalRow` | 返回写入输出行的字段片段                                                 |
 
 使用 `defineStatisticsReducer(definition)` 定义 reducer。
 
@@ -120,6 +121,8 @@ Definition 只应实现数据行与统计语义。颜色、图元或布局等消
 | `select`       | `(rows: Array<ExternalRow>, operation: TSelectorOperation) => Array<RowSelection>` | 返回原始行与可选一基 rank     |
 
 使用 `defineRowSelector(definition)` 定义 selector。
+
+自定义 selector 可用于 `select`，也可用于明确声明支持它的宿主 transform（例如 Plot `relate`）；Data `annotate` 不接受自定义 selector。
 
 <SourceLinks
   sources={[

@@ -5,9 +5,9 @@
 ## 包职责契约
 
 - **解决的问题**：让无 UI 框架、SSR 与 build-time 用户用 plain API 构造并运行 Plot，同时复用同一 Data / Plot / Core 管线
-- **拥有的契约**：`plotBuilder` 的 framework-free authoring convenience、`renderPlot` 编排、dataset / lineage options 与 `@retikz/vanilla` 接线
+- **拥有的契约**：plain `plot()` authoring、`embedPlot()` / `createPlotAdapter()` Tier 2 接线、`renderPlot()` 编排、dataset / lineage options
 - **不拥有的能力**：Data schema / transform、Plot IR 语义与 lowering 算法、Core 编译、SVG renderer、DOM runtime 或框架组件
-- **输入与输出**：接收 builder calls 或 PlotSpec、datasets 与 options，产出规范 PlotSpec、SVG string 或 `{ svg, lineage }`；不建立平行 IR 或 lowering
+- **输入与输出**：接收 plain authoring input 或 PlotSpec、datasets 与 options，产出规范 PlotSpec、Vanilla embed、SVG string 或 `{ svg, lineage }`；不建立平行 IR 或 lowering
 - **缺口流向**：数据问题进入 `@retikz/data`；可视化表达和 lowering 进入 `@retikz/plot`；通用无框架挂载 / SSR 能力进入 `@retikz/vanilla`；只有 Plot-specific plain authoring 与编排进入本包
 
 ## 约束

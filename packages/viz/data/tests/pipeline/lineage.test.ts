@@ -8,6 +8,7 @@ import {
   applyTransformsWithLineage,
   defineStatisticsReducer,
   defineTransform,
+  readSourceIndex,
   readSourceIndices,
   resolveStatisticsReducerRegistry,
   resolveTransformRegistry,
@@ -321,6 +322,31 @@ describe('data lineage runtime', () => {
       indices: [0, 1, 2, 3, 4],
       truncated: false,
     });
+  });
+
+  it('preserves original row identities when a transformed view enters another lineage run', () => {
+    const tagged = tagSourceIndex([{ value: 30 }, { value: 10 }, { value: 20 }]);
+    const sorted = applyTransforms(tagged, [{ kind: 'sort', field: 'value' }]);
+
+    const { rows, lineage } = applyTransformsWithLineage(sorted);
+
+    expect(rows.map(readSourceIndex)).toEqual([1, 2, 0]);
+    expect(eventsOf(lineage.events, 'source')[0]?.sourceIdentity).toEqual({
+      mode: 'summary',
+      count: 3,
+      indices: [1, 2, 0],
+      truncated: false,
+    });
+  });
+
+  it('keeps grouped provenance without assigning an intermediate row identity', () => {
+    const tagged = tagSourceIndex([{ value: 10 }, { value: 20 }]);
+    const grouped = withGroupProvenance({ total: 30 }, tagged);
+
+    const { rows } = applyTransformsWithLineage([grouped]);
+
+    expect(readSourceIndex(rows[0])).toBeUndefined();
+    expect(readSourceIndices(rows[0])).toEqual([0, 1]);
   });
 
   it('streams sink events without retaining them unless requested', () => {
