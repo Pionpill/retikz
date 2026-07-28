@@ -93,7 +93,7 @@ Plain spec每轮可按datasets生成新的composite callback，但Definition数�
 
 ### Hydration、resource 与 animation 同步提交
 
-一次commit同步切换Scene snapshot、DOM/display list、geometry/hit-test index、handler mapping、resource consumer set与animation state。Handler contribution按registration升序合并，同publicId/event不覆盖；handle只移除自身，失败可重试。
+一次commit同步切换Scene snapshot、DOM/display list、geometry/hit-test index、handler mapping、resource consumer set与animation state。Handler contribution按registration升序合并，同publicId/event不覆盖；handle只移除自身，失败可重试。Candidate hydration controller在setup、rollback与prepared-token dispose均失败时转入renderer清理队列，不能随prepared token丢失；最终renderer/Session dispose继续best-effort重试。
 
 Resource以canonical descriptor与candidate/committed consumer set staging，新consumer可见前先创建，旧consumer移除后再释放。Animation对unchanged/move保留clock；静态update且track descriptor相同保留，descriptor变化重启该identity，remove释放，replace重启全部。
 
@@ -141,7 +141,7 @@ Timing只在完整environment fingerprint一致时比较。`bench:report`与`ben
 
 - Runtime：169 tests
 - Core：2825 tests
-- Render：52 files / 482 tests
+- Render：52 files / 483 tests
 - React：47 files / 430 tests
 - Vanilla：14 files / 110 tests
 - Bench：10 files / 45 tests；`bench:check` 18项预算PASS；runner fingerprint `e63f16b6` timing compare PASS

@@ -209,6 +209,32 @@ export const runBestEffortCleanup = (cleanups: ReadonlyArray<() => void>): void 
   if (failed) throw firstCause;
 };
 
+/** renderer prepared token 失败后仍需由最终 dispose 重试的 candidate hydration 清理队列 */
+type HydrationCleanupQueue = Readonly<{
+  /** 尝试清理 controller；失败时保留到 pending 队列 */
+  dispose: (controller: HydrationController) => void;
+  /** best-effort 重试全部 pending controller */
+  disposePending: () => void;
+}>;
+
+/** 创建跨 prepared token 生命周期保留失败 candidate controller 的清理队列 */
+export const createHydrationCleanupQueue = (): HydrationCleanupQueue => {
+  const pending = new Set<HydrationController>();
+  const dispose = (controller: HydrationController): void => {
+    try {
+      controller.dispose();
+      pending.delete(controller);
+    } catch (cause) {
+      pending.add(controller);
+      throw cause;
+    }
+  };
+  const disposePending = (): void => {
+    runBestEffortCleanup([...pending].map(controller => () => dispose(controller)));
+  };
+  return Object.freeze({ dispose, disposePending });
+};
+
 /** 从 hydration setup 双重失败中恢复 owner 必须重试清理的 controller 与 primary cause */
 export const recoverHydrationSetupFailure = (
   cause: unknown,

@@ -34,6 +34,7 @@ import {
   SceneAnimationOccurrenceChangeKind,
 } from './runtime-options';
 import {
+  createHydrationCleanupQueue,
   createPublicIdPrimitivePathMap,
   createRuntimeIdentityMap,
   createSemanticOwnerPublicIdMap,
@@ -1045,6 +1046,7 @@ export const createBuiltinSvgRetainedRenderer = (
   let currentElements = createRuntimeIdentityMap<SVGElement>([]);
   let currentAnimationConfig: RenderRuntimeConfig['animation'];
   let currentConfig: RenderRuntimeConfig | undefined;
+  const candidateHydrationCleanup = createHydrationCleanupQueue();
 
   const prepare = (
     patch: ScenePatch | undefined,
@@ -1180,6 +1182,12 @@ export const createBuiltinSvgRetainedRenderer = (
       | undefined;
     const suspendedAnimation: Array<Readonly<{ control: SvgAnimationControl; running: boolean }>> = [];
     let hydration: HydrationController | undefined;
+    const disposeCandidateHydration = (): void => {
+      const candidate = hydration;
+      if (candidate === undefined) return;
+      candidateHydrationCleanup.dispose(candidate);
+      hydration = undefined;
+    };
     let journal: MutationJournal | undefined;
     let committed = false;
     let rolledBack = false;
@@ -1349,7 +1357,7 @@ export const createBuiltinSvgRetainedRenderer = (
       rollback: () => {
         rolledBack = true;
         runBestEffortCleanup([
-          () => hydration?.dispose(),
+          disposeCandidateHydration,
           ...(animationTransition?.created.map(control => () => control.controls.dispose()) ?? []),
           () => journal?.rollback(),
           ...suspendedAnimation.map(suspended => () => {
@@ -1394,8 +1402,7 @@ export const createBuiltinSvgRetainedRenderer = (
           ...(rolledBack
             ? [
                 () => {
-                  hydration?.dispose();
-                  hydration = undefined;
+                  disposeCandidateHydration();
                 },
               ]
             : []),
@@ -1428,6 +1435,7 @@ export const createBuiltinSvgRetainedRenderer = (
           hydration?.dispose();
           if (currentHydration === hydration) currentHydration = undefined;
         },
+        () => candidateHydrationCleanup.disposePending(),
         () => {
           animation?.controls.dispose();
           if (currentAnimation === animation) currentAnimation = undefined;

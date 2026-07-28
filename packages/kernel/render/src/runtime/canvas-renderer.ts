@@ -37,6 +37,7 @@ import {
   SceneAnimationOccurrenceChangeKind,
 } from './runtime-options';
 import {
+  createHydrationCleanupQueue,
   createPublicIdPrimitivePathMap,
   createRuntimeIdentityMap,
   createSemanticOwnerPublicIdMap,
@@ -1093,6 +1094,7 @@ export const createBuiltinCanvasRetainedRenderer = (
   let currentDisplayList: ReadonlyArray<CanvasDisplayItem> | undefined;
   let currentConfig: RenderRuntimeConfig | undefined;
   let currentHostStyle: CanvasHostStyle | undefined;
+  const candidateHydrationCleanup = createHydrationCleanupQueue();
   const imageLoader = createCanvasImageLoader(() => {
     if (currentSnapshot === undefined || currentConfig === undefined) return;
     const time =
@@ -1206,6 +1208,12 @@ export const createBuiltinCanvasRetainedRenderer = (
       let rollbackAnimationRebind: (() => void) | undefined;
       let previousAnimationRunning: boolean | undefined;
       let hydration: HydrationController | undefined;
+      const disposeCandidateHydration = (): void => {
+        const candidate = hydration;
+        if (candidate === undefined) return;
+        candidateHydrationCleanup.dispose(candidate);
+        hydration = undefined;
+      };
       let committed = false;
       let rolledBack = false;
       let hostMutated = false;
@@ -1264,7 +1272,7 @@ export const createBuiltinCanvasRetainedRenderer = (
           rolledBack = true;
           runBestEffortCleanup([
             () => rollbackAnimationRebind?.(),
-            () => hydration?.dispose(),
+            disposeCandidateHydration,
             ...(!reuseAnimation ? [() => animation?.dispose()] : []),
             () => {
               if (previousAnimationRunning !== undefined) previousAnimation?.resume(previousAnimationRunning);
@@ -1322,8 +1330,7 @@ export const createBuiltinCanvasRetainedRenderer = (
             ...(rolledBack
               ? [
                   () => {
-                    hydration?.dispose();
-                    hydration = undefined;
+                    disposeCandidateHydration();
                   },
                   ...(!reuseAnimation
                     ? [
@@ -1367,6 +1374,7 @@ export const createBuiltinCanvasRetainedRenderer = (
           hydration?.dispose();
           if (currentHydration === hydration) currentHydration = undefined;
         },
+        () => candidateHydrationCleanup.disposePending(),
         () => {
           animation?.dispose();
           if (currentAnimation === animation) currentAnimation = undefined;

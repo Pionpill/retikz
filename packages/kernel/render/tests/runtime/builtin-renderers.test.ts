@@ -960,6 +960,55 @@ describe('builtin retained renderers', () => {
     expect(() => session.dispose()).not.toThrow();
   });
 
+  it('candidate hydration cleanup 三次失败后由公开 Session dispose 重试残留 listener', () => {
+    const host = document.createElementNS(SVG_NAMESPACE, 'svg');
+    const previous = vi.fn();
+    const candidateClick = vi.fn();
+    const { session } = createSession('svg', host, {
+      config: { handlerContributions: [{ registration: 1, handlers: { 'node-a': { click: previous } } }] },
+    });
+    const originalAdd = host.addEventListener.bind(host);
+    const originalRemove = host.removeEventListener.bind(host);
+    let candidateSetupFailed = false;
+    let rejectedCandidateCleanups = 0;
+    vi.spyOn(host, 'addEventListener').mockImplementation((type, listener, options) => {
+      if (type === 'dblclick' && !candidateSetupFailed) {
+        candidateSetupFailed = true;
+        throw new Error('candidate dblclick registration rejected');
+      }
+      originalAdd(type, listener, options);
+    });
+    vi.spyOn(host, 'removeEventListener').mockImplementation((type, listener, options) => {
+      if (type === 'click' && candidateSetupFailed && rejectedCandidateCleanups < 3) {
+        rejectedCandidateCleanups += 1;
+        throw new Error(`candidate click cleanup rejected ${rejectedCandidateCleanups.toString()}`);
+      }
+      originalRemove(type, listener, options);
+    });
+
+    expect(() =>
+      session.update({
+        baseRevision: session.revision(),
+        owners: [
+          createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, {
+            handlerContributions: [
+              {
+                registration: 2,
+                handlers: { 'node-a': { click: candidateClick, doubleClick: vi.fn() } },
+              },
+            ],
+          }),
+        ],
+      }),
+    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_ROLLBACK_FAILED' }));
+
+    expect(() => session.dispose()).not.toThrow();
+    host.querySelector('[data-retikz-id="node-a"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(previous).not.toHaveBeenCalled();
+    expect(candidateClick).not.toHaveBeenCalled();
+    expect(rejectedCandidateCleanups).toBe(3);
+  });
+
   it('SVG renderer dispose 在 hydration 失败后仍释放动画并允许重试 listener cleanup', () => {
     const snapshot = createCorePair(scene('#ef4444'), animatedScene('#22c55e', { onEvent: 'click' })).next;
     const host = document.createElementNS(SVG_NAMESPACE, 'svg');
