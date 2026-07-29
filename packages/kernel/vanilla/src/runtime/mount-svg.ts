@@ -22,15 +22,21 @@ import type {
   HydrateOptions,
   HydrationHandle,
   MountOptions,
+  RawStaticMountOptions,
+  RenderInput,
+  RetainedMountOptions,
   RetainedRenderInput,
   RetainedSvgView,
   StaticMountOptions,
+  StaticRawSvgView,
   StaticSvgView,
+  VanillaRetainedRuntimeOptions,
   VanillaView,
 } from './types';
 
 import { DEFAULT_ID_PREFIX, VanillaViewMode } from './constants';
 import { createVanillaRetainedSession } from './retained-session';
+import { captureVanillaRuntimeOptions } from './runtime-options';
 import { assertStaticMountRuntimeExcluded } from './static-mount-options';
 import { applyAttrs, svgNodeToDom } from './svg-dom';
 import { createEmptyRuntimeMeta, toSceneResult } from './to-scene';
@@ -43,7 +49,11 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
  *   `<svg>`；`output.width` / `output.height` 若给则写回根（`@retikz/render/svg` 只产 viewBox，显示尺寸是 adapter 本分）。`update`
  *   原地重渲染、root 元素 identity 跨 update 不变、不失效。DOM 仅在调用时惰性触碰，`import` 本模块不碰 DOM——守 SSR 导入安全
  */
-const mountStaticSvg = (container: Element, input: Scene, options: StaticMountOptions): StaticSvgView => {
+const mountStaticSvg = (
+  container: Element,
+  input: RenderInput,
+  options: StaticMountOptions | RawStaticMountOptions,
+): StaticSvgView | StaticRawSvgView => {
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
     throw new Error('mountSvg: container must be a DOM Element.');
   }
@@ -60,7 +70,7 @@ const mountStaticSvg = (container: Element, input: Scene, options: StaticMountOp
   // 存活水合的解绑句柄：view.dispose 时统一解绑（未手动 dispose 的水合也随 view 卸载干净）
   const liveHydrationDisposers = new Set<() => void>();
 
-  const renderInto = (next: Scene): void => {
+  const renderInto = (next: RenderInput): void => {
     const { scene, artifacts, runtimeMeta } = toSceneResult(next, options);
     currentScene = scene;
     currentArtifacts = artifacts;
@@ -116,7 +126,7 @@ const mountStaticSvg = (container: Element, input: Scene, options: StaticMountOp
   return {
     mode: VanillaViewMode.Static,
     root,
-    update(next) {
+    update(next: RenderInput) {
       if (disposed) throw new Error('mountSvg: view already disposed.');
       renderInto(next);
     },
@@ -142,7 +152,12 @@ const mountStaticSvg = (container: Element, input: Scene, options: StaticMountOp
 };
 
 /** 把 IR / plain spec 挂成 retained SVG Runtime session */
-const mountRetainedSvg = (container: Element, input: RetainedRenderInput, options: MountOptions): RetainedSvgView => {
+const mountRetainedSvg = (
+  container: Element,
+  input: RetainedRenderInput,
+  options: RetainedMountOptions,
+  runtimeOptions: VanillaRetainedRuntimeOptions,
+): RetainedSvgView => {
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
     throw new Error('mountSvg: container must be a DOM Element.');
   }
@@ -155,6 +170,7 @@ const mountRetainedSvg = (container: Element, input: RetainedRenderInput, option
     host: root,
     input,
     options,
+    runtimeOptions,
     idPrefix: output.idPrefix ?? DEFAULT_ID_PREFIX,
   });
   container.appendChild(root);
@@ -183,7 +199,8 @@ const mountRetainedSvg = (container: Element, input: RetainedRenderInput, option
 /** `mountSvg` 的 static / retained 输入重载 */
 type MountSvg = {
   (container: Element, input: Scene, options?: StaticMountOptions): StaticSvgView;
-  (container: Element, input: RetainedRenderInput, options?: MountOptions): RetainedSvgView;
+  (container: Element, input: RetainedRenderInput, options: RawStaticMountOptions): StaticRawSvgView;
+  (container: Element, input: RetainedRenderInput, options?: RetainedMountOptions): RetainedSvgView;
 };
 
 /** 按输入是否已编译，创建 static 或 retained SVG view */
@@ -196,5 +213,9 @@ export const mountSvg: MountSvg = ((
     assertStaticMountRuntimeExcluded(options);
     return mountStaticSvg(container, input, options as StaticMountOptions);
   }
-  return mountRetainedSvg(container, input, options);
+  const runtimeOptions = captureVanillaRuntimeOptions(options);
+  if (runtimeOptions.mode === VanillaViewMode.Static) {
+    return mountStaticSvg(container, input, options as RawStaticMountOptions);
+  }
+  return mountRetainedSvg(container, input, options as RetainedMountOptions, runtimeOptions);
 }) as MountSvg;

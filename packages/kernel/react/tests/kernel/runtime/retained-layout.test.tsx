@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { IRScene, SceneRuntimeSnapshot } from '@retikz/core';
+import type { IRScene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
 import type {
   RenderRuntimeConfig,
   RetainedRendererFactory,
@@ -15,6 +15,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
 import { Layout, Node } from '../../../src';
+import { createGeometryContext } from '../../helpers/geometry-context';
 
 const source = (fill: string): IRScene => ({
   version: 1,
@@ -46,6 +47,7 @@ const createMemoryRendererFactory = (
   capability: 'none' | 'entity',
   onDispose?: () => void,
   onPrepare?: (host: SVGSVGElement | HTMLCanvasElement, config: RenderRuntimeConfig) => void,
+  onPatch?: (patch: ScenePatch) => void,
 ): RetainedRendererFactory =>
   ((input: RetainedRendererFactoryInput) => {
     let current: SceneRuntimeSnapshot | undefined;
@@ -65,8 +67,10 @@ const createMemoryRendererFactory = (
     const definition = {
       capability,
       prepareMount: (snapshot: SceneRuntimeSnapshot, config: RenderRuntimeConfig) => prepare(snapshot, config),
-      prepare: (_patch: unknown, snapshot: SceneRuntimeSnapshot, config: RenderRuntimeConfig) =>
-        prepare(snapshot, config),
+      prepare: (patch: ScenePatch, snapshot: SceneRuntimeSnapshot, config: RenderRuntimeConfig) => {
+        onPatch?.(patch);
+        return prepare(snapshot, config);
+      },
       read: () => {
         if (current === undefined) throw new Error('memory renderer is not committed');
         return Object.freeze({ snapshot: current });
@@ -185,6 +189,96 @@ describe('React Layout retained Runtime', () => {
     await act(() => root.render(<Layout ir={source('#22c55e')} />));
 
     expect(container.querySelector('[data-retikz-id="stable"]')).toBe(stable);
+    await act(() => root.unmount());
+  });
+
+  it('默认 retained auto 发布局部 Patch，retained full 发布 replaceScene Patch', async () => {
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    const autoPatches: Array<ScenePatch> = [];
+    const fullPatches: Array<ScenePatch> = [];
+    const autoFactory = createMemoryRendererFactory('entity', undefined, undefined, patch => autoPatches.push(patch));
+    const fullFactory = createMemoryRendererFactory('entity', undefined, undefined, patch => fullPatches.push(patch));
+
+    await act(() => root.render(<Layout ir={source('#ef4444')} runtime={{ rendererFactory: autoFactory }} />));
+    await act(() => root.render(<Layout ir={source('#22c55e')} runtime={{ rendererFactory: autoFactory }} />));
+    expect(autoPatches[0]?.operations[0]?.kind).toBe('update');
+
+    await act(() =>
+      root.render(
+        <Layout
+          ir={source('#ef4444')}
+          runtime={{ mode: 'retained', updateStrategy: 'full', rendererFactory: fullFactory }}
+        />,
+      ),
+    );
+    await act(() =>
+      root.render(
+        <Layout
+          ir={source('#22c55e')}
+          runtime={{ mode: 'retained', updateStrategy: 'full', rendererFactory: fullFactory }}
+        />,
+      ),
+    );
+    expect(fullPatches[0]?.operations[0]?.kind).toBe('replaceScene');
+    await act(() => root.unmount());
+  });
+
+  it('updateStrategy 变化时在同一 host 上释放旧 Session 并重建', async () => {
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    const dispose = vi.fn();
+    const baseFactory = createMemoryRendererFactory('entity', dispose);
+    const rendererFactory = vi.fn(baseFactory) as unknown as RetainedRendererFactory;
+
+    await act(() =>
+      root.render(
+        <Layout ir={source('#ef4444')} runtime={{ mode: 'retained', updateStrategy: 'auto', rendererFactory }} />,
+      ),
+    );
+    const host = container.querySelector('svg');
+    await act(() =>
+      root.render(
+        <Layout ir={source('#ef4444')} runtime={{ mode: 'retained', updateStrategy: 'full', rendererFactory }} />,
+      ),
+    );
+
+    expect(container.querySelector('svg')).toBe(host);
+    expect(rendererFactory).toHaveBeenCalledTimes(2);
+    expect(dispose).toHaveBeenCalledTimes(1);
+    await act(() => root.unmount());
+    expect(dispose).toHaveBeenCalledTimes(2);
+  });
+
+  it('retained 切到 static 时释放旧 Session 并替换 host', async () => {
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    const dispose = vi.fn();
+    const rendererFactory = createMemoryRendererFactory('entity', dispose);
+
+    await act(() => root.render(<Layout ir={source('#ef4444')} runtime={{ mode: 'retained', rendererFactory }} />));
+    const retainedHost = container.querySelector('svg');
+    await act(() => root.render(<Layout ir={source('#22c55e')} runtime={{ mode: 'static' }} />));
+
+    expect(dispose).toHaveBeenCalledTimes(1);
+    expect(container.querySelector('svg')).not.toBe(retainedHost);
+    expect(container.querySelector('[data-retikz-id="changed"]')?.getAttribute('fill')).toBe('#22c55e');
+    await act(() => root.unmount());
+  });
+
+  it('static Canvas 完整重绘时复用同一 host', async () => {
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((contextId: string) =>
+      contextId === '2d' ? createGeometryContext() : null,
+    );
+    const container = document.createElement('div');
+    const root = createRoot(container);
+
+    await act(() => root.render(<Layout renderer="canvas" ir={source('#ef4444')} runtime={{ mode: 'static' }} />));
+    const host = container.querySelector('canvas');
+    await act(() => root.render(<Layout renderer="canvas" ir={source('#22c55e')} runtime={{ mode: 'static' }} />));
+
+    expect(host).not.toBeNull();
+    expect(container.querySelector('canvas')).toBe(host);
     await act(() => root.unmount());
   });
 

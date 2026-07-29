@@ -6,6 +6,7 @@ import * as react from '../src';
 
 const PUBLIC_RUNTIME_EXPORTS = [
   'Layout',
+  'LayoutRuntimeMode',
   'Node',
   'Path',
   'Step',

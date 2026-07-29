@@ -4,13 +4,19 @@ import type {
   CanvasView,
   MountCanvasOptions,
   MountOptions,
+  RawStaticMountCanvasOptions,
+  RawStaticMountOptions,
   RenderInput,
   RetainedCanvasView,
+  RetainedMountCanvasOptions,
+  RetainedMountOptions,
   RetainedRenderInput,
   RetainedSvgView,
   StaticCanvasView,
   StaticMountCanvasOptions,
   StaticMountOptions,
+  StaticRawCanvasView,
+  StaticRawSvgView,
   StaticSvgView,
   VanillaView,
 } from './types';
@@ -22,10 +28,19 @@ import { mountSvg } from './mount-svg';
 export type MountRenderer = 'svg' | 'canvas';
 
 /** 统一 mount 入口选项 */
-export type MountUnifiedOptions = (MountOptions | MountCanvasOptions) & {
+export type RetainedMountUnifiedOptions = (RetainedMountOptions | RetainedMountCanvasOptions) & {
   /** 渲染后端；缺省使用 SVG */
   renderer?: MountRenderer;
 };
+
+/** 统一 raw-input static mount 入口选项 */
+export type RawStaticMountUnifiedOptions = (RawStaticMountOptions | RawStaticMountCanvasOptions) & {
+  /** 渲染后端；缺省使用 SVG */
+  renderer?: MountRenderer;
+};
+
+/** 统一 raw-input mount 入口选项 */
+export type MountUnifiedOptions = RetainedMountUnifiedOptions | RawStaticMountUnifiedOptions;
 
 /** 统一 static mount 入口选项 */
 export type StaticMountUnifiedOptions = (StaticMountOptions | StaticMountCanvasOptions) & {
@@ -39,13 +54,23 @@ type MountFn = {
   (
     container: Element,
     input: RetainedRenderInput,
-    options: MountUnifiedOptions & { renderer: 'canvas' },
+    options: RawStaticMountUnifiedOptions & { renderer: 'canvas' },
+  ): StaticRawCanvasView;
+  (
+    container: Element,
+    input: RetainedRenderInput,
+    options: RetainedMountUnifiedOptions & { renderer: 'canvas' },
   ): RetainedCanvasView;
   (container: Element, input: Scene, options?: StaticMountUnifiedOptions & { renderer?: 'svg' }): StaticSvgView;
   (
     container: Element,
     input: RetainedRenderInput,
-    options?: MountUnifiedOptions & { renderer?: 'svg' },
+    options: RawStaticMountUnifiedOptions & { renderer?: 'svg' },
+  ): StaticRawSvgView;
+  (
+    container: Element,
+    input: RetainedRenderInput,
+    options?: RetainedMountUnifiedOptions & { renderer?: 'svg' },
   ): RetainedSvgView;
 };
 
@@ -60,7 +85,17 @@ export const mount: MountFn = ((
     if (staticOptions.renderer === 'canvas') return mountCanvas(container, input, staticOptions);
     return mountSvg(container, input, staticOptions);
   }
-  const retainedOptions = options as MountUnifiedOptions;
-  if (retainedOptions.renderer === 'canvas') return mountCanvas(container, input, retainedOptions);
-  return mountSvg(container, input, retainedOptions);
+  const rawOptions = options as MountUnifiedOptions;
+  const mountRawCanvas = mountCanvas as (
+    target: Element,
+    source: RetainedRenderInput,
+    mountOptions: MountCanvasOptions,
+  ) => CanvasView;
+  const mountRawSvg = mountSvg as (
+    target: Element,
+    source: RetainedRenderInput,
+    mountOptions: MountOptions,
+  ) => VanillaView;
+  if (rawOptions.renderer === 'canvas') return mountRawCanvas(container, input, rawOptions);
+  return mountRawSvg(container, input, rawOptions);
 }) as MountFn;

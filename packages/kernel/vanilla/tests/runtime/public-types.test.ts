@@ -6,6 +6,8 @@ import type {
   MountCanvasOptions,
   MountOptions,
   MountUnifiedOptions,
+  RawStaticMountCanvasOptions,
+  RawStaticMountOptions,
   RenderToStringOptions,
   RetainedCanvasUpdateOptions,
   RetainedCanvasView,
@@ -14,6 +16,9 @@ import type {
   StaticMountCanvasOptions,
   StaticMountOptions,
   StaticMountUnifiedOptions,
+  StaticRawCanvasView,
+  StaticRawSvgView,
+  VanillaRuntimeOptions,
   VanillaViewModeValue,
 } from '../../src';
 
@@ -64,5 +69,18 @@ describe('Vanilla retained 公开类型', () => {
     expect(VanillaViewMode).toEqual({ Retained: 'retained', Static: 'static' });
     expectTypeOf(VanillaViewMode.Retained).toEqualTypeOf<'retained'>();
     expectTypeOf<VanillaViewModeValue>().toEqualTypeOf<'retained' | 'static'>();
+  });
+
+  it('raw static mount 由 runtime mode 判别，update 统一接受 IR 与 plain spec', () => {
+    expectTypeOf<RawStaticMountOptions>().toHaveProperty('runtime');
+    expectTypeOf<RawStaticMountCanvasOptions>().toHaveProperty('runtime');
+    expectTypeOf<Parameters<StaticRawSvgView['update']>[0]>().toEqualTypeOf<Parameters<RetainedSvgView['update']>[0]>();
+    expectTypeOf<Parameters<StaticRawCanvasView['update']>[0]>().toEqualTypeOf<
+      Parameters<RetainedCanvasView['update']>[0]
+    >();
+    expectTypeOf({
+      mode: 'static' as const,
+      updateStrategy: 'full' as const,
+    }).not.toMatchTypeOf<VanillaRuntimeOptions>();
   });
 });

@@ -27,16 +27,21 @@ import type {
   CanvasView,
   HydrateOptions,
   MountCanvasOptions,
+  RawStaticMountCanvasOptions,
   RenderInput,
   RetainedCanvasView,
+  RetainedMountCanvasOptions,
   RetainedRenderInput,
   ScenePoint,
   StaticCanvasView,
   StaticMountCanvasOptions,
+  StaticRawCanvasView,
+  VanillaRetainedRuntimeOptions,
 } from './types';
 
 import { DEFAULT_ID_PREFIX, VanillaViewMode } from './constants';
 import { createVanillaRetainedSession } from './retained-session';
+import { captureVanillaRuntimeOptions } from './runtime-options';
 import { assertStaticMountRuntimeExcluded } from './static-mount-options';
 import { createEmptyRuntimeMeta, toSceneResult } from './to-scene';
 
@@ -54,7 +59,11 @@ const resolveDevicePixelRatio = (override: number | undefined): number => {
  *   进去（镜像 SVG `preserveAspectRatio=meet` + CanvasHost）。返回的 `CanvasView` 暴露 `hydrate`（hitTest 定位）
  *   与 `clientToScene`（逆 meet-fit 坐标映射）。DOM 仅在调用时惰性触碰，`import` 本模块不碰 DOM——守 SSR 导入安全
  */
-const mountStaticCanvas = (container: Element, input: Scene, options: StaticMountCanvasOptions): StaticCanvasView => {
+const mountStaticCanvas = (
+  container: Element,
+  input: RenderInput,
+  options: StaticMountCanvasOptions | RawStaticMountCanvasOptions,
+): StaticCanvasView | StaticRawCanvasView => {
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
     throw new Error('mountCanvas: container must be a DOM Element.');
   }
@@ -293,7 +302,7 @@ const mountStaticCanvas = (container: Element, input: Scene, options: StaticMoun
   return {
     mode: VanillaViewMode.Static,
     root: canvas,
-    update(next) {
+    update(next: RenderInput) {
       if (disposed) throw new Error('mountCanvas: view already disposed.');
       renderInto(next);
       // renderInto 已换 currentScene；按新 scene 重建存活水合，使 onEvent 动画 trigger 反映新图
@@ -327,7 +336,8 @@ const mountStaticCanvas = (container: Element, input: Scene, options: StaticMoun
 const mountRetainedCanvas = (
   container: Element,
   input: RetainedRenderInput,
-  options: MountCanvasOptions,
+  options: RetainedMountCanvasOptions,
+  runtimeOptions: VanillaRetainedRuntimeOptions,
 ): RetainedCanvasView => {
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
     throw new Error('mountCanvas: container must be a DOM Element.');
@@ -343,6 +353,7 @@ const mountRetainedCanvas = (
     host: canvas,
     input,
     options,
+    runtimeOptions,
     idPrefix: output.idPrefix ?? DEFAULT_ID_PREFIX,
     devicePixelRatio: ratio,
   });
@@ -384,7 +395,8 @@ const mountRetainedCanvas = (
 /** `mountCanvas` 的 static / retained 输入重载 */
 type MountCanvas = {
   (container: Element, input: Scene, options?: StaticMountCanvasOptions): StaticCanvasView;
-  (container: Element, input: RetainedRenderInput, options?: MountCanvasOptions): RetainedCanvasView;
+  (container: Element, input: RetainedRenderInput, options: RawStaticMountCanvasOptions): StaticRawCanvasView;
+  (container: Element, input: RetainedRenderInput, options?: RetainedMountCanvasOptions): RetainedCanvasView;
 };
 
 /** 按输入是否已编译，创建 static 或 retained Canvas view */
@@ -397,5 +409,9 @@ export const mountCanvas: MountCanvas = ((
     assertStaticMountRuntimeExcluded(options);
     return mountStaticCanvas(container, input, options as StaticMountCanvasOptions);
   }
-  return mountRetainedCanvas(container, input, options);
+  const runtimeOptions = captureVanillaRuntimeOptions(options);
+  if (runtimeOptions.mode === VanillaViewMode.Static) {
+    return mountStaticCanvas(container, input, options as RawStaticMountCanvasOptions);
+  }
+  return mountRetainedCanvas(container, input, options as RetainedMountCanvasOptions, runtimeOptions);
 }) as MountCanvas;

@@ -19,7 +19,7 @@ runtime/   compile / render 编排、SSR、DOM mount、hydrate、view lifecycle
 
 - plain spec helper 只能构造或归一化既有 Core IR；不得新增平行字段语义。
 - `runtime` 组合 core / render；Scene → SVG / Canvas 算法保持在 `@retikz/render`。
-- 预编译 `Scene` 只创建 `mode: 'static'` view；IR / plain spec 创建 `mode: 'retained'` session，Patch、fallback 与 rollback 只委托 Render participant。
+- 预编译 `Scene` 只创建 static view；IR / plain spec 由 `runtime.mode` 选择 retained Session 或无 Session 的 static full 执行，默认 retained；Patch、fallback 与 rollback 只属于 retained 路径并委托 Render participant。
 - SSR 路径不得依赖 DOM 全局；DOM 访问只在浏览器 mount / hydrate 调用路径发生。
 - Tier 2 adapter 只负责把领域输入转成 Core IR contribution，不把领域 schema 或算法内置到 vanilla。
 

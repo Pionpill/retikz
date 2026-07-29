@@ -6,7 +6,7 @@ import type {
   RetainedRendererFactory,
   RetainedRenderParticipantHandle,
 } from '@retikz/render/runtime';
-import type { RuntimeDiagnostic, RuntimeSession } from '@retikz/runtime';
+import type { RuntimeDiagnostic, RuntimeSession, RuntimeUpdateStrategyValue } from '@retikz/runtime';
 import type { CSSProperties, FC, MutableRefObject, Ref } from 'react';
 
 import { CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
@@ -60,6 +60,11 @@ export type RetainedHostProps = Readonly<{
   idPrefix: string;
   /** 可选第三方 retained renderer factory */
   rendererFactory?: RetainedRendererFactory;
+  /**
+   * Program 更新策略
+   * @default RuntimeUpdateStrategy.Auto
+   */
+  updateStrategy?: RuntimeUpdateStrategyValue;
   /** 成功提交或失败 transaction 的 Runtime diagnostic 出口 */
   onDiagnostic?: (diagnostic: RuntimeDiagnostic) => void;
   /** committed compile artifacts 通知出口 */
@@ -158,6 +163,7 @@ export const RetainedHost: FC<RetainedHostProps> = props => {
     animationRef,
     idPrefix,
     rendererFactory,
+    updateStrategy,
     onDiagnostic,
     onArtifacts,
   } = props;
@@ -264,6 +270,7 @@ export const RetainedHost: FC<RetainedHostProps> = props => {
       session = createRuntimeSession({
         owners,
         programs,
+        updateStrategy,
         participants: [participant.participant],
         initialSnapshots: [
           createRuntimeOwnerInput(CoreOwnerDefinition, sourceRef.current),
@@ -293,7 +300,7 @@ export const RetainedHost: FC<RetainedHostProps> = props => {
         previousAnimationRef.current = undefined;
       }
     };
-  }, [backend, coreOptions, rendererFactory, idPrefix, devicePixelRatio, publishCommitted]);
+  }, [backend, coreOptions, rendererFactory, updateStrategy, idPrefix, devicePixelRatio, publishCommitted]);
 
   useHostLayoutEffect(() => {
     const active = runtimeRef.current;

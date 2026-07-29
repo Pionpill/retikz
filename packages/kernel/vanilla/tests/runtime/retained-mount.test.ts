@@ -33,6 +33,18 @@ const source = (fill: string): IRScene => ({
   ],
 });
 
+const plainFigure = (fill: string): VanillaFigureSpec => ({
+  version: 1,
+  type: 'figure',
+  layers: [
+    {
+      type: 'layer',
+      id: 'main',
+      children: source(fill).children,
+    },
+  ],
+});
+
 const createRecordingContext = (): CanvasRenderingContext2D => {
   const target: Record<string | symbol, unknown> = {
     canvas: null,
@@ -482,6 +494,115 @@ describe('@retikz/vanilla retained mount', () => {
 
     expect(view.root.querySelector('[data-retikz-id="stable"]')).toBe(stable);
     expect(view.diagnostics()).toEqual([]);
+  });
+
+  it('IR/plain spec SVG static view 完整重绘、复用 root 并同步 metadata', () => {
+    const container = document.createElement('div');
+    const view = mountSvg(container, source('#ef4444'), {
+      runtime: { mode: 'static' },
+      compile: { artifacts: { nodeLayouts: true } },
+    });
+    const root = view.root;
+
+    view.update(plainFigure('#22c55e'));
+
+    expect(view.mode).toBe('static');
+    expect(view.root).toBe(root);
+    expect(view.root.querySelector('[data-retikz-id="changed"]')?.getAttribute('fill')).toBe('#22c55e');
+    expect(view.runtimeMeta.layers).toHaveLength(1);
+    expect(view.artifacts.length).toBeGreaterThan(0);
+  });
+
+  it('IR/plain spec Canvas static view 完整重绘并复用 root', () => {
+    const container = document.createElement('div');
+    const view = mountCanvas(container, source('#ef4444'), {
+      runtime: { mode: 'static' },
+      output: { width: 100, height: 100 },
+    });
+    const root = view.root;
+
+    view.update(plainFigure('#22c55e'));
+
+    expect(view.mode).toBe('static');
+    expect(view.root).toBe(root);
+    expect(view.runtimeMeta.layers).toHaveLength(1);
+  });
+
+  it('retained full 保留 Session 但每次更新发布 replaceScene', () => {
+    const patches: Array<unknown> = [];
+    const view = mountSvg(document.createElement('div'), source('#ef4444'), {
+      runtime: {
+        mode: 'retained',
+        updateStrategy: 'full',
+        rendererFactory: createMemoryRendererFactory('entity', false, undefined, patch => patches.push(patch)),
+      },
+    });
+
+    view.update(source('#22c55e'));
+
+    expect(view.mode).toBe('retained');
+    expect(patches).toEqual([
+      expect.objectContaining({ operations: [expect.objectContaining({ kind: 'replaceScene' })] }),
+    ]);
+    expect(view.diagnostics()).toEqual([]);
+  });
+
+  it('非法 mode、static 互斥字段与 accessor 在创建 DOM 前 fail-loud', () => {
+    const invalidRuntimes: ReadonlyArray<unknown> = [
+      { mode: 'incremental' },
+      { mode: 'static', updateStrategy: 'full' },
+      { mode: 'static', rendererFactory: createMemoryRendererFactory('entity') },
+    ];
+    for (const runtime of invalidRuntimes) {
+      const container = document.createElement('div');
+      expect(() =>
+        mountSvg(container, source('#ef4444'), {
+          runtime,
+        } as never),
+      ).toThrowError(expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid }));
+      expect(container.children).toHaveLength(0);
+    }
+
+    const getter = vi.fn(() => 'static');
+    const runtime = Object.defineProperty({}, 'mode', { enumerable: true, get: getter });
+    const container = document.createElement('div');
+    expect(() => mountSvg(container, source('#ef4444'), { runtime } as never)).toThrowError(
+      expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid }),
+    );
+    expect(getter).not.toHaveBeenCalled();
+    expect(container.children).toHaveLength(0);
+
+    const runtimeGetter = vi.fn(() => ({ mode: 'static' }));
+    const options = Object.defineProperty({}, 'runtime', { enumerable: true, get: runtimeGetter });
+    expect(() => mountSvg(container, source('#ef4444'), options as never)).toThrowError(
+      expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid }),
+    );
+    expect(runtimeGetter).not.toHaveBeenCalled();
+    expect(container.children).toHaveLength(0);
+  });
+
+  it('raw static compile 失败保留旧 view，materialization 失败同步抛出', () => {
+    const view = mountSvg(document.createElement('div'), source('#ef4444'), {
+      runtime: { mode: 'static' },
+      compile: { artifacts: { nodeLayouts: true } },
+    });
+    const html = view.root.innerHTML;
+    const artifacts = view.artifacts;
+    const runtimeMeta = view.runtimeMeta;
+    const invalid: IRScene = {
+      ...source('#22c55e'),
+      children: [{ type: 'node', id: 'invalid', position: [0, 0], shape: 'missing-shape' }],
+    };
+
+    expect(() => view.update(invalid)).toThrow();
+    expect(view.root.innerHTML).toBe(html);
+    expect(view.artifacts).toBe(artifacts);
+    expect(view.runtimeMeta).toBe(runtimeMeta);
+
+    vi.spyOn(view.root, 'appendChild').mockImplementationOnce(() => {
+      throw new Error('materialization failed');
+    });
+    expect(() => view.update(source('#22c55e'))).toThrow('materialization failed');
   });
 
   it('retained hydrate 以 contribution transaction 添加和移除 handler', () => {

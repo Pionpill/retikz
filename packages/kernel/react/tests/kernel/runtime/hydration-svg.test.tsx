@@ -49,6 +49,29 @@ describe('SVG 水合', () => {
     container.remove();
   });
 
+  it('static SVG 继续绑定同一 hydration handler', async () => {
+    const onClick = vi.fn();
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(() => {
+      root.render(
+        <Layout renderer="svg" width={200} height={200} runtime={{ mode: 'static' }}>
+          <Node id="a" position={[0, 0]} fill="red" minimumSize={2} onClick={onClick} />
+        </Layout>,
+      );
+    });
+    const target = container.querySelector('[data-retikz-id="a"]');
+    await act(() => {
+      target?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+    root.unmount();
+    container.remove();
+  });
+
   it('onClick 收到 (event, context)：context 带 id / meta / geometry / renderer / element', async () => {
     let context: HydrationContext | undefined;
     const container = document.createElement('div');

@@ -8,3 +8,10 @@ export type { RendererMode } from './renderer-context';
 export { RendererModeContext, useRendererMode } from './renderer-context';
 export type { RendererModeProviderProps } from './RendererModeProvider';
 export { RendererModeProvider } from './RendererModeProvider';
+export type {
+  LayoutRetainedRuntimeOptions,
+  LayoutRuntimeModeValue,
+  LayoutRuntimeOptions,
+  LayoutStaticRuntimeOptions,
+} from './runtime-options';
+export { LayoutRuntimeMode } from './runtime-options';

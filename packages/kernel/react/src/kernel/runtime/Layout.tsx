@@ -19,8 +19,6 @@ import type {
 } from '@retikz/core';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
-import type { RetainedRendererFactory } from '@retikz/render/runtime';
-import type { RuntimeDiagnostic } from '@retikz/runtime';
 import type { CSSProperties, FC, ReactNode, Ref } from 'react';
 
 import { compileToScene } from '@retikz/core';
@@ -28,14 +26,16 @@ import { resolveAnimationEnabled } from '@retikz/render/animation';
 import { useId, useMemo } from 'react';
 
 import type { EmbeddableContributionRecord, EmbeddableTier2Adapter, ScopeStyleProps } from '../protocol';
+import type { LayoutRuntimeOptions } from './runtime-options';
 
 import { usePrefersReducedMotion } from '../../render/animation';
-import { RetainedHost } from '../../render/runtime';
+import { RetainedHost, StaticHost } from '../../render/runtime';
 import { browserMeasurer } from '../../render/text';
 import { buildIRWithContributions, pickScopeStyle, wrapRootScope } from '../adapter';
 import { useAnimationMode } from './animation-context';
 import { collectHydrationHandlers } from './collect-hydration-handlers';
 import { useRendererMode } from './renderer-context';
+import { captureLayoutRuntimeOptions, LayoutRuntimeMode } from './runtime-options';
 
 const styleFontFamily = (style: CSSProperties | undefined): string | undefined => {
   const fontFamily = style?.fontFamily;
@@ -131,14 +131,6 @@ const aggregateEmbeddableComposites = (
   return out;
 };
 
-/** React Layout retained Runtime 配置 */
-export type LayoutRuntimeOptions = Readonly<{
-  /** 可选第三方 retained renderer factory；缺省使用内置实现 */
-  rendererFactory?: RetainedRendererFactory;
-  /** 按 Runtime queue 顺序接收成功提交或失败 transaction 的 diagnostic */
-  onDiagnostic?: (diagnostic: RuntimeDiagnostic) => void;
-}>;
-
 /**
  * @description 含 {@link ScopeStyleProps} 级联样式子集——设任一样式 prop 时把 children 包进合成根 `<Scope>`，
  *   等价于用户手写一层根 `<Scope>`（编译产物同一 IR）。内层 `<Scope>` / 图元显式属性照常级联覆盖。
@@ -156,7 +148,7 @@ export type LayoutProps = ScopeStyleProps & {
    *   （svg root 或 `<canvas>`），svg / canvas 双模共用同一注册表与分发
    */
   handlers?: HydrationHandlers;
-  /** Retained Runtime session 配置 */
+  /** 宿主执行模式与 retained Runtime session 配置 */
   runtime?: LayoutRuntimeOptions;
   /** SVG 元素宽度（CSS 长度或数字） */
   width?: number | string;
@@ -334,6 +326,7 @@ export const Layout: FC<LayoutProps> = props => {
     handlers,
     runtime,
   } = props;
+  const resolvedRuntime = captureLayoutRuntimeOptions(runtime);
   const stableShapes = canonicalizeDefinitionArray(shapes);
   const stableBoundaries = canonicalizeDefinitionArray(boundaries);
   const stableClips = canonicalizeDefinitionArray(clips);
@@ -483,9 +476,32 @@ export const Layout: FC<LayoutProps> = props => {
     [irFromProp, handlers, children, stableEmbeddables],
   );
 
+  if (resolvedRuntime.mode === LayoutRuntimeMode.Static) {
+    return (
+      <StaticHost
+        key={`${resolvedRuntime.mode}:${renderer}:${resolvedIdPrefix}`}
+        backend={renderer}
+        scene={scene}
+        artifacts={compiledLayout.artifacts}
+        handlers={resolvedHandlers}
+        width={width}
+        height={height}
+        className={className}
+        style={style}
+        animate={animate}
+        snapshotAt={snapshotAt}
+        animationRef={animationRef}
+        easings={easings}
+        animationProperties={animationProperties}
+        idPrefix={resolvedIdPrefix}
+        onArtifacts={onArtifacts}
+      />
+    );
+  }
+
   return (
     <RetainedHost
-      key={`${renderer}:${resolvedIdPrefix}`}
+      key={`${resolvedRuntime.mode}:${renderer}:${resolvedIdPrefix}`}
       backend={renderer}
       source={ir}
       scene={scene}
@@ -501,8 +517,9 @@ export const Layout: FC<LayoutProps> = props => {
       easings={easings}
       animationProperties={animationProperties}
       idPrefix={resolvedIdPrefix}
-      rendererFactory={runtime?.rendererFactory}
-      onDiagnostic={runtime?.onDiagnostic}
+      rendererFactory={resolvedRuntime.rendererFactory}
+      updateStrategy={resolvedRuntime.updateStrategy}
+      onDiagnostic={resolvedRuntime.onDiagnostic}
       onArtifacts={onArtifacts}
     />
   );

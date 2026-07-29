@@ -25,14 +25,15 @@ import type {
   CommonOptions,
   HydrateOptions,
   HydrationHandle,
-  MountCanvasOptions,
-  MountOptions,
   RetainedCanvasUpdateOptions,
+  RetainedMountCanvasOptions,
+  RetainedMountOptions,
   RetainedRenderInput,
   RetainedSvgUpdateOptions,
   RetainedVanillaCanvasUpdateOptions,
   RetainedVanillaUpdateOptions,
   VanillaAnimationOptions,
+  VanillaRetainedRuntimeOptions,
 } from './types';
 
 import { isVanillaFigureSpec, normalizeFigureSpec, VanillaLayerCache } from '../spec';
@@ -60,7 +61,7 @@ const captureCompositeDefinition = (definition: AnyCompositeDefinition): AnyComp
   ) as AnyCompositeDefinition;
 
 /** 捕获 retained session 会在后续 normalization 继续读取的 mount options */
-const captureRetainedMountOptions = (options: MountCanvasOptions): MountCanvasOptions => {
+const captureRetainedMountOptions = (options: RetainedMountCanvasOptions): RetainedMountCanvasOptions => {
   const adapters = options.adapters?.map(adapter =>
     Object.freeze({ kind: adapter.kind, namespace: adapter.namespace, lower: adapter.lower }),
   );
@@ -167,7 +168,9 @@ type CreateSvgRetainedSessionOptions = Readonly<{
   /** 初始完整 IR 或 plain spec */
   input: RetainedRenderInput;
   /** session-lifetime mount 配置 */
-  options: MountOptions;
+  options: RetainedMountOptions;
+  /** 已在宿主创建前校验并复制的 Runtime 配置 */
+  runtimeOptions: VanillaRetainedRuntimeOptions;
   /** SSR 与资源引用共用的稳定 id 前缀 */
   idPrefix: string;
 }>;
@@ -180,7 +183,9 @@ type CreateCanvasRetainedSessionOptions = Readonly<{
   /** 初始完整 IR 或 plain spec */
   input: RetainedRenderInput;
   /** session-lifetime mount 配置 */
-  options: MountCanvasOptions;
+  options: RetainedMountCanvasOptions;
+  /** 已在宿主创建前校验并复制的 Runtime 配置 */
+  runtimeOptions: VanillaRetainedRuntimeOptions;
   /** SSR 与资源引用共用的稳定 id 前缀 */
   idPrefix: string;
   /** Canvas session-lifetime 设备像素比 */
@@ -228,7 +233,7 @@ const createVanillaRetainedSessionImplementation = (
     builtins: [CoreOwnerDefinition, RenderRuntimeOwnerDefinition, VanillaCompositeRevisionOwnerDefinition],
   });
   const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
-  const rendererFactory = fixedOptions.runtime?.rendererFactory ?? builtinRetainedRendererFactory;
+  const rendererFactory = options.runtimeOptions.rendererFactory ?? builtinRetainedRendererFactory;
   const participant =
     options.backend === 'svg'
       ? createRetainedRenderParticipant({
@@ -276,6 +281,7 @@ const createVanillaRetainedSessionImplementation = (
   const session: RuntimeSession = createRuntimeSession({
     owners,
     programs,
+    updateStrategy: options.runtimeOptions.updateStrategy,
     participants: [participant.participant],
     initialSnapshots: [
       createRuntimeOwnerInput(CoreOwnerDefinition, initial.source),
