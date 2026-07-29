@@ -1,50 +1,41 @@
 import type { FC } from 'react';
 
-import { Axis, Plot, PointMark, ReferenceMark } from '@retikz/plot-react';
-import { Layout } from '@retikz/react';
+import { Axis, Plot, PointMark, ReferenceMark, Scale } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract, RULE_THRESHOLD_VALUE_ID } from './rule-threshold.controls';
+import {
+  previewControlContract,
+  RULE_THRESHOLD_AXIS_ID,
+  RULE_THRESHOLD_COORDINATE_ID,
+  RULE_THRESHOLD_VALUE_ID,
+} from './rule-threshold.controls';
 import { scores } from './rule-threshold.data';
 
-/** 阈值线：散点 + 一条 y=60 水平 rule（数字常量 → value，跨满 x 域，crimson 描边） */
+/** 固定参考线：坐标系决定 line 的投影，参考轴决定直线、圆环或径向线形态 */
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout width={620} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Plot
-      data={scores}
-      model={[
-        { name: 'name', type: 'categorical' },
-        { name: 'score', type: 'continuous' },
-      ]}
-      width={300}
-      height={220}
-      x={0}
-      y={30}
-    >
-      <PointMark x="name" y="score" />
+  <Plot
+    data={scores}
+    model={[
+      { name: 'attempt', type: 'continuous' },
+      { name: 'score', type: 'continuous' },
+    ]}
+    width={400}
+    height={280}
+    coordinate={values[RULE_THRESHOLD_COORDINATE_ID] === 'polar2D' ? 'polar2D' : undefined}
+    style={{ maxWidth: '100%', height: 'auto' }}
+  >
+    <Scale dimension="x" type="linear" domain={[0, 120]} />
+    <Scale dimension="y" type="linear" domain={[0, 100]} />
+    <PointMark x="attempt" y="score" />
+    {values[RULE_THRESHOLD_AXIS_ID] === 'x' ? (
+      <ReferenceMark x={values[RULE_THRESHOLD_VALUE_ID]} color="crimson" />
+    ) : (
       <ReferenceMark y={values[RULE_THRESHOLD_VALUE_ID]} color="crimson" />
-      <Axis dimension="x" />
-      <Axis dimension="y" grid />
-    </Plot>
-    <Plot
-      data={scores}
-      model={[
-        { name: 'name', type: 'categorical' },
-        { name: 'score', type: 'continuous' },
-      ]}
-      width={260}
-      height={260}
-      coordinate="polar2D"
-      x={350}
-      y={0}
-    >
-      <PointMark x="name" y="score" />
-      <ReferenceMark y={values[RULE_THRESHOLD_VALUE_ID]} color="crimson" />
-      <Axis dimension="x" />
-      <Axis dimension="y" grid />
-    </Plot>
-  </Layout>
+    )}
+    <Axis dimension="x" />
+    <Axis dimension="y" grid />
+  </Plot>
 ));
 
 /** canonical 状态派生的稳定源码配置 */

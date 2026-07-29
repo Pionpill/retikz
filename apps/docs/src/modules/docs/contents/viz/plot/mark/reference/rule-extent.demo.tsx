@@ -4,7 +4,7 @@ import { Axis, Legend, Plot, PointMark, ReferenceMark, Scale } from '@retikz/plo
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract, RULE_EXTENT_INSET_ID } from './rule-extent.controls';
+import { previewControlContract, RULE_EXTENT_COORDINATE_ID, RULE_EXTENT_INSET_ID } from './rule-extent.controls';
 import { referenceSpans } from './rule-extent.data';
 
 /** 用逐行字段限制参考线在对侧轴上的起止范围 */
@@ -25,8 +25,9 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         { name: 'spanStart', type: 'continuous' },
         { name: 'spanEnd', type: 'continuous' },
       ]}
-      width={580}
-      height={260}
+      width={400}
+      height={280}
+      coordinate={values[RULE_EXTENT_COORDINATE_ID] === 'polar2D' ? 'polar2D' : undefined}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
       <Scale dimension="x" type="linear" domain={[0, 120]} />
