@@ -1,8 +1,8 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
+import { createTransformTableViews } from '@/modules/docs/preview';
 
-import { createTransformTableViews } from '../transform-table-views';
 import { regionalOrders } from './transform-component.data';
 import { transformComponentOperationsOf } from './transform-component-preview';
 

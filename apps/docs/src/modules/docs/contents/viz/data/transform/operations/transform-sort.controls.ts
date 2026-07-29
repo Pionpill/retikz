@@ -1,8 +1,8 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
+import { createTransformTableViews } from '@/modules/docs/preview';
 
-import { createTransformTableViews } from '../transform-table-views';
 import { monthlyRevenue } from './transform-sort.data';
 import { transformSortOperationOf } from './transform-sort-preview';
 

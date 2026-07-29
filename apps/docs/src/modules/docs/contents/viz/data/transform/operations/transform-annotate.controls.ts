@@ -1,8 +1,8 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
+import { createTransformTableViews } from '@/modules/docs/preview';
 
-import { createTransformTableViews } from '../transform-table-views';
 import { storeRevenue } from './transform-annotate.data';
 import { transformAnnotateOperationOf } from './transform-annotate-preview';
 
