@@ -147,6 +147,104 @@ type CanvasAnimationState = Readonly<{
   dispose: () => void;
 }>;
 
+/** Canvas visibility 注册与初次清理同时失败时的错误 */
+class CanvasVisibilitySetupError extends Error {
+  /** 原始 visibility listener 注册失败 */
+  override readonly cause: unknown;
+
+  /** 初次 visibility teardown 失败 */
+  readonly cleanupCause: unknown;
+
+  /** 创建保留 primary setup cause 的 visibility 错误 */
+  constructor(cause: unknown, cleanupCause: unknown) {
+    super('Canvas visibility setup and cleanup failed', { cause });
+    this.name = 'CanvasVisibilitySetupError';
+    this.cause = cause;
+    this.cleanupCause = cleanupCause;
+  }
+}
+
+/** Canvas animation 构建失败且清理仍失败时的可恢复错误 */
+class CanvasAnimationSetupError extends Error {
+  /** 原始 animation 构建失败 */
+  override readonly cause: unknown;
+
+  /** 初次 animation cleanup 失败 */
+  readonly cleanupCause: unknown;
+
+  /** 保留尚未清理资源的 state，供 renderer 最终 dispose 重试 */
+  readonly state: CanvasAnimationState;
+
+  /** 创建保留 primary setup cause 与可重试 state 的错误 */
+  constructor(cause: unknown, cleanupCause: unknown, state: CanvasAnimationState) {
+    super('Canvas animation setup and cleanup failed', { cause });
+    this.name = 'CanvasAnimationSetupError';
+    this.cause = cause;
+    this.cleanupCause = cleanupCause;
+    this.state = state;
+  }
+}
+
+/** Canvas clock candidate 与内部恢复同时失败时的可重试错误 */
+class CanvasAnimationCommitRecoveryError extends Error {
+  /** 原始 candidate clock 切换失败 */
+  override readonly cause: unknown;
+
+  /** 同次恢复 committed clock 的失败 */
+  readonly rollbackCause: unknown;
+
+  /** prepared rollback 继续恢复 committed clock 的重试入口 */
+  readonly retryRollback: () => void;
+
+  /** 创建保留 trigger primary 与 rollback 重试入口的错误 */
+  constructor(cause: unknown, rollbackCause: unknown, retryRollback: () => void) {
+    super('Canvas animation clock replacement and recovery failed', { cause });
+    this.name = 'CanvasAnimationCommitRecoveryError';
+    this.cause = cause;
+    this.rollbackCause = rollbackCause;
+    this.retryRollback = retryRollback;
+  }
+}
+
+/** 跨 prepared token 保留失败 Canvas animation state 的清理队列 */
+type CanvasAnimationCleanupQueue = Readonly<{
+  /** 尝试清理 state；失败时保留到 pending 队列 */
+  dispose: (state: CanvasAnimationState) => void;
+  /** 直接保留已确认初次清理失败的 state */
+  retain: (state: CanvasAnimationState) => void;
+  /** best-effort 重试全部 pending state */
+  disposePending: () => void;
+}>;
+
+/** 创建 renderer 生命周期内的 Canvas animation 清理队列 */
+const createCanvasAnimationCleanupQueue = (): CanvasAnimationCleanupQueue => {
+  const pending = new Set<CanvasAnimationState>();
+  const dispose = (state: CanvasAnimationState): void => {
+    try {
+      state.dispose();
+      pending.delete(state);
+    } catch (cause) {
+      pending.add(state);
+      throw cause;
+    }
+  };
+  const retain = (state: CanvasAnimationState): void => {
+    pending.add(state);
+  };
+  const disposePending = (): void => {
+    runBestEffortCleanup([...pending].map(state => () => dispose(state)));
+  };
+  return Object.freeze({ dispose, retain, disposePending });
+};
+
+/** 恢复 Canvas animation setup 双重失败中的 primary cause 与 retryable state */
+const recoverCanvasAnimationSetupFailure = (
+  cause: unknown,
+): Readonly<{ cause: unknown; state: CanvasAnimationState }> | undefined => {
+  if (!(cause instanceof CanvasAnimationSetupError)) return undefined;
+  return Object.freeze({ cause: cause.cause, state: cause.state });
+};
+
 /** 按资源地址读取 renderer-lifetime image cache */
 type CanvasImageResolver = (href: string) => CanvasImageSource | null;
 
@@ -799,7 +897,13 @@ const createCanvasAnimation = (
   let visibleTeardown: (() => void) | undefined;
   let coarsePlayRequested = false;
   let enabled = true;
+  let cleanupStarted = false;
+  let cleanupInProgress = false;
   let disposed = false;
+  let clockDisposed = false;
+  let clockReplacementInProgress = false;
+  /** 外部 animation callback 返回后重新读取 renderer animation gate */
+  const isAnimationStateActive = (): boolean => enabled && !cleanupStarted;
   const resolveWithRegistry = (candidate: IdClockRegistry, id: string | undefined, time: number) =>
     id !== undefined && candidate.isStopped(id)
       ? ({ mode: 'skip' } as const)
@@ -809,7 +913,7 @@ const createCanvasAnimation = (
           includeNonAutoplay: candidate.isActive(id),
         } as const);
   const renderFrame = (time = clock.time): void => {
-    if (!enabled || disposed) return;
+    if (!enabled || cleanupStarted) return;
     renderToCanvas(host, scene, {
       devicePixelRatio: options.devicePixelRatio,
       time,
@@ -824,11 +928,13 @@ const createCanvasAnimation = (
     visibleTeardown?.();
     visibleTeardown = undefined;
     const visibleIds = collectCanvasVisibleAnimationIds(scene);
-    if (!enabled || disposed || visibleIds.size === 0 || typeof window === 'undefined') return;
+    if (!enabled || cleanupStarted || visibleIds.size === 0 || typeof window === 'undefined') return;
     const activated = new Set(Array.from(visibleIds).filter(id => registry.isActive(id)));
     let scheduled: number | undefined;
+    let scheduleInProgress = false;
     const activate = (): void => {
       scheduled = undefined;
+      if (!enabled || cleanupStarted) return;
       let changed = false;
       for (const id of visibleIds) {
         if (activated.has(id) || !isCanvasAnimationIdVisible(host, scene, id)) continue;
@@ -841,29 +947,97 @@ const createCanvasAnimation = (
         renderFrame();
       }
     };
-    const schedule = (): void => {
-      if (scheduled === undefined) scheduled = window.requestAnimationFrame(activate);
+    /** 外部 rAF 注册前后都重新读取 visibility gate */
+    const canSchedule = (): boolean => enabled && !cleanupStarted;
+    type ListenerRegistration = { state: 'idle' | 'registering' | 'registered'; cleanupRequested: boolean };
+    const scrollRegistration: ListenerRegistration = { state: 'idle', cleanupRequested: false };
+    const resizeRegistration: ListenerRegistration = { state: 'idle', cleanupRequested: false };
+    /** 外部 listener 注册返回后重新读取 registration 与 visibility gate */
+    const canPublishListener = (registration: ListenerRegistration): boolean =>
+      !registration.cleanupRequested && canSchedule();
+    /** 清理 listener；注册尚未返回时先关闭发布资格，由注册方在返回后接管清理 */
+    const removeListener = (registration: ListenerRegistration, remove: () => void): void => {
+      if (registration.state === 'idle') return;
+      if (registration.state === 'registering') {
+        registration.cleanupRequested = true;
+        return;
+      }
+      remove();
+      registration.state = 'idle';
+      registration.cleanupRequested = false;
     };
-    let scrollRegistered = false;
-    let resizeRegistered = false;
     const teardown = (): void => {
-      if (scrollRegistered) window.removeEventListener('scroll', schedule, true);
-      if (resizeRegistered) window.removeEventListener('resize', schedule);
-      if (scheduled !== undefined) window.cancelAnimationFrame(scheduled);
-      scrollRegistered = false;
-      resizeRegistered = false;
-      scheduled = undefined;
+      runBestEffortCleanup([
+        () => removeListener(scrollRegistration, () => window.removeEventListener('scroll', schedule, true)),
+        () => removeListener(resizeRegistration, () => window.removeEventListener('resize', schedule)),
+        () => {
+          const frame = scheduled;
+          if (frame === undefined) return;
+          window.cancelAnimationFrame(frame);
+          if (scheduled === frame) scheduled = undefined;
+        },
+      ]);
     };
-    try {
-      scrollRegistered = true;
-      window.addEventListener('scroll', schedule, true);
-      resizeRegistered = true;
-      window.addEventListener('resize', schedule);
+    /** 注册 listener，并在注册期间同步 cleanup 后立即回收可能已安装的 listener */
+    const registerListener = (registration: ListenerRegistration, register: () => void): boolean => {
+      registration.state = 'registering';
+      registration.cleanupRequested = false;
+      try {
+        register();
+      } catch (cause) {
+        registration.state = 'registered';
+        throw cause;
+      }
+      registration.state = 'registered';
+      if (canPublishListener(registration)) return true;
       visibleTeardown = teardown;
+      try {
+        teardown();
+        if (visibleTeardown === teardown) visibleTeardown = undefined;
+      } catch (cause) {
+        disposed = false;
+        throw cause;
+      }
+      return false;
+    };
+    const schedule = (): void => {
+      if (!canSchedule() || scheduled !== undefined || scheduleInProgress) return;
+      scheduleInProgress = true;
+      try {
+        const registration = { consumed: false, frame: undefined as number | undefined };
+        const frame = window.requestAnimationFrame(() => {
+          registration.consumed = true;
+          if (scheduled === registration.frame) scheduled = undefined;
+          activate();
+        });
+        registration.frame = frame;
+        if (registration.consumed) return;
+        scheduled = frame;
+        if (canSchedule()) return;
+        try {
+          window.cancelAnimationFrame(frame);
+          if (scheduled === frame) scheduled = undefined;
+        } catch (cause) {
+          visibleTeardown = teardown;
+          disposed = false;
+          throw cause;
+        }
+      } finally {
+        scheduleInProgress = false;
+      }
+    };
+    visibleTeardown = teardown;
+    try {
+      if (!registerListener(scrollRegistration, () => window.addEventListener('scroll', schedule, true))) return;
+      if (!registerListener(resizeRegistration, () => window.addEventListener('resize', schedule))) return;
       schedule();
     } catch (cause) {
-      teardown();
-      visibleTeardown = undefined;
+      try {
+        teardown();
+        if (visibleTeardown === teardown) visibleTeardown = undefined;
+      } catch (cleanupCause) {
+        throw new CanvasVisibilitySetupError(cause, cleanupCause);
+      }
       throw cause;
     }
   };
@@ -876,19 +1050,30 @@ const createCanvasAnimation = (
     const finiteOccurrenceEnds = occurrenceEnds.filter((value): value is number => value !== null);
     return Math.max(sceneDuration, rootTimelineStart + rootDuration, ...finiteOccurrenceEnds);
   };
+  /** 外部 cleanup 返回后重新读取 replacement gate，避免闭包状态被同步重入改写 */
+  const canContinueClockReplacement = (): boolean => !cleanupStarted && clockReplacementInProgress;
   const replaceClock = (time: number, shouldPlay: boolean): void => {
-    visibleTeardown?.();
-    visibleTeardown = undefined;
-    clock.dispose();
-    clockEnd = animationEnvelopeEnd();
-    clock = createClock({ durationMs: clockEnd, onFrame: renderFrame });
-    clock.seek(time);
-    bindVisibility();
-    if (shouldPlay) clock.play();
+    if (cleanupStarted || clockReplacementInProgress) return;
+    clockReplacementInProgress = true;
+    try {
+      visibleTeardown?.();
+      visibleTeardown = undefined;
+      if (!canContinueClockReplacement()) return;
+      clock.dispose();
+      if (!canContinueClockReplacement()) return;
+      clockEnd = animationEnvelopeEnd();
+      clock = createClock({ durationMs: clockEnd, onFrame: renderFrame });
+      clock.seek(time);
+      if (!canContinueClockReplacement()) return;
+      bindVisibility();
+      if (shouldPlay && canContinueClockReplacement()) clock.play();
+    } finally {
+      clockReplacementInProgress = false;
+    }
   };
   /** per-id play/restart/seek 后按有效时刻刷新 finite envelope，并确保新 clock 推进 */
   const ensureActiveTimelinesPlaying = (): void => {
-    if (!enabled || disposed) return;
+    if (!enabled || cleanupStarted) return;
     const currentTime = clock.time;
     const walk = (primitives: ReadonlyArray<Scene['primitives'][number]>): void => {
       for (const primitive of primitives) {
@@ -917,36 +1102,50 @@ const createCanvasAnimation = (
   }
   clockEnd = sceneAnimationDurationMs(scene);
   clock = createClock({ durationMs: clockEnd, onFrame: renderFrame });
-  bindVisibility();
-  if (sceneHasAutoplayTrigger(scene)) clock.play();
   const dispose = (): void => {
-    if (disposed) return;
-    disposed = true;
+    if (disposed || cleanupInProgress) return;
+    cleanupStarted = true;
+    cleanupInProgress = true;
     enabled = false;
-    visibleTeardown?.();
-    visibleTeardown = undefined;
-    clock.dispose();
+    try {
+      runBestEffortCleanup([
+        () => {
+          const teardown = visibleTeardown;
+          if (teardown === undefined) return;
+          teardown();
+          if (visibleTeardown === teardown) visibleTeardown = undefined;
+        },
+        () => {
+          if (clockDisposed) return;
+          clock.dispose();
+          clockDisposed = true;
+        },
+      ]);
+      disposed = true;
+    } finally {
+      cleanupInProgress = false;
+    }
   };
   const controls: AnimationControls = Object.freeze({
     play: () => {
-      if (!enabled || disposed) return;
-      coarsePlayRequested = true;
+      if (!enabled || cleanupStarted) return;
       clock.play();
+      if (isAnimationStateActive()) coarsePlayRequested = true;
     },
     pause: () => {
-      if (!enabled || disposed) return;
-      coarsePlayRequested = false;
+      if (!enabled || cleanupStarted) return;
       clock.pause();
+      if (isAnimationStateActive()) coarsePlayRequested = false;
     },
     seek: (timeMs: number) => {
-      if (enabled && !disposed) clock.seek(timeMs);
+      if (enabled && !cleanupStarted) clock.seek(timeMs);
     },
     dispose,
     get time() {
       return clock.time;
     },
     get running() {
-      return enabled && !disposed && clock.running;
+      return enabled && !cleanupStarted && clock.running;
     },
   });
   /** 以 renderer-private token 与默认 public id 创建一组 per-id hydration controls */
@@ -959,16 +1158,16 @@ const createCanvasAnimation = (
       defaultId,
       resolveIds: publicId => occurrenceIndex.tokensByPublicId.get(publicId),
     });
-  return Object.freeze({
+  const state: CanvasAnimationState = Object.freeze({
     controls,
     makeHydrationControls: target => {
-      if (!enabled || disposed) return createClockAnimationControls(undefined);
+      if (!enabled || cleanupStarted) return createClockAnimationControls(undefined);
       const defaultToken = occurrenceIndex.tokenByIdentity.get(target.identity);
       if (defaultToken === undefined) return createClockAnimationControls(undefined);
       return makeHydrationControls(target.publicId ?? defaultToken);
     },
     makeHydrationControlsForPublicId: publicId => {
-      if (!enabled || disposed) return createClockAnimationControls(undefined);
+      if (!enabled || cleanupStarted) return createClockAnimationControls(undefined);
       const defaultToken = occurrenceIndex.tokensByPublicId.get(publicId)?.[0];
       return defaultToken === undefined ? createClockAnimationControls(undefined) : makeHydrationControls(publicId);
     },
@@ -1042,7 +1241,12 @@ const createCanvasAnimation = (
             registry = previousRegistry;
             timelineEndByToken = previousTimelineEndByToken;
             rootTimelineStart = previousRootTimelineStart;
-            replaceClock(previousTime, previousRunning);
+            const retryRollback = (): void => replaceClock(previousTime, previousRunning);
+            try {
+              retryRollback();
+            } catch (rollbackCause) {
+              throw new CanvasAnimationCommitRecoveryError(cause, rollbackCause, retryRollback);
+            }
             throw cause;
           }
           return () => {
@@ -1059,22 +1263,40 @@ const createCanvasAnimation = (
     },
     renderFrame: () => renderFrame(),
     suspend: () => {
-      if (!enabled || disposed) return false;
+      if (!enabled || cleanupStarted) return false;
       const running = clock.running;
       enabled = false;
-      visibleTeardown?.();
-      visibleTeardown = undefined;
-      clock.pause();
+      runBestEffortCleanup([
+        () => {
+          const teardown = visibleTeardown;
+          if (teardown === undefined) return;
+          teardown();
+          if (visibleTeardown === teardown) visibleTeardown = undefined;
+        },
+        () => clock.pause(),
+      ]);
       return running;
     },
     resume: running => {
-      if (enabled || disposed) return;
+      if (enabled || cleanupStarted) return;
       enabled = true;
-      bindVisibility();
-      if (running) clock.play();
+      runBestEffortCleanup([bindVisibility, () => (running && enabled && !cleanupStarted ? clock.play() : undefined)]);
     },
     dispose,
   });
+  try {
+    bindVisibility();
+    if (sceneHasAutoplayTrigger(scene)) clock.play();
+  } catch (cause) {
+    const setupCause = cause instanceof CanvasVisibilitySetupError ? cause.cause : cause;
+    try {
+      state.dispose();
+    } catch (cleanupCause) {
+      throw new CanvasAnimationSetupError(setupCause, cleanupCause, state);
+    }
+    throw setupCause;
+  }
+  return state;
 };
 
 /** 创建内置 Canvas retained renderer */
@@ -1095,6 +1317,7 @@ export const createBuiltinCanvasRetainedRenderer = (
   let currentConfig: RenderRuntimeConfig | undefined;
   let currentHostStyle: CanvasHostStyle | undefined;
   const candidateHydrationCleanup = createHydrationCleanupQueue();
+  const candidateAnimationCleanup = createCanvasAnimationCleanupQueue();
   const imageLoader = createCanvasImageLoader(() => {
     if (currentSnapshot === undefined || currentConfig === undefined) return;
     const time =
@@ -1205,7 +1428,15 @@ export const createBuiltinCanvasRetainedRenderer = (
       const previousHostStyle = currentHostStyle;
       const previousHostSize = Object.freeze({ width: host.width, height: host.height });
       let animation: CanvasAnimationState | undefined;
+      const disposeCandidateAnimation = (): void => {
+        if (reuseAnimation) return;
+        const candidate = animation;
+        if (candidate === undefined) return;
+        candidateAnimationCleanup.dispose(candidate);
+        if (animation === candidate) animation = undefined;
+      };
       let rollbackAnimationRebind: (() => void) | undefined;
+      let retryAnimationCommitRollback: (() => void) | undefined;
       let previousAnimationRunning: boolean | undefined;
       let hydration: HydrationController | undefined;
       const disposeCandidateHydration = (): void => {
@@ -1234,13 +1465,33 @@ export const createBuiltinCanvasRetainedRenderer = (
               paintBitmap(host, bitmap);
             }
           }
-          animation = reuseAnimation
-            ? previousAnimation
-            : createCanvasAnimation(host, snapshot, config, immutableOptions, imageLoader.getImage);
+          if (reuseAnimation) animation = previousAnimation;
+          else {
+            try {
+              animation = createCanvasAnimation(host, snapshot, config, immutableOptions, imageLoader.getImage);
+            } catch (cause) {
+              const setupFailure = recoverCanvasAnimationSetupFailure(cause);
+              if (setupFailure !== undefined) {
+                animation = setupFailure.state;
+                candidateAnimationCleanup.retain(setupFailure.state);
+                throw setupFailure.cause;
+              }
+              throw cause;
+            }
+          }
           if (reuseAnimation && animation !== undefined) {
-            rollbackAnimationRebind = animationCandidate?.commit();
+            try {
+              rollbackAnimationRebind = animationCandidate?.commit();
+            } catch (cause) {
+              if (cause instanceof CanvasAnimationCommitRecoveryError) {
+                retryAnimationCommitRollback = cause.retryRollback;
+                throw cause.cause;
+              }
+              throw cause;
+            }
           }
           if (!reuseAnimation && previousAnimation !== undefined) {
+            previousAnimationRunning = previousAnimation.controls.running;
             previousAnimationRunning = previousAnimation.suspend();
           }
           if (previousHydration !== undefined) {
@@ -1271,9 +1522,16 @@ export const createBuiltinCanvasRetainedRenderer = (
         rollback: () => {
           rolledBack = true;
           runBestEffortCleanup([
-            () => rollbackAnimationRebind?.(),
+            () => {
+              const retry = retryAnimationCommitRollback;
+              if (retry !== undefined) {
+                retry();
+                if (retryAnimationCommitRollback === retry) retryAnimationCommitRollback = undefined;
+              }
+              rollbackAnimationRebind?.();
+            },
             disposeCandidateHydration,
-            ...(!reuseAnimation ? [() => animation?.dispose()] : []),
+            ...(!reuseAnimation ? [disposeCandidateAnimation] : []),
             () => {
               if (previousAnimationRunning !== undefined) previousAnimation?.resume(previousAnimationRunning);
             },
@@ -1330,19 +1588,20 @@ export const createBuiltinCanvasRetainedRenderer = (
             ...(rolledBack
               ? [
                   () => {
+                    const retry = retryAnimationCommitRollback;
+                    if (retry === undefined) return;
+                    retry();
+                    if (retryAnimationCommitRollback === retry) retryAnimationCommitRollback = undefined;
+                  },
+                  () => {
                     disposeCandidateHydration();
                   },
-                  ...(!reuseAnimation
-                    ? [
-                        () => {
-                          animation?.dispose();
-                          animation = undefined;
-                        },
-                      ]
-                    : []),
+                  ...(!reuseAnimation ? [disposeCandidateAnimation] : []),
                 ]
               : []),
-            ...(committed && !rolledBack && !reuseAnimation ? [() => previousAnimation?.dispose()] : []),
+            ...(committed && !rolledBack && !reuseAnimation && previousAnimation !== undefined
+              ? [() => candidateAnimationCleanup.dispose(previousAnimation)]
+              : []),
             () => imageStage.dispose(),
           ]);
         },
@@ -1376,9 +1635,10 @@ export const createBuiltinCanvasRetainedRenderer = (
         },
         () => candidateHydrationCleanup.disposePending(),
         () => {
-          animation?.dispose();
+          if (animation !== undefined) candidateAnimationCleanup.dispose(animation);
           if (currentAnimation === animation) currentAnimation = undefined;
         },
+        () => candidateAnimationCleanup.disposePending(),
         () => imageLoader.dispose(),
         () => {
           currentBitmap = undefined;

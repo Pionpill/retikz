@@ -95,7 +95,7 @@ Plain spec每轮可按datasets生成新的composite callback，但Definition数�
 
 一次commit同步切换Scene snapshot、DOM/display list、geometry/hit-test index、handler mapping、resource consumer set与animation state。Handler contribution按registration升序合并，同publicId/event不覆盖；handle只移除自身，失败可重试。Candidate hydration controller在setup、rollback与prepared-token dispose均失败时转入renderer清理队列，不能随prepared token丢失；最终renderer/Session dispose继续best-effort重试。
 
-Resource以canonical descriptor与candidate/committed consumer set staging，新consumer可见前先创建，旧consumer移除后再释放。Animation对unchanged/move保留clock；静态update且track descriptor相同保留，descriptor变化重启该identity，remove释放，replace重启全部。
+Resource以canonical descriptor与candidate/committed consumer set staging，新consumer可见前先创建，旧consumer移除后再释放。Animation对unchanged/move保留clock；静态update且track descriptor相同保留，descriptor变化重启该identity，remove释放，replace重启全部。SVG WAAPI binding、聚合controls与Canvas clock cleanup分离started/in-progress/completed状态：开始清理即让全部controls与回调失活，同步嵌套dispose为no-op；aggregate在首个child cleanup前先关闭全部child gate，animation、observer、listener、style ownership、visibility与clock再逐项best-effort，成功项不重跑，失败项跨prepared token保留并由后续dispose重试。所有外部frame、animate、cancel、disconnect与register callback返回后重新读取gate；返回前已开始清理的新句柄立即纳入可重试cleanup，Visible observer则在disconnect前一次性消费trigger。Canvas clock replacement在外部cleanup同步重入dispose后不能继续创建listener或rAF，pause也只在cancel成功后发布停止状态；rAF注册返回后若gate失活则立即取消，取消失败保留到后续dispose。构建与初次cleanup同时失败时保持构建错误为primary并保留retryable state；candidate切换、旧animation suspend或内部clock恢复失败均进入prepared rollback，rollback成功恢复旧controls与running状态且不能遗留并行rAF链，连续cleanup失败由renderer最终dispose继续重试。
 
 `VanillaLayerCache`在alpha.2只作为未来失效优化的metadata hint：Vanilla把layer metadata保留在`runtimeMeta`，并折叠为`RenderRuntimeConfig.cachePolicy`；Render只校验和冻结该字段，SVG/Canvas renderer尚不消费它，也不启用auto/static/dynamic复用。该hint不改变画面、hit-test或transaction行为；真正的layer fingerprint、复用与等价性门禁留给后续独立contract。Kernel不会为提前启用复用而建立Vanilla layer到Core identity的平行映射。
 
@@ -141,7 +141,7 @@ Timing只在完整environment fingerprint一致时比较。`bench:report`与`ben
 
 - Runtime：169 tests
 - Core：2825 tests
-- Render：52 files / 483 tests
+- Render：52 files / 518 tests
 - React：47 files / 430 tests
 - Vanilla：14 files / 110 tests
 - Bench：10 files / 45 tests；`bench:check` 18项预算PASS；runner fingerprint `e63f16b6` timing compare PASS

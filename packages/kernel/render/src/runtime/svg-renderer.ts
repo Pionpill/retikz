@@ -18,7 +18,11 @@ import type { SceneAnimationDescriptorDiff } from './runtime-options';
 import type { RuntimeIdentityMap } from './shared';
 
 import { classifyProperty, sceneHasAnimations } from '../animation';
-import { bindWaapiDescriptorElements, isWaapiAnimationStyleOwned } from '../animation/retained';
+import {
+  bindWaapiDescriptorElements,
+  isWaapiAnimationStyleOwned,
+  recoverWaapiBindingSetupFailure,
+} from '../animation/retained';
 import {
   createContextBuilder,
   createHydrationController,
@@ -75,24 +79,90 @@ type SvgAnimationState = Readonly<{
 }>;
 
 /** 把 root 与 occurrence controls 聚合为稳定的公开动画控制器 */
-const combineSvgAnimationControls = (controls: ReadonlyArray<AnimationControls>): AnimationControls =>
-  Object.freeze({
-    play: () => controls.forEach(control => control.play()),
-    pause: () => controls.forEach(control => control.pause()),
-    seek: (timeMs: number) => controls.forEach(control => control.seek(timeMs)),
-    dispose: () => controls.forEach(control => control.dispose()),
+const combineSvgAnimationControls = (children: ReadonlyArray<SvgAnimationControl>): AnimationControls => {
+  const controls = children.map(child => child.controls);
+  let cleanupStarted = false;
+  let cleanupInProgress = false;
+  let cleanupComplete = false;
+  return Object.freeze({
+    play: () => {
+      if (!cleanupStarted) controls.forEach(control => control.play());
+    },
+    pause: () => {
+      if (!cleanupStarted) controls.forEach(control => control.pause());
+    },
+    seek: (timeMs: number) => {
+      if (!cleanupStarted) controls.forEach(control => control.seek(timeMs));
+    },
+    dispose: () => {
+      if (cleanupComplete || cleanupInProgress) return;
+      cleanupStarted = true;
+      cleanupInProgress = true;
+      try {
+        children.forEach(child => (child.gate.enabled = false));
+        runBestEffortCleanup(controls.map(control => () => control.dispose()));
+        cleanupComplete = true;
+      } finally {
+        cleanupInProgress = false;
+      }
+    },
     get time() {
       return controls[0]?.time ?? 0;
     },
     get running() {
-      return controls.some(control => control.running);
+      return !cleanupStarted && controls.some(control => control.running);
     },
   });
+};
+
+/** 跨 prepared token 保留失败 WAAPI controls 的 renderer 级清理队列 */
+type SvgAnimationCleanupQueue = Readonly<{
+  /** 尝试清理 controls；失败时保留到 pending 队列 */
+  dispose: (controls: AnimationControls) => void;
+  /** 直接保留已确认初次清理失败的 controls */
+  retain: (controls: AnimationControls) => void;
+  /** best-effort 重试全部 pending controls */
+  disposePending: () => void;
+}>;
+
+/** 创建 renderer 生命周期内的 WAAPI controls 清理队列 */
+const createSvgAnimationCleanupQueue = (): SvgAnimationCleanupQueue => {
+  const pending = new Set<AnimationControls>();
+  const dispose = (controls: AnimationControls): void => {
+    try {
+      controls.dispose();
+      pending.delete(controls);
+    } catch (cause) {
+      pending.add(controls);
+      throw cause;
+    }
+  };
+  const retain = (controls: AnimationControls): void => {
+    pending.add(controls);
+  };
+  const disposePending = (): void => {
+    runBestEffortCleanup([...pending].map(controls => () => dispose(controls)));
+  };
+  return Object.freeze({ dispose, retain, disposePending });
+};
 
 /** 创建受内部 gate 保护、可在 rollback 恢复的 WAAPI control */
-const createSvgAnimationControl = (elements: ReadonlyArray<Element>): SvgAnimationControl => {
+const createSvgAnimationControl = (
+  elements: ReadonlyArray<Element>,
+  cleanupQueue: SvgAnimationCleanupQueue,
+): SvgAnimationControl => {
   const gate = { enabled: true };
-  const raw = bindWaapiDescriptorElements(elements, () => gate.enabled);
+  let raw: AnimationControls;
+  try {
+    raw = bindWaapiDescriptorElements(elements, () => gate.enabled);
+  } catch (cause) {
+    const setupFailure = recoverWaapiBindingSetupFailure(cause);
+    if (setupFailure !== undefined) {
+      cleanupQueue.retain(setupFailure.controls);
+      throw setupFailure.cause;
+    }
+    throw cause;
+  }
   const controls: AnimationControls = Object.freeze({
     play: () => {
       if (gate.enabled) raw.play();
@@ -105,7 +175,7 @@ const createSvgAnimationControl = (elements: ReadonlyArray<Element>): SvgAnimati
     },
     dispose: () => {
       gate.enabled = false;
-      raw.dispose();
+      cleanupQueue.dispose(raw);
     },
     get time() {
       return raw.time;
@@ -841,6 +911,7 @@ const createSvgAnimationState = (
   diff: SceneAnimationDescriptorDiff,
   previous: SvgAnimationState | undefined,
   preserve: boolean,
+  cleanupQueue: SvgAnimationCleanupQueue,
 ): Readonly<{
   state: SvgAnimationState;
   created: ReadonlyArray<SvgAnimationControl>;
@@ -867,7 +938,7 @@ const createSvgAnimationState = (
         retained.add(existing);
         return existing;
       }
-      const control = createSvgAnimationControl(group.elements);
+      const control = createSvgAnimationControl(group.elements, cleanupQueue);
       created.push(control);
       return Object.freeze({ identity: group.identity, ...control });
     });
@@ -879,7 +950,7 @@ const createSvgAnimationState = (
         ? previous.root
         : grouped.root.length === 0
           ? undefined
-          : createSvgAnimationControl(grouped.root);
+          : createSvgAnimationControl(grouped.root, cleanupQueue);
     if (root !== undefined) {
       if (root === previous?.root) retained.add(root);
       else created.push(root);
@@ -888,7 +959,7 @@ const createSvgAnimationState = (
       ...(previous?.root === undefined || retained.has(previous.root) ? [] : [previous.root]),
       ...(previous?.bindings.flatMap(binding => (retained.has(binding) ? [] : [binding])) ?? []),
     ];
-    const all = [...(root === undefined ? [] : [root.controls]), ...bindings.map(binding => binding.controls)];
+    const all = [...(root === undefined ? [] : [root]), ...bindings];
     const reuseAggregate =
       previous !== undefined &&
       root === previous.root &&
@@ -904,7 +975,11 @@ const createSvgAnimationState = (
       retired: Object.freeze(retired),
     });
   } catch (cause) {
-    for (let index = created.length - 1; index >= 0; index -= 1) created[index].controls.dispose();
+    try {
+      runBestEffortCleanup([...created].reverse().map(control => () => control.controls.dispose()));
+    } catch {
+      // 失败 controls 已进入 renderer 级队列；setup cause 保持 primary
+    }
     throw cause;
   }
 };
@@ -1047,6 +1122,7 @@ export const createBuiltinSvgRetainedRenderer = (
   let currentAnimationConfig: RenderRuntimeConfig['animation'];
   let currentConfig: RenderRuntimeConfig | undefined;
   const candidateHydrationCleanup = createHydrationCleanupQueue();
+  const candidateAnimationCleanup = createSvgAnimationCleanupQueue();
 
   const prepare = (
     patch: ScenePatch | undefined,
@@ -1313,6 +1389,7 @@ export const createBuiltinSvgRetainedRenderer = (
             animationDiff,
             previousAnimation,
             preserveAnimation,
+            candidateAnimationCleanup,
           );
           animation = transition.state;
           animationTransition = transition;
@@ -1440,6 +1517,7 @@ export const createBuiltinSvgRetainedRenderer = (
           animation?.controls.dispose();
           if (currentAnimation === animation) currentAnimation = undefined;
         },
+        () => candidateAnimationCleanup.disposePending(),
         () => {
           currentSnapshot = undefined;
           currentOwnedAttributes = new Set();

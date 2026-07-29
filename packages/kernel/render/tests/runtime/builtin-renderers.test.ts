@@ -19,7 +19,7 @@ import type { HydrationAnimationControls, HydrationContext } from '../../src/hyd
 import type { RenderRuntimeConfigInput } from '../../src/runtime';
 
 import { bindWaapiDescriptors } from '../../src/animation';
-import { isWaapiAnimationStyleOwned } from '../../src/animation/retained';
+import { bindWaapiDescriptorElements, isWaapiAnimationStyleOwned } from '../../src/animation/retained';
 import { renderToCanvas } from '../../src/canvas';
 import {
   builtinRetainedRendererFactory,
@@ -57,6 +57,45 @@ const animatedScene = (fill: string, trigger: 'manual' | 'visible' | Readonly<{ 
           ],
           duration: 300,
           trigger,
+        },
+      ],
+    },
+  ],
+});
+
+/** 同时包含 visible 与 autoplay track 的 Canvas lifecycle 场景 */
+const canvasLifecycleScene = (duration: number): IRScene => ({
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'node',
+      id: 'visible',
+      position: [0, 0],
+      animations: [
+        {
+          property: 'opacity',
+          keyframes: [
+            { at: 0, value: 0 },
+            { at: 1, value: 1 },
+          ],
+          duration,
+          trigger: 'visible',
+        },
+      ],
+    },
+    {
+      type: 'node',
+      id: 'autoplay',
+      position: [40, 0],
+      animations: [
+        {
+          property: 'opacity',
+          keyframes: [
+            { at: 0, value: 0 },
+            { at: 1, value: 1 },
+          ],
+          duration,
         },
       ],
     },
@@ -1054,6 +1093,757 @@ describe('builtin retained renderers', () => {
     }
   });
 
+  it('Canvas clock cleanup 失败时仍释放 visibility listener 并只重试失败 clock', () => {
+    const animated: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'node',
+          id: 'visible',
+          position: [0, 0],
+          animations: [
+            {
+              property: 'opacity',
+              keyframes: [
+                { at: 0, value: 0 },
+                { at: 1, value: 1 },
+              ],
+              duration: 300,
+              trigger: 'visible',
+            },
+          ],
+        },
+        {
+          type: 'node',
+          id: 'autoplay',
+          position: [40, 0],
+          animations: [
+            {
+              property: 'opacity',
+              keyframes: [
+                { at: 0, value: 0 },
+                { at: 1, value: 1 },
+              ],
+              duration: 300,
+            },
+          ],
+        },
+      ],
+    };
+    const snapshot = createCorePair(scene('#ef4444'), animated).next;
+    let frameSequence = 0;
+    let clockFrame: number | undefined;
+    let rejectClockCleanup = true;
+    const requestFrame = vi.fn(() => ++frameSequence);
+    const cancelFrame = vi.fn((frame: number) => {
+      if (frame === clockFrame && rejectClockCleanup) {
+        rejectClockCleanup = false;
+        throw new Error('clock cleanup rejected');
+      }
+    });
+    vi.stubGlobal('requestAnimationFrame', requestFrame);
+    vi.stubGlobal('cancelAnimationFrame', cancelFrame);
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => {
+          if (key === 'measureText') return () => ({ width: 0 });
+          if (key === 'createLinearGradient' || key === 'createRadialGradient') {
+            return () => ({ addColorStop: vi.fn() });
+          }
+          if (key in target) return Reflect.get(target, key);
+          return vi.fn();
+        },
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    const remove = vi.spyOn(window, 'removeEventListener');
+    try {
+      const host = document.createElement('canvas');
+      const renderer = builtinRetainedRendererFactory({
+        backend: 'canvas',
+        host,
+        immutableOptions: { backend: 'canvas', idPrefix: 'canvas-dispose-failure', devicePixelRatio: 1 },
+      });
+      const executor = getRetainedRendererExecutor(renderer);
+      if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+      const mount = executor.prepareMount(snapshot, {}, 'create');
+      mount.commit();
+      mount.dispose();
+      clockFrame = requestFrame.mock.results.at(-1)?.value;
+      if (clockFrame === undefined) throw new Error('expected active Canvas animation clock');
+
+      expect(() => executor.dispose()).toThrow('clock cleanup rejected');
+      expect(remove.mock.calls.some(([type]) => type === 'scroll')).toBe(true);
+      expect(remove.mock.calls.some(([type]) => type === 'resize')).toBe(true);
+      expect(() => executor.dispose()).not.toThrow();
+      expect(() => executor.dispose()).not.toThrow();
+      expect(cancelFrame.mock.calls.filter(([frame]) => frame === clockFrame)).toHaveLength(2);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('Canvas animation dispose 同步重入时不重复取消 clock frame', () => {
+    const snapshot = createCorePair(scene('#ef4444'), canvasLifecycleScene(300)).next;
+    let frameSequence = 0;
+    const controlsRef: { current?: Readonly<{ dispose: () => void }> } = {};
+    const requestFrame = vi.fn(() => ++frameSequence);
+    const cancelFrame = vi.fn((frame: number) => {
+      void frame;
+      controlsRef.current?.dispose();
+    });
+    vi.stubGlobal('requestAnimationFrame', requestFrame);
+    vi.stubGlobal('cancelAnimationFrame', cancelFrame);
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => (key === 'measureText' ? () => ({ width: 0 }) : (Reflect.get(target, key) ?? vi.fn())),
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    const host = document.createElement('canvas');
+    const renderer = builtinRetainedRendererFactory({
+      backend: 'canvas',
+      host,
+      immutableOptions: { backend: 'canvas', idPrefix: 'canvas-dispose-reentry', devicePixelRatio: 1 },
+    });
+    const executor = getRetainedRendererExecutor(renderer);
+    if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+    const mount = executor.prepareMount(snapshot, {}, 'create');
+    mount.commit();
+    mount.dispose();
+    const controls = executor.read().animation;
+    controlsRef.current = controls;
+
+    expect(() => controls?.dispose()).not.toThrow();
+    expect(cancelFrame).toHaveBeenCalledTimes(2);
+    expect(new Set(cancelFrame.mock.calls.map(([frame]) => frame)).size).toBe(2);
+    executor.dispose();
+    vi.unstubAllGlobals();
+  });
+
+  it('Canvas clock replacement 清理同步重入 dispose 后不再创建新 clock', () => {
+    const current = createCorePair(scene('#ef4444'), canvasLifecycleScene(300)).next;
+    const next: SceneRuntimeSnapshot = {
+      ...current,
+      revision: (Number(current.revision) + 1) as SceneRuntimeSnapshot['revision'],
+    };
+    const patch: ScenePatch = {
+      baseRevision: current.revision,
+      nextRevision: next.revision,
+      operations: [],
+    };
+    let frameSequence = 0;
+    const controlsRef: { current?: Readonly<{ dispose: () => void }> } = {};
+    const requestFrame = vi.fn(() => ++frameSequence);
+    const cancelFrame = vi.fn(() => controlsRef.current?.dispose());
+    vi.stubGlobal('requestAnimationFrame', requestFrame);
+    vi.stubGlobal('cancelAnimationFrame', cancelFrame);
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => (key === 'measureText' ? () => ({ width: 0 }) : (Reflect.get(target, key) ?? vi.fn())),
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    try {
+      const host = document.createElement('canvas');
+      const renderer = builtinRetainedRendererFactory({
+        backend: 'canvas',
+        host,
+        immutableOptions: { backend: 'canvas', idPrefix: 'canvas-clock-replace-reentry', devicePixelRatio: 1 },
+      });
+      const executor = getRetainedRendererExecutor(renderer);
+      if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+      const mount = executor.prepareMount(current, {}, 'create');
+      mount.commit();
+      mount.dispose();
+      const controls = executor.read().animation;
+      controlsRef.current = controls;
+      const prepared = executor.prepare(patch, next, {});
+      const requestedBeforeCommit = requestFrame.mock.calls.length;
+
+      expect(() => prepared.commit()).not.toThrow();
+      expect(requestFrame).toHaveBeenCalledTimes(requestedBeforeCommit);
+      expect(controls?.running).toBe(false);
+      prepared.dispose();
+      expect(() => executor.dispose()).not.toThrow();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('Canvas visibility cleanup 失败后回调失活且只重试失败项', () => {
+    const snapshot = createCorePair(scene('#ef4444'), animatedScene('#22c55e', 'visible')).next;
+    let frameSequence = 0;
+    const pendingFrames = new Map<number, FrameRequestCallback>();
+    const requestFrame = vi.fn((callback: FrameRequestCallback) => {
+      const frame = ++frameSequence;
+      pendingFrames.set(frame, callback);
+      return frame;
+    });
+    const cancelFrame = vi.fn();
+    vi.stubGlobal('requestAnimationFrame', requestFrame);
+    vi.stubGlobal('cancelAnimationFrame', cancelFrame);
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => {
+          if (key === 'measureText') return () => ({ width: 0 });
+          if (key === 'createLinearGradient' || key === 'createRadialGradient') {
+            return () => ({ addColorStop: vi.fn() });
+          }
+          if (key in target) return Reflect.get(target, key);
+          return vi.fn();
+        },
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    const originalRemove = window.removeEventListener.bind(window);
+    let rejectScrollRemoval = true;
+    const remove = vi.spyOn(window, 'removeEventListener').mockImplementation((type, listener, options) => {
+      if (type === 'scroll' && rejectScrollRemoval) {
+        rejectScrollRemoval = false;
+        throw new Error('scroll cleanup rejected');
+      }
+      originalRemove(type, listener, options);
+    });
+    try {
+      const host = document.createElement('canvas');
+      const renderer = builtinRetainedRendererFactory({
+        backend: 'canvas',
+        host,
+        immutableOptions: { backend: 'canvas', idPrefix: 'canvas-visibility-dispose', devicePixelRatio: 1 },
+      });
+      const executor = getRetainedRendererExecutor(renderer);
+      if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+      const mount = executor.prepareMount(snapshot, {}, 'create');
+      mount.commit();
+      mount.dispose();
+      const getBoundingClientRect = vi.spyOn(host, 'getBoundingClientRect');
+
+      expect(() => executor.dispose()).toThrow('scroll cleanup rejected');
+      expect(remove.mock.calls.filter(([type]) => type === 'resize')).toHaveLength(1);
+      expect(cancelFrame).toHaveBeenCalledTimes(1);
+      window.dispatchEvent(new Event('scroll'));
+      for (const callback of pendingFrames.values()) callback(0);
+      expect(getBoundingClientRect).not.toHaveBeenCalled();
+
+      expect(() => executor.dispose()).not.toThrow();
+      expect(() => executor.dispose()).not.toThrow();
+      expect(remove.mock.calls.filter(([type]) => type === 'scroll')).toHaveLength(2);
+      expect(remove.mock.calls.filter(([type]) => type === 'resize')).toHaveLength(1);
+      expect(cancelFrame).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('Canvas visibility rAF 注册同步 dispose 后立即取消并保留失败 frame 重试', () => {
+    const snapshot = createCorePair(scene('#ef4444'), animatedScene('#22c55e', 'visible')).next;
+    let frameSequence = 0;
+    let reenterOnRequest = false;
+    let reentrantFrame: number | undefined;
+    let rejectReentrantCleanup = true;
+    const controlsRef: { current?: Readonly<{ dispose: () => void }> } = {};
+    const pendingFrames = new Map<number, FrameRequestCallback>();
+    const requestFrame = vi.fn((callback: FrameRequestCallback) => {
+      const frame = ++frameSequence;
+      pendingFrames.set(frame, callback);
+      if (reenterOnRequest) {
+        reenterOnRequest = false;
+        reentrantFrame = frame;
+        controlsRef.current?.dispose();
+      }
+      return frame;
+    });
+    const cancelFrame = vi.fn((frame: number) => {
+      if (frame === reentrantFrame && rejectReentrantCleanup) {
+        rejectReentrantCleanup = false;
+        throw new Error('reentrant visibility frame cleanup rejected');
+      }
+      pendingFrames.delete(frame);
+    });
+    vi.stubGlobal('requestAnimationFrame', requestFrame);
+    vi.stubGlobal('cancelAnimationFrame', cancelFrame);
+    let scheduleVisibility: EventListener | undefined;
+    const originalAdd = window.addEventListener.bind(window);
+    vi.spyOn(window, 'addEventListener').mockImplementation((type, listener, options) => {
+      if (type === 'scroll' && typeof listener === 'function') scheduleVisibility = listener;
+      originalAdd(type, listener, options);
+    });
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => (key === 'measureText' ? () => ({ width: 0 }) : (Reflect.get(target, key) ?? vi.fn())),
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    try {
+      const host = document.createElement('canvas');
+      const renderer = builtinRetainedRendererFactory({
+        backend: 'canvas',
+        host,
+        immutableOptions: { backend: 'canvas', idPrefix: 'canvas-visibility-register-reentry', devicePixelRatio: 1 },
+      });
+      const executor = getRetainedRendererExecutor(renderer);
+      if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+      const mount = executor.prepareMount(snapshot, {}, 'create');
+      mount.commit();
+      mount.dispose();
+      const controls = executor.read().animation;
+      controlsRef.current = controls;
+      const initialFrame = requestFrame.mock.results[0]?.value;
+      if (initialFrame === undefined) throw new Error('expected initial visibility frame');
+      const initialCallback = pendingFrames.get(initialFrame);
+      if (initialCallback === undefined) throw new Error('expected initial visibility callback');
+      pendingFrames.delete(initialFrame);
+      initialCallback(0);
+      reenterOnRequest = true;
+      if (scheduleVisibility === undefined) throw new Error('expected Canvas visibility schedule listener');
+
+      expect(() => scheduleVisibility?.(new Event('scroll'))).toThrow('reentrant visibility frame cleanup rejected');
+
+      expect(reentrantFrame).toBeDefined();
+      expect(pendingFrames.size).toBe(1);
+      expect(() => controls?.dispose()).not.toThrow();
+      expect(pendingFrames.size).toBe(0);
+      expect(cancelFrame.mock.calls.some(([frame]) => frame === reentrantFrame)).toBe(true);
+      expect(() => executor.dispose()).not.toThrow();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('Canvas visibility rAF 同步执行 callback 后不回写已消费 frame', () => {
+    const snapshot = createCorePair(scene('#ef4444'), animatedScene('#22c55e', 'visible')).next;
+    let frameSequence = 0;
+    const requestFrame = vi.fn((callback: FrameRequestCallback) => {
+      callback(0);
+      return ++frameSequence;
+    });
+    vi.stubGlobal('requestAnimationFrame', requestFrame);
+    vi.stubGlobal('cancelAnimationFrame', vi.fn());
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => (key === 'measureText' ? () => ({ width: 0 }) : (Reflect.get(target, key) ?? vi.fn())),
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    try {
+      const host = document.createElement('canvas');
+      const renderer = builtinRetainedRendererFactory({
+        backend: 'canvas',
+        host,
+        immutableOptions: { backend: 'canvas', idPrefix: 'canvas-visibility-sync-frame', devicePixelRatio: 1 },
+      });
+      const executor = getRetainedRendererExecutor(renderer);
+      if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+      const mount = executor.prepareMount(snapshot, {}, 'create');
+      mount.commit();
+      mount.dispose();
+      expect(requestFrame).toHaveBeenCalledTimes(1);
+
+      window.dispatchEvent(new Event('scroll'));
+
+      expect(requestFrame).toHaveBeenCalledTimes(2);
+      executor.dispose();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('Canvas visibility setup 与 cleanup 连续失败时保留 setup primary 到 renderer dispose', () => {
+    const snapshot = createCorePair(scene('#ef4444'), animatedScene('#22c55e', 'visible')).next;
+    vi.stubGlobal(
+      'requestAnimationFrame',
+      vi.fn(() => 1),
+    );
+    vi.stubGlobal('cancelAnimationFrame', vi.fn());
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => (key === 'measureText' ? () => ({ width: 0 }) : (Reflect.get(target, key) ?? vi.fn())),
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    const originalAdd = window.addEventListener.bind(window);
+    const originalRemove = window.removeEventListener.bind(window);
+    vi.spyOn(window, 'addEventListener').mockImplementation((type, listener, options) => {
+      if (type === 'resize') throw new Error('visibility setup rejected');
+      originalAdd(type, listener, options);
+    });
+    let cleanupRejects = 4;
+    const remove = vi.spyOn(window, 'removeEventListener').mockImplementation((type, listener, options) => {
+      if (type === 'scroll' && cleanupRejects > 0) {
+        cleanupRejects -= 1;
+        throw new Error(`visibility cleanup rejected ${String(4 - cleanupRejects)}`);
+      }
+      originalRemove(type, listener, options);
+    });
+    try {
+      const host = document.createElement('canvas');
+      const renderer = builtinRetainedRendererFactory({
+        backend: 'canvas',
+        host,
+        immutableOptions: { backend: 'canvas', idPrefix: 'canvas-visibility-setup', devicePixelRatio: 1 },
+      });
+      const executor = getRetainedRendererExecutor(renderer);
+      if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+      const mount = executor.prepareMount(snapshot, {}, 'create');
+
+      expect(() => mount.commit()).toThrow('visibility setup rejected');
+      expect(() => mount.rollback()).toThrow('visibility cleanup rejected 3');
+      expect(() => mount.dispose()).toThrow('visibility cleanup rejected 4');
+      expect(() => executor.dispose()).not.toThrow();
+      expect(remove.mock.calls.filter(([type]) => type === 'scroll')).toHaveLength(5);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('Canvas candidate animation cleanup 跨 rollback/token 连续失败后由 renderer dispose 重试', () => {
+    const pair = createCorePair(canvasLifecycleScene(300), canvasLifecycleScene(600));
+    let frameSequence = 0;
+    const candidateFrameRef: { current?: number } = {};
+    const requestFrame = vi.fn(() => ++frameSequence);
+    const cancelFrame = vi.fn((frame: number) => {
+      if (
+        frame === candidateFrameRef.current &&
+        cancelFrame.mock.calls.filter(([value]) => value === frame).length <= 2
+      ) {
+        throw new Error(`candidate clock cleanup rejected ${String(cancelFrame.mock.calls.length)}`);
+      }
+    });
+    vi.stubGlobal('requestAnimationFrame', requestFrame);
+    vi.stubGlobal('cancelAnimationFrame', cancelFrame);
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => (key === 'measureText' ? () => ({ width: 0 }) : (Reflect.get(target, key) ?? vi.fn())),
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    const host = document.createElement('canvas');
+    const renderer = builtinRetainedRendererFactory({
+      backend: 'canvas',
+      host,
+      immutableOptions: { backend: 'canvas', idPrefix: 'canvas-candidate-cleanup', devicePixelRatio: 1 },
+    });
+    const executor = getRetainedRendererExecutor(renderer);
+    if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+    const mount = executor.prepareMount(pair.current, {}, 'create');
+    mount.commit();
+    mount.dispose();
+    const originalAdd = host.addEventListener.bind(host);
+    vi.spyOn(host, 'addEventListener').mockImplementation((type, listener, options) => {
+      if (type === 'click') throw new Error('candidate hydration rejected');
+      originalAdd(type, listener, options);
+    });
+    const prepared = executor.prepare(pair.patch, pair.next, {
+      animation: { enabled: true },
+      handlerContributions: [{ registration: 1, handlers: { visible: { click: vi.fn() } } }],
+    });
+
+    expect(() => prepared.commit()).toThrow('candidate hydration rejected');
+    const candidateFrame = requestFrame.mock.results.at(-1)?.value;
+    if (candidateFrame === undefined) throw new Error('expected candidate Canvas clock frame');
+    candidateFrameRef.current = candidateFrame;
+    expect(() => prepared.rollback()).toThrow();
+    expect(() => prepared.dispose()).toThrow();
+    expect(() => executor.dispose()).not.toThrow();
+    expect(cancelFrame.mock.calls.filter(([frame]) => frame === candidateFrame)).toHaveLength(3);
+    vi.unstubAllGlobals();
+  });
+
+  it('Canvas previous animation suspend 失败后 rollback 恢复 committed running state', () => {
+    const pair = createCorePair(canvasLifecycleScene(300), canvasLifecycleScene(600));
+    vi.stubGlobal(
+      'requestAnimationFrame',
+      vi.fn(() => 1),
+    );
+    vi.stubGlobal('cancelAnimationFrame', vi.fn());
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => (key === 'measureText' ? () => ({ width: 0 }) : (Reflect.get(target, key) ?? vi.fn())),
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    const host = document.createElement('canvas');
+    const renderer = builtinRetainedRendererFactory({
+      backend: 'canvas',
+      host,
+      immutableOptions: { backend: 'canvas', idPrefix: 'canvas-suspend-rollback', devicePixelRatio: 1 },
+    });
+    const executor = getRetainedRendererExecutor(renderer);
+    if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+    const mount = executor.prepareMount(pair.current, {}, 'create');
+    mount.commit();
+    mount.dispose();
+    const previousControls = executor.read().animation;
+    expect(previousControls?.running).toBe(true);
+    const originalRemove = window.removeEventListener.bind(window);
+    let rejectScrollRemoval = true;
+    vi.spyOn(window, 'removeEventListener').mockImplementation((type, listener, options) => {
+      if (type === 'scroll' && rejectScrollRemoval) {
+        rejectScrollRemoval = false;
+        throw new Error('previous visibility suspend rejected');
+      }
+      originalRemove(type, listener, options);
+    });
+    const prepared = executor.prepare(pair.patch, pair.next, { animation: { enabled: true } });
+
+    expect(() => prepared.commit()).toThrow('previous visibility suspend rejected');
+    expect(() => prepared.rollback()).not.toThrow();
+    prepared.dispose();
+    expect(executor.read().animation).toBe(previousControls);
+    expect(previousControls?.running).toBe(true);
+    executor.dispose();
+    vi.unstubAllGlobals();
+  });
+
+  it('Canvas rollback visibility listener 注册同步 dispose 后不泄漏 listener 或重启 clock', () => {
+    const pair = createCorePair(canvasLifecycleScene(300), canvasLifecycleScene(600));
+    let frameSequence = 0;
+    vi.stubGlobal(
+      'requestAnimationFrame',
+      vi.fn(() => ++frameSequence),
+    );
+    vi.stubGlobal('cancelAnimationFrame', vi.fn());
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => (key === 'measureText' ? () => ({ width: 0 }) : (Reflect.get(target, key) ?? vi.fn())),
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    const activeScrollListeners = new Set<EventListenerOrEventListenerObject>();
+    const originalWindowAdd = window.addEventListener.bind(window);
+    const originalWindowRemove = window.removeEventListener.bind(window);
+    let reenterOnScrollRegistration = false;
+    const controlsRef: { current?: Readonly<{ dispose: () => void }> } = {};
+    vi.spyOn(window, 'addEventListener').mockImplementation((type, listener, options) => {
+      if (type === 'scroll' && reenterOnScrollRegistration) {
+        reenterOnScrollRegistration = false;
+        controlsRef.current?.dispose();
+      }
+      originalWindowAdd(type, listener, options);
+      if (type === 'scroll') activeScrollListeners.add(listener);
+    });
+    vi.spyOn(window, 'removeEventListener').mockImplementation((type, listener, options) => {
+      originalWindowRemove(type, listener, options);
+      if (type === 'scroll') activeScrollListeners.delete(listener);
+    });
+    try {
+      const host = document.createElement('canvas');
+      const renderer = builtinRetainedRendererFactory({
+        backend: 'canvas',
+        host,
+        immutableOptions: { backend: 'canvas', idPrefix: 'canvas-resume-register-reentry', devicePixelRatio: 1 },
+      });
+      const executor = getRetainedRendererExecutor(renderer);
+      if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+      const mount = executor.prepareMount(pair.current, {}, 'create');
+      mount.commit();
+      mount.dispose();
+      const previousControls = executor.read().animation;
+      controlsRef.current = previousControls;
+      const originalHostAdd = host.addEventListener.bind(host);
+      vi.spyOn(host, 'addEventListener').mockImplementation((type, listener, options) => {
+        if (type === 'click') throw new Error('candidate hydration rejected');
+        originalHostAdd(type, listener, options);
+      });
+      const prepared = executor.prepare(pair.patch, pair.next, {
+        animation: { enabled: true },
+        handlerContributions: [{ registration: 1, handlers: { visible: { click: vi.fn() } } }],
+      });
+      expect(() => prepared.commit()).toThrow('candidate hydration rejected');
+      reenterOnScrollRegistration = true;
+
+      expect(() => prepared.rollback()).not.toThrow();
+
+      expect(activeScrollListeners.size).toBe(0);
+      expect(previousControls?.running).toBe(false);
+      prepared.dispose();
+      expect(() => executor.dispose()).not.toThrow();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('Canvas public pause 失败时保留 coarse play intent', () => {
+    const current = createCorePair(scene('#ef4444'), animatedScene('#22c55e', 'manual')).next;
+    const next: SceneRuntimeSnapshot = {
+      ...current,
+      revision: (Number(current.revision) + 1) as SceneRuntimeSnapshot['revision'],
+    };
+    const patch: ScenePatch = {
+      baseRevision: current.revision,
+      nextRevision: next.revision,
+      operations: [],
+    };
+    let frameSequence = 0;
+    let rejectPause = false;
+    const requestFrame = vi.fn(() => ++frameSequence);
+    const cancelFrame = vi.fn(() => {
+      if (rejectPause) {
+        rejectPause = false;
+        throw new Error('public pause rejected');
+      }
+    });
+    vi.stubGlobal('requestAnimationFrame', requestFrame);
+    vi.stubGlobal('cancelAnimationFrame', cancelFrame);
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => (key === 'measureText' ? () => ({ width: 0 }) : (Reflect.get(target, key) ?? vi.fn())),
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    try {
+      const host = document.createElement('canvas');
+      const renderer = builtinRetainedRendererFactory({
+        backend: 'canvas',
+        host,
+        immutableOptions: { backend: 'canvas', idPrefix: 'canvas-coarse-pause-failure', devicePixelRatio: 1 },
+      });
+      const executor = getRetainedRendererExecutor(renderer);
+      if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+      const mount = executor.prepareMount(current, {}, 'create');
+      mount.commit();
+      mount.dispose();
+      const controls = executor.read().animation;
+      controls?.play();
+      rejectPause = true;
+      expect(() => controls?.pause()).toThrow('public pause rejected');
+      expect(controls?.running).toBe(true);
+      const prepared = executor.prepare(patch, next, {});
+
+      prepared.commit();
+
+      expect(controls?.running).toBe(true);
+      prepared.dispose();
+      executor.dispose();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('Canvas clock pause 取消失败后 rollback 不会遗留两条 rAF 链', () => {
+    const pair = createCorePair(canvasLifecycleScene(300), canvasLifecycleScene(600));
+    let frameSequence = 0;
+    let previousClockFrame: number | undefined;
+    let rejectPreviousClockCleanup = true;
+    const pendingFrames = new Map<number, FrameRequestCallback>();
+    const requestFrame = vi.fn((callback: FrameRequestCallback) => {
+      const frame = ++frameSequence;
+      pendingFrames.set(frame, callback);
+      return frame;
+    });
+    const cancelFrame = vi.fn((frame: number) => {
+      if (frame === previousClockFrame && rejectPreviousClockCleanup) {
+        rejectPreviousClockCleanup = false;
+        throw new Error('previous clock pause rejected');
+      }
+      pendingFrames.delete(frame);
+    });
+    vi.stubGlobal('requestAnimationFrame', requestFrame);
+    vi.stubGlobal('cancelAnimationFrame', cancelFrame);
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => (key === 'measureText' ? () => ({ width: 0 }) : (Reflect.get(target, key) ?? vi.fn())),
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    try {
+      const host = document.createElement('canvas');
+      const renderer = builtinRetainedRendererFactory({
+        backend: 'canvas',
+        host,
+        immutableOptions: { backend: 'canvas', idPrefix: 'canvas-clock-pause-rollback', devicePixelRatio: 1 },
+      });
+      const executor = getRetainedRendererExecutor(renderer);
+      if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+      const mount = executor.prepareMount(pair.current, {}, 'create');
+      mount.commit();
+      mount.dispose();
+      const previousControls = executor.read().animation;
+      previousClockFrame = requestFrame.mock.results[1]?.value;
+      if (previousClockFrame === undefined) throw new Error('expected committed Canvas clock frame');
+      const previousTick = pendingFrames.get(previousClockFrame);
+      if (previousTick === undefined) throw new Error('expected pending Canvas clock callback');
+      const prepared = executor.prepare(pair.patch, pair.next, { animation: { enabled: true } });
+
+      expect(() => prepared.commit()).toThrow('previous clock pause rejected');
+      expect(() => prepared.rollback()).not.toThrow();
+      expect(pendingFrames.size).toBe(2);
+      pendingFrames.delete(previousClockFrame);
+      previousTick(0);
+      expect(pendingFrames.size).toBe(2);
+      expect(previousControls?.running).toBe(true);
+      prepared.dispose();
+      executor.dispose();
+      expect(pendingFrames.size).toBe(0);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('Canvas clock replacement 恢复也失败时保留 trigger primary 并由 rollback 重试', () => {
+    const current = createCorePair(scene('#ef4444'), canvasLifecycleScene(300)).next;
+    const next: SceneRuntimeSnapshot = {
+      ...current,
+      revision: (Number(current.revision) + 1) as SceneRuntimeSnapshot['revision'],
+    };
+    const patch: ScenePatch = {
+      baseRevision: current.revision,
+      nextRevision: next.revision,
+      operations: [],
+    };
+    let frameSequence = 0;
+    const visibilityFrameRef: { current?: number } = {};
+    let clockCleanupRejects = 2;
+    const requestFrame = vi.fn(() => ++frameSequence);
+    const cancelFrame = vi.fn((frame: number) => {
+      if (frame === visibilityFrameRef.current && clockCleanupRejects > 0) {
+        const attempt = 3 - clockCleanupRejects;
+        clockCleanupRejects -= 1;
+        throw new Error(`clock replacement cleanup rejected ${String(attempt)}`);
+      }
+    });
+    vi.stubGlobal('requestAnimationFrame', requestFrame);
+    vi.stubGlobal('cancelAnimationFrame', cancelFrame);
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => (key === 'measureText' ? () => ({ width: 0 }) : (Reflect.get(target, key) ?? vi.fn())),
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    const host = document.createElement('canvas');
+    const renderer = builtinRetainedRendererFactory({
+      backend: 'canvas',
+      host,
+      immutableOptions: { backend: 'canvas', idPrefix: 'canvas-clock-recovery', devicePixelRatio: 1 },
+    });
+    const executor = getRetainedRendererExecutor(renderer);
+    if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+    const mount = executor.prepareMount(current, {}, 'create');
+    mount.commit();
+    mount.dispose();
+    const previousControls = executor.read().animation;
+    const visibilityFrame = requestFrame.mock.results[0]?.value;
+    if (visibilityFrame === undefined) throw new Error('expected committed Canvas visibility frame');
+    visibilityFrameRef.current = visibilityFrame;
+    const prepared = executor.prepare(patch, next, {});
+
+    expect(() => prepared.commit()).toThrow('clock replacement cleanup rejected 1');
+    let rollbackFailure: unknown;
+    try {
+      prepared.rollback();
+    } catch (cause) {
+      rollbackFailure = cause;
+    }
+    expect(rollbackFailure).toBeUndefined();
+    expect(cancelFrame.mock.calls.filter(([frame]) => frame === visibilityFrame)).toHaveLength(3);
+    prepared.dispose();
+    expect(executor.read().animation).toBe(previousControls);
+    executor.dispose();
+    vi.unstubAllGlobals();
+  });
+
   it('SVG prepare 在 commit 前拒绝已缺失的 entity mutation target', () => {
     const pair = createCorePair(scene('#ef4444'), scene('#22c55e'));
     const host = document.createElementNS(SVG_NAMESPACE, 'svg');
@@ -1259,6 +2049,516 @@ describe('builtin retained renderers', () => {
     expect(target.style.transformOrigin).toBe('30px 40px');
     rollbackBase.dispose();
     expect(target.style.transformOrigin).toBe('3px 4px');
+  });
+
+  it('SVG WAAPI binding 的 cancel 失败时仍清理 listener/style 并只重试失败 animation', () => {
+    const host = document.createElementNS(SVG_NAMESPACE, 'svg');
+    const target = document.createElementNS(SVG_NAMESPACE, 'g');
+    target.style.transformOrigin = '3px 4px';
+    target.style.transformBox = 'fill-box';
+    target.setAttribute(
+      'data-retikz-anim',
+      JSON.stringify([
+        {
+          property: 'rotate',
+          keyframes: [{ transform: 'rotate(0deg)' }, { transform: 'rotate(90deg)' }],
+          timing: { duration: 100, delay: 0, easing: 'linear', iterations: 1, fill: 'both' },
+          trigger: { onEvent: 'click' },
+          transformOrigin: '10px 20px',
+        },
+      ]),
+    );
+    let rejectCancel = true;
+    const play = vi.fn();
+    const cancel = vi.fn(() => {
+      if (rejectCancel) {
+        rejectCancel = false;
+        throw new Error('animation cancel rejected');
+      }
+    });
+    Object.defineProperty(target, 'animate', {
+      value: () => ({ pause: vi.fn(), play, cancel, currentTime: 0, playState: 'running' }),
+    });
+    host.appendChild(target);
+    const remove = vi.spyOn(target, 'removeEventListener');
+    const controls = bindWaapiDescriptors(host);
+    target.dispatchEvent(new MouseEvent('click'));
+
+    expect(() => controls.dispose()).toThrow('animation cancel rejected');
+    expect(target.style.transformOrigin).toBe('3px 4px');
+    expect(target.style.transformBox).toBe('fill-box');
+    target.dispatchEvent(new MouseEvent('click'));
+    expect(play).not.toHaveBeenCalled();
+
+    expect(() => controls.dispose()).not.toThrow();
+    expect(() => controls.dispose()).not.toThrow();
+    expect(cancel).toHaveBeenCalledTimes(2);
+    expect(remove.mock.calls.filter(([type]) => type === 'click')).toHaveLength(1);
+  });
+
+  it('SVG event animation cancel 同步触发 dispose 后不再重新 play', () => {
+    const host = document.createElementNS(SVG_NAMESPACE, 'svg');
+    const target = document.createElementNS(SVG_NAMESPACE, 'g');
+    target.setAttribute(
+      'data-retikz-anim',
+      JSON.stringify([
+        {
+          property: 'opacity',
+          keyframes: [{ opacity: 0 }, { opacity: 1 }],
+          timing: { duration: 100, delay: 0, easing: 'linear', iterations: 1, fill: 'both' },
+          trigger: { onEvent: 'click' },
+        },
+      ]),
+    );
+    const controlsRef: { current?: Readonly<{ dispose: () => void }> } = {};
+    const play = vi.fn();
+    const cancel = vi.fn(() => controlsRef.current?.dispose());
+    Object.defineProperty(target, 'animate', {
+      value: () => ({ pause: vi.fn(), play, cancel, currentTime: 0, playState: 'running' }),
+    });
+    host.appendChild(target);
+    const remove = vi.spyOn(target, 'removeEventListener');
+    const controls = bindWaapiDescriptors(host);
+    controlsRef.current = controls;
+    target.dispatchEvent(new MouseEvent('click'));
+
+    target.dispatchEvent(new MouseEvent('click'));
+
+    expect(play).not.toHaveBeenCalled();
+    expect(cancel).toHaveBeenCalledTimes(2);
+    expect(controls.running).toBe(false);
+    expect(remove.mock.calls.filter(([type]) => type === 'click')).toHaveLength(1);
+    expect(() => controls.dispose()).not.toThrow();
+  });
+
+  it.each(['visible', 'event'] as const)('SVG %s 首次 animate 同步 dispose 后立即清理返回的 animation', triggerKind => {
+    const host = document.createElementNS(SVG_NAMESPACE, 'svg');
+    const target = document.createElementNS(SVG_NAMESPACE, 'g');
+    target.setAttribute(
+      'data-retikz-anim',
+      JSON.stringify([
+        {
+          property: 'opacity',
+          keyframes: [{ opacity: 0 }, { opacity: 1 }],
+          timing: { duration: 100, delay: 0, easing: 'linear', iterations: 1, fill: 'both' },
+          trigger: triggerKind === 'visible' ? 'visible' : { onEvent: 'click' },
+        },
+      ]),
+    );
+    const controlsRef: { current?: Readonly<{ dispose: () => void }> } = {};
+    const cancel = vi.fn();
+    Object.defineProperty(target, 'animate', {
+      value: () => {
+        controlsRef.current?.dispose();
+        return { pause: vi.fn(), play: vi.fn(), cancel, currentTime: 0, playState: 'running' };
+      },
+    });
+    let observeVisibility: ((entries: Array<Readonly<{ isIntersecting: boolean }>>) => void) | undefined;
+    class TestIntersectionObserver {
+      constructor(callback: (entries: Array<Readonly<{ isIntersecting: boolean }>>) => void) {
+        observeVisibility = callback;
+      }
+      observe = vi.fn();
+      disconnect = vi.fn();
+    }
+    vi.stubGlobal('IntersectionObserver', TestIntersectionObserver);
+    try {
+      host.appendChild(target);
+      const controls = bindWaapiDescriptors(host);
+      controlsRef.current = controls;
+
+      if (triggerKind === 'visible') observeVisibility?.([{ isIntersecting: true }]);
+      else target.dispatchEvent(new MouseEvent('click'));
+
+      expect(cancel).toHaveBeenCalledTimes(1);
+      expect(controls.running).toBe(false);
+      expect(() => controls.dispose()).not.toThrow();
+      expect(cancel).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it.each(['visible', 'event'] as const)('SVG %s gate 读取同步 dispose 后不再调用外部 animation', triggerKind => {
+    const target = document.createElementNS(SVG_NAMESPACE, 'g');
+    target.setAttribute(
+      'data-retikz-anim',
+      JSON.stringify([
+        {
+          property: 'opacity',
+          keyframes: [{ opacity: 0 }, { opacity: 1 }],
+          timing: { duration: 100, delay: 0, easing: 'linear', iterations: 1, fill: 'both' },
+          trigger: triggerKind === 'visible' ? 'visible' : { onEvent: 'click' },
+        },
+      ]),
+    );
+    const animate = vi.fn(() => ({
+      pause: vi.fn(),
+      play: vi.fn(),
+      cancel: vi.fn(),
+      currentTime: 0,
+      playState: 'running',
+    }));
+    Object.defineProperty(target, 'animate', { value: animate });
+    let observeVisibility: ((entries: Array<Readonly<{ isIntersecting: boolean }>>) => void) | undefined;
+    class TestIntersectionObserver {
+      constructor(callback: (entries: Array<Readonly<{ isIntersecting: boolean }>>) => void) {
+        observeVisibility = callback;
+      }
+      observe = vi.fn();
+      disconnect = vi.fn();
+    }
+    vi.stubGlobal('IntersectionObserver', TestIntersectionObserver);
+    let reenterOnGateRead = false;
+    const controlsRef: { current?: Readonly<{ dispose: () => void }> } = {};
+    const controls = bindWaapiDescriptorElements([target], () => {
+      if (reenterOnGateRead) {
+        reenterOnGateRead = false;
+        controlsRef.current?.dispose();
+      }
+      return true;
+    });
+    controlsRef.current = controls;
+    reenterOnGateRead = true;
+    try {
+      if (triggerKind === 'visible') observeVisibility?.([{ isIntersecting: true }]);
+      else target.dispatchEvent(new MouseEvent('click'));
+
+      expect(animate).not.toHaveBeenCalled();
+      expect(controls.running).toBe(false);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('SVG binding play 中首个 animation 同步 dispose 后不再播放后续 animation', () => {
+    const target = document.createElementNS(SVG_NAMESPACE, 'g');
+    target.setAttribute(
+      'data-retikz-anim',
+      JSON.stringify(
+        [100, 200].map(duration => ({
+          property: 'opacity',
+          keyframes: [{ opacity: 0 }, { opacity: 1 }],
+          timing: { duration, delay: 0, easing: 'linear', iterations: 1, fill: 'both' },
+          trigger: 'manual',
+        })),
+      ),
+    );
+    const controlsRef: { current?: Readonly<{ dispose: () => void }> } = {};
+    const secondPlay = vi.fn();
+    let animationIndex = 0;
+    Object.defineProperty(target, 'animate', {
+      value: () => {
+        const index = animationIndex++;
+        return {
+          pause: vi.fn(),
+          play: index === 0 ? vi.fn(() => controlsRef.current?.dispose()) : secondPlay,
+          cancel: vi.fn(),
+          currentTime: 0,
+          playState: 'paused',
+        };
+      },
+    });
+    const controls = bindWaapiDescriptors(target);
+    controlsRef.current = controls;
+
+    controls.play();
+
+    expect(secondPlay).not.toHaveBeenCalled();
+    expect(controls.running).toBe(false);
+  });
+
+  it('SVG visible observer 注册中同步消费 trigger 后不遗留 observer', () => {
+    const target = document.createElementNS(SVG_NAMESPACE, 'g');
+    target.setAttribute(
+      'data-retikz-anim',
+      JSON.stringify([
+        {
+          property: 'opacity',
+          keyframes: [{ opacity: 0 }, { opacity: 1 }],
+          timing: { duration: 100, delay: 0, easing: 'linear', iterations: 1, fill: 'both' },
+          trigger: 'visible',
+        },
+      ]),
+    );
+    Object.defineProperty(target, 'animate', {
+      value: () => ({ pause: vi.fn(), play: vi.fn(), cancel: vi.fn(), currentTime: 0, playState: 'running' }),
+    });
+    let observerRegistered = false;
+    const disconnect = vi.fn(() => {
+      observerRegistered = false;
+    });
+    class TestIntersectionObserver {
+      private readonly callback: (entries: Array<Readonly<{ isIntersecting: boolean }>>) => void;
+
+      constructor(callback: (entries: Array<Readonly<{ isIntersecting: boolean }>>) => void) {
+        this.callback = callback;
+      }
+
+      observe = vi.fn(() => {
+        this.callback([{ isIntersecting: true }]);
+        observerRegistered = true;
+      });
+
+      disconnect = disconnect;
+    }
+    vi.stubGlobal('IntersectionObserver', TestIntersectionObserver);
+    try {
+      const controls = bindWaapiDescriptors(target);
+
+      expect(observerRegistered).toBe(false);
+      expect(disconnect).toHaveBeenCalledTimes(2);
+      controls.dispose();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('SVG event listener 安装后注册抛错仍由 setup cleanup 移除', () => {
+    const target = document.createElementNS(SVG_NAMESPACE, 'g');
+    target.setAttribute(
+      'data-retikz-anim',
+      JSON.stringify([
+        {
+          property: 'opacity',
+          keyframes: [{ opacity: 0 }, { opacity: 1 }],
+          timing: { duration: 100, delay: 0, easing: 'linear', iterations: 1, fill: 'both' },
+          trigger: { onEvent: 'click' },
+        },
+      ]),
+    );
+    const animate = vi.fn(() => ({
+      pause: vi.fn(),
+      play: vi.fn(),
+      cancel: vi.fn(),
+      currentTime: 0,
+      playState: 'running',
+    }));
+    Object.defineProperty(target, 'animate', { value: animate });
+    const addEventListener = target.addEventListener.bind(target);
+    const removeEventListener = target.removeEventListener.bind(target);
+    const removeEventListenerSpy = vi
+      .spyOn(target, 'removeEventListener')
+      .mockImplementation((type, listener, options) => removeEventListener(type, listener, options));
+    vi.spyOn(target, 'addEventListener').mockImplementation((type, listener, options) => {
+      addEventListener(type, listener, options);
+      throw new Error('listener registration rejected');
+    });
+
+    expect(() => bindWaapiDescriptors(target)).toThrow('listener registration rejected');
+    target.dispatchEvent(new MouseEvent('click'));
+
+    expect(animate).not.toHaveBeenCalled();
+    expect(removeEventListenerSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('SVG visible observer 触发成功后 final dispose 不重复 disconnect', () => {
+    const host = document.createElementNS(SVG_NAMESPACE, 'svg');
+    const target = document.createElementNS(SVG_NAMESPACE, 'g');
+    target.setAttribute(
+      'data-retikz-anim',
+      JSON.stringify([
+        {
+          property: 'opacity',
+          keyframes: [{ opacity: 0 }, { opacity: 1 }],
+          timing: { duration: 100, delay: 0, easing: 'linear', iterations: 1, fill: 'both' },
+          trigger: 'visible',
+        },
+      ]),
+    );
+    Object.defineProperty(target, 'animate', {
+      value: () => ({ pause: vi.fn(), play: vi.fn(), cancel: vi.fn(), currentTime: 0, playState: 'running' }),
+    });
+    const disconnect = vi.fn();
+    let observeVisibility: ((entries: Array<Readonly<{ isIntersecting: boolean }>>) => void) | undefined;
+    class TestIntersectionObserver {
+      constructor(callback: (entries: Array<Readonly<{ isIntersecting: boolean }>>) => void) {
+        observeVisibility = callback;
+      }
+      observe = vi.fn();
+      disconnect = disconnect;
+    }
+    vi.stubGlobal('IntersectionObserver', TestIntersectionObserver);
+    try {
+      host.appendChild(target);
+      const controls = bindWaapiDescriptors(host);
+      observeVisibility?.([{ isIntersecting: true }]);
+      controls.dispose();
+      controls.dispose();
+      expect(disconnect).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('SVG visible observer disconnect 重入或失败时只消费一次 trigger', () => {
+    const host = document.createElementNS(SVG_NAMESPACE, 'svg');
+    const target = document.createElementNS(SVG_NAMESPACE, 'g');
+    target.setAttribute(
+      'data-retikz-anim',
+      JSON.stringify([
+        {
+          property: 'opacity',
+          keyframes: [{ opacity: 0 }, { opacity: 1 }],
+          timing: { duration: 100, delay: 0, easing: 'linear', iterations: 1, fill: 'both' },
+          trigger: 'visible',
+        },
+      ]),
+    );
+    const cancel = vi.fn();
+    const animate = vi.fn(() => ({ pause: vi.fn(), play: vi.fn(), cancel, currentTime: 0, playState: 'running' }));
+    Object.defineProperty(target, 'animate', { value: animate });
+    let observeVisibility: ((entries: Array<Readonly<{ isIntersecting: boolean }>>) => void) | undefined;
+    let reentered = false;
+    const disconnect = vi.fn(() => {
+      if (reentered) return;
+      reentered = true;
+      observeVisibility?.([{ isIntersecting: true }]);
+      throw new Error('observer disconnect rejected');
+    });
+    class TestIntersectionObserver {
+      constructor(callback: (entries: Array<Readonly<{ isIntersecting: boolean }>>) => void) {
+        observeVisibility = callback;
+      }
+      observe = vi.fn();
+      disconnect = disconnect;
+    }
+    vi.stubGlobal('IntersectionObserver', TestIntersectionObserver);
+    try {
+      host.appendChild(target);
+      const controls = bindWaapiDescriptors(host);
+
+      expect(() => observeVisibility?.([{ isIntersecting: true }])).toThrow('observer disconnect rejected');
+      expect(() => observeVisibility?.([{ isIntersecting: true }])).not.toThrow();
+      expect(animate).toHaveBeenCalledTimes(1);
+      expect(() => controls.dispose()).not.toThrow();
+      expect(disconnect).toHaveBeenCalledTimes(2);
+      expect(cancel).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('SVG WAAPI binding 构建与 cleanup 同时失败时保留 setup primary 与重试 controls', () => {
+    const host = document.createElementNS(SVG_NAMESPACE, 'svg');
+    const descriptor = JSON.stringify([
+      {
+        property: 'rotate',
+        keyframes: [{ transform: 'rotate(0deg)' }, { transform: 'rotate(90deg)' }],
+        timing: { duration: 100, delay: 0, easing: 'linear', iterations: 1, fill: 'both' },
+        trigger: 'manual',
+      },
+    ]);
+    const first = document.createElementNS(SVG_NAMESPACE, 'g');
+    const second = document.createElementNS(SVG_NAMESPACE, 'g');
+    first.setAttribute('data-retikz-anim', descriptor);
+    second.setAttribute('data-retikz-anim', descriptor);
+    let rejectCancel = true;
+    const cancel = vi.fn(() => {
+      if (rejectCancel) {
+        rejectCancel = false;
+        throw new Error('setup cleanup rejected');
+      }
+    });
+    Object.defineProperty(first, 'animate', {
+      value: () => ({ pause: vi.fn(), play: vi.fn(), cancel, currentTime: 0, playState: 'paused' }),
+    });
+    Object.defineProperty(second, 'animate', {
+      value: () => {
+        throw new Error('binding setup rejected');
+      },
+    });
+    host.append(first, second);
+
+    let failure: unknown;
+    try {
+      bindWaapiDescriptors(host);
+    } catch (cause) {
+      failure = cause;
+    }
+    expect(failure).toMatchObject({
+      cause: expect.objectContaining({ message: 'binding setup rejected' }),
+      cleanupCause: expect.objectContaining({ message: 'setup cleanup rejected' }),
+    });
+    const controls = Reflect.get(failure as object, 'controls') as Readonly<{ dispose: () => void }>;
+    expect(() => controls.dispose()).not.toThrow();
+    expect(cancel).toHaveBeenCalledTimes(2);
+  });
+
+  it('SVG manual animation 在 pause 前进入 pending 并支持 setup cleanup 重试', () => {
+    const host = document.createElementNS(SVG_NAMESPACE, 'svg');
+    const target = document.createElementNS(SVG_NAMESPACE, 'g');
+    target.setAttribute(
+      'data-retikz-anim',
+      JSON.stringify([
+        {
+          property: 'opacity',
+          keyframes: [{ opacity: 0 }, { opacity: 1 }],
+          timing: { duration: 100, delay: 0, easing: 'linear', iterations: 1, fill: 'both' },
+          trigger: 'manual',
+        },
+      ]),
+    );
+    let rejectCancel = true;
+    const cancel = vi.fn(() => {
+      if (rejectCancel) {
+        rejectCancel = false;
+        throw new Error('pause cleanup rejected');
+      }
+    });
+    Object.defineProperty(target, 'animate', {
+      value: () => ({
+        pause: () => {
+          throw new Error('manual pause rejected');
+        },
+        play: vi.fn(),
+        cancel,
+        currentTime: 0,
+        playState: 'paused',
+      }),
+    });
+    host.appendChild(target);
+
+    let failure: unknown;
+    try {
+      bindWaapiDescriptors(host);
+    } catch (cause) {
+      failure = cause;
+    }
+    expect(failure).toMatchObject({
+      cause: expect.objectContaining({ message: 'manual pause rejected' }),
+      cleanupCause: expect.objectContaining({ message: 'pause cleanup rejected' }),
+    });
+    const controls = Reflect.get(failure as object, 'controls') as Readonly<{ dispose: () => void }>;
+    expect(() => controls.dispose()).not.toThrow();
+    expect(cancel).toHaveBeenCalledTimes(2);
+  });
+
+  it('SVG raw binding dispose 同步重入时不重复 cancel', () => {
+    const host = document.createElementNS(SVG_NAMESPACE, 'svg');
+    const target = document.createElementNS(SVG_NAMESPACE, 'g');
+    target.setAttribute(
+      'data-retikz-anim',
+      JSON.stringify([
+        {
+          property: 'opacity',
+          keyframes: [{ opacity: 0 }, { opacity: 1 }],
+          timing: { duration: 100, delay: 0, easing: 'linear', iterations: 1, fill: 'both' },
+          trigger: 'manual',
+        },
+      ]),
+    );
+    const controlsRef: { current?: Readonly<{ dispose: () => void }> } = {};
+    const cancel = vi.fn(() => controlsRef.current?.dispose());
+    Object.defineProperty(target, 'animate', {
+      value: () => ({ pause: vi.fn(), play: vi.fn(), cancel, currentTime: 0, playState: 'paused' }),
+    });
+    host.appendChild(target);
+    const controls = bindWaapiDescriptors(host);
+    controlsRef.current = controls;
+
+    expect(() => controls.dispose()).not.toThrow();
+    expect(cancel).toHaveBeenCalledTimes(1);
   });
 
   it('SVG WAAPI binding 中途失败会清理已创建 animation 与 style ownership', () => {
@@ -1885,7 +3185,13 @@ describe('builtin retained renderers', () => {
         publicId: primitive.id,
       })),
     };
-    const cancel = vi.fn();
+    let rejectCancel = true;
+    const cancel = vi.fn(() => {
+      if (rejectCancel) {
+        rejectCancel = false;
+        throw new Error('created controls cleanup rejected');
+      }
+    });
     const previousAnimate = Object.getOwnPropertyDescriptor(SVGElement.prototype, 'animate');
     Object.defineProperty(SVGElement.prototype, 'animate', {
       configurable: true,
@@ -1908,7 +3214,70 @@ describe('builtin retained renderers', () => {
       mount.rollback();
       mount.dispose();
       expect(cancel).toHaveBeenCalledTimes(1);
+      expect(() => executor.dispose()).not.toThrow();
+      expect(cancel).toHaveBeenCalledTimes(2);
+    } finally {
+      if (previousAnimate === undefined) delete (SVGElement.prototype as { animate?: unknown }).animate;
+      else Object.defineProperty(SVGElement.prototype, 'animate', previousAnimate);
+    }
+  });
+
+  it('SVG aggregate cleanup 同步重入时先让全部 child controls 失活', () => {
+    const animated: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: ['node-a', 'node-b'].map((id, index) => ({
+        type: 'node' as const,
+        id,
+        position: [index * 40, 0] as const,
+        animations: [
+          {
+            property: 'opacity' as const,
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 1 },
+            ],
+            duration: 300,
+            trigger: index === 0 ? ('manual' as const) : ({ onEvent: 'click' } as const),
+          },
+        ],
+      })),
+    };
+    const snapshot = createCorePair(scene('#ef4444'), animated).next;
+    let animationIndex = 0;
+    let host: SVGSVGElement | undefined;
+    const previousAnimate = Object.getOwnPropertyDescriptor(SVGElement.prototype, 'animate');
+    const animate = vi.fn(() => {
+      const index = animationIndex++;
+      return {
+        pause: vi.fn(),
+        play: vi.fn(),
+        cancel: vi.fn(() => {
+          if (index === 0) host?.querySelector('[data-retikz-id="node-b"]')?.dispatchEvent(new MouseEvent('click'));
+        }),
+        currentTime: 0,
+        playState: 'paused',
+      };
+    });
+    Object.defineProperty(SVGElement.prototype, 'animate', {
+      configurable: true,
+      value: animate,
+    });
+    try {
+      host = document.createElementNS(SVG_NAMESPACE, 'svg');
+      const renderer = builtinRetainedRendererFactory({
+        backend: 'svg',
+        host,
+        immutableOptions: { backend: 'svg', idPrefix: 'svg-animation-reentry' },
+      });
+      const executor = getRetainedRendererExecutor(renderer);
+      if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
+      const mount = executor.prepareMount(snapshot, {}, 'create');
+      mount.commit();
+      mount.dispose();
+
       executor.dispose();
+      expect(animate).toHaveBeenCalledTimes(1);
     } finally {
       if (previousAnimate === undefined) delete (SVGElement.prototype as { animate?: unknown }).animate;
       else Object.defineProperty(SVGElement.prototype, 'animate', previousAnimate);

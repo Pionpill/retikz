@@ -29,6 +29,27 @@ type WaapiStyleOwnership = {
 
 const waapiStyleOwnerships = new WeakMap<SVGElement, WaapiStyleOwnership>();
 
+/** WAAPI binding 构建失败且初次清理也失败时的可恢复错误 */
+class WaapiBindingSetupError extends Error {
+  /** 原始 binding 构建失败 */
+  override readonly cause: unknown;
+
+  /** 初次 best-effort cleanup 的首个失败 */
+  readonly cleanupCause: unknown;
+
+  /** 保留尚未清理资源的 controls，供 renderer 最终 dispose 重试 */
+  readonly controls: AnimationControls;
+
+  /** 创建保留 primary setup cause 与可重试 controls 的错误 */
+  constructor(cause: unknown, cleanupCause: unknown, controls: AnimationControls) {
+    super('WAAPI binding setup and cleanup failed', { cause });
+    this.name = 'WaapiBindingSetupError';
+    this.cause = cause;
+    this.cleanupCause = cleanupCause;
+    this.controls = controls;
+  }
+}
+
 /** 判断指定 inline style 当前是否由 retained WAAPI binding 接管 */
 export const isWaapiAnimationStyleOwned = (element: SVGElement, key: string): boolean =>
   (key === 'transform-origin' || key === 'transformOrigin' || key === 'transform-box' || key === 'transformBox') &&
@@ -43,34 +64,132 @@ export const bindWaapiDescriptorElements = (
   isEnabled: () => boolean,
 ): AnimationControls => {
   const animations: Array<Animation> = [];
-  const observers: Array<IntersectionObserver> = [];
-  const cleanups: Array<() => void> = [];
+  const pendingAnimations = new Set<Animation>();
+  const pendingObservers = new Set<IntersectionObserver>();
+  const pendingListenerCleanups = new Set<() => void>();
   const styleOwner = Object.freeze({});
   const ownedStyles = new Map<SVGElement, WaapiStyleOwnership>();
   const hasIO = typeof IntersectionObserver !== 'undefined';
-  let disposed = false;
+  let cleanupStarted = false;
+  let cleanupInProgress = false;
+  let cleanupComplete = false;
+  /** 外部注册或回调返回后重新读取 cleanup 状态 */
+  const hasCleanupStarted = (): boolean => cleanupStarted;
+  /** 外部 gate 回调返回后重新读取 cleanup gate */
+  const isBindingActive = (): boolean => {
+    if (cleanupStarted) return false;
+    const enabled = isEnabled();
+    return enabled && !cleanupStarted;
+  };
 
   const disposeResources = (): void => {
-    if (disposed) return;
-    disposed = true;
-    animations.forEach(animation => animation.cancel());
-    observers.forEach(observer => observer.disconnect());
-    cleanups.forEach(cleanup => cleanup());
-    ownedStyles.forEach((ownership, element) => {
-      if (ownership.disposed) return;
-      ownership.disposed = true;
-      if (waapiStyleOwnerships.get(element) !== ownership) return;
-      let previous = ownership.previous;
-      while (previous.kind === 'owner' && previous.disposed) previous = previous.previous;
-      element.style.transformOrigin = previous.transformOrigin;
-      element.style.transformBox = previous.transformBox;
-      if (previous.kind === 'owner') waapiStyleOwnerships.set(element, previous);
-      else waapiStyleOwnerships.delete(element);
-    });
+    if (cleanupComplete || cleanupInProgress) return;
+    cleanupStarted = true;
+    cleanupInProgress = true;
+    try {
+      const failures: Array<unknown> = [];
+      const attempt = (cleanup: () => void): void => {
+        try {
+          cleanup();
+        } catch (cause) {
+          failures.push(cause);
+        }
+      };
+      for (const animation of [...pendingAnimations]) {
+        attempt(() => {
+          animation.cancel();
+          pendingAnimations.delete(animation);
+        });
+      }
+      for (const observer of [...pendingObservers]) {
+        attempt(() => {
+          observer.disconnect();
+          pendingObservers.delete(observer);
+        });
+      }
+      for (const cleanup of [...pendingListenerCleanups]) {
+        attempt(() => {
+          cleanup();
+          pendingListenerCleanups.delete(cleanup);
+        });
+      }
+      for (const [element, ownership] of [...ownedStyles]) {
+        attempt(() => {
+          if (ownership.disposed) {
+            ownedStyles.delete(element);
+            return;
+          }
+          if (waapiStyleOwnerships.get(element) !== ownership) {
+            ownership.disposed = true;
+            ownedStyles.delete(element);
+            return;
+          }
+          let previous = ownership.previous;
+          while (previous.kind === 'owner' && previous.disposed) previous = previous.previous;
+          element.style.transformOrigin = previous.transformOrigin;
+          element.style.transformBox = previous.transformBox;
+          if (previous.kind === 'owner') waapiStyleOwnerships.set(element, previous);
+          else waapiStyleOwnerships.delete(element);
+          ownership.disposed = true;
+          ownedStyles.delete(element);
+        });
+      }
+      if (failures.length > 0) throw failures[0];
+      cleanupComplete = true;
+    } finally {
+      cleanupInProgress = false;
+    }
   };
+
+  /** 接管外部刚创建的 animation，并在 gate 已失活时立即转入可重试清理 */
+  const retainAnimation = (animation: Animation): boolean => {
+    pendingAnimations.add(animation);
+    if (isBindingActive()) {
+      animations.push(animation);
+      return true;
+    }
+    if (cleanupStarted) {
+      cleanupComplete = false;
+      disposeResources();
+      return false;
+    }
+    animation.cancel();
+    pendingAnimations.delete(animation);
+    return false;
+  };
+
+  const controls: AnimationControls = Object.freeze({
+    play: () => {
+      for (const animation of animations) {
+        if (cleanupStarted) return;
+        animation.play();
+      }
+    },
+    pause: () => {
+      for (const animation of animations) {
+        if (cleanupStarted) return;
+        animation.pause();
+      }
+    },
+    seek: timeMs => {
+      for (const animation of animations) {
+        if (cleanupStarted) return;
+        animation.currentTime = timeMs;
+      }
+    },
+    dispose: disposeResources,
+    get time() {
+      const first = animations[0] as Animation | undefined;
+      return Number(first?.currentTime ?? 0);
+    },
+    get running() {
+      return !cleanupStarted && animations.some(animation => animation.playState === 'running');
+    },
+  });
 
   try {
     elements.forEach(element => {
+      if (cleanupStarted) return;
       const raw = element.getAttribute('data-retikz-anim');
       if (!raw) return;
       let descriptors: Array<WaapiDescriptor>;
@@ -80,6 +199,7 @@ export const bindWaapiDescriptorElements = (
         return;
       }
       for (const descriptor of descriptors) {
+        if (hasCleanupStarted()) break;
         if (descriptor.transformOrigin && element instanceof SVGElement) {
           const existingOwnership = waapiStyleOwnerships.get(element);
           const ownership =
@@ -122,55 +242,89 @@ export const bindWaapiDescriptorElements = (
         const trigger = descriptor.trigger;
         if (trigger === 'manual') {
           const animation = animate();
-          animation?.pause();
-          if (animation) animations.push(animation);
+          if (animation && retainAnimation(animation)) animation.pause();
         } else if (trigger === 'visible' && hasIO) {
+          let consumed = false;
+          let registrationInProgress = true;
+          /** observer 注册返回后重新读取同步消费与 cleanup 状态 */
+          const shouldReleaseObserver = (): boolean => consumed || hasCleanupStarted();
           const observer = new IntersectionObserver(entries => {
-            if (!isEnabled()) return;
+            if (consumed || !isBindingActive()) return;
             for (const entry of entries) {
               if (entry.isIntersecting) {
+                consumed = true;
                 const animation = animate();
-                if (animation) animations.push(animation);
+                if (animation && !retainAnimation(animation)) return;
+                if (!isBindingActive()) return;
                 observer.disconnect();
+                if (!registrationInProgress) pendingObservers.delete(observer);
+                return;
               }
             }
           });
-          observer.observe(element);
-          observers.push(observer);
+          pendingObservers.add(observer);
+          try {
+            observer.observe(element);
+          } finally {
+            registrationInProgress = false;
+          }
+          if (shouldReleaseObserver()) {
+            pendingObservers.add(observer);
+            if (hasCleanupStarted()) cleanupComplete = false;
+            observer.disconnect();
+            pendingObservers.delete(observer);
+          }
         } else if (typeof trigger === 'object') {
           // 复用单个 Animation：每次事件 cancel + play 从头重播，避免每次触发新建并无界堆积
           let animation: Animation | undefined;
           const handler = (): void => {
-            if (!isEnabled()) return;
+            if (!isBindingActive()) return;
             if (animation) {
               animation.cancel();
+              if (!isBindingActive()) return;
               animation.play();
               return;
             }
-            animation = animate();
-            if (animation) animations.push(animation);
+            const created = animate();
+            if (created && retainAnimation(created)) animation = created;
           };
-          element.addEventListener(trigger.onEvent, handler);
-          cleanups.push(() => element.removeEventListener(trigger.onEvent, handler));
+          const cleanup = () => element.removeEventListener(trigger.onEvent, handler);
+          pendingListenerCleanups.add(cleanup);
+          try {
+            element.addEventListener(trigger.onEvent, handler);
+          } catch (cause) {
+            pendingListenerCleanups.add(cleanup);
+            if (hasCleanupStarted()) cleanupComplete = false;
+            throw cause;
+          }
+          if (hasCleanupStarted()) {
+            cleanupComplete = false;
+            pendingListenerCleanups.add(cleanup);
+            disposeResources();
+          }
         }
       }
     });
   } catch (cause) {
-    disposeResources();
+    try {
+      disposeResources();
+    } catch (cleanupCause) {
+      throw new WaapiBindingSetupError(cause, cleanupCause, controls);
+    }
     throw cause;
   }
 
-  return {
-    play: () => animations.forEach(animation => animation.play()),
-    pause: () => animations.forEach(animation => animation.pause()),
-    seek: timeMs => animations.forEach(animation => (animation.currentTime = timeMs)),
-    dispose: disposeResources,
-    get time() {
-      const first = animations[0] as Animation | undefined;
-      return Number(first?.currentTime ?? 0);
-    },
-    get running() {
-      return animations.some(animation => animation.playState === 'running');
-    },
-  };
+  return controls;
+};
+
+/** 从 WAAPI setup 双重失败中恢复 owner 必须重试的 controls 与 primary cause */
+export const recoverWaapiBindingSetupFailure = (
+  cause: unknown,
+): Readonly<{ cause: unknown; controls: AnimationControls }> | undefined => {
+  if (!(cause instanceof Error) || cause.name !== 'WaapiBindingSetupError') return undefined;
+  const controls = Reflect.get(cause, 'controls');
+  if (typeof controls !== 'object' || controls === null || typeof Reflect.get(controls, 'dispose') !== 'function') {
+    return undefined;
+  }
+  return Object.freeze({ cause: Reflect.get(cause, 'cause'), controls: controls as AnimationControls });
 };

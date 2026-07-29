@@ -47,6 +47,14 @@ export type ClockOptions = {
   autoplay?: boolean;
 };
 
+/** rAF 注册返回前后共享的 frame ownership */
+type ClockFrameRegistration = {
+  /** rAF 返回的 handle；注册尚未返回时为 null */
+  id: number | null;
+  /** callback 是否已经同步或异步消费该 frame */
+  consumed: boolean;
+};
+
 /**
  * 创建 rAF 共享时钟：维护 scene 级 time，每帧调 onFrame；到有限时长尽头停在末帧
  * @description 缺 requestAnimationFrame（SSR）→ 退化为只画一帧（末帧 / t=0）。所有 track 共用此时钟，
@@ -58,26 +66,73 @@ export const createClock = (options: ClockOptions): AnimationControls => {
   const finite = options.durationMs != null && Number.isFinite(options.durationMs);
   const end = options.durationMs as number;
   let running = false;
-  let rafId: number | null = null;
+  /** 当前待执行 frame 的注册所有权；id 发布前也可被同步 cleanup 关闭 gate */
+  let frameRegistration: ClockFrameRegistration | null = null;
+  let stopping = false;
+  let frameCancellationInProgress = false;
+  let cleanupStarted = false;
+  let cleanupInProgress = false;
   let stamp = 0;
   let baseTime = 0;
   let currentTime = 0;
+  /** 外部 frame callback 返回后重新读取 clock gate */
+  const isRunning = (): boolean => running && !cleanupStarted;
+  /** 外部 rAF 注册返回后重新读取当前 registration 的发布资格 */
+  const canPublishFrame = (registration: ClockFrameRegistration): boolean =>
+    running && !stopping && !cleanupStarted && frameRegistration === registration;
+  /** cancel 失败返回后判断同步消费的 frame 是否需要恢复推进链 */
+  const shouldRestoreFrame = (registration: ClockFrameRegistration | null): boolean =>
+    registration?.consumed === true && frameRegistration === null && running && !cleanupStarted;
+
+  /** 取消已发布 handle；失败时保留 registration 供后续 dispose 重试 */
+  const cancelFrameRegistration = (registration: ClockFrameRegistration | null): void => {
+    const frame = registration?.id;
+    if (frame === null || frame === undefined) return;
+    if (!caf) {
+      if (frameRegistration === registration) frameRegistration = null;
+      return;
+    }
+    if (frameCancellationInProgress) return;
+    frameCancellationInProgress = true;
+    try {
+      caf(frame);
+      if (frameRegistration === registration) frameRegistration = null;
+    } finally {
+      frameCancellationInProgress = false;
+    }
+  };
 
   const tick = (): void => {
+    if (!running || stopping || cleanupStarted) return;
     currentTime = baseTime + (now() - stamp);
     if (finite && currentTime >= end) {
       currentTime = end;
       options.onFrame(currentTime);
       running = false;
-      rafId = null;
       return;
     }
     options.onFrame(currentTime);
-    if (raf) rafId = raf(tick);
+    if (isRunning()) scheduleFrame();
+  };
+
+  /** 注册下一帧，并在同步重入关闭 gate 后接管返回 handle 的清理 */
+  const scheduleFrame = (): void => {
+    if (!raf || !running || stopping) return;
+    const registration: ClockFrameRegistration = { id: null, consumed: false };
+    frameRegistration = registration;
+    const frame = raf(() => {
+      registration.consumed = true;
+      if (frameRegistration === registration) frameRegistration = null;
+      tick();
+    });
+    registration.id = frame;
+    if (registration.consumed) return;
+    if (canPublishFrame(registration)) return;
+    cancelFrameRegistration(registration);
   };
 
   const play = (): void => {
-    if (running) return;
+    if (running || cleanupStarted) return;
     if (!raf) {
       // 无 rAF：直接定格末帧（有限）/ 起点
       options.onFrame(finite ? end : 0);
@@ -85,24 +140,45 @@ export const createClock = (options: ClockOptions): AnimationControls => {
     }
     running = true;
     stamp = now();
-    rafId = raf(tick);
+    scheduleFrame();
   };
   const pause = (): void => {
-    running = false;
-    if (rafId !== null && caf) caf(rafId);
-    rafId = null;
-    baseTime = currentTime;
+    if (!running || stopping || cleanupStarted) return;
+    const registration = frameRegistration;
+    let cancellationFailed = false;
+    let cancellationCause: unknown;
+    stopping = true;
+    try {
+      cancelFrameRegistration(registration);
+      running = false;
+      baseTime = currentTime;
+    } catch (cause) {
+      cancellationFailed = true;
+      cancellationCause = cause;
+    } finally {
+      stopping = false;
+    }
+    if (!cancellationFailed) return;
+    if (shouldRestoreFrame(registration)) scheduleFrame();
+    throw cancellationCause;
   };
   const seek = (timeMs: number): void => {
+    if (cleanupStarted) return;
     baseTime = timeMs;
     currentTime = timeMs;
     stamp = now();
     options.onFrame(timeMs);
   };
   const dispose = (): void => {
+    if (cleanupInProgress) return;
+    cleanupStarted = true;
     running = false;
-    if (rafId !== null && caf) caf(rafId);
-    rafId = null;
+    cleanupInProgress = true;
+    try {
+      cancelFrameRegistration(frameRegistration);
+    } finally {
+      cleanupInProgress = false;
+    }
   };
 
   if (options.autoplay) play();
@@ -115,7 +191,7 @@ export const createClock = (options: ClockOptions): AnimationControls => {
       return currentTime;
     },
     get running() {
-      return running;
+      return running && !cleanupStarted;
     },
   };
 };
