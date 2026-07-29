@@ -35,44 +35,50 @@ This is why PointMark usually does not need coordinate-specific adapters. The co
 
 ## Examples
 
-### Position Rows in a Coordinate
+All four examples can switch between Cartesian and polar coordinates from the Coordinate section. The PointMark configuration stays unchanged; in polar coordinates, `x` is angular position and `y` is radial position.
 
-`x` / `y` define the anchor for each row. The left plot uses cartesian2D, and the right plot uses polar2D; the same fields become different geometry under different coordinates.
+### Basic Usage
 
-<ComponentPreview files={['point-position', 'point-api.data.ts']} controls={{ name: 'point-position' }} size="md" />
-
-### Transform Only the Point Layer
-
-`transform` can live directly on the current PointMark. In the example below, the gray points still read the original rows, while the colored bubble layer runs `jitter` only inside this mark and slightly spreads overlapping `orders` points along y.
-
-<ComponentPreview files={['point-transform', 'point-transform.data.ts']} size="md" />
-
-### Adjust Point Appearance
-
-`color` / `size` / `opacity` / `shape` / `stroke` / `strokeWidth` change a point's visible form without changing its projected position. Field bindings encode appearance from data, while constant colors and `IRPaintSpec` apply one solid or gradient paint to the layer.
-
-Node style props such as `stroke`, `strokeWidth`, `opacity`, `fillOpacity`, and `rotate` can all bind to data fields. At the component layer, strings and numbers are syntax sugar: a string becomes `{ kind: 'field', value: FieldName }` when it matches a data field; if it does not match a field but is a valid constant, it becomes `{ kind: 'constant', value }`; otherwise it is skipped with a warning. Use the explicit form when you need to remove ambiguity.
-
-<ComponentPreview files={['point-style', 'point-api.data.ts']} size="md" />
-
-### Show Labels or Text Points
-
-For text attached to dots, prefer `label`: it writes to the core `Node.label` on each point, so a single `PointMark` can draw the dot and its label. The playground covers center, four sides, and four corners; `labelPosition` also accepts an angle or `{ boundary, fraction }` for precise placement along the real boundary. Use `labelTextColor`, `labelOpacity`, `labelFont`, `labelRotate`, and `labelKeepUpright` for label appearance and orientation. `text` is a different mode: it replaces the point itself with a borderless text Node. `dx` / `dy` apply a small screen-space offset.
-
-<ComponentPreview files={['point-text', 'point-api.data.ts']} controls={{ name: 'point-text' }} size="md" />
-
-### Reuse Position Roles
-
-The example below focuses on how coordinates interpret position roles: PointMark itself stays unchanged, while position fields project to a line, ring, or plane.
-
-#### 1D: Line And Polar
-
-1D coordinates consume only `x`. In cartesian1D it lands on a straight axis; in polar1D the same values land on a ring.
+`x` / `y` define the anchor for each row, and PointMark creates one default circular node at every anchor. You can then map a categorical field to color or a numeric field to size to move from plain scatter points to bubbles.
 
 <ComponentPreview
-  files={['point-coordinate-1d', 'point-coordinates.data.ts']}
-  controls={{ name: 'point-coordinate-1d' }}
-  size="md"
+  files={['point-position', 'point-api.data.ts']}
+  controls={{ name: 'point-position' }}
+  size="lg"
+  caption="Switch position, color, and size encodings to compare plain, categorical, and bubble scatter."
+/>
+
+### Style Variations
+
+Node styles such as `fill`, `stroke`, and `opacity` change only the scatter appearance, not the projected positions established above. Compare gradients, opacity, dashed strokes, and shadows directly here.
+
+<ComponentPreview
+  files={['point-style', 'point-api.data.ts']}
+  controls={{ name: 'point-style' }}
+  size="lg"
+  caption="Keep x / y fixed while combining paint, opacity, stroke, size, and shadow changes."
+/>
+
+### Labels and Text Points
+
+PointMark has two text modes. `label` preserves the scatter glyph and attaches text through `Node.label`; `text` replaces the glyph itself with a borderless text Node, so a scatter layer can contain text only.
+
+<ComponentPreview
+  files={['point-text', 'point-api.data.ts']}
+  controls={{ name: 'point-text' }}
+  size="lg"
+  caption="Switch between point labels and text points, then change color, size, and weight across both text forms."
+/>
+
+### Node Shapes
+
+PointMark creates a core Node at every position rather than a fixed circle. `shape` can be a simple name such as circle, rectangle, or diamond, or a full shape reference with `params` for stars, polygons, and registered custom shapes; parameterized shapes can further vary their point or side count.
+
+<ComponentPreview
+  files={['point-node-shape', 'point-api.data.ts']}
+  controls={{ name: 'point-node-shape' }}
+  size="lg"
+  caption="Keep data and positions fixed while changing shape, size, rotation, star points, or polygon sides."
 />
 
 ## How it works

@@ -6,16 +6,20 @@ import { points } from './point-api.data';
 
 /** 点外观 playground 的稳定控件 id */
 export const POINT_STYLE_CONTROL_IDS = {
+  coordinate: 'point-style-coordinate',
   paintMode: 'point-paint-mode',
   fill: 'point-fill',
   stroke: 'point-stroke',
   strokeWidth: 'point-stroke-width',
+  fillOpacity: 'point-fill-opacity',
+  strokeOpacity: 'point-stroke-opacity',
   opacity: 'point-opacity',
   size: 'point-size',
-  shape: 'point-shape',
+  dashed: 'point-dashed',
+  shadow: 'point-shadow',
 } as const;
 
-/** 点通道与 paint 的中文属性面板 */
+/** 点填充与样式的中文属性面板 */
 export const pointStyleControls = definePreviewControls({
   presentation: 'panel',
   title: '点外观',
@@ -26,7 +30,22 @@ export const pointStyleControls = definePreviewControls({
       controls: [{ kind: 'table', id: 'points', label: '点数据', rows: points }],
     },
     {
-      label: 'Paint 与形状',
+      label: '坐标系',
+      controls: [
+        {
+          kind: 'select',
+          id: POINT_STYLE_CONTROL_IDS.coordinate,
+          label: '投影',
+          defaultValue: 'cartesian2D',
+          options: [
+            { value: 'cartesian2D', label: '笛卡尔坐标' },
+            { value: 'polar2D', label: '极坐标' },
+          ],
+        },
+      ],
+    },
+    {
+      label: '填充与样式',
       controls: [
         {
           kind: 'select',
@@ -58,6 +77,24 @@ export const pointStyleControls = definePreviewControls({
         },
         {
           kind: 'range',
+          id: POINT_STYLE_CONTROL_IDS.fillOpacity,
+          label: '填充透明度',
+          defaultValue: 1,
+          min: 0.15,
+          max: 1,
+          step: 0.05,
+        },
+        {
+          kind: 'range',
+          id: POINT_STYLE_CONTROL_IDS.strokeOpacity,
+          label: '描边透明度',
+          defaultValue: 1,
+          min: 0.15,
+          max: 1,
+          step: 0.05,
+        },
+        {
+          kind: 'range',
           id: POINT_STYLE_CONTROL_IDS.opacity,
           label: '透明度',
           defaultValue: 0.85,
@@ -75,14 +112,20 @@ export const pointStyleControls = definePreviewControls({
           step: 1,
         },
         {
+          kind: 'switch',
+          id: POINT_STYLE_CONTROL_IDS.dashed,
+          label: '虚线描边',
+          defaultValue: false,
+        },
+        {
           kind: 'select',
-          id: POINT_STYLE_CONTROL_IDS.shape,
-          label: '形状',
-          defaultValue: 'circle',
+          id: POINT_STYLE_CONTROL_IDS.shadow,
+          label: '阴影',
+          defaultValue: 'none',
           options: [
-            { value: 'circle', label: '圆形' },
-            { value: 'rectangle', label: '矩形' },
-            { value: 'diamond', label: '菱形' },
+            { value: 'none', label: '无' },
+            { value: 'md', label: '中' },
+            { value: 'xl', label: '强' },
           ],
         },
       ],
@@ -94,49 +137,65 @@ export const pointStyleControls = definePreviewControls({
 export const previewControlContract = {
   controls: pointStyleControls,
   canonicalValues: {
+    [POINT_STYLE_CONTROL_IDS.coordinate]: 'cartesian2D',
     [POINT_STYLE_CONTROL_IDS.paintMode]: 'field',
     [POINT_STYLE_CONTROL_IDS.fill]: '#38bdf8',
     [POINT_STYLE_CONTROL_IDS.stroke]: '#0f172a',
     [POINT_STYLE_CONTROL_IDS.strokeWidth]: 2,
+    [POINT_STYLE_CONTROL_IDS.fillOpacity]: 1,
+    [POINT_STYLE_CONTROL_IDS.strokeOpacity]: 1,
     [POINT_STYLE_CONTROL_IDS.opacity]: 0.85,
     [POINT_STYLE_CONTROL_IDS.size]: 14,
-    [POINT_STYLE_CONTROL_IDS.shape]: 'circle',
+    [POINT_STYLE_CONTROL_IDS.dashed]: false,
+    [POINT_STYLE_CONTROL_IDS.shadow]: 'none',
   },
   presets: [
     {
       id: 'field',
       label: '字段编码',
       values: {
+        [POINT_STYLE_CONTROL_IDS.coordinate]: 'cartesian2D',
         [POINT_STYLE_CONTROL_IDS.paintMode]: 'field',
         [POINT_STYLE_CONTROL_IDS.fill]: '#38bdf8',
         [POINT_STYLE_CONTROL_IDS.stroke]: '#0f172a',
         [POINT_STYLE_CONTROL_IDS.strokeWidth]: 2,
+        [POINT_STYLE_CONTROL_IDS.fillOpacity]: 1,
+        [POINT_STYLE_CONTROL_IDS.strokeOpacity]: 1,
         [POINT_STYLE_CONTROL_IDS.opacity]: 0.85,
         [POINT_STYLE_CONTROL_IDS.size]: 14,
-        [POINT_STYLE_CONTROL_IDS.shape]: 'circle',
+        [POINT_STYLE_CONTROL_IDS.dashed]: false,
+        [POINT_STYLE_CONTROL_IDS.shadow]: 'none',
       },
     },
     {
       id: 'gradient',
       label: '渐变强调',
       values: {
+        [POINT_STYLE_CONTROL_IDS.coordinate]: 'cartesian2D',
         [POINT_STYLE_CONTROL_IDS.paintMode]: 'gradient',
         [POINT_STYLE_CONTROL_IDS.fill]: '#38bdf8',
         [POINT_STYLE_CONTROL_IDS.stroke]: '#f97316',
         [POINT_STYLE_CONTROL_IDS.strokeWidth]: 3,
+        [POINT_STYLE_CONTROL_IDS.fillOpacity]: 0.9,
+        [POINT_STYLE_CONTROL_IDS.strokeOpacity]: 1,
         [POINT_STYLE_CONTROL_IDS.opacity]: 0.95,
         [POINT_STYLE_CONTROL_IDS.size]: 18,
-        [POINT_STYLE_CONTROL_IDS.shape]: 'diamond',
+        [POINT_STYLE_CONTROL_IDS.dashed]: true,
+        [POINT_STYLE_CONTROL_IDS.shadow]: 'xl',
       },
     },
   ],
   relatedApis: [
+    'Plot.coordinate',
     'PointMark.color',
     'PointMark.fill',
     'PointMark.stroke',
     'PointMark.strokeWidth',
+    'PointMark.fillOpacity',
+    'PointMark.strokeOpacity',
     'PointMark.opacity',
     'PointMark.size',
-    'PointMark.shape',
+    'PointMark.dashed',
+    'PointMark.shadow',
   ],
 } satisfies PreviewControlContract;
