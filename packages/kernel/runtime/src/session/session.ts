@@ -19,6 +19,7 @@ import type {
   RuntimeCandidateView,
   RuntimeCommitEvent,
   RuntimePreparedProgramArtifact,
+  RuntimeProgramContext,
   RuntimeProgramDefinition,
   RuntimeProgramErasedExecutor,
   RuntimeProgramToken,
@@ -50,6 +51,7 @@ import {
   getRuntimeOwnerCommandExecutor,
   isRuntimeRevision,
 } from '../transaction';
+import { RuntimeUpdateStrategy } from './constants';
 
 type RuntimeOwnerState = Readonly<{
   command: RuntimeOwnerCommandExecutor;
@@ -94,6 +96,7 @@ type RuntimeSessionState =
 const sessionError = (
   code:
     | 'RUNTIME_REGISTRY_MISMATCH'
+    | 'RUNTIME_UPDATE_STRATEGY_INVALID'
     | 'RUNTIME_INITIAL_OWNER_MISMATCH'
     | 'RUNTIME_OWNER_COMMAND_INVALID'
     | 'RUNTIME_REVISION_INVALID'
@@ -610,34 +613,37 @@ const runProgram = (
       executionDiagnostics.push(mapped);
     }
   };
-  const context = Object.freeze({
-    trace: Object.freeze({ owner: traceReporter.owner, report: traceReporter.report }),
-    diagnose: (diagnostic: Readonly<{ code: string; phase: string; message: string }>) => {
-      drainTraceDiagnostics();
-      const candidate: unknown = diagnostic;
-      if (typeof candidate !== 'object' || candidate === null) {
-        throw new Error('runtime Program diagnostic input is invalid');
-      }
-      const code = Reflect.get(candidate, 'code');
-      const diagnosticPhase = Reflect.get(candidate, 'phase');
-      const message = Reflect.get(candidate, 'message');
-      if (typeof code !== 'string' || typeof diagnosticPhase !== 'string' || typeof message !== 'string') {
-        throw new Error('runtime Program diagnostic input is invalid');
-      }
-      diagnostics.push(
-        Object.freeze({
-          code,
-          phase: diagnosticPhase,
-          message,
-          severity: 'warning' as const,
-          owner: definition.id.owner,
-          program: definition.id,
-        }),
-      );
-    },
-  });
+  const createContext = (execution: RuntimeProgramContext['execution']): RuntimeProgramContext =>
+    Object.freeze({
+      execution,
+      trace: Object.freeze({ owner: traceReporter.owner, report: traceReporter.report }),
+      diagnose: (diagnostic: Readonly<{ code: string; phase: string; message: string }>) => {
+        drainTraceDiagnostics();
+        const candidate: unknown = diagnostic;
+        if (typeof candidate !== 'object' || candidate === null) {
+          throw new Error('runtime Program diagnostic input is invalid');
+        }
+        const code = Reflect.get(candidate, 'code');
+        const diagnosticPhase = Reflect.get(candidate, 'phase');
+        const message = Reflect.get(candidate, 'message');
+        if (typeof code !== 'string' || typeof diagnosticPhase !== 'string' || typeof message !== 'string') {
+          throw new Error('runtime Program diagnostic input is invalid');
+        }
+        diagnostics.push(
+          Object.freeze({
+            code,
+            phase: diagnosticPhase,
+            message,
+            severity: 'warning' as const,
+            owner: definition.id.owner,
+            program: definition.id,
+          }),
+        );
+      },
+    });
 
   if (mode === 'incremental' && executor.update !== undefined && previous !== undefined) {
+    const context = createContext('incremental');
     let callbackResult;
     try {
       callbackResult = executor.update<unknown, unknown>(previous.prepared.programRead, view, context);
@@ -675,6 +681,7 @@ const runProgram = (
     for (const diagnostic of result.diagnostics ?? []) context.diagnose(diagnostic);
   }
 
+  const context = createContext(mode === 'incremental' ? 'fallback' : mode);
   let callbackResult;
   try {
     callbackResult = executor.run<unknown>(view, context);
@@ -720,6 +727,14 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
   }
   if (programOwners !== options.owners) {
     throw sessionError('RUNTIME_REGISTRY_MISMATCH', 'session-create', options.programs);
+  }
+  const updateStrategyDescriptor = Object.getOwnPropertyDescriptor(optionsCandidate, 'updateStrategy');
+  if (updateStrategyDescriptor !== undefined && !Object.hasOwn(updateStrategyDescriptor, 'value')) {
+    throw sessionError('RUNTIME_UPDATE_STRATEGY_INVALID', 'session-create', updateStrategyDescriptor);
+  }
+  const updateStrategy = updateStrategyDescriptor?.value ?? RuntimeUpdateStrategy.Auto;
+  if (updateStrategy !== RuntimeUpdateStrategy.Auto && updateStrategy !== RuntimeUpdateStrategy.Full) {
+    throw sessionError('RUNTIME_UPDATE_STRATEGY_INVALID', 'session-create', updateStrategy);
   }
   const participantCandidates: unknown = Reflect.get(optionsCandidate, 'participants');
   if (participantCandidates !== undefined && !Array.isArray(participantCandidates)) {
@@ -1130,7 +1145,8 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
               .map(program => programOutcomes.get(program))
               .filter((outcome): outcome is RuntimeProgramOutcome => outcome !== undefined);
             if (!directOwnerChange && upstreamOutcomes.length === 0) continue;
-            const forceFull = upstreamOutcomes.some(outcome => outcome === 'full' || outcome === 'fallback');
+            const upstreamFallback = upstreamOutcomes.some(outcome => outcome === 'fallback');
+            const upstreamFull = upstreamOutcomes.some(outcome => outcome === 'full');
             const previous = programStates.get(definition);
             if (previous === undefined) throw new Error('runtime session: missing committed Program state');
             const prepared = runProgram(
@@ -1144,7 +1160,11 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
               definition,
               executor,
               options.trace,
-              directInvalidHint ? 'fallback' : forceFull || executor.update === undefined ? 'full' : 'incremental',
+              directInvalidHint || upstreamFallback
+                ? 'fallback'
+                : updateStrategy === RuntimeUpdateStrategy.Full || upstreamFull || executor.update === undefined
+                  ? 'full'
+                  : 'incremental',
               previous,
             );
             candidateDiagnostics.push(...prepared.diagnostics);

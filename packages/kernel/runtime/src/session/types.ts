@@ -5,6 +5,7 @@ import type { RuntimeProgramDefinition } from '../program';
 import type { RuntimeOwnerRegistry, RuntimeProgramRegistry } from '../registry';
 import type { PerformanceTraceSink } from '../trace';
 import type { RuntimeOwnerInput, RuntimeSessionResult, RuntimeSessionUpdate, RuntimeSnapshot } from '../transaction';
+import type { RuntimeUpdateStrategyValue } from './constants';
 
 /** 同步 Runtime session 的创建配置 */
 export type RuntimeSessionOptions = Readonly<{
@@ -14,6 +15,11 @@ export type RuntimeSessionOptions = Readonly<{
   programs: RuntimeProgramRegistry;
   /** 精确覆盖 owner registry 的初始完整 Snapshot commands */
   initialSnapshots: ReadonlyArray<RuntimeOwnerInput>;
+  /**
+   * Program 更新策略
+   * @default RuntimeUpdateStrategy.Auto
+   */
+  updateStrategy?: RuntimeUpdateStrategyValue;
   /** 可选性能 trace sink */
   trace?: PerformanceTraceSink;
   /** 可选的领域中立 commit participants */

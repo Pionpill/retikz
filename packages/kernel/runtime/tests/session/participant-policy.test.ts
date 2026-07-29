@@ -176,6 +176,65 @@ describe('runtime session participant revision policy', () => {
     session.dispose();
   });
 
+  it('forced full 下 continuous participant 每个 revision 只推进一次', () => {
+    const owner = defineCounterOwner('forced-full');
+    const owners = createRuntimeOwnerRegistry({ builtins: [owner] });
+    const program = defineRuntimeProgram<number, number, number, number>({
+      id: { owner: 'forced-full', key: 'artifact' },
+      owners: [owner],
+      programs: [],
+      tracePhases: [],
+      artifact: {
+        capture: value => value,
+        readForProgram: value => value,
+        read: value => value,
+      },
+      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
+      update: (_previous, view) => ({ kind: 'incremental', artifact: view.snapshot(owner).value }),
+    });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const preparedRevisions: Array<number> = [];
+    const committedRevisions: Array<number> = [];
+    const participant = defineRuntimeCommitParticipant({
+      key: 'forced-full-continuous',
+      owners: [],
+      programs: [program],
+      revisionPolicy: 'continuous',
+      tracePhases: [],
+      prepare: candidate => {
+        preparedRevisions.push(candidate.candidateRevision);
+        return Object.freeze({
+          commit: () => {
+            committedRevisions.push(candidate.candidateRevision);
+          },
+          rollback: () => undefined,
+          dispose: () => undefined,
+        });
+      },
+      read: () => Object.freeze({}),
+      dispose: () => undefined,
+    });
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      updateStrategy: 'full',
+      initialSnapshots: [createRuntimeOwnerInput(owner, 1)],
+      participants: [participant],
+    });
+    preparedRevisions.length = 0;
+    committedRevisions.length = 0;
+
+    expect(
+      session.update({
+        baseRevision: session.revision(),
+        owners: [createRuntimeOwnerUpdate(owner, 2)],
+      }),
+    ).toEqual({ revision: 1, outcome: 'full', diagnostics: [] });
+    expect(preparedRevisions).toEqual([1]);
+    expect(committedRevisions).toEqual([1]);
+    session.dispose();
+  });
+
   it('session dispose failure 不阻断反向 cleanup，并只重试失败 participant', () => {
     let ownerDisposeCalls = 0;
     let artifactDisposeCalls = 0;

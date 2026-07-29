@@ -431,7 +431,7 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
     revisionPolicy: 'continuous',
     tracePhases: [
       { phase: 'commit', unit: 'scene-primitive', outcomes: ['full'] },
-      { phase: 'update', unit: 'scene-change', outcomes: ['incremental', 'fallback'] },
+      { phase: 'update', unit: 'scene-change', outcomes: ['full', 'incremental', 'fallback'] },
     ],
     prepare: (candidate, context) => {
       const core = candidate.artifact(captured.coreProgram).value;
@@ -476,6 +476,7 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
           : createConfigOnlyPatch(committedLineage, next);
       validateScenePatch(committedLineage, patch, next);
       const fallback = !supportsPatch(renderer, patch, committedLineage);
+      const directReplace = patch.operations.length === 1 && patch.operations[0]?.kind === 'replaceScene';
       const rendererPatch = fallback ? createReplacePatch(patch, next) : patch;
       if (fallback) {
         context.diagnose({
@@ -493,7 +494,7 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
           context.trace.report({
             phase: 'update',
             unit: 'scene-change',
-            outcome: fallback ? 'fallback' : 'incremental',
+            outcome: fallback ? 'fallback' : directReplace ? 'full' : 'incremental',
             visited: rendererPatch.operations.length,
             reused: 0,
             changed: rendererPatch.operations.length,

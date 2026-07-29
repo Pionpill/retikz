@@ -92,7 +92,14 @@ const createRendererHarness = (capability: 'none' | 'group' | 'entity' = 'entity
   return { renderer, prepareMount, prepare, read, patches };
 };
 
-const createHarness = (capability: 'none' | 'group' | 'entity' = 'entity', initialScene: IRScene = scene('A')) => {
+const createHarness = (
+  capability: 'none' | 'group' | 'entity' = 'entity',
+  initialScene: IRScene = scene('A'),
+  runtimeOptions: Readonly<{
+    updateStrategy?: 'auto' | 'full';
+    trace?: (record: PerformanceTraceRecord) => void;
+  }> = {},
+) => {
   const renderer = createRendererHarness(capability);
   const coreProgram = createCoreProgram({ onWarn: () => undefined });
   const factory = vi.fn(() => renderer.renderer) as unknown as RetainedRendererFactory;
@@ -110,6 +117,7 @@ const createHarness = (capability: 'none' | 'group' | 'entity' = 'entity', initi
   const session = createRuntimeSession({
     owners,
     programs,
+    ...runtimeOptions,
     participants: [handle.participant],
     initialSnapshots: [
       createRuntimeOwnerInput(CoreOwnerDefinition, initialScene),
@@ -373,8 +381,49 @@ describe('createRetainedRenderParticipant', () => {
   });
 
   it('Core update 原子提交 Patch 与 next snapshot', () => {
-    const { renderer, handle, session } = createHarness();
+    const records: Array<PerformanceTraceRecord> = [];
+    const initial = {
+      ...scene('A'),
+      children: [{ ...scene('A').children[0], fill: '#ef4444' }],
+    };
+    const { renderer, handle, session } = createHarness('entity', initial, {
+      trace: record => records.push(record),
+    });
     const previous = handle.read(session);
+    records.length = 0;
+
+    session.update({
+      baseRevision: session.revision(),
+      owners: [
+        createRuntimeOwnerUpdate(CoreOwnerDefinition, {
+          ...initial,
+          children: [{ ...initial.children[0], fill: '#22c55e' }],
+        }),
+      ],
+    });
+
+    const next = handle.read(session);
+    expect(next).not.toBe(previous);
+    expect(next.snapshot.revision).toBe(1);
+    expect(renderer.prepare).toHaveBeenCalledTimes(1);
+    expect(renderer.read).toHaveBeenCalledTimes(2);
+    expect(renderer.patches[0]).toMatchObject({ baseRevision: 0, nextRevision: 1 });
+    expect(renderer.patches[0]?.operations[0]?.kind).toBe('update');
+    expect(records.filter(record => record.owner === '@retikz/render:svg' && record.unit === 'scene-change')).toEqual([
+      expect.objectContaining({
+        phase: 'update',
+        outcome: 'incremental',
+      }),
+    ]);
+  });
+
+  it('直接 replaceScene 物化记录为 full，不伪报 incremental 或 fallback', () => {
+    const records: Array<PerformanceTraceRecord> = [];
+    const { renderer, coreProgram, session } = createHarness('entity', scene('A'), {
+      updateStrategy: 'full',
+      trace: record => records.push(record),
+    });
+    records.length = 0;
 
     session.update({
       baseRevision: session.revision(),
@@ -386,12 +435,14 @@ describe('createRetainedRenderParticipant', () => {
       ],
     });
 
-    const next = handle.read(session);
-    expect(next).not.toBe(previous);
-    expect(next.snapshot.revision).toBe(1);
-    expect(renderer.prepare).toHaveBeenCalledTimes(1);
-    expect(renderer.read).toHaveBeenCalledTimes(2);
-    expect(renderer.patches[0]).toMatchObject({ baseRevision: 0, nextRevision: 1 });
+    expect(session.artifact(coreProgram).value.patch?.operations[0]?.kind).toBe('replaceScene');
+    expect(renderer.patches[0]?.operations[0]?.kind).toBe('replaceScene');
+    expect(records.filter(record => record.owner === '@retikz/render:svg' && record.unit === 'scene-change')).toEqual([
+      expect.objectContaining({
+        phase: 'update',
+        outcome: 'full',
+      }),
+    ]);
   });
 
   it('config-only update 以 empty Patch 连续推进 lineage，prepare 前不调用 read', () => {
@@ -419,8 +470,12 @@ describe('createRetainedRenderParticipant', () => {
 
   it('合法但 capability 不支持的 Patch 在 renderer 调用前转换为独占 replace 并报告 warning', () => {
     const initial = { ...scene('A'), children: [{ ...scene('A').children[0], fill: '#ef4444' }] };
-    const { renderer, coreProgram, session } = createHarness('none', initial);
+    const records: Array<PerformanceTraceRecord> = [];
+    const { renderer, coreProgram, session } = createHarness('none', initial, {
+      trace: record => records.push(record),
+    });
     session.diagnostics();
+    records.length = 0;
 
     session.update({
       baseRevision: session.revision(),
@@ -441,6 +496,12 @@ describe('createRetainedRenderParticipant', () => {
         owner: '@retikz/render:svg',
         code: 'RETAINED_RENDERER_CAPABILITY_FALLBACK',
         phase: 'prepare',
+      }),
+    ]);
+    expect(records.filter(record => record.owner === '@retikz/render:svg' && record.unit === 'scene-change')).toEqual([
+      expect.objectContaining({
+        phase: 'update',
+        outcome: 'fallback',
       }),
     ]);
   });

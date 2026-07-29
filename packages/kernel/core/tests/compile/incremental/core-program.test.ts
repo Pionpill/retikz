@@ -135,6 +135,50 @@ describe('Core Runtime Program initial full run', () => {
     expect(artifact.patch?.operations).toEqual([expect.objectContaining({ kind: 'replaceScene' })]);
   });
 
+  it('forced full 不掩盖 invalid change hint，Core replace 与 trace 仍报告 fallback', () => {
+    const records: Array<PerformanceTraceRecord> = [];
+    const invalidationOwner = defineRuntimeOwner<number, number, number, number>({
+      key: 'fixture:core-invalid-hint',
+      value: {
+        capture: value => value,
+        read: value => value,
+        equals: Object.is,
+      },
+      validateChangeSet: () => 'fallback',
+    });
+    const program = createCoreProgram({}, { invalidationOwners: [invalidationOwner] });
+    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, invalidationOwner] });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      updateStrategy: 'full',
+      initialSnapshots: [
+        createRuntimeOwnerInput(CoreOwnerDefinition, sceneWithText('A')),
+        createRuntimeOwnerInput(invalidationOwner, 0),
+      ],
+      trace: record => records.push(record),
+    });
+    records.length = 0;
+    const baseRevision = session.revision();
+
+    const result = session.update({
+      baseRevision,
+      owners: [createRuntimeOwnerUpdate(invalidationOwner, 1, createRuntimeChangeSet(baseRevision, [1]))],
+    });
+    const artifact = session.artifact(program).value;
+
+    expect(result.outcome).toBe('fallback');
+    expect(result.diagnostics).toEqual([expect.objectContaining({ code: 'RUNTIME_CHANGESET_FALLBACK' })]);
+    expect(artifact.patch?.operations).toEqual([
+      expect.objectContaining({ kind: 'replaceScene', snapshot: artifact.snapshot }),
+    ]);
+    expect(records.filter(record => record.owner === CORE_OWNER_KEY).map(record => record.outcome)).toEqual([
+      'fallback',
+      'fallback',
+    ]);
+  });
+
   it('只修改 Core IR 时不会把未变化的外部失效 owner 误判为 invalidation', () => {
     const invalidationOwner = defineRuntimeOwner<number, number, number, never>({
       key: 'fixture:core-stable-invalidation',
@@ -844,6 +888,65 @@ describe('Core Runtime Program incremental style update', () => {
         phase: 'update',
         unit: 'scene-change',
         outcome: 'incremental',
+        visited: 1,
+        reused: 0,
+        changed: 1,
+      },
+    ]);
+  });
+
+  it('forced full 跳过局部编译并发布独占 replaceScene Patch 与 full trace', () => {
+    const records: Array<PerformanceTraceRecord> = [];
+    const initial: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'a', position: [0, 0], text: 'A', fill: '#ef4444' },
+        { type: 'node', id: 'b', position: [80, 0], text: 'B', fill: '#3b82f6' },
+      ],
+    };
+    const next: IRScene = {
+      ...initial,
+      children: [{ ...initial.children[0], fill: '#22c55e' }, initial.children[1]],
+    };
+    const program = createCoreProgram({ onWarn: () => {} });
+    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      updateStrategy: 'full',
+      initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, initial)],
+      trace: record => records.push(record),
+    });
+    records.length = 0;
+
+    const result = session.update({
+      baseRevision: session.revision(),
+      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
+    });
+    const after = session.artifact(program).value;
+
+    expect(result.outcome).toBe('full');
+    expect(after.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
+    expect(after.patch?.operations).toEqual([
+      expect.objectContaining({ kind: 'replaceScene', snapshot: after.snapshot }),
+    ]);
+    expect(records).toEqual([
+      {
+        owner: CORE_OWNER_KEY,
+        phase: 'update',
+        unit: 'ir-child',
+        outcome: 'full',
+        visited: 2,
+        reused: 0,
+        changed: 2,
+      },
+      {
+        owner: CORE_OWNER_KEY,
+        phase: 'update',
+        unit: 'scene-change',
+        outcome: 'full',
         visited: 1,
         reused: 0,
         changed: 1,

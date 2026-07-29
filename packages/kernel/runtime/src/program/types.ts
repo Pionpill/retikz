@@ -47,6 +47,8 @@ export type RuntimeProgramTraceReporter = Pick<RuntimeTraceReporter, 'owner' | '
 
 /** Program callback 可用的 trace 与 warning context */
 export type RuntimeProgramContext = Readonly<{
+  /** 当前 callback 的实际执行方式 */
+  execution: 'full' | 'incremental' | 'fallback';
   /** 固定绑定 Program owner 的 trace reporter */
   trace: RuntimeProgramTraceReporter;
   /** 追加由 Runtime 统一归属的 commit-safe warning */
