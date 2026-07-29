@@ -467,9 +467,12 @@ const unwrapPrimitiveContent = (
   primitive: RuntimeScenePrimitive,
   descriptor: SvgNode,
   element: SVGElement,
+  config: RenderRuntimeConfig,
 ): Readonly<{ descriptor: SvgNode; element: SVGElement }> => {
   const wrapperCount =
-    primitive.animations?.filter(track => classifyProperty(track.property) === 'transform').length ?? 0;
+    config.animation?.enabled === false || config.animation?.snapshotAt !== undefined
+      ? 0
+      : (primitive.animations?.filter(track => classifyProperty(track.property) === 'transform').length ?? 0);
   let contentDescriptor = descriptor;
   let contentElement = element;
   for (let index = 0; index < wrapperCount; index += 1) {
@@ -600,7 +603,7 @@ const buildFullElementIndex = (
     if (topology === undefined) throw new Error('SVG topology element is missing');
     entries.push([topology.identity, element]);
     if (primitive.type !== 'group') return;
-    const content = unwrapPrimitiveContent(primitive, primitiveDescriptor, element);
+    const content = unwrapPrimitiveContent(primitive, primitiveDescriptor, element, config);
     const children = content.descriptor.children ?? [];
     primitive.children.forEach((child, index) => {
       const childDescriptor: unknown = Reflect.get(children, index);
@@ -636,6 +639,7 @@ const reconcilePrimitiveSubtree = (
   descriptor: SvgNode,
   primitive: RuntimeScenePrimitive,
   subtree: SceneRuntimeSubtree,
+  config: RenderRuntimeConfig,
   currentElements: RuntimeIdentityMap<SVGElement>,
   journal: MutationJournal,
   path: ReadonlyArray<number> = [],
@@ -646,7 +650,7 @@ const reconcilePrimitiveSubtree = (
   }
   reconcileElement(element, descriptor, journal, false, new Set(), new Set(), false);
   const topologyByPath = new Map(subtree.topology.map(node => [topologyPathKey(node.primitivePath), node]));
-  const content = unwrapPrimitiveContent(primitive, descriptor, element);
+  const content = unwrapPrimitiveContent(primitive, descriptor, element, config);
   const desiredChildren = content.descriptor.children ?? [];
   primitive.children.forEach((child, index) => {
     const childDescriptor: unknown = Reflect.get(desiredChildren, index);
@@ -672,7 +676,10 @@ const reconcilePrimitiveSubtree = (
         },
       );
     }
-    reconcilePrimitiveSubtree(candidate, descriptorNode, child, subtree, currentElements, journal, [...path, index]);
+    reconcilePrimitiveSubtree(candidate, descriptorNode, child, subtree, config, currentElements, journal, [
+      ...path,
+      index,
+    ]);
   });
   while (content.element.childNodes.length > primitive.children.length) {
     const child = content.element.childNodes[primitive.children.length];
@@ -826,7 +833,7 @@ const reconcileFullIdentityDocument = (
         },
       );
     }
-    reconcilePrimitiveSubtree(candidate, primitiveDescriptor, primitive, subtree, currentElements, journal);
+    reconcilePrimitiveSubtree(candidate, primitiveDescriptor, primitive, subtree, config, currentElements, journal);
   });
   const contentCount = plan.wrappers.length === 0 ? plan.head.length + plan.primitives.length : plan.primitives.length;
   while (contentElement.childNodes.length > contentCount) {
@@ -1330,6 +1337,7 @@ export const createBuiltinSvgRetainedRenderer = (
                 subtreeDescriptor,
                 subtree.primitive,
                 subtree,
+                config,
                 currentElements,
                 journal,
               );

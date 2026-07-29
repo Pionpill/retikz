@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import type { HydrationContext } from '@retikz/render/hydration';
 
+import { pulse } from '@retikz/core';
+import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -22,6 +24,35 @@ afterEach(() => {
 });
 
 describe('SVG 水合', () => {
+  it('retained SVG 禁用动画时仍可挂载带动画 track 的分组节点', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(() => {
+      root.render(
+        <StrictMode>
+          <Layout animate={false} width={300} height={160}>
+            <Node
+              id="ball"
+              position={[0, 0]}
+              shape="circle"
+              fill="darkorange"
+              stroke="none"
+              meta={{ label: 'ball' }}
+              animations={[{ ...pulse({ peak: 1.4, duration: 500 }), trigger: 'manual', iterations: 1 }]}
+              onClick={(_event, context) => context.animation.restart()}
+            />
+          </Layout>
+        </StrictMode>,
+      );
+    });
+
+    expect(container.querySelector('[data-retikz-id="ball"]')).not.toBeNull();
+    await act(() => root.unmount());
+    container.remove();
+  });
+
   it('点击带 id 的节点 DOM → 对应 onClick 触发', async () => {
     const onClick = vi.fn();
     const container = document.createElement('div');
