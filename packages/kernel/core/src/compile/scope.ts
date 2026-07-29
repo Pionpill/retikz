@@ -19,6 +19,7 @@ import { Anchor } from '../shared';
 import { rect as rectOps } from '../shared/geometry';
 import { outerRectOf } from './node';
 import { resolvePosition } from './position';
+import { CompileInvariantError } from './probe-failure';
 import { resolveAnchorRefUncached } from './reference';
 
 /** scope transform lowering 所需的编译上下文 */
@@ -53,7 +54,7 @@ export const resolveScopeSelfPoint = (point: IRScopeSelfPoint, intrinsicLayout: 
   if (point === 'origin') return [0, 0];
   if (Array.isArray(point)) return assertFiniteScopePoint([point[0], point[1]], 'scope self point');
   if (intrinsicLayout === undefined) {
-    throw new Error('internal: intrinsic Scope layout is required to resolve an anchor self point');
+    throw new CompileInvariantError('internal: intrinsic Scope layout is required to resolve an anchor self point');
   }
   return assertFiniteScopePoint(resolveAnchorRefUncached(intrinsicLayout, point), 'scope self point');
 };

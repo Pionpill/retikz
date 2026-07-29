@@ -5,6 +5,7 @@ import type { IRJsonObject, IRNode, IRShapeRef, JsonValue } from '../../schemas'
 import { providerDefinitionOf } from '../../providers/registry';
 import { BuiltinShape, JsonObjectSchema } from '../../schemas';
 import { parseProviderPayload } from '../provider-payload';
+import { withProviderOutputValidationBoundary } from '../scene-primitive';
 
 /** 节点 shape 解析输入 */
 export type ResolveNodeShapeInput = {
@@ -89,11 +90,18 @@ export const resolveNodeShape = (input: ResolveNodeShapeInput): ResolvedNodeShap
 
   const shapeScale = Math.sqrt(scaleX * scaleY);
   const noScale = scaleX === 1 && scaleY === 1;
-  const shapeParams: IRJsonObject = noScale
-    ? mergedShapeParams
-    : shapeDef.scaleParams
-      ? shapeDef.scaleParams(mergedShapeParams, scaleX, scaleY)
-      : scaleJsonNumbers(mergedShapeParams, shapeScale);
+  let shapeParams: IRJsonObject;
+  if (noScale) {
+    shapeParams = mergedShapeParams;
+  } else if (shapeDef.scaleParams === undefined) {
+    shapeParams = scaleJsonNumbers(mergedShapeParams, shapeScale);
+  } else {
+    const rawScaledParams = shapeDef.scaleParams(mergedShapeParams, scaleX, scaleY);
+    shapeParams = withProviderOutputValidationBoundary(`Shape '${shapeName}' scaleParams`, () => {
+      const parsedScaledParams = shapeDef.paramsSchema.parse(rawScaledParams);
+      return JsonObjectSchema.parse(parsedScaledParams);
+    });
+  }
 
   return { shapeName, shapeDef, shapeParams };
 };

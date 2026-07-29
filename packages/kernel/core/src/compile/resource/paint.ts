@@ -1,5 +1,4 @@
 import type {
-  MarkerPrimitive,
   PaintValue,
   PatternDefinition,
   PatternEmitContext,
@@ -9,6 +8,7 @@ import type {
 import type { IRPaintSpec } from '../../schemas';
 
 import { providerDefinitionOf } from '../../providers/registry';
+import { CompositeContractError, LayoutProbeRecoverableError, safeThrownDetail } from '../probe-failure';
 import { validateMarkerPrimitives } from './marker-primitive';
 
 /** paint 解析器：纯色 string 原样返回；PaintSpec 去重 + 派稳定 id → `{ kind:'resourceRef', id }`；undefined 透传 */
@@ -66,17 +66,20 @@ const resolvePatternTile = (
   if (spec.background !== undefined) ctx.background = spec.background;
   if (spec.lineWidth !== undefined) ctx.lineWidth = spec.lineWidth;
   if (typeof def.emit !== 'function') {
-    throw new Error(`Pattern '${spec.shape}' is missing an emit function (PatternDefinition.emit is required).`);
+    throw new CompositeContractError(
+      `Pattern '${spec.shape}' is missing an emit function (PatternDefinition.emit is required).`,
+    );
   }
-  let motif: Array<MarkerPrimitive>;
+  let emitted: unknown;
   try {
-    motif = [...def.emit(ctx)];
+    emitted = def.emit(ctx);
   } catch (e) {
-    throw new Error(`Pattern '${spec.shape}' emit failed: ${e instanceof Error ? e.message : String(e)}`, {
+    throw new LayoutProbeRecoverableError(`Pattern '${spec.shape}' emit failed: ${safeThrownDetail(e)}`, {
       cause: e,
+      providerKey: `pattern:${spec.shape}`,
     });
   }
-  validateMarkerPrimitives(`Pattern '${spec.shape}'`, motif);
+  const motif = validateMarkerPrimitives(`Pattern '${spec.shape}'`, emitted);
   const tile: ResolvedPatternTile = { size, motif };
   if (spec.background !== undefined) tile.background = spec.background;
   if (spec.rotation !== undefined) tile.rotation = spec.rotation;

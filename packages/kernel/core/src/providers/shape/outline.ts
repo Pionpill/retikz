@@ -45,7 +45,7 @@ export const contourToPathCommands = (
           radius: round(cmd.radius),
           startAngle: cmd.startAngle,
           endAngle: cmd.endAngle,
-          counterClockwise: cmd.counterClockwise,
+          ...(cmd.counterClockwise === undefined ? {} : { counterClockwise: cmd.counterClockwise }),
         });
         break;
       }

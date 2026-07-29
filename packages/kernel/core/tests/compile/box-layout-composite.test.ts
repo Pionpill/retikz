@@ -8,7 +8,15 @@ import {
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { CompileWarning, IRChild, IRScene, TextMeasurer } from '../../src';
+import type {
+  CompileWarning,
+  IRChild,
+  IRScene,
+  LayoutChildResult,
+  LayoutCompositeCompileContext,
+  LayoutProposal,
+  TextMeasurer,
+} from '../../src';
 
 import {
   ChildSchema,
@@ -18,6 +26,10 @@ import {
   CoreOwnerDefinition,
   createCoreProgram,
   defineComposite,
+  LayoutAxisProposalKind,
+  LayoutChildProbeKind,
+  LayoutIntrinsicMode,
+  NaturalLayoutProposal,
 } from '../../src';
 
 const fixedMeasurer: TextMeasurer = text => ({
@@ -32,6 +44,16 @@ const sceneOf = (child: IRChild): IRScene => ({
   type: 'scene',
   children: [child],
 });
+
+const resolvedResultOf = (
+  context: LayoutCompositeCompileContext,
+  child: IRChild,
+  proposal: LayoutProposal = NaturalLayoutProposal,
+): LayoutChildResult => {
+  const probe = context.layoutChild(child, proposal);
+  if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+  return probe.result;
+};
 
 const boxNode = (text = ''): IRChild => ({
   type: 'node',
@@ -63,10 +85,9 @@ describe('Box Layout Composite contract', () => {
         visualWidth: z.number(),
       }),
       compile: (node, context) => {
-        const laid = context.layoutChild(node.child, {
-          kind: 'constrained',
-          width: { kind: 'bounded', min: 30, max: 50 },
-          height: { kind: 'exact', size: 40 },
+        const laid = resolvedResultOf(context, node.child, {
+          x: { kind: LayoutAxisProposalKind.Range, min: 30, max: 50 },
+          y: { kind: LayoutAxisProposalKind.Exact, value: 40 },
         });
         return {
           children: [context.replay(laid)],
@@ -112,7 +133,7 @@ describe('Box Layout Composite contract', () => {
         slotHeight: z.number(),
       }),
       compile: (_node, context) => {
-        const laid = context.layoutChild(boxNode(), { kind: 'intrinsic' });
+        const laid = resolvedResultOf(context, boxNode());
         return {
           children: [context.replay(laid)],
           artifact: {
@@ -151,13 +172,13 @@ describe('Box Layout Composite contract', () => {
         indefiniteHeight: z.number(),
       }),
       compile: (_node, context) => {
-        const exact = context.layoutChild(boxNode(), {
-          kind: 'constrained',
-          width: { kind: 'exact', size: 0 },
+        const exact = resolvedResultOf(context, boxNode(), {
+          x: { kind: LayoutAxisProposalKind.Exact, value: 0 },
+          y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
         });
-        const bounded = context.layoutChild(boxNode(), {
-          kind: 'constrained',
-          height: { kind: 'bounded', max: 0 },
+        const bounded = resolvedResultOf(context, boxNode(), {
+          x: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
+          y: { kind: LayoutAxisProposalKind.Range, min: 0, max: 0 },
         });
         return {
           children: [context.replay(exact)],
@@ -196,12 +217,9 @@ describe('Box Layout Composite contract', () => {
         allocationBounds: { x: 5, y: 6, width: 20, height: 10 },
         children: [{ type: 'coordinate', id: 'nested-point', position: [100, 100] }],
         artifact: {
-          widthKind: context.constraint.kind === 'constrained' ? (context.constraint.width?.kind ?? 'none') : 'none',
-          heightKind: context.constraint.kind === 'constrained' ? (context.constraint.height?.kind ?? 'none') : 'none',
-          heightSize:
-            context.constraint.kind === 'constrained' && context.constraint.height?.kind === 'exact'
-              ? context.constraint.height.size
-              : -1,
+          widthKind: context.proposal.x.kind,
+          heightKind: context.proposal.y.kind,
+          heightSize: context.proposal.y.kind === LayoutAxisProposalKind.Exact ? context.proposal.y.value : -1,
         },
       }),
     });
@@ -221,12 +239,12 @@ describe('Box Layout Composite contract', () => {
         slotHeight: z.number(),
       }),
       compile: (_node, context) => {
-        const laid = context.layoutChild(
+        const laid = resolvedResultOf(
+          context,
           { namespace: 'test', type: 'nestedBox' },
           {
-            kind: 'constrained',
-            width: { kind: 'exact', size: 80 },
-            height: { kind: 'exact', size: 40 },
+            x: { kind: LayoutAxisProposalKind.Exact, value: 80 },
+            y: { kind: LayoutAxisProposalKind.Exact, value: 40 },
           },
         );
         return {
@@ -293,7 +311,7 @@ describe('Box Layout Composite contract', () => {
         height: z.number(),
       }),
       compile: (_node, context) => {
-        const laid = context.layoutChild({ namespace: 'test', type: 'emptyBox' }, { kind: 'intrinsic' });
+        const laid = resolvedResultOf(context, { namespace: 'test', type: 'emptyBox' });
         return {
           children: [context.replay(laid)],
           artifact: { ...laid.allocationBounds },
@@ -336,7 +354,7 @@ describe('Box Layout Composite contract', () => {
       }),
       artifactSchema: z.strictObject({ x: z.number(), y: z.number(), width: z.number(), height: z.number() }),
       compile: (_node, context) => {
-        const laid = context.layoutChild({ namespace: 'test', type: 'visibleOverflowLeaf' }, { kind: 'intrinsic' });
+        const laid = resolvedResultOf(context, { namespace: 'test', type: 'visibleOverflowLeaf' });
         return { children: [context.replay(laid)], artifact: { ...laid.allocationBounds } };
       },
     });
@@ -370,10 +388,10 @@ describe('Box Layout Composite contract', () => {
       }),
       compile: (_node, context) => {
         const child = boxNode('aa aa');
-        const intrinsic = context.layoutChild(child, { kind: 'intrinsic' });
-        const constrained = context.layoutChild(child, {
-          kind: 'constrained',
-          width: { kind: 'exact', size: 25 },
+        const intrinsic = resolvedResultOf(context, child);
+        const constrained = resolvedResultOf(context, child, {
+          x: { kind: LayoutAxisProposalKind.Exact, value: 25 },
+          y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
         });
         return {
           children: [context.replay(constrained)],
@@ -410,9 +428,9 @@ describe('Box Layout Composite contract', () => {
         type: z.literal('constraintMutator'),
       }),
       compile: (_node, context) => {
-        const width = context.constraint.kind === 'constrained' ? context.constraint.width : undefined;
-        receivedFrozenConstraint = Object.isFrozen(context.constraint) && Object.isFrozen(width);
-        mutationSucceeded = width === undefined ? true : Reflect.set(width, 'size', -5);
+        const xProposal = context.proposal.x;
+        receivedFrozenConstraint = Object.isFrozen(context.proposal) && Object.isFrozen(xProposal);
+        mutationSucceeded = Reflect.set(xProposal, 'value', -5);
         return { children: [] };
       },
     });
@@ -425,9 +443,13 @@ describe('Box Layout Composite contract', () => {
       }),
       artifactSchema: z.strictObject({ slotWidth: z.number() }),
       compile: (_node, context) => {
-        const laid = context.layoutChild(
+        const laid = resolvedResultOf(
+          context,
           { namespace: 'test', type: 'constraintMutator' },
-          { kind: 'constrained', width: { kind: 'exact', size: 20 } },
+          {
+            x: { kind: LayoutAxisProposalKind.Exact, value: 20 },
+            y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
+          },
         );
         return { children: [context.replay(laid)], artifact: { slotWidth: laid.slotSize.width } };
       },
@@ -452,9 +474,9 @@ describe('Box Layout Composite contract', () => {
         type: z.literal('negativeZeroSlot'),
       }),
       compile: (_node, context) => {
-        const laid = context.layoutChild(boxNode(), {
-          kind: 'constrained',
-          width: { kind: 'exact', size: -0 },
+        const laid = resolvedResultOf(context, boxNode(), {
+          x: { kind: LayoutAxisProposalKind.Exact, value: -0 },
+          y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
         });
         slotWidth = laid.slotSize.width;
         return { children: [context.replay(laid)] };
@@ -476,12 +498,12 @@ describe('Box Layout Composite contract', () => {
         type: z.literal('clippedReplay'),
       }),
       compile: (_node, context) => {
-        const laid = context.layoutChild(boxNode(), { kind: 'intrinsic' });
+        const laid = resolvedResultOf(context, boxNode());
         return {
           children: [
             context.replay(laid, {
               transforms: [{ kind: 'translate', x: 10, y: 20 }],
-              clip: { kind: 'rect', x: -2, y: -2, width: 4, height: 4 },
+              clip: { kind: 'rect', x: 8, y: 18, width: 4, height: 4 },
             }),
           ],
         };
@@ -496,7 +518,7 @@ describe('Box Layout Composite contract', () => {
       }),
       artifactSchema: z.strictObject({ width: z.number(), height: z.number() }),
       compile: (_node, context) => {
-        const laid = context.layoutChild({ namespace: 'test', type: 'clippedReplay' }, { kind: 'intrinsic' });
+        const laid = resolvedResultOf(context, { namespace: 'test', type: 'clippedReplay' });
         return {
           children: [context.replay(laid)],
           artifact: { width: laid.allocationBounds.width, height: laid.allocationBounds.height },
@@ -514,13 +536,18 @@ describe('Box Layout Composite contract', () => {
       expect.objectContaining({
         kind: 'clip',
         id: 'clip-1',
-        shape: { kind: 'rect', x: -2, y: -2, width: 4, height: 4 },
+        shape: { kind: 'rect', x: 8, y: 18, width: 4, height: 4 },
       }),
     ]);
     expect(primitive).toMatchObject({
       type: 'group',
-      transforms: [{ kind: 'translate', x: 10, y: 20 }],
       clipRef: 'clip-1',
+    });
+    expect(primitive).not.toHaveProperty('transforms');
+    if (primitive.type !== 'group') throw new Error('expected replay clip group');
+    expect(primitive.children[0]).toMatchObject({
+      type: 'group',
+      transforms: [{ kind: 'translate', x: 10, y: 20 }],
     });
     const allocation = result.artifacts.find(value => value.kind === 'composite')?.value;
     expect(allocation?.width).toBe(10);
@@ -537,11 +564,8 @@ describe('Box Layout Composite contract', () => {
         type: z.literal('invisibleReplayWrappers'),
       }),
       compile: (_node, context) => {
-        const empty = context.layoutChild(
-          { type: 'coordinate', id: 'empty-coordinate', position: [20, 20] },
-          { kind: 'intrinsic' },
-        );
-        const clipped = context.layoutChild(boxNode(), { kind: 'intrinsic' });
+        const empty = resolvedResultOf(context, { type: 'coordinate', id: 'empty-coordinate', position: [20, 20] });
+        const clipped = resolvedResultOf(context, boxNode());
         return {
           children: [
             context.replay(empty, { clip: { kind: 'rect', x: -10, y: -10, width: 5, height: 5 } }),
@@ -569,7 +593,7 @@ describe('Box Layout Composite contract', () => {
         type: z.literal('detachedReplayWrapper'),
       }),
       compile: (_node, context) => {
-        const laid = context.layoutChild(boxNode(), { kind: 'intrinsic' });
+        const laid = resolvedResultOf(context, boxNode());
         const transforms = [{ kind: 'translate' as const, x: 5, y: 6 }];
         const clip = { kind: 'rect' as const, x: -2, y: -2, width: 4, height: 4 };
         const replay = context.replay(laid, { transforms, clip });
@@ -584,7 +608,10 @@ describe('Box Layout Composite contract', () => {
       padding: 0,
     });
 
-    expect(result.scene.primitives[0]).toMatchObject({
+    const primitive = result.scene.primitives[0];
+    expect(primitive).toMatchObject({ type: 'group', clipRef: 'clip-1' });
+    if (primitive.type !== 'group') throw new Error('expected replay clip group');
+    expect(primitive.children[0]).toMatchObject({
       type: 'group',
       transforms: [{ kind: 'translate', x: 5, y: 6 }],
     });
@@ -607,7 +634,7 @@ describe('Box Layout Composite contract', () => {
         type: z.literal('invalidReplayWrapper'),
       }),
       compile: (_node, context) => {
-        const laid = context.layoutChild(boxNode(), { kind: 'intrinsic' });
+        const laid = resolvedResultOf(context, boxNode());
         return { children: [context.replay(laid, wrapper as never)] };
       },
     });
@@ -628,7 +655,7 @@ describe('Box Layout Composite contract', () => {
         type: z.literal('replayAfterInvalidWrapper'),
       }),
       compile: (_node, context) => {
-        const laid = context.layoutChild(boxNode(), { kind: 'intrinsic' });
+        const laid = resolvedResultOf(context, boxNode());
         expect(() => context.replay(laid, { unknown: true } as never)).toThrow(/unsupported.*wrapper/i);
         return { children: [context.replay(laid)] };
       },
@@ -643,11 +670,11 @@ describe('Box Layout Composite contract', () => {
 
   it.each([
     null,
-    { kind: 'constrained' },
-    { kind: 'constrained', width: { kind: 'bounded', min: 20, max: 10 } },
-    { kind: 'constrained', width: { kind: 'exact', size: Number.NaN } },
-    { kind: 'constrained', height: { kind: 'bounded', max: Number.POSITIVE_INFINITY } },
-  ])('rejects invalid dual-axis constraint %o with the composite occurrence', constraint => {
+    { x: { kind: 'intrinsic', mode: 'natural' } },
+    { x: { kind: 'range', min: 20, max: 10 }, y: { kind: 'intrinsic', mode: 'natural' } },
+    { x: { kind: 'exact', value: Number.NaN }, y: { kind: 'intrinsic', mode: 'natural' } },
+    { x: { kind: 'intrinsic', mode: 'natural' }, y: { kind: 'range', min: 0, max: Number.POSITIVE_INFINITY } },
+  ])('rejects invalid dual-axis proposal %o with the composite occurrence', proposal => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'invalidBoxConstraint',
@@ -656,14 +683,14 @@ describe('Box Layout Composite contract', () => {
         type: z.literal('invalidBoxConstraint'),
       }),
       compile: (_node, context) => {
-        context.layoutChild(boxNode(), constraint as never);
+        context.layoutChild(boxNode(), proposal as never);
         return { children: [] };
       },
     });
 
     expect(() =>
       compileToScene(sceneOf({ namespace: 'test', type: 'invalidBoxConstraint' }), { composites: [definition] }),
-    ).toThrow(/test\.invalidBoxConstraint.*children\[0\].*(constraint|axis|finite|min|max)/i);
+    ).toThrow(/test\.invalidBoxConstraint.*children\[0\].*(proposal|axis|finite|min|max)/i);
   });
 
   it.each([
@@ -685,6 +712,51 @@ describe('Box Layout Composite contract', () => {
     ).toThrow(/test\.invalidAllocation.*children\[0\].*allocation/i);
   });
 
+  it('snapshots dynamic explicit allocation fields before validation and publication', () => {
+    let widthReads = 0;
+    const allocationBounds = new Proxy(
+      { x: 0, y: 0, width: 20, height: 10 },
+      {
+        get: (target, property, receiver) => {
+          if (property === 'width') {
+            widthReads += 1;
+            return widthReads <= 3 ? 20 : Number.NaN;
+          }
+          return Reflect.get(target, property, receiver);
+        },
+      },
+    );
+    const child = defineComposite({
+      namespace: 'test',
+      type: 'dynamicAllocationChild',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('test'),
+        type: z.literal('dynamicAllocationChild'),
+      }),
+      compile: () => ({ allocationBounds, children: [boxNode()] }),
+    });
+    const parent = defineComposite({
+      namespace: 'test',
+      type: 'dynamicAllocationParent',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('test'),
+        type: z.literal('dynamicAllocationParent'),
+      }),
+      artifactSchema: z.strictObject({ width: z.number() }),
+      compile: (_node, context) => {
+        const laid = resolvedResultOf(context, { namespace: 'test', type: 'dynamicAllocationChild' });
+        return { children: [], artifact: { width: laid.allocationBounds.width } };
+      },
+    });
+
+    const result = compileToScene(sceneOf({ namespace: 'test', type: 'dynamicAllocationParent' }), {
+      composites: [child, parent],
+    });
+
+    expect(result.artifacts.find(value => value.kind === 'composite')?.value).toEqual({ width: 20 });
+    expect(widthReads).toBe(1);
+  });
+
   it('uses full fallback for a changed layout-aware composite and matches a fresh compile', () => {
     const definition = defineComposite({
       namespace: 'test',
@@ -695,7 +767,8 @@ describe('Box Layout Composite contract', () => {
         x: z.number(),
       }),
       compile: (node, context) => {
-        const laid = context.layoutChild(
+        const laid = resolvedResultOf(
+          context,
           {
             type: 'scope',
             children: [
@@ -704,9 +777,8 @@ describe('Box Layout Composite contract', () => {
             ],
           },
           {
-            kind: 'constrained',
-            width: { kind: 'exact', size: 20 },
-            height: { kind: 'exact', size: 20 },
+            x: { kind: LayoutAxisProposalKind.Exact, value: 20 },
+            y: { kind: LayoutAxisProposalKind.Exact, value: 20 },
           },
         );
         return {

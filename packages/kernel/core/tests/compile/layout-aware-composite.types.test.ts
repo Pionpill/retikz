@@ -3,7 +3,11 @@ import { z } from 'zod';
 
 import type {
   AnyCompositeDefinition,
+  // @ts-expect-error 旧 ChildLayoutAxisConstraint 已从公开 contract 删除
   ChildLayoutAxisConstraint,
+  // @ts-expect-error 旧 ChildLayoutConstraint 已从公开 contract 删除
+  ChildLayoutConstraint,
+  // @ts-expect-error 旧 ChildLayoutSize 已从公开 contract 删除
   ChildLayoutSize,
   CompositeCompileArtifact,
   CompositeCompileChild,
@@ -12,11 +16,25 @@ import type {
   IRChild,
   IRScene,
   JsonValue,
+  LayoutAlignmentGuide,
+  LayoutAxisProposal,
+  LayoutChildFailure,
+  LayoutChildProbe,
+  LayoutChildResult,
   LayoutCompositeCompileResult,
+  LayoutProposal,
   NodeLayoutCompileArtifact,
 } from '../../src';
 
-import { compileToScene, CompositeBaseSchema, defineComposite } from '../../src';
+import {
+  compileToScene,
+  CompositeBaseSchema,
+  defineComposite,
+  LayoutAlignmentGuideDimension,
+  LayoutAxisProposalKind,
+  LayoutChildProbeKind,
+  LayoutIntrinsicMode,
+} from '../../src';
 
 const scene: IRScene = { version: 1, type: 'scene', children: [] };
 
@@ -52,8 +70,31 @@ const wrapped = defineComposite({
   }),
   artifactSchema: z.strictObject({ value: z.literal('wrapped') }),
   compile: (node, context) => {
-    const axis = { kind: 'bounded', min: 4, max: 20 } satisfies ChildLayoutAxisConstraint;
-    const laid = context.layoutChild(node.child, { kind: 'constrained', width: axis });
+    const axis = {
+      kind: LayoutAxisProposalKind.Range,
+      min: 4,
+      max: 20,
+    } satisfies LayoutAxisProposal;
+    const proposal = {
+      x: axis,
+      y: {
+        kind: LayoutAxisProposalKind.Intrinsic,
+        mode: LayoutIntrinsicMode.Natural,
+      },
+    } satisfies LayoutProposal;
+    const minimumExactProposal = {
+      x: {
+        kind: LayoutAxisProposalKind.Intrinsic,
+        mode: LayoutIntrinsicMode.Minimum,
+      },
+      y: { kind: LayoutAxisProposalKind.Exact, value: 12 },
+    } satisfies LayoutProposal;
+    void minimumExactProposal;
+    const probe = context.layoutChild(node.child, proposal);
+    expectTypeOf(probe).toEqualTypeOf<LayoutChildProbe>();
+    expectTypeOf(context.proposal).toEqualTypeOf<LayoutProposal>();
+    if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+    const laid = probe.result;
     const replayWrapper = {
       transforms: [{ kind: 'translate', x: 4, y: 6 }],
       clip: { kind: 'rect', x: 0, y: 0, width: 20, height: 10 },
@@ -67,7 +108,44 @@ const wrapped = defineComposite({
     const wrapper = context.scope(scopeProps, [placed]);
 
     expectTypeOf(wrapper).toEqualTypeOf<CompositeCompileChild>();
-    expectTypeOf(laid.slotSize).toEqualTypeOf<ChildLayoutSize>();
+    expectTypeOf(laid).toEqualTypeOf<LayoutChildResult>();
+    expectTypeOf(laid.slotSize).toEqualTypeOf<Readonly<{ width: number; height: number }>>();
+
+    const guide: LayoutAlignmentGuide = {
+      name: 'custom-baseline',
+      dimension: LayoutAlignmentGuideDimension.Y,
+      position: 8,
+    };
+    const resultWithGuide: LayoutCompositeCompileResult = {
+      children: [wrapper],
+      alignmentGuides: [guide],
+    };
+    void resultWithGuide;
+
+    // @ts-expect-error proposal 缺少 y 轴
+    context.layoutChild(node.child, { x: axis });
+    // @ts-expect-error proposal 不允许额外字段
+    context.layoutChild(node.child, { ...proposal, width: axis });
+    // @ts-expect-error range variant 不允许 exact value
+    context.layoutChild(node.child, { ...proposal, x: { ...axis, value: 10 } });
+    // @ts-expect-error 旧 constrained contract 不再接受
+    context.layoutChild(node.child, { kind: 'constrained', width: { kind: 'bounded', max: 20 } });
+    // @ts-expect-error opaque failure 不能伪造
+    const forgedFailure: LayoutChildFailure = {};
+    void forgedFailure;
+    // @ts-expect-error result 是只读值
+    laid.slotSize.width = 12;
+    // @ts-expect-error guide 是只读值
+    guide.position = 12;
+    // @ts-expect-error guide array 是只读值
+    laid.alignmentGuides?.push(guide);
+    // @ts-expect-error probe 是只读判别 union
+    probe.kind = LayoutChildProbeKind.Failed;
+    // @ts-expect-error replay 只接受 resolved result
+    context.replay(probe);
+    // @ts-expect-error resolved probe 不能伪造额外 output 字段
+    const forgedProbe: LayoutChildProbe = { kind: LayoutChildProbeKind.Resolved, result: laid, output: wrapper };
+    void forgedProbe;
 
     // @ts-expect-error replay 的第二参数已迁移为 wrapper object
     context.replay(laid, [{ kind: 'translate', x: 4, y: 6 }]);
@@ -96,6 +174,12 @@ const wrapped = defineComposite({
 });
 
 describe('layout-aware composite type contracts', () => {
+  it('removes the legacy child layout public types', () => {
+    void expectTypeOf<ChildLayoutAxisConstraint>();
+    void expectTypeOf<ChildLayoutConstraint>();
+    void expectTypeOf<ChildLayoutSize>();
+  });
+
   it('preserves exact definition literals and callable branch types', () => {
     expectTypeOf(alpha.namespace).toEqualTypeOf<'test'>();
     expectTypeOf(alpha.type).toEqualTypeOf<'alpha'>();

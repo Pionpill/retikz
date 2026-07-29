@@ -8,10 +8,15 @@ import type { NodeLayout } from './types';
 import { resolveBoundaryRegistry } from '../../providers/boundary';
 import { CenterAnchor, isAnchor } from '../../shared';
 import { DEG_TO_RAD } from '../../shared/geometry';
-import { fallbackBoundaryAnchor, resolveBoundary } from './boundary';
+import { snapshotProviderPosition } from '../scene-primitive';
+import { boundaryKey, fallbackBoundaryAnchor, resolveBoundary } from './boundary';
 
 /** 空 shape params */
 const EMPTY_SHAPE_PARAMS: IRJsonObject = {};
+
+/** 保留合法 undefined fallback，并校验 provider 实际返回的二维坐标 */
+const snapshotOptionalProviderPosition = (owner: string, value: unknown): Position | undefined =>
+  value === undefined ? undefined : snapshotProviderPosition(owner, value);
 
 const isZeroInsets = (m: BoundsInsets): boolean => m.top === 0 && m.right === 0 && m.bottom === 0 && m.left === 0;
 
@@ -58,7 +63,8 @@ export const boundaryPointOf = (
   boundary: IRBoundary | undefined = 'shape',
 ): Position => {
   const { def, rect, params } = resolveBoundary(boundary, boundaryContextOf(layout));
-  return def.boundaryPoint(inflateRect(rect, layout.margin), toward, params);
+  const raw = def.boundaryPoint(inflateRect(rect, layout.margin), toward, params);
+  return snapshotProviderPosition(`Boundary '${boundaryKey(boundary)}' boundaryPoint`, raw);
 };
 
 /** 取节点 shape 的命名 anchor；标准 anchor 可选在 boundary 拟合后应用 margin */
@@ -70,29 +76,42 @@ export const anchorOf = (
 ): Position => {
   if (isAnchor(name)) {
     if (name === CenterAnchor.Center) {
-      const own = layout.shapeDef.anchor(layout.rect, CenterAnchor.Center, layout.shapeParams ?? EMPTY_SHAPE_PARAMS);
+      const own = snapshotOptionalProviderPosition(
+        `Shape '${layout.shapeName}' anchor`,
+        layout.shapeDef.anchor(layout.rect, CenterAnchor.Center, layout.shapeParams ?? EMPTY_SHAPE_PARAMS),
+      );
       return own ?? [layout.rect.x, layout.rect.y];
     }
 
     // 标准方位名优先走视觉 shape 自身 anchor；未实现时回退外接 AABB。
     if (boundary === 'shape') {
       const shapeRect = applyMargin ? inflateRect(layout.rect, layout.margin) : layout.rect;
-      const own = layout.shapeDef.anchor(shapeRect, name, layout.shapeParams ?? EMPTY_SHAPE_PARAMS);
+      const own = snapshotOptionalProviderPosition(
+        `Shape '${layout.shapeName}' anchor`,
+        layout.shapeDef.anchor(shapeRect, name, layout.shapeParams ?? EMPTY_SHAPE_PARAMS),
+      );
       if (own !== undefined) return own;
       const fallback = resolveBoundary('rectangle', boundaryContextOf(layout));
       const fallbackRect = applyMargin ? inflateRect(fallback.rect, layout.margin) : fallback.rect;
-      const p = fallback.def.anchor?.(fallbackRect, name, fallback.params);
+      const raw = fallback.def.anchor?.(fallbackRect, name, fallback.params);
+      const p = snapshotOptionalProviderPosition(`Boundary 'rectangle' anchor`, raw);
       if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
       return p;
     }
     const { def, rect, params } = resolveBoundary(boundary, boundaryContextOf(layout));
     const anchorRect = applyMargin ? inflateRect(rect, layout.margin) : rect;
-    const p = def.anchor?.(anchorRect, name, params) ?? fallbackBoundaryAnchor(anchorRect, name);
+    const raw = def.anchor?.(anchorRect, name, params);
+    const p =
+      snapshotOptionalProviderPosition(`Boundary '${boundaryKey(boundary)}' anchor`, raw) ??
+      fallbackBoundaryAnchor(anchorRect, name);
     if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
     return p;
   }
   // 形状专属命名 anchor 恒走视觉形状。
-  const p = layout.shapeDef.anchor(layout.rect, name, layout.shapeParams ?? EMPTY_SHAPE_PARAMS);
+  const p = snapshotOptionalProviderPosition(
+    `Shape '${layout.shapeName}' anchor`,
+    layout.shapeDef.anchor(layout.rect, name, layout.shapeParams ?? EMPTY_SHAPE_PARAMS),
+  );
   if (p === undefined) {
     throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
   }
@@ -116,5 +135,6 @@ export const angleBoundaryOf = (
   const sinR = Math.sin(rot);
   // 局部方向转为世界方向。
   const toward: Position = [boundaryRect.x + lx * cosR - ly * sinR, boundaryRect.y + lx * sinR + ly * cosR];
-  return def.boundaryPoint(boundaryRect, toward, params);
+  const raw = def.boundaryPoint(boundaryRect, toward, params);
+  return snapshotProviderPosition(`Boundary '${boundaryKey(boundary)}' boundaryPoint`, raw);
 };

@@ -1,3 +1,5 @@
+import type { RuntimeRevision } from '@retikz/runtime';
+
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -9,18 +11,30 @@ import type {
   IRPaintSpec,
   IRScene,
   LayoutChildResult,
+  LayoutCompositeCompileContext,
+  LayoutProposal,
   ScenePrimitive,
 } from '../../src';
+import type { CompositeCompileSession } from '../../src/compile/orchestration/types';
 
 import {
   ChildSchema,
   compileToScene,
   CompileWarningCode,
   CompositeBaseSchema,
+  defineClip,
   defineComposite,
   formatCompileOccurrence,
   isNodeLayoutCompileArtifact,
+  LayoutAxisProposalKind,
+  LayoutChildProbeKind,
+  LayoutIntrinsicMode,
+  NaturalLayoutProposal,
 } from '../../src';
+import { NamespaceStack } from '../../src/compile/namespace';
+import { createCompileContext } from '../../src/compile/orchestration/context';
+import { createRuntimeTopologyTracker } from '../../src/compile/orchestration/runtime-topology';
+import { compileChildrenToPrimitives } from '../../src/compile/orchestration/traversal';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
@@ -36,6 +50,16 @@ const node = (id: string, position: readonly [number, number] = [0, 0]): IRChild
   padding: 0,
   margin: 0,
 });
+
+const resolvedResultOf = (
+  context: LayoutCompositeCompileContext,
+  child: IRChild,
+  proposal: LayoutProposal = NaturalLayoutProposal,
+): LayoutChildResult => {
+  const probe = context.layoutChild(child, proposal);
+  if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+  return probe.result;
+};
 
 const groups = (primitives: ReadonlyArray<ScenePrimitive>): Array<Extract<ScenePrimitive, { type: 'group' }>> => {
   const output: Array<Extract<ScenePrimitive, { type: 'group' }>> = [];
@@ -68,7 +92,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
         child: ChildSchema,
       }),
       compile: (value, context) => {
-        const laid = context.layoutChild(value.child, { kind: 'intrinsic' });
+        const laid = resolvedResultOf(context, value.child);
         const replay = context.replay(laid);
         const placement = context.scope(
           {
@@ -122,7 +146,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       type: 'referencedWrapper',
       schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('referencedWrapper') }),
       compile: (_value, context) => {
-        const laid = context.layoutChild(node('target', [1, 0]), { kind: 'intrinsic' });
+        const laid = resolvedResultOf(context, node('target', [1, 0]));
         return {
           children: [
             context.scope({ transforms: [{ kind: 'translate', x: 10, y: 0 }] }, [
@@ -238,7 +262,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
         type: z.literal('duplicateWrappedReplay'),
       }),
       compile: (_value, context) => {
-        const laid = context.layoutChild(node('once'), { kind: 'intrinsic' });
+        const laid = resolvedResultOf(context, node('once'));
         const replay = context.replay(laid);
         return {
           children: [context.scope({ id: 'a' }, [replay]), context.scope({ id: 'b' }, [replay])],
@@ -253,6 +277,176 @@ describe('layout-aware composite runtime wrapper tree', () => {
     ).toThrow(/replay.*once|already.*replay/i);
   });
 
+  it('preflights the whole output tree before a valid replay can publish a warning or be consumed', () => {
+    const warnings: Array<{ code: string }> = [];
+    const definition = defineComposite({
+      namespace: 'test',
+      type: 'wholeTreePreflight',
+      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('wholeTreePreflight') }),
+      compile: (_value, context) => {
+        const laid = resolvedResultOf(context, {
+          type: 'node',
+          id: 'same',
+          position: [20, 0],
+          text: [{ runs: [{ tex: 'x' }] }],
+        });
+        const replay = context.replay(laid);
+        return {
+          children: [replay, {} as CompositeCompileChild],
+        };
+      },
+    });
+
+    expect(() =>
+      compileToScene(scene([node('same'), { namespace: 'test', type: 'wholeTreePreflight' }]), {
+        composites: [definition],
+        onWarn: warning => warnings.push(warning),
+      }),
+    ).toThrow(/output child|forged|belong/i);
+    expect(warnings).toEqual([]);
+  });
+
+  it('preflights a nested runtime Scope clip before replay side effects become observable', () => {
+    let clipResolveCalls = 0;
+    let replayHandle: CompositeCompileChild | undefined;
+    let scopeHandle: CompositeCompileChild | undefined;
+    let retainedResult: LayoutChildResult | undefined;
+    const conditionalClip = defineClip({
+      kind: 'conditionalPreflightClip',
+      schema: z.strictObject({
+        kind: z.literal('conditionalPreflightClip'),
+        fail: z.boolean(),
+      }),
+      resolve: spec => {
+        clipResolveCalls += 1;
+        if (spec.fail) throw new Error('runtime Scope clip failed');
+        return { kind: 'rect', x: -10, y: -10, width: 20, height: 20 };
+      },
+    });
+    const artifactLeaf = defineComposite({
+      namespace: 'test',
+      type: 'preflightArtifactLeaf',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('test'),
+        type: z.literal('preflightArtifactLeaf'),
+      }),
+      artifactSchema: z.strictObject({ candidate: z.literal(true) }),
+      compile: () => ({
+        children: [
+          {
+            type: 'scope',
+            children: [
+              {
+                type: 'node',
+                id: 'same',
+                position: [20, 0],
+                fill: {
+                  kind: 'linearGradient',
+                  stops: [
+                    { offset: 0, color: '#000' },
+                    { offset: 1, color: '#fff' },
+                  ],
+                },
+              },
+              node('same', [40, 0]),
+            ],
+          },
+        ],
+        artifact: { candidate: true },
+      }),
+    });
+    const definition = defineComposite({
+      namespace: 'test',
+      type: 'nestedScopeClipPreflight',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('test'),
+        type: z.literal('nestedScopeClipPreflight'),
+        fail: z.boolean(),
+      }),
+      compile: (value, context) => {
+        const laid = resolvedResultOf(context, { namespace: 'test', type: 'preflightArtifactLeaf' });
+        retainedResult = laid;
+        replayHandle = context.replay(laid);
+        scopeHandle = context.scope({ clip: { kind: 'conditionalPreflightClip', fail: value.fail } }, [
+          context.scope({}, []),
+        ]);
+        return {
+          children: [replayHandle, scopeHandle],
+        };
+      },
+    });
+    const warnings: Array<{ code: string }> = [];
+    const options = {
+      composites: [artifactLeaf, definition],
+      clips: [conditionalClip],
+      artifacts: { nodeLayouts: true },
+      onWarn: (warning: { code: string }): void => {
+        warnings.push(warning);
+      },
+    };
+
+    const failingIr = scene([{ namespace: 'test', type: 'nestedScopeClipPreflight', fail: true }]);
+    const context = createCompileContext(failingIr, options);
+    const namespaceStack = new NamespaceStack();
+    const identityTracker = createRuntimeTopologyTracker(1 as RuntimeRevision);
+    const session: CompositeCompileSession = {
+      replayTransactions: new WeakMap(),
+      layoutResults: new WeakMap(),
+      outputChildren: new WeakMap(),
+      failures: new WeakMap(),
+    };
+    expect(() =>
+      compileChildrenToPrimitives(failingIr.children, context, {
+        session,
+        namespaceStack,
+        identityTracker,
+      }),
+    ).toThrow(/runtime Scope clip failed/i);
+    expect(warnings).toEqual([]);
+    expect(clipResolveCalls).toBe(1);
+    expect(context.paint.resources()).toEqual([]);
+    expect(context.clip.resources()).toEqual([]);
+    expect(namespaceStack.lookup('same')).toBeUndefined();
+    expect(identityTracker.rootIdentityRegistrations()).toEqual([]);
+    expect(session.outputChildren.get(replayHandle!)).toMatchObject({ used: false });
+    expect(session.outputChildren.get(scopeHandle!)).toMatchObject({ used: false });
+    const transaction = session.replayTransactions.get(retainedResult!.replay);
+    expect(transaction).toMatchObject({ used: false });
+    expect(transaction?.primitives.length).toBeGreaterThan(0);
+    expect(transaction?.resources.length).toBeGreaterThan(0);
+    expect(transaction?.warnings.length).toBeGreaterThan(0);
+    expect(transaction?.artifacts.length).toBeGreaterThan(0);
+    expect(transaction?.namespaceChanges.length).toBeGreaterThan(0);
+    expect(transaction?.topologyIdentityIds.length).toBeGreaterThan(0);
+    expect(transaction?.observations.length).toBeGreaterThan(0);
+
+    const committed = compileToScene(
+      scene([{ namespace: 'test', type: 'nestedScopeClipPreflight', fail: false }]),
+      options,
+    );
+    expect(committed.scene.primitives).toHaveLength(2);
+    expect(committed.scene.resources?.map(resource => resource.kind)).toEqual(['paint', 'clip']);
+    expect(warnings.map(warning => warning.code)).toContain(CompileWarningCode.DuplicateNodeId);
+    expect(committed.artifacts.filter(isNodeLayoutCompileArtifact)).toHaveLength(2);
+    expect(clipResolveCalls).toBe(2);
+  });
+
+  it('rejects a repeated runtime Scope handle during whole-tree preflight', () => {
+    const definition = defineComposite({
+      namespace: 'test',
+      type: 'repeatedScopeHandle',
+      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('repeatedScopeHandle') }),
+      compile: (_value, context) => {
+        const scope = context.scope({ id: 'only-once' }, [node('inside')]);
+        return { children: [scope, scope] };
+      },
+    });
+
+    expect(() =>
+      compileToScene(scene([{ namespace: 'test', type: 'repeatedScopeHandle' }]), { composites: [definition] }),
+    ).toThrow(/same output child|more than once|consum/i);
+  });
+
   it('rejects retained handles and layout results across compile sessions', () => {
     let retainedHandle: CompositeCompileChild | undefined;
     let retainedResult: LayoutChildResult | undefined;
@@ -264,7 +458,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       compile: (_value, context) => {
         run += 1;
         if (run === 1) {
-          retainedResult = context.layoutChild(node('retained'), { kind: 'intrinsic' });
+          retainedResult = resolvedResultOf(context, node('retained'));
           retainedHandle = context.replay(retainedResult);
           return { children: [] };
         }
@@ -288,7 +482,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       type: 'producer',
       schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('producer') }),
       compile: (_value, context) => {
-        foreignResult = context.layoutChild(node('foreign'), { kind: 'intrinsic' });
+        foreignResult = resolvedResultOf(context, node('foreign'));
         foreignHandle = context.replay(foreignResult);
         return { children: [] };
       },
@@ -320,7 +514,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       type: 'resultProducer',
       schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('resultProducer') }),
       compile: (_value, context) => {
-        foreignResult = context.layoutChild(node('foreign-result'), { kind: 'intrinsic' });
+        foreignResult = resolvedResultOf(context, node('foreign-result'));
         return { children: [] };
       },
     });
@@ -381,14 +575,11 @@ describe('layout-aware composite runtime wrapper tree', () => {
       type: 'resourceWrapper',
       schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('resourceWrapper') }),
       compile: (_value, context) => {
-        const laid = context.layoutChild(
-          {
-            type: 'scope',
-            clip: { kind: 'circle', cx: 0, cy: 0, r: 20 },
-            children: [{ ...node('resource'), fill: paint }],
-          },
-          { kind: 'intrinsic' },
-        );
+        const laid = resolvedResultOf(context, {
+          type: 'scope',
+          clip: { kind: 'circle', cx: 0, cy: 0, r: 20 },
+          children: [{ ...node('resource'), fill: paint }],
+        });
         return {
           children: [
             context.scope({ clip: { kind: 'rect', x: -10, y: -10, width: 20, height: 20 } }, [
@@ -427,10 +618,10 @@ describe('layout-aware composite runtime wrapper tree', () => {
       schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('artifactParent') }),
       artifactSchema: z.strictObject({ parent: z.literal(true) }),
       compile: (_value, context) => {
-        const laid = context.layoutChild(
-          { type: 'scope', children: [{ namespace: 'test', type: 'artifactLeaf' }] },
-          { kind: 'intrinsic' },
-        );
+        const laid = resolvedResultOf(context, {
+          type: 'scope',
+          children: [{ namespace: 'test', type: 'artifactLeaf' }],
+        });
         return {
           children: [context.scope({ id: 'outer' }, [context.scope({}, [context.replay(laid)])])],
           artifact: { parent: true },
@@ -472,7 +663,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       type: 'localWrapper',
       schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('localWrapper') }),
       compile: (_value, context) => {
-        const laid = context.layoutChild(node('secret'), { kind: 'intrinsic' });
+        const laid = resolvedResultOf(context, node('secret'));
         return {
           children: [
             context.scope({ id: 'local', localNamespace: true }, [context.replay(laid)]),
@@ -503,7 +694,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       type: 'localShadowWrapper',
       schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('localShadowWrapper') }),
       compile: (_value, context) => {
-        const laid = context.layoutChild(node('shared', [10, 0]), { kind: 'intrinsic' });
+        const laid = resolvedResultOf(context, node('shared', [10, 0]));
         return {
           children: [context.scope({ id: 'local', localNamespace: true }, [context.replay(laid)])],
         };
@@ -526,20 +717,17 @@ describe('layout-aware composite runtime wrapper tree', () => {
       type: 'orderedDuplicateWrapper',
       schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('orderedDuplicateWrapper') }),
       compile: (_value, context) => {
-        const laid = context.layoutChild(
-          {
-            type: 'scope',
-            children: [
-              {
-                type: 'scope',
-                localNamespace: true,
-                children: [node('shared'), node('shared', [2, 0])],
-              },
-              node('shared', [10, 0]),
-            ],
-          },
-          { kind: 'intrinsic' },
-        );
+        const laid = resolvedResultOf(context, {
+          type: 'scope',
+          children: [
+            {
+              type: 'scope',
+              localNamespace: true,
+              children: [node('shared'), node('shared', [2, 0])],
+            },
+            node('shared', [10, 0]),
+          ],
+        });
         return {
           children: [context.scope({ localNamespace: true }, [context.replay(laid)])],
         };
@@ -633,7 +821,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
         type: z.literal('invalidReplayTransforms'),
       }),
       compile: (_value, context) => {
-        const laid = context.layoutChild(node('content'), { kind: 'intrinsic' });
+        const laid = resolvedResultOf(context, node('content'));
         return { children: [context.replay(laid, { transforms: {} } as never)] };
       },
     });
@@ -643,6 +831,78 @@ describe('layout-aware composite runtime wrapper tree', () => {
         composites: [definition],
       }),
     ).toThrow(/Composite 'test\.invalidReplayTransforms'.*invalid.*replay.*transforms/i);
+  });
+
+  it('finishes invalid replay wrapper preflight before consuming the result', () => {
+    const definition = defineComposite({
+      namespace: 'test',
+      type: 'atomicReplayPreflight',
+      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('atomicReplayPreflight') }),
+      compile: (_value, context) => {
+        const laid = resolvedResultOf(context, node('preflight'));
+        expect(() => context.replay(laid, { transforms: {} } as never)).toThrow(/invalid.*transforms/i);
+        return { children: [context.replay(laid)] };
+      },
+    });
+
+    const result = compileToScene(scene([{ namespace: 'test', type: 'atomicReplayPreflight' }]), {
+      composites: [definition],
+    });
+
+    expect(JSON.stringify(result.scene.primitives).match(/preflight/g)).toHaveLength(1);
+  });
+
+  it('applies replay placement before a parent-allocation-coordinate clip without mutating result bounds', () => {
+    const BoundsSchema = z.strictObject({ x: z.number(), y: z.number(), width: z.number(), height: z.number() });
+    const definition = defineComposite({
+      namespace: 'test',
+      type: 'replayCoordinateOrder',
+      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('replayCoordinateOrder') }),
+      artifactSchema: z.strictObject({ before: BoundsSchema, after: BoundsSchema }),
+      compile: (_value, context) => {
+        const laid = resolvedResultOf(context, node('coordinate-order'));
+        const before = laid.visualBounds;
+        const replay = context.replay(laid, {
+          transforms: [{ kind: 'translate', x: 20, y: 0 }],
+          clip: { kind: 'rect', x: 18, y: -10, width: 4, height: 20 },
+        });
+        return { children: [replay], artifact: { before, after: laid.visualBounds } };
+      },
+    });
+
+    const result = compileToScene(scene([{ namespace: 'test', type: 'replayCoordinateOrder' }]), {
+      composites: [definition],
+      padding: 0,
+    });
+    const outer = result.scene.primitives[0];
+
+    expect(outer).toMatchObject({ type: 'group', clipRef: 'clip-1' });
+    expect(outer).not.toHaveProperty('transforms');
+    if (outer.type !== 'group') throw new Error('expected replay clip group');
+    expect(outer.children[0]).toMatchObject({
+      type: 'group',
+      transforms: [{ kind: 'translate', x: 20, y: 0 }],
+    });
+    const artifact = result.artifacts[0];
+    if (artifact.kind !== 'composite') throw new Error('expected replay coordinate artifact');
+    expect(artifact.value.before).toEqual(artifact.value.after);
+    expect(result.scene.layout).toEqual({ x: 18, y: -4.5, width: 4, height: 9 });
+  });
+
+  it('rejects a discarded layout result placed directly in runtime Scope output', () => {
+    const definition = defineComposite({
+      namespace: 'test',
+      type: 'discardedResultScope',
+      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('discardedResultScope') }),
+      compile: (_value, context) => {
+        const discarded = resolvedResultOf(context, node('discarded-result'));
+        return { children: [context.scope({}, [discarded as unknown as CompositeCompileChild])] };
+      },
+    });
+
+    expect(() =>
+      compileToScene(scene([{ namespace: 'test', type: 'discardedResultScope' }]), { composites: [definition] }),
+    ).toThrow(/invalid|forged|output child/i);
   });
 
   it('expresses the Table-like root, Cell placement, content replay, and Border replay in one compile', () => {
@@ -670,11 +930,11 @@ describe('layout-aware composite runtime wrapper tree', () => {
       type: 'tableLike',
       schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('tableLike') }),
       compile: (_value, context) => {
-        const content = context.layoutChild(node('content'), {
-          kind: 'constrained',
-          width: { kind: 'bounded', max: 40 },
+        const content = resolvedResultOf(context, node('content'), {
+          x: { kind: LayoutAxisProposalKind.Range, min: 0, max: 40 },
+          y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
         });
-        const border = context.layoutChild({ namespace: 'test', type: 'borderLeaf' }, { kind: 'intrinsic' });
+        const border = resolvedResultOf(context, { namespace: 'test', type: 'borderLeaf' });
         const cell = context.scope(
           {
             id: 'cell-0-0',

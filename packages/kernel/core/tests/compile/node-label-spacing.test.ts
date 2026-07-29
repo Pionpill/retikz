@@ -8,6 +8,7 @@ import type { IRNode, IRNodeLabel, IRScene } from '../../src/schemas';
 import { isNodeLayoutCompileArtifact } from '../../src/compile/artifact';
 import { compileToScene } from '../../src/compile/compile';
 import { CompileWarningCode } from '../../src/compile/constants';
+import { CompositeContractError } from '../../src/compile/probe-failure';
 import { normalizeTextMetrics } from '../../src/compile/text';
 import { NodeLabelSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
@@ -210,25 +211,28 @@ describe('Node label resolved metrics', () => {
     ['ascent', { width: 40, height: 20, ascent: Number.POSITIVE_INFINITY }],
     ['descent', { width: 40, height: 20, descent: -1 }],
   ] satisfies Array<[string, TextMetrics]>)('fails loud for invalid %s metrics', (_field, metrics) => {
-    expect(() =>
-      compileToScene(sceneWithLabel({ text: 'L', position: 'center' }), { measureText: () => metrics, padding: 0 }).scene,
+    expect(
+      () =>
+        compileToScene(sceneWithLabel({ text: 'L', position: 'center' }), { measureText: () => metrics, padding: 0 })
+          .scene,
     ).toThrow(/normalizeTextMetrics: invalid/);
   });
 
   it('fails loud when individually finite ascent and descent overflow in aggregate', () => {
-    expect(() =>
-      compileToScene(sceneWithLabel({ text: 'L', position: 'center' }), {
-        measureText: () => ({
-          width: 1,
-          height: 1,
-          ascent: 1e308,
-          descent: 1e308,
-        }),
-      }).scene,
+    expect(
+      () =>
+        compileToScene(sceneWithLabel({ text: 'L', position: 'center' }), {
+          measureText: () => ({
+            width: 1,
+            height: 1,
+            ascent: 1e308,
+            descent: 1e308,
+          }),
+        }).scene,
     ).toThrow(/normalizeTextMetrics: invalid/);
   });
 
-  it('normalizes mixed Node label text runs without changing shared host semantics', () => {
+  it('rejects invalid metrics for mixed Node labels and mixed Node body text', () => {
     const invalidHeight: TextMeasurer = () => ({ width: 10, height: -1, ascent: 6, descent: 2 });
     const labelScene = sceneWithLabel({ text: { runs: [{ text: 'L' }] }, position: 'center' });
     const nodeTextScene: IRScene = {
@@ -237,28 +241,41 @@ describe('Node label resolved metrics', () => {
       children: [{ type: 'node', position: [0, 0], text: [{ runs: [{ text: 'body' }] }] }],
     };
 
-    expect(() => compileToScene(labelScene, { measureText: invalidHeight }).scene).toThrow(/normalizeTextMetrics: invalid/);
-    expect(() => compileToScene(nodeTextScene, { measureText: invalidHeight }).scene).not.toThrow();
+    expect(() => compileToScene(labelScene, { measureText: invalidHeight }).scene).toThrow(
+      /normalizeTextMetrics: invalid/,
+    );
+    expect(() => compileToScene(nodeTextScene, { measureText: invalidHeight }).scene).toThrow(
+      /normalizeTextMetrics: invalid/,
+    );
   });
 
-  it('warns and skips malformed LoweredTex only on the Node label path', () => {
+  it('rejects malformed LoweredTex on the Node label path', () => {
     const lowerTex: LowerTex = () => ({
       paths: [],
       width: -1,
       height: 20,
       depth: 2,
     });
+    expect(() =>
+      compileToScene(sceneWithLabel({ text: { runs: [{ tex: 'x' }] }, position: 'center' }), {
+        lowerTex,
+        measureText: fixedMeasure,
+      }),
+    ).toThrow(CompositeContractError);
+  });
+
+  it('keeps lowerTex null as a warning-based absence on the Node label path', () => {
     const warnings: Array<CompileWarning> = [];
     const scene = compileToScene(sceneWithLabel({ text: { runs: [{ tex: 'x' }] }, position: 'center' }), {
-      lowerTex,
+      lowerTex: () => null,
       measureText: fixedMeasure,
       onWarn: warning => warnings.push(warning),
     }).scene;
 
     expect(warnings.some(warning => warning.code === CompileWarningCode.TexInvalid)).toBe(true);
-    expect(flattenPrims(scene.primitives).some(primitive => primitive.type === 'path' && primitive.fillRule)).toBe(
-      false,
-    );
+    expect(
+      flattenPrims(scene.primitives).some(primitive => primitive.type === 'path' && primitive.fillRule !== undefined),
+    ).toBe(false);
   });
 });
 
@@ -320,12 +337,9 @@ describe('Node label pin and bounds', () => {
       padding: 0,
       artifacts: { nodeLayouts: true },
     });
-    const markerX = result.artifacts
-      .find(
-        artifact =>
-          isNodeLayoutCompileArtifact(artifact) && artifact.value.id === 'marker',
-      )
-      ?.value.rect.x;
+    const markerX = result.artifacts.find(
+      artifact => isNodeLayoutCompileArtifact(artifact) && artifact.value.id === 'marker',
+    )?.value.rect.x;
 
     expect(markerX).toBeCloseTo(50);
   });

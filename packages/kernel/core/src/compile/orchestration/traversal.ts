@@ -3,8 +3,7 @@ import type { BoundsRect } from '@retikz/math';
 import { boundsToRect } from '@retikz/math';
 
 import type {
-  ChildLayoutAxisConstraint,
-  ChildLayoutConstraint,
+  ClipShape,
   CompositeCompileChild,
   CompositeCompileScopeProps,
   CompositeReplay,
@@ -23,15 +22,17 @@ import type {
   IRScopePlacementTarget,
   IRScopeSelfPoint,
   IRTransform,
+  JsonValue,
 } from '../../schemas';
 import type { NodeLayout } from '../node';
-import type { CompileOccurrenceLocator } from '../types';
+import type { CompileOccurrenceLocator, CompositeCompileArtifact } from '../types';
 import type { CompileWarning, CompileWarningCodeValue } from '../warning';
 import type { CompileContext } from './context';
 import type { InternalScenePrimitive } from './primitive';
 import type {
   CallableLayoutCompositeDefinition,
   CompositeCompileOwner,
+  CompositeReplayTransaction,
   CompositeRuntimeOutputChild,
   CoordinateChild,
   EmitScopeGroupContext,
@@ -48,6 +49,7 @@ import type {
   TraversalRuntime,
 } from './types';
 
+import { LayoutChildProbeKind, NaturalLayoutProposal } from '../../contract';
 import { providerDefinitionOf } from '../../providers/registry';
 import { ScopeBoundingShape } from '../../schemas';
 import { Anchor } from '../../shared';
@@ -57,6 +59,7 @@ import { formatCompileOccurrence } from '../artifact';
 import { CompileWarningCode } from '../constants';
 import { NamespaceStack } from '../namespace';
 import {
+  alignmentGuidesOfNode,
   computeCompiledNodeLayout,
   createScopeCircleLayout,
   createScopePlaceholderLayout,
@@ -70,16 +73,41 @@ import {
 import { resolveNodeTextColor } from '../node';
 import { emitPathPrimitive, emitRibbonPrimitive, refPointOfTarget } from '../path';
 import { resolvePosition } from '../position';
+import {
+  CompileInvariantError,
+  CompositeContractError,
+  createLayoutChildFailure,
+  enrichLayoutProbeError,
+  isFatalProbeError,
+  isLayoutProbeRecoverableError,
+  LayoutProbeRecoverableError,
+  normalizeLayoutProbeError,
+  raiseLayoutChildFailure,
+  safeErrorMessage,
+  safeThrownDetail,
+} from '../probe-failure';
 import { parseProviderPayload } from '../provider-payload';
 import { resolveAnchorRefUncached } from '../reference';
-import { createClipRegistry, createPaintRegistry } from '../resource';
+import { createClipRegistry, createPaintRegistry, validateMarkerPrimitives } from '../resource';
+import {
+  snapshotProviderPosition,
+  validateScenePrimitives,
+  withProviderOutputValidationBoundary,
+} from '../scene-primitive';
 import { collectScopeCornerPoints, computeScopeBoundingBox, lowerScopeTransforms } from '../scope';
 import { createStyleFrame, resolveEffectivePath, resolveLabelDefault, resolveNodeStyle, resolveShadow } from '../style';
 import { applyTransformChain, inverseTransformChain, projectLayoutToGlobal } from '../transform';
+import { cloneAlignmentGuides, resolveStructuralAlignmentGuides, transformAlignmentGuides } from './alignment-guide';
 import { filterAnimations } from './animation';
 import { freezeCompileArtifact, freezeOccurrence, orderCompileArtifacts } from './artifact';
-import { collectLayoutBounds } from './bounds';
-import { createCompositeReplayChild, createCompositeScopeChild, resolveCompositeOutputChild } from './composite-output';
+import { canonicalizeBoundsRect, collectLayoutBounds } from './bounds';
+import {
+  createCompositeReplayChild,
+  createCompositeScopeChild,
+  snapshotCompositeLayoutChild,
+  snapshotCompositeOutputChild,
+  validateExpandCompositeOutput,
+} from './composite-output';
 import {
   compileWarningOccurrenceOf,
   createDuplicateWarning,
@@ -87,6 +115,7 @@ import {
   transformWarnCode,
   withCompileWarningOccurrence,
 } from './diagnostics';
+import { cloneLayoutProposal, resolveLayoutSlotSize } from './layout-proposal';
 import {
   collectPlaceholderLocators,
   makePathPlaceholder,
@@ -107,6 +136,7 @@ export const compileChildrenToPrimitives = (
     replayTransactions: new WeakMap(),
     layoutResults: new WeakMap(),
     outputChildren: new WeakMap(),
+    failures: new WeakMap(),
   };
   const warningOccurrences: Array<CompileOccurrenceLocator> = [];
   const dispatchWarning = (warning: CompileWarning): void => {
@@ -144,7 +174,7 @@ export const compileChildrenToPrimitives = (
       composites: context.composites,
       maxCompositeDepth: context.maxCompositeDepth,
       artifacts: context.artifacts,
-      constraint: options.constraint ?? { kind: 'intrinsic' },
+      proposal: options.proposal ?? NaturalLayoutProposal,
       session,
     },
     state: {
@@ -160,6 +190,27 @@ export const compileChildrenToPrimitives = (
       ...(options.identityTracker === undefined ? {} : { identityTracker: options.identityTracker }),
     },
   };
+
+  /** 校验并脱离 PathKind provider 返回的 primitive 与 bounds point */
+  const validatePathKindCompileResult = (kind: string, value: unknown): PathKindCompileResult | null =>
+    withProviderOutputValidationBoundary(`Path kind '${kind}'`, () => {
+      if (value === null) return null;
+      if (typeof value !== 'object') {
+        throw new CompositeContractError(`Path kind '${kind}' must return a compile result object or null.`);
+      }
+      const result = value as Record<string, unknown>;
+      const primitives = validateScenePrimitives(`Path kind '${kind}'`, result.primitives, validateMarkerPrimitives);
+      const rawBoundsPoints = result.boundsPoints;
+      if (!Array.isArray(rawBoundsPoints)) {
+        throw new CompositeContractError(`Path kind '${kind}' must return boundsPoints as an array.`);
+      }
+      const boundsPoints = Array.from(
+        rawBoundsPoints,
+        (point, index): IRPosition =>
+          snapshotProviderPosition(`Path kind '${kind}' bounds point at index ${index}`, point),
+      );
+      return Object.freeze({ primitives, boundsPoints });
+    });
 
   /** 按 path.kind 查找 path kind provider，并提供内置 stroke / ribbon emit 回调 */
   const emitPathKindPrimitive = (
@@ -192,7 +243,7 @@ export const compileChildrenToPrimitives = (
       lowerTex: runtime.context.lowerTex,
       rootFontSize: runtime.context.rootFontSize,
     };
-    return definition.compile({
+    const produced = definition.compile({
       path,
       options: optionsValue,
       emitStroke: nextPath =>
@@ -213,6 +264,7 @@ export const compileChildrenToPrimitives = (
           },
         }),
     });
+    return validatePathKindCompileResult(kind, produced);
   };
 
   /** 把 allocation contribution 绑定到最近的显式 composite allocation boundary */
@@ -241,7 +293,7 @@ export const compileChildrenToPrimitives = (
         const primitives = runtime.state.identityTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
         const idx = pendingPath.placeholderSlot.primitiveSink.indexOf(pendingPath.placeholderSlot.placeholder);
         if (idx === -1) {
-          throw new Error('internal: path placeholder missing from its sink');
+          throw new CompileInvariantError('internal: path placeholder missing from its sink');
         }
         pendingPath.placeholderSlot.primitiveSink.splice(idx, 1, ...primitives);
         if (pendingPath.semanticOwner !== undefined) {
@@ -299,14 +351,7 @@ export const compileChildrenToPrimitives = (
         resolveBetweenGlobal: refPointOfTarget,
         irPath: nodeIrPath,
         warn,
-        ...(frame.childConstraint?.kind === 'constrained' && frame.childConstraint.width !== undefined
-          ? {
-              maxAllocationWidth:
-                frame.childConstraint.width.kind === 'bounded'
-                  ? frame.childConstraint.width.max
-                  : frame.childConstraint.width.size,
-            }
-          : {}),
+        ...(frame.childProposal?.x === undefined ? {} : { allocationWidthProposal: frame.childProposal.x }),
         texLowering: {
           lowerTex: runtime.context.lowerTex,
           warn: (code, message) => runtime.context.onWarn({ code, message, path: nodeIrPath }),
@@ -347,6 +392,10 @@ export const compileChildrenToPrimitives = (
     frame.boundsSink.push({ points: nodeBoundsPoints, shadow: layout.shadow });
     frame.boundsSink.push({ points: labelExtentPoints(layout) });
     pushAllocation(frame.allocationSink, nodeBoundsPoints, frame.allocationBoundary);
+    const alignmentGuides = alignmentGuidesOfNode(layout, runtime.context.round);
+    if (alignmentGuides !== undefined) {
+      frame.alignmentGuideSink.push(...cloneAlignmentGuides(alignmentGuides, `Node '${nodeIrPath}'`));
+    }
     layoutSink.push(layout);
   };
 
@@ -361,7 +410,7 @@ export const compileChildrenToPrimitives = (
       resolveBetweenGlobal: refPointOfTarget,
     });
     if (!localCenter) {
-      throw new Error(
+      throw new LayoutProbeRecoverableError(
         `Cannot resolve position for coordinate ${child.id}; polar.origin or at.of may reference an undefined node`,
       );
     }
@@ -440,13 +489,13 @@ export const compileChildrenToPrimitives = (
     }
     const scopeIrPath = `${frame.locatorPrefix}children[${index}].scope`;
     if (target.id === child.id) {
-      throw new Error(
+      throw new LayoutProbeRecoverableError(
         `Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}: self target is not allowed`,
       );
     }
     const entry = runtime.state.namespaceStack.lookupEntry(target.id);
     if (entry === undefined || entry.state !== 'resolved') {
-      throw new Error(
+      throw new LayoutProbeRecoverableError(
         `Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}: target must be defined and fully resolved before this Scope`,
       );
     }
@@ -639,7 +688,7 @@ export const compileChildrenToPrimitives = (
 
   /** 在需要可见输出时 emit scope group，并挂载 transform、clip 和动画 */
   const emitScopeGroup = (child: ScopeChild, input: EmitScopeGroupContext): void => {
-    const { index, scopeTransforms, scopePrimitiveSink, frame, semanticOwner } = input;
+    const { index, scopeTransforms, scopePrimitiveSink, frame, resolvedClipShape, semanticOwner } = input;
     const { primitiveSink, locatorPrefix } = frame;
     const scopeIrPath = `${locatorPrefix}children[${index}].scope`;
     const hasScopeTransforms = scopeTransforms.length > 0;
@@ -660,7 +709,11 @@ export const compileChildrenToPrimitives = (
     });
     if (scopeAnimations !== undefined) group.animations = scopeAnimations;
     if (hasScopeTransforms) group.transforms = [...scopeTransforms];
-    if (child.clip !== undefined) group.clipRef = runtime.context.clip.register(child.clip);
+    if (resolvedClipShape !== undefined) {
+      group.clipRef = runtime.context.clip.importResolved(resolvedClipShape);
+    } else if (child.clip !== undefined) {
+      group.clipRef = runtime.context.clip.register(child.clip);
+    }
     primitiveSink.push(group);
     if (semanticOwner !== undefined) runtime.state.identityTracker?.recordPrimitives([group], semanticOwner, 'scope');
     recordPrimitiveZIndex(runtime.state.zIndexOf, group, child.zIndex);
@@ -676,6 +729,7 @@ export const compileChildrenToPrimitives = (
     semanticOwner?: RuntimeSemanticOwner,
     compileNested?: (scopeFrame: TraversalFrame) => void,
     preLoweredTransforms?: ReadonlyArray<Transform>,
+    preResolvedClipShape?: ClipShape,
   ): void => {
     const { locatorPrefix, styleStack } = frame;
     const placementTarget =
@@ -699,6 +753,7 @@ export const compileChildrenToPrimitives = (
     const scopePublications: Array<NodeLayout> = [];
     const scopeBounds: TraversalFrame['boundsSink'] = [];
     const scopeAllocations: TraversalFrame['allocationSink'] = [];
+    const scopeAlignmentGuides: TraversalFrame['alignmentGuideSink'] = [];
     const scopeObservations: TraversalFrame['observationSink'] = [];
     const scopeArtifacts: TraversalFrame['artifactSink'] = [];
     let scopeTransforms: Array<Transform> = [];
@@ -713,6 +768,7 @@ export const compileChildrenToPrimitives = (
         publicationSink: scopePublications,
         boundsSink: scopeBounds,
         allocationSink: scopeAllocations,
+        alignmentGuideSink: scopeAlignmentGuides,
         ...(frame.allocationBoundary === undefined ? {} : { allocationBoundary: frame.allocationBoundary }),
         observationSink: scopeObservations,
         artifactSink: scopeArtifacts,
@@ -742,19 +798,6 @@ export const compileChildrenToPrimitives = (
         frame.observationSink.push(observation);
       }
       frame.artifactSink.push(...scopeArtifacts);
-      for (const contribution of scopeBounds) {
-        frame.boundsSink.push({
-          points: contribution.points.map(point => applyTransformChain(point, scopeTransforms)),
-          shadow: contribution.shadow,
-        });
-      }
-      for (const contribution of effectiveAllocations(scopeAllocations)) {
-        pushAllocation(
-          frame.allocationSink,
-          contribution.points.map(point => applyTransformChain(point, scopeTransforms)),
-          frame.allocationBoundary,
-        );
-      }
       for (const pendingPath of scopePendingPaths) {
         pendingPath.scopeChain.splice(frame.scopeChain.length, 0, ...postTransforms);
       }
@@ -779,6 +822,22 @@ export const compileChildrenToPrimitives = (
         frame.publicationSink.push(globalEnvelope);
       }
       flushPendingPathEmissions(scopePendingPaths);
+      for (const contribution of scopeBounds) {
+        frame.boundsSink.push({
+          points: contribution.points.map(point => applyTransformChain(point, scopeTransforms)),
+          shadow: contribution.shadow,
+        });
+      }
+      for (const contribution of effectiveAllocations(scopeAllocations)) {
+        pushAllocation(
+          frame.allocationSink,
+          contribution.points.map(point => applyTransformChain(point, scopeTransforms)),
+          frame.allocationBoundary,
+        );
+      }
+      const structuralGuides = resolveStructuralAlignmentGuides(scopeAlignmentGuides);
+      const transformedGuides = transformAlignmentGuides(structuralGuides, scopeTransforms);
+      if (transformedGuides !== undefined) frame.alignmentGuideSink.push(...transformedGuides);
     } finally {
       if (didPushNamespaceFrame) {
         runtime.state.namespaceStack.popFrame();
@@ -792,10 +851,11 @@ export const compileChildrenToPrimitives = (
       scopePrimitiveSink,
       frame,
       ...(semanticOwner === undefined ? {} : { semanticOwner }),
+      ...(preResolvedClipShape === undefined ? {} : { resolvedClipShape: preResolvedClipShape }),
     });
   };
 
-  const emptyBounds = (): Readonly<BoundsRect> => Object.freeze({ x: 0, y: 0, width: 0, height: 0 });
+  const emptyBounds = (): Readonly<BoundsRect> => canonicalizeBoundsRect({ x: 0, y: 0, width: 0, height: 0 });
 
   const boundsRectOf = (result: TraversalResult): Readonly<BoundsRect> =>
     (() => {
@@ -803,7 +863,7 @@ export const compileChildrenToPrimitives = (
         (current, contribution) => collectLayoutBounds(current, contribution.points),
         undefined as TraversalResult['layoutBounds'],
       );
-      return allocation === undefined ? emptyBounds() : Object.freeze(boundsToRect(allocation));
+      return allocation === undefined ? emptyBounds() : canonicalizeBoundsRect(boundsToRect(allocation));
     })();
 
   /** 把矩形转换为父 allocation collector 使用的四角点 */
@@ -821,72 +881,36 @@ export const compileChildrenToPrimitives = (
     occurrence: CompileOccurrenceLocator,
   ): Readonly<BoundsRect> => {
     if (bounds === null || typeof bounds !== 'object' || Array.isArray(bounds)) {
-      throw new Error(
+      throw new CompositeContractError(
         `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} returned an invalid allocationBounds.`,
       );
     }
     const input = bounds as Record<string, unknown>;
     const unsupportedKeys = Object.keys(input).filter(key => !['x', 'y', 'width', 'height'].includes(key));
-    const values = [input.x, input.y, input.width, input.height];
+    const [x, y, width, height] = [input.x, input.y, input.width, input.height];
     if (
       unsupportedKeys.length > 0 ||
-      !values.every(value => typeof value === 'number' && Number.isFinite(value)) ||
-      (input.width as number) < 0 ||
-      (input.height as number) < 0
+      ![x, y, width, height].every(value => typeof value === 'number' && Number.isFinite(value)) ||
+      (width as number) < 0 ||
+      (height as number) < 0
     ) {
-      throw new Error(
+      throw new CompositeContractError(
         `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} returned invalid allocationBounds; x/y must be finite and width/height must be finite non-negative numbers.`,
       );
     }
-    const right = (input.x as number) + (input.width as number);
-    const bottom = (input.y as number) + (input.height as number);
+    const right = (x as number) + (width as number);
+    const bottom = (y as number) + (height as number);
     if (!Number.isFinite(right) || !Number.isFinite(bottom)) {
-      throw new Error(
+      throw new CompositeContractError(
         `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} returned invalid allocationBounds; derived edges must remain finite.`,
       );
     }
     return Object.freeze({
-      x: Object.is(input.x, -0) ? 0 : (input.x as number),
-      y: Object.is(input.y, -0) ? 0 : (input.y as number),
-      width: Object.is(input.width, -0) ? 0 : (input.width as number),
-      height: Object.is(input.height, -0) ? 0 : (input.height as number),
+      x: Object.is(x, -0) ? 0 : (x as number),
+      y: Object.is(y, -0) ? 0 : (y as number),
+      width: Object.is(width, -0) ? 0 : (width as number),
+      height: Object.is(height, -0) ? 0 : (height as number),
     });
-  };
-
-  /** 校验单轴约束 */
-  const validateAxisConstraint = (
-    axis: unknown,
-    axisName: 'width' | 'height',
-    compositeKey: string,
-    occurrence: CompileOccurrenceLocator,
-  ): void => {
-    const fail = (detail: string): never => {
-      throw new Error(
-        `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} called layoutChild with an invalid ${axisName} axis constraint; ${detail}.`,
-      );
-    };
-    const finiteNonNegative = (value: unknown, field: string): number => {
-      if (typeof value !== 'number') return fail(`${field} must be finite and non-negative`);
-      if (!Number.isFinite(value) || value < 0) return fail(`${field} must be finite and non-negative`);
-      return value;
-    };
-    if (axis === null || typeof axis !== 'object' || Array.isArray(axis)) fail('expected an object');
-    const input = axis as Record<string, unknown>;
-    if (input.kind === 'bounded') {
-      const unsupportedKeys = Object.keys(input).filter(key => !['kind', 'min', 'max'].includes(key));
-      if (unsupportedKeys.length > 0) fail(`unsupported field(s): ${unsupportedKeys.join(', ')}`);
-      const min = finiteNonNegative(input.min ?? 0, 'min');
-      const max = finiteNonNegative(input.max, 'max');
-      if (min > max) fail(`min must not exceed max`);
-      return;
-    }
-    if (input.kind === 'exact') {
-      const unsupportedKeys = Object.keys(input).filter(key => !['kind', 'size'].includes(key));
-      if (unsupportedKeys.length > 0) fail(`unsupported field(s): ${unsupportedKeys.join(', ')}`);
-      finiteNonNegative(input.size, 'size');
-      return;
-    }
-    fail(`unknown kind '${String(input.kind)}'`);
   };
 
   /** 只在 definition schema parse 后恢复 erased layout callback */
@@ -894,83 +918,16 @@ export const compileChildrenToPrimitives = (
     definition: NonNullable<ReturnType<typeof runtime.context.composites.get>>,
   ): CallableLayoutCompositeDefinition => {
     if (definition.compile === undefined) {
-      throw new Error('internal: callableLayoutDefinition received an expand composite');
+      throw new CompileInvariantError('internal: callableLayoutDefinition received an expand composite');
     }
     return definition as unknown as CallableLayoutCompositeDefinition;
-  };
-
-  /** 校验、脱离、规范化并递归冻结传给 layout provider 的双轴约束 */
-  const cloneConstraint = (
-    constraint: unknown,
-    compositeKey: string,
-    occurrence: CompileOccurrenceLocator,
-  ): ChildLayoutConstraint => {
-    if (constraint === null || typeof constraint !== 'object' || Array.isArray(constraint)) {
-      throw new Error(
-        `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} called layoutChild with an invalid constraint; expected an object.`,
-      );
-    }
-    const kind: unknown = (constraint as { kind?: unknown }).kind;
-    if (kind !== 'intrinsic' && kind !== 'constrained') {
-      throw new Error(
-        `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} called layoutChild with an invalid constraint kind '${String(kind)}'.`,
-      );
-    }
-    const input = constraint as
-      | { kind: 'intrinsic' }
-      | { kind: 'constrained'; width?: ChildLayoutAxisConstraint; height?: ChildLayoutAxisConstraint };
-    const allowedKeys = input.kind === 'intrinsic' ? new Set(['kind']) : new Set(['kind', 'width', 'height']);
-    const unsupportedKeys = Object.keys(constraint).filter(key => !allowedKeys.has(key));
-    if (unsupportedKeys.length > 0) {
-      throw new Error(
-        `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} called layoutChild with an invalid constraint; unsupported field(s): ${unsupportedKeys.join(', ')}.`,
-      );
-    }
-    if (input.kind === 'intrinsic') return Object.freeze({ kind: 'intrinsic' });
-    if (input.width === undefined && input.height === undefined) {
-      throw new Error(
-        `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} called layoutChild with an invalid constrained constraint; width or height is required.`,
-      );
-    }
-    if (input.width !== undefined) validateAxisConstraint(input.width, 'width', compositeKey, occurrence);
-    if (input.height !== undefined) validateAxisConstraint(input.height, 'height', compositeKey, occurrence);
-    const cloneAxis = (axis: ChildLayoutAxisConstraint | undefined): ChildLayoutAxisConstraint | undefined => {
-      if (axis === undefined) return undefined;
-      if (axis.kind === 'exact') {
-        return Object.freeze({ kind: 'exact', size: Object.is(axis.size, -0) ? 0 : axis.size });
-      }
-      return Object.freeze({
-        kind: 'bounded',
-        ...(axis.min === undefined ? {} : { min: Object.is(axis.min, -0) ? 0 : axis.min }),
-        max: Object.is(axis.max, -0) ? 0 : axis.max,
-      });
-    };
-    return Object.freeze({
-      kind: 'constrained',
-      ...(input.width === undefined ? {} : { width: cloneAxis(input.width) }),
-      ...(input.height === undefined ? {} : { height: cloneAxis(input.height) }),
-    });
-  };
-
-  /** 按实际 allocation 与父约束得到无位置语义的 slot 尺寸 */
-  const slotSizeOf = (
-    allocation: Readonly<BoundsRect>,
-    constraint: ChildLayoutConstraint,
-  ): Readonly<{ width: number; height: number }> => {
-    const resolveAxis = (actual: number, axis: ChildLayoutAxisConstraint | undefined): number => {
-      if (axis === undefined) return actual;
-      return axis.kind === 'exact' ? axis.size : Math.min(axis.max, Math.max(axis.min ?? 0, actual));
-    };
-    return Object.freeze({
-      width: resolveAxis(allocation.width, constraint.kind === 'constrained' ? constraint.width : undefined),
-      height: resolveAxis(allocation.height, constraint.kind === 'constrained' ? constraint.height : undefined),
-    });
   };
 
   const remapPaint = (paint: PaintValue | undefined, ids: ReadonlyMap<string, string>): PaintValue | undefined => {
     if (paint === undefined || typeof paint === 'string' || paint.kind === 'contextStroke') return paint;
     const id = ids.get(paint.id);
-    if (id === undefined) throw new Error(`internal: replay paint resource '${paint.id}' was not imported`);
+    if (id === undefined)
+      throw new CompileInvariantError(`internal: replay paint resource '${paint.id}' was not imported`);
     return { kind: 'resourceRef', id };
   };
 
@@ -978,7 +935,7 @@ export const compileChildrenToPrimitives = (
     if (primitive.type === 'group') {
       const clipRef = primitive.clipRef === undefined ? undefined : ids.get(primitive.clipRef);
       if (primitive.clipRef !== undefined && clipRef === undefined) {
-        throw new Error(`internal: replay clip resource '${primitive.clipRef}' was not imported`);
+        throw new CompileInvariantError(`internal: replay clip resource '${primitive.clipRef}' was not imported`);
       }
       return {
         ...primitive,
@@ -1008,31 +965,46 @@ export const compileChildrenToPrimitives = (
     ],
   });
 
+  type PreparedReplay = Readonly<{
+    transaction: CompositeReplayTransaction;
+    wrapperClipShape?: ClipShape;
+  }>;
+
+  /** replay transaction 捕获的 primitive resource ref 必须在提交前完整可解析 */
+  const validateReplayResourceRefs = (transaction: CompositeReplayTransaction): void => {
+    const replayResourceIds = new Set(transaction.resources.map(resource => resource.id));
+    const visit = (primitive: ScenePrimitive): void => {
+      if (primitive.type === 'group') {
+        if (primitive.clipRef !== undefined && !replayResourceIds.has(primitive.clipRef)) {
+          throw new CompileInvariantError(`internal: replay clip resource '${primitive.clipRef}' was not captured`);
+        }
+        primitive.children.forEach(visit);
+        return;
+      }
+      if (primitive.type === 'text') return;
+      for (const paint of [primitive.fill, primitive.stroke]) {
+        if (paint !== undefined && typeof paint === 'object' && paint.kind !== 'contextStroke') {
+          if (!replayResourceIds.has(paint.id)) {
+            throw new CompileInvariantError(`internal: replay paint resource '${paint.id}' was not captured`);
+          }
+        }
+      }
+    };
+    transaction.primitives.forEach(visit);
+  };
+
   const commitReplay = (
     token: CompositeReplay,
     wrapper: CompositeReplayWrapper | undefined,
     frame: TraversalFrame,
     occurrence: CompileOccurrenceLocator,
     outputIndex: number,
-    owner: CompositeCompileOwner,
+    preparedReplays: ReadonlyMap<CompositeReplay, PreparedReplay>,
     semanticOwner?: RuntimeSemanticOwner,
   ): void => {
-    const transaction = runtime.context.session.replayTransactions.get(token);
-    if (transaction === undefined) {
-      throw new Error(`${owner.label} received a replay token that does not belong to this compile or was forged.`);
-    }
-    if (transaction.used) {
-      throw new Error(`${transaction.owner.label} replay token may be placed at most once and was already replayed.`);
-    }
-    let wrapperClipShape: ReturnType<typeof runtime.context.clip.resolve> | undefined;
-    if (wrapper?.clip !== undefined) {
-      try {
-        wrapperClipShape = runtime.context.clip.resolve(wrapper.clip);
-      } catch (cause) {
-        throw new Error(`${transaction.owner.label} received an invalid replay wrapper clip.`, { cause });
-      }
-    }
-    transaction.used = true;
+    const prepared = preparedReplays.get(token);
+    if (prepared === undefined) throw new CompileInvariantError('internal: replay was not preflighted before commit');
+    const { transaction, wrapperClipShape } = prepared;
 
     const transforms = wrapper?.transforms;
     const resourceIds = new Map<string, string>();
@@ -1040,7 +1012,7 @@ export const compileChildrenToPrimitives = (
       if (resource.kind === 'paint') {
         const imported = runtime.context.paint.importResolved(resource);
         if (typeof imported !== 'object' || imported.kind !== 'resourceRef') {
-          throw new Error('internal: imported paint did not produce a resourceRef');
+          throw new CompileInvariantError('internal: imported paint did not produce a resourceRef');
         }
         resourceIds.set(resource.id, imported.id);
       } else {
@@ -1059,15 +1031,17 @@ export const compileChildrenToPrimitives = (
       });
     } else {
       replayedPrimitives.forEach((primitive, index) => {
-        const group: GroupPrim = {
-          type: 'group',
-          ...(transforms === undefined || transforms.length === 0 ? {} : { transforms: [...transforms] }),
-          ...(wrapperClipRef === undefined ? {} : { clipRef: wrapperClipRef }),
-          children: [primitive],
-        };
-        frame.primitiveSink.push(group);
-        committedPrimitives.push(group);
-        recordPrimitiveZIndex(runtime.state.zIndexOf, group, transaction.primitiveZIndices[index]);
+        const placed: ScenePrimitive =
+          transforms === undefined || transforms.length === 0
+            ? primitive
+            : { type: 'group', transforms: [...transforms], children: [primitive] };
+        const wrapped: GroupPrim =
+          wrapperClipRef === undefined
+            ? (placed as GroupPrim)
+            : { type: 'group', clipRef: wrapperClipRef, children: [placed] };
+        frame.primitiveSink.push(wrapped);
+        committedPrimitives.push(wrapped);
+        recordPrimitiveZIndex(runtime.state.zIndexOf, wrapped, transaction.primitiveZIndices[index]);
       });
     }
     if (semanticOwner !== undefined) {
@@ -1158,9 +1132,97 @@ export const compileChildrenToPrimitives = (
     }
   };
 
-  /** opaque handle 没有 IR discriminator；普通 child 继续走既有 compile dispatch */
-  const isIRChild = (output: IRChild | CompositeCompileChild): output is IRChild =>
-    'type' in output || 'namespace' in output;
+  /** opaque handle 只由当前 compile session 的 identity table 识别 */
+  const isCompositeOutputHandle = (output: unknown): output is CompositeCompileChild =>
+    output !== null && typeof output === 'object' && runtime.context.session.outputChildren.has(output);
+
+  type PreparedRuntimeOutput = Readonly<{
+    output: CompositeRuntimeOutputChild;
+    scopeClipShape?: ClipShape;
+  }>;
+
+  type PreparedCompositeOutputs = Readonly<{
+    outputs: ReadonlyMap<object, PreparedRuntimeOutput>;
+    replays: ReadonlyMap<CompositeReplay, PreparedReplay>;
+  }>;
+
+  /** 递归预检完整 runtime output tree；成功后统一消费 handle 与 replay token */
+  const preflightCompositeOutputs = (
+    outputs: ReadonlyArray<unknown>,
+    owner: CompositeCompileOwner,
+  ): PreparedCompositeOutputs => {
+    const preparedOutputs = new Map<object, PreparedRuntimeOutput>();
+    const preparedReplays = new Map<CompositeReplay, PreparedReplay>();
+    const entriesToConsume: Array<{ used: boolean }> = [];
+    const transactionsToConsume: Array<CompositeReplayTransaction> = [];
+    const visitHandle = (handle: unknown): void => {
+      if (handle === null || typeof handle !== 'object') {
+        throw new CompositeContractError(`${owner.label} received an invalid or forged output child.`);
+      }
+      const entry = runtime.context.session.outputChildren.get(handle);
+      if (entry === undefined) {
+        throw new CompositeContractError(
+          `${owner.label} received an output child that does not belong to this compile or was forged.`,
+        );
+      }
+      if (entry.owner !== owner) {
+        throw new CompositeContractError(
+          `${owner.label} received an output child that does not belong to this composite callback.`,
+        );
+      }
+      if (entry.used) {
+        throw new CompositeContractError(`${owner.label} received an output child that was already consumed.`);
+      }
+      if (preparedOutputs.has(handle)) {
+        throw new CompositeContractError(`${owner.label} received the same output child more than once.`);
+      }
+      entriesToConsume.push(entry);
+      if (entry.child.kind === 'scope') {
+        const scopeClipShape =
+          entry.child.props.clip === undefined ? undefined : runtime.context.clip.resolve(entry.child.props.clip);
+        preparedOutputs.set(handle, {
+          output: entry.child,
+          ...(scopeClipShape === undefined ? {} : { scopeClipShape }),
+        });
+        for (const child of entry.child.children) if (isCompositeOutputHandle(child)) visitHandle(child);
+        return;
+      }
+      preparedOutputs.set(handle, { output: entry.child });
+      const transaction = runtime.context.session.replayTransactions.get(entry.child.replay);
+      if (transaction === undefined) {
+        throw new CompositeContractError(
+          `${owner.label} received a replay token that does not belong to this compile or was forged.`,
+        );
+      }
+      if (transaction.owner !== owner) {
+        throw new CompositeContractError(
+          `${owner.label} received a replay token that does not belong to this composite callback.`,
+        );
+      }
+      if (transaction.used) {
+        throw new CompositeContractError(
+          `${transaction.owner.label} replay token may be placed at most once and was already replayed.`,
+        );
+      }
+      if (preparedReplays.has(entry.child.replay)) {
+        throw new CompositeContractError(
+          `${owner.label} received the same replay token more than once and it was already replayed.`,
+        );
+      }
+      const wrapperClipShape =
+        entry.child.wrapper?.clip === undefined ? undefined : runtime.context.clip.resolve(entry.child.wrapper.clip);
+      validateReplayResourceRefs(transaction);
+      preparedReplays.set(entry.child.replay, {
+        transaction,
+        ...(wrapperClipShape === undefined ? {} : { wrapperClipShape }),
+      });
+      transactionsToConsume.push(transaction);
+    };
+    for (const output of outputs) if (isCompositeOutputHandle(output)) visitHandle(output);
+    entriesToConsume.forEach(entry => (entry.used = true));
+    transactionsToConsume.forEach(transaction => (transaction.used = true));
+    return Object.freeze({ outputs: preparedOutputs, replays: preparedReplays });
+  };
 
   /** 把 runtime Scope props 投影到普通 Scope orchestration 接受的结构 child */
   const runtimeScopeChildOf = (props: CompositeCompileScopeProps): ScopeChild => ({
@@ -1184,10 +1246,12 @@ export const compileChildrenToPrimitives = (
     scopeSegment: 'output' | 'scopeChild',
     compositeDepth: number,
     owner: CompositeCompileOwner,
+    prepared: PreparedCompositeOutputs,
     semanticOwner?: RuntimeSemanticOwner,
+    preparedScopeClipShape?: ClipShape,
   ): void => {
     if (output.kind === 'replay') {
-      commitReplay(output.replay, output.wrapper, frame, parentOccurrence, index, owner, semanticOwner);
+      commitReplay(output.replay, output.wrapper, frame, parentOccurrence, index, prepared.replays, semanticOwner);
       return;
     }
     const runtimeScopeChild = runtimeScopeChildOf(output.props);
@@ -1208,7 +1272,7 @@ export const compileChildrenToPrimitives = (
       scopeSemanticOwner,
       scopeFrame => {
         for (const [childIndex, child] of output.children.entries()) {
-          if (isIRChild(child)) {
+          if (!isCompositeOutputHandle(child)) {
             const childOccurrence: CompileOccurrenceLocator = {
               sourcePath: scopeOccurrence.sourcePath,
               expansionPath: [...scopeOccurrence.expansionPath, { kind: 'scopeChild' as const, index: childIndex }],
@@ -1226,19 +1290,26 @@ export const compileChildrenToPrimitives = (
             );
             continue;
           }
+          const preparedChild = prepared.outputs.get(child);
+          if (preparedChild === undefined) {
+            throw new CompileInvariantError('internal: runtime Scope output child was not preflighted');
+          }
           compileRuntimeOutputChild(
-            resolveCompositeOutputChild(runtime.context.session, owner, child),
+            preparedChild.output,
             childIndex,
             scopeFrame,
             scopeOccurrence,
             'scopeChild',
             compositeDepth,
             owner,
+            prepared,
             scopeSemanticOwner,
+            preparedChild.scopeClipShape,
           );
         }
       },
       output.props.transforms,
+      preparedScopeClipShape,
     );
   };
 
@@ -1253,6 +1324,12 @@ export const compileChildrenToPrimitives = (
     const key = `${child.namespace}.${child.type}`;
     const definition = runtime.context.composites.get(key);
     if (definition === undefined) {
+      if (options.probe === true) {
+        throw new LayoutProbeRecoverableError(
+          `No composite registered for '${key}' at ${formatCompileOccurrence(occurrence)}`,
+          { providerKey: key, occurrence },
+        );
+      }
       runtime.context.onWarn({
         code: CompileWarningCode.CompositeNotRegistered,
         message: `No composite registered for '${key}'; the node is skipped.`,
@@ -1278,7 +1355,7 @@ export const compileChildrenToPrimitives = (
         expand: (node: unknown) => IRChild | Array<IRChild>;
       };
       const produced = callable.expand(parsed);
-      const expanded = Array.isArray(produced) ? produced : [produced];
+      const expanded = validateExpandCompositeOutput(`Composite '${key}'`, produced);
       for (const [outputIndex, output] of expanded.entries()) {
         compileChild(
           output,
@@ -1301,129 +1378,216 @@ export const compileChildrenToPrimitives = (
     const owner: CompositeCompileOwner = Object.freeze({
       label: `Composite '${key}' at ${formatCompileOccurrence(occurrence)}`,
     });
-    const result = callable.compile(parsed, {
-      constraint: cloneConstraint(frame.childConstraint ?? { kind: 'intrinsic' }, key, occurrence),
-      layoutChild: (nextChild, constraint) => {
-        const clonedConstraint = cloneConstraint(constraint, key, occurrence);
-        const warnings: Array<CompileWarning> = [];
-        const namespaceBaselineWarnings: Array<{ id: string; warning: CompileWarning }> = [];
-        const captureWarning = (warning: CompileWarning): void => {
-          if (
-            warning.code === CompileWarningCode.UnresolvedNodeReference ||
-            warning.code === CompileWarningCode.OffsetBaseUnresolved ||
-            warning.code === CompileWarningCode.PolarOriginUnresolved ||
-            warning.code === CompileWarningCode.AtTargetUnresolved
-          ) {
-            throw new Error(
-              `Composite '${key}' at ${formatCompileOccurrence(occurrence)} cannot layout child with an unresolved reference: ${warning.message}`,
+    let callbackResult: unknown;
+    let layoutProbeIndex = 0;
+    try {
+      callbackResult = callable.compile(parsed, {
+        proposal: cloneLayoutProposal(frame.childProposal ?? NaturalLayoutProposal, key, occurrence),
+        layoutChild: (nextChild, proposal) => {
+          const clonedProposal = cloneLayoutProposal(proposal, key, occurrence);
+          const clonedChild = withProviderOutputValidationBoundary(owner.label, () =>
+            snapshotCompositeLayoutChild(owner.label, nextChild, layoutProbeIndex),
+          );
+          const probeOccurrence = freezeOccurrence({
+            sourcePath: occurrence.sourcePath,
+            expansionPath: [...occurrence.expansionPath, { kind: 'probe', index: layoutProbeIndex }],
+          });
+          layoutProbeIndex += 1;
+          const warnings: Array<CompileWarning> = [];
+          const namespaceBaselineWarnings: Array<{ id: string; warning: CompileWarning }> = [];
+          const captureWarning = (warning: CompileWarning): void => {
+            if (
+              warning.code === CompileWarningCode.UnresolvedNodeReference ||
+              warning.code === CompileWarningCode.OffsetBaseUnresolved ||
+              warning.code === CompileWarningCode.PolarOriginUnresolved ||
+              warning.code === CompileWarningCode.AtTargetUnresolved
+            ) {
+              throw new Error(
+                `Composite '${key}' at ${formatCompileOccurrence(occurrence)} cannot layout child with an unresolved reference: ${warning.message}`,
+              );
+            }
+            warnings.push(warning);
+          };
+          const paint = createPaintRegistry(context.patterns, context.round);
+          const clip = createClipRegistry(context.round, context.clips);
+          const probeIdentityTracker =
+            runtime.state.identityTracker === undefined
+              ? undefined
+              : createRuntimeTopologyTracker(runtime.state.identityTracker.revision);
+          let probeWarningOccurrence = probeOccurrence;
+          const registrationOccurrences = new Map<string, CompileOccurrenceLocator>();
+          const registrationKey = (frameDepth: number, id: string): string => `${frameDepth}\u0000${id}`;
+          const namespaceStack = runtime.state.namespaceStack.fork({
+            onDuplicate: info => {
+              const warning = withCompileWarningOccurrence(createDuplicateWarning(info), probeWarningOccurrence);
+              captureWarning(warning);
+              if (info.overwroteForkBaseline) namespaceBaselineWarnings.push({ id: info.id, warning });
+            },
+            onRegister: info =>
+              registrationOccurrences.set(
+                registrationKey(info.frameDepth, info.id),
+                freezeOccurrence(probeWarningOccurrence),
+              ),
+          });
+          const sandboxContext: CompileContext = {
+            ...context,
+            onWarn: captureWarning,
+            paint,
+            clip,
+          };
+          try {
+            const laid = compileChildrenToPrimitives([clonedChild], sandboxContext, {
+              namespaceStack,
+              scopeChain: frame.scopeChain,
+              styleStack: frame.styleStack,
+              occurrence: probeOccurrence,
+              compositeDepth: compositeDepth + 1,
+              generated: true,
+              probe: true,
+              proposal: clonedProposal,
+              session: runtime.context.session,
+              ...(probeIdentityTracker === undefined ? {} : { identityTracker: probeIdentityTracker }),
+              observeWarningOccurrence: current => {
+                probeWarningOccurrence = current ?? probeOccurrence;
+              },
+            });
+            const token = Object.freeze({}) as CompositeReplay;
+            const resources: Array<SceneResource> = [...paint.resources(), ...clip.resources()];
+            const namespaceChanges = namespaceStack.diffTopFrame(runtime.state.namespaceStack);
+            const probeFrameDepth = namespaceStack.depth - 1;
+            const allocationBounds = validateAllocationBounds(boundsRectOf(laid), key, probeOccurrence);
+            const layoutResult = Object.freeze({
+              allocationBounds,
+              slotSize: resolveLayoutSlotSize(allocationBounds, clonedProposal),
+              visualBounds: visualBoundsOfPrimitives(laid.primitives, resources),
+              ...(laid.alignmentGuides === undefined ? {} : { alignmentGuides: laid.alignmentGuides }),
+              replay: token,
+            });
+            runtime.context.session.replayTransactions.set(token, {
+              owner,
+              originOccurrence: probeOccurrence,
+              used: false,
+              primitives: laid.primitives,
+              primitiveZIndices: laid.primitiveZIndices,
+              layouts: laid.layouts,
+              bounds: laid.bounds,
+              allocations: laid.allocations,
+              observations: laid.observations,
+              namespaceChanges,
+              namespaceChangeOccurrences: namespaceChanges.map(
+                change => registrationOccurrences.get(registrationKey(probeFrameDepth, change.id)) ?? probeOccurrence,
+              ),
+              topologyIdentityIds: [...(probeIdentityTracker?.rootIdentityRegistrations() ?? [])],
+              namespaceBaselineWarnings,
+              resources,
+              warnings,
+              artifacts: laid.artifacts,
+            });
+            runtime.context.session.layoutResults.set(layoutResult, Object.freeze({ owner, replay: token }));
+            return Object.freeze({ kind: LayoutChildProbeKind.Resolved, result: layoutResult });
+          } catch (thrown) {
+            if (isFatalProbeError(thrown)) throw thrown;
+            const error = normalizeLayoutProbeError(thrown);
+            const fallbackProviderKey =
+              'namespace' in clonedChild ? `${clonedChild.namespace}.${clonedChild.type}` : clonedChild.type;
+            const failure = createLayoutChildFailure(
+              runtime.context.session.failures,
+              owner,
+              error,
+              fallbackProviderKey,
+              probeOccurrence,
             );
+            return Object.freeze({ kind: LayoutChildProbeKind.Failed, failure });
           }
-          warnings.push(warning);
-        };
-        const paint = createPaintRegistry(context.patterns, context.round);
-        const clip = createClipRegistry(context.round, context.clips);
-        const probeIdentityTracker =
-          runtime.state.identityTracker === undefined
-            ? undefined
-            : createRuntimeTopologyTracker(runtime.state.identityTracker.revision);
-        let probeWarningOccurrence = occurrence;
-        const registrationOccurrences = new Map<string, CompileOccurrenceLocator>();
-        const registrationKey = (frameDepth: number, id: string): string => `${frameDepth}\u0000${id}`;
-        const namespaceStack = runtime.state.namespaceStack.fork({
-          onDuplicate: info => {
-            const warning = withCompileWarningOccurrence(createDuplicateWarning(info), probeWarningOccurrence);
-            captureWarning(warning);
-            if (info.overwroteForkBaseline) namespaceBaselineWarnings.push({ id: info.id, warning });
-          },
-          onRegister: info =>
-            registrationOccurrences.set(
-              registrationKey(info.frameDepth, info.id),
-              freezeOccurrence(probeWarningOccurrence),
-            ),
-        });
-        const sandboxContext: CompileContext = {
-          ...context,
-          onWarn: captureWarning,
-          paint,
-          clip,
-        };
-        const laid = compileChildrenToPrimitives([nextChild], sandboxContext, {
-          namespaceStack,
-          scopeChain: frame.scopeChain,
-          styleStack: frame.styleStack,
-          occurrence,
-          compositeDepth: compositeDepth + 1,
-          generated: true,
-          constraint: clonedConstraint,
-          session: runtime.context.session,
-          ...(probeIdentityTracker === undefined ? {} : { identityTracker: probeIdentityTracker }),
-          observeWarningOccurrence: current => {
-            probeWarningOccurrence = current ?? occurrence;
-          },
-        });
-        const token = Object.freeze({}) as CompositeReplay;
-        const resources: Array<SceneResource> = [...paint.resources(), ...clip.resources()];
-        const namespaceChanges = namespaceStack.diffTopFrame(runtime.state.namespaceStack);
-        const probeFrameDepth = namespaceStack.depth - 1;
-        runtime.context.session.replayTransactions.set(token, {
-          owner,
-          originOccurrence: occurrence,
-          used: false,
-          primitives: laid.primitives,
-          primitiveZIndices: laid.primitiveZIndices,
-          layouts: laid.layouts,
-          bounds: laid.bounds,
-          allocations: laid.allocations,
-          observations: laid.observations,
-          namespaceChanges,
-          namespaceChangeOccurrences: namespaceChanges.map(
-            change => registrationOccurrences.get(registrationKey(probeFrameDepth, change.id)) ?? occurrence,
-          ),
-          topologyIdentityIds: [...(probeIdentityTracker?.rootIdentityRegistrations() ?? [])],
-          namespaceBaselineWarnings,
-          resources,
-          warnings,
-          artifacts: laid.artifacts,
-        });
-        const allocationBounds = boundsRectOf(laid);
-        const layoutResult = Object.freeze({
-          allocationBounds,
-          slotSize: slotSizeOf(allocationBounds, clonedConstraint),
-          visualBounds: visualBoundsOfPrimitives(laid.primitives, resources),
-          replay: token,
-        });
-        runtime.context.session.layoutResults.set(layoutResult, Object.freeze({ owner, replay: token }));
-        return layoutResult;
-      },
-      replay: (layoutResult, wrapper) =>
-        createCompositeReplayChild(runtime.context.session, owner, layoutResult, wrapper),
-      scope: (props, children) => createCompositeScopeChild(runtime.context.session, owner, props, children),
-    });
+        },
+        replay: (layoutResult, wrapper) =>
+          createCompositeReplayChild(runtime.context.session, owner, layoutResult, wrapper),
+        raise: failure => raiseLayoutChildFailure(runtime.context.session.failures, owner, failure),
+        scope: (props, children) => createCompositeScopeChild(runtime.context.session, owner, props, children),
+      });
+    } catch (thrown) {
+      if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
+      throw new LayoutProbeRecoverableError(safeErrorMessage(thrown, 'Composite callback threw a non-Error value'), {
+        cause: thrown,
+        providerKey: key,
+        occurrence,
+      });
+    }
 
-    const explicitAllocation =
-      result.allocationBounds === undefined
-        ? undefined
-        : validateAllocationBounds(result.allocationBounds, key, occurrence);
-    const outputFrame: TraversalFrame =
-      explicitAllocation === undefined ? frame : { ...frame, allocationBoundary: Object.freeze({}) };
-
-    if (result.artifact !== undefined) {
-      if (callable.artifactSchema === undefined) {
-        throw new Error(`Composite '${key}' returned artifact without artifactSchema.`);
+    const validatedResult = withProviderOutputValidationBoundary(owner.label, () => {
+      if (
+        callbackResult === null ||
+        typeof callbackResult !== 'object' ||
+        Array.isArray(callbackResult) ||
+        !('children' in callbackResult)
+      ) {
+        throw new CompositeContractError(
+          `${owner.label} returned an invalid compile result; children must be an array.`,
+        );
       }
-      const parsedArtifact = callable.artifactSchema.parse(result.artifact);
-      frame.artifactSink.push(
-        freezeCompileArtifact({
+      const result = callbackResult as ReturnType<CallableLayoutCompositeDefinition['compile']>;
+      const resultChildren = result.children;
+      const resultAllocationBounds = result.allocationBounds;
+      const resultAlignmentGuides = result.alignmentGuides;
+      const resultArtifact = result.artifact;
+      if (!Array.isArray(resultChildren)) {
+        throw new CompositeContractError(
+          `${owner.label} returned an invalid compile result; children must be an array.`,
+        );
+      }
+      const children = Object.freeze(
+        Array.from(resultChildren, (output, outputIndex): IRChild | CompositeCompileChild => {
+          if (isCompositeOutputHandle(output)) return output;
+          return snapshotCompositeOutputChild(owner.label, output, outputIndex);
+        }),
+      );
+      const explicitAllocation =
+        resultAllocationBounds === undefined
+          ? undefined
+          : validateAllocationBounds(resultAllocationBounds, key, occurrence);
+      const explicitAlignmentGuides =
+        resultAlignmentGuides === undefined
+          ? undefined
+          : cloneAlignmentGuides(resultAlignmentGuides, `Composite '${key}' at ${formatCompileOccurrence(occurrence)}`);
+
+      let compositeArtifact: CompositeCompileArtifact | undefined;
+      if (resultArtifact !== undefined) {
+        if (callable.artifactSchema === undefined) {
+          throw new CompositeContractError(`Composite '${key}' returned artifact without artifactSchema.`);
+        }
+        let parsedArtifact: JsonValue;
+        try {
+          parsedArtifact = callable.artifactSchema.parse(resultArtifact);
+        } catch (cause) {
+          throw new CompositeContractError(`${owner.label} returned an invalid artifact.`, { cause });
+        }
+        let frozenArtifact: JsonValue;
+        try {
+          frozenArtifact = cloneAndFreezeJson(parsedArtifact, `Composite '${key}' artifact`);
+        } catch (cause) {
+          const detail = safeThrownDetail(cause);
+          throw new CompositeContractError(`${owner.label} returned a non-JSON artifact: ${detail}`, { cause });
+        }
+        compositeArtifact = freezeCompileArtifact({
           kind: 'composite',
           namespace: definition.namespace,
           type: definition.type,
           occurrence,
-          value: cloneAndFreezeJson(parsedArtifact, `Composite '${key}' artifact`),
-        }),
-      );
-    }
-    for (const [outputIndex, output] of result.children.entries()) {
-      if (isIRChild(output)) {
+          value: frozenArtifact,
+        });
+      }
+      return Object.freeze({ children, explicitAllocation, explicitAlignmentGuides, compositeArtifact });
+    });
+    const { children, explicitAllocation, explicitAlignmentGuides, compositeArtifact } = validatedResult;
+    const outputFrame: TraversalFrame = {
+      ...frame,
+      alignmentGuideSink: [],
+      ...(explicitAllocation === undefined ? {} : { allocationBoundary: Object.freeze({}) }),
+    };
+    const preparedOutputs = preflightCompositeOutputs(children, owner);
+    if (compositeArtifact !== undefined) frame.artifactSink.push(compositeArtifact);
+    for (const [outputIndex, output] of children.entries()) {
+      if (!isCompositeOutputHandle(output)) {
         const outputOccurrence: CompileOccurrenceLocator = {
           sourcePath: occurrence.sourcePath,
           expansionPath: [...occurrence.expansionPath, { kind: 'output', index: outputIndex }],
@@ -1442,19 +1606,25 @@ export const compileChildrenToPrimitives = (
         continue;
       }
       compileRuntimeOutputChild(
-        resolveCompositeOutputChild(runtime.context.session, owner, output),
+        preparedOutputs.outputs.get(output)?.output ??
+          (() => {
+            throw new CompileInvariantError('internal: composite output child was not preflighted');
+          })(),
         outputIndex,
         outputFrame,
         occurrence,
         'output',
         compositeDepth + 1,
         owner,
+        preparedOutputs,
         semanticOwner,
+        preparedOutputs.outputs.get(output)?.scopeClipShape,
       );
     }
     if (explicitAllocation !== undefined) {
       pushAllocation(frame.allocationSink, allocationPointsOf(explicitAllocation), frame.allocationBoundary);
     }
+    if (explicitAlignmentGuides !== undefined) frame.alignmentGuideSink.push(...explicitAlignmentGuides);
   };
 
   const compileChild = (
@@ -1465,27 +1635,41 @@ export const compileChildrenToPrimitives = (
     compositeDepth: number,
     generated: boolean,
     semanticOwner?: RuntimeSemanticOwner,
-  ): void =>
-    withWarningOccurrence(occurrence, () => {
-      if (context.trace !== undefined) context.trace.visited += 1;
-      if ('namespace' in child) {
-        compileCompositeChild(child, index, frame, occurrence, compositeDepth, semanticOwner);
-        return;
+  ): void => {
+    try {
+      withWarningOccurrence(occurrence, () => {
+        if (context.trace !== undefined) context.trace.visited += 1;
+        if ('namespace' in child) {
+          compileCompositeChild(child, index, frame, occurrence, compositeDepth, semanticOwner);
+          return;
+        }
+        switch (child.type) {
+          case 'node':
+            emitNodeChild(child, index, frame, occurrence, semanticOwner);
+            break;
+          case 'coordinate':
+            registerCoordinateChild(child, index, frame);
+            break;
+          case 'scope':
+            compileScopeChild(child, index, frame, generated ? occurrence : undefined, compositeDepth, semanticOwner);
+            break;
+          default:
+            queuePathChild(child, index, frame, occurrence, semanticOwner);
+        }
+      });
+    } catch (thrown) {
+      if (isFatalProbeError(thrown)) throw thrown;
+      const providerKey = 'namespace' in child ? `${child.namespace}.${child.type}` : child.type;
+      if (isLayoutProbeRecoverableError(thrown)) {
+        throw enrichLayoutProbeError(thrown, providerKey, occurrence);
       }
-      switch (child.type) {
-        case 'node':
-          emitNodeChild(child, index, frame, occurrence, semanticOwner);
-          break;
-        case 'coordinate':
-          registerCoordinateChild(child, index, frame);
-          break;
-        case 'scope':
-          compileScopeChild(child, index, frame, generated ? occurrence : undefined, compositeDepth, semanticOwner);
-          break;
-        default:
-          queuePathChild(child, index, frame, occurrence, semanticOwner);
-      }
-    });
+      throw new LayoutProbeRecoverableError(safeErrorMessage(thrown, 'Child compilation threw a non-Error value'), {
+        cause: thrown,
+        providerKey,
+        occurrence,
+      });
+    }
+  };
 
   const compileChildren = (
     children: ReadonlyArray<IRChild>,
@@ -1523,10 +1707,11 @@ export const compileChildrenToPrimitives = (
   const rootObservations: TraversalFrame['observationSink'] = [];
   const rootLayouts: TraversalFrame['layoutSink'] = [];
   const rootArtifacts: TraversalFrame['artifactSink'] = [];
+  const rootAlignmentGuides: TraversalFrame['alignmentGuideSink'] = [];
   compileChildren(
     rootChildren,
     {
-      childConstraint: options.constraint ?? { kind: 'intrinsic' },
+      childProposal: options.proposal ?? NaturalLayoutProposal,
       scopeChain: options.scopeChain ?? [],
       primitiveSink: runtime.state.primitives,
       locatorPrefix: '',
@@ -1536,6 +1721,7 @@ export const compileChildrenToPrimitives = (
       publicationSink: [],
       boundsSink: rootBounds,
       allocationSink: rootAllocations,
+      alignmentGuideSink: rootAlignmentGuides,
       observationSink: rootObservations,
       artifactSink: rootArtifacts,
       ...(options.semanticOwner === undefined && runtime.state.identityTracker === undefined
@@ -1572,12 +1758,13 @@ export const compileChildrenToPrimitives = (
       typeof process !== 'undefined' && process.env.NODE_ENV !== 'production'
         ? ` at ${collectPlaceholderLocators(runtime.state.primitives).join(', ')}`
         : '';
-    throw new Error(
+    throw new CompileInvariantError(
       `internal: ${runtime.state.placeholderBalance} unresolved path placeholder(s) leaked into Scene output${detail}`,
     );
   }
 
   const primitives = stableSortByZIndex(sealSink(runtime.state.primitives), runtime.state.zIndexOf);
+  const alignmentGuides = resolveStructuralAlignmentGuides(rootAlignmentGuides);
   return {
     primitives,
     primitiveZIndices: primitives.map(primitive => runtime.state.zIndexOf.get(primitive)),
@@ -1587,5 +1774,6 @@ export const compileChildrenToPrimitives = (
     allocations: effectiveAllocations(rootAllocations),
     observations: rootObservations,
     artifacts: orderCompileArtifacts(rootArtifacts),
+    ...(alignmentGuides === undefined ? {} : { alignmentGuides }),
   };
 };

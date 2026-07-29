@@ -108,6 +108,7 @@ describe('compile source structure', () => {
 
   it('node compile barrel keeps the internal compatibility surface', () => {
     expect(Object.keys(nodeCompile).sort()).toEqual([
+      'alignmentGuidesOfNode',
       'anchorOf',
       'angleBoundaryOf',
       'boundaryKey',

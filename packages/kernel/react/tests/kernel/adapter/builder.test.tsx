@@ -256,7 +256,9 @@ after`;
         body line
       </Node>,
     );
-    expect(ir.children[0]).toMatchObject({
+    expect(ir.children[0]).toStrictEqual({
+      id: 'A',
+      position: [0, 0],
       type: 'node',
       text: [{ text: 'Heading', fill: 'red', font: { weight: 'bold' } }, 'body line'],
     });

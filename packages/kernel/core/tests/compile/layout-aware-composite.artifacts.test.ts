@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { IRPaintSpec, IRScene } from '../../src';
+import type {
+  IRChild,
+  IRPaintSpec,
+  IRScene,
+  LayoutChildResult,
+  LayoutCompositeCompileContext,
+  LayoutProposal,
+} from '../../src';
 
 import {
   compileToScene,
@@ -10,6 +17,10 @@ import {
   defineComposite,
   formatCompileOccurrence,
   isNodeLayoutCompileArtifact,
+  LayoutAxisProposalKind,
+  LayoutChildProbeKind,
+  LayoutIntrinsicMode,
+  NaturalLayoutProposal,
 } from '../../src';
 
 const scene = (children: IRScene['children']): IRScene => ({
@@ -17,6 +28,16 @@ const scene = (children: IRScene['children']): IRScene => ({
   type: 'scene',
   children,
 });
+
+const resolvedResultOf = (
+  context: LayoutCompositeCompileContext,
+  child: IRChild,
+  proposal: LayoutProposal = NaturalLayoutProposal,
+): LayoutChildResult => {
+  const probe = context.layoutChild(child, proposal);
+  if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+  return probe.result;
+};
 
 const gradient = (first: string, second: string): IRPaintSpec => ({
   kind: 'linearGradient',
@@ -27,6 +48,50 @@ const gradient = (first: string, second: string): IRPaintSpec => ({
 });
 
 describe('layout-aware composite transactions and artifacts', () => {
+  it('commits only the exact probe across minimum, natural, and exact transaction side effects', () => {
+    const definition = defineComposite({
+      namespace: 'test',
+      type: 'multiProposalIsolation',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('test'),
+        type: z.literal('multiProposalIsolation'),
+      }),
+      compile: (_, context) => {
+        context.layoutChild(
+          { type: 'node', id: 'minimum-only', position: [0, 0], text: 'minimum', fill: gradient('#100', '#200') },
+          {
+            x: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Minimum },
+            y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
+          },
+        );
+        context.layoutChild(
+          { type: 'node', id: 'natural-only', position: [0, 0], text: 'natural', fill: gradient('#300', '#400') },
+          NaturalLayoutProposal,
+        );
+        const exact = resolvedResultOf(
+          context,
+          { type: 'node', id: 'exact-only', position: [0, 0], text: 'exact', fill: gradient('#500', '#600') },
+          {
+            x: { kind: LayoutAxisProposalKind.Exact, value: 80 },
+            y: { kind: LayoutAxisProposalKind.Exact, value: 30 },
+          },
+        );
+        return { children: [context.replay(exact)] };
+      },
+    });
+
+    const result = compileToScene(scene([{ namespace: 'test', type: 'multiProposalIsolation' }]), {
+      composites: [definition],
+      artifacts: { nodeLayouts: true },
+    });
+    const serialized = JSON.stringify(result);
+
+    expect(serialized).toContain('exact-only');
+    expect(serialized).not.toContain('minimum-only');
+    expect(serialized).not.toContain('natural-only');
+    expect(result.scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: gradient('#500', '#600') }]);
+    expect(result.artifacts.filter(isNodeLayoutCompileArtifact)).toHaveLength(1);
+  });
   it('publishes only replayed resources and preserves final resource ordering', () => {
     const discarded = gradient('#f00', '#0f0');
     const selected = gradient('#00f', '#fff');
@@ -38,12 +103,16 @@ describe('layout-aware composite transactions and artifacts', () => {
         type: z.literal('resourceProbe'),
       }),
       compile: (_, context) => {
-        const { layoutChild } = context;
-        layoutChild({ type: 'node', position: [0, 0], text: 'discarded', fill: discarded }, { kind: 'intrinsic' });
-        const final = layoutChild(
-          { type: 'node', position: [0, 0], text: 'selected', fill: selected },
-          { kind: 'intrinsic' },
+        context.layoutChild(
+          { type: 'node', position: [0, 0], text: 'discarded', fill: discarded },
+          NaturalLayoutProposal,
         );
+        const final = resolvedResultOf(context, {
+          type: 'node',
+          position: [0, 0],
+          text: 'selected',
+          fill: selected,
+        });
         return { children: [context.replay(final)] };
       },
     });
@@ -65,14 +134,13 @@ describe('layout-aware composite transactions and artifacts', () => {
         type: z.literal('warningProbe'),
       }),
       compile: (_, context) => {
-        const { layoutChild } = context;
-        layoutChild(
+        context.layoutChild(
           {
             type: 'node',
             position: [0, 0],
             text: [{ runs: [{ tex: 'x' }] }],
           },
-          { kind: 'intrinsic' },
+          NaturalLayoutProposal,
         );
         return { children: [] };
       },
@@ -88,6 +156,58 @@ describe('layout-aware composite transactions and artifacts', () => {
     });
   });
 
+  it('discards resources, warnings, identities, observations, and artifacts created before a failed child', () => {
+    const failure = defineComposite({
+      namespace: 'test',
+      type: 'lateProbeFailure',
+      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('lateProbeFailure') }),
+      compile: () => {
+        throw new Error('late failure');
+      },
+    });
+    const parent = defineComposite({
+      namespace: 'test',
+      type: 'failedSideEffectIsolation',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('test'),
+        type: z.literal('failedSideEffectIsolation'),
+      }),
+      compile: (_, context) => {
+        const probe = context.layoutChild(
+          {
+            type: 'scope',
+            children: [
+              {
+                type: 'node',
+                id: 'discarded-side-effects',
+                position: [0, 0],
+                text: [{ runs: [{ tex: 'x' }] }],
+                fill: gradient('#123', '#456'),
+              },
+              { namespace: 'test', type: 'lateProbeFailure' },
+            ],
+          },
+          NaturalLayoutProposal,
+        );
+        expect(probe.kind).toBe(LayoutChildProbeKind.Failed);
+        return { children: [] };
+      },
+    });
+    const warnings: Array<{ code: string }> = [];
+
+    const result = compileToScene(scene([{ namespace: 'test', type: 'failedSideEffectIsolation' }]), {
+      composites: [failure, parent],
+      artifacts: { nodeLayouts: true },
+      onWarn: warning => warnings.push(warning),
+    });
+
+    expect(result.scene.primitives).toEqual([]);
+    expect(result.scene.resources ?? []).toEqual([]);
+    expect(result.artifacts).toEqual([]);
+    expect(warnings).toEqual([]);
+    expect(JSON.stringify(result)).not.toContain('discarded-side-effects');
+  });
+
   it('commits replayed namespace entries before later siblings resolve them', () => {
     const definition = defineComposite({
       namespace: 'test',
@@ -97,10 +217,12 @@ describe('layout-aware composite transactions and artifacts', () => {
         type: z.literal('namedChild'),
       }),
       compile: (_, context) => {
-        const laid = context.layoutChild(
-          { type: 'node', id: 'inside', position: [20, 10], minimumSize: 10 },
-          { kind: 'intrinsic' },
-        );
+        const laid = resolvedResultOf(context, {
+          type: 'node',
+          id: 'inside',
+          position: [20, 10],
+          minimumSize: 10,
+        });
         return { children: [context.replay(laid)] };
       },
     });
@@ -130,8 +252,7 @@ describe('layout-aware composite transactions and artifacts', () => {
         type: z.literal('discardedNamespace'),
       }),
       compile: (_, context) => {
-        const { layoutChild } = context;
-        layoutChild({ type: 'node', id: 'discarded', position: [20, 0] }, { kind: 'intrinsic' });
+        context.layoutChild({ type: 'node', id: 'discarded', position: [20, 0] }, NaturalLayoutProposal);
         return { children: [] };
       },
     });
@@ -166,16 +287,13 @@ describe('layout-aware composite transactions and artifacts', () => {
         type: z.literal('currentReferences'),
       }),
       compile: (_, context) => {
-        const child = context.layoutChild(
-          {
-            type: 'path',
-            children: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              { type: 'step', kind: 'line', to: { id: 'ready' } },
-            ],
-          },
-          { kind: 'intrinsic' },
-        );
+        const child = resolvedResultOf(context, {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: { id: 'ready' } },
+          ],
+        });
         return { children: [context.replay(child)] };
       },
     });
@@ -218,8 +336,7 @@ describe('layout-aware composite transactions and artifacts', () => {
       }),
       artifactSchema: z.strictObject({ role: z.literal('parent') }),
       compile: (_, context) => {
-        const { layoutChild } = context;
-        const laid = layoutChild({ namespace: 'test', type: 'child' }, { kind: 'intrinsic' });
+        const laid = resolvedResultOf(context, { namespace: 'test', type: 'child' });
         return {
           children: [context.replay(laid)],
           artifact: { role: 'parent' },
@@ -351,21 +468,17 @@ describe('layout-aware composite transactions and artifacts', () => {
         type: z.literal('replayedScope'),
       }),
       compile: (_, context) => {
-        const { layoutChild } = context;
-        layoutChild(
+        context.layoutChild(
           {
             type: 'scope',
             children: [{ namespace: 'test', type: 'replayedLeaf' }],
           },
-          { kind: 'intrinsic' },
+          NaturalLayoutProposal,
         );
-        const selected = layoutChild(
-          {
-            type: 'scope',
-            children: [{ namespace: 'test', type: 'replayedLeaf' }],
-          },
-          { kind: 'intrinsic' },
-        );
+        const selected = resolvedResultOf(context, {
+          type: 'scope',
+          children: [{ namespace: 'test', type: 'replayedLeaf' }],
+        });
         return { children: [context.replay(selected)] };
       },
     });
@@ -424,8 +537,7 @@ describe('layout-aware composite transactions and artifacts', () => {
         type: z.literal('replayedNodeLayout'),
       }),
       compile: (_node, context) => {
-        const { layoutChild } = context;
-        const laid = layoutChild({ type: 'node', id: 'replayed', position: [0, 0], text: 'N' }, { kind: 'intrinsic' });
+        const laid = resolvedResultOf(context, { type: 'node', id: 'replayed', position: [0, 0], text: 'N' });
         return { children: [context.replay(laid)] };
       },
     });
