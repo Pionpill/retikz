@@ -65,9 +65,11 @@ Element-level visual effects only live on renderable main geometry primitives:
 
 ### Canonical visual bounds
 
-A layout-aware composite's `layoutChild().visualBounds` is computed from the final static primitive tree; it is not an alias for a Node allocation box. It covers rectangles, rotated ellipses, text, complete path-command hulls, arrow markers, shadows, clips, and recursive group transforms. A paint contributes no geometry when its `fillOpacity` / `strokeOpacity` is explicitly `0`; CSS colors whose alpha cannot be resolved statically remain conservatively visible. Stroke joins use the canonical miter upper bound of `10`, which covers current renderer defaults and avoids backend- or composite-specific bounds guesses.
+A layout-aware composite's `layoutChild().visualBounds` is computed from the final static primitive tree; it is not an alias for `slotSize` or `allocationBounds`. A proposal describes parent availability, the slot is the origin-free result of evaluating that proposal, allocation is the child's real layout occupancy, and visual bounds describe only final ink. Renderers participate in none of these evaluations.
 
-A layout-aware replay wrapper emits an equivalent `GroupPrim` around each replay root only when it has a non-empty `transforms` list or a `clip`; without an effective wrapper field, the original primitive is preserved. Following Scope coordinate order, `clipRef` applies in replay-local space before `transforms` project the visual envelope. Clipping tightens the final committed Scene's compile visual bounds, but it neither changes allocation bounds nor rewrites an earlier `LayoutChildResult.visualBounds`. Each root is wrapped independently, so roots with different zIndex values are not collapsed into one sorting unit.
+The visual envelope covers rectangles, rotated ellipses, text, complete path-command hulls, arrow markers, shadows, clips, and recursive group transforms. A paint contributes no geometry when its `fillOpacity` / `strokeOpacity` is explicitly `0`; CSS colors whose alpha cannot be resolved statically remain conservatively visible. Stroke joins use the canonical miter upper bound of `10`, which covers current renderer defaults and avoids backend- or composite-specific bounds guesses.
+
+A layout-aware replay wrapper emits an equivalent `GroupPrim` around each replay root only when it has a non-empty `transforms` list or a `clip`; without an effective wrapper field, the original primitive is preserved. An inner transform group first places the child in parent allocation coordinates, then an outer `clipRef` clips in that parent coordinate system. Clipping tightens the final committed Scene's compile visual bounds, but it neither changes allocation bounds nor rewrites an earlier `LayoutChildResult.visualBounds`. Each root is wrapped independently, so roots with different zIndex values are not collapsed into one sorting unit.
 
 Static / settled here means the static Scene state produced by compile. Animation does not expand this envelope; a capability that needs whole-animation bounds must solve that separately.
 
@@ -172,8 +174,8 @@ For platform materialization behavior, continue to the [SVG renderer](/kernel/pa
     {
       label: 'Per-root replay wrapping, ordering, and visual-bound commit',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1010,
-      endLine: 1163,
+      startLine: 995,
+      endLine: 1132,
     },
   ]}
 />

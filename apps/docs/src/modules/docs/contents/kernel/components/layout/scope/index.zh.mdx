@@ -138,8 +138,8 @@ zero scale 作为纯视觉变换合法；需要跨该 chain 反投影目标时�
     {
       label: 'path 延迟解析与原位回填',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 152,
-      endLine: 179,
+      startLine: 283,
+      endLine: 315,
     },
   ]}
 />
@@ -155,16 +155,28 @@ zero scale 作为纯视觉变换合法；需要跨该 chain 反投影目标时�
 <SourceLinks
   sources={[
     {
-      label: 'namespace 注册与查找',
+      label: 'namespace frame 生命周期',
       path: 'packages/kernel/core/src/compile/namespace.ts',
-      startLine: 24,
-      endLine: 132,
+      startLine: 156,
+      endLine: 183,
+    },
+    {
+      label: 'namespace 注册',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 185,
+      endLine: 215,
+    },
+    {
+      label: 'namespace inside-out 查找',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 241,
+      endLine: 253,
     },
     {
       label: 'Scope 父子 frame 编排',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 300,
-      endLine: 627,
+      startLine: 668,
+      endLine: 856,
     },
   ]}
 />
@@ -180,10 +192,16 @@ Scope 包络只收集 node、coordinate 与嵌套 Scope layout，不包含 path 
 <SourceLinks
   sources={[
     {
-      label: 'Scope 包络与 Group 输出',
+      label: 'Scope 固有包络',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 331,
-      endLine: 627,
+      startLine: 510,
+      endLine: 522,
+    },
+    {
+      label: 'Scope Group 输出与子树编排',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 668,
+      endLine: 856,
     },
     {
       label: '矩形与圆形 synthetic layout',
@@ -194,8 +212,8 @@ Scope 包络只收集 node、coordinate 与嵌套 Scope layout，不包含 path 
     {
       label: 'clip 解析与资源注册',
       path: 'packages/kernel/core/src/compile/resource/clip.ts',
-      startLine: 156,
-      endLine: 189,
+      startLine: 343,
+      endLine: 390,
     },
   ]}
 />

@@ -76,29 +76,40 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 `CompositeDefinition` 的两个分支互斥：
 
 - `expand(node)` 只做无上下文结构展开；
-- `compile(node, context)` 可用 `context.constraint` 与 `layoutChild(child, constraint)` 在完整 compile 环境中测量真实子内容。
+- `compile(node, context)` 通过 `context.proposal` 与 `layoutChild(child, proposal)` 在完整 compile 环境中求值真实子内容。
 
-`layoutChild` 的 `ChildLayoutConstraint` 支持自然布局和可独立省略的双轴约束：
+`LayoutProposal` 必须恰好包含 `x` 与 `y`；每条轴使用 `LayoutAxisProposal`：
 
-| 分支          | 字段                      | 语义                                                         |
-| ------------- | ------------------------- | ------------------------------------------------------------ |
-| `intrinsic`   | —                         | width / height 都 indefinite，slot 等于真实 allocation size  |
-| `constrained` | `width?` / `height?`      | 至少提供一条轴；省略轴保持 indefinite                        |
-| `bounded` 轴  | `min?`（默认 `0`）/ `max` | 有限非负区间；slot size 是真实 allocation size 的 clamp 结果 |
-| `exact` 轴    | `size`                    | 有限非负固定 slot；不缩放 child，也不改 child local origin   |
+| `kind`      | 字段                           | slot 不变量                                       |
+| ----------- | ------------------------------ | ------------------------------------------------- |
+| `intrinsic` | `mode: 'minimum' \| 'natural'` | slot 是完整双轴上下文中解析出的 contribution      |
+| `range`     | `min` / `max?`                 | `max` 存在时落在 `[min, max]`；省略时不小于 `min` |
+| `exact`     | `value`                        | slot 严格等于该有限非负值                         |
 
-公开合同由 `ChildLayoutAxisConstraint`、`ChildLayoutSize`、`CompositeReplayWrapper` 与 `LayoutCompositeCompileResult` 组成；`layoutChild()` 返回 `LayoutChildResult`：
+`NaturalLayoutProposal` 是深冻结的 natural / natural 常量，也是根 layout-aware composite 的默认 proposal。Proposal 会在 child dispatch 前严格校验、detached clone 并冻结；缺轴、额外字段、负数、NaN、Infinity、非法 range 都直接报 occurrence-aware contract error，显式零合法，`-0` 规范为 `0`。
 
-| 字段               | 语义                                                             |
-| ------------------ | ---------------------------------------------------------------- |
-| `allocationBounds` | 约束后 child 的真实局部占用                                      |
-| `slotSize`         | 解析双轴约束后的 `width` / `height`，不包含 x / y 或对齐语义     |
-| `visualBounds`     | 包含描边 / marker / shadow / clip / transform 的保守静态视觉包络 |
-| `replay`           | 一次性的 compile-local opaque token                              |
+`layoutChild()` 返回 `LayoutChildProbe`，先按 `LayoutChildProbeKind.Resolved` / `Failed` 缩窄：
 
-layout-aware `compile` 可以在结果级返回 `allocationBounds`，把它作为 composite 对父级声明的 container allocation；后代 overflow 不会反向扩大它。省略时，Core 合并最终 children 的 allocation contribution。
+| Outcome    | 字段      | 语义                                                                                         |
+| ---------- | --------- | -------------------------------------------------------------------------------------------- |
+| `resolved` | `result`  | `LayoutChildResult`：resolved slot、真实 bounds、guides 与 replay transaction                |
+| `failed`   | `failure` | callback-local、compile-local 的 opaque `LayoutChildFailure`；可丢弃或传给 `context.raise()` |
 
-父 composite 求解布局后，用 `context.replay(result, wrapper?)` 创建 output child。`wrapper` 只接受 `transforms?` 与 `clip?`：clip 先在 replay local space 生效，再按 transforms 投影；它只收紧最终提交后 Scene 的 compile visual bounds，不改变 allocation，也不回写已有 `LayoutChildResult.visualBounds`。最终 Scene 直接复用已布局结果，不再次展开、测量或布局。
+`LayoutChildResult` 的字段彼此独立：
+
+| 字段               | 语义                                                                          |
+| ------------------ | ----------------------------------------------------------------------------- |
+| `slotSize`         | proposal 求值后的 `width` / `height`，没有 origin 或 alignment 语义           |
+| `allocationBounds` | child 在自身局部坐标中的真实布局占用，可大于或小于 slot                       |
+| `visualBounds`     | 最终静态 primitive tree 的保守墨迹包络，不参与 slot 求值                      |
+| `alignmentGuides?` | child-local 一维 guide；`LayoutAlignmentGuideName` 内置 first / last baseline |
+| `replay`           | 该隔离 transaction 的 one-use opaque token                                    |
+
+Plain text 会在 x minimum / natural 下计算上下文化 contribution，并在有限 x range / exact 下重排；mixed / TeX authored line 与固定 geometry 保持原子，不缩放真实 allocation。Y minimum / natural 是应用完整 x proposal 后的真实排版高度。所有 built-in 都只复用 Core 的 measurer、provider 与几何，不回读 DOM 或 renderer。
+
+layout-aware `compile` 可返回显式 `allocationBounds` 作为 composite 的 container allocation，以及已经位于 composite-local allocation coordinate 的 `alignmentGuides`。省略 allocation 时 Core 合并最终 children；Core 不自动替 solver 选择或合并多条 child guide。
+
+父 solver 用 `context.replay(result, wrapper?)` 选择成功 transaction。`wrapper.transforms` 先把 child 放进 parent allocation coordinate，随后 `wrapper.clip` 在该父坐标系裁剪；它只收紧最终 Scene visual contribution，不改变 allocation，也不回写已有 `LayoutChildResult.visualBounds`。最终提交复用已布局结果，不再次展开、测量或布局。
 
 `context.scope(props, children)` 可以递归包装普通 `IRChild`、replay child 与其它 runtime Scope child。它只开放 replay 后仍有确定语义的八个结构字段：
 
@@ -113,9 +124,11 @@ layout-aware `compile` 可以在结果级返回 `allocationBounds`，把它作�
 | `meta`           | 透传 JSON metadata                      |
 | `animations`     | 透传 Group 动画轨道                     |
 
-`context.replay()` / `context.scope()` 返回 runtime-only opaque handle，不进入 IR、Scene 或 renderer 合同。handle 与 layout result 都不能跨 compile、跨 composite callback、序列化或伪造；同一个 replay 只能提交一次。Replay wrapper 与 Scope props 都会在 builder 调用时 detached、校验并冻结。样式默认、`resetStyle`、引用式 transform 与 `placement` 不被接受，因为 replayed content 已经完成样式解析与布局；再次施加这些语义会造成第二套编译结果。
+`context.replay()` / `context.scope()` 返回 runtime-only opaque handle，不进入 IR、Scene 或 renderer 合同。Failure、layout result、handle 与 replay 都由 callback-local / compile-local identity 校验，不能跨 compile、跨 callback、序列化、spread 后伪造或重复使用。由 replay / runtime Scope handle 形成的完整 runtime output tree 会在任何 sink 写入前预检；普通 `IRChild` 随后继续经过既有 compile dispatch。Replay wrapper 与 Scope props 在 builder 调用时 detached、校验并冻结。
 
-最终 occurrence 继续使用既有 `output` / `scopeChild` / `replay` segment；嵌套 wrapper 不新增 locator kind。resource、namespace、warning、bounds 与 artifact 仍在选中 replay 的一次提交中原子发布。
+每次 probe 的 primitive、resource、warning、artifact、namespace、identity 与 observation 都留在隔离 transaction。丢弃 resolved / failed outcome 对最终 `CompileResult` 零可观察；`context.raise(failure)` 只接受当前 callback 创建的 failure，并保留原始 cause、provider、source path 与 nested occurrence 后抛错。
+
+Occurrence 的 `probe[index]` segment 表示候选 `layoutChild()` dispatch；最终成功 transaction 的 locator 把该候选来源重映射到既有 `replay[index]` output commit。`output` / `scopeChild` 继续描述 compile output tree。Resource、namespace、warning、bounds 与 artifact 只在选中 replay 的一次提交中原子发布。
 
 带 `artifactSchema` 的 layout-aware definition 可在同一次 `compile` 返回 JSON-safe `artifact`。`compileToScene` 会把它封装为 `{ kind:'composite', namespace, type, occurrence, value }`；`occurrence` 由原始 `sourcePath` 和结构化 `expansionPath` 标识，不依赖全局 Map 或 callback capture。精确的 definition tuple 会让 `CompileResult` 推导对应 artifact union。
 
@@ -197,14 +210,26 @@ Node label 会把一次测量阶段得到的 `width` / `height` / `ascent` / `de
     {
       label: '编译入口组装 Scene、资源与根动画',
       path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 25,
-      endLine: 53,
+      startLine: 59,
+      endLine: 91,
     },
     {
       label: 'CompileResult、artifact 与 occurrence 公共合同',
       path: 'packages/kernel/core/src/compile/types.ts',
       startLine: 70,
       endLine: 128,
+    },
+    {
+      label: 'layout proposal、probe、guide 与 context 公共合同',
+      path: 'packages/kernel/core/src/contract/composite/types.ts',
+      startLine: 20,
+      endLine: 205,
+    },
+    {
+      label: 'proposal runtime validator 与 resolved slot',
+      path: 'packages/kernel/core/src/compile/orchestration/layout-proposal.ts',
+      startLine: 15,
+      endLine: 148,
     },
     {
       label: 'occurrence formatter 与 Node artifact type guard',
@@ -215,32 +240,50 @@ Node label 会把一次测量阶段得到的 `width` / `height` / `ascent` / `de
     {
       label: 'compile-local replay 与 Scope builder',
       path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
-      startLine: 115,
-      endLine: 224,
+      startLine: 197,
+      endLine: 260,
     },
     {
-      label: 'replay 的逐 root 原子提交',
+      label: 'replay root 的 placement 与各类 sink 提交',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1010,
-      endLine: 1163,
+      startLine: 995,
+      endLine: 1132,
+    },
+    {
+      label: '完整 runtime handle tree 的原子预检与 token 消费',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1148,
+      endLine: 1224,
     },
     {
       label: 'runtime Scope 的递归输出',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1165,
-      endLine: 1242,
+      startLine: 1226,
+      endLine: 1313,
     },
     {
-      label: '子布局结果、artifact 与 container allocation',
+      label: '隔离 child probe、failure 与 resolved result',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1303,
-      endLine: 1456,
+      startLine: 1380,
+      endLine: 1501,
+    },
+    {
+      label: 'callback result、artifact 与 container allocation 提交',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1517,
+      endLine: 1628,
+    },
+    {
+      label: 'failure ownership 与受控 raise',
+      path: 'packages/kernel/core/src/compile/probe-failure.ts',
+      startLine: 154,
+      endLine: 208,
     },
     {
       label: '延迟解析 path 并回填原始输出位置',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 183,
-      endLine: 209,
+      startLine: 283,
+      endLine: 314,
     },
     {
       label: '按 zIndex 稳定排序 Scene 图元',

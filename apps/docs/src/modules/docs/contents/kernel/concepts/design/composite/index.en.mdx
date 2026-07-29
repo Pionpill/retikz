@@ -48,65 +48,90 @@ The compiler looks up `${namespace}.${type}`, validates the node, and calls the 
 
 ## Layout-aware compile
 
-`CompositeDefinition.expand()` has no text measurement, providers, reference environment, or parent constraint, so it cannot express a parent layout that feeds back from real child content. `compile(node, context)` provides the general loop needed by those Tier 2 components:
+`CompositeDefinition.expand()` has no text measurement, providers, reference environment, or parent availability, so it cannot express “query child contribution → solve parent layout → allocate the child slot.” `compile(node, context)` closes that loop inside one Core compile. A root composite receives the frozen `NaturalLayoutProposal`; a nested composite receives the complete two-axis `context.proposal` sent to that occurrence by its parent.
 
-Each `layoutChild` call separates child layout into four independent results:
+A proposal is a **parent-provided availability condition**, not the child's real size or the slot itself. `LayoutProposal` always contains both `x` and `y`:
 
-| Result             | Meaning                                                                 |
-| ------------------ | ----------------------------------------------------------------------- |
-| `allocationBounds` | The child's real constrained local occupancy, never forged into a slot  |
-| `slotSize`         | Parent-assigned `width` / `height`, with no x / y position              |
-| `visualBounds`     | Static envelope including stroke, markers, shadow, clip, and transforms |
-| `replay`           | Opaque token for one atomic commit                                      |
+| Axis proposal         | Meaning                                                                   |
+| --------------------- | ------------------------------------------------------------------------- |
+| `intrinsic.minimum`   | Query the minimum contribution while the other-axis proposal stays active |
+| `intrinsic.natural`   | Query the natural contribution while the other-axis proposal stays active |
+| `range { min, max? }` | Resolve a slot in the interval; an omitted `max` is unbounded             |
+| `exact { value }`     | Require a fixed parent slot without forcing child geometry to scale       |
 
 <ComponentPreview files="layout-aware-compile" size="xl" hideCode />
 
-Both probes in the figure return allocation bounds, slot size, visual bounds, and a replay token without publishing their results. Replay A from the intrinsic probe only informs the solve; after the parent composite chooses its two-axis constraint, only replay B follows the final edge into a single commit and joins the domain artifact in the same `CompileResult`.
+Every probe in the figure first returns a `resolved` or `failed` outcome. A resolved result then keeps five independent fields that cannot be inferred from one another:
 
-1. call `layoutChild(child, { kind:'intrinsic' })` to measure natural content;
-2. solve columns, rows, and a target slot from allocation bounds;
-3. set independent `bounded` or `exact` axes through `constrained.width` / `constrained.height`;
-4. place and clip the chosen result with `context.replay(result, { transforms, clip })`; use `context.scope(props, children)` when identity or recursive structure is needed.
+| Field              | Meaning                                                                          |
+| ------------------ | -------------------------------------------------------------------------------- |
+| `slotSize`         | Origin-free allocation slot resolved from the proposal                           |
+| `allocationBounds` | Real child-local layout occupancy, which may be larger or smaller than the slot  |
+| `visualBounds`     | Final static ink envelope; it describes visual contribution, not slot evaluation |
+| `alignmentGuides?` | One-dimensional child-local guides; Core defines first / last baseline           |
+| `replay`           | Opaque, one-use token for this isolated transaction                              |
 
-An omitted axis is indefinite. A `bounded` axis clamps real occupancy to finite `min` / `max` when producing the slot; an `exact` axis sets the slot size directly. Neither scales child geometry, so the parent solver still owns alignment and overflow policy.
+An `exact` slot axis equals `value`; a `range` axis lies in `[min, max]`, or is at least `min` when unbounded; an intrinsic slot is the size resolved by that contribution probe. `slotSize` has width and height but no origin. The parent solver creates a slot rect in its own coordinate system, then uses real bounds and guides for alignment, overflow, and clipping.
 
-`compile` may also return an explicit `allocationBounds` as the composite's own container box. This gives an empty container a size and lets descendants overflow without expanding their parent. When omitted, Core unions the final children's allocation instead. `context.replay()` turns the selected result into an output child. A replay is valid once in the compile and composite callback that created it. Final emission commits the saved primitives, resources, references, warnings, and artifacts without a third expansion or layout.
+Plain text uses the widest unbreakable unit for x minimum, natural line width for x natural, and can reflow under finite range / exact proposals. Its y contribution is the actual height after applying the complete x proposal. Mixed runs, TeX, Path, Coordinate, and ordinary Scope have no general reflow contract, so they may retain natural allocation while only their slot responds to range / exact. Core does not read dimensions back from DOM, SVG / Canvas, or a renderer, and does not own Box / Flex / Grid / Overlay line, track, or slot policy.
 
-### Compile-local wrapper trees
+### Selection, failure, and commit
 
-After layout is solved, a parent composite may still need to place, clip, or identify a replay. Put numeric transforms and clipping for one replay directly on its replay wrapper. Use `context.scope()` when identity, a local namespace, metadata, zIndex, or recursive structure is required. Scope children can mix ordinary `IRChild` values, `context.replay()` results, and nested `context.scope()` results:
+Each `layoutChild()` runs in an isolated transaction. A parent solver may compare several minimum / natural / range / exact candidates. Discarded resolved results and failed outcomes leak no primitives, resources, warnings, artifacts, namespaces, identities, or observations. Select success with `context.replay(result)`; select failure with `context.raise(failure)`, which preserves the original provider, source path, cause, and complete nested probe occurrence.
+
+Failures, results, replays, and output children are governed by callback-local, compile-local identity. They cannot be forged, reused after copying, passed across callbacks / compiles, or committed twice. An occurrence's `probe[index]` records candidate child dispatch, while `replay[index]` records final output commit; these are different stages.
+
+This complete third-party layout-aware Composite first queries contribution, then sends an allocation proposal. It aligns real allocation inside the slot, projects guides into composite coordinates, and commits only the final result:
 
 ```ts
-compile: (node, context) => {
-  const constrained = context.layoutChild(node.child, {
-    kind: 'constrained',
-    width: { kind: 'exact', size: node.width },
-    height: { kind: 'bounded', max: node.height },
-  });
+import { ChildSchema, CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { z } from 'zod';
 
-  const placed = context.replay(constrained, {
-    transforms: [{ kind: 'translate', x: 12, y: 8 }],
-    clip: { kind: 'rect', x: 0, y: 0, width: node.width, height: node.height },
-  });
+export const cardComposite = defineComposite({
+  namespace: 'demo',
+  type: 'card',
+  schema: CompositeBaseSchema.extend({
+    namespace: z.literal('demo'),
+    type: z.literal('card'),
+    child: ChildSchema,
+    width: z.number().nonnegative(),
+    height: z.number().nonnegative(),
+  }),
+  compile: (node, context) => {
+    const contribution = context.layoutChild(node.child, {
+      x: { kind: 'intrinsic', mode: 'minimum' },
+      y: { kind: 'intrinsic', mode: 'natural' },
+    });
+    if (contribution.kind === 'failed') return context.raise(contribution.failure);
 
-  return {
-    allocationBounds: { x: 0, y: 0, width: node.width, height: node.height },
-    children: [
-      context.scope(
-        {
-          id: 'cell',
-          meta: { role: 'cell' },
-        },
-        [placed],
-      ),
-    ],
-  };
-};
+    const final = context.layoutChild(node.child, {
+      x: { kind: 'exact', value: Math.max(node.width, contribution.result.slotSize.width) },
+      y: { kind: 'range', min: 0, max: node.height },
+    });
+    if (final.kind === 'failed') return context.raise(final.failure);
+
+    const { slotSize, allocationBounds } = final.result;
+    const x = 8 + (slotSize.width - allocationBounds.width) / 2 - allocationBounds.x;
+    const y = 8 + (slotSize.height - allocationBounds.height) / 2 - allocationBounds.y;
+
+    return {
+      allocationBounds: { x: 0, y: 0, width: slotSize.width + 16, height: slotSize.height + 16 },
+      alignmentGuides: final.result.alignmentGuides?.map(guide => ({
+        ...guide,
+        position: guide.position + (guide.dimension === 'x' ? x : y),
+      })),
+      children: [
+        context.replay(final.result, {
+          transforms: [{ kind: 'translate', x, y }],
+          clip: { kind: 'rect', x: 8, y: 8, width: slotSize.width, height: slotSize.height },
+        }),
+      ],
+    };
+  },
+});
 ```
 
-A replay wrapper's clip applies in child-local coordinates before `transforms` project it. Clipping leaves allocation unchanged and only tightens the final committed Scene's compile visual bounds; it does not rewrite an earlier `LayoutChildResult.visualBounds`. Builders return opaque handles that cannot be inspected, forged, or serialized; they exist only in the current `compileToScene()` session. Cross-compile or cross-callback use, duplicate replay, and forged handles all fail loudly. Core still emits the existing Tier 1 Scene, resources, and occurrence locators, so wrappers add no IR, Scene, or renderer contract.
-
-This is not a Table-specific interface. Any Tier 2 composite that needs “measure child content → solve parent layout → constrain child content → place the final result” can reuse it.
+A replay wrapper first places the child with `transforms`, then applies `clip` in the parent allocation coordinate system. It does not rewrite the original `LayoutChildResult`; clipping only tightens the final committed Scene visual contribution. Use `context.scope()` when identity, a local namespace, metadata, zIndex, or recursive structure is needed. Scope may compose ordinary `IRChild`, replay children, and nested scope children without introducing a new IR or Scene-primitive kind, renderer contract, or second compile pipeline.
 
 ### Typed artifacts from the same compile
 
@@ -143,34 +168,46 @@ If you are implementing a domain adapter, injecting `composites` / `embeddables`
       endLine: 90,
     },
     {
+      label: 'Public proposal, probe, guide, and callback contracts',
+      path: 'packages/kernel/core/src/contract/composite/types.ts',
+      startLine: 20,
+      endLine: 205,
+    },
+    {
+      label: 'Validate and freeze proposals and resolve slots',
+      path: 'packages/kernel/core/src/compile/orchestration/layout-proposal.ts',
+      startLine: 15,
+      endLine: 148,
+    },
+    {
       label: 'Build compile-local replay and Scope children',
       path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
-      startLine: 115,
-      endLine: 224,
+      startLine: 197,
+      endLine: 260,
     },
     {
-      label: 'Commit replay roots atomically',
+      label: 'Place replay roots and commit their transaction sinks',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1010,
-      endLine: 1163,
+      startLine: 995,
+      endLine: 1132,
     },
     {
-      label: 'Emit recursive runtime Scopes',
+      label: 'Preflight the complete runtime handle tree before consuming tokens',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1165,
-      endLine: 1242,
+      startLine: 1148,
+      endLine: 1224,
     },
     {
-      label: 'Produce child layout results and container allocation',
+      label: 'Isolate child probes, failures, and resolved results',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1303,
-      endLine: 1456,
+      startLine: 1380,
+      endLine: 1501,
     },
     {
-      label: 'Inject composites and providers into compile context',
-      path: 'packages/kernel/core/src/compile/orchestration/context.ts',
-      startLine: 83,
-      endLine: 124,
+      label: 'Own failures and raise selected failures',
+      path: 'packages/kernel/core/src/compile/probe-failure.ts',
+      startLine: 154,
+      endLine: 208,
     },
   ]}
 />

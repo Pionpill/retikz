@@ -48,65 +48,90 @@ Core 只按顶层 `namespace + type` 路由 composite，不读取领域 schema �
 
 ## 布局感知编译
 
-`CompositeDefinition.expand()` 拿不到文字测量、provider、引用环境或父级约束，因此不能表达“先看真实子内容，再求解父布局”的反馈过程。`compile(node, context)` 为这类 Tier 2 组件提供通用闭环：
+`CompositeDefinition.expand()` 拿不到文字测量、provider、引用环境或父级可用空间，因此不能表达“查询子贡献 → 求解父布局 → 再分配 child slot”的反馈过程。`compile(node, context)` 把这条闭环放在同一次 Core compile 中；根 composite 收到冻结的 `NaturalLayoutProposal`，nested composite 收到父级为该 occurrence 发出的完整双轴 `context.proposal`。
 
-每次 `layoutChild` 都把子布局拆成四个彼此独立的结果：
+Proposal 是父级提供的**可用空间条件**，不是 child 的真实尺寸，也不是 slot 本身。`LayoutProposal` 必须同时给出 `x` 与 `y`：
 
-| 结果               | 含义                                                   |
-| ------------------ | ------------------------------------------------------ |
-| `allocationBounds` | 约束后 child 的真实局部占用，不伪装成目标 slot         |
-| `slotSize`         | 父级按双轴约束分配的 `width` / `height`，不包含 x / y  |
-| `visualBounds`     | 包含描边、marker、shadow、clip 与 transform 的静态包络 |
-| `replay`           | 只允许一次原子提交的 opaque token                      |
+| 单轴 proposal         | 含义                                                     |
+| --------------------- | -------------------------------------------------------- |
+| `intrinsic.minimum`   | 在另一轴 proposal 仍生效时查询最小 contribution          |
+| `intrinsic.natural`   | 在另一轴 proposal 仍生效时查询自然 contribution          |
+| `range { min, max? }` | 在区间内解析 slot；省略 `max` 表示无上限                 |
+| `exact { value }`     | 父 solver 要求固定 slot；不强迫 child 缩放或改变真实几何 |
 
 <ComponentPreview files="layout-aware-compile" size="xl" hideCode />
 
-图中的两次 probe 都返回 allocation bounds、slot size、visual bounds 与 replay，但不会立即发布结果。自然尺寸 probe 的 replay A 只参与求解；父 composite 选定双轴约束后，只有 replay B 沿最后一条边进入单次提交，并与领域 artifact 一起汇入同一个 `CompileResult`。
+图中的每次 probe 都先得到 `resolved` 或 `failed` outcome。Resolved result 再分开保存下面五项；它们不能互相反推或替代：
 
-1. `layoutChild(child, { kind:'intrinsic' })` 测量子内容的自然尺寸；
-2. 父 composite 据 allocation bounds 求解列、行和目标 slot；
-3. 用 `constrained.width` / `constrained.height` 分别传入 `bounded` 或 `exact` 轴约束；
-4. 用 `context.replay(result, { transforms, clip })` 放置并裁剪选中结果；需要 identity 或嵌套结构时，再用 `context.scope(props, children)` 递归组合。
+| 字段               | 含义                                                    |
+| ------------------ | ------------------------------------------------------- |
+| `slotSize`         | proposal 求值后的无原点 allocation slot                 |
+| `allocationBounds` | child 在自身局部坐标中的真实布局占用，可大于或小于 slot |
+| `visualBounds`     | 最终静态墨迹包络，只描述视觉贡献，不参与 slot 求值      |
+| `alignmentGuides?` | child-local 一维 guide；Core 内置 first / last baseline |
+| `replay`           | 对应本次隔离 transaction 的 opaque、one-use token       |
 
-省略某一轴表示 indefinite；`bounded` 把真实占用 clamp 到有限 `min` / `max` 后生成 slot，`exact` 直接给定 slot 尺寸。两者都不会缩放 child 几何，因此父 solver 仍负责对齐位置与 overflow 策略。
+`exact` 轴的 slot 严格等于 `value`；`range` 轴落在 `[min, max]`，无上限时不小于 `min`；intrinsic 的 slot 是该次 contribution probe 解析出的尺寸。`slotSize` 只有 width / height，没有 origin。父 solver 在自己的坐标系里据此建立 slot rect，再用真实 bounds 与 guides 决定 alignment、overflow 和 clip。
 
-`compile` 还可以返回显式 `allocationBounds`，把它作为 composite 自身的 container box。它让空容器拥有尺寸，也允许后代溢出而不反向撑大父容器；省略时才继续合并最终 children 的 allocation。`context.replay()` 把选中结果转为 output child；replay 只在创建它的同一次 compile、同一个 composite callback 中可用一次，最终发出保存的 primitive、资源、引用、warning 与 artifact，不会第三次展开或布局。
+Plain text 的 x minimum 取最宽不可断单元，natural 取自然行宽，有限 range / exact 可以触发换行；y contribution 是应用完整 x proposal 后的真实排版高度。Mixed runs、TeX、Path、Coordinate 与普通 Scope 没有通用重排合同，因此可以保留自然 allocation，只让 slot 响应 range / exact。Core 不从 DOM、SVG / Canvas 或 renderer 回读尺寸，也不拥有 Box / Flex / Grid / Overlay 的 line、track 或 slot policy。
 
-### 编译期局部包装树
+### 选择、失败与提交
 
-布局求解完成后，父 composite 往往还要放置、裁剪或标记 replay。单个 replay 的数值变换与 clip 直接放在 replay wrapper；需要 identity、local namespace、metadata、zIndex 或递归结构时，再用 `context.scope()` 建立 runtime Scope tree。Scope children 可以混合普通 `IRChild`、`context.replay()` 和其它 `context.scope()` 结果：
+每次 `layoutChild()` 都在隔离 transaction 中执行。父 solver 可以比较多组 minimum / natural / range / exact 结果；未选中的 resolved result 与 failed outcome 都不会泄漏 primitive、resource、warning、artifact、namespace、identity 或 observation。选中成功结果时调用 `context.replay(result)`；选中失败时调用 `context.raise(failure)`，Core 会保留原始 provider、source path、cause 与完整 nested probe occurrence。
+
+Failure、result、replay 与 output child 都由 callback-local、compile-local identity 管理，不能伪造、复制后重用、跨 callback / compile 传递或重复提交。Occurrence 中的 `probe[index]` 表示候选 child dispatch，成功提交后的 `replay[index]` 表示最终 output；两者不是同一个阶段。
+
+下面是一个完整的第三方 layout-aware Composite。第一次 probe 查询 contribution，第二次发出 allocation proposal；示例用真实 allocation 对齐 slot、把 guide 投影到 composite 坐标，再只提交最终结果：
 
 ```ts
-compile: (node, context) => {
-  const constrained = context.layoutChild(node.child, {
-    kind: 'constrained',
-    width: { kind: 'exact', size: node.width },
-    height: { kind: 'bounded', max: node.height },
-  });
+import { ChildSchema, CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { z } from 'zod';
 
-  const placed = context.replay(constrained, {
-    transforms: [{ kind: 'translate', x: 12, y: 8 }],
-    clip: { kind: 'rect', x: 0, y: 0, width: node.width, height: node.height },
-  });
+export const cardComposite = defineComposite({
+  namespace: 'demo',
+  type: 'card',
+  schema: CompositeBaseSchema.extend({
+    namespace: z.literal('demo'),
+    type: z.literal('card'),
+    child: ChildSchema,
+    width: z.number().nonnegative(),
+    height: z.number().nonnegative(),
+  }),
+  compile: (node, context) => {
+    const contribution = context.layoutChild(node.child, {
+      x: { kind: 'intrinsic', mode: 'minimum' },
+      y: { kind: 'intrinsic', mode: 'natural' },
+    });
+    if (contribution.kind === 'failed') return context.raise(contribution.failure);
 
-  return {
-    allocationBounds: { x: 0, y: 0, width: node.width, height: node.height },
-    children: [
-      context.scope(
-        {
-          id: 'cell',
-          meta: { role: 'cell' },
-        },
-        [placed],
-      ),
-    ],
-  };
-};
+    const final = context.layoutChild(node.child, {
+      x: { kind: 'exact', value: Math.max(node.width, contribution.result.slotSize.width) },
+      y: { kind: 'range', min: 0, max: node.height },
+    });
+    if (final.kind === 'failed') return context.raise(final.failure);
+
+    const { slotSize, allocationBounds } = final.result;
+    const x = 8 + (slotSize.width - allocationBounds.width) / 2 - allocationBounds.x;
+    const y = 8 + (slotSize.height - allocationBounds.height) / 2 - allocationBounds.y;
+
+    return {
+      allocationBounds: { x: 0, y: 0, width: slotSize.width + 16, height: slotSize.height + 16 },
+      alignmentGuides: final.result.alignmentGuides?.map(guide => ({
+        ...guide,
+        position: guide.position + (guide.dimension === 'x' ? x : y),
+      })),
+      children: [
+        context.replay(final.result, {
+          transforms: [{ kind: 'translate', x, y }],
+          clip: { kind: 'rect', x: 8, y: 8, width: slotSize.width, height: slotSize.height },
+        }),
+      ],
+    };
+  },
+});
 ```
 
-replay wrapper 的 clip 先在 child 局部坐标中生效，再按 `transforms` 投影；clip 不改变 allocation，只收紧最终提交后 Scene 的 compile visual bounds，不回写此前取得的 `LayoutChildResult.visualBounds`。builder 返回的是不可读取、不可伪造或序列化的 opaque handle；它只存在于当前 `compileToScene()` 的内存 session 中。跨 compile、跨 callback、重复 replay 或伪造 handle 都会报错。Core 最终仍输出既有 Tier 1 Scene、resource 与 occurrence；wrapper 不新增 IR、Scene 或 renderer 合同。
-
-任何需要“测量子内容 → 求解父布局 → 约束子内容 → 放置最终结果”的 Tier 2 composite 都可以复用它。
+Replay wrapper 先用 `transforms` 把 child 放进 parent allocation coordinate，再在该父坐标系应用 `clip`。Wrapper 不回写原始 `LayoutChildResult`；clip 只收紧最终提交后的 Scene visual contribution。需要 identity、local namespace、metadata、zIndex 或递归结构时，再用 `context.scope()` 组合普通 `IRChild`、replay child 与 nested scope child。它们都不引入新的 IR / Scene primitive kind、renderer contract 或第二条 compile pipeline。
 
 ### 同次类型化产物
 
@@ -143,34 +168,46 @@ PGFPlots 位于 TikZ 基础图元之上；同样地，`@retikz/plot` 通过 comp
       endLine: 90,
     },
     {
+      label: 'proposal、probe、guide 与 callback 公共合同',
+      path: 'packages/kernel/core/src/contract/composite/types.ts',
+      startLine: 20,
+      endLine: 205,
+    },
+    {
+      label: 'proposal 校验、冻结与 slot 求值',
+      path: 'packages/kernel/core/src/compile/orchestration/layout-proposal.ts',
+      startLine: 15,
+      endLine: 148,
+    },
+    {
       label: 'compile-local replay 与 Scope builder',
       path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
-      startLine: 115,
-      endLine: 224,
+      startLine: 197,
+      endLine: 260,
     },
     {
-      label: 'replay 的逐 root 原子提交',
+      label: 'replay root 的 placement 与各类 sink 提交',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1010,
-      endLine: 1163,
+      startLine: 995,
+      endLine: 1132,
     },
     {
-      label: 'runtime Scope 的递归输出',
+      label: '完整 runtime handle tree 的原子预检与 token 消费',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1165,
-      endLine: 1242,
+      startLine: 1148,
+      endLine: 1224,
     },
     {
-      label: '子布局结果与 container allocation',
+      label: '隔离 child probe、failure 与 resolved result',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1303,
-      endLine: 1456,
+      startLine: 1380,
+      endLine: 1501,
     },
     {
-      label: '在 compile 上下文注入 composite 与 provider',
-      path: 'packages/kernel/core/src/compile/orchestration/context.ts',
-      startLine: 83,
-      endLine: 124,
+      label: 'failure ownership 与受控 raise',
+      path: 'packages/kernel/core/src/compile/probe-failure.ts',
+      startLine: 154,
+      endLine: 208,
     },
   ]}
 />

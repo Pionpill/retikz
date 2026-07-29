@@ -76,29 +76,40 @@ Definitions passed here are appended to the corresponding `BUILTIN_*` collection
 The two `CompositeDefinition` branches are mutually exclusive:
 
 - `expand(node)` performs context-free structural expansion;
-- `compile(node, context)` can use `context.constraint` and `layoutChild(child, constraint)` to lay out real child content in the complete compile environment.
+- `compile(node, context)` evaluates real child content through `context.proposal` and `layoutChild(child, proposal)` in the complete compile environment.
 
-`layoutChild` accepts a `ChildLayoutConstraint` with natural layout or independently optional axes:
+`LayoutProposal` contains exactly `x` and `y`; each axis is a `LayoutAxisProposal`:
 
-| Branch         | Fields                       | Meaning                                                                     |
-| -------------- | ---------------------------- | --------------------------------------------------------------------------- |
-| `intrinsic`    | —                            | Both axes are indefinite; the slot equals real allocation size              |
-| `constrained`  | `width?` / `height?`         | At least one axis is required; an omitted axis stays indefinite             |
-| `bounded` axis | `min?` (default `0`) / `max` | Finite non-negative range; slot size is clamped real allocation size        |
-| `exact` axis   | `size`                       | Finite non-negative slot; does not scale the child or move its local origin |
+| `kind`      | Fields                         | Slot invariant                                                 |
+| ----------- | ------------------------------ | -------------------------------------------------------------- |
+| `intrinsic` | `mode: 'minimum' \| 'natural'` | The contribution resolved in the complete two-axis context     |
+| `range`     | `min` / `max?`                 | In `[min, max]` when bounded, or at least `min` when unbounded |
+| `exact`     | `value`                        | Exactly this finite non-negative value                         |
 
-The public contract is expressed by `ChildLayoutAxisConstraint`, `ChildLayoutSize`, `CompositeReplayWrapper`, and `LayoutCompositeCompileResult`; `layoutChild()` returns a `LayoutChildResult`:
+`NaturalLayoutProposal` is the deeply frozen natural / natural constant and the default proposal for root layout-aware composites. Proposals are strictly validated, detached, cloned, and frozen before child dispatch. Missing axes, extra fields, negatives, NaN, Infinity, and invalid ranges produce occurrence-aware contract errors. Explicit zero is valid and `-0` canonicalizes to `0`.
 
-| Field              | Meaning                                                                              |
-| ------------------ | ------------------------------------------------------------------------------------ |
-| `allocationBounds` | The child's real constrained local occupancy                                         |
-| `slotSize`         | Resolved axis `width` / `height`, with no x / y position or alignment semantics      |
-| `visualBounds`     | Conservative static envelope including stroke / markers / shadow / clip / transforms |
-| `replay`           | One-use compile-local opaque token                                                   |
+`layoutChild()` returns a `LayoutChildProbe`, narrowed by `LayoutChildProbeKind.Resolved` / `Failed`:
 
-A layout-aware `compile` result may declare `allocationBounds` as the composite's container allocation to its parent, so descendant overflow does not expand it. When omitted, Core unions the final children's allocation contributions.
+| Outcome    | Field     | Meaning                                                                                               |
+| ---------- | --------- | ----------------------------------------------------------------------------------------------------- |
+| `resolved` | `result`  | `LayoutChildResult`: resolved slot, real bounds, guides, and a replay transaction                     |
+| `failed`   | `failure` | Callback-local, compile-local opaque `LayoutChildFailure`; discard it or pass it to `context.raise()` |
 
-After solving its parent layout, the composite creates an output child with `context.replay(result, wrapper?)`. The wrapper only accepts `transforms?` and `clip?`: clipping happens in replay-local space before transforms project it, tightens the final committed Scene's compile visual bounds, and leaves allocation unchanged without rewriting an existing `LayoutChildResult.visualBounds`. Final Scene emission reuses the saved layout without expanding, measuring, or laying it out again.
+The fields of `LayoutChildResult` are independent:
+
+| Field              | Meaning                                                                                      |
+| ------------------ | -------------------------------------------------------------------------------------------- |
+| `slotSize`         | Proposal-resolved `width` / `height`, with no origin or alignment semantics                  |
+| `allocationBounds` | Real child-local layout occupancy, which may be larger or smaller than the slot              |
+| `visualBounds`     | Conservative final static primitive-tree ink envelope; not used to resolve slots             |
+| `alignmentGuides?` | One-dimensional child-local guides; `LayoutAlignmentGuideName` defines first / last baseline |
+| `replay`           | One-use opaque token for the isolated transaction                                            |
+
+Plain text computes contextual x minimum / natural contributions and reflows under finite x range / exact proposals. Mixed / TeX authored lines and fixed geometry remain atomic and keep real allocation unscaled. Y minimum / natural is the actual height after applying the complete x proposal. Built-ins reuse Core measurers, providers, and geometry without reading back from DOM or renderers.
+
+A layout-aware `compile` result may declare container `allocationBounds` and `alignmentGuides` already expressed in composite-local allocation coordinates. Core unions final-child allocation when omitted, but does not choose or merge several child guides on behalf of the solver.
+
+The parent solver selects a successful transaction with `context.replay(result, wrapper?)`. `wrapper.transforms` first places the child in parent allocation coordinates; `wrapper.clip` then clips in that parent coordinate system. It only tightens final Scene visual contribution without changing allocation or rewriting an existing `LayoutChildResult.visualBounds`. Final emission reuses the saved layout without expanding, measuring, or laying it out again.
 
 `context.scope(props, children)` recursively wraps ordinary `IRChild` values, replay children, and other runtime Scope children. It exposes exactly the eight structural fields whose semantics remain deterministic after replay:
 
@@ -113,9 +124,11 @@ After solving its parent layout, the composite creates an output child with `con
 | `meta`           | Pass JSON metadata to the Scene group           |
 | `animations`     | Pass Group animation tracks                     |
 
-`context.replay()` and `context.scope()` return runtime-only opaque handles that never enter IR, Scene, or renderer contracts. Handles and layout results cannot cross compiles or composite callbacks, be serialized, or be forged; one replay can be committed only once. Replay wrappers and Scope props are detached, validated, and frozen when their builders are called. Style defaults, `resetStyle`, reference-based transforms, and `placement` are rejected because replayed content has already consumed styles and layout; applying them afterward would create a second compile meaning.
+`context.replay()` and `context.scope()` return runtime-only opaque handles that never enter IR, Scene, or renderer contracts. Failures, layout results, handles, and replays are checked by callback-local / compile-local identity. They cannot cross compiles or callbacks, be serialized, be forged through spreading, or be reused. The complete runtime output tree formed by replay and runtime Scope handles is preflighted before any sink write; ordinary `IRChild` values then continue through the existing compile dispatch. Wrappers and Scope props are detached, validated, and frozen when built.
 
-Final occurrence locators keep the existing `output` / `scopeChild` / `replay` segments, with no new locator kind for nested wrappers. Resources, namespaces, warnings, bounds, and artifacts are still published atomically by the selected replay's single commit.
+Every probe keeps primitives, resources, warnings, artifacts, namespaces, identities, and observations in its isolated transaction. Discarded resolved / failed outcomes have zero observable effect on the final `CompileResult`. `context.raise(failure)` accepts only a failure created by the current callback and throws while preserving the original cause, provider, source path, and nested occurrence.
+
+An occurrence's `probe[index]` segment records candidate `layoutChild()` dispatch. A successful selected transaction remaps that candidate origin to the existing `replay[index]` output commit, while `output` / `scopeChild` continue to describe the compile output tree. Resources, namespaces, warnings, bounds, and artifacts publish atomically only with the selected replay.
 
 A layout-aware definition with `artifactSchema` may return a JSON-safe `artifact` from the same `compile` call. `compileToScene` wraps it as `{ kind:'composite', namespace, type, occurrence, value }`. The occurrence uses an original `sourcePath` plus a structured `expansionPath`; it does not depend on a global Map or captured callback. A precise definition tuple lets `CompileResult` infer the corresponding artifact union.
 
@@ -197,14 +210,26 @@ A custom renderer must consume `resources` and `animations`, otherwise gradients
     {
       label: 'Assemble Scene, resources, and root animations at the compile entry point',
       path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 25,
-      endLine: 53,
+      startLine: 59,
+      endLine: 91,
     },
     {
       label: 'Public CompileResult, artifact, and occurrence contracts',
       path: 'packages/kernel/core/src/compile/types.ts',
       startLine: 70,
       endLine: 128,
+    },
+    {
+      label: 'Public layout proposal, probe, guide, and context contracts',
+      path: 'packages/kernel/core/src/contract/composite/types.ts',
+      startLine: 20,
+      endLine: 205,
+    },
+    {
+      label: 'Proposal runtime validation and resolved slots',
+      path: 'packages/kernel/core/src/compile/orchestration/layout-proposal.ts',
+      startLine: 15,
+      endLine: 148,
     },
     {
       label: 'Occurrence formatter and Node-artifact type guard',
@@ -215,32 +240,50 @@ A custom renderer must consume `resources` and `animations`, otherwise gradients
     {
       label: 'Build compile-local replay and Scope children',
       path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
-      startLine: 115,
-      endLine: 224,
+      startLine: 197,
+      endLine: 260,
     },
     {
-      label: 'Commit replay roots atomically',
+      label: 'Place replay roots and commit their transaction sinks',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1010,
-      endLine: 1163,
+      startLine: 995,
+      endLine: 1132,
+    },
+    {
+      label: 'Preflight the complete runtime handle tree before consuming tokens',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1148,
+      endLine: 1224,
     },
     {
       label: 'Emit recursive runtime Scopes',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1165,
-      endLine: 1242,
+      startLine: 1226,
+      endLine: 1313,
     },
     {
-      label: 'Produce child layout results, artifacts, and container allocation',
+      label: 'Isolate child probes, failures, and resolved results',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1303,
-      endLine: 1456,
+      startLine: 1380,
+      endLine: 1501,
+    },
+    {
+      label: 'Validate and commit callback results, artifacts, and container allocation',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1517,
+      endLine: 1628,
+    },
+    {
+      label: 'Failure ownership and controlled raise',
+      path: 'packages/kernel/core/src/compile/probe-failure.ts',
+      startLine: 154,
+      endLine: 208,
     },
     {
       label: 'Resolve deferred paths and fill their original output slots',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 183,
-      endLine: 209,
+      startLine: 283,
+      endLine: 314,
     },
     {
       label: 'Stably sort Scene primitives by zIndex',

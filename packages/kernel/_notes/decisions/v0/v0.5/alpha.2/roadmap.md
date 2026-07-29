@@ -1,12 +1,12 @@
-# v0.5.0-alpha.2 增量性能与 Box Layout 基建
+# v0.5.0-alpha.2 增量性能、Runtime 策略与 Box Layout 基建
 
-- 状态：扩展中（ADR-01～07 Accepted）
+- 状态：扩展中（ADR-01～07 Accepted；ADR-08 Proposed）
 - 目标版本：`0.5.0-alpha.2`
 - 关联：[v0.5 roadmap](../roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
 ## 目标
 
-alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，并补齐 Standard Box Layout 所需的通用 Core child layout contract：完整 Snapshot 仍是真源，同步 Runtime 根据 ChangeSet 或前后 Snapshot 做局部失效，Core 只重算必要 contribution，renderer 只提交必要 Scene Patch；任何阶段无法证明局部等价时扩大失效范围或完整重建。Flex、Grid、Overlay solver 仍由 Standard 拥有，Kernel 只提供双轴 constraint、slot feedback、显式 composite allocation 与 replay wrapper。
+alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，并补齐 Standard Box Layout 所需的通用 Core child layout contract：完整 Snapshot 仍是真源，同步 Runtime 根据 ChangeSet 或前后 Snapshot 做局部失效，Core 只重算必要 contribution，renderer 只提交必要 Scene Patch；任何阶段无法证明局部等价时扩大失效范围或完整重建。Box、Flex、Grid、Overlay solver 的领域规则与 baseline alignment policy 仍由 Standard 拥有，Kernel 提供双轴 proposal、minimum / natural probe、resolved slot、真实 allocation / visual bounds、alignment guide、隔离失败与 replay wrapper。
 
 本 milestone 不以极限大数据吞吐为目标，而以中等规模图形持续更新时减少无效工作、缩短更新延迟和 renderer commit 为验收重点。首次完整渲染不得明显退化。
 
@@ -21,6 +21,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | [ADR-05](./05-scene-patch-retained-renderer.md)      | Accepted | Scene Patch 与 retained renderer | 冻结 identity topology、commit participant 与 SVG/Canvas retained lifecycle                |
 | [ADR-06](./06-box-layout-composite-contract.md)      | Accepted | Box Layout Composite contract    | 冻结双轴 constraint、allocation / slot-size feedback、nested propagation 与 replay wrapper |
 | [ADR-07](./07-runtime-execution-policy.md)           | Accepted | Runtime 执行模式与更新策略       | 显式选择 static / retained，并在 retained Session 中选择 auto / full 更新                  |
+| [ADR-08](./08-layout-proposal-probe-contract.md)     | Proposed | Layout proposal / probe contract | 冻结双轴 proposal、minimum / natural、resolved slot、guide、failure isolation 与 replay    |
 
 ## 当前进度
 
@@ -29,18 +30,20 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-05 已完成 Runtime commit participant、Render retained runtime、SVG/Canvas事务后端、React/Vanilla session接线、5000规模确定性/计时门禁与双语文档，并于2026-07-29获人工接受。
 - ADR-06 已完成双轴 constraint、`slotSize`、显式 composite allocation、完整 replay wrapper、Table consumer 迁移、对抗测试与双语文档，并于 2026-07-28 获人工接受。
 - ADR-07 已完成 Architecture Gate、Runtime/Core/Render/React/Vanilla实现、SVG/Canvas三策略Bench A/B、对抗测试与双语文档，并于2026-07-29获人工接受。
+- ADR-08 已完成双轴 proposal、resolved slot、真实 allocation / visual bounds、alignment guide、隔离 failure、one-use replay、Table consumer 迁移、对抗测试与双语文档；Architecture Gate Round 3/3 PASS，当前保持 Proposed，等待人工最终 review 与接受。
 
 ## 执行批次
 
-| 批次 | ADR    | 进入条件                                              | 退出条件                                                                   |
-| ---- | ------ | ----------------------------------------------------- | -------------------------------------------------------------------------- |
-| 0    | ADR-01 | alpha.1 发布准备完成                                  | Runtime trace 切片、full baseline 与预算获得人工确认                       |
-| 1    | ADR-02 | ADR-01 runtime/trace 可复现                           | identity、Owner Definition/registry 与 owned value 稳定                    |
-| 2    | ADR-03 | ADR-02 owner contract Accepted                        | 同步 Program graph / transaction lifecycle 稳定                            |
-| 3    | ADR-04 | ADR-03 Accepted                                       | 完整 Program、stable Diff、fallback 与首个安全局部更新闭环稳定             |
-| 4    | ADR-06 | alpha.1 ADR-07 已 Accepted；Standard Core Gate 已明确 | 完整 compile 的双轴 constraint、slot size、nested 与 wrapper contract 稳定 |
-| 5    | ADR-05 | ADR-04 可产出稳定 Scene Patch                         | SVG / Canvas patch 与完整 redraw 等价，并有可测收益                        |
-| 6    | ADR-07 | ADR-03～05 Accepted                                   | static / retained 与 auto / full 可显式选择、对比并保持默认行为不变        |
+| 批次 | ADR    | 进入条件                                               | 退出条件                                                                   |
+| ---- | ------ | ------------------------------------------------------ | -------------------------------------------------------------------------- |
+| 0    | ADR-01 | alpha.1 发布准备完成                                   | Runtime trace 切片、full baseline 与预算获得人工确认                       |
+| 1    | ADR-02 | ADR-01 runtime/trace 可复现                            | identity、Owner Definition/registry 与 owned value 稳定                    |
+| 2    | ADR-03 | ADR-02 owner contract Accepted                         | 同步 Program graph / transaction lifecycle 稳定                            |
+| 3    | ADR-04 | ADR-03 Accepted                                        | 完整 Program、stable Diff、fallback 与首个安全局部更新闭环稳定             |
+| 4    | ADR-06 | alpha.1 ADR-07 已 Accepted；Standard Core Gate 已明确  | 完整 compile 的双轴 constraint、slot size、nested 与 wrapper contract 稳定 |
+| 5    | ADR-05 | ADR-04 可产出稳定 Scene Patch                          | SVG / Canvas patch 与完整 redraw 等价，并有可测收益                        |
+| 6    | ADR-07 | ADR-03～05 Accepted                                    | static / retained 与 auto / full 可显式选择、对比并保持默认行为不变        |
+| 7    | ADR-08 | ADR-06 Accepted；Standard alpha.2 Core Gate 缺口已明确 | proposal / probe / slot / guide / failure / replay contract 稳定           |
 
 批次存在硬依赖，不并行实施。每条 ADR 分别完成 `test-contract`、Architecture Gate 与人工实现授权。
 
@@ -57,7 +60,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 
 - benchmark 覆盖5000实体首次渲染、单实体更新、稳定Group update、replace fallback与真实dispose live handles。
 - 至少一个真实持续更新场景贯通 `Snapshot / ChangeSet → Core 增量 compile → Scene Patch → SVG / Canvas retained commit`。
-- 任意合法 `IRChild` 可通过同一 layout-aware composite 主链接受双轴 constraint，返回真实 allocation / slot size / visual bounds，并以 transform / clip wrapper replay；target slot位置与对齐由父solver决定，nested layout与空container不需要Standard私有测量或透明primitive。
+- 任意合法 `IRChild` 可通过同一 layout-aware Composite 主链接受双轴 minimum / natural / range / exact proposal，返回 resolved slot、真实 allocation / visual bounds、可选 alignment guides 或隔离 failure，并以 transform / clip wrapper replay；target slot 位置、baseline alignment policy 与 overflow 由父 solver 决定，nested layout 与空 container 不需要 Standard 私有测量或透明 primitive。
 - 每个增量场景都有与完整重建的等价性证据；错误或不安全输入明确 fallback。
 - 同时记录同环境median/p95/max、访问/复用/变更实体数、Patch/trace基数、renderer commit与live handles。
 - 首次完整渲染和静态 SSR / 导出路径没有超出 ADR-01 冻结的回归预算。
@@ -75,7 +78,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - progressive materialization 与 LLM generation session。
 - pointer、keyboard、focus、selection、drag、brush、zoom 等交互语义。
 - Plot / Table 的完整领域增量算法；alpha.2 只要求至少一个跨 Tier fixture 验证通用契约。
-- Flex / Grid / Overlay solver、LayoutItem schema、baseline alignment 与完整 CSS intrinsic sizing。
+- Box / Flex / Grid / Overlay solver、LayoutItem schema、Standard baseline alignment policy 与完整 CSS intrinsic sizing；Core 只提供领域中立的 alignment guide contract。
 - 为既有 `0.x` API 保留兼容桥接。
 
 ## 授权边界

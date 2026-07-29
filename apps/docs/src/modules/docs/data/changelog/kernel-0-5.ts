@@ -110,10 +110,10 @@ export const kernelV05: Release = {
           },
         },
         {
-          label: { zh: '布局感知 Composite 与显式产物', en: 'Layout-aware composites and explicit artifacts' },
+          label: { zh: '上下文化 layout proposal', en: 'Contextual layout proposals' },
           content: {
-            zh: '`defineComposite()` 的 `compile` 分支支持双轴 bounded / exact child constraint、独立 `slotSize`、显式 container allocation，以及带 transform / clip wrapper 的单次 replay。迁移时把 `constrained.maxWidth` 改为 `constrained.width` 轴，为自建 `LayoutChildResult` 补齐必填 `slotSize`，并把 replay 的 transform 数组移入 `wrapper.transforms`。`compileToScene()` 同次返回 `{ scene, artifacts }`。',
-            en: '`defineComposite()` compile branches support two-axis bounded or exact child constraints, independent `slotSize`, explicit container allocation, and one replay with a transform/clip wrapper. To migrate, replace `constrained.maxWidth` with a `constrained.width` axis, add the required `slotSize` to manually constructed `LayoutChildResult` values, and move a replay transform array into `wrapper.transforms`. `compileToScene()` returns `{ scene, artifacts }` from the same compile.',
+            zh: '`defineComposite()` 的 `compile` 分支以双轴 minimum / natural / range / exact proposal 查询任意 child，独立返回 resolved `slotSize`、真实 allocation / visual bounds 与 alignment guides。每次 probe 的成功或失败 transaction 保持隔离；solver 通过 one-use `replay()` 或 occurrence-aware `raise()` 选择结果。此变更删除 `ChildLayoutAxisConstraint`、`ChildLayoutConstraint` 与 `ChildLayoutSize`，把 `context.constraint` 改为 `context.proposal`，并把 `layoutChild()` 返回值改为需按 `kind` narrowing 的 `LayoutChildProbe`；原 fail-loud consumer 应对 `failed` 调用 `raise()`，不提供旧别名或兼容 overload。',
+            en: '`defineComposite()` compile branches query any child with two-axis minimum / natural / range / exact proposals and independently return resolved `slotSize`, real allocation / visual bounds, and alignment guides. Every successful or failed probe transaction stays isolated until the solver selects it through one-use `replay()` or occurrence-aware `raise()`. This breaking change removes `ChildLayoutAxisConstraint`, `ChildLayoutConstraint`, and `ChildLayoutSize`, renames `context.constraint` to `context.proposal`, and makes `layoutChild()` return a `LayoutChildProbe` that must be narrowed by `kind`; consumers preserving fail-loud behavior should call `raise()` for `failed`, with no legacy aliases or compatibility overloads.',
           },
         },
         {
@@ -127,10 +127,10 @@ export const kernelV05: Release = {
       subVersions: [
         {
           version: 'alpha.2',
-          date: '2026-07-28',
+          date: '2026-07-29',
           summary: {
-            zh: '交付 Core Runtime Program、单 root Node fill 局部增量闭环，以及布局感知 Composite 的双轴 slot、显式 allocation 与 replay wrapper。',
-            en: 'Ships the Core Runtime Program and one-root Node fill incremental path, plus two-axis slots, explicit allocation, and replay wrappers for layout-aware composites.',
+            zh: '交付 Core Runtime Program、单 root Node fill 局部增量闭环，以及布局感知 Composite 的双轴 proposal、resolved slot、guide、failure isolation 与 replay。',
+            en: 'Ships the Core Runtime Program and one-root Node fill incremental path, plus two-axis proposals, resolved slots, guides, failure isolation, and replay for layout-aware composites.',
           },
           items: [],
         },
