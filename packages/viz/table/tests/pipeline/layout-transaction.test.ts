@@ -1,6 +1,14 @@
 import type { LayoutCompositeCompileContext, NodeLayoutCompileArtifact } from '@retikz/core';
 
-import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
+import {
+  compileToScene,
+  CompositeBaseSchema,
+  defineComposite,
+  LayoutAxisProposalKind,
+  LayoutChildProbeKind,
+  LayoutIntrinsicMode,
+  NaturalLayoutProposal,
+} from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -115,13 +123,13 @@ describe('Table layout transaction', () => {
     expect(nodeArtifact?.value.rect).toMatchObject({ x: 30, y: 25, width: 50, height: 10 });
   });
 
-  it('uses constrained layout as the selected wrap replay and publishes its nested artifact once', () => {
-    const calls: Array<{ kind: string; maxWidth?: number }> = [];
+  it('uses a full finite range proposal as the selected wrap replay and publishes its nested artifact once', () => {
+    const calls: Array<LayoutCompositeCompileContext['proposal']> = [];
     const ProbeSchema = CompositeBaseSchema.extend({
       namespace: z.literal('fixture'),
       type: z.literal('probe'),
     });
-    const ProbeArtifactSchema = z.strictObject({ kind: z.enum(['intrinsic', 'constrained']), maxWidth: z.number() });
+    const ProbeArtifactSchema = z.strictObject({ mode: z.enum(['natural', 'range']), maxWidth: z.number() });
     const probe = defineComposite({
       namespace: 'fixture',
       type: 'probe',
@@ -129,13 +137,11 @@ describe('Table layout transaction', () => {
       artifactSchema: ProbeArtifactSchema,
       compile: (_node, context) => {
         const maxWidth =
-          context.constraint.kind === 'constrained' && context.constraint.width?.kind === 'bounded'
-            ? context.constraint.width.max
+          context.proposal.x.kind === LayoutAxisProposalKind.Range && context.proposal.x.max !== undefined
+            ? context.proposal.x.max
             : 100;
-        calls.push({
-          kind: context.constraint.kind,
-          ...(context.constraint.kind === 'constrained' ? { maxWidth } : {}),
-        });
+        calls.push(context.proposal);
+        const mode = context.proposal.x.kind === LayoutAxisProposalKind.Range ? 'range' : 'natural';
         return {
           children: [
             {
@@ -143,11 +149,11 @@ describe('Table layout transaction', () => {
               id: 'wrapped-node',
               position: [0, 0],
               shape: 'rectangle',
-              minimumSize: { width: maxWidth, height: context.constraint.kind === 'constrained' ? 40 : 20 },
+              minimumSize: { width: maxWidth, height: mode === 'range' ? 40 : 20 },
               padding: 0,
             },
           ],
-          artifact: { kind: context.constraint.kind, maxWidth },
+          artifact: { mode, maxWidth },
         };
       },
     });
@@ -173,18 +179,24 @@ describe('Table layout transaction', () => {
       artifact => artifact.kind === 'composite' && artifact.namespace === 'fixture',
     );
 
-    expect(calls).toEqual([{ kind: 'intrinsic' }, { kind: 'constrained', maxWidth: 50 }]);
+    expect(calls).toEqual([
+      NaturalLayoutProposal,
+      {
+        x: { kind: LayoutAxisProposalKind.Range, min: 0, max: 50 },
+        y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
+      },
+    ]);
     expect(probeArtifacts).toHaveLength(1);
-    expect(probeArtifacts[0]?.value).toEqual({ kind: 'constrained', maxWidth: 50 });
+    expect(probeArtifacts[0]?.value).toEqual({ mode: 'range', maxWidth: 50 });
     expect(result.manifest.rows[0].size).toBe(50);
     expect(result.manifest.cells[0].sourceAllocationBounds.height).toBe(40);
     expect(result.manifest.cells[0].contentAllocationBounds.height).toBe(40);
   });
 
   it.each([
-    ['exact', { kind: 'exact', size: 60 }],
-    ['bounded', { kind: 'bounded', max: 60 }],
-  ] as const)('maps an explicit parent %s width into the column solver exactly once', (_kind, width) => {
+    ['exact', { kind: LayoutAxisProposalKind.Exact, value: 60 }],
+    ['finite range', { kind: LayoutAxisProposalKind.Range, min: 10, max: 60 }],
+  ] as const)('maps an explicit parent %s width into the column solver exactly once', (_kind, x) => {
     const OuterSchema = CompositeBaseSchema.extend({
       namespace: z.literal('fixture'),
       type: z.literal('outer'),
@@ -195,11 +207,12 @@ describe('Table layout transaction', () => {
       type: 'outer',
       schema: OuterSchema,
       compile: (node, context) => {
-        const table = context.layoutChild(node.table, {
-          kind: 'constrained',
-          width,
+        const tableProbe = context.layoutChild(node.table, {
+          x,
+          y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
         });
-        return { children: [context.replay(table)] };
+        if (tableProbe.kind === LayoutChildProbeKind.Failed) return context.raise(tableProbe.failure);
+        return { children: [context.replay(tableProbe.result)] };
       },
     });
     const nested: IRTableSpec = {
@@ -226,6 +239,67 @@ describe('Table layout transaction', () => {
 
     expect(tableArtifact?.value.allocationBounds).toEqual({ x: 0, y: 0, width: 60, height: 10 });
     expect(tableArtifact?.value.columns.map(column => column.size)).toEqual([28, 28]);
+  });
+
+  it.each([
+    ['minimum', { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Minimum }, 20],
+    ['natural', { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural }, 20],
+    ['unbounded range', { kind: LayoutAxisProposalKind.Range, min: 0 }, 20],
+    ['explicit exact zero', { kind: LayoutAxisProposalKind.Exact, value: 0 }, 0],
+  ] as const)('maps parent %s without inventing or dropping a column limit', (_kind, x, expectedWidth) => {
+    const OuterSchema = CompositeBaseSchema.extend({
+      namespace: z.literal('fixture'),
+      type: z.literal('limit-observer'),
+      table: TableSpecSchema,
+    });
+    const outer = defineComposite({
+      namespace: 'fixture',
+      type: 'limit-observer',
+      schema: OuterSchema,
+      compile: (node, context) => {
+        const tableProbe = context.layoutChild(node.table, {
+          x,
+          y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
+        });
+        if (tableProbe.kind === LayoutChildProbeKind.Failed) return context.raise(tableProbe.failure);
+        return { children: [context.replay(tableProbe.result)] };
+      },
+    });
+    const nested: IRTableSpec = {
+      namespace: TABLE_NAMESPACE,
+      type: TableComposite.Table,
+      structure: {
+        kind: 'manual',
+        rows: 1,
+        columns: 1,
+        cells: [
+          {
+            address: { row: 0, column: 0 },
+            payload: {
+              kind: 'content',
+              content: { type: 'node', position: [0, 0], minimumSize: 20, padding: 0 },
+            },
+          },
+        ],
+      },
+      layout: {
+        columnSize: { kind: 'fraction' },
+        rowSize: { kind: 'fixed', value: 10 },
+      },
+    };
+    const result = compileToScene(
+      {
+        type: 'scene',
+        version: 1,
+        children: [{ namespace: 'fixture', type: 'limit-observer', table: nested }],
+      },
+      { composites: [...lowerTables({}), outer], padding: 0 },
+    );
+    const tableArtifact = result.artifacts.find(
+      (artifact): artifact is TableCompileArtifact => artifact.kind === 'composite',
+    );
+
+    expect(tableArtifact?.value.allocationBounds.width).toBe(expectedWidth);
   });
 
   it('keeps zero-size clipped Cell identity while omitting its selected replay', () => {
@@ -316,6 +390,58 @@ describe('Table layout transaction', () => {
     expect(result.manifest.cells[0].cellId).toBe('nested-cell');
   });
 
+  it('keeps a fatal nested Cell contract error fatal when an ancestor discards the Table probe', () => {
+    const malformed = defineComposite({
+      namespace: 'fixture',
+      type: 'malformed-cell-output',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('fixture'),
+        type: z.literal('malformed-cell-output'),
+      }),
+      compile: () => ({ children: [{ type: 'bogus' } as never] }),
+    });
+    const OuterSchema = CompositeBaseSchema.extend({
+      namespace: z.literal('fixture'),
+      type: z.literal('discard-table-probe'),
+      table: TableSpecSchema,
+    });
+    const outer = defineComposite({
+      namespace: 'fixture',
+      type: 'discard-table-probe',
+      schema: OuterSchema,
+      compile: (node, context) => {
+        context.layoutChild(node.table, NaturalLayoutProposal);
+        return { children: [] };
+      },
+    });
+    const table: IRTableSpec = {
+      namespace: TABLE_NAMESPACE,
+      type: TableComposite.Table,
+      structure: {
+        kind: 'manual',
+        rows: 1,
+        columns: 1,
+        cells: [
+          {
+            address: { row: 0, column: 0 },
+            payload: { kind: 'content', content: { namespace: 'fixture', type: 'malformed-cell-output' } },
+          },
+        ],
+      },
+    };
+
+    expect(() =>
+      compileToScene(
+        {
+          version: 1,
+          type: 'scene',
+          children: [{ namespace: 'fixture', type: 'discard-table-probe', table }],
+        },
+        { composites: [malformed, ...lowerTables({}), outer] },
+      ),
+    ).toThrow(/malformed-cell-output.*invalid output child.*index 0/i);
+  });
+
   it('associates intrinsic Cell layout failures with the Table and Cell while preserving the cause', () => {
     const rootCause = new Error('fixture intrinsic failure');
     const FailingSchema = CompositeBaseSchema.extend({
@@ -355,6 +481,7 @@ describe('Table layout transaction', () => {
       thrown = error;
     }
     const chain = errorChainOf(thrown);
+    const message = thrown instanceof Error ? thrown.message : '';
 
     expect(
       chain.some(
@@ -365,6 +492,76 @@ describe('Table layout transaction', () => {
       ),
     ).toBe(true);
     expect(chain).toContain(rootCause);
+    expect(chain.some(error => error.message.includes('children[0]'))).toBe(true);
+    expect(message.match(/Layout child provider/g)).toHaveLength(1);
+    expect(message).toContain("Layout child provider 'fixture.intrinsic-failure'");
+    expect(message).not.toContain("Layout child provider 'table.table'");
+  });
+
+  it('keeps one leaf failure envelope when an outer solver raises a failed Table probe', () => {
+    const rootCause = new Error('fixture nested Table failure');
+    const failing = defineComposite({
+      namespace: 'fixture',
+      type: 'nested-table-failure',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('fixture'),
+        type: z.literal('nested-table-failure'),
+      }),
+      compile: () => {
+        throw rootCause;
+      },
+    });
+    const table: IRTableSpec = {
+      namespace: TABLE_NAMESPACE,
+      type: TableComposite.Table,
+      id: 'orders',
+      structure: {
+        kind: 'manual',
+        rows: 1,
+        columns: 1,
+        cells: [
+          {
+            id: 'total',
+            address: { row: 0, column: 0 },
+            payload: { kind: 'content', content: { namespace: 'fixture', type: 'nested-table-failure' } },
+          },
+        ],
+      },
+    };
+    const outer = defineComposite({
+      namespace: 'fixture',
+      type: 'nested-table-failure-outer',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('fixture'),
+        type: z.literal('nested-table-failure-outer'),
+        table: TableSpecSchema,
+      }),
+      compile: (node, context) => {
+        const probe = context.layoutChild(node.table, NaturalLayoutProposal);
+        if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+        return { children: [context.replay(probe.result)] };
+      },
+    });
+
+    let thrown: unknown;
+    try {
+      compileToScene(
+        {
+          version: 1,
+          type: 'scene',
+          children: [{ namespace: 'fixture', type: 'nested-table-failure-outer', table }],
+        },
+        { composites: [failing, ...lowerTables({}), outer] },
+      );
+    } catch (error) {
+      thrown = error;
+    }
+    const message = thrown instanceof Error ? thrown.message : '';
+
+    expect(message.match(/Layout child provider/g)).toHaveLength(1);
+    expect(message).toContain("Layout child provider 'fixture.nested-table-failure'");
+    expect(message).not.toContain("Layout child provider 'table.table'");
+    expect(errorChainOf(thrown)).toContain(rootCause);
   });
 
   it('associates constrained Cell layout failures with the Table and Cell while preserving the cause', () => {
@@ -378,7 +575,7 @@ describe('Table layout transaction', () => {
       type: 'constrained-failure',
       schema: FailingSchema,
       compile: (_node, context) => {
-        if (context.constraint.kind === 'constrained') throw rootCause;
+        if (context.proposal.x.kind === LayoutAxisProposalKind.Range) throw rootCause;
         return {
           children: [
             {
@@ -428,22 +625,11 @@ describe('Table layout transaction', () => {
       ),
     ).toBe(true);
     expect(chain).toContain(rootCause);
+    expect(chain.some(error => error.message.includes('children[0]'))).toBe(true);
   });
 
   it('associates Border Scope layout failures with the Table while preserving the cause', () => {
     const rootCause = new Error('fixture border failure');
-    const context: LayoutCompositeCompileContext = {
-      constraint: { kind: 'intrinsic' },
-      layoutChild: () => {
-        throw rootCause;
-      },
-      replay: () => {
-        throw new Error('unexpected replay');
-      },
-      scope: () => {
-        throw new Error('unexpected scope');
-      },
-    };
     const spec: IRTableSpec = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
@@ -455,10 +641,63 @@ describe('Table layout transaction', () => {
         borders: { outer: { kind: 'line' } },
       },
     };
+    const failing = defineComposite({
+      namespace: 'fixture',
+      type: 'border-failure',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('fixture'),
+        type: z.literal('border-failure'),
+      }),
+      compile: () => {
+        throw rootCause;
+      },
+    });
+    let borderLayoutCalls = 0;
+    let raisedFailure: unknown;
+    let expectedFailure: unknown;
+    const harness = defineComposite({
+      namespace: 'fixture',
+      type: 'border-harness',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('fixture'),
+        type: z.literal('border-harness'),
+      }),
+      compile: (_node, context) => {
+        const failedProbe = context.layoutChild(
+          { namespace: 'fixture', type: 'border-failure' },
+          NaturalLayoutProposal,
+        );
+        if (failedProbe.kind === LayoutChildProbeKind.Resolved) {
+          throw new Error('expected a real failed Border fixture probe');
+        }
+        expectedFailure = failedProbe.failure;
+        const tableContext: LayoutCompositeCompileContext = {
+          ...context,
+          layoutChild: (_child, proposal) => {
+            borderLayoutCalls += 1;
+            expect(proposal).toEqual(NaturalLayoutProposal);
+            return failedProbe;
+          },
+          raise: failure => {
+            raisedFailure = failure;
+            return context.raise(failure);
+          },
+        };
+        resolveTableTransaction(spec, {}, {}, tableContext);
+        return { children: [] };
+      },
+    });
 
     let thrown: unknown;
     try {
-      resolveTableTransaction(spec, {}, {}, context);
+      compileToScene(
+        {
+          version: 1,
+          type: 'scene',
+          children: [{ namespace: 'fixture', type: 'border-harness' }],
+        },
+        { composites: [failing, harness] },
+      );
     } catch (error) {
       thrown = error;
     }
@@ -468,5 +707,7 @@ describe('Table layout transaction', () => {
       chain.some(error => error.message.includes('Border Scope layout') && error.message.includes('table "orders"')),
     ).toBe(true);
     expect(chain).toContain(rootCause);
+    expect(borderLayoutCalls).toBe(1);
+    expect(raisedFailure).toBe(expectedFailure);
   });
 });
