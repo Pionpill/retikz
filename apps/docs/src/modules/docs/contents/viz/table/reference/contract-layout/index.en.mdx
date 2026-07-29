@@ -1,0 +1,118 @@
+---
+title: Contract - Layout
+description: Look up Cell span/layout, track sizing, sparse overrides, and border-input JSON schemas.
+---
+
+Layout contracts describe how Cells occupy tracks, how content fits a Cell box, and how a Table configures tracks and borders. This page lists inputs; see [Artifact contracts](/viz/table/reference/manifest) for resolved geometry and provenance after compile.
+
+## Cell layout
+
+### TableCellSpanSchema
+
+<ZodSchema name="TableCellSpanSchema" />
+
+A span cannot leave the row/column range, overlap another Cell, or cross row kinds.
+
+### TableCellLayoutSchema
+
+<ZodSchema name="TableCellLayoutSchema" />
+
+Horizontal alignment values are <ApiValues name="TableHorizontalAlignment" />, vertical alignment values are <ApiValues name="TableVerticalAlignment" />, fit values are <ApiValues name="TableCellFit" />, and overflow values are <ApiValues name="TableCellOverflow" />.
+
+### TableCellFitSchema
+
+<ZodSchema name="TableCellFitSchema" />
+
+### TableCellOverflowSchema
+
+<ZodSchema name="TableCellOverflowSchema" />
+
+## Table layout
+
+### TableLayoutSchema
+
+<ZodSchema name="TableLayoutSchema" />
+
+Omitted fields resolve to fixed `120` columns, fixed `32` body rows, header rows that follow the body default, and zero gaps. `auto` and `minmax` consume content contributions; fractions expand columns only under a finite parent-width constraint, while rows currently use natural contributions.
+
+## Track size primitives
+
+The following primitives are used directly by `TableLayoutSchema.columnSize` / `rowSize` / `headerRowSize` and sparse overrides. They express fixed sizes, intrinsic content sizes, remaining-space fractions, and bounded tracks.
+
+Track size discriminators are <ApiValues name="TableTrackSizeKind" />.
+
+### TableFixedTrackSizeSchema
+
+<ZodSchema name="TableFixedTrackSizeSchema" />
+
+A fixed value may be `0` to represent an explicitly collapsed track.
+
+### TableAutoTrackSizeSchema
+
+<ZodSchema name="TableAutoTrackSizeSchema" />
+
+### TableFractionTrackSizeSchema
+
+<ZodSchema name="TableFractionTrackSizeSchema" />
+
+The runtime materializes an omitted `weight` as `1`.
+
+### TableMinmaxTrackSizeSchema
+
+<ZodSchema name="TableMinmaxTrackSizeSchema" />
+
+When both bounds are fixed, `min.value` cannot exceed `max.value`. The minimum accepts fixed or auto sizing; the maximum accepts fixed, auto, or fraction sizing.
+
+### TableTrackSizeSchema
+
+<ZodSchema name="TableTrackSizeSchema" />
+
+### TableTrackOverrideSchema
+
+<ZodSchema name="TableTrackOverrideSchema" />
+
+### TableTrackOverridesSchema
+
+<ZodSchema name="TableTrackOverridesSchema" />
+
+The list is sparse, so callers declare only the canonical indexes they need to replace. The schema rejects duplicate indexes. The later layout resolver checks indexes against the actual row or column count.
+
+## Border configuration
+
+Border candidate kinds are <ApiValues name="TableBorderKind" />; table-wide topology modes are <ApiValues name="TableBorderMode" />. `collapse` resolves shared-edge candidates together, while `separate` retains each real Cell side.
+
+### TableNoBorderSchema
+
+<ZodSchema name="TableNoBorderSchema" />
+
+### TableLineBorderSchema
+
+<ZodSchema name="TableLineBorderSchema" />
+
+### TableBorderSchema
+
+<ZodSchema name="TableBorderSchema" />
+
+### TableCellBordersSchema
+
+<ZodSchema name="TableCellBordersSchema" />
+
+### TableBordersSchema
+
+<ZodSchema name="TableBordersSchema" />
+
+Cell-side candidates outrank table defaults. Shared atomic edges compare `priority`, source specificity, and canonical source order. `kind: 'none'` explicitly suppresses lower-priority lines.
+
+## Contract migration
+
+| Previous field                               | Current field                                            |
+| -------------------------------------------- | -------------------------------------------------------- |
+| `columnWidth` / `rowHeight` / `headerHeight` | `columnSize` / `rowSize` / `headerRowSize` track objects |
+
+## Related
+
+- [Table contracts](/viz/table/reference/contract-table) — TableSpec, manual Cells, and canonical payloads
+- [Detail Table contracts](/viz/table/reference/contract-detail) — how detail columns reference Cell layout
+- [Artifact contracts](/viz/table/reference/manifest) — resolved tracks, Cell boxes, and border provenance
+- [Runtime](/viz/table/reference/runtime) — how to compile and observe layout artifacts
+- [Table Model](/viz/table/model) — where layout configuration sits in the complete Table pipeline

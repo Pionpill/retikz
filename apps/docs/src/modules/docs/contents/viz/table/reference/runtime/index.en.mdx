@@ -5,7 +5,7 @@ description: Look up how React, Vanilla, and direct compile entries share one Ta
 
 TableSpec stores only JSON-safe structure. Datasets, Definitions, Core compile options, and host capabilities arrive at runtime. Every standalone entry measures content, solves tracks, replays selected content, and produces both Scene and manifest inside one Core compile; sidecar observation no longer runs a second lowering pass.
 
-> This page explains runtime wiring and execution without repeating schema fields. See [Table contracts](/viz/table/reference/contract-table) for the JSON shapes of TableSpec, Cells, tracks, borders, and manifests.
+> This page explains runtime wiring and execution without repeating schema fields. See [Table contracts](/viz/table/reference/contract-table) for TableSpec and Cell content, [Layout contracts](/viz/table/reference/contract-layout) for track and border inputs, and [Artifact contracts](/viz/table/reference/manifest) for compile outputs.
 
 <ComponentPreview files="table-runtime-flow" hideCode size="xs" />
 
@@ -82,7 +82,7 @@ Top-level `composites` has been removed; use `compile.composites`. `renderTable(
 
 A layout-aware Table cannot persist its compile-local replay tree through pure Tier 1 `lowerIRToKernel()`. Use `compileTable()` for a standalone result. For an embedded Scene, pass `lowerTables()` definitions to host `compileToScene()`, React `<Layout>`, or the Vanilla adapter.
 
-The manifest is a JSON-safe, detached, recursively frozen typed-artifact payload. See the [layout manifest contract](/viz/table/reference/contract-table#layout-manifest) for its fields and nested DTOs. Core compile traversal creates the root artifact occurrence; it never enters TableSpec or the manifest. `tableId` is not an instance selector; exact occurrences distinguish anonymous roots, nested Tables, and repeated ids.
+The manifest is a JSON-safe, detached, recursively frozen typed-artifact payload. See [Artifact contracts](/viz/table/reference/manifest) for its fields and nested DTOs. Core compile traversal creates the root artifact occurrence; it never enters TableSpec or the manifest. `tableId` is not an instance selector; exact occurrences distinguish anonymous roots, nested Tables, and repeated ids.
 
 ## Runtime migration
 
@@ -94,6 +94,8 @@ The manifest is a JSON-safe, detached, recursively frozen typed-artifact payload
 
 ## Related
 
-- [Table contracts](/viz/table/reference/contract-table) — TableSpec, Cell, track, border, and manifest schemas
+- [Table contracts](/viz/table/reference/contract-table) — TableSpec, manual Cells, and canonical payloads
+- [Layout contracts](/viz/table/reference/contract-layout) — Cell layout, track, and border-input schemas
+- [Artifact contracts](/viz/table/reference/manifest) — resolved geometry, sources, and locator DTOs
 - [Detail Table contracts](/viz/table/reference/contract-detail) — columns and the detail Structure schema
 - [Kernel compile](/kernel/reference/runtime/compile) — Core options, typed artifacts, and the composite registry

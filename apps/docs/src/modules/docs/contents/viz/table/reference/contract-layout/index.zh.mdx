@@ -1,0 +1,218 @@
+---
+title: 契约 - 布局
+description: 查询 Cell span/layout、轨道尺寸、稀疏覆盖与 border 输入配置的 JSON schema。
+---
+
+布局契约描述 Cell 如何占据轨道、内容如何适配 Cell box，以及 Table 如何配置轨道和 border。这里列输入配置；compile 后的 resolved geometry 与来源见[产物契约](/viz/table/reference/manifest)。
+
+## Cell 布局
+
+### TableCellSpanSchema
+
+<ZodSchema
+  name="TableCellSpanSchema"
+  description="从 Cell 原点开始连续覆盖的矩形行列跨度；省略的轴在运行时按 1 处理。"
+  descriptions={{
+    rows: '连续覆盖的正行数；省略时按 1 处理。',
+    columns: '连续覆盖的正列数；省略时按 1 处理。',
+  }}
+/>
+
+span 不能超出行列范围、与其它 Cell 重叠或跨越不同 row kind。
+
+### TableCellLayoutSchema
+
+<ZodSchema
+  name="TableCellLayoutSchema"
+  description="Cell content box、受约束换行、尺寸适配、可见性与四边边线策略。"
+  descriptions={{
+    padding: '非负统一或分边 padding；省略时使用 0。',
+    horizontalAlign: 'content box 内的横向对齐；省略时居中。',
+    verticalAlign: 'content box 内的纵向对齐；省略时居中。',
+    wrap: '是否请求宽度受约束的内容布局；省略时为 false。',
+    fit: '最终内容缩放策略；省略时为 none。',
+    overflow: '内容溢出保持可见或裁剪；省略时为 visible。',
+    borders: '可选的 Cell 四边边线候选。',
+  }}
+/>
+
+横向对齐取值为 <ApiValues name="TableHorizontalAlignment" />，纵向对齐取值为 <ApiValues name="TableVerticalAlignment" />；fit 为 <ApiValues name="TableCellFit" />，overflow 为 <ApiValues name="TableCellOverflow" />。
+
+### TableCellFitSchema
+
+<ZodSchema name="TableCellFitSchema" description="Cell 内容在最终 content box 内的缩放策略。" />
+
+### TableCellOverflowSchema
+
+<ZodSchema name="TableCellOverflowSchema" description="Cell 内容保持可见或裁剪到 content box 的溢出策略。" />
+
+## Table 布局
+
+### TableLayoutSchema
+
+<ZodSchema
+  name="TableLayoutSchema"
+  description="Table 默认/稀疏覆盖轨道尺寸、非负 gap 与全表 border 策略。"
+  descriptions={{
+    columnSize: '默认列轨道尺寸；省略时使用 fixed 120。',
+    rowSize: '默认正文行轨道尺寸；省略时使用 fixed 32。',
+    headerRowSize: '默认列头行尺寸；省略时跟随解析后的 rowSize。',
+    columns: '按 canonical 零基索引声明的稀疏列尺寸覆盖。',
+    rows: '按 canonical 零基索引声明的稀疏行尺寸覆盖。',
+    columnGap: '相邻列之间的非负间距；省略时使用 0。',
+    rowGap: '相邻行之间的非负间距；省略时使用 0。',
+    borders: '可选的 Table border 拓扑与默认候选。',
+  }}
+/>
+
+省略字段时，列为 fixed `120`、正文行为 fixed `32`、列头行跟随正文行，行列 gap 为 `0`。`auto` 与 `minmax` 可以消费内容 contribution；fraction 只在有限父宽约束下扩展列，行轴当前按自然 contribution 求值。
+
+## 轨道尺寸原语
+
+以下尺寸原语直接用于 `TableLayoutSchema.columnSize` / `rowSize` / `headerRowSize` 和稀疏覆盖，表达固定尺寸、内容自然尺寸、剩余空间份额与带上下界的轨道。
+
+轨道尺寸的判别值为 <ApiValues name="TableTrackSizeKind" />。
+
+### TableFixedTrackSizeSchema
+
+<ZodSchema
+  name="TableFixedTrackSizeSchema"
+  description="显式固定轨道尺寸；允许 0 表达折叠轨道。"
+  descriptions={{
+    kind: '固定轨道尺寸的判别值。',
+    value: '有限非负的固定尺寸。',
+  }}
+/>
+
+### TableAutoTrackSizeSchema
+
+<ZodSchema
+  name="TableAutoTrackSizeSchema"
+  description="从 canonical 内容贡献确定自然尺寸的轨道。"
+  descriptions={{
+    kind: '内容自然尺寸轨道的判别值。',
+  }}
+/>
+
+### TableFractionTrackSizeSchema
+
+<ZodSchema
+  name="TableFractionTrackSizeSchema"
+  description="在有限轴约束下按权重分配剩余空间的轨道。"
+  descriptions={{
+    kind: '弹性份额轨道的判别值。',
+    weight: '有限正权重；省略时运行时使用 1。',
+  }}
+/>
+
+### TableMinmaxTrackSizeSchema
+
+<ZodSchema
+  name="TableMinmaxTrackSizeSchema"
+  description="由下界和上界变体约束的轨道尺寸。"
+  descriptions={{
+    kind: '带上下界轨道的判别值。',
+    min: '固定或内容自然下界。',
+    max: '固定、内容自然或弹性份额上界。',
+  }}
+/>
+
+当上下界都是 fixed 时，`min.value` 不能大于 `max.value`。`min` 不接受 fraction；`max` 接受 fixed、auto 或 fraction。
+
+### TableTrackSizeSchema
+
+<ZodSchema name="TableTrackSizeSchema" description="fixed、auto、fraction 与 minmax 四种轨道尺寸的判别联合。" />
+
+### TableTrackOverrideSchema
+
+<ZodSchema
+  name="TableTrackOverrideSchema"
+  description="通过 canonical 零基索引覆盖单个轨道的尺寸。"
+  descriptions={{
+    index: '要覆盖的 canonical 零基轨道索引。',
+    size: '替换该索引轴默认值的轨道尺寸。',
+  }}
+/>
+
+### TableTrackOverridesSchema
+
+<ZodSchema name="TableTrackOverridesSchema" description="canonical 索引必须唯一的稀疏轨道尺寸覆盖列表。" />
+
+列表允许只声明需要覆盖的索引，不要求复制其余轨道。同一列表中的重复索引会被 schema 拒绝；相对于实际行列数量的越界检查由后续 layout resolve 执行。
+
+## Border 配置
+
+border 候选类型为 <ApiValues name="TableBorderKind" />；全表拓扑模式为 <ApiValues name="TableBorderMode" />。`collapse` 把共享边候选放入同一冲突解析，`separate` 保留每个真实 Cell side。
+
+### TableNoBorderSchema
+
+<ZodSchema
+  name="TableNoBorderSchema"
+  description="显式隐藏一条候选边，并参与同一冲突优先级比较。"
+  descriptions={{
+    kind: '显式隐藏 border 候选的判别值。',
+    priority: '有限整数冲突优先级；省略时使用 0。',
+  }}
+/>
+
+### TableLineBorderSchema
+
+<ZodSchema
+  name="TableLineBorderSchema"
+  description="使用 Core-compatible paint 与线型参数绘制的 border 候选。"
+  descriptions={{
+    kind: '可见线条 border 候选的判别值。',
+    stroke: '非 none 的 Core paint；省略时使用 currentColor。',
+    width: '非负线宽；省略时使用 1。',
+    strokeOpacity: '边线不透明度；省略时使用 1。',
+    dashPattern: '可选的非空正数虚线数组；省略时为实线。',
+    dashOffset: '有限虚线偏移；省略时使用 0。',
+    priority: '有限整数冲突优先级；省略时使用 0。',
+  }}
+/>
+
+### TableBorderSchema
+
+<ZodSchema name="TableBorderSchema" description="显式隐藏或 Core-compatible 线条组成的 border 候选联合。" />
+
+### TableCellBordersSchema
+
+<ZodSchema
+  name="TableCellBordersSchema"
+  description="单个 Cell 的物理 top/right/bottom/left border 候选。"
+  descriptions={{
+    top: '可选上边候选。',
+    right: '可选右边候选。',
+    bottom: '可选下边候选。',
+    left: '可选左边候选。',
+  }}
+/>
+
+### TableBordersSchema
+
+<ZodSchema
+  name="TableBordersSchema"
+  description="全表 border 拓扑与外框、横向内线、纵向内线默认候选。"
+  descriptions={{
+    mode: '共享边 collapse 或逐 Cell separate 模式；省略时为 collapse。',
+    outer: '可选外边界默认候选。',
+    horizontal: '可选内部行边界默认候选。',
+    vertical: '可选内部列边界默认候选。',
+  }}
+/>
+
+Cell side 的候选优先于全表默认；同一共享原子边先比较 `priority`，再比较来源 specificity 与 canonical source order。`kind: 'none'` 可以显式压制低优先级线条。
+
+## 契约迁移
+
+| 旧字段                                       | 当前字段                                            |
+| -------------------------------------------- | --------------------------------------------------- |
+| `columnWidth` / `rowHeight` / `headerHeight` | `columnSize` / `rowSize` / `headerRowSize` 轨道对象 |
+
+## 相关
+
+- [表格契约](/viz/table/reference/contract-table)：TableSpec、manual Cell 与 canonical payload
+- [明细表契约](/viz/table/reference/contract-detail)：detail columns 如何引用 Cell layout
+- [产物契约](/viz/table/reference/manifest)：resolved tracks、Cell boxes 与 border provenance
+- [运行时](/viz/table/reference/runtime)：如何 compile 并读取布局产物
+- [表格模型](/viz/table/model)：布局配置在完整 Table pipeline 中的位置

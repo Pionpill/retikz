@@ -67,7 +67,7 @@ description: 查询外部数据引用、detail columns 与 record-per-row Struct
 />
 
 作者侧 `TableDetailColumnInput` 额外允许把 `header` 写成字符串；`createDetailTableSpec()`、`DetailTable` 和 `detailTable()` 会把它规范化为 `{ kind: 'value', value: header }`。
-`headerLayout` / `bodyLayout` 共用 [TableCellLayoutSchema](/viz/table/reference/contract-table#tablecelllayoutschema)，可分别设置 padding、对齐、wrap、fit、overflow 与 border。
+`headerLayout` / `bodyLayout` 共用 [TableCellLayoutSchema](/viz/table/reference/contract-layout#tablecelllayoutschema)，可分别设置 padding、对齐、wrap、fit、overflow 与 border。
 
 ## 精确 schema 的使用边界
 
@@ -75,6 +75,7 @@ description: 查询外部数据引用、detail columns 与 record-per-row Struct
 
 ## 相关
 
-- [表格契约](/viz/table/reference/contract-table)：共享根字段、Cell 与 Layout schema
+- [表格契约](/viz/table/reference/contract-table)：共享根字段与 Cell 内容 schema
+- [布局契约](/viz/table/reference/contract-layout)：Cell layout、轨道与 border schema
 - [明细表](/viz/table/detail)：React 与 Vanilla 使用方式
 - [运行时](/viz/table/reference/runtime)：spec helper、adapter、lowering 与 SSR

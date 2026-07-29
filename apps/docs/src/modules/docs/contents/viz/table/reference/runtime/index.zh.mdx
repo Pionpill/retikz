@@ -5,7 +5,7 @@ description: 查询 React、Vanilla 与直接编译入口如何共享一次 Tabl
 
 TableSpec 只保存 JSON-safe 结构；datasets、Definitions、Core compile options 与宿主能力在运行时注入。所有 standalone 入口都让 Table 在同一次 Core compile 中完成内容测量、轨道求解、replay、Scene 与 manifest，不再为了 sidecar 执行第二次 lowering。
 
-> 这里解释运行时接线与执行逻辑，不重复 schema 字段。TableSpec、Cell、轨道、border 与 manifest 的 JSON 形状请查[表格契约](/viz/table/reference/contract-table)。
+> 这里解释运行时接线与执行逻辑，不重复 schema 字段。TableSpec 与 Cell 内容见[表格契约](/viz/table/reference/contract-table)，轨道与 border 输入见[布局契约](/viz/table/reference/contract-layout)，compile 输出见[产物契约](/viz/table/reference/manifest)。
 
 <ComponentPreview files="table-runtime-flow" hideCode size="xs" />
 
@@ -82,7 +82,7 @@ result.manifest;
 
 layout-aware Table 不能通过纯 Tier 1 `lowerIRToKernel()` 保存 compile-local replay tree。需要 standalone 结果时使用 `compileTable()`；嵌入其它 Scene 时把 `lowerTables()` definitions 交给宿主 `compileToScene()`、React `<Layout>` 或 Vanilla adapter。
 
-manifest 是 JSON-safe、detached、递归冻结的 typed artifact payload；字段与嵌套 DTO 见[表格契约的布局 manifest](/viz/table/reference/contract-table#布局-manifest)。根 artifact occurrence 由 Core compile traversal 生成，不进入 TableSpec 或 manifest；`tableId` 不是实例 selector，匿名根、nested Table 与重复 id 都由 exact occurrence 区分。
+manifest 是 JSON-safe、detached、递归冻结的 typed artifact payload；字段与嵌套 DTO 见[产物契约](/viz/table/reference/manifest)。根 artifact occurrence 由 Core compile traversal 生成，不进入 TableSpec 或 manifest；`tableId` 不是实例 selector，匿名根、nested Table 与重复 id 都由 exact occurrence 区分。
 
 ## 运行时迁移
 
@@ -94,6 +94,8 @@ manifest 是 JSON-safe、detached、递归冻结的 typed artifact payload；字
 
 ## 相关
 
-- [表格契约](/viz/table/reference/contract-table)：TableSpec、Cell、轨道、border 与 manifest schema
+- [表格契约](/viz/table/reference/contract-table)：TableSpec、manual Cell 与 canonical payload
+- [布局契约](/viz/table/reference/contract-layout)：Cell layout、轨道与 border 输入 schema
+- [产物契约](/viz/table/reference/manifest)：resolved geometry、来源与 locator DTO
 - [明细表契约](/viz/table/reference/contract-detail)：columns 与 detail Structure schema
 - [Kernel compile](/kernel/reference/runtime/compile)：Core options、typed artifacts 与 composite registry

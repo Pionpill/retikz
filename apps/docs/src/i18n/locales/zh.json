@@ -143,6 +143,8 @@
     "tableReference": "API 参考",
     "tableReferenceContractTable": "契约 - 表格",
     "tableReferenceContractDetail": "契约 - 明细表",
+    "tableReferenceContractLayout": "契约 - 布局",
+    "tableReferenceManifest": "契约 - 产物",
     "tableReferenceRuntime": "运行时",
     "dataModel": "数据模型",
     "dataModelContract": "字段契约",

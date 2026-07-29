@@ -1,9 +1,9 @@
 ---
 title: Contract - Table
-description: Look up the TableSpec root, Cell spans/layout, track sizing, border, and layout-manifest JSON schemas.
+description: Look up the TableSpec root, manual Cells, canonical payloads, and presentation-reference JSON schemas.
 ---
 
-Base Table contracts define the top-level identity, Cell content, and layout fields shared by every table type, plus precise manual and custom root variants. See [Detail Table contracts](/viz/table/reference/contract-detail) for the detail-only data reference and column structure.
+Base Table contracts define the top-level identity and Cell content shared by every table type, plus precise manual and custom root variants. See [Detail Table contracts](/viz/table/reference/contract-detail) for detail-only data references and columns, or [Layout contracts](/viz/table/reference/contract-layout) for Cell boxes, tracks, and borders.
 
 ## TableSpec root
 
@@ -33,7 +33,7 @@ An LLM or tool that emits one table type should retain its precise schema. Use `
 
 <ZodSchema name="CustomTableSpecSchema" />
 
-## Cells
+## Cell content
 
 `IRManualTableCell` is the directly persistable non-null entry used inside manual `rows`. `string | number | boolean` are value shorthands; rich objects carry value/content, spans, layout, and semantic fields. `null` is the row-matrix empty-slot sentinel, not a Cell union member; use `{ value: null }` for a real null scalar.
 
@@ -61,169 +61,10 @@ These payload schemas describe canonical Structure output. Manual authoring uses
 
 `presentation.name` must match a definition injected at runtime. An unregistered name or options that fail the selected provider's `optionsSchema` fail loudly.
 
-### TableCellSpanSchema
-
-<ZodSchema name="TableCellSpanSchema" />
-
-A span cannot leave the row/column range, overlap another Cell, or cross row kinds.
-
-### TableCellLayoutSchema
-
-<ZodSchema name="TableCellLayoutSchema" />
-
-Horizontal alignment values are <ApiValues name="TableHorizontalAlignment" />, vertical alignment values are <ApiValues name="TableVerticalAlignment" />, fit values are <ApiValues name="TableCellFit" />, and overflow values are <ApiValues name="TableCellOverflow" />.
-
-### TableCellFitSchema
-
-<ZodSchema name="TableCellFitSchema" />
-
-### TableCellOverflowSchema
-
-<ZodSchema name="TableCellOverflowSchema" />
-
-## Layout
-
-### TableLayoutSchema
-
-<ZodSchema name="TableLayoutSchema" />
-
-Omitted fields resolve to fixed `120` columns, fixed `32` body rows, header rows that follow the body default, and zero gaps. `auto` and `minmax` consume content contributions; fractions expand columns only under a finite parent-width constraint, while rows currently use natural contributions.
-
-## Track size primitives
-
-The following primitives are used directly by `TableLayoutSchema.columnSize` / `rowSize` / `headerRowSize` and sparse overrides. They express fixed sizes, intrinsic content sizes, remaining-space fractions, and bounded tracks.
-
-Track size discriminators are <ApiValues name="TableTrackSizeKind" />.
-
-### TableFixedTrackSizeSchema
-
-<ZodSchema name="TableFixedTrackSizeSchema" />
-
-A fixed value may be `0` to represent an explicitly collapsed track.
-
-### TableAutoTrackSizeSchema
-
-<ZodSchema name="TableAutoTrackSizeSchema" />
-
-### TableFractionTrackSizeSchema
-
-<ZodSchema name="TableFractionTrackSizeSchema" />
-
-The runtime materializes an omitted `weight` as `1`.
-
-### TableMinmaxTrackSizeSchema
-
-<ZodSchema name="TableMinmaxTrackSizeSchema" />
-
-When both bounds are fixed, `min.value` cannot exceed `max.value`. The minimum accepts fixed or auto sizing; the maximum accepts fixed, auto, or fraction sizing.
-
-### TableTrackSizeSchema
-
-<ZodSchema name="TableTrackSizeSchema" />
-
-### TableTrackOverrideSchema
-
-<ZodSchema name="TableTrackOverrideSchema" />
-
-### TableTrackOverridesSchema
-
-<ZodSchema name="TableTrackOverridesSchema" />
-
-The list is sparse, so callers declare only the canonical indexes they need to replace. The schema rejects duplicate indexes. The later layout resolver checks indexes against the actual row or column count.
-
-## Border
-
-Border candidate kinds are <ApiValues name="TableBorderKind" />; table-wide topology modes are <ApiValues name="TableBorderMode" />. `collapse` resolves shared-edge candidates together, while `separate` retains each real Cell side.
-
-### TableNoBorderSchema
-
-<ZodSchema name="TableNoBorderSchema" />
-
-### TableLineBorderSchema
-
-<ZodSchema name="TableLineBorderSchema" />
-
-### TableBorderSchema
-
-<ZodSchema name="TableBorderSchema" />
-
-### TableCellBordersSchema
-
-<ZodSchema name="TableCellBordersSchema" />
-
-### TableBordersSchema
-
-<ZodSchema name="TableBordersSchema" />
-
-Cell-side candidates outrank table defaults. Shared atomic edges compare `priority`, source specificity, and canonical source order. `kind: 'none'` explicitly suppresses lower-priority lines.
-
-## Layout manifest
-
-`TableLayoutManifest` is the JSON-safe, detached, recursively frozen typed-artifact payload produced by the same Table compile. See [Runtime](/viz/table/reference/runtime#table-compile-api) for exact-root selection; this section lists only the persisted shape and nested DTOs.
-
-### TableLayoutManifestSchema
-
-<ZodSchema name="TableLayoutManifestSchema" />
-
-### TableTrackManifestEntrySchema
-
-<ZodSchema name="TableTrackManifestEntrySchema" />
-
-### TableCellManifestEntrySchema
-
-<ZodSchema name="TableCellManifestEntrySchema" />
-
-The border manifest preserves final visible edges together with their atomic conflict provenance. The following schemas build from resolved lines and candidate contributions to atoms and merged edges.
-
-### ResolvedTableBorderLineSchema
-
-<ZodSchema name="ResolvedTableBorderLineSchema" />
-
-### TableBorderSourceSchema
-
-<ZodSchema name="TableBorderSourceSchema" />
-
-Cell sources retain `cellId + row + column + side`. Table defaults use `scope + side` or `scope + boundaryIndex`, so conflict resolution does not depend on object traversal order.
-
-### TableNoBorderContributionSchema
-
-<ZodSchema name="TableNoBorderContributionSchema" />
-
-### TableLineBorderContributionSchema
-
-<ZodSchema name="TableLineBorderContributionSchema" />
-
-### TableBorderContributionSchema
-
-<ZodSchema name="TableBorderContributionSchema" />
-
-### TableBorderManifestAtomSchema
-
-<ZodSchema name="TableBorderManifestAtomSchema" />
-
-### TableBorderManifestEntrySchema
-
-<ZodSchema name="TableBorderManifestEntrySchema" />
-
-### TableBorderPathMetaSchema
-
-<ZodSchema name="TableBorderPathMetaSchema" />
-
-### TableBorderLocatorEntrySchema
-
-<ZodSchema name="TableBorderLocatorEntrySchema" />
-
-`TableBorderLocatorEntrySchema` is an independent JSON-safe index entry; the current `TableLayoutManifestSchema` does not embed a locator list.
-
-## Contract migration
-
-| Previous field                               | Current field                                                          |
-| -------------------------------------------- | ---------------------------------------------------------------------- |
-| `columnWidth` / `rowHeight` / `headerHeight` | `columnSize` / `rowSize` / `headerRowSize` track objects               |
-| `manifest.bounds`                            | `manifest.allocationBounds`; use `visualOverflowBounds` for visibility |
-
 ## Related
 
-- [Detail Table contracts](/viz/table/reference/contract-detail) — data reference, columns, and the detail Structure
+- [Detail Table contracts](/viz/table/reference/contract-detail) — data references, columns, and the detail Structure
+- [Layout contracts](/viz/table/reference/contract-layout) — Cell spans/layout, track sizing, and border configuration
+- [Artifact contracts](/viz/table/reference/manifest) — same-compile geometry, sources, and locator DTOs
 - [Runtime](/viz/table/reference/runtime) — how these contracts are constructed, lowered, compiled, and observed
 - [Table Model](/viz/table/model) — how Structure, Cells, Presentation, and Layout relate

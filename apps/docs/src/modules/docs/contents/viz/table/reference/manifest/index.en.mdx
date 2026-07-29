@@ -1,0 +1,79 @@
+---
+title: Contract - Artifact
+description: Look up the track, Cell, border, source, and locator DTO schemas emitted by Table compile.
+---
+
+`TableLayoutManifest` is the JSON-safe, detached, recursively frozen typed-artifact payload produced by the same Table compile. See [Runtime](/viz/table/reference/runtime#table-compile-api) for exact-root selection; this page lists only output shapes and nested DTOs.
+
+## Root manifest
+
+### TableLayoutManifestSchema
+
+<ZodSchema name="TableLayoutManifestSchema" />
+
+## Tracks and Cells
+
+### TableTrackManifestEntrySchema
+
+<ZodSchema name="TableTrackManifestEntrySchema" />
+
+### TableCellManifestEntrySchema
+
+<ZodSchema name="TableCellManifestEntrySchema" />
+
+## Border provenance
+
+The border manifest preserves final visible edges together with their atomic conflict provenance. The following schemas build from resolved lines and candidate contributions to atoms and merged edges.
+
+### ResolvedTableBorderLineSchema
+
+<ZodSchema name="ResolvedTableBorderLineSchema" />
+
+### TableBorderSourceSchema
+
+<ZodSchema name="TableBorderSourceSchema" />
+
+Cell sources retain `cellId + row + column + side`. Table defaults use `scope + side` or `scope + boundaryIndex`, so conflict resolution does not depend on object traversal order.
+
+### TableNoBorderContributionSchema
+
+<ZodSchema name="TableNoBorderContributionSchema" />
+
+### TableLineBorderContributionSchema
+
+<ZodSchema name="TableLineBorderContributionSchema" />
+
+### TableBorderContributionSchema
+
+<ZodSchema name="TableBorderContributionSchema" />
+
+### TableBorderManifestAtomSchema
+
+<ZodSchema name="TableBorderManifestAtomSchema" />
+
+### TableBorderManifestEntrySchema
+
+<ZodSchema name="TableBorderManifestEntrySchema" />
+
+### TableBorderPathMetaSchema
+
+<ZodSchema name="TableBorderPathMetaSchema" />
+
+### TableBorderLocatorEntrySchema
+
+<ZodSchema name="TableBorderLocatorEntrySchema" />
+
+`TableBorderLocatorEntrySchema` is an independent JSON-safe index entry; the current `TableLayoutManifestSchema` does not embed a locator list.
+
+## Contract migration
+
+| Previous field    | Current field                                                          |
+| ----------------- | ---------------------------------------------------------------------- |
+| `manifest.bounds` | `manifest.allocationBounds`; use `visualOverflowBounds` for visibility |
+
+## Related
+
+- [Table contracts](/viz/table/reference/contract-table) — TableSpec and Cell-content inputs
+- [Layout contracts](/viz/table/reference/contract-layout) — track and border configuration that produces these resolved outputs
+- [Runtime](/viz/table/reference/runtime) — how to obtain an exact-root manifest
+- [Table Model](/viz/table/model) — the Manifest's role in the complete Table pipeline
