@@ -201,6 +201,72 @@ describe('builtin retained renderers', () => {
     session.dispose();
   });
 
+  it('SVG snapshotAt 完整索引递归映射静态 transform 包裹的 group topology', () => {
+    const host = document.createElementNS(SVG_NAMESPACE, 'svg');
+    const { handle, session } = createSession('svg', host, {
+      config: { animation: { enabled: false, snapshotAt: 150 } },
+      ir: {
+        version: 1,
+        type: 'scene',
+        viewBox: { x: -110, y: -75, width: 220, height: 150 },
+        children: [
+          {
+            type: 'node',
+            id: 'animated-group',
+            position: [0, 0],
+            shape: 'rectangle',
+            fill: '#f97316',
+            textColor: 'white',
+            padding: { x: 28, y: 18 },
+            text: 'animated',
+            animations: [
+              {
+                property: 'scale',
+                keyframes: [
+                  { at: 0, value: 0.8 },
+                  { at: 1, value: 1 },
+                ],
+                duration: 400,
+                easing: 'ease-out',
+                origin: 'center',
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    expect(host.querySelector('[data-retikz-id="animated-group"]')).not.toBeNull();
+    expect(handle.read(session).snapshot.topology.length).toBeGreaterThan(1);
+    session.dispose();
+  });
+
+  it('SVG snapshotAt 完整索引跳过静态 camera transform wrapper', () => {
+    const host = document.createElementNS(SVG_NAMESPACE, 'svg');
+    const { session } = createSession('svg', host, {
+      config: { animation: { enabled: false, snapshotAt: 150 } },
+      ir: {
+        version: 1,
+        type: 'scene',
+        viewBox: { x: 0, y: 0, width: 100, height: 100 },
+        animations: [
+          {
+            property: 'viewBox',
+            keyframes: [
+              { at: 0, value: [0, 0, 100, 100] },
+              { at: 1, value: [20, 20, 60, 60] },
+            ],
+            duration: 400,
+          },
+        ],
+        children: [{ type: 'node', id: 'camera-child', position: [0, 0], text: 'camera' }],
+      },
+    });
+
+    expect(host.querySelector('[data-retikz-id="camera-child"]')).not.toBeNull();
+    session.dispose();
+  });
+
   it('SVG 只接管 renderer-owned root attr/style，保留 host shell 外部状态', () => {
     const host = document.createElementNS(SVG_NAMESPACE, 'svg');
     host.setAttribute('aria-label', 'external');

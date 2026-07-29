@@ -1,4 +1,5 @@
 import type {
+  IRAnimationTrack,
   RuntimeScenePrimitive,
   Scene,
   ScenePatch,
@@ -17,7 +18,7 @@ import type { RetainedSvgRenderer, RetainedSvgRendererImmutableOptions } from '.
 import type { SceneAnimationDescriptorDiff } from './runtime-options';
 import type { RuntimeIdentityMap } from './shared';
 
-import { classifyProperty, sceneHasAnimations } from '../animation';
+import { classifyProperty, evaluateTrack, isAutoplayTrigger, sceneHasAnimations } from '../animation';
 import {
   bindWaapiDescriptorElements,
   isWaapiAnimationStyleOwned,
@@ -462,6 +463,24 @@ const canApplyEntityPatch = (
 
 const topologyPathKey = (path: ReadonlyArray<number>): string => path.join('.');
 
+/** 统计当前播放或截帧配置下实际会物化的动画 wrapper */
+const animationWrapperCount = (
+  tracks: RuntimeScenePrimitive['animations'] | Scene['animations'],
+  config: RenderRuntimeConfig,
+  matches: (track: IRAnimationTrack) => boolean,
+): number => {
+  // Runtime snapshot 只把同一 JSON track 深度只读化；求值器不改写输入
+  const candidates = tracks?.map(track => track as unknown as IRAnimationTrack).filter(matches) ?? [];
+  const snapshotAt = config.animation?.snapshotAt;
+  if (snapshotAt !== undefined) {
+    const easings = materializeEasingRegistry(config);
+    return candidates.filter(
+      track => isAutoplayTrigger(track) && evaluateTrack(track, snapshotAt, { easings }) !== null,
+    ).length;
+  }
+  return config.animation?.enabled === false ? 0 : candidates.length;
+};
+
 /** 定位 transform 动画 wrapper 内真正承载 primitive children 的 descriptor 与元素 */
 const unwrapPrimitiveContent = (
   primitive: RuntimeScenePrimitive,
@@ -469,10 +488,11 @@ const unwrapPrimitiveContent = (
   element: SVGElement,
   config: RenderRuntimeConfig,
 ): Readonly<{ descriptor: SvgNode; element: SVGElement }> => {
-  const wrapperCount =
-    config.animation?.enabled === false || config.animation?.snapshotAt !== undefined
-      ? 0
-      : (primitive.animations?.filter(track => classifyProperty(track.property) === 'transform').length ?? 0);
+  const wrapperCount = animationWrapperCount(
+    primitive.animations,
+    config,
+    track => classifyProperty(track.property) === 'transform',
+  );
   let contentDescriptor = descriptor;
   let contentElement = element;
   for (let index = 0; index < wrapperCount; index += 1) {
@@ -507,10 +527,7 @@ const buildRootDescriptorPlan = (
   config: RenderRuntimeConfig,
 ): SvgRootDescriptorPlan => {
   const children = (descriptor.children ?? []).filter((child): child is SvgNode => typeof child !== 'string');
-  const wrapperCount =
-    config.animation?.enabled === false || config.animation?.snapshotAt !== undefined
-      ? 0
-      : snapshot.scene.animations.filter(track => track.property === 'viewBox').length;
+  const wrapperCount = animationWrapperCount(snapshot.scene.animations, config, track => track.property === 'viewBox');
   if (wrapperCount === 0) {
     const headCount = children.length - snapshot.scene.primitives.length;
     if (headCount < 0) throw new Error('SVG root descriptor primitive count is invalid');
