@@ -2,12 +2,12 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { share } from './coordinate-pie.data';
+import { coordinate2DRows } from './coordinate-2d.data';
 
-/** 饼图与环形图示例的中文控件 */
-export const coordinatePieControls = definePreviewControls({
+/** 极坐标二维坐标系示例的中文控件 */
+export const coordinatePolarControls = definePreviewControls({
   presentation: 'panel',
-  title: '扇区图',
+  title: '极坐标二维坐标系',
   sections: [
     {
       label: '数据',
@@ -16,17 +16,33 @@ export const coordinatePieControls = definePreviewControls({
         {
           kind: 'table',
           id: 'rows',
-          label: '类别占比',
-          rows: share,
+          label: '分类数值',
+          rows: coordinate2DRows,
           columns: [
-            { key: 'label', label: '类别' },
+            { key: 'category', label: '分类' },
             { key: 'value', label: '数值' },
           ],
         },
       ],
     },
     {
-      label: '圆环',
+      label: '图元',
+      controls: [
+        {
+          kind: 'select',
+          id: 'markType',
+          label: '图元类型',
+          defaultValue: 'point',
+          options: [
+            { value: 'point', label: '点' },
+            { value: 'line', label: '线' },
+            { value: 'interval', label: '面' },
+          ],
+        },
+      ],
+    },
+    {
+      label: '坐标投影',
       controls: [
         {
           kind: 'range',
@@ -41,7 +57,7 @@ export const coordinatePieControls = definePreviewControls({
           kind: 'range',
           id: 'startAngle',
           label: '起始角度',
-          defaultValue: 0,
+          defaultValue: -90,
           min: -180,
           max: 180,
           step: 15,
@@ -60,18 +76,14 @@ export const coordinatePieControls = definePreviewControls({
   ],
 });
 
-/** 饼图与环形图示例的稳定文档契约 */
+/** 极坐标二维坐标系示例的稳定文档契约 */
 export const previewControlContract = {
-  controls: coordinatePieControls,
+  controls: coordinatePolarControls,
   canonicalValues: {
+    markType: 'point',
     innerRadius: 0,
-    startAngle: 0,
+    startAngle: -90,
     sweepAngle: 360,
   },
-  presets: [
-    { id: 'pie', label: '饼图', values: { innerRadius: 0, startAngle: 0, sweepAngle: 360 } },
-    { id: 'donut', label: '环形图', values: { innerRadius: 0.55, startAngle: 0, sweepAngle: 360 } },
-    { id: 'semicircle', label: '半圆图', values: { innerRadius: 0.45, startAngle: 180, sweepAngle: 180 } },
-  ],
-  relatedApis: ['Plot.coordinate', 'IntervalMark.angle'],
+  relatedApis: ['PointMark', 'PathMark', 'IntervalMark', 'Plot.coordinate'],
 } satisfies PreviewControlContract;

@@ -2,12 +2,12 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { share } from './coordinate-pie.data';
+import { coordinate2DRows } from './coordinate-2d.data';
 
-/** English controls for the pie and donut example */
-export const coordinatePieControls = definePreviewControls({
+/** English controls for the polar 2D coordinate example */
+export const coordinatePolarControls = definePreviewControls({
   presentation: 'panel',
-  title: 'Sector chart',
+  title: 'Polar 2D coordinates',
   sections: [
     {
       label: 'Data',
@@ -16,17 +16,33 @@ export const coordinatePieControls = definePreviewControls({
         {
           kind: 'table',
           id: 'rows',
-          label: 'Category share',
-          rows: share,
+          label: 'Category values',
+          rows: coordinate2DRows,
           columns: [
-            { key: 'label', label: 'Category' },
+            { key: 'category', label: 'Category' },
             { key: 'value', label: 'Value' },
           ],
         },
       ],
     },
     {
-      label: 'Ring',
+      label: 'Mark',
+      controls: [
+        {
+          kind: 'select',
+          id: 'markType',
+          label: 'Mark type',
+          defaultValue: 'point',
+          options: [
+            { value: 'point', label: 'Point' },
+            { value: 'line', label: 'Line' },
+            { value: 'interval', label: 'Area' },
+          ],
+        },
+      ],
+    },
+    {
+      label: 'Coordinate projection',
       controls: [
         {
           kind: 'range',
@@ -41,7 +57,7 @@ export const coordinatePieControls = definePreviewControls({
           kind: 'range',
           id: 'startAngle',
           label: 'Start angle',
-          defaultValue: 0,
+          defaultValue: -90,
           min: -180,
           max: 180,
           step: 15,
@@ -60,18 +76,14 @@ export const coordinatePieControls = definePreviewControls({
   ],
 });
 
-/** Stable documentation contract for the pie and donut example */
+/** Stable documentation contract for the polar 2D coordinate example */
 export const previewControlContract = {
-  controls: coordinatePieControls,
+  controls: coordinatePolarControls,
   canonicalValues: {
+    markType: 'point',
     innerRadius: 0,
-    startAngle: 0,
+    startAngle: -90,
     sweepAngle: 360,
   },
-  presets: [
-    { id: 'pie', label: 'Pie', values: { innerRadius: 0, startAngle: 0, sweepAngle: 360 } },
-    { id: 'donut', label: 'Donut', values: { innerRadius: 0.55, startAngle: 0, sweepAngle: 360 } },
-    { id: 'semicircle', label: 'Semicircle', values: { innerRadius: 0.45, startAngle: 180, sweepAngle: 180 } },
-  ],
-  relatedApis: ['Plot.coordinate', 'IntervalMark.angle'],
+  relatedApis: ['PointMark', 'PathMark', 'IntervalMark', 'Plot.coordinate'],
 } satisfies PreviewControlContract;

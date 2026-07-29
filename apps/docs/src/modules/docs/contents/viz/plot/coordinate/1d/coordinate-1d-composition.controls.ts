@@ -2,6 +2,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
 import { coordinate1DCompositionRows } from './coordinate-1d-composition.zh.data';
 
 /** 一维映射组合 playground 的稳定控件 id */
@@ -25,6 +26,13 @@ export const COORDINATE_1D_COMPOSITION_CONTROL_IDS = {
   axisStrokeWidth: 'axisStrokeWidth',
 } as const;
 
+/** 汇聚目标点使用的分组统计 operation */
+export const coordinate1DCompositionOperation = {
+  kind: 'summarize',
+  groupBy: ['practiceX', 'practiceId', 'practiceLabel', 'practiceGlyph', 'relationColor'],
+  metrics: [{ kind: 'count', as: 'thingCount' }],
+} as const;
+
 /** 一维映射后二次组合的中文控件 */
 export const coordinate1DCompositionControls = definePreviewControls({
   presentation: 'panel',
@@ -38,11 +46,16 @@ export const coordinate1DCompositionControls = definePreviewControls({
           kind: 'table',
           id: 'rows',
           label: '节点与关系',
-          rows: coordinate1DCompositionRows,
+          views: createPlotTransformTableViews(
+            { source: '原始', result: '目标点汇总后' },
+            coordinate1DCompositionRows,
+            () => coordinate1DCompositionOperation,
+          ),
           columns: [
             { key: 'thingLabel', label: '来源节点' },
             { key: 'practiceLabel', label: '汇聚目标' },
             { key: 'relationColor', label: '分组色' },
+            { key: 'thingCount', label: '来源数量' },
           ],
         },
       ],
