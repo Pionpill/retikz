@@ -17,7 +17,7 @@ A color scale answers which color a data value should use. The scale establishes
 Bind `color` to a categorical field and `<Plot>` derives `ordinal`, assigning one discrete color per category. A categorical color field also splits path data into multiple series when no explicit series is present.
 
 <ComponentPreview
-  size="md"
+  size="lg"
   files={['scale-ordinal', 'scale-ordinal.data.ts']}
   caption="Switch discrete palettes and show or hide the legend to inspect the separate responsibilities of color mapping and legend explanation."
 />
@@ -29,7 +29,7 @@ Bind `color` to a categorical field and `<Plot>` derives `ordinal`, assigning on
 `sequential` uses one low-to-high ramp for a continuous quantity. `diverging` uses a three-value domain for the low end, center, and high end, which suits profit/loss, deviation, temperature delta, and other data centered on a reference value.
 
 <ComponentPreview
-  size="md"
+  size="lg"
   files={['scale-continuous', 'scale-continuous.data.ts']}
   caption="Switch between sequential and diverging, choose a scheme, and move the midpoint. The same -50 to 50 values reveal the mapping difference immediately."
 />
@@ -54,7 +54,7 @@ A discretization scale still consumes continuous data, but returns only a finite
 | `quantile`  | derive quantiles with roughly equal sample count | skewed distributions, reduced outlier impact |
 
 <ComponentPreview
-  size="md"
+  size="lg"
   files={['scale-discretization', 'scale-discretization.data.ts']}
   caption="Switch among quantize, threshold, and quantile. Tune the bin count, business thresholds, and palette to compare how the same skewed data falls into different color bins."
 />

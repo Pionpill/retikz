@@ -27,7 +27,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           style={{ maxWidth: '100%', height: 'auto' }}
         >
           <IntervalMark x="category" y="value" color="category" />
-          <Scale dimension="y" type="linear" />
+          <Scale dimension="y" type="linear" domainPadding={0} />
         </Plot>
       </figure>
       <figure className="grid justify-items-center gap-1">
@@ -42,7 +42,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           style={{ maxWidth: '100%', height: 'auto' }}
         >
           <IntervalMark x="category" y="value" color="category" />
-          <Scale dimension="y" type="radial" />
+          <Scale dimension="y" type="radial" domainPadding={0} />
         </Plot>
       </figure>
     </div>

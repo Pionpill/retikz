@@ -24,7 +24,7 @@ A positional scale answers where a field lands on the canvas, how long it is, or
 `linear`, `log`, `sqrt`, and `symlog` share one interactive chart. Choose a dataset in the controls, then switch the scale and tune its parameters to inspect the mapping directly.
 
 <ComponentPreview
-  size="md"
+  size="lg"
   files={['scale-continuous', 'scale-continuous.data.ts']}
   caption="Switch between positive and zero-crossing data to compare four continuous positional scales. Tune the log base, symlog linear region, and domain padding."
 />
@@ -42,7 +42,7 @@ The `size` channel also uses `sqrt` so point area tracks magnitude, but that map
 `radial` maps values to radii so the **area** of a sector or ring stays proportional to the value. It starts from a zero baseline and is designed for the polar radial value axis, so it can be used with intervals and path closures; the square-root-style `sqrt` scale cannot.
 
 <ComponentPreview
-  size="md"
+  size="lg"
   files={['scale-radial', 'scale-radial.data.ts']}
   caption="Choose a data distribution, then compare linear radius and area-proportional radial mapping side by side; both plots share the same maximum radius."
 />
@@ -62,7 +62,7 @@ The `size` channel also uses `sqrt` so point area tracks magnitude, but that map
 A `temporal` field defaults to `time` on positional channels. It remains continuous, but ticks land on month starts, quarters, whole hours, and other readable boundaries, while labels are formatted as time. Declare the field as `temporal` in the model and no `<Scale>` is needed.
 
 <ComponentPreview
-  size="md"
+  size="lg"
   files={['scale-time', 'scale-time.data.ts']}
   caption="The x channel does not declare Scale explicitly; the temporal model field derives a time scale and formats quarterly dates at readable time boundaries."
 />
@@ -79,7 +79,7 @@ Categorical fields have no continuous numeric order. The default `band` scale gi
 | `point` | One evenly spaced point, with no slot width | categorical lines and scatter |
 
 <ComponentPreview
-  size="md"
+  size="lg"
   files={['scale-band', 'scale-band.data.ts']}
   caption="Switch scales: band supplies bandwidth to intervals, while point provides evenly spaced positions for lines and points; the panel only shows padding for the current type."
 />
