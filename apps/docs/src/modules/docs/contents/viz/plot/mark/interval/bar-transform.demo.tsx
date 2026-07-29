@@ -4,7 +4,7 @@ import { Axis, IntervalMark, Plot, PointMark, Scale } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { BAR_TRANSFORM_BASELINE_ID, BAR_TRANSFORM_GAP_ID, previewControlContract } from './bar-transform.controls';
+import { BAR_TRANSFORM_GAP_ID, barTransformOperationOf, previewControlContract } from './bar-transform.controls';
 import { storeRevenue } from './bar-transform.data';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
@@ -15,13 +15,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       bounds={{ y: { kind: 'extent', from: 'y0', to: 'y1' } }}
       color="segment"
       label="store"
-      transform={[
-        {
-          kind: 'derive-interval',
-          from: 'revenue',
-          baseline: values[BAR_TRANSFORM_BASELINE_ID],
-        },
-      ]}
+      transform={[barTransformOperationOf(values)]}
     />
     <Scale dimension="x" type="band" paddingInner={values[BAR_TRANSFORM_GAP_ID]} paddingOuter={0.15} />
     <Scale dimension="y" type="linear" domainPadding={0} />

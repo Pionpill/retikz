@@ -743,15 +743,20 @@ describe('preview controls registry', () => {
 
   it('IntervalMark demo 统一保留左右外侧空间，且不改变默认柱间距', () => {
     const segments = ['viz', 'plot', 'mark', 'interval'];
-    const bandCases = ['bar-series', 'bar-transform', 'rect-bounds'];
+    const bandCases = ['bar-transform', 'rect-bounds'];
 
     for (const name of bandCases) {
       expect(demoSources[buildKey(segments, name)], name).toContain('paddingOuter={0.15}');
     }
 
     const positionSource = demoSources[buildKey(segments, 'bar-position')];
-    expect(positionSource).toContain('paddingOuter={isHorizontal ? 0 : 0.15}');
+    expect(positionSource).toContain(
+      'paddingOuter={isHorizontal ? 0 : isPolar ? values[BAR_POSITION_CONTROL_IDS.gap] / 2 : 0.15}',
+    );
     expect(positionSource).toContain('domainPadding={isHorizontal ? 0.05 : 0}');
+
+    const seriesSource = demoSources[buildKey(segments, 'bar-series')];
+    expect(seriesSource).toContain('paddingOuter={isPolar ? values[BAR_SERIES_GAP_ID] / 2 : 0.15}');
 
     const radialSource = demoSources[buildKey(segments, 'bar-radial')];
     const sectorSource = demoSources[buildKey(segments, 'interval-sector')];
