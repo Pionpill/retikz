@@ -16,7 +16,13 @@ type PublicContractTypes = [
   TableTypes.TableBorderContribution,
   TableTypes.TableBorderManifestEntry,
   TableTypes.TableBorderPathMeta,
+  TableTypes.IRManualTableCell,
 ];
+
+// @ts-expect-error 旧 addressed manual Cell 类型不再从包根导出
+type RemovedIRTableCell = TableTypes.IRTableCell;
+// @ts-expect-error 旧 addressed manual Cell 地址类型不再从包根导出
+type RemovedIRTableCellAddress = TableTypes.IRTableCellAddress;
 
 // @ts-expect-error 阶段级 resolved layout 不从包根导出
 type RemovedResolvedTableLayoutSpec = TableTypes.ResolvedTableLayoutSpec;
@@ -53,6 +59,8 @@ type RemovedStageTypes = [
   RemovedTableCellContentPlacement,
   RemovedBuildTableBorderGraphInput,
   RemovedTableBorderGraph,
+  RemovedIRTableCell,
+  RemovedIRTableCellAddress,
 ];
 
 describe('@retikz/table public API', () => {
@@ -67,6 +75,9 @@ describe('@retikz/table public API', () => {
     expect(Table).toHaveProperty('TableTrackOverridesSchema');
     expect(Table).toHaveProperty('TableCellSpanSchema');
     expect(Table).toHaveProperty('TableCellLayoutSchema');
+    expect(Table).toHaveProperty('ManualTableCellSchema');
+    expect(Table).not.toHaveProperty('TableCellSchema');
+    expect(Table).not.toHaveProperty('TableCellAddressSchema');
     expect(Table).toHaveProperty('TableBorderSchema');
     expect(Table).toHaveProperty('TableLayoutManifestSchema');
     expect(Table).toHaveProperty('ResolvedTableBorderLineSchema');
@@ -97,29 +108,29 @@ describe('@retikz/table public API', () => {
     expectTypeOf<RemovedStageTypes>().toBeArray();
   });
 
-  it('accepts alpha.2 Cell and border fields and rejects removed alpha.1 fields', () => {
+  it('accepts row-major manual Cell and border fields and rejects removed fields', () => {
     const parsed = Table.TableStructureSchema.parse({
       kind: 'manual',
-      rows: 1,
-      columns: 2,
-      cells: [
-        {
-          address: { row: 0, column: 0 },
-          payload: { kind: 'value', value: 'x' },
-          span: { columns: 2 },
-          layout: {
-            padding: { x: 4, y: 2 },
-            horizontalAlign: 'end',
-            verticalAlign: 'start',
-            wrap: true,
-            fit: 'contain',
-            overflow: 'clip',
-            borders: { top: { kind: 'line', width: 2 } },
+      rows: [
+        [
+          {
+            value: 'x',
+            span: { columns: 2 },
+            layout: {
+              padding: { x: 4, y: 2 },
+              horizontalAlign: 'end',
+              verticalAlign: 'start',
+              wrap: true,
+              fit: 'contain',
+              overflow: 'clip',
+              borders: { top: { kind: 'line', width: 2 } },
+            },
           },
-        },
+          null,
+        ],
       ],
     });
-    expect(parsed).toMatchObject({ kind: 'manual', cells: [{ span: { columns: 2 } }] });
+    expect(parsed).toMatchObject({ kind: 'manual', rows: [[{ span: { columns: 2 } }, null]] });
     expect(Table.TableLayoutSchema.parse({ borders: { mode: 'collapse', outer: { kind: 'line' } } })).toEqual({
       borders: { mode: 'collapse', outer: { kind: 'line' } },
     });
