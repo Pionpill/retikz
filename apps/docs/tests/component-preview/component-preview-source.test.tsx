@@ -382,6 +382,7 @@ describe('ComponentPreview localized controls', () => {
         title: 'Path connection',
         sections: [
           { label: 'Data' },
+          { label: 'Coordinate' },
           {
             label: 'Connection',
             controls: expect.arrayContaining([
@@ -392,6 +393,7 @@ describe('ComponentPreview localized controls', () => {
               }),
             ]),
           },
+          { label: 'Path style' },
         ],
       });
     } finally {
