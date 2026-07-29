@@ -24,7 +24,7 @@ describe('Table React manifest observation', () => {
   it('does not call onManifest during render', () => {
     const onManifest = vi.fn();
 
-    renderToStaticMarkup(<ManualTable rows={1} columns={1} cells={[]} onManifest={onManifest} />);
+    renderToStaticMarkup(<ManualTable rows={[[null]]} onManifest={onManifest} />);
 
     expect(onManifest).not.toHaveBeenCalled();
   });
@@ -39,7 +39,9 @@ describe('Table React manifest observation', () => {
     const root = createRoot(container);
     const renderTable = async (rows: number, width?: number): Promise<void> => {
       await act(() => {
-        root.render(<ManualTable rows={rows} columns={1} cells={[]} width={width} onManifest={onManifest} />);
+        root.render(
+          <ManualTable rows={Array.from({ length: rows }, () => [null])} width={width} onManifest={onManifest} />,
+        );
       });
     };
 
@@ -57,20 +59,14 @@ describe('Table React manifest observation', () => {
 
   it('selects the exact root artifact when a nested Table repeats the root id', async () => {
     const manifests: Array<TableLayoutManifest> = [];
-    const nested = createManualTableSpec({ id: 'repeated', rows: 2, columns: 1, cells: [] });
+    const nested = createManualTableSpec({ id: 'repeated', rows: [[null], [null]] });
     const container = document.createElement('div');
     document.body.appendChild(container);
     const root = createRoot(container);
 
     await act(() => {
       root.render(
-        <ManualTable
-          id="repeated"
-          rows={1}
-          columns={1}
-          cells={[{ address: { row: 0, column: 0 }, payload: { kind: 'content', content: nested } }]}
-          onManifest={manifest => manifests.push(manifest)}
-        />,
+        <ManualTable id="repeated" rows={[[{ content: nested }]]} onManifest={manifest => manifests.push(manifest)} />,
       );
     });
 
@@ -98,14 +94,7 @@ describe('Table React manifest observation', () => {
       await act(() => {
         root.render(
           <ManualTable
-            rows={1}
-            columns={1}
-            cells={[
-              {
-                address: { row: 0, column: 0 },
-                payload: { kind: 'value', value: 'stable', presentation: { name: 'observer-stability' } },
-              },
-            ]}
+            rows={[[{ value: 'stable', presentation: { name: 'observer-stability' } }]]}
             presentationDefinitions={presentationDefinitions}
             onManifest={onManifest}
           />,

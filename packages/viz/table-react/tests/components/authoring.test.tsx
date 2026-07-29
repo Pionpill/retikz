@@ -66,7 +66,7 @@ describe('Table React composition authoring collectors', () => {
     );
   });
 
-  it('collects addressed manual Cells and preserves explicit row kinds', () => {
+  it('collects a rectangular row matrix and preserves explicit row kinds', () => {
     const structure = buildManualStructure(
       <>
         <Row kind="columnHeader">
@@ -78,41 +78,27 @@ describe('Table React composition authoring collectors', () => {
           <Cell>{null}</Cell>
         </Row>
       </>,
-      2,
-      2,
     );
 
     expect(structure).toEqual({
       rowKinds: ['columnHeader', 'body'],
-      cells: [
-        { address: { row: 0, column: 0 }, payload: { kind: 'value', value: 'Name' } },
-        {
-          address: { row: 0, column: 1 },
-          payload: { kind: 'value', value: false, presentation: { name: 'text' } },
-        },
-        { address: { row: 1, column: 0 }, payload: { kind: 'content', content } },
-        { address: { row: 1, column: 1 }, payload: { kind: 'value', value: null } },
+      rows: [
+        [{ value: 'Name' }, { value: false, presentation: { name: 'text' } }],
+        [{ content }, { value: null }],
       ],
     });
-    expect(createManualTableSpec({ rows: 2, columns: 2, ...structure })).toEqual(
+    expect(createManualTableSpec(structure)).toEqual(
       createManualTableSpec({
-        rows: 2,
-        columns: 2,
         rowKinds: ['columnHeader', 'body'],
-        cells: [
-          { address: { row: 0, column: 0 }, payload: { kind: 'value', value: 'Name' } },
-          {
-            address: { row: 0, column: 1 },
-            payload: { kind: 'value', value: false, presentation: { name: 'text' } },
-          },
-          { address: { row: 1, column: 0 }, payload: { kind: 'content', content } },
-          { address: { row: 1, column: 1 }, payload: { kind: 'value', value: null } },
+        rows: [
+          [{ value: 'Name' }, { value: false, presentation: { name: 'text' } }],
+          [{ content }, { value: null }],
         ],
       }),
     );
   });
 
-  it('keeps empty Rows and trailing sparse Cells valid without emitting row kinds', () => {
+  it('pads empty Rows to the inferred width without emitting row kinds', () => {
     expect(
       buildManualStructure(
         <>
@@ -124,15 +110,11 @@ describe('Table React composition authoring collectors', () => {
             </Row>,
           ]}
         </>,
-        2,
-        3,
       ),
-    ).toEqual({
-      cells: [{ address: { row: 1, column: 0 }, payload: { kind: 'value', value: 1 } }],
-    });
+    ).toEqual({ rows: [[null], [{ value: 1 }]] });
   });
 
-  it('places span-aware markers in the first unoccupied slot across future rows', () => {
+  it('places span-aware markers at the first unoccupied slot and pads covered coordinates', () => {
     expect(
       buildManualStructure(
         <>
@@ -144,28 +126,21 @@ describe('Table React composition authoring collectors', () => {
             <Cell>C</Cell>
           </Row>
         </>,
-        2,
-        3,
-      ).cells.map(cell => ({
-        address: cell.address,
-        span: cell.span,
-        value: cell.payload.kind === 'value' ? cell.payload.value : null,
-      })),
-    ).toEqual([
-      { address: { row: 0, column: 0 }, span: { rows: 2, columns: 2 }, value: 'A' },
-      { address: { row: 0, column: 2 }, span: undefined, value: 'B' },
-      { address: { row: 1, column: 2 }, span: undefined, value: 'C' },
-    ]);
+      ),
+    ).toEqual({
+      rows: [
+        [{ value: 'A', span: { rows: 2, columns: 2 } }, null, { value: 'B' }],
+        [null, null, { value: 'C' }],
+      ],
+    });
   });
 
-  it('rejects marker spans that overflow, cross row kinds, or leave no free slot', () => {
+  it('rejects marker spans that overflow rows, cross row kinds, or overlap future occupancy', () => {
     expect(() =>
       buildManualStructure(
         <Row>
-          <Cell span={{ columns: 2 }}>wide</Cell>
+          <Cell span={{ rows: 2 }}>tall</Cell>
         </Row>,
-        1,
-        1,
       ),
     ).toThrow(/span.*out of bounds/i);
     expect(() =>
@@ -176,24 +151,21 @@ describe('Table React composition authoring collectors', () => {
           </Row>
           <Row kind="body" />
         </>,
-        2,
-        1,
       ),
     ).toThrow(/span.*row kind/i);
     expect(() =>
       buildManualStructure(
         <>
           <Row>
+            <Cell>A</Cell>
             <Cell span={{ rows: 2 }}>occupied</Cell>
           </Row>
           <Row>
-            <Cell>extra</Cell>
+            <Cell span={{ columns: 2 }}>overlap</Cell>
           </Row>
         </>,
-        2,
-        1,
       ),
-    ).toThrow(/no unoccupied Cell slot/i);
+    ).toThrow(/span.*overlaps/i);
   });
 
   it('rejects invalid DetailTable children', () => {
@@ -217,7 +189,7 @@ describe('Table React composition authoring collectors', () => {
   });
 
   it('rejects invalid ManualTable and Row child grammars', () => {
-    expect(() => buildManualStructure(<Cell value="orphan" />, 1, 1)).toThrow(
+    expect(() => buildManualStructure(<Cell value="orphan" />)).toThrow(
       'table react: ManualTable children only accept Row',
     );
     expect(() =>
@@ -225,24 +197,13 @@ describe('Table React composition authoring collectors', () => {
         <Row>
           <span />
         </Row>,
-        1,
-        1,
       ),
     ).toThrow('table react: Row children only accept Cell');
   });
 
-  it('rejects row and Cell counts outside explicit dimensions', () => {
-    expect(() => buildManualStructure(<Row />, 2, 1)).toThrow(/table react: ManualTable rows expected 2, received 1/);
-    expect(() =>
-      buildManualStructure(
-        <Row>
-          <Cell value="A" />
-          <Cell value="B" />
-        </Row>,
-        1,
-        1,
-      ),
-    ).toThrow(/table react: Row 0 received 2 Cell children, columns is 1/);
+  it('rejects missing Rows and all-empty marker matrices whose width cannot be inferred', () => {
+    expect(() => buildManualStructure(null)).toThrow(/require.*at least one Row/i);
+    expect(() => buildManualStructure(<Row />)).toThrow(/require.*at least one Cell/i);
   });
 
   it('rejects Cell payload sources that are absent, multiple, or React elements', () => {
@@ -250,13 +211,13 @@ describe('Table React composition authoring collectors', () => {
     const multiple = <Cell {...({ value: 'A', content, children: 'B' } as unknown as CellProps)} />;
     const invalid = <Cell {...({ children: <span>A</span> } as unknown as CellProps)} />;
 
-    expect(() => buildManualStructure(<Row>{absent}</Row>, 1, 1)).toThrow(
+    expect(() => buildManualStructure(<Row>{absent}</Row>)).toThrow(
       /table react: Cell at row 0, column 0 requires exactly one payload source/,
     );
-    expect(() => buildManualStructure(<Row>{multiple}</Row>, 1, 1)).toThrow(
+    expect(() => buildManualStructure(<Row>{multiple}</Row>)).toThrow(
       /table react: Cell at row 0, column 0 requires exactly one payload source/,
     );
-    expect(() => buildManualStructure(<Row>{invalid}</Row>, 1, 1)).toThrow(
+    expect(() => buildManualStructure(<Row>{invalid}</Row>)).toThrow(
       /table react: Cell at row 0, column 0 value must be a JSON scalar/,
     );
   });
@@ -264,7 +225,7 @@ describe('Table React composition authoring collectors', () => {
   it('rejects presentation paired with a content Cell payload', () => {
     const invalid = <Cell {...({ content, presentation: { name: 'text' } } as unknown as CellProps)} />;
 
-    expect(() => buildManualStructure(<Row>{invalid}</Row>, 1, 1)).toThrow(
+    expect(() => buildManualStructure(<Row>{invalid}</Row>)).toThrow(
       'table react: Cell at row 0, column 0 content cannot be combined with presentation',
     );
   });
@@ -274,15 +235,11 @@ describe('Table React composition authoring collectors', () => {
       <Row>
         <Cell content={content} />
       </Row>,
-      1,
-      1,
     );
     const withUndefinedPresentation = buildManualStructure(
       <Row>
         <Cell content={content} presentation={undefined} />
       </Row>,
-      1,
-      1,
     );
 
     expect(withUndefinedPresentation).toEqual(withoutPresentation);
@@ -418,20 +375,14 @@ describe('Table React composition root integration', () => {
   it('normalizes ManualTable props and Row children to the same embedded node and standalone values', () => {
     const propsMode = {
       id: 'manual-composition',
-      rows: 2,
-      columns: 2,
-      rowKinds: ['columnHeader' as const, 'body' as const],
-      cells: [
-        { address: { row: 0, column: 0 }, payload: { kind: 'value' as const, value: 'Name' } },
-        { address: { row: 0, column: 1 }, payload: { kind: 'value' as const, value: 'Score' } },
-        { address: { row: 1, column: 0 }, payload: { kind: 'value' as const, value: 'Ada' } },
-        { address: { row: 1, column: 1 }, payload: { kind: 'value' as const, value: 98 } },
+      rows: [
+        [{ value: 'Name' }, { value: 'Score' }],
+        [{ value: 'Ada' }, { value: 98 }],
       ],
+      rowKinds: ['columnHeader' as const, 'body' as const],
     };
     const childrenMode = {
       id: 'manual-composition',
-      rows: 2,
-      columns: 2,
       children: (
         <>
           <Row kind="columnHeader">
@@ -497,22 +448,22 @@ describe('Table React composition root integration', () => {
 
   it('rejects mixed and absent ManualTable structure sources through the shared runtime', () => {
     const adapter = adapterOf(ManualTable);
-    const shared = { id: 'manual-invalid', rows: 1, columns: 1 };
+    const shared = { id: 'manual-invalid' };
     const children = (
       <Row>
         <Cell value="Ada" />
       </Row>
     );
-    const cells = [{ address: { row: 0, column: 0 }, payload: { kind: 'value' as const, value: 'Ada' } }];
+    const rows = [['Ada']];
 
-    expect(() => adapter.contribute({ ...shared, cells, children } as unknown as ManualTableProps)).toThrow(
-      'table react: ManualTable Row children cannot be mixed with cells or rowKinds',
+    expect(() => adapter.contribute({ ...shared, rows, children } as unknown as ManualTableProps)).toThrow(
+      'table react: ManualTable Row children cannot be mixed with rows or rowKinds',
     );
     expect(() =>
-      adapter.contribute({ ...shared, rowKinds: ['body'], cells: [], children } as unknown as ManualTableProps),
-    ).toThrow('table react: ManualTable Row children cannot be mixed with cells or rowKinds');
+      adapter.contribute({ ...shared, rowKinds: ['body'], children } as unknown as ManualTableProps),
+    ).toThrow('table react: ManualTable Row children cannot be mixed with rows or rowKinds');
     expect(() => adapter.contribute(shared as unknown as ManualTableProps)).toThrow(
-      'table react: ManualTable requires cells or Row children',
+      'table react: ManualTable requires rows or Row children',
     );
   });
 });
