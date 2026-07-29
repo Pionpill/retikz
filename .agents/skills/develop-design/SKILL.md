@@ -1,11 +1,11 @@
 ---
 name: develop-design
-description: Use when starting a retikz alpha feature that needs an ADR before implementation, especially changes to IR, public API, compile behavior, DSL surface, renderer-observable behavior, or docs-visible feature design.
+description: Use when planning a retikz architecture direction, version roadmap, or alpha feature that may need an ADR before implementation.
 ---
 
-# Stage 1: 设计
+# 功能设计
 
-alpha 功能开发入口。目标是产出一份状态为 `Proposed` 的 ADR，并让下游 implement / test / document / wrapup 有足够明确的契约可执行。
+retikz 功能设计入口。先判断当前需要 architecture design、版本 roadmap 还是具体 ADR；不同阶段只写当前层级需要冻结的内容。
 
 ## 责任边界
 
@@ -13,6 +13,19 @@ alpha 功能开发入口。目标是产出一份状态为 `Proposed` 的 ADR，�
 - **AI 辅助整理与校验**：查现有概念、起草 ADR、补齐实现契约、指出缺口与风险。
 - 不跳过本阶段直接实现；ADR 未获人工确认前不进入 `develop-implement`。
 - ADR 草案默认不提交；提交前的长文件索引、测试计划、执行 checklist、review prompt 等 LLM 执行材料只服务当前任务，放 ignored plan / report 文件或 ADR 临时段，收尾时压缩。
+
+## 设计产物粒度
+
+| 当前产物            | 回答的问题                                                                 | 细节归宿                  |
+| ------------------- | -------------------------------------------------------------------------- | ------------------------- |
+| Architecture design | 长期解决什么问题、整体结构、能力归属、功能边界、关键原则与演进方向         | 具体契约留给后续 ADR      |
+| 版本 roadmap        | 本版本目标、里程碑边界、候选 ADR 主题、依赖顺序与阶段退出条件              | API、算法与文件留给各 ADR |
+| ADR                 | 单项能力的精确行为、公开契约、默认值、失败语义、兼容性、测试摘要与实施边界 | 执行步骤和命令留给 plan   |
+| Implementation plan | 基于已确认 ADR 拆文件、任务、测试命令、commit 边界与执行顺序               | 实现阶段按 plan 执行      |
+
+Architecture design 的正文由定位、整体关系、功能边界、关键取舍、不变量和演进方向组成。版本 roadmap 由版本目标、里程碑 / ADR 主题、依赖与验收边界组成。当前任务只要求前两者时，完成对应文档并交人工 review 后停止，不提前设计字段、类型、函数、文件结构、逐项测试或实现步骤。
+
+以下 ADR 规则仅在已经进入具体功能设计时适用。
 
 ## 必读
 
