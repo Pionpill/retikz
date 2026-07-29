@@ -2,6 +2,8 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
+import { relationBubbleOperation } from './relation-bubble.controls';
 import { bubbleNodes } from './relation-bubble.data';
 
 /** Stable control ids for the bubble-relation playground */
@@ -23,7 +25,18 @@ export const relationBubbleControls = definePreviewControls({
     {
       label: 'Data',
       defaultCollapsed: true,
-      controls: [{ kind: 'table', id: 'bubbleNodes', label: 'Bubble nodes', rows: bubbleNodes }],
+      controls: [
+        {
+          kind: 'table',
+          id: 'bubbleNodes',
+          label: 'Bubble nodes',
+          views: createPlotTransformTableViews(
+            { source: 'Source', result: 'Relation pairing' },
+            bubbleNodes,
+            () => relationBubbleOperation,
+          ),
+        },
+      ],
     },
     {
       label: 'Relation style',

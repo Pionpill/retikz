@@ -2,6 +2,8 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
+import { relationPathOperationOf } from './relation-path-extremes.controls';
 import { pathExtremeRelations } from './relation-path-extremes.data';
 
 /** Stable control ids for the path-extreme relation playground */
@@ -24,7 +26,16 @@ export const relationPathExtremesControls = definePreviewControls({
       label: 'Data',
       defaultCollapsed: true,
       controls: [
-        { kind: 'table', id: 'pathExtremeRelations', label: 'Path-extreme relations', rows: pathExtremeRelations },
+        {
+          kind: 'table',
+          id: 'pathExtremeRelations',
+          label: 'Path-extreme relations',
+          views: createPlotTransformTableViews(
+            { source: 'Source', result: 'Relation pairing' },
+            pathExtremeRelations,
+            relationPathOperationOf,
+          ),
+        },
       ],
     },
     {
