@@ -716,17 +716,6 @@ export const compileChildrenToPrimitives = (
         frame.observationSink.push(observation);
       }
       frame.artifactSink.push(...scopeArtifacts);
-      for (const contribution of scopeBounds) {
-        frame.boundsSink.push({
-          points: contribution.points.map(point => applyTransformChain(point, scopeTransforms)),
-          shadow: contribution.shadow,
-        });
-      }
-      for (const contribution of scopeAllocations) {
-        frame.allocationSink.push({
-          points: contribution.points.map(point => applyTransformChain(point, scopeTransforms)),
-        });
-      }
       for (const pendingPath of scopePendingPaths) {
         pendingPath.scopeChain.splice(frame.scopeChain.length, 0, ...postTransforms);
       }
@@ -751,6 +740,17 @@ export const compileChildrenToPrimitives = (
         frame.publicationSink.push(globalEnvelope);
       }
       flushPendingPathEmissions(scopePendingPaths);
+      for (const contribution of scopeBounds) {
+        frame.boundsSink.push({
+          points: contribution.points.map(point => applyTransformChain(point, scopeTransforms)),
+          shadow: contribution.shadow,
+        });
+      }
+      for (const contribution of scopeAllocations) {
+        frame.allocationSink.push({
+          points: contribution.points.map(point => applyTransformChain(point, scopeTransforms)),
+        });
+      }
     } finally {
       if (didPushNamespaceFrame) {
         runtime.state.namespaceStack.popFrame();
