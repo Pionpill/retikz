@@ -9,7 +9,7 @@ description: Compile complete Core IR into a deterministic Scene, then publish c
 
 Callers always submit a complete IR Snapshot. The Core owner copies, freezes, and compares the document. The Core Program reads that typed Snapshot, produces a complete `CompileResult`, `SceneRuntimeSnapshot`, and optional `ScenePatch`, then lets the Runtime Session publish them atomically.
 
-<ComponentPreview files="core-runtime-program" size="xxl" hideCode />
+<ComponentPreview files="core-runtime-program" size="xs" hideCode />
 
 Runtime does not interpret Nodes, Paths, Scopes, Composites, or Scenes. Core decides domain identities, compile diagnostics, and full-fallback `replaceScene` Patches; Runtime only constrains dependency order, candidate isolation, revisions, and publication.
 

@@ -9,7 +9,7 @@ description: 把完整 Core IR 编译为确定性 Scene，并通过 Core Runtime
 
 调用方始终提交完整 IR Snapshot。Core owner 负责复制、冻结和比较文档；Core Program 读取 typed Snapshot，产生完整 `CompileResult`、`SceneRuntimeSnapshot` 与可选 `ScenePatch`，最后由 Runtime Session 原子发布。
 
-<ComponentPreview files="core-runtime-program" size="xxl" hideCode />
+<ComponentPreview files="core-runtime-program" size="xs" hideCode />
 
 Runtime 不解释 Node、Path、Scope、Composite 或 Scene。领域 identity、编译诊断和 full-fallback `replaceScene` Patch 都由 Core 决定；Runtime 只约束依赖顺序、candidate 隔离、revision 与发布。
 
