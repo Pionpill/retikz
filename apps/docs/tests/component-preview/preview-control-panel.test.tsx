@@ -512,10 +512,32 @@ describe('PreviewControlPanel', () => {
     expect(
       markup.match(/data-slot="preview-control-field"[^>]*class="[^"]*min-h-7[^"]*items-center[^"]*"/g),
     ).toHaveLength(6);
-    expect(markup).toContain('class="flex min-w-0 flex-1 justify-end"');
     expect(markup).not.toMatch(/data-slot="preview-control-field"[^>]*class="[^"]*justify-between/);
     expect(markup).toContain('>Text</label>');
     expect(markup).not.toContain('Text：');
+  });
+
+  it('字段标签使用可用空间，并为不同输入保留最小操作宽度', async () => {
+    const container = await mount(
+      <PreviewControlPanel definition={definition} controlState={emptyControlState} onClose={() => undefined} />,
+    );
+    const textField = container.querySelector('[data-control-id="text"]');
+    const switchField = container.querySelector('[data-control-id="dashed"]');
+    const rangeField = container.querySelector('[data-control-id="opacity"]');
+    const textLabel = textField?.querySelector('label');
+    const switchLabel = switchField?.querySelector('label');
+    const rangeLabel = rangeField?.querySelector('label');
+    const textInput = textLabel?.nextElementSibling;
+    const switchInput = switchLabel?.nextElementSibling;
+    const rangeInput = rangeLabel?.nextElementSibling;
+
+    expect(textLabel?.classList.contains('max-w-16')).toBe(false);
+    expect(textLabel?.classList.contains('min-w-0')).toBe(true);
+    expect(textInput?.classList.contains('min-w-16')).toBe(true);
+    expect(switchLabel?.classList.contains('flex-1')).toBe(true);
+    expect(switchInput?.classList.contains('shrink-0')).toBe(true);
+    expect(rangeLabel?.classList.contains('max-w-16')).toBe(false);
+    expect(rangeInput?.classList.contains('min-w-24')).toBe(true);
   });
 
   it('在 panel 内渲染只读二维表格并限制大数据行数', async () => {
