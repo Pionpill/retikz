@@ -2,6 +2,8 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
+import { smoothOperationsOf } from './transform-smooth.controls';
 import { trendSamples } from './transform-smooth.data';
 
 /** 趋势示例的英文控件 */
@@ -17,11 +19,17 @@ export const smoothControls = definePreviewControls({
           kind: 'table',
           id: 'rows',
           label: 'Grouped time samples',
-          rows: trendSamples,
+          views: createPlotTransformTableViews(
+            { source: 'Source', result: 'Trend samples' },
+            trendSamples,
+            smoothOperationsOf,
+          ),
           columns: [
             { key: 'series', label: 'Series' },
             { key: 'time', label: 'Time' },
             { key: 'value', label: 'Value' },
+            { key: 'trendX', label: 'Trend X' },
+            { key: 'trendY', label: 'Trend Y' },
           ],
         },
       ],

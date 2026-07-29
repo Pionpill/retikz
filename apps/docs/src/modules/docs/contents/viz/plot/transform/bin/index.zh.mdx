@@ -15,7 +15,7 @@ description: 用 bin 把连续字段切成区间，并为直方图生成箱边�
 
 切换 `count`、`step` 和 `thresholds` 三种互斥策略。示例固定 `extent` 为 `[0, 20]`，并使用双峰且带稀疏尾部的数据，让边界变化不会同时改变取景，策略差异也更容易观察。
 
-<ComponentPreview files={['transform-histogram', 'transform-histogram.data.ts']} size="md" />
+<ComponentPreview files={['transform-histogram', 'transform-histogram.data.ts']} size="lg" />
 
 `IntervalMark` 用 `x0` / `x1` 读取箱边，在连续 x 轴上绘制真实宽度的相邻区间柱；`y` 读取默认的 `binCount`。
 
@@ -39,7 +39,7 @@ description: 用 bin 把连续字段切成区间，并为直方图生成箱边�
 
 图中的“唯一分箱策略”表示互斥配置，不是按顺序尝试的候选。策略解析完成后，主链依次求箱边、分桶、规约并输出每箱一行。
 
-<ComponentPreview files="transform-bin-logic" hideCode size="xl" />
+<ComponentPreview files="transform-bin-logic" hideCode size="sm" />
 
 三种策略产生边界的方式不同：
 

@@ -2,6 +2,8 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
+import { histogramOperationOf } from './transform-histogram.controls';
 import { measurements } from './transform-histogram.data';
 
 /** 分箱示例的英文控件 */
@@ -17,8 +19,17 @@ export const histogramControls = definePreviewControls({
           kind: 'table',
           id: 'rows',
           label: 'Continuous measurements',
-          rows: measurements,
-          columns: [{ key: 'measurement', label: 'Measurement' }],
+          views: createPlotTransformTableViews(
+            { source: 'Source', result: 'Binned' },
+            measurements,
+            histogramOperationOf,
+          ),
+          columns: [
+            { key: 'measurement', label: 'Measurement' },
+            { key: 'binStart', label: 'Bin start' },
+            { key: 'binEnd', label: 'Bin end' },
+            { key: 'binCount', label: 'Bin count' },
+          ],
         },
       ],
     },

@@ -2,6 +2,7 @@ import { Axis, PathMark, Plot, Scale, Transform } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
+import { densityOperationOf } from './transform-density.controls';
 import { measurements } from './transform-density.data';
 import { densityControls, previewControlContract } from './transform-density.en.controls';
 
@@ -10,15 +11,7 @@ export const previewControls = densityControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Plot data={measurements} width={440} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Transform
-      kind="density"
-      field="value"
-      groupBy={['group']}
-      bandwidth={values.bandwidthMode === 'value' ? { kind: 'value', value: values.bandwidth } : { kind: 'silverman' }}
-      sampleCount={values.sampleCount}
-      xAs="densityX"
-      densityAs="density"
-    />
+    <Transform {...densityOperationOf(values)} />
     <Scale dimension="x" type="linear" domain={[1, 10]} />
     <Scale dimension="y" type="linear" domain={[0, 0.7]} />
     <PathMark

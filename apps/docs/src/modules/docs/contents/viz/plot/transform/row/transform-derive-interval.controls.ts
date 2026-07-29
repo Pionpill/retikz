@@ -2,7 +2,14 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
 import { tasks } from './transform-derive-interval.data';
+
+/** 根据实时控件值创建区间派生 operation */
+export const deriveIntervalOperationOf = (values: { mode: 'fields' | 'baseline'; baseline: number }) =>
+  values.mode === 'fields'
+    ? ({ kind: 'derive-interval', startFrom: 'start', endFrom: 'end' } as const)
+    : ({ kind: 'derive-interval', from: 'end', baseline: values.baseline } as const);
 
 /** 派生区间示例的中文控件 */
 export const deriveIntervalControls = definePreviewControls({
@@ -17,12 +24,18 @@ export const deriveIntervalControls = definePreviewControls({
           kind: 'table',
           id: 'rows',
           label: '任务起止值',
-          rows: tasks,
+          views: createPlotTransformTableViews(
+            { source: '原始', result: '派生区间后' },
+            tasks,
+            deriveIntervalOperationOf,
+          ),
           columns: [
             { key: 'task', label: '任务' },
             { key: 'phase', label: '阶段' },
             { key: 'start', label: '起点' },
             { key: 'end', label: '终点' },
+            { key: 'y0', label: '下界 y0' },
+            { key: 'y1', label: '上界 y1' },
           ],
         },
       ],

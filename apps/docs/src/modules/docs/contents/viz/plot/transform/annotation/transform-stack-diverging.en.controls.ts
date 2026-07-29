@@ -2,6 +2,8 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
+import { stackDivergingOperation } from './transform-stack-diverging.controls';
 import { signedProductChange } from './transform-stack-diverging.data';
 
 /** 正负分流堆叠示例的英文只读数据面板 */
@@ -16,11 +18,17 @@ export const stackDivergingControls = definePreviewControls({
           kind: 'table',
           id: 'rows',
           label: 'Quarterly product changes',
-          rows: signedProductChange,
+          views: createPlotTransformTableViews(
+            { source: 'Source', result: 'Diverging stack' },
+            signedProductChange,
+            () => stackDivergingOperation,
+          ),
           columns: [
             { key: 'quarter', label: 'Quarter' },
             { key: 'product', label: 'Product' },
             { key: 'change', label: 'Change' },
+            { key: 'y0', label: 'Lower y0' },
+            { key: 'y1', label: 'Upper y1' },
           ],
         },
       ],

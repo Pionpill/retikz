@@ -18,13 +18,13 @@ description: 堆叠与占比保留每一条明细行，同时补出 plot 绘图�
 
 切换 `offset`，比较普通累加、归一化、居中与重叠区间。归一化模式使用 0–1，居中模式使用 −60–60，其余模式使用 0–120 的纵轴范围。
 
-<ComponentPreview files={['transform-stack', 'transform-stack.data.ts']} size="md" />
+<ComponentPreview files={['transform-stack', 'transform-stack.data.ts']} size="lg" />
 
 ### 正负分流
 
 `diverging` 面向同时含正值和负值的数据：正值从 0 向上累加，负值从 0 向下累加。它需要单独的有符号数据示例；这类输入不能交给只定义非负占比的 `normalize`。
 
-<ComponentPreview files={['transform-stack-diverging', 'transform-stack-diverging.data.ts']} size="md" />
+<ComponentPreview files={['transform-stack-diverging', 'transform-stack-diverging.data.ts']} size="lg" />
 
 ### API 参考
 
@@ -43,7 +43,7 @@ description: 堆叠与占比保留每一条明细行，同时补出 plot 绘图�
 
 `stack` 先按 `x` 划分独立堆栈，再按 `groupBy` 的全局首次出现顺序排列系列。图中的 `offset` 是边界计算的辅助策略，不改变分组和输出行顺序。
 
-<ComponentPreview files="transform-stack-logic" hideCode size="xl" />
+<ComponentPreview files="transform-stack-logic" hideCode size="xs" />
 
 每个分组的边界计算按 `offset` 分支执行：
 
@@ -73,7 +73,7 @@ description: 堆叠与占比保留每一条明细行，同时补出 plot 绘图�
 
 切换 `basis` 和分组范围，对比 0–1 比例、0–100 百分比，以及“每季度归一”与“全局归一”。
 
-<ComponentPreview files={['transform-normalize', 'transform-normalize.data.ts']} size="md" />
+<ComponentPreview files={['transform-normalize', 'transform-normalize.data.ts']} size="lg" />
 
 ### API 参考
 
@@ -90,7 +90,7 @@ description: 堆叠与占比保留每一条明细行，同时补出 plot 绘图�
 
 `normalize` 要先遍历一次数据校验有限负值并建立各组总和，再遍历第二次写回每一行的占比。图中的负值分支会抛错；零和保护则是正常输出规则。
 
-<ComponentPreview files="transform-normalize-logic" hideCode size="xl" />
+<ComponentPreview files="transform-normalize-logic" hideCode size="sm" />
 
 `groupBy` 省略时所有行共享一个总和；设置多个字段时，字段值组合成复合分组键。有限负值会抛错，缺失或非有限数值按 0 参与求和和除法。
 

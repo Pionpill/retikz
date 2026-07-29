@@ -15,7 +15,7 @@ Use `relate` to select two representative rows from every group and derive a rel
 
 Switch between global and per-series pairing, then choose first, last, lowest, or highest rows independently for source and target. The data table stays expanded so arrow endpoints, direction, and difference labels remain easy to inspect.
 
-<ComponentPreview files={['transform-relate', 'transform-relate.data.ts']} size="md" />
+<ComponentPreview files={['transform-relate', 'transform-relate.data.ts']} size="lg" />
 
 Per-series pairing emits one relation for each series; all-rows pairing emits one global relation. The demo projects `sourceId` / `targetId`, then calculates `target.value - source.value`. `PathMark` and `PointMark` continue reading source data; only the mark-local `RelationMark` transform reads the paired result.
 
@@ -43,7 +43,7 @@ For example, `source.fields: { id: 'id', x: 'month' }` emits `sourceId` and `sou
 
 The source and target branches in the figure are parallel selections, not sequential filters. They only join for field projection and measure calculation after both endpoints exist, so each group emits at most one relation row.
 
-<ComponentPreview files="transform-relate-logic" hideCode size="xl" />
+<ComponentPreview files="transform-relate-logic" hideCode size="sm" />
 
 Execution has four steps:
 

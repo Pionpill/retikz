@@ -5,7 +5,7 @@ import { Layout } from '@retikz/react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { CUSTOM_TRANSFORM_CONTROL_IDS, previewControlContract, waterfallControls } from './waterfall.controls';
+import { previewControlContract, waterfallControls, waterfallOperationOf } from './waterfall.controls';
 import { waterfallRows } from './waterfall.data';
 import { waterfallTransform } from './waterfall.definition';
 
@@ -26,7 +26,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       colors={['#16a34a', '#dc2626']}
       transformDefinitions={[waterfallTransform]}
     >
-      <Transform kind="waterfall" field="delta" initialValue={values[CUSTOM_TRANSFORM_CONTROL_IDS.initialValue]} />
+      <Transform {...waterfallOperationOf(values)} />
       <Scale dimension="x" type="band" paddingInner={0.2} paddingOuter={0.08} />
       <Scale dimension="y" type="linear" domain={[-20, 160]} domainPadding={0} />
       <IntervalMark x="period" color="direction" bounds={{ y: { kind: 'extent', from: 'from', to: 'to' } }} />

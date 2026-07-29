@@ -4,10 +4,10 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** jitter 的英文字段选择、确定性偏移与 pre-scale 数据流 */
 const Demo: FC = () => (
-  <Layout width={420} height={360} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={820} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
       id="rows"
-      position={[70, -140]}
+      position={[-350, 40]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}
@@ -22,7 +22,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="select"
-      position={[70, -70]}
+      position={[-225, 40]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -37,7 +37,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="rng"
-      position={[-130, 0]}
+      position={[-40, -50]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -52,7 +52,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="perturb"
-      position={[70, 0]}
+      position={[-40, 40]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -67,7 +67,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="output"
-      position={[70, 70]}
+      position={[170, 40]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}
@@ -82,7 +82,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="scale"
-      position={[70, 140]}
+      position={[350, 40]}
       stroke="dimgray"
       fill="dimgray"
       fillOpacity={0.06}

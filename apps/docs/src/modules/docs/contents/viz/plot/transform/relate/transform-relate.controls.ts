@@ -2,7 +2,28 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
 import { monthlyTrend } from './transform-relate.data';
+
+const endpointSelectors = {
+  first: { kind: 'first' },
+  last: { kind: 'last' },
+  min: { kind: 'min', by: 'value' },
+  max: { kind: 'max', by: 'value' },
+} as const;
+
+/** 根据实时控件值创建端点配对 operation */
+export const relateOperationOf = (values: {
+  pairingScope: 'series' | 'all';
+  sourceSelector: keyof typeof endpointSelectors;
+  targetSelector: keyof typeof endpointSelectors;
+}) => ({
+  kind: 'relate',
+  ...(values.pairingScope === 'series' ? { groupBy: ['series'] } : {}),
+  source: { selector: endpointSelectors[values.sourceSelector], fields: { id: 'id' } },
+  target: { selector: endpointSelectors[values.targetSelector], fields: { id: 'id' } },
+  measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+});
 
 /** 行配对示例的中文控件 */
 export const relateControls = definePreviewControls({
@@ -16,12 +37,20 @@ export const relateControls = definePreviewControls({
           kind: 'table',
           id: 'rows',
           label: '月度趋势',
-          rows: monthlyTrend,
+          views: createPlotTransformTableViews(
+            { source: '原始', result: '端点配对后' },
+            monthlyTrend,
+            relateOperationOf,
+          ),
           columns: [
             { key: 'series', label: '系列' },
             { key: 'id', label: 'ID' },
             { key: 'month', label: '月份' },
             { key: 'value', label: '数值' },
+            { key: 'sourceId', label: '起点 ID' },
+            { key: 'targetId', label: '终点 ID' },
+            { key: 'delta', label: '差值' },
+            { key: 'deltaLabel', label: '差值标签' },
           ],
         },
       ],

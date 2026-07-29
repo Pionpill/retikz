@@ -4,10 +4,10 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** derive-interval 的英文模式优先级、逐行派生与错误出口 */
 const Demo: FC = () => (
-  <Layout width={440} height={360} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={820} height={240} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
       id="explicit-mode"
-      position={[-100, -140]}
+      position={[-300, -45]}
       stroke="gray"
       fill="gray"
       fillOpacity={0.06}
@@ -22,7 +22,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="baseline-mode"
-      position={[100, -140]}
+      position={[-300, 85]}
       stroke="gray"
       fill="gray"
       fillOpacity={0.06}
@@ -37,7 +37,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="resolve-mode"
-      position={[0, -60]}
+      position={[-100, 35]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -52,7 +52,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="error"
-      position={[165, -60]}
+      position={[-100, -55]}
       stroke="red"
       fill="red"
       fillOpacity={0.06}
@@ -67,7 +67,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="rows"
-      position={[-140, 40]}
+      position={[100, -55]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}
@@ -82,7 +82,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="derive"
-      position={[40, 40]}
+      position={[100, 35]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -97,7 +97,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="output"
-      position={[40, 140]}
+      position={[300, 35]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}
@@ -121,7 +121,7 @@ const Demo: FC = () => (
           label: {
             text: 'mode',
             position: 'midway',
-            side: 'right',
+            side: 'top',
             sloped: false,
             textColor: 'gray',
             font: { size: 12 },

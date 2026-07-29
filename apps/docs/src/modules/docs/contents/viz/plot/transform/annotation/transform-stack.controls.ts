@@ -2,7 +2,17 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
 import { productRevenue } from './transform-stack.data';
+
+/** 根据实时控件值创建堆叠 operation */
+export const stackOperationOf = (values: { offset: 'zero' | 'normalize' | 'center' | 'overlap' }) => ({
+  kind: 'stack',
+  x: 'quarter',
+  y: 'revenue',
+  groupBy: 'product',
+  offset: values.offset,
+});
 
 /** 堆叠示例的中文控件 */
 export const stackControls = definePreviewControls({
@@ -11,17 +21,18 @@ export const stackControls = definePreviewControls({
   sections: [
     {
       label: '数据',
-      defaultCollapsed: true,
       controls: [
         {
           kind: 'table',
           id: 'rows',
           label: '季度产品收入',
-          rows: productRevenue,
+          views: createPlotTransformTableViews({ source: '原始', result: '堆叠后' }, productRevenue, stackOperationOf),
           columns: [
             { key: 'quarter', label: '季度' },
             { key: 'product', label: '产品' },
             { key: 'revenue', label: '收入' },
+            { key: 'y0', label: '下界 y0' },
+            { key: 'y1', label: '上界 y1' },
           ],
         },
       ],
