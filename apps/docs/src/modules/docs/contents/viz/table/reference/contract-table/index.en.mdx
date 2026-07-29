@@ -35,17 +35,17 @@ An LLM or tool that emits one table type should retain its precise schema. Use `
 
 ## Cells
 
-`IRTableCell` is the directly persistable Cell used by a manual Structure. Addresses are zero-based. When `id`, `location`, or `roles` are omitted, runtime resolution derives them from the address and containing row semantics.
+`IRManualTableCell` is the directly persistable non-null entry used inside manual `rows`. `string | number | boolean` are value shorthands; rich objects carry value/content, spans, layout, and semantic fields. `null` is the row-matrix empty-slot sentinel, not a Cell union member; use `{ value: null }` for a real null scalar.
 
-### TableCellSchema
+### ManualTableCellSchema
 
-<ZodSchema name="TableCellSchema" />
+<ZodSchema name="ManualTableCellSchema" />
 
 ### TableCellPayloadSchema
 
 <ZodSchema name="TableCellPayloadSchema" />
 
-In `{ kind: 'value', value: 'Score' }`, `kind: 'value'` selects the scalar-presentation branch; it is not an alias for the JavaScript string type. Use `kind: 'content'` to place a Node, Path, or Tier 2 child directly.
+These payload schemas describe canonical Structure output. Manual authoring uses `{ value: 'Score' }` or `{ content }`, and Table materializes the corresponding `kind: 'value' | 'content'` payload.
 
 ### TableCellValuePayloadSchema
 

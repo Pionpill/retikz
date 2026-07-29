@@ -32,7 +32,7 @@ description: 查询 TableSpec 根、Cell span/布局、轨道尺寸、border 与
 
 <ZodSchema
   name="ManualTableSpecSchema"
-  description="显式网格 spec：直接保存行、列与 Cell，不接受外部 data reference。"
+  description="显式网格 spec：保存矩形行优先 Cell entries，不接受外部 data reference。"
   descriptions={{
     namespace: 'Table Tier 2 composite 的固定命名空间，用于把节点路由到 Table composite definition。',
     type: '顶层 Table 规格的 composite 类型判别值。',
@@ -40,12 +40,10 @@ description: 查询 TableSpec 根、Cell span/布局、轨道尺寸、border 与
     layout: '轨道、gap 与 border 布局配置；省略字段使用 pipeline 默认值。',
     meta: '由 lowering 原样保留的 JSON-safe 元数据。',
     data: 'manual Table 不接受外部数据引用。',
-    structure: 'manual Table 的显式行、列与 Cell 结构。',
+    structure: 'manual Table 的矩形行优先 Cell 结构。',
     'structure.kind': '显式 manual Structure 的判别值。',
-    'structure.rows': '显式声明的行数。',
-    'structure.columns': '显式声明的列数。',
+    'structure.rows': '非空矩形二维 Cell entries；行列数量和地址由数组坐标推导。',
     'structure.rowKinds': '每一行的可选语义类型；省略时所有行均按正文行处理。',
-    'structure.cells': '按声明行列范围内的地址保存的显式 Cell。',
   }}
 />
 
@@ -68,19 +66,18 @@ description: 查询 TableSpec 根、Cell span/布局、轨道尺寸、border 与
 
 ## Cell
 
-`IRTableCell` 是 manual Structure 中可直接持久化的 Cell。地址从 `0` 开始；省略 `id`、`location` 或 `roles` 时，运行时会从地址和所在行语义派生。
+`IRManualTableCell` 是 manual `rows` 中可直接持久化的非空 entry。`string | number | boolean` 是 value 简写；rich object 可保存 value/content、span 与 layout。`null` 属于 rows 的空槽哨兵，不是这个 Cell union；真正的 null scalar 写成 `{ value: null }`。
 
-### TableCellSchema
+### ManualTableCellSchema
 
 <ZodSchema
-  name="TableCellSchema"
-  description="显式 Cell：包含零基地址、value/content payload，以及可选身份与语义角色。"
+  name="ManualTableCellSchema"
+  description="manual rows 中的非空 Cell entry：标量简写或 addressless value/content rich object。"
   descriptions={{
     id: '可选稳定 Cell id；省略时根据 Cell 地址派生。',
-    address: 'manual Structure 中的零基 Cell 地址。',
-    'address.row': 'Structure 输出中的零基行索引。',
-    'address.column': 'Structure 输出中的零基列索引。',
-    payload: 'Cell 的标量值或直接 Core/Tier 2 内容。',
+    value: '交给 presentation provider 的 JSON scalar；可显式为 null。',
+    presentation: 'value Cell 的可选 presentation provider 引用；省略时使用内置 text。',
+    content: '在 Cell 局部坐标中 author 的 JSON-safe Core 或 Tier 2 child。',
     location: 'Cell 所在的可选语义区域；省略时根据所在行类型派生。',
     roles: 'Cell 承担的可选非空语义角色；省略时根据所在行类型派生。',
     span: '可选矩形跨度；省略的轴按 1 处理。',
@@ -95,7 +92,7 @@ description: 查询 TableSpec 根、Cell span/布局、轨道尺寸、border 与
   description="Cell 内容联合：value 交给 presentation provider，content 直接保存 JSON-safe Core/Tier 2 child。"
 />
 
-`{ kind: 'value', value: 'Score' }` 中的 `kind: 'value'` 表示“标量值呈现”分支；它不是 JavaScript 字符串类型的别名。直接放置 Node、Path 或 Tier 2 child 时使用 `kind: 'content'`。
+这些 payload schema 描述 Structure output 中的 canonical 内容契约。manual authoring 使用 `{ value: 'Score' }` 或 `{ content }`，Table 会统一物化对应的 `kind: 'value' | 'content'` payload。
 
 ### TableCellValuePayloadSchema
 

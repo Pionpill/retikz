@@ -17,26 +17,28 @@ description: 理解不同表格类型共享的 Structure、Cell、Presentation�
 
 `structure.kind` 判别当前结构操作。当前内置两种结构，并允许注册自定义结构：
 
-| kind     | 数据放在哪里                            | 适合谁                         |
-| -------- | --------------------------------------- | ------------------------------ |
-| `detail` | spec 保存字段映射，记录在运行时注入     | 一条记录对应一行的明细表       |
-| `manual` | spec 直接保存行列尺寸与 Cell            | 需要精确声明静态网格的底层场景 |
-| custom   | spec 保存自定义参数，由 definition 解析 | 扩展作者定义新的结构操作       |
+| kind     | 数据放在哪里                             | 适合谁                         |
+| -------- | ---------------------------------------- | ------------------------------ |
+| `detail` | spec 保存字段映射，记录在运行时注入      | 一条记录对应一行的明细表       |
+| `manual` | spec 直接保存矩形 `rows` 与 Cell entries | 需要精确声明静态网格的底层场景 |
+| custom   | spec 保存自定义参数，由 definition 解析  | 扩展作者定义新的结构操作       |
 
 自定义 Structure 也复用同一个 definition registry、语义输出和消费管线。只生成一种结构的 LLM 或工具应持有精确的 `IRDetailTableSpec`、`IRManualTableSpec` 或 `IRCustomTableSpec`；需要在同一存储或协议中接收多种结构时，才使用聚合的 `IRTableSpec`。
 
 ### 显式网格入口
 
-`ManualTable` 直接声明行、列和零基 Cell 地址，适合表头、摘要或不依赖外部记录的静态网格。
+`ManualTable` 直接接收行优先二维数组，适合表头、摘要或不依赖外部记录的静态网格。行数、列数和零基地址都由矩形 `rows` 推导，不再重复声明。
 
 <ComponentPreview files={['table-manual', 'table-manual.zh.data.ts']} size="xs" />
 
-React 中也可以用嵌套的 `Row` / `Cell` 按声明顺序生成地址：
+标量 entry 是 value Cell 简写；`null` 表示该坐标没有 Cell，真正的空标量写成 `{ value: null }`。需要 presentation、span、layout、语义字段或直接内容时，使用 `{ value, ... }` / `{ content, ... }` rich object。
+
+React 中也可以用嵌套的 `Row` / `Cell` 按声明顺序生成同一种矩形结构：
 
 ```tsx
 import { Cell, ManualTable, Row } from '@retikz/table-react';
 
-<ManualTable rows={2} columns={3}>
+<ManualTable>
   <Row kind="columnHeader">
     <Cell span={{ columns: 2 }}>身份</Cell>
     <Cell>分数</Cell>
@@ -49,18 +51,18 @@ import { Cell, ManualTable, Row } from '@retikz/table-react';
 </ManualTable>;
 ```
 
-根上的 `rows` 与 `columns` 必须显式声明，嵌套 `Row` 数量必须等于 `rows`。marker 按当前行最小未占用位置放置，`span` 会预占完整矩形和未来行；span 不能越界、重叠或跨越不同 row kind。需要任意零基地址的稀疏 Cell 时，改用完整 `cells` props。`Cell` 的 children、`value` 与 `content` 三者只能选一个。
+marker 按当前行最小未占用位置放置，`span` 会预占完整矩形和未来行；最终列数取全部 marker 的最大占用宽度，其余位置补成 `null`。span 不能越界、重叠或跨越不同 row kind。所有 `Row` 都为空时无法推导列数，应改用显式 null matrix 的 `rows` props。`Cell` 的 children、`value` 与 `content` 三者只能选一个。
 
 ## Cell 与 Presentation
 
-每个 Cell 的 `payload.kind` 决定内容从哪里来：
+manual authoring 中，每个非 null entry 会被 Table 规范化成 canonical Cell payload：
 
 | kind      | 保存内容                         | 处理方式                                      |
 | --------- | -------------------------------- | --------------------------------------------- |
 | `value`   | JSON 标量值与可选呈现引用        | 交给 presentation definition；默认使用 `text` |
 | `content` | JSON-safe 的 Core / Tier 2 child | 直接作为 Cell 局部坐标中的内容，不经过值呈现  |
 
-因此 `{ kind: 'value', value: 'Score' }` 表示“这是一个待呈现的标量值”；`value` 是判别分支，不是字符串类型的别名。若 Cell 要直接容纳 Node、Path 或另一个 Tier 2 child，则使用 `content`。
+因此 `{ value: 'Score' }` 表示“这是一个待呈现的标量值”；若 Cell 要直接容纳 Node、Path 或另一个 Tier 2 child，则使用 `{ content }`。canonical payload 的精确 schema 仍供 Structure output、presentation 与 manifest 契约复用。
 
 Presentation 只负责把值变成 Core 内容，不决定 Cell 属于哪一行或多宽。内置 `text` 与自定义 presentation 通过同一个 registry 解析。
 

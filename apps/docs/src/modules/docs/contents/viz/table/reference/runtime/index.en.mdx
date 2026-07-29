@@ -13,11 +13,13 @@ TableSpec stores only JSON-safe structure. Datasets, Definitions, Core compile o
 
 `@retikz/table-react` exposes three roots: `Table` accepts a complete `IRTableSpec`, `DetailTable` creates record-per-row specs, and `ManualTable` creates explicit-grid specs. All three share `TableCommonProps` and one runtime.
 
-| Entry         | Core input                       | Structure authoring                      |
-| ------------- | -------------------------------- | ---------------------------------------- |
-| `Table`       | `spec`, optional `data`          | An already constructed precise TableSpec |
-| `DetailTable` | `dataRef`, `data`, and `columns` | `columns` or `DetailColumn` children     |
-| `ManualTable` | `rows`, `columns`, and `cells`   | `cells` or `Row` / `Cell` children       |
+| Entry         | Core input                              | Structure authoring                      |
+| ------------- | --------------------------------------- | ---------------------------------------- |
+| `Table`       | `spec`, optional `data`                 | An already constructed precise TableSpec |
+| `DetailTable` | `dataRef`, `data`, and `columns`        | `columns` or `DetailColumn` children     |
+| `ManualTable` | Rectangular `rows`, optional `rowKinds` | `rows` props or `Row` / `Cell` children  |
+
+The two `ManualTable` authoring modes are mutually exclusive. Props mode forwards the persisted row-major structure. Marker mode derives width from the maximum occupied position, pads with `null`, and then uses the same `createManualTableSpec()` and Table schema.
 
 `TableLayoutHostProps` precisely reuses the host fields currently supported by Kernel `<Layout ir>`: handlers, output size/viewBox, renderer, animation, resource ids, Core provider definitions, and the TeX lowerer. See the authoritative [Layout API](/kernel/components/layout/overview) for the complete field semantics. Scope styles, full `compile`, `artifacts/onArtifacts`, and `embeddables` are not part of the Table-root public surface.
 

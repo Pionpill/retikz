@@ -341,10 +341,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'CustomTableSpec',
     url: '/viz/table/reference/contract-table#customtablespecschema',
   },
-  TableCellSchema: {
-    schema: TableIR.TableCellSchema,
-    label: 'TableCell',
-    url: '/viz/table/reference/contract-table#tablecellschema',
+  ManualTableCellSchema: {
+    schema: TableIR.ManualTableCellSchema,
+    label: 'ManualTableCell',
+    url: '/viz/table/reference/contract-table#manualtablecellschema',
   },
   TableCellPayloadSchema: {
     schema: TableIR.TableCellPayloadSchema,
