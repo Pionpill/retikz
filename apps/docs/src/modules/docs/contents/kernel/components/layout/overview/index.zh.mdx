@@ -73,6 +73,16 @@ children 直接放 Kernel / Sugar 组件树即可，没有额外的固定组合�
 
 boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` 进入各自的 core registry。`<Layout>` 只提供 React 注入入口，不在 adapter 内维护另一套内置白名单；完整契约见对应自定义指南与下方 API。
 
+### 执行模式与更新策略
+
+```tsx
+<Layout /> {/* retained + auto */}
+<Layout runtime={{ mode: 'retained', updateStrategy: 'full' }} />
+<Layout runtime={{ mode: 'static' }} />
+```
+
+默认 `retained + auto` 兼顾局部更新和事务回滚；要排除增量 Program 但保留 Session 能力时选 `retained + full`，要减少常驻 Runtime 状态时选 `static`。
+
 ## 技术原理
 
 <ComponentAlert type="tip" title="上手阶段可跳过本节" description="遇到输入、视框或宿主策略的边界 case 时再回来读。" />
@@ -81,7 +91,9 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
 
 ### 职责如何闭环
 
-`<Layout>` 把 JSX children 转成 Core IR，或直接采用 `ir` prop；definitions 与 runtime options 也由这里接入。每当 `ir` 或 Core options 改变，render 阶段会完整编译一次 SSR-safe Scene seed；React commit 后，Core Program 与 retained Render participant 再在 Runtime Session 中处理同一输入。输入和 renderer 配置在一次 transaction 中提交，成功后才一起发布 Scene、DOM / bitmap、事件、动画句柄与 artifacts。
+`<Layout>` 把 JSX children 转成 Core IR，或直接采用 `ir` prop；definitions 与 runtime options 也由这里接入。每当 `ir` 或 Core options 改变，render 阶段会完整编译一次 SSR-safe Scene seed；React commit 后再由 `runtime.mode` 选择 retained Session 或无 Session 的 static host。
+
+retained 路径让 Core Program 与 Render participant 在一次 transaction 中提交输入和 renderer 配置，成功后才一起发布 Scene、DOM / bitmap、事件、动画句柄与 artifacts。static 路径直接完整物化当前 Scene，不创建 Snapshot、diff、transaction 或 rollback。
 
 <ComponentPreview files="layout-input-flow" size="sm" hideCode />
 
@@ -98,14 +110,14 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
     {
       label: 'React retained Session 创建与清理',
       path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
-      startLine: 238,
-      endLine: 296,
+      startLine: 244,
+      endLine: 303,
     },
     {
       label: 'React retained update 与错误传播',
       path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
-      startLine: 298,
-      endLine: 316,
+      startLine: 305,
+      endLine: 323,
     },
     {
       label: 'React 声明 SVG / Canvas host shell',
@@ -119,8 +131,30 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
       startLine: 25,
       endLine: 53,
     },
+    {
+      label: 'Layout Runtime 判别配置',
+      path: 'packages/kernel/react/src/kernel/runtime/runtime-options.ts',
+      startLine: 5,
+      endLine: 48,
+    },
+    {
+      label: 'Static 与 retained host 分派',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 479,
+      endLine: 524,
+    },
   ]}
 />
+
+### 执行模式如何分流
+
+| 配置              | 更新行为                                         | 常驻状态与失败语义                                             |
+| ----------------- | ------------------------------------------------ | -------------------------------------------------------------- |
+| `retained + auto` | 安全变化走局部 Patch，其余完整 fallback          | 保留 diagnostics、原子 commit 与 rollback；默认配置            |
+| `retained + full` | 有实际依赖变化时跳过 Program `update()` 完整运行 | 与 auto 持有相同 Session 状态；不是低内存模式                  |
+| `static`          | 每次完整 compile 并直接物化 SVG / Canvas         | 不创建 Session、Snapshot、diff 或 rollback；物化失败不承诺回滚 |
+
+`static` 不能同时传 `updateStrategy`、`rendererFactory` 或 `onDiagnostic`。在 retained host 上改变 `updateStrategy` 会保留宿主元素并重建 Session；改变 `mode` 会释放并替换整套宿主。
 
 ### 视框如何确定
 
@@ -239,16 +273,20 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
 
 ### 渲染与宿主
 
-| 属性        | 类型                      | 默认值  | 描述                                                                        |
-| ----------- | ------------------------- | ------- | --------------------------------------------------------------------------- |
-| `renderer`  | `'svg'` \| `'canvas'`     | `'svg'` | 输出后端；缺省时读取最近的 `RendererModeProvider`                           |
-| `className` | `string`                  | —       | 透传到 SVG / Canvas 根元素                                                  |
-| `style`     | `CSSProperties`           | —       | 透传到 SVG / Canvas 根元素                                                  |
-| `idPrefix`  | `string`                  | —       | 覆盖资源 id 前缀，用于多实例或 SSR 水合稳定性                               |
-| `handlers`  | `LayoutProps['handlers']` | —       | `ir` 模式的事件 handler 注册表；见[水合](/kernel/packages/render/hydration) |
-| `runtime`   | `LayoutRuntimeOptions`    | `{}`    | retained renderer factory 与 Runtime diagnostic 出口                        |
+| 属性                      | 类型                                              | 默认值            | 描述                                                                        |
+| ------------------------- | ------------------------------------------------- | ----------------- | --------------------------------------------------------------------------- |
+| `renderer`                | `'svg'` \| `'canvas'`                             | `'svg'`           | 输出后端；缺省时读取最近的 `RendererModeProvider`                           |
+| `className`               | `string`                                          | —                 | 透传到 SVG / Canvas 根元素                                                  |
+| `style`                   | `CSSProperties`                                   | —                 | 透传到 SVG / Canvas 根元素                                                  |
+| `idPrefix`                | `string`                                          | —                 | 覆盖资源 id 前缀，用于多实例或 SSR 水合稳定性                               |
+| `handlers`                | `LayoutProps['handlers']`                         | —                 | `ir` 模式的事件 handler 注册表；见[水合](/kernel/packages/render/hydration) |
+| `runtime`                 | `LayoutRuntimeOptions`                            | `retained + auto` | 选择 retained / static 宿主与 auto / full Program 更新策略                  |
+| `runtime.mode`            | `LayoutRuntimeModeValue`                          | `'retained'`      | retained 创建 Session；static 直接完整物化且不提供事务回滚                  |
+| `runtime.updateStrategy`  | `LayoutRetainedRuntimeOptions['updateStrategy']`  | `'auto'`          | retained Program 走自动增量 / fallback，或强制 full                         |
+| `runtime.rendererFactory` | `LayoutRetainedRuntimeOptions['rendererFactory']` | 内置 factory      | 仅 retained；注入实现相同 contract 的第三方 renderer                        |
+| `runtime.onDiagnostic`    | `LayoutRetainedRuntimeOptions['onDiagnostic']`    | —                 | 仅 retained；按 Runtime queue 顺序接收 diagnostic                           |
 
-`runtime.rendererFactory` 可注入实现同一 retained renderer contract 的第三方后端；省略时使用内置 SVG / Canvas factory。`runtime.onDiagnostic` 按 Runtime queue 顺序接收成功提交和失败 transaction 的诊断；callback 自身抛错会被隔离，不改变 Runtime 的提交或失败结果。
+`runtime.mode: 'static'` 与其余三个 runtime 字段互斥。retained 的 `onDiagnostic` callback 自身抛错会被隔离，不改变 Runtime 的提交或失败结果。
 
 ### React 宿主导出
 

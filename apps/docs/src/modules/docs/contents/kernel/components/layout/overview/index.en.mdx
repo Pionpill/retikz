@@ -73,6 +73,16 @@ A `ShapeDefinition` first supplies the folded file's footprint, connection bound
 
 Boundary, clip, arrow, pattern, and path-kind definitions enter their own core registries through `<Layout>` in the same way. `<Layout>` only exposes the React injection point and does not maintain another adapter-side built-in allowlist; see each extension guide and the API below for the full contracts.
 
+### Execution Modes And Update Strategies
+
+```tsx
+<Layout /> {/* retained + auto */}
+<Layout runtime={{ mode: 'retained', updateStrategy: 'full' }} />
+<Layout runtime={{ mode: 'static' }} />
+```
+
+The default `retained + auto` combines local updates with transactional rollback. Choose `retained + full` to exclude incremental Program updates while retaining Session capabilities, or choose `static` to reduce resident Runtime state.
+
 ## How it works
 
 <ComponentAlert
@@ -85,7 +95,9 @@ This section zooms in on React wiring, viewport, and host-policy decisions owned
 
 ### How Responsibilities Close the Loop
 
-`<Layout>` converts JSX children to Core IR or adopts the `ir` prop, while definitions and runtime options enter through the same boundary. Whenever `ir` or Core options change, the render phase performs one complete compile for an SSR-safe Scene seed. After React commits, a Core Program and retained Render participant process the same input in a Runtime Session. Input and renderer configuration commit in one transaction, then publish Scene, DOM / bitmap, events, animation handles, and artifacts together.
+`<Layout>` converts JSX children to Core IR or adopts the `ir` prop, while definitions and runtime options enter through the same boundary. Whenever `ir` or Core options change, the render phase performs one complete compile for an SSR-safe Scene seed. After React commits, `runtime.mode` selects either a retained Session or a Session-free static host.
+
+The retained path commits input and renderer configuration through a Core Program and Render participant in one transaction, then publishes Scene, DOM / bitmap, events, animation handles, and artifacts together. The static path directly materializes the complete current Scene without creating Snapshots, diffs, transactions, or rollback.
 
 <ComponentPreview files="layout-input-flow" size="sm" hideCode />
 
@@ -102,14 +114,14 @@ Semantic ownership does not drift with the entry point: React declares only a st
     {
       label: 'Create and clean up the React retained Session',
       path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
-      startLine: 238,
-      endLine: 296,
+      startLine: 244,
+      endLine: 303,
     },
     {
       label: 'React retained update and error propagation',
       path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
-      startLine: 298,
-      endLine: 316,
+      startLine: 305,
+      endLine: 323,
     },
     {
       label: 'Declare the SVG and Canvas host shells',
@@ -123,8 +135,30 @@ Semantic ownership does not drift with the entry point: React declares only a st
       startLine: 25,
       endLine: 53,
     },
+    {
+      label: 'Discriminated Layout Runtime options',
+      path: 'packages/kernel/react/src/kernel/runtime/runtime-options.ts',
+      startLine: 5,
+      endLine: 48,
+    },
+    {
+      label: 'Static and retained host dispatch',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 479,
+      endLine: 524,
+    },
   ]}
 />
+
+### How Execution Modes Dispatch
+
+| Configuration     | Update behavior                                           | Resident state and failure semantics                                                       |
+| ----------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `retained + auto` | Safe changes use local Patches; others fully fall back    | Keeps diagnostics, atomic commits, and rollback; this is default                           |
+| `retained + full` | Skips Program `update()` for affected work and runs fully | Holds the same Session state as auto; not a low-memory mode                                |
+| `static`          | Fully compiles and directly materializes SVG / Canvas     | Creates no Session, Snapshot, diff, or rollback; materialization may fail without rollback |
+
+`static` cannot be combined with `updateStrategy`, `rendererFactory`, or `onDiagnostic`. Changing `updateStrategy` on a retained host preserves the host element and rebuilds the Session, while changing `mode` releases and replaces the complete host.
 
 ### How the viewport is chosen
 
@@ -243,16 +277,20 @@ These props reuse the [`<Scope>`](/kernel/components/layout/scope) cascade contr
 
 ### Rendering and Host Runtime
 
-| Prop        | Type                      | Default | Description                                                                      |
-| ----------- | ------------------------- | ------- | -------------------------------------------------------------------------------- |
-| `renderer`  | `'svg'` \| `'canvas'`     | `'svg'` | Output backend; falls back to the nearest `RendererModeProvider`                 |
-| `className` | `string`                  | —       | Forwarded to the SVG / Canvas root                                               |
-| `style`     | `CSSProperties`           | —       | Forwarded to the SVG / Canvas root                                               |
-| `idPrefix`  | `string`                  | —       | Overrides resource ids for multi-instance or SSR hydration stability             |
-| `handlers`  | `LayoutProps['handlers']` | —       | Event registry for `ir` mode; see [Hydration](/kernel/packages/render/hydration) |
-| `runtime`   | `LayoutRuntimeOptions`    | `{}`    | Retained renderer factory and Runtime diagnostic outlet                          |
+| Prop                      | Type                                              | Default           | Description                                                                      |
+| ------------------------- | ------------------------------------------------- | ----------------- | -------------------------------------------------------------------------------- |
+| `renderer`                | `'svg'` \| `'canvas'`                             | `'svg'`           | Output backend; falls back to the nearest `RendererModeProvider`                 |
+| `className`               | `string`                                          | —                 | Forwarded to the SVG / Canvas root                                               |
+| `style`                   | `CSSProperties`                                   | —                 | Forwarded to the SVG / Canvas root                                               |
+| `idPrefix`                | `string`                                          | —                 | Overrides resource ids for multi-instance or SSR hydration stability             |
+| `handlers`                | `LayoutProps['handlers']`                         | —                 | Event registry for `ir` mode; see [Hydration](/kernel/packages/render/hydration) |
+| `runtime`                 | `LayoutRuntimeOptions`                            | `retained + auto` | Selects a retained / static host and auto / full Program update strategy         |
+| `runtime.mode`            | `LayoutRuntimeModeValue`                          | `'retained'`      | Retained creates a Session; static materializes fully without rollback           |
+| `runtime.updateStrategy`  | `LayoutRetainedRuntimeOptions['updateStrategy']`  | `'auto'`          | Uses retained automatic incremental / fallback dispatch or forces full execution |
+| `runtime.rendererFactory` | `LayoutRetainedRuntimeOptions['rendererFactory']` | built-in factory  | Retained only; injects a third-party renderer with the same contract             |
+| `runtime.onDiagnostic`    | `LayoutRetainedRuntimeOptions['onDiagnostic']`    | —                 | Retained only; receives diagnostics in Runtime queue order                       |
 
-`runtime.rendererFactory` can inject a third-party backend that implements the same retained renderer contract; omitting it selects the built-in SVG / Canvas factory. `runtime.onDiagnostic` receives diagnostics for successful commits and failed transactions in Runtime queue order. Callback exceptions are isolated and do not change the Runtime commit or failure result.
+`runtime.mode: 'static'` is mutually exclusive with the other three runtime fields. Exceptions from a retained `onDiagnostic` callback are isolated and do not change the Runtime commit or failure result.
 
 ### React host exports
 

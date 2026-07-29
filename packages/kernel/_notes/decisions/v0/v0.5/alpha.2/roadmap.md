@@ -1,6 +1,6 @@
 # v0.5.0-alpha.2 增量性能与 Box Layout 基建
 
-- 状态：已完成（ADR-01～06 Accepted）
+- 状态：扩展中（ADR-01～06 Accepted；ADR-07 Proposed）
 - 目标版本：`0.5.0-alpha.2`
 - 关联：[v0.5 roadmap](../roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
@@ -20,6 +20,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | [ADR-04](./04-incremental-core-compile.md)           | Accepted | Core 增量编译                    | 冻结完整 Program、stable Diff、fallback 与首个安全局部更新闭环                             |
 | [ADR-05](./05-scene-patch-retained-renderer.md)      | Accepted | Scene Patch 与 retained renderer | 冻结 identity topology、commit participant 与 SVG/Canvas retained lifecycle                |
 | [ADR-06](./06-box-layout-composite-contract.md)      | Accepted | Box Layout Composite contract    | 冻结双轴 constraint、allocation / slot-size feedback、nested propagation 与 replay wrapper |
+| [ADR-07](./07-runtime-execution-policy.md)           | Proposed | Runtime 执行模式与更新策略       | 显式选择 static / retained，并在 retained Session 中选择 auto / full 更新                  |
 
 ## 当前进度
 
@@ -27,6 +28,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-04 已完成 canonical Scene topology、Core Program full oracle、ChangeSet/Snapshot 校验、stable/nested Diff、full fallback 与单 root Node fill 局部增量闭环，并于 2026-07-28 按当前安全子集获人工接受；通用 contribution 与其它图元局部失效不属于本次 Accepted 事实。
 - ADR-05 已完成 Runtime commit participant、Render retained runtime、SVG/Canvas事务后端、React/Vanilla session接线、5000规模确定性/计时门禁与双语文档，并于2026-07-29获人工接受。
 - ADR-06 已完成双轴 constraint、`slotSize`、显式 composite allocation、完整 replay wrapper、Table consumer 迁移、对抗测试与双语文档，并于 2026-07-28 获人工接受。
+- ADR-07 已完成 Architecture Gate、Runtime/Core/Render/React/Vanilla实现、SVG/Canvas三策略Bench A/B、对抗测试与双语文档；保持Proposed，待人工accept。
 
 ## 执行批次
 
@@ -38,6 +40,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | 3    | ADR-04 | ADR-03 Accepted                                       | 完整 Program、stable Diff、fallback 与首个安全局部更新闭环稳定             |
 | 4    | ADR-06 | alpha.1 ADR-07 已 Accepted；Standard Core Gate 已明确 | 完整 compile 的双轴 constraint、slot size、nested 与 wrapper contract 稳定 |
 | 5    | ADR-05 | ADR-04 可产出稳定 Scene Patch                         | SVG / Canvas patch 与完整 redraw 等价，并有可测收益                        |
+| 6    | ADR-07 | ADR-03～05 Accepted                                   | static / retained 与 auto / full 可显式选择、对比并保持默认行为不变        |
 
 批次存在硬依赖，不并行实施。每条 ADR 分别完成 `test-contract`、Architecture Gate 与人工实现授权。
 

@@ -47,6 +47,13 @@ export const kernelV05: Release = {
           },
         },
         {
+          label: { zh: '可选更新策略', en: 'Selectable update strategies' },
+          content: {
+            zh: '`RuntimeSessionOptions.updateStrategy` 默认 `auto`；选择 `full` 时保留 Snapshot、transaction、rollback 与 diagnostics，但有实际依赖变化的 Program 跳过 `update()` 并完整运行。`RuntimeProgramContext.execution` 可区分主动 full、incremental 与安全 fallback。',
+            en: '`RuntimeSessionOptions.updateStrategy` defaults to `auto`. Selecting `full` keeps Snapshots, transactions, rollback, and diagnostics while affected Programs skip `update()` and run fully. `RuntimeProgramContext.execution` distinguishes forced full, incremental, and safe fallback execution.',
+          },
+        },
+        {
           label: { zh: '稳定诊断与资源回滚', en: 'Stable diagnostics and resource rollback' },
           content: {
             zh: 'Program callback、artifact lifecycle、observer、trace 与 dispose 使用稳定 code/context；publish 前失败反向清理 candidate，publish 后 observer/retire failure 进入 drain queue 而不回滚。',
@@ -186,8 +193,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/react',
       version: 'v0.5',
       description: {
-        zh: 'React 等价暴露 Core v0.5 authoring，并让 `<Layout>` 以 retained Session 原子提交 Scene、handler、animation与compile artifacts。',
-        en: 'React exposes Core v0.5 authoring and lets `<Layout>` atomically commit Scene, handlers, animation, and compile artifacts through a retained Session.',
+        zh: 'React 等价暴露 Core v0.5 authoring；`<Layout>` 默认以 retained Session 原子提交 Scene、handler、animation 与 compile artifacts，也可选择无 Session 的 static full 执行。',
+        en: 'React exposes Core v0.5 authoring. `<Layout>` defaults to atomic Scene, handler, animation, and compile-artifact commits through a retained Session, with an optional Session-free static full path.',
       },
       highlights: [
         {
@@ -205,10 +212,10 @@ export const kernelV05: Release = {
           },
         },
         {
-          label: { zh: 'Layout retained Session', en: 'Layout retained Sessions' },
+          label: { zh: 'Layout 执行策略', en: 'Layout execution policy' },
           content: {
-            zh: '`<Layout runtime>` 可注入 retained renderer 与 diagnostic callback；React只声明宿主shell，SVG descendants/Canvas bitmap由Render拥有。SSR matching seed原位接管，mismatch在publish前replace，StrictMode按renderer instance exactly-once释放。',
-            en: '`<Layout runtime>` can inject a retained renderer and diagnostic callback. React declares only the host shell while Render owns SVG descendants or the Canvas bitmap. Matching SSR seeds are adopted in place, mismatches replace before publish, and StrictMode disposes each renderer instance exactly once.',
+            zh: '`<Layout runtime>` 默认 `retained + auto`，也可选择保留事务的 `retained + full` 或不创建 Session/Snapshot 的 `static`。strategy 改变时在同一 host 重建 Session，mode 改变时释放并替换宿主；static 与 renderer factory、diagnostic callback 互斥。',
+            en: '`<Layout runtime>` defaults to `retained + auto` and can instead select transactional `retained + full` or `static` without a Session or Snapshot. Strategy changes rebuild the Session on the same host, while mode changes replace the host. Static mode excludes renderer factories and diagnostic callbacks.',
           },
         },
       ],
@@ -217,8 +224,8 @@ export const kernelV05: Release = {
           version: 'alpha.2',
           date: '2026-07-29',
           summary: {
-            zh: '让Layout进入retained Runtime Session，补齐SSR handoff、transaction diagnostic、commit后artifact/ref出口与第三方renderer注入。',
-            en: 'Moves Layout onto retained Runtime Sessions with SSR handoff, transaction diagnostics, post-commit artifact/ref outputs, and third-party renderer injection.',
+            zh: '交付 Layout 的 retained / static 执行模式与 auto / full 更新策略，并补齐 SSR handoff、transaction diagnostic、commit 后 artifact/ref 出口与第三方 renderer 注入。',
+            en: 'Ships retained / static Layout execution modes and auto / full update strategies, plus SSR handoff, transaction diagnostics, post-commit artifact/ref outputs, and third-party renderer injection.',
           },
           items: [],
         },
@@ -237,8 +244,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/vanilla',
       version: 'v0.5',
       description: {
-        zh: 'Vanilla plain spec 直接透传 Core v0.5 IR；IR/plain mount使用retained Session，Scene mount保留static full render。',
-        en: 'Vanilla plain specs pass Core v0.5 IR through directly. IR/plain mounts use retained Sessions, while Scene mounts preserve static full rendering.',
+        zh: 'Vanilla plain spec 直接透传 Core v0.5 IR；IR/plain mount 默认使用 retained Session，也可显式选择 raw static full，Scene mount 保持纯 static full render。',
+        en: 'Vanilla plain specs pass Core v0.5 IR through directly. IR/plain mounts default to retained Sessions with an explicit raw static full option, while Scene mounts remain static full rendering.',
       },
       highlights: [
         {
@@ -251,8 +258,8 @@ export const kernelV05: Release = {
         {
           label: { zh: 'Retained / static 明确判别', en: 'Explicit retained/static modes' },
           content: {
-            zh: 'IR与plain spec返回`mode: "retained"` view，`update()`原子切换Scene、runtimeMeta、artifacts、animation与renderer config；升级后必须继续传同层IR/plain输入。预编译Scene返回`mode: "static"`，用于保留Scene→Scene完整重绘；DPR、compile或Definition拓扑变化要求dispose后remount。Plain-spec composite callback失败时回滚。',
-            en: 'IR and plain specs return `mode: "retained"` views whose `update()` atomically switches Scene, runtime metadata, artifacts, animation, and renderer config; after upgrading, keep passing input from the same IR/plain layer. Precompiled Scenes return `mode: "static"` for full-redraw Scene-to-Scene updates. DPR, compile, or Definition topology changes require disposal and remounting. Plain-spec composite callbacks roll back on failure.',
+            zh: 'IR与plain spec默认返回`retained + auto` view，也可显式选择保留事务的`retained + full`或无Session的`static`。raw static update接受IR/plain spec并完整归一化、编译、重绘；预编译Scene仍是独立static入口并拒绝整个runtime字段。策略变化要求dispose后remount。',
+            en: 'IR and plain specs default to `retained + auto` views and can explicitly select transactional `retained + full` or `static` without a Session. Raw static updates accept IR/plain specs and fully normalize, compile, and redraw. Precompiled Scenes remain a separate static entry that rejects the entire runtime field. Strategy changes require disposal and remounting.',
           },
         },
       ],
@@ -261,8 +268,8 @@ export const kernelV05: Release = {
           version: 'alpha.2',
           date: '2026-07-29',
           summary: {
-            zh: '交付SVG/Canvas retained view、transactional update/diagnostics/hydration、第三方renderer注入与plain-spec composite callback transaction。',
-            en: 'Ships retained SVG/Canvas views, transactional updates/diagnostics/hydration, third-party renderer injection, and plain-spec composite callback transactions.',
+            zh: '交付 SVG/Canvas retained / static view、auto / full 更新策略、transactional update/diagnostics/hydration、第三方 renderer 注入与 plain-spec composite callback transaction。',
+            en: 'Ships retained / static SVG and Canvas views, auto / full update strategies, transactional updates/diagnostics/hydration, third-party renderer injection, and plain-spec composite callback transactions.',
           },
           items: [],
         },
