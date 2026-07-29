@@ -2,6 +2,8 @@ import type { ValueOf } from '@retikz/core';
 import type { RetainedRendererFactory } from '@retikz/render/runtime';
 import type { RuntimeDiagnostic, RuntimeUpdateStrategyValue } from '@retikz/runtime';
 
+import { RuntimeUpdateStrategy } from '@retikz/runtime';
+
 /** React Layout 的宿主执行模式 */
 export const LayoutRuntimeMode = Object.freeze({
   Retained: 'retained',
@@ -84,7 +86,9 @@ export const captureLayoutRuntimeOptions = (runtime: LayoutRuntimeOptions | unde
     }
     if (
       mode !== LayoutRuntimeMode.Retained ||
-      (updateStrategy !== undefined && updateStrategy !== 'auto' && updateStrategy !== 'full') ||
+      (updateStrategy !== undefined &&
+        updateStrategy !== RuntimeUpdateStrategy.Auto &&
+        updateStrategy !== RuntimeUpdateStrategy.Full) ||
       (rendererFactory !== undefined && typeof rendererFactory !== 'function') ||
       (onDiagnostic !== undefined && typeof onDiagnostic !== 'function')
     ) {

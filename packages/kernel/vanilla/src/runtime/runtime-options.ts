@@ -1,4 +1,5 @@
 import { RetainedRenderError, RetainedRenderErrorCode } from '@retikz/render/runtime';
+import { RuntimeUpdateStrategy } from '@retikz/runtime';
 
 import type { VanillaRetainedRuntimeOptions, VanillaRuntimeOptions } from './types';
 
@@ -43,7 +44,9 @@ export const captureVanillaRuntimeOptions = (options: object): VanillaRuntimeOpt
     }
     if (
       mode !== VanillaViewMode.Retained ||
-      (updateStrategy !== undefined && updateStrategy !== 'auto' && updateStrategy !== 'full') ||
+      (updateStrategy !== undefined &&
+        updateStrategy !== RuntimeUpdateStrategy.Auto &&
+        updateStrategy !== RuntimeUpdateStrategy.Full) ||
       (rendererFactory !== undefined && typeof rendererFactory !== 'function')
     ) {
       return invalidRuntimeOptions(runtime);
