@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { previewControlContract as pointTransformContract } from '../../src/modules/docs/contents/viz/plot/mark/point/point-transform.controls';
+import { previewControlContract as pointTransformEnglishContract } from '../../src/modules/docs/contents/viz/plot/mark/point/point-transform.en.controls';
 import {
   CUSTOM_TRANSFORM_CONTROL_IDS,
   waterfallOperationOf,
@@ -43,5 +45,27 @@ describe('Plot transform table views', () => {
       { period: 'Q1', delta: 35, from: 60, to: 95, direction: 'increase' },
       { period: 'Q2', delta: -20, from: 95, to: 75, direction: 'decrease' },
     ]);
+  });
+
+  it.each([
+    ['zh', pointTransformContract, ['原始', '抖动后']],
+    ['en', pointTransformEnglishContract, ['Source', 'Jittered']],
+  ] as const)('PointMark jitter 的 %s 数据表提供原始与变换后视图', (_language, contract, labels) => {
+    const table = contract.controls.sections[0].controls[0];
+    const views = table.views;
+
+    expect(views.map(view => view.label)).toEqual(labels);
+    const resultRows = views[1].rows;
+    expect(typeof resultRows).toBe('function');
+    if (typeof resultRows !== 'function') return;
+
+    const sourceRowsDefinition = views[0].rows;
+    const sourceRows =
+      typeof sourceRowsDefinition === 'function'
+        ? sourceRowsDefinition(contract.canonicalValues)
+        : sourceRowsDefinition;
+    const transformedRows = resultRows(contract.canonicalValues);
+    expect(transformedRows).not.toEqual(sourceRows);
+    expect(transformedRows.map(row => row.orders)).not.toEqual(sourceRows.map(row => row.orders));
   });
 });
