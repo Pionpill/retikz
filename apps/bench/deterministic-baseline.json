@@ -28,6 +28,44 @@
     "changed": 1
   },
   {
+    "id": "canvas-policy-retained-auto-5000",
+    "oracle": "308164dd",
+    "visited": 5000,
+    "reused": 4999,
+    "changed": 1,
+    "execution": {
+      "mode": "retained",
+      "updateStrategy": "auto",
+      "outcome": "incremental",
+      "source": "runtime-trace"
+    }
+  },
+  {
+    "id": "canvas-policy-retained-full-5000",
+    "oracle": "308164dd",
+    "visited": 5000,
+    "reused": 0,
+    "changed": 5000,
+    "execution": {
+      "mode": "retained",
+      "updateStrategy": "full",
+      "outcome": "full",
+      "source": "runtime-trace"
+    }
+  },
+  {
+    "id": "canvas-policy-static-full-5000",
+    "oracle": "308164dd",
+    "visited": 5000,
+    "reused": 0,
+    "changed": 5000,
+    "execution": {
+      "mode": "static",
+      "outcome": "full",
+      "source": "static-view"
+    }
+  },
+  {
     "id": "canvas-replace-fallback-5000",
     "oracle": "b53e884c",
     "visited": 1,
@@ -104,6 +142,44 @@
     "visited": 1,
     "reused": 0,
     "changed": 1
+  },
+  {
+    "id": "svg-policy-retained-auto-5000",
+    "oracle": "1ee316ed",
+    "visited": 5000,
+    "reused": 4999,
+    "changed": 1,
+    "execution": {
+      "mode": "retained",
+      "updateStrategy": "auto",
+      "outcome": "incremental",
+      "source": "runtime-trace"
+    }
+  },
+  {
+    "id": "svg-policy-retained-full-5000",
+    "oracle": "1ee316ed",
+    "visited": 5000,
+    "reused": 0,
+    "changed": 5000,
+    "execution": {
+      "mode": "retained",
+      "updateStrategy": "full",
+      "outcome": "full",
+      "source": "runtime-trace"
+    }
+  },
+  {
+    "id": "svg-policy-static-full-5000",
+    "oracle": "1ee316ed",
+    "visited": 5000,
+    "reused": 0,
+    "changed": 5000,
+    "execution": {
+      "mode": "static",
+      "outcome": "full",
+      "source": "static-view"
+    }
   },
   {
     "id": "svg-replace-fallback-5000",

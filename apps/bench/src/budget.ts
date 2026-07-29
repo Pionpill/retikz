@@ -1,3 +1,15 @@
+/** 策略 A/B 场景的执行模式与可观察结果 */
+export type BenchmarkExecution = Readonly<{
+  /** 是否创建 retained Runtime Session */
+  mode: 'static' | 'retained';
+  /** retained Program 更新策略；static 不存在 */
+  updateStrategy?: 'auto' | 'full';
+  /** 本次更新实际执行结果 */
+  outcome: 'full' | 'incremental' | 'fallback';
+  /** outcome 的公共契约来源 */
+  source: 'static-view' | 'runtime-trace';
+}>;
+
 /** 单个确定性 benchmark 的观测结果 */
 export type DeterministicBenchmarkResult = Readonly<{
   id: string;
@@ -7,6 +19,8 @@ export type DeterministicBenchmarkResult = Readonly<{
   changed: number;
   /** dispose后仍可观察的listener、handler或resource handle数量 */
   liveHandles?: number;
+  /** 可选策略执行元数据 */
+  execution?: BenchmarkExecution;
 }>;
 
 /** 单个确定性 benchmark 的已审查预算 */
@@ -18,7 +32,17 @@ export type DeterministicBenchmarkBudget = Readonly<{
   changed: number;
   /** 已审查的dispose后live handle精确预算 */
   liveHandles?: number;
+  /** 已审查的策略执行元数据 */
+  execution?: BenchmarkExecution;
 }>;
+
+const executionEquals = (left: BenchmarkExecution | undefined, right: BenchmarkExecution | undefined): boolean =>
+  left === undefined || right === undefined
+    ? left === undefined && right === undefined
+    : left.mode === right.mode &&
+      left.updateStrategy === right.updateStrategy &&
+      left.outcome === right.outcome &&
+      left.source === right.source;
 
 /** 对比实际确定性指标与已审查预算，返回全部阻断错误 */
 export const compareDeterministicResults = (
@@ -48,6 +72,9 @@ export const compareDeterministicResults = (
     if (result.liveHandles !== budget.liveHandles) {
       errors.push(`${budget.id}: liveHandles ${String(result.liveHandles)} differs from ${String(budget.liveHandles)}`);
     }
+    if (!executionEquals(result.execution, budget.execution)) {
+      errors.push(`${budget.id}: execution metadata differs from reviewed budget`);
+    }
   }
 
   for (const result of results) {
@@ -71,6 +98,7 @@ export const createBaselineCandidate = (
           reused: result.reused,
           changed: result.changed,
           ...(result.liveHandles === undefined ? {} : { liveHandles: result.liveHandles }),
+          ...(result.execution === undefined ? {} : { execution: Object.freeze({ ...result.execution }) }),
         }),
       ),
   );

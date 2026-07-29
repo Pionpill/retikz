@@ -10,7 +10,7 @@ import {
   createRuntimeTraceReporter,
 } from '@retikz/runtime';
 
-import type { DeterministicBenchmarkResult } from './budget';
+import type { BenchmarkExecution, DeterministicBenchmarkResult } from './budget';
 
 import { createSimpleNodeScene, updateSimpleNodeFill } from './fixtures';
 import { stableHash } from './hash';
@@ -25,6 +25,7 @@ export const toResult = (
   oracle: string,
   record: PerformanceTraceRecord,
   liveHandles?: number,
+  execution?: BenchmarkExecution,
 ): DeterministicBenchmarkResult =>
   Object.freeze({
     id,
@@ -33,6 +34,7 @@ export const toResult = (
     reused: record.reused,
     changed: record.changed,
     ...(liveHandles === undefined ? {} : { liveHandles }),
+    ...(execution === undefined ? {} : { execution: Object.freeze({ ...execution }) }),
   });
 
 /** 在 Node 环境运行 Core full-path 确定性 benchmark */

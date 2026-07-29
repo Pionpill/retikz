@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { compareDeterministicResults } from '../src/budget';
+import { compareDeterministicResults, createBaselineCandidate } from '../src/budget';
 
 describe('deterministic budget', () => {
   it('接受精确工作量与 oracle 一致的 full / incremental 结果', () => {
@@ -58,5 +58,27 @@ describe('deterministic budget', () => {
     expect(compareDeterministicResults([result], [{ ...result, liveHandles: undefined }])).toEqual([
       expect.stringMatching(/liveHandles/i),
     ]);
+  });
+
+  it('逐字段冻结可选 execution metadata，并写入 baseline candidate', () => {
+    const result = {
+      id: 'svg-policy-retained-auto-5000',
+      oracle: 'ok',
+      visited: 5_000,
+      reused: 4_999,
+      changed: 1,
+      execution: {
+        mode: 'retained',
+        updateStrategy: 'auto',
+        outcome: 'incremental',
+        source: 'runtime-trace',
+      },
+    } as const;
+
+    expect(compareDeterministicResults([result], [result])).toEqual([]);
+    expect(
+      compareDeterministicResults([{ ...result, execution: { ...result.execution, outcome: 'full' } }], [result]),
+    ).toEqual([expect.stringMatching(/execution/i)]);
+    expect(createBaselineCandidate([result])).toEqual([result]);
   });
 });

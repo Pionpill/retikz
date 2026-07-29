@@ -9,7 +9,7 @@ import type {
 } from '@retikz/render/runtime';
 import type { PerformanceTraceRecord, RuntimeSession } from '@retikz/runtime';
 
-import { compileToScene, CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
+import { compileToScene, CORE_OWNER_KEY, CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
 import { drawScene, renderToCanvas } from '@retikz/render/canvas';
 import {
   builtinRetainedRendererFactory,
@@ -26,9 +26,10 @@ import {
   createRuntimeSession,
   createRuntimeTraceReporter,
 } from '@retikz/runtime';
+import { mountCanvas, mountSvg } from '@retikz/vanilla';
 
 import type { BrowserBenchmarkOptions, BrowserBenchmarkResult, RetikzBenchWindow } from './browser-contract';
-import type { DeterministicBenchmarkResult } from './budget';
+import type { BenchmarkExecution, DeterministicBenchmarkResult } from './budget';
 import type { WallClockScenarioReport } from './report';
 
 import { createSimpleNodeScene, createStableGroupScene, updateSimpleNodeFill, updateStableGroupFill } from './fixtures';
@@ -82,6 +83,7 @@ const createRetainedBenchmarkSession = (
   records: Array<PerformanceTraceRecord>,
   rendererFactory: RetainedRendererFactory = builtinRetainedRendererFactory,
   config: RenderRuntimeConfigInput = {},
+  updateStrategy?: 'auto' | 'full',
 ): RetainedBenchmarkSession => {
   const coreProgram = createCoreProgram({ onWarn: () => undefined });
   const handle =
@@ -105,6 +107,7 @@ const createRetainedBenchmarkSession = (
   const session = createRuntimeSession({
     owners,
     programs,
+    updateStrategy,
     participants: [handle.participant],
     initialSnapshots: [
       createRuntimeOwnerInput(CoreOwnerDefinition, source),
@@ -280,7 +283,7 @@ const readRetainedUpdateRecord = (
   id: string,
   backend: 'svg' | 'canvas',
   records: ReadonlyArray<PerformanceTraceRecord>,
-  outcome: 'incremental' | 'fallback',
+  outcome: 'full' | 'incremental' | 'fallback',
 ): PerformanceTraceRecord => {
   return assertSingleTraceRecord(id, records, {
     owner: `@retikz/render:${backend}`,
@@ -291,6 +294,11 @@ const readRetainedUpdateRecord = (
     reused: 0,
     changed: 1,
   });
+};
+
+/** 通过公共 view mode 证明 static 场景没有伪造 Runtime outcome */
+const assertStaticViewMode = (id: string, view: Readonly<{ mode: string }>): void => {
+  if (view.mode !== 'static') throw new Error(`${id}: expected public static view`);
 };
 
 /** 把 static SVG oracle 交给 browser parser 规范化后与 retained host 逐字对比 */
@@ -614,6 +622,109 @@ const runRetainedDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchm
   return Object.freeze(results);
 };
 
+/** 运行 static-full / retained-full / retained-auto 三组共享 fixture 策略基准 */
+const runPolicyDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchmarkResult> => {
+  const results: Array<DeterministicBenchmarkResult> = [];
+  const current = createSimpleNodeScene(5_000);
+  const next = updateSimpleNodeFill(current, 2_500, '#22c55e');
+  const oracleScene = compileToScene(next).scene;
+
+  for (const backend of ['svg', 'canvas'] as const) {
+    const staticId = `${backend}-policy-static-full-5000`;
+    const staticRecords: Array<PerformanceTraceRecord> = [];
+    const staticReporter = createRuntimeTraceReporter({
+      owner: '@retikz/core',
+      phases: [{ phase: 'compile', unit: 'ir-child', outcomes: ['full'] }],
+      sink: record => staticRecords.push(record),
+    });
+    const container = document.createElement('div');
+    const staticView =
+      backend === 'svg'
+        ? mountSvg(container, current, {
+            runtime: { mode: 'static' },
+            compile: { trace: staticReporter },
+            output: { idPrefix: 'retained-bench' },
+            animation: { enabled: false },
+          })
+        : mountCanvas(container, current, {
+            runtime: { mode: 'static' },
+            compile: { trace: staticReporter },
+            animation: { enabled: false },
+            canvas: { devicePixelRatio: 1 },
+          });
+    try {
+      staticRecords.length = 0;
+      staticView.update(next);
+      assertStaticViewMode(staticId, staticView);
+      const record = assertFullTrace(staticId, staticReporter, staticRecords, {
+        phase: 'compile',
+        unit: 'ir-child',
+        visited: 5_000,
+      });
+      const execution: BenchmarkExecution = Object.freeze({
+        mode: 'static',
+        outcome: 'full',
+        source: 'static-view',
+      });
+      results.push(
+        toResult(
+          staticId,
+          assertBackendOracle(staticId, backend, staticView.root, oracleScene),
+          record,
+          undefined,
+          execution,
+        ),
+      );
+    } finally {
+      staticView.dispose();
+    }
+
+    for (const updateStrategy of ['full', 'auto'] as const) {
+      const id = `${backend}-policy-retained-${updateStrategy}-5000`;
+      const host = createBackendHost(backend);
+      const records: Array<PerformanceTraceRecord> = [];
+      const value = createRetainedBenchmarkSession(
+        backend,
+        host,
+        current,
+        records,
+        builtinRetainedRendererFactory,
+        {},
+        updateStrategy,
+      );
+      try {
+        records.length = 0;
+        value.session.update({
+          baseRevision: value.session.revision(),
+          owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
+        });
+        const outcome = updateStrategy === 'full' ? 'full' : 'incremental';
+        const work = assertSingleTraceRecord(id, records, {
+          owner: CORE_OWNER_KEY,
+          phase: 'update',
+          unit: 'ir-child',
+          outcome,
+          visited: 5_000,
+          reused: updateStrategy === 'full' ? 0 : 4_999,
+          changed: updateStrategy === 'full' ? 5_000 : 1,
+        });
+        readRetainedUpdateRecord(id, backend, records, outcome);
+        if (value.session.diagnostics().length !== 0) throw new Error(`${id}: unexpected Runtime diagnostics`);
+        const execution: BenchmarkExecution = Object.freeze({
+          mode: 'retained',
+          updateStrategy,
+          outcome,
+          source: 'runtime-trace',
+        });
+        results.push(toResult(id, assertBackendOracle(id, backend, host, oracleScene), work, undefined, execution));
+      } finally {
+        value.session.dispose();
+      }
+    }
+  }
+  return Object.freeze(results);
+};
+
 const measureRetainedUpdateScenario = (
   id: string,
   backend: 'svg' | 'canvas',
@@ -622,10 +733,11 @@ const measureRetainedUpdateScenario = (
   warmupRuns: number,
   sampleRuns: number,
   rendererFactory?: RetainedRendererFactory,
+  updateStrategy?: 'auto' | 'full',
 ): WallClockScenarioReport => {
   const host = createBackendHost(backend);
   const records: Array<PerformanceTraceRecord> = [];
-  const value = createRetainedBenchmarkSession(backend, host, first, records, rendererFactory);
+  const value = createRetainedBenchmarkSession(backend, host, first, records, rendererFactory, {}, updateStrategy);
   let next = second;
   try {
     return measureScenario(id, warmupRuns, sampleRuns, () => {
@@ -637,6 +749,39 @@ const measureRetainedUpdateScenario = (
     });
   } finally {
     value.session.dispose();
+  }
+};
+
+/** 测量 public static view 的完整编译与重绘更新 */
+const measureStaticPolicyUpdateScenario = (
+  id: string,
+  backend: 'svg' | 'canvas',
+  first: IRScene,
+  second: IRScene,
+  warmupRuns: number,
+  sampleRuns: number,
+): WallClockScenarioReport => {
+  const container = document.createElement('div');
+  const view =
+    backend === 'svg'
+      ? mountSvg(container, first, {
+          runtime: { mode: 'static' },
+          output: { idPrefix: 'retained-bench' },
+          animation: { enabled: false },
+        })
+      : mountCanvas(container, first, {
+          runtime: { mode: 'static' },
+          animation: { enabled: false },
+          canvas: { devicePixelRatio: 1 },
+        });
+  let next = second;
+  try {
+    return measureScenario(id, warmupRuns, sampleRuns, () => {
+      view.update(next);
+      next = next === first ? second : first;
+    });
+  } finally {
+    view.dispose();
   }
 };
 
@@ -664,6 +809,34 @@ const runRetainedWallClockReport = (warmupRuns: number, sampleRuns: number): Rea
   for (const backend of ['svg', 'canvas'] as const) {
     const noneFactory = createNoneCapabilityFactory(() => undefined);
     reports.push(
+      measureStaticPolicyUpdateScenario(
+        `${backend}-policy-static-full-5000`,
+        backend,
+        entityFirst,
+        entitySecond,
+        warmupRuns,
+        sampleRuns,
+      ),
+      measureRetainedUpdateScenario(
+        `${backend}-policy-retained-full-5000`,
+        backend,
+        entityFirst,
+        entitySecond,
+        warmupRuns,
+        sampleRuns,
+        undefined,
+        'full',
+      ),
+      measureRetainedUpdateScenario(
+        `${backend}-policy-retained-auto-5000`,
+        backend,
+        entityFirst,
+        entitySecond,
+        warmupRuns,
+        sampleRuns,
+        undefined,
+        'auto',
+      ),
       measureRetainedFullScenario(`${backend}-retained-full-5000`, backend, entityFirst, warmupRuns, sampleRuns),
       measureRetainedUpdateScenario(
         `${backend}-single-entity-update-5000`,
@@ -747,7 +920,11 @@ const runBrowserBenchmarks = async (options: BrowserBenchmarkOptions): Promise<B
   await document.fonts.ready;
   return Object.freeze({
     environment: readEnvironment(options.browserVersion),
-    deterministic: Object.freeze([...runDeterministicBrowserBenchmarks(), ...runRetainedDeterministicBenchmarks()]),
+    deterministic: Object.freeze([
+      ...runDeterministicBrowserBenchmarks(),
+      ...runRetainedDeterministicBenchmarks(),
+      ...runPolicyDeterministicBenchmarks(),
+    ]),
     wallClock: options.includeWallClock
       ? runBrowserWallClockReport(options.warmupRuns, options.sampleRuns)
       : Object.freeze([]),

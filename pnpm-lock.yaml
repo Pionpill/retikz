@@ -262,6 +262,9 @@ importers:
       '@retikz/runtime':
         specifier: workspace:*
         version: link:../../packages/kernel/runtime
+      '@retikz/vanilla':
+        specifier: workspace:*
+        version: link:../../packages/kernel/vanilla
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
