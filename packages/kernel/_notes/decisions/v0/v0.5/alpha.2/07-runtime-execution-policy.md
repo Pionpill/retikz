@@ -1,6 +1,6 @@
 # ADR-07：Runtime 执行模式与更新策略
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-07-29
 - 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-03](./03-program-transaction-lifecycle.md) · [ADR-04](./04-incremental-core-compile.md) · [ADR-05](./05-scene-patch-retained-renderer.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md)
 
