@@ -1,9 +1,17 @@
-﻿import type { GroupPrim, ResolvedShapeStyle, ScenePrimitive } from '../../contract';
+import type { GroupPrim, ResolvedShapeStyle, ScenePrimitive } from '../../contract';
 import type { IRJsonObject } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
 import type { PaintResolver } from '../resource';
 import type { NodeLabelLayout, NodeLayout } from './types';
 
+import {
+  isFatalProbeError,
+  isLayoutProbeRecoverableError,
+  LayoutProbeRecoverableError,
+  safeThrownDetail,
+} from '../probe-failure';
+import { validateMarkerPrimitives } from '../resource';
+import { validateScenePrimitives } from '../scene-primitive';
 import { toAlphabeticBaselineY } from '../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
 import { labelBorderPoint, labelBoxEdgeToward, labelCenter } from './label/geometry';
@@ -35,14 +43,22 @@ const emitNodeShapePrimitives = (
   resolvePaint: PaintResolver,
 ): Array<ScenePrimitive> => {
   const axisAlignedRect: Rect = { ...layout.rect, rotate: 0 };
-  return [
-    ...layout.shapeDef.emit(
+  let emitted: unknown;
+  try {
+    emitted = layout.shapeDef.emit(
       axisAlignedRect,
       toShapeStyle(layout, resolvePaint),
       round,
       layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
-    ),
-  ].map(primitive => ({ ...primitive }));
+    );
+  } catch (thrown) {
+    if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
+    throw new LayoutProbeRecoverableError(`Shape '${layout.shapeName}' emit failed: ${safeThrownDetail(thrown)}`, {
+      cause: thrown,
+      providerKey: `shape:${layout.shapeName}`,
+    });
+  }
+  return validateScenePrimitives(`Shape '${layout.shapeName}'`, emitted, validateMarkerPrimitives);
 };
 
 /** 发出节点正文图元 */
@@ -68,11 +84,34 @@ const emitNodeContentPrimitives = (layout: NodeLayout, round: Round): Array<Scen
   const halfBlockW = layout.textWidth / 2;
   const xOffset = layout.align === 'start' ? -halfBlockW : layout.align === 'end' ? halfBlockW : 0;
   const lineHeight = round(layout.lineHeight);
-  return [
-    {
-      type: 'text',
-      x: round(layout.contentCenter[0] + xOffset),
-      y: round(
+  const baselineOffsets = layout.textBaselineOffsets;
+  const blockTop = layout.contentCenter[1] - layout.textHeight / 2;
+  /** 用现有 grouped TextPrim 合同发出 authoritative physical-line baselines */
+  const textPrimitive = (
+    lines: NonNullable<NodeLayout['lines']>,
+    baselineY: number,
+    measuredHeight: number,
+  ): ScenePrimitive => ({
+    type: 'text',
+    x: round(layout.contentCenter[0] + xOffset),
+    y: round(baselineY),
+    lines,
+    fontSize: layout.fontSize,
+    fontFamily: layout.fontFamily,
+    fontWeight: layout.fontWeight,
+    fontStyle: layout.fontStyle,
+    align: layout.align,
+    baseline: 'alphabetic',
+    lineHeight,
+    fill: layout.textColor ?? 'currentColor',
+    opacity: layout.opacity,
+    measuredWidth: round(layout.textWidth),
+    measuredHeight: round(measuredHeight),
+  });
+  if (baselineOffsets === undefined || baselineOffsets.length !== layout.lines.length) {
+    return [
+      textPrimitive(
+        layout.lines,
         toAlphabeticBaselineY({
           y: layout.contentCenter[1],
           baseline: 'middle',
@@ -80,21 +119,11 @@ const emitNodeContentPrimitives = (layout: NodeLayout, round: Round): Array<Scen
           lineHeight,
           fontSize: layout.fontSize,
         }),
+        layout.textHeight,
       ),
-      lines: layout.lines,
-      fontSize: layout.fontSize,
-      fontFamily: layout.fontFamily,
-      fontWeight: layout.fontWeight,
-      fontStyle: layout.fontStyle,
-      align: layout.align,
-      baseline: 'alphabetic',
-      lineHeight,
-      fill: layout.textColor ?? 'currentColor',
-      opacity: layout.opacity,
-      measuredWidth: round(layout.textWidth),
-      measuredHeight: round(layout.textHeight),
-    },
-  ];
+    ];
+  }
+  return [textPrimitive(layout.lines, blockTop + baselineOffsets[0], layout.textHeight)];
 };
 
 /** 发出 label pin 引线图元 */

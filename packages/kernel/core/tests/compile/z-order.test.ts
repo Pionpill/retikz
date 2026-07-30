@@ -219,7 +219,6 @@ describe('compile transformed scope 保留 path 所有权', () => {
     const path = group.children.find(primitive => primitive.type === 'path');
     expect(path).toMatchInlineSnapshot(`
       {
-        "blendMode": undefined,
         "commands": [
           {
             "kind": "move",
@@ -236,17 +235,8 @@ describe('compile transformed scope 保留 path 所有权', () => {
             ],
           },
         ],
-        "dashOffset": undefined,
-        "dashPattern": undefined,
         "fill": "none",
-        "fillOpacity": undefined,
-        "fillRule": undefined,
-        "opacity": undefined,
-        "shadow": undefined,
         "stroke": "currentColor",
-        "strokeLinecap": undefined,
-        "strokeLinejoin": undefined,
-        "strokeOpacity": undefined,
         "strokeWidth": 1,
         "type": "path",
       }

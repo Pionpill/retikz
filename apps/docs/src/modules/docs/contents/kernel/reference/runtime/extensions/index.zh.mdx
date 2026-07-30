@@ -17,6 +17,8 @@ description: 查询 Definition、registry 与 host lowerer 的能力族、注入
 
 Definition 能力使用 `XxxDefinition` 与 `defineXxx` 描述扩展项，内置和自定义 definitions 合并成一次编译专用的 registry。Runtime registry 保存宿主函数，不进入 compile contract。Host lowerer 是可选宿主能力，不应为了单个集成扩张通用图元契约。
 
+Layout proposal 不是新的 registry：它是每个 layout-aware `CompositeDefinition.compile` callback 内闭合的通用 child 求值合同。内置 child、第三方 provider 与 nested composite 都继续经过同一 composite / provider registry、同一 compile 环境和同一 replay transaction；Core 不按 child 类型维护测量白名单。
+
 ## 能力索引
 
 | 能力               | IR 选择键          | 注入入口                                               |
@@ -41,7 +43,9 @@ Definition 能力使用 `XxxDefinition` 与 `defineXxx` 描述扩展项，内置
 - 普通 Definition 找不到 key 时 fail-loud，并列出已注册项。
 - 未注册 composite 在完整 compile 中产生 warning 并跳过该节点；独立 lowering 会提升为错误。
 - Composite registry 同时接受互斥的 `expand` 与 `compile` 分支；`lowerIRToKernel` 遇到依赖完整环境的 `compile` 分支会明确报错。
-- layout-aware composite 只能用 callback 提供的 `replay()` / `scope()` builder 创建 compile-local output child；重复 replay、伪造 handle、跨 compile 或跨 callback 使用都会 fail-loud。
+- layout-aware composite 的 `layoutChild(child, proposal)` 返回 resolved / failed outcome。未选中的失败保持隔离；选中失败必须通过当前 callback 的 `raise()` 提升，诊断保留原 provider、cause、source path 与 `probe[...]` occurrence。
+- Proposal 是每次调用按值校验并冻结的输入；failure、result、replay 与 output child 才受 callback-local / compile-local ownership 约束，只能用 `replay()` / `raise()` / `scope()` 完成选择。对这些受 ownership 约束的对象重复使用、伪造、spread-copy、跨 compile 或跨 callback 传递，都会在任何提交前 fail-loud。
+- Provider 主动抛出的普通错误可成为 recoverable failed probe；malformed provider output、非法 proposal、token misuse 与 Core invariant 属于 fatal contract / invariant error，不能被伪装成可丢弃失败。
 - schema 或 payload 校验发生在 definition 消费前，错误应包含能力族与 lookup key。
 
 ## 指南入口
@@ -110,16 +114,46 @@ Definition 能力使用 `XxxDefinition` 与 `defineXxx` 描述扩展项，内置
       endLine: 97,
     },
     {
+      label: 'proposal、probe、failure、replay 与 callback 公共合同',
+      path: 'packages/kernel/core/src/contract/composite/types.ts',
+      startLine: 20,
+      endLine: 205,
+    },
+    {
+      label: 'recoverable、contract 与 invariant 的 identity 分类',
+      path: 'packages/kernel/core/src/compile/probe-failure.ts',
+      startLine: 67,
+      endLine: 78,
+    },
+    {
+      label: '普通 thrown value 的安全规范化与诊断补全',
+      path: 'packages/kernel/core/src/compile/probe-failure.ts',
+      startLine: 127,
+      endLine: 151,
+    },
+    {
+      label: 'failure ownership 与受控 raise',
+      path: 'packages/kernel/core/src/compile/probe-failure.ts',
+      startLine: 154,
+      endLine: 208,
+    },
+    {
+      label: 'child probe 隔离、fatal 穿透与 resolved result',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1380,
+      endLine: 1501,
+    },
+    {
       label: 'Canvas 自定义动画属性的 runtime registry 合同',
       path: 'packages/kernel/render/src/animation/registry.ts',
       startLine: 1,
       endLine: 18,
     },
     {
-      label: 'React 宿主只向 Canvas 传入 animationProperties',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 487,
-      endLine: 544,
+      label: 'React retained host 组装 animationProperties 配置',
+      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
+      startLine: 173,
+      endLine: 191,
     },
   ]}
 />

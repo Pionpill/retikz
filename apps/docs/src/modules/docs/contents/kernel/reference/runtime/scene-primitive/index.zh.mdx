@@ -65,7 +65,11 @@ Scene primitive 是 `compileToScene(...).scene` 的输出合同：IR 经过布�
 
 ### 规范视觉边界
 
-布局感知复合定义的 `layoutChild().visualBounds` 从最终静态图元树计算，不是 `Node` 分配框的别名。它覆盖矩形、旋转椭圆、文本、完整路径命令外壳、箭头 marker、阴影、clip 与递归 group 变换；`fillOpacity` / `strokeOpacity` 显式为 `0` 时，对应 paint 不贡献几何，无法静态解析透明度的 CSS 颜色仍保守视为可能可见。描边 join 使用覆盖当前 renderer 默认值的统一斜接上界 `10`，避免不同后端或不同复合定义各自猜测包络。
+布局感知复合定义的 `layoutChild().visualBounds` 从最终静态图元树计算，不是 `slotSize` 或 `allocationBounds` 的别名。Proposal 只描述父级可用空间，slot 是 proposal 求值后的无原点分配结果，allocation 是 child 的真实布局占用，visual bounds 只描述最终墨迹；renderer 不参与这四者的求值。
+
+视觉包络覆盖矩形、旋转椭圆、文本、完整路径命令外壳、箭头 marker、阴影、clip 与递归 group 变换；`fillOpacity` / `strokeOpacity` 显式为 `0` 时，对应 paint 不贡献几何，无法静态解析透明度的 CSS 颜色仍保守视为可能可见。描边 join 使用覆盖当前 renderer 默认值的统一斜接上界 `10`，避免不同后端或不同复合定义各自猜测包络。
+
+layout-aware replay wrapper 只在存在非空 `transforms` 或 `clip` 时，为每个 replay root 生成等价 `GroupPrim`；没有有效 wrapper 字段时保留原 primitive。它先用内层 transform group 把 child 放进 parent allocation coordinate，再用外层 `clipRef` 在父坐标系裁剪。裁剪只收紧最终提交后 Scene 的 compile visual bounds，不改变 allocation bounds，也不回写此前取得的 `LayoutChildResult.visualBounds`。每个 root 独立包装，因此不会把多个不同 zIndex 的 root 压成一个排序单元。
 
 这里的“静态 / 稳定状态”指编译后的静态 Scene 状态。动画不会扩大该包络；需要动画全程范围时应由上层能力另行求解。
 
@@ -165,7 +169,13 @@ compile 层已经把 core IR 的 `marks` 端点箭头解析成 `ResolvedArrowEnd
       label: '图元、marker、clip 与 group 的视觉边界',
       path: 'packages/kernel/core/src/compile/orchestration/visual-bounds.ts',
       startLine: 235,
-      endLine: 350,
+      endLine: 360,
+    },
+    {
+      label: 'replay root 的逐项包装、排序与视觉边界提交',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 995,
+      endLine: 1132,
     },
   ]}
 />

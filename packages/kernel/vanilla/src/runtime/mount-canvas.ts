@@ -23,8 +23,26 @@ import {
 } from '@retikz/render/hydration';
 
 import type { VanillaRuntimeMeta } from '../spec';
-import type { CanvasView, HydrateOptions, MountCanvasOptions, RenderInput, ScenePoint } from './types';
+import type {
+  CanvasView,
+  HydrateOptions,
+  MountCanvasOptions,
+  RawStaticMountCanvasOptions,
+  RenderInput,
+  RetainedCanvasView,
+  RetainedMountCanvasOptions,
+  RetainedRenderInput,
+  ScenePoint,
+  StaticCanvasView,
+  StaticMountCanvasOptions,
+  StaticRawCanvasView,
+  VanillaRetainedRuntimeOptions,
+} from './types';
 
+import { DEFAULT_ID_PREFIX, VanillaViewMode } from './constants';
+import { createVanillaRetainedSession } from './retained-session';
+import { captureVanillaRuntimeOptions } from './runtime-options';
+import { assertStaticMountRuntimeExcluded } from './static-mount-options';
 import { createEmptyRuntimeMeta, toSceneResult } from './to-scene';
 
 /** 设备像素比：取有限正数、否则回退 1（镜像 react CanvasHost） */
@@ -41,7 +59,11 @@ const resolveDevicePixelRatio = (override: number | undefined): number => {
  *   进去（镜像 SVG `preserveAspectRatio=meet` + CanvasHost）。返回的 `CanvasView` 暴露 `hydrate`（hitTest 定位）
  *   与 `clientToScene`（逆 meet-fit 坐标映射）。DOM 仅在调用时惰性触碰，`import` 本模块不碰 DOM——守 SSR 导入安全
  */
-export const mountCanvas = (container: Element, input: RenderInput, options: MountCanvasOptions = {}): CanvasView => {
+const mountStaticCanvas = (
+  container: Element,
+  input: RenderInput,
+  options: StaticMountCanvasOptions | RawStaticMountCanvasOptions,
+): StaticCanvasView | StaticRawCanvasView => {
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
     throw new Error('mountCanvas: container must be a DOM Element.');
   }
@@ -278,8 +300,9 @@ export const mountCanvas = (container: Element, input: RenderInput, options: Mou
   };
 
   return {
+    mode: VanillaViewMode.Static,
     root: canvas,
-    update(next) {
+    update(next: RenderInput) {
       if (disposed) throw new Error('mountCanvas: view already disposed.');
       renderInto(next);
       // renderInto 已换 currentScene；按新 scene 重建存活水合，使 onEvent 动画 trigger 反映新图
@@ -308,3 +331,87 @@ export const mountCanvas = (container: Element, input: RenderInput, options: Mou
     },
   };
 };
+
+/** 把 IR / plain spec 挂成 retained Canvas Runtime session */
+const mountRetainedCanvas = (
+  container: Element,
+  input: RetainedRenderInput,
+  options: RetainedMountCanvasOptions,
+  runtimeOptions: VanillaRetainedRuntimeOptions,
+): RetainedCanvasView => {
+  if (typeof Element === 'undefined' || !(container instanceof Element)) {
+    throw new Error('mountCanvas: container must be a DOM Element.');
+  }
+  const canvas = document.createElement('canvas');
+  const output = options.output ?? {};
+  const ratio = resolveDevicePixelRatio(options.canvas?.devicePixelRatio);
+  if (output.width !== undefined) canvas.style.width = `${output.width}px`;
+  if (output.height !== undefined) canvas.style.height = `${output.height}px`;
+  canvas.style.objectFit = 'contain';
+  const runtime = createVanillaRetainedSession({
+    backend: 'canvas',
+    host: canvas,
+    input,
+    options,
+    runtimeOptions,
+    idPrefix: output.idPrefix ?? DEFAULT_ID_PREFIX,
+    devicePixelRatio: ratio,
+  });
+  container.appendChild(canvas);
+  const clientToScene = (clientX: number, clientY: number): ScenePoint => {
+    const { layout } = runtime.scene();
+    const rect = canvas.getBoundingClientRect();
+    const scale = Math.min(rect.width / layout.width, rect.height / layout.height);
+    const offsetX = (rect.width - layout.width * scale) / 2;
+    const offsetY = (rect.height - layout.height * scale) / 2;
+    return {
+      x: (clientX - rect.left - offsetX) / scale + layout.x,
+      y: (clientY - rect.top - offsetY) / scale + layout.y,
+    };
+  };
+  return {
+    mode: VanillaViewMode.Retained,
+    root: canvas,
+    update: (next, updateOptions) => runtime.update(next, updateOptions),
+    hydrate: hydrateOptions => runtime.hydrate(hydrateOptions),
+    diagnostics: () => runtime.diagnostics(),
+    clientToScene,
+    dispose: () => {
+      runtime.dispose();
+      canvas.remove();
+    },
+    get animation() {
+      return runtime.read().animation;
+    },
+    get runtimeMeta() {
+      return runtime.runtimeMeta();
+    },
+    get artifacts() {
+      return runtime.artifacts();
+    },
+  };
+};
+
+/** `mountCanvas` 的 static / retained 输入重载 */
+type MountCanvas = {
+  (container: Element, input: Scene, options?: StaticMountCanvasOptions): StaticCanvasView;
+  (container: Element, input: RetainedRenderInput, options: RawStaticMountCanvasOptions): StaticRawCanvasView;
+  (container: Element, input: RetainedRenderInput, options?: RetainedMountCanvasOptions): RetainedCanvasView;
+};
+
+/** 按输入是否已编译，创建 static 或 retained Canvas view */
+export const mountCanvas: MountCanvas = ((
+  container: Element,
+  input: Scene | RetainedRenderInput,
+  options: StaticMountCanvasOptions | MountCanvasOptions = {},
+): CanvasView => {
+  if ('primitives' in input) {
+    assertStaticMountRuntimeExcluded(options);
+    return mountStaticCanvas(container, input, options as StaticMountCanvasOptions);
+  }
+  const runtimeOptions = captureVanillaRuntimeOptions(options);
+  if (runtimeOptions.mode === VanillaViewMode.Static) {
+    return mountStaticCanvas(container, input, options as RawStaticMountCanvasOptions);
+  }
+  return mountRetainedCanvas(container, input, options as RetainedMountCanvasOptions, runtimeOptions);
+}) as MountCanvas;

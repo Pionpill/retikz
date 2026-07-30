@@ -5,6 +5,7 @@ import type { RibbonLike } from './types';
 import { providerDefinitionOf } from '../../../providers/registry';
 import { JsonObjectSchema } from '../../../schemas';
 import { parseProviderPayload } from '../../provider-payload';
+import { withProviderOutputValidationBoundary } from '../../scene-primitive';
 import { DEFAULT_RIBBON_SAMPLES } from './types';
 
 const smoothstep = (t: number): number => t * t * (3 - 2 * t);
@@ -97,11 +98,12 @@ export const widthFunction = (
     schema: JsonObjectSchema,
     value: params,
   });
-  return offset =>
-    assertFiniteWidth(
-      profile.widthAt({ offset, length: totalLength, params }),
-      `profile "${width.name}" at offset ${offset}`,
+  return offset => {
+    const rawWidth = profile.widthAt({ offset, length: totalLength, params });
+    return withProviderOutputValidationBoundary(`Ribbon width profile "${width.name}"`, () =>
+      assertFiniteWidth(rawWidth, `profile "${width.name}" at offset ${offset}`),
     );
+  };
 };
 
 /**

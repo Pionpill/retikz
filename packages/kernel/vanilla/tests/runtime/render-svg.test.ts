@@ -5,6 +5,8 @@ import { renderToSvgString as svgRenderToString } from '@retikz/render/svg';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
+import type { MountOptions, RenderToStringOptions } from '../../src';
+
 import { renderToSvgString } from '../../src';
 
 /**
@@ -100,6 +102,22 @@ describe('@retikz/vanilla renderToSvgString', () => {
     expect(renderToSvgString(scene, { output: { width: 200, height: 100 } })).toBe(sized);
     // 缺省时根 <svg> 不带 size（直接以 viewBox 开头；内层 rect 自带 width 不算）
     expect(renderToSvgString(scene)).toMatch(/^<svg viewBox=/);
+  });
+
+  it('rejects mount-only runtime and unknown top-level SSR options instead of silently ignoring them', () => {
+    const mountOptions: MountOptions = {
+      runtime: {
+        rendererFactory: () => {
+          throw new Error('unused renderer factory');
+        },
+      },
+    };
+    expect(() => renderToSvgString(nodeIr, mountOptions as unknown as RenderToStringOptions)).toThrowError(
+      expect.objectContaining({ code: 'RETAINED_RUNTIME_INPUT_INVALID' }),
+    );
+    expect(() => renderToSvgString(nodeIr, { ignored: true } as unknown as RenderToStringOptions)).toThrowError(
+      expect.objectContaining({ code: 'RETAINED_RUNTIME_INPUT_INVALID' }),
+    );
   });
   it('passes boundary providers to compile options', () => {
     expect(() => renderToSvgString(boundaryIr)).toThrow(/options\.boundaries/i);

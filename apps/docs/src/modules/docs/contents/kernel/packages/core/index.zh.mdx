@@ -9,7 +9,7 @@ description: 把完整 Core IR 编译为确定性 Scene，并通过 Core Runtime
 
 调用方始终提交完整 IR Snapshot。Core owner 负责复制、冻结和比较文档；Core Program 读取 typed Snapshot，产生完整 `CompileResult`、`SceneRuntimeSnapshot` 与可选 `ScenePatch`，最后由 Runtime Session 原子发布。
 
-<ComponentPreview files="core-runtime-program" size="xxl" hideCode />
+<ComponentPreview files="core-runtime-program" size="xs" hideCode />
 
 Runtime 不解释 Node、Path、Scope、Composite 或 Scene。领域 identity、编译诊断和 full-fallback `replaceScene` Patch 都由 Core 决定；Runtime 只约束依赖顺序、candidate 隔离、revision 与发布。
 
@@ -74,9 +74,74 @@ Core Program 的 private read 保存下一次 update 使用的 immutable source 
 
 ## 不可变 Program options
 
-`createCoreProgram(options)` 在 factory 调用时复制 option record、registry array 与 Definition record，并固定 callback reference。之后修改原数组或 Definition 字段不会改变已创建 Program。
+`createCoreProgram(options, runtimeOptions?)` 在 factory 调用时复制 option record、registry array 与 Definition record，并固定 callback reference。之后修改原数组或 Definition 字段不会改变已创建 Program。
 
-要更换 measurer、lowerer、provider callback 或它们依赖的外部状态，请销毁旧 Session，并用新 options 创建新的 Program。新 Program 的第一轮总是 full run；`trace` 由 Runtime Program context 统一注入，因此不属于 `CoreProgramOptions`。
+普通 measurer、lowerer、provider callback 或 option 变化仍要求销毁旧 Session，再用新 options 创建 Program。若固定 Definition 的 callback 会读取一份可变外部状态，可把该状态建模成 Runtime owner，并通过 `runtimeOptions.invalidationOwners` 声明为额外失效依赖；owner value 只触发 Core Program 重算，不进入 IR 或 Scene。
+
+`invalidationOwners` 不会替换固定 Definition topology，也不会自动更新 callback reference。新 Program 的第一轮总是 full run；`trace` 由 Runtime Program context 统一注入，因此不属于 `CoreProgramOptions`。
+
+同一个失效 owner 必须同时进入 owner registry、Program runtime options、初始 Snapshot，以及状态变化时的 update transaction：
+
+```ts
+import { CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
+import {
+  createRuntimeOwnerInput,
+  createRuntimeOwnerRegistry,
+  createRuntimeOwnerUpdate,
+  createRuntimeProgramRegistry,
+  createRuntimeSession,
+  defineRuntimeOwner,
+} from '@retikz/runtime';
+
+const MeasureRevisionOwner = defineRuntimeOwner({
+  key: 'app:measure-revision',
+  value: {
+    capture: value => value,
+    read: value => value,
+    equals: Object.is,
+  },
+});
+
+const coreProgram = createCoreProgram({}, { invalidationOwners: [MeasureRevisionOwner] });
+const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, MeasureRevisionOwner] });
+const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
+const session = createRuntimeSession({
+  owners,
+  programs,
+  initialSnapshots: [
+    createRuntimeOwnerInput(CoreOwnerDefinition, ir),
+    createRuntimeOwnerInput(MeasureRevisionOwner, 0),
+  ],
+});
+
+session.update({
+  baseRevision: session.revision(),
+  owners: [createRuntimeOwnerUpdate(MeasureRevisionOwner, 1)],
+});
+```
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Program options 隔离与冻结',
+      path: 'packages/kernel/core/src/compile/incremental/options.ts',
+      startLine: 6,
+      endLine: 27,
+    },
+    {
+      label: '额外 owner 注册为 Core Program 依赖',
+      path: 'packages/kernel/core/src/compile/incremental/program.ts',
+      startLine: 30,
+      endLine: 47,
+    },
+    {
+      label: '额外 owner 变化触发 full fallback',
+      path: 'packages/kernel/core/src/compile/incremental/program.ts',
+      startLine: 126,
+      endLine: 130,
+    },
+  ]}
+/>
 
 ## 公开 API
 
@@ -84,9 +149,10 @@ Core Program 的 private read 保存下一次 update 使用的 immutable source 
 | ------------------------------------------------------ | ------------------------------------------------------------- |
 | `CORE_OWNER_KEY` / `CORE_PROGRAM_ID`                   | Core document owner 与 compile Program 的固定 identity        |
 | `CoreOwnerDefinition`                                  | 完整 IR Snapshot 的 capture/read/equality Definition          |
-| `createCoreProgram(options)`                           | 创建保留 composite artifact 泛型的 Runtime Program Definition |
+| `createCoreProgram(options, runtimeOptions?)`          | 创建保留 composite artifact 泛型的 Runtime Program Definition |
 | `CoreChange`                                           | `add` / `update` / `remove` / `move` change hint union        |
 | `CoreProgramOptions<TComposites>`                      | `CompileOptions` 去掉 `trace` 后的 Program 生命周期配置       |
+| `CoreProgramRuntimeOptions`                            | 声明只负责失效、不进入 IR / Scene 的额外 Runtime owners       |
 | `CoreProgramOutput<TComposites>`                       | 完整 compile result 与 warnings                               |
 | `CoreProgramPublicRead<TComposites>`                   | public `output` / `snapshot` / optional `patch`               |
 | `CoreProgramDefinition<TComposites>`                   | 保留 artifact input、owned artifact、private/public read 泛型 |
@@ -141,8 +207,8 @@ Core Program 的 private read 保存下一次 update 使用的 immutable source 
     {
       label: 'Mismatch fallback diagnostic',
       path: 'packages/kernel/core/src/compile/incremental/program.ts',
-      startLine: 119,
-      endLine: 135,
+      startLine: 134,
+      endLine: 144,
     },
     {
       label: 'canonical Scene topology',

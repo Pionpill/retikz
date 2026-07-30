@@ -83,6 +83,8 @@ export type NodeLayout = {
   textWidth: number;
   /** 文本块高度 */
   textHeight: number;
+  /** 同次正文排版得到的 authored physical-line baseline offsets */
+  textBaselineOffsets?: Array<number>;
   /** 文本对齐 */
   align: 'start' | 'middle' | 'end';
   /** 行高 */

@@ -208,3 +208,179 @@ describe('createClock（无 requestAnimationFrame：SSR 降级）', () => {
     expect(clock.running).toBe(false);
   });
 });
+
+describe('createClock rAF lifecycle', () => {
+  it('frame callback 同步 dispose 后不再续接 rAF', () => {
+    let frameSequence = 0;
+    const pendingFrames = new Map<number, () => void>();
+    const requestFrame = vi.fn((callback: () => void) => {
+      const frame = ++frameSequence;
+      pendingFrames.set(frame, callback);
+      return frame;
+    });
+    const cancelFrame = vi.fn((frame: number) => pendingFrames.delete(frame));
+    vi.stubGlobal('requestAnimationFrame', requestFrame);
+    vi.stubGlobal('cancelAnimationFrame', cancelFrame);
+    const clock = createClock({
+      durationMs: null,
+      onFrame: () => clock.dispose(),
+    });
+    clock.play();
+    const frame = requestFrame.mock.results[0]?.value;
+    if (frame === undefined) throw new Error('expected pending clock frame');
+    const callback = pendingFrames.get(frame);
+    if (callback === undefined) throw new Error('expected pending clock callback');
+
+    pendingFrames.delete(frame);
+    callback();
+
+    expect(clock.running).toBe(false);
+    expect(pendingFrames.size).toBe(0);
+    expect(requestFrame).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(['play', 'tick'] as const)('requestAnimationFrame 在 %s 注册中同步 dispose 不遗留返回 frame', phase => {
+    let frameSequence = 0;
+    let disposeDuringRequest = phase === 'play';
+    const controlsRef: { current?: ReturnType<typeof createClock> } = {};
+    const pendingFrames = new Map<number, () => void>();
+    const requestFrame = vi.fn((callback: () => void) => {
+      const frame = ++frameSequence;
+      if (disposeDuringRequest) {
+        disposeDuringRequest = false;
+        controlsRef.current?.dispose();
+      }
+      pendingFrames.set(frame, callback);
+      return frame;
+    });
+    const cancelFrame = vi.fn((frame: number) => pendingFrames.delete(frame));
+    vi.stubGlobal('requestAnimationFrame', requestFrame);
+    vi.stubGlobal('cancelAnimationFrame', cancelFrame);
+    const clock = createClock({ durationMs: null, onFrame: () => undefined });
+    controlsRef.current = clock;
+    clock.play();
+    if (phase === 'tick') {
+      const firstFrame = requestFrame.mock.results[0]?.value;
+      if (firstFrame === undefined) throw new Error('expected initial clock frame');
+      const firstCallback = pendingFrames.get(firstFrame);
+      if (firstCallback === undefined) throw new Error('expected initial clock callback');
+      pendingFrames.delete(firstFrame);
+      disposeDuringRequest = true;
+      firstCallback();
+    }
+
+    expect(clock.running).toBe(false);
+    expect(pendingFrames.size).toBe(0);
+    expect(cancelFrame).toHaveBeenCalledTimes(1);
+  });
+
+  it('pause 中 cancelAnimationFrame 同步执行当前 callback 不续接新 frame', () => {
+    let frameSequence = 0;
+    const pendingFrames = new Map<number, () => void>();
+    const requestFrame = vi.fn((callback: () => void) => {
+      const frame = ++frameSequence;
+      pendingFrames.set(frame, callback);
+      return frame;
+    });
+    const cancelFrame = vi.fn((frame: number) => {
+      const callback = pendingFrames.get(frame);
+      pendingFrames.delete(frame);
+      callback?.();
+    });
+    vi.stubGlobal('requestAnimationFrame', requestFrame);
+    vi.stubGlobal('cancelAnimationFrame', cancelFrame);
+    const onFrame = vi.fn();
+    const clock = createClock({ durationMs: null, onFrame });
+    clock.play();
+
+    clock.pause();
+
+    expect(clock.running).toBe(false);
+    expect(onFrame).not.toHaveBeenCalled();
+    expect(pendingFrames.size).toBe(0);
+    expect(requestFrame).toHaveBeenCalledTimes(1);
+  });
+
+  it('pause 取消同步消费 callback 后抛错时恢复可推进 frame', () => {
+    let frameSequence = 0;
+    let rejectCancel = true;
+    const pendingFrames = new Map<number, () => void>();
+    const requestFrame = vi.fn((callback: () => void) => {
+      const frame = ++frameSequence;
+      pendingFrames.set(frame, callback);
+      return frame;
+    });
+    const cancelFrame = vi.fn((frame: number) => {
+      const callback = pendingFrames.get(frame);
+      pendingFrames.delete(frame);
+      callback?.();
+      if (rejectCancel) {
+        rejectCancel = false;
+        throw new Error('pause cancel rejected after callback');
+      }
+    });
+    vi.stubGlobal('requestAnimationFrame', requestFrame);
+    vi.stubGlobal('cancelAnimationFrame', cancelFrame);
+    const onFrame = vi.fn();
+    const clock = createClock({ durationMs: null, onFrame });
+    clock.play();
+
+    expect(() => clock.pause()).toThrow('pause cancel rejected after callback');
+
+    expect(clock.running).toBe(true);
+    expect(onFrame).not.toHaveBeenCalled();
+    expect(requestFrame).toHaveBeenCalledTimes(2);
+    expect(pendingFrames.size).toBe(1);
+    expect(pendingFrames.has(2)).toBe(true);
+    expect(() => clock.dispose()).not.toThrow();
+    expect(pendingFrames.size).toBe(0);
+  });
+
+  it('dispose 成功后 play 与 seek 不再复活动画 clock', () => {
+    let frameSequence = 0;
+    const requestFrame = vi.fn(() => ++frameSequence);
+    const cancelFrame = vi.fn();
+    const onFrame = vi.fn();
+    vi.stubGlobal('requestAnimationFrame', requestFrame);
+    vi.stubGlobal('cancelAnimationFrame', cancelFrame);
+    const clock = createClock({ durationMs: null, onFrame });
+    clock.play();
+
+    clock.dispose();
+    clock.play();
+    clock.seek(100);
+
+    expect(clock.running).toBe(false);
+    expect(requestFrame).toHaveBeenCalledTimes(1);
+    expect(cancelFrame).toHaveBeenCalledTimes(1);
+    expect(onFrame).not.toHaveBeenCalled();
+  });
+
+  it('dispose 取消失败后 controls 失活且后续 dispose 重试同一 frame', () => {
+    let frameSequence = 0;
+    let rejectCancel = true;
+    const requestFrame = vi.fn(() => ++frameSequence);
+    const cancelFrame = vi.fn((frame: number) => {
+      if (rejectCancel) {
+        rejectCancel = false;
+        throw new Error(`cancel ${frame} rejected`);
+      }
+    });
+    const onFrame = vi.fn();
+    vi.stubGlobal('requestAnimationFrame', requestFrame);
+    vi.stubGlobal('cancelAnimationFrame', cancelFrame);
+    const clock = createClock({ durationMs: null, onFrame });
+    clock.play();
+
+    expect(() => clock.dispose()).toThrow('cancel 1 rejected');
+    clock.play();
+    clock.seek(100);
+    expect(() => clock.dispose()).not.toThrow();
+
+    expect(clock.running).toBe(false);
+    expect(requestFrame).toHaveBeenCalledTimes(1);
+    expect(cancelFrame).toHaveBeenNthCalledWith(1, 1);
+    expect(cancelFrame).toHaveBeenNthCalledWith(2, 1);
+    expect(onFrame).not.toHaveBeenCalled();
+  });
+});

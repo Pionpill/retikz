@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
+import { createRuntimeIdentity } from '@retikz/runtime';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { HydrationHandlers } from '../../src/hydration';
+import type { HydrationHandlers, HydrationTarget } from '../../src/hydration';
+import type { HydrationController } from '../../src/hydration';
 
 import { createHydrationController, locateSvg } from '../../src/hydration';
 
@@ -100,6 +102,32 @@ describe('Hydration 控制器', () => {
     controller.dispose();
   });
 
+  it('同一 semantic owner 的多个 occurrence 之间移动不重复触发 enter/leave', () => {
+    const root = document.createElement('div');
+    const owner = createRuntimeIdentity('hydration-owner', ['owner']);
+    const targets: ReadonlyArray<HydrationTarget> = ['shape', 'label'].map(segment => ({
+      identity: createRuntimeIdentity('hydration-owner', ['owner', segment]),
+      semanticOwner: owner,
+      publicId: 'owner',
+    }));
+    let current: HydrationTarget | null = targets[0];
+    const onEnter = vi.fn();
+    const onLeave = vi.fn();
+    const controller = createHydrationController(
+      root,
+      { owner: { pointerEnter: onEnter, pointerLeave: onLeave } },
+      () => current,
+    );
+
+    root.dispatchEvent(new Event('pointermove'));
+    current = targets[1];
+    root.dispatchEvent(new Event('pointermove'));
+
+    expect(onEnter).toHaveBeenCalledTimes(1);
+    expect(onLeave).not.toHaveBeenCalled();
+    controller.dispose();
+  });
+
   it('leave-whole-figure：pointerleave 离开整图 → lastHitId 的 leave 触发并清空命中态', () => {
     const { root, childA1 } = setupRoot();
     const onLeaveA = vi.fn();
@@ -136,6 +164,38 @@ describe('Hydration 控制器', () => {
     expect(() => controller.dispose()).not.toThrow(); // 再次 dispose 不抛
   });
 
+  it('dispose-retry：单个 listener 解绑失败时保留失败项并继续清理，其后可重试', () => {
+    const { root, childA1 } = setupRoot();
+    const onClick = vi.fn();
+    const onDoubleClick = vi.fn();
+    const originalRemove = root.removeEventListener.bind(root);
+    let rejectClickRemoval = true;
+    const remove = vi.spyOn(root, 'removeEventListener').mockImplementation((type, listener, options) => {
+      if (type === 'click' && rejectClickRemoval) {
+        rejectClickRemoval = false;
+        throw new Error('click listener removal rejected');
+      }
+      originalRemove(type, listener, options);
+    });
+    const controller = createHydrationController(
+      root,
+      { a: { click: onClick, doubleClick: onDoubleClick } },
+      locateSvg,
+    );
+
+    expect(() => controller.dispose()).toThrow('click listener removal rejected');
+    dispatch(childA1, 'click');
+    dispatch(childA1, 'dblclick');
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(onDoubleClick).not.toHaveBeenCalled();
+    expect(remove.mock.calls.map(([type]) => type)).toEqual(['click', 'dblclick']);
+
+    expect(() => controller.dispose()).not.toThrow();
+    dispatch(childA1, 'click');
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(remove.mock.calls.map(([type]) => type)).toEqual(['click', 'dblclick', 'click']);
+  });
+
   it('no-handler-no-throw：命中 id 但无对应事件 handler → 静默、不抛', () => {
     const { root, nodeB } = setupRoot();
     const handlers: HydrationHandlers = { a: { click: vi.fn() } };
@@ -143,6 +203,65 @@ describe('Hydration 控制器', () => {
 
     expect(() => dispatch(nodeB, 'click')).not.toThrow();
     controller.dispose();
+  });
+
+  it('listener 注册中途失败会反向清理已挂载 listener', () => {
+    const added: Array<string> = [];
+    const removed: Array<string> = [];
+    const root = {
+      addEventListener: (type: string) => {
+        if (type === 'dblclick') throw new Error('listener rejected');
+        added.push(type);
+      },
+      removeEventListener: (type: string) => removed.push(type),
+    } as unknown as EventTarget;
+
+    expect(() =>
+      createHydrationController(root, { node: { click: vi.fn(), doubleClick: vi.fn() } }, () => null),
+    ).toThrow('listener rejected');
+    expect(added).toEqual(['click']);
+    expect(removed).toEqual(['click']);
+  });
+
+  it('listener 注册与反向解绑连续失败时暴露可重试的 controller，且保留注册失败为 primary cause', () => {
+    const listeners = new Map<string, EventListener>();
+    let rejectRemoval = true;
+    const setupCause = new Error('listener rejected');
+    const cleanupCause = new Error('listener removal rejected');
+    const root = {
+      addEventListener: (type: string, listener: EventListenerOrEventListenerObject) => {
+        if (type === 'dblclick') throw setupCause;
+        listeners.set(type, listener as EventListener);
+      },
+      removeEventListener: (type: string) => {
+        if (rejectRemoval) {
+          rejectRemoval = false;
+          throw cleanupCause;
+        }
+        listeners.delete(type);
+      },
+    } as unknown as EventTarget;
+
+    let failure: unknown;
+    try {
+      createHydrationController(root, { node: { click: vi.fn(), doubleClick: vi.fn() } }, () => null);
+    } catch (cause) {
+      failure = cause;
+    }
+
+    expect(failure).toBeInstanceOf(Error);
+    expect(failure).toEqual(
+      expect.objectContaining({
+        name: 'HydrationControllerSetupError',
+        cause: setupCause,
+        cleanupCause,
+      }),
+    );
+    expect(listeners.has('click')).toBe(true);
+    if (!(failure instanceof Error)) throw new Error('expected hydration setup error');
+    const controller = Reflect.get(failure, 'controller') as HydrationController;
+    expect(() => controller.dispose()).not.toThrow();
+    expect(listeners.size).toBe(0);
   });
 });
 

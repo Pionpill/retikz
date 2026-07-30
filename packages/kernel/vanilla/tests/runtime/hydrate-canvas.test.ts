@@ -139,6 +139,7 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
     fillRect(): void {},
     strokeRect(): void {},
     fillText(): void {},
+    drawImage(): void {},
     measureText(): { width: number } {
       return { width: 0 };
     },

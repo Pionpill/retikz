@@ -6,6 +6,7 @@ import type { NodeLayout } from '../node';
 
 import { isAnchor } from '../../shared';
 import { anchorOf, angleBoundaryOf, boundaryKey } from '../node';
+import { snapshotProviderPosition } from '../scene-primitive';
 
 /** 单个 NodeLayout 生命周期内的 anchor 坐标缓存 */
 const cache = new WeakMap<NodeLayout, Map<string, IRPosition>>();
@@ -33,7 +34,8 @@ const computeEdgePoint = (layout: NodeLayout, side: SideValue, fraction: number)
   if (layout.rect.width === 0 && layout.rect.height === 0) {
     throw new Error(`{ side, fraction } is not meaningful on a zero-size target (shape '${layout.shapeName}')`);
   }
-  return positionToIR(edgePoint(layout.rect, side, fraction, layout.shapeParams ?? {}));
+  const raw = edgePoint(layout.rect, side, fraction, layout.shapeParams ?? {});
+  return positionToIR(snapshotProviderPosition(`Shape '${layout.shapeName}' edgePoint`, raw));
 };
 
 /**

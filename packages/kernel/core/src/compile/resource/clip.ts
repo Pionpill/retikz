@@ -2,8 +2,16 @@ import type { ClipDefinition, ClipResource, ClipShape, PathClipShape, PathComman
 import type { IRClipSpec } from '../../schemas';
 
 import { providerDefinitionOf } from '../../providers/registry';
-import { JsonObjectSchema } from '../../schemas';
+import { JsonObjectSchema, PathCommandSchema } from '../../schemas';
+import {
+  CompositeContractError,
+  isFatalProbeError,
+  isLayoutProbeRecoverableError,
+  LayoutProbeRecoverableError,
+  safeThrownDetail,
+} from '../probe-failure';
 import { parseProviderPayload } from '../provider-payload';
+import { snapshotProviderOutputJson, withProviderOutputValidationBoundary } from '../scene-primitive';
 
 export type ClipRegistry = {
   /** 解析 IR clip 为 canonical ClipShape，不登记资源 */
@@ -34,7 +42,7 @@ type ClipPointInput = {
 };
 
 const bad = ({ kind, field, value, positive = false }: ClipFieldInput & { positive?: boolean }): never => {
-  throw new Error(
+  throw new CompositeContractError(
     `Clip '${kind}' has an invalid ${field} (${String(value)}); it must be a finite number${
       positive ? ' greater than 0' : ''
     }.`,
@@ -102,6 +110,167 @@ const roundCommand = (command: PathCommand, round: (n: number) => number): PathC
   }
 };
 
+const assertResolvedClipShape: (shape: unknown, owner: string) => asserts shape is ClipShape = (shape, owner) => {
+  const fail = (detail: string): never => {
+    throw new CompositeContractError(`${owner} resolve returned ${detail}.`);
+  };
+  const ownStringKeys = (value: object, path: string, arrayLength = false): Array<string> => {
+    const keys = Reflect.ownKeys(value);
+    const stringKeys: Array<string> = [];
+    for (const key of keys) {
+      if (typeof key === 'symbol') {
+        fail(`${path} with an unsupported symbol field`);
+      }
+      const stringKey = key as string;
+      const descriptor = Object.getOwnPropertyDescriptor(value, stringKey);
+      if (
+        descriptor === undefined ||
+        ((!arrayLength || key !== 'length') && (!descriptor.enumerable || !('value' in descriptor)))
+      ) {
+        fail(`${path} with a hidden or accessor field '${stringKey}'`);
+      }
+      stringKeys.push(stringKey);
+    }
+    return stringKeys;
+  };
+  const object = (value: unknown, path: string): Record<string, unknown> => {
+    if (value === null || typeof value !== 'object' || Array.isArray(value)) fail(`an invalid ${path}`);
+    const prototype = Object.getPrototypeOf(value);
+    if (prototype !== Object.prototype && prototype !== null) fail(`a non-plain ${path}`);
+    ownStringKeys(value as object, path);
+    return value as Record<string, unknown>;
+  };
+  const array = (value: unknown, path: string): Array<unknown> => {
+    if (!Array.isArray(value)) fail(`an invalid ${path}`);
+    if (Object.getPrototypeOf(value) !== Array.prototype) fail(`an invalid ${path}`);
+    const entries = value as Array<unknown>;
+    for (const key of ownStringKeys(entries, path, true)) {
+      if (key === 'length') continue;
+      if (!/^(?:0|[1-9]\d*)$/.test(key) || Number(key) >= entries.length) {
+        fail(`${path} with an unsupported field '${key}'`);
+      }
+    }
+    for (let index = 0; index < entries.length; index += 1) {
+      const descriptor = Object.getOwnPropertyDescriptor(entries, String(index));
+      if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
+        fail(`a sparse or accessor ${path}`);
+      }
+    }
+    return entries;
+  };
+  const exactKeys = (value: Record<string, unknown>, allowed: ReadonlyArray<string>, path: string): void => {
+    const unsupported = ownStringKeys(value, path).filter(key => !allowed.includes(key));
+    if (unsupported.length > 0) fail(`${path} with unsupported field(s): ${unsupported.join(', ')}`);
+  };
+  const finiteNumber = (value: unknown, path: string, positiveValue = false): void => {
+    if (typeof value !== 'number' || !Number.isFinite(value) || (positiveValue && value <= 0)) {
+      fail(`an invalid ${path}`);
+    }
+  };
+  const pointValue = (value: unknown, path: string): void => {
+    const coordinates = array(value, path);
+    if (coordinates.length !== 2) fail(`an invalid ${path}`);
+    finiteNumber(coordinates[0], `${path}[0]`);
+    finiteNumber(coordinates[1], `${path}[1]`);
+  };
+  const jsonActive = new WeakSet<object>();
+  const assertJsonValue = (value: unknown, path: string): void => {
+    if (value === null || typeof value === 'string' || typeof value === 'boolean') return;
+    if (typeof value === 'number') {
+      finiteNumber(value, path);
+      return;
+    }
+    if (typeof value !== 'object') fail(`a non-JSON ${path}`);
+    const objectValue = value as object;
+    if (jsonActive.has(objectValue)) fail(`a cyclic ${path}`);
+    jsonActive.add(objectValue);
+    try {
+      if (Array.isArray(value)) {
+        array(value, path).forEach((entry, index) => assertJsonValue(entry, `${path}[${index}]`));
+      } else {
+        const record = object(value, path);
+        for (const key of ownStringKeys(record, path)) assertJsonValue(record[key], `${path}.${key}`);
+      }
+    } finally {
+      jsonActive.delete(objectValue);
+    }
+  };
+  const active = new WeakSet<object>();
+  const visit = (value: unknown, path: string): void => {
+    const candidate = object(value, path);
+    switch (candidate.kind) {
+      case 'rect':
+        exactKeys(candidate, ['kind', 'x', 'y', 'width', 'height'], path);
+        finiteNumber(candidate.x, `${path}.x`);
+        finiteNumber(candidate.y, `${path}.y`);
+        finiteNumber(candidate.width, `${path}.width`, true);
+        finiteNumber(candidate.height, `${path}.height`, true);
+        return;
+      case 'circle':
+        exactKeys(candidate, ['kind', 'cx', 'cy', 'r'], path);
+        finiteNumber(candidate.cx, `${path}.cx`);
+        finiteNumber(candidate.cy, `${path}.cy`);
+        finiteNumber(candidate.r, `${path}.r`, true);
+        return;
+      case 'ellipse':
+        exactKeys(candidate, ['kind', 'cx', 'cy', 'rx', 'ry'], path);
+        finiteNumber(candidate.cx, `${path}.cx`);
+        finiteNumber(candidate.cy, `${path}.cy`);
+        finiteNumber(candidate.rx, `${path}.rx`, true);
+        finiteNumber(candidate.ry, `${path}.ry`, true);
+        return;
+      case 'polygon': {
+        exactKeys(candidate, ['kind', 'points'], path);
+        const polygonPoints = array(candidate.points, `${path}.points`);
+        if (polygonPoints.length < 3) fail(`an invalid ${path}.points`);
+        polygonPoints.forEach((polygonPoint, index) => pointValue(polygonPoint, `${path}.points[${index}]`));
+        return;
+      }
+      case 'path': {
+        exactKeys(candidate, ['kind', 'commands', 'fillRule'], path);
+        const commands = array(candidate.commands, `${path}.commands`);
+        if (commands.length === 0) {
+          fail(`an invalid ${path}.commands`);
+        }
+        commands.forEach((command, index) => {
+          assertJsonValue(command, `${path}.commands[${index}]`);
+          const parsed = PathCommandSchema.safeParse(command);
+          if (!parsed.success) {
+            throw new CompositeContractError(`${owner} resolve returned an invalid ${path}.commands[${index}].`, {
+              cause: parsed.error,
+            });
+          }
+        });
+        if (candidate.fillRule !== undefined && candidate.fillRule !== 'nonzero' && candidate.fillRule !== 'evenodd') {
+          fail(`an invalid ${path}.fillRule`);
+        }
+        return;
+      }
+      case 'compound': {
+        exactKeys(candidate, ['kind', 'children', 'fillRule'], path);
+        const children = array(candidate.children, `${path}.children`);
+        if (children.length === 0) {
+          fail(`an invalid ${path}.children`);
+        }
+        if (candidate.fillRule !== undefined && candidate.fillRule !== 'nonzero' && candidate.fillRule !== 'evenodd') {
+          fail(`an invalid ${path}.fillRule`);
+        }
+        if (active.has(candidate)) fail(`a cyclic ${path}`);
+        active.add(candidate);
+        try {
+          children.forEach((child, index) => visit(child, `${path}.children[${index}]`));
+        } finally {
+          active.delete(candidate);
+        }
+        return;
+      }
+      default:
+        fail(`an invalid or unknown ${path} kind '${String(candidate.kind)}'`);
+    }
+  };
+  visit(shape, 'root shape');
+};
+
 const guardAndRoundShape = (shape: ClipShape, round: (n: number) => number): ClipShape => {
   switch (shape.kind) {
     case 'rect':
@@ -128,8 +297,10 @@ const guardAndRoundShape = (shape: ClipShape, round: (n: number) => number): Cli
         ry: positive({ kind: shape.kind, field: 'ry', value: shape.ry, round }),
       };
     case 'polygon':
-      if (shape.points.length < 3) {
-        throw new Error(`Clip 'polygon' needs at least 3 points; got ${shape.points.length}.`);
+      if (!Array.isArray(shape.points) || shape.points.length < 3) {
+        throw new CompositeContractError(
+          `Clip 'polygon' needs at least 3 points; got ${Array.isArray(shape.points) ? shape.points.length : 'non-array'}.`,
+        );
       }
       return {
         kind: 'polygon',
@@ -139,7 +310,9 @@ const guardAndRoundShape = (shape: ClipShape, round: (n: number) => number): Cli
         ]),
       };
     case 'path': {
-      if (shape.commands.length === 0) throw new Error("Clip 'path' needs at least 1 command.");
+      if (!Array.isArray(shape.commands) || shape.commands.length === 0) {
+        throw new CompositeContractError("Clip 'path' needs at least 1 command.");
+      }
       const rounded: PathClipShape = {
         kind: 'path',
         commands: shape.commands.map(command => roundCommand(command, round)),
@@ -148,7 +321,9 @@ const guardAndRoundShape = (shape: ClipShape, round: (n: number) => number): Cli
       return rounded;
     }
     case 'compound':
-      if (shape.children.length === 0) throw new Error("Clip 'compound' needs at least 1 child.");
+      if (!Array.isArray(shape.children) || shape.children.length === 0) {
+        throw new CompositeContractError("Clip 'compound' needs at least 1 child.");
+      }
       return {
         kind: 'compound',
         children: shape.children.map(child => guardAndRoundShape(child, round)),
@@ -156,6 +331,14 @@ const guardAndRoundShape = (shape: ClipShape, round: (n: number) => number): Cli
       };
   }
 };
+
+/** 在统一 fatal boundary 内校验并规范化 Clip provider resolved output */
+const validateResolvedClipShape = (shape: unknown, owner: string, round: (n: number) => number): ClipShape =>
+  withProviderOutputValidationBoundary(owner, () => {
+    const snapshot = snapshotProviderOutputJson(owner, shape, 'root shape');
+    assertResolvedClipShape(snapshot, owner);
+    return guardAndRoundShape(snapshot, round);
+  });
 
 export const createClipRegistry = (
   round: (n: number) => number,
@@ -175,8 +358,22 @@ export const createClipRegistry = (
       schema: definition.schema,
       value: clip,
     });
-    JsonObjectSchema.parse(parsed);
-    return guardAndRoundShape(definition.resolve(parsed, { round, resolve: resolveShape }), round);
+    try {
+      JsonObjectSchema.parse(parsed);
+    } catch (cause) {
+      throw new CompositeContractError(`Clip '${kind}' schema returned a non-JSON payload.`, { cause });
+    }
+    let resolved: unknown;
+    try {
+      resolved = definition.resolve(parsed, { round, resolve: resolveShape });
+    } catch (thrown) {
+      if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
+      throw new LayoutProbeRecoverableError(`Clip '${kind}' resolve failed: ${safeThrownDetail(thrown)}`, {
+        cause: thrown,
+        providerKey: `clip:${kind}`,
+      });
+    }
+    return validateResolvedClipShape(resolved, `Clip '${kind}'`, round);
   };
   const importResolved = (shape: ClipShape): string => {
     const key = JSON.stringify(shape);

@@ -9,9 +9,7 @@ import type { LowerTablesOptions } from './types';
 
 import { TableLayoutManifestSchema } from '../contract';
 import { TABLE_NAMESPACE, TableComposite, TableSpecSchema } from '../schemas';
-import { resolveTableTransaction, TableTransactionStageError } from './layout';
-
-const errorMessageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error));
+import { resolveTableTransaction } from './layout';
 
 /** 构造 Table 的 layout-aware composite definition，供 Core compile options 注入 */
 export const lowerTables = (
@@ -31,16 +29,11 @@ export const lowerTables = (
     schema: TableSpecSchema,
     artifactSchema: TableLayoutManifestSchema,
     compile: (spec: IRTableSpec, context) => {
-      try {
-        const transaction = resolveTableTransaction(spec, datasets, options, context);
-        return {
-          children: transaction.children,
-          artifact: TableLayoutManifestSchema.parse(transaction.manifest),
-        };
-      } catch (error) {
-        if (error instanceof TableTransactionStageError) throw error;
-        throw new Error(`table: layout transaction: ${errorMessageOf(error)}`, { cause: error });
-      }
+      const transaction = resolveTableTransaction(spec, datasets, options, context);
+      return {
+        children: transaction.children,
+        artifact: TableLayoutManifestSchema.parse(transaction.manifest),
+      };
     },
   }),
 ];

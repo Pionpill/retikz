@@ -21,6 +21,7 @@ describe('@retikz/vanilla 入口边界', () => {
       'scope',
       'embed',
       'VanillaLayerCache',
+      'VanillaViewMode',
     ] as const) {
       expect(vanilla[name]).toBeDefined();
     }

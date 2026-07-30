@@ -7,6 +7,7 @@ import type { IRChild } from '../../schemas';
 import type { RuntimePrimitiveMetadata, RuntimeSemanticOwner, RuntimeTopologyTracker } from './types';
 
 import { CORE_OWNER_KEY } from '../../contract';
+import { CompileInvariantError } from '../probe-failure';
 
 const rootIdentity = createRuntimeIdentity(CORE_OWNER_KEY, ['root']);
 
@@ -58,7 +59,7 @@ export const createRuntimeTopologyTracker = (revision: RuntimeRevision): Runtime
 
   const stateOf = (owner: RuntimeSemanticOwner): RuntimeOwnerState => {
     const state = ownerStates.get(owner);
-    if (state === undefined) throw new Error('internal: unknown Runtime semantic owner');
+    if (state === undefined) throw new CompileInvariantError('internal: unknown Runtime semantic owner');
     return state;
   };
 
@@ -84,7 +85,7 @@ export const createRuntimeTopologyTracker = (revision: RuntimeRevision): Runtime
 
   const registerIdentity = (id: string, owner: RuntimeSemanticOwner): void => {
     const frame = namespaceFrames.at(-1);
-    if (frame === undefined) throw new Error('internal: Runtime namespace frame stack is empty');
+    if (frame === undefined) throw new CompileInvariantError('internal: Runtime namespace frame stack is empty');
     const occurrences = frame.get(id) ?? [];
     occurrences.push(owner);
     frame.set(id, occurrences);
@@ -145,7 +146,7 @@ export const createRuntimeTopologyTracker = (revision: RuntimeRevision): Runtime
     pushNamespaceFrame: () => namespaceFrames.push(new Map()),
     popNamespaceFrame: () => {
       if (namespaceFrames.length <= 1) {
-        throw new Error('internal: cannot pop Runtime root namespace frame');
+        throw new CompileInvariantError('internal: cannot pop Runtime root namespace frame');
       }
       namespaceFrames.pop();
     },

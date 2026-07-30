@@ -1,6 +1,6 @@
 ---
 title: '@retikz/react'
-description: Author Kernel and Sugar components in JSX, then connect the generated core IR to React-managed SVG or Canvas hosts.
+description: Author Kernel and Sugar components in JSX, then connect the generated Core IR to a retained or static Runtime and stable SVG or Canvas host.
 ---
 
 `@retikz/react` is the primary entry for React applications. You declare figures with JSX components such as `<Layout>`, `<Node>`, `<Path>`, `<Scope>`, and `<Draw>`; its adapter turns props and children into `@retikz/core` IR, then `<Layout>` compiles a Scene and connects it to an SVG or Canvas host.
@@ -55,7 +55,7 @@ Marker components are not used because React is incapable of drawing. They keep 
 
 JSX therefore organizes declarations while the builder converges them into framework-neutral Core IR. The intermediate path creates no extra DOM and does not make CSS layout an implicit input to compilation. Persistence, transport, SSR, and other framework adapters can continue through the same IR → Scene pipeline.
 
-React still operates where it adds value. The final SVG descriptor tree becomes ordinary React elements with reconciliation, keys, refs, and event lifecycle; for Canvas, React manages the single host and redraw timing. Drawing semantics are thin in this layer, not host integration.
+React still operates where it adds value. It declares a stable `<svg>` / `<canvas>` host shell and connects React commit, refs, and unmounting to the selected Runtime host. The default retained path gives a `@retikz/render` participant exclusive ownership of SVG descendants or the Canvas bitmap, while the static path directly materializes the complete Scene. Both paths prevent React reconciliation and the renderer from rewriting the same subtree. Drawing semantics are thin in this layer, not host integration.
 
 Kernel components such as `<Node>`, `<Path>`, and `<Scope>` are **IR markers**, not DOM components. They return `null` and expose only a stable `displayName` that tells the React builder which primitive they represent. A `<Node>` therefore does not produce an intermediate `<div>` or acquire a second browser-layout model.
 
@@ -100,42 +100,87 @@ return (
   ]}
 />
 
-### Performance boundaries and future direction
+### Retained update boundaries
 
-Marker components avoid intermediate DOM and duplicated drawing semantics, but the conversion pipeline still has a cost. `Layout` currently uses separate `useMemo` stages for JSX → IR, IR → Scene, Scene → SVG descriptors, and handler collection. When IR, compile options, and the other dependency references stay stable, those stages can reuse their results.
+Marker components avoid intermediate DOM and duplicated drawing semantics, but JSX → IR still reruns when children references change. Today, every `ir` or Core-options change also calls `compileToScene` during React render to produce an SSR-safe seed; in the default retained mode, the Runtime Session compiles the same input again after the client commit for its transaction. Retained updates reduce backend commit cost, not this render-time full compile.
 
-Children mode has an explicit limitation: JSX children commonly receive a new reference on every React render, so memoization can miss and rerun `buildIRWithContributions` plus full-scene `compileToScene`. For large figures that rerender frequently, the current guidance is to keep a stable IR outside the component or in `useMemo`, then pass it through the `ir` prop. When the other compile options are stable as well, this skips the JSX builder and lets the Scene compilation memo reuse its result.
+Frequently updated large figures can keep stable IR and Core options outside the component or in `useMemo`, then pass the IR prop to skip the builder and let the seed-compile memo hit.
 
-The project will not introduce a public incremental API merely because JSON Patch exists. Kernel will first measure full compilation in real large-figure or interaction scenarios and evaluate whether bailouts, caching, or domain lowering are sufficient. Only with supporting performance evidence will it design IR diffing, local compilation, Scene patches, concurrent scheduling, and whether SVG and Canvas can share the same update semantics.
+In retained mode, `Layout` creates a Runtime Session after the client commit and updates the complete IR Snapshot plus renderer configuration in one transaction. When Core can prove an update locally safe it publishes a local Scene Patch; other valid changes use a `replaceScene` fallback while preserving full-oracle equivalence. The SVG / Canvas retained participant isolates candidate state during prepare, then publishes DOM / bitmap, events, animation handles, and artifacts together only after the transaction succeeds.
 
-Progressive IR / incremental compilation still requires evidence-based scheduling in a future version and is not a frozen API.
+On unmount, the Session cleans up in reverse order on a best-effort basis, then retries failed renderer cleanup once after logical resources retire. Successful entries never rerun. Persistent failure only enters Runtime diagnostics and does not block React from completing the unmount.
+
+Definition arrays are canonicalized by ordered element identity, so recreating an equivalent container such as `[shape]` does not rebuild the Session. Changing a Definition itself, the renderer backend, `idPrefix`, or `runtime.rendererFactory` does rebuild it. Concurrent scheduling and progressive materialization remain outside the current public contract.
 
 <SourceLinks
   sources={[
     {
-      label: 'Layout memoization and full-compile boundary',
+      label: 'Layout Definition-container canonicalization',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 410,
-      endLine: 493,
+      startLine: 48,
+      endLine: 73,
     },
     {
-      label: 'Thin React mapping for SVG descriptors',
-      path: 'packages/kernel/react/src/render/svg/svg-to-react.ts',
-      startLine: 53,
-      endLine: 69,
+      label: 'Retained Session creation and initial publish',
+      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
+      startLine: 244,
+      endLine: 294,
     },
     {
-      label: 'Incremental-compile entry criteria and open questions',
-      path: 'packages/kernel/_notes/decisions/v0/v0.4/backlog.md',
-      startLine: 3,
-      endLine: 27,
+      label: 'Retained Session update transaction',
+      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
+      startLine: 305,
+      endLine: 323,
+    },
+  ]}
+/>
+
+### Execution modes and update strategies
+
+`<Layout>` uses two orthogonal `runtime` fields to select the host lifecycle and Program update behavior. Omitting the option means `retained + auto`:
+
+```tsx
+<Layout /> {/* retained + auto */}
+<Layout runtime={{ mode: 'retained', updateStrategy: 'full' }} />
+<Layout runtime={{ mode: 'static' }} />
+```
+
+| Configuration     | Update behavior                                           | Session, memory, and failure semantics                                                              |
+| ----------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `retained + auto` | Safe changes use local Patches; others fully fall back    | Keeps Snapshots, candidates, diagnostics, atomic commits, and rollback; this is the default         |
+| `retained + full` | Skips Program `update()` for affected work and runs fully | Retains the same Runtime state and transaction guarantees as auto; it is not a low-memory mode      |
+| `static`          | Fully compiles and directly materializes SVG / Canvas     | Creates no Session, Snapshot, diff, transaction, or rollback; less resident state, more update work |
+
+`mode: 'static'` cannot be combined with `updateStrategy`, `rendererFactory`, or `onDiagnostic`. The `LayoutRuntimeOptions` TypeScript union rejects those combinations, and JavaScript calls fail before a host is created. If static compilation fails before host writes, no new picture is published. Errors after materialization, animation, or hydration begins propagate without a guarantee that the old host state is restored.
+
+Changing `updateStrategy` between `auto` and `full` on a retained host disposes the old Session and creates a new one from the current complete input. The host element keeps its identity, while the revision restarts from initial. Changing `mode` releases and replaces the complete host. Choose `retained + full`, not `static`, when you want to keep transactions, diagnostics, and rollback while excluding incremental updates.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Discriminated Layout runtime options',
+      path: 'packages/kernel/react/src/kernel/runtime/runtime-options.ts',
+      startLine: 5,
+      endLine: 48,
+    },
+    {
+      label: 'Static / retained host dispatch',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 479,
+      endLine: 524,
+    },
+    {
+      label: 'Retained Session recreation on strategy changes',
+      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
+      startLine: 238,
+      endLine: 306,
     },
   ]}
 />
 
 ## From JSX to Scene
 
-`<Layout>` orchestrates two pure transformations: it first calls the React builder to adapt JSX into Core IR, then calls Core's `compileToScene`. In the figure, blue nodes belong to `@retikz/react` authoring / adaptation, while orange nodes are the data contracts and compiler owned by `@retikz/core`.
+`<Layout>` first calls the React builder to adapt JSX into Core IR. Whenever the input or Core options change, the render phase uses `compileToScene` for an SSR-safe seed; after the client commit, the same Core options create or update the Core Program. In the figure, blue nodes belong to `@retikz/react` authoring / adaptation, while orange nodes are the data contracts and compiler owned by `@retikz/core`.
 
 <ComponentPreview files="react-to-scene" size="xs" hideCode />
 
@@ -147,7 +192,7 @@ Progressive IR / incremental compilation still requires evidence-based schedulin
 | `compileToScene`           | `@retikz/core`  | Process composites; resolve registries, references, geometry, layout, resources, and animation |
 | `CompileResult`            | `@retikz/core`  | Return a backend-neutral `scene` and immutable typed `artifacts` from the same compile         |
 
-`Layout` injects host capabilities such as text measurement, Definition registries, and the TeX lowerer as compile options, but those options do not put React into IR or Scene. Passing the `ir` prop skips the JSX builder and continues through the same `compileToScene` entry. The `artifacts` prop requests opt-in outputs, while `onArtifacts` receives immutable same-compile artifacts after React commit; notification does not trigger another compile.
+`Layout` injects host capabilities such as text measurement, Definition registries, and the TeX lowerer as compile options, but those options do not put React into IR or Scene. Passing the `ir` prop skips the JSX builder. The `artifacts` prop requests opt-in outputs, while `onArtifacts` receives immutable same-compile artifacts after the selected host publishes; notification does not trigger another compile.
 
 <SourceLinks
   sources={[
@@ -167,7 +212,7 @@ Progressive IR / incremental compilation still requires evidence-based schedulin
       label: 'Layout wiring builder to compile',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
       startLine: 410,
-      endLine: 472,
+      endLine: 474,
     },
     {
       label: 'Core IR to Scene compiler',
@@ -180,34 +225,28 @@ Progressive IR / incremental compilation still requires evidence-based schedulin
 
 ## After Scene
 
-Scene no longer contains React component semantics. `@retikz/render` executes it against a target backend, while `@retikz/react` adds only React host lifecycle and element mapping:
+Scene no longer contains React component semantics. In the default retained mode, `@retikz/render` executes Snapshots / Patches against a target backend, while `@retikz/react` adds only React host lifecycle and Session wiring:
 
-| Target | `@retikz/render`                                               | `@retikz/react`                                              |
-| ------ | -------------------------------------------------------------- | ------------------------------------------------------------ |
-| SVG    | `buildSvgDocument`: Scene → neutral `SvgNode` descriptor tree  | `svgToReact` maps it to React elements and connects root ref |
-| Canvas | `renderToCanvas`: draw Scene directly into a Canvas 2D context | `CanvasHost` owns `<canvas>`, redraw effects, and rAF clock  |
+| Target | `@retikz/render`                                                        | `@retikz/react`                                           |
+| ------ | ----------------------------------------------------------------------- | --------------------------------------------------------- |
+| SVG    | Retained renderer owns descendants and applies a Patch or full fallback | Declares a stable `<svg>` shell, then adopts the SSR seed |
+| Canvas | Retained renderer updates dirty regions or uses a full fallback         | Declares a stable `<canvas>` shell and fixes DPR at mount |
 
 Event handlers are functions and cannot enter JSON IR. In children mode, React separately runs `collectHydrationHandlers` to collect functions by primitive id, then binds them after rendering through SVG location or Canvas hit-testing. With the `ir` prop, the `handlers` prop supplies this runtime side channel instead.
 
 <SourceLinks
   sources={[
     {
-      label: 'Layout SVG / Canvas routing',
+      label: 'Layout retained-host wiring',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 487,
-      endLine: 544,
+      startLine: 486,
+      endLine: 508,
     },
     {
-      label: 'Thin SvgNode to React element mapping',
-      path: 'packages/kernel/react/src/render/svg/svg-to-react.ts',
-      startLine: 53,
-      endLine: 69,
-    },
-    {
-      label: 'CanvasHost calling renderToCanvas',
-      path: 'packages/kernel/react/src/render/canvas/CanvasHost.tsx',
-      startLine: 175,
-      endLine: 230,
+      label: 'Retained host shell declaration',
+      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
+      startLine: 329,
+      endLine: 356,
     },
     {
       label: 'JSX handler runtime side channel',

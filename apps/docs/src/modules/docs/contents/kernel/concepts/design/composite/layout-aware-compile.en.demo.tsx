@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
 
-/** A layout-aware composite measures, solves, and commits one selected replay inside one Core compile */
+/** Two-axis proposals are evaluated, selected, and committed inside one Core compile */
 const Demo: FC = () => (
   <Layout width={520} height={420} style={{ maxWidth: '100%', height: 'auto' }}>
     <LogicFrame id="compile-boundary">
@@ -26,7 +26,7 @@ const Demo: FC = () => (
         </Text>
       </Node>
       <Node
-        id="intrinsic"
+        id="contribution"
         position={[0, -70]}
         minimumSize={{ width: 260, height: 54 }}
         stroke="dodgerblue"
@@ -36,9 +36,9 @@ const Demo: FC = () => (
         align="middle"
         lineHeight={16}
       >
-        <Text font={{ size: 14, weight: 'bold' }}>Intrinsic probe</Text>
+        <Text font={{ size: 14, weight: 'bold' }}>Minimum / natural probe</Text>
         <Text fill="gray" font={{ size: 12 }}>
-          allocation · visual · replay A
+          resolved · failed
         </Text>
       </Node>
       <Node
@@ -52,13 +52,13 @@ const Demo: FC = () => (
         align="middle"
         lineHeight={16}
       >
-        <Text font={{ size: 14, weight: 'bold' }}>Parent layout</Text>
+        <Text font={{ size: 14, weight: 'bold' }}>Parent solver</Text>
         <Text fill="gray" font={{ size: 12 }}>
-          columns · rows · constraints
+          slot · alignment · overflow
         </Text>
       </Node>
       <Node
-        id="constrained"
+        id="allocation"
         position={[0, 80]}
         minimumSize={{ width: 260, height: 54 }}
         stroke="dodgerblue"
@@ -68,9 +68,9 @@ const Demo: FC = () => (
         align="middle"
         lineHeight={16}
       >
-        <Text font={{ size: 14, weight: 'bold' }}>Constrained probe</Text>
+        <Text font={{ size: 14, weight: 'bold' }}>Range / exact probe</Text>
         <Text fill="gray" font={{ size: 12 }}>
-          allocation · visual · replay B
+          slot · allocation · visual · guides
         </Text>
       </Node>
       <Node
@@ -84,20 +84,36 @@ const Demo: FC = () => (
         align="middle"
         lineHeight={16}
       >
-        <Text font={{ size: 14, weight: 'bold' }}>Commit replay once</Text>
+        <Text font={{ size: 14, weight: 'bold' }}>Choose replay or raise</Text>
         <Text fill="gray" font={{ size: 12 }}>
-          Scene · artifacts
+          one-use · atomic
         </Text>
       </Node>
     </LogicFrame>
 
-    <Draw way={['compile', 'intrinsic']} arrow="->" />
     <Draw
       way={[
-        'intrinsic',
+        'compile',
         {
           label: {
-            text: 'allocation',
+            text: 'context.proposal',
+            position: 'midway',
+            side: 'right',
+            sloped: false,
+            textColor: 'gray',
+            font: { size: 12 },
+          },
+        },
+        'contribution',
+      ]}
+      arrow="->"
+    />
+    <Draw
+      way={[
+        'contribution',
+        {
+          label: {
+            text: 'resolved result',
             position: 'midway',
             side: 'right',
             sloped: false,
@@ -114,7 +130,7 @@ const Demo: FC = () => (
         'solve',
         {
           label: {
-            text: 'maxWidth',
+            text: 'next proposal',
             position: 'midway',
             side: 'right',
             sloped: false,
@@ -122,16 +138,16 @@ const Demo: FC = () => (
             font: { size: 12 },
           },
         },
-        'constrained',
+        'allocation',
       ]}
       arrow="->"
     />
     <Draw
       way={[
-        'constrained',
+        'allocation',
         {
           label: {
-            text: 'selected replay',
+            text: 'replay / raise',
             position: 'midway',
             side: 'right',
             sloped: false,

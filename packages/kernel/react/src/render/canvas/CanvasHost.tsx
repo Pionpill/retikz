@@ -150,6 +150,11 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     easings,
     animationProperties,
   } = props;
+  const initialRatio = devicePixelRatio();
+  const hasInitialNominalSize =
+    typeof width === 'number' && Number.isFinite(width) && typeof height === 'number' && Number.isFinite(height);
+  const initialBitmapWidth = hasInitialNominalSize ? width : scene.layout.width;
+  const initialBitmapHeight = hasInitialNominalSize ? height : scene.layout.height;
   const ref = useRef<HTMLCanvasElement>(null);
   // rAF 时钟句柄：render effect 写、hydration effect 的 context.animation 读 live，update 后自动跟随
   const clockRef = useRef<AnimationControls | null>(null);
@@ -314,6 +319,12 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
   // object-fit:contain：受限容器（如 max-width 收窄宽度但高度固定）下让位图按比例 letterbox 不拉伸，
   // 对齐 SVG preserveAspectRatio="meet"；用户可经 style.objectFit 覆盖
   return (
-    <canvas ref={ref} className={className} style={{ objectFit: 'contain', ...displayStyle(width, height, style) }} />
+    <canvas
+      ref={ref}
+      width={Math.max(1, Math.round(initialBitmapWidth * initialRatio))}
+      height={Math.max(1, Math.round(initialBitmapHeight * initialRatio))}
+      className={className}
+      style={{ objectFit: 'contain', ...displayStyle(width, height, style) }}
+    />
   );
 };

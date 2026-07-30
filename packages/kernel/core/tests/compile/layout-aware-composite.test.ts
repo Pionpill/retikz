@@ -1,9 +1,26 @@
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import type { IRChild, IRScene, TextMeasurer } from '../../src';
+import type {
+  IRChild,
+  IRScene,
+  LayoutChildResult,
+  LayoutCompositeCompileContext,
+  LayoutProposal,
+  TextMeasurer,
+} from '../../src';
 
-import { ChildSchema, compileToScene, CompositeBaseSchema, defineComposite, lowerIRToKernel } from '../../src';
+import {
+  ChildSchema,
+  compileToScene,
+  CompositeBaseSchema,
+  defineComposite,
+  LayoutAxisProposalKind,
+  LayoutChildProbeKind,
+  LayoutIntrinsicMode,
+  lowerIRToKernel,
+  NaturalLayoutProposal,
+} from '../../src';
 
 const fixedMeasurer: TextMeasurer = text => ({
   width: text.length * 10,
@@ -11,6 +28,16 @@ const fixedMeasurer: TextMeasurer = text => ({
   ascent: 8,
   descent: 2,
 });
+
+const resolvedResultOf = (
+  context: LayoutCompositeCompileContext,
+  child: IRChild,
+  proposal: LayoutProposal = NaturalLayoutProposal,
+): LayoutChildResult => {
+  const probe = context.layoutChild(child, proposal);
+  if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+  return probe.result;
+};
 
 const createLayoutDefinition = () =>
   defineComposite({
@@ -23,22 +50,26 @@ const createLayoutDefinition = () =>
       width: z.number().nonnegative(),
     }),
     artifactSchema: z.strictObject({
-      intrinsicWidth: z.number(),
-      constrainedWidth: z.number(),
+      naturalWidth: z.number(),
+      rangeWidth: z.number(),
     }),
     compile: (node, context) => {
-      const { constraint, layoutChild } = context;
-      expect(constraint).toEqual({ kind: 'intrinsic' });
-      const intrinsic = layoutChild(node.child, { kind: 'intrinsic' });
-      const constrained = layoutChild(node.child, {
-        kind: 'constrained',
-        maxWidth: node.width,
+      expect(context.proposal).toEqual(NaturalLayoutProposal);
+      expect(Object.isFrozen(context.proposal)).toBe(true);
+      expect(Object.isFrozen(context.proposal.x)).toBe(true);
+      expect(Object.isFrozen(context.proposal.y)).toBe(true);
+      const naturalProbe = context.layoutChild(node.child, NaturalLayoutProposal);
+      expect(naturalProbe.kind).toBe(LayoutChildProbeKind.Resolved);
+      if (naturalProbe.kind === LayoutChildProbeKind.Failed) return context.raise(naturalProbe.failure);
+      const ranged = resolvedResultOf(context, node.child, {
+        x: { kind: LayoutAxisProposalKind.Range, min: 0, max: node.width },
+        y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
       });
       return {
-        children: [context.replay(constrained)],
+        children: [context.replay(ranged)],
         artifact: {
-          intrinsicWidth: intrinsic.allocationBounds.width,
-          constrainedWidth: constrained.allocationBounds.width,
+          naturalWidth: naturalProbe.result.allocationBounds.width,
+          rangeWidth: ranged.allocationBounds.width,
         },
       };
     },
@@ -79,13 +110,13 @@ describe('layout-aware composite', () => {
         namespace: 'test',
         type: 'layout',
         occurrence: { sourcePath: 'children[0]', expansionPath: [] },
-        value: { intrinsicWidth: 50, constrainedWidth: 20 },
+        value: { naturalWidth: 50, rangeWidth: 20 },
       },
     ]);
     expect(measureText).toHaveBeenCalledTimes(4);
   });
 
-  it('does not broadcast a constrained Scope width to nested layout-aware composites', () => {
+  it('does not broadcast a range Scope proposal to nested layout-aware composites', () => {
     const nested = defineComposite({
       namespace: 'test',
       type: 'nestedConstraint',
@@ -94,12 +125,23 @@ describe('layout-aware composite', () => {
         type: z.literal('nestedConstraint'),
       }),
       artifactSchema: z.strictObject({
-        constraint: z.enum(['intrinsic', 'constrained']),
+        xMode: z.literal('natural'),
+        yMode: z.literal('natural'),
       }),
-      compile: (_node, { constraint }) => ({
-        children: [],
-        artifact: { constraint: constraint.kind },
-      }),
+      compile: (_node, { proposal }) => {
+        if (
+          proposal.x.kind !== LayoutAxisProposalKind.Intrinsic ||
+          proposal.x.mode !== LayoutIntrinsicMode.Natural ||
+          proposal.y.kind !== LayoutAxisProposalKind.Intrinsic ||
+          proposal.y.mode !== LayoutIntrinsicMode.Natural
+        ) {
+          throw new Error('Expected natural proposal inside structural Scope');
+        }
+        return {
+          children: [],
+          artifact: { xMode: proposal.x.mode, yMode: proposal.y.mode },
+        };
+      },
     });
     const parent = defineComposite({
       namespace: 'test',
@@ -109,13 +151,16 @@ describe('layout-aware composite', () => {
         type: z.literal('scopeConstraint'),
       }),
       compile: (_node, context) => {
-        const { layoutChild } = context;
-        const laid = layoutChild(
+        const laid = resolvedResultOf(
+          context,
           {
             type: 'scope',
             children: [{ namespace: 'test', type: 'nestedConstraint' }],
           },
-          { kind: 'constrained', maxWidth: 40 },
+          {
+            x: { kind: LayoutAxisProposalKind.Range, min: 0, max: 40 },
+            y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
+          },
         );
         return { children: [context.replay(laid)] };
       },
@@ -137,7 +182,7 @@ describe('layout-aware composite', () => {
             { kind: 'scopeChild', index: 0 },
           ],
         },
-        value: { constraint: 'intrinsic' },
+        value: { xMode: 'natural', yMode: 'natural' },
       },
     ]);
   });
@@ -152,8 +197,7 @@ describe('layout-aware composite', () => {
         child: ChildSchema,
       }),
       compile: (node, context) => {
-        const { layoutChild } = context;
-        const laid = layoutChild(node.child, { kind: 'intrinsic' });
+        const laid = resolvedResultOf(context, node.child);
         return {
           children: [context.replay(laid), context.replay(laid)],
         };
@@ -169,7 +213,7 @@ describe('layout-aware composite', () => {
         }),
         { composites: [definition] },
       ),
-    ).toThrow(/replay.*once|already.*replay/i);
+    ).toThrow(/Composite 'test\.duplicateReplay' at children\[0\].*already replayed/i);
   });
 
   it('makes lowerIRToKernel fail loudly before invoking a layout-aware definition', () => {

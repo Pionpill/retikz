@@ -6,14 +6,14 @@ import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-fig
 
 /** Core 把完整 IR Snapshot 编译为由 Runtime 原子发布的 public artifact */
 const Demo: FC = () => (
-  <Layout width={420} height={400} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={860} height={150} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
       id="ir-snapshot"
       text={[
         { text: 'IR Snapshot', font: { weight: 'bold' } },
         { text: 'complete document', fill: 'gray', font: { size: 11 } },
       ]}
-      position={[0, -155]}
+      position={[-350, 0]}
       minimumSize={{ width: 126, height: 48 }}
       stroke="darkorange"
       fill="darkorange"
@@ -31,7 +31,7 @@ const Demo: FC = () => (
           { text: 'CoreOwnerDefinition', font: { weight: 'bold' } },
           { text: 'capture · equality', fill: 'gray', font: { size: 11 } },
         ]}
-        position={[0, -75]}
+        position={[-185, 0]}
         minimumSize={{ width: 154, height: 48 }}
         stroke="darkorange"
         fill="darkorange"
@@ -46,7 +46,7 @@ const Demo: FC = () => (
           { text: 'createCoreProgram', font: { weight: 'bold' } },
           { text: 'compile · diagnostics', fill: 'gray', font: { size: 11 } },
         ]}
-        position={[0, -10]}
+        position={[-8, 0]}
         minimumSize={{ width: 154, height: 48 }}
         stroke="darkorange"
         fill="darkorange"
@@ -63,7 +63,7 @@ const Demo: FC = () => (
         { text: 'Runtime Session', font: { weight: 'bold' } },
         { text: 'atomic publish', fill: 'gray', font: { size: 11 } },
       ]}
-      position={[0, 70]}
+      position={[165, 0]}
       minimumSize={{ width: 136, height: 48 }}
       stroke="dodgerblue"
       fill="dodgerblue"
@@ -79,7 +79,7 @@ const Demo: FC = () => (
         { text: 'Core public read', font: { weight: 'bold' } },
         { text: 'result · snapshot · patch', fill: 'gray', font: { size: 11 } },
       ]}
-      position={[0, 145]}
+      position={[333, 0]}
       minimumSize={{ width: 160, height: 48 }}
       stroke="darkorange"
       fill="darkorange"

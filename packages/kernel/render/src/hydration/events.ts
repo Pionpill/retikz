@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/core';
+import type { RuntimeIdentity } from '@retikz/runtime';
 
 import type { HydrationContext } from './context';
 
@@ -60,5 +61,15 @@ export type ElementHandlers = Partial<Record<RetikzEventValue, HydrationHandler>
 /** 水合 handler 注册表：id → 事件名 → handler */
 export type HydrationHandlers = Record<string, ElementHandlers>;
 
-/** 把一次 DOM 事件定位到图元 id（svg = closest；canvas = hitTest），命不中返回 null */
-export type Locate = (event: Event) => string | null;
+/** Retained hydration 命中的 runtime occurrence 与语义 owner */
+export type HydrationTarget = Readonly<{
+  /** primitive occurrence identity */
+  identity: RuntimeIdentity;
+  /** 聚合多个 primitive 的 semantic owner identity */
+  semanticOwner: RuntimeIdentity;
+  /** handler registry 使用的公开 id；anonymous occurrence 可缺省 */
+  publicId?: string;
+}>;
+
+/** 把一次事件定位到公开 id 或 retained runtime target，命不中返回 null */
+export type Locate = (event: Event) => string | HydrationTarget | null;

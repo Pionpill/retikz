@@ -159,6 +159,17 @@ describe('命令式动画句柄（animationRef）', () => {
     expect(typeof ref.current?.seek).toBe('function');
   });
 
+  it('static SVG 交互 track 继续发布 AnimationControls', async () => {
+    const ref = createRef<AnimationControls | null>();
+    await mount(
+      <Layout width={100} height={100} animationRef={ref} runtime={{ mode: 'static' }}>
+        <Node id="a" position={[0, 0]} stroke="#000" minimumSize={2} animations={MANUAL} />
+      </Layout>,
+    );
+    expect(ref.current).not.toBeNull();
+    expect(typeof ref.current?.play).toBe('function');
+  });
+
   it('canvas load track → animationRef.current 是 rAF 时钟句柄', async () => {
     const ref = createRef<AnimationControls | null>();
     await mount(

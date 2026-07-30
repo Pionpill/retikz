@@ -14,13 +14,13 @@
 
 - Kernel 组件一对一映射 IR：`Layout`、`Node`、`Path`、`Step`、`Text`、`Coordinate`、`Scope` 等。
 - Sugar 组件同步展开为 Kernel，产出的 IR 必须与手写 Kernel 等价。
-- Scene 到 SVG / Canvas 的主逻辑属于 `@retikz/render`；react 侧只做 React 元素映射、idPrefix、事件和宿主接线。
+- Scene 到 SVG / Canvas 的主逻辑属于 `@retikz/render`；react 侧只拥有 host shell、Runtime session、idPrefix 与 commit 后回调接线。
 - Tier 2（plot 等）独立成包；react 包不内置它们的语法或算法。
 
 ## 硬约束
 
 - `react` / `react-dom` 保持 peerDependencies，本地开发再放 devDependencies。
-- workspace 依赖限于 `@retikz/core` 与 `@retikz/render`；不 import app 包或 Tier 2 包。
+- workspace 依赖限于 `@retikz/runtime`、`@retikz/core` 与 `@retikz/render`；不 import app 包或 Tier 2 包。
 - 不新增第三方运行时依赖；确需新增时先说明理由。
 - 不引 Tailwind / shadcn / 样式库；adapter 输出原生 SVG / Canvas 宿主，样式由消费者或 props 控制。
 - `kernel/` 与 `sugar/` 必须 SSR-safe，不访问 `document` / `window` / `HTMLElement`。浏览器全局只允许在 `render/` 下出现。
@@ -71,6 +71,8 @@ runtime/     Layout、hydration handler 收集、renderer mode 接线
 ## Renderer 接线
 
 - 输入是 Scene，不在 renderer 里重做 IR -> Scene 编译。
+- `Layout` 的客户端 IR / JSX 路径由 `runtime.mode` 选择 retained Session 或无 Session 的 static full 执行，默认 retained；React 只声明 `<svg>` / `<canvas>` shell，descendants / bitmap 由 Render 接线独占。
+- SSR SVG 只输出 opaque seed，首次客户端 layout effect 以 `adopt` 接管；后续 render 不重写 Render-owned descendants。
 - 坐标、anchor、bbox 等几何计算属于 core；react renderer 不重复实现。
 - SVG 输出形态优先改 `@retikz/render/svg`；react 侧保持 `SvgNode -> ReactElement` 薄映射。
 - `browser-measurer.ts` 只实现浏览器端 text measurement，并注入 `compileToScene`；服务端 / 测试环境使用 fallback measurer。

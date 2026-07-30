@@ -847,10 +847,11 @@ export const drawScene = (ctx: CanvasRenderingContext2D, scene: Scene, options: 
   const resources: ResourceMap = new Map((scene.resources ?? []).map(r => [r.id, r]));
   const state: DrawState = { gradientPatterns: new Map() };
   // 镜头：给定 time 且 scene 根有 viewBox track 时，先叠一层取景变换（包住全部 prim）
-  const hasCamera = options.time !== undefined && (scene.animations ?? []).some(t => t.property === 'viewBox');
+  const rootAnimationTime = options.rootAnimationTime ?? options.time;
+  const hasCamera = rootAnimationTime !== undefined && (scene.animations ?? []).some(t => t.property === 'viewBox');
   if (hasCamera) {
     ctx.save();
-    applySceneCamera(ctx, scene, options.time as number, options.easings);
+    applySceneCamera(ctx, scene, rootAnimationTime, options.easings);
   }
   for (const primitive of scene.primitives) drawPrim(ctx, primitive, options, resources, state);
   if (hasCamera) ctx.restore();

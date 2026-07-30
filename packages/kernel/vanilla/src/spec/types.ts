@@ -86,7 +86,7 @@ export type VanillaTier2Adapter<TProps = unknown> = {
 export type AnyVanillaTier2Adapter = VanillaTier2Adapter<never>;
 
 /** Vanilla 运行时记录的分层元数据 */
-export type VanillaLayerMeta = {
+export type VanillaLayerMeta = Readonly<{
   /** 分层身份标识 */
   id: string;
   /** 运行时缓存提示 */
@@ -96,22 +96,22 @@ export type VanillaLayerMeta = {
   /** 分层 zIndex，缺省为 0 */
   zIndex: number;
   /** 该分层下直接公开的子节点身份标识列表 */
-  childIds: Array<string>;
+  childIds: ReadonlyArray<string>;
   /** 该分层是否包含匿名直接子节点；匿名子节点的最小失效边界回退到当前分层 */
   hasAnonymousChildren: boolean;
   /** 匿名子节点或无法精确命中子节点时使用的失效边界 */
   invalidationBoundary: string;
-};
+}>;
 
 /** Vanilla 运行时元数据，供后续补丁和失效标记使用 */
-export type VanillaRuntimeMeta = {
+export type VanillaRuntimeMeta = Readonly<{
   /** 排序后的分层元数据 */
-  layers: Array<VanillaLayerMeta>;
+  layers: ReadonlyArray<VanillaLayerMeta>;
   /** 公开身份标识到身份路径的索引 */
-  identityIndex: ReadonlyMap<string, Array<string>>;
+  identityIndex: ReadonlyMap<string, ReadonlyArray<string>>;
   /** 公开身份标识到父身份标识或分层 id 的索引 */
   parentIndex: ReadonlyMap<string, string>;
-};
+}>;
 
 /** Vanilla 规格规范化产物 */
 export type VanillaNormalizedFigure = {

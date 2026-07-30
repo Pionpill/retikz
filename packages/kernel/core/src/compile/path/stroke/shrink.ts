@@ -16,6 +16,7 @@ import {
   ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH,
   DEFAULT_ARROW_SHAPE,
 } from '../../../schemas';
+import { CompositeContractError, LayoutProbeRecoverableError, safeThrownDetail } from '../../probe-failure';
 import { validateMarkerPrimitives } from '../../resource';
 import { arcCommandPointAt, trimArcEnd, trimArcStart } from './arc-shrink';
 
@@ -87,20 +88,22 @@ const resolveArrowMarkVisual = (mark: IRArrowMark, registry: ResolvedArrowRegist
 /** 校验 arrow definition 的几何字段有效 */
 const assertFiniteGeometry = (shape: string, def: ArrowDefinition): void => {
   if (!Number.isFinite(def.lineContactX)) {
-    throw new Error(
+    throw new CompositeContractError(
       `Arrow '${shape}' has a non-finite lineContactX (${String(def.lineContactX)}); it must be a finite number.`,
     );
   }
   if (def.baseSize !== undefined && (!Number.isFinite(def.baseSize) || def.baseSize <= 0)) {
-    throw new Error(
+    throw new CompositeContractError(
       `Arrow '${shape}' has an invalid baseSize (${String(def.baseSize)}); it must be a finite number greater than 0.`,
     );
   }
   if (def.tipX !== undefined && !Number.isFinite(def.tipX)) {
-    throw new Error(`Arrow '${shape}' has a non-finite tipX (${String(def.tipX)}); it must be a finite number.`);
+    throw new CompositeContractError(
+      `Arrow '${shape}' has a non-finite tipX (${String(def.tipX)}); it must be a finite number.`,
+    );
   }
   if (def.outerInset !== undefined && !Number.isFinite(def.outerInset)) {
-    throw new Error(
+    throw new CompositeContractError(
       `Arrow '${shape}' has a non-finite outerInset (${String(def.outerInset)}); it must be a finite number.`,
     );
   }
@@ -113,18 +116,20 @@ const emitArrowMarkerPrimitives = (
   ctx: ArrowEmitContext,
 ): Array<MarkerPrimitive> => {
   if (typeof def.emit !== 'function') {
-    throw new Error(`Arrow '${shape}' is missing an emit function (ArrowDefinition.emit is required).`);
+    throw new CompositeContractError(
+      `Arrow '${shape}' is missing an emit function (ArrowDefinition.emit is required).`,
+    );
   }
-  let marker: Array<MarkerPrimitive>;
+  let emitted: unknown;
   try {
-    marker = [...def.emit(ctx)];
+    emitted = def.emit(ctx);
   } catch (e) {
-    throw new Error(`Arrow '${shape}' emit failed: ${e instanceof Error ? e.message : String(e)}`, {
+    throw new LayoutProbeRecoverableError(`Arrow '${shape}' emit failed: ${safeThrownDetail(e)}`, {
       cause: e,
+      providerKey: `arrow:${shape}`,
     });
   }
-  validateMarkerPrimitives(`Arrow '${shape}'`, marker);
-  return marker;
+  return validateMarkerPrimitives(`Arrow '${shape}'`, emitted);
 };
 
 /** 解析 def + 视觉输入后的端点几何（shrink / wrapper 共用） */

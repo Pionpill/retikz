@@ -1,11 +1,54 @@
 import { boundsOf, boundsToRect } from '@retikz/math';
 
-import type { Transform } from '../../contract';
+import type { LayoutAlignmentGuide, Transform } from '../../contract';
 import type { IRPosition } from '../../schemas';
 import type { CompiledNodeLayout } from '../types';
 import type { NodeLayout } from './types';
 
+import { LayoutAlignmentGuideDimension, LayoutAlignmentGuideName } from '../../contract';
 import { applyTransformChain, projectLayoutToGlobal } from '../transform';
+
+const isEffectiveIdentityRotation = (degrees: number): boolean => Object.is(degrees % 360, -0) || degrees % 360 === 0;
+
+/** 从同次 Node 正文排版结果投影 child-local baseline guides */
+export const alignmentGuidesOfNode = (
+  layout: NodeLayout,
+  round: (value: number) => number,
+): Array<LayoutAlignmentGuide> | undefined => {
+  const offsets = layout.textBaselineOffsets;
+  if (offsets === undefined || offsets.length === 0 || !isEffectiveIdentityRotation(layout.rotateDeg)) {
+    return undefined;
+  }
+  const blockTop = layout.contentCenter[1] - layout.textHeight / 2;
+  const firstBaseline = round(blockTop + offsets[0]);
+  if (layout.inlineBlock !== undefined) {
+    return [
+      {
+        name: LayoutAlignmentGuideName.FirstBaseline,
+        dimension: LayoutAlignmentGuideDimension.Y,
+        position: firstBaseline,
+      },
+      {
+        name: LayoutAlignmentGuideName.LastBaseline,
+        dimension: LayoutAlignmentGuideDimension.Y,
+        position: round(blockTop + offsets[offsets.length - 1]),
+      },
+    ];
+  }
+  const emittedLineHeight = round(layout.lineHeight);
+  return [
+    {
+      name: LayoutAlignmentGuideName.FirstBaseline,
+      dimension: LayoutAlignmentGuideDimension.Y,
+      position: firstBaseline,
+    },
+    {
+      name: LayoutAlignmentGuideName.LastBaseline,
+      dimension: LayoutAlignmentGuideDimension.Y,
+      position: firstBaseline + (offsets.length - 1) * emittedLineHeight,
+    },
+  ];
+};
 
 const contentCorners = (layout: NodeLayout): Array<IRPosition> => {
   const [cx, cy] = layout.contentCenter;

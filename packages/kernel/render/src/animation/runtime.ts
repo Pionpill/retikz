@@ -7,9 +7,8 @@
  */
 import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
 
-import type { WaapiDescriptor } from '../svg/animation/waapi';
-
 import { isAutoplayTrigger } from './channels';
+import { bindWaapiDescriptorElements } from './retained';
 
 /** 可能缺席的运行时全局（SSR / 老浏览器）：lib.dom 把它们类型成必有，这里显式放宽成可选以正确降级 */
 type OptionalGlobals = {
@@ -48,6 +47,14 @@ export type ClockOptions = {
   autoplay?: boolean;
 };
 
+/** rAF 注册返回前后共享的 frame ownership */
+type ClockFrameRegistration = {
+  /** rAF 返回的 handle；注册尚未返回时为 null */
+  id: number | null;
+  /** callback 是否已经同步或异步消费该 frame */
+  consumed: boolean;
+};
+
 /**
  * 创建 rAF 共享时钟：维护 scene 级 time，每帧调 onFrame；到有限时长尽头停在末帧
  * @description 缺 requestAnimationFrame（SSR）→ 退化为只画一帧（末帧 / t=0）。所有 track 共用此时钟，
@@ -59,26 +66,73 @@ export const createClock = (options: ClockOptions): AnimationControls => {
   const finite = options.durationMs != null && Number.isFinite(options.durationMs);
   const end = options.durationMs as number;
   let running = false;
-  let rafId: number | null = null;
+  /** 当前待执行 frame 的注册所有权；id 发布前也可被同步 cleanup 关闭 gate */
+  let frameRegistration: ClockFrameRegistration | null = null;
+  let stopping = false;
+  let frameCancellationInProgress = false;
+  let cleanupStarted = false;
+  let cleanupInProgress = false;
   let stamp = 0;
   let baseTime = 0;
   let currentTime = 0;
+  /** 外部 frame callback 返回后重新读取 clock gate */
+  const isRunning = (): boolean => running && !cleanupStarted;
+  /** 外部 rAF 注册返回后重新读取当前 registration 的发布资格 */
+  const canPublishFrame = (registration: ClockFrameRegistration): boolean =>
+    running && !stopping && !cleanupStarted && frameRegistration === registration;
+  /** cancel 失败返回后判断同步消费的 frame 是否需要恢复推进链 */
+  const shouldRestoreFrame = (registration: ClockFrameRegistration | null): boolean =>
+    registration?.consumed === true && frameRegistration === null && running && !cleanupStarted;
+
+  /** 取消已发布 handle；失败时保留 registration 供后续 dispose 重试 */
+  const cancelFrameRegistration = (registration: ClockFrameRegistration | null): void => {
+    const frame = registration?.id;
+    if (frame === null || frame === undefined) return;
+    if (!caf) {
+      if (frameRegistration === registration) frameRegistration = null;
+      return;
+    }
+    if (frameCancellationInProgress) return;
+    frameCancellationInProgress = true;
+    try {
+      caf(frame);
+      if (frameRegistration === registration) frameRegistration = null;
+    } finally {
+      frameCancellationInProgress = false;
+    }
+  };
 
   const tick = (): void => {
+    if (!running || stopping || cleanupStarted) return;
     currentTime = baseTime + (now() - stamp);
     if (finite && currentTime >= end) {
       currentTime = end;
       options.onFrame(currentTime);
       running = false;
-      rafId = null;
       return;
     }
     options.onFrame(currentTime);
-    if (raf) rafId = raf(tick);
+    if (isRunning()) scheduleFrame();
+  };
+
+  /** 注册下一帧，并在同步重入关闭 gate 后接管返回 handle 的清理 */
+  const scheduleFrame = (): void => {
+    if (!raf || !running || stopping) return;
+    const registration: ClockFrameRegistration = { id: null, consumed: false };
+    frameRegistration = registration;
+    const frame = raf(() => {
+      registration.consumed = true;
+      if (frameRegistration === registration) frameRegistration = null;
+      tick();
+    });
+    registration.id = frame;
+    if (registration.consumed) return;
+    if (canPublishFrame(registration)) return;
+    cancelFrameRegistration(registration);
   };
 
   const play = (): void => {
-    if (running) return;
+    if (running || cleanupStarted) return;
     if (!raf) {
       // 无 rAF：直接定格末帧（有限）/ 起点
       options.onFrame(finite ? end : 0);
@@ -86,24 +140,45 @@ export const createClock = (options: ClockOptions): AnimationControls => {
     }
     running = true;
     stamp = now();
-    rafId = raf(tick);
+    scheduleFrame();
   };
   const pause = (): void => {
-    running = false;
-    if (rafId !== null && caf) caf(rafId);
-    rafId = null;
-    baseTime = currentTime;
+    if (!running || stopping || cleanupStarted) return;
+    const registration = frameRegistration;
+    let cancellationFailed = false;
+    let cancellationCause: unknown;
+    stopping = true;
+    try {
+      cancelFrameRegistration(registration);
+      running = false;
+      baseTime = currentTime;
+    } catch (cause) {
+      cancellationFailed = true;
+      cancellationCause = cause;
+    } finally {
+      stopping = false;
+    }
+    if (!cancellationFailed) return;
+    if (shouldRestoreFrame(registration)) scheduleFrame();
+    throw cancellationCause;
   };
   const seek = (timeMs: number): void => {
+    if (cleanupStarted) return;
     baseTime = timeMs;
     currentTime = timeMs;
     stamp = now();
     options.onFrame(timeMs);
   };
   const dispose = (): void => {
+    if (cleanupInProgress) return;
+    cleanupStarted = true;
     running = false;
-    if (rafId !== null && caf) caf(rafId);
-    rafId = null;
+    cleanupInProgress = true;
+    try {
+      cancelFrameRegistration(frameRegistration);
+    } finally {
+      cleanupInProgress = false;
+    }
   };
 
   if (options.autoplay) play();
@@ -116,7 +191,7 @@ export const createClock = (options: ClockOptions): AnimationControls => {
       return currentTime;
     },
     get running() {
-      return running;
+      return running && !cleanupStarted;
     },
   };
 };
@@ -188,96 +263,9 @@ export const sceneAnimationDurationMs = (scene: Scene): number | null => {
   return max;
 };
 
-/**
- * 绑定 SVG 交互 track（读 root 下 `data-retikz-anim`）：按 trigger 经 WAAPI 播放
- * @description visible→IntersectionObserver 进视口播；manual→创建即暂停、句柄控制；{onEvent}→事件委托命中即播。
- *   load track 不在此（已由 CSS 自播）。缺 element.animate / IntersectionObserver 的环境优雅跳过。返回控制句柄。
- *   timing.easing 已由编译期烘焙成 CSS 串（含自定义 easing 的 bezier 形式），本桥直传、无需 easing 注册表
- */
-export const bindWaapiDescriptors = (root: Element): AnimationControls => {
-  const animations: Array<Animation> = [];
-  const observers: Array<IntersectionObserver> = [];
-  const cleanups: Array<() => void> = [];
-  const hasIO = typeof IntersectionObserver !== 'undefined';
-
-  const elements = root.querySelectorAll('[data-retikz-anim]');
-  elements.forEach(element => {
-    const raw = element.getAttribute('data-retikz-anim');
-    if (!raw) return;
-    let descriptors: Array<WaapiDescriptor>;
-    try {
-      descriptors = JSON.parse(raw) as Array<WaapiDescriptor>;
-    } catch {
-      return;
-    }
-    for (const descriptor of descriptors) {
-      if (descriptor.transformOrigin && element instanceof SVGElement) {
-        element.style.transformOrigin = descriptor.transformOrigin;
-        element.style.transformBox = 'view-box';
-      }
-      const timing: KeyframeAnimationOptions = {
-        duration: descriptor.timing.duration,
-        delay: descriptor.timing.delay,
-        easing: descriptor.timing.easing,
-        iterations: descriptor.timing.iterations === 'infinite' ? Infinity : descriptor.timing.iterations,
-        direction: descriptor.timing.direction as PlaybackDirection | undefined,
-        fill: descriptor.timing.fill as FillMode,
-      };
-      const animate = (): Animation | undefined =>
-        (element as unknown as { animate?: (k: unknown, t: unknown) => Animation }).animate?.(
-          descriptor.keyframes,
-          timing,
-        );
-      const trigger = descriptor.trigger;
-      if (trigger === 'manual') {
-        const animation = animate();
-        animation?.pause();
-        if (animation) animations.push(animation);
-      } else if (trigger === 'visible' && hasIO) {
-        const observer = new IntersectionObserver(entries => {
-          for (const entry of entries) {
-            if (entry.isIntersecting) {
-              const animation = animate();
-              if (animation) animations.push(animation);
-              observer.disconnect();
-            }
-          }
-        });
-        observer.observe(element);
-        observers.push(observer);
-      } else if (typeof trigger === 'object') {
-        // 复用单个 Animation：每次事件 cancel + play 从头重播，避免每次触发新建并无界堆积
-        let animation: Animation | undefined;
-        const handler = (): void => {
-          if (animation) {
-            animation.cancel();
-            animation.play();
-            return;
-          }
-          animation = animate();
-          if (animation) animations.push(animation);
-        };
-        element.addEventListener(trigger.onEvent, handler);
-        cleanups.push(() => element.removeEventListener(trigger.onEvent, handler));
-      }
-    }
-  });
-
-  return {
-    play: () => animations.forEach(a => a.play()),
-    pause: () => animations.forEach(a => a.pause()),
-    seek: timeMs => animations.forEach(a => (a.currentTime = timeMs)),
-    dispose: () => {
-      animations.forEach(a => a.cancel());
-      observers.forEach(o => o.disconnect());
-      cleanups.forEach(c => c());
-    },
-    get time() {
-      const first = animations[0] as Animation | undefined;
-      return Number(first?.currentTime ?? 0);
-    },
-    get running() {
-      return animations.some(a => a.playState === 'running');
-    },
-  };
-};
+/** 绑定 root 自身及 descendants 上的全部 WAAPI descriptors */
+export const bindWaapiDescriptors = (root: Element): AnimationControls =>
+  bindWaapiDescriptorElements(
+    [...(root.matches('[data-retikz-anim]') ? [root] : []), ...root.querySelectorAll('[data-retikz-anim]')],
+    () => true,
+  );

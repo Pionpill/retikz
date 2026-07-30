@@ -56,6 +56,9 @@ const assertBrowserEnvironment = (
   if (actual.language !== expected.locale || actual.timezone !== expected.timezone) {
     throw new Error('bench browser locale or timezone mismatch');
   }
+  if (!Number.isSafeInteger(actual.hardwareConcurrency) || actual.hardwareConcurrency <= 0) {
+    throw new Error('bench browser hardwareConcurrency is unavailable');
+  }
   if (!actual.reducedMotion || expected.animations || !actual.fontAvailable || expected.font !== 'Arial') {
     throw new Error('bench browser motion or font environment mismatch');
   }
