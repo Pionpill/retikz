@@ -3,11 +3,11 @@ title: 数据接入
 description: 把外部字段路径和存储格式接到逻辑字段上，在变换前生成统一的规范化行。
 ---
 
-数据接入把接口、文件或数据库记录转换为消费方可稳定引用的逻辑字段。下面统一用 React `<Plot>` 展示处理结果，但这只是示例宿主：字段路径、model、format 与规范化规则属于 Data，不依赖 Plot，其他消费模块也可以复用。
+数据接入把接口、文件或数据库记录转换为消费方可稳定引用的逻辑字段。例如 `{ period, amount }` 可以通过 `fieldMap` 形成 `{ month, revenue }`，存储值再按字段模型（`model`）与格式（`format`）规范化。下面统一用 React `<Plot>` 展示处理结果，但这只是示例宿主：字段路径、字段模型、格式与规范化规则属于 Data，不依赖 Plot，其他消费模块也可以复用。
 
 ## 字段路径
 
-字段名可以是点路径：`user.address.city` 会逐段读取嵌套对象，叶子必须是字符串、数字、布尔值或时间等标量。解析先检查整段名称是否是行上的直接 key，再按 `.` 下钻，所以规范化后的逻辑字段名仍可包含点。
+字段名可以是点路径：`user.address.city` 会逐段读取嵌套对象，叶子必须是字符串、数字、布尔值或时间等标量。解析先检查整段名称是否是行上的直接键，再按 `.` 下钻，所以规范化后的逻辑字段名仍可包含点。
 
 ```tsx
 <Plot data={rows}>
@@ -25,11 +25,11 @@ description: 把外部字段路径和存储格式接到逻辑字段上，在变�
 
 如果新旧数据都使用相同的字段名与类型，消费方只需替换数据输入。在下面的 Plot 示例中，就是只替换 `<Plot data>`；实际值与预测值共用一份字段契约和消费配置。
 
-<ComponentPreview files={['processing-same', 'processing-same.data.ts']} />
+下方的数据源绑定试验场把“同名字段换数据”和“异名字段加 fieldMap”放在同一个消费配置中比较。
 
 ### 字段名不同
 
-用 `fieldMap` 把逻辑字段映射到真实路径，数据变换与消费方仍只引用逻辑名。在 Plot 应用中，mark 和 transform 也因此不必感知真实路径：
+用 `fieldMap` 把逻辑字段映射到真实路径，数据变换与消费方仍只引用逻辑名。在 Plot 应用中，图元和变换也因此不必感知真实路径：
 
 ```tsx
 <Plot
@@ -46,42 +46,52 @@ description: 把外部字段路径和存储格式接到逻辑字段上，在变�
 
 `fieldMap` 只对齐名字，不做计算；它必须配合 `model` 使用，因为没有字段契约就没有可映射的逻辑名。
 
-<ComponentPreview files={['processing-source', 'processing-source.data.ts']} />
+<ComponentPreview
+  files={['source-binding', 'source-binding-preview.tsx', 'source-binding.data.ts']}
+  defaultSourceFile="source-binding-preview.tsx"
+  size="lg"
+  caption="图元始终引用 month/revenue；只有财务数据源通过 fieldMap 对齐物理字段。"
+/>
 
 ### 存储形态不同
 
-默认转换能把 `Date`、严格 ISO 字符串与 epoch 毫秒统一成时间值，也能把有限数值、安全整数 `bigint` 与严格数字串统一成连续值。下面的数据混用了这些形态，但规范化后仍满足同一份 model。
+默认转换能把 `Date`、严格 ISO 字符串与 Unix 时间戳毫秒统一成时间值，也能把有限数值、安全整数 `bigint` 与严格数字串统一成连续值。下面的数据混用了这些形态，但规范化后仍满足同一份字段模型。
 
-<ComponentPreview files={['processing-storage', 'processing-storage.data.ts']} />
+下方的值解析试验场同时展示标准值、内置转换支持的混合值，以及必须声明 format 的报表值。
 
 ## 声明解析格式
 
-默认转换以外的常见格式写在字段的 `format` 上。格式名进入可序列化 model，解析函数由内置或注入的 Definition 提供。
+默认转换以外的常见格式写在字段的 `format` 上。格式名进入可序列化字段模型，解析函数由内置或注入的定义（Definition）提供。
 
 | `format`       | 类型         | 解析                           |
 | -------------- | ------------ | ------------------------------ |
 | `iso`          | `temporal`   | 严格 ISO，与默认时间解析等价   |
-| `epochSeconds` | `temporal`   | epoch 秒转毫秒                 |
-| `epochMillis`  | `temporal`   | epoch 毫秒                     |
+| `epochSeconds` | `temporal`   | Unix 时间戳秒转毫秒            |
+| `epochMillis`  | `temporal`   | Unix 时间戳毫秒                |
 | `slashDate`    | `temporal`   | 严格 `YYYY/MM/DD`，按 UTC 零点 |
 | `numberString` | `continuous` | 容许空白与千分位逗号的数字串   |
 | `percent`      | `continuous` | 百分比串 `'50%'` 转为 `0.5`    |
 
 `format` 会蕴含类型；如果显式 `type` 与格式绑定的类型冲突，接入阶段会报错。标准接入路径先应用声明式 `format`，再回到内置默认转换。
 
-<ComponentPreview files={['processing-format', 'processing-format.data.ts']} />
+<ComponentPreview
+  files={['value-parsing', 'value-parsing-preview.tsx', 'value-parsing.data.ts']}
+  defaultSourceFile="value-parsing-preview.tsx"
+  size="lg"
+  caption="规范数据与混合数据使用默认转换；报表数据由 slashDate 与 percent 格式解析。"
+/>
 
-需要注册自定义格式或使用运行时字段 parser 时，统一参见[扩展机制](/viz/data/model/extensions)。
+需要注册自定义格式或使用运行时字段解析器（parser）时，统一参见[扩展机制](/viz/data/model/extensions)。
 
 ## 接入顺序
 
 1. 收集当前配置实际引用的字段。
 2. 用 `fieldMap` 从真实路径取值。
-3. 按 model / format、自动推断确定类型。
+3. 按字段模型、格式和自动推断确定类型。
 4. 按声明式格式、默认转换解析值。
 5. 把结果写回逻辑字段名，形成规范化行。
 
-后续数据变换与消费模块都只读取规范化行，不再各自重复解析。在 Plot 应用中，这些消费者包括 scale、mark 与 locator。
+后续数据变换与消费模块都只读取规范化行，不再各自重复解析。在 Plot 应用中，这些消费者包括比例尺、图元与定位器。
 
 <SourceLinks
   sources={[
@@ -98,7 +108,7 @@ description: 把外部字段路径和存储格式接到逻辑字段上，在变�
       endLine: 45,
     },
     {
-      label: '格式类型兼容与 parser 解析',
+      label: '格式类型兼容与解析器处理',
       path: 'packages/viz/data/src/providers/format/orchestrate.ts',
       startLine: 6,
       endLine: 38,

@@ -7,6 +7,8 @@ import { describe, expect, it } from 'vitest';
 import type {
   PreviewControlsDefinition,
   PreviewPanelControlItem,
+  PreviewTableControlField,
+  PreviewTableRows,
 } from '../../src/modules/docs/components/component-preview';
 
 import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
@@ -65,13 +67,19 @@ import {
   relationScatterControls as englishRelationScatterControls,
 } from '../../src/modules/docs/contents/viz/plot/mark/relation/relation-scatter.en.controls';
 
+const sourceRowsOf = (field: PreviewTableControlField): PreviewTableRows => {
+  if (field.rows !== undefined) return field.rows;
+  const sourceView = field.views[0];
+  return typeof sourceView.rows !== 'function' ? sourceView.rows : [];
+};
+
 /** 抹平可见文案后比较单个控件的双语运行时结构 */
 const fieldContractOf = (field: PreviewPanelControlItem) =>
   field.kind === 'table'
     ? {
         id: field.id,
         kind: field.kind,
-        rowCount: field.rows.length,
+        rowCount: sourceRowsOf(field).length,
         columnKeys: field.columns?.map(column => column.key),
       }
     : {
@@ -191,6 +199,10 @@ const renderIntervalWithValues = (overrides: Readonly<Record<string, string | nu
       createElement(IntervalDemo),
     ),
   );
+
+/** 收集真实 SVG 文字节点使用的 fill */
+const textFillValuesOf = (markup: string): Array<string> =>
+  [...markup.matchAll(/<text\b[^>]*\bfill="([^"]+)"/g)].map(match => match[1]);
 
 const cases = [
   {
@@ -341,6 +353,19 @@ describe('关系图元文档 controls', () => {
     expect(() => renderToStaticMarkup(scatterSource.canonicalRender?.())).not.toThrow();
   });
 
+  it.each([
+    ['散点关系', scatterSource],
+    ['桑基关系', sankeySource],
+    ['气泡关系', bubbleSource],
+    ['路径极值', pathExtremesSource],
+    ['区间关系', intervalSource],
+  ] as const)('%s 的全部文字继承 Preview 主题前景色', (_name, source) => {
+    const markup = renderToStaticMarkup(source.canonicalRender?.());
+
+    expect(textFillValuesOf(markup)).not.toHaveLength(0);
+    expect(new Set(textFillValuesOf(markup))).toEqual(new Set(['currentColor']));
+  });
+
   it('散点关系的居中、上方与下方会生成不同的 Path 标签位置', () => {
     const center = renderScatterWithLabelSide('center');
     const top = renderScatterWithLabelSide('top');
@@ -420,7 +445,7 @@ describe('关系图元文档 controls', () => {
     const firstBar = markup.match(/<rect x="([\d.-]+)" y="[\d.-]+" width="[\d.-]+" height="[\d.-]+" fill="#1f77b4"/);
     const axisLines = [
       ...markup.matchAll(
-        /<path d="M ([\d.-]+) ([\d.-]+) L ([\d.-]+) ([\d.-]+)" fill="none" stroke="currentColor" stroke-width="1"><\/path>/g,
+        /<path d="M ([\d.-]+) ([\d.-]+) L ([\d.-]+) ([\d.-]+)" fill="none" stroke="currentColor" stroke-width="1"\s*\/?>/g,
       ),
     ];
     const yAxis = axisLines.find(([, x1, , x2]) => x1 === x2);
@@ -435,7 +460,7 @@ describe('关系图元文档 controls', () => {
     const firstBar = markup.match(/<rect x="[\d.-]+" y="([\d.-]+)" width="[\d.-]+" height="([\d.-]+)" fill="#1f77b4"/);
     const axisLines = [
       ...markup.matchAll(
-        /<path d="M ([\d.-]+) ([\d.-]+) L ([\d.-]+) ([\d.-]+)" fill="none" stroke="currentColor" stroke-width="1"><\/path>/g,
+        /<path d="M ([\d.-]+) ([\d.-]+) L ([\d.-]+) ([\d.-]+)" fill="none" stroke="currentColor" stroke-width="1"\s*\/?>/g,
       ),
     ];
     const xAxis = axisLines.find(([, , y1, , y2]) => y1 === y2);
@@ -443,6 +468,25 @@ describe('关系图元文档 controls', () => {
     expect(firstBar).not.toBeNull();
     expect(xAxis).toBeDefined();
     expect(Number(firstBar?.[1]) + Number(firstBar?.[2])).toBeCloseTo(Number(xAxis?.[2]));
+  });
+
+  it('区间关系在高度偏移极值下保持固定取景并为路径标签预留边界', () => {
+    const viewBoxes = [-40, 0, 40].map(offset => {
+      const markup = renderIntervalWithValues({ 'relation-interval-offset': offset });
+      const match = markup.match(/<svg[^>]*viewBox="([^"]+)"/);
+
+      expect(match).not.toBeNull();
+      return match?.[1].split(' ').map(Number);
+    });
+
+    expect(viewBoxes[1]).toEqual(viewBoxes[0]);
+    expect(viewBoxes[2]).toEqual(viewBoxes[0]);
+
+    const [x, y, width, height] = viewBoxes[0] ?? [];
+    expect(x).toBeLessThanOrEqual(-10);
+    expect(y).toBeLessThanOrEqual(-20);
+    expect(x + width).toBeGreaterThanOrEqual(630);
+    expect(y + height).toBeGreaterThanOrEqual(330);
   });
 
   it.each(cases)('$name 中英文 controls 结构一致并覆盖预期字段', testCase => {

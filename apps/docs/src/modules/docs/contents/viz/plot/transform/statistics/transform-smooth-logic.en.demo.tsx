@@ -4,10 +4,10 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** smooth finite-pair filtering, OLS fit, extent sampling, and predicted output */
 const Demo: FC = () => (
-  <Layout width={440} height={380} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={720} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
       id="rows"
-      position={[-70, -150]}
+      position={[-295, 20]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}
@@ -15,14 +15,14 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>(x, y) sample rows</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>(x, y) rows</Text>
       <Text fill="gray" font={{ size: 12 }}>
         N rows
       </Text>
     </Node>
     <Node
       id="group"
-      position={[-70, -80]}
+      position={[-160, 20]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -30,14 +30,14 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Group finite pairs</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Filter finite pairs</Text>
       <Text fill="gray" font={{ size: 12 }}>
         groupBy · x · y
       </Text>
     </Node>
     <Node
       id="method"
-      position={[120, -10]}
+      position={[-10, -55]}
       stroke="gray"
       fill="gray"
       fillOpacity={0.06}
@@ -52,7 +52,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="fit"
-      position={[-70, -10]}
+      position={[-10, 20]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -60,14 +60,14 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Fit OLS model</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Fit OLS</Text>
       <Text fill="gray" font={{ size: 12 }}>
         intercept + slope × x
       </Text>
     </Node>
     <Node
       id="sampling"
-      position={[120, 60]}
+      position={[140, -55]}
       stroke="gray"
       fill="gray"
       fillOpacity={0.06}
@@ -75,14 +75,14 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Sampling config</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Sampling</Text>
       <Text fill="gray" font={{ size: 12 }}>
         extent · sampleCount
       </Text>
     </Node>
     <Node
       id="predict"
-      position={[-70, 60]}
+      position={[140, 20]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -90,14 +90,14 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Sample x and predict y</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Sample x → predict y</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        evenly spaced points
+        evenly spaced
       </Text>
     </Node>
     <Node
       id="error"
-      position={[120, -80]}
+      position={[-10, 95]}
       stroke="red"
       fill="red"
       fillOpacity={0.06}
@@ -107,12 +107,12 @@ const Demo: FC = () => (
     >
       <Text font={{ size: 14, weight: 'bold' }}>Cannot fit</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        too few pairs or zero x variance
+        few pairs or zero x variance
       </Text>
     </Node>
     <Node
       id="output"
-      position={[-70, 140]}
+      position={[290, 20]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}
@@ -120,9 +120,9 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Emit trend rows</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Trend rows</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        sampleCount rows per group
+        sampleCount / group
       </Text>
     </Node>
 

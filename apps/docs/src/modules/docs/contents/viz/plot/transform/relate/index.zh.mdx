@@ -15,7 +15,7 @@ description: 用 relate 从每个分组选择 source 和 target 行，并投影�
 
 切换全局或按系列配对，并为 source 与 target 独立选择首行、末行、最低值或最高值。数据表保持展开，便于直接对照箭头端点、方向和差值标签。
 
-<ComponentPreview files={['transform-relate', 'transform-relate.data.ts']} size="md" />
+<ComponentPreview files={['transform-relate', 'transform-relate.data.ts']} size="lg" />
 
 按系列配对时，每条序列各输出一条关系；切到全部数据时，只输出一条全局关系。示例投影 `sourceId` / `targetId`，再计算 `target.value - source.value`。`PathMark` 和 `PointMark` 继续读取源数据，只有 `RelationMark` 的局部 transform 读取配对结果。
 
@@ -43,7 +43,7 @@ description: 用 relate 从每个分组选择 source 和 target 行，并投影�
 
 图中的 source 与 target 是并行选择，不是先后过滤。两端都选中后才汇合投影字段和计算度量，因此每组最多输出一条关系行。
 
-<ComponentPreview files="transform-relate-logic" hideCode size="xl" />
+<ComponentPreview files="transform-relate-logic" hideCode size="sm" />
 
 执行过程分为四步：
 

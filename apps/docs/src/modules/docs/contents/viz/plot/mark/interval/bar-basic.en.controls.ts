@@ -6,6 +6,7 @@ import { revenue } from './bar-basic.data';
 
 /** Stable control ids for the basic bar playground */
 export const BAR_POSITION_CONTROL_IDS = {
+  coordinate: 'interval-basic-coordinate',
   direction: 'bar-position-direction',
   gap: 'bar-position-gap',
   cornerRadius: 'bar-position-corner-radius',
@@ -18,12 +19,27 @@ export const BAR_POSITION_CONTROL_IDS = {
 /** English panel for basic bars */
 export const barPositionControls = definePreviewControls({
   presentation: 'panel',
-  title: 'Basic bars',
+  title: 'Basic intervals',
   sections: [
     {
       label: 'Data',
       defaultCollapsed: true,
       controls: [{ kind: 'table', id: 'revenue', label: 'Quarterly revenue', rows: revenue }],
+    },
+    {
+      label: 'Coordinate',
+      controls: [
+        {
+          kind: 'select',
+          id: BAR_POSITION_CONTROL_IDS.coordinate,
+          label: 'Projection',
+          defaultValue: 'cartesian2D',
+          options: [
+            { value: 'cartesian2D', label: 'Cartesian' },
+            { value: 'polar2D', label: 'Polar' },
+          ],
+        },
+      ],
     },
     {
       label: 'Layout',
@@ -33,6 +49,7 @@ export const barPositionControls = definePreviewControls({
           id: BAR_POSITION_CONTROL_IDS.direction,
           label: 'Direction',
           defaultValue: 'vertical',
+          visibleWhen: { controlId: BAR_POSITION_CONTROL_IDS.coordinate, oneOf: ['cartesian2D'] },
           options: [
             { value: 'vertical', label: 'Vertical' },
             { value: 'horizontal', label: 'Horizontal' },
@@ -41,7 +58,7 @@ export const barPositionControls = definePreviewControls({
         {
           kind: 'range',
           id: BAR_POSITION_CONTROL_IDS.gap,
-          label: 'Bar gap',
+          label: 'Band gap',
           defaultValue: 0,
           min: 0,
           max: 0.8,
@@ -90,6 +107,7 @@ export const barPositionControls = definePreviewControls({
 export const previewControlContract = {
   controls: barPositionControls,
   canonicalValues: {
+    [BAR_POSITION_CONTROL_IDS.coordinate]: 'cartesian2D',
     [BAR_POSITION_CONTROL_IDS.direction]: 'vertical',
     [BAR_POSITION_CONTROL_IDS.gap]: 0,
     [BAR_POSITION_CONTROL_IDS.cornerRadius]: 6,
@@ -99,6 +117,7 @@ export const previewControlContract = {
     [BAR_POSITION_CONTROL_IDS.shadow]: false,
   },
   relatedApis: [
+    'Plot.coordinate',
     'IntervalMark.x',
     'IntervalMark.y',
     'IntervalMark.direction',

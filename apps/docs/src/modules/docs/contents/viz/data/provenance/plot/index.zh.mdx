@@ -1,0 +1,165 @@
+---
+title: Plot 溯源
+description: 图元链路在 Data 来源与变换记录上补充图元、编码、比例尺和布局语义，生成宿主可消费的运行时审计产物。
+---
+
+Data 能解释一行来自哪里、经过哪些变换；Plot 还需要解释这行怎样成为某个图元、使用了哪些通道和比例尺、位于哪种布局中。图元链路把两层信息组合成 `PlotLineageRun`，供检查器、审计面板和交互回查使用。
+
+<ComponentAlert
+  type="tip"
+  title="什么时候需要溯源"
+  description="只想渲染图表时无需开启溯源。只有宿主需要审计一次运行、解释图元来源，或把命中结果回查到数据时，才配置链路选项或接收链路结果的回调。"
+/>
+
+## 从数据到图元
+
+<ComponentPreview files="plot-lineage-flow" size="xs" hideCode />
+
+图元链路复用 [Data 来源追溯](/viz/data/provenance/data)，再补充 Plot 自己拥有的语义：根级与图元局部变换的分段、图元身份与编码、声明式比例尺、坐标布局，以及宿主允许透传的查询或 AI 元数据。
+
+`PlotLineageRun` 是运行时产物，不进入 `IRPlotSpec`，也不会写进 Scene 元数据。绘图结果与链路结果因此可以按不同的存储、权限和保留策略处理。
+
+## 两条路径
+
+<ComponentPreview files="plot-lineage-paths" size="sm" hideCode />
+
+Plot 中有两类名字相近但用途不同的来源能力：
+
+| 路径           | 入口选项                                        | 输出与用途                                                            |
+| -------------- | ----------------------------------------------- | --------------------------------------------------------------------- |
+| 下沉来源元数据 | `provenance`、`datumProvenance`、`datumIdField` | Core 图元的 ID / 元数据，进入 Scene<br />用于定位、稳定锚点和图元检查 |
+| 运行时图元链路 | `lineage`、`hostLineageMetadata`                | `PlotLineageRun` 返回值或回调<br />用于审计、解释和宿主检查器         |
+
+下沉来源元数据会影响生成图元携带的 ID 或元数据；图元链路只旁路记录一次运行。开启 `lineage` 不等于把整份链路塞进 Scene，开启 `datumProvenance` 也不会自动生成 `PlotLineageRun`。
+
+## React 接入
+
+仍然按普通 `<Plot>` 声明图表。宿主需要链路时传入 `lineage`，并通过 `onLineage` 接收运行结果。面板可分别启用根级排序与图元局部前 N 名选择；图表显示变换结果，`transformSteps` 同时列出两层操作及其输入、输出行数：
+
+<ComponentPreview
+  files={['plot-lineage', 'plot-lineage.data.ts', 'plot-lineage-options.ts']}
+  size="lg"
+  caption="排序和前 N 名选择会改变绘图数据；记录范围开关只改变旁路链路字段。摘要中的 root 与 mark[0] 对应两层变换。"
+/>
+
+示例只展示宿主真正需要的链路摘要。只要存在 `onLineage`，省略 `lineage` 也会按最小默认配置计算链路；显式传 `lineage={false}` 才关闭。需要在渲染之外主动获取链路时，可以使用 React 适配器导出的 `resolvePlotLineage`。
+
+## Vanilla 与服务端渲染
+
+Vanilla / SSR 侧把同一组配置传给 `renderPlot`。不传链路配置时返回 SVG 字符串；传入 `lineage` 对象后返回 `{ svg, lineage }`。
+
+```ts
+import { plot, renderPlot } from '@retikz/plot-vanilla';
+
+const spec = plot({
+  data: { reference: 'sales' },
+  scales: [
+    { type: 'band', name: 'x' },
+    { type: 'linear', name: 'y', domainPadding: 0 },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'revenue' } } }],
+});
+
+const { svg, lineage } = renderPlot(
+  spec,
+  { sales },
+  {
+    width: 420,
+    height: 260,
+    lineage: {},
+  },
+);
+```
+
+## 记录范围
+
+`lineage: {}` 默认保留足够识别图元与变换分段的轻量摘要，其余高成本或敏感信息独立开启：
+
+| 开关              | 默认值  | 记录内容                                               |
+| ----------------- | ------- | ------------------------------------------------------ |
+| `data`            | `{}`    | Data 来源摘要与变换阶段                                |
+| `markIdentity`    | `true`  | 补充图元 ID；绘图 ID、数据引用、图元索引与类型始终保留 |
+| `markEncoding`    | `true`  | 图元通道消费的字段与绑定比例尺                         |
+| `transformScopes` | `true`  | 根级与图元局部变换的分段                               |
+| `scaleMappings`   | `false` | `spec.scales` 中声明的比例尺及其通道绑定               |
+| `layoutContext`   | `false` | 坐标系、视图、分面与轨道摘要                           |
+| `locatorAnchors`  | `false` | 定位地址与最终锚点                                     |
+| `rowValues`       | `false` | 最终行样本，必须限制 `maxRows` 和字段白名单            |
+| `hostMetadata`    | `false` | 宿主查询、AI、权限与额外元数据的选择性透传             |
+
+`markIdentity: false` 只省略可选的图元 ID；`plotId`（存在时）、`dataReference`、`markIndex` 和 `markType` 是定位产物所需的最小骨架，始终保留。`scaleMappings` 只记录 `spec.scales` 中显式声明的比例尺与图元通道绑定，不把下沉过程内部派生的临时比例尺当成稳定契约。`rowValues` 默认关闭，避免审计产物意外复制完整业务数据。
+
+## 交互回查
+
+需要从命中的 datum 或 series 回查来源时，使用 `createPlotLineageLocator`。沿用上面的 `spec` 和 `sales` 数据，先显式建立数据集表；返回值可能为 `null`，命中后再读取 anchor 与溯源摘要：
+
+```ts
+import { createPlotLineageLocator } from '@retikz/plot';
+
+const datasets = { sales };
+const locator = createPlotLineageLocator(spec, datasets, {
+  lineage: { locatorAnchors: true },
+});
+
+const result = locator.datum(0);
+if (result !== null) {
+  console.log(result.anchor, result.lineage.sourceIdentity, result.lineage.mark);
+}
+```
+
+这个入口适合提示框、AI 解释面板或审计跳转；实际显示什么内容仍由宿主决定。
+
+<SourceLinks
+  sources={[
+    {
+      label: '图元链路选项与产物契约',
+      path: 'packages/viz/plot/src/contract/lineage.ts',
+      startLine: 28,
+      endLine: 172,
+    },
+    {
+      label: '图元链路默认值',
+      path: 'packages/viz/plot/src/pipeline/lineage.ts',
+      startLine: 52,
+      endLine: 90,
+    },
+    {
+      label: '链路生成与定位器回查',
+      path: 'packages/viz/plot/src/pipeline/lineage.ts',
+      startLine: 267,
+      endLine: 410,
+    },
+    {
+      label: 'React 图元链路 props',
+      path: 'packages/viz/plot-react/src/Plot.tsx',
+      startLine: 32,
+      endLine: 48,
+    },
+    {
+      label: 'React 链路计算与回调',
+      path: 'packages/viz/plot-react/src/Plot.tsx',
+      startLine: 145,
+      endLine: 164,
+    },
+    {
+      label: 'Vanilla 图元链路返回契约',
+      path: 'packages/viz/plot-vanilla/src/runtime/render-plot.ts',
+      startLine: 14,
+      endLine: 68,
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/data/provenance/data">
+    <span className="font-semibold">Data 来源追溯</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">理解 Data 的行级来源与运行时事件。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot">
+    <span className="font-semibold">绘图语法</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">理解 Plot 的整体流程与模块边界。</span>
+  </LinkedCard>
+</div>

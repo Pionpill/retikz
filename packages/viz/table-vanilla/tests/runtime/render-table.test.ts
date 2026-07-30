@@ -7,9 +7,7 @@ import { detailTable, manualTable, renderTable } from '../../src';
 describe('renderTable', () => {
   it('renders anonymous manual specs without data and detail specs with runtime data in SSR', () => {
     const manual = manualTable({
-      rows: 1,
-      columns: 1,
-      cells: [{ address: { row: 0, column: 0 }, payload: { kind: 'value', value: 'Ada' } }],
+      rows: [['Ada']],
     });
     const detail = detailTable({
       dataRef: 'people',
@@ -19,11 +17,21 @@ describe('renderTable', () => {
 
     expect(typeof window).toBe('undefined');
     expect(renderTable(manual)).toContain('Ada');
+    expect(renderTable(manual, { artifacts: true }).manifest.cells[0].source).toEqual({
+      kind: 'manual',
+      row: 0,
+      column: 0,
+    });
     expect(renderTable(detail, { data: { people: [{ name: 'Grace' }] } })).toContain('Grace');
   });
 
   it('returns manifest artifacts only when requested and keeps output size outside Table geometry', () => {
-    const spec = manualTable({ rows: 2, columns: 2, cells: [] });
+    const spec = manualTable({
+      rows: [
+        [null, null],
+        [null, null],
+      ],
+    });
     const plain = renderTable(spec, { output: { width: 640, height: 480 } });
     const artifact = renderTable(spec, { artifacts: true, output: { width: 320, height: 240 } });
 
@@ -36,7 +44,7 @@ describe('renderTable', () => {
   });
 
   it('accepts Core options under compile and rejects the removed top-level composites field', () => {
-    const spec = manualTable({ rows: 1, columns: 1, cells: [] });
+    const spec = manualTable({ rows: [[null]] });
 
     expect(renderTable(spec, { compile: { padding: 0 }, animation: { enabled: false } })).toContain('<svg');
     expect(() => renderTable(spec, { composites: [] } as never)).toThrow(/composites.*compile\.composites/i);
@@ -56,14 +64,7 @@ describe('renderTable', () => {
       expand: node => ({ type: 'node', position: [0, 0], text: node.label }),
     });
     const spec = manualTable({
-      rows: 1,
-      columns: 1,
-      cells: [
-        {
-          address: { row: 0, column: 0 },
-          payload: { kind: 'content', content: { namespace: 'fixture', type: 'badge', label: 'Nested' } },
-        },
-      ],
+      rows: [[{ content: { namespace: 'fixture', type: 'badge', label: 'Nested' } }]],
     });
 
     expect(renderTable(spec, { compile: { composites: [badge] } })).toContain('Nested');

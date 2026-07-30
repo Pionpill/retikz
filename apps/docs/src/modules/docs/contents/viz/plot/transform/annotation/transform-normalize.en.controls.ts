@@ -2,6 +2,8 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
+import { normalizeOperationsOf } from './transform-normalize.controls';
 import { revenue } from './transform-normalize.data';
 
 /** 归一化示例的英文控件 */
@@ -11,17 +13,23 @@ export const normalizeControls = definePreviewControls({
   sections: [
     {
       label: 'Data',
-      defaultCollapsed: true,
       controls: [
         {
           kind: 'table',
           id: 'rows',
           label: 'Quarterly product sales',
-          rows: revenue,
+          views: createPlotTransformTableViews(
+            { source: 'Source', result: 'Normalized and stacked' },
+            revenue,
+            normalizeOperationsOf,
+          ),
           columns: [
             { key: 'quarter', label: 'Quarter' },
             { key: 'product', label: 'Product' },
             { key: 'amount', label: 'Amount' },
+            { key: 'share', label: 'Share' },
+            { key: 'y0', label: 'Lower y0' },
+            { key: 'y1', label: 'Upper y1' },
           ],
         },
       ],

@@ -2,18 +2,12 @@ import { Axis, PathMark, Plot, PointMark, RelationMark, Scale } from '@retikz/pl
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
+import { relateOperationOf } from './transform-relate.controls';
 import { monthlyTrend } from './transform-relate.data';
 import { previewControlContract, relateControls } from './transform-relate.en.controls';
 
 /** 注册回退使用的行配对英文控件 */
 export const previewControls = relateControls;
-
-const endpointSelectors = {
-  first: { kind: 'first' },
-  last: { kind: 'last' },
-  min: { kind: 'min', by: 'value' },
-  max: { kind: 'max', by: 'value' },
-} as const;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
@@ -38,15 +32,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         size={5}
       />
       <RelationMark
-        transform={[
-          {
-            kind: 'relate',
-            ...(values.pairingScope === 'series' ? { groupBy: ['series'] } : {}),
-            source: { selector: endpointSelectors[values.sourceSelector], fields: { id: 'id' } },
-            target: { selector: endpointSelectors[values.targetSelector], fields: { id: 'id' } },
-            measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
-          },
-        ]}
+        transform={[relateOperationOf(values)]}
         source={{ anchorId: { prefix: 'trend', field: 'sourceId' } }}
         target={{ anchorId: { prefix: 'trend', field: 'targetId' } }}
         style={{

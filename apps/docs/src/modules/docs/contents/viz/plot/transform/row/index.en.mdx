@@ -18,7 +18,7 @@ Use `derive-interval` to add an interval to each input row. Use `jitter` to spre
 
 Switch the interval source to compare explicit `startFrom` / `endFrom` fields with the `from` / `baseline` mode.
 
-<ComponentPreview files={['transform-derive-interval', 'transform-derive-interval.data.ts']} size="md" />
+<ComponentPreview files={['transform-derive-interval', 'transform-derive-interval.data.ts']} size="lg" />
 
 ### API Reference
 
@@ -37,7 +37,7 @@ Switch the interval source to compare explicit `startFrom` / `endFrom` fields wi
 
 `derive-interval` chooses one configuration mode first, then applies the same derivation rule to every row. Orange nodes in the figure represent row data, blue nodes represent per-row processing, and only the red branch terminates lowering.
 
-<ComponentPreview files="transform-derive-interval-logic" hideCode size="xl" />
+<ComponentPreview files="transform-derive-interval-logic" hideCode size="sm" />
 
 Mode selection and field writes follow four steps:
 
@@ -65,9 +65,9 @@ Both `derive-interval` and `stack` default to `y0` / `y1`, but their meaning dif
 
 ### Interactive Demo
 
-Adjust the maximum offset and random seed. The left plot preserves the original positions; the right plot uses a fixed data domain so parameter changes remain directly comparable.
+Adjust the maximum offset and random seed. The chart uses a fixed data domain so jitter parameter changes remain directly comparable.
 
-<ComponentPreview files={['transform-jitter', 'transform-jitter.data.ts']} size="md" />
+<ComponentPreview files={['transform-jitter', 'transform-jitter.data.ts']} size="lg" />
 
 ### API Reference
 
@@ -85,7 +85,7 @@ Adjust the maximum offset and random seed. The left plot preserves the original 
 
 The `jitter` main chain is “select fields → generate offsets → write rows → scale.” The `mulberry32(seed)` node above the chain is an auxiliary input: it does not change cardinality, but supplies one deterministic `u` for every field perturbation.
 
-<ComponentPreview files="transform-jitter-logic" hideCode size="xl" />
+<ComponentPreview files="transform-jitter-logic" hideCode size="sm" />
 
 `axis` chooses x, y, or both, while `xField` / `yField` identify the actual fields. For each selected field, the PRNG advances once to produce `u ∈ [0,1)`, then computes:
 

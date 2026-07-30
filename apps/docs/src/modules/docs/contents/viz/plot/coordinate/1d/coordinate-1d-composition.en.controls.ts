@@ -2,7 +2,11 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { COORDINATE_1D_COMPOSITION_CONTROL_IDS } from './coordinate-1d-composition.controls';
+import { createPlotTransformTableViews } from '../../transform-table-views';
+import {
+  COORDINATE_1D_COMPOSITION_CONTROL_IDS,
+  coordinate1DCompositionOperation,
+} from './coordinate-1d-composition.controls';
 import { coordinate1DCompositionRows } from './coordinate-1d-composition.en.data';
 
 /** 一维映射后二次组合的英文控件 */
@@ -18,11 +22,16 @@ export const coordinate1DCompositionControls = definePreviewControls({
           kind: 'table',
           id: 'rows',
           label: 'Nodes and relations',
-          rows: coordinate1DCompositionRows,
+          views: createPlotTransformTableViews(
+            { source: 'Source', result: 'Target summary' },
+            coordinate1DCompositionRows,
+            () => coordinate1DCompositionOperation,
+          ),
           columns: [
             { key: 'thingLabel', label: 'Source node' },
             { key: 'practiceLabel', label: 'Target node' },
             { key: 'relationColor', label: 'Group color' },
+            { key: 'thingCount', label: 'Source count' },
           ],
         },
       ],

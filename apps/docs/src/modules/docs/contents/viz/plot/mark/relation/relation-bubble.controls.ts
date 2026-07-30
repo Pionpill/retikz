@@ -2,6 +2,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
 import { bubbleNodes } from './relation-bubble.data';
 
 /** 气泡关系 playground 的稳定控件 id */
@@ -15,6 +16,14 @@ export const RELATION_BUBBLE_CONTROL_IDS = {
   nodeOpacity: 'relation-bubble-node-opacity',
 } as const;
 
+/** 气泡极值关系 operation */
+export const relationBubbleOperation = {
+  kind: 'relate',
+  source: { selector: { kind: 'max', by: 'value' }, fields: { id: 'id' } },
+  target: { selector: { kind: 'max', by: 'y' }, fields: { id: 'id' } },
+  measures: [{ op: 'difference', field: 'y', as: 'delta', labelAs: 'relLabel', labelPrefix: 'lift +' }],
+} as const;
+
 /** 气泡关系样式的中文属性面板 */
 export const relationBubbleControls = definePreviewControls({
   presentation: 'panel',
@@ -23,7 +32,18 @@ export const relationBubbleControls = definePreviewControls({
     {
       label: '数据',
       defaultCollapsed: true,
-      controls: [{ kind: 'table', id: 'bubbleNodes', label: '气泡节点', rows: bubbleNodes }],
+      controls: [
+        {
+          kind: 'table',
+          id: 'bubbleNodes',
+          label: '气泡节点',
+          views: createPlotTransformTableViews(
+            { source: '原始', result: '关系层配对后' },
+            bubbleNodes,
+            () => relationBubbleOperation,
+          ),
+        },
+      ],
     },
     {
       label: '关系样式',

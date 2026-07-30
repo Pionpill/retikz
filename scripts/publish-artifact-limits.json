@@ -1,7 +1,7 @@
 {
   "@retikz/core": {
-    "maxFiles": 970,
-    "maxPackedBytes": 399360
+    "maxFiles": 1020,
+    "maxPackedBytes": 450560
   },
   "@retikz/data": {
     "maxFiles": 160,
@@ -24,16 +24,16 @@
     "maxPackedBytes": 10240
   },
   "@retikz/react": {
-    "maxFiles": 150,
-    "maxPackedBytes": 81920
+    "maxFiles": 170,
+    "maxPackedBytes": 92160
   },
   "@retikz/render": {
-    "maxFiles": 180,
-    "maxPackedBytes": 112640
+    "maxFiles": 230,
+    "maxPackedBytes": 174080
   },
   "@retikz/runtime": {
-    "maxFiles": 80,
-    "maxPackedBytes": 40960
+    "maxFiles": 110,
+    "maxPackedBytes": 51200
   },
   "@retikz/standard": {
     "maxFiles": 130,
@@ -49,7 +49,7 @@
   },
   "@retikz/table": {
     "maxFiles": 260,
-    "maxPackedBytes": 92160
+    "maxPackedBytes": 102400
   },
   "@retikz/table-react": {
     "maxFiles": 50,
@@ -64,7 +64,7 @@
     "maxPackedBytes": 30720
   },
   "@retikz/vanilla": {
-    "maxFiles": 60,
-    "maxPackedBytes": 30720
+    "maxFiles": 80,
+    "maxPackedBytes": 51200
   }
 }

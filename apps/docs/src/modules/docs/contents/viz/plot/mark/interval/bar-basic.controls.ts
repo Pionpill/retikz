@@ -6,6 +6,7 @@ import { revenue } from './bar-basic.data';
 
 /** 基础柱形 playground 的稳定控件 id */
 export const BAR_POSITION_CONTROL_IDS = {
+  coordinate: 'interval-basic-coordinate',
   direction: 'bar-position-direction',
   gap: 'bar-position-gap',
   cornerRadius: 'bar-position-corner-radius',
@@ -18,12 +19,27 @@ export const BAR_POSITION_CONTROL_IDS = {
 /** 基础柱形的中文属性面板 */
 export const barPositionControls = definePreviewControls({
   presentation: 'panel',
-  title: '基础柱形',
+  title: '基础区间',
   sections: [
     {
       label: '数据',
       defaultCollapsed: true,
       controls: [{ kind: 'table', id: 'revenue', label: '季度收入', rows: revenue }],
+    },
+    {
+      label: '坐标系',
+      controls: [
+        {
+          kind: 'select',
+          id: BAR_POSITION_CONTROL_IDS.coordinate,
+          label: '投影',
+          defaultValue: 'cartesian2D',
+          options: [
+            { value: 'cartesian2D', label: '笛卡尔坐标' },
+            { value: 'polar2D', label: '极坐标' },
+          ],
+        },
+      ],
     },
     {
       label: '布局',
@@ -33,6 +49,7 @@ export const barPositionControls = definePreviewControls({
           id: BAR_POSITION_CONTROL_IDS.direction,
           label: '方向',
           defaultValue: 'vertical',
+          visibleWhen: { controlId: BAR_POSITION_CONTROL_IDS.coordinate, oneOf: ['cartesian2D'] },
           options: [
             { value: 'vertical', label: '纵向' },
             { value: 'horizontal', label: '横向' },
@@ -41,7 +58,7 @@ export const barPositionControls = definePreviewControls({
         {
           kind: 'range',
           id: BAR_POSITION_CONTROL_IDS.gap,
-          label: '柱间距',
+          label: '分类间距',
           defaultValue: 0,
           min: 0,
           max: 0.8,
@@ -90,6 +107,7 @@ export const barPositionControls = definePreviewControls({
 export const previewControlContract = {
   controls: barPositionControls,
   canonicalValues: {
+    [BAR_POSITION_CONTROL_IDS.coordinate]: 'cartesian2D',
     [BAR_POSITION_CONTROL_IDS.direction]: 'vertical',
     [BAR_POSITION_CONTROL_IDS.gap]: 0,
     [BAR_POSITION_CONTROL_IDS.cornerRadius]: 6,
@@ -99,6 +117,7 @@ export const previewControlContract = {
     [BAR_POSITION_CONTROL_IDS.shadow]: false,
   },
   relatedApis: [
+    'Plot.coordinate',
     'IntervalMark.x',
     'IntervalMark.y',
     'IntervalMark.direction',

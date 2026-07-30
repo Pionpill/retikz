@@ -4,10 +4,10 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** stack 的分组、排序、边界计算与逐行写回 */
 const Demo: FC = () => (
-  <Layout width={420} height={360} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={680} height={150} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
       id="rows"
-      position={[70, -140]}
+      position={[-270, 40]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}
@@ -22,7 +22,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="group"
-      position={[70, -70]}
+      position={[-150, 40]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -37,7 +37,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="order"
-      position={[70, 0]}
+      position={[-20, 40]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -52,7 +52,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="offset"
-      position={[-130, 70]}
+      position={[120, -40]}
       stroke="gray"
       fill="gray"
       fillOpacity={0.06}
@@ -67,7 +67,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="bounds"
-      position={[70, 70]}
+      position={[120, 40]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -82,7 +82,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="output"
-      position={[70, 140]}
+      position={[270, 40]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}

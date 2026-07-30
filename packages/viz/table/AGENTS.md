@@ -5,10 +5,10 @@
 ## 包职责契约
 
 - **解决的问题**：把结构化数据或显式内容组织为具有行、列、Cell 和语义区域的二维表格，并确定性地 lowering 为 Core IR
-- **拥有的契约**：Table IR / schema、表格结构与操作、Cell 语义、framework-neutral authoring normalization、adapter-shared runtime contribution、formatter / presentation / visual encoding / rule / theme definitions、表格约束布局与内容 fit / overflow、后续大表 window / viewport 计算、lowering、manifest / lineage / locator / diagnostics
-- **不拥有的能力**：通用数据 transform / statistics、Core IR / Scene 与通用测量、Plot 语义及跨 Plot Cell 的 scale / axis / guide 协调、renderer、React / Vanilla authoring、单元格编辑或电子表格计算
-- **输入与输出**：接收 Table IR、external datasets、Table definitions 与 compile options，输出 Core IR contribution 与可追溯附属信息；不直接输出 DOM、SVG 或 Canvas
-- **缺口流向**：通用数据能力进入 `@retikz/data`；通用图形、几何和测量进入 core / math；宿主 authoring、滚动容器与 viewport 生命周期进入对应 adapter；服务端分页 / 异步缓存状态留在宿主；编辑和电子表格计算不进入 Table 家族
+- **拥有的契约**：Table IR / schema、表格结构与操作、Cell 语义、framework-neutral authoring normalization、adapter-shared runtime contribution、formatter / presentation / visual encoding / rule / theme definitions、Legend descriptor 与领域解析、表格约束布局与内容 fit / overflow、后续大表 window / viewport 计算、lowering、manifest / lineage / locator / diagnostics
+- **不拥有的能力**：通用数据 transform / statistics、跨领域 Legend 视觉结构 / 内部布局 / lowering、Core IR / Scene 与通用测量、Plot 语义及跨 Plot Cell 的 scale / axis / guide 协调、renderer、React / Vanilla authoring、单元格编辑或电子表格计算
+- **输入与输出**：接收 Table IR、external datasets、Table definitions 与 compile options，向 Standard 产生已经解析好的通用绘图输入，并输出 Core IR contribution 与可追溯附属信息；不直接输出 DOM、SVG 或 Canvas
+- **缺口流向**：通用数据能力进入 `@retikz/data`；通用机制、几何和测量进入 core / math；被多个领域复用的绘图 composite 进入 `@retikz/standard`；宿主 authoring、滚动容器与 viewport 生命周期进入对应 adapter；服务端分页 / 异步缓存状态留在宿主；编辑和电子表格计算不进入 Table 家族
 
 新增或迁移能力前，先按 [`table-visualization-complete.md`](../_notes/architecture/table-visualization-complete.md) 判断领域归属，并以 [`table-design.md`](../_notes/architecture/table-design.md) 作为总体设计坐标。具体 IR、Definition 和算法必须由后续 ADR 冻结，不能仅凭本文件直接实现。
 
@@ -27,7 +27,7 @@ pipeline/     数据接入、结构规范化、呈现、布局、lowering 与 lo
 - 内置与自定义能力必须经过同一 Definition / registry，不写内置白名单分支
 - Cell 是 Table 的语义与布局槽位，内容统一使用 Core `IRChild`，不建立平行内容 IR
 - 显式 Plot 等 Tier 2 Cell 走通用 `IRChild` 测量、放置和 composite lowering；不得在 Table 中按 namespace 特判
-- Table 可以消费 Data 与 Core，但不得依赖 Plot、React、DOM 或 renderer
+- Table 可以消费 Data、Standard 与 Core，但不得依赖 Plot、React、DOM 或 renderer；visual encoding / Legend descriptor 由 Table 解析，通用 Legend 呈现交给 Standard
 - 通用 `IRChild` 测量缺口优先补 Core，不在 Table 内建立私有 bbox 系统
 - 虚拟滚动等大表展示能力必须复用 Table layout / manifest；核心只拥有 window 计算，瞬时滚动状态和 DOM 生命周期留在 adapter
 

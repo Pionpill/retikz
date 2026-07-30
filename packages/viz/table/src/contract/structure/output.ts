@@ -33,7 +33,8 @@ export const TableCellSourceSchema = z
       kind: z
         .literal(TableCellSourceKind.Manual)
         .describe('Discriminator for a source Cell authored by manual structure input.'),
-      cellIndex: z.number().int().nonnegative().describe('Index of the source Cell in the manual operation.'),
+      row: z.number().int().nonnegative().describe('Zero-based row of the source entry in the manual matrix.'),
+      column: z.number().int().nonnegative().describe('Zero-based column of the source entry in the manual matrix.'),
     }),
     z.strictObject({
       kind: z

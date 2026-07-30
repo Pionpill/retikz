@@ -2,6 +2,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
 import { regionOrders } from './point-transform.data';
 
 /** 点层变换 playground 的稳定控件 id */
@@ -9,6 +10,18 @@ export const POINT_TRANSFORM_CONTROL_IDS = {
   amount: 'point-jitter-amount',
   seed: 'point-jitter-seed',
 } as const;
+
+/** 根据实时控件值创建纵向抖动 operation */
+export const pointTransformOperationOf = (values: {
+  [POINT_TRANSFORM_CONTROL_IDS.amount]: number;
+  [POINT_TRANSFORM_CONTROL_IDS.seed]: number;
+}) => ({
+  kind: 'jitter',
+  axis: 'y',
+  yField: 'orders',
+  amount: values[POINT_TRANSFORM_CONTROL_IDS.amount],
+  seed: values[POINT_TRANSFORM_CONTROL_IDS.seed],
+});
 
 /** 点层变换 playground 的中文属性面板 */
 export const pointTransformControls = definePreviewControls({
@@ -18,7 +31,18 @@ export const pointTransformControls = definePreviewControls({
     {
       label: '数据',
       defaultCollapsed: true,
-      controls: [{ kind: 'table', id: 'regionOrders', label: '地区订单', rows: regionOrders }],
+      controls: [
+        {
+          kind: 'table',
+          id: 'regionOrders',
+          label: '地区订单',
+          views: createPlotTransformTableViews(
+            { source: '原始', result: '抖动后' },
+            regionOrders,
+            pointTransformOperationOf,
+          ),
+        },
+      ],
     },
     {
       label: 'jitter 参数',

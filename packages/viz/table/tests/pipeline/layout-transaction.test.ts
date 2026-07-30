@@ -41,21 +41,17 @@ describe('Table layout transaction', () => {
       type: TableComposite.Table,
       structure: {
         kind: 'manual',
-        rows: 1,
-        columns: 3,
-        cells: [
-          {
-            id: 'wide',
-            address: { row: 0, column: 0 },
-            span: { columns: 2 },
-            layout: { padding: { x: 2, y: 1 } },
-            payload: { kind: 'value', value: 'wide' },
-          },
-          {
-            id: 'last',
-            address: { row: 0, column: 2 },
-            payload: { kind: 'value', value: 'last' },
-          },
+        rows: [
+          [
+            {
+              id: 'wide',
+              value: 'wide',
+              span: { columns: 2 },
+              layout: { padding: { x: 2, y: 1 } },
+            },
+            null,
+            { id: 'last', value: 'last' },
+          ],
         ],
       },
       layout: {
@@ -84,14 +80,10 @@ describe('Table layout transaction', () => {
       type: TableComposite.Table,
       structure: {
         kind: 'manual',
-        rows: 1,
-        columns: 1,
-        cells: [
-          {
-            address: { row: 0, column: 0 },
-            layout: { padding: 5, fit: 'contain', overflow: 'clip' },
-            payload: {
-              kind: 'content',
+        rows: [
+          [
+            {
+              layout: { padding: 5, fit: 'contain', overflow: 'clip' },
               content: {
                 type: 'node',
                 id: 'probe-node',
@@ -101,7 +93,7 @@ describe('Table layout transaction', () => {
                 padding: 0,
               },
             },
-          },
+          ],
         ],
       },
       layout: {
@@ -162,14 +154,13 @@ describe('Table layout transaction', () => {
       type: TableComposite.Table,
       structure: {
         kind: 'manual',
-        rows: 1,
-        columns: 1,
-        cells: [
-          {
-            address: { row: 0, column: 0 },
-            layout: { padding: 5, wrap: true },
-            payload: { kind: 'content', content: { namespace: 'fixture', type: 'probe' } },
-          },
+        rows: [
+          [
+            {
+              layout: { padding: 5, wrap: true },
+              content: { namespace: 'fixture', type: 'probe' },
+            },
+          ],
         ],
       },
       layout: { columnSize: { kind: 'fixed', value: 60 }, rowSize: { kind: 'auto' } },
@@ -218,7 +209,7 @@ describe('Table layout transaction', () => {
     const nested: IRTableSpec = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
-      structure: { kind: 'manual', rows: 1, columns: 2, cells: [] },
+      structure: { kind: 'manual', rows: [[null, null]] },
       layout: {
         columnSize: { kind: 'fraction' },
         rowSize: { kind: 'fixed', value: 10 },
@@ -270,17 +261,7 @@ describe('Table layout transaction', () => {
       type: TableComposite.Table,
       structure: {
         kind: 'manual',
-        rows: 1,
-        columns: 1,
-        cells: [
-          {
-            address: { row: 0, column: 0 },
-            payload: {
-              kind: 'content',
-              content: { type: 'node', position: [0, 0], minimumSize: 20, padding: 0 },
-            },
-          },
-        ],
+        rows: [[{ content: { type: 'node', position: [0, 0], minimumSize: 20, padding: 0 } }]],
       },
       layout: {
         columnSize: { kind: 'fraction' },
@@ -308,18 +289,14 @@ describe('Table layout transaction', () => {
       type: TableComposite.Table,
       structure: {
         kind: 'manual',
-        rows: 1,
-        columns: 1,
-        cells: [
-          {
-            id: 'zero',
-            address: { row: 0, column: 0 },
-            layout: { overflow: 'clip' },
-            payload: {
-              kind: 'content',
+        rows: [
+          [
+            {
+              id: 'zero',
+              layout: { overflow: 'clip' },
               content: { type: 'node', id: 'discarded', position: [0, 0], minimumSize: 20, padding: 0 },
             },
-          },
+          ],
         ],
       },
       layout: {
@@ -346,7 +323,7 @@ describe('Table layout transaction', () => {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'same',
-      structure: { kind: 'manual', rows: 1, columns: 1, cells: [] },
+      structure: { kind: 'manual', rows: [[null]] },
       layout: {
         columnSize: { kind: 'fixed', value: 10 },
         rowSize: { kind: 'fixed', value: 8 },
@@ -358,15 +335,7 @@ describe('Table layout transaction', () => {
       id: 'same',
       structure: {
         kind: 'manual',
-        rows: 1,
-        columns: 1,
-        cells: [
-          {
-            id: 'nested-cell',
-            address: { row: 0, column: 0 },
-            payload: { kind: 'content', content: nested },
-          },
-        ],
+        rows: [[{ id: 'nested-cell', content: nested }]],
       },
       layout: {
         columnSize: { kind: 'fixed', value: 50 },
@@ -419,14 +388,7 @@ describe('Table layout transaction', () => {
       type: TableComposite.Table,
       structure: {
         kind: 'manual',
-        rows: 1,
-        columns: 1,
-        cells: [
-          {
-            address: { row: 0, column: 0 },
-            payload: { kind: 'content', content: { namespace: 'fixture', type: 'malformed-cell-output' } },
-          },
-        ],
+        rows: [[{ content: { namespace: 'fixture', type: 'malformed-cell-output' } }]],
       },
     };
 
@@ -462,15 +424,7 @@ describe('Table layout transaction', () => {
       id: 'orders',
       structure: {
         kind: 'manual',
-        rows: 1,
-        columns: 1,
-        cells: [
-          {
-            id: 'total',
-            address: { row: 0, column: 0 },
-            payload: { kind: 'content', content: { namespace: 'fixture', type: 'intrinsic-failure' } },
-          },
-        ],
+        rows: [[{ id: 'total', content: { namespace: 'fixture', type: 'intrinsic-failure' } }]],
       },
     };
 
@@ -517,15 +471,7 @@ describe('Table layout transaction', () => {
       id: 'orders',
       structure: {
         kind: 'manual',
-        rows: 1,
-        columns: 1,
-        cells: [
-          {
-            id: 'total',
-            address: { row: 0, column: 0 },
-            payload: { kind: 'content', content: { namespace: 'fixture', type: 'nested-table-failure' } },
-          },
-        ],
+        rows: [[{ id: 'total', content: { namespace: 'fixture', type: 'nested-table-failure' } }]],
       },
     };
     const outer = defineComposite({
@@ -594,15 +540,8 @@ describe('Table layout transaction', () => {
       id: 'orders',
       structure: {
         kind: 'manual',
-        rows: 1,
-        columns: 1,
-        cells: [
-          {
-            id: 'total',
-            address: { row: 0, column: 0 },
-            layout: { wrap: true },
-            payload: { kind: 'content', content: { namespace: 'fixture', type: 'constrained-failure' } },
-          },
+        rows: [
+          [{ id: 'total', layout: { wrap: true }, content: { namespace: 'fixture', type: 'constrained-failure' } }],
         ],
       },
       layout: { columnSize: { kind: 'fixed', value: 40 } },
@@ -634,7 +573,7 @@ describe('Table layout transaction', () => {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'orders',
-      structure: { kind: 'manual', rows: 1, columns: 1, cells: [] },
+      structure: { kind: 'manual', rows: [[null]] },
       layout: {
         columnSize: { kind: 'fixed', value: 40 },
         rowSize: { kind: 'fixed', value: 20 },

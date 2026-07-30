@@ -19,9 +19,7 @@ const manualSpec = (id?: string): IRTableSpec => ({
   ...(id === undefined ? {} : { id }),
   structure: {
     kind: 'manual',
-    rows: 1,
-    columns: 1,
-    cells: [{ address: { row: 0, column: 0 }, payload: { kind: 'value', value: 'Ada' } }],
+    rows: [['Ada']],
   },
 });
 
@@ -77,14 +75,7 @@ describe('Table layout-aware lowering', () => {
       type: TableComposite.Table,
       structure: {
         kind: 'manual',
-        rows: 1,
-        columns: 1,
-        cells: [
-          {
-            address: { row: 0, column: 0 },
-            payload: { kind: 'content', content: { namespace: 'fixture', type: 'badge', label: 'Nested' } },
-          },
-        ],
+        rows: [[{ content: { namespace: 'fixture', type: 'badge', label: 'Nested' } }]],
       },
     };
 
@@ -98,7 +89,13 @@ describe('Table layout-aware lowering', () => {
     const spec: IRTableSpec = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
-      structure: { kind: 'manual', rows: 2, columns: 3, cells: [] },
+      structure: {
+        kind: 'manual',
+        rows: [
+          [null, null, null],
+          [null, null, null],
+        ],
+      },
       layout: {
         columnSize: { kind: 'fixed', value: 100 },
         rowSize: { kind: 'fixed', value: 30 },

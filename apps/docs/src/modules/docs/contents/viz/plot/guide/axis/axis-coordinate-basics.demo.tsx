@@ -1,4 +1,5 @@
 import { Axis, PathMark, Plot } from '@retikz/plot-react';
+import { Layout } from '@retikz/react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
@@ -17,17 +18,18 @@ const renderCoordinateBasics = (values: AxisCoordinateBasicsValues) => {
   const isPolar = values.coordinate === 'polar2D';
 
   return (
-    <Plot
-      data={axisCoordinateBasicsRows}
+    <Layout
       width={340}
       height={260}
-      coordinate={isPolar ? 'polar2D' : undefined}
+      viewBox={{ x: 0, y: 0, width: 340, height: 260 }}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
-      <PathMark x="dimension" y="value" order="order" closed={isPolar} stroke="#2563eb" />
-      {values.showX ? <Axis dimension="x" /> : null}
-      {values.showY ? <Axis dimension="y" grid={values.showGrid} ticks={{ count: values.tickCount }} /> : null}
-    </Plot>
+      <Plot data={axisCoordinateBasicsRows} width={340} height={260} coordinate={isPolar ? 'polar2D' : undefined}>
+        <PathMark x="dimension" y="value" order="order" closed={isPolar} stroke="#2563eb" />
+        {values.showX ? <Axis dimension="x" /> : null}
+        {values.showY ? <Axis dimension="y" grid={values.showGrid} ticks={{ count: values.tickCount }} /> : null}
+      </Plot>
+    </Layout>
   );
 };
 

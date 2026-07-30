@@ -239,7 +239,24 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     route: '初始 move(source) 之后的显式路由 step。',
     routing: '算法路由策略；省略时直线连接。',
     label: '附着在默认路由或最后一个可绘制 step 上的标签。',
+    'label.textColor': '标签文本颜色；依次回退到标签默认值、路径颜色和 currentColor。',
+    'label.opacity': '标签自身不透明度，与所属路径不透明度相乘。',
+    'label.font': '标签字体覆盖；缺失字段继承 Scope 标签默认值。',
+    'label.text': '常量 Core step 标签文本、混合文本或数据字段绑定。',
+    'label.position': '标签沿 step 的关键词或归一化位置；参数含义由 step 类型决定。',
+    'label.side': '相对标签锚点的标准侧，默认 top。',
+    'label.sloped': '是否沿采样切线旋转，并由 side 决定标签方位。',
+    'label.placement': '标签放置方式：outside 按 side 外偏，inside 由区域 host 放在内部。',
+    'label.distance': '标签相对锚点的侧向偏移距离，单位为用户坐标。',
     options: '仅 path 关系使用的 Core Path 选项。',
+    'options.dashPattern': '描边虚线长度数组；省略表示实线。',
+    'options.fillRule': '自交或嵌套子路径的填充规则。',
+    'options.lineCap': '描边端点形状；省略使用 butt。',
+    'options.lineJoin': '描边拐角形状；省略使用 miter。',
+    'options.roundedCorners': '线段连接处的几何圆角半径；省略保持尖角。',
+    'options.rotate': '围绕路径包围盒中心旋转整条路径。',
+    'options.scale': '围绕路径包围盒中心缩放整条路径。',
+    'options.marks': '沿路径归一化位置放置的 mark，方向跟随路径切线。',
   }}
 />
 
@@ -252,6 +269,10 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     width: '源端宽度；省略 endWidth 时也是全程宽度。',
     endWidth: '可选目标端宽度，与 width 组成渐变 ribbon。',
     options: '仅 ribbon 关系使用的 Core Path kind=ribbon 选项。',
+    'options.interpolation': '起点宽度到终点宽度之间的插值曲线。',
+    'options.align': '生成带状区域中保持在中心线上的一侧。',
+    'options.samples': '中心线 lowering 的采样简写。',
+    'options.sampling': '显式中心线采样策略。',
   }}
 />
 
@@ -296,6 +317,15 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     inAngle: 'bend step 进入角。',
     looseness: 'bend step 曲线松紧系数。',
     label: '附着在该可绘制 step 上的标签。',
+    'label.textColor': '标签文本颜色；依次回退到标签默认值、路径颜色和 currentColor。',
+    'label.opacity': '标签自身不透明度，与所属路径不透明度相乘。',
+    'label.font': '标签字体覆盖；缺失字段继承 Scope 标签默认值。',
+    'label.text': '常量 Core step 标签文本、混合文本或数据字段绑定。',
+    'label.position': '标签沿 step 的关键词或归一化位置；参数含义由 step 类型决定。',
+    'label.side': '相对标签锚点的标准侧，默认 top。',
+    'label.sloped': '是否沿采样切线旋转，并由 side 决定标签方位。',
+    'label.placement': '标签放置方式：outside 按 side 外偏，inside 由区域 host 放在内部。',
+    'label.distance': '标签相对锚点的侧向偏移距离，单位为用户坐标。',
   }}
 />
 

@@ -118,8 +118,34 @@ const validateSelectControl = (field: PreviewSelectControlField): void => {
 
 /** 校验只读表格的行与显式列定义 */
 const validateTableControl = (field: PreviewTableControlField): void => {
-  if (!Array.isArray(field.rows)) {
-    throw new Error(`Preview table control "${field.id}" rows must be an array.`);
+  const hasRows = 'rows' in field;
+  const hasViews = 'views' in field;
+  if (hasRows === hasViews) {
+    throw new Error(`Preview table control "${field.id}" must define either rows or views.`);
+  }
+
+  if (hasRows) {
+    if (!Array.isArray(field.rows)) {
+      throw new Error(`Preview table control "${field.id}" rows must be an array.`);
+    }
+  } else {
+    if (!Array.isArray(field.views) || field.views.length < 2) {
+      throw new Error(`Preview table control "${field.id}" views must define at least two views.`);
+    }
+
+    const viewIds = new Set<string>();
+    for (const view of field.views) {
+      if (viewIds.has(view.id)) {
+        throw new Error(`Duplicate preview table view id "${view.id}" in control "${field.id}".`);
+      }
+      viewIds.add(view.id);
+      if (view.label.trim().length === 0) {
+        throw new Error(`Preview table view "${view.id}" in control "${field.id}" must define a label.`);
+      }
+      if (typeof view.rows !== 'function' && !Array.isArray(view.rows)) {
+        throw new Error(`Preview table view "${view.id}" in control "${field.id}" rows must be an array or resolver.`);
+      }
+    }
   }
 
   const columnKeys = new Set<string>();

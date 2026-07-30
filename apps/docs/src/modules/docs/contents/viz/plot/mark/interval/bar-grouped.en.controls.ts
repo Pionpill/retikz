@@ -8,6 +8,7 @@ import { sales } from './bar-grouped.data';
 export const BAR_SERIES_MODE_ID = 'bar-series-mode';
 export const BAR_SERIES_STACK_OFFSET_ID = 'bar-series-stack-offset';
 export const BAR_SERIES_GAP_ID = 'bar-series-gap';
+export const BAR_SERIES_COORDINATE_ID = 'interval-series-coordinate';
 
 /** English panel for multi-series arrangements */
 export const barSeriesControls = definePreviewControls({
@@ -16,7 +17,23 @@ export const barSeriesControls = definePreviewControls({
   sections: [
     {
       label: 'Data',
+      defaultCollapsed: true,
       controls: [{ kind: 'table', id: 'sales', label: 'Grouped sales', rows: sales }],
+    },
+    {
+      label: 'Coordinate',
+      controls: [
+        {
+          kind: 'select',
+          id: BAR_SERIES_COORDINATE_ID,
+          label: 'Projection',
+          defaultValue: 'cartesian2D',
+          options: [
+            { value: 'cartesian2D', label: 'Cartesian' },
+            { value: 'polar2D', label: 'Polar' },
+          ],
+        },
+      ],
     },
     {
       label: 'Arrangement',
@@ -49,7 +66,7 @@ export const barSeriesControls = definePreviewControls({
         {
           kind: 'range',
           id: BAR_SERIES_GAP_ID,
-          label: 'Bar gap',
+          label: 'Band gap',
           defaultValue: 0,
           min: 0,
           max: 0.8,
@@ -64,11 +81,13 @@ export const barSeriesControls = definePreviewControls({
 export const previewControlContract = {
   controls: barSeriesControls,
   canonicalValues: {
+    [BAR_SERIES_COORDINATE_ID]: 'cartesian2D',
     [BAR_SERIES_MODE_ID]: 'stack',
     [BAR_SERIES_STACK_OFFSET_ID]: 'zero',
     [BAR_SERIES_GAP_ID]: 0,
   },
   relatedApis: [
+    'Plot.coordinate',
     'IntervalMark.series',
     'IntervalMark.group',
     'IntervalMark.arrangement',

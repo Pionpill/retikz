@@ -1,9 +1,9 @@
 import type { IRDataScalarValue } from '@retikz/data';
-import type { IRTableCell, ManualTableSpecInput, TableRowKindValue } from '@retikz/table';
+import type { IRManualTableCell, ManualTableSpecInput, TableRowKindValue } from '@retikz/table';
 import type { ReactElement, ReactNode } from 'react';
 
 import { ScalarValueSchema } from '@retikz/data';
-import { TableCellPayloadKind, TableRowKind } from '@retikz/table';
+import { TableRowKind } from '@retikz/table';
 import { isValidElement } from 'react';
 
 import type { CellProps } from './cell';
@@ -13,8 +13,8 @@ import { Cell } from './cell';
 import { visitTableChildren } from './child-traversal';
 import { Row } from './row';
 
-/** ManualTable children 收集后交给现有 plain constructor 的结构输入 */
-export type ManualStructureInput = Pick<ManualTableSpecInput, 'cells' | 'rowKinds'>;
+/** ManualTable children 收集后交给 plain constructor 的矩形结构输入 */
+export type ManualStructureInput = Pick<ManualTableSpecInput, 'rows' | 'rowKinds'>;
 
 /** 判断节点是否为 Row marker */
 const isRowElement = (child: ReactNode): child is ReactElement<RowProps, typeof Row> =>
@@ -33,8 +33,8 @@ const parseScalarValue = (value: unknown, row: number, column: number): IRDataSc
   }
 };
 
-/** 把单个 Cell marker 转成带显式地址的 Table Cell */
-const buildCell = (element: ReactElement<CellProps, typeof Cell>, row: number, column: number): IRTableCell => {
+/** 把单个 Cell marker 转成 addressless manual Table Cell */
+const buildCell = (element: ReactElement<CellProps, typeof Cell>, row: number, column: number): IRManualTableCell => {
   const { children, value, content, presentation, ...fields } = element.props;
   const hasChildren = Object.hasOwn(element.props, 'children');
   const hasValue = Object.hasOwn(element.props, 'value');
@@ -51,24 +51,19 @@ const buildCell = (element: ReactElement<CellProps, typeof Cell>, row: number, c
     }
     return {
       ...fields,
-      address: { row, column },
-      payload: { kind: TableCellPayloadKind.Content, content },
+      content,
     };
   }
   const scalar = parseScalarValue(hasValue ? value : children, row, column);
   return {
     ...fields,
-    address: { row, column },
-    payload: {
-      kind: TableCellPayloadKind.Value,
-      value: scalar,
-      ...(presentation === undefined ? {} : { presentation }),
-    },
+    value: scalar,
+    ...(presentation === undefined ? {} : { presentation }),
   };
 };
 
-/** 从 Row 与 Cell marker children 构造 manual Table 的显式结构 */
-export const buildManualStructure = (children: ReactNode, rows: number, columns: number): ManualStructureInput => {
+/** 从 Row 与 Cell marker children 构造 manual Table 的矩形 rows */
+export const buildManualStructure = (children: ReactNode): ManualStructureInput => {
   const rowElements: Array<ReactElement<RowProps, typeof Row>> = [];
   visitTableChildren(children, child => {
     if (!isRowElement(child)) {
@@ -76,14 +71,13 @@ export const buildManualStructure = (children: ReactNode, rows: number, columns:
     }
     rowElements.push(child);
   });
-  if (rowElements.length !== rows) {
-    throw new Error(`table react: ManualTable rows expected ${rows}, received ${rowElements.length}`);
-  }
+  if (rowElements.length === 0) throw new Error('table react: ManualTable children require at least one Row');
 
   const hasExplicitRowKind = rowElements.some(rowElement => rowElement.props.kind !== undefined);
   const rowKinds: Array<TableRowKindValue> = rowElements.map(rowElement => rowElement.props.kind ?? TableRowKind.Body);
-  const occupancy = Array.from({ length: rows }, () => Array.from<boolean>({ length: columns }).fill(false));
-  const cells: Array<IRTableCell> = [];
+  const occupancy = Array.from({ length: rowElements.length }, () => [] as Array<boolean>);
+  const entries: Array<{ row: number; column: number; cell: IRManualTableCell }> = [];
+  let columnCount = 0;
   rowElements.forEach((rowElement, rowIndex) => {
     const { children: rowChildren } = rowElement.props;
 
@@ -94,17 +88,15 @@ export const buildManualStructure = (children: ReactNode, rows: number, columns:
       }
       rowCells.push(child);
     });
-    if (rowCells.length > columns) {
-      throw new Error(`table react: Row ${rowIndex} received ${rowCells.length} Cell children, columns is ${columns}`);
-    }
     rowCells.forEach(cell => {
-      const columnIndex = occupancy[rowIndex].findIndex(occupied => !occupied);
-      if (columnIndex < 0) {
-        throw new Error(`table react: Row ${rowIndex} has no unoccupied Cell slot`);
-      }
+      let columnIndex = 0;
+      while (occupancy[rowIndex][columnIndex]) columnIndex += 1;
       const rowSpan = cell.props.span?.rows ?? 1;
       const columnSpan = cell.props.span?.columns ?? 1;
-      if (rowIndex + rowSpan > rows || columnIndex + columnSpan > columns) {
+      if (!Number.isInteger(rowSpan) || rowSpan <= 0 || !Number.isInteger(columnSpan) || columnSpan <= 0) {
+        throw new Error(`table react: Cell at row ${rowIndex}, column ${columnIndex} span must be positive integers`);
+      }
+      if (rowIndex + rowSpan > rowElements.length) {
         throw new Error(`table react: Cell at row ${rowIndex}, column ${columnIndex} span is out of bounds`);
       }
       for (let occupiedRow = rowIndex; occupiedRow < rowIndex + rowSpan; occupiedRow += 1) {
@@ -124,12 +116,21 @@ export const buildManualStructure = (children: ReactNode, rows: number, columns:
           occupancy[occupiedRow][occupiedColumn] = true;
         }
       }
-      cells.push(buildCell(cell, rowIndex, columnIndex));
+      entries.push({ row: rowIndex, column: columnIndex, cell: buildCell(cell, rowIndex, columnIndex) });
+      columnCount = Math.max(columnCount, columnIndex + columnSpan);
     });
   });
 
+  if (entries.length === 0) {
+    throw new Error('table react: ManualTable Row children require at least one Cell to infer column count');
+  }
+  const rows = Array.from({ length: rowElements.length }, () =>
+    Array.from<IRManualTableCell | null>({ length: columnCount }).fill(null),
+  );
+  for (const entry of entries) rows[entry.row][entry.column] = entry.cell;
+
   return {
-    cells,
+    rows,
     ...(hasExplicitRowKind ? { rowKinds } : {}),
   };
 };

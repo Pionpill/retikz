@@ -7,7 +7,7 @@ export type TypeRepr =
   | { kind: 'tuple'; elements: Array<TypeRepr> }
   | { kind: 'union'; members: Array<TypeRepr> }
   | { kind: 'ref'; name: string; url: string } // 命中注册表
-  | { kind: 'object'; fields: Array<ObjectField> } // 匿名/未注册 object，就地展开
+  | { kind: 'object'; fields: Array<ObjectField>; additionalProperties: boolean } // 匿名/未注册 object，就地展开
   | { kind: 'unknown'; note: string };
 
 export type ObjectField = {

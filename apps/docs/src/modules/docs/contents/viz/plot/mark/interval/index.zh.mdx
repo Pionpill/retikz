@@ -39,57 +39,71 @@ IntervalMark 是底层 cell mark：它只负责把每行数据变成一个正交
 
 ## 例子
 
-### 配置基础柱形
+下面前四个示例都可以在“坐标系”中切换笛卡尔与极坐标。IntervalMark 的区间配置保持不变：笛卡尔坐标通常把 cell 投影成矩形，极坐标通常把同一个 cell 投影成扇区或环形网格。
+
+### 基础用法
 
 `x` / `y` 是最小柱形写法：`x` 绑定分类字段，`y` 绑定数值字段。坐标系会把分类字段解释为 band，把数值字段解释为从 `0` 到值的 span。
 
-`direction="horizontal"` 会交换柱形角色：`x` 仍然绑定数值字段，但解释为从 `0` 到值的长度；`y` 绑定分类字段，并自动推断为 band。横向多系列编排会由 `arrangement` 入口统一表达。
+在笛卡尔坐标中，`direction="horizontal"` 会交换分类与数值角色；极坐标没有横向柱语义，因此切换到极坐标后仍使用 `x` 作为角向 band、`y` 作为径向 span。
 
-方向、柱间距和常用 cell 外观集中在同一个 playground：切换方向时观察 `x` / `y` 角色如何交换，也可以调整圆角、透明度、描边、标签和阴影。纵向柱形在分类 x 轴使用 `<Scale type="band" paddingInner={gap} paddingOuter={0.15} />`；横向柱形的分类 y 轴使用 `paddingOuter={0}`，左右空间改由连续 x 轴的 `domainPadding` 提供。本页所有柱形 playground 的柱间距默认都是 `0`。样式最终会下沉到每个 cell 的 core `Node`。
+同一个 playground 继续提供柱间距、圆角、透明度、描边、标签和阴影。它们只装饰最终生成的 core `Node`，不会改变区间来源。
 
-<ComponentPreview files={['bar-position', 'bar-basic.data.ts']} controls={{ name: 'bar-basic' }} size="md" />
+<ComponentPreview
+  files={['bar-position', 'bar-basic.data.ts']}
+  controls={{ name: 'bar-basic' }}
+  size="lg"
+  caption="切换坐标系观察同一组 x / y 区间如何从矩形柱投影为径向柱。"
+/>
 
-### 使用连续区间
+### 系列排列
 
-`x0` / `x1` 是连续区间写法。直方图先用 bin transform 产出 `binStart` / `binEnd`，再由 IntervalMark 把它们作为 `bounds.x=extent(x0,x1)`；比例宽度模式则用 `width` 按 GDP 分配柱宽，并用 `x` 显示国家标签。通过 control 切换区间来源，箱数只在直方图模式下显示；左右、上下留白分别调整 x / y 连续比例尺的 `domainPadding`，默认都为 `0`。
+`arrangement` 控制多个系列如何共享一个分类 band：`dodge` 切成并排子带，`stack` 累积为连续 extent，`normalize-stack` 先按分类归一化再堆叠。`group` 决定编排分组，`color` 决定视觉着色。
+
+切换坐标系只改变这些区间的投影方向：并排、堆叠和百分比堆叠的编排关系保持不变。`stackOffset` 只在普通堆叠下显示，可切换从零、归一化、正负分离、居中或重叠基线。
+
+<ComponentPreview
+  files={['bar-series', 'bar-grouped.data.ts']}
+  controls={{ name: 'bar-grouped' }}
+  size="lg"
+  caption="对比同一系列排列在笛卡尔与极坐标中的矩形柱和径向柱。"
+/>
+
+### 连续区间
+
+`x0` / `x1` 是连续 extent 写法。直方图先用 bin transform 产出 `binStart` / `binEnd`，IntervalMark 再把它们作为 x 区间；比例宽度模式则用 `width` 按 GDP 分配连续区间宽度。
+
+在极坐标中，连续 x 区间成为连续角区间，y 仍表达径向长度。通过 control 切换区间来源，箱数只在直方图模式下显示；左右、上下留白继续作用于对应的连续比例尺。
 
 <ComponentPreview
   files={['interval-histogram', 'interval-histogram.data.ts', 'bar-variable-width.data.ts']}
-  size="md"
+  size="lg"
+  caption="切换模式比较 extent 与 proportional，再切换坐标系观察连续区间如何映射到角向。"
 />
 
-### 显式描述二维 cell
+### 二维 cell
 
-`bounds` 用来覆盖默认推断。热图需要两个方向都是 band，因此显式写 `bounds={{ x: { kind: 'band' }, y: { kind: 'band' } }}`。
+`bounds` 用来覆盖默认推断。热图需要两个方向都是 band，因此显式写 `bounds={{ x: { kind: 'band' }, y: { kind: 'band' } }}`；把 y 改为 `full` 时，每个 x band 会占满另一维。
 
-关闭颜色映射后，同一套双 band 区间会画成固定网格；它仍然是 IntervalMark，只是没有把单元格值映射成填充色。
+同一套二维区间在笛卡尔坐标中形成矩形网格，在极坐标中形成环形 cell。关闭颜色映射只会改成统一填充，不会改变 cell 边界。
 
-<ComponentPreview files={['rect-bounds', 'rect-heatmap.data.ts']} size="md" />
+<ComponentPreview
+  files={['rect-bounds', 'rect-heatmap.data.ts']}
+  size="lg"
+  caption="切换坐标系观察 band × band 如何从矩形网格投影为环形网格。"
+/>
 
-### 并排与堆叠系列
-
-`arrangement` 控制多系列区间如何放进同一个分类槽：`dodge` 并排、`stack` 堆叠、`normalize-stack` 百分比堆叠。`group` 是编排字段，决定子带或堆叠段；`color` 是着色字段，可以与 `group` 相同，也可以单独指定。`series` 仍可作为兼容快捷写法：未写 `group` / `color` 时，它会同时作为默认编排字段和颜色字段。柱间距继续由分类维度的 band scale 控制。
-`arrangement="stack"` 可配 `stackOffset`：`zero` 从 0 累加，`normalize` 把每个分类堆叠归一到 0..1，`diverging` 正负分离，`center` 居中，`overlap` 让每段都从 0 起画。若需要百分比堆叠，直接写 `percent` 或 `arrangement="normalize-stack"`，它会先把分类内值归一化到 0..100，再堆叠。
-
-<ComponentPreview files={['bar-series', 'bar-grouped.data.ts']} controls={{ name: 'bar-grouped' }} size="md" />
-
-### 只变换当前区间层
-
-IntervalMark 也可以直接通过自己的 `transform` 获取派生字段。下面的灰点展示门店原始收入，柱层只在当前图元内执行 `derive-interval`，把每行 `revenue` 派生成从 0 到收入值的区间。
-
-<ComponentPreview files={['bar-transform', 'bar-transform.data.ts']} size="md" />
-
-### 在极坐标中生成区间
-
-同一个 `x` / `y` 区间切到 `coordinate="polar2D"` 后，`x` band 会被解释成角向 band，`y` span 会被解释成半径方向长度。
-
-<ComponentPreview files={['bar-radial', 'bar-radial.data.ts']} size="md" />
+### 饼图与环图
 
 `angle` 是饼图 / 环图的便捷入口：它会把份额字段累积成角向 extent，半径方向使用 full。环图不是新的 mark，只是 polar 坐标系配置了 `innerRadius`。
 
-`padAngle` 留出真实角向间隔；`pull` 沿扇区中线静态外移，单位是画布 user units。数字会作用到所有扇区，字符串会绑定数据字段。下面用饼图、环图和突出扇区三个 preset 共享同一个场景。
+这个入口只在极坐标下有效，因此不提供无效的坐标切换。`padAngle` 留出真实角向间隔；`pull` 沿扇区中线静态外移。下面用饼图、环图和突出扇区三个 preset 共享同一个场景。
 
-<ComponentPreview files={['interval-sector', 'interval-sector.data.ts']} size="md" />
+<ComponentPreview
+  files={['interval-sector', 'interval-sector.data.ts']}
+  size="lg"
+  caption="angle 固定使用极坐标；调整内半径即可在饼图与环图之间切换。"
+/>
 
 ## 技术原理
 

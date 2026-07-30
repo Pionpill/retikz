@@ -1,151 +1,32 @@
 ---
-title: Provenance
-description: Provenance keeps transformed rows traceable to their original inputs and uses optional runtime events to explain how data was processed.
+title: Data Traceability
+description: Data traceability connects row provenance, transformation history, and Plot semantics so hosts can inspect, explain, and audit a visualization run.
 ---
 
-After parsing, sorting, or summarization, an output row may no longer equal one row from the original dataset. `@retikz/data` provenance answers two separate questions: **where did this row come from**, and **what work did this run perform**?
+Data traceability begins with source identity and runtime lineage established by Data, then lets consumers such as Plot add their own host semantics. Data answers where data came from and what happened to it; Plot explains how that data became marks. Each layer keeps its own package boundary and public entry points.
 
-Provenance is a host-independent Data capability. It does not create Plot mark ids or define tooltip and hit-testing behavior. This page uses Plot, Table, and other hosts as consumer examples; those hosts are not part of the Data contract.
+Enable these capabilities only for trace-back, diagnostics, or audits. Runtime lineage does not enter JSON IR, and Plot's complete audit artifact is not automatically written into Scene metadata.
 
-## Overall Flow
+## Responsibilities
 
-<ComponentPreview files="provenance-flow" size="xs" hideCode />
+| Layer           | Responsibility                                                        | Reach for it when                                            |
+| --------------- | --------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Data Provenance | Propagate row sources and record transform and statistical operations | Explaining row origins or inspecting data processing         |
+| Plot Lineage    | Add mark, encoding, scale, layout, and locator semantics              | Auditing visualization runs or tracing marks back to sources |
 
-Source identity is established when data enters the transform pipeline. Row-preserving transforms keep one source, aggregation transforms merge several sources into a set, and the result is delivered beside canonical rows. Consumers do not have to infer provenance again from field values or output position.
+## Chapters
 
-## Two Provenance Artifacts
-
-<ComponentPreview files="provenance-artifacts" size="sm" hideCode />
-
-Data separates provenance that travels with rows from events that explain one execution, so audit information does not become business data.
-
-| Artifact                | Carrier                                   | Question answered                       | Lifetime                               |
-| ----------------------- | ----------------------------------------- | --------------------------------------- | -------------------------------------- |
-| Row provenance metadata | `SOURCE_INDEX` / `SOURCE_INDICES` Symbols | Which input rows produced this row      | Travels with the row                   |
-| Runtime lineage events  | `DataLineageRun.events`                   | Which stages, fields, and operators ran | Returned by the call or sent to `sink` |
-
-### Row Provenance Metadata
-
-`SOURCE_INDEX` and `SOURCE_INDICES` are Symbol keys, not string field names:
-
-| Symbol           | When it exists                                        | Reader                   |
-| ---------------- | ----------------------------------------------------- | ------------------------ |
-| `SOURCE_INDEX`   | The row still traces to exactly one original input    | `readSourceIndex(row)`   |
-| `SOURCE_INDICES` | The row summarizes, groups, or aggregates many inputs | `readSourceIndices(row)` |
-
-Object spread preserves these enumerable Symbols, so ordinary row-preserving transforms propagate them naturally. Field-path resolution and `JSON.stringify` ignore them, keeping data fields and serializable config clean. Use `tagSourceIndex` when assembling a Data pipeline directly; `applyTransformsWithLineage` already tags its inputs.
-
-### Runtime Lineage Events
-
-Lineage events can record the source, transform steps, field flow, reducers, selectors, or bounded row samples. They are not written back into rows and do not enter JSON IR. Runtime information such as transformed indexes, transform kinds, and field flow belongs to events or host-specific artifacts, not to universal Data row fields.
-
-## How Sources Propagate
-
-<ComponentPreview files="provenance-transform" size="sm" hideCode />
-
-| Transform shape                           | Provenance meaning                                                             |
-| ----------------------------------------- | ------------------------------------------------------------------------------ |
-| Stable reorder such as `sort`             | The row still comes from the same input; preserve `SOURCE_INDEX`               |
-| Representative selection such as `select` | The output is the selected original row; preserve that row's source            |
-| Detail annotation such as `annotate`      | Every detail row keeps its own source; added statistics do not change identity |
-| Group summary such as `summarize`         | The output represents the group; write `SOURCE_INDICES`                        |
-| Custom row-changing transform             | If an output represents a group, merge sources with `context.groupProvenance`  |
-
-The key invariant is: **never invent one source when the result is not uniquely traceable**. A grouped total is not one order; it is derived from a set of orders and should carry that source set.
-
-## Recording Calculation Lineage
-
-Use `applyTransformsWithLineage` instead of `applyTransforms` when you need transform order, field inputs and outputs, or statistical sub-operators. Both execute the same transform Definitions; the former additionally returns runtime events.
-
-```ts
-import { applyTransformsWithLineage } from '@retikz/data';
-
-const { rows, lineage } = applyTransformsWithLineage(sourceRows, operations, {
-  lineage: {
-    sourceIdentity: { mode: 'summary', maxIndices: 10 },
-    fieldFlow: true,
-    reducerOperations: true,
-    rowSamples: { maxRows: 5, fields: ['region', 'revenue', 'total'] },
-  },
-});
-```
-
-`lineage: {}` records only source identity summaries and transform-step summaries by default, including order, kind, input/output row counts, and field sets. Everything else is opt-in:
-
-| Option               | Default                     | Records                                                       |
-| -------------------- | --------------------------- | ------------------------------------------------------------- |
-| `sourceIdentity`     | `summary`, up to 20 indexes | Source count, bounded index prefix, and truncation state      |
-| `transformSteps`     | `true`                      | Transform order, kind, row counts, and field sets             |
-| `fieldFlow`          | `false`                     | Fields read and produced by each step                         |
-| `reducerOperations`  | `false`                     | Reducer config, fields, row count, and source summary         |
-| `selectorOperations` | `false`                     | Selector config, input source, and selected source summary    |
-| `rowSamples`         | `false`                     | Before/after samples bounded by row count and field whitelist |
-| `calculationDetails` | `false`                     | Reducer inputs or selector candidates with the same bounds    |
-
-`sourceIdentity: { mode: 'full' }` records every source index and must be enabled explicitly by the host. `rowSamples` and `calculationDetails` require a positive `maxRows` and a non-empty `fields` whitelist so whole rows are never copied by default.
-
-When `lineage.sink` is present, events stream to the callback and are not retained in the returned `lineage.events` by default. Set `retainEvents: true` only when the host needs both streaming and the complete array.
-
-## Consumer Boundary
-
-<ComponentPreview files="provenance-consumers" size="md" hideCode />
-
-Data delivers rows, row provenance, and optional lineage events. Each host decides how to turn them into a view, interaction, or audit panel.
-
-| Consumer    | Typical use                                                         |
-| ----------- | ------------------------------------------------------------------- |
-| Plot        | Enrich Data lineage with mark, scale, and layout semantics          |
-| Table       | Explain which details produced summary, filtered, or outlier rows   |
-| Other hosts | Trace aggregated, sampled, or derived outputs under their contracts |
-
-Ordinary field binding, sorting, and summarization usually do not require reading provenance directly. It primarily serves trace-back, diagnostics, and audit use cases. See [Plot Lineage](/viz/plot/lineage) for Plot-specific runtime semantics.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'Row provenance Symbols and propagation helpers',
-      path: 'packages/viz/data/src/pipeline/provenance.ts',
-      startLine: 1,
-      endLine: 56,
-    },
-    {
-      label: 'Data lineage options and event contracts',
-      path: 'packages/viz/data/src/contract/lineage.ts',
-      startLine: 25,
-      endLine: 126,
-    },
-    {
-      label: 'Lineage defaults and safe whitelists',
-      path: 'packages/viz/data/src/pipeline/lineage.ts',
-      startLine: 43,
-      endLine: 99,
-    },
-    {
-      label: 'Transform entry with lineage',
-      path: 'packages/viz/data/src/pipeline/transform.ts',
-      startLine: 78,
-      endLine: 130,
-    },
-  ]}
-/>
-
-## Further Reading
-
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-  <LinkedCard href="/viz/data/transform">
-    <span className="font-semibold">Data Transforms</span>
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/data/provenance/data">
+    <span className="font-semibold">Data Provenance</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Understand how each transform changes rows and fields.
+      Understand row metadata, runtime events, and their propagation boundaries.
     </span>
   </LinkedCard>
-  <LinkedCard href="/viz/data/transform/extensions">
-    <span className="font-semibold">Extension Mechanisms</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Preserve provenance in custom transforms.</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/lineage">
+  <LinkedCard href="/viz/data/provenance/plot">
     <span className="font-semibold">Plot Lineage</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Enrich Data provenance with Plot runtime semantics.
+      Extend Data lineage into mark audits and interaction trace-back.
     </span>
   </LinkedCard>
 </div>

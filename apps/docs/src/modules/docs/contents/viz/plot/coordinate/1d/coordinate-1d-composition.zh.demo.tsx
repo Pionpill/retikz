@@ -7,6 +7,7 @@ import { defineControlledPreview } from '@/modules/docs/preview';
 import {
   COORDINATE_1D_COMPOSITION_CONTROL_IDS,
   coordinate1DCompositionControls,
+  coordinate1DCompositionOperation,
   previewControlContract,
 } from './coordinate-1d-composition.controls';
 import { coordinate1DCompositionRows } from './coordinate-1d-composition.zh.data';
@@ -57,13 +58,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         zIndex={2}
       />
       <PointMark
-        transform={[
-          {
-            kind: 'summarize',
-            groupBy: ['practiceX', 'practiceId', 'practiceLabel', 'practiceGlyph', 'relationColor'],
-            metrics: [{ kind: 'count', as: 'thingCount' }],
-          },
-        ]}
+        transform={[coordinate1DCompositionOperation]}
         x="practiceX"
         anchorId={{ prefix: 'practice', field: 'practiceId' }}
         text="practiceGlyph"
@@ -77,13 +72,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       />
       {values[COORDINATE_1D_COMPOSITION_CONTROL_IDS.targetLabelVisible] ? (
         <PointMark
-          transform={[
-            {
-              kind: 'summarize',
-              groupBy: ['practiceX', 'practiceId', 'practiceLabel', 'practiceGlyph', 'relationColor'],
-              metrics: [{ kind: 'count', as: 'thingCount' }],
-            },
-          ]}
+          transform={[coordinate1DCompositionOperation]}
           x="practiceX"
           text="practiceLabel"
           textColor="#334155"

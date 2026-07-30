@@ -15,12 +15,13 @@ import { useSourcePanelState } from '../../src/modules/docs/components/component
 
 type ProbeProps = {
   source: ComponentRenderSource;
+  defaultSourceFile?: string;
   onState: (state: SourcePanelState) => void;
 };
 
 const Probe: FC<ProbeProps> = props => {
-  const { source, onState } = props;
-  const state = useSourcePanelState(source);
+  const { source, defaultSourceFile, onState } = props;
+  const state = useSourcePanelState(source, defaultSourceFile);
   onState(state);
   return null;
 };
@@ -99,6 +100,86 @@ describe('useSourcePanelState', () => {
     expect(card!.setActiveFileIndex).not.toBe(dialog!.setActiveFileIndex);
     expect(card!.setDiffMode).not.toBe(dialog!.setDiffMode);
     expect(card!.copyActiveFile).not.toBe(dialog!.copyActiveFile);
+  });
+
+  it('按文件名初始化 React 源码视图的默认文件', () => {
+    const source: ComponentRenderSource = {
+      react: {
+        files: [
+          { filename: 'example.demo.tsx', code: 'export default null;', lang: 'tsx', isMain: true },
+          { filename: 'example-preview.tsx', code: 'export const renderExample = () => null;', lang: 'tsx' },
+        ],
+      },
+    };
+    let latest: SourcePanelState | null = null;
+
+    renderToStaticMarkup(
+      <Probe source={source} defaultSourceFile="example-preview.tsx" onState={state => (latest = state)} />,
+    );
+
+    expect(latest).not.toBeNull();
+    const state: SourcePanelState = latest!;
+    expect(state.activeFileIndex).toBe(1);
+    expect(state.activeFile?.filename).toBe('example-preview.tsx');
+  });
+
+  it('默认源码文件不存在时回退主 demo', () => {
+    const source: ComponentRenderSource = {
+      react: {
+        files: [
+          { filename: 'example.demo.tsx', code: 'export default null;', lang: 'tsx', isMain: true },
+          { filename: 'example-preview.tsx', code: 'export const renderExample = () => null;', lang: 'tsx' },
+        ],
+      },
+    };
+    let latest: SourcePanelState | null = null;
+
+    renderToStaticMarkup(
+      <Probe source={source} defaultSourceFile="missing-preview.tsx" onState={state => (latest = state)} />,
+    );
+
+    expect(latest!.activeFileIndex).toBe(0);
+    expect(latest!.activeFile?.filename).toBe('example.demo.tsx');
+  });
+
+  it('按视图独立保存源码文件位置', async () => {
+    const source: ComponentRenderSource = {
+      react: {
+        files: [
+          { filename: 'example.demo.tsx', code: 'export default null;', lang: 'tsx', isMain: true },
+          { filename: 'example-preview.tsx', code: 'export const renderExample = () => null;', lang: 'tsx' },
+        ],
+      },
+      vanilla: {
+        files: [
+          { filename: 'example.vanilla.ts', code: 'render({});', lang: 'ts', isMain: true },
+          { filename: 'example-preview.tsx', code: 'export const renderExample = () => null;', lang: 'tsx' },
+        ],
+      },
+      ir: { files: [{ filename: 'example.ir.json', code: '{}', lang: 'json', isMain: true }] },
+    };
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    renderedRoots.push(root);
+    let latest: SourcePanelState | null = null;
+
+    await act(() =>
+      root.render(
+        <Probe source={source} defaultSourceFile="example-preview.tsx" onState={state => (latest = state)} />,
+      ),
+    );
+
+    expect(latest!.activeFile?.filename).toBe('example-preview.tsx');
+
+    await act(() => latest!.setView('vanilla'));
+    expect(latest!.activeFile?.filename).toBe('example.vanilla.ts');
+
+    await act(() => latest!.setView('ir'));
+    expect(latest!.activeFile?.filename).toBe('example.ir.json');
+
+    await act(() => latest!.setView('react'));
+    expect(latest!.activeFile?.filename).toBe('example-preview.tsx');
   });
 
   it('父级无关状态更新时保持 source state 引用稳定', async () => {

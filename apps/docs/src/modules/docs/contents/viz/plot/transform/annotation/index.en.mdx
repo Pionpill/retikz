@@ -18,13 +18,13 @@ Use `stack` to generate cumulative intervals for detail rows. Use `normalize` to
 
 Switch `offset` to compare standard accumulation, normalization, centering, and overlapping intervals. Normalize mode uses 0–1, center mode uses −60–60, and the other modes use a 0–120 y-axis.
 
-<ComponentPreview files={['transform-stack', 'transform-stack.data.ts']} size="md" />
+<ComponentPreview files={['transform-stack', 'transform-stack.data.ts']} size="lg" />
 
 ### Diverging Values
 
 `diverging` is for data containing both positive and negative values. Positive segments accumulate upward from 0, while negative segments accumulate downward. This signed input must not be passed to `normalize`, whose share contract is non-negative.
 
-<ComponentPreview files={['transform-stack-diverging', 'transform-stack-diverging.data.ts']} size="md" />
+<ComponentPreview files={['transform-stack-diverging', 'transform-stack-diverging.data.ts']} size="lg" />
 
 ### API Reference
 
@@ -43,7 +43,7 @@ Switch `offset` to compare standard accumulation, normalization, centering, and 
 
 `stack` first partitions independent stacks by `x`, then orders series by the first global appearance of each `groupBy` value. The `offset` node in the figure only changes bound calculation, not grouping or output row order.
 
-<ComponentPreview files="transform-stack-logic" hideCode size="xl" />
+<ComponentPreview files="transform-stack-logic" hideCode size="xs" />
 
 Each group calculates bounds according to `offset`:
 
@@ -73,7 +73,7 @@ Each group calculates bounds according to `offset`:
 
 Switch `basis` and grouping scope to compare 0–1 fractions, 0–100 percentages, per-quarter normalization, and global normalization.
 
-<ComponentPreview files={['transform-normalize', 'transform-normalize.data.ts']} size="md" />
+<ComponentPreview files={['transform-normalize', 'transform-normalize.data.ts']} size="lg" />
 
 ### API Reference
 
@@ -90,7 +90,7 @@ Switch `basis` and grouping scope to compare 0–1 fractions, 0–100 percentage
 
 `normalize` makes one pass to reject finite negative values and build group totals, then a second pass to write each row's share. The negative-value branch throws; the zero-sum guard is a normal output rule.
 
-<ComponentPreview files="transform-normalize-logic" hideCode size="xl" />
+<ComponentPreview files="transform-normalize-logic" hideCode size="sm" />
 
 When `groupBy` is omitted, every row shares one total. Multiple group fields form a composite key. Finite negative values throw; missing and non-finite values contribute 0 to both the total and the numerator.
 

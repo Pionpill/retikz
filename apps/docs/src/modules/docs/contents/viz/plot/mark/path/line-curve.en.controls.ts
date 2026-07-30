@@ -4,7 +4,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { PATH_CURVE_CONTROL_ID, PATH_CURVE_SHOW_POINTS_ID } from './line-curve.controls';
+import { PATH_CURVE_CONTROL_ID, PATH_CURVE_CONTROL_IDS, PATH_CURVE_SHOW_POINTS_ID } from './line-curve.controls';
 import { curveSamples } from './line-curve.data';
 
 /** 路径连接方式的英文属性面板 */
@@ -14,7 +14,30 @@ export const lineCurveControls = definePreviewControls({
   sections: [
     {
       label: 'Data',
+      defaultCollapsed: true,
       controls: [{ kind: 'table', id: 'curveSamples', label: 'Curve samples', rows: curveSamples }],
+    },
+    {
+      label: 'Coordinate',
+      controls: [
+        {
+          kind: 'select',
+          id: PATH_CURVE_CONTROL_IDS.coordinate,
+          label: 'Projection',
+          defaultValue: 'cartesian2D',
+          options: [
+            { value: 'cartesian2D', label: 'Cartesian' },
+            { value: 'polar2D', label: 'Polar' },
+          ],
+        },
+        {
+          kind: 'switch',
+          id: PATH_CURVE_CONTROL_IDS.closed,
+          label: 'Close path',
+          defaultValue: false,
+          visibleWhen: { controlId: PATH_CURVE_CONTROL_IDS.coordinate, oneOf: ['polar2D'] },
+        },
+      ],
     },
     {
       label: 'Connection',
@@ -45,6 +68,41 @@ export const lineCurveControls = definePreviewControls({
         },
       ],
     },
+    {
+      label: 'Path style',
+      controls: [
+        {
+          kind: 'color',
+          id: PATH_CURVE_CONTROL_IDS.stroke,
+          label: 'Stroke',
+          defaultValue: '#0284c7',
+        },
+        {
+          kind: 'range',
+          id: PATH_CURVE_CONTROL_IDS.strokeWidth,
+          label: 'Stroke width',
+          defaultValue: 3,
+          min: 1,
+          max: 8,
+          step: 0.5,
+        },
+        {
+          kind: 'switch',
+          id: PATH_CURVE_CONTROL_IDS.dashed,
+          label: 'Dashed stroke',
+          defaultValue: false,
+        },
+        {
+          kind: 'range',
+          id: PATH_CURVE_CONTROL_IDS.opacity,
+          label: 'Opacity',
+          defaultValue: 0.9,
+          min: 0.2,
+          max: 1,
+          step: 0.05,
+        },
+      ],
+    },
   ],
 });
 
@@ -52,20 +110,52 @@ export const lineCurveControls = definePreviewControls({
 export const previewControlContract = {
   controls: lineCurveControls,
   canonicalValues: {
+    [PATH_CURVE_CONTROL_IDS.coordinate]: 'cartesian2D',
+    [PATH_CURVE_CONTROL_IDS.closed]: false,
     [PATH_CURVE_CONTROL_ID]: PathCurve.Linear,
     [PATH_CURVE_SHOW_POINTS_ID]: true,
+    [PATH_CURVE_CONTROL_IDS.stroke]: '#0284c7',
+    [PATH_CURVE_CONTROL_IDS.strokeWidth]: 3,
+    [PATH_CURVE_CONTROL_IDS.dashed]: false,
+    [PATH_CURVE_CONTROL_IDS.opacity]: 0.9,
   },
   presets: [
     {
       id: 'linear',
       label: 'Linear',
-      values: { [PATH_CURVE_CONTROL_ID]: PathCurve.Linear, [PATH_CURVE_SHOW_POINTS_ID]: true },
+      values: {
+        [PATH_CURVE_CONTROL_IDS.coordinate]: 'cartesian2D',
+        [PATH_CURVE_CONTROL_IDS.closed]: false,
+        [PATH_CURVE_CONTROL_ID]: PathCurve.Linear,
+        [PATH_CURVE_SHOW_POINTS_ID]: true,
+        [PATH_CURVE_CONTROL_IDS.stroke]: '#0284c7',
+        [PATH_CURVE_CONTROL_IDS.strokeWidth]: 3,
+        [PATH_CURVE_CONTROL_IDS.dashed]: false,
+        [PATH_CURVE_CONTROL_IDS.opacity]: 0.9,
+      },
     },
     {
       id: 'smooth',
       label: 'Catmull-Rom',
-      values: { [PATH_CURVE_CONTROL_ID]: PathCurve.CatmullRom, [PATH_CURVE_SHOW_POINTS_ID]: true },
+      values: {
+        [PATH_CURVE_CONTROL_IDS.coordinate]: 'cartesian2D',
+        [PATH_CURVE_CONTROL_IDS.closed]: false,
+        [PATH_CURVE_CONTROL_ID]: PathCurve.CatmullRom,
+        [PATH_CURVE_SHOW_POINTS_ID]: true,
+        [PATH_CURVE_CONTROL_IDS.stroke]: '#7c3aed',
+        [PATH_CURVE_CONTROL_IDS.strokeWidth]: 4,
+        [PATH_CURVE_CONTROL_IDS.dashed]: false,
+        [PATH_CURVE_CONTROL_IDS.opacity]: 0.9,
+      },
     },
   ],
-  relatedApis: ['PathMark.curve'],
+  relatedApis: [
+    'Plot.coordinate',
+    'PathMark.closed',
+    'PathMark.curve',
+    'PathMark.stroke',
+    'PathMark.strokeWidth',
+    'PathMark.dashPattern',
+    'PathMark.opacity',
+  ],
 } satisfies PreviewControlContract;
