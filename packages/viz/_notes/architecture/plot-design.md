@@ -288,7 +288,7 @@ viz domain 分为三类 API：
 
 ### 5.1 Chart API
 
-Chart API（包：`@retikz/chart`，框架表面由 `@retikz/chart-react` / `@retikz/chart-vanilla` 暴露）服务快速上手，允许传统 chart type / preset 入口。它是 plot 之上的 Tier 3 封装层，不是 plot grammar 的一部分。
+Chart API（包：`@retikz/chart`，框架表面由 `@retikz/chart-react` / `@retikz/chart-vanilla` 暴露）服务快速上手，允许传统 chart type / preset 入口。它是 plot 之上的 Tier 3 封装层，不是 plot grammar 的一部分。完整边界见 [`Chart 类型封装与 Plot-backed lowering 总设计`](./chart-design.md)，本节只保留 Plot 视角的摘要。
 
 示意：
 
@@ -300,9 +300,10 @@ Chart API（包：`@retikz/chart`，框架表面由 `@retikz/chart-react` / `@re
 
 约束：
 
-- Chart 可以定义自己的 JSON-safe `ChartSpec`，承载 type、series、默认装饰、主题 preset 与语义配置。
+- Chart 可以定义自己的 JSON-safe `ChartSpec`；单一根 data 与 Plot 保持一致，type 隐式选择完整 GoG 配方，IR 只保存数据角色、用户差异配置与显式追加内容。
 - ChartSpec 的唯一执行出口是 `lowerChartSpec(chartSpec): PlotSpec`。
-- Chart preset 必须可展开成 plot 底层表达 API。
+- Chart 的 Canonical Type 目录封闭，不提供 `defineChart` 或 Chart registry；扩展完全复用 Plot 的正式能力。
+- Chart type 必须可展开成 plot 底层表达 API；type 核心配方不可撤销，用户只能在其允许范围内调整，并可围绕本体语义追加 Plot Mark / Transform 等成员。
 - `line` / `bar` / `pie` 等坐标化图形展开成 plot primitive。
 - `tree` / `network` / `wordCloud` / `gauge` / `progress` / `pictogram` 等结构化图形展开成 plot layout transform + plot mark 组合。
 - Chart 不封装 table 能力；geo-backed type 等 geo 边界决策后再定。

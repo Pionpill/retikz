@@ -1,7 +1,7 @@
 # chart v0.1 Roadmap
 
 > 本文件汇总 `@retikz/chart` v0.1 的路线。chart 是 viz 的 Tier 3 封装层，依赖 `@retikz/data` 与 `@retikz/plot`，不拥有 renderer，不直接 lower 到 core。
-> 关联：[`plot v0 roadmap`](../../../v0/roadmap.md) · [`plot v0.2 roadmap`](../../../v0/v0.2/roadmap.md) · [`plot-design.md §5.1`](../../../../architecture/plot-design.md)
+> 关联：[`Chart 总设计`](../../../../architecture/chart-design.md) · [`Chart 封装完备设计`](../../../../architecture/chart-encapsulation-complete.md) · [`plot v0 roadmap`](../../../plot/v0/roadmap.md) · [`plot v0.2 roadmap`](../../../plot/v0/v0.2/roadmap.md) · [`plot-design.md §5.1`](../../../../architecture/plot-design.md)
 > ⚠️ 草案：由 2026-07-05 版本规划讨论开出，待人工 review。
 
 ## 定位
