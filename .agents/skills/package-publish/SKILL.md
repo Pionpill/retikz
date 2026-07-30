@@ -24,7 +24,7 @@ description: 'Use when 发布或准备发布 retikz npm 包、核对发布版本
 | -------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------- | --------------------- |
 | kernel   | `@retikz/math`, `@retikz/core`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla`, `@retikz/tex` | math -> core -> render -> react -> vanilla -> tex | `kernel-v<version>`   |
 | data     | `@retikz/data`                                                                                      | data                                              | `data-v<version>`     |
-| plot     | `@retikz/plot`, `@retikz/plot-vanilla`, `@retikz/plot-react`                                        | plot -> plot-vanilla -> plot-react                | `plot-v<version>`     |
+| plot     | `@retikz/plot`, `@retikz/plot-react`, `@retikz/plot-vanilla`                                        | plot -> plot-react -> plot-vanilla                | `plot-v<version>`     |
 | table    | `@retikz/table`, `@retikz/table-vanilla`, `@retikz/table-react`                                     | table -> table-vanilla -> table-react             | `table-v<version>`    |
 | standard | `@retikz/standard`, `@retikz/standard-vanilla`, `@retikz/standard-react`                            | standard -> standard-vanilla -> standard-react    | `standard-v<version>` |
 
