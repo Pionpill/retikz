@@ -3,9 +3,9 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import type {
   PreviewControlsDefinition,
   PreviewControlValuesFor,
-} from '../../src/modules/docs/components/component-preview';
+} from '../../src/modules/docs/components/component-preview/author';
 
-import { definePreviewControls } from '../../src/modules/docs/components/component-preview';
+import { definePreviewControls } from '../../src/modules/docs/components/component-preview/author';
 import {
   buildPreviewControlDefaults,
   getPreviewControlFields,
@@ -110,6 +110,90 @@ describe('preview controls definition', () => {
     });
 
     expect(definition.presentation).toBe('panel');
+  });
+
+  it('多视图 table 可按控件值解析行且不进入共享控件状态', () => {
+    const definition = definePreviewControls({
+      presentation: 'panel',
+      sections: [
+        {
+          controls: [
+            {
+              kind: 'table',
+              id: 'rows',
+              label: 'Rows',
+              views: [
+                { id: 'source', label: 'Source', rows: [{ x: 2 }] },
+                { id: 'result', label: 'Result', rows: values => [{ x: Number(values.factor) * 2 }] },
+              ],
+            },
+            { kind: 'number', id: 'factor', label: 'Factor', defaultValue: 2 },
+          ],
+        },
+      ],
+    });
+
+    expectTypeOf<PreviewControlValuesFor<typeof definition>>().toEqualTypeOf<{ factor: number }>();
+    expect(getPreviewControlFields(definition).map(field => field.id)).toEqual(['factor']);
+    expect(buildPreviewControlDefaults(definition)).toEqual({ factor: 2 });
+  });
+
+  it('拒绝 table 的单个 view、重复 view id 与空 label', () => {
+    const tableDefinitionOf = (views: ReadonlyArray<Record<string, unknown>>) =>
+      ({
+        presentation: 'panel',
+        sections: [{ controls: [{ kind: 'table', id: 'rows', label: 'Rows', views }] }],
+      }) as unknown as PreviewControlsDefinition;
+
+    expect(() => definePreviewControls(tableDefinitionOf([{ id: 'source', label: 'Source', rows: [] }]))).toThrow(
+      'Preview table control "rows" views must define at least two views.',
+    );
+    expect(() =>
+      definePreviewControls(
+        tableDefinitionOf([
+          { id: 'source', label: 'Source', rows: [] },
+          { id: 'source', label: 'Result', rows: [] },
+        ]),
+      ),
+    ).toThrow('Duplicate preview table view id "source" in control "rows".');
+    expect(() =>
+      definePreviewControls(
+        tableDefinitionOf([
+          { id: 'source', label: 'Source', rows: [] },
+          { id: 'result', label: ' ', rows: [] },
+        ]),
+      ),
+    ).toThrow('Preview table view "result" in control "rows" must define a label.');
+  });
+
+  it('拒绝 table 同时声明 rows 与 views 或声明无效静态 view rows', () => {
+    const definitionOf = (table: Record<string, unknown>) =>
+      ({
+        presentation: 'panel',
+        sections: [{ controls: [{ kind: 'table', id: 'rows', label: 'Rows', ...table }] }],
+      }) as unknown as PreviewControlsDefinition;
+
+    expect(() =>
+      definePreviewControls(
+        definitionOf({
+          rows: [],
+          views: [
+            { id: 'source', label: 'Source', rows: [] },
+            { id: 'result', label: 'Result', rows: [] },
+          ],
+        }),
+      ),
+    ).toThrow('Preview table control "rows" must define either rows or views.');
+    expect(() =>
+      definePreviewControls(
+        definitionOf({
+          views: [
+            { id: 'source', label: 'Source', rows: [] },
+            { id: 'result', label: 'Result', rows: null },
+          ],
+        }),
+      ),
+    ).toThrow('Preview table view "result" in control "rows" rows must be an array or resolver.');
   });
 
   it('拒绝 overlay table 与重复的显式列', () => {

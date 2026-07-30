@@ -17,6 +17,8 @@ This page is an extension-point dictionary. Use it to decide which mechanism own
 
 Definition capabilities use `XxxDefinition` and `defineXxx`; built-ins and custom definitions merge into a compile-local registry. Runtime registries hold host functions outside the compile contract. A host lowerer supplies an optional integration without expanding the general primitive model.
 
+Layout proposals are not a new registry. They are the closed, general child-evaluation contract inside each layout-aware `CompositeDefinition.compile` callback. Built-in children, third-party providers, and nested composites continue through the same composite / provider registries, compile environment, and replay transaction; Core has no child-type measurement whitelist.
+
 ## Capability index
 
 | Capability         | IR selection key   | Injection point                                                   |
@@ -41,7 +43,9 @@ Definition capabilities use `XxxDefinition` and `defineXxx`; built-ins and custo
 - Missing ordinary Definition keys fail loudly and list registered items.
 - Missing composites warn and skip the node during full compile; standalone lowering promotes the condition to an error.
 - The Composite registry accepts mutually exclusive `expand` and `compile` branches; `lowerIRToKernel` fails explicitly on a `compile` branch that requires the complete environment.
-- A layout-aware composite can create compile-local output children only through the callback's `replay()` and `scope()` builders. Duplicate replay, forged handles, and cross-compile or cross-callback use fail loudly.
+- A layout-aware composite's `layoutChild(child, proposal)` returns a resolved / failed outcome. Discarded failure stays isolated; selected failure must be promoted through the current callback's `raise()`, preserving the original provider, cause, source path, and `probe[...]` occurrence.
+- A proposal is validated and frozen by value for each call. Failures, results, replays, and output children instead have callback-local / compile-local ownership and are selected only through `replay()` / `raise()` / `scope()`. Reusing, forging, spread-copying, or transferring these ownership-bound objects across compiles or callbacks fails before any commit.
+- An ordinary error thrown by a provider may become a recoverable failed probe. Malformed provider output, invalid proposals, token misuse, and Core invariants remain fatal contract / invariant errors rather than discardable failures.
 - Schema and payload validation run before consuming a definition, and diagnostics identify the capability family and lookup key.
 
 ## Guides
@@ -122,16 +126,46 @@ Definition capabilities use `XxxDefinition` and `defineXxx`; built-ins and custo
       endLine: 97,
     },
     {
+      label: 'Public proposal, probe, failure, replay, and callback contracts',
+      path: 'packages/kernel/core/src/contract/composite/types.ts',
+      startLine: 20,
+      endLine: 205,
+    },
+    {
+      label: 'Classify recoverable, contract, and invariant errors by identity',
+      path: 'packages/kernel/core/src/compile/probe-failure.ts',
+      startLine: 67,
+      endLine: 78,
+    },
+    {
+      label: 'Safely normalize ordinary thrown values and enrich diagnostics',
+      path: 'packages/kernel/core/src/compile/probe-failure.ts',
+      startLine: 127,
+      endLine: 151,
+    },
+    {
+      label: 'Own failures and raise a selected failure',
+      path: 'packages/kernel/core/src/compile/probe-failure.ts',
+      startLine: 154,
+      endLine: 208,
+    },
+    {
+      label: 'Child probe isolation, fatal propagation, and resolved results',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1380,
+      endLine: 1501,
+    },
+    {
       label: 'Canvas custom animation-property runtime registry contract',
       path: 'packages/kernel/render/src/animation/registry.ts',
       startLine: 1,
       endLine: 18,
     },
     {
-      label: 'Pass animationProperties only to the Canvas host in React',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 487,
-      endLine: 544,
+      label: 'Build animationProperties config in the React retained host',
+      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
+      startLine: 173,
+      endLine: 191,
     },
   ]}
 />

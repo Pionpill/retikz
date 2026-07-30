@@ -4,10 +4,10 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** smooth 的有限点筛选、OLS 拟合、区间采样与预测输出 */
 const Demo: FC = () => (
-  <Layout width={440} height={380} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={720} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
       id="rows"
-      position={[-70, -150]}
+      position={[-295, 20]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}
@@ -22,7 +22,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="group"
-      position={[-70, -80]}
+      position={[-160, 20]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -37,7 +37,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="method"
-      position={[120, -10]}
+      position={[-10, -55]}
       stroke="gray"
       fill="gray"
       fillOpacity={0.06}
@@ -52,7 +52,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="fit"
-      position={[-70, -10]}
+      position={[-10, 20]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -67,7 +67,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="sampling"
-      position={[120, 60]}
+      position={[140, -55]}
       stroke="gray"
       fill="gray"
       fillOpacity={0.06}
@@ -82,7 +82,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="predict"
-      position={[-70, 60]}
+      position={[140, 20]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -97,7 +97,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="error"
-      position={[120, -80]}
+      position={[-10, 95]}
       stroke="red"
       fill="red"
       fillOpacity={0.06}
@@ -112,7 +112,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="output"
-      position={[-70, 140]}
+      position={[290, 20]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}

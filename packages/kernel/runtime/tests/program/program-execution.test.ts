@@ -19,6 +19,109 @@ const defineCounterOwner = (key = 'counter') =>
   });
 
 describe('runtime Program execution', () => {
+  it('默认 auto 向 Program 暴露 initial full 与 incremental update execution', () => {
+    const owner = defineCounterOwner();
+    const owners = createRuntimeOwnerRegistry({ builtins: [owner] });
+    const executions: Array<unknown> = [];
+    const program = defineRuntimeProgram<number, number, number, number>({
+      id: { owner: 'counter', key: 'execution-default' },
+      owners: [owner],
+      programs: [],
+      tracePhases: [],
+      artifact: { capture: value => value, readForProgram: value => value, read: value => value },
+      run: (view, context) => {
+        executions.push(context.execution);
+        return { kind: 'full', artifact: view.snapshot(owner).value };
+      },
+      update: (_previous, view, context) => {
+        executions.push(context.execution);
+        return { kind: 'incremental', artifact: view.snapshot(owner).value };
+      },
+    });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      initialSnapshots: [createRuntimeOwnerInput(owner, 1)],
+    });
+
+    const result = session.update({
+      baseRevision: session.revision(),
+      owners: [createRuntimeOwnerUpdate(owner, 2)],
+    });
+
+    expect(result.outcome).toBe('incremental');
+    expect(executions).toEqual(['full', 'incremental']);
+  });
+
+  it('full strategy 跳过 Program update 并只以 full execution 调用 run', () => {
+    const owner = defineCounterOwner();
+    const owners = createRuntimeOwnerRegistry({ builtins: [owner] });
+    const executions: Array<unknown> = [];
+    const update = vi.fn(() => ({ kind: 'incremental' as const, artifact: 999 }));
+    const program = defineRuntimeProgram<number, number, number, number>({
+      id: { owner: 'counter', key: 'forced-full' },
+      owners: [owner],
+      programs: [],
+      tracePhases: [],
+      artifact: { capture: value => value, readForProgram: value => value, read: value => value },
+      run: (view, context) => {
+        executions.push(context.execution);
+        return { kind: 'full', artifact: view.snapshot(owner).value };
+      },
+      update,
+    });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      updateStrategy: 'full',
+      initialSnapshots: [createRuntimeOwnerInput(owner, 1)],
+    });
+
+    const result = session.update({
+      baseRevision: session.revision(),
+      owners: [createRuntimeOwnerUpdate(owner, 2)],
+    });
+
+    expect(result).toEqual({ revision: 1, outcome: 'full', diagnostics: [] });
+    expect(update).not.toHaveBeenCalled();
+    expect(executions).toEqual(['full', 'full']);
+    expect(session.artifact(program)).toEqual({ revision: 1, value: 2 });
+  });
+
+  it('CandidateView 精确区分同一 Program 已声明 owner 的实际变化', () => {
+    const primaryOwner = defineCounterOwner('primary-changed');
+    const stableOwner = defineCounterOwner('stable-owner');
+    const owners = createRuntimeOwnerRegistry({ builtins: [primaryOwner, stableOwner] });
+    const observations: Array<Readonly<[boolean, boolean]>> = [];
+    const program = defineRuntimeProgram<number, number, number, number>({
+      id: { owner: 'primary-changed', key: 'changed-observer' },
+      owners: [primaryOwner, stableOwner],
+      programs: [],
+      tracePhases: [],
+      artifact: { capture: value => value, readForProgram: value => value, read: value => value },
+      run: view => ({ kind: 'full', artifact: view.snapshot(primaryOwner).value }),
+      update: (_previous, view) => {
+        observations.push(Object.freeze([view.changed(primaryOwner), view.changed(stableOwner)]));
+        return { kind: 'incremental', artifact: view.snapshot(primaryOwner).value };
+      },
+    });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      initialSnapshots: [createRuntimeOwnerInput(primaryOwner, 1), createRuntimeOwnerInput(stableOwner, 7)],
+    });
+
+    session.update({
+      baseRevision: session.revision(),
+      owners: [createRuntimeOwnerUpdate(primaryOwner, 2)],
+    });
+
+    expect(observations).toEqual([[true, false]]);
+  });
+
   it('只执行直接与传递失效分支，并复用无关 Program artifact', () => {
     const primaryOwner = defineCounterOwner('primary');
     const unrelatedOwner = defineCounterOwner('unrelated');
@@ -216,6 +319,7 @@ describe('runtime Program execution', () => {
     const session = createRuntimeSession({
       owners,
       programs,
+      updateStrategy: 'full',
       initialSnapshots: [createRuntimeOwnerInput(owner, 1)],
     });
     const baseRevision = session.revision();
@@ -250,7 +354,11 @@ describe('runtime Program execution', () => {
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
       run: upstreamRun,
     });
-    const downstreamRun = vi.fn(view => ({ kind: 'full' as const, artifact: view.artifact(upstream).value * 10 }));
+    const downstreamExecutions: Array<unknown> = [];
+    const downstreamRun = vi.fn((view, context) => {
+      downstreamExecutions.push(context.execution);
+      return { kind: 'full' as const, artifact: view.artifact(upstream).value * 10 };
+    });
     const downstreamUpdate = vi.fn((_previous, view) => ({
       kind: 'incremental' as const,
       artifact: view.artifact(upstream).value * 10,
@@ -280,6 +388,7 @@ describe('runtime Program execution', () => {
     expect(upstreamRun).toHaveBeenCalledTimes(2);
     expect(downstreamRun).toHaveBeenCalledTimes(2);
     expect(downstreamUpdate).not.toHaveBeenCalled();
+    expect(downstreamExecutions).toEqual(['full', 'full']);
     expect(session.artifact(upstream)).toEqual({ revision: 1, value: 2 });
     expect(session.artifact(downstream)).toEqual({ revision: 1, value: 20 });
   });
@@ -306,7 +415,11 @@ describe('runtime Program execution', () => {
       update: upstreamUpdate,
       observeCommit: upstreamObserver,
     });
-    const downstreamRun = vi.fn(view => ({ kind: 'full' as const, artifact: view.artifact(upstream).value * 10 }));
+    const fallbackDownstreamExecutions: Array<unknown> = [];
+    const downstreamRun = vi.fn((view, context) => {
+      fallbackDownstreamExecutions.push(context.execution);
+      return { kind: 'full' as const, artifact: view.artifact(upstream).value * 10 };
+    });
     const downstreamObserver = vi.fn();
     const downstreamUpdate = vi.fn((_previous, view) => ({
       kind: 'incremental' as const,
@@ -347,6 +460,7 @@ describe('runtime Program execution', () => {
     ]);
     expect(downstreamRun).toHaveBeenCalledTimes(2);
     expect(downstreamUpdate).not.toHaveBeenCalled();
+    expect(fallbackDownstreamExecutions).toEqual(['full', 'fallback']);
     expect(upstreamObserver).toHaveBeenCalledTimes(2);
     expect(downstreamObserver).toHaveBeenCalledTimes(2);
     expect(session.artifact(downstream)).toEqual({ revision: 1, value: 20 });
@@ -362,6 +476,7 @@ describe('runtime Program execution', () => {
     expect(session.artifact(downstream)).toEqual({ revision: 2, value: 20 });
     expect(downstreamRun).toHaveBeenCalledTimes(2);
     expect(downstreamUpdate).not.toHaveBeenCalled();
+    expect(fallbackDownstreamExecutions).toEqual(['full', 'fallback']);
     expect(upstreamObserver).toHaveBeenCalledTimes(2);
     expect(downstreamObserver).toHaveBeenCalledTimes(2);
   });

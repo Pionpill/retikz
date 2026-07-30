@@ -22,7 +22,7 @@ The diagram puts the atomic boundary at publish. The solid central path is one t
 
 Only `Publish pointer` advances the revision. A pre-publish failure retires candidates in reverse order while the current Snapshot and revision remain unchanged. Post-publish failures only enter the diagnostic queue; they never roll back the published result.
 
-During an active transaction or disposal, `update()`, `snapshot()`, `artifact()`, diagnostic drain, and another `dispose()` reject synchronous reentry. `revision()` always returns the revision already published. Disposal starts only from idle; after disposal, callers may still read the revision, drain diagnostics, or repeat the no-op dispose.
+During an active transaction or one in-progress dispose call, `update()`, `snapshot()`, `artifact()`, diagnostic drain, and reentrant `dispose()` are rejected. `revision()` always returns the revision already published. A participant-cleanup failure leaves the Session cleanup-pending: callers may still read the revision, drain diagnostics, or call dispose again, while every other read or update fails loudly as it does after disposal. Repeated disposal is a no-op after all cleanup succeeds.
 
 ## Define And Run A Program
 
@@ -108,6 +108,8 @@ Each row below is an independent case for the same dependency edge in the Progra
 
 With no ChangeSet, Runtime still calls `update()` and `view.changeSet(owner)` returns `undefined`. When an Owner validator explicitly returns `fallback`, Runtime discards the untrusted hint; the direct Program and its downstream dependents take the full path.
 
+When a Program declares multiple Owners, `view.changed(owner)` reports exactly whether that Owner changed in the current candidate transaction. It identifies the invalidation source rather than replacing the complete Snapshot or optional ChangeSet. Reading an undeclared Owner fails loudly at the CandidateView dependency boundary.
+
 When an Owner provides no domain validator, Runtime only confirms that `createRuntimeChangeSet()` created the hint and that its base revision matches the update envelope. Runtime then passes the hint to the Program. The Program must cross-check it against the complete previous and candidate Snapshots instead of treating Runtime envelope validation as proof of domain completeness.
 
 Every public `RuntimeSnapshot.revision` identifies the Session revision of the current view. Reused Owner reads and Program artifacts only receive a new envelope; Runtime does not copy or prematurely retire the underlying value.
@@ -119,6 +121,55 @@ Runtime prepares changed Owners first, then executes Programs in topological ord
 A disposable Owner value or Program artifact cannot return the current object identity as a candidate. Runtime fails loudly with `RUNTIME_OWNER_OWNERSHIP_ALIAS` or `RUNTIME_ARTIFACT_OWNERSHIP_ALIAS`; the current resource never enters rollback.
 
 After publish, observers only read the published artifact event. An observer throw does not roll back and produces `RUNTIME_PROGRAM_OBSERVER_FAILED`. Old artifacts and Owner values retire afterward in reverse order.
+
+## Include External State In The Atomic Commit
+
+Programs manage artifacts owned by Runtime. External state such as DOM, Canvas, or file handles enters the same transaction through a commit participant. Continuing the counter example above, a participant declares a stable `key`, readable Owner / Program dependencies, trace phases, and a revision policy:
+
+- `affected`: run when a declared Owner changes or a Program produces a new artifact
+- `continuous`: run on every non-bailout commit, for hosts that must follow every Session revision
+
+```ts
+import { defineRuntimeCommitParticipant } from '@retikz/runtime';
+
+let committed = 0;
+const hostParticipant = defineRuntimeCommitParticipant<number>({
+  key: 'example/host',
+  owners: [counterOwner],
+  programs: [sumProgram],
+  revisionPolicy: 'affected',
+  tracePhases: [],
+  prepare: candidate => {
+    const previous = committed;
+    const next = candidate.artifact(sumProgram).value;
+    return Object.freeze({
+      commit: () => {
+        committed = next;
+      },
+      rollback: () => {
+        committed = previous;
+      },
+      dispose: () => undefined,
+    });
+  },
+  read: () => committed,
+  dispose: () => undefined,
+});
+
+const participantSession = createRuntimeSession({
+  owners,
+  programs,
+  initialSnapshots: [createRuntimeOwnerInput(counterOwner, 1)],
+  participants: [hostParticipant],
+});
+
+participantSession.participant(hostParticipant); // number; reads the committed cache only
+participantSession.dispose();
+```
+
+Each selected participant follows `prepare → commit → read → publish`. `prepare()` may read only the candidate public reads of declared dependencies and returns a one-transaction `RuntimePreparedCommit`. `commit()` only switches already validated staging state. `read()` produces the immutable public read after every commit succeeds and before the Session publishes. Calling `session.participant(token)` reads Runtime's published cache instead of invoking the participant executor live.
+
+A pre-publish failure rolls back and disposes in reverse order while preserving the old revision and participant read. When rollback itself fails during an update, the Session enters `broken`: `update()`, Snapshot/artifact access, and participant reads keep failing loudly, leaving only revision, diagnostics, and disposal for cleanup. A participant token is permanently bound once claimed. A failed create consumes it immediately; final disposal consumes it after that participant cleans up successfully, and a pending failure never makes it available to another Session.
 
 ## Diagnostics & Failure Semantics
 
@@ -134,6 +185,8 @@ After publish, observers only read the published artifact event. An observer thr
 A Program warning belongs to the candidate. It reaches the result and queue only after the candidate artifact publishes successfully; a compile or transaction failure discards the warning with the candidate.
 
 When initial `createRuntimeSession()` fails, there is no Session queue; secondary diagnostics are only available on the thrown error. For failed updates, that call's `RuntimeError.diagnostics` entries append to the existing queue in the same order. The next drain matches the error entries item-for-item only when the queue was empty beforehand.
+
+`session.dispose()` does not throw when participant cleanup fails. It first attempts every participant in reverse order, retires Programs and Owners exactly once, then retries only the failed participants in the same call. Remaining failures enter the queue as `RUNTIME_PARTICIPANT_DISPOSE_FAILED`; later dispose calls retry only those pending entries and never rerun successful cleanup.
 
 ## Key Stable Errors
 
@@ -169,20 +222,24 @@ The original callback error is only stored in `cause`. Stable code, phase, Owner
 | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | `RuntimeProgramId`                                                                    | Exact `owner` and `key` identity                                                                      |
 | `RuntimeProgramDefinitionInput<TArtifactInput, TArtifact, TProgramRead, TPublicRead>` | `id`, `owners`, `programs`, `tracePhases`, `artifact`, `run`, and optional `update` / `observeCommit` |
-| `RuntimeSessionOptions`                                                               | `owners`, `programs`, exact `initialSnapshots`, and optional `trace`                                  |
+| `RuntimeSessionOptions`                                                               | `owners`, `programs`, exact `initialSnapshots`, and optional `trace` / `participants`                 |
 | `RuntimeSessionUpdate`                                                                | `baseRevision` and complete Owner update commands for this call                                       |
 | `RuntimeSessionResult`                                                                | Published `revision`, aggregate `outcome`, and frozen `diagnostics`                                   |
 | `RuntimeSnapshot<TRead>`                                                              | View `revision` and immutable `value`                                                                 |
+| `RuntimeCandidateView`                                                                | Candidate `snapshot` / `artifact`, Owner `changed`, and optional `changeSet`                          |
+| `RuntimeCommitParticipantDefinitionInput<TRead>`                                      | `key`, `owners`, `programs`, `revisionPolicy`, `tracePhases`, `prepare`, `read`, and `dispose`        |
+| `RuntimePreparedCommit`                                                               | `commit`, `rollback`, and `dispose` for one transaction                                               |
 
-| API                            | Purpose                                                                   |
-| ------------------------------ | ------------------------------------------------------------------------- |
-| `defineRuntimeProgram`         | Create an opaque Program Definition retaining four artifact generic types |
-| `createRuntimeProgramRegistry` | Merge and validate a built-in/custom Program DAG                          |
-| `createRuntimeChangeSet`       | Create an opaque change hint bound to a base revision                     |
-| `createRuntimeOwnerInput`      | Create a complete initial Owner command                                   |
-| `createRuntimeOwnerUpdate`     | Create a complete Owner update command                                    |
-| `createRuntimeSession`         | Create revision 0 and execute the initial full transaction                |
-| `RuntimeError`                 | Expose stable code, phase, cause, context, and secondary diagnostics      |
+| API                              | Purpose                                                                   |
+| -------------------------------- | ------------------------------------------------------------------------- |
+| `defineRuntimeProgram`           | Create an opaque Program Definition retaining four artifact generic types |
+| `defineRuntimeCommitParticipant` | Create a one-use nominal participant retaining its committed read type    |
+| `createRuntimeProgramRegistry`   | Merge and validate a built-in/custom Program DAG                          |
+| `createRuntimeChangeSet`         | Create an opaque change hint bound to a base revision                     |
+| `createRuntimeOwnerInput`        | Create a complete initial Owner command                                   |
+| `createRuntimeOwnerUpdate`       | Create a complete Owner update command                                    |
+| `createRuntimeSession`           | Create revision 0 and execute the initial full transaction                |
+| `RuntimeError`                   | Expose stable code, phase, cause, context, and secondary diagnostics      |
 
 <SourceLinks
   sources={[
@@ -211,16 +268,34 @@ The original callback error is only stored in `cause`. Stable code, phase, Owner
       endLine: 211,
     },
     {
+      label: 'Define and freeze a typed commit participant',
+      path: 'packages/kernel/runtime/src/participant/define.ts',
+      startLine: 20,
+      endLine: 72,
+    },
+    {
+      label: 'Prepare, commit, read, rollback, and enter broken state',
+      path: 'packages/kernel/runtime/src/session/session.ts',
+      startLine: 1205,
+      endLine: 1337,
+    },
+    {
+      label: 'Read a participant through its Session-bound cache',
+      path: 'packages/kernel/runtime/src/session/session.ts',
+      startLine: 1447,
+      endLine: 1456,
+    },
+    {
       label: 'Atomically publish, isolate observers, and retire in reverse order',
       path: 'packages/kernel/runtime/src/session/session.ts',
-      startLine: 779,
-      endLine: 833,
+      startLine: 1342,
+      endLine: 1414,
     },
     {
       label: 'Dispose a Session and queue cleanup diagnostics',
       path: 'packages/kernel/runtime/src/session/session.ts',
-      startLine: 854,
-      endLine: 880,
+      startLine: 1458,
+      endLine: 1517,
     },
   ]}
 />

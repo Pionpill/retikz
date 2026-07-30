@@ -1,33 +1,43 @@
 ---
 title: API 参考
-description: 查询 Table 的 JSON 契约，以及 React、Vanilla 与 compile 运行时合同。
+description: 查询 Table 的输入契约、布局配置、Manifest 输出，以及 React、Vanilla 与 compile 运行时合同。
 ---
 
-API 参考用于查稳定合同，不承担入门教学。基础表格与明细表使用各自的契约页；React、Vanilla、SSR 如何构造、下沉和渲染同一份规格集中在运行时页。
+API 参考用于查稳定合同，不承担入门教学。TableSpec 与 Cell 内容、detail 专有结构、布局配置、compile 输出和运行时接线分别进入独立页面。
 
 > 这里是参考层。开始制作表格请阅读[明细表](/viz/table/detail)，理解共享抽象请阅读[表格模型](/viz/table/model)。
 
 ## 职责一览
 
-| 主题          | 职责                                        | 何时查阅                       |
-| ------------- | ------------------------------------------- | ------------------------------ |
-| 契约 - 表格   | TableSpec、Cell、轨道、border 与 manifest   | 生成 Table IR 或读取布局产物   |
-| 契约 - 明细表 | data reference、columns 与 detail Structure | 生成或校验 `IRDetailTableSpec` |
-| 运行时        | React / Vanilla、compile 与 artifact 接线   | 集成宿主、SSR 或执行 Table     |
+| 主题          | 职责                                           | 何时查阅                    |
+| ------------- | ---------------------------------------------- | --------------------------- |
+| 契约 - 明细表 | data reference、columns 与 detail Structure    | 生成或校验明细表 IR         |
+| 契约 - 表格   | TableSpec、manual Cell 与 canonical payload    | 生成或校验 Table IR         |
+| 契约 - 布局   | Cell span/layout、轨道与 border 输入配置       | 配置表格布局与内容适配      |
+| 契约 - 产物   | resolved tracks、Cell boxes、border 与 locator | 读取同次 compile 的布局产物 |
+| 运行时        | React / Vanilla、compile 与 artifact 接线      | 集成宿主、SSR 或执行 Table  |
 
 ## 章节内容
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/table/reference/contract-detail">
+    <span className="font-semibold">契约 - 明细表</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">外部数据引用、列声明与 detail Structure</span>
+  </LinkedCard>
   <LinkedCard href="/viz/table/reference/contract-table">
     <span className="font-semibold">契约 - 表格</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      TableSpec、Cell、轨道、border 与 manifest schema
+      TableSpec、manual Cell、payload 与 presentation reference
     </span>
   </LinkedCard>
-  <LinkedCard href="/viz/table/reference/contract-detail">
-    <span className="font-semibold">契约 - 明细表</span>
+  <LinkedCard href="/viz/table/reference/contract-layout">
+    <span className="font-semibold">契约 - 布局</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Cell span/layout、轨道尺寸与 border 输入</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/reference/manifest">
+    <span className="font-semibold">契约 - 产物</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      外部数据引用、列声明与 detail Structure schema
+      resolved geometry、border provenance 与 locator DTO
     </span>
   </LinkedCard>
   <LinkedCard href="/viz/table/reference/runtime">

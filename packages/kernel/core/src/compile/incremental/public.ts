@@ -1,4 +1,4 @@
-import type { RuntimeProgramDefinition } from '@retikz/runtime';
+import type { RuntimeOwnerToken, RuntimeProgramDefinition } from '@retikz/runtime';
 
 import type { AnyCompositeDefinition, ScenePatch, SceneRuntimeSnapshot } from '../../contract';
 import type { CompileOptions, CompileResult, CompositeArtifactOf } from '../types';
@@ -14,6 +14,12 @@ export const CORE_PROGRAM_ID = Object.freeze({ owner: CORE_OWNER_KEY, key: 'comp
 export type CoreProgramOptions<
   TComposites extends ReadonlyArray<AnyCompositeDefinition> = ReadonlyArray<AnyCompositeDefinition>,
 > = Omit<CompileOptions<TComposites>, 'trace'>;
+
+/** Core Program 的 Runtime 装配选项 */
+export type CoreProgramRuntimeOptions = Readonly<{
+  /** 只负责使固定 compile definitions 外部状态失效的 owner；其 value 不进入 Core IR */
+  invalidationOwners?: ReadonlyArray<RuntimeOwnerToken>;
+}>;
 
 /** Core Program 对外提供的完整编译输出 */
 export type CoreProgramOutput<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{

@@ -1,7 +1,7 @@
 import { JsonValueSchema } from '@retikz/core';
 import { z } from 'zod';
 
-import { TableCellLayoutSchema, TableCellPayloadSchema, TableCellSchema } from '../cell';
+import { ManualTableCellSchema, TableCellLayoutSchema, TableCellPayloadSchema } from '../cell';
 import { TablePresentationRefSchema } from '../presentation';
 import { RESERVED_TABLE_STRUCTURE_KINDS, TableRowKind, TableStructureKind } from './constants';
 
@@ -63,27 +63,41 @@ export const DetailTableStructureSchema = z
   })
   .describe('Detail Table structure that maps each source record to one body row.');
 
+const ManualTableRowSchema = z
+  .array(z.union([ManualTableCellSchema, z.null()]))
+  .min(1)
+  .describe('Nonempty row of manual Cell entries; null marks an unoccupied coordinate.');
+
 export const ManualTableStructureSchema = z
   .strictObject({
     kind: z.literal(TableStructureKind.Manual).describe('Discriminator for an explicit manual Table structure.'),
-    rows: z.number().int().positive().describe('Number of explicit rows.'),
-    columns: z.number().int().positive().describe('Number of explicit columns.'),
+    rows: z.array(ManualTableRowSchema).min(1).describe('Nonempty rectangular matrix of manual Table Cell entries.'),
     rowKinds: z
       .array(TableRowKindSchema)
       .optional()
       .describe('Optional semantic kind for each row. Omitted fields make every row a body row.'),
-    cells: z.array(TableCellSchema).describe('Explicit Cells addressed within the declared row and column counts.'),
   })
   .superRefine((structure, context) => {
-    if (structure.rowKinds !== undefined && structure.rowKinds.length !== structure.rows) {
+    const columnCount = structure.rows[0]?.length;
+    structure.rows.forEach((row, index) => {
+      if (row.length !== columnCount) {
+        context.addIssue({
+          code: 'custom',
+          path: ['rows', index],
+          message: 'manual Table rows must have equal lengths',
+        });
+      }
+    });
+
+    if (structure.rowKinds !== undefined && structure.rowKinds.length !== structure.rows.length) {
       context.addIssue({
         code: 'custom',
         path: ['rowKinds'],
-        message: 'rowKinds length must equal rows',
+        message: 'rowKinds length must equal rows length',
       });
     }
   })
-  .describe('Manual Table structure with explicit dimensions and Cells.');
+  .describe('Manual Table structure whose dimensions and Cell addresses derive from a row-major matrix.');
 
 export const TableStructureSchema = z
   .union([ManualTableStructureSchema, DetailTableStructureSchema, CustomTableStructureSchema])

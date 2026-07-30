@@ -7,6 +7,8 @@ Built-in channels map data to visual results such as position, style, text, and 
 
 Each table gives the form and visible meaning first, then the internal property destination in its last column. You can skip destinations on a first read.
 
+When a table lists both a field and a string constant, a built-in flat style prop matches current data fields first and only tries a valid constant after a miss. See [Fields And Constants](/viz/plot/channel/binding#fields-and-constants) for collisions, explicit forms, and scope.
+
 | Type          | Channels                                                                                                | Meaning                                        |
 | ------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
 | Position      | `x` / `y` / `z`                                                                                         | Fields determine coordinate roles              |
@@ -23,7 +25,7 @@ Position channels say which row fields participate in coordinate projection. `x`
 
 <ComponentPreview
   files={['builtin-position', 'builtin-position.data.ts']}
-  size="md"
+  size="lg"
   caption="This playground keeps Cartesian coordinates fixed and only changes the x / y bindings; the data and chart size stay fixed."
 />
 
@@ -39,7 +41,7 @@ Style channels control the visible appearance of a mark. Color, opacity, size, a
 
 <ComponentPreview
   files={['builtin-point-style', 'builtin-point-style.data.ts']}
-  size="md"
+  size="lg"
   caption="The target chooses whether paint enters color, fill, or stroke; the remaining controls keep the subject and data fixed."
 />
 
@@ -133,7 +135,7 @@ Path channels apply to marks that produce paths, such as line marks, relation li
 
 <ComponentPreview
   files={['builtin-path-style', 'builtin-path-style.data.ts']}
-  size="md"
+  size="lg"
   caption="With roundedCorners at 0, compare miter, round, and bevel joins. Raising roundedCorners replaces sharp joints with geometric curves, so the join control is hidden."
 />
 
@@ -154,8 +156,8 @@ Other channels do not directly describe color, position, or path shape. They con
 
 <ComponentPreview
   files={['builtin-other', 'builtin-other.data.ts']}
-  size="md"
-  caption="The input rows are intentionally shuffled: series splits two lines, order restores their step sequence, and points use a higher zIndex to stay above the lines."
+  size="lg"
+  caption="The input rows are intentionally shuffled: series splits two lines, order restores their step sequence, and the overlapping A/B points at step=2 use zIndex to decide which series stays on top."
 />
 
 | Channel  | Channel Value                                           | Meaning                            | Delivery                                 |

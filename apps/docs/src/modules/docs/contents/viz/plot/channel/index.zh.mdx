@@ -12,25 +12,6 @@ description: '通道把字段或固定值连接到位置、颜色、大小等视
 | 通道绑定 | 字段或固定值如何直接写在图元属性上       | 想确认 `x="date"`、`color="region"`、`y={80}` 的含义 |
 | 内置通道 | 位置、颜色、大小、文本和路径有哪些可选项 | 想选择 `color`、`size`、`strokeWidth` 等通道         |
 
-## 章节内容
-
-第一次阅读时，建议先理解字段与常量如何绑定，再按视觉目标查询内置通道。
-
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/channel/binding">
-    <span className="font-semibold">通道绑定</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">把字段或固定值绑定到位置、颜色、大小等通道</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/channel/builtin">
-    <span className="font-semibold">内置通道</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">查询位置、颜色、大小、文本和路径通道</span>
-  </LinkedCard>
-</div>
-
-需要新增项目特有的视觉通道时，继续阅读[自定义通道](/viz/plot/channel/custom-channel)。
-
-通道决定“取哪个值”；[比例尺](/viz/plot/scale)决定值如何映射，[坐标系](/viz/plot/coordinate)决定位置角色如何投影。
-
 ## 技术原理（首次阅读可跳过）
 
 React 图元属性会被整理成 PlotSpec（一份可以序列化和保存的绘图配置）。位置通道交给坐标系解释；其他通道通过统一的通道注册表查找处理规则，再转换为可见属性或图例信息。
@@ -61,3 +42,22 @@ PlotSpec 只保存字段或常量绑定，不保存函数。内置通道与通�
     },
   ]}
 />
+
+## 章节内容
+
+第一次阅读时，建议先理解字段与常量如何绑定，再按视觉目标查询内置通道。
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/channel/binding">
+    <span className="font-semibold">通道绑定</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">把字段或固定值绑定到位置、颜色、大小等通道</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/channel/builtin">
+    <span className="font-semibold">内置通道</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">查询位置、颜色、大小、文本和路径通道</span>
+  </LinkedCard>
+</div>
+
+需要新增项目特有的视觉通道时，继续阅读[自定义通道](/viz/plot/channel/custom-channel)。
+
+通道决定“取哪个值”；[比例尺](/viz/plot/scale)决定值如何映射，[坐标系](/viz/plot/coordinate)决定位置角色如何投影。

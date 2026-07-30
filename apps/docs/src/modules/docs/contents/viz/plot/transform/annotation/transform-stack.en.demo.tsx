@@ -2,6 +2,7 @@ import { Axis, IntervalMark, Plot, Scale, Transform } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
+import { stackOperationOf } from './transform-stack.controls';
 import { productRevenue } from './transform-stack.data';
 import { previewControlContract, stackControls } from './transform-stack.en.controls';
 
@@ -18,7 +19,7 @@ export const previewControls = stackControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Plot data={productRevenue} width={420} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Transform kind="stack" x="quarter" y="revenue" groupBy="product" offset={values.offset} />
+    <Transform {...stackOperationOf(values)} />
     <Scale dimension="y" type="linear" domain={yDomainByOffset[values.offset]} />
     <IntervalMark
       x="quarter"

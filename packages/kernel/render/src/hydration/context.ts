@@ -15,8 +15,9 @@ import { pathControlPoints } from '../shared/path-command';
 
 /**
  * handler 内的动画控制（缺省作用于命中元素，传 id 控别的元素）
- * @description SVG per-id 强（查 `data-retikz-id` / `data-retikz-animation-owner` 全部命中元素的 `getAnimations()`）；
- *   Canvas coarse（scene 级单时钟，id 参数当前忽略）；无 runtime / scene 时各方法 no-op
+ * @description SVG 与 Canvas 都按公开 id 聚合同一 semantic owner 的全部 primitive occurrence；显式 id 控制对应聚合集合，
+ *   缺省控制当前命中 owner。Canvas 在 scene 级 coarse clock 上为每个 occurrence 维护独立虚拟时钟；无 runtime / scene
+ *   时各方法 no-op
  */
 export type HydrationAnimationControls = {
   /** 播放 / 继续（manual track 或已暂停的） */
@@ -256,6 +257,52 @@ export const geometryOf = (scene: Scene, id: string): HydrationGeometry | undefi
   };
 };
 
+/** 沿 Scene primitive path 定位图元及其父级累积变换 */
+const primitiveAtPath = (
+  scene: Scene,
+  path: ReadonlyArray<number>,
+): Readonly<{ primitive: ScenePrimitive; matrix: Matrix }> | undefined => {
+  let primitives = scene.primitives;
+  let matrix = IDENTITY;
+  for (let depth = 0; depth < path.length; depth += 1) {
+    const candidate: unknown = Reflect.get(primitives, path[depth]);
+    if (typeof candidate !== 'object' || candidate === null) return undefined;
+    const primitive = candidate as ScenePrimitive;
+    if (depth === path.length - 1) return Object.freeze({ primitive, matrix });
+    if (primitive.type !== 'group') return undefined;
+    if (primitive.transforms && primitive.transforms.length > 0) {
+      matrix = multiply(matrix, transformsToMatrix(primitive.transforms));
+    }
+    primitives = primitive.children;
+  }
+  return undefined;
+};
+
+/** 按 topology 选定的 occurrence paths 读取首个 provenance */
+const metaAtPaths = (scene: Scene, paths: ReadonlyArray<ReadonlyArray<number>>): IRJsonObject | undefined => {
+  for (const path of paths) {
+    const meta = primitiveAtPath(scene, path)?.primitive.meta;
+    if (meta !== undefined) return meta;
+  }
+  return undefined;
+};
+
+/** 按 topology 选定的 occurrence paths 聚合语义 owner 几何 */
+const geometryAtPaths = (scene: Scene, paths: ReadonlyArray<ReadonlyArray<number>>): HydrationGeometry | undefined => {
+  let bbox: BBox | undefined;
+  for (const path of paths) {
+    const located = primitiveAtPath(scene, path);
+    if (located !== undefined) bbox = accumulateSubtree(located.primitive, located.matrix, bbox);
+  }
+  if (bbox === undefined) return undefined;
+  const width = bbox.maxX - bbox.minX;
+  const height = bbox.maxY - bbox.minY;
+  return {
+    bbox: { x: bbox.minX, y: bbox.minY, width, height },
+    center: [bbox.minX + width / 2, bbox.minY + height / 2],
+  };
+};
+
 // ── renderer 专有片段（element / point / animation）的可复用实现 ────────────────
 
 /** 转义属性选择器值（防 id 含引号 / 反斜杠破坏选择器） */
@@ -267,10 +314,17 @@ const escapeAttr = (value: string): string => value.replace(/["\\]/g, '\\$&');
  *   `data-retikz-id`、但有 `data-retikz-animation-owner`）。`getAnimations` 同时返回 CSSAnimation + WAAPI，配
  *   owner 属性定位最完整。`defaultId` = 命中元素 id（`id` 省略时用它）。缺 `getAnimations` 的环境优雅退化为空
  */
-export const createSvgAnimationControls = (root: Element, defaultId: string): HydrationAnimationControls => {
+export const createSvgAnimationControls = (
+  root: Element,
+  defaultId: string,
+  resolveAdditionalElements?: (id: string) => ReadonlyArray<Element>,
+): HydrationAnimationControls => {
   const animationsFor = (id: string): Array<Animation> => {
     const escaped = escapeAttr(id);
-    const elements = root.querySelectorAll(`[data-retikz-id="${escaped}"],[data-retikz-animation-owner="${escaped}"]`);
+    const elements = new Set<Element>(
+      root.querySelectorAll(`[data-retikz-id="${escaped}"],[data-retikz-animation-owner="${escaped}"]`),
+    );
+    for (const element of resolveAdditionalElements?.(id) ?? []) elements.add(element);
     const out: Array<Animation> = [];
     elements.forEach(element => {
       const getAnimations = (element as Element & { getAnimations?: () => Array<Animation> }).getAnimations;
@@ -310,8 +364,8 @@ type ClockHandle = { play: () => void; pause: () => void; seek: (timeMs: number)
 const SETTLED_SEEK_MS = Number.MAX_SAFE_INTEGER;
 
 /**
- * Canvas coarse 动画控制：作用于 scene 级单 rAF 时钟（id 参数忽略）
- * @description per-id 控制不可用（无登记表）时的降级；restart 走 `seek(0)+play`。无时钟 → no-op。
+ * Canvas 未提供 per-occurrence registry 时的 coarse 降级控制（仅此路径忽略 id 参数）
+ * @description restart 走 `seek(0)+play`。无时钟 → no-op。
  *   `stop` 落 **settled 末态**（与 SVG `finish` / per-id `stop` 一致，非定格当前帧）：scene 级时钟无 per-id
  *   skip 机制，故 seek 到远超任何有限动画时长处让各 track fill-forward 到末态，再 pause 定格。无限循环动画无
  *   settled 末态（与 SVG `finish` 同样语义未定），会落在循环某相位
@@ -345,37 +399,43 @@ export type CanvasIdControlsDeps = {
   renderFrame: () => void;
   /** 命中元素 id（`id` 省略时默认作用于它） */
   defaultId: string;
+  /** 显式 public id 对应的一个或多个 occurrence clock key，未知 id 返回 undefined */
+  resolveIds?: (id: string) => ReadonlyArray<string> | undefined;
 };
 
 /**
  * Canvas per-id 动画控制：在 scene 级单 rAF 时钟之上经 IdClockRegistry 给每个 id 叠加独立虚拟时钟
- * @description `ctx.animation.restart(id)` 等只影响该 id（缺省命中元素）：登记表记 offset / pause / active / stop，
- *   `drawScene` 经 `resolvePrimAnimation` 折算各 id 有效时刻。play / restart / seek 后确保时钟在跑；每次操作后重绘一帧
+ * @description `ctx.animation.restart(id)` 等作用于该 public id 聚合的全部 occurrence（缺省命中 owner）：登记表记
+ *   offset / pause / active / stop，`drawScene` 经 `resolvePrimAnimation` 折算各 occurrence 有效时刻。play / restart /
+ *   seek 后确保时钟在跑；每次操作后重绘一帧
  */
 export const createCanvasIdAnimationControls = (deps: CanvasIdControlsDeps): HydrationAnimationControls => {
-  const { registry, clockTime, ensurePlaying, renderFrame, defaultId } = deps;
-  const target = (id: string | undefined): string => id ?? defaultId;
+  const { registry, clockTime, ensurePlaying, renderFrame, defaultId, resolveIds } = deps;
+  const targets = (id: string | undefined): ReadonlyArray<string> => {
+    if (id === undefined) return resolveIds?.(defaultId) ?? [defaultId];
+    return resolveIds === undefined ? [id] : (resolveIds(id) ?? []);
+  };
   return {
     play: id => {
-      registry.play(target(id), clockTime());
+      for (const target of targets(id)) registry.play(target, clockTime());
       ensurePlaying();
       renderFrame();
     },
     pause: id => {
-      registry.pause(target(id), clockTime());
+      for (const target of targets(id)) registry.pause(target, clockTime());
       renderFrame();
     },
     restart: id => {
-      registry.restart(target(id), clockTime());
+      for (const target of targets(id)) registry.restart(target, clockTime());
       ensurePlaying();
       renderFrame();
     },
     stop: id => {
-      registry.stop(target(id));
+      for (const target of targets(id)) registry.stop(target);
       renderFrame();
     },
     seek: (timeMs, id) => {
-      registry.seek(target(id), timeMs, clockTime());
+      for (const target of targets(id)) registry.seek(target, timeMs, clockTime());
       ensurePlaying();
       renderFrame();
     },
@@ -442,12 +502,14 @@ export type ContextSources = {
    * 传 getter（`() => Scene`）支持 live scene——mount 后 `update()` 换图时每次命中读最新 Scene
    */
   scene?: Scene | (() => Scene | undefined);
+  /** retained topology 按 public id 聚合的 occurrence paths；缺省继续按持久 Scene id 查询 */
+  resolvePrimitivePaths?: (id: string) => ReadonlyArray<ReadonlyArray<number>> | undefined;
   /** 命中 DOM 元素定位（svg = closest；canvas = () => null） */
   resolveElement: (event: Event, id: string) => Element | null;
   /** 指针逆映射到 scene user units（非指针事件 → null） */
   resolvePoint: (event: Event) => { x: number; y: number } | null;
-  /** 据命中 id 造动画控制（缺省作用于命中元素）；无 runtime → noopAnimationControls */
-  makeAnimation: (defaultId: string) => HydrationAnimationControls;
+  /** 据命中 id 与事件造动画控制（缺省作用于命中 occurrence）；无 runtime → noopAnimationControls */
+  makeAnimation: (defaultId: string, event: Event) => HydrationAnimationControls;
 };
 
 /**
@@ -456,18 +518,27 @@ export type ContextSources = {
  *   注入的 renderer 专有片段提供。无 scene → meta / geometry / scene 缺省。context 永远完整对象（绝不 undefined）
  */
 export const createContextBuilder = (sources: ContextSources): BuildContext => {
-  const { renderer, root, scene, resolveElement, resolvePoint, makeAnimation } = sources;
+  const { renderer, root, scene, resolvePrimitivePaths, resolveElement, resolvePoint, makeAnimation } = sources;
   return (event, id) => {
     const currentScene = typeof scene === 'function' ? scene() : scene;
+    const primitivePaths = resolvePrimitivePaths?.(id);
     return {
       id,
-      meta: currentScene ? metaOf(currentScene, id) : undefined,
+      meta: currentScene
+        ? primitivePaths === undefined
+          ? metaOf(currentScene, id)
+          : metaAtPaths(currentScene, primitivePaths)
+        : undefined,
       renderer,
       element: resolveElement(event, id),
       root,
       point: resolvePoint(event),
-      geometry: currentScene ? geometryOf(currentScene, id) : undefined,
-      animation: makeAnimation(id),
+      geometry: currentScene
+        ? primitivePaths === undefined
+          ? geometryOf(currentScene, id)
+          : geometryAtPaths(currentScene, primitivePaths)
+        : undefined,
+      animation: makeAnimation(id, event),
       scene: currentScene,
     };
   };

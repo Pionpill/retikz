@@ -3,7 +3,7 @@ title: Data Intake
 description: Bind external field paths and storage formats to logical fields, producing canonical rows before transforms run.
 ---
 
-Data intake converts API, file, or database records into logical fields that consumers can reference consistently. The examples use React `<Plot>` to visualize the result, but Plot is only the example host: field paths, models, formats, and normalization belong to Data and can be reused by other consumers.
+Data intake converts API, file, or database records into logical fields that consumers can reference consistently. For example, `{ period, amount }` can become `{ month, revenue }` through `fieldMap`, then storage values normalize through models and formats. The examples use React `<Plot>` to visualize the result, but Plot is only the example host: field paths, models, formats, and normalization belong to Data and can be reused by other consumers.
 
 ## Field paths
 
@@ -25,7 +25,7 @@ Real rows stay outside the serializable field contract, so one consumer configur
 
 When both sources expose the same names and types, the consumer only replaces its data input. In the Plot example below, that means replacing `<Plot data>`; actual and forecast values share one field contract and consumer configuration.
 
-<ComponentPreview files={['processing-same', 'processing-same.data.ts']} />
+The source-binding playground below compares swapping matching data with aligning renamed fields through one stable consumer configuration.
 
 ### Different field names
 
@@ -46,13 +46,18 @@ Use `fieldMap` to map logical names to physical paths. Data transforms and consu
 
 `fieldMap` aligns names without computing values. It requires `model`, because there is no logical field set to map without a field contract.
 
-<ComponentPreview files={['processing-source', 'processing-source.data.ts']} />
+<ComponentPreview
+  files={['source-binding', 'source-binding-preview.tsx', 'source-binding.data.ts']}
+  defaultSourceFile="source-binding-preview.tsx"
+  size="lg"
+  caption="Marks always reference month/revenue; only the finance feed aligns physical fields through fieldMap."
+/>
 
 ### Different storage shapes
 
 Default coercion unifies `Date`, strict ISO strings, and epoch milliseconds as temporal values. It also unifies finite numbers, safe-integer `bigint` values, and strict numeric strings as continuous values. The mixed representations below still normalize against one model.
 
-<ComponentPreview files={['processing-storage', 'processing-storage.data.ts']} />
+The value-parsing playground below compares canonical values, mixed built-in storage shapes, and report values that require explicit formats.
 
 ## Declaring parsing formats
 
@@ -69,7 +74,12 @@ Put common non-default formats on the field as `format`. The format name enters 
 
 `format` implies a type. The intake stage reports an error when an explicit `type` conflicts with the format's type. The standard intake path applies declarative `format` before falling back to default coercion.
 
-<ComponentPreview files={['processing-format', 'processing-format.data.ts']} />
+<ComponentPreview
+  files={['value-parsing', 'value-parsing-preview.tsx', 'value-parsing.data.ts']}
+  defaultSourceFile="value-parsing-preview.tsx"
+  size="lg"
+  caption="canonical and mixed use default coercion; report uses slashDate and percent formats."
+/>
 
 See [Extension Mechanisms](/viz/data/model/extensions) when you need to register a custom format or supply a runtime field parser.
 

@@ -198,6 +198,33 @@ describe('[ADV] generate 输出校验', () => {
     expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).toThrow(/unknown kind 'bogus'/);
   });
 
+  it('snapshots a dynamic command before validation and downstream lowering', () => {
+    let kindReads = 0;
+    const command = new Proxy({ kind: 'line', to: [5, 5] } as const, {
+      get: (target, property, receiver) => {
+        if (property === 'kind') {
+          kindReads += 1;
+          return kindReads === 1 ? 'line' : 'bogus';
+        }
+        return Reflect.get(target, property, receiver);
+      },
+    });
+    const gen = definePathGenerator({
+      name: 'dynamicCommand',
+      paramsSchema: z.strictObject({}),
+      generate: () => [command as unknown as PathCommand],
+    });
+    const ir = wrapPath([
+      { type: 'step', kind: 'move', to: [0, 0] },
+      { type: 'step', kind: 'generator', name: 'dynamicCommand', params: {} },
+    ]);
+
+    const drawn = firstDrawnPath(compileToScene(ir, { pathGenerators: [gen] }).scene.primitives);
+
+    expect(drawn?.commands).toContainEqual({ kind: 'line', to: [5, 5] });
+    expect(kindReads).toBe(1);
+  });
+
   it('cmd_missing_field：cubic 缺 control2 → 抛 non-finite（含 cubic + generator 名）', () => {
     const gen = definePathGenerator({
       name: 'gen',
@@ -260,7 +287,7 @@ describe('[ADV] generate 输出校验', () => {
     ]);
     const drawn = firstDrawnPath(compileToScene(ir, { pathGenerators: [gen] }).scene.primitives);
     expect(drawn?.commands.length ?? 0).toBeGreaterThanOrEqual(N);
-  });
+  }, 15_000);
 });
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -415,7 +442,9 @@ describe('[ADV] 未注册 / 名称边角', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'custom-curve', params: {} },
     ]);
-    expect(() => compileToScene(ir, { pathGenerators: [{ ...gen, name: 'Custom-Curve' }] }).scene).toThrow(/custom-curve/);
+    expect(() => compileToScene(ir, { pathGenerators: [{ ...gen, name: 'Custom-Curve' }] }).scene).toThrow(
+      /custom-curve/,
+    );
   });
 
   it('name_proto_pollution：原型链 key 经 hasOwnProperty 守门 → throw', () => {

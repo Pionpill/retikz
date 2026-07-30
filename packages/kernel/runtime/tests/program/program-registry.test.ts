@@ -91,6 +91,7 @@ describe('runtime program definition and registry', () => {
       snapshot: () => {
         throw new Error('unused owner lookup');
       },
+      changed: () => true,
       changeSet: () => {
         throw new Error('unused change lookup');
       },
@@ -113,6 +114,7 @@ describe('runtime program definition and registry', () => {
     expect(executor.read(1)).toBe(1);
     expect(
       executor.run(view, {
+        execution: 'full',
         trace: createRuntimeTraceReporter({ owner: 'counter', phases: [], sink: () => undefined }),
         diagnose: () => undefined,
       }),

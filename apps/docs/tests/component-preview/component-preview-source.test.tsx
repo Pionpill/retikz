@@ -181,6 +181,15 @@ describe('ComponentPreview Vanilla source', () => {
 });
 
 describe('ComponentPreview localized controls', () => {
+  it('将默认源码文件名透传给卡片', () => {
+    const props = renderPreview(
+      ['viz', 'plot', 'mark', 'path'],
+      <ComponentPreview files={['line-basic', 'line-basic.data.ts']} defaultSourceFile="line-basic.data.ts" />,
+    );
+
+    expect(props.defaultSourceFile).toBe('line-basic.data.ts');
+  });
+
   it('将 previewClassName 透传给卡片且不再传旧名称', () => {
     const props = renderPreview(
       ['viz', 'plot', 'mark', 'path'],
@@ -373,6 +382,7 @@ describe('ComponentPreview localized controls', () => {
         title: 'Path connection',
         sections: [
           { label: 'Data' },
+          { label: 'Coordinate' },
           {
             label: 'Connection',
             controls: expect.arrayContaining([
@@ -383,6 +393,7 @@ describe('ComponentPreview localized controls', () => {
               }),
             ]),
           },
+          { label: 'Path style' },
         ],
       });
     } finally {

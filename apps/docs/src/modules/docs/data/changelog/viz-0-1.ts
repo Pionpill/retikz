@@ -967,6 +967,36 @@ export const vizV01: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.3',
+          date: '2026-07-29',
+          summary: {
+            zh: '将 manual Table 收口为可直接手写和持久化的矩形 `rows`：Table 统一推导轨道、Cell 地址与稳定来源坐标，不再要求作者重复声明 dimensions 与 addressed cells。',
+            en: 'Converges manual Table on a directly authorable and persistable rectangular `rows` matrix. Table now derives tracks, Cell addresses, and stable source coordinates without repeated dimensions or addressed cells.',
+          },
+          items: [
+            {
+              label: {
+                zh: 'BREAKING：manual Table 改为二维 rows',
+                en: 'BREAKING: Manual Table uses two-dimensional rows',
+              },
+              content: {
+                zh: '`IRManualTableStructure`、`createManualTableSpec()` 与 `manualTable()` 删除 numeric `rows`、`columns`、flat `cells`、`address` 和 author-facing `payload`。改为传入非空矩形 `rows`；标量是 value Cell 简写，`null` 是空槽，真实 null scalar 写成 `{ value: null }`，rich object 继续承载 presentation、span、layout 与语义字段。',
+                en: '`IRManualTableStructure`, `createManualTableSpec()`, and `manualTable()` remove numeric `rows`, `columns`, flat `cells`, `address`, and author-facing `payload`. Pass a non-empty rectangular `rows` matrix instead: scalars are value-Cell shorthands, `null` is an empty slot, `{ value: null }` stores a real null scalar, and rich objects retain presentation, span, layout, and semantic fields.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：manual Cell 与 source 公共面更名',
+                en: 'BREAKING: Manual Cell and source surfaces renamed',
+              },
+              content: {
+                zh: '包根新增 `ManualTableCellSchema` / `IRManualTableCell`，删除 `TableCellSchema` / `IRTableCell` 与 `TableCellAddressSchema` / `IRTableCellAddress`，不保留兼容别名；manual manifest source 从 `cellIndex` 改为持久化坐标 `{ row, column }`。',
+                en: 'The package root adds `ManualTableCellSchema` / `IRManualTableCell` and removes `TableCellSchema` / `IRTableCell` plus `TableCellAddressSchema` / `IRTableCellAddress` without compatibility aliases. Manual manifest sources move from `cellIndex` to persisted `{ row, column }` coordinates.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.2',
           date: '2026-07-27',
           summary: {
@@ -1062,6 +1092,26 @@ export const vizV01: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.3',
+          date: '2026-07-29',
+          summary: {
+            zh: '`<ManualTable>` 的 props 与 Row/Cell markers 统一生成同一矩形 `rows`，marker 会按 span occupancy 推导宽度并补 `null`。',
+            en: '`<ManualTable>` props and Row/Cell markers now produce the same rectangular `rows`; markers derive width from span occupancy and pad unused coordinates with `null`.',
+          },
+          items: [
+            {
+              label: {
+                zh: 'BREAKING：ManualTable authoring 改用 rows 或 markers',
+                en: 'BREAKING: ManualTable authoring uses rows or markers',
+              },
+              content: {
+                zh: 'props 模式直接接收 `rows` 与可选 `rowKinds`，不再接收 numeric dimensions；marker 模式不接收 `rows` / `rowKinds`，两种来源互斥。全空 marker 无法推导列数，应改用显式 null-matrix `rows`。',
+                en: 'Props mode accepts `rows` with optional `rowKinds` and no numeric dimensions. Marker mode accepts neither `rows` nor `rowKinds`, and the two sources are mutually exclusive. An all-empty marker tree cannot infer width; use an explicit null-matrix `rows` value instead.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.2',
           date: '2026-07-27',
           summary: {
@@ -1145,6 +1195,26 @@ export const vizV01: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.3',
+          date: '2026-07-29',
+          summary: {
+            zh: '`manualTable()` 保持薄封装，但输入迁移为与 Table schema 完全相同的矩形 `rows` contract。',
+            en: '`manualTable()` remains a thin wrapper, while its input moves to the same rectangular `rows` contract as the Table schema.',
+          },
+          items: [
+            {
+              label: {
+                zh: 'BREAKING：manualTable() 使用矩形 rows',
+                en: 'BREAKING: manualTable() uses rectangular rows',
+              },
+              content: {
+                zh: '删除 numeric dimensions 与 addressed `cells` 输入；把每个坐标直接写进 `rows`，由 `@retikz/table` 统一验证和构造 spec。',
+                en: 'Numeric dimensions and addressed `cells` inputs are removed. Author each coordinate directly in `rows`, then let `@retikz/table` validate and construct the spec.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.2',
           date: '2026-07-27',

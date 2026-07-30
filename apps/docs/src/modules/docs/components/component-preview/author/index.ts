@@ -12,5 +12,8 @@ export type {
   PreviewStateControlField,
   PreviewTableColumn,
   PreviewTableControlField,
+  PreviewTableRows,
+  PreviewTableRowsResolver,
+  PreviewTableView,
 } from '../types';
 export * from './define-controlled-preview';

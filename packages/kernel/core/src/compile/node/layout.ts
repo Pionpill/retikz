@@ -1,4 +1,4 @@
-﻿import type { BoundaryDefinition, ShapeDefinition, Transform } from '../../contract';
+﻿import type { BoundaryDefinition, LayoutAxisProposal, ShapeDefinition, Transform } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
 import type { IRAnchorPosition, IRLabelDefault, IRNode, IRPosition } from '../../schemas';
 import type { NamespaceStack } from '../namespace';
@@ -7,14 +7,22 @@ import type { TextMeasurer } from '../text';
 import type { CompileWarningCodeValue } from '../warning';
 import type { NodeLayout, TexLoweringContext } from './types';
 
-import { resolveBoxSpacing } from '../../contract';
+import { LayoutAxisProposalKind, LayoutIntrinsicMode, resolveBoxSpacing } from '../../contract';
 import { resolveBoundaryRegistry } from '../../providers/boundary';
 import { resolveShapeRegistry } from '../../providers/shape';
 import { CenterAnchor } from '../../shared';
 import { DEG_TO_RAD } from '../../shared/geometry';
 import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE } from '../constants';
 import { resolvePosition } from '../position';
+import {
+  CompositeContractError,
+  isFatalProbeError,
+  isLayoutProbeRecoverableError,
+  LayoutProbeRecoverableError,
+  safeThrownDetail,
+} from '../probe-failure';
 import { resolveAnchorRefUncached } from '../reference';
+import { snapshotProviderPosition, withProviderOutputValidationBoundary } from '../scene-primitive';
 import { resolveShadow } from '../style';
 import { resolveFontSize } from '../text';
 import { inverseTransformChain, isTransformChainInvertible, projectLayoutToGlobal } from '../transform';
@@ -25,6 +33,8 @@ import { layoutNodeLabels, measureNodeLabels } from './label/layout';
 import { resolveNodeShape } from './shape';
 
 const DEFAULT_PADDING = 8;
+/** 限制 custom circumscribe 反馈次数，保证 proposal 求值有确定上界 */
+const MAX_ALLOCATION_REFLOW_ATTEMPTS = 32;
 
 /** 判断 Node.position 是否为锚点对锚点定位 */
 const isAnchorPosition = (position: IRNode['position']): position is IRAnchorPosition =>
@@ -125,8 +135,8 @@ export type LayoutNodeContext = {
   irPath?: string;
   /** 当前 node 的 compile warning 分发函数 */
   warn?: (code: CompileWarningCodeValue, message: string) => void;
-  /** 父级给 allocation box 的有限非负宽度上限 */
-  maxAllocationWidth?: number;
+  /** 父级给 allocation box 的水平 proposal */
+  allocationWidthProposal?: LayoutAxisProposal;
 };
 
 export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout => {
@@ -144,7 +154,7 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
     texLowering,
     irPath,
     warn,
-    maxAllocationWidth,
+    allocationWidthProposal,
   } = context;
   // 缩放影响节点尺寸与字体。
   // 字号取 min(sx,sy) 保 glyph 形状，避免非均匀缩放下文字被拉变形。
@@ -178,48 +188,128 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
 
   // 折行阈值受 x 缩放。
   const explicitMaxTextWidth = node.maxTextWidth !== undefined ? node.maxTextWidth * sx : undefined;
-  const constrainedTextWidth =
-    maxAllocationWidth === undefined
-      ? undefined
-      : Math.max(0, maxAllocationWidth - margin.left - margin.right - paddingLeft - paddingRight);
-  const maxTextWidth =
-    explicitMaxTextWidth === undefined
-      ? constrainedTextWidth
-      : constrainedTextWidth === undefined
-        ? explicitMaxTextWidth
-        : Math.min(explicitMaxTextWidth, constrainedTextWidth);
-  const { textWidth, textHeight, lines, inlineBlock } = layoutNodeContent({
-    node,
-    measureText,
-    texLowering,
-    fontSize,
-    baseFontSize,
-    fontScale,
-    rootFontSize,
-    fontFamily,
-    fontWeight,
-    fontStyle,
-    lineHeight,
-    maxTextWidth,
-  });
+  const proposedAllocationWidth =
+    allocationWidthProposal?.kind === LayoutAxisProposalKind.Exact
+      ? allocationWidthProposal.value
+      : allocationWidthProposal?.kind === LayoutAxisProposalKind.Range
+        ? allocationWidthProposal.max
+        : undefined;
+  const minimumTextWidth =
+    allocationWidthProposal?.kind === LayoutAxisProposalKind.Intrinsic &&
+    allocationWidthProposal.mode === LayoutIntrinsicMode.Minimum;
 
-  // 内框半轴：content box + padding。
-  const innerHalfW = (textWidth + paddingLeft + paddingRight) / 2;
-  const innerHalfH = (textHeight + paddingTop + paddingBottom) / 2;
-  const paddingOffsetX = (paddingRight - paddingLeft) / 2;
-  const paddingOffsetY = (paddingBottom - paddingTop) / 2;
-
-  // 外接边界半轴由 shape.circumscribe 派生。
-  const circumscribed = shapeDef.circumscribe(innerHalfW, innerHalfH, shapeParams);
+  /** 使用同一正文 owner 与 measurer 求当前 wrap budget 的真实内容布局 */
+  const layoutContent = (textWidthBudget: number | undefined) =>
+    layoutNodeContent({
+      node,
+      measureText,
+      texLowering,
+      fontSize,
+      baseFontSize,
+      fontScale,
+      rootFontSize,
+      fontFamily,
+      fontWeight,
+      fontStyle,
+      lineHeight,
+      maxTextWidth: textWidthBudget,
+      minimumTextWidth,
+    });
 
   // minimumSize 作用于外接边界，且随 scale 缩放。
   const minimumSize = resolveBoxSize(node.minimumSize, 0);
   const minHalfW = (minimumSize.width * sx) / 2;
   const minHalfH = (minimumSize.height * sy) / 2;
+  const circumscribeContent = (textWidth: number, textHeight: number) => {
+    let raw: unknown;
+    try {
+      raw = shapeDef.circumscribe(
+        (textWidth + paddingLeft + paddingRight) / 2,
+        (textHeight + paddingTop + paddingBottom) / 2,
+        shapeParams,
+      );
+    } catch (thrown) {
+      if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
+      throw new LayoutProbeRecoverableError(
+        `Shape '${shapeDef.name}' circumscribe failed: ${safeThrownDetail(thrown)}`,
+        { cause: thrown, providerKey: `shape:${shapeDef.name}` },
+      );
+    }
+    return withProviderOutputValidationBoundary(`Shape '${shapeDef.name}' circumscribe`, () => {
+      if (raw === null || typeof raw !== 'object') {
+        throw new CompositeContractError(
+          `Shape '${shapeDef.name}' returned invalid circumscribe geometry; halfWidth and halfHeight must be finite non-negative numbers`,
+        );
+      }
+      const halfWidth = 'halfWidth' in raw ? raw.halfWidth : undefined;
+      const halfHeight = 'halfHeight' in raw ? raw.halfHeight : undefined;
+      if (
+        typeof halfWidth !== 'number' ||
+        typeof halfHeight !== 'number' ||
+        !Number.isFinite(halfWidth) ||
+        !Number.isFinite(halfHeight) ||
+        halfWidth < 0 ||
+        halfHeight < 0
+      ) {
+        throw new CompositeContractError(
+          `Shape '${shapeDef.name}' returned invalid circumscribe geometry; halfWidth and halfHeight must be finite non-negative numbers`,
+        );
+      }
+      return { halfWidth, halfHeight };
+    });
+  };
+  const rotateDeg = node.rotate ?? 0;
+  const allocationWidthOf = (halfWidth: number, halfHeight: number): number => {
+    const outerWidth = 2 * Math.max(halfWidth, minHalfW) + margin.left + margin.right;
+    const outerHeight = 2 * Math.max(halfHeight, minHalfH) + margin.top + margin.bottom;
+    const rotateRad = rotateDeg * DEG_TO_RAD;
+    return Math.abs(outerWidth * Math.cos(rotateRad)) + Math.abs(outerHeight * Math.sin(rotateRad));
+  };
+  /** 前向求值一个正文 budget 对应的真实 content、shape 与 allocation width */
+  const evaluateContentCandidate = (textWidthBudget: number | undefined) => {
+    const contentLayout = layoutContent(textWidthBudget);
+    const circumscribed = circumscribeContent(contentLayout.textWidth, contentLayout.textHeight);
+    return {
+      contentLayout,
+      circumscribed,
+      allocationWidth: allocationWidthOf(circumscribed.halfWidth, circumscribed.halfHeight),
+    };
+  };
+
+  let selectedCandidate = evaluateContentCandidate(explicitMaxTextWidth);
+  if (
+    proposedAllocationWidth !== undefined &&
+    selectedCandidate.allocationWidth > proposedAllocationWidth &&
+    selectedCandidate.contentLayout.lines !== undefined
+  ) {
+    let currentCandidate = selectedCandidate;
+    let textWidthBudget = explicitMaxTextWidth ?? currentCandidate.contentLayout.textWidth;
+    for (let attempt = 0; attempt < MAX_ALLOCATION_REFLOW_ATTEMPTS; attempt += 1) {
+      if (textWidthBudget === 0) break;
+      const ratio = proposedAllocationWidth / currentCandidate.allocationWidth;
+      const decrement = Math.max(Number.EPSILON, Math.abs(textWidthBudget) * Number.EPSILON);
+      const nextBudget = Math.max(
+        0,
+        Math.min(textWidthBudget - decrement, currentCandidate.contentLayout.textWidth * ratio),
+      );
+      if (!(nextBudget < textWidthBudget)) break;
+      textWidthBudget = nextBudget;
+      currentCandidate = evaluateContentCandidate(textWidthBudget);
+      if (currentCandidate.allocationWidth < selectedCandidate.allocationWidth) selectedCandidate = currentCandidate;
+      if (currentCandidate.allocationWidth <= proposedAllocationWidth) {
+        selectedCandidate = currentCandidate;
+        break;
+      }
+    }
+  }
+  const { contentLayout, circumscribed } = selectedCandidate;
+  const { textWidth, textHeight, textBaselineOffsets, lines, inlineBlock } = contentLayout;
+
+  const paddingOffsetX = (paddingRight - paddingLeft) / 2;
+  const paddingOffsetY = (paddingBottom - paddingTop) / 2;
   const boundsHalfW = Math.max(circumscribed.halfWidth, minHalfW);
   const boundsHalfH = Math.max(circumscribed.halfHeight, minHalfH);
 
-  const rotateDeg = node.rotate ?? 0;
   let anchorPosition: IRAnchorPosition | undefined;
   let center: IRPosition | null;
   if (isAnchorPosition(node.position)) {
@@ -234,7 +324,11 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
     );
   }
   // shape 可声明 AABB 中心相对 position 的偏移。
-  const aabbOffset = shapeDef.circumscribeOffset?.(shapeParams);
+  const rawAabbOffset: unknown = shapeDef.circumscribeOffset?.(shapeParams);
+  const aabbOffset =
+    rawAabbOffset === undefined
+      ? undefined
+      : snapshotProviderPosition(`Shape '${shapeDef.name}' circumscribeOffset`, rawAabbOffset);
   const rectCenterX = center[0] + paddingOffsetX + (aabbOffset?.[0] ?? 0);
   const rectCenterY = center[1] + paddingOffsetY + (aabbOffset?.[1] ?? 0);
   const contentCenter: [number, number] = [rectCenterX - paddingOffsetX, rectCenterY - paddingOffsetY];
@@ -274,6 +368,7 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
     inlineBlock,
     textWidth,
     textHeight,
+    textBaselineOffsets,
     align,
     lineHeight,
     fontSize,

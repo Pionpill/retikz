@@ -34,6 +34,8 @@ export type ComponentPreviewCardProps = {
   Component: FC;
   /** 代码区视图集合；缺省时整段代码面板与 Dialog 右栏都不渲染。 */
   source?: ComponentRenderSource;
+  /** React 源码视图默认选中的文件名。 */
+  defaultSourceFile?: string;
   /** 渲染区垂直对齐，默认 center。 */
   align?: AlignKey;
   /** 渲染区高度档位，默认 `md`。 */
@@ -62,6 +64,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     name,
     Component,
     source,
+    defaultSourceFile,
     align = 'center',
     size = 'md',
     previewClassName,
@@ -77,7 +80,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
   const [localIsExpanded, setLocalIsExpanded] = useState<boolean | undefined>(undefined);
   const [localControlPanelOpen, setLocalControlPanelOpen] = useState<boolean>();
   const [themeMode, setThemeMode] = useState<PreviewThemeMode>(() => useComponentPreviewStore.getState().themeMode);
-  const sourceState = useSourcePanelState(source);
+  const sourceState = useSourcePanelState(source, defaultSourceFile);
   const hasCode = sourceState.views.length > 0;
   const [isMaximized, setIsMaximized] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -185,6 +188,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
             name={name}
             Component={Component}
             source={source}
+            defaultSourceFile={defaultSourceFile}
             align={align}
             initialSize={size}
             controlState={controlState}

@@ -1,6 +1,6 @@
 ﻿---
 title: '@retikz/render'
-description: Lands the renderer-agnostic Scene on a concrete backend — SVG vector DOM, Canvas raster bitmap, and hydration that binds events after a static render.
+description: Lands renderer-agnostic Scenes on SVG / Canvas and uses retained Runtime transactions to commit Patches, events, animation, and hydration atomically.
 ---
 
 > This is package documentation, not component docs; to draw, start from [Components](/kernel/components/layout).
@@ -9,11 +9,165 @@ This group covers how retikz actually paints a figure to the screen. Your figure
 
 ## Responsibilities
 
-| Topic     | Responsibility                                                                               | Reach for it when                                                   |
-| --------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| SVG       | Scene → vector DOM, or an SSR / build-time string                                            | The default: you want crisp vectors, CSS hit-testing, accessibility |
-| Canvas    | Scene → raster bitmap, immediate-mode drawing + hit-testing                                  | Hundreds of primitives, frequent repaints, performance first        |
-| Hydration | Bind event handlers back to primitives by id after a static render (shared by both backends) | Adding click / hover interaction to a figure                        |
+| Topic            | Responsibility                                                                               | Reach for it when                                                   |
+| ---------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| SVG              | Scene → vector DOM, or an SSR / build-time string                                            | The default: you want crisp vectors, CSS hit-testing, accessibility |
+| Canvas           | Scene → raster bitmap, immediate-mode drawing + hit-testing                                  | Hundreds of primitives, frequent repaints, performance first        |
+| Retained Runtime | Prepare and commit Scene Patches inside a Runtime transaction                                | Stable host identity and incremental updates                        |
+| Hydration        | Bind event handlers back to primitives by id after a static render (shared by both backends) | Adding click / hover interaction to a figure                        |
+
+## Retained Runtime
+
+`createRetainedRenderParticipant()` connects a Core Program, `RenderRuntimeOwnerDefinition`, and one retained renderer to the same Runtime Session. The initial transaction materializes a complete Scene. Later transactions prepare a Scene Patch and renderer config together; DOM / bitmap state, events, animation controls, and the public read advance to one revision only after every participant commits. A failed transaction publishes no new revision and attempts rollback. The old host remains usable when rollback succeeds; if rollback itself fails, the Session becomes broken and must be disposed and recreated.
+
+Final disposal performs reverse best-effort cleanup across hydration, animation, and the image loader. Once an SVG WAAPI binding or Canvas clock starts cleanup, public controls and event / visibility callbacks become inert immediately. Animations, observers, listeners, inline-style ownership, visibility listeners, and the clock are cleaned independently: successful items are not repeated, while failed items remain retryable by a later disposal call.
+
+`RenderRuntimeConfigInput` is a closed transaction config. `handlerContributions` merge hydration handlers in registration order, `animation` controls playback, snapshots, and extension registries, `cachePolicy` preserves a hint for future layer invalidation optimization, and `canvas.width` / `canvas.height` declare Canvas CSS user-space dimensions. The alpha.2 SVG and Canvas renderers validate and freeze `cachePolicy` but do not yet enable auto, static, or dynamic layer reuse. Omitted Canvas dimensions derive from the committed Scene layout and are multiplied by the session-lifetime DPR. Size changes and bitmap painting commit atomically, while dirty reuse is allowed only when the target size is stable.
+
+Import these retained APIs from `@retikz/render/runtime`; they are not exported from the `@retikz/render` package root. A third-party backend uses `RetainedRendererFactory` to create a nominal SVG or Canvas renderer and declares `none`, `group`, or `entity` capability. The Render participant validates Snapshot / Patch lineage. When a backend cannot interpret a Patch, it consistently falls back to a complete Scene replacement and publishes a diagnostic.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Public Render Runtime config input',
+      path: 'packages/kernel/render/src/runtime/config.ts',
+      startLine: 35,
+      endLine: 61,
+    },
+    {
+      label: 'Closed config capture',
+      path: 'packages/kernel/render/src/runtime/config.ts',
+      startLine: 209,
+      endLine: 286,
+    },
+    {
+      label: 'Render Runtime config owner',
+      path: 'packages/kernel/render/src/runtime/config.ts',
+      startLine: 288,
+      endLine: 301,
+    },
+    {
+      label: 'Retained renderer creation and participant registration',
+      path: 'packages/kernel/render/src/runtime/participant.ts',
+      startLine: 381,
+      endLine: 435,
+    },
+    {
+      label: 'Retained prepare / commit / rollback',
+      path: 'packages/kernel/render/src/runtime/participant.ts',
+      startLine: 436,
+      endLine: 508,
+    },
+    {
+      label: 'Retained public read and dispose',
+      path: 'packages/kernel/render/src/runtime/participant.ts',
+      startLine: 509,
+      endLine: 518,
+    },
+    {
+      label: 'SVG WAAPI independent resource cleanup',
+      path: 'packages/kernel/render/src/animation/retained/binding.ts',
+      startLine: 66,
+      endLine: 187,
+    },
+    {
+      label: 'SVG WAAPI trigger ownership',
+      path: 'packages/kernel/render/src/animation/retained/binding.ts',
+      startLine: 243,
+      endLine: 305,
+    },
+    {
+      label: 'SVG WAAPI setup cleanup recovery',
+      path: 'packages/kernel/render/src/animation/retained/binding.ts',
+      startLine: 308,
+      endLine: 330,
+    },
+    {
+      label: 'SVG aggregate controls cleanup',
+      path: 'packages/kernel/render/src/runtime/svg-renderer.ts',
+      startLine: 82,
+      endLine: 116,
+    },
+    {
+      label: 'SVG animation retry queue',
+      path: 'packages/kernel/render/src/runtime/svg-renderer.ts',
+      startLine: 118,
+      endLine: 147,
+    },
+    {
+      label: 'Shared rAF frame continuation gate',
+      path: 'packages/kernel/render/src/animation/runtime.ts',
+      startLine: 78,
+      endLine: 132,
+    },
+    {
+      label: 'Shared clock controls cleanup',
+      path: 'packages/kernel/render/src/animation/runtime.ts',
+      startLine: 134,
+      endLine: 182,
+    },
+    {
+      label: 'Canvas animation retry queue',
+      path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
+      startLine: 209,
+      endLine: 246,
+    },
+    {
+      label: 'Canvas visibility cleanup',
+      path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
+      startLine: 927,
+      endLine: 1043,
+    },
+    {
+      label: 'Canvas clock replacement gate',
+      path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
+      startLine: 1053,
+      endLine: 1073,
+    },
+    {
+      label: 'Canvas controls final cleanup',
+      path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
+      startLine: 1105,
+      endLine: 1150,
+    },
+    {
+      label: 'Canvas candidate cleanup retention',
+      path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
+      startLine: 1430,
+      endLine: 1447,
+    },
+    {
+      label: 'Canvas animation rollback cleanup',
+      path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
+      startLine: 1522,
+      endLine: 1537,
+    },
+    {
+      label: 'Canvas renderer final dispose',
+      path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
+      startLine: 1628,
+      endLine: 1650,
+    },
+    {
+      label: 'Renderer capability and public read',
+      path: 'packages/kernel/render/src/runtime/renderer.ts',
+      startLine: 10,
+      endLine: 53,
+    },
+    {
+      label: 'Retained renderer definition and factory contract',
+      path: 'packages/kernel/render/src/runtime/renderer.ts',
+      startLine: 55,
+      endLine: 127,
+    },
+    {
+      label: 'Nominal retained renderer token construction',
+      path: 'packages/kernel/render/src/runtime/renderer.ts',
+      startLine: 169,
+      endLine: 240,
+    },
+  ]}
+/>
 
 ## In this section
 

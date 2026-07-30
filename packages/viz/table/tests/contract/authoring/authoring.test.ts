@@ -62,23 +62,16 @@ describe('Table plain authoring', () => {
     expect(TableSpecSchema.parse(spec)).toEqual(spec);
   });
 
-  it('assembles manual structure without inferring dimensions, row kinds, addresses, or semantics', () => {
-    const cells: ManualTableSpecInput['cells'] = [
-      {
-        id: 'score',
-        address: { row: 1, column: 0 },
-        payload: { kind: 'value', value: 98 },
-        location: 'body',
-        roles: ['data'],
-      },
+  it('assembles a row-major manual structure without modifying its input', () => {
+    const rows: ManualTableSpecInput['rows'] = [
+      ['Name', 'Score'],
+      ['Ada', { id: 'score', value: 98, location: 'body', roles: ['data'] }],
     ];
     const rowKinds: NonNullable<ManualTableSpecInput['rowKinds']> = ['columnHeader', 'body'];
     const input: ManualTableSpecInput = {
       id: 'scores',
-      rows: 2,
-      columns: 1,
+      rows,
       rowKinds,
-      cells,
     };
     const before = structuredClone(input);
     const spec = createManualTableSpec(input);
@@ -88,25 +81,24 @@ describe('Table plain authoring', () => {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'scores',
-      structure: { kind: 'manual', rows: 2, columns: 1, rowKinds, cells },
+      structure: { kind: 'manual', rows, rowKinds },
     });
     expect(input).toEqual(before);
     expect(spec.structure.kind).toBe('manual');
     expect(spec.structure.rowKinds).not.toBe(rowKinds);
-    expect(spec.structure.cells).not.toBe(cells);
+    expect(spec.structure.rows).not.toBe(rows);
     expect('data' in spec).toBe(false);
+    expect(JSON.parse(JSON.stringify(spec))).toEqual(spec);
     expect(TableSpecSchema.parse(spec)).toEqual(spec);
   });
 
   it('delegates invalid detail and manual inputs to the Table schema', () => {
     expect(() => createDetailTableSpec({ dataRef: '', columns: [] })).toThrow();
-    expect(() => createManualTableSpec({ rows: 0, columns: 1, cells: [] })).toThrow();
+    expect(() => createManualTableSpec({ rows: [] })).toThrow();
     expect(() =>
       createManualTableSpec({
-        rows: 1,
-        columns: 1,
+        rows: [['A']],
         rowKinds: ['body', 'body'],
-        cells: [],
       }),
     ).toThrow(/rowKinds/i);
   });

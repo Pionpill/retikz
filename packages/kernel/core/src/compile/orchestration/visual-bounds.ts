@@ -16,8 +16,9 @@ import type { IRPosition, ResolvedDropShadow } from '../../schemas';
 import { DEG_TO_RAD } from '../../shared/geometry';
 import { CANONICAL_STROKE_MITER_LIMIT } from '../constants';
 import { buildMarkMarkerGroup } from '../path';
+import { CompileInvariantError } from '../probe-failure';
 import { applyTransformChain } from '../transform';
-import { expandBoundsForShadow } from './bounds';
+import { canonicalizeBoundsRect, expandBoundsForShadow } from './bounds';
 
 type MutableRect = { x: number; y: number; width: number; height: number };
 
@@ -319,7 +320,9 @@ const primitiveBounds = (
     if (primitive.clipRef !== undefined) {
       const resource = resources.get(primitive.clipRef);
       if (resource === undefined || resource.kind !== 'clip') {
-        throw new Error(`Cannot resolve clip resource '${primitive.clipRef}' for canonical visual bounds`);
+        throw new CompileInvariantError(
+          `Cannot resolve clip resource '${primitive.clipRef}' for canonical visual bounds`,
+        );
       }
       const clip = clipBounds(resource.shape);
       if (clip !== undefined) bounds = intersect(bounds, clip);
@@ -334,19 +337,33 @@ const primitiveBounds = (
   return primitive.type === 'path' ? union(geometry, markerBounds(primitive, resources)) : geometry;
 };
 
-/** 从最终 settled Scene primitive tree 计算 canonical visual bounds */
-export const visualBoundsOfPrimitives = (
+/** 从最终 settled Scene primitive tree 计算可选 canonical visual bounds */
+export const optionalVisualBoundsOfPrimitives = (
   primitives: ReadonlyArray<ScenePrimitive>,
   resources: ReadonlyArray<SceneResource>,
-): Readonly<BoundsRect> => {
+): Readonly<BoundsRect> | undefined => {
   const resourceMap = new Map(resources.map(resource => [resource.id, resource]));
   const bounds = primitives.reduce<BoundsRect | undefined>(
     (current, primitive) => union(current, primitiveBounds(primitive, resourceMap)),
     undefined,
   );
-  const output: MutableRect = bounds ?? { x: 0, y: 0, width: 0, height: 0 };
-  if (![output.x, output.y, output.width, output.height].every(Number.isFinite)) {
-    throw new Error('Canonical visual bounds must contain only finite numbers');
+  if (bounds === undefined) return undefined;
+  const output: MutableRect = bounds;
+  const right = output.x + output.width;
+  const bottom = output.y + output.height;
+  if (
+    ![output.x, output.y, output.width, output.height, right, bottom].every(Number.isFinite) ||
+    output.width < 0 ||
+    output.height < 0
+  ) {
+    throw new CompileInvariantError('Canonical visual bounds and their derived edges must remain finite and valid');
   }
-  return Object.freeze(output);
+  return canonicalizeBoundsRect(output);
 };
+
+/** 从最终 settled Scene primitive tree 计算 canonical visual bounds */
+export const visualBoundsOfPrimitives = (
+  primitives: ReadonlyArray<ScenePrimitive>,
+  resources: ReadonlyArray<SceneResource>,
+): Readonly<BoundsRect> =>
+  optionalVisualBoundsOfPrimitives(primitives, resources) ?? Object.freeze({ x: 0, y: 0, width: 0, height: 0 });

@@ -68,7 +68,32 @@ export const vizSection: Array<Section> = [
           },
         ],
       },
-      { id: 'provenance', label: 'viz.dataProvenance' },
+      {
+        id: 'provenance',
+        label: 'viz.dataProvenance',
+        children: [
+          {
+            id: 'data',
+            label: 'viz.dataProvenanceData',
+            meta: {
+              pageType: 'concept',
+              audience: 'integrator',
+              capability: 'data.provenance',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          {
+            id: 'plot',
+            label: 'viz.dataProvenancePlot',
+            meta: {
+              pageType: 'concept',
+              audience: 'integrator',
+              capability: 'plot.lineage',
+              sourceOfTruth: 'runtime',
+            },
+          },
+        ],
+      },
       {
         id: 'reference',
         label: 'viz.dataReference',
@@ -101,8 +126,10 @@ export const vizSection: Array<Section> = [
         id: 'reference',
         label: 'viz.tableReference',
         children: [
-          { id: 'contract-table', label: 'viz.tableReferenceContractTable' },
           { id: 'contract-detail', label: 'viz.tableReferenceContractDetail' },
+          { id: 'contract-table', label: 'viz.tableReferenceContractTable' },
+          { id: 'contract-layout', label: 'viz.tableReferenceContractLayout' },
+          { id: 'manifest', label: 'viz.tableReferenceManifest' },
           { id: 'runtime', label: 'viz.tableReferenceRuntime' },
         ],
       },
@@ -203,16 +230,6 @@ export const vizSection: Array<Section> = [
           { id: 'axis', label: 'viz.compAxis' },
           { id: 'legend', label: 'viz.compLegend' },
         ],
-      },
-      {
-        id: 'lineage',
-        label: 'viz.plotLineage',
-        meta: {
-          pageType: 'concept',
-          audience: 'integrator',
-          capability: 'plot.lineage',
-          sourceOfTruth: 'runtime',
-        },
       },
       {
         id: 'reference',

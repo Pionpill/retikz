@@ -35,7 +35,7 @@ Start with the same data and the same `<PathMark>`. When switching between `cart
 
 <ComponentPreview
   files={['axis-coordinate-basics', 'axis-coordinate-basics.data.ts']}
-  size="md"
+  size="lg"
   caption="Switch the coordinate system, axis visibility, grid, and target tick count to compare x / y roles across both projections."
 />
 
@@ -47,7 +47,7 @@ In the origin scene, both axes use `placement.kind="origin"` to cross the other 
 
 <ComponentPreview
   files={['axis-cartesian-playground', 'axis-cartesian-playground.data.ts']}
-  size="md"
+  size="lg"
   caption="Switch among continuous-edge, continuous-origin, and categorical-label scenes, then tune only the active Axis controls."
 />
 
@@ -63,7 +63,7 @@ In the origin scene, both axes use `placement.kind="origin"` to cross the other 
 
 Axis creates candidate ticks with the priority `ticks.values > ticks.interval > ticks.count`, then applies `density` to obtain visible ticks. The grid reuses those results unless `grid.ticks` requests a separate candidate source, so its density can remain independent from axis labels. Minor-grid positions come from `grid.minor.ticks`, then drop positions that overlap the major grid.
 
-<ComponentPreview files="axis-tick-grid-flow" size="sm" hideCode />
+<ComponentPreview files="axis-tick-grid-flow" size="xs" hideCode />
 
 <SourceLinks
   sources={[
@@ -92,7 +92,7 @@ Axis creates candidate ticks with the priority `ticks.values > ticks.interval > 
 
 Axes sit above marks by default, while grids stay below them. `layer={{ zIndex }}` overrides only the axis scope; grid always uses its separate background layer so lines do not cover the data. The default order is grid `-300`, marks `0`, axis `200`, plot labels `400`, and legend `500`.
 
-<ComponentPreview files="axis-semantic-layers" size="sm" hideCode />
+<ComponentPreview files="axis-semantic-layers" size="md" hideCode />
 
 <SourceLinks
   sources={[

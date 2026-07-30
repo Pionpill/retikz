@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 
 import { BuiltinShape } from '@retikz/core';
-import { Axis, Plot, PointMark } from '@retikz/plot-react';
+import { Axis, Plot, PointMark, Scale } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -25,6 +25,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     height={360}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
+    <Scale dimension="x" type="linear" domain={[0.5, 3.5]} domainPadding={0} />
+    <Scale dimension="y" type="linear" domain={[8, 24]} domainPadding={0} />
     <PointMark
       x="x"
       y="nodeY"

@@ -21,9 +21,7 @@ import { DetailTable, ManualTable, Table } from '../../src';
 const manualSpec = (id?: string): IRTableSpec =>
   createManualTableSpec({
     ...(id === undefined ? {} : { id }),
-    rows: 1,
-    columns: 1,
-    cells: [{ address: { row: 0, column: 0 }, payload: { kind: 'value', value: 'Ada' } }],
+    rows: [['Ada']],
   });
 
 const adapterOf = <TProps,>(component: {
@@ -83,9 +81,7 @@ describe('Table React components', () => {
     };
     const manualProps = {
       id: 'score-table',
-      rows: 1,
-      columns: 1,
-      cells: [{ address: { row: 0, column: 0 }, payload: { kind: 'value' as const, value: 98 } }],
+      rows: [[98]],
     };
     const detailContribution = adapterOf(DetailTable).contribute(detailProps);
     const manualContribution = adapterOf(ManualTable).contribute(manualProps);
@@ -117,9 +113,7 @@ describe('Table React components', () => {
     });
     const manualContribution = manualAdapter.contribute({
       id: 'manual',
-      rows: 1,
-      columns: 1,
-      cells: [],
+      rows: [[null]],
     });
 
     expect([tableAdapter.displayName, detailAdapter.displayName, manualAdapter.displayName]).toEqual([
@@ -147,12 +141,7 @@ describe('Table React components', () => {
           header={false}
           columns={[{ id: 'name', field: 'name' }]}
         />
-        <ManualTable
-          id="manual"
-          rows={1}
-          columns={1}
-          cells={[{ address: { row: 0, column: 0 }, payload: { kind: 'value', value: 'Lin' } }]}
-        />
+        <ManualTable id="manual" rows={[['Lin']]} />
       </Layout>,
     );
 
@@ -172,15 +161,15 @@ describe('Table React components', () => {
     expect(() =>
       renderToStaticMarkup(
         <Layout>
-          <ManualTable id="same" rows={1} columns={1} cells={[]} />
-          <ManualTable id="same" rows={1} columns={1} cells={[]} />
+          <ManualTable id="same" rows={[[null]]} />
+          <ManualTable id="same" rows={[[null]]} />
         </Layout>,
       ),
     ).toThrow(/reference.*@@retikz\/table\/runtime\/same/i);
     expect(() =>
       renderToStaticMarkup(
         <Layout>
-          <ManualTable id="manifest" rows={1} columns={1} cells={[]} onManifest={vi.fn()} />
+          <ManualTable id="manifest" rows={[[null]]} onManifest={vi.fn()} />
         </Layout>,
       ),
     ).toThrow(/onManifest.*outer.*Layout/i);
@@ -192,9 +181,7 @@ describe('Table React components', () => {
         <Layout>
           <ManualTable
             id="embedded-host"
-            rows={1}
-            columns={1}
-            cells={[]}
+            rows={[[null]]}
             width={320}
             viewBox={{ x: 0, y: 0, width: 100, height: 100 }}
             onManifest={vi.fn()}
@@ -208,9 +195,7 @@ describe('Table React components', () => {
         <Layout>
           <ManualTable
             id="embedded-explicit-undefined"
-            rows={1}
-            columns={1}
-            cells={[]}
+            rows={[[null]]}
             width={undefined}
             onManifest={undefined}
             {...({ embeddables: undefined } as { embeddables?: unknown })}
@@ -233,14 +218,7 @@ describe('Table React components', () => {
       expand: node => ({ type: 'node', position: [0, 0], text: node.label }),
     });
     const spec = createManualTableSpec({
-      rows: 1,
-      columns: 1,
-      cells: [
-        {
-          address: { row: 0, column: 0 },
-          payload: { kind: 'content', content: { namespace: 'fixture', type: 'badge', label: 'Nested' } },
-        },
-      ],
+      rows: [[{ content: { namespace: 'fixture', type: 'badge', label: 'Nested' } }]],
     });
 
     expect(renderToStaticMarkup(<Table spec={spec} composites={[badge]} />)).toContain('Nested');

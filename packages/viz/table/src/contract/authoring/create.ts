@@ -41,7 +41,7 @@ export const createDetailTableSpec = (input: DetailTableSpecInput): IRDetailTabl
 
 /** 从 plain manual 输入构造 schema-valid Table spec */
 export const createManualTableSpec = (input: ManualTableSpecInput): IRManualTableSpec => {
-  const { rows, columns, rowKinds, cells, ...root } = input;
+  const { rows, rowKinds, ...root } = input;
   return ManualTableSpecSchema.parse({
     namespace: TABLE_NAMESPACE,
     type: TableComposite.Table,
@@ -49,9 +49,7 @@ export const createManualTableSpec = (input: ManualTableSpecInput): IRManualTabl
     structure: {
       kind: TableStructureKind.Manual,
       rows,
-      columns,
       ...(rowKinds === undefined ? {} : { rowKinds }),
-      cells,
     },
   });
 };

@@ -17,7 +17,7 @@ import {
 const manualSpec = {
   namespace: 'table',
   type: 'table',
-  structure: { kind: 'manual', rows: 1, columns: 1, cells: [] },
+  structure: { kind: 'manual', rows: [['value']] },
 } as const;
 
 describe('Table root spec schema', () => {

@@ -1,30 +1,37 @@
 import type { FC } from 'react';
 
 import { Axis, PathMark, Plot } from '@retikz/plot-react';
-import { Layout } from '@retikz/react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { LINE_SERIES_CONTROL_ID, previewControlContract } from './line-series.controls';
+import { LINE_SERIES_CONTROL_IDS, previewControlContract } from './line-series.controls';
 import { climate } from './line-series.data';
 
-/** 显式 series：左侧笛卡尔、右侧极坐标，每个 city 下沉为一条路径。 */
+/** 比较显式 series 与分类 color 触发的隐式路径拆分 */
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const series = values[LINE_SERIES_CONTROL_ID] === 'city' ? 'city' : undefined;
+  const coordinate = values[LINE_SERIES_CONTROL_IDS.coordinate];
+  const grouping = values[LINE_SERIES_CONTROL_IDS.grouping];
+  const x = coordinate === 'polar2D' ? 'quarter' : 'month';
+  const grouped = grouping !== 'none';
 
   return (
-    <Layout width={620} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
-      <Plot data={climate} width={300} height={220} x={0} y={30}>
-        <PathMark x="month" y="score" series={series} order="month" />
-        <Axis dimension="x" />
-        <Axis dimension="y" grid />
-      </Plot>
-      <Plot data={climate} width={260} height={260} coordinate="polar2D" x={350} y={0}>
-        <PathMark x="quarter" y="score" series={series} order="month" closed />
-        <Axis dimension="x" />
-        <Axis dimension="y" grid />
-      </Plot>
-    </Layout>
+    <Plot data={climate} width={400} height={280} coordinate={coordinate === 'polar2D' ? 'polar2D' : undefined}>
+      <PathMark
+        x={x}
+        y="score"
+        order="month"
+        series={grouping === 'series' ? 'city' : undefined}
+        color={grouping === 'color' ? 'city' : undefined}
+        label={
+          grouped && values[LINE_SERIES_CONTROL_IDS.showLabels]
+            ? { content: { field: 'city' }, position: 'near-end', side: 'top', distance: 6 }
+            : undefined
+        }
+        closed={coordinate === 'polar2D' && values[LINE_SERIES_CONTROL_IDS.closed]}
+      />
+      <Axis dimension="x" />
+      <Axis dimension="y" grid />
+    </Plot>
   );
 });
 

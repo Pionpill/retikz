@@ -1,9 +1,9 @@
 ---
 title: 契约 - 表格
-description: 查询 TableSpec 根、Cell span/布局、轨道尺寸、border 与布局 manifest 的 JSON schema。
+description: 查询 TableSpec 根、manual Cell、canonical payload 与 presentation reference 的 JSON schema。
 ---
 
-基础表格契约定义所有表型共享的顶层身份、Cell 内容和布局字段，并提供 manual / custom 精确根变体。detail 专有的数据引用与列结构见[明细表契约](/viz/table/reference/contract-detail)。
+基础表格契约定义所有表型共享的顶层身份与 Cell 内容，并提供 manual / custom 精确根变体。detail 专有的数据引用与列结构见[明细表契约](/viz/table/reference/contract-detail)；Cell box、轨道和 border 配置见[布局契约](/viz/table/reference/contract-layout)。
 
 ## TableSpec 根
 
@@ -32,7 +32,7 @@ description: 查询 TableSpec 根、Cell span/布局、轨道尺寸、border 与
 
 <ZodSchema
   name="ManualTableSpecSchema"
-  description="显式网格 spec：直接保存行、列与 Cell，不接受外部 data reference。"
+  description="显式网格 spec：保存矩形行优先 Cell entries，不接受外部 data reference。"
   descriptions={{
     namespace: 'Table Tier 2 composite 的固定命名空间，用于把节点路由到 Table composite definition。',
     type: '顶层 Table 规格的 composite 类型判别值。',
@@ -40,12 +40,10 @@ description: 查询 TableSpec 根、Cell span/布局、轨道尺寸、border 与
     layout: '轨道、gap 与 border 布局配置；省略字段使用 pipeline 默认值。',
     meta: '由 lowering 原样保留的 JSON-safe 元数据。',
     data: 'manual Table 不接受外部数据引用。',
-    structure: 'manual Table 的显式行、列与 Cell 结构。',
+    structure: 'manual Table 的矩形行优先 Cell 结构。',
     'structure.kind': '显式 manual Structure 的判别值。',
-    'structure.rows': '显式声明的行数。',
-    'structure.columns': '显式声明的列数。',
+    'structure.rows': '非空矩形二维 Cell entries；行列数量和地址由数组坐标推导。',
     'structure.rowKinds': '每一行的可选语义类型；省略时所有行均按正文行处理。',
-    'structure.cells': '按声明行列范围内的地址保存的显式 Cell。',
   }}
 />
 
@@ -66,21 +64,20 @@ description: 查询 TableSpec 根、Cell span/布局、轨道尺寸、border 与
   }}
 />
 
-## Cell
+## Cell 内容
 
-`IRTableCell` 是 manual Structure 中可直接持久化的 Cell。地址从 `0` 开始；省略 `id`、`location` 或 `roles` 时，运行时会从地址和所在行语义派生。
+`IRManualTableCell` 是 manual `rows` 中可直接持久化的非空 entry。`string | number | boolean` 是 value 简写；rich object 可保存 value/content、span 与 layout。`null` 属于 rows 的空槽哨兵，不是这个 Cell union；真正的 null scalar 写成 `{ value: null }`。
 
-### TableCellSchema
+### ManualTableCellSchema
 
 <ZodSchema
-  name="TableCellSchema"
-  description="显式 Cell：包含零基地址、value/content payload，以及可选身份与语义角色。"
+  name="ManualTableCellSchema"
+  description="manual rows 中的非空 Cell entry：标量简写或 addressless value/content rich object。"
   descriptions={{
     id: '可选稳定 Cell id；省略时根据 Cell 地址派生。',
-    address: 'manual Structure 中的零基 Cell 地址。',
-    'address.row': 'Structure 输出中的零基行索引。',
-    'address.column': 'Structure 输出中的零基列索引。',
-    payload: 'Cell 的标量值或直接 Core/Tier 2 内容。',
+    value: '交给 presentation provider 的 JSON scalar；可显式为 null。',
+    presentation: 'value Cell 的可选 presentation provider 引用；省略时使用内置 text。',
+    content: '在 Cell 局部坐标中 author 的 JSON-safe Core 或 Tier 2 child。',
     location: 'Cell 所在的可选语义区域；省略时根据所在行类型派生。',
     roles: 'Cell 承担的可选非空语义角色；省略时根据所在行类型派生。',
     span: '可选矩形跨度；省略的轴按 1 处理。',
@@ -95,7 +92,7 @@ description: 查询 TableSpec 根、Cell span/布局、轨道尺寸、border 与
   description="Cell 内容联合：value 交给 presentation provider，content 直接保存 JSON-safe Core/Tier 2 child。"
 />
 
-`{ kind: 'value', value: 'Score' }` 中的 `kind: 'value'` 表示“标量值呈现”分支；它不是 JavaScript 字符串类型的别名。直接放置 Node、Path 或 Tier 2 child 时使用 `kind: 'content'`。
+这些 payload schema 描述 Structure output 中的 canonical 内容契约。manual authoring 使用 `{ value: 'Score' }` 或 `{ content }`，Table 会统一物化对应的 `kind: 'value' | 'content'` payload。
 
 ### TableCellValuePayloadSchema
 
@@ -133,436 +130,10 @@ description: 查询 TableSpec 根、Cell span/布局、轨道尺寸、border 与
 
 `presentation.name` 必须命中 runtime 注入的 definition；未注册名称或不符合该 provider `optionsSchema` 的 options 会 fail-loud。
 
-### TableCellSpanSchema
-
-<ZodSchema
-  name="TableCellSpanSchema"
-  description="从 Cell 原点开始连续覆盖的矩形行列跨度；省略的轴在运行时按 1 处理。"
-  descriptions={{
-    rows: '连续覆盖的正行数；省略时按 1 处理。',
-    columns: '连续覆盖的正列数；省略时按 1 处理。',
-  }}
-/>
-
-span 不能超出行列范围、与其它 Cell 重叠或跨越不同 row kind。
-
-### TableCellLayoutSchema
-
-<ZodSchema
-  name="TableCellLayoutSchema"
-  description="Cell content box、受约束换行、尺寸适配、可见性与四边边线策略。"
-  descriptions={{
-    padding: '非负统一或分边 padding；省略时使用 0。',
-    horizontalAlign: 'content box 内的横向对齐；省略时居中。',
-    verticalAlign: 'content box 内的纵向对齐；省略时居中。',
-    wrap: '是否请求宽度受约束的内容布局；省略时为 false。',
-    fit: '最终内容缩放策略；省略时为 none。',
-    overflow: '内容溢出保持可见或裁剪；省略时为 visible。',
-    borders: '可选的 Cell 四边边线候选。',
-  }}
-/>
-
-横向对齐取值为 <ApiValues name="TableHorizontalAlignment" />，纵向对齐取值为 <ApiValues name="TableVerticalAlignment" />；fit 为 <ApiValues name="TableCellFit" />，overflow 为 <ApiValues name="TableCellOverflow" />。
-
-### TableCellFitSchema
-
-<ZodSchema name="TableCellFitSchema" description="Cell 内容在最终 content box 内的缩放策略。" />
-
-### TableCellOverflowSchema
-
-<ZodSchema name="TableCellOverflowSchema" description="Cell 内容保持可见或裁剪到 content box 的溢出策略。" />
-
-## Layout
-
-### TableLayoutSchema
-
-<ZodSchema
-  name="TableLayoutSchema"
-  description="Table 默认/稀疏覆盖轨道尺寸、非负 gap 与全表 border 策略。"
-  descriptions={{
-    columnSize: '默认列轨道尺寸；省略时使用 fixed 120。',
-    rowSize: '默认正文行轨道尺寸；省略时使用 fixed 32。',
-    headerRowSize: '默认列头行尺寸；省略时跟随解析后的 rowSize。',
-    columns: '按 canonical 零基索引声明的稀疏列尺寸覆盖。',
-    rows: '按 canonical 零基索引声明的稀疏行尺寸覆盖。',
-    columnGap: '相邻列之间的非负间距；省略时使用 0。',
-    rowGap: '相邻行之间的非负间距；省略时使用 0。',
-    borders: '可选的 Table border 拓扑与默认候选。',
-  }}
-/>
-
-省略字段时，列为 fixed `120`、正文行为 fixed `32`、列头行跟随正文行，行列 gap 为 `0`。`auto` 与 `minmax` 可以消费内容 contribution；fraction 只在有限父宽约束下扩展列，行轴当前按自然 contribution 求值。
-
-## 轨道尺寸原语
-
-以下尺寸原语直接用于 `TableLayoutSchema.columnSize` / `rowSize` / `headerRowSize` 和稀疏覆盖，表达固定尺寸、内容自然尺寸、剩余空间份额与带上下界的轨道。
-
-轨道尺寸的判别值为 <ApiValues name="TableTrackSizeKind" />。
-
-### TableFixedTrackSizeSchema
-
-<ZodSchema
-  name="TableFixedTrackSizeSchema"
-  description="显式固定轨道尺寸；允许 0 表达折叠轨道。"
-  descriptions={{
-    kind: '固定轨道尺寸的判别值。',
-    value: '有限非负的固定尺寸。',
-  }}
-/>
-
-### TableAutoTrackSizeSchema
-
-<ZodSchema
-  name="TableAutoTrackSizeSchema"
-  description="从 canonical 内容贡献确定自然尺寸的轨道。"
-  descriptions={{
-    kind: '内容自然尺寸轨道的判别值。',
-  }}
-/>
-
-### TableFractionTrackSizeSchema
-
-<ZodSchema
-  name="TableFractionTrackSizeSchema"
-  description="在有限轴约束下按权重分配剩余空间的轨道。"
-  descriptions={{
-    kind: '弹性份额轨道的判别值。',
-    weight: '有限正权重；省略时运行时使用 1。',
-  }}
-/>
-
-### TableMinmaxTrackSizeSchema
-
-<ZodSchema
-  name="TableMinmaxTrackSizeSchema"
-  description="由下界和上界变体约束的轨道尺寸。"
-  descriptions={{
-    kind: '带上下界轨道的判别值。',
-    min: '固定或内容自然下界。',
-    max: '固定、内容自然或弹性份额上界。',
-  }}
-/>
-
-当上下界都是 fixed 时，`min.value` 不能大于 `max.value`。`min` 不接受 fraction；`max` 接受 fixed、auto 或 fraction。
-
-### TableTrackSizeSchema
-
-<ZodSchema name="TableTrackSizeSchema" description="fixed、auto、fraction 与 minmax 四种轨道尺寸的判别联合。" />
-
-### TableTrackOverrideSchema
-
-<ZodSchema
-  name="TableTrackOverrideSchema"
-  description="通过 canonical 零基索引覆盖单个轨道的尺寸。"
-  descriptions={{
-    index: '要覆盖的 canonical 零基轨道索引。',
-    size: '替换该索引轴默认值的轨道尺寸。',
-  }}
-/>
-
-### TableTrackOverridesSchema
-
-<ZodSchema name="TableTrackOverridesSchema" description="canonical 索引必须唯一的稀疏轨道尺寸覆盖列表。" />
-
-列表允许只声明需要覆盖的索引，不要求复制其余轨道。同一列表中的重复索引会被 schema 拒绝；相对于实际行列数量的越界检查由后续 layout resolve 执行。
-
-## Border
-
-border 候选类型为 <ApiValues name="TableBorderKind" />；全表拓扑模式为 <ApiValues name="TableBorderMode" />。`collapse` 把共享边候选放入同一冲突解析，`separate` 保留每个真实 Cell side。
-
-### TableNoBorderSchema
-
-<ZodSchema
-  name="TableNoBorderSchema"
-  description="显式隐藏一条候选边，并参与同一冲突优先级比较。"
-  descriptions={{
-    kind: '显式隐藏 border 候选的判别值。',
-    priority: '有限整数冲突优先级；省略时使用 0。',
-  }}
-/>
-
-### TableLineBorderSchema
-
-<ZodSchema
-  name="TableLineBorderSchema"
-  description="使用 Core-compatible paint 与线型参数绘制的 border 候选。"
-  descriptions={{
-    kind: '可见线条 border 候选的判别值。',
-    stroke: '非 none 的 Core paint；省略时使用 currentColor。',
-    width: '非负线宽；省略时使用 1。',
-    strokeOpacity: '边线不透明度；省略时使用 1。',
-    dashPattern: '可选的非空正数虚线数组；省略时为实线。',
-    dashOffset: '有限虚线偏移；省略时使用 0。',
-    priority: '有限整数冲突优先级；省略时使用 0。',
-  }}
-/>
-
-### TableBorderSchema
-
-<ZodSchema name="TableBorderSchema" description="显式隐藏或 Core-compatible 线条组成的 border 候选联合。" />
-
-### TableCellBordersSchema
-
-<ZodSchema
-  name="TableCellBordersSchema"
-  description="单个 Cell 的物理 top/right/bottom/left border 候选。"
-  descriptions={{
-    top: '可选上边候选。',
-    right: '可选右边候选。',
-    bottom: '可选下边候选。',
-    left: '可选左边候选。',
-  }}
-/>
-
-### TableBordersSchema
-
-<ZodSchema
-  name="TableBordersSchema"
-  description="全表 border 拓扑与外框、横向内线、纵向内线默认候选。"
-  descriptions={{
-    mode: '共享边 collapse 或逐 Cell separate 模式；省略时为 collapse。',
-    outer: '可选外边界默认候选。',
-    horizontal: '可选内部行边界默认候选。',
-    vertical: '可选内部列边界默认候选。',
-  }}
-/>
-
-Cell side 的候选优先于全表默认；同一共享原子边先比较 `priority`，再比较来源 specificity 与 canonical source order。`kind: 'none'` 可以显式压制低优先级线条。
-
-## 布局 manifest
-
-`TableLayoutManifest` 是同次 Table compile 产出的 JSON-safe、detached、递归冻结 typed artifact payload。运行时如何取得 exact root manifest 见[运行时](/viz/table/reference/runtime#table-compile-api)；本节只列它的持久化形状与嵌套 DTO。
-
-### TableLayoutManifestSchema
-
-<ZodSchema
-  name="TableLayoutManifestSchema"
-  description="同次 Table compile 产出的布局、可见范围与可追溯条目集合。"
-  descriptions={{
-    tableId: '可选的公开 Table id；不能作为实例 selector。',
-    allocationBounds: 'tracks 与 gaps 在 Table-local 坐标中的分配范围。',
-    'allocationBounds.x': '分配范围左边界的有限 Table-local x 坐标。',
-    'allocationBounds.y': '分配范围上边界的有限 Table-local y 坐标。',
-    'allocationBounds.width': '分配范围的有限非负宽度。',
-    'allocationBounds.height': '分配范围的有限非负高度。',
-    visualOverflowBounds: '可见 Cell 与 border 在 Table-local 坐标中的 union。',
-    'visualOverflowBounds.x': '可见范围左边界的有限 Table-local x 坐标。',
-    'visualOverflowBounds.y': '可见范围上边界的有限 Table-local y 坐标。',
-    'visualOverflowBounds.width': '可见范围的有限非负宽度。',
-    'visualOverflowBounds.height': '可见范围的有限非负高度。',
-    rows: '按 canonical 顺序保存的行轨道几何。',
-    columns: '按 canonical 顺序保存的列轨道几何。',
-    cells: '按 canonical 顺序保存的 Cell 几何与来源。',
-    borders: '可见 border edge 的几何与冲突解析来源。',
-  }}
-/>
-
-### TableTrackManifestEntrySchema
-
-<ZodSchema
-  name="TableTrackManifestEntrySchema"
-  description="一条 resolved 行或列轨道的稳定身份与 Table-local 几何。"
-  descriptions={{
-    id: '稳定语义轨道 id。',
-    index: 'canonical 零基轨道索引。',
-    offset: '有限 Table-local 轴向偏移。',
-    size: '有限非负轨道尺寸。',
-  }}
-/>
-
-### TableCellManifestEntrySchema
-
-<ZodSchema
-  name="TableCellManifestEntrySchema"
-  description="一个 resolved Cell 的身份、span、各坐标空间 bounds、语义与来源。"
-  descriptions={{
-    cellId: '稳定语义 Cell id。',
-    rowId: '所属起始行的稳定语义 id。',
-    columnId: '所属起始列的稳定语义 id。',
-    rowIndex: 'Cell 起点的 canonical 零基行索引。',
-    columnIndex: 'Cell 起点的 canonical 零基列索引。',
-    span: 'resolved 矩形 Cell span。',
-    'span.rows': 'resolved 正行跨度。',
-    'span.columns': 'resolved 正列跨度。',
-    box: 'Table-local Cell box。',
-    'box.x': 'Cell box 左边界的有限 Table-local x 坐标。',
-    'box.y': 'Cell box 上边界的有限 Table-local y 坐标。',
-    'box.width': 'Cell box 的有限非负宽度。',
-    'box.height': 'Cell box 的有限非负高度。',
-    contentBox: 'Table-local padding-reduced content box。',
-    'contentBox.x': 'content box 左边界的有限 Table-local x 坐标。',
-    'contentBox.y': 'content box 上边界的有限 Table-local y 坐标。',
-    'contentBox.width': 'content box 的有限非负宽度。',
-    'contentBox.height': 'content box 的有限非负高度。',
-    sourceAllocationBounds: 'replay-root local 的源 allocation bounds。',
-    'sourceAllocationBounds.x': '源 allocation bounds 左边界的有限局部 x 坐标。',
-    'sourceAllocationBounds.y': '源 allocation bounds 上边界的有限局部 y 坐标。',
-    'sourceAllocationBounds.width': '源 allocation bounds 的有限非负宽度。',
-    'sourceAllocationBounds.height': '源 allocation bounds 的有限非负高度。',
-    sourceVisualOverflowBounds: 'replay-root local 的源可见 bounds。',
-    'sourceVisualOverflowBounds.x': '源可见 bounds 左边界的有限局部 x 坐标。',
-    'sourceVisualOverflowBounds.y': '源可见 bounds 上边界的有限局部 y 坐标。',
-    'sourceVisualOverflowBounds.width': '源可见 bounds 的有限非负宽度。',
-    'sourceVisualOverflowBounds.height': '源可见 bounds 的有限非负高度。',
-    contentAllocationBounds: 'fit 与 alignment 后的 Table-local allocation bounds。',
-    'contentAllocationBounds.x': '内容 allocation bounds 左边界的有限 Table-local x 坐标。',
-    'contentAllocationBounds.y': '内容 allocation bounds 上边界的有限 Table-local y 坐标。',
-    'contentAllocationBounds.width': '内容 allocation bounds 的有限非负宽度。',
-    'contentAllocationBounds.height': '内容 allocation bounds 的有限非负高度。',
-    visualOverflowBounds: 'overflow 策略后的 Table-local 可见 bounds。',
-    'visualOverflowBounds.x': 'Cell 可见 bounds 左边界的有限 Table-local x 坐标。',
-    'visualOverflowBounds.y': 'Cell 可见 bounds 上边界的有限 Table-local y 坐标。',
-    'visualOverflowBounds.width': 'Cell 可见 bounds 的有限非负宽度。',
-    'visualOverflowBounds.height': 'Cell 可见 bounds 的有限非负高度。',
-    location: 'Cell 所在的语义区域。',
-    roles: 'Cell 承担的非空语义角色。',
-    source: '可选的稳定 Cell 来源身份。',
-  }}
-/>
-
-border manifest 把最终可见 edge 与原子边冲突来源一起保存。以下 schema 从 resolved line 和候选 contribution 逐层组成 atom，再组成 merged edge。
-
-### ResolvedTableBorderLineSchema
-
-<ZodSchema
-  name="ResolvedTableBorderLineSchema"
-  description="完成默认值解析、可直接 lowering 为 Core Path 的 border line style。"
-  descriptions={{
-    stroke: '非 none 的 resolved Core paint。',
-    width: 'resolved 非负 border 宽度。',
-    strokeOpacity: 'resolved border stroke opacity。',
-    dashPattern: '可选非空正数 dash pattern；省略表示实线。',
-    dashOffset: 'resolved 有限 dash offset。',
-    lineCap: 'canonical border line cap。',
-    lineJoin: 'canonical border line join。',
-  }}
-/>
-
-### TableBorderSourceSchema
-
-<ZodSchema
-  name="TableBorderSourceSchema"
-  description="border 候选的 canonical 来源：Cell side、Table outer 默认边或内部 grid 默认边。"
-  descriptions={{
-    kind: 'Cell side 或 Table 默认边来源的判别值。',
-    cellId: '保留用于 provenance 的语义 Cell id。',
-    row: 'Cell 起点的 canonical 零基行索引。',
-    column: 'Cell 起点的 canonical 零基列索引。',
-    side: '提供候选的物理 Cell side 或 Table 外边。',
-    scope: 'Table outer、horizontal 或 vertical 默认边作用域。',
-    boundaryIndex: '内部 grid 边界的 canonical 零基索引。',
-  }}
-/>
-
-Cell 来源保留 `cellId + row + column + side`；Table 默认来源使用 `scope + side` 或 `scope + boundaryIndex`，不依赖对象遍历顺序决定冲突结果。
-
-### TableNoBorderContributionSchema
-
-<ZodSchema
-  name="TableNoBorderContributionSchema"
-  description="参与冲突解析的显式隐藏 border 候选。"
-  descriptions={{
-    kind: '显式隐藏候选的判别值。',
-    key: '当前 layout transaction 内唯一的 contribution key。',
-    source: 'canonical border 候选来源。',
-    priority: 'resolved 有限整数冲突优先级。',
-    specificity: 'Table 默认边或 Cell side 的来源精确度等级。',
-    ownerSideRank: 'canonical 物理 owner side 排序值。',
-    sourceOrderKey: '不依赖 Cell id 的 canonical 来源排序 key。',
-  }}
-/>
-
-### TableLineBorderContributionSchema
-
-<ZodSchema
-  name="TableLineBorderContributionSchema"
-  description="携带完整 resolved line、可见性仍由 resolved width 与 opacity 决定的 border 候选。"
-  descriptions={{
-    kind: 'resolved line 候选的判别值。',
-    key: '当前 layout transaction 内唯一的 contribution key。',
-    source: 'canonical border 候选来源。',
-    priority: 'resolved 有限整数冲突优先级。',
-    specificity: 'Table 默认边或 Cell side 的来源精确度等级。',
-    ownerSideRank: 'canonical 物理 owner side 排序值。',
-    sourceOrderKey: '不依赖 Cell id 的 canonical 来源排序 key。',
-    line: '完成默认值解析的 Core-compatible border line。',
-  }}
-/>
-
-### TableBorderContributionSchema
-
-<ZodSchema
-  name="TableBorderContributionSchema"
-  description="显式隐藏或 resolved line 两类 border contribution 的判别联合。"
-/>
-
-### TableBorderManifestAtomSchema
-
-<ZodSchema
-  name="TableBorderManifestAtomSchema"
-  description="一条不可再分的 canonical border atom，以及胜出候选和完整候选顺序。"
-  descriptions={{
-    key: 'canonical atomic border key。',
-    winner: '冲突解析后的 atom 胜出候选。',
-    contributors: '按 canonical source 顺序保存的非空候选列表。',
-  }}
-/>
-
-### TableBorderManifestEntrySchema
-
-<ZodSchema
-  name="TableBorderManifestEntrySchema"
-  description="一条可见 merged border edge 的几何、resolved line style 与逐 atom 来源。"
-  descriptions={{
-    edgeKey: 'canonical merged edge key。',
-    orientation: 'edge 的水平或垂直方向。',
-    start: 'Table-local edge 起点。',
-    'start.x': 'edge 起点的有限 Table-local x 坐标。',
-    'start.y': 'edge 起点的有限 Table-local y 坐标。',
-    end: 'Table-local edge 终点。',
-    'end.x': 'edge 终点的有限 Table-local x 坐标。',
-    'end.y': 'edge 终点的有限 Table-local y 坐标。',
-    style: '最终 emit 的 resolved line style。',
-    atoms: '按 edge 顺序保存的 canonical atomic provenance。',
-    pathId: '可选的已 emit Core Path id。',
-  }}
-/>
-
-### TableBorderPathMetaSchema
-
-<ZodSchema
-  name="TableBorderPathMetaSchema"
-  description="lowering 写入每条 emitted border Core Path 的 JSON-safe Table 来源元数据。"
-  descriptions={{
-    kind: 'Table border Path metadata 的判别值。',
-    tableId: '可选的 owning Table id。',
-    edgeKey: '该 Path 对应的 canonical merged edge key。',
-    atomicKeys: '该 Path 合并表示的非空 canonical atom key 列表。',
-  }}
-/>
-
-### TableBorderLocatorEntrySchema
-
-<ZodSchema
-  name="TableBorderLocatorEntrySchema"
-  description="把 canonical merged edge 映射到可选 emitted Core Path id 的独立 locator DTO。"
-  descriptions={{
-    edgeKey: 'canonical merged edge key。',
-    pathId: '可选的已 emit Core Path id。',
-  }}
-/>
-
-`TableBorderLocatorEntrySchema` 是独立的 JSON-safe 索引条目；当前 `TableLayoutManifestSchema` 不内嵌 locator 列表。
-
-## 契约迁移
-
-| 旧字段                                       | 当前字段                                                       |
-| -------------------------------------------- | -------------------------------------------------------------- |
-| `columnWidth` / `rowHeight` / `headerHeight` | `columnSize` / `rowSize` / `headerRowSize` 轨道对象            |
-| `manifest.bounds`                            | `manifest.allocationBounds`；可见范围用 `visualOverflowBounds` |
-
 ## 相关
 
 - [明细表契约](/viz/table/reference/contract-detail)：data reference、columns 与 detail Structure
+- [布局契约](/viz/table/reference/contract-layout)：Cell span/layout、轨道尺寸与 border 配置
+- [产物契约](/viz/table/reference/manifest)：同次 compile 产出的几何、来源与 locator DTO
 - [运行时](/viz/table/reference/runtime)：这些契约如何构造、下沉、编译和读取 manifest
 - [表格模型](/viz/table/model)：Structure、Cell、Presentation 与 Layout 的关系

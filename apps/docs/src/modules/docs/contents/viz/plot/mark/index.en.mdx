@@ -17,6 +17,11 @@ Choose a mark from the geometric relationship in the data, not from the final ch
 | Supporting | `ReferenceMark` | Reference positions outside the main shape | Thresholds, rings, bands, regions        |
 | Relational | `RelationMark`  | Connections between two locatable targets  | Arrows, dependencies, ribbons            |
 
+<ComponentAlert
+  title="Why only five built-in marks?"
+  description="Charts have many names, but marks are classified by basic geometric responsibility rather than by finished chart type. The three primary marks can be understood as the basic point, line, and area structures; familiar scatterplots, lines, areas, bars, pies, and heatmaps are derived from them by combining channel bindings, data transforms, coordinate projection, and layer composition as needed. The other two marks add reference and relational semantics."
+/>
+
 A mark owns only the contract that turns data into geometry:
 
 - [Scales](/viz/plot/scale) map field values to positions, colors, sizes, and other visual values

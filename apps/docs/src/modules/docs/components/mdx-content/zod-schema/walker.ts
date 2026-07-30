@@ -83,7 +83,11 @@ function walkTypeImpl(schema: AnySchema, skipRegistry: boolean, ctx: WalkCtx = R
   }
 
   if (schema instanceof z.ZodObject) {
-    return { kind: 'object', fields: extractFields(schema, next) };
+    return {
+      kind: 'object',
+      fields: extractFields(schema, next),
+      additionalProperties: schema.def.catchall instanceof z.ZodUnknown,
+    };
   }
 
   return { kind: 'unknown', note: `unhandled: ${schema._zod.def.type}` };

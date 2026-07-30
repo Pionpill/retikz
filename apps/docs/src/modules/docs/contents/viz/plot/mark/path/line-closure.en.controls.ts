@@ -2,7 +2,8 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { closureRadar, closureTrend } from './line-closure.data';
+import { LINE_CLOSURE_CONTROL_IDS } from './line-closure.controls';
+import { closureTrend } from './line-closure.data';
 
 /** Stable control id for baseline closure */
 export const LINE_CLOSURE_BASELINE_ID = 'line-closure-baseline';
@@ -21,14 +22,44 @@ export const lineClosureControls = definePreviewControls({
     {
       label: 'Data',
       defaultCollapsed: true,
+      controls: [{ kind: 'table', id: 'closureTrend', label: 'Trend area', rows: closureTrend }],
+    },
+    {
+      label: 'Coordinate',
       controls: [
-        { kind: 'table', id: 'closureTrend', label: 'Trend area', rows: closureTrend },
-        { kind: 'table', id: 'closureRadar', label: 'Radar area', rows: closureRadar },
+        {
+          kind: 'select',
+          id: LINE_CLOSURE_CONTROL_IDS.coordinate,
+          label: 'Projection',
+          defaultValue: 'cartesian2D',
+          options: [
+            { value: 'cartesian2D', label: 'Cartesian' },
+            { value: 'polar2D', label: 'Polar' },
+          ],
+        },
+        {
+          kind: 'switch',
+          id: LINE_CLOSURE_CONTROL_IDS.closed,
+          label: 'Close path',
+          defaultValue: false,
+          visibleWhen: { controlId: LINE_CLOSURE_CONTROL_IDS.coordinate, oneOf: ['polar2D'] },
+        },
       ],
     },
     {
-      label: 'Baseline',
+      label: 'Closure and fill',
       controls: [
+        {
+          kind: 'select',
+          id: LINE_CLOSURE_CONTROL_IDS.mode,
+          label: 'Closure mode',
+          defaultValue: 'open',
+          options: [
+            { value: 'open', label: 'Open path' },
+            { value: 'cycle', label: 'Close end to start' },
+            { value: 'baseline', label: 'Return to baseline' },
+          ],
+        },
         {
           kind: 'range',
           id: LINE_CLOSURE_BASELINE_ID,
@@ -37,6 +68,17 @@ export const lineClosureControls = definePreviewControls({
           min: 0,
           max: 50,
           step: 5,
+          visibleWhen: { controlId: LINE_CLOSURE_CONTROL_IDS.mode, oneOf: ['baseline'] },
+        },
+        {
+          kind: 'range',
+          id: LINE_CLOSURE_CONTROL_IDS.fillOpacity,
+          label: 'Fill opacity',
+          defaultValue: 0.24,
+          min: 0.1,
+          max: 0.7,
+          step: 0.05,
+          visibleWhen: { controlId: LINE_CLOSURE_CONTROL_IDS.mode, oneOf: ['cycle', 'baseline'] },
         },
       ],
     },
@@ -70,9 +112,20 @@ export const lineClosureControls = definePreviewControls({
 export const previewControlContract = {
   controls: lineClosureControls,
   canonicalValues: {
+    [LINE_CLOSURE_CONTROL_IDS.coordinate]: 'cartesian2D',
+    [LINE_CLOSURE_CONTROL_IDS.closed]: false,
+    [LINE_CLOSURE_CONTROL_IDS.mode]: 'open',
     [LINE_CLOSURE_BASELINE_ID]: 30,
+    [LINE_CLOSURE_CONTROL_IDS.fillOpacity]: 0.24,
     [LINE_CLOSURE_HORIZONTAL_PADDING_ID]: 0,
     [LINE_CLOSURE_VERTICAL_PADDING_ID]: 0,
   },
-  relatedApis: ['PathMark.closure', 'PathMark.fill', 'Scale.padding', 'Scale.domainPadding'],
+  relatedApis: [
+    'Plot.coordinate',
+    'PathMark.closed',
+    'PathMark.closure',
+    'PathMark.fill',
+    'Scale.padding',
+    'Scale.domainPadding',
+  ],
 } satisfies PreviewControlContract;

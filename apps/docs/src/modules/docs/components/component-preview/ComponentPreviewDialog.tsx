@@ -56,6 +56,8 @@ export type ComponentPreviewDialogProps = {
   Component: FC;
   /** 不可变源码视图定义；缺省时预览区占满弹窗。 */
   source?: ComponentRenderSource;
+  /** React 源码视图默认选中的文件名。 */
+  defaultSourceFile?: string;
   /** 预览内容垂直对齐方式。 */
   align: AlignKey;
   /** 从 ComponentPreview 原始配置初始化，不读取 card controller 当前 size。 */
@@ -136,6 +138,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
     name,
     Component,
     source,
+    defaultSourceFile,
     align,
     initialSize,
     controlState,
@@ -155,7 +158,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
     const { rendererMode, dragEnabled } = useComponentPreviewStore.getState();
     return { rendererMode, dragEnabled };
   });
-  const sourceState = useSourcePanelState(source);
+  const sourceState = useSourcePanelState(source, defaultSourceFile);
   const previewState = usePreviewPanelState({
     controlState,
     rendererMode: globalDefaults.rendererMode,

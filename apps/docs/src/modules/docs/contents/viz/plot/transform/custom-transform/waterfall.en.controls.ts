@@ -2,7 +2,10 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
+import { waterfallOperationOf } from './waterfall.controls';
 import { waterfallRows } from './waterfall.data';
+import { waterfallTransform } from './waterfall.definition';
 
 /** Stable control ids for the custom waterfall-transform playground */
 export const CUSTOM_TRANSFORM_CONTROL_IDS = {
@@ -22,10 +25,18 @@ export const waterfallControls = definePreviewControls({
           kind: 'table',
           id: 'custom-transform-waterfall-rows',
           label: 'Quarterly changes',
-          rows: waterfallRows,
+          views: createPlotTransformTableViews(
+            { source: 'Source', result: 'Waterfall result' },
+            waterfallRows,
+            waterfallOperationOf,
+            { transformDefinitions: [waterfallTransform] },
+          ),
           columns: [
             { key: 'period', label: 'Quarter' },
             { key: 'delta', label: 'Change' },
+            { key: 'from', label: 'Start value' },
+            { key: 'to', label: 'End value' },
+            { key: 'direction', label: 'Direction' },
           ],
         },
       ],

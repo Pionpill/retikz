@@ -3,10 +3,9 @@ import type { IRDataModel } from '@retikz/data';
 import type {
   IRDetailTableSpec,
   IRManualTableSpec,
-  IRTableCell,
+  IRManualTableStructure,
   IRTableCellPayload,
   IRTableDetailColumn,
-  TableRowKindValue,
 } from '../../schemas';
 
 /** detail Table 的作者侧 column 输入 */
@@ -28,13 +27,5 @@ export type DetailTableSpecInput = Omit<IRDetailTableSpec, 'namespace' | 'type' 
 };
 
 /** manual Table 的 framework-neutral plain spec 输入 */
-export type ManualTableSpecInput = Omit<IRManualTableSpec, 'namespace' | 'type' | 'data' | 'structure'> & {
-  /** 显式行数 */
-  rows: number;
-  /** 显式列数 */
-  columns: number;
-  /** 每行的可选语义类型 */
-  rowKinds?: Array<TableRowKindValue>;
-  /** 带显式地址的 Cells */
-  cells: Array<IRTableCell>;
-};
+export type ManualTableSpecInput = Omit<IRManualTableSpec, 'namespace' | 'type' | 'data' | 'structure'> &
+  Omit<IRManualTableStructure, 'kind'>;

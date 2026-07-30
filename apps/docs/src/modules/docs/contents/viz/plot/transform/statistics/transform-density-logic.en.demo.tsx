@@ -4,10 +4,10 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** density finite-sample filtering, bandwidth resolution, KDE sampling, and output */
 const Demo: FC = () => (
-  <Layout width={440} height={380} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={720} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
       id="rows"
-      position={[-70, -150]}
+      position={[-295, 20]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}
@@ -15,14 +15,14 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>1D sample rows</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>1D samples</Text>
       <Text fill="gray" font={{ size: 12 }}>
         N rows
       </Text>
     </Node>
     <Node
       id="group"
-      position={[-70, -80]}
+      position={[-160, 20]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -30,14 +30,14 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Group finite values</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Filter finite values</Text>
       <Text fill="gray" font={{ size: 12 }}>
         groupBy · field
       </Text>
     </Node>
     <Node
       id="strategy"
-      position={[120, -10]}
+      position={[-10, -55]}
       stroke="gray"
       fill="gray"
       fillOpacity={0.06}
@@ -47,12 +47,12 @@ const Demo: FC = () => (
     >
       <Text font={{ size: 14, weight: 'bold' }}>Bandwidth strategy</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        silverman or explicit value
+        silverman · value
       </Text>
     </Node>
     <Node
       id="bandwidth"
-      position={[-70, -10]}
+      position={[-10, 20]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -60,14 +60,14 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Resolve bandwidth</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Resolve h</Text>
       <Text fill="gray" font={{ size: 12 }}>
         h &gt; 0
       </Text>
     </Node>
     <Node
       id="sampling"
-      position={[120, 60]}
+      position={[140, -55]}
       stroke="gray"
       fill="gray"
       fillOpacity={0.06}
@@ -75,14 +75,14 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Sampling config</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Sampling</Text>
       <Text fill="gray" font={{ size: 12 }}>
         extent · sampleCount
       </Text>
     </Node>
     <Node
       id="kde"
-      position={[-70, 60]}
+      position={[140, 20]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -90,14 +90,14 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Evaluate Gaussian KDE</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Gaussian KDE</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        mean of all sample kernels
+        mean of sample kernels
       </Text>
     </Node>
     <Node
       id="error"
-      position={[120, -80]}
+      position={[-10, 95]}
       stroke="red"
       fill="red"
       fillOpacity={0.06}
@@ -112,7 +112,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="output"
-      position={[-70, 140]}
+      position={[290, 20]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}
@@ -120,9 +120,9 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Emit density rows</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Density rows</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        sampleCount rows per group
+        sampleCount / group
       </Text>
     </Node>
 
@@ -139,8 +139,8 @@ const Demo: FC = () => (
           label: {
             text: 'invalid',
             position: 'midway',
-            side: 'top',
-            sloped: true,
+            side: 'right',
+            sloped: false,
             textColor: 'red',
             font: { size: 12 },
           },

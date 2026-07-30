@@ -8,11 +8,27 @@ import { POINT_POSITION_CONTROL_IDS } from './point-position.controls';
 /** 点定位 playground 的英文属性面板 */
 export const pointPositionControls = definePreviewControls({
   presentation: 'panel',
-  title: 'Position fields',
+  title: 'Scatter encodings',
   sections: [
     {
       label: 'Data',
+      defaultCollapsed: true,
       controls: [{ kind: 'table', id: 'points', label: 'Point rows', rows: points }],
+    },
+    {
+      label: 'Coordinate',
+      controls: [
+        {
+          kind: 'select',
+          id: POINT_POSITION_CONTROL_IDS.coordinate,
+          label: 'Projection',
+          defaultValue: 'cartesian2D',
+          options: [
+            { value: 'cartesian2D', label: 'Cartesian' },
+            { value: 'polar2D', label: 'Polar' },
+          ],
+        },
+      ],
     },
     {
       label: 'Position channels',
@@ -41,6 +57,31 @@ export const pointPositionControls = definePreviewControls({
         },
       ],
     },
+    {
+      label: 'Appearance encodings',
+      controls: [
+        {
+          kind: 'select',
+          id: POINT_POSITION_CONTROL_IDS.colorMode,
+          label: 'Color encoding',
+          defaultValue: 'none',
+          options: [
+            { value: 'none', label: 'Uniform color' },
+            { value: 'region', label: 'By region' },
+          ],
+        },
+        {
+          kind: 'select',
+          id: POINT_POSITION_CONTROL_IDS.sizeMode,
+          label: 'Size encoding',
+          defaultValue: 'fixed',
+          options: [
+            { value: 'fixed', label: 'Fixed points' },
+            { value: 'population', label: 'Population bubbles' },
+          ],
+        },
+      ],
+    },
   ],
 });
 
@@ -48,26 +89,35 @@ export const pointPositionControls = definePreviewControls({
 export const previewControlContract = {
   controls: pointPositionControls,
   canonicalValues: {
+    [POINT_POSITION_CONTROL_IDS.coordinate]: 'cartesian2D',
     [POINT_POSITION_CONTROL_IDS.xField]: 'x',
     [POINT_POSITION_CONTROL_IDS.yField]: 'y',
+    [POINT_POSITION_CONTROL_IDS.colorMode]: 'none',
+    [POINT_POSITION_CONTROL_IDS.sizeMode]: 'fixed',
   },
   presets: [
     {
       id: 'xy',
       label: 'x / y',
       values: {
+        [POINT_POSITION_CONTROL_IDS.coordinate]: 'cartesian2D',
         [POINT_POSITION_CONTROL_IDS.xField]: 'x',
         [POINT_POSITION_CONTROL_IDS.yField]: 'y',
+        [POINT_POSITION_CONTROL_IDS.colorMode]: 'none',
+        [POINT_POSITION_CONTROL_IDS.sizeMode]: 'fixed',
       },
     },
     {
-      id: 'population',
-      label: 'x / pop',
+      id: 'bubble',
+      label: 'Regional bubbles',
       values: {
+        [POINT_POSITION_CONTROL_IDS.coordinate]: 'cartesian2D',
         [POINT_POSITION_CONTROL_IDS.xField]: 'x',
-        [POINT_POSITION_CONTROL_IDS.yField]: 'pop',
+        [POINT_POSITION_CONTROL_IDS.yField]: 'y',
+        [POINT_POSITION_CONTROL_IDS.colorMode]: 'region',
+        [POINT_POSITION_CONTROL_IDS.sizeMode]: 'population',
       },
     },
   ],
-  relatedApis: ['PointMark.x', 'PointMark.y'],
+  relatedApis: ['Plot.coordinate', 'PointMark.x', 'PointMark.y', 'PointMark.color', 'PointMark.size'],
 } satisfies PreviewControlContract;

@@ -4,7 +4,9 @@ import type { LoweredIRScene } from '../types';
 import type { CompileWarning } from '../warning';
 
 import { CompileWarningCode } from '../constants';
+import { CompileInvariantError } from '../probe-failure';
 import { parseProviderPayload } from '../provider-payload';
+import { validateExpandCompositeOutput } from './composite-output';
 
 /** composite 嵌套展开最大深度 */
 export const DEFAULT_MAX_COMPOSITE_DEPTH = 32;
@@ -28,7 +30,7 @@ type CallableExpandDefinition = {
 /** 只在紧邻 schema parse 的边界恢复已擦除 expand callback */
 const callableExpandDefinition = (definition: AnyCompositeDefinition): CallableExpandDefinition => {
   if (definition.expand === undefined) {
-    throw new Error('internal: callableExpandDefinition received a layout-aware composite');
+    throw new CompileInvariantError('internal: callableExpandDefinition received a layout-aware composite');
   }
   return definition as unknown as CallableExpandDefinition;
 };
@@ -40,7 +42,7 @@ const lowerCompositeTree = (
 ): IRScene => {
   const { onWarn, onUnregistered, maxDepth = DEFAULT_MAX_COMPOSITE_DEPTH } = options;
 
-  const expandList = (children: Array<IRChild>, depth: number, path: string): Array<IRChild> =>
+  const expandList = (children: ReadonlyArray<IRChild>, depth: number, path: string): Array<IRChild> =>
     children.flatMap((child, index) => expandChild(child, depth, `${path}[${index}]`));
 
   const expandChild = (child: IRChild, depth: number, path: string): Array<IRChild> => {
@@ -76,7 +78,7 @@ const lowerCompositeTree = (
         value: child,
       });
       const produced = callable.expand(parsed);
-      const list = Array.isArray(produced) ? produced : [produced];
+      const list = validateExpandCompositeOutput(`Composite '${key}' at ${path}`, produced);
       return expandList(list, depth + 1, path);
     }
     if (child.type === 'scope') {

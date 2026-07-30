@@ -14,13 +14,6 @@ import {
   TableVerticalAlignment,
 } from './constants';
 
-export const TableCellAddressSchema = z
-  .strictObject({
-    row: z.number().int().nonnegative().describe('Zero-based row index in the structure output.'),
-    column: z.number().int().nonnegative().describe('Zero-based column index in the structure output.'),
-  })
-  .describe('Zero-based Table Cell address.');
-
 export const TableCellLocationSchema = z
   .enum(TableCellLocation)
   .describe('Semantic Table region occupied by the Cell.');
@@ -98,20 +91,43 @@ export const TableCellPayloadSchema = z
   .discriminatedUnion('kind', [TableCellValuePayloadSchema, TableCellContentPayloadSchema])
   .describe('Table Cell payload: a scalar value presentation or direct Core child content.');
 
-export const TableCellSchema = z
+const ManualTableCellSharedShape = {
+  id: z.string().min(1).optional().describe('Optional stable Cell id. Omitted fields use an address-derived id.'),
+  location: TableCellLocationSchema.optional().describe(
+    'Optional semantic location. Omitted fields derive from the containing row kind.',
+  ),
+  roles: z
+    .array(TableCellRoleSchema)
+    .min(1)
+    .optional()
+    .describe('Optional semantic roles. Omitted fields derive from the containing row kind.'),
+  span: TableCellSpanSchema.optional().describe('Optional rectangular Cell span. Omitted fields use 1 × 1.'),
+  layout: TableCellLayoutSchema.optional().describe('Optional Cell layout policy with runtime defaults.'),
+};
+
+export const ManualTableValueCellSchema = z
   .strictObject({
-    id: z.string().min(1).optional().describe('Optional stable Cell id. Omitted fields use an address-derived id.'),
-    address: TableCellAddressSchema.describe('Zero-based Cell address in the manual structure.'),
-    payload: TableCellPayloadSchema.describe('Cell value or direct Core content.'),
-    location: TableCellLocationSchema.optional().describe(
-      'Optional semantic location. Omitted fields derive from the containing row kind.',
+    ...ManualTableCellSharedShape,
+    value: ScalarValueSchema.describe('JSON scalar value presented as Core content at runtime.'),
+    presentation: TablePresentationRefSchema.optional().describe(
+      'Optional presentation provider reference. Omitted fields use the built-in text presentation.',
     ),
-    roles: z
-      .array(TableCellRoleSchema)
-      .min(1)
-      .optional()
-      .describe('Optional semantic roles. Omitted fields derive from the containing row kind.'),
-    span: TableCellSpanSchema.optional().describe('Optional rectangular Cell span. Omitted fields use 1 × 1.'),
-    layout: TableCellLayoutSchema.optional().describe('Optional Cell layout policy with runtime defaults.'),
   })
-  .describe('Explicit Cell authored by a manual Table structure.');
+  .describe('Manual Table Cell authored from a scalar value.');
+
+export const ManualTableContentCellSchema = z
+  .strictObject({
+    ...ManualTableCellSharedShape,
+    content: ChildSchema.describe('Direct JSON-safe Core or Tier 2 child authored in Cell-local coordinates.'),
+  })
+  .describe('Manual Table Cell authored from direct Core child content.');
+
+export const ManualTableCellSchema = z
+  .union([
+    z.string().describe('String shorthand for a value Cell.'),
+    z.number().describe('Number shorthand for a value Cell.'),
+    z.boolean().describe('Boolean shorthand for a value Cell.'),
+    ManualTableValueCellSchema,
+    ManualTableContentCellSchema,
+  ])
+  .describe('Manual Table Cell entry authored as scalar shorthand or a rich value/content object.');

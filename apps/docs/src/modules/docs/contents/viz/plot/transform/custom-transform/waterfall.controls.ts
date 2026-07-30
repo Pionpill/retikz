@@ -2,12 +2,21 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
 import { waterfallRows } from './waterfall.data';
+import { waterfallTransform } from './waterfall.definition';
 
 /** 自定义瀑布变换 playground 的稳定控件 id */
 export const CUSTOM_TRANSFORM_CONTROL_IDS = {
   initialValue: 'custom-transform-initial-value',
 } as const;
+
+/** 根据实时控件值创建自定义 waterfall operation */
+export const waterfallOperationOf = (values: { [CUSTOM_TRANSFORM_CONTROL_IDS.initialValue]: number }) => ({
+  kind: 'waterfall',
+  field: 'delta',
+  initialValue: values[CUSTOM_TRANSFORM_CONTROL_IDS.initialValue],
+});
 
 /** 自定义瀑布变换的中文属性面板 */
 export const waterfallControls = definePreviewControls({
@@ -22,10 +31,18 @@ export const waterfallControls = definePreviewControls({
           kind: 'table',
           id: 'custom-transform-waterfall-rows',
           label: '季度增减',
-          rows: waterfallRows,
+          views: createPlotTransformTableViews(
+            { source: '原始', result: '瀑布变换后' },
+            waterfallRows,
+            waterfallOperationOf,
+            { transformDefinitions: [waterfallTransform] },
+          ),
           columns: [
             { key: 'period', label: '季度' },
             { key: 'delta', label: '增减值' },
+            { key: 'from', label: '起始值' },
+            { key: 'to', label: '结束值' },
+            { key: 'direction', label: '方向' },
           ],
         },
       ],

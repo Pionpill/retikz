@@ -47,20 +47,34 @@ export const kernelV05: Release = {
           },
         },
         {
+          label: { zh: '可选更新策略', en: 'Selectable update strategies' },
+          content: {
+            zh: '`RuntimeSessionOptions.updateStrategy` 默认 `auto`；选择 `full` 时保留 Snapshot、transaction、rollback 与 diagnostics，但有实际依赖变化的 Program 跳过 `update()` 并完整运行。`RuntimeProgramContext.execution` 可区分主动 full、incremental 与安全 fallback。',
+            en: '`RuntimeSessionOptions.updateStrategy` defaults to `auto`. Selecting `full` keeps Snapshots, transactions, rollback, and diagnostics while affected Programs skip `update()` and run fully. `RuntimeProgramContext.execution` distinguishes forced full, incremental, and safe fallback execution.',
+          },
+        },
+        {
           label: { zh: '稳定诊断与资源回滚', en: 'Stable diagnostics and resource rollback' },
           content: {
             zh: 'Program callback、artifact lifecycle、observer、trace 与 dispose 使用稳定 code/context；publish 前失败反向清理 candidate，publish 后 observer/retire failure 进入 drain queue 而不回滚。',
             en: 'Program callbacks, artifact lifecycle, observers, traces, and disposal use stable codes and context. Pre-publish failures retire candidates in reverse order, while post-publish observer and retire failures enter the drain queue without rollback.',
           },
         },
+        {
+          label: { zh: 'Commit participant', en: 'Commit participants' },
+          content: {
+            zh: '`defineRuntimeCommitParticipant()` 让 renderer 等外部状态与 Owner/Program candidate 同一 transaction prepare、commit、read 与 publish；失败反向 rollback，rollback 失败进入可诊断的 broken Session。',
+            en: '`defineRuntimeCommitParticipant()` lets renderer and other external state prepare, commit, read, and publish in the same transaction as Owner/Program candidates. Failures roll back in reverse order, while rollback failures enter a diagnosable broken Session.',
+          },
+        },
       ],
       subVersions: [
         {
           version: 'alpha.2',
-          date: '2026-07-26',
+          date: '2026-07-29',
           summary: {
-            zh: '交付 performance trace、Owner / Program typed identity、同步 transaction、fallback、diagnostic queue 与 exactly-once lifecycle。',
-            en: 'Ships performance traces, typed Owner/Program identity, synchronous transactions, fallback, diagnostic queues, and exactly-once lifecycle management.',
+            zh: '交付 performance trace、Owner / Program / participant typed identity、同步 transaction、fallback、diagnostic queue 与 exactly-once lifecycle。',
+            en: 'Ships performance traces, typed Owner/Program/participant identity, synchronous transactions, fallback, diagnostic queues, and exactly-once lifecycle management.',
           },
           items: [],
         },
@@ -70,8 +84,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/core',
       version: 'v0.5',
       description: {
-        zh: 'v0.5 alpha.1 补齐跨图元布局与文本语义：Node / Scope 锚点、正交路径、自动对比色、标签视觉盒、布局感知 Composite、typed artifacts 与多路径 TeX lowering。',
-        en: 'v0.5 alpha.1 adds Node/Scope anchors, orthogonal paths, automatic text contrast, visual-box labels, layout-aware composites, typed artifacts, and multi-path TeX lowering.',
+        zh: 'v0.5 补齐跨图元布局与文本语义，并在 alpha.2 以完整 Snapshot、Core Runtime Program、Scene Patch 与保守 fallback 建立首个安全局部增量编译闭环。',
+        en: 'v0.5 adds cross-primitive layout and text semantics. Alpha.2 adds complete Snapshots, a Core Runtime Program, Scene Patches, conservative fallback, and the first safe local incremental path.',
       },
       highlights: [
         {
@@ -96,14 +110,30 @@ export const kernelV05: Release = {
           },
         },
         {
-          label: { zh: '布局感知 Composite 与显式产物', en: 'Layout-aware composites and explicit artifacts' },
+          label: { zh: '上下文化 layout proposal', en: 'Contextual layout proposals' },
           content: {
-            zh: '`defineComposite()` 支持与 `expand` 互斥的 `compile` 分支，可通过 `layoutChild()` 做 intrinsic / constrained 布局并单次 replay。`compileToScene()` 返回 `{ scene, artifacts }`；混合 registry 使用 `AnyCompositeDefinition`，Node layout 通过带 `occurrence` 的 opt-in typed artifact 提供。',
-            en: '`defineComposite()` supports a `compile` branch mutually exclusive with `expand`, enabling intrinsic or constrained `layoutChild()` work followed by one replay. `compileToScene()` returns `{ scene, artifacts }`; mixed registries use `AnyCompositeDefinition`, and Node layouts are exposed as opt-in typed artifacts with an `occurrence`.',
+            zh: '`defineComposite()` 的 `compile` 分支以双轴 minimum / natural / range / exact proposal 查询任意 child，独立返回 resolved `slotSize`、真实 allocation / visual bounds 与 alignment guides。每次 probe 的成功或失败 transaction 保持隔离；solver 通过 one-use `replay()` 或 occurrence-aware `raise()` 选择结果。此变更删除 `ChildLayoutAxisConstraint`、`ChildLayoutConstraint` 与 `ChildLayoutSize`，把 `context.constraint` 改为 `context.proposal`，并把 `layoutChild()` 返回值改为需按 `kind` narrowing 的 `LayoutChildProbe`；原 fail-loud consumer 应对 `failed` 调用 `raise()`，不提供旧别名或兼容 overload。',
+            en: '`defineComposite()` compile branches query any child with two-axis minimum / natural / range / exact proposals and independently return resolved `slotSize`, real allocation / visual bounds, and alignment guides. Every successful or failed probe transaction stays isolated until the solver selects it through one-use `replay()` or occurrence-aware `raise()`. This breaking change removes `ChildLayoutAxisConstraint`, `ChildLayoutConstraint`, and `ChildLayoutSize`, renames `context.constraint` to `context.proposal`, and makes `layoutChild()` return a `LayoutChildProbe` that must be narrowed by `kind`; consumers preserving fail-loud behavior should call `raise()` for `failed`, with no legacy aliases or compatibility overloads.',
+          },
+        },
+        {
+          label: { zh: 'Core Runtime Program', en: 'Core Runtime Program' },
+          content: {
+            zh: '`createCoreProgram()` 让完整 IR Snapshot 在 Runtime transaction 中原子产出完整 CompileResult、带 canonical identity topology 的 Scene Snapshot 与 Patch。ChangeSet 会与前后 Snapshot 交叉校验；当前安全局部路径只重编一个 root Node 的纯色 fill，引用、资源、Scope、Path、Composite 与其它变化保守 full fallback。',
+            en: '`createCoreProgram()` atomically derives a complete CompileResult, a Scene Snapshot with canonical identity topology, and a Patch from complete IR Snapshots inside Runtime transactions. ChangeSets are cross-checked against previous and next Snapshots. The current safe local path recompiles only one root Node solid fill, while references, resources, Scopes, Paths, composites, and other changes conservatively use full fallback.',
           },
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.2',
+          date: '2026-07-29',
+          summary: {
+            zh: '交付 Core Runtime Program、单 root Node fill 局部增量闭环，以及布局感知 Composite 的双轴 proposal、resolved slot、guide、failure isolation 与 replay。',
+            en: 'Ships the Core Runtime Program and one-root Node fill incremental path, plus two-axis proposals, resolved slots, guides, failure isolation, and replay for layout-aware composites.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.1',
           date: '2026-07-26',
@@ -119,11 +149,35 @@ export const kernelV05: Release = {
       pkg: '@retikz/render',
       version: 'v0.5',
       description: {
-        zh: 'SVG / Canvas renderer 继续只消费 Scene；alpha.1 验证多路径 TeX paint / opacity 与 CompileResult 不引入 renderer 私有 API。',
-        en: 'SVG and Canvas continue to consume Scene only; alpha.1 verifies multi-path TeX paint and opacity plus CompileResult without renderer-specific APIs.',
+        zh: '静态 SVG / Canvas API 继续只消费 Scene；alpha.2 新增可回滚 retained runtime，以 canonical Scene Patch 原位更新宿主。',
+        en: 'Static SVG and Canvas APIs continue to consume Scene only. Alpha.2 adds a rollback-safe retained runtime that applies canonical Scene Patches in place.',
       },
-      highlights: [],
+      highlights: [
+        {
+          label: { zh: 'Retained renderer runtime', en: 'Retained renderer runtime' },
+          content: {
+            zh: '`@retikz/render/runtime` 提供 nominal renderer factory、`none | group | entity` capability、Patch/Snapshot validator 与 Runtime participant；合法但不受支持的操作在执行前完整 fallback，第三方 renderer 与内置后端共用协议。',
+            en: '`@retikz/render/runtime` provides nominal renderer factories, `none | group | entity` capabilities, Patch/Snapshot validation, and a Runtime participant. Valid unsupported operations fully fall back before execution, and third-party renderers share the built-in protocol.',
+          },
+        },
+        {
+          label: { zh: 'SVG / Canvas 原子提交', en: 'Atomic SVG and Canvas commits' },
+          content: {
+            zh: 'SVG 原位保留未变 DOM identity并支持SSR adopt；Canvas以retained display list/index和保守dirty region提交。Scene、resource、hydration、animation与hit-test在同一revision切换。',
+            en: 'SVG preserves unchanged DOM identity in place and supports SSR adoption. Canvas commits a retained display list/index through conservative dirty regions. Scene, resources, hydration, animation, and hit testing switch in one revision.',
+          },
+        },
+      ],
       subVersions: [
+        {
+          version: 'alpha.2',
+          date: '2026-07-29',
+          summary: {
+            zh: '交付 retained renderer contract、内置SVG/Canvas事务后端、capability fallback、hydration/resource/animation同步提交与5000规模性能门禁。',
+            en: 'Ships the retained renderer contract, transactional built-in SVG/Canvas backends, capability fallback, synchronized hydration/resource/animation commits, and 5,000-entity performance gates.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.1',
           date: '2026-07-26',
@@ -139,8 +193,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/react',
       version: 'v0.5',
       description: {
-        zh: 'React 等价暴露 Core v0.5 的 Node / Scope placement、正交 Step 与文本语义，并让 `<Layout>` 在 commit 后通知同次 compile 的 immutable artifacts。',
-        en: 'React exposes Core v0.5 Node/Scope placement, orthogonal steps, and text semantics, while `<Layout>` reports immutable artifacts from the same compile after commit.',
+        zh: 'React 等价暴露 Core v0.5 authoring；`<Layout>` 默认以 retained Session 原子提交 Scene、handler、animation 与 compile artifacts，也可选择无 Session 的 static full 执行。',
+        en: 'React exposes Core v0.5 authoring. `<Layout>` defaults to atomic Scene, handler, animation, and compile-artifact commits through a retained Session, with an optional Session-free static full path.',
       },
       highlights: [
         {
@@ -157,8 +211,24 @@ export const kernelV05: Release = {
             en: '`<Layout>` requests Node layouts through `artifacts={{ nodeLayouts: true }}` and reports immutable artifacts through `onArtifacts` after the React commit; `isNodeLayoutCompileArtifact()` narrows the result.',
           },
         },
+        {
+          label: { zh: 'Layout 执行策略', en: 'Layout execution policy' },
+          content: {
+            zh: '`<Layout runtime>` 默认 `retained + auto`，也可选择保留事务的 `retained + full` 或不创建 Session/Snapshot 的 `static`。strategy 改变时在同一 host 重建 Session，mode 改变时释放并替换宿主；static 与 renderer factory、diagnostic callback 互斥。',
+            en: '`<Layout runtime>` defaults to `retained + auto` and can instead select transactional `retained + full` or `static` without a Session or Snapshot. Strategy changes rebuild the Session on the same host, while mode changes replace the host. Static mode excludes renderer factories and diagnostic callbacks.',
+          },
+        },
       ],
       subVersions: [
+        {
+          version: 'alpha.2',
+          date: '2026-07-29',
+          summary: {
+            zh: '交付 Layout 的 retained / static 执行模式与 auto / full 更新策略，并补齐 SSR handoff、transaction diagnostic、commit 后 artifact/ref 出口与第三方 renderer 注入。',
+            en: 'Ships retained / static Layout execution modes and auto / full update strategies, plus SSR handoff, transaction diagnostics, post-commit artifact/ref outputs, and third-party renderer injection.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.1',
           date: '2026-07-26',
@@ -174,8 +244,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/vanilla',
       version: 'v0.5',
       description: {
-        zh: 'Vanilla plain spec 直接透传 Core v0.5 IR；SVG / Canvas view 与当前 Scene 原子持有同次 compile 的 artifacts。',
-        en: 'Vanilla plain specs pass Core v0.5 IR through directly, while SVG and Canvas views atomically retain artifacts from the same compile as the current Scene.',
+        zh: 'Vanilla plain spec 直接透传 Core v0.5 IR；IR/plain mount 默认使用 retained Session，也可显式选择 raw static full，Scene mount 保持纯 static full render。',
+        en: 'Vanilla plain specs pass Core v0.5 IR through directly. IR/plain mounts default to retained Sessions with an explicit raw static full option, while Scene mounts remain static full rendering.',
       },
       highlights: [
         {
@@ -185,8 +255,24 @@ export const kernelV05: Release = {
             en: '`VanillaView.artifacts` and `CanvasView.artifacts` update atomically alongside Scene after `update()`. Direct Scene input exposes an empty immutable array, and `toScene()` returns Scene only.',
           },
         },
+        {
+          label: { zh: 'Retained / static 明确判别', en: 'Explicit retained/static modes' },
+          content: {
+            zh: 'IR与plain spec默认返回`retained + auto` view，也可显式选择保留事务的`retained + full`或无Session的`static`。raw static update接受IR/plain spec并完整归一化、编译、重绘；预编译Scene仍是独立static入口并拒绝整个runtime字段。策略变化要求dispose后remount。',
+            en: 'IR and plain specs default to `retained + auto` views and can explicitly select transactional `retained + full` or `static` without a Session. Raw static updates accept IR/plain specs and fully normalize, compile, and redraw. Precompiled Scenes remain a separate static entry that rejects the entire runtime field. Strategy changes require disposal and remounting.',
+          },
+        },
       ],
       subVersions: [
+        {
+          version: 'alpha.2',
+          date: '2026-07-29',
+          summary: {
+            zh: '交付 SVG/Canvas retained / static view、auto / full 更新策略、transactional update/diagnostics/hydration、第三方 renderer 注入与 plain-spec composite callback transaction。',
+            en: 'Ships retained / static SVG and Canvas views, auto / full update strategies, transactional updates/diagnostics/hydration, third-party renderer injection, and plain-spec composite callback transactions.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.1',
           date: '2026-07-26',

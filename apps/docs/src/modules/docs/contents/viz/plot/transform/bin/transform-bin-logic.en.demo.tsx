@@ -4,10 +4,10 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** bin edge resolution, bucketing, reducer metrics, and per-bin output */
 const Demo: FC = () => (
-  <Layout width={420} height={360} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={680} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
       id="rows"
-      position={[70, -140]}
+      position={[-290, 35]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}
@@ -15,14 +15,14 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Continuous rows</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Input rows</Text>
       <Text fill="gray" font={{ size: 12 }}>
         N rows
       </Text>
     </Node>
     <Node
       id="strategy"
-      position={[-130, -70]}
+      position={[-170, -35]}
       stroke="gray"
       fill="gray"
       fillOpacity={0.06}
@@ -30,14 +30,14 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>One bin strategy</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Bin strategy</Text>
       <Text fill="gray" font={{ size: 12 }}>
         count · step · thresholds
       </Text>
     </Node>
     <Node
       id="edges"
-      position={[70, -70]}
+      position={[-170, 35]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -45,14 +45,14 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Resolve bin edges</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Resolve edges</Text>
       <Text fill="gray" font={{ size: 12 }}>
         extent + strategy
       </Text>
     </Node>
     <Node
       id="error"
-      position={[-130, 10]}
+      position={[-170, -105]}
       stroke="red"
       fill="red"
       fillOpacity={0.06}
@@ -67,7 +67,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="buckets"
-      position={[70, 0]}
+      position={[-35, 35]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -75,14 +75,14 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Assign half-open bins</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Assign [start, end)</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        final bin includes max
+        final includes max
       </Text>
     </Node>
     <Node
       id="metrics"
-      position={[70, 70]}
+      position={[115, 35]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -92,12 +92,12 @@ const Demo: FC = () => (
     >
       <Text font={{ size: 14, weight: 'bold' }}>Run reducers</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        default count → binCount
+        count → binCount
       </Text>
     </Node>
     <Node
       id="output"
-      position={[70, 140]}
+      position={[265, 35]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}
@@ -105,9 +105,9 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>Emit one row per bin</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>Emit bin rows</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        edges · midpoint · metrics
+        edges · center · metrics
       </Text>
     </Node>
 

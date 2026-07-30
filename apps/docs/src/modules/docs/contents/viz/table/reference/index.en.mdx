@@ -1,33 +1,47 @@
 ---
 title: API Reference
-description: Look up Table's JSON contracts and its React, Vanilla, and compile runtime contracts.
+description: Look up Table input contracts, layout configuration, Manifest outputs, and React, Vanilla, and compile runtime contracts.
 ---
 
-API Reference is a contract dictionary rather than an introductory guide. Base and detail tables have separate contract pages; Runtime collects how React, Vanilla, and SSR construct, lower, and render the same specification.
+API Reference is a contract dictionary rather than an introductory guide. TableSpec and Cell content, detail-only structure, layout inputs, compile outputs, and runtime wiring each have a dedicated page.
 
 > This is the reference layer. Start with [Detail Table](/viz/table/detail) to build a table, or [Table Model](/viz/table/model) to understand the shared abstractions.
 
 ## Responsibilities
 
-| Topic                   | Responsibility                                    | Reach for it when                           |
-| ----------------------- | ------------------------------------------------- | ------------------------------------------- |
-| Contract - Table        | TableSpec, Cells, tracks, borders, and manifests  | Generating Table IR or reading layout data  |
-| Contract - Detail Table | Data reference, columns, and the detail Structure | Generating or validating detail-table IR    |
-| Runtime                 | React / Vanilla, compile, and artifact wiring     | Integrating a host, SSR, or executing Table |
+| Topic                   | Responsibility                                  | Reach for it when                         |
+| ----------------------- | ----------------------------------------------- | ----------------------------------------- |
+| Contract - Detail Table | Data references, columns, and detail Structure  | Generating or validating detail IR        |
+| Contract - Table        | TableSpec, manual Cells, and canonical payloads | Generating or validating Table IR         |
+| Contract - Layout       | Cell span/layout, tracks, and border inputs     | Configuring layout and content fitting    |
+| Contract - Artifact     | Resolved tracks, Cell boxes, borders, locators  | Reading same-compile layout artifacts     |
+| Runtime                 | React / Vanilla, compile, and artifact wiring   | Integrating a host, SSR, or Table runtime |
 
 ## Chapters
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-  <LinkedCard href="/viz/table/reference/contract-table">
-    <span className="font-semibold">Contract - Table</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      TableSpec, Cell, track, border, and manifest schemas
-    </span>
-  </LinkedCard>
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/viz/table/reference/contract-detail">
     <span className="font-semibold">Contract - Detail Table</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      External data references, columns, and the detail Structure schema
+      External data references, columns, and the detail Structure
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/reference/contract-table">
+    <span className="font-semibold">Contract - Table</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      TableSpec, manual Cells, payloads, and presentation references
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/reference/contract-layout">
+    <span className="font-semibold">Contract - Layout</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Cell span/layout, track sizing, and border inputs
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/reference/manifest">
+    <span className="font-semibold">Contract - Artifact</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Resolved geometry, border provenance, and locator DTOs
     </span>
   </LinkedCard>
   <LinkedCard href="/viz/table/reference/runtime">

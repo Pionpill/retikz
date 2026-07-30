@@ -92,9 +92,7 @@ describe('Table layout manifest', () => {
       type: TableComposite.Table,
       structure: {
         kind: 'manual',
-        rows: 1,
-        columns: 1,
-        cells: [{ address: { row: 0, column: 0 }, payload: { kind: 'value', value: 'Ada' } }],
+        rows: [['Ada']],
       },
     };
     const before = structuredClone(spec);
@@ -119,9 +117,7 @@ describe('Table layout manifest', () => {
       id: 'grid',
       structure: {
         kind: 'manual',
-        rows: 1,
-        columns: 1,
-        cells: [{ address: { row: 0, column: 0 }, payload: { kind: 'value', value: 'x' } }],
+        rows: [['x']],
       },
       layout: {
         columnSize: { kind: 'fixed', value: 40 },

@@ -49,13 +49,13 @@ RelationMark 是底层关系路径 mark：它不重新发明箭头、标签或�
 
 每个散点行同时声明 `id` 和 `target`。关系已经在原始数据里，因此 RelationMark 只需按 `anchorId` 规则解析两端，再生成点到点路径；切换路由方式可以在同一关系上比较直线、弯曲和正交连接。
 
-<ComponentPreview files={['relation-scatter', 'relation-scatter.data.ts']} size="md" />
+<ComponentPreview files={['relation-scatter', 'relation-scatter.data.ts']} size="lg" />
 
 #### 桑基带状关系
 
 桑基关系仍使用同一套 `source` / `target` 引用，但将 `kind` 设为 `ribbon`，并用 `ribbon.width` 声明带宽。填充和透明度继续放在 path / ribbon 共用的 `style` 中。
 
-<ComponentPreview files={['relation-sankey', 'relation-sankey.data.ts']} size="md" />
+<ComponentPreview files={['relation-sankey', 'relation-sankey.data.ts']} size="lg" />
 
 ### 从主体数据派生关系
 
@@ -63,19 +63,19 @@ RelationMark 是底层关系路径 mark：它不重新发明箭头、标签或�
 
 气泡层通过 `anchorId` 生成可引用 id；RelationMark 的局部 `relate` 再选择 `value` 最大与 `y` 最高的气泡，并派生两端 id 和路径标签。`boundary` 让连接线停在气泡边界上。
 
-<ComponentPreview files={['relation-bubble', 'relation-bubble.data.ts']} size="md" />
+<ComponentPreview files={['relation-bubble', 'relation-bubble.data.ts']} size="lg" />
 
 #### 路径极值
 
 PathMark 为每个顶点注册可引用坐标，RelationMark 的局部 `relate` 从同一批点中选择极小值和极大值。切换 control 可以观察选择字段如何改变两端，bend 路由则把关系画成曲线。
 
-<ComponentPreview files={['relation-path-extremes', 'relation-path-extremes.data.ts']} size="md" />
+<ComponentPreview files={['relation-path-extremes', 'relation-path-extremes.data.ts']} size="lg" />
 
 #### 区间关系
 
 两个 RelationMark 分别从 before / after 区间行派生减少与增加关系，再用正交路由连接柱顶。“高度偏移”只改变派生的中转高度，不改两端；其余 controls 用于比较线型、线宽、关系标签位置以及区间标签方位和颜色。
 
-<ComponentPreview files={['relation-interval', 'relation-interval.data.ts']} size="md" />
+<ComponentPreview files={['relation-interval', 'relation-interval.data.ts']} size="lg" />
 
 ## 技术原理
 
@@ -89,7 +89,7 @@ PathMark 为每个顶点注册可引用坐标，RelationMark 的局部 `relate` 
 
 下图在 RelationMark 的职责边界内展示这条主链：目标解析由 path 与 ribbon 共用，分支只决定怎样构造几何，最终产物仍是 core `Path`。
 
-<ComponentPreview files="relation-lowering-flow" hideCode size="sm" />
+<ComponentPreview files="relation-lowering-flow" hideCode size="xs" />
 
 | 阶段       | 可观察行为                                                                                                                 |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------- |

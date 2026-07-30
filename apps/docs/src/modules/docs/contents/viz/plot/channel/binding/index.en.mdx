@@ -26,7 +26,21 @@ Some channels also accept constants. `ReferenceMark` is the clearest example:
 <ReferenceMark y={80} color="crimson" />
 ```
 
-A channel must choose exactly one: read a field from every row or always use the same fixed value.
+For a **built-in flat style prop** that accepts either a field name or a string constant, the React DSL removes the ambiguity in this order:
+
+1. Match the string against field names from the current dataset and data model. A match becomes a field binding.
+2. Only after a field miss, check whether the string is a valid constant for that prop, such as a CSS color or a built-in shape name.
+3. If neither rule accepts the string, the builder warns and skips the prop.
+
+If the data contains a field named `crimson`, `color="crimson"` therefore reads that field instead of using the crimson color constant. Use an explicit constant to avoid a name collision:
+
+```tsx
+<PointMark color={{ kind: 'constant', value: 'crimson' }} />
+```
+
+This decision happens while the React DSL builds PlotSpec. It does not mean that a missing value in one row falls back to a constant. In Plot IR, a channel still chooses exactly one: read a field from every row or always use the same fixed value.
+
+Strings on position props still mean fields directly. Strings in the custom `channels` bag also mean fields directly, while constants use an explicit `{ value }` or `MarkValueType` binding. The complete build-time decision and runtime value path appears under “How It Works”.
 
 ## Binding Playground
 
@@ -48,9 +62,15 @@ Channels only say “which value to read”. Scales map values into drawing spac
 
 Continue with [Built-In Channels](/viz/plot/channel/builtin) to see how style channels land on core element attributes, [Scales](/viz/plot/scale) to see how field types derive scales, or [Coordinates](/viz/plot/coordinate) to see how position channels are reinterpreted.
 
-## How It Works (Optional On A First Read)
+## How It Works
 
 React mark props become serializable channel configuration while PlotSpec is built. A field is represented internally as `{ field: 'gdp' }`, while a constant becomes `{ value: 80 }`.
+
+The figure connects **build-time selection** for a built-in flat style prop with **runtime value resolution**. Its numbers are candidate priorities: a string first matches a field name and only after a miss tries a valid constant. If neither accepts it, the builder warns and skips the prop rather than processing a data row.
+
+<ComponentPreview files="channel-binding-flow" hideCode size="lg" />
+
+Once Plot IR records the binding type, it does not fall back again: a field binding resolves one value per canonical row, while a constant binding reads its own `value` directly. Both paths hand the resolved value to a mark that supports the channel.
 
 Field lookup follows the data model rule: first check whether the complete field name is a direct property on the row, then fall back to `.` traversal. Data preparation applies `fieldMap`, `format`, and `resolveField` before writing normalized results under logical field names; the prepared result is called a canonical row.
 

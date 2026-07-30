@@ -6,13 +6,10 @@ import type { VanillaRuntimeMeta } from '../spec';
 import type { CommonOptions, RenderInput } from './types';
 
 import { isVanillaFigureSpec, normalizeFigureSpec } from '../spec';
+import { createEmptyRuntimeMetaSnapshot } from '../spec/internal';
 
 /** 为非 plain spec 输入创建独立的空 runtime metadata */
-export const createEmptyRuntimeMeta = (): VanillaRuntimeMeta => ({
-  layers: [],
-  identityIndex: new Map(),
-  parentIndex: new Map(),
-});
+export const createEmptyRuntimeMeta = (): VanillaRuntimeMeta => createEmptyRuntimeMetaSnapshot();
 
 /** 从 vanilla runtime options 中取出 core compile options */
 const toCompileOptions = (options: CommonOptions): CompileOptions => ({ ...(options.compile ?? {}) });

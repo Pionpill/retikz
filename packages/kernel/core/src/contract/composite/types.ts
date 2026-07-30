@@ -9,16 +9,68 @@ import type {
   JsonValue,
   ScopeBoundingShapeValue,
 } from '../../schemas';
+import type { ValueOf } from '../../shared';
 import type { Transform } from '../scene';
+import type {
+  LayoutAlignmentGuideDimension,
+  LayoutAlignmentGuideName,
+  LayoutAxisProposalKind,
+  LayoutChildProbeKind,
+  LayoutIntrinsicMode,
+} from './constants';
 
-/** 子内容布局约束 */
-export type ChildLayoutConstraint =
-  | Readonly<{ kind: 'intrinsic' }>
+/** 单轴 layout proposal 的判别值 */
+export type LayoutAxisProposalKindValue = ValueOf<typeof LayoutAxisProposalKind>;
+
+/** intrinsic contribution 查询模式 */
+export type LayoutIntrinsicModeValue = ValueOf<typeof LayoutIntrinsicMode>;
+
+/** 父布局传给 child 单轴的上下文化尺寸 proposal */
+export type LayoutAxisProposal =
   | Readonly<{
-      kind: 'constrained';
-      /** allocation box 的有限非负宽度上限 */
-      maxWidth: number;
+      /** 查询 child 的 intrinsic contribution */
+      kind: typeof LayoutAxisProposalKind.Intrinsic;
+      /** 查询最小或自然 contribution */
+      mode: LayoutIntrinsicModeValue;
+    }>
+  | Readonly<{
+      /** 在可用区间内解析 allocation slot */
+      kind: typeof LayoutAxisProposalKind.Range;
+      /** slot 的有限非负最小尺寸 */
+      min: number;
+      /** slot 的有限非负最大尺寸；省略表示无上限 */
+      max?: number;
+    }>
+  | Readonly<{
+      /** 父布局已要求固定 allocation slot */
+      kind: typeof LayoutAxisProposalKind.Exact;
+      /** slot 的有限非负固定尺寸 */
+      value: number;
     }>;
+
+/** 父布局传给任意 child 的完整双轴 proposal */
+export type LayoutProposal = Readonly<{
+  /** 水平轴 proposal */
+  x: LayoutAxisProposal;
+  /** 垂直轴 proposal */
+  y: LayoutAxisProposal;
+}>;
+
+/** alignment guide 所属维度的判别值 */
+export type LayoutAlignmentGuideDimensionValue = ValueOf<typeof LayoutAlignmentGuideDimension>;
+
+/** Core 内置 alignment guide 的稳定名称 */
+export type LayoutAlignmentGuideNameValue = ValueOf<typeof LayoutAlignmentGuideName>;
+
+/** child-local allocation coordinate 中的一维 alignment guide */
+export type LayoutAlignmentGuide = Readonly<{
+  /** 开放的 guide 名称 */
+  name: string;
+  /** guide 所属的一维坐标轴 */
+  dimension: LayoutAlignmentGuideDimensionValue;
+  /** child-local allocation coordinate 中的有限位置 */
+  position: number;
+}>;
 
 declare const replayBrand: unique symbol;
 
@@ -32,13 +84,47 @@ export type CompositeReplay = Readonly<{
 
 /** 已完成一次真实子布局、可供父 composite 选择的结果 */
 export type LayoutChildResult = Readonly<{
-  /** 父布局应为 child 保留的局部坐标包络 */
+  /** 本次 proposal 求值后的无原点 allocation slot */
+  slotSize: Readonly<{
+    /** slot 宽度 */
+    width: number;
+    /** slot 高度 */
+    height: number;
+  }>;
+  /** child 在自身局部坐标中的真实布局占用 */
   allocationBounds: Readonly<BoundsRect>;
   /** 最终静态 primitive tree 的保守局部视觉包络 */
   visualBounds: Readonly<BoundsRect>;
+  /** child-local allocation coordinate 中分离并冻结的 alignment guides */
+  alignmentGuides?: ReadonlyArray<LayoutAlignmentGuide>;
   /** 对应本次布局结果的 opaque replay token */
   replay: CompositeReplay;
 }>;
+
+declare const layoutChildFailureBrand: unique symbol;
+
+/** callback-local、compile-local 的 opaque child probe failure */
+export type LayoutChildFailure = Readonly<{
+  [layoutChildFailureBrand]: never;
+}>;
+
+/** child probe 的结果判别值 */
+export type LayoutChildProbeKindValue = ValueOf<typeof LayoutChildProbeKind>;
+
+/** layoutChild 的 resolved 或 failed outcome */
+export type LayoutChildProbe =
+  | Readonly<{
+      /** probe 已解析为可 replay 的结果 */
+      kind: typeof LayoutChildProbeKind.Resolved;
+      /** 当前 callback 拥有的布局结果 */
+      result: LayoutChildResult;
+    }>
+  | Readonly<{
+      /** probe 形成可丢弃或显式提升的失败 */
+      kind: typeof LayoutChildProbeKind.Failed;
+      /** 当前 callback 拥有的 opaque failure */
+      failure: LayoutChildFailure;
+    }>;
 
 declare const compositeCompileChildBrand: unique symbol;
 
@@ -70,18 +156,31 @@ export type CompositeCompileScopeProps = Readonly<{
   animations?: ReadonlyArray<IRAnimationTrack>;
 }>;
 
+/** replay 外层允许附加的无 identity Scope 语义 */
+export type CompositeReplayWrapper = Readonly<{
+  /** replay root primitive 共享的已 lowering 数值变换 */
+  transforms?: ReadonlyArray<Transform>;
+  /** placement transform 后、parent allocation coordinate 中的裁剪区域 */
+  clip?: IRClipSpec;
+}>;
+
 /** layout-aware composite 可见的受限编译上下文 */
 export type LayoutCompositeCompileContext = Readonly<{
-  /** 当前 composite occurrence 从父级收到的约束 */
-  constraint: ChildLayoutConstraint;
-  /** 在完整 compile 环境中布局任意 child */
-  layoutChild: (child: IRChild, constraint: ChildLayoutConstraint) => LayoutChildResult;
+  /** 当前 composite occurrence 从父级收到的完整双轴 proposal */
+  proposal: LayoutProposal;
+  /** 在完整 compile 环境中 probe 任意 child */
+  layoutChild: (child: IRChild, proposal: LayoutProposal) => LayoutChildProbe;
   /**
    * 把当前 callback 的一次布局结果转为 one-use output child
-   * @param result 当前 callback 的 `layoutChild()` 返回值
-   * @param transforms replay 提交时应用的已 lowering 数值变换
+   * @param result 当前 callback 的 resolved probe result
+   * @param wrapper replay 提交时应用的数值变换与裁剪外壳
    */
-  replay: (result: LayoutChildResult, transforms?: ReadonlyArray<Transform>) => CompositeCompileChild;
+  replay: (result: LayoutChildResult, wrapper?: CompositeReplayWrapper) => CompositeCompileChild;
+  /**
+   * 提升当前 callback 创建的 child probe failure
+   * @param failure 当前 callback 的 failed probe failure
+   */
+  raise: (failure: LayoutChildFailure) => never;
   /**
    * 创建递归 runtime Scope output child
    * @description 只支持结构属性，不重新施加样式默认、引用变换或 placement
@@ -98,6 +197,10 @@ export type LayoutCompositeCompileContext = Readonly<{
 export type LayoutCompositeCompileResult<TArtifact extends JsonValue = never> = Readonly<{
   /** 普通 child 继续编译，opaque child 在当前 callback 的 runtime output tree 中解析 */
   children: ReadonlyArray<IRChild | CompositeCompileChild>;
+  /** composite 对父布局声明的 container allocation box；省略时由最终 children 合并 */
+  allocationBounds?: Readonly<BoundsRect>;
+  /** composite 在自身局部 allocation coordinate 中显式声明、由 Core 校验并分离的 guides */
+  alignmentGuides?: ReadonlyArray<LayoutAlignmentGuide>;
 }> &
   ([TArtifact] extends [never] ? { artifact?: never } : { artifact?: TArtifact });
 

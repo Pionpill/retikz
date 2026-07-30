@@ -50,8 +50,20 @@ export const validateTableStructureOutput = (
 
     if (cell.source?.kind === TableCellSourceKind.Manual) {
       if (!manualOperation.success) throw new Error(`Cell "${cell.id}" uses manual source outside manual structure`);
-      if (cell.source.cellIndex >= manualOperation.data.cells.length) {
-        throw new Error(`Cell "${cell.id}" manual cellIndex ${cell.source.cellIndex} is out of range`);
+      if (
+        cell.source.row >= manualOperation.data.rows.length ||
+        cell.source.column >= manualOperation.data.rows[0].length
+      ) {
+        throw new Error(`Cell "${cell.id}" manual source (${cell.source.row}, ${cell.source.column}) is out of range`);
+      }
+      const sourceEntry = manualOperation.data.rows[cell.source.row][cell.source.column];
+      if (sourceEntry === null) {
+        throw new Error(
+          `Cell "${cell.id}" manual source (${cell.source.row}, ${cell.source.column}) does not reference a Cell entry`,
+        );
+      }
+      if (cell.source.row !== cell.row || cell.source.column !== cell.column) {
+        throw new Error(`Cell "${cell.id}" manual source must match its canonical coordinates`);
       }
     }
     if (cell.source?.kind === TableCellSourceKind.Field) {

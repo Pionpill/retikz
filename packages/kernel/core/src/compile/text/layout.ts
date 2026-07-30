@@ -9,6 +9,8 @@ import { CompileWarningCode, DEFAULT_FONT_SIZE } from '../constants';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from './baseline';
 import { resolveFontSize } from './font-size';
 import { isMathRun, parseInlineRuns } from './inline';
+import { normalizeTextMetrics } from './metrics';
+import { snapshotLoweredTex } from './tex';
 
 /** 行高近似系数 */
 const LINE_HEIGHT_FACTOR = 1.2;
@@ -164,14 +166,15 @@ export const layoutInlineLine = (runs: Array<IRInlineRun>, ctx: LineLayoutContex
         );
         continue;
       }
-      const lowered = ctx.lowerTex(
+      const rawLowered = ctx.lowerTex(
         { tex: run.tex, displayMode: run.displayMode },
         { fontSize: ctx.font.size, color: run.fill ?? ctx.color },
       );
-      if (lowered === null) {
+      if (rawLowered === null) {
         ctx.warn(CompileWarningCode.TexInvalid, `Failed to render inline tex: ${run.tex}`);
         continue;
       }
+      const lowered = snapshotLoweredTex(rawLowered);
       const above = lowered.height - lowered.depth;
       ascent = Math.max(ascent, above);
       descent = Math.max(descent, lowered.depth);
@@ -188,9 +191,9 @@ export const layoutInlineLine = (runs: Array<IRInlineRun>, ctx: LineLayoutContex
       x += lowered.width;
     } else {
       const font = mergeFont(ctx.font, run.font, rootFontSize);
-      const m = ctx.measureText(run.text, font);
-      ascent = Math.max(ascent, m.ascent ?? font.size * ASCENT_FACTOR);
-      descent = Math.max(descent, m.descent ?? font.size * DESCENT_FACTOR);
+      const m = normalizeTextMetrics(ctx.measureText(run.text, font));
+      ascent = Math.max(ascent, m.ascent);
+      descent = Math.max(descent, m.descent);
       pieces.push({
         kind: 'text',
         x,

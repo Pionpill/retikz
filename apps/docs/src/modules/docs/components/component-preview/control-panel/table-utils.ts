@@ -1,4 +1,4 @@
-import type { PreviewTableColumn, PreviewTableControlField } from '../types';
+import type { PreviewTableColumn, PreviewTableControlField, PreviewTableRows } from '../types';
 
 /** 单个只读表格单元格的展示结果 */
 export type PreviewTableCell = {
@@ -13,11 +13,14 @@ export const PREVIEW_TABLE_MAX_ROWS = 100;
 export const PREVIEW_TABLE_DEFAULT_VISIBLE_ROWS = 5;
 
 /** 按字段首次出现的顺序解析只读表格列 */
-export const resolvePreviewTableColumns = (field: PreviewTableControlField): Array<PreviewTableColumn> => {
+export const resolvePreviewTableColumns = (
+  field: PreviewTableControlField,
+  rows: PreviewTableRows,
+): Array<PreviewTableColumn> => {
   if (field.columns !== undefined) return field.columns.map(column => ({ ...column }));
 
   const keys = new Set<string>();
-  for (const row of field.rows) {
+  for (const row of rows) {
     Object.keys(row).forEach(key => keys.add(key));
   }
   return Array.from(keys, key => ({ key }));

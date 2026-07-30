@@ -15,7 +15,7 @@ General reducers, selectors, and grouped summaries belong to [Data Transforms](/
 
 Switch between automatic Silverman bandwidth and an explicit value, then adjust `sampleCount`. Fixed coordinate domains make bandwidth and sampling density directly comparable.
 
-<ComponentPreview files={['transform-density', 'transform-density.data.ts']} size="md" />
+<ComponentPreview files={['transform-density', 'transform-density.data.ts']} size="lg" />
 
 Bandwidth controls how far each observation spreads along the x-axis. A smaller bandwidth preserves more local peaks and valleys; a larger one blends a wider neighborhood into a smoother curve. `sampleCount` only changes output sampling density, not smoothing strength.
 
@@ -39,7 +39,7 @@ Bandwidth controls how far each observation spreads along the x-axis. A smaller 
 
 The `density` main chain is “group finite samples → resolve bandwidth → average kernels at each position → emit sampled rows.” Bandwidth strategy and sampling configuration are auxiliary inputs, not extra data-processing stages.
 
-<ComponentPreview files="transform-density-logic" hideCode size="xl" />
+<ComponentPreview files="transform-density-logic" hideCode size="sm" />
 
 Each group first drops non-finite `field` values and sorts the rest. The Silverman strategy combines standard deviation and interquartile range to estimate a positive bandwidth. The explicit strategy uses `bandwidth.value` directly.
 
@@ -74,7 +74,7 @@ A group with no finite samples throws. Silverman also requires at least two fini
 
 Adjust the number of predictions and switch between the observed range and explicit extrapolation. Hollow points show the predicted rows directly while the coordinate domain stays fixed: `sampleCount` changes their spacing, and `extent` only changes the sampled trend interval.
 
-<ComponentPreview files={['transform-smooth', 'transform-smooth.data.ts']} size="md" />
+<ComponentPreview files={['transform-smooth', 'transform-smooth.data.ts']} size="lg" />
 
 ### API Reference
 
@@ -97,7 +97,7 @@ Adjust the number of predictions and switch between the observed range and expli
 
 `smooth` first filters finite `(x, y)` pairs, then fits one linear model per group. `extent` and `sampleCount` only control prediction sampling after the model is fitted.
 
-<ComponentPreview files="transform-smooth-logic" hideCode size="xl" />
+<ComponentPreview files="transform-smooth-logic" hideCode size="sm" />
 
 Ordinary least squares computes `meanX`, `meanY`, x variance, and xy covariance before deriving:
 

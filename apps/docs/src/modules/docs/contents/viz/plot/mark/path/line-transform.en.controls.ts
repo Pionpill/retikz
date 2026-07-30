@@ -2,6 +2,8 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
+import { lineTransformOperationOf } from './line-transform.controls';
 import { weeklyPipeline } from './line-transform.data';
 
 /** Stable control id for the path-layer trend grouping playground */
@@ -15,7 +17,18 @@ export const lineTransformControls = definePreviewControls({
     {
       label: 'Data',
       defaultCollapsed: true,
-      controls: [{ kind: 'table', id: 'weeklyPipeline', label: 'Weekly pipeline', rows: weeklyPipeline }],
+      controls: [
+        {
+          kind: 'table',
+          id: 'weeklyPipeline',
+          label: 'Weekly pipeline',
+          views: createPlotTransformTableViews(
+            { source: 'Source', result: 'Trend fit' },
+            weeklyPipeline,
+            lineTransformOperationOf,
+          ),
+        },
+      ],
     },
     {
       label: 'Fit',

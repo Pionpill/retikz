@@ -17,7 +17,7 @@ description: 颜色比例尺把分类、连续和带中点的数据映射成离�
 把 `color` 绑定到分类字段，`<Plot>` 会自动派生 `ordinal`，每个类别取一个离散颜色。分类 color 也会在没有显式 series 时把 path 数据拆成多个系列。
 
 <ComponentPreview
-  size="md"
+  size="lg"
   files={['scale-ordinal', 'scale-ordinal.data.ts']}
   caption="切换离散配色并显示或隐藏图例，分别观察颜色映射与图例解释承担的职责。"
 />
@@ -29,7 +29,7 @@ description: 颜色比例尺把分类、连续和带中点的数据映射成离�
 `sequential` 用一条由低到高的色带表达连续量；`diverging` 用三段 domain 表达低端、中点和高端，适合盈亏、偏差、温差等围绕基准值展开的数据。
 
 <ComponentPreview
-  size="md"
+  size="lg"
   files={['scale-continuous', 'scale-continuous.data.ts']}
   caption="切换 sequential 与 diverging、选择配色并移动中点；同一份 -50 到 50 数据会立即显示映射差异。"
 />
@@ -54,7 +54,7 @@ description: 颜色比例尺把分类、连续和带中点的数据映射成离�
 | `quantile`  | 根据数据分位切档，每档样本数近似相等 | 偏斜分布、减弱离群值影响 |
 
 <ComponentPreview
-  size="md"
+  size="lg"
   files={['scale-discretization', 'scale-discretization.data.ts']}
   caption="切换 quantize、threshold 与 quantile；调整档数、业务阈值和配色，比较同一份偏斜数据如何落入不同色档。"
 />

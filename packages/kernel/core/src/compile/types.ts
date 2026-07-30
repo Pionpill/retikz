@@ -68,9 +68,9 @@ export type CompiledNodeLayout = {
   };
 };
 
-/** composite 展开或输出相对原始 occurrence 的结构化路径段 */
+/** compile dispatch、展开与输出相对原始 occurrence 的结构化路径段 */
 export type CompileExpansionSegment = Readonly<{
-  kind: 'expand' | 'output' | 'replay' | 'scopeChild';
+  kind: 'expand' | 'output' | 'probe' | 'replay' | 'scopeChild';
   index: number;
 }>;
 

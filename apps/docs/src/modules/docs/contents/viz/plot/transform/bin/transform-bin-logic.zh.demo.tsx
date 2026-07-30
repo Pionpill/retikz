@@ -4,10 +4,10 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** bin 的边界解析、分桶、指标规约与每箱输出 */
 const Demo: FC = () => (
-  <Layout width={420} height={360} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={680} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
       id="rows"
-      position={[70, -140]}
+      position={[-290, 35]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}
@@ -22,7 +22,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="strategy"
-      position={[-130, -70]}
+      position={[-170, -35]}
       stroke="gray"
       fill="gray"
       fillOpacity={0.06}
@@ -37,7 +37,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="edges"
-      position={[70, -70]}
+      position={[-170, 35]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -52,7 +52,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="error"
-      position={[-130, 10]}
+      position={[-170, -105]}
       stroke="red"
       fill="red"
       fillOpacity={0.06}
@@ -67,7 +67,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="buckets"
-      position={[70, 0]}
+      position={[-35, 35]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -82,7 +82,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="metrics"
-      position={[70, 70]}
+      position={[115, 35]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -97,7 +97,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="output"
-      position={[70, 140]}
+      position={[265, 35]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}

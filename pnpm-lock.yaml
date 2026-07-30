@@ -262,6 +262,9 @@ importers:
       '@retikz/runtime':
         specifier: workspace:*
         version: link:../../packages/kernel/runtime
+      '@retikz/vanilla':
+        specifier: workspace:*
+        version: link:../../packages/kernel/vanilla
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -545,6 +548,9 @@ importers:
       '@retikz/render':
         specifier: workspace:*
         version: link:../render
+      '@retikz/runtime':
+        specifier: workspace:*
+        version: link:../runtime
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -680,6 +686,9 @@ importers:
       '@retikz/render':
         specifier: workspace:*
         version: link:../render
+      '@retikz/runtime':
+        specifier: workspace:*
+        version: link:../runtime
     devDependencies:
       '@types/node':
         specifier: 'catalog:'

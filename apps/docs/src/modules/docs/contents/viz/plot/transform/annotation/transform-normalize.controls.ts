@@ -2,7 +2,20 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
 import { revenue } from './transform-normalize.data';
+
+/** 根据实时控件值创建归一化与堆叠流水线 */
+export const normalizeOperationsOf = (values: { basis: 'fraction' | 'percent'; grouping: 'quarter' | 'global' }) => [
+  {
+    kind: 'normalize',
+    field: 'amount',
+    ...(values.grouping === 'quarter' ? { groupBy: ['quarter'] } : {}),
+    basis: values.basis,
+    as: 'share',
+  },
+  { kind: 'stack', x: 'quarter', y: 'share', groupBy: 'product' },
+];
 
 /** 归一化示例的中文控件 */
 export const normalizeControls = definePreviewControls({
@@ -11,17 +24,23 @@ export const normalizeControls = definePreviewControls({
   sections: [
     {
       label: '数据',
-      defaultCollapsed: true,
       controls: [
         {
           kind: 'table',
           id: 'rows',
           label: '季度产品销量',
-          rows: revenue,
+          views: createPlotTransformTableViews(
+            { source: '原始', result: '归一化与堆叠后' },
+            revenue,
+            normalizeOperationsOf,
+          ),
           columns: [
             { key: 'quarter', label: '季度' },
             { key: 'product', label: '产品' },
             { key: 'amount', label: '销量' },
+            { key: 'share', label: '占比 share' },
+            { key: 'y0', label: '下界 y0' },
+            { key: 'y1', label: '上界 y1' },
           ],
         },
       ],

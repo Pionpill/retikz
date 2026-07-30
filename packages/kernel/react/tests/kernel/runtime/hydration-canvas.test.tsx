@@ -78,4 +78,29 @@ describe('Canvas 水合', () => {
     container.remove();
     harness.restore();
   });
+
+  it('static Canvas 继续通过 hitTest 分发 hydration handler', async () => {
+    const harness = installCanvasHarness();
+    const onClick = vi.fn();
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(() => {
+      root.render(
+        <Layout renderer="canvas" width={SIZE} height={SIZE} runtime={{ mode: 'static' }}>
+          <Node id="a" position={[0, 0]} fill="red" minimumSize={2} onClick={onClick} />
+        </Layout>,
+      );
+    });
+    const canvas = container.querySelector('canvas');
+    await act(() => {
+      canvas?.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: SIZE / 2, clientY: SIZE / 2 }));
+    });
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+    root.unmount();
+    container.remove();
+    harness.restore();
+  });
 });

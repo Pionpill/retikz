@@ -4,7 +4,7 @@
 
 ## 定位
 
-Standard 家族是官方维护、可选安装的跨领域绘图能力库：通过 Core 公开的 definition / registry / composite 契约提供常用绘图实现、通用布局积木与 JSON-safe 语义组件，并统一 lowering 为 Core IR。
+Standard 家族是官方维护、相对 Core 可选安装的跨领域绘图能力库：通过 Core 公开的 definition / registry / composite 契约，为直接作者和 Plot、Table 等官方 Tier 2 包提供常用绘图实现、通用布局积木与 JSON-safe 语义组件，并统一 lowering 为 Core IR。
 
 - `@retikz/standard` 拥有宿主无关的 schema、definition / factory、composite、capability module 与 lowering
 - `@retikz/standard-react` / `@retikz/standard-vanilla` 只负责等价 authoring 与宿主接入
@@ -20,7 +20,8 @@ v0.1 建立 Standard 三包的首个完整闭环，覆盖：
 
 - Grid、Axes、Frame 等首批宿主无关 Tier 2 composite
 - capability module、不可变 bundle、按需与全量 preset
-- Stack、Align / Distribute 等不理解领域模型的通用布局 composite
+- Flex、GridLayout、Overlay 等不理解领域模型的通用布局 composite
+- 由 Plot、Table 与直接作者共同消费的通用 Legend 呈现
 - `Stage`、`Decision`、`Terminal`、`Junction` 等逻辑节点语义
 - `Connector`、`Callout` 等结构化关系与注释语义
 - React / Vanilla 等价 authoring、JSON-safe 语义输入、Core lowering、诊断、测试与双语文档
@@ -36,6 +37,8 @@ v0.2 仍不接管完整 GraphModel、拓扑校验、算法布局、自动路由�
 ## 发布组
 
 `@retikz/standard`、`@retikz/standard-react` 与 `@retikz/standard-vanilla` 使用独立 `standard` release group 并 lockstep 发布。每个 milestone 必须声明所需 Core 能力是否就绪，Standard 不反向改变 Kernel 的发布边界。
+
+Plot、Table 等领域 release group 可以使用兼容版本单向依赖 Standard，不与 Standard lockstep；领域包必须声明可消费版本并显式组合所需 capability，Standard 不反向依赖领域包。
 
 ## 参考
 

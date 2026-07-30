@@ -21,9 +21,14 @@ Extend a reducer when `summarize` or `annotate` only lacks a statistical calcula
 
 `defineTransform` extracts a unique `kind` from `schema`, declares field dependencies through `inputFields` and `outputFields`, and processes rows in `apply`. `apply` must be pure and deterministic and must not mutate the input array or rows.
 
-The `double-x` operation below reads `x`, produces `x2`, and uses Plot as an example host to display the result:
+The `scale-field` operation below reads `x`, uses a serializable `factor` to produce `scaledX`, and uses Plot as an example host to display source and derived values:
 
-<ComponentPreview files={['extension-transform', 'extension-transform.data.ts']} />
+<ComponentPreview
+  files={['extension-transform', 'extension-transform-preview.tsx', 'extension-transform.data.ts']}
+  defaultSourceFile="extension-transform-preview.tsx"
+  size="lg"
+  caption="Gray points are the fixed reference and blue points read scaledX; a fixed x domain keeps automatic scaling from canceling the factor."
+/>
 
 Built-in and custom transforms merge into one registry and use the same `kind` lookup, schema validation, and execution path.
 
@@ -50,7 +55,12 @@ Reducers and selectors are not independent pipeline steps. `summarize` and `anno
 
 The example below registers a midpoint reducer and a selector for the row closest to the mean. The left plot generates aggregate rows through `summarize`; the right plot retains original representative rows through `select`:
 
-<ComponentPreview files={['extension-statistics', 'extension-statistics.data.ts']} />
+<ComponentPreview
+  files={['extension-statistics', 'extension-statistics-preview.tsx', 'extension-statistics.data.ts']}
+  defaultSourceFile="extension-statistics-preview.tsx"
+  size="lg"
+  caption="The left plot generates statistical rows with a custom reducer; the right retains original representatives with a custom selector."
+/>
 
 A reducer should declare read and written fields through `inputFields` and `outputFields`. A selector declares its read fields through `inputFields` and returns selected original rows. Promote the logic to a complete transform when it must change several fields or combine multiple stages.
 

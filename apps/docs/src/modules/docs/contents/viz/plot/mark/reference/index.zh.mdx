@@ -40,39 +40,41 @@ ReferenceMark 是底层参考 mark：它负责把一个固定轴值解释成 lin
 
 ## 例子
 
-### 添加固定阈值
+以下五个示例都可以在“坐标系”中切换笛卡尔与极坐标。ReferenceMark 的边界配置保持不变，坐标系负责把同一个轴值或区间重新投影成直线、圆环、带或扇区。
 
-`y={60}` 是常量轴值，生成一条跨满 x 域的水平阈值线。这个例子对应 API 里的 `x` / `y` 常量写法。
+### 基础参考线
 
-<ComponentPreview files={['rule-threshold', 'rule-threshold.data.ts']} size="md" />
+单个 `x` 或 `y` 常量会生成一条跨满对侧轴域的参考线。切换“参考轴”可以比较水平线与竖直线；再切到极坐标，同一配置分别变成参考环与径向线。
 
-### 扩展为参考带
+<ComponentPreview files={['rule-threshold', 'rule-threshold.data.ts']} size="lg" />
 
-给 `yTo` 后，ReferenceMark 从线变成填充带。带通常先声明，再叠加数据图元，让点、柱或路径画在带之上。
+### 参考带
 
-<ComponentPreview files={['rule-band', 'rule-threshold.data.ts']} size="md" />
+给同轴上界后，ReferenceMark 从线变成填充带。`y` / `yTo` 在极坐标中形成环带，`x` / `xTo` 则形成扇形楔；带通常先声明，再叠加数据图元。
+
+<ComponentPreview files={['rule-band', 'rule-threshold.data.ts']} size="lg" />
 
 `xTo` 与 `yTo` 对称：绑 `x` 时用 `xTo` 得到竖直带。上界必须匹配绑定轴，否则会在构造或 lowering 阶段报错。
 
-### 高亮二维区域
+### 二维参考区域
 
 `kind="region"` 让 ReferenceMark 从单轴约束变成坐标 cell 区域。笛卡尔坐标下它围出矩形区域；极坐标下同一份 `x` / `xTo` / `y` / `yTo` 会被解释成角度区间 + 半径区间，围出环扇区。
 
-<ComponentPreview files={['rule-region', 'rule-region.data.ts']} size="md" />
+<ComponentPreview files={['rule-region', 'rule-region.data.ts']} size="lg" />
 
-### 从每行数据读取参考值
+### 逐行参考
 
 `y="threshold"` 是字段轴值，表示每行数据各生成一条参考线。此时 `color="tier"` 会被当作颜色字段，按类别分组上色。
 
-<ComponentPreview files={['rule-per-datum', 'rule-per-datum.data.ts']} size="md" />
+<ComponentPreview files={['rule-per-datum', 'rule-per-datum.data.ts']} size="lg" />
 
 在 React 写法中，`color` 的字符串语义由下界 `x` / `y` 决定：下界是数字时按常量颜色处理，下界是字段时按颜色字段处理。即使字段上界或 extent 让 reference 逐行生成，只要下界仍是数字，`color` 仍是常量颜色。
 
-### 限制参考线长度
+### 局部参考
 
 默认 line / band 跨满对侧轴域。设置 `extentField` / `extentToField` 后，每行可以从两个字段读取对侧 role 的起止值，把参考约束截成局部线段或局部带；两者必须成对出现。
 
-<ComponentPreview files={['rule-extent', 'rule-extent.data.ts']} size="md" />
+<ComponentPreview files={['rule-extent', 'rule-extent.data.ts']} size="lg" />
 
 extent 只改变参考在对侧轴上的覆盖范围，不改变 `x` / `y` 绑定的参考轴值。在 `polar2D` 下，对侧 role 会相应解释为角度跨度或半径跨度。
 

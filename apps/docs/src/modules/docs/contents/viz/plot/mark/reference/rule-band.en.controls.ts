@@ -6,6 +6,8 @@ import { scores } from './rule-threshold.data';
 
 /** Stable control ids for a reference band */
 export const RULE_BAND_CONTROL_IDS = {
+  coordinate: 'rule-band-coordinate',
+  axis: 'rule-band-axis',
   start: 'rule-band-start',
   end: 'rule-band-end',
 } as const;
@@ -21,8 +23,33 @@ export const ruleBandControls = definePreviewControls({
       controls: [{ kind: 'table', id: 'scores', label: 'Score rows', rows: scores }],
     },
     {
+      label: 'Coordinate system',
+      controls: [
+        {
+          kind: 'select',
+          id: RULE_BAND_CONTROL_IDS.coordinate,
+          label: 'Projection',
+          defaultValue: 'cartesian2D',
+          options: [
+            { value: 'cartesian2D', label: 'Cartesian' },
+            { value: 'polar2D', label: 'Polar' },
+          ],
+        },
+      ],
+    },
+    {
       label: 'Range',
       controls: [
+        {
+          kind: 'select',
+          id: RULE_BAND_CONTROL_IDS.axis,
+          label: 'Reference axis',
+          defaultValue: 'y',
+          options: [
+            { value: 'y', label: 'y: horizontal / annular band' },
+            { value: 'x', label: 'x: vertical band / sector wedge' },
+          ],
+        },
         {
           kind: 'range',
           id: RULE_BAND_CONTROL_IDS.start,
@@ -50,8 +77,10 @@ export const ruleBandControls = definePreviewControls({
 export const previewControlContract = {
   controls: ruleBandControls,
   canonicalValues: {
+    [RULE_BAND_CONTROL_IDS.coordinate]: 'cartesian2D',
+    [RULE_BAND_CONTROL_IDS.axis]: 'y',
     [RULE_BAND_CONTROL_IDS.start]: 60,
     [RULE_BAND_CONTROL_IDS.end]: 80,
   },
-  relatedApis: ['ReferenceMark.y', 'ReferenceMark.yTo'],
+  relatedApis: ['Plot.coordinate', 'ReferenceMark.x', 'ReferenceMark.xTo', 'ReferenceMark.y', 'ReferenceMark.yTo'],
 } satisfies PreviewControlContract;
