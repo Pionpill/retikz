@@ -6,7 +6,7 @@ import { createServer } from 'vite';
 
 import type { BrowserBenchmarkOptions, BrowserBenchmarkResult, RetikzBenchWindow } from './browser-contract';
 
-/** bench-environment.json 中与 Chromium runner 相关的冻结字段 */
+/** environment.json 中与 Chromium runner 相关的冻结字段 */
 export type BrowserRunnerEnvironment = Readonly<{
   browser: string;
   playwright: string;
