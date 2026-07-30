@@ -5,7 +5,7 @@ import { FlexLayout, GridLayout, LayoutItem, OverlayLayout } from '@retikz/stand
 
 /** 展示三种布局容器可作为普通 IRChild 递归组合 */
 const Demo: FC = () => (
-  <Layout width={500} height={260}>
+  <Layout width={500} height={260} inspect={{ layout: true }}>
     <FlexLayout
       size={{ x: { kind: 'fixed', value: 430 }, y: { kind: 'fixed', value: 190 } }}
       direction="column"
@@ -24,14 +24,14 @@ const Demo: FC = () => (
           columnGap={10}
         >
           <LayoutItem kind="grid" itemKey="left">
-            <Node position={[0, 0]} text="Grid 单元" fill="#dcfce7" stroke="#16a34a" />
+            <Node position={[0, 0]} text="网格单元" fill="#dcfce7" stroke="#16a34a" />
           </LayoutItem>
           <LayoutItem kind="grid" itemKey="right">
             <OverlayLayout size={{ y: { kind: 'fixed', value: 86 } }}>
               <LayoutItem kind="overlay" itemKey="base">
                 <Node
                   position={[0, 0]}
-                  text="Overlay"
+                  text="叠加层"
                   minimumSize={{ width: 150, height: 64 }}
                   fill="#f3e8ff"
                   stroke="#9333ea"

@@ -5,8 +5,19 @@ import { definePreviewControls } from '@/modules/docs/preview';
 /** OverlayLayout 局部定位的中文属性面板 */
 export const overlayLayoutPlaygroundControls = definePreviewControls({
   presentation: 'panel',
-  title: 'OverlayLayout 参数',
+  title: '叠加布局参数',
   sections: [
+    {
+      label: '辅助层',
+      controls: [
+        {
+          kind: 'switch',
+          id: 'inspect',
+          label: '显示布局辅助线',
+          defaultValue: true,
+        },
+      ],
+    },
     {
       label: '共享对齐',
       controls: [
@@ -37,7 +48,7 @@ export const overlayLayoutPlaygroundControls = definePreviewControls({
       ],
     },
     {
-      label: 'Badge 定位',
+      label: '徽标定位',
       controls: [
         { kind: 'range', id: 'badgeX', label: '目标 x', defaultValue: 300, min: 20, max: 320, step: 10 },
         { kind: 'range', id: 'badgeY', label: '目标 y', defaultValue: 18, min: 10, max: 130, step: 10 },
@@ -62,6 +73,7 @@ export const overlayLayoutPlaygroundControls = definePreviewControls({
 export const previewControlContract = {
   controls: overlayLayoutPlaygroundControls,
   canonicalValues: {
+    inspect: true,
     justifyItems: 'center',
     alignItems: 'center',
     badgeX: 300,
@@ -70,6 +82,7 @@ export const previewControlContract = {
     zIndex: 2,
   },
   relatedApis: [
+    'OverlayLayout.inspect',
     'OverlayLayout.justifyItems',
     'OverlayLayout.alignItems',
     'LayoutItem.placement.at',

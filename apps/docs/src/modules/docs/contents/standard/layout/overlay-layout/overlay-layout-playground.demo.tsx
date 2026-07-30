@@ -21,6 +21,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       style={{ maxWidth: '100%', height: 'auto' }}
     >
       <OverlayLayout
+        inspect={values.inspect}
         size={{ x: { kind: 'fixed', value: 350 }, y: { kind: 'fixed', value: 170 } }}
         padding={12}
         justifyItems={values.justifyItems}

@@ -55,6 +55,16 @@ children 直接放 Kernel / Sugar 组件树即可，没有额外的固定组合�
 
 <ComponentPreview files="layout-artifacts" size="sm" />
 
+### 布局检查策略
+
+`inspect` 是运行时 sidecar，不进入 IR。给 `<Layout>` 传入 `{ layout: true }` 会为当前图中所有已注册且提供 inspector 的布局 occurrence 打开辅助层；边界、溢出阴影和对齐参考线与主图分开提交，不扩大 viewBox，也不参与命中测试。
+
+```tsx
+<Layout inspect={{ layout: true }}>{/* layout-aware composites */}</Layout>
+```
+
+需要只检查一段 authored 子树时在 [`<Scope>`](/kernel/components/layout/scope) 上声明同一策略；只检查一个 Standard 容器时使用其组件 `inspect`。字段、默认值与级联规则见 [Standard 布局检查器](/standard/layout/reference/runtime#布局检查器)。
+
 ### 输出边界
 
 `viewBox` 决定内部坐标范围，`width` / `height` 决定页面显示尺寸。用面板分别调整这两类输出参数，观察它们不会改变 JSX 图形结构。
@@ -240,6 +250,7 @@ retained 路径让 Core Program 与 Render participant 在一次 transaction 中
 | `fontSize`     | `number`                                                     | `16`   | 默认字号，也是 preset 与 `rem` 的根字号                                 |
 | `artifacts`    | `CompileArtifactOptions`                                     | `{}`   | 请求 opt-in 产物；`nodeLayouts:true` 返回 `CompiledNodeLayout` 布局快照 |
 | `onArtifacts`  | `(artifacts:`<br />`ReadonlyArray<CompileArtifact>) => void` | —      | React commit 后通知同次 compile 的 immutable artifacts                  |
+| `inspect`      | `InspectOptions`                                             | —      | 为已注册布局检查器提供整张图的 runtime-only 策略                        |
 
 ### 图元与资源注入
 

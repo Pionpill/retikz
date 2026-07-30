@@ -322,45 +322,76 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/reference/schema/path#arrowenddetail',
   },
 
+  LayoutInspectBoundsOptionsInputSchema: {
+    schema: IR.LayoutInspectBoundsOptionsInputSchema,
+    label: 'LayoutInspectBoundsOptionsInput',
+    url: '/standard/layout/reference/runtime#layoutinspectboundsoptionsinputschema',
+  },
+  BaseLayoutInspectOptionsInputSchema: {
+    schema: IR.BaseLayoutInspectOptionsInputSchema,
+    label: 'BaseLayoutInspectOptionsInput',
+    url: '/standard/layout/reference/runtime#baselayoutinspectoptionsinputschema',
+  },
+  InspectOptionsInputSchema: {
+    schema: IR.InspectOptionsInputSchema,
+    label: 'InspectOptionsInput',
+    url: '/standard/layout/reference/runtime#inspectoptionsinputschema',
+  },
+  FlexLayoutInspectOptionsInputSchema: {
+    schema: StandardIR.FlexLayoutInspectOptionsInputSchema,
+    label: 'FlexLayoutInspectOptionsInput',
+    url: '/standard/layout/reference/runtime#flexlayoutinspectoptionsinputschema',
+  },
+  GridLayoutInspectOptionsInputSchema: {
+    schema: StandardIR.GridLayoutInspectOptionsInputSchema,
+    label: 'GridLayoutInspectOptionsInput',
+    url: '/standard/layout/reference/runtime#gridlayoutinspectoptionsinputschema',
+  },
+  OverlayLayoutInspectOptionsInputSchema: {
+    schema: StandardIR.OverlayLayoutInspectOptionsInputSchema,
+    label: 'OverlayLayoutInspectOptionsInput',
+    url: '/standard/layout/reference/runtime#overlaylayoutinspectoptionsinputschema',
+  },
+
   FlexLayoutSchema: {
     schema: StandardIR.FlexLayoutSchema,
     label: 'FlexLayout',
-    url: '/standard/layout/reference/contract#flexlayoutschema',
+    url: '/standard/layout/reference/contract-input#flexlayoutschema',
   },
   GridLayoutSchema: {
     schema: StandardIR.GridLayoutSchema,
     label: 'GridLayout',
-    url: '/standard/layout/reference/contract#gridlayoutschema',
+    url: '/standard/layout/reference/contract-input#gridlayoutschema',
   },
   OverlayLayoutSchema: {
     schema: StandardIR.OverlayLayoutSchema,
     label: 'OverlayLayout',
-    url: '/standard/layout/reference/contract#overlaylayoutschema',
+    url: '/standard/layout/reference/contract-input#overlaylayoutschema',
   },
   LayoutItemSchema: {
     schema: StandardIR.LayoutItemSchema,
     label: 'LayoutItem',
-    url: '/standard/layout/reference/contract#layoutitemschema',
+    url: '/standard/layout/reference/contract-input#layoutitemschema',
   },
   LayoutArtifactSchema: {
     schema: StandardIR.LayoutArtifactSchema,
     label: 'LayoutArtifact',
-    url: '/standard/layout/reference/contract#layoutartifactschema',
+    url: '/standard/layout/reference/contract-artifact#layoutartifactschema',
   },
   FlexLayoutArtifactSchema: {
     schema: StandardIR.FlexLayoutArtifactSchema,
     label: 'FlexLayoutArtifact',
-    url: '/standard/layout/reference/contract#flexlayoutartifactschema',
+    url: '/standard/layout/reference/contract-artifact#flexlayoutartifactschema',
   },
   GridLayoutArtifactSchema: {
     schema: StandardIR.GridLayoutArtifactSchema,
     label: 'GridLayoutArtifact',
-    url: '/standard/layout/reference/contract#gridlayoutartifactschema',
+    url: '/standard/layout/reference/contract-artifact#gridlayoutartifactschema',
   },
   OverlayLayoutArtifactSchema: {
     schema: StandardIR.OverlayLayoutArtifactSchema,
     label: 'OverlayLayoutArtifact',
-    url: '/standard/layout/reference/contract#overlaylayoutartifactschema',
+    url: '/standard/layout/reference/contract-artifact#overlaylayoutartifactschema',
   },
 
   TableSpecSchema: {

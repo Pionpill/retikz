@@ -17,6 +17,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     style={{ maxWidth: '100%', height: 'auto' }}
   >
     <GridLayout
+      inspect={values.inspect}
       columns={[
         { kind: 'fraction', factor: 1 },
         { kind: 'fraction', factor: values.fraction },

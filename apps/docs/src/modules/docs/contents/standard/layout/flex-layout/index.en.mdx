@@ -47,7 +47,11 @@ The three items keep authored paint order. The middle label receives remaining m
 
 Switch the main axis, wrapping, and cross-axis alignment, then adjust item basis, grow, and shrink. The preview uses a fixed viewBox. Raising the basis or disabling wrapping makes negative free space and shrink directly observable.
 
-<ComponentPreview files="flex-layout-playground" size="lg" />
+<ComponentPreview
+  files="flex-layout-playground"
+  size="lg"
+  caption="Layout guides are enabled by default and can be disabled under Inspection overlay. They are not part of the figure, layout bounds, or hit testing."
+/>
 
 ### Overflow and clipping
 
@@ -85,6 +89,14 @@ Each line runs bounded grow/shrink independently. An item freezes when it reache
 
 React `FlexLayoutProps` mirrors the container fields below but changes `children` to direct `LayoutItem` elements. `FlexLayoutItemProps` renames JSON `key` to `itemKey` and requires exactly one of `children` or `ir`.
 
+### React inspection
+
+| Prop       | Type                                    | Default   | Description                                                                                                              |
+| ---------- | --------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `inspect?` | `boolean` \| `FlexLayoutInspectOptions` | Inherited | Omission inherits Layout or the nearest Scope; `false` disables only this occurrence and leaves nested layouts unchanged |
+
+The object form can control `lines` and `gaps` in addition to shared bounds, overflow, and alignment guides. See [Runtime Reference](/standard/layout/reference/runtime#layout-inspector) for every field and root or Scope policies.
+
 ### `FlexLayoutInput`
 
 | Prop              | Type                                     | Default               | Description                                                     |
@@ -119,6 +131,6 @@ React `FlexLayoutProps` mirrors the container fields below but changes `children
 ## Related
 
 - [Layout containers](/standard/layout): the Standard layout family and its ownership boundary
-- [Layout contract reference](/standard/layout/reference/contract): input, LayoutItem, and typed artifact schemas
+- [API Reference](/standard/layout/reference): input contracts, artifact contracts, and runtime wiring
 - [Tier 2 Composite](/kernel/concepts/design/composite): how Core registers and compiles higher-level IR
 - [Layout](/kernel/components/layout/overview): host sizing, Scene output, and layout artifacts

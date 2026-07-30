@@ -14,6 +14,7 @@ description: 把渲染目标无关的 Scene 落到 SVG / Canvas，并以 retaine
 | SVG              | Scene → 矢量 DOM，或 SSR / 构建期的字符串输出          | 默认选它：要清晰矢量、CSS 命中、无障碍 |
 | Canvas           | Scene → 像素位图，即时模式绘制 + 命中查询              | 图元成百上千、高频重绘、性能优先       |
 | Retained Runtime | 在 Runtime transaction 中 prepare / commit Scene Patch | 需要稳定宿主 identity 与增量更新       |
+| 检查辅助层       | 在主图之后物化独立开发辅助层                           | 查看布局边界、溢出与对齐参考线         |
 | 水合             | 静态出图后按 id 把事件 handler 绑回图元（两后端共用）  | 给图加点击 / 悬停等交互                |
 
 ## Retained Runtime
@@ -25,6 +26,22 @@ description: 把渲染目标无关的 Scene 落到 SVG / Canvas，并以 retaine
 `RenderRuntimeConfigInput` 是 closed transaction config：`handlerContributions` 按注册序合并水合 handler，`animation` 控制播放、截帧与扩展 registry，`cachePolicy` 保留未来 layer 失效优化的 hint，`canvas.width` / `canvas.height` 声明 Canvas CSS user-space 尺寸。alpha.2 的 SVG / Canvas renderer 只校验和冻结 `cachePolicy`，尚不按 auto / static / dynamic 启用 layer 复用。Canvas 尺寸字段省略时从 committed Scene layout 推导，再乘 session-lifetime DPR 得到设备像素；尺寸更新与位图绘制原子 commit，dirty reuse 仅在目标尺寸稳定时成立。
 
 这些 retained API 从 `@retikz/render/runtime` 导入，不从 `@retikz/render` package root 导出。第三方后端通过 `RetainedRendererFactory` 创建 nominal SVG / Canvas renderer，并声明 `none` / `group` / `entity` capability。Render participant 会校验 Snapshot / Patch lineage；后端无法解释某个 Patch 时，统一降级为完整 Scene replacement 并发布 diagnostic。
+
+### 主图与检查辅助层
+
+Static API 使用 `StaticRenderFrame { primary: Scene, inspection }`，retained renderer 使用 `RenderFrameSnapshot { primary: SceneRuntimeSnapshot, inspection }`。两者都把主图和完整检查辅助层作为一个 frame 物化；retained transaction 失败时不会出现新主图配旧辅助线。
+
+SVG 在主图之后追加 `pointer-events="none"` 的检查分组，不写 hydration id。Canvas 在主图之后绘制检查 DTO，但 `hitTest` 仍只读取主 Scene。辅助层不会决定 viewBox、资源、动画或主图 identity。第三方 retained renderer 必须通过 `inspectionCapability: 'supported' | 'unsupported'` 明确声明支持情况；收到非空辅助层但声明 unsupported 时会 fail-loud，不会静默丢弃。
+
+### 静态帧 API
+
+`StaticRenderFrame` 从 `@retikz/render/runtime` 导入；具体物化函数仍按后端从 SVG / Canvas subpath 导入。
+
+| API                                            | 导入路径                | 产物                            |
+| ---------------------------------------------- | ----------------------- | ------------------------------- |
+| `buildSvgFrameDocument(frame, options)`        | `@retikz/render/svg`    | 包含主图与检查分组的 `SvgNode`  |
+| `renderFrameToSvgString(frame, options)`       | `@retikz/render/svg`    | 可用于 SSR 的完整 SVG 字符串    |
+| `renderFrameToCanvas(canvas, frame, options?)` | `@retikz/render/canvas` | 原子绘制到目标 Canvas，无返回值 |
 
 <SourceLinks
   sources={[
@@ -153,6 +170,10 @@ description: 把渲染目标无关的 Scene 落到 SVG / Canvas，并以 retaine
       path: 'packages/kernel/render/src/runtime/renderer.ts',
       startLine: 10,
       endLine: 53,
+    },
+    {
+      label: 'Static 与 retained frame 契约',
+      path: 'packages/kernel/render/src/runtime/frame.ts',
     },
     {
       label: 'Retained renderer definition 与 factory contract',

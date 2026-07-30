@@ -8,6 +8,17 @@ export const flexLayoutPlaygroundEnControls = definePreviewControls({
   title: 'FlexLayout parameters',
   sections: [
     {
+      label: 'Inspection overlay',
+      controls: [
+        {
+          kind: 'switch',
+          id: 'inspect',
+          label: 'Show layout guides',
+          defaultValue: true,
+        },
+      ],
+    },
+    {
       label: 'Direction and wrapping',
       controls: [
         {
@@ -62,6 +73,7 @@ export const flexLayoutPlaygroundEnControls = definePreviewControls({
 export const previewControlContract = {
   controls: flexLayoutPlaygroundEnControls,
   canonicalValues: {
+    inspect: true,
     direction: 'row',
     wrap: 'wrap',
     alignItems: 'center',
@@ -70,6 +82,7 @@ export const previewControlContract = {
     shrink: 1,
   },
   relatedApis: [
+    'FlexLayout.inspect',
     'FlexLayout.direction',
     'FlexLayout.wrap',
     'FlexLayout.alignItems',

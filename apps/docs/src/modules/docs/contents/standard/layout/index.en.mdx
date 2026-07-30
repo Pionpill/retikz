@@ -9,7 +9,14 @@ Given the same available space and child measurement, layout solving is determin
 
 The example below uses Flex for lines, Grid for columns, and Overlay for a badge in the right-hand cell to show how all three containers compose as ordinary children.
 
-<ComponentPreview files="layout-nested" hideCode size="md" />
+<ComponentPreview
+  files="layout-nested"
+  hideCode
+  size="md"
+  caption="The inspection overlay is separate from the real figure: it does not expand layout bounds or participate in hit testing."
+/>
+
+This example enables layout guides for the whole figure with `<Layout inspect={{ layout: true }}>`. Use a container's own `inspect` prop for one occurrence, or declare `<Scope inspect={{ layout: true }}>` to affect one authored subtree.
 
 ## Responsibilities
 
@@ -42,10 +49,10 @@ Containers own generic size distribution, spacing, alignment, overflow, and obse
       Alignment, positioning, and stable paint order
     </span>
   </LinkedCard>
-  <LinkedCard href="/standard/layout/reference/contract">
-    <span className="font-semibold">Contract reference</span>
+  <LinkedCard href="/standard/layout/reference">
+    <span className="font-semibold">API Reference</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Inputs, LayoutItem, and typed artifact schemas
+      Input contracts, artifact contracts, and runtime wiring
     </span>
   </LinkedCard>
 </div>

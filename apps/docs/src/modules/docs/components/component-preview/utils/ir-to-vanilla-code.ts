@@ -1,4 +1,6 @@
 import type {
+  InspectionOptionsInputObject,
+  InspectOptions,
   IRArcStep,
   IRBendStep,
   IRChild,
@@ -88,7 +90,11 @@ type Ctx = {
   standardHelpers: Set<string>;
   standardAdapters: Set<string>;
   standardCounts: Map<string, number>;
+  componentInspections: ReadonlyMap<string, boolean | InspectionOptionsInputObject>;
 };
+
+const inspectionPathKey = (path: ReadonlyArray<Readonly<{ kind: string; index: number }>>): string =>
+  path.map(segment => `${segment.kind}:${segment.index}`).join('/');
 
 type WayFrag = { text: string; comment?: boolean };
 
@@ -273,10 +279,15 @@ const ribbonCode = (path: IRPathBase, indent: number, ctx: Ctx): string => {
   return id !== undefined ? `path(${formatString(id)}, ${pathConfig})` : `path(${pathConfig})`;
 };
 
-const scopeCode = (scope: IRScope, indent: number, ctx: Ctx): string => {
+const scopeCode = (
+  scope: IRScope,
+  indent: number,
+  ctx: Ctx,
+  path: ReadonlyArray<Readonly<{ kind: string; index: number }>>,
+): string => {
   ctx.used.add('scope');
   const config = stripKeys(scope, ['type', 'children']);
-  const childrenStr = childListCode(scope.children, indent, ctx);
+  const childrenStr = childListCode(scope.children, indent, ctx, path, 'scopeChild');
   return `scope(${formatObject(config, indent)}, ${childrenStr})`;
 };
 
@@ -297,7 +308,12 @@ const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
   'OverlayLayoutVanillaAdapter',
 ];
 
-const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
+const standardCompositeCode = (
+  child: IRChild,
+  indent: number,
+  ctx: Ctx,
+  path: ReadonlyArray<Readonly<{ kind: string; index: number }>>,
+): string => {
   const record = child as IRChild & { namespace: string; type: string; id?: string };
   const adapterName = `${record.type.charAt(0).toUpperCase()}${record.type.slice(1)}VanillaAdapter`;
   if (!STANDARD_HELPER_ORDER.includes(record.type) || !STANDARD_ADAPTER_ORDER.includes(adapterName)) {
@@ -309,12 +325,19 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
   ctx.standardHelpers.add(record.type);
   ctx.standardAdapters.add(adapterName);
   const input = stripKeys(record, record.type === 'frame' ? ['namespace', 'type', 'id'] : ['namespace', 'type']);
-  return `${record.type}(${formatString(`preview-${record.type}-${count}`)}, ${formatObject(input, indent)})`;
+  const inspect = ctx.componentInspections.get(inspectionPathKey(path));
+  const inspectArg = inspect === undefined ? '' : `, ${formatValue(inspect, indent)}`;
+  return `${record.type}(${formatString(`preview-${record.type}-${count}`)}, ${formatObject(input, indent)}${inspectArg})`;
 };
 
-const childCode = (child: IRChild, indent: number, ctx: Ctx): string => {
+const childCode = (
+  child: IRChild,
+  indent: number,
+  ctx: Ctx,
+  path: ReadonlyArray<Readonly<{ kind: string; index: number }>>,
+): string => {
   if ('namespace' in child) {
-    if (child.namespace === 'standard') return standardCompositeCode(child, indent, ctx);
+    if (child.namespace === 'standard') return standardCompositeCode(child, indent, ctx, path);
     throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
   }
   switch (child.type) {
@@ -325,25 +348,43 @@ const childCode = (child: IRChild, indent: number, ctx: Ctx): string => {
     case 'path':
       return pathCode(child, indent, ctx);
     case 'scope':
-      return scopeCode(child, indent, ctx);
+      return scopeCode(child, indent, ctx, path);
   }
 };
 
-const childListCode = (children: ReadonlyArray<IRChild>, indent: number, ctx: Ctx): string => {
+const childListCode = (
+  children: ReadonlyArray<IRChild>,
+  indent: number,
+  ctx: Ctx,
+  parentPath: ReadonlyArray<Readonly<{ kind: string; index: number }>> = [],
+  segmentKind: 'sceneChild' | 'scopeChild' = 'sceneChild',
+): string => {
   if (children.length === 0) return '[]';
-  const lines = children.map(c => `${pad(indent + 1)}${childCode(c, indent + 1, ctx)},`);
+  const lines = children.map(
+    (child, index) =>
+      `${pad(indent + 1)}${childCode(child, indent + 1, ctx, [...parentPath, { kind: segmentKind, index }])},`,
+  );
   return `[\n${lines.join('\n')}\n${pad(indent)}]`;
 };
 
-const HELPER_ORDER: ReadonlyArray<string> = ['figure', 'node', 'path', 'coordinate', 'scope'];
+const HELPER_ORDER: ReadonlyArray<string> = ['figure', 'node', 'path', 'coordinate', 'scope', 'renderToSvgString'];
 
-export const irToVanillaCode = (ir: IRScene): string => {
+/** Vanilla 示例代码生成时保留的 runtime-only authoring 信息 */
+export type VanillaCodeOptions = Readonly<{
+  /** 整张图的检查策略 */
+  inspect?: InspectOptions;
+  /** 由 authored locator key 索引的组件局部检查策略 */
+  componentInspections?: ReadonlyMap<string, boolean | InspectionOptionsInputObject>;
+}>;
+
+export const irToVanillaCode = (ir: IRScene, options: VanillaCodeOptions = {}): string => {
   const ctx: Ctx = {
     used: new Set(['figure']),
     usesDrawWay: false,
     standardHelpers: new Set(),
     standardAdapters: new Set(),
     standardCounts: new Map(),
+    componentInspections: options.componentInspections ?? new Map(),
   };
   const childrenStr = childListCode(ir.children, 0, ctx);
   const figureConfig = {
@@ -356,6 +397,7 @@ export const irToVanillaCode = (ir: IRScene): string => {
     childrenStr,
   );
 
+  if (options.inspect !== undefined) ctx.used.add('renderToSvgString');
   const helpers = HELPER_ORDER.filter(name => ctx.used.has(name));
   const imports = [`import { ${helpers.join(', ')} } from '@retikz/vanilla';`];
   if (ctx.usesDrawWay) imports.push("import { DrawWay } from '@retikz/core';");
@@ -366,7 +408,11 @@ export const irToVanillaCode = (ir: IRScene): string => {
   }
 
   const adapters = standardAdapters.length > 0 ? `\nconst adapters = [${standardAdapters.join(', ')}];\n` : '';
-  return `${imports.join('\n')}\n\nconst fig = figure(${figureArgs});\n${adapters}`;
+  const render =
+    options.inspect === undefined
+      ? ''
+      : `\nexport const svg = renderToSvgString(fig, { inspect: ${formatValue(options.inspect, 0)}${standardAdapters.length > 0 ? ', adapters' : ''} });\n`;
+  return `${imports.join('\n')}\n\nconst fig = figure(${figureArgs});\n${adapters}${render}`;
 };
 
 /** 把 JSON-safe 值格式化为 Vanilla 示例使用的 TypeScript 字面量。 */

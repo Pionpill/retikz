@@ -51,12 +51,14 @@ const { output, snapshot, patch } = session.artifact(coreProgram).value;
 
 ## Artifact 契约
 
-| 字段                 | 作用                                                                                |
-| -------------------- | ----------------------------------------------------------------------------------- |
-| `output.result`      | 与同一 IR/options 下 fresh `compileToScene()` 等价的完整 Scene 与 typed artifacts   |
-| `output.diagnostics` | canonical 顺序的 Core compile warnings；只在成功 commit 后派发给 `onWarn`           |
-| `snapshot`           | 当前 Session revision 的 deeply immutable Scene、document root identity 与 topology |
-| `patch`              | 相对 base revision 的原子 Scene Patch；initial full run 不提供                      |
+| 字段                 | 作用                                                                                            |
+| -------------------- | ----------------------------------------------------------------------------------------------- |
+| `output.result`      | 与同一 IR/options 下 fresh `compileToScene()` 等价的 Scene、typed artifacts 与 inspection plane |
+| `output.diagnostics` | canonical 顺序的 Core compile warnings；只在成功 commit 后派发给 `onWarn`                       |
+| `snapshot`           | 当前 Session revision 的 deeply immutable Scene、document root identity 与 topology             |
+| `patch`              | 相对 base revision 的原子 Scene Patch；initial full run 不提供                                  |
+
+`CompileOptions.inspection` 是 runtime-only authored sidecar。Core 按 `CompositeDefinition.inspector` 解析级联策略，并把严格 rect / line / label DTO 汇总到 `CompileResult.inspection`；它与主 Scene 隔离，不进入 Snapshot identity、资源、layout bounds 或 Patch diff。Program full fallback 时仍在同一 revision 重新生成主 Scene、artifacts 与 inspection plane。
 
 初始运行执行完整编译。update 无法安全局部证明时，Program 会 full fallback，并在 `patch.operations` 中发布唯一的 `replaceScene`；调用方仍只消费同一个 Snapshot / Patch envelope，不需要切换协议。
 
@@ -157,6 +159,9 @@ session.update({
 | `CoreProgramPublicRead<TComposites>`                   | public `output` / `snapshot` / optional `patch`               |
 | `CoreProgramDefinition<TComposites>`                   | 保留 artifact input、owned artifact、private/public read 泛型 |
 | `RuntimeScene` / `SceneRuntimeSnapshot` / `ScenePatch` | deeply readonly Scene 与原子 Patch DTO                        |
+| `InspectOptions` / `CompileInspectionOptions`          | Layout / Scope 级联策略与 compile authored sidecar            |
+| `InspectionPlane` / `InspectionPrimitive`              | 与主 Scene 隔离的严格检查辅助层 DTO                           |
+| `CompositeInspectorDefinition`                         | 与 layout-aware composite definition 同 registry 的 inspector |
 
 ## 源码
 

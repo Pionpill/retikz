@@ -39,8 +39,8 @@ export const standardV01: Release = {
           version: 'alpha.2',
           date: '2026-07-30',
           summary: {
-            zh: '新增三种通用布局容器、公共 LayoutItem、typed artifacts 与布局 capability preset。',
-            en: 'Adds three general layout containers, the shared LayoutItem vocabulary, typed artifacts, and a layout capability preset.',
+            zh: '新增三种通用布局容器、公共 LayoutItem、typed artifacts、布局 capability preset 与开发期布局检查器。',
+            en: 'Adds three general layout containers, shared LayoutItem vocabulary, typed artifacts, a layout capability preset, and a development-time Layout Inspector.',
           },
           items: [
             {
@@ -55,6 +55,13 @@ export const standardV01: Release = {
               content: {
                 zh: '每种容器返回 strict JSON artifact，记录 container、items 与 line / track / paint order 结果；`StandardLayoutPreset` 可只装载布局 definitions，`StandardAllPreset` 同步纳入三项能力。',
                 en: 'Each container returns a strict JSON artifact with container, item, and line, track, or paint-order results. `StandardLayoutPreset` loads only layout definitions, while `StandardAllPreset` now includes all three.',
+              },
+            },
+            {
+              label: { zh: '布局检查器', en: 'Layout Inspector' },
+              content: {
+                zh: 'Flex、Grid 与 Overlay 可逐个开启辅助层；Layout 提供整图策略，Scope 提供 authored 子树策略。SVG / Canvas、static / retained 与 SSR 共用独立 inspection plane，不改变主图边界、资源或命中测试。',
+                en: 'Flex, Grid, and Overlay can enable overlays per occurrence. Layout supplies a whole-figure policy, while Scope supplies an authored-subtree policy. SVG and Canvas, static and retained hosts, and SSR share an isolated inspection plane that does not change primary bounds, resources, or hit testing.',
               },
             },
           ],
@@ -124,6 +131,13 @@ export const standardV01: Release = {
                 en: '`flexLayout()`, `gridLayout()`, and `overlayLayout()` produce canonical Standard IR. Their adapters share one stable family maker and contribute definitions in Flex, Grid, Overlay order.',
               },
             },
+            {
+              label: { zh: '局部检查开关', en: 'Local inspection switches' },
+              content: {
+                zh: '`flexLayout()`、`gridLayout()` 与 `overlayLayout()` 的第三个参数可为当前容器开启、关闭或细化检查辅助层；省略时继承宿主策略。',
+                en: 'The third argument of `flexLayout()`, `gridLayout()`, and `overlayLayout()` enables, disables, or refines the inspection overlay for that container; omission inherits the host policy.',
+              },
+            },
           ],
         },
         {
@@ -167,6 +181,13 @@ export const standardV01: Release = {
               content: {
                 zh: '`LayoutItem` 用 `itemKey` 保存容器内 identity，可接一个 React drawable child 或显式 `ir`；三种布局任意嵌套时仍只贡献一组有序 definitions。',
                 en: '`LayoutItem` stores container-local identity through `itemKey` and accepts either one React drawable child or explicit `ir`. Arbitrary nesting among the three layouts still contributes one ordered definition set.',
+              },
+            },
+            {
+              label: { zh: '容器检查 prop', en: 'Container inspection props' },
+              content: {
+                zh: '`FlexLayout`、`GridLayout` 与 `OverlayLayout` 新增 `inspect` prop，可为当前 occurrence 开启、关闭或细化辅助层；省略时继承 Layout / Scope。',
+                en: '`FlexLayout`, `GridLayout`, and `OverlayLayout` add an `inspect` prop that enables, disables, or refines the overlay for the current occurrence; omission inherits Layout or Scope.',
               },
             },
           ],

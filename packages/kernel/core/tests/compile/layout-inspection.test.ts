@@ -108,6 +108,73 @@ describe('layout inspection compile channel', () => {
     expect(result.artifacts).toHaveLength(1);
   });
 
+  it('merges Layout, authored subtree, and component fields before resolving one canonical request', () => {
+    const observe = vi.fn();
+    const definition = definitionOf('cascade', observe);
+
+    compileToScene(scene('cascade'), {
+      composites: [definition],
+      inspection: {
+        root: { layout: { bounds: { slot: false }, alignmentGuides: false } },
+        roots: [
+          {
+            locator: { path: [{ kind: 'sceneChild', index: 0 }] },
+            tree: {
+              policy: {
+                inherited: { layout: { bounds: { visual: true }, labels: true } },
+                component: { overflow: false },
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    expect(observe).toHaveBeenCalledTimes(1);
+    expect(observe).toHaveBeenCalledWith(
+      { width: 40, height: 20 },
+      expect.objectContaining({
+        baseOptions: {
+          bounds: {
+            container: true,
+            content: true,
+            slot: false,
+            allocation: true,
+            visual: true,
+          },
+          overflow: false,
+          alignmentGuides: false,
+          labels: true,
+        },
+      }),
+    );
+  });
+
+  it('keeps an authored enabled:false barrier closed against component re-enabling', () => {
+    const observe = vi.fn();
+    const definition = definitionOf('blocked', observe);
+    const result = compileToScene(scene('blocked'), {
+      composites: [definition],
+      inspection: {
+        root: { layout: true },
+        roots: [
+          {
+            locator: { path: [{ kind: 'sceneChild', index: 0 }] },
+            tree: {
+              policy: {
+                inherited: { enabled: false },
+                component: true,
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    expect(observe).not.toHaveBeenCalled();
+    expect(result.inspection).toBeNull();
+  });
+
   it('fails loudly when an enabled selected inspector has no artifact value', () => {
     const base = definitionOf('missingArtifact');
     const missing = defineComposite({

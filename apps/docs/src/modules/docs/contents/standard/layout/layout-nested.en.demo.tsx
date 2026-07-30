@@ -5,7 +5,7 @@ import { FlexLayout, GridLayout, LayoutItem, OverlayLayout } from '@retikz/stand
 
 /** Demonstrates recursive composition because every layout container is an ordinary IRChild */
 const Demo: FC = () => (
-  <Layout width={500} height={260}>
+  <Layout width={500} height={260} inspect={{ layout: true }}>
     <FlexLayout
       size={{ x: { kind: 'fixed', value: 430 }, y: { kind: 'fixed', value: 190 } }}
       direction="column"

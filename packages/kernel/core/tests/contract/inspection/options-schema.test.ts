@@ -5,10 +5,22 @@ import {
   BaseLayoutInspectOptionsSchema,
   InspectOptionsInputSchema,
   InspectOptionsSchema,
+  LayoutInspectBoundsOptionsInputSchema,
+  mergeInspectOptions,
   resolveBaseLayoutInspectOptions,
 } from '../../../src';
 
 describe('layout inspection option schemas', () => {
+  it('describes every public authoring field for schema reference consumers', () => {
+    const fields = [
+      ...Object.values(LayoutInspectBoundsOptionsInputSchema.shape),
+      ...Object.values(BaseLayoutInspectOptionsInputSchema.shape),
+      ...Object.values(InspectOptionsInputSchema.shape),
+    ];
+
+    expect(fields.every(field => typeof field.description === 'string' && field.description.length > 0)).toBe(true);
+  });
+
   it('keeps admission sparse and rejects unknown keys', () => {
     expect(BaseLayoutInspectOptionsInputSchema.parse({ overflow: false })).toEqual({ overflow: false });
     expect(BaseLayoutInspectOptionsInputSchema.parse({ bounds: { visual: true } })).toEqual({
@@ -64,5 +76,11 @@ describe('layout inspection option schemas', () => {
         visual: true,
       },
     });
+  });
+
+  it('lets descendants override layout false but not an enabled false barrier', () => {
+    expect(mergeInspectOptions({ layout: true }, { layout: false })).toEqual({ layout: false });
+    expect(mergeInspectOptions({ layout: false }, { layout: true })).toEqual({ layout: true });
+    expect(mergeInspectOptions({ enabled: false }, { layout: true })).toEqual({ enabled: false });
   });
 });

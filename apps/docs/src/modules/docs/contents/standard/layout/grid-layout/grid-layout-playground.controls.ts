@@ -5,8 +5,19 @@ import { definePreviewControls } from '@/modules/docs/preview';
 /** GridLayout 轨道分配的中文属性面板 */
 export const gridLayoutPlaygroundControls = definePreviewControls({
   presentation: 'panel',
-  title: 'GridLayout 参数',
+  title: '网格布局参数',
   sections: [
+    {
+      label: '辅助层',
+      controls: [
+        {
+          kind: 'switch',
+          id: 'inspect',
+          label: '显示布局辅助线',
+          defaultValue: true,
+        },
+      ],
+    },
     {
       label: '轨道与自动放置',
       controls: [
@@ -61,6 +72,7 @@ export const gridLayoutPlaygroundControls = definePreviewControls({
 export const previewControlContract = {
   controls: gridLayoutPlaygroundControls,
   canonicalValues: {
+    inspect: true,
     autoFlow: 'row',
     fraction: 2,
     columnGap: 8,
@@ -69,6 +81,7 @@ export const previewControlContract = {
     alignItems: 'center',
   },
   relatedApis: [
+    'GridLayout.inspect',
     'GridLayout.autoFlow',
     'GridLayout.columns',
     'GridLayout.columnGap',

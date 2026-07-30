@@ -2,25 +2,38 @@ import { z } from 'zod';
 
 /** Layout Inspector bounds 的 sparse authoring schema */
 export const LayoutInspectBoundsOptionsInputSchema = z.strictObject({
-  container: z.boolean().optional(),
-  content: z.boolean().optional(),
-  slot: z.boolean().optional(),
-  allocation: z.boolean().optional(),
-  visual: z.boolean().optional(),
+  container: z.boolean().optional().describe('Whether to draw the outer container bounds.'),
+  content: z.boolean().optional().describe('Whether to draw the content bounds inside container padding.'),
+  slot: z.boolean().optional().describe('Whether to draw each parent-assigned child slot.'),
+  allocation: z.boolean().optional().describe("Whether to draw each child's actual allocation bounds."),
+  visual: z.boolean().optional().describe("Whether to draw each child's final visual bounds."),
 });
 
 /** 通用 Layout Inspector 的 sparse authoring schema */
 export const BaseLayoutInspectOptionsInputSchema = z.strictObject({
-  bounds: z.union([z.boolean(), LayoutInspectBoundsOptionsInputSchema]).optional(),
-  overflow: z.boolean().optional(),
-  alignmentGuides: z.boolean().optional(),
-  labels: z.boolean().optional(),
+  bounds: z
+    .union([z.boolean(), LayoutInspectBoundsOptionsInputSchema])
+    .optional()
+    .describe(
+      'Bounds guide selection. true restores the canonical profile, false disables every bounds guide, and an object overrides individual guides.',
+    ),
+  overflow: z.boolean().optional().describe('Whether to shade content that overflows its assigned slot.'),
+  alignmentGuides: z.boolean().optional().describe('Whether to draw alignment reference guides.'),
+  labels: z.boolean().optional().describe('Whether to draw textual inspection labels.'),
 });
 
 /** Layout / Scope inspection 策略的 sparse authoring schema */
 export const InspectOptionsInputSchema = z.strictObject({
-  enabled: z.boolean().optional(),
-  layout: z.union([z.boolean(), BaseLayoutInspectOptionsInputSchema]).optional(),
+  enabled: z
+    .boolean()
+    .optional()
+    .describe('Whether inspection remains enabled for this authored subtree. false creates a hard descendant barrier.'),
+  layout: z
+    .union([z.boolean(), BaseLayoutInspectOptionsInputSchema])
+    .optional()
+    .describe(
+      'Layout inspector policy. true enables the canonical profile, false disables the current cascaded value but descendants may re-enable it, and an object overrides shared options. Only enabled: false creates a hard descendant barrier.',
+    ),
 });
 
 /** Layout Inspector bounds authoring值 */

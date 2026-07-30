@@ -3,23 +3,23 @@ import { z } from 'zod';
 
 /** FlexLayout family-local inspector sparse schema */
 export const FlexLayoutInspectLocalOptionsInputSchema = z.strictObject({
-  lines: z.boolean().optional(),
-  gaps: z.boolean().optional(),
+  lines: z.boolean().optional().describe('Whether to draw FlexLayout line regions.'),
+  gaps: z.boolean().optional().describe('Whether to shade FlexLayout row and column gaps.'),
 });
 
 /** GridLayout family-local inspector sparse schema */
 export const GridLayoutInspectLocalOptionsInputSchema = z.strictObject({
-  tracks: z.boolean().optional(),
-  cells: z.boolean().optional(),
-  gaps: z.boolean().optional(),
-  spans: z.boolean().optional(),
+  tracks: z.boolean().optional().describe('Whether to draw GridLayout track boundaries.'),
+  cells: z.boolean().optional().describe('Whether to draw individual GridLayout cell bounds.'),
+  gaps: z.boolean().optional().describe('Whether to shade GridLayout row and column gaps.'),
+  spans: z.boolean().optional().describe('Whether to mark items that span multiple GridLayout tracks.'),
 });
 
 /** OverlayLayout family-local inspector sparse schema */
 export const OverlayLayoutInspectLocalOptionsInputSchema = z.strictObject({
-  placements: z.boolean().optional(),
-  anchors: z.boolean().optional(),
-  stacking: z.boolean().optional(),
+  placements: z.boolean().optional().describe('Whether to draw OverlayLayout placement relations.'),
+  anchors: z.boolean().optional().describe('Whether to draw positioned OverlayLayout item anchors.'),
+  stacking: z.boolean().optional().describe('Whether to label OverlayLayout stacking order.'),
 });
 
 /** FlexLayout inspector 完整 authoring schema */

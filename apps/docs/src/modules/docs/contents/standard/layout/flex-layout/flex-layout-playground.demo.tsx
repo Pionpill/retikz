@@ -17,6 +17,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     style={{ maxWidth: '100%', height: 'auto' }}
   >
     <FlexLayout
+      inspect={values.inspect}
       size={{ x: { kind: 'fixed', value: 340 }, y: { kind: 'fixed', value: 170 } }}
       padding={12}
       columnGap={8}

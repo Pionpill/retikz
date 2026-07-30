@@ -1,9 +1,9 @@
 ---
-title: OverlayLayout
+title: 叠加布局
 description: 在同一区域内混合对齐与局部定位，并独立控制尺寸参与和稳定叠放顺序。
 ---
 
-`OverlayLayout` 让多个子图形共享同一区域。aligned item 跟随容器对齐；positioned item 用局部 `at` 和 `anchor` 放置 badge、callout 等浮层。`sizeParticipation` 决定 item 是否影响容器尺寸，`zIndex` 只决定稳定绘制层级。
+`OverlayLayout` 让多个子图形共享同一区域。对齐子项跟随容器对齐；定位子项用局部 `at` 和 `anchor` 放置徽标、标注框等浮层。`sizeParticipation` 决定子项是否影响容器尺寸，`zIndex` 只决定稳定绘制层级。
 
 ## 用法
 
@@ -41,45 +41,49 @@ JSON/IR 路径使用 `createOverlayLayout()` 与 `OverlayLayoutDefinition`；Van
 
 ## 例子
 
-下面的结构层参与 intrinsic size；右上 badge 使用 positioned placement 且排除尺寸贡献；caption 仍是 aligned item。绘制顺序按 `zIndex` 升序，同层保持 authored `sourceIndex`。
+下面的结构层参与固有尺寸计算；右上徽标使用定位放置并排除尺寸贡献；说明文字仍是对齐子项。绘制顺序按 `zIndex` 升序，同层保持作者声明的 `sourceIndex` 顺序。
 
 <ComponentPreview files="overlay-layout-basic" size="md" />
 
-### Aligned 与 positioned
+### 对齐与定位
 
-| 模式         | slot 来源                                            | 常见用途                        |
-| ------------ | ---------------------------------------------------- | ------------------------------- |
-| `aligned`    | content box 扣除 margin 后按 alignment 分配          | 背景、居中内容、底部 caption    |
-| `positioned` | `at` 决定目标点，`anchor` 决定 slot 哪一点贴到目标点 | badge、callout、局部 annotation |
+| 模式         | 分配区域来源                                             | 常见用途                     |
+| ------------ | -------------------------------------------------------- | ---------------------------- |
+| `aligned`    | 内容区域扣除外边距后按对齐方式分配                       | 背景、居中内容、底部说明文字 |
+| `positioned` | `at` 决定目标点，`anchor` 决定分配区域的哪一点贴到目标点 | 徽标、标注框、局部注释       |
 
 ### 控制面板
 
-切换共享对齐，并移动 positioned badge 的目标点、锚点和 `zIndex`。预览中的三个 item 发生重叠，因而层级变化会直接反映到绘制结果。
+切换共享对齐，并移动定位徽标的目标点、锚点和 `zIndex`。预览中的三个子项发生重叠，因而层级变化会直接反映到绘制结果。
 
-<ComponentPreview files="overlay-layout-playground" size="lg" />
+<ComponentPreview
+  files="overlay-layout-playground"
+  size="lg"
+  caption="布局辅助线默认开启，可在“辅助层”中关闭；它们不属于实际图形、布局边界或命中测试。"
+/>
 
 ## 技术原理
 
 <ComponentAlert
   type="tip"
   title="上手阶段可跳过本节"
-  description="只有在排查 baseline、结构尺寸参与或稳定 paint order 时才需要理解这些约束。"
+  description="只有在排查基线、结构尺寸参与或稳定绘制顺序时，才需要理解这些约束。"
 />
 
-`offset` 在 placement 后平移。baseline-aligned item 的纵向 offset 必须为零；positioned item 必须采用 edge alignment，避免把局部点定位和跨 item baseline 求解混为一件事。
+`offset` 在放置后平移。按基线对齐的子项，其纵向偏移必须为零；定位子项必须采用边缘对齐，避免把局部点定位和跨子项基线求解混为一件事。
 
-`sizeParticipation="exclude"` 只排除 minimum/natural profile，不隐藏、不跳过 replay，也不改变 paint order。即使 item 位于 allocation 外，typed artifact 仍保留其 slot、allocation、visual 与 visible bounds。
+`sizeParticipation="exclude"` 只排除最小和自然尺寸轮廓，不隐藏子项、不跳过回放，也不改变绘制顺序。即使子项位于容器分配区域外，类型化产物仍保留其父级分配区域、真实占用、视觉边界和可见边界。
 
 <SourceLinks
   sources={[
     { label: 'OverlayLayout 输入契约', path: 'packages/library/standard/src/composites/overlay-layout/schema.ts' },
-    { label: 'Overlay profile 与 placement', path: 'packages/library/standard/src/composites/overlay-layout/solve.ts' },
+    { label: '叠加布局尺寸轮廓与放置', path: 'packages/library/standard/src/composites/overlay-layout/solve.ts' },
     {
-      label: 'Overlay compile 与 paint order',
+      label: '叠加布局编译与绘制顺序',
       path: 'packages/library/standard/src/composites/overlay-layout/compile.ts',
     },
     {
-      label: 'OverlayLayout React adapter',
+      label: 'OverlayLayout React 适配器',
       path: 'packages/library/standard-react/src/overlay-layout/OverlayLayout.tsx',
     },
   ]}
@@ -87,44 +91,52 @@ JSON/IR 路径使用 `createOverlayLayout()` 与 `OverlayLayoutDefinition`；Van
 
 ## API 参考
 
+### React 检查选项
+
+| 属性       | 类型                                       | 默认值 | 描述                                                                                    |
+| ---------- | ------------------------------------------ | ------ | --------------------------------------------------------------------------------------- |
+| `inspect?` | `boolean` \| `OverlayLayoutInspectOptions` | 继承   | 省略时继承 Layout / 最近 Scope；`false` 只关闭当前 occurrence，且不会关闭或开启嵌套布局 |
+
+对象形式可分别控制 `placements`、`anchors` 与 `stacking`。完整通用字段和全图 / Scope 策略见[运行时参考](/standard/layout/reference/runtime#布局检查器)。
+
 ### `OverlayLayoutInput`
 
-| 属性            | 类型                                        | 默认值            | 描述                             |
-| --------------- | ------------------------------------------- | ----------------- | -------------------------------- |
-| `size?`         | `LayoutSizeInput`                           | content / content | 双轴 allocation 策略             |
-| `padding?`      | `number` \| `IRBoxSpacing`                  | `0`               | allocation 到 content 的内边距   |
-| `overflow?`     | <ApiValues name="LayoutOverflow" />         | `'visible'`       | 是否在 allocation 上裁切视觉输出 |
-| `justifyItems?` | `'start' \| 'center' \| 'end' \| 'stretch'` | `'center'`        | 默认水平 alignment               |
-| `alignItems?`   | <ApiValues name="LayoutAlignment" />        | `'center'`        | 默认垂直 alignment               |
-| `children?`     | `Array<OverlayLayoutItemInput>`             | `[]`              | authored items；本地 `key` 唯一  |
+| 属性            | 类型                                        | 默认值      | 描述                                |
+| --------------- | ------------------------------------------- | ----------- | ----------------------------------- |
+| `size?`         | `LayoutSizeInput`                           | 内容 / 内容 | 双轴分配策略                        |
+| `padding?`      | `number` \| `IRBoxSpacing`                  | `0`         | 从分配区域到内容区域的内边距        |
+| `overflow?`     | <ApiValues name="LayoutOverflow" />         | `'visible'` | 是否在容器分配区域上裁切视觉输出    |
+| `justifyItems?` | `'start' \| 'center' \| 'end' \| 'stretch'` | `'center'`  | 默认水平对齐                        |
+| `alignItems?`   | <ApiValues name="LayoutAlignment" />        | `'center'`  | 默认垂直对齐                        |
+| `children?`     | `Array<OverlayLayoutItemInput>`             | `[]`        | 作者声明的子项；本地 `key` 必须唯一 |
 
 ### `OverlayLayoutItemInput`
 
-| 属性                 | 类型                                         | 默认值      | 描述                                        |
-| -------------------- | -------------------------------------------- | ----------- | ------------------------------------------- |
-| `kind`               | `'overlay'`                                  | —           | OverlayLayout item discriminator            |
-| `key`                | `string`                                     | —           | 当前容器内 authored identity                |
-| `child`              | `IRChild`                                    | —           | 任意 JSON-safe Core child                   |
-| `placement?`         | `OverlayPlacementInput`                      | aligned     | 对齐或 content-local 定位                   |
-| `offset?`            | `{ x: number, y: number }`                   | `{0, 0}`    | placement 后偏移                            |
-| `margin?`            | `number` \| `IRBoxSpacing`                   | `0`         | aligned/positioned slot 外边距              |
-| `justifySelf?`       | `'start' \| 'center' \| 'end' \| 'stretch'`  | container   | 水平 alignment override                     |
-| `alignSelf?`         | <ApiValues name="LayoutAlignment" />         | container   | 垂直 alignment override                     |
-| `sizeParticipation?` | <ApiValues name="LayoutSizeParticipation" /> | `'include'` | 是否参与 intrinsic profiles                 |
-| `zIndex?`            | `number`                                     | `0`         | integer paint layer；同值保持 authored 顺序 |
+| 属性                 | 类型                                         | 默认值      | 描述                                 |
+| -------------------- | -------------------------------------------- | ----------- | ------------------------------------ |
+| `kind`               | `'overlay'`                                  | —           | 叠加布局子项判别字段                 |
+| `key`                | `string`                                     | —           | 当前容器内由作者声明的标识           |
+| `child`              | `IRChild`                                    | —           | 任意可 JSON 序列化的 Core 子图形     |
+| `placement?`         | `OverlayPlacementInput`                      | `aligned`   | 对齐或内容区域局部定位               |
+| `offset?`            | `{ x: number, y: number }`                   | `{0, 0}`    | 放置后的偏移                         |
+| `margin?`            | `number` \| `IRBoxSpacing`                   | `0`         | 对齐或定位分配区域的外边距           |
+| `justifySelf?`       | `'start' \| 'center' \| 'end' \| 'stretch'`  | 容器值      | 覆盖水平对齐                         |
+| `alignSelf?`         | <ApiValues name="LayoutAlignment" />         | 容器值      | 覆盖垂直对齐                         |
+| `sizeParticipation?` | <ApiValues name="LayoutSizeParticipation" /> | `'include'` | 是否参与固有尺寸轮廓计算             |
+| `zIndex?`            | `number`                                     | `0`         | 整数绘制层级；相同值保持作者声明顺序 |
 
 ### `OverlayPlacementInput`
 
-| kind         | 字段                                 | 语义                                  |
-| ------------ | ------------------------------------ | ------------------------------------- |
-| `aligned`    | 无                                   | 使用容器与 item alignment             |
-| `positioned` | `at`、`anchor?`、`width?`、`height?` | content-local 目标点与可选 exact slot |
+| `kind`       | 字段                                 | 语义                                 |
+| ------------ | ------------------------------------ | ------------------------------------ |
+| `aligned`    | 无                                   | 使用容器与子项对齐                   |
+| `positioned` | `at`、`anchor?`、`width?`、`height?` | 内容区域局部目标点与可选精确分配尺寸 |
 
-React 中把 `key` 写成 `itemKey`，并用一个 drawable child 或 `ir` 提供 `child`。
+React 中把 `key` 写成 `itemKey`，并用一个可绘制子元素或 `ir` 提供 `child`。
 
 ## 相关
 
-- [布局容器](/standard/layout)：递归组合与共同 artifact
-- [布局契约参考](/standard/layout/reference/contract)：输入、LayoutItem 与 typed artifact schema
-- [GridLayout](/standard/layout/grid-layout)：二维结构排布
-- [FlexLayout](/standard/layout/flex-layout)：单轴分配与换行
+- [布局容器](/standard/layout)：递归组合与共同产物
+- [API 参考](/standard/layout/reference)：输入契约、产物契约与运行时接线
+- [网格布局](/standard/layout/grid-layout)：二维结构排布
+- [弹性布局](/standard/layout/flex-layout)：单轴分配与换行

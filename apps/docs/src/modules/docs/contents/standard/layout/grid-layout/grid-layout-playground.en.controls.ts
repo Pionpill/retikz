@@ -8,6 +8,17 @@ export const gridLayoutPlaygroundEnControls = definePreviewControls({
   title: 'GridLayout parameters',
   sections: [
     {
+      label: 'Inspection overlay',
+      controls: [
+        {
+          kind: 'switch',
+          id: 'inspect',
+          label: 'Show layout guides',
+          defaultValue: true,
+        },
+      ],
+    },
+    {
       label: 'Tracks and auto placement',
       controls: [
         {
@@ -61,6 +72,7 @@ export const gridLayoutPlaygroundEnControls = definePreviewControls({
 export const previewControlContract = {
   controls: gridLayoutPlaygroundEnControls,
   canonicalValues: {
+    inspect: true,
     autoFlow: 'row',
     fraction: 2,
     columnGap: 8,
@@ -69,6 +81,7 @@ export const previewControlContract = {
     alignItems: 'center',
   },
   relatedApis: [
+    'GridLayout.inspect',
     'GridLayout.autoFlow',
     'GridLayout.columns',
     'GridLayout.columnGap',

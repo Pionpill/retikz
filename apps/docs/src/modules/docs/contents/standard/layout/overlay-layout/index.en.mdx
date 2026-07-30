@@ -56,7 +56,11 @@ The structural layer contributes intrinsic size. The top-right badge uses positi
 
 Switch shared alignment, then move the positioned badge's target, anchor, and `zIndex`. The three items overlap, making paint-layer changes directly visible.
 
-<ComponentPreview files="overlay-layout-playground" size="lg" />
+<ComponentPreview
+  files="overlay-layout-playground"
+  size="lg"
+  caption="Layout guides are enabled by default and can be disabled under Inspection overlay. They are not part of the figure, layout bounds, or hit testing."
+/>
 
 ## How it works
 
@@ -92,6 +96,14 @@ Switch shared alignment, then move the positioned badge's target, anchor, and `z
 />
 
 ## API Reference
+
+### React inspection
+
+| Prop       | Type                                       | Default   | Description                                                                                                              |
+| ---------- | ------------------------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `inspect?` | `boolean` \| `OverlayLayoutInspectOptions` | Inherited | Omission inherits Layout or the nearest Scope; `false` disables only this occurrence and leaves nested layouts unchanged |
+
+The object form controls `placements`, `anchors`, and `stacking` independently. See [Runtime Reference](/standard/layout/reference/runtime#layout-inspector) for shared fields and root or Scope policies.
 
 ### `OverlayLayoutInput`
 
@@ -131,6 +143,6 @@ In React, write `key` as `itemKey` and provide `child` through one drawable chil
 ## Related
 
 - [Layout containers](/standard/layout): recursive composition and common artifacts
-- [Layout contract reference](/standard/layout/reference/contract): input, LayoutItem, and typed artifact schemas
+- [API Reference](/standard/layout/reference): input contracts, artifact contracts, and runtime wiring
 - [GridLayout](/standard/layout/grid-layout): two-dimensional structural arrangement
 - [FlexLayout](/standard/layout/flex-layout): one-axis distribution and wrapping

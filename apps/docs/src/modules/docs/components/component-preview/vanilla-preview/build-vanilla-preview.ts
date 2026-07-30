@@ -1,4 +1,4 @@
-import type { IRChild } from '@retikz/core';
+import type { CompositeInspectionAuthoringTree, InspectionOptionsInputObject, IRChild } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlotSpec } from '@retikz/plot';
 import type { AnyVanillaTier2Adapter, VanillaChildSpec } from '@retikz/vanilla';
@@ -65,8 +65,8 @@ const buildCorePreview = (preview: PreviewIR): VanillaPreviewArtifact => {
     children: preview.ir.children,
   });
   return {
-    code: irToVanillaCode(preview.ir),
-    svg: renderToSvgString(input, { output: outputSize(preview) }),
+    code: irToVanillaCode(preview.ir, { inspect: preview.inspect }),
+    svg: renderToSvgString(input, { output: outputSize(preview), inspect: preview.inspect }),
   };
 };
 
@@ -75,6 +75,60 @@ type StandardKind = 'grid' | 'axes' | 'frame' | 'flexLayout' | 'gridLayout' | 'o
 type StandardConversionState = {
   counts: Record<StandardKind, number>;
   adapters: Set<StandardKind>;
+  componentInspections: ReadonlyMap<string, boolean | InspectionOptionsInputObject>;
+};
+
+type InspectionPathSegment = Readonly<{ kind: 'sceneChild' | 'scopeChild'; index: number }>;
+
+const inspectionPathKey = (path: ReadonlyArray<InspectionPathSegment>): string =>
+  path.map(segment => `${segment.kind}:${segment.index}`).join('/');
+
+/** 合并继承与组件级稀疏检查对象，同时保留 bounds 的逐字段覆盖语义 */
+const mergeInspectionObjects = (
+  inherited: InspectionOptionsInputObject,
+  component: InspectionOptionsInputObject,
+): InspectionOptionsInputObject => {
+  const inheritedBounds = inherited.bounds;
+  const componentBounds = component.bounds;
+  return Object.freeze({
+    ...inherited,
+    ...component,
+    ...(typeof inheritedBounds === 'object' &&
+    inheritedBounds !== null &&
+    !Array.isArray(inheritedBounds) &&
+    typeof componentBounds === 'object' &&
+    componentBounds !== null &&
+    !Array.isArray(componentBounds)
+      ? { bounds: { ...inheritedBounds, ...componentBounds } }
+      : {}),
+  });
+};
+
+/** 把 Scope 继承策略折叠为当前 Vanilla embed 的等价局部开关 */
+const resolveComponentInspection = (
+  tree: CompositeInspectionAuthoringTree,
+): boolean | InspectionOptionsInputObject | undefined => {
+  const inherited = tree.policy?.inherited;
+  const component = tree.policy?.component;
+  if (inherited?.enabled === false || component === false) return false;
+  const inheritedLayout = inherited?.layout;
+  if (component === undefined) {
+    if (inheritedLayout === false) return false;
+    if (inheritedLayout === true) return true;
+    return typeof inheritedLayout === 'object' ? inheritedLayout : undefined;
+  }
+  if (component === true) return typeof inheritedLayout === 'object' ? inheritedLayout : true;
+  return typeof inheritedLayout === 'object' ? mergeInspectionObjects(inheritedLayout, component) : component;
+};
+
+/** 按 Scene / Scope authored locator 建立组件局部检查索引 */
+const indexComponentInspections = (preview: PreviewIR): ReadonlyMap<string, boolean | InspectionOptionsInputObject> => {
+  const inspections = new Map<string, boolean | InspectionOptionsInputObject>();
+  preview.inspectionRoots.forEach(root => {
+    const inspect = resolveComponentInspection(root.tree);
+    if (inspect !== undefined) inspections.set(inspectionPathKey(root.locator.path), inspect);
+  });
+  return inspections;
 };
 
 const nextStandardId = (kind: StandardKind, state: StandardConversionState): string => {
@@ -83,8 +137,13 @@ const nextStandardId = (kind: StandardKind, state: StandardConversionState): str
   return `preview-${kind}-${state.counts[kind]}`;
 };
 
-const convertStandardChild = (child: IRChild, state: StandardConversionState): VanillaChildSpec => {
+const convertStandardChild = (
+  child: IRChild,
+  state: StandardConversionState,
+  path: ReadonlyArray<InspectionPathSegment>,
+): VanillaChildSpec => {
   if (isComposite(child)) {
+    const inspect = state.componentInspections.get(inspectionPathKey(path));
     switch (child.type) {
       case 'grid': {
         const { namespace: _namespace, type: _type, ...input } = GridSchema.parse(child);
@@ -109,19 +168,22 @@ const convertStandardChild = (child: IRChild, state: StandardConversionState): V
         const { namespace: _namespace, type: _type, ...input } = FlexLayoutSchema.parse(child);
         void _namespace;
         void _type;
-        return flexLayout(nextStandardId('flexLayout', state), input);
+        const id = nextStandardId('flexLayout', state);
+        return inspect === undefined ? flexLayout(id, input) : flexLayout(id, input, inspect);
       }
       case 'gridLayout': {
         const { namespace: _namespace, type: _type, ...input } = GridLayoutSchema.parse(child);
         void _namespace;
         void _type;
-        return gridLayout(nextStandardId('gridLayout', state), input);
+        const id = nextStandardId('gridLayout', state);
+        return inspect === undefined ? gridLayout(id, input) : gridLayout(id, input, inspect);
       }
       case 'overlayLayout': {
         const { namespace: _namespace, type: _type, ...input } = OverlayLayoutSchema.parse(child);
         void _namespace;
         void _type;
-        return overlayLayout(nextStandardId('overlayLayout', state), input);
+        const id = nextStandardId('overlayLayout', state);
+        return inspect === undefined ? overlayLayout(id, input) : overlayLayout(id, input, inspect);
       }
       default:
         throw new Error(`Unsupported Standard composite "${child.namespace}.${child.type}".`);
@@ -132,7 +194,7 @@ const convertStandardChild = (child: IRChild, state: StandardConversionState): V
   void _type;
   return scope(
     config,
-    children.map(nested => convertStandardChild(nested, state)),
+    children.map((nested, index) => convertStandardChild(nested, state, [...path, { kind: 'scopeChild', index }])),
   );
 };
 
@@ -146,18 +208,26 @@ const standardAdapters = (state: StandardConversionState): ReadonlyArray<AnyVani
 ];
 
 const buildStandardPreview = (preview: PreviewIR): VanillaPreviewArtifact => {
+  const componentInspections = indexComponentInspections(preview);
   const state: StandardConversionState = {
     counts: { grid: 0, axes: 0, frame: 0, flexLayout: 0, gridLayout: 0, overlayLayout: 0 },
     adapters: new Set(),
+    componentInspections,
   };
   const input = figure({
     ...(preview.ir.viewBox !== undefined ? { viewBox: preview.ir.viewBox } : {}),
     ...(preview.ir.animations !== undefined ? { animations: preview.ir.animations } : {}),
-    children: preview.ir.children.map(child => convertStandardChild(child, state)),
+    children: preview.ir.children.map((child, index) =>
+      convertStandardChild(child, state, [{ kind: 'sceneChild', index }]),
+    ),
   });
   return {
-    code: irToVanillaCode(preview.ir),
-    svg: renderToSvgString(input, { adapters: standardAdapters(state), output: outputSize(preview) }),
+    code: irToVanillaCode(preview.ir, { inspect: preview.inspect, componentInspections }),
+    svg: renderToSvgString(input, {
+      adapters: standardAdapters(state),
+      output: outputSize(preview),
+      inspect: preview.inspect,
+    }),
   };
 };
 

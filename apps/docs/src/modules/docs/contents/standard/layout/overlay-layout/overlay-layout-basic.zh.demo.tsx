@@ -31,7 +31,7 @@ const Demo: FC = () => (
         <Node position={[0, 0]} text="置顶" shape="circle" minimumSize={42} fill="#fee2e2" stroke="#dc2626" />
       </LayoutItem>
       <LayoutItem kind="overlay" itemKey="caption" alignSelf="end" offset={{ x: 0, y: -8 }} zIndex={1}>
-        <Node position={[0, 0]} text="同一 allocation 内叠放" fill="#f8fafc" stroke="#64748b" />
+        <Node position={[0, 0]} text="在同一分配区域内叠放" fill="#f8fafc" stroke="#64748b" />
       </LayoutItem>
     </OverlayLayout>
   </Layout>

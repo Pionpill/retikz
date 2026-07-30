@@ -31,13 +31,33 @@ export const standardSection: Array<Section> = [
         label: 'standard.layoutReference',
         children: [
           {
-            id: 'contract',
-            label: 'standard.layoutContract',
+            id: 'contract-input',
+            label: 'standard.layoutContractInput',
             meta: {
               pageType: 'reference',
               audience: 'integrator',
               capability: 'standard.layout',
               sourceOfTruth: 'schema',
+            },
+          },
+          {
+            id: 'contract-artifact',
+            label: 'standard.layoutContractArtifact',
+            meta: {
+              pageType: 'reference',
+              audience: 'integrator',
+              capability: 'standard.layout',
+              sourceOfTruth: 'schema',
+            },
+          },
+          {
+            id: 'runtime',
+            label: 'standard.layoutRuntime',
+            meta: {
+              pageType: 'reference',
+              audience: 'integrator',
+              capability: 'standard.layout',
+              sourceOfTruth: 'runtime',
             },
           },
         ],

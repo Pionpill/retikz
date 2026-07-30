@@ -5,8 +5,19 @@ import { definePreviewControls } from '@/modules/docs/preview';
 /** FlexLayout 关键分配行为的中文属性面板 */
 export const flexLayoutPlaygroundControls = definePreviewControls({
   presentation: 'panel',
-  title: 'FlexLayout 参数',
+  title: '弹性布局参数',
   sections: [
+    {
+      label: '辅助层',
+      controls: [
+        {
+          kind: 'switch',
+          id: 'inspect',
+          label: '显示布局辅助线',
+          defaultValue: true,
+        },
+      ],
+    },
     {
       label: '方向与换行',
       controls: [
@@ -51,8 +62,8 @@ export const flexLayoutPlaygroundControls = definePreviewControls({
           ],
         },
         { kind: 'range', id: 'basis', label: '基础尺寸', defaultValue: 92, min: 52, max: 150, step: 2 },
-        { kind: 'range', id: 'grow', label: 'A 的 grow', defaultValue: 1, min: 0, max: 4, step: 1 },
-        { kind: 'range', id: 'shrink', label: 'B 的 shrink', defaultValue: 1, min: 0, max: 4, step: 1 },
+        { kind: 'range', id: 'grow', label: 'A 的伸展系数', defaultValue: 1, min: 0, max: 4, step: 1 },
+        { kind: 'range', id: 'shrink', label: 'B 的收缩系数', defaultValue: 1, min: 0, max: 4, step: 1 },
       ],
     },
   ],
@@ -62,6 +73,7 @@ export const flexLayoutPlaygroundControls = definePreviewControls({
 export const previewControlContract = {
   controls: flexLayoutPlaygroundControls,
   canonicalValues: {
+    inspect: true,
     direction: 'row',
     wrap: 'wrap',
     alignItems: 'center',
@@ -70,6 +82,7 @@ export const previewControlContract = {
     shrink: 1,
   },
   relatedApis: [
+    'FlexLayout.inspect',
     'FlexLayout.direction',
     'FlexLayout.wrap',
     'FlexLayout.alignItems',

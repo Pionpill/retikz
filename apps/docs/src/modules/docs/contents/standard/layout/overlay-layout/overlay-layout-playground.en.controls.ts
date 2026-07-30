@@ -8,6 +8,17 @@ export const overlayLayoutPlaygroundEnControls = definePreviewControls({
   title: 'OverlayLayout parameters',
   sections: [
     {
+      label: 'Inspection overlay',
+      controls: [
+        {
+          kind: 'switch',
+          id: 'inspect',
+          label: 'Show layout guides',
+          defaultValue: true,
+        },
+      ],
+    },
+    {
       label: 'Shared alignment',
       controls: [
         {
@@ -62,6 +73,7 @@ export const overlayLayoutPlaygroundEnControls = definePreviewControls({
 export const previewControlContract = {
   controls: overlayLayoutPlaygroundEnControls,
   canonicalValues: {
+    inspect: true,
     justifyItems: 'center',
     alignItems: 'center',
     badgeX: 300,
@@ -70,6 +82,7 @@ export const previewControlContract = {
     zIndex: 2,
   },
   relatedApis: [
+    'OverlayLayout.inspect',
     'OverlayLayout.justifyItems',
     'OverlayLayout.alignItems',
     'LayoutItem.placement.at',
