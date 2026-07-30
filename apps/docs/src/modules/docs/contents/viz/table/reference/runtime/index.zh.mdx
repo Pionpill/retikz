@@ -3,11 +3,76 @@ title: 运行时
 description: 查询 React、Vanilla 与直接编译入口如何共享一次 Table layout transaction、Scene 与 manifest artifact。
 ---
 
-TableSpec 只保存 JSON-safe 结构；datasets、Definitions、Core compile options 与宿主能力在运行时注入。所有 standalone 入口都让 Table 在同一次 Core compile 中完成内容测量、轨道求解、replay、Scene 与 manifest，不再为了 sidecar 执行第二次 lowering。
+TableSpec 只保存 JSON-safe 结构；datasets、Definitions、Core compile options 与宿主能力在运行时注入。Table runtime 需要回答两个问题：不同入口如何汇入同一执行链，以及一次 layout-aware transaction 如何同时产出 Scene 与 manifest。
 
 > 这里解释运行时接线与执行逻辑，不重复 schema 字段。TableSpec 与 Cell 内容见[表格契约](/viz/table/reference/contract-table)，轨道与 border 输入见[布局契约](/viz/table/reference/contract-layout)，compile 输出见[产物契约](/viz/table/reference/manifest)。
 
-<ComponentPreview files="table-runtime-flow" hideCode size="xs" />
+## 入口如何汇合
+
+React standalone、Vanilla SSR、直接 `compileTable()` 与 embedded Table 的 authoring 和宿主方式不同，但它们不会复制 Table 的 normalize、presentation 或 layout 算法。
+
+<div className="hidden sm:block">
+  <ComponentPreview files="table-runtime-entry" hideCode size="sm" previewClassName="p-3" />
+</div>
+<div className="sm:hidden">
+  <ComponentPreview files="table-runtime-entry" hideCode size="xxl" previewClassName="p-3" />
+</div>
+
+Standalone 入口构造 canonical `children[0]` 根 Scene，把 Table definitions 与额外 composites 一起交给 Core compile；React 由 `<Layout>` 管理渲染，Vanilla 的 `renderTable()` 再把同一 Scene 输出为 SVG 字符串。
+
+Embedded Table 不启动局部 compile。它把 spec、datasets、Structure / Presentation definitions 与额外 composites 贡献给外层 `<Layout>` 或 Vanilla adapter，由宿主统一编译并通过宿主 artifacts 观察结果。
+
+## 一次 Table transaction
+
+`table.table` 是 layout-aware composite：它既要测量 Cell 内任意 Core / Tier 2 内容，也要在最终轨道尺寸确定后只提交被选中的 replay。整个过程发生在一次 Core compile transaction 内。
+
+<div className="hidden sm:block">
+  <ComponentPreview files="table-runtime-transaction" hideCode size="sm" previewClassName="p-3" />
+</div>
+<div className="sm:hidden">
+  <ComponentPreview files="table-runtime-transaction" hideCode size="xxxl" previewClassName="p-3" />
+</div>
+
+1. **Canonical model**：先通过 Table schema，再由 Structure definition 把 manual、detail 或 custom 输入规范化为统一语义模型；Presentation definition 把 Cell payload 转成可布局内容。
+2. **Intrinsic probes**：每个 Cell 先执行 intrinsic `layoutChild`，得到内容的 allocation bounds 与 visual bounds；这些 probe 只用于测量。
+3. **列求解与 wrap**：intrinsic 宽度、span、gap、track 配置和父级 `maxWidth` 一起进入列求解。只有开启 wrap 的 Cell 才按最终内容宽度再执行 constrained `layoutChild`。
+4. **行求解与放置**：最终 probe 的高度进入行求解，随后计算 Cell box、padding 后的 content box、fit / align / overflow placement，并建立 border conflict graph。
+5. **Replay 与发布**：runtime 只 replay 每个 Cell 的最终 probe 与最终 border Scope，构造 Scene children；同一 composite occurrence 同时发布 detached、递归冻结的 `TableLayoutManifest`。
+
+### 三个运行时不变量
+
+- **只有一次 Core compile**：manifest 是同次 compile 的 typed artifact，不会触发第二次 lowering。
+- **probe 不等于输出**：intrinsic / constrained 测量可以产生多个候选，未被 replay 的候选不会进入最终 Scene 或 artifacts。
+- **根产物按 occurrence 定位**：standalone 根使用 `sourcePath: 'children[0]'` 与空 `expansionPath`；公开 `tableId` 不是实例 selector。
+
+<SourceLinks
+  sources={[
+    {
+      label: '单次 Table transaction 的测量、求解、放置与 replay',
+      path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
+      startLine: 230,
+      endLine: 405,
+    },
+    {
+      label: 'compileTable 的单根 Scene、definitions 合并与根 artifact 选择',
+      path: 'packages/viz/table/src/pipeline/compile.ts',
+      startLine: 11,
+      endLine: 34,
+    },
+    {
+      label: 'React standalone 的 Layout 与 manifest observer 接线',
+      path: 'packages/viz/table-react/src/table-view.tsx',
+      startLine: 17,
+      endLine: 60,
+    },
+    {
+      label: 'React embedded Table 向外层宿主贡献运行时输入',
+      path: 'packages/viz/table-react/src/embedded-runtime.ts',
+      startLine: 12,
+      endLine: 45,
+    },
+  ]}
+/>
 
 ## React
 
