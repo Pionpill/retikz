@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 
 import type { LabState } from '../lab-state';
 
-import { RenderStage } from './render-stage';
+import { RenderStage } from './RenderStage';
 
 /** 测试预览工作区属性 */
 export type TestWorkspaceProps = Readonly<{

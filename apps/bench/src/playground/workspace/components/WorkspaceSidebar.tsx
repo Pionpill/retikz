@@ -4,9 +4,9 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } fr
 
 import type { LabState, LabStateAction } from '../lab-state';
 
-import { ModuleSwitcher } from './module-switcher';
-import { TestSuiteNav } from './test-suite-nav';
-import { WorkspaceSettings } from './workspace-settings';
+import { ModuleSwitcher } from './ModuleSwitcher';
+import { TestSuiteNav } from './TestSuiteNav';
+import { WorkspaceSettings } from './WorkspaceSettings';
 
 /** Workspace Sidebar 属性 */
 export type WorkspaceSidebarProps = Readonly<{
