@@ -7,49 +7,109 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
  * @description 根级 transform 先生成共享行；图元局部 transform 再从共享行派生当前图元独有的数据视图
  */
 const Demo: FC = () => (
-  <Layout width={460} height={240} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node id="data" position={[-160, -70]} stroke="none" align="middle" lineHeight={18}>
+  <Layout width={560} height={208} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Node
+      id="data"
+      position={[-215, 0]}
+      minimumSize={{ width: 106, height: 58 }}
+      stroke="darkorange"
+      fill="darkorange"
+      fillOpacity={0.08}
+      cornerRadius={4}
+      align="middle"
+      lineHeight={17}
+    >
       <Text font={{ size: 14, weight: 'bold' }}>数据层</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        canonical 行
+        规范化行
       </Text>
     </Node>
-    <Node id="root" position={[0, -70]} stroke="none" align="middle" lineHeight={18}>
+    <Node
+      id="root"
+      position={[-80, 0]}
+      minimumSize={{ width: 120, height: 58 }}
+      stroke="dodgerblue"
+      fill="dodgerblue"
+      fillOpacity={0.08}
+      cornerRadius={4}
+      align="middle"
+      lineHeight={17}
+    >
       <Text font={{ size: 14, weight: 'bold' }}>根级 transform</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        声明顺序 · 行数可变
+        依次改写共享行
       </Text>
     </Node>
-    <Node id="shared" position={[160, -70]} stroke="none" align="middle" lineHeight={18}>
+    <Node
+      id="shared"
+      position={[60, 0]}
+      minimumSize={{ width: 106, height: 58 }}
+      stroke="darkorange"
+      fill="darkorange"
+      fillOpacity={0.08}
+      cornerRadius={4}
+      align="middle"
+      lineHeight={17}
+    >
       <Text font={{ size: 14, weight: 'bold' }}>共享行</Text>
       <Text fill="gray" font={{ size: 12 }}>
         所有图元读取
       </Text>
     </Node>
-    <Node id="local" position={[-10, 40]} stroke="none" align="middle" lineHeight={18}>
-      <Text font={{ size: 14, weight: 'bold' }}>图元 A 局部 transform</Text>
-      <Text fill="gray" font={{ size: 12 }}>
-        私有派生
-      </Text>
-    </Node>
-    <Node id="mark-a" position={[160, 40]} stroke="none" align="middle" lineHeight={18}>
+    <Node
+      id="mark-a"
+      position={[205, -63]}
+      minimumSize={{ width: 132, height: 58 }}
+      stroke="darkorange"
+      fill="darkorange"
+      fillOpacity={0.08}
+      cornerRadius={4}
+      align="middle"
+      lineHeight={17}
+    >
       <Text font={{ size: 14, weight: 'bold' }}>图元 A 数据视图</Text>
       <Text fill="gray" font={{ size: 12 }}>
         局部结果
       </Text>
     </Node>
-    <Node id="mark-b" position={[160, 100]} stroke="none" align="middle" lineHeight={18}>
+    <Node
+      id="mark-b"
+      position={[205, 63]}
+      minimumSize={{ width: 132, height: 58 }}
+      stroke="darkorange"
+      fill="darkorange"
+      fillOpacity={0.08}
+      cornerRadius={4}
+      align="middle"
+      lineHeight={17}
+    >
       <Text font={{ size: 14, weight: 'bold' }}>图元 B 数据视图</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        仍用共享行
+        直接读取共享行
       </Text>
     </Node>
 
-    <Draw way={['data', 'root']} arrow="->" />
-    <Draw way={['root', 'shared']} arrow="->" />
-    <Draw way={['shared', 'local']} arrow="->" />
-    <Draw way={['local', 'mark-a']} arrow="->" />
-    <Draw way={['shared', 'mark-b']} arrow="->" />
+    <Draw way={['data', 'root']} arrow="->" stroke="gray" />
+    <Draw way={['root', 'shared']} arrow="->" stroke="gray" />
+    <Draw
+      way={[
+        'shared',
+        {
+          label: {
+            text: '局部 transform',
+            position: 'midway',
+            side: 'top',
+            sloped: false,
+            textColor: 'gray',
+            font: { size: 12 },
+          },
+        },
+        'mark-a',
+      ]}
+      arrow="->"
+      stroke="gray"
+    />
+    <Draw way={['shared', 'mark-b']} arrow="->" stroke="gray" />
   </Layout>
 );
 

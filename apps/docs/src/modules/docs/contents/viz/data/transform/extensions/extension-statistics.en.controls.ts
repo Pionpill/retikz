@@ -3,8 +3,8 @@ import { DEFAULT_TRANSFORM_CONTEXT, resolveRowSelectorRegistry, resolveStatistic
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
+import { createTransformResultView } from '@/modules/docs/preview';
 
-import { createTransformResultView } from '../transform-table-views';
 import { scoreRows } from './extension-statistics.data';
 import {
   closestToMean,

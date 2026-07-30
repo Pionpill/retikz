@@ -2,7 +2,17 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
 import { samples } from './transform-jitter.data';
+
+/** 根据实时控件值创建横向抖动 operation */
+export const jitterOperationOf = (values: { amount: number; seed: number }) => ({
+  kind: 'jitter',
+  axis: 'x',
+  xField: 'dose',
+  amount: values.amount,
+  seed: values.seed,
+});
 
 /** 抖动示例的中文控件 */
 export const jitterControls = definePreviewControls({
@@ -17,7 +27,7 @@ export const jitterControls = definePreviewControls({
           kind: 'table',
           id: 'rows',
           label: '剂量与响应',
-          rows: samples,
+          views: createPlotTransformTableViews({ source: '原始', result: '抖动后' }, samples, jitterOperationOf),
           columns: [
             { key: 'dose', label: '剂量' },
             { key: 'response', label: '响应' },

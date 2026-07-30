@@ -542,6 +542,54 @@ describe('rule polar', () => {
     }
   });
 
+  it('rule-polar-field-radius-rings-stay-inside-scene-layout-with-legend', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: {
+        reference: 'd',
+        model: [
+          { name: 'tier', type: 'categorical' },
+          { name: 'threshold', type: 'continuous' },
+        ],
+      },
+      coordinate: { type: 'polar2D' },
+      scales: [],
+      marks: [{ type: 'reference', encoding: { y: { field: 'threshold' }, color: { field: 'tier' } } }],
+      guides: [
+        { type: 'axis', dimension: 'y', grid: true },
+        { type: 'legend', channel: 'color' },
+      ],
+    });
+    const layer = expandOf(
+      spec,
+      {
+        d: [
+          { tier: 'low', threshold: 30 },
+          { tier: 'mid', threshold: 60 },
+          { tier: 'high', threshold: 90 },
+        ],
+      },
+      { width: 400, height: 280 },
+    );
+    const scene = compileToScene({ version: 1, type: 'scene', children: [layer] }).scene;
+    const rings = flattenPrimitives(scene.primitives)
+      .filter(
+        (primitive): primitive is Extract<ScenePrimitive, { type: 'path' }> =>
+          primitive.type === 'path' && primitive.stroke !== 'currentColor',
+      )
+      .flatMap(path => path.commands.filter(command => command.kind === 'ellipseArc'))
+      .filter(command => Math.abs(command.endAngle - command.startAngle) >= 360);
+
+    expect(rings).toHaveLength(3);
+    for (const ring of rings) {
+      expect(scene.layout.x).toBeLessThanOrEqual(ring.center[0] - ring.radiusX);
+      expect(scene.layout.y).toBeLessThanOrEqual(ring.center[1] - ring.radiusY);
+      expect(scene.layout.x + scene.layout.width).toBeGreaterThanOrEqual(ring.center[0] + ring.radiusX);
+      expect(scene.layout.y + scene.layout.height).toBeGreaterThanOrEqual(ring.center[1] + ring.radiusY);
+    }
+  });
+
   it('rule-region-polar-sector', () => {
     // region x∈[30,120] 且 y∈[40,60] → projectCell 环扇区
     const mark: IRPlotReferenceMark = {

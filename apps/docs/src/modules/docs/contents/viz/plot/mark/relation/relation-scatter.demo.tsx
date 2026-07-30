@@ -31,6 +31,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         color="group"
         label="label"
         labelPosition={values[RELATION_SCATTER_CONTROL_IDS.nodeLabelPosition]}
+        labelTextColor="currentColor"
         fill="#f8fafc"
         stroke="#334155"
         strokeWidth={1}
@@ -52,6 +53,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
             position: values[RELATION_SCATTER_CONTROL_IDS.labelPosition],
             ...(labelSide === 'center' ? { placement: 'inside' as const } : { side: labelSide }),
             sloped: values[RELATION_SCATTER_CONTROL_IDS.labelSloped],
+            textColor: 'currentColor',
           },
           routing,
           options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] },

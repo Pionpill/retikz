@@ -2,7 +2,8 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { POINT_TRANSFORM_CONTROL_IDS } from './point-transform.controls';
+import { createPlotTransformTableViews } from '../../transform-table-views';
+import { POINT_TRANSFORM_CONTROL_IDS, pointTransformOperationOf } from './point-transform.controls';
 import { regionOrders } from './point-transform.data';
 
 /** 点层变换 playground 的英文属性面板 */
@@ -13,7 +14,18 @@ export const pointTransformControls = definePreviewControls({
     {
       label: 'Data',
       defaultCollapsed: true,
-      controls: [{ kind: 'table', id: 'regionOrders', label: 'Regional orders', rows: regionOrders }],
+      controls: [
+        {
+          kind: 'table',
+          id: 'regionOrders',
+          label: 'Regional orders',
+          views: createPlotTransformTableViews(
+            { source: 'Source', result: 'Jittered' },
+            regionOrders,
+            pointTransformOperationOf,
+          ),
+        },
+      ],
     },
     {
       label: 'Jitter parameters',

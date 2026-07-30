@@ -1,9 +1,8 @@
-import type { IRPlotTransform } from '@retikz/plot';
-
 import { Axis, PathMark, Plot, PointMark, Scale } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
+import { smoothOperationsOf } from './transform-smooth.controls';
 import { trendSamples } from './transform-smooth.data';
 import { previewControlContract, smoothControls } from './transform-smooth.en.controls';
 
@@ -11,20 +10,7 @@ import { previewControlContract, smoothControls } from './transform-smooth.en.co
 export const previewControls = smoothControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const extent: [number, number] | undefined = values.extentMode === 'extend' ? [-1, 5] : undefined;
-  const smoothTransform: Array<IRPlotTransform> = [
-    {
-      kind: 'smooth',
-      x: 'time',
-      y: 'value',
-      groupBy: ['series'],
-      method: { kind: 'linear' },
-      sampleCount: values.sampleCount,
-      ...(extent !== undefined ? { extent } : {}),
-      xAs: 'trendX',
-      yAs: 'trendY',
-    },
-  ];
+  const smoothTransform = smoothOperationsOf(values);
 
   return (
     <Plot data={trendSamples} width={440} height={260} style={{ maxWidth: '100%', height: 'auto' }}>

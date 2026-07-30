@@ -4,7 +4,11 @@ import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { LINE_TRANSFORM_GROUPING_ID, previewControlContract } from './line-transform.controls';
+import {
+  LINE_TRANSFORM_GROUPING_ID,
+  lineTransformOperationOf,
+  previewControlContract,
+} from './line-transform.controls';
 import { weeklyPipeline } from './line-transform.data';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
@@ -21,16 +25,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         color={groupByChannel ? 'channel' : undefined}
         stroke={groupByChannel ? undefined : '#0f172a'}
         strokeWidth={2.5}
-        transform={[
-          {
-            kind: 'smooth',
-            x: 'day',
-            y: 'value',
-            xAs: 'trendX',
-            yAs: 'trendY',
-            ...(groupByChannel ? { groupBy: ['channel'] } : {}),
-          },
-        ]}
+        transform={[lineTransformOperationOf(values)]}
       />
       <Axis dimension="x" />
       <Axis dimension="y" grid />

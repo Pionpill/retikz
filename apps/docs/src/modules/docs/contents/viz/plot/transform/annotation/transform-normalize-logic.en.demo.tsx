@@ -4,10 +4,10 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** normalize grouping, group sums, zero-sum protection, and row-preserving output */
 const Demo: FC = () => (
-  <Layout width={420} height={380} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={750} height={230} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
       id="rows"
-      position={[70, -140]}
+      position={[-305, 20]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}
@@ -22,7 +22,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="group"
-      position={[70, -70]}
+      position={[-185, 20]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -37,7 +37,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="sum"
-      position={[70, 0]}
+      position={[-35, 20]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -52,7 +52,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="negative"
-      position={[-130, 0]}
+      position={[-35, -65]}
       stroke="red"
       fill="red"
       fillOpacity={0.06}
@@ -67,7 +67,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="zero"
-      position={[-130, 70]}
+      position={[125, -65]}
       stroke="gray"
       fill="gray"
       fillOpacity={0.06}
@@ -82,7 +82,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="share"
-      position={[70, 70]}
+      position={[125, 20]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -97,7 +97,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="config"
-      position={[-130, 140]}
+      position={[125, 105]}
       stroke="gray"
       fill="gray"
       fillOpacity={0.06}
@@ -112,7 +112,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="output"
-      position={[70, 140]}
+      position={[285, 20]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}

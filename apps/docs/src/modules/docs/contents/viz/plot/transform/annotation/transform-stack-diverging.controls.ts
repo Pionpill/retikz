@@ -2,7 +2,17 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
 import { signedProductChange } from './transform-stack-diverging.data';
+
+/** 正负分流堆叠 operation */
+export const stackDivergingOperation = {
+  kind: 'stack',
+  x: 'quarter',
+  y: 'change',
+  groupBy: 'product',
+  offset: 'diverging',
+} as const;
 
 /** 正负分流堆叠示例的中文只读数据面板 */
 export const stackDivergingControls = definePreviewControls({
@@ -16,11 +26,17 @@ export const stackDivergingControls = definePreviewControls({
           kind: 'table',
           id: 'rows',
           label: '季度产品变化',
-          rows: signedProductChange,
+          views: createPlotTransformTableViews(
+            { source: '原始', result: '正负分流堆叠后' },
+            signedProductChange,
+            () => stackDivergingOperation,
+          ),
           columns: [
             { key: 'quarter', label: '季度' },
             { key: 'product', label: '产品' },
             { key: 'change', label: '变化' },
+            { key: 'y0', label: '下界 y0' },
+            { key: 'y1', label: '上界 y1' },
           ],
         },
       ],

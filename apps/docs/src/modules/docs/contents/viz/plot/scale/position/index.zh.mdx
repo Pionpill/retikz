@@ -24,7 +24,7 @@ description: 位置比例尺把数值、时间和分类字段映射成坐标、�
 `linear`、`log`、`sqrt` 与 `symlog` 共享同一张可交互图表。先在 controls 中选择数据，再切换 scale 并调整对应参数，可以直接观察映射变化。
 
 <ComponentPreview
-  size="md"
+  size="lg"
   files={['scale-continuous', 'scale-continuous.data.ts']}
   caption="切换正值与跨零数据，比较四种连续位置 scale；log 可调底数，symlog 可调线性区，domain padding 控制数据与边界的留白。"
 />
@@ -42,7 +42,7 @@ description: 位置比例尺把数值、时间和分类字段映射成坐标、�
 `radial` 把值映射成半径，并让扇形或圆环的**面积**正比于值。它从零基线起算，专门服务极坐标径向值轴，因此可以配 interval 或 path closure；同为开方型映射的 `sqrt` 不允许这样使用。
 
 <ComponentPreview
-  size="md"
+  size="lg"
   files={['scale-radial', 'scale-radial.data.ts']}
   caption="选择数据分布，并排比较同一数值在 linear 下的半径线性与 radial 下的面积线性；两图共用最大半径。"
 />
@@ -62,7 +62,7 @@ description: 位置比例尺把数值、时间和分类字段映射成坐标、�
 `temporal` 字段的位置通道默认使用 `time`。它仍是连续映射，但刻度会落在月初、季度、整点等时间边界，标签也按时间格式化；把字段在 model 中声明为 `temporal` 后无需手写 `<Scale>`。
 
 <ComponentPreview
-  size="md"
+  size="lg"
   files={['scale-time', 'scale-time.data.ts']}
   caption="横轴没有显式声明 Scale；model 中的 temporal 字段会自动派生 time scale，并把季度日期格式化到可读的时间边界。"
 />
@@ -79,7 +79,7 @@ description: 位置比例尺把数值、时间和分类字段映射成坐标、�
 | `point` | 每类一个等距点，不提供格宽 | 分类折线、分类散点 |
 
 <ComponentPreview
-  size="md"
+  size="lg"
   files={['scale-band', 'scale-band.data.ts']}
   caption="切换比例尺：band 为 interval 提供格宽，point 只为折线和散点提供等距点位；面板只显示当前类型对应的 padding。"
 />

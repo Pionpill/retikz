@@ -8,6 +8,7 @@ import {
   previewControlContract,
   RELATION_BUBBLE_CONTROL_IDS,
   relationBubbleControls,
+  relationBubbleOperation,
 } from './relation-bubble.controls';
 import { bubbleNodes } from './relation-bubble.data';
 
@@ -24,19 +25,13 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         anchorId={{ prefix: 'bubble', field: 'id' }}
         label="label"
         labelPosition={values[RELATION_BUBBLE_CONTROL_IDS.nodeLabelPosition]}
+        labelTextColor="currentColor"
         fillOpacity={values[RELATION_BUBBLE_CONTROL_IDS.nodeOpacity]}
         stroke="#0f172a"
         strokeWidth={0.8}
       />
       <RelationMark
-        transform={[
-          {
-            kind: 'relate',
-            source: { selector: { kind: 'max', by: 'value' }, fields: { id: 'id' } },
-            target: { selector: { kind: 'max', by: 'y' }, fields: { id: 'id' } },
-            measures: [{ op: 'difference', field: 'y', as: 'delta', labelAs: 'relLabel', labelPrefix: 'lift +' }],
-          },
-        ]}
+        transform={[relationBubbleOperation]}
         source={{ anchorId: { prefix: 'bubble', field: 'sourceId' }, boundary: true }}
         target={{ anchorId: { prefix: 'bubble', field: 'targetId' }, boundary: true }}
         style={{
@@ -49,6 +44,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
             position: values[RELATION_BUBBLE_CONTROL_IDS.labelPosition],
             ...(labelSide === 'center' ? { placement: 'inside' as const } : { side: labelSide }),
             sloped: values[RELATION_BUBBLE_CONTROL_IDS.labelSloped],
+            textColor: 'currentColor',
           },
           options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], roundedCorners: 8 },
         }}

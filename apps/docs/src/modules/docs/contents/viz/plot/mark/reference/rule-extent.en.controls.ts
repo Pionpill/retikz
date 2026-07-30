@@ -7,6 +7,9 @@ import { referenceSpans } from './rule-extent.data';
 /** Stable control id for partial reference spans */
 export const RULE_EXTENT_INSET_ID = 'rule-extent-inset';
 
+/** Stable coordinate control id for partial reference spans */
+export const RULE_EXTENT_COORDINATE_ID = 'rule-extent-coordinate';
+
 /** English panel for partial reference spans */
 export const ruleExtentControls = definePreviewControls({
   presentation: 'panel',
@@ -14,7 +17,23 @@ export const ruleExtentControls = definePreviewControls({
   sections: [
     {
       label: 'Data',
+      defaultCollapsed: true,
       controls: [{ kind: 'table', id: 'referenceSpans', label: 'Reference spans', rows: referenceSpans }],
+    },
+    {
+      label: 'Coordinate system',
+      controls: [
+        {
+          kind: 'select',
+          id: RULE_EXTENT_COORDINATE_ID,
+          label: 'Projection',
+          defaultValue: 'cartesian2D',
+          options: [
+            { value: 'cartesian2D', label: 'Cartesian' },
+            { value: 'polar2D', label: 'Polar' },
+          ],
+        },
+      ],
     },
     {
       label: 'Opposite-axis span',
@@ -36,6 +55,9 @@ export const ruleExtentControls = definePreviewControls({
 /** Stable documentation contract for partial reference spans */
 export const previewControlContract = {
   controls: ruleExtentControls,
-  canonicalValues: { [RULE_EXTENT_INSET_ID]: 0 },
-  relatedApis: ['ReferenceMark.extentField', 'ReferenceMark.extentToField'],
+  canonicalValues: {
+    [RULE_EXTENT_COORDINATE_ID]: 'cartesian2D',
+    [RULE_EXTENT_INSET_ID]: 0,
+  },
+  relatedApis: ['Plot.coordinate', 'ReferenceMark.extentField', 'ReferenceMark.extentToField'],
 } satisfies PreviewControlContract;

@@ -2,6 +2,8 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
+import { stackOperationOf } from './transform-stack.controls';
 import { productRevenue } from './transform-stack.data';
 
 /** 堆叠示例的英文控件 */
@@ -11,17 +13,22 @@ export const stackControls = definePreviewControls({
   sections: [
     {
       label: 'Data',
-      defaultCollapsed: true,
       controls: [
         {
           kind: 'table',
           id: 'rows',
           label: 'Quarterly product revenue',
-          rows: productRevenue,
+          views: createPlotTransformTableViews(
+            { source: 'Source', result: 'Stacked' },
+            productRevenue,
+            stackOperationOf,
+          ),
           columns: [
             { key: 'quarter', label: 'Quarter' },
             { key: 'product', label: 'Product' },
             { key: 'revenue', label: 'Revenue' },
+            { key: 'y0', label: 'Lower y0' },
+            { key: 'y1', label: 'Upper y1' },
           ],
         },
       ],

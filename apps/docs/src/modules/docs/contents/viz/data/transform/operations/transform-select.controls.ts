@@ -1,8 +1,8 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
+import { createTransformTableViews } from '@/modules/docs/preview';
 
-import { createTransformTableViews } from '../transform-table-views';
 import { cityRevenue } from './transform-select.data';
 import { transformSelectOperationOf } from './transform-select-preview';
 

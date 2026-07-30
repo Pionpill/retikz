@@ -45,7 +45,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         label="nodeLabel"
         labelPosition={values[RELATION_SANKEY_CONTROL_IDS.nodeLabelPosition]}
         labelDistance={values[RELATION_SANKEY_CONTROL_IDS.nodeLabelDistance]}
-        labelTextColor="#0f172a"
+        labelTextColor="currentColor"
         labelFont={{ size: 11, weight: 'bold' }}
       />
       <Scale dimension="x" type="linear" domain={[0, 3]} domainPadding={0} />

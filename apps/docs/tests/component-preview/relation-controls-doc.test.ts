@@ -200,6 +200,10 @@ const renderIntervalWithValues = (overrides: Readonly<Record<string, string | nu
     ),
   );
 
+/** 收集真实 SVG 文字节点使用的 fill */
+const textFillValuesOf = (markup: string): Array<string> =>
+  [...markup.matchAll(/<text\b[^>]*\bfill="([^"]+)"/g)].map(match => match[1]);
+
 const cases = [
   {
     name: '散点关系',
@@ -349,6 +353,19 @@ describe('关系图元文档 controls', () => {
     expect(() => renderToStaticMarkup(scatterSource.canonicalRender?.())).not.toThrow();
   });
 
+  it.each([
+    ['散点关系', scatterSource],
+    ['桑基关系', sankeySource],
+    ['气泡关系', bubbleSource],
+    ['路径极值', pathExtremesSource],
+    ['区间关系', intervalSource],
+  ] as const)('%s 的全部文字继承 Preview 主题前景色', (_name, source) => {
+    const markup = renderToStaticMarkup(source.canonicalRender?.());
+
+    expect(textFillValuesOf(markup)).not.toHaveLength(0);
+    expect(new Set(textFillValuesOf(markup))).toEqual(new Set(['currentColor']));
+  });
+
   it('散点关系的居中、上方与下方会生成不同的 Path 标签位置', () => {
     const center = renderScatterWithLabelSide('center');
     const top = renderScatterWithLabelSide('top');
@@ -451,6 +468,25 @@ describe('关系图元文档 controls', () => {
     expect(firstBar).not.toBeNull();
     expect(xAxis).toBeDefined();
     expect(Number(firstBar?.[1]) + Number(firstBar?.[2])).toBeCloseTo(Number(xAxis?.[2]));
+  });
+
+  it('区间关系在高度偏移极值下保持固定取景并为路径标签预留边界', () => {
+    const viewBoxes = [-40, 0, 40].map(offset => {
+      const markup = renderIntervalWithValues({ 'relation-interval-offset': offset });
+      const match = markup.match(/<svg[^>]*viewBox="([^"]+)"/);
+
+      expect(match).not.toBeNull();
+      return match?.[1].split(' ').map(Number);
+    });
+
+    expect(viewBoxes[1]).toEqual(viewBoxes[0]);
+    expect(viewBoxes[2]).toEqual(viewBoxes[0]);
+
+    const [x, y, width, height] = viewBoxes[0] ?? [];
+    expect(x).toBeLessThanOrEqual(-10);
+    expect(y).toBeLessThanOrEqual(-20);
+    expect(x + width).toBeGreaterThanOrEqual(630);
+    expect(y + height).toBeGreaterThanOrEqual(330);
   });
 
   it.each(cases)('$name 中英文 controls 结构一致并覆盖预期字段', testCase => {

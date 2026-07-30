@@ -9,7 +9,7 @@ The Plot runtime separates how a chart is authored from how it executes. React, 
 
 ## Hosts and Package Boundaries
 
-<ComponentPreview files="plot-runtime-architecture" size="xxl" hideCode />
+<ComponentPreview files="plot-runtime-architecture" size="xs" hideCode />
 
 React and Vanilla provide different authoring and host wiring without duplicating Plot algorithms. Standalone `<Plot>` wraps a spec in Scene IR and injects `lowerPlots` into `<Layout>`. `embedPlot()` and `createPlotAdapter()` connect the same spec to Kernel Vanilla figures and layers. `renderPlot()` remains the independent DOM-free SSR and lineage entry.
 
@@ -17,7 +17,7 @@ All three entries delegate data, scale, coordinate, mark, and guide semantics to
 
 ## Authoring and Runtime Boundary
 
-<ComponentPreview files="plot-authoring-convergence" size="xxl" hideCode />
+<ComponentPreview files="plot-authoring-convergence" size="md" hideCode />
 
 The React DSL collects JSX through `buildPlotSpec`, while Vanilla's `plot()` accepts a plain object. Both delegate axis, facet, and scaffold bindings to the shared authoring normalization in `@retikz/plot`. The `spec` prop and generated JSON can still provide complete Plot IR. Every entry passes through `PlotSpecSchema` before execution, so downstream code receives a schema-valid `IRPlotSpec`.
 
@@ -32,7 +32,7 @@ The React DSL collects JSX through `buildPlotSpec`, while Vanilla's `plot()` acc
 
 ## Lowering and Outputs
 
-<ComponentPreview files="plot-lowering-flow" size="xxl" hideCode />
+<ComponentPreview files="plot-lowering-flow" size="sm" hideCode />
 
 The main lowering path resolves transform, statistics, row-selector, scale, mark, and format registries inside `prepareRows()`, then normalizes data from the data model, field maps, and resolver. It next applies transforms, resolves the frame, and builds the channel registry. Channel and mark Definitions produce primitives; guides, themes, composition, and layout add explanatory and spatial structure. The result expands into Core `Scope`, `Node`, and `Path` IR.
 

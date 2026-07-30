@@ -397,34 +397,33 @@ describe('preview controls registry', () => {
     expect(resolveControlsKey(segments, 'line-curve', 'fr')).toBe(buildControlsKey(segments, 'line-curve'));
 
     const controls = resolvePreviewControls(controlModules[englishKey]);
-    expect(controls).toMatchObject({
-      presentation: 'panel',
-      sections: [
-        {
-          label: 'Data',
-          controls: [{ kind: 'table', id: 'curveSamples', label: 'Curve samples' }],
-        },
-        {
-          label: 'Connection',
-          controls: [
-            {
-              kind: 'select',
-              id: 'path-curve',
-              label: 'Connection',
-              options: expect.arrayContaining([
-                { value: 'linear', label: 'Linear' },
-                { value: 'step', label: 'Step' },
-              ]),
-            },
-            {
-              kind: 'switch',
-              id: 'path-curve-show-points',
-              label: 'Show data points',
-              defaultValue: true,
-            },
-          ],
-        },
-      ],
+    expect(controls?.presentation).toBe('panel');
+    if (!controls || controls.presentation !== 'panel') return;
+
+    expect(controls.sections.map(section => section.label)).toEqual(['Data', 'Coordinate', 'Connection', 'Path style']);
+    const fields = controls.sections.flatMap(section => section.controls);
+    expect(fields).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: 'table', id: 'curveSamples', label: 'Curve samples' }),
+        expect.objectContaining({ kind: 'select', id: 'path-curve-coordinate', label: 'Projection' }),
+        expect.objectContaining({ kind: 'color', id: 'path-curve-stroke', label: 'Stroke' }),
+        expect.objectContaining({ kind: 'range', id: 'path-curve-stroke-width', label: 'Stroke width' }),
+        expect.objectContaining({ kind: 'switch', id: 'path-curve-dashed', label: 'Dashed stroke' }),
+        expect.objectContaining({ kind: 'range', id: 'path-curve-opacity', label: 'Opacity' }),
+      ]),
+    );
+    expect(fields.find(field => field.id === 'path-curve')).toMatchObject({
+      kind: 'select',
+      label: 'Connection',
+      options: expect.arrayContaining([
+        { value: 'linear', label: 'Linear' },
+        { value: 'step', label: 'Step' },
+      ]),
+    });
+    expect(fields.find(field => field.id === 'path-curve-show-points')).toMatchObject({
+      kind: 'switch',
+      label: 'Show data points',
+      defaultValue: true,
     });
   });
 
@@ -469,7 +468,7 @@ describe('preview controls registry', () => {
     ).toThrow('Unknown preview control id in canonicalValues: "missing".');
   });
 
-  it('Path curve 只保留 canonical 可写控件，复用示例提供独立数据面板', () => {
+  it('Path curve 保留 canonical 可写控件，并默认折叠数据面板', () => {
     const segments = ['viz', 'plot', 'mark', 'path'];
 
     for (const key of [buildControlsKey(segments, 'line-curve'), buildLangControlsKey(segments, 'line-curve', 'en')]) {
@@ -478,7 +477,7 @@ describe('preview controls registry', () => {
       if (!controls || controls.presentation !== 'panel') continue;
 
       expect(controls.sections[0].controls[0].kind, key).toBe('table');
-      expect(Boolean(controls.sections[0].defaultCollapsed), key).toBe(false);
+      expect(Boolean(controls.sections[0].defaultCollapsed), key).toBe(true);
       expect(
         controls.sections.flatMap(section => section.controls.map(control => control.id)),
         key,
@@ -554,6 +553,7 @@ describe('preview controls registry', () => {
       { name: 'point-transform', writableIds: ['point-jitter-amount', 'point-jitter-seed'] },
       { name: 'point-style', writableIds: ['point-paint-mode', 'point-size'] },
       { name: 'point-text', writableIds: ['point-text-mode', 'point-label-position', 'point-label-distance'] },
+      { name: 'point-node-shape', writableIds: ['point-node-shape'] },
       { name: 'point-coordinate-1d', writableIds: ['point-coordinate-x-field'] },
     ];
 
@@ -623,7 +623,14 @@ describe('preview controls registry', () => {
 
   it('Mark controlled demo 模块显式导出 previewControls 作为 registry 回退', () => {
     const cases = {
-      point: ['point-position', 'point-transform', 'point-style', 'point-text', 'point-coordinate-1d'],
+      point: [
+        'point-position',
+        'point-transform',
+        'point-style',
+        'point-text',
+        'point-node-shape',
+        'point-coordinate-1d',
+      ],
       path: [
         'line-basic',
         'line-series',
@@ -743,15 +750,20 @@ describe('preview controls registry', () => {
 
   it('IntervalMark demo 统一保留左右外侧空间，且不改变默认柱间距', () => {
     const segments = ['viz', 'plot', 'mark', 'interval'];
-    const bandCases = ['bar-series', 'bar-transform', 'rect-bounds'];
+    const bandCases = ['bar-transform', 'rect-bounds'];
 
     for (const name of bandCases) {
       expect(demoSources[buildKey(segments, name)], name).toContain('paddingOuter={0.15}');
     }
 
     const positionSource = demoSources[buildKey(segments, 'bar-position')];
-    expect(positionSource).toContain('paddingOuter={isHorizontal ? 0 : 0.15}');
+    expect(positionSource).toContain(
+      'paddingOuter={isHorizontal ? 0 : isPolar ? values[BAR_POSITION_CONTROL_IDS.gap] / 2 : 0.15}',
+    );
     expect(positionSource).toContain('domainPadding={isHorizontal ? 0.05 : 0}');
+
+    const seriesSource = demoSources[buildKey(segments, 'bar-series')];
+    expect(seriesSource).toContain('paddingOuter={isPolar ? values[BAR_SERIES_GAP_ID] / 2 : 0.15}');
 
     const radialSource = demoSources[buildKey(segments, 'bar-radial')];
     const sectorSource = demoSources[buildKey(segments, 'interval-sector')];
@@ -2083,30 +2095,16 @@ describe('preview controls registry', () => {
       },
       {
         segments: ['viz', 'plot', 'coordinate', '2d'],
-        name: 'coordinate-switch',
+        name: 'coordinate-cartesian',
         rowCount: 6,
-        columnKeys: ['month', 'value'],
+        columnKeys: ['category', 'value'],
         defaultCollapsed: true,
       },
       {
         segments: ['viz', 'plot', 'coordinate', '2d'],
-        name: 'coordinate-pie',
-        rowCount: 5,
-        columnKeys: ['label', 'value'],
-        defaultCollapsed: true,
-      },
-      {
-        segments: ['viz', 'plot', 'coordinate', '2d'],
-        name: 'coordinate-radar',
-        rowCount: 5,
-        columnKeys: ['dim', 'value'],
-        defaultCollapsed: true,
-      },
-      {
-        segments: ['viz', 'plot', 'coordinate', '2d'],
-        name: 'coordinate-polar-line',
-        rowCount: 8,
-        columnKeys: ['angle', 'speed'],
+        name: 'coordinate-polar',
+        rowCount: 6,
+        columnKeys: ['category', 'value'],
         defaultCollapsed: true,
       },
       {

@@ -4,10 +4,10 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** relate 的分组、双端点选择、字段投影与关系行输出 */
 const Demo: FC = () => (
-  <Layout width={440} height={400} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={780} height={190} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
       id="rows"
-      position={[0, -160]}
+      position={[-330, 0]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}
@@ -22,7 +22,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="group"
-      position={[0, -90]}
+      position={[-195, 0]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -37,7 +37,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="source"
-      position={[-100, -10]}
+      position={[-25, -42]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -52,7 +52,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="target"
-      position={[100, -10]}
+      position={[-25, 42]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -67,7 +67,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="config"
-      position={[-140, 80]}
+      position={[155, 78]}
       stroke="gray"
       fill="gray"
       fillOpacity={0.06}
@@ -82,7 +82,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="project"
-      position={[40, 80]}
+      position={[155, 0]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -97,7 +97,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="output"
-      position={[40, 160]}
+      position={[325, 0]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}

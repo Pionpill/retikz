@@ -1,8 +1,8 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
+import { createTransformResultView } from '@/modules/docs/preview';
 
-import { createTransformResultView } from '../transform-table-views';
 import { boxplotSamples } from './transform-boxplot.data';
 import { boxOutlierOperationOf, boxSummaryOperationOf } from './transform-boxplot-preview';
 

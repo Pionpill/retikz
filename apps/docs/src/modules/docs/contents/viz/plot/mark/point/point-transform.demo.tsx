@@ -4,7 +4,7 @@ import { Axis, Plot, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { POINT_TRANSFORM_CONTROL_IDS, previewControlContract } from './point-transform.controls';
+import { pointTransformOperationOf, previewControlContract } from './point-transform.controls';
 import { regionOrders } from './point-transform.data';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
@@ -16,15 +16,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       size="orders"
       color="region"
       label="rep"
-      transform={[
-        {
-          kind: 'jitter',
-          axis: 'y',
-          yField: 'orders',
-          amount: values[POINT_TRANSFORM_CONTROL_IDS.amount],
-          seed: values[POINT_TRANSFORM_CONTROL_IDS.seed],
-        },
-      ]}
+      transform={[pointTransformOperationOf(values)]}
     />
     <Axis dimension="x" />
     <Axis dimension="y" grid />

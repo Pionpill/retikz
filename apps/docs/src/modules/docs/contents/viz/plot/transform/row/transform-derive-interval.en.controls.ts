@@ -2,6 +2,8 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
+import { deriveIntervalOperationOf } from './transform-derive-interval.controls';
 import { tasks } from './transform-derive-interval.data';
 
 /** 派生区间示例的英文控件 */
@@ -17,12 +19,18 @@ export const deriveIntervalControls = definePreviewControls({
           kind: 'table',
           id: 'rows',
           label: 'Task bounds',
-          rows: tasks,
+          views: createPlotTransformTableViews(
+            { source: 'Source', result: 'Derived intervals' },
+            tasks,
+            deriveIntervalOperationOf,
+          ),
           columns: [
             { key: 'task', label: 'Task' },
             { key: 'phase', label: 'Phase' },
             { key: 'start', label: 'Start' },
             { key: 'end', label: 'End' },
+            { key: 'y0', label: 'Lower y0' },
+            { key: 'y1', label: 'Upper y1' },
           ],
         },
       ],

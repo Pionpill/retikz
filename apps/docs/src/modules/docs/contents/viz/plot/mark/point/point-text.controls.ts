@@ -6,7 +6,11 @@ import { points } from './point-api.data';
 
 /** 点文字 playground 的稳定控件 id */
 export const POINT_TEXT_CONTROL_IDS = {
+  coordinate: 'point-text-coordinate',
   mode: 'point-text-mode',
+  textColor: 'point-text-color',
+  fontSize: 'point-font-size',
+  fontBold: 'point-font-bold',
   labelPosition: 'point-label-position',
   labelDistance: 'point-label-distance',
   labelPin: 'point-label-pin',
@@ -25,6 +29,21 @@ export const pointTextControls = definePreviewControls({
       controls: [{ kind: 'table', id: 'points', label: '点数据', rows: points }],
     },
     {
+      label: '坐标系',
+      controls: [
+        {
+          kind: 'select',
+          id: POINT_TEXT_CONTROL_IDS.coordinate,
+          label: '投影',
+          defaultValue: 'cartesian2D',
+          options: [
+            { value: 'cartesian2D', label: '笛卡尔坐标' },
+            { value: 'polar2D', label: '极坐标' },
+          ],
+        },
+      ],
+    },
+    {
       label: '显示模式',
       controls: [
         {
@@ -36,6 +55,32 @@ export const pointTextControls = definePreviewControls({
             { value: 'label', label: '点标签' },
             { value: 'text', label: '文本点' },
           ],
+        },
+      ],
+    },
+    {
+      label: '文字样式',
+      controls: [
+        {
+          kind: 'color',
+          id: POINT_TEXT_CONTROL_IDS.textColor,
+          label: '文字颜色',
+          defaultValue: '#0f172a',
+        },
+        {
+          kind: 'range',
+          id: POINT_TEXT_CONTROL_IDS.fontSize,
+          label: '字号',
+          defaultValue: 14,
+          min: 10,
+          max: 28,
+          step: 1,
+        },
+        {
+          kind: 'switch',
+          id: POINT_TEXT_CONTROL_IDS.fontBold,
+          label: '粗体',
+          defaultValue: false,
         },
       ],
     },
@@ -116,7 +161,11 @@ export const pointTextControls = definePreviewControls({
 export const previewControlContract = {
   controls: pointTextControls,
   canonicalValues: {
+    [POINT_TEXT_CONTROL_IDS.coordinate]: 'cartesian2D',
     [POINT_TEXT_CONTROL_IDS.mode]: 'label',
+    [POINT_TEXT_CONTROL_IDS.textColor]: '#0f172a',
+    [POINT_TEXT_CONTROL_IDS.fontSize]: 14,
+    [POINT_TEXT_CONTROL_IDS.fontBold]: false,
     [POINT_TEXT_CONTROL_IDS.labelPosition]: 'top',
     [POINT_TEXT_CONTROL_IDS.labelDistance]: 8,
     [POINT_TEXT_CONTROL_IDS.labelPin]: false,
@@ -128,7 +177,11 @@ export const previewControlContract = {
       id: 'label',
       label: '点标签',
       values: {
+        [POINT_TEXT_CONTROL_IDS.coordinate]: 'cartesian2D',
         [POINT_TEXT_CONTROL_IDS.mode]: 'label',
+        [POINT_TEXT_CONTROL_IDS.textColor]: '#0f172a',
+        [POINT_TEXT_CONTROL_IDS.fontSize]: 14,
+        [POINT_TEXT_CONTROL_IDS.fontBold]: false,
         [POINT_TEXT_CONTROL_IDS.labelPosition]: 'top',
         [POINT_TEXT_CONTROL_IDS.labelDistance]: 8,
         [POINT_TEXT_CONTROL_IDS.labelPin]: false,
@@ -140,7 +193,11 @@ export const previewControlContract = {
       id: 'text',
       label: '文本点',
       values: {
+        [POINT_TEXT_CONTROL_IDS.coordinate]: 'cartesian2D',
         [POINT_TEXT_CONTROL_IDS.mode]: 'text',
+        [POINT_TEXT_CONTROL_IDS.textColor]: '#7c3aed',
+        [POINT_TEXT_CONTROL_IDS.fontSize]: 22,
+        [POINT_TEXT_CONTROL_IDS.fontBold]: true,
         [POINT_TEXT_CONTROL_IDS.labelPosition]: 'top',
         [POINT_TEXT_CONTROL_IDS.labelDistance]: 8,
         [POINT_TEXT_CONTROL_IDS.labelPin]: false,
@@ -150,11 +207,16 @@ export const previewControlContract = {
     },
   ],
   relatedApis: [
+    'Plot.coordinate',
     'PointMark.label',
+    'PointMark.labelTextColor',
+    'PointMark.labelFont',
     'PointMark.labelPosition',
     'PointMark.labelDistance',
     'PointMark.labelPin',
     'PointMark.text',
+    'PointMark.textColor',
+    'PointMark.font',
     'PointMark.dx',
     'PointMark.dy',
   ],

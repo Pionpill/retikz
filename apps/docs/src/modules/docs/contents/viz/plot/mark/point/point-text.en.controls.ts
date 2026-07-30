@@ -16,6 +16,21 @@ export const pointTextControls = definePreviewControls({
       controls: [{ kind: 'table', id: 'points', label: 'Point rows', rows: points }],
     },
     {
+      label: 'Coordinate',
+      controls: [
+        {
+          kind: 'select',
+          id: POINT_TEXT_CONTROL_IDS.coordinate,
+          label: 'Projection',
+          defaultValue: 'cartesian2D',
+          options: [
+            { value: 'cartesian2D', label: 'Cartesian' },
+            { value: 'polar2D', label: 'Polar' },
+          ],
+        },
+      ],
+    },
+    {
       label: 'Display mode',
       controls: [
         {
@@ -27,6 +42,32 @@ export const pointTextControls = definePreviewControls({
             { value: 'label', label: 'Point labels' },
             { value: 'text', label: 'Text points' },
           ],
+        },
+      ],
+    },
+    {
+      label: 'Text style',
+      controls: [
+        {
+          kind: 'color',
+          id: POINT_TEXT_CONTROL_IDS.textColor,
+          label: 'Text color',
+          defaultValue: '#0f172a',
+        },
+        {
+          kind: 'range',
+          id: POINT_TEXT_CONTROL_IDS.fontSize,
+          label: 'Font size',
+          defaultValue: 14,
+          min: 10,
+          max: 28,
+          step: 1,
+        },
+        {
+          kind: 'switch',
+          id: POINT_TEXT_CONTROL_IDS.fontBold,
+          label: 'Bold',
+          defaultValue: false,
         },
       ],
     },
@@ -107,7 +148,11 @@ export const pointTextControls = definePreviewControls({
 export const previewControlContract = {
   controls: pointTextControls,
   canonicalValues: {
+    [POINT_TEXT_CONTROL_IDS.coordinate]: 'cartesian2D',
     [POINT_TEXT_CONTROL_IDS.mode]: 'label',
+    [POINT_TEXT_CONTROL_IDS.textColor]: '#0f172a',
+    [POINT_TEXT_CONTROL_IDS.fontSize]: 14,
+    [POINT_TEXT_CONTROL_IDS.fontBold]: false,
     [POINT_TEXT_CONTROL_IDS.labelPosition]: 'top',
     [POINT_TEXT_CONTROL_IDS.labelDistance]: 8,
     [POINT_TEXT_CONTROL_IDS.labelPin]: false,
@@ -119,7 +164,11 @@ export const previewControlContract = {
       id: 'label',
       label: 'Point labels',
       values: {
+        [POINT_TEXT_CONTROL_IDS.coordinate]: 'cartesian2D',
         [POINT_TEXT_CONTROL_IDS.mode]: 'label',
+        [POINT_TEXT_CONTROL_IDS.textColor]: '#0f172a',
+        [POINT_TEXT_CONTROL_IDS.fontSize]: 14,
+        [POINT_TEXT_CONTROL_IDS.fontBold]: false,
         [POINT_TEXT_CONTROL_IDS.labelPosition]: 'top',
         [POINT_TEXT_CONTROL_IDS.labelDistance]: 8,
         [POINT_TEXT_CONTROL_IDS.labelPin]: false,
@@ -131,7 +180,11 @@ export const previewControlContract = {
       id: 'text',
       label: 'Text points',
       values: {
+        [POINT_TEXT_CONTROL_IDS.coordinate]: 'cartesian2D',
         [POINT_TEXT_CONTROL_IDS.mode]: 'text',
+        [POINT_TEXT_CONTROL_IDS.textColor]: '#7c3aed',
+        [POINT_TEXT_CONTROL_IDS.fontSize]: 22,
+        [POINT_TEXT_CONTROL_IDS.fontBold]: true,
         [POINT_TEXT_CONTROL_IDS.labelPosition]: 'top',
         [POINT_TEXT_CONTROL_IDS.labelDistance]: 8,
         [POINT_TEXT_CONTROL_IDS.labelPin]: false,
@@ -141,11 +194,16 @@ export const previewControlContract = {
     },
   ],
   relatedApis: [
+    'Plot.coordinate',
     'PointMark.label',
+    'PointMark.labelTextColor',
+    'PointMark.labelFont',
     'PointMark.labelPosition',
     'PointMark.labelDistance',
     'PointMark.labelPin',
     'PointMark.text',
+    'PointMark.textColor',
+    'PointMark.font',
     'PointMark.dx',
     'PointMark.dy',
   ],

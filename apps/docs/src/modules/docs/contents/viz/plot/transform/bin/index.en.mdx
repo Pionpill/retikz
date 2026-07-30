@@ -15,7 +15,7 @@ General grouped summaries, representative-row selection, and boxplot statistics 
 
 Switch among the mutually exclusive `count`, `step`, and `thresholds` strategies. The demo fixes `extent` to `[0, 20]` and uses a bimodal sample with a sparse tail, so edge changes do not also change the viewport and the strategy differences remain visible.
 
-<ComponentPreview files={['transform-histogram', 'transform-histogram.data.ts']} size="md" />
+<ComponentPreview files={['transform-histogram', 'transform-histogram.data.ts']} size="lg" />
 
 `IntervalMark` reads `x0` / `x1` for bin edges and draws adjacent intervals at their true width on a continuous x-axis. `y` reads the default `binCount`.
 
@@ -39,7 +39,7 @@ Switch among the mutually exclusive `count`, `step`, and `thresholds` strategies
 
 The “one bin strategy” node represents mutually exclusive configuration, not a fallback sequence. Once the strategy resolves, the main chain derives edges, assigns buckets, reduces metrics, and emits one row per bin.
 
-<ComponentPreview files="transform-bin-logic" hideCode size="xl" />
+<ComponentPreview files="transform-bin-logic" hideCode size="sm" />
 
 The three strategies derive edges differently:
 

@@ -1,70 +1,42 @@
 ---
 title: 2D Coordinates
-description: '2D coordinates use two positional dimensions for cartesian or polar charts, including sectors, radar, and polar lines.'
+description: '2D coordinates project x and y position channels onto Cartesian or polar planes while point, line, and area marks reuse the same data bindings.'
 ---
 
-2D coordinates decide how two position channels land on a plane. Data fields first bind to `x` / `y` and pass through position scales; the coordinate then projects the result into horizontal / vertical positions or angle / radius. It does not accumulate data, choose mark shapes, or style axes.
+2D coordinates decide how two position channels land on a plane. Data fields first bind to `x` / `y` and pass through position scales; the coordinate then projects them into horizontal / vertical positions or angle / radius. Switching marks does not change those bindings.
 
-## Start with a Coordinate Switch
+## Cartesian 2D Coordinates
 
-The playground below keeps the data, size, and `<IntervalMark>` fixed. Switch the coordinate first to see the same `x` / `y` bindings turn ordinary bars into radial bars, then use the plot-area controls to adjust each outer margin.
+Cartesian coordinates map `x` horizontally and `y` vertically, making them suitable for comparing categories and values along shared straight axes. The playground fixes the coordinate and six data rows while letting you switch marks, adjust plot-area margins, and toggle the y grid:
 
-| Channel | `cartesian2D`       | `polar2D`                      |
-| ------- | ------------------- | ------------------------------ |
-| `x`     | Horizontal position | Angular position around center |
-| `y`     | Vertical position   | Radial distance from center    |
-
-Use the default `cartesian2D` when positions and values should share straight axes. Use `polar2D` when direction, cycles, or closed dimensions need angular and radial roles. Both coordinates keep the same marks and field bindings.
+- Points use `<PointMark>` to show the position of each row.
+- Lines use an open `<PathMark>` to connect those positions by `order`.
+- Areas use `<IntervalMark>` to occupy each category band and extend upward from the `y = 0` x-axis baseline.
 
 <ComponentPreview
-  files={['coordinate-switch', 'coordinate-switch.data.ts']}
-  size="md"
-  caption="After switching the projection, adjust each outer margin; polar mode also exposes the inner radius."
+  files={['coordinate-cartesian', 'coordinate-2d.data.ts']}
+  size="lg"
+  caption="After switching point, line, and area marks, adjust all four margins and the y grid to see how the same x / y bindings adapt to the plot area."
 />
 
-`margin` is the top, right, bottom, and left distance from the chart edge to the plot area. In polar coordinates, `innerRadius` is a fraction of the outer radius in `0 <= value < 1`; `0` keeps a solid center, while larger values create a ring.
+## Polar 2D Coordinates
 
-## Sector Charts
+Polar coordinates map `x` to angular positions around the center and `y` to radial distance. They reuse the same data and marks, but their projected relationships change:
 
-Pies and donuts are not ordinary `x` / `y` charts. `<IntervalMark angle="value" />` is the React DSL sector shortcut, and it works in four steps:
+- Points spread around the angle, with values determining their radii.
+- Lines use a closed `<PathMark>` that connects the final point back to the first.
+- Areas still use `<IntervalMark>`, producing radial intervals separated by category.
 
-1. `angle="value"` selects the field that determines each sector's share.
-2. An automatic stack transform turns every `value` into cumulative lower and upper bounds.
-3. The interval uses those bounds to form adjacent sectors.
-4. `polar2D` projects the sectors into angles and radii.
-
-Increase `innerRadius` to turn a pie into a donut.
-
-The public configuration uses `startAngle` / `endAngle` in degrees. `0` is at the right side of the chart and positive angles sweep clockwise. The playground's sweep angle is a teaching control: it passes `endAngle = startAngle + sweepAngle`.
+The playground also controls `innerRadius`, the start angle, and the sweep angle. Sweep angle is a teaching parameter in the panel; the coordinate receives `endAngle = startAngle + sweepAngle`.
 
 <ComponentPreview
-  files={['coordinate-pie', 'coordinate-pie.data.ts']}
-  size="md"
-  caption="The data determines sector proportions; the panel changes the center hole, start angle, and sweep."
-/>
-
-## Radar
-
-Radar still uses `x` / `y`: the dimension field runs around the angle, and the score field maps to radius. `closed` connects the final point back to the first.
-
-<ComponentPreview
-  files={['coordinate-radar', 'coordinate-radar.data.ts']}
-  size="md"
-  caption="The data is supporting context here, so its section starts collapsed and remains available for inspection."
-/>
-
-## Polar Lines
-
-An open `<PathMark>` can represent wind direction, cycles, and similar data. Here `angle` binds to `x`, `speed` binds to `y`, and `order` controls the connection sequence.
-
-<ComponentPreview
-  files={['coordinate-polar-line', 'coordinate-polar-line.data.ts']}
-  size="md"
-  caption="Angle controls the position around the center, while speed controls the distance from it."
+  files={['coordinate-polar', 'coordinate-2d.data.ts']}
+  size="lg"
+  caption="After switching point, line, and area marks, adjust the inner radius and angle range to see how polar projection changes the same position bindings."
 />
 
 <Comparison target="tikz" title="TikZ Comparison">
-TikZ typically enters polar coordinates through the PGFPlots `polaraxis` environment. retikz puts the projection on `<Plot coordinate>`, so the same mark can keep its field bindings.
+TikZ typically distinguishes Cartesian and polar coordinates with the PGFPlots `axis` and `polaraxis` environments. retikz puts the projection on `<Plot coordinate>`, allowing the same mark to keep its original field bindings.
 </Comparison>
 
 ## Further Reading
@@ -72,12 +44,12 @@ TikZ typically enters polar coordinates through the PGFPlots `polaraxis` environ
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/viz/plot/channel">
     <span className="font-semibold">Channels</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Understand how x, y, and angle bind fields</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Understand how x and y bind data fields</span>
   </LinkedCard>
   <LinkedCard href="/viz/plot/mark">
     <span className="font-semibold">Marks</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Choose bars, lines, points, sectors, and other shapes
+      Continue with PointMark, PathMark, and IntervalMark
     </span>
   </LinkedCard>
 </div>
