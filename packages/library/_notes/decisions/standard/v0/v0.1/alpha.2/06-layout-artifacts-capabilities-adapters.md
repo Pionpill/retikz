@@ -67,7 +67,7 @@ rect都位于当前container allocation coordinate，x/y有限，width/height有
 
 - `slotBounds` 是父solver最终分配的无margin child slot；`marginBounds = outset(slotBounds, resolvedMargin)`
 - `allocationBounds`/`visualBounds` 是child local rect应用最终translation后的结果，不允许假定local origin为零
-- `visibleBounds`：overflow=visible时等于visualBounds；clip时取visualBounds与container allocationBounds交集，无正面积交集或zero-area clip时为null
+- `visibleBounds`：visualBounds有正面积且overflow=visible时等于visualBounds；clip时取visualBounds与container allocationBounds交集；visualBounds自身无正面积、交集无正面积或zero-area clip时为null
 - item `overflow.allocation.x/y` 表示translated allocationBounds在该轴超出slotBounds；`overflow.visual.x/y`表示visualBounds在该轴超出slotBounds
 - `overflow.clipped`只在overflow=clip且visualBounds确有任何部分落在container allocationBounds外时为true；仅启用clip但没有裁切为false
 - `alignmentGuide`只记录该item本次alignment实际采用的first/last真实guide或edge fallback；position是应用最终translation/offset后的container-local坐标，fallback区分是否使用边缘

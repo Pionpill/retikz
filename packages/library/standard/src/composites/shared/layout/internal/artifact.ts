@@ -135,14 +135,15 @@ export const createLayoutArtifactItem = (input: CreateLayoutArtifactItemInput): 
     x: outsideAxis(visualBounds, input.slotBounds, 'x'),
     y: outsideAxis(visualBounds, input.slotBounds, 'y'),
   });
-  const visibleBounds =
-    input.overflow === LayoutOverflow.Visible
+  const hasPositiveVisualArea = visualBounds.width > 0 && visualBounds.height > 0;
+  const visibleBounds = !hasPositiveVisualArea
+    ? null
+    : input.overflow === LayoutOverflow.Visible
       ? visualBounds
       : intersectLayoutArtifactRects(visualBounds, input.containerAllocation);
   const clipped =
     input.overflow === LayoutOverflow.Clip &&
-    visualBounds.width > 0 &&
-    visualBounds.height > 0 &&
+    hasPositiveVisualArea &&
     (outsideAxisExactly(visualBounds, input.containerAllocation, 'x') ||
       outsideAxisExactly(visualBounds, input.containerAllocation, 'y'));
   return Object.freeze({

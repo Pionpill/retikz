@@ -455,6 +455,38 @@ describe('layout compile artifacts', () => {
     expect(artifact.value.container.visibleBounds).toBeNull();
   });
 
+  it('normalizes single and separated degenerate visible-policy bounds to null', () => {
+    const positionedItem = (key: string, x: number) => ({
+      kind: LayoutItemKind.Overlay,
+      key,
+      child: leaf(key, 4, 4),
+      placement: {
+        kind: OverlayPlacementKind.Positioned,
+        at: { x, y: 0 },
+        anchor: { x: 0, y: 0 },
+      },
+      sizeParticipation: LayoutSizeParticipation.Exclude,
+    });
+    const output = compile([
+      createOverlayLayout({
+        size: { x: { kind: 'fixed', value: 20 }, y: { kind: 'fixed', value: 20 } },
+        overflow: LayoutOverflow.Visible,
+        children: [positionedItem('single', 4)],
+      }),
+      createOverlayLayout({
+        size: { x: { kind: 'fixed', value: 20 }, y: { kind: 'fixed', value: 20 } },
+        overflow: LayoutOverflow.Visible,
+        children: [positionedItem('left-degenerate', -10), positionedItem('right-degenerate', 30)],
+      }),
+    ]);
+    const artifacts = compositeArtifacts(output) as Array<OverlayLayoutCompileArtifact>;
+
+    expect(artifacts[0].value.items.map(item => item.visibleBounds)).toEqual([null]);
+    expect(artifacts[0].value.container.visibleBounds).toBeNull();
+    expect(artifacts[1].value.items.map(item => item.visibleBounds)).toEqual([null, null]);
+    expect(artifacts[1].value.container.visibleBounds).toBeNull();
+  });
+
   it('records translated real and fallback alignment guides', () => {
     const output = compile([
       createOverlayLayout({
