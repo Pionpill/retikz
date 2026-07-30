@@ -1050,7 +1050,7 @@ export const vizV01: Release = {
               },
             },
             {
-              label: { zh: '结构与 Cell 扩展同路', en: 'Unified structure and Cell extensions' },
+              label: { zh: '结构与单元格扩展同路', en: 'Unified structure and Cell extensions' },
               content: {
                 zh: '内置 manual/detail 与自定义 structure 共用 registry；内置 text 与自定义 presentation 同样经过精确 schema 和 JSON/Core output guard。',
                 en: 'Built-in manual/detail and custom structures share a registry; built-in text and custom presentations use the same precise schemas and JSON/Core output guards.',

@@ -1,0 +1,94 @@
+---
+title: Artifacts & Provenance
+description: Understand how TableLayoutManifest exposes track, Cell, and border geometry with semantic provenance from the same compile.
+---
+
+Scene lets a renderer draw the table, but a host also needs structured answers such as “which Cell owns this area,” “why is content outside its Cell,” and “which border candidate won.” `TableLayoutManifest` exposes those answers as a typed artifact from the same compile.
+
+<ComponentAlert
+  type="tip"
+  title="This is an advanced model"
+  description="You do not need a manifest just to display a table. Use it for hit testing, inspectors, export, debugging, or host integration."
+/>
+
+## From the same source as Scene
+
+<ComponentPreview files="table-manifest-map" hideCode size="xs" />
+
+Scene and Manifest in the figure come from one layout transaction. The manifest is not a post-render calculation and does not parse SVG; it directly reuses canonical identity, solved tracks, Cell placement, and the Border Graph.
+
+The artifact passes its public schema before return, is recursively frozen, and is detached from compile-internal objects. Consumers can store, compare, or use it across renderers without depending on a particular DOM structure.
+
+## What the manifest records
+
+| Level  | Main information                                   | Question answered                              |
+| ------ | -------------------------------------------------- | ---------------------------------------------- |
+| Table  | `tableId`, overall allocation/visual bounds        | How much space is occupied or visible?         |
+| Track  | Row/column id, index, offset, size                 | Where does a track start and how large is it?  |
+| Cell   | Identity, address, span, semantics, source, bounds | Who owns this area and where did it come from? |
+| Border | Edge geometry, style, winner, contributors         | Which edge is visible and why?                 |
+
+These arrays preserve canonical order. A Cell connects the semantic model and solved tracks through stable row/column ids and indexes. Border atoms retain candidate provenance even when several atoms merge into one visible edge.
+
+## Bounds must remain distinct
+
+| Bounds                       | Coordinate space / meaning                     | Typical use                    |
+| ---------------------------- | ---------------------------------------------- | ------------------------------ |
+| `box`                        | Table-local track rectangle occupied by a Cell | Cell hit region, grid coverage |
+| `contentBox`                 | `box` reduced by padding                       | Content container, alignment   |
+| `sourceAllocationBounds`     | Child allocation in replay-root local space    | Diagnose original measurement  |
+| `sourceVisualOverflowBounds` | Child visibility before placement              | Explain original overflow      |
+| `contentAllocationBounds`    | Table-local allocation after fit and alignment | Content layout, host overlays  |
+| `visualOverflowBounds`       | Table-local visibility after overflow policy   | Visible hits, clipping, export |
+
+Root `allocationBounds` covers only tracks and gaps, while root `visualOverflowBounds` is the union of visible Cell content and borders. The two may differ when content remains visible outside allocation, so one generic bbox cannot replace them.
+
+## Provenance and consumption boundaries
+
+A Cell `source` retains the smallest stable origin: explicit-grid coordinates, external dataset/row/field identity, or the Structure kind that generated it. `location` and `roles` describe semantic placement in the table; together they support inspectors, selection mapping, and domain export.
+
+The manifest provides facts rather than host interaction policy. Table does not own hover, selection, editing state, or DOM lifecycle here. A host can use the manifest as geometry and identity input for those capabilities, while persistent changes still return to the Table-owned spec or data.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Build the manifest from the canonical model and solved layout',
+      path: 'packages/viz/table/src/pipeline/manifest/build.ts',
+      startLine: 12,
+      endLine: 55,
+    },
+    {
+      label: 'Public Cell and root manifest schemas',
+      path: 'packages/viz/table/src/contract/manifest/schema.ts',
+      startLine: 122,
+      endLine: 166,
+    },
+  ]}
+/>
+
+## Further reading
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/table/model/layout">
+    <span className="font-semibold">Layout & Borders</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Review how tracks, Cell placement, and the Border Graph are produced.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/reference/manifest">
+    <span className="font-semibold">Contract - Artifact</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Look up every manifest DTO field and schema.</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/reference/runtime">
+    <span className="font-semibold">Runtime</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      See how React, Vanilla, and compile expose artifacts.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/detail">
+    <span className="font-semibold">Detail Table</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Observe onManifest and SSR sidecars from the common entry.
+    </span>
+  </LinkedCard>
+</div>

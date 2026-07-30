@@ -121,7 +121,22 @@ export const vizSection: Array<Section> = [
     document: true,
     pages: [
       { id: 'detail', label: 'viz.detailTable' },
-      { id: 'model', label: 'viz.tableModel' },
+      {
+        id: 'model',
+        label: 'viz.tableModel',
+        children: [
+          { id: 'structure', label: 'viz.tableModelStructure' },
+          { id: 'presentation', label: 'viz.tableModelPresentation' },
+          { id: 'layout', label: 'viz.tableModelLayout' },
+          { id: 'manifest', label: 'viz.tableModelManifest' },
+        ],
+        meta: {
+          pageType: 'concept',
+          audience: 'integrator',
+          capability: 'table.model',
+          sourceOfTruth: 'runtime',
+        },
+      },
       {
         id: 'reference',
         label: 'viz.tableReference',
