@@ -143,6 +143,8 @@
     "tableReference": "API Reference",
     "tableReferenceContractTable": "Contract - Table",
     "tableReferenceContractDetail": "Contract - Detail Table",
+    "tableReferenceContractLayout": "Contract - Layout",
+    "tableReferenceManifest": "Contract - Artifact",
     "tableReferenceRuntime": "Runtime",
     "dataModel": "Data Model",
     "dataModelContract": "Field Contract",

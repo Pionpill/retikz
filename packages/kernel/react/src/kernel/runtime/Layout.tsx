@@ -5,6 +5,7 @@ import type {
   ClipDefinition,
   CompileArtifact,
   CompileArtifactOptions,
+  CoreProgramOptions,
   IRAnimationTrack,
   IRScene,
   IRViewBox,
@@ -13,37 +14,28 @@ import type {
   PathKindDefinition,
   PatternDefinition,
   RibbonWidthProfileDefinition,
-  Scene,
   ShapeDefinition,
   TextMeasurer,
 } from '@retikz/core';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
-import type { CSSProperties, FC, MutableRefObject, ReactElement, ReactNode, Ref } from 'react';
+import type { CSSProperties, FC, ReactNode, Ref } from 'react';
 
 import { compileToScene } from '@retikz/core';
-import { bindWaapiDescriptors, resolveAnimationEnabled, sceneHasAnimations } from '@retikz/render/animation';
-import {
-  createContextBuilder,
-  createHydrationController,
-  createSvgAnimationControls,
-  locateSvg,
-  resolvePointViaLayout,
-  resolveSvgElement,
-} from '@retikz/render/hydration';
-import { buildSvgDocument } from '@retikz/render/svg';
-import { cloneElement, useCallback, useEffect, useId, useMemo, useRef } from 'react';
+import { resolveAnimationEnabled } from '@retikz/render/animation';
+import { useId, useMemo } from 'react';
 
 import type { EmbeddableContributionRecord, EmbeddableTier2Adapter, ScopeStyleProps } from '../protocol';
+import type { LayoutRuntimeOptions } from './runtime-options';
 
 import { usePrefersReducedMotion } from '../../render/animation';
-import { CanvasHost } from '../../render/canvas';
-import { svgToReact } from '../../render/svg';
+import { RetainedHost, StaticHost } from '../../render/runtime';
 import { browserMeasurer } from '../../render/text';
 import { buildIRWithContributions, pickScopeStyle, wrapRootScope } from '../adapter';
 import { useAnimationMode } from './animation-context';
 import { collectHydrationHandlers } from './collect-hydration-handlers';
 import { useRendererMode } from './renderer-context';
+import { captureLayoutRuntimeOptions, LayoutRuntimeMode } from './runtime-options';
 
 const styleFontFamily = (style: CSSProperties | undefined): string | undefined => {
   const fontFamily = style?.fontFamily;
@@ -52,6 +44,32 @@ const styleFontFamily = (style: CSSProperties | undefined): string | undefined =
 
 /** 同一条诊断消息进程内只 `console.warn` 一次，避免组件重复 render 时刷屏 */
 const warnedMessages = new Set<string>();
+const EMPTY_COMPOSITES: ReadonlyArray<AnyCompositeDefinition> = Object.freeze([]);
+
+type DefinitionArrayNode = {
+  children: WeakMap<object, DefinitionArrayNode>;
+  value?: ReadonlyArray<object>;
+};
+
+const definitionArrayRoot: DefinitionArrayNode = { children: new WeakMap() };
+
+/** 按有序元素 identity 规范化 Definition 容器，避免等价 inline 数组重建 Runtime session */
+const canonicalizeDefinitionArray = <TDefinition extends object>(
+  definitions: ReadonlyArray<TDefinition> | undefined,
+): ReadonlyArray<TDefinition> | undefined => {
+  if (definitions === undefined || definitions.length === 0) return undefined;
+  let current = definitionArrayRoot;
+  for (const definition of definitions) {
+    let child = current.children.get(definition);
+    if (child === undefined) {
+      child = { children: new WeakMap() };
+      current.children.set(definition, child);
+    }
+    current = child;
+  }
+  current.value ??= Object.freeze([...definitions]);
+  return current.value as ReadonlyArray<TDefinition>;
+};
 const warnOnce = (message: string): void => {
   if (warnedMessages.has(message)) return;
   warnedMessages.add(message);
@@ -65,12 +83,6 @@ const withDefaultFontFamily = (measureText: TextMeasurer, defaultFontFamily: str
       ...font,
       family: typeof font.family === 'string' && font.family.trim().length > 0 ? font.family : defaultFontFamily,
     });
-};
-
-/** 写入 ref（兼容 callback ref 与 RefObject）；value 为 null 表示清空 */
-const assignRef = <T,>(ref: Ref<T> | undefined, value: T): void => {
-  if (typeof ref === 'function') ref(value);
-  else if (ref) (ref as MutableRefObject<T>).current = value;
 };
 
 /**
@@ -136,6 +148,8 @@ export type LayoutProps = ScopeStyleProps & {
    *   （svg root 或 `<canvas>`），svg / canvas 双模共用同一注册表与分发
    */
   handlers?: HydrationHandlers;
+  /** 宿主执行模式与 retained Runtime session 配置 */
+  runtime?: LayoutRuntimeOptions;
   /** SVG 元素宽度（CSS 长度或数字） */
   width?: number | string;
   /** SVG 元素高度（CSS 长度或数字） */
@@ -273,52 +287,6 @@ export type LayoutProps = ScopeStyleProps & {
 };
 
 /**
- * 把水合 handler 注册表绑到 svg figure root（renderer 无关控制器 + locateSvg 定位）
- * @description JSX / `ir` 两路收集出的 `HydrationHandlers` 经 `createHydrationController(root, handlers, locateSvg)`
- *   绑到 svg root DOM（由 callback ref 在挂载后写入）；canvas 模式的绑定在 `CanvasHost` 内（hitTest 定位）、
- *   此处不接管。`locateSvg` 走 `event.target.closest('[data-retikz-id]')` 反查图元 id。卸载 / 依赖变化时 dispose、重建
- */
-const useSvgRootBinding = (
-  handlers: HydrationHandlers,
-  scene: Scene,
-  hasAnimations: boolean,
-  publishAnimation: (controls: AnimationControls | null) => void,
-): ((element: SVGSVGElement | null) => void) => {
-  const rootRef = useRef<SVGSVGElement | null>(null);
-  const setRoot = useCallback((element: SVGSVGElement | null) => {
-    rootRef.current = element;
-  }, []);
-  useEffect(() => {
-    const root = rootRef.current;
-    if (root === null) return undefined;
-    // svg 富 context：meta / geometry 经 Scene 按 id 聚合；element 经 closest；point 逆 meet-fit；
-    // 动画控制经 data-retikz-id / data-retikz-animation-owner 双查 getAnimations per-id。scene 变 → effect 重跑、重建。
-    const buildContext = createContextBuilder({
-      renderer: 'svg',
-      root,
-      scene,
-      resolveElement: resolveSvgElement,
-      resolvePoint: resolvePointViaLayout(root, scene.layout),
-      makeAnimation: id => createSvgAnimationControls(root, id),
-    });
-    const controller = createHydrationController(root, handlers, locateSvg, buildContext);
-    return () => controller.dispose();
-  }, [handlers, scene]);
-  // 交互 track（visible / manual / onEvent）经 WAAPI 桥按 trigger 驱动；load track 已由内联 CSS 自播
-  useEffect(() => {
-    const root = rootRef.current;
-    if (root === null || !hasAnimations) return undefined;
-    const controls = bindWaapiDescriptors(root);
-    publishAnimation(controls); // 命令式句柄出口（manual/visible/onEvent 的 WAAPI 控制）
-    return () => {
-      controls.dispose();
-      publishAnimation(null);
-    };
-  }, [hasAnimations, scene, publishAnimation]);
-  return setRoot;
-};
-
-/**
  * <Layout> 顶层容器
  * @description children 模式写 Kernel / Sugar JSX；`ir` 模式直接传入 JSON IR。组件负责计算图形尺寸、
  *   选择 SVG 或 Canvas 输出、绑定事件水合和动画控制
@@ -356,7 +324,19 @@ export const Layout: FC<LayoutProps> = props => {
     onArtifacts,
     embeddables,
     handlers,
+    runtime,
   } = props;
+  const resolvedRuntime = captureLayoutRuntimeOptions(runtime);
+  const stableShapes = canonicalizeDefinitionArray(shapes);
+  const stableBoundaries = canonicalizeDefinitionArray(boundaries);
+  const stableClips = canonicalizeDefinitionArray(clips);
+  const stableArrows = canonicalizeDefinitionArray(arrows);
+  const stablePatterns = canonicalizeDefinitionArray(patterns);
+  const stablePathGenerators = canonicalizeDefinitionArray(pathGenerators);
+  const stablePathKinds = canonicalizeDefinitionArray(pathKinds);
+  const stableRibbonWidthProfiles = canonicalizeDefinitionArray(ribbonWidthProfiles);
+  const stableComposites = canonicalizeDefinitionArray(composites);
+  const stableEmbeddables = canonicalizeDefinitionArray(embeddables);
   const reducedMotion = usePrefersReducedMotion();
   const animationMode = useAnimationMode();
   const resolvedAnimateProp =
@@ -424,8 +404,8 @@ export const Layout: FC<LayoutProps> = props => {
     () =>
       irFromProp !== undefined
         ? { ir: irFromProp, contributions: [] as Array<EmbeddableContributionRecord> }
-        : buildIRWithContributions(wrapRootScope(children, scopeStyle), embeddables),
-    [irFromProp, children, scopeStyle, embeddables],
+        : buildIRWithContributions(wrapRootScope(children, scopeStyle), stableEmbeddables),
+    [irFromProp, children, scopeStyle, stableEmbeddables],
   );
   const ir = useMemo(() => {
     const base = built.ir;
@@ -440,89 +420,69 @@ export const Layout: FC<LayoutProps> = props => {
   // 可嵌入贡献按 namespace 聚合成 composite 定义，再拼接用户显式 composites（用户优先级后置、可覆盖语义由 compile 决定）
   const aggregatedComposites = useMemo(() => {
     const fromEmbeddables = aggregateEmbeddableComposites(built.contributions);
-    return composites !== undefined ? [...fromEmbeddables, ...composites] : fromEmbeddables;
-  }, [built.contributions, composites]);
+    if (fromEmbeddables.length === 0) return stableComposites ?? EMPTY_COMPOSITES;
+    return stableComposites !== undefined ? [...fromEmbeddables, ...stableComposites] : fromEmbeddables;
+  }, [built.contributions, stableComposites]);
   const defaultFontFamily = styleFontFamily(style);
   const measureText = useMemo(() => withDefaultFontFamily(browserMeasurer, defaultFontFamily), [defaultFontFamily]);
   const compileArtifacts = useMemo<CompileArtifactOptions | undefined>(
     () => (artifacts?.nodeLayouts === true ? { nodeLayouts: true } : undefined),
     [artifacts?.nodeLayouts],
   );
-  const compiledLayout = useMemo(
-    () =>
-      compileToScene(ir, {
-        measureText,
-        nodeDistance,
-        fontSize,
-        shapes,
-        boundaries,
-        clips,
-        arrows,
-        patterns,
-        pathGenerators,
-        pathKinds,
-        ribbonWidthProfiles,
-        composites: aggregatedComposites,
-        lowerTex,
-        artifacts: compileArtifacts,
-      }),
-    [
-      ir,
+  const coreOptions = useMemo<CoreProgramOptions>(
+    () => ({
       measureText,
       nodeDistance,
       fontSize,
-      shapes,
-      boundaries,
-      clips,
-      arrows,
-      patterns,
-      pathGenerators,
-      pathKinds,
-      ribbonWidthProfiles,
+      shapes: stableShapes,
+      boundaries: stableBoundaries,
+      clips: stableClips,
+      arrows: stableArrows,
+      patterns: stablePatterns,
+      pathGenerators: stablePathGenerators,
+      pathKinds: stablePathKinds,
+      ribbonWidthProfiles: stableRibbonWidthProfiles,
+      composites: aggregatedComposites,
+      lowerTex,
+      artifacts: compileArtifacts,
+    }),
+    [
+      measureText,
+      nodeDistance,
+      fontSize,
+      stableShapes,
+      stableBoundaries,
+      stableClips,
+      stableArrows,
+      stablePatterns,
+      stablePathGenerators,
+      stablePathKinds,
+      stableRibbonWidthProfiles,
       aggregatedComposites,
       lowerTex,
       compileArtifacts,
     ],
   );
+  const compiledLayout = useMemo(() => compileToScene(ir, coreOptions), [ir, coreOptions]);
   const scene = compiledLayout.scene;
-  const onArtifactsRef = useRef(onArtifacts);
-  useEffect(() => {
-    onArtifactsRef.current = onArtifacts;
-  }, [onArtifacts]);
-  useEffect(() => {
-    onArtifactsRef.current?.(compiledLayout.artifacts);
-  }, [compiledLayout.artifacts]);
 
   // useId 返回 ":r0:" 含冒号；SVG `url(#id)` 对冒号兼容性差，剥成纯字母数字。caller 显式 idPrefix 优先（SSR 水合对齐）
   const rawId = useId();
   const resolvedIdPrefix = idPrefix ?? rawId.replace(/[^a-zA-Z0-9]/g, '');
-  const doc = useMemo(
-    () =>
-      renderer === 'canvas'
-        ? null
-        : buildSvgDocument(scene, { idPrefix: resolvedIdPrefix, animate, snapshotAt, easings }),
-    [renderer, scene, resolvedIdPrefix, animate, snapshotAt, easings],
-  );
 
   // 水合 handler 注册表：JSX 模式从 children 同源收集，`ir` prop 模式用 `handlers` prop（无 children 可收集）
   const resolvedHandlers = useMemo(
-    () => (irFromProp !== undefined ? (handlers ?? {}) : collectHydrationHandlers(children, embeddables)),
-    [irFromProp, handlers, children, embeddables],
+    () => (irFromProp !== undefined ? (handlers ?? {}) : collectHydrationHandlers(children, stableEmbeddables)),
+    [irFromProp, handlers, children, stableEmbeddables],
   );
 
-  // svg root 的 callback ref——水合控制器（createHydrationController + locateSvg）+ 交互动画 WAAPI 桥绑定的 figure root
-  const hasAnimations = renderer !== 'canvas' && animate && sceneHasAnimations(scene);
-  // 命令式动画句柄出口（与 vanilla view.animation 对等）；svg 走 WAAPI 句柄、canvas 走 CanvasHost 的 rAF 时钟
-  const publishAnimation = useCallback(
-    (controls: AnimationControls | null) => assignRef(animationRef, controls),
-    [animationRef],
-  );
-  const setRoot = useSvgRootBinding(resolvedHandlers, scene, hasAnimations, publishAnimation);
-
-  if (renderer === 'canvas') {
+  if (resolvedRuntime.mode === LayoutRuntimeMode.Static) {
     return (
-      <CanvasHost
+      <StaticHost
+        key={`${resolvedRuntime.mode}:${renderer}:${resolvedIdPrefix}`}
+        backend={renderer}
         scene={scene}
+        artifacts={compiledLayout.artifacts}
         handlers={resolvedHandlers}
         width={width}
         height={height}
@@ -533,13 +493,34 @@ export const Layout: FC<LayoutProps> = props => {
         animationRef={animationRef}
         easings={easings}
         animationProperties={animationProperties}
+        idPrefix={resolvedIdPrefix}
+        onArtifacts={onArtifacts}
       />
     );
   }
 
-  // Scene → 中性 SvgNode 描述树（buildSvgDocument 内部完成 arrow dedup / defs 组装 / id 前缀派生）→ React 元素
-  const svgEl = svgToReact(doc as NonNullable<typeof doc>) as ReactElement;
-
-  // svg 元素级附加（width / height / className / 框架 style）由 react 层补：非 svg 包职责
-  return cloneElement(svgEl, { width, height, className, style, ref: setRoot });
+  return (
+    <RetainedHost
+      key={`${resolvedRuntime.mode}:${renderer}:${resolvedIdPrefix}`}
+      backend={renderer}
+      source={ir}
+      scene={scene}
+      coreOptions={coreOptions}
+      handlers={resolvedHandlers}
+      width={width}
+      height={height}
+      className={className}
+      style={style}
+      animate={animate}
+      snapshotAt={snapshotAt}
+      animationRef={animationRef}
+      easings={easings}
+      animationProperties={animationProperties}
+      idPrefix={resolvedIdPrefix}
+      rendererFactory={resolvedRuntime.rendererFactory}
+      updateStrategy={resolvedRuntime.updateStrategy}
+      onDiagnostic={resolvedRuntime.onDiagnostic}
+      onArtifacts={onArtifacts}
+    />
+  );
 };

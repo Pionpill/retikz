@@ -13,9 +13,9 @@ const pkg = JSON.parse(readFileSync(path.resolve(here, '../../package.json'), 'u
 const readSrc = (f: string) => readFileSync(path.resolve(here, '../../src', f), 'utf8');
 
 describe('@retikz/vanilla 架构守卫', () => {
-  it('no-react-dep：运行时依赖仅 core/render，无 react', () => {
+  it('no-react-dep：运行时依赖仅 core/render/runtime，无 react', () => {
     const deps = Object.keys(pkg.dependencies ?? {}).sort();
-    expect(deps).toEqual(['@retikz/core', '@retikz/render']);
+    expect(deps).toEqual(['@retikz/core', '@retikz/render', '@retikz/runtime']);
     expect(JSON.stringify(pkg)).not.toContain('@retikz/react');
     expect(pkg.dependencies).not.toHaveProperty('react');
   });

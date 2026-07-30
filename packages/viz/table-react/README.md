@@ -3,7 +3,7 @@
 React bindings for [`@retikz/table`](../table), retikz's renderer-agnostic Tier 2 table package.
 
 Use `Table` with a complete `IRTableSpec`, `DetailTable` for record-per-row data, or `ManualTable`
-for explicit dimensions and Cells. Detail and manual authoring delegate to `@retikz/table`, so all
+for explicit row-major Cells. Detail and manual authoring delegate to `@retikz/table`, so all
 three entries use the same lowering and layout manifest. The sugar entries retain precise
 `IRDetailTableSpec` / `IRManualTableSpec` values; `Table` accepts the aggregate `IRTableSpec` union.
 
@@ -34,14 +34,14 @@ import { DetailColumn, DetailTable } from '@retikz/table-react';
 </DetailTable>;
 ```
 
-`ManualTable` likewise accepts the complete `cells` / `rowKinds` props or nested `Row` and `Cell`
-markers. Dimensions always remain explicit on the root component, while spans reserve occupied slots
-across later rows:
+`ManualTable` accepts the same rectangular `rows` persisted by `@retikz/table`, or nested `Row` and
+`Cell` markers. Marker mode infers the maximum occupied width and pads unoccupied coordinates with
+`null`; spans reserve occupied slots across later rows:
 
 ```tsx
 import { Cell, ManualTable, Row } from '@retikz/table-react';
 
-<ManualTable rows={2} columns={3}>
+<ManualTable>
   <Row kind="columnHeader">
     <Cell span={{ columns: 2 }}>Identity</Cell>
     <Cell>Score</Cell>
@@ -57,6 +57,10 @@ import { Cell, ManualTable, Row } from '@retikz/table-react';
 `DetailColumn`, `Row`, and `Cell` are React authoring markers: they compile to the same TableSpec
 forms as their respective plain props. `<Table>` remains the entry for callers that already hold a
 complete TableSpec.
+
+For persisted or props-based authoring, scalar entries are value shorthands, `null` means no Cell,
+and `{ value: null }` means a real null-valued Cell. Rich value/content objects carry span, layout,
+presentation, semantic fields, or direct Core/Tier 2 content.
 
 All three root components work standalone or as Tier 2 children of `@retikz/react` `Layout`.
 Standalone roots reuse the supported `Layout` host surface and observe `onManifest` from the same

@@ -89,9 +89,9 @@ const textElementToLineSpec = (el: ReactElement): IRLineSpec | undefined => {
   }
   return {
     text,
-    fill: props.fill,
-    opacity: props.opacity,
-    font: props.font,
+    ...(props.fill === undefined ? {} : { fill: props.fill }),
+    ...(props.opacity === undefined ? {} : { opacity: props.opacity }),
+    ...(props.font === undefined ? {} : { font: props.font }),
   };
 };
 

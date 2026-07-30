@@ -1,3 +1,10 @@
+import { CompositeContractError } from '../probe-failure';
+import {
+  assertProviderOutputKeys,
+  providerOutputRecord,
+  withProviderOutputValidationBoundary,
+} from '../scene-primitive';
+
 /** 字体规格：传给 TextMeasurer 的最小信息 */
 export type FontSpec = {
   /**
@@ -50,51 +57,66 @@ export type NormalizedTextMetrics = {
 };
 
 /** 校验并规范化单次文字度量结果 */
-export const normalizeTextMetrics = (metrics: TextMetrics): NormalizedTextMetrics => {
-  const assertMetric = (name: keyof TextMetrics, value: number): void => {
-    if (!Number.isFinite(value) || value < 0) {
-      throw new Error(`normalizeTextMetrics: invalid ${name} '${value}'; must be a non-negative finite number`);
+export const normalizeTextMetrics = (metrics: TextMetrics): NormalizedTextMetrics =>
+  withProviderOutputValidationBoundary('normalizeTextMetrics', () => {
+    const candidate = providerOutputRecord('normalizeTextMetrics', metrics, 'text metrics');
+    assertProviderOutputKeys(
+      'normalizeTextMetrics',
+      candidate,
+      ['width', 'height', 'ascent', 'descent'],
+      'text metrics',
+    );
+    const width = candidate.width;
+    const height = candidate.height;
+    const rawAscent = candidate.ascent;
+    const rawDescent = candidate.descent;
+    const assertMetric = (name: keyof TextMetrics, value: unknown): number => {
+      if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+        throw new CompositeContractError(
+          `normalizeTextMetrics: invalid ${name} '${String(value)}'; must be a non-negative finite number`,
+        );
+      }
+      return value;
+    };
+
+    const normalizedWidth = assertMetric('width', width);
+    const normalizedHeight = assertMetric('height', height);
+    const measuredAscent = rawAscent === undefined ? undefined : assertMetric('ascent', rawAscent);
+    const measuredDescent = rawDescent === undefined ? undefined : assertMetric('descent', rawDescent);
+
+    let ascent: number;
+    let descent: number;
+    if (measuredAscent !== undefined && measuredDescent !== undefined) {
+      const measuredVerticalSpan = measuredAscent + measuredDescent;
+      if (!Number.isFinite(measuredVerticalSpan)) {
+        throw new CompositeContractError(
+          `normalizeTextMetrics: invalid ascent/descent sum '${measuredVerticalSpan}'; must be a non-negative finite number`,
+        );
+      }
+      const visualHeight = Math.max(normalizedHeight, measuredVerticalSpan);
+      const leadingHalf = (visualHeight - measuredVerticalSpan) / 2;
+      ascent = measuredAscent + leadingHalf;
+      descent = measuredDescent + leadingHalf;
+    } else if (measuredAscent !== undefined) {
+      const visualHeight = Math.max(normalizedHeight, measuredAscent);
+      ascent = measuredAscent;
+      descent = visualHeight - measuredAscent;
+    } else if (measuredDescent !== undefined) {
+      const visualHeight = Math.max(normalizedHeight, measuredDescent);
+      ascent = visualHeight - measuredDescent;
+      descent = measuredDescent;
+    } else {
+      ascent = normalizedHeight / 2;
+      descent = normalizedHeight / 2;
     }
-  };
 
-  assertMetric('width', metrics.width);
-  assertMetric('height', metrics.height);
-  if (metrics.ascent !== undefined) assertMetric('ascent', metrics.ascent);
-  if (metrics.descent !== undefined) assertMetric('descent', metrics.descent);
-
-  let ascent: number;
-  let descent: number;
-  if (metrics.ascent !== undefined && metrics.descent !== undefined) {
-    const measuredVerticalSpan = metrics.ascent + metrics.descent;
-    if (!Number.isFinite(measuredVerticalSpan)) {
-      throw new Error(
-        `normalizeTextMetrics: invalid ascent/descent sum '${measuredVerticalSpan}'; must be a non-negative finite number`,
-      );
-    }
-    const visualHeight = Math.max(metrics.height, measuredVerticalSpan);
-    const leadingHalf = (visualHeight - measuredVerticalSpan) / 2;
-    ascent = metrics.ascent + leadingHalf;
-    descent = metrics.descent + leadingHalf;
-  } else if (metrics.ascent !== undefined) {
-    const visualHeight = Math.max(metrics.height, metrics.ascent);
-    ascent = metrics.ascent;
-    descent = visualHeight - metrics.ascent;
-  } else if (metrics.descent !== undefined) {
-    const visualHeight = Math.max(metrics.height, metrics.descent);
-    ascent = visualHeight - metrics.descent;
-    descent = metrics.descent;
-  } else {
-    ascent = metrics.height / 2;
-    descent = metrics.height / 2;
-  }
-
-  return {
-    width: metrics.width,
-    height: ascent + descent,
-    ascent,
-    descent,
-  };
-};
+    return Object.freeze({
+      width: normalizedWidth,
+      height: ascent + descent,
+      ascent,
+      descent,
+    });
+  });
 
 /** 文字度量函数接口 */
 export type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;

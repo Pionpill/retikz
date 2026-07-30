@@ -25,6 +25,8 @@ export type IdClockRegistry = {
   isActive: (id: string | undefined) => boolean;
   /** 该 id 是否处于 stop（渲染 base，跳过全部 track） */
   isStopped: (id: string | undefined) => boolean;
+  /** 是否至少有一个 id 正在驱动非自动播 track */
+  hasActive: () => boolean;
   /** 播放 / 继续：清暂停、激活非自动播 track */
   play: (id: string, globalTime: number) => void;
   /** 暂停：定格在当前有效时刻 */
@@ -35,6 +37,16 @@ export type IdClockRegistry = {
   stop: (id: string) => void;
   /** 跳到有效时刻 timeMs */
   seek: (id: string, timeMs: number, globalTime: number) => void;
+  /** public id 改名时迁移既有虚拟时钟态 */
+  rekey: (from: string, to: string) => void;
+  /** 保留激活/暂停语义并把该 id 时间轴归零 */
+  restartTimeline: (id: string, globalTime: number) => void;
+  /** occurrence 移除后释放该 id 的虚拟时钟态 */
+  remove: (id: string) => void;
+  /** 捕获当前全部虚拟时钟态，供 renderer transaction rollback */
+  capture: () => ReadonlyArray<readonly [string, Readonly<IdEntry>]>;
+  /** 恢复先前捕获的虚拟时钟态 */
+  restore: (snapshot: ReadonlyArray<readonly [string, Readonly<IdEntry>]>) => void;
 };
 
 /** 创建按 id 的虚拟时钟登记表 */
@@ -57,6 +69,7 @@ export const createIdClockRegistry = (): IdClockRegistry => {
     },
     isActive: id => (id === undefined ? false : (map.get(id)?.active ?? false)),
     isStopped: id => (id === undefined ? false : (map.get(id)?.stopped ?? false)),
+    hasActive: () => Array.from(map.values()).some(entry => entry.active && !entry.stopped),
     play: (id, globalTime) => {
       const entry = ensure(id);
       if (entry.pausedAt !== null) {
@@ -90,6 +103,26 @@ export const createIdClockRegistry = (): IdClockRegistry => {
       entry.active = true;
       if (entry.pausedAt !== null) entry.pausedAt = timeMs;
       else entry.offset = globalTime - timeMs;
+    },
+    rekey: (from, to) => {
+      if (from === to) return;
+      const entry = map.get(from);
+      map.delete(from);
+      if (entry !== undefined) map.set(to, entry);
+    },
+    restartTimeline: (id, globalTime) => {
+      const entry = ensure(id);
+      entry.offset = globalTime;
+      if (entry.pausedAt !== null) entry.pausedAt = 0;
+      entry.stopped = false;
+    },
+    remove: id => {
+      map.delete(id);
+    },
+    capture: () => Object.freeze(Array.from(map, ([id, entry]) => [id, Object.freeze({ ...entry })] as const)),
+    restore: snapshot => {
+      map.clear();
+      for (const [id, entry] of snapshot) map.set(id, { ...entry });
     },
   };
 };

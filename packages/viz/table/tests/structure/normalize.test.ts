@@ -17,11 +17,6 @@ import {
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { presentTable } from '../../src/pipeline/presentation';
 
-const bodyCell = (row: number, column: number, value: string | number | boolean | null) => ({
-  address: { row, column },
-  payload: { kind: 'value' as const, value },
-});
-
 describe('normalizeTableStructure', () => {
   it('exports stable source discriminator values', () => {
     expect(TableCellSourceKind).toEqual({ Manual: 'manual', Field: 'field', Generated: 'generated' });
@@ -30,13 +25,15 @@ describe('normalizeTableStructure', () => {
   it('normalizes manual cells to stable canonical identity and semantics', () => {
     const model = normalizeTableStructure({
       kind: 'manual',
-      rows: 2,
-      columns: 2,
-      cells: [bodyCell(0, 1, 'A'), { ...bodyCell(1, 0, 2), id: 'score' }],
+      rows: [
+        ['Name', { value: false }],
+        [null, { value: null, id: 'null-value' }],
+      ],
+      rowKinds: [TableRowKind.ColumnHeader, TableRowKind.Body],
     });
 
     expect(model.rows).toEqual([
-      { id: 'row.0', index: 0, kind: TableRowKind.Body },
+      { id: 'row.0', index: 0, kind: TableRowKind.ColumnHeader },
       { id: 'row.1', index: 1, kind: TableRowKind.Body },
     ]);
     expect(model.columns).toEqual([
@@ -45,14 +42,34 @@ describe('normalizeTableStructure', () => {
     ]);
     expect(model.cells).toEqual([
       {
+        id: 'cell.r0.c0',
+        rowId: 'row.0',
+        columnId: 'column.0',
+        rowIndex: 0,
+        columnIndex: 0,
+        location: TableCellLocation.ColumnHeader,
+        roles: [TableCellRole.ColumnHeader],
+        payload: { kind: 'value', value: 'Name' },
+        span: { rows: 1, columns: 1 },
+        layout: {
+          padding: { top: 0, right: 0, bottom: 0, left: 0 },
+          horizontalAlign: 'center',
+          verticalAlign: 'center',
+          wrap: false,
+          fit: 'none',
+          overflow: 'visible',
+        },
+        source: { kind: 'manual', row: 0, column: 0 },
+      },
+      {
         id: 'cell.r0.c1',
         rowId: 'row.0',
         columnId: 'column.1',
         rowIndex: 0,
         columnIndex: 1,
-        location: TableCellLocation.Body,
-        roles: [TableCellRole.Data],
-        payload: { kind: 'value', value: 'A' },
+        location: TableCellLocation.ColumnHeader,
+        roles: [TableCellRole.ColumnHeader],
+        payload: { kind: 'value', value: false },
         span: { rows: 1, columns: 1 },
         layout: {
           padding: { top: 0, right: 0, bottom: 0, left: 0 },
@@ -62,17 +79,17 @@ describe('normalizeTableStructure', () => {
           fit: 'none',
           overflow: 'visible',
         },
-        source: { kind: 'manual', cellIndex: 0 },
+        source: { kind: 'manual', row: 0, column: 1 },
       },
       {
-        id: 'score',
+        id: 'null-value',
         rowId: 'row.1',
-        columnId: 'column.0',
+        columnId: 'column.1',
         rowIndex: 1,
-        columnIndex: 0,
+        columnIndex: 1,
         location: TableCellLocation.Body,
         roles: [TableCellRole.Data],
-        payload: { kind: 'value', value: 2 },
+        payload: { kind: 'value', value: null },
         span: { rows: 1, columns: 1 },
         layout: {
           padding: { top: 0, right: 0, bottom: 0, left: 0 },
@@ -82,7 +99,7 @@ describe('normalizeTableStructure', () => {
           fit: 'none',
           overflow: 'visible',
         },
-        source: { kind: 'manual', cellIndex: 1 },
+        source: { kind: 'manual', row: 1, column: 1 },
       },
     ]);
     expect(Object.isFrozen(model)).toBe(true);
@@ -94,10 +111,8 @@ describe('normalizeTableStructure', () => {
   it('materializes manual header/body location and rejects semantic mismatches', () => {
     const model = normalizeTableStructure({
       kind: 'manual',
-      rows: 2,
-      columns: 1,
+      rows: [['Name'], ['Ada']],
       rowKinds: [TableRowKind.ColumnHeader, TableRowKind.Body],
-      cells: [bodyCell(0, 0, 'Name'), bodyCell(1, 0, 'Ada')],
     });
 
     expect(model.cells.map(cell => [cell.location, cell.roles])).toEqual([
@@ -107,35 +122,40 @@ describe('normalizeTableStructure', () => {
     expect(() =>
       normalizeTableStructure({
         kind: 'manual',
-        rows: 1,
-        columns: 1,
+        rows: [[{ value: 'Name', location: TableCellLocation.Body, roles: [TableCellRole.Data] }]],
         rowKinds: [TableRowKind.ColumnHeader],
-        cells: [{ ...bodyCell(0, 0, 'Name'), location: TableCellLocation.Body, roles: [TableCellRole.Data] }],
       }),
     ).toThrow(/table: structure "manual"/);
   });
 
-  it('allows empty manual cells but rejects duplicate, out-of-range, and duplicate ids', () => {
-    expect(normalizeTableStructure({ kind: 'manual', rows: 1, columns: 1, cells: [] }).cells).toEqual([]);
+  it('preserves all-null tracks and rejects occupied span slots, out-of-range spans, and duplicate ids', () => {
+    const empty = normalizeTableStructure({
+      kind: 'manual',
+      rows: [
+        [null, null],
+        [null, null],
+      ],
+    });
+    expect(empty.rows).toHaveLength(2);
+    expect(empty.columns).toHaveLength(2);
+    expect(empty.cells).toEqual([]);
     expect(() =>
       normalizeTableStructure({
         kind: 'manual',
-        rows: 1,
-        columns: 1,
-        cells: [bodyCell(0, 0, 1), bodyCell(0, 0, 2)],
+        rows: [[{ value: 1, span: { columns: 2 } }, 2]],
       }),
     ).toThrow(/overlaps/i);
-    expect(() => normalizeTableStructure({ kind: 'manual', rows: 1, columns: 1, cells: [bodyCell(1, 0, 1)] })).toThrow(
-      /row/i,
+    expect(() => normalizeTableStructure({ kind: 'manual', rows: [[{ value: 1, span: { rows: 2 } }]] })).toThrow(
+      /span range/i,
     );
     expect(() =>
       normalizeTableStructure({
         kind: 'manual',
-        rows: 1,
-        columns: 2,
-        cells: [
-          { ...bodyCell(0, 0, 1), id: 'same' },
-          { ...bodyCell(0, 1, 2), id: 'same' },
+        rows: [
+          [
+            { value: 1, id: 'same' },
+            { value: 2, id: 'same' },
+          ],
         ],
       }),
     ).toThrow(/duplicate.*same/i);
@@ -300,12 +320,7 @@ describe('normalizeTableStructure', () => {
   it('presents canonical cells without changing semantic identity or order', () => {
     const semantic = normalizeTableStructure({
       kind: 'manual',
-      rows: 1,
-      columns: 2,
-      cells: [
-        bodyCell(0, 0, 'A'),
-        { address: { row: 0, column: 1 }, payload: { kind: 'content', content: { type: 'node', position: [0, 0] } } },
-      ],
+      rows: [['A', { content: { type: 'node', position: [0, 0] } }]],
     });
     const custom = defineCellPresentation({
       name: 'upper',
@@ -314,14 +329,7 @@ describe('normalizeTableStructure', () => {
     });
     const semanticWithCustom = normalizeTableStructure({
       kind: 'manual',
-      rows: 1,
-      columns: 1,
-      cells: [
-        {
-          address: { row: 0, column: 0 },
-          payload: { kind: 'value', value: 'custom', presentation: { name: 'upper' } },
-        },
-      ],
+      rows: [[{ value: 'custom', presentation: { name: 'upper' } }]],
     });
 
     const presented = presentTable(semantic);

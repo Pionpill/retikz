@@ -1,5 +1,5 @@
 import type { IRLabelDefault, IRNodeLabel } from '../../../schemas';
-import type { FontSpec, LowerTex, TextMeasurer } from '../../text';
+import type { FontSpec, TextMeasurer } from '../../text';
 import type { MeasuredNodeLabel, NodeLabelLayout, NodeLayout, NodeTextLayoutContext } from '../types';
 
 import { layoutInlineLine, normalizeTextMetrics, resolveFontSize, resolveLineRunsWithWarning } from '../../text';
@@ -23,27 +23,6 @@ const nodeLabelMeasurer =
   (text, font) =>
     normalizeTextMetrics(measureText(text, font));
 
-/** 只为 Node label 过滤非法 TeX 度量 */
-const nodeLabelLowerTex = (lowerTex: LowerTex | undefined): LowerTex | undefined =>
-  lowerTex === undefined
-    ? undefined
-    : (content, style) => {
-        const lowered = lowerTex(content, style);
-        if (lowered === null) return null;
-        if (
-          !Number.isFinite(lowered.width) ||
-          lowered.width < 0 ||
-          !Number.isFinite(lowered.height) ||
-          lowered.height < 0 ||
-          !Number.isFinite(lowered.depth) ||
-          lowered.depth < 0 ||
-          lowered.depth > lowered.height
-        ) {
-          return null;
-        }
-        return lowered;
-      };
-
 /** 测量节点附属 label，不读取 Node rect */
 export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredNodeLabel> | undefined => {
   const {
@@ -64,7 +43,6 @@ export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredN
   const texGatingOn = texLowering?.lowerTex !== undefined;
   const inlineWarn = texLowering?.warn ?? ((): void => {});
   const measureLabelText = nodeLabelMeasurer(measureText);
-  const lowerLabelTex = nodeLabelLowerTex(texLowering?.lowerTex);
   return rawLabels?.map(lab => {
     const labFont = lab.font;
     const labelBaseFontSize = resolveFontSize(labelDefault?.font?.size, {
@@ -92,7 +70,7 @@ export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredN
     const laid = isMixed
       ? layoutInlineLine(resolved.runs, {
           measureText: measureLabelText,
-          lowerTex: lowerLabelTex,
+          lowerTex: texLowering?.lowerTex,
           font: labFontSpec,
           rootFontSize,
           color: labTextColor,

@@ -53,5 +53,5 @@ export const extensionStatisticsControls = definePreviewControls({
 export const previewControlContract = {
   controls: extensionStatisticsControls,
   canonicalValues: {},
-  relatedApis: [],
+  relatedApis: ['defineStatisticsReducer', 'defineRowSelector'],
 } satisfies PreviewControlContract;

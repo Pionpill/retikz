@@ -1,5 +1,7 @@
 import type { NodeLayout } from './node';
 
+import { CompileInvariantError } from './probe-failure';
+
 /** namespace 栈当前写入/解析阶段 */
 export type NamespacePhase = 'registering' | 'resolving';
 
@@ -101,7 +103,7 @@ export class NamespaceStack {
   /** 返回当前顶层 frame 相对 base 的新增或覆盖项 */
   diffTopFrame(base: NamespaceStack): Array<NamespaceFrameChange> {
     if (this.frames.length !== base.frames.length) {
-      throw new Error('NamespaceStack.diffTopFrame: frame depth mismatch after isolated layout');
+      throw new CompileInvariantError('NamespaceStack.diffTopFrame: frame depth mismatch after isolated layout');
     }
     const frameIndex = this.frames.length - 1;
     const current = this.frames[frameIndex];
@@ -128,7 +130,7 @@ export class NamespaceStack {
    */
   commitForkChange(change: NamespaceFrameChange): boolean {
     if (this.currentPhase !== 'registering') {
-      throw new Error(
+      throw new CompileInvariantError(
         `NamespaceStack.commitForkChange('${change.id}'): only allowed during registering; current phase is '${this.currentPhase}'`,
       );
     }
@@ -161,7 +163,9 @@ export class NamespaceStack {
   /** 弹出栈顶 frame；根 frame 不可弹出 */
   popFrame(): void {
     if (this.frames.length <= 1) {
-      throw new Error('NamespaceStack.popFrame: cannot pop the root frame (internal invariant violated)');
+      throw new CompileInvariantError(
+        'NamespaceStack.popFrame: cannot pop the root frame (internal invariant violated)',
+      );
     }
     this.frames.pop();
     this.firstIrPaths.pop();
@@ -181,7 +185,7 @@ export class NamespaceStack {
   /** 注册 id 到栈顶 frame；返回是否覆盖了同 frame 旧值 */
   register(id: string, layout: NodeLayout, irPath?: string, state: NamespaceEntryState = 'resolved'): boolean {
     if (this.currentPhase !== 'registering') {
-      throw new Error(
+      throw new CompileInvariantError(
         `NamespaceStack.register('${id}'): only allowed during registering; current phase is '${this.currentPhase}'`,
       );
     }
@@ -213,18 +217,18 @@ export class NamespaceStack {
   /** 替换指定 frame 内已注册的 layout；用于 scope 占位升级，不触发重复 id 诊断 */
   replaceLayout(id: string, layout: NodeLayout, frameDepth: number, expectedCurrent?: NodeLayout): boolean {
     if (this.currentPhase !== 'registering') {
-      throw new Error(
+      throw new CompileInvariantError(
         `NamespaceStack.replaceLayout('${id}'): only allowed during registering; current phase is '${this.currentPhase}'`,
       );
     }
     if (frameDepth < 0 || frameDepth >= this.frames.length) {
-      throw new Error(
+      throw new CompileInvariantError(
         `NamespaceStack.replaceLayout('${id}'): frameDepth ${frameDepth} out of range (stack depth ${this.frames.length})`,
       );
     }
     const targetFrame = this.frames[frameDepth];
     if (!targetFrame.has(id)) {
-      throw new Error(
+      throw new CompileInvariantError(
         `NamespaceStack.replaceLayout('${id}'): id not previously registered in frame at depth ${frameDepth}`,
       );
     }

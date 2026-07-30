@@ -27,7 +27,7 @@ export const DetailTableSpecSchema = TableSpecBaseSchema.extend({
 
 export const ManualTableSpecSchema = TableSpecBaseSchema.extend({
   data: z.never().optional().describe('Manual Table specifications do not accept an external dataset reference.'),
-  structure: ManualTableStructureSchema.describe('Explicit rows, columns, and Cells for this manual Table.'),
+  structure: ManualTableStructureSchema.describe('Explicit row-major Cell matrix for this manual Table.'),
 }).describe('JSON-safe manual Table composite specification with explicit content.');
 
 export const CustomTableSpecSchema = TableSpecBaseSchema.extend({

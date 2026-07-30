@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { RuntimeProgramDefinitionInput } from '../../src/program';
 import type { RuntimeSessionUpdate } from '../../src/transaction';
@@ -29,6 +29,87 @@ describe('runtime session malformed JavaScript input', () => {
     expect(() => create({ owners: {}, programs: {} })).toThrowError(
       expect.objectContaining({ code: 'RUNTIME_REGISTRY_MISMATCH', phase: 'session-create' }),
     );
+  });
+
+  it('拒绝未知 updateStrategy，不把非法策略静默当成 auto', () => {
+    const owner = defineOwner();
+    const owners = createRuntimeOwnerRegistry({ builtins: [owner] });
+    const programs = createRuntimeProgramRegistry({ owners });
+    const create = createRuntimeSession as (value: unknown) => unknown;
+
+    expect(() =>
+      create({
+        owners,
+        programs,
+        updateStrategy: 'incremental',
+        initialSnapshots: [createRuntimeOwnerInput(owner, 1)],
+      }),
+    ).toThrowError(
+      expect.objectContaining({
+        code: 'RUNTIME_UPDATE_STRATEGY_INVALID',
+        phase: 'session-create',
+      }),
+    );
+  });
+
+  it('创建时复制 updateStrategy，后续修改 options 不改变既有 Session', () => {
+    const owner = defineOwner();
+    const owners = createRuntimeOwnerRegistry({ builtins: [owner] });
+    const update = vi.fn((_previous, view) => ({
+      kind: 'incremental' as const,
+      artifact: view.snapshot(owner).value,
+    }));
+    const program = defineRuntimeProgram<number, number, number, number>({
+      id: { owner: 'counter', key: 'immutable-strategy' },
+      owners: [owner],
+      programs: [],
+      tracePhases: [],
+      artifact: { capture: value => value, readForProgram: value => value, read: value => value },
+      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
+      update,
+    });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const options = {
+      owners,
+      programs,
+      updateStrategy: 'auto' as 'auto' | 'full',
+      initialSnapshots: [createRuntimeOwnerInput(owner, 1)],
+    };
+    const session = createRuntimeSession(options);
+    options.updateStrategy = 'full';
+
+    expect(
+      session.update({
+        baseRevision: session.revision(),
+        owners: [createRuntimeOwnerUpdate(owner, 2)],
+      }).outcome,
+    ).toBe('incremental');
+    expect(update).toHaveBeenCalledTimes(1);
+  });
+
+  it('拒绝 updateStrategy accessor，避免创建阶段执行外部 getter', () => {
+    const owner = defineOwner();
+    const owners = createRuntimeOwnerRegistry({ builtins: [owner] });
+    const programs = createRuntimeProgramRegistry({ owners });
+    const create = createRuntimeSession as (value: unknown) => unknown;
+    const getter = vi.fn(() => 'auto');
+    const options = Object.defineProperty(
+      {
+        owners,
+        programs,
+        initialSnapshots: [createRuntimeOwnerInput(owner, 1)],
+      },
+      'updateStrategy',
+      { enumerable: true, get: getter },
+    );
+
+    expect(() => create(options)).toThrowError(
+      expect.objectContaining({
+        code: 'RUNTIME_UPDATE_STRATEGY_INVALID',
+        phase: 'session-create',
+      }),
+    );
+    expect(getter).not.toHaveBeenCalled();
   });
 
   it('update null/primitive 不泄漏 TypeError', () => {

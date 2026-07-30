@@ -1,9 +1,10 @@
 import type { IRChild } from '@retikz/core';
 import type { IRDataScalarValue } from '@retikz/data';
-import type { IRTableCell, IRTablePresentationRef } from '@retikz/table';
+import type { IRManualTableCell, IRTablePresentationRef } from '@retikz/table';
 import type { FC } from 'react';
 
-type CellSharedProps = Omit<IRTableCell, 'address' | 'payload'>;
+type ManualTableCellObject = Extract<IRManualTableCell, object>;
+type CellSharedProps = Omit<ManualTableCellObject, 'value' | 'content' | 'presentation'>;
 
 type CellValueProps = {
   /** 作为 value payload 写入的 JSON 标量 */

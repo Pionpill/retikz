@@ -11,6 +11,7 @@ export default defineRetikzLibraryConfig({
     'src/canvas-node/index.ts',
     'src/hydration/index.ts',
     'src/animation/index.ts',
+    'src/runtime/index.ts',
   ],
   test: {
     environment: 'node',

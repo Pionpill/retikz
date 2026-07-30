@@ -6,7 +6,13 @@ import { z } from 'zod';
 
 import type { IRScene } from '../../src';
 
-import { compileToScene, CompositeBaseSchema, defineComposite } from '../../src';
+import {
+  compileToScene,
+  CompositeBaseSchema,
+  defineComposite,
+  LayoutChildProbeKind,
+  NaturalLayoutProposal,
+} from '../../src';
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
@@ -84,9 +90,9 @@ describe('compileToScene performance trace', () => {
         type: z.literal('replay'),
       }),
       compile: (_node, context) => {
-        const { layoutChild } = context;
-        const child = layoutChild({ type: 'node', id: 'replayed', position: [0, 0] }, { kind: 'intrinsic' });
-        return { children: [context.replay(child)] };
+        const child = context.layoutChild({ type: 'node', id: 'replayed', position: [0, 0] }, NaturalLayoutProposal);
+        if (child.kind === LayoutChildProbeKind.Failed) return context.raise(child.failure);
+        return { children: [context.replay(child.result)] };
       },
     });
 

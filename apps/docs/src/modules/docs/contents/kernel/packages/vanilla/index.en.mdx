@@ -1,6 +1,6 @@
 ---
 title: '@retikz/vanilla'
-description: Author figures outside React with a plain spec, then render the same description to SVG, Canvas, or an SSR string.
+description: Author figures outside React with a plain spec, then render them as retained or static SVG / Canvas views or SSR strings.
 ---
 
 `@retikz/vanilla` is the framework-free entry. You can describe a figure with a plain spec, or pass Core IR or a compiled `Scene` directly, then produce output through SSR, the SVG DOM, or the Canvas runtime.
@@ -14,12 +14,12 @@ pnpm add @retikz/vanilla
 ```
 
 ```ts
-import { figure, layer, mount, node, path, renderToSvgString, VanillaLayerCache } from '@retikz/vanilla';
+import { figure, layer, mount, node, path, renderToSvgString } from '@retikz/vanilla';
 
 const spec = figure({
   id: 'flow',
   layers: [
-    layer('main', { cache: VanillaLayerCache.Static }, [
+    layer('main', [
       node('a', { position: [0, 0], text: 'A' }),
       node('b', { position: [120, 0], text: 'B' }),
       path('edge', {
@@ -73,13 +73,13 @@ This separation keeps authoring data easy to generate, compare, and test while c
 
 <ComponentPreview files="vanilla-pipeline" size="xs" hideCode />
 
-| Input          | Owner             | Runtime handling                                                              |
-| -------------- | ----------------- | ----------------------------------------------------------------------------- |
-| plain spec     | `@retikz/vanilla` | Normalize layers, embeds, and metadata into Core IR and composite definitions |
-| Core `IRScene` | `@retikz/core`    | Skip spec normalization and call `compileToScene` directly                    |
-| `Scene`        | `@retikz/core`    | Skip normalization and compilation; pass directly to the SVG / Canvas backend |
+| Input          | Owner             | Runtime handling                                                                              |
+| -------------- | ----------------- | --------------------------------------------------------------------------------------------- |
+| plain spec     | `@retikz/vanilla` | Normalize layers, embeds, and metadata; retained by default, with an optional raw static view |
+| Core `IRScene` | `@retikz/core`    | Skip spec normalization; retained by default, with an optional raw static view                |
+| `Scene`        | `@retikz/core`    | Skip normalization and compilation; only create a full-redraw static view                     |
 
-The plain-spec path first uses `normalizeFigureSpec` to produce Core IR. `compileToScene` then resolves composites, registries, references, geometry, layout, resources, and animation. `renderToSvgString`, `mountSvg`, and `mountCanvas` all share the same `toSceneResult` dispatch, so the three input levels do not create three rendering semantics.
+The plain-spec path first uses `normalizeFigureSpec` to produce Core IR. The Core Program then resolves composites, registries, references, geometry, layout, resources, and animation. Retained mounts of IR or a plain spec use `createVanillaRetainedSession → prepareRetainedInput` to create an updateable Core + Render Session; raw static mounts fully normalize, compile, and materialize on every update. `renderToSvgString` and static mounts of a precompiled `Scene` continue through `toSceneResult` for one-shot compilation / dispatch. Every path ultimately consumes the same Core Scene and Render backends rather than defining parallel graphics semantics.
 
 <SourceLinks
   sources={[
@@ -90,10 +90,22 @@ The plain-spec path first uses `normalizeFigureSpec` to produce Core IR. `compil
       endLine: 255,
     },
     {
-      label: 'Shared plain spec, IR, and Scene input dispatch',
+      label: 'One-shot Scene entry for SSR and static mounts',
       path: 'packages/kernel/vanilla/src/runtime/to-scene.ts',
-      startLine: 29,
-      endLine: 52,
+      startLine: 26,
+      endLine: 46,
+    },
+    {
+      label: 'Retained mount input preparation',
+      path: 'packages/kernel/vanilla/src/runtime/retained-session.ts',
+      startLine: 99,
+      endLine: 120,
+    },
+    {
+      label: 'Retained Core + Render Session creation entry',
+      path: 'packages/kernel/vanilla/src/runtime/retained-session.ts',
+      startLine: 216,
+      endLine: 285,
     },
   ]}
 />
@@ -108,33 +120,53 @@ The plain-spec path first uses `normalizeFigureSpec` to produce Core IR. `compil
 | `mountCanvas`       | Mount a Canvas explicitly                 | `CanvasView`                 |
 | `hydrate`           | Bind handlers to SSR / existing SVG roots | `HydrationHandle`            |
 
-`view.update(nextInput)` currently rerenders the full backend while preserving root element identity. SVG clears and rebuilds the root's attributes and children; Canvas redraws from the new Scene and rebinds live hydration. Passing a precompiled `Scene` skips plain-spec normalization and Core compilation, but it does not turn the backend update into a local patch.
+`mountSvg` / `mountCanvas` return a view discriminated by `mode` or `VanillaViewMode`. With default options, IR and plain specs create a `VanillaViewMode.Retained` view: `update(next, options?)` places the complete input and mutable renderer config in one transaction. Core publishes a Scene Patch or full fallback, and the Render participant atomically replaces DOM / bitmap, artifacts, runtime metadata, events, and animation handles only after success. A failed transaction publishes no new revision. The old view remains usable when rollback succeeds; if rollback itself fails, the Session becomes broken and must be disposed and remounted.
 
-The readonly `artifacts` getter on `VanillaView` and `CanvasView` exposes immutable artifacts produced with the current IR / plain spec's Scene. `update()` replaces `scene`, `artifacts`, and `runtimeMeta` synchronously. A precompiled `Scene` has no corresponding compile, so `artifacts` is the shared empty array. Enable `nodeLayouts` under `compile.artifacts` when Node layout outputs are needed.
+Retained `view.dispose()` removes the host and performs one reverse best-effort cleanup, retrying failed entries in the same call after logical resources retire. If cleanup remains pending, repeated `view.dispose()` calls retry only failed entries; successful work and host removal remain idempotent.
 
-Layer order, layer ids, the `cache` hint, and child identities are retained in `view.runtimeMeta`. This metadata only reserves stable boundaries for future invalidation decisions. It does not mean that layer caching, local DOM diffing, Canvas dirty layers, or incremental compilation exist today.
+IR and plain specs can also explicitly select static full redraws. The three valid combinations are:
 
-Future performance work starts with measurements from real large figures or high-frequency interaction. The first question is whether bailouts, caching, or domain lowering solve the cost. Only supporting evidence would justify designing IR diffing, local compilation, Scene patches, SVG DOM diffing, Canvas dirty layers, and scheduling. Progressive IR / incremental compilation still requires scheduling in a future version and is not a frozen public API.
+| Configuration     | Update behavior                                           | Session, memory, and failure semantics                                                              |
+| ----------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `retained + auto` | Safe changes use local Patches; others fully fall back    | Keeps Snapshots, candidates, diagnostics, atomic commits, and rollback; this is the default         |
+| `retained + full` | Skips Program `update()` for affected work and runs fully | Retains the same Runtime state and transaction guarantees as auto; it is not a low-memory mode      |
+| `static`          | Fully normalizes, compiles, and redraws on every update   | Creates no Session, Snapshot, diff, transaction, or rollback; less resident state, more update work |
+
+A raw static view accepts `IRScene | VanillaFigureSpec` in `update(next)` instead of locking to the initial input subtype. It updates runtime metadata, artifacts, hydration, and animation on the same root. Compilation or normalization failures before host writes preserve the old picture and public getters. Failures after materialization, animation, or hydration switching begins throw synchronously without a rollback guarantee; dispose and remount the view.
+
+A precompiled `Scene` still creates a naturally `VanillaViewMode.Static` view. `update(nextScene)` preserves root identity but fully redraws the backend; there is no Core Program, Patch, Runtime diagnostics, or compile artifacts. This entry rejects the entire `runtime` field, including `{ mode: 'static' }`. Pass IR / a plain spec and enable `nodeLayouts` under `compile.artifacts` when Node layout outputs are needed.
+
+Both `mode` and `updateStrategy` are fixed at mount time. Dispose and remount to change the strategy, DPR, or compile topology; do not try to switch them through `update()`.
+
+`diagnostics()` on a retained view returns and drains Runtime diagnostics in queue order. `runtimeMeta` is a deeply immutable snapshot: layers, `childIds`, identity paths, and readonly indexes do not alias internal transaction state. `hydrate()` reads the latest committed Scene, so callers do not rebind after every update.
+
+The SVG retained renderer preserves unchanged DOM identity. Canvas updates a dirty region for safe local changes and otherwise takes the full fallback. Concurrent scheduling and progressive materialization are not part of the current public contract.
 
 <SourceLinks
   sources={[
     {
-      label: 'SVG update reuses the root and rebuilds its contents',
+      label: 'SVG static / retained view dispatch',
       path: 'packages/kernel/vanilla/src/runtime/mount-svg.ts',
-      startLine: 51,
-      endLine: 68,
+      startLine: 207,
+      endLine: 220,
     },
     {
-      label: 'Canvas update redraws and rebinds hydration',
-      path: 'packages/kernel/vanilla/src/runtime/mount-canvas.ts',
-      startLine: 278,
-      endLine: 304,
+      label: 'Vanilla retained Session creation',
+      path: 'packages/kernel/vanilla/src/runtime/retained-session.ts',
+      startLine: 216,
+      endLine: 285,
     },
     {
-      label: 'Incremental compilation gates and open questions',
-      path: 'packages/kernel/_notes/decisions/v0/v0.4/backlog.md',
-      startLine: 3,
-      endLine: 27,
+      label: 'Vanilla retained update transaction',
+      path: 'packages/kernel/vanilla/src/runtime/retained-session.ts',
+      startLine: 301,
+      endLine: 341,
+    },
+    {
+      label: 'Vanilla retained hydration and public read',
+      path: 'packages/kernel/vanilla/src/runtime/retained-session.ts',
+      startLine: 342,
+      endLine: 379,
     },
   ]}
 />
@@ -154,16 +186,25 @@ mount(canvasRoot, spec, {
   renderer: 'canvas',
   output: { width: 640, height: 360 },
   canvas: { devicePixelRatio: 2 },
+  runtime: { mode: 'retained', updateStrategy: 'auto', rendererFactory },
+});
+
+mount(svgRoot, spec, {
+  runtime: { mode: 'static' },
 });
 ```
 
-`figure()` only describes the figure. `output` controls display size and resource ids, `compile` injects Core compile capabilities, `animation` controls playback or snapshots, and `canvas` is only for the Canvas backend.
+`figure()` only describes the figure. `output` controls display size and resource ids, `compile` injects Core compile capabilities, `animation` controls playback or snapshots, and `canvas` applies only to Canvas mounts. `runtime.mode` defaults to `retained`, while `runtime.updateStrategy` defaults to `auto`; `rendererFactory` replaces the built-in factory only for retained IR / plain-spec mounts. Static mode is mutually exclusive with `updateStrategy` and `rendererFactory`. Invalid modes, primitives, and accessors throw `RETAINED_RUNTIME_INPUT_INVALID` before any DOM is created.
+
+`RenderToStringOptions`, `StaticMountOptions`, `StaticMountCanvasOptions`, and `StaticMountUnifiedOptions` are the existing static options for SSR or precompiled Scenes and continue to reject the whole `runtime` field. Raw-input static mounts instead use `RawStaticMountOptions` / `RawStaticMountCanvasOptions` and require `runtime: { mode: 'static' }`.
 
 Omit `animation.enabled` to follow the system's reduced-motion preference. Explicit `true` forces playback on, and explicit `false` forces it off. `snapshotAt` still overrides playback and produces a static frame.
 
+Retained `update()` accepts only backend-matched closed plain-data options. SVG `RetainedSvgUpdateOptions` contains only top-level `animation`; Canvas `RetainedCanvasUpdateOptions` additionally accepts `canvas.animationProperties`. `devicePixelRatio` is fixed at mount. Passing Canvas-only config to SVG, hot DPR changes, unknown fields, symbols, and accessors throw stable `RETAINED_RUNTIME_INPUT_INVALID`; dispose and remount to change DPR or compile capabilities.
+
 ## Layers And Embeds
 
-`figure({ children })` creates a default layer. Use explicit `layers` when you need draw ordering, stable layer ids, or future invalidation hints. `zIndex` only orders the layer stack, with equal values retaining declaration order. `cache` only enters runtime metadata and does not enter Core IR.
+`figure({ children })` creates a default layer. Use explicit `layers` when you need draw ordering, stable layer ids, or future invalidation hints. `zIndex` only orders the layer stack, with equal values retaining declaration order. `cache` only enters runtime metadata and does not enter Core IR. Alpha.2 folds it into a retained-config hint, but the SVG and Canvas renderers do not consume it yet and do not enable auto, static, or dynamic layer reuse from it.
 
 Tier 2 capabilities enter through `embed(kind, id, props)`. Vanilla does not parse components or run hooks. It finds an injected adapter by `kind` and statically lowers props into a Core IR child, datasets, and composite definitions.
 
@@ -192,6 +233,25 @@ const svg = renderToSvgString(spec, { adapters: [badgeAdapter] });
 
 `normalizeFigureSpec` is exported from the package root. `adapters` is a top-level render / mount option, not a field inside `compile`. To inspect normalization before rendering, call `normalizeFigureSpec(spec, { adapters })` directly and read its `ir`, `composites`, and `runtimeMeta` result.
 
+A plain-spec retained update may replace the callback behind the same composite key, schema, and execution branch, committing or rolling it back with the Scene transaction. Definition count, order, key, schema, expand / compile branch, and artifact schema form fixed topology; dispose and remount to change them.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Fixed composite topology and callback transaction',
+      path: 'packages/kernel/vanilla/src/runtime/retained-composites.ts',
+      startLine: 98,
+      endLine: 150,
+    },
+    {
+      label: 'Connect the composite candidate to the Session update',
+      path: 'packages/kernel/vanilla/src/runtime/retained-session.ts',
+      startLine: 301,
+      endLine: 340,
+    },
+  ]}
+/>
+
 ## Responsibility Boundaries
 
 | Capability           | What `@retikz/vanilla` owns                                                    | Source of truth / boundary              |
@@ -205,16 +265,31 @@ Prefer [`@retikz/react`](/kernel/packages/react) for JSX authoring and React hos
 
 ## API Summary
 
-| API                   | Kind          | Description                                        |
-| --------------------- | ------------- | -------------------------------------------------- |
-| `figure`              | authoring     | Builds the plain spec root                         |
-| `layer`               | authoring     | Builds a layer with ordering and metadata          |
-| `node`                | authoring     | Builds a named or anonymous node                   |
-| `coordinate`          | authoring     | Builds a named coordinate with a required id       |
-| `path`                | authoring     | Builds a path; `way` reuses Draw way DSL           |
-| `scope`               | authoring     | Builds a style and namespace scope                 |
-| `embed`               | authoring     | Builds a Tier 2 embed node                         |
-| `VanillaLayerCache`   | authoring     | Provides the layer `cache` metadata values         |
-| `isVanillaFigureSpec` | normalization | Checks for a version 1 plain spec                  |
-| `normalizeFigureSpec` | normalization | Produces Core IR, composites, and runtime metadata |
-| `VanillaTier2Adapter` | type          | Defines lowering for `embed()`                     |
+| API                             | Kind          | Description                                                         |
+| ------------------------------- | ------------- | ------------------------------------------------------------------- |
+| `figure`                        | authoring     | Builds the plain spec root                                          |
+| `layer`                         | authoring     | Builds a layer with ordering and metadata                           |
+| `node`                          | authoring     | Builds a named or anonymous node                                    |
+| `coordinate`                    | authoring     | Builds a named coordinate with a required id                        |
+| `path`                          | authoring     | Builds a path; `way` reuses Draw way DSL                            |
+| `scope`                         | authoring     | Builds a style and namespace scope                                  |
+| `embed`                         | authoring     | Builds a Tier 2 embed node                                          |
+| `VanillaLayerCache`             | authoring     | Provides a metadata hint for future layer invalidation optimization |
+| `VanillaViewMode`               | runtime       | Public const object for retained / static view modes                |
+| `VanillaRuntimeOptions`         | type          | Discriminated retained / static config for raw inputs               |
+| `VanillaRetainedRuntimeOptions` | type          | Retained mode, update strategy, and renderer factory                |
+| `VanillaStaticRuntimeOptions`   | type          | Closed config that only permits `mode: "static"`                    |
+| `isVanillaFigureSpec`           | normalization | Checks for a version 1 plain spec                                   |
+| `normalizeFigureSpec`           | normalization | Produces Core IR, composites, and runtime metadata                  |
+| `VanillaTier2Adapter`           | type          | Defines lowering for `embed()`                                      |
+| `RetainedVanillaView`           | runtime       | Transactional retained view for IR / plain specs                    |
+| `StaticVanillaView`             | runtime       | Full-redraw view for a precompiled Scene or raw input               |
+| `StaticRawSvgView`              | runtime       | SVG static view for IR / plain specs                                |
+| `StaticRawCanvasView`           | runtime       | Canvas static view for IR / plain specs                             |
+| `RawStaticMountOptions`         | type          | SVG static-mount options for IR / plain specs                       |
+| `RawStaticMountCanvasOptions`   | type          | Canvas static-mount options for IR / plain specs                    |
+| `StaticMountOptions`            | type          | SVG static-mount options for a precompiled Scene                    |
+| `StaticMountCanvasOptions`      | type          | Canvas static-mount options for a precompiled Scene                 |
+| `StaticMountUnifiedOptions`     | type          | Unified static-mount options for a precompiled Scene                |
+| `RetainedSvgUpdateOptions`      | type          | Animation config for SVG retained updates                           |
+| `RetainedCanvasUpdateOptions`   | type          | Animation and property config for Canvas retained updates           |

@@ -14,9 +14,10 @@ describe('Table Vanilla plain authoring', () => {
       columns: [{ id: 'name', field: 'name', header: 'Name' }],
     };
     const manualInput = {
-      rows: 1,
-      columns: 1,
-      cells: [{ address: { row: 0, column: 0 }, payload: { kind: 'value' as const, value: 98 } }],
+      rows: [
+        ['Name', { value: 98 }],
+        [null, { value: null }],
+      ],
     };
     const detailBefore = structuredClone(detailInput);
     const manualBefore = structuredClone(manualInput);
@@ -33,10 +34,11 @@ describe('Table Vanilla plain authoring', () => {
     expect(TableSpecSchema.parse(detailSpec)).toEqual(detailSpec);
     expect(TableSpecSchema.parse(manualSpec)).toEqual(manualSpec);
     expect(JSON.parse(JSON.stringify(detailSpec))).toEqual(detailSpec);
+    expect(JSON.parse(JSON.stringify(manualSpec))).toEqual(manualSpec);
   });
 
   it('returns a standard plain embed spec and rejects an empty id before construction', () => {
-    const spec = manualTable({ rows: 1, columns: 1, cells: [] });
+    const spec = manualTable({ rows: [[null]] });
 
     expect(embedTable('panel', spec, { data: {} })).toEqual({
       type: 'embed',

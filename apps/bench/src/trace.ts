@@ -38,3 +38,29 @@ export const assertFullTrace = (
   }
   return record;
 };
+
+/** 从混合trace中要求指定owner/phase/unit恰好一条且全部字段精确匹配 */
+export const assertSingleTraceRecord = (
+  id: string,
+  records: ReadonlyArray<PerformanceTraceRecord>,
+  expected: PerformanceTraceRecord,
+): PerformanceTraceRecord => {
+  const unitRecords = records.filter(
+    record => record.owner === expected.owner && record.phase === expected.phase && record.unit === expected.unit,
+  );
+  if (unitRecords.length !== 1) {
+    throw new Error(
+      `${id}: emitted ${unitRecords.length} ${expected.owner}/${expected.phase}/${expected.unit} records`,
+    );
+  }
+  const record = unitRecords[0];
+  if (
+    record.outcome !== expected.outcome ||
+    record.visited !== expected.visited ||
+    record.reused !== expected.reused ||
+    record.changed !== expected.changed
+  ) {
+    throw new Error(`${id}: trace record differs from the exact expected work`);
+  }
+  return record;
+};

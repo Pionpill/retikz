@@ -47,6 +47,8 @@ export type RuntimeProgramTraceReporter = Pick<RuntimeTraceReporter, 'owner' | '
 
 /** Program callback 可用的 trace 与 warning context */
 export type RuntimeProgramContext = Readonly<{
+  /** 当前 callback 的实际执行方式 */
+  execution: 'full' | 'incremental' | 'fallback';
   /** 固定绑定 Program owner 的 trace reporter */
   trace: RuntimeProgramTraceReporter;
   /** 追加由 Runtime 统一归属的 commit-safe warning */
@@ -59,6 +61,8 @@ export type RuntimeCandidateLookup = Readonly<{
   snapshot: <TInput, TValue, TRead, TChange>(
     owner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
   ) => RuntimeSnapshot<TRead>;
+  /** 判断已声明 owner 是否在当前 candidate transaction 中发生实际变化 */
+  changed: (owner: RuntimeOwnerToken) => boolean;
   /** 读取已通过 Runtime envelope/revision 校验的 change hint；领域完整性由 Owner validator 或 Program 校验 */
   changeSet: <TInput, TValue, TRead, TChange>(
     owner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,

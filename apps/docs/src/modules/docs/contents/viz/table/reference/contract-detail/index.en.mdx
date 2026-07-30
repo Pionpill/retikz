@@ -33,7 +33,7 @@ Field paths support dotted access. Runtime resolution fails when a declared fiel
 <ZodSchema name="TableDetailColumnSchema" />
 
 Authoring-side `TableDetailColumnInput` also accepts a string `header`. `createDetailTableSpec()`, `DetailTable`, and `detailTable()` normalize it to `{ kind: 'value', value: header }`.
-`headerLayout` and `bodyLayout` reuse [TableCellLayoutSchema](/viz/table/reference/contract-table#tablecelllayoutschema) to configure padding, alignment, wrapping, fit, overflow, and borders independently for header and body Cells.
+`headerLayout` and `bodyLayout` reuse [TableCellLayoutSchema](/viz/table/reference/contract-layout#tablecelllayoutschema) to configure padding, alignment, wrapping, fit, overflow, and borders independently for header and body Cells.
 
 ## When to use the precise schema
 
@@ -41,6 +41,7 @@ An LLM, form, or persistence endpoint that only emits detail tables should use `
 
 ## Related
 
-- [Table contracts](/viz/table/reference/contract-table) — shared root fields, Cells, and Layout schemas
+- [Table contracts](/viz/table/reference/contract-table) — shared root fields and Cell-content schemas
+- [Layout contracts](/viz/table/reference/contract-layout) — Cell layout, tracks, and border schemas
 - [Detail Table](/viz/table/detail) — React and Vanilla usage
 - [Runtime](/viz/table/reference/runtime) — spec helpers, adapters, lowering, and SSR

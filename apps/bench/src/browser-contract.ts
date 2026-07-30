@@ -6,6 +6,8 @@ export type BrowserEnvironmentFingerprint = Readonly<{
   browserVersion: string;
   userAgent: string;
   platform: string;
+  /** Browser runtime 可见的逻辑处理器数量 */
+  hardwareConcurrency: number;
   language: string;
   timezone: string;
   viewport: Readonly<{ width: number; height: number }>;

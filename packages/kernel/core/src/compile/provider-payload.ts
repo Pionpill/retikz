@@ -1,5 +1,7 @@
 import type { z } from 'zod';
 
+import { LayoutProbeRecoverableError, safeThrownDetail } from './probe-failure';
+
 /** provider payload 校验输入 */
 export type ParseProviderPayloadInput<TOutput> = {
   /** 能力名称，用于错误诊断 */
@@ -28,9 +30,10 @@ export const parseProviderPayload = <TOutput>({
   try {
     return schema.parse(value);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`${capability} '${providerName}' failed ${payloadName} validation at ${irPath}: ${message}`, {
-      cause: error,
-    });
+    const message = safeThrownDetail(error);
+    throw new LayoutProbeRecoverableError(
+      `${capability} '${providerName}' failed ${payloadName} validation at ${irPath}: ${message}`,
+      { cause: error, providerKey: providerName },
+    );
   }
 };

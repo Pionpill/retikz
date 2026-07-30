@@ -1,15 +1,22 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import type { BrowserRunnerEnvironment } from './browser-runner';
 import type { DeterministicBenchmarkBudget, DeterministicBenchmarkResult } from './budget';
+import type { TimingBaseline, TimingRunnerEnvironment } from './timing';
 
 import { runBrowserBenchmark } from './browser-runner';
 import { compareDeterministicResults, createBaselineCandidate } from './budget';
-import { stableHash } from './hash';
 import { runCoreWallClockReport } from './report';
 import { runCoreDeterministicBenchmarks } from './run';
+import { readTimingRunnerEnvironment } from './runner-environment';
+import {
+  assertTimingGatePassed,
+  createTimingBaselineCandidate,
+  createTimingEnvironmentFingerprint,
+  runTimingGateAttempts,
+} from './timing';
 
 type BenchEnvironment = BrowserRunnerEnvironment &
   Readonly<{
@@ -66,6 +73,41 @@ const runDeterministicBenchmarks = async (): Promise<
   });
 };
 
+type WallClockAttempt = Readonly<{
+  fingerprint: string;
+  environment: Awaited<ReturnType<typeof runBrowserBenchmark>>['environment'];
+  scenarios: ReturnType<typeof runCoreWallClockReport>;
+}>;
+
+/** 完整运行一次 Node Core + Chromium renderer wall-clock 场景 */
+const runWallClockAttempt = async (runnerEnvironment: TimingRunnerEnvironment): Promise<WallClockAttempt> => {
+  const browser = await runBrowserBenchmark(environment, {
+    warmupRuns: environment.warmupRuns,
+    sampleRuns: environment.sampleRuns,
+    includeWallClock: true,
+  });
+  return Object.freeze({
+    fingerprint: createTimingEnvironmentFingerprint(
+      environment,
+      process.version,
+      browser.environment,
+      runnerEnvironment,
+    ),
+    environment: browser.environment,
+    scenarios: Object.freeze([
+      ...runCoreWallClockReport(environment.warmupRuns, environment.sampleRuns),
+      ...browser.wallClock,
+    ]),
+  });
+};
+
+/** 按完整 fingerprint 读取 tracked timing baseline，不做近似环境匹配 */
+const readTimingBaseline = (fingerprint: string): TimingBaseline | undefined => {
+  const path = resolve(appRoot, 'timing-baselines', `${fingerprint}.json`);
+  if (!existsSync(path)) return undefined;
+  return JSON.parse(readFileSync(path, 'utf8')) as TimingBaseline;
+};
+
 /** 执行一个 bench CLI 子命令 */
 const main = async (): Promise<void> => {
   const command = process.argv[2];
@@ -80,36 +122,70 @@ const main = async (): Promise<void> => {
   }
 
   if (command === 'report') {
-    const browser = await runBrowserBenchmark(environment, {
-      warmupRuns: environment.warmupRuns,
-      sampleRuns: environment.sampleRuns,
-      includeWallClock: true,
-    });
+    const runnerEnvironment = readTimingRunnerEnvironment();
+    const compareBaseline = process.argv.includes('--compare-timing-baseline');
+    const first = await runWallClockAttempt(runnerEnvironment);
+    const baselineForFirst = compareBaseline ? readTimingBaseline(first.fingerprint) : undefined;
+    const gateRun = compareBaseline
+      ? await runTimingGateAttempts(
+          { fingerprint: first.fingerprint, reports: first.scenarios },
+          baselineForFirst,
+          async () => {
+            const attempt = await runWallClockAttempt(runnerEnvironment);
+            return { fingerprint: attempt.fingerprint, reports: attempt.scenarios };
+          },
+        )
+      : undefined;
+    const finalComparison = gateRun?.finalComparison;
     const path = writeResult('wall-clock-report.json', {
       environment: {
         expected: environment,
         actualNode: process.version,
-        browser: browser.environment,
-        fingerprint: stableHash({ node: process.version, browser: browser.environment }),
+        runner: runnerEnvironment,
+        browser: first.environment,
+        fingerprint: first.fingerprint,
       },
-      scenarios: [...runCoreWallClockReport(environment.warmupRuns, environment.sampleRuns), ...browser.wallClock],
+      attempts:
+        gateRun === undefined
+          ? [{ scenarios: first.scenarios }]
+          : gateRun.attempts.map(({ attempt, comparison }) => ({
+              scenarios: attempt.reports,
+              gate: comparison,
+            })),
     });
     console.log(`bench:report wrote ${path}`);
+    if (finalComparison?.status === 'skipped') {
+      console.log(`timing gate skipped: ${finalComparison.errors.join('; ')}`);
+    }
+    if (finalComparison?.status === 'passed') console.log('timing gate passed');
+    if (finalComparison !== undefined) assertTimingGatePassed(finalComparison);
     return;
   }
 
   if (command === 'update-baseline') {
+    const runnerEnvironment = readTimingRunnerEnvironment();
     const { browserEnvironment, results } = await runDeterministicBenchmarks();
-    const path = writeResult('deterministic-baseline.candidate.json', {
+    const deterministicPath = writeResult('deterministic-baseline.candidate.json', {
       environment: {
         expected: environment,
         actualNode: process.version,
         browser: browserEnvironment,
-        fingerprint: stableHash({ node: process.version, browser: browserEnvironment }),
+        runner: runnerEnvironment,
+        fingerprint: createTimingEnvironmentFingerprint(
+          environment,
+          process.version,
+          browserEnvironment,
+          runnerEnvironment,
+        ),
       },
       budgets: createBaselineCandidate(results),
     });
-    console.log(`bench:update-baseline wrote candidate ${path}`);
+    const timing = await runWallClockAttempt(runnerEnvironment);
+    const timingPath = writeResult(
+      `timing-baseline.${timing.fingerprint}.candidate.json`,
+      createTimingBaselineCandidate(timing.fingerprint, timing.scenarios),
+    );
+    console.log(`bench:update-baseline wrote candidates ${deterministicPath} and ${timingPath}`);
     return;
   }
 

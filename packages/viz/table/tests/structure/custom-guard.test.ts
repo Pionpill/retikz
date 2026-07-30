@@ -51,7 +51,7 @@ const illegalSourceCases: Array<
     'manual-source',
     {
       ...validOutput(),
-      cells: [{ ...validOutput().cells[0], source: { kind: 'manual', cellIndex: 0 } }],
+      cells: [{ ...validOutput().cells[0], source: { kind: 'manual', row: 0, column: 0 } }],
     },
     {},
     /manual source outside manual/i,

@@ -2021,7 +2021,7 @@ describe('preview controls registry', () => {
       expect(
         firstControl.columns?.map(column => column.key),
         language,
-      ).toEqual(['thingLabel', 'practiceLabel', 'relationColor']);
+      ).toEqual(['thingLabel', 'practiceLabel', 'relationColor', 'thingCount']);
       expect(definition.sections, language).toHaveLength(4);
       expect(visibleIds({ routing: 'bend', sourceLabelVisible: true, targetLabelVisible: true }), language).toEqual(
         expect.arrayContaining(['bendDirection', 'bendAngle']),
@@ -2071,8 +2071,7 @@ describe('preview controls registry', () => {
       expect(source, language).toContain('defineControlledPreview(previewControlContract');
       expect(source, language).toContain("anchorId={{ prefix: 'thing', field: 'thingId' }}");
       expect(source, language).toContain("anchorId={{ prefix: 'practice', field: 'practiceId' }}");
-      expect(source, language).toContain("kind: 'summarize'");
-      expect(source, language).toContain("'practiceGlyph'");
+      expect(source, language).toContain('transform={[coordinate1DCompositionOperation]}');
       expect(source, language).toContain('text="practiceGlyph"');
       expect(source, language).toContain('path={{ routing }}');
       expect(source, language).toContain('COORDINATE_1D_COMPOSITION_CONTROL_IDS.relationStrokeWidth');
