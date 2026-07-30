@@ -1,3 +1,4 @@
+import type { EmbeddableContribution } from '@retikz/react';
 import type {
   FlexLayoutItemInput,
   GridLayoutItemInput,
@@ -56,25 +57,44 @@ const validateNestedLayoutContributions = (
 };
 
 /** 把单个 LayoutItem 的 child authoring 转为恰好一个 JSON-safe IRChild */
-const resolveLayoutItemChild = (props: LayoutItemProps) => {
+const resolveLayoutItemChild = (
+  props: LayoutItemProps,
+): Readonly<{
+  child: LayoutItemInputByKind[LayoutItemKindValue]['child'];
+  inspection: NonNullable<EmbeddableContribution['inspectionRoots']> | null;
+}> => {
   const hasIR = props.ir !== undefined;
   const hasChildren = props.children !== undefined;
   if (hasIR === hasChildren) throw new Error('Standard LayoutItem requires exactly one of children or ir');
-  if (hasIR) return props.ir;
+  if (hasIR) return { child: props.ir, inspection: null };
   const built = buildIRWithContributions(props.children);
   if (built.ir.children.length !== 1) {
     throw new Error('Standard LayoutItem React child must produce exactly one IRChild');
   }
   validateNestedLayoutContributions(built.contributions);
-  return built.ir.children[0];
+  const inspection = built.inspectionRoots.map(root => {
+    const [sceneSegment, ...path] = root.locator.path;
+    if (sceneSegment.index !== 0) {
+      throw new Error('Standard LayoutItem inspection root must be relative to its sole IRChild');
+    }
+    return Object.freeze({ locator: Object.freeze({ path }), tree: root.tree });
+  });
+  return {
+    child: built.ir.children[0],
+    inspection: inspection.length === 0 ? null : Object.freeze(inspection),
+  };
 };
 
 /** 解析一个容器的直属 LayoutItem，并按期望 kind 生成 Standard authoring inputs */
 export const resolveReactLayoutItems = <TKind extends LayoutItemKindValue>(
   children: ReactNode,
   expectedKind: TKind,
-): Array<LayoutItemInputByKind[TKind]> =>
-  flattenLayoutChildren(children).map(child => {
+): Readonly<{
+  items: Array<LayoutItemInputByKind[TKind]>;
+  inspectionChildren: Array<NonNullable<EmbeddableContribution['inspectionRoots']> | null>;
+}> => {
+  const inspectionChildren: Array<NonNullable<EmbeddableContribution['inspectionRoots']> | null> = [];
+  const items = flattenLayoutChildren(children).map(child => {
     if (!isValidElement(child) || child.type !== LayoutItem) {
       throw new Error('Standard layout container direct children must be LayoutItem');
     }
@@ -85,6 +105,24 @@ export const resolveReactLayoutItems = <TKind extends LayoutItemKindValue>(
     const { children: itemChildren, ir, itemKey, ...item } = props;
     void itemChildren;
     void ir;
-    const childIR = resolveLayoutItemChild(props);
-    return { ...item, key: itemKey, child: childIR } as LayoutItemInputByKind[TKind];
+    const resolved = resolveLayoutItemChild(props);
+    inspectionChildren.push(resolved.inspection);
+    return { ...item, key: itemKey, child: resolved.child } as LayoutItemInputByKind[TKind];
   });
+  return Object.freeze({ items, inspectionChildren });
+};
+
+/** 为一个 Standard layout contribution 创建相对单 node 的 inspection tree */
+export const createReactLayoutInspectionRoots = (
+  inspect: boolean | Readonly<Record<string, unknown>> | undefined,
+  children: Array<NonNullable<EmbeddableContribution['inspectionRoots']> | null>,
+): NonNullable<EmbeddableContribution['inspectionRoots']> =>
+  Object.freeze([
+    Object.freeze({
+      locator: Object.freeze({ path: [] }),
+      tree: Object.freeze({
+        ...(inspect === undefined ? {} : { policy: Object.freeze({ component: inspect }) }),
+        ...(children.every(child => child === null) ? {} : { children: Object.freeze(children) }),
+      }),
+    }),
+  ]);

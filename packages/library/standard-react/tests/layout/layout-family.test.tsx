@@ -2,7 +2,7 @@ import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { LayoutItemProps } from '@retikz/standard-react';
 import type { FC } from 'react';
 
-import { buildIRWithContributions, Node } from '@retikz/react';
+import { buildIRWithContributions, Layout, Node, Scope } from '@retikz/react';
 import {
   createFlexLayout,
   createGridLayout,
@@ -14,6 +14,7 @@ import {
 } from '@retikz/standard';
 import { FlexLayout, GridLayout, LayoutItem, OverlayLayout } from '@retikz/standard-react';
 import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 type ForeignProps = Readonly<{ id: string }>;
@@ -117,6 +118,64 @@ describe('Standard React layout family', () => {
     expect(OverlayLayout.embeddableAdapter.namespace).toBe('standard.layout');
     expect(flex.makeComposites).toBe(grid.makeComposites);
     expect(grid.makeComposites).toBe(overlay.makeComposites);
+  });
+
+  it('keeps component and Scope inspection policies in a nested authored sidecar only', () => {
+    const result = buildIRWithContributions(
+      <Scope inspect={{ layout: { overflow: false } }}>
+        <FlexLayout inspect={{ gaps: false }}>
+          <LayoutItem kind="flex" itemKey="nested">
+            <GridLayout inspect={{ tracks: false }} columns={[{ kind: 'fixed', value: 20 }]}>
+              <LayoutItem kind="grid" itemKey="leaf">
+                <Node position={[0, 0]} />
+              </LayoutItem>
+            </GridLayout>
+          </LayoutItem>
+        </FlexLayout>
+      </Scope>,
+    );
+
+    expect(result.ir).not.toHaveProperty('inspection');
+    expect(result.ir.children[0]).not.toHaveProperty('inspect');
+    expect(result.inspectionRoots).toEqual([
+      {
+        locator: {
+          path: [
+            { kind: 'sceneChild', index: 0 },
+            { kind: 'scopeChild', index: 0 },
+          ],
+        },
+        tree: {
+          policy: {
+            inherited: { layout: { overflow: false } },
+            component: { gaps: false },
+          },
+          children: [
+            [
+              {
+                locator: { path: [] },
+                tree: { policy: { component: { tracks: false } } },
+              },
+            ],
+          ],
+        },
+      },
+    ]);
+  });
+
+  it('materializes component-local inspection in static SVG without adding inspect to IR', () => {
+    const output = renderToStaticMarkup(
+      <Layout idPrefix="standard-react-inspection">
+        <FlexLayout inspect={{ gaps: true }}>
+          <LayoutItem kind="flex" itemKey="leaf">
+            <Node position={[0, 0]} text="leaf" />
+          </LayoutItem>
+        </FlexLayout>
+      </Layout>,
+    );
+
+    expect(output).toContain('data-retikz-inspection="layout"');
+    expect(output).not.toContain('inspect=');
   });
 
   it('fails loudly for standalone, ordinary direct, mismatched and multiple children', () => {

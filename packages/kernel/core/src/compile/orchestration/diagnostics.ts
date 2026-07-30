@@ -1,6 +1,6 @@
+import type { CompileOccurrenceLocator } from '../../contract';
 import type { IRTransform } from '../../schemas';
 import type { DuplicateRegisterInfo } from '../namespace';
-import type { CompileOccurrenceLocator } from '../types';
 import type { CompileWarning } from '../warning';
 
 import { CompileWarningCode } from '../constants';

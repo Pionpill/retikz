@@ -1,7 +1,7 @@
-import type { OverlayLayoutInput } from '@retikz/standard';
+import type { OverlayLayoutInput, OverlayLayoutInspectOptions } from '@retikz/standard';
 import type { VanillaEmbedSpec, VanillaTier2Adapter } from '@retikz/vanilla';
 
-import { createOverlayLayout } from '@retikz/standard';
+import { createOverlayLayout, OverlayLayoutInspectOptionsInputSchema } from '@retikz/standard';
 
 import { makeVanillaStandardLayoutComposites, StandardLayoutVanillaNamespace } from './layout-family';
 
@@ -20,9 +20,16 @@ export const OverlayLayoutVanillaAdapter: VanillaTier2Adapter<OverlayLayoutInput
 };
 
 /** 创建由 OverlayLayoutVanillaAdapter 下沉的 Standard OverlayLayout embed */
-export const overlayLayout = (id: string, input: OverlayLayoutInput): VanillaEmbedSpec<OverlayLayoutInput> => ({
+export const overlayLayout = (
+  id: string,
+  input: OverlayLayoutInput,
+  inspect?: boolean | OverlayLayoutInspectOptions,
+): VanillaEmbedSpec<OverlayLayoutInput, OverlayLayoutInspectOptions> => ({
   type: 'embed',
   kind: OverlayLayoutEmbedKind,
   id,
   props: input,
+  ...(inspect === undefined
+    ? {}
+    : { inspect: typeof inspect === 'object' ? OverlayLayoutInspectOptionsInputSchema.parse(inspect) : inspect }),
 });

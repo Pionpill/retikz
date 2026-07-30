@@ -12,6 +12,7 @@
 import type { IRScene } from '../../schemas';
 import type { CompileOptions } from '../types';
 import type { CompileWarning } from '../warning';
+import type { PreparedCompileInspection } from './inspection';
 
 import { resolveArrowRegistry } from '../../providers/arrow';
 import { resolveBoundaryRegistry } from '../../providers/boundary';
@@ -28,6 +29,7 @@ import { createRound, DEFAULT_PRECISION } from '../scene';
 import { fallbackMeasurer } from '../text';
 import { formatCompileWarning } from '../warning';
 import { DEFAULT_MAX_COMPOSITE_DEPTH } from './composite';
+import { prepareCompileInspection } from './inspection';
 
 /**
  * 标准化后的 compile 依赖上下文
@@ -48,6 +50,8 @@ export type CompileContext = {
   maxCompositeDepth: number;
   /** 本次请求的 artifact 开关 */
   artifacts: CompileOptions['artifacts'];
+  /** admission 后的 runtime-only inspection sidecar */
+  inspection: PreparedCompileInspection | undefined;
   /** 本次 full compile 共享的可选 trace 计数器 */
   trace: { reporter: NonNullable<CompileOptions['trace']>; visited: number } | undefined;
   /** Scene 输出 rounder */
@@ -108,6 +112,7 @@ export const createCompileContext = (ir: IRScene, options: CompileOptions): Comp
     composites,
     maxCompositeDepth: options.maxCompositeDepth ?? DEFAULT_MAX_COMPOSITE_DEPTH,
     artifacts: options.artifacts,
+    inspection: prepareCompileInspection(ir, options.inspection),
     trace: options.trace === undefined ? undefined : { reporter: options.trace, visited: 0 },
     round,
     layoutPadding: options.padding ?? DEFAULT_LAYOUT_PADDING,

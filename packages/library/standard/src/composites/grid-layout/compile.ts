@@ -98,8 +98,9 @@ const requiredProbe = (
   context: LayoutCompositeCompileContext,
   child: IRGridLayoutItem['child'],
   proposal: LayoutProposal,
+  childIndex: number,
 ): LayoutChildResult => {
-  const probe = context.layoutChild(child, proposal);
+  const probe = context.layoutChild(child, proposal, context.inspection.child(childIndex));
   if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
   return probe.result;
 };
@@ -243,10 +244,20 @@ export const compileGridLayout = (
   const finiteYLimit = finiteYLimitOf(node, context.proposal.y, padding);
   const xCrossProposal = finiteYLimit === undefined ? intrinsicProposal('natural') : boundedProposal(finiteYLimit);
   const xMinimum = measured.map(item =>
-    requiredProbe(context, item.authored.child, { x: intrinsicProposal('minimum'), y: xCrossProposal }),
+    requiredProbe(
+      context,
+      item.authored.child,
+      { x: intrinsicProposal('minimum'), y: xCrossProposal },
+      item.sourceIndex,
+    ),
   );
   const xNatural = measured.map(item =>
-    requiredProbe(context, item.authored.child, { x: intrinsicProposal('natural'), y: xCrossProposal }),
+    requiredProbe(
+      context,
+      item.authored.child,
+      { x: intrinsicProposal('natural'), y: xCrossProposal },
+      item.sourceIndex,
+    ),
   );
   const columnConstraints: ReadonlyArray<GridTrackConstraint> = measured.map((item, index) => ({
     start: item.columnStart,
@@ -282,19 +293,29 @@ export const compileGridLayout = (
     const column = gridSpanRange(positionedColumns, item.columnStart, item.columnSpan);
     const innerWidth = Math.max(0, column.size - item.margin.left - item.margin.right);
     const justify = item.authored.justifySelf ?? node.justifyItems;
-    return requiredProbe(context, item.authored.child, {
-      x: itemAxisProposal(justify, innerWidth),
-      y: intrinsicProposal('minimum'),
-    });
+    return requiredProbe(
+      context,
+      item.authored.child,
+      {
+        x: itemAxisProposal(justify, innerWidth),
+        y: intrinsicProposal('minimum'),
+      },
+      item.sourceIndex,
+    );
   });
   const yNatural = measured.map(item => {
     const column = gridSpanRange(positionedColumns, item.columnStart, item.columnSpan);
     const innerWidth = Math.max(0, column.size - item.margin.left - item.margin.right);
     const justify = item.authored.justifySelf ?? node.justifyItems;
-    return requiredProbe(context, item.authored.child, {
-      x: itemAxisProposal(justify, innerWidth),
-      y: intrinsicProposal('natural'),
-    });
+    return requiredProbe(
+      context,
+      item.authored.child,
+      {
+        x: itemAxisProposal(justify, innerWidth),
+        y: intrinsicProposal('natural'),
+      },
+      item.sourceIndex,
+    );
   });
   const rowConstraints: Array<GridTrackConstraint> = measured.map((item, index) => ({
     start: item.rowStart,
@@ -352,10 +373,15 @@ export const compileGridLayout = (
     const column = gridSpanRange(positionedColumns, item.columnStart, item.columnSpan);
     const row = gridSpanRange(positionedRows, item.rowStart, item.rowSpan);
     const slot = gridItemSlot({ x: column.start, y: row.start, width: column.size, height: row.size }, item.margin);
-    return requiredProbe(context, item.authored.child, {
-      x: itemAxisProposal(item.authored.justifySelf ?? node.justifyItems, slot.width),
-      y: itemAxisProposal(item.authored.alignSelf ?? node.alignItems, slot.height),
-    });
+    return requiredProbe(
+      context,
+      item.authored.child,
+      {
+        x: itemAxisProposal(item.authored.justifySelf ?? node.justifyItems, slot.width),
+        y: itemAxisProposal(item.authored.alignSelf ?? node.alignItems, slot.height),
+      },
+      item.sourceIndex,
+    );
   });
   const finalRowMetrics = rows.map((_, rowIndex) => {
     const singleRow = measured.filter(item => item.rowStart === rowIndex && item.rowSpan === 1);

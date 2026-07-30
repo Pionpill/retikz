@@ -72,6 +72,53 @@ describe('Standard Vanilla layout family', () => {
     expect(normalized.composites).toEqual([FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition]);
   });
 
+  it('keeps precise family inspection options in the runtime-only normalization sidecar', () => {
+    const figure = {
+      type: 'figure' as const,
+      version: 1 as const,
+      children: [flexLayout('flex', {}, { gaps: false })],
+    };
+    const normalized = normalizeFigureSpec(figure, { adapters: StandardLayoutVanillaAdapters });
+
+    expect(figure.children[0].inspect).toEqual({ gaps: false });
+    expect(normalized.ir.children[0]).not.toHaveProperty('inspect');
+    expect(normalized.inspectionRoots).toEqual([
+      {
+        locator: { path: [{ kind: 'sceneChild', index: 0 }] },
+        tree: { policy: { component: { gaps: false } } },
+      },
+    ]);
+  });
+
+  it('materializes embed-local inspection in SVG SSR without persisting it in canonical IR', () => {
+    const figure = {
+      type: 'figure' as const,
+      version: 1 as const,
+      children: [
+        flexLayout(
+          'flex',
+          {
+            children: [
+              {
+                kind: LayoutItemKind.Flex,
+                key: 'leaf',
+                child: { type: 'node' as const, position: [0, 0] as const, text: 'leaf' },
+              },
+            ],
+          },
+          { gaps: true },
+        ),
+      ],
+    };
+
+    const svg = renderToSvgString(figure, { adapters: StandardLayoutVanillaAdapters });
+
+    expect(svg).toContain('data-retikz-inspection="layout"');
+    expect(normalizeFigureSpec(figure, { adapters: StandardLayoutVanillaAdapters }).ir.children[0]).not.toHaveProperty(
+      'inspect',
+    );
+  });
+
   it('exports a shallow-frozen family adapter array in container order', () => {
     expect(StandardLayoutVanillaAdapters).toEqual([
       FlexLayoutVanillaAdapter,

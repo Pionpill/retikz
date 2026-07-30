@@ -78,8 +78,9 @@ const requiredProbe = (
   context: LayoutCompositeCompileContext,
   child: IROverlayLayoutItem['child'],
   proposal: LayoutProposal,
+  childIndex: number,
 ): LayoutChildResult => {
-  const probe = context.layoutChild(child, proposal);
+  const probe = context.layoutChild(child, proposal, context.inspection.child(childIndex));
   if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
   return probe.result;
 };
@@ -146,7 +147,7 @@ const probeOverlayProfile = (
       : finiteYLimit === undefined
         ? intrinsicProposal('natural')
         : boundedProposal(Math.max(0, finiteYLimit - item.margin.top - item.margin.bottom));
-  const xResult = requiredProbe(context, item.authored.child, { x: xProposal, y: yBasis });
+  const xResult = requiredProbe(context, item.authored.child, { x: xProposal, y: yBasis }, item.sourceIndex);
 
   let contextualX: LayoutAxisProposal;
   if (placement.kind === OverlayPlacementKind.Positioned) {
@@ -162,7 +163,7 @@ const probeOverlayProfile = (
     placement.kind === OverlayPlacementKind.Positioned && placement.height !== undefined
       ? exactProposal(placement.height)
       : intrinsicProposal(mode);
-  const yResult = requiredProbe(context, item.authored.child, { x: contextualX, y: yProposal });
+  const yResult = requiredProbe(context, item.authored.child, { x: contextualX, y: yProposal }, item.sourceIndex);
   return Object.freeze({ xResult, yResult });
 };
 
@@ -253,19 +254,29 @@ export const compileOverlayLayout = (
     const placement = item.authored.placement;
     if (placement.kind === OverlayPlacementKind.Positioned) {
       const natural = naturalResults[sourceIndex];
-      return requiredProbe(context, item.authored.child, {
-        x: exactProposal(placement.width ?? natural.xResult.slotSize.width),
-        y: exactProposal(placement.height ?? natural.yResult.slotSize.height),
-      });
+      return requiredProbe(
+        context,
+        item.authored.child,
+        {
+          x: exactProposal(placement.width ?? natural.xResult.slotSize.width),
+          y: exactProposal(placement.height ?? natural.yResult.slotSize.height),
+        },
+        sourceIndex,
+      );
     }
     const availableWidth = Math.max(0, content.width - item.margin.left - item.margin.right);
     const availableHeight = Math.max(0, content.height - item.margin.top - item.margin.bottom);
     const justify = item.authored.justifySelf ?? node.justifyItems;
     const align = item.authored.alignSelf ?? node.alignItems;
-    return requiredProbe(context, item.authored.child, {
-      x: justify === LayoutAlignment.Stretch ? exactProposal(availableWidth) : boundedProposal(availableWidth),
-      y: align === LayoutAlignment.Stretch ? exactProposal(availableHeight) : boundedProposal(availableHeight),
-    });
+    return requiredProbe(
+      context,
+      item.authored.child,
+      {
+        x: justify === LayoutAlignment.Stretch ? exactProposal(availableWidth) : boundedProposal(availableWidth),
+        y: align === LayoutAlignment.Stretch ? exactProposal(availableHeight) : boundedProposal(availableHeight),
+      },
+      sourceIndex,
+    );
   });
 
   const baselineTargetOf = (name: 'first-baseline' | 'last-baseline'): number | undefined => {
@@ -413,6 +424,20 @@ export const compileOverlayLayout = (
       placement: placed.authored.placement.kind,
       sizeParticipation: placed.authored.sizeParticipation,
       zIndex: placed.authored.zIndex,
+      ...(placed.authored.placement.kind === OverlayPlacementKind.Positioned
+        ? {
+            position: Object.freeze({
+              target: Object.freeze({
+                x: content.x + placed.authored.placement.at.x + placed.authored.offset.x,
+                y: content.y + placed.authored.placement.at.y + placed.authored.offset.y,
+              }),
+              slotAnchor: Object.freeze({
+                x: placed.slotBounds.x + placed.authored.placement.anchor.x * placed.slotBounds.width,
+                y: placed.slotBounds.y + placed.authored.placement.anchor.y * placed.slotBounds.height,
+              }),
+            }),
+          }
+        : {}),
     });
   });
   return {

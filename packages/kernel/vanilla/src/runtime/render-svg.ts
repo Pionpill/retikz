@@ -1,11 +1,11 @@
 import { prefersReducedMotion, resolveAnimationEnabled } from '@retikz/render/animation';
 import { RetainedRenderError, RetainedRenderErrorCode } from '@retikz/render/runtime';
-import { renderToSvgString as buildSvgString } from '@retikz/render/svg';
+import { renderFrameToSvgString as buildSvgString } from '@retikz/render/svg';
 
 import type { RenderInput, RenderToStringOptions } from './types';
 
 import { DEFAULT_ID_PREFIX } from './constants';
-import { toScene } from './to-scene';
+import { toSceneResult } from './to-scene';
 
 const invalidRenderOptions = (cause: unknown): never => {
   throw new RetainedRenderError({
@@ -20,7 +20,7 @@ const captureRenderToStringOptions = (input: unknown): RenderToStringOptions => 
   if (typeof input !== 'object' || input === null || Array.isArray(input)) return invalidRenderOptions(input);
   const prototype = Object.getPrototypeOf(input);
   if (prototype !== Object.prototype && prototype !== null) return invalidRenderOptions(input);
-  const allowedKeys = new Set(['output', 'compile', 'animation', 'adapters']);
+  const allowedKeys = new Set(['output', 'compile', 'inspect', 'animation', 'adapters']);
   const captured: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
   for (const key of Reflect.ownKeys(input)) {
     const descriptor = Object.getOwnPropertyDescriptor(input, key);
@@ -49,12 +49,16 @@ export const renderToSvgString = (input: RenderInput, options: RenderToStringOpt
   const output = capturedOptions.output ?? {};
   const animation = capturedOptions.animation ?? {};
   const animate = resolveAnimationEnabled(animation.enabled, prefersReducedMotion());
-  return buildSvgString(toScene(input, capturedOptions), {
-    idPrefix: output.idPrefix ?? DEFAULT_ID_PREFIX,
-    animate,
-    snapshotAt: animation.snapshotAt,
-    easings: animation.easings,
-    width: output.width,
-    height: output.height,
-  });
+  const result = toSceneResult(input, capturedOptions);
+  return buildSvgString(
+    { primary: result.scene, inspection: result.inspection },
+    {
+      idPrefix: output.idPrefix ?? DEFAULT_ID_PREFIX,
+      animate,
+      snapshotAt: animation.snapshotAt,
+      easings: animation.easings,
+      width: output.width,
+      height: output.height,
+    },
+  );
 };

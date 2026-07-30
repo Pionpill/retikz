@@ -112,7 +112,13 @@ describe('layout artifact schemas', () => {
       container,
       items: [
         { ...item('a', 0), placement: 'aligned', sizeParticipation: 'include', zIndex: 2 },
-        { ...item('b', 1), placement: 'positioned', sizeParticipation: 'exclude', zIndex: -1 },
+        {
+          ...item('b', 1),
+          placement: 'positioned',
+          sizeParticipation: 'exclude',
+          zIndex: -1,
+          position: { target: { x: 20, y: 20 }, slotAnchor: { x: 20, y: 20 } },
+        },
         { ...item('c', 2), placement: 'aligned', sizeParticipation: 'include', zIndex: 2 },
       ],
       paintOrder: ['b', 'a', 'c'],
@@ -121,6 +127,28 @@ describe('layout artifact schemas', () => {
     expect(OverlayLayoutArtifactSchema.parse(value)).toEqual(value);
     expect(() => OverlayLayoutArtifactSchema.parse({ ...value, paintOrder: ['b', 'c', 'a'] })).toThrow();
     expect(() => OverlayLayoutArtifactSchema.parse({ ...value, paintOrder: ['b', 'a', 'a'] })).toThrow();
+    expect(() =>
+      OverlayLayoutArtifactSchema.parse({
+        ...value,
+        items: value.items.map((entry, index) => (index === 1 ? { ...entry, position: undefined } : entry)),
+      }),
+    ).toThrow();
+    expect(() =>
+      OverlayLayoutArtifactSchema.parse({
+        ...value,
+        items: value.items.map((entry, index) =>
+          index === 1 ? { ...entry, position: { target: { x: 20, y: 20 }, slotAnchor: { x: 21, y: 20 } } } : entry,
+        ),
+      }),
+    ).toThrow();
+    expect(() =>
+      OverlayLayoutArtifactSchema.parse({
+        ...value,
+        items: value.items.map((entry, index) =>
+          index === 0 ? { ...entry, position: { target: { x: 20, y: 20 }, slotAnchor: { x: 20, y: 20 } } } : entry,
+        ),
+      }),
+    ).toThrow();
   });
 
   it('provides one discriminated public union for all layout payloads', () => {

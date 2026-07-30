@@ -1,7 +1,7 @@
-import type { FlexLayoutInput } from '@retikz/standard';
+import type { FlexLayoutInput, FlexLayoutInspectOptions } from '@retikz/standard';
 import type { VanillaEmbedSpec, VanillaTier2Adapter } from '@retikz/vanilla';
 
-import { createFlexLayout } from '@retikz/standard';
+import { createFlexLayout, FlexLayoutInspectOptionsInputSchema } from '@retikz/standard';
 
 import { makeVanillaStandardLayoutComposites, StandardLayoutVanillaNamespace } from './layout-family';
 
@@ -20,9 +20,16 @@ export const FlexLayoutVanillaAdapter: VanillaTier2Adapter<FlexLayoutInput> = {
 };
 
 /** 创建由 FlexLayoutVanillaAdapter 下沉的 Standard FlexLayout embed */
-export const flexLayout = (id: string, input: FlexLayoutInput): VanillaEmbedSpec<FlexLayoutInput> => ({
+export const flexLayout = (
+  id: string,
+  input: FlexLayoutInput,
+  inspect?: boolean | FlexLayoutInspectOptions,
+): VanillaEmbedSpec<FlexLayoutInput, FlexLayoutInspectOptions> => ({
   type: 'embed',
   kind: FlexLayoutEmbedKind,
   id,
   props: input,
+  ...(inspect === undefined
+    ? {}
+    : { inspect: typeof inspect === 'object' ? FlexLayoutInspectOptionsInputSchema.parse(inspect) : inspect }),
 });
