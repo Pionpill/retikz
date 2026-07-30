@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import type { LabRunSession } from '../src/playground/model';
+import type { LabRunSession } from '../src/playground/modules/core';
 
-import { createInitialLabState, reduceLabState } from '../src/playground/lab-state';
-import { detailedConfigControls, quickConfigControls } from '../src/playground/workspace-config';
-import { benchModules, getModuleTestSuites } from '../src/playground/workspace-model';
+import { createInitialLabState, reduceLabState } from '../src/playground/workspace/lab-state';
+import { detailedConfigControls, quickConfigControls } from '../src/playground/workspace/workspace-config';
+import { benchModules, getModuleTestSuites } from '../src/playground/workspace/workspace-model';
 
 const session: LabRunSession = {
   id: 'run-1',

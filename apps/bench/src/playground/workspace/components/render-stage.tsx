@@ -3,10 +3,11 @@ import type { FC, RefObject } from 'react';
 import { Boxes, ScanSearch } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { Badge } from '@/components/ui/badge';
+
 import type { LabState } from '../lab-state';
 
 import { LabStatus } from '../lab-state';
-import { Badge } from './ui/badge';
 
 /** 真实 renderer 舞台属性 */
 export type RenderStageProps = Readonly<{

@@ -3,10 +3,11 @@ import type { FC, RefObject } from 'react';
 import { CircleAlert, Cpu, DatabaseZap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { Badge } from '@/components/ui/badge';
+
 import type { LabState } from '../lab-state';
 
 import { RenderStage } from './render-stage';
-import { Badge } from './ui/badge';
 
 /** 测试预览工作区属性 */
 export type TestWorkspaceProps = Readonly<{

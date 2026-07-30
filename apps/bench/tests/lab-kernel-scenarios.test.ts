@@ -5,7 +5,7 @@ import {
   getKernelLabScenario,
   kernelLabPolicies,
   kernelLabScenarios,
-} from '../src/playground/kernel-scenarios';
+} from '../src/playground/modules/core';
 
 describe('Kernel Performance Lab 场景目录', () => {
   it('固定提供三个可比较的运行策略', () => {

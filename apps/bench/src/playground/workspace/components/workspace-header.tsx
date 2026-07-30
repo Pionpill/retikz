@@ -25,12 +25,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 
+import type { LabPolicyIdValue, LabRunModeValue } from '../../modules/core';
 import type { LabState, LabStateAction } from '../lab-state';
-import type { LabPolicyIdValue, LabRunModeValue } from '../model';
 
-import { kernelLabPolicies } from '../kernel-scenarios';
+import { kernelLabPolicies, LabBackend, LabRunMode } from '../../modules/core';
 import { LabActionType, LabStatus } from '../lab-state';
-import { LabBackend, LabRunMode } from '../model';
 
 /** Workspace Header 属性 */
 export type WorkspaceHeaderProps = Readonly<{

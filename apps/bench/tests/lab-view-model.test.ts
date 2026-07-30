@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import type { LabPolicyResult } from '../src/playground/model';
+import type { LabPolicyResult } from '../src/playground/modules/core';
 
-import { LabLifecycleAvailability, LabOutcome, LabPolicyId, LabResultSource } from '../src/playground/model';
-import { createComparisonChartRows, createLabSummary } from '../src/playground/view-model';
+import { LabLifecycleAvailability, LabOutcome, LabPolicyId, LabResultSource } from '../src/playground/modules/core';
+import { createComparisonChartRows, createLabSummary } from '../src/playground/report/view-model';
 
 const result = (policyId: LabPolicyResult['policyId'], medianMs: number, reused: number): LabPolicyResult => ({
   policyId,

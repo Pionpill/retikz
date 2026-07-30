@@ -14,13 +14,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 
-import type { LanguageValue } from '../i18n/preferences';
+import type { LanguageValue } from '../../i18n/preferences';
 import type { LabStateAction } from '../lab-state';
 
-import i18n from '../i18n';
-import { Language } from '../i18n/preferences';
+import i18n from '../../i18n';
+import { Language } from '../../i18n/preferences';
+import { Theme, useThemeStore } from '../../store';
 import { LabActionType } from '../lab-state';
-import { Theme, useThemeStore } from '../store';
 
 /** Workspace 全局操作属性 */
 export type WorkspaceSettingsProps = Readonly<{

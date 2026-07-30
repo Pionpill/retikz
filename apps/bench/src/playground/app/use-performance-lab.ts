@@ -2,10 +2,10 @@ import type { Dispatch, RefObject } from 'react';
 
 import { useCallback, useReducer, useRef } from 'react';
 
-import type { LabState, LabStateAction } from './lab-state';
+import type { LabState, LabStateAction } from '../workspace';
 
-import { createInitialLabState, LabActionType, reduceLabState } from './lab-state';
-import { runKernelLab } from './run-kernel-lab';
+import { runKernelLab } from '../modules/core';
+import { createInitialLabState, LabActionType, reduceLabState } from '../workspace';
 
 /** Performance Lab 页面交互出口 */
 export type UsePerformanceLabValue = Readonly<{
@@ -23,7 +23,7 @@ export const usePerformanceLab = (): UsePerformanceLabValue => {
     dispatch({ type: LabActionType.RunStarted });
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     try {
-      const { executeBrowserKernelLabPolicy } = await import('./browser-kernel-executor');
+      const { executeBrowserKernelLabPolicy } = await import('../modules/core/browser');
       const session = await runKernelLab(
         {
           mode: state.mode,

@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 
-import type { LabPolicyResult } from '../model';
+import type { LabPolicyResult } from '../../modules/core';
 
 /** Runtime Inspector 属性 */
 export type InspectorProps = Readonly<{

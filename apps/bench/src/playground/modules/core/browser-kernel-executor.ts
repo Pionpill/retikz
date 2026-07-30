@@ -14,7 +14,7 @@ import {
   createSimpleNodeScene,
   summarizeSamples,
   updateSimpleNodeFill,
-} from '../shared';
+} from '../../../shared';
 import { getKernelLabScenario } from './kernel-scenarios';
 import { LabBackend, LabLifecycleAvailability, LabOutcome, LabPolicyId, LabResultSource } from './model';
 

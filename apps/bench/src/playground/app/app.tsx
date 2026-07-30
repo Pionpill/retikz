@@ -3,12 +3,9 @@ import type { FC } from 'react';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
-import { ConfigurationSheet } from './components/configuration-sheet';
-import { ReportPanel } from './components/report-panel';
-import { TestWorkspace } from './components/test-workspace';
-import { WorkspaceHeader } from './components/workspace-header';
-import { WorkspaceSidebar } from './components/workspace-sidebar';
-import { LabPolicyId } from './model';
+import { LabPolicyId } from '../modules/core';
+import { ReportPanel } from '../report';
+import { ConfigurationSheet, LabActionType, TestWorkspace, WorkspaceHeader, WorkspaceSidebar } from '../workspace';
 import { usePerformanceLab } from './use-performance-lab';
 
 /** Kernel Performance Lab 工作台属性 */
@@ -31,7 +28,11 @@ export const App: FC<AppProps> = () => {
           <div className="relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
             <TestWorkspace state={state} previewHostRef={previewHostRef} />
             {state.reportOpen && state.session !== undefined ? (
-              <ReportPanel session={state.session} inspectedResult={inspectedResult} dispatch={dispatch} />
+              <ReportPanel
+                session={state.session}
+                inspectedResult={inspectedResult}
+                onClose={() => dispatch({ type: LabActionType.ReportClosed })}
+              />
             ) : null}
           </div>
         </SidebarInset>

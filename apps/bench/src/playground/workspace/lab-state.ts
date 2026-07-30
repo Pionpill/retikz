@@ -1,10 +1,9 @@
 import type { ValueOf } from '@retikz/core';
 
-import type { LabBackendValue, LabPolicyIdValue, LabRunModeValue, LabRunSession } from './model';
+import type { LabBackendValue, LabPolicyIdValue, LabRunModeValue, LabRunSession } from '../modules/core';
 import type { BenchModuleIdValue } from './workspace-model';
 
-import { defaultKernelLabScenarioId } from './kernel-scenarios';
-import { LabBackend, LabPolicyId, LabRunMode } from './model';
+import { defaultKernelLabScenarioId, LabBackend, LabPolicyId, LabRunMode } from '../modules/core';
 import { BenchModuleId } from './workspace-model';
 
 /** Performance Lab 运行状态 */
