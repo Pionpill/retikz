@@ -71,7 +71,7 @@ rect都位于当前container allocation coordinate，x/y有限，width/height有
 - item `overflow.allocation.x/y` 表示translated allocationBounds在该轴超出slotBounds；`overflow.visual.x/y`表示visualBounds在该轴超出slotBounds
 - `overflow.clipped`只在overflow=clip且visualBounds确有任何部分落在container allocationBounds外时为true；仅启用clip但没有裁切为false
 - `alignmentGuide`只记录该item本次alignment实际采用的first/last真实guide或edge fallback；position是应用最终translation/offset后的container-local坐标，fallback区分是否使用边缘
-- container visualBounds为所有item visualBounds的union；默认content/content、零padding且空items时使用canonical `(0,0,0,0)`，visibleBounds为null。fixed/fill空container仍保留其非零allocation/content rect，但visual保持canonical zero
+- container visualBounds为所有item visualBounds的union；visibleBounds为所有非null item visibleBounds的union，全部item均不可见时为null，不得先union未裁切visualBounds再与container求交。默认content/content、零padding且空items时使用canonical `(0,0,0,0)`，visibleBounds为null。fixed/fill空container仍保留其非零allocation/content rect，但visual保持canonical zero
 
 artifact不重复Core envelope的namespace/type/occurrence，不保存proposal、probe failure、replay token、definition、函数、Map/Set或child私有IR。item key只在当前container内解释；nested layout有自己的artifact envelope与key空间。
 

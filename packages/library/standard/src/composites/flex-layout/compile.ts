@@ -694,7 +694,7 @@ export const compileFlexLayout = (
     ...(alignmentGuides === undefined ? {} : { alignmentGuides }),
     artifact: Object.freeze({
       kind: 'flex',
-      container: createLayoutArtifactContainer(allocation, content, items, node.overflow),
+      container: createLayoutArtifactContainer(allocation, content, items),
       items,
       lines,
     }),

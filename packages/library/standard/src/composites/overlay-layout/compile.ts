@@ -406,11 +406,7 @@ export const compileOverlayLayout = (
         overflow: node.overflow,
         ...(usesBaseline
           ? {
-              alignmentGuide: createLayoutArtifactAlignmentGuide(
-                placed.result,
-                placed.translation,
-                placed.alignment,
-              ),
+              alignmentGuide: createLayoutArtifactAlignmentGuide(placed.result, placed.translation, placed.alignment),
             }
           : {}),
       }),
@@ -425,7 +421,7 @@ export const compileOverlayLayout = (
     ...(alignmentGuides === undefined ? {} : { alignmentGuides }),
     artifact: Object.freeze({
       kind: 'overlay',
-      container: createLayoutArtifactContainer(allocation, content, items, node.overflow),
+      container: createLayoutArtifactContainer(allocation, content, items),
       items,
       paintOrder: paintOrder.map(sourceIndex => placedBySource[sourceIndex].authored.key),
     }),

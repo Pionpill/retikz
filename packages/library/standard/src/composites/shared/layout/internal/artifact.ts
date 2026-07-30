@@ -164,14 +164,9 @@ export const createLayoutArtifactContainer = (
   allocationBounds: LayoutRect,
   contentBounds: LayoutRect,
   items: ReadonlyArray<LayoutArtifactItemBase>,
-  overflow: LayoutOverflowValue,
 ): LayoutArtifactContainer => {
   const visualBounds = unionLayoutArtifactRects(items.map(item => item.visualBounds));
-  const visibleBounds =
-    items.length === 0
-      ? null
-      : overflow === LayoutOverflow.Visible
-        ? visualBounds
-        : intersectLayoutArtifactRects(visualBounds, allocationBounds);
+  const visibleItemBounds = items.flatMap(item => (item.visibleBounds === null ? [] : [item.visibleBounds]));
+  const visibleBounds = visibleItemBounds.length === 0 ? null : unionLayoutArtifactRects(visibleItemBounds);
   return Object.freeze({ allocationBounds, contentBounds, visualBounds, visibleBounds });
 };

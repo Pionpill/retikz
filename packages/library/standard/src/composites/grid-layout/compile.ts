@@ -474,11 +474,7 @@ export const compileGridLayout = (
         overflow: node.overflow,
         ...(usesBaseline
           ? {
-              alignmentGuide: createLayoutArtifactAlignmentGuide(
-                placed.result,
-                placed.translation,
-                placed.alignment,
-              ),
+              alignmentGuide: createLayoutArtifactAlignmentGuide(placed.result, placed.translation, placed.alignment),
             }
           : {}),
       }),
@@ -504,7 +500,7 @@ export const compileGridLayout = (
     ...(alignmentGuides === undefined ? {} : { alignmentGuides }),
     artifact: Object.freeze({
       kind: 'grid',
-      container: createLayoutArtifactContainer(allocation, content, items, node.overflow),
+      container: createLayoutArtifactContainer(allocation, content, items),
       items,
       columns: trackArtifacts(columns, positionedColumns, node.columns.length),
       rows: trackArtifacts(rows, positionedRows, node.rows.length),

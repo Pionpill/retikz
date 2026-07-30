@@ -418,6 +418,43 @@ describe('layout compile artifacts', () => {
     expect(item.overflow.clipped).toBe(true);
   });
 
+  it('keeps container visible bounds null when opposite-side items are fully clipped', () => {
+    const output = compile([
+      createOverlayLayout({
+        size: { x: { kind: 'fixed', value: 20 }, y: { kind: 'fixed', value: 20 } },
+        overflow: LayoutOverflow.Clip,
+        children: [
+          {
+            kind: LayoutItemKind.Overlay,
+            key: 'left',
+            child: leaf('left', 4, 4, { x: 0, y: 0 }, { visualX: 2, visualY: 2, visualSize: 4 }),
+            placement: {
+              kind: OverlayPlacementKind.Positioned,
+              at: { x: -10, y: 0 },
+              anchor: { x: 0, y: 0 },
+            },
+            sizeParticipation: LayoutSizeParticipation.Exclude,
+          },
+          {
+            kind: LayoutItemKind.Overlay,
+            key: 'right',
+            child: leaf('right', 4, 4, { x: 0, y: 0 }, { visualX: 2, visualY: 2, visualSize: 4 }),
+            placement: {
+              kind: OverlayPlacementKind.Positioned,
+              at: { x: 30, y: 0 },
+              anchor: { x: 0, y: 0 },
+            },
+            sizeParticipation: LayoutSizeParticipation.Exclude,
+          },
+        ],
+      }),
+    ]);
+    const artifact = compositeArtifacts(output)[0] as OverlayLayoutCompileArtifact;
+
+    expect(artifact.value.items.map(item => item.visibleBounds)).toEqual([null, null]);
+    expect(artifact.value.container.visibleBounds).toBeNull();
+  });
+
   it('records translated real and fallback alignment guides', () => {
     const output = compile([
       createOverlayLayout({
