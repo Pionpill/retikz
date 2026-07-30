@@ -445,7 +445,7 @@ describe('关系图元文档 controls', () => {
     const firstBar = markup.match(/<rect x="([\d.-]+)" y="[\d.-]+" width="[\d.-]+" height="[\d.-]+" fill="#1f77b4"/);
     const axisLines = [
       ...markup.matchAll(
-        /<path d="M ([\d.-]+) ([\d.-]+) L ([\d.-]+) ([\d.-]+)" fill="none" stroke="currentColor" stroke-width="1"><\/path>/g,
+        /<path d="M ([\d.-]+) ([\d.-]+) L ([\d.-]+) ([\d.-]+)" fill="none" stroke="currentColor" stroke-width="1"\s*\/?>/g,
       ),
     ];
     const yAxis = axisLines.find(([, x1, , x2]) => x1 === x2);
@@ -460,7 +460,7 @@ describe('关系图元文档 controls', () => {
     const firstBar = markup.match(/<rect x="[\d.-]+" y="([\d.-]+)" width="[\d.-]+" height="([\d.-]+)" fill="#1f77b4"/);
     const axisLines = [
       ...markup.matchAll(
-        /<path d="M ([\d.-]+) ([\d.-]+) L ([\d.-]+) ([\d.-]+)" fill="none" stroke="currentColor" stroke-width="1"><\/path>/g,
+        /<path d="M ([\d.-]+) ([\d.-]+) L ([\d.-]+) ([\d.-]+)" fill="none" stroke="currentColor" stroke-width="1"\s*\/?>/g,
       ),
     ];
     const xAxis = axisLines.find(([, , y1, , y2]) => y1 === y2);

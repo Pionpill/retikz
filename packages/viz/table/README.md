@@ -10,8 +10,10 @@ root. A Table spec keeps actual dataset rows outside the IR, referring to host-s
 `data.reference` instead.
 
 Use `createDetailTableSpec()` for record-per-row tables and `createManualTableSpec()` for explicit
-dimensions and Cells. They return plain, JSON-safe `IRDetailTableSpec` and `IRManualTableSpec`
-values, while sharing structure normalization, presentation, layout, and lowering.
+row-major Cells. Manual `rows` is a non-empty rectangular matrix whose dimensions and Cell addresses
+are derived by Table. Scalar entries are value shorthands, `null` leaves a coordinate empty, and
+`{ value: null }` stores a real null Cell. Both helpers return plain, JSON-safe precise specs while
+sharing structure normalization, presentation, layout, and lowering.
 
 Use `lowerTables(datasets, options)` to register the layout-aware Table composite definition with
 `@retikz/core`. For a standalone Table, `compileTable(spec, datasets, options)` performs one Core

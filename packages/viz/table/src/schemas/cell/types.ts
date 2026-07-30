@@ -11,11 +11,10 @@ import type {
   TableVerticalAlignment,
 } from './constants';
 import type {
-  TableCellAddressSchema,
+  ManualTableCellSchema,
   TableCellContentPayloadSchema,
   TableCellLayoutSchema,
   TableCellPayloadSchema,
-  TableCellSchema,
   TableCellSpanSchema,
   TableCellValuePayloadSchema,
 } from './schema';
@@ -41,9 +40,6 @@ export type TableCellFitValue = ValueOf<typeof TableCellFit>;
 /** Cell 内容 overflow 取值 */
 export type TableCellOverflowValue = ValueOf<typeof TableCellOverflow>;
 
-/** 零基 Cell 地址 */
-export type IRTableCellAddress = z.infer<typeof TableCellAddressSchema>;
-
 /** Table Cell 矩形跨度 IR */
 export type IRTableCellSpan = z.infer<typeof TableCellSpanSchema>;
 
@@ -60,4 +56,4 @@ export type IRTableCellValuePayload = z.infer<typeof TableCellValuePayloadSchema
 export type IRTableCellContentPayload = z.infer<typeof TableCellContentPayloadSchema>;
 
 /** 显式 manual Table Cell */
-export type IRTableCell = z.infer<typeof TableCellSchema>;
+export type IRManualTableCell = z.infer<typeof ManualTableCellSchema>;

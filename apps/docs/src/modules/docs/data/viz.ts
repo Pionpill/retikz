@@ -126,8 +126,10 @@ export const vizSection: Array<Section> = [
         id: 'reference',
         label: 'viz.tableReference',
         children: [
-          { id: 'contract-table', label: 'viz.tableReferenceContractTable' },
           { id: 'contract-detail', label: 'viz.tableReferenceContractDetail' },
+          { id: 'contract-table', label: 'viz.tableReferenceContractTable' },
+          { id: 'contract-layout', label: 'viz.tableReferenceContractLayout' },
+          { id: 'manifest', label: 'viz.tableReferenceManifest' },
           { id: 'runtime', label: 'viz.tableReferenceRuntime' },
         ],
       },

@@ -66,6 +66,8 @@ describe('Plot transform table views', () => {
         : sourceRowsDefinition;
     const transformedRows = resultRows(contract.canonicalValues);
     expect(transformedRows).not.toEqual(sourceRows);
-    expect(transformedRows.map(row => row.orders)).not.toEqual(sourceRows.map(row => row.orders));
+    expect(transformedRows.map(row => Reflect.get(row, 'orders'))).not.toEqual(
+      sourceRows.map(row => Reflect.get(row, 'orders')),
+    );
   });
 });

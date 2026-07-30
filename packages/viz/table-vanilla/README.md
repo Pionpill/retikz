@@ -8,6 +8,10 @@ package.
 `createTableAdapter()` plugs them into the standard `@retikz/vanilla` Figure / mount lifecycle;
 `renderTable()` is a one-shot SSR convenience and can return a layout manifest artifact.
 
+`manualTable()` accepts the same non-empty rectangular `rows` matrix as `createManualTableSpec()`.
+Table derives dimensions and addresses from that matrix; `null` leaves a coordinate empty, while
+`{ value: null }` creates a real null-valued Cell.
+
 ```ts
 import { createTableAdapter, detailTable, embedTable, renderTable } from '@retikz/table-vanilla';
 import { figure, mount } from '@retikz/vanilla';

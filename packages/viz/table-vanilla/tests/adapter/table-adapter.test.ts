@@ -27,8 +27,8 @@ const detailSpec = (): IRDetailTableSpec => ({
 describe('Table Vanilla adapter', () => {
   it('validates handwritten embed ids/specs and namespaces the Table root identity', () => {
     const adapter = createTableAdapter();
-    const anonymous = createManualTableSpec({ rows: 1, columns: 1, cells: [] });
-    const named = createManualTableSpec({ id: 'scores', rows: 1, columns: 1, cells: [] });
+    const anonymous = createManualTableSpec({ rows: [[null]] });
+    const named = createManualTableSpec({ id: 'scores', rows: [[null]] });
 
     expect(adapter.lower({ spec: anonymous }, contextOf('panel')).node).toMatchObject({ id: 'panel/table' });
     expect(adapter.lower({ spec: named }, contextOf('panel')).node).toMatchObject({ id: 'panel/scores' });
@@ -42,7 +42,7 @@ describe('Table Vanilla adapter', () => {
 
   it('returns the shared stable composite maker for every lower call', () => {
     const adapter = createTableAdapter();
-    const spec = createManualTableSpec({ rows: 1, columns: 1, cells: [] });
+    const spec = createManualTableSpec({ rows: [[null]] });
     const first = adapter.lower({ spec }, contextOf('first'));
     const second = adapter.lower({ spec }, contextOf('second'));
 
@@ -85,14 +85,7 @@ describe('Table Vanilla adapter', () => {
       expand: node => ({ type: 'node', position: [0, 0], text: node.label }),
     });
     const spec = createManualTableSpec({
-      rows: 1,
-      columns: 1,
-      cells: [
-        {
-          address: { row: 0, column: 0 },
-          payload: { kind: 'content', content: { namespace: 'fixture', type: 'badge', label: 'Nested' } },
-        },
-      ],
+      rows: [[{ content: { namespace: 'fixture', type: 'badge', label: 'Nested' } }]],
     });
     const tableFigure = figure([embedTable('nested', spec, { composites: [badge] })]);
 
@@ -101,7 +94,7 @@ describe('Table Vanilla adapter', () => {
 
   it('rejects handwritten empty ids and duplicate embed identities through the standard runtime', () => {
     const adapter = createTableAdapter();
-    const spec = createManualTableSpec({ rows: 1, columns: 1, cells: [] });
+    const spec = createManualTableSpec({ rows: [[null]] });
     const handwritten = embed('table', '', { spec });
 
     expect(() => normalizeFigureSpec(figure([handwritten]), { adapters: [adapter] })).toThrow(

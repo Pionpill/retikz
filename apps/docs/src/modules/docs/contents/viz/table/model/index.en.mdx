@@ -20,23 +20,25 @@ This pipeline is Table's internal model; users do not need to author it stage by
 | kind     | Where the data lives                                          | Intended use                                   |
 | -------- | ------------------------------------------------------------- | ---------------------------------------------- |
 | `detail` | Field mappings live in spec; records arrive at runtime        | Record-per-row detail tables                   |
-| `manual` | Dimensions and Cells live directly in spec                    | Low-level scenarios that need an explicit grid |
+| `manual` | Rectangular `rows` and Cell entries live directly in spec     | Low-level scenarios that need an explicit grid |
 | custom   | Custom parameters live in spec and a definition resolves them | Extension-defined structure operations         |
 
 Custom Structures reuse the same definition registry, semantic output, and consumer pipeline. An LLM or tool that emits one structure should retain the precise `IRDetailTableSpec`, `IRManualTableSpec`, or `IRCustomTableSpec`; use aggregate `IRTableSpec` only when one store or protocol accepts several structures.
 
 ### Explicit-grid entry
 
-`ManualTable` declares dimensions and zero-based Cell addresses directly. It suits headers, summaries, or static grids without external records.
+`ManualTable` accepts a row-major matrix. It suits headers, summaries, or static grids without external records. Table derives row count, column count, and zero-based addresses from rectangular `rows`.
 
 <ComponentPreview files={['table-manual', 'table-manual.en.data.ts']} size="xs" />
 
-React can also generate addresses in declaration order with nested `Row` / `Cell` markers:
+Scalar entries are value Cell shorthands. `null` means that a coordinate has no Cell; write `{ value: null }` for a real null scalar. Use rich `{ value, ... }` / `{ content, ... }` objects for presentation, spans, layout, semantic fields, or direct content.
+
+React can also generate the same rectangular structure in declaration order with nested `Row` / `Cell` markers:
 
 ```tsx
 import { Cell, ManualTable, Row } from '@retikz/table-react';
 
-<ManualTable rows={2} columns={3}>
+<ManualTable>
   <Row kind="columnHeader">
     <Cell span={{ columns: 2 }}>Identity</Cell>
     <Cell>Score</Cell>
@@ -49,18 +51,18 @@ import { Cell, ManualTable, Row } from '@retikz/table-react';
 </ManualTable>;
 ```
 
-The root `rows` and `columns` are always explicit, and nested Row count must equal `rows`. Markers occupy the lowest free column in the current row, while `span` reserves its full rectangle across future rows. Spans cannot overflow, overlap, or cross row kinds. Use the complete `cells` prop for arbitrary sparse zero-based addresses. A `Cell` accepts exactly one of scalar children, `value`, or `content`.
+Markers occupy the lowest free column in the current row, while `span` reserves its full rectangle across future rows. The widest occupied position determines the final width, and every other coordinate is padded with `null`. Spans cannot overflow, overlap, or cross row kinds. If every `Row` is empty, use an explicit null-matrix `rows` prop because marker width cannot be inferred. A `Cell` accepts exactly one of scalar children, `value`, or `content`.
 
 ## Cells and Presentation
 
-Each Cell's `payload.kind` selects where its content comes from:
+For manual authoring, Table normalizes each non-null entry into a canonical Cell payload:
 
 | kind      | Stored content                                        | Processing                                                         |
 | --------- | ----------------------------------------------------- | ------------------------------------------------------------------ |
 | `value`   | A JSON scalar plus an optional presentation reference | Resolved by a presentation definition; defaults to `text`          |
 | `content` | A JSON-safe Core or Tier 2 child                      | Used directly in Cell-local coordinates without value presentation |
 
-`{ kind: 'value', value: 'Score' }` therefore means “this is a scalar value to present.” `value` is the variant discriminator, not an alias for the JavaScript string type. Use `content` when a Cell directly hosts a Node, Path, or another Tier 2 child.
+`{ value: 'Score' }` therefore means “this is a scalar value to present.” Use `{ content }` when a Cell directly hosts a Node, Path, or another Tier 2 child. The precise canonical payload schemas remain public for Structure output, presentation, and manifest contracts.
 
 Presentation only turns a value into Core content; it does not decide which row owns the Cell or how wide it is. Built-in `text` and custom presentations resolve through the same registry.
 

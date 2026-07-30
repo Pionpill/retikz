@@ -127,20 +127,20 @@ const detailColumnsOf = (props: DetailTableProps): Array<TableDetailColumnInput>
   return buildDetailColumns(structure.children);
 };
 
-/** 统一 ManualTable 的 cells props 与 Row marker children authoring */
-const manualStructureOf = (props: ManualTableProps): Pick<ManualTableSpecInput, 'cells' | 'rowKinds'> => {
-  const structure = props as Pick<ManualTableProps, 'cells' | 'rowKinds' | 'children'>;
+/** 统一 ManualTable 的 rows props 与 Row marker children authoring */
+const manualStructureOf = (props: ManualTableProps): Pick<ManualTableSpecInput, 'rows' | 'rowKinds'> => {
+  const structure = props as Pick<ManualTableProps, 'rows' | 'rowKinds' | 'children'>;
   if (structure.children !== undefined) {
-    if (structure.cells !== undefined || structure.rowKinds !== undefined) {
-      throw new Error('table react: ManualTable Row children cannot be mixed with cells or rowKinds');
+    if (structure.rows !== undefined || structure.rowKinds !== undefined) {
+      throw new Error('table react: ManualTable Row children cannot be mixed with rows or rowKinds');
     }
-    return buildManualStructure(structure.children, props.rows, props.columns);
+    return buildManualStructure(structure.children);
   }
-  if (structure.cells === undefined) {
-    throw new Error('table react: ManualTable requires cells or Row children');
+  if (structure.rows === undefined) {
+    throw new Error('table react: ManualTable requires rows or Row children');
   }
   return {
-    cells: structure.cells,
+    rows: structure.rows,
     ...(structure.rowKinds === undefined ? {} : { rowKinds: structure.rowKinds }),
   };
 };
@@ -164,8 +164,6 @@ const manualSpecOf = (props: ManualTableProps): IRManualTableSpec => {
   const structure = manualStructureOf(props);
   return createManualTableSpec({
     ...(props.id === undefined ? {} : { id: props.id }),
-    rows: props.rows,
-    columns: props.columns,
     ...structure,
     ...(props.layout === undefined ? {} : { layout: props.layout }),
     ...(props.meta === undefined ? {} : { meta: props.meta }),

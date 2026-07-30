@@ -33,5 +33,5 @@ export const transformComponentControls = definePreviewControls({
 export const previewControlContract = {
   controls: transformComponentControls,
   canonicalValues: {},
-  relatedApis: [],
+  relatedApis: ['Transform'],
 } satisfies PreviewControlContract;

@@ -73,7 +73,7 @@ const markupOf = (render: PreviewRender | undefined, values: Record<string, unkn
 };
 
 const horizontalAxisOf = (markup: string) =>
-  Array.from(markup.matchAll(/<path d="M ([\d.-]+) ([\d.-]+) L ([\d.-]+) ([\d.-]+)"[^>]*><\/path>/g), match =>
+  Array.from(markup.matchAll(/<path d="M ([\d.-]+) ([\d.-]+) L ([\d.-]+) ([\d.-]+)"[^>]*\/?>/g), match =>
     match.slice(1).map(Number),
   ).find(points => points[0] !== points[2] && points[1] === points[3]);
 
@@ -260,7 +260,7 @@ describe('二维坐标系文档 playground', () => {
     const horizontalAxis = horizontalAxisOf(markup);
     const barBottoms = Array.from(
       markup.matchAll(
-        /<rect x="[\d.-]+" y="([\d.-]+)" width="[\d.-]+" height="([\d.-]+)" fill="[^"]+" stroke="[^"]+" stroke-width="0"><\/rect>/g,
+        /<rect x="[\d.-]+" y="([\d.-]+)" width="[\d.-]+" height="([\d.-]+)" fill="[^"]+" stroke="[^"]+" stroke-width="0"\s*\/?>/g,
       ),
       match => Number(match[1]) + Number(match[2]),
     );
