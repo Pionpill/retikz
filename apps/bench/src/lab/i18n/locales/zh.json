@@ -1,0 +1,95 @@
+{
+  "app": {
+    "title": "Kernel 更新遥测",
+    "description": "Snapshot diff → Runtime execution → Scene Patch → retained renderer commit"
+  },
+  "module": {
+    "core": "Core",
+    "coreDescription": "Kernel 运行时与渲染器",
+    "plot": "Plot",
+    "plotDescription": "可视化图表",
+    "table": "Table",
+    "tableDescription": "表格布局",
+    "switch": "切换测试模块",
+    "soon": "即将支持"
+  },
+  "sidebar": {
+    "testSuites": "测试集",
+    "runtimeUpdates": "运行时更新",
+    "singleEntityUpdate": "单实体更新",
+    "singleEntityUpdateDescription": "5,000 个稳定实体中修改一个节点",
+    "workspace": "工作区",
+    "settings": "工作区设置"
+  },
+  "header": {
+    "collapseSidebar": "收起侧栏",
+    "expandSidebar": "展开侧栏",
+    "inspect": "观察",
+    "compare": "对比",
+    "measure": "测量",
+    "updatePolicy": "更新策略",
+    "run": "运行",
+    "running": "运行中",
+    "details": "详细配置",
+    "openReport": "打开报告",
+    "closeReport": "关闭报告"
+  },
+  "settings": {
+    "language": "语言",
+    "theme": "主题",
+    "light": "亮色",
+    "dark": "暗色",
+    "chinese": "简体中文",
+    "english": "English"
+  },
+  "config": {
+    "title": "详细配置",
+    "description": "采样参数与当前执行环境",
+    "sampling": "采样",
+    "samplingDescription": "观察适合快速检查；对比与测量建议增加采样次数",
+    "sampleRuns": "采样次数",
+    "warmupRuns": "预热次数",
+    "environment": "运行环境",
+    "execution": "执行位置",
+    "currentBrowser": "当前浏览器主线程",
+    "baseline": "基准数据",
+    "deterministicEvidence": "确定性 CI 证据",
+    "local": "本地",
+    "readOnly": "只读",
+    "notice": "当前面板用于本地探索。正式回归门禁仍由 pnpm bench:check 产生",
+    "close": "关闭详细配置",
+    "done": "完成"
+  },
+  "stage": {
+    "title": "渲染预览",
+    "ready": "准备渲染 5,000 个实体",
+    "description": "观察模式会在此保留真实 renderer host",
+    "evidence": "探索数据不能替代 CI 证据 · 使用 pnpm bench:check 执行确定性门禁"
+  },
+  "report": {
+    "title": "运行报告",
+    "complete": "完成",
+    "close": "关闭报告",
+    "awaiting": "等待运行"
+  },
+  "metrics": {
+    "medianUpdate": "更新中位数",
+    "entitiesReused": "复用实体",
+    "executionPath": "执行路径",
+    "autoVsStatic": "自动策略对比静态策略"
+  },
+  "chart": {
+    "title": "策略对比",
+    "description": "更新耗时中位数 · 越低越好",
+    "empty": "运行对比或测量",
+    "emptyDescription": "采样完成后图表才会更新"
+  },
+  "inspector": {
+    "title": "运行时检查器",
+    "trace": "Trace",
+    "patch": "Scene Patch",
+    "diagnostics": "诊断",
+    "lifecycle": "生命周期",
+    "noData": "暂无数据"
+  }
+}

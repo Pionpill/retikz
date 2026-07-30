@@ -1,3 +1,6 @@
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
+import path from 'node:path';
 import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ mode }) => {
@@ -7,6 +10,12 @@ export default defineConfig(({ mode }) => {
     throw new Error('RETIKZ_BENCH_PORT must be an integer between 1 and 65535');
   }
   return {
+    plugins: [react(), tailwindcss()],
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src/lab'),
+      },
+    },
     server: {
       host: '127.0.0.1',
       open: false,

@@ -1,0 +1,95 @@
+{
+  "app": {
+    "title": "Kernel update telemetry",
+    "description": "Snapshot diff → Runtime execution → Scene Patch → retained renderer commit"
+  },
+  "module": {
+    "core": "Core",
+    "coreDescription": "Kernel runtime & renderer",
+    "plot": "Plot",
+    "plotDescription": "Visualization plots",
+    "table": "Table",
+    "tableDescription": "Table layout",
+    "switch": "Switch test module",
+    "soon": "Soon"
+  },
+  "sidebar": {
+    "testSuites": "Test suites",
+    "runtimeUpdates": "Runtime updates",
+    "singleEntityUpdate": "Single entity update",
+    "singleEntityUpdateDescription": "Change one node among 5,000 stable entities",
+    "workspace": "Workspace",
+    "settings": "Workspace settings"
+  },
+  "header": {
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar",
+    "inspect": "Inspect",
+    "compare": "Compare",
+    "measure": "Measure",
+    "updatePolicy": "Update policy",
+    "run": "Run",
+    "running": "Running",
+    "details": "Detailed settings",
+    "openReport": "Open report",
+    "closeReport": "Close report"
+  },
+  "settings": {
+    "language": "Language",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "chinese": "简体中文",
+    "english": "English"
+  },
+  "config": {
+    "title": "Detailed settings",
+    "description": "Sampling parameters and the current execution environment",
+    "sampling": "Sampling",
+    "samplingDescription": "Inspect is best for quick checks; increase samples for Compare and Measure",
+    "sampleRuns": "Sample runs",
+    "warmupRuns": "Warmup runs",
+    "environment": "Environment",
+    "execution": "Execution",
+    "currentBrowser": "Current browser main thread",
+    "baseline": "Baseline",
+    "deterministicEvidence": "Deterministic CI evidence",
+    "local": "Local",
+    "readOnly": "Read-only",
+    "notice": "This panel is for local exploration. pnpm bench:check remains the regression gate.",
+    "close": "Close detailed settings",
+    "done": "Done"
+  },
+  "stage": {
+    "title": "Render stage",
+    "ready": "Ready to render 5,000 entities",
+    "description": "Inspect keeps a real renderer host on this stage",
+    "evidence": "Exploratory numbers are not CI evidence · use pnpm bench:check for deterministic gates"
+  },
+  "report": {
+    "title": "Run report",
+    "complete": "Complete",
+    "close": "Close report",
+    "awaiting": "Awaiting run"
+  },
+  "metrics": {
+    "medianUpdate": "Median update",
+    "entitiesReused": "Entities reused",
+    "executionPath": "Execution path",
+    "autoVsStatic": "Auto vs static"
+  },
+  "chart": {
+    "title": "Policy comparison",
+    "description": "Median update duration · lower is better",
+    "empty": "Run Compare or Measure",
+    "emptyDescription": "Charts update only after sampling completes"
+  },
+  "inspector": {
+    "title": "Runtime inspector",
+    "trace": "Trace",
+    "patch": "Scene Patch",
+    "diagnostics": "Diagnostics",
+    "lifecycle": "Lifecycle",
+    "noData": "No data"
+  }
+}
