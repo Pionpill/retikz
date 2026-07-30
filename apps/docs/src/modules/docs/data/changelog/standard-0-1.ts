@@ -26,8 +26,39 @@ export const standardV01: Release = {
             en: 'Each capability provides a module; `createStandardBundle()` composes selected definitions, while `StandardAllPreset` exposes the current full set. Every path reuses the Core registry without global registration or a second conflict model.',
           },
         },
+        {
+          label: { zh: '通用布局容器', en: 'General layout containers' },
+          content: {
+            zh: '`FlexLayout`、`GridLayout` 与 `OverlayLayout` 用统一的双轴尺寸、间距、对齐和 overflow 契约替代手写坐标，并公开区分父级 slot、真实占用与视觉包络的 typed artifact。',
+            en: '`FlexLayout`, `GridLayout`, and `OverlayLayout` replace hand-authored coordinates with shared two-axis sizing, spacing, alignment, and overflow contracts while exposing typed artifacts that distinguish parent slots, real allocation, and visual bounds.',
+          },
+        },
       ],
       subVersions: [
+        {
+          version: 'alpha.2',
+          date: '2026-07-30',
+          summary: {
+            zh: '新增三种通用布局容器、公共 LayoutItem、typed artifacts 与布局 capability preset。',
+            en: 'Adds three general layout containers, the shared LayoutItem vocabulary, typed artifacts, and a layout capability preset.',
+          },
+          items: [
+            {
+              label: { zh: 'Flex、Grid 与 Overlay', en: 'Flex, Grid, and Overlay' },
+              content: {
+                zh: '`FlexLayout` 处理 grow、shrink、wrap 与 baseline；`GridLayout` 处理 tracks、span 和非 dense 自动放置；`OverlayLayout` 处理 aligned / positioned 叠放与稳定 paint order。三者都通过 Core proposal / probe / replay 契约求解。',
+                en: '`FlexLayout` handles grow, shrink, wrapping, and baselines; `GridLayout` handles tracks, spans, and non-dense auto placement; `OverlayLayout` handles aligned or positioned stacking with stable paint order. All three solve through the Core proposal, probe, and replay contract.',
+              },
+            },
+            {
+              label: { zh: 'Typed artifact 与装载', en: 'Typed artifacts and loading' },
+              content: {
+                zh: '每种容器返回 strict JSON artifact，记录 container、items 与 line / track / paint order 结果；`StandardLayoutPreset` 可只装载布局 definitions，`StandardAllPreset` 同步纳入三项能力。',
+                en: 'Each container returns a strict JSON artifact with container, item, and line, track, or paint-order results. `StandardLayoutPreset` loads only layout definitions, while `StandardAllPreset` now includes all three.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.1',
           date: '2026-07-26',
@@ -65,19 +96,36 @@ export const standardV01: Release = {
       pkg: '@retikz/standard-vanilla',
       version: 'v0.1',
       description: {
-        zh: 'Standard 的无框架 authoring：提供 Grid、Axes、Frame builders、显式 adapters 与全量便利数组。',
-        en: 'Framework-free Standard authoring with Grid, Axes, and Frame builders, explicit adapters, and an all-capabilities convenience array.',
+        zh: 'Standard 的无框架 authoring：提供呈现与布局 builders、显式 adapters、SSR 接线与全量便利数组。',
+        en: 'Framework-free Standard authoring with presentation and layout builders, explicit adapters, SSR wiring, and all-capabilities convenience arrays.',
       },
       highlights: [
         {
           label: { zh: '显式 Vanilla 接线', en: 'Explicit Vanilla wiring' },
           content: {
-            zh: '`grid()`、`axes()`、`frame()` 构造与 Standard schema 一致的输入；`StandardVanillaAdapters` 是浅冻结的当前版本全量数组，部分加载仍可逐项传入。',
-            en: '`grid()`, `axes()`, and `frame()` construct inputs governed by the Standard schemas. `StandardVanillaAdapters` is a shallow-frozen full array for this release, while partial loading remains explicit.',
+            zh: '所有 builders 都构造由 Standard schema 约束的输入；布局家族提供独立的 `StandardLayoutVanillaAdapters`，`StandardVanillaAdapters` 仍是浅冻结的当前版本全量数组。',
+            en: 'Every builder constructs input governed by Standard schemas. The layout family has its own `StandardLayoutVanillaAdapters`, while `StandardVanillaAdapters` remains the shallow-frozen full array for this release.',
           },
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.2',
+          date: '2026-07-30',
+          summary: {
+            zh: '新增三种布局 builder、对应 adapters 与无 DOM 的嵌套编译 / SSR 接线。',
+            en: 'Adds three layout builders, their adapters, and DOM-free nested compilation and SSR wiring.',
+          },
+          items: [
+            {
+              label: { zh: '布局 family adapters', en: 'Layout family adapters' },
+              content: {
+                zh: '`flexLayout()`、`gridLayout()` 与 `overlayLayout()` 生成 canonical Standard IR；三个 adapter 共用稳定 family maker，并按 Flex、Grid、Overlay 顺序贡献 definitions。',
+                en: '`flexLayout()`, `gridLayout()`, and `overlayLayout()` produce canonical Standard IR. Their adapters share one stable family maker and contribute definitions in Flex, Grid, Overlay order.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.1',
           date: '2026-07-26',
@@ -93,19 +141,36 @@ export const standardV01: Release = {
       pkg: '@retikz/standard-react',
       version: 'v0.1',
       description: {
-        zh: 'Standard 的 React authoring：以静态 Tier 2 adapter 提供 Grid、Axes、Frame 及 Node-like header JSX。',
-        en: 'React authoring for Standard with Grid, Axes, Frame, and Node-like header JSX backed by static Tier 2 adapters.',
+        zh: 'Standard 的 React authoring：以静态 Tier 2 adapter 提供呈现 composite、布局容器与 LayoutItem JSX。',
+        en: 'React authoring for Standard presentation composites, layout containers, and LayoutItem JSX backed by static Tier 2 adapters.',
       },
       highlights: [
         {
           label: { zh: '按使用项贡献', en: 'Per-use contribution' },
           content: {
-            zh: '组件只在当前 `Layout` 中按实际使用项贡献 definition；导入包不会注册全局状态。`FrameTitle` / `FrameDescription` 复用公开 Node authoring，并对非法组合 fail-loud。',
-            en: 'Components contribute definitions only for capabilities used by the current `Layout`; importing the package creates no global state. `FrameTitle` and `FrameDescription` reuse public Node authoring and fail loudly on invalid composition.',
+            zh: '组件只在当前 `Layout` 中按实际使用项贡献 definition；导入包不会注册全局状态。嵌套布局共用稳定 family contribution，非法 child 组合会立即 fail-loud。',
+            en: 'Components contribute definitions only for capabilities used by the current `Layout`; importing the package creates no global state. Nested layouts share one stable family contribution, and invalid child composition fails loudly.',
           },
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.2',
+          date: '2026-07-30',
+          summary: {
+            zh: '新增 FlexLayout、GridLayout、OverlayLayout 与只能作为直属语义 child 的 LayoutItem。',
+            en: 'Adds FlexLayout, GridLayout, OverlayLayout, and LayoutItem as their direct semantic child.',
+          },
+          items: [
+            {
+              label: { zh: '嵌套布局 authoring', en: 'Nested layout authoring' },
+              content: {
+                zh: '`LayoutItem` 用 `itemKey` 保存容器内 identity，可接一个 React drawable child 或显式 `ir`；三种布局任意嵌套时仍只贡献一组有序 definitions。',
+                en: '`LayoutItem` stores container-local identity through `itemKey` and accepts either one React drawable child or explicit `ir`. Arbitrary nesting among the three layouts still contributes one ordered definition set.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.1',
           date: '2026-07-26',

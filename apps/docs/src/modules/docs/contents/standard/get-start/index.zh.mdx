@@ -115,6 +115,26 @@ mountSvg(container, scene, {
 
 如果 bundle 没有选择 `GridModule`，Core 会产生 `COMPOSITE_NOT_REGISTERED` 诊断并跳过 Grid；其它已注册或 Core 原生 child 仍会继续编译。需要当前全部 Standard 能力时，可以直接使用 `StandardAllPreset.compile`。
 
+## 下一步：用布局容器替代手写坐标
+
+布局 JSX 使用 `FlexLayout`、`GridLayout`、`OverlayLayout` 与直属 `LayoutItem`。三者共享一次 `standard.layout` contribution；直接 IR 可注入 `StandardLayoutPreset.compile`，Vanilla 可传 `StandardLayoutVanillaAdapters`。
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { FlexLayout, LayoutItem } from '@retikz/standard-react';
+
+<Layout width={320} height={120}>
+  <FlexLayout columnGap={8}>
+    <LayoutItem kind="flex" itemKey="label" grow={1}>
+      <Node position={[0, 0]} text="Label" />
+    </LayoutItem>
+    <LayoutItem kind="flex" itemKey="value" shrink={0}>
+      <Node position={[0, 0]} text="42%" />
+    </LayoutItem>
+  </FlexLayout>
+</Layout>;
+```
+
 ## 接下来
 
 | 页面                                               | 继续了解什么                               |
@@ -122,4 +142,5 @@ mountSvg(container, scene, {
 | [网格](/standard/composite/grid)                   | 格距、主线、边界和边框                     |
 | [坐标轴](/standard/composite/axes)                 | 箭头、刻度、轴名和分方向网格               |
 | [分组框](/standard/composite/frame)                | 自动 bounds、间距、边框和标签              |
+| [布局容器](/standard/layout)                       | Flex、Grid、Overlay 与 typed artifacts     |
 | [能力装载](/standard/extension/capability-loading) | module、部分 bundle、all preset 与宿主边界 |

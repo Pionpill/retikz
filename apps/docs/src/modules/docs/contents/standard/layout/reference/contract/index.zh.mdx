@@ -1,0 +1,251 @@
+---
+title: 布局契约参考
+description: 查询 Standard 布局输入、LayoutItem 联合与 typed layout artifact 的 JSON schema 和字段语义。
+---
+
+本页是 Standard 布局持久化输入与编译 artifact 的权威契约。React props 与 Vanilla builders 最终都生成这里的 canonical JSON；三个容器共享相同的 item 几何字段，再各自补充 line、track 或 paint order 结果。
+
+## 容器输入
+
+### FlexLayoutSchema
+
+<ZodSchema
+  name="FlexLayoutSchema"
+  description="一维 grow、shrink、wrap 与 baseline 布局的 canonical 输入。"
+  descriptions={{
+    namespace: 'Standard 绘图能力的 composite 命名空间。',
+    type: '确定性一维盒布局的 composite 类型。',
+    size: '包含 padding 的容器双轴分配尺寸策略。',
+    'size.x': '容器水平方向的 allocation 尺寸策略。',
+    'size.y': '容器垂直方向的 allocation 尺寸策略。',
+    padding: '从 allocation box 到 content box 的内边距。',
+    overflow: '视觉溢出保持可见或裁切到容器 allocation 的策略。',
+    direction: '主轴的物理方向。',
+    wrap: '换行与交叉轴遍历策略。',
+    columnGap: 'item 或 line 之间的水平间距。',
+    rowGap: 'item 或 line 之间的垂直间距。',
+    justifyContent: '每条 line 内主轴剩余空间的分布方式。',
+    alignItems: 'Flex item 默认的交叉轴对齐方式。',
+    alignContent: '多条 line 之间交叉轴剩余空间的分布方式。',
+    children: '按稳定绘制顺序排列的 authored Flex item。',
+  }}
+/>
+
+### GridLayoutSchema
+
+<ZodSchema
+  name="GridLayoutSchema"
+  description="二维 tracks、span 与非 dense 自动放置布局的 canonical 输入。"
+  descriptions={{
+    size: '包含 padding 的容器双轴分配尺寸策略。',
+    'size.x': '容器水平方向的 allocation 尺寸策略。',
+    'size.y': '容器垂直方向的 allocation 尺寸策略。',
+    padding: '从 allocation box 到 content box 的内边距。',
+    overflow: '视觉溢出保持可见或裁切到容器 allocation 的策略。',
+    namespace: 'Standard 绘图能力的 composite 命名空间。',
+    type: '确定性二维 track 布局的 composite 类型。',
+    columns: '显式声明的物理列 tracks。',
+    rows: '显式声明的物理行 tracks。',
+    implicitColumn: '隐式列使用的 track 定义。',
+    implicitRow: '隐式行使用的 track 定义。',
+    autoFlow: '完全自动放置 item 的非 dense 流向。',
+    overlap: '完全显式放置的 authored item 发生重叠时采用的策略。',
+    columnGap: '列 tracks 之间的水平间距。',
+    rowGap: '行 tracks 之间的垂直间距。',
+    justifyItems: 'Grid area 内 item 默认的水平对齐方式。',
+    alignItems: 'Grid area 内 item 默认的垂直对齐方式。',
+    justifyContent: '已求解列组的水平分布方式。',
+    alignContent: '已求解行组的垂直分布方式。',
+    children: '按稳定绘制顺序排列的 authored Grid item。',
+  }}
+/>
+
+### OverlayLayoutSchema
+
+<ZodSchema
+  name="OverlayLayoutSchema"
+  description="共享 content box 中 aligned 与 positioned item 的 canonical 输入。"
+  descriptions={{
+    size: '包含 padding 的容器双轴分配尺寸策略。',
+    'size.x': '容器水平方向的 allocation 尺寸策略。',
+    'size.y': '容器垂直方向的 allocation 尺寸策略。',
+    padding: '从 allocation box 到 content box 的内边距。',
+    overflow: '视觉溢出保持可见或裁切到容器 allocation 的策略。',
+    namespace: 'Standard 绘图能力的 composite 命名空间。',
+    type: '确定性叠放布局的 composite 类型。',
+    justifyItems: 'aligned 与 positioned item 默认继承的水平对齐方式。',
+    alignItems: 'aligned 与 positioned item 默认继承的垂直对齐方式。',
+    children: '按稳定 identity 顺序排列的 authored Overlay item。',
+  }}
+/>
+
+## LayoutItem 联合
+
+### LayoutItemSchema
+
+<ZodSchema
+  name="LayoutItemSchema"
+  description="由 kind 判别的 FlexLayoutItem、GridLayoutItem 与 OverlayLayoutItem 闭合联合。"
+/>
+
+所有 item 共享以下基础字段；具体容器页记录各自增加的分配字段。
+
+| 字段      | 类型                            | 默认值 | 描述                                            |
+| --------- | ------------------------------- | ------ | ----------------------------------------------- |
+| `kind`    | `'flex' \| 'grid' \| 'overlay'` | —      | 选择拥有该 item 的布局容器                      |
+| `key`     | `string`                        | —      | 当前容器内唯一且非空的 authored identity        |
+| `child`   | `IRChild`                       | —      | 参与布局的 JSON-safe Core 或已注册 Tier 2 child |
+| `margin?` | `number` \| `IRBoxSpacing`      | `0`    | slot 外围间距，不进入 child proposal            |
+
+## Artifact 通用字段
+
+`LayoutArtifactSchema` 是三个具体 payload 的闭合联合。它只描述布局可观察结果，不保存 proposal、probe、replay token、solver 对象或 child 私有 IR。
+
+### LayoutArtifactSchema
+
+<ZodSchema name="LayoutArtifactSchema" description="由 kind 判别的三个 Standard typed layout artifact payload 联合。" />
+
+每个具体 artifact 的 `container` 都包含：
+
+| 字段               | 类型                         | 描述                                                |
+| ------------------ | ---------------------------- | --------------------------------------------------- |
+| `allocationBounds` | `LayoutArtifactRect`         | 容器最终 allocation rectangle                       |
+| `contentBounds`    | `LayoutArtifactRect`         | 扣除 padding 后的 content rectangle                 |
+| `visualBounds`     | `LayoutArtifactRect`         | 所有已平移 item visual bounds 的并集                |
+| `visibleBounds`    | `LayoutArtifactRect \| null` | overflow policy 后仍可见的并集；无正面积时为 `null` |
+
+每个 `items[]` 条目共享：
+
+| 字段               | 类型                              | 描述                                                  |
+| ------------------ | --------------------------------- | ----------------------------------------------------- |
+| `key`              | `string`                          | 对应 authored item identity                           |
+| `sourceIndex`      | `number`                          | 连续、从零开始的 authored 顺序                        |
+| `marginBounds`     | `LayoutArtifactRect`              | resolved margin 包围的完整父级分配区域                |
+| `slotBounds`       | `LayoutArtifactRect`              | 不含 margin 的父级分配 slot                           |
+| `allocationBounds` | `LayoutArtifactRect`              | child 接受或拒绝 slot 后的真实布局占用                |
+| `visualBounds`     | `LayoutArtifactRect`              | stroke、label 等效果形成的保守视觉包络                |
+| `visibleBounds`    | `LayoutArtifactRect \| null`      | clipping 后仍可见的视觉区域                           |
+| `translation`      | `{ x: number, y: number }`        | replay 前应用的 container-local 平移                  |
+| `overflow`         | `{ allocation, visual, clipped }` | 双轴真实占用、视觉包络与裁切状态                      |
+| `alignmentGuide?`  | `{ name, position, fallback }`    | 实际用于 placement 的 baseline guide 或 edge fallback |
+
+`slotBounds`、`allocationBounds` 与 `visualBounds` 不能互换：父级分配的 slot 可以被固定几何拒绝，而视觉包络还可能因 stroke 或 label 继续扩大。
+
+## 具体 Artifact
+
+### FlexLayoutArtifactSchema
+
+<ZodSchema
+  name="FlexLayoutArtifactSchema"
+  description="FlexLayout 的 container、source-order items 与 physical cross-order lines。"
+  descriptions={{
+    kind: 'FlexLayout artifact payload 的判别字段。',
+    container: '已求解的容器几何。',
+    'container.allocationBounds': '容器最终的 allocation rectangle。',
+    'container.allocationBounds.x': '容器 allocation 的水平原点。',
+    'container.allocationBounds.y': '容器 allocation 的垂直原点。',
+    'container.allocationBounds.width': '容器 allocation 的非负宽度。',
+    'container.allocationBounds.height': '容器 allocation 的非负高度。',
+    'container.contentBounds': '扣除 padding 后的容器 content rectangle。',
+    'container.contentBounds.x': '容器 content rectangle 的水平原点。',
+    'container.contentBounds.y': '容器 content rectangle 的垂直原点。',
+    'container.contentBounds.width': '容器 content rectangle 的非负宽度。',
+    'container.contentBounds.height': '容器 content rectangle 的非负高度。',
+    'container.visualBounds': '所有已平移 item visual bounds 的并集。',
+    'container.visualBounds.x': 'visual bounds 并集的水平原点。',
+    'container.visualBounds.y': 'visual bounds 并集的垂直原点。',
+    'container.visualBounds.width': 'visual bounds 并集的非负宽度。',
+    'container.visualBounds.height': 'visual bounds 并集的非负高度。',
+    'container.visibleBounds': '容器内仍可见的视觉并集；没有正面积时为 null。',
+    items: '按 authored source order 排列的 item 结果。',
+    lines: '按最终物理交叉轴顺序排列的 lines。',
+  }}
+/>
+
+`items[].line` 指向所属 line；`lines[]` 记录连续 `index`、`itemKeys`、物理主轴、主轴范围与 cross 范围。两者必须形成完整双向 partition。
+
+### GridLayoutArtifactSchema
+
+<ZodSchema
+  name="GridLayoutArtifactSchema"
+  description="GridLayout 的 container、resolved item spans 以及 columns/rows track geometry。"
+  descriptions={{
+    kind: 'GridLayout artifact payload 的判别字段。',
+    container: '已求解的容器几何。',
+    'container.allocationBounds': '容器最终的 allocation rectangle。',
+    'container.allocationBounds.x': '容器 allocation 的水平原点。',
+    'container.allocationBounds.y': '容器 allocation 的垂直原点。',
+    'container.allocationBounds.width': '容器 allocation 的非负宽度。',
+    'container.allocationBounds.height': '容器 allocation 的非负高度。',
+    'container.contentBounds': '扣除 padding 后的容器 content rectangle。',
+    'container.contentBounds.x': '容器 content rectangle 的水平原点。',
+    'container.contentBounds.y': '容器 content rectangle 的垂直原点。',
+    'container.contentBounds.width': '容器 content rectangle 的非负宽度。',
+    'container.contentBounds.height': '容器 content rectangle 的非负高度。',
+    'container.visualBounds': '所有已平移 item visual bounds 的并集。',
+    'container.visualBounds.x': 'visual bounds 并集的水平原点。',
+    'container.visualBounds.y': 'visual bounds 并集的垂直原点。',
+    'container.visualBounds.width': 'visual bounds 并集的非负宽度。',
+    'container.visualBounds.height': 'visual bounds 并集的非负高度。',
+    'container.visibleBounds': '容器内仍可见的视觉并集；没有正面积时为 null。',
+    items: '按 authored source order 排列的 item 结果。',
+    columns: '按物理起点顺序排列的已求解列 tracks。',
+    rows: '按物理起点顺序排列的已求解行 tracks。',
+  }}
+/>
+
+`items[]` 增加 `column`、`row`、`columnSpan` 与 `rowSpan`。`columns[]` / `rows[]` 按物理 start 排序，并记录连续 `index`、`start`、`size`、`sourceKind` 与 `implicit`。
+
+### OverlayLayoutArtifactSchema
+
+<ZodSchema
+  name="OverlayLayoutArtifactSchema"
+  description="OverlayLayout 的 container、source-order items 与稳定 resolved paintOrder。"
+  descriptions={{
+    kind: 'OverlayLayout artifact payload 的判别字段。',
+    container: '已求解的容器几何。',
+    'container.allocationBounds': '容器最终的 allocation rectangle。',
+    'container.allocationBounds.x': '容器 allocation 的水平原点。',
+    'container.allocationBounds.y': '容器 allocation 的垂直原点。',
+    'container.allocationBounds.width': '容器 allocation 的非负宽度。',
+    'container.allocationBounds.height': '容器 allocation 的非负高度。',
+    'container.contentBounds': '扣除 padding 后的容器 content rectangle。',
+    'container.contentBounds.x': '容器 content rectangle 的水平原点。',
+    'container.contentBounds.y': '容器 content rectangle 的垂直原点。',
+    'container.contentBounds.width': '容器 content rectangle 的非负宽度。',
+    'container.contentBounds.height': '容器 content rectangle 的非负高度。',
+    'container.visualBounds': '所有已平移 item visual bounds 的并集。',
+    'container.visualBounds.x': 'visual bounds 并集的水平原点。',
+    'container.visualBounds.y': 'visual bounds 并集的垂直原点。',
+    'container.visualBounds.width': 'visual bounds 并集的非负宽度。',
+    'container.visualBounds.height': 'visual bounds 并集的非负高度。',
+    'container.visibleBounds': '容器内仍可见的视觉并集；没有正面积时为 null。',
+    items: '按 authored source order 排列的 item 结果。',
+    paintOrder: '包含全部 item key 的稳定已求解绘制顺序。',
+  }}
+/>
+
+`items[]` 增加 `placement`、`sizeParticipation` 与 `zIndex`。`paintOrder` 必须是所有 item key 的完整排列：先按 `zIndex` 升序，再按 `sourceIndex` 保持稳定顺序。
+
+## 读取 Artifact
+
+Core artifact envelope 负责 occurrence、namespace 与 composite type；Standard schema 只解析其中的 `value` payload。
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { FlexLayoutArtifactSchema, StandardLayoutPreset } from '@retikz/standard';
+
+const output = compileToScene(scene, StandardLayoutPreset.compile);
+const envelope = output.artifacts.find(
+  artifact => artifact.kind === 'composite' && artifact.namespace === 'standard' && artifact.type === 'flexLayout',
+);
+const artifact = FlexLayoutArtifactSchema.parse(envelope?.value);
+```
+
+## 相关
+
+- [布局容器](/standard/layout)：选择 Flex、Grid 或 Overlay
+- [FlexLayout](/standard/layout/flex-layout)：一维分配字段与行为
+- [GridLayout](/standard/layout/grid-layout)：track 与 placement 字段
+- [OverlayLayout](/standard/layout/overlay-layout)：aligned、positioned 与 paint order
+- [Layout](/kernel/components/layout/overview)：Core proposal、slot、bounds 与 replay 契约

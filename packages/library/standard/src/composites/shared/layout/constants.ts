@@ -38,3 +38,12 @@ export const LayoutOverflow = {
   Visible: 'visible',
   Clip: 'clip',
 } as const;
+
+/** GridLayout artifact 中 track 的 authored sizing 来源 */
+export const LayoutTrackSourceKind = {
+  Fixed: 'fixed',
+  ContentMinimum: 'content-minimum',
+  ContentNatural: 'content-natural',
+  Fraction: 'fraction',
+  Minmax: 'minmax',
+} as const;

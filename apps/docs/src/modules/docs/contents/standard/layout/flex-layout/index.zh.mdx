@@ -1,0 +1,124 @@
+---
+title: FlexLayout
+description: 用一维 Box layout 表达 grow、shrink、wrap 与 baseline，在宿主无关的编译阶段排布子图形。
+---
+
+`FlexLayout` 沿一个主轴排布任意子图形。它可以把剩余空间分给可伸展项、在空间不足时收缩或换行，同时让固定几何保持真实尺寸、让文本按分配宽度重新排版。
+
+## 用法
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { FlexLayout, LayoutItem } from '@retikz/standard-react';
+```
+
+```tsx
+<Layout width={360} height={120}>
+  <FlexLayout columnGap={8}>
+    <LayoutItem kind="flex" itemKey="label" grow={1}>
+      <Node position={[0, 0]} text="标签" />
+    </LayoutItem>
+    <LayoutItem kind="flex" itemKey="value" shrink={0}>
+      <Node position={[0, 0]} text="42%" />
+    </LayoutItem>
+  </FlexLayout>
+</Layout>
+```
+
+`itemKey` 是布局容器内的 authored identity，不读取 React 保留的 `key`。每个 `LayoutItem` 恰好接受一个 drawable child，或用 `ir` 显式传一个 `IRChild`。
+
+| 场景        | 公开入口                                                                                   |
+| ----------- | ------------------------------------------------------------------------------------------ |
+| React       | `FlexLayout`、`LayoutItem`（`@retikz/standard-react`）                                     |
+| Vanilla     | `flexLayout`、`FlexLayoutVanillaAdapter`（`@retikz/standard-vanilla`）                     |
+| IR / 持久化 | `FlexLayoutSchema`、`createFlexLayout`、`IRFlexLayout`、`FlexLayoutDefinition`（Standard） |
+
+## 例子
+
+### 基础分配
+
+下面的三项保持 authored paint order。中间标签接收剩余主轴空间；两侧 item 不 shrink，`columnGap` 始终表示物理水平方向的间距。
+
+<ComponentPreview files="flex-layout-basic" size="sm" />
+
+`direction` 决定主轴与遍历方向，`wrap` 决定是否形成多条 line。reverse 只改变布局遍历和 placement，不改变 `children`、item `key` 或绘制顺序。
+
+### 控制面板
+
+切换主轴、换行与交叉轴对齐，并调节 item 的 basis、grow 和 shrink。预览使用固定 viewBox；当 basis 增大或取消换行时，可以直接观察负剩余空间如何触发 shrink。
+
+<ComponentPreview files="flex-layout-playground" size="lg" />
+
+### Overflow 与 clip
+
+slot 与真实 allocation 是两个量。固定几何拒绝较小 slot 时，`visible` 保留完整视觉；`clip` 只改变可见区域，typed artifact 仍保留真实 bounds 与 `clipped` 状态。
+
+<ComponentPreview files="flex-layout-overflow" size="sm" />
+
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="只有在排查文本重排、固定几何 overflow 或 baseline 行为时才需要理解 probe/replay。"
+/>
+
+FlexLayout 先用 `intrinsic.minimum` 与 `intrinsic.natural` probe child，再在主轴 slot 冻结后使用 `exact` 重新 probe。文本可以据此在较窄宽度下增加高度；固定几何也可以让真实 allocation 超出 slot，而不会触发第二轮主轴分配。
+
+每条 line 独立执行有界 grow/shrink：item 命中 `min` 或 `max` 后冻结，剩余空间继续分给未冻结项。最终只 replay 被选中的 probe；未选候选不会发布 primitive、resource、namespace 或 artifact。
+
+<SourceLinks
+  sources={[
+    { label: 'FlexLayout 输入契约', path: 'packages/library/standard/src/composites/flex-layout/schema.ts' },
+    {
+      label: 'FlexLayout proposal 与 placement',
+      path: 'packages/library/standard/src/composites/flex-layout/compile.ts',
+    },
+    { label: 'Flex line 纯求解', path: 'packages/library/standard/src/composites/flex-layout/solve.ts' },
+    { label: 'FlexLayout React adapter', path: 'packages/library/standard-react/src/flex-layout/FlexLayout.tsx' },
+  ]}
+/>
+
+## API 参考
+
+`FlexLayoutInput` 是 factory 的作者输入；`IRFlexLayout` 是应用默认值后的 JSON-safe 持久化形态。
+
+React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为直属 `LayoutItem`；`FlexLayoutItemProps` 把 JSON 的 `key` 命名为 `itemKey`，并要求 `children` 与 `ir` 二选一。
+
+### `FlexLayoutInput`
+
+| 属性              | 类型                                     | 默认值                | 描述                                                                |
+| ----------------- | ---------------------------------------- | --------------------- | ------------------------------------------------------------------- |
+| `size?`           | `LayoutSizeInput`                        | `content` / `content` | 双轴 allocation 策略；`fixed` 保留作者尺寸，`fill` 需要有限父级空间 |
+| `padding?`        | `number` \| `IRBoxSpacing`               | `0`                   | allocation box 到 content box 的内边距                              |
+| `overflow?`       | <ApiValues name="LayoutOverflow" />      | `'visible'`           | `clip` 在 container allocation 上创建一个 Scope clip                |
+| `direction?`      | <ApiValues name="FlexLayoutDirection" /> | `'row'`               | 主轴及正反向遍历                                                    |
+| `wrap?`           | <ApiValues name="FlexLayoutWrap" />      | `'nowrap'`            | 单 line、换行或反向 cross placement                                 |
+| `columnGap?`      | `number`                                 | `0`                   | 物理水平方向 item 或 line gap                                       |
+| `rowGap?`         | `number`                                 | `0`                   | 物理垂直方向 item 或 line gap                                       |
+| `justifyContent?` | `FlexMainDistributionValue`              | `'start'`             | 每条 line 的主轴剩余空间分布                                        |
+| `alignItems?`     | <ApiValues name="LayoutAlignment" />     | `'stretch'`           | 默认 cross alignment；column 方向不接受 baseline                    |
+| `alignContent?`   | <ApiValues name="LayoutDistribution" />  | `'start'`             | 多 line 的 cross 剩余空间分布                                       |
+| `children?`       | `Array<FlexLayoutItemInput>`             | `[]`                  | authored item；同一容器内 `key` 必须唯一                            |
+
+### `FlexLayoutItemInput`
+
+| 属性         | 类型                                 | 默认值        | 描述                                                                        |
+| ------------ | ------------------------------------ | ------------- | --------------------------------------------------------------------------- |
+| `kind`       | `'flex'`                             | —             | item discriminator；可使用 `LayoutItemKind.Flex`                            |
+| `key`        | `string`                             | —             | 当前容器内稳定且非空的 authored identity                                    |
+| `child`      | `IRChild`                            | —             | 参与布局的任意 JSON-safe Core child                                         |
+| `margin?`    | `number` \| `IRBoxSpacing`           | `0`           | slot 外边距；不进入 child proposal                                          |
+| `basis?`     | `'content'` \| `number`              | `'content'`   | 自然主轴 contribution 或有限非负 authored base slot                         |
+| `grow?`      | `number`                             | `0`           | 接收正 free space 的有限非负 factor                                         |
+| `shrink?`    | `number`                             | `1`           | 乘以 unclamped basis 后用于回收负 free space                                |
+| `min?`       | `number`                             | child minimum | 显式值替代 automatic child minimum；child 拒绝时以 allocation overflow 表达 |
+| `max?`       | `number`                             | 无上限        | authored main slot 硬上限                                                   |
+| `alignSelf?` | <ApiValues name="LayoutAlignment" /> | `alignItems`  | 覆盖当前 item 的 cross alignment                                            |
+
+## 相关
+
+- [布局容器](/standard/layout)：Standard 通用布局家族与职责边界
+- [布局契约参考](/standard/layout/reference/contract)：输入、LayoutItem 与 typed artifact schema
+- [Tier 2 Composite](/kernel/concepts/design/composite)：Core 如何注册并编译高层 IR
+- [Layout](/kernel/components/layout/overview)：宿主尺寸、Scene 输出与 layout artifact

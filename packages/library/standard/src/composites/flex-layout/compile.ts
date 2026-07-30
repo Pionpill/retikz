@@ -16,6 +16,7 @@ import {
 } from '@retikz/core';
 
 import type { LayoutInsets, LayoutRect } from '../shared/layout/internal';
+import type { FlexLayoutArtifact } from './artifact-types';
 import type { IRFlexLayout, IRFlexLayoutItem } from './types';
 
 import { LayoutAlignment, LayoutAxisSizeKind, LayoutDistribution, LayoutOverflow } from '../shared/layout';
@@ -23,6 +24,9 @@ import {
   alignAllocationInSlot,
   compensatedLayoutSum,
   contentRectOf,
+  createLayoutArtifactAlignmentGuide,
+  createLayoutArtifactContainer,
+  createLayoutArtifactItem,
   layoutClipOf,
   layoutEpsilon,
   normalizeLayoutSpacing,
@@ -55,6 +59,8 @@ type FlexLineState = {
 
 type PlacedFlexItem = Readonly<{
   sourceIndex: number;
+  margin: LayoutInsets;
+  slotBounds: LayoutRect;
   result: LayoutChildResult;
   translation: Readonly<{ x: number; y: number }>;
   alignment: string;
@@ -349,7 +355,7 @@ const outgoingLineGuide = (
 export const compileFlexLayout = (
   node: IRFlexLayout,
   context: LayoutCompositeCompileContext,
-): LayoutCompositeCompileResult => {
+): LayoutCompositeCompileResult<FlexLayoutArtifact> => {
   const axes = axesOf(node.direction);
   const padding = normalizeLayoutSpacing(node.padding);
   const proposalByAxis = context.proposal;
@@ -603,7 +609,14 @@ export const compileFlexLayout = (
       }
       const translation =
         axes.main === 'x' ? { x: mainTranslation, y: crossTranslation } : { x: crossTranslation, y: mainTranslation };
-      placedBySource[sourceIndex] = Object.freeze({ sourceIndex, result: finalResult, translation, alignment });
+      placedBySource[sourceIndex] = Object.freeze({
+        sourceIndex,
+        margin: item.margin,
+        slotBounds: Object.freeze(physicalSlot),
+        result: finalResult,
+        translation: Object.freeze(translation),
+        alignment,
+      });
     }
   }
   const outputChildren = placedBySource.map(placed => {
@@ -635,9 +648,55 @@ export const compileFlexLayout = (
       }),
     ]);
   }
+  const physicalLines = [...lineStates].sort(
+    (first, second) => first.crossStart - second.crossStart || lineStates.indexOf(first) - lineStates.indexOf(second),
+  );
+  const lineIndexBySource = new Map<number, number>();
+  physicalLines.forEach((line, lineIndex) =>
+    line.itemIndexes.forEach(sourceIndex => lineIndexBySource.set(sourceIndex, lineIndex)),
+  );
+  const items = placedBySource.map((placed, sourceIndex) => {
+    if (placed === undefined) throw new Error('FlexLayout failed to artifact an authored item');
+    const authored = measured[sourceIndex].authored;
+    const alignmentGuide =
+      placed.alignment === LayoutAlignment.FirstBaseline || placed.alignment === LayoutAlignment.LastBaseline
+        ? createLayoutArtifactAlignmentGuide(placed.result, placed.translation, placed.alignment, axes.cross)
+        : undefined;
+    return Object.freeze({
+      ...createLayoutArtifactItem({
+        key: authored.key,
+        sourceIndex,
+        margin: placed.margin,
+        slotBounds: placed.slotBounds,
+        result: placed.result,
+        translation: placed.translation,
+        containerAllocation: allocation,
+        overflow: node.overflow,
+        ...(alignmentGuide === undefined ? {} : { alignmentGuide }),
+      }),
+      line: lineIndexBySource.get(sourceIndex) ?? 0,
+    });
+  });
+  const lines = physicalLines.map((line, index) =>
+    Object.freeze({
+      index,
+      itemKeys: line.itemIndexes.map(sourceIndex => measured[sourceIndex].authored.key),
+      mainAxis: axes.main,
+      mainStart: mainContent.start,
+      mainSize: mainContent.size,
+      crossStart: line.crossStart,
+      crossSize: line.finalCrossSize,
+    }),
+  );
   return {
     children: [scope],
     allocationBounds: allocation,
     ...(alignmentGuides === undefined ? {} : { alignmentGuides }),
+    artifact: Object.freeze({
+      kind: 'flex',
+      container: createLayoutArtifactContainer(allocation, content, items, node.overflow),
+      items,
+      lines,
+    }),
   };
 };

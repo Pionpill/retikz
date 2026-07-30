@@ -23,7 +23,7 @@ bundle 只组合 `CompositeDefinition`。它不合并 renderer、布局策略、
 
 ## 定义能力
 
-Standard 内置 module 分别是 `GridModule`、`AxesModule` 与 `FrameModule`。第三方 composite 仍以 Core `defineComposite()` 为真源；需要和官方能力一起组合时，可用普通结构化 module 分组：
+Standard 内置 module 包括 `GridModule`、`AxesModule`、`FrameModule`、`FlexLayoutModule`、`GridLayoutModule` 与 `OverlayLayoutModule`。第三方 composite 仍以 Core `defineComposite()` 为真源；需要和官方能力一起组合时，可用普通结构化 module 分组：
 
 ```ts
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
@@ -64,9 +64,11 @@ import { StandardAllPreset } from '@retikz/standard';
 
 `StandardAllPreset` 包含当前版本发布的全部 Standard modules。需要更小集合时，使用 `createStandardBundle([GridModule, FrameModule])`。
 
+只需要布局家族时使用 `StandardLayoutPreset`。它按 FlexLayout、GridLayout、OverlayLayout 顺序提供三项 definitions。
+
 ### React JSX
 
-`<Grid>`、`<Axes>` 与 `<Frame>` 继续通过组件静态 adapter 按实际使用项贡献 definition。不要再把同一能力的 bundle composites 传给这个 `Layout`；两路重复时 Core 会 fail-loud。
+`<Grid>`、`<Axes>`、`<Frame>` 与三种布局容器继续通过组件静态 adapter 贡献 definition。嵌套布局共享 `standard.layout` namespace 与 maker，只向最外层 `Layout` 贡献一次家族 definitions。不要再把同一能力的 bundle composites 传给这个 `Layout`；两路重复时 Core 会 fail-loud。
 
 ### Vanilla
 
@@ -80,6 +82,8 @@ mountSvg(container, figure, { adapters: StandardVanillaAdapters });
 ```
 
 直接传 Standard IR 时不读取 adapters，只需把 `bundle.compile` 放进 runtime 的 `compile` 选项。
+
+只需要布局 embeds 时使用 `StandardLayoutVanillaAdapters`；完整 `StandardVanillaAdapters` 在 Grid/Axes/Frame 后追加这三项。
 
 ## 执行机制
 
@@ -119,16 +123,21 @@ module、bundle 与 adapter 都不能进入持久化 IR。`StandardAllPreset` �
 
 ## API 参考
 
-| 导出                       | 所属包                     | 职责                                      |
-| -------------------------- | -------------------------- | ----------------------------------------- |
-| `StandardCapabilityModule` | `@retikz/standard`         | 用稳定名称分组 Core composite definitions |
-| `StandardBundle`           | `@retikz/standard`         | 保存 module 名称和必填 compile 片段       |
-| `createStandardBundle()`   | `@retikz/standard`         | 校验、组合并冻结选定 modules              |
-| `GridModule`               | `@retikz/standard`         | Grid 的官方 module                        |
-| `AxesModule`               | `@retikz/standard`         | Axes 的官方 module                        |
-| `FrameModule`              | `@retikz/standard`         | Frame 的官方 module                       |
-| `StandardAllPreset`        | `@retikz/standard`         | 当前版本全部 Standard modules 的 bundle   |
-| `StandardVanillaAdapters`  | `@retikz/standard-vanilla` | 当前版本全部 Standard Vanilla adapters    |
+| 导出                            | 所属包                     | 职责                                      |
+| ------------------------------- | -------------------------- | ----------------------------------------- |
+| `StandardCapabilityModule`      | `@retikz/standard`         | 用稳定名称分组 Core composite definitions |
+| `StandardBundle`                | `@retikz/standard`         | 保存 module 名称和必填 compile 片段       |
+| `createStandardBundle()`        | `@retikz/standard`         | 校验、组合并冻结选定 modules              |
+| `GridModule`                    | `@retikz/standard`         | Grid 的官方 module                        |
+| `AxesModule`                    | `@retikz/standard`         | Axes 的官方 module                        |
+| `FrameModule`                   | `@retikz/standard`         | Frame 的官方 module                       |
+| `FlexLayoutModule`              | `@retikz/standard`         | FlexLayout 的官方 module                  |
+| `GridLayoutModule`              | `@retikz/standard`         | GridLayout 的官方 module                  |
+| `OverlayLayoutModule`           | `@retikz/standard`         | OverlayLayout 的官方 module               |
+| `StandardLayoutPreset`          | `@retikz/standard`         | 三种布局 definitions 的 bundle            |
+| `StandardAllPreset`             | `@retikz/standard`         | 当前版本全部 Standard modules 的 bundle   |
+| `StandardLayoutVanillaAdapters` | `@retikz/standard-vanilla` | 三种布局 Vanilla adapters                 |
+| `StandardVanillaAdapters`       | `@retikz/standard-vanilla` | 当前版本全部 Standard Vanilla adapters    |
 
 `StandardCapabilityModule` 包含 `name: string` 与 `composites: ReadonlyArray<CompositeDefinition>`。`StandardBundle` 包含 `modules: ReadonlyArray<string>` 和必填的 `compile.composites`；空 bundle 也返回空数组，无需空值分支。
 
@@ -138,4 +147,5 @@ module、bundle 与 adapter 都不能进入持久化 IR。`StandardAllPreset` �
 
 - [快速开始](/standard/get-start)：从 React、Vanilla 与持久化 JSON 跑通一个 Grid
 - [复合](/standard/composite)：查看当前 Standard composite 目录
+- [布局容器](/standard/layout)：查看 Flex、Grid、Overlay 与 typed artifacts
 - [Core 扩展机制](/kernel/reference/runtime/extensions)：定义和注册第三方 Core definitions

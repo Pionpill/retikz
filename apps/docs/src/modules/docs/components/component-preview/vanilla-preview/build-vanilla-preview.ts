@@ -5,14 +5,27 @@ import type { AnyVanillaTier2Adapter, VanillaChildSpec } from '@retikz/vanilla';
 
 import { PlotSpecSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
-import { AxesSchema, FrameSchema, GridSchema } from '@retikz/standard';
+import {
+  AxesSchema,
+  FlexLayoutSchema,
+  FrameSchema,
+  GridLayoutSchema,
+  GridSchema,
+  OverlayLayoutSchema,
+} from '@retikz/standard';
 import {
   axes,
   AxesVanillaAdapter,
+  flexLayout,
+  FlexLayoutVanillaAdapter,
   frame,
   FrameVanillaAdapter,
   grid,
+  gridLayout,
+  GridLayoutVanillaAdapter,
   GridVanillaAdapter,
+  overlayLayout,
+  OverlayLayoutVanillaAdapter,
 } from '@retikz/standard-vanilla';
 import { figure, renderToSvgString, scope } from '@retikz/vanilla';
 
@@ -57,7 +70,7 @@ const buildCorePreview = (preview: PreviewIR): VanillaPreviewArtifact => {
   };
 };
 
-type StandardKind = 'grid' | 'axes' | 'frame';
+type StandardKind = 'grid' | 'axes' | 'frame' | 'flexLayout' | 'gridLayout' | 'overlayLayout';
 
 type StandardConversionState = {
   counts: Record<StandardKind, number>;
@@ -92,6 +105,24 @@ const convertStandardChild = (child: IRChild, state: StandardConversionState): V
         void _id;
         return frame(nextStandardId('frame', state), input);
       }
+      case 'flexLayout': {
+        const { namespace: _namespace, type: _type, ...input } = FlexLayoutSchema.parse(child);
+        void _namespace;
+        void _type;
+        return flexLayout(nextStandardId('flexLayout', state), input);
+      }
+      case 'gridLayout': {
+        const { namespace: _namespace, type: _type, ...input } = GridLayoutSchema.parse(child);
+        void _namespace;
+        void _type;
+        return gridLayout(nextStandardId('gridLayout', state), input);
+      }
+      case 'overlayLayout': {
+        const { namespace: _namespace, type: _type, ...input } = OverlayLayoutSchema.parse(child);
+        void _namespace;
+        void _type;
+        return overlayLayout(nextStandardId('overlayLayout', state), input);
+      }
       default:
         throw new Error(`Unsupported Standard composite "${child.namespace}.${child.type}".`);
     }
@@ -109,11 +140,14 @@ const standardAdapters = (state: StandardConversionState): ReadonlyArray<AnyVani
   ...(state.adapters.has('grid') ? [GridVanillaAdapter as AnyVanillaTier2Adapter] : []),
   ...(state.adapters.has('axes') ? [AxesVanillaAdapter as AnyVanillaTier2Adapter] : []),
   ...(state.adapters.has('frame') ? [FrameVanillaAdapter as AnyVanillaTier2Adapter] : []),
+  ...(state.adapters.has('flexLayout') ? [FlexLayoutVanillaAdapter as AnyVanillaTier2Adapter] : []),
+  ...(state.adapters.has('gridLayout') ? [GridLayoutVanillaAdapter as AnyVanillaTier2Adapter] : []),
+  ...(state.adapters.has('overlayLayout') ? [OverlayLayoutVanillaAdapter as AnyVanillaTier2Adapter] : []),
 ];
 
 const buildStandardPreview = (preview: PreviewIR): VanillaPreviewArtifact => {
   const state: StandardConversionState = {
-    counts: { grid: 0, axes: 0, frame: 0 },
+    counts: { grid: 0, axes: 0, frame: 0, flexLayout: 0, gridLayout: 0, overlayLayout: 0 },
     adapters: new Set(),
   };
   const input = figure({

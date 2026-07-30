@@ -1,0 +1,134 @@
+---
+title: GridLayout
+description: 用显式与隐式二维 tracks、span 和确定性自动放置排布任意子图形。
+---
+
+`GridLayout` 把 content box 划分为物理 column/row tracks。track 可以固定、按 minimum/natural 内容贡献、按 fraction 吸收有限剩余空间，或用 `minmax` 组合上下界；item 可以显式指定连续 span，也可以按 `autoFlow` 放入下一处空位。
+
+## 用法
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { GridLayout, LayoutItem } from '@retikz/standard-react';
+```
+
+```tsx
+<Layout width={420} height={220}>
+  <GridLayout
+    columns={[
+      { kind: 'fixed', value: 100 },
+      { kind: 'fraction', factor: 1 },
+    ]}
+    columnGap={8}
+  >
+    <LayoutItem kind="grid" itemKey="label">
+      <Node position={[0, 0]} text="标签" />
+    </LayoutItem>
+    <LayoutItem kind="grid" itemKey="value">
+      <Node position={[0, 0]} text="42%" />
+    </LayoutItem>
+  </GridLayout>
+</Layout>
+```
+
+JSON/IR 路径使用 `createGridLayout()` 与 `GridLayoutDefinition`；Vanilla 使用 `gridLayout()` 与 `GridLayoutVanillaAdapter`。完整家族可通过 `StandardLayoutPreset` 或 `StandardLayoutVanillaAdapters` 装载。
+
+| 场景        | 公开入口                                                                                   |
+| ----------- | ------------------------------------------------------------------------------------------ |
+| React       | `GridLayout`、`LayoutItem`（`@retikz/standard-react`）                                     |
+| Vanilla     | `gridLayout`、`GridLayoutVanillaAdapter`（`@retikz/standard-vanilla`）                     |
+| IR / 持久化 | `GridLayoutSchema`、`createGridLayout`、`IRGridLayout`、`GridLayoutDefinition`（Standard） |
+
+## 例子
+
+### Tracks、span 与自动放置
+
+下面同时使用 fixed、`1fr`、`2fr`、显式 span 和未指定坐标的 item。自动放置只在 canonical authored 顺序中前进，不实现浏览器 dense 回填。
+
+<ComponentPreview files="grid-layout-basic" size="md" />
+
+### 控制面板
+
+切换非 dense 自动放置方向、fraction 权重、gap 与单元格对齐。固定 viewBox 让轨道比例、span 和 placement 的变化可以直接比较。
+
+<ComponentPreview files="grid-layout-playground" size="lg" />
+
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="只有在排查 track contribution、自动放置或文字重排高度时才需要理解求解顺序。"
+/>
+
+GridLayout 使用固定的物理 x→y 求解顺序：
+
+1. 校验显式 placement，按 `autoFlow` 解析未完整指定的 item，并据此物化隐式 tracks。
+2. 沿 x 轴 probe minimum/natural contribution，求 column profiles 与有限宽度分配。
+3. 把最终 column slot 传给 child，再沿 y 轴 probe 文本重排后的高度并求 row profiles。
+4. 按 `justifyItems` / `alignItems` 或 item override 放置真实 allocation，最后 replay selected probe。
+
+这个物理 x→y 顺序使文本在列宽确定后再决定行高，不需要 DOM 回读或循环猜测。`GridLayoutArtifact` 公开 resolved columns、rows、implicit 标记和每个 item 的最终 span。
+
+<SourceLinks
+  sources={[
+    { label: 'GridLayout 输入契约', path: 'packages/library/standard/src/composites/grid-layout/schema.ts' },
+    { label: 'Grid placement', path: 'packages/library/standard/src/composites/grid-layout/placement.ts' },
+    { label: 'Grid track solver', path: 'packages/library/standard/src/composites/grid-layout/tracks.ts' },
+    { label: 'GridLayout compile', path: 'packages/library/standard/src/composites/grid-layout/compile.ts' },
+  ]}
+/>
+
+## API 参考
+
+### `GridLayoutInput`
+
+| 属性              | 类型                                        | 默认值            | 描述                                    |
+| ----------------- | ------------------------------------------- | ----------------- | --------------------------------------- |
+| `columns`         | `Array<GridTrackInput>`                     | —                 | 至少一条显式物理 column track           |
+| `rows?`           | `Array<GridTrackInput>`                     | `[]`              | 显式 row tracks；不足部分由隐式定义补齐 |
+| `implicitColumn?` | `GridTrackInput`                            | content natural   | 自动 placement 扩展 column 时使用       |
+| `implicitRow?`    | `GridTrackInput`                            | content natural   | 自动 placement 扩展 row 时使用          |
+| `autoFlow?`       | <ApiValues name="GridAutoFlow" />           | `'row'`           | 非 dense 的确定性自动放置方向           |
+| `overlap?`        | <ApiValues name="GridOverlap" />            | `'reject'`        | fully explicit item 重叠策略            |
+| `columnGap?`      | `number`                                    | `0`               | 物理 column gap                         |
+| `rowGap?`         | `number`                                    | `0`               | 物理 row gap                            |
+| `justifyItems?`   | `'start' \| 'center' \| 'end' \| 'stretch'` | `'stretch'`       | 默认水平 item alignment                 |
+| `alignItems?`     | <ApiValues name="LayoutAlignment" />        | `'stretch'`       | 默认垂直 item alignment                 |
+| `justifyContent?` | <ApiValues name="LayoutDistribution" />     | `'start'`         | column group 的水平剩余空间分布         |
+| `alignContent?`   | <ApiValues name="LayoutDistribution" />     | `'start'`         | row group 的垂直剩余空间分布            |
+| `size?`           | `LayoutSizeInput`                           | content / content | container 双轴 allocation 策略          |
+| `padding?`        | `number` \| `IRBoxSpacing`                  | `0`               | allocation 到 content 的内边距          |
+| `overflow?`       | <ApiValues name="LayoutOverflow" />         | `'visible'`       | 是否在 allocation 上裁切视觉输出        |
+| `children?`       | `Array<GridLayoutItemInput>`                | `[]`              | authored items；`key` 在本容器内唯一    |
+
+### `GridTrackInput`
+
+| 形态     | 关键字段                       | 含义                                     |
+| -------- | ------------------------------ | ---------------------------------------- |
+| fixed    | `{ kind: 'fixed', value }`     | 固定非负尺寸                             |
+| content  | `{ kind: 'content', mode }`    | child minimum 或 natural contribution    |
+| fraction | `{ kind: 'fraction', factor }` | 有限空间中的正 fraction 权重             |
+| minmax   | `{ kind: 'minmax', min, max }` | 非 fraction 下界与 fixed/content/fr 上界 |
+
+### `GridLayoutItemInput`
+
+| 属性           | 类型                                        | 默认值        | 描述                            |
+| -------------- | ------------------------------------------- | ------------- | ------------------------------- |
+| `kind`         | `'grid'`                                    | —             | GridLayout item discriminator   |
+| `key`          | `string`                                    | —             | 当前容器内 authored identity    |
+| `child`        | `IRChild`                                   | —             | 任意 JSON-safe Core child       |
+| `column?`      | `{ start?: number, span?: number }`         | auto / span 1 | column placement                |
+| `row?`         | `{ start?: number, span?: number }`         | auto / span 1 | row placement                   |
+| `margin?`      | `number` \| `IRBoxSpacing`                  | `0`           | track area 内缩前的 item margin |
+| `justifySelf?` | `'start' \| 'center' \| 'end' \| 'stretch'` | container     | 覆盖水平 alignment              |
+| `alignSelf?`   | <ApiValues name="LayoutAlignment" />        | container     | 覆盖垂直 alignment              |
+
+React 中把 `key` 写成 `itemKey`，并用一个 drawable child 或 `ir` 提供 `child`。
+
+## 相关
+
+- [布局容器](/standard/layout)：三种容器的选择与共同 artifact
+- [布局契约参考](/standard/layout/reference/contract)：输入、LayoutItem 与 typed artifact schema
+- [FlexLayout](/standard/layout/flex-layout)：单主轴分配与换行
+- [OverlayLayout](/standard/layout/overlay-layout)：同一 box 内叠放

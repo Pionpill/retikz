@@ -5,28 +5,51 @@ import {
   AxesDefinition,
   AxesModule,
   createGrid,
+  FlexLayoutDefinition,
+  FlexLayoutModule,
   FrameDefinition,
   FrameModule,
   GridDefinition,
+  GridLayoutDefinition,
+  GridLayoutModule,
   GridModule,
+  OverlayLayoutDefinition,
+  OverlayLayoutModule,
   StandardAllPreset,
 } from '../../src';
 
 describe('StandardAllPreset', () => {
   it('contains the current Standard catalog once in stable order', () => {
-    expect(StandardAllPreset.modules).toEqual(['standard.grid', 'standard.axes', 'standard.frame']);
-    expect(StandardAllPreset.compile.composites).toEqual([GridDefinition, AxesDefinition, FrameDefinition]);
+    expect(StandardAllPreset.modules).toEqual([
+      'standard.grid',
+      'standard.axes',
+      'standard.frame',
+      'standard.flexLayout',
+      'standard.gridLayout',
+      'standard.overlayLayout',
+    ]);
+    expect(StandardAllPreset.compile.composites).toEqual([
+      GridDefinition,
+      AxesDefinition,
+      FrameDefinition,
+      FlexLayoutDefinition,
+      GridLayoutDefinition,
+      OverlayLayoutDefinition,
+    ]);
     expect(StandardAllPreset.compile.composites).toEqual([
       GridModule.composites[0],
       AxesModule.composites[0],
       FrameModule.composites[0],
+      FlexLayoutModule.composites[0],
+      GridLayoutModule.composites[0],
+      OverlayLayoutModule.composites[0],
     ]);
     expect(Object.isFrozen(StandardAllPreset)).toBe(true);
   });
 
   it('does not globally register capabilities when it is imported', () => {
     const warningCodes: Array<string> = [];
-    expect(StandardAllPreset.compile.composites).toHaveLength(3);
+    expect(StandardAllPreset.compile.composites).toHaveLength(6);
 
     compileToScene(
       {

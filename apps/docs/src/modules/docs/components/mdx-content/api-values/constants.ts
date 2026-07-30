@@ -50,7 +50,15 @@ import {
   AxesTickExtent,
   AxesTickSide,
   AxesTickSourceKind,
+  FlexLayoutDirection,
+  FlexLayoutWrap,
+  GridAutoFlow,
   GridBorderOrder,
+  GridOverlap,
+  LayoutAlignment,
+  LayoutDistribution,
+  LayoutOverflow,
+  LayoutSizeParticipation,
 } from '@retikz/standard';
 import {
   TableBorderKind,
@@ -142,11 +150,23 @@ export const API_VALUE_REGISTRY = {
   FontWeightKeyword: {
     values: Object.values(FontWeightKeyword),
   },
+  FlexLayoutDirection: {
+    values: Object.values(FlexLayoutDirection),
+  },
+  FlexLayoutWrap: {
+    values: Object.values(FlexLayoutWrap),
+  },
   GeometryLabelPosition: {
     values: Object.values(GeometryLabelPosition),
   },
   GridBorderOrder: {
     values: Object.values(GridBorderOrder),
+  },
+  GridAutoFlow: {
+    values: Object.values(GridAutoFlow),
+  },
+  GridOverlap: {
+    values: Object.values(GridOverlap),
   },
   JitterAxis: {
     values: Object.values(JitterAxis),
@@ -159,6 +179,18 @@ export const API_VALUE_REGISTRY = {
   },
   LegendSymbolFit: {
     values: Object.values(LegendSymbolFit),
+  },
+  LayoutAlignment: {
+    values: Object.values(LayoutAlignment),
+  },
+  LayoutDistribution: {
+    values: Object.values(LayoutDistribution),
+  },
+  LayoutOverflow: {
+    values: Object.values(LayoutOverflow),
+  },
+  LayoutSizeParticipation: {
+    values: Object.values(LayoutSizeParticipation),
   },
   MathJaxExtension: {
     values: Object.values(MathJaxExtension),

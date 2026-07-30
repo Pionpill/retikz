@@ -1,0 +1,136 @@
+---
+title: Layout contract reference
+description: Look up Standard layout inputs, the LayoutItem union, and typed layout artifact JSON schemas and field semantics.
+---
+
+This page is the authoritative contract for persisted Standard layout inputs and compile artifacts. React props and Vanilla builders both produce the canonical JSON described here. The three containers share item geometry fields and add line, track, or paint-order results.
+
+## Container inputs
+
+### FlexLayoutSchema
+
+<ZodSchema
+  name="FlexLayoutSchema"
+  description="Canonical input for one-dimensional grow, shrink, wrap, and baseline layout."
+/>
+
+### GridLayoutSchema
+
+<ZodSchema
+  name="GridLayoutSchema"
+  description="Canonical input for two-dimensional tracks, spans, and non-dense auto placement."
+/>
+
+### OverlayLayoutSchema
+
+<ZodSchema
+  name="OverlayLayoutSchema"
+  description="Canonical input for aligned and positioned items sharing one content box."
+/>
+
+## LayoutItem union
+
+### LayoutItemSchema
+
+<ZodSchema
+  name="LayoutItemSchema"
+  description="Closed kind-discriminated union of FlexLayoutItem, GridLayoutItem, and OverlayLayoutItem."
+/>
+
+Every item shares these base fields. Each container page documents its additional distribution fields.
+
+| Field     | Type                            | Default | Description                                               |
+| --------- | ------------------------------- | ------- | --------------------------------------------------------- |
+| `kind`    | `'flex' \| 'grid' \| 'overlay'` | —       | Selects the layout container that owns this item          |
+| `key`     | `string`                        | —       | Non-empty authored identity unique within the container   |
+| `child`   | `IRChild`                       | —       | JSON-safe Core or registered Tier 2 child being laid out  |
+| `margin?` | `number` \| `IRBoxSpacing`      | `0`     | Spacing around the slot, excluded from the child proposal |
+
+## Shared artifact fields
+
+`LayoutArtifactSchema` is the closed union of the three concrete payloads. It records observable layout results and never stores proposals, probes, replay tokens, solver objects, or private child IR.
+
+### LayoutArtifactSchema
+
+<ZodSchema
+  name="LayoutArtifactSchema"
+  description="Kind-discriminated union of the three Standard typed layout artifact payloads."
+/>
+
+Every concrete artifact has a `container` with these fields:
+
+| Field              | Type                         | Description                                                  |
+| ------------------ | ---------------------------- | ------------------------------------------------------------ |
+| `allocationBounds` | `LayoutArtifactRect`         | Final container allocation rectangle                         |
+| `contentBounds`    | `LayoutArtifactRect`         | Content rectangle after padding                              |
+| `visualBounds`     | `LayoutArtifactRect`         | Union of translated item visual bounds                       |
+| `visibleBounds`    | `LayoutArtifactRect \| null` | Union still visible after overflow policy; `null` when empty |
+
+Every `items[]` entry shares:
+
+| Field              | Type                              | Description                                               |
+| ------------------ | --------------------------------- | --------------------------------------------------------- |
+| `key`              | `string`                          | Matching authored item identity                           |
+| `sourceIndex`      | `number`                          | Contiguous zero-based authored order                      |
+| `marginBounds`     | `LayoutArtifactRect`              | Full parent allocation area including resolved margins    |
+| `slotBounds`       | `LayoutArtifactRect`              | Parent-assigned slot excluding margins                    |
+| `allocationBounds` | `LayoutArtifactRect`              | Real child occupancy after accepting or refusing the slot |
+| `visualBounds`     | `LayoutArtifactRect`              | Conservative visual envelope including strokes or labels  |
+| `visibleBounds`    | `LayoutArtifactRect \| null`      | Visual region remaining after clipping                    |
+| `translation`      | `{ x: number, y: number }`        | Container-local translation applied before replay         |
+| `overflow`         | `{ allocation, visual, clipped }` | Per-axis occupancy, visual, and clipping state            |
+| `alignmentGuide?`  | `{ name, position, fallback }`    | Baseline guide or edge fallback used for placement        |
+
+`slotBounds`, `allocationBounds`, and `visualBounds` are not interchangeable. Fixed geometry may refuse its parent slot, and strokes or labels may expand the visual envelope further.
+
+## Concrete artifacts
+
+### FlexLayoutArtifactSchema
+
+<ZodSchema
+  name="FlexLayoutArtifactSchema"
+  description="FlexLayout container, source-order items, and physical cross-order lines."
+/>
+
+`items[].line` identifies the item's line. Each `lines[]` entry records a contiguous `index`, `itemKeys`, physical main axis, main range, and cross range. The two collections must form a complete bidirectional partition.
+
+### GridLayoutArtifactSchema
+
+<ZodSchema
+  name="GridLayoutArtifactSchema"
+  description="GridLayout container, resolved item spans, and column/row track geometry."
+/>
+
+Each item adds `column`, `row`, `columnSpan`, and `rowSpan`. `columns[]` and `rows[]` are sorted by physical start and record contiguous `index`, `start`, `size`, `sourceKind`, and `implicit` fields.
+
+### OverlayLayoutArtifactSchema
+
+<ZodSchema
+  name="OverlayLayoutArtifactSchema"
+  description="OverlayLayout container, source-order items, and stable resolved paintOrder."
+/>
+
+Each item adds `placement`, `sizeParticipation`, and `zIndex`. `paintOrder` is a complete permutation of item keys, sorted by ascending `zIndex` and then stable `sourceIndex`.
+
+## Reading artifacts
+
+The Core artifact envelope owns occurrence, namespace, and composite type. Standard schemas parse only its `value` payload.
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { FlexLayoutArtifactSchema, StandardLayoutPreset } from '@retikz/standard';
+
+const output = compileToScene(scene, StandardLayoutPreset.compile);
+const envelope = output.artifacts.find(
+  artifact => artifact.kind === 'composite' && artifact.namespace === 'standard' && artifact.type === 'flexLayout',
+);
+const artifact = FlexLayoutArtifactSchema.parse(envelope?.value);
+```
+
+## Related
+
+- [Layout containers](/standard/layout): choosing Flex, Grid, or Overlay
+- [FlexLayout](/standard/layout/flex-layout): one-axis distribution fields and behavior
+- [GridLayout](/standard/layout/grid-layout): track and placement fields
+- [OverlayLayout](/standard/layout/overlay-layout): aligned, positioned, and paint order
+- [Layout](/kernel/components/layout/overview): Core proposal, slot, bounds, and replay contracts

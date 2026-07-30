@@ -3,6 +3,7 @@ import type { core, z } from 'zod';
 import * as IR from '@retikz/core';
 import * as DataIR from '@retikz/data';
 import * as PlotIR from '@retikz/plot';
+import * as StandardIR from '@retikz/standard';
 import * as TableIR from '@retikz/table';
 
 export type SchemaRegistryEntry = {
@@ -319,6 +320,47 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IR.ArrowEndDetailSchema,
     label: 'ArrowEndDetail',
     url: '/kernel/reference/schema/path#arrowenddetail',
+  },
+
+  FlexLayoutSchema: {
+    schema: StandardIR.FlexLayoutSchema,
+    label: 'FlexLayout',
+    url: '/standard/layout/reference/contract#flexlayoutschema',
+  },
+  GridLayoutSchema: {
+    schema: StandardIR.GridLayoutSchema,
+    label: 'GridLayout',
+    url: '/standard/layout/reference/contract#gridlayoutschema',
+  },
+  OverlayLayoutSchema: {
+    schema: StandardIR.OverlayLayoutSchema,
+    label: 'OverlayLayout',
+    url: '/standard/layout/reference/contract#overlaylayoutschema',
+  },
+  LayoutItemSchema: {
+    schema: StandardIR.LayoutItemSchema,
+    label: 'LayoutItem',
+    url: '/standard/layout/reference/contract#layoutitemschema',
+  },
+  LayoutArtifactSchema: {
+    schema: StandardIR.LayoutArtifactSchema,
+    label: 'LayoutArtifact',
+    url: '/standard/layout/reference/contract#layoutartifactschema',
+  },
+  FlexLayoutArtifactSchema: {
+    schema: StandardIR.FlexLayoutArtifactSchema,
+    label: 'FlexLayoutArtifact',
+    url: '/standard/layout/reference/contract#flexlayoutartifactschema',
+  },
+  GridLayoutArtifactSchema: {
+    schema: StandardIR.GridLayoutArtifactSchema,
+    label: 'GridLayoutArtifact',
+    url: '/standard/layout/reference/contract#gridlayoutartifactschema',
+  },
+  OverlayLayoutArtifactSchema: {
+    schema: StandardIR.OverlayLayoutArtifactSchema,
+    label: 'OverlayLayoutArtifact',
+    url: '/standard/layout/reference/contract#overlaylayoutartifactschema',
   },
 
   TableSpecSchema: {

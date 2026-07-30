@@ -1,0 +1,51 @@
+---
+title: Layout containers
+description: Replace hand-authored coordinates with FlexLayout, GridLayout, and OverlayLayout to compose reusable graphical layouts.
+---
+
+Standard layout containers extract child arrangement from hand-authored coordinates. They cover linear distribution, two-dimensional tracks, and stacking within one region, and they compose recursively. Domain packages such as Plot, Table, and future Gantt packages can reuse them internally while retaining ownership of domain semantics.
+
+Given the same available space and child measurement, layout solving is deterministic and independent of a specific renderer. Text dimensions still depend on the host measurer, fonts, and font-loading state.
+
+The example below uses Flex for lines, Grid for columns, and Overlay for a badge in the right-hand cell to show how all three containers compose as ordinary children.
+
+<ComponentPreview files="layout-nested" hideCode size="md" />
+
+## Responsibilities
+
+| Component       | Core model                     | Best suited for                                |
+| --------------- | ------------------------------ | ---------------------------------------------- |
+| `FlexLayout`    | One axis, grow/shrink, wrap    | Legend entries, label strips, toolbars         |
+| `GridLayout`    | 2D tracks, spans, auto placing | Panels, matrices, guide regions, structured UI |
+| `OverlayLayout` | Alignment or local positioning | Badges, overlays, annotations, stacked marks   |
+
+Containers own generic size distribution, spacing, alignment, overflow, and observable results. Data channels, chart semantics, table rules, and algorithmic layout remain with their domain packages.
+
+## Pages
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/standard/layout/flex-layout">
+    <span className="font-semibold">FlexLayout</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      One-dimensional distribution, wrapping, and baselines
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/standard/layout/grid-layout">
+    <span className="font-semibold">GridLayout</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Two-dimensional tracks, spans, and auto placement
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/standard/layout/overlay-layout">
+    <span className="font-semibold">OverlayLayout</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Alignment, positioning, and stable paint order
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/standard/layout/reference/contract">
+    <span className="font-semibold">Contract reference</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Inputs, LayoutItem, and typed artifact schemas
+    </span>
+  </LinkedCard>
+</div>

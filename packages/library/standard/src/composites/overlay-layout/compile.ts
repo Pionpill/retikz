@@ -16,12 +16,17 @@ import {
 } from '@retikz/core';
 
 import type { LayoutInsets, LayoutRect } from '../shared/layout/internal';
+import type { OverlayLayoutArtifact } from './artifact-types';
 import type { IROverlayLayout, IROverlayLayoutItem } from './types';
 
 import { LayoutAlignment, LayoutAxisSizeKind, LayoutOverflow } from '../shared/layout';
 import {
+  alignResolvedLayoutSlot,
   compensatedLayoutSum,
   contentRectOf,
+  createLayoutArtifactAlignmentGuide,
+  createLayoutArtifactContainer,
+  createLayoutArtifactItem,
   layoutClipOf,
   normalizeLayoutSpacing,
   resolveLayoutAxisSize,
@@ -45,6 +50,8 @@ type OverlayProfileResults = Readonly<{
 type PlacedOverlayItem = Readonly<{
   authored: IROverlayLayoutItem;
   sourceIndex: number;
+  margin: LayoutInsets;
+  slotBounds: LayoutRect;
   alignment: IROverlayLayout['alignItems'];
   result: LayoutChildResult;
   translation: Readonly<{ x: number; y: number }>;
@@ -197,7 +204,7 @@ const outgoingOverlayGuide = (
 export const compileOverlayLayout = (
   node: IROverlayLayout,
   context: LayoutCompositeCompileContext,
-): LayoutCompositeCompileResult => {
+): LayoutCompositeCompileResult<OverlayLayoutArtifact> => {
   const padding = normalizeLayoutSpacing(node.padding);
   const finiteXLimit = finiteContentLimitOf(node, 'x', context.proposal.x, padding);
   const finiteYLimit = finiteContentLimitOf(node, 'y', context.proposal.y, padding);
@@ -302,6 +309,10 @@ export const compileOverlayLayout = (
       align: alignment,
       result,
     });
+    let resolvedSlot =
+      authored.placement.kind === OverlayPlacementKind.Positioned
+        ? geometry.slot
+        : alignResolvedLayoutSlot(geometry.slot, result, justify, alignment);
     let y = geometry.translation.y;
     if (authored.placement.kind === OverlayPlacementKind.Aligned && alignment === LayoutAlignment.FirstBaseline) {
       const guide = result.alignmentGuides?.find(
@@ -310,6 +321,12 @@ export const compileOverlayLayout = (
       );
       const source = guide?.position ?? result.allocationBounds.y;
       y = (firstTarget ?? content.y) - source;
+      resolvedSlot = Object.freeze({
+        ...resolvedSlot,
+        y:
+          (firstTarget ?? content.y) -
+          overlayStructuralGuideOffset(result, LayoutAlignmentGuideName.FirstBaseline).offset,
+      });
     } else if (authored.placement.kind === OverlayPlacementKind.Aligned && alignment === LayoutAlignment.LastBaseline) {
       const guide = result.alignmentGuides?.find(
         value =>
@@ -317,10 +334,18 @@ export const compileOverlayLayout = (
       );
       const source = guide?.position ?? result.allocationBounds.y + result.allocationBounds.height;
       y = (lastTarget ?? content.y + content.height) - source;
+      resolvedSlot = Object.freeze({
+        ...resolvedSlot,
+        y:
+          (lastTarget ?? content.y + content.height) -
+          overlayStructuralGuideOffset(result, LayoutAlignmentGuideName.LastBaseline).offset,
+      });
     }
     return Object.freeze({
       authored,
       sourceIndex,
+      margin: item.margin,
+      slotBounds: Object.freeze(resolvedSlot),
       alignment,
       result,
       translation: Object.freeze({ x: geometry.translation.x, y }),
@@ -365,9 +390,44 @@ export const compileOverlayLayout = (
       }),
     ]);
   }
+  const items = placedBySource.map(placed => {
+    const usesBaseline =
+      placed.authored.placement.kind === OverlayPlacementKind.Aligned &&
+      (placed.alignment === LayoutAlignment.FirstBaseline || placed.alignment === LayoutAlignment.LastBaseline);
+    return Object.freeze({
+      ...createLayoutArtifactItem({
+        key: placed.authored.key,
+        sourceIndex: placed.sourceIndex,
+        margin: placed.margin,
+        slotBounds: placed.slotBounds,
+        result: placed.result,
+        translation: placed.translation,
+        containerAllocation: allocation,
+        overflow: node.overflow,
+        ...(usesBaseline
+          ? {
+              alignmentGuide: createLayoutArtifactAlignmentGuide(
+                placed.result,
+                placed.translation,
+                placed.alignment,
+              ),
+            }
+          : {}),
+      }),
+      placement: placed.authored.placement.kind,
+      sizeParticipation: placed.authored.sizeParticipation,
+      zIndex: placed.authored.zIndex,
+    });
+  });
   return {
     children: [scope],
     allocationBounds: allocation,
     ...(alignmentGuides === undefined ? {} : { alignmentGuides }),
+    artifact: Object.freeze({
+      kind: 'overlay',
+      container: createLayoutArtifactContainer(allocation, content, items, node.overflow),
+      items,
+      paintOrder: paintOrder.map(sourceIndex => placedBySource[sourceIndex].authored.key),
+    }),
   };
 };

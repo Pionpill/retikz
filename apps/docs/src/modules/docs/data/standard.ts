@@ -19,6 +19,32 @@ export const standardSection: Array<Section> = [
     ],
   },
   {
+    id: 'layout',
+    label: 'standard.layout',
+    document: true,
+    pages: [
+      { id: 'flex-layout', label: 'standard.flexLayout' },
+      { id: 'grid-layout', label: 'standard.gridLayout' },
+      { id: 'overlay-layout', label: 'standard.overlayLayout' },
+      {
+        id: 'reference',
+        label: 'standard.layoutReference',
+        children: [
+          {
+            id: 'contract',
+            label: 'standard.layoutContract',
+            meta: {
+              pageType: 'reference',
+              audience: 'integrator',
+              capability: 'standard.layout',
+              sourceOfTruth: 'schema',
+            },
+          },
+        ],
+      },
+    ],
+  },
+  {
     id: 'extension',
     label: 'standard.extension',
     document: true,

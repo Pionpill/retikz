@@ -3,5 +3,7 @@ export * from './flex-layout';
 export * from './frame';
 export * from './grid';
 export * from './grid-layout';
+export * from './layout-artifact';
+export * from './layout-item';
 export * from './overlay-layout';
 export * from './shared';

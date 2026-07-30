@@ -15,22 +15,35 @@ import {
   LayoutIntrinsicMode,
 } from '@retikz/core';
 
+import type { LayoutTrackSourceKindValue } from '../shared/layout';
 import type { LayoutInsets, LayoutRect } from '../shared/layout/internal';
+import type { GridLayoutArtifact } from './artifact-types';
 import type { GridTrackConstraint } from './tracks';
 import type { IRGridLayout, IRGridLayoutItem } from './types';
 
-import { LayoutAlignment, LayoutAxisSizeKind, LayoutOverflow } from '../shared/layout';
+import { LayoutAlignment, LayoutAxisSizeKind, LayoutOverflow, LayoutTrackSourceKind } from '../shared/layout';
 import {
   alignAllocationInSlot,
+  alignResolvedLayoutSlot,
   compensatedLayoutSum,
   contentRectOf,
+  createLayoutArtifactAlignmentGuide,
+  createLayoutArtifactContainer,
+  createLayoutArtifactItem,
   layoutClipOf,
   layoutEpsilon,
   normalizeLayoutSpacing,
   resolveLayoutAxisSize,
 } from '../shared/layout/internal';
 import { resolveGridPlacements } from './placement';
-import { gridItemSlot, gridSpanRange, materializeGridTracks, positionGridTracks, resolveGridRowMetrics } from './solve';
+import {
+  gridItemSlot,
+  gridSpanRange,
+  gridStructuralGuideOffset,
+  materializeGridTracks,
+  positionGridTracks,
+  resolveGridRowMetrics,
+} from './solve';
 import { solveGridTracks } from './tracks';
 
 type MeasuredGridItem = Readonly<{
@@ -45,12 +58,24 @@ type MeasuredGridItem = Readonly<{
 
 type PlacedGridItem = Readonly<{
   sourceIndex: number;
+  columnStart: number;
+  columnSpan: number;
   rowStart: number;
   rowSpan: number;
+  margin: LayoutInsets;
+  slotBounds: LayoutRect;
   alignment: IRGridLayout['alignItems'];
   result: LayoutChildResult;
   translation: Readonly<{ x: number; y: number }>;
 }>;
+
+/** 把 Grid track 定义归一为公开 artifact 的稳定来源类别 */
+const trackSourceKindOf = (track: IRGridLayout['columns'][number]): LayoutTrackSourceKindValue => {
+  if (track.kind === 'fixed') return LayoutTrackSourceKind.Fixed;
+  if (track.kind === 'fraction') return LayoutTrackSourceKind.Fraction;
+  if (track.kind === 'minmax') return LayoutTrackSourceKind.Minmax;
+  return track.mode === 'minimum' ? LayoutTrackSourceKind.ContentMinimum : LayoutTrackSourceKind.ContentNatural;
+};
 
 /** 创建 intrinsic 单轴 proposal */
 const intrinsicProposal = (mode: 'minimum' | 'natural'): LayoutAxisProposal => ({
@@ -185,7 +210,7 @@ const outgoingRowGuide = (name: 'first-baseline' | 'last-baseline', items: Reado
 export const compileGridLayout = (
   node: IRGridLayout,
   context: LayoutCompositeCompileContext,
-): LayoutCompositeCompileResult => {
+): LayoutCompositeCompileResult<GridLayoutArtifact> => {
   const padding = normalizeLayoutSpacing(node.padding);
   const placements = resolveGridPlacements(
     node.children.map((item, sourceIndex) => ({
@@ -351,6 +376,7 @@ export const compileGridLayout = (
     const slot = gridItemSlot({ x: column.start, y: row.start, width: column.size, height: row.size }, item.margin);
     const justify = item.authored.justifySelf ?? node.justifyItems;
     const alignment = item.authored.alignSelf ?? node.alignItems;
+    let resolvedSlot = alignResolvedLayoutSlot(slot, result, justify, alignment);
     const x = alignAllocationInSlot(slot, result.allocationBounds, 'x', justify);
     let y: number;
     if (item.rowSpan === 1 && alignment === LayoutAlignment.FirstBaseline) {
@@ -361,6 +387,10 @@ export const compileGridLayout = (
           value.dimension === LayoutAlignmentGuideDimension.Y && value.name === LayoutAlignmentGuideName.FirstBaseline,
       );
       y = target - (guide?.position ?? result.allocationBounds.y);
+      resolvedSlot = Object.freeze({
+        ...resolvedSlot,
+        y: target - gridStructuralGuideOffset(result, LayoutAlignmentGuideName.FirstBaseline).offset,
+      });
     } else if (item.rowSpan === 1 && alignment === LayoutAlignment.LastBaseline) {
       const metrics = finalRowMetrics[item.rowStart];
       const target = row.start + row.size - (metrics.size - (metrics.lastTarget ?? metrics.size));
@@ -369,13 +399,21 @@ export const compileGridLayout = (
           value.dimension === LayoutAlignmentGuideDimension.Y && value.name === LayoutAlignmentGuideName.LastBaseline,
       );
       y = target - (guide?.position ?? result.allocationBounds.y + result.allocationBounds.height);
+      resolvedSlot = Object.freeze({
+        ...resolvedSlot,
+        y: target - gridStructuralGuideOffset(result, LayoutAlignmentGuideName.LastBaseline).offset,
+      });
     } else {
       y = alignAllocationInSlot(slot, result.allocationBounds, 'y', alignment);
     }
     placedBySource[item.sourceIndex] = Object.freeze({
       sourceIndex: item.sourceIndex,
+      columnStart: item.columnStart,
+      columnSpan: item.columnSpan,
       rowStart: item.rowStart,
       rowSpan: item.rowSpan,
+      margin: item.margin,
+      slotBounds: resolvedSlot,
       alignment,
       result,
       translation: Object.freeze({ x, y }),
@@ -418,9 +456,58 @@ export const compileGridLayout = (
       }),
     ]);
   }
+  const items = placedBySource.map((placed, sourceIndex) => {
+    if (placed === undefined) throw new Error('GridLayout failed to artifact an authored item');
+    const authored = measured[sourceIndex].authored;
+    const usesBaseline =
+      placed.rowSpan === 1 &&
+      (placed.alignment === LayoutAlignment.FirstBaseline || placed.alignment === LayoutAlignment.LastBaseline);
+    return Object.freeze({
+      ...createLayoutArtifactItem({
+        key: authored.key,
+        sourceIndex,
+        margin: placed.margin,
+        slotBounds: placed.slotBounds,
+        result: placed.result,
+        translation: placed.translation,
+        containerAllocation: allocation,
+        overflow: node.overflow,
+        ...(usesBaseline
+          ? {
+              alignmentGuide: createLayoutArtifactAlignmentGuide(
+                placed.result,
+                placed.translation,
+                placed.alignment,
+              ),
+            }
+          : {}),
+      }),
+      column: placed.columnStart,
+      row: placed.rowStart,
+      columnSpan: placed.columnSpan,
+      rowSpan: placed.rowSpan,
+    });
+  });
+  const trackArtifacts = (tracks: typeof columns, positioned: typeof positionedColumns, explicitCount: number) =>
+    positioned.map((track, index) =>
+      Object.freeze({
+        index,
+        start: track.start,
+        size: track.size,
+        sourceKind: trackSourceKindOf(tracks[index]),
+        implicit: index >= explicitCount,
+      }),
+    );
   return {
     children: [scope],
     allocationBounds: allocation,
     ...(alignmentGuides === undefined ? {} : { alignmentGuides }),
+    artifact: Object.freeze({
+      kind: 'grid',
+      container: createLayoutArtifactContainer(allocation, content, items, node.overflow),
+      items,
+      columns: trackArtifacts(columns, positionedColumns, node.columns.length),
+      rows: trackArtifacts(rows, positionedRows, node.rows.length),
+    }),
   };
 };

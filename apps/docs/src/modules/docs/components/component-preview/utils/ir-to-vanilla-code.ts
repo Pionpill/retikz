@@ -280,11 +280,21 @@ const scopeCode = (scope: IRScope, indent: number, ctx: Ctx): string => {
   return `scope(${formatObject(config, indent)}, ${childrenStr})`;
 };
 
-const STANDARD_HELPER_ORDER: ReadonlyArray<string> = ['grid', 'axes', 'frame'];
+const STANDARD_HELPER_ORDER: ReadonlyArray<string> = [
+  'grid',
+  'axes',
+  'frame',
+  'flexLayout',
+  'gridLayout',
+  'overlayLayout',
+];
 const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
   'GridVanillaAdapter',
   'AxesVanillaAdapter',
   'FrameVanillaAdapter',
+  'FlexLayoutVanillaAdapter',
+  'GridLayoutVanillaAdapter',
+  'OverlayLayoutVanillaAdapter',
 ];
 
 const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
