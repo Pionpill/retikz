@@ -2,21 +2,26 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import type {
+  DeterministicBenchmarkBudget,
+  DeterministicBenchmarkResult,
+  TimingBaseline,
+  TimingRunnerEnvironment,
+} from '../shared';
 import type { BrowserRunnerEnvironment } from './browser-runner';
-import type { DeterministicBenchmarkBudget, DeterministicBenchmarkResult } from './budget';
-import type { TimingBaseline, TimingRunnerEnvironment } from './timing';
 
-import { runBrowserBenchmark } from './browser-runner';
-import { compareDeterministicResults, createBaselineCandidate } from './budget';
-import { runCoreWallClockReport } from './report';
-import { runCoreDeterministicBenchmarks } from './run';
-import { readTimingRunnerEnvironment } from './runner-environment';
 import {
   assertTimingGatePassed,
+  compareDeterministicResults,
+  createBaselineCandidate,
   createTimingBaselineCandidate,
   createTimingEnvironmentFingerprint,
+  runCoreDeterministicBenchmarks,
+  runCoreWallClockReport,
   runTimingGateAttempts,
-} from './timing';
+} from '../shared';
+import { runBrowserBenchmark } from './browser-runner';
+import { readTimingRunnerEnvironment } from './runner-environment';
 
 type BenchEnvironment = BrowserRunnerEnvironment &
   Readonly<{
@@ -25,7 +30,7 @@ type BenchEnvironment = BrowserRunnerEnvironment &
     sampleRuns: number;
   }>;
 
-const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const environment = JSON.parse(readFileSync(resolve(appRoot, 'bench-environment.json'), 'utf8')) as BenchEnvironment;
 const baseline = JSON.parse(
   readFileSync(resolve(appRoot, 'deterministic-baseline.json'), 'utf8'),

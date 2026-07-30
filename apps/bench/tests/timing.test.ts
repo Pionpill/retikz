@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { WallClockScenarioReport } from '../src/report';
-import type { TimingBaseline } from '../src/timing';
+import type { TimingBaseline, WallClockScenarioReport } from '../src/shared';
 
 import {
   assertTimingGatePassed,
@@ -9,7 +8,7 @@ import {
   createTimingBaselineCandidate,
   createTimingEnvironmentFingerprint,
   runTimingGateAttempts,
-} from '../src/timing';
+} from '../src/shared';
 
 const report = (id: string, median: number, p95 = median, max = p95): WallClockScenarioReport =>
   Object.freeze({ id, samples: 30, durationMs: Object.freeze({ median, p95, max }) });

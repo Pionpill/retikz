@@ -7,49 +7,38 @@ import type {
   RetainedRendererFactoryInput,
   RetainedSvgRenderer,
 } from '@retikz/render/runtime';
-import type { PerformanceTraceRecord, RuntimeSession } from '@retikz/runtime';
+import type { PerformanceTraceRecord } from '@retikz/runtime';
 
-import { compileToScene, CORE_OWNER_KEY, CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
+import { compileToScene, CORE_OWNER_KEY, CoreOwnerDefinition } from '@retikz/core';
 import { drawScene, renderToCanvas } from '@retikz/render/canvas';
-import {
-  builtinRetainedRendererFactory,
-  createRetainedRenderParticipant,
-  defineRetainedRenderer,
-  RenderRuntimeOwnerDefinition,
-} from '@retikz/render/runtime';
+import { builtinRetainedRendererFactory, defineRetainedRenderer } from '@retikz/render/runtime';
 import { buildSvgDocument, renderToSvgString } from '@retikz/render/svg';
-import {
-  createRuntimeOwnerInput,
-  createRuntimeOwnerRegistry,
-  createRuntimeOwnerUpdate,
-  createRuntimeProgramRegistry,
-  createRuntimeSession,
-  createRuntimeTraceReporter,
-} from '@retikz/runtime';
+import { createRuntimeOwnerUpdate, createRuntimeTraceReporter } from '@retikz/runtime';
 import { mountCanvas, mountSvg } from '@retikz/vanilla';
 
+import type {
+  BenchmarkExecution,
+  DeterministicBenchmarkResult,
+  RetainedBenchmarkSession,
+  WallClockScenarioReport,
+} from '../shared';
 import type { BrowserBenchmarkOptions, BrowserBenchmarkResult, RetikzBenchWindow } from './browser-contract';
-import type { BenchmarkExecution, DeterministicBenchmarkResult } from './budget';
-import type { WallClockScenarioReport } from './report';
 
-import { createSimpleNodeScene, createStableGroupScene, updateSimpleNodeFill, updateStableGroupFill } from './fixtures';
-import { stableHash } from './hash';
-import { measureScenario } from './report';
-import { fullBaselineSizes, toResult } from './run';
-import { assertFullTrace, assertSingleTraceRecord } from './trace';
-
-/** 创建固定尺寸的真实 browser Canvas */
-const createCanvas = (): Readonly<{
-  canvas: HTMLCanvasElement;
-  context: CanvasRenderingContext2D;
-}> => {
-  const canvas = document.createElement('canvas');
-  canvas.width = 1440;
-  canvas.height = 900;
-  const context = canvas.getContext('2d', { alpha: true, willReadFrequently: true });
-  if (context === null) throw new Error('browser benchmark: CanvasRenderingContext2D is unavailable');
-  return Object.freeze({ canvas, context });
-};
+import {
+  assertFullTrace,
+  assertSingleTraceRecord,
+  createBackendHost,
+  createBenchmarkCanvas,
+  createRetainedBenchmarkSession,
+  createSimpleNodeScene,
+  createStableGroupScene,
+  fullBaselineSizes,
+  measureScenario,
+  stableHash,
+  toResult,
+  updateSimpleNodeFill,
+  updateStableGroupFill,
+} from '../shared';
 
 /** 对真实 Canvas 像素生成 FNV-1a 32-bit 功能摘要 */
 export const hashCanvasPixels = (context: CanvasRenderingContext2D): string => {
@@ -68,54 +57,6 @@ export const hashCanvasPixels = (context: CanvasRenderingContext2D): string => {
   }
   for (const value of pixels) mix(value);
   return (hash >>> 0).toString(16).padStart(8, '0');
-};
-
-type RetainedBenchmarkSession = Readonly<{
-  coreProgram: ReturnType<typeof createCoreProgram<readonly []>>;
-  session: RuntimeSession;
-}>;
-
-/** 创建使用公共 Runtime / Core / Render 入口的 retained benchmark session */
-const createRetainedBenchmarkSession = (
-  backend: 'svg' | 'canvas',
-  host: SVGSVGElement | HTMLCanvasElement,
-  source: IRScene,
-  records: Array<PerformanceTraceRecord>,
-  rendererFactory: RetainedRendererFactory = builtinRetainedRendererFactory,
-  config: RenderRuntimeConfigInput = {},
-  updateStrategy?: 'auto' | 'full',
-): RetainedBenchmarkSession => {
-  const coreProgram = createCoreProgram({ onWarn: () => undefined });
-  const handle =
-    backend === 'svg'
-      ? createRetainedRenderParticipant({
-          backend,
-          host: host as SVGSVGElement,
-          rendererFactory,
-          immutableOptions: { backend, idPrefix: 'retained-bench' },
-          coreProgram,
-        })
-      : createRetainedRenderParticipant({
-          backend,
-          host: host as HTMLCanvasElement,
-          rendererFactory,
-          immutableOptions: { backend, idPrefix: 'retained-bench', devicePixelRatio: 1 },
-          coreProgram,
-        });
-  const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, RenderRuntimeOwnerDefinition] });
-  const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
-  const session = createRuntimeSession({
-    owners,
-    programs,
-    updateStrategy,
-    participants: [handle.participant],
-    initialSnapshots: [
-      createRuntimeOwnerInput(CoreOwnerDefinition, source),
-      createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, config),
-    ],
-    trace: record => records.push(record),
-  });
-  return Object.freeze({ coreProgram, session });
 };
 
 type HostListenerProbe = Readonly<{
@@ -461,7 +402,7 @@ const runDeterministicBrowserBenchmarks = (): ReadonlyArray<DeterministicBenchma
     });
     results.push(toResult(`svg-full-${size}`, stableHash(svg), svgRecord));
 
-    const { context } = createCanvas();
+    const { context } = createBenchmarkCanvas();
     const canvasRecords: Array<PerformanceTraceRecord> = [];
     const canvasReporter = createRuntimeTraceReporter({
       owner: '@retikz/render:canvas',
@@ -493,11 +434,6 @@ const readRetainedFullRecord = (
     reused: 0,
     changed: 5_000,
   });
-};
-
-const createBackendHost = (backend: 'svg' | 'canvas'): SVGSVGElement | HTMLCanvasElement => {
-  if (backend === 'svg') return document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  return createCanvas().canvas;
 };
 
 const assertBackendOracle = (
@@ -881,7 +817,7 @@ const runBrowserWallClockReport = (warmupRuns: number, sampleRuns: number): Read
   const reports: Array<WallClockScenarioReport> = [];
   for (const size of fullBaselineSizes) {
     const scene = compileToScene(createSimpleNodeScene(size)).scene;
-    const { context } = createCanvas();
+    const { context } = createBenchmarkCanvas();
     reports.push(
       measureScenario(`svg-full-${size}`, warmupRuns, sampleRuns, () => {
         buildSvgDocument(scene, { idPrefix: `report-${size}`, animate: false });
@@ -931,4 +867,6 @@ const runBrowserBenchmarks = async (options: BrowserBenchmarkOptions): Promise<B
   });
 };
 
-Object.assign(window as RetikzBenchWindow, { retikzBench: Object.freeze({ run: runBrowserBenchmarks }) });
+if (typeof window !== 'undefined') {
+  Object.assign(window as RetikzBenchWindow, { retikzBench: Object.freeze({ run: runBrowserBenchmarks }) });
+}

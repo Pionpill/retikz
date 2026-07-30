@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { runCoreDeterministicBenchmarks } from '../src/run';
+import { runCoreDeterministicBenchmarks } from '../src/shared';
 
 describe('Core deterministic benchmark scenarios', () => {
   it('冻结 5000 单 entity update 的增量 work 与 full oracle', () => {
