@@ -1,0 +1,92 @@
+---
+title: 产物与追溯
+description: 理解 TableLayoutManifest 如何在同次编译中暴露轨道、Cell、边框几何及其语义来源。
+---
+
+Scene 负责让 renderer 画出表格，但宿主还会需要“这个区域属于哪个 Cell”“内容为什么超出 Cell”“这条边由谁获胜”等结构化答案。`TableLayoutManifest` 把这些答案作为同次编译的 typed artifact 暴露出来。
+
+<ComponentAlert
+  type="tip"
+  title="这是进阶模型"
+  description="只需要显示表格时无需读取 manifest；实现命中、检查器、导出、调试或宿主集成时再使用本页。"
+/>
+
+## 与 Scene 同源
+
+<ComponentPreview files="table-manifest-map" hideCode size="xs" />
+
+图中 Scene 与 Manifest 都来自同一个 layout transaction。Manifest 不是渲染后的补算结果，也不会解析 SVG；它直接复用 canonical identity、已解轨道、Cell 放置和 Border Graph。
+
+产物在返回前会通过公开 schema 校验，并递归冻结、与编译内部对象分离。消费者可以保存、比较或跨 renderer 使用它，而不依赖某个 DOM 结构。
+
+## Manifest 记录哪些层次
+
+| 层次   | 主要内容                                   | 能回答的问题                 |
+| ------ | ------------------------------------------ | ---------------------------- |
+| Table  | `tableId`、整体 allocation/visual bounds   | 表格占位与可见范围多大       |
+| Track  | row/column id、index、offset、size         | 某条轨道从哪里开始、尺寸多大 |
+| Cell   | 身份、地址、span、语义、来源与多组 bounds  | 这个区域属于谁、来自哪里     |
+| Border | edge geometry、style、winner、contributors | 哪条边可见、为何获胜         |
+
+这些数组保持 canonical 顺序。Cell 通过稳定 row/column id 与 index 连接语义模型和已解轨道；border atom 则保留候选来源，即使最终多个原子被合并成一条可见 edge，也不会丢失冲突过程。
+
+## 不同 bounds 不应合并
+
+| Bounds                       | 坐标空间 / 含义                        | 典型用途                |
+| ---------------------------- | -------------------------------------- | ----------------------- |
+| `box`                        | Table-local Cell 占据的轨道矩形        | Cell 命中、表格网格覆盖 |
+| `contentBox`                 | `box` 扣除 padding 后的容器            | 内容容器、对齐参考      |
+| `sourceAllocationBounds`     | child 在 replay 根局部坐标中的占位     | 诊断原始测量            |
+| `sourceVisualOverflowBounds` | child 变换前的局部可见范围             | 解释原始溢出            |
+| `contentAllocationBounds`    | fit 与 alignment 后的 Table-local 占位 | 内容布局、宿主 overlay  |
+| `visualOverflowBounds`       | overflow 策略后的 Table-local 可见范围 | 可见命中、裁剪和导出    |
+
+根 `allocationBounds` 只覆盖轨道与 gap；根 `visualOverflowBounds` 是可见 Cell 内容和边框的 union。内容允许溢出时，两者可以不同，因此不能用一个通用 bbox 代替。
+
+## 来源与消费边界
+
+Cell `source` 保留最小稳定来源：显式网格坐标、外部 dataset/row/field，或生成它的 Structure kind。`location` 与 `roles` 则描述它在表格中的语义位置，两者共同支持 inspector、选择映射和领域导出。
+
+Manifest 提供事实，不替宿主决定交互。Table 不在这里拥有 hover、selection、编辑状态或 DOM 生命周期；宿主可以把 manifest 用作这些能力的几何与 identity 输入，持久修改仍应回到 Table 所拥有的 spec 或数据。
+
+<SourceLinks
+  sources={[
+    {
+      label: '由 canonical model 与已解 layout 构造 manifest',
+      path: 'packages/viz/table/src/pipeline/manifest/build.ts',
+      startLine: 12,
+      endLine: 55,
+    },
+    {
+      label: 'Cell 与根 manifest 的公开 schema',
+      path: 'packages/viz/table/src/contract/manifest/schema.ts',
+      startLine: 122,
+      endLine: 166,
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/table/model/layout">
+    <span className="font-semibold">布局与边框</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      回看轨道、Cell 放置和 Border Graph 如何产生。
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/reference/manifest">
+    <span className="font-semibold">契约 - 产物</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">查询 manifest DTO 的完整字段与 schema。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/reference/runtime">
+    <span className="font-semibold">运行时</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      查看 React、Vanilla 与 compile 如何读取产物。
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/detail">
+    <span className="font-semibold">明细表</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">在常用入口中观察 onManifest 与 SSR sidecar。</span>
+  </LinkedCard>
+</div>
