@@ -16,6 +16,10 @@ v0.1 建立独立数据包边界：`@retikz/data` 接管 plot 内已经成型的
 - v0.1 RC 冻结现有 schema、definition / registry、pipeline 与 lineage 公共契约，只接收兼容性 bug、诊断、文档和发布修正。
 - canonical data-view preparation、宿主共享 view lifecycle 等新能力延期到后续 Alpha milestone，不在 RC 内扩展公共面。
 
+## Stable 发布
+
+- `0.1.0-rc.1` 后无 data 源码或公开契约变化；`0.1.0` 仅切换 stable 版本与默认 npm `latest`，git tag 使用 `data-v0.1.0`。
+
 ## 验证策略
 
 - data 包：eslint、tsc、迁移后的 transform / field / statistics 单测。

@@ -24,6 +24,7 @@
 - **beta.1**：抽出 `@retikz/data`，Plot 改为消费共享数据 schema、contract、provider 与 pipeline。
 - **beta.2**：补齐 runtime-only Plot lineage；以 `createPlotSpec()` / `normalizePlotBindings()` 统一 React 与 Vanilla authoring；Vanilla 迁移为 `plot()`、`embedPlot()`、`createPlotAdapter()` 与独立 `renderPlot()` runtime。
 - **RC**：冻结 Plot IR、Definition / registry、authoring、lowering、lineage、locator 与三包 adapter 公共面。增量更新、依赖失效、按需物化和 renderer diff 进入 v0.2。
+- **Stable**：`0.1.0-rc.1` 后无 Plot 源码或公开契约变化；`0.1.0` 仅切换三包 stable 版本与默认 npm `latest`，git tag 使用 `plot-v0.1.0`。
 
 ## Milestones
 

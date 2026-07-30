@@ -4,7 +4,7 @@ import { esmOnlyChangeItem } from './esm-only';
 
 export const vizV01: Release = {
   minor: 'v0.1',
-  stableDate: null,
+  stableDate: '2026-07-30',
   packages: [
     {
       pkg: '@retikz/data',
