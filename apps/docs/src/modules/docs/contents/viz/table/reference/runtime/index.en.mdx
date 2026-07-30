@@ -34,15 +34,15 @@ An embedded Table does not start a local compile. It contributes its spec, datas
 </div>
 
 1. **Canonical model**: Table schema validation runs first. A Structure definition normalizes manual, detail, or custom input into one semantic model; Presentation definitions turn Cell payloads into layoutable content.
-2. **Intrinsic probes**: every Cell runs intrinsic `layoutChild` to obtain allocation and visual bounds. These probes measure content but do not commit output.
-3. **Columns and wrap**: intrinsic width, spans, gaps, track configuration, and parent `maxWidth` feed the column solver. Only wrapping Cells run another constrained `layoutChild` with their final content width.
+2. **Natural proposal probes**: every Cell calls `layoutChild` with `NaturalLayoutProposal` to obtain allocation and visual bounds. These probes measure content but do not commit output.
+3. **Columns and wrap**: natural width, spans, gaps, track configuration, and the parent x-axis `exact.value` or finite `range.max` feed the column solver. Only wrapping Cells issue another `x: range(0, contentWidth)` probe.
 4. **Rows and placement**: final probe heights feed the row solver. The transaction then computes Cell boxes, padding-reduced content boxes, fit / align / overflow placement, and the border conflict graph.
 5. **Replay and publish**: the runtime replays only each Cell's final probe and the final border Scope to build Scene children. The same composite occurrence publishes a detached, recursively frozen `TableLayoutManifest`.
 
 ### Three runtime invariants
 
 - **One Core compile only**: the manifest is a typed artifact from that compile; observing it never starts a second lowering pass.
-- **A probe is not output**: intrinsic and constrained measurement may create multiple candidates. Candidates that are not replayed never enter the final Scene or artifacts.
+- **A probe is not output**: natural and range proposals may create multiple candidates. Candidates that are not replayed never enter the final Scene or artifacts; `context.raise()` preserves the selected failed probe's original identity.
 - **The root artifact uses occurrence identity**: standalone root selection uses `sourcePath: 'children[0]'` plus an empty `expansionPath`; public `tableId` is not an instance selector.
 
 <SourceLinks
@@ -50,8 +50,8 @@ An embedded Table does not start a local compile. It contributes its spec, datas
     {
       label: 'Measurement, solving, placement, and replay in one Table transaction',
       path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
-      startLine: 230,
-      endLine: 405,
+      startLine: 263,
+      endLine: 455,
     },
     {
       label: 'compileTable root Scene, definition merge, and root artifact selection',

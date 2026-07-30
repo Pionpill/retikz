@@ -23,14 +23,14 @@ normalize 后三项都成为 `ResolvedTableCellLayout` 的必填字段。schema 
 
 ### wrap 选择 layout result
 
-所有 Cell 先执行 intrinsic layout，以 intrinsic allocation width 参与 column contribution。columns 与 content-box width 确定后：
+所有 Cell 先用 `NaturalLayoutProposal` 执行 natural probe，以结果的 allocation width 参与 column contribution。columns 与 content-box width 确定后：
 
-- `wrap: false` 继续使用 intrinsic result
-- `wrap: true` 用 `maxWidth = contentBox.width` 执行一次 constrained layout
+- `wrap: false` 继续使用 natural probe result
+- `wrap: true` 用 `x: range(0, contentBox.width)` 与 `y: intrinsic(natural)` 执行一次 probe
 
-被选中的 result 同时提供 row contribution、最终 replay、allocation bounds、visual bounds 与 nested artifacts；不得用 constrained bounds 配 intrinsic replay，也不得再次 compile 内容。`maxWidth = 0` 是合法约束。
+被选中的 result 同时提供 row contribution、最终 replay、allocation bounds、visual bounds 与 nested artifacts；不得用 range-proposal bounds 配 natural replay，也不得再次 compile 内容。`range.max = 0` 是合法 proposal。
 
-wrap 是通用 constrained layout 请求。文本 Node 是否换行由 Core measurer 与 Node 合同决定；Table 不识别 Node、文本或 composite kind。
+wrap 是通用 x 轴 range proposal probe 请求。文本 Node 是否换行由 Core measurer 与 Node 合同决定；Table 不识别 Node、文本或 composite kind。
 
 ### fit 与 alignment
 
@@ -65,8 +65,8 @@ source 或 target 出现非法 bounds、非有限 scale 或除零歧义时 fail-
 
 ## 最终实现与验证
 
-实现由 `layout/content.ts`、`layout/fit.ts` 与 `layout/transaction.ts` 组合 Core layout-aware replay。constrained result 的 nested artifact 只发布一次，丢弃的 intrinsic replay 不进入最终 output。
+实现由 `layout/content.ts`、`layout/fit.ts` 与 `layout/transaction.ts` 组合 Core layout-aware replay。选中的 range-proposal result 只发布一次 nested artifact，丢弃的 natural probe 不进入最终 output。
 
-正式测试覆盖 contain / cover / stretch、非零/负 source bounds、零尺寸、clip、visible overflow、未知策略、非有限 scale、wrap constrained replay 与 nested artifact 同源。关键证据位于 `tests/layout/content-policy.test.ts` 与 `tests/pipeline/layout-transaction.test.ts`。
+正式测试覆盖 contain / cover / stretch、非零/负 source bounds、零尺寸、clip、visible overflow、未知策略、非有限 scale、wrap range-proposal replay 与 nested artifact 同源。关键证据位于 `tests/layout/content-policy.test.ts` 与 `tests/pipeline/layout-transaction.test.ts`。
 
 有限高度 reflow、多行 fragmentation、hyphenation 与 renderer-specific text shaping 不在 alpha.2 范围；它们必须继续由 Core 或更高层显式能力承载。

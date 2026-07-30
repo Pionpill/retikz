@@ -19,9 +19,9 @@ alpha.2 保留完整 JSON-safe props / plain input，并用窄 marker 提供等�
 
 - `<Table>` 接受完整 `IRTableSpec` 与 datasets
 - `<DetailTable>` 接受完整 columns props，或互斥的 `<DetailColumn>` children
-- `<ManualTable>` 接受完整 cells / rowKinds props，或互斥的 `<Row>` / `<Cell>` children
+- `<ManualTable>` 接受非空矩形 rows / rowKinds props，或互斥的 `<Row>` / `<Cell>` children
 
-完整 props / plain input 是持久化、LLM、程序化构造与 Vanilla 的 authoring 真源。marker 只负责结构：`DetailColumn` 转成同名 plain column；`Row/Cell` 按当前 row 的首个未占槽位放置，并让 span 立即预占未来 rows。两路最终都调用 framework-neutral create / normalize 合同。
+完整 props / plain input 是持久化、LLM、程序化构造与 Vanilla 的 authoring 真源。marker 只负责结构：`DetailColumn` 转成同名 plain column；`Row/Cell` 按当前 row 的首个未占槽位放置，让 span 立即预占未来 rows，并把未占位置补成 `null`。两路最终都调用 ADR-08 冻结的 framework-neutral create / normalize 合同。
 
 ### standalone host props
 
