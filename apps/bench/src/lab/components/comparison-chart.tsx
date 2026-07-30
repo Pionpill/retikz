@@ -54,7 +54,7 @@ export const ComparisonChart: FC<ComparisonChartProps> = props => {
           </div>
           <p className="mt-1 text-[11px] text-muted-foreground">{t('chart.description')}</p>
         </div>
-        <span className="font-mono text-[10px] text-muted-foreground">LOCAL WALL CLOCK</span>
+        <span className="font-mono text-[10px] text-muted-foreground">{t('chart.localWallClock')}</span>
       </div>
       <div ref={plotHostRef} className="mt-4 min-h-0 flex-1 overflow-hidden text-muted-foreground">
         {data.length === 0 ? (

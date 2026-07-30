@@ -92,6 +92,7 @@
   "chart": {
     "title": "Policy comparison",
     "description": "Median update duration · lower is better",
+    "localWallClock": "Local wall clock",
     "empty": "Run Compare or Measure",
     "emptyDescription": "Charts update only after sampling completes"
   },

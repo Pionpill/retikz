@@ -17,7 +17,7 @@ import type { LabState, LabStateAction } from '../lab-state';
 import type { BenchModuleIdValue } from '../workspace-model';
 
 import { LabActionType } from '../lab-state';
-import { BenchModuleId,benchModules } from '../workspace-model';
+import { BenchModuleId, benchModules } from '../workspace-model';
 
 /** 模块切换器属性 */
 export type ModuleSwitcherProps = Readonly<{

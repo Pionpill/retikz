@@ -92,6 +92,7 @@
   "chart": {
     "title": "策略对比",
     "description": "更新耗时中位数 · 越低越好",
+    "localWallClock": "本机挂钟时间",
     "empty": "运行对比或测量",
     "emptyDescription": "采样完成后图表才会更新"
   },
