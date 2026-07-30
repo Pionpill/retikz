@@ -11,13 +11,21 @@ import {
 } from '../../../src';
 
 describe('layout inspection option schemas', () => {
-  it('describes every public authoring field for schema reference consumers', () => {
+  it('describes every public schema and authoring field for schema reference consumers', () => {
+    const schemas = [
+      LayoutInspectBoundsOptionsInputSchema,
+      BaseLayoutInspectOptionsInputSchema,
+      InspectOptionsInputSchema,
+      BaseLayoutInspectOptionsSchema,
+      InspectOptionsSchema,
+    ];
     const fields = [
       ...Object.values(LayoutInspectBoundsOptionsInputSchema.shape),
       ...Object.values(BaseLayoutInspectOptionsInputSchema.shape),
       ...Object.values(InspectOptionsInputSchema.shape),
     ];
 
+    expect(schemas.every(schema => typeof schema.description === 'string' && schema.description.length > 0)).toBe(true);
     expect(fields.every(field => typeof field.description === 'string' && field.description.length > 0)).toBe(true);
   });
 

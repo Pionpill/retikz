@@ -1,15 +1,34 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  FlexLayoutInspectLocalOptionsInputSchema,
   FlexLayoutInspectLocalOptionsSchema,
   FlexLayoutInspectOptionsInputSchema,
+  GridLayoutInspectLocalOptionsInputSchema,
   GridLayoutInspectLocalOptionsSchema,
   GridLayoutInspectOptionsInputSchema,
+  OverlayLayoutInspectLocalOptionsInputSchema,
   OverlayLayoutInspectLocalOptionsSchema,
   OverlayLayoutInspectOptionsInputSchema,
 } from '../../src';
 
 describe('Standard layout inspection options', () => {
+  it('describes every public family option schema for schema reference consumers', () => {
+    const schemas = [
+      FlexLayoutInspectLocalOptionsInputSchema,
+      GridLayoutInspectLocalOptionsInputSchema,
+      OverlayLayoutInspectLocalOptionsInputSchema,
+      FlexLayoutInspectOptionsInputSchema,
+      GridLayoutInspectOptionsInputSchema,
+      OverlayLayoutInspectOptionsInputSchema,
+      FlexLayoutInspectLocalOptionsSchema,
+      GridLayoutInspectLocalOptionsSchema,
+      OverlayLayoutInspectLocalOptionsSchema,
+    ];
+
+    expect(schemas.every(schema => typeof schema.description === 'string' && schema.description.length > 0)).toBe(true);
+  });
+
   it('inherits the Core Base fields while keeping family admission sparse and strict', () => {
     expect(FlexLayoutInspectOptionsInputSchema.parse({ overflow: false, lines: false })).toEqual({
       overflow: false,

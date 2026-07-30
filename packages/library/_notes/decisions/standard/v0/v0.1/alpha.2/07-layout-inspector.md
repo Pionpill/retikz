@@ -83,13 +83,14 @@ authoring schema 全部是无 default、无 transform 的 strict sparse object�
 
 Core 在同一 `CompositeDefinition` 上提供可选 `inspector`，不新增 registry。只有 layout-aware、能返回且声明 typed artifact schema 的 definition 可以注册 inspector。
 
-inspector callback 接收：
+inspector callback 只接收：
 
 - 同次最终 replay 发布的 typed artifact
-- occurrence locator 与最终 occurrence transform
+- occurrence locator
 - Core 已求值的 Base profile
 - definition 已求值的 local profile
-- 受限的 child forest / opaque child handle remap context
+
+最终 occurrence transform 不暴露给 callback，由 Core 在封装 inspection plane entry 时统一附加。child forest 与 opaque child handle 只属于 layout compile / `layoutChild()` 的 authored sidecar remap，不进入 inspector 公共 context。
 
 callback 只返回 renderer-neutral 的 rect、line、label DTO。Core 再以 strict schema 校验有限数值、深冻结，并拒绝 id、target、resource、paint、animation、path 或其它主 Scene 语义。
 

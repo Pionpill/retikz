@@ -1,40 +1,48 @@
 import { z } from 'zod';
 
 /** Layout Inspector bounds 的 sparse authoring schema */
-export const LayoutInspectBoundsOptionsInputSchema = z.strictObject({
-  container: z.boolean().optional().describe('Whether to draw the outer container bounds.'),
-  content: z.boolean().optional().describe('Whether to draw the content bounds inside container padding.'),
-  slot: z.boolean().optional().describe('Whether to draw each parent-assigned child slot.'),
-  allocation: z.boolean().optional().describe("Whether to draw each child's actual allocation bounds."),
-  visual: z.boolean().optional().describe("Whether to draw each child's final visual bounds."),
-});
+export const LayoutInspectBoundsOptionsInputSchema = z
+  .strictObject({
+    container: z.boolean().optional().describe('Whether to draw the outer container bounds.'),
+    content: z.boolean().optional().describe('Whether to draw the content bounds inside container padding.'),
+    slot: z.boolean().optional().describe('Whether to draw each parent-assigned child slot.'),
+    allocation: z.boolean().optional().describe("Whether to draw each child's actual allocation bounds."),
+    visual: z.boolean().optional().describe("Whether to draw each child's final visual bounds."),
+  })
+  .describe('Sparse bounds-guide selection shared by layout inspectors.');
 
 /** 通用 Layout Inspector 的 sparse authoring schema */
-export const BaseLayoutInspectOptionsInputSchema = z.strictObject({
-  bounds: z
-    .union([z.boolean(), LayoutInspectBoundsOptionsInputSchema])
-    .optional()
-    .describe(
-      'Bounds guide selection. true restores the canonical profile, false disables every bounds guide, and an object overrides individual guides.',
-    ),
-  overflow: z.boolean().optional().describe('Whether to shade content that overflows its assigned slot.'),
-  alignmentGuides: z.boolean().optional().describe('Whether to draw alignment reference guides.'),
-  labels: z.boolean().optional().describe('Whether to draw textual inspection labels.'),
-});
+export const BaseLayoutInspectOptionsInputSchema = z
+  .strictObject({
+    bounds: z
+      .union([z.boolean(), LayoutInspectBoundsOptionsInputSchema])
+      .optional()
+      .describe(
+        'Bounds guide selection. true restores the canonical profile, false disables every bounds guide, and an object overrides individual guides.',
+      ),
+    overflow: z.boolean().optional().describe('Whether to shade content that overflows its assigned slot.'),
+    alignmentGuides: z.boolean().optional().describe('Whether to draw alignment reference guides.'),
+    labels: z.boolean().optional().describe('Whether to draw textual inspection labels.'),
+  })
+  .describe('Sparse shared options accepted by every layout inspector.');
 
 /** Layout / Scope inspection 策略的 sparse authoring schema */
-export const InspectOptionsInputSchema = z.strictObject({
-  enabled: z
-    .boolean()
-    .optional()
-    .describe('Whether inspection remains enabled for this authored subtree. false creates a hard descendant barrier.'),
-  layout: z
-    .union([z.boolean(), BaseLayoutInspectOptionsInputSchema])
-    .optional()
-    .describe(
-      'Layout inspector policy. true enables the canonical profile, false disables the current cascaded value but descendants may re-enable it, and an object overrides shared options. Only enabled: false creates a hard descendant barrier.',
-    ),
-});
+export const InspectOptionsInputSchema = z
+  .strictObject({
+    enabled: z
+      .boolean()
+      .optional()
+      .describe(
+        'Whether inspection remains enabled for this authored subtree. false creates a hard descendant barrier.',
+      ),
+    layout: z
+      .union([z.boolean(), BaseLayoutInspectOptionsInputSchema])
+      .optional()
+      .describe(
+        'Layout inspector policy. true enables the canonical profile, false disables the current cascaded value but descendants may re-enable it, and an object overrides shared options. Only enabled: false creates a hard descendant barrier.',
+      ),
+  })
+  .describe('Sparse inspection policy authored on a Layout or Scope.');
 
 /** Layout Inspector bounds authoring值 */
 export type LayoutInspectBoundsOptions = z.input<typeof LayoutInspectBoundsOptionsInputSchema>;
@@ -139,7 +147,7 @@ export const resolveBaseLayoutInspectOptions = (
 /** 通用 Layout Inspector 的 canonical resolved schema */
 export const BaseLayoutInspectOptionsSchema = BaseLayoutInspectOptionsInputSchema.transform(
   resolveBaseLayoutInspectOptions,
-);
+).describe('Canonical shared options resolved for a layout inspector.');
 
 /** 把 sparse Layout / Scope 策略求值为 canonical profile */
 export const resolveInspectOptions = (options: InspectOptions): ResolvedInspectOptions =>
@@ -152,4 +160,6 @@ export const resolveInspectOptions = (options: InspectOptions): ResolvedInspectO
   });
 
 /** Layout / Scope inspection 的 canonical resolved schema */
-export const InspectOptionsSchema = InspectOptionsInputSchema.transform(resolveInspectOptions);
+export const InspectOptionsSchema = InspectOptionsInputSchema.transform(resolveInspectOptions).describe(
+  'Canonical inspection policy resolved for an authored Layout or Scope.',
+);
