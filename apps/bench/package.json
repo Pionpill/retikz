@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@retikz/core": "workspace:*",
+    "@retikz/plot-react": "workspace:*",
     "@retikz/render": "workspace:*",
     "@retikz/runtime": "workspace:*",
     "@retikz/vanilla": "workspace:*",

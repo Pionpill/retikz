@@ -66,6 +66,12 @@
     "description": "观察模式会在此保留真实 renderer host",
     "evidence": "探索数据不能替代 CI 证据 · 使用 pnpm bench:check 执行确定性门禁"
   },
+  "status": {
+    "idle": "空闲",
+    "running": "运行中",
+    "success": "完成",
+    "error": "错误"
+  },
   "report": {
     "title": "运行报告",
     "complete": "完成",
@@ -76,7 +82,12 @@
     "medianUpdate": "更新中位数",
     "entitiesReused": "复用实体",
     "executionPath": "执行路径",
-    "autoVsStatic": "自动策略对比静态策略"
+    "autoVsStatic": "自动策略对比静态策略",
+    "faster": "快 {{value}}%",
+    "slower": "慢 {{value}}%",
+    "samples": "{{count}} 次采样",
+    "reuse": "复用率 {{value}}%",
+    "best": "最佳：{{policy}}"
   },
   "chart": {
     "title": "策略对比",
@@ -90,6 +101,11 @@
     "patch": "Scene Patch",
     "diagnostics": "诊断",
     "lifecycle": "生命周期",
-    "noData": "暂无数据"
+    "noData": "暂无数据",
+    "traceRecord": "{{owner}}\n{{phase}} · {{outcome}}\n访问 {{visited}} / 复用 {{reused}}",
+    "noPatch": "完整路径 · 无 Scene Patch",
+    "patchSummary": "{{count}} 个操作\n{{kinds}}",
+    "noDiagnostics": "无诊断",
+    "lifecycleUnavailable": "当前实验未采集生命周期探针"
   }
 }

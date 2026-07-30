@@ -127,3 +127,49 @@
     cursor: pointer;
   }
 }
+
+.lab-panel {
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 6px);
+  background: var(--card);
+  color: var(--card-foreground);
+  box-shadow: 0 18px 60px color-mix(in oklab, var(--foreground) 8%, transparent);
+}
+
+.lab-label {
+  color: var(--muted-foreground);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.lab-grid {
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--border) 65%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--border) 65%, transparent) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.lab-preview > svg,
+.lab-preview > canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--muted-foreground) 35%, transparent);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}

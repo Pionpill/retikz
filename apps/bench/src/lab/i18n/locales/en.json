@@ -66,6 +66,12 @@
     "description": "Inspect keeps a real renderer host on this stage",
     "evidence": "Exploratory numbers are not CI evidence · use pnpm bench:check for deterministic gates"
   },
+  "status": {
+    "idle": "Idle",
+    "running": "Running",
+    "success": "Complete",
+    "error": "Error"
+  },
   "report": {
     "title": "Run report",
     "complete": "Complete",
@@ -76,7 +82,12 @@
     "medianUpdate": "Median update",
     "entitiesReused": "Entities reused",
     "executionPath": "Execution path",
-    "autoVsStatic": "Auto vs static"
+    "autoVsStatic": "Auto vs static",
+    "faster": "{{value}}% faster",
+    "slower": "{{value}}% slower",
+    "samples": "{{count}} samples",
+    "reuse": "{{value}}% reuse",
+    "best": "Best: {{policy}}"
   },
   "chart": {
     "title": "Policy comparison",
@@ -90,6 +101,11 @@
     "patch": "Scene Patch",
     "diagnostics": "Diagnostics",
     "lifecycle": "Lifecycle",
-    "noData": "No data"
+    "noData": "No data",
+    "traceRecord": "{{owner}}\n{{phase}} · {{outcome}}\nvisited {{visited}} / reused {{reused}}",
+    "noPatch": "Full path · no Scene Patch",
+    "patchSummary": "{{count}} operations\n{{kinds}}",
+    "noDiagnostics": "No diagnostics",
+    "lifecycleUnavailable": "Lifecycle probes are not collected in this experiment"
   }
 }
