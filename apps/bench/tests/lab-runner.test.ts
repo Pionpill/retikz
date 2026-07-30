@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { LabPolicyResult } from '../src/lab/model';
+import type { LabPolicyResult } from '../src/playground/model';
 
 import {
   LabBackend,
@@ -9,8 +9,8 @@ import {
   LabPolicyId,
   LabResultSource,
   LabRunMode,
-} from '../src/lab/model';
-import { runKernelLab } from '../src/lab/run-kernel-lab';
+} from '../src/playground/model';
+import { runKernelLab } from '../src/playground/run-kernel-lab';
 
 const createResult = (policyId: LabPolicyResult['policyId']): LabPolicyResult => ({
   policyId,

@@ -2,7 +2,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { ComparisonPlot } from '../src/lab/components/comparison-plot';
+import { ComparisonPlot } from '../src/playground/components/comparison-plot';
 
 describe('Performance Lab comparison Plot', () => {
   it('通过 retikz Plot 输出策略柱形与坐标文字', () => {

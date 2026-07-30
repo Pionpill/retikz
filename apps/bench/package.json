@@ -5,9 +5,9 @@
   "type": "module",
   "description": "retikz deterministic work and wall-clock benchmark harness.",
   "scripts": {
-    "bench:check": "tsx src/runner/cli.ts check",
-    "bench:report": "tsx src/runner/cli.ts report",
-    "bench:update-baseline": "tsx src/runner/cli.ts update-baseline",
+    "bench:check": "tsx src/benchmark/cli.ts check",
+    "bench:report": "tsx src/benchmark/cli.ts report",
+    "bench:update-baseline": "tsx src/benchmark/cli.ts update-baseline",
     "bench:install-browser": "playwright install chromium",
     "dev": "vite",
     "build": "vite build",

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { getBrowserRunnerPath, readBenchPort } from '../src/runner/browser-runner';
+import { getBrowserRunnerPath, readBenchPort } from '../src/benchmark/browser-runner';
 
 const originalPort = process.env.RETIKZ_BENCH_PORT;
 

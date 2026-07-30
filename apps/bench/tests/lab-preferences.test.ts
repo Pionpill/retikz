@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { getNextLanguage, supportedLanguages } from '../src/lab/i18n/preferences';
-import { applyThemeToRoot, defaultTheme } from '../src/lab/store/theme-model';
+import { getNextLanguage, supportedLanguages } from '../src/playground/i18n/preferences';
+import { applyThemeToRoot, defaultTheme } from '../src/playground/store/theme-model';
 
 describe('Bench workspace preferences', () => {
   it('只在中英文之间循环切换', () => {

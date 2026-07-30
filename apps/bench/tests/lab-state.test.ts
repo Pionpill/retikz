@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createInitialLabState, reduceLabState } from '../src/lab/lab-state';
+import { createInitialLabState, reduceLabState } from '../src/playground/lab-state';
 
 describe('Performance Lab state', () => {
   it('使用 Inspect 与 retained-auto 作为默认入口', () => {

@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
   }),
 }));
 
-vi.mock('../src/runner/browser-runner', () => ({
+vi.mock('../src/benchmark/browser-runner', () => ({
   runBrowserBenchmark: vi.fn(() =>
     Promise.resolve({
       deterministic: [],
@@ -24,7 +24,7 @@ vi.mock('../src/shared', async importOriginal => ({
   runCoreDeterministicBenchmarks: vi.fn(() => []),
   runCoreWallClockReport: vi.fn(() => []),
 }));
-vi.mock('../src/runner/runner-environment', () => ({
+vi.mock('../src/benchmark/runner-environment', () => ({
   readTimingRunnerEnvironment: mocks.readTimingRunnerEnvironment,
 }));
 
@@ -41,7 +41,7 @@ describe('bench CLI', () => {
     process.argv = [originalArgv[0], originalArgv[1], 'check'];
     vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
-    await expect(import('../src/runner/cli')).resolves.toBeDefined();
+    await expect(import('../src/benchmark/cli')).resolves.toBeDefined();
 
     expect(mocks.readTimingRunnerEnvironment).not.toHaveBeenCalled();
   });
