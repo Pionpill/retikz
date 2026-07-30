@@ -1,13 +1,63 @@
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 
-import { InspectionPlaneSchema, InspectionPrimitiveSchema } from '../../../src';
+import {
+  InspectionLabelPrimitiveSchema,
+  InspectionLinePrimitiveSchema,
+  InspectionLineStyleSchema,
+  InspectionPlaneEntrySchema,
+  InspectionPlaneSchema,
+  InspectionPrimitiveSchema,
+  InspectionRectPrimitiveSchema,
+  InspectionToneSchema,
+} from '../../../src';
 
 const occurrence = {
   sourcePath: 'children[0]',
   expansionPath: [],
 } as const;
 
+const collectUndescribedProperties = (value: unknown, path = 'root'): Array<string> => {
+  if (typeof value !== 'object' || value === null) return [];
+  if (Array.isArray(value)) {
+    return value.flatMap((item, index) => collectUndescribedProperties(item, `${path}[${index}]`));
+  }
+
+  const record = value as Record<string, unknown>;
+  const properties = record.properties;
+  const missing =
+    typeof properties === 'object' && properties !== null && !Array.isArray(properties)
+      ? Object.entries(properties as Record<string, unknown>).flatMap(([name, property]) => {
+          if (typeof property !== 'object' || property === null || Array.isArray(property)) return [`${path}.${name}`];
+          const description = (property as Record<string, unknown>).description;
+          return typeof description === 'string' && description.length > 0 ? [] : [`${path}.${name}`];
+        })
+      : [];
+
+  return [
+    ...missing,
+    ...Object.entries(record).flatMap(([name, child]) => collectUndescribedProperties(child, `${path}.${name}`)),
+  ];
+};
+
 describe('inspection primitive schemas', () => {
+  it('describes every public schema and field for schema reference consumers', () => {
+    const schemas = [
+      InspectionToneSchema,
+      InspectionLineStyleSchema,
+      InspectionRectPrimitiveSchema,
+      InspectionLinePrimitiveSchema,
+      InspectionLabelPrimitiveSchema,
+      InspectionPrimitiveSchema,
+      InspectionPlaneEntrySchema,
+      InspectionPlaneSchema,
+    ];
+    const jsonSchema = z.toJSONSchema(InspectionPlaneSchema, { unrepresentable: 'any' });
+
+    expect(schemas.every(schema => typeof schema.description === 'string' && schema.description.length > 0)).toBe(true);
+    expect(collectUndescribedProperties(jsonSchema)).toEqual([]);
+  });
+
   it('accepts the renderer-neutral rect, line, label, entry, and plane DTOs', () => {
     const primitives = [
       {
