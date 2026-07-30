@@ -1,11 +1,11 @@
 ---
 title: 字段契约
-description: 用 model 声明逻辑字段、测量类型与分类顺序，并在需要时保留自动推断。
+description: 用字段模型声明逻辑字段、测量类型与分类顺序，并在需要时保留自动推断。
 ---
 
-`model` 是数据与消费方配置之间的字段契约。它让下游逻辑只依赖稳定的逻辑字段名，而不必猜测某列是数值、时间还是类别。
+字段模型（`model`）是数据与消费方配置之间的字段契约。它让下游逻辑只依赖稳定的逻辑字段名，而不必猜测某列是数值、时间还是类别。
 
-在 Plot 应用中，这些下游逻辑包括 mark、transform 与 scale；Table 或其它模块也可以按自己的消费契约读取同一个 model。下面默认使用 Plot 展示字段类型和分类顺序带来的可视差异，但 `model` 本身属于 Data，不依赖 Plot。
+在 Plot 应用中，这些下游逻辑包括图元、变换与比例尺；Table 或其它模块也可以按自己的消费契约读取同一个字段模型。下面默认使用 Plot 展示字段类型和分类顺序带来的可视差异，但 `model` 本身属于 Data，不依赖 Plot。
 
 ## 声明字段
 
@@ -18,11 +18,16 @@ description: 用 model 声明逻辑字段、测量类型与分类顺序，并在
 | `format?` | <ApiValues name="DataFieldFormat" /> \| `string`                      | 默认转换       | 声明式解析格式；具名格式也可以蕴含字段类型             |
 | `order?`  | <ApiValues name="FieldOrderMode" /> \|<br />`Array<string \| number>` | `'appearance'` | 分类域顺序；数组中的值按给定顺序优先，只对分类字段有效 |
 
-下面的左右对比使用同一份漏斗数据，`stage` 编码为不等距的 `10`、`20`、`50`、`100`。左图没有 `model`，数值被推断为连续字段，点按数值距离排列；右图把它声明为分类字段，每个阶段等距排列。
+下面的试验场始终使用同一种 PointMark 与坐标轴。切换连续、时间、分类与数值编码分类场景，可以只观察字段语义怎样改变 x 轴；在漏斗场景中，`10`、`20`、`50`、`100` 被推断为连续数值时按数值距离排列，显式声明为分类字段时则等距排列。
 
-<ComponentPreview files={['data-model-custom', 'data-model-custom.data.ts']} />
+<ComponentPreview
+  files={['field-contract-playground', 'field-contract-playground-preview.tsx', 'field-contract-playground.data.ts']}
+  defaultSourceFile="field-contract-playground-preview.tsx"
+  size="lg"
+  caption="图元结构保持不变；控件只改变输入场景与 x 字段类型。"
+/>
 
-只要声明了 `model`，当前数据管线引用的每个源字段都必须列在其中。拼错字段名或重复声明会立即报错，不会退化为空结果。在 Plot 应用中，检查范围包括 `x` / `y` / `color`、mark 的 `order`、尺寸与形状通道，以及 transform 输入字段。
+只要声明了 `model`，当前数据管线引用的每个源字段都必须列在其中。拼错字段名或重复声明会立即报错，不会退化为空结果。在 Plot 应用中，检查范围包括 `x` / `y` / `color`、图元的 `order`、尺寸与形状通道，以及变换输入字段。
 
 ### 部分声明
 
@@ -56,15 +61,20 @@ description: 用 model 声明逻辑字段、测量类型与分类顺序，并在
 
 字段类型是消费模块理解数据语义的输入，Data 只提供类型，不规定它必须怎样显示。在 Plot 应用中，字段类型会影响比例尺、坐标轴和图例；位置通道省略比例尺时，`continuous`、`temporal`、`categorical` 分别对应线性、时间与分类带比例尺。
 
-<ComponentPreview files={['data-model', 'data-model.data.ts']} size="xxxl" />
+上面的字段契约试验场也覆盖这三种默认位置比例尺；切换场景时 PointMark 与坐标轴结构保持不变，因此可见差异只来自字段类型。
 
-在 Plot 中，颜色通道还要区分 authoring 层级：React `<Plot>` 在 `model` 类型已知时可以补出默认离散或连续色阶；直接书写低层 Plot IR 时，分类字段可缺省为 `ordinal`，连续或时间字段必须显式引用连续色阶。完整规则与覆盖方式见[比例尺](/viz/plot/scale)。
+在 Plot 中，颜色通道还要区分创作层级：React `<Plot>` 在 `model` 类型已知时可以补出默认离散或连续色阶；直接书写低层 Plot IR 时，分类字段可缺省为 `ordinal`，连续或时间字段必须显式引用连续色阶。完整规则与覆盖方式见[比例尺](/viz/plot/scale)。
 
 ## 分类顺序
 
 `categorical` 字段默认按数据出现顺序形成分类域。需要 `S → M → L → XL` 这样的业务顺序时，在字段上写 `order`：
 
-<ComponentPreview files={['data-model-order', 'data-model-order.data.ts']} />
+<ComponentPreview
+  files={['data-model-order', 'data-model-order-preview.tsx', 'data-model-order.data.ts']}
+  defaultSourceFile="data-model-order-preview.tsx"
+  size="lg"
+  caption="源表始终是 XL、S、L、M；控件改变分类域，不重排数据行。"
+/>
 
 | `order`                        | 效果                               |
 | ------------------------------ | ---------------------------------- |
@@ -76,7 +86,7 @@ description: 用 model 声明逻辑字段、测量类型与分类顺序，并在
 
 ## 公开类型
 
-这些 schema 与派生类型都可从 `@retikz/data` 的包入口导入：
+这些 Schema 与派生类型都可从 `@retikz/data` 的包入口导入：
 
 | 概念     | 公开导出                                             |
 | -------- | ---------------------------------------------------- |
@@ -88,7 +98,7 @@ description: 用 model 声明逻辑字段、测量类型与分类顺序，并在
 <SourceLinks
   sources={[
     {
-      label: '字段声明与数据模型 schema',
+      label: '字段声明与数据模型 Schema',
       path: 'packages/viz/data/src/schemas/data/schema.ts',
       startLine: 5,
       endLine: 40,

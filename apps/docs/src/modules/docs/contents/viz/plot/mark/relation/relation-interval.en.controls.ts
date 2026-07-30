@@ -2,7 +2,12 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { intervalRelations } from './relation-interval.data';
+import { createPlotTransformResultView, createPlotTransformTableViews } from '../../transform-table-views';
+import {
+  relationDecreaseOperation,
+  relationIncreaseOperation,
+  relationIntervalRowsOf,
+} from './relation-interval.controls';
 
 /** Stable control ids for the interval-relation playground */
 export const RELATION_INTERVAL_CONTROL_IDS = {
@@ -24,7 +29,26 @@ export const relationIntervalControls = definePreviewControls({
     {
       label: 'Data',
       defaultCollapsed: true,
-      controls: [{ kind: 'table', id: 'intervalRelations', label: 'Interval relations', rows: intervalRelations }],
+      controls: [
+        {
+          kind: 'table',
+          id: 'intervalRelations',
+          label: 'Interval relations',
+          views: [
+            ...createPlotTransformTableViews(
+              { source: 'Source', result: 'Decrease relation layer' },
+              relationIntervalRowsOf,
+              () => relationDecreaseOperation,
+            ),
+            createPlotTransformResultView(
+              'increase-result',
+              'Increase relation layer',
+              relationIntervalRowsOf,
+              () => relationIncreaseOperation,
+            ),
+          ],
+        },
+      ],
     },
     {
       label: 'Relation style',
@@ -108,10 +132,10 @@ export const relationIntervalControls = definePreviewControls({
           ],
         },
         {
-          kind: 'color',
+          kind: 'text',
           id: RELATION_INTERVAL_CONTROL_IDS.barLabelColor,
           label: 'Label color',
-          defaultValue: '#0f172a',
+          defaultValue: 'currentColor',
         },
       ],
     },
@@ -129,7 +153,7 @@ export const previewControlContract = {
     [RELATION_INTERVAL_CONTROL_IDS.labelSide]: 'top',
     [RELATION_INTERVAL_CONTROL_IDS.labelSloped]: true,
     [RELATION_INTERVAL_CONTROL_IDS.barLabelPosition]: 'top',
-    [RELATION_INTERVAL_CONTROL_IDS.barLabelColor]: '#0f172a',
+    [RELATION_INTERVAL_CONTROL_IDS.barLabelColor]: 'currentColor',
   },
   relatedApis: [
     'RelationMark.transform',

@@ -142,8 +142,8 @@ A zero scale remains legal as a purely visual transform. Any operation that must
     {
       label: 'Deferred Path resolution and in-place backfill',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 152,
-      endLine: 179,
+      startLine: 283,
+      endLine: 315,
     },
   ]}
 />
@@ -159,16 +159,28 @@ Equal ids in different frames are valid shadowing. A duplicate in one frame emit
 <SourceLinks
   sources={[
     {
-      label: 'Namespace registration and lookup',
+      label: 'Namespace frame lifecycle',
       path: 'packages/kernel/core/src/compile/namespace.ts',
-      startLine: 24,
-      endLine: 132,
+      startLine: 156,
+      endLine: 183,
+    },
+    {
+      label: 'Namespace registration',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 185,
+      endLine: 215,
+    },
+    {
+      label: 'Namespace inside-out lookup',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 241,
+      endLine: 253,
     },
     {
       label: 'Parent and child frame orchestration',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 300,
-      endLine: 627,
+      startLine: 668,
+      endLine: 856,
     },
   ]}
 />
@@ -184,10 +196,16 @@ The Scope envelope collects node, coordinate, and nested-Scope layouts, not path
 <SourceLinks
   sources={[
     {
-      label: 'Scope envelope and Group output',
+      label: 'Scope intrinsic envelope',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 331,
-      endLine: 627,
+      startLine: 510,
+      endLine: 522,
+    },
+    {
+      label: 'Scope Group output and child orchestration',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 668,
+      endLine: 856,
     },
     {
       label: 'Rectangle and circle synthetic layouts',
@@ -198,8 +216,8 @@ The Scope envelope collects node, coordinate, and nested-Scope layouts, not path
     {
       label: 'Clip resolution and resource registration',
       path: 'packages/kernel/core/src/compile/resource/clip.ts',
-      startLine: 156,
-      endLine: 189,
+      startLine: 343,
+      endLine: 390,
     },
   ]}
 />

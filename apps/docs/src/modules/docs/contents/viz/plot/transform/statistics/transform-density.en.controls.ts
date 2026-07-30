@@ -2,6 +2,8 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
+import { densityOperationOf } from './transform-density.controls';
 import { measurements } from './transform-density.data';
 
 /** 密度示例的英文控件 */
@@ -17,10 +19,16 @@ export const densityControls = definePreviewControls({
           kind: 'table',
           id: 'rows',
           label: 'Grouped measurements',
-          rows: measurements,
+          views: createPlotTransformTableViews(
+            { source: 'Source', result: 'Density samples' },
+            measurements,
+            densityOperationOf,
+          ),
           columns: [
             { key: 'group', label: 'Group' },
             { key: 'value', label: 'Value' },
+            { key: 'densityX', label: 'Sample position' },
+            { key: 'density', label: 'Density' },
           ],
         },
       ],

@@ -24,6 +24,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       ) : (
         <Scale dimension="x" type="point" padding={values.padding} />
       )}
+      <Scale dimension="y" type="linear" domainPadding={0} />
       <Axis dimension="x" />
       <Axis dimension="y" grid />
     </Plot>

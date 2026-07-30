@@ -1,10 +1,13 @@
 import type { FC } from 'react';
 
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib';
 
-import type { PreviewTableControlField } from '../types';
+import type { PreviewControlValues, PreviewTableControlField, PreviewTableRows, PreviewTableView } from '../types';
 
 import {
   formatPreviewTableCell,
@@ -21,15 +24,49 @@ export type PreviewTableControlProps = {
    * @default default
    */
   density?: 'compact' | 'default';
+  /** 当前实时控件值 */
+  values: Readonly<PreviewControlValues>;
+};
+
+const STATIC_VIEW_ID = '__preview-table-static-view__';
+
+/** 将单视图旧契约统一为 table view */
+const tableViewsOf = (field: PreviewTableControlField): ReadonlyArray<PreviewTableView> =>
+  field.views !== undefined
+    ? field.views
+    : [{ id: STATIC_VIEW_ID, label: field.label, rows: field.rows } satisfies PreviewTableView];
+
+/** 解析当前 view，并把作者 resolver 错误约束在 table 内 */
+const resolveTableRows = (
+  view: PreviewTableView,
+  values: Readonly<PreviewControlValues>,
+): { rows: PreviewTableRows; error: boolean } => {
+  try {
+    return {
+      rows: typeof view.rows === 'function' ? view.rows(values) : view.rows,
+      error: false,
+    };
+  } catch {
+    return { rows: [], error: true };
+  }
 };
 
 /** 在属性面板内显示只读二维数据 */
 export const PreviewTableControl: FC<PreviewTableControlProps> = props => {
-  const { field, density = 'default' } = props;
+  const { field, density = 'default', values } = props;
   const { t } = useTranslation();
   const compact = density === 'compact';
-  const columns = resolvePreviewTableColumns(field);
-  const visibleRows = field.rows.slice(0, PREVIEW_TABLE_MAX_ROWS);
+  const views = tableViewsOf(field);
+  const [activeViewId, setActiveViewId] = useState(views[0].id);
+  const activeView = views.find(view => view.id === activeViewId) ?? views[0];
+  const resolved = resolveTableRows(activeView, values);
+  const columns = resolvePreviewTableColumns(field, resolved.rows);
+  const visibleRows = resolved.rows.slice(0, PREVIEW_TABLE_MAX_ROWS);
+  const dimensions = t('preview.tableDimensions', { rows: resolved.rows.length, columns: columns.length });
+  const compactDimensions = t('preview.tableDimensionsCompact', {
+    rows: resolved.rows.length,
+    columns: columns.length,
+  });
   const rowHeight = compact ? 24 : 28;
   const scrollAreaMaxHeight = rowHeight * (PREVIEW_TABLE_DEFAULT_VISIBLE_ROWS + 1) + 2;
 
@@ -39,11 +76,55 @@ export const PreviewTableControl: FC<PreviewTableControlProps> = props => {
         <span className="min-w-0 truncate text-xs font-medium" title={field.label}>
           {field.label}
         </span>
-        <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
-          {t('preview.tableDimensions', { rows: field.rows.length, columns: columns.length })}
-        </span>
+        <div className="flex min-w-0 shrink-0 items-center gap-1.5">
+          {views.length > 1 ? (
+            <div
+              role="group"
+              aria-label={field.label}
+              data-slot="preview-table-view-switch"
+              className="flex min-w-0 items-center rounded-md border bg-background p-0.5"
+            >
+              {views.map(view => (
+                <Button
+                  key={view.id}
+                  type="button"
+                  variant={view.id === activeView.id ? 'secondary' : 'ghost'}
+                  size="xs"
+                  aria-pressed={view.id === activeView.id}
+                  data-slot="preview-table-view-trigger"
+                  data-view-id={view.id}
+                  className="h-5 min-w-0 px-1.5 text-[10px]"
+                  onClick={() => setActiveViewId(view.id)}
+                >
+                  <span className="truncate">{view.label}</span>
+                </Button>
+              ))}
+            </div>
+          ) : null}
+          <TooltipProvider delayDuration={150}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  data-slot="preview-table-dimensions"
+                  aria-label={dimensions}
+                  className="shrink-0 cursor-help text-[10px] tabular-nums text-muted-foreground"
+                >
+                  {compactDimensions}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>{dimensions}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </div>
-      {field.rows.length === 0 || columns.length === 0 ? (
+      {resolved.error ? (
+        <div
+          data-slot="preview-table-view-error"
+          className="rounded-md border border-destructive/40 bg-destructive/5 px-2 py-4 text-center text-xs text-destructive"
+        >
+          {t('preview.tableViewError')}
+        </div>
+      ) : resolved.rows.length === 0 || columns.length === 0 ? (
         <div className="rounded-md border border-dashed px-2 py-4 text-center text-xs text-muted-foreground">
           {t('preview.tableEmpty')}
         </div>
@@ -98,9 +179,9 @@ export const PreviewTableControl: FC<PreviewTableControlProps> = props => {
               </tbody>
             </table>
           </div>
-          {field.rows.length > visibleRows.length ? (
+          {resolved.rows.length > visibleRows.length ? (
             <p className="text-[10px] tabular-nums text-muted-foreground">
-              {t('preview.tableVisibleRows', { shown: visibleRows.length, total: field.rows.length })}
+              {t('preview.tableVisibleRows', { shown: visibleRows.length, total: resolved.rows.length })}
             </p>
           ) : null}
         </>

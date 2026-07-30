@@ -12,29 +12,6 @@ A channel describes two things: where a value comes from and which visual result
 | Channel binding   | How fields or fixed values are written on mark props     | You want to confirm what `x="date"`, `color="region"`, or `y={80}` means |
 | Built-in channels | Which options control position, color, size, text, paths | You want to choose channels such as `color`, `size`, or `strokeWidth`    |
 
-## In This Section
-
-For a first read, start with how fields and constants bind, then look up built-in channels by visual goal.
-
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/channel/binding">
-    <span className="font-semibold">Channel Binding</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Bind fields or fixed values to position, color, size, and related channels
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/channel/builtin">
-    <span className="font-semibold">Built-In Channels</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Look up channels for position, color, size, text, and paths
-    </span>
-  </LinkedCard>
-</div>
-
-To add a project-specific visual channel, continue to [Custom Channels](/viz/plot/channel/custom-channel).
-
-Channels decide which value to read; [Scales](/viz/plot/scale) decide how values map, and [Coordinates](/viz/plot/coordinate) decide how positional roles project.
-
 ## How It Works (Optional On A First Read)
 
 React mark props are assembled into PlotSpec, a serializable drawing configuration. Position channels are interpreted by the coordinate system. Other channels use a shared channel registry to find their handling rules, then resolve into visible properties or legend information.
@@ -65,3 +42,26 @@ PlotSpec stores field or constant bindings, not functions. Built-ins and custom 
     },
   ]}
 />
+
+## In This Section
+
+For a first read, start with how fields and constants bind, then look up built-in channels by visual goal.
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/channel/binding">
+    <span className="font-semibold">Channel Binding</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Bind fields or fixed values to position, color, size, and related channels
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/channel/builtin">
+    <span className="font-semibold">Built-In Channels</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Look up channels for position, color, size, text, and paths
+    </span>
+  </LinkedCard>
+</div>
+
+To add a project-specific visual channel, continue to [Custom Channels](/viz/plot/channel/custom-channel).
+
+Channels decide which value to read; [Scales](/viz/plot/scale) decide how values map, and [Coordinates](/viz/plot/coordinate) decide how positional roles project.

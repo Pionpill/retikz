@@ -1,6 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+
+import { demoModules, resolveDemoKey } from '../../src/modules/docs/components/component-preview/registry/contents';
 
 const scalePositionRoot = resolve('src/modules/docs/contents/viz/plot/scale/position');
 const scaleRoot = resolve(scalePositionRoot, '..');
@@ -8,9 +12,18 @@ const scaleChinesePage = readFileSync(resolve(scaleRoot, 'index.zh.mdx'), 'utf8'
 const scaleEnglishPage = readFileSync(resolve(scaleRoot, 'index.en.mdx'), 'utf8');
 const chinesePage = readFileSync(resolve(scalePositionRoot, 'index.zh.mdx'), 'utf8');
 const englishPage = readFileSync(resolve(scalePositionRoot, 'index.en.mdx'), 'utf8');
-const flowDemo = readFileSync(resolve(scalePositionRoot, 'scale-position-flow.demo.tsx'), 'utf8');
+const flowFigure = readFileSync(resolve(scalePositionRoot, 'scale-position-flow.tsx'), 'utf8');
 const continuousControls = readFileSync(resolve(scalePositionRoot, 'scale-continuous.controls.ts'), 'utf8');
 const englishContinuousControls = readFileSync(resolve(scalePositionRoot, 'scale-continuous.en.controls.ts'), 'utf8');
+const scalePositionSegments = ['viz', 'plot', 'scale', 'position'];
+
+const renderLocalizedFlow = (language: 'zh' | 'en'): { key: string; markup: string } => {
+  const key = resolveDemoKey(scalePositionSegments, 'scale-position-flow', language);
+  const Demo = demoModules[key]?.default;
+
+  if (Demo === undefined) throw new Error(`Expected localized scale position flow demo for ${language}`);
+  return { key, markup: renderToStaticMarkup(createElement(Demo)) };
+};
 
 describe('位置比例尺文档结构', () => {
   it('分组页说明非位置视觉通道与 Scale dimension 的边界', () => {
@@ -36,15 +49,27 @@ describe('位置比例尺文档结构', () => {
     expect(englishPage).not.toContain('## Implementation sources');
   });
 
-  it('技术原理使用双语叙述图解释位置映射链路', () => {
+  it('技术原理叙述图默认使用 xs 尺寸', () => {
     expect(chinesePage).toContain('<ComponentPreview files="scale-position-flow" size="xs" hideCode />');
     expect(englishPage).toContain('<ComponentPreview files="scale-position-flow" size="xs" hideCode />');
   });
 
-  it('技术原理使用统一的有边框块状流程节点', () => {
-    const nodeTags = flowDemo.match(/<Node[\s\S]*?>/g) ?? [];
+  it('技术原理叙述图按页面语言呈现节点与关系', () => {
+    const chineseFlow = renderLocalizedFlow('zh');
+    const englishFlow = renderLocalizedFlow('en');
 
-    expect(flowDemo).toContain('<Layout width={360} height={120}');
+    expect(chineseFlow.key.endsWith('scale-position-flow.zh.demo.tsx')).toBe(true);
+    expect(chineseFlow.markup).toContain('字段与图元');
+    expect(chineseFlow.markup).toContain('派生');
+    expect(chineseFlow.markup).not.toContain('field + mark');
+    expect(englishFlow.key.endsWith('scale-position-flow.en.demo.tsx')).toBe(true);
+    expect(englishFlow.markup).toContain('field + mark');
+  });
+
+  it('技术原理使用统一的有边框块状流程节点', () => {
+    const nodeTags = flowFigure.match(/<Node[\s\S]*?>/g) ?? [];
+
+    expect(flowFigure).toContain('<Layout width={360} height={120}');
     expect(nodeTags.length).toBeGreaterThan(0);
     for (const nodeTag of nodeTags) {
       expect(nodeTag).toContain('stroke="gray"');

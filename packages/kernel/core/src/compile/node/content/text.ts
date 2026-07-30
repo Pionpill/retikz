@@ -29,9 +29,8 @@ export type WrapTextContext = {
   measureText: TextMeasurer;
 };
 
-export const wrapText = (text: string, context: WrapTextContext): Array<string> => {
-  const { font, maxWidth, measureText } = context;
-  // 拆 unit：空白段 → 单空格分隔符；非空白段把 CJK 拆单字、非 CJK 连续 run 保整
+/** 按既有折行规则把文本拆成可断单元与规范化空格 */
+const tokenizeText = (text: string): Array<string> => {
   const units: Array<string> = [];
   for (const seg of text.split(/(\s+)/)) {
     if (seg === '') continue;
@@ -53,6 +52,24 @@ export const wrapText = (text: string, context: WrapTextContext): Array<string> 
     }
     if (run) units.push(run);
   }
+  return units;
+};
+
+/** 用既有 tokenization 与文本测量器返回最宽不可断单元 */
+export const measureMinimumTextWidth = (
+  text: string,
+  context: Pick<WrapTextContext, 'font' | 'measureText'>,
+): number => {
+  const { font, measureText } = context;
+  return tokenizeText(text).reduce(
+    (width, unit) => (unit === ' ' ? width : Math.max(width, measureText(unit, font).width)),
+    0,
+  );
+};
+
+export const wrapText = (text: string, context: WrapTextContext): Array<string> => {
+  const { font, maxWidth, measureText } = context;
+  const units = tokenizeText(text);
 
   const lines: Array<string> = [];
   let cur = '';

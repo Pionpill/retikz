@@ -18,23 +18,27 @@ Table 是与 Plot 平行的 Tier 2 能力，不是 Plot 的封装层，也不是
 
 ## 2. 包角色与端到端管线
 
-| 角色                | 主责包 / 协作包                 | 责任                                                                | 不拥有                                            |
-| ------------------- | ------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------- |
-| 数据底座            | `@retikz/data`                  | 数据模型、字段解析、通用 transform / statistics 与 lineage          | Table 结构、Cell 呈现、表格布局                   |
-| Table 主责          | `@retikz/table`                 | Table IR、结构与呈现、约束布局、lowering、manifest / lineage        | 通用数据算法、Core 测量、renderer                 |
-| 图形与测量底座      | `@retikz/core` / `@retikz/math` | `IRChild` 测量、布局感知 composite、Core IR / Scene 与通用几何      | Table 结构、Table track solver                    |
-| authoring / runtime | table-react / table-vanilla     | 构造 Table 输入、注入数据与 definitions、接入宿主生命周期和滚动容器 | Table schema、布局算法、lowering 或 renderer 语义 |
+| 角色                 | 主责包 / 协作包                 | 责任                                                                                  | 不拥有                                            |
+| -------------------- | ------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| 数据底座             | `@retikz/data`                  | 数据模型、字段解析、通用 transform / statistics 与 lineage                            | Table 结构、Cell 呈现、表格布局                   |
+| Table 主责           | `@retikz/table`                 | Table IR、结构与呈现、约束布局、lowering、manifest / lineage                          | 通用数据算法、Core 测量、renderer                 |
+| 通用 Tier 2 图形能力 | `@retikz/standard`              | 接收 Table 已解析的领域无关绘图输入，提供可复用 composite、布局、lowering 与 artifact | Table structure、visual encoding、lineage 与交互  |
+| 图形与测量底座       | `@retikz/core` / `@retikz/math` | `IRChild` 测量、布局感知 composite、Core IR / Scene 与通用几何                        | Table 结构、Table track solver                    |
+| authoring / runtime  | table-react / table-vanilla     | 构造 Table 输入、注入数据与 definitions、接入宿主生命周期和滚动容器                   | Table schema、布局算法、lowering 或 renderer 语义 |
 
 依赖主链保持：
 
 ```text
-Data ──▶ Table ──lowering──▶ Core IR ──▶ Renderer
+Data ──▶ Table ──domain resolution──▶ Standard composite / Core IR
+                                             │
+                                             ▼
+                                      Core compile ──▶ Renderer
            ▲
            │
     React / Vanilla adapter
 ```
 
-Table 可以消费 Data 与 Core，但不依赖 Plot。Plot 等 Tier 2 内容通过 Core 的通用 `IRChild` / composite 能力进入单元格；Table 负责 Cell box、测量请求、对齐、fit、裁剪和追溯，不解析内容内部的 mark、scale 或 guide。
+Table 可以消费 Data、Standard 与 Core，但不依赖 Plot。Plot 等 Tier 2 内容通过 Core 的通用 `IRChild` / composite 能力进入单元格；Table 负责 Cell box、测量请求、对齐、fit、裁剪和追溯，不解析内容内部的 mark、scale 或 guide。Table 自身的 visual encoding 可以解析出领域无关 Legend 输入并交给 Standard 呈现，但 Standard 不读取 Table field、selector、rule 或 lineage。
 
 ## 3. 能力边界与能力面
 
@@ -43,6 +47,7 @@ Table 拥有：
 - 行、列、单元格、表头、表体、表尾，以及 spanner、stub、corner、row group 等层级区域语义
 - 明细、分组、层级、汇总、交叉和显式矩阵等表格结构
 - 表格专用的格式化、单元格呈现、条件视觉编码、规则和主题
+- 条件视觉编码到通用 Legend 输入的 descriptor、领域解析、theme mapping 与 lineage / locator
 - 列宽、行高、跨度、内边距、对齐、内容 fit、overflow、表线和分片等布局语义
 - 大表展示所需的 viewport / window 计算、可见区布局映射与虚拟化契约
 - Table 到 Core IR 的 lowering，以及必要的 manifest、lineage、locator 和 diagnostics
@@ -51,6 +56,7 @@ Table 不拥有：
 
 - 通用数据解析、transform、statistics 和 aggregate；这些属于 Data
 - 通用图元、几何、测量和 renderer；这些属于 Core、Math 或 renderer
+- 通用 Legend 的视觉结构、内部布局、lowering 与领域无关 artifact；这些属于 Standard
 - Plot 的 mark、scale、coordinate 和 guide
 - 多个 Plot Cell 之间的 scale、axis、grid 和 legend 自动协调
 - 单元格编辑、电子表格公式、依赖计算和协作编辑
@@ -81,7 +87,7 @@ Table 区分：
 
 - Formatter：原始值到展示值
 - Presentation：展示值到 `IRChild`
-- Visual Encoding：数值或状态到 Cell 视觉属性，并与可选 legend descriptor 保持同源
+- Visual Encoding：数值或状态到 Cell 视觉属性，并与可选 legend descriptor 保持同源；Table 把 descriptor 解析为 Standard Legend 输入，不复制通用呈现
 - Style / Rule / Theme：决定单元格的视觉呈现和覆盖关系
 
 内置与自定义能力应经过统一的 Definition / registry，而不是分成内置白名单和扩展补丁。

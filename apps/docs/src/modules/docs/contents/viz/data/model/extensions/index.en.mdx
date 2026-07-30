@@ -22,13 +22,23 @@ Use `defineFieldFormat` for formats that must be persisted and reused across dat
 
 The `wan` Definition below is injected through `<Plot formatDefinitions>`. The model stores only `format: 'wan'`, never the parsing function.
 
-<ComponentPreview files={['extension-format', 'extension-format.data.ts']} />
+<ComponentPreview
+  files={['extension-format', 'extension-format-preview.tsx', 'extension-format.data.ts']}
+  defaultSourceFile="extension-format-preview.tsx"
+  size="lg"
+  caption="The input table keeps the raw wan strings; the Definition supplies the parser while the model stores only its name."
+/>
 
 ## Runtime Field Resolution
 
 Use `resolveField` for one-off logic and source-specific branches. It returns an optional `type` and `parse` for each logical field and takes precedence over the model, named format, and default coercion. Returning `undefined` falls back to the standard intake path.
 
-<ComponentPreview files={['extension-resolver', 'extension-resolver.data.ts']} />
+<ComponentPreview
+  files={['extension-resolver', 'extension-resolver-preview.tsx', 'extension-resolver.data.ts']}
+  defaultSourceFile="extension-resolver-preview.tsx"
+  size="lg"
+  caption="The input remains quarter strings; the runtime resolver only overrides parsing for the quarter field."
+/>
 
 `resolveField` is a runtime escape hatch. It does not use a registry and cannot be serialized. Use a `FieldFormatDefinition` when a stable name, cross-host reuse, or persisted configuration is required.
 

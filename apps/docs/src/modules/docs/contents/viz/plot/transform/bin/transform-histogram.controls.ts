@@ -2,7 +2,25 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
 import { measurements } from './transform-histogram.data';
+
+/** 根据实时控件值创建分箱 operation */
+export const histogramOperationOf = (values: {
+  strategy: 'count' | 'step' | 'thresholds';
+  count: number;
+  step: number;
+  thresholdPreset: 'regular' | 'focused';
+}) => {
+  const thresholds = values.thresholdPreset === 'focused' ? [3, 5, 7, 10, 14] : [4, 8, 12, 16];
+  if (values.strategy === 'count') {
+    return { kind: 'bin', field: 'measurement', count: values.count, extent: [0, 20], nice: false } as const;
+  }
+  if (values.strategy === 'step') {
+    return { kind: 'bin', field: 'measurement', step: values.step, extent: [0, 20] } as const;
+  }
+  return { kind: 'bin', field: 'measurement', thresholds, extent: [0, 20] } as const;
+};
 
 /** 分箱示例的中文控件 */
 export const histogramControls = definePreviewControls({
@@ -17,8 +35,17 @@ export const histogramControls = definePreviewControls({
           kind: 'table',
           id: 'rows',
           label: '连续测量值',
-          rows: measurements,
-          columns: [{ key: 'measurement', label: '测量值' }],
+          views: createPlotTransformTableViews(
+            { source: '原始', result: '分箱后' },
+            measurements,
+            histogramOperationOf,
+          ),
+          columns: [
+            { key: 'measurement', label: '测量值' },
+            { key: 'binStart', label: '分箱下界' },
+            { key: 'binEnd', label: '分箱上界' },
+            { key: 'binCount', label: '箱内数量' },
+          ],
         },
       ],
     },

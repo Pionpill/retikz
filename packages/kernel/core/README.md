@@ -33,7 +33,7 @@ Most users consume core indirectly through [`@retikz/react`](https://www.npmjs.c
 - `compileToScene` — IR → `CompileResult` (`Scene` + typed artifacts)
 - `computeLayout` — bounds points → `BoundsRect`; `fallbackMeasurer` — dependency-free default `TextMeasurer`
 - `lowerIRToKernel` — Tier 2 composite IR → JSON-serializable Tier 1 Kernel IR; accepts `composites` and `maxCompositeDepth`
-- Layout-aware composite authoring — `layoutChild()` probes real child layout; `context.replay()` and recursive `context.scope()` build compile-local output trees without adding runtime handles to IR or Scene
+- Layout-aware composite authoring — `layoutChild(child, proposal)` evaluates two-axis `minimum` / `natural` / `range` / `exact` proposals and returns a resolved `slotSize`, real allocation / visual bounds, alignment guides, or an isolated failure; `context.replay()` / `context.raise()` select one callback-local transaction without adding runtime handles to IR or Scene
 - IR & `Scene` zod schemas + inferred types
 - `parseWay` / `parseNodeTarget` / `parseTargetSugar` — pure parsers
 - `point` / `rect` / `circle` / `ellipse` / `diamond` / `polar` — geometry

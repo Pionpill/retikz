@@ -49,7 +49,7 @@ mount(document.querySelector('#diagram')!, spec);
 ## Exports
 
 - Runtime: `renderToSvgString`, `mount`, `mountSvg`, `mountCanvas`, `hydrate` (SSR / existing SVG only; use `CanvasView.hydrate` for Canvas)
-- Views: `VanillaView` from `mountSvg` exposes `root`, `update`, `hydrate`, `dispose`, and `animation`; `CanvasView` from `mountCanvas` also exposes `clientToScene`
+- Views: `VanillaView` from `mountSvg` exposes `root`, `update`, `hydrate`, `dispose`, and `animation`; `CanvasView` from `mountCanvas` also exposes `clientToScene`; use `VanillaViewMode` to discriminate retained and static views
 - Plain spec: `figure` / `layer` / `node` / `path` / `coordinate` / `scope` / `embed`, plus `VanillaTier2Adapter` for explicit Tier 2 embedding
 
 Core IR helpers, animation preset factories, and extension registrars such as `DrawWay`, `fadeIn`, `defineArrow`, and `definePathKind` should be imported from `@retikz/core`. Hydration and animation runtime helper types should be imported from `@retikz/render`.

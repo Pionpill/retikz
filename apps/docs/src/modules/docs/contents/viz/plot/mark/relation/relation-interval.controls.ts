@@ -2,6 +2,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformResultView, createPlotTransformTableViews } from '../../transform-table-views';
 import { intervalRelations } from './relation-interval.data';
 
 /** 区间关系 playground 的稳定控件 id */
@@ -16,6 +17,37 @@ export const RELATION_INTERVAL_CONTROL_IDS = {
   barLabelColor: 'relation-interval-bar-label-color',
 } as const;
 
+/** 根据高度偏移控件创建 Plot 实际消费的区间行 */
+export const relationIntervalRowsOf = (values: { [RELATION_INTERVAL_CONTROL_IDS.offset]: number }) =>
+  intervalRelations.map(row => ({
+    ...row,
+    routeY: Number(row.routeY) + values[RELATION_INTERVAL_CONTROL_IDS.offset],
+  }));
+
+/** 下降关系层的端点配对 operation */
+export const relationDecreaseOperation = {
+  kind: 'relate',
+  groupBy: ['pair'],
+  source: {
+    selector: { kind: 'min', by: 'decreaseOrder' },
+    fields: { x: 'slot', y: 'value', viaY: 'routeY' },
+  },
+  target: { selector: { kind: 'max', by: 'decreaseOrder' }, fields: { x: 'slot', y: 'value' } },
+  measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+} as const;
+
+/** 上升关系层的端点配对 operation */
+export const relationIncreaseOperation = {
+  kind: 'relate',
+  groupBy: ['pair'],
+  source: {
+    selector: { kind: 'min', by: 'increaseOrder' },
+    fields: { x: 'slot', y: 'value', viaY: 'routeY' },
+  },
+  target: { selector: { kind: 'max', by: 'increaseOrder' }, fields: { x: 'slot', y: 'value' } },
+  measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+} as const;
+
 /** 区间关系路由的中文属性面板 */
 export const relationIntervalControls = definePreviewControls({
   presentation: 'panel',
@@ -24,7 +56,26 @@ export const relationIntervalControls = definePreviewControls({
     {
       label: '数据',
       defaultCollapsed: true,
-      controls: [{ kind: 'table', id: 'intervalRelations', label: '区间关系', rows: intervalRelations }],
+      controls: [
+        {
+          kind: 'table',
+          id: 'intervalRelations',
+          label: '区间关系',
+          views: [
+            ...createPlotTransformTableViews(
+              { source: '原始', result: '下降关系层' },
+              relationIntervalRowsOf,
+              () => relationDecreaseOperation,
+            ),
+            createPlotTransformResultView(
+              'increase-result',
+              '上升关系层',
+              relationIntervalRowsOf,
+              () => relationIncreaseOperation,
+            ),
+          ],
+        },
+      ],
     },
     {
       label: '关系样式',
@@ -108,10 +159,10 @@ export const relationIntervalControls = definePreviewControls({
           ],
         },
         {
-          kind: 'color',
+          kind: 'text',
           id: RELATION_INTERVAL_CONTROL_IDS.barLabelColor,
           label: '标签颜色',
-          defaultValue: '#0f172a',
+          defaultValue: 'currentColor',
         },
       ],
     },
@@ -129,7 +180,7 @@ export const previewControlContract = {
     [RELATION_INTERVAL_CONTROL_IDS.labelSide]: 'top',
     [RELATION_INTERVAL_CONTROL_IDS.labelSloped]: true,
     [RELATION_INTERVAL_CONTROL_IDS.barLabelPosition]: 'top',
-    [RELATION_INTERVAL_CONTROL_IDS.barLabelColor]: '#0f172a',
+    [RELATION_INTERVAL_CONTROL_IDS.barLabelColor]: 'currentColor',
   },
   relatedApis: [
     'RelationMark.transform',

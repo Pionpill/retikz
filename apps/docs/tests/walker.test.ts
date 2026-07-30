@@ -194,4 +194,13 @@ describe('walker — top-level entry + object + optional + constraints', () => {
       expect(r.members[1].fields.map(f => f.name)).toEqual(['text', 'color']);
     }
   });
+
+  it('marks a loose object as allowing additional properties', () => {
+    const r = walkType(z.looseObject({ kind: z.string() }));
+
+    expect(r).toMatchObject({
+      kind: 'object',
+      additionalProperties: true,
+    });
+  });
 });

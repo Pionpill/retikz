@@ -1,9 +1,9 @@
-/** demo 自造数据集：考试成绩散点，叠一条 y=60 及格阈值线；喂 rule-threshold.demo.tsx 的 <Plot data>（不进 IR） */
+/** demo 自造数据集：考试成绩散点；attempt 与 score 都保持连续，便于切换参考轴和坐标系 */
 export const scores: Array<Record<string, string | number>> = [
-  { name: 'Amy', score: 52 },
-  { name: 'Ben', score: 74 },
-  { name: 'Cara', score: 61 },
-  { name: 'Dan', score: 88 },
-  { name: 'Eve', score: 45 },
-  { name: 'Fay', score: 93 },
+  { name: 'Amy', attempt: 15, score: 52 },
+  { name: 'Ben', attempt: 32, score: 74 },
+  { name: 'Cara', attempt: 48, score: 61 },
+  { name: 'Dan', attempt: 68, score: 88 },
+  { name: 'Eve', attempt: 84, score: 45 },
+  { name: 'Fay', attempt: 105, score: 93 },
 ];

@@ -2,10 +2,21 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
 import { weeklyPipeline } from './line-transform.data';
 
 /** 路径层趋势分组 playground 的稳定控件 id */
 export const LINE_TRANSFORM_GROUPING_ID = 'line-transform-grouping';
+
+/** 根据实时控件值创建趋势拟合 operation */
+export const lineTransformOperationOf = (values: { [LINE_TRANSFORM_GROUPING_ID]: 'overall' | 'channel' }) => ({
+  kind: 'smooth',
+  x: 'day',
+  y: 'value',
+  xAs: 'trendX',
+  yAs: 'trendY',
+  ...(values[LINE_TRANSFORM_GROUPING_ID] === 'channel' ? { groupBy: ['channel'] } : {}),
+});
 
 /** 路径层局部变换的中文属性面板 */
 export const lineTransformControls = definePreviewControls({
@@ -15,7 +26,18 @@ export const lineTransformControls = definePreviewControls({
     {
       label: '数据',
       defaultCollapsed: true,
-      controls: [{ kind: 'table', id: 'weeklyPipeline', label: '周度流水', rows: weeklyPipeline }],
+      controls: [
+        {
+          kind: 'table',
+          id: 'weeklyPipeline',
+          label: '周度流水',
+          views: createPlotTransformTableViews(
+            { source: '原始', result: '趋势拟合后' },
+            weeklyPipeline,
+            lineTransformOperationOf,
+          ),
+        },
+      ],
     },
     {
       label: '拟合',

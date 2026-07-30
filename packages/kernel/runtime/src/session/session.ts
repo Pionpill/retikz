@@ -8,10 +8,18 @@ import type {
   RuntimeRevision,
 } from '../owner';
 import type {
+  RuntimeCommitParticipant,
+  RuntimeCommitParticipantToken,
+  RuntimeParticipantContext,
+  RuntimePreparedCommit,
+} from '../participant';
+import type { RuntimeCommitParticipantExecutor } from '../participant/internal';
+import type {
   RuntimeCandidateLookup,
   RuntimeCandidateView,
   RuntimeCommitEvent,
   RuntimePreparedProgramArtifact,
+  RuntimeProgramContext,
   RuntimeProgramDefinition,
   RuntimeProgramErasedExecutor,
   RuntimeProgramToken,
@@ -28,14 +36,22 @@ import type { RuntimeSession, RuntimeSessionOptions } from './types';
 
 import { RuntimeError, RuntimeOwnerError } from '../error';
 import { createRuntimeOwnerExecutor } from '../owner';
+import {
+  claimRuntimeCommitParticipants,
+  consumeRuntimeCommitParticipant,
+  getRuntimeCommitParticipantExecutor,
+  isRuntimeCommitParticipant,
+} from '../participant/internal';
 import { getRuntimeProgramOwnerRegistry, getRuntimeProgramRegistryExecutor } from '../registry';
 import { createRuntimeTraceReporter } from '../trace';
+import { observeRuntimeTraceReporterDiagnostics } from '../trace/internal';
 import {
   createNextRuntimeRevision,
   createRuntimeRevision,
   getRuntimeOwnerCommandExecutor,
   isRuntimeRevision,
 } from '../transaction';
+import { RuntimeUpdateStrategy } from './constants';
 
 type RuntimeOwnerState = Readonly<{
   command: RuntimeOwnerCommandExecutor;
@@ -50,6 +66,12 @@ type RuntimeProgramState = Readonly<{
 
 type RuntimeProgramOutcome = 'full' | 'incremental' | 'fallback';
 
+type RuntimePreparedParticipantState = Readonly<{
+  executor: RuntimeCommitParticipantExecutor;
+  prepared: RuntimePreparedCommit;
+  takeDiagnostics: () => ReadonlyArray<RuntimeDiagnostic>;
+}>;
+
 type NormalizedRunResult = Readonly<{ kind: 'full'; artifact: unknown }>;
 
 type NormalizedUpdateResult =
@@ -60,12 +82,21 @@ type NormalizedUpdateResult =
       diagnostics?: ReadonlyArray<Readonly<{ code: string; phase: string; message: string }>>;
     }>;
 
-type RuntimeSessionState = 'preparing' | 'idle' | 'observing' | 'retiring' | 'disposing' | 'disposed';
+type RuntimeSessionState =
+  | 'preparing'
+  | 'idle'
+  | 'observing'
+  | 'retiring'
+  | 'broken'
+  | 'disposing'
+  | 'dispose-pending'
+  | 'disposed';
 
 /** 创建 session contract 错误 */
 const sessionError = (
   code:
     | 'RUNTIME_REGISTRY_MISMATCH'
+    | 'RUNTIME_UPDATE_STRATEGY_INVALID'
     | 'RUNTIME_INITIAL_OWNER_MISMATCH'
     | 'RUNTIME_OWNER_COMMAND_INVALID'
     | 'RUNTIME_REVISION_INVALID'
@@ -73,7 +104,13 @@ const sessionError = (
     | 'RUNTIME_CHANGESET_REVISION_MISMATCH'
     | 'RUNTIME_UNDECLARED_DEPENDENCY'
     | 'RUNTIME_SESSION_REENTRANT'
-    | 'RUNTIME_SESSION_DISPOSED',
+    | 'RUNTIME_SESSION_DISPOSED'
+    | 'RUNTIME_PARTICIPANT_TOKEN_INVALID'
+    | 'RUNTIME_PARTICIPANT_DUPLICATE'
+    | 'RUNTIME_PARTICIPANT_DEPENDENCY_INVALID'
+    | 'RUNTIME_PARTICIPANT_UNKNOWN'
+    | 'RUNTIME_PARTICIPANT_ALREADY_OWNED'
+    | 'RUNTIME_PARTICIPANT_ROLLBACK_FAILED',
   phase: string,
   cause?: unknown,
   owner?: string,
@@ -95,6 +132,55 @@ const programError = (
     cause,
     diagnostics,
   });
+
+/** 把 participant callback throw 转成稳定 lifecycle error */
+const participantError = (
+  code: 'RUNTIME_PARTICIPANT_PREPARE_FAILED' | 'RUNTIME_PARTICIPANT_COMMIT_FAILED' | 'RUNTIME_PARTICIPANT_READ_FAILED',
+  phase: 'prepare' | 'commit' | 'read',
+  participant: RuntimeCommitParticipantToken,
+  cause: unknown,
+  diagnostics: ReadonlyArray<RuntimeDiagnostic> = [],
+) =>
+  new RuntimeError({
+    code,
+    phase,
+    owner: participant.key,
+    cause,
+    diagnostics,
+  });
+
+/** 把 participant cleanup throw 转成 secondary diagnostic */
+const participantLifecycleDiagnostic = (
+  code:
+    | 'RUNTIME_PARTICIPANT_ROLLBACK_FAILED'
+    | 'RUNTIME_PARTICIPANT_TOKEN_DISPOSE_FAILED'
+    | 'RUNTIME_PARTICIPANT_DISPOSE_FAILED',
+  phase: 'rollback' | 'token-dispose' | 'participant-dispose',
+  participant: RuntimeCommitParticipantToken,
+  cause: unknown,
+): RuntimeDiagnostic =>
+  Object.freeze({
+    code,
+    phase,
+    severity: 'error',
+    message: cause instanceof Error ? cause.message : String(cause),
+    owner: participant.key,
+    cause,
+  });
+
+/** 校验 participant prepare 返回的 transaction token */
+const normalizePreparedCommit = (value: unknown, participant: RuntimeCommitParticipantToken): RuntimePreparedCommit => {
+  if (
+    typeof value !== 'object' ||
+    value === null ||
+    typeof Reflect.get(value, 'commit') !== 'function' ||
+    typeof Reflect.get(value, 'rollback') !== 'function' ||
+    typeof Reflect.get(value, 'dispose') !== 'function'
+  ) {
+    throw participantError('RUNTIME_PARTICIPANT_PREPARE_FAILED', 'prepare', participant, value);
+  }
+  return value as RuntimePreparedCommit;
+};
 
 /** 把 observer throw 转成不影响 publish 的结构化诊断 */
 const observerDiagnostic = (definition: RuntimeProgramToken, cause: unknown): RuntimeDiagnostic =>
@@ -134,6 +220,91 @@ const mapTraceDiagnostic = (
     owner: definition.id.owner,
     program: definition.id,
   });
+
+/** 把 reporter-local diagnostic 映射到固定 participant context */
+const mapParticipantTraceDiagnostic = (
+  participant: RuntimeCommitParticipantToken,
+  diagnostic: PerformanceTraceDiagnostic,
+): RuntimeDiagnostic =>
+  Object.freeze({
+    code: traceDiagnosticCodes[diagnostic.code],
+    phase: 'trace',
+    severity: 'error',
+    message: `Runtime trace reporter rejected a ${diagnostic.code} record during ${diagnostic.phase}`,
+    owner: participant.key,
+  });
+
+/** 创建只写 participant context，并由 Runtime 独占 reporter drain */
+const createParticipantInvocation = (
+  participant: RuntimeCommitParticipantToken,
+  trace: RuntimeSessionOptions['trace'],
+): Readonly<{
+  context: RuntimeParticipantContext;
+  takeDiagnostics: () => ReadonlyArray<RuntimeDiagnostic>;
+}> => {
+  let diagnostics: Array<RuntimeDiagnostic> = [];
+  const traceReporter = createRuntimeTraceReporter({
+    owner: participant.key,
+    phases: participant.tracePhases,
+    sink: trace ?? (() => undefined),
+  });
+  observeRuntimeTraceReporterDiagnostics(traceReporter, diagnostic => {
+    diagnostics.push(mapParticipantTraceDiagnostic(participant, diagnostic));
+  });
+  const drainTraceDiagnostics = (): void => {
+    traceReporter.diagnostics();
+  };
+  let diagnosing = false;
+  const context: RuntimeParticipantContext = Object.freeze({
+    trace: Object.freeze({ owner: traceReporter.owner, report: traceReporter.report }),
+    diagnose: (warning): void => {
+      if (diagnosing) {
+        diagnostics.push(
+          Object.freeze({
+            code: 'RUNTIME_PARTICIPANT_DIAGNOSTIC_REENTRANT',
+            phase: 'diagnose',
+            severity: 'error',
+            message: 'Runtime participant diagnose reentry was rejected',
+            owner: participant.key,
+          }),
+        );
+        return;
+      }
+      diagnosing = true;
+      try {
+        const candidate: unknown = warning;
+        if (typeof candidate !== 'object' || candidate === null) throw new Error('invalid diagnostic input');
+        const code = Reflect.get(candidate, 'code');
+        const phase = Reflect.get(candidate, 'phase');
+        const message = Reflect.get(candidate, 'message');
+        if (typeof code !== 'string' || typeof phase !== 'string' || typeof message !== 'string') {
+          throw new Error('invalid diagnostic input');
+        }
+        diagnostics.push(Object.freeze({ code, phase, message, severity: 'warning' as const, owner: participant.key }));
+      } catch (cause) {
+        diagnostics.push(
+          Object.freeze({
+            code: 'RUNTIME_PARTICIPANT_DIAGNOSTIC_INVALID',
+            phase: 'diagnose',
+            severity: 'error',
+            message: 'Runtime participant diagnostic input is invalid',
+            owner: participant.key,
+            cause,
+          }),
+        );
+      } finally {
+        diagnosing = false;
+      }
+    },
+  });
+  const takeDiagnostics = (): ReadonlyArray<RuntimeDiagnostic> => {
+    drainTraceDiagnostics();
+    const output = Object.freeze([...diagnostics]);
+    diagnostics = [];
+    return output;
+  };
+  return Object.freeze({ context, takeDiagnostics });
+};
 
 /** 把 owner cleanup diagnostic 归一为 session diagnostic */
 const mapOwnerLifecycleDiagnostic = (diagnostic: RuntimeOwnerLifecycleDiagnostic): RuntimeDiagnostic =>
@@ -331,6 +502,7 @@ const createCandidateView = (
   baseRevision: RuntimeRevision | undefined,
   candidateRevision: RuntimeRevision,
   ownerStates: ReadonlyMap<RuntimeOwnerToken, RuntimeOwnerState>,
+  changedOwners: ReadonlySet<RuntimeOwnerToken>,
   changeSets: ReadonlyMap<RuntimeOwnerToken, RuntimeOwnerCommandExecutor>,
   programStates: ReadonlyMap<RuntimeProgramToken, RuntimeProgramState>,
   program: RuntimeProgramToken,
@@ -358,6 +530,12 @@ const createCandidateView = (
         throw candidateError('candidate-read', owner, owner.key);
       }
       return state.command.snapshot(owner, state.prepared, candidateRevision);
+    },
+    changed: owner => {
+      if (!declaredOwners.has(owner)) {
+        throw candidateError('candidate-change', owner, owner.key);
+      }
+      return changedOwners.has(owner);
     },
     changeSet: <TInput, TValue, TRead, TChange>(owner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>) => {
       if (!declaredOwners.has(owner)) {
@@ -394,6 +572,7 @@ const runProgram = (
   baseRevision: RuntimeRevision | undefined,
   candidateRevision: RuntimeRevision,
   ownerStates: ReadonlyMap<RuntimeOwnerToken, RuntimeOwnerState>,
+  changedOwners: ReadonlySet<RuntimeOwnerToken>,
   changeSets: ReadonlyMap<RuntimeOwnerToken, RuntimeOwnerCommandExecutor>,
   programStates: ReadonlyMap<RuntimeProgramToken, RuntimeProgramState>,
   definition: RuntimeProgramToken,
@@ -413,6 +592,7 @@ const runProgram = (
     baseRevision,
     candidateRevision,
     ownerStates,
+    changedOwners,
     changeSets,
     programStates,
     definition,
@@ -433,34 +613,37 @@ const runProgram = (
       executionDiagnostics.push(mapped);
     }
   };
-  const context = Object.freeze({
-    trace: Object.freeze({ owner: traceReporter.owner, report: traceReporter.report }),
-    diagnose: (diagnostic: Readonly<{ code: string; phase: string; message: string }>) => {
-      drainTraceDiagnostics();
-      const candidate: unknown = diagnostic;
-      if (typeof candidate !== 'object' || candidate === null) {
-        throw new Error('runtime Program diagnostic input is invalid');
-      }
-      const code = Reflect.get(candidate, 'code');
-      const diagnosticPhase = Reflect.get(candidate, 'phase');
-      const message = Reflect.get(candidate, 'message');
-      if (typeof code !== 'string' || typeof diagnosticPhase !== 'string' || typeof message !== 'string') {
-        throw new Error('runtime Program diagnostic input is invalid');
-      }
-      diagnostics.push(
-        Object.freeze({
-          code,
-          phase: diagnosticPhase,
-          message,
-          severity: 'warning' as const,
-          owner: definition.id.owner,
-          program: definition.id,
-        }),
-      );
-    },
-  });
+  const createContext = (execution: RuntimeProgramContext['execution']): RuntimeProgramContext =>
+    Object.freeze({
+      execution,
+      trace: Object.freeze({ owner: traceReporter.owner, report: traceReporter.report }),
+      diagnose: (diagnostic: Readonly<{ code: string; phase: string; message: string }>) => {
+        drainTraceDiagnostics();
+        const candidate: unknown = diagnostic;
+        if (typeof candidate !== 'object' || candidate === null) {
+          throw new Error('runtime Program diagnostic input is invalid');
+        }
+        const code = Reflect.get(candidate, 'code');
+        const diagnosticPhase = Reflect.get(candidate, 'phase');
+        const message = Reflect.get(candidate, 'message');
+        if (typeof code !== 'string' || typeof diagnosticPhase !== 'string' || typeof message !== 'string') {
+          throw new Error('runtime Program diagnostic input is invalid');
+        }
+        diagnostics.push(
+          Object.freeze({
+            code,
+            phase: diagnosticPhase,
+            message,
+            severity: 'warning' as const,
+            owner: definition.id.owner,
+            program: definition.id,
+          }),
+        );
+      },
+    });
 
   if (mode === 'incremental' && executor.update !== undefined && previous !== undefined) {
+    const context = createContext('incremental');
     let callbackResult;
     try {
       callbackResult = executor.update<unknown, unknown>(previous.prepared.programRead, view, context);
@@ -498,6 +681,7 @@ const runProgram = (
     for (const diagnostic of result.diagnostics ?? []) context.diagnose(diagnostic);
   }
 
+  const context = createContext(mode === 'incremental' ? 'fallback' : mode);
   let callbackResult;
   try {
     callbackResult = executor.run<unknown>(view, context);
@@ -544,15 +728,87 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
   if (programOwners !== options.owners) {
     throw sessionError('RUNTIME_REGISTRY_MISMATCH', 'session-create', options.programs);
   }
+  const updateStrategyDescriptor = Object.getOwnPropertyDescriptor(optionsCandidate, 'updateStrategy');
+  if (updateStrategyDescriptor !== undefined && !Object.hasOwn(updateStrategyDescriptor, 'value')) {
+    throw sessionError('RUNTIME_UPDATE_STRATEGY_INVALID', 'session-create', updateStrategyDescriptor);
+  }
+  const updateStrategy = updateStrategyDescriptor?.value ?? RuntimeUpdateStrategy.Auto;
+  if (updateStrategy !== RuntimeUpdateStrategy.Auto && updateStrategy !== RuntimeUpdateStrategy.Full) {
+    throw sessionError('RUNTIME_UPDATE_STRATEGY_INVALID', 'session-create', updateStrategy);
+  }
+  const participantCandidates: unknown = Reflect.get(optionsCandidate, 'participants');
+  if (participantCandidates !== undefined && !Array.isArray(participantCandidates)) {
+    throw sessionError('RUNTIME_PARTICIPANT_TOKEN_INVALID', 'session-create', participantCandidates);
+  }
+  const participantsInput: ReadonlyArray<unknown> = participantCandidates ?? [];
+  const participantExecutors = new Map<RuntimeCommitParticipantToken, RuntimeCommitParticipantExecutor>();
+  const participantKeys = new Set<string>();
+  const participants: Array<RuntimeCommitParticipantToken> = [];
+  for (const participantCandidate of participantsInput) {
+    if (!isRuntimeCommitParticipant(participantCandidate)) {
+      throw sessionError('RUNTIME_PARTICIPANT_TOKEN_INVALID', 'session-create', participantCandidate);
+    }
+    const participant = participantCandidate;
+    if (participantKeys.has(participant.key)) {
+      throw sessionError('RUNTIME_PARTICIPANT_DUPLICATE', 'session-create', participant, participant.key);
+    }
+    participantKeys.add(participant.key);
+    const ownerDependencies = new Set<RuntimeOwnerToken>();
+    for (const owner of participant.owners) {
+      if (ownerDependencies.has(owner) || options.owners.find(owner.key) !== owner) {
+        throw sessionError('RUNTIME_PARTICIPANT_DEPENDENCY_INVALID', 'session-create', owner, participant.key);
+      }
+      ownerDependencies.add(owner);
+    }
+    const programDependencies = new Set<RuntimeProgramToken>();
+    for (const program of participant.programs) {
+      if (programDependencies.has(program)) {
+        throw sessionError('RUNTIME_PARTICIPANT_DEPENDENCY_INVALID', 'session-create', program, participant.key);
+      }
+      try {
+        if (options.programs.find(program.id) !== program) {
+          throw new Error('participant Program dependency is not registered');
+        }
+      } catch {
+        throw sessionError('RUNTIME_PARTICIPANT_DEPENDENCY_INVALID', 'session-create', program, participant.key);
+      }
+      programDependencies.add(program);
+    }
+    const executor = getRuntimeCommitParticipantExecutor(participant);
+    if (executor === undefined) {
+      throw sessionError('RUNTIME_PARTICIPANT_TOKEN_INVALID', 'session-create', participant, participant.key);
+    }
+    participants.push(participant);
+    participantExecutors.set(participant, executor);
+  }
+  participants.sort((left, right) => (left.key < right.key ? -1 : left.key > right.key ? 1 : 0));
+  Object.freeze(participants);
+  const alreadyOwnedParticipant = claimRuntimeCommitParticipants(participants);
+  if (alreadyOwnedParticipant !== undefined) {
+    throw sessionError(
+      'RUNTIME_PARTICIPANT_ALREADY_OWNED',
+      'session-create',
+      alreadyOwnedParticipant,
+      alreadyOwnedParticipant.key,
+    );
+  }
   const ownerExecutor = createRuntimeOwnerExecutor(options.owners);
-  let ownerStates = prepareInitialOwners(options.owners, options.initialSnapshots, ownerExecutor);
+  let ownerStates = new Map<RuntimeOwnerToken, RuntimeOwnerState>();
   let programStates = new Map<RuntimeProgramToken, RuntimeProgramState>();
   let currentRevision = createRuntimeRevision(0);
   let state: RuntimeSessionState = 'preparing';
+  let brokenError: RuntimeError | undefined;
   let diagnosticQueue: Array<RuntimeDiagnostic> = [];
   const initialDiagnostics: Array<RuntimeDiagnostic> = [];
+  const initialParticipantDiagnostics: Array<RuntimeDiagnostic> = [];
+  const preparedParticipants = new Map<RuntimeCommitParticipantToken, RuntimePreparedParticipantState>();
+  const participantDrains = new Map<RuntimeCommitParticipantToken, () => ReadonlyArray<RuntimeDiagnostic>>();
+  let participantReads = new Map<RuntimeCommitParticipantToken, unknown>();
+  const pendingParticipantDisposals = new Set(participants);
+  let sessionResourcesRetired = false;
 
   try {
+    ownerStates = prepareInitialOwners(options.owners, options.initialSnapshots, ownerExecutor);
     for (const definition of options.programs.definitions()) {
       const executor = getRuntimeProgramRegistryExecutor(options.programs, definition);
       const prepared = runProgram(
@@ -560,6 +816,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
         undefined,
         currentRevision,
         ownerStates,
+        new Set(options.owners.definitions()),
         new Map(),
         programStates,
         definition,
@@ -571,11 +828,163 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
       programStates.set(definition, prepared.state);
       initialDiagnostics.push(...prepared.diagnostics);
     }
+    for (const participant of participants) {
+      const executor = participantExecutors.get(participant);
+      if (executor === undefined) throw new Error('runtime session: missing participant executor');
+      const invocationErrors = new WeakSet<RuntimeError>();
+      const declaredOwners = new Set(participant.owners);
+      const declaredPrograms = new Set(participant.programs);
+      const view = Object.freeze({
+        phase: 'initial' as const,
+        candidateRevision: currentRevision,
+        snapshot: <TInput, TValue, TRead, TChange>(
+          owner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
+        ): RuntimeSnapshot<TRead> => {
+          if (!declaredOwners.has(owner)) {
+            const error = sessionError('RUNTIME_UNDECLARED_DEPENDENCY', 'participant-snapshot', owner, participant.key);
+            invocationErrors.add(error);
+            throw error;
+          }
+          const ownerState = ownerStates.get(owner);
+          if (ownerState === undefined) {
+            const error = sessionError('RUNTIME_UNDECLARED_DEPENDENCY', 'participant-snapshot', owner, participant.key);
+            invocationErrors.add(error);
+            throw error;
+          }
+          return ownerState.command.snapshot(owner, ownerState.prepared, currentRevision);
+        },
+        artifact: <TArtifactInput, TArtifact, TProgramRead, TPublicRead>(
+          program: RuntimeProgramDefinition<TArtifactInput, TArtifact, TProgramRead, TPublicRead>,
+        ): RuntimeSnapshot<TPublicRead> => {
+          if (!declaredPrograms.has(program)) {
+            const error = sessionError(
+              'RUNTIME_UNDECLARED_DEPENDENCY',
+              'participant-artifact',
+              program,
+              participant.key,
+            );
+            invocationErrors.add(error);
+            throw error;
+          }
+          const programState = programStates.get(program);
+          if (programState === undefined) {
+            const error = sessionError(
+              'RUNTIME_UNDECLARED_DEPENDENCY',
+              'participant-artifact',
+              program,
+              participant.key,
+            );
+            invocationErrors.add(error);
+            throw error;
+          }
+          return programState.executor.snapshot(program, programState.prepared, currentRevision);
+        },
+      });
+      const invocation = createParticipantInvocation(participant, options.trace);
+      participantDrains.set(participant, invocation.takeDiagnostics);
+      let preparedCandidate: unknown;
+      try {
+        preparedCandidate = executor.prepare(view, invocation.context);
+      } catch (cause) {
+        initialParticipantDiagnostics.push(...invocation.takeDiagnostics());
+        if (cause instanceof RuntimeError && invocationErrors.has(cause)) throw cause;
+        throw participantError('RUNTIME_PARTICIPANT_PREPARE_FAILED', 'prepare', participant, cause);
+      }
+      initialParticipantDiagnostics.push(...invocation.takeDiagnostics());
+      const prepared = normalizePreparedCommit(preparedCandidate, participant);
+      preparedParticipants.set(
+        participant,
+        Object.freeze({ executor, prepared, takeDiagnostics: invocation.takeDiagnostics }),
+      );
+    }
+    for (const participant of participants) {
+      try {
+        preparedParticipants.get(participant)?.prepared.commit();
+      } catch (cause) {
+        initialParticipantDiagnostics.push(...(preparedParticipants.get(participant)?.takeDiagnostics() ?? []));
+        throw participantError('RUNTIME_PARTICIPANT_COMMIT_FAILED', 'commit', participant, cause);
+      }
+      initialParticipantDiagnostics.push(...(preparedParticipants.get(participant)?.takeDiagnostics() ?? []));
+    }
+    const candidateReads = new Map<RuntimeCommitParticipantToken, unknown>();
+    for (const participant of participants) {
+      const executor = participantExecutors.get(participant);
+      if (executor !== undefined) {
+        try {
+          candidateReads.set(participant, executor.read());
+        } catch (cause) {
+          initialParticipantDiagnostics.push(...(preparedParticipants.get(participant)?.takeDiagnostics() ?? []));
+          throw participantError('RUNTIME_PARTICIPANT_READ_FAILED', 'read', participant, cause);
+        }
+        initialParticipantDiagnostics.push(...(preparedParticipants.get(participant)?.takeDiagnostics() ?? []));
+      }
+    }
+    participantReads = candidateReads;
   } catch (cause) {
     const failedDiagnostics: Array<RuntimeDiagnostic> = [
       ...initialDiagnostics.filter(isExecutionDiagnostic),
+      ...initialParticipantDiagnostics,
       ...(cause instanceof RuntimeError ? cause.diagnostics : []),
     ];
+    for (const participant of [...participants].reverse()) {
+      const participantState = preparedParticipants.get(participant);
+      if (participantState !== undefined) {
+        try {
+          participantState.prepared.rollback();
+          failedDiagnostics.push(...participantState.takeDiagnostics());
+        } catch (rollbackCause) {
+          failedDiagnostics.push(...participantState.takeDiagnostics());
+          failedDiagnostics.push(
+            participantLifecycleDiagnostic(
+              'RUNTIME_PARTICIPANT_ROLLBACK_FAILED',
+              'rollback',
+              participant,
+              rollbackCause,
+            ),
+          );
+        }
+      }
+    }
+    for (const participant of [...participants].reverse()) {
+      const participantState = preparedParticipants.get(participant);
+      if (participantState !== undefined) {
+        try {
+          participantState.prepared.dispose();
+          failedDiagnostics.push(...participantState.takeDiagnostics());
+        } catch (disposeCause) {
+          failedDiagnostics.push(...participantState.takeDiagnostics());
+          failedDiagnostics.push(
+            participantLifecycleDiagnostic(
+              'RUNTIME_PARTICIPANT_TOKEN_DISPOSE_FAILED',
+              'token-dispose',
+              participant,
+              disposeCause,
+            ),
+          );
+        }
+      }
+    }
+    for (const participant of [...participants].reverse()) {
+      let participantDisposeFailure: Readonly<{ cause: unknown }> | undefined;
+      try {
+        participantExecutors.get(participant)?.dispose();
+      } catch (disposeCause) {
+        participantDisposeFailure = Object.freeze({ cause: disposeCause });
+      }
+      failedDiagnostics.push(...(participantDrains.get(participant)?.() ?? []));
+      if (participantDisposeFailure !== undefined) {
+        failedDiagnostics.push(
+          participantLifecycleDiagnostic(
+            'RUNTIME_PARTICIPANT_DISPOSE_FAILED',
+            'participant-dispose',
+            participant,
+            participantDisposeFailure.cause,
+          ),
+        );
+      }
+      consumeRuntimeCommitParticipant(participant);
+    }
+    participantReads.clear();
     for (const definition of [...options.programs.definitions()].reverse()) {
       const prepared = programStates.get(definition);
       if (prepared !== undefined) failedDiagnostics.push(...prepared.executor.retire(prepared.prepared));
@@ -592,7 +1001,12 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
   }
 
   const assertIdle = (phase: string): void => {
-    if (state === 'disposed') throw sessionError('RUNTIME_SESSION_DISPOSED', phase, undefined);
+    if (state === 'dispose-pending' || state === 'disposed') {
+      throw sessionError('RUNTIME_SESSION_DISPOSED', phase, undefined);
+    }
+    if (state === 'broken') {
+      throw sessionError('RUNTIME_PARTICIPANT_ROLLBACK_FAILED', phase, brokenError, brokenError?.owner);
+    }
     if (state !== 'idle') throw sessionError('RUNTIME_SESSION_REENTRANT', phase, state);
   };
 
@@ -601,6 +1015,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
     update: (update: RuntimeSessionUpdate): RuntimeSessionResult => {
       assertIdle('update');
       state = 'preparing';
+      const updateState = { broken: false };
       try {
         const updateCandidate: unknown = update;
         if (typeof updateCandidate !== 'object' || updateCandidate === null) {
@@ -717,6 +1132,10 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
 
         const nextProgramStates = new Map(programStates);
         const programOutcomes = new Map<RuntimeProgramToken, RuntimeProgramOutcome>();
+        const candidateParticipantDiagnostics: Array<RuntimeDiagnostic> = [];
+        const selectedParticipants: Array<RuntimeCommitParticipantToken> = [];
+        const preparedUpdateParticipants = new Map<RuntimeCommitParticipantToken, RuntimePreparedParticipantState>();
+        const nextParticipantReads = new Map(participantReads);
         try {
           for (const definition of options.programs.definitions()) {
             const executor = getRuntimeProgramRegistryExecutor(options.programs, definition);
@@ -726,7 +1145,8 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
               .map(program => programOutcomes.get(program))
               .filter((outcome): outcome is RuntimeProgramOutcome => outcome !== undefined);
             if (!directOwnerChange && upstreamOutcomes.length === 0) continue;
-            const forceFull = upstreamOutcomes.some(outcome => outcome === 'full' || outcome === 'fallback');
+            const upstreamFallback = upstreamOutcomes.some(outcome => outcome === 'fallback');
+            const upstreamFull = upstreamOutcomes.some(outcome => outcome === 'full');
             const previous = programStates.get(definition);
             if (previous === undefined) throw new Error('runtime session: missing committed Program state');
             const prepared = runProgram(
@@ -734,12 +1154,17 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
               currentRevision,
               candidateRevision,
               nextOwnerStates,
+              changedOwners,
               changeSets,
               nextProgramStates,
               definition,
               executor,
               options.trace,
-              directInvalidHint ? 'fallback' : forceFull || executor.update === undefined ? 'full' : 'incremental',
+              directInvalidHint || upstreamFallback
+                ? 'fallback'
+                : updateStrategy === RuntimeUpdateStrategy.Full || upstreamFull || executor.update === undefined
+                  ? 'full'
+                  : 'incremental',
               previous,
             );
             candidateDiagnostics.push(...prepared.diagnostics);
@@ -747,11 +1172,169 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
             nextProgramStates.set(definition, prepared.state);
             programOutcomes.set(definition, prepared.outcome);
           }
+          for (const participant of participants) {
+            const isAffected =
+              participant.owners.some(owner => changedOwners.has(owner)) ||
+              participant.programs.some(program => programOutcomes.has(program));
+            if (participant.revisionPolicy !== 'continuous' && !isAffected) continue;
+            selectedParticipants.push(participant);
+            const executor = participantExecutors.get(participant);
+            if (executor === undefined) throw new Error('runtime session: missing participant executor');
+            const invocationErrors = new WeakSet<RuntimeError>();
+            const declaredOwners = new Set(participant.owners);
+            const declaredPrograms = new Set(participant.programs);
+            const view = Object.freeze({
+              phase: 'update' as const,
+              baseRevision: currentRevision,
+              candidateRevision,
+              snapshot: <TInput, TValue, TRead, TChange>(
+                owner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
+              ): RuntimeSnapshot<TRead> => {
+                if (!declaredOwners.has(owner)) {
+                  const error = sessionError(
+                    'RUNTIME_UNDECLARED_DEPENDENCY',
+                    'participant-snapshot',
+                    owner,
+                    participant.key,
+                  );
+                  invocationErrors.add(error);
+                  throw error;
+                }
+                const ownerState = nextOwnerStates.get(owner);
+                if (ownerState === undefined) {
+                  const error = sessionError(
+                    'RUNTIME_UNDECLARED_DEPENDENCY',
+                    'participant-snapshot',
+                    owner,
+                    participant.key,
+                  );
+                  invocationErrors.add(error);
+                  throw error;
+                }
+                return ownerState.command.snapshot(owner, ownerState.prepared, candidateRevision);
+              },
+              artifact: <TArtifactInput, TArtifact, TProgramRead, TPublicRead>(
+                program: RuntimeProgramDefinition<TArtifactInput, TArtifact, TProgramRead, TPublicRead>,
+              ): RuntimeSnapshot<TPublicRead> => {
+                if (!declaredPrograms.has(program)) {
+                  const error = sessionError(
+                    'RUNTIME_UNDECLARED_DEPENDENCY',
+                    'participant-artifact',
+                    program,
+                    participant.key,
+                  );
+                  invocationErrors.add(error);
+                  throw error;
+                }
+                const programState = nextProgramStates.get(program);
+                if (programState === undefined) {
+                  const error = sessionError(
+                    'RUNTIME_UNDECLARED_DEPENDENCY',
+                    'participant-artifact',
+                    program,
+                    participant.key,
+                  );
+                  invocationErrors.add(error);
+                  throw error;
+                }
+                return programState.executor.snapshot(program, programState.prepared, candidateRevision);
+              },
+            });
+            const invocation = createParticipantInvocation(participant, options.trace);
+            participantDrains.set(participant, invocation.takeDiagnostics);
+            let preparedCandidate: unknown;
+            try {
+              preparedCandidate = executor.prepare(view, invocation.context);
+            } catch (cause) {
+              candidateParticipantDiagnostics.push(...invocation.takeDiagnostics());
+              if (cause instanceof RuntimeError && invocationErrors.has(cause)) throw cause;
+              throw participantError('RUNTIME_PARTICIPANT_PREPARE_FAILED', 'prepare', participant, cause);
+            }
+            candidateParticipantDiagnostics.push(...invocation.takeDiagnostics());
+            const prepared = normalizePreparedCommit(preparedCandidate, participant);
+            preparedUpdateParticipants.set(
+              participant,
+              Object.freeze({ executor, prepared, takeDiagnostics: invocation.takeDiagnostics }),
+            );
+          }
+          for (const participant of selectedParticipants) {
+            try {
+              preparedUpdateParticipants.get(participant)?.prepared.commit();
+            } catch (cause) {
+              candidateParticipantDiagnostics.push(
+                ...(preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []),
+              );
+              throw participantError('RUNTIME_PARTICIPANT_COMMIT_FAILED', 'commit', participant, cause);
+            }
+            candidateParticipantDiagnostics.push(
+              ...(preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []),
+            );
+          }
+          for (const participant of selectedParticipants) {
+            const executor = participantExecutors.get(participant);
+            if (executor !== undefined) {
+              try {
+                nextParticipantReads.set(participant, executor.read());
+              } catch (cause) {
+                candidateParticipantDiagnostics.push(
+                  ...(preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []),
+                );
+                throw participantError('RUNTIME_PARTICIPANT_READ_FAILED', 'read', participant, cause);
+              }
+              candidateParticipantDiagnostics.push(
+                ...(preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []),
+              );
+            }
+          }
         } catch (cause) {
           const failedDiagnostics: Array<RuntimeDiagnostic> = [
             ...candidateDiagnostics.filter(isExecutionDiagnostic),
+            ...candidateParticipantDiagnostics,
             ...(cause instanceof RuntimeError ? cause.diagnostics : []),
           ];
+          let firstRollbackFailure:
+            | Readonly<{ participant: RuntimeCommitParticipantToken; cause: unknown }>
+            | undefined;
+          for (const participant of [...selectedParticipants].reverse()) {
+            const prepared = preparedUpdateParticipants.get(participant)?.prepared;
+            if (prepared === undefined) continue;
+            try {
+              prepared.rollback();
+              failedDiagnostics.push(...(preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []));
+            } catch (rollbackCause) {
+              failedDiagnostics.push(...(preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []));
+              if (firstRollbackFailure === undefined) {
+                firstRollbackFailure = Object.freeze({ participant, cause: rollbackCause });
+              } else {
+                failedDiagnostics.push(
+                  participantLifecycleDiagnostic(
+                    'RUNTIME_PARTICIPANT_ROLLBACK_FAILED',
+                    'rollback',
+                    participant,
+                    rollbackCause,
+                  ),
+                );
+              }
+            }
+          }
+          for (const participant of [...selectedParticipants].reverse()) {
+            const prepared = preparedUpdateParticipants.get(participant)?.prepared;
+            if (prepared === undefined) continue;
+            try {
+              prepared.dispose();
+              failedDiagnostics.push(...(preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []));
+            } catch (disposeCause) {
+              failedDiagnostics.push(...(preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []));
+              failedDiagnostics.push(
+                participantLifecycleDiagnostic(
+                  'RUNTIME_PARTICIPANT_TOKEN_DISPOSE_FAILED',
+                  'token-dispose',
+                  participant,
+                  disposeCause,
+                ),
+              );
+            }
+          }
           for (const definition of [...options.programs.definitions()].reverse()) {
             const candidate = nextProgramStates.get(definition);
             const previous = programStates.get(definition);
@@ -773,13 +1356,27 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
           }
           const frozenFailedDiagnostics = Object.freeze(failedDiagnostics);
           diagnosticQueue.push(...frozenFailedDiagnostics);
+          if (firstRollbackFailure !== undefined) {
+            brokenError = new RuntimeError({
+              code: 'RUNTIME_PARTICIPANT_ROLLBACK_FAILED',
+              phase: 'rollback',
+              owner: firstRollbackFailure.participant.key,
+              cause: Object.freeze({ trigger: cause, rollback: firstRollbackFailure.cause }),
+              diagnostics: frozenFailedDiagnostics,
+            });
+            state = 'broken';
+            updateState.broken = true;
+            throw brokenError;
+          }
           throw withFailureDiagnostics(cause, frozenFailedDiagnostics);
         }
 
         const previousOwnerStates = ownerStates;
         const previousProgramStates = programStates;
+        candidateDiagnostics.push(...candidateParticipantDiagnostics);
         ownerStates = nextOwnerStates;
         programStates = nextProgramStates;
+        participantReads = nextParticipantReads;
         const baseRevision = currentRevision;
         currentRevision = candidateRevision;
         const frozenDiagnostics = Object.freeze([...candidateDiagnostics]);
@@ -820,6 +1417,22 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
             );
           }
         }
+        for (const participant of [...selectedParticipants].reverse()) {
+          try {
+            preparedUpdateParticipants.get(participant)?.prepared.dispose();
+            candidateDiagnostics.push(...(preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []));
+          } catch (cause) {
+            candidateDiagnostics.push(...(preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []));
+            candidateDiagnostics.push(
+              participantLifecycleDiagnostic(
+                'RUNTIME_PARTICIPANT_TOKEN_DISPOSE_FAILED',
+                'token-dispose',
+                participant,
+                cause,
+              ),
+            );
+          }
+        }
 
         const resultDiagnostics = Object.freeze([...candidateDiagnostics]);
         diagnosticQueue.push(...resultDiagnostics);
@@ -832,7 +1445,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
               : 'committed';
         return Object.freeze({ revision: currentRevision, outcome, diagnostics: resultDiagnostics });
       } finally {
-        state = 'idle';
+        if (!updateState.broken) state = 'idle';
       }
     },
     snapshot: <TInput, TValue, TRead, TChange>(owner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>) => {
@@ -851,8 +1464,19 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
       if (programState === undefined) throw sessionError('RUNTIME_UNDECLARED_DEPENDENCY', 'artifact', program);
       return programState.executor.snapshot(program, programState.prepared, currentRevision);
     },
+    participant: <TRead>(participant: RuntimeCommitParticipant<TRead>): TRead => {
+      const participantCandidate: unknown = participant;
+      if (!isRuntimeCommitParticipant(participantCandidate)) {
+        throw sessionError('RUNTIME_PARTICIPANT_TOKEN_INVALID', 'participant', participantCandidate);
+      }
+      if (!participantExecutors.has(participant)) {
+        throw sessionError('RUNTIME_PARTICIPANT_UNKNOWN', 'participant', participant, participant.key);
+      }
+      assertIdle('participant');
+      return participantReads.get(participant) as TRead;
+    },
     diagnostics: () => {
-      if (state !== 'idle' && state !== 'disposed') {
+      if (state !== 'idle' && state !== 'broken' && state !== 'dispose-pending' && state !== 'disposed') {
         throw sessionError('RUNTIME_SESSION_REENTRANT', 'diagnostics', state);
       }
       const output = Object.freeze([...diagnosticQueue]);
@@ -861,26 +1485,60 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
     },
     dispose: () => {
       if (state === 'disposed') return;
-      assertIdle('dispose');
+      if (state !== 'broken' && state !== 'dispose-pending') assertIdle('dispose');
       state = 'disposing';
-      for (const definition of [...options.programs.definitions()].reverse()) {
-        const programState = programStates.get(definition);
-        if (programState !== undefined) diagnosticQueue.push(...programState.executor.retire(programState.prepared));
-      }
-      for (const owner of [...options.owners.definitions()].reverse()) {
-        const ownerState = ownerStates.get(owner);
-        if (ownerState !== undefined) {
-          diagnosticQueue.push(
-            ...ownerState.command
-              .retire(ownerExecutor, ownerState.prepared)
-              .diagnostics.map(mapOwnerLifecycleDiagnostic),
-          );
+      /** 反向清理尚未成功的 participant，并只消费已完成的 token */
+      const disposePendingParticipants = (): void => {
+        for (const participant of [...participants].reverse()) {
+          if (!pendingParticipantDisposals.has(participant)) continue;
+          let participantDisposeFailure: Readonly<{ cause: unknown }> | undefined;
+          try {
+            participantExecutors.get(participant)?.dispose();
+          } catch (cause) {
+            participantDisposeFailure = Object.freeze({ cause });
+          }
+          diagnosticQueue.push(...(participantDrains.get(participant)?.() ?? []));
+          if (participantDisposeFailure !== undefined) {
+            diagnosticQueue.push(
+              participantLifecycleDiagnostic(
+                'RUNTIME_PARTICIPANT_DISPOSE_FAILED',
+                'participant-dispose',
+                participant,
+                participantDisposeFailure.cause,
+              ),
+            );
+            continue;
+          }
+          pendingParticipantDisposals.delete(participant);
+          consumeRuntimeCommitParticipant(participant);
         }
+      };
+
+      disposePendingParticipants();
+      if (!sessionResourcesRetired) {
+        participantReads.clear();
+        for (const definition of [...options.programs.definitions()].reverse()) {
+          const programState = programStates.get(definition);
+          if (programState !== undefined) diagnosticQueue.push(...programState.executor.retire(programState.prepared));
+        }
+        for (const owner of [...options.owners.definitions()].reverse()) {
+          const ownerState = ownerStates.get(owner);
+          if (ownerState !== undefined) {
+            diagnosticQueue.push(
+              ...ownerState.command
+                .retire(ownerExecutor, ownerState.prepared)
+                .diagnostics.map(mapOwnerLifecycleDiagnostic),
+            );
+          }
+        }
+        sessionResourcesRetired = true;
+        if (pendingParticipantDisposals.size > 0) disposePendingParticipants();
       }
-      state = 'disposed';
+      state = pendingParticipantDisposals.size > 0 ? 'dispose-pending' : 'disposed';
     },
   });
 
+  initialDiagnostics.push(...initialParticipantDiagnostics);
   const frozenInitialDiagnostics = Object.freeze([...initialDiagnostics]);
   const completedInitialDiagnostics = [...initialDiagnostics];
   state = 'observing';
@@ -898,6 +1556,17 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
       programState.executor.observeCommit<unknown>(event);
     } catch (cause) {
       completedInitialDiagnostics.push(observerDiagnostic(definition, cause));
+    }
+  }
+  for (const participant of [...participants].reverse()) {
+    try {
+      preparedParticipants.get(participant)?.prepared.dispose();
+      completedInitialDiagnostics.push(...(preparedParticipants.get(participant)?.takeDiagnostics() ?? []));
+    } catch (cause) {
+      completedInitialDiagnostics.push(...(preparedParticipants.get(participant)?.takeDiagnostics() ?? []));
+      completedInitialDiagnostics.push(
+        participantLifecycleDiagnostic('RUNTIME_PARTICIPANT_TOKEN_DISPOSE_FAILED', 'token-dispose', participant, cause),
+      );
     }
   }
   diagnosticQueue.push(...completedInitialDiagnostics);

@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib';
 
 import type {
   PreviewControlContract,
@@ -185,10 +186,10 @@ const PreviewControlPanelComponent: FC<PreviewControlPanelProps> = props => {
             <div data-slot="preview-control-column" className="min-w-0">
               {columnIndex === 0 && presetSelector && presetField ? (
                 <div data-slot="preview-preset-selector" className="mb-3 flex min-h-7 w-full items-center gap-2">
-                  <Label className="max-w-16 shrink-0 truncate text-xs whitespace-nowrap" title={presetSelector.label}>
+                  <Label className="min-w-0 shrink truncate text-xs whitespace-nowrap" title={presetSelector.label}>
                     {presetSelector.label}
                   </Label>
-                  <div className="flex min-w-0 flex-1 justify-end">
+                  <div className="flex min-w-16 flex-1 justify-end">
                     <PreviewControlFieldInput
                       field={presetField}
                       value={activePresetId}
@@ -237,16 +238,28 @@ const PreviewControlPanelComponent: FC<PreviewControlPanelProps> = props => {
                             className={field.kind === 'table' ? 'min-w-0' : 'flex min-h-7 w-full items-center gap-2'}
                           >
                             {field.kind === 'table' ? (
-                              <PreviewTableControl field={field} density={density} />
+                              <PreviewTableControl field={field} values={controlState.values} density={density} />
                             ) : (
                               <>
                                 <Label
-                                  className="max-w-16 shrink-0 truncate text-xs whitespace-nowrap"
+                                  className={cn(
+                                    'min-w-0 truncate text-xs whitespace-nowrap',
+                                    field.kind === 'switch' ? 'flex-1' : 'shrink',
+                                  )}
                                   title={field.label}
                                 >
                                   {field.label}
                                 </Label>
-                                <div className="flex min-w-0 flex-1 justify-end">
+                                <div
+                                  className={cn(
+                                    'flex min-w-0 justify-end',
+                                    field.kind === 'switch'
+                                      ? 'shrink-0'
+                                      : field.kind === 'range' || field.kind === 'color' || field.kind === 'point'
+                                        ? 'min-w-24 flex-1'
+                                        : 'min-w-16 flex-1',
+                                  )}
+                                >
                                   <PreviewControlFieldInput
                                     field={field}
                                     value={controlState.values[field.id] ?? field.defaultValue}

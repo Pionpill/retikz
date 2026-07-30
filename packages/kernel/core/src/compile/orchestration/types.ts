@@ -2,10 +2,16 @@ import type { AxisAlignedBounds, BoundsRect } from '@retikz/math';
 import type { RuntimeIdentity, RuntimeRevision } from '@retikz/runtime';
 
 import type {
-  ChildLayoutConstraint,
+  ClipShape,
   CompositeCompileChild,
   CompositeCompileScopeProps,
   CompositeReplay,
+  CompositeReplayWrapper,
+  LayoutAlignmentGuide,
+  LayoutChildFailure,
+  LayoutChildProbe,
+  LayoutChildResult,
+  LayoutProposal,
   ScenePrimitive,
   SceneResource,
   Transform,
@@ -13,6 +19,7 @@ import type {
 import type { IRChild, IRPathBase, IRPosition, JsonValue, ResolvedDropShadow } from '../../schemas';
 import type { NamespaceFrameChange, NamespaceStack } from '../namespace';
 import type { NodeLayout } from '../node';
+import type { LayoutProbeFailureEntry } from '../probe-failure';
 import type { StyleFrame } from '../style';
 import type { CompileOccurrenceLocator, CompositeCompileArtifact, NodeLayoutCompileArtifact } from '../types';
 import type { CompileWarning } from '../warning';
@@ -31,6 +38,8 @@ export type PendingPathEmission = {
   boundsSink: Array<LayoutBoundsContribution>;
   /** path allocation 几何贡献 */
   allocationSink: Array<LayoutBoundsContribution>;
+  /** path 位于该显式 composite allocation boundary 内 */
+  allocationBoundary?: object;
   /** path 在所属 primitive sink 中的原位回填槽 */
   placeholderSlot: { primitiveSink: Array<InternalScenePrimitive>; placeholder: PathPlaceholder };
   /** path 的完整 canonical occurrence */
@@ -59,6 +68,8 @@ export type TraversalResult = {
   observations: Array<PendingNodeLayoutObservation>;
   /** 本次 traversal 最终逻辑树的 artifacts */
   artifacts: Array<CompositeCompileArtifact | NodeLayoutCompileArtifact>;
+  /** 顶层 child 向父布局暴露的无歧义 alignment guides */
+  alignmentGuides?: ReadonlyArray<LayoutAlignmentGuide>;
 };
 
 /** layout-aware child probe 保存的全部可提交贡献 */
@@ -102,7 +113,7 @@ export type CompositeRuntimeOutputChild =
   | Readonly<{
       kind: 'replay';
       replay: CompositeReplay;
-      transforms?: ReadonlyArray<Transform>;
+      wrapper?: CompositeReplayWrapper;
     }>
   | Readonly<{
       kind: 'scope';
@@ -120,18 +131,30 @@ export type CompositeCompileOwner = Readonly<{
 export type CompositeRuntimeOutputEntry = Readonly<{
   owner: CompositeCompileOwner;
   child: CompositeRuntimeOutputChild;
+}> & { used: boolean };
+
+/** layoutChild 返回对象对应的 callback-local replay identity */
+export type CompositeLayoutResultEntry = Readonly<{
+  owner: CompositeCompileOwner;
+  replay: CompositeReplay;
 }>;
 
 /** 同一次 compile 独占的 replay 与 runtime output handle 表 */
 export type CompositeCompileSession = {
   /** token → 隔离 probe 结果；不跨 compile 共享 */
   replayTransactions: WeakMap<object, CompositeReplayTransaction>;
+  /** LayoutChildResult identity → replay token；拒绝复制或伪造 result */
+  layoutResults: WeakMap<object, CompositeLayoutResultEntry>;
   /** opaque handle → runtime output 节点；不跨 compile 共享 */
   outputChildren: WeakMap<object, CompositeRuntimeOutputEntry>;
+  /** opaque LayoutChildFailure identity → callback/compile-local failure metadata */
+  failures: WeakMap<object, LayoutProbeFailureEntry>;
 };
 
 /** 单次 traversal 的可选隔离输入 */
 export type TraversalCompileOptions = {
+  /** 当前 traversal 是否为 layoutChild 隔离 probe */
+  probe?: boolean;
   /** probe 继承的 namespace snapshot */
   namespaceStack?: NamespaceStack;
   /** probe 继承的当前 scope chain */
@@ -144,8 +167,8 @@ export type TraversalCompileOptions = {
   compositeDepth?: number;
   /** root child 是否来自 provider 输入 / 输出 */
   generated?: boolean;
-  /** 当前父约束 */
-  constraint?: ChildLayoutConstraint;
+  /** 当前 root child 收到的完整双轴 proposal */
+  proposal?: LayoutProposal;
   /** 根 compile 共享 session */
   session?: CompositeCompileSession;
   /** Runtime Program full compile 使用的 identity tracker */
@@ -194,8 +217,8 @@ export type TraversalContext = Pick<
   | 'maxCompositeDepth'
   | 'artifacts'
 > & {
-  /** 当前 traversal 接收到的父约束 */
-  constraint: ChildLayoutConstraint;
+  /** 当前 traversal 接收到的完整双轴 proposal */
+  proposal: LayoutProposal;
   /** 同次 compile 的 replay token 表 */
   session: CompositeCompileSession;
 };
@@ -210,8 +233,8 @@ export type TraversalRuntime = {
 
 /** 递归处理一层 child 时的上下文 */
 export type TraversalFrame = {
-  /** 只供当前直接 child 消费的父约束；递归 Scope 不向普通后代广播 */
-  childConstraint?: ChildLayoutConstraint;
+  /** 只供当前直接 child 消费的父 proposal；递归 Scope 不向普通后代广播 */
+  childProposal?: LayoutProposal;
   /** 当前 scope 累计 transform */
   scopeChain: ReadonlyArray<Transform>;
   /** 当前层 primitive 输出容器 */
@@ -230,6 +253,10 @@ export type TraversalFrame = {
   boundsSink: Array<LayoutBoundsContribution>;
   /** 当前层父布局 allocation 几何贡献 */
   allocationSink: Array<LayoutBoundsContribution>;
+  /** 当前层 descendant alignment guide 贡献 */
+  alignmentGuideSink: Array<LayoutAlignmentGuide>;
+  /** 最近一层显式 composite allocation boundary */
+  allocationBoundary?: object;
   /** 延迟到完整 Scope chain 冻结后发布的 Node layout observer 记录 */
   observationSink: Array<PendingNodeLayoutObservation>;
   /** 最终逻辑树 artifact 输出容器 */
@@ -312,6 +339,8 @@ export type EmitScopeGroupContext = {
   scopeTransforms: ReadonlyArray<Transform>;
   scopePrimitiveSink: Array<InternalScenePrimitive>;
   frame: TraversalFrame;
+  /** runtime Scope 预检阶段已解析且尚未登记的 clip */
+  resolvedClipShape?: ClipShape;
   /** Scope child 的 semantic owner */
   semanticOwner?: RuntimeSemanticOwner;
 };
@@ -322,6 +351,8 @@ export type LayoutBoundsContribution = {
   points: Array<IRPosition>;
   /** 与该点集关联的阴影外溢 */
   shadow?: ResolvedDropShadow;
+  /** 位于该显式 composite allocation boundary 内时不直接贡献到外层 */
+  allocationBoundary?: object;
 };
 
 /** 等完整 Scope chain 冻结后再发送的节点布局观测记录 */
@@ -342,23 +373,10 @@ export type CallableLayoutCompositeDefinition = {
   compile: (
     node: unknown,
     context: {
-      constraint: ChildLayoutConstraint;
-      layoutChild: (
-        child: IRChild,
-        constraint: ChildLayoutConstraint,
-      ) => {
-        allocationBounds: Readonly<BoundsRect>;
-        visualBounds: Readonly<BoundsRect>;
-        replay: CompositeReplay;
-      };
-      replay: (
-        result: {
-          allocationBounds: Readonly<BoundsRect>;
-          visualBounds: Readonly<BoundsRect>;
-          replay: CompositeReplay;
-        },
-        transforms?: ReadonlyArray<Transform>,
-      ) => CompositeCompileChild;
+      proposal: LayoutProposal;
+      layoutChild: (child: IRChild, proposal: LayoutProposal) => LayoutChildProbe;
+      replay: (result: LayoutChildResult, wrapper?: CompositeReplayWrapper) => CompositeCompileChild;
+      raise: (failure: LayoutChildFailure) => never;
       scope: (
         props: CompositeCompileScopeProps,
         children: ReadonlyArray<IRChild | CompositeCompileChild>,
@@ -366,6 +384,8 @@ export type CallableLayoutCompositeDefinition = {
     },
   ) => {
     children: ReadonlyArray<IRChild | CompositeCompileChild>;
+    allocationBounds?: Readonly<BoundsRect>;
+    alignmentGuides?: ReadonlyArray<LayoutAlignmentGuide>;
     artifact?: JsonValue;
   };
 };

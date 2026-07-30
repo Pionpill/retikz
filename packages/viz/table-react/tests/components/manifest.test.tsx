@@ -103,9 +103,10 @@ describe('Table React manifest observation', () => {
     };
 
     await renderTable(firstObserver);
+    present.mockClear();
     await renderTable(secondObserver);
 
-    expect(present).toHaveBeenCalledTimes(1);
+    expect(present).not.toHaveBeenCalled();
     expect(firstObserver).toHaveBeenCalledTimes(1);
     expect(secondObserver).not.toHaveBeenCalled();
     await act(() => root.unmount());

@@ -5,28 +5,34 @@ description: 数据变换按顺序改写规范化行，并把排序、汇总、�
 
 数据变换属于 `@retikz/data`。它们读取数据模型产出的规范化行，按顺序处理后输出新的规范化行，可供图形、表格或其它消费模块使用。
 
-本站默认用 Plot 展示变换结果，只是因为图形更容易观察行数、顺序和统计字段的变化。在 Plot 的 React 写法中，可以通过 `<Transform>`、`dataTransforms` 或 mark-local `transform` 使用这些能力；这些入口不属于 Data 本身。
+本站默认用 Plot 展示变换结果，只是因为图形更容易观察行数、顺序和统计字段的变化。在 Plot 的 React 写法中，可以通过 `<Transform>`、`dataTransforms` 或图元局部 `transform` 使用这些能力；这些入口不属于 Data 本身。
 
 ## 整体流程
 
-| 阶段         | 输入                   | 输出                     | 负责什么                         |
-| ------------ | ---------------------- | ------------------------ | -------------------------------- |
-| 数据模型     | 外部数据行 + 字段契约  | 规范化行                 | 对齐字段、解析值并执行接入校验   |
-| 数据变换管线 | 规范化行 + operation[] | 新的规范化行             | 按声明顺序排序、汇总、选择或标注 |
-| 消费模块     | 变换后的行             | 图形、表格或其它领域输出 | 解释字段并形成具体视图           |
+下面以 `summarize` 为例：输入是商品粒度的规范化明细，变换按 `region` 分组后，输出改成地区粒度的汇总行。`product`、`revenue` 被汇总结果字段 `total`、`orders` 取代。
 
-每个 operation 都是 JSON 可序列化配置，由对应的 Definition 提供运行函数。变换读取的字段会参与 model 校验；变换新产出的字段不需要提前声明进 model。
+<ComponentPreview files="data-transform-shape" size="sm" previewClassName="!p-3" hideCode />
+
+这个例子同时改变了行粒度和字段集合，但并非所有变换都会改列结构：`sort` 只重排行，`select` 主要改变行数，`annotate` 则保留明细行并增加统计字段。
+
+| 阶段         | 输入                  | 输出                     | 负责什么                         |
+| ------------ | --------------------- | ------------------------ | -------------------------------- |
+| 数据模型     | 外部数据行 + 字段契约 | 规范化行                 | 对齐字段、解析值并执行接入校验   |
+| 数据变换管线 | 规范化行 + 操作数组   | 新的规范化行             | 按声明顺序排序、汇总、选择或标注 |
+| 消费模块     | 变换后的行            | 图形、表格或其它领域输出 | 解释字段并形成具体视图           |
+
+每个变换操作（operation）都是 JSON 可序列化配置，由对应的定义（Definition）提供运行函数。变换读取的字段会参与 `model` 校验；变换新产出的字段不需要提前声明进 `model`。
 
 ## 职责一览
 
-| 主题       | 负责什么                                           | 何时阅读                                   |
-| ---------- | -------------------------------------------------- | ------------------------------------------ |
-| Transform  | 在 Plot React 中声明 operation，并确认多入口执行序 | 用 JSX 组织数据管线或排查变换顺序时        |
-| 变换操作   | `sort`、`summarize`、`select`、`annotate`          | 要重排行、生成统计行或保留代表原始行时     |
-| 统计子算子 | reducer、selector 与分位区间组合                   | 要计算统计字段、选择极值或组织箱线图数据时 |
-| 扩展机制   | 自定义 transform、reducer 与 selector Definition   | 内置操作无法表达新的数据处理语义时         |
+| 主题       | 负责什么                                              | 何时阅读                                   |
+| ---------- | ----------------------------------------------------- | ------------------------------------------ |
+| Transform  | 在 Plot React 中声明变换操作，并确认多入口执行顺序    | 用 JSX 组织数据管线或排查变换顺序时        |
+| 变换操作   | `sort`、`summarize`、`select`、`annotate`             | 要重排行、生成统计行或保留代表原始行时     |
+| 统计子算子 | 规约器（reducer）、行选择器（selector）与分位区间组合 | 要计算统计字段、选择极值或组织箱线图数据时 |
+| 扩展机制   | 自定义变换、规约器与行选择器定义                      | 内置操作无法表达新的数据处理语义时         |
 
-Plot 自己注册的 `stack`、`bin`、`normalize`、`derive-interval`、`relate`、`jitter`、`density` 和 `smooth` 仍在[绘图语法的变换](/viz/plot/transform)中说明。自定义 transform、reducer 或 selector 的注册方式集中放在[扩展机制](/viz/data/transform/extensions)，运行链路事件则见[来源追溯](/viz/data/provenance)。
+Plot 自己注册的 `stack`、`bin`、`normalize`、`derive-interval`、`relate`、`jitter`、`density` 和 `smooth` 仍在[绘图语法的变换](/viz/plot/transform)中说明。自定义变换、规约器或行选择器的注册方式集中放在[扩展机制](/viz/data/transform/extensions)，运行链路事件则见[Data 来源追溯](/viz/data/provenance/data)。
 
 ## 章节内容
 
@@ -39,24 +45,16 @@ Plot 自己注册的 `stack`、`bin`、`normalize`、`derive-interval`、`relate
   </LinkedCard>
   <LinkedCard href="/viz/data/transform/operations">
     <span className="font-semibold">变换操作</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      查询四种 Data 内置 operation 的语义、参数和示例。
-    </span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">查询四种 Data 内置操作的语义、参数和示例。</span>
   </LinkedCard>
   <LinkedCard href="/viz/data/transform/statistics">
     <span className="font-semibold">统计子算子</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      组合 reducer 与 selector，生成统计字段或保留原始代表行。
+      组合规约器与行选择器，生成统计字段或保留原始代表行。
     </span>
   </LinkedCard>
   <LinkedCard href="/viz/data/transform/extensions">
     <span className="font-semibold">扩展机制</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      注册自定义 transform、reducer 与 selector Definition。
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/provenance">
-    <span className="font-semibold">来源追溯</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">记录 operation 顺序、字段流和可选计算细节。</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">注册自定义变换、规约器与行选择器定义。</span>
   </LinkedCard>
 </div>

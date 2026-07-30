@@ -55,7 +55,7 @@ With data and column order held constant, tracks determine each Cell box and Cel
   caption="Switch between Content first and Fixed compact, then adjust one field at a time. Reset restores the canonical fixed-width, wrapped, clipped, collapse-border state."
 />
 
-`auto` reads intrinsic size, `fixed` uses an explicit size, and `minmax` absorbs content contributions between bounds. `fraction` distributes remaining width only when the parent compile provides a finite `maxWidth` constraint. Standalone `DetailTable` `width` / `height` controls output size, not layout constraints.
+`auto` reads intrinsic size, `fixed` uses an explicit size, and `minmax` absorbs content contributions between bounds. `fraction` distributes remaining width only when the parent compile provides an x-axis `exact` proposal or a `range` proposal with a finite `max`. Standalone `DetailTable` `width` / `height` controls output size, not layout proposals.
 
 `DetailColumn.headerLayout` / `bodyLayout` configure header and body Cells independently. Padding first establishes the content box; wrapping reruns content layout with the solved column width; fit and alignment place the selected replay; overflow finally decides whether content outside the box remains visible.
 
@@ -109,32 +109,32 @@ A Table compile performs these stages in a fixed order. They share one canonical
     {
       label: 'Structure normalization and Cell presentation',
       path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
-      startLine: 236,
-      endLine: 244,
+      startLine: 264,
+      endLine: 277,
     },
     {
       label: 'Content measurement, track solving, and wrap reflow',
       path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
-      startLine: 246,
-      endLine: 305,
+      startLine: 279,
+      endLine: 330,
     },
     {
       label: 'Cell boxes and content placement',
       path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
-      startLine: 306,
-      endLine: 336,
+      startLine: 333,
+      endLine: 380,
     },
     {
-      label: 'Border Graph construction and replay',
+      label: 'Border Graph construction and probe',
       path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
-      startLine: 338,
-      endLine: 369,
+      startLine: 383,
+      endLine: 418,
     },
     {
       label: 'Layout bounds, replay root, and manifest construction',
       path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
-      startLine: 371,
-      endLine: 405,
+      startLine: 420,
+      endLine: 455,
     },
     {
       label: 'Table composite validates the typed artifact',
@@ -224,7 +224,7 @@ result.manifest;
 | `presentationDefinitions?` | `DetailTableProps['presentationDefinitions']`                    | `[]`           | Custom Cell presentation definitions                                     |
 | `composites?`              | `DetailTableProps['composites']`                                 | `[]`           | Definitions required by Tier 2 Cell content                              |
 | `onManifest?`              | `DetailTableProps['onManifest']`                                 | —              | Standalone layout artifact callback; unsupported when embedded           |
-| `width?` / `height?`       | `DetailTableProps['width']`                                      | —              | Host size; does not change Table constraints                             |
+| `width?` / `height?`       | `DetailTableProps['width']`                                      | —              | Host size; does not change Table layout proposals                        |
 | `viewBox?`                 | `DetailTableProps['viewBox']`                                    | —              | Scene camera; does not affect track solving                              |
 | `animate?` / `snapshotAt?` | `DetailTableProps['animate']`                                    | —              | Reuses the Kernel Layout animation host contract                         |
 | `renderer?`                | `DetailTableProps['renderer']`                                   | `'svg'`        | Rendering backend                                                        |

@@ -55,7 +55,7 @@ import { DetailColumn, DetailTable } from '@retikz/table-react';
   caption="先切换“内容优先 / 固定紧凑”场景，再调整单个字段；点击“重置”会回到固定列宽、换行、裁剪和合并共享边的标准状态。"
 />
 
-`auto` 读取内容自然尺寸，`fixed` 使用明确尺寸，`minmax` 在上下界之间吸收内容贡献。`fraction` 只有在父级 compile 提供有限 `maxWidth` 约束时才分配剩余宽度；standalone `DetailTable` 的 `width` / `height` 只控制输出尺寸，不是布局约束。
+`auto` 读取内容自然尺寸，`fixed` 使用明确尺寸，`minmax` 在上下界之间吸收内容贡献。`fraction` 只有在父级 compile 给出 x 轴 `exact` proposal 或带有限 `max` 的 `range` proposal 时才分配剩余宽度；standalone `DetailTable` 的 `width` / `height` 只控制输出尺寸，不是布局 proposal。
 
 `DetailColumn.headerLayout` / `bodyLayout` 分别控制列头与正文 Cell。padding 先缩出 content box；wrap 使用已求解列宽重新布局内容；fit 与对齐放置选中的 replay；overflow 最后决定内容框外的部分是否可见。
 
@@ -109,32 +109,32 @@ const svg = renderTable(spec, { data: { scores: rows } });
     {
       label: '结构规范化与 Cell presentation',
       path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
-      startLine: 236,
-      endLine: 244,
+      startLine: 264,
+      endLine: 277,
     },
     {
       label: '内容测量、轨道求解与 wrap 重排',
       path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
-      startLine: 246,
-      endLine: 305,
+      startLine: 279,
+      endLine: 330,
     },
     {
       label: 'Cell box 与内容放置',
       path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
-      startLine: 306,
-      endLine: 336,
+      startLine: 333,
+      endLine: 380,
     },
     {
-      label: 'Border Graph 构建与 replay',
+      label: 'Border Graph 构建与 probe',
       path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
-      startLine: 338,
-      endLine: 369,
+      startLine: 383,
+      endLine: 418,
     },
     {
       label: '布局范围、replay root 与 manifest 构造',
       path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
-      startLine: 371,
-      endLine: 405,
+      startLine: 420,
+      endLine: 455,
     },
     {
       label: 'Table composite 校验 typed artifact',
@@ -224,7 +224,7 @@ result.manifest;
 | `presentationDefinitions?` | `DetailTableProps['presentationDefinitions']`                    | `[]`       | 自定义 Cell presentation definitions                              |
 | `composites?`              | `DetailTableProps['composites']`                                 | `[]`       | Cell 内嵌 Tier 2 内容所需 definitions                             |
 | `onManifest?`              | `DetailTableProps['onManifest']`                                 | —          | standalone 布局产物通知；嵌入时不支持                             |
-| `width?` / `height?`       | `DetailTableProps['width']`                                      | —          | 宿主显示尺寸；不改变 Table 约束                                   |
+| `width?` / `height?`       | `DetailTableProps['width']`                                      | —          | 宿主显示尺寸；不改变 Table layout proposal                        |
 | `viewBox?`                 | `DetailTableProps['viewBox']`                                    | —          | Scene 相机；不改变轨道求解                                        |
 | `animate?` / `snapshotAt?` | `DetailTableProps['animate']`                                    | —          | 复用 Kernel Layout 的动画宿主合同                                 |
 | `renderer?`                | `DetailTableProps['renderer']`                                   | `'svg'`    | 渲染后端                                                          |

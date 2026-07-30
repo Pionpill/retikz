@@ -18,7 +18,7 @@ description: 派生与抖动保持输入行数不变，只按单行字段补出�
 
 切换区间来源，对比 `startFrom` / `endFrom` 的双字段模式与 `from` / `baseline` 的单字段模式。
 
-<ComponentPreview files={['transform-derive-interval', 'transform-derive-interval.data.ts']} size="md" />
+<ComponentPreview files={['transform-derive-interval', 'transform-derive-interval.data.ts']} size="lg" />
 
 ### API 参考
 
@@ -37,7 +37,7 @@ description: 派生与抖动保持输入行数不变，只按单行字段补出�
 
 `derive-interval` 先确定全局配置使用哪一种模式，再用同一规则逐行派生。图中的橙色节点是行数据，蓝色节点是逐行处理；只有红色支路会终止 lowering。
 
-<ComponentPreview files="transform-derive-interval-logic" hideCode size="xl" />
+<ComponentPreview files="transform-derive-interval-logic" hideCode size="sm" />
 
 模式选择和字段写入分为四步：
 
@@ -65,9 +65,9 @@ description: 派生与抖动保持输入行数不变，只按单行字段补出�
 
 ### 动态示例
 
-调整最大偏移与随机种子。左图保留原始位置，右图使用固定数据域，便于直接观察参数变化。
+调整最大偏移与随机种子。图表使用固定数据域，便于直接观察抖动参数带来的位置变化。
 
-<ComponentPreview files={['transform-jitter', 'transform-jitter.data.ts']} size="md" />
+<ComponentPreview files={['transform-jitter', 'transform-jitter.data.ts']} size="lg" />
 
 ### API 参考
 
@@ -85,7 +85,7 @@ description: 派生与抖动保持输入行数不变，只按单行字段补出�
 
 `jitter` 的主链是“选字段 → 生成偏移 → 写回行 → 进入比例尺”。图上方的 `mulberry32(seed)` 是辅助输入，它不改变行数，只为每次字段扰动提供一个确定的 `u`。
 
-<ComponentPreview files="transform-jitter-logic" hideCode size="xl" />
+<ComponentPreview files="transform-jitter-logic" hideCode size="sm" />
 
 `axis` 决定处理 x、y 还是两者，`xField` / `yField` 再确定实际字段。每处理一个目标字段，PRNG 都先前进一步得到 `u ∈ [0,1)`，然后计算：
 

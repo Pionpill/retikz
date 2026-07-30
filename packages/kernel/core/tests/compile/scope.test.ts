@@ -640,6 +640,32 @@ describe('scope.id synthetic bbox 注册', () => {
   });
 });
 
+describe('scope 内延迟 path 的 Scene layout', () => {
+  it('nested circlePath contributes its full bounds to the root layout', () => {
+    const compiled = compileToScene(
+      scene([
+        {
+          type: 'scope',
+          children: [
+            {
+              type: 'path',
+              children: [
+                { type: 'step', kind: 'move', to: [100, 100] },
+                { type: 'step', kind: 'circlePath', radius: 50 },
+              ],
+            },
+          ],
+        },
+      ]),
+    ).scene;
+
+    expect(compiled.layout.x).toBeLessThanOrEqual(50);
+    expect(compiled.layout.y).toBeLessThanOrEqual(50);
+    expect(compiled.layout.x + compiled.layout.width).toBeGreaterThanOrEqual(150);
+    expect(compiled.layout.y + compiled.layout.height).toBeGreaterThanOrEqual(150);
+  });
+});
+
 describe('同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + last-wins', () => {
   it('duplicate_same_frame_two_nodes_warn_last_wins：两个同 id node → 1 条 warn，nodeIndex 取 second', () => {
     const ir = scene([

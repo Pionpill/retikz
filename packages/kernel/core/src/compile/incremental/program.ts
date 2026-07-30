@@ -4,7 +4,12 @@ import { defineRuntimeProgram } from '@retikz/runtime';
 
 import type { AnyCompositeDefinition } from '../../contract';
 import type { CompileWarning } from '../warning';
-import type { CoreProgramDefinition, CoreProgramOptions, CoreProgramPublicRead } from './public';
+import type {
+  CoreProgramDefinition,
+  CoreProgramOptions,
+  CoreProgramPublicRead,
+  CoreProgramRuntimeOptions,
+} from './public';
 import type { CoreProgramArtifact, CoreProgramArtifactInput, CoreProgramRead } from './types';
 
 import { CoreOwnerDefinition } from '../../contract';
@@ -25,8 +30,10 @@ const dispatchDefaultWarning = (warning: CompileWarning): void => {
 /** 创建保留 full oracle 语义的 Core Runtime Program */
 export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []>(
   options: CoreProgramOptions<TComposites>,
+  runtimeOptions: CoreProgramRuntimeOptions = {},
 ): CoreProgramDefinition<TComposites> => {
   const fixedOptions = copyCoreProgramOptions(options);
+  const invalidationOwners = Object.freeze([...(runtimeOptions.invalidationOwners ?? [])]);
   const warningSink = fixedOptions.onWarn ?? dispatchDefaultWarning;
 
   const definition = defineRuntimeProgram<
@@ -36,11 +43,11 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
     CoreProgramPublicRead<TComposites>
   >({
     id: CORE_PROGRAM_ID,
-    owners: [CoreOwnerDefinition],
+    owners: [CoreOwnerDefinition, ...invalidationOwners],
     programs: [],
     tracePhases: [
       { phase: 'update', unit: 'ir-child', outcomes: ['full', 'incremental', 'fallback'] },
-      { phase: 'update', unit: 'scene-change', outcomes: ['incremental', 'fallback'] },
+      { phase: 'update', unit: 'scene-change', outcomes: ['full', 'incremental', 'fallback'] },
     ],
     artifact: {
       capture: input => input,
@@ -76,11 +83,11 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
         view.candidateRevision,
         compiled.primitiveMetadata,
       );
-      const isFallback = view.phase === 'update';
+      const isUpdate = view.phase === 'update';
       const publicRead = Object.freeze({
         output: Object.freeze({ result: compiled.result, diagnostics: compiled.diagnostics }),
         snapshot,
-        ...(isFallback
+        ...(isUpdate
           ? {
               patch: Object.freeze({
                 baseRevision: view.baseRevision,
@@ -93,16 +100,16 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
       context.trace.report({
         phase: 'update',
         unit: 'ir-child',
-        outcome: isFallback ? 'fallback' : 'full',
+        outcome: context.execution,
         visited,
         reused: 0,
         changed: visited,
       });
-      if (isFallback) {
+      if (isUpdate) {
         context.trace.report({
           phase: 'update',
           unit: 'scene-change',
-          outcome: 'fallback',
+          outcome: context.execution,
           visited: 1,
           reused: 0,
           changed: 1,
@@ -118,6 +125,9 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
     },
     update: (previous, view, context) => {
       if (view.phase !== 'update') return { kind: 'fallback' };
+      if (invalidationOwners.some(owner => view.changed(owner))) {
+        return { kind: 'fallback' };
+      }
       const changeSet = view.changeSet(CoreOwnerDefinition);
       const nextSource = view.snapshot(CoreOwnerDefinition).value;
       const nextIndex = createCoreSnapshotIndex(nextSource);

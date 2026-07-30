@@ -9,7 +9,15 @@ import type { CompileWarningCodeValue } from '../warning';
 import { resolveBoundaryRegistry } from '../../providers/boundary';
 import { boundsConnectionEnvelope, isDirectionalAnchor, rect as rectOps } from '../../shared';
 import { CompileWarningCode } from '../constants';
+import {
+  CompositeContractError,
+  isFatalProbeError,
+  isLayoutProbeRecoverableError,
+  LayoutProbeRecoverableError,
+  safeThrownDetail,
+} from '../probe-failure';
 import { parseProviderPayload } from '../provider-payload';
+import { withProviderOutputValidationBoundary } from '../scene-primitive';
 
 /** 保留字：连接面 = 节点自身视觉形状 */
 const SELF = 'shape';
@@ -50,22 +58,33 @@ const connectionEnvelopeCacheKey = (rect: Rect, kind: ConnectionEnvelopeKind): s
 const validateConnectionEnvelope = (
   shapeName: string,
   kind: ConnectionEnvelopeKind,
-  halfWidth: number,
-  halfHeight: number,
+  envelope: unknown,
   irPath?: string,
-): void => {
+): Readonly<{ halfWidth: number; halfHeight: number }> => {
   const path = irPath ?? 'node';
+  if (envelope === null || typeof envelope !== 'object') {
+    throw new CompositeContractError(
+      `Shape '${shapeName}' returned an invalid ${kind} connection envelope at ${path}: expected an object with finite positive half-axes`,
+    );
+  }
+  const { halfWidth, halfHeight } = envelope as Record<string, unknown>;
+  if (typeof halfWidth !== 'number' || typeof halfHeight !== 'number') {
+    throw new CompositeContractError(
+      `Shape '${shapeName}' returned an invalid ${kind} connection envelope at ${path}: expected numeric half-axes`,
+    );
+  }
   if (!Number.isFinite(halfWidth) || !Number.isFinite(halfHeight) || halfWidth <= 0 || halfHeight <= 0) {
-    throw new Error(
+    throw new CompositeContractError(
       `Shape '${shapeName}' returned an invalid ${kind} connection envelope at ${path}: expected finite positive half-axes, received [${halfWidth}, ${halfHeight}]`,
     );
   }
   const tolerance = Number.EPSILON * Math.max(1, halfWidth, halfHeight) * 8;
   if (kind === 'circle' && Math.abs(halfWidth - halfHeight) > tolerance) {
-    throw new Error(
+    throw new CompositeContractError(
       `Shape '${shapeName}' returned an invalid circle connection envelope at ${path}: half-axes must be equal, received [${halfWidth}, ${halfHeight}]`,
     );
   }
+  return { halfWidth, halfHeight };
 };
 
 /** 解析并缓存视觉 shape 对规则连接面的安全包络矩形 */
@@ -74,7 +93,13 @@ const connectionEnvelopeOf = (kind: ConnectionEnvelopeKind, context: ResolveBoun
   const cached = context.connectionEnvelopeCache?.get(cacheKey);
   if (cached !== undefined) return cached;
 
-  const own = context.visualDef.connectionEnvelope?.(context.visualRect, kind, context.visualParams);
+  const rawOwn = context.visualDef.connectionEnvelope?.(context.visualRect, kind, context.visualParams);
+  const own =
+    rawOwn === undefined
+      ? undefined
+      : withProviderOutputValidationBoundary(`Shape '${context.visualDef.name}' connectionEnvelope`, () =>
+          validateConnectionEnvelope(context.visualDef.name, kind, rawOwn, context.irPath),
+        );
   const envelope = own ?? boundsConnectionEnvelope(context.visualRect, kind);
   if (own === undefined && !context.connectionEnvelopeWarnings?.has(kind)) {
     context.connectionEnvelopeWarnings?.add(kind);
@@ -83,7 +108,6 @@ const connectionEnvelopeOf = (kind: ConnectionEnvelopeKind, context: ResolveBoun
       `Shape '${context.visualDef.name}' does not provide a ${kind} connection envelope; falling back to visual bounds.`,
     );
   }
-  validateConnectionEnvelope(context.visualDef.name, kind, envelope.halfWidth, envelope.halfHeight, context.irPath);
   const resolved: Rect = {
     ...context.visualRect,
     width: envelope.halfWidth * 2,
@@ -94,20 +118,32 @@ const connectionEnvelopeOf = (kind: ConnectionEnvelopeKind, context: ResolveBoun
 };
 
 /** 校验 Boundary provider 解析出的最终矩形 */
-const validateResolvedRect = (providerName: string, rect: Rect, irPath?: string): void => {
+const validateResolvedRect = (providerName: string, value: unknown, irPath?: string): Rect => {
+  if (value === null || typeof value !== 'object') {
+    throw new CompositeContractError(
+      `Boundary '${providerName}' resolved an invalid rect at ${irPath ?? 'node'}: expected an object`,
+    );
+  }
+  const { x, y, width, height, rotate } = value as Record<string, unknown>;
   if (
-    !Number.isFinite(rect.x) ||
-    !Number.isFinite(rect.y) ||
-    !Number.isFinite(rect.width) ||
-    !Number.isFinite(rect.height) ||
-    (rect.rotate !== undefined && !Number.isFinite(rect.rotate)) ||
-    rect.width <= 0 ||
-    rect.height <= 0
+    typeof x !== 'number' ||
+    typeof y !== 'number' ||
+    typeof width !== 'number' ||
+    typeof height !== 'number' ||
+    (rotate !== undefined && typeof rotate !== 'number') ||
+    !Number.isFinite(x) ||
+    !Number.isFinite(y) ||
+    !Number.isFinite(width) ||
+    !Number.isFinite(height) ||
+    (rotate !== undefined && !Number.isFinite(rotate)) ||
+    width <= 0 ||
+    height <= 0
   ) {
-    throw new Error(
+    throw new CompositeContractError(
       `Boundary '${providerName}' resolved an invalid rect at ${irPath ?? 'node'}: expected finite positive width and height`,
     );
   }
+  return { x, y, width, height, ...(rotate === undefined ? {} : { rotate }) };
 };
 
 const providerOf = <TDefinition>(registry: ProviderCollection<TDefinition>, key: string): TDefinition | undefined =>
@@ -143,21 +179,29 @@ export const resolveBoundary = (
       value: rawParams,
     });
     let rect: Rect;
-    try {
-      rect =
-        boundaryDef.resolveRect?.(
+    if (boundaryDef.resolveRect === undefined) {
+      rect = visualRect;
+    } else {
+      let rawRect: unknown;
+      try {
+        rawRect = boundaryDef.resolveRect(
           {
             visualRect,
             connectionEnvelope: kind => connectionEnvelopeOf(kind, context),
           },
           params,
-        ) ?? visualRect;
-      validateResolvedRect(type, rect, context.irPath);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      throw new Error(`Boundary '${type}' failed to resolve its rect at ${context.irPath ?? 'node'}: ${message}`, {
-        cause: error,
-      });
+        );
+      } catch (error) {
+        if (isFatalProbeError(error) || isLayoutProbeRecoverableError(error)) throw error;
+        const message = safeThrownDetail(error);
+        throw new LayoutProbeRecoverableError(
+          `Boundary '${type}' failed to resolve its rect at ${context.irPath ?? 'node'}: ${message}`,
+          { cause: error, providerKey: `boundary:${type}` },
+        );
+      }
+      rect = withProviderOutputValidationBoundary(`Boundary '${type}' resolveRect`, () =>
+        validateResolvedRect(type, rawRect, context.irPath),
+      );
     }
     return {
       def: boundaryDef,

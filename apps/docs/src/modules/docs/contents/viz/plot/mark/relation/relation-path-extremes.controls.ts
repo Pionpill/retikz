@@ -2,6 +2,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
 import { pathExtremeRelations } from './relation-path-extremes.data';
 
 /** 路径极值关系 playground 的稳定控件 id */
@@ -15,6 +16,14 @@ export const RELATION_PATH_CONTROL_IDS = {
   labelSide: 'relation-path-label-side',
 } as const;
 
+/** 根据实时控件值创建路径极值配对 operation */
+export const relationPathOperationOf = (values: { [RELATION_PATH_CONTROL_IDS.anchor]: 'x' | 'y' }) => ({
+  kind: 'relate',
+  source: { selector: { kind: 'min', by: values[RELATION_PATH_CONTROL_IDS.anchor] }, fields: { id: 'id' } },
+  target: { selector: { kind: 'max', by: values[RELATION_PATH_CONTROL_IDS.anchor] }, fields: { id: 'id' } },
+  measures: [{ op: 'difference', field: 'y', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+});
+
 /** 路径极值关系的中文属性面板 */
 export const relationPathExtremesControls = definePreviewControls({
   presentation: 'panel',
@@ -23,7 +32,18 @@ export const relationPathExtremesControls = definePreviewControls({
     {
       label: '数据',
       defaultCollapsed: true,
-      controls: [{ kind: 'table', id: 'pathExtremeRelations', label: '路径极值关系', rows: pathExtremeRelations }],
+      controls: [
+        {
+          kind: 'table',
+          id: 'pathExtremeRelations',
+          label: '路径极值关系',
+          views: createPlotTransformTableViews(
+            { source: '原始', result: '关系层配对后' },
+            pathExtremeRelations,
+            relationPathOperationOf,
+          ),
+        },
+      ],
     },
     {
       label: '端点选择',

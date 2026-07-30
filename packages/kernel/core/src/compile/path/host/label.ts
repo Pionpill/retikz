@@ -9,6 +9,7 @@ import { DEFAULT_FONT_SIZE } from '../../constants';
 import {
   combineOpacity,
   layoutInlineLine,
+  normalizeTextMetrics,
   resolveFontSize,
   resolveLineRunsWithWarning,
   toAlphabeticBaselineY,
@@ -183,7 +184,7 @@ export const emitLabelPrimitive = (
   // 纯文本：维持既有 TextPrim 路径（gating 时用反转义后的文字，否则原字符串、零回归）
   const text = resolved.runs.map(r => ('text' in r ? r.text : '')).join('');
   const lineHeight = fontSize * LABEL_LINE_HEIGHT_FACTOR;
-  const m = measureText(text, font);
+  const m = normalizeTextMetrics(measureText(text, font));
   const measuredWidth = m.width;
   const measuredHeight = m.height || lineHeight;
 

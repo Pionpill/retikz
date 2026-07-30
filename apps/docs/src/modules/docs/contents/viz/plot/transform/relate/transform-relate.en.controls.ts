@@ -2,6 +2,8 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
+import { relateOperationOf } from './transform-relate.controls';
 import { monthlyTrend } from './transform-relate.data';
 
 /** 行配对示例的英文控件 */
@@ -16,12 +18,20 @@ export const relateControls = definePreviewControls({
           kind: 'table',
           id: 'rows',
           label: 'Monthly trend',
-          rows: monthlyTrend,
+          views: createPlotTransformTableViews(
+            { source: 'Source', result: 'Paired endpoints' },
+            monthlyTrend,
+            relateOperationOf,
+          ),
           columns: [
             { key: 'series', label: 'Series' },
             { key: 'id', label: 'ID' },
             { key: 'month', label: 'Month' },
             { key: 'value', label: 'Value' },
+            { key: 'sourceId', label: 'Source ID' },
+            { key: 'targetId', label: 'Target ID' },
+            { key: 'delta', label: 'Difference' },
+            { key: 'deltaLabel', label: 'Difference label' },
           ],
         },
       ],

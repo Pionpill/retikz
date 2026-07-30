@@ -2,7 +2,23 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
 import { measurements } from './transform-density.data';
+
+/** 根据实时控件值创建密度估计 operation */
+export const densityOperationOf = (values: {
+  bandwidthMode: 'silverman' | 'value';
+  bandwidth: number;
+  sampleCount: number;
+}) => ({
+  kind: 'density',
+  field: 'value',
+  groupBy: ['group'],
+  bandwidth: values.bandwidthMode === 'value' ? { kind: 'value', value: values.bandwidth } : { kind: 'silverman' },
+  sampleCount: values.sampleCount,
+  xAs: 'densityX',
+  densityAs: 'density',
+});
 
 /** 密度示例的中文控件 */
 export const densityControls = definePreviewControls({
@@ -17,10 +33,16 @@ export const densityControls = definePreviewControls({
           kind: 'table',
           id: 'rows',
           label: '分组测量值',
-          rows: measurements,
+          views: createPlotTransformTableViews(
+            { source: '原始', result: '密度采样后' },
+            measurements,
+            densityOperationOf,
+          ),
           columns: [
             { key: 'group', label: '组' },
             { key: 'value', label: '测量值' },
+            { key: 'densityX', label: '采样位置' },
+            { key: 'density', label: '密度' },
           ],
         },
       ],

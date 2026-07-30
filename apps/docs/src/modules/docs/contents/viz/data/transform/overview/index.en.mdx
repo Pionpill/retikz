@@ -28,7 +28,12 @@ One `<Transform>` represents one operation. For a multi-step pipeline, declare c
 
 This example first summarizes orders into `total` per region, then sorts by that newly produced field in descending order. The second operation can read the first operation's output; swapping their declaration order changes the meaning.
 
-<ComponentPreview files={['transform-component', 'transform-component.data.ts']} />
+<ComponentPreview
+  files={['transform-component', 'transform-component-preview.tsx', 'transform-component.data.ts']}
+  defaultSourceFile="transform-component-preview.tsx"
+  size="lg"
+  caption="Input rows are summarized into total and then sorted by total; swapping the JSX declarations creates a different pipeline."
+/>
 
 ### Choose an entry point
 
@@ -71,14 +76,14 @@ When an explicit `stack` has the same signature as an automatic `stack`, the aut
     {
       label: 'Collecting Transform props from Plot children',
       path: 'packages/viz/plot-react/src/components/build-plot-spec.ts',
-      startLine: 1658,
-      endLine: 1668,
+      startLine: 1642,
+      endLine: 1644,
     },
     {
       label: 'Assembly order for explicit and automatic operations',
       path: 'packages/viz/plot-react/src/components/build-plot-spec.ts',
-      startLine: 1900,
-      endLine: 1925,
+      startLine: 1904,
+      endLine: 1929,
     },
   ]}
 />

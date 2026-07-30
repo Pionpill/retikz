@@ -39,57 +39,71 @@ IntervalMark is the low-level cell mark: it turns each data row into an orthogon
 
 ## Examples
 
-### Configure Basic Bars
+The first four examples can all switch between Cartesian and polar coordinates. The IntervalMark configuration stays the same: Cartesian coordinates usually project a cell as a rectangle, while polar coordinates project the same cell as a sector or annular grid.
+
+### Basic Usage
 
 `x` / `y` are the smallest bar form: `x` binds a categorical field, and `y` binds a numeric field. The coordinate system interprets the categorical field as a band and the numeric field as a span from `0` to the value.
 
-`direction="horizontal"` swaps the bar roles: `x` still binds the numeric field, but it is interpreted as the length from `0` to the value; `y` binds the categorical field and is inferred as a band. Multi-series horizontal arrangement is handled by the arrangement API.
+Under Cartesian coordinates, `direction="horizontal"` swaps the category and value roles. Polar coordinates have no horizontal-bar semantics, so the polar branch keeps `x` as the angular band and `y` as the radial span.
 
-Direction, bar gap, and common cell appearance share one playground: switch direction to observe how the `x` / `y` roles swap, then adjust corner radius, opacity, stroke, labels, or shadow. Vertical bars use `<Scale type="band" paddingInner={gap} paddingOuter={0.15} />` on the categorical x axis. Horizontal bars use `paddingOuter={0}` on the categorical y axis and obtain left/right space from `domainPadding` on the continuous x axis. Every bar playground on this page starts with a bar gap of `0`. These styles lower onto the core `Node` for each cell.
+The same playground also exposes gap, corner radius, opacity, stroke, labels, and shadow. These controls decorate the resulting core `Node` without changing the interval source.
 
-<ComponentPreview files={['bar-position', 'bar-basic.data.ts']} controls={{ name: 'bar-basic' }} size="md" />
+<ComponentPreview
+  files={['bar-position', 'bar-basic.data.ts']}
+  controls={{ name: 'bar-basic' }}
+  size="lg"
+  caption="Switch coordinates to project the same x / y intervals as rectangular or radial bars."
+/>
 
-### Use Continuous Intervals
+### Series Arrangement
 
-`x0` / `x1` are the continuous-interval form. Histogram mode first lets the bin transform produce `binStart` / `binEnd`, then IntervalMark uses them as `bounds.x=extent(x0,x1)`; proportional-width mode uses `width` to allocate bar width by GDP and `x` to show country labels. Switch the interval source in the controls; bin count only appears in histogram mode. Horizontal and vertical padding adjust the x / y continuous scales' `domainPadding`, and both default to `0`.
+`arrangement` controls how multiple series share a categorical band: `dodge` creates adjacent sub-bands, `stack` accumulates continuous extents, and `normalize-stack` normalizes each category before stacking. `group` selects the arrangement groups, while `color` controls visual encoding.
+
+Switching coordinates changes only the projection direction; dodge, stack, and normalized-stack relationships stay intact. `stackOffset` appears only for a regular stack and offers zero, normalized, diverging, centered, and overlapping baselines.
+
+<ComponentPreview
+  files={['bar-series', 'bar-grouped.data.ts']}
+  controls={{ name: 'bar-grouped' }}
+  size="lg"
+  caption="Compare the same series arrangement as rectangular and radial bars."
+/>
+
+### Continuous Intervals
+
+`x0` / `x1` define a continuous extent. Histogram mode first produces `binStart` / `binEnd` through a bin transform, then IntervalMark uses them as x intervals. Proportional mode uses `width` to allocate contiguous interval widths by GDP.
+
+Under polar coordinates, the continuous x interval becomes a continuous angular interval while y remains the radial length. Switch the interval source in the controls; bin count appears only for the histogram branch, and horizontal / vertical padding still applies to the corresponding continuous scales.
 
 <ComponentPreview
   files={['interval-histogram', 'interval-histogram.data.ts', 'bar-variable-width.data.ts']}
-  size="md"
+  size="lg"
+  caption="Compare extent and proportional modes, then switch coordinates to map continuous intervals onto the angular role."
 />
 
-### Describe 2D Cells Explicitly
+### 2D Cells
 
-`bounds` overrides the default inference. A heatmap needs both directions to be bands, so it explicitly writes `bounds={{ x: { kind: 'band' }, y: { kind: 'band' } }}`.
+`bounds` overrides the default inference. A heatmap needs both directions to be bands, so it writes `bounds={{ x: { kind: 'band' }, y: { kind: 'band' } }}` explicitly. Changing y to `full` makes every x band occupy the complete other dimension.
 
-When color mapping is disabled, the same double-band interval draws a fixed grid. It is still IntervalMark; it just does not map a cell value to fill color.
+The same two-dimensional intervals form a rectangular grid under Cartesian coordinates and annular cells under polar coordinates. Disabling color mapping changes only the fill, not the cell boundaries.
 
-<ComponentPreview files={['rect-bounds', 'rect-heatmap.data.ts']} size="md" />
+<ComponentPreview
+  files={['rect-bounds', 'rect-heatmap.data.ts']}
+  size="lg"
+  caption="Switch coordinates to project band × band cells as a rectangular or annular grid."
+/>
 
-### Dodge and Stack Series
-
-`arrangement` controls how multiple interval segments share one category slot: `dodge` places them side by side, `stack` accumulates them, and `normalize-stack` builds a percentage stack. `group` is the arrangement field used for sub-bands or stack segments; `color` is the visual color field and can be the same field or a separate one. `series` remains as a compatibility shortcut: when `group` / `color` are omitted, it acts as the default arrangement and color field. Bar gap still belongs to the categorical dimension's band scale.
-`arrangement="stack"` can use `stackOffset`: `zero` accumulates from 0, `normalize` scales each stack to 0..1, `diverging` separates positive and negative values, `center` centers the full stack, and `overlap` draws every segment from 0. For percentage stacks, use `percent` or `arrangement="normalize-stack"`; that path normalizes values within each category to 0..100 before stacking.
-
-<ComponentPreview files={['bar-series', 'bar-grouped.data.ts']} controls={{ name: 'bar-grouped' }} size="md" />
-
-### Transform Only the Interval Layer
-
-IntervalMark can also derive fields through its own `transform`. The gray points show raw store revenue, while the bar layer runs `derive-interval` only inside this mark and turns each `revenue` value into an interval from 0 to that value.
-
-<ComponentPreview files={['bar-transform', 'bar-transform.data.ts']} size="md" />
-
-### Build Intervals in Polar Coordinates
-
-The same `x` / `y` interval under `coordinate="polar2D"` maps the `x` band to an angular band and the `y` span to radial length.
-
-<ComponentPreview files={['bar-radial', 'bar-radial.data.ts']} size="md" />
+### Pie and Donut
 
 `angle` is the shortcut for pies and donuts: it accumulates a share field into angular extents, and the radial role uses full. A donut is not a new mark; it is a polar coordinate with `innerRadius`.
 
-`padAngle` creates a real angular gap, while `pull` statically offsets a sector along its midline in canvas user units. A number affects every sector; a string binds a data field. The Pie, Donut, and Exploded presets below share one scene.
+This shortcut is valid only in polar coordinates, so it does not expose an invalid coordinate switch. `padAngle` creates a real angular gap, while `pull` offsets a sector along its midline. The Pie, Donut, and Exploded presets below share one scene.
 
-<ComponentPreview files={['interval-sector', 'interval-sector.data.ts']} size="md" />
+<ComponentPreview
+  files={['interval-sector', 'interval-sector.data.ts']}
+  size="lg"
+  caption="angle stays in polar coordinates; adjust inner radius to move between pie and donut forms."
+/>
 
 ## How it works
 

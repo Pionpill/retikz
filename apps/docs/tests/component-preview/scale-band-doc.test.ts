@@ -1,11 +1,14 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import {
   previewControlContract,
   scaleBandControls,
 } from '../../src/modules/docs/contents/viz/plot/scale/position/scale-band.controls';
+import Demo from '../../src/modules/docs/contents/viz/plot/scale/position/scale-band.demo';
 import {
   previewControlContract as englishPreviewControlContract,
   scaleBandControls as englishScaleBandControls,
@@ -18,6 +21,20 @@ const englishPage = readFileSync(resolve(scaleBandRoot, 'index.en.mdx'), 'utf8')
 
 const fieldIdsOf = (controls: typeof scaleBandControls | typeof englishScaleBandControls) =>
   controls.sections.flatMap(section => section.controls.map(control => control.id));
+
+const renderedBandGeometry = (): { barBottoms: Array<number>; xAxisBaseline: number } => {
+  const markup = renderToStaticMarkup(createElement(Demo));
+  const barBottoms = Array.from(
+    markup.matchAll(/<rect x="[\d.-]+" y="([\d.-]+)" width="[\d.-]+" height="([\d.-]+)" fill="(?!none)[^"]+"/g),
+    match => Number(match[1]) + Number(match[2]),
+  );
+  const horizontalAxis = Array.from(markup.matchAll(/<path d="([^"]+)"/g), match => match[1])
+    .map(pathData => pathData.match(/^M [\d.-]+ ([\d.-]+) L [\d.-]+ \1$/))
+    .find(match => match !== null);
+
+  if (horizontalAxis === undefined) throw new Error('Expected a horizontal x-axis baseline');
+  return { barBottoms, xAxisBaseline: Number(horizontalAxis[1]) };
+};
 
 describe('分类位置比例尺文档 playground', () => {
   it('controls 只保留 band / point scale 及其 padding', () => {
@@ -46,5 +63,12 @@ describe('分类位置比例尺文档 playground', () => {
     expect(demoSource).not.toContain('values.showPath');
     expect(chinesePage).toContain('band 为 interval 提供格宽');
     expect(englishPage).toContain('band supplies bandwidth to intervals');
+  });
+
+  it('band 柱形底边贴合横轴基线', () => {
+    const { barBottoms, xAxisBaseline } = renderedBandGeometry();
+
+    expect(barBottoms).toHaveLength(5);
+    expect(barBottoms).toEqual(barBottoms.map(() => xAxisBaseline));
   });
 });

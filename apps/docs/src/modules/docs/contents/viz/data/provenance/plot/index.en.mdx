@@ -1,0 +1,169 @@
+---
+title: Plot Lineage
+description: Plot lineage enriches Data provenance and transform records with mark, encoding, scale, and layout semantics for host-side runtime audits.
+---
+
+Data explains where a row came from and which transforms it passed through. Plot must additionally explain how that row became a mark, which channels and scales it used, and which layout contained it. Plot lineage combines both layers into a `PlotLineageRun` for inspectors, audit panels, and interaction trace-back.
+
+<ComponentAlert
+  type="tip"
+  title="When lineage is useful"
+  description="Rendering a chart does not require lineage. Configure lineage or onLineage only when a host must audit one run, explain a mark's origin, or trace a hit back to data."
+/>
+
+## From Data to Marks
+
+<ComponentPreview files="plot-lineage-flow" size="xs" hideCode />
+
+Plot lineage reuses [Data Provenance](/viz/data/provenance/data), then adds Plot-owned semantics: root versus mark-local transform scopes, mark identity and encoding, declared scales, coordinate layout, and host-approved query or AI metadata.
+
+`PlotLineageRun` is a runtime artifact. It does not enter `IRPlotSpec` and is not written into Scene metadata, so rendered output and lineage can follow different storage, permission, and retention policies.
+
+## Two Separate Paths
+
+<ComponentPreview files="plot-lineage-paths" size="sm" hideCode />
+
+Plot has two similarly named source capabilities with different jobs:
+
+| Path                        | Entry options                                   | Output and use                                                                             |
+| --------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Lowered provenance metadata | `provenance`, `datumProvenance`, `datumIdField` | Core primitive ids / meta in the Scene<br />For locators, stable anchors, and inspection   |
+| Runtime Plot lineage        | `lineage`, `hostLineageMetadata`                | `PlotLineageRun` return value or callback<br />For audit, explanation, and host inspectors |
+
+Lowered provenance can change the ids and metadata carried by generated primitives. Plot lineage only records one run on a side channel. Enabling `lineage` does not copy the artifact into the Scene, and enabling `datumProvenance` does not create a `PlotLineageRun`.
+
+## React Integration
+
+Author the chart with the normal `<Plot>` entry. Pass `lineage` when the host needs the artifact and receive it through `onLineage`. The panel can enable root sorting and mark-local Top-N independently. The chart shows the transformed rows, while `transformSteps` lists both scopes with their input and output row counts:
+
+<ComponentPreview
+  files={['plot-lineage', 'plot-lineage.data.ts', 'plot-lineage-options.ts']}
+  size="lg"
+  caption="Sort and Top-N change the plotted rows; recording switches change only side-channel lineage fields. root and mark[0] identify the two transform scopes."
+/>
+
+The example displays only the lineage summary the host needs. The presence of `onLineage` enables the minimal default configuration even when `lineage` is omitted. Pass `lineage={false}` to disable it explicitly. Use the React adapter's `resolvePlotLineage` when lineage is needed outside rendering.
+
+## Vanilla and SSR
+
+Vanilla and SSR pass the same options to `renderPlot`. Without lineage options it returns an SVG string; with a `lineage` object it returns `{ svg, lineage }`.
+
+```ts
+import { plot, renderPlot } from '@retikz/plot-vanilla';
+
+const spec = plot({
+  data: { reference: 'sales' },
+  scales: [
+    { type: 'band', name: 'x' },
+    { type: 'linear', name: 'y', domainPadding: 0 },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'revenue' } } }],
+});
+
+const { svg, lineage } = renderPlot(
+  spec,
+  { sales },
+  {
+    width: 420,
+    height: 260,
+    lineage: {},
+  },
+);
+```
+
+## Recording Scope
+
+`lineage: {}` keeps a lightweight summary sufficient to identify marks and transform scopes. Higher-cost or sensitive details are independent opt-ins:
+
+| Option            | Default | Records                                                             |
+| ----------------- | ------- | ------------------------------------------------------------------- |
+| `data`            | `{}`    | Data source summaries and transform steps                           |
+| `markIdentity`    | `true`  | Adds mark id; Plot id, data reference, and mark index / type remain |
+| `markEncoding`    | `true`  | Fields consumed by mark channels and their scale bindings           |
+| `transformScopes` | `true`  | Root and mark-local transform segmentation                          |
+| `scaleMappings`   | `false` | Declared `spec.scales` and their channel bindings                   |
+| `layoutContext`   | `false` | Coordinate, view, facet, and track summaries                        |
+| `locatorAnchors`  | `false` | Locator addresses and resolved anchors                              |
+| `rowValues`       | `false` | Final row samples with required row and field limits                |
+| `hostMetadata`    | `false` | Selected host query, AI, permission, and extra metadata             |
+
+`markIdentity: false` omits only the optional mark id. `plotId` when present, `dataReference`, `markIndex`, and `markType` form the minimal artifact skeleton and remain available. `scaleMappings` records only scales declared in `spec.scales` and their mark-channel bindings. Temporary scales derived inside lowering are not a stable contract. `rowValues` is off by default so an audit artifact never copies complete business rows accidentally.
+
+## Interaction Trace-Back
+
+Use `createPlotLineageLocator` to trace a hit datum or series back to its source. Reuse the `spec` and `sales` data above, then create the dataset table explicitly. The result may be `null`; read the anchor and lineage summary only after a hit:
+
+```ts
+import { createPlotLineageLocator } from '@retikz/plot';
+
+const datasets = { sales };
+const locator = createPlotLineageLocator(spec, datasets, {
+  lineage: { locatorAnchors: true },
+});
+
+const result = locator.datum(0);
+if (result !== null) {
+  console.log(result.anchor, result.lineage.sourceIdentity, result.lineage.mark);
+}
+```
+
+This entry is suitable for tooltips, AI explanation panels, or audit navigation. The host still decides what is displayed.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Plot lineage options and result contracts',
+      path: 'packages/viz/plot/src/contract/lineage.ts',
+      startLine: 28,
+      endLine: 172,
+    },
+    {
+      label: 'Plot lineage defaults',
+      path: 'packages/viz/plot/src/pipeline/lineage.ts',
+      startLine: 52,
+      endLine: 90,
+    },
+    {
+      label: 'Lineage construction and locator trace-back',
+      path: 'packages/viz/plot/src/pipeline/lineage.ts',
+      startLine: 267,
+      endLine: 410,
+    },
+    {
+      label: 'React Plot lineage props',
+      path: 'packages/viz/plot-react/src/Plot.tsx',
+      startLine: 32,
+      endLine: 48,
+    },
+    {
+      label: 'React lineage calculation and callback',
+      path: 'packages/viz/plot-react/src/Plot.tsx',
+      startLine: 145,
+      endLine: 164,
+    },
+    {
+      label: 'Vanilla lineage return contract',
+      path: 'packages/viz/plot-vanilla/src/runtime/render-plot.ts',
+      startLine: 14,
+      endLine: 68,
+    },
+  ]}
+/>
+
+## Further Reading
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/data/provenance/data">
+    <span className="font-semibold">Data Provenance</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Understand row provenance and runtime events in Data.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot">
+    <span className="font-semibold">Plot Grammar</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Understand the overall Plot flow and module boundaries.
+    </span>
+  </LinkedCard>
+</div>

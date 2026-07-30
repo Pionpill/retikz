@@ -2,6 +2,8 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
+import { barTransformOperationOf } from './bar-transform.controls';
 import { storeRevenue } from './bar-transform.data';
 
 /** Stable control id for the derived interval baseline */
@@ -16,7 +18,18 @@ export const barTransformControls = definePreviewControls({
     {
       label: 'Data',
       defaultCollapsed: true,
-      controls: [{ kind: 'table', id: 'storeRevenue', label: 'Store revenue', rows: storeRevenue }],
+      controls: [
+        {
+          kind: 'table',
+          id: 'storeRevenue',
+          label: 'Store revenue',
+          views: createPlotTransformTableViews(
+            { source: 'Source', result: 'Derived intervals' },
+            storeRevenue,
+            barTransformOperationOf,
+          ),
+        },
+      ],
     },
     {
       label: 'Transform',

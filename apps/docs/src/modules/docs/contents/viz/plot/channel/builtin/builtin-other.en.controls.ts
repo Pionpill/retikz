@@ -25,12 +25,37 @@ export const builtinOtherControls = definePreviewControls({
         },
       ],
     },
+    {
+      label: 'Path construction',
+      controls: [
+        { kind: 'switch', id: 'orderEnabled', label: 'Sort by step', defaultValue: true },
+        { kind: 'switch', id: 'seriesEnabled', label: 'Split by series', defaultValue: true },
+      ],
+    },
+    {
+      label: 'Drawing order',
+      controls: [
+        {
+          kind: 'range',
+          id: 'pointZIndex',
+          label: 'Series B point zIndex',
+          defaultValue: 2,
+          min: -2,
+          max: 3,
+          step: 1,
+        },
+      ],
+    },
   ],
 });
 
 /** Stable documentation contract for the other-channel example */
 export const previewControlContract = {
   controls: builtinOtherControls,
-  canonicalValues: {},
-  relatedApis: ['PathMark.order', 'PathMark.series'],
+  canonicalValues: {
+    orderEnabled: true,
+    seriesEnabled: true,
+    pointZIndex: 2,
+  },
+  relatedApis: ['PointMark.zIndex', 'PathMark.order', 'PathMark.series'],
 } satisfies PreviewControlContract;

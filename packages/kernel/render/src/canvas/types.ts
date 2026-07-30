@@ -63,6 +63,8 @@ export type DrawOptions = {
    *   缺省（undefined）→ 渲染 base 静态图。连续播放由 runtime 的 rAF 循环推进 time
    */
   time?: number;
+  /** Scene root animation 的独立时刻；缺省与 `time` 相同 */
+  rootAnimationTime?: number;
   /**
    * 按 id 解析单个 prim 的动画时刻 / 模式（per-id 虚拟时钟用；缺省 → 全部用 `time` + 仅自动播 track）
    * @description Canvas per-id 控制（`ctx.animation.restart(id)` 等）经此把全局帧时刻折算成各 id 的有效时刻：

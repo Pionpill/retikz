@@ -86,6 +86,7 @@ describe('ComponentPreviewDialog', () => {
       name: string;
       Component: FC;
       source?: ComponentRenderSource;
+      defaultSourceFile?: string;
       align: AlignKey;
       initialSize: SizeKey;
       controlState: PreviewControlState;
@@ -227,6 +228,47 @@ describe('ComponentPreviewDialog', () => {
     expect(dialog).not.toBeNull();
     expect(dialog!.querySelector('[data-dialog-action-renderer="canvas"]')).not.toBeNull();
     expect(dialog!.querySelector('button[aria-label="Canvas renderer"]')).not.toBeNull();
+
+    act(() => root.unmount());
+  });
+
+  it('Card 与 Dialog 分别按指定文件初始化 React 源码', () => {
+    const source: ComponentRenderSource = {
+      react: {
+        files: [
+          { filename: 'example.demo.tsx', code: 'export default null;', lang: 'tsx', isMain: true },
+          {
+            filename: 'example-preview.tsx',
+            code: 'export const renderPreview = () => null;',
+            lang: 'tsx',
+          },
+        ],
+      },
+    };
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(
+        <ComponentPreviewCard
+          name="default-source-dialog"
+          Component={Demo}
+          source={source}
+          defaultSourceFile="example-preview.tsx"
+        />,
+      );
+    });
+
+    expect(container.textContent).toContain('renderPreview');
+    const maximizeButton = container.querySelector<HTMLButtonElement>('button[aria-label="Maximize"]');
+    expect(maximizeButton).not.toBeNull();
+    act(() => maximizeButton!.click());
+
+    const dialog = container.querySelector<HTMLElement>('[data-dialog-content]');
+    expect(dialog).not.toBeNull();
+    expect(dialog!.textContent).toContain('example-preview.tsx');
+    expect(dialog!.textContent).toContain('renderPreview');
 
     act(() => root.unmount());
   });

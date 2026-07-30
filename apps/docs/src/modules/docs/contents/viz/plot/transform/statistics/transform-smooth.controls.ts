@@ -2,7 +2,26 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
 import { trendSamples } from './transform-smooth.data';
+
+/** 根据实时控件值创建趋势采样流水线 */
+export const smoothOperationsOf = (values: { sampleCount: number; extentMode: 'observed' | 'extend' }) => {
+  const extent: [number, number] | undefined = values.extentMode === 'extend' ? [-1, 5] : undefined;
+  return [
+    {
+      kind: 'smooth',
+      x: 'time',
+      y: 'value',
+      groupBy: ['series'],
+      method: { kind: 'linear' },
+      sampleCount: values.sampleCount,
+      ...(extent !== undefined ? { extent } : {}),
+      xAs: 'trendX',
+      yAs: 'trendY',
+    },
+  ];
+};
 
 /** 趋势示例的中文控件 */
 export const smoothControls = definePreviewControls({
@@ -17,11 +36,17 @@ export const smoothControls = definePreviewControls({
           kind: 'table',
           id: 'rows',
           label: '分组时序样本',
-          rows: trendSamples,
+          views: createPlotTransformTableViews(
+            { source: '原始', result: '趋势采样后' },
+            trendSamples,
+            smoothOperationsOf,
+          ),
           columns: [
             { key: 'series', label: '系列' },
             { key: 'time', label: '时间' },
             { key: 'value', label: '数值' },
+            { key: 'trendX', label: '趋势 X' },
+            { key: 'trendY', label: '趋势 Y' },
           ],
         },
       ],

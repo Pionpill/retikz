@@ -8,6 +8,7 @@ import {
   previewControlContract,
   RELATION_PATH_CONTROL_IDS,
   relationPathExtremesControls,
+  relationPathOperationOf,
 } from './relation-path-extremes.controls';
 import { pathExtremeRelations } from './relation-path-extremes.data';
 
@@ -26,20 +27,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       />
       <PointMark x="x" y="y" fill="#ffffff" stroke="#0f766e" strokeWidth={1} size={4.5} />
       <RelationMark
-        transform={[
-          {
-            kind: 'relate',
-            source: {
-              selector: { kind: 'min', by: values[RELATION_PATH_CONTROL_IDS.anchor] },
-              fields: { id: 'id' },
-            },
-            target: {
-              selector: { kind: 'max', by: values[RELATION_PATH_CONTROL_IDS.anchor] },
-              fields: { id: 'id' },
-            },
-            measures: [{ op: 'difference', field: 'y', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
-          },
-        ]}
+        transform={[relationPathOperationOf(values)]}
         source={{ anchorId: { prefix: 'trend', field: 'sourceId' } }}
         target={{ anchorId: { prefix: 'trend', field: 'targetId' } }}
         style={{
@@ -57,7 +45,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
             position: values[RELATION_PATH_CONTROL_IDS.labelPosition],
             ...(labelSide === 'center' ? { placement: 'inside' as const } : { side: labelSide }),
             sloped: true,
-            textColor: '#ea580c',
+            textColor: 'currentColor',
             font: { size: 11, weight: 'bold' },
           },
           options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] },

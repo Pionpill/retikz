@@ -36,78 +36,64 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 ## 例子
 
-### 连接一条基础轨迹
+以下五个示例都可以在“坐标系”中切换笛卡尔与极坐标。PathMark 的配置保持同一职责：在极坐标中，`x` 是角向位置，`y` 是径向位置。切换到极坐标后会出现“是否闭合”，可以独立比较投影方式与首尾连接关系；默认仍保持开放路径。
 
-`x` / `y` 决定路径经过哪些点，`order` 决定这些点的连接顺序。示例数据刻意打乱了月份行；切换“连接顺序”可以直接比较数据数组顺序与显式 `order="month"`。左侧是二维笛卡尔坐标，右侧是二维极坐标，两边使用同一组行数据。
+### 基础用法
 
-<ComponentPreview files={['line-basic', 'line-basic.data.ts']} size="md" />
+`x` / `y` 决定路径经过哪些点，`order` 决定连接顺序。示例数据刻意打乱了月份行；切换“连接顺序”可以比较显式排序与数据数组顺序。
 
-### 拆分多条路径
+<ComponentPreview
+  files={['line-basic', 'line-basic.data.ts']}
+  controls={{ name: 'line-basic' }}
+  size="lg"
+  caption="切换坐标系、位置字段和连接顺序，观察同一组有序点如何形成轨迹。"
+/>
 
-给 `series` 一个字段，数据会先按该字段拆成多组，每组独立排序和连接。这个例子显式按 `city` 拆分，左侧看多系列折线，右侧看同一组系列在极坐标下形成的线框。
+### 系列与标签
 
-<ComponentPreview files={['line-series', 'line-series.data.ts']} size="md" />
+`series` 会先把数据拆成多组，再让每组独立排序和连接；不写 `series`、只给 `color` 一个分类字段时，也会按颜色字段隐式拆分路径。系列标签直接挂在各自的路径几何上，不需要额外创建文本图层。
 
-不写 `series`、只给 `color` 一个分类字段时，PathMark 也会按该字段隐式拆系列。这个例子换成另一组数据，突出“颜色字段本身就是系列字段”的紧凑写法。
+<ComponentPreview
+  files={['line-series', 'line-series.data.ts']}
+  controls={{ name: 'line-series' }}
+  size="lg"
+  caption="比较单条路径、显式 series 与 color 隐式拆分，并开关每条路径的系列标签。"
+/>
 
-<ComponentPreview files={['line-color-split', 'line-series.data.ts']} size="md" />
+### 连接与样式
 
-### 只变换当前路径层
+`curve` 决定相邻点如何连接，描边色、线宽、虚线和透明度只改变路径外观。灰色数据点是固定参照，可以帮助判断曲线是否穿过原始位置；`monotoneX` / `monotoneY` 在 polar2D 下会降级为 `linear`。
 
-`transform` 写在 PathMark 上时，只改变这条路径层看到的数据。下面的点层始终保留每个渠道的原始值；路径层可以对全部数据拟合一条整体趋势，也可以通过 `groupBy` 按渠道拟合两条趋势线。切换拟合方式时，点层不会随路径层一起变换。
+<ComponentPreview
+  files={['line-curve', 'line-curve.data.ts']}
+  controls={{ name: 'line-curve' }}
+  size="lg"
+  caption="保持数据不变，组合调整连接方式与描边样式，并在极坐标下比较开放与闭合路径。"
+/>
 
-<ComponentPreview files={['line-transform', 'line-transform.data.ts']} size="md" />
+### 闭合与填充
 
-### 设置路径 paint
+开放路径只描绘轨迹；`cycle` 让末点回连首点，`baseline` 再把路径返回到固定基线。`closure` 只构造可填充边界，仍需显式设置 `fill` 才能看到区域。
 
-`stroke` 和 `fill` 都可以写成 `IRPaintSpec`。在同一张图中切换“纯色线”“渐变线”和“渐变面积”，可以比较 paint 作用于描边与填充时的区别；渐变面积会用 `closure={{ kind: 'baseline' }}` 构造可填充边界，并叠加一条只描边的 PathMark 作为上边界。
+<ComponentPreview
+  files={['line-closure', 'line-closure.data.ts']}
+  controls={{ name: 'line-closure' }}
+  size="lg"
+  caption="在两种坐标系中比较开放、首尾闭合和基线闭合，并调整填充与比例尺留白。"
+/>
 
-<ComponentPreview files={['line-paint', 'line-basic.data.ts']} size="md" />
+`baseline` 省略时会跟随值轴：0 在 domain 内时使用 0，否则使用离 0 最近的 domain 边界。逐行堆叠下边界则使用 `closure={{ kind: 'stack', baselineField: ... }}`。
 
-### 在极坐标中闭合
+### 缺失值处理
 
-`closed` 会让末点回连首点。在 `polar2D` 下，PathMark 省略 `closed` 时也默认闭合。示例左侧固定闭合，右侧默认开放；切换“闭合右侧路径”可以直接比较两种连接结果。
+某一行无法投影成有效点时，PathMark 默认在这里断开，并把前后连续数据分别生成 core `Path`。`connectNulls` 可以跨过空值连接；区域填充也遵循同一分段规则，不会默认铺满缺口。
 
-<ComponentPreview files={['line-radar', 'line-radar.data.ts']} size="md" />
-
-### 调整相邻点的连接方式
-
-`curve` 控制相邻点之间如何连接。左侧是二维笛卡尔坐标，右侧是二维极坐标；切换连接方式时，两边会同步更新。默认叠加灰色数据点，便于判断曲线是否穿过原始位置；关闭“显示数据点”可以只观察路径轮廓。极坐标下不额外设置内部半径，PathMark 会按角向和径向位置直接投影。`monotoneX` / `monotoneY` 依赖投影后的屏幕 x / y 单调，在 polar2D 下会自动降级为 `linear`，避免闭合区域产生过长控制柄。
-
-<ComponentPreview files={['line-curve', 'line-curve.data.ts']} size="md" />
-
-| 值           | 说明     | 表现                                                              |
-| ------------ | -------- | ----------------------------------------------------------------- |
-| `linear`     | 直线连接 | 最忠实于相邻点之间的折线关系，适合强调逐段变化                    |
-| `step`       | 中点阶梯 | 在两个 x 位置中间切换 y 值，适合状态或库存类数据                  |
-| `stepBefore` | 前置阶梯 | 先切换到新值，再沿 x 方向推进，适合“新值立即生效”的序列           |
-| `stepAfter`  | 后置阶梯 | 先保持旧值，到下一个 x 位置再切换，适合“旧值持续到下一时刻”的序列 |
-| `basis`      | 平滑样条 | 曲线最柔和，但不保证穿过每个中间点，适合表现整体趋势              |
-| `cardinal`   | 基数样条 | 穿过数据点，曲率比直线自然，但局部极值可能略有过冲                |
-| `catmullRom` | 穿点平滑 | 穿过数据点，并更多保留局部形状，适合一般平滑折线                  |
-| `monotoneX`  | 横向单调 | x 单调时尽量避免曲线超过相邻点的 y 极值，BI 趋势线优先用它        |
-| `monotoneY`  | 纵向单调 | y 单调时尽量避免曲线超过相邻点的 x 极值，适合竖向轨迹             |
-| `natural`    | 自然样条 | 整体连续且端点更放松，适合追求连续曲率的趋势表达                  |
-
-### 构造可填充区域
-
-`closure` 只让 PathMark 闭合成可填充路径，不会自动开启填充。`stroke` 默认开启，写 `stroke="none"` 可以关闭边框线；`fill` 默认关闭，写具体颜色或 paint 后才填充内容。左侧的面积效果由两层 PathMark 组合：一层 `baseline + fill + stroke="none"` 负责填充，另一层普通 path 负责上边界描边；右侧使用 `cycle + fill` 填充雷达多边形。使用“基线值”可以调整左侧面积的回程下边界，右侧的循环闭合不受影响；“横向留白”控制首尾分类点与 y 轴的距离，“纵向留白”控制推断值域在上下两端的额外空间，把两者都调到 `0` 时面积会贴到 y 轴和 x 轴。
-
-<ComponentPreview files={['line-closure', 'line-closure.data.ts']} size="md" />
-
-`baseline` 省略时会跟随值轴：0 落在值轴 domain 内就使用 0；如果显式 domain 不包含 0，例如 `[30, 80]`，则使用离 0 最近的 domain 边界 30。需要固定到其它值时再显式传 `closure={{ kind: 'baseline', baseline: ... }}`。
-
-堆叠面积可以把上边界绑定到 `y`，再把下边界字段交给 `closure.baselineField`。这个字段可以来自 stack transform，也可以像示例一样来自预先算好的 `y0` / `y1`；示例同样用填充层和描边层组合出面积图效果。设置 `curve` 时，上下两条边界都会按同一种方式连接。
-
-<ComponentPreview files={['line-stack-area', 'line-stack-area.data.ts']} size="md" />
-
-### 保留数据缺口
-
-当某一行无法投影成有效点时，PathMark 默认会在这里断开，并为前后两段分别生成 core `Path`。如果路径同时设置了 `closure` 和 `fill`，填充也按同样的段落拆开，不会跨过缺失点铺满中间空档。
-
-这个例子里 `Yasin` 的 2019 年数据缺失，因此线和填充都会在 2018 到 2020 之间断开。确实需要跨过缺口连接时，再显式设置 `connectNulls`。
-
-<ComponentPreview files={['line-interruption', 'line-interruption.data.ts']} size="md" />
+<ComponentPreview
+  files={['line-interruption', 'line-interruption.data.ts']}
+  controls={{ name: 'line-interruption' }}
+  size="lg"
+  caption="开关跨空值连接和区域填充，观察缺口如何同时影响描边与闭合区域。"
+/>
 
 ## 技术原理
 

@@ -2,7 +2,6 @@ import type { IRPaintSpec } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Axis, Plot, PointMark } from '@retikz/plot-react';
-import { Layout } from '@retikz/react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -33,24 +32,25 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     fill,
     stroke: { kind: 'constant' as const, value: values[POINT_STYLE_CONTROL_IDS.stroke] },
     strokeWidth: values[POINT_STYLE_CONTROL_IDS.strokeWidth],
+    fillOpacity: values[POINT_STYLE_CONTROL_IDS.fillOpacity],
+    strokeOpacity: values[POINT_STYLE_CONTROL_IDS.strokeOpacity],
     opacity: values[POINT_STYLE_CONTROL_IDS.opacity],
     size: values[POINT_STYLE_CONTROL_IDS.size],
-    shape: { kind: 'constant' as const, value: values[POINT_STYLE_CONTROL_IDS.shape] },
+    dashed: values[POINT_STYLE_CONTROL_IDS.dashed],
+    shadow: values[POINT_STYLE_CONTROL_IDS.shadow],
   };
 
   return (
-    <Layout width={620} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
-      <Plot data={points} width={300} height={220} x={0} y={20}>
-        <PointMark {...pointProps} />
-        <Axis dimension="x" />
-        <Axis dimension="y" grid />
-      </Plot>
-      <Plot data={points} width={260} height={260} coordinate="polar2D" x={340} y={0}>
-        <PointMark {...pointProps} />
-        <Axis dimension="x" />
-        <Axis dimension="y" grid />
-      </Plot>
-    </Layout>
+    <Plot
+      data={points}
+      width={400}
+      height={280}
+      coordinate={values[POINT_STYLE_CONTROL_IDS.coordinate] === 'polar2D' ? 'polar2D' : undefined}
+    >
+      <PointMark {...pointProps} />
+      <Axis dimension="x" />
+      <Axis dimension="y" grid />
+    </Plot>
   );
 });
 
@@ -60,7 +60,7 @@ export const previewSource = controlledPreview.source;
 /** controls registry 缺失时使用的显式回退 */
 export const previewControls = previewControlContract.controls;
 
-/** 点通道、paint、透明度、大小与形状 playground */
+/** 点的 paint、透明度、大小与描边 playground */
 const Demo: FC = controlledPreview.Component;
 
 export default Demo;

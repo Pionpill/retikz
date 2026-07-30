@@ -52,6 +52,10 @@
     "./animation": {
       "types": "./src/animation/index.ts",
       "default": "./src/animation/index.ts"
+    },
+    "./runtime": {
+      "types": "./src/runtime/index.ts",
+      "default": "./src/runtime/index.ts"
     }
   },
   "publishConfig": {
@@ -80,6 +84,11 @@
         "types": "./dist/types/animation/index.d.ts",
         "import": "./dist/animation/index.js",
         "default": "./dist/animation/index.js"
+      },
+      "./runtime": {
+        "types": "./dist/types/runtime/index.d.ts",
+        "import": "./dist/runtime/index.js",
+        "default": "./dist/runtime/index.js"
       }
     }
   },

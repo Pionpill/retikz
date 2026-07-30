@@ -2,6 +2,7 @@ import { Axis, IntervalMark, Plot, Scale, Transform } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
+import { deriveIntervalOperationOf } from './transform-derive-interval.controls';
 import { tasks } from './transform-derive-interval.data';
 import { deriveIntervalControls, previewControlContract } from './transform-derive-interval.en.controls';
 
@@ -10,11 +11,7 @@ export const previewControls = deriveIntervalControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Plot data={tasks} width={420} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
-    {values.mode === 'fields' ? (
-      <Transform kind="derive-interval" startFrom="start" endFrom="end" />
-    ) : (
-      <Transform kind="derive-interval" from="end" baseline={values.baseline} />
-    )}
+    <Transform {...deriveIntervalOperationOf(values)} />
     <Scale dimension="y" type="linear" domain={[0, 12]} />
     <IntervalMark x="task" color="phase" bounds={{ y: { kind: 'extent', from: 'y0', to: 'y1' } }} />
     <Axis dimension="x" title="Task" />

@@ -7,6 +7,8 @@ description: 按视觉目标查询 plot 内置通道，以及字段、固定值�
 
 各表先列使用方式和可见含义，最后一列再给内部属性落点；第一次阅读可以跳过落点。
 
+表格同时列出字段与字符串常量时，内置扁平样式 prop 会先匹配当前数据字段，未命中才尝试合法常量；同名冲突、显式写法和适用边界见[通道绑定的字段与常量](/viz/plot/channel/binding#字段与常量)。
+
 | 类型     | 通道                                                                                                    | 说明                             |
 | -------- | ------------------------------------------------------------------------------------------------------- | -------------------------------- |
 | 位置     | `x` / `y` / `z`                                                                                         | 字段决定坐标角色                 |
@@ -23,7 +25,7 @@ description: 按视觉目标查询 plot 内置通道，以及字段、固定值�
 
 <ComponentPreview
   files={['builtin-position', 'builtin-position.data.ts']}
-  size="md"
+  size="lg"
   caption="本试验场固定使用笛卡尔坐标，仅切换 x / y 绑定；数据与图表尺寸保持不变。"
 />
 
@@ -39,7 +41,7 @@ description: 按视觉目标查询 plot 内置通道，以及字段、固定值�
 
 <ComponentPreview
   files={['builtin-point-style', 'builtin-point-style.data.ts']}
-  size="md"
+  size="lg"
   caption="作用通道决定颜色写入 color、fill 还是 stroke；其余控件保持主体与数据不变。"
 />
 
@@ -133,7 +135,7 @@ description: 按视觉目标查询 plot 内置通道，以及字段、固定值�
 
 <ComponentPreview
   files={['builtin-path-style', 'builtin-path-style.data.ts']}
-  size="md"
+  size="lg"
   caption="路径圆角为 0 时可以比较尖角、圆角与斜角连接；提高路径圆角后，折点会改为几何圆角，连接样式随之隐藏。"
 />
 
@@ -154,8 +156,8 @@ description: 按视觉目标查询 plot 内置通道，以及字段、固定值�
 
 <ComponentPreview
   files={['builtin-other', 'builtin-other.data.ts']}
-  size="md"
-  caption="输入行被刻意打乱：series 拆成两条线，order 再按 step 恢复连接顺序；点以更高 zIndex 显示在线条上方。"
+  size="lg"
+  caption="输入行被刻意打乱：series 拆成两条线，order 再按 step 恢复连接顺序；A、B 在 step=2 的点重叠，zIndex 决定哪个系列显示在上方。"
 />
 
 | 通道     | 通道值                                             | 含义             | 落点                         |

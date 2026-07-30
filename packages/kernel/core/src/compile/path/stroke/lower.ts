@@ -5,55 +5,112 @@ import type { IRPosition, IRStep } from '../../../schemas';
 
 import { providerDefinitionOf } from '../../../providers/registry';
 import { JsonObjectSchema } from '../../../schemas';
+import { CompositeContractError, LayoutProbeRecoverableError, safeThrownDetail } from '../../probe-failure';
 import { parseProviderPayload } from '../../provider-payload';
+import { withProviderOutputValidationBoundary } from '../../scene-primitive';
 
 const EMPTY_PATH_GENERATORS: ReadonlyMap<string, PathGeneratorDefinition> = new Map();
 
-/** 校验 path generator 产出的单条命令可写入 Scene */
-const assertValidGeneratedCommand = (name: string, cmd: unknown): void => {
+/** 校验 generator 命令并返回只含 canonical 字段的 detached command */
+const parseGeneratedCommand = (name: string, command: unknown): PathCommand => {
   const bad = (detail: string): never => {
-    throw new Error(`path generator '${name}' produced a ${detail}.`);
+    throw new CompositeContractError(`path generator '${name}' produced a ${detail}.`);
   };
-  if (cmd === null || typeof cmd !== 'object') {
-    bad(`non-object command (expected an object with a 'kind')`);
-    return;
+  if (command === null || typeof command !== 'object' || Array.isArray(command)) {
+    return bad(`invalid path command`);
   }
-  const c = cmd as Record<string, unknown>;
-  switch (c.kind) {
-    case 'move':
-    case 'line':
-      if (!isFinitePoint(c.to)) bad(`non-finite coordinate in a '${String(c.kind)}' command`);
-      break;
-    case 'quad':
-      if (!isFinitePoint(c.control) || !isFinitePoint(c.to)) bad(`non-finite coordinate in a 'quad' command`);
-      break;
-    case 'cubic':
-      if (!isFinitePoint(c.control1) || !isFinitePoint(c.control2) || !isFinitePoint(c.to))
-        bad(`non-finite coordinate in a 'cubic' command`);
-      break;
-    case 'arc':
+  const candidate = command as Record<PropertyKey, unknown>;
+  const kind = candidate.kind;
+  if (typeof kind !== 'string') {
+    return bad(`command with unknown kind '${String(kind)}'`);
+  }
+  const invalidPoint = (): never => bad(`non-finite coordinate in a '${kind}' command`);
+  const finitePoint = (value: unknown): IRPosition => {
+    if (!Array.isArray(value)) return invalidPoint();
+    const length = value.length;
+    const x = value[0];
+    const y = value[1];
+    const point = [x, y] as unknown;
+    if (length !== 2 || !isFinitePoint(point)) return invalidPoint();
+    return point;
+  };
+  const optionalDirection = (value: unknown): boolean | undefined => {
+    if (value === undefined) return undefined;
+    if (typeof value !== 'boolean') return bad(`invalid '${kind}' command`);
+    return value;
+  };
+  switch (kind) {
+    case 'move': {
+      const to = finitePoint(candidate.to);
+      return { kind: 'move', to };
+    }
+    case 'line': {
+      const to = finitePoint(candidate.to);
+      return { kind: 'line', to };
+    }
+    case 'quad': {
+      const control = finitePoint(candidate.control);
+      const to = finitePoint(candidate.to);
+      return { kind: 'quad', control, to };
+    }
+    case 'cubic': {
+      const control1 = finitePoint(candidate.control1);
+      const control2 = finitePoint(candidate.control2);
+      const to = finitePoint(candidate.to);
+      return { kind: 'cubic', control1, control2, to };
+    }
+    case 'arc': {
+      const center = finitePoint(candidate.center);
+      const radius = candidate.radius;
+      const startAngle = candidate.startAngle;
+      const endAngle = candidate.endAngle;
+      const counterClockwise = optionalDirection(candidate.counterClockwise);
+      if (!isFiniteNumber(radius) || radius <= 0 || !isFiniteNumber(startAngle) || !isFiniteNumber(endAngle)) {
+        return bad(`invalid 'arc' command`);
+      }
+      return {
+        kind: 'arc',
+        center,
+        radius,
+        startAngle,
+        endAngle,
+        ...(counterClockwise === undefined ? {} : { counterClockwise }),
+      };
+    }
+    case 'ellipseArc': {
+      const center = finitePoint(candidate.center);
+      const radiusX = candidate.radiusX;
+      const radiusY = candidate.radiusY;
+      const rotation = candidate.rotation;
+      const startAngle = candidate.startAngle;
+      const endAngle = candidate.endAngle;
+      const counterClockwise = optionalDirection(candidate.counterClockwise);
       if (
-        !isFinitePoint(c.center) ||
-        !isFiniteNumber(c.radius) ||
-        !isFiniteNumber(c.startAngle) ||
-        !isFiniteNumber(c.endAngle)
-      )
-        bad(`non-finite value in an 'arc' command`);
-      break;
-    case 'ellipseArc':
-      if (
-        !isFinitePoint(c.center) ||
-        !isFiniteNumber(c.radiusX) ||
-        !isFiniteNumber(c.radiusY) ||
-        !isFiniteNumber(c.startAngle) ||
-        !isFiniteNumber(c.endAngle)
-      )
-        bad(`non-finite value in an 'ellipseArc' command`);
-      break;
+        !isFiniteNumber(radiusX) ||
+        radiusX <= 0 ||
+        !isFiniteNumber(radiusY) ||
+        radiusY <= 0 ||
+        (rotation !== undefined && !isFiniteNumber(rotation)) ||
+        !isFiniteNumber(startAngle) ||
+        !isFiniteNumber(endAngle)
+      ) {
+        return bad(`invalid 'ellipseArc' command`);
+      }
+      return {
+        kind: 'ellipseArc',
+        center,
+        radiusX,
+        radiusY,
+        ...(rotation === undefined ? {} : { rotation }),
+        startAngle,
+        endAngle,
+        ...(counterClockwise === undefined ? {} : { counterClockwise }),
+      };
+    }
     case 'close':
-      break;
+      return { kind: 'close' };
     default:
-      bad(`command with unknown kind '${String(c.kind)}'`);
+      return bad(`command with unknown kind '${kind}'`);
   }
 };
 
@@ -116,15 +173,17 @@ export const lowerGeneratorStepToCommands = (args: {
       round,
     });
   } catch (e) {
-    throw new Error(`path generator '${step.name}' threw: ${e instanceof Error ? e.message : String(e)}`, {
+    throw new LayoutProbeRecoverableError(`path generator '${step.name}' threw: ${safeThrownDetail(e)}`, {
       cause: e,
+      providerKey: `path-generator:${step.name}`,
     });
   }
-  if (!Array.isArray(produced)) {
-    throw new Error(
-      `path generator '${step.name}' must return an array of path commands; got ${produced === null ? 'null' : typeof produced}.`,
-    );
-  }
-  for (const cmd of produced) assertValidGeneratedCommand(step.name, cmd);
-  return produced as Array<PathCommand>;
+  return withProviderOutputValidationBoundary(`path generator '${step.name}'`, () => {
+    if (!Array.isArray(produced)) {
+      throw new CompositeContractError(
+        `path generator '${step.name}' must return an array of path commands; got ${produced === null ? 'null' : typeof produced}.`,
+      );
+    }
+    return Array.from(produced, command => parseGeneratedCommand(step.name, command));
+  });
 };

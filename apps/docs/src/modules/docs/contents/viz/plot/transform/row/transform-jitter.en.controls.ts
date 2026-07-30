@@ -2,6 +2,8 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPlotTransformTableViews } from '../../transform-table-views';
+import { jitterOperationOf } from './transform-jitter.controls';
 import { samples } from './transform-jitter.data';
 
 /** 抖动示例的英文控件 */
@@ -17,7 +19,7 @@ export const jitterControls = definePreviewControls({
           kind: 'table',
           id: 'rows',
           label: 'Dose and response',
-          rows: samples,
+          views: createPlotTransformTableViews({ source: 'Source', result: 'Jittered' }, samples, jitterOperationOf),
           columns: [
             { key: 'dose', label: 'Dose' },
             { key: 'response', label: 'Response' },

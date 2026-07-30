@@ -1,6 +1,15 @@
-import type { CompositeCompileChild, IRChild, LayoutChildResult, LayoutCompositeCompileContext } from '@retikz/core';
+import type {
+  CompositeCompileChild,
+  IRChild,
+  LayoutAxisProposal,
+  LayoutChildProbe,
+  LayoutChildResult,
+  LayoutCompositeCompileContext,
+} from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { BoundsRect } from '@retikz/math';
+
+import { LayoutAxisProposalKind, LayoutChildProbeKind, LayoutIntrinsicMode, NaturalLayoutProposal } from '@retikz/core';
 
 import type { PresentedTableModel, SemanticTableCell, TableLayoutManifest } from '../../contract';
 import type { IRTableBorder, IRTableCellBorders, IRTableSpec } from '../../schemas';
@@ -57,7 +66,7 @@ export class TableTransactionStageError extends Error {
   }
 }
 
-/** 执行一个可诊断 transaction 阶段并保留原始错误 */
+/** 给选中 failure 的同一错误对象补充 Table 阶段上下文，保留 Core identity brand */
 const runTableTransactionStage = <T>(
   stage: TableTransactionStage,
   tableId: string | undefined,
@@ -67,11 +76,35 @@ const runTableTransactionStage = <T>(
   try {
     return run();
   } catch (error) {
-    throw new TableTransactionStageError(stage, error, tableId, cellId);
+    const contextual = new TableTransactionStageError(stage, error, tableId, cellId);
+    if (error instanceof Error) {
+      error.message = contextual.message;
+      throw error;
+    }
+    throw contextual;
   }
 };
 
+/** 只为可恢复 probe failure 补充 Table 阶段上下文，Core fatal error 在 layoutChild 调用点直接穿透 */
+const resultOfTableProbe = (
+  context: LayoutCompositeCompileContext,
+  probe: LayoutChildProbe,
+  stage: TableTransactionStage,
+  tableId: string | undefined,
+  cellId: string | undefined,
+): LayoutChildResult => {
+  if (probe.kind === LayoutChildProbeKind.Resolved) return probe.result;
+  return runTableTransactionStage(stage, tableId, cellId, () => context.raise(probe.failure));
+};
+
 const zeroBounds = (): BoundsRect => ({ x: 0, y: 0, width: 0, height: 0 });
+
+/** 把父级水平 proposal 映射为 Table column solver 的有限可用尺寸 */
+const availableColumnSizeOf = (proposal: LayoutAxisProposal): number | undefined => {
+  if (proposal.kind === LayoutAxisProposalKind.Exact) return proposal.value;
+  if (proposal.kind === LayoutAxisProposalKind.Range) return proposal.max;
+  return undefined;
+};
 
 /** 合并两个非空可见 bounds */
 const unionBounds = (left: BoundsRect | undefined, right: BoundsRect): BoundsRect => {
@@ -244,8 +277,12 @@ export const resolveTableTransaction = (
   const resolved = resolveTableLayoutSpec(parsed.layout);
 
   const intrinsic = presented.cells.map(cell =>
-    runTableTransactionStage('intrinsic Cell layout', parsed.id, cell.cellId, () =>
-      context.layoutChild(cell.content, { kind: 'intrinsic' }),
+    resultOfTableProbe(
+      context,
+      context.layoutChild(cell.content, NaturalLayoutProposal),
+      'intrinsic Cell layout',
+      parsed.id,
+      cell.cellId,
     ),
   );
   const columnTracks = resolveTableTrackSizes(
@@ -259,11 +296,12 @@ export const resolveTableTransaction = (
     'column',
     (cell, index) => computeTableCellOuterSize(intrinsic[index].allocationBounds, cell.layout.padding).width,
   );
+  const availableColumnSize = availableColumnSizeOf(context.proposal.x);
   const columnSizes = solveTableTracks({
     tracks: columnTracks,
     contributions: columnContributions,
     gap: resolved.columnGap,
-    ...(context.constraint.kind === 'constrained' ? { availableSize: context.constraint.maxWidth } : {}),
+    ...(availableColumnSize === undefined ? {} : { availableSize: availableColumnSize }),
   });
   const columns = trackLayoutsOf(
     semantic.columns.map(column => column.id),
@@ -278,8 +316,15 @@ export const resolveTableTransaction = (
       cellColumnWidth(cell, columns, resolved.columnGap) - cell.layout.padding.left - cell.layout.padding.right,
     );
     const final = cell.layout.wrap
-      ? runTableTransactionStage('constrained Cell layout', parsed.id, cell.id, () =>
-          context.layoutChild(presentedCell.content, { kind: 'constrained', maxWidth: contentWidth }),
+      ? resultOfTableProbe(
+          context,
+          context.layoutChild(presentedCell.content, {
+            x: { kind: LayoutAxisProposalKind.Range, min: 0, max: contentWidth },
+            y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
+          }),
+          'constrained Cell layout',
+          parsed.id,
+          cell.id,
         )
       : intrinsic[index];
     return { semantic: cell, content: presentedCell.content, intrinsic: intrinsic[index], final };
@@ -364,8 +409,12 @@ export const resolveTableTransaction = (
   const borderResult =
     graph.edges.length === 0
       ? undefined
-      : runTableTransactionStage('Border Scope layout', parsed.id, undefined, () =>
-          context.layoutChild(emitTableBorderScope(graph.edges, parsed.id), { kind: 'intrinsic' }),
+      : resultOfTableProbe(
+          context,
+          context.layoutChild(emitTableBorderScope(graph.edges, parsed.id), NaturalLayoutProposal),
+          'Border Scope layout',
+          parsed.id,
+          undefined,
         );
 
   const width =

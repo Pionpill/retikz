@@ -9,7 +9,7 @@ Plot 运行时把“怎样声明图”和“怎样执行图”分开：React、V
 
 ## 宿主与包边界
 
-<ComponentPreview files="plot-runtime-architecture" size="xxl" hideCode />
+<ComponentPreview files="plot-runtime-architecture" size="xs" hideCode />
 
 React 与 Vanilla 提供不同的 authoring 和宿主接线，但不复制 Plot 算法。Standalone `<Plot>` 把规格包装成 Scene IR 并向 `<Layout>` 注入 `lowerPlots`；`embedPlot()` 与 `createPlotAdapter()` 把同一规格接入 Kernel Vanilla 的 figure / layer。`renderPlot()` 则保留为独立的无 DOM SSR 与 lineage 入口。
 
@@ -17,7 +17,7 @@ React 与 Vanilla 提供不同的 authoring 和宿主接线，但不复制 Plot 
 
 ## 声明与运行时边界
 
-<ComponentPreview files="plot-authoring-convergence" size="xxl" hideCode />
+<ComponentPreview files="plot-authoring-convergence" size="md" hideCode />
 
 React DSL 通过 `buildPlotSpec` 收集 JSX，Vanilla 的 `plot()` 接收 plain object；两者把 axis、facet 与 scaffold binding 交给 `@retikz/plot` 的共享 authoring normalization。`spec` prop 与直接生成的 JSON 仍可提供完整 Plot IR。所有入口都在执行前通过 `PlotSpecSchema`，因此下游只处理 schema-valid 的 `IRPlotSpec`。
 
@@ -32,13 +32,13 @@ React DSL 通过 `buildPlotSpec` 收集 JSX，Vanilla 的 `plot()` 接收 plain 
 
 ## Lowering 与产物
 
-<ComponentPreview files="plot-lowering-flow" size="xxl" hideCode />
+<ComponentPreview files="plot-lowering-flow" size="sm" hideCode />
 
 主 lowering 在 `prepareRows()` 内解析 transform、statistics、row selector、scale、mark 与 format registry，并按 data model、field map 和 resolver 归一化数据。随后执行 transform、解析 frame 并建立 channel registry；channel 与 mark Definition 生成图元，guide、theme、composition 与 layout 补齐辅助和空间关系，最终展开为 `Scope`、`Node`、`Path` 等 Core IR。
 
 `lowerPlots()` 返回供 Core composite 编译使用的 Definition；它不直接创建 DOM，也不直接选择 renderer。`compileToScene()` 消费下沉后的 Core IR 并产生 Scene，React `<Layout>` 或 Vanilla renderer 再决定 SVG、Canvas 或字符串输出。
 
-溯源与定位是基于共享输入的独立重算路径，而不是主 lowering 直接吐出的旁路产物：`lowerPlotWithLineage()` 返回 Core IR children 与 `PlotLineageRun`，`createPlotLocator()` 复用数据准备与 frame 解析来计算 datum / series anchor。它们接收同一份 spec、datasets 与 lowering 配置，但不会把整份运行记录写进 `IRPlotSpec` 或 Scene meta。完整开关与数据边界见[溯源](/viz/plot/lineage)。
+溯源与定位是基于共享输入的独立重算路径，而不是主 lowering 直接吐出的旁路产物：`lowerPlotWithLineage()` 返回 Core IR children 与 `PlotLineageRun`，`createPlotLocator()` 复用数据准备与 frame 解析来计算 datum / series anchor。它们接收同一份 spec、datasets 与 lowering 配置，但不会把整份运行记录写进 `IRPlotSpec` 或 Scene meta。完整开关与数据边界见[Plot 溯源](/viz/data/provenance/plot)。
 
 ## 入口与输出
 
@@ -137,8 +137,8 @@ React DSL 通过 `buildPlotSpec` 收集 JSX，Vanilla 的 `plot()` 接收 plain 
 ## 延伸阅读
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/lineage">
-    <span className="font-semibold">溯源</span>
+  <LinkedCard href="/viz/data/provenance/plot">
+    <span className="font-semibold">Plot 溯源</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">理解运行审计、宿主元数据与交互回查。</span>
   </LinkedCard>
   <LinkedCard href="/kernel/concepts/design/principles">

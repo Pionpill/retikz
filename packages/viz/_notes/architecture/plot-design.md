@@ -50,6 +50,8 @@ Data + Transform + Channel(Encoding):
 
 > viz 组解决的是「有了数据之后如何可视化」。数据语义归共享 `@retikz/data`；底层可视化表达至少分为 plot 与 table：plot 负责 GoG 图形语法（含 layout transform），table 负责表格型展示，geo 作为地图类边界待决策；chart 是 plot 之上的 Tier 3 新手友好封装，负责把 type/config/preset 收敛为 `ChartSpec`，再 lower 成 PlotSpec。几何由 packing / layout 算法（词云、力导向 network、treemap）决定的结构化可视化不设独立 `@retikz/struct` 包，而是作为 plot 的 layout transform：先把结构数据转成位置、尺寸、路由等派生字段，之后统一走 plot 的 channel / scale / coordinate / mark / guide / lowering。
 
+Plot 拥有 guide 的领域解析，但不独占已经去除数据与坐标语义的通用呈现。以 Legend 为例，Plot 负责 channel / scale 绑定、domain / ticks、formatter、theme mapping、guide resolve、provenance / locator 与交互意图；解析后的 title、entries、swatch / ramp / symbol、内部布局与 lowering 交给 `@retikz/standard`。依赖保持 `plot -> standard -> core / math`，Standard 不反向读取 Plot IR。
+
 ## 3. 核心概念
 
 ### 3.1 Data
@@ -808,7 +810,7 @@ intent
 2. **JSON 可序列化 IR 的物理代价**：禁 typed-array（数值只能 `number[]`/对象，内存/GC 重于 Float64Array）；禁 function（**无 in-spec escape hatch**，自定义 mark/stat 只能改包源码，不能像 Vega 在 spec 塞表达式/lambda）。这是 §3.1「数据不进 IR」+ IR 全 JSON-safe 的必然代价。
 3. **Plot 仍是批量急切 lowering**：Core 已有受限的 incremental program，但 Plot 尚未提供领域 incremental program；数据变化仍重跑 Plot pipeline，再交给 Core compile。对比 Vega 细粒度响应式，数据过滤型交互仍会触及这道墙。
 4. **像素尺寸 lower 期钉死**：`lowerPlots` 必须知道 `width/height`（`pipeline/expand`），scale range 即像素区间 `[0,width]`。plot 不能参与 intrinsic sizing；响应式 resize = 整张重 lower（SVG `viewBox` + CSS 那种纯浏览器缩放默认拿不到）。
-5. **纯函数 lowering 里无文字度量**：`fontSize`/`margin` 是输入参数，管线无 text measurement。做不了测量驱动的 tick label 防重叠/旋转/抽稀、legend 自适应宽度——metrics 依赖字体/后端、不可序列化，永远进不了 JSON IR，axis/legend 排版精度有结构上限。
+5. **当前纯 `expand` lowering 无文字度量**：`fontSize`/`margin` 是输入参数，现有管线仍依赖字符估算和固定预留，无法完成测量驱动的 tick label 防重叠/旋转/抽稀与 Legend 自适应宽度。metrics 不进入 JSON IR，但可以作为 Core compile capability 由 layout-aware composite 消费；这是当前 Plot 主链尚未接入通用测量的问题，不再视为永久结构上限。
 6. **Tier1/Tier2 双层 = 表达力被 Kernel 词汇量门控**：plot 每个能力都得能用 Tier 1 图元表达；表达不了就必须由 core owner 补通用原语，并经 `next-kernel → next → next-viz` 集成。这是 PGFPlots/TikZ 税——既是表达力上限也是组织延迟。**这是设计原则本身（§1 / §8 / §9），不是 bug。**
 
 ### 16.2 候选处置（2026-06-07 快照）
@@ -819,7 +821,7 @@ intent
 | 2   | JSON IR 物理代价   | typed-array 收益**跟随 #1**（稠密 primitive 的扁平数组即收益）；in-spec 函数**永不做**（自觉取舍），扩展点在创作层（§5.3 Plot API 组件 / 新 mark 包）  | 后续只增内置 mark/stat，不开放 spec 内函数                                                                                                                                                                                                 |
 | 3   | Plot 无响应式/增量 | 后续性能 milestone 接入 `@retikz/runtime` program                                                                                                      | 守住「纯函数 + 稳定 identity 可得」——provenance 的 `transformedIndex` / `sourceIndex` / id 是 diff 候选 key，后续不能破坏。**展示类交互（hover / tooltip / 高亮 / 选区）用 locator + overlay，不重 lower**；只有数据过滤型交互才需重 lower |
 | 4   | 像素尺寸耦合       | 双机制：**viewBox 等比缩放兜底**（免费、纯 resize 不重 lower，代价文字等比缩放）+ **debounce 重 lower**（要文字不变、布局重排时）                      | API/文档讲清「resize 是等比缩放还是重排」                                                                                                                                                                                                  |
-| 5   | 无文字度量         | 后续处理；最终形态 = **`measureText` 作为编译期 option/capability 注入**（像 `width/height` 一样是选项、不是 IR 内容，不破坏 JSON-IR 原则；Vega 同法） | metrics 永不进 IR；别走两遍渲染回灌，别长期停在「字符数×fontSize」估算                                                                                                                                                                     |
+| 5   | 无文字度量         | 迁移到 Core layout-aware composite 的约束测量与同次 replay；Legend 的通用视觉结构和内部布局消费 Standard Box Layout / Legend，Plot 保留 guide 领域解析 | metrics 永不进 IR；不走两遍渲染回灌，不长期停在「字符数×fontSize」或固定带宽估算，也不在 Plot 建立第二套容器 solver                                                                                                                        |
 | 6   | Tier1/Tier2 门控   | 不处理——这是设计原则（§1 / §9）                                                                                                                        | 守纪律：缺能力**下沉补 core**，不在 plot 绕开自造（AGENTS.md 已成硬规）                                                                                                                                                                    |
 
 ### 16.3 候选处置仍逆风的边界（定位声明）

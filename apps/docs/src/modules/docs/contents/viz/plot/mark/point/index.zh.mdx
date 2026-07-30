@@ -35,44 +35,50 @@ PointMark 是底层点 mark：它只负责把每行数据投影成一个坐标�
 
 ## 例子
 
-### 在坐标系中定位
+以下四个示例都可以在“坐标系”中切换笛卡尔与极坐标。PointMark 配置保持不变；在极坐标中，`x` 是角向位置，`y` 是径向位置。
 
-`x` / `y` 决定每行数据的锚点。左侧是笛卡尔二维坐标系，右侧是极坐标二维坐标系；同一组字段在不同坐标系下会被解释成不同的几何位置。
+### 基础用法
 
-<ComponentPreview files={['point-position', 'point-api.data.ts']} controls={{ name: 'point-position' }} size="md" />
-
-### 只变换当前点层
-
-`transform` 可以直接写在当前 PointMark 上。下面的灰点仍然使用原始行，彩色气泡层只在当前图元内执行 `jitter`，把重叠的 `orders` 点在 y 方向轻微抖开。
-
-<ComponentPreview files={['point-transform', 'point-transform.data.ts']} size="md" />
-
-### 调整点的外观
-
-`color` / `size` / `opacity` / `shape` / `stroke` / `strokeWidth` 都只改变点的可见形态，不改变投影位置。字段绑定适合用数据编码外观；固定颜色与 `IRPaintSpec` 适合整层使用一致的纯色或渐变。
-
-`stroke`、`strokeWidth`、`opacity`、`fillOpacity`、`rotate` 等 Node 样式都支持字段绑定。组件层的字符串 / 数字是语法糖：如果有同名数据字段，字符串会变成 `{ kind: 'field', value: FieldName }`；如果没有字段但能作为合法常量使用，就变成 `{ kind: 'constant', value }`；否则会跳过并给出 warning。需要消除歧义时可以直接写显式形式。
-
-<ComponentPreview files={['point-style', 'point-api.data.ts']} size="md" />
-
-### 显示标签或文本点
-
-点上的文字优先使用 `label`：它会把文本挂到每个散点对应的 core `Node.label` 上，因此一层 `PointMark` 就能同时画点和显示标签。playground 覆盖中心、四边与四角；`labelPosition` 还接受角度和 `{ boundary, fraction }`，用于沿真实边界精确定位。颜色、透明度、字体、旋转与正立约束分别由 `labelTextColor`、`labelOpacity`、`labelFont`、`labelRotate` 和 `labelKeepUpright` 控制。`text` 是另一种模式：它把点本身替换成无边框文本 Node，适合只画文字点而不画圆点；`dx` / `dy` 用来做屏幕方向的微调。
-
-<ComponentPreview files={['point-text', 'point-api.data.ts']} controls={{ name: 'point-text' }} size="md" />
-
-### 复用位置角色
-
-下面只看位置角色如何被坐标系解释：PointMark 自身不变，变的是位置字段被投影到直线、圆环或平面中的方式。
-
-#### 一维：直线和极坐标
-
-一维坐标系只消费 `x`。在直线坐标里它落到一条轴上，在极坐标里同一组值落到圆环上。
+`x` / `y` 决定每行数据的锚点，PointMark 再在每个锚点生成一个默认圆点。可以继续把分类字段映射为颜色，或把数值字段映射为尺寸，从普通散点切换成气泡。
 
 <ComponentPreview
-  files={['point-coordinate-1d', 'point-coordinates.data.ts']}
-  controls={{ name: 'point-coordinate-1d' }}
-  size="md"
+  files={['point-position', 'point-api.data.ts']}
+  controls={{ name: 'point-position' }}
+  size="lg"
+  caption="切换位置、颜色与尺寸编码，对比普通散点、分类散点和气泡。"
+/>
+
+### 样式变换
+
+`fill` / `stroke` / `opacity` 等 Node 样式只改变散点的视觉外观，不改变上一例建立的投影位置。这里可以直接比较渐变、透明度、虚线描边与阴影。
+
+<ComponentPreview
+  files={['point-style', 'point-api.data.ts']}
+  controls={{ name: 'point-style' }}
+  size="lg"
+  caption="保持 x / y 不变，组合调整颜色填充、透明度、描边、尺寸和阴影。"
+/>
+
+### 文本标签
+
+PointMark 有两种文字用法：`label` 保留散点图形，再把文字挂到对应的 `Node.label`；`text` 则把散点本身替换成无边框文本 Node，因此散点也可以只有文字内容。
+
+<ComponentPreview
+  files={['point-text', 'point-api.data.ts']}
+  controls={{ name: 'point-text' }}
+  size="lg"
+  caption="切换“点标签”和“文本点”，再调整颜色、字号和字重观察两种文字形态。"
+/>
+
+### 节点形态
+
+PointMark 在每个位置生成的是 core Node，而不是固定的圆。`shape` 既可以是圆、矩形、菱形等简单形状名，也可以是带 `params` 的星形、多边形或已注册的自定义形状引用；参数化形状还能继续调整角数或边数。
+
+<ComponentPreview
+  files={['point-node-shape', 'point-api.data.ts']}
+  controls={{ name: 'point-node-shape' }}
+  size="lg"
+  caption="保持数据和位置不变，切换形状并调整尺寸、旋转、星形角数或多边形边数。"
 />
 
 ## 技术原理
