@@ -9,7 +9,7 @@
 
 alpha.1 先 direct lowering Table，再单独计算 manifest。进入内容驱动布局后，这会重复 presentation / measurement，且第二次运行可能使用不同 definitions、datasets、host capabilities 或 occurrence identity，导致 Scene 与 manifest 漂移。
 
-Table alpha.2 必须把 normalize、内容 layout、轨道求解、replay、border lowering 与 manifest 绑定到同一次 Core compile。Table 只消费 Kernel v0.5-alpha.1 已发布的 layout-aware composite、compile-local occurrence 与 typed artifact 能力，不修改 Kernel 产品文件。
+Table alpha.2 必须把 normalize、内容 probe、轨道求解、replay、border lowering 与 manifest 绑定到同一次 Core compile。Table 只消费 Core 的 layout proposal / probe、compile-local occurrence 与 typed artifact 能力，不建立私有布局或失败传播机制。
 
 ## 决策
 
@@ -19,19 +19,19 @@ Table alpha.2 必须把 normalize、内容 layout、轨道求解、replay、bord
 
 1. parse Table spec，resolve Structure 与 Presentation definitions
 2. normalize canonical rows、columns、Cells、span 与 resolved layout
-3. intrinsic layout 所有 Cell 内容并求 columns
-4. 对 `wrap: true` 的 Cell 做 width-constrained layout并求 rows
+3. 用 natural proposal probe 所有 Cell 内容并求 columns
+4. 对 `wrap: true` 的 Cell 发起 x 轴 range proposal probe 并求 rows
 5. 计算 Cell/content boxes、fit、alignment、overflow 与 Border Graph
 6. 用选中的 Core replay result 构造最终 Scope wrapper，emit border Paths
 7. 同时返回 Core child 与 `TableLayoutManifest` typed artifact
 
-阶段之间只传递 detached plain data、Core layout result 与 compile-local replay；不得在 Table 私有 public type 中暴露 opaque replay。intrinsic、constrained 与 Border Scope 失败使用 `TableTransactionStageError` 保留精确 stage、可用的 Table/Cell id 和原始 cause；外层 resolver 不抹除这些信息。
+阶段之间只传递 detached plain data、Core layout result 与 compile-local replay；不得在 Table 私有 public type 中暴露 opaque replay。selected failed probe 通过 `context.raise()` 保留唯一 Core leaf failure envelope，并补充精确 stage 与可用的 Table/Cell id；fatal error 在 `layoutChild()` 调用点直接穿透，外层 resolver 不重复包装 provider 或抹除原始 cause。
 
 ### replay wrapper tree
 
 fit scale、Table-local translation、clip、id 与 meta 通过 `context.replay()` / `context.scope()` 包在选中 replay root 外层。wrapper tree 只重组 compile-local output，不重新 layout child，也不改写 child 自带 transforms。
 
-因此 selected layout result 的 bounds、artifacts、references 与最终 output 始终同源；discarded intrinsic result 不会泄漏到最终 artifact collection。
+因此 selected layout result 的 bounds、artifacts、references 与最终 output 始终同源；discarded natural / range probe 不会泄漏到最终 artifact collection。
 
 ### 编译入口与 artifact 选择
 

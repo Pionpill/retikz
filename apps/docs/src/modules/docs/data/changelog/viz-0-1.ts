@@ -4,7 +4,7 @@ import { esmOnlyChangeItem } from './esm-only';
 
 export const vizV01: Release = {
   minor: 'v0.1',
-  stableDate: null,
+  stableDate: '2026-07-30',
   packages: [
     {
       pkg: '@retikz/data',
@@ -967,11 +967,11 @@ export const vizV01: Release = {
       ],
       subVersions: [
         {
-          version: 'alpha.3',
+          version: 'alpha.2',
           date: '2026-07-29',
           summary: {
-            zh: '将 manual Table 收口为可直接手写和持久化的矩形 `rows`：Table 统一推导轨道、Cell 地址与稳定来源坐标，不再要求作者重复声明 dimensions 与 addressed cells。',
-            en: 'Converges manual Table on a directly authorable and persistable rectangular `rows` matrix. Table now derives tracks, Cell addresses, and stable source coordinates without repeated dimensions or addressed cells.',
+            zh: '完成可持久化 manual authoring 与内容驱动的二维约束布局：矩形 rows、轨道、span、Cell box、wrap/fit/overflow、Border Graph 与 typed manifest 在同一次 Core compile 中闭环。',
+            en: 'Completes persistable manual authoring and content-driven two-dimensional layout: rectangular rows, tracks, spans, Cell boxes, wrap/fit/overflow, the Border Graph, and typed manifests now close in one Core compile.',
           },
           items: [
             {
@@ -994,16 +994,6 @@ export const vizV01: Release = {
                 en: 'The package root adds `ManualTableCellSchema` / `IRManualTableCell` and removes `TableCellSchema` / `IRTableCell` plus `TableCellAddressSchema` / `IRTableCellAddress` without compatibility aliases. Manual manifest sources move from `cellIndex` to persisted `{ row, column }` coordinates.',
               },
             },
-          ],
-        },
-        {
-          version: 'alpha.2',
-          date: '2026-07-27',
-          summary: {
-            zh: '完成内容驱动的二维约束布局：轨道、span、Cell box、wrap/fit/overflow、Border Graph 与 typed manifest 在同一次 Core compile 中闭环。',
-            en: 'Completes content-driven two-dimensional layout: tracks, spans, Cell boxes, wrap/fit/overflow, the Border Graph, and typed manifests now close in one Core compile.',
-          },
-          items: [
             {
               label: { zh: 'BREAKING：约束轨道与 span', en: 'BREAKING: Constrained tracks and spans' },
               content: {
@@ -1092,11 +1082,11 @@ export const vizV01: Release = {
       ],
       subVersions: [
         {
-          version: 'alpha.3',
+          version: 'alpha.2',
           date: '2026-07-29',
           summary: {
-            zh: '`<ManualTable>` 的 props 与 Row/Cell markers 统一生成同一矩形 `rows`，marker 会按 span occupancy 推导宽度并补 `null`。',
-            en: '`<ManualTable>` props and Row/Cell markers now produce the same rectangular `rows`; markers derive width from span occupancy and pad unused coordinates with `null`.',
+            zh: 'React Table 接入矩形 rows、span-aware marker、完整 alpha.2 authoring、选定 Layout host props 与同次 compile manifest observer。',
+            en: 'Connects React Table to rectangular rows, span-aware markers, complete alpha.2 authoring, selected Layout host props, and same-compile manifest observation.',
           },
           items: [
             {
@@ -1109,21 +1099,11 @@ export const vizV01: Release = {
                 en: 'Props mode accepts `rows` with optional `rowKinds` and no numeric dimensions. Marker mode accepts neither `rows` nor `rowKinds`, and the two sources are mutually exclusive. An all-empty marker tree cannot infer width; use an explicit null-matrix `rows` value instead.',
               },
             },
-          ],
-        },
-        {
-          version: 'alpha.2',
-          date: '2026-07-27',
-          summary: {
-            zh: 'React Table 接入完整 alpha.2 authoring、span-aware marker、选定 Layout host props 与同次 compile manifest observer。',
-            en: 'Connects React Table to complete alpha.2 authoring, span-aware markers, selected Layout host props, and same-compile manifest observation.',
-          },
-          items: [
             {
               label: { zh: '完整 props 与 span-aware markers', en: 'Complete props and span-aware markers' },
               content: {
-                zh: '`DetailColumn` 透传 header/body Cell layout；`Row` / `Cell` 按首个未占用槽位放置并让 span 预占未来行。完整 `columns` / `cells` props 仍是 JSON authoring 真源。',
-                en: '`DetailColumn` forwards header/body Cell layout, while `Row` / `Cell` place markers in the first unoccupied slot and reserve future rows for spans. Complete `columns` / `cells` props remain the JSON authoring source of truth.',
+                zh: '`DetailColumn` 透传 header/body Cell layout；`Row` / `Cell` 按首个未占用槽位放置并让 span 预占未来行。Detail `columns` 与 Manual `rows` props 分别是 JSON authoring 真源。',
+                en: '`DetailColumn` forwards header/body Cell layout, while `Row` / `Cell` place markers in the first unoccupied slot and reserve future rows for spans. Detail `columns` and Manual `rows` props are their respective JSON authoring sources of truth.',
               },
             },
             {
@@ -1196,11 +1176,11 @@ export const vizV01: Release = {
       ],
       subVersions: [
         {
-          version: 'alpha.3',
+          version: 'alpha.2',
           date: '2026-07-29',
           summary: {
-            zh: '`manualTable()` 保持薄封装，但输入迁移为与 Table schema 完全相同的矩形 `rows` contract。',
-            en: '`manualTable()` remains a thin wrapper, while its input moves to the same rectangular `rows` contract as the Table schema.',
+            zh: '`manualTable()` 改用矩形 rows；`renderTable()` 改为一次 `compileTable()` 取得 SVG 与 manifest，并对齐 Kernel Vanilla 的 compile / animation 选项。',
+            en: '`manualTable()` moves to rectangular rows, while `renderTable()` uses one `compileTable()` call for SVG and manifest, aligned with Kernel Vanilla compile and animation options.',
           },
           items: [
             {
@@ -1213,16 +1193,6 @@ export const vizV01: Release = {
                 en: 'Numeric dimensions and addressed `cells` inputs are removed. Author each coordinate directly in `rows`, then let `@retikz/table` validate and construct the spec.',
               },
             },
-          ],
-        },
-        {
-          version: 'alpha.2',
-          date: '2026-07-27',
-          summary: {
-            zh: '`renderTable()` 改为一次 `compileTable()` 取得 SVG 与 manifest，并对齐 Kernel Vanilla 的 compile / animation 选项。',
-            en: '`renderTable()` now uses one `compileTable()` call for SVG and manifest, aligned with Kernel Vanilla compile and animation options.',
-          },
-          items: [
             {
               label: { zh: 'BREAKING：composites 进入 compile', en: 'BREAKING: Composites move under compile' },
               content: {

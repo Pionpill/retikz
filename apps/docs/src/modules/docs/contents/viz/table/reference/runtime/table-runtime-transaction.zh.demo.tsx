@@ -68,9 +68,9 @@ const Demo: FC = () => (
             align="middle"
             lineHeight={16}
           >
-            <Text font={{ size: 14, weight: 'bold' }}>Intrinsic probes</Text>
+            <Text font={{ size: 14, weight: 'bold' }}>Natural probes</Text>
             <Text fill="gray" font={{ size: 11 }}>
-              intrinsic layoutChild
+              NaturalLayoutProposal
             </Text>
           </Node>
           <Node
@@ -86,7 +86,7 @@ const Demo: FC = () => (
           >
             <Text font={{ size: 14, weight: 'bold' }}>列求解 + wrap</Text>
             <Text fill="gray" font={{ size: 11 }}>
-              constrained 重测
+              x range proposal
             </Text>
           </Node>
           <Node
@@ -150,9 +150,9 @@ const Demo: FC = () => (
           align="middle"
           lineHeight={15}
         >
-          <Text font={{ size: 13, weight: 'bold' }}>父级约束</Text>
+          <Text font={{ size: 13, weight: 'bold' }}>父级 x proposal</Text>
           <Text fill="gray" font={{ size: 11 }}>
-            maxWidth
+            exact / range.max
           </Text>
         </Node>
         <Node
@@ -214,8 +214,8 @@ const Demo: FC = () => (
           {renderMobileNode({
             id: 'mobile-intrinsic',
             position: [-40, -85],
-            title: 'Intrinsic probes',
-            detail: 'intrinsic layoutChild',
+            title: 'Natural probes',
+            detail: 'NaturalLayoutProposal',
             width: 200,
             color: 'dodgerblue',
           })}
@@ -223,7 +223,7 @@ const Demo: FC = () => (
             id: 'mobile-columns',
             position: [-40, -20],
             title: '列求解 + wrap',
-            detail: 'constrained 重测',
+            detail: 'x range proposal',
             width: 200,
             color: 'dodgerblue',
           })}
@@ -256,8 +256,8 @@ const Demo: FC = () => (
         {renderMobileNode({
           id: 'mobile-parent-constraint',
           position: [130, -20],
-          title: '父级约束',
-          detail: 'maxWidth',
+          title: '父级 x proposal',
+          detail: 'exact / range.max',
           width: 100,
           color: 'gray',
         })}

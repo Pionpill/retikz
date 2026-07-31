@@ -2,6 +2,7 @@
 
 Kernel 开发使用的 private 性能基准工具，不发布 npm 包。
 
+- `pnpm --filter @retikz/bench dev`：启动 React Performance Lab，供开发者本机 Inspect、Compare 与 Measure
 - `pnpm bench:install-browser`：安装 lockfile 对应的 Chromium build
 - `pnpm bench:check`：只读检查确定性预算与功能 oracle，不采集 timing runner 硬件环境
 - `pnpm bench:report`：在固定 Node / Chromium 环境生成 ignored wall-clock 报告
@@ -17,3 +18,17 @@ SVG与Canvas在真实Chromium中执行，Canvas oracle来自完整像素摘要�
 SVG与Canvas各用同一5000实体fixture运行`static-full`、`retained-full`与`retained-auto`。三路都与独立full oracle对账；deterministic baseline额外冻结`execution`，其中static的`full`来自公共view mode，retained的`full`或`incremental`来自Runtime/Core/Render trace，漏报或重复outcome都会失败。
 
 同名三组wall-clock场景只写入ignored report，便于开发者在同一机器手动比较Session开销、forced full和增量更新；它们不在`relativeGuards`内，也不修改tracked timing baseline。只有收集稳定样本并经独立审查后，才能另行批准进入timing gate。
+
+## Performance Lab
+
+根页面是面向开发者的交互式实验环境，首版聚焦 Kernel 当前的 `static-full`、`retained-full` 与 `retained-auto`。Inspect 会在真实 SVG / Canvas host 中执行所选策略，展示 Runtime trace、Scene Patch、diagnostics 与确定性工作量；Compare / Measure 使用同一 fixture 完成采样后再刷新图表，避免 React 重绘进入计时窗口。首版 Lab 尚未接入 runner 使用的生命周期探针，界面会明确显示该证据不可用，不会推断 mount、dispose 或 live handles 状态。
+
+工作台参考 shadcn `sidebar-07` 组织模块、测试集、配置、预览与报告。Sidebar、Dropdown Menu、Sheet、Select、Tooltip 等基础组件由 shadcn CLI 下载到 Bench 自己的 `src/playground/components/ui`，业务组件只组合这些官方 vendored 原语。左侧切换 Core / Plot / Table 模块并选择已接入的真实测试集；Header 提供高频运行配置，低频采样和环境信息收进详细配置 Sheet；运行成功后，结果在预览右侧作为可关闭、可重新打开的持久报告展示。首版只有 Core 测试集可用，Plot 与 Table 仅保留未来入口。
+
+界面沿用 `apps/docs` 的本地偏好方案：`react-i18next` 提供中文 / 英文，Zustand 持久化 light / dark 主题并把 `.dark` 同步到 `<html>`。Bench 使用独立的 `retikz-bench-lang` 与 `retikz-bench-theme` 存储键，不与文档站偏好互相覆盖。
+
+报告中的策略对比图由 `@retikz/plot-react` 经 Plot lowering、Core 与 SVG renderer 绘制，Bench 不引入平行图表库。页面中的 wall-clock 数据只用于本机探索，不可替代固定环境报告，也不能写 tracked baseline。Playwright 正式 runner 使用独立的 `/runner.html`，因此 React、Tailwind、Plot 与面板 DOM 不会进入现有 timing 测量页面。确定性门禁仍以 `pnpm bench:check` 为准。
+
+## Source boundaries
+
+`src/benchmark`只负责 CLI、Playwright 调度与无界面的 browser benchmark 入口；`src/playground`只负责 React、shadcn、国际化、主题与可视化观测；`src/shared`保存两边共用的场景、测量、报告和 browser runtime 原语。Benchmark 与 Playground 只能依赖 Shared，不能互相导入。

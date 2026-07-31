@@ -8,7 +8,7 @@ import {
   createStableGroupScene,
   updateSimpleNodeFill,
   updateStableGroupFill,
-} from '../src/fixtures';
+} from '../src/shared';
 
 /** 递归统计 Scene primitive occurrence */
 const countPrimitives = (primitives: ReadonlyArray<ScenePrimitive>): number =>

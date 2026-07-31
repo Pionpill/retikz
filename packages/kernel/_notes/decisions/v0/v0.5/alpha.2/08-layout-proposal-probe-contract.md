@@ -1,10 +1,10 @@
 # ADR-08：Child Layout Proposal、Probe 与 Alignment Guide 合同
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-07-29
 - 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-06](./06-box-layout-composite-contract.md) · [alpha.1 ADR-07](../alpha.1/07-layout-aware-composite.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [Standard Box Layout roadmap](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/roadmap.md)
 
-> Alpha Architecture Gate：Round 1、2 BLOCKED 后完成对应修订，Round 3/3 PASS（BLOCKING / WARNING 均为 0）；2026-07-29 已获得人工实现授权，代码、测试与双语文档已实现，正在完成出口审计并等待人工接受。
+> Alpha Architecture Gate：Round 1、2 BLOCKED 后完成对应修订，Round 3/3 PASS（BLOCKING / WARNING 均为 0）；2026-07-29 获得人工实现授权，代码、测试、双语文档与出口审计完成后，于 2026-07-30 获人工接受。
 
 ## 背景
 
@@ -446,4 +446,3 @@ React 与 Vanilla 继续通过现有 compile options 注入完全相同的 Compo
 - mixed / TeX 当前保持原子 contribution；完整 run-level intrinsic sizing、CSS writing mode、百分比与 aspect-ratio transfer 不在本 ADR 范围
 - 非轴保持变换后的 alignment guide 被省略；需要二维直线、点或区域 guide 时应另立公开空间引用能力
 - Standard 仍需在自己的 ADR 中实现并验证 Box / Flex / Grid / Overlay slot 规则、baseline policy、overflow 与 clip；Core 不拥有这些 solver 语义
-- ADR 保持 Proposed，直到人工完成最终 review 并明确接受；实现完成与 commit 不自动等于 Accepted

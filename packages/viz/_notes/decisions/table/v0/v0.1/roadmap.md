@@ -11,15 +11,15 @@ v0.1 发布前应覆盖明细、分组、汇总与交叉表等核心静态表格
 
 ## Milestones
 
-| Milestone                       | 主题                     | 主要产出                                                                                                                              | Gating                                                         | 状态   |
-| ------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------ |
-| [alpha.1](./alpha.1/roadmap.md) | **最薄纵向闭环**         | TableSpec、manual/detail、基础 Cell、固定轨道布局、lowering、React/Vanilla                                                            | Core composite 与 DataReference 已就绪                         | 已完成 |
-| [alpha.2](./alpha.2/roadmap.md) | **二维约束布局**         | auto/fraction/minmax、span、border、bounds-aware alignment、fit/overflow                                                              | 通用 `IRChild` constrained layout                              | 已完成 |
-| [alpha.3](./alpha.3/roadmap.md) | **Authoring 与呈现语法** | manual row-major persistence、formatter、presentation、selector/rule、条件视觉 scale、theme、Legend descriptor / Standard Legend 消费 | alpha.2 canonical model 与既有 registry 边界；Standard alpha.3 | 进行中 |
-| alpha.4                         | **分组与汇总**           | group、hierarchy、subtotal、grand total                                                                                               | Data aggregate / lineage                                       | 计划中 |
-| alpha.5                         | **交叉表**               | pivot、matrix、多层 header、spanner/stub/corner/row group                                                                             | Data 分组与聚合能力                                            | 计划中 |
-| alpha.6                         | **分片与追溯收口**       | fragmentation、重复 header、完整 manifest/lineage/locator/diagnostics                                                                 | Core / host artifact 协作边界                                  | 计划中 |
-| beta.1                          | **稳定化**               | API 收口、adversarial tests、双语 docs、发布检查                                                                                      | alpha completeness 全部闭环                                    | 计划中 |
+| Milestone                       | 主题                           | 主要产出                                                                                                | Gating                                                         | 状态   |
+| ------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------ |
+| [alpha.1](./alpha.1/roadmap.md) | **最薄纵向闭环**               | TableSpec、manual/detail、基础 Cell、固定轨道布局、lowering、React/Vanilla                              | Core composite 与 DataReference 已就绪                         | 已完成 |
+| [alpha.2](./alpha.2/roadmap.md) | **二维布局与持久化 authoring** | auto/fraction/minmax、span、border、bounds-aware alignment、fit/overflow、manual row-major persistence  | 通用 `IRChild` constrained layout                              | 已完成 |
+| [alpha.3](./alpha.3/roadmap.md) | **呈现语法**                   | formatter、presentation、selector/rule、条件视觉 scale、theme、Legend descriptor / Standard Legend 消费 | alpha.2 canonical model 与既有 registry 边界；Standard alpha.3 | 计划中 |
+| alpha.4                         | **分组与汇总**                 | group、hierarchy、subtotal、grand total                                                                 | Data aggregate / lineage                                       | 计划中 |
+| alpha.5                         | **交叉表**                     | pivot、matrix、多层 header、spanner/stub/corner/row group                                               | Data 分组与聚合能力                                            | 计划中 |
+| alpha.6                         | **分片与追溯收口**             | fragmentation、重复 header、完整 manifest/lineage/locator/diagnostics                                   | Core / host artifact 协作边界                                  | 计划中 |
+| beta.1                          | **稳定化**                     | API 收口、adversarial tests、双语 docs、发布检查                                                        | alpha completeness 全部闭环                                    | 计划中 |
 
 ## 贯穿原则
 

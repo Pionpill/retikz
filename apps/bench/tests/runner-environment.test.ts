@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { captureTimingRunnerEnvironment, readTimingRunnerEnvironment } from '../src/runner-environment';
+import { captureTimingRunnerEnvironment, readTimingRunnerEnvironment } from '../src/benchmark/runner-environment';
 
 const validRunnerEnvironment = Object.freeze({
   runnerId: 'kernel-alpha2-runner',
