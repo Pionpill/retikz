@@ -17,7 +17,6 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui
 import type { LanguageValue } from '../../i18n/preferences';
 import type { LabStateAction } from '../lab-state';
 
-import i18n from '../../i18n';
 import { Language } from '../../i18n/preferences';
 import { Theme, useThemeStore } from '../../store';
 import { LabActionType } from '../lab-state';
@@ -25,12 +24,14 @@ import { LabActionType } from '../lab-state';
 /** Workspace 全局操作属性 */
 export type WorkspaceSettingsProps = Readonly<{
   dispatch: Dispatch<LabStateAction>;
+  /** 是否禁用当前模块不可用的详细配置 */
+  detailsDisabled?: boolean;
 }>;
 
 /** sidebar-07 左下角的语言、主题与详细配置入口 */
 export const WorkspaceSettings: FC<WorkspaceSettingsProps> = props => {
-  const { dispatch } = props;
-  const { t } = useTranslation();
+  const { dispatch, detailsDisabled = false } = props;
+  const { t, i18n } = useTranslation();
   const theme = useThemeStore(state => state.theme);
   const setTheme = useThemeStore(state => state.setTheme);
   const language: LanguageValue =
@@ -98,7 +99,10 @@ export const WorkspaceSettings: FC<WorkspaceSettingsProps> = props => {
               })}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => dispatch({ type: LabActionType.DetailsOpened })}>
+            <DropdownMenuItem
+              disabled={detailsDisabled}
+              onClick={() => dispatch({ type: LabActionType.DetailsOpened })}
+            >
               <SlidersHorizontal />
               {t('sidebar.settings')}
             </DropdownMenuItem>

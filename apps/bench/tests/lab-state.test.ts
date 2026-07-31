@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { BenchModuleId } from '../src/playground/workspace/constant';
 import { createInitialLabState, reduceLabState } from '../src/playground/workspace/lab-state';
 
 describe('Performance Lab state', () => {
@@ -11,6 +12,10 @@ describe('Performance Lab state', () => {
       scenarioId: 'single-entity-update',
       status: 'idle',
     });
+  });
+
+  it('使用路由模块初始化工作台', () => {
+    expect(createInitialLabState(BenchModuleId.Plot).moduleId).toBe('plot');
   });
 
   it('模式切换保留策略与场景选择', () => {

@@ -4,14 +4,18 @@
     "description": "Snapshot diff → Runtime execution → Scene Patch → retained renderer commit"
   },
   "module": {
-    "core": "Core",
-    "coreDescription": "Kernel 运行时与渲染器",
+    "kernel": "Kernel",
+    "kernelDescription": "Kernel 运行时与渲染器",
     "plot": "Plot",
     "plotDescription": "可视化图表",
     "table": "Table",
     "tableDescription": "表格布局",
     "switch": "切换测试模块",
-    "soon": "即将支持"
+    "soon": "即将支持",
+    "unavailableTitle": "{{module}} 性能实验尚未开放",
+    "unavailableDescription": "该模块尚未接入可运行测试集，你仍可通过独立一级路由保留工作区入口",
+    "backToKernel": "返回 Kernel",
+    "unavailableRun": "{{module}} 尚未接入可运行测试集"
   },
   "sidebar": {
     "testSuites": "测试集",

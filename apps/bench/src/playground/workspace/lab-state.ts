@@ -1,10 +1,10 @@
 import type { ValueOf } from '@retikz/core';
 
 import type { LabBackendValue, LabPolicyIdValue, LabRunModeValue, LabRunSession } from '../modules/core';
-import type { BenchModuleIdValue } from './workspace-model';
+import type { BenchModuleIdValue } from './constant';
 
 import { defaultKernelLabScenarioId, LabBackend, LabPolicyId, LabRunMode } from '../modules/core';
-import { BenchModuleId } from './workspace-model';
+import { BenchModuleId } from './constant';
 
 /** Performance Lab 运行状态 */
 export const LabStatus = {
@@ -20,7 +20,6 @@ export type LabStatusValue = ValueOf<typeof LabStatus>;
 /** Performance Lab 页面动作类型 */
 export const LabActionType = {
   ModeSelected: 'mode-selected',
-  ModuleSelected: 'module-selected',
   BackendSelected: 'backend-selected',
   PolicySelected: 'policy-selected',
   ScenarioSelected: 'scenario-selected',
@@ -57,7 +56,6 @@ export type LabState = Readonly<{
 /** Performance Lab 页面状态动作 */
 export type LabStateAction =
   | Readonly<{ type: typeof LabActionType.ModeSelected; mode: LabRunModeValue }>
-  | Readonly<{ type: typeof LabActionType.ModuleSelected; moduleId: BenchModuleIdValue }>
   | Readonly<{ type: typeof LabActionType.BackendSelected; backend: LabBackendValue }>
   | Readonly<{ type: typeof LabActionType.PolicySelected; policyId: LabPolicyIdValue }>
   | Readonly<{ type: typeof LabActionType.ScenarioSelected; scenarioId: string }>
@@ -72,10 +70,10 @@ export type LabStateAction =
   | Readonly<{ type: typeof LabActionType.RunFailed; error: string }>;
 
 /** 创建 Performance Lab 的稳定默认状态 */
-export const createInitialLabState = (): LabState =>
+export const createInitialLabState = (moduleId: BenchModuleIdValue = BenchModuleId.Kernel): LabState =>
   Object.freeze({
     mode: LabRunMode.Inspect,
-    moduleId: BenchModuleId.Core,
+    moduleId,
     backend: LabBackend.Svg,
     policyId: LabPolicyId.RetainedAuto,
     scenarioId: defaultKernelLabScenarioId,
@@ -91,8 +89,6 @@ export const reduceLabState = (state: LabState, action: LabStateAction): LabStat
   switch (action.type) {
     case LabActionType.ModeSelected:
       return Object.freeze({ ...state, mode: action.mode });
-    case LabActionType.ModuleSelected:
-      return Object.freeze({ ...state, moduleId: action.moduleId });
     case LabActionType.BackendSelected:
       return Object.freeze({ ...state, backend: action.backend });
     case LabActionType.PolicySelected:

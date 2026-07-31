@@ -26,6 +26,7 @@ import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 
 import type { LabPolicyIdValue, LabRunModeValue } from '../../modules/core';
+import type { BenchModule } from '../constant';
 import type { LabState, LabStateAction } from '../lab-state';
 
 import { kernelLabPolicies, LabBackend, LabRunMode } from '../../modules/core';
@@ -33,6 +34,8 @@ import { LabActionType, LabStatus } from '../lab-state';
 
 /** Workspace Header 属性 */
 export type WorkspaceHeaderProps = Readonly<{
+  /** 当前一级路由对应的模块 */
+  module: BenchModule;
   state: LabState;
   dispatch: Dispatch<LabStateAction>;
   onRun: () => void;
@@ -46,7 +49,7 @@ const modes: ReadonlyArray<Readonly<{ id: LabRunModeValue; icon: typeof Activity
 
 /** 工作台常用配置与运行入口 */
 export const WorkspaceHeader: FC<WorkspaceHeaderProps> = props => {
-  const { state, dispatch, onRun } = props;
+  const { module, state, dispatch, onRun } = props;
   const { t } = useTranslation();
   const { isMobile, openMobile, state: sidebarState } = useSidebar();
   const sidebarExpanded = isMobile ? openMobile : sidebarState === 'expanded';
@@ -58,11 +61,11 @@ export const WorkspaceHeader: FC<WorkspaceHeaderProps> = props => {
       <Breadcrumb className="hidden xl:block">
         <BreadcrumbList>
           <BreadcrumbItem>
-            <span className="text-muted-foreground">Core</span>
+            <span className="text-muted-foreground">{t(module.title)}</span>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>{t('sidebar.singleEntityUpdate')}</BreadcrumbPage>
+            <BreadcrumbPage>{t(module.available ? 'sidebar.singleEntityUpdate' : 'module.soon')}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -79,6 +82,7 @@ export const WorkspaceHeader: FC<WorkspaceHeaderProps> = props => {
                 variant={state.mode === mode.id ? 'secondary' : 'ghost'}
                 aria-label={label}
                 title={label}
+                disabled={!module.available}
                 onClick={() => dispatch({ type: LabActionType.ModeSelected, mode: mode.id })}
               >
                 <Icon />
@@ -95,6 +99,7 @@ export const WorkspaceHeader: FC<WorkspaceHeaderProps> = props => {
               variant={state.backend === backend ? 'secondary' : 'ghost'}
               aria-label={backend.toUpperCase()}
               title={backend.toUpperCase()}
+              disabled={!module.available}
               onClick={() => dispatch({ type: LabActionType.BackendSelected, backend })}
             >
               {backend === LabBackend.Svg ? <Layers3 /> : <Box />}
@@ -103,6 +108,7 @@ export const WorkspaceHeader: FC<WorkspaceHeaderProps> = props => {
         </div>
 
         <Select
+          disabled={!module.available}
           value={state.policyId}
           onValueChange={value => dispatch({ type: LabActionType.PolicySelected, policyId: value as LabPolicyIdValue })}
         >
@@ -132,7 +138,7 @@ export const WorkspaceHeader: FC<WorkspaceHeaderProps> = props => {
             <BarChart3 />
           </Button>
         )}
-        <Button onClick={onRun} disabled={state.status === LabStatus.Running}>
+        <Button onClick={onRun} disabled={!module.available || state.status === LabStatus.Running}>
           {state.status === LabStatus.Running ? (
             <LoaderCircle className="animate-spin" />
           ) : (
@@ -146,6 +152,7 @@ export const WorkspaceHeader: FC<WorkspaceHeaderProps> = props => {
           variant="ghost"
           size="icon"
           aria-label={t('header.details')}
+          disabled={!module.available}
           onClick={() => dispatch({ type: LabActionType.DetailsOpened })}
         >
           <Ellipsis />

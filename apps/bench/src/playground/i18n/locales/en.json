@@ -4,14 +4,18 @@
     "description": "Snapshot diff → Runtime execution → Scene Patch → retained renderer commit"
   },
   "module": {
-    "core": "Core",
-    "coreDescription": "Kernel runtime & renderer",
+    "kernel": "Kernel",
+    "kernelDescription": "Kernel runtime & renderer",
     "plot": "Plot",
     "plotDescription": "Visualization plots",
     "table": "Table",
     "tableDescription": "Table layout",
     "switch": "Switch test module",
-    "soon": "Soon"
+    "soon": "Soon",
+    "unavailableTitle": "{{module}} performance lab is not available yet",
+    "unavailableDescription": "This module has no runnable test suite yet, but its top-level workspace route is ready.",
+    "backToKernel": "Back to Kernel",
+    "unavailableRun": "{{module}} has no runnable test suite"
   },
   "sidebar": {
     "testSuites": "Test suites",

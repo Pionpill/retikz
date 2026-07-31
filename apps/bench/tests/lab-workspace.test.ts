@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import type { LabRunSession } from '../src/playground/modules/core';
 
+import { benchModules, defaultBenchModule } from '../src/playground/workspace/constant';
 import { createInitialLabState, reduceLabState } from '../src/playground/workspace/lab-state';
 import { detailedConfigControls, quickConfigControls } from '../src/playground/workspace/workspace-config';
-import { benchModules, getModuleTestSuites } from '../src/playground/workspace/workspace-model';
+import { getModuleTestSuites } from '../src/playground/workspace/workspace-model';
 
 const session: LabRunSession = {
   id: 'run-1',
@@ -16,13 +17,41 @@ const session: LabRunSession = {
 };
 
 describe('Bench workspace', () => {
-  it('仅允许选择已有真实测试集的 Core 模块', () => {
-    expect(benchModules.map(module => ({ id: module.id, available: module.available }))).toEqual([
-      { id: 'core', available: true },
-      { id: 'plot', available: false },
-      { id: 'table', available: false },
+  it('仅允许选择已有真实测试集的 Kernel 模块', () => {
+    expect(
+      benchModules.map(({ id, path, title, description, available }) => ({
+        id,
+        path,
+        title,
+        description,
+        available,
+      })),
+    ).toEqual([
+      {
+        id: 'kernel',
+        path: '/kernel',
+        title: 'module.kernel',
+        description: 'module.kernelDescription',
+        available: true,
+      },
+      {
+        id: 'plot',
+        path: '/plot',
+        title: 'module.plot',
+        description: 'module.plotDescription',
+        available: false,
+      },
+      {
+        id: 'table',
+        path: '/table',
+        title: 'module.table',
+        description: 'module.tableDescription',
+        available: false,
+      },
     ]);
-    expect(getModuleTestSuites('core').map(suite => suite.scenarioId)).toEqual(['single-entity-update']);
+    expect(defaultBenchModule.id).toBe('kernel');
+    expect(new Set(benchModules.map(module => module.icon)).size).toBe(3);
+    expect(getModuleTestSuites('kernel').map(suite => suite.scenarioId)).toEqual(['single-entity-update']);
     expect(getModuleTestSuites('plot')).toEqual([]);
   });
 
