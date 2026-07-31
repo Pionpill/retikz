@@ -318,7 +318,7 @@ describe('normalizeTableStructure', () => {
     }
   });
 
-  it('presents canonical cells without changing semantic identity or order', () => {
+  it('presents canonical cells from a detached snapshot without changing identity or order', () => {
     const semantic = normalizeTableStructure({
       kind: 'manual',
       rows: [['A', { content: { type: 'node', position: [0, 0] } }]],
@@ -336,7 +336,8 @@ describe('normalizeTableStructure', () => {
     const presented = presentTable(formatTable(semantic));
     const customPresented = presentTable(formatTable(semanticWithCustom), [custom]);
 
-    expect(presented.semantic).toBe(semantic);
+    expect(presented.semantic).not.toBe(semantic);
+    expect(presented.semantic).toEqual(semantic);
     expect(presented.cells.map(cell => cell.cellId)).toEqual(semantic.cells.map(cell => cell.id));
     expect(presented.cells[0].content).toMatchObject({ text: 'A' });
     expect(presented.cells[1].content).toEqual({ type: 'node', position: [0, 0] });

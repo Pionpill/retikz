@@ -71,7 +71,8 @@ export const formatTable = (
   model: SemanticTableModel,
   definitions?: ReadonlyArray<AnyCellFormatterDefinition>,
 ): FormattedTableModel => {
+  const semantic = deepFreeze(structuredClone(model));
   const registry = resolveCellFormatterRegistry(definitions);
-  const cells = Object.freeze(model.cells.map(cell => formatCell(cell, registry)));
-  return Object.freeze({ semantic: model, cells });
+  const cells = Object.freeze(semantic.cells.map(cell => formatCell(cell, registry)));
+  return Object.freeze({ semantic, cells });
 };

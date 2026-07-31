@@ -90,6 +90,20 @@ describe('Cell formatter registry', () => {
 });
 
 describe('formatted Table model', () => {
+  it('detaches and recursively freezes the semantic model snapshot', () => {
+    const model = modelOf('before');
+    const formatted = formatTable(model);
+
+    expect(formatted.semantic).not.toBe(model);
+    expect(formatted.semantic.cells[0]).not.toBe(model.cells[0]);
+    expect(Object.isFrozen(formatted.semantic)).toBe(true);
+    expect(Object.isFrozen(formatted.semantic.cells)).toBe(true);
+    expect(Object.isFrozen(formatted.semantic.cells[0].payload)).toBe(true);
+
+    model.cells[0].payload.value = 'after';
+    expect(formatted.semantic.cells[0].payload).toMatchObject({ kind: 'value', value: 'before' });
+  });
+
   it.each(['plain', 42, true, false, null] as const)('uses identity without changing scalar %j', value => {
     const formatted = formatTable(modelOf(value));
 
