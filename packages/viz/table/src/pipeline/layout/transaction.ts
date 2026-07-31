@@ -250,6 +250,13 @@ const assertPresentedAlignment = (presented: PresentedTableModel): void => {
     if (presentedCell.kind !== cell.payload.kind) {
       throw new Error(`table: transaction presentation Cell ${index} kind differs`);
     }
+    if (
+      presentedCell.kind === TableCellPayloadKind.Value &&
+      cell.payload.kind === TableCellPayloadKind.Value &&
+      presentedCell.rawValue !== cell.payload.value
+    ) {
+      throw new Error(`table: transaction presentation Cell ${index} raw value differs`);
+    }
   });
 };
 

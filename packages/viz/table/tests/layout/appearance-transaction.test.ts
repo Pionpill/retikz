@@ -65,6 +65,38 @@ describe('Presented Table layout transaction', () => {
     ).toThrow(/transaction presentation Cell 0 shape differs/i);
   });
 
+  it('fails loud when a Presented raw value differs from the canonical semantic payload', () => {
+    const semantic = normalizeTableStructure({ kind: 'manual', rows: [[{ id: 'tampered', value: 7 }]] });
+    const presented = presentTable(formatTable(semantic));
+    const malformed = {
+      ...presented,
+      cells: [{ ...presented.cells[0], rawValue: 9 }],
+    } as PresentedTableModel;
+    const harness = defineComposite({
+      namespace: 'fixture',
+      type: 'tampered-presented-table',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('fixture'),
+        type: z.literal('tampered-presented-table'),
+      }),
+      compile: (_node, context) => {
+        const transaction = resolvePresentedTableTransaction({ presented: malformed }, context);
+        return { children: transaction.children };
+      },
+    });
+
+    expect(() =>
+      compileToScene(
+        {
+          type: 'scene',
+          version: 1,
+          children: [{ namespace: 'fixture', type: 'tampered-presented-table' }],
+        },
+        { composites: [harness], padding: 0 },
+      ),
+    ).toThrow(/transaction presentation Cell 0 raw value differs/i);
+  });
+
   it('consumes supplied appearances through the real layout transaction', () => {
     const wrapProbe = defineComposite({
       namespace: 'fixture',
