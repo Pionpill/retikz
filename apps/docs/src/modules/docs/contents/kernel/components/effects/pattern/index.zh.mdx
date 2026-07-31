@@ -1,6 +1,6 @@
 ---
 title: 图案
-description: 用内置线条、圆点或网格图案填充 Node 与闭合 Path，并通过实例参数控制周期、线宽、颜色和旋转。
+description: 用内置线条、圆点或网格图案填充 Node 与闭合 Path，并控制方向样式、线条周期、间距、颜色和旋转。
 ---
 
 图案把一小块重复单元铺满图元，比纯色更适合区分区域、标记材质或表达状态。`lines`、`dots` 与 `grid` 是可直接使用的内置图案，不需要向宿主注册定义。
@@ -21,7 +21,7 @@ import { Node } from '@retikz/react';
 
 ### 内置图案
 
-三种内置 `shape` 共用一套实例参数，只改变重复单元的几何：
+三种内置 `shape` 共用颜色、尺寸和旋转等基础参数，并各自消费适用的扩展字段：
 
 <ComponentPreview files="pattern-builtins" size="sm" />
 
@@ -33,6 +33,24 @@ import { Node } from '@retikz/react';
 
 `rotation` 会旋转整块重复图案，所以 `lines` 可以变成斜线或竖线；不需要为每个方向注册新名称。
 
+`dashed` 与 `dotted` 为 `lines`、`grid` 提供常用预设；需要精确节奏时使用 `dashPattern`。显式数组优先于两个预设，`dashed` 又优先于 `dotted`。`dots` 是铺满区域的圆点阵列，不等于把线条改成 dotted stroke，因此会忽略这些线型字段。
+
+### 横纵网格样式
+
+`grid` 的横线与竖线会生成两个独立 Path。用 `horizontalStyle` 与 `verticalStyle` 分别覆盖颜色、线宽、dash、offset、cap 或 join；未给出的字段继续继承顶层基础样式：
+
+<ComponentPreview files="pattern-directional-grid" size="sm" />
+
+### 周期线条样式
+
+`lines` 的 `lineStyleCycle` 可以表达“每 N 条一条主线”，也可以在任意周期内指定不同样式。`index` 从 `0` 开始；没有 override 的位置继承顶层基础样式：
+
+<ComponentPreview
+  files="pattern-line-cycle"
+  size="sm"
+  caption="左侧每 5 条出现一条粗线；右侧按实线、点线、虚线循环。两者的相邻线距都仍是 size: 8。"
+/>
+
 ### Node 与 Path
 
 图案是共享的 paint（绘制颜料）规格，不属于某一种图元。同一个对象可以同时填充 Node 与闭合 Path：
@@ -41,12 +59,12 @@ import { Node } from '@retikz/react';
 
 ### 参数试验场
 
-固定图元和取景框，只调整内置类型、周期、线宽、旋转与颜色。几何位置不会随图案参数变化：
+固定图元和取景框，只调整内置类型、间距、线宽、基础线型、网格方向样式、线条周期、旋转与颜色。方向控件只在 `grid` 中出现，周期控件只在 `lines` 中出现；选择 `dots` 时会隐藏全部不适用控件：
 
 <ComponentPreview
   files="pattern-playground"
   size="sm"
-  caption="切换三种 shape 后继续调整 size 与 lineWidth，可以直接比较疏密和重复单元粗细。"
+  caption="切换三种 shape 后调整 size、方向样式与线条周期，可以直接比较疏密和重复单元样式。"
 />
 
 ## 技术原理
@@ -59,21 +77,29 @@ import { Node } from '@retikz/react';
 
 编译时，`shape` 会从统一图案注册表找到对应定义，再把实例参数变成一个已解析的重复单元资源。Scene 只保存结构化图元；SVG 与 Canvas 分别把同一资源物化为各自的 pattern。
 
-这也解释了参数边界：`size` 是重复周期，`lineWidth` 影响线条粗细或圆点半径，`rotation` 旋转整块图案。它们不会改变 Node 或 Path 自身的几何边界。
+这也解释了参数边界：`size` 是传给定义的基础尺寸；在三个内置图案中，它表示相邻线条或圆点中心的间距。`lineWidth` 影响线条粗细或圆点半径，`rotation` 旋转整块图案。普通 `lines`、`grid` 与 `dots` 的 tile 周期等于 `size`；带周期线型的 `lines` 会把最终 tile 扩大为 `size * period`，但不会改变相邻线距。自定义定义也可以通过 `PatternEmitResult.tileSize` 指定不同的最终周期。
+
+编译器先按 `dashPattern > dashed > dotted` 解析基础线型。方向样式和周期 override 再按字段继承基础样式；如果 override 显式包含 `dashPattern`、`dashed` 或 `dotted` 中的任一字段，它会独立按同一优先级解析。没有有效 `dashPattern` 且两个 preset 都不为 `true` 时会清除继承的 dash，例如 `{ dashed: false }` 可以恢复实线。`grid` 把解析后的横纵样式写入两个独立 Path，`lines` 把完整周期展开成等距 Path。Scene 与 renderer 仍只消费普通的已解析 tile，不需要知道这些高层配置。
 
 <SourceLinks
   sources={[
     {
       label: '三种内置重复单元定义',
       path: 'packages/kernel/core/src/providers/pattern/definitions.ts',
-      startLine: 17,
-      endLine: 76,
+      startLine: 16,
+      endLine: 127,
+    },
+    {
+      label: '继承并展开方向与周期线型',
+      path: 'packages/kernel/core/src/compile/resource/pattern-style.ts',
+      startLine: 35,
+      endLine: 108,
     },
     {
       label: '解析实例参数并生成 Scene 图案资源',
       path: 'packages/kernel/core/src/compile/resource/paint.ts',
-      startLine: 29,
-      endLine: 81,
+      startLine: 39,
+      endLine: 102,
     },
     {
       label: '物化 SVG 图案',
@@ -103,15 +129,52 @@ import { Node } from '@retikz/react';
 
 `IRPaintSpec` 中 `kind: 'pattern'` 的对象字段如下：
 
-| 属性         | 类型                                          | 默认值                   | 描述                       |
-| ------------ | --------------------------------------------- | ------------------------ | -------------------------- |
-| `kind`       | `'pattern'`                                   | —                        | 图案 paint 的判别字段      |
-| `shape`      | <ApiValues name="PatternShape" /> \| `string` | —                        | 内置名或已注册的自定义名称 |
-| `color`      | `string`                                      | `currentColor`           | 重复单元主色               |
-| `background` | `string`                                      | 透明                     | 每块 tile 的背景色         |
-| `size`       | `number`                                      | `8`                      | 重复周期，必须为有限正数   |
-| `lineWidth`  | `number`                                      | 线/网格 `1`；点 `size/5` | 线宽；dots 中作为圆点半径  |
-| `rotation`   | `number`                                      | `0`                      | 整块图案旋转角度           |
+| 属性              | 类型                                          | 默认值                   | 描述                       |
+| ----------------- | --------------------------------------------- | ------------------------ | -------------------------- |
+| `kind`            | `'pattern'`                                   | —                        | 图案 paint 的判别字段      |
+| `shape`           | <ApiValues name="PatternShape" /> \| `string` | —                        | 内置名或已注册的自定义名称 |
+| `color`           | `string`                                      | `currentColor`           | 重复单元主色               |
+| `background`      | `string`                                      | 透明                     | 每块 tile 的背景色         |
+| `size`            | `number`                                      | 定义默认值或 `8`         | 基础尺寸；内置中是相邻间距 |
+| `lineWidth`       | `number`                                      | 线/网格 `1`；点 `size/5` | 线宽；dots 中作为圆点半径  |
+| `dashed`          | `boolean`                                     | `false`                  | 线型虚线预设               |
+| `dotted`          | `boolean`                                     | `false`                  | 线型点线预设               |
+| `dashPattern`     | `Array<number>`                               | —                        | 显式 dash 节奏；优先级最高 |
+| `dashOffset`      | `number`                                      | `0`                      | dash 起始偏移              |
+| `lineCap`         | <ApiValues name="PathLineCap" />              | `'butt'`                 | 线段端点样式               |
+| `lineJoin`        | <ApiValues name="PathLineJoin" />             | `'miter'`                | 线段连接样式               |
+| `horizontalStyle` | `IRPatternLineStyle`                          | —                        | `grid` 横线样式覆盖        |
+| `verticalStyle`   | `IRPatternLineStyle`                          | —                        | `grid` 竖线样式覆盖        |
+| `lineStyleCycle`  | `IRPatternLineStyleCycle`                     | —                        | `lines` 的完整线条样式周期 |
+| `rotation`        | `number`                                      | `0`                      | 整块图案旋转角度           |
+
+顶层 `color`、`lineWidth` 与六个线型字段共同构成基础样式，供 `lines`、`grid` 与选择消费它们的自定义图案使用；内置 `dots` 会忽略方向和线型字段。
+
+### IRPatternLineStyle
+
+方向覆盖与周期 override 复用同一线型对象：
+
+| 属性          | 类型                               | 默认值       | 描述                     |
+| ------------- | ---------------------------------- | ------------ | ------------------------ |
+| `color`       | `string?`                          | 继承基础样式 | 覆盖主色                 |
+| `lineWidth`   | `number?`                          | 继承基础样式 | 覆盖线宽，必须为有限正数 |
+| `dashed`      | `boolean?`                         | 继承基础样式 | 虚线预设或显式清除入口   |
+| `dotted`      | `boolean?`                         | 继承基础样式 | 点线预设或显式清除入口   |
+| `dashPattern` | `Array<number>?`                   | 继承基础样式 | 显式 dash 节奏           |
+| `dashOffset`  | `number?`                          | 继承基础样式 | dash 起始偏移            |
+| `lineCap`     | <ApiValues name="PathLineCap" />?  | 继承基础样式 | 端点样式                 |
+| `lineJoin`    | <ApiValues name="PathLineJoin" />? | 继承基础样式 | 连接样式                 |
+
+### IRPatternLineStyleCycle
+
+| 属性                | 类型                      | 默认值 | 描述                                      |
+| ------------------- | ------------------------- | ------ | ----------------------------------------- |
+| `period`            | `number`                  | —      | 一个周期的线条数；必须是 `2`–`512` 的整数 |
+| `overrides`         | `Array<{ index, style }>` | —      | 稀疏样式覆盖；至少包含一项                |
+| `overrides[].index` | `number`                  | —      | 零基位置；必须唯一且小于 `period`         |
+| `overrides[].style` | `IRPatternLineStyle`      | —      | 该位置相对基础样式的字段覆盖              |
+
+`lineStyleCycle` 只由内置 `lines` 消费。未列出的 index 和未覆盖的样式字段都会继承基础样式；无效 `period`、重复 index 或越界 index 会在 schema / 编译校验时报错。
 
 ## 相关
 

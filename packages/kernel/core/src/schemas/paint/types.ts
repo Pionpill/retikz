@@ -2,13 +2,27 @@ import type { z } from 'zod';
 
 import type { ValueOf } from '../../shared';
 import type { ImageFit, PatternShape } from './constants';
-import type { GradientStopSchema, PaintSpecSchema } from './schema';
+import type {
+  GradientStopSchema,
+  PaintSpecSchema,
+  PatternLineStyleCycleSchema,
+  PatternLineStyleSchema,
+} from './schema';
 
 /** 渐变 stop 类型 */
 export type IRGradientStop = z.infer<typeof GradientStopSchema>;
 
 /** Paint server 规格类型（渐变 / 图案 / 图片） */
 export type IRPaintSpec = z.infer<typeof PaintSpecSchema>;
+
+/** Pattern paint 的可序列化实例参数 */
+export type IRPatternPaintSpec = Extract<IRPaintSpec, { kind: 'pattern' }>;
+
+/** Pattern 单条线 motif 的可序列化样式覆盖 */
+export type IRPatternLineStyle = z.infer<typeof PatternLineStyleSchema>;
+
+/** Pattern 相邻线条的稀疏周期样式 */
+export type IRPatternLineStyleCycle = z.infer<typeof PatternLineStyleCycleSchema>;
 
 /**
  * 内置 3 pattern motif 名联合

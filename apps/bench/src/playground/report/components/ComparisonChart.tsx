@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import type { LabPolicyResult } from '../../modules/core';
 
 import { createComparisonChartRows } from '../view-model';
-import { ComparisonPlot } from './comparison-plot';
+import { ComparisonPlot } from './ComparisonPlot';
 
 /** 策略对比图属性 */
 export type ComparisonChartProps = Readonly<{

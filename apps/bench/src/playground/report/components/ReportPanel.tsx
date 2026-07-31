@@ -8,9 +8,9 @@ import { Button } from '@/components/ui/button';
 
 import type { LabPolicyResult, LabRunSession } from '../../modules/core';
 
-import { ComparisonChart } from './comparison-chart';
-import { Inspector } from './inspector';
-import { MetricsSummary } from './metrics-summary';
+import { ComparisonChart } from './ComparisonChart';
+import { Inspector } from './Inspector';
+import { MetricsSummary } from './MetricsSummary';
 
 /** 运行报告面板属性 */
 export type ReportPanelProps = Readonly<{
