@@ -1,16 +1,6 @@
 import type { Dispatch, FC } from 'react';
 
-import {
-  Activity,
-  BarChart3,
-  Box,
-  Ellipsis,
-  FlaskConical,
-  GitCompareArrows,
-  Layers3,
-  LoaderCircle,
-  Play,
-} from 'lucide-react';
+import { Activity, Box, Ellipsis, FlaskConical, GitCompareArrows, Layers3, LoaderCircle, Play } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -28,14 +18,18 @@ import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import type { LabPolicyIdValue, LabRunModeValue } from '../../modules/core';
 import type { BenchModule } from '../constant';
 import type { LabState, LabStateAction } from '../lab-state';
+import type { BenchTestCase } from '../test-catalog';
 
 import { kernelLabPolicies, LabBackend, LabRunMode } from '../../modules/core';
 import { LabActionType, LabStatus } from '../lab-state';
+import { getBenchTestCaseContext } from '../test-catalog';
 
 /** Workspace Header 属性 */
 export type WorkspaceHeaderProps = Readonly<{
   /** 当前一级路由对应的模块 */
   module: BenchModule;
+  /** 当前路由对应的测试用例 */
+  testCase?: BenchTestCase;
   state: LabState;
   dispatch: Dispatch<LabStateAction>;
   onRun: () => void;
@@ -49,11 +43,12 @@ const modes: ReadonlyArray<Readonly<{ id: LabRunModeValue; icon: typeof Activity
 
 /** 工作台常用配置与运行入口 */
 export const WorkspaceHeader: FC<WorkspaceHeaderProps> = props => {
-  const { module, state, dispatch, onRun } = props;
+  const { module, testCase, state, dispatch, onRun } = props;
   const { t } = useTranslation();
   const { isMobile, openMobile, state: sidebarState } = useSidebar();
   const sidebarExpanded = isMobile ? openMobile : sidebarState === 'expanded';
   const sidebarLabel = t(sidebarExpanded ? 'header.collapseSidebar' : 'header.expandSidebar');
+  const caseContext = testCase === undefined ? undefined : getBenchTestCaseContext(module.id, testCase.id);
   return (
     <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
       <SidebarTrigger className="-ml-1" aria-label={sidebarLabel} title={sidebarLabel} />
@@ -64,9 +59,25 @@ export const WorkspaceHeader: FC<WorkspaceHeaderProps> = props => {
             <span className="text-muted-foreground">{t(module.title)}</span>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{t(module.available ? 'sidebar.singleEntityUpdate' : 'module.soon')}</BreadcrumbPage>
-          </BreadcrumbItem>
+          {caseContext === undefined ? (
+            <BreadcrumbItem>
+              <BreadcrumbPage>{t('module.soon')}</BreadcrumbPage>
+            </BreadcrumbItem>
+          ) : (
+            <>
+              <BreadcrumbItem>
+                <span className="text-muted-foreground">{t(caseContext.group.title)}</span>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <span className="text-muted-foreground">{t(caseContext.direction.title)}</span>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{t(caseContext.testCase.title)}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
+          )}
         </BreadcrumbList>
       </Breadcrumb>
 
@@ -124,20 +135,6 @@ export const WorkspaceHeader: FC<WorkspaceHeaderProps> = props => {
           </SelectContent>
         </Select>
 
-        {state.session === undefined ? null : (
-          <Button
-            variant={state.reportOpen ? 'secondary' : 'ghost'}
-            size="icon"
-            aria-label={t(state.reportOpen ? 'header.closeReport' : 'header.openReport')}
-            onClick={() =>
-              dispatch({
-                type: state.reportOpen ? LabActionType.ReportClosed : LabActionType.ReportOpened,
-              })
-            }
-          >
-            <BarChart3 />
-          </Button>
-        )}
         <Button onClick={onRun} disabled={!module.available || state.status === LabStatus.Running}>
           {state.status === LabStatus.Running ? (
             <LoaderCircle className="animate-spin" />

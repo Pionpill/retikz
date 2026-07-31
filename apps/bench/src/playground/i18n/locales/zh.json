@@ -17,11 +17,27 @@
     "backToKernel": "返回 Kernel",
     "unavailableRun": "{{module}} 尚未接入可运行测试集"
   },
+  "catalog": {
+    "group": {
+      "performance": "性能测试",
+      "llm": "LLM 测试"
+    },
+    "direction": {
+      "fullPerformance": "全量测试",
+      "incrementalPerformance": "增量测试",
+      "interactionPerformance": "交互测试",
+      "generationAccuracy": "生成准确性测试",
+      "incrementalGeneration": "增量生成测试"
+    },
+    "case": {
+      "singleEntityUpdate": {
+        "title": "单实体更新",
+        "description": "5,000 个稳定实体中修改一个节点"
+      }
+    },
+    "emptyDirection": "尚无测试用例"
+  },
   "sidebar": {
-    "testSuites": "测试集",
-    "runtimeUpdates": "运行时更新",
-    "singleEntityUpdate": "单实体更新",
-    "singleEntityUpdateDescription": "5,000 个稳定实体中修改一个节点",
     "workspace": "工作区",
     "settings": "工作区设置"
   },
@@ -34,9 +50,18 @@
     "updatePolicy": "更新策略",
     "run": "运行",
     "running": "运行中",
-    "details": "详细配置",
-    "openReport": "打开报告",
-    "closeReport": "关闭报告"
+    "details": "详细配置"
+  },
+  "caseView": {
+    "config": "配置",
+    "run": "运行",
+    "reports": "报告",
+    "scenario": "场景标识",
+    "localEnvironment": "本地运行环境",
+    "backend": "渲染后端",
+    "policy": "更新策略",
+    "samples": "采样次数",
+    "warmups": "预热次数"
   },
   "settings": {
     "language": "语言",
@@ -71,10 +96,22 @@
     "evidence": "探索数据不能替代 CI 证据 · 使用 pnpm bench:check 执行确定性门禁"
   },
   "status": {
+    "notRun": "尚未运行",
     "idle": "空闲",
     "running": "运行中",
+    "passed": "通过",
+    "warning": "警告",
+    "failed": "失败",
     "success": "完成",
     "error": "错误"
+  },
+  "reportHistory": {
+    "title": "本地报告",
+    "emptyTitle": "尚无本地报告",
+    "emptyDescription": "运行当前用例后，报告会保存在本地忽略目录中",
+    "loadFailed": "无法读取本地报告",
+    "selectHint": "选择一份报告查看详情；当前版本优先展示本次会话结果",
+    "saveFailed": "运行已完成，但报告保存失败：{{error}}"
   },
   "report": {
     "title": "运行报告",

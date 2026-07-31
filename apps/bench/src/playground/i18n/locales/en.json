@@ -17,11 +17,27 @@
     "backToKernel": "Back to Kernel",
     "unavailableRun": "{{module}} has no runnable test suite"
   },
+  "catalog": {
+    "group": {
+      "performance": "Performance tests",
+      "llm": "LLM tests"
+    },
+    "direction": {
+      "fullPerformance": "Full test",
+      "incrementalPerformance": "Incremental test",
+      "interactionPerformance": "Interaction test",
+      "generationAccuracy": "Generation accuracy test",
+      "incrementalGeneration": "Incremental generation test"
+    },
+    "case": {
+      "singleEntityUpdate": {
+        "title": "Single entity update",
+        "description": "Change one node among 5,000 stable entities"
+      }
+    },
+    "emptyDirection": "No test cases yet"
+  },
   "sidebar": {
-    "testSuites": "Test suites",
-    "runtimeUpdates": "Runtime updates",
-    "singleEntityUpdate": "Single entity update",
-    "singleEntityUpdateDescription": "Change one node among 5,000 stable entities",
     "workspace": "Workspace",
     "settings": "Workspace settings"
   },
@@ -34,9 +50,18 @@
     "updatePolicy": "Update policy",
     "run": "Run",
     "running": "Running",
-    "details": "Detailed settings",
-    "openReport": "Open report",
-    "closeReport": "Close report"
+    "details": "Detailed settings"
+  },
+  "caseView": {
+    "config": "Config",
+    "run": "Run",
+    "reports": "Reports",
+    "scenario": "Scenario ID",
+    "localEnvironment": "Local environment",
+    "backend": "Renderer backend",
+    "policy": "Update policy",
+    "samples": "Sample runs",
+    "warmups": "Warmup runs"
   },
   "settings": {
     "language": "Language",
@@ -71,10 +96,22 @@
     "evidence": "Exploratory numbers are not CI evidence · use pnpm bench:check for deterministic gates"
   },
   "status": {
+    "notRun": "Not run",
     "idle": "Idle",
     "running": "Running",
+    "passed": "Passed",
+    "warning": "Warning",
+    "failed": "Failed",
     "success": "Complete",
     "error": "Error"
+  },
+  "reportHistory": {
+    "title": "Local reports",
+    "emptyTitle": "No local reports",
+    "emptyDescription": "Run this case to save a report in the local ignored directory.",
+    "loadFailed": "Unable to load local reports",
+    "selectHint": "Select a report for details; this version prioritizes the current session result.",
+    "saveFailed": "The run completed, but the report could not be saved: {{error}}"
   },
   "report": {
     "title": "Run report",
