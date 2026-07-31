@@ -129,6 +129,24 @@ describe('resolved Table Cell plans', () => {
     expect(() => resolveTableCellPlans(modelOf(), [rule])).not.toThrow();
   });
 
+  it('omits an explicitly undefined opacity from a complete background replacement', () => {
+    const rules = [
+      {
+        selector: { cellIds: ['value'] },
+        appearance: { background: { fill: '#ff0000', fillOpacity: 0.25 } },
+      },
+      TableCellRuleSchema.parse({
+        selector: { cellIds: ['value'] },
+        appearance: { background: { fill: '#0000ff', fillOpacity: undefined } },
+      }),
+    ] satisfies Array<IRTableCellRule>;
+    const value = resolveTableCellPlans(modelOf(), rules)[0];
+
+    expect(value.appearance.background).toStrictEqual({ fill: '#0000ff' });
+    expect(value.trace.appearance).not.toHaveProperty('/background/fillOpacity');
+    expect(JSON.parse(JSON.stringify(value.appearance.background))).toStrictEqual(value.appearance.background);
+  });
+
   it('lets a later none border replace an earlier line border', () => {
     const value = resolveTableCellPlans(modelOf(), [
       {

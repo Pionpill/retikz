@@ -425,6 +425,23 @@ describe('Table React composition root integration', () => {
     expect(output).toContain('98');
   });
 
+  it('uses rule-selected custom formatter definitions in standalone rendering', () => {
+    const formatter = defineCellFormatter({
+      name: 'rule-prefix',
+      optionsSchema: z.strictObject({}),
+      format: input => `#${String(input.value)}`,
+    });
+    const output = renderToStaticMarkup(
+      <ManualTable
+        rows={[[7]]}
+        rules={[{ selector: { cellIds: ['cell.r0.c0'] }, formatter: { name: 'rule-prefix' } }]}
+        formatterDefinitions={[formatter]}
+      />,
+    );
+
+    expect(output).toContain('#7');
+  });
+
   it('keeps DetailTable children data injection and embedded runtime reference', () => {
     const props = {
       id: 'detail-runtime-reference',

@@ -49,7 +49,12 @@ export const cascadeTableCellAppearance = (
   const trace: MutableAppearanceTrace = structuredClone(currentTrace);
 
   if (patch.background !== undefined) {
-    next.background = structuredClone(patch.background);
+    next.background = {
+      fill: structuredClone(patch.background.fill),
+      ...(patch.background.fillOpacity === undefined
+        ? {}
+        : { fillOpacity: structuredClone(patch.background.fillOpacity) }),
+    };
     removeTraceSubtree(trace, '/background');
     setTrace(trace, '/background/fill', source);
     if (patch.background.fillOpacity !== undefined) setTrace(trace, '/background/fillOpacity', source);

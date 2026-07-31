@@ -30,10 +30,10 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
     [datasetReference, datasetSource],
   );
   const scene = useMemo(() => ({ version: 1 as const, type: 'scene' as const, children: [stableSpec] }), [stableSpec]);
-  const { presentationDefinitions, structureDefinitions } = lowerOptions;
+  const { formatterDefinitions, presentationDefinitions, structureDefinitions } = lowerOptions;
   const tableDefinitions = useMemo(
-    () => lowerTables(stableDatasets, { presentationDefinitions, structureDefinitions }),
-    [presentationDefinitions, stableDatasets, structureDefinitions],
+    () => lowerTables(stableDatasets, { formatterDefinitions, presentationDefinitions, structureDefinitions }),
+    [formatterDefinitions, presentationDefinitions, stableDatasets, structureDefinitions],
   );
   const mergedComposites = useMemo(() => [...tableDefinitions, ...composites], [composites, tableDefinitions]);
   const notifiedManifestKey = useRef<string>();
