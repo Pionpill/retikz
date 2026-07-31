@@ -4,14 +4,22 @@ import type { FC } from 'react';
 import { Plot, PointMark } from '@retikz/plot-react';
 import { Layout, Node } from '@retikz/react';
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react';
+import { DetailColumn, DetailTable, ManualTable } from '@retikz/table-react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { buildPreviewSource } from '../../src/modules/docs/components/component-preview/source-panel';
 import { buildPreviewIR, formatIR, irHasAnimations } from '../../src/modules/docs/components/component-preview/utils';
+import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
 import FramePlaygroundDemo, {
   previewSource as framePlaygroundPreviewSource,
 } from '../../src/modules/docs/contents/standard/composite/frame/frame-playground.demo';
+import TableDetailDemo, {
+  previewSource as tableDetailPreviewSource,
+} from '../../src/modules/docs/contents/viz/table/detail/table-detail.zh.demo';
+import TableLayoutPlaygroundDemo, {
+  previewSource as tableLayoutPlaygroundPreviewSource,
+} from '../../src/modules/docs/contents/viz/table/detail/table-layout-playground.zh.demo';
 
 const StaticDemo: FC = () => (
   <Layout width={40} height={20}>
@@ -50,6 +58,28 @@ const PlotDemo: FC = () => (
   <Plot data={plotRows} width={100} height={80}>
     <PointMark x="category" y="value" />
   </Plot>
+);
+
+const EmbeddedTableDetailDemo: FC = () => (
+  <Layout width={160} height={100}>
+    <DetailTable id="scores" dataRef="scores" data={plotRows}>
+      <DetailColumn id="category" field="category" header="Category" />
+      <DetailColumn id="value" field="value" header="Value" />
+    </DetailTable>
+  </Layout>
+);
+
+const ManualTableDemo: FC = () => (
+  <Layout width={160} height={100}>
+    <ManualTable
+      id="manual-scores"
+      rows={[
+        [{ value: 'Category' }, { value: 'Value' }],
+        [{ value: 'A' }, { value: 1 }],
+      ]}
+      rowKinds={['columnHeader', 'body']}
+    />
+  </Layout>
 );
 
 const staticIR = buildPreviewIR(StaticDemo).ir;
@@ -118,6 +148,109 @@ describe('buildPreviewSource', () => {
     expect(result.source?.vanilla?.files[0]?.code).toContain("import { renderPlot } from '@retikz/plot-vanilla'");
     expect(result.source?.vanilla?.files[0]?.code).toContain("category: 'A'");
     expect(renderToStaticMarkup(result.source?.vanilla?.render?.('svg'))).toContain('<svg');
+  });
+
+  it('为 Detail Table 自动生成 Table adapter、dataset 与真实 Vanilla SVG', () => {
+    const preview = buildPreviewIR(EmbeddedTableDetailDemo);
+    const result = buildPreviewSource(createInput({ Component: EmbeddedTableDetailDemo }));
+    const vanilla = result.source?.vanilla;
+
+    expect(vanilla?.files[0]?.code).toContain("from '@retikz/table-vanilla'");
+    expect(vanilla?.files[0]?.code).toContain("embedTable('preview-table-1'");
+    expect(vanilla?.files[0]?.code).toContain('createTableAdapter()');
+    expect(vanilla?.files[0]?.code).toContain("category: 'A'");
+    expect(vanilla?.render).toBeUndefined();
+    expect(buildVanillaPreview(preview).svg).toContain('<svg');
+  });
+
+  it('为 Manual Table 自动生成不带 dataset 的 Table adapter 与真实 Vanilla SVG', () => {
+    const preview = buildPreviewIR(ManualTableDemo);
+    const result = buildPreviewSource(createInput({ Component: ManualTableDemo }));
+    const vanilla = result.source?.vanilla;
+
+    expect(vanilla?.files[0]?.code).toContain("from '@retikz/table-vanilla'");
+    expect(vanilla?.files[0]?.code).toContain("embedTable('preview-table-1'");
+    expect(vanilla?.files[0]?.code).toContain('createTableAdapter()');
+    expect(vanilla?.files[0]?.code).not.toContain('const datasets =');
+    expect(vanilla?.render).toBeUndefined();
+    expect(buildVanillaPreview(preview).svg).toContain('<svg');
+  });
+
+  it('Detail Table dataset 未被捕获时生成明确诊断', () => {
+    const tableIR = buildPreviewIR(EmbeddedTableDetailDemo).ir;
+    const result = buildPreviewSource(createInput({ exportedPreviewIR: tableIR }));
+
+    expect(result.source?.vanilla?.files[0]?.code).toContain(
+      '// Cannot generate Vanilla preview: Table dataset "scores" was not captured.',
+    );
+    expect(result.source?.vanilla?.render).toBeUndefined();
+  });
+
+  it('自定义 Table structure 生成需要 runtime definitions 的明确诊断', () => {
+    const tableIR = {
+      type: 'scene',
+      version: 1,
+      children: [
+        {
+          namespace: 'table',
+          type: 'table',
+          id: 'custom-table',
+          structure: { kind: 'heatmap', field: 'value' },
+        },
+      ],
+    } as IRScene;
+    const result = buildPreviewSource(createInput({ exportedPreviewIR: tableIR }));
+
+    expect(result.source?.vanilla?.files[0]?.code).toContain(
+      '// Cannot generate Vanilla preview: Table structure "heatmap" requires runtime definitions that cannot be serialized.',
+    );
+    expect(result.source?.vanilla?.render).toBeUndefined();
+  });
+
+  it('Table 明细页 demo 通过 canonical render 派生三种源码视图', () => {
+    const result = buildPreviewSource(
+      createInput({
+        Component: TableDetailDemo,
+        previewSource: tableDetailPreviewSource,
+        name: 'table-detail',
+        key: '../../contents/viz/table/detail/table-detail.zh.demo.tsx',
+        segments: ['viz', 'table', 'detail'],
+        sourceFiles: [{ file: 'table-detail.data.ts' }],
+      }),
+    );
+    const vanilla = result.source?.vanilla;
+
+    expect(result.previewIr).not.toBeNull();
+    expect(result.source?.react).toBeDefined();
+    expect(result.source?.ir).toBeDefined();
+    expect(vanilla?.files[0]?.code).toContain("import { scoreRows } from './table-detail.data'");
+    expect(vanilla?.files[0]?.code).not.toContain('const datasets =');
+    expect(vanilla?.files.map(file => file.filename)).toContain('table-detail.data.ts');
+    expect(vanilla?.render).toBeUndefined();
+  });
+
+  it('Table 布局 playground 从 canonical 状态派生三种源码视图', () => {
+    const result = buildPreviewSource(
+      createInput({
+        Component: TableLayoutPlaygroundDemo,
+        previewSource: tableLayoutPlaygroundPreviewSource,
+        name: 'table-layout-playground',
+        key: '../../contents/viz/table/detail/table-layout-playground.zh.demo.tsx',
+        segments: ['viz', 'table', 'detail'],
+        sourceFiles: [{ file: 'table-layout-playground.zh.data.ts' }],
+      }),
+    );
+    const vanilla = result.source?.vanilla;
+
+    expect(result.previewIr).not.toBeNull();
+    expect(result.source?.react).toBeDefined();
+    expect(result.source?.ir).toBeDefined();
+    expect(vanilla?.files[0]?.code).toContain(
+      "import { tableLayoutPlaygroundRows } from './table-layout-playground.zh.data'",
+    );
+    expect(vanilla?.files[0]?.code).not.toContain('const datasets =');
+    expect(vanilla?.files.map(file => file.filename)).toContain('table-layout-playground.zh.data.ts');
+    expect(vanilla?.render).toBeUndefined();
   });
 
   it('deriveIR false 时不执行 demo 并保持 React-only', () => {
