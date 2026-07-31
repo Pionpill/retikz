@@ -25,7 +25,7 @@ Data + Transform + Channel(Encoding):
 
 这条判断决定了 plot 的能力边界（见 §2）：凡能被「数据 → 通道」描述的图就能进 plot——位置通道交给坐标系、关系类几何交给 ribbon 等 mark；而定义性几何来自 packing / layout 算法（与原始数据字段无直接映射）的图（如词云）也不需要独立 struct 包，它们应作为 plot 的 layout transform：先算出位置 / 尺寸 / 路由等派生字段，再继续走通道、scale、坐标系、mark、guide 与 lowering。
 
-`type="line"` / `type="bar"` 这类新手友好入口归 `@retikz/chart`：chart 可以拥有自己的 Tier 3 `ChartSpec`，但它只 lower 成 PlotSpec，再由 plot 下沉到 core。chart 不能直接 lower 到 core，也不能拥有 plot 底层无法表达的能力。这与 retikz 现有的 Kernel / Sugar 分层规则一致：快捷入口服务上手，语义核心保持单一。
+`type="line"` / `type="bar"` 这类新手友好入口归 `@retikz/chart`：chart 可以拥有自己的 Tier 3 `ChartSpec`，先解析出完整 PlotSpec，再用 Standard 将 Plot 本体与可选标题、说明、来源等单图展示内容组合为一个结果。chart 不能私造直达 core 的几何 / renderer 路径，也不能拥有 plot 底层无法表达的可视化能力。这与 retikz 现有的分层规则一致：快捷入口服务上手，语义核心保持单一。
 
 ## 2. Plot 包边界
 
@@ -48,9 +48,11 @@ Data + Transform + Channel(Encoding):
 
 边界原则：
 
-> viz 组解决的是「有了数据之后如何可视化」。数据语义归共享 `@retikz/data`；底层可视化表达至少分为 plot 与 table：plot 负责 GoG 图形语法（含 layout transform），table 负责表格型展示，geo 作为地图类边界待决策；chart 是 plot 之上的 Tier 3 新手友好封装，负责把 type/config/preset 收敛为 `ChartSpec`，再 lower 成 PlotSpec。几何由 packing / layout 算法（词云、力导向 network、treemap）决定的结构化可视化不设独立 `@retikz/struct` 包，而是作为 plot 的 layout transform：先把结构数据转成位置、尺寸、路由等派生字段，之后统一走 plot 的 channel / scale / coordinate / mark / guide / lowering。
+> viz 组解决的是「有了数据之后如何可视化」。数据语义归共享 `@retikz/data`；底层可视化表达至少分为 plot 与 table：plot 负责 GoG 图形语法（含 layout transform），table 负责表格型展示，geo 作为地图类边界待决策；chart 是 plot 之上的 Tier 3 新手友好封装，负责把 type/config/preset 收敛为 `ChartSpec`，解析完整 PlotSpec，并通过 Standard 组合可选单图展示外壳。几何由 packing / layout 算法（词云、力导向 network、treemap）决定的结构化可视化不设独立 `@retikz/struct` 包，而是作为 plot 的 layout transform：先把结构数据转成位置、尺寸、路由等派生字段，之后统一走 plot 的 channel / scale / coordinate / mark / guide / lowering。
 
 Plot 拥有 guide 的领域解析，但不独占已经去除数据与坐标语义的通用呈现。以 Legend 为例，Plot 负责 channel / scale 绑定、domain / ticks、formatter、theme mapping、guide resolve、provenance / locator 与交互意图；解析后的 title、entries、swatch / ramp / symbol、内部布局与 lowering 交给 `@retikz/standard`。依赖保持 `plot -> standard -> core / math`，Standard 不反向读取 Plot IR。
+
+长期 label 边界也按语义而不是文字外观划分：axis title、tick label、datum / mark label 与数据锚定 annotation 继续属于 Plot；chart-level title、subtitle、caption、note、source、credit 属于 Chart 的可选 presentation，并由 Standard 布局 / 绘制。当前 Plot schema 中对应后者的 label role 是迁移候选，不构成 Plot 长期 ownership 的依据。
 
 ## 3. 核心概念
 
@@ -281,10 +283,10 @@ viz domain 分为三类 API：
 
 - **共享数据层**：`@retikz/data`。职责是数据模型、字段与值语义、通用 transform / statistics、字段输入解析、lineage 等宿主无关契约。
 - **Tier 2 表达层**：`@retikz/plot` / `@retikz/table` / geo 候选能力。职责是抽象能力、扩展契约、底层实现和 lowering；面向高级用户、AI、preset 作者和扩展作者。原 struct 范围收敛进 plot 的 layout transform，不作为独立包。
-- **Tier 3 封装层**：`@retikz/chart`。职责是通过 `type` / config / preset 提供新手友好的 API；可以拥有 JSON-safe 的 `ChartSpec`，但唯一执行出口是 lower 成 PlotSpec；不拥有直接到 core 的底层 IR、lowering 或 renderer。
+- **Tier 3 封装层**：`@retikz/chart`。职责是通过 `type` / config / preset 提供新手友好的 API；可以拥有 JSON-safe 的 `ChartSpec`，解析出可检查的完整 PlotSpec，并用 Standard 组合可选单图展示内容；不拥有直达 core 的私有几何、lowering 或 renderer。
 - **框架绑定层**：各模块各自发布 React / Vanilla 绑定包，例如 `@retikz/plot-react` / `@retikz/plot-vanilla`、`@retikz/chart-react` / `@retikz/chart-vanilla`、`@retikz/table-react` / `@retikz/table-vanilla`，以及候选的 `@retikz/geo-react` / `@retikz/geo-vanilla`。不规划统一 `@retikz/viz-react` / `@retikz/viz-vanilla` 聚合 adapter，避免安装不需要的模块。
 
-`data` 是 viz 共享数据语义层，`plot` / `table` / geo（若独立）都消费它；`chart` 是 `plot` 之上的友好封装，line / bar / tree / wordCloud 等 type/config 入口可以先装配成 ChartSpec，但必须 lower 成 PlotSpec。
+`data` 是 viz 共享数据语义层，`plot` / `table` / geo（若独立）都消费它；`chart` 是 `plot` 之上的友好封装，line / bar / tree / wordCloud 等 type/config 入口先装配成 ChartSpec，再解析完整 PlotSpec，并可形成包含 PlotSpec 的 Standard presentation composition。
 
 ### 5.1 Chart API
 
@@ -301,9 +303,12 @@ Chart API（包：`@retikz/chart`，框架表面由 `@retikz/chart-react` / `@re
 约束：
 
 - Chart 可以定义自己的 JSON-safe `ChartSpec`；单一根 data 与 Plot 保持一致，type 隐式选择完整 GoG 配方，IR 只保存数据角色、用户差异配置与显式追加内容。
-- ChartSpec 的唯一执行出口是 `lowerChartSpec(chartSpec): PlotSpec`。
+- Chart 必须暴露可独立 inspection 的完整 PlotSpec，但最终执行出口是包含该 PlotSpec 与可选 presentation 的单一 JSON-safe 组合结果；精确 API 由后续 ADR 冻结。
 - Chart 的 Canonical Type 目录封闭，不提供 `defineChart` 或 Chart registry；扩展完全复用 Plot 的正式能力。
 - Chart type 必须可展开成 plot 底层表达 API；type 核心配方不可撤销，用户只能在其允许范围内调整，并可围绕本体语义追加 Plot Mark / Transform 等成员。
+- Chart type 可以把多 view、facet、tracks 或 overlay 作为隐式配方；共享 coordinate、scale、axis、track 或同一数据映射语义的部分必须展开到同一个 PlotSpec，而不是由 Chart 私造跨 Plot 同步。
+- Chart 是空间透明封装：它可以增加外层 presentation namespace，但不得隐藏、扁平化或重建 Plot 的 view / arrangement / panel / track / plotArea identity 与 provenance。
+- Chart-level title、subtitle、caption、note、source、credit 与外框是可选 presentation，不属于 type 核心配方；布局与绘制复用 Standard，不写回 PlotSpec。
 - `line` / `bar` / `pie` 等坐标化图形展开成 plot primitive。
 - `tree` / `network` / `wordCloud` / `gauge` / `progress` / `pictogram` 等结构化图形展开成 plot layout transform + plot mark 组合。
 - Chart 不封装 table 能力；geo-backed type 等 geo 边界决策后再定。
@@ -412,7 +417,7 @@ import { Geo } from '@retikz/geo-react';
 - **底层 `@retikz/plot`**：可组合的坐标语法 primitive（data / transform / layout / scale / coordinate / encoding / mark / guide / layer），像 Recharts / Observable Plot 那样自由组合（即 §5.3 Plot API）。原 struct 范围作为 plot layout transform，不独立成包。
 - **底层 `@retikz/table`**：可组合的表格可视化 primitive（columns / cells / grouping / summary / pivot / matrix 等），承载表格布局和表格语义。
 - **底层 `@retikz/geo`（候选）**：可组合的地图可视化 primitive（projection / feature / layer / geo channel 等），是否独立成包待决策；若不独立，地图投影 / 地理布局能力进入 plot pipeline。
-- **高层 `@retikz/chart`**：line / bar / tree / wordCloud 等新手友好封装，拥有 Tier 3 ChartSpec，lower 成 PlotSpec 并调度 plot；不封装 table，不在本阶段封装 geo。
+- **高层 `@retikz/chart`**：line / bar / tree / wordCloud 等新手友好封装，拥有 Tier 3 ChartSpec，解析 PlotSpec、调度 Plot，并用 Standard 组合可选单图展示内容；不封装 table，不在本阶段封装 geo。
 - **框架绑定**：各表达层各自发布 `*-react` / `*-vanilla` 包，保持安装依赖精确。
 
 命名理由与业界直觉一致：**data** 指共享数据语义，**plot** 指坐标语法 / 组合层（Observable Plot、ggplot、Recharts），**chart** 指面向用户的图表封装，**table** 指表格可视化底座，**geo** 指地图 / 地理可视化候选底座。结构化算法不再命名为独立 struct 包，而是作为 plot 的 layout transform。
@@ -477,6 +482,10 @@ viz domain（data / plot / chart / table / geo 及其绑定包）留在主 monor
 - **plot 内坐标复合**：一个 plot 图内部的多个 coordinate scope（facet 小多图、inset、双轴、共享坐标骨架的 radial rings / cartesian lanes 等）。这是 plot 的职责，模型见下。
 - **跨域内容组合**：把整个 plot 与 uml / table / 任意业务内容拼到一起。这 **不由 plot 负责**，而是基于 core 现有 `Scope` 的通用能力——任意 Tier 2 内容都 lower 进可引用的 scope，由通用组合层编排。plot 对它的唯一义务是「可被组合」：lower 进可引用 scope 并暴露下列 anchor（见 §14）。
 
+Plot 的「可被组合」不只指整图 bbox。view、arrangement、facet panel、track、plotArea、axis region、series 与按需 datum 都应形成稳定、renderer-neutral 的 domain handle / provenance。Core 提供 handle 模型、索引与 qualified selector 基础；Plot 负责生成这些领域 handle 并解释其语义。
+
+当 Plot 被 Chart 包裹时，这些内部 identity 仍属于 Plot。Chart 可以在外层增加整图、frame、header、body、footer namespace，并让 Standard 布局改变最终全局 geometry，但不能重命名、扁平化或丢弃 Plot handle。外部工具应能先定位 Chart，再通过 qualified selector 进入 Plot body，继续选择某个 track、facet panel 或 plotArea；Chart 只转发 / 委托查询，不复制 Plot handle registry。
+
 推荐模型：
 
 ```txt
@@ -510,13 +519,15 @@ Scope 的职责：
 
 多坐标组合需要预留 semantic anchor：
 
+- coordinate view 与 arrangement：显式 view、facet / tracks arrangement 及其稳定派生 identity。
+- facet panel / track：数据分区 panel 与共享骨架 track。
 - panel bbox：`plot.north` / `plot.southEast`。
 - plot area：`plot.plotArea`。
 - axis region：`plot.xAxis` / `plot.yAxis`。
 - series region：`plot.series.<id>`。
 - data point anchor：`plot.datum.<id>` 或后续等价 locator。
 
-早期可以只实现 bbox anchor；但设计上应避免把 plot lowering 成不可引用的黑盒 primitive。
+早期可以只实现 bbox anchor；长期则由统一 spatial handle / selector 契约覆盖 view、arrangement、panel、track、plotArea、axis region、series 与 datum。无论 Plot 直接运行、被 Chart 包裹还是进入 Standard 外层组合，都不得把它 lowering 成不可引用的黑盒 primitive。
 
 ## 8. Lowering 到 core IR
 

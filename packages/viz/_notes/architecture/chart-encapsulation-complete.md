@@ -12,24 +12,24 @@
 
 Chart 解决的是：
 
-> 将常见图表意图表达为简洁、JSON-safe 的 ChartSpec，并确定性地展开为完整 PlotSpec，同时保留 Plot 的配置、扩展、诊断和追溯能力。
+> 将常见图表意图表达为简洁、JSON-safe 的 ChartSpec，确定性地展开完整 PlotSpec，并把可选的单图展示内容组合为同一个 renderer-neutral Chart 结果，同时保留 Plot 的配置、扩展、诊断和追溯能力。
 
 Chart 是 Tier 3 封装层，不是新的 capability domain。它的完备方向是 **Encapsulation Complete**：
 
-> 在封闭的 Canonical Type 目录内，每个 type 都能通过统一 ChartSpec、默认解析和 lowering 完整映射到 Plot；type 核心配方始终保留，用户可以在其边界内调整隐式 GoG 成员并追加正式 Plot 内容；React、Vanilla 与 JSON 入口等价；类型专用 definition 与宿主扩展都复用 Plot registry，不私造纵向能力机制或平行 registry。
+> 在封闭的 Canonical Type 目录内，每个 type 都能通过统一 ChartSpec、默认解析和 lowering 完整映射到 Plot；type 核心配方始终保留，用户可以在其边界内调整隐式 GoG 成员并追加正式 Plot 内容；Chart-level title、caption、source 等可选内容通过 Standard 与 Plot 本体组成单一结果；React、Vanilla 与 JSON 入口等价；类型专用 definition 与宿主扩展都复用 Plot registry，不私造纵向能力机制或平行 registry。
 
 “Chart 完备”不表示拥有最多的图表类型，也不表示任何名称都应进入 `type` union。它表示新增或维护一个官方 type 时，可以沿统一封装机制闭环，而不是为每个 type 写独立 schema、adapter、renderer 或 lowering 特判。
 
 ## 2. 包角色与端到端闭环
 
-| 角色                | 主责包 / 协作包             | 在 Chart 闭环中的责任                                                                                         | 不拥有                                      |
-| ------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| 数据能力            | `@retikz/data`              | 数据引用、字段解析、通用 transform / statistics、lineage                                                      | Chart type 与视觉默认                       |
-| 可视化能力          | `@retikz/plot`              | GoG schema、definition / registry、lowering、diagnostics、provenance / locator                                | Chart type 目录                             |
-| Chart 主责          | `@retikz/chart`             | ChartSpec、Canonical Type 配方、默认 / override 解析、配方所需的具体 Plot definitions、Chart-to-Plot lowering | 新 GoG 能力轴、renderer、开放 type registry |
-| 通用呈现            | `@retikz/standard`          | 由 Plot 解析后消费的领域无关 composite、布局和呈现                                                            | Chart 语义与字段角色                        |
-| 图形执行            | Core / Render               | 编译 Plot lowering 产物并渲染                                                                                 | Chart / Plot 领域语义                       |
-| authoring / runtime | chart-react / chart-vanilla | 构造同一 ChartSpec、传递 datasets / definitions、接入宿主                                                     | Chart 默认算法与私有 IR                     |
+| 角色                | 主责包 / 协作包             | 在 Chart 闭环中的责任                                                                                   | 不拥有                                      |
+| ------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| 数据能力            | `@retikz/data`              | 数据引用、字段解析、通用 transform / statistics、lineage                                                | Chart type 与视觉默认                       |
+| 可视化能力          | `@retikz/plot`              | GoG schema、definition / registry、lowering、diagnostics、provenance / locator                          | Chart type 目录                             |
+| Chart 主责          | `@retikz/chart`             | ChartSpec、Canonical Type 配方、默认 / override 解析、具体 Plot definitions、单图展示语义与最终组合编排 | 新 GoG 能力轴、renderer、开放 type registry |
+| 通用呈现            | `@retikz/standard`          | 由 Plot 或 Chart 解析后消费的领域无关 composite、布局和呈现                                             | Chart / Plot 语义与字段角色                 |
+| 图形执行            | Core / Render               | 编译 Plot 与 Standard lowering 产物并渲染                                                               | Chart / Plot 领域语义                       |
+| authoring / runtime | chart-react / chart-vanilla | 构造同一 ChartSpec、传递 datasets / definitions、接入宿主                                               | Chart 默认算法与私有 IR                     |
 
 完整链路必须保持：
 
@@ -39,7 +39,9 @@ Chart authoring / JSON
   -> Canonical Type recipe
   -> default + override + extension resolution
   -> complete PlotSpec
-  -> Plot schema / definitions / lowering
+  -> optional Chart presentation resolution
+  -> Standard composition containing PlotSpec
+  -> Plot / Standard definitions and lowering
   -> Core IR / Scene
   -> Renderer
   -> Plot provenance / locator / lineage consumed by host
@@ -49,17 +51,19 @@ Chart authoring / JSON
 
 ## 3. 封装能力面
 
-| 能力面             | 完备目标                                               | 关键不变量                                          |
-| ------------------ | ------------------------------------------------------ | --------------------------------------------------- |
-| Type Recipe        | 每个 Canonical Type 选择完整、确定的 Plot 配方         | 核心配方不可撤销；type 不是可任意改写的 preset      |
-| Sparse IR          | ChartSpec 只保存高层意图、数据角色、差异配置和追加内容 | 隐式默认不重复写入 IR；IR 仍 JSON-safe              |
-| Default Resolution | 核心配方、表现性默认和覆盖优先级统一                   | 不按 type 私造互不相容的 merge 规则                 |
-| Plot Extension     | 用户可调整隐式成员并追加 Plot operations               | 扩展复用 Plot schema / definition / registry        |
-| Lowering           | 相同输入确定性生成完整合法 PlotSpec                    | Chart 不直接生成 Core IR，不隐藏第二条执行链        |
-| Authoring Parity   | React、Vanilla、JSON 共享同一 ChartSpec 和 lowering    | JSX children 只是 sugar，不成为私有能力             |
-| Diagnostics        | schema、type、definition 与冲突错误 fail-loud          | 错误指向用户可修改的 Chart 或 Plot 配置             |
-| Traceability       | 默认、override、extension 的贡献可解释                 | Plot provenance / locator / lineage 不因 Chart 丢失 |
-| Docs / LLM         | schema 和文档能区分 Canonical Type 与 Chart Pattern    | 不用不断扩张 type union 换取可发现性                |
+| 能力面               | 完备目标                                                                  | 关键不变量                                          |
+| -------------------- | ------------------------------------------------------------------------- | --------------------------------------------------- |
+| Type Recipe          | 每个 Canonical Type 选择完整、确定的 Plot 配方                            | 核心配方不可撤销；type 不是可任意改写的 preset      |
+| Sparse IR            | ChartSpec 只保存高层意图、数据角色、差异配置、追加内容与显式 presentation | 隐式默认不重复写入 IR；IR 仍 JSON-safe              |
+| Default Resolution   | 核心配方、表现性默认和覆盖优先级统一                                      | 不按 type 私造互不相容的 merge 规则                 |
+| Plot Extension       | 用户可调整隐式成员并追加 Plot operations                                  | 扩展复用 Plot schema / definition / registry        |
+| Presentation         | 单图可选绘制 title、caption、source 等展示外壳                            | 语义归 Chart，布局 / 绘制复用 Standard，不污染 Plot |
+| Spatial Transparency | Chart 外层空间与 Plot 内部空间都可被稳定选择、解释和复用                  | 增加外层 namespace，但不吞掉或复制 Plot handles     |
+| Lowering             | 相同输入确定性生成完整 PlotSpec 与单一 Chart 组合结果                     | PlotSpec 可检查；Chart 不私造 Core 几何或隐藏旁路   |
+| Authoring Parity     | React、Vanilla、JSON 共享同一 ChartSpec 和 lowering                       | JSX children 只是 sugar，不成为私有能力             |
+| Diagnostics          | schema、type、definition 与冲突错误 fail-loud                             | 错误指向用户可修改的 Chart 或 Plot 配置             |
+| Traceability         | 默认、override、extension 的贡献可解释                                    | Plot provenance / locator / lineage 不因 Chart 丢失 |
+| Docs / LLM           | schema 和文档能区分 Canonical Type 与 Chart Pattern                       | 不用不断扩张 type union 换取可发现性                |
 
 ## 4. Type Recipe 完备
 
@@ -87,7 +91,7 @@ ChartSpec 的省略语义由 `type` 决定：省略代表使用类型默认，�
 ```text
 non-revocable type core recipe
   + (Plot built-in defaults
-     < Chart type presentational defaults
+     < Chart type Plot presentational defaults
      < ChartSpec theme
      < allowed GoG member overrides)
 ```
@@ -104,6 +108,22 @@ Type 核心配方只能在允许范围内调整，不能删除、关闭、替换
 - lower 后继续由 renderer 猜测或补齐 Chart 默认
 
 多个隐式同类成员需要稳定语义目标。其公开表达由 ADR 冻结，但完备标准是不依赖声明顺序和内部实现偶然性。
+
+### 5.1 单图展示外壳完备
+
+Chart presentation 只覆盖一个独立 Chart 可以选择绘制、但不构成 Plot 数据映射的内容。长期候选包括 title、subtitle、caption、note、source、credit，以及背景、边框、padding 和槽位间距；精确字段与首批范围由后续 ADR 冻结。
+
+必须按语义而不是视觉形态划分：
+
+- Chart 拥有展示槽位的含义、默认顺序、可选性和与整图的关系
+- Standard 拥有领域无关的 Box / Overlay / Frame 等组合、测量、布局和呈现机制
+- Plot 继续拥有 axis title、tick label、datum / mark label、数据锚定 annotation、legend 与 tooltip 的领域语义
+- adapter / host 拥有 export、toolbox、fullscreen、loading 等运行时 chrome 与状态切换
+- accessibility name / description 可以作为 Chart semantic metadata 候选，但可见 caption 与不可见描述不得混成同一含混语义
+
+presentation 不属于 Canonical Type 核心配方。没有显式内容时，type 不得凭空生成标题、来源或说明；用户可以省略或关闭整套展示外壳。Chart 可以为已声明内容提供样式与排列默认，但不能用开放 `graphic`、任意 ReactNode 或任意 slots 建立第二套通用组合系统。
+
+现有 Plot 实现中与 title、caption、note、source 对应的 chart-level label 是后续迁移候选，不能因为当前代码位置而继续把展示外壳定义为 Plot 长期职责。axis / datum / annotation label 不在该迁移范围。
 
 ## 6. Plot registry 横向扩展与 `defineChart` 不适用
 
@@ -142,29 +162,51 @@ React children 中的 Plot 内容必须可以表示为 Chart IR；Vanilla 和 JS
 
 混合内容应围绕当前 type 的本体功能增强，而不是把 Chart 当作无类型约束的 Plot 容器。核心配方破坏必须 fail-loud；对于无法可靠机械判断的语义偏离，不全面禁止任意组合，但文档、inspection 与可选诊断应引导作者在主要意图已经改变时直接使用 Plot。
 
-## 8. Lowering 完备
+## 8. Spatial Transparency 完备
 
-`lowerChartSpec` 只有一个合法输出：完整 PlotSpec。它必须：
+Chart presentation 会在 Plot 外增加 frame、header、body、footer 等布局区域，但 Chart 封装不能把 Plot 变成只剩整体 bbox 的不可寻址黑盒。完整闭环必须同时满足：
+
+- Chart 可以为整图与外层 presentation 区域生成稳定 handle；具体 handle 清单由后续空间契约 ADR 冻结
+- Plot 继续生成并拥有 view、arrangement、facet panel、track、plotArea、axis region、series、datum 等 domain handle
+- 外部 selector 可以先定位 Chart，再穿过 body / Plot namespace 定位内部 Plot 空间，而不只能选中整个 Chart
+- Chart 只做 namespace facade 与 selector delegation，不复制 Plot handle registry，不重新解释 facet / track，也不把内部 id 改造成 Chart 私有 id
+- Standard 布局改变最终全局 geometry 时，Core handle index 更新空间结果，但 Plot handle 的稳定 identity、domain payload、locator 与 provenance 保持连续
+- type recipe 隐式生成的 view / facet / track 仍在展开后的完整 PlotSpec 中可检查，并能追溯到 type default、用户 override 或显式 extension
+
+Canonical Type 可以把 Plot composition 作为核心配方。例如价格轨道、成交量轨道与共享时间轴应展开为同一个 PlotSpec；只要共享 coordinate、scale、axis、track 或同一数据映射语义，就不应拆成多个 Chart 再由 Chart 私下同步。多个独立 Chart / Plot / Table 的静态排列与 attachment 归 Standard + Core spatial handles；linked selection、filter、scroll、responsive dashboard state 归更高层 dashboard / workspace runtime。Chart 不拥有 dashboard IR，也不复制 Plot composition 或 Standard layout。
+
+空间透明性至少需要验证：
+
+- 等价 PlotSpec 单独运行与被 Chart 包裹后，内部 handle 集合与相对 selector 语义一致
+- selector 可以分别命中整个 Chart、presentation 区域、Plot body、某个 view / track / facet panel / plotArea
+- 多个 Chart 中相同 Plot 局部 id 经过 qualified namespace 后不冲突
+- Chart presentation 的加入或关闭只改变外层组合 geometry，不破坏内部 provenance / locator / lineage
+- selector 目标不存在、namespace 越界或被 type override 破坏时 fail-loud，不静默回退到整个 Chart
+
+## 9. Lowering 完备
+
+Chart lowering 必须产出一个包含完整 PlotSpec 的单一、JSON-safe、renderer-neutral 组合结果，而不是以裸 PlotSpec 作为最终 Chart，也不是让 adapter 在外部补 DOM-only 标题。精确公开 API 由后续 ADR 冻结，但逻辑阶段必须保持：
 
 - 在 Chart 层校验 type 数据角色与覆盖边界
-- 确定性展开隐式配方
-- 验证 type 核心配方在 override 与 extension 后仍完整、有效
+- 确定性展开隐式配方，验证核心配方在 override 与 extension 后仍完整、有效
 - 使用统一规则合并 defaults、overrides 与 extensions
-- 输出可通过 PlotSpec schema 的结果
-- 保留 stable identity 与可追溯来源
-- 不读取 renderer 或 framework 私有状态
-- 不直接调用 Core geometry / compile 绕开 Plot
+- 生成可通过 PlotSpec schema、可独立 inspection 的完整 PlotSpec
+- 独立解析可选 Chart presentation 及其稳定 identity / 来源
+- 通过 Standard 通用布局组合 presentation children 与 PlotSpec
+- 让 Plot 与 Standard 各自沿正式 definition / lowering 主链进入 Core
+- 不读取 renderer 或 framework 私有状态，不自行实现文字测量、容器 solver 或私有几何
 
-Chart lowering 与 Plot lowering 应可独立观察和测试。至少需要验证：
+Chart resolution、Plot lowering 与 presentation composition 应可分别观察和测试。至少需要验证：
 
 - ChartSpec 到预期 PlotSpec 的精确等价
 - 删除、替换或关闭 type 核心成员的配置稳定失败
-- 显式 Chart 配置与手写等价 PlotSpec 的可观察结果一致
-- React / Vanilla / JSON 生成同一 ChartSpec 或等价 PlotSpec
+- 显式 Chart 图本体配置与手写等价 PlotSpec 的可观察结果一致
+- presentation 缺省时不生成额外可见内容，显式内容时形成预期 Standard 组合
+- React / Vanilla / JSON 生成同一 ChartSpec、等价 PlotSpec 与等价最终组合
 - 自定义 Plot definitions 能穿过 Chart 链路被统一消费
-- 错误路径不会静默丢弃用户配置或退化为另一类型
+- 错误路径不会静默丢弃用户配置、展示内容或退化为另一类型
 
-## 9. Diagnostics 与 Traceability 完备
+## 10. Diagnostics 与 Traceability 完备
 
 Chart 隐式内容越多，越需要可解释性。完整闭环至少要求：
 
@@ -175,11 +217,13 @@ Chart 隐式内容越多，越需要可解释性。完整闭环至少要求：
 - ID 冲突不自动重命名或覆盖
 - 所需 Plot definition 缺失时保留 capability key 与来源信息
 - 工具可以查看展开后的 PlotSpec
-- Plot provenance / locator / lineage 能继续定位最终视觉贡献
+- 工具可以查看 Chart presentation 的来源、最终组合位置及其与 Plot label / guide 的区别
+- 工具可以区分 Chart 外层 handle 与 Plot 内部 handle，并检查 qualified selector 的委托路径
+- Plot 的 view / arrangement / facet panel / track / plotArea identity、provenance / locator / lineage 能继续定位最终视觉贡献
 
 具体 artifact schema 可以延期，但不得以“Chart 只是 sugar”为理由省略诊断和来源链。
 
-## 10. Docs 与 type taxonomy 完备
+## 11. Docs 与 type taxonomy 完备
 
 文档发现性不等于公开 type 数量。Chart 文档使用：
 
@@ -192,7 +236,7 @@ Chart 隐式内容越多，越需要可解释性。完整闭环至少要求：
 
 新增 type 不能只因为某个市场别名常见。应先把候选图表展开为完整 Plot 配方，移除 theme / style 并提取可复用 modifier，再判断剩余的数据角色、Mark 组合、Transform 与 Coordinate / Composition 拓扑是否形成稳定独立语义。具体阈值由 Chart architecture design 或 ADR 决定。
 
-## 11. 准入与闭环检查
+## 12. 准入与闭环检查
 
 新的 Chart type 进入 roadmap / ADR 前至少填写：
 
@@ -204,13 +248,18 @@ Chart 隐式内容越多，越需要可解释性。完整闭环至少要求：
 - 完整隐式 Plot 配方：
 - 不可撤销的 type 核心配方与允许调整范围：
 - 表现性默认及关闭 / 替换范围：
+- 可选 Chart presentation、默认排列与关闭语义：
+- Chart / Plot label 边界与 Standard composition：
+- 隐式 composition / track / facet 配方及其核心不变量：
 - 用户 override 与 Plot extension 表面：
 - 扩展后如何保持 type 本体语义：
 - 依赖的 Data / Plot / Standard / Core capability：
 - 是否只使用现有能力轴与 contract：
 - 新增具体 definition、来源、注册方式与闭环：
 - 缺失纵向 capability 的 owner 与处理结论：
-- ChartSpec -> PlotSpec lowering 与错误路径：
+- ChartSpec -> complete PlotSpec -> presentation composition 的 lowering 与错误路径：
+- Chart 外层 handles、Plot 内部 handle forwarding 与 qualified selector：
+- 空间 identity、provenance / locator 在封装前后的保持方式：
 - React / Vanilla / JSON parity：
 - diagnostics / provenance / locator / lineage：
 - Canonical Type 还是 Chart Pattern，理由：
@@ -219,29 +268,37 @@ Chart 隐式内容越多，越需要可解释性。完整闭环至少要求：
 
 若需求可以由既有 Plot contract 下的具体 Mark、Transform 等 definition 表达，Chart ADR 可以纳入该横向 provider，但必须证明 definition、registry、lowering、诊断与测试闭环。只有当需求需要新增能力轴、contract、registry 类型、pipeline 语义或 Core primitive 时，当前 Chart ADR 才必须暂停并把纵向能力送回对应 owner；不得在 Chart 内建立旁路实现。
 
-## 12. 常见反例
+## 13. 常见反例
 
 以下情况都不算 Chart 封装完备：
 
-- 某 type 由 renderer 或 React 组件直接绘制，无法生成 PlotSpec
+- 某 type 由 renderer 或 React 组件直接绘制，无法生成完整 PlotSpec
+- adapter 用 DOM-only 外壳补 title / caption / source，Vanilla、SSR 或导出结果不等价
+- 把 title / caption / source 塞回 PlotSpec，迫使 Plot 长期承担 Chart 展示外壳
+- Chart 自建文字测量、Box / Overlay solver 或开放任意 graphic / ReactNode slots
 - ChartSpec 只保存 `type + x + y`，常用 style、guide、scale、mark 配置无法表达
 - 允许 Bubble override 删除 Point Mark、改成 Interval Mark，或撤销维持气泡语义的核心 encoding
 - 追加内容已经成为主要表达、原 type 只剩名义存在，却仍把 Chart 当作通用 Plot 容器
 - 为股票图在 Chart 内建立私有股票几何路径，而不是提供 Plot registry 可识别的 `MarkDefinition`
 - 为 waterfall 在 Chart 内旁路计算数据，而不是提供或复用 Data / Plot transform definition
 - React children 能追加 Plot Mark，但 Vanilla / JSON 无对应 IR
+- Chart wrapper 只暴露整个 body bbox，吞掉 Plot 的 view / track / facet panel / plotArea handles
+- Chart 复制 Plot handle registry、重新生成内部 id，或让 selector 依赖不透明数组下标
+- type recipe 把共享时间轴的价格 / 成交量轨道拆成多个 Chart，再在 Chart 内私造同步状态
+- Chart 私造 dashboard IR，拥有 linked selection、filter、scroll 或 responsive runtime state
 - 每个 type 各写一套 merge、默认轴、theme 或错误处理
 - 用 `series[]` 给每个系列绑定独立 dataset，破坏 Plot 单根 data 模型
 - 为了用户自定义 type 增加 Chart registry，形成第二套扩展体系
 - 文档把 stacked / horizontal / smooth 等所有市场名称都固化成 type union
 
-## 13. 与能力域和版本的关系
+## 14. 与能力域和版本的关系
 
 Chart 封装完备性依赖但不取代：
 
 - Data Complete：数据与通用 transform 可被统一消费
 - Visualization Complete：所有 GoG 能力可表达、扩展并 lower
-- Drawing Complete：Plot 产物可由 Core / Render 执行
+- Standard 通用呈现：Chart presentation 与 Plot 本体可以通过同一领域无关布局 / composite 主链组合
+- Drawing Complete：Plot 产物可由 Core / Render 执行，空间 handle / selector 由 Core 提供 renderer-neutral 基础
 
 Chart completeness 只检查高层意图是否完整、安全、可解释地映射到这些能力。
 
