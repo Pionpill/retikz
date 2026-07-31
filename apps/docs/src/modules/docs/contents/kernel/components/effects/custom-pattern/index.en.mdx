@@ -15,7 +15,7 @@ Primitive data stores only serializable configuration such as `{ kind: 'pattern'
 
 ## Define the capability
 
-Use `definePattern()` to create a named definition. `emit` receives the resolved size and color, then returns structured primitives in tile-local `0..size` coordinates.
+Use `definePattern()` to create a named definition. `emit` receives the resolved size, base line style, directional styles, and cyclic styles, then returns structured primitives in tile-local coordinates.
 
 ```tsx
 import { definePattern } from '@retikz/core';
@@ -49,6 +49,8 @@ const cross = definePattern({
 
 Built-in and custom patterns implement the same `PatternDefinition` and enter the same registry. `definePattern()` only checks the definition shape in TypeScript; it does not put functions into primitive data.
 
+When `emit` returns an `Iterable<MarkerPrimitive>` directly, the final tile period stays at `context.size`. If the motif needs a different complete period, return `{ tileSize, motif }`; compile validates `tileSize` and writes it into the same Scene pattern resource.
+
 ## Inject the host
 
 Pass the definition to `<Layout patterns>`, then reference its `name` from a Node or Path `fill`:
@@ -78,12 +80,12 @@ When calling `compileToScene()` directly, use `CompileOptions.patterns`. Definit
 
 At compile time, built-in and custom definitions merge into one registry. The compiler looks up `shape`, calls `emit`, and writes a resolved pattern resource into the Scene. SVG and Canvas materialize that resource without seeing the definition function.
 
-| Stage    | Input                    | Output                    |
-| -------- | ------------------------ | ------------------------- |
-| Register | Built-ins + `patterns`   | One name-indexed registry |
-| Resolve  | `shape`, size, and color | Tile-local primitives     |
-| Emit     | Resolved tile            | Scene pattern resource    |
-| Render   | Scene pattern resource   | SVG or Canvas pattern     |
+| Stage    | Input                        | Output                           |
+| -------- | ---------------------------- | -------------------------------- |
+| Register | Built-ins + `patterns`       | One name-indexed registry        |
+| Resolve  | `shape` and instance options | Inherited, expanded emit context |
+| Emit     | Resolved tile                | Scene pattern resource           |
+| Render   | Scene pattern resource       | SVG or Canvas pattern            |
 
 Built-in and custom patterns therefore share name conflicts, lookup, validation, and rendering semantics.
 
@@ -98,8 +100,14 @@ Built-in and custom patterns therefore share name conflicts, lookup, validation,
     {
       label: 'Resolve a tile into a Scene resource',
       path: 'packages/kernel/core/src/compile/resource/paint.ts',
-      startLine: 29,
-      endLine: 79,
+      startLine: 39,
+      endLine: 102,
+    },
+    {
+      label: 'Pattern emit context and output contract',
+      path: 'packages/kernel/core/src/contract/pattern/types.ts',
+      startLine: 32,
+      endLine: 86,
     },
     {
       label: 'Materialize an SVG pattern resource',
@@ -124,14 +132,15 @@ TikZ declares patterns at the PGF layer. retikz represents the same extension wi
 
 ## Errors and limits
 
-| Case                            | Result                           | Fix                                  |
-| ------------------------------- | -------------------------------- | ------------------------------------ |
-| Empty or duplicate name         | Registration throws              | Use a non-empty unique `name`        |
-| Unregistered `shape`            | Compile lists available names    | Inject or correct the definition     |
-| Invalid `size` / `lineWidth`    | Compile throws                   | Pass a finite positive number        |
-| Non-finite `rotation`           | Compile throws                   | Pass a finite angle                  |
-| `emit` throws                   | Compile reports the pattern name | Fix the definition logic             |
-| Invalid primitive or coordinate | Compile validation fails         | Return supported structured geometry |
+| Case                                  | Result                           | Fix                                  |
+| ------------------------------------- | -------------------------------- | ------------------------------------ |
+| Empty or duplicate name               | Registration throws              | Use a non-empty unique `name`        |
+| Unregistered `shape`                  | Compile lists available names    | Inject or correct the definition     |
+| Invalid `size` / `lineWidth`          | Compile throws                   | Pass a finite positive number        |
+| Non-finite `rotation`                 | Compile throws                   | Pass a finite angle                  |
+| `emit` throws                         | Compile reports the pattern name | Fix the definition logic             |
+| Non-positive or non-finite `tileSize` | Compile validation fails         | Return a finite positive period      |
+| Invalid primitive or coordinate       | Compile validation fails         | Return supported structured geometry |
 
 Tile output accepts only JSON-safe structured geometry. Do not return functions, DOM nodes, text, external resource references, or non-finite coordinates.
 
@@ -139,21 +148,39 @@ Tile output accepts only JSON-safe structured geometry. Do not return functions,
 
 ### PatternDefinition
 
-| Prop          | Type                                 | Default | Description                                         |
-| ------------- | ------------------------------------ | ------- | --------------------------------------------------- |
-| `name`        | `string`                             | —       | Registry name used by `pattern.shape`               |
-| `defaultSize` | `number?`                            | `8`     | Optional period used when `pattern.size` is omitted |
-| `emit`        | `(ctx) => Iterable<MarkerPrimitive>` | —       | Produces tile-local geometry                        |
+| Prop          | Type                         | Default | Description                                   |
+| ------------- | ---------------------------- | ------- | --------------------------------------------- |
+| `name`        | `string`                     | —       | Registry name used by `pattern.shape`         |
+| `defaultSize` | `number?`                    | `8`     | Base size used when `pattern.size` is omitted |
+| `emit`        | `(ctx) => PatternEmitOutput` | —       | Produces tile-local geometry                  |
 
 ### PatternEmitContext
 
-| Prop         | Type            | Default        | Description                      |
-| ------------ | --------------- | -------------- | -------------------------------- |
-| `size`       | `number`        | resolved       | Tile period                      |
-| `color`      | `string`        | `currentColor` | Primary motif color              |
-| `background` | `string?`       | —              | Omitted means a transparent tile |
-| `lineWidth`  | `number?`       | —              | Omitted lets the motif choose    |
-| `round`      | `(n) => number` | —              | Applies compile precision        |
+| Prop              | Type                              | Default        | Description                                    |
+| ----------------- | --------------------------------- | -------------- | ---------------------------------------------- |
+| `size`            | `number`                          | resolved       | Base size resolved from instance or definition |
+| `color`           | `string`                          | `currentColor` | Primary motif color                            |
+| `background`      | `string?`                         | —              | Omitted means a transparent tile               |
+| `lineWidth`       | `number?`                         | —              | Omitted lets the motif choose                  |
+| `dashPattern`     | `Array<number>?`                  | —              | Resolved stroke dash rhythm                    |
+| `dashOffset`      | `number?`                         | —              | Starting stroke dash offset                    |
+| `lineCap`         | <ApiValues name="PathLineCap" />  | —              | Stroke endpoint style                          |
+| `lineJoin`        | <ApiValues name="PathLineJoin" /> | —              | Stroke corner style                            |
+| `horizontalStyle` | `ResolvedPatternLineStyle?`       | —              | Horizontal style with base fields inherited    |
+| `verticalStyle`   | `ResolvedPatternLineStyle?`       | —              | Vertical style with base fields inherited      |
+| `lineStyleCycle`  | `ResolvedPatternLineStyleCycle?`  | —              | Complete style array expanded by index         |
+| `round`           | `(n) => number`                   | —              | Applies compile precision                      |
+
+`dashPattern`, directional styles, and cycle styles already reflect field inheritance and the `dashPattern > dashed > dotted` priority. Custom definitions can map them directly to `MarkerPathPrim` without parsing presets again. `lineStyleCycle.styles` always has the same length as `period`.
+
+### PatternEmitResult
+
+| Prop       | Type                        | Default | Description                             |
+| ---------- | --------------------------- | ------- | --------------------------------------- |
+| `tileSize` | `number`                    | —       | Final finite positive tile period       |
+| `motif`    | `Iterable<MarkerPrimitive>` | —       | Structured geometry in tile coordinates |
+
+`PatternEmitOutput` is the union of a plain motif iterable and `PatternEmitResult`. Return the result object only when the motif's complete period differs from `context.size`.
 
 ## Related
 

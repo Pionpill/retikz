@@ -3,16 +3,13 @@ import { z } from 'zod';
 import { DrawableInstanceSchema, DrawableStyleSchema } from '../../drawable';
 import { JsonObjectSchema } from '../../json';
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
+import { PathLineCapSchema, PathLineJoinSchema, StrokeDashOffsetSchema, StrokeDashPatternSchema } from '../../stroke';
 import { ArrowEndDetailSchema } from '../arrow';
 import { PathRibbonOptionsSchema } from '../ribbon';
 import { GeometryLabelSchema, StepSchema } from '../step';
-import { PathFillRule, PathKind, PathLineCap, PathLineJoin } from './constants';
+import { PathFillRule, PathKind } from './constants';
 
 export const PathFillRuleSchema = z.enum(PathFillRule).describe('Path fill rule keyword.');
-
-export const PathLineCapSchema = z.enum(PathLineCap).describe('Path stroke endpoint cap keyword.');
-
-export const PathLineJoinSchema = z.enum(PathLineJoin).describe('Path stroke corner join keyword.');
 
 export const PathAnisotropicScaleSchema = z
   .object({
@@ -62,15 +59,12 @@ export const PathBaseSchema = z
       .union([GeometryLabelSchema, z.array(GeometryLabelSchema).min(1)])
       .optional()
       .describe('Host label attached to this path-like relation.'),
-    dashPattern: z
-      .array(z.number().nonnegative())
-      .min(1)
-      .optional()
-      .describe('Stroke dash pattern lengths in user units. Omitted fields mean solid line.'),
-    dashOffset: z
-      .number()
-      .optional()
-      .describe('Stroke dash offset in user units. Positive and negative finite values are allowed.'),
+    dashPattern: StrokeDashPatternSchema.optional().describe(
+      'Stroke dash pattern lengths in user units. Omitted fields mean solid line.',
+    ),
+    dashOffset: StrokeDashOffsetSchema.optional().describe(
+      'Stroke dash offset in user units. Positive and negative finite values are allowed.',
+    ),
     fillRule: PathFillRuleSchema.optional().describe(
       'How self-intersecting / nested sub-paths are filled. `nonzero` (default) winds-by-direction; `evenodd` toggles fill on each crossing — useful for ring / donut shapes.',
     ),

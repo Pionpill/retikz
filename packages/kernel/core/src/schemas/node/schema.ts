@@ -15,6 +15,7 @@ import {
 } from '../position';
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../scalar';
 import { ShapeRefSchema } from '../shape';
+import { StrokeDashOffsetSchema, StrokeDashPatternSchema } from '../stroke';
 import { CssColorSchema, GraphicStyleSchema } from '../style';
 import { createLabelVisualStyleShape, LabelTextContentSchema, TextBlockSchema } from '../text';
 import { NodeLabelPlacement, NodeLabelPosition, NodeLabelRotateMode, NodeTextAlign } from './constants';
@@ -210,15 +211,12 @@ export const NodeSchema = z
     strokeWidth: z.number().nonnegative().optional().describe('Border width in user units; defaults to 1 when omitted'),
     dashed: z.boolean().optional().describe('Dashed border preset. `dashPattern` takes precedence.'),
     dotted: z.boolean().optional().describe('Dotted border preset. `dashPattern` and `dashed` take precedence.'),
-    dashPattern: z
-      .array(z.number().nonnegative())
-      .min(1)
-      .optional()
-      .describe('Explicit stroke dash pattern lengths in user units; overrides `dashed` and `dotted`.'),
-    dashOffset: z
-      .number()
-      .optional()
-      .describe('Explicit stroke dash offset in user units. Positive and negative finite values are allowed.'),
+    dashPattern: StrokeDashPatternSchema.optional().describe(
+      'Explicit stroke dash pattern lengths in user units; overrides `dashed` and `dotted`.',
+    ),
+    dashOffset: StrokeDashOffsetSchema.optional().describe(
+      'Explicit stroke dash offset in user units. Positive and negative finite values are allowed.',
+    ),
     cornerRadius: z
       .number()
       .nonnegative()

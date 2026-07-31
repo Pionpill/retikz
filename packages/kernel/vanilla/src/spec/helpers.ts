@@ -1,8 +1,21 @@
-import type { IRChild, IRCoordinate, IRNode, IRPath, IRScope, PathThicknessValue, WayDSL } from '@retikz/core';
+import type {
+  InspectionOptionsInputObject,
+  IRCoordinate,
+  IRNode,
+  IRPath,
+  PathThicknessValue,
+  WayDSL,
+} from '@retikz/core';
 
 import { parsePathThickness, parseWay } from '@retikz/core';
 
-import type { VanillaChildSpec, VanillaEmbedSpec, VanillaFigureSpec, VanillaLayerSpec } from './types';
+import type {
+  VanillaChildSpec,
+  VanillaEmbedSpec,
+  VanillaFigureSpec,
+  VanillaLayerSpec,
+  VanillaScopeSpec,
+} from './types';
 
 /** Vanilla 图形辅助函数的输入配置 */
 export type VanillaFigureInput = Pick<VanillaFigureSpec, 'id' | 'viewBox' | 'animations'> &
@@ -75,10 +88,13 @@ export const path: PathFn = (
 };
 
 /** Vanilla 作用域普通规格辅助函数 */
-export const scope = (config: Omit<IRScope, 'type' | 'children'>, children: Array<VanillaChildSpec>): IRScope => ({
+export const scope = (
+  config: Omit<VanillaScopeSpec, 'type' | 'children'>,
+  children: Array<VanillaChildSpec>,
+): VanillaScopeSpec => ({
   type: 'scope',
   ...config,
-  children: children as Array<IRChild>,
+  children,
 });
 
 /** Vanilla 分层普通规格辅助函数 */
@@ -93,15 +109,20 @@ export const layer = (
 };
 
 /** Vanilla Tier2 嵌入节点普通规格辅助函数 */
-export const embed = <TProps = Record<string, unknown>>(
+export const embed = <
+  TProps = Record<string, unknown>,
+  TInspect extends InspectionOptionsInputObject = InspectionOptionsInputObject,
+>(
   kind: string,
   id: string,
   props: TProps,
-): VanillaEmbedSpec<TProps> => ({
+  inspect?: boolean | TInspect,
+): VanillaEmbedSpec<TProps, TInspect> => ({
   type: 'embed',
   kind,
   id,
   props,
+  ...(inspect === undefined ? {} : { inspect }),
 });
 
 /** Vanilla 图形普通规格辅助函数 */

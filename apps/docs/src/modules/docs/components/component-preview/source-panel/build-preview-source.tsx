@@ -92,12 +92,24 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
     irJson = irJsonOverride.replace(/\n$/, '');
     try {
       const ir = JSON.parse(irJson) as IRScene;
-      resolvedPreviewIr = { ir, contributions: [], width: undefined, height: undefined };
+      resolvedPreviewIr = {
+        ir,
+        contributions: [],
+        inspectionRoots: [],
+        width: undefined,
+        height: undefined,
+      };
     } catch (error) {
       irJson = `// Failed to parse IR override: ${errorMessage(error)}`;
     }
   } else if (exportedPreviewIR !== undefined) {
-    resolvedPreviewIr = { ir: exportedPreviewIR, contributions: [], width: undefined, height: undefined };
+    resolvedPreviewIr = {
+      ir: exportedPreviewIR,
+      contributions: [],
+      inspectionRoots: [],
+      width: undefined,
+      height: undefined,
+    };
     irJson = formatIR(exportedPreviewIR);
   } else if (previewSource?.canonicalRender !== undefined) {
     try {

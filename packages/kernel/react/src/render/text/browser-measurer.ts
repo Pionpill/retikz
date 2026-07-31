@@ -36,9 +36,9 @@ export const browserMeasurer: TextMeasurer = (text, font) => {
   const m = c.measureText(text);
   // lib.dom 把 actualBoundingBox* 标成必填，但旧 Safari / Chromium 仍可能返回 undefined，故意保留兜底
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  const ascent = m.actualBoundingBoxAscent ?? font.size * 0.8;
+  const ascent = Math.max(0, m.actualBoundingBoxAscent ?? font.size * 0.8);
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  const descent = m.actualBoundingBoxDescent ?? font.size * 0.2;
+  const descent = Math.max(0, m.actualBoundingBoxDescent ?? font.size * 0.2);
   return {
     width: m.width,
     height: ascent + descent || font.size * 1.2,

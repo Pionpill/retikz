@@ -1,5 +1,5 @@
 import type { LayoutChildFailure } from '../contract';
-import type { CompileOccurrenceLocator } from './types';
+import type { CompileOccurrenceLocator } from '../contract';
 
 import { formatCompileOccurrence } from './artifact';
 

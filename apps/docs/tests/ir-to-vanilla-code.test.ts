@@ -288,4 +288,26 @@ describe('irToVanillaCode fallback', () => {
       'Cannot generate Vanilla code for Tier 2 composite "plot.plot".',
     );
   });
+
+  it('为三种 Standard layout composite 生成对应 Vanilla builder 与 adapter', () => {
+    const code = irToVanillaCode(
+      ir([
+        { namespace: 'standard', type: 'flexLayout', children: [] },
+        {
+          namespace: 'standard',
+          type: 'gridLayout',
+          columns: [{ kind: 'fixed', value: 10 }],
+          children: [],
+        },
+        { namespace: 'standard', type: 'overlayLayout', children: [] },
+      ]),
+    );
+
+    expect(code).toContain('flexLayout(');
+    expect(code).toContain('gridLayout(');
+    expect(code).toContain('overlayLayout(');
+    expect(code).toContain('FlexLayoutVanillaAdapter');
+    expect(code).toContain('GridLayoutVanillaAdapter');
+    expect(code).toContain('OverlayLayoutVanillaAdapter');
+  });
 });

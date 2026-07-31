@@ -1,0 +1,79 @@
+---
+title: Contract - Artifact
+description: Look up typed Standard layout compile artifacts, bounds semantics, overflow state, and container-specific solved results.
+---
+
+Layout artifacts record observable results solved during the same Core compilation. They describe parent allocation slots, real child occupancy, visual envelopes, and clipping results. They do not persist proposals, probe candidates, replay tokens, solver objects, or private child IR.
+
+> The Core artifact envelope owns occurrence, namespace, and composite type. Standard schemas on this page parse only its `value`. See [Runtime](/standard/layout/reference/runtime) for capability loading, compilation, and artifact selection.
+
+## Shared fields
+
+### LayoutArtifactSchema
+
+<ZodSchema
+  name="LayoutArtifactSchema"
+  description="Kind-discriminated union of the three Standard typed layout artifacts."
+/>
+
+Every concrete artifact has a `container` with these fields:
+
+| Field              | Type                         | Description                                                  |
+| ------------------ | ---------------------------- | ------------------------------------------------------------ |
+| `allocationBounds` | `LayoutArtifactRect`         | Final container allocation rectangle                         |
+| `contentBounds`    | `LayoutArtifactRect`         | Content rectangle after padding                              |
+| `visualBounds`     | `LayoutArtifactRect`         | Union of translated item visual bounds                       |
+| `visibleBounds`    | `LayoutArtifactRect \| null` | Union still visible after overflow policy; `null` when empty |
+
+Every `items[]` entry shares:
+
+| Field              | Type                              | Description                                               |
+| ------------------ | --------------------------------- | --------------------------------------------------------- |
+| `key`              | `string`                          | Matching authored item identity                           |
+| `sourceIndex`      | `number`                          | Contiguous zero-based authored order                      |
+| `marginBounds`     | `LayoutArtifactRect`              | Full parent allocation area including resolved margins    |
+| `slotBounds`       | `LayoutArtifactRect`              | Parent-assigned slot excluding margins                    |
+| `allocationBounds` | `LayoutArtifactRect`              | Real child occupancy after accepting or refusing the slot |
+| `visualBounds`     | `LayoutArtifactRect`              | Conservative visual envelope including strokes or labels  |
+| `visibleBounds`    | `LayoutArtifactRect \| null`      | Visual region remaining after clipping                    |
+| `translation`      | `{ x: number, y: number }`        | Container-local translation applied before replay         |
+| `overflow`         | `{ allocation, visual, clipped }` | Per-axis occupancy, visual, and clipping state            |
+| `alignmentGuide?`  | `{ name, position, fallback }`    | Baseline guide or edge fallback used for placement        |
+
+`slotBounds`, `allocationBounds`, and `visualBounds` are not interchangeable. Fixed geometry may refuse its parent slot, and strokes or labels may expand the visual envelope further.
+
+## Container-specific artifacts
+
+### FlexLayoutArtifactSchema
+
+<ZodSchema
+  name="FlexLayoutArtifactSchema"
+  description="FlexLayout container, source-order items, and physical cross-order lines."
+/>
+
+`items[].line` identifies the item's line. Each `lines[]` entry records a contiguous `index`, `itemKeys`, physical main axis, main range, and cross range. The two collections must form a complete bidirectional partition.
+
+### GridLayoutArtifactSchema
+
+<ZodSchema
+  name="GridLayoutArtifactSchema"
+  description="GridLayout container, resolved item spans, and column/row track geometry."
+/>
+
+Each item adds `column`, `row`, `columnSpan`, and `rowSpan`. `columns[]` and `rows[]` are sorted by physical start and record contiguous `index`, `start`, `size`, `sourceKind`, and `implicit` fields.
+
+### OverlayLayoutArtifactSchema
+
+<ZodSchema
+  name="OverlayLayoutArtifactSchema"
+  description="OverlayLayout container, source-order items, and stable resolved paintOrder."
+/>
+
+Each item adds `placement`, `sizeParticipation`, `zIndex`, and optional `position`. A `positioned` item must expose `position.target` and `position.slotAnchor`; both use container-allocation coordinates and coincide within numeric tolerance. An `aligned` item must omit the field. `paintOrder` is a complete permutation of item keys, sorted by ascending `zIndex` and then stable `sourceIndex`.
+
+## Related
+
+- [API Reference](/standard/layout/reference): reference responsibilities and navigation
+- [Contract - Input](/standard/layout/reference/contract-input): container and LayoutItem JSON schemas
+- [Runtime](/standard/layout/reference/runtime): compiling and reading typed artifacts
+- [Layout](/kernel/components/layout/overview): Core proposal, slot, bounds, and replay contracts

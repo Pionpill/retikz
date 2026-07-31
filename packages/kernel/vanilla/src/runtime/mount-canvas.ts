@@ -1,4 +1,4 @@
-import type { CompileArtifact, Scene } from '@retikz/core';
+import type { CompileArtifact, InspectionPlane, Scene } from '@retikz/core';
 import type { AnimationControls, IdClockRegistry } from '@retikz/render/animation';
 import type { PrimAnimationResolution } from '@retikz/render/canvas';
 import type { HydrationController } from '@retikz/render/hydration';
@@ -12,7 +12,7 @@ import {
   sceneHasAnimations,
   sceneHasAutoplayTrigger,
 } from '@retikz/render/animation';
-import { hitTest, renderToCanvas } from '@retikz/render/canvas';
+import { hitTest, renderFrameToCanvas } from '@retikz/render/canvas';
 import {
   collectCanvasVisibleAnimationIds,
   createCanvasIdAnimationControls,
@@ -82,6 +82,7 @@ const mountStaticCanvas = (
   let visibleTeardown: (() => void) | undefined;
 
   let currentScene: Scene;
+  let currentInspection: InspectionPlane | null = null;
   let currentArtifacts: ReadonlyArray<CompileArtifact> = Object.freeze([]);
   let currentRuntimeMeta: VanillaRuntimeMeta = createEmptyRuntimeMeta();
 
@@ -100,13 +101,17 @@ const mountStaticCanvas = (
   /** 按当前时钟时刻 + per-id 登记表立即重绘一帧（per-id pause / stop 即时反映） */
   const renderFrame = (): void => {
     const time = clock?.time ?? 0;
-    renderToCanvas(canvas, currentScene, {
-      devicePixelRatio: ratio,
-      time,
-      easings: animation.easings,
-      animationProperties: canvasOptions.animationProperties,
-      resolvePrimAnimation: id => resolvePrim(id, time),
-    });
+    renderFrameToCanvas(
+      canvas,
+      { primary: currentScene, inspection: currentInspection },
+      {
+        devicePixelRatio: ratio,
+        time,
+        easings: animation.easings,
+        animationProperties: canvasOptions.animationProperties,
+        resolvePrimAnimation: id => resolvePrim(id, time),
+      },
+    );
   };
 
   const ensureClockPlaying = (): void => {
@@ -159,8 +164,9 @@ const mountStaticCanvas = (
   };
 
   const renderInto = (next: RenderInput): void => {
-    const { scene, artifacts, runtimeMeta } = toSceneResult(next, options);
+    const { scene, artifacts, inspection, runtimeMeta } = toSceneResult(next, options);
     currentScene = scene;
+    currentInspection = inspection;
     currentArtifacts = artifacts;
     currentRuntimeMeta = runtimeMeta;
     const hasNominalSize =
@@ -178,29 +184,37 @@ const mountStaticCanvas = (
     // 截帧（animation.snapshotAt 给定）：按该时刻烘焙一帧、不起 rAF（定格），覆盖 animation.enabled。
     // animation.snapshotAt 来自 mount options、view 生命周期内恒定，故此分支下 clock / visible bridge 始终不建。
     if (animation.snapshotAt !== undefined) {
-      renderToCanvas(canvas, scene, {
-        devicePixelRatio: ratio,
-        time: animation.snapshotAt,
-        easings: animation.easings,
-        animationProperties: canvasOptions.animationProperties,
-      });
+      renderFrameToCanvas(
+        canvas,
+        { primary: scene, inspection },
+        {
+          devicePixelRatio: ratio,
+          time: animation.snapshotAt,
+          easings: animation.easings,
+          animationProperties: canvasOptions.animationProperties,
+        },
+      );
       return;
     }
     // base 静态先画一帧；含动画且未降级时起 rAF 时钟逐帧重绘（共享时钟，per-track delay 在 evaluateTrack 内偏移）
-    renderToCanvas(canvas, scene, { devicePixelRatio: ratio });
+    renderFrameToCanvas(canvas, { primary: scene, inspection }, { devicePixelRatio: ratio });
     clock?.dispose();
     clock = undefined;
     if (animate && sceneHasAnimations(scene)) {
       clock = createClock({
         durationMs: sceneAnimationDurationMs(scene),
         onFrame: time =>
-          renderToCanvas(canvas, currentScene, {
-            devicePixelRatio: ratio,
-            time,
-            easings: animation.easings,
-            animationProperties: canvasOptions.animationProperties,
-            resolvePrimAnimation: id => resolvePrim(id, time),
-          }),
+          renderFrameToCanvas(
+            canvas,
+            { primary: currentScene, inspection: currentInspection },
+            {
+              devicePixelRatio: ratio,
+              time,
+              easings: animation.easings,
+              animationProperties: canvasOptions.animationProperties,
+              resolvePrimAnimation: id => resolvePrim(id, time),
+            },
+          ),
       });
       if (sceneHasAutoplayTrigger(scene)) clock.play();
     }

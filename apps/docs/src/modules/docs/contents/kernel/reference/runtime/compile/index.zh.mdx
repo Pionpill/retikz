@@ -7,16 +7,16 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 ## 函数
 
-| API                           | Signature                                                              | 用途                                                         |
-| ----------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `compileToScene`              | `(ir: IRScene, options?: CompileOptions) => CompileResult`             | 主编译入口；同次返回 `scene` 与 immutable `artifacts`        |
-| `lowerIRToKernel`             | `(ir: IRScene, options?: LowerIRToKernelOptions) => LoweredIRScene`    | 只递归展开 composite，返回不含 Tier 2 节点的 Kernel IR       |
-| `computeLayout`               | `(points, padding, round) => Layout`                                   | 从 bbox 候选点计算场景边界；通常由 `compileToScene` 内部调用 |
-| `resolveBoxSpacing`           | `(value, fallback) => BoundsInsets`                                    | 把统一值或按边覆盖值归一化为完整四边间距                     |
-| `fallbackMeasurer`            | `(text, font) => TextMetrics`                                          | 默认文字度量；不准但可运行，适合无 DOM 环境的兜底            |
-| `formatCompileWarning`        | `(warning: CompileWarning) => string`                                  | 把结构化 warning 格式化为统一的可读消息                      |
-| `formatCompileOccurrence`     | `(locator: CompileOccurrenceLocator) => string`                        | 格式化 artifact 的 occurrence locator                        |
-| `isNodeLayoutCompileArtifact` | `(artifact: CompileArtifact) => artifact is NodeLayoutCompileArtifact` | 缩窄 opt-in Node layout artifact                             |
+| API                           | Signature                                                              | 用途                                                                |
+| ----------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `compileToScene`              | `(ir: IRScene, options?: CompileOptions) => CompileResult`             | 主编译入口；同次返回 `scene`、immutable `artifacts` 与 `inspection` |
+| `lowerIRToKernel`             | `(ir: IRScene, options?: LowerIRToKernelOptions) => LoweredIRScene`    | 只递归展开 composite，返回不含 Tier 2 节点的 Kernel IR              |
+| `computeLayout`               | `(points, padding, round) => Layout`                                   | 从 bbox 候选点计算场景边界；通常由 `compileToScene` 内部调用        |
+| `resolveBoxSpacing`           | `(value, fallback) => BoundsInsets`                                    | 把统一值或按边覆盖值归一化为完整四边间距                            |
+| `fallbackMeasurer`            | `(text, font) => TextMetrics`                                          | 默认文字度量；不准但可运行，适合无 DOM 环境的兜底                   |
+| `formatCompileWarning`        | `(warning: CompileWarning) => string`                                  | 把结构化 warning 格式化为统一的可读消息                             |
+| `formatCompileOccurrence`     | `(locator: CompileOccurrenceLocator) => string`                        | 格式化 artifact 的 occurrence locator                               |
+| `isNodeLayoutCompileArtifact` | `(artifact: CompileArtifact) => artifact is NodeLayoutCompileArtifact` | 缩窄 opt-in Node layout artifact                                    |
 
 `compileToScene` 先遍历并注册当前作用域内的 node / coordinate，再回填延迟发出的 path，因此路径可以引用同一作用域中写在它后面的目标。输出随后按 `zIndex` 升序稳定排序；只有 `zIndex` 相同的图元才保持声明顺序。
 
@@ -42,14 +42,15 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 ### 布局与输出
 
-| Option          | Type                     | Default | 说明                                                                                      |
-| --------------- | ------------------------ | ------- | ----------------------------------------------------------------------------------------- |
-| `padding`       | `number`                 | `10`    | layout 外围留白，单位为 user units                                                        |
-| `precision`     | `number`                 | `2`     | 输出 Scene 图元坐标、结构化 path command 与 layout 数值的小数位；内部几何保持 double 精度 |
-| `nodeDistance`  | `number`                 | `24`    | `AtPosition` 未写 `distance` 时使用的默认距离                                             |
-| `labelDistance` | `number`                 | `12`    | `Node.label.distance` 未设置时，节点边界到旋转后标签视觉框的默认净距；必须为有限非负数    |
-| `fontSize`      | `number`                 | `16`    | 默认字号；同时作为字号 preset 与 `rem` 的根字号，不改变显式数字字号                       |
-| `artifacts`     | `CompileArtifactOptions` | `{}`    | opt-in 通用产物；`{ nodeLayouts: true }` 返回真实 Node 的 `CompiledNodeLayout` 布局快照   |
+| Option          | Type                       | Default | 说明                                                                                      |
+| --------------- | -------------------------- | ------- | ----------------------------------------------------------------------------------------- |
+| `padding`       | `number`                   | `10`    | layout 外围留白，单位为 user units                                                        |
+| `precision`     | `number`                   | `2`     | 输出 Scene 图元坐标、结构化 path command 与 layout 数值的小数位；内部几何保持 double 精度 |
+| `nodeDistance`  | `number`                   | `24`    | `AtPosition` 未写 `distance` 时使用的默认距离                                             |
+| `labelDistance` | `number`                   | `12`    | `Node.label.distance` 未设置时，节点边界到旋转后标签视觉框的默认净距；必须为有限非负数    |
+| `fontSize`      | `number`                   | `16`    | 默认字号；同时作为字号 preset 与 `rem` 的根字号，不改变显式数字字号                       |
+| `artifacts`     | `CompileArtifactOptions`   | `{}`    | opt-in 通用产物；`{ nodeLayouts: true }` 返回真实 Node 的 `CompiledNodeLayout` 布局快照   |
+| `inspection`    | `CompileInspectionOptions` | —       | runtime-only 检查 sidecar；`root` 是全图策略，`roots` 绑定 authored occurrence            |
 
 ### 扩展注册表
 
@@ -77,6 +78,10 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 - `expand(node)` 只做无上下文结构展开；
 - `compile(node, context)` 通过 `context.proposal` 与 `layoutChild(child, proposal)` 在完整 compile 环境中求值真实子内容。
+
+带 `artifactSchema` 的 layout-aware definition 还可以声明 `inspector`。Inspector 与 compile 仍属于同一个 `CompositeDefinition` 和同一个 registry key；Core 不维护第二张 inspector 注册表。选中 occurrence 后，callback 接收同次 compile 已校验的 artifact、完整通用选项和 definition 专属选项，只能返回严格的 rect / line / label 检查 DTO。`expand` 分支、没有 `artifactSchema` 的 compile 分支或已开启但未返回 artifact 的 occurrence 都会 fail-loud。
+
+`CompileInspectionOptions.root` 承载全图稀疏策略；`roots` 是 React / Vanilla 等 authoring adapter 构造的 authored occurrence sidecar。它不进入 IR，也不要求第三方调用方预测 probe / replay 的动态路径。省略 `inspection` 时 inspector 不运行，主 Scene 与 artifacts 保持原行为。
 
 `LayoutProposal` 必须恰好包含 `x` 与 `y`；每条轴使用 `LayoutAxisProposal`：
 
@@ -189,10 +194,13 @@ Node label 会把一次测量阶段得到的 `width` / `height` / `ascent` / `de
 
 `compileToScene` 返回 `CompileResult`：
 
-| Field       | Type                             | 说明                                                                 |
-| ----------- | -------------------------------- | -------------------------------------------------------------------- |
-| `scene`     | `Scene`                          | 已布局、可直接交给 renderer 的场景                                   |
-| `artifacts` | `ReadonlyArray<CompileArtifact>` | 与 `scene` 同一次 canonical compile 产生的 immutable typed artifacts |
+| Field        | Type                             | 说明                                                                 |
+| ------------ | -------------------------------- | -------------------------------------------------------------------- |
+| `scene`      | `Scene`                          | 已布局、可直接交给 renderer 的场景                                   |
+| `artifacts`  | `ReadonlyArray<CompileArtifact>` | 与 `scene` 同一次 canonical compile 产生的 immutable typed artifacts |
+| `inspection` | `InspectionPlane \| null`        | 与主 Scene 隔离的检查辅助层；关闭时为 `null`                         |
+
+`inspection` 不属于 `scene`：它不会扩大 `scene.layout`、添加资源或 identity，也不改变命中测试。Render 的 static frame 与 retained frame 会把 primary Scene 和 inspection plane 作为同一 revision 的两个平面一起物化。
 
 其中 `scene` 包含：
 

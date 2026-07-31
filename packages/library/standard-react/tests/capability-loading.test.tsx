@@ -1,6 +1,6 @@
 import { Layout, Node } from '@retikz/react';
 import { createGrid, StandardAllPreset } from '@retikz/standard';
-import { Axes, Frame, FrameTitle, Grid } from '@retikz/standard-react';
+import { Axes, FlexLayout, Frame, FrameTitle, Grid, LayoutItem } from '@retikz/standard-react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
@@ -15,6 +15,11 @@ describe('Standard React capability loading', () => {
             <FrameTitle text="Contract" />
             <Node position={[0, 0]} text="Body" />
           </Frame>
+          <FlexLayout>
+            <LayoutItem kind="flex" itemKey="layout-node">
+              <Node position={[30, 30]} text="Layout" />
+            </LayoutItem>
+          </FlexLayout>
         </Layout>,
       ),
     ).not.toThrow();

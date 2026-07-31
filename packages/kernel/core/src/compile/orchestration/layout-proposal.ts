@@ -1,7 +1,7 @@
 import type { BoundsRect } from '@retikz/math';
 
 import type { LayoutAxisProposal, LayoutProposal } from '../../contract';
-import type { CompileOccurrenceLocator } from '../types';
+import type { CompileOccurrenceLocator } from '../../contract';
 
 import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../contract';
 import { formatCompileOccurrence } from '../artifact';

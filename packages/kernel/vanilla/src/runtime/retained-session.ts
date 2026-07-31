@@ -57,6 +57,7 @@ const captureCompositeDefinition = (definition: AnyCompositeDefinition): AnyComp
           schema: definition.schema,
           compile: definition.compile,
           ...(definition.artifactSchema === undefined ? {} : { artifactSchema: definition.artifactSchema }),
+          ...(definition.inspector === undefined ? {} : { inspector: definition.inspector }),
         },
   ) as AnyCompositeDefinition;
 
@@ -94,7 +95,10 @@ export type PreparedRetainedInput = Readonly<{
 const toCoreProgramOptions = (options: CommonOptions): CoreProgramOptions<ReadonlyArray<AnyCompositeDefinition>> => {
   const { trace, ...coreOptions } = options.compile ?? {};
   void trace;
-  return coreOptions;
+  return {
+    ...coreOptions,
+    ...(options.inspect === undefined ? {} : { inspection: { root: options.inspect } }),
+  };
 };
 
 /** 把 IR / plain spec 规范化为 retained session 的 Core owner 输入 */
@@ -114,7 +118,18 @@ export const prepareRetainedInput = (input: RetainedRenderInput, options: Common
     return Object.freeze({
       source: normalized.ir,
       runtimeMeta: normalized.runtimeMeta,
-      coreOptions: { ...coreOptions, composites: normalized.composites },
+      coreOptions: {
+        ...coreOptions,
+        composites: normalized.composites,
+        ...(options.inspect === undefined && normalized.inspectionRoots.length === 0
+          ? {}
+          : {
+              inspection: {
+                ...(options.inspect === undefined ? {} : { root: options.inspect }),
+                ...(normalized.inspectionRoots.length === 0 ? {} : { roots: normalized.inspectionRoots }),
+              },
+            }),
+      },
     });
   }
   return Object.freeze({ source: input, runtimeMeta: createEmptyRuntimeMeta(), coreOptions });
@@ -224,36 +239,7 @@ const createVanillaRetainedSessionImplementation = (
 ): RetainedSessionController => {
   const fixedOptions = captureRetainedMountOptions(options.options);
   const initial = prepareRetainedInput(options.input, fixedOptions);
-  const compositeDefinitions = createRetainedCompositeDefinitions(initial.coreOptions.composites);
-  const coreProgram = createCoreProgram(
-    { ...initial.coreOptions, composites: compositeDefinitions.definitions },
-    { invalidationOwners: [VanillaCompositeRevisionOwnerDefinition] },
-  );
-  const owners = createRuntimeOwnerRegistry({
-    builtins: [CoreOwnerDefinition, RenderRuntimeOwnerDefinition, VanillaCompositeRevisionOwnerDefinition],
-  });
-  const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
   const rendererFactory = options.runtimeOptions.rendererFactory ?? builtinRetainedRendererFactory;
-  const participant =
-    options.backend === 'svg'
-      ? createRetainedRenderParticipant({
-          backend: 'svg',
-          host: options.host,
-          rendererFactory,
-          immutableOptions: { backend: 'svg', idPrefix: options.idPrefix },
-          coreProgram,
-        })
-      : createRetainedRenderParticipant({
-          backend: 'canvas',
-          host: options.host,
-          rendererFactory,
-          immutableOptions: {
-            backend: 'canvas',
-            idPrefix: options.idPrefix,
-            ...(options.devicePixelRatio === undefined ? {} : { devicePixelRatio: options.devicePixelRatio }),
-          },
-          coreProgram,
-        });
   const { devicePixelRatio: _devicePixelRatio, ...initialCanvas } = fixedOptions.canvas ?? {};
   void _devicePixelRatio;
   const initialMutableOptions = captureRetainedUpdateOptions(
@@ -278,26 +264,100 @@ const createVanillaRetainedSessionImplementation = (
         })
       : undefined;
   const initialConfig = createRenderConfig(state, handlerContributions, canvasSize);
-  const session: RuntimeSession = createRuntimeSession({
-    owners,
-    programs,
-    updateStrategy: options.runtimeOptions.updateStrategy,
-    participants: [participant.participant],
-    initialSnapshots: [
-      createRuntimeOwnerInput(CoreOwnerDefinition, initial.source),
-      createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, initialConfig),
-      createRuntimeOwnerInput(VanillaCompositeRevisionOwnerDefinition, 0),
-    ],
-  });
+
+  /** 一组使用固定 Core Program options 的 Vanilla retained 执行资源 */
+  type ActiveRetainedSession = {
+    compositeDefinitions: ReturnType<typeof createRetainedCompositeDefinitions>;
+    coreProgram: ReturnType<typeof createCoreProgram>;
+    participant: ReturnType<typeof createRetainedRenderParticipant>;
+    session: RuntimeSession;
+    compositeRevision: number;
+  };
+
+  /** 创建并完整提交一组 retained session；失败由 Runtime 回滚宿主内容 */
+  const createActiveSession = (
+    prepared: PreparedRetainedInput,
+    config: RenderRuntimeConfigInput,
+  ): ActiveRetainedSession => {
+    const compositeDefinitions = createRetainedCompositeDefinitions(prepared.coreOptions.composites);
+    const coreProgram = createCoreProgram(
+      { ...prepared.coreOptions, composites: compositeDefinitions.definitions },
+      { invalidationOwners: [VanillaCompositeRevisionOwnerDefinition] },
+    );
+    const owners = createRuntimeOwnerRegistry({
+      builtins: [CoreOwnerDefinition, RenderRuntimeOwnerDefinition, VanillaCompositeRevisionOwnerDefinition],
+    });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
+    const participant =
+      options.backend === 'svg'
+        ? createRetainedRenderParticipant({
+            backend: 'svg',
+            host: options.host,
+            rendererFactory,
+            immutableOptions: { backend: 'svg', idPrefix: options.idPrefix },
+            coreProgram,
+          })
+        : createRetainedRenderParticipant({
+            backend: 'canvas',
+            host: options.host,
+            rendererFactory,
+            immutableOptions: {
+              backend: 'canvas',
+              idPrefix: options.idPrefix,
+              ...(options.devicePixelRatio === undefined ? {} : { devicePixelRatio: options.devicePixelRatio }),
+            },
+            coreProgram,
+          });
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      updateStrategy: options.runtimeOptions.updateStrategy,
+      participants: [participant.participant],
+      initialSnapshots: [
+        createRuntimeOwnerInput(CoreOwnerDefinition, prepared.source),
+        createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, config),
+        createRuntimeOwnerInput(VanillaCompositeRevisionOwnerDefinition, 0),
+      ],
+    });
+    return { compositeDefinitions, coreProgram, participant, session, compositeRevision: 0 };
+  };
+
+  let active = createActiveSession(initial, initialConfig);
+  let committedInspection = initial.coreOptions.inspection;
+  const retiredSessions: Array<RuntimeSession> = [];
+  let retiredDiagnostics: Array<RuntimeDiagnostic> = [];
   let sessionDisposalStarted = false;
-  let compositeRevision = 0;
+
+  /** 释放旧 session，仅保留 participant cleanup 失败而需要重试的实例 */
+  const retireSession = (session: RuntimeSession): void => {
+    session.dispose();
+    const diagnostics = session.diagnostics();
+    retiredDiagnostics.push(...diagnostics);
+    if (diagnostics.some(diagnostic => diagnostic.code === 'RUNTIME_PARTICIPANT_DISPOSE_FAILED')) {
+      retiredSessions.push(session);
+    }
+  };
+
+  /** 重试旧 session 的 pending cleanup，并丢弃已成功释放的引用 */
+  const retryRetiredSessions = (): void => {
+    const pending: Array<RuntimeSession> = [];
+    retiredSessions.forEach(session => {
+      session.dispose();
+      const diagnostics = session.diagnostics();
+      retiredDiagnostics.push(...diagnostics);
+      if (diagnostics.some(diagnostic => diagnostic.code === 'RUNTIME_PARTICIPANT_DISPOSE_FAILED')) {
+        pending.push(session);
+      }
+    });
+    retiredSessions.splice(0, retiredSessions.length, ...pending);
+  };
 
   const commitConfig = (
     nextState: RetainedSessionState,
     nextHandlers: ReadonlyArray<RenderHandlerContribution>,
   ): void => {
-    session.update({
-      baseRevision: session.revision(),
+    active.session.update({
+      baseRevision: active.session.revision(),
       owners: [
         createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, createRenderConfig(nextState, nextHandlers, canvasSize)),
       ],
@@ -308,8 +368,27 @@ const createVanillaRetainedSessionImplementation = (
     update: (next, updateOptions = {}) => {
       const capturedOptions = captureRetainedUpdateOptions(updateOptions, options.backend);
       const prepared = prepareRetainedInput(next, fixedOptions);
-      const preparedDefinitions = compositeDefinitions.prepare(prepared.coreOptions.composites);
-      const nextCompositeRevision = preparedDefinitions.changed ? compositeRevision + 1 : compositeRevision;
+      const nextState = Object.freeze({
+        animation: capturedOptions.animation ?? state.animation,
+        canvas: ('canvas' in capturedOptions ? capturedOptions.canvas : undefined) ?? state.canvas,
+        runtimeMeta: prepared.runtimeMeta,
+      });
+      if (JSON.stringify(prepared.coreOptions.inspection) !== JSON.stringify(committedInspection)) {
+        const candidate = createActiveSession(
+          prepared,
+          createRenderConfig(nextState, handlerContributions, canvasSize),
+        );
+        const previous = active;
+        active = candidate;
+        committedInspection = prepared.coreOptions.inspection;
+        state = nextState;
+        retireSession(previous.session);
+        return;
+      }
+      const preparedDefinitions = active.compositeDefinitions.prepare(prepared.coreOptions.composites);
+      const nextCompositeRevision = preparedDefinitions.changed
+        ? active.compositeRevision + 1
+        : active.compositeRevision;
       if (!Number.isSafeInteger(nextCompositeRevision)) {
         preparedDefinitions.rollback();
         throw new RetainedRenderError({
@@ -318,14 +397,9 @@ const createVanillaRetainedSessionImplementation = (
           message: 'Vanilla retained composite revision overflow',
         });
       }
-      const nextState = Object.freeze({
-        animation: capturedOptions.animation ?? state.animation,
-        canvas: ('canvas' in capturedOptions ? capturedOptions.canvas : undefined) ?? state.canvas,
-        runtimeMeta: prepared.runtimeMeta,
-      });
       try {
-        session.update({
-          baseRevision: session.revision(),
+        active.session.update({
+          baseRevision: active.session.revision(),
           owners: [
             createRuntimeOwnerUpdate(CoreOwnerDefinition, prepared.source),
             createRuntimeOwnerUpdate(
@@ -342,7 +416,7 @@ const createVanillaRetainedSessionImplementation = (
         throw cause;
       }
       preparedDefinitions.commit();
-      compositeRevision = nextCompositeRevision;
+      active.compositeRevision = nextCompositeRevision;
       state = nextState;
     },
     hydrate: hydrateOptions => {
@@ -352,7 +426,7 @@ const createVanillaRetainedSessionImplementation = (
       const nextHandlers = Object.freeze([...handlerContributions, contribution]);
       commitConfig(state, nextHandlers);
       handlerContributions =
-        session.snapshot(RenderRuntimeOwnerDefinition).value.handlerContributions ?? Object.freeze([]);
+        active.session.snapshot(RenderRuntimeOwnerDefinition).value.handlerContributions ?? Object.freeze([]);
       nextRegistration += 1;
       let disposed = false;
       return Object.freeze({
@@ -367,19 +441,24 @@ const createVanillaRetainedSessionImplementation = (
           );
           commitConfig(state, withoutContribution);
           handlerContributions =
-            session.snapshot(RenderRuntimeOwnerDefinition).value.handlerContributions ?? Object.freeze([]);
+            active.session.snapshot(RenderRuntimeOwnerDefinition).value.handlerContributions ?? Object.freeze([]);
           disposed = true;
         },
       });
     },
     dispose: () => {
       sessionDisposalStarted = true;
-      session.dispose();
+      active.session.dispose();
+      retryRetiredSessions();
     },
-    diagnostics: () => session.diagnostics(),
-    read: () => participant.read(session),
-    scene: () => participant.read(session).snapshot.scene as Scene,
-    artifacts: () => session.artifact(coreProgram).value.output.result.artifacts,
+    diagnostics: () => {
+      const output = Object.freeze([...retiredDiagnostics, ...active.session.diagnostics()]);
+      retiredDiagnostics = [];
+      return output;
+    },
+    read: () => active.participant.read(active.session),
+    scene: () => active.participant.read(active.session).frame.primary.scene as Scene,
+    artifacts: () => active.session.artifact(active.coreProgram).value.output.result.artifacts,
     runtimeMeta: () => state.runtimeMeta,
   });
 };

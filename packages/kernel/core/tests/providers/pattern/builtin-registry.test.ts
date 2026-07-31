@@ -42,6 +42,10 @@ const tileOf = (spec: IRPaintSpec, opts?: CompileOptions): ResolvedPatternTile |
 const firstMotifPath = (tile: ResolvedPatternTile | undefined): MarkerPathPrim | undefined =>
   (tile?.motif ?? []).find((m): m is MarkerPathPrim => m.type === 'path');
 
+/** 取 tile.motif 中的全部 path 原语 */
+const motifPaths = (tile: ResolvedPatternTile | undefined): Array<MarkerPathPrim> =>
+  (tile?.motif ?? []).filter((motif): motif is MarkerPathPrim => motif.type === 'path');
+
 /** 取 tile.motif 里首个 ellipse 原语 */
 const firstMotifEllipse = (tile: ResolvedPatternTile | undefined): MarkerEllipsePrim | undefined =>
   (tile?.motif ?? []).find((m): m is MarkerEllipsePrim => m.type === 'ellipse');
@@ -103,10 +107,9 @@ describe('Pattern registry — happy path', () => {
     const linesPath = firstMotifPath(linesTile);
     expect(linesPath && pathD(linesPath)).toBe('M0,4 L8,4');
 
-    // grid：一个 path 横竖居中 d "M0,4 L8,4 M4,0 L4,8"（横竖线均落在 tile 中线）
+    // grid：横纵方向是两个独立 path，均落在 tile 中线
     const gridTile = tileOf({ kind: 'pattern', shape: 'grid' });
-    const gridPath = firstMotifPath(gridTile);
-    expect(gridPath && pathD(gridPath)).toBe('M0,4 L8,4 M4,0 L4,8');
+    expect(motifPaths(gridTile).map(pathD)).toEqual(['M0,4 L8,4', 'M4,0 L4,8']);
 
     // dots：一个 ellipse（圆），cx=cy=4（size/2）、rx=ry=8/5=1.6（缺省半径 size/5）
     const dotsTile = tileOf({ kind: 'pattern', shape: 'dots' });
@@ -161,6 +164,259 @@ describe('Pattern registry — boundary', () => {
     expect(mp && pathD(mp)).toBe('M0,6 L12,6');
   });
 
+  it('line_style：grid motif 复用 dash、offset、cap 与 join', () => {
+    const path = firstMotifPath(
+      tileOf({
+        kind: 'pattern',
+        shape: 'grid',
+        dashPattern: [6, 3],
+        dashOffset: 2,
+        lineCap: 'round',
+        lineJoin: 'bevel',
+      }),
+    );
+    expect(path).toMatchObject({
+      dashPattern: [6, 3],
+      dashOffset: 2,
+      strokeLinecap: 'round',
+      strokeLinejoin: 'bevel',
+    });
+  });
+
+  it('grid_direction_style：横纵 path 分别覆盖基础样式且互不泄漏', () => {
+    const [horizontal, vertical] = motifPaths(
+      tileOf({
+        kind: 'pattern',
+        shape: 'grid',
+        color: '#64748b',
+        lineWidth: 1,
+        dashed: true,
+        horizontalStyle: {
+          color: '#2563eb',
+          dotted: true,
+          lineCap: 'round',
+        },
+        verticalStyle: {
+          color: '#dc2626',
+          lineWidth: 2,
+          dashPattern: [6, 2],
+        },
+      }),
+    );
+
+    expect(horizontal).toMatchObject({
+      stroke: '#2563eb',
+      strokeWidth: 1,
+      dashPattern: [1, 2],
+      strokeLinecap: 'round',
+    });
+    expect(vertical).toMatchObject({
+      stroke: '#dc2626',
+      strokeWidth: 2,
+      dashPattern: [6, 2],
+    });
+    expect(vertical.strokeLinecap).toBeUndefined();
+  });
+
+  it('line_style_cycle_every_n：每 5 条主线扩展 tile，稀疏位置继承基础样式', () => {
+    const tile = tileOf({
+      kind: 'pattern',
+      shape: 'lines',
+      size: 6,
+      color: '#64748b',
+      lineWidth: 1,
+      dotted: true,
+      lineStyleCycle: {
+        period: 5,
+        overrides: [{ index: 0, style: { lineWidth: 3, dashed: true } }],
+      },
+    });
+    const paths = motifPaths(tile);
+
+    expect(tile?.size).toBe(30);
+    expect(paths.map(pathD)).toEqual(['M0,3 L30,3', 'M0,9 L30,9', 'M0,15 L30,15', 'M0,21 L30,21', 'M0,27 L30,27']);
+    expect(paths[0]).toMatchObject({ strokeWidth: 3, dashPattern: [4, 2] });
+    expect(paths[1]).toMatchObject({ strokeWidth: 1, dashPattern: [1, 2] });
+    expect(paths[4]).toMatchObject({ strokeWidth: 1, dashPattern: [1, 2] });
+  });
+
+  it('line_style_cycle_sequence：override 按 index 形成任意周期，并可显式恢复实线', () => {
+    const paths = motifPaths(
+      tileOf({
+        kind: 'pattern',
+        shape: 'lines',
+        size: 8,
+        color: '#64748b',
+        dashed: true,
+        lineStyleCycle: {
+          period: 3,
+          overrides: [
+            { index: 2, style: { dashed: false, color: '#16a34a' } },
+            { index: 0, style: { color: '#dc2626' } },
+            { index: 1, style: { dotted: true, color: '#2563eb' } },
+          ],
+        },
+      }),
+    );
+
+    expect(paths.map(path => path.stroke)).toEqual(['#dc2626', '#2563eb', '#16a34a']);
+    expect(paths[0]?.dashPattern).toEqual([4, 2]);
+    expect(paths[1]?.dashPattern).toEqual([1, 2]);
+    expect(paths[2]?.dashPattern).toBeUndefined();
+  });
+
+  it('dashed_preset：dashed 解析为 [4, 2]', () => {
+    expect(firstMotifPath(tileOf({ kind: 'pattern', shape: 'lines', dashed: true }))?.dashPattern).toEqual([4, 2]);
+  });
+
+  it('dotted_preset：dotted 解析为 [1, 2]', () => {
+    expect(firstMotifPath(tileOf({ kind: 'pattern', shape: 'lines', dotted: true }))?.dashPattern).toEqual([1, 2]);
+  });
+
+  it('dash_priority：显式 dashPattern 优先于 dashed / dotted', () => {
+    const path = firstMotifPath(
+      tileOf({
+        kind: 'pattern',
+        shape: 'lines',
+        dashed: true,
+        dotted: true,
+        dashPattern: [8, 3, 2, 3],
+      }),
+    );
+    expect(path?.dashPattern).toEqual([8, 3, 2, 3]);
+  });
+
+  it('preset_priority：dashed 优先于 dotted', () => {
+    const path = firstMotifPath(tileOf({ kind: 'pattern', shape: 'lines', dashed: true, dotted: true }));
+    expect(path?.dashPattern).toEqual([4, 2]);
+  });
+
+  it('dots_line_style：内置 dots 保持填充圆点语义并忽略线型字段', () => {
+    const dot = firstMotifEllipse(
+      tileOf({
+        kind: 'pattern',
+        shape: 'dots',
+        dashed: true,
+        dashOffset: 2,
+        lineCap: 'round',
+        lineJoin: 'bevel',
+      }),
+    );
+    expect(dot).toMatchObject({ type: 'ellipse', fill: 'currentColor' });
+    expect(dot?.dashPattern).toBeUndefined();
+    expect(dot?.dashOffset).toBeUndefined();
+  });
+
+  it('custom_pattern_line_style：自定义 definition 收到解析后的低层线型字段', () => {
+    const echo = definePattern({
+      name: 'echo',
+      emit: context => [
+        {
+          type: 'path',
+          commands: [
+            { kind: 'move', to: [0, 0] },
+            { kind: 'line', to: [context.size, 0] },
+          ],
+          stroke: context.color,
+          dashPattern: context.dashPattern,
+          dashOffset: context.dashOffset,
+          strokeLinecap: context.lineCap,
+          strokeLinejoin: context.lineJoin,
+        },
+      ],
+    });
+    const path = firstMotifPath(
+      tileOf(
+        {
+          kind: 'pattern',
+          shape: 'echo',
+          dotted: true,
+          dashOffset: -1,
+          lineCap: 'round',
+          lineJoin: 'bevel',
+        },
+        { patterns: [echo] },
+      ),
+    );
+    expect(path).toMatchObject({
+      dashPattern: [1, 2],
+      dashOffset: -1,
+      strokeLinecap: 'round',
+      strokeLinejoin: 'bevel',
+    });
+  });
+
+  it('custom_pattern_grouped_styles：自定义 definition 收到已继承和展开的方向/周期样式', () => {
+    let captured: PatternEmitContext | undefined;
+    const capture = definePattern({
+      name: 'capture',
+      emit: context => {
+        captured = context;
+        return [];
+      },
+    });
+
+    tileOf(
+      {
+        kind: 'pattern',
+        shape: 'capture',
+        color: '#64748b',
+        lineWidth: 1,
+        dashed: true,
+        horizontalStyle: { color: '#2563eb', dotted: true, lineCap: 'round' },
+        verticalStyle: { color: '#dc2626', dashPattern: [6, 2], lineWidth: 2 },
+        lineStyleCycle: {
+          period: 2,
+          overrides: [
+            { index: 0, style: { lineWidth: 3 } },
+            { index: 1, style: { dashed: false, dotted: false } },
+          ],
+        },
+      },
+      { patterns: [capture] },
+    );
+
+    expect(captured?.horizontalStyle).toEqual({
+      color: '#2563eb',
+      lineWidth: 1,
+      dashPattern: [1, 2],
+      lineCap: 'round',
+    });
+    expect(captured?.verticalStyle).toEqual({
+      color: '#dc2626',
+      lineWidth: 2,
+      dashPattern: [6, 2],
+    });
+    expect(captured?.lineStyleCycle).toEqual({
+      period: 2,
+      styles: [
+        { color: '#64748b', lineWidth: 3, dashPattern: [4, 2] },
+        { color: '#64748b', lineWidth: 1 },
+      ],
+    });
+  });
+
+  it('custom_pattern_tile_size：result object 覆盖 tile 周期，Iterable 输出保持默认周期', () => {
+    const expanded = definePattern({
+      name: 'expanded',
+      emit: ({ size }) => ({
+        tileSize: size * 3,
+        motif: [
+          {
+            type: 'path' as const,
+            commands: [
+              { kind: 'move' as const, to: [0, 0] as [number, number] },
+              { kind: 'line' as const, to: [size * 3, 0] as [number, number] },
+            ],
+          },
+        ],
+      }),
+    });
+
+    expect(tileOf({ kind: 'pattern', shape: 'expanded', size: 8 }, { patterns: [expanded] })?.size).toBe(24);
+    expect(tileOf({ kind: 'pattern', shape: 'customPattern', size: 8 }, { patterns: [customPattern()] })?.size).toBe(8);
+  });
+
   it('pattern_coexist_gradient：同场景 pattern + gradient → resources 不撞、id 各异', () => {
     const grad: IRPaintSpec = {
       kind: 'linearGradient',
@@ -196,10 +452,11 @@ describe('Pattern registry — error path', () => {
 
   it('same_name_duplicate_rejected：patterns 覆盖内置名 → duplicate error（不静默）', () => {
     const ir = patternNodeIR({ kind: 'pattern', shape: 'lines' });
-    expect(() =>
-      compileToScene(ir, {
-        patterns: [{ ...customPattern(), name: 'lines' }],
-      }).scene,
+    expect(
+      () =>
+        compileToScene(ir, {
+          patterns: [{ ...customPattern(), name: 'lines' }],
+        }).scene,
     ).toThrow(/duplicate pattern shape registration: "lines"/);
   });
 

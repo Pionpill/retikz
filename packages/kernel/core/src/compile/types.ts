@@ -6,6 +6,9 @@ import type {
   ArrowDefinition,
   BoundaryDefinition,
   ClipDefinition,
+  CompileInspectionOptions,
+  CompileOccurrenceLocator,
+  InspectionPlane,
   PathGeneratorDefinition,
   PathKindDefinition,
   PatternDefinition,
@@ -68,20 +71,6 @@ export type CompiledNodeLayout = {
   };
 };
 
-/** compile dispatch、展开与输出相对原始 occurrence 的结构化路径段 */
-export type CompileExpansionSegment = Readonly<{
-  kind: 'expand' | 'output' | 'probe' | 'replay' | 'scopeChild';
-  index: number;
-}>;
-
-/** 同一次 canonical compile 内确定的 occurrence locator */
-export type CompileOccurrenceLocator = Readonly<{
-  /** 最近的原始输入 IR occurrence */
-  sourcePath: string;
-  /** 从原始 occurrence 到 provider 产物的结构化索引链 */
-  expansionPath: ReadonlyArray<CompileExpansionSegment>;
-}>;
-
 /** layout-aware composite 返回的显式领域产物 */
 export type CompositeCompileArtifact<
   TNamespace extends string = string,
@@ -115,6 +104,8 @@ export type CompileArtifactOptions = Readonly<{
 export type CompileResult<TCompositeArtifact extends CompositeCompileArtifact = CompositeCompileArtifact> = Readonly<{
   scene: Scene;
   artifacts: ReadonlyArray<TCompositeArtifact | NodeLayoutCompileArtifact>;
+  /** 与 primary Scene 隔离的开发期 inspection plane */
+  inspection: InspectionPlane | null;
 }>;
 
 /** 从精确 composite definition 推导 artifact envelope */
@@ -274,6 +265,8 @@ export type CompileOptions<
   CompileCompositeOptions<TComposites> & {
     /** 本次 compile 请求的 opt-in artifacts */
     artifacts?: CompileArtifactOptions;
+    /** runtime-only Layout Inspector authoring sidecar */
+    inspection?: CompileInspectionOptions;
     /** 记录本次 full compile 的确定性 IRChild dispatch 工作量 */
     trace?: RuntimeTraceReporter<'@retikz/core'>;
   };

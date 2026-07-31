@@ -64,6 +64,20 @@ describe('changelog data', () => {
     expect(changelogPage?.children?.some(page => page.id === currentReleaseId)).toBe(true);
   });
 
+  it('Standard alpha.2 更新日志覆盖三个发布包', () => {
+    const release = changelogForModule('standard')[0];
+    const packages = ['@retikz/standard', '@retikz/standard-vanilla', '@retikz/standard-react'];
+
+    expect(release.packages.map(block => block.pkg)).toEqual(packages);
+    for (const block of release.packages) {
+      const alpha = block.subVersions.find(version => version.version === 'alpha.2');
+      expect(alpha?.date).toBe('2026-07-30');
+      expect(alpha?.summary?.zh).toBeTruthy();
+      expect(alpha?.summary?.en).toBeTruthy();
+      expect(alpha?.items.length).toBeGreaterThan(0);
+    }
+  });
+
   it.each(['data', 'table', 'plot'] as const)('当前 Viz %s 分区注册独立更新日志详情路由', sectionId => {
     const section = vizSection.find(entry => entry.id === sectionId);
     const changelogPage = section?.pages.find(page => page.id === 'changelog');

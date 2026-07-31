@@ -31,9 +31,9 @@ type BenchEnvironment = BrowserRunnerEnvironment &
   }>;
 
 const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const environment = JSON.parse(readFileSync(resolve(appRoot, 'bench-environment.json'), 'utf8')) as BenchEnvironment;
+const environment = JSON.parse(readFileSync(resolve(appRoot, 'environment.json'), 'utf8')) as BenchEnvironment;
 const baseline = JSON.parse(
-  readFileSync(resolve(appRoot, 'deterministic-baseline.json'), 'utf8'),
+  readFileSync(resolve(appRoot, 'baselines', 'deterministic.json'), 'utf8'),
 ) as ReadonlyArray<DeterministicBenchmarkBudget>;
 
 /** 校验 Node 与采样次数是否符合冻结的 benchmark 环境 */
@@ -108,7 +108,7 @@ const runWallClockAttempt = async (runnerEnvironment: TimingRunnerEnvironment): 
 
 /** 按完整 fingerprint 读取 tracked timing baseline，不做近似环境匹配 */
 const readTimingBaseline = (fingerprint: string): TimingBaseline | undefined => {
-  const path = resolve(appRoot, 'timing-baselines', `${fingerprint}.json`);
+  const path = resolve(appRoot, 'baselines', 'timing', `${fingerprint}.json`);
   if (!existsSync(path)) return undefined;
   return JSON.parse(readFileSync(path, 'utf8')) as TimingBaseline;
 };
