@@ -2,7 +2,7 @@
 
 Kernel 开发使用的 private 性能基准工具，不发布 npm 包。
 
-- `pnpm --filter @retikz/bench dev`：启动 React Performance Lab，供开发者本机 Inspect、Compare 与 Measure
+- `pnpm dev:bench`：启动 React Performance Lab，供开发者本机 Inspect、Compare 与 Measure
 - `pnpm bench:install-browser`：安装 lockfile 对应的 Chromium build
 - `pnpm bench:check`：只读检查确定性预算与功能 oracle，不采集 timing runner 硬件环境
 - `pnpm bench:report`：在固定 Node / Chromium 环境生成 ignored wall-clock 报告
