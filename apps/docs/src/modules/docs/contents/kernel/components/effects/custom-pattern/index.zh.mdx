@@ -15,7 +15,7 @@ description: 用 PatternDefinition 定义重复填充图案，通过 Layout.patt
 
 ## 定义能力
 
-使用 `definePattern()` 创建一个带名称的图案定义。`emit` 接收已解析的尺寸与颜色，并在 `0..size` 的局部坐标中返回结构化图元。
+使用 `definePattern()` 创建一个带名称的图案定义。`emit` 接收已解析的尺寸、基础线型、方向样式和周期样式，并在 tile 局部坐标中返回结构化图元。
 
 ```tsx
 import { definePattern } from '@retikz/core';
@@ -49,6 +49,8 @@ const cross = definePattern({
 
 内置图案与自定义图案都实现同一份 `PatternDefinition`，并进入同一注册表。`definePattern()` 只帮助 TypeScript 检查定义形状，不会把函数写进图元数据。
 
+`emit` 直接返回 `Iterable<MarkerPrimitive>` 时，最终 tile 周期沿用 `context.size`。如果 motif 自己需要不同的完整周期，可以返回 `{ tileSize, motif }`；编译器会校验 `tileSize` 并把它写入同一个 Scene 图案资源。
+
 ## 注入宿主
 
 把定义传给 `<Layout patterns>`，再在 Node 或 Path 的 `fill` 中引用它的 `name`：
@@ -80,7 +82,7 @@ const cross = definePattern({
 | 阶段 | 输入                  | 产物                          |
 | ---- | --------------------- | ----------------------------- |
 | 注册 | 内置定义 + `patterns` | 按名称索引的统一注册表        |
-| 解析 | `shape`、尺寸与颜色   | 局部重复单元图元              |
+| 解析 | `shape` 与实例参数    | 已继承并展开的 emit context   |
 | 输出 | 已解析重复单元        | Scene 图案资源                |
 | 渲染 | Scene 图案资源        | SVG pattern 或 Canvas pattern |
 
@@ -97,8 +99,14 @@ const cross = definePattern({
     {
       label: '解析重复单元并写入 Scene 资源',
       path: 'packages/kernel/core/src/compile/resource/paint.ts',
-      startLine: 29,
-      endLine: 79,
+      startLine: 39,
+      endLine: 102,
+    },
+    {
+      label: 'Pattern emit 上下文与输出契约',
+      path: 'packages/kernel/core/src/contract/pattern/types.ts',
+      startLine: 32,
+      endLine: 86,
     },
     {
       label: '物化 SVG 图案资源',
@@ -130,6 +138,7 @@ TikZ 在 PGF 层声明图案。retikz 用 `PatternDefinition` 描述同一类扩
 | `size` / `lineWidth` 非正数 | 编译时报错               | 传有限正数              |
 | `rotation` 不是有限数       | 编译时报错               | 传有限角度              |
 | `emit` 抛错                 | 编译包装并报告图案名     | 检查定义逻辑            |
+| `tileSize` 非有限正数       | 编译校验失败             | 返回有限正周期          |
 | 产物含非法图元或坐标        | 编译校验失败             | 只返回允许的结构化图元  |
 
 重复单元只接受 Scene 可序列化的结构化几何；不要返回函数、DOM 节点、文本、外部资源引用或非有限坐标。
@@ -138,21 +147,39 @@ TikZ 在 PGF 层声明图案。retikz 用 `PatternDefinition` 描述同一类扩
 
 ### PatternDefinition
 
-| 属性          | 类型                                 | 默认值 | 描述                               |
-| ------------- | ------------------------------------ | ------ | ---------------------------------- |
-| `name`        | `string`                             | —      | `pattern.shape` 使用的注册名       |
-| `defaultSize` | `number?`                            | `8`    | 可选；未传 `pattern.size` 时的周期 |
-| `emit`        | `(ctx) => Iterable<MarkerPrimitive>` | —      | 生成局部重复单元几何               |
+| 属性          | 类型                         | 默认值 | 描述                             |
+| ------------- | ---------------------------- | ------ | -------------------------------- |
+| `name`        | `string`                     | —      | `pattern.shape` 使用的注册名     |
+| `defaultSize` | `number?`                    | `8`    | 未传 `pattern.size` 时的基础尺寸 |
+| `emit`        | `(ctx) => PatternEmitOutput` | —      | 生成局部重复单元几何             |
 
 ### PatternEmitContext
 
-| 属性         | 类型            | 默认值         | 描述                 |
-| ------------ | --------------- | -------------- | -------------------- |
-| `size`       | `number`        | 已解析         | 重复单元周期         |
-| `color`      | `string`        | `currentColor` | 重复单元主色         |
-| `background` | `string?`       | —              | 省略时背景透明       |
-| `lineWidth`  | `number?`       | —              | 省略时由图案定义决定 |
-| `round`      | `(n) => number` | —              | 使用编译精度取整     |
+| 属性              | 类型                              | 默认值         | 描述                            |
+| ----------------- | --------------------------------- | -------------- | ------------------------------- |
+| `size`            | `number`                          | 已解析         | 实例或定义解析后的基础尺寸      |
+| `color`           | `string`                          | `currentColor` | 重复单元主色                    |
+| `background`      | `string?`                         | —              | 省略时背景透明                  |
+| `lineWidth`       | `number?`                         | —              | 省略时由图案定义决定            |
+| `dashPattern`     | `Array<number>?`                  | —              | 已解析的描边 dash 节奏          |
+| `dashOffset`      | `number?`                         | —              | 描边 dash 起始偏移              |
+| `lineCap`         | <ApiValues name="PathLineCap" />  | —              | 描边端点样式                    |
+| `lineJoin`        | <ApiValues name="PathLineJoin" /> | —              | 描边连接样式                    |
+| `horizontalStyle` | `ResolvedPatternLineStyle?`       | —              | 已继承基础字段的横向样式        |
+| `verticalStyle`   | `ResolvedPatternLineStyle?`       | —              | 已继承基础字段的纵向样式        |
+| `lineStyleCycle`  | `ResolvedPatternLineStyleCycle?`  | —              | 按 index 展开的完整周期样式数组 |
+| `round`           | `(n) => number`                   | —              | 使用编译精度取整                |
+
+`dashPattern`、方向样式与周期样式都已经应用继承关系和 `dashPattern > dashed > dotted` 优先级；自定义定义可以直接把这些字段映射到 `MarkerPathPrim`，无需再次解析预设。`lineStyleCycle.styles` 长度始终等于 `period`。
+
+### PatternEmitResult
+
+| 属性       | 类型                        | 默认值 | 描述                           |
+| ---------- | --------------------------- | ------ | ------------------------------ |
+| `tileSize` | `number`                    | —      | 最终 tile 周期，必须为有限正数 |
+| `motif`    | `Iterable<MarkerPrimitive>` | —      | tile 局部坐标中的结构化几何    |
+
+`PatternEmitOutput` 是普通 motif iterable 与 `PatternEmitResult` 的联合。只有 motif 的完整周期不同于 `context.size` 时才需要返回 result object。
 
 ## 相关
 

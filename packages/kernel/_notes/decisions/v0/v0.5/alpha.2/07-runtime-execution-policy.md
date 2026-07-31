@@ -115,7 +115,7 @@ type BenchmarkExecution = Readonly<{
 
 Static场景的`full`来自公开`view.mode === 'static'`与static update完整重绘契约，source固定为`static-view`；retained场景必须从Runtime/Core/Render trace取得唯一outcome，source为`runtime-trace`，漏报或多报使场景失败。三路都与独立full oracle对账。
 
-六个deterministic场景进入tracked`apps/bench/deterministic-baseline.json`，baseline逐字段对账execution；三组wall-clock会写入ignored report，用于手动A/B，但本ADR不把新场景加入`relativeGuards`，也不修改fingerprint timing baseline。待稳定样本人工审查后再独立批准timing gate，不能用当前机器一次结果直接冻结绝对预算。
+六个deterministic场景进入tracked`apps/bench/baselines/deterministic.json`，baseline逐字段对账execution；三组wall-clock会写入ignored report，用于手动A/B，但本ADR不把新场景加入`relativeGuards`，也不修改fingerprint timing baseline。待稳定样本人工审查后再独立批准timing gate，不能用当前机器一次结果直接冻结绝对预算。
 
 ## 测试设计
 

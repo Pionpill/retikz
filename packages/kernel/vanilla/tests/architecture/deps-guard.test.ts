@@ -24,7 +24,7 @@ describe('@retikz/vanilla 架构守卫', () => {
     const mountSrc = readSrc('runtime/mount-svg.ts');
     const strSrc = readSrc('runtime/render-svg.ts');
     expect(mountSrc).toMatch(/from ['"]@retikz\/render\/svg['"]/);
-    expect(mountSrc).toMatch(/buildSvgDocument/);
+    expect(mountSrc).toMatch(/buildSvgFrameDocument/);
     expect(strSrc).toMatch(/from ['"]@retikz\/render\/svg['"]/);
     // 不在 vanilla 复制 prim→attrs（stroke-width 这类呈现属性映射是 svg 的活）
     expect(mountSrc + strSrc).not.toMatch(/['"]stroke-width['"]/);

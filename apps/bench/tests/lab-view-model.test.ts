@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { LabPolicyResult } from '../src/playground/modules/core';
 
 import { LabLifecycleAvailability, LabOutcome, LabPolicyId, LabResultSource } from '../src/playground/modules/core';
-import { createComparisonChartRows, createLabSummary } from '../src/playground/report/view-model';
+import { createComparisonChartRows, createLabSummary } from '../src/playground/report';
 
 const result = (policyId: LabPolicyResult['policyId'], medianMs: number, reused: number): LabPolicyResult => ({
   policyId,

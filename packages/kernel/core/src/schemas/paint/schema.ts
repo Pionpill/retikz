@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../scalar';
+import { PathLineCapSchema, PathLineJoinSchema, StrokeDashOffsetSchema, StrokeDashPatternSchema } from '../stroke';
 import { CssColorSchema, OpacitySchema } from '../style';
 import { ImageFit } from './constants';
 
@@ -46,6 +47,65 @@ export const ConicGradientPaintSpecSchema = z
   })
   .describe('Conic gradient paint server');
 
+export const PatternLineStyleSchema = z.strictObject({
+  color: CssColorSchema.optional().describe('Line motif color override.'),
+  lineWidth: z.number().positive().optional().describe('Line motif stroke width override in user units.'),
+  dashed: z.boolean().optional().describe('Dashed preset override. Explicit `dashPattern` takes precedence.'),
+  dotted: z
+    .boolean()
+    .optional()
+    .describe('Dotted preset override. Explicit `dashPattern` and `dashed` take precedence.'),
+  dashPattern: StrokeDashPatternSchema.optional().describe(
+    'Explicit line motif dash pattern override; takes precedence over presets.',
+  ),
+  dashOffset: StrokeDashOffsetSchema.optional().describe('Line motif dash offset override in user units.'),
+  lineCap: PathLineCapSchema.optional().describe('Line motif endpoint cap override.'),
+  lineJoin: PathLineJoinSchema.optional().describe('Line motif corner join override.'),
+});
+
+export const PatternLineStyleOverrideSchema = z.strictObject({
+  index: z.number().int().nonnegative().describe('Zero-based line index within the style cycle.'),
+  style: PatternLineStyleSchema.describe('Partial line style applied at this cycle index.'),
+});
+
+/** 单个 Pattern tile 允许展开的最大线型周期，限制 motif 数量与编译期内存 */
+const MAX_PATTERN_LINE_STYLE_PERIOD = 512;
+
+export const PatternLineStyleCycleSchema = z
+  .strictObject({
+    period: z
+      .number()
+      .int()
+      .min(2)
+      .max(MAX_PATTERN_LINE_STYLE_PERIOD)
+      .describe('Number of adjacent line slots in one style cycle, from 2 through 512.'),
+    overrides: z
+      .array(PatternLineStyleOverrideSchema)
+      .min(1)
+      .describe('Sparse line-style overrides keyed by zero-based cycle index.'),
+  })
+  .superRefine((cycle, context) => {
+    const seen = new Set<number>();
+    cycle.overrides.forEach((override, overrideIndex) => {
+      if (override.index >= cycle.period) {
+        context.addIssue({
+          code: 'custom',
+          message: `Cycle index must be less than period (${cycle.period}).`,
+          path: ['overrides', overrideIndex, 'index'],
+        });
+      }
+      if (seen.has(override.index)) {
+        context.addIssue({
+          code: 'custom',
+          message: `Cycle index ${override.index} must be unique.`,
+          path: ['overrides', overrideIndex, 'index'],
+        });
+      }
+      seen.add(override.index);
+    });
+  })
+  .describe('Sparse repeating line-style cycle.');
+
 export const PatternPaintSpecSchema = z
   .object({
     kind: z.literal('pattern').describe('Discriminator for pattern paint.'),
@@ -55,14 +115,37 @@ export const PatternPaintSpecSchema = z
       .describe(
         'Pattern motif provider name. Built-ins are `lines`, `dots`, and `grid`; custom names must be registered via CompileOptions.patterns.',
       ),
-    color: CssColorSchema.optional().describe('Motif color; any CSS color, defaults to `currentColor`'),
+    color: PatternLineStyleSchema.shape.color.describe('Motif color; any CSS color, defaults to `currentColor`'),
     background: CssColorSchema.optional().describe('Tile background fill; omitted = transparent'),
-    size: z.number().positive().optional().describe('Tile period in user units (line gap / dot spacing); default 8'),
-    lineWidth: z
+    size: z
       .number()
       .positive()
       .optional()
-      .describe('Line / grid stroke width; for dots, drives the dot radius. Default 1 (dots default to size/5)'),
+      .describe(
+        'Base motif size or spacing in user units; the definition may emit a different final tile size. Defaults to the definition value or 8.',
+      ),
+    lineWidth: PatternLineStyleSchema.shape.lineWidth.describe(
+      'Line / grid stroke width; for dots, drives the dot radius. Default 1 (dots default to size/5)',
+    ),
+    dashed: PatternLineStyleSchema.shape.dashed.describe(
+      'Dashed line-motif preset. Explicit `dashPattern` takes precedence.',
+    ),
+    dotted: PatternLineStyleSchema.shape.dotted.describe(
+      'Dotted line-motif preset. Explicit `dashPattern` and `dashed` take precedence.',
+    ),
+    dashPattern: PatternLineStyleSchema.shape.dashPattern.describe(
+      'Explicit line-motif dash pattern; overrides `dashed` and `dotted`.',
+    ),
+    dashOffset: PatternLineStyleSchema.shape.dashOffset.describe('Line-motif dash offset in user units.'),
+    lineCap: PatternLineStyleSchema.shape.lineCap.describe('Line-motif stroke endpoint cap.'),
+    lineJoin: PatternLineStyleSchema.shape.lineJoin.describe('Line-motif stroke corner join.'),
+    horizontalStyle: PatternLineStyleSchema.optional().describe(
+      'Partial line-style override for horizontal grid motifs.',
+    ),
+    verticalStyle: PatternLineStyleSchema.optional().describe('Partial line-style override for vertical grid motifs.'),
+    lineStyleCycle: PatternLineStyleCycleSchema.optional().describe(
+      'Sparse repeating style cycle for adjacent line motifs.',
+    ),
     rotation: AngleDegreesSchema.optional().describe('Rotate the whole pattern, in degrees'),
   })
   .describe('Pattern paint server (hatching / dots / grid)');

@@ -55,6 +55,16 @@ It is not IR, a Scene primitive, or a live DOM measurement object, and it expose
 
 <ComponentPreview files="layout-artifacts" size="sm" />
 
+### Layout inspection policy
+
+`inspect` is a runtime sidecar and never enters IR. Passing `{ layout: true }` to `<Layout>` enables overlays for every registered layout occurrence that provides an inspector. Bounds, overflow shading, and alignment guides commit separately from the primary figure, do not expand the viewBox, and do not participate in hit testing.
+
+```tsx
+<Layout inspect={{ layout: true }}>{/* layout-aware composites */}</Layout>
+```
+
+Declare the same policy on [`<Scope>`](/kernel/components/layout/scope) for one authored subtree, or use a Standard container's own `inspect` prop for one occurrence. See [Standard Layout Inspector](/standard/layout/reference/runtime#layout-inspector) for fields, defaults, and cascade rules.
+
 ### Output Boundary
 
 `viewBox` controls the internal coordinate range, while `width` / `height` control display size. Use the panel to vary these two output boundaries without changing the JSX structure.
@@ -244,6 +254,7 @@ These props enter `CompileOptions` together. See each extension guide for defini
 | `fontSize`     | `number`                                                     | `16`    | Default font size and root size for presets and `rem`                               |
 | `artifacts`    | `CompileArtifactOptions`                                     | `{}`    | Requests opt-in outputs; `nodeLayouts:true` includes `CompiledNodeLayout` snapshots |
 | `onArtifacts`  | `(artifacts:`<br />`ReadonlyArray<CompileArtifact>) => void` | —       | Reports same-compile immutable artifacts after React commit                         |
+| `inspect`      | `InspectOptions`                                             | —       | Runtime-only whole-figure policy for registered layout inspectors                   |
 
 ### Primitive and Resource Injection
 

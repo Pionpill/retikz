@@ -1,27 +1,32 @@
-import type { AxisAlignedBounds, BoundsRect } from '@retikz/math';
+import type { AxisAlignedBounds } from '@retikz/math';
 import type { RuntimeIdentity, RuntimeRevision } from '@retikz/runtime';
 
 import type {
+  AnyCompositeInspectorDefinition,
+  BaseLayoutInspectOptions,
   ClipShape,
   CompositeCompileChild,
   CompositeCompileScopeProps,
+  CompositeInspectionAuthoringTree,
+  CompositeInspectionChildForest,
   CompositeReplay,
   CompositeReplayWrapper,
+  InspectionPrimitive,
   LayoutAlignmentGuide,
-  LayoutChildFailure,
-  LayoutChildProbe,
-  LayoutChildResult,
+  LayoutCompositeCompileContext,
+  LayoutCompositeCompileResult,
   LayoutProposal,
   ScenePrimitive,
   SceneResource,
   Transform,
 } from '../../contract';
+import type { CompileOccurrenceLocator } from '../../contract';
 import type { IRChild, IRPathBase, IRPosition, JsonValue, ResolvedDropShadow } from '../../schemas';
 import type { NamespaceFrameChange, NamespaceStack } from '../namespace';
 import type { NodeLayout } from '../node';
 import type { LayoutProbeFailureEntry } from '../probe-failure';
 import type { StyleFrame } from '../style';
-import type { CompileOccurrenceLocator, CompositeCompileArtifact, NodeLayoutCompileArtifact } from '../types';
+import type { CompositeCompileArtifact, NodeLayoutCompileArtifact } from '../types';
 import type { CompileWarning } from '../warning';
 import type { CompileContext } from './context';
 import type { InternalScenePrimitive, PathPlaceholder, PrimitiveZIndexTable } from './primitive';
@@ -68,6 +73,8 @@ export type TraversalResult = {
   observations: Array<PendingNodeLayoutObservation>;
   /** 本次 traversal 最终逻辑树的 artifacts */
   artifacts: Array<CompositeCompileArtifact | NodeLayoutCompileArtifact>;
+  /** 本次 traversal 最终逻辑树的 inspection entries */
+  inspections: Array<PendingInspectionEntry>;
   /** 顶层 child 向父布局暴露的无歧义 alignment guides */
   alignmentGuides?: ReadonlyArray<LayoutAlignmentGuide>;
 };
@@ -106,6 +113,8 @@ export type CompositeReplayTransaction = {
   warnings: Array<CompileWarning>;
   /** 仅在 replay 时发布的 artifacts */
   artifacts: Array<CompositeCompileArtifact | NodeLayoutCompileArtifact>;
+  /** 仅在 replay 时发布的 inspection entries */
+  inspections: Array<PendingInspectionEntry>;
 };
 
 /** runtime output tree 中的递归节点 */
@@ -149,6 +158,25 @@ export type CompositeCompileSession = {
   outputChildren: WeakMap<object, CompositeRuntimeOutputEntry>;
   /** opaque LayoutChildFailure identity → callback/compile-local failure metadata */
   failures: WeakMap<object, LayoutProbeFailureEntry>;
+  /** opaque inspection child handle → callback-local authored sidecar */
+  inspectionChildren: WeakMap<object, CompositeInspectionChildEntry>;
+};
+
+/** 只向 nested layout 传播的 sparse inherited inspection 状态 */
+export type InheritedInspectionState = Readonly<{
+  blocked: boolean;
+  layout: false | BaseLayoutInspectOptions;
+}>;
+
+/** 已按 layoutChild authoring locator 索引的 inspection forest */
+export type PreparedCompositeInspectionChildForest = ReadonlyMap<string, CompositeInspectionAuthoringTree>;
+
+/** opaque inspection child handle 的 callback-local 绑定记录 */
+export type CompositeInspectionChildEntry = {
+  owner: CompositeCompileOwner;
+  forest: CompositeInspectionChildForest;
+  boundChild?: IRChild;
+  prepared?: PreparedCompositeInspectionChildForest;
 };
 
 /** 单次 traversal 的可选隔离输入 */
@@ -175,6 +203,10 @@ export type TraversalCompileOptions = {
   identityTracker?: RuntimeTopologyTracker;
   /** 隔离 traversal 继承的 semantic owner */
   semanticOwner?: RuntimeSemanticOwner;
+  /** layoutChild 自动下传的 inherited inspection 状态 */
+  inheritedInspection?: InheritedInspectionState;
+  /** layoutChild opaque handle 绑定的 authored inspection forest */
+  inspectionForest?: PreparedCompositeInspectionChildForest;
   /** 向隔离 namespace callback 暴露当前 warning occurrence */
   observeWarningOccurrence?: (occurrence: CompileOccurrenceLocator | undefined) => void;
 };
@@ -216,6 +248,7 @@ export type TraversalContext = Pick<
   | 'composites'
   | 'maxCompositeDepth'
   | 'artifacts'
+  | 'inspection'
 > & {
   /** 当前 traversal 接收到的完整双轴 proposal */
   proposal: LayoutProposal;
@@ -261,6 +294,8 @@ export type TraversalFrame = {
   observationSink: Array<PendingNodeLayoutObservation>;
   /** 最终逻辑树 artifact 输出容器 */
   artifactSink: Array<CompositeCompileArtifact | NodeLayoutCompileArtifact>;
+  /** 最终逻辑树 inspection 输出容器 */
+  inspectionSink: Array<PendingInspectionEntry>;
   /** 当前 frame 的稳定或 candidate-local semantic owner */
   semanticOwner?: RuntimeSemanticOwner;
 };
@@ -365,27 +400,21 @@ export type PendingNodeLayoutObservation = {
   occurrence: CompileOccurrenceLocator;
 };
 
+/** 等最终 Scope/replay transform 与 occurrence remap 完成后发布的 inspection entry */
+export type PendingInspectionEntry = {
+  /** 最终 Composite occurrence locator */
+  occurrence: CompileOccurrenceLocator;
+  /** 从当前 artifact local coordinate 到 root 的 transform chain */
+  scopeChain: Array<Transform>;
+  /** 已校验和冻结的受限 primitives */
+  primitives: ReadonlyArray<InspectionPrimitive>;
+};
+
 /** 紧邻 schema parse 后可调用的 layout-aware composite 形态 */
 export type CallableLayoutCompositeDefinition = {
   namespace: string;
   type: string;
   artifactSchema?: { parse: (value: unknown) => JsonValue };
-  compile: (
-    node: unknown,
-    context: {
-      proposal: LayoutProposal;
-      layoutChild: (child: IRChild, proposal: LayoutProposal) => LayoutChildProbe;
-      replay: (result: LayoutChildResult, wrapper?: CompositeReplayWrapper) => CompositeCompileChild;
-      raise: (failure: LayoutChildFailure) => never;
-      scope: (
-        props: CompositeCompileScopeProps,
-        children: ReadonlyArray<IRChild | CompositeCompileChild>,
-      ) => CompositeCompileChild;
-    },
-  ) => {
-    children: ReadonlyArray<IRChild | CompositeCompileChild>;
-    allocationBounds?: Readonly<BoundsRect>;
-    alignmentGuides?: ReadonlyArray<LayoutAlignmentGuide>;
-    artifact?: JsonValue;
-  };
+  inspector?: AnyCompositeInspectorDefinition;
+  compile: (node: unknown, context: LayoutCompositeCompileContext) => LayoutCompositeCompileResult<JsonValue>;
 };

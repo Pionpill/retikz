@@ -1,4 +1,5 @@
-import type { CompileOccurrenceLocator, CompositeCompileArtifact, NodeLayoutCompileArtifact } from './types';
+import type { CompileOccurrenceLocator } from '../contract';
+import type { CompositeCompileArtifact, NodeLayoutCompileArtifact } from './types';
 
 /** 把结构化 occurrence locator 格式化为唯一调试字符串 */
 export const formatCompileOccurrence = (locator: CompileOccurrenceLocator): string =>

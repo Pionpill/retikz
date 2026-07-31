@@ -71,6 +71,92 @@ describe('ADV — 非 finite size / lineWidth / rotation 抛', () => {
   });
 });
 
+describe('ADV — 非法 line style 字段抛', () => {
+  const ignoreStyle: PatternDefinition = {
+    name: 'ignoreStyle',
+    emit: (): Array<MarkerPrimitive> => [{ type: 'ellipse', cx: 4, cy: 4, rx: 1, ry: 1, fill: 'red' }],
+  };
+  const compileIgnoringStyle = (spec: Record<string, unknown>): void =>
+    compilePattern(spec as unknown as IRPaintSpec, { patterns: [ignoreStyle] });
+
+  it('dashpattern_nonarray → 抛 invalid dashPattern', () => {
+    expect(() => compileIgnoringStyle({ kind: 'pattern', shape: 'ignoreStyle', dashPattern: '4 2' })).toThrow(
+      /invalid dashPattern/i,
+    );
+  });
+
+  it('dashpattern_empty_or_negative → 抛 invalid dashPattern', () => {
+    expect(() => compileIgnoringStyle({ kind: 'pattern', shape: 'ignoreStyle', dashPattern: [] })).toThrow(
+      /invalid dashPattern/i,
+    );
+    expect(() => compileIgnoringStyle({ kind: 'pattern', shape: 'ignoreStyle', dashPattern: [4, -2] })).toThrow(
+      /invalid dashPattern/i,
+    );
+  });
+
+  it('dashoffset_infinity → 抛 invalid dashOffset', () => {
+    expect(() => compileIgnoringStyle({ kind: 'pattern', shape: 'ignoreStyle', dashOffset: Infinity })).toThrow(
+      /invalid dashOffset/i,
+    );
+  });
+
+  it('linecap_unknown → 抛 invalid lineCap', () => {
+    expect(() => compileIgnoringStyle({ kind: 'pattern', shape: 'ignoreStyle', lineCap: 'triangle' })).toThrow(
+      /invalid lineCap/i,
+    );
+  });
+
+  it('linejoin_unknown → 抛 invalid lineJoin', () => {
+    expect(() => compileIgnoringStyle({ kind: 'pattern', shape: 'ignoreStyle', lineJoin: 'curve' })).toThrow(
+      /invalid lineJoin/i,
+    );
+  });
+
+  it('preset_nonboolean → 抛对应字段错误', () => {
+    expect(() => compileIgnoringStyle({ kind: 'pattern', shape: 'ignoreStyle', dashed: 'yes' })).toThrow(
+      /invalid dashed/i,
+    );
+    expect(() => compileIgnoringStyle({ kind: 'pattern', shape: 'ignoreStyle', dotted: 1 })).toThrow(/invalid dotted/i);
+  });
+
+  it.each([
+    ['period_nan', { period: NaN, overrides: [{ index: 0, style: {} }] }],
+    ['period_infinity', { period: Infinity, overrides: [{ index: 0, style: {} }] }],
+    ['period_too_small', { period: 1, overrides: [{ index: 0, style: {} }] }],
+    ['period_too_large', { period: 513, overrides: [{ index: 0, style: {} }] }],
+    ['period_fractional', { period: 2.5, overrides: [{ index: 0, style: {} }] }],
+    ['period_string', { period: '3', overrides: [{ index: 0, style: {} }] }],
+    ['index_negative', { period: 3, overrides: [{ index: -1, style: {} }] }],
+    ['index_out_of_range', { period: 3, overrides: [{ index: 3, style: {} }] }],
+    [
+      'index_duplicate',
+      {
+        period: 3,
+        overrides: [
+          { index: 1, style: {} },
+          { index: 1, style: { dashed: true } },
+        ],
+      },
+    ],
+  ])('%s → 抛 lineStyleCycle 诊断', (_label, lineStyleCycle) => {
+    expect(() => compileIgnoringStyle({ kind: 'pattern', shape: 'ignoreStyle', lineStyleCycle })).toThrow(
+      /lineStyleCycle/i,
+    );
+  });
+
+  it.each([
+    ['horizontalStyle dashed', 'horizontalStyle', { dashed: 'yes' }],
+    ['horizontalStyle dashPattern', 'horizontalStyle', { dashPattern: [] }],
+    ['verticalStyle dashOffset', 'verticalStyle', { dashOffset: Infinity }],
+    ['verticalStyle lineCap', 'verticalStyle', { lineCap: 'triangle' }],
+    ['verticalStyle lineJoin', 'verticalStyle', { lineJoin: 'curve' }],
+  ])('%s 非法 → 抛字段诊断', (_label, field, style) => {
+    expect(() => compileIgnoringStyle({ kind: 'pattern', shape: 'ignoreStyle', [field]: style })).toThrow(
+      new RegExp(field, 'i'),
+    );
+  });
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 攻击面 2：round-trip——非 finite 源头被拦，干净 pattern Scene round-trip 无损
 // ─────────────────────────────────────────────────────────────────────────────
@@ -115,6 +201,23 @@ describe('ADV — 极端 / 非正 size', () => {
 // 攻击面 4：emit 产物绕窄子集 / finite 栅栏
 // ─────────────────────────────────────────────────────────────────────────────
 describe('ADV — emit 产物栅栏', () => {
+  it.each([
+    [
+      'tileSize',
+      Object.assign([{ type: 'ellipse' as const, cx: 4, cy: 4, rx: 1, ry: 1, fill: 'red' }], { tileSize: 24 }),
+    ],
+    ['motif', Object.assign([{ type: 'ellipse' as const, cx: 4, cy: 4, rx: 1, ry: 1, fill: 'red' }], { motif: [] })],
+  ])('iterable_with_%s_metadata：带单个同名元数据字段的合法 iterable 不被误判', (_field, motif) => {
+    const metadataPattern: PatternDefinition = {
+      name: 'metadataIterable',
+      emit: () => motif,
+    };
+
+    expect(
+      tileOf({ kind: 'pattern', shape: 'metadataIterable' }, { patterns: [metadataPattern] })?.motif,
+    ).toMatchObject([{ type: 'ellipse', cx: 4, cy: 4, rx: 1, ry: 1, fill: 'red' }]);
+  });
+
   it('motif_nonfinite_coords：custom emit 产 NaN 坐标 → finite 栅栏抛（含 pattern 名）', () => {
     const nanPattern: PatternDefinition = {
       name: 'nanPattern',
@@ -156,6 +259,44 @@ describe('ADV — emit 产物栅栏', () => {
     expect(() =>
       compilePattern({ kind: 'pattern', shape: 'fn' }, { patterns: [{ ...fnPattern, name: 'fn' }] }),
     ).toThrow(/function/i);
+  });
+
+  it.each([
+    ['zero', 0],
+    ['negative', -1],
+    ['nan', NaN],
+    ['infinity', Infinity],
+    ['string', '24'],
+  ])('result_tile_size_%s：非法 tileSize fail-loud', (_label, tileSize) => {
+    const badPattern = {
+      name: 'badTileSize',
+      emit: () => ({ tileSize, motif: [] }),
+    } as unknown as PatternDefinition;
+
+    expect(() =>
+      compilePattern(
+        { kind: 'pattern', shape: 'badTileSize' },
+        {
+          patterns: [badPattern],
+        },
+      ),
+    ).toThrow(/badTileSize.*tileSize|tileSize.*badTileSize/i);
+  });
+
+  it('result_motif_noniterable：result object 的 motif 必须可迭代', () => {
+    const badPattern = {
+      name: 'badResultMotif',
+      emit: () => ({ tileSize: 16, motif: null }),
+    } as unknown as PatternDefinition;
+
+    expect(() =>
+      compilePattern(
+        { kind: 'pattern', shape: 'badResultMotif' },
+        {
+          patterns: [badPattern],
+        },
+      ),
+    ).toThrow(/badResultMotif.*motif|motif.*badResultMotif/i);
   });
 
   it('empty_motif：emit 返回 [] → 空 tile，不崩', () => {
@@ -288,10 +429,11 @@ describe('ADV — dedup / override / 交叉', () => {
 describe('ADV — duplicate registration / background', () => {
   it('duplicate_builtin_name_rejected_even_if_unused：注册同名内置但场景未用 → 仍失败', () => {
     const customLines: PatternDefinition = { name: 'lines', emit: (): Array<MarkerPrimitive> => [] };
-    expect(() =>
-      compileToScene(patternNodeIR({ kind: 'pattern', shape: 'grid' }), {
-        patterns: [{ ...customLines, name: 'lines' }],
-      }).scene,
+    expect(
+      () =>
+        compileToScene(patternNodeIR({ kind: 'pattern', shape: 'grid' }), {
+          patterns: [{ ...customLines, name: 'lines' }],
+        }).scene,
     ).toThrow(/duplicate pattern shape registration: "lines"/);
   });
 

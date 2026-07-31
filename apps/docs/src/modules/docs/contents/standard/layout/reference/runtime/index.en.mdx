@@ -1,0 +1,142 @@
+---
+title: Runtime
+description: Look up Standard layout definitions, capability presets, Core probe/replay, and how React and Vanilla adapters join one compilation.
+---
+
+Layout schemas persist container and item configuration. Definitions, capability presets, the Core compile context, and adapters are runtime objects. Standard owns generic layout solving, while Core proposes two-axis conditions to children, isolates probe candidates, replays selected candidates, and publishes typed artifacts.
+
+> This page covers capability loading and execution rather than schema fields. See [Contract - Input](/standard/layout/reference/contract-input) for persisted configuration and [Contract - Artifact](/standard/layout/reference/contract-artifact) for solved results.
+
+## Loading capability
+
+| Granularity    | Public entry                                                              | Purpose                                                   |
+| -------------- | ------------------------------------------------------------------------- | --------------------------------------------------------- |
+| One definition | `FlexLayoutDefinition`, `GridLayoutDefinition`, `OverlayLayoutDefinition` | Register one layout composite with Core                   |
+| One module     | `FlexLayoutModule`, `GridLayoutModule`, `OverlayLayoutModule`             | Load one member through the Standard capability system    |
+| Layout preset  | `StandardLayoutPreset`                                                    | Load all three layout definitions                         |
+| React          | `FlexLayout`, `GridLayout`, `OverlayLayout`, `LayoutItem`                 | Build canonical IR and contribute definitions to `Layout` |
+| Vanilla        | `StandardLayoutVanillaAdapters`                                           | Recognize all three embeds in figure, mount, or SSR hosts |
+
+`StandardLayoutPreset.compile.composites` is the Core definition array passed to `compileToScene()`. The preset does not introduce another compilation pipeline. React and Vanilla adapters produce the same Standard IR and contribute the same definitions.
+
+## One layout transaction
+
+A layout container is a Core layout-aware composite. One compilation proceeds through these deterministic stages:
+
+1. **Parse input**: Core resolves the definition by `namespace` and `type`, then validates canonical IR with its schema.
+2. **Probe children**: the container calls `layoutChild` for minimum, natural, ranged, or exact candidates. Results carry the parent-resolved `slotSize`, real `allocationBounds`, `visualBounds`, and available alignment guides.
+3. **Solve the container**: Standard pure solvers use container rules, available space, and probe measurements to resolve tracks, lines, slots, and translations.
+4. **Replay selected candidates**: each child replays only its selected candidate. Discarded probes publish no primitives, resources, namespaces, or artifacts.
+5. **Publish results**: Core wraps the Standard value in an occurrence-aware composite artifact and returns it with the final Scene.
+
+Fixed geometry may refuse a smaller slot, so `slotSize` and real `allocationBounds` remain distinct. Containers do not guess another main-axis distribution after refusal. Determinate undersizing is represented through overflow and visible bounds, while invalid or unsolvable configuration fails loudly.
+
+Nested layouts remain in the same Core compilation. An inner container receives the outer proposal as an ordinary child. Every composite occurrence publishes an artifact with a local key space, without relying on a public id as an instance selector.
+
+## Direct Core usage
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { FlexLayoutArtifactSchema, StandardLayoutPreset } from '@retikz/standard';
+
+const output = compileToScene(scene, StandardLayoutPreset.compile);
+const envelope = output.artifacts.find(
+  artifact => artifact.kind === 'composite' && artifact.namespace === 'standard' && artifact.type === 'flexLayout',
+);
+const artifact = FlexLayoutArtifactSchema.parse(envelope?.value);
+```
+
+Hosts that need one container may put its definition in `compile.composites`; use `StandardLayoutPreset.compile` for the complete family. `occurrence.sourcePath` and `occurrence.expansionPath` distinguish nested or repeated instances. Parse `value` with the matching `XxxLayoutArtifactSchema`.
+
+## React
+
+The three `@retikz/standard-react` containers are embeddable Tier 2 components. Their direct children must be `LayoutItem` elements with the matching `kind`. Fragments and arrays flatten transparently, but ordinary JSX nodes cannot bypass item semantics.
+
+Every `LayoutItem` requires exactly one of `children` or `ir` and must produce exactly one `IRChild`. React `itemKey` becomes canonical JSON `key`; it never reads React's reserved `key`. Nested Standard layouts may contribute the same family, while external datasets or foreign Tier 2 runtime contributions remain the outer host's responsibility.
+
+React containers start no local compilation and perform no DOM measurement. They contribute IR and definitions to the outer `Layout`, which compiles and renders the complete tree. Observe artifacts through the outer host.
+
+## Vanilla
+
+`flexLayout()`, `gridLayout()`, and `overlayLayout()` return `VanillaEmbedSpec` values. Figure, mount, or SSR hosts need the matching adapter; use `StandardLayoutVanillaAdapters` for the complete family.
+
+Each adapter calls the same `createXxxLayout()` factory as direct authoring and contributes a copy of `StandardLayoutPreset.compile.composites`. Vanilla therefore shares schemas, definitions, solvers, and artifact semantics with direct Core compilation and React.
+
+## Layout Inspector
+
+Layout Inspector is a runtime-only development overlay. It never enters Standard IR or changes typed layout artifacts. SVG appends a `pointer-events="none"` group after the primary figure. Canvas draws the overlay after the primary bitmap without adding its primitives to hit testing. Both backends derive viewBox, resources, animation, and normal interaction from the primary Scene only.
+
+### Three activation scopes
+
+| Scope            | React                                  | Vanilla                           | Cascade behavior                                            |
+| ---------------- | -------------------------------------- | --------------------------------- | ----------------------------------------------------------- |
+| Whole figure     | `<Layout inspect={{ layout: true }}>`  | `inspect` in mount or SSR options | Select every registered layout occurrence with an inspector |
+| Authored subtree | `<Scope inspect={{ layout: true }}>`   | `VanillaScopeSpec.inspect`        | Select only authored descendants of that Scope              |
+| One container    | `<FlexLayout inspect>` and equivalents | `flexLayout('id', input, true)`   | Select that occurrence only; nested layouts stay unchanged  |
+
+Policies merge field by field from Layout to the nearest Scope and then the component. `layout: false` only overrides the current cascaded value, so a deeper Scope or component may enable it again; only `enabled: false` creates a hard subtree barrier that descendants cannot cross. Component-level `inspect={false}` disables only that occurrence. With every `inspect` omitted, no inspector runs and `CompileResult.inspection` is `null`.
+
+### Shared policy and bounds
+
+<ZodSchema name="InspectOptionsInputSchema" description="Sparse inspection policy used by Layout and Scope." />
+
+<ZodSchema name="BaseLayoutInspectOptionsInputSchema" description="Sparse options shared by every layout inspector." />
+
+<ZodSchema
+  name="LayoutInspectBoundsOptionsInputSchema"
+  description="Per-boundary sparse switches for layout overlays."
+/>
+
+`layout: true` uses one canonical profile: container, content, slot, allocation, overflow, and alignment guides are on; visual bounds and labels are off. Object values override only explicit fields, so `{ layout: { bounds: { visual: true } } }` keeps the other default bounds enabled.
+
+### Family options
+
+<ZodSchema
+  name="FlexLayoutInspectOptionsInputSchema"
+  description="Shared and FlexLayout-specific inspection options."
+/>
+
+<ZodSchema
+  name="GridLayoutInspectOptionsInputSchema"
+  description="Shared and GridLayout-specific inspection options."
+/>
+
+<ZodSchema
+  name="OverlayLayoutInspectOptionsInputSchema"
+  description="Shared and OverlayLayout-specific inspection options."
+/>
+
+Flex enables `lines` and `gaps` by default. Grid enables `tracks`, `gaps`, and `spans`, while `cells` stays off. Overlay enables `placements` and `anchors`, while `stacking` stays off.
+
+`inspect` accepts sparse authoring values only; unknown keys or invalid types fail loudly. Core resolves the cascade exactly once, then a Standard inspector reads only the typed artifact from that same compilation. A retained update commits the primary frame, artifacts, and overlay atomically; a failure publishes no partial frame.
+
+<SourceLinks
+  sources={[
+    { label: 'Layout capability preset', path: 'packages/library/standard/src/preset/layout.ts' },
+    {
+      label: 'FlexLayout definition and typed artifact',
+      path: 'packages/library/standard/src/composites/flex-layout/definition.ts',
+    },
+    {
+      label: 'React layout-family contribution and LayoutItem resolution',
+      path: 'packages/library/standard-react/src/shared/layout-family.ts',
+    },
+    {
+      label: 'Shared Layout Inspector policy and defaults',
+      path: 'packages/kernel/core/src/contract/inspection/options-schema.ts',
+    },
+    {
+      label: 'Standard family inspection options',
+      path: 'packages/library/standard/src/composites/shared/layout/inspect-schema.ts',
+    },
+    { label: 'Vanilla layout adapter preset', path: 'packages/library/standard-vanilla/src/preset/index.ts' },
+  ]}
+/>
+
+## Related
+
+- [Contract - Input](/standard/layout/reference/contract-input): JSON-safe schemas consumed at runtime
+- [Contract - Artifact](/standard/layout/reference/contract-artifact): typed layout results from the same compilation
+- [Tier 2 Composite](/kernel/concepts/design/composite): how Core registers and compiles higher-level IR
+- [Kernel compile](/kernel/reference/runtime/compile): Core options, artifacts, and the composite registry
+- [Layout](/kernel/components/layout/overview): host sizing, Scene output, and layout artifacts

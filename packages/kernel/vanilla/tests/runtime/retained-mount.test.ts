@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-import type { AnyCompositeDefinition, IRScene, SceneRuntimeSnapshot } from '@retikz/core';
+import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
 import type {
+  RenderFrameSnapshot,
   RenderRuntimeConfig,
   RetainedRendererFactory,
   RetainedRendererFactoryInput,
@@ -71,10 +72,12 @@ const createMemoryRendererFactory = (
   onConfig?: (config: RenderRuntimeConfig) => void,
   onPatch?: (patch: unknown) => void,
   onDispose?: () => void,
+  onFrame?: (frame: RenderFrameSnapshot) => void,
+  failMount: boolean | (() => boolean) = false,
 ): RetainedRendererFactory =>
   ((input: RetainedRendererFactoryInput) => {
-    let current: SceneRuntimeSnapshot | undefined;
-    const prepare = (snapshot: SceneRuntimeSnapshot): RuntimePreparedCommit => {
+    let current: RenderFrameSnapshot | undefined;
+    const prepare = (frame: RenderFrameSnapshot): RuntimePreparedCommit => {
       if (current !== undefined) {
         const shouldFail = typeof failUpdate === 'function' ? failUpdate() : failUpdate;
         if (shouldFail) throw new Error('expected update failure');
@@ -82,7 +85,8 @@ const createMemoryRendererFactory = (
       const previous = current;
       return Object.freeze({
         commit: () => {
-          current = snapshot;
+          current = frame;
+          onFrame?.(frame);
         },
         rollback: () => {
           current = previous;
@@ -92,18 +96,21 @@ const createMemoryRendererFactory = (
     };
     const definition = {
       capability,
-      prepareMount: (snapshot: SceneRuntimeSnapshot, config: RenderRuntimeConfig) => {
+      inspectionCapability: 'supported' as const,
+      prepareMount: (frame: RenderFrameSnapshot, config: RenderRuntimeConfig) => {
+        const shouldFail = typeof failMount === 'function' ? failMount() : failMount;
+        if (shouldFail) throw new Error('expected mount failure');
         onConfig?.(config);
-        return prepare(snapshot);
+        return prepare(frame);
       },
-      prepare: (patch: unknown, snapshot: SceneRuntimeSnapshot, config: RenderRuntimeConfig) => {
+      prepare: (patch: unknown, frame: RenderFrameSnapshot, config: RenderRuntimeConfig) => {
         onPatch?.(patch);
         onConfig?.(config);
-        return prepare(snapshot);
+        return prepare(frame);
       },
       read: () => {
         if (current === undefined) throw new Error('memory renderer is not committed');
-        return Object.freeze({ snapshot: current });
+        return Object.freeze({ frame: current });
       },
       dispose: () => {
         current = undefined;
@@ -151,6 +158,53 @@ const datasetFigure = (color: string): VanillaFigureSpec => ({
   children: [{ type: 'embed', kind: 'fixture-dataset', id: 'dataset', props: { color } }],
 });
 
+const inspectionDefinition = defineComposite({
+  namespace: 'fixture',
+  type: 'inspectionBox',
+  schema: CompositeBaseSchema.extend({
+    namespace: z.literal('fixture'),
+    type: z.literal('inspectionBox'),
+  }),
+  artifactSchema: z.strictObject({ width: z.number(), height: z.number() }),
+  inspector: {
+    kind: 'layout',
+    localOptionsInputSchema: z.strictObject({}),
+    localOptionsSchema: z.strictObject({}),
+    inspect: artifact => [
+      {
+        kind: 'rect',
+        role: 'fixture.inspection',
+        x: 0,
+        y: 0,
+        width: artifact.width,
+        height: artifact.height,
+        presentation: 'outline',
+        tone: 'neutral',
+      },
+    ],
+  },
+  compile: () => ({
+    children: [{ type: 'node', id: 'inspection-box', position: [0, 0], shape: 'rectangle' }],
+    artifact: { width: 20, height: 20 },
+  }),
+});
+
+const inspectionAdapter: VanillaTier2Adapter<Record<string, never>> = {
+  kind: 'fixture-inspection',
+  namespace: 'fixture',
+  lower: () => ({
+    node: { namespace: 'fixture', type: 'inspectionBox' },
+    datasets: {},
+    makeComposites: () => [inspectionDefinition],
+  }),
+};
+
+const inspectionFigure = (inspect: boolean): VanillaFigureSpec => ({
+  type: 'figure',
+  version: 1,
+  children: [{ type: 'embed', kind: 'fixture-inspection', id: 'inspection', props: {}, inspect }],
+});
+
 beforeEach(() => {
   const context = createRecordingContext();
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => context);
@@ -161,6 +215,109 @@ afterEach(() => {
 });
 
 describe('@retikz/vanilla retained mount', () => {
+  it('updates an embed inspection sidecar by atomically rebuilding the retained frame', () => {
+    const frames: Array<RenderFrameSnapshot> = [];
+    const configs: Array<RenderRuntimeConfig> = [];
+    const rendererFactory = createMemoryRendererFactory(
+      'entity',
+      false,
+      config => configs.push(config),
+      undefined,
+      undefined,
+      frame => frames.push(frame),
+    );
+    const view = mountSvg(document.createElement('div'), inspectionFigure(false), {
+      adapters: [inspectionAdapter],
+      runtime: { rendererFactory },
+    });
+    const handler = vi.fn();
+    view.hydrate({ handlers: { 'inspection-box': { click: handler } } });
+
+    view.update(inspectionFigure(true));
+
+    expect(frames.at(-2)?.inspection).toBeNull();
+    expect(frames.at(-1)?.inspection?.entries).toHaveLength(1);
+    expect(configs.at(-1)?.handlerContributions).toEqual([
+      expect.objectContaining({ handlers: { 'inspection-box': { click: handler } } }),
+    ]);
+    view.dispose();
+  });
+
+  it('releases a successfully retired inspection session exactly once', () => {
+    const dispose = vi.fn();
+    const view = mountSvg(document.createElement('div'), inspectionFigure(false), {
+      adapters: [inspectionAdapter],
+      runtime: {
+        rendererFactory: createMemoryRendererFactory('entity', false, undefined, undefined, dispose),
+      },
+    });
+
+    view.update(inspectionFigure(true));
+    expect(dispose).toHaveBeenCalledTimes(1);
+
+    view.dispose();
+    view.dispose();
+    expect(dispose).toHaveBeenCalledTimes(2);
+  });
+
+  it('retries a failed retired inspection session cleanup until it succeeds', () => {
+    const disposeFailure = new Error('retired dispose failed');
+    let remainingFailures = 2;
+    const dispose = vi.fn(() => {
+      if (remainingFailures > 0) {
+        remainingFailures -= 1;
+        throw disposeFailure;
+      }
+    });
+    const view = mountSvg(document.createElement('div'), inspectionFigure(false), {
+      adapters: [inspectionAdapter],
+      runtime: {
+        rendererFactory: createMemoryRendererFactory('entity', false, undefined, undefined, dispose),
+      },
+    });
+
+    view.update(inspectionFigure(true));
+    expect(dispose).toHaveBeenCalledTimes(2);
+    expect(view.diagnostics()).toEqual([
+      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED', cause: disposeFailure }),
+      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED', cause: disposeFailure }),
+    ]);
+    expect(view.diagnostics()).toEqual([]);
+
+    view.dispose();
+    expect(dispose).toHaveBeenCalledTimes(4);
+    view.dispose();
+    expect(dispose).toHaveBeenCalledTimes(4);
+  });
+
+  it('keeps the previous retained frame usable when an inspection sidecar rebuild fails', () => {
+    let mountCount = 0;
+    const rendererFactory = createMemoryRendererFactory(
+      'entity',
+      false,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      () => {
+        mountCount += 1;
+        return mountCount === 2;
+      },
+    );
+    const view = mountSvg(document.createElement('div'), inspectionFigure(false), {
+      adapters: [inspectionAdapter],
+      runtime: { rendererFactory },
+    });
+    const artifacts = view.artifacts;
+    const runtimeMeta = view.runtimeMeta;
+
+    expect(() => view.update(inspectionFigure(true))).toThrow(/RUNTIME_PARTICIPANT_PREPARE_FAILED/);
+    expect(view.artifacts).toBe(artifacts);
+    expect(view.runtimeMeta).toBe(runtimeMeta);
+    expect(() => view.update(inspectionFigure(false))).not.toThrow();
+    view.dispose();
+  });
+
   it('composite candidate rollback 后稳定代理恢复旧 callback', () => {
     const initial = makeDatasetComposites({ color: '#ef4444' })[0];
     const candidate = makeDatasetComposites({ color: '#22c55e' })[0];

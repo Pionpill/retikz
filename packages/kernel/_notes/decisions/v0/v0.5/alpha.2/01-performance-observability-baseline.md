@@ -82,7 +82,7 @@ Batch 0 只锁定当前 full compile / full renderer commit 的工作量与功�
 
 CI 硬门槛使用 visited/reused/changed、发射基数、输出等价、retained handle / resource 数量等确定性指标。内存硬门槛不直接使用 GC 后 heap 字节；dispose 后 live handle、listener、index 与 resource reference 必须回到 fixture 起始计数。Heap 只在 Node `--expose-gc` 或 browser runner 提供显式 GC 时作为非阻断报告。
 
-机器可读 `apps/bench/bench-environment.json` 冻结：Node `24.x`、pnpm lockfile 对应的 Chromium build、`1440 × 900` viewport、DPR 1、关闭动画、固定字体与 locale/timezone。每个 wall-clock 场景 warm-up 5 次、测量 30 次，报告 median / p95 / max；只在 environment fingerprint 完全一致时比较。`bench:check` 只读验证确定性预算，`bench:report` 生成 ignored 时间报告，`bench:update-baseline` 只生成候选 diff且必须人工审查，不由普通验证或 CI 自动改预算。
+机器可读 `apps/bench/environment.json` 冻结：Node `24.x`、pnpm lockfile 对应的 Chromium build、`1440 × 900` viewport、DPR 1、关闭动画、固定字体与 locale/timezone。每个 wall-clock 场景 warm-up 5 次、测量 30 次，报告 median / p95 / max；只在 environment fingerprint 完全一致时比较。`bench:check` 只读验证确定性预算，`bench:report` 生成 ignored 时间报告，`bench:update-baseline` 只生成候选 diff且必须人工审查，不由普通验证或 CI 自动改预算。
 
 理由：
 

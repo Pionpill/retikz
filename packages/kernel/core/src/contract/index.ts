@@ -3,6 +3,8 @@ export * from './boundary';
 export * from './box-spacing';
 export * from './clip';
 export * from './composite';
+export * from './inspection';
+export * from './occurrence';
 export * from './path-generator';
 export * from './path-kind';
 export * from './pattern';

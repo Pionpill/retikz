@@ -2,6 +2,7 @@ import type {
   PaintValue,
   PatternDefinition,
   PatternEmitContext,
+  PatternEmitResult,
   ResolvedPatternTile,
   SceneResource,
 } from '../../contract';
@@ -10,6 +11,7 @@ import type { IRPaintSpec } from '../../schemas';
 import { providerDefinitionOf } from '../../providers/registry';
 import { CompositeContractError, LayoutProbeRecoverableError, safeThrownDetail } from '../probe-failure';
 import { validateMarkerPrimitives } from './marker-primitive';
+import { resolvePatternStyleContext } from './pattern-style';
 
 /** paint 解析器：纯色 string 原样返回；PaintSpec 去重 + 派稳定 id → `{ kind:'resourceRef', id }`；undefined 透传 */
 export type PaintResolver = (paint: string | IRPaintSpec | undefined) => PaintValue | undefined;
@@ -28,6 +30,13 @@ const FALLBACK_PATTERN_SIZE = 8;
 /** motif 缺省主色：CSS `currentColor`（继承 svg color，主题反应天然） */
 const DEFAULT_MOTIF_COLOR = 'currentColor';
 
+/** 判断 emit 输出是否为显式 tile 结果；两个必需字段同时存在才进入该分支 */
+const isPatternEmitResult = (value: unknown): value is PatternEmitResult =>
+  typeof value === 'object' &&
+  value !== null &&
+  Object.prototype.hasOwnProperty.call(value, 'tileSize') &&
+  Object.prototype.hasOwnProperty.call(value, 'motif');
+
 /** 解析 pattern paint spec 为 Scene resource tile */
 const resolvePatternTile = (
   spec: Extract<IRPaintSpec, { kind: 'pattern' }>,
@@ -38,18 +47,13 @@ const resolvePatternTile = (
     capability: 'pattern shape',
     optionName: 'patterns',
   });
-  // size / lineWidth / rotation 的 schema `.positive()` 只在 PathSchema.parse 守门；compileToScene
-  // 直接收 IR（手搓 / LLM 写法）会绕过，故 compile 是唯一真实关口——非 finite / 非正会污染 tile + Scene
-  // round-trip（JSON.stringify(NaN/Infinity)=null），在此抛清晰错（含 shape 名），对齐 arrow finite 守卫。
+  // PatternPaintSpecSchema 只在显式 parse 时守门；compileToScene 直接收 IR（手搓 / LLM 写法）会绕过，
+  // 故 compile 是唯一真实关口——非法数值会污染 tile + Scene round-trip
+  // （JSON.stringify(NaN/Infinity)=null），在此抛清晰错（含 shape 名），对齐 arrow finite 守卫。
   const rawSize = spec.size ?? def.defaultSize ?? FALLBACK_PATTERN_SIZE;
   if (!Number.isFinite(rawSize) || rawSize <= 0) {
     throw new Error(
       `Pattern '${spec.shape}' has an invalid size (${String(rawSize)}); it must be a finite number greater than 0.`,
-    );
-  }
-  if (spec.lineWidth !== undefined && (!Number.isFinite(spec.lineWidth) || spec.lineWidth <= 0)) {
-    throw new Error(
-      `Pattern '${spec.shape}' has an invalid lineWidth (${String(spec.lineWidth)}); it must be a finite number greater than 0.`,
     );
   }
   if (spec.rotation !== undefined && !Number.isFinite(spec.rotation)) {
@@ -58,13 +62,16 @@ const resolvePatternTile = (
     );
   }
   const size = round(rawSize);
+  const styleContext = resolvePatternStyleContext(spec, DEFAULT_MOTIF_COLOR);
   const ctx: PatternEmitContext = {
     size,
-    color: spec.color ?? DEFAULT_MOTIF_COLOR,
+    ...styleContext.base,
     round,
   };
   if (spec.background !== undefined) ctx.background = spec.background;
-  if (spec.lineWidth !== undefined) ctx.lineWidth = spec.lineWidth;
+  if (styleContext.horizontalStyle !== undefined) ctx.horizontalStyle = styleContext.horizontalStyle;
+  if (styleContext.verticalStyle !== undefined) ctx.verticalStyle = styleContext.verticalStyle;
+  if (styleContext.lineStyleCycle !== undefined) ctx.lineStyleCycle = styleContext.lineStyleCycle;
   if (typeof def.emit !== 'function') {
     throw new CompositeContractError(
       `Pattern '${spec.shape}' is missing an emit function (PatternDefinition.emit is required).`,
@@ -79,8 +86,19 @@ const resolvePatternTile = (
       providerKey: `pattern:${spec.shape}`,
     });
   }
-  const motif = validateMarkerPrimitives(`Pattern '${spec.shape}'`, emitted);
-  const tile: ResolvedPatternTile = { size, motif };
+  let tileSize = size;
+  let emittedMotif = emitted;
+  if (isPatternEmitResult(emitted)) {
+    if (typeof emitted.tileSize !== 'number' || !Number.isFinite(emitted.tileSize) || emitted.tileSize <= 0) {
+      throw new CompositeContractError(
+        `Pattern '${spec.shape}' emit returned an invalid tileSize (${String(emitted.tileSize)}); it must be a finite number greater than 0.`,
+      );
+    }
+    tileSize = round(emitted.tileSize);
+    emittedMotif = emitted.motif;
+  }
+  const motif = validateMarkerPrimitives(`Pattern '${spec.shape}' motif`, emittedMotif);
+  const tile: ResolvedPatternTile = { size: tileSize, motif };
   if (spec.background !== undefined) tile.background = spec.background;
   if (spec.rotation !== undefined) tile.rotation = spec.rotation;
   return tile;

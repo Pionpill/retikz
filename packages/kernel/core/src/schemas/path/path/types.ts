@@ -1,8 +1,9 @@
 import type { z } from 'zod';
 
 import type { ValueOf } from '../../../shared';
+import type { PathLineCap, PathLineJoin } from '../../stroke';
 import type { StepSchema } from '../step';
-import type { PathFillRule, PathKind, PathLineCap, PathLineJoin } from './constants';
+import type { PathFillRule, PathKind } from './constants';
 import type { ArrowMarkSchema, PathBaseSchema, PathScaleSchema } from './schema';
 
 /** 路径填充规则关键字类型 */

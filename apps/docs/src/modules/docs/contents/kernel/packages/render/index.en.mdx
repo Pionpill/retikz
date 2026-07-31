@@ -14,6 +14,7 @@ This group covers how retikz actually paints a figure to the screen. Your figure
 | SVG              | Scene → vector DOM, or an SSR / build-time string                                            | The default: you want crisp vectors, CSS hit-testing, accessibility |
 | Canvas           | Scene → raster bitmap, immediate-mode drawing + hit-testing                                  | Hundreds of primitives, frequent repaints, performance first        |
 | Retained Runtime | Prepare and commit Scene Patches inside a Runtime transaction                                | Stable host identity and incremental updates                        |
+| Inspection       | Materialize an independent development overlay after the primary figure                      | Reading layout bounds, overflow, and alignment guides               |
 | Hydration        | Bind event handlers back to primitives by id after a static render (shared by both backends) | Adding click / hover interaction to a figure                        |
 
 ## Retained Runtime
@@ -25,6 +26,22 @@ Final disposal performs reverse best-effort cleanup across hydration, animation,
 `RenderRuntimeConfigInput` is a closed transaction config. `handlerContributions` merge hydration handlers in registration order, `animation` controls playback, snapshots, and extension registries, `cachePolicy` preserves a hint for future layer invalidation optimization, and `canvas.width` / `canvas.height` declare Canvas CSS user-space dimensions. The alpha.2 SVG and Canvas renderers validate and freeze `cachePolicy` but do not yet enable auto, static, or dynamic layer reuse. Omitted Canvas dimensions derive from the committed Scene layout and are multiplied by the session-lifetime DPR. Size changes and bitmap painting commit atomically, while dirty reuse is allowed only when the target size is stable.
 
 Import these retained APIs from `@retikz/render/runtime`; they are not exported from the `@retikz/render` package root. A third-party backend uses `RetainedRendererFactory` to create a nominal SVG or Canvas renderer and declares `none`, `group`, or `entity` capability. The Render participant validates Snapshot / Patch lineage. When a backend cannot interpret a Patch, it consistently falls back to a complete Scene replacement and publishes a diagnostic.
+
+### Primary and inspection planes
+
+Static APIs use `StaticRenderFrame { primary: Scene, inspection }`. Retained renderers use `RenderFrameSnapshot { primary: SceneRuntimeSnapshot, inspection }`. Both materialize the primary figure and complete inspection overlay as one frame, so a failed retained transaction cannot publish a new figure with an old overlay.
+
+SVG appends a `pointer-events="none"` inspection group after the primary figure and assigns no hydration ids. Canvas draws inspection DTOs after the primary bitmap, while `hitTest` continues to read only the primary Scene. The overlay never determines viewBox, resources, animation, or primary identity. A third-party retained renderer must declare `inspectionCapability: 'supported' | 'unsupported'`; receiving a non-null overlay while unsupported fails loudly instead of silently dropping it.
+
+### Static frame APIs
+
+Import `StaticRenderFrame` from `@retikz/render/runtime`; import each materialization function from its SVG or Canvas backend subpath.
+
+| API                                            | Import path             | Result                                                          |
+| ---------------------------------------------- | ----------------------- | --------------------------------------------------------------- |
+| `buildSvgFrameDocument(frame, options)`        | `@retikz/render/svg`    | An `SvgNode` containing the primary figure and inspection group |
+| `renderFrameToSvgString(frame, options)`       | `@retikz/render/svg`    | A complete SVG string for SSR                                   |
+| `renderFrameToCanvas(canvas, frame, options?)` | `@retikz/render/canvas` | Atomically paints the target Canvas and returns nothing         |
 
 <SourceLinks
   sources={[
@@ -153,6 +170,10 @@ Import these retained APIs from `@retikz/render/runtime`; they are not exported 
       path: 'packages/kernel/render/src/runtime/renderer.ts',
       startLine: 10,
       endLine: 53,
+    },
+    {
+      label: 'Static and retained frame contracts',
+      path: 'packages/kernel/render/src/runtime/frame.ts',
     },
     {
       label: 'Retained renderer definition and factory contract',

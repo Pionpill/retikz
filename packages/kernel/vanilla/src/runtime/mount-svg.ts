@@ -15,7 +15,7 @@ import {
   resolvePointViaLayout,
   resolveSvgElement,
 } from '@retikz/render/hydration';
-import { buildSvgDocument } from '@retikz/render/svg';
+import { buildSvgFrameDocument } from '@retikz/render/svg';
 
 import type { VanillaRuntimeMeta } from '../spec';
 import type {
@@ -71,16 +71,19 @@ const mountStaticSvg = (
   const liveHydrationDisposers = new Set<() => void>();
 
   const renderInto = (next: RenderInput): void => {
-    const { scene, artifacts, runtimeMeta } = toSceneResult(next, options);
+    const { scene, artifacts, inspection, runtimeMeta } = toSceneResult(next, options);
     currentScene = scene;
     currentArtifacts = artifacts;
     currentRuntimeMeta = runtimeMeta;
-    const doc = buildSvgDocument(scene, {
-      idPrefix,
-      animate,
-      snapshotAt: animation.snapshotAt,
-      easings: animation.easings,
-    });
+    const doc = buildSvgFrameDocument(
+      { primary: scene, inspection },
+      {
+        idPrefix,
+        animate,
+        snapshotAt: animation.snapshotAt,
+        easings: animation.easings,
+      },
+    );
     // 清空 root（子节点 + 自身 attrs），再写新 doc → root 元素复用、引用不失效
     while (root.firstChild) root.removeChild(root.firstChild);
     for (const attr of [...root.attributes]) root.removeAttribute(attr.name);
