@@ -1,9 +1,9 @@
-# ADR-01：Manual Table 使用行优先二维持久化结构
+# ADR-08：Manual Table 使用行优先二维持久化结构
 
 - 状态：Accepted
 - 决策日期：2026-07-29
 - 完成日期：2026-07-29
-- 关联：[table v0.1 roadmap](../roadmap.md) · [alpha.3 roadmap](./roadmap.md) · [Table 完备设计](../../../../../architecture/table-visualization-complete.md) · [Table 总设计](../../../../../architecture/table-design.md)
+- 关联：[table v0.1 roadmap](../roadmap.md) · [alpha.2 roadmap](./roadmap.md) · [Table 完备设计](../../../../../architecture/table-visualization-complete.md) · [Table 总设计](../../../../../architecture/table-design.md)
 
 ## 背景
 

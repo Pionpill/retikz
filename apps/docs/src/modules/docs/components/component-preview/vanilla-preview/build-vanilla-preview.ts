@@ -1,6 +1,7 @@
 import type { IRChild } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlotSpec } from '@retikz/plot';
+import type { IRTableSpec } from '@retikz/table';
 import type { AnyVanillaTier2Adapter, VanillaChildSpec } from '@retikz/vanilla';
 
 import { PlotSpecSchema } from '@retikz/plot';
@@ -14,10 +15,12 @@ import {
   grid,
   GridVanillaAdapter,
 } from '@retikz/standard-vanilla';
+import { TableSpecSchema, TableStructureKind } from '@retikz/table';
+import { createTableAdapter, embedTable } from '@retikz/table-vanilla';
 import { figure, renderToSvgString, scope } from '@retikz/vanilla';
 
 import type { PreviewIR } from '../utils/build-preview-ir';
-import type { VanillaPreviewArtifact } from './types';
+import type { BuildVanillaPreviewOptions, VanillaPreviewArtifact } from './types';
 
 import { formatVanillaValue, irToVanillaCode } from '../utils/ir-to-vanilla-code';
 
@@ -161,8 +164,123 @@ const buildPlotPreview = (preview: PreviewIR, composite: CompositeChild): Vanill
   };
 };
 
-/** 从统一的预览 IR 上下文生成 Core、Standard 或 Plot 的 Vanilla 源码与真实 SVG。 */
-export const buildVanillaPreview = (preview: PreviewIR): VanillaPreviewArtifact => {
+const findTableDatasets = (preview: PreviewIR, spec: IRTableSpec): ExternalDatasets | null => {
+  if (spec.data === undefined) return {};
+  let dataset: unknown;
+  let found = false;
+  for (const contribution of preview.contributions) {
+    if (contribution.namespace !== 'table' || !Object.hasOwn(contribution.datasets, spec.data.reference)) continue;
+    const candidate = contribution.datasets[spec.data.reference];
+    if (found && dataset !== candidate) {
+      throw new Error(`Table dataset reference "${spec.data.reference}" resolves to different values.`);
+    }
+    dataset = candidate;
+    found = true;
+  }
+  return found ? ({ [spec.data.reference]: dataset } as ExternalDatasets) : null;
+};
+
+type DatasetImportCode = {
+  imports: string;
+  expression: string;
+};
+
+const identifierPattern = /^[A-Za-z_$][\w$]*$/;
+
+const buildDatasetImportCode = (
+  datasets: ExternalDatasets,
+  options: BuildVanillaPreviewOptions,
+): DatasetImportCode | null => {
+  const references = Object.keys(datasets);
+  if (references.length === 0) return { imports: '', expression: '{}' };
+  const bindings = references.map(reference => options.datasetImports?.[reference]);
+  if (bindings.some(binding => binding === undefined)) return null;
+
+  const importsBySource = new Map<string, Array<string>>();
+  bindings.forEach(binding => {
+    if (binding === undefined) return;
+    if (!identifierPattern.test(binding.name)) {
+      throw new Error(`Dataset import name "${binding.name}" is not a supported identifier.`);
+    }
+    const names = importsBySource.get(binding.from) ?? [];
+    if (!names.includes(binding.name)) names.push(binding.name);
+    importsBySource.set(binding.from, names);
+  });
+  const imports = Array.from(
+    importsBySource,
+    ([from, names]) => `import { ${names.join(', ')} } from ${formatVanillaValue(from)};`,
+  ).join('\n');
+  const expression = `{ ${references
+    .map((reference, index) => {
+      const key = identifierPattern.test(reference) ? reference : formatVanillaValue(reference);
+      return `${key}: ${bindings[index]?.name ?? 'undefined'}`;
+    })
+    .join(', ')} }`;
+  return { imports, expression };
+};
+
+const buildTableCode = (
+  spec: IRTableSpec,
+  datasets: ExternalDatasets,
+  preview: PreviewIR,
+  options: BuildVanillaPreviewOptions,
+): string => {
+  const hasDatasets = Object.keys(datasets).length > 0;
+  const datasetImport = hasDatasets ? buildDatasetImportCode(datasets, options) : null;
+  const importCode = datasetImport === null || datasetImport.imports.length === 0 ? '' : `${datasetImport.imports}\n`;
+  const dataCode = hasDatasets && datasetImport === null ? `const datasets = ${formatVanillaValue(datasets)};\n\n` : '';
+  const dataExpression = datasetImport?.expression ?? 'datasets';
+  const embedOptions = hasDatasets ? `, { data: ${dataExpression} }` : '';
+  const childrenCode = `[embedTable('preview-table-1', spec${embedOptions})]`;
+  const figureCode = formatVanillaValue({
+    ...(preview.ir.viewBox !== undefined ? { viewBox: preview.ir.viewBox } : {}),
+    ...(preview.ir.animations !== undefined ? { animations: preview.ir.animations } : {}),
+    children: '__CHILDREN__',
+  }).replace("'__CHILDREN__'", childrenCode);
+  const size = outputSize(preview);
+  const renderOptions = {
+    adapters: '__ADAPTERS__',
+    ...(Object.keys(size).length > 0 ? { output: size } : {}),
+  };
+  const optionsCode = formatVanillaValue(renderOptions).replace("'__ADAPTERS__'", '[createTableAdapter()]');
+  return `import { createTableAdapter, embedTable } from '@retikz/table-vanilla';\nimport { figure, renderToSvgString } from '@retikz/vanilla';\n${importCode}\nconst spec = ${formatVanillaValue(spec)};\n${dataCode}const input = figure(${figureCode});\n\nexport const svg = renderToSvgString(input, ${optionsCode});\n`;
+};
+
+const buildTablePreview = (
+  preview: PreviewIR,
+  composite: CompositeChild,
+  options: BuildVanillaPreviewOptions,
+): VanillaPreviewArtifact => {
+  const spec = TableSpecSchema.parse(composite);
+  if (spec.structure.kind !== TableStructureKind.Detail && spec.structure.kind !== TableStructureKind.Manual) {
+    return diagnostic(
+      `Cannot generate Vanilla preview: Table structure "${spec.structure.kind}" requires runtime definitions that cannot be serialized.`,
+    );
+  }
+  const datasets = findTableDatasets(preview, spec);
+  if (datasets === null && spec.data !== undefined) {
+    return diagnostic(`Cannot generate Vanilla preview: Table dataset "${spec.data.reference}" was not captured.`);
+  }
+  const resolvedDatasets = datasets ?? {};
+  const input = figure({
+    ...(preview.ir.viewBox !== undefined ? { viewBox: preview.ir.viewBox } : {}),
+    ...(preview.ir.animations !== undefined ? { animations: preview.ir.animations } : {}),
+    children: [
+      embedTable('preview-table-1', spec, Object.keys(resolvedDatasets).length > 0 ? { data: resolvedDatasets } : {}),
+    ],
+  });
+  return {
+    code: buildTableCode(spec, resolvedDatasets, preview, options),
+    svg: renderToSvgString(input, { adapters: [createTableAdapter()], output: outputSize(preview) }),
+    replacePreviewRender: false,
+  };
+};
+
+/** 从统一的预览 IR 上下文生成 Core、Standard、Plot 或 Table 的 Vanilla 源码与真实 SVG。 */
+export const buildVanillaPreview = (
+  preview: PreviewIR,
+  options: BuildVanillaPreviewOptions = {},
+): VanillaPreviewArtifact => {
   const composites = collectComposites(preview.ir.children);
   try {
     if (composites.length === 0) return buildCorePreview(preview);
@@ -171,8 +289,14 @@ export const buildVanillaPreview = (preview: PreviewIR): VanillaPreviewArtifact 
     if (composites.length === 1 && firstComposite.namespace === 'plot' && firstComposite.type === 'plot') {
       return buildPlotPreview(preview, firstComposite);
     }
+    if (composites.length === 1 && firstComposite.namespace === 'table' && firstComposite.type === 'table') {
+      return buildTablePreview(preview, firstComposite, options);
+    }
     const unsupported = composites.find(
-      child => child.namespace !== 'standard' && !(child.namespace === 'plot' && child.type === 'plot'),
+      child =>
+        child.namespace !== 'standard' &&
+        !(child.namespace === 'plot' && child.type === 'plot') &&
+        !(child.namespace === 'table' && child.type === 'table'),
     );
     const child = unsupported ?? firstComposite;
     return diagnostic(`Cannot generate Vanilla preview for Tier 2 composite "${child.namespace}.${child.type}".`);

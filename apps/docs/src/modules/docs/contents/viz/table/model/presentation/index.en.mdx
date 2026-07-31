@@ -1,0 +1,91 @@
+---
+title: Content Presentation
+description: Understand how ordinary Cell values become renderable content and how Cells can directly provide text, nodes, or composite graphics.
+---
+
+Structure has decided which Cell this is and where it belongs, but a scalar value is not yet measurable, renderable graphics content. Presentation turns value Cells into Core children while allowing Cells that already own graphics content to continue directly.
+
+<ComponentAlert
+  type="tip"
+  title="This is an advanced model"
+  description="Plain text tables use the built-in text presentation automatically. Read this page when you need a custom value presentation or direct graphics content."
+/>
+
+## Two content paths
+
+<ComponentPreview files="table-presentation-flow" hideCode size="xs" />
+
+Both paths in the figure produce one Core child with the same identity and order as the source Cell. They differ in who constructs that child:
+
+| Payload   | Stored value                                                              | How it becomes a Core child              |
+| --------- | ------------------------------------------------------------------------- | ---------------------------------------- |
+| `value`   | Ordinary values such as `string`, `number`, and `boolean`                 | Resolve and invoke a registry Definition |
+| `content` | Any renderable content, such as text, icons, Nodes, or composite graphics | Validate and use directly                |
+
+`value` stores ordinary Cell values, such as a name string, an amount number, or a boolean state. Presentation decides how those values are displayed.
+
+`content` stores any renderable content directly, such as styled text, an icon, a Node, or a composite graphic. It skips Presentation, so presentation options apply only to the value path.
+
+## Built-in and custom use the same entry
+
+A value Cell uses the built-in `text` presentation when no presentation is named. It converts the scalar into a zero-padding Core Node without stroke or fill; `null` becomes an empty string.
+
+A custom Presentation Definition has a stable name, a precise options schema, and `present()`. Runtime merges built-in and custom Definitions into one registry, then resolves `presentation.name`. Duplicate or missing names, invalid options, and non-JSON-safe outputs all fail loudly.
+
+Presentation output must still pass the Core child schema. Built-in text and custom graphics therefore share measurement, layout, replay, and renderers instead of introducing a second Table-specific rendering language.
+
+## What Presentation does not own
+
+| Neighbor  | Presentation reads       | Presentation does not decide        |
+| --------- | ------------------------ | ----------------------------------- |
+| Structure | Cell id and payload      | Address, roles, provenance, or span |
+| Layout    | The produced Core child  | Tracks, padding, fit, or overflow   |
+| Renderer  | No direct renderer input | SVG, Canvas, or SSR implementation  |
+
+The same Presentation Definition can therefore serve different table forms, while the same Cell can change layout policy independently of how its value is presented.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'value/content dispatch and Definition invocation',
+      path: 'packages/viz/table/src/pipeline/presentation/present.ts',
+      startLine: 24,
+      endLine: 52,
+    },
+    {
+      label: 'PresentedTableModel preserves Cell identity and order',
+      path: 'packages/viz/table/src/pipeline/presentation/table.ts',
+      startLine: 8,
+      endLine: 19,
+    },
+  ]}
+/>
+
+## Further reading
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/table/model/structure">
+    <span className="font-semibold">Structure & Cells</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Review how payload, identity, and provenance enter the semantic model.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/model/layout">
+    <span className="font-semibold">Layout & Borders</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Continue to measurement and content placement.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/reference/contract-table">
+    <span className="font-semibold">Contract - Table</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Look up payload and presentation-reference schemas.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/reference/runtime">
+    <span className="font-semibold">Runtime</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      See how Definitions enter the complete compile transaction.
+    </span>
+  </LinkedCard>
+</div>
