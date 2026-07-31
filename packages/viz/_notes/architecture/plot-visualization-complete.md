@@ -1,6 +1,6 @@
 # Plot 可视化完备设计
 
-> **状态：长期架构真源，不跟随单个版本维护功能清单。** 本文定义 Visualization Complete 能力域的边界与检测方法，主责包是 `@retikz/plot`。总纲见 [`notes/architecture/capability-design.md`](../../../../notes/architecture/capability-design.md)，当前包职责与公开契约以就近 `AGENTS.md`、Accepted ADR 和代码为准。通用数据与 transform 能力由 [`@retikz/data`](./data-capability-complete.md) 负责；本文不覆盖 chart preset、table、geo、adapter UI 或具体 renderer。
+> **状态：长期架构真源，不跟随单个版本维护功能清单。** 本文定义 Visualization Complete 能力域的边界与检测方法，主责包是 `@retikz/plot`。总纲见 [`notes/architecture/capability-design.md`](../../../../notes/architecture/capability-design.md)，当前包职责与公开契约以就近 `AGENTS.md`、Accepted ADR 和代码为准。通用数据与 transform 能力由 [`@retikz/data`](./data-capability-complete.md) 负责；本文不覆盖 chart type / presentation、table、geo、adapter UI 或具体 renderer。
 
 ---
 
@@ -39,17 +39,18 @@ plot 可以提供依赖 mark、geometry 或 layout 语义的 plot-specific trans
 
 ## 3. 能力面
 
-| 能力面                | 目标                                                                        | 所有权                                                    | 不属于 Visualization Complete                   |
-| --------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------- |
-| Data Consumption      | 组合 Data IR、external datasets 和 data view                                | data 拥有数据与字段解析语义，plot 拥有消费方式            | 数据库、业务数据源 SDK                          |
-| Transform Consumption | 消费通用 transform，提供必要的 plot-specific definitions                    | data 拥有 contract / pipeline，plot 只拥有可视化特有实现  | core geometry transform、UI state update        |
-| Encoding / Channel    | 把字段、常量或派生值绑定到视觉通道                                          | plot                                                      | renderer 私有样式补丁                           |
-| Scale                 | 把数据域映射到视觉范围或视觉值                                              | plot                                                      | 坐标系本身、core transform                      |
-| Coordinate            | 把位置通道解析到绘图空间                                                    | plot                                                      | core target / anchor、geo 底图系统              |
-| Mark                  | 定义数据在坐标空间中的几何显现                                              | plot                                                      | chart preset、单 demo 拼装                      |
-| Guide                 | 解析 axis、grid、legend、label 等解释语义并组织领域 provenance / locator    | plot 拥有领域解析；经跨领域验证的通用呈现由 standard 拥有 | 上层 UI 控件、文档说明文字                      |
-| Layer / Lowering      | 组织层、scope 与 provenance，并下沉 Core IR                                 | plot                                                      | 独立 renderer、平行 scene graph                 |
-| Interaction Readiness | 保留 datum / series / scope identity、locator、selection mapping 和诊断边界 | plot 定义语义，core 承载 metadata，adapter 消费           | DOM 事件树、tooltip UI、高频 dashboard dataflow |
+| 能力面                 | 目标                                                                                  | 所有权                                                    | 不属于 Visualization Complete                   |
+| ---------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------- |
+| Data Consumption       | 组合 Data IR、external datasets 和 data view                                          | data 拥有数据与字段解析语义，plot 拥有消费方式            | 数据库、业务数据源 SDK                          |
+| Transform Consumption  | 消费通用 transform，提供必要的 plot-specific definitions                              | data 拥有 contract / pipeline，plot 只拥有可视化特有实现  | core geometry transform、UI state update        |
+| Encoding / Channel     | 把字段、常量或派生值绑定到视觉通道                                                    | plot                                                      | renderer 私有样式补丁                           |
+| Scale                  | 把数据域映射到视觉范围或视觉值                                                        | plot                                                      | 坐标系本身、core transform                      |
+| Coordinate             | 把位置通道解析到绘图空间                                                              | plot                                                      | core target / anchor、geo 底图系统              |
+| Mark                   | 定义数据在坐标空间中的几何显现                                                        | plot                                                      | chart preset、单 demo 拼装                      |
+| Guide                  | 解析 axis、grid、legend、axis / datum label 等解释语义并组织领域 provenance / locator | plot 拥有领域解析；经跨领域验证的通用呈现由 standard 拥有 | Chart title / caption / source、上层 UI 控件    |
+| Layer / Lowering       | 组织层、scope 与 provenance，并下沉 Core IR                                           | plot                                                      | 独立 renderer、平行 scene graph                 |
+| Spatial Addressability | 为 view、arrangement、panel、track、plotArea 等空间保留稳定 identity 与 handle        | plot 生成领域 handle；core 提供模型、索引与 selector 基础 | Chart 外层 frame、Standard 布局、dashboard 状态 |
+| Interaction Readiness  | 保留 datum / series / scope identity、locator、selection mapping 和诊断边界           | plot 定义语义，core 承载 metadata，adapter 消费           | DOM 事件树、tooltip UI、高频 dashboard dataflow |
 
 这些是检测维度，不要求一一对应目录；代码仍按 `schemas / contract / providers / pipeline / shared` 分层。
 
@@ -65,7 +66,11 @@ plot 可以提供依赖 mark、geometry 或 layout 语义的 plot-specific trans
 - 不复制 `@retikz/data` 的通用数据算法，也不复制 core 的图形、几何、target 或 style。
 - 缺失时会迫使多个 preset / adapter 私造相同可视化语义。
 
-通用数据能力先补 data；通用机制 / 几何能力先补 core / math；被多个领域消费的通用绘图 composite 进入 Standard；体验组合留在 chart / preset；运行时事件接线留在 adapter。
+通用数据能力先补 data；通用机制 / 几何能力先补 core / math；被多个领域消费的通用绘图 composite 进入 Standard；Chart type 与单图 presentation 留在 chart；运行时事件接线与宿主 chrome 留在 adapter。
+
+文字内容不因使用同一种 Core Text / Node 就归同一 owner。与 scale、coordinate、datum、series 或 plot area 锚定的 axis title、tick label、datum / mark label、reference label 和 annotation 属于 Visualization Complete；描述整个独立 Chart 的 title、subtitle、caption、note、source、credit 不属于 Plot。当前实现若暂由 Plot label 表达后者，只代表迁移状态，不能扩张 Plot 的长期能力边界。
+
+Chart 封装也不能缩小 Visualization Complete 的空间输出。Plot 负责生成 view、arrangement、facet panel、track、plotArea、axis region、series 与按需 datum 的 domain identity、handle、locator 和 provenance；Chart 只可增加外层 namespace，并通过 qualified selector 委托访问内部 Plot 空间。若 wrapper 只能定位整个 Chart body，或复制 / 重建 Plot handle registry，就破坏了 Plot 的端到端闭环。
 
 ### 4.2 是否需要新语法能力
 
@@ -85,6 +90,7 @@ contract 可扩展
 provider / feature 可实现
 pipeline / lowering 可消费
 Core IR 可承载
+spatial handles / selectors 可保留 Plot 内部 identity
 provenance / locator 可追踪
 React / Vanilla 可等价暴露
 tests 可锁定
@@ -105,6 +111,7 @@ docs / notes 可解释
 - 是否应先下沉到 data / core / math：
 - Plot IR / contract / registry / lowering 变化：
 - Data Complete 与 Drawing Complete 如何衔接：
+- spatial handle / qualified selector 如何保持 view / arrangement / panel / track / plotArea identity：
 - provenance / locator / Interaction Readiness：
 - plot-react / plot-vanilla 如何等价暴露：
 - 不支持边界与本轮结论：
