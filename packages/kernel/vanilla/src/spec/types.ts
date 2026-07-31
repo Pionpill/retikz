@@ -1,4 +1,16 @@
-import type { AnyCompositeDefinition, CompileOptions, IRChild, IRScene, IRViewBox, ValueOf } from '@retikz/core';
+import type {
+  AnyCompositeDefinition,
+  CompileOptions,
+  CompositeInspectionAuthoringRoot,
+  CompositeInspectionChildForest,
+  InspectionOptionsInputObject,
+  InspectOptions,
+  IRChild,
+  IRScene,
+  IRScope,
+  IRViewBox,
+  ValueOf,
+} from '@retikz/core';
 
 import type { VanillaLayerCache } from './constants';
 
@@ -6,7 +18,14 @@ import type { VanillaLayerCache } from './constants';
 export type VanillaLayerCacheValue = ValueOf<typeof VanillaLayerCache>;
 
 /** Vanilla 普通规格中可直接写入分层或作用域的子节点 */
-export type VanillaChildSpec = IRChild | VanillaEmbedSpec;
+export type VanillaChildSpec = Exclude<IRChild, IRScope> | VanillaScopeSpec | AnyVanillaEmbedSpec;
+
+/** Vanilla Scope authoring；inspect 只进入 normalization sidecar */
+export type VanillaScopeSpec = Omit<IRScope, 'children'> &
+  Readonly<{
+    inspect?: InspectOptions;
+    children: Array<VanillaChildSpec>;
+  }>;
 
 /** Vanilla 普通规格的图形根节点 */
 export type VanillaFigureSpec = {
@@ -37,7 +56,10 @@ export type VanillaLayerSpec = {
 };
 
 /** Vanilla Tier2 嵌入节点 */
-export type VanillaEmbedSpec<TProps = Record<string, unknown>> = {
+export type VanillaEmbedSpec<
+  TProps = Record<string, unknown>,
+  TInspect extends InspectionOptionsInputObject = InspectionOptionsInputObject,
+> = {
   /** 嵌入节点判别字段 */
   type: 'embed';
   /** 适配器匹配键 */
@@ -46,7 +68,12 @@ export type VanillaEmbedSpec<TProps = Record<string, unknown>> = {
   id: string;
   /** 传给适配器的领域属性；不直接进入核心 IR */
   props: TProps;
+  /** 只作用于当前 embed occurrence 的 family-local inspection 策略 */
+  inspect?: boolean | TInspect;
 };
+
+/** 擦除 family-local inspection 泛型后的 Vanilla embed */
+export type AnyVanillaEmbedSpec = VanillaEmbedSpec<unknown, InspectionOptionsInputObject>;
 
 /** Vanilla Tier2 适配器的下沉上下文 */
 export type VanillaEmbedContext = {
@@ -68,6 +95,8 @@ export type VanillaTier2Contribution = {
   node: IRChild;
   /** 由引用键索引的外部数据集表；不进入 IR */
   datasets: Record<string, unknown>;
+  /** 相对 contribution.node 的 runtime-only inspection roots */
+  inspectionRoots?: CompositeInspectionChildForest;
   /** 合并同命名空间数据集后生成组合定义；同命名空间贡献必须稳定复用同一个函数引用 */
   makeComposites: (mergedDatasets: Record<string, unknown>) => Array<AnyCompositeDefinition>;
 };
@@ -121,6 +150,8 @@ export type VanillaNormalizedFigure = {
   composites: Array<AnyCompositeDefinition>;
   /** 运行时元数据，不进入核心 IR */
   runtimeMeta: VanillaRuntimeMeta;
+  /** 可交给 Core compile 的 Scene authored inspection roots */
+  inspectionRoots: Array<CompositeInspectionAuthoringRoot>;
 };
 
 /** Vanilla 规格规范化选项 */

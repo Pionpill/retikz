@@ -1,10 +1,11 @@
-import type { CompileArtifact, CoreProgramOptions, IRScene, Scene } from '@retikz/core';
+import type { CompileArtifact, CoreProgramOptions, IRScene } from '@retikz/core';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type {
   RenderRuntimeConfigInput,
   RetainedRendererFactory,
   RetainedRenderParticipantHandle,
+  StaticRenderFrame,
 } from '@retikz/render/runtime';
 import type { RuntimeDiagnostic, RuntimeSession, RuntimeUpdateStrategyValue } from '@retikz/runtime';
 import type { CSSProperties, FC, MutableRefObject, Ref } from 'react';
@@ -15,7 +16,7 @@ import {
   createRetainedRenderParticipant,
   RenderRuntimeOwnerDefinition,
 } from '@retikz/render/runtime';
-import { renderToSvgString } from '@retikz/render/svg';
+import { renderFrameToSvgString } from '@retikz/render/svg';
 import {
   createRuntimeOwnerInput,
   createRuntimeOwnerRegistry,
@@ -32,8 +33,8 @@ export type RetainedHostProps = Readonly<{
   backend: 'svg' | 'canvas';
   /** 提交给 Core Program 的完整 IR Snapshot */
   source: IRScene;
-  /** React render 阶段生成的 SSR-safe Scene seed */
-  scene: Scene;
+  /** React render 阶段生成的 SSR-safe 初始 frame */
+  initialFrame: StaticRenderFrame;
   /** Core Program 的 session-lifetime 编译配置 */
   coreOptions: CoreProgramOptions;
   /** 当前 revision 的 hydration handler 注册表 */
@@ -126,8 +127,8 @@ const deliverDiagnostics = (
 };
 
 /** 从完整 SVG seed 中截取 Render-owned descendants */
-const svgSeedInnerHtml = (scene: Scene, options: RetainedHostProps): string => {
-  const document = renderToSvgString(scene, {
+const svgSeedInnerHtml = (frame: StaticRenderFrame, options: RetainedHostProps): string => {
+  const document = renderFrameToSvgString(frame, {
     idPrefix: options.idPrefix,
     animate: options.animate,
     snapshotAt: options.snapshotAt,
@@ -149,7 +150,7 @@ export const RetainedHost: FC<RetainedHostProps> = props => {
   const {
     backend,
     source,
-    scene,
+    initialFrame,
     coreOptions,
     handlers,
     width,
@@ -169,6 +170,7 @@ export const RetainedHost: FC<RetainedHostProps> = props => {
   } = props;
   const hostRef = useRef<SVGSVGElement | HTMLCanvasElement | null>(null);
   const runtimeRef = useRef<ActiveRuntime | undefined>(undefined);
+  const adoptedInitialFrameRef = useRef(false);
   const sourceRef = useRef(source);
   const configRef = useRef<RenderRuntimeConfigInput>({});
   const animationRefTarget = useRef(animationRef);
@@ -200,15 +202,19 @@ export const RetainedHost: FC<RetainedHostProps> = props => {
   const [seed] = useState(() =>
     Object.freeze({
       backend,
-      scene,
-      html: backend === 'svg' ? svgSeedInnerHtml(scene, props) : '',
+      frame: initialFrame,
+      html: backend === 'svg' ? svgSeedInnerHtml(initialFrame, props) : '',
       canvasBitmapWidth:
-        backend === 'canvas' && typeof width === 'number' && Number.isFinite(width) ? width : scene.layout.width,
+        backend === 'canvas' && typeof width === 'number' && Number.isFinite(width)
+          ? width
+          : initialFrame.primary.layout.width,
       canvasBitmapHeight:
-        backend === 'canvas' && typeof height === 'number' && Number.isFinite(height) ? height : scene.layout.height,
+        backend === 'canvas' && typeof height === 'number' && Number.isFinite(height)
+          ? height
+          : initialFrame.primary.layout.height,
     }),
   );
-  const initial = seed.scene;
+  const initial = seed.frame.primary;
 
   useHostLayoutEffect(() => {
     sourceRef.current = source;
@@ -244,6 +250,7 @@ export const RetainedHost: FC<RetainedHostProps> = props => {
   useHostLayoutEffect(() => {
     const host = hostRef.current;
     if (host === null) return undefined;
+    const shouldAdoptInitialFrame = backend === 'svg' && !adoptedInitialFrameRef.current;
     const coreProgram = createCoreProgram(coreOptions);
     const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, RenderRuntimeOwnerDefinition] });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
@@ -256,7 +263,8 @@ export const RetainedHost: FC<RetainedHostProps> = props => {
             rendererFactory: factory,
             immutableOptions: { backend: 'svg', idPrefix },
             coreProgram,
-            mountMode: 'adopt',
+            mountMode: shouldAdoptInitialFrame ? 'adopt' : 'create',
+            ...(shouldAdoptInitialFrame ? { expectedInitialFrame: seed.frame } : {}),
           })
         : createRetainedRenderParticipant({
             backend: 'canvas',
@@ -281,6 +289,7 @@ export const RetainedHost: FC<RetainedHostProps> = props => {
       if (cause instanceof RuntimeError) deliverDiagnostics(cause.diagnostics, onDiagnosticRef.current);
       throw cause;
     }
+    if (shouldAdoptInitialFrame) adoptedInitialFrameRef.current = true;
     const active: ActiveRuntime = {
       session,
       coreProgram,

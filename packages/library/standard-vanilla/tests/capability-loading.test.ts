@@ -2,10 +2,13 @@ import { createGrid, createStandardBundle, GridModule } from '@retikz/standard';
 import {
   axes,
   AxesVanillaAdapter,
+  FlexLayoutVanillaAdapter,
   frame,
   FrameVanillaAdapter,
   grid,
+  GridLayoutVanillaAdapter,
   GridVanillaAdapter,
+  OverlayLayoutVanillaAdapter,
   StandardVanillaAdapters,
 } from '@retikz/standard-vanilla';
 import { normalizeFigureSpec, renderToSvgString } from '@retikz/vanilla';
@@ -23,7 +26,14 @@ const figure = {
 
 describe('Standard Vanilla capability loading', () => {
   it('provides the current adapter catalog once in stable frozen order', () => {
-    expect(StandardVanillaAdapters).toEqual([GridVanillaAdapter, AxesVanillaAdapter, FrameVanillaAdapter]);
+    expect(StandardVanillaAdapters).toEqual([
+      GridVanillaAdapter,
+      AxesVanillaAdapter,
+      FrameVanillaAdapter,
+      FlexLayoutVanillaAdapter,
+      GridLayoutVanillaAdapter,
+      OverlayLayoutVanillaAdapter,
+    ]);
     expect(Object.isFrozen(StandardVanillaAdapters)).toBe(true);
     expect(Object.isFrozen(GridVanillaAdapter)).toBe(false);
   });

@@ -1,7 +1,9 @@
 import type { Scene } from '@retikz/core';
 
+import type { StaticRenderFrame } from '../runtime/frame';
 import type { RenderOptions } from './types';
 
+import { drawInspectionPlane } from './draw-inspection';
 import { drawScene } from './draw-scene';
 import { createCssColorNormalizer, sceneFitMatrix } from './shared';
 
@@ -49,7 +51,12 @@ const normalizeCssColorViaCanvas = createCssColorNormalizer(() =>
 );
 
 /** 将 Scene 渲染到 HTMLCanvasElement */
-export const renderToCanvas = (canvas: HTMLCanvasElement, scene: Scene, options: RenderOptions = {}): void => {
+export const renderFrameToCanvas = (
+  canvas: HTMLCanvasElement,
+  frame: StaticRenderFrame,
+  options: RenderOptions = {},
+): void => {
+  const scene = frame.primary;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('renderToCanvas: unable to acquire 2d canvas context.');
 
@@ -86,4 +93,9 @@ export const renderToCanvas = (canvas: HTMLCanvasElement, scene: Scene, options:
     createOffscreen: options.createOffscreen ?? createOffscreenContext,
     resolveCssColor: options.resolveCssColor ?? normalizeCssColorViaCanvas,
   });
+  if (frame.inspection !== null) drawInspectionPlane(ctx, frame.inspection);
 };
+
+/** 将 Scene 渲染到 HTMLCanvasElement，等价于不带 inspection 的静态 frame */
+export const renderToCanvas = (canvas: HTMLCanvasElement, scene: Scene, options: RenderOptions = {}): void =>
+  renderFrameToCanvas(canvas, { primary: scene, inspection: null }, options);

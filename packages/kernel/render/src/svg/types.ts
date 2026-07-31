@@ -79,6 +79,8 @@ export type SvgPresentationAttrs = {
   'stroke-dashoffset'?: number | string;
   'stroke-linecap'?: 'butt' | 'round' | 'square';
   'stroke-linejoin'?: 'miter' | 'round' | 'bevel';
+  /** 元素是否参与指针命中 */
+  'pointer-events'?: string;
   'font-size'?: number | string;
   'font-family'?: string;
   'font-weight'?: number | string;
@@ -114,6 +116,7 @@ export type SvgTag =
   | 'defs'
   | 'style'
   | 'g'
+  | 'line'
   | 'rect'
   | 'ellipse'
   | 'circle'

@@ -1,4 +1,4 @@
-import type { CompileArtifact, CompileOptions, Scene } from '@retikz/core';
+import type { CompileArtifact, CompileOptions, InspectionPlane, Scene } from '@retikz/core';
 
 import { compileToScene } from '@retikz/core';
 
@@ -12,12 +12,16 @@ import { createEmptyRuntimeMetaSnapshot } from '../spec/internal';
 export const createEmptyRuntimeMeta = (): VanillaRuntimeMeta => createEmptyRuntimeMetaSnapshot();
 
 /** 从 vanilla runtime options 中取出 core compile options */
-const toCompileOptions = (options: CommonOptions): CompileOptions => ({ ...(options.compile ?? {}) });
+const toCompileOptions = (options: CommonOptions): CompileOptions => ({
+  ...(options.compile ?? {}),
+  ...(options.inspect === undefined ? {} : { inspection: { root: options.inspect } }),
+});
 
 /** Render input 归一结果 */
 export type SceneResult = {
   scene: Scene;
   artifacts: ReadonlyArray<CompileArtifact>;
+  inspection: InspectionPlane | null;
   runtimeMeta: VanillaRuntimeMeta;
 };
 
@@ -31,14 +35,29 @@ const EMPTY_ARTIFACTS: ReadonlyArray<CompileArtifact> = Object.freeze([]);
  */
 export const toSceneResult = (input: RenderInput, options: CommonOptions): SceneResult => {
   if ('primitives' in input) {
-    return { scene: input, artifacts: EMPTY_ARTIFACTS, runtimeMeta: createEmptyRuntimeMeta() };
+    if (options.inspect !== undefined) {
+      throw new Error('Vanilla Layout Inspector cannot run from a precompiled Scene.');
+    }
+    return { scene: input, artifacts: EMPTY_ARTIFACTS, inspection: null, runtimeMeta: createEmptyRuntimeMeta() };
   }
   if (isVanillaFigureSpec(input)) {
     const normalized = normalizeFigureSpec(input, {
       adapters: options.adapters,
       composites: options.compile?.composites,
     });
-    const compileOptions = { ...toCompileOptions(options), composites: normalized.composites };
+    const baseOptions = toCompileOptions(options);
+    const compileOptions = {
+      ...baseOptions,
+      composites: normalized.composites,
+      ...(options.inspect === undefined && normalized.inspectionRoots.length === 0
+        ? {}
+        : {
+            inspection: {
+              ...(options.inspect === undefined ? {} : { root: options.inspect }),
+              ...(normalized.inspectionRoots.length === 0 ? {} : { roots: normalized.inspectionRoots }),
+            },
+          }),
+    };
     const result = compileToScene(normalized.ir, compileOptions);
     return { ...result, runtimeMeta: normalized.runtimeMeta };
   }

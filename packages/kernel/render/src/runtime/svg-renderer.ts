@@ -1,4 +1,5 @@
 import type {
+  InspectionPlane,
   IRAnimationTrack,
   RuntimeScenePrimitive,
   Scene,
@@ -14,6 +15,7 @@ import type { AnimationControls } from '../animation';
 import type { HydrationController, HydrationTarget } from '../hydration';
 import type { SvgNode } from '../svg';
 import type { RenderRuntimeConfig } from './config';
+import type { RenderFrameSnapshot } from './frame';
 import type { RetainedSvgRenderer, RetainedSvgRendererImmutableOptions } from './renderer';
 import type { SceneAnimationDescriptorDiff } from './runtime-options';
 import type { RuntimeIdentityMap } from './shared';
@@ -31,6 +33,7 @@ import {
   resolvePointViaLayout,
 } from '../hydration';
 import { buildSvgDocument } from '../svg';
+import { buildSvgInspectionGroup } from '../svg/builders/inspection';
 import { mergeRenderHandlers } from './handlers';
 import { defineRetainedRenderer } from './renderer';
 import {
@@ -401,9 +404,16 @@ const descriptorMatchesElement = (element: SVGElement, node: SvgNode, root: bool
   if (expectedStyles.some(([key, value]) => element.style.getPropertyValue(key) !== String(value))) return false;
   if (!root && element.style.length !== expectedStyles.length) return false;
   const children = node.children ?? [];
-  if (element.childNodes.length !== children.length) return false;
+  const actualChildren = root
+    ? Array.from(element.childNodes).filter(
+        child =>
+          !(child instanceof element.ownerDocument.defaultView!.SVGElement) ||
+          child.getAttribute('data-retikz-inspection') !== 'layout',
+      )
+    : Array.from(element.childNodes);
+  if (actualChildren.length !== children.length) return false;
   return children.every((child, index) => {
-    const actual = element.childNodes[index];
+    const actual = actualChildren[index];
     if (typeof child === 'string') return actual.nodeType === actual.TEXT_NODE && actual.textContent === child;
     return (
       actual instanceof element.ownerDocument.defaultView!.SVGElement && descriptorMatchesElement(actual, child, false)
@@ -1138,6 +1148,8 @@ export const createBuiltinSvgRetainedRenderer = (
   options: RetainedSvgRendererImmutableOptions,
 ): RetainedSvgRenderer => {
   let currentSnapshot: SceneRuntimeSnapshot | undefined;
+  let currentInspection: InspectionPlane | null = null;
+  let currentInspectionElement: SVGElement | undefined;
   let currentAnimation: SvgAnimationState | undefined;
   let currentHydration: HydrationController | undefined;
   let currentOwnedAttributes = new Set<string>();
@@ -1516,16 +1528,60 @@ export const createBuiltinSvgRetainedRenderer = (
     });
   };
 
+  const prepareFrame = (
+    scenePatch: ScenePatch | undefined,
+    frame: RenderFrameSnapshot,
+    config: RenderRuntimeConfig,
+    mode: 'create' | 'adopt' = 'create',
+  ): RuntimePreparedCommit => {
+    const primaryToken = prepare(scenePatch, frame.primary, config, mode);
+    const previousInspection = currentInspection;
+    const adoptedInspection =
+      mode === 'adopt'
+        ? Array.from(host.children).find(child => child.getAttribute('data-retikz-inspection') === 'layout')
+        : undefined;
+    const previousElement =
+      currentInspectionElement ??
+      (adoptedInspection instanceof host.ownerDocument.defaultView!.SVGElement ? adoptedInspection : undefined);
+    const candidateElement =
+      frame.inspection === null
+        ? undefined
+        : createSvgElement(host.ownerDocument, buildSvgInspectionGroup(frame.inspection));
+    let committed = false;
+    return Object.freeze({
+      commit: () => {
+        primaryToken.commit();
+        previousElement?.remove();
+        if (candidateElement !== undefined) host.appendChild(candidateElement);
+        currentInspection = frame.inspection;
+        currentInspectionElement = candidateElement;
+        committed = true;
+      },
+      rollback: () => {
+        primaryToken.rollback();
+        candidateElement?.remove();
+        if (previousElement !== undefined && previousElement.parentNode !== host) host.appendChild(previousElement);
+        currentInspection = previousInspection;
+        currentInspectionElement = previousElement;
+      },
+      dispose: () => {
+        primaryToken.dispose();
+        if (!committed) candidateElement?.remove();
+      },
+    });
+  };
+
   return defineRetainedRenderer({
     backend: 'svg',
     host,
     capability: 'entity',
-    prepareMount: (snapshot, config, mode) => prepare(undefined, snapshot, config, mode),
-    prepare: (scenePatch, snapshot, config) => prepare(scenePatch, snapshot, config),
+    inspectionCapability: 'supported',
+    prepareMount: (frame, config, mode) => prepareFrame(undefined, frame, config, mode),
+    prepare: (scenePatch, frame, config) => prepareFrame(scenePatch, frame, config),
     read: () => {
       if (currentSnapshot === undefined) throw new Error('SVG retained renderer is not committed');
       return Object.freeze({
-        snapshot: currentSnapshot,
+        frame: Object.freeze({ primary: currentSnapshot, inspection: currentInspection }),
         ...(currentAnimation === undefined ? {} : { animation: currentAnimation.controls }),
       });
     },
@@ -1545,6 +1601,8 @@ export const createBuiltinSvgRetainedRenderer = (
         () => candidateAnimationCleanup.disposePending(),
         () => {
           currentSnapshot = undefined;
+          currentInspection = null;
+          currentInspectionElement = undefined;
           currentOwnedAttributes = new Set();
           currentOwnedStyles = new Set();
           currentElements = createRuntimeIdentityMap([]);

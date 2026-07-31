@@ -1,7 +1,7 @@
 # 空间贴附与复用长期计划
 
 > **状态：长期计划，当前不实现。** 本文记录复杂复合可视化所需的底层能力，用于后续 core / plot 架构演进时对齐方向。
-> 关联：`packages/viz/_notes/architecture/plot-design.md` · `packages/viz/_notes/decisions/plot/v0/v0.1/alpha.14/09-composition-api-structure.md`。
+> 关联：`packages/viz/_notes/architecture/plot-design.md` · `packages/viz/_notes/architecture/chart-design.md` · `packages/viz/_notes/decisions/plot/v0/v0.1/alpha.14/09-composition-api-structure.md`。
 
 ---
 
@@ -297,7 +297,37 @@ React 层可以提供更接近人类 authoring 的结构组件；LLM 可以理�
 
 ---
 
-## 6. 产品与 LLM 场景
+## 6. Chart 作为空间透明封装
+
+Chart 会在 Plot 外增加 presentation 与类型语义，但它不是新的 attachment owner。长期上，Chart 是 handle facade / namespace boundary：
+
+```text
+Chart
+├─ chart handles: chart / frame / header / body / footer
+└─ Plot body
+   ├─ view / arrangement handles
+   ├─ facet panel / track handles
+   ├─ plotArea / axis region handles
+   └─ series / datum handles
+```
+
+Chart 外层 handle 由 Chart 生成，Plot 内部 handle 仍由 Plot 生成。Core 的 handle index 保存两者的 qualified 关系；Standard 在排列 presentation 与 Plot body 后写回最终 geometry。Chart 不复制 Plot handle registry，不重新生成内部 id，也不解释 facet / track payload。selector 可以先定位 Chart，再穿过 body / Plot namespace 委托给底层索引，因此 dashboard 或 attachment 既能选择整个 Chart，也能直接选择其内部某个 track、facet panel 或 plotArea。
+
+presentation 的加入会改变 Plot body 的最终全局 bbox，但不能改变内部 handle 的稳定 identity、相对选择语义、domain payload、locator 或 provenance。相同 PlotSpec 单独运行和被 Chart 包裹时，内部 handle 应保持同源；qualified namespace 只负责避免多个 Chart 中相同局部 id 冲突。
+
+Chart type 可以隐式生成复杂 Plot composition。例如价格轨道、成交量轨道与共享时间轴构成一个 type recipe 时，应展开为同一个 PlotSpec，并由 Plot 生成 view / track handles。只要多个视图共享 coordinate、scale、axis、track 或同一数据映射语义，就不应拆成多个 Chart 再由 Chart 私造同步。
+
+复合能力的 owner 保持分层：
+
+- 单个 type 内的 facet、tracks、overlay 与共享骨架属于 Plot composition，由 Chart recipe 选择和配置
+- 多个独立 Chart、Plot、Table 或其它内容的静态排列、对齐、union 与 attachment 属于 Standard + Core spatial handles
+- linked selection、filter、scroll、responsive state 与跨图数据流属于更高层 dashboard / workspace runtime
+
+因此 Chart 不拥有 dashboard IR，不复制 Plot composition，也不吸收 Standard layout。它只保证自己的外层区域可寻址，并让内部 Plot 空间在封装后仍可进入、选择、解释和复用。
+
+---
+
+## 7. 产品与 LLM 场景
 
 当用户在编辑器中选中一个分面折线图，系统不应直接从 primitive 推导建议，而应先形成 selection context。
 
@@ -331,7 +361,7 @@ locator / hit testing 的结果应先归一成 selection context，再交给 pla
 
 LLM 也可以基于同样信息生成结构化 patch，而不是重新猜测图形布局。
 
-### 6.1 面向 LLM 的空间上下文
+### 7.1 面向 LLM 的空间上下文
 
 给 LLM 的提示不应直接倾倒完整 Scene primitives。更合适的是由工具链从 Scene / handles / meta 中生成一个紧凑的空间上下文：
 
@@ -390,7 +420,7 @@ LLM 生成的结果应是结构化操作，例如“给 selector 命中的每个
 
 ---
 
-## 7. 明确反对
+## 8. 明确反对
 
 - **反对手算坐标作为主要方案。** 手算坐标可以作为底层 fallback，但不能成为公开 API，否则 LLM 和产品都无法稳定扩展。
 - **反对把派生关系塞进 mark 私有字段。** 派生是 view / layout / data 的组合关系，不属于某个 mark。
@@ -401,10 +431,12 @@ LLM 生成的结果应是结构化操作，例如“给 selector 命中的每个
 - **反对把完整 Scene 当作 LLM 上下文。** LLM 需要的是压缩后的空间句柄、语义 meta 和可执行动作，不是 renderer primitive 明细。
 - **反对把候选动作写死在 meta 里。** meta 描述事实，planner 结合 capability / action registry 生成候选动作。
 - **反对让 LLM 拼接内部 id。** LLM 应使用 selector 和 action 参数；内部 opaque id 只能用于系统内部定位。
+- **反对 Chart wrapper 吞掉或复制 Plot handles。** Chart 只建立外层 namespace 并委托内部选择；facet / track / plotArea identity 仍由 Plot 拥有。
+- **反对 Chart 私造 dashboard runtime。** 跨 Chart 的联动、过滤、滚动与响应式状态属于更高层宿主，不进入 Chart IR。
 
 ---
 
-## 8. 分阶段路线
+## 9. 分阶段路线
 
 ### 阶段 0：沉淀方向
 
@@ -450,7 +482,7 @@ LLM 生成的结果应是结构化操作，例如“给 selector 命中的每个
 
 ---
 
-## 9. 待决策
+## 10. 待决策
 
 - 空间句柄最终挂在 Scene 上，还是作为 compile metadata 与 Scene 并列返回。
 - 句柄 id 由用户显式命名、编译器稳定生成，还是两者结合。
@@ -460,10 +492,11 @@ LLM 生成的结果应是结构化操作，例如“给 selector 命中的每个
 - 产品选择态、locator、hit testing 与 provenance 的边界如何划分。
 - action schema、capability registry、candidate action ranking 是否属于 plot 包，还是编辑器 / AI 工具链。
 - 极坐标空间复用是否抽象成通用 span，还是由 coordinate definition 提供自定义 handle provider。
+- Chart 外层 namespace 与 Plot 内部 qualified selector 的精确结构，以及 selector delegation 的诊断 owner。
 
 ---
 
-## 10. 判断标准
+## 11. 判断标准
 
 当后续真正实现本计划时，至少满足以下标准：
 
@@ -475,3 +508,4 @@ LLM 生成的结果应是结构化操作，例如“给 selector 命中的每个
 6. 编译错误能指出缺失的来源 view、冲突的空间继承或不可解析的数据 lineage。
 7. bbox 数值默认只用于解释和预览；可执行 patch 使用 selector / action 参数。
 8. 删除来源图时，attached view 要么拥有固化空间与数据快照，要么保留可解析 lineage；不得留下半失效图形。
+9. Plot 被 Chart 包裹后，外部仍能通过 qualified selector 定位同一 view / panel / track / plotArea，且 provenance 不因 presentation 布局丢失。

@@ -2,6 +2,7 @@ import type {
   AnyCompositeDefinition,
   CoreProgramDefinition,
   RuntimeScenePrimitive,
+  Scene,
   ScenePatch,
   ScenePatchOperation,
   SceneRuntimeSnapshot,
@@ -12,6 +13,7 @@ import { defineRuntimeCommitParticipant } from '@retikz/runtime';
 
 import type { AnimationControls } from '../animation';
 import type { RenderRuntimeConfig } from './config';
+import type { RenderFrameSnapshot, StaticRenderFrame } from './frame';
 import type {
   RetainedCanvasRendererImmutableOptions,
   RetainedRenderer,
@@ -24,7 +26,7 @@ import type { RuntimeIdentityMap } from './shared';
 import { RenderRuntimeOwnerDefinition } from './config';
 import { isRetainedRenderError, RetainedRenderError, RetainedRenderErrorCode } from './error';
 import { getRetainedRendererExecutor, isCanvasHost, isRetainedRenderer, isSvgHost } from './renderer';
-import { createRuntimeIdentityMap, isPlainObject } from './shared';
+import { createRuntimeIdentityMap, isPlainObject, runtimeStructuralEquals } from './shared';
 import { sceneRuntimeSnapshotEquals, validateScenePatch, validateSceneRuntimeSnapshot } from './validator';
 
 /** SVG retained participant 的固定 key */
@@ -59,6 +61,8 @@ export type CreateRetainedRenderParticipantOptions<TComposites extends ReadonlyA
         backend: 'svg';
         host: SVGSVGElement;
         immutableOptions: RetainedSvgRendererImmutableOptions;
+        /** SSR/create seed 与首次 Core frame 的预期值 */
+        expectedInitialFrame?: StaticRenderFrame;
       }>)
   | (RetainedRenderParticipantOptionsBase<TComposites> &
       Readonly<{
@@ -72,6 +76,13 @@ const countPrimitives = (primitives: ReadonlyArray<RuntimeScenePrimitive>): numb
     (count, primitive) => count + 1 + (primitive.type === 'group' ? countPrimitives(primitive.children) : 0),
     0,
   );
+
+/** 把静态 Scene 补齐为 Runtime Scene 的 canonical 空集合口径，用于 SSR seed 比较 */
+const canonicalizeStaticScene = (scene: Scene): Scene => ({
+  ...scene,
+  resources: scene.resources ?? [],
+  animations: scene.animations ?? [],
+});
 
 const primitiveAtPath = (
   snapshot: SceneRuntimeSnapshot,
@@ -262,7 +273,7 @@ const freezeAnimationControls = (
 
 const normalizeRendererReadUnsafe = (
   value: RetainedRendererRead,
-  lineage: SceneRuntimeSnapshot | undefined,
+  lineage: RenderFrameSnapshot | undefined,
   animationControlsCache: WeakMap<object, AnimationControls>,
 ): RetainedRendererRead => {
   const candidate: unknown = value;
@@ -272,24 +283,31 @@ const normalizeRendererReadUnsafe = (
       cause: value,
     });
   }
-  const snapshot = Reflect.get(candidate, 'snapshot') as SceneRuntimeSnapshot;
+  const rawFrame: unknown = Reflect.get(candidate, 'frame');
   const animation = Reflect.get(candidate, 'animation') as AnimationControls | undefined;
-  validateSceneRuntimeSnapshot(snapshot);
-  if (!sceneRuntimeSnapshotEquals(snapshot, lineage)) {
+  if (typeof rawFrame !== 'object' || rawFrame === null) {
+    throw new RetainedRenderError({ code: RetainedRenderErrorCode.ScenePatchSnapshotMismatch, cause: value });
+  }
+  const frame = rawFrame as RenderFrameSnapshot;
+  validateSceneRuntimeSnapshot(frame.primary);
+  if (
+    !sceneRuntimeSnapshotEquals(frame.primary, lineage.primary) ||
+    !runtimeStructuralEquals(frame.inspection, lineage.inspection)
+  ) {
     throw new RetainedRenderError({
       code: RetainedRenderErrorCode.ScenePatchSnapshotMismatch,
-      cause: { expected: lineage, received: snapshot },
+      cause: { expected: lineage, received: frame },
     });
   }
   return Object.freeze({
-    snapshot: lineage,
+    frame: lineage,
     ...(animation === undefined ? {} : { animation: freezeAnimationControls(animation, animationControlsCache) }),
   });
 };
 
 const normalizeRendererRead = (
   value: RetainedRendererRead,
-  lineage: SceneRuntimeSnapshot | undefined,
+  lineage: RenderFrameSnapshot | undefined,
   animationControlsCache: WeakMap<object, AnimationControls>,
 ): RetainedRendererRead => {
   try {
@@ -318,6 +336,7 @@ const captureOptionsUnsafe = <TComposites extends ReadonlyArray<AnyCompositeDefi
   const immutableOptions = Reflect.get(candidate, 'immutableOptions');
   const mountMode = Reflect.get(candidate, 'mountMode');
   const coreProgram = Reflect.get(candidate, 'coreProgram');
+  const expectedInitialFrame = Reflect.get(candidate, 'expectedInitialFrame');
   if (typeof immutableOptions !== 'object' || immutableOptions === null || !isPlainObject(immutableOptions)) {
     return invalidInput(options);
   }
@@ -333,11 +352,14 @@ const captureOptionsUnsafe = <TComposites extends ReadonlyArray<AnyCompositeDefi
     idPrefix.length === 0 ||
     (typeof coreProgram !== 'object' && typeof coreProgram !== 'function') ||
     coreProgram === null ||
+    (expectedInitialFrame !== undefined &&
+      (typeof expectedInitialFrame !== 'object' || expectedInitialFrame === null)) ||
     (mountMode !== undefined && mountMode !== 'create' && mountMode !== 'adopt')
   ) {
     return invalidInput(options);
   }
   if (backend === 'canvas') {
+    if (expectedInitialFrame !== undefined) return invalidInput(options);
     if (
       devicePixelRatio !== undefined &&
       (typeof devicePixelRatio !== 'number' || !Number.isFinite(devicePixelRatio) || devicePixelRatio <= 0)
@@ -363,6 +385,7 @@ const captureOptionsUnsafe = <TComposites extends ReadonlyArray<AnyCompositeDefi
     rendererFactory,
     immutableOptions: Object.freeze({ backend, idPrefix }),
     coreProgram: coreProgram as CoreProgramDefinition<TComposites>,
+    ...(expectedInitialFrame === undefined ? {} : { expectedInitialFrame: expectedInitialFrame as StaticRenderFrame }),
     ...(mountMode === undefined ? {} : { mountMode }),
   });
 };
@@ -422,8 +445,12 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
   if (executor === undefined) {
     throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererInvalid, cause: renderer });
   }
-  let committedLineage: SceneRuntimeSnapshot | undefined;
+  let committedFrame: RenderFrameSnapshot | undefined;
   const animationControlsCache = new WeakMap<object, AnimationControls>();
+  const assertInspectionSupported = (frame: RenderFrameSnapshot): void => {
+    if (frame.inspection === null || renderer.inspectionCapability === 'supported') return;
+    throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererInspectionUnsupported });
+  };
   const participant = defineRuntimeCommitParticipant<RetainedRendererRead>({
     key: captured.backend === 'svg' ? RETAINED_SVG_PARTICIPANT_KEY : RETAINED_CANVAS_PARTICIPANT_KEY,
     owners: [RenderRuntimeOwnerDefinition],
@@ -438,14 +465,27 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
       const config: RenderRuntimeConfig = candidate.snapshot(RenderRuntimeOwnerDefinition).value;
       if (candidate.phase === 'initial') {
         validateSceneRuntimeSnapshot(core.snapshot);
+        const frame = Object.freeze({ primary: core.snapshot, inspection: core.output.result.inspection });
+        if (
+          captured.backend === 'svg' &&
+          captured.expectedInitialFrame !== undefined &&
+          (!runtimeStructuralEquals(
+            canonicalizeStaticScene(captured.expectedInitialFrame.primary),
+            frame.primary.scene,
+          ) ||
+            !runtimeStructuralEquals(captured.expectedInitialFrame.inspection, frame.inspection))
+        ) {
+          throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererInitialFrameMismatch });
+        }
+        assertInspectionSupported(frame);
         const rendererToken = callRendererPrepare(() =>
-          executor.prepareMount(core.snapshot, config, captured.mountMode ?? 'create'),
+          executor.prepareMount(frame, config, captured.mountMode ?? 'create'),
         );
-        const previous = committedLineage;
+        const previous = committedFrame;
         return Object.freeze({
           commit: () => {
             rendererToken.commit();
-            committedLineage = core.snapshot;
+            committedFrame = frame;
             const count = countPrimitives(core.snapshot.scene.primitives);
             context.trace.report({
               phase: 'commit',
@@ -458,24 +498,28 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
           },
           rollback: () => {
             rendererToken.rollback();
-            committedLineage = previous;
+            committedFrame = previous;
           },
           dispose: () => rendererToken.dispose(),
         });
       }
-      if (committedLineage === undefined) {
+      if (committedFrame === undefined) {
         throw new RetainedRenderError({ code: RetainedRenderErrorCode.ScenePatchRevisionMismatch });
       }
       const hasCandidateCoreSnapshot = core.snapshot.revision === candidate.candidateRevision;
       const next = hasCandidateCoreSnapshot
         ? core.snapshot
-        : createConfigOnlySnapshot(committedLineage, candidate.candidateRevision);
+        : createConfigOnlySnapshot(committedFrame.primary, candidate.candidateRevision);
+      const nextFrame = Object.freeze({
+        primary: next,
+        inspection: hasCandidateCoreSnapshot ? core.output.result.inspection : committedFrame.inspection,
+      });
       const patch =
         hasCandidateCoreSnapshot && core.patch !== undefined
           ? core.patch
-          : createConfigOnlyPatch(committedLineage, next);
-      validateScenePatch(committedLineage, patch, next);
-      const fallback = !supportsPatch(renderer, patch, committedLineage);
+          : createConfigOnlyPatch(committedFrame.primary, next);
+      validateScenePatch(committedFrame.primary, patch, next);
+      const fallback = !supportsPatch(renderer, patch, committedFrame.primary);
       const directReplace = patch.operations.length === 1 && patch.operations[0]?.kind === 'replaceScene';
       const rendererPatch = fallback ? createReplacePatch(patch, next) : patch;
       if (fallback) {
@@ -485,12 +529,13 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
           message: `Renderer capability "${renderer.capability}" requires a full Scene replacement`,
         });
       }
-      const rendererToken = callRendererPrepare(() => executor.prepare(rendererPatch, next, config));
-      const previous = committedLineage;
+      assertInspectionSupported(nextFrame);
+      const rendererToken = callRendererPrepare(() => executor.prepare(rendererPatch, nextFrame, config));
+      const previous = committedFrame;
       return Object.freeze({
         commit: () => {
           rendererToken.commit();
-          committedLineage = next;
+          committedFrame = nextFrame;
           context.trace.report({
             phase: 'update',
             unit: 'scene-change',
@@ -502,15 +547,15 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
         },
         rollback: () => {
           rendererToken.rollback();
-          committedLineage = previous;
+          committedFrame = previous;
         },
         dispose: () => rendererToken.dispose(),
       });
     },
-    read: () => normalizeRendererRead(executor.read(), committedLineage, animationControlsCache),
+    read: () => normalizeRendererRead(executor.read(), committedFrame, animationControlsCache),
     dispose: () => {
       executor.dispose();
-      committedLineage = undefined;
+      committedFrame = undefined;
     },
   });
   return Object.freeze({

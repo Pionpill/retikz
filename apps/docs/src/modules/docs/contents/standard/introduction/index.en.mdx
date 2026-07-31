@@ -3,7 +3,7 @@ title: Introduction
 description: Learn how the Library extends Core horizontally with optional, dynamically loaded Tier 2 capabilities and which entry point each package owns.
 ---
 
-The Library group contains official drawing capabilities that should not enter minimal Core but remain reusable across domains. Components such as Grid, Axes, and Frame express common structures through compact high-level configuration, then lower to existing Core `Path`, `Node`, and `Scope` primitives.
+The Library group contains official drawing capabilities that should not enter minimal Core but remain reusable across domains. Presentation components such as Grid, Axes, and Frame lower compact configuration to Core primitives. FlexLayout, GridLayout, and OverlayLayout provide generic containers on the Core layout-aware composite contract.
 
 ## Boundary with Core
 
@@ -17,11 +17,11 @@ As a result:
 
 ## Three Packages
 
-| Package                    | Responsibility                                      | Use it when                                        |
-| -------------------------- | --------------------------------------------------- | -------------------------------------------------- |
-| `@retikz/standard`         | Schemas, factories, Definitions, and lowering       | Validating or persisting IR and compiling directly |
-| `@retikz/standard-react`   | React DSL such as `<Grid>`, `<Axes>`, and `<Frame>` | Authoring inside `@retikz/react` `Layout`          |
-| `@retikz/standard-vanilla` | Plain-spec helpers and Vanilla Tier 2 adapters      | Authoring in browsers or scripts without React     |
+| Package                    | Responsibility                                 | Use it when                                        |
+| -------------------------- | ---------------------------------------------- | -------------------------------------------------- |
+| `@retikz/standard`         | Schemas, factories, Definitions, and lowering  | Validating or persisting IR and compiling directly |
+| `@retikz/standard-react`   | Presentation and layout React DSL              | Authoring inside `@retikz/react` `Layout`          |
+| `@retikz/standard-vanilla` | Plain-spec helpers and Vanilla Tier 2 adapters | Authoring in browsers or scripts without React     |
 
 All three packages share the same schemas and lowering from `@retikz/standard`. React and Vanilla only connect their authoring surfaces to those capabilities; they do not duplicate semantics.
 
@@ -33,4 +33,4 @@ All three packages share the same schemas and lowering from `@retikz/standard`. 
 | Vanilla      | An embed uses a partial adapter list or `StandardVanillaAdapters`; direct IR uses `bundle.compile` instead |
 | Persisted IR | A schema validates JSON and the host selects and injects definitions through `createStandardBundle()`      |
 
-See [Get Started](/standard/get-start) for all three complete paths, browse [Composites](/standard/composite) to choose a capability, or manage partial and full catalogs in [Capability Loading](/standard/extension/capability-loading).
+See [Get Started](/standard/get-start) for all three paths, browse [Composites](/standard/composite) or [Layout Containers](/standard/layout), and manage catalogs in [Capability Loading](/standard/extension/capability-loading).

@@ -1,6 +1,7 @@
 import type { CompileArtifact, Scene } from '@retikz/core';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
+import type { StaticRenderFrame } from '@retikz/render/runtime';
 import type { CSSProperties, FC, MutableRefObject, ReactElement, Ref } from 'react';
 
 import { bindWaapiDescriptors, sceneHasAnimations } from '@retikz/render/animation';
@@ -12,7 +13,7 @@ import {
   resolvePointViaLayout,
   resolveSvgElement,
 } from '@retikz/render/hydration';
-import { buildSvgDocument } from '@retikz/render/svg';
+import { buildSvgFrameDocument } from '@retikz/render/svg';
 import { cloneElement, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { CanvasHost } from '../canvas';
@@ -22,8 +23,8 @@ import { svgToReact } from '../svg';
 export type StaticHostProps = Readonly<{
   /** 要完整物化的 renderer 后端 */
   backend: 'svg' | 'canvas';
-  /** 当前 render 已完整编译的 Scene */
-  scene: Scene;
+  /** 当前 render 已完整编译的主图与检查辅助层 */
+  frame: StaticRenderFrame;
   /** 当前完整编译产生的 artifacts */
   artifacts: ReadonlyArray<CompileArtifact>;
   /** 当前 hydration handler 注册表 */
@@ -100,7 +101,7 @@ const useSvgRootBinding = (
 export const StaticHost: FC<StaticHostProps> = props => {
   const {
     backend,
-    scene,
+    frame,
     artifacts,
     handlers,
     width,
@@ -115,17 +116,18 @@ export const StaticHost: FC<StaticHostProps> = props => {
     idPrefix,
     onArtifacts,
   } = props;
+  const scene = frame.primary;
   const document = useMemo(
     () =>
       backend === 'canvas'
         ? null
-        : buildSvgDocument(scene, {
+        : buildSvgFrameDocument(frame, {
             idPrefix,
             animate,
             snapshotAt,
             easings,
           }),
-    [backend, scene, idPrefix, animate, snapshotAt, easings],
+    [backend, frame, idPrefix, animate, snapshotAt, easings],
   );
   const hasAnimations = backend === 'svg' && animate && sceneHasAnimations(scene);
   const publishAnimation = useCallback(
@@ -145,7 +147,7 @@ export const StaticHost: FC<StaticHostProps> = props => {
   if (backend === 'canvas') {
     return (
       <CanvasHost
-        scene={scene}
+        frame={frame}
         handlers={handlers}
         width={width}
         height={height}

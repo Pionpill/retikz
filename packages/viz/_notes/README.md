@@ -1,12 +1,12 @@
 # viz 内部文档
 
-这里放 viz 组内部协作文档。`@retikz/data` 独立维护版本；Plot 三包按 plot 发布组 lockstep；Table 三包按 table 发布组 lockstep。未来 chart、geo 只有在具体能力 ADR 确认 package manifest 后才建立各自路线与 release group。
+这里放 viz 组内部协作文档。`@retikz/data` 独立维护版本；Plot 三包按 plot 发布组 lockstep；Table 三包按 table 发布组 lockstep。Chart 已有长期设计与 v0.1 路线草案，但 package manifest 和 release group 仍需具体能力 ADR 确认；未来 geo 也遵守同一关卡。
 
 ## 目录
 
-- [`architecture/`](./architecture)：viz 能力域与 plot / table 长期架构设计。
+- [`architecture/`](./architecture)：viz 能力域与 plot / chart / table 长期架构设计。
 - [`decisions/`](./decisions)：版本路线、milestone roadmap、ADR。
-- [`analysis/`](./analysis)：plot / table 相关一次性分析。
+- [`analysis/`](./analysis)：plot / chart / table 相关一次性分析。
 
 跨包长期架构原则仍放在根 [`notes/architecture`](../../../notes/architecture)。
 
@@ -15,6 +15,8 @@
 - [`architecture/plot-design.md`](./architecture/plot-design.md)：plot grammar-of-graphics、Plot IR、lowering 管线设计。
 - [`architecture/data-capability-complete.md`](./architecture/data-capability-complete.md)：data 能力完备与宿主边界。
 - [`architecture/plot-visualization-complete.md`](./architecture/plot-visualization-complete.md)：plot 可视化完备检测设计。
+- [`architecture/chart-design.md`](./architecture/chart-design.md)：chart 类型封装、隐式配方、Plot 混合与 lowering 总设计。
+- [`architecture/chart-encapsulation-complete.md`](./architecture/chart-encapsulation-complete.md)：chart 封装闭环、能力复用与准入检测设计。
 - [`architecture/table-visualization-complete.md`](./architecture/table-visualization-complete.md)：table 表格可视化完备检测设计。
 - [`architecture/table-design.md`](./architecture/table-design.md)：table grammar、Table Algebra、约束布局与 lowering 总设计。
 - [`decisions/plot/v0/roadmap.md`](./decisions/plot/v0/roadmap.md)：plot v0 总路线。
@@ -27,6 +29,7 @@
 - [`decisions/_template.md`](./decisions/_template.md)：plot ADR 模板。
 - [`analysis/plot-compare-analysis.md`](./analysis/plot-compare-analysis.md)：plot 横向对比。
 - [`analysis/plot-rendering-performance.md`](./analysis/plot-rendering-performance.md)：plot 渲染性能分析。
+- [`analysis/chart-compare-analysis.md`](./analysis/chart-compare-analysis.md)：chart 类型封装、type taxonomy 与文档分类横向分析。
 - [`analysis/table-compare-analysis.md`](./analysis/table-compare-analysis.md)：table 竞品与能力差距分析。
 
 ## 规则

@@ -1,4 +1,4 @@
-import type { CompileArtifact, CompileOptions, IRScene, Scene } from '@retikz/core';
+import type { CompileArtifact, CompileOptions, InspectOptions, IRScene, Scene } from '@retikz/core';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { RetainedRendererFactory } from '@retikz/render/runtime';
@@ -112,7 +112,9 @@ export type CommonOptions = {
   /** 输出资源与显示尺寸选项 */
   output?: VanillaOutputOptions;
   /** core compile 选项；输入已是 Scene 时忽略 */
-  compile?: CompileOptions;
+  compile?: Omit<CompileOptions, 'inspection'>;
+  /** Layout Inspector 根策略；Scene 输入会 fail-loud */
+  inspect?: InspectOptions;
   /** runtime 动画选项 */
   animation?: VanillaAnimationOptions;
   /** 可嵌入 Tier2 adapter 列表，仅 plain spec normalization 使用 */

@@ -12,6 +12,7 @@ import {
   createRuntimeTopologyTracker,
   filterAnimations,
   orderCompileWarnings,
+  sealInspectionPlane,
 } from './orchestration';
 import { assertFiniteLayout, computeLayoutFromBounds, viewBoxToLayout } from './scene';
 import { formatCompileWarning } from './warning';
@@ -56,9 +57,13 @@ export const compileCoreSnapshot = <const TComposites extends ReadonlyArray<AnyC
   const { loweredIr, layoutPadding, round, onWarn, paint, clip } = context;
   const identityTracker =
     execution.candidateRevision === undefined ? undefined : createRuntimeTopologyTracker(execution.candidateRevision);
-  const { primitives, layoutBounds, artifacts } = compileChildrenToPrimitives(loweredIr.children, context, {
-    ...(identityTracker === undefined ? {} : { identityTracker }),
-  });
+  const { primitives, layoutBounds, artifacts, inspections } = compileChildrenToPrimitives(
+    loweredIr.children,
+    context,
+    {
+      ...(identityTracker === undefined ? {} : { identityTracker }),
+    },
+  );
 
   const resources = [...paint.resources(), ...clip.resources()];
   const rootAnimations = filterAnimations(loweredIr.animations, { target: 'root', onWarn, irPath: 'scene' });
@@ -85,6 +90,7 @@ export const compileCoreSnapshot = <const TComposites extends ReadonlyArray<AnyC
     result: Object.freeze({
       scene,
       artifacts: Object.freeze(artifacts),
+      inspection: sealInspectionPlane(inspections),
     }) as CompileResult<CompositeArtifactOf<TComposites[number]>>,
     diagnostics: Object.freeze(orderCompileWarnings(diagnostics)),
     ...(identityTracker === undefined ? {} : { primitiveMetadata: identityTracker.metadata }),

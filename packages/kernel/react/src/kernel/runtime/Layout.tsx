@@ -6,6 +6,7 @@ import type {
   CompileArtifact,
   CompileArtifactOptions,
   CoreProgramOptions,
+  InspectOptions,
   IRAnimationTrack,
   IRScene,
   IRViewBox,
@@ -141,6 +142,8 @@ export type LayoutProps = ScopeStyleProps & {
   ir?: IRScene;
   /** Kernel/Sugar JSX children */
   children?: ReactNode;
+  /** 全图 Layout Inspector 策略；只进入 compile sidecar，不进入 IR */
+  inspect?: InspectOptions;
   /**
    * `ir` prop 模式下按图元 id 提供的水合 handler 注册表（无 JSX children 可收集时用）
    * @description JSX 模式经组件 `on<Event>` props 收集，无需此 prop；直接传 `ir` 时无组件 props，
@@ -295,6 +298,7 @@ export const Layout: FC<LayoutProps> = props => {
   const {
     ir: irFromProp,
     children,
+    inspect,
     width,
     height,
     viewBox,
@@ -403,7 +407,11 @@ export const Layout: FC<LayoutProps> = props => {
   const built = useMemo(
     () =>
       irFromProp !== undefined
-        ? { ir: irFromProp, contributions: [] as Array<EmbeddableContributionRecord> }
+        ? {
+            ir: irFromProp,
+            contributions: [] as Array<EmbeddableContributionRecord>,
+            inspectionRoots: [],
+          }
         : buildIRWithContributions(wrapRootScope(children, scopeStyle), stableEmbeddables),
     [irFromProp, children, scopeStyle, stableEmbeddables],
   );
@@ -429,6 +437,16 @@ export const Layout: FC<LayoutProps> = props => {
     () => (artifacts?.nodeLayouts === true ? { nodeLayouts: true } : undefined),
     [artifacts?.nodeLayouts],
   );
+  const compileInspection = useMemo(
+    () =>
+      inspect === undefined && built.inspectionRoots.length === 0
+        ? undefined
+        : {
+            ...(inspect === undefined ? {} : { root: inspect }),
+            ...(built.inspectionRoots.length === 0 ? {} : { roots: built.inspectionRoots }),
+          },
+    [inspect, built.inspectionRoots],
+  );
   const coreOptions = useMemo<CoreProgramOptions>(
     () => ({
       measureText,
@@ -445,6 +463,7 @@ export const Layout: FC<LayoutProps> = props => {
       composites: aggregatedComposites,
       lowerTex,
       artifacts: compileArtifacts,
+      inspection: compileInspection,
     }),
     [
       measureText,
@@ -461,10 +480,15 @@ export const Layout: FC<LayoutProps> = props => {
       aggregatedComposites,
       lowerTex,
       compileArtifacts,
+      compileInspection,
     ],
   );
   const compiledLayout = useMemo(() => compileToScene(ir, coreOptions), [ir, coreOptions]);
   const scene = compiledLayout.scene;
+  const frame = useMemo(
+    () => Object.freeze({ primary: scene, inspection: compiledLayout.inspection }),
+    [scene, compiledLayout.inspection],
+  );
 
   // useId 返回 ":r0:" 含冒号；SVG `url(#id)` 对冒号兼容性差，剥成纯字母数字。caller 显式 idPrefix 优先（SSR 水合对齐）
   const rawId = useId();
@@ -481,7 +505,7 @@ export const Layout: FC<LayoutProps> = props => {
       <StaticHost
         key={`${resolvedRuntime.mode}:${renderer}:${resolvedIdPrefix}`}
         backend={renderer}
-        scene={scene}
+        frame={frame}
         artifacts={compiledLayout.artifacts}
         handlers={resolvedHandlers}
         width={width}
@@ -504,7 +528,7 @@ export const Layout: FC<LayoutProps> = props => {
       key={`${resolvedRuntime.mode}:${renderer}:${resolvedIdPrefix}`}
       backend={renderer}
       source={ir}
-      scene={scene}
+      initialFrame={frame}
       coreOptions={coreOptions}
       handlers={resolvedHandlers}
       width={width}

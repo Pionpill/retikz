@@ -1,6 +1,10 @@
 // @vitest-environment jsdom
-import type { IRScene, SceneRuntimeSnapshot } from '@retikz/core';
-import type { RetainedRendererFactory, RetainedRendererFactoryInput } from '@retikz/render/runtime';
+import type { IRScene } from '@retikz/core';
+import type {
+  RenderFrameSnapshot,
+  RetainedRendererFactory,
+  RetainedRendererFactoryInput,
+} from '@retikz/render/runtime';
 import type { RuntimePreparedCommit } from '@retikz/runtime';
 
 import { defineRetainedRenderer } from '@retikz/render/runtime';
@@ -35,12 +39,12 @@ const renderSeed = (ir: IRScene): string => {
 const createDisposeRecordingFactory = (disposeCounts: Array<number>): RetainedRendererFactory =>
   ((input: RetainedRendererFactoryInput) => {
     const instance = disposeCounts.push(0) - 1;
-    let current: SceneRuntimeSnapshot | undefined;
-    const prepare = (snapshot: SceneRuntimeSnapshot): RuntimePreparedCommit => {
+    let current: RenderFrameSnapshot | undefined;
+    const prepare = (frame: RenderFrameSnapshot): RuntimePreparedCommit => {
       const previous = current;
       return Object.freeze({
         commit: () => {
-          current = snapshot;
+          current = frame;
         },
         rollback: () => {
           current = previous;
@@ -50,11 +54,12 @@ const createDisposeRecordingFactory = (disposeCounts: Array<number>): RetainedRe
     };
     const definition = {
       capability: 'entity' as const,
-      prepareMount: (snapshot: SceneRuntimeSnapshot) => prepare(snapshot),
-      prepare: (_patch: unknown, snapshot: SceneRuntimeSnapshot) => prepare(snapshot),
+      inspectionCapability: 'supported' as const,
+      prepareMount: (frame: RenderFrameSnapshot) => prepare(frame),
+      prepare: (_patch: unknown, frame: RenderFrameSnapshot) => prepare(frame),
       read: () => {
         if (current === undefined) throw new Error('renderer is not committed');
-        return Object.freeze({ snapshot: current });
+        return Object.freeze({ frame: current });
       },
       dispose: () => {
         current = undefined;

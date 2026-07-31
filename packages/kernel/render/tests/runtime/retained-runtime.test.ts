@@ -15,6 +15,7 @@ import {
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import type {
+  RenderFrameSnapshot,
   RenderRuntimeConfigInput,
   RetainedCanvasRenderer,
   RetainedRendererFactory,
@@ -49,13 +50,13 @@ const noopToken = (): RuntimePreparedCommit =>
   });
 
 const createRendererHarness = (capability: 'none' | 'group' | 'entity' = 'entity') => {
-  let current: SceneRuntimeSnapshot | undefined;
+  let current: RenderFrameSnapshot | undefined;
   const patches: Array<ScenePatch> = [];
-  const prepareMount = vi.fn((snapshot: SceneRuntimeSnapshot) => {
+  const prepareMount = vi.fn((frame: RenderFrameSnapshot) => {
     const previous = current;
     return Object.freeze({
       commit: () => {
-        current = snapshot;
+        current = frame;
       },
       rollback: () => {
         current = previous;
@@ -63,12 +64,12 @@ const createRendererHarness = (capability: 'none' | 'group' | 'entity' = 'entity
       dispose: () => undefined,
     });
   });
-  const prepare = vi.fn((patch: ScenePatch, snapshot: SceneRuntimeSnapshot) => {
+  const prepare = vi.fn((patch: ScenePatch, frame: RenderFrameSnapshot) => {
     const previous = current;
     return Object.freeze({
       commit: () => {
         patches.push(patch);
-        current = snapshot;
+        current = frame;
       },
       rollback: () => {
         current = previous;
@@ -78,12 +79,13 @@ const createRendererHarness = (capability: 'none' | 'group' | 'entity' = 'entity
   });
   const read = vi.fn(() => {
     if (current === undefined) throw new Error('renderer is not committed');
-    return Object.freeze({ snapshot: current });
+    return Object.freeze({ frame: current });
   });
   const renderer = defineRetainedRenderer({
     backend: 'svg',
     host: svgHost,
     capability,
+    inspectionCapability: 'supported',
     prepareMount,
     prepare,
     read,
@@ -148,6 +150,7 @@ describe('@retikz/render/runtime public contract', () => {
       backend: 'svg',
       host: svgHost,
       capability: RetainedRendererCapability.Entity,
+      inspectionCapability: 'supported',
       prepareMount: noopToken,
       prepare: noopToken,
       read: () => {
@@ -159,7 +162,12 @@ describe('@retikz/render/runtime public contract', () => {
     expectTypeOf(svgRenderer).toEqualTypeOf<RetainedSvgRenderer>();
     expectTypeOf<RetainedCanvasRenderer>().not.toEqualTypeOf<RetainedSvgRenderer>();
     expect(Object.isFrozen(svgRenderer)).toBe(true);
-    expect(svgRenderer).toEqual({ backend: 'svg', host: svgHost, capability: 'entity' });
+    expect(svgRenderer).toEqual({
+      backend: 'svg',
+      host: svgHost,
+      capability: 'entity',
+      inspectionCapability: 'supported',
+    });
     expect('read' in svgRenderer).toBe(false);
     expect('prepare' in svgRenderer).toBe(false);
   });
@@ -173,6 +181,7 @@ describe('@retikz/render/runtime public contract', () => {
         backend: 'webgl',
         host: canvasHost,
         capability: 'entity',
+        inspectionCapability: 'supported',
         prepareMount: noopToken,
         prepare: noopToken,
         read: () => {
@@ -375,7 +384,7 @@ describe('createRetainedRenderParticipant', () => {
     expect(renderer.prepareMount).toHaveBeenCalledTimes(1);
     expect(renderer.read).toHaveBeenCalledTimes(1);
     const first = handle.read(session);
-    expect(first.snapshot.revision).toBe(0);
+    expect(first.frame.primary.revision).toBe(0);
     expect(handle.read(session)).toBe(first);
     expect(renderer.read).toHaveBeenCalledTimes(1);
   });
@@ -404,7 +413,7 @@ describe('createRetainedRenderParticipant', () => {
 
     const next = handle.read(session);
     expect(next).not.toBe(previous);
-    expect(next.snapshot.revision).toBe(1);
+    expect(next.frame.primary.revision).toBe(1);
     expect(renderer.prepare).toHaveBeenCalledTimes(1);
     expect(renderer.read).toHaveBeenCalledTimes(2);
     expect(renderer.patches[0]).toMatchObject({ baseRevision: 0, nextRevision: 1 });
@@ -465,7 +474,7 @@ describe('createRetainedRenderParticipant', () => {
     );
     expect(renderer.read).toHaveBeenCalledTimes(callsBefore + 1);
     expect(renderer.patches[0]).toEqual({ baseRevision: 0, nextRevision: 1, operations: [] });
-    expect(handle.read(session).snapshot.revision).toBe(1);
+    expect(handle.read(session).frame.primary.revision).toBe(1);
   });
 
   it('合法但 capability 不支持的 Patch 在 renderer 调用前转换为独占 replace 并报告 warning', () => {
@@ -544,25 +553,35 @@ describe('createRetainedRenderParticipant', () => {
         }),
         topology: Object.freeze([]),
       });
+    const artifact = (current: SceneRuntimeSnapshot, patch?: ScenePatch) =>
+      Object.freeze({
+        snapshot: current,
+        output: Object.freeze({
+          result: Object.freeze({ scene: current.scene, artifacts: Object.freeze([]), inspection: null }),
+          diagnostics: Object.freeze([]),
+        }),
+        ...(patch === undefined ? {} : { patch }),
+      });
     const program = defineRuntimeProgram({
       id: Object.freeze({ owner: sourceOwner.key, key: 'compile' }),
       owners: [sourceOwner],
       programs: [],
       tracePhases: [],
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: Object.freeze({ snapshot: snapshot(view.candidateRevision, false) }) }),
+      run: view => ({ kind: 'full', artifact: artifact(snapshot(view.candidateRevision, false)) }),
       update: (_previous, view) => {
         const next = snapshot(view.candidateRevision, view.snapshot(sourceOwner).value);
+        if (view.baseRevision === undefined) throw new Error('expected update base revision');
         return {
           kind: 'incremental',
-          artifact: Object.freeze({
-            snapshot: next,
-            patch: Object.freeze({
+          artifact: artifact(
+            next,
+            Object.freeze({
               baseRevision: view.baseRevision,
               nextRevision: view.candidateRevision,
               operations: Object.freeze([]),
             }),
-          }),
+          ),
         };
       },
     }) as unknown as CoreProgramDefinition<readonly []>;
@@ -605,19 +624,20 @@ describe('createRetainedRenderParticipant', () => {
     const originalRead = renderer.renderer;
     void originalRead;
     const coreProgram = createCoreProgram({ onWarn: () => undefined });
-    let stale: SceneRuntimeSnapshot | undefined;
+    let stale: RenderFrameSnapshot | undefined;
     const mismatching = defineRetainedRenderer({
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
-      prepareMount: snapshot => {
-        stale = snapshot;
+      inspectionCapability: 'supported',
+      prepareMount: frame => {
+        stale = frame;
         return noopToken();
       },
       prepare: () => noopToken(),
       read: () => {
         if (stale === undefined) throw new Error('missing snapshot');
-        return Object.freeze({ snapshot: stale });
+        return Object.freeze({ frame: stale });
       },
       dispose: () => undefined,
     });
@@ -653,24 +673,25 @@ describe('createRetainedRenderParticipant', () => {
 
   it('结构等价但可变的第三方 snapshot 不会泄漏到 committed public read', () => {
     const coreProgram = createCoreProgram({ onWarn: () => undefined });
-    let committed: SceneRuntimeSnapshot | undefined;
-    let exposedClone: SceneRuntimeSnapshot | undefined;
+    let committed: RenderFrameSnapshot | undefined;
+    let exposedClone: RenderFrameSnapshot | undefined;
     const renderer = defineRetainedRenderer({
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
-      prepareMount: snapshot => {
-        committed = snapshot;
+      inspectionCapability: 'supported',
+      prepareMount: frame => {
+        committed = frame;
         return noopToken();
       },
-      prepare: (_patch, snapshot) => {
-        committed = snapshot;
+      prepare: (_patch, frame) => {
+        committed = frame;
         return noopToken();
       },
       read: () => {
         if (committed === undefined) throw new Error('missing committed snapshot');
         exposedClone = structuredClone(committed);
-        return { snapshot: exposedClone };
+        return { frame: exposedClone };
       },
       dispose: () => undefined,
     });
@@ -694,11 +715,11 @@ describe('createRetainedRenderParticipant', () => {
     });
     const read = handle.read(session);
     if (exposedClone === undefined) throw new Error('expected renderer clone');
-    (exposedClone as unknown as { scene: { layout: { width: number } } }).scene.layout.width = 999;
+    (exposedClone as unknown as { primary: { scene: { layout: { width: number } } } }).primary.scene.layout.width = 999;
 
-    expect(read.snapshot).not.toBe(exposedClone);
-    expect(read.snapshot.scene.layout.width).not.toBe(999);
-    expect(Object.isFrozen(read.snapshot.scene.layout)).toBe(true);
+    expect(read.frame).not.toBe(exposedClone);
+    expect(read.frame.primary.scene.layout.width).not.toBe(999);
+    expect(Object.isFrozen(read.frame.primary.scene.layout)).toBe(true);
   });
 
   it('invalid renderer cleanup throw 不覆盖稳定 primary error', () => {
@@ -707,6 +728,7 @@ describe('createRetainedRenderParticipant', () => {
       backend: 'canvas',
       host: canvasHost,
       capability: 'entity',
+      inspectionCapability: 'supported',
       prepareMount: noopToken,
       prepare: noopToken,
       read: () => {
@@ -744,12 +766,12 @@ describe('createRetainedRenderParticipant', () => {
         throw disposeFailure;
       }
     });
-    let current: SceneRuntimeSnapshot | undefined;
-    const prepare = (snapshot: SceneRuntimeSnapshot): RuntimePreparedCommit => {
+    let current: RenderFrameSnapshot | undefined;
+    const prepare = (frame: RenderFrameSnapshot): RuntimePreparedCommit => {
       const previous = current;
       return Object.freeze({
         commit: () => {
-          current = snapshot;
+          current = frame;
         },
         rollback: () => {
           current = previous;
@@ -761,11 +783,12 @@ describe('createRetainedRenderParticipant', () => {
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
+      inspectionCapability: 'supported',
       prepareMount: prepare,
-      prepare: (_patch, snapshot) => prepare(snapshot),
+      prepare: (_patch, frame) => prepare(frame),
       read: () => {
         if (current === undefined) throw new Error('renderer is not committed');
-        return Object.freeze({ snapshot: current });
+        return Object.freeze({ frame: current });
       },
       dispose,
     });
@@ -863,6 +886,7 @@ describe('createRetainedRenderParticipant', () => {
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
+      inspectionCapability: 'supported',
       prepareMount: () => {
         throw new Error('renderer failed');
       },
@@ -912,6 +936,7 @@ describe('createRetainedRenderParticipant', () => {
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
+      inspectionCapability: 'supported',
       prepareMount: () => {
         throw expected;
       },
@@ -959,6 +984,7 @@ describe('createRetainedRenderParticipant', () => {
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
+      inspectionCapability: 'supported',
       prepareMount: noopToken,
       prepare: noopToken,
       read: () =>
@@ -1005,19 +1031,20 @@ describe('createRetainedRenderParticipant', () => {
 
   it('在 publish 前拒绝 malformed AnimationControls', () => {
     const coreProgram = createCoreProgram({ onWarn: () => undefined });
-    let committed: SceneRuntimeSnapshot | undefined;
+    let committed: RenderFrameSnapshot | undefined;
     const renderer = defineRetainedRenderer({
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
-      prepareMount: snapshot => {
-        committed = snapshot;
+      inspectionCapability: 'supported',
+      prepareMount: frame => {
+        committed = frame;
         return noopToken();
       },
       prepare: noopToken,
       read: () => {
         if (committed === undefined) throw new Error('missing snapshot');
-        return { snapshot: committed, animation: {} as NonNullable<RetainedRendererRead['animation']> };
+        return { frame: committed, animation: {} as NonNullable<RetainedRendererRead['animation']> };
       },
       dispose: () => undefined,
     });
@@ -1051,7 +1078,7 @@ describe('createRetainedRenderParticipant', () => {
 
   it('固定捕获 AnimationControls callback 与 data state，不保留可变容器 alias', () => {
     const coreProgram = createCoreProgram({ onWarn: () => undefined });
-    let committed: SceneRuntimeSnapshot | undefined;
+    let committed: RenderFrameSnapshot | undefined;
     const originalPlay = vi.fn();
     const replacementPlay = vi.fn();
     const controls = {
@@ -1066,14 +1093,15 @@ describe('createRetainedRenderParticipant', () => {
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
-      prepareMount: snapshot => {
-        committed = snapshot;
+      inspectionCapability: 'supported',
+      prepareMount: frame => {
+        committed = frame;
         return noopToken();
       },
       prepare: noopToken,
       read: () => {
         if (committed === undefined) throw new Error('missing snapshot');
-        return { snapshot: committed, animation: controls };
+        return { frame: committed, animation: controls };
       },
       dispose: () => undefined,
     });

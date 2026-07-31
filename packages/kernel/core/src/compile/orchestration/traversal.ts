@@ -15,6 +15,7 @@ import type {
   SceneResource,
   Transform,
 } from '../../contract';
+import type { CompileOccurrenceLocator } from '../../contract';
 import type {
   IRChild,
   IRPathBase,
@@ -25,7 +26,7 @@ import type {
   JsonValue,
 } from '../../schemas';
 import type { NodeLayout } from '../node';
-import type { CompileOccurrenceLocator, CompositeCompileArtifact } from '../types';
+import type { CompositeCompileArtifact } from '../types';
 import type { CompileWarning, CompileWarningCodeValue } from '../warning';
 import type { CompileContext } from './context';
 import type { InternalScenePrimitive } from './primitive';
@@ -115,6 +116,13 @@ import {
   transformWarnCode,
   withCompileWarningOccurrence,
 } from './diagnostics';
+import {
+  createLayoutCompositeInspectionContext,
+  lookupCompositeInspectionChildTree,
+  resolveCompositeInspection,
+  resolveLayoutChildInspection,
+  runCompositeInspector,
+} from './inspection';
 import { cloneLayoutProposal, resolveLayoutSlotSize } from './layout-proposal';
 import {
   collectPlaceholderLocators,
@@ -137,6 +145,7 @@ export const compileChildrenToPrimitives = (
     layoutResults: new WeakMap(),
     outputChildren: new WeakMap(),
     failures: new WeakMap(),
+    inspectionChildren: new WeakMap(),
   };
   const warningOccurrences: Array<CompileOccurrenceLocator> = [];
   const dispatchWarning = (warning: CompileWarning): void => {
@@ -174,6 +183,7 @@ export const compileChildrenToPrimitives = (
       composites: context.composites,
       maxCompositeDepth: context.maxCompositeDepth,
       artifacts: context.artifacts,
+      inspection: context.inspection,
       proposal: options.proposal ?? NaturalLayoutProposal,
       session,
     },
@@ -756,6 +766,7 @@ export const compileChildrenToPrimitives = (
     const scopeAlignmentGuides: TraversalFrame['alignmentGuideSink'] = [];
     const scopeObservations: TraversalFrame['observationSink'] = [];
     const scopeArtifacts: TraversalFrame['artifactSink'] = [];
+    const scopeInspections: TraversalFrame['inspectionSink'] = [];
     let scopeTransforms: Array<Transform> = [];
     try {
       const scopeFrame: TraversalFrame = {
@@ -772,6 +783,7 @@ export const compileChildrenToPrimitives = (
         ...(frame.allocationBoundary === undefined ? {} : { allocationBoundary: frame.allocationBoundary }),
         observationSink: scopeObservations,
         artifactSink: scopeArtifacts,
+        inspectionSink: scopeInspections,
         ...(semanticOwner === undefined ? {} : { semanticOwner }),
       };
       if (compileNested === undefined) {
@@ -798,6 +810,10 @@ export const compileChildrenToPrimitives = (
         frame.observationSink.push(observation);
       }
       frame.artifactSink.push(...scopeArtifacts);
+      for (const inspection of scopeInspections) {
+        inspection.scopeChain.splice(frame.scopeChain.length, 0, ...postTransforms);
+        frame.inspectionSink.push(inspection);
+      }
       for (const pendingPath of scopePendingPaths) {
         pendingPath.scopeChain.splice(frame.scopeChain.length, 0, ...postTransforms);
       }
@@ -1130,6 +1146,15 @@ export const compileChildrenToPrimitives = (
         }),
       );
     }
+    for (const inspection of transaction.inspections) {
+      if (transforms !== undefined && transforms.length > 0) {
+        inspection.scopeChain.splice(frame.scopeChain.length, 0, ...transforms);
+      }
+      frame.inspectionSink.push({
+        ...inspection,
+        occurrence: replayOccurrence(occurrence, outputIndex, transaction.originOccurrence, inspection.occurrence),
+      });
+    }
   };
 
   /** opaque handle 只由当前 compile session 的 identity table 识别 */
@@ -1375,6 +1400,19 @@ export const compileChildrenToPrimitives = (
       return;
     }
     const callable = callableLayoutDefinition(definition);
+    const authoredInspectionTree = lookupCompositeInspectionChildTree(
+      options.inspectionForest,
+      options.occurrence,
+      occurrence,
+    );
+    const inspection = resolveCompositeInspection(
+      runtime.context.inspection,
+      occurrence,
+      callable.inspector,
+      options.inheritedInspection,
+      authoredInspectionTree,
+    );
+    const inspectionRequest = inspection.request;
     const owner: CompositeCompileOwner = Object.freeze({
       label: `Composite '${key}' at ${formatCompileOccurrence(occurrence)}`,
     });
@@ -1383,8 +1421,15 @@ export const compileChildrenToPrimitives = (
     try {
       callbackResult = callable.compile(parsed, {
         proposal: cloneLayoutProposal(frame.childProposal ?? NaturalLayoutProposal, key, occurrence),
-        layoutChild: (nextChild, proposal) => {
+        inspection: createLayoutCompositeInspectionContext(runtime.context.session, owner, inspection.tree),
+        layoutChild: (nextChild, proposal, inspectionChild) => {
           const clonedProposal = cloneLayoutProposal(proposal, key, occurrence);
+          const inspectionForest = resolveLayoutChildInspection(
+            runtime.context.session,
+            owner,
+            inspectionChild,
+            nextChild,
+          );
           const clonedChild = withProviderOutputValidationBoundary(owner.label, () =>
             snapshotCompositeLayoutChild(owner.label, nextChild, layoutProbeIndex),
           );
@@ -1446,6 +1491,8 @@ export const compileChildrenToPrimitives = (
               probe: true,
               proposal: clonedProposal,
               session: runtime.context.session,
+              inheritedInspection: inspection.inherited,
+              ...(inspectionForest === undefined ? {} : { inspectionForest }),
               ...(probeIdentityTracker === undefined ? {} : { identityTracker: probeIdentityTracker }),
               observeWarningOccurrence: current => {
                 probeWarningOccurrence = current ?? probeOccurrence;
@@ -1482,6 +1529,7 @@ export const compileChildrenToPrimitives = (
               resources,
               warnings,
               artifacts: laid.artifacts,
+              inspections: laid.inspections,
             });
             runtime.context.session.layoutResults.set(layoutResult, Object.freeze({ owner, replay: token }));
             return Object.freeze({ kind: LayoutChildProbeKind.Resolved, result: layoutResult });
@@ -1579,6 +1627,29 @@ export const compileChildrenToPrimitives = (
       return Object.freeze({ children, explicitAllocation, explicitAlignmentGuides, compositeArtifact });
     });
     const { children, explicitAllocation, explicitAlignmentGuides, compositeArtifact } = validatedResult;
+    if (inspectionRequest !== undefined) {
+      if (compositeArtifact === undefined) {
+        throw new CompositeContractError(
+          `COMPOSITE_INSPECTION_ARTIFACT_MISSING: Composite '${key}' at ${formatCompileOccurrence(occurrence)} enabled an inspector but returned no artifact.`,
+        );
+      }
+      const primitives = runCompositeInspector(
+        callable.inspector ??
+          (() => {
+            throw new CompileInvariantError('internal: resolved inspection request has no inspector definition');
+          })(),
+        compositeArtifact.value,
+        occurrence,
+        inspectionRequest,
+      );
+      if (primitives.length > 0) {
+        frame.inspectionSink.push({
+          occurrence: freezeOccurrence(occurrence),
+          scopeChain: [...frame.scopeChain],
+          primitives,
+        });
+      }
+    }
     const outputFrame: TraversalFrame = {
       ...frame,
       alignmentGuideSink: [],
@@ -1707,6 +1778,7 @@ export const compileChildrenToPrimitives = (
   const rootObservations: TraversalFrame['observationSink'] = [];
   const rootLayouts: TraversalFrame['layoutSink'] = [];
   const rootArtifacts: TraversalFrame['artifactSink'] = [];
+  const rootInspections: TraversalFrame['inspectionSink'] = [];
   const rootAlignmentGuides: TraversalFrame['alignmentGuideSink'] = [];
   compileChildren(
     rootChildren,
@@ -1724,6 +1796,7 @@ export const compileChildrenToPrimitives = (
       alignmentGuideSink: rootAlignmentGuides,
       observationSink: rootObservations,
       artifactSink: rootArtifacts,
+      inspectionSink: rootInspections,
       ...(options.semanticOwner === undefined && runtime.state.identityTracker === undefined
         ? {}
         : { semanticOwner: options.semanticOwner ?? runtime.state.identityTracker?.root }),
@@ -1774,6 +1847,7 @@ export const compileChildrenToPrimitives = (
     allocations: effectiveAllocations(rootAllocations),
     observations: rootObservations,
     artifacts: orderCompileArtifacts(rootArtifacts),
+    inspections: rootInspections,
     ...(alignmentGuides === undefined ? {} : { alignmentGuides }),
   };
 };

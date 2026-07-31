@@ -19,6 +19,52 @@ export const standardSection: Array<Section> = [
     ],
   },
   {
+    id: 'layout',
+    label: 'standard.layout',
+    document: true,
+    pages: [
+      { id: 'flex-layout', label: 'standard.flexLayout' },
+      { id: 'grid-layout', label: 'standard.gridLayout' },
+      { id: 'overlay-layout', label: 'standard.overlayLayout' },
+      {
+        id: 'reference',
+        label: 'standard.layoutReference',
+        children: [
+          {
+            id: 'contract-input',
+            label: 'standard.layoutContractInput',
+            meta: {
+              pageType: 'reference',
+              audience: 'integrator',
+              capability: 'standard.layout',
+              sourceOfTruth: 'schema',
+            },
+          },
+          {
+            id: 'contract-artifact',
+            label: 'standard.layoutContractArtifact',
+            meta: {
+              pageType: 'reference',
+              audience: 'integrator',
+              capability: 'standard.layout',
+              sourceOfTruth: 'schema',
+            },
+          },
+          {
+            id: 'runtime',
+            label: 'standard.layoutRuntime',
+            meta: {
+              pageType: 'reference',
+              audience: 'integrator',
+              capability: 'standard.layout',
+              sourceOfTruth: 'runtime',
+            },
+          },
+        ],
+      },
+    ],
+  },
+  {
     id: 'extension',
     label: 'standard.extension',
     document: true,
