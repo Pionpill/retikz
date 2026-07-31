@@ -78,6 +78,7 @@ describe('Table layout transaction', () => {
     const spec: IRTableSpec = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
+      style: 'clean',
       structure: {
         kind: 'manual',
         rows: [
@@ -152,6 +153,7 @@ describe('Table layout transaction', () => {
     const spec: IRTableSpec = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
+      style: 'clean',
       structure: {
         kind: 'manual',
         rows: [
@@ -538,6 +540,7 @@ describe('Table layout transaction', () => {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'orders',
+      style: 'clean',
       structure: {
         kind: 'manual',
         rows: [

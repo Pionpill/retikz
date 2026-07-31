@@ -23,6 +23,14 @@ type PublicContractTypes = [
   TableTypes.IRTableCellRule,
   TableTypes.TableCellPlanSource,
   TableTypes.TableCellAppearanceTracePathValue,
+  TableTypes.IRTableCellVisualEncoding,
+  TableTypes.IRTableVisualScaleRef,
+  TableTypes.CellVisualScaleDefinition,
+  TableTypes.AnyCellVisualScaleDefinition,
+  TableTypes.TableLegendDescriptor,
+  TableTypes.IRTableStyleTokens,
+  TableTypes.TableStyleTokenMap,
+  TableTypes.TableStyleTokenKey,
 ];
 
 // @ts-expect-error 旧 addressed manual Cell 类型不再从包根导出
@@ -99,6 +107,18 @@ describe('@retikz/table public API', () => {
     expect(Table).toHaveProperty('TableCellRuleSchema');
     expect(Table).toHaveProperty('TableCellPlanSourceSchema');
     expect(Table).toHaveProperty('TableCellAppearanceTracePathSchema');
+    expect(Table).toHaveProperty('TableCellVisualEncodingSchema');
+    expect(Table).toHaveProperty('TableVisualScaleRefSchema');
+    expect(Table).toHaveProperty('TableLegendDescriptorSchema');
+    expect(Table).toHaveProperty('defineCellVisualScale');
+    expect(Table).toHaveProperty('TableStyle');
+    expect(Table).toHaveProperty('TableThemeMode');
+    expect(Table).toHaveProperty('TableStyleTokenKeySchema');
+    expect(Table).toHaveProperty('TableStyleBorderTokenSchema');
+    expect(Table).toHaveProperty('TableStyleTokensSchema');
+    expect(Table).toHaveProperty('TableStyleTokenMapSchema');
+    expect(Table).toHaveProperty('BUILTIN_TABLE_STYLE_TOKENS');
+    expect(Table).not.toHaveProperty('TableStyleTokenShape');
     expect(Table).toHaveProperty('TableCellSourceKind');
     expect(StructurePublic).not.toHaveProperty('TableCellSourceKind');
 
@@ -123,6 +143,8 @@ describe('@retikz/table public API', () => {
     expect(Table).not.toHaveProperty('matchesTableCellSelector');
     expect(Table).not.toHaveProperty('matchesTableValuePredicate');
     expect(Table).not.toHaveProperty('resolveTableCellPlans');
+    expect(Table).not.toHaveProperty('resolveTableStyleTokens');
+    expect(Table).not.toHaveProperty('resolveCellVisualScale');
   });
 
   it('keeps public contract types while hiding pipeline stage types', () => {

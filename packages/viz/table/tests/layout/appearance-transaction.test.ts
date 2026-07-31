@@ -30,6 +30,39 @@ const contentNode = (id: string, fill: string, text = id): IRChild => ({
 });
 
 describe('Presented Table layout transaction', () => {
+  it('does not claim neutral token seeds when token resolution is omitted', () => {
+    const semantic = normalizeTableStructure({ kind: 'manual', rows: [['plain']] });
+    const presented = presentTable(formatDefaultTable(semantic));
+    let transaction: ResolvedTableTransaction | undefined;
+    const harness = defineComposite({
+      namespace: 'fixture',
+      type: 'unstyled-presented-table',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('fixture'),
+        type: z.literal('unstyled-presented-table'),
+      }),
+      compile: (_node, context) => {
+        transaction = resolvePresentedTableTransaction({ presented }, context);
+        return { children: transaction.children };
+      },
+    });
+
+    compileToScene(
+      {
+        type: 'scene',
+        version: 1,
+        children: [{ namespace: 'fixture', type: 'unstyled-presented-table' }],
+      },
+      { composites: [harness], padding: 0 },
+    );
+
+    expect(transaction?.manifest).toMatchObject({
+      style: { style: 'clean', themeMode: 'light' },
+      cells: [{ appearance: {} }],
+      borders: [],
+    });
+  });
+
   it('fails loud for a mixed Presented content branch before probing Core content', () => {
     const semantic = normalizeTableStructure({
       kind: 'manual',

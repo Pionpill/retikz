@@ -98,6 +98,7 @@ const lowerOptionsOf = (props: TableCommonProps): LowerTablesOptions => ({
   structureDefinitions: props.structureDefinitions,
   formatterDefinitions: props.formatterDefinitions,
   presentationDefinitions: props.presentationDefinitions,
+  visualScaleDefinitions: props.visualScaleDefinitions,
 });
 
 /** 从共享 props 精确提取 React Layout 宿主选项 */

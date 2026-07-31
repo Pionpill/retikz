@@ -1,4 +1,5 @@
 export * from './authoring';
+export * from './encoding';
 export * from './formatter';
 export * from './manifest';
 export * from './model';

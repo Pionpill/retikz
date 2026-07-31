@@ -4,6 +4,10 @@ export const TableCellPlanSourceKind = {
   Default: 'default',
   /** Structure 显式 Cell 值 */
   Structure: 'structure',
+  /** Resolved style token */
+  StyleToken: 'styleToken',
+  /** Ordered visual encoding */
+  Encoding: 'encoding',
   /** 按声明顺序应用的 root rule */
   RootRule: 'rootRule',
 } as const;

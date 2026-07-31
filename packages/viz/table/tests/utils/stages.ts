@@ -9,6 +9,8 @@ export const formatDefaultTable = (
   formatterDefinitions?: ReadonlyArray<AnyCellFormatterDefinition>,
 ) =>
   formatTable(model, {
-    cells: resolveTableCellPlans(model),
+    cells: resolveTableCellPlans(model, {
+      scaleContext: { categoricalColors: ['red'], sequentialColors: ['white', 'black'] },
+    }).cells,
     ...(formatterDefinitions === undefined ? {} : { formatterDefinitions }),
   });

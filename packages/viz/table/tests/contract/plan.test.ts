@@ -16,14 +16,34 @@ describe('Table Cell plan lineage contract', () => {
     const sources: Array<TableCellPlanSource> = [
       TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.Default }),
       TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.Structure }),
+      TableCellPlanSourceSchema.parse({
+        kind: TableCellPlanSourceKind.StyleToken,
+        tokenKey: 'cell.content.color',
+        tokenSource: 'preset',
+      }),
+      TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.Encoding, encodingId: 'status-color' }),
       TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.RootRule, ruleIndex: 0 }),
     ];
 
     expectTypeOf(sources).toEqualTypeOf<Array<TableCellPlanSource>>();
-    expect(sources).toEqual([{ kind: 'default' }, { kind: 'structure' }, { kind: 'rootRule', ruleIndex: 0 }]);
+    expect(sources).toEqual([
+      { kind: 'default' },
+      { kind: 'structure' },
+      { kind: 'styleToken', tokenKey: 'cell.content.color', tokenSource: 'preset' },
+      { kind: 'encoding', encodingId: 'status-color' },
+      { kind: 'rootRule', ruleIndex: 0 },
+    ]);
     expect(() => TableCellPlanSourceSchema.parse({ kind: 'rootRule', ruleIndex: -1 })).toThrow(/ruleIndex/i);
+    expect(() => TableCellPlanSourceSchema.parse({ kind: 'encoding', encodingId: '' })).toThrow(/encodingId/i);
     expect(() => TableCellPlanSourceSchema.parse({ kind: 'encoding', encodingIndex: 0 })).toThrow();
-    expect(() => TableCellPlanSourceSchema.parse({ kind: 'styleToken' })).toThrow();
+    expect(() => TableCellPlanSourceSchema.parse({ kind: 'styleToken' })).toThrow(/tokenKey|tokenSource/i);
+    expect(() =>
+      TableCellPlanSourceSchema.parse({
+        kind: 'styleToken',
+        tokenKey: 'data.categorical',
+        tokenSource: 'preset',
+      }),
+    ).toThrow(/tokenKey/i);
     expect(() => TableCellPlanSourceSchema.parse({ kind: 'default', ruleIndex: 0 })).toThrow();
   });
 

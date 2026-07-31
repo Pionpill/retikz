@@ -1042,6 +1042,9 @@ importers:
       d3-format:
         specifier: 'catalog:'
         version: 3.1.2
+      d3-scale:
+        specifier: 'catalog:'
+        version: 4.0.2
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -1049,6 +1052,9 @@ importers:
       '@types/d3-format':
         specifier: 'catalog:'
         version: 3.0.4
+      '@types/d3-scale':
+        specifier: 'catalog:'
+        version: 4.0.9
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0

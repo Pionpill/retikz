@@ -2,14 +2,14 @@
 import type { IRChild } from '@retikz/core';
 import type { CellPresentationInput, TableLayoutManifest } from '@retikz/table';
 
-import { createManualTableSpec, defineCellPresentation } from '@retikz/table';
+import { createManualTableSpec, defineCellPresentation, defineCellVisualScale } from '@retikz/table';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import { ManualTable } from '../../src';
+import { ManualTable, Table } from '../../src';
 
 beforeEach(() => {
   (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -53,6 +53,57 @@ describe('Table React manifest observation', () => {
     expect(manifests[0].allocationBounds).toEqual({ x: 0, y: 0, width: 120, height: 32 });
     expect(manifests[1].allocationBounds).toEqual({ x: 0, y: 0, width: 120, height: 64 });
 
+    await act(() => root.unmount());
+    container.remove();
+  });
+
+  it('exposes Legend descriptor seeds produced by the generic Table entry', async () => {
+    const manifests: Array<TableLayoutManifest> = [];
+    const visualScale = defineCellVisualScale({
+      name: 'react-manifest-palette',
+      optionsSchema: z.strictObject({}),
+      resolve: (_options, _values, context) => ({
+        of: () => context.categoricalColors[0],
+        legendForm: 'swatch',
+        domain: [1],
+        range: [context.categoricalColors[0]],
+      }),
+    });
+    const spec = createManualTableSpec({
+      id: 'encoded',
+      rows: [[1]],
+      styleTokens: { 'data.categorical': ['#123456'] },
+      encodings: [
+        {
+          id: 'palette',
+          selector: { locations: ['body'] },
+          channel: 'backgroundFill',
+          scale: { name: 'react-manifest-palette' },
+          legend: { title: 'Palette' },
+        },
+      ],
+    });
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(() => {
+      root.render(
+        <Table spec={spec} visualScaleDefinitions={[visualScale]} onManifest={manifest => manifests.push(manifest)} />,
+      );
+    });
+
+    expect(manifests[0].legendDescriptors).toEqual([
+      {
+        encodingId: 'palette',
+        channel: 'backgroundFill',
+        scaleName: 'react-manifest-palette',
+        title: 'Palette',
+        form: 'swatch',
+        domain: [1],
+        range: ['#123456'],
+      },
+    ]);
     await act(() => root.unmount());
     container.remove();
   });
@@ -188,6 +239,11 @@ describe('Table React manifest observation', () => {
           appearance: {
             background: { fill: '#f3f4f6' },
             borders: { bottom: { kind: 'line', stroke: '#2563eb', width: 2 } },
+            content: {
+              color: '#18181b',
+              nodeDefault: { font: { family: 'sans-serif', weight: 400 } },
+              labelDefault: { font: { family: 'sans-serif', weight: 400 } },
+            },
           },
         }),
       ]),

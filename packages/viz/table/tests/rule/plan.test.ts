@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IRTableCellRule } from '../../src';
+import type { IRTableCellRule, SemanticTableModel } from '../../src';
 
 import { TableCellRuleSchema } from '../../src';
 import { formatTable } from '../../src/pipeline/formatter';
@@ -23,6 +23,12 @@ const modelOf = () =>
       ],
     ],
   });
+
+const resolvePlans = (model: SemanticTableModel, rules: ReadonlyArray<IRTableCellRule> = []) =>
+  resolveTableCellPlans(model, {
+    rules,
+    scaleContext: { categoricalColors: ['red'], sequentialColors: ['white', 'black'] },
+  }).cells;
 
 const rulesOf = (): Array<IRTableCellRule> => [
   {
@@ -63,7 +69,7 @@ const rulesOf = (): Array<IRTableCellRule> => [
 
 describe('resolved Table Cell plans', () => {
   it('cascades references and appearance by declaration order with precise winner trace', () => {
-    const plans = resolveTableCellPlans(modelOf(), rulesOf());
+    const plans = resolvePlans(modelOf(), rulesOf());
     const value = plans[0];
 
     expect(value).toMatchObject({
@@ -114,7 +120,7 @@ describe('resolved Table Cell plans', () => {
       selector: { cellIds: ['value'] },
       appearance: { content: { fill: undefined } },
     });
-    const value = resolveTableCellPlans(modelOf(), [rule])[0];
+    const value = resolvePlans(modelOf(), [rule])[0];
 
     expect(value.appearance.content).not.toHaveProperty('fill');
     expect(value.trace.appearance).not.toHaveProperty('/content/fill');
@@ -126,7 +132,7 @@ describe('resolved Table Cell plans', () => {
       appearance: { content: { nodeDefault: { font: undefined } } },
     });
 
-    expect(() => resolveTableCellPlans(modelOf(), [rule])).not.toThrow();
+    expect(() => resolvePlans(modelOf(), [rule])).not.toThrow();
   });
 
   it('omits an explicitly undefined opacity from a complete background replacement', () => {
@@ -140,7 +146,7 @@ describe('resolved Table Cell plans', () => {
         appearance: { background: { fill: '#0000ff', fillOpacity: undefined } },
       }),
     ] satisfies Array<IRTableCellRule>;
-    const value = resolveTableCellPlans(modelOf(), rules)[0];
+    const value = resolvePlans(modelOf(), rules)[0];
 
     expect(value.appearance.background).toStrictEqual({ fill: '#0000ff' });
     expect(value.trace.appearance).not.toHaveProperty('/background/fillOpacity');
@@ -148,7 +154,7 @@ describe('resolved Table Cell plans', () => {
   });
 
   it('lets a later none border replace an earlier line border', () => {
-    const value = resolveTableCellPlans(modelOf(), [
+    const value = resolvePlans(modelOf(), [
       {
         selector: { cellIds: ['value'] },
         appearance: { borders: { top: { kind: 'line', stroke: '#ff0000', width: 2 } } },
@@ -161,7 +167,7 @@ describe('resolved Table Cell plans', () => {
   });
 
   it('applies appearance-only rules to direct content Cells', () => {
-    const direct = resolveTableCellPlans(modelOf(), [
+    const direct = resolvePlans(modelOf(), [
       {
         selector: { cellIds: ['direct'] },
         appearance: { background: { fill: '#fff000' } },
@@ -179,7 +185,7 @@ describe('resolved Table Cell plans', () => {
   });
 
   it('keeps value/content plans discriminated and seeds structure winners once', () => {
-    const plans = resolveTableCellPlans(modelOf());
+    const plans = resolvePlans(modelOf());
 
     expect(plans[0]).toMatchObject({
       kind: 'value',
@@ -205,7 +211,7 @@ describe('resolved Table Cell plans', () => {
 
   it('detaches and recursively freezes plans without freezing authored rules', () => {
     const rules = rulesOf();
-    const plans = resolveTableCellPlans(modelOf(), rules);
+    const plans = resolvePlans(modelOf(), rules);
     const original = structuredClone(plans[0]);
 
     expect(Object.isFrozen(plans)).toBe(true);
@@ -222,17 +228,17 @@ describe('resolved Table Cell plans', () => {
   it('rejects formatter or presentation rewrites of direct content with rule and Cell identity', () => {
     const model = modelOf();
 
-    expect(() =>
-      resolveTableCellPlans(model, [{ selector: { cellIds: ['direct'] }, formatter: { name: 'identity' } }]),
-    ).toThrow(/rule 0.*direct.*formatter/i);
-    expect(() =>
-      resolveTableCellPlans(model, [{ selector: { cellIds: ['direct'] }, presentation: { name: 'text' } }]),
-    ).toThrow(/rule 0.*direct.*presentation/i);
+    expect(() => resolvePlans(model, [{ selector: { cellIds: ['direct'] }, formatter: { name: 'identity' } }])).toThrow(
+      /rule 0.*direct.*formatter/i,
+    );
+    expect(() => resolvePlans(model, [{ selector: { cellIds: ['direct'] }, presentation: { name: 'text' } }])).toThrow(
+      /rule 0.*direct.*presentation/i,
+    );
   });
 
   it('makes formatTable consume the same strictly aligned value plan', () => {
     const model = modelOf();
-    const plans = resolveTableCellPlans(model, [{ selector: { cellIds: ['value'] }, formatter: { name: 'identity' } }]);
+    const plans = resolvePlans(model, [{ selector: { cellIds: ['value'] }, formatter: { name: 'identity' } }]);
     const formatted = formatTable(model, { cells: plans });
 
     expect(formatted.cells[0]).toMatchObject({ rawValue: 12, value: 12, formatterName: 'identity' });

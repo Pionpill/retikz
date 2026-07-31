@@ -4,6 +4,7 @@ import type { ExternalDatasets } from '@retikz/data';
 import type {
   AnyCellFormatterDefinition,
   AnyCellPresentationDefinition,
+  AnyCellVisualScaleDefinition,
   AnyTableStructureDefinition,
 } from '../../contract';
 import type { LowerTablesOptions } from '../types';
@@ -16,6 +17,7 @@ const TableRuntimeEnvelopeMarker = Symbol('retikz.table.runtimeEnvelope');
 const STRUCTURE_DEFINITIONS_KEY = 'structureDefinitions';
 const FORMATTER_DEFINITIONS_KEY = 'formatterDefinitions';
 const PRESENTATION_DEFINITIONS_KEY = 'presentationDefinitions';
+const VISUAL_SCALE_DEFINITIONS_KEY = 'visualScaleDefinitions';
 
 /** 把任意 JSON 字符串编码为稳定且无碰撞的 runtime reference 片段 */
 const encodeRuntimeReference = (reference: string): string =>
@@ -70,7 +72,8 @@ const mergeSharedLowerOptions = (optionSets: ReadonlyArray<LowerTablesOptions>):
         value === undefined ||
         key === STRUCTURE_DEFINITIONS_KEY ||
         key === FORMATTER_DEFINITIONS_KEY ||
-        key === PRESENTATION_DEFINITIONS_KEY
+        key === PRESENTATION_DEFINITIONS_KEY ||
+        key === VISUAL_SCALE_DEFINITIONS_KEY
       )
         continue;
       if (Object.hasOwn(merged, key) && !Object.is(merged[key], value)) {
@@ -100,11 +103,17 @@ const mergeLowerOptions = (envelopes: ReadonlyArray<TableRuntimeEnvelope>): Lowe
     definition => definition.name,
     'formatter definition',
   );
+  const visualScaleDefinitions = mergeByIdentity<AnyCellVisualScaleDefinition>(
+    optionSets.map(options => options.visualScaleDefinitions),
+    definition => definition.name,
+    'visual scale definition',
+  );
   return {
     ...mergeSharedLowerOptions(optionSets),
     ...(structureDefinitions.length === 0 ? {} : { structureDefinitions }),
     ...(formatterDefinitions.length === 0 ? {} : { formatterDefinitions }),
     ...(presentationDefinitions.length === 0 ? {} : { presentationDefinitions }),
+    ...(visualScaleDefinitions.length === 0 ? {} : { visualScaleDefinitions }),
   };
 };
 
@@ -155,6 +164,9 @@ export const createTableRuntimeContribution = (input: TableRuntimeContributionIn
     ...(input.lowerOptions?.formatterDefinitions === undefined
       ? {}
       : { formatterDefinitions: [...input.lowerOptions.formatterDefinitions] }),
+    ...(input.lowerOptions?.visualScaleDefinitions === undefined
+      ? {}
+      : { visualScaleDefinitions: [...input.lowerOptions.visualScaleDefinitions] }),
   };
   const envelope: TableRuntimeEnvelope = Object.freeze({
     [TableRuntimeEnvelopeMarker]: true,

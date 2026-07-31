@@ -70,10 +70,12 @@
     "@retikz/data": "workspace:^",
     "@retikz/math": "workspace:^",
     "d3-format": "catalog:",
+    "d3-scale": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@types/d3-format": "catalog:",
+    "@types/d3-scale": "catalog:",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

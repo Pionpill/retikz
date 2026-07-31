@@ -373,6 +373,7 @@ describe('Table React composition root integration', () => {
       structureDefinitions,
       formatterDefinitions,
       presentationDefinitions,
+      visualScaleDefinitions: undefined,
     });
     expect(runtime.composites).toBe(composites);
     expect(runtime.onManifest).toBe(onManifest);

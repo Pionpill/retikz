@@ -1,7 +1,7 @@
 import type { CellPresentationInput } from '@retikz/table';
 
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
-import { defineCellFormatter, defineCellPresentation } from '@retikz/table';
+import { defineCellFormatter, defineCellPresentation, defineCellVisualScale } from '@retikz/table';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -57,6 +57,101 @@ describe('renderTable', () => {
     });
 
     expect(renderTable(spec, { lowerOptions: { formatterDefinitions: [prefix] } })).toContain('#7');
+  });
+
+  it('keeps style fields, encodings, and custom visual scales in Vanilla SSR artifacts', () => {
+    const visualScale = defineCellVisualScale({
+      name: 'vanilla-palette',
+      optionsSchema: z.strictObject({}),
+      resolve: (_options, _values, context) => ({
+        of: () => context.categoricalColors[0],
+        legendForm: 'swatch',
+        domain: [1],
+        range: [context.categoricalColors[0]],
+      }),
+    });
+    const spec = manualTable({
+      id: 'table',
+      rows: [[1]],
+      style: 'clean',
+      themeMode: 'dark',
+      styleTokens: { 'data.categorical': ['#123456'] },
+      encodings: [
+        {
+          id: 'palette',
+          selector: { locations: ['body'] },
+          channel: 'backgroundFill',
+          scale: { name: 'vanilla-palette' },
+          legend: { title: 'Palette' },
+        },
+      ],
+    });
+    const result = renderTable(spec, {
+      artifacts: true,
+      lowerOptions: { visualScaleDefinitions: [visualScale] },
+    });
+
+    expect(result.svg).toContain('#123456');
+    expect(result.manifest).toMatchObject({
+      style: { style: 'clean', themeMode: 'dark' },
+      encodings: [{ id: 'palette', scaleName: 'vanilla-palette', cellIds: ['cell.r0.c0'] }],
+      legendDescriptors: [
+        {
+          encodingId: 'palette',
+          channel: 'backgroundFill',
+          scaleName: 'vanilla-palette',
+          title: 'Palette',
+          form: 'swatch',
+          domain: [1],
+          range: ['#123456'],
+        },
+      ],
+      cells: [{ appearance: { background: { fill: '#123456' } }, encodingIds: ['palette'] }],
+    });
+  });
+
+  it('keeps the neutral light default distinct from explicit clean in SSR', () => {
+    const neutral = renderTable(manualTable({ rows: [['Ada']] }), { artifacts: true });
+    const clean = renderTable(manualTable({ rows: [['Ada']], style: 'clean' }), { artifacts: true });
+
+    expect(neutral.manifest).toMatchObject({
+      style: { style: 'neutral', themeMode: 'light' },
+      cells: [{ appearance: { background: { fill: '#ffffff' }, content: { color: '#18181b' } } }],
+    });
+    expect(clean.manifest).toMatchObject({
+      style: { style: 'clean', themeMode: 'light' },
+      cells: [{ appearance: {} }],
+      borders: [],
+    });
+  });
+
+  it('surfaces invalid custom Legend resolution diagnostics through Vanilla SSR', () => {
+    const invalid = defineCellVisualScale({
+      name: 'vanilla-invalid-legend',
+      optionsSchema: z.strictObject({}),
+      resolve: () =>
+        ({
+          of: () => 'red',
+          legendForm: 'invalid',
+          domain: [1],
+          range: ['red'],
+        }) as never,
+    });
+    const spec = manualTable({
+      id: 'invalid-legend',
+      rows: [[1]],
+      encodings: [
+        {
+          id: 'invalid',
+          selector: { locations: ['body'] },
+          channel: 'backgroundFill',
+          scale: { name: 'vanilla-invalid-legend' },
+          legend: {},
+        },
+      ],
+    });
+
+    expect(() => renderTable(spec, { lowerOptions: { visualScaleDefinitions: [invalid] } })).toThrow(/legendForm/i);
   });
 
   it('passes the new Presentation ABI and semantic border appearance through SSR', () => {
