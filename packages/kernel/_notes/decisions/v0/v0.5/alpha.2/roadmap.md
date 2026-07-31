@@ -1,6 +1,6 @@
 # v0.5.0-alpha.2 增量性能、Runtime 策略与 Box Layout 基建
 
-- 状态：扩展中（ADR-01～07 Accepted；ADR-08 Proposed）
+- 状态：实现、测试、双语文档与 Accepted 收口完成（ADR-01～08）
 - 目标版本：`0.5.0-alpha.2`
 - 关联：[v0.5 roadmap](../roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
@@ -21,7 +21,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | [ADR-05](./05-scene-patch-retained-renderer.md)      | Accepted | Scene Patch 与 retained renderer | 冻结 identity topology、commit participant 与 SVG/Canvas retained lifecycle                |
 | [ADR-06](./06-box-layout-composite-contract.md)      | Accepted | Box Layout Composite contract    | 冻结双轴 constraint、allocation / slot-size feedback、nested propagation 与 replay wrapper |
 | [ADR-07](./07-runtime-execution-policy.md)           | Accepted | Runtime 执行模式与更新策略       | 显式选择 static / retained，并在 retained Session 中选择 auto / full 更新                  |
-| [ADR-08](./08-layout-proposal-probe-contract.md)     | Proposed | Layout proposal / probe contract | 冻结双轴 proposal、minimum / natural、resolved slot、guide、failure isolation 与 replay    |
+| [ADR-08](./08-layout-proposal-probe-contract.md)     | Accepted | Layout proposal / probe contract | 冻结双轴 proposal、minimum / natural、resolved slot、guide、failure isolation 与 replay    |
 
 ## 当前进度
 
@@ -30,7 +30,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-05 已完成 Runtime commit participant、Render retained runtime、SVG/Canvas事务后端、React/Vanilla session接线、5000规模确定性/计时门禁与双语文档，并于2026-07-29获人工接受。
 - ADR-06 已完成双轴 constraint、`slotSize`、显式 composite allocation、完整 replay wrapper、Table consumer 迁移、对抗测试与双语文档，并于 2026-07-28 获人工接受。
 - ADR-07 已完成 Architecture Gate、Runtime/Core/Render/React/Vanilla实现、SVG/Canvas三策略Bench A/B、对抗测试与双语文档，并于2026-07-29获人工接受。
-- ADR-08 已完成双轴 proposal、resolved slot、真实 allocation / visual bounds、alignment guide、隔离 failure、one-use replay、Table consumer 迁移、对抗测试与双语文档；Architecture Gate Round 3/3 PASS，当前保持 Proposed，等待人工最终 review 与接受。
+- ADR-08 已完成双轴 proposal、resolved slot、真实 allocation / visual bounds、alignment guide、隔离 failure、one-use replay、Table consumer 迁移、对抗测试与双语文档；Architecture Gate Round 3/3 PASS，并于 2026-07-30 获人工接受。
 
 ## 执行批次
 

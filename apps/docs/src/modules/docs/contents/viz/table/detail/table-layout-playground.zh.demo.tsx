@@ -1,6 +1,9 @@
 import type { IRTableTrackSize } from '@retikz/table';
 
+import { Layout } from '@retikz/react';
 import { DetailColumn, DetailTable } from '@retikz/table-react';
+
+import type { PreviewSourceConfig } from '@/modules/docs/preview';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -35,78 +38,92 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     : undefined;
 
   return (
-    <DetailTable
-      id="score-layout-playground"
-      dataRef="scores"
-      data={tableLayoutPlaygroundRows}
-      layout={{
-        columnSize: { kind: 'fixed', value: 80 },
-        rowSize: bodyRowSize,
-        headerRowSize: { kind: 'fixed', value: 36 },
-        columns: [
-          { index: 0, size: { kind: 'fixed', value: 88 } },
-          { index: 1, size: { kind: 'fixed', value: 56 } },
-          { index: 2, size: { kind: 'fixed', value: 60 } },
-          { index: 3, size: { kind: 'fixed', value: 64 } },
-          { index: 4, size: noteColumnSize },
-        ],
-        columnGap: values.columnGap,
-        rowGap: values.rowGap,
-        borders: {
-          mode: values.borderMode,
-          outer: { kind: 'line', stroke: 'currentColor', width: values.gridWidth },
-          horizontal: { kind: 'line', stroke: 'lightgray', width: values.gridWidth },
-          vertical: { kind: 'line', stroke: 'lightgray', width: values.gridWidth },
-        },
-      }}
+    <Layout
       width={440}
       height={240}
       viewBox={{ x: -110, y: -32, width: 660, height: 340 }}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
-      <DetailColumn
-        id="name"
-        field="name"
-        header="姓名"
-        headerLayout={{ padding: 4 }}
-        bodyLayout={{ padding: 4, horizontalAlign: 'start' }}
-      />
-      <DetailColumn id="group" field="group" header="分组" headerLayout={{ padding: 4 }} bodyLayout={{ padding: 4 }} />
-      <DetailColumn
-        id="score"
-        field="score"
-        header="分数"
-        headerLayout={{ padding: 4 }}
-        bodyLayout={{ padding: 4, horizontalAlign: 'end' }}
-      />
-      <DetailColumn
-        id="status"
-        field="status"
-        header="状态"
-        headerLayout={{ padding: 4 }}
-        bodyLayout={{ padding: 4, horizontalAlign: 'center' }}
-      />
-      <DetailColumn
-        id="note"
-        field="note"
-        header="备注"
-        headerLayout={{ padding: 4 }}
-        bodyLayout={{
-          padding: values.padding,
-          horizontalAlign: values.horizontalAlign,
-          verticalAlign: values.verticalAlign,
-          wrap: values.wrap,
-          fit: values.fit,
-          overflow: values.overflow,
-          ...(noteBorders === undefined ? {} : { borders: noteBorders }),
+      <DetailTable
+        id="score-layout-playground"
+        dataRef="scores"
+        data={tableLayoutPlaygroundRows}
+        layout={{
+          columnSize: { kind: 'fixed', value: 80 },
+          rowSize: bodyRowSize,
+          headerRowSize: { kind: 'fixed', value: 36 },
+          columns: [
+            { index: 0, size: { kind: 'fixed', value: 88 } },
+            { index: 1, size: { kind: 'fixed', value: 56 } },
+            { index: 2, size: { kind: 'fixed', value: 60 } },
+            { index: 3, size: { kind: 'fixed', value: 64 } },
+            { index: 4, size: noteColumnSize },
+          ],
+          columnGap: values.columnGap,
+          rowGap: values.rowGap,
+          borders: {
+            mode: values.borderMode,
+            outer: { kind: 'line', stroke: 'currentColor', width: values.gridWidth },
+            horizontal: { kind: 'line', stroke: 'lightgray', width: values.gridWidth },
+            vertical: { kind: 'line', stroke: 'lightgray', width: values.gridWidth },
+          },
         }}
-      />
-    </DetailTable>
+      >
+        <DetailColumn
+          id="name"
+          field="name"
+          header="姓名"
+          headerLayout={{ padding: 4 }}
+          bodyLayout={{ padding: 4, horizontalAlign: 'start' }}
+        />
+        <DetailColumn
+          id="group"
+          field="group"
+          header="分组"
+          headerLayout={{ padding: 4 }}
+          bodyLayout={{ padding: 4 }}
+        />
+        <DetailColumn
+          id="score"
+          field="score"
+          header="分数"
+          headerLayout={{ padding: 4 }}
+          bodyLayout={{ padding: 4, horizontalAlign: 'end' }}
+        />
+        <DetailColumn
+          id="status"
+          field="status"
+          header="状态"
+          headerLayout={{ padding: 4 }}
+          bodyLayout={{ padding: 4, horizontalAlign: 'center' }}
+        />
+        <DetailColumn
+          id="note"
+          field="note"
+          header="备注"
+          headerLayout={{ padding: 4 }}
+          bodyLayout={{
+            padding: values.padding,
+            horizontalAlign: values.horizontalAlign,
+            verticalAlign: values.verticalAlign,
+            wrap: values.wrap,
+            fit: values.fit,
+            overflow: values.overflow,
+            ...(noteBorders === undefined ? {} : { borders: noteBorders }),
+          }}
+        />
+      </DetailTable>
+    </Layout>
   );
 });
 
 /** canonical 状态派生的稳定源码配置 */
-export const previewSource = controlledPreview.source;
+export const previewSource = {
+  ...controlledPreview.source,
+  datasetImports: {
+    scores: { from: './table-layout-playground.zh.data', name: 'tableLayoutPlaygroundRows' },
+  },
+} satisfies PreviewSourceConfig;
 
 /** 操作轨道、Cell 内容策略与 Border Graph 的 DetailTable 试验场 */
 export default controlledPreview.Component;

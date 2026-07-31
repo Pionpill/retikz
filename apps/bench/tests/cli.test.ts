@@ -1,12 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import type * as Shared from '../src/shared';
+
 const mocks = vi.hoisted(() => ({
   readTimingRunnerEnvironment: vi.fn(() => {
     throw new Error('timing runner environment unavailable');
   }),
 }));
 
-vi.mock('../src/browser-runner', () => ({
+vi.mock('../src/benchmark/browser-runner', () => ({
   runBrowserBenchmark: vi.fn(() =>
     Promise.resolve({
       deterministic: [],
@@ -15,13 +17,14 @@ vi.mock('../src/browser-runner', () => ({
     }),
   ),
 }));
-vi.mock('../src/budget', () => ({
+vi.mock('../src/shared', async importOriginal => ({
+  ...(await importOriginal<typeof Shared>()),
   compareDeterministicResults: vi.fn(() => []),
   createBaselineCandidate: vi.fn(() => []),
+  runCoreDeterministicBenchmarks: vi.fn(() => []),
+  runCoreWallClockReport: vi.fn(() => []),
 }));
-vi.mock('../src/report', () => ({ runCoreWallClockReport: vi.fn(() => []) }));
-vi.mock('../src/run', () => ({ runCoreDeterministicBenchmarks: vi.fn(() => []) }));
-vi.mock('../src/runner-environment', () => ({
+vi.mock('../src/benchmark/runner-environment', () => ({
   readTimingRunnerEnvironment: mocks.readTimingRunnerEnvironment,
 }));
 
@@ -38,7 +41,7 @@ describe('bench CLI', () => {
     process.argv = [originalArgv[0], originalArgv[1], 'check'];
     vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
-    await expect(import('../src/cli')).resolves.toBeDefined();
+    await expect(import('../src/benchmark/cli')).resolves.toBeDefined();
 
     expect(mocks.readTimingRunnerEnvironment).not.toHaveBeenCalled();
   });

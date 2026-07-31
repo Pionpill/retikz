@@ -3,7 +3,7 @@ import type { PerformanceTraceRecord } from '@retikz/runtime';
 import { createRuntimeTraceReporter } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 
-import { assertFullTrace, assertSingleTraceRecord } from '../src/trace';
+import { assertFullTrace, assertSingleTraceRecord } from '../src/shared';
 
 const expected = Object.freeze({ phase: 'compile' as const, unit: 'ir-child' as const, visited: 1 });
 

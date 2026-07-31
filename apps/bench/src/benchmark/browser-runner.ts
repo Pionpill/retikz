@@ -17,7 +17,10 @@ export type BrowserRunnerEnvironment = Readonly<{
   timezone: string;
 }>;
 
-const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+
+/** 返回与交互式 Performance Lab 隔离的无头 runner 页面 */
+export const getBrowserRunnerPath = (): '/runner.html' => '/runner.html';
 
 /** 读取并校验固定 bench 服务端口 */
 export const readBenchPort = (): number => {
@@ -88,7 +91,9 @@ export const runBrowserBenchmark = async (
       colorScheme: 'light',
     });
     const page = await context.newPage();
-    await page.goto(`http://127.0.0.1:${port.toString()}`, { waitUntil: 'networkidle' });
+    await page.goto(`http://127.0.0.1:${port.toString()}${getBrowserRunnerPath()}`, {
+      waitUntil: 'networkidle',
+    });
     const browserVersion = browser.version();
     const result = await page.evaluate(
       browserOptions => {

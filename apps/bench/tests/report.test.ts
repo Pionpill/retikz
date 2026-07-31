@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { runCoreWallClockReport } from '../src/report';
+import { runCoreWallClockReport } from '../src/shared';
 
 describe('wall-clock report scenarios', () => {
   it('在 Node 中报告 Core direct full、Runtime initial full 与 5000 单 entity update', () => {

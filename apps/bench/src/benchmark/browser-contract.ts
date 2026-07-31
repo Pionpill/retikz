@@ -1,5 +1,4 @@
-import type { DeterministicBenchmarkResult } from './budget';
-import type { WallClockScenarioReport } from './report';
+import type { DeterministicBenchmarkResult, WallClockScenarioReport } from '../shared';
 
 /** Browser benchmark 的固定环境指纹字段 */
 export type BrowserEnvironmentFingerprint = Readonly<{
