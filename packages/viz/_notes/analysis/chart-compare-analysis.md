@@ -1,10 +1,10 @@
-# Chart type-first 横向分析：Highcharts / ECharts / Recharts vs retikz
+# Chart type-first 横向分析：Highcharts / ECharts / Recharts / Flint vs retikz
 
 > **定位：** 本文只比较 type-first 图表库的横向覆盖、完整配置表面、默认体验、文档发现性和学习成本，为 `@retikz/chart` 的类型封装与 taxonomy 提供参照
 >
 > **边界：** 不比较 Transform、Scale、Coordinate、Mark、Guide、Composition 等 GoG 纵向能力是否完备；这些属于 [`Plot GoG 纵向能力对比`](./plot-compare-analysis.md)
 >
-> **快照：** 2026-07-30。`@retikz/chart` 尚未实现，retikz 列描述长期目标，不是当前能力评分或 v0.1 类型承诺
+> **快照：** 2026-07-31。`@retikz/chart` 尚未实现，retikz 列描述长期目标；首版类型范围以 [`chart v0.1 roadmap`](../decisions/chart/v0/v0.1/roadmap.md) 为准
 >
 > 关联：[`Chart 总设计`](../architecture/chart-design.md) · [`Chart 封装完备设计`](../architecture/chart-encapsulation-complete.md) · [`chart v0.1 roadmap`](../decisions/chart/v0/v0.1/roadmap.md)
 
@@ -74,13 +74,48 @@ Canonical Type
 
 对 retikz 的限制：ReactNode、callback 和组件生命周期不能成为 framework-neutral、JSON-safe 的 IR。retikz 只能借鉴 authoring 手感，JSX children 必须落回正式 ChartSpec。
 
-### 2.4 为什么不再比较 Vega / G2 / VChart
+### 2.4 Flint Chart Gallery：传统 family 与跨库名称对照
+
+[Flint Chart Gallery](https://microsoft.github.io/flint-chart/#/gallery/vegalite) 为 Vega-Lite、ECharts、Chart.js、Plotly 和 Excel 提供并列 gallery，并用同一组传统 family 组织各后端的常见图表名称：
+
+1. Bar & Column
+2. Line & Area
+3. Scatter & Points
+4. Distributions
+5. Circular & Radial
+6. Tables & Multi-Dimensional
+7. Hierarchies & Flows
+8. Maps
+
+主要价值：
+
+- 同一名称在多个后端重复出现时，可以证明它已形成稳定的用户认知，而不只是某个库的私有术语
+- family 保持传统图表分类，用户无需先理解 Mark、Transform、Coordinate 或 Layout
+- 同一个 family 可以容纳不同底层配方，例如 Waterfall 仍归 Bar & Column，Regression 仍归 Scatter & Points
+- gallery 名称与底层实现解耦，允许 Retikz 把某些条目实现为 Canonical Type，另一些实现为 Chart Pattern
+- Excel 的原生图表对照补充了 Web 图表库之外的业务软件认知
+
+对 retikz 的限制：Flint 的 gallery 是经过整理的展示目录，不是各后端的完整能力矩阵；它同时混合基础类型、常用变体和特定后端能力，不能把每一行直接复制为 `ChartSpec.type`。Retikz 只借鉴其 family、名称与跨库对照，不复制 Flint 的 assembler 或后端抽象。
+
+### 2.5 为什么仍不比较 Vega / G2 / VChart 的纵向能力
 
 Vega / Vega-Lite、Observable Plot、AntV G2 与 VGrammar / VChart 在 [`Plot GoG 纵向能力对比`](./plot-compare-analysis.md) 中作为 grammar cohort 研究。Chart 文档不再重复评价它们的 Mark / Transform / Scale 或 compiler；这里仅研究 Highcharts、ECharts、Recharts 代表的 type-first 用户表面。
 
+Flint 的 Vega-Lite gallery 是这里的特例：研究对象是它整理出的 type 名称、传统 family 和多后端对照，不是 Vega-Lite 的 GoG 能力。
+
 ## 3. 横向图表覆盖
 
-下表比较用户能否通过直接入口发现和表达常见图表家族。它不统计底层 Mark 数量，也不冻结 retikz 的首批 Canonical Type。
+下表比较用户能否通过直接入口发现和表达常见图表家族。它不统计底层 Mark 数量；retikz 首批 Canonical Type 由 roadmap 独立冻结。
+
+Flint 对 v0.1 最直接的启发是先选择三个传统 family，同时让它们分别覆盖 Plot 的三个坐标系无关维度 Mark：
+
+| v0.1 family      | Flint 跨库常见名称                                                      | Retikz 技术主干 | v0.1 结论                                                                                  |
+| ---------------- | ----------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------ |
+| Scatter & Points | scatter、connected scatter、bubble、regression、ranged dot、strip       | Point 为主      | 保留传统 family；不同 type 可隐式组合 Path、Reference 或内建 Transform                     |
+| Line & Area      | line、area、range area、sparkline、slope、streamgraph、bump             | Path 为主       | line / area / range-area 进入 type；只改变 curve、guide、stack offset 的名称优先做 Pattern |
+| Bar & Column     | bar、stacked / grouped bar、waterfall、Gantt、bullet、pyramid、lollipop | Interval 为主   | bar / waterfall / Gantt / bullet 进入 type；堆叠、分组、方向等做 Pattern；lollipop 暂缓    |
+
+三个 family 是用户目录，不是互斥的底层 primitive 白名单。Coordinate 与 family 正交：Point、Path、Interval 可以投影到 Cartesian、Polar 或其它已注册 Coordinate，不因为切换坐标系建立新的技术 family。
 
 | 图表家族                                           | Highcharts                   | ECharts                                  | Recharts                            | retikz Chart 目标                                                                   |
 | -------------------------------------------------- | ---------------------------- | ---------------------------------------- | ----------------------------------- | ----------------------------------------------------------------------------------- |
@@ -187,18 +222,11 @@ Chart type + data roles
 
 ## 6. 文档与发现路径
 
-参考 [Financial Times Visual Vocabulary](https://github.com/Financial-Times/chart-doctor/tree/main/visual-vocabulary)，Chart 文档应按用户意图而不是底层 primitive 作为主导航：
+Chart 文档使用 Flint 一类传统图表 family 作为主导航。用户通常先知道“柱状图、折线图或散点图”这类名称，再逐步理解数据角色与配置；不要求用户先选择分析目的或学习 GoG primitive。
 
-1. 比较与量级
-2. 趋势与变化
-3. 偏差与累计
-4. 分布
-5. 变量关系
-6. 部分与整体
-7. 不确定性
-8. 流动、层级、空间随底层能力加入
+用户意图仍作为辅助标签和交叉索引，可参考 [Financial Times Visual Vocabulary](https://github.com/Financial-Times/chart-doctor/tree/main/visual-vocabulary) 标记比较、趋势、偏差、分布、关系、部分与整体、不确定性等用途。同一个 type 可以拥有多个意图标签，但只进入一个传统 family。
 
-Plot recipe family 只作为技术标签和交叉索引，例如 point、path、interval、relation、reference、composite / custom。
+Plot recipe signature 是内部技术元数据和工程索引，例如 point、path、interval、relation、reference、transform、coordinate 与 composition；它用于说明实现依赖和版本 gate，不作为用户一级目录。
 
 每个 Canonical Type 只维护一份契约页，至少说明：
 
@@ -219,7 +247,8 @@ Plot recipe family 只作为技术标签和交叉索引，例如 point、path、
 - 学 Highcharts：type 入口仍然拥有完整、成熟的配置表面
 - 学 ECharts：用 gallery、Pattern 与组件配置建立横向发现性，不让用户先学习 GoG
 - 学 Recharts：Chart 容器允许渐进追加子成员，保持探索与组合手感
-- 学三者的共同结果：单个 Chart 可以是完整可导出的展示单元，但静态内容、Plot guide 与宿主 runtime 必须分层
+- 学 Flint：用传统 family 统一整理多个后端的市场名称，再由 Retikz 判断 Canonical Type、Pattern 或延期
+- 学各项目的共同结果：单个 Chart 可以是完整可导出的展示单元，但静态内容、Plot guide 与宿主 runtime 必须分层
 
 ### 7.2 不直接复制的部分
 
@@ -244,10 +273,11 @@ Chart 只评价“用户如何选图、配置和学习”。当某个 type 需�
 - 若既有 Plot contract 能表达，Chart 可以横向提供或消费具体 definition
 - 若需要新的能力轴、contract、registry 或 pipeline，缺口回到 Plot / Data / Core
 
-因此，Chart 文档不再给 Vega、G2 等 GoG 底座评分；Plot 文档也不再用 Highcharts、ECharts、Recharts 衡量 type 数量或上手体验。
+因此，Chart 文档不再给 Vega、G2 等 GoG 底座评分；Flint Vega-Lite gallery 只作为 type taxonomy 与跨后端名称索引。Plot 文档也不再用 Highcharts、ECharts、Recharts 衡量 type 数量或上手体验。
 
 ## 9. 更新记录
 
 - **2026-07-30 初稿**：混合比较 GoG 与 type-first 项目，用于确定 ChartSpec、Canonical Type / Pattern 和 Plot extension 关系
 - **2026-07-30 重构**：移除 Vega-Lite、Observable Plot、AntV G2、VChart 的重复分析；聚焦 Highcharts、ECharts、Recharts 的横向覆盖、完整配置与学习成本
 - **2026-07-31 单图展示补充**：比较 title、caption、source、frame、accessibility 与 host chrome，确认 Chart presentation / Plot / Standard / adapter 的分层
+- **2026-07-31 Flint taxonomy 补充**：纳入 Vega-Lite / ECharts / Chart.js / Plotly / Excel gallery 对照，确认传统 family 为主导航、技术 signature 与用户意图为辅助索引
