@@ -1,6 +1,7 @@
 import type {
   CompositeCompileChild,
   IRChild,
+  IRJsonObject,
   LayoutAxisProposal,
   LayoutChildProbe,
   LayoutChildResult,
@@ -9,10 +10,18 @@ import type {
 import type { ExternalDatasets } from '@retikz/data';
 import type { BoundsRect } from '@retikz/math';
 
-import { LayoutAxisProposalKind, LayoutChildProbeKind, LayoutIntrinsicMode, NaturalLayoutProposal } from '@retikz/core';
+import {
+  ChildSchema,
+  LayoutAxisProposalKind,
+  LayoutChildProbeKind,
+  LayoutIntrinsicMode,
+  NaturalLayoutProposal,
+} from '@retikz/core';
+import { ScalarValueSchema } from '@retikz/data';
+import { z } from 'zod';
 
 import type { PresentedTableModel, SemanticTableCell, TableLayoutManifest } from '../../contract';
-import type { IRTableBorder, IRTableCellBorders, IRTableSpec } from '../../schemas';
+import type { IRTableBorder, IRTableCellBorders, IRTableLayout, IRTableSpec } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
 import type { LowerTablesOptions } from '../types';
 import type { ResolvedTableBorderCandidate, TableBorderSide } from './border';
@@ -24,11 +33,17 @@ import type {
   TableTrackLayout,
 } from './types';
 
-import { TableBorderKind, TableBorderMode, TableRowKind, TableSpecSchema } from '../../schemas';
+import {
+  TableBorderKind,
+  TableBorderMode,
+  TableCellAppearanceSchema,
+  TableCellPayloadKind,
+  TableRowKind,
+  TableSpecSchema,
+} from '../../schemas';
 import { deepFreeze } from '../../shared';
 import { formatTable } from '../formatter';
-import { emitTableBoundsSentinel } from '../lower';
-import { emitTableBorderScope } from '../lower';
+import { emitTableBorderScope, emitTableBoundsSentinel, emitTableCellBackground } from '../lower';
 import { buildTableLayoutManifest } from '../manifest';
 import { normalizeTableStructure } from '../normalize';
 import { presentTable } from '../presentation';
@@ -47,6 +62,18 @@ export type ResolvedTableTransaction = Readonly<{
   manifest: TableLayoutManifest;
 }>;
 
+/** 已完成 presentation 的 Table 后半布局事务输入 */
+export type PresentedTableTransactionInput = Readonly<{
+  /** 可选 Table root identity */
+  tableId?: string;
+  /** 透传到 Table root Scope 的 JSON metadata */
+  meta?: IRJsonObject;
+  /** Table 轨道、间距与默认 border 配置 */
+  layout?: IRTableLayout;
+  /** 与 canonical semantic model 严格对齐的呈现结果 */
+  presented: PresentedTableModel;
+}>;
+
 type TableCellProbe = Readonly<{
   semantic: SemanticTableCell;
   content: IRChild;
@@ -55,6 +82,26 @@ type TableCellProbe = Readonly<{
 }>;
 
 type TableTransactionStage = 'intrinsic Cell layout' | 'constrained Cell layout' | 'Border Scope layout';
+
+/** Presented model 进入布局事务前的闭合 Cell 运行时合同 */
+const PresentedTableCellSchema = z.discriminatedUnion('kind', [
+  z.strictObject({
+    kind: z.literal(TableCellPayloadKind.Value),
+    cellId: z.string().min(1),
+    rawValue: ScalarValueSchema,
+    value: ScalarValueSchema,
+    formatterName: z.string().min(1),
+    presentationName: z.string().min(1),
+    appearance: TableCellAppearanceSchema,
+    content: ChildSchema,
+  }),
+  z.strictObject({
+    kind: z.literal(TableCellPayloadKind.Content),
+    cellId: z.string().min(1),
+    appearance: TableCellAppearanceSchema,
+    content: ChildSchema,
+  }),
+]);
 
 /** 标记 Table transaction 中失败的精确阶段与可用实体身份 */
 export class TableTransactionStageError extends Error {
@@ -116,6 +163,9 @@ const unionBounds = (left: BoundsRect | undefined, right: BoundsRect): BoundsRec
   const maxY = Math.max(left.y + left.height, right.y + right.height);
   return { x, y, width: maxX - x, height: maxY - y };
 };
+
+/** 判断 bounds 是否具有二维可见面积 */
+const hasArea = (bounds: BoundsRect): boolean => bounds.width > 0 && bounds.height > 0;
 
 /** 根据 canonical ids、sizes 与 gap 构造同序轨道几何 */
 const trackLayoutsOf = (
@@ -187,8 +237,18 @@ const assertPresentedAlignment = (presented: PresentedTableModel): void => {
     throw new Error('table: transaction presentation Cell count differs from semantic model');
   }
   presented.semantic.cells.forEach((cell, index) => {
-    if (presented.cells[index]?.cellId !== cell.id) {
+    const presentedCell = presented.cells[index];
+    const guarded = PresentedTableCellSchema.safeParse(presentedCell);
+    if (!guarded.success) {
+      const issue = guarded.error.issues[0];
+      const path = issue.path.length === 0 ? '' : ` at ${issue.path.join('.')}`;
+      throw new Error(`table: transaction presentation Cell ${index} shape differs${path}: ${issue.message}`);
+    }
+    if (presentedCell.cellId !== cell.id) {
       throw new Error(`table: transaction presentation Cell ${index} identity differs`);
+    }
+    if (presentedCell.kind !== cell.payload.kind) {
+      throw new Error(`table: transaction presentation Cell ${index} kind differs`);
     }
   });
 };
@@ -260,30 +320,22 @@ const cellOutputOf = (
   );
 };
 
-/** 执行一次 Table layout-aware compile transaction */
-export const resolveTableTransaction = (
-  spec: IRTableSpec,
-  datasets: ExternalDatasets,
-  options: LowerTablesOptions,
+/** 从 Presented model 执行完整 Table layout-aware 后半事务 */
+export const resolvePresentedTableTransaction = (
+  input: PresentedTableTransactionInput,
   context: LayoutCompositeCompileContext,
 ): ResolvedTableTransaction => {
-  const parsed = TableSpecSchema.parse(spec);
-  const semantic = normalizeTableStructure(parsed.structure, {
-    data: parsed.data,
-    datasets,
-    structureDefinitions: options.structureDefinitions,
-  });
-  const formatted = formatTable(semantic, options.formatterDefinitions);
-  const presented = presentTable(formatted, options.presentationDefinitions);
+  const { tableId, meta, presented } = input;
   assertPresentedAlignment(presented);
-  const resolved = resolveTableLayoutSpec(parsed.layout);
+  const semantic = presented.semantic;
+  const resolved = resolveTableLayoutSpec(input.layout);
 
   const intrinsic = presented.cells.map(cell =>
     resultOfTableProbe(
       context,
       context.layoutChild(cell.content, NaturalLayoutProposal),
       'intrinsic Cell layout',
-      parsed.id,
+      tableId,
       cell.cellId,
     ),
   );
@@ -325,7 +377,7 @@ export const resolveTableTransaction = (
             y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
           }),
           'constrained Cell layout',
-          parsed.id,
+          tableId,
           cell.id,
         )
       : intrinsic[index];
@@ -350,7 +402,8 @@ export const resolveTableTransaction = (
     resolved.rowGap,
   );
 
-  const placements = probes.map(probe => {
+  const backgroundOutputs: Array<IRChild> = [];
+  const placements = probes.map((probe, index) => {
     const box = computeTableCellBox({
       rows,
       columns,
@@ -371,6 +424,14 @@ export const resolveTableTransaction = (
       fit: probe.semantic.layout.fit,
       overflow: probe.semantic.layout.overflow,
     });
+    const background = emitTableCellBackground(presented.cells[index].appearance.background, box);
+    if (background !== undefined) backgroundOutputs.push(background);
+    const visualOverflowBounds =
+      background === undefined
+        ? placement.visualOverflowBounds
+        : hasArea(placement.visualOverflowBounds)
+          ? unionBounds(placement.visualOverflowBounds, box)
+          : { ...box };
     return {
       cellId: probe.semantic.id,
       box,
@@ -378,23 +439,23 @@ export const resolveTableTransaction = (
       sourceAllocationBounds: { ...probe.final.allocationBounds },
       sourceVisualOverflowBounds: { ...probe.final.visualBounds },
       contentAllocationBounds: placement.contentAllocationBounds,
-      visualOverflowBounds: placement.visualOverflowBounds,
+      visualOverflowBounds,
     } satisfies TableCellLayout;
   });
 
   const graph = buildTableBorderGraph({
     rows,
     columns,
-    cells: semantic.cells.map(cell => ({
+    cells: semantic.cells.map((cell, index) => ({
       cellId: cell.id,
       rowIndex: cell.rowIndex,
       columnIndex: cell.columnIndex,
       rowSpan: cell.span.rows,
       columnSpan: cell.span.columns,
-      ...(cell.layout.borders === undefined
+      ...(presented.cells[index].appearance.borders === undefined
         ? {}
         : {
-            borders: resolveCellBorders(cell.layout.borders),
+            borders: resolveCellBorders(presented.cells[index].appearance.borders),
           }),
     })),
     mode: resolved.borders?.mode ?? TableBorderMode.Collapse,
@@ -413,9 +474,9 @@ export const resolveTableTransaction = (
       ? undefined
       : resultOfTableProbe(
           context,
-          context.layoutChild(emitTableBorderScope(graph.edges, parsed.id), NaturalLayoutProposal),
+          context.layoutChild(emitTableBorderScope(graph.edges, tableId), NaturalLayoutProposal),
           'Border Scope layout',
-          parsed.id,
+          tableId,
           undefined,
         );
 
@@ -424,7 +485,7 @@ export const resolveTableTransaction = (
   const height = rowSizes.reduce((total, size) => total + size, 0) + Math.max(0, rows.length - 1) * resolved.rowGap;
   let visual: BoundsRect | undefined;
   placements.forEach(cell => {
-    if (cell.visualOverflowBounds.width > 0 && cell.visualOverflowBounds.height > 0) {
+    if (hasArea(cell.visualOverflowBounds)) {
       visual = unionBounds(visual, cell.visualOverflowBounds);
     }
   });
@@ -442,17 +503,44 @@ export const resolveTableTransaction = (
   const root = context.scope(
     {
       localNamespace: true,
-      ...(parsed.id === undefined ? {} : { id: parsed.id }),
-      ...(parsed.meta === undefined ? {} : { meta: parsed.meta }),
+      ...(tableId === undefined ? {} : { id: tableId }),
+      ...(meta === undefined ? {} : { meta }),
     },
     [
       emitTableBoundsSentinel(layout),
+      ...backgroundOutputs,
       ...cellOutputs,
       ...(borderResult === undefined ? [] : [context.replay(borderResult)]),
     ],
   );
   return deepFreeze({
     children: [root],
-    manifest: buildTableLayoutManifest(parsed.id, semantic, layout, graph.edges),
+    manifest: buildTableLayoutManifest(tableId, semantic, layout, graph.edges),
   });
+};
+
+/** 解析 Table spec 与 definitions，并执行一次 layout-aware compile transaction */
+export const resolveTableTransaction = (
+  spec: IRTableSpec,
+  datasets: ExternalDatasets,
+  options: LowerTablesOptions,
+  context: LayoutCompositeCompileContext,
+): ResolvedTableTransaction => {
+  const parsed = TableSpecSchema.parse(spec);
+  const semantic = normalizeTableStructure(parsed.structure, {
+    data: parsed.data,
+    datasets,
+    structureDefinitions: options.structureDefinitions,
+  });
+  const formatted = formatTable(semantic, options.formatterDefinitions);
+  const presented = presentTable(formatted, { presentationDefinitions: options.presentationDefinitions });
+  return resolvePresentedTableTransaction(
+    {
+      ...(parsed.id === undefined ? {} : { tableId: parsed.id }),
+      ...(parsed.meta === undefined ? {} : { meta: parsed.meta }),
+      ...(parsed.layout === undefined ? {} : { layout: parsed.layout }),
+      presented,
+    },
+    context,
+  );
 };

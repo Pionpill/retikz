@@ -82,6 +82,9 @@ describe('@retikz/table public API', () => {
     expect(Table).toHaveProperty('TableLayoutManifestSchema');
     expect(Table).toHaveProperty('ResolvedTableBorderLineSchema');
     expect(Table).toHaveProperty('TableBorderContributionSchema');
+    expect(Table).toHaveProperty('TableCellBackgroundSchema');
+    expect(Table).toHaveProperty('TableCellContentStyleSchema');
+    expect(Table).toHaveProperty('TableCellAppearanceSchema');
 
     expect(Table).not.toHaveProperty('emitTable');
     expect(Table).not.toHaveProperty('layoutTable');

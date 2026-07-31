@@ -334,7 +334,7 @@ describe('normalizeTableStructure', () => {
     });
 
     const presented = presentTable(formatTable(semantic));
-    const customPresented = presentTable(formatTable(semanticWithCustom), [custom]);
+    const customPresented = presentTable(formatTable(semanticWithCustom), { presentationDefinitions: [custom] });
 
     expect(presented.semantic).not.toBe(semantic);
     expect(presented.semantic).toEqual(semantic);

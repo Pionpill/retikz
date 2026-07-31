@@ -246,11 +246,15 @@ describe('formatted Table model', () => {
     ]);
   });
 
-  it('passes the formatted scalar into the existing presentation ABI', () => {
+  it('passes the raw and formatted scalars into the presentation ABI', () => {
     const inspect = defineCellPresentation({
       name: 'inspect',
       optionsSchema: z.strictObject({}),
-      present: ({ value, cellId }) => ({ type: 'node', position: [0, 0], text: `${String(value)}@${cellId}` }),
+      present: ({ rawValue, value, context }) => ({
+        type: 'node',
+        position: [0, 0],
+        text: `${String(rawValue)}>${String(value)}@${context.cellId}`,
+      }),
     });
     const base = modelOf(12.5, { name: 'number', options: { specifier: '.2f' } });
     const semantic: SemanticTableModel = {
@@ -262,9 +266,9 @@ describe('formatted Table model', () => {
         },
       ],
     };
-    const presented = presentTable(formatTable(semantic), [inspect]);
+    const presented = presentTable(formatTable(semantic), { presentationDefinitions: [inspect] });
 
-    expect(presented.cells[0].content).toMatchObject({ text: '12.50@cell.0' });
+    expect(presented.cells[0].content).toMatchObject({ text: '12.5>12.50@cell.0' });
   });
 
   it('preserves content Cells without formatter dispatch and freezes detached output', () => {

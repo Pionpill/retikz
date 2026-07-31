@@ -1,5 +1,7 @@
+import type { CellPresentationInput } from '@retikz/table';
+
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
-import { defineCellFormatter } from '@retikz/table';
+import { defineCellFormatter, defineCellPresentation } from '@retikz/table';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -55,6 +57,59 @@ describe('renderTable', () => {
     });
 
     expect(renderTable(spec, { lowerOptions: { formatterDefinitions: [prefix] } })).toContain('#7');
+  });
+
+  it('passes the new Presentation ABI and semantic border appearance through SSR', () => {
+    const observed: Array<CellPresentationInput> = [];
+    const inspect = defineCellPresentation({
+      name: 'inspect-appearance',
+      optionsSchema: z.strictObject({}),
+      present: input => {
+        observed.push(input);
+        return {
+          type: 'node',
+          position: [0, 0],
+          text: `${input.context.cellId}:${String(input.rawValue)}>${String(input.value)}`,
+        };
+      },
+    });
+    const spec = manualTable({
+      rows: [
+        [
+          { id: 'plain', value: 1, presentation: { name: 'inspect-appearance' } },
+          {
+            id: 'bordered',
+            value: 2,
+            presentation: { name: 'inspect-appearance' },
+            layout: { borders: { bottom: { kind: 'line', stroke: '#2563eb', width: 2 } } },
+          },
+        ],
+      ],
+    });
+    const result = renderTable(spec, {
+      artifacts: true,
+      lowerOptions: { presentationDefinitions: [inspect] },
+    });
+
+    expect(result.svg).toContain('plain:1&gt;1');
+    expect(result.svg).toContain('bordered:2&gt;2');
+    expect(observed).toMatchObject([
+      {
+        rawValue: 1,
+        value: 1,
+        context: { cellId: 'plain', rowIndex: 0, columnIndex: 0 },
+        appearance: {},
+      },
+      {
+        rawValue: 2,
+        value: 2,
+        context: { cellId: 'bordered', rowIndex: 0, columnIndex: 1 },
+        appearance: { borders: { bottom: { kind: 'line', stroke: '#2563eb', width: 2 } } },
+      },
+    ]);
+    expect(result.manifest.borders).toContainEqual(
+      expect.objectContaining({ style: expect.objectContaining({ stroke: '#2563eb', width: 2 }) }),
+    );
   });
 
   it('accepts Core options under compile and rejects the removed top-level composites field', () => {

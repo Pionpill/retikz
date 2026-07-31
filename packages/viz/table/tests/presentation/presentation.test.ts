@@ -3,8 +3,20 @@ import type { IRChild, IRJsonObject } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
+import type { AnyCellPresentationDefinition, IRManualTableCell } from '../../src';
+
 import { defineCellPresentation, resolveCellPresentationRegistry } from '../../src';
-import { presentCellPayload } from '../../src/pipeline/presentation';
+import { formatTable } from '../../src/pipeline/formatter';
+import { normalizeTableStructure } from '../../src/pipeline/normalize';
+import { presentTable } from '../../src/pipeline/presentation';
+
+const presentedCellOf = (
+  cell: IRManualTableCell,
+  presentationDefinitions?: ReadonlyArray<AnyCellPresentationDefinition>,
+) => {
+  const formatted = formatTable(normalizeTableStructure({ kind: 'manual', rows: [[cell]] }));
+  return presentTable(formatted, { presentationDefinitions }).cells[0];
+};
 
 describe('Cell presentation registry', () => {
   it.each([
@@ -14,9 +26,7 @@ describe('Cell presentation registry', () => {
     [false, 'false'],
     [null, ''],
   ] as const)('presents scalar %j through the built-in text definition', (value, text) => {
-    const registry = resolveCellPresentationRegistry();
-
-    expect(presentCellPayload({ kind: 'value', value }, 'body:0:0', registry)).toEqual({
+    expect(presentedCellOf({ value }).content).toEqual({
       type: 'node',
       position: [0, 0],
       text,
@@ -26,25 +36,37 @@ describe('Cell presentation registry', () => {
     });
   });
 
-  it('dispatches custom definitions through the same registry', () => {
+  it('dispatches custom definitions with raw, formatted, context, and appearance input', () => {
     const badge = defineCellPresentation({
       name: 'badge',
       optionsSchema: z.strictObject({ prefix: z.string() }),
-      present: ({ value, cellId }, options) => ({
+      present: ({ rawValue, value, context, appearance }, options) => ({
         type: 'node',
         position: [0, 0],
-        text: `${options.prefix}${String(value)}@${cellId}`,
+        text: `${options.prefix}${String(rawValue)}>${String(value)}@${context.cellId}:${String(
+          appearance.background?.fill,
+        )}`,
       }),
     });
-    const registry = resolveCellPresentationRegistry([badge]);
+    const formatted = formatTable(
+      normalizeTableStructure({
+        kind: 'manual',
+        rows: [[{ value: 7, presentation: { name: 'badge', options: { prefix: '#' } } }]],
+      }),
+    );
+    const presented = presentTable(formatted, {
+      cells: [
+        {
+          kind: 'value',
+          cellId: 'cell.r0.c0',
+          presentation: { name: 'badge', options: { prefix: '#' } },
+          appearance: { background: { fill: '#fff4e5' } },
+        },
+      ],
+      presentationDefinitions: [badge],
+    });
 
-    expect(
-      presentCellPayload(
-        { kind: 'value', value: 7, presentation: { name: 'badge', options: { prefix: '#' } } },
-        'body:1:2',
-        registry,
-      ),
-    ).toMatchObject({ text: '#7@body:1:2' });
+    expect(presented.cells[0].content).toMatchObject({ text: '#7>7@cell.r0.c0:#fff4e5' });
   });
 
   it('validates omitted options as an empty object', () => {
@@ -58,13 +80,9 @@ describe('Cell presentation registry', () => {
       }),
     });
 
-    expect(
-      presentCellPayload(
-        { kind: 'value', value: 'ok', presentation: { name: 'empty' } },
-        'body:0:0',
-        resolveCellPresentationRegistry([empty]),
-      ),
-    ).toMatchObject({ text: 'ok:0' });
+    expect(presentedCellOf({ value: 'ok', presentation: { name: 'empty' } }, [empty]).content).toMatchObject({
+      text: 'ok:0',
+    });
   });
 
   it('rejects duplicate, built-in-conflicting, empty, and missing definitions', () => {
@@ -80,13 +98,9 @@ describe('Cell presentation registry', () => {
     expect(() => resolveCellPresentationRegistry([definition, duplicate])).toThrow(/duplicate.*badge/i);
     expect(() => resolveCellPresentationRegistry([builtinConflict])).toThrow(/duplicate.*text/i);
     expect(() => resolveCellPresentationRegistry([emptyName])).toThrow(/non-empty/i);
-    expect(() =>
-      presentCellPayload(
-        { kind: 'value', value: 1, presentation: { name: 'missing' } },
-        'body:2:3',
-        resolveCellPresentationRegistry(),
-      ),
-    ).toThrow(/table: presentation "missing" for cell "body:2:3"/);
+    expect(() => presentedCellOf({ value: 1, presentation: { name: 'missing' } })).toThrow(
+      /table: presentation "missing" for cell "cell\.r0\.c0"/,
+    );
   });
 
   it('guards custom options and provider output at runtime', () => {
@@ -106,53 +120,40 @@ describe('Cell presentation registry', () => {
       present: () => ({ namespace: 'custom', type: 'child', render: () => 'x' }),
     });
 
-    expect(() =>
-      presentCellPayload(
-        { kind: 'value', value: 1, presentation: { name: 'non-json-options' } },
-        'body:0:0',
-        resolveCellPresentationRegistry([nonJsonOptions]),
-      ),
-    ).toThrow(/table: presentation "non-json-options" for cell "body:0:0"/);
-    expect(() =>
-      presentCellPayload(
-        { kind: 'value', value: 1, presentation: { name: 'invalid-output' } },
-        'body:0:1',
-        resolveCellPresentationRegistry([invalidOutput]),
-      ),
-    ).toThrow(/table: presentation "invalid-output" for cell "body:0:1"/);
-    expect(() =>
-      presentCellPayload(
-        { kind: 'value', value: 1, presentation: { name: 'non-json-output' } },
-        'body:0:2',
-        resolveCellPresentationRegistry([nonJsonOutput]),
-      ),
-    ).toThrow(/table: presentation "non-json-output" for cell "body:0:2"/);
+    expect(() => presentedCellOf({ value: 1, presentation: { name: 'non-json-options' } }, [nonJsonOptions])).toThrow(
+      /table: presentation "non-json-options" for cell "cell\.r0\.c0"/,
+    );
+    expect(() => presentedCellOf({ value: 1, presentation: { name: 'invalid-output' } }, [invalidOutput])).toThrow(
+      /table: presentation "invalid-output" for cell "cell\.r0\.c0"/,
+    );
+    expect(() => presentedCellOf({ value: 1, presentation: { name: 'non-json-output' } }, [nonJsonOutput])).toThrow(
+      /table: presentation "non-json-output" for cell "cell\.r0\.c0"/,
+    );
   });
 
   it('returns detached recursively frozen direct and generated content', () => {
     const direct: IRChild = { type: 'scope', children: [{ type: 'node', position: [0, 0], text: 'direct' }] };
-    const registry = resolveCellPresentationRegistry();
-    const directContent = presentCellPayload({ kind: 'content', content: direct }, 'body:0:0', registry);
-    const generatedContent = presentCellPayload({ kind: 'value', value: 'generated' }, 'body:0:1', registry);
+    const nestedOutput = {
+      type: 'scope' as const,
+      children: [{ type: 'node' as const, position: [0, 0] as [number, number], text: 'generated' }],
+    };
     const nested = defineCellPresentation({
       name: 'nested',
       optionsSchema: z.strictObject({}),
-      present: () => ({
-        type: 'scope',
-        children: [{ type: 'node', position: [0, 0], text: 'generated' }],
-      }),
+      present: () => nestedOutput,
     });
-    const nestedContent = presentCellPayload(
-      { kind: 'value', value: 'generated', presentation: { name: 'nested' } },
-      'body:0:2',
-      resolveCellPresentationRegistry([nested]),
-    );
+    const directContent = presentedCellOf({ content: direct }).content;
+    const generatedContent = presentedCellOf({ value: 'generated' }).content;
+    const nestedContent = presentedCellOf({ value: 'generated', presentation: { name: 'nested' } }, [nested]).content;
 
     expect(directContent).not.toBe(direct);
+    expect(nestedContent).not.toBe(nestedOutput);
     expect(Object.isFrozen(directContent)).toBe(true);
     expect(Object.isFrozen((directContent as { children: Array<IRChild> }).children)).toBe(true);
     expect(Object.isFrozen(generatedContent)).toBe(true);
     expect(Object.isFrozen((nestedContent as { children: Array<IRChild> }).children)).toBe(true);
     expect(Object.isFrozen((nestedContent as { children: Array<IRChild> }).children[0])).toBe(true);
+    expect(Object.isFrozen(direct)).toBe(false);
+    expect(Object.isFrozen(nestedOutput)).toBe(false);
   });
 });

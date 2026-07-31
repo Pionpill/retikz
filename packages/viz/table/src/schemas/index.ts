@@ -1,3 +1,4 @@
+export * from './appearance';
 export * from './border';
 export * from './cell';
 export * from './formatter';

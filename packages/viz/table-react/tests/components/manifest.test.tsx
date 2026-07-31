@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import type { IRChild } from '@retikz/core';
-import type { TableLayoutManifest } from '@retikz/table';
+import type { CellPresentationInput, TableLayoutManifest } from '@retikz/table';
 
 import { createManualTableSpec, defineCellPresentation } from '@retikz/table';
 import { createRoot } from 'react-dom/client';
@@ -78,7 +78,11 @@ describe('Table React manifest observation', () => {
 
   it('does not recompile or renotify when only the observer identity changes', async () => {
     const content: IRChild = { type: 'node', position: [0, 0], text: 'stable' };
-    const present = vi.fn(() => content);
+    const observed: Array<CellPresentationInput> = [];
+    const present = vi.fn((input: CellPresentationInput) => {
+      observed.push(input);
+      return content;
+    });
     const presentation = defineCellPresentation({
       name: 'observer-stability',
       optionsSchema: z.strictObject({}),
@@ -94,7 +98,17 @@ describe('Table React manifest observation', () => {
       await act(() => {
         root.render(
           <ManualTable
-            rows={[[{ value: 'stable', presentation: { name: 'observer-stability' } }]]}
+            rows={[
+              [
+                { id: 'plain', value: 'plain', presentation: { name: 'observer-stability' } },
+                {
+                  id: 'bordered',
+                  value: 'bordered',
+                  presentation: { name: 'observer-stability' },
+                  layout: { borders: { bottom: { kind: 'line', width: 2 } } },
+                },
+              ],
+            ]}
             presentationDefinitions={presentationDefinitions}
             onManifest={onManifest}
           />,
@@ -103,10 +117,26 @@ describe('Table React manifest observation', () => {
     };
 
     await renderTable(firstObserver);
+    expect(observed.slice(0, 2)).toMatchObject([
+      {
+        rawValue: 'plain',
+        value: 'plain',
+        context: { cellId: 'plain', rowIndex: 0, columnIndex: 0 },
+        appearance: {},
+      },
+      {
+        rawValue: 'bordered',
+        value: 'bordered',
+        context: { cellId: 'bordered', rowIndex: 0, columnIndex: 1 },
+        appearance: { borders: { bottom: { kind: 'line', width: 2 } } },
+      },
+    ]);
+    const observedCount = observed.length;
     present.mockClear();
     await renderTable(secondObserver);
 
     expect(present).not.toHaveBeenCalled();
+    expect(observed).toHaveLength(observedCount);
     expect(firstObserver).toHaveBeenCalledTimes(1);
     expect(secondObserver).not.toHaveBeenCalled();
     await act(() => root.unmount());

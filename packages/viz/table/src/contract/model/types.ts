@@ -3,6 +3,7 @@ import type { IRDataScalarValue } from '@retikz/data';
 import type { BoundsInsets } from '@retikz/math';
 
 import type {
+  IRTableCellAppearance,
   IRTableCellBorders,
   IRTableCellPayload,
   TableCellFitValue,
@@ -151,17 +152,40 @@ export type FormattedTableModel = Readonly<{
   cells: ReadonlyArray<FormattedTableCell>;
 }>;
 
-/** 已解析为 Core 内容的 Cell */
-export type PresentedTableCell = Readonly<{
-  /** 对应 semantic Cell 的稳定 id */
-  cellId: string;
-  /** detached、递归冻结的 Core 内容 */
-  content: IRChild;
-}>;
+/** 已解析为 Core 内容并保留 provider trace 的 Cell */
+export type PresentedTableCell =
+  | Readonly<{
+      /** value Cell 判别字段 */
+      kind: 'value';
+      /** 对应 semantic Cell 的稳定 id */
+      cellId: string;
+      /** formatter 前的 canonical scalar */
+      rawValue: IRDataScalarValue;
+      /** formatter 产生的展示 scalar */
+      value: IRDataScalarValue;
+      /** 实际执行的 formatter 名称 */
+      formatterName: string;
+      /** 实际执行的 presentation 名称 */
+      presentationName: string;
+      /** detached、递归冻结的最终视觉输入 */
+      appearance: DeepReadonly<IRTableCellAppearance>;
+      /** detached、递归冻结的 Core 内容 */
+      content: IRChild;
+    }>
+  | Readonly<{
+      /** direct content Cell 判别字段 */
+      kind: 'content';
+      /** 对应 semantic Cell 的稳定 id */
+      cellId: string;
+      /** detached、递归冻结的最终视觉输入 */
+      appearance: DeepReadonly<IRTableCellAppearance>;
+      /** detached、递归冻结的 Core 内容 */
+      content: IRChild;
+    }>;
 
 /** 保留 canonical identity 的 Table presentation 视图 */
 export type PresentedTableModel = Readonly<{
-  /** 同一个递归冻结的 canonical model 引用 */
+  /** formatter snapshot 中同一个递归冻结的 canonical model 引用 */
   semantic: SemanticTableModel;
   /** 与 semantic Cells 等长、同序的呈现内容 */
   cells: ReadonlyArray<PresentedTableCell>;
