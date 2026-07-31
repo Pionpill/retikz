@@ -90,20 +90,3 @@ export const wrapText = (text: string, context: WrapTextContext): Array<string> 
   if (cur.trimEnd() !== '') lines.push(cur.trimEnd());
   return lines.length > 0 ? lines : [''];
 };
-
-/** dashed 预设：4 px 实线 + 2 px 间隙循环 */
-const DASHED_PATTERN: Array<number> = [4, 2];
-/** dotted 预设：1 px 圆点 + 2 px 间隙 */
-const DOTTED_PATTERN: Array<number> = [1, 2];
-
-/** 虚线字段优先级：显式 dashPattern > dashed 预设 > dotted 预设 */
-export const resolveDashPattern = (
-  dashPattern: Array<number> | undefined,
-  dashed: boolean | undefined,
-  dotted: boolean | undefined,
-): Array<number> | undefined => {
-  if (dashPattern !== undefined) return dashPattern;
-  if (dashed) return DASHED_PATTERN;
-  if (dotted) return DOTTED_PATTERN;
-  return undefined;
-};

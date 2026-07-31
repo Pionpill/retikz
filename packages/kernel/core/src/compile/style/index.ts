@@ -1,4 +1,5 @@
 export * from './arrow';
+export * from './dash';
 export * from './frame';
 export * from './label';
 export * from './node';

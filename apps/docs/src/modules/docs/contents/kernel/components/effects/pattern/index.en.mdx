@@ -1,6 +1,6 @@
 ---
 title: Patterns
-description: Fill Node and closed Path geometry with built-in lines, dots, or grids, then tune spacing, width, color, and rotation per instance.
+description: Fill Node and closed Path geometry with built-in lines, dots, or grids, then tune directional styles, line cycles, spacing, color, and rotation.
 ---
 
 A pattern repeats one small tile across a primitive. It works well for distinguishing regions, marking materials, or showing state without relying on a solid color. The built-in `lines`, `dots`, and `grid` shapes need no host registration.
@@ -21,7 +21,7 @@ Pass the pattern object to `fill` on a Node or Path; a closed Path fills its int
 
 ### Built-in patterns
 
-All three built-in `shape` values share the same instance options and differ only in tile geometry:
+All three built-in `shape` values share base options such as color, size, and rotation, then consume the extension fields that apply to their geometry:
 
 <ComponentPreview files="pattern-builtins" size="sm" />
 
@@ -33,6 +33,24 @@ All three built-in `shape` values share the same instance options and differ onl
 
 `rotation` rotates the whole tile, so `lines` can become diagonal or vertical without registering another name.
 
+`dashed` and `dotted` provide common presets for `lines` and `grid`; use `dashPattern` when you need an exact rhythm. An explicit array overrides both presets, and `dashed` takes precedence over `dotted`. The `dots` shape is a field of filled circles rather than a dotted stroke, so it ignores these line-style fields.
+
+### Directional grid styles
+
+`grid` emits its horizontal and vertical lines as separate Paths. Use `horizontalStyle` and `verticalStyle` to override color, width, dash, offset, cap, or join independently. Omitted fields inherit the top-level base style:
+
+<ComponentPreview files="pattern-directional-grid" size="sm" />
+
+### Cyclic line styles
+
+`lineStyleCycle` on `lines` can express “one major line every N lines” or an arbitrary repeating style sequence. `index` is zero-based; positions without an override inherit the top-level base style:
+
+<ComponentPreview
+  files="pattern-line-cycle"
+  size="sm"
+  caption="The left emphasizes every fifth line; the right cycles through solid, dotted, and dashed lines. Both still use size: 8 between adjacent lines."
+/>
+
 ### Node and Path
 
 Patterns are shared paint specs rather than a feature owned by one primitive. The same object can fill both Node and a closed Path:
@@ -41,12 +59,12 @@ Patterns are shared paint specs rather than a feature owned by one primitive. Th
 
 ### Playground
 
-The primitive and viewBox stay fixed while you change the built-in shape, spacing, width, rotation, and colors:
+The primitive and viewBox stay fixed while you change the built-in shape, spacing, width, base line style, directional grid styles, line cycle, rotation, and colors. Direction controls appear only for `grid`, cycle controls only for `lines`, and `dots` hides all line-only controls:
 
 <ComponentPreview
   files="pattern-playground"
   size="sm"
-  caption="Switch among all three shapes, then compare how size and lineWidth affect spacing and motif weight."
+  caption="Switch among all three shapes, then compare how size, directional styles, and line cycles affect the repeated motif."
 />
 
 ## How it works
@@ -59,21 +77,29 @@ The primitive and viewBox stay fixed while you change the built-in shape, spacin
 
 During compile, `shape` resolves through the unified pattern registry and combines with the instance options to produce one resolved tile resource. The Scene contains only structured primitives; SVG and Canvas materialize that same resource as their native pattern.
 
-This also defines the option boundaries: `size` is the tile period, `lineWidth` changes line weight or dot radius, and `rotation` turns the complete pattern. None of them changes the Node or Path geometry itself.
+This also defines the option boundaries: `size` is the base size passed to a definition; for the three built-ins, it means the spacing between adjacent lines or dot centers. `lineWidth` changes line weight or dot radius, and `rotation` turns the complete pattern. A regular `lines`, `grid`, or `dots` tile has period `size`; cyclic `lines` expands the final tile to `size * period` without changing adjacent-line spacing. A custom definition can use `PatternEmitResult.tileSize` to select a different final period.
+
+Compile resolves the base style in `dashPattern > dashed > dotted` order. Direction styles and cycle overrides inherit it field by field. If an override explicitly contains any of `dashPattern`, `dashed`, or `dotted`, that override resolves the same priority independently. With no effective `dashPattern` and neither preset set to `true`, it clears the inherited dash; for example, `{ dashed: false }` restores a solid line. `grid` writes the resolved directions to two independent Paths, while `lines` expands the complete cycle into equally spaced Paths. Scene and renderers still consume an ordinary resolved tile and do not need to know these higher-level options.
 
 <SourceLinks
   sources={[
     {
       label: 'Define the three built-in tiles',
       path: 'packages/kernel/core/src/providers/pattern/definitions.ts',
-      startLine: 17,
-      endLine: 76,
+      startLine: 16,
+      endLine: 127,
+    },
+    {
+      label: 'Inherit and expand directional and cyclic styles',
+      path: 'packages/kernel/core/src/compile/resource/pattern-style.ts',
+      startLine: 35,
+      endLine: 108,
     },
     {
       label: 'Resolve instance options into a Scene resource',
       path: 'packages/kernel/core/src/compile/resource/paint.ts',
-      startLine: 29,
-      endLine: 81,
+      startLine: 39,
+      endLine: 102,
     },
     {
       label: 'Materialize the SVG pattern',
@@ -103,15 +129,52 @@ This also defines the option boundaries: `size` is the tile period, `lineWidth` 
 
 The `kind: 'pattern'` branch of `IRPaintSpec` has these fields:
 
-| Prop         | Type                                          | Default                       | Description                       |
-| ------------ | --------------------------------------------- | ----------------------------- | --------------------------------- |
-| `kind`       | `'pattern'`                                   | —                             | Pattern paint discriminator       |
-| `shape`      | <ApiValues name="PatternShape" /> \| `string` | —                             | Built-in or registered name       |
-| `color`      | `string`                                      | `currentColor`                | Motif color                       |
-| `background` | `string`                                      | transparent                   | Background for each tile          |
-| `size`       | `number`                                      | `8`                           | Positive finite tile period       |
-| `lineWidth`  | `number`                                      | lines/grid `1`; dots `size/5` | Line width or dot radius          |
-| `rotation`   | `number`                                      | `0`                           | Rotation for the complete pattern |
+| Prop              | Type                                          | Default                       | Description                              |
+| ----------------- | --------------------------------------------- | ----------------------------- | ---------------------------------------- |
+| `kind`            | `'pattern'`                                   | —                             | Pattern paint discriminator              |
+| `shape`           | <ApiValues name="PatternShape" /> \| `string` | —                             | Built-in or registered name              |
+| `color`           | `string`                                      | `currentColor`                | Motif color                              |
+| `background`      | `string`                                      | transparent                   | Background for each tile                 |
+| `size`            | `number`                                      | definition default or `8`     | Base size; adjacent spacing in built-ins |
+| `lineWidth`       | `number`                                      | lines/grid `1`; dots `size/5` | Line width or dot radius                 |
+| `dashed`          | `boolean`                                     | `false`                       | Dashed line preset                       |
+| `dotted`          | `boolean`                                     | `false`                       | Dotted line preset                       |
+| `dashPattern`     | `Array<number>`                               | —                             | Explicit dash rhythm; highest priority   |
+| `dashOffset`      | `number`                                      | `0`                           | Starting offset for the dash rhythm      |
+| `lineCap`         | <ApiValues name="PathLineCap" />              | `'butt'`                      | Line endpoint style                      |
+| `lineJoin`        | <ApiValues name="PathLineJoin" />             | `'miter'`                     | Line corner style                        |
+| `horizontalStyle` | `IRPatternLineStyle`                          | —                             | Horizontal override for `grid`           |
+| `verticalStyle`   | `IRPatternLineStyle`                          | —                             | Vertical override for `grid`             |
+| `lineStyleCycle`  | `IRPatternLineStyleCycle`                     | —                             | Complete line-style cycle for `lines`    |
+| `rotation`        | `number`                                      | `0`                           | Rotation for the complete pattern        |
+
+Top-level `color`, `lineWidth`, and the six line-style fields together form the base style for `lines`, `grid`, and custom patterns that consume them. The built-in `dots` motif ignores line and direction style fields.
+
+### IRPatternLineStyle
+
+Directional overrides and cycle overrides share one line-style object:
+
+| Prop          | Type                               | Default            | Description                         |
+| ------------- | ---------------------------------- | ------------------ | ----------------------------------- |
+| `color`       | `string?`                          | inherit base style | Overrides the primary color         |
+| `lineWidth`   | `number?`                          | inherit base style | Positive finite line-width override |
+| `dashed`      | `boolean?`                         | inherit base style | Dashed preset or explicit clear     |
+| `dotted`      | `boolean?`                         | inherit base style | Dotted preset or explicit clear     |
+| `dashPattern` | `Array<number>?`                   | inherit base style | Explicit dash rhythm                |
+| `dashOffset`  | `number?`                          | inherit base style | Starting dash offset                |
+| `lineCap`     | <ApiValues name="PathLineCap" />?  | inherit base style | Endpoint style                      |
+| `lineJoin`    | <ApiValues name="PathLineJoin" />? | inherit base style | Corner style                        |
+
+### IRPatternLineStyleCycle
+
+| Prop                | Type                      | Default | Description                                        |
+| ------------------- | ------------------------- | ------- | -------------------------------------------------- |
+| `period`            | `number`                  | —       | Lines per cycle; an integer from `2` through `512` |
+| `overrides`         | `Array<{ index, style }>` | —       | Sparse style overrides; at least one item          |
+| `overrides[].index` | `number`                  | —       | Zero-based position; unique and below `period`     |
+| `overrides[].style` | `IRPatternLineStyle`      | —       | Field-level override relative to the base style    |
+
+Only the built-in `lines` definition consumes `lineStyleCycle`. Unlisted indices and omitted style fields inherit the base style. Invalid periods, duplicate indices, and out-of-range indices fail schema or compile validation.
 
 ## Related
 

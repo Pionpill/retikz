@@ -5,7 +5,7 @@
   "tsx": true,
   "tailwind": {
     "config": "",
-    "css": "src/playground/styles.css",
+    "css": "src/playground/index.css",
     "baseColor": "slate",
     "cssVariables": true,
     "prefix": ""

@@ -6,7 +6,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { LabPolicyId } from '../modules/core';
 import { ReportPanel } from '../report';
 import { ConfigurationSheet, LabActionType, TestWorkspace, WorkspaceHeader, WorkspaceSidebar } from '../workspace';
-import { usePerformanceLab } from './use-performance-lab';
+import { usePerformanceLab } from './usePerformanceLab';
 
 /** Kernel Performance Lab 工作台属性 */
 export type AppProps = Readonly<Record<string, never>>;

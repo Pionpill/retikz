@@ -23,12 +23,12 @@ import {
 } from '../probe-failure';
 import { resolveAnchorRefUncached } from '../reference';
 import { snapshotProviderPosition, withProviderOutputValidationBoundary } from '../scene-primitive';
-import { resolveShadow } from '../style';
+import { resolveDashPattern, resolveShadow } from '../style';
 import { resolveFontSize } from '../text';
 import { inverseTransformChain, isTransformChainInvertible, projectLayoutToGlobal } from '../transform';
 import { resolveAxisScale, resolveBoxSize } from './box';
 import { layoutNodeContent } from './content/layout';
-import { DEFAULT_LINE_HEIGHT_FACTOR, resolveDashPattern } from './content/text';
+import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
 import { layoutNodeLabels, measureNodeLabels } from './label/layout';
 import { resolveNodeShape } from './shape';
 

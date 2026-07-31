@@ -41,7 +41,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           size: values.size,
           rotation: values.rotation,
           color: values.color,
-          background,
+          ...(background === undefined ? {} : { background }),
         }}
         stroke={values.color}
       />
