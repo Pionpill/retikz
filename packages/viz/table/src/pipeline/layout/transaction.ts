@@ -26,6 +26,7 @@ import type {
 
 import { TableBorderKind, TableBorderMode, TableRowKind, TableSpecSchema } from '../../schemas';
 import { deepFreeze } from '../../shared';
+import { formatTable } from '../formatter';
 import { emitTableBoundsSentinel } from '../lower';
 import { emitTableBorderScope } from '../lower';
 import { buildTableLayoutManifest } from '../manifest';
@@ -272,7 +273,8 @@ export const resolveTableTransaction = (
     datasets,
     structureDefinitions: options.structureDefinitions,
   });
-  const presented = presentTable(semantic, options.presentationDefinitions);
+  const formatted = formatTable(semantic, options.formatterDefinitions);
+  const presented = presentTable(formatted, options.presentationDefinitions);
   assertPresentedAlignment(presented);
   const resolved = resolveTableLayoutSpec(parsed.layout);
 

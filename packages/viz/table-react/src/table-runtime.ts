@@ -96,6 +96,7 @@ type AnyTableProps = TableProps | DetailTableProps | ManualTableProps;
 /** 从共享 props 提取 Table lowering options */
 const lowerOptionsOf = (props: TableCommonProps): LowerTablesOptions => ({
   structureDefinitions: props.structureDefinitions,
+  formatterDefinitions: props.formatterDefinitions,
   presentationDefinitions: props.presentationDefinitions,
 });
 

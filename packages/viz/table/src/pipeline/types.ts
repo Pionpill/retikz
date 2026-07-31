@@ -8,6 +8,7 @@ import type {
 import type { z } from 'zod';
 
 import type {
+  AnyCellFormatterDefinition,
   AnyCellPresentationDefinition,
   AnyTableStructureDefinition,
   TableLayoutManifest,
@@ -20,6 +21,8 @@ export type LowerTablesOptions = Readonly<{
   structureDefinitions?: ReadonlyArray<AnyTableStructureDefinition>;
   /** 用户自定义 Cell presentation definitions */
   presentationDefinitions?: ReadonlyArray<AnyCellPresentationDefinition>;
+  /** 用户自定义 Cell formatter definitions */
+  formatterDefinitions?: ReadonlyArray<AnyCellFormatterDefinition>;
 }>;
 
 /** Table layout-aware composite 的 typed artifact */

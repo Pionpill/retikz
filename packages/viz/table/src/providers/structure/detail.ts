@@ -51,6 +51,7 @@ export const DETAIL_TABLE_STRUCTURE = defineTableStructure({
             payload: {
               kind: TableCellPayloadKind.Value,
               value,
+              ...(column.formatter === undefined ? {} : { formatter: column.formatter }),
               ...(column.presentation === undefined ? {} : { presentation: column.presentation }),
             },
             location: TableCellLocation.Body,

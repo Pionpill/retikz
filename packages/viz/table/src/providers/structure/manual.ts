@@ -16,6 +16,7 @@ const payloadOf = (cell: IRManualTableCell): IRTableCellPayload => {
     return {
       kind: TableCellPayloadKind.Value,
       value: cell.value,
+      ...(cell.formatter === undefined ? {} : { formatter: cell.formatter }),
       ...(cell.presentation === undefined ? {} : { presentation: cell.presentation }),
     };
   }

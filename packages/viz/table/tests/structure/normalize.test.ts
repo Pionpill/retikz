@@ -14,6 +14,7 @@ import {
   TableCellSourceKind,
   TableRowKind,
 } from '../../src';
+import { formatTable } from '../../src/pipeline/formatter';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { presentTable } from '../../src/pipeline/presentation';
 
@@ -332,8 +333,8 @@ describe('normalizeTableStructure', () => {
       rows: [[{ value: 'custom', presentation: { name: 'upper' } }]],
     });
 
-    const presented = presentTable(semantic);
-    const customPresented = presentTable(semanticWithCustom, [custom]);
+    const presented = presentTable(formatTable(semantic));
+    const customPresented = presentTable(formatTable(semanticWithCustom), [custom]);
 
     expect(presented.semantic).toBe(semantic);
     expect(presented.cells.map(cell => cell.cellId)).toEqual(semantic.cells.map(cell => cell.id));

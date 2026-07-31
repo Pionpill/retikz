@@ -1,4 +1,5 @@
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { defineCellFormatter } from '@retikz/table';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -41,6 +42,19 @@ describe('renderTable', () => {
     expect(artifact.svg).toContain('width="320"');
     expect(artifact.svg).toContain('height="240"');
     expect(artifact.manifest.allocationBounds).toEqual({ x: 0, y: 0, width: 240, height: 64 });
+  });
+
+  it('passes formatter definitions through the shared lowering options in SSR', () => {
+    const prefix = defineCellFormatter({
+      name: 'prefix',
+      optionsSchema: z.strictObject({ prefix: z.string() }),
+      format: ({ value }, options) => `${options.prefix}${String(value)}`,
+    });
+    const spec = manualTable({
+      rows: [[{ value: 7, formatter: { name: 'prefix', options: { prefix: '#' } } }]],
+    });
+
+    expect(renderTable(spec, { lowerOptions: { formatterDefinitions: [prefix] } })).toContain('#7');
   });
 
   it('accepts Core options under compile and rejects the removed top-level composites field', () => {

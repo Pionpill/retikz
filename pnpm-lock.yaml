@@ -1039,10 +1039,16 @@ importers:
       '@retikz/math':
         specifier: workspace:^
         version: link:../../kernel/math
+      d3-format:
+        specifier: 'catalog:'
+        version: 3.1.2
       zod:
         specifier: 'catalog:'
         version: 4.4.3
     devDependencies:
+      '@types/d3-format':
+        specifier: 'catalog:'
+        version: 3.0.4
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0
