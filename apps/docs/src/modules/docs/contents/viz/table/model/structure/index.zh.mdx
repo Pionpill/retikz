@@ -1,0 +1,84 @@
+---
+title: 结构与单元格
+description: 理解明细、显式与自定义 Structure 如何生成统一的行、列和 Cell 语义模型。
+---
+
+不同表型可以从记录、显式网格或领域参数生成 Cell。Structure 层负责消除这些输入差异，让后续呈现和布局只面对同一种 `SemanticTableModel`。
+
+<ComponentAlert
+  type="tip"
+  title="这是进阶模型"
+  description="只需要渲染逐行记录时，请先阅读明细表；编写自定义 Structure 或消费 Cell 来源时再使用本页。"
+/>
+
+## 从表型收敛到语义模型
+
+<ComponentPreview files="table-structure-model" hideCode size="sm" />
+
+图中三个输入都先按自己的精确 schema 校验，再由同一个 Structure registry 选择 Definition。Definition 输出声明式候选，Table 继续校验地址、跨度和语义约束，最终补齐索引与默认值。
+
+| Structure | 输入特点                   | 收敛后的来源                   |
+| --------- | -------------------------- | ------------------------------ |
+| `detail`  | 字段映射 + 运行时记录      | dataset、source index 与 field |
+| `manual`  | 显式矩形 Cell entries      | 原始行列坐标                   |
+| custom    | 自定义 JSON 参数与可选数据 | Structure kind                 |
+
+`detail`、`manual` 和 custom 不是三套布局系统。它们只决定 canonical rows、columns 和 Cells 如何产生；从 Presentation 开始便走同一条消费路径。
+
+## Cell 是语义单位
+
+一个 canonical Cell 不只是要显示的值。它把稳定身份、二维位置、语义、内容和布局输入组合在一起：
+
+| 维度     | 主要信息                            | 下游用途                     |
+| -------- | ----------------------------------- | ---------------------------- |
+| 身份位置 | `id`、row/column id 与零基 index    | 稳定引用、轨道放置           |
+| 语义     | `location`、`roles`                 | 区分列头、正文和领域角色     |
+| 内容     | value/content `payload`             | 进入 Presentation            |
+| 布局输入 | 已补默认值的 `span` 与 Cell layout  | 轨道贡献、内容放置和边框候选 |
+| 来源     | manual、field 或 generated `source` | 调试、追溯和宿主映射         |
+
+行与列也有稳定 id 和 canonical index。明细列还可保留字段路径，正文行可保留外部 source index；因此消费者无需从 Cell 文本反推它属于哪条记录或字段。
+
+## Structure Definition 的边界
+
+自定义 Definition 可以读取只读数据上下文、字段类型和标量值，然后返回 rows、columns 与 Cells。内置和自定义 Definition 使用同一个 registry、输出 guard 和规范化步骤。
+
+Definition 必须停在语义模型边界：它可以决定 Cell 身份、角色、payload、span 和布局输入，但不能自己求解轨道、绘制边框或返回 renderer 专属对象。非法地址、重复身份、越界 span 或不一致语义会在规范化阶段 fail-loud。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Structure Definition 与只读上下文',
+      path: 'packages/viz/table/src/contract/structure/types.ts',
+      startLine: 7,
+      endLine: 29,
+    },
+    {
+      label: '统一 registry 与 canonical model 构造',
+      path: 'packages/viz/table/src/pipeline/normalize/normalize.ts',
+      startLine: 22,
+      endLine: 75,
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/table/model/presentation">
+    <span className="font-semibold">内容呈现</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">继续看 Cell payload 如何成为 Core 内容。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/model/layout">
+    <span className="font-semibold">布局与边框</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">理解 span、轨道和 Cell box 如何求解。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/detail">
+    <span className="font-semibold">明细表</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">从记录生成逐行 Cell 的常用入口。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/reference/contract-table">
+    <span className="font-semibold">契约 - 表格</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">查询 Structure、Cell 与 TableSpec schema。</span>
+  </LinkedCard>
+</div>

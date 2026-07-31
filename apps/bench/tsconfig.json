@@ -2,8 +2,16 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "lib": ["ESNext", "DOM"],
-    "types": ["node"]
+    "jsx": "react-jsx",
+    "types": ["node"],
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./src/playground/*"]
+    }
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts", "vite.config.ts", "vitest.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts", "vite.config.ts", "vitest.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

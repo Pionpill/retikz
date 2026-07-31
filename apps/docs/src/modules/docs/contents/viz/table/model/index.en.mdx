@@ -1,83 +1,56 @@
 ---
 title: Table Model
-description: Understand the Structure, Cell, Presentation, Layout, and lowering pipeline shared by every table type.
+description: Understand how Table converges structures into Cells, presents their content, and produces a Scene plus traceable artifacts through constrained layout.
 ---
 
-A detail table generates Cells from records, an explicit grid lists Cells directly, and a custom structure asks an extension definition to produce Cells. Their inputs differ, but they converge on one semantic model and then share presentation, layout, and lowering.
+Detail tables, explicit grids, and custom structures use different inputs, but all enter the same Table model. This group explains how those stable concepts work together for readers who need layout control, artifact consumption, or extensions.
 
-## One shared pipeline
-
-This pipeline is Table's internal model; users do not need to author it stage by stage.
+<ComponentAlert
+  type="tip"
+  title="You can skip this on your first visit"
+  description="Start with Detail Table when you only need to display records. Return here for custom structures, content presentation, advanced layout, or artifact consumption."
+/>
 
 <ComponentPreview files="table-model-pipeline" hideCode size="xs" />
 
-`Structure` determines rows, columns, and Cells. The semantic model gives every Cell a stable identity, location, role, and source. `Presentation` turns Cell payloads into Core children. `Layout` measures content, solves tracks, replays selected content, and emits the manifest inside one Core compile.
+The main path first answers “which Cells exist,” then “what each Cell draws” and “where it is placed.” `Scene` and `Manifest` come from the same compile and serve rendering versus geometry and semantic consumers.
 
-## Structure: how a table produces Cells
+## Responsibilities
 
-`structure.kind` discriminates the current structure operation. The current release has two built-in structures and permits registered custom structures:
+| Topic                  | Responsibility                                             | Reach for it when                                |
+| ---------------------- | ---------------------------------------------------------- | ------------------------------------------------ |
+| Structure & Cells      | Unify row, column, Cell identity, semantics, and source    | Creating a table shape or tracing a Cell         |
+| Content Presentation   | Turn scalar values into layout-ready Core content          | Custom formatting, graphics, or providers        |
+| Layout & Borders       | Measure, solve tracks, place content, resolve shared edges | Controlling size, wrapping, spans, borders       |
+| Artifacts & Provenance | Expose track, Cell, border geometry and source             | Hit testing, debugging, export, host integration |
 
-| kind     | Where the data lives                                          | Intended use                                   |
-| -------- | ------------------------------------------------------------- | ---------------------------------------------- |
-| `detail` | Field mappings live in spec; records arrive at runtime        | Record-per-row detail tables                   |
-| `manual` | Rectangular `rows` and Cell entries live directly in spec     | Low-level scenarios that need an explicit grid |
-| custom   | Custom parameters live in spec and a definition resolves them | Extension-defined structure operations         |
+All four layers share one canonical model. Structure does not draw, Presentation does not size tracks, Layout does not reinterpret business data, and Manifest only observes the deterministic result of the same compile.
 
-Custom Structures reuse the same definition registry, semantic output, and consumer pipeline. An LLM or tool that emits one structure should retain the precise `IRDetailTableSpec`, `IRManualTableSpec`, or `IRCustomTableSpec`; use aggregate `IRTableSpec` only when one store or protocol accepts several structures.
+## In this section
 
-### Explicit-grid entry
-
-`ManualTable` accepts a row-major matrix. It suits headers, summaries, or static grids without external records. Table derives row count, column count, and zero-based addresses from rectangular `rows`.
-
-<ComponentPreview files={['table-manual', 'table-manual.en.data.ts']} size="xs" />
-
-Scalar entries are value Cell shorthands. `null` means that a coordinate has no Cell; write `{ value: null }` for a real null scalar. Use rich `{ value, ... }` / `{ content, ... }` objects for presentation, spans, layout, semantic fields, or direct content.
-
-React can also generate the same rectangular structure in declaration order with nested `Row` / `Cell` markers:
-
-```tsx
-import { Cell, ManualTable, Row } from '@retikz/table-react';
-
-<ManualTable>
-  <Row kind="columnHeader">
-    <Cell span={{ columns: 2 }}>Identity</Cell>
-    <Cell>Score</Cell>
-  </Row>
-  <Row>
-    <Cell>Alice</Cell>
-    <Cell>Engineering</Cell>
-    <Cell value={95} />
-  </Row>
-</ManualTable>;
-```
-
-Markers occupy the lowest free column in the current row, while `span` reserves its full rectangle across future rows. The widest occupied position determines the final width, and every other coordinate is padded with `null`. Spans cannot overflow, overlap, or cross row kinds. If every `Row` is empty, use an explicit null-matrix `rows` prop because marker width cannot be inferred. A `Cell` accepts exactly one of scalar children, `value`, or `content`.
-
-## Cells and Presentation
-
-For manual authoring, Table normalizes each non-null entry into a canonical Cell payload:
-
-| kind      | Stored content                                        | Processing                                                         |
-| --------- | ----------------------------------------------------- | ------------------------------------------------------------------ |
-| `value`   | A JSON scalar plus an optional presentation reference | Resolved by a presentation definition; defaults to `text`          |
-| `content` | A JSON-safe Core or Tier 2 child                      | Used directly in Cell-local coordinates without value presentation |
-
-`{ value: 'Score' }` therefore means “this is a scalar value to present.” Use `{ content }` when a Cell directly hosts a Node, Path, or another Tier 2 child. The precise canonical payload schemas remain public for Structure output, presentation, and manifest contracts.
-
-Presentation only turns a value into Core content; it does not decide which row owns the Cell or how wide it is. Built-in `text` and custom presentations resolve through the same registry.
-
-## Layout and Manifest
-
-Table first measures every Cell intrinsically, then solves columns from fixed / auto / fraction / minmax rules, gaps, and span contributions. Content with `wrap: true` receives the solved column constraint before rows resolve from final heights. Padding defines the content box, fit and alignment transform the selected replay, overflow controls visibility, and the Border Graph resolves shared-edge conflicts last.
-
-`TableLayoutManifest` and Scene come from one compile. The root records both `allocationBounds` and `visualOverflowBounds`; each Cell records its span, box/content box, pre- and post-transform allocation/visual bounds, semantic location, roles, and source. Visible borders retain winner and contributor provenance, so hit testing, debugging, export, and interaction do not reverse-engineer SVG geometry.
-
-## Extension boundary
-
-Extension authors can add a Structure through `defineTableStructure()` or a value presentation through `defineCellPresentation()`. Both definitions arrive at runtime and stay outside JSON TableSpec. New capabilities must still output the shared semantic model or a Core child instead of bypassing the pipeline with parallel layout and rendering semantics.
-
-## Related
-
-- [Detail Table](/viz/table/detail) — the record-to-row user entry
-- [API Reference](/viz/table/reference) — precise schemas, React / Vanilla APIs, and lowering contracts
-- [Composite](/kernel/concepts/design/composite) — how Tier 2 capabilities enter the Core compile pipeline
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/table/model/structure">
+    <span className="font-semibold">Structure & Cells</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      See how different table forms converge on stable rows, columns, and Cell semantics.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/model/presentation">
+    <span className="font-semibold">Content Presentation</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Understand the boundary between value, content, and Presentation Definitions.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/model/layout">
+    <span className="font-semibold">Layout & Borders</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Follow measurement, track solving, Cell placement, and the Border Graph.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/model/manifest">
+    <span className="font-semibold">Artifacts & Provenance</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Use geometry, semantics, and provenance beyond the rendered Scene.
+    </span>
+  </LinkedCard>
+</div>

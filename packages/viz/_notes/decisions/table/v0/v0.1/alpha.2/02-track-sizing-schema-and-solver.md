@@ -9,7 +9,7 @@
 
 alpha.1 的 `columnWidth`、`rowHeight` 与 `headerHeight` 只能为全部同类轨道提供统一固定尺寸，不能表达列级差异、内容自然尺寸、剩余空间份额或上下界。alpha.2 需要一个与内容类型、renderer 和 adapter 无关的数值基础，后续 Cell、span、wrap、border 与 manifest 才能共享同一几何语义。
 
-Table 拥有轨道规则，但不拥有任意 `IRChild` 的测量。Core 负责 intrinsic / constrained layout 与 replay；本 ADR 只定义 JSON-safe 轨道表达、canonical index 覆盖、运行时归一化和轴无关 numeric solver。
+Table 拥有轨道规则，但不拥有任意 `IRChild` 的测量。Core 负责 proposal / probe / replay；本 ADR 只定义 JSON-safe 轨道表达、canonical index 覆盖、运行时归一化和轴无关 numeric solver。
 
 ## 决策
 
@@ -82,7 +82,7 @@ type SolveTableTracksInput = Readonly<{
 
 ### 两轴编排边界
 
-solver 保持轴无关，但本 ADR 不拥有两轴 transaction。alpha.2 后续编排采用 column-first：父 `constrained.maxWidth` 原样成为 column `availableSize`，column solver 自行扣 gap；行轴没有有限高度来源，始终按 unconstrained 自然 contribution 求解。
+solver 保持轴无关，但本 ADR 不拥有两轴 transaction。alpha.2 后续编排采用 column-first：父级 x 轴 `exact.value` 或有限 `range.max` 成为 column `availableSize`，intrinsic 或无上界 range 不制造限制；column solver 自行扣 gap。Table 当前不消费父级 y 轴 exact / range，行轴始终按自然 contribution 求解。
 
 column-first、受约束内容后的 row contribution、span 传播、最终 replay 与 manifest 同源性由 ADR-03 和 ADR-06 集成，不进入本 numeric solver。
 
@@ -98,7 +98,7 @@ column-first、受约束内容后的 row contribution、span 传播、最终 rep
 - 用轨道 id 做稀疏覆盖：会泄漏 structure 内部生成身份；canonical index 对 detail / manual / custom 同样成立
 - 开放 solver Definition / registry：轨道求解是 span、border、manifest 与 adapter 必须共享的正确性不变量，不是可替换语义
 - 在 Table 内测量文字或特判 Node / Path / Plot：突破 Core 通用 `IRChild` layout 边界
-- 从 CSS height、viewBox 或 renderer 猜测 row available size：alpha.2 没有 height-constraint 合同，有限高度行分配延期
+- 从 CSS height、viewBox、renderer 或未消费的 y 轴 proposal 猜测 row available size：alpha.2 不承诺有限高度行分配
 
 ## 实现与兼容性
 

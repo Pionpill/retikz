@@ -146,7 +146,12 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
   }
 
   const automaticVanilla =
-    resolvedPreviewIr !== null && structureError === undefined ? buildVanillaPreview(resolvedPreviewIr) : undefined;
+    resolvedPreviewIr !== null && structureError === undefined
+      ? buildVanillaPreview(
+          resolvedPreviewIr,
+          previewSource?.datasetImports === undefined ? {} : { datasetImports: previewSource.datasetImports },
+        )
+      : undefined;
   let vanillaCode = '';
   if (vanillaOverride !== undefined) {
     vanillaCode = vanillaOverride.replace(/\n$/, '');
@@ -156,6 +161,8 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
     vanillaCode = automaticVanilla.code;
   }
   const resolvedVanillaSvg = vanillaOverride !== undefined ? vanillaSvg : (vanillaSvg ?? automaticVanilla?.svg);
+  const replacePreviewRender =
+    vanillaOverride !== undefined || vanillaSvg !== undefined || automaticVanilla?.replacePreviewRender !== false;
 
   const source: ComponentRenderSource = {
     react: { files: reactFiles },
@@ -182,7 +189,7 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
       ? {
           vanilla: {
             files: [{ filename: `${name}.vanilla.ts`, code: vanillaCode, lang: 'ts' as const }, ...extraSourceFiles],
-            ...(resolvedVanillaSvg !== undefined
+            ...(resolvedVanillaSvg !== undefined && replacePreviewRender
               ? {
                   rendererMode: 'svg' as const,
                   render: () => <RawSvgFrame svg={resolvedVanillaSvg} />,

@@ -34,15 +34,15 @@ Embedded Table 不启动局部 compile。它把 spec、datasets、Structure / Pr
 </div>
 
 1. **Canonical model**：先通过 Table schema，再由 Structure definition 把 manual、detail 或 custom 输入规范化为统一语义模型；Presentation definition 把 Cell payload 转成可布局内容。
-2. **Intrinsic probes**：每个 Cell 先执行 intrinsic `layoutChild`，得到内容的 allocation bounds 与 visual bounds；这些 probe 只用于测量。
-3. **列求解与 wrap**：intrinsic 宽度、span、gap、track 配置和父级 `maxWidth` 一起进入列求解。只有开启 wrap 的 Cell 才按最终内容宽度再执行 constrained `layoutChild`。
+2. **Natural proposal probes**：每个 Cell 先用 `NaturalLayoutProposal` 执行 `layoutChild`，得到内容的 allocation bounds 与 visual bounds；这些 probe 只用于测量。
+3. **列求解与 wrap**：natural 宽度、span、gap、track 配置，以及父级 x 轴 `exact.value` 或有限 `range.max` 一起进入列求解。只有开启 wrap 的 Cell 才按最终内容宽度再发起 `x: range(0, contentWidth)` probe。
 4. **行求解与放置**：最终 probe 的高度进入行求解，随后计算 Cell box、padding 后的 content box、fit / align / overflow placement，并建立 border conflict graph。
 5. **Replay 与发布**：runtime 只 replay 每个 Cell 的最终 probe 与最终 border Scope，构造 Scene children；同一 composite occurrence 同时发布 detached、递归冻结的 `TableLayoutManifest`。
 
 ### 三个运行时不变量
 
 - **只有一次 Core compile**：manifest 是同次 compile 的 typed artifact，不会触发第二次 lowering。
-- **probe 不等于输出**：intrinsic / constrained 测量可以产生多个候选，未被 replay 的候选不会进入最终 Scene 或 artifacts。
+- **probe 不等于输出**：natural / range proposal 可以产生多个候选，未被 replay 的候选不会进入最终 Scene 或 artifacts；选中的 failed probe 由 `context.raise()` 保留原始失败身份。
 - **根产物按 occurrence 定位**：standalone 根使用 `sourcePath: 'children[0]'` 与空 `expansionPath`；公开 `tableId` 不是实例 selector。
 
 <SourceLinks
@@ -50,8 +50,8 @@ Embedded Table 不启动局部 compile。它把 spec、datasets、Structure / Pr
     {
       label: '单次 Table transaction 的测量、求解、放置与 replay',
       path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
-      startLine: 230,
-      endLine: 405,
+      startLine: 263,
+      endLine: 455,
     },
     {
       label: 'compileTable 的单根 Scene、definitions 合并与根 artifact 选择',

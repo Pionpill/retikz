@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { summarizeSamples } from '../src/stats';
+import { summarizeSamples } from '../src/shared';
 
 describe('wall-clock statistics', () => {
   it('确定性计算 median、p95 与 max', () => {
