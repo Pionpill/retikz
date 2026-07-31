@@ -325,6 +325,9 @@ describe('Table React composition root integration', () => {
     ];
     const onManifest = vi.fn();
     const style = { color: 'rebeccapurple' };
+    const rules: NonNullable<DetailTableProps['rules']> = [
+      { selector: { fields: ['name'] }, appearance: { background: { fill: '#f3f4f6' } } },
+    ];
     const runtime = resolveReactTableRuntime(ReactTableRuntimeKind.Detail, {
       id: 'detail-root-props',
       dataRef: 'people',
@@ -333,6 +336,7 @@ describe('Table React composition root integration', () => {
       header: false,
       layout: { columnSize: { kind: 'fixed', value: 96 } },
       meta: { source: 'root-props-test' },
+      rules,
       children: <DetailColumn id="name" field="name" formatter={{ name: 'root-props-formatter' }} />,
       structureDefinitions,
       formatterDefinitions,
@@ -362,6 +366,7 @@ describe('Table React composition root integration', () => {
       },
       layout: { columnSize: { kind: 'fixed', value: 96 } },
       meta: { source: 'root-props-test' },
+      rules,
     });
     expect(runtime.datasets).toMatchObject({ people: [{ name: 'Ada' }] });
     expect(runtime.lowerOptions).toEqual({

@@ -142,4 +142,71 @@ describe('Table React manifest observation', () => {
     await act(() => root.unmount());
     container.remove();
   });
+
+  it('passes ordered root rules through ManualTable authoring into the shared pipeline', async () => {
+    const observed: Array<CellPresentationInput> = [];
+    const manifests: Array<TableLayoutManifest> = [];
+    const inspect = defineCellPresentation({
+      name: 'rule-inspect',
+      optionsSchema: z.strictObject({}),
+      present: input => {
+        observed.push(input);
+        return { type: 'node', position: [0, 0], text: String(input.value) };
+      },
+    });
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(() => {
+      root.render(
+        <ManualTable
+          rows={[[{ id: 'ruled', value: 2 }]]}
+          rules={[
+            {
+              selector: { cellIds: ['ruled'], value: { kind: 'compare', operator: 'gt', value: 1 } },
+              formatter: { name: 'number', options: { specifier: '.1f' } },
+              presentation: { name: 'rule-inspect' },
+              appearance: {
+                background: { fill: '#f3f4f6' },
+                borders: { bottom: { kind: 'line', stroke: '#2563eb', width: 2 } },
+              },
+            },
+          ]}
+          presentationDefinitions={[inspect]}
+          onManifest={manifest => manifests.push(manifest)}
+        />,
+      );
+    });
+
+    expect(observed).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          rawValue: 2,
+          value: '2.0',
+          context: expect.objectContaining({ cellId: 'ruled' }),
+          appearance: {
+            background: { fill: '#f3f4f6' },
+            borders: { bottom: { kind: 'line', stroke: '#2563eb', width: 2 } },
+          },
+        }),
+      ]),
+    );
+    expect(manifests[0].borders).toContainEqual(
+      expect.objectContaining({ style: expect.objectContaining({ stroke: '#2563eb', width: 2 }) }),
+    );
+    await act(() => root.unmount());
+    container.remove();
+  });
+
+  it('preserves shared content rewrite diagnostics in React SSR', () => {
+    expect(() =>
+      renderToStaticMarkup(
+        <ManualTable
+          rows={[[{ id: 'direct', content: { type: 'node', position: [0, 0], text: 'direct' } }]]}
+          rules={[{ selector: { cellIds: ['direct'] }, formatter: { name: 'identity' } }]}
+        />,
+      ),
+    ).toThrow(/rule 0.*direct.*formatter/i);
+  });
 });

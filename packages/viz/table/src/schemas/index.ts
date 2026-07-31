@@ -4,5 +4,6 @@ export * from './cell';
 export * from './formatter';
 export * from './layout';
 export * from './presentation';
+export * from './rule';
 export * from './structure';
 export * from './table';

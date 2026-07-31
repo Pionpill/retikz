@@ -112,6 +112,61 @@ describe('renderTable', () => {
     );
   });
 
+  it('passes ordered root rules through plain authoring into SSR', () => {
+    const observed: Array<CellPresentationInput> = [];
+    const inspect = defineCellPresentation({
+      name: 'rule-inspect',
+      optionsSchema: z.strictObject({}),
+      present: input => {
+        observed.push(input);
+        return { type: 'node', position: [0, 0], text: String(input.value) };
+      },
+    });
+    const spec = manualTable({
+      rows: [[{ id: 'ruled', value: 2 }]],
+      rules: [
+        {
+          selector: { cellIds: ['ruled'], value: { kind: 'compare', operator: 'gt', value: 1 } },
+          formatter: { name: 'number', options: { specifier: '.1f' } },
+          presentation: { name: 'rule-inspect' },
+          appearance: {
+            background: { fill: '#f3f4f6' },
+            borders: { bottom: { kind: 'line', stroke: '#2563eb', width: 2 } },
+          },
+        },
+      ],
+    });
+    const result = renderTable(spec, {
+      artifacts: true,
+      lowerOptions: { presentationDefinitions: [inspect] },
+    });
+
+    expect(result.svg).toContain('2.0');
+    expect(observed).toMatchObject([
+      {
+        rawValue: 2,
+        value: '2.0',
+        context: { cellId: 'ruled' },
+        appearance: {
+          background: { fill: '#f3f4f6' },
+          borders: { bottom: { kind: 'line', stroke: '#2563eb', width: 2 } },
+        },
+      },
+    ]);
+    expect(result.manifest.borders).toContainEqual(
+      expect.objectContaining({ style: expect.objectContaining({ stroke: '#2563eb', width: 2 }) }),
+    );
+  });
+
+  it('preserves shared content rewrite diagnostics in Vanilla SSR', () => {
+    const spec = manualTable({
+      rows: [[{ id: 'direct', content: { type: 'node', position: [0, 0], text: 'direct' } }]],
+      rules: [{ selector: { cellIds: ['direct'] }, formatter: { name: 'identity' } }],
+    });
+
+    expect(() => renderTable(spec)).toThrow(/rule 0.*direct.*formatter/i);
+  });
+
   it('accepts Core options under compile and rejects the removed top-level composites field', () => {
     const spec = manualTable({ rows: [[null]] });
 

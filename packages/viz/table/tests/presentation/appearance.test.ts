@@ -1,11 +1,11 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
-import { formatTable } from '../../src/pipeline/formatter';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { presentTable } from '../../src/pipeline/presentation';
+import { formatDefaultTable } from '../utils/stages';
 
 const formatted = () =>
-  formatTable(
+  formatDefaultTable(
     normalizeTableStructure({
       kind: 'manual',
       rows: [

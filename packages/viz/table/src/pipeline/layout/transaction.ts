@@ -47,6 +47,7 @@ import { emitTableBorderScope, emitTableBoundsSentinel, emitTableCellBackground 
 import { buildTableLayoutManifest } from '../manifest';
 import { normalizeTableStructure } from '../normalize';
 import { presentTable } from '../presentation';
+import { presentationInputsOfTableCellPlans, resolveTableCellPlans } from '../rule';
 import { buildTableBorderGraph } from './border';
 import { computeTableCellBox, computeTableCellContentBox, computeTableCellOuterSize } from './cell';
 import { computeTableCellContentPlacement } from './content';
@@ -539,8 +540,12 @@ export const resolveTableTransaction = (
     datasets,
     structureDefinitions: options.structureDefinitions,
   });
-  const formatted = formatTable(semantic, options.formatterDefinitions);
-  const presented = presentTable(formatted, { presentationDefinitions: options.presentationDefinitions });
+  const plans = resolveTableCellPlans(semantic, parsed.rules);
+  const formatted = formatTable(semantic, { cells: plans, formatterDefinitions: options.formatterDefinitions });
+  const presented = presentTable(formatted, {
+    cells: presentationInputsOfTableCellPlans(plans),
+    presentationDefinitions: options.presentationDefinitions,
+  });
   return resolvePresentedTableTransaction(
     {
       ...(parsed.id === undefined ? {} : { tableId: parsed.id }),

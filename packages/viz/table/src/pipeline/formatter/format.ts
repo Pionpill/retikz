@@ -9,6 +9,7 @@ import type {
   SemanticTableModel,
   TableCellContext,
 } from '../../contract';
+import type { ResolvedTableCellPlan } from '../rule';
 
 import { cellFormatterDefinitionOf, resolveCellFormatterRegistry } from '../../providers';
 import { TableCellPayloadKind, TableCellPayloadSchema } from '../../schemas';
@@ -32,6 +33,7 @@ const formatterContextOf = (cell: SemanticTableCell): TableCellContext =>
 /** 把单个 canonical Cell 转换为 formatter 阶段结果 */
 const formatCell = (
   cell: SemanticTableCell,
+  plan: ResolvedTableCellPlan,
   registry: ReadonlyMap<string, AnyCellFormatterDefinition>,
 ): FormattedTableCell => {
   const parsedPayload = TableCellPayloadSchema.parse(cell.payload);
@@ -43,11 +45,14 @@ const formatCell = (
     });
   }
 
-  const name = parsedPayload.formatter?.name ?? 'identity';
+  if (plan.kind !== TableCellPayloadKind.Value) {
+    throw new Error(`table: formatter plan for Cell "${cell.id}" kind differs`);
+  }
+  const name = plan.formatter.name;
   const prefix = `table: formatter "${name}" for cell "${cell.id}"`;
   try {
     const definition = cellFormatterDefinitionOf(name, registry);
-    const rawOptions = JsonObjectSchema.parse(parsedPayload.formatter?.options ?? {});
+    const rawOptions = JsonObjectSchema.parse(plan.formatter.options ?? {});
     const parsedOptions = definition.optionsSchema.parse(rawOptions);
     const guardedOptions = JsonObjectSchema.parse(parsedOptions);
     const context = formatterContextOf(cell);
@@ -66,13 +71,30 @@ const formatCell = (
   }
 };
 
+/** formatter 阶段消费的严格 identity-aligned Cell plans */
+export type FormatTableOptions = Readonly<{
+  /** 与 canonical Cells 等长、同序、同 identity 的 resolved plans */
+  cells: ReadonlyArray<ResolvedTableCellPlan>;
+  /** 用户自定义 Cell formatter definitions */
+  formatterDefinitions?: ReadonlyArray<AnyCellFormatterDefinition>;
+}>;
+
+/** 校验 formatter plans 与 canonical Cells 同长、同序、同 identity / kind */
+const assertPlanAlignment = (model: SemanticTableModel, plans: ReadonlyArray<ResolvedTableCellPlan>): void => {
+  if (model.cells.length !== plans.length)
+    throw new Error('table: formatter plan Cell count differs from semantic model');
+  model.cells.forEach((cell, index) => {
+    const plan = plans[index];
+    if (plan.cellId !== cell.id) throw new Error(`table: formatter plan Cell ${index} identity differs`);
+    if (plan.kind !== cell.payload.kind) throw new Error(`table: formatter plan Cell ${index} kind differs`);
+  });
+};
+
 /** 把 canonical Table Cells 格式化为同 identity、同顺序的展示值模型 */
-export const formatTable = (
-  model: SemanticTableModel,
-  definitions?: ReadonlyArray<AnyCellFormatterDefinition>,
-): FormattedTableModel => {
+export const formatTable = (model: SemanticTableModel, options: FormatTableOptions): FormattedTableModel => {
+  assertPlanAlignment(model, options.cells);
   const semantic = deepFreeze(structuredClone(model));
-  const registry = resolveCellFormatterRegistry(definitions);
-  const cells = Object.freeze(semantic.cells.map(cell => formatCell(cell, registry)));
+  const registry = resolveCellFormatterRegistry(options.formatterDefinitions);
+  const cells = Object.freeze(semantic.cells.map((cell, index) => formatCell(cell, options.cells[index], registry)));
   return Object.freeze({ semantic, cells });
 };

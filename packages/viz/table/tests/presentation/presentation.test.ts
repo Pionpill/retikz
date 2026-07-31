@@ -1,4 +1,4 @@
-import type { IRChild, IRJsonObject } from '@retikz/core';
+﻿import type { IRChild, IRJsonObject } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -6,15 +6,15 @@ import { z } from 'zod';
 import type { AnyCellPresentationDefinition, IRManualTableCell } from '../../src';
 
 import { defineCellPresentation, resolveCellPresentationRegistry } from '../../src';
-import { formatTable } from '../../src/pipeline/formatter';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { presentTable } from '../../src/pipeline/presentation';
+import { formatDefaultTable } from '../utils/stages';
 
 const presentedCellOf = (
   cell: IRManualTableCell,
   presentationDefinitions?: ReadonlyArray<AnyCellPresentationDefinition>,
 ) => {
-  const formatted = formatTable(normalizeTableStructure({ kind: 'manual', rows: [[cell]] }));
+  const formatted = formatDefaultTable(normalizeTableStructure({ kind: 'manual', rows: [[cell]] }));
   return presentTable(formatted, { presentationDefinitions }).cells[0];
 };
 
@@ -48,7 +48,7 @@ describe('Cell presentation registry', () => {
         )}`,
       }),
     });
-    const formatted = formatTable(
+    const formatted = formatDefaultTable(
       normalizeTableStructure({
         kind: 'manual',
         rows: [[{ value: 7, presentation: { name: 'badge', options: { prefix: '#' } } }]],

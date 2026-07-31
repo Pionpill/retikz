@@ -1,4 +1,4 @@
-import type { IRChild, LayoutCompositeCompileContext, ScenePrimitive } from '@retikz/core';
+﻿import type { IRChild, LayoutCompositeCompileContext, ScenePrimitive } from '@retikz/core';
 
 import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -7,10 +7,10 @@ import { z } from 'zod';
 import type { PresentedTableModel } from '../../src';
 import type { ResolvedTableTransaction } from '../../src/pipeline/layout';
 
-import { formatTable } from '../../src/pipeline/formatter';
 import { resolvePresentedTableTransaction } from '../../src/pipeline/layout';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { presentTable } from '../../src/pipeline/presentation';
+import { formatDefaultTable } from '../utils/stages';
 
 const flattenScenePrimitives = (primitives: ReadonlyArray<ScenePrimitive>): ReadonlyArray<ScenePrimitive> =>
   primitives.flatMap(primitive =>
@@ -35,7 +35,7 @@ describe('Presented Table layout transaction', () => {
       kind: 'manual',
       rows: [[{ id: 'mixed', content: contentNode('mixed-content', '#111111') }]],
     });
-    const presented = presentTable(formatTable(semantic));
+    const presented = presentTable(formatDefaultTable(semantic));
     const malformed = {
       ...presented,
       cells: [{ ...presented.cells[0], rawValue: 'leaked-value-trace' }],
@@ -67,7 +67,7 @@ describe('Presented Table layout transaction', () => {
 
   it('fails loud when a Presented raw value differs from the canonical semantic payload', () => {
     const semantic = normalizeTableStructure({ kind: 'manual', rows: [[{ id: 'tampered', value: 7 }]] });
-    const presented = presentTable(formatTable(semantic));
+    const presented = presentTable(formatDefaultTable(semantic));
     const malformed = {
       ...presented,
       cells: [{ ...presented.cells[0], rawValue: 9 }],
@@ -139,7 +139,7 @@ describe('Presented Table layout transaction', () => {
         ],
       ],
     });
-    const presented = presentTable(formatTable(semantic), {
+    const presented = presentTable(formatDefaultTable(semantic), {
       cells: [
         {
           kind: 'content',
@@ -326,7 +326,7 @@ describe('Presented Table layout transaction', () => {
         [{ id: 'zero-area', content: invisibleContent('zero-content') }, null, null, null],
       ],
     });
-    const presented = presentTable(formatTable(semantic), {
+    const presented = presentTable(formatDefaultTable(semantic), {
       cells: [
         { kind: 'content', cellId: 'empty', appearance: {} },
         { kind: 'content', cellId: 'none', appearance: { background: { fill: 'none' } } },
@@ -400,7 +400,7 @@ describe('Presented Table layout transaction', () => {
         ],
       ],
     });
-    const presented = presentTable(formatTable(semantic), {
+    const presented = presentTable(formatDefaultTable(semantic), {
       cells: [
         { kind: 'content', cellId: 'plain', appearance: {} },
         { kind: 'content', cellId: 'painted', appearance: { background: { fill: '#dc2626' } } },

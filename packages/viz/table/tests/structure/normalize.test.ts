@@ -1,4 +1,4 @@
-import type { IRChild } from '@retikz/core';
+﻿import type { IRChild } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -14,9 +14,9 @@ import {
   TableCellSourceKind,
   TableRowKind,
 } from '../../src';
-import { formatTable } from '../../src/pipeline/formatter';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { presentTable } from '../../src/pipeline/presentation';
+import { formatDefaultTable } from '../utils/stages';
 
 describe('normalizeTableStructure', () => {
   it('exports stable source discriminator values', () => {
@@ -333,8 +333,8 @@ describe('normalizeTableStructure', () => {
       rows: [[{ value: 'custom', presentation: { name: 'upper' } }]],
     });
 
-    const presented = presentTable(formatTable(semantic));
-    const customPresented = presentTable(formatTable(semanticWithCustom), { presentationDefinitions: [custom] });
+    const presented = presentTable(formatDefaultTable(semantic));
+    const customPresented = presentTable(formatDefaultTable(semanticWithCustom), { presentationDefinitions: [custom] });
 
     expect(presented.semantic).not.toBe(semantic);
     expect(presented.semantic).toEqual(semantic);

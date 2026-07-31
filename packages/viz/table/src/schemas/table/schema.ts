@@ -3,6 +3,7 @@ import { DataReferenceSchema } from '@retikz/data';
 import { z } from 'zod';
 
 import { TableLayoutSchema } from '../layout';
+import { TableCellRuleSchema } from '../rule';
 import { CustomTableStructureSchema, DetailTableStructureSchema, ManualTableStructureSchema } from '../structure';
 import { TABLE_NAMESPACE, TableComposite } from './constants';
 
@@ -16,6 +17,7 @@ const TableSpecBaseSchema = CompositeBaseSchema.extend({
     'Two-dimensional Table track, gap, and border layout options. Omitted fields use the pipeline defaults.',
   ),
   meta: JsonObjectSchema.optional().describe('Opaque JSON-safe metadata preserved by Table lowering.'),
+  rules: z.array(TableCellRuleSchema).optional().describe('Ordered root Cell rules applied by declaration order.'),
 });
 
 export const DetailTableSpecSchema = TableSpecBaseSchema.extend({

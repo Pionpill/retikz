@@ -157,6 +157,7 @@ const detailSpecOf = (props: DetailTableProps): IRDetailTableSpec => {
     ...(props.header === undefined ? {} : { header: props.header }),
     ...(props.layout === undefined ? {} : { layout: props.layout }),
     ...(props.meta === undefined ? {} : { meta: props.meta }),
+    ...(props.rules === undefined ? {} : { rules: props.rules }),
   });
 };
 
@@ -168,6 +169,7 @@ const manualSpecOf = (props: ManualTableProps): IRManualTableSpec => {
     ...structure,
     ...(props.layout === undefined ? {} : { layout: props.layout }),
     ...(props.meta === undefined ? {} : { meta: props.meta }),
+    ...(props.rules === undefined ? {} : { rules: props.rules }),
   });
 };
 

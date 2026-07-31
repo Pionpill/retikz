@@ -1,6 +1,5 @@
 export * from './define';
-export type { TableCellSource, TableCellSourceKindValue, TableStructureOutput } from './output';
-export { TableCellSourceKind } from './output';
+export type { TableCellSource, TableStructureOutput } from './output';
 export type {
   AnyTableStructureDefinition,
   ReadonlyTableCellPayload,

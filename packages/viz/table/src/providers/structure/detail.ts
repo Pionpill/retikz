@@ -1,4 +1,4 @@
-import { defineTableStructure, TableCellSourceKind } from '../../contract';
+import { defineTableStructure } from '../../contract';
 import {
   DetailTableStructureSchema,
   TableCellLocation,
@@ -7,6 +7,7 @@ import {
   TableRowKind,
   TableStructureKind,
 } from '../../schemas';
+import { TableCellSourceKind } from '../../shared';
 
 /** detail Table structure definition */
 export const DETAIL_TABLE_STRUCTURE = defineTableStructure({

@@ -1,6 +1,6 @@
 import type { IRManualTableCell, IRTableCellPayload } from '../../schemas';
 
-import { defineTableStructure, TableCellSourceKind } from '../../contract';
+import { defineTableStructure } from '../../contract';
 import {
   ManualTableStructureSchema,
   TableCellLocation,
@@ -8,6 +8,7 @@ import {
   TableCellRole,
   TableRowKind,
 } from '../../schemas';
+import { TableCellSourceKind } from '../../shared';
 
 /** 把 manual Cell entry 转换为 canonical payload */
 const payloadOf = (cell: IRManualTableCell): IRTableCellPayload => {

@@ -1,15 +1,15 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import type { CellPresentationInput } from '../../src';
 
 import { defineCellPresentation } from '../../src';
-import { formatTable } from '../../src/pipeline/formatter';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { presentTable } from '../../src/pipeline/presentation';
+import { formatDefaultTable } from '../utils/stages';
 
 const formattedModel = () =>
-  formatTable(
+  formatDefaultTable(
     normalizeTableStructure({
       kind: 'manual',
       rows: [

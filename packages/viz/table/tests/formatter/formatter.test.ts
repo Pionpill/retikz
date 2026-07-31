@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+﻿import type { IRJsonObject } from '@retikz/core';
 
 import { formatDefaultLocale } from 'd3-format';
 import { describe, expect, it } from 'vitest';
@@ -17,9 +17,9 @@ import {
   TableCellSourceKind,
   TableRowKind,
 } from '../../src';
-import { formatTable } from '../../src/pipeline/formatter';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { presentTable } from '../../src/pipeline/presentation';
+import { formatDefaultTable } from '../utils/stages';
 
 const layout = {
   padding: { top: 0, right: 0, bottom: 0, left: 0 },
@@ -92,7 +92,7 @@ describe('Cell formatter registry', () => {
 describe('formatted Table model', () => {
   it('detaches and recursively freezes the semantic model snapshot', () => {
     const model = modelOf('before');
-    const formatted = formatTable(model);
+    const formatted = formatDefaultTable(model);
 
     expect(formatted.semantic).not.toBe(model);
     expect(formatted.semantic.cells[0]).not.toBe(model.cells[0]);
@@ -105,7 +105,7 @@ describe('formatted Table model', () => {
   });
 
   it.each(['plain', 42, true, false, null] as const)('uses identity without changing scalar %j', value => {
-    const formatted = formatTable(modelOf(value));
+    const formatted = formatDefaultTable(modelOf(value));
 
     expect(formatted.cells[0]).toEqual({
       kind: 'value',
@@ -117,7 +117,7 @@ describe('formatted Table model', () => {
   });
 
   it('formats numbers with a private deterministic locale', () => {
-    const before = formatTable(modelOf(-1234.5, { name: 'number', options: { specifier: '$,.2f' } }));
+    const before = formatDefaultTable(modelOf(-1234.5, { name: 'number', options: { specifier: '$,.2f' } }));
     try {
       formatDefaultLocale({
         decimal: ',',
@@ -127,7 +127,7 @@ describe('formatted Table model', () => {
         minus: '-',
         nan: 'not-a-number',
       });
-      const after = formatTable(modelOf(-1234.5, { name: 'number', options: { specifier: '$,.2f' } }));
+      const after = formatDefaultTable(modelOf(-1234.5, { name: 'number', options: { specifier: '$,.2f' } }));
 
       expect(before.cells[0]).toMatchObject({ value: '−$1,234.50', formatterName: 'number' });
       expect(after.cells[0]).toEqual(before.cells[0]);
@@ -145,17 +145,17 @@ describe('formatted Table model', () => {
   });
 
   it('handles number and boolean null labels without truthy or numeric coercion', () => {
-    expect(formatTable(modelOf(null, { name: 'number' })).cells[0]).toMatchObject({ value: null });
-    expect(formatTable(modelOf(null, { name: 'number', options: { nullText: '' } })).cells[0]).toMatchObject({
+    expect(formatDefaultTable(modelOf(null, { name: 'number' })).cells[0]).toMatchObject({ value: null });
+    expect(formatDefaultTable(modelOf(null, { name: 'number', options: { nullText: '' } })).cells[0]).toMatchObject({
       value: '',
     });
     expect(
-      formatTable(modelOf(false, { name: 'boolean', options: { falseText: 'Unavailable' } })).cells[0],
+      formatDefaultTable(modelOf(false, { name: 'boolean', options: { falseText: 'Unavailable' } })).cells[0],
     ).toMatchObject({ value: 'Unavailable' });
-    expect(() => formatTable(modelOf('12.5', { name: 'number' }))).toThrow(
+    expect(() => formatDefaultTable(modelOf('12.5', { name: 'number' }))).toThrow(
       /table: formatter "number" for cell "cell\.0"/i,
     );
-    expect(() => formatTable(modelOf(1, { name: 'boolean' }))).toThrow(
+    expect(() => formatDefaultTable(modelOf(1, { name: 'boolean' }))).toThrow(
       /table: formatter "boolean" for cell "cell\.0"/i,
     );
   });
@@ -170,7 +170,7 @@ describe('formatted Table model', () => {
         return `${String(input.value)}${options.suffix}`;
       },
     });
-    const formatted = formatTable(modelOf('ok', { name: 'inspect' }), [inspect]);
+    const formatted = formatDefaultTable(modelOf('ok', { name: 'inspect' }), [inspect]);
 
     expect(formatted.cells[0]).toMatchObject({ rawValue: 'ok', value: 'ok!', formatterName: 'inspect' });
     expect(observed).toEqual({
@@ -197,10 +197,10 @@ describe('formatted Table model', () => {
       format: () => ({ invalid: true }) as unknown as string,
     });
 
-    expect(() => formatTable(modelOf(1, { name: 'non-json-options' }), [nonJsonOptions])).toThrow(
+    expect(() => formatDefaultTable(modelOf(1, { name: 'non-json-options' }), [nonJsonOptions])).toThrow(
       /formatter "non-json-options".*cell "cell\.0"/i,
     );
-    expect(() => formatTable(modelOf(1, { name: 'invalid-output' }), [invalidOutput])).toThrow(
+    expect(() => formatDefaultTable(modelOf(1, { name: 'invalid-output' }), [invalidOutput])).toThrow(
       /formatter "invalid-output".*cell "cell\.0"/i,
     );
 
@@ -213,7 +213,7 @@ describe('formatted Table model', () => {
       },
     });
     try {
-      formatTable(modelOf(1, { name: 'thrown' }), [thrown]);
+      formatDefaultTable(modelOf(1, { name: 'thrown' }), [thrown]);
       throw new Error('expected formatter failure');
     } catch (error) {
       expect(error).toMatchObject({
@@ -238,7 +238,7 @@ describe('formatted Table model', () => {
       },
       { data: { reference: 'sales' }, datasets: { sales: [{ amount: 1234.5 }] } },
     );
-    const formatted = formatTable(semantic);
+    const formatted = formatDefaultTable(semantic);
 
     expect(formatted.cells).toMatchObject([
       { kind: 'value', value: 'Amount', formatterName: 'identity' },
@@ -266,7 +266,7 @@ describe('formatted Table model', () => {
         },
       ],
     };
-    const presented = presentTable(formatTable(semantic), { presentationDefinitions: [inspect] });
+    const presented = presentTable(formatDefaultTable(semantic), { presentationDefinitions: [inspect] });
 
     expect(presented.cells[0].content).toMatchObject({ text: '12.5>12.50@cell.0' });
   });
@@ -282,7 +282,7 @@ describe('formatted Table model', () => {
         },
       ],
     };
-    const formatted = formatTable(model);
+    const formatted = formatDefaultTable(model);
 
     expect(formatted.cells[0]).toEqual({ kind: 'content', cellId: 'cell.0', content: sourceContent });
     if (formatted.cells[0].kind !== TableCellPayloadKind.Content) throw new Error('expected content Cell');
