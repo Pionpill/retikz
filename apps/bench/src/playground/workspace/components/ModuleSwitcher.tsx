@@ -47,12 +47,13 @@ export const ModuleSwitcher: FC<ModuleSwitcherProps> = props => {
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              title={t('module.switch')}
-              className="h-12 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
+          <SidebarMenuButton
+            asChild
+            size="lg"
+            title={t('module.switch')}
+            className="h-12 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+          >
+            <DropdownMenuTrigger>
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                 <Boxes className="size-4" />
               </div>
@@ -61,8 +62,8 @@ export const ModuleSwitcher: FC<ModuleSwitcherProps> = props => {
                 <span className="truncate text-xs text-muted-foreground">{t(moduleDescriptionKeys[selected.id])}</span>
               </div>
               <ChevronsUpDown className="ml-auto" />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
+            </DropdownMenuTrigger>
+          </SidebarMenuButton>
           <DropdownMenuContent
             className="z-[60] w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
             align="start"

@@ -44,12 +44,13 @@ export const WorkspaceSettings: FC<WorkspaceSettingsProps> = props => {
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              title={t('sidebar.settings')}
-              className="h-12 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
+          <SidebarMenuButton
+            asChild
+            size="lg"
+            title={t('sidebar.settings')}
+            className="h-12 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+          >
+            <DropdownMenuTrigger>
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
                 <Settings2 className="size-4" />
               </div>
@@ -60,8 +61,8 @@ export const WorkspaceSettings: FC<WorkspaceSettingsProps> = props => {
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
+            </DropdownMenuTrigger>
+          </SidebarMenuButton>
           <DropdownMenuContent
             className="z-[60] w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
             side="right"
