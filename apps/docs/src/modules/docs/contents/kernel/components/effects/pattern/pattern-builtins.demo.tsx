@@ -9,7 +9,14 @@ const Demo: FC = () => (
       position={[-115, 0]}
       shape="rectangle"
       minimumSize={{ width: 92, height: 82 }}
-      fill={{ kind: 'pattern', shape: 'lines', color: '#2563eb', background: '#eff6ff', size: 10 }}
+      fill={{
+        kind: 'pattern',
+        shape: 'lines',
+        color: '#2563eb',
+        background: '#eff6ff',
+        size: 10,
+        dashed: true,
+      }}
       stroke="#2563eb"
     >
       lines
@@ -27,7 +34,15 @@ const Demo: FC = () => (
       position={[115, 0]}
       shape="rectangle"
       minimumSize={{ width: 92, height: 82 }}
-      fill={{ kind: 'pattern', shape: 'grid', color: '#15803d', background: '#f0fdf4', size: 14 }}
+      fill={{
+        kind: 'pattern',
+        shape: 'grid',
+        color: '#15803d',
+        background: '#f0fdf4',
+        size: 14,
+        dotted: true,
+        lineCap: 'round',
+      }}
       stroke="#15803d"
     >
       grid
