@@ -102,6 +102,23 @@ packaging / rc 发布候选：
 - 发布后从 npm registry 反查版本和 dist-tag。
 - push commit / tag 仍需单独授权。
 
+### Stage 6 站点文档检测
+
+发布成功并完成 npm registry 反查后、宣布 RC 完成前，必须检测当前工作区构建出的文档站：
+
+```bash
+node .agents/skills/docs-doc-principle/scripts/check-doc-integrity.mjs
+pnpm --filter @retikz/docs exec tsc --noEmit
+pnpm --filter @retikz/docs build
+pnpm --filter @retikz/docs preview
+```
+
+- 用 preview 命令实际输出的 URL 检测构建产物，不把其它 checkout 的 dev 服务当作本次结果。
+- 遍历全部已注册文档路由的 zh / en 页面，确认默认状态下的 `ComponentPreview` 已挂载，页面和浏览器 console 均无错误。
+- 明确检查 `页面渲染异常`、`Demo ... not found`、`Failed to compute IR`、`Unknown schema`、Runtime / React 未捕获错误。
+- 任一路由失败时记录语言、URL、demo 与原始 cause；修复后重跑失败路由和全站检测。
+- 检测未通过时不得宣布 RC 完成。若 npm 包已经发布，不移动或复用 tag、不重发同版本；由用户决定只修站点或发布下一个 rc。
+
 ## rc 文档优先级
 
 - 安装与第一个图。
@@ -123,6 +140,7 @@ packaging / rc 发布候选：
 rc 阶段整体：
 
 - 文档站核心路径可供新用户从零使用。
+- 发布后的构建产物已通过全站双语路由与默认 preview 检测。
 - API 参考与实现一致。
 - 迁移指南覆盖 beta 阶段 breaking changes。
 - npm `next` 包可在独立项目安装并运行。
