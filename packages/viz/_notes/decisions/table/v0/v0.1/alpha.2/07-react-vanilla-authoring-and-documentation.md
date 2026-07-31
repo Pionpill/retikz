@@ -19,9 +19,9 @@ alpha.2 保留完整 JSON-safe props / plain input，并用窄 marker 提供等�
 
 - `<Table>` 接受完整 `IRTableSpec` 与 datasets
 - `<DetailTable>` 接受完整 columns props，或互斥的 `<DetailColumn>` children
-- `<ManualTable>` 接受完整 cells / rowKinds props，或互斥的 `<Row>` / `<Cell>` children
+- `<ManualTable>` 接受非空矩形 rows / rowKinds props，或互斥的 `<Row>` / `<Cell>` children
 
-完整 props / plain input 是持久化、LLM、程序化构造与 Vanilla 的 authoring 真源。marker 只负责结构：`DetailColumn` 转成同名 plain column；`Row/Cell` 按当前 row 的首个未占槽位放置，并让 span 立即预占未来 rows。两路最终都调用 framework-neutral create / normalize 合同。
+完整 props / plain input 是持久化、LLM、程序化构造与 Vanilla 的 authoring 真源。marker 只负责结构：`DetailColumn` 转成同名 plain column；`Row/Cell` 按当前 row 的首个未占槽位放置，让 span 立即预占未来 rows，并把未占位置补成 `null`。两路最终都调用 ADR-08 冻结的 framework-neutral create / normalize 合同。
 
 ### standalone host props
 
@@ -51,7 +51,7 @@ adapter 使用 `Object.hasOwn` 检查所有 standalone-only host props、`onMani
 
 ## 文档决策
 
-不新增导航层级，更新 `/viz/table`、`model`、`detail` 与三个 reference 页面。zh 为 source of truth，en 同步；schema registry、ApiValues、README、demo、API 表和 breaking migration 与 package root 的真实导出一致。
+文档按读者任务与模型深度组织：`detail` 作为常用入口；`model` 下分结构、呈现、布局与产物四个概念页；reference 分开明细表、Table、布局、manifest 与 runtime 契约。zh 为 source of truth，en 同步；schema registry、ApiValues、README、demo、API 表和 breaking migration 与 package root 的真实导出一致。
 
 Reference 覆盖 track variants / overrides、Cell span/layout、fit/overflow、border variants / union / Cell sides / Table defaults，以及 manifest root / track / Cell / border entries。中文为公开 object fields 提供完整翻译；union alias 不伪造字段级翻译。
 
@@ -73,7 +73,7 @@ Reference 覆盖 track variants / overrides、Cell span/layout、fit/overflow、
 
 ## 最终实现与验证
 
-实现集中在 React `Table.tsx`、`table-runtime.ts`、`table-view.tsx`、marker builders，以及 Vanilla runtime / adapter。七个 Table 文档路由、双语 demo、schema registry、ApiValues 与 README 已同步。
+实现集中在 React `Table.tsx`、`table-runtime.ts`、`table-view.tsx`、marker builders，以及 Vanilla runtime / adapter。Table 双语文档、demo、schema registry、ApiValues 与 README 已同步。
 
 正式测试覆盖 props/marker 深等、span occupancy、host prop tuple、embedded presence diagnostics、onManifest commit 时序与去重、nested/repeated id exact root、Vanilla compile options、顶层 composites 拒绝、SSR / embedded composites 与 package boundaries。Table、React、Vanilla 与 docs 类型检查、测试、docs integrity、zh/en 浏览器和 390px 窄屏均通过。
 

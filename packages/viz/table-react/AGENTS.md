@@ -21,7 +21,7 @@
 
 ## 当前状态
 
-`0.1.0-alpha.1` 提供 `<Table>`、`<DetailTable>` 与 `<ManualTable>`。`<DetailColumn>`、`<Row>` 与 `<Cell>` 仅负责将 JSX authoring 收集为既有的 detail / manual 结构输入，不增加 Table 语义。三个根组件共享 standalone / embedded runtime；detail / manual sugar 委托 `@retikz/table` normalization 并保留精确 spec 变体，`<Table>` 接收聚合 `IRTableSpec`。embedded 入口要求稳定 spec id，standalone `onManifest` 只在内容变化时通知。后续虚拟滚动仍只在 adapter 维护 viewport 与滚动生命周期。
+当前基线提供 `<Table>`、`<DetailTable>` 与 `<ManualTable>`。`<DetailColumn>`、`<Row>` 与 `<Cell>` 仅负责将 JSX authoring 收集为既有的 detail / manual 结构输入，不增加 Table 语义；`<ManualTable>` 的矩形 `rows` props 与 Row / Cell markers 归一化为同一持久化结构。三个根组件共享 standalone / embedded runtime；detail / manual sugar 委托 `@retikz/table` normalization 并保留精确 spec 变体，`<Table>` 接收聚合 `IRTableSpec`。embedded 入口要求稳定 spec id，standalone `onManifest` 只在内容变化时通知。后续虚拟滚动仍只在 adapter 维护 viewport 与滚动生命周期。
 
 ## 验证
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { compareDeterministicResults, createBaselineCandidate } from '../src/budget';
+import { compareDeterministicResults, createBaselineCandidate } from '../src/shared';
 
 describe('deterministic budget', () => {
   it('接受精确工作量与 oracle 一致的 full / incremental 结果', () => {

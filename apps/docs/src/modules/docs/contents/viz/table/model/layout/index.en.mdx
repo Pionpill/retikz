@@ -1,0 +1,112 @@
+---
+title: Layout & Borders
+description: Understand how Table measures Cell content, solves row and column tracks, places visible content, and deterministically resolves shared borders.
+---
+
+Table layout handles natural content size, parent constraints, spanning Cells, and visible overflow together. It does more than arrange fixed rectangles: track sizes and Cell content constrain each other within one transaction.
+
+<ComponentAlert
+  type="tip"
+  title="This is an advanced model"
+  description="Use the Detail Table layout playground to observe results first. Return here to explain fraction, wrap, span, fit, or shared-border behavior."
+/>
+
+## From measurement to final replay
+
+<ComponentPreview files="table-layout-stages" hideCode size="xs" />
+
+The order in the figure is stable. Table first obtains natural content contributions. Only after column widths are known can a `wrap` Cell receive a width constraint; its final height then contributes to row solving. Cell boxes, content placement, and borders all use those solved tracks.
+
+| Stage             | Question solved                             | Stable information                   |
+| ----------------- | ------------------------------------------- | ------------------------------------ |
+| Intrinsic measure | How large is unconstrained content?         | Row and column contributions         |
+| Track solve       | How do constraints and content size tracks? | Row/column offsets and sizes         |
+| Placement         | How does a child enter its content box?     | Transformed allocation/visual bounds |
+| Border Graph      | Which candidate owns a shared edge?         | Winner, contributors, visible edge   |
+| Final replay      | Which selected result is committed?         | Scene children and manifest          |
+
+Probes participate in solving but do not become duplicate Scene primitives. Final output replays only the child result selected after wrap, fit, alignment, and overflow decisions.
+
+## How tracks get their sizes
+
+| Track type | Natural state                                   | Under finite parent width            |
+| ---------- | ----------------------------------------------- | ------------------------------------ |
+| `fixed`    | Use the explicit size                           | Absorb no extra space                |
+| `auto`     | Use the largest content contribution            | Keep that contribution               |
+| `fraction` | Fall back to content without finite width       | Absorb remaining space by weight     |
+| `minmax`   | Resolve among lower bound, content, upper bound | Grow toward a finite or flexible max |
+
+A non-spanning Cell contributes its outer size directly to its track. A spanning Cell first subtracts the tracks and internal gaps already covered; any remaining deficit is propagated to growable tracks in deterministic order. When every covered track is fixed, Table does not silently enlarge them; the later overflow policy decides whether excess content remains visible.
+
+`fraction` needs an exact or finite range proposal on that axis before “remaining space” exists. The display width of the host SVG is not itself a Table layout proposal.
+
+## Cell boxes and visible content
+
+The central Cell in the hash-shaped grid is `box`, determined by the covered tracks, their internal gaps, and the Cell's span. Subtracting padding produces `contentBox`. The child's allocation and visibly rendered bounds can then diverge further.
+
+<ComponentPreview files="table-cell-box" hideCode size="sm" />
+
+Read the model as four layers from the outside inward. The first two shrink inward; the last two are content results, so visible bounds do not have to stay inside the content area.
+
+| Layer              | Formed from                                                      | Gap to outer layer                              | Responsibility                          |
+| ------------------ | ---------------------------------------------------------------- | ----------------------------------------------- | --------------------------------------- |
+| `box`              | Solved tracks + `span`                                           | `columnGap` / `rowGap`, default `0`             | Cell grid occupancy and border position |
+| `contentBox`       | `box - padding`                                                  | `padding`, default `0`                          | Wrap, fit, alignment, and clip area     |
+| Content allocation | Child measure (`wrap: false`) → `fit: none` → both axes `center` | No property; follows content size and alignment | Logical replay position and size        |
+| Visible bounds     | Child visual bounds → `overflow: visible`                        | No property; `visible` may leave content area   | Final visibly rendered envelope         |
+
+The blue content allocation is `contentAllocationBounds`; the orange visible bounds is `visualOverflowBounds`. The manifest retains both because logical occupancy and visible pixels can differ.
+
+Their different heights are not controlled by a Table spacing property. The blue bounds come from the child's `allocationBounds`, while the orange bounds come from its `visualBounds`; visible geometry such as a stroke can make the latter taller. Table applies the same fit and alignment to both. `overflow` only decides whether to preserve that visible overflow or clip it back to `contentBox`. When the child's source bounds are equal, the two remain the same height under the default `visible` policy.
+
+## Border Graph
+
+Borders are not drawn as four independent lines per Cell. In `collapse` mode, Table defaults and adjacent Cell sides contribute to the same atomic edge. The winner is chosen by priority, Cell specificity, explicit hiding, width, owner side, and stable source order. In `separate` mode, each real Cell side remains distinct.
+
+Only visible winners become final edges. Adjacent solid atoms with equal styles can merge deterministically when no perpendicular intersection must be preserved, while the manifest retains every atom's winner and contributors.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Measurement, columns, wrap, rows, and Cell placement',
+      path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
+      startLine: 263,
+      endLine: 380,
+    },
+    {
+      label: 'Border Graph and final layout/manifest',
+      path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
+      startLine: 383,
+      endLine: 455,
+    },
+  ]}
+/>
+
+## Further reading
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/table/model/presentation">
+    <span className="font-semibold">Content Presentation</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Review how the measured Core child is produced.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/model/manifest">
+    <span className="font-semibold">Artifacts & Provenance</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Continue from final geometry to host consumption.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/reference/contract-layout">
+    <span className="font-semibold">Contract - Layout</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Look up track, Cell layout, and border schemas.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/reference/runtime">
+    <span className="font-semibold">Runtime</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      See the execution boundary of one layout transaction.
+    </span>
+  </LinkedCard>
+</div>

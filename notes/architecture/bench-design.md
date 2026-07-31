@@ -1,6 +1,6 @@
 # Bench 与开发者性能实验室设计
 
-> **状态：Proposed 架构总则。** `@retikz/bench` 已具备自动化 benchmark；可视化开发者工具尚未实现。首个 GUI 版本只服务当前 Kernel 已落地的性能能力。
+> **状态：Active 架构总则。** `@retikz/bench` 已具备自动化 benchmark 与首版 Kernel Performance Lab；后续能力继续按本文边界演进。
 >
 > 关联：[`性能与增量运行时设计`](./performance-design.md) · [`交互与增量运行时设计`](./interaction-design.md) · [`能力完备性与模块边界`](./capability-design.md) · [`@retikz/bench`](../../apps/bench/README.md)
 >
@@ -31,7 +31,7 @@ Bench 通过产品包已有的 trace、diagnostics、Scene、Patch 和公开运�
 
 ### 2.3 自动化与交互共享底座
 
-同一场景应能被 CLI、无头浏览器和交互界面执行。场景、fixture、运行策略与结果口径只有一份，避免自动化结果和人工调试相互矛盾。
+CLI、无头浏览器和交互界面共享可复用的 fixture 与执行原语。各表面可以拥有适合自身目标的编排和展示模型，但同名策略、正确性依据与可比较指标必须保持一致，避免自动化结果和人工调试相互矛盾。
 
 ### 2.4 调试与测量分离
 
@@ -96,17 +96,13 @@ Performance Lab 长期围绕五类问题组织信息：
 
 ## 6. 首个版本边界
 
-首版只为 Kernel 当前已落地的性能优化提供调试面板，不提前模拟未来能力。
-
-开发者需要能够：
+首版只为 Kernel 当前已落地的性能优化提供调试面板，不提前模拟未来能力。当前已提供：
 
 - 选择 SVG / Canvas 与当前支持的 Runtime 执行策略。
-- 调整基础场景规模并触发初始渲染或更新。
-- 直接看到实际图形输出。
+- 运行固定的单实体更新场景并直接查看真实图形输出。
 - 判断本次是否发生增量执行、完整执行或 fallback。
-- 对比不同策略的工作量与本机耗时。
-- 查看必要的 trace、Scene Patch、诊断和资源释放结果。
-- 导出本次实验结果与环境信息。
+- 对比不同策略的确定性工作量与本机耗时。
+- 查看 trace、Scene Patch 与诊断；未接入的生命周期探针明确标记为不可用。
 
 首版使用与 `apps/docs` 一致的 Vite、React、Tailwind v4 和 shadcn/ui 基础技术，但 Bench 保持独立 app，不依赖 Docs 的业务代码。
 
@@ -114,7 +110,7 @@ Performance Lab 长期围绕五类问题组织信息：
 
 - 修改正式 baseline 或 timing guard 的界面。
 - 尚未落地的调度、渐进物化或 generation 假数据。
-- Data、Plot、Table 等上层模块的占位场景。
+- Data、Plot、Table 等上层模块的可运行场景；界面只保留不可选的未来入口。
 - 真实 LLM 调用、模型评测或远程结果服务。
 
 ## 7. 长期扩展方向
@@ -158,7 +154,7 @@ GUI 可以读取和导出报告，但不能直接把一次本机结果设为正�
 
 ## 10. 架构不变量
 
-1. CLI 与 GUI 共享场景、fixture、执行和结果口径。
+1. CLI 与 GUI 共享可复用 fixture 和执行原语，同名策略与可比较指标保持一致。
 2. 正确性失败时，不产生性能通过结论。
 3. 产品包不依赖 Bench，Bench 不复制产品语义。
 4. Inspect 与 Measure 分离，调试界面不进入受控计时区间。
