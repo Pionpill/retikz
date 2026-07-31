@@ -18,7 +18,7 @@ export type WorkspaceSidebarProps = Readonly<{
 export const WorkspaceSidebar: FC<WorkspaceSidebarProps> = props => {
   const { state, dispatch } = props;
   return (
-    <Sidebar collapsible="icon" variant="inset">
+    <Sidebar collapsible="icon">
       <SidebarHeader>
         <ModuleSwitcher state={state} dispatch={dispatch} />
       </SidebarHeader>
