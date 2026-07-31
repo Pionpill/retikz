@@ -15,7 +15,7 @@ Table 需要把内容的 allocation bounds、padding 与 span 归一为数值 co
 
 ### Cell 合同
 
-`IRTableCell` 增加可选 `span` 与 `layout`：
+Cell 的共享 payload / manual entry 合同通过 `IRTableCellSpan` 与 `IRTableCellLayout` 提供可选 `span` 和 `layout`：
 
 - `span.rows` / `span.columns` 是正整数，省略时为 `1`
 - `layout.padding` 复用 Core `BoxSpacingSchema`，按 side > axis > default > `0` 解析
@@ -52,7 +52,7 @@ spanning Cell box 覆盖全部轨道及其内部 gaps。content box 由 Cell box
 
 对齐基于 Core `allocationBounds`：content box 的 start / center / end anchor 减去 source allocation bounds 的对应 anchor，得到 finite Table-local translation。该 translation 包在 replay root 外层，不覆盖 child 自带 transform，也不重新 layout child。
 
-列优先事务先用 intrinsic allocation width 求 columns；列宽确定后，仅对 `wrap: true` 的 Cell 以 content-box width 做 constrained layout，并用选中的 replay 与 allocation height 求 rows。row 结果不反向重开 column solver。
+列优先事务先用 natural proposal probe 的 allocation width 求 columns；列宽确定后，仅对 `wrap: true` 的 Cell 以 content-box width 发起 x 轴 range proposal，并用选中的 probe result、replay 与 allocation height 求 rows。row 结果不反向重开 column solver。
 
 ## 不采用的方案
 
@@ -64,7 +64,7 @@ spanning Cell box 覆盖全部轨道及其内部 gaps。content box 由 Cell box
 ## 公开影响与兼容性
 
 - ⚠️ BREAKING：Cell 从单槽占位扩展为矩形占位，重叠或跨 row-kind span 现在 fail-loud
-- `IRTableCell`、detail column、Structure output 与 Semantic model 增加 span/layout
+- `IRTableCellSpan` / `IRTableCellLayout`、detail column、manual Cell、Structure output 与 Semantic model 共享 span/layout；manual 持久化最终形态由 ADR-08 冻结
 - alpha.1 的单点 `contentCenter` 被 Cell box、content box、source bounds 与 translation 取代，不保留兼容字段
 - `visualBounds` 不参与 contribution；fit / overflow 后的可见范围由 ADR-04 与 ADR-06 的 manifest 表达
 

@@ -1,0 +1,88 @@
+---
+title: Structure & Cells
+description: Understand how detail, explicit, and custom Structures produce one shared row, column, and Cell semantic model.
+---
+
+Different table forms can produce Cells from records, an explicit grid, or domain parameters. The Structure layer removes those input differences so presentation and layout only consume one `SemanticTableModel`.
+
+<ComponentAlert
+  type="tip"
+  title="This is an advanced model"
+  description="Start with Detail Table when you only need record-per-row rendering. Use this page when authoring a custom Structure or consuming Cell provenance."
+/>
+
+## From table forms to one semantic model
+
+<ComponentPreview files="table-structure-model" hideCode size="sm" />
+
+In the figure, each input first passes its precise schema, then the shared Structure registry selects a Definition. The Definition emits declarative candidates; Table validates addresses, spans, and semantic constraints before filling indexes and defaults.
+
+| Structure | Input shape                   | Preserved source                    |
+| --------- | ----------------------------- | ----------------------------------- |
+| `detail`  | Field mapping + runtime rows  | Dataset, source index, and field    |
+| `manual`  | Explicit rectangular entries  | Original row and column coordinates |
+| custom    | Custom JSON and optional data | Structure kind                      |
+
+`detail`, `manual`, and custom are not separate layout systems. They only decide how canonical rows, columns, and Cells are produced; all three share the same path from Presentation onward.
+
+## A Cell is a semantic unit
+
+A canonical Cell is more than its displayed value. It combines stable identity, two-dimensional position, semantics, content, and layout inputs:
+
+| Dimension         | Main information                         | Downstream use                        |
+| ----------------- | ---------------------------------------- | ------------------------------------- |
+| Identity/position | `id`, row/column ids, zero-based indexes | Stable references and track placement |
+| Semantics         | `location`, `roles`                      | Header, body, and domain roles        |
+| Content           | value/content `payload`                  | Presentation input                    |
+| Layout input      | Resolved `span` and Cell layout          | Contributions, placement, borders     |
+| Provenance        | manual, field, or generated `source`     | Debugging, tracing, host mapping      |
+
+Rows and columns also retain stable ids and canonical indexes. Detail columns can preserve a field path, while body rows can preserve an external source index, so consumers do not have to infer record or field identity from rendered text.
+
+## The Structure Definition boundary
+
+A custom Definition can read the immutable data context, field types, and scalar values, then return rows, columns, and Cells. Built-in and custom Definitions use the same registry, output guard, and normalization path.
+
+A Definition must stop at the semantic-model boundary. It may choose Cell identity, roles, payload, span, and layout inputs, but it cannot solve tracks, draw borders, or return renderer-specific objects. Invalid addresses, duplicate identities, out-of-range spans, or inconsistent semantics fail loudly during normalization.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Structure Definition and read-only context',
+      path: 'packages/viz/table/src/contract/structure/types.ts',
+      startLine: 7,
+      endLine: 29,
+    },
+    {
+      label: 'Shared registry and canonical model construction',
+      path: 'packages/viz/table/src/pipeline/normalize/normalize.ts',
+      startLine: 22,
+      endLine: 75,
+    },
+  ]}
+/>
+
+## Further reading
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/table/model/presentation">
+    <span className="font-semibold">Content Presentation</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Continue from Cell payloads to Core content.</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/model/layout">
+    <span className="font-semibold">Layout & Borders</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      See how spans, tracks, and Cell boxes are solved.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/detail">
+    <span className="font-semibold">Detail Table</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">The common record-to-row authoring entry.</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/reference/contract-table">
+    <span className="font-semibold">Contract - Table</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Look up Structure, Cell, and TableSpec schemas.
+    </span>
+  </LinkedCard>
+</div>

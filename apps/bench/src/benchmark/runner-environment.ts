@@ -1,6 +1,6 @@
 import { arch, cpus, hostname, platform, totalmem } from 'node:os';
 
-import type { TimingRunnerEnvironment } from './timing';
+import type { TimingRunnerEnvironment } from '../shared';
 
 /** 校验并冻结绑定 wall-clock baseline 的机器与 runner identity */
 export const captureTimingRunnerEnvironment = (environment: TimingRunnerEnvironment): TimingRunnerEnvironment => {

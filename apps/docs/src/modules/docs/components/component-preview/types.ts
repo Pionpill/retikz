@@ -408,12 +408,22 @@ export type ComponentPreviewFiles =
   | ComponentPreviewFile
   | readonly [ComponentPreviewFile, ...Array<ComponentPreviewFile>];
 
+/** Vanilla 源码复用附属数据文件时使用的 named import。 */
+export type PreviewDatasetImport = {
+  /** Vanilla 源码中的模块导入路径。 */
+  from: string;
+  /** 数据文件提供的 named export。 */
+  name: string;
+};
+
 /** demo 模块声明的源码派生能力。 */
 export type PreviewSourceConfig = {
   /** 是否允许直接执行 demo 以自动派生 IR。 @default true */
   deriveIR?: boolean;
   /** 使用稳定默认状态渲染源码视图，不参与可见 demo 的交互状态 */
   canonicalRender?: () => ReactNode;
+  /** 按外部数据引用名声明 Vanilla 源码复用的附属数据导入。 */
+  datasetImports?: Readonly<Record<string, PreviewDatasetImport>>;
 };
 
 /** unified diff 中单行的种类：未变 / 新增 / 删除。 */

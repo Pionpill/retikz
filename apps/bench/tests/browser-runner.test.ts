@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { readBenchPort } from '../src/browser-runner';
+import { getBrowserRunnerPath, readBenchPort } from '../src/benchmark/browser-runner';
 
 const originalPort = process.env.RETIKZ_BENCH_PORT;
 
@@ -18,5 +18,11 @@ describe('browser runner port', () => {
   it.each(['0', '65536', '1.5', 'not-a-port'])('拒绝非法端口 %s', value => {
     process.env.RETIKZ_BENCH_PORT = value;
     expect(() => readBenchPort()).toThrow(/1 and 65535/i);
+  });
+});
+
+describe('browser runner page', () => {
+  it('使用与 Performance Lab 隔离的 runner 页面', () => {
+    expect(getBrowserRunnerPath()).toBe('/runner.html');
   });
 });

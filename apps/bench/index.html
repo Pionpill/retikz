@@ -1,25 +1,17 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>retikz browser benchmark</title>
-    <style>
-      *,
-      *::before,
-      *::after {
-        animation: none !important;
-        transition: none !important;
-      }
-
-      body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-      }
-    </style>
+    <meta name="theme-color" content="#0b0d12" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🧪%3C/text%3E%3C/svg%3E"
+    />
+    <title>Retikz Performance Lab</title>
   </head>
   <body>
-    <main id="bench-root" aria-label="retikz browser benchmark"></main>
-    <script type="module" src="/src/browser.ts"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/playground/main.tsx"></script>
   </body>
 </html>
