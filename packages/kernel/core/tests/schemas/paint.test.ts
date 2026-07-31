@@ -139,18 +139,134 @@ describe('PaintSpecSchema — pattern', () => {
     }
   });
 
-  it('接受全字段（color / background / size / lineWidth / rotation）', () => {
-    expect(() =>
-      PaintSpecSchema.parse({
+  it('接受并保留完整图案与线型字段', () => {
+    const input = {
+      kind: 'pattern' as const,
+      shape: 'lines',
+      color: 'currentColor',
+      background: '#eee',
+      size: 6,
+      lineWidth: 1.5,
+      dashed: true,
+      dotted: true,
+      dashPattern: [6, 3],
+      dashOffset: -2,
+      lineCap: 'round' as const,
+      lineJoin: 'bevel' as const,
+      rotation: 45,
+    };
+    const parsed = PaintSpecSchema.parse(input);
+    expect(parsed).toEqual(input);
+    expect(PaintSpecSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
+  });
+
+  it('保留横纵方向样式与稀疏线型周期，并通过 JSON 往返', () => {
+    const input = {
+      kind: 'pattern' as const,
+      shape: 'grid',
+      color: '#64748b',
+      lineWidth: 1,
+      dashed: true,
+      horizontalStyle: {
+        color: '#2563eb',
+        dotted: true,
+        lineCap: 'round' as const,
+      },
+      verticalStyle: {
+        color: '#dc2626',
+        dashPattern: [6, 2],
+        lineWidth: 2,
+      },
+      lineStyleCycle: {
+        period: 4,
+        overrides: [
+          { index: 0, style: { lineWidth: 3 } },
+          { index: 3, style: { dashed: false, dotted: false } },
+        ],
+      },
+    };
+
+    const parsed = PaintSpecSchema.parse(input);
+    expect(parsed).toEqual(input);
+    expect(PaintSpecSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
+  });
+
+  it.each([
+    ['period 小于 2', { period: 1, overrides: [{ index: 0, style: {} }] }],
+    ['period 大于 512', { period: 513, overrides: [{ index: 0, style: {} }] }],
+    ['period 不是整数', { period: 2.5, overrides: [{ index: 0, style: {} }] }],
+    ['period 不是 finite number', { period: Number.POSITIVE_INFINITY, overrides: [{ index: 0, style: {} }] }],
+  ])('拒绝非法 lineStyleCycle：%s', (_label, lineStyleCycle) => {
+    const result = PaintSpecSchema.safeParse({ kind: 'pattern', shape: 'lines', lineStyleCycle });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some(issue => issue.path[0] === 'lineStyleCycle' && issue.path[1] === 'period')).toBe(
+        true,
+      );
+    }
+  });
+
+  it('拒绝空 lineStyleCycle overrides', () => {
+    const result = PaintSpecSchema.safeParse({
+      kind: 'pattern',
+      shape: 'lines',
+      lineStyleCycle: { period: 3, overrides: [] },
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(
+        result.error.issues.some(issue => issue.path[0] === 'lineStyleCycle' && issue.path[1] === 'overrides'),
+      ).toBe(true);
+    }
+  });
+
+  it.each([
+    ['负 index', { period: 3, overrides: [{ index: -1, style: {} }] }],
+    ['越界 index', { period: 3, overrides: [{ index: 3, style: {} }] }],
+    [
+      '重复 index',
+      {
+        period: 3,
+        overrides: [
+          { index: 1, style: {} },
+          { index: 1, style: { dashed: true } },
+        ],
+      },
+    ],
+  ])('拒绝非法 lineStyleCycle override：%s', (_label, lineStyleCycle) => {
+    const result = PaintSpecSchema.safeParse({ kind: 'pattern', shape: 'lines', lineStyleCycle });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(
+        result.error.issues.some(
+          issue =>
+            issue.path[0] === 'lineStyleCycle' &&
+            issue.path[1] === 'overrides' &&
+            typeof issue.path[2] === 'number' &&
+            issue.path[3] === 'index',
+        ),
+      ).toBe(true);
+    }
+  });
+
+  it.each([
+    ['空 dashPattern', { dashPattern: [] }],
+    ['负 dashPattern', { dashPattern: [2, -1] }],
+    ['未知 lineCap', { lineCap: 'triangle' }],
+    ['未知 lineJoin', { lineJoin: 'curve' }],
+    ['非正 lineWidth', { lineWidth: 0 }],
+    ['未知字段', { dashArray: [4, 2] }],
+  ])('嵌套 Pattern line style 复用描边约束：%s', (_label, horizontalStyle) => {
+    expect(
+      PaintSpecSchema.safeParse({
         kind: 'pattern',
-        shape: 'lines',
-        color: 'currentColor',
-        background: '#eee',
-        size: 6,
-        lineWidth: 1.5,
-        rotation: 45,
-      }),
-    ).not.toThrow();
+        shape: 'grid',
+        horizontalStyle,
+      }).success,
+    ).toBe(false);
   });
 
   it('shape 开放：接受任意非空 string（未注册名拒绝移到 compile 期）', () => {
@@ -165,6 +281,16 @@ describe('PaintSpecSchema — pattern', () => {
   it('空串 shape / size 非正 被拒', () => {
     expect(() => PaintSpecSchema.parse({ kind: 'pattern', shape: '' })).toThrow();
     expect(() => PaintSpecSchema.parse({ kind: 'pattern', shape: 'dots', size: 0 })).toThrow();
+  });
+
+  it('非法 dash pattern 被拒', () => {
+    expect(() => PaintSpecSchema.parse({ kind: 'pattern', shape: 'lines', dashPattern: [] })).toThrow();
+    expect(() => PaintSpecSchema.parse({ kind: 'pattern', shape: 'lines', dashPattern: [2, -1] })).toThrow();
+  });
+
+  it('未知 line cap / join 被拒', () => {
+    expect(() => PaintSpecSchema.parse({ kind: 'pattern', shape: 'lines', lineCap: 'triangle' })).toThrow();
+    expect(() => PaintSpecSchema.parse({ kind: 'pattern', shape: 'grid', lineJoin: 'curve' })).toThrow();
   });
 });
 
