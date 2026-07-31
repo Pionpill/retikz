@@ -1,171 +1,71 @@
 # ADR-NN：<一句话标题>
 
-> 起新 ADR：`cp _template.md v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-<channel>.<N>/NN-<slug>.md`
-> 例：`cp _template.md v0/v0.1/alpha.1/01-foo.md`
-> 目录约定：
+> 起新 ADR：`cp _template.md <FAMILY>/v<MAJOR>/v<MAJOR>.<MINOR>/<channel.N>/NN-<slug>.md`
 >
-> - 一级 = MAJOR 版本号（`v0/` / `v1/`）
-> - 二级 = MINOR 版本号（`v0.1/` / `v0.2/`）
-> - 三级 = 版本通道节点（`alpha.1/` / `beta.1/` / `rc.1/` / `v0.1/` 表稳定）
-> - PATCH 不开目录（patch 仅修 bug，不写 ADR）
->   NN 是**按 milestone 重置**的两位数编号（目录已分组，编号无需全局唯一）。alpha.1 是 01-08，alpha.2 从 01 重新起计；跨 milestone 引用带前缀：`alpha.1 ADR-01`
->   slug 用 kebab-case
->   **viz 家族版本独立**：data / plot 等家族各自维护路线与版本；消费上游能力但不反向注入实现，里程碑由所需依赖能力是否就绪 gating。
->   模板对应 [`develop-design`](../../../../../../../../.agents/skills/develop-design/SKILL.md) SKILL；改 ADR 结构时同步改两边
->   路径假设实例位于 `packages/viz/_notes/decisions/<FAMILY>/<MAJOR>/<MAJOR>.<MINOR>/<channel.N>/<NN>-...md`，模板里的相对链接按此位置写（在模板自身处链接会断，cp 到实例位置后才正确）
->   **ADR 生命周期**：Proposed 期是「施工蓝图」，带完整实现契约供下游 implement / test / document Agent 执行；该里程碑**发布后、bump 到下一版本前**（也可平时主动单独发起），由 [`package-publish`](../../../../../../../../.agents/skills/package-publish/SKILL.md) 阶段 6.1 把本里程碑目录下的 Accepted ADR **压缩成「决策记录」**——只留「只有 ADR 能告诉你的 WHY」：删 🔻 两段（待决策点并进「决策」/ 实现契约折成指针）、背景压成几条硬约束、DSL 表面 / 落地分布并进文档站 + 指针、删完工即失效的过渡文本（「受限于… / 待…处理」这类）。保留：决策 / 被否决选项 + 理由 / 不在范围；代码块只留核心数据结构。完整施工契约留在 Proposed commit 的 git 历史（`git show <commit>:<path>` 可捞回），工作区只留定稿态、零信息损失。详见 package-publish 阶段 6.1。
+> - 目录层级为 family / major / minor / channel；PATCH 不开 ADR 目录。
+> - 编号在 milestone 内从 `01` 重新开始，slug 用 kebab-case；各 viz family 独立演进。
+> - 本模板对应 [`develop-design`](../../../../../../../../.agents/skills/develop-design/SKILL.md)；结构变化时同步更新。
+> - ADR 从 Proposed 起就是长期功能与架构文档，不写施工细节，也不在 Accepted / 发布前再做“压缩”。
+> - 进入实现后，将 `decisions` 替换为 `plans`、文件名变为目录，在 ignored 镜像路径维护 `PLAN.md`、`TEST_CONTRACT.md`、必要的 `TASK_STATE.md` 与 `REVIEW.md`。
 
 - 状态：Proposed
 - 决策日期：YYYY-MM-DD
-- 关联：[所属家族 v0 roadmap §<段>](../../roadmap.md) · [能力域 completeness 文档](../../../../../architecture/<data-capability-complete-or-plot-visualization-complete>.md) · [具体架构设计 §<段>](../../../../../architecture/<...>.md)
+- 关联：[所属家族 v0 roadmap §<段>](../../roadmap.md) · [能力域 completeness 文档](../../../../../architecture/<...>.md) · [架构设计 §<段>](../../../../../architecture/<...>.md)
 
-## 背景
+## 背景与目标
 
-<现状是什么、为什么不够、所属能力域或同类库怎么做、用户为什么会想要。3-5 段，避免空话>
+<当前问题、为什么现有能力不够、必须达成什么。只写长期成立的约束>
 
 ## 决策：<最终方案一句话>
 
-<直接写定稿方案：解决了什么、关键设计、代价。只写最终采纳的做法，不罗列被否决的中间方案>
-
-```ts
-// Data / Plot IR、schema、spec 表面或 pipeline / lowering 处理示意
-```
+<写核心方案、关键取舍与代价，不写文件或施工顺序>
 
 理由：
 
-1. <第一条不可让步的理由>
-2. <第二条>
-3. <第三条>
+1. <不可让步的理由>
+2. <不可让步的理由>
 
-## 待决策点 🔻
+## 基础数据结构与公开契约
 
-> 方案已定，但方案内部仍有的小决策。**列得越细，下游 Spec / 实现 Agent 越不需要猜**。
-> 🔻 临时段：带硬「倾向」的其实已是决策、应直接并进「决策」段而非停在这里；封板（bump 前）时把实现期已拍板项并进「决策」、删除本段，真正悬而未决的挪「不在本 ADR 范围」。
+<只保留理解功能所必需的 IR / schema / DSL / API 或跨包数据结构。可以给 1–2 个最小示例；不写文件位置、Zod 拼装方式、private intermediate 或逐字段操作>
 
-- **<决策点 1>**：<选项与倾向>
-- **<决策点 2>**：<选项与倾向>
-
-## DSL 表面
-
-```tsx
-<最能表达本 ADR 价值的 1-2 段 Data / Plot IR 或 authoring 示例；用户读这段就知道能力解决什么问题——develop-document 阶段的 mdx demo 种子>
+```ts
+// 最小公开或跨包契约；不适用时删除代码块并说明“无新增基础数据结构”
 ```
 
-## 测试设计
+## 行为、失败语义与兼容性
 
-`packages/viz/<data-or-plot>/tests/<对应路径>.test.ts` 覆盖：
+- 默认行为：
+- 失败与诊断：
+- 兼容性 / breaking：
+- React / Vanilla 等价性：
 
-- <case 类别 1>
-- <case 类别 2>
-- ...
+## 功能与包边界
 
-具体 case 拆分见下面"实现契约 § 测试象限"。
-
-## 影响
-
-- <对现有代码的影响：哪些能力域和包受牵动、哪些 IR 字段或 pipeline 产物改变>
-- <对 data / core 的影响：是否依赖上游新能力、是否触及其公开契约>
-- <对文档站的影响：哪些章节要补 / 改>
-- <对外 API 的影响：哪些 plot spec / chart prop 加 / 改 / 删>
-- <breaking 改动则显式标 ⚠️ BREAKING + 迁移路径>
-
-## 能力完备性检查
-
-- 所属能力域与能力面：Data Complete / Visualization Complete
-- 解决的问题：
+- 所属能力域与解决的问题：
 - 主责包与协作包：
+- 拥有：
+- 不拥有：
+- 外部扩展与下游闭环：
+- 不支持边界：
+
+## 架构验证
+
 - 是否可由现有能力组合：
-- 是否需要下沉到 data / core / math：
-- 内部表达链路：
-- 外部扩展链路：
-- pipeline / lowering 与下游消费：
-- React / Vanilla adapter 等价性：
+- Data / Plot / Table / Chart / Standard / Core 责任切分：
+- 是否需要新 IR / contract / registry；不采用 registry 时的理由：
+- pipeline / lowering / renderer / diagnostics 如何闭环：
 - provenance / lineage / locator 是否适用：
-- 不支持边界与本轮结论：组合 / 扩展当前域 / 下沉 / 上移 / 不支持或延期
+- 结论：组合 / 扩展当前域 / 下沉 / 上移 / 不支持或延期
+
+## 被否决方案
+
+- <方案>：<否决理由>
+
+## 测试策略摘要
+
+<只写需要 schema、pipeline、adapter parity、renderer、docs 等哪些证据层及关键不变量，不写 case、路径、命令或数量；详细矩阵进入镜像 plan 的 TEST_CONTRACT.md>
 
 ## 不在本 ADR 范围
 
-- <列推迟到下版的相关项；写清楚省得 review 时被问 "为什么不顺手做掉 X">
-
----
-
-## 实现契约（必填）🔻
-
-> 本段是下游 implement / test / document / wrapup 阶段的硬契约。AI 子 Agent 严格按此执行，偏离需开新 ADR 或本 ADR 加新条目重审。
-> 🔻 临时段：前瞻施工指令，仅 Proposed → 实现窗口内有效。该里程碑发布、bump 到下一版本前（package-publish 阶段 6）整段折成一行指针——实现 commit range + 测试路径 +「最终 schema / 行为以代码为准」；完整契约留在 Proposed commit 的 git 历史。Accepted 后代码 + 测试才是真源，此表只会与代码漂移。
-
-### Level
-
-`red` | `yellow` | `green`
-
-判级规则（参 [`flow-alpha`](../../../../../../../../.agents/skills/flow-alpha/SKILL.md) "自动判级" 表）：
-
-- **red**：动 `packages/viz/{data,plot}/src/schemas/**` · `packages/viz/plot/src/pipeline/**`（下沉到 core IR 的契约边界）· `packages/viz/*/src/index.ts`
-- **yellow**：动 `packages/viz/{data,plot}/src/{contract,providers,shared}/**` 或 adapter 接线
-- **green**：仅 `apps/docs/**` / 测试 / 注释 / 配置
-
-跨级取最高 level。本 ADR 自评 level：`<red / yellow / green>`，与"文件 scope" 段相符。
-
-### Schema 改动
-
-| 文件                                               | 操作         | 字段名         | 类型         | 默认值           | describe 中文摘要 |
-| -------------------------------------------------- | ------------ | -------------- | ------------ | ---------------- | ----------------- |
-| `packages/viz/<data-or-plot>/src/schemas/<...>.ts` | 加 / 改 / 删 | `<exact name>` | `<zod 类型>` | `<default 或 —>` | <一句话>          |
-| ...                                                | ...          | ...            | ...          | ...              | ...               |
-
-每行一条字段改动。**字段名一旦写死，下游 Spec / 实现 Agent 不允许改**——发现需要改 → 回本 ADR 加条 / 开新 ADR。
-
-无 schema 改动（黄色或绿色 ADR）→ 本表写"无"。
-
-### 文件 scope
-
-本 ADR 实现允许触碰的文件白名单：
-
-- `packages/viz/<data-or-plot>/src/schemas/<新建>.ts`
-- `packages/viz/<data-or-plot>/src/{contract,providers,pipeline}/<...>.ts`（修改）
-- `packages/viz/<data-or-plot>/tests/<.../...>.test.ts`（新建）
-- `apps/docs/src/modules/docs/contents/<...>/<...>.mdx`（修改）
-- `apps/docs/src/modules/docs/contents/<...>/<...>.demo.tsx`（新建）
-- ...
-
-偏离白名单的改动需要：
-
-- 加新条目到本 ADR 的"实现契约 → 文件 scope"段，并自我注解"为什么扩展 scope"
-- 或开新 ADR
-
-### 测试象限
-
-每条 ADR **至少 9 个 case**，按四象限分布（**plot alpha milestone 放宽**：按复杂度适量、覆盖真实有意义的 accept/reject 与几何断言即可，不硬凑 9——见该 milestone roadmap 的「测试 case 规则」）：
-
-**Happy path（≥ 3）**：
-
-- `<case 名>`：<触发输入> → <期望行为>
-- `<case 名>`：...
-- `<case 名>`：...
-
-**边界（≥ 2）**：
-
-- `<case 名>`：<min/max / 0 / 空 / 单元素 / undefined / 单 datum / 空 domain> → <期望>
-- `<case 名>`：...
-
-**错误路径（≥ 2）**：
-
-- `<case 名>`：<schema 拒绝 / 引用未定义 scale / 通道类型错 / lowering 失败> → <期望抛错或 null>
-- `<case 名>`：...
-
-**交互（≥ 2）**：
-
-- `<case 名>`：<与已有功能交叉，如 stack × dodge × scale / polar × guide> → <期望>
-- `<case 名>`：...
-
-> 这是 [`develop-implement`](../../../../../../../../.agents/skills/develop-implement/SKILL.md) Stage 2 Spec Writer 的输入。象限填得越具体，Spec Writer 写出的测试越贴 ADR 意图，越不需要 [`develop-test`](../../../../../../../../.agents/skills/develop-test/SKILL.md) Stage 3 Bug Hunter 兜底。
-
-### 依赖的现有元素
-
-本 ADR 引用 / 扩展 / 修改的现有 Data / Plot IR、公开 API 和上游能力：
-
-- `<元素名>`（位于 `<file path>`）—— <如何用：仅引用 / 扩展 / 修改>
-- `<data / core 能力>`（位于所属主责包）—— <本能力如何消费，不反向依赖其内部实现>
-- ...
-
-无依赖（全新孤立功能）→ 写"无"。
+- <明确延期或不支持的相邻能力>

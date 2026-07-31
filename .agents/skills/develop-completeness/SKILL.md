@@ -9,10 +9,10 @@ description: Use when an Alpha ADR needs a pre-implementation capability gate, o
 
 ## 模式
 
-| 模式         | 输入                                            | 输出                                      | 用途                         |
-| ------------ | ----------------------------------------------- | ----------------------------------------- | ---------------------------- |
-| `adr-gate`   | Alpha ADR、当前代码、适用 completeness / AGENTS | 返回调用方的结构化 findings，不写报告文件 | 实现前阻止错误归属和局部闭环 |
-| `code-audit` | 能力域、当前完整代码、公开表面与架构文档        | ignored completeness report               | Beta 入口规划或出口验收      |
+| 模式         | 输入                                                       | 输出                                      | 用途                             |
+| ------------ | ---------------------------------------------------------- | ----------------------------------------- | -------------------------------- |
+| `adr-gate`   | 长期形态的 Alpha ADR、当前代码、适用 completeness / AGENTS | 返回调用方的结构化 findings，不写报告文件 | 人工确认前阻止错误归属和局部闭环 |
+| `code-audit` | 能力域、当前完整代码、公开表面与架构文档                   | ignored completeness report               | Beta 入口规划或出口验收          |
 
 调用方必须明确模式；不要把代码评分报告代替 ADR gate，也不要用 ADR 自述代替 Beta 代码证据。
 
@@ -43,24 +43,28 @@ description: Use when an Alpha ADR needs a pre-implementation capability gate, o
 
 ### 输入要求
 
-- 读取完整 Proposed ADR，尤其是决策、能力完备性检查、DSL / API 表面、测试设计和实现契约。
+- 读取完整 Proposed ADR，尤其是核心决策、基础数据结构 / 公开契约、行为与失败语义、功能边界、被否决方案和架构验证。
 - 对照当前代码判断 ADR 是否复用既有机制；尚未实现不妨碍设计门禁。
-- 调用方提供当前轮次 `1/3`、`2/3` 或 `3/3`。
+- 调用方提供固定快照、评审模型与当前轮次 `1/3`、`2/3` 或 `3/3`；同轮并发与多模型归并由 `cross-review` 负责。
 
 ### Gate 重点
 
 - ADR 必须选择明确结论：组合、扩展当前域、下沉、上移、不支持或延期。
 - 新增开放语义时，ADR 必须定义内置与自定义同路的 define-registry 链路；若能力天然闭合，必须写出不采用 registry 的契约理由。
-- 文件 scope、schema 明细、测试象限和依赖元素必须足以约束实现，不能让 implementer 再决定所有权或公开字段。
+- 基础数据结构、公开契约、默认 / 失败语义和跨包接口必须足以冻结功能，不能让 plan 或 implementer 再决定所有权或公开字段。
 - 发现需要另一个能力域先补底座时，当前 ADR 不得用局部 adapter / renderer patch 绕过。
+- ADR 必须保留稳定测试策略摘要，说明需要哪些证据层和关键不变量；具体 case、文件、路径、命令和数量属于镜像 plan，不是 Gate 缺失项。
+- Gate 不得要求 ADR 增加文件 scope、private helper、业务逻辑步骤、Zod 拼装、测试 case、验证命令、commit 切分或 review 过程。
 
 ### 输出契约
 
 只返回以下结构，不创建报告文件：
 
 ```md
-Verdict: PASS | BLOCKED
+ReviewerVerdict: REVIEWER_PASS | BLOCKED
 Round: <1|2|3>/3
+Reviewer: <actual-model>
+Snapshot: HEAD=<sha>; ADR=<path-and-content-version>
 
 ## BLOCKING
 
@@ -68,7 +72,7 @@ Round: <1|2|3>/3
   检查轴：<共同检查矩阵中的一项>
   问题：<会导致错误实现或边界破坏的具体事实>
   证据：<ADR 段落 + 1-2 个当前代码 / 契约路径>
-  必须修订：<ADR 应补齐或改写的契约>
+  必须修订：<ADR 应补齐或改写的长期契约；实现细节写 plan>
 
 ## WARNING
 
@@ -81,7 +85,7 @@ Round: <1|2|3>/3
 - <可选建议>
 ```
 
-无 BLOCKING，且每个 WARNING 已修复或在 ADR 中记录可验证的接受理由时才能 `PASS`。时间压力、已有实现、用户离线或“后续再补”都不能降低 finding 等级。
+单个评审员无 BLOCKING，且每个 WARNING 已修复或在 ADR 中记录可验证的接受理由时可以返回 `REVIEWER_PASS`。该值只表示一份 reviewer 输出合格，不能解析为 Gate PASS。Architecture Gate 的 `GateVerdict: PASS` 只能由编排者在 `cross-review` 最新一轮至少两个不同模型实际完成并归并通过后产生。时间压力、已有实现、用户离线或“后续再补”都不能降低 finding 等级。
 
 ## `code-audit`
 
@@ -158,8 +162,9 @@ PASS | BLOCKED | ESCALATE_ALPHA
 ### `adr-gate`
 
 - 覆盖共同检查矩阵，使用当前代码证据而非只读 ADR 自述。
+- 只检查长期功能和架构契约，不把 plan 细节反向写入 ADR。
 - 输出严格符合 findings 契约，没有修改任何文件。
-- PASS 条件已满足；否则明确 BLOCKED。
+- 单模型结论已明确；最终多模型 PASS 由调用方按 `cross-review` 汇总。
 
 ### `code-audit`
 
