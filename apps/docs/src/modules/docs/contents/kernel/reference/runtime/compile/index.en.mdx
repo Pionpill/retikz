@@ -9,7 +9,7 @@ The `@retikz/core` compile layer turns JSON-serializable IR into a `Scene` and t
 
 | API                           | Signature                                                              | Purpose                                                                                      |
 | ----------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `compileToScene`              | `(ir: IRScene, options?: CompileOptions) => CompileResult`             | Main compile entry point; returns `scene` and immutable `artifacts` together                 |
+| `compileToScene`              | `(ir: IRScene, options?: CompileOptions) => CompileResult`             | Main entry; returns `scene`, immutable `artifacts`, and `inspection` together                |
 | `lowerIRToKernel`             | `(ir: IRScene, options?: LowerIRToKernelOptions) => LoweredIRScene`    | Recursively expands composites and returns Kernel IR with no Tier 2 nodes                    |
 | `computeLayout`               | `(points, padding, round) => Layout`                                   | Computes the scene bounds from bbox candidate points; usually called inside `compileToScene` |
 | `resolveBoxSpacing`           | `(value, fallback) => BoundsInsets`                                    | Normalizes a uniform or side-specific value into complete four-side spacing                  |
@@ -42,14 +42,15 @@ Callers validate `value` with their owning schema first. `fallback` must be fini
 
 ### Layout And Output
 
-| Option          | Type                     | Default | Notes                                                                                                                                         |
-| --------------- | ------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `padding`       | `number`                 | `10`    | Extra layout padding in user units                                                                                                            |
-| `precision`     | `number`                 | `2`     | Decimal precision for Scene coordinates, structured path commands, and layout values; internal geometry is double precision                   |
-| `nodeDistance`  | `number`                 | `24`    | Default distance for `AtPosition` when `distance` is omitted                                                                                  |
-| `labelDistance` | `number`                 | `12`    | Default net gap from the node boundary to the rotated label visual box when `Node.label.distance` is omitted; must be finite and non-negative |
-| `fontSize`      | `number`                 | `16`    | Default font size; also the root size for presets and `rem`; explicit numeric font sizes are unchanged                                        |
-| `artifacts`     | `CompileArtifactOptions` | `{}`    | Opt-in generic outputs; `{ nodeLayouts: true }` includes real Node `CompiledNodeLayout` snapshots                                             |
+| Option          | Type                       | Default | Notes                                                                                                                                         |
+| --------------- | -------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `padding`       | `number`                   | `10`    | Extra layout padding in user units                                                                                                            |
+| `precision`     | `number`                   | `2`     | Decimal precision for Scene coordinates, structured path commands, and layout values; internal geometry is double precision                   |
+| `nodeDistance`  | `number`                   | `24`    | Default distance for `AtPosition` when `distance` is omitted                                                                                  |
+| `labelDistance` | `number`                   | `12`    | Default net gap from the node boundary to the rotated label visual box when `Node.label.distance` is omitted; must be finite and non-negative |
+| `fontSize`      | `number`                   | `16`    | Default font size; also the root size for presets and `rem`; explicit numeric font sizes are unchanged                                        |
+| `artifacts`     | `CompileArtifactOptions`   | `{}`    | Opt-in generic outputs; `{ nodeLayouts: true }` includes real Node `CompiledNodeLayout` snapshots                                             |
+| `inspection`    | `CompileInspectionOptions` | —       | Runtime-only sidecar; `root` is the whole-figure policy and `roots` bind authored occurrences                                                 |
 
 ### Provider Registries
 
@@ -77,6 +78,10 @@ The two `CompositeDefinition` branches are mutually exclusive:
 
 - `expand(node)` performs context-free structural expansion;
 - `compile(node, context)` evaluates real child content through `context.proposal` and `layoutChild(child, proposal)` in the complete compile environment.
+
+A layout-aware definition with `artifactSchema` may also declare `inspector`. The inspector stays on the same `CompositeDefinition` and registry key; Core does not maintain a second inspector registry. For a selected occurrence, the callback receives the validated artifact from that compile, complete shared options, and definition-local options, and may return only strict rect, line, or label inspection DTOs. An `expand` branch, a compile branch without `artifactSchema`, or a selected occurrence that omits its artifact fails loudly.
+
+`CompileInspectionOptions.root` carries a sparse whole-figure policy. `roots` is an authored-occurrence sidecar built by adapters such as React or Vanilla. It never enters IR and does not require callers to predict dynamic probe or replay paths. With `inspection` omitted, inspectors do not run and the primary Scene and artifacts retain their original behavior.
 
 `LayoutProposal` contains exactly `x` and `y`; each axis is a `LayoutAxisProposal`:
 
@@ -189,10 +194,13 @@ For an auto-contrast warning, `path` is the current Node locator and `message` i
 
 `compileToScene` returns a `CompileResult`:
 
-| Field       | Type                             | Notes                                                                |
-| ----------- | -------------------------------- | -------------------------------------------------------------------- |
-| `scene`     | `Scene`                          | The laid-out scene consumed by renderers                             |
-| `artifacts` | `ReadonlyArray<CompileArtifact>` | Immutable typed artifacts from the same canonical compile as `scene` |
+| Field        | Type                             | Notes                                                                |
+| ------------ | -------------------------------- | -------------------------------------------------------------------- |
+| `scene`      | `Scene`                          | The laid-out scene consumed by renderers                             |
+| `artifacts`  | `ReadonlyArray<CompileArtifact>` | Immutable typed artifacts from the same canonical compile as `scene` |
+| `inspection` | `InspectionPlane \| null`        | Inspection overlay isolated from the primary Scene; `null` when off  |
+
+`inspection` is not part of `scene`: it cannot expand `scene.layout`, add resources or identities, or change hit testing. Render static and retained frames materialize the primary Scene and inspection plane as two planes from the same revision.
 
 Its `scene` contains:
 

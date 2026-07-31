@@ -1,13 +1,27 @@
-import type { AnyCompositeDefinition, IRChild, IRScene, IRScope } from '@retikz/core';
+import type {
+  AnyCompositeDefinition,
+  CompositeInspectionAuthoringRoot,
+  CompositeInspectionAuthoringTree,
+  CompositeInspectionChildForest,
+  InspectOptions,
+  IRChild,
+  IRScene,
+  IRScope,
+  SceneInspectionAuthoringPathSegment,
+  ScopeInspectionAuthoringPathSegment,
+} from '@retikz/core';
+
+import { mergeInspectOptions } from '@retikz/core';
 
 import type {
+  AnyVanillaEmbedSpec,
   VanillaChildSpec,
-  VanillaEmbedSpec,
   VanillaFigureSpec,
   VanillaLayerMeta,
   VanillaLayerSpec,
   VanillaNormalizedFigure,
   VanillaNormalizeOptions,
+  VanillaScopeSpec,
   VanillaTier2Contribution,
 } from './types';
 
@@ -40,6 +54,12 @@ type NormalizeContext = {
   identityIndex: Map<string, Array<string>>;
   /** 全图父子身份关系索引，用于后续失效边界推导 */
   parentIndex: Map<string, string>;
+  /** 当前 child 在最终 Scene authored tree 中的 locator */
+  inspectionPath: Array<SceneInspectionAuthoringPathSegment | ScopeInspectionAuthoringPathSegment>;
+  /** 最近 Scope 累积的 sparse inspection 策略 */
+  inheritedInspection?: InspectOptions;
+  /** 全图 runtime-only inspection roots */
+  inspectionRoots: Array<CompositeInspectionAuthoringRoot>;
 };
 
 /** 校验 adapter 输出身份标识时额外需要的上下文 */
@@ -86,12 +106,15 @@ const registerIdentity = (
   ctx.parentIndex.set(id, parentId);
 };
 
-const isEmbed = (child: VanillaChildSpec): child is VanillaEmbedSpec => child.type === 'embed';
+const isEmbed = (child: VanillaChildSpec): child is AnyVanillaEmbedSpec => child.type === 'embed';
 
-const isScope = (child: IRChild): child is IRScope =>
+const isScope = (child: VanillaChildSpec | IRChild): child is VanillaScopeSpec =>
   child.type === 'scope' && !('namespace' in child) && Array.isArray((child as { children?: unknown }).children);
 
-const readIdentity = (child: IRChild): string | undefined =>
+const isIRScope = (child: IRChild): child is IRScope =>
+  child.type === 'scope' && !('namespace' in child) && Array.isArray((child as { children?: unknown }).children);
+
+const readIdentity = (child: object): string | undefined =>
   'id' in child && typeof child.id === 'string' ? child.id : undefined;
 
 /** 按命名空间合并 Tier2 数据集，再生成 core composite definitions */
@@ -137,7 +160,7 @@ const registerAdapterOutputIdentity = (id: string | undefined, ctx: AdapterOutpu
 const validateAdapterOutputIdentities = (child: IRChild, ctx: AdapterOutputContext): void => {
   const identity = readIdentity(child);
   registerAdapterOutputIdentity(identity, ctx);
-  if (!isScope(child)) return;
+  if (!isIRScope(child)) return;
 
   const scopeParentId = identity ?? ctx.parentId;
   const scopePath = identity === undefined ? ctx.path : [...ctx.path, identity];
@@ -145,8 +168,76 @@ const validateAdapterOutputIdentities = (child: IRChild, ctx: AdapterOutputConte
   for (const scopeChild of child.children) validateAdapterOutputIdentities(scopeChild, childCtx);
 };
 
+/** 把 ancestor Scope policy 合入一个 Vanilla authored root tree */
+const inheritInspectionTree = (
+  tree: CompositeInspectionAuthoringTree,
+  inherited: InspectOptions | undefined,
+): CompositeInspectionAuthoringTree => {
+  const merged = mergeInspectOptions(inherited, tree.policy?.inherited);
+  if (merged === undefined) return tree;
+  return Object.freeze({
+    ...tree,
+    policy: Object.freeze({ ...tree.policy, inherited: merged }),
+  });
+};
+
+/** 把 embed 的 component policy 写入其唯一相对根 occurrence */
+const applyEmbedInspection = (
+  forest: CompositeInspectionChildForest,
+  inspect: AnyVanillaEmbedSpec['inspect'],
+): CompositeInspectionChildForest => {
+  if (inspect === undefined) return forest;
+  const rootIndexes = forest
+    .map((root, index) => (root.locator.path.length === 0 ? index : -1))
+    .filter(index => index >= 0);
+  if (rootIndexes.length !== 1) {
+    throw new Error('vanilla embed inspection requires exactly one contribution root at the embedded node');
+  }
+  return Object.freeze(
+    forest.map((root, index) =>
+      index === rootIndexes[0]
+        ? Object.freeze({
+            ...root,
+            tree: Object.freeze({
+              ...root.tree,
+              policy: Object.freeze({ ...root.tree.policy, component: inspect }),
+            }),
+          })
+        : root,
+    ),
+  );
+};
+
+/** 把相对 contribution.node 的 forest 提升为最终 Scene roots */
+const collectContributionInspectionRoots = (
+  context: NormalizeContext,
+  forest: CompositeInspectionChildForest,
+): void => {
+  const sceneSegment = context.inspectionPath[0];
+  const scopePath = context.inspectionPath.slice(1);
+  if (
+    sceneSegment.kind !== 'sceneChild' ||
+    !scopePath.every((segment): segment is ScopeInspectionAuthoringPathSegment => segment.kind === 'scopeChild')
+  ) {
+    throw new Error('internal: Vanilla inspection path must start at a Scene child');
+  }
+  forest.forEach(root => {
+    const path: CompositeInspectionAuthoringRoot['locator']['path'] = [
+      sceneSegment,
+      ...scopePath,
+      ...root.locator.path,
+    ];
+    context.inspectionRoots.push(
+      Object.freeze({
+        locator: Object.freeze({ path }),
+        tree: inheritInspectionTree(root.tree, context.inheritedInspection),
+      }),
+    );
+  });
+};
+
 /** 把 embed 节点交给匹配的 Tier2 adapter 静态下沉为 core IR 子节点 */
-const lowerEmbed = (embed: VanillaEmbedSpec, ctx: NormalizeContext): IRChild => {
+const lowerEmbed = (embed: AnyVanillaEmbedSpec, ctx: NormalizeContext): IRChild => {
   const adapter = ctx.adapters?.find(entry => entry.kind === embed.kind);
   if (!adapter) {
     throw new Error(`vanilla spec embed "${embed.id}" uses kind "${embed.kind}" but no adapter was provided.`);
@@ -169,6 +260,16 @@ const lowerEmbed = (embed: VanillaEmbedSpec, ctx: NormalizeContext): IRChild => 
     parentId: embed.id,
     path: [...ctx.path, embed.id],
   });
+  let inspectionRoots = contribution.inspectionRoots;
+  if (inspectionRoots === undefined && embed.inspect !== undefined) {
+    if (!('namespace' in contribution.node)) {
+      throw new Error('vanilla embed inspection requires an adapter contribution root');
+    }
+    inspectionRoots = Object.freeze([Object.freeze({ locator: Object.freeze({ path: [] }), tree: Object.freeze({}) })]);
+  }
+  if (inspectionRoots !== undefined) {
+    collectContributionInspectionRoots(ctx, applyEmbedInspection(inspectionRoots, embed.inspect));
+  }
   return contribution.node;
 };
 
@@ -181,14 +282,31 @@ const normalizeChild = (child: VanillaChildSpec, ctx: NormalizeContext): IRChild
 
   const identity = readIdentity(child);
   registerIdentity(identity, ctx.parentId, identity === undefined ? ctx.path : [...ctx.path, identity], ctx);
-  if (!isScope(child)) return child;
+  if (!isScope(child)) {
+    if ('namespace' in child && ctx.inheritedInspection !== undefined) {
+      collectContributionInspectionRoots(ctx, [{ locator: { path: [] }, tree: {} }]);
+    }
+    return child;
+  }
 
   // scope 的匿名子节点继续归属最近具名祖先；具名 scope 则成为新的父身份标识。
   const scopeId = identity ?? ctx.parentId;
   const scopePath = identity === undefined ? ctx.path : [...ctx.path, identity];
-  const scopeCtx: NormalizeContext = { ...ctx, parentId: scopeId, path: scopePath };
-  const children = (child.children as Array<VanillaChildSpec>).map(scopeChild => normalizeChild(scopeChild, scopeCtx));
-  return { ...child, children };
+  const scopeCtx: NormalizeContext = {
+    ...ctx,
+    parentId: scopeId,
+    path: scopePath,
+    inheritedInspection: mergeInspectOptions(ctx.inheritedInspection, child.inspect),
+  };
+  const children = child.children.map((scopeChild, index) =>
+    normalizeChild(scopeChild, {
+      ...scopeCtx,
+      inspectionPath: [...ctx.inspectionPath, { kind: 'scopeChild', index }],
+    }),
+  );
+  const { inspect: _inspect, ...scope } = child;
+  void _inspect;
+  return { ...scope, children };
 };
 
 /** 把 Vanilla 普通规格规范化为核心 IR 与运行时元数据 */
@@ -205,6 +323,7 @@ export const normalizeFigureSpec = (
   const parentIndex = new Map<string, string>();
   const layerMetas: Array<VanillaLayerMeta> = [];
   const children: Array<IRChild> = [];
+  const inspectionRoots: Array<CompositeInspectionAuthoringRoot> = [];
 
   for (const [order, layer] of layers.entries()) {
     // layer 本身也是公开身份标识；后续 layer 级 patch / cache 都依赖它唯一。
@@ -222,8 +341,16 @@ export const normalizeFigureSpec = (
       contributions,
       identityIndex,
       parentIndex,
+      inspectionPath: [],
+      inspectionRoots,
     };
-    const layerChildren = layer.children.map(child => normalizeChild(child, ctx));
+    const sceneOffset = children.length;
+    const layerChildren = layer.children.map((child, index) =>
+      normalizeChild(child, {
+        ...ctx,
+        inspectionPath: [{ kind: 'sceneChild', index: sceneOffset + index }],
+      }),
+    );
     children.push(...layerChildren);
     layerMetas.push({
       id: layer.id,
@@ -252,5 +379,6 @@ export const normalizeFigureSpec = (
     ir,
     composites: [...aggregateComposites(contributions), ...(options.composites ?? [])],
     runtimeMeta,
+    inspectionRoots,
   };
 };

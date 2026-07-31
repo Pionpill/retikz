@@ -1,9 +1,5 @@
-import type {
-  CompileArtifact,
-  CompileOccurrenceLocator,
-  CompositeCompileArtifact,
-  NodeLayoutCompileArtifact,
-} from '../types';
+import type { CompileOccurrenceLocator } from '../../contract';
+import type { CompileArtifact, CompositeCompileArtifact, NodeLayoutCompileArtifact } from '../types';
 
 /** 创建递归冻结的 occurrence locator */
 export const freezeOccurrence = (occurrence: CompileOccurrenceLocator): CompileOccurrenceLocator =>

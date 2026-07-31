@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-import type { IRScene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
+import type { IRScene, ScenePatch } from '@retikz/core';
 import type {
+  RenderFrameSnapshot,
   RenderRuntimeConfig,
   RetainedRendererFactory,
   RetainedRendererFactoryInput,
@@ -42,6 +43,43 @@ const compositeSource: IRScene = {
   children: [{ namespace: 'fixture', type: 'stable' }],
 };
 
+const inspectionComposite = defineComposite({
+  namespace: 'fixture',
+  type: 'inspection',
+  schema: CompositeBaseSchema.extend({
+    namespace: z.literal('fixture'),
+    type: z.literal('inspection'),
+  }),
+  artifactSchema: z.strictObject({ width: z.number(), height: z.number() }),
+  inspector: {
+    kind: 'layout',
+    localOptionsInputSchema: z.strictObject({}),
+    localOptionsSchema: z.strictObject({}),
+    inspect: artifact => [
+      {
+        kind: 'rect',
+        role: 'fixture.inspection',
+        x: 0,
+        y: 0,
+        width: artifact.width,
+        height: artifact.height,
+        presentation: 'outline',
+        tone: 'neutral',
+      },
+    ],
+  },
+  compile: () => ({
+    children: [{ type: 'node', id: 'inspection-node', position: [0, 0], shape: 'rectangle' }],
+    artifact: { width: 20, height: 20 },
+  }),
+});
+
+const inspectionSource: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [{ namespace: 'fixture', type: 'inspection' }],
+};
+
 /** 构造只保留 committed snapshot 的第三方 renderer */
 const createMemoryRendererFactory = (
   capability: 'none' | 'entity',
@@ -50,13 +88,13 @@ const createMemoryRendererFactory = (
   onPatch?: (patch: ScenePatch) => void,
 ): RetainedRendererFactory =>
   ((input: RetainedRendererFactoryInput) => {
-    let current: SceneRuntimeSnapshot | undefined;
-    const prepare = (snapshot: SceneRuntimeSnapshot, config: RenderRuntimeConfig): RuntimePreparedCommit => {
+    let current: RenderFrameSnapshot | undefined;
+    const prepare = (frame: RenderFrameSnapshot, config: RenderRuntimeConfig): RuntimePreparedCommit => {
       onPrepare?.(input.host, config);
       const previous = current;
       return Object.freeze({
         commit: () => {
-          current = snapshot;
+          current = frame;
         },
         rollback: () => {
           current = previous;
@@ -66,14 +104,15 @@ const createMemoryRendererFactory = (
     };
     const definition = {
       capability,
-      prepareMount: (snapshot: SceneRuntimeSnapshot, config: RenderRuntimeConfig) => prepare(snapshot, config),
-      prepare: (patch: ScenePatch, snapshot: SceneRuntimeSnapshot, config: RenderRuntimeConfig) => {
+      inspectionCapability: 'supported' as const,
+      prepareMount: (frame: RenderFrameSnapshot, config: RenderRuntimeConfig) => prepare(frame, config),
+      prepare: (patch: ScenePatch, frame: RenderFrameSnapshot, config: RenderRuntimeConfig) => {
         onPatch?.(patch);
-        return prepare(snapshot, config);
+        return prepare(frame, config);
       },
       read: () => {
         if (current === undefined) throw new Error('memory renderer is not committed');
-        return Object.freeze({ snapshot: current });
+        return Object.freeze({ frame: current });
       },
       dispose: () => {
         current = undefined;
@@ -94,6 +133,29 @@ afterEach(() => {
 });
 
 describe('React Layout retained Runtime', () => {
+  it('recreates a retained session when inspect changes without comparing the new frame to the stale SSR seed', async () => {
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    const rendererFactory = vi.fn(createMemoryRendererFactory('entity')) as unknown as RetainedRendererFactory;
+
+    await act(() =>
+      root.render(<Layout ir={inspectionSource} composites={[inspectionComposite]} runtime={{ rendererFactory }} />),
+    );
+    await act(() =>
+      root.render(
+        <Layout
+          ir={inspectionSource}
+          composites={[inspectionComposite]}
+          inspect={{ layout: true }}
+          runtime={{ rendererFactory }}
+        />,
+      ),
+    );
+
+    expect(rendererFactory).toHaveBeenCalledTimes(2);
+    await act(() => root.unmount());
+  });
+
   it('Definition 数组容器重建但元素 identity 不变时复用 retained session', async () => {
     const container = document.createElement('div');
     const root = createRoot(container);

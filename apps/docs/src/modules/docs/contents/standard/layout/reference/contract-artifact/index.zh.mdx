@@ -1,0 +1,143 @@
+---
+title: 契约 - 产物
+description: 查询 Standard 布局容器的类型化编译产物、边界语义、溢出状态和容器专属求解结果。
+---
+
+布局产物记录同一次 Core 编译中已经求解的可观察结果。它描述父级分配区域、子图形真实占用、视觉包络与裁切结果，但不保存空间提案、测量候选、回放令牌、求解器对象或子图形私有 IR。
+
+> Core 产物信封负责实例出现位置（`occurrence`）、命名空间（`namespace`）与复合组件类型（`type`）；本页的 Standard schema 只解析信封中的 `value`。如何装载能力、执行编译和定位产物见[运行时](/standard/layout/reference/runtime)。
+
+## 通用字段
+
+### LayoutArtifactSchema
+
+<ZodSchema name="LayoutArtifactSchema" description="由 kind 判别的三个 Standard 类型化布局产物联合。" />
+
+每个具体产物的 `container` 都包含：
+
+| 字段               | 类型                         | 描述                                            |
+| ------------------ | ---------------------------- | ----------------------------------------------- |
+| `allocationBounds` | `LayoutArtifactRect`         | 容器最终的分配矩形                              |
+| `contentBounds`    | `LayoutArtifactRect`         | 扣除内边距后的内容矩形                          |
+| `visualBounds`     | `LayoutArtifactRect`         | 所有已平移子项视觉边界的并集                    |
+| `visibleBounds`    | `LayoutArtifactRect \| null` | 应用溢出策略后仍可见的并集；无正面积时为 `null` |
+
+每个 `items[]` 条目共享：
+
+| 字段               | 类型                              | 描述                                                   |
+| ------------------ | --------------------------------- | ------------------------------------------------------ |
+| `key`              | `string`                          | 对应作者声明的子项标识                                 |
+| `sourceIndex`      | `number`                          | 连续且从零开始的声明顺序                               |
+| `marginBounds`     | `LayoutArtifactRect`              | 包含已求解外边距的完整父级分配区域                     |
+| `slotBounds`       | `LayoutArtifactRect`              | 不含外边距、由父级分配的区域                           |
+| `allocationBounds` | `LayoutArtifactRect`              | 子图形接受或拒绝分配区域后的真实布局占用               |
+| `visualBounds`     | `LayoutArtifactRect`              | 包含描边或标签等效果的保守视觉包络                     |
+| `visibleBounds`    | `LayoutArtifactRect \| null`      | 裁切后仍可见的视觉区域                                 |
+| `translation`      | `{ x: number, y: number }`        | 回放前应用的容器局部平移                               |
+| `overflow`         | `{ allocation, visual, clipped }` | 双轴真实占用、视觉包络与裁切状态                       |
+| `alignmentGuide?`  | `{ name, position, fallback }`    | 实际用于放置的基线参考线，或基线不可用时的边缘回退结果 |
+
+`slotBounds`、`allocationBounds` 与 `visualBounds` 不能互换：固定几何可以拒绝父级分配的区域，而描边或标签还可能让视觉包络继续扩大。
+
+## 容器专属产物
+
+### FlexLayoutArtifactSchema
+
+<ZodSchema
+  name="FlexLayoutArtifactSchema"
+  description="FlexLayout 的容器、声明顺序子项与物理交叉轴顺序布局行。"
+  descriptions={{
+    kind: 'FlexLayout 产物的判别字段。',
+    container: '已求解的容器几何。',
+    'container.allocationBounds': '容器最终的分配矩形。',
+    'container.allocationBounds.x': '容器分配矩形的水平原点。',
+    'container.allocationBounds.y': '容器分配矩形的垂直原点。',
+    'container.allocationBounds.width': '容器分配矩形的非负宽度。',
+    'container.allocationBounds.height': '容器分配矩形的非负高度。',
+    'container.contentBounds': '扣除内边距后的容器内容矩形。',
+    'container.contentBounds.x': '容器内容矩形的水平原点。',
+    'container.contentBounds.y': '容器内容矩形的垂直原点。',
+    'container.contentBounds.width': '容器内容矩形的非负宽度。',
+    'container.contentBounds.height': '容器内容矩形的非负高度。',
+    'container.visualBounds': '所有已平移子项视觉边界的并集。',
+    'container.visualBounds.x': '视觉边界并集的水平原点。',
+    'container.visualBounds.y': '视觉边界并集的垂直原点。',
+    'container.visualBounds.width': '视觉边界并集的非负宽度。',
+    'container.visualBounds.height': '视觉边界并集的非负高度。',
+    'container.visibleBounds': '容器内仍可见的视觉并集；没有正面积时为 null。',
+    items: '按作者声明顺序排列的子项结果。',
+    lines: '按最终物理交叉轴顺序排列的布局行。',
+  }}
+/>
+
+`items[].line` 指向所属布局行；`lines[]` 记录连续 `index`、`itemKeys`、物理主轴、主轴范围与交叉轴范围。两者必须形成完整的双向分组关系。
+
+### GridLayoutArtifactSchema
+
+<ZodSchema
+  name="GridLayoutArtifactSchema"
+  description="GridLayout 的容器、已求解子项跨轨道范围与行列轨道几何。"
+  descriptions={{
+    kind: 'GridLayout 产物的判别字段。',
+    container: '已求解的容器几何。',
+    'container.allocationBounds': '容器最终的分配矩形。',
+    'container.allocationBounds.x': '容器分配矩形的水平原点。',
+    'container.allocationBounds.y': '容器分配矩形的垂直原点。',
+    'container.allocationBounds.width': '容器分配矩形的非负宽度。',
+    'container.allocationBounds.height': '容器分配矩形的非负高度。',
+    'container.contentBounds': '扣除内边距后的容器内容矩形。',
+    'container.contentBounds.x': '容器内容矩形的水平原点。',
+    'container.contentBounds.y': '容器内容矩形的垂直原点。',
+    'container.contentBounds.width': '容器内容矩形的非负宽度。',
+    'container.contentBounds.height': '容器内容矩形的非负高度。',
+    'container.visualBounds': '所有已平移子项视觉边界的并集。',
+    'container.visualBounds.x': '视觉边界并集的水平原点。',
+    'container.visualBounds.y': '视觉边界并集的垂直原点。',
+    'container.visualBounds.width': '视觉边界并集的非负宽度。',
+    'container.visualBounds.height': '视觉边界并集的非负高度。',
+    'container.visibleBounds': '容器内仍可见的视觉并集；没有正面积时为 null。',
+    items: '按作者声明顺序排列的子项结果。',
+    columns: '按物理起点顺序排列的已求解列轨道。',
+    rows: '按物理起点顺序排列的已求解行轨道。',
+  }}
+/>
+
+`items[]` 增加 `column`、`row`、`columnSpan` 与 `rowSpan`。`columns[]` 和 `rows[]` 按物理起点排序，并记录连续 `index`、`start`、`size`、`sourceKind` 与 `implicit`。
+
+### OverlayLayoutArtifactSchema
+
+<ZodSchema
+  name="OverlayLayoutArtifactSchema"
+  description="OverlayLayout 的容器、声明顺序子项与稳定的已求解绘制顺序。"
+  descriptions={{
+    kind: 'OverlayLayout 产物的判别字段。',
+    container: '已求解的容器几何。',
+    'container.allocationBounds': '容器最终的分配矩形。',
+    'container.allocationBounds.x': '容器分配矩形的水平原点。',
+    'container.allocationBounds.y': '容器分配矩形的垂直原点。',
+    'container.allocationBounds.width': '容器分配矩形的非负宽度。',
+    'container.allocationBounds.height': '容器分配矩形的非负高度。',
+    'container.contentBounds': '扣除内边距后的容器内容矩形。',
+    'container.contentBounds.x': '容器内容矩形的水平原点。',
+    'container.contentBounds.y': '容器内容矩形的垂直原点。',
+    'container.contentBounds.width': '容器内容矩形的非负宽度。',
+    'container.contentBounds.height': '容器内容矩形的非负高度。',
+    'container.visualBounds': '所有已平移子项视觉边界的并集。',
+    'container.visualBounds.x': '视觉边界并集的水平原点。',
+    'container.visualBounds.y': '视觉边界并集的垂直原点。',
+    'container.visualBounds.width': '视觉边界并集的非负宽度。',
+    'container.visualBounds.height': '视觉边界并集的非负高度。',
+    'container.visibleBounds': '容器内仍可见的视觉并集；没有正面积时为 null。',
+    items: '按作者声明顺序排列的子项结果。',
+    paintOrder: '包含全部子项 key 的稳定绘制顺序。',
+  }}
+/>
+
+`items[]` 增加 `placement`、`sizeParticipation`、`zIndex` 与可选 `position`。只有 `positioned` 子项必须提供 `position.target` 和 `position.slotAnchor`；两点都使用容器分配坐标，并在数值容差内重合。`aligned` 子项不得携带该字段。`paintOrder` 必须是所有子项 key 的完整排列：先按 `zIndex` 升序，再按 `sourceIndex` 保持稳定顺序。
+
+## 相关
+
+- [API 参考](/standard/layout/reference)：参考页职责与导航
+- [输入契约](/standard/layout/reference/contract-input)：容器与 LayoutItem 的 JSON schema
+- [运行时](/standard/layout/reference/runtime)：执行编译并读取类型化产物
+- [布局](/kernel/components/layout/overview)：Core 空间提案、分配区域、边界与回放契约

@@ -51,12 +51,14 @@ The fixed identities are `CORE_OWNER_KEY = '@retikz/core/document'` and `CORE_PR
 
 ## Artifact Contract
 
-| Field                | Role                                                                                              |
-| -------------------- | ------------------------------------------------------------------------------------------------- |
-| `output.result`      | Complete Scene and typed artifacts equivalent to fresh `compileToScene()` for the same IR/options |
-| `output.diagnostics` | Core compile warnings in canonical order; dispatched to `onWarn` only after a successful commit   |
-| `snapshot`           | Deeply immutable Scene, document root identity, and topology for the current Session revision     |
-| `patch`              | Atomic Scene Patch relative to the base revision; absent on the initial full run                  |
+| Field                | Role                                                                                                        |
+| -------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `output.result`      | Scene, typed artifacts, and inspection plane equivalent to fresh `compileToScene()` for the same IR/options |
+| `output.diagnostics` | Core compile warnings in canonical order; dispatched to `onWarn` only after a successful commit             |
+| `snapshot`           | Deeply immutable Scene, document root identity, and topology for the current Session revision               |
+| `patch`              | Atomic Scene Patch relative to the base revision; absent on the initial full run                            |
+
+`CompileOptions.inspection` is a runtime-only authored sidecar. Core resolves cascade policies through `CompositeDefinition.inspector` and assembles strict rect, line, and label DTOs in `CompileResult.inspection`. The plane is isolated from the primary Scene and never enters Snapshot identity, resources, layout bounds, or Patch diff. A Program full fallback regenerates the primary Scene, artifacts, and inspection plane in the same revision.
 
 The initial run performs a full compile. When an update cannot be proven locally safe, the Program falls back to a full compile and publishes one `replaceScene` in `patch.operations`. Callers still consume the same Snapshot / Patch envelope instead of switching protocols.
 
@@ -157,6 +159,9 @@ session.update({
 | `CoreProgramPublicRead<TComposites>`                   | Public `output`, `snapshot`, and optional `patch`                            |
 | `CoreProgramDefinition<TComposites>`                   | Artifact-input, owned-artifact, and private/public read generic relationship |
 | `RuntimeScene` / `SceneRuntimeSnapshot` / `ScenePatch` | Deeply readonly Scene and atomic Patch DTOs                                  |
+| `InspectOptions` / `CompileInspectionOptions`          | Layout or Scope cascade policy and compile authored sidecar                  |
+| `InspectionPlane` / `InspectionPrimitive`              | Strict inspection overlay DTOs isolated from the primary Scene               |
+| `CompositeInspectorDefinition`                         | Inspector attached to a layout-aware composite in the same registry          |
 
 ## Source
 

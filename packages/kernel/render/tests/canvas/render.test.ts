@@ -1,8 +1,8 @@
-import type { Scene } from '@retikz/core';
+import type { InspectionPlane, Scene } from '@retikz/core';
 
 import { describe, expect, it, vi } from 'vitest';
 
-import { renderToCanvas } from '../../src/canvas';
+import { renderFrameToCanvas, renderToCanvas } from '../../src/canvas';
 
 type CanvasCall = {
   name: string;
@@ -15,12 +15,15 @@ type SpyCanvasContext = Pick<
   | 'clearRect'
   | 'fill'
   | 'fillText'
+  | 'lineTo'
+  | 'moveTo'
   | 'rect'
   | 'restore'
   | 'save'
   | 'setLineDash'
   | 'setTransform'
   | 'stroke'
+  | 'transform'
 > & {
   calls: Array<CanvasCall>;
   fillStyle: string | CanvasGradient | CanvasPattern;
@@ -47,12 +50,15 @@ const createSpyCanvasContext = (): SpyCanvasContext => {
     clearRect: record('clearRect'),
     fill: record('fill'),
     fillText: record('fillText'),
+    lineTo: record('lineTo'),
+    moveTo: record('moveTo'),
     rect: record('rect'),
     restore: record('restore'),
     save: record('save'),
     setLineDash: record('setLineDash'),
     setTransform: record('setTransform'),
     stroke: record('stroke'),
+    transform: record('transform'),
   };
 };
 
@@ -76,6 +82,40 @@ const frameScene: Scene = {
 };
 
 describe('renderToCanvas 规格', () => {
+  it('render frame 在同一 fit/DPR transform 下先绘制 primary、再绘制 inspection', () => {
+    const context = createSpyCanvasContext();
+    const { canvas } = createCanvas(context as unknown as CanvasRenderingContext2D);
+    const inspection: InspectionPlane = {
+      entries: [
+        {
+          occurrence: { sourcePath: '$.children[0]', expansionPath: [] },
+          transform: [1, 0, 0, 1, 12, 8],
+          primitives: [
+            {
+              kind: 'line',
+              role: 'layout.guide',
+              x1: 0,
+              y1: 0,
+              x2: 20,
+              y2: 0,
+              tone: 'guide',
+              lineStyle: 'dotted',
+            },
+          ],
+        },
+      ],
+    };
+
+    renderFrameToCanvas(canvas, { primary: frameScene, inspection }, { devicePixelRatio: 2 });
+
+    const rectIndex = context.calls.findIndex(call => call.name === 'rect');
+    const lineIndex = context.calls.findIndex(call => call.name === 'lineTo');
+    expect(rectIndex).toBeGreaterThanOrEqual(0);
+    expect(lineIndex).toBeGreaterThan(rectIndex);
+    expect(context.calls.filter(call => call.name === 'setTransform')).toHaveLength(2);
+    expect(context.calls.filter(call => call.name === 'setTransform')[1].args).toEqual([3, 0, 0, 3, -30, -60]);
+  });
+
   it('render-to-canvas-frame：获取 2d context，按 DPR 和 viewBox 设置帧，再 clear 后绘制', () => {
     const context = createSpyCanvasContext();
     const { canvas, getContext } = createCanvas(context as unknown as CanvasRenderingContext2D);

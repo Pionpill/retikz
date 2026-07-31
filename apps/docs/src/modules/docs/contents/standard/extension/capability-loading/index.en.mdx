@@ -23,7 +23,7 @@ A bundle only combines `CompositeDefinition` values. It does not merge renderer 
 
 ## Define a Capability
 
-The built-in modules are `GridModule`, `AxesModule`, and `FrameModule`. Third-party composites still use Core `defineComposite()` as their source of truth. Wrap a definition in an ordinary structural module only when it needs to participate in the same composition step:
+The built-in modules are `GridModule`, `AxesModule`, `FrameModule`, `FlexLayoutModule`, `GridLayoutModule`, and `OverlayLayoutModule`. Third-party composites still use Core `defineComposite()` as their source of truth. Wrap a definition in an ordinary structural module only when it needs to participate in the same composition step:
 
 ```ts
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
@@ -64,9 +64,11 @@ import { StandardAllPreset } from '@retikz/standard';
 
 `StandardAllPreset` contains every Standard module published by the current version. Use `createStandardBundle([GridModule, FrameModule])` for a smaller selection.
 
+Use `StandardLayoutPreset` when only the layout family is needed. It provides FlexLayout, GridLayout, and OverlayLayout definitions in that order.
+
 ### React JSX
 
-`<Grid>`, `<Axes>`, and `<Frame>` continue to contribute definitions through their static adapters. Do not also pass the same capability through bundle composites to that `Layout`; Core fails loudly when both paths register the same definition.
+`<Grid>`, `<Axes>`, `<Frame>`, and the three layout containers contribute definitions through static adapters. Nested layouts share the `standard.layout` namespace and maker, so the outer `Layout` receives one family contribution. Do not also pass the same capability through bundle composites; Core fails loudly on duplicate registration.
 
 ### Vanilla
 
@@ -80,6 +82,8 @@ mountSvg(container, figure, { adapters: StandardVanillaAdapters });
 ```
 
 Direct Standard IR does not use adapters. Put `bundle.compile` in the runtime `compile` option instead.
+
+Use `StandardLayoutVanillaAdapters` for layout embeds only. The complete `StandardVanillaAdapters` appends those three entries after Grid, Axes, and Frame.
 
 ## Execution Model
 
@@ -119,16 +123,21 @@ Modules, bundles, and adapters cannot enter persisted IR. `StandardAllPreset` an
 
 ## API Reference
 
-| Export                     | Package                    | Responsibility                                    |
-| -------------------------- | -------------------------- | ------------------------------------------------- |
-| `StandardCapabilityModule` | `@retikz/standard`         | Group Core composite definitions under one name   |
-| `StandardBundle`           | `@retikz/standard`         | Hold module names and a required compile fragment |
-| `createStandardBundle()`   | `@retikz/standard`         | Validate, combine, and freeze selected modules    |
-| `GridModule`               | `@retikz/standard`         | Official Grid module                              |
-| `AxesModule`               | `@retikz/standard`         | Official Axes module                              |
-| `FrameModule`              | `@retikz/standard`         | Official Frame module                             |
-| `StandardAllPreset`        | `@retikz/standard`         | Bundle of all current Standard modules            |
-| `StandardVanillaAdapters`  | `@retikz/standard-vanilla` | All current Standard Vanilla adapters             |
+| Export                          | Package                    | Responsibility                                    |
+| ------------------------------- | -------------------------- | ------------------------------------------------- |
+| `StandardCapabilityModule`      | `@retikz/standard`         | Group Core composite definitions under one name   |
+| `StandardBundle`                | `@retikz/standard`         | Hold module names and a required compile fragment |
+| `createStandardBundle()`        | `@retikz/standard`         | Validate, combine, and freeze selected modules    |
+| `GridModule`                    | `@retikz/standard`         | Official Grid module                              |
+| `AxesModule`                    | `@retikz/standard`         | Official Axes module                              |
+| `FrameModule`                   | `@retikz/standard`         | Official Frame module                             |
+| `FlexLayoutModule`              | `@retikz/standard`         | Official FlexLayout module                        |
+| `GridLayoutModule`              | `@retikz/standard`         | Official GridLayout module                        |
+| `OverlayLayoutModule`           | `@retikz/standard`         | Official OverlayLayout module                     |
+| `StandardLayoutPreset`          | `@retikz/standard`         | Bundle containing the three layout definitions    |
+| `StandardAllPreset`             | `@retikz/standard`         | Bundle of all current Standard modules            |
+| `StandardLayoutVanillaAdapters` | `@retikz/standard-vanilla` | The three layout Vanilla adapters                 |
+| `StandardVanillaAdapters`       | `@retikz/standard-vanilla` | All current Standard Vanilla adapters             |
 
 `StandardCapabilityModule` contains `name: string` and `composites: ReadonlyArray<CompositeDefinition>`. `StandardBundle` contains `modules: ReadonlyArray<string>` and required `compile.composites`; even an empty bundle returns an empty array without an optional branch.
 
@@ -138,4 +147,5 @@ All three packages expose only their root package entry. Capabilities are named 
 
 - [Get Started](/standard/get-start): run one Grid through React, Vanilla, and persisted JSON
 - [Composites](/standard/composite): browse the current Standard composite catalog
+- [Layout Containers](/standard/layout): Flex, Grid, Overlay, and typed artifacts
 - [Core Extension Mechanisms](/kernel/reference/runtime/extensions): define and register third-party Core definitions

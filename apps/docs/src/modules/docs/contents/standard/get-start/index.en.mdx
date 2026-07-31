@@ -115,6 +115,26 @@ mountSvg(container, scene, {
 
 If the bundle does not select `GridModule`, Core emits `COMPOSITE_NOT_REGISTERED` and skips the Grid. Other registered or native Core children still compile. Use `StandardAllPreset.compile` when the host needs every current Standard capability.
 
+## Next: replace handwritten coordinates with a layout container
+
+Layout JSX uses `FlexLayout`, `GridLayout`, `OverlayLayout`, and direct `LayoutItem` children. The three containers share one `standard.layout` contribution. Direct IR can inject `StandardLayoutPreset.compile`, while Vanilla can pass `StandardLayoutVanillaAdapters`.
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { FlexLayout, LayoutItem } from '@retikz/standard-react';
+
+<Layout width={320} height={120}>
+  <FlexLayout columnGap={8}>
+    <LayoutItem kind="flex" itemKey="label" grow={1}>
+      <Node position={[0, 0]} text="Label" />
+    </LayoutItem>
+    <LayoutItem kind="flex" itemKey="value" shrink={0}>
+      <Node position={[0, 0]} text="42%" />
+    </LayoutItem>
+  </FlexLayout>
+</Layout>;
+```
+
 ## Next Steps
 
 | Page                                                         | Continue with                                                 |
@@ -122,4 +142,5 @@ If the bundle does not select `GridModule`, Core emits `COMPOSITE_NOT_REGISTERED
 | [Grid](/standard/composite/grid)                             | Spacing, major lines, boundaries, and border                  |
 | [Axes](/standard/composite/axes)                             | Arrows, ticks, labels, and directional grid                   |
 | [Frame](/standard/composite/frame)                           | Automatic bounds, gap, border, and label                      |
+| [Layout Containers](/standard/layout)                        | Flex, Grid, Overlay, and typed artifacts                      |
 | [Capability Loading](/standard/extension/capability-loading) | Modules, partial bundles, the all preset, and host boundaries |

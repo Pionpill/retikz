@@ -1,4 +1,8 @@
 import type {
+  CompositeInspectionAuthoringRoot,
+  CompositeInspectionAuthoringTree,
+  CompositeInspectionChildForest,
+  InspectOptions,
   IRArrowMark,
   IRChild,
   IRLineSpec,
@@ -14,10 +18,18 @@ import type {
   IRTarget,
   IRTransform,
   IRTransformInput,
+  SceneInspectionAuthoringPathSegment,
+  ScopeInspectionAuthoringPathSegment,
 } from '@retikz/core';
 import type { ReactElement, ReactNode } from 'react';
 
-import { AxisLineTargetSchema, CURRENT_IR_VERSION, parsePathThickness, parseTargetSugar } from '@retikz/core';
+import {
+  AxisLineTargetSchema,
+  CURRENT_IR_VERSION,
+  mergeInspectOptions,
+  parsePathThickness,
+  parseTargetSugar,
+} from '@retikz/core';
 import { Children, createElement, Fragment, isValidElement } from 'react';
 
 import type { CoordinateProps } from '../components';
@@ -587,16 +599,75 @@ const buildCoordinateFromProps = (props: CoordinateProps): IRChild => ({
  */
 type BuildContext = {
   contributions: Array<EmbeddableContributionRecord>;
+  inspectionRoots: Array<CompositeInspectionAuthoringRoot>;
+  inspectionPath: Array<SceneInspectionAuthoringPathSegment | ScopeInspectionAuthoringPathSegment>;
+  inheritedInspection?: InspectOptions;
   embeddables?: ReadonlyArray<EmbeddableTier2Adapter>;
 };
 
-/** `<Scope>` props → IRScope；样式 / 容器字段走 SCOPE_FIELDS 透传，children 递归扫描走 readSceneChildren（透传贡献上下文） */
-const buildScopeFromProps = (props: ScopeProps, ctx?: BuildContext): IRScope => {
+/** 把 ancestor Scope policy 合入一个 embeddable root tree */
+const inheritInspectionTree = (
+  tree: CompositeInspectionAuthoringTree,
+  inherited: InspectOptions | undefined,
+): CompositeInspectionAuthoringTree => {
+  const merged = mergeInspectOptions(inherited, tree.policy?.inherited);
+  if (merged === undefined) return tree;
+  return Object.freeze({
+    ...tree,
+    policy: Object.freeze({ ...tree.policy, inherited: merged }),
+  });
+};
+
+/** 读取当前父容器中一个 IR child 的 authored locator path */
+const inspectionChildPath = (
+  context: BuildContext,
+  index: number,
+): Array<SceneInspectionAuthoringPathSegment | ScopeInspectionAuthoringPathSegment> => [
+  ...context.inspectionPath,
+  context.inspectionPath.length === 0 ? { kind: 'sceneChild', index } : { kind: 'scopeChild', index },
+];
+
+/** 把 embeddable 相对单 node 的 sidecar forest 提升为 Scene roots */
+const collectContributionInspectionRoots = (
+  context: BuildContext,
+  index: number,
+  forest: CompositeInspectionChildForest | undefined,
+): void => {
+  if (forest === undefined) return;
+  const basePath = inspectionChildPath(context, index);
+  const sceneSegment = basePath[0] as SceneInspectionAuthoringPathSegment;
+  const scopePath = basePath.slice(1) as Array<ScopeInspectionAuthoringPathSegment>;
+  forest.forEach(root => {
+    const path: CompositeInspectionAuthoringRoot['locator']['path'] = [
+      sceneSegment,
+      ...scopePath,
+      ...root.locator.path,
+    ];
+    context.inspectionRoots.push(
+      Object.freeze({
+        locator: Object.freeze({ path }),
+        tree: inheritInspectionTree(root.tree, context.inheritedInspection),
+      }),
+    );
+  });
+};
+
+/** `<Scope>` props → IRScope；inspect 只进入 authoring sidecar，其余字段与 children 进入 canonical IR */
+const buildScopeFromProps = (
+  props: ScopeProps,
+  ctx: BuildContext,
+  inspectionPath: BuildContext['inspectionPath'],
+): IRScope => {
   const scopeFields = pickDefined(props, SCOPE_FIELDS) as Omit<IRScope, 'type' | 'children' | 'transforms'>;
+  const nestedContext: BuildContext = {
+    ...ctx,
+    inspectionPath,
+    inheritedInspection: mergeInspectOptions(ctx.inheritedInspection, props.inspect),
+  };
   const scope: IRScope = {
     type: 'scope',
     ...scopeFields,
-    children: readSceneChildren(props.children, ctx),
+    children: readSceneChildren(props.children, nestedContext),
   };
   if (props.transforms !== undefined) scope.transforms = normalizeTransformsInput(props.transforms);
   return scope;
@@ -623,65 +694,67 @@ const buildPathFromProps = (props: PathProps): IRChild => {
  */
 const readSceneChildren = (children: ReactNode, ctx?: BuildContext): Array<IRChild> => {
   const out: Array<IRChild> = [];
-  Children.forEach(children, child => {
-    if (!isValidElement(child)) return;
-    // React.Fragment：透明容器，递归解开 children 让 .map() 内 <>...</> 平铺到 TikZ 子级
-    if (child.type === Fragment) {
-      const fragChildren = (child.props as { children?: ReactNode }).children;
-      for (const ir of readSceneChildren(fragChildren, ctx)) {
-        out.push(ir);
+  const visit = (nodes: ReactNode): void =>
+    Children.forEach(nodes, child => {
+      if (!isValidElement(child)) return;
+      // React.Fragment：透明容器，递归解开 children 让 .map() 内 <>...</> 平铺到 TikZ 子级
+      if (child.type === Fragment) {
+        visit((child.props as { children?: ReactNode }).children);
+        return;
       }
-      return;
-    }
-    const name = getDisplayName(child);
-    switch (name) {
-      case TIKZ_NODE:
-        out.push(buildNodeFromProps(child.props as NodeProps));
+      const name = getDisplayName(child);
+      switch (name) {
+        case TIKZ_NODE:
+          out.push(buildNodeFromProps(child.props as NodeProps));
+          return;
+        case TIKZ_PATH:
+          out.push(buildPathFromProps(child.props as PathProps));
+          return;
+        case TIKZ_COORDINATE:
+          out.push(buildCoordinateFromProps(child.props as CoordinateProps));
+          return;
+        case TIKZ_SCOPE:
+          if (ctx === undefined) throw new Error('internal: Scope inspection context is unavailable');
+          out.push(buildScopeFromProps(child.props as ScopeProps, ctx, inspectionChildPath(ctx, out.length)));
+          return;
+      }
+      if (typeof child.type === 'function') {
+        // class 组件有 render 方法在原型上；当函数直接调用会抛难懂的 TypeError，提前给出清晰错误
+        if (isClassComponent(child.type)) {
+          throw new Error(
+            `[retikz] <Layout> children 含类组件 <${componentLabel(child.type)}>。Kernel / Sugar 组件必须是函数组件——把它改写成函数组件，或在其内部返回 Kernel JSX。`,
+          );
+        }
+        // 可嵌入 Tier2：经 adapter 静态贡献 IR 节点 + datasets + composites 工厂；不调用组件本身（避免 hook / 副作用）。
+        // resolveEmbeddableAdapter 在「标记但缺 adapter」时 fail-loud throw（即便 ctx 缺省的公开 buildIR 路径也会抛）
+        const adapter = resolveEmbeddableAdapter(child.type, getDisplayName(child), ctx?.embeddables);
+        if (adapter) {
+          const contribution = adapter.contribute(child.props);
+          const outputIndex = out.length;
+          out.push(contribution.node);
+          if (ctx !== undefined) {
+            collectContributionInspectionRoots(ctx, outputIndex, contribution.inspectionRoots);
+          }
+          ctx?.contributions.push({
+            namespace: adapter.namespace,
+            datasets: contribution.datasets,
+            makeComposites: contribution.makeComposites,
+          });
+          return;
+        }
+        const expanded = (child.type as (p: unknown) => ReactNode)(child.props);
+        visit(expanded);
         return;
-      case TIKZ_PATH:
-        out.push(buildPathFromProps(child.props as PathProps));
-        return;
-      case TIKZ_COORDINATE:
-        out.push(buildCoordinateFromProps(child.props as CoordinateProps));
-        return;
-      case TIKZ_SCOPE:
-        out.push(buildScopeFromProps(child.props as ScopeProps, ctx));
-        return;
-    }
-    if (typeof child.type === 'function') {
-      // class 组件有 render 方法在原型上；当函数直接调用会抛难懂的 TypeError，提前给出清晰错误
-      if (isClassComponent(child.type)) {
-        throw new Error(
-          `[retikz] <Layout> children 含类组件 <${componentLabel(child.type)}>。Kernel / Sugar 组件必须是函数组件——把它改写成函数组件，或在其内部返回 Kernel JSX。`,
+      }
+      // 走到这里说明是 react adapter 不认识的元素：宿主标签（'div' 等字符串 type）、memo / forwardRef /
+      // context Provider 等包装组件（type 是对象，不是函数）。它们不会产出 IR，静默丢弃会让用户图元莫名缺失——dev 下提示
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn(
+          `[retikz] <Layout> children 含无法识别的元素 <${componentLabel(child.type)}>，已忽略。只有 Kernel 组件（Node / Path / Coordinate / Scope）、Sugar 函数组件、以及 React.Fragment 会被翻译进 IR；memo / forwardRef / Context.Provider 等包装组件不被穿透。`,
         );
       }
-      // 可嵌入 Tier2：经 adapter 静态贡献 IR 节点 + datasets + composites 工厂；不调用组件本身（避免 hook / 副作用）。
-      // resolveEmbeddableAdapter 在「标记但缺 adapter」时 fail-loud throw（即便 ctx 缺省的公开 buildIR 路径也会抛）
-      const adapter = resolveEmbeddableAdapter(child.type, getDisplayName(child), ctx?.embeddables);
-      if (adapter) {
-        const contribution = adapter.contribute(child.props);
-        out.push(contribution.node);
-        ctx?.contributions.push({
-          namespace: adapter.namespace,
-          datasets: contribution.datasets,
-          makeComposites: contribution.makeComposites,
-        });
-        return;
-      }
-      const expanded = (child.type as (p: unknown) => ReactNode)(child.props);
-      for (const ir of readSceneChildren(expanded, ctx)) {
-        out.push(ir);
-      }
-      return;
-    }
-    // 走到这里说明是 react adapter 不认识的元素：宿主标签（'div' 等字符串 type）、memo / forwardRef /
-    // context Provider 等包装组件（type 是对象，不是函数）。它们不会产出 IR，静默丢弃会让用户图元莫名缺失——dev 下提示
-    if (process.env.NODE_ENV !== 'production') {
-      console.warn(
-        `[retikz] <Layout> children 含无法识别的元素 <${componentLabel(child.type)}>，已忽略。只有 Kernel 组件（Node / Path / Coordinate / Scope）、Sugar 函数组件、以及 React.Fragment 会被翻译进 IR；memo / forwardRef / Context.Provider 等包装组件不被穿透。`,
-      );
-    }
-  });
+    });
+  visit(children);
   return out;
 };
 
@@ -724,10 +797,24 @@ export const wrapRootScope = (children: ReactNode, style: ScopeStyleProps): Reac
 export const buildIRWithContributions = (
   children: ReactNode,
   embeddables?: ReadonlyArray<EmbeddableTier2Adapter>,
-): { ir: IRScene; contributions: Array<EmbeddableContributionRecord> } => {
+): {
+  ir: IRScene;
+  contributions: Array<EmbeddableContributionRecord>;
+  inspectionRoots: Array<CompositeInspectionAuthoringRoot>;
+} => {
   const contributions: Array<EmbeddableContributionRecord> = [];
-  const sceneChildren = readSceneChildren(children, { contributions, embeddables });
-  return { ir: { version: CURRENT_IR_VERSION, type: 'scene', children: sceneChildren }, contributions };
+  const inspectionRoots: Array<CompositeInspectionAuthoringRoot> = [];
+  const sceneChildren = readSceneChildren(children, {
+    contributions,
+    inspectionRoots,
+    inspectionPath: [],
+    embeddables,
+  });
+  return {
+    ir: { version: CURRENT_IR_VERSION, type: 'scene', children: sceneChildren },
+    contributions,
+    inspectionRoots,
+  };
 };
 
 /**

@@ -1,4 +1,9 @@
-import type { AnyCompositeDefinition, AnyExpandCompositeDefinition, AnyLayoutCompositeDefinition } from '@retikz/core';
+import type {
+  AnyCompositeDefinition,
+  AnyCompositeInspectorDefinition,
+  AnyExpandCompositeDefinition,
+  AnyLayoutCompositeDefinition,
+} from '@retikz/core';
 
 import { RetainedRenderError, RetainedRenderErrorCode } from '@retikz/render/runtime';
 import { defineRuntimeOwner } from '@retikz/runtime';
@@ -63,6 +68,21 @@ const createExpandDelegate = (
   },
 });
 
+/** 用稳定 callable 包装 normalization 每轮生成的 inspector callback */
+const createInspectorDelegate = (
+  initial: AnyCompositeInspectorDefinition,
+  slot: CompositeSlot,
+): AnyCompositeInspectorDefinition => ({
+  kind: 'layout',
+  localOptionsInputSchema: initial.localOptionsInputSchema,
+  localOptionsSchema: initial.localOptionsSchema,
+  inspect: (artifact: never, context: never) => {
+    const inspector = slot.current.inspector;
+    if (inspector === undefined) return invalidDefinitions(slot.current);
+    return inspector.inspect(artifact, context);
+  },
+});
+
 /** 用稳定 callback 包装 normalization 每轮生成的 layout-aware definition */
 const createLayoutDelegate = (
   initial: AnyLayoutCompositeDefinition,
@@ -77,15 +97,10 @@ const createLayoutDelegate = (
       if (typeof compile !== 'function') return invalidDefinitions(slot.current);
       return compile(node, context);
     },
+    ...(initial.artifactSchema === undefined ? {} : { artifactSchema: initial.artifactSchema }),
+    ...(initial.inspector === undefined ? {} : { inspector: createInspectorDelegate(initial.inspector, slot) }),
   };
-  return (
-    initial.artifactSchema === undefined
-      ? delegate
-      : {
-          ...delegate,
-          artifactSchema: initial.artifactSchema,
-        }
-  ) as AnyLayoutCompositeDefinition;
+  return delegate as AnyLayoutCompositeDefinition;
 };
 
 const createDelegate = (slot: CompositeSlot): AnyCompositeDefinition => {
@@ -99,12 +114,19 @@ const createDelegate = (slot: CompositeSlot): AnyCompositeDefinition => {
 const assertCompatibleDefinition = (initial: AnyCompositeDefinition, next: AnyCompositeDefinition): void => {
   const initialExpand = typeof initial.expand === 'function';
   const nextExpand = typeof next.expand === 'function';
+  const initialInspector = initial.inspector;
+  const nextInspector = next.inspector;
   if (
     initial.namespace !== next.namespace ||
     initial.type !== next.type ||
     initial.schema !== next.schema ||
     initialExpand !== nextExpand ||
-    initial.artifactSchema !== next.artifactSchema
+    initial.artifactSchema !== next.artifactSchema ||
+    (initialInspector === undefined) !== (nextInspector === undefined) ||
+    (initialInspector !== undefined &&
+      nextInspector !== undefined &&
+      (initialInspector.localOptionsInputSchema !== nextInspector.localOptionsInputSchema ||
+        initialInspector.localOptionsSchema !== nextInspector.localOptionsSchema))
   ) {
     invalidDefinitions({ initial, next });
   }

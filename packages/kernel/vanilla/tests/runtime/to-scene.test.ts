@@ -41,4 +41,10 @@ describe('toSceneResult runtime metadata', () => {
     expect(passedScene.artifacts).toEqual([]);
     expect(Object.isFrozen(passedScene.artifacts)).toBe(true);
   });
+
+  it('预编译 Scene 开启 inspector 时 fail-loud，不从 Scene 反推布局', () => {
+    expect(() => toSceneResult(scene, { inspect: { layout: true } })).toThrow(
+      'Vanilla Layout Inspector cannot run from a precompiled Scene.',
+    );
+  });
 });

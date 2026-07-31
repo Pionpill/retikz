@@ -2,6 +2,7 @@ import type { IRDropShadow, ResolvedArrowEndSpec, Scene, ScenePrimitive } from '
 import type { RuntimeTraceReporter } from '@retikz/runtime';
 
 import type { EasingRegistry } from '../../animation/types';
+import type { StaticRenderFrame } from '../../runtime/frame';
 import type { SvgNode } from '../types';
 import type { BuildContext } from './prim';
 
@@ -12,6 +13,7 @@ import { formatViewBox } from '../view-box';
 import { collectArrowSpecs, hashKey, stableSpecKey } from './arrow-collect';
 import { buildArrowMarker } from './arrow-markers';
 import { buildClipDef } from './clip-defs';
+import { buildSvgInspectionGroup } from './inspection';
 import { buildPaintDef } from './paint-defs';
 import { buildPrim } from './prim';
 import { buildShadowDef, collectShadows, shadowHash, stableShadowKey } from './shadow-defs';
@@ -153,11 +155,15 @@ export const buildSvgFragment = (scene: Scene, options: BuildDocumentOptions): A
  * @description `@retikz/render/svg` 的核心总装入口。width / height / className / 框架级 style 等 svg 元素附加由
  *   framework adapter 自理（非本包职责）
  */
-export const buildSvgDocument = (scene: Scene, options: BuildDocumentOptions): SvgNode => {
+export const buildSvgFrameDocument = (frame: StaticRenderFrame, options: BuildDocumentOptions): SvgNode => {
+  const scene = frame.primary;
   const document: SvgNode = {
     tag: 'svg',
     attrs: { viewBox: formatViewBox(scene.layout) },
-    children: buildSvgFragment(scene, options),
+    children: [
+      ...buildSvgFragment(scene, options),
+      ...(frame.inspection === null ? [] : [buildSvgInspectionGroup(frame.inspection)]),
+    ],
   };
   if (options.trace !== undefined) {
     const visited = countScenePrimitiveOccurrences(scene.primitives);
@@ -172,3 +178,7 @@ export const buildSvgDocument = (scene: Scene, options: BuildDocumentOptions): S
   }
   return document;
 };
+
+/** Scene → 整棵 `<svg>` 描述树，等价于不带 inspection 的静态 frame */
+export const buildSvgDocument = (scene: Scene, options: BuildDocumentOptions): SvgNode =>
+  buildSvgFrameDocument({ primary: scene, inspection: null }, options);

@@ -1,6 +1,7 @@
 export * from './builtin';
 export * from './config';
 export * from './error';
+export * from './frame';
 export * from './participant';
 export type {
   DefineRetainedRenderer,
@@ -15,10 +16,16 @@ export type {
   RetainedRendererFactoryInput,
   RetainedRendererHost,
   RetainedRendererImmutableOptions,
+  RetainedRendererInspectionCapabilityValue,
   RetainedRendererRead,
   RetainedRendererTokenBase,
   RetainedSvgRenderer,
   RetainedSvgRendererDefinitionInput,
   RetainedSvgRendererImmutableOptions,
 } from './renderer';
-export { defineRetainedRenderer, isRetainedRenderer, RetainedRendererCapability } from './renderer';
+export {
+  defineRetainedRenderer,
+  isRetainedRenderer,
+  RetainedRendererCapability,
+  RetainedRendererInspectionCapability,
+} from './renderer';

@@ -1,6 +1,6 @@
 ---
 title: Scope
-description: Scope is Kernel's local-context container: a group shares coordinate transforms, style defaults, namespaces, group references, and clipping without gaining drawing or automatic-layout behavior.
+description: "Scope is Kernel's local-context container: a group shares coordinate transforms, style defaults, namespaces, group references, and clipping without gaining drawing or automatic-layout behavior."
 ---
 
 `<Scope>` places a group of children in one local context. It does not draw a new primitive or calculate plot / table layout; it controls how the group transforms, aligns by its own envelope, can be referenced, and enters Scene.
@@ -92,6 +92,16 @@ Use `localNamespace` only when a reusable subfigure truly carries fixed ids. The
 `zIndex` moves the whole Scope among siblings without reordering children inside it. Adjust all four Nodes and both Scopes in the panel to compare within-group and whole-group stacking.
 
 <ComponentPreview files="scope-z-index" size="sm" />
+
+### Layout inspection scope
+
+`Scope.inspect` affects only the current authored subtree. The left side inherits the whole-figure policy from `<Layout>`; the right side sets an `enabled: false` barrier, so descendant containers emit no guides.
+
+<ComponentPreview
+  files="scope-layout-inspection"
+  size="sm"
+  caption="The guides are not part of the primary figure. The right FlexLayout still lays out normally; it only omits inspection primitives."
+/>
 
 ### Style defaults
 
@@ -238,7 +248,10 @@ The Scope envelope collects node, coordinate, and nested-Scope layouts, not path
 | `zIndex`         | `number` (integer)                      | `0`           | Stable sibling order for the whole Scope                                                                           |
 | `meta`           | `Record<string, JSON value>`            | —             | Forwarded to GroupPrim, not layout or cascade                                                                      |
 | `animations`     | `Array<IRAnimationTrack>`               | —             | Group animation, not inherited by children                                                                         |
+| `inspect`        | `InspectOptions`                        | Inherited     | Runtime-only Layout Inspector policy for this authored subtree; omission inherits without creating a barrier       |
 | `on<Event>`      | `ScopeProps['onClick']`                 | —             | Uses the `onClick` signature and requires `id`; see [Hydration](/kernel/packages/render/hydration) for every event |
+
+`inspect={{ layout: true }}` cascades to descendant layout occurrences. Omitting `inspect` continues the outer policy without disabling descendants or creating a barrier. `inspect={{ layout: false }}` only overrides the current cascaded value, so deeper descendants may re-enable it; `inspect={{ enabled: false }}` is the hard barrier they cannot cross. The prop never enters `IRScope`; see [Standard Layout Inspector](/standard/layout/reference/runtime#layout-inspector) for the complete cascade.
 
 ### Style defaults
 

@@ -93,6 +93,16 @@ import { Scope } from '@retikz/react';
 
 <ComponentPreview files="scope-z-index" size="sm" />
 
+### 布局检查范围
+
+`Scope.inspect` 只改变当前 authored 子树。下面左侧继承 `<Layout>` 的全图策略；右侧用 `enabled: false` 建立硬屏障，因此后代容器不会生成辅助层。
+
+<ComponentPreview
+  files="scope-layout-inspection"
+  size="sm"
+  caption="辅助层不属于主图；右侧 FlexLayout 仍正常排布，只是不生成检查图元。"
+/>
+
 ### 样式默认值
 
 Scope 同时提供 `color`、共享 graphic state 与 `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`。这些值逐字段向内继承，元素显式值优先；`resetStyle` 只切断指定通道的外层继承。
@@ -234,7 +244,10 @@ Scope 包络只收集 node、coordinate 与嵌套 Scope layout，不包含 path 
 | `zIndex`         | `number`（整数）                        | `0`           | Scope 整体在父层的稳定栈序                                                              |
 | `meta`           | `Record<string, JSON 值>`               | —             | 透传到 GroupPrim，不参与布局或继承                                                      |
 | `animations`     | `Array<IRAnimationTrack>`               | —             | Scope 整体动画，不下传 children                                                         |
+| `inspect`        | `InspectOptions`                        | 继承          | 只作用于当前 authored 子树的 runtime-only 布局检查策略；省略时继承且不建立屏障          |
 | `on<Event>`      | `ScopeProps['onClick']`                 | —             | 与 `onClick` 同签名；需要 `id`，完整事件列表见[水合](/kernel/packages/render/hydration) |
+
+`inspect={{ layout: true }}` 会继承到后代布局 occurrence；省略 `inspect` 会继续继承外层策略，不会关闭后代或建立屏障。`inspect={{ layout: false }}` 只覆盖当前级联值，更深后代仍可重新开启；`inspect={{ enabled: false }}` 才是后代不能越过的硬屏障。该 prop 不进入 `IRScope`，完整级联规则见 [Standard 布局检查器](/standard/layout/reference/runtime#布局检查器)。
 
 ### 样式默认值
 

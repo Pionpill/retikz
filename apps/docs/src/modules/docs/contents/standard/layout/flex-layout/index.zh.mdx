@@ -1,0 +1,136 @@
+---
+title: 弹性布局
+description: 用一维盒布局表达伸展、收缩、换行与基线对齐，在宿主无关的编译阶段排布子图形。
+---
+
+`FlexLayout` 沿一个主轴排布任意子图形。它可以把剩余空间分给可伸展项、在空间不足时收缩或换行，同时让固定几何保持真实尺寸、让文本按分配宽度重新排版。
+
+## 用法
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { FlexLayout, LayoutItem } from '@retikz/standard-react';
+```
+
+```tsx
+<Layout width={360} height={120}>
+  <FlexLayout columnGap={8}>
+    <LayoutItem kind="flex" itemKey="label" grow={1}>
+      <Node position={[0, 0]} text="标签" />
+    </LayoutItem>
+    <LayoutItem kind="flex" itemKey="value" shrink={0}>
+      <Node position={[0, 0]} text="42%" />
+    </LayoutItem>
+  </FlexLayout>
+</Layout>
+```
+
+`itemKey` 是布局容器内由作者声明的标识，不读取 React 保留的 `key`。每个 `LayoutItem` 恰好接受一个可绘制子元素，或用 `ir` 显式传入一个 `IRChild`。
+
+| 场景        | 公开入口                                                                                   |
+| ----------- | ------------------------------------------------------------------------------------------ |
+| React       | `FlexLayout`、`LayoutItem`（`@retikz/standard-react`）                                     |
+| Vanilla     | `flexLayout`、`FlexLayoutVanillaAdapter`（`@retikz/standard-vanilla`）                     |
+| IR / 持久化 | `FlexLayoutSchema`、`createFlexLayout`、`IRFlexLayout`、`FlexLayoutDefinition`（Standard） |
+
+## 例子
+
+### 基础分配
+
+下面三个子项保持作者声明的绘制顺序。中间标签接收剩余主轴空间；两侧子项不参与收缩，`columnGap` 始终表示物理水平方向的间距。
+
+<ComponentPreview files="flex-layout-basic" size="sm" />
+
+`direction` 决定主轴与遍历方向，`wrap` 决定是否形成多条布局行。反向模式只改变布局遍历和放置位置，不改变 `children`、子项 `key` 或绘制顺序。
+
+### 控制面板
+
+切换主轴、换行与交叉轴对齐，并调节子项的基础尺寸（`basis`）、伸展系数（`grow`）和收缩系数（`shrink`）。预览使用固定 `viewBox`；当基础尺寸增大或取消换行时，可以直接观察负剩余空间如何触发收缩。
+
+<ComponentPreview
+  files="flex-layout-playground"
+  size="lg"
+  caption="布局辅助线默认开启，可在“辅助层”中关闭；它们不属于实际图形、布局边界或命中测试。"
+/>
+
+### 溢出与裁切
+
+父级分配区域（slot）与真实占用是两个量。固定几何拒绝较小的分配区域时，`visible` 保留完整视觉；`clip` 只改变可见区域，类型化产物仍保留真实边界与 `clipped` 状态。
+
+<ComponentPreview files="flex-layout-overflow" size="sm" />
+
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="只有在排查文本重排、固定几何溢出或基线行为时，才需要理解测量与回放。"
+/>
+
+FlexLayout 先用 `intrinsic.minimum` 与 `intrinsic.natural` 测量子图形，再在主轴分配区域冻结后使用 `exact` 重新测量。文本可以据此在较窄宽度下增加高度；固定几何也可以让真实占用超出父级分配区域，而不会触发第二轮主轴分配。
+
+每条布局行独立执行有界伸展和收缩：子项命中 `min` 或 `max` 后冻结，剩余空间继续分给未冻结项。最终只回放被选中的测量候选；未选候选不会发布图元、资源、命名空间或产物。
+
+<SourceLinks
+  sources={[
+    { label: 'FlexLayout 输入契约', path: 'packages/library/standard/src/composites/flex-layout/schema.ts' },
+    {
+      label: 'FlexLayout 空间提案与放置',
+      path: 'packages/library/standard/src/composites/flex-layout/compile.ts',
+    },
+    { label: '弹性布局行纯求解', path: 'packages/library/standard/src/composites/flex-layout/solve.ts' },
+    { label: 'FlexLayout React 适配器', path: 'packages/library/standard-react/src/flex-layout/FlexLayout.tsx' },
+  ]}
+/>
+
+## API 参考
+
+`FlexLayoutInput` 是工厂函数接受的作者输入；`IRFlexLayout` 是应用默认值后可 JSON 序列化的持久化形态。
+
+React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为直属 `LayoutItem`；`FlexLayoutItemProps` 把 JSON 的 `key` 命名为 `itemKey`，并要求在 `children` 与 `ir` 中二选一。
+
+### React 检查选项
+
+| 属性       | 类型                                    | 默认值 | 描述                                                                                    |
+| ---------- | --------------------------------------- | ------ | --------------------------------------------------------------------------------------- |
+| `inspect?` | `boolean` \| `FlexLayoutInspectOptions` | 继承   | 省略时继承 Layout / 最近 Scope；`false` 只关闭当前 occurrence，且不会关闭或开启嵌套布局 |
+
+对象形式在通用边界、溢出和对齐参考线之外，还可分别控制 `lines` 与 `gaps`。完整字段和全图 / Scope 策略见[运行时参考](/standard/layout/reference/runtime#布局检查器)。
+
+### `FlexLayoutInput`
+
+| 属性              | 类型                                     | 默认值                | 描述                                                        |
+| ----------------- | ---------------------------------------- | --------------------- | ----------------------------------------------------------- |
+| `size?`           | `LayoutSizeInput`                        | `content` / `content` | 双轴分配策略；`fixed` 保留作者尺寸，`fill` 需要有限父级空间 |
+| `padding?`        | `number` \| `IRBoxSpacing`               | `0`                   | 从分配区域到内容区域的内边距                                |
+| `overflow?`       | <ApiValues name="LayoutOverflow" />      | `'visible'`           | `clip` 在容器分配区域上创建一个 Scope 裁切                  |
+| `direction?`      | <ApiValues name="FlexLayoutDirection" /> | `'row'`               | 主轴及正反向遍历                                            |
+| `wrap?`           | <ApiValues name="FlexLayoutWrap" />      | `'nowrap'`            | 单行、换行或反向交叉轴放置                                  |
+| `columnGap?`      | `number`                                 | `0`                   | 物理水平方向的子项或布局行间距                              |
+| `rowGap?`         | `number`                                 | `0`                   | 物理垂直方向的子项或布局行间距                              |
+| `justifyContent?` | `FlexMainDistributionValue`              | `'start'`             | 每条布局行的主轴剩余空间分布                                |
+| `alignItems?`     | <ApiValues name="LayoutAlignment" />     | `'stretch'`           | 默认交叉轴对齐；纵向主轴不接受基线对齐                      |
+| `alignContent?`   | <ApiValues name="LayoutDistribution" />  | `'start'`             | 多条布局行的交叉轴剩余空间分布                              |
+| `children?`       | `Array<FlexLayoutItemInput>`             | `[]`                  | 作者声明的子项；同一容器内 `key` 必须唯一                   |
+
+### `FlexLayoutItemInput`
+
+| 属性         | 类型                                 | 默认值       | 描述                                                 |
+| ------------ | ------------------------------------ | ------------ | ---------------------------------------------------- |
+| `kind`       | `'flex'`                             | —            | 子项判别字段；可使用 `LayoutItemKind.Flex`           |
+| `key`        | `string`                             | —            | 当前容器内稳定且非空、由作者声明的标识               |
+| `child`      | `IRChild`                            | —            | 参与布局的任意可 JSON 序列化 Core 子图形             |
+| `margin?`    | `number` \| `IRBoxSpacing`           | `0`          | 分配区域外边距；不进入子图形的空间提案               |
+| `basis?`     | `'content'` \| `number`              | `'content'`  | 自然主轴贡献，或作者给出的有限非负基础分配尺寸       |
+| `grow?`      | `number`                             | `0`          | 接收正剩余空间的有限非负系数                         |
+| `shrink?`    | `number`                             | `1`          | 与未约束基础尺寸相乘，用于回收负剩余空间             |
+| `min?`       | `number`                             | 子图形最小值 | 显式值替代自动最小值；子图形拒绝时以真实占用溢出表达 |
+| `max?`       | `number`                             | 无上限       | 作者给出的主轴分配尺寸硬上限                         |
+| `alignSelf?` | <ApiValues name="LayoutAlignment" /> | `alignItems` | 覆盖当前子项的交叉轴对齐                             |
+
+## 相关
+
+- [布局容器](/standard/layout)：Standard 通用布局家族与职责边界
+- [API 参考](/standard/layout/reference)：输入契约、产物契约与运行时接线
+- [Tier 2 复合组件](/kernel/concepts/design/composite)：Core 如何注册并编译高层 IR
+- [布局](/kernel/components/layout/overview)：宿主尺寸、Scene 输出与布局产物

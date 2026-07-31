@@ -1,6 +1,13 @@
-// @vitest-environment jsdom
+﻿// @vitest-environment jsdom
 import type { Canvas as NapiCanvas } from '@napi-rs/canvas';
-import type { IRScene, RuntimeScenePrimitive, Scene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
+import type {
+  InspectionPlane,
+  IRScene,
+  RuntimeScenePrimitive,
+  Scene,
+  ScenePatch,
+  SceneRuntimeSnapshot,
+} from '@retikz/core';
 import type { RuntimeCommitParticipantToken } from '@retikz/runtime';
 
 import { CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
@@ -16,7 +23,7 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { HydrationAnimationControls, HydrationContext } from '../../src/hydration';
-import type { RenderRuntimeConfigInput } from '../../src/runtime';
+import type { RenderFrameSnapshot, RenderRuntimeConfigInput } from '../../src/runtime';
 
 import { bindWaapiDescriptors } from '../../src/animation';
 import { bindWaapiDescriptorElements, isWaapiAnimationStyleOwned } from '../../src/animation/retained';
@@ -29,6 +36,29 @@ import {
 import { getRetainedRendererExecutor } from '../../src/runtime/renderer';
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+
+const frameOf = (primary: SceneRuntimeSnapshot): RenderFrameSnapshot => Object.freeze({ primary, inspection: null });
+
+const inspectionAt = (x: number): InspectionPlane => ({
+  entries: [
+    {
+      occurrence: { sourcePath: '$.children[0]', expansionPath: [] },
+      transform: [1, 0, 0, 1, 0, 0],
+      primitives: [
+        {
+          kind: 'rect' as const,
+          role: 'layout.container',
+          x,
+          y: 0,
+          width: 20,
+          height: 10,
+          presentation: 'outline' as const,
+          tone: 'neutral' as const,
+        },
+      ],
+    },
+  ],
+});
 
 const scene = (fill: string, reversed = false): IRScene => {
   const children: IRScene['children'] = [
@@ -174,6 +204,90 @@ const createCorePair = (currentSource: IRScene, nextSource: IRScene) => {
 afterEach(() => vi.restoreAllMocks());
 
 describe('builtin retained renderers', () => {
+  it('SVG retained renderer 原子替换独立 inspection group，rollback 恢复旧辅助层', () => {
+    const pair = createCorePair(scene('#ef4444'), scene('#22c55e'));
+    const host = document.createElementNS(SVG_NAMESPACE, 'svg');
+    const renderer = builtinRetainedRendererFactory({
+      backend: 'svg',
+      host,
+      immutableOptions: { backend: 'svg', idPrefix: 'inspection-frame' },
+    });
+    const executor = getRetainedRendererExecutor(renderer);
+    if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
+    const initialFrame = Object.freeze({ primary: pair.current, inspection: inspectionAt(4) });
+    const nextFrame = Object.freeze({ primary: pair.next, inspection: inspectionAt(14) });
+    const mount = executor.prepareMount(initialFrame, {}, 'create');
+
+    mount.commit();
+    mount.dispose();
+    expect(host.querySelector('[data-retikz-inspection="layout"] rect')?.getAttribute('x')).toBe('4');
+    expect(host.querySelector('[data-retikz-inspection="layout"]')?.getAttribute('pointer-events')).toBe('none');
+
+    const prepared = executor.prepare(pair.patch, nextFrame, {});
+    prepared.commit();
+    expect(host.querySelector('[data-retikz-inspection="layout"] rect')?.getAttribute('x')).toBe('14');
+    prepared.rollback();
+    expect(host.querySelector('[data-retikz-inspection="layout"] rect')?.getAttribute('x')).toBe('4');
+    prepared.dispose();
+    executor.dispose();
+  });
+
+  it('Canvas retained renderer 后绘 inspection，但 hit-test 仍只命中 primary topology', () => {
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => {
+          if (key === 'isPointInPath') return () => true;
+          if (key === 'isPointInStroke') return () => false;
+          if (key === 'measureText') return () => ({ width: 0 });
+          if (key === 'createLinearGradient' || key === 'createRadialGradient') {
+            return () => ({ addColorStop: vi.fn() });
+          }
+          if (key in target) return Reflect.get(target, key);
+          return vi.fn();
+        },
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    const primary = createCorePair(scene('#ef4444'), scene('#22c55e')).current;
+    const host = document.createElement('canvas');
+    host.width = 200;
+    host.height = 100;
+    host.getBoundingClientRect = () => ({
+      left: 0,
+      top: 0,
+      width: 200,
+      height: 100,
+      right: 200,
+      bottom: 100,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    document.body.appendChild(host);
+    const click = vi.fn();
+    const renderer = builtinRetainedRendererFactory({
+      backend: 'canvas',
+      host,
+      immutableOptions: { backend: 'canvas', idPrefix: 'inspection-hit-test', devicePixelRatio: 1 },
+    });
+    const executor = getRetainedRendererExecutor(renderer);
+    if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+    const mount = executor.prepareMount(
+      Object.freeze({ primary, inspection: inspectionAt(0) }),
+      {
+        handlerContributions: [{ registration: 1, handlers: { 'node-a': { click }, 'node-b': { click } } }],
+      },
+      'create',
+    );
+
+    mount.commit();
+    mount.dispose();
+    host.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 100, clientY: 50 }));
+
+    expect(click).toHaveBeenCalledTimes(1);
+    executor.dispose();
+  });
+
   it('SVG 完整索引跳过 root resource head 并递归映射 group topology', () => {
     const host = document.createElementNS(SVG_NAMESPACE, 'svg');
     const { handle, session } = createSession('svg', host, {
@@ -197,7 +311,7 @@ describe('builtin retained renderers', () => {
 
     expect(host.querySelector('defs')).not.toBeNull();
     expect(host.querySelector('[data-retikz-id="nested"]')).not.toBeNull();
-    expect(handle.read(session).snapshot.topology.length).toBeGreaterThan(1);
+    expect(handle.read(session).frame.primary.topology.length).toBeGreaterThan(1);
     session.dispose();
   });
 
@@ -237,7 +351,7 @@ describe('builtin retained renderers', () => {
     });
 
     expect(host.querySelector('[data-retikz-id="animated-group"]')).not.toBeNull();
-    expect(handle.read(session).snapshot.topology.length).toBeGreaterThan(1);
+    expect(handle.read(session).frame.primary.topology.length).toBeGreaterThan(1);
     session.dispose();
   });
 
@@ -504,7 +618,7 @@ describe('builtin retained renderers', () => {
     });
     const svgExecutor = getRetainedRendererExecutor(svgRenderer);
     if (svgExecutor === undefined) throw new Error('expected builtin SVG renderer executor');
-    const svgMount = svgExecutor.prepareMount(snapshot, svgConfig, 'create');
+    const svgMount = svgExecutor.prepareMount(frameOf(snapshot), svgConfig, 'create');
     svgMount.commit();
     svgMount.dispose();
     const svgAnimations = Array.from(svgHost.querySelectorAll('[data-retikz-anim]'), element => {
@@ -590,7 +704,7 @@ describe('builtin retained renderers', () => {
     });
     const canvasExecutor = getRetainedRendererExecutor(canvasRenderer);
     if (canvasExecutor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const canvasMount = canvasExecutor.prepareMount(snapshot, canvasConfig, 'create');
+    const canvasMount = canvasExecutor.prepareMount(frameOf(snapshot), canvasConfig, 'create');
     expect(() => canvasMount.commit()).not.toThrow();
     canvasMount.dispose();
     expect(requestFrame).not.toHaveBeenCalled();
@@ -701,7 +815,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const mount = executor.prepareMount(snapshot, config, 'create');
+    const mount = executor.prepareMount(frameOf(snapshot), config, 'create');
     mount.commit();
     mount.dispose();
 
@@ -929,7 +1043,7 @@ describe('builtin retained renderers', () => {
     const config = {
       handlerContributions: [{ registration: 1, handlers: { 'node-a': { click: vi.fn(), doubleClick: vi.fn() } } }],
     };
-    const mount = executor.prepareMount(pair.current, config, 'create');
+    const mount = executor.prepareMount(frameOf(pair.current), config, 'create');
     mount.commit();
     mount.dispose();
     add.mockClear();
@@ -942,7 +1056,7 @@ describe('builtin retained renderers', () => {
       }
       originalRemove(type, listener, options);
     });
-    const prepared = executor.prepare(pair.patch, pair.next, config);
+    const prepared = executor.prepare(pair.patch, frameOf(pair.next), config);
 
     expect(() => prepared.commit()).toThrow('old Canvas dblclick removal rejected');
     expect(() => prepared.rollback()).not.toThrow();
@@ -1132,7 +1246,7 @@ describe('builtin retained renderers', () => {
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
       const mount = executor.prepareMount(
-        snapshot,
+        frameOf(snapshot),
         { handlerContributions: [{ registration: 1, handlers: { 'node-a': { click: vi.fn() } } }] },
         'create',
       );
@@ -1233,7 +1347,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-      const mount = executor.prepareMount(snapshot, {}, 'create');
+      const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
       mount.commit();
       mount.dispose();
       clockFrame = requestFrame.mock.results.at(-1)?.value;
@@ -1275,7 +1389,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const mount = executor.prepareMount(snapshot, {}, 'create');
+    const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
     mount.commit();
     mount.dispose();
     const controls = executor.read().animation;
@@ -1320,12 +1434,12 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-      const mount = executor.prepareMount(current, {}, 'create');
+      const mount = executor.prepareMount(frameOf(current), {}, 'create');
       mount.commit();
       mount.dispose();
       const controls = executor.read().animation;
       controlsRef.current = controls;
-      const prepared = executor.prepare(patch, next, {});
+      const prepared = executor.prepare(patch, frameOf(next), {});
       const requestedBeforeCommit = requestFrame.mock.calls.length;
 
       expect(() => prepared.commit()).not.toThrow();
@@ -1381,7 +1495,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-      const mount = executor.prepareMount(snapshot, {}, 'create');
+      const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
       mount.commit();
       mount.dispose();
       const getBoundingClientRect = vi.spyOn(host, 'getBoundingClientRect');
@@ -1451,7 +1565,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-      const mount = executor.prepareMount(snapshot, {}, 'create');
+      const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
       mount.commit();
       mount.dispose();
       const controls = executor.read().animation;
@@ -1502,7 +1616,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-      const mount = executor.prepareMount(snapshot, {}, 'create');
+      const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
       mount.commit();
       mount.dispose();
       expect(requestFrame).toHaveBeenCalledTimes(1);
@@ -1552,7 +1666,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-      const mount = executor.prepareMount(snapshot, {}, 'create');
+      const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
 
       expect(() => mount.commit()).toThrow('visibility setup rejected');
       expect(() => mount.rollback()).toThrow('visibility cleanup rejected 3');
@@ -1593,7 +1707,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const mount = executor.prepareMount(pair.current, {}, 'create');
+    const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
     mount.commit();
     mount.dispose();
     const originalAdd = host.addEventListener.bind(host);
@@ -1601,7 +1715,7 @@ describe('builtin retained renderers', () => {
       if (type === 'click') throw new Error('candidate hydration rejected');
       originalAdd(type, listener, options);
     });
-    const prepared = executor.prepare(pair.patch, pair.next, {
+    const prepared = executor.prepare(pair.patch, frameOf(pair.next), {
       animation: { enabled: true },
       handlerContributions: [{ registration: 1, handlers: { visible: { click: vi.fn() } } }],
     });
@@ -1638,7 +1752,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const mount = executor.prepareMount(pair.current, {}, 'create');
+    const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
     mount.commit();
     mount.dispose();
     const previousControls = executor.read().animation;
@@ -1652,7 +1766,7 @@ describe('builtin retained renderers', () => {
       }
       originalRemove(type, listener, options);
     });
-    const prepared = executor.prepare(pair.patch, pair.next, { animation: { enabled: true } });
+    const prepared = executor.prepare(pair.patch, frameOf(pair.next), { animation: { enabled: true } });
 
     expect(() => prepared.commit()).toThrow('previous visibility suspend rejected');
     expect(() => prepared.rollback()).not.toThrow();
@@ -1703,7 +1817,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-      const mount = executor.prepareMount(pair.current, {}, 'create');
+      const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
       mount.commit();
       mount.dispose();
       const previousControls = executor.read().animation;
@@ -1713,7 +1827,7 @@ describe('builtin retained renderers', () => {
         if (type === 'click') throw new Error('candidate hydration rejected');
         originalHostAdd(type, listener, options);
       });
-      const prepared = executor.prepare(pair.patch, pair.next, {
+      const prepared = executor.prepare(pair.patch, frameOf(pair.next), {
         animation: { enabled: true },
         handlerContributions: [{ registration: 1, handlers: { visible: { click: vi.fn() } } }],
       });
@@ -1768,7 +1882,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-      const mount = executor.prepareMount(current, {}, 'create');
+      const mount = executor.prepareMount(frameOf(current), {}, 'create');
       mount.commit();
       mount.dispose();
       const controls = executor.read().animation;
@@ -1776,7 +1890,7 @@ describe('builtin retained renderers', () => {
       rejectPause = true;
       expect(() => controls?.pause()).toThrow('public pause rejected');
       expect(controls?.running).toBe(true);
-      const prepared = executor.prepare(patch, next, {});
+      const prepared = executor.prepare(patch, frameOf(next), {});
 
       prepared.commit();
 
@@ -1823,7 +1937,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-      const mount = executor.prepareMount(pair.current, {}, 'create');
+      const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
       mount.commit();
       mount.dispose();
       const previousControls = executor.read().animation;
@@ -1831,7 +1945,7 @@ describe('builtin retained renderers', () => {
       if (previousClockFrame === undefined) throw new Error('expected committed Canvas clock frame');
       const previousTick = pendingFrames.get(previousClockFrame);
       if (previousTick === undefined) throw new Error('expected pending Canvas clock callback');
-      const prepared = executor.prepare(pair.patch, pair.next, { animation: { enabled: true } });
+      const prepared = executor.prepare(pair.patch, frameOf(pair.next), { animation: { enabled: true } });
 
       expect(() => prepared.commit()).toThrow('previous clock pause rejected');
       expect(() => prepared.rollback()).not.toThrow();
@@ -1886,14 +2000,14 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const mount = executor.prepareMount(current, {}, 'create');
+    const mount = executor.prepareMount(frameOf(current), {}, 'create');
     mount.commit();
     mount.dispose();
     const previousControls = executor.read().animation;
     const visibilityFrame = requestFrame.mock.results[0]?.value;
     if (visibilityFrame === undefined) throw new Error('expected committed Canvas visibility frame');
     visibilityFrameRef.current = visibilityFrame;
-    const prepared = executor.prepare(patch, next, {});
+    const prepared = executor.prepare(patch, frameOf(next), {});
 
     expect(() => prepared.commit()).toThrow('clock replacement cleanup rejected 1');
     let rollbackFailure: unknown;
@@ -1920,12 +2034,12 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
-    const mount = executor.prepareMount(pair.current, {}, 'create');
+    const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
     mount.commit();
     mount.dispose();
     host.querySelector('[data-retikz-id="node-a"]')?.remove();
 
-    expect(() => executor.prepare(pair.patch, pair.next, {})).toThrow('SVG update target is missing');
+    expect(() => executor.prepare(pair.patch, frameOf(pair.next), {})).toThrow('SVG update target is missing');
     executor.dispose();
   });
 
@@ -2039,7 +2153,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const mount = executor.prepareMount(current, config, 'create');
+    const mount = executor.prepareMount(frameOf(current), config, 'create');
     mount.commit();
     mount.dispose();
     host.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 10, clientY: 10 }));
@@ -2055,7 +2169,7 @@ describe('builtin retained renderers', () => {
         nextRevision: next.revision,
         operations: [{ kind: 'setAnimations', animations: next.scene.animations }],
       },
-      next,
+      frameOf(next),
       config,
     );
     prepared.commit();
@@ -2725,7 +2839,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
-      const mount = executor.prepareMount(current, {}, 'create');
+      const mount = executor.prepareMount(frameOf(current), {}, 'create');
       mount.commit();
       mount.dispose();
       const aggregate = executor.read().animation;
@@ -2740,7 +2854,7 @@ describe('builtin retained renderers', () => {
         nextRevision: stableSnapshot.revision,
         operations: [],
       };
-      const preparedStable = executor.prepare(stablePatch, stableSnapshot, {});
+      const preparedStable = executor.prepare(stablePatch, frameOf(stableSnapshot), {});
       preparedStable.commit();
       preparedStable.dispose();
       expect(executor.read().animation).toBe(aggregate);
@@ -2768,7 +2882,7 @@ describe('builtin retained renderers', () => {
           },
         ],
       };
-      const preparedUpdate = executor.prepare(update, changed, {});
+      const preparedUpdate = executor.prepare(update, frameOf(changed), {});
       preparedUpdate.commit();
       expect(records.map(record => record.duration)).toEqual([200, 300, 600]);
       expect(changedOld?.cancel).not.toHaveBeenCalled();
@@ -2781,7 +2895,7 @@ describe('builtin retained renderers', () => {
         nextRevision: removed.revision,
         operations: [{ kind: 'remove', identity: identities[1] }],
       };
-      const preparedRemove = executor.prepare(remove, removed, {});
+      const preparedRemove = executor.prepare(remove, frameOf(removed), {});
       preparedRemove.commit();
       preparedRemove.dispose();
       expect(records.find(record => record.duration === 600)?.cancel).toHaveBeenCalledTimes(1);
@@ -2792,7 +2906,7 @@ describe('builtin retained renderers', () => {
         nextRevision: replaced.revision,
         operations: [{ kind: 'replaceScene', snapshot: replaced }],
       };
-      const preparedReplace = executor.prepare(replace, replaced, {});
+      const preparedReplace = executor.prepare(replace, frameOf(replaced), {});
       preparedReplace.commit();
       preparedReplace.dispose();
       expect(records.map(record => record.duration)).toEqual([200, 300, 600, 200]);
@@ -2866,7 +2980,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
-      const mount = executor.prepareMount(current, {}, 'create');
+      const mount = executor.prepareMount(frameOf(current), {}, 'create');
       mount.commit();
       mount.dispose();
       const prepared = executor.prepare(
@@ -2885,7 +2999,7 @@ describe('builtin retained renderers', () => {
             },
           ],
         },
-        next,
+        frameOf(next),
         {},
       );
       prepared.commit();
@@ -2922,7 +3036,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
-      const mount = executor.prepareMount(pair.current, {}, 'create');
+      const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
       mount.commit();
       mount.dispose();
       const target = host.querySelector('[data-retikz-id="node-a"]');
@@ -2932,7 +3046,7 @@ describe('builtin retained renderers', () => {
 
       const prepared = executor.prepare(
         { baseRevision: pair.current.revision, nextRevision: next.revision, operations: [] },
-        next,
+        frameOf(next),
         { animation: { enabled: false } },
       );
       prepared.commit();
@@ -2974,7 +3088,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
-      const mount = executor.prepareMount(pair.current, {}, 'create');
+      const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
       mount.commit();
       mount.dispose();
       const target = host.querySelector('[data-retikz-id="node-a"]');
@@ -2982,7 +3096,7 @@ describe('builtin retained renderers', () => {
       rejectPause = true;
       const prepared = executor.prepare(
         { baseRevision: pair.current.revision, nextRevision: next.revision, operations: [] },
-        next,
+        frameOf(next),
         { animation: { enabled: false } },
       );
       expect(() => prepared.commit()).toThrow('pause rejected');
@@ -3016,7 +3130,7 @@ describe('builtin retained renderers', () => {
       });
       const svgExecutor = getRetainedRendererExecutor(svgRenderer);
       if (svgExecutor === undefined) throw new Error('expected builtin SVG renderer executor');
-      const svgMount = svgExecutor.prepareMount(svgPair.current, {}, 'create');
+      const svgMount = svgExecutor.prepareMount(frameOf(svgPair.current), {}, 'create');
       svgMount.commit();
       svgMount.dispose();
       const svgControls = svgExecutor.read().animation;
@@ -3059,7 +3173,7 @@ describe('builtin retained renderers', () => {
     });
     const canvasExecutor = getRetainedRendererExecutor(canvasRenderer);
     if (canvasExecutor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const canvasMount = canvasExecutor.prepareMount(canvasPair.current, {}, 'create');
+    const canvasMount = canvasExecutor.prepareMount(frameOf(canvasPair.current), {}, 'create');
     canvasMount.commit();
     canvasMount.dispose();
     const canvasControls = canvasExecutor.read().animation;
@@ -3073,7 +3187,7 @@ describe('builtin retained renderers', () => {
         nextRevision: nextCanvasSnapshot.revision,
         operations: [],
       },
-      nextCanvasSnapshot,
+      frameOf(nextCanvasSnapshot),
       { animation: { enabled: false } },
     );
     retired.commit();
@@ -3116,7 +3230,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const mount = executor.prepareMount(pair.current, {}, 'create');
+    const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
     expect(() => mount.commit()).toThrow('resize listener rejected');
     expect(add).toHaveBeenCalledWith('scroll', expect.any(Function), true);
     expect(remove).toHaveBeenCalledWith('scroll', expect.any(Function), true);
@@ -3176,7 +3290,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
-      const mount = executor.prepareMount(current, {}, 'create');
+      const mount = executor.prepareMount(frameOf(current), {}, 'create');
       mount.commit();
       mount.dispose();
       const element = host.querySelector('[data-retikz-anim]');
@@ -3193,7 +3307,7 @@ describe('builtin retained renderers', () => {
           nextRevision: next.revision,
           operations: [{ kind: 'setLayout', layout: next.scene.layout }],
         },
-        next,
+        frameOf(next),
         {},
       );
       prepared.commit();
@@ -3275,7 +3389,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
-      const mount = executor.prepareMount(snapshot, {}, 'create');
+      const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
       expect(() => mount.commit()).toThrow('second occurrence failed');
       mount.rollback();
       mount.dispose();
@@ -3338,7 +3452,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
-      const mount = executor.prepareMount(snapshot, {}, 'create');
+      const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
       mount.commit();
       mount.dispose();
 
@@ -3370,7 +3484,7 @@ describe('builtin retained renderers', () => {
     });
     expect(host.querySelector('[data-retikz-id="node-a"]')).toBe(nodeA);
     expect(host.querySelector('[data-retikz-id="node-b"]')).toBe(nodeB);
-    expect(handle.read(session).snapshot.revision).toBe(2);
+    expect(handle.read(session).frame.primary.revision).toBe(2);
 
     session.dispose();
     expect(() => handle.read(session)).toThrow();
@@ -3432,12 +3546,12 @@ describe('builtin retained renderers', () => {
 
     const seedHost = document.createElementNS(SVG_NAMESPACE, 'svg');
     const seed = createSession('svg', seedHost, { ir: sourceScene(false, false) });
-    const current = duplicatePublicIds(seed.handle.read(seed.session).snapshot);
+    const current = duplicatePublicIds(seed.handle.read(seed.session).frame.primary);
     seed.session.update({
       baseRevision: seed.session.revision(),
       owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, sourceScene(true, true, true))],
     });
-    const next = duplicatePublicIds(seed.handle.read(seed.session).snapshot);
+    const next = duplicatePublicIds(seed.handle.read(seed.session).frame.primary);
     seed.session.dispose();
 
     const host = document.createElementNS(SVG_NAMESPACE, 'svg');
@@ -3458,7 +3572,7 @@ describe('builtin retained renderers', () => {
         },
       ],
     } as const;
-    const mount = executor.prepareMount(current, runtimeConfig, 'create');
+    const mount = executor.prepareMount(frameOf(current), runtimeConfig, 'create');
     mount.commit();
     mount.dispose();
     const occurrences = Array.from(host.querySelectorAll('[data-retikz-id="duplicate"]'));
@@ -3476,7 +3590,7 @@ describe('builtin retained renderers', () => {
       nextRevision: next.revision,
       operations: Object.freeze([Object.freeze({ kind: 'replaceScene', snapshot: next })]),
     });
-    const prepared = executor.prepare(replacePatch, next, runtimeConfig);
+    const prepared = executor.prepare(replacePatch, frameOf(next), runtimeConfig);
     prepared.commit();
     prepared.dispose();
     const nextOccurrences = Array.from(host.querySelectorAll('[data-retikz-id="duplicate"]'));
@@ -3523,7 +3637,7 @@ describe('builtin retained renderers', () => {
     });
 
     expect(drawImage).toHaveBeenCalledTimes(2);
-    expect(handle.read(session).snapshot.revision).toBe(1);
+    expect(handle.read(session).frame.primary.revision).toBe(1);
     session.dispose();
   });
 
@@ -3562,7 +3676,7 @@ describe('builtin retained renderers', () => {
 
     expect(drawImage).toHaveBeenCalledTimes(1);
     expect(handle.read(session)).not.toBe(previousRead);
-    expect(handle.read(session).snapshot.revision).toBe(1);
+    expect(handle.read(session).frame.primary.revision).toBe(1);
     session.dispose();
   });
 
@@ -3656,11 +3770,11 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const mount = executor.prepareMount(reverseTopology(pair.current), {}, 'create');
+    const mount = executor.prepareMount(frameOf(reverseTopology(pair.current)), {}, 'create');
     mount.commit();
     mount.dispose();
     fillStyles.length = 0;
-    const prepared = executor.prepare(pair.patch, reverseTopology(pair.next), {});
+    const prepared = executor.prepare(pair.patch, frameOf(reverseTopology(pair.next)), {});
     prepared.commit();
     prepared.dispose();
     expect(fillStyles).toContain('#22c55e');
@@ -3709,11 +3823,11 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const mount = executor.prepareMount(pair.current, {}, 'create');
+    const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
     mount.commit();
     mount.dispose();
     fillStyles.length = 0;
-    const prepared = executor.prepare(pair.patch, pair.next, {});
+    const prepared = executor.prepare(pair.patch, frameOf(pair.next), {});
     prepared.commit();
     prepared.dispose();
     expect(clip).toHaveBeenCalled();
@@ -3756,12 +3870,12 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const mount = executor.prepareMount(pair.current, {}, 'create');
+    const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
     mount.commit();
     mount.dispose();
     drawImageCalls.length = 0;
 
-    const prepared = executor.prepare(pair.patch, pair.next, {});
+    const prepared = executor.prepare(pair.patch, frameOf(pair.next), {});
     prepared.commit();
     prepared.rollback();
     prepared.dispose();
@@ -3832,17 +3946,17 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const mount = executor.prepareMount(current, {}, 'create');
+    const mount = executor.prepareMount(frameOf(current), {}, 'create');
     mount.commit();
     mount.dispose();
     drawImage.mockClear();
 
-    const prepared = executor.prepare(pair.patch, next, {});
+    const prepared = executor.prepare(pair.patch, frameOf(next), {});
     prepared.commit();
-    expect(executor.read().snapshot).toBe(next);
+    expect(executor.read().frame.primary).toBe(next);
     expect(drawImage).not.toHaveBeenCalled();
     prepared.rollback();
-    expect(executor.read().snapshot).toBe(current);
+    expect(executor.read().frame.primary).toBe(current);
     expect(drawImage).not.toHaveBeenCalled();
     prepared.dispose();
     executor.dispose();
@@ -3877,12 +3991,12 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const mount = executor.prepareMount(pair.current, { animation: { snapshotAt: 100 } }, 'create');
+    const mount = executor.prepareMount(frameOf(pair.current), { animation: { snapshotAt: 100 } }, 'create');
     mount.commit();
     mount.dispose();
     drawImageArgumentCounts.length = 0;
 
-    const prepared = executor.prepare(pair.patch, pair.next, { animation: { snapshotAt: 100 } });
+    const prepared = executor.prepare(pair.patch, frameOf(pair.next), { animation: { snapshotAt: 100 } });
     prepared.commit();
     prepared.rollback();
     prepared.dispose();
@@ -4022,10 +4136,10 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const mount = executor.prepareMount(current, {}, 'create');
+    const mount = executor.prepareMount(frameOf(current), {}, 'create');
     mount.commit();
     mount.dispose();
-    const prepared = executor.prepare(patch, next, {});
+    const prepared = executor.prepare(patch, frameOf(next), {});
     prepared.commit();
     prepared.dispose();
 
@@ -4520,12 +4634,12 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const mount = executor.prepareMount(current, {}, 'create');
+    const mount = executor.prepareMount(frameOf(current), {}, 'create');
     mount.commit();
     mount.dispose();
     const controls = executor.read().animation;
     controls?.seek(123);
-    const prepared = executor.prepare(patch, next, {});
+    const prepared = executor.prepare(patch, frameOf(next), {});
     prepared.commit();
     prepared.dispose();
     expect(executor.read().animation).toBe(controls);
@@ -4612,7 +4726,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const mount = executor.prepareMount(current, {}, 'create');
+    const mount = executor.prepareMount(frameOf(current), {}, 'create');
     mount.commit();
     mount.dispose();
     const controls = executor.read().animation;
@@ -4632,7 +4746,7 @@ describe('builtin retained renderers', () => {
         },
       ],
     };
-    const prepared = executor.prepare(patch, next, {});
+    const prepared = executor.prepare(patch, frameOf(next), {});
     prepared.commit();
     prepared.dispose();
     alphas.length = 0;
@@ -4702,7 +4816,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const mount = executor.prepareMount(current, {}, 'create');
+    const mount = executor.prepareMount(frameOf(current), {}, 'create');
     mount.commit();
     mount.dispose();
     const controls = executor.read().animation;
@@ -4723,7 +4837,7 @@ describe('builtin retained renderers', () => {
           },
         ],
       },
-      next,
+      frameOf(next),
       {},
     );
     prepared.commit();
@@ -4793,7 +4907,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const mount = executor.prepareMount(current, {}, 'create');
+    const mount = executor.prepareMount(frameOf(current), {}, 'create');
     mount.commit();
     mount.dispose();
     expect(requestFrame).toHaveBeenCalledTimes(1);
@@ -4817,7 +4931,7 @@ describe('builtin retained renderers', () => {
           },
         ],
       },
-      next,
+      frameOf(next),
       {},
     );
     prepared.commit();
@@ -4887,7 +5001,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const mount = executor.prepareMount(current, {}, 'create');
+    const mount = executor.prepareMount(frameOf(current), {}, 'create');
     mount.commit();
     mount.dispose();
     expect(requestFrame).not.toHaveBeenCalled();
@@ -4906,7 +5020,7 @@ describe('builtin retained renderers', () => {
         },
       ],
     };
-    const prepared = executor.prepare(patch, next, {});
+    const prepared = executor.prepare(patch, frameOf(next), {});
     prepared.commit();
     prepared.dispose();
     expect(requestFrame).toHaveBeenCalledTimes(1);
@@ -4991,7 +5105,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const mount = executor.prepareMount(current, {}, 'create');
+    const mount = executor.prepareMount(frameOf(current), {}, 'create');
     mount.commit();
     mount.dispose();
     host.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 10, clientY: 10 }));
@@ -5012,7 +5126,7 @@ describe('builtin retained renderers', () => {
         },
       ],
     };
-    const prepared = executor.prepare(patch, next, {});
+    const prepared = executor.prepare(patch, frameOf(next), {});
     prepared.commit();
     prepared.dispose();
     expect(committedAlphas.some(alpha => Math.abs(alpha - 0.4) < 0.01)).toBe(true);
@@ -5140,11 +5254,11 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    const mount = executor.prepareMount(current, {}, 'create');
+    const mount = executor.prepareMount(frameOf(current), {}, 'create');
     mount.commit();
     mount.dispose();
 
-    const prepared = executor.prepare(patch, next, {});
+    const prepared = executor.prepare(patch, frameOf(next), {});
     const image = TestImage.latest;
     expect(image).toBeDefined();
     image?.onload?.(new Event('load'));
@@ -5262,7 +5376,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    expect(() => executor.prepareMount(snapshot, {}, 'create')).toThrow('bitmap prepare failed');
+    expect(() => executor.prepareMount(frameOf(snapshot), {}, 'create')).toThrow('bitmap prepare failed');
     expect(TestImage.latest?.onload).toBeNull();
     executor.dispose();
   });
@@ -5304,7 +5418,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
-    expect(() => executor.prepareMount(snapshot, {}, 'create')).toThrow('second image rejected');
+    expect(() => executor.prepareMount(frameOf(snapshot), {}, 'create')).toThrow('second image rejected');
     expect(TestImage.instances).toHaveLength(2);
     expect(TestImage.instances.every(image => image.onload === null && image.onerror === null)).toBe(true);
     executor.dispose();
