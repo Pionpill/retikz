@@ -9,6 +9,8 @@ Kernel 开发使用的 private 性能基准工具，不发布 npm 包。
 - `pnpm bench:report -- --compare-timing-baseline`：仅在完整 fingerprint 匹配时执行 tracked timing gate；不匹配会明确输出 `timing gate skipped`并以非零退出
 - `pnpm bench:update-baseline`：生成 ignored deterministic / timing baseline 候选，供人工审查后显式提交
 
+Bench 开发服务默认使用端口 `6003`。每个 clone / worktree 可在被 Git 忽略的 `apps/bench/.env.local` 中通过 `RETIKZ_BENCH_PORT` 固定本地端口；进程环境变量优先于本地文件。开发服务与 browser runner 共用该配置，端口占用时不会自动递增。
+
 固定环境声明在 `environment.json`。已审查的确定性基线保存在 `baselines/deterministic.json`，按完整环境 fingerprint 区分的 wall-clock 基线保存在 `baselines/timing/`；`results/` 只存 ignored 报告和待人工审查的候选，不作为正式门禁输入。
 
 `bench:report` 与 `bench:update-baseline` 进入 timing 路径时才采集 runner 环境，并在同次命令及重跑中复用。完整 fingerprint 覆盖 expected Playwright、采样、viewport 等配置、实际 Node 与 browser 环境，以及 runner 的 identity、平台、架构、CPU model 集合、逻辑处理器数和总内存；browser 侧另记录 `hardwareConcurrency`。CI 或固定基准机应通过 `RETIKZ_BENCH_RUNNER_ID` 提供稳定 identity，未配置或只含空白时回退到 hostname。timing 路径任一必需硬件字段不可用都会 fail-loud，避免不同机器共享绝对 wall-clock baseline。

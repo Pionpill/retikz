@@ -2,9 +2,11 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
-import { createServer } from 'vite';
+import { createServer, loadEnv } from 'vite';
 
 import type { BrowserBenchmarkOptions, BrowserBenchmarkResult, RetikzBenchWindow } from './browser-contract';
+
+import { resolveBenchPort } from '../../bench-port';
 
 /** environment.json 中与 Chromium runner 相关的冻结字段 */
 export type BrowserRunnerEnvironment = Readonly<{
@@ -24,11 +26,9 @@ export const getBrowserRunnerPath = (): '/runner.html' => '/runner.html';
 
 /** 读取并校验固定 bench 服务端口 */
 export const readBenchPort = (): number => {
-  const port = Number(process.env.RETIKZ_BENCH_PORT ?? 5175);
-  if (!Number.isInteger(port) || port < 1 || port > 65_535) {
-    throw new Error('RETIKZ_BENCH_PORT must be an integer between 1 and 65535');
-  }
-  return port;
+  const rawPort = process.env.RETIKZ_BENCH_PORT ?? loadEnv('development', appRoot, '').RETIKZ_BENCH_PORT;
+
+  return resolveBenchPort(rawPort);
 };
 
 /** 读取 lockfile 安装的 Playwright 版本 */
