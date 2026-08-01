@@ -1,16 +1,16 @@
 # ADR-03：Chart presentation 与 Standard FlexLayout
 
-- 状态：Proposed（自动混合嵌入受 ADR-01 Kernel capability gate 阻塞）
+- 状态：Proposed（公开入口仍受 Standard surface、Kernel dependency assembly 与 Core spatial transparency gate 阻塞）
 - 决策日期：2026-07-31
 - 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-01](./01-chart-infrastructure.md) · [ADR-02](./02-style-palette.md) · [Chart 总设计 §8](../../../../../architecture/chart-design.md)
 
-## 背景
+## 背景与目标
 
-Plot 负责图本体及 axis、legend、datum / mark label 等可视化语义。一个可独立绘制的 Chart 还需要标题、说明、来源与署名，但这些内容不能被塞入 PlotSpec，也不能由 React DOM 外壳独占。
+Plot 负责图本体及 axis、legend、datum / mark label 等可视化语义。一个可独立绘制的 Chart 还需要标题、说明、来源与署名；这些内容不能进入 PlotSpec，也不能由 React DOM 外壳独占。
 
-Standard 已提供 JSON-safe FlexLayout，能够布局任意 Core child，包括完整 Plot composite 与文本 Node。Chart 只声明展示语义并生成 Standard 输入，不实现文字测量、box solver 或 renderer 分支。
+Chart 只声明 presentation 语义和固定排列，Standard 负责领域无关的组合、测量、布局与 surface，Core 负责文本与 renderer-neutral 图形底座。最终结果必须在 JSON、React、Vanilla、SVG 与 Canvas 中保持等价。
 
-## 决策：六个可选槽位进入固定 Standard column FlexLayout
+## 决策：六个可选槽位组成固定 column presentation
 
 ```ts
 type ChartPresentation = {
@@ -22,11 +22,7 @@ type ChartPresentation = {
   credit?: ChartPresentationText;
   layout?: ChartPresentationLayout;
 };
-```
 
-每个槽位接受 non-empty `TextBlock` shorthand，或以下 strict object：
-
-```ts
 type ChartPresentationText =
   | IRTextBlock
   | {
@@ -39,221 +35,76 @@ type ChartPresentationText =
     };
 ```
 
-`ChartPresentationTextBlockSchema` 在 Core `TextBlockSchema` 之上增加非空 refinement：string 至少一个字符；数组至少一行，且至少一个 plain / styled line text 或 mixed run 的 `text` / `tex` 非空。它与 Plot label 的 non-empty 规则同义，但由 Chart schema owner 实现，不 deep import Plot 私有 helper。
+每个 slot 接受 non-empty Core TextBlock shorthand 或严格 styled object。`presentation` 至少包含一个 text slot；只有 `layout` 的空外壳无效。
 
-## Canonical expansion
-
-固定 child 顺序与 Flex item key：
+存在 presentation 时，canonical child 顺序固定为：
 
 ```text
 title -> subtitle -> plot -> caption -> note -> source -> credit
 ```
 
-每个存在的 text slot 解析为：
+每个 slot 映射为 renderer-neutral Core text child，Plot body 保持完整 PlotSpec。整体使用 Standard 的 column FlexLayout；纵向 gap 来自 `presentation.layout.gap` 或 ADR-02 `chart.gap` token，横轴对齐来自 `presentation.layout.align`，slot-local style 覆盖对应 resolved token，但未覆盖的 font sibling 必须保留。
 
-```ts
-{
-  kind: 'flex',
-  key: '<slot>',
-  child: {
-    type: 'node',
-    position: [0, 0],
-    text,
-    fill: 'none',
-    stroke: 'none',
-    strokeWidth: 0,
-    padding: 0,
-    ...resolvedPresetStyle,
-    ...slotStyle,
-  },
-}
-```
+没有 presentation 时 content 直接是 PlotSpec，不生成空 FlexLayout。无论 content 是 PlotSpec 还是 FlexLayout，最终都进入同一个 Standard surface phase；surface 即使视觉值为透明、零 padding 也不省略，以保持 canonical tree、inspection 与 adapter parity。
 
-Plot item 固定为：
-
-```ts
-{ kind: 'flex', key: 'plot', child: resolvedPlotSpec }
-```
-
-resolver 必须把下列 authored input 交给 `createFlexLayout` / `FlexLayoutSchema.parse`，`ChartResolution.node` 保存 parse 后的 normalized `IRFlexLayout`，不是未物化默认值的 input：
-
-```ts
-{
-  namespace: 'standard',
-  type: 'flexLayout',
-  direction: 'column',
-  wrap: 'nowrap',
-  padding: presentation.layout?.padding ?? 0,
-  columnGap: 0,
-  rowGap: presentation.layout?.gap ?? preset.presentation.gap,
-  justifyContent: 'start',
-  alignItems: presentation.layout?.align ?? 'stretch',
-  alignContent: 'start',
-  children,
-}
-```
-
-normalized container 还必须包含：
-
-```ts
-{
-  size: { x: { kind: 'content' }, y: { kind: 'content' } },
-  overflow: 'visible',
-  // 以及上文已经固定的 namespace/type/direction/wrap/padding/gaps/alignment
-}
-```
-
-每个 normalized item 固定包含：
-
-```ts
-{
-  kind: 'flex',
-  key,
-  child,
-  margin: 0,
-  basis: 'content',
-  grow: 0,
-  shrink: 1,
-}
-```
-
-整个 `presentation` 缺省时直接返回 PlotSpec，不生成空 FlexLayout；存在 presentation object 但六个文本槽位都缺省时 schema 失败，避免无意义外壳。
-
-Chart 有 `id` 时，最终 expansion 是 `{type:'scope', id: chart.id, children:[flexOrPlot]}`，resolved PlotSpec id 为 `${chart.id}/plot`。无 id 时不生成外层 Scope，也不生成 Plot id；多个实例依靠 compile occurrence 隔离。
-
-## Layout surface
+## 基础数据结构与公开契约
 
 `presentation.layout` 只开放：
 
-| 字段      | Schema                                    | 映射           |
-| --------- | ----------------------------------------- | -------------- | --- | -------- | ----------------- |
-| `padding` | 直接复用 `FlexLayoutSchema.shape.padding` | Flex `padding` |
-| `gap`     | finite non-negative number                | Flex `rowGap`  |
-| `align`   | `start                                    | center         | end | stretch` | Flex `alignItems` |
+| 字段      | Contract                               | 语义                                           |
+| --------- | -------------------------------------- | ---------------------------------------------- |
+| `padding` | Standard padding number / box spacing  | 覆盖 `chart.padding`，作为 outer surface inset |
+| `gap`     | finite non-negative number             | 覆盖 `chart.gap`，作为 slot 与 Plot 的纵向 gap |
+| `align`   | `start` / `center` / `end` / `stretch` | Standard Flex cross-axis alignment             |
 
-复杂外部排列由用户直接使用 Standard。Chart 不开放 wrap、reverse、grow、slot renderer 或任意 graphic。
+Chart 不开放 wrap、reverse、grow、任意 graphic、slot renderer 或 ReactNode。复杂外部排列由用户直接使用 Standard。
 
-## Runtime capability assembly
+ADR-03 扩展 ADR-01 的唯一 inspection：记录 content 是裸 Plot 还是 FlexLayout，并按 canonical 顺序列出实际存在的 slot 及其用户输入来源。inspection 不复制 PlotSpec、surface geometry、Plot provenance 或 lineage。
 
-Chart expansion 保留完整 PlotSpec child，因此 host 必须同时注册 `lowerCharts(...)`、`lowerPlots(...)` 与 `FlexLayoutDefinition`。独立 JSON / React / Vanilla 入口显式构造该集合。
+## 行为、失败语义与兼容性
 
-Chart / Plot / Standard 作为同一外层 Layout 的 embeddable children 时，依赖 ADR-01 所述 Kernel contribution capability。该 gate 未解除时：
+- slot 文本必须包含至少一个非空 plain / styled line 或 mixed run
+- object key 顺序不影响 canonical child 顺序与稳定 slot identity
+- slot-local style 高于 ADR-02 token，但只覆盖 authored leaf
+- 缺省 presentation 不产生可见内容；显式空 presentation fail-loud
+- 非法 padding、gap、align、空文本或未知字段在 Chart schema 阶段 fail-loud
+- Chart 有 id 时，Chart 外层、Plot body 与已存在 slot 获得稳定关联 identity；无 id 时由 occurrence 区分实例
+- Standard probe / replay 可以改变最终 geometry，但不能改变 Plot semantic identity、domain payload、provenance、locator 或 lineage
+- React、Vanilla 与手写 JSON 使用同一 presentation schema；adapter 不提供 DOM-only title 或 CSS-only surface
 
-- 不允许 adapter 悄悄提前展开 Plot
-- 不允许 Chart 私调 Flex solver
-- 不允许因重复 definitions 静默保留第一项
-- docs 不宣称混合嵌入已支持
+## 功能与包边界
 
-gate 解除后，三入口必须使用同一个 dependency aggregation contract。稳定 fail-loud 属于 Kernel host preflight：在 compile 前检查 Chart 所需的 Chart / Plot / Flex definition keys，并由 Kernel owner ADR 冻结 error payload。当前 Core 对未注册 root composite 可能 warning + skip，因此本 ADR 在 gate 解除前只承诺“显式完整 bundle 可以成功编译”，不虚构 Chart resolver error code。
+- Chart 拥有六个 slot 的语义、可选性、canonical 顺序、layout override 与到 Standard 输入的映射
+- Standard 拥有 FlexLayout 与可包装任意 child 的 renderer-neutral surface / background / padding
+- Core 拥有 TextBlock、文本测量、通用 layout replay 与 spatial handle / selector 基础
+- Plot body 始终是完整 PlotSpec；Chart 不接管 Plot guide、label、composition 或 trace
+- adapter / host 只负责 authoring、definition / dataset 注入和 runtime，不拥有 presentation defaults
 
-## Identity 与空间边界
+完整 host 必须正式组装 Chart、Plot、FlexLayout 与 surface definitions。自动 React / Vanilla 混合嵌入等待 ADR-01 的 Kernel dependency assembly；完整 canvas 等待 ADR-02 的 Standard surface；公开空间访问等待 Core qualified selector。缺少任一 gate 时可以验证 owner-private content mapping，但不得公开最终 Chart composition。
 
-- Flex item key 是容器本地 layout identity，不与 Plot id 共用命名域
-- Standard probe / replay 会合法增加 / 重映射 compile occurrence 并改变全局 geometry
-- Plot 语义 id、datum / series payload、provenance、locator、lineage 保持连续，不由 Chart 复制或改写
-- wrapped 与裸 Plot 的 trace payload 等价；`sourcePath` 继续指向原 Plot composite source，`expansionPath` 可以增加 Core 定义的 numeric `expand` / `probe` / `replay` / `output` / `scopeChild` 段
-- Flex item key 只属于 Standard layout artifact 的容器本地 identity，不进入 Core occurrence locator
-- alpha.1 不承诺 qualified selector、Chart header/body/footer handle 或完整空间 index；稳定 slot key 只作为未来 Standard artifact 兼容锚点
+## 架构验证
 
-## DSL 表面
+- 归属结论：title、caption、source 等语义归 Chart；通用布局 / surface 归 Standard；文本与空间底座归 Core
+- 内部表达：现有 Core TextBlock + Standard FlexLayout 足以表达 content phase，不需要新 Chart layout IR
+- 外部扩展：presentation 是闭合 ChartSpec 数据，不新增 registry；复杂组合继续沿 Standard 正式能力扩展
+- 下游闭环：Chart presentation -> Standard composition -> Core IR / Scene -> renderer
+- 空间透明：外层 slot identity 由 Chart 声明，Plot 内部 handle 继续由 Plot / Core 拥有并通过 qualified selector 委托访问
+- capability 结论：content 组合现有能力；surface、自动 assembly 与 spatial delegation 分别下沉所属 owner 并作为公开 gate
 
-```json
-{
-  "presentation": {
-    "title": "Monthly retention",
-    "subtitle": { "text": "Cohorts acquired in 2026", "font": { "size": 12 } },
-    "source": "Source: internal analytics",
-    "layout": { "padding": 12, "gap": 6, "align": "start" }
-  }
-}
-```
+## 被否决方案
 
-## Chart 封装完备性检查
+- 把 presentation slots 写入 PlotSpec：会扩张 Plot 的长期职责
+- adapter 用 DOM / CSS 外壳实现 title 或 canvas：会破坏 Vanilla、SSR、导出与 renderer parity
+- Chart 自建 box solver、文字测量或 surface composite：会复制 Standard / Core 能力
+- 开放任意 slot renderer / graphic：会建立第二套通用组合系统并破坏 JSON-safe IR
 
-- presentation 不属于 type 核心 recipe，所有单独槽位均可省略
-- Plot body 始终是完整 PlotSpec，不降级为 bbox / image
-- Standard 负责 probe / replay / layout，Core 负责文本测量与最终几何
-- adapter 不创建 DOM-only 标题
-- inspection 记录 slot source path，不复制 Plot trace
-- 本轮结论：组合 Standard + Core 现有能力；自动混合嵌入等待 Kernel owner gate
+## 测试策略摘要
+
+需要 schema、canonical mapping、Standard content integration、surface、inspection / spatial、trace 与 adapter parity 证据。关键不变量是六槽位顺序和 identity 稳定，slot token 与 local override 的 cascade 正确，缺省 presentation 不生成空 Flex，所有 content 进入同一 surface，Chart 包裹前后 Plot trace 连续，并在上游 gates 到位后三入口产生等价 canonical tree。
 
 ## 不在本 ADR 范围
 
-- 任意 ReactNode、graphic、slot renderer
-- toolbar、export、fullscreen、loading
-- accessibility description 到 DOM / renderer 的宿主映射
-- dashboard linked state
-- Kernel embeddable dependency aggregation 的具体 API
-- Kernel host capability preflight / stable missing-definition error
-- Core qualified selector / handle index
-
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-本 ADR 自评 level：`red`，因为新增 Chart presentation schema 与 composite resolution。
-
-### Schema 改动
-
-| 文件                                             | 操作 | 字段名                                                                         | 类型                                      | 默认值    | describe 中文摘要 |
-| ------------------------------------------------ | ---- | ------------------------------------------------------------------------------ | ----------------------------------------- | --------- | ----------------- |
-| `packages/viz/chart/src/schemas/presentation.ts` | 新增 | text shorthand                                                                 | non-empty `TextBlockSchema`               | —         | 非空展示文本      |
-| 同上                                             | 新增 | styled `text` / `font` / `textColor` / `align` / `lineHeight` / `maxTextWidth` | exact Node fragments                      | —         | strict 文本对象   |
-| 同上                                             | 新增 | `layout.padding`                                                               | `FlexLayoutSchema.shape.padding` optional | `0`       | 外层 padding      |
-| 同上                                             | 新增 | `layout.gap`                                                                   | finite non-negative optional              | preset    | 垂直间距          |
-| 同上                                             | 新增 | `layout.align`                                                                 | edge alignment optional                   | `stretch` | 横轴对齐          |
-| 同上                                             | 新增 | 六个 slot                                                                      | text union optional                       | —         | Chart 展示槽位    |
-| `packages/viz/chart/src/schemas/shared.ts`       | 新增 | `presentation`                                                                 | refined strict object optional            | —         | 至少一个可见 slot |
-
-### 文件 scope
-
-- `packages/viz/chart/package.json`（新增 `@retikz/standard` dependency）
-- `packages/viz/chart/src/schemas/presentation.ts`
-- `packages/viz/chart/src/schemas/index.ts`、`packages/viz/chart/src/index.ts`
-- `packages/viz/chart/src/pipeline/resolve-presentation.ts`
-- `packages/viz/chart/src/pipeline/resolve-chart.ts`、`packages/viz/chart/src/pipeline/index.ts`
-- `packages/viz/chart/src/contract/inspection.ts`
-- `packages/viz/chart/tests/presentation/**`
-- `packages/viz/chart-react/src/{Chart,embedded-runtime,chart-runtime}.tsx`
-- `packages/viz/chart-react/src/index.ts`、`packages/viz/chart-react/tests/presentation.test.tsx`
-- `packages/viz/chart-vanilla/src/{adapter,runtime,spec}/**`
-- `packages/viz/chart-vanilla/src/index.ts`、`packages/viz/chart-vanilla/tests/presentation.test.ts`
-- `pnpm-lock.yaml`
-- `apps/docs/src/modules/docs/contents/chart/concepts/presentation*.mdx`
-- 对应 Chart docs data / i18n / demo 文件
-
-上述 adapter runtime 文件只在 ADR-04 首个公开 type 和 ADR-01 Kernel gate 均就绪时接线；本 ADR 可先实现 core schema / resolver。
-
-### 测试象限
-
-**Happy path（≥ 3）**
-
-- 六槽位生成与上文完全相等的 canonical Flex tree
-- shorthand / styled object 生成相同 text，preset style < slot style
-- standalone JSON host 注册 Chart + Plot + Flex 后真实 compile
-
-**边界（≥ 2）**
-
-- 无 presentation 时 node 是 PlotSpec；仅 source 时只有 plot / source items
-- idless 多 Chart 不生成虚构 id，occurrence 分离且无冲突
-
-**错误路径（≥ 2）**
-
-- 空 TextBlock、空 presentation、负 gap / padding、非法 align 被 schema 拒绝
-- gate 解除后 Kernel host preflight 对缺 Chart / Plot / Flex definition 给出上游 ADR 冻结的稳定错误；当前只测显式完整 bundle 成功
-
-**交互（≥ 2）**
-
-- wrapped / bare Plot 的 trace payload 等价；sourcePath 保持，expansionPath 按 Core numeric segments 合法重映射
-- React / Vanilla / JSON 在 gate 解除后装配相同 definitions 与 canonical tree
-- 混合 Chart + Plot + Standard 时 definitions 去重、datasets 同源冲突 fail-loud
-
-### 依赖的现有元素
-
-- Standard FlexLayoutSchema / factory / definition
-- Core TextBlockSchema、NodeSchema、IRNode、Scope 与 compile occurrence
-- PlotSpec、lowerPlots、provenance / locator / lineage
-- ADR-01 composite registration / upstream capability gate
-- ADR-02 exact presentation preset tokens
+- 任意 ReactNode、graphic 与 slot renderer
+- toolbar、export、fullscreen、loading 与 dashboard linked state
+- accessibility description 到宿主 DOM / renderer 的映射
+- Kernel dependency assembly、Standard surface 或 Core selector 的具体 API 与实现

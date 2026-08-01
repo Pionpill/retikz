@@ -1,16 +1,14 @@
 # ADR-07：Regression 的 mark-local Smooth 配方
 
-- 状态：Proposed（core variant 可设计；public adapters / docs 受 ADR-04 Kernel gate 阻塞）
+- 状态：Proposed（公开 adapter 与 docs 受 ADR-04 capability gate 阻塞）
 - 决策日期：2026-07-31
 - 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-06](./06-connected-scatter.md)
 
-## 背景
+## 背景与目标
 
-Regression 同时展示原始散点与拟合趋势。Plot 的 Smooth transform 会输出采样后的趋势 rows；若把它放在 Plot root，原始散点也会被替换，破坏该 type。
+Regression 同时展示原始散点与拟合趋势。Plot 的 Smooth transform 会输出采样后的趋势 rows；若把它放在 Plot root，原始散点也会被替换。因此拟合只能作为 trend Path 的 mark-local transform。
 
-Plot 已支持 mark-local transform，因此趋势计算应只属于 trend Path。
-
-## 决策：Point 读取原始 rows，Path 通过 mark-local Smooth 读取派生 rows
+## 决策：Point 读取原始 rows，trend Path 读取 mark-local Smooth rows
 
 ```ts
 type RegressionChartSpec = ChartCommon & {
@@ -31,191 +29,85 @@ type RegressionChartSpec = ChartCommon & {
 };
 ```
 
-recipe 生成：
+recipe 固定生成原始 Point 与趋势 Path。Smooth 只挂在 trend Path，输入来自 x / y field，输出写入稳定的派生字段；trend Path 读取派生字段并保持开放，Point 继续读取 root-transformed 原始 rows。Point、mark-local Smooth、trend Path 及其输入输出关系构成不可撤销核心。
 
-- `mark.points`：id=`__chart.regression.mark.points` 的原始 Point
-- `transform.trend`：位于 trend Path 的 Smooth，x / y 来自 field-bound encoding，输出 `__chart.regression.trend.x` / `__chart.regression.trend.y`
-- `mark.trend`：id=`__chart.regression.mark.trend`，读取输出字段的 Path；series 映射到 Smooth `groupBy` 与 Path `series`
-
-Regression 的 x / y 是 strict `{field:string}`，不能使用 constant 或位置 binding 上无效的 `scale`。用户可调整 Smooth `method`、`sampleCount`、`extent`，但不能修改 kind、输入 / 输出字段或把 transform 移到 root。
-
-color constant 同时应用于 points / trend。color field 必须等于 `series`，或在省略 series 时自动成为 Smooth `groupBy` 与 Path `series`；这保证 Smooth 输出保留颜色分组字段，不依赖代表 row 猜测颜色。series 与不同 color field 的组合在 Chart schema 阶段拒绝。
-
-marks 数组固定先画 trend、后画 points：
+隐式 Smooth 与 trend Path 的完整基础契约固定为：
 
 ```ts
-[
-  {
-    type: 'path',
-    id: '__chart.regression.mark.trend',
-    order: '__chart.regression.trend.x',
-    closed: false,
-    ...(resolvedSeries ? { series: resolvedSeries } : {}),
-    transform: [
-      {
-        kind: 'smooth',
-        x: spec.encoding.x.field,
-        y: spec.encoding.y.field,
-        ...(resolvedSeries ? { groupBy: [resolvedSeries] } : {}),
-        ...smoothPatch,
-        xAs: '__chart.regression.trend.x',
-        yAs: '__chart.regression.trend.y',
-      },
-    ],
-    encoding: {
-      x: { field: '__chart.regression.trend.x' },
-      y: { field: '__chart.regression.trend.y' },
-      ...(resolvedColorChannel ? { color: resolvedColorChannel } : {}),
-    },
+const trendX = '__chart.regression.trend.x';
+const trendY = '__chart.regression.trend.y';
+
+const smooth = {
+  kind: 'smooth',
+  x: spec.encoding.x.field,
+  y: spec.encoding.y.field,
+  groupBy: resolvedSeries === undefined ? undefined : [resolvedSeries],
+  ...allowedSmoothPatch,
+  xAs: trendX,
+  yAs: trendY,
+};
+
+const trendPath = {
+  type: 'path',
+  order: trendX,
+  series: resolvedSeries,
+  closed: false,
+  transform: [smooth],
+  encoding: {
+    x: { field: trendX },
+    y: { field: trendY },
+    color: resolvedColorChannel,
   },
-  {
-    type: 'point',
-    id: '__chart.regression.mark.points',
-    encoding: {
-      x: { field: spec.encoding.x.field },
-      y: { field: spec.encoding.y.field },
-      ...(resolvedColorChannel ? { color: resolvedColorChannel } : {}),
-    },
-  },
-];
+};
 ```
 
-省略 `method` 表示 Plot 当前默认 linear；patch 若给出 method，必须通过 `SmoothMethodSpecSchema`。`RegressionSmoothPatch` 是只允许 `method`、`sampleCount`、`extent` 的 strict object。`RegressionPointPatch` 复用 ADR-04 strict Point patch；`RegressionPathPatch` 复用 ADR-06 的纯表现 strict allowlist，不允许 `connectNulls`，也不允许 type、id、order、series、closed、closure、encoding、transform、coordinateView、anchorId、zIndex、rotate、scale。
+省略的 optional 字段不写入最终 PlotSpec。`__chart.regression.trend.x` / `y` 是 Chart 保留的 mark-local output fields：二者不得相同，不得出现在 Smooth `groupBy`，ChartSpec root transform、显式 Plot extension 或声明数据模型若输出 / 占用这些保留字段必须 fail-loud，不能覆盖、重命名或自动选择替代名称。Point 永远读取 authored x / y fields；只有 trend Path 读取这两个派生字段。
 
-series / color 输入矩阵固定为：
+用户可以调整 Smooth method、sample count、extent 与两种 Mark 的表现样式，但不能移除 Smooth、改变其 kind / input / output、把 transform 移到 root，或改写核心 Point / Path identity 和 view。
 
-| 输入                    | Smooth `groupBy` | Path `series` | 两个 Mark 的 `encoding.color`          | 结果                                                                                         |
-| ----------------------- | ---------------- | ------------- | -------------------------------------- | -------------------------------------------------------------------------------------------- |
-| 均省略                  | —                | —             | —                                      | 单组拟合                                                                                     |
-| 仅 series               | `[series]`       | series        | reserved ordinal scale 的 series field | categorical / untyped series 自动着色；continuous / temporal 需显式 color + compatible scale |
-| 仅 color constant       | —                | —             | `{value}`                              | 单组、常量色                                                                                 |
-| 仅 color field          | `[color.field]`  | color.field   | 原样 `{field,scale?}`                  | 按 color 分组拟合                                                                            |
-| series + constant color | `[series]`       | series        | `{value}`                              | 按 series 分组、统一颜色                                                                     |
-| series = color field    | `[series]`       | series        | 原样 `{field,scale?}`                  | 同字段分组与着色                                                                             |
-| series != color field   | —                | —             | —                                      | Chart schema 拒绝                                                                            |
+公开 patch contract 固定为：
 
-仅 series 时生成 `__chart.regression.scale.series-color` ordinal scale；字段类型边界和显式恢复路径与 ADR-06 一致。color field 无显式 scale 且为 continuous / temporal 时沿用 Plot 诊断。
+- `RegressionPointPatch` 精确复用 ADR-04 `ScatterPointPatch`
+- `RegressionSmoothPatch` 是 strict object，只允许 Plot Smooth 的 `method`、`sampleCount`、`extent`
+- `RegressionPathPatch` 是 strict object，只允许 `curve`、`strokeWidth`、`opacity`、`lineCap`、`lineJoin`、`roundedCorners`、`fill`、`stroke`、`strokeOpacity`、`fillRule`、`thickness`、`marks`、`dashPattern`、`shadow`、`blendMode`、`label`
 
-## Smooth 数据边界
+所有 value contract 直接复用对应 Plot schema。Path patch 特意不接受 `connectNulls`，也不接受 `type`、`id`、`order`、`series`、`closed`、`closure`、`encoding`、`transform`、`coordinateView`、`anchorId`、`zIndex`、`rotate` 或 `scale`。Recipe encoding / Smooth 先成立，Point 与 trend style patch 只覆盖各自允许的表现字段。
 
-Smooth 对每个 group 只保留运行时为有限 number 的 x/y pair。每组必须至少有两个 pair，且 x 至少有两个不同值；空数据、全无效、相同 x、或多组中任一组不满足时，Plot fail-loud，整个 Chart 不产生部分结果。无效 pair 可以被忽略，但剩余 pairs 仍需满足上述条件。Chart 不捕获 Smooth 错误来只保留 points，也不新增 temporal / categorical coercion；输入在 root transform / Plot field normalization 后是否为有限 number，以 Plot 当前数据链为准。
+## 行为、失败语义与兼容性
 
-## Coordinate / composition 与核心复验
+- x / y 是严格 field-only roles，不接受 constant 或 binding-level scale
+- `series` 同时驱动 Smooth grouping 与 Path series；color constant 可统一着色
+- color field 省略 series 时自动成为 grouping；同时提供 series 与不同 color field 时 schema fail-loud，避免由代表 row 猜测颜色
+- 只有 series 时提供 categorical color default；continuous / temporal 字段需要显式兼容 color scale
+- 每个 Smooth group 必须保留至少两个 finite pair，且 x 至少有两个不同值；任一组失败时整个 Chart fail-loud，不只返回 points
+- root transforms 先作用于共同输入，Smooth 再只处理 trend；Chart 不做数值 coercion 或回归算法 fallback
+- coordinate / composition 复用二维 role contract，Point、trend 与 axes 始终属于同一 view；Polar 只改变 role projection，不闭合趋势
 
-缺省 `scales:[]`。coordinate shorthand 与 composition 均先用 Plot `resolveCoordinateScopeRegistry` 找 active/default operation，再用 `resolveCoordinateRegistry(options.plot?.coordinates)` 查询 definition并要求 `roles === ['x','y']`；同一 `options.plot` 原样传给 `lowerPlots`。shorthand 下 trend、points 与两条 axes 都省略 `coordinateView`；composition 下全部固定为 `defaultView`。Path 显式 `closed:false`，Polar 只改变投影，不闭合趋势。
+## 功能与包边界
 
-`validateCore` 复验 marks 前两项顺序与 reserved ids、Point / Path type、Path order / closed、mark-local Smooth exact IO / groupBy / scope、原始与派生 encoding、series / color 矩阵、reserved series scale和两个 Mark 的同一 view。任一破坏抛 `core-recipe-violation`。
+- Chart 拥有 Regression 的复合 recipe、field roles、grouping / color 约束和 patch 边界
+- Plot 拥有 Smooth definition、mark-local transform pipeline、Point / Path、field validation、coordinate、lowering 与 trace
+- Chart 不实现拟合算法、不暴露第二根 dataset，也不捕获 Smooth 错误返回部分结果
 
-## DSL 表面
+## 架构验证
 
-```json
-{
-  "namespace": "chart",
-  "type": "regression",
-  "data": { "reference": "measurements" },
-  "encoding": {
-    "x": { "field": "temperature" },
-    "y": { "field": "yield" }
-  },
-  "components": {
-    "trend": {
-      "transform": { "sampleCount": 96 },
-      "mark": { "strokeWidth": { "kind": "constant", "value": 2 } }
-    }
-  }
-}
-```
+- Canonical Type 判定：原始 observations 与拟合趋势同时存在，形成区别于 Scatter / Connected Scatter 的稳定配方
+- 内部表达：完全组合 Plot mark-local Smooth、Point 与 Path，无新 transform contract
+- 外部扩展：Smooth method 与表现样式沿现有 schema 调整，额外 Plot members 沿正式 extension 追加
+- trace：Point locator 指向 root-transformed rows；trend series locator、Smooth group provenance 与 lineage 穿过 presentation 保持连续
 
-## 测试设计
+## 被否决方案
 
-- schema：field-only x / y、trend patches
-- rows：points 保留原 rows，trend 使用 Smooth rows
-- invariant：Smooth 与 Path 不可撤销
+- 把 Smooth 放到 root：会替换 Point 输入并破坏原始 observations
+- Chart 私自计算回归或吞掉坏组：会复制 Plot provider并产生部分结果歧义
+- 允许任意 callback method：破坏 JSON-safe IR 与 adapter parity
 
-## 影响
+## 测试策略摘要
 
-- 扩展 ChartSpec union
-- inspection 增加 transform target
-- docs 新增 Regression canonical 页面
-
-## Chart 封装完备性检查
-
-- 核心 recipe：Point + mark-local Smooth + Path
-- Data / Plot owner：拟合由 Plot Smooth definition 执行，Chart 不补算法
-- extension：root transforms 先作用于共同输入，Smooth 再仅作用于 trend
-- parity：所有配置 JSON-safe，无 adapter-only callback
-- 本轮结论：组合 Plot 现有 mark-local transform
+需要 schema、mark-local rows、series / color grouping、Smooth 数据边界、coordinate / composition、core invariant、错误传播、inspection / trace 与三入口 parity 证据。关键不变量是 Point 保留共同输入，只有 trend 消费 Smooth rows，所有 group 要么共同成功要么整体失败。
 
 ## 不在本 ADR 范围
 
-- 新回归算法、置信区间、统计显著性
+- 新回归算法、置信区间与统计显著性
 - runtime callback method
 - 把 fitted rows 暴露为第二根 dataset
-
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-本 ADR 自评 level：`red`，因为新增 ChartSpec variant。
-
-### Schema 改动
-
-| 文件                                           | 操作 | 字段名                       | 类型                               | 默认值 | describe 中文摘要                |
-| ---------------------------------------------- | ---- | ---------------------------- | ---------------------------------- | ------ | -------------------------------- |
-| `packages/viz/chart/src/schemas/regression.ts` | 新增 | `type`                       | `z.literal('regression')`          | —      | Regression 判别值                |
-| 同上                                           | 新增 | `encoding.x` / `y`           | strict field-only channel          | —      | Smooth 输入字段                  |
-| 同上                                           | 新增 | `encoding.series`            | `z.string().min(1).optional()`     | —      | 拟合分组字段                     |
-| 同上                                           | 新增 | `encoding.color`             | ADR-04 strict color union optional | —      | points / trend 共享颜色          |
-| 同上                                           | 新增 | `mark`                       | strict Point patch optional        | —      | 原始 points patch                |
-| 同上                                           | 新增 | `components.trend.transform` | strict Smooth patch optional       | —      | 仅 method / sampleCount / extent |
-| 同上                                           | 新增 | `components.trend.mark`      | strict Path style patch optional   | —      | trend Path 样式                  |
-| `packages/viz/chart/src/schemas/chart.ts`      | 修改 | root union                   | 加入 Regression                    | —      | 扩展封闭 union                   |
-
-### 文件 scope
-
-- `packages/viz/chart/src/schemas/regression.ts`
-- `packages/viz/chart/src/schemas/chart.ts`
-- `packages/viz/chart/src/providers/recipes/regression.ts`
-- `packages/viz/chart/src/providers/recipes/index.ts`
-- `packages/viz/chart/tests/**/regression*`
-- `packages/viz/chart-react/tests/regression.test.tsx`
-- `packages/viz/chart-vanilla/tests/regression.test.ts`
-- `apps/docs/**`（Regression 中英文 canonical 页面 / demo）
-
-### 测试象限
-
-**Happy path（≥ 3）**
-
-- 最小 spec 生成原始 Point 与带 Smooth 的 trend Path
-- sampleCount / extent 只 patch 隐式 Smooth
-- series 同时生成 groupBy 与分组 Path
-- 七种 series / color 输入得到上表结果或稳定 schema 诊断
-
-**边界（≥ 2）**
-
-- 每组恰好两个 finite pair 且 x 不同，满足最低拟合输入
-- invalid pair 被忽略后仍有足够 pair 时成功
-
-**错误路径（≥ 2）**
-
-- x / y constant 或 `scale` 被 strict schema 拒绝
-- trend patch 试图改 kind、x、y、xAs、yAs 或移除 transform 被拒绝
-- 空数据、全无效、相同 x、或多组任一坏组沿用 Plot fail-loud，不能返回只有 points 的部分结果
-- series != color field 被 Chart schema 拒绝
-
-**交互（≥ 2）**
-
-- root filter 后 points 和 Smooth 共享过滤结果，但仅 trend 接收采样 rows
-- 自定义 Path style / color scale 不改变 Smooth lineage
-- inspection 稳定记录 `mark.points`、`transform.trend`、`mark.trend` value / source 与 reserved ids
-- presentation 前后 Point datum locator 使用 root-transformed rows，trend Path series locator、Smooth group provenance 与 lineage payload 保持
-- ADR-04 Kernel gate 解除后 JSON / React / Vanilla 对 ChartSpec、resolved PlotSpec 与 final composition exact parity；gate 前只实现 core variant
-
-### 依赖的现有元素
-
-- Plot `SmoothTransformSchema` / definition
-- Plot mark-local transform pipeline
-- Plot coordinate scope / definition registries
-- Point / Path Mark definitions、field resolver、locator、provenance 与 lineage

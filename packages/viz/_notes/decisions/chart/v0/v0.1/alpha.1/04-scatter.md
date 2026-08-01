@@ -1,14 +1,12 @@
 # ADR-04：Scatter 首个 Canonical Type
 
-- 状态：Proposed（core variant 可实施；public adapters / release group 受 ADR-01 Kernel gate 阻塞）
+- 状态：Proposed（公开 adapter 与 release surface 受 ADR-01 / ADR-03 capability gates 阻塞）
 - 决策日期：2026-07-31
 - 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-01](./01-chart-infrastructure.md) · [ADR-03](./03-presentation-standard-layout.md)
 
-## 背景
+## 背景与目标
 
-Scatter 是最小的二维关系图，也是验证 Chart 基础设施的首个 type。它只需要 Point Mark、两个位置角色和 Plot 已有的 scale / coordinate / guide 能力，适合作为公开 `ChartSpecSchema` 的第一个 variant。
-
-Scatter 不能退化为 `type + x + y` 的一次性 sugar。用户仍需使用 Plot 的 transform、scale、coordinate、guide、theme、layout、mark style 与追加 marks。
+Scatter 是最小的二维关系图，也是验证 Chart 封装主链的首个 Canonical Type。它只需要 Point Mark、两个位置角色和 Plot 已有的 scale、coordinate 与 guide 能力，但仍应保留 ChartCommon 提供的 Plot transform、scale、coordinate / composition、guide、theme、layout 与追加 mark 扩展。
 
 ## 决策：`scatter` 固定 Point 主 Mark 与 x / y 核心角色
 
@@ -19,7 +17,7 @@ type ScatterChartSpec = ChartCommon & {
   encoding: {
     x: IRPlotChannel;
     y: IRPlotChannel;
-    color?: { field: string; scale?: string } | { value: string };
+    color?: StrictColorChannel;
     size?: IRPlotSizeChannel;
     opacity?: IRPlotOpacityChannel;
     shape?: IRPlotShapeChannel;
@@ -28,163 +26,64 @@ type ScatterChartSpec = ChartCommon & {
 };
 ```
 
-recipe 生成：
+Scatter recipe 固定生成一个 Point 主 Mark、二维 coordinate / composition root 以及 x / y axis 表现性 defaults。x / y 和 Point identity 构成不可撤销的 type 核心；color、size、opacity、shape 与 Point 表现样式可以调整。用户可以追加正式 Plot marks，但不能替换主 Point 或改写其核心位置角色。
 
-- `mark.main`：id=`__chart.scatter.mark.main` 的 Point Mark
-- `scales`：空数组；位置 scale 继续由 Plot 根据 bound field / data model 推断
-- `coordinate.main`：`{type:'cartesian2D'}`
-- `guide.x` / `guide.y`：`{type:'axis', dimension:'x'}` / `{type:'axis', dimension:'y'}`
-
-Point 的 exact core fragment 是：
+公开 patch / channel contract 固定为：
 
 ```ts
-{
-  type: 'point',
-  id: '__chart.scatter.mark.main',
-  encoding: { x: spec.encoding.x, y: spec.encoding.y },
-}
+type StrictColorChannel = { field: string; scale?: string } | { value: string };
 ```
 
-视觉角色的 exact 映射：
+`ScatterPointPatch` 是封闭 strict allowlist，字段的 value contract 逐项复用 `IRPlotPointMark` 同名字段：
 
-| Chart encoding | Chart schema                     | Point Mark 输出                                                         |
-| -------------- | -------------------------------- | ----------------------------------------------------------------------- |
-| `color.field`  | non-empty field + optional scale | `color:{kind:'field',value:field,scale?}`                               |
-| `color.value`  | non-empty string，禁止其它 JSON  | `color:{kind:'constant',value}`                                         |
-| `size`         | 直接复用 `SizeChannelSchema`     | field -> `size:{kind:'field',value:field,scale?}`；value -> constant    |
-| `opacity`      | 直接复用 `OpacityChannelSchema`  | field -> `opacity:{kind:'field',value:field,scale?}`；value -> constant |
-| `shape`        | 直接复用 `ShapeChannelSchema`    | field -> `shape:{kind:'field',value:field}`；value -> constant          |
-
-`mark` patch 最后覆盖这些可选视觉字段。x / y 始终由 recipe 写入，mark patch 无法接触。所有转换完成后必须通过 PointMarkSchema 与 PlotSpecSchema 二次校验；非法 constant 在 Chart encoding schema 阶段失败。
-
-## Coordinate / composition normalization
-
-- 缺省 Cartesian2D；显式 Cartesian2D / Polar2D 缺 scale ref 时继续由 Plot inference 解析
-- coordinate shorthand 的 exact 结果保留 `coordinate`、不生成 `composition`；Point 与两条 axis guide 均省略 `coordinateView`，由 `resolveCoordinateScopeRegistry` 解析到 `default`
-- Polar2D 的 coordinate operation 保持 `angle` / `radius` 字段，Point encoding 与 axis guide dimension 仍为 `x` / `y`；Plot 的 Polar2D definition 以相同 roles 完成投影
-- Cartesian1D / Polar1D 以 `core-recipe-violation` 拒绝
-- custom coordinate 从 `LowerChartsOptions.plot.coordinates` 解析；该数组必须原样传给同一 host 的 `lowerPlots(..., options.plot)`，definition 缺失或 `roles` 不精确等于 `['x', 'y']` 时以 `core-recipe-violation` 拒绝
-- composition 复用 Plot `resolveCoordinateScopeRegistry`；必须能找到 `defaultView` 对应 scope，且该 scope 的内置或自定义 definition `roles` 精确等于 `['x', 'y']`
-- composition 的 exact 结果保留 `composition`、不生成 `coordinate`；Point 与两条 axis guide 都显式写入 `coordinateView: composition.defaultView`
-- 显式 scale 只有被 coordinate / composition 引用时才影响位置；未引用 scale 不由 Chart 猜测重绑定
-
-`mark` 是 `PointMarkSchema` 去掉 `type`、`id`、`encoding`、`transform`、`coordinateView` 后的 partial patch。用户不能替换 Point、核心 x / y encoding 或主 view；可通过 Chart encoding、mark patch 与追加 Plot marks 完整调整视觉表达。
-
-## DSL 表面
-
-```json
-{
-  "namespace": "chart",
-  "type": "scatter",
-  "data": { "reference": "iris" },
-  "encoding": {
-    "x": { "field": "sepalLength" },
-    "y": { "field": "petalLength" },
-    "color": { "field": "species", "scale": "speciesColor" }
-  },
-  "mark": { "opacity": { "kind": "constant", "value": 0.65 } }
-}
+```text
+color, textColor, size, shape, fill, stroke, strokeWidth,
+fillOpacity, strokeOpacity, opacity, rotate, minimumSize, zIndex,
+align, lineHeight, maxTextWidth, cornerRadius, scale, padding, margin,
+dashed, dotted, dashPattern, font, boundary, shadow, blendMode,
+dx, dy, anchorId, layer, label
 ```
 
-## 测试设计
+`type`、`id`、`encoding`、`transform` 与 `coordinateView` 明确拒绝；任何未来加入 Plot Point 的字段不会自动进入 Chart patch。`anchorId` 只控制每个 datum 的 Plot anchor 规则，不替换 recipe 保留的主 Mark identity；`layer` 只调整该 Mark 的 Plot semantic layer。两种 patch 对象都严格拒绝未知字段，也不能通过嵌套对象重新引入核心字段。应用顺序是 recipe 视觉 encoding 先成立，再由 `mark` patch 按 authored 字段覆盖 Point-local 值；未 authored sibling 保留。
 
-- schema：首个 discriminated union variant 与核心角色
-- recipe：精确 Point / scale / coordinate / guide 输出
-- parity：JSON / React / Vanilla 与 presentation 组合
+## 行为、失败语义与兼容性
 
-## 影响
+- 缺省使用 Cartesian2D；显式 Cartesian2D、Polar2D 或兼容自定义 coordinate 仍由 Plot 的正式 coordinate registry 与 role projection 处理
+- coordinate 与 composition 互斥；composition 的 active/default view 必须提供精确二维角色，核心 Point 与 axes 始终属于同一 view
+- 位置 scale 由 Plot 根据 binding、data model 与显式 scale 解析；Chart 不猜测重绑定未引用 scale
+- `color` 支持严格 field binding 或 string constant；其它视觉角色复用 Plot 的正式 channel contract
+- `mark` 只能覆盖 Point 的非核心表现字段，不能携带 type、identity、encoding、transform 或 view ownership
+- 缺 x / y、非法视觉值、非二维 coordinate、缺失自定义 definition、保留 identity 冲突或核心配方破坏均 fail-loud
+- 公开时首次形成 ChartSpec discriminated union，并让 JSON、React、Vanilla 生成等价 ChartSpec、PlotSpec 与最终 composition
 
-- 首次公开 `ChartSpecSchema`、`IRChartSpec` 与 `createChartSpec`
-- 三个 adapter 首次提供可运行 Chart
-- 把三个包从 `private` skeleton 切为 `retikz.releaseGroup='chart'` 的 publishable `0.1.0-alpha.1`
-- docs 新增 Chart 起步页与 Scatter canonical 页面
+## 功能与包边界
 
-上述 public export、adapter、release-group 和 docs 接线全部以 ADR-01 Kernel gate 已 Accepted / implemented 为硬前置；gate 前只实现 Scatter core variant。切为 publishable 也不表示允许在 alpha.1 中途发包，真正 publish 仍需完成 milestone 全部退出条件并另获发布授权。
+- Chart 拥有 `scatter` variant、数据角色、核心 Point recipe 与允许覆盖边界
+- Plot 拥有 Point、channel、scale inference、coordinate / composition、axis guide、lowering 与 trace
+- adapter 只暴露同一 ChartSpec；presentation 与 surface 继续由 ADR-02 / ADR-03 组合
+- package 公开、release group 与 docs 只在 ADR-01 / ADR-03 gates 解除后原子完成；成为 publishable 不等于获得发布授权
 
-## Chart 封装完备性检查
+## 架构验证
 
-- 核心 recipe：Point + x / y，不可撤销
-- 表现性默认：axes、theme、palette 可替换
-- Plot extension：root transforms、scales、coordinate / composition、guides、marks
-- coordinate：Point 经 Plot coordinate roles 投影，不绑定 Cartesian renderer
-- traceability：`mark.main` 记录 type-default / user-override 来源
-- 本轮结论：完全组合 Plot 现有能力
+- Canonical Type 判定：Scatter 的稳定身份是二维 Point + x / y，而不是只换主题的 Chart Pattern
+- 能力归属：完全组合 Plot 现有 Point、channel、coordinate、scale 与 guide 能力
+- 外部扩展：自定义 coordinate / scale /追加 mark 沿 Plot registry 与 ChartCommon 表面进入，不新增 Chart registry
+- 核心闭环：ChartSpec -> complete PlotSpec -> Plot lowering；presentation 可选地再由 Standard 包装
+- trace：主 Point 的默认、用户覆盖与 extension 来源可 inspection；Chart 包裹不改变 Plot datum / series provenance 与 locator
+
+## 被否决方案
+
+- 只公开 `type + x + y`：会把 Chart 降为一次性 sugar，丢失 Plot 可调整能力
+- 固定 Cartesian renderer 语义：会绕过 Plot coordinate contract
+- 允许 mark patch 改写 encoding / coordinate view：会使 Scatter type identity 可撤销
+
+## 测试策略摘要
+
+需要 strict schema、exact Plot recipe、coordinate / composition、custom definition、core invariant、inspection / trace 与三入口 parity 证据。关键不变量是主 Point 与 x / y 始终存在，兼容 coordinate 通过 Plot 正式 roles 投影，追加 marks 不替换核心，presentation 前后 datum identity 与 provenance 连续。
 
 ## 不在本 ADR 范围
 
 - size 必需语义（Bubble）
 - 点间连接、拟合线、range 或 jitter
-- scatter matrix / facet type；用户可直接使用 Plot composition
-- ADR-01 Kernel embeddable dependency gate 未解除前的 public adapter、release group 与自动混合嵌入
-
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-本 ADR 自评 level：`red`，因为首次导出 ChartSpec schema 与公共入口。
-
-### Schema 改动
-
-| 文件                                        | 操作 | 字段名                                | 类型                                                     | 默认值 | describe 中文摘要        |
-| ------------------------------------------- | ---- | ------------------------------------- | -------------------------------------------------------- | ------ | ------------------------ |
-| `packages/viz/chart/src/schemas/scatter.ts` | 新增 | `type`                                | `z.literal('scatter')`                                   | —      | Scatter 判别值           |
-| 同上                                        | 新增 | `encoding.x` / `encoding.y`           | `ChannelSchema`                                          | —      | 必需二维位置角色         |
-| 同上                                        | 新增 | `encoding.color`                      | strict field/string-value union optional                 | —      | 可选颜色角色             |
-| 同上                                        | 新增 | `encoding.size` / `opacity` / `shape` | 对应 Plot channel schema optional                        | —      | 可选 Point 视觉角色      |
-| 同上                                        | 新增 | `mark`                                | `ScatterPointPatchSchema.optional()`                     | —      | Point 主 Mark 稀疏 patch |
-| `packages/viz/chart/src/schemas/chart.ts`   | 新增 | root union                            | `z.discriminatedUnion('type', [ScatterChartSpecSchema])` | —      | 首个公开 ChartSpec       |
-
-### 文件 scope
-
-- `packages/viz/chart/src/schemas/scatter.ts`
-- `packages/viz/chart/src/schemas/chart.ts`
-- `packages/viz/chart/src/providers/recipes/scatter.ts`
-- `packages/viz/chart/src/providers/recipes/index.ts`
-- `packages/viz/chart/src/pipeline/resolve-chart.ts`
-- `packages/viz/chart/src/index.ts`
-- `packages/viz/chart/package.json`、`packages/viz/chart-react/package.json`、`packages/viz/chart-vanilla/package.json`
-- `packages/viz/chart-react/src/Chart.tsx`、`packages/viz/chart-react/src/chart-runtime.ts`
-- `packages/viz/chart-react/src/embedded-runtime.ts`、`packages/viz/chart-react/src/index.ts`
-- `packages/viz/chart-vanilla/src/spec/{types,helpers,index}.ts`
-- `packages/viz/chart-vanilla/src/adapter/{chart-adapter,index}.ts`
-- `packages/viz/chart-vanilla/src/runtime/{render-chart,index}.ts`、`packages/viz/chart-vanilla/src/index.ts`
-- `packages/viz/chart*/tests/**/scatter*`
-- `scripts/release-groups.config.mjs`、`pnpm-lock.yaml`
-- `apps/docs/**`（Chart 起步与 Scatter 中英文页面 / demo）
-
-### 测试象限
-
-**Happy path（≥ 3）**
-
-- x / y 最小 spec 解析为 `Point + scales:[] + Cartesian2D + x/y axis guides` 的精确 PlotSpec；integration 再证明 Plot lowering 推断两个 position scales
-- color / size / opacity / shape 映射到 Point 正式 channel / style
-- mark patch 与 theme / preset 按统一优先级合并
-
-**边界（≥ 2）**
-
-- 单 datum 仍生成合法 Point
-- Polar2D coordinate 复用相同 x / y recipe 并由 Plot 投影
-
-**错误路径（≥ 2）**
-
-- 缺 x 或 y 被 Scatter schema 拒绝
-- mark patch 尝试携带 type、id、encoding、transform 或 coordinateView 被 strict schema 拒绝
-- 视觉角色非法 constant 在 Chart schema 失败
-- 1D coordinate、缺失 custom coordinate definition、非 `['x', 'y']` roles 或 composition defaultView 不兼容时 `core-recipe-violation`
-
-**交互（≥ 2）**
-
-- 追加 Interval Mark 不替换 Point，resolved PlotSpec 同时含两者
-- presentation 包裹前后 Point provenance / datum locator 一致
-- Kernel gate 解除后 Chart + Plot + Standard 混合入口共用同一 Plot dataset / definition group
-- reserved id 冲突失败；inspection 的 `mark.main` 区分 default / override / extension
-- Kernel gate 解除后 JSON / React / Vanilla 生成 exact-equal ChartSpec 与 PlotSpec
-
-### 依赖的现有元素
-
-- `PointMarkSchema` / Point MarkDefinition——核心 Mark 与 patch 真源
-- strict color union、Size / Opacity / Shape channel schemas——视觉角色绑定
-- Plot `resolveCoordinateScopeRegistry`、`LowerPlotsOptions.coordinates`、position scale inference、Cartesian2D / Polar2D coordinate 与 axis guides——默认配方与 custom definition 真源
-- ADR-01–03 resolver、style、presentation 主链
+- scatter matrix / facet type；相邻需求可直接使用 Plot composition
+- capability gate 未解除前的 public adapter、release surface 与自动混合嵌入
