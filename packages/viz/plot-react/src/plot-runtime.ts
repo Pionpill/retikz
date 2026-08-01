@@ -3,10 +3,10 @@ import type { IRPlotSpec, LowerPlotsOptions, PlotLineageRun } from '@retikz/plot
 
 import { lowerPlotWithLineage, PlotSpecSchema } from '@retikz/plot';
 
-import type { ResolveLabelMap } from './components';
+import type { ResolveLabelMap } from './adapter';
 import type { PlotProps } from './Plot';
 
-import { buildPlotSpec, resolveLabelOf } from './components';
+import { buildPlotSpec, resolveLabelOf } from './adapter';
 
 type PlotRuntime = {
   spec: IRPlotSpec;

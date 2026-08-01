@@ -2,7 +2,7 @@
 
 > **状态：长期架构草案，已确认分层、IR、扩展与单图呈现边界。** 本文定义 `@retikz/chart` 的长期定位、ChartSpec 语义、默认解析、Plot 混合、可选展示外壳与 lowering 关系，不冻结具体字段、首批类型清单或版本排期。当前公开契约以后续 Accepted ADR、代码与用户文档为准。
 >
-> 关联：[`Chart 封装完备设计`](./chart-encapsulation-complete.md) · [`Chart 横向分析对比`](../analysis/chart-compare-analysis.md) · [`Plot 总设计`](./plot-design.md) · [`Plot 可视化完备设计`](./plot-visualization-complete.md) · [`chart v0.1 roadmap`](../decisions/chart/v0/v0.1/roadmap.md)
+> 关联：[`Chart 封装完备设计`](./chart-encapsulation-complete.md) · [`Chart 横向分析对比`](../analysis/chart-compare-analysis.md) · [`Plot 总设计`](./plot-design.md) · [`Plot 可视化完备设计`](./plot-visualization-complete.md) · [`通用视觉主题设计`](../../../../notes/architecture/visual-theme-design.md) · [`chart v0.1 roadmap`](../decisions/chart/v0/v0.1/roadmap.md)
 
 ---
 
@@ -168,6 +168,8 @@ Type 核心配方定义该 type 的身份，例如：
 ### 6.2 表现性默认
 
 表现性默认负责开箱可读性，例如 guide 可见性、Plot label、theme、palette、Plot spacing 和部分 scale 呈现。它们允许调整、关闭或替换。
+
+Chart 的 style、明暗模式和公开 token 消费全仓 [`通用视觉主题设计`](../../../../notes/architecture/visual-theme-design.md)：preset 提供视觉人格，mode 负责 light / dark 适配，公开 strict token map 承载稀疏自定义。Chart 只拥有领域 token、preset 具体值和到 Plot / Standard 正式能力的映射，不建立平行 theme、layout 或 renderer 语义。
 
 标题、说明、来源等单图展示内容没有值时不得由 type 凭空生成，也不构成 Canonical Type 身份。Chart 可以为已声明的展示槽位提供样式、顺序和间距默认，但用户始终可以省略或关闭整套展示外壳。
 

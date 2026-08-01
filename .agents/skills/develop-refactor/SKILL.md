@@ -14,14 +14,14 @@ description: Use when retikz work is primarily refactoring, reorganization, rena
 1. plan 写完是否派子 agent / 外部模型评审。
 2. 代码写完是否派子 agent / 外部模型评审。
 
-用户未确认前不派子 agent / 外部模型。用户拒绝或工具不可用时，由主 AI 自审并说明退化路径。
+用户未确认前不派 subagent / 外部模型。用户同意 review 后按 `cross-review` 使用同一固定快照、2–3 个不同可用模型并发评审；用户拒绝时由主 AI 自审并说明退化路径。只有一个模型可用时不称为交叉评审；仅可选 plan / 完工 review 可由人工决定是否接受单模型退化，`flow-long-task` 的批量自动 commit gate 不允许退化。
 
 ## Plan First
 
 - 先写 plan，通常使用 `superpowers:writing-plans`。
 - plan 放 `.gitignore` 已覆盖的临时目录：`notes/plans/` 或就近 `**/_notes/plans/`，默认不 stage / commit。
 - plan 至少写清：目标、非目标、文件 scope、分步策略、行为等价性、验证命令、回滚点、预期提交粒度。
-- plan 写完后，按用户选择执行子 agent review 或主 AI 自审，再润色 plan；未经润色不进入实现。
+- plan 写完后，按用户选择执行 1–3 轮 `cross-review` 或主 AI 自审，再润色 plan；同轮模型并发且互不可见结论，修订后用 fresh agents 复审。未经 review / 自审润色不进入实现。
 
 ## Review 重点
 
@@ -37,7 +37,8 @@ description: Use when retikz work is primarily refactoring, reorganization, rena
 
 - 小重构：review / 自审后直接执行，跑受影响验证，完工后不 commit，留给用户 review。
 - 大重构：实现前需要用户批准 scope；允许按步骤提交代码，但每步 commit 前仍需用户确认。
-- 若大重构属于用户批准的批量执行，且授权 LLM 自行 commit，每次 commit 前先派子 agent review 单个 commit，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。用户明确认可的小任务单次 commit 不触发该要求；改动面大或核心功能不适用该豁免。
+- 若大重构属于用户批准的批量执行，且授权 LLM 自行 commit，每次 commit 前按 `flow-long-task` 与 `cross-review` 并发评审固定 staged diff，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。用户明确认可的小任务单次 commit 不触发该要求；改动面大或核心功能不适用该豁免。
+- 用户要求代码完工 review 时，固定完整 diff / commit range，并按 `cross-review` 并发使用 2–3 个不同可用模型；不得串行把一个模型的结论喂给同轮其它模型。
 - 非明确功能类代码完工并提交或准备提交后，询问用户是否需要子 agent review；改动面大、核心功能或高风险提交仍需询问；小任务且用户已明确认可本次单次 commit 时不再额外询问。
 - 发现必须改公开契约、文档可见行为或 roadmap 外目标时，halt 并请用户裁决是否换流。
 
@@ -55,7 +56,7 @@ pnpm --filter <pkg> exec vitest run [test-file]
 
 ## 完成标志
 
-- plan 已写入忽略目录，并按用户选择完成 review 或自审。
+- plan 已写入忽略目录，并按用户选择完成并发多模型 review 或主 AI 自审。
 - 实现未超出 scope；若超出，已有用户裁决。
 - 受影响验证通过或阻塞原因明确。
 - 小重构未 commit；大重构只在用户逐步确认后 commit。

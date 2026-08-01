@@ -1,92 +1,104 @@
 ---
 name: develop-design
-description: Use when planning a retikz architecture direction, version roadmap, or alpha feature that may need an ADR before implementation.
+description: Use when planning a retikz architecture direction, version roadmap, or alpha feature that may need a long-lived ADR before implementation.
 ---
 
 # 功能设计
 
-retikz 功能设计入口。先判断当前需要 architecture design、版本 roadmap 还是具体 ADR；不同阶段只写当前层级需要冻结的内容。
+先判断当前产物是 architecture design、版本 roadmap 还是 ADR。ADR 从 Proposed 起就是长期功能与架构文档；实现细节始终写入 ignored plan，不经过“施工蓝图再压缩”的阶段。
 
-## 责任边界
+## 产物边界
 
-- **人工主导设计决策**：问题范围、方案取舍、schema 字段名、默认值、测试 case 由人工拍板。
-- **AI 辅助整理与校验**：查现有概念、起草 ADR、补齐实现契约、指出缺口与风险。
-- 不跳过本阶段直接实现；ADR 未获人工确认前不进入 `develop-implement`。
-- ADR 草案默认不提交；提交前的长文件索引、测试计划、执行 checklist、review prompt 等 LLM 执行材料只服务当前任务，放 ignored plan / report 文件或 ADR 临时段，收尾时压缩。
+| 产物                | 负责                                                                 | 不负责                                                 |
+| ------------------- | -------------------------------------------------------------------- | ------------------------------------------------------ |
+| Architecture design | 长期问题、整体结构、能力归属、功能边界、关键原则与演进方向           | 版本字段、具体实现和执行步骤                           |
+| 版本 roadmap        | 版本目标、milestone、候选 ADR、依赖顺序与退出条件                    | API、算法、文件和测试 case                             |
+| ADR                 | 单项功能、核心决策、基础数据结构 / 公开契约、行为边界与架构验证      | 文件清单、私有命名、业务逻辑步骤、测试 case 和执行过程 |
+| Implementation plan | 文件 scope、代码与业务逻辑、任务顺序、测试、命令、commit、风险和回滚 | 改写 ADR 的公开契约、能力归属或功能边界                |
 
-## 设计产物粒度
-
-| 当前产物            | 回答的问题                                                                 | 细节归宿                  |
-| ------------------- | -------------------------------------------------------------------------- | ------------------------- |
-| Architecture design | 长期解决什么问题、整体结构、能力归属、功能边界、关键原则与演进方向         | 具体契约留给后续 ADR      |
-| 版本 roadmap        | 本版本目标、里程碑边界、候选 ADR 主题、依赖顺序与阶段退出条件              | API、算法与文件留给各 ADR |
-| ADR                 | 单项能力的精确行为、公开契约、默认值、失败语义、兼容性、测试摘要与实施边界 | 执行步骤和命令留给 plan   |
-| Implementation plan | 基于已确认 ADR 拆文件、任务、测试命令、commit 边界与执行顺序               | 实现阶段按 plan 执行      |
-
-Architecture design 的正文由定位、整体关系、功能边界、关键取舍、不变量和演进方向组成。版本 roadmap 由版本目标、里程碑 / ADR 主题、依赖与验收边界组成。当前任务只要求前两者时，完成对应文档并交人工 review 后停止，不提前设计字段、类型、函数、文件结构、逐项测试或实现步骤。
-
-以下 ADR 规则仅在已经进入具体功能设计时适用。
+当前任务只要求 architecture design 或 roadmap 时，完成对应文档并交人工 review 后停止，不提前进入 ADR 或 plan。
 
 ## 必读
 
 - 根 `AGENTS.md` 的设计原则、IR / Schema / 分层规则。
-- 能力性迭代读取 `notes/architecture/capability-design.md` 和所属能力域的 completeness 文档；纯 bugfix、文案或行为等价重构只需声明不改变能力边界。
-- 涉及 schema / contract / providers / pipeline / compile 时，按 `standard-structure` 分流读取对应 `standard-*` skill。
+- 能力性迭代读取 `notes/architecture/capability-design.md` 和所属能力域 completeness 文档。
+- 涉及 schema / contract / providers / pipeline / compile 时，按 `standard-structure` 分流读取适用 `standard-*` skill。
 - 对应分组的 `_notes/decisions/_template.md` 与当前 milestone `roadmap.md`。
 
 ## ADR 位置
-
-按被改模块所属分组选择目录：
 
 ```text
 packages/kernel/_notes/decisions/v<MAJOR>/v<MAJOR>.<MINOR>/<channel.N>/<NN>-<slug>.md
 packages/viz/_notes/decisions/<FAMILY>/v<MAJOR>/v<MAJOR>.<MINOR>/<channel.N>/<NN>-<slug>.md
 ```
 
-其它分组以后新增时沿用同形态。模板来自该分组的 `_notes/decisions/_template.md`。编号在 milestone 目录内从 `01` 起，起新 ADR 前查对应 `_notes/README.md` 或 roadmap。
+其它分组沿用同形态。模板来自所属分组的 `_notes/decisions/_template.md`；编号在 milestone 目录内从 `01` 起。
 
-## ADR 必填内容
+## ADR 内容契约
 
-叙述部分按模板写，至少覆盖：背景、决策、DSL / API 表面、测试设计、影响、能力完备性检查、不在范围。ADR 草案完成后、Architecture Gate 前必须用 `test-contract` 写 ignored 测试契约矩阵；ADR 保留稳定测试设计摘要，不保留临时测试文件索引。
+ADR 至少包含：
 
-能力完备性检查必须写清所属能力域与能力面、解决的问题、主责 / 协作包、内部表达与外部扩展链路、依赖域和下游闭环，以及本轮结论。不能用“先局部实现”代替组合、扩展当前域、下沉、上移、不支持或延期中的明确选择。
+1. 背景、目标和必须解决的问题。
+2. 核心决策及不可让步的理由。
+3. 基础数据结构、公开 DSL / API 或稳定跨层契约；只写理解功能必需的最小形态。
+4. 用户可观察行为、默认值、失败语义和兼容性。
+5. 功能边界、主责 / 协作包、扩展链路、下游闭环和非目标。
+6. 被否决方案及理由。
+7. 稳定测试策略摘要，只声明需要哪些证据层，不列具体 case、路径或命令。
+8. 能力完备性与架构验证结论。
 
-实现契约段必须完整：
+ADR 不得写：
 
-| 项           | 要求                                                                                                                         |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| Level        | `red` / `yellow` / `green`，判级见 `flow-alpha`                                                                              |
-| Schema 改动  | 文件 / 操作 / 字段名 / 类型 / 默认值 / describe；无改动写“无”                                                                |
-| 文件 scope   | 白名单列出允许触碰的文件或目录；偏离需要人工确认                                                                             |
-| 测试契约矩阵 | 每项行为的可观察结果、不变量、反例、最低测试层与必要的 adapter / renderer / docs 证据；仍覆盖 happy / 边界 / 错误路径 / 交互 |
-| 依赖现有元素 | 引用、扩展或修改的现有 IR / API / 工具，并说明用途                                                                           |
+- 具体源文件、测试文件、文档文件白名单。
+- 私有函数、helper、class、内部模块名或临时类型名。
+- 逐步业务逻辑、算法施工顺序、object spread / merge 等实现过程。
+- 测试标题、逐项 case、测试路径、验证命令或覆盖率 checklist。
+- commit 切分、执行 checklist、review prompt、轮次状态和临时裁决。
+- “实现后再删除 / 压缩”的临时段或只存在于 Git 历史的施工全文。
 
-新增或修改 authoring API 时，ADR 必须同时考虑 React 与 Vanilla 两套入口；若某套不适用，在“不在范围”写明理由。
+Schema 或数据结构只有在它是基础公开契约、跨包接口或非法状态边界时进入 ADR；文件位置、Zod 拼装方式、private intermediate 和逐字段操作进入 plan。
+
+新增或修改 authoring API 时，ADR 必须说明 React 与 Vanilla 是否表达同一契约；某套不适用时写明理由。
 
 ## Alpha Architecture Gate
 
-ADR 草案完成后，先执行 `develop-completeness` 的 `adr-gate`，再交人工 review 或请求进入实现：
+ADR 草案完成后、人工 ack 前，使用 `develop-completeness` 的 `adr-gate` rubric，并按 `cross-review` 执行并发多模型评审：
 
-1. 自动派遣一个新的只读 subagent；这是 `flow-alpha` 的常驻授权，不询问用户，也不因用户离线、赶进度或已有实现而跳过。
-2. subagent 读取 ADR、测试契约矩阵、适用 completeness / AGENTS、当前代码与必要 standard skills，检查能力完备性、包边界、define-registry、端到端闭环，以及每项新增或变更能力是否有行为、不变量、反例和最低测试层。
-3. 主 AI按 findings 修订 ADR 或测试契约矩阵；只要任一项因 BLOCKING 或 WARNING 发生修订，就必须派新的 subagent 复检，不能由主 AI判断自己的修订已经通过。
-4. Gate 只接受最新 subagent 明确返回 `PASS`；该轮必须无 BLOCKING，且每个 WARNING 已修复或 ADR 已记录可验证的接受理由。
-5. 最多执行 3 轮。第 3 轮未 PASS、其后仍需修订，或 subagent 不可用时，立即停止并交人工决策，不退化为主 AI自审放行。
+1. 冻结 ADR、当前 HEAD、工作区摘要、适用 architecture / completeness / AGENTS 与必要代码证据。
+2. 每轮并发派发 2–3 个实际可用的不同模型；模型名以工具元数据为准，同轮互不可见结论。
+3. 每个评审员只返回 `BLOCKING / WARNING / INFO`，检查问题归属、基础契约、包边界、define-registry、端到端闭环与非目标。
+4. 不得因 Gate 要求把文件 scope、private 逻辑、测试 case 或执行命令补回 ADR。
+5. 主 AI 收齐本轮结果后归并并修订 ADR；发生修订时冻结新快照，用 fresh agents 进入下一轮。
+6. 最新一轮至少两个不同模型实际完成、无 BLOCKING、WARNING 已修订或有可验证的人工裁决时 PASS。
+7. 最多 3 轮；第 3 轮未 PASS、只剩一个模型、快照漂移或分歧无法裁决时 halt。
 
-Gate 只校验并修订 ADR，不授权实现、commit、push 或扩大文件 scope。其它目的的子 agent / 外部模型评审仍按根 AGENTS 单独征求授权。
+该 Gate 是 `flow-alpha` 的常驻只读授权；不授权实现、commit、push、扩大功能 scope 或其它外部写操作。
 
-## 草案落盘规则
+## Implementation plan 交接
 
-- ADR 草案状态保持 `Proposed`，允许未提交；人工 ack 是进入实现的冻结点。
-- 实现前 ADR 必须足够指导执行，但可以包含临时执行材料；这些材料不作为最终 git 记录。
-- 文件索引、分步执行计划、临时测试矩阵、LLM review prompt 优先写入 `.gitignore` 覆盖的 `notes/plans/`、`notes/reports/` 或就近 `_notes/plans/` / `_notes/reports/`。
-- 只有用户明确要求跨分支 / 跨人提前 review、长期搁置或单独归档设计稿时，才在本阶段提交 ADR 草案。
+人工确认 ADR 并授权进入实现后，执行者必须重新阅读全文 ADR，再把 ADR 路径中的 `decisions` 替换为 `plans`，并把 `<NN>-<slug>.md` 变为同名目录：
+
+```text
+packages/viz/_notes/decisions/chart/v0/v0.1/alpha.1/01-example.md
+-> packages/viz/_notes/plans/chart/v0/v0.1/alpha.1/01-example/
+   PLAN.md
+   TEST_CONTRACT.md
+   TASK_STATE.md      # 长任务需要
+   REVIEW.md          # 记录 Plan Gate 轮次摘要
+```
+
+`**/_notes/plans/` 由 `.gitignore` 覆盖。plan、测试矩阵、状态和 review 记录默认不 stage、不 commit。
+
+`PLAN.md` 至少包含：ADR 与目标、非目标、文件 scope、基础契约到代码的映射、业务逻辑与任务顺序、docs / changelog、验证命令、commit 边界、风险与回滚。详细测试矩阵由 `test-contract` 写入同目录 `TEST_CONTRACT.md`。
+
+Plan 可以细化实现，不能改变 ADR 的公开契约、所有权和功能边界；发现冲突时停止 plan，回到 ADR 修订和 Architecture Gate。
+
+Plan 写完后必须按 `cross-review` 完成 1–3 轮并发多模型 Plan Gate；通过前不得修改产品代码。具体编排由 `flow-alpha` 负责。
 
 ## 完成标志
 
-- ADR 文件已创建，状态为 `Proposed`。
-- 能力性迭代已完成适用 completeness 检查；不适用时已写明理由。
-- Alpha Architecture Gate 已 PASS；或 3 轮后已停止并等待人工决策。
-- 实现契约段五项齐全。
-- 人工明确确认“可以进入实现”。
-- ADR 草案未提交，或用户明确要求时已按根 AGENTS 的 Git 规则单独提交。
+- ADR 为长期形态且状态为 `Proposed`，不含施工细节或临时压缩段。
+- 能力性迭代已完成 Architecture Gate PASS；或 3 轮后已 halt 等待人工。
+- 人工明确确认 ADR；是否进入实现另行授权。
+- 需要实现时，已明确镜像 plan 路径，但尚未用 plan 反向改写 ADR。
+- 未经当前对话授权不 commit / push。
