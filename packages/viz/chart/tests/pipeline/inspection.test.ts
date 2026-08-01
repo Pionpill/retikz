@@ -26,7 +26,10 @@ describe('Chart inspection', () => {
       ],
     });
 
-    expect(result.inspection).toEqual({
+    const { style, ...inspection } = result.inspection;
+    expect(style).toMatchObject({ preset: 'neutral', mode: 'light', authoredOverrides: [] });
+    expect(style.tokenSources).toHaveLength(75);
+    expect(inspection).toEqual({
       chart: { type: '__infrastructure-fixture', id: 'sales' },
       plot: { id: 'sales/plot' },
       members: [

@@ -1,12 +1,28 @@
 export type {
   ChartContributionSourceValue,
+  ChartStyleAuthoredOverrideValue,
+  ChartStyleTokenSourceValue,
+  ChartStyleTokenValue,
+  ChartStyleValue,
+  ChartThemeModeValue,
   IRChartInspection,
   IRChartInspectionMember,
+  IRChartResolvedStyleTokens,
   IRChartShared,
+  IRChartStyleSurface,
+  IRChartStyleTokenOverrides,
 } from './schemas';
 export {
   ChartContributionSource,
   ChartInspectionMemberSchema,
   ChartInspectionSchema,
+  ChartResolvedStyleTokensSchema,
   ChartSharedSchema,
+  ChartStyle,
+  ChartStyleAuthoredOverride,
+  ChartStyleSurfaceSchema,
+  ChartStyleToken,
+  ChartStyleTokenOverridesSchema,
+  ChartStyleTokenSource,
+  ChartThemeMode,
 } from './schemas';

@@ -12,6 +12,7 @@ import { CHART_NAMESPACE } from '../schemas';
 import { ChartResolveError, ChartResolveErrorCode } from './errors';
 import { createChartInspection } from './inspection';
 import { ChartMemberParseError, mergeChartSeed } from './merge';
+import { chartRecipeStyleContextOf, materializeChartPlotTheme, resolveChartStyle } from './style';
 
 /** Chart resolver 的内部成功结果 */
 export type ChartResolution = {
@@ -67,7 +68,8 @@ export const resolveChartSpec = (input: unknown): ChartResolution => {
     if (error instanceof z.ZodError) throw invalidSchemaError(ChartResolveErrorCode.InvalidChartSpec, error);
     throw error;
   }
-  const seed = bound.createSeed();
+  const style = resolveChartStyle(bound.spec);
+  const seed = bound.createSeed(chartRecipeStyleContextOf(style));
   let merged: ReturnType<typeof mergeChartSeed>;
   try {
     merged = mergeChartSeed(bound.spec, seed);
@@ -77,6 +79,14 @@ export const resolveChartSpec = (input: unknown): ChartResolution => {
     }
     throw error;
   }
+  merged = {
+    ...merged,
+    plotSpec: {
+      ...merged.plotSpec,
+      ...(bound.spec.colors === undefined ? {} : { colors: bound.spec.colors }),
+      theme: materializeChartPlotTheme(style.tokens, bound.spec.colors, bound.spec.theme, merged.plotSpec.theme),
+    },
+  };
   try {
     bound.validateCore(merged.plotSpec);
   } catch (error) {
@@ -97,7 +107,7 @@ export const resolveChartSpec = (input: unknown): ChartResolution => {
     throw error;
   }
   const spec: InternalChartSpecBound = bound.spec;
-  const inspection = createChartInspection(spec, plotSpec, merged.members);
+  const inspection = createChartInspection(spec, plotSpec, merged.members, style);
   const node: IRChild = spec.id === undefined ? plotSpec : { type: 'scope', id: spec.id, children: [plotSpec] };
   return { plotSpec, node, inspection };
 };

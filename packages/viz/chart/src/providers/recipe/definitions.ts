@@ -9,7 +9,7 @@ export const chartRecipeOf = <TSpec extends InternalChartSpecBound>(recipe: Char
     const spec = recipe.schema.parse(input);
     return {
       spec,
-      createSeed: () => recipe.createSeed(spec),
+      createSeed: style => recipe.createSeed(spec, style),
       validateCore: plotSpec => recipe.validateCore(spec, plotSpec),
     };
   },

@@ -207,9 +207,11 @@ describe('Plot definition pass-through', () => {
 describe('Plot trace continuity', () => {
   it('preserves Scene trace, locator source identity, and lineage across the Chart wrapper', () => {
     const resolution = resolveChartSpec(chartSpec);
-    expect(resolution.plotSpec).toEqual(barePlotSpec);
+    const { theme: resolvedTheme, ...resolvedCore } = resolution.plotSpec;
+    expect(resolvedTheme).toBeDefined();
+    expect(resolvedCore).toEqual(barePlotSpec);
 
-    const bareScene = compileToScene(sceneOf(barePlotSpec), {
+    const bareScene = compileToScene(sceneOf(resolution.plotSpec), {
       composites: lowerPlots(datasets, compileOptions),
       onWarn: () => undefined,
     }).scene;

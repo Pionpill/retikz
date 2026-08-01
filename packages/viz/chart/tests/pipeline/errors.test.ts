@@ -157,8 +157,8 @@ describe('Chart resolution errors', () => {
 
   it('不把 merge 内非 member schema 的 ZodError 误译为 resolved Plot failure', () => {
     const originalCreateSeed = InfrastructureChartRecipe.createSeed;
-    const createSeed = vi.spyOn(InfrastructureChartRecipe, 'createSeed').mockImplementationOnce(spec => {
-      const seed = originalCreateSeed(spec);
+    const createSeed = vi.spyOn(InfrastructureChartRecipe, 'createSeed').mockImplementationOnce((spec, style) => {
+      const seed = originalCreateSeed(spec, style);
       return {
         ...seed,
         plot: { ...seed.plot, marks: [42, ...seed.plot.marks.slice(1)] },

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { ChartInspectionSchema, ChartSharedSchema } from '../../src/schemas';
+import { getChartStylePreset } from '../../src/providers';
+import { ChartInspectionSchema, ChartSharedSchema, ChartStyleToken } from '../../src/schemas';
 
 describe('Chart shared schemas', () => {
   it('复用 Data 与 Plot 字段契约', () => {
@@ -77,10 +78,23 @@ describe('Chart shared schemas', () => {
   });
 
   it('校验 inspection 的公开 JSON 结构', () => {
+    const tokens = getChartStylePreset('neutral', 'light');
+    const style = {
+      preset: 'neutral',
+      mode: 'light',
+      tokens,
+      tokenSources: Object.values(ChartStyleToken).map(token => ({
+        token,
+        kind: 'preset',
+        path: `$preset/neutral/light/${token}`,
+      })),
+      authoredOverrides: [],
+    } as const;
     expect(
       ChartInspectionSchema.parse({
         chart: { type: 'scatter', id: 'sales' },
         plot: { id: 'sales/plot' },
+        style,
         members: [
           {
             target: 'mark.main',
@@ -95,6 +109,7 @@ describe('Chart shared schemas', () => {
     ).toEqual({
       chart: { type: 'scatter', id: 'sales' },
       plot: { id: 'sales/plot' },
+      style,
       members: [
         {
           target: 'mark.main',
@@ -106,5 +121,19 @@ describe('Chart shared schemas', () => {
         },
       ],
     });
+    expect(
+      ChartInspectionSchema.safeParse({
+        chart: { type: 'scatter' },
+        plot: {},
+        style: {
+          ...style,
+          authoredOverrides: [
+            { kind: 'theme', path: '$spec/theme' },
+            { kind: 'colors', path: '$spec/colors' },
+          ],
+        },
+        members: [],
+      }).success,
+    ).toBe(false);
   });
 });

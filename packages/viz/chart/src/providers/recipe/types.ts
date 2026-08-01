@@ -60,6 +60,16 @@ export type ChartRecipeSeed = {
   patches: ReadonlyArray<ChartMemberPatch>;
 };
 
+/** recipe 可读取的表现性 topology defaults */
+export type ChartRecipeStyleContext = {
+  /** 是否默认生成 axis guides */
+  axisEnabled: boolean;
+  /** 是否默认启用 axis grid */
+  axisGridEnabled: boolean;
+  /** 是否允许 recipe 为可图例化 channel 生成 legend */
+  legendEnabled: boolean;
+};
+
 /** 保留具体 variant 类型的 Chart recipe */
 export type ChartRecipe<TSpec extends InternalChartSpecBound> = {
   /** 与 schema literal 一致的 variant type */
@@ -67,7 +77,7 @@ export type ChartRecipe<TSpec extends InternalChartSpecBound> = {
   /** variant 的精确输入 schema */
   schema: ZodType<TSpec>;
   /** 从已解析 variant 建立 pre-merge seed */
-  createSeed: (spec: TSpec) => ChartRecipeSeed;
+  createSeed: (spec: TSpec, style: ChartRecipeStyleContext) => ChartRecipeSeed;
   /** merge 后验证 recipe 必需结构 */
   validateCore: (spec: TSpec, plotSpec: IRPlotSpec) => void;
 };
@@ -77,7 +87,7 @@ export type BoundChartRecipe = {
   /** 已解析的公共 Chart bound */
   spec: InternalChartSpecBound;
   /** 生成绑定 variant 的 seed */
-  createSeed: () => ChartRecipeSeed;
+  createSeed: (style: ChartRecipeStyleContext) => ChartRecipeSeed;
   /** 验证绑定 variant 的最终 PlotSpec */
   validateCore: (plotSpec: IRPlotSpec) => void;
 };

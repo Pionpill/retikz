@@ -6,7 +6,20 @@ import type { ChartResolution } from '../src';
 import type { InfrastructureChartSpec } from '../src';
 // @ts-expect-error recipe 基础类型必须保持 owner-private
 import type { InternalChartSpecBound } from '../src';
-import type { ChartContributionSourceValue, IRChartInspection, IRChartInspectionMember, IRChartShared } from '../src';
+import type {
+  ChartContributionSourceValue,
+  ChartStyleAuthoredOverrideValue,
+  ChartStyleTokenSourceValue,
+  ChartStyleTokenValue,
+  ChartStyleValue,
+  ChartThemeModeValue,
+  IRChartInspection,
+  IRChartInspectionMember,
+  IRChartResolvedStyleTokens,
+  IRChartShared,
+  IRChartStyleSurface,
+  IRChartStyleTokenOverrides,
+} from '../src';
 
 import * as chart from '../src';
 
@@ -17,17 +30,34 @@ describe('@retikz/chart package root', () => {
     expectTypeOf<InternalChartSpecBound>();
   });
 
-  it('只暴露 shared 与 inspection 的八个允许符号', () => {
+  it('只暴露 shared、inspection 与 theme 数据契约', () => {
     expect(Object.keys(chart).sort()).toEqual([
       'ChartContributionSource',
       'ChartInspectionMemberSchema',
       'ChartInspectionSchema',
+      'ChartResolvedStyleTokensSchema',
       'ChartSharedSchema',
+      'ChartStyle',
+      'ChartStyleAuthoredOverride',
+      'ChartStyleSurfaceSchema',
+      'ChartStyleToken',
+      'ChartStyleTokenOverridesSchema',
+      'ChartStyleTokenSource',
+      'ChartThemeMode',
     ]);
+    expect(chart.ChartStyleTokenSource).toEqual({ Preset: 'preset', StyleToken: 'style-token' });
+    expect(chart.ChartStyleAuthoredOverride).toEqual({ Colors: 'colors', Theme: 'theme' });
   });
 
-  it('公开四个 schema 派生类型', () => {
-    const shared: IRChartShared = { data: { reference: 'rows' } };
+  it('公开 schema 派生类型而不公开 resolver 或 recipe', () => {
+    const style: ChartStyleValue = 'neutral';
+    const mode: ChartThemeModeValue = 'dark';
+    const token: ChartStyleTokenValue = 'axis.enabled';
+    const tokenSource: ChartStyleTokenSourceValue = 'style-token';
+    const authoredOverride: ChartStyleAuthoredOverrideValue = 'theme';
+    const overrides: IRChartStyleTokenOverrides = { [token]: false };
+    const surface: IRChartStyleSurface = { style, themeMode: mode, styleTokens: overrides };
+    const shared: IRChartShared = { data: { reference: 'rows' }, ...surface };
     const source: ChartContributionSourceValue = 'type-default';
     const member: IRChartInspectionMember = {
       target: 'mark.main',
@@ -36,12 +66,9 @@ describe('@retikz/chart package root', () => {
       value: { type: 'point' },
       sources: [{ kind: source, path: '$recipe/scatter/mark.main' }],
     };
-    const inspection: IRChartInspection = {
-      chart: { type: 'scatter' },
-      plot: {},
-      members: [member],
-    };
+    expectTypeOf<IRChartResolvedStyleTokens>().toMatchTypeOf<IRChartInspection['style']['tokens']>();
+    expectTypeOf<IRChartInspectionMember>().toMatchTypeOf<typeof member>();
 
-    expect({ shared, inspection }).toBeDefined();
+    expect({ shared, member, tokenSource, authoredOverride }).toBeDefined();
   });
 });

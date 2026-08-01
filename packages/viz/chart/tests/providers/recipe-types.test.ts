@@ -4,7 +4,7 @@ import type { z } from 'zod';
 import { describe, expect, it } from 'vitest';
 import { z as zod } from 'zod';
 
-import type { ChartRecipe, ChartRecipeSeed } from '../../src/providers';
+import type { ChartRecipe, ChartRecipeSeed, ChartRecipeStyleContext } from '../../src/providers';
 
 import { chartRecipeOf } from '../../src/providers';
 import { assertChartSpatialRoot, ChartSharedBaseSchema } from '../../src/schemas';
@@ -23,6 +23,12 @@ const emptySeed = (field: string): ChartRecipeSeed => ({
   members: [],
   patches: [],
 });
+
+const styleContext: ChartRecipeStyleContext = {
+  axisEnabled: true,
+  axisGridEnabled: true,
+  legendEnabled: true,
+};
 
 describe('Chart recipe typing', () => {
   it('异构 recipe 绑定后只解析一次并恢复各自的精确 spec', () => {
@@ -85,10 +91,10 @@ describe('Chart recipe typing', () => {
       fieldB: 42,
     });
 
-    expect(boundA.createSeed()).toEqual(emptySeed('amount'));
-    expect(boundB.createSeed()).toEqual(emptySeed('42'));
-    boundA.validateCore(boundA.createSeed().plot);
-    boundB.validateCore(boundB.createSeed().plot);
+    expect(boundA.createSeed(styleContext)).toEqual(emptySeed('amount'));
+    expect(boundB.createSeed(styleContext)).toEqual(emptySeed('42'));
+    boundA.validateCore(boundA.createSeed(styleContext).plot);
+    boundB.validateCore(boundB.createSeed(styleContext).plot);
     expect(parseCountA).toBe(1);
     expect(parseCountB).toBe(1);
 
