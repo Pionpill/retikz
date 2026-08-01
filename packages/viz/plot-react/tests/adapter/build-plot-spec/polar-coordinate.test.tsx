@@ -4,7 +4,7 @@ import { PlotSpecSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { createPolarPieSpec } from '../../../../plot/tests/helpers/plot-spec-fixtures';
-import { buildPlotSpec } from '../../../src/components/build-plot-spec';
+import { buildPlotSpec } from '../../../src/adapter';
 import { Axis } from '../../../src/components/guides';
 import { IntervalMark, PathMark } from '../../../src/components/marks';
 import { Scale } from '../../../src/components/scales';

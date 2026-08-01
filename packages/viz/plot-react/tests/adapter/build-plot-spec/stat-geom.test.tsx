@@ -2,7 +2,7 @@ import { isBuiltinMark, PlotSpecSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { boxplotOutside, boxplotSummary } from '../../../../plot/tests/helpers/plot-spec-fixtures';
-import { buildPlotSpec } from '../../../src/components/build-plot-spec';
+import { buildPlotSpec } from '../../../src/adapter';
 import { IntervalMark, PointMark, ReferenceMark } from '../../../src/components/marks';
 
 describe('buildPlotSpec stat-geom 结构组合', () => {

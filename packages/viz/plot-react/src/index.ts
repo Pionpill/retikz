@@ -1,17 +1,21 @@
 // @retikz/plot-react public API barrel.
 export type {
-  AxisProps,
   BuildPlotSpecOptions,
-  CaptionLabelProps,
   CoordinateInput,
+  MarkTransformShortcutContext,
+  MarkTransformShortcutDefinition,
+  ResolveLabelMap,
+} from './adapter';
+export { buildPlotSpec, resolveLabelOf } from './adapter';
+export type {
+  AxisProps,
+  CaptionLabelProps,
   DatumLabelProps,
   FacetDimensionInput,
   FacetProps,
   FieldName,
   IntervalMarkProps,
   LegendProps,
-  MarkTransformShortcutContext,
-  MarkTransformShortcutDefinition,
   PathMarkProps,
   PlotLabelText,
   PlotTextLabelProps,
@@ -19,7 +23,6 @@ export type {
   PositionScaleType,
   ReferenceMarkProps,
   RelationMarkProps,
-  ResolveLabelMap,
   ScaffoldProps,
   ScaleDimension,
   ScaleProps,
@@ -29,7 +32,6 @@ export type {
 } from './components';
 export {
   Axis,
-  buildPlotSpec,
   CaptionLabel,
   Facet,
   IntervalMark,
@@ -38,7 +40,6 @@ export {
   PointMark,
   ReferenceMark,
   RelationMark,
-  resolveLabelOf,
   Scaffold,
   Scale,
   TitleLabel,

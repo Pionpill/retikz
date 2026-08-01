@@ -2,7 +2,7 @@ import type { IRPaintSpec } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotSpec } from '../../../src/components/build-plot-spec';
+import { buildPlotSpec } from '../../../src/adapter';
 import { IntervalMark, PathMark, PointMark, ReferenceMark } from '../../../src/components/marks';
 
 const gradientPaint: IRPaintSpec = {

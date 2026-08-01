@@ -1,7 +1,7 @@
 import { PlotSpecSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotSpec } from '../../../src/components/build-plot-spec';
+import { buildPlotSpec } from '../../../src/adapter';
 import { ReferenceMark } from '../../../src/components/marks';
 
 describe('buildPlotSpec rule 装配（alpha.11 ADR-03）', () => {

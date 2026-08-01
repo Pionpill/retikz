@@ -3,7 +3,7 @@ import type { IRPlotSpec } from '@retikz/plot';
 import { PlotSpecSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotSpec } from '../../../src/components/build-plot-spec';
+import { buildPlotSpec } from '../../../src/adapter';
 import { IntervalMark, PathMark, PointMark } from '../../../src/components/marks';
 import { Scale } from '../../../src/components/scales';
 

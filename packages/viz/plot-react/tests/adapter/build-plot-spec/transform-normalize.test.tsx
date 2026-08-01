@@ -1,7 +1,7 @@
 import { isBuiltinMark, PlotSpecSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotSpec } from '../../../src/components/build-plot-spec';
+import { buildPlotSpec } from '../../../src/adapter';
 import { IntervalMark, PointMark } from '../../../src/components/marks';
 import { Transform } from '../../../src/components/transform';
 

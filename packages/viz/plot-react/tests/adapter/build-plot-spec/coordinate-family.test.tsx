@@ -1,7 +1,7 @@
 import { PlotSpecSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotSpec } from '../../../src/components/build-plot-spec';
+import { buildPlotSpec } from '../../../src/adapter';
 import { PointMark } from '../../../src/components/marks';
 
 describe('buildPlotSpec 坐标系族 cartesian1D / polar1D', () => {

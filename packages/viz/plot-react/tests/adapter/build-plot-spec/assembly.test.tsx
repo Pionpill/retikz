@@ -8,7 +8,7 @@ import { createElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import { ZodError } from 'zod';
 
-import { buildPlotSpec } from '../../../src/components/build-plot-spec';
+import { buildPlotSpec } from '../../../src/adapter';
 import { Axis, Legend } from '../../../src/components/guides';
 import { CaptionLabel, TitleLabel } from '../../../src/components/labels';
 import { IntervalMark, PathMark, PointMark, RelationMark } from '../../../src/components/marks';

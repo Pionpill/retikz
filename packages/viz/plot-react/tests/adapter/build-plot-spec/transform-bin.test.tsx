@@ -1,8 +1,8 @@
-﻿import { isBuiltinMark, PlotSpecSchema } from '@retikz/plot';
+import { isBuiltinMark, PlotSpecSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { createHistogramSpec } from '../../../../plot/tests/helpers/plot-spec-fixtures';
-import { buildPlotSpec } from '../../../src/components/build-plot-spec';
+import { buildPlotSpec } from '../../../src/adapter';
 import { IntervalMark } from '../../../src/components/marks';
 import { Transform } from '../../../src/components/transform';
 

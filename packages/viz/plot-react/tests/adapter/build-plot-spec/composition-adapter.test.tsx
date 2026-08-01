@@ -3,7 +3,7 @@ import type { IRPlotSpec } from '@retikz/plot';
 import { AxisGridApplyTo, PlotSpecSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotSpec } from '../../../src/components/build-plot-spec';
+import { buildPlotSpec } from '../../../src/adapter';
 import { Axis } from '../../../src/components/guides';
 import { IntervalMark, PointMark } from '../../../src/components/marks';
 import { Scale } from '../../../src/components/scales';

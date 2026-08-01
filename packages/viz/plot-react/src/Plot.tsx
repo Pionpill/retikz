@@ -14,7 +14,7 @@ import { lowerPlots, lowerPlotWithLineage } from '@retikz/plot';
 import { Layout } from '@retikz/react';
 import { useEffect, useRef } from 'react';
 
-import type { CoordinateInput, MarkTransformShortcutDefinition } from './components';
+import type { CoordinateInput, MarkTransformShortcutDefinition } from './adapter';
 
 import { makeEmbeddedPlotComposites, withEmbeddedPlotRuntime } from './embedded-runtime';
 import { resolvePlotRuntime } from './plot-runtime';

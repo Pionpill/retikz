@@ -1,7 +1,7 @@
 import { PlotSpecSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotSpec } from '../../../src/components/build-plot-spec';
+import { buildPlotSpec } from '../../../src/adapter';
 import { Axis } from '../../../src/components/guides';
 import { PathMark, PointMark } from '../../../src/components/marks';
 
