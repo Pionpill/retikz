@@ -1,4 +1,11 @@
-import { AxisLineStepSchema, CoordinateSchema, MoveStepSchema, RelativeTargetSchema, SceneSchema } from '@retikz/core';
+import {
+  AxisLineStepSchema,
+  CoordinateSchema,
+  LayoutInspectSpacingOptionsInputSchema,
+  MoveStepSchema,
+  RelativeTargetSchema,
+  SceneSchema,
+} from '@retikz/core';
 import {
   CoordinateSchema as PlotCoordinateSchema,
   EncodingSchema,
@@ -23,6 +30,7 @@ describe('SCHEMA_REGISTRY', () => {
   it('contains the documented Kernel, Table, and Plot schema surfaces', () => {
     expect(SCHEMA_REGISTRY).toMatchObject({
       SceneSchema: { schema: SceneSchema },
+      LayoutInspectSpacingOptionsInputSchema: { schema: LayoutInspectSpacingOptionsInputSchema },
       TableSpecSchema: { schema: TableSpecSchema },
       PlotSpecSchema: { schema: PlotSpecSchema },
       EncodingSchema: { schema: EncodingSchema },
@@ -51,7 +59,23 @@ describe('SCHEMA_REGISTRY', () => {
     expect(lookupSchema(MoveStepSchema)?.url).toBe('/kernel/reference/schema/path#move');
     expect(lookupSchema(AxisLineStepSchema)?.url).toBe('/kernel/reference/schema/path#axis-line');
     expect(lookupSchema(RelativeTargetSchema)?.url).toBe('/kernel/reference/schema/path#relative');
+    expect(lookupSchema(LayoutInspectSpacingOptionsInputSchema)?.url).toBe(
+      '/kernel/reference/runtime/compile#layoutinspectspacingoptionsinputschema',
+    );
     expect(lookupSchema(TableSpecSchema)?.url).toBe('/viz/table/reference/contract-table#tablespecschema');
+  });
+
+  it('documents the Layout Inspector spacing schema on the Kernel compile reference page', () => {
+    const referenceRoot = resolve(process.cwd(), 'src/modules/docs/contents/kernel/reference/runtime/compile');
+    const zhSource = readFileSync(resolve(referenceRoot, 'index.zh.mdx'), 'utf8');
+    const enSource = readFileSync(resolve(referenceRoot, 'index.en.mdx'), 'utf8');
+
+    expect(zhSource).toContain('### LayoutInspectSpacingOptionsInputSchema');
+    expect(zhSource).toContain('<ZodSchema\n  name="LayoutInspectSpacingOptionsInputSchema"');
+    expect(zhSource).toContain("padding: '是否为容器已解析的 padding 绘制阴影。'");
+    expect(zhSource).toContain("margin: '是否为子项已解析的 margin 绘制阴影。'");
+    expect(enSource).toContain('### LayoutInspectSpacingOptionsInputSchema');
+    expect(enSource).toContain('<ZodSchema name="LayoutInspectSpacingOptionsInputSchema" />');
   });
 
   it.each(['table', 'plot'] as const)(

@@ -327,6 +327,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'LayoutInspectBoundsOptionsInput',
     url: '/standard/layout/reference/runtime#layoutinspectboundsoptionsinputschema',
   },
+  LayoutInspectSpacingOptionsInputSchema: {
+    schema: IR.LayoutInspectSpacingOptionsInputSchema,
+    label: 'LayoutInspectSpacingOptionsInput',
+    url: '/kernel/reference/runtime/compile#layoutinspectspacingoptionsinputschema',
+  },
   BaseLayoutInspectOptionsInputSchema: {
     schema: IR.BaseLayoutInspectOptionsInputSchema,
     label: 'BaseLayoutInspectOptionsInput',

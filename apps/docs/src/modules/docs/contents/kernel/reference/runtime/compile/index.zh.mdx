@@ -87,6 +87,19 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 `BaseLayoutInspectOptions` 把 box 边界与间距层拆成相互独立的 `bounds` 和 `spacing`。Core canonical profile 默认开启 `spacing.padding` 与 `spacing.margin`；`spacing: false | true` 会整体关闭或恢复这两个默认值，对象形式只覆盖显式提供的成员。相邻层都是对象时按字段 sparse merge；boolean 与 object 互换时由后者替换整个分组，最后再补 canonical defaults。修改 `bounds` 不会隐式修改 `spacing`，反之亦然。
 
+### LayoutInspectSpacingOptionsInputSchema
+
+`spacing` 写成对象时使用这个 sparse schema：只写需要覆盖的层，未写成员继续由相邻 policy 或 canonical profile 决定。
+
+<ZodSchema
+  name="LayoutInspectSpacingOptionsInputSchema"
+  description="布局检查器共用的稀疏盒模型间距选择。"
+  descriptions={{
+    padding: '是否为容器已解析的 padding 绘制阴影。',
+    margin: '是否为子项已解析的 margin 绘制阴影。',
+  }}
+/>
+
 Adapter 把 `<Layout>`、`<Scope>` 与组件本地配置分别映射为全图 root、authored subtree 的 inherited policy 和 component policy。Core 固定按 Layout → Scope → component-local 的顺序合并，每一级只覆盖自己提供的值；`enabled: false` 仍是后代不能重新开启的硬屏障。Docs 的“推荐”预设显式把 padding / margin 设为 `false`，不改变 Core 的全量诊断默认值。
 
 手写 `InspectionPlane` 的调用方必须为 entry 提供非负安全整数 `colorScope`；正常 `compileToScene()` 调用由 Core 在丢弃 probe 后统一分配。该 breaking contract 不改变 `CompileOptions.inspection`、`CompileResult.inspection` 或主 Scene 的外层形状。
