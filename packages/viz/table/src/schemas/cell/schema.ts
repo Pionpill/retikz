@@ -3,6 +3,7 @@ import { ScalarValueSchema } from '@retikz/data';
 import { z } from 'zod';
 
 import { TableCellBordersSchema } from '../border';
+import { TableFormatterRefSchema } from '../formatter';
 import { TablePresentationRefSchema } from '../presentation';
 import {
   TableCellFit,
@@ -74,6 +75,9 @@ export const TableCellValuePayloadSchema = z
   .strictObject({
     kind: z.literal(TableCellPayloadKind.Value).describe('Discriminator for a scalar value Cell payload.'),
     value: ScalarValueSchema.describe('JSON scalar value presented as Core content at runtime.'),
+    formatter: TableFormatterRefSchema.optional().describe(
+      'Optional formatter provider reference. Omitted fields use the built-in identity formatter.',
+    ),
     presentation: TablePresentationRefSchema.optional().describe(
       'Optional presentation provider reference. Omitted fields use the built-in text presentation.',
     ),
@@ -109,6 +113,9 @@ export const ManualTableValueCellSchema = z
   .strictObject({
     ...ManualTableCellSharedShape,
     value: ScalarValueSchema.describe('JSON scalar value presented as Core content at runtime.'),
+    formatter: TableFormatterRefSchema.optional().describe(
+      'Optional formatter provider reference. Omitted fields use the built-in identity formatter.',
+    ),
     presentation: TablePresentationRefSchema.optional().describe(
       'Optional presentation provider reference. Omitted fields use the built-in text presentation.',
     ),

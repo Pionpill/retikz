@@ -9,7 +9,7 @@ import { ReactTableRuntimeKind, resolveReactTableRuntime } from './table-runtime
 import { TableRuntimeView } from './table-view';
 
 type DetailTableRootProps = TableCommonProps &
-  Omit<DetailTableSpecInput, 'columns'> & {
+  Omit<DetailTableSpecInput, 'columns' | 'encodings' | 'style' | 'styleTokens' | 'themeMode'> & {
     /** dataRef 对应的运行时数据行 */
     data: Array<ExternalRow>;
   };

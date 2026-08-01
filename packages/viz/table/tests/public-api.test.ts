@@ -3,6 +3,7 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import type * as TableTypes from '../src';
 
 import * as Table from '../src';
+import * as StructurePublic from '../src/contract/structure/public';
 
 type PublicContractTypes = [
   TableTypes.LowerTablesOptions,
@@ -17,6 +18,19 @@ type PublicContractTypes = [
   TableTypes.TableBorderManifestEntry,
   TableTypes.TableBorderPathMeta,
   TableTypes.IRManualTableCell,
+  TableTypes.IRTableCellSelector,
+  TableTypes.IRTableValuePredicate,
+  TableTypes.IRTableCellRule,
+  TableTypes.TableCellPlanSource,
+  TableTypes.TableCellAppearanceTracePathValue,
+  TableTypes.IRTableCellVisualEncoding,
+  TableTypes.IRTableVisualScaleRef,
+  TableTypes.CellVisualScaleDefinition,
+  TableTypes.AnyCellVisualScaleDefinition,
+  TableTypes.TableLegendDescriptor,
+  TableTypes.IRTableStyleTokens,
+  TableTypes.TableStyleTokenMap,
+  TableTypes.TableStyleTokenKey,
 ];
 
 // @ts-expect-error 旧 addressed manual Cell 类型不再从包根导出
@@ -46,6 +60,8 @@ type RemovedTableCellContentPlacement = TableTypes.TableCellContentPlacement;
 type RemovedBuildTableBorderGraphInput = TableTypes.BuildTableBorderGraphInput;
 // @ts-expect-error 私有 Border Graph result 不从包根导出
 type RemovedTableBorderGraph = TableTypes.TableBorderGraph;
+// @ts-expect-error package-private resolved plan 不从包根导出
+type RemovedResolvedTableCellPlan = TableTypes.ResolvedTableCellPlan;
 
 type RemovedStageTypes = [
   RemovedResolvedTableLayoutSpec,
@@ -59,6 +75,7 @@ type RemovedStageTypes = [
   RemovedTableCellContentPlacement,
   RemovedBuildTableBorderGraphInput,
   RemovedTableBorderGraph,
+  RemovedResolvedTableCellPlan,
   RemovedIRTableCell,
   RemovedIRTableCellAddress,
 ];
@@ -82,6 +99,28 @@ describe('@retikz/table public API', () => {
     expect(Table).toHaveProperty('TableLayoutManifestSchema');
     expect(Table).toHaveProperty('ResolvedTableBorderLineSchema');
     expect(Table).toHaveProperty('TableBorderContributionSchema');
+    expect(Table).toHaveProperty('TableCellBackgroundSchema');
+    expect(Table).toHaveProperty('TableCellContentStyleSchema');
+    expect(Table).toHaveProperty('TableCellAppearanceSchema');
+    expect(Table).toHaveProperty('TableCellSelectorSchema');
+    expect(Table).toHaveProperty('TableValuePredicateSchema');
+    expect(Table).toHaveProperty('TableCellRuleSchema');
+    expect(Table).toHaveProperty('TableCellPlanSourceSchema');
+    expect(Table).toHaveProperty('TableCellAppearanceTracePathSchema');
+    expect(Table).toHaveProperty('TableCellVisualEncodingSchema');
+    expect(Table).toHaveProperty('TableVisualScaleRefSchema');
+    expect(Table).toHaveProperty('TableLegendDescriptorSchema');
+    expect(Table).toHaveProperty('defineCellVisualScale');
+    expect(Table).toHaveProperty('TableStyle');
+    expect(Table).toHaveProperty('TableThemeMode');
+    expect(Table).toHaveProperty('TableStyleTokenKeySchema');
+    expect(Table).toHaveProperty('TableStyleBorderTokenSchema');
+    expect(Table).toHaveProperty('TableStyleTokensSchema');
+    expect(Table).toHaveProperty('TableStyleTokenMapSchema');
+    expect(Table).toHaveProperty('BUILTIN_TABLE_STYLE_TOKENS');
+    expect(Table).not.toHaveProperty('TableStyleTokenShape');
+    expect(Table).toHaveProperty('TableCellSourceKind');
+    expect(StructurePublic).not.toHaveProperty('TableCellSourceKind');
 
     expect(Table).not.toHaveProperty('emitTable');
     expect(Table).not.toHaveProperty('layoutTable');
@@ -101,6 +140,11 @@ describe('@retikz/table public API', () => {
     expect(Table).not.toHaveProperty('buildTableBorderGraph');
     expect(Table).not.toHaveProperty('resolveTableBorderAtoms');
     expect(Table).not.toHaveProperty('mergeTableBorderAtoms');
+    expect(Table).not.toHaveProperty('matchesTableCellSelector');
+    expect(Table).not.toHaveProperty('matchesTableValuePredicate');
+    expect(Table).not.toHaveProperty('resolveTableCellPlans');
+    expect(Table).not.toHaveProperty('resolveTableStyleTokens');
+    expect(Table).not.toHaveProperty('resolveCellVisualScale');
   });
 
   it('keeps public contract types while hiding pipeline stage types', () => {

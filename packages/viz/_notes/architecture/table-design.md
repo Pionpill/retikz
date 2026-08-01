@@ -1,6 +1,6 @@
 # Table 表格语法与 lowering 总设计
 
-> **状态：长期模型已确认，alpha.2 纵向基线已实现。** 本文维护 Grammar of Tables、Table Algebra、Constraint Grid Layout 与跨包边界，不冻结具体字段。当前公开契约以 [`packages/viz/table/AGENTS.md`](../../table/AGENTS.md)、Accepted ADR、公开类型和用户文档为准。
+> **状态：长期模型已确认，alpha.2 布局基线与 alpha.3 ADR-01～05 呈现基线已实现。** 本文维护 Grammar of Tables、Table Algebra、Constraint Grid Layout 与跨包边界，不冻结具体字段。当前公开契约以 [`packages/viz/table/AGENTS.md`](../../table/AGENTS.md)、Accepted ADR、公开类型和用户文档为准。
 >
 > 关联：[`Table 表格可视化完备设计`](./table-visualization-complete.md) · [`Table 竞品与能力差距分析`](../analysis/table-compare-analysis.md) · [`table v0.1 roadmap`](../decisions/table/v0/v0.1/roadmap.md)
 
@@ -24,14 +24,14 @@ Table 的指导思想是：
 
 ## 2. 包定位
 
-`@retikz/table` 消费 `@retikz/data` 与 `@retikz/core`，负责 Table IR、语义模型、布局和 lowering。它与 Plot 平行，不依赖 Plot。
+`@retikz/table` 消费 `@retikz/data`、`@retikz/standard` 与 `@retikz/core`，负责 Table IR、语义模型、表格 body 布局和 lowering。它与 Plot 平行，不依赖 Plot；领域无关的外围 Box Layout 直接复用 Standard。
 
 `@retikz/table-react` 与 `@retikz/table-vanilla` 只负责 authoring 和宿主接入，不拥有表格结构、规则、布局或 lowering 算法。
 
 Table 家族以展示为核心。v0.1 先完成确定性的静态表格编译；后续大表展示由 `@retikz/table` 提供 window / viewport 计算，由 adapter 接入实际滚动容器和生命周期。
 
 ```text
-Data ──▶ Table ──▶ Core IR ──▶ Renderer
+Data ──▶ Table ──domain resolution──▶ Standard composition / Core IR ──▶ Renderer
            ▲
      React / Vanilla
 ```
@@ -48,7 +48,7 @@ Table grammar 分为五个部分：
 | Layout       | 求解轨道、span、padding、alignment、fit、border 和 fragment |
 | Rules        | 按 Cell 地址、位置、角色或值覆盖呈现与样式                  |
 
-五部分保持正交：结构不私有格式化，主题不改变数据和拓扑，布局不重新计算业务聚合，规则不直接操作 lowering 后的图元。
+五部分保持正交：结构不私有格式化，style preset / tokens 不改变数据和拓扑，布局不重新计算业务聚合，规则不直接操作 lowering 后的图元。
 
 实际数据集与 Plot 一样保持在 IR 之外，Table IR 只保存数据引用和结构配置。manual 表格可以直接声明少量显式值或内容。
 
@@ -72,7 +72,7 @@ TableSpec
 
 ### 4.2 PresentedTableModel
 
-在语义结构上解析 formatter、presentation、rules、theme 和最终 Cell 内容，但还没有绝对几何。
+在语义结构上解析 formatter、presentation、rules、style tokens 和最终 Cell 内容，但还没有绝对几何。
 
 ### 4.3 TableLayout
 
@@ -112,7 +112,7 @@ Table 的 Cell 拓扑保持正交矩形：地址是行列坐标，span 覆盖连
 
 `Table<PlotCell>` 是合法组合：Table 管理行列语义与 Cell box，Plot 管理 Cell 内部图形。Table 可以测量、放置和裁剪 Plot composite，但不能读取或自动协调多个 Plot Cell 的 scale、axis、grid 和 legend；这些语义由作者显式配置 Plot，或交给 Plot facet / 外部 Figure composition。
 
-Table 只拥有与网格拓扑有关的表头、行头、小计、总计和 Cell 注释关系。标题、caption、来源说明等外围内容优先由 Standard 通用容器 / Figure composition 承担；Table 条件视觉编码产生的 Legend descriptor 由 Table 解析为 Standard Legend 输入，通用 Legend 呈现不进入 Table。
+Table 只拥有与网格拓扑有关的表头、行头、小计、总计和 Cell 注释关系。当前 Table 条件视觉编码先产生 Legend descriptor；Standard Legend gate 满足后再由 Table 将 descriptor 解析为 Standard Legend 输入。Table 可以保留 right / bottom 等领域 placement sugar，但生成的 Legend 与未来 title、description、caption、source 等外围内容必须作为 `IRChild` 进入同一 Standard Flex / Grid / Overlay composition，不建立 Table 私有停靠或文字布局器。
 
 ## 7. 扩展机制
 
@@ -122,15 +122,16 @@ Table 只拥有与网格拓扑有关的表头、行头、小计、总计和 Cell
 - Operation
 - Formatter
 - Presentation
-- Theme
 
 内置与自定义能力经过相同的注册、解析和消费链路。
+
+Style 不属于行为 Definition。Table 维护闭合、扁平、命名空间化的公开 token vocabulary；内置 preset 与用户 token overlay 经过同一 strict schema、leaf resolver 和消费链路。`TableSpec.styleTokens` 只接收当前 `themeMode` 下的 partial overlay；外部主题包可以导出已知 token 的完整 light / dark map，由宿主选择一份作为 overlay 输入，但不能注册未知 token 或 token 消费器。
 
 地址、span 合法性、布局不变量、border conflict 和 lowering 正确性属于 Table 核心合同，不应为了扩展性暴露任意执行钩子。
 
 ## 8. Layout 与 lowering
 
-Table layout 是二维约束求解，不是逐 Cell 手工放置，也不是 Core Grid sugar。它需要统一考虑：
+Table body layout 是表格专用二维约束求解，不是逐 Cell 手工放置，也不是 Core Grid sugar。它需要统一考虑：
 
 - 内容的 intrinsic / constrained size
 - 基于内容真实 bounds 的 alignment 与 allocated content box
@@ -145,21 +146,24 @@ Table layout 是二维约束求解，不是逐 Cell 手工放置，也不是 Cor
 
 任意 `IRChild` 的通用测量与受约束内容布局能力属于 Core；若当前能力不足，应先补 Core 合同，而不是在 Table 内建立私有测量系统或按 Plot 类型特判。
 
+Table body 与 Legend、title、description、caption、source 等外围内容之间的排列是通用 Box Layout，属于 Standard。Table 只把领域位置、顺序和关联解析为 Standard layout item；Standard Flex / Grid / Overlay 负责 Box Layout 求解、间距、对齐、overflow 与整体 bounds，并通过 Core 的 probe、constrained measurement 与 replay 合同完成测量和回放。
+
 Lowering 最终只输出 Core IR，renderer 不感知 Table。Table 同时保留 Cell、数据来源、布局实例和 Core visual contribution 之间的映射；alpha.2 已通过 Core layout-aware composite 的 typed artifact 公开这条映射，后续只能扩展同一链路，不能依赖隐藏 side channel。
 
 ## 9. 已实现基线与后续未决
 
-alpha.1 / alpha.2 已冻结并实现：
+alpha.1 / alpha.2 与 alpha.3 ADR-01～05 当前已冻结并实现：
 
 - Table IR 与外部数据绑定，manual / detail / custom 三种精确 spec 变体与 framework-neutral authoring helpers
-- `SemanticTableModel` 纵向写入链路，以及 formatter / presentation / theme 等统一 Definition / registry 消费方式
+- `SemanticTableModel` 纵向写入链路，以及 formatter / presentation 等统一 Definition / registry 消费方式
 - fixed / auto / fraction / minmax 轨道、矩形 span、真实 `IRChild` intrinsic / constrained measurement、fit / overflow / clip 与 Border Graph
 - layout-aware composite 同次 compile、typed manifest / occurrence，以及 React / Vanilla 共享 runtime contribution 与 artifact contract
+- formatter / presentation、selector / rule、条件视觉 encoding、四种 style preset、闭合 style tokens，以及同源 Legend descriptor / manifest seed
 
 后续 ADR 只处理尚未闭环的能力：
 
 1. 分组、层级、汇总、交叉、矩阵与转置等 Table Algebra
-2. Selector、Rule、条件视觉编码、Legend descriptor、到 Standard Legend 的领域解析与样式级联
+2. Standard Legend 消费、外围 Box Layout composition 与 occurrence-safe artifact join，以及后续 adapter / SSR / docs 闭环
 3. Fragmentation、重复 Cell instance 与跨页重复表头
 4. 更完整的 lineage、locator 与 diagnostics 查询面
 5. 大表 windowing、虚拟滚动与 adapter runtime 边界

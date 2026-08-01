@@ -1,10 +1,20 @@
-import type { ResolvedTableBorderLine, TableBorderContribution, TableBorderSource } from '../../../contract/manifest';
+import type {
+  ResolvedTableBorderLine,
+  TableBorderContribution,
+  TableBorderSource,
+  TableBorderStyleTokenKey,
+} from '../../../contract/manifest';
 import type { TableTrackLayout } from '../types';
 
 /** resolved Border Graph 输入候选 */
 export type ResolvedTableBorderCandidate =
   | Readonly<{ kind: 'none'; priority: number }>
-  | Readonly<{ kind: 'line'; priority: number; line: ResolvedTableBorderLine }>;
+  | Readonly<{
+      kind: 'line';
+      priority: number;
+      line: ResolvedTableBorderLine;
+      styleToken?: Readonly<{ key: TableBorderStyleTokenKey; source: 'preset' | 'user' }>;
+    }>;
 
 /** Border Graph 支持的物理 Cell side */
 export type TableBorderSide = 'top' | 'right' | 'bottom' | 'left';
@@ -36,7 +46,7 @@ export type TableBorderCellInput = Readonly<{
 /** Border Graph resolved Table defaults */
 export type TableBorderDefaultsInput = Readonly<{
   /** Table 外轮廓默认候选 */
-  outer?: ResolvedTableBorderCandidate;
+  outer?: Readonly<Partial<Record<TableBorderSide, ResolvedTableBorderCandidate>>>;
   /** row 间默认候选 */
   horizontal?: ResolvedTableBorderCandidate;
   /** column 间默认候选 */
