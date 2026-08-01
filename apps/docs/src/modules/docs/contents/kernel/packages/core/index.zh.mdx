@@ -60,6 +60,10 @@ const { output, snapshot, patch } = session.artifact(coreProgram).value;
 
 `CompileOptions.inspection` 是 runtime-only authored sidecar。Core 按 `CompositeDefinition.inspector` 解析级联策略，并把严格 rect / line / label DTO 汇总到 `CompileResult.inspection`；它与主 Scene 隔离，不进入 Snapshot identity、资源、layout bounds 或 Patch diff。Program full fallback 时仍在同一 revision 重新生成主 Scene、artifacts 与 inspection plane。
 
+每个最终 `InspectionPlaneEntry` 都有必填的非负安全整数 `colorScope`。Core 先按 occurrence 与最终提交顺序稳定排序 entry，再从 `0` 连续编号；被丢弃的 probe 不占号，编号也不从 `sourcePath` 文本或 Scope 深度推导。普通 primitive 使用 `tone: 'scope'`，warning 使用固定的 `tone: 'warning'`。
+
+矩形 DTO 按 `presentation` 严格分支：`outline` 必须提供 `lineStyle`，`fill` 必须提供 `fillPattern: 'solid' | 'forward-diagonal' | 'backward-diagonal' | 'crosshatch'`，两类字段不能混用。自定义 inspector 需要返回新 tone 和对应 presentation 字段；手写 `InspectionPlane` 还需要为每个 entry 提供 `colorScope`，通过 `compileToScene()` 组装时则由 Core 自动分配。
+
 初始运行执行完整编译。update 无法安全局部证明时，Program 会 full fallback，并在 `patch.operations` 中发布唯一的 `replaceScene`；调用方仍只消费同一个 Snapshot / Patch envelope，不需要切换协议。
 
 Core 会把可选 ChangeSet 与 previous / next 完整 Snapshot 交叉校验。Scene 根和 stable entity 的每一项自身 value 变化都必须由唯一 `update` hint 恰好覆盖；add/remove/move 必须完整解释所属 parent 的 next identity 集合与顺序，`parent` / `before` 指向 next 的最终位置。
@@ -160,7 +164,8 @@ session.update({
 | `CoreProgramDefinition<TComposites>`                   | 保留 artifact input、owned artifact、private/public read 泛型 |
 | `RuntimeScene` / `SceneRuntimeSnapshot` / `ScenePatch` | deeply readonly Scene 与原子 Patch DTO                        |
 | `InspectOptions` / `CompileInspectionOptions`          | Layout / Scope 级联策略与 compile authored sidecar            |
-| `InspectionPlane` / `InspectionPrimitive`              | 与主 Scene 隔离的严格检查辅助层 DTO                           |
+| `InspectionPlane` / `InspectionPlaneEntry`             | 与主 Scene 隔离、按最终 occurrence 分配颜色范围的辅助层 DTO   |
+| `InspectionPrimitive` / `InspectionFillPatternSchema`  | 严格 rect / line / label 与后端中立的填充纹理契约             |
 | `CompositeInspectorDefinition`                         | 与 layout-aware composite definition 同 registry 的 inspector |
 
 ## 源码

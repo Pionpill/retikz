@@ -81,7 +81,15 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 带 `artifactSchema` 的 layout-aware definition 还可以声明 `inspector`。Inspector 与 compile 仍属于同一个 `CompositeDefinition` 和同一个 registry key；Core 不维护第二张 inspector 注册表。选中 occurrence 后，callback 接收同次 compile 已校验的 artifact、完整通用选项和 definition 专属选项，只能返回严格的 rect / line / label 检查 DTO。`expand` 分支、没有 `artifactSchema` 的 compile 分支或已开启但未返回 artifact 的 occurrence 都会 fail-loud。
 
+检查 DTO 使用 occurrence identity、spacing pattern 与 geometry line style 三条独立通道。Core 对最终排序后的 entry 连续分配 `colorScope`；普通 primitive 的 tone 为 `scope`，warning 为 `warning`。`rect` 的 `outline` 分支必须带 `lineStyle`，`fill` 分支必须带 `fillPattern`，不能依赖旧的 `neutral | accent | guide` tone 或缺省 presentation 字段。
+
 `CompileInspectionOptions.root` 承载全图稀疏策略；`roots` 是 React / Vanilla 等 authoring adapter 构造的 authored occurrence sidecar。它不进入 IR，也不要求第三方调用方预测 probe / replay 的动态路径。省略 `inspection` 时 inspector 不运行，主 Scene 与 artifacts 保持原行为。
+
+`BaseLayoutInspectOptions` 把 box 边界与间距层拆成相互独立的 `bounds` 和 `spacing`。Core canonical profile 默认开启 `spacing.padding` 与 `spacing.margin`；`spacing: false | true` 会整体关闭或恢复这两个默认值，对象形式只覆盖显式提供的成员。相邻层都是对象时按字段 sparse merge；boolean 与 object 互换时由后者替换整个分组，最后再补 canonical defaults。修改 `bounds` 不会隐式修改 `spacing`，反之亦然。
+
+Adapter 把 `<Layout>`、`<Scope>` 与组件本地配置分别映射为全图 root、authored subtree 的 inherited policy 和 component policy。Core 固定按 Layout → Scope → component-local 的顺序合并，每一级只覆盖自己提供的值；`enabled: false` 仍是后代不能重新开启的硬屏障。Docs 的“推荐”预设显式把 padding / margin 设为 `false`，不改变 Core 的全量诊断默认值。
+
+手写 `InspectionPlane` 的调用方必须为 entry 提供非负安全整数 `colorScope`；正常 `compileToScene()` 调用由 Core 在丢弃 probe 后统一分配。该 breaking contract 不改变 `CompileOptions.inspection`、`CompileResult.inspection` 或主 Scene 的外层形状。
 
 `LayoutProposal` 必须恰好包含 `x` 与 `y`；每条轴使用 `LayoutAxisProposal`：
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import {
+  InspectionFillPatternSchema,
   InspectionLabelPrimitiveSchema,
   InspectionLinePrimitiveSchema,
   InspectionLineStyleSchema,
@@ -44,6 +45,7 @@ describe('inspection primitive schemas', () => {
   it('describes every public schema and field for schema reference consumers', () => {
     const schemas = [
       InspectionToneSchema,
+      InspectionFillPatternSchema,
       InspectionLineStyleSchema,
       InspectionRectPrimitiveSchema,
       InspectionLinePrimitiveSchema,
@@ -68,7 +70,7 @@ describe('inspection primitive schemas', () => {
         width: 100,
         height: 40,
         presentation: 'outline',
-        tone: 'neutral',
+        tone: 'scope',
         lineStyle: 'solid',
       },
       {
@@ -78,7 +80,7 @@ describe('inspection primitive schemas', () => {
         y1: 20,
         x2: 100,
         y2: 20,
-        tone: 'guide',
+        tone: 'scope',
         lineStyle: 'dashed',
         opacity: 0.5,
       },
@@ -88,16 +90,27 @@ describe('inspection primitive schemas', () => {
         x: 4,
         y: 8,
         text: 'slot 100×40',
-        tone: 'accent',
+        tone: 'scope',
+      },
+      {
+        kind: 'rect',
+        role: 'layout.gap',
+        x: 20,
+        y: 0,
+        width: 8,
+        height: 40,
+        presentation: 'fill',
+        tone: 'scope',
+        fillPattern: 'crosshatch',
       },
     ] as const;
 
     primitives.forEach(primitive => expect(InspectionPrimitiveSchema.parse(primitive)).toEqual(primitive));
-    expect(
-      InspectionPlaneSchema.parse({
-        entries: [{ occurrence, transform: [1, 0, 0, 1, 12, 24], primitives }],
-      }),
-    ).toMatchObject({ entries: [{ occurrence }] });
+    const plane = InspectionPlaneSchema.parse({
+      entries: [{ occurrence, colorScope: 0, transform: [1, 0, 0, 1, 12, 24], primitives }],
+    });
+    expect(plane).toMatchObject({ entries: [{ occurrence }] });
+    expect(InspectionPlaneSchema.parse(JSON.parse(JSON.stringify(plane)))).toEqual(plane);
   });
 
   it('rejects authored Scene semantics and invalid numeric bounds', () => {
@@ -110,7 +123,8 @@ describe('inspection primitive schemas', () => {
         width: 10,
         height: 10,
         presentation: 'outline',
-        tone: 'neutral',
+        tone: 'scope',
+        lineStyle: 'dashed',
         id: 'forbidden',
       }),
     ).toThrow();
@@ -122,7 +136,7 @@ describe('inspection primitive schemas', () => {
         y1: 0,
         x2: 10,
         y2: 0,
-        tone: 'guide',
+        tone: 'scope',
         lineStyle: 'solid',
       }),
     ).toThrow();
@@ -136,6 +150,7 @@ describe('inspection primitive schemas', () => {
         height: 10,
         presentation: 'fill',
         tone: 'warning',
+        fillPattern: 'solid',
       }),
     ).toThrow();
     expect(() =>
@@ -145,20 +160,99 @@ describe('inspection primitive schemas', () => {
         x: 0,
         y: 0,
         text: 'x'.repeat(129),
-        tone: 'accent',
+        tone: 'scope',
       }),
     ).toThrow();
+  });
+
+  it('rejects mixed or incomplete rect presentations and legacy tones', () => {
+    expect(() =>
+      InspectionRectPrimitiveSchema.parse({
+        kind: 'rect',
+        role: 'layout.padding',
+        x: 0,
+        y: 0,
+        width: 10,
+        height: 10,
+        presentation: 'outline',
+        tone: 'scope',
+        lineStyle: 'dashed',
+        fillPattern: 'backward-diagonal',
+      }),
+    ).toThrow();
+    expect(() =>
+      InspectionRectPrimitiveSchema.parse({
+        kind: 'rect',
+        role: 'layout.padding',
+        x: 0,
+        y: 0,
+        width: 10,
+        height: 10,
+        presentation: 'fill',
+        tone: 'scope',
+      }),
+    ).toThrow();
+    expect(() =>
+      InspectionRectPrimitiveSchema.parse({
+        kind: 'rect',
+        role: 'layout.padding',
+        x: 0,
+        y: 0,
+        width: 10,
+        height: 10,
+        presentation: 'fill',
+        tone: 'scope',
+        fillPattern: 'forward-diagonal',
+        lineStyle: 'dashed',
+      }),
+    ).toThrow();
+    expect(() => InspectionToneSchema.parse('neutral')).toThrow();
+    expect(InspectionFillPatternSchema.options).toEqual([
+      'solid',
+      'forward-diagonal',
+      'backward-diagonal',
+      'crosshatch',
+    ]);
   });
 
   it('rejects invalid plane transforms and occurrence fields', () => {
     expect(() =>
       InspectionPlaneSchema.parse({
-        entries: [{ occurrence, transform: [1, 0, 0, 1, Number.NaN, 0], primitives: [] }],
+        entries: [{ occurrence, colorScope: 0, transform: [1, 0, 0, 1, Number.NaN, 0], primitives: [] }],
       }),
     ).toThrow();
     expect(() =>
       InspectionPlaneSchema.parse({
-        entries: [{ occurrence: { ...occurrence, owner: 'x' }, transform: [1, 0, 0, 1, 0, 0], primitives: [] }],
+        entries: [
+          {
+            occurrence: { ...occurrence, owner: 'x' },
+            colorScope: 0,
+            transform: [1, 0, 0, 1, 0, 0],
+            primitives: [],
+          },
+        ],
+      }),
+    ).toThrow();
+    expect(() =>
+      InspectionPlaneSchema.parse({
+        entries: [{ occurrence, colorScope: -1, transform: [1, 0, 0, 1, 0, 0], primitives: [] }],
+      }),
+    ).toThrow();
+    expect(() =>
+      InspectionPlaneSchema.parse({
+        entries: [{ occurrence, colorScope: 0.5, transform: [1, 0, 0, 1, 0, 0], primitives: [] }],
+      }),
+    ).toThrow();
+    expect(() =>
+      InspectionPlaneSchema.parse({
+        entries: [
+          {
+            occurrence,
+            colorScope: Number.MAX_SAFE_INTEGER + 1,
+            transform: [1, 0, 0, 1, 0, 0],
+            primitives: [],
+          },
+        ],
       }),
     ).toThrow();
   });
