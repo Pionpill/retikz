@@ -1,6 +1,6 @@
 # Standard v0.1 alpha.2 Roadmap：通用布局容器
 
-> 状态：已完成，ADR-01～07 均已 Accepted
+> 状态：进行中；ADR-01～07 已 Accepted，ADR-08 Proposed，alpha.2 为 Layout Inspector 视觉语义收口重新打开
 >
 > 主题：由 Standard 提供 renderer-agnostic 的高层 Box Layout 容器，用确定性绘图布局替代调用方对 CSS 布局或私有 solver 的依赖
 >
@@ -108,15 +108,16 @@ ADR-01 不重新设计或私有补齐 Core contract；在可消费的 Kernel 版
 
 ## ADR 顺序
 
-| ADR | 主题                                     | 主要决策                                                                                                    | 依赖                                               | 最终状态 |
-| --- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | -------- |
-| 01  | Layout Profile 与 Core Gate              | 冻结 alpha.2 能力矩阵、坐标、proposal / contribution / solve / placement 边界，以行为测试确认 Core 前置能力 | alpha.1 capability loading；Core ADR-08 可消费版本 | Accepted |
-| 02  | Box、LayoutItem 与共享词汇               | 冻结尺寸、spacing、alignment、distribution、overflow、key/path、artifact 公共结构与 diagnostics             | ADR-01 PASS                                        | Accepted |
-| 03  | FlexLayout                               | 冻结 schema、line formation、wrap、grow/shrink、free-space distribution、cross-axis feedback 与 nested Flex | ADR-01～02                                         | Accepted |
-| 04  | GridLayout                               | 冻结 tracks、span、implicit tracks、稳定 auto-placement、track sizing、双轴 feedback 与 nested Grid         | ADR-01～03                                         | Accepted |
-| 05  | OverlayLayout                            | 冻结 aligned/positioned placement、anchor、offset、size participation、paint order、clip 与 nested Overlay  | ADR-01～04                                         | Accepted |
-| 06  | Artifact、capability、adapter 与文档收口 | 冻结 artifact schema，接入 module/bundle/preset、React/Vanilla，完成 docs 与跨入口等价性                    | ADR-02～05                                         | Accepted |
-| 07  | Layout Inspector                         | 冻结组件局部、Scope 子树与 Layout 全图策略，以独立 inspection plane 可视化真实 artifact 且不污染主 Scene    | ADR-02～06；Kernel inspection Gate                 | Accepted |
+| ADR | 主题                                     | 主要决策                                                                                                                                      | 依赖                                               | 最终状态 |
+| --- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | -------- |
+| 01  | Layout Profile 与 Core Gate              | 冻结 alpha.2 能力矩阵、坐标、proposal / contribution / solve / placement 边界，以行为测试确认 Core 前置能力                                   | alpha.1 capability loading；Core ADR-08 可消费版本 | Accepted |
+| 02  | Box、LayoutItem 与共享词汇               | 冻结尺寸、spacing、alignment、distribution、overflow、key/path、artifact 公共结构与 diagnostics                                               | ADR-01 PASS                                        | Accepted |
+| 03  | FlexLayout                               | 冻结 schema、line formation、wrap、grow/shrink、free-space distribution、cross-axis feedback 与 nested Flex                                   | ADR-01～02                                         | Accepted |
+| 04  | GridLayout                               | 冻结 tracks、span、implicit tracks、稳定 auto-placement、track sizing、双轴 feedback 与 nested Grid                                           | ADR-01～03                                         | Accepted |
+| 05  | OverlayLayout                            | 冻结 aligned/positioned placement、anchor、offset、size participation、paint order、clip 与 nested Overlay                                    | ADR-01～04                                         | Accepted |
+| 06  | Artifact、capability、adapter 与文档收口 | 冻结 artifact schema，接入 module/bundle/preset、React/Vanilla，完成 docs 与跨入口等价性                                                      | ADR-02～05                                         | Accepted |
+| 07  | Layout Inspector                         | 冻结组件局部、Scope 子树与 Layout 全图策略，以独立 inspection plane 可视化真实 artifact 且不污染主 Scene                                      | ADR-02～06；Kernel inspection Gate                 | Accepted |
+| 08  | Layout Inspector 视觉语义                | 以 occurrence palette、spacing pattern 与统一 dashed 边界规范 nested overlay，区分固定 gap / distributed space，并拆分 bounds 与 spacing 开关 | ADR-07；Core inspection DTO 与 Render parity Gate  | Proposed |
 
 每份 ADR 均从 `Proposed` 完成 test-contract、Architecture Gate 与人工确认后进入实现，并在收尾时压缩为长期 `Accepted` 记录。
 
@@ -145,6 +146,9 @@ Core ADR-08 实现 / 出口审计 / 可消费版本
                     │
                     ▼
 07 Layout Inspector + Kernel inspection Gate
+                    │
+                    ▼
+08 visual semantics + truthful spacing artifact
 ```
 
 - ADR-02 只抽取 Flex、Grid 与 Overlay 确认共享的公开词汇和不变量，不建立未被本 milestone 消费的通用 framework
@@ -154,6 +158,7 @@ Core ADR-08 实现 / 出口审计 / 可消费版本
 - LayoutItem key 是容器内 authored identity，不替代后续语义组件的全局 identity、Target 或 Connector contract
 - 每项 capability 接入 alpha.1 已建立的 module、bundle、all preset 与 adapter 机制，不使用包根导入副作用或隐式全局注册
 - Frame 默认继续使用现有纯 `expand` 主链；没有独立 ADR 证明时不迁入 layout-aware compile
+- ADR-08 重新打开 alpha.2，只收口既有 Layout Inspector 的公开 DTO、resolved spacing artifact、正交 inspection authoring option 与双后端视觉语义；不新增交互能力或其它 Tier 2 适配
 
 ## Architecture Gate
 
@@ -193,10 +198,12 @@ Gate 至少证明：
 
 - [x] Core ADR-08 已 Accepted，并有 Standard 可消费的 Kernel 版本
 - [x] ADR-01～07 均完成 test contract、Architecture Gate、人工设计确认并进入 Accepted
+- [ ] ADR-08 完成 test contract、Architecture Gate、实现、自测、双语文档与视觉验证并进入 Accepted
 - [x] FlexLayout、GridLayout、OverlayLayout、LayoutItem 与 layout artifact 的 schema、solver、layout-aware compile、diagnostics 与公共 exports 形成闭环
 - [x] 全部能力接入 module、bundle、all preset、React 与 Vanilla，不引入隐式注册或 adapter 私有语义
 - [x] 任意 `IRChild`、nested layout、文本双轴 proposal、baseline、non-zero bounds、overflow / clip 和失败路径均有自动化证据
 - [x] Flex/Grid/Overlay Inspector 支持单组件、Scope 子树与 Layout 全图开关，SVG/Canvas、static/retained 等价且不污染主 Scene
+- [ ] Layout Inspector 用颜色区分 final occurrence；margin/padding/gap 只绘制无底色的 12-unit 斜线和单份 dashed boundary，distributed 仅绘制 dashed perimeter、内部保持透明；box 与内部结构统一 dashed 且共线不重画；bounds 与 spacing 可独立配置，推荐态显示 content outline、内部结构线与固定 gap，且 Flex/Grid 不再从相邻空白误判 gap
 - [x] 现有 `Grid` 与新 `GridLayout` 无概念、schema、definition key 或文档歧义
 - [x] Standard 中英文文档和真实示例完整，不修改其它 Tier 2 的领域文档或公开契约
 - [x] Standard 三包与 docs 完成受影响范围的格式、lint、类型、测试、构建和 package exports 验证
