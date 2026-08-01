@@ -2,6 +2,7 @@ import { JsonValueSchema } from '@retikz/core';
 import { z } from 'zod';
 
 import { ManualTableCellSchema, TableCellLayoutSchema, TableCellPayloadSchema } from '../cell';
+import { TableFormatterRefSchema } from '../formatter';
 import { TablePresentationRefSchema } from '../presentation';
 import { RESERVED_TABLE_STRUCTURE_KINDS, TableRowKind, TableStructureKind } from './constants';
 
@@ -30,6 +31,9 @@ export const TableDetailColumnSchema = z
     field: z.string().min(1).describe('Data field name or dotted path read from each source row.'),
     header: TableCellPayloadSchema.optional().describe(
       'Optional column header payload. Omitted fields present the column id as text.',
+    ),
+    formatter: TableFormatterRefSchema.optional().describe(
+      'Optional formatter applied to body values in this column. Omitted fields use identity.',
     ),
     presentation: TablePresentationRefSchema.optional().describe(
       'Optional presentation applied to body values in this column.',

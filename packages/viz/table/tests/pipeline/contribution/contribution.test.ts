@@ -8,7 +8,9 @@ import type { LowerTablesOptions, TableStructureOutput } from '../../../src';
 
 import {
   createTableRuntimeContribution,
+  defineCellFormatter,
   defineCellPresentation,
+  defineCellVisualScale,
   defineTableStructure,
   makeTableRuntimeComposites,
   TABLE_NAMESPACE,
@@ -43,6 +45,20 @@ const presentationOf = (name: string) =>
     name,
     optionsSchema: z.strictObject({}),
     present: input => ({ type: 'node', position: [0, 0], text: String(input.value) }),
+  });
+
+const formatterOf = (name: string) =>
+  defineCellFormatter({
+    name,
+    optionsSchema: z.strictObject({}),
+    format: input => input.value,
+  });
+
+const visualScaleOf = (name: string) =>
+  defineCellVisualScale({
+    name,
+    optionsSchema: z.strictObject({}),
+    resolve: () => ({ of: () => '#2563eb', legendForm: 'swatch', domain: [1], range: ['#2563eb'] }),
   });
 
 const compositeOf = (namespace: string, type: string): AnyCompositeDefinition => {
@@ -137,13 +153,19 @@ describe('Table runtime contribution', () => {
     const structureB = structureOf('fixture-b');
     const presentationA = presentationOf('fixture-a');
     const presentationB = presentationOf('fixture-b');
+    const formatterA = formatterOf('fixture-a');
+    const formatterB = formatterOf('fixture-b');
+    const visualScaleA = visualScaleOf('fixture-a');
+    const visualScaleB = visualScaleOf('fixture-b');
     const compositeA = compositeOf('fixture', 'a');
     const compositeB = compositeOf('fixture', 'b');
     const first = createTableRuntimeContribution({
       reference: 'first',
       lowerOptions: {
         structureDefinitions: [structureA],
+        formatterDefinitions: [formatterA],
         presentationDefinitions: [presentationA],
+        visualScaleDefinitions: [visualScaleA],
       },
       composites: [compositeA],
     });
@@ -151,7 +173,9 @@ describe('Table runtime contribution', () => {
       reference: 'second',
       lowerOptions: {
         structureDefinitions: [structureA, structureB],
+        formatterDefinitions: [formatterA, formatterB],
         presentationDefinitions: [presentationA, presentationB],
+        visualScaleDefinitions: [visualScaleA, visualScaleB],
       },
       composites: [compositeA, compositeB],
     });
@@ -162,10 +186,16 @@ describe('Table runtime contribution', () => {
 
   it.each([
     ['structure', { structureDefinitions: [structureOf('same')] }, { structureDefinitions: [structureOf('same')] }],
+    ['formatter', { formatterDefinitions: [formatterOf('same')] }, { formatterDefinitions: [formatterOf('same')] }],
     [
       'presentation',
       { presentationDefinitions: [presentationOf('same')] },
       { presentationDefinitions: [presentationOf('same')] },
+    ],
+    [
+      'visual scale',
+      { visualScaleDefinitions: [visualScaleOf('same')] },
+      { visualScaleDefinitions: [visualScaleOf('same')] },
     ],
   ] as const)(
     'fails loud for the same %s key with different definition objects',
@@ -199,5 +229,33 @@ describe('Table runtime contribution', () => {
 
     expect(() => makeTableRuntimeComposites(mergeContributions(first, second))).not.toThrow();
     expect(() => makeTableRuntimeComposites(mergeContributions(first, conflict))).toThrow(/lower option.*futureMode/i);
+  });
+
+  it('defensively copies formatter definition arrays when creating a contribution', () => {
+    const original = formatterOf('original');
+    const late = formatterOf('late');
+    const formatterDefinitions = [original];
+    const first = createTableRuntimeContribution({ reference: 'first', lowerOptions: { formatterDefinitions } });
+    formatterDefinitions.push(late);
+    const second = createTableRuntimeContribution({
+      reference: 'second',
+      lowerOptions: { formatterDefinitions: [formatterOf('late')] },
+    });
+
+    expect(() => makeTableRuntimeComposites(mergeContributions(first, second))).not.toThrow();
+  });
+
+  it('defensively copies visual scale definition arrays when creating a contribution', () => {
+    const original = visualScaleOf('original');
+    const late = visualScaleOf('late');
+    const visualScaleDefinitions = [original];
+    const first = createTableRuntimeContribution({ reference: 'first', lowerOptions: { visualScaleDefinitions } });
+    visualScaleDefinitions.push(late);
+    const second = createTableRuntimeContribution({
+      reference: 'second',
+      lowerOptions: { visualScaleDefinitions: [visualScaleOf('late')] },
+    });
+
+    expect(() => makeTableRuntimeComposites(mergeContributions(first, second))).not.toThrow();
   });
 });

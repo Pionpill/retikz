@@ -1,4 +1,7 @@
+import type { CellPresentationInput } from '@retikz/table';
+
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { defineCellFormatter, defineCellPresentation, defineCellVisualScale } from '@retikz/table';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -41,6 +44,222 @@ describe('renderTable', () => {
     expect(artifact.svg).toContain('width="320"');
     expect(artifact.svg).toContain('height="240"');
     expect(artifact.manifest.allocationBounds).toEqual({ x: 0, y: 0, width: 240, height: 64 });
+  });
+
+  it('passes formatter definitions through the shared lowering options in SSR', () => {
+    const prefix = defineCellFormatter({
+      name: 'prefix',
+      optionsSchema: z.strictObject({ prefix: z.string() }),
+      format: ({ value }, options) => `${options.prefix}${String(value)}`,
+    });
+    const spec = manualTable({
+      rows: [[{ value: 7, formatter: { name: 'prefix', options: { prefix: '#' } } }]],
+    });
+
+    expect(renderTable(spec, { lowerOptions: { formatterDefinitions: [prefix] } })).toContain('#7');
+  });
+
+  it('keeps style fields, encodings, and custom visual scales in Vanilla SSR artifacts', () => {
+    const visualScale = defineCellVisualScale({
+      name: 'vanilla-palette',
+      optionsSchema: z.strictObject({}),
+      resolve: (_options, _values, context) => ({
+        of: () => context.categoricalColors[0],
+        legendForm: 'swatch',
+        domain: [1],
+        range: [context.categoricalColors[0]],
+      }),
+    });
+    const spec = manualTable({
+      id: 'table',
+      rows: [[1]],
+      style: 'clean',
+      themeMode: 'dark',
+      styleTokens: { 'data.categorical': ['#123456'] },
+      encodings: [
+        {
+          id: 'palette',
+          selector: { locations: ['body'] },
+          channel: 'backgroundFill',
+          scale: { name: 'vanilla-palette' },
+          legend: { title: 'Palette' },
+        },
+      ],
+    });
+    const result = renderTable(spec, {
+      artifacts: true,
+      lowerOptions: { visualScaleDefinitions: [visualScale] },
+    });
+
+    expect(result.svg).toContain('#123456');
+    expect(result.manifest).toMatchObject({
+      style: { style: 'clean', themeMode: 'dark' },
+      encodings: [{ id: 'palette', scaleName: 'vanilla-palette', cellIds: ['cell.r0.c0'] }],
+      legendDescriptors: [
+        {
+          encodingId: 'palette',
+          channel: 'backgroundFill',
+          scaleName: 'vanilla-palette',
+          title: 'Palette',
+          form: 'swatch',
+          domain: [1],
+          range: ['#123456'],
+        },
+      ],
+      cells: [{ appearance: { background: { fill: '#123456' } }, encodingIds: ['palette'] }],
+    });
+  });
+
+  it('keeps the neutral light default distinct from explicit clean in SSR', () => {
+    const neutral = renderTable(manualTable({ rows: [['Ada']] }), { artifacts: true });
+    const clean = renderTable(manualTable({ rows: [['Ada']], style: 'clean' }), { artifacts: true });
+
+    expect(neutral.manifest).toMatchObject({
+      style: { style: 'neutral', themeMode: 'light' },
+      cells: [{ appearance: { background: { fill: '#ffffff' }, content: { color: '#18181b' } } }],
+    });
+    expect(clean.manifest).toMatchObject({
+      style: { style: 'clean', themeMode: 'light' },
+      cells: [{ appearance: {} }],
+      borders: [],
+    });
+  });
+
+  it('surfaces invalid custom Legend resolution diagnostics through Vanilla SSR', () => {
+    const invalid = defineCellVisualScale({
+      name: 'vanilla-invalid-legend',
+      optionsSchema: z.strictObject({}),
+      resolve: () =>
+        ({
+          of: () => 'red',
+          legendForm: 'invalid',
+          domain: [1],
+          range: ['red'],
+        }) as never,
+    });
+    const spec = manualTable({
+      id: 'invalid-legend',
+      rows: [[1]],
+      encodings: [
+        {
+          id: 'invalid',
+          selector: { locations: ['body'] },
+          channel: 'backgroundFill',
+          scale: { name: 'vanilla-invalid-legend' },
+          legend: {},
+        },
+      ],
+    });
+
+    expect(() => renderTable(spec, { lowerOptions: { visualScaleDefinitions: [invalid] } })).toThrow(/legendForm/i);
+  });
+
+  it('passes the new Presentation ABI and semantic border appearance through SSR', () => {
+    const observed: Array<CellPresentationInput> = [];
+    const inspect = defineCellPresentation({
+      name: 'inspect-appearance',
+      optionsSchema: z.strictObject({}),
+      present: input => {
+        observed.push(input);
+        return {
+          type: 'node',
+          position: [0, 0],
+          text: `${input.context.cellId}:${String(input.rawValue)}>${String(input.value)}`,
+        };
+      },
+    });
+    const spec = manualTable({
+      rows: [
+        [
+          { id: 'plain', value: 1, presentation: { name: 'inspect-appearance' } },
+          {
+            id: 'bordered',
+            value: 2,
+            presentation: { name: 'inspect-appearance' },
+            layout: { borders: { bottom: { kind: 'line', stroke: '#2563eb', width: 2 } } },
+          },
+        ],
+      ],
+    });
+    const result = renderTable(spec, {
+      artifacts: true,
+      lowerOptions: { presentationDefinitions: [inspect] },
+    });
+
+    expect(result.svg).toContain('plain:1&gt;1');
+    expect(result.svg).toContain('bordered:2&gt;2');
+    expect(observed).toMatchObject([
+      {
+        rawValue: 1,
+        value: 1,
+        context: { cellId: 'plain', rowIndex: 0, columnIndex: 0 },
+        appearance: {},
+      },
+      {
+        rawValue: 2,
+        value: 2,
+        context: { cellId: 'bordered', rowIndex: 0, columnIndex: 1 },
+        appearance: { borders: { bottom: { kind: 'line', stroke: '#2563eb', width: 2 } } },
+      },
+    ]);
+    expect(result.manifest.borders).toContainEqual(
+      expect.objectContaining({ style: expect.objectContaining({ stroke: '#2563eb', width: 2 }) }),
+    );
+  });
+
+  it('passes ordered root rules through plain authoring into SSR', () => {
+    const observed: Array<CellPresentationInput> = [];
+    const inspect = defineCellPresentation({
+      name: 'rule-inspect',
+      optionsSchema: z.strictObject({}),
+      present: input => {
+        observed.push(input);
+        return { type: 'node', position: [0, 0], text: String(input.value) };
+      },
+    });
+    const spec = manualTable({
+      rows: [[{ id: 'ruled', value: 2 }]],
+      rules: [
+        {
+          selector: { cellIds: ['ruled'], value: { kind: 'compare', operator: 'gt', value: 1 } },
+          formatter: { name: 'number', options: { specifier: '.1f' } },
+          presentation: { name: 'rule-inspect' },
+          appearance: {
+            background: { fill: '#f3f4f6' },
+            borders: { bottom: { kind: 'line', stroke: '#2563eb', width: 2 } },
+          },
+        },
+      ],
+    });
+    const result = renderTable(spec, {
+      artifacts: true,
+      lowerOptions: { presentationDefinitions: [inspect] },
+    });
+
+    expect(result.svg).toContain('2.0');
+    expect(observed).toMatchObject([
+      {
+        rawValue: 2,
+        value: '2.0',
+        context: { cellId: 'ruled' },
+        appearance: {
+          background: { fill: '#f3f4f6' },
+          borders: { bottom: { kind: 'line', stroke: '#2563eb', width: 2 } },
+        },
+      },
+    ]);
+    expect(result.manifest.borders).toContainEqual(
+      expect.objectContaining({ style: expect.objectContaining({ stroke: '#2563eb', width: 2 }) }),
+    );
+  });
+
+  it('preserves shared content rewrite diagnostics in Vanilla SSR', () => {
+    const spec = manualTable({
+      rows: [[{ id: 'direct', content: { type: 'node', position: [0, 0], text: 'direct' } }]],
+      rules: [{ selector: { cellIds: ['direct'] }, formatter: { name: 'identity' } }],
+    });
+
+    expect(() => renderTable(spec)).toThrow(/rule 0.*direct.*formatter/i);
   });
 
   it('accepts Core options under compile and rejects the removed top-level composites field', () => {

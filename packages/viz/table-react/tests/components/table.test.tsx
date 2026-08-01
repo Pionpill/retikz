@@ -7,6 +7,7 @@ import { Layout } from '@retikz/react';
 import {
   createDetailTableSpec,
   createManualTableSpec,
+  defineCellVisualScale,
   defineTableStructure,
   TABLE_NAMESPACE,
   TableComposite,
@@ -69,6 +70,85 @@ describe('Table React components', () => {
     expect(renderToStaticMarkup(<Table spec={customSpec} structureDefinitions={[customDefinition]} />)).toContain(
       'Custom',
     );
+  });
+
+  it('keeps style fields, encodings, and custom visual scales equal in standalone and embedded Table runtimes', () => {
+    const visualScale = defineCellVisualScale({
+      name: 'react-palette',
+      optionsSchema: z.strictObject({}),
+      resolve: (_options, _values, context) => ({
+        of: () => context.categoricalColors[0],
+        legendForm: 'swatch',
+        domain: [1],
+        range: [context.categoricalColors[0]],
+      }),
+    });
+    const spec = createManualTableSpec({
+      id: 'encoded',
+      rows: [[1]],
+      style: 'clean',
+      themeMode: 'dark',
+      styleTokens: { 'data.categorical': ['#123456'] },
+      encodings: [
+        {
+          id: 'palette',
+          selector: { locations: ['body'] },
+          channel: 'backgroundFill',
+          scale: { name: 'react-palette' },
+          legend: { title: 'Palette' },
+        },
+      ],
+    });
+
+    const standalone = renderToStaticMarkup(<Table spec={spec} visualScaleDefinitions={[visualScale]} />);
+    const embedded = renderToStaticMarkup(
+      <Layout>
+        <Table spec={spec} visualScaleDefinitions={[visualScale]} />
+      </Layout>,
+    );
+
+    expect(standalone).toContain('#123456');
+    expect(embedded).toContain('#123456');
+    expect(embedded).toContain('1');
+  });
+
+  it('keeps the neutral light default distinct from the explicit clean migration style', () => {
+    const neutral = renderToStaticMarkup(<Table spec={createManualTableSpec({ rows: [['Ada']] })} />);
+    const clean = renderToStaticMarkup(<Table spec={createManualTableSpec({ rows: [['Ada']], style: 'clean' })} />);
+
+    expect(neutral).toContain('#ffffff');
+    expect(neutral).toContain('#18181b');
+    expect(clean).not.toContain('#18181b');
+    expect(clean).not.toContain('#e4e4e7');
+  });
+
+  it('surfaces invalid custom Legend resolution diagnostics through the generic Table entry', () => {
+    const invalid = defineCellVisualScale({
+      name: 'react-invalid-legend',
+      optionsSchema: z.strictObject({}),
+      resolve: () =>
+        ({
+          of: () => 'red',
+          legendForm: 'invalid',
+          domain: [1],
+          range: ['red'],
+        }) as never,
+    });
+    const spec = createManualTableSpec({
+      id: 'invalid-legend',
+      rows: [[1]],
+      encodings: [
+        {
+          id: 'invalid',
+          selector: { locations: ['body'] },
+          channel: 'backgroundFill',
+          scale: { name: 'react-invalid-legend' },
+          legend: {},
+        },
+      ],
+    });
+
+    expect(() => renderToStaticMarkup(<Table spec={spec} visualScaleDefinitions={[invalid]} />)).toThrow(/legendForm/i);
   });
 
   it('keeps DetailTable and ManualTable authoring equal to the shared plain constructors', () => {

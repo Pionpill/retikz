@@ -5,6 +5,7 @@ import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import {
   createDetailTableSpec,
   createManualTableSpec,
+  defineCellFormatter,
   defineCellPresentation,
   defineTableStructure,
 } from '@retikz/table';
@@ -303,6 +304,13 @@ describe('Table React composition root integration', () => {
         present: () => content,
       }),
     ];
+    const formatterDefinitions = [
+      defineCellFormatter({
+        name: 'root-props-formatter',
+        optionsSchema: z.strictObject({}),
+        format: input => input.value,
+      }),
+    ];
     const compositeSchema = CompositeBaseSchema.extend({
       namespace: z.literal('root-props'),
       type: z.literal('content'),
@@ -317,6 +325,9 @@ describe('Table React composition root integration', () => {
     ];
     const onManifest = vi.fn();
     const style = { color: 'rebeccapurple' };
+    const rules: NonNullable<DetailTableProps['rules']> = [
+      { selector: { fields: ['name'] }, appearance: { background: { fill: '#f3f4f6' } } },
+    ];
     const runtime = resolveReactTableRuntime(ReactTableRuntimeKind.Detail, {
       id: 'detail-root-props',
       dataRef: 'people',
@@ -325,8 +336,10 @@ describe('Table React composition root integration', () => {
       header: false,
       layout: { columnSize: { kind: 'fixed', value: 96 } },
       meta: { source: 'root-props-test' },
-      children: <DetailColumn id="name" field="name" />,
+      rules,
+      children: <DetailColumn id="name" field="name" formatter={{ name: 'root-props-formatter' }} />,
       structureDefinitions,
+      formatterDefinitions,
       presentationDefinitions,
       composites,
       onManifest,
@@ -346,14 +359,21 @@ describe('Table React composition root integration', () => {
     expect(runtime.spec).toMatchObject({
       id: 'detail-root-props',
       data: { reference: 'people', model: [{ name: 'name' }] },
-      structure: { kind: 'detail', header: false, columns: [{ id: 'name', field: 'name' }] },
+      structure: {
+        kind: 'detail',
+        header: false,
+        columns: [{ id: 'name', field: 'name', formatter: { name: 'root-props-formatter' } }],
+      },
       layout: { columnSize: { kind: 'fixed', value: 96 } },
       meta: { source: 'root-props-test' },
+      rules,
     });
     expect(runtime.datasets).toMatchObject({ people: [{ name: 'Ada' }] });
     expect(runtime.lowerOptions).toEqual({
       structureDefinitions,
+      formatterDefinitions,
       presentationDefinitions,
+      visualScaleDefinitions: undefined,
     });
     expect(runtime.composites).toBe(composites);
     expect(runtime.onManifest).toBe(onManifest);
@@ -404,6 +424,23 @@ describe('Table React composition root integration', () => {
     expect(output).toBe(renderToStaticMarkup(<ManualTable {...propsMode} />));
     expect(output).toContain('Ada');
     expect(output).toContain('98');
+  });
+
+  it('uses rule-selected custom formatter definitions in standalone rendering', () => {
+    const formatter = defineCellFormatter({
+      name: 'rule-prefix',
+      optionsSchema: z.strictObject({}),
+      format: input => `#${String(input.value)}`,
+    });
+    const output = renderToStaticMarkup(
+      <ManualTable
+        rows={[[7]]}
+        rules={[{ selector: { cellIds: ['cell.r0.c0'] }, formatter: { name: 'rule-prefix' } }]}
+        formatterDefinitions={[formatter]}
+      />,
+    );
+
+    expect(output).toContain('#7');
   });
 
   it('keeps DetailTable children data injection and embedded runtime reference', () => {

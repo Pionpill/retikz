@@ -1,10 +1,10 @@
 import type { ValueOf } from '@retikz/core';
 
 import type { LabBackendValue, LabPolicyIdValue, LabRunModeValue, LabRunSession } from '../modules/core';
-import type { BenchModuleIdValue } from './workspace-model';
+import type { BenchModuleIdValue } from './constant';
 
 import { defaultKernelLabScenarioId, LabBackend, LabPolicyId, LabRunMode } from '../modules/core';
-import { BenchModuleId } from './workspace-model';
+import { BenchModuleId } from './constant';
 
 /** Performance Lab 运行状态 */
 export const LabStatus = {
@@ -20,7 +20,6 @@ export type LabStatusValue = ValueOf<typeof LabStatus>;
 /** Performance Lab 页面动作类型 */
 export const LabActionType = {
   ModeSelected: 'mode-selected',
-  ModuleSelected: 'module-selected',
   BackendSelected: 'backend-selected',
   PolicySelected: 'policy-selected',
   ScenarioSelected: 'scenario-selected',
@@ -28,11 +27,10 @@ export const LabActionType = {
   WarmupRunsSelected: 'warmup-runs-selected',
   DetailsOpened: 'details-opened',
   DetailsClosed: 'details-closed',
-  ReportOpened: 'report-opened',
-  ReportClosed: 'report-closed',
   RunStarted: 'run-started',
   RunSucceeded: 'run-succeeded',
   RunFailed: 'run-failed',
+  ReportSaveFailed: 'report-save-failed',
 } as const;
 
 /** Performance Lab 页面动作类型取值 */
@@ -49,15 +47,14 @@ export type LabState = Readonly<{
   sampleRuns: number;
   status: LabStatusValue;
   detailsOpen: boolean;
-  reportOpen: boolean;
   session?: LabRunSession;
   error?: string;
+  reportWarning?: string;
 }>;
 
 /** Performance Lab 页面状态动作 */
 export type LabStateAction =
   | Readonly<{ type: typeof LabActionType.ModeSelected; mode: LabRunModeValue }>
-  | Readonly<{ type: typeof LabActionType.ModuleSelected; moduleId: BenchModuleIdValue }>
   | Readonly<{ type: typeof LabActionType.BackendSelected; backend: LabBackendValue }>
   | Readonly<{ type: typeof LabActionType.PolicySelected; policyId: LabPolicyIdValue }>
   | Readonly<{ type: typeof LabActionType.ScenarioSelected; scenarioId: string }>
@@ -65,25 +62,26 @@ export type LabStateAction =
   | Readonly<{ type: typeof LabActionType.WarmupRunsSelected; warmupRuns: number }>
   | Readonly<{ type: typeof LabActionType.DetailsOpened }>
   | Readonly<{ type: typeof LabActionType.DetailsClosed }>
-  | Readonly<{ type: typeof LabActionType.ReportOpened }>
-  | Readonly<{ type: typeof LabActionType.ReportClosed }>
   | Readonly<{ type: typeof LabActionType.RunStarted }>
   | Readonly<{ type: typeof LabActionType.RunSucceeded; session: LabRunSession }>
-  | Readonly<{ type: typeof LabActionType.RunFailed; error: string }>;
+  | Readonly<{ type: typeof LabActionType.RunFailed; error: string }>
+  | Readonly<{ type: typeof LabActionType.ReportSaveFailed; warning: string }>;
 
 /** 创建 Performance Lab 的稳定默认状态 */
-export const createInitialLabState = (): LabState =>
+export const createInitialLabState = (
+  moduleId: BenchModuleIdValue = BenchModuleId.Kernel,
+  scenarioId: string = defaultKernelLabScenarioId,
+): LabState =>
   Object.freeze({
     mode: LabRunMode.Inspect,
-    moduleId: BenchModuleId.Core,
+    moduleId,
     backend: LabBackend.Svg,
     policyId: LabPolicyId.RetainedAuto,
-    scenarioId: defaultKernelLabScenarioId,
+    scenarioId,
     warmupRuns: 2,
     sampleRuns: 12,
     status: LabStatus.Idle,
     detailsOpen: false,
-    reportOpen: false,
   });
 
 /** 归并 Performance Lab 页面动作 */
@@ -91,8 +89,6 @@ export const reduceLabState = (state: LabState, action: LabStateAction): LabStat
   switch (action.type) {
     case LabActionType.ModeSelected:
       return Object.freeze({ ...state, mode: action.mode });
-    case LabActionType.ModuleSelected:
-      return Object.freeze({ ...state, moduleId: action.moduleId });
     case LabActionType.BackendSelected:
       return Object.freeze({ ...state, backend: action.backend });
     case LabActionType.PolicySelected:
@@ -107,21 +103,18 @@ export const reduceLabState = (state: LabState, action: LabStateAction): LabStat
       return Object.freeze({ ...state, detailsOpen: true });
     case LabActionType.DetailsClosed:
       return Object.freeze({ ...state, detailsOpen: false });
-    case LabActionType.ReportOpened:
-      return Object.freeze({ ...state, reportOpen: state.session !== undefined });
-    case LabActionType.ReportClosed:
-      return Object.freeze({ ...state, reportOpen: false });
     case LabActionType.RunStarted:
-      return Object.freeze({ ...state, status: LabStatus.Running, reportOpen: false, error: undefined });
+      return Object.freeze({ ...state, status: LabStatus.Running, error: undefined, reportWarning: undefined });
     case LabActionType.RunSucceeded:
       return Object.freeze({
         ...state,
         status: LabStatus.Success,
         session: action.session,
-        reportOpen: true,
         error: undefined,
       });
     case LabActionType.RunFailed:
       return Object.freeze({ ...state, status: LabStatus.Error, error: action.error });
+    case LabActionType.ReportSaveFailed:
+      return Object.freeze({ ...state, reportWarning: action.warning });
   }
 };

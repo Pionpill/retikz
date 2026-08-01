@@ -1,4 +1,4 @@
-import type { IRChild } from '@retikz/core';
+﻿import type { IRChild } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -16,6 +16,7 @@ import {
 } from '../../src';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { presentTable } from '../../src/pipeline/presentation';
+import { formatDefaultTable } from '../utils/stages';
 
 describe('normalizeTableStructure', () => {
   it('exports stable source discriminator values', () => {
@@ -317,7 +318,7 @@ describe('normalizeTableStructure', () => {
     }
   });
 
-  it('presents canonical cells without changing semantic identity or order', () => {
+  it('presents canonical cells from a detached snapshot without changing identity or order', () => {
     const semantic = normalizeTableStructure({
       kind: 'manual',
       rows: [['A', { content: { type: 'node', position: [0, 0] } }]],
@@ -332,10 +333,11 @@ describe('normalizeTableStructure', () => {
       rows: [[{ value: 'custom', presentation: { name: 'upper' } }]],
     });
 
-    const presented = presentTable(semantic);
-    const customPresented = presentTable(semanticWithCustom, [custom]);
+    const presented = presentTable(formatDefaultTable(semantic));
+    const customPresented = presentTable(formatDefaultTable(semanticWithCustom), { presentationDefinitions: [custom] });
 
-    expect(presented.semantic).toBe(semantic);
+    expect(presented.semantic).not.toBe(semantic);
+    expect(presented.semantic).toEqual(semantic);
     expect(presented.cells.map(cell => cell.cellId)).toEqual(semantic.cells.map(cell => cell.id));
     expect(presented.cells[0].content).toMatchObject({ text: 'A' });
     expect(presented.cells[1].content).toEqual({ type: 'node', position: [0, 0] });

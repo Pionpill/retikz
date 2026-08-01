@@ -2,6 +2,7 @@ export * from './browser-runtime';
 export * from './budget';
 export * from './fixtures';
 export * from './hash';
+export * from './lab-report';
 export * from './report';
 export * from './run';
 export * from './stats';

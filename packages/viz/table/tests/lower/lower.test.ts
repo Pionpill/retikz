@@ -89,6 +89,7 @@ describe('Table layout-aware lowering', () => {
     const spec: IRTableSpec = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
+      style: 'clean',
       structure: {
         kind: 'manual',
         rows: [
