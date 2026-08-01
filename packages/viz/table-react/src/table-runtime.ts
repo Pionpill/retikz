@@ -96,7 +96,9 @@ type AnyTableProps = TableProps | DetailTableProps | ManualTableProps;
 /** 从共享 props 提取 Table lowering options */
 const lowerOptionsOf = (props: TableCommonProps): LowerTablesOptions => ({
   structureDefinitions: props.structureDefinitions,
+  formatterDefinitions: props.formatterDefinitions,
   presentationDefinitions: props.presentationDefinitions,
+  visualScaleDefinitions: props.visualScaleDefinitions,
 });
 
 /** 从共享 props 精确提取 React Layout 宿主选项 */
@@ -156,6 +158,7 @@ const detailSpecOf = (props: DetailTableProps): IRDetailTableSpec => {
     ...(props.header === undefined ? {} : { header: props.header }),
     ...(props.layout === undefined ? {} : { layout: props.layout }),
     ...(props.meta === undefined ? {} : { meta: props.meta }),
+    ...(props.rules === undefined ? {} : { rules: props.rules }),
   });
 };
 
@@ -167,6 +170,7 @@ const manualSpecOf = (props: ManualTableProps): IRManualTableSpec => {
     ...structure,
     ...(props.layout === undefined ? {} : { layout: props.layout }),
     ...(props.meta === undefined ? {} : { meta: props.meta }),
+    ...(props.rules === undefined ? {} : { rules: props.rules }),
   });
 };
 

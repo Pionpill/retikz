@@ -1,8 +1,35 @@
-import type { SemanticTableModel, TableLayoutManifest } from '../../contract';
+import type {
+  PresentedTableModel,
+  SemanticTableModel,
+  TableLayoutManifest,
+  TableLegendDescriptor,
+} from '../../contract';
+import type { ResolvedTableStyleTokens } from '../../providers/style';
+import type { TableStyleValue, TableThemeModeValue } from '../../schemas';
 import type { TableBorderEdge, TableLayout } from '../layout';
+import type { ResolvedTableCellPlan, ResolvedTableEncoding } from '../rule';
 
 import { TableLayoutManifestSchema } from '../../contract';
+import { TableStyleTokenKeySchema } from '../../schemas';
 import { deepFreeze } from '../../shared';
+
+/** manifest 中的 style、plan 与 encoding lineage 输入 */
+export type BuildTableManifestContext = Readonly<{
+  /** 已解析的 preset */
+  style: TableStyleValue;
+  /** 已解析的 token mode */
+  themeMode: TableThemeModeValue;
+  /** 同次 resolved tokens */
+  styleTokens: ResolvedTableStyleTokens;
+  /** 同次 presented model */
+  presented: PresentedTableModel;
+  /** 可选同次 resolved Cell plans */
+  plans?: ReadonlyArray<ResolvedTableCellPlan>;
+  /** 同次 ordered encoding seed */
+  encodings?: ReadonlyArray<ResolvedTableEncoding>;
+  /** 同次 visual scale resolutions 产出的 Legend descriptor seed */
+  legendDescriptors: ReadonlyArray<TableLegendDescriptor>;
+}>;
 
 const alignmentError = (detail: string): never => {
   throw new Error(`table: internal cell alignment: ${detail}`);
@@ -14,6 +41,7 @@ export const buildTableLayoutManifest = (
   model: SemanticTableModel,
   layout: TableLayout,
   borderEdges: ReadonlyArray<TableBorderEdge>,
+  manifestContext: BuildTableManifestContext,
 ): TableLayoutManifest =>
   deepFreeze(
     TableLayoutManifestSchema.parse({
@@ -27,6 +55,15 @@ export const buildTableLayoutManifest = (
         if (geometry === undefined || geometry.cellId !== cell.id) {
           return alignmentError(`manifest Cell ${index} differs`);
         }
+        const presented = manifestContext.presented.cells.at(index);
+        if (presented === undefined || presented.cellId !== cell.id) {
+          return alignmentError(`manifest presented Cell ${index} differs`);
+        }
+        const plan = manifestContext.plans?.at(index);
+        if (plan !== undefined && plan.cellId !== cell.id) {
+          return alignmentError(`manifest plan Cell ${index} differs`);
+        }
+        const trace = plan?.trace.appearance ?? {};
         return {
           cellId: cell.id,
           rowId: cell.rowId,
@@ -43,6 +80,15 @@ export const buildTableLayoutManifest = (
           location: cell.location,
           roles: [...cell.roles],
           ...(cell.source === undefined ? {} : { source: { ...cell.source } }),
+          ...(presented.kind === 'value'
+            ? { formatterName: presented.formatterName, presentationName: presented.presentationName }
+            : {}),
+          matchedRuleIndices: [...(plan?.trace.matchedRuleIndices ?? [])],
+          encodingIds: [...(plan?.kind === 'value' ? (plan.trace.encodingIds ?? []) : [])],
+          appearance: structuredClone(presented.appearance),
+          appearanceTrace: Object.entries(trace)
+            .sort(([left], [right]) => left.localeCompare(right))
+            .map(([path, source]) => ({ path, source })),
         };
       }),
       borders: borderEdges.map(edge => ({
@@ -54,5 +100,16 @@ export const buildTableLayoutManifest = (
         style: edge.style,
         atoms: edge.atoms,
       })),
+      style: {
+        style: manifestContext.style,
+        themeMode: manifestContext.themeMode,
+        tokens: manifestContext.styleTokens.tokens,
+        sources: TableStyleTokenKeySchema.options.map(key => ({
+          key,
+          source: manifestContext.styleTokens.sources[key],
+        })),
+      },
+      encodings: [...(manifestContext.encodings ?? [])],
+      legendDescriptors: [...manifestContext.legendDescriptors],
     }),
   );

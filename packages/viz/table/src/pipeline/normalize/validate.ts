@@ -1,8 +1,8 @@
 import type { TableStructureContext, TableStructureOutput } from '../../contract/structure';
 import type { IRTableStructureOperation } from '../../schemas';
 
-import { TableCellSourceKind } from '../../contract/structure';
 import { ManualTableStructureSchema, TableCellLocation, TableCellRole, TableRowKind } from '../../schemas';
+import { TableCellSourceKind } from '../../shared';
 
 const assertUniqueIds = (owner: string, values: ReadonlyArray<{ id: string }>): void => {
   const ids = new Set<string>();

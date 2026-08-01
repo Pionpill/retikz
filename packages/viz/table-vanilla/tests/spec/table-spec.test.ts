@@ -14,6 +14,17 @@ describe('Table Vanilla plain authoring', () => {
       columns: [{ id: 'name', field: 'name', header: 'Name' }],
     };
     const manualInput = {
+      style: 'clean' as const,
+      themeMode: 'dark' as const,
+      styleTokens: { 'data.categorical': ['#123456'] },
+      encodings: [
+        {
+          id: 'score',
+          selector: { locations: ['body' as const] },
+          channel: 'backgroundFill' as const,
+          scale: { name: 'ordinal-color', options: { domain: [98], range: ['#123456'] } },
+        },
+      ],
       rows: [
         ['Name', { value: 98 }],
         [null, { value: null }],

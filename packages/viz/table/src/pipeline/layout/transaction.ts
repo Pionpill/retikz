@@ -1,6 +1,7 @@
 import type {
   CompositeCompileChild,
   IRChild,
+  IRJsonObject,
   LayoutAxisProposal,
   LayoutChildProbe,
   LayoutChildResult,
@@ -9,11 +10,29 @@ import type {
 import type { ExternalDatasets } from '@retikz/data';
 import type { BoundsRect } from '@retikz/math';
 
-import { LayoutAxisProposalKind, LayoutChildProbeKind, LayoutIntrinsicMode, NaturalLayoutProposal } from '@retikz/core';
+import {
+  ChildSchema,
+  LayoutAxisProposalKind,
+  LayoutChildProbeKind,
+  LayoutIntrinsicMode,
+  NaturalLayoutProposal,
+} from '@retikz/core';
+import { ScalarValueSchema } from '@retikz/data';
+import { z } from 'zod';
 
 import type { PresentedTableModel, SemanticTableCell, TableLayoutManifest } from '../../contract';
-import type { IRTableBorder, IRTableCellBorders, IRTableSpec } from '../../schemas';
+import type { ResolvedTableStyleTokens } from '../../providers/style';
+import type {
+  IRTableBorder,
+  IRTableCellBorders,
+  IRTableLayout,
+  IRTableSpec,
+  IRTableStyleBorderToken,
+  TableStyleValue,
+  TableThemeModeValue,
+} from '../../schemas';
 import type { DeepReadonly } from '../../shared';
+import type { ResolvedTablePlan, TableCellAppearanceTrace } from '../rule';
 import type { LowerTablesOptions } from '../types';
 import type { ResolvedTableBorderCandidate, TableBorderSide } from './border';
 import type {
@@ -24,13 +43,24 @@ import type {
   TableTrackLayout,
 } from './types';
 
-import { TableBorderKind, TableBorderMode, TableRowKind, TableSpecSchema } from '../../schemas';
+import { resolveTableStyleTokens } from '../../providers/style';
+import {
+  TableBorderKind,
+  TableBorderMode,
+  TableCellAppearanceSchema,
+  TableCellPayloadKind,
+  TableRowKind,
+  TableSpecSchema,
+  TableStyle,
+  TableThemeMode,
+} from '../../schemas';
 import { deepFreeze } from '../../shared';
-import { emitTableBoundsSentinel } from '../lower';
-import { emitTableBorderScope } from '../lower';
+import { formatTable } from '../formatter';
+import { emitTableBorderScope, emitTableBoundsSentinel, emitTableCellBackground } from '../lower';
 import { buildTableLayoutManifest } from '../manifest';
 import { normalizeTableStructure } from '../normalize';
 import { presentTable } from '../presentation';
+import { presentationInputsOfTableCellPlans, resolveTableCellPlans } from '../rule';
 import { buildTableBorderGraph } from './border';
 import { computeTableCellBox, computeTableCellContentBox, computeTableCellOuterSize } from './cell';
 import { computeTableCellContentPlacement } from './content';
@@ -46,6 +76,26 @@ export type ResolvedTableTransaction = Readonly<{
   manifest: TableLayoutManifest;
 }>;
 
+/** 已完成 presentation 的 Table 后半布局事务输入 */
+export type PresentedTableTransactionInput = Readonly<{
+  /** 可选 Table root identity */
+  tableId?: string;
+  /** 透传到 Table root Scope 的 JSON metadata */
+  meta?: IRJsonObject;
+  /** Table 轨道、间距与默认 border 配置 */
+  layout?: IRTableLayout;
+  /** 与 canonical semantic model 严格对齐的呈现结果 */
+  presented: PresentedTableModel;
+  /** 同次 style resolution 与选择值 */
+  resolvedStyle?: Readonly<{
+    style: TableStyleValue;
+    themeMode: TableThemeModeValue;
+    tokens: ResolvedTableStyleTokens;
+  }>;
+  /** 同次 Cell/encoding plan bundle */
+  plan?: ResolvedTablePlan;
+}>;
+
 type TableCellProbe = Readonly<{
   semantic: SemanticTableCell;
   content: IRChild;
@@ -54,6 +104,26 @@ type TableCellProbe = Readonly<{
 }>;
 
 type TableTransactionStage = 'intrinsic Cell layout' | 'constrained Cell layout' | 'Border Scope layout';
+
+/** Presented model 进入布局事务前的闭合 Cell 运行时合同 */
+const PresentedTableCellSchema = z.discriminatedUnion('kind', [
+  z.strictObject({
+    kind: z.literal(TableCellPayloadKind.Value),
+    cellId: z.string().min(1),
+    rawValue: ScalarValueSchema,
+    value: ScalarValueSchema,
+    formatterName: z.string().min(1),
+    presentationName: z.string().min(1),
+    appearance: TableCellAppearanceSchema,
+    content: ChildSchema,
+  }),
+  z.strictObject({
+    kind: z.literal(TableCellPayloadKind.Content),
+    cellId: z.string().min(1),
+    appearance: TableCellAppearanceSchema,
+    content: ChildSchema,
+  }),
+]);
 
 /** 标记 Table transaction 中失败的精确阶段与可用实体身份 */
 export class TableTransactionStageError extends Error {
@@ -116,6 +186,9 @@ const unionBounds = (left: BoundsRect | undefined, right: BoundsRect): BoundsRec
   return { x, y, width: maxX - x, height: maxY - y };
 };
 
+/** 判断 bounds 是否具有二维可见面积 */
+const hasArea = (bounds: BoundsRect): boolean => bounds.width > 0 && bounds.height > 0;
+
 /** 根据 canonical ids、sizes 与 gap 构造同序轨道几何 */
 const trackLayoutsOf = (
   ids: ReadonlyArray<string>,
@@ -148,14 +221,45 @@ const resolveBorderCandidate = (border: DeepReadonly<IRTableBorder>): ResolvedTa
   };
 };
 
+/** 把 style border token 物化为带 provenance 的低优先级 graph candidate */
+const resolveStyleBorderCandidate = (
+  key:
+    | 'table.border.top'
+    | 'table.border.right'
+    | 'table.border.bottom'
+    | 'table.border.left'
+    | 'table.border.horizontal'
+    | 'table.border.vertical'
+    | 'columnHeader.border.bottom',
+  border: DeepReadonly<IRTableStyleBorderToken>,
+  tokens: ResolvedTableStyleTokens,
+): ResolvedTableBorderCandidate => {
+  const resolved = resolveBorderCandidate({ ...structuredClone(border), priority: -100 });
+  if (resolved.kind !== 'line') throw new Error('table: internal style border must resolve to a line');
+  return { ...resolved, styleToken: { key, source: tokens.sources[key] } };
+};
+
 /** 把 Cell 四侧 border 按固定物理顺序物化为 Border Graph 输入 */
 const resolveCellBorders = (
   borders: DeepReadonly<IRTableCellBorders>,
+  trace?: TableCellAppearanceTrace,
 ): Readonly<Partial<Record<TableBorderSide, ResolvedTableBorderCandidate>>> => ({
-  ...(borders.top === undefined ? {} : { top: resolveBorderCandidate(borders.top) }),
-  ...(borders.right === undefined ? {} : { right: resolveBorderCandidate(borders.right) }),
-  ...(borders.bottom === undefined ? {} : { bottom: resolveBorderCandidate(borders.bottom) }),
-  ...(borders.left === undefined ? {} : { left: resolveBorderCandidate(borders.left) }),
+  ...Object.fromEntries(
+    (['top', 'right', 'bottom', 'left'] as const).flatMap(side => {
+      const border = borders[side];
+      if (border === undefined) return [];
+      const resolved = resolveBorderCandidate(border);
+      const source = trace?.[`/borders/${side}`];
+      return [
+        [
+          side,
+          source?.kind === 'styleToken' && resolved.kind === 'line'
+            ? { ...resolved, styleToken: { key: source.tokenKey, source: source.tokenSource } }
+            : resolved,
+        ],
+      ];
+    }),
+  ),
 });
 
 /** 从单轴 Cell outer sizes 构造 span-aware canonical contributions */
@@ -186,8 +290,25 @@ const assertPresentedAlignment = (presented: PresentedTableModel): void => {
     throw new Error('table: transaction presentation Cell count differs from semantic model');
   }
   presented.semantic.cells.forEach((cell, index) => {
-    if (presented.cells[index]?.cellId !== cell.id) {
+    const presentedCell = presented.cells[index];
+    const guarded = PresentedTableCellSchema.safeParse(presentedCell);
+    if (!guarded.success) {
+      const issue = guarded.error.issues[0];
+      const path = issue.path.length === 0 ? '' : ` at ${issue.path.join('.')}`;
+      throw new Error(`table: transaction presentation Cell ${index} shape differs${path}: ${issue.message}`);
+    }
+    if (presentedCell.cellId !== cell.id) {
       throw new Error(`table: transaction presentation Cell ${index} identity differs`);
+    }
+    if (presentedCell.kind !== cell.payload.kind) {
+      throw new Error(`table: transaction presentation Cell ${index} kind differs`);
+    }
+    if (
+      presentedCell.kind === TableCellPayloadKind.Value &&
+      cell.payload.kind === TableCellPayloadKind.Value &&
+      presentedCell.rawValue !== cell.payload.value
+    ) {
+      throw new Error(`table: transaction presentation Cell ${index} raw value differs`);
     }
   });
 };
@@ -259,29 +380,29 @@ const cellOutputOf = (
   );
 };
 
-/** 执行一次 Table layout-aware compile transaction */
-export const resolveTableTransaction = (
-  spec: IRTableSpec,
-  datasets: ExternalDatasets,
-  options: LowerTablesOptions,
+/** 从 Presented model 执行完整 Table layout-aware 后半事务 */
+export const resolvePresentedTableTransaction = (
+  input: PresentedTableTransactionInput,
   context: LayoutCompositeCompileContext,
 ): ResolvedTableTransaction => {
-  const parsed = TableSpecSchema.parse(spec);
-  const semantic = normalizeTableStructure(parsed.structure, {
-    data: parsed.data,
-    datasets,
-    structureDefinitions: options.structureDefinitions,
-  });
-  const presented = presentTable(semantic, options.presentationDefinitions);
+  const { tableId, meta, presented } = input;
   assertPresentedAlignment(presented);
-  const resolved = resolveTableLayoutSpec(parsed.layout);
+  const semantic = presented.semantic;
+  const resolved = resolveTableLayoutSpec(input.layout);
+  const manifestStyle =
+    input.resolvedStyle ??
+    ({
+      style: TableStyle.Clean,
+      themeMode: TableThemeMode.Light,
+      tokens: resolveTableStyleTokens(TableStyle.Clean, TableThemeMode.Light),
+    } as const);
 
   const intrinsic = presented.cells.map(cell =>
     resultOfTableProbe(
       context,
       context.layoutChild(cell.content, NaturalLayoutProposal),
       'intrinsic Cell layout',
-      parsed.id,
+      tableId,
       cell.cellId,
     ),
   );
@@ -323,7 +444,7 @@ export const resolveTableTransaction = (
             y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
           }),
           'constrained Cell layout',
-          parsed.id,
+          tableId,
           cell.id,
         )
       : intrinsic[index];
@@ -348,7 +469,8 @@ export const resolveTableTransaction = (
     resolved.rowGap,
   );
 
-  const placements = probes.map(probe => {
+  const backgroundOutputs: Array<IRChild> = [];
+  const placements = probes.map((probe, index) => {
     const box = computeTableCellBox({
       rows,
       columns,
@@ -369,6 +491,14 @@ export const resolveTableTransaction = (
       fit: probe.semantic.layout.fit,
       overflow: probe.semantic.layout.overflow,
     });
+    const background = emitTableCellBackground(presented.cells[index].appearance.background, box);
+    if (background !== undefined) backgroundOutputs.push(background);
+    const visualOverflowBounds =
+      background === undefined
+        ? placement.visualOverflowBounds
+        : hasArea(placement.visualOverflowBounds)
+          ? unionBounds(placement.visualOverflowBounds, box)
+          : { ...box };
     return {
       cellId: probe.semantic.id,
       box,
@@ -376,33 +506,72 @@ export const resolveTableTransaction = (
       sourceAllocationBounds: { ...probe.final.allocationBounds },
       sourceVisualOverflowBounds: { ...probe.final.visualBounds },
       contentAllocationBounds: placement.contentAllocationBounds,
-      visualOverflowBounds: placement.visualOverflowBounds,
+      visualOverflowBounds,
     } satisfies TableCellLayout;
   });
 
   const graph = buildTableBorderGraph({
     rows,
     columns,
-    cells: semantic.cells.map(cell => ({
+    cells: semantic.cells.map((cell, index) => ({
       cellId: cell.id,
       rowIndex: cell.rowIndex,
       columnIndex: cell.columnIndex,
       rowSpan: cell.span.rows,
       columnSpan: cell.span.columns,
-      ...(cell.layout.borders === undefined
+      ...(presented.cells[index].appearance.borders === undefined
         ? {}
         : {
-            borders: resolveCellBorders(cell.layout.borders),
+            borders: resolveCellBorders(
+              presented.cells[index].appearance.borders,
+              input.plan?.cells[index].trace.appearance,
+            ),
           }),
     })),
     mode: resolved.borders?.mode ?? TableBorderMode.Collapse,
     defaults: {
-      ...(resolved.borders?.outer === undefined ? {} : { outer: resolveBorderCandidate(resolved.borders.outer) }),
+      ...(() => {
+        if (resolved.borders?.outer !== undefined) {
+          const candidate = resolveBorderCandidate(resolved.borders.outer);
+          return { outer: { top: candidate, right: candidate, bottom: candidate, left: candidate } };
+        }
+        const resolvedStyle = input.resolvedStyle;
+        if (resolvedStyle === undefined) return {};
+        const keys = {
+          top: 'table.border.top',
+          right: 'table.border.right',
+          bottom: 'table.border.bottom',
+          left: 'table.border.left',
+        } as const;
+        const outer = Object.fromEntries(
+          Object.entries(keys).flatMap(([side, key]) => {
+            const border = resolvedStyle.tokens.tokens[key];
+            return border === null ? [] : [[side, resolveStyleBorderCandidate(key, border, resolvedStyle.tokens)]];
+          }),
+        );
+        return Object.keys(outer).length === 0 ? {} : { outer };
+      })(),
       ...(resolved.borders?.horizontal === undefined
-        ? {}
+        ? input.resolvedStyle?.tokens.tokens['table.border.horizontal'] === null || input.resolvedStyle === undefined
+          ? {}
+          : {
+              horizontal: resolveStyleBorderCandidate(
+                'table.border.horizontal',
+                input.resolvedStyle.tokens.tokens['table.border.horizontal'],
+                input.resolvedStyle.tokens,
+              ),
+            }
         : { horizontal: resolveBorderCandidate(resolved.borders.horizontal) }),
       ...(resolved.borders?.vertical === undefined
-        ? {}
+        ? input.resolvedStyle?.tokens.tokens['table.border.vertical'] === null || input.resolvedStyle === undefined
+          ? {}
+          : {
+              vertical: resolveStyleBorderCandidate(
+                'table.border.vertical',
+                input.resolvedStyle.tokens.tokens['table.border.vertical'],
+                input.resolvedStyle.tokens,
+              ),
+            }
         : { vertical: resolveBorderCandidate(resolved.borders.vertical) }),
     },
   });
@@ -411,9 +580,9 @@ export const resolveTableTransaction = (
       ? undefined
       : resultOfTableProbe(
           context,
-          context.layoutChild(emitTableBorderScope(graph.edges, parsed.id), NaturalLayoutProposal),
+          context.layoutChild(emitTableBorderScope(graph.edges, tableId), NaturalLayoutProposal),
           'Border Scope layout',
-          parsed.id,
+          tableId,
           undefined,
         );
 
@@ -422,7 +591,7 @@ export const resolveTableTransaction = (
   const height = rowSizes.reduce((total, size) => total + size, 0) + Math.max(0, rows.length - 1) * resolved.rowGap;
   let visual: BoundsRect | undefined;
   placements.forEach(cell => {
-    if (cell.visualOverflowBounds.width > 0 && cell.visualOverflowBounds.height > 0) {
+    if (hasArea(cell.visualOverflowBounds)) {
       visual = unionBounds(visual, cell.visualOverflowBounds);
     }
   });
@@ -440,17 +609,69 @@ export const resolveTableTransaction = (
   const root = context.scope(
     {
       localNamespace: true,
-      ...(parsed.id === undefined ? {} : { id: parsed.id }),
-      ...(parsed.meta === undefined ? {} : { meta: parsed.meta }),
+      ...(tableId === undefined ? {} : { id: tableId }),
+      ...(meta === undefined ? {} : { meta }),
     },
     [
       emitTableBoundsSentinel(layout),
+      ...backgroundOutputs,
       ...cellOutputs,
       ...(borderResult === undefined ? [] : [context.replay(borderResult)]),
     ],
   );
   return deepFreeze({
     children: [root],
-    manifest: buildTableLayoutManifest(parsed.id, semantic, layout, graph.edges),
+    manifest: buildTableLayoutManifest(tableId, semantic, layout, graph.edges, {
+      style: manifestStyle.style,
+      themeMode: manifestStyle.themeMode,
+      styleTokens: manifestStyle.tokens,
+      presented,
+      ...(input.plan === undefined ? {} : { plans: input.plan.cells, encodings: input.plan.encodings }),
+      legendDescriptors: input.plan?.legendDescriptors ?? [],
+    }),
   });
+};
+
+/** 解析 Table spec 与 definitions，并执行一次 layout-aware compile transaction */
+export const resolveTableTransaction = (
+  spec: IRTableSpec,
+  datasets: ExternalDatasets,
+  options: LowerTablesOptions,
+  context: LayoutCompositeCompileContext,
+): ResolvedTableTransaction => {
+  const parsed = TableSpecSchema.parse(spec);
+  const semantic = normalizeTableStructure(parsed.structure, {
+    data: parsed.data,
+    datasets,
+    structureDefinitions: options.structureDefinitions,
+  });
+  const style = parsed.style ?? TableStyle.Neutral;
+  const themeMode = parsed.themeMode ?? TableThemeMode.Light;
+  const styleTokens = resolveTableStyleTokens(style, themeMode, parsed.styleTokens);
+  const plan = resolveTableCellPlans(semantic, {
+    rules: parsed.rules,
+    encodings: parsed.encodings,
+    visualScaleDefinitions: options.visualScaleDefinitions,
+    styleTokens,
+    scaleContext: {
+      categoricalColors: styleTokens.tokens['data.categorical'],
+      sequentialColors: [styleTokens.tokens['data.sequential'][0], styleTokens.tokens['data.sequential'][1]],
+    },
+  });
+  const formatted = formatTable(semantic, { cells: plan.cells, formatterDefinitions: options.formatterDefinitions });
+  const presented = presentTable(formatted, {
+    cells: presentationInputsOfTableCellPlans(plan.cells),
+    presentationDefinitions: options.presentationDefinitions,
+  });
+  return resolvePresentedTableTransaction(
+    {
+      ...(parsed.id === undefined ? {} : { tableId: parsed.id }),
+      ...(parsed.meta === undefined ? {} : { meta: parsed.meta }),
+      ...(parsed.layout === undefined ? {} : { layout: parsed.layout }),
+      presented,
+      resolvedStyle: { style, themeMode, tokens: styleTokens },
+      plan,
+    },
+    context,
+  );
 };

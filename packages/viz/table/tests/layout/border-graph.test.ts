@@ -32,6 +32,13 @@ const lineCandidate = (
   priority = 0,
 ): ResolvedTableBorderCandidate => ({ kind: 'line', priority, line: line(override) });
 
+const outerCandidates = (candidate: ResolvedTableBorderCandidate) => ({
+  top: candidate,
+  right: candidate,
+  bottom: candidate,
+  left: candidate,
+});
+
 const track = (id: string, index: number, offset: number, size: number): TableTrackLayout => ({
   id,
   index,
@@ -66,8 +73,8 @@ const contribution = (
     sourceOrderKey,
   };
   return options.kind === 'none'
-    ? { kind: 'none', ...base }
-    : { kind: 'line', ...base, line: options.borderLine ?? line() };
+    ? { kind: 'none', origin: 'explicit', ...base }
+    : { kind: 'line', origin: 'explicit', ...base, line: options.borderLine ?? line() };
 };
 
 const rows = [track('r0', 0, 0, 10), track('r1', 1, 14, 20)];
@@ -83,7 +90,7 @@ const fullGridInput = (): BuildTableBorderGraphInput => ({
     { cellId: 'd', rowIndex: 1, columnIndex: 1, rowSpan: 1, columnSpan: 1 },
   ],
   mode: 'collapse',
-  defaults: { outer: lineCandidate(), horizontal: lineCandidate(), vertical: lineCandidate() },
+  defaults: { outer: outerCandidates(lineCandidate()), horizontal: lineCandidate(), vertical: lineCandidate() },
 });
 
 describe('Table Border Graph', () => {
@@ -118,6 +125,7 @@ describe('Table Border Graph', () => {
     expect(() =>
       TableBorderContributionSchema.parse({
         kind: 'line',
+        origin: 'explicit',
         key: 'x',
         source: { kind: 'default', scope: 'outer', side: 'top' },
         priority: 0,
@@ -154,7 +162,7 @@ describe('Table Border Graph', () => {
       columns,
       cells: [{ cellId: 'span', rowIndex: 0, columnIndex: 0, rowSpan: 1, columnSpan: 2 }],
       mode: 'collapse',
-      defaults: { outer: lineCandidate(), vertical: lineCandidate() },
+      defaults: { outer: outerCandidates(lineCandidate()), vertical: lineCandidate() },
     });
 
     expect(graph.atoms.map(atom => atom.key)).not.toContain('c:v:1:0');
@@ -178,10 +186,22 @@ describe('Table Border Graph', () => {
 
   it('returns an empty graph when either Table dimension is zero', () => {
     expect(
-      buildTableBorderGraph({ rows: [], columns, cells: [], mode: 'collapse', defaults: { outer: lineCandidate() } }),
+      buildTableBorderGraph({
+        rows: [],
+        columns,
+        cells: [],
+        mode: 'collapse',
+        defaults: { outer: outerCandidates(lineCandidate()) },
+      }),
     ).toEqual({ atoms: [], edges: [] });
     expect(
-      buildTableBorderGraph({ rows, columns: [], cells: [], mode: 'collapse', defaults: { outer: lineCandidate() } }),
+      buildTableBorderGraph({
+        rows,
+        columns: [],
+        cells: [],
+        mode: 'collapse',
+        defaults: { outer: outerCandidates(lineCandidate()) },
+      }),
     ).toEqual({ atoms: [], edges: [] });
   });
 
@@ -564,10 +584,30 @@ describe('Table Border Graph', () => {
       /overlap/i,
     ],
     [{ cells: [{ cellId: 'bad', rowIndex: 0, columnIndex: 1, rowSpan: 1, columnSpan: 2 }] }, /range/i],
-    [{ defaults: { outer: { kind: 'line', priority: 0, line: line({ width: Number.NaN }) } } }, /finite|number/i],
+    [
+      {
+        defaults: {
+          outer: outerCandidates({ kind: 'line', priority: 0, line: line({ width: Number.NaN }) }),
+        },
+      },
+      /finite|number/i,
+    ],
+    [
+      {
+        defaults: {
+          outer: {
+            top: {
+              kind: 'line' as const,
+              priority: 0,
+              line: line(),
+              styleToken: { key: 'table.border.top' as const, source: 'preset' as const },
+            },
+          },
+        },
+      },
+      /priority|-100/i,
+    ],
   ])('rejects invalid graph topology or geometry for %#', (override, message) => {
-    expect(() => buildTableBorderGraph({ ...fullGridInput(), ...override } as BuildTableBorderGraphInput)).toThrow(
-      message,
-    );
+    expect(() => buildTableBorderGraph({ ...fullGridInput(), ...override })).toThrow(message);
   });
 });

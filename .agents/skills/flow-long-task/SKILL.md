@@ -11,12 +11,12 @@ description: Use when retikz work is a large, long-running, batch, multi-commit,
 
 执行前先确认：
 
-1. 任务 source of truth：功能迭代用一篇或多篇 ADR 草案或 roadmap 项；非功能重构用 `superpowers:writing-plans` 产出的 plan；beta / rc / 发布用 roadmap、plan 或发布清单。
+1. 任务 source of truth：Alpha 功能的长期契约用 ADR，执行用其 ignored 镜像 `PLAN.md` / `TEST_CONTRACT.md`；非功能重构用 `superpowers:writing-plans` 产出的 plan；Beta / RC / 发布用 roadmap、plan 或发布清单。
 2. 是否允许批量执行、是否允许 LLM 分步 commit。
-3. 是否授权 plan / ADR 草案 review、批量自动 commit 前 review、最终整体 review。
-4. 临时状态文件位置，必须在 `.gitignore` 覆盖的 `notes/plans/` 或就近 `**/_notes/plans/`。
+3. Architecture / Plan Gate 使用根规则的常驻只读授权；其它批量自动 commit 前 review、最终整体 review 仍按根规则确认授权。
+4. 临时状态文件位置。Alpha 必须使用 ADR 的 `**/_notes/plans/` 镜像目录；其它任务使用 `.gitignore` 覆盖的 `notes/plans/` 或就近 `**/_notes/plans/`。
 
-未确认 source of truth 前不改代码；ADR 草案人工 ack 后可执行但默认不提交；未授权 commit 前不 commit；未授权子 agent / 外部模型前不调度 review。
+未确认 source of truth 前不改代码；Alpha 必须在 Architecture Gate、人工 ADR 确认、镜像 plan 与 Plan Gate 均通过且已有实现授权后执行。未授权 commit 前不 commit；常驻 Gate 之外未授权 subagent / 外部模型前不调度 review。
 
 ## 分流
 
@@ -28,11 +28,14 @@ description: Use when retikz work is a large, long-running, batch, multi-commit,
 
 ## 状态文件
 
-为防上下文压缩失忆，长任务必须维护一个 ignored 状态文件，例如：
+为防上下文压缩失忆，长任务必须维护 ignored 状态文件。Alpha 使用镜像 plan：
 
 ```text
+packages/<group>/_notes/decisions/<relative>/<NN>-<slug>.md
+-> packages/<group>/_notes/plans/<relative>/<NN>-<slug>/TASK_STATE.md
+
+# 非 ADR 长任务
 notes/plans/<task>/TASK_STATE.md
-<module>/_notes/plans/<task>/TASK_STATE.md
 ```
 
 状态文件至少包含：
@@ -50,8 +53,8 @@ notes/plans/<task>/TASK_STATE.md
 上下文恢复或接手长任务时，按顺序读取：
 
 1. 根 `AGENTS.md` 与本 skill。
-2. source docs：ADR / plan / roadmap / 发布清单。
-3. `TASK_STATE.md`。
+2. source docs：ADR / roadmap / 发布清单。
+3. reviewed `PLAN.md`、`TEST_CONTRACT.md`、`TASK_STATE.md`、`REVIEW.md`；不适用的文件跳过。
 4. `git status --short`、最近 commits、当前 staged diff。
 5. 本阶段需要的具体 flow / develop / standard skill。
 
@@ -63,11 +66,11 @@ notes/plans/<task>/TASK_STATE.md
 
 1. 只 stage 本 commit 文件，不用 `git add -A`。
 2. 跑受影响验证；验证失败不进入 review。
-3. 派子 agent review staged diff。
-4. 修复 BLOCKING 并按需复审；WARNING 需要人工裁决或记录理由。
+3. 按 `cross-review` 冻结 staged diff，同轮并发派发 2–3 个实际可用的不同模型。
+4. 主 AI 收齐同轮结果后归并；修复 BLOCKING 后冻结新 staged snapshot，用 fresh agents 复审。WARNING 需要人工裁决或记录理由。
 5. commit 成功后更新 `TASK_STATE.md`。
 
-子 agent review 输入只给：source doc 摘要、相关 AGENTS / standard skill 要点、staged diff、验证结果。不要传主 AI 的结论。
+Review 输入只给：长期 ADR / source doc、reviewed plan、相关 AGENTS / standard skill、staged diff、验证结果。所有模型得到相同输入，同轮互不可见结论；不要传主 AI 的预判。
 
 Review 固定检查：
 
@@ -83,9 +86,11 @@ Review 输出只分：
 - `WARNING`：可由人工裁决或记录风险。
 - `INFO`：可选建议。
 
+每个 commit review 最多 3 轮。最新一轮至少两个不同模型完成、无 BLOCKING、WARNING 已裁决时 PASS；只有一个模型、快照漂移或第三轮未通过时 halt。
+
 ## 最终整体 Review
 
-所有 commit 完成后，按用户授权派子 agent review commit range。输入包含 source docs、`TASK_STATE.md`、commit list、关键 diff、验证结果。
+全部实现完成后，按用户授权和 `cross-review` 对固定完整 working-tree diff 或 commit range 并发派发 2–3 个不同模型。没有 commit 授权时使用 working-tree diff，不得为了整体 review 提前 commit；已有多个 commit 时使用固定 range。输入包含 ADR / source docs、reviewed plan、`TASK_STATE.md`、commit list（如有）、完整 diff 与验证结果。
 
 整体 review 检查：
 
@@ -96,8 +101,10 @@ Review 输出只分：
 
 最终 BLOCKING 清空后，再进入 wrapup、roadmap / ADR 状态更新或交付汇报。
 
+整体 review 同样按轮次归并；修订后使用新的完整 working-tree diff 或 commit range 与 fresh agents 进入下一轮，最多 3 轮。不得串行把一个模型的结论喂给同轮其它模型。
+
 ## 失败与暂停
 
-- source docs 自相矛盾、scope 膨胀、git 状态不明、连续 3 轮验证失败、review BLOCKING 反复不收敛：halt，汇报事实和选项。
+- ADR / plan 自相矛盾、scope 膨胀、git 状态不明、连续 3 轮验证失败、第三轮 review 仍有 BLOCKING：halt，汇报事实和选项。
 - 不 push / tag / publish；这些始终需要单独授权。
 - 不提交临时 plan、状态文件、review 报告，除非用户明确要求转为正式文档。
