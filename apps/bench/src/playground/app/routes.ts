@@ -3,16 +3,10 @@ import type { LoaderFunctionArgs, RouteObject } from 'react-router';
 
 import { redirect } from 'react-router';
 
-import type { BenchModule } from '../workspace';
+import type { BenchModule } from './module-registry';
 
-import {
-  BenchCaseView,
-  benchModules,
-  defaultBenchModule,
-  getBenchCasePath,
-  getDefaultBenchTestCase,
-  getModuleTestCases,
-} from '../workspace';
+import { benchModules, defaultBenchModule } from './module-registry';
+import { BenchCaseView, getBenchCasePath, getDefaultBenchTestCase, getModuleTestCases } from './test-catalog';
 
 /** 为模块路由创建 React element */
 export type BenchModuleElementFactory = (module: BenchModule) => ReactNode;

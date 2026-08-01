@@ -14,9 +14,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 
-import type { BenchModule } from '../constant';
+import type { BenchModule } from '../module-registry';
 
-import { benchModules } from '../constant';
+import { benchModules } from '../module-registry';
 
 /** 模块切换器属性 */
 export type ModuleSwitcherProps = Readonly<{

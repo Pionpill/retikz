@@ -22,14 +22,14 @@ import { Theme, useThemeStore } from '../../store';
 import { LabActionType } from '../lab-state';
 
 /** Workspace 全局操作属性 */
-export type WorkspaceSettingsProps = Readonly<{
+export type SidebarSettingsProps = Readonly<{
   dispatch: Dispatch<LabStateAction>;
   /** 是否禁用当前模块不可用的详细配置 */
   detailsDisabled?: boolean;
 }>;
 
 /** sidebar-07 左下角的语言、主题与详细配置入口 */
-export const WorkspaceSettings: FC<WorkspaceSettingsProps> = props => {
+export const SidebarSettings: FC<SidebarSettingsProps> = props => {
   const { dispatch, detailsDisabled = false } = props;
   const { t, i18n } = useTranslation();
   const theme = useThemeStore(state => state.theme);

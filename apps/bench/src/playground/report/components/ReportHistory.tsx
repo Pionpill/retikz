@@ -4,7 +4,7 @@ import { FileBarChart } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import type { BenchReportSummary } from '../../../shared';
-import type { LabRunSession } from '../../modules/core';
+import type { LabRunSession } from '../../modules/kernel';
 
 import { ComparisonChart } from './ComparisonChart';
 import { Inspector } from './Inspector';

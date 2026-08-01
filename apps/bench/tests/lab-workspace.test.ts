@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
-import type { LabRunSession } from '../src/playground/modules/core';
+import type { LabRunSession } from '../src/playground/modules/kernel';
 
-import { benchModules, defaultBenchModule } from '../src/playground/workspace/constant';
-import { createInitialLabState, reduceLabState } from '../src/playground/workspace/lab-state';
+import { detailedConfigControls, quickConfigControls } from '../src/playground/app/case-config';
+import { createInitialLabState, reduceLabState } from '../src/playground/app/lab-state';
+import { benchModules, defaultBenchModule } from '../src/playground/app/module-registry';
 import {
   BenchCaseView,
   getBenchCasePath,
   getBenchTestCase,
   getModuleTestGroups,
-} from '../src/playground/workspace/test-catalog';
-import { detailedConfigControls, quickConfigControls } from '../src/playground/workspace/workspace-config';
-import { getModuleTestSuites } from '../src/playground/workspace/workspace-model';
+} from '../src/playground/app/test-catalog';
+import { getModuleTestSuites } from '../src/playground/app/test-suites';
 
 const session: LabRunSession = {
   id: 'run-1',

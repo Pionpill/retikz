@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import type { LabRunSession } from '../src/playground/modules/core';
+import type { LabRunSession } from '../src/playground/modules/kernel';
 
-import { BenchModuleId } from '../src/playground/workspace/constant';
-import { createInitialLabState, reduceLabState } from '../src/playground/workspace/lab-state';
+import { createInitialLabState, reduceLabState } from '../src/playground/app/lab-state';
+import { BenchModuleId } from '../src/playground/app/module-registry';
 
 describe('Performance Lab state', () => {
   it('使用 Inspect 与 retained-auto 作为默认入口', () => {

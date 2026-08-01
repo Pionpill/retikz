@@ -10,13 +10,13 @@ import type { LabState } from '../lab-state';
 import { RenderStage } from './RenderStage';
 
 /** 测试预览工作区属性 */
-export type TestWorkspaceProps = Readonly<{
+export type RunViewProps = Readonly<{
   state: LabState;
   previewHostRef: RefObject<HTMLDivElement>;
 }>;
 
 /** 当前测试集的说明与真实渲染预览 */
-export const TestWorkspace: FC<TestWorkspaceProps> = props => {
+export const RunView: FC<RunViewProps> = props => {
   const { state, previewHostRef } = props;
   const { t } = useTranslation();
   return (

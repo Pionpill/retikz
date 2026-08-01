@@ -1,8 +1,8 @@
 import type { BenchLabReport, BenchReportList, WriteBenchReportInput } from '../../shared';
-import type { LabRunSession } from '../modules/core';
+import type { LabRunSession } from '../modules/kernel';
 
 import { BenchReportStatus, isBenchLabReport, isBenchReportList } from '../../shared';
-import { LabOutcome } from '../modules/core';
+import { LabOutcome } from '../modules/kernel';
 
 /** 报告客户端使用的 Fetch 边界 */
 export type BenchReportFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;

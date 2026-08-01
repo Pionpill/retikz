@@ -4,7 +4,7 @@ import { BarChart3 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { LabPolicyResult } from '../../modules/core';
+import type { LabPolicyResult } from '../../modules/kernel';
 
 import { createComparisonChartRows } from '../view-model';
 import { ComparisonPlot } from './ComparisonPlot';

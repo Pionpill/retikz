@@ -3,12 +3,14 @@ import type { Dispatch, RefObject } from 'react';
 import { useCallback, useReducer, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { BenchModule, BenchTestCase, LabState, LabStateAction } from '../workspace';
+import type { LabState, LabStateAction } from './lab-state';
+import type { BenchModule } from './module-registry';
+import type { BenchTestCase } from './test-catalog';
 
 import { BenchReportStatus } from '../../shared';
-import { runKernelLab } from '../modules/core';
+import { runKernelLab } from '../modules/kernel';
 import { createLabSessionReportStatus, saveBenchReport } from '../report';
-import { createInitialLabState, LabActionType, reduceLabState } from '../workspace';
+import { createInitialLabState, LabActionType, reduceLabState } from './lab-state';
 
 /** Performance Lab 页面交互出口 */
 export type UsePerformanceLabValue = Readonly<{
@@ -39,7 +41,7 @@ export const usePerformanceLab = (
     const reportStartedAt = new Date().toISOString();
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     try {
-      const { executeBrowserKernelLabPolicy } = await import('../modules/core/browser');
+      const { executeBrowserKernelLabPolicy } = await import('../modules/kernel/browser');
       const session = await runKernelLab(
         {
           mode: state.mode,

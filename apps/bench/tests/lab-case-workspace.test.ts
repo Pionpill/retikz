@@ -6,14 +6,14 @@ import { Route, Routes, StaticRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
 import { App } from '../src/playground/app/App';
+import { CasePage } from '../src/playground/app/case/CasePage';
+import { Header } from '../src/playground/app/header/Header';
+import { createInitialLabState } from '../src/playground/app/lab-state';
+import { defaultBenchModule } from '../src/playground/app/module-registry';
+import { BenchCaseView, getBenchTestCase } from '../src/playground/app/test-catalog';
 import { SidebarProvider } from '../src/playground/components/ui/sidebar';
 import { zh } from '../src/playground/i18n/locales';
 import { ReportHistory } from '../src/playground/report';
-import { CaseWorkspace } from '../src/playground/workspace/components/CaseWorkspace';
-import { WorkspaceHeader } from '../src/playground/workspace/components/WorkspaceHeader';
-import { defaultBenchModule } from '../src/playground/workspace/constant';
-import { createInitialLabState } from '../src/playground/workspace/lab-state';
-import { BenchCaseView, getBenchTestCase } from '../src/playground/workspace/test-catalog';
 
 const resources = {
   ...zh,
@@ -48,7 +48,7 @@ const resources = {
   },
 };
 
-describe('CaseWorkspace', () => {
+describe('CasePage', () => {
   it('使用稳定链接展示配置、运行和报告页面', async () => {
     const i18n = createInstance().use(initReactI18next);
     await i18n.init({ lng: 'zh', resources: { zh: { translation: resources } } });
@@ -63,7 +63,7 @@ describe('CaseWorkspace', () => {
           createElement(
             StaticRouter,
             { location: `/kernel/cases/single-entity-update/${view}` },
-            createElement(CaseWorkspace, {
+            createElement(CasePage, {
               module: defaultBenchModule,
               testCase,
               view,
@@ -99,7 +99,7 @@ describe('CaseWorkspace', () => {
           createElement(
             SidebarProvider,
             null,
-            createElement(WorkspaceHeader, {
+            createElement(Header, {
               module: defaultBenchModule,
               testCase,
               state: createInitialLabState(),
@@ -110,10 +110,13 @@ describe('CaseWorkspace', () => {
         ),
       ),
     );
-    expect(headerMarkup).toContain('Kernel');
-    expect(headerMarkup).toContain('性能测试');
-    expect(headerMarkup).toContain('增量测试');
-    expect(headerMarkup).toContain('单实体更新');
+    const breadcrumbMarkup = headerMarkup.match(/<nav aria-label="breadcrumb"[\s\S]*?<\/nav>/)?.[0];
+    const breadcrumbClassNames = breadcrumbMarkup?.match(/<nav[^>]*class="([^"]*)"/)?.[1]?.split(' ');
+    expect(breadcrumbMarkup).toBeDefined();
+    expect(breadcrumbClassNames).not.toContain('hidden');
+    expect(breadcrumbMarkup).not.toContain('Kernel');
+    expect(breadcrumbMarkup).not.toContain('性能测试');
+    expect(breadcrumbMarkup).toMatch(/增量测试[\s\S]*data-slot="breadcrumb-separator"[\s\S]*单实体更新/);
 
     const appMarkup = renderToStaticMarkup(
       createElement(

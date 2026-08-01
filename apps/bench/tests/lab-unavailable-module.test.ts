@@ -5,9 +5,9 @@ import { I18nextProvider, initReactI18next } from 'react-i18next';
 import { StaticRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
+import { UnavailableModulePage } from '../src/playground/app/case/UnavailableModulePage';
+import { benchModules } from '../src/playground/app/module-registry';
 import { zh } from '../src/playground/i18n/locales';
-import { UnavailableModuleWorkspace } from '../src/playground/workspace/components/UnavailableModuleWorkspace';
-import { benchModules } from '../src/playground/workspace/constant';
 
 describe('Unavailable module workspace', () => {
   it('展示当前模块说明并引导返回 Kernel', async () => {
@@ -23,7 +23,7 @@ describe('Unavailable module workspace', () => {
         createElement(
           StaticRouter,
           { location: '/plot' },
-          createElement(UnavailableModuleWorkspace, { module: plotModule }),
+          createElement(UnavailableModulePage, { module: plotModule }),
         ),
       ),
     );

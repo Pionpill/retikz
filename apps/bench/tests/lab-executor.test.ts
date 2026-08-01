@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { LabLifecycleAvailability, LabOutcome, LabPolicyId } from '../src/playground/modules/core';
-import { createLabPolicyResult } from '../src/playground/modules/core/browser';
+import { LabLifecycleAvailability, LabOutcome, LabPolicyId } from '../src/playground/modules/kernel';
+import { createLabPolicyResult } from '../src/playground/modules/kernel/browser';
 
 describe('browser Kernel Lab 结果映射', () => {
   it('从公共 trace 与 timing 生成 retained-auto 增量结果', () => {

@@ -1,4 +1,4 @@
-import type { BenchModuleIdValue } from './constant';
+import type { BenchModuleIdValue } from './module-registry';
 import type { BenchTestCase } from './test-catalog';
 
 import { getModuleTestCases } from './test-catalog';

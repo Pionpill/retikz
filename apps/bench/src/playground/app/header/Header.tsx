@@ -15,17 +15,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 
-import type { LabPolicyIdValue, LabRunModeValue } from '../../modules/core';
-import type { BenchModule } from '../constant';
+import type { LabPolicyIdValue, LabRunModeValue } from '../../modules/kernel';
 import type { LabState, LabStateAction } from '../lab-state';
+import type { BenchModule } from '../module-registry';
 import type { BenchTestCase } from '../test-catalog';
 
-import { kernelLabPolicies, LabBackend, LabRunMode } from '../../modules/core';
+import { kernelLabPolicies, LabBackend, LabRunMode } from '../../modules/kernel';
 import { LabActionType, LabStatus } from '../lab-state';
 import { getBenchTestCaseContext } from '../test-catalog';
 
 /** Workspace Header 属性 */
-export type WorkspaceHeaderProps = Readonly<{
+export type HeaderProps = Readonly<{
   /** 当前一级路由对应的模块 */
   module: BenchModule;
   /** 当前路由对应的测试用例 */
@@ -42,7 +42,7 @@ const modes: ReadonlyArray<Readonly<{ id: LabRunModeValue; icon: typeof Activity
 ]);
 
 /** 工作台常用配置与运行入口 */
-export const WorkspaceHeader: FC<WorkspaceHeaderProps> = props => {
+export const Header: FC<HeaderProps> = props => {
   const { module, testCase, state, dispatch, onRun } = props;
   const { t } = useTranslation();
   const { isMobile, openMobile, state: sidebarState } = useSidebar();
@@ -53,28 +53,26 @@ export const WorkspaceHeader: FC<WorkspaceHeaderProps> = props => {
     <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
       <SidebarTrigger className="-ml-1" aria-label={sidebarLabel} title={sidebarLabel} />
       <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
-      <Breadcrumb className="hidden xl:block">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <span className="text-muted-foreground">{t(module.title)}</span>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
+      <Breadcrumb className="min-w-0 overflow-hidden">
+        <BreadcrumbList className="flex-nowrap">
           {caseContext === undefined ? (
-            <BreadcrumbItem>
-              <BreadcrumbPage>{t('module.soon')}</BreadcrumbPage>
-            </BreadcrumbItem>
+            <>
+              <BreadcrumbItem className="min-w-0">
+                <span className="truncate text-muted-foreground">{t(module.title)}</span>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="shrink-0" />
+              <BreadcrumbItem className="min-w-0">
+                <BreadcrumbPage className="truncate">{t('module.soon')}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
           ) : (
             <>
-              <BreadcrumbItem>
-                <span className="text-muted-foreground">{t(caseContext.group.title)}</span>
+              <BreadcrumbItem className="min-w-0">
+                <span className="truncate text-muted-foreground">{t(caseContext.direction.title)}</span>
               </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <span className="text-muted-foreground">{t(caseContext.direction.title)}</span>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{t(caseContext.testCase.title)}</BreadcrumbPage>
+              <BreadcrumbSeparator className="shrink-0" />
+              <BreadcrumbItem className="min-w-0">
+                <BreadcrumbPage className="truncate">{t(caseContext.testCase.title)}</BreadcrumbPage>
               </BreadcrumbItem>
             </>
           )}

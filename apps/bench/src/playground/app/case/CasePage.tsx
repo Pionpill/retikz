@@ -8,17 +8,17 @@ import { NavLink } from 'react-router';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import type { BenchReportSummary } from '../../../shared';
-import type { BenchModule } from '../constant';
 import type { LabState } from '../lab-state';
+import type { BenchModule } from '../module-registry';
 import type { BenchCaseViewValue, BenchTestCase } from '../test-catalog';
 
 import { ReportHistory } from '../../report';
 import { BenchCaseView, getBenchCasePath } from '../test-catalog';
 import { CaseConfiguration } from './CaseConfiguration';
-import { TestWorkspace } from './TestWorkspace';
+import { RunView } from './RunView';
 
 /** 用例工作区属性 */
-export type CaseWorkspaceProps = Readonly<{
+export type CasePageProps = Readonly<{
   module: BenchModule;
   testCase: BenchTestCase;
   view: BenchCaseViewValue;
@@ -37,7 +37,7 @@ const views = Object.freeze([
 ]);
 
 /** 通过稳定路由组织用例配置、运行和报告 */
-export const CaseWorkspace: FC<CaseWorkspaceProps> = props => {
+export const CasePage: FC<CasePageProps> = props => {
   const {
     module,
     testCase,
@@ -77,7 +77,7 @@ export const CaseWorkspace: FC<CaseWorkspaceProps> = props => {
         <CaseConfiguration module={module} testCase={testCase} state={state} />
       </TabsContent>
       <TabsContent value={BenchCaseView.Run} className="min-h-0 overflow-hidden">
-        <TestWorkspace state={state} previewHostRef={previewHostRef} />
+        <RunView state={state} previewHostRef={previewHostRef} />
       </TabsContent>
       <TabsContent value={BenchCaseView.Reports} className="min-h-0 overflow-auto">
         <ReportHistory

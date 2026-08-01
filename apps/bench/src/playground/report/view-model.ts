@@ -1,6 +1,6 @@
-import type { LabPolicyIdValue, LabPolicyResult } from '../modules/core';
+import type { LabPolicyIdValue, LabPolicyResult } from '../modules/kernel';
 
-import { LabOutcome, LabPolicyId } from '../modules/core';
+import { LabOutcome, LabPolicyId } from '../modules/kernel';
 
 /** Performance Lab 顶部摘要的纯数据模型 */
 export type LabSummary = Readonly<{

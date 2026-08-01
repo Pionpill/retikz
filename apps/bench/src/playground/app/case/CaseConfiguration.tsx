@@ -5,8 +5,8 @@ import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 
-import type { BenchModule } from '../constant';
 import type { LabState } from '../lab-state';
+import type { BenchModule } from '../module-registry';
 import type { BenchTestCase } from '../test-catalog';
 
 /** 用例配置页面属性 */

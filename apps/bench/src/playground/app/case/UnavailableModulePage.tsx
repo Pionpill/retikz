@@ -7,18 +7,18 @@ import { Link } from 'react-router';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
-import type { BenchModule } from '../constant';
+import type { BenchModule } from '../module-registry';
 
-import { defaultBenchModule } from '../constant';
+import { defaultBenchModule } from '../module-registry';
 
 /** 尚未接入执行器的模块工作区属性 */
-export type UnavailableModuleWorkspaceProps = Readonly<{
+export type UnavailableModulePageProps = Readonly<{
   /** 当前一级路由对应的模块 */
   module: BenchModule;
 }>;
 
 /** 展示不可运行模块的稳定占位入口 */
-export const UnavailableModuleWorkspace: FC<UnavailableModuleWorkspaceProps> = props => {
+export const UnavailableModulePage: FC<UnavailableModulePageProps> = props => {
   const { module } = props;
   const { t } = useTranslation();
   const Icon = module.icon;

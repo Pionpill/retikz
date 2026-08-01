@@ -5,9 +5,9 @@ import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 
-import type { LabPolicyResult } from '../../modules/core';
+import type { LabPolicyResult } from '../../modules/kernel';
 
-import { LabPolicyId } from '../../modules/core';
+import { LabPolicyId } from '../../modules/kernel';
 import { createLabSummary } from '../view-model';
 
 /** 指标摘要属性 */

@@ -19,7 +19,7 @@ import {
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 
-import type { BenchModule } from '../constant';
+import type { BenchModule } from '../module-registry';
 import type { BenchCaseStatusValue, BenchTestDirection } from '../test-catalog';
 
 import { BenchCaseStatus, BenchCaseView, getBenchCasePath, getModuleTestGroups } from '../test-catalog';

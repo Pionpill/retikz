@@ -5,20 +5,15 @@ import { useParams } from 'react-router';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
-import type { BenchModule } from '../workspace';
-import type { BenchCaseStatusValue } from '../workspace';
+import type { BenchModule } from './module-registry';
+import type { BenchCaseStatusValue } from './test-catalog';
 
 import { createLabSessionReportStatus, useReportHistory } from '../report';
-import {
-  BenchCaseStatus,
-  BenchCaseView,
-  CaseWorkspace,
-  ConfigurationSheet,
-  getBenchTestCase,
-  UnavailableModuleWorkspace,
-  WorkspaceHeader,
-  WorkspaceSidebar,
-} from '../workspace';
+import { CasePage, UnavailableModulePage } from './case';
+import { ConfigurationSheet } from './configuration';
+import { Header } from './header';
+import { AppSidebar } from './sidebar';
+import { BenchCaseStatus, BenchCaseView, getBenchTestCase } from './test-catalog';
 import { usePerformanceLab } from './usePerformanceLab';
 
 /** Bench Performance Lab 工作台属性 */
@@ -50,7 +45,7 @@ export const App: FC<AppProps> = props => {
   return (
     <TooltipProvider>
       <SidebarProvider>
-        <WorkspaceSidebar
+        <AppSidebar
           module={module}
           activeCaseId={testCase?.id}
           caseStatuses={caseStatuses}
@@ -58,16 +53,10 @@ export const App: FC<AppProps> = props => {
           dispatch={dispatch}
         />
         <SidebarInset className="h-svh min-w-0 overflow-hidden">
-          <WorkspaceHeader
-            module={module}
-            testCase={testCase}
-            state={state}
-            dispatch={dispatch}
-            onRun={() => void run()}
-          />
+          <Header module={module} testCase={testCase} state={state} dispatch={dispatch} onRun={() => void run()} />
           <div className="relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
             {module.available && testCase !== undefined ? (
-              <CaseWorkspace
+              <CasePage
                 module={module}
                 testCase={testCase}
                 view={view}
@@ -79,7 +68,7 @@ export const App: FC<AppProps> = props => {
                 reportsLoading={reportHistory.loading}
               />
             ) : (
-              <UnavailableModuleWorkspace module={module} />
+              <UnavailableModulePage module={module} />
             )}
           </div>
         </SidebarInset>

@@ -5,10 +5,10 @@ import { I18nextProvider, initReactI18next } from 'react-i18next';
 import { StaticRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
+import { defaultBenchModule } from '../src/playground/app/module-registry';
+import { TestCatalogNav } from '../src/playground/app/sidebar/TestCatalogNav';
 import { SidebarProvider } from '../src/playground/components/ui/sidebar';
 import { zh } from '../src/playground/i18n/locales';
-import { TestCatalogNav } from '../src/playground/workspace/components/TestCatalogNav';
-import { defaultBenchModule } from '../src/playground/workspace/constant';
 
 describe('TestCatalogNav', () => {
   it('按分组折叠方向并为当前用例生成稳定链接', async () => {
