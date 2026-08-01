@@ -10,7 +10,7 @@ import type {
   TableBorderVertex,
 } from './types';
 
-import { ResolvedTableBorderLineSchema } from '../../../contract/manifest';
+import { ResolvedTableBorderLineSchema, TableBorderContributionOrigin } from '../../../contract/manifest';
 import { deepFreeze } from '../../../shared';
 import { mergeTableBorderAtoms } from './merge';
 import { resolveTableBorderAtoms } from './resolve';
@@ -58,7 +58,15 @@ const validateCandidate = (candidate: ResolvedTableBorderCandidate): ResolvedTab
     throw new Error('table: Border candidate priority must be a finite integer');
   }
   if (candidate.kind === 'none') return { kind: 'none', priority: candidate.priority };
-  return { kind: 'line', priority: candidate.priority, line: ResolvedTableBorderLineSchema.parse(candidate.line) };
+  if (candidate.styleToken !== undefined && candidate.priority !== -100) {
+    throw new Error('table: style token Border candidate priority must be -100');
+  }
+  return {
+    kind: 'line',
+    priority: candidate.priority,
+    line: ResolvedTableBorderLineSchema.parse(candidate.line),
+    ...(candidate.styleToken === undefined ? {} : { styleToken: structuredClone(candidate.styleToken) }),
+  };
 };
 
 /** 构造 atom-local、transaction-unique contribution */
@@ -78,7 +86,20 @@ const contributionOf = (
     ownerSideRank,
     sourceOrderKey,
   };
-  return candidate.kind === 'none' ? { kind: 'none', ...base } : { kind: 'line', ...base, line: candidate.line };
+  if (candidate.kind === 'none') {
+    return { kind: 'none', origin: TableBorderContributionOrigin.Explicit, ...base };
+  }
+  if (candidate.styleToken === undefined) {
+    return { kind: 'line', origin: TableBorderContributionOrigin.Explicit, ...base, line: candidate.line };
+  }
+  return {
+    kind: 'line',
+    origin: TableBorderContributionOrigin.StyleToken,
+    ...base,
+    priority: -100,
+    line: candidate.line,
+    styleToken: candidate.styleToken,
+  };
 };
 
 /** 建立 canonical occupancy 并验证 Cell span 不越界或重叠 */
@@ -168,11 +189,14 @@ const collapseContributors = (
     orientation === 'horizontal'
       ? boundaryIndex === 0 || boundaryIndex === input.rows.length
       : boundaryIndex === 0 || boundaryIndex === input.columns.length;
-  if (outer && input.defaults.outer !== undefined) {
+  if (outer) {
     const side: TableBorderSide =
       orientation === 'horizontal' ? (boundaryIndex === 0 ? 'top' : 'bottom') : boundaryIndex === 0 ? 'left' : 'right';
-    contributors.push(contributionOf(atomKey, { kind: 'default', scope: 'outer', side }, input.defaults.outer, 0));
-  } else if (!outer) {
+    const candidate = input.defaults.outer?.[side];
+    if (candidate !== undefined) {
+      contributors.push(contributionOf(atomKey, { kind: 'default', scope: 'outer', side }, candidate, 0));
+    }
+  } else {
     const candidate = orientation === 'horizontal' ? input.defaults.horizontal : input.defaults.vertical;
     if (candidate !== undefined) {
       contributors.push(contributionOf(atomKey, { kind: 'default', scope: orientation, boundaryIndex }, candidate, 0));
@@ -251,9 +275,8 @@ const separateFallback = (
     (side === 'left' && cell.columnIndex === 0) ||
     (side === 'right' && columnEnd === input.columns.length);
   if (outer) {
-    return input.defaults.outer === undefined
-      ? undefined
-      : { candidate: input.defaults.outer, source: { kind: 'default', scope: 'outer', side } };
+    const candidate = input.defaults.outer?.[side];
+    return candidate === undefined ? undefined : { candidate, source: { kind: 'default', scope: 'outer', side } };
   }
   if (side === 'top' || side === 'bottom') {
     const boundaryIndex = side === 'top' ? cell.rowIndex : rowEnd;
@@ -328,7 +351,9 @@ export const buildTableBorderGraph = (input: BuildTableBorderGraphInput): TableB
     throw new Error('table: Border Graph mode must be collapse or separate');
   }
   const { cells, occupancy } = buildOccupancy(input.rows.length, input.columns.length, input.cells);
-  Object.values(input.defaults).forEach(candidate => validateCandidate(candidate));
+  Object.values(input.defaults.outer ?? {}).forEach(candidate => validateCandidate(candidate));
+  if (input.defaults.horizontal !== undefined) validateCandidate(input.defaults.horizontal);
+  if (input.defaults.vertical !== undefined) validateCandidate(input.defaults.vertical);
   cells.forEach(cell => Object.values(cell.borders ?? {}).forEach(candidate => validateCandidate(candidate)));
   if (input.rows.length === 0 || input.columns.length === 0) return deepFreeze({ atoms: [], edges: [] });
   const rawAtoms = input.mode === 'collapse' ? buildCollapseAtoms(input, occupancy) : buildSeparateAtoms(input, cells);

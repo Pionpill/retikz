@@ -42,13 +42,13 @@ beta 不开新功能 ADR，不走 alpha 的设计 / adversarial 自测 / 必选�
 | Data          | `code-audit` + `beta-entry` + `Data`          | data 及其消费边界                             |
 | Visualization | `code-audit` + `beta-entry` + `Visualization` | plot / plot-react / plot-vanilla 及上下游接口 |
 
-三个审计使用同一 HEAD 基线，各自写 ignored report，不修改产品文件、roadmap 或暂存区。主 AI 汇总：
+三个审计使用同一 HEAD 基线，各自写 ignored report，不修改产品文件、roadmap 或暂存区。派遣时显式记录每个 subagent 的实际模型，在可用模型之间最大化多样性；有三个不同模型时分别分配，没有时允许跨能力域复用，但不得伪造不存在的模型。三个能力域互相独立，同轮并发执行，不把任一域结论先喂给其它域。主 AI 汇总：
 
 - 能力矩阵与 `BLOCKING / WARNING / INFO / ESCALATE_ALPHA`。
 - 跨域重复所有权、依赖方向和 public surface 问题。
 - 去重、可执行的 beta TODO 候选及建议顺序。
 
-候选 TODO scope 必须经人工确认后才能进入 Stage 1。`ESCALATE_ALPHA` 不得伪装成 beta cleanup；交人工决定退回 Alpha 或延期。审计 subagent 不可用或报告互相矛盾时，最多重新派遣 3 轮，仍不收敛则 halt 交人工。
+候选 TODO scope 必须经人工确认后才能进入 Stage 1。`ESCALATE_ALPHA` 不得伪装成 beta cleanup；交人工决定退回 Alpha 或延期。审计 subagent 不可用或报告互相矛盾时，最多重新派遣 3 轮；每轮都使用新的 subagent、同一轮固定 HEAD，并重新记录实际模型，仍不收敛则 halt 交人工。
 
 ## 判级
 
@@ -90,7 +90,9 @@ beta 的核心风险是重构回归和 breaking 漏迁移。Stage 0 / 4 的自�
 - WARNING：人工裁决。
 - INFO：可选采纳。
 
-Stage 2 最多 3 轮，不因 finding 改名、拆分或出现新 ID 重新计数；第 3 轮仍有任一 BLOCKING 时 halt，交给人工决定继续、缩 scope 或放弃。
+用户同意评审后，Stage 2 复用 `cross-review`：固定 TODO、完整 diff / commit range、public surface diff 与测试证据，同轮并发派遣 2–3 个不同可用模型，互不传递结论；主 AI 只在全部结果返回后归并。至少两个实际不同模型完成才称为交叉评审；只剩一个模型时 halt 交人工决定是否接受单模型退化。
+
+Stage 2 最多 3 轮，不因 finding 改名、拆分或出现新 ID 重新计数；修订发生在轮间，下一轮必须使用 fresh agents 评审新的固定快照。第 3 轮仍有任一 BLOCKING 时 halt，交给人工决定继续、缩 scope 或放弃。
 
 ## Stage 3 TODO 收尾规则
 
@@ -106,7 +108,7 @@ Stage 2 最多 3 轮，不因 finding 改名、拆分或出现新 ID 重新计�
 
 所有获批 TODO 完成并集成到同一 beta milestone 分支后，自动执行：
 
-1. 记录当前 milestone HEAD，重新并行派遣三个新的只读 subagent，分别以 `code-audit` + `beta-exit` 审计 Drawing、Data、Visualization；三者必须使用该轮同一 HEAD，不能复用 Stage 0 或上一轮主体。审计期间 HEAD 变化则本轮作废并计入轮次。
+1. 记录当前 milestone HEAD，重新并行派遣三个新的只读 subagent，分别以 `code-audit` + `beta-exit` 审计 Drawing、Data、Visualization；三者必须使用该轮同一 HEAD，不能复用 Stage 0 或上一轮主体。显式记录实际模型并最大化跨域模型多样性；有三个不同模型时分别分配，可用模型不足时允许跨能力域复用但必须如实记录。审计期间 HEAD 变化则本轮作废并计入轮次。
 2. 主 AI 汇总最新报告。任一能力域为 `ESCALATE_ALPHA` 时立即 halt，交人工决定退回 Alpha 或延期。
 3. 有 BLOCKING 时，仅当修复属于人工已批准 TODO scope、已有当前任务实施授权，且不净新增公开能力、公开组件、IR 形态、schema 字段或用户可见行为契约，主 AI 才自动修复。修复后重新执行适用的 Stage 1 验证与 Stage 2 评估，再派三个新的 subagent 全量复审；超出原 scope 或授权时先 halt 请求人工扩 scope。
 4. 只有最新一轮三个能力域都明确 `PASS`，且 WARNING 已记录处置或风险归属，Stage 4 才通过。任何修复都必须由下一轮新的三域审计验证，不能由主 AI 自审放行。
@@ -122,7 +124,7 @@ Stage 2 最多 3 轮，不因 finding 改名、拆分或出现新 ID 重新计�
 - 呈现平行 / 堆叠 / 混合布局，人工 ack 后建 worktree。
 - 每个 worktree 写 `REVIEW.md` 并 halt。
 - 不 push / merge / 切回 base / 删除 worktree / 删除 `REVIEW.md`。
-- 若批量执行中用户授权 LLM 自行 commit，每次 commit 前先派子 agent review 单个 commit，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。用户明确认可的小任务单次 commit 不触发该要求；改动面大或核心功能不适用该豁免。
+- 若批量执行中用户授权 LLM 自行 commit，每次 commit 前按 `flow-long-task` 与 `cross-review` 固定 staged diff，并发使用 2–3 个不同可用模型评审，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。用户明确认可的小任务单次 commit 不触发该要求；改动面大或核心功能不适用该豁免。
 
 ## 失败与换流
 

@@ -10,11 +10,14 @@
 | `@retikz/plot`          | 把数据语义映射成可组合的 Core 图形语义 | Plot IR、channel / scale / coordinate / mark / guide 领域解析、layout、lowering  | 通用数据算法、通用 Legend 呈现、Core IR 语义、renderer、框架 authoring |
 | `@retikz/plot-react`    | 用 React JSX authoring 和运行 Plot     | React 组件、composition builder、数据注入和 React runtime 接线                   | Data / Plot 算法、Core 编译、renderer                                  |
 | `@retikz/plot-vanilla`  | 无框架 authoring、SSR 和运行 Plot      | plain helper、Tier 2 adapter、数据注入与 vanilla / SSR 编排                      | Data / Plot 算法、Core 编译、renderer                                  |
+| `@retikz/chart`         | 把封闭 Chart 类型解析为完整 PlotSpec   | shared schema fragments、recipe、merge、inspection、逐类型 composite             | Data / Plot 算法、Standard layout、Core 编译、adapter、renderer        |
+| `@retikz/chart-react`   | 用 React authoring 和运行 Chart        | React props/children 适配与 runtime 接线（ADR-01 暂为空）                        | Chart / Plot 算法、依赖聚合、Standard layout、Core 编译、renderer      |
+| `@retikz/chart-vanilla` | 无框架 authoring、SSR 和运行 Chart     | plain helper 与 Vanilla runtime 接线（ADR-01 暂为空）                            | Chart / Plot 算法、依赖聚合、identity bypass、Core 编译、renderer      |
 | `@retikz/table`         | 把数据或显式内容组织为二维语义表格     | Table IR、结构/呈现、visual encoding / Legend 领域解析、约束布局、lowering、追溯 | 通用数据算法、通用 Legend 呈现、Core 测量、Plot 语义、renderer         |
 | `@retikz/table-react`   | 用 React authoring 和运行 Table        | Table / DetailTable / ManualTable、数据注入、composite 与宿主 runtime 接线       | Table 算法、Core 编译、renderer                                        |
 | `@retikz/table-vanilla` | 无框架 authoring、SSR 和运行 Table     | plain helper、Tier 2 adapter、数据注入与 SSR convenience                         | Table 算法、Core 编译、renderer                                        |
 
-未来的 chart / geo 等边界只在 ADR 或 roadmap 明确后落包；AGENTS 不为未存在包保留详细规则。
+未来的 geo 等边界只在 ADR 或 roadmap 明确后落包；AGENTS 不为未存在包保留详细规则。
 
 ## 分层约束
 

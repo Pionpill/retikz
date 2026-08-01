@@ -7,7 +7,8 @@ import { manualTableEmbeddableAdapter } from './embedded-runtime';
 import { ReactTableRuntimeKind, resolveReactTableRuntime } from './table-runtime';
 import { TableRuntimeView } from './table-view';
 
-type ManualTableRootProps = TableCommonProps & Omit<ManualTableSpecInput, 'rows' | 'rowKinds'>;
+type ManualTableRootProps = TableCommonProps &
+  Omit<ManualTableSpecInput, 'encodings' | 'rowKinds' | 'rows' | 'style' | 'styleTokens' | 'themeMode'>;
 
 type ManualTableRowsPropsMode = {
   /** 与持久化契约相同的矩形行优先 Cell entries */

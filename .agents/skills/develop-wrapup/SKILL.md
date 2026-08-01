@@ -10,6 +10,7 @@ description: Use when retikz implementation, adversarial testing, and docs are c
 ## 输入
 
 - alpha：状态为 `Proposed` 的 ADR、实现 / 测试 / 文档 diff、Bug Hunter 结果。
+- alpha 镜像 `PLAN.md`、`TEST_CONTRACT.md`、`TASK_STATE.md` / `REVIEW.md`。
 - beta：已完成的 roadmap TODO、diff、多 LLM 评估结果。
 - 文档页和 demo 路径。
 
@@ -23,15 +24,16 @@ internal-only 改动通常不写 changelog；breaking 必写迁移说明。
 
 ## Contract Auditor
 
-alpha 红黄改动建议做第二关对账。目标不是找代码 bug，而是检查五方一致：
+Alpha 红黄改动建议做第二关对账。调用 subagent / 外部模型前仍按根规则取得授权；一旦执行，必须按 `cross-review` 对固定快照并发使用 2–3 个不同可用模型，不能串行传递同轮结论。目标不是找代码 bug，而是检查六方一致：
 
 1. ADR 承诺。
-2. 测试契约矩阵及每行的具名证据。
-3. changelog 草稿。
-4. docs mdx + demo。
-5. 实际代码 + 测试。
+2. reviewed `PLAN.md` 与执行偏差。
+3. 测试契约矩阵及每行的具名证据。
+4. changelog 草稿。
+5. docs mdx + demo。
+6. 实际代码 + 测试。
 
-优先用独立线程、子代理或外部模型；不可用时主 AI 自己执行并说明退化。输入给 ADR、测试契约矩阵、changelog 草稿、commit / diff、相关 docs、schema / public API / tests diff。
+输入给 ADR、plan、测试契约矩阵、changelog 草稿、commit / diff、相关 docs、schema / public API / tests diff。只能使用一个模型时不得宣称交叉评审；按根授权由人工决定是否接受单模型退化。
 
 结果处理：
 
@@ -43,20 +45,21 @@ alpha 红黄改动建议做第二关对账。目标不是找代码 bug，而是�
 
 Contract 偏差通常涉及承诺取舍；1 轮后仍不一致时，halt 给人工，不让 AI 自行调和。
 
-## ADR 压缩
+## ADR 长期一致性
 
-alpha 收尾必须先把 ADR 从执行草案压缩成长期决策记录，再更新状态：
+ADR 从 Proposed 起就应是长期功能与架构记录。收尾不执行“施工蓝图压缩”，只做一致性对账：
 
-- 保留：背景问题、关键决策、被否决选项与理由、公开契约 / 兼容性、最终实现摘要、验证结果、遗留风险。
-- 删除或移出：临时文件索引、逐步执行 checklist、LLM review prompt、过细测试计划、已经由代码和测试历史承载的实现过程。
-- 若压缩会丢失重要审计信息，移到 ignored `notes/reports/` 或 `_notes/reports/`，不要默认提交。
-- 不把“压缩前全文”留给发版阶段处理；本阶段提交的是压缩后的 ADR。
+- 对账核心决策、基础数据结构 / 公开契约、默认 / 失败语义、兼容性、功能边界和架构验证是否与最终实现一致。
+- 补充简短最终实现摘要、验证层级与真实遗留风险；不写具体文件、私有命名、业务步骤、测试 case、命令或 commit 历史。
+- 若发现 Proposed ADR 已混入施工细节，把仍服务当前执行的内容迁回镜像 plan 后再更新状态；不要把膨胀全文保存在 Proposed commit 或等待发布阶段清理。审计历史 Accepted ADR 时，若 ignored plan 已丢失，只清除或重述不属于长期契约的内容，不要求从 git 历史复原临时执行材料。
+- 若最终行为改变了公开契约、能力归属或功能边界，不能用收尾摘要掩盖；回到 ADR 修订、Architecture Gate 和必要的 Plan Gate。
+- plan、测试矩阵、状态与 review 记录始终 ignored，不因 ADR Accepted 而提交。
 
 ## 人工确认后落盘
 
 收到人工确认后再改最终状态文件：
 
-- alpha：先压缩 ADR，再将 `Proposed` -> `Accepted`，补完工摘要；对应 roadmap 勾选或标完成；changelog 写入最终稿。
+- alpha：确认 ADR 为长期形态并与最终行为一致，再将 `Proposed` -> `Accepted`，补完工摘要；对应 roadmap 勾选或标完成；changelog 写入最终稿。
 - beta：roadmap TODO 标完成并记录 commit；breaking / visible 按需写 changelog；不改 ADR 状态。
 
 这些文件可按逻辑分块提交。每块提交前展示文件清单和建议 message；没有当前对话授权不提交。
@@ -68,7 +71,8 @@ alpha 收尾必须先把 ADR 从执行草案压缩成长期决策记录，再更
 ## 完成标志
 
 - changelog、ADR / roadmap 状态与实际行为一致。
-- ADR 已压缩成长期决策记录，不含只服务 LLM 执行的临时材料。
+- ADR 始终保持长期功能与架构记录，不含只服务执行的临时材料。
+- 镜像 plan、测试矩阵、状态与 review 记录保持 ignored，未被误提交。
 - Contract Auditor BLOCKING 清空或人工明确裁决。
 - 人工 ack 已记录在对话中。
 - 如获授权，相关提交已按根 AGENTS 粒度完成；否则工作区改动清楚可 review。

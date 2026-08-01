@@ -1,39 +1,86 @@
 import type { FC } from 'react';
 
+import { useParams } from 'react-router';
+
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
-import { LabPolicyId } from '../modules/core';
-import { ReportPanel } from '../report';
-import { ConfigurationSheet, LabActionType, TestWorkspace, WorkspaceHeader, WorkspaceSidebar } from '../workspace';
+import type { BenchModule } from '../workspace';
+import type { BenchCaseStatusValue } from '../workspace';
+
+import { createLabSessionReportStatus, useReportHistory } from '../report';
+import {
+  BenchCaseStatus,
+  BenchCaseView,
+  CaseWorkspace,
+  ConfigurationSheet,
+  getBenchTestCase,
+  UnavailableModuleWorkspace,
+  WorkspaceHeader,
+  WorkspaceSidebar,
+} from '../workspace';
 import { usePerformanceLab } from './usePerformanceLab';
 
-/** Kernel Performance Lab 工作台属性 */
-export type AppProps = Readonly<Record<string, never>>;
+/** Bench Performance Lab 工作台属性 */
+export type AppProps = Readonly<{
+  /** 当前一级路由对应的模块 */
+  module: BenchModule;
+}>;
 
-/** Kernel Performance Lab 工作台 */
-export const App: FC<AppProps> = () => {
-  const { state, dispatch, previewHostRef, run } = usePerformanceLab();
-  const results = state.session?.results ?? [];
-  const inspectedResult =
-    results.find(result => result.policyId === state.policyId) ??
-    results.find(result => result.policyId === LabPolicyId.RetainedAuto) ??
-    results[0];
+/** Bench Performance Lab 工作台 */
+export const App: FC<AppProps> = props => {
+  const { module } = props;
+  const params = useParams();
+  const testCase = params.caseId === undefined ? undefined : getBenchTestCase(module.id, params.caseId);
+  const view = Object.values(BenchCaseView).includes(params.view as (typeof BenchCaseView)[keyof typeof BenchCaseView])
+    ? (params.view as (typeof BenchCaseView)[keyof typeof BenchCaseView])
+    : BenchCaseView.Run;
+  const reportHistory = useReportHistory(module.id, testCase?.id);
+  const { state, dispatch, previewHostRef, run } = usePerformanceLab(module, testCase, reportHistory.refresh);
+  const caseStatuses: Partial<Record<string, BenchCaseStatusValue>> = {};
+  for (const report of reportHistory.reports) {
+    if (caseStatuses[report.caseId] !== undefined) continue;
+    caseStatuses[report.caseId] = report.status;
+  }
+  if (testCase !== undefined) {
+    if (state.status === 'running') caseStatuses[testCase.id] = BenchCaseStatus.Running;
+    else if (state.status === 'error') caseStatuses[testCase.id] = BenchCaseStatus.Failed;
+    else if (state.session !== undefined) caseStatuses[testCase.id] = createLabSessionReportStatus(state.session);
+  }
   return (
     <TooltipProvider>
       <SidebarProvider>
-        <WorkspaceSidebar state={state} dispatch={dispatch} />
+        <WorkspaceSidebar
+          module={module}
+          activeCaseId={testCase?.id}
+          caseStatuses={caseStatuses}
+          state={state}
+          dispatch={dispatch}
+        />
         <SidebarInset className="h-svh min-w-0 overflow-hidden">
-          <WorkspaceHeader state={state} dispatch={dispatch} onRun={() => void run()} />
+          <WorkspaceHeader
+            module={module}
+            testCase={testCase}
+            state={state}
+            dispatch={dispatch}
+            onRun={() => void run()}
+          />
           <div className="relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
-            <TestWorkspace state={state} previewHostRef={previewHostRef} />
-            {state.reportOpen && state.session !== undefined ? (
-              <ReportPanel
-                session={state.session}
-                inspectedResult={inspectedResult}
-                onClose={() => dispatch({ type: LabActionType.ReportClosed })}
+            {module.available && testCase !== undefined ? (
+              <CaseWorkspace
+                module={module}
+                testCase={testCase}
+                view={view}
+                state={state}
+                previewHostRef={previewHostRef}
+                reports={reportHistory.reports}
+                reportDiagnostics={reportHistory.diagnostics}
+                reportError={reportHistory.error}
+                reportsLoading={reportHistory.loading}
               />
-            ) : null}
+            ) : (
+              <UnavailableModuleWorkspace module={module} />
+            )}
           </div>
         </SidebarInset>
         <ConfigurationSheet state={state} dispatch={dispatch} />

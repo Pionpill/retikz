@@ -9,6 +9,8 @@ Kernel 开发使用的 private 性能基准工具，不发布 npm 包。
 - `pnpm bench:report -- --compare-timing-baseline`：仅在完整 fingerprint 匹配时执行 tracked timing gate；不匹配会明确输出 `timing gate skipped`并以非零退出
 - `pnpm bench:update-baseline`：生成 ignored deterministic / timing baseline 候选，供人工审查后显式提交
 
+Bench 开发服务默认使用端口 `6003`。每个 clone / worktree 可在被 Git 忽略的 `apps/bench/.env.local` 中通过 `RETIKZ_BENCH_PORT` 固定本地端口；进程环境变量优先于本地文件。开发服务与 browser runner 共用该配置，端口占用时不会自动递增。
+
 固定环境声明在 `environment.json`。已审查的确定性基线保存在 `baselines/deterministic.json`，按完整环境 fingerprint 区分的 wall-clock 基线保存在 `baselines/timing/`；`results/` 只存 ignored 报告和待人工审查的候选，不作为正式门禁输入。
 
 `bench:report` 与 `bench:update-baseline` 进入 timing 路径时才采集 runner 环境，并在同次命令及重跑中复用。完整 fingerprint 覆盖 expected Playwright、采样、viewport 等配置、实际 Node 与 browser 环境，以及 runner 的 identity、平台、架构、CPU model 集合、逻辑处理器数和总内存；browser 侧另记录 `hardwareConcurrency`。CI 或固定基准机应通过 `RETIKZ_BENCH_RUNNER_ID` 提供稳定 identity，未配置或只含空白时回退到 hostname。timing 路径任一必需硬件字段不可用都会 fail-loud，避免不同机器共享绝对 wall-clock baseline。
@@ -25,7 +27,9 @@ SVG与Canvas各用同一5000实体fixture运行`static-full`、`retained-full`�
 
 根页面是面向开发者的交互式实验环境，首版聚焦 Kernel 当前的 `static-full`、`retained-full` 与 `retained-auto`。Inspect 会在真实 SVG / Canvas host 中执行所选策略，展示 Runtime trace、Scene Patch、diagnostics 与确定性工作量；Compare / Measure 使用同一 fixture 完成采样后再刷新图表，避免 React 重绘进入计时窗口。首版 Lab 尚未接入 runner 使用的生命周期探针，界面会明确显示该证据不可用，不会推断 mount、dispose 或 live handles 状态。
 
-工作台参考 shadcn `sidebar-07` 组织模块、测试集、配置、预览与报告。Sidebar、Dropdown Menu、Sheet、Select、Tooltip 等基础组件由 shadcn CLI 下载到 Bench 自己的 `src/playground/components/ui`，业务组件只组合这些官方 vendored 原语。左侧切换 Core / Plot / Table 模块并选择已接入的真实测试集；Header 提供高频运行配置，低频采样和环境信息收进详细配置 Sheet；运行成功后，结果在预览右侧作为可关闭、可重新打开的持久报告展示。首版只有 Core 测试集可用，Plot 与 Table 仅保留未来入口。
+工作台参考 shadcn `sidebar-07` 组织模块、测试目录、配置、运行与报告。Sidebar、Collapsible、Tabs、Dropdown Menu、Sheet、Select、Tooltip 等基础组件由 shadcn CLI 下载到 Bench 自己的 `src/playground/components/ui`，业务组件只组合这些官方 vendored 原语。React Router 为 Kernel / Plot / Table 提供固定的 `/kernel`、`/plot`、`/table` 一级入口；模块内再以“测试分组 → 测试方向 → 测试用例”组织侧栏，并用 `/<module>/cases/<case-id>/config|run|reports` 提供不受分类调整影响的稳定用例路由。Header 提供高频运行配置，低频采样和环境信息收进详细配置 Sheet。首版只有 Kernel 的增量性能 / 单实体更新用例可运行，Plot 与 Table 可进入独立占位工作区但不会调用 Kernel runner。
+
+用例运行报告写入已被 Git 忽略的 `results/runs/<module-id>/<case-id>/<run-id>/report.json`；分组和测试方向不进入文件路径，因此调整侧栏分类不会迁移历史报告。Playground 只通过 Vite 本地服务的 `/__bench/reports` JSON API 读写报告，不直接访问文件系统。报告保存失败不会覆盖已完成的运行结果；ignored 报告仍只用于本地探索，不会自动成为 tracked baseline 或正式门禁输入。
 
 界面沿用 `apps/docs` 的本地偏好方案：`react-i18next` 提供中文 / 英文，Zustand 持久化 light / dark 主题并把 `.dark` 同步到 `<html>`。Bench 使用独立的 `retikz-bench-lang` 与 `retikz-bench-theme` 存储键，不与文档站偏好互相覆盖。
 

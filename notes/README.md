@@ -46,6 +46,7 @@
 - [`package-topology.md`](./architecture/package-topology.md)：领域目录、release group 与依赖策略。
 - [`performance-design.md`](./architecture/performance-design.md)：增量执行、调度、retained patch 与 generation 总则。
 - [`interaction-design.md`](./architecture/interaction-design.md)：事件、behavior、presentation、intent 与交互边界。
+- [`visual-theme-design.md`](./architecture/visual-theme-design.md)：renderer-neutral 视觉主题、公开 token、通用 preset 与跨包映射原则。
 - [`attached-space-composition.md`](./architecture/attached-space-composition.md)：跨域空间贴附与复用长期方向。
 - [`logical-diagram-design.md`](./architecture/logical-diagram-design.md)：Graph / Flow / Workspace 逻辑制图长期边界。
 

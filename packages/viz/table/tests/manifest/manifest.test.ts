@@ -24,6 +24,7 @@ describe('Table layout manifest', () => {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'people',
+      style: 'clean',
       data: { reference: 'people' },
       structure: {
         kind: 'detail',

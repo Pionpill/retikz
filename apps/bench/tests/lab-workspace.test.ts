@@ -2,9 +2,16 @@ import { describe, expect, it } from 'vitest';
 
 import type { LabRunSession } from '../src/playground/modules/core';
 
+import { benchModules, defaultBenchModule } from '../src/playground/workspace/constant';
 import { createInitialLabState, reduceLabState } from '../src/playground/workspace/lab-state';
+import {
+  BenchCaseView,
+  getBenchCasePath,
+  getBenchTestCase,
+  getModuleTestGroups,
+} from '../src/playground/workspace/test-catalog';
 import { detailedConfigControls, quickConfigControls } from '../src/playground/workspace/workspace-config';
-import { benchModules, getModuleTestSuites } from '../src/playground/workspace/workspace-model';
+import { getModuleTestSuites } from '../src/playground/workspace/workspace-model';
 
 const session: LabRunSession = {
   id: 'run-1',
@@ -16,33 +23,79 @@ const session: LabRunSession = {
 };
 
 describe('Bench workspace', () => {
-  it('仅允许选择已有真实测试集的 Core 模块', () => {
-    expect(benchModules.map(module => ({ id: module.id, available: module.available }))).toEqual([
-      { id: 'core', available: true },
-      { id: 'plot', available: false },
-      { id: 'table', available: false },
+  it('仅允许选择已有真实测试集的 Kernel 模块', () => {
+    expect(
+      benchModules.map(({ id, path, title, description, available }) => ({
+        id,
+        path,
+        title,
+        description,
+        available,
+      })),
+    ).toEqual([
+      {
+        id: 'kernel',
+        path: '/kernel',
+        title: 'module.kernel',
+        description: 'module.kernelDescription',
+        available: true,
+      },
+      {
+        id: 'plot',
+        path: '/plot',
+        title: 'module.plot',
+        description: 'module.plotDescription',
+        available: false,
+      },
+      {
+        id: 'table',
+        path: '/table',
+        title: 'module.table',
+        description: 'module.tableDescription',
+        available: false,
+      },
     ]);
-    expect(getModuleTestSuites('core').map(suite => suite.scenarioId)).toEqual(['single-entity-update']);
+    expect(defaultBenchModule.id).toBe('kernel');
+    expect(new Set(benchModules.map(module => module.icon)).size).toBe(3);
+    expect(getModuleTestSuites('kernel').map(suite => suite.scenarioId)).toEqual(['single-entity-update']);
     expect(getModuleTestSuites('plot')).toEqual([]);
   });
 
-  it('成功运行后自动打开报告面板', () => {
+  it('按分组、方向和用例组织 Kernel 测试目录', () => {
+    const groups = getModuleTestGroups('kernel');
+
+    expect(groups.map(group => group.id)).toEqual(['performance', 'llm']);
+    expect(groups.flatMap(group => group.directions.map(direction => direction.id))).toEqual([
+      'full-performance',
+      'incremental-performance',
+      'interaction-performance',
+      'generation-accuracy',
+      'incremental-generation',
+    ]);
+    expect(
+      groups.flatMap(group => group.directions.flatMap(direction => direction.cases.map(testCase => testCase.id))),
+    ).toEqual(['single-entity-update']);
+  });
+
+  it('用稳定模块和用例标识生成页面路径', () => {
+    expect(getBenchTestCase('kernel', 'single-entity-update')?.scenarioId).toBe('single-entity-update');
+    expect(getBenchTestCase('plot', 'single-entity-update')).toBeUndefined();
+    expect(getBenchCasePath('kernel', 'single-entity-update', BenchCaseView.Reports)).toBe(
+      '/kernel/cases/single-entity-update/reports',
+    );
+  });
+
+  it('成功运行后保留供报告页面读取的会话', () => {
     const next = reduceLabState(createInitialLabState(), { type: 'run-succeeded', session });
-    expect(next.reportOpen).toBe(true);
+    expect(next.status).toBe('success');
     expect(next.session).toBe(session);
+    expect('reportOpen' in next).toBe(false);
   });
 
-  it('关闭报告不会清除最近一次结果', () => {
-    const completed = reduceLabState(createInitialLabState(), { type: 'run-succeeded', session });
-    const closed = reduceLabState(completed, { type: 'report-closed' });
-    expect(closed.reportOpen).toBe(false);
-    expect(closed.session).toBe(session);
-  });
-
-  it('详细配置 Sheet 与报告面板独立开关', () => {
+  it('详细配置 Sheet 独立管理开关', () => {
     const detailsOpen = reduceLabState(createInitialLabState(), { type: 'details-opened' });
     expect(detailsOpen.detailsOpen).toBe(true);
-    expect(detailsOpen.reportOpen).toBe(false);
+    expect('reportOpen' in detailsOpen).toBe(false);
   });
 
   it('Header 只保留高频配置，采样与环境进入详细配置', () => {

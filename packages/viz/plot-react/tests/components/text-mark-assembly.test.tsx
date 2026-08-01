@@ -1,7 +1,7 @@
 import { PlotSpecSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotSpec, resolveLabelOf } from '../../src/components/build-plot-spec';
+import { buildPlotSpec, resolveLabelOf } from '../../src/adapter';
 import { IntervalMark, PointMark } from '../../src/components/marks';
 
 /**

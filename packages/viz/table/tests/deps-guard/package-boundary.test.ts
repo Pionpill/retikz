@@ -12,6 +12,7 @@ type PackageManifest = Readonly<{
     publishable: boolean;
   }>;
   dependencies: Readonly<Record<string, string>>;
+  devDependencies: Readonly<Record<string, string>>;
 }>;
 
 const packageDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -28,8 +29,19 @@ describe('@retikz/table package boundary', () => {
     });
   });
 
-  it('depends only on Core, Data, Math, and the schema runtime', () => {
-    expect(Object.keys(manifest.dependencies).sort()).toEqual(['@retikz/core', '@retikz/data', '@retikz/math', 'zod']);
+  it('depends only on Core, Data, Math, the formatter and scale runtimes, and the schema runtime', () => {
+    expect(Object.keys(manifest.dependencies).sort()).toEqual([
+      '@retikz/core',
+      '@retikz/data',
+      '@retikz/math',
+      'd3-format',
+      'd3-scale',
+      'zod',
+    ]);
+    expect(manifest.dependencies['d3-format']).toBe('catalog:');
+    expect(manifest.dependencies['d3-scale']).toBe('catalog:');
+    expect(manifest.devDependencies['@types/d3-format']).toBe('catalog:');
+    expect(manifest.devDependencies['@types/d3-scale']).toBe('catalog:');
     expect(manifest.dependencies).not.toHaveProperty('@retikz/plot');
     expect(manifest.dependencies).not.toHaveProperty('react');
     expect(manifest.dependencies).not.toHaveProperty('react-dom');

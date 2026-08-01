@@ -2,13 +2,41 @@ import { OpacitySchema, PaintValueSchema } from '@retikz/core';
 import { z } from 'zod';
 
 import { TableCellLocationSchema, TableCellRoleSchema } from '../../schemas';
+import {
+  TableCellAppearanceSchema,
+  TableStyleSchema,
+  TableStyleTokenKeySchema,
+  TableStyleTokenMapSchema,
+  TableThemeModeSchema,
+  TableVisualChannel,
+} from '../../schemas';
+import { TableLegendDescriptorSchema } from '../encoding';
+import { TableCellAppearanceTracePathSchema, TableCellPlanSourceSchema } from '../plan';
 import { TableCellSourceSchema } from '../structure';
+import { TableBorderContributionOrigin } from './constants';
 
 const TableBorderSideSchema = z.enum(['top', 'right', 'bottom', 'left']);
 const TableBorderOrientationSchema = z.enum(['horizontal', 'vertical']);
 const TableBorderPrioritySchema = z
   .number()
   .refine(Number.isInteger, { message: 'Border priority must be a finite integer.' });
+
+export const TableBorderStyleTokenKeySchema = z
+  .enum([
+    'table.border.top',
+    'table.border.right',
+    'table.border.bottom',
+    'table.border.left',
+    'table.border.horizontal',
+    'table.border.vertical',
+    'columnHeader.border.bottom',
+  ])
+  .describe('Closed border-producing Table style token key.');
+
+const TableBorderStyleTokenProvenanceSchema = z.strictObject({
+  key: TableBorderStyleTokenKeySchema.describe('Border style token mapped to this geometric source.'),
+  source: z.enum(['preset', 'user']).describe('Preset or user overlay winner for the border token.'),
+});
 
 const TableBorderVertexSchema = z.strictObject({
   x: z.number().describe('Finite Table-local x coordinate.'),
@@ -68,16 +96,34 @@ const TableBorderContributionBaseShape = {
 
 export const TableNoBorderContributionSchema = z.strictObject({
   kind: z.literal('none').describe('Discriminator for an explicit hidden border candidate.'),
+  origin: z.literal(TableBorderContributionOrigin.Explicit).describe('Explicit Table, Cell, or rule border origin.'),
   ...TableBorderContributionBaseShape,
 });
 
-export const TableLineBorderContributionSchema = z.strictObject({
+const TableExplicitLineBorderContributionSchema = z.strictObject({
   kind: z.literal('line').describe('Discriminator for a resolved visible-capable line candidate.'),
+  origin: z.literal(TableBorderContributionOrigin.Explicit).describe('Explicit Table, Cell, or rule border origin.'),
   ...TableBorderContributionBaseShape,
   line: ResolvedTableBorderLineSchema.describe('Complete resolved Core-compatible line style.'),
 });
 
-export const TableBorderContributionSchema = z.discriminatedUnion('kind', [
+const TableStyleTokenLineBorderContributionSchema = z.strictObject({
+  kind: z.literal('line').describe('Discriminator for a resolved visible-capable line candidate.'),
+  origin: z.literal(TableBorderContributionOrigin.StyleToken).describe('Resolved Table style token border origin.'),
+  ...TableBorderContributionBaseShape,
+  priority: z.literal(-100).describe('Closed style token border priority.'),
+  line: ResolvedTableBorderLineSchema.describe('Complete resolved Core-compatible line style.'),
+  styleToken: TableBorderStyleTokenProvenanceSchema.describe('Required style token provenance.'),
+});
+
+export const TableLineBorderContributionSchema = z
+  .discriminatedUnion('origin', [
+    TableExplicitLineBorderContributionSchema,
+    TableStyleTokenLineBorderContributionSchema,
+  ])
+  .describe('Explicit or style-token-origin resolved line contribution.');
+
+export const TableBorderContributionSchema = z.union([
   TableNoBorderContributionSchema,
   TableLineBorderContributionSchema,
 ]);
@@ -150,8 +196,122 @@ export const TableCellManifestEntrySchema = z
     location: TableCellLocationSchema.describe('Semantic Cell location.'),
     roles: z.array(TableCellRoleSchema).min(1).describe('Semantic Cell roles.'),
     source: TableCellSourceSchema.optional().describe('Optional stable Cell source identity.'),
+    formatterName: z.string().min(1).optional().describe('Executed formatter name for value Cells.'),
+    presentationName: z.string().min(1).optional().describe('Executed presentation name for value Cells.'),
+    matchedRuleIndices: z.array(z.number().int().nonnegative()).describe('Ordered matched root rule indices.'),
+    encodingIds: z.array(z.string().min(1)).describe('Ordered visual encodings that produced a Cell color.'),
+    appearance: TableCellAppearanceSchema.describe('Resolved Cell appearance consumed by layout.'),
+    appearanceTrace: z
+      .array(
+        z.strictObject({
+          path: TableCellAppearanceTracePathSchema.describe('Canonical appearance leaf path.'),
+          source: TableCellPlanSourceSchema.describe('Winning source for the resolved appearance leaf.'),
+        }),
+      )
+      .describe('Canonical path-sorted appearance winner lineage.'),
   })
   .describe('Resolved Table Cell geometry, identity, and provenance.');
+
+const TableManifestStyleSchema = z
+  .strictObject({
+    style: TableStyleSchema.describe('Resolved built-in Table style preset.'),
+    themeMode: TableThemeModeSchema.describe('Resolved explicit Table theme mode.'),
+    tokens: TableStyleTokenMapSchema.describe('Complete resolved Table style token map.'),
+    sources: z
+      .array(
+        z.strictObject({
+          key: TableStyleTokenKeySchema.describe('Canonical Table style token key.'),
+          source: z.enum(['preset', 'user']).describe('Preset or user overlay winner.'),
+        }),
+      )
+      .length(19)
+      .describe('Token winners in canonical schema key order.'),
+  })
+  .superRefine((style, context) => {
+    TableStyleTokenKeySchema.options.forEach((key, index) => {
+      if (style.sources[index]?.key !== key) {
+        context.addIssue({
+          code: 'custom',
+          path: ['sources', index, 'key'],
+          message: `Style token sources must use canonical key order; expected "${key}"`,
+        });
+      }
+    });
+  })
+  .describe('Resolved Table style metadata.');
+
+type ManifestLineContribution = z.infer<typeof TableLineBorderContributionSchema>;
+type ManifestCell = z.infer<typeof TableCellManifestEntrySchema>;
+type ManifestStyle = z.infer<typeof TableManifestStyleSchema>;
+
+/** 比较 resolved line 是否精确来自同一 style border token */
+const matchesStyleBorderToken = (
+  line: z.infer<typeof ResolvedTableBorderLineSchema>,
+  token: NonNullable<ManifestStyle['tokens'][z.infer<typeof TableBorderStyleTokenKeySchema>]>,
+): boolean =>
+  JSON.stringify(line.stroke) === JSON.stringify(token.stroke ?? 'currentColor') &&
+  line.width === (token.width ?? 1) &&
+  line.strokeOpacity === (token.strokeOpacity ?? 1) &&
+  JSON.stringify(line.dashPattern) === JSON.stringify(token.dashPattern) &&
+  line.dashOffset === (token.dashOffset ?? 0);
+
+/** 校验 style token provenance 与 Border Graph 几何来源严格对应 */
+const validateBorderStyleTokenProvenance = (
+  contribution: ManifestLineContribution,
+  cells: ReadonlyArray<ManifestCell>,
+  style: ManifestStyle,
+  context: z.RefinementCtx,
+  path: ReadonlyArray<string | number>,
+): void => {
+  if (contribution.origin !== TableBorderContributionOrigin.StyleToken) return;
+  const token = contribution.styleToken;
+
+  let expectedKey: z.infer<typeof TableBorderStyleTokenKeySchema> | undefined;
+  if (contribution.source.kind === 'default') {
+    expectedKey =
+      contribution.source.scope === 'outer'
+        ? `table.border.${contribution.source.side}`
+        : `table.border.${contribution.source.scope}`;
+  } else {
+    const source = contribution.source;
+    const cell = cells.find(candidate => candidate.cellId === source.cellId);
+    if (
+      source.side === 'bottom' &&
+      cell?.location === 'columnHeader' &&
+      cell.rowIndex === source.row &&
+      cell.columnIndex === source.column
+    ) {
+      expectedKey = 'columnHeader.border.bottom';
+    }
+  }
+  if (token.key !== expectedKey) {
+    context.addIssue({
+      code: 'custom',
+      path: [...path, 'styleToken', 'key'],
+      message: 'Border style token key must match its geometric source and Cell location',
+    });
+  }
+  const expectedSource = style.sources.find(entry => entry.key === token.key)?.source;
+  if (token.source !== expectedSource) {
+    context.addIssue({
+      code: 'custom',
+      path: [...path, 'styleToken', 'source'],
+      message: 'Border style token source must match the resolved style winner',
+    });
+  }
+  const styleBorder = style.tokens[token.key];
+  if (styleBorder === null || !matchesStyleBorderToken(contribution.line, styleBorder)) {
+    context.addIssue({
+      code: 'custom',
+      path: [...path, 'line'],
+      message: 'Border style token line must match the resolved style token value',
+    });
+  }
+};
+
+/** 判断两个字符串序列是否逐项相等 */
+const sameStringSequence = (left: ReadonlyArray<string>, right: ReadonlyArray<string>): boolean =>
+  left.length === right.length && left.every((value, index) => value === right[index]);
 
 export const TableLayoutManifestSchema = z
   .strictObject({
@@ -162,5 +322,150 @@ export const TableLayoutManifestSchema = z
     columns: z.array(TableTrackManifestEntrySchema).describe('Canonical column track geometry.'),
     cells: z.array(TableCellManifestEntrySchema).describe('Canonical Cell geometry and provenance.'),
     borders: z.array(TableBorderManifestEntrySchema).describe('Visible border edge geometry and provenance.'),
+    style: TableManifestStyleSchema,
+    encodings: z
+      .array(
+        z.strictObject({
+          id: z.string().min(1).describe('Visual encoding id.'),
+          channel: z.enum(TableVisualChannel).describe('Encoding-owned Cell appearance channel.'),
+          scaleName: z.string().min(1).describe('Resolved visual scale definition name.'),
+          cellIds: z.array(z.string().min(1)).describe('Canonical Cells that received an encoding color.'),
+        }),
+      )
+      .describe('Ordered visual encoding manifest seed.'),
+    legendDescriptors: z
+      .array(TableLegendDescriptorSchema)
+      .describe('Ordered Table-domain Legend descriptors from the same visual scale resolutions.'),
+  })
+  .superRefine((manifest, context) => {
+    const encodingsById = new Map<string, (typeof manifest.encodings)[number]>();
+    const encodingOrder = new Map<string, number>();
+    manifest.encodings.forEach((encoding, index) => {
+      if (encodingsById.has(encoding.id)) {
+        context.addIssue({
+          code: 'custom',
+          path: ['encodings', index, 'id'],
+          message: 'Manifest encoding ids must be unique',
+        });
+        return;
+      }
+      encodingsById.set(encoding.id, encoding);
+      encodingOrder.set(encoding.id, index);
+    });
+    manifest.cells.forEach((cell, cellIndex) => {
+      let previousOrder = -1;
+      cell.encodingIds.forEach((encodingId, encodingIndex) => {
+        const order = encodingOrder.get(encodingId);
+        if (order === undefined) {
+          context.addIssue({
+            code: 'custom',
+            path: ['cells', cellIndex, 'encodingIds', encodingIndex],
+            message: 'Cell encoding id must reference a manifest encoding',
+          });
+          return;
+        }
+        if (order <= previousOrder) {
+          context.addIssue({
+            code: 'custom',
+            path: ['cells', cellIndex, 'encodingIds', encodingIndex],
+            message: 'Cell encoding ids must be unique and follow manifest encoding order',
+          });
+        }
+        previousOrder = order;
+      });
+    });
+    manifest.encodings.forEach((encoding, encodingIndex) => {
+      const expectedCellIds = manifest.cells
+        .filter(cell => cell.encodingIds.includes(encoding.id))
+        .map(cell => cell.cellId);
+      if (!sameStringSequence(encoding.cellIds, expectedCellIds)) {
+        context.addIssue({
+          code: 'custom',
+          path: ['encodings', encodingIndex, 'cellIds'],
+          message: 'Manifest encoding Cell ids must match canonical Cell encoding lineage',
+        });
+      }
+    });
+    const descriptorEncodingIds = new Set<string>();
+    manifest.legendDescriptors.forEach((descriptor, descriptorIndex) => {
+      const encoding = encodingsById.get(descriptor.encodingId);
+      if (encoding === undefined) {
+        context.addIssue({
+          code: 'custom',
+          path: ['legendDescriptors', descriptorIndex, 'encodingId'],
+          message: 'Legend descriptor encoding id must reference a manifest encoding',
+        });
+      } else {
+        if (descriptor.channel !== encoding.channel) {
+          context.addIssue({
+            code: 'custom',
+            path: ['legendDescriptors', descriptorIndex, 'channel'],
+            message: 'Legend descriptor channel must match its manifest encoding',
+          });
+        }
+        if (descriptor.scaleName !== encoding.scaleName) {
+          context.addIssue({
+            code: 'custom',
+            path: ['legendDescriptors', descriptorIndex, 'scaleName'],
+            message: 'Legend descriptor scale name must match its manifest encoding',
+          });
+        }
+      }
+      if (descriptorEncodingIds.has(descriptor.encodingId)) {
+        context.addIssue({
+          code: 'custom',
+          path: ['legendDescriptors', descriptorIndex, 'encodingId'],
+          message: 'Each manifest encoding may produce at most one Legend descriptor',
+        });
+      }
+      descriptorEncodingIds.add(descriptor.encodingId);
+    });
+    if (manifest.legendDescriptors.length > 0 && manifest.tableId === undefined) {
+      context.addIssue({
+        code: 'custom',
+        path: ['tableId'],
+        message: 'Table id is required when the manifest contains Legend descriptors',
+      });
+    }
+    manifest.borders.forEach((border, borderIndex) => {
+      border.atoms.forEach((atom, atomIndex) => {
+        const contributionKeys = new Set(atom.contributors.map(contribution => contribution.key));
+        if (contributionKeys.size !== atom.contributors.length) {
+          context.addIssue({
+            code: 'custom',
+            path: ['borders', borderIndex, 'atoms', atomIndex, 'contributors'],
+            message: 'Border atom contribution keys must be unique',
+          });
+        }
+        const matchingWinner = atom.contributors.find(contribution => contribution.key === atom.winner.key);
+        if (matchingWinner === undefined || JSON.stringify(matchingWinner) !== JSON.stringify(atom.winner)) {
+          context.addIssue({
+            code: 'custom',
+            path: ['borders', borderIndex, 'atoms', atomIndex, 'winner'],
+            message: 'Border atom winner must exactly match one contributor',
+          });
+        }
+        if (atom.winner.kind === 'line') {
+          validateBorderStyleTokenProvenance(atom.winner, manifest.cells, manifest.style, context, [
+            'borders',
+            borderIndex,
+            'atoms',
+            atomIndex,
+            'winner',
+          ]);
+        }
+        atom.contributors.forEach((contribution, contributionIndex) => {
+          if (contribution.kind !== 'line') return;
+          validateBorderStyleTokenProvenance(contribution, manifest.cells, manifest.style, context, [
+            'borders',
+            borderIndex,
+            'atoms',
+            atomIndex,
+            'contributors',
+            contributionIndex,
+          ]);
+        });
+      });
+    });
   })
   .describe('Detached immutable Table layout manifest emitted as a composite artifact.');

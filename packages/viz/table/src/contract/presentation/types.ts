@@ -2,12 +2,20 @@ import type { IRChild, IRJsonObject } from '@retikz/core';
 import type { IRDataScalarValue } from '@retikz/data';
 import type { ZodType } from 'zod';
 
+import type { IRTableCellAppearance } from '../../schemas';
+import type { DeepReadonly } from '../../shared';
+import type { TableCellContext } from '../model';
+
 /** Cell presentation 接收的稳定输入 */
 export type CellPresentationInput = Readonly<{
-  /** 待呈现的 JSON scalar */
+  /** formatter 前的 canonical scalar */
+  rawValue: IRDataScalarValue;
+  /** formatter 产生的展示 scalar */
   value: IRDataScalarValue;
-  /** 当前语义 Cell 的稳定标识 */
-  cellId: string;
+  /** 当前 semantic Cell 的最小稳定上下文 */
+  context: TableCellContext;
+  /** presentation 与 layout 共用的最终视觉输入 */
+  appearance: DeepReadonly<IRTableCellAppearance>;
 }>;
 
 /** Cell presentation provider 定义 */
