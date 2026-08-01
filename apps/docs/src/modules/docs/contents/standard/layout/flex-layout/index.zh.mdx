@@ -50,7 +50,7 @@ import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 <ComponentPreview
   files="flex-layout-playground"
   size="lg"
-  caption="布局辅助线默认开启，可在“辅助层”中关闭；它们不属于实际图形、布局边界或命中测试。"
+  caption="推荐态显示 content 边界、Flex 行区域与固定 gap；可在“辅助层”中查看 padding、margin、自由空间边界与其它细节。"
 />
 
 ### 溢出与裁切
@@ -95,7 +95,7 @@ React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为�
 | ---------- | --------------------------------------- | ------ | --------------------------------------------------------------------------------------- |
 | `inspect?` | `boolean` \| `FlexLayoutInspectOptions` | 继承   | 省略时继承 Layout / 最近 Scope；`false` 只关闭当前 occurrence，且不会关闭或开启嵌套布局 |
 
-对象形式在通用边界、溢出和对齐参考线之外，还可分别控制 `lines` 与 `gaps`。完整字段和全图 / Scope 策略见[运行时参考](/standard/layout/reference/runtime#布局检查器)。
+对象形式在通用边界、盒模型间距、溢出和对齐参考线之外，还可分别控制 `lines`、固定 `gaps` 与 `distributedSpace`。完整字段和全图 / Scope 策略见[运行时参考](/standard/layout/reference/runtime#布局检查器)。
 
 ### `FlexLayoutInput`
 

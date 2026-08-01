@@ -59,7 +59,7 @@ JSON/IR 路径使用 `createOverlayLayout()` 与 `OverlayLayoutDefinition`；Van
 <ComponentPreview
   files="overlay-layout-playground"
   size="lg"
-  caption="布局辅助线默认开启，可在“辅助层”中关闭；它们不属于实际图形、布局边界或命中测试。"
+  caption="推荐态只显示 content 边界；可在“辅助层”中查看放置、锚点、padding、margin 与其它细节。"
 />
 
 ## 技术原理
@@ -97,7 +97,7 @@ JSON/IR 路径使用 `createOverlayLayout()` 与 `OverlayLayoutDefinition`；Van
 | ---------- | ------------------------------------------ | ------ | --------------------------------------------------------------------------------------- |
 | `inspect?` | `boolean` \| `OverlayLayoutInspectOptions` | 继承   | 省略时继承 Layout / 最近 Scope；`false` 只关闭当前 occurrence，且不会关闭或开启嵌套布局 |
 
-对象形式可分别控制 `placements`、`anchors` 与 `stacking`。完整通用字段和全图 / Scope 策略见[运行时参考](/standard/layout/reference/runtime#布局检查器)。
+对象形式可分别控制 `placements`、`anchors` 与 `stacking`，并复用通用边界与盒模型间距开关。完整字段和全图 / Scope 策略见[运行时参考](/standard/layout/reference/runtime#布局检查器)。
 
 ### `OverlayLayoutInput`
 

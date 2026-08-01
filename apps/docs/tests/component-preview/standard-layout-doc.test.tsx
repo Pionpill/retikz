@@ -6,6 +6,9 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
+import type { PreviewControlSection } from '../../src/modules/docs/components/component-preview';
+
+import { resolvePreviewControlContract } from '../../src/modules/docs/components/component-preview/registry';
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
 import ScopeInspectionEnDemo from '../../src/modules/docs/contents/kernel/components/layout/scope/scope-layout-inspection.en.demo';
@@ -119,11 +122,103 @@ describe('Standard layout documentation demos', () => {
     ['grid', gridZhContract, gridEnContract],
     ['overlay', overlayZhContract, overlayEnContract],
   ])('keeps %s controls structurally aligned across languages', (_name, chinese, english) => {
+    expect(english.stateOnlyIds).toEqual(chinese.stateOnlyIds);
     expect(english.canonicalValues).toEqual(chinese.canonicalValues);
+    expect(
+      english.presets.map(preset => ({ id: preset.id, values: preset.values, applyMode: preset.applyMode })),
+    ).toEqual(chinese.presets.map(preset => ({ id: preset.id, values: preset.values, applyMode: preset.applyMode })));
     expect(english.relatedApis).toEqual(chinese.relatedApis);
     expect(english.controls.sections.map(section => section.controls.map(control => control.id))).toEqual(
       chinese.controls.sections.map(section => section.controls.map(control => control.id)),
     );
+  });
+
+  it.each([
+    ['flex', flexEnContract, 'Inspection details', 'Inspection preset'],
+    ['grid', gridEnContract, 'Inspection details', 'Inspection preset'],
+    ['overlay', overlayEnContract, 'Overlay details', 'Overlay preset'],
+  ])('uses family-accurate English inspection labels for %s', (_name, contract, detailsLabel, presetLabel) => {
+    expect(contract.controls.sections[0].label).toBe(detailsLabel);
+    expect(contract.presetSelector.label).toBe(presetLabel);
+  });
+
+  it.each([
+    ['flex zh', flexZhContract],
+    ['flex en', flexEnContract],
+    ['grid zh', gridZhContract],
+    ['grid en', gridEnContract],
+    ['overlay zh', overlayZhContract],
+    ['overlay en', overlayEnContract],
+  ])('resolves preset-only inspection state for %s', (_name, contract) => {
+    expect(resolvePreviewControlContract({ previewControlContract: contract })).toBe(contract);
+  });
+
+  it.each([
+    [
+      'flex',
+      flexZhContract,
+      {
+        inspectLines: true,
+        inspectGaps: true,
+        inspectDistributedSpace: false,
+      },
+    ],
+    [
+      'grid',
+      gridZhContract,
+      {
+        inspectTracks: true,
+        inspectCells: false,
+        inspectGaps: true,
+        inspectDistributedSpace: false,
+        inspectSpans: false,
+      },
+    ],
+    [
+      'overlay',
+      overlayZhContract,
+      {
+        inspectPlacements: false,
+        inspectAnchors: false,
+        inspectStacking: false,
+      },
+    ],
+  ])('offers reusable recommended, all, and off inspection profiles for %s', (_name, contract, familyValues) => {
+    const recommendedValues = {
+      ...contract.canonicalValues,
+      inspect: true,
+      inspectContainer: false,
+      inspectContent: true,
+      inspectPadding: false,
+      inspectSlot: false,
+      inspectMargin: false,
+      inspectAllocation: false,
+      inspectVisual: false,
+      inspectOverflow: false,
+      inspectAlignmentGuides: false,
+      inspectLabels: false,
+      ...familyValues,
+    };
+    const detailIds = Object.keys(recommendedValues).filter(id => id.startsWith('inspect') && id !== 'inspect');
+    const inspectionDetailSection: PreviewControlSection = contract.controls.sections[0];
+    const controlIds = contract.controls.sections.flatMap(section => section.controls.map(control => control.id));
+
+    expect(inspectionDetailSection.defaultCollapsed).toBe(true);
+    expect(inspectionDetailSection.visibleWhen).toBeUndefined();
+    expect(inspectionDetailSection.controls.map(control => control.id)).toEqual(detailIds);
+    expect(controlIds).not.toContain('inspect');
+    expect(contract.stateOnlyIds).toEqual(['inspect']);
+    expect(contract.canonicalValues).toEqual(recommendedValues);
+    expect(contract.presets.map(preset => preset.id)).toEqual(['recommended', 'all', 'off']);
+    expect(contract.presets[0]?.values).toEqual(recommendedValues);
+    expect(contract.presets[1]?.values).toEqual({
+      ...recommendedValues,
+      ...Object.fromEntries(detailIds.map(id => [id, true])),
+    });
+    expect(contract.presets[2]).toMatchObject({
+      values: { inspect: false },
+      applyMode: 'merge-current',
+    });
   });
 
   it.each(demos)('derives canonical IR and a real Vanilla SVG for $name', ({ Component }) => {
@@ -138,15 +233,33 @@ describe('Standard layout documentation demos', () => {
   });
 
   it.each([
-    ['flexLayout', FlexPlaygroundCanonical],
-    ['gridLayout', GridPlaygroundCanonical],
-    ['overlayLayout', OverlayPlaygroundCanonical],
-  ])('keeps canonical %s component inspection in generated Vanilla output', (kind, Component) => {
+    ['flexLayout', FlexPlaygroundCanonical, { lines: true, gaps: true, distributedSpace: false }],
+    [
+      'gridLayout',
+      GridPlaygroundCanonical,
+      { tracks: true, cells: false, gaps: true, distributedSpace: false, spans: false },
+    ],
+    ['overlayLayout', OverlayPlaygroundCanonical, { placements: false, anchors: false, stacking: false }],
+  ])('keeps canonical %s component inspection in generated Vanilla output', (kind, Component, familyOptions) => {
     const preview = buildPreviewIR(Component);
     const vanilla = buildVanillaPreview(preview);
 
     expect(preview.inspectionRoots).toHaveLength(1);
-    expect(vanilla.code).toMatch(new RegExp(`${kind}\\([\\s\\S]*, true\\)`));
+    expect(preview.inspectionRoots[0].tree.policy?.component).toMatchObject({
+      bounds: {
+        container: false,
+        content: true,
+        slot: false,
+        allocation: false,
+        visual: false,
+      },
+      spacing: { padding: false, margin: false },
+      overflow: false,
+      alignmentGuides: false,
+      labels: false,
+      ...familyOptions,
+    });
+    expect(vanilla.code).toContain(`${kind}(`);
     expect(vanilla.svg).toContain('data-retikz-inspection="layout"');
   });
 
