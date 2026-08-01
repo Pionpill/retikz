@@ -66,13 +66,14 @@ Chart Pattern 是 Canonical Type 加可复用 modifier、表现配置或正式 P
 | Canonical Type      | 核心配方边界                                              |
 | ------------------- | --------------------------------------------------------- |
 | `scatter`           | 以 Point 为主的二维关系配方                               |
-| `bubble`            | Point + 不可撤销的 size 数据角色 / encoding               |
 | `connected-scatter` | Point + Path + 稳定顺序；仍是单个 PlotSpec 内的 Mark 组合 |
 | `regression`        | Point + 内建 Smooth / regression Transform + Path         |
 | `ranged-dot`        | 起止数值角色 + 端点与连接线                               |
 | `strip`             | 一维分布角色 + 内建 Jitter Transform + Point              |
 
-上述类型只消费 Plot 已有 Mark、Transform、Scale、Coordinate 与 Guide 能力。精确字段角色、排序规则和默认呈现留给 ADR。
+Bubble 作为 Scatter 的 field-bound size Pattern，不进入 `ChartSpec.type`。Scatter 的 size channel 已通过 Plot 正式 sqrt radius scale 表达面积感知语义；只有未来出现 circle packing 等独立布局或拓扑时，才重新判断是否需要新的 Canonical Type。
+
+除受 position-offset capability gate 阻塞的 Strip 外，上述类型只消费 Plot 已有 Mark、Transform、Scale、Coordinate 与 Guide 能力。精确字段角色、排序规则和默认呈现留给 ADR。
 
 ### 3.2 Line & Area
 
@@ -141,11 +142,11 @@ Lollipop Chart 虽然在 Flint 中归 Bar & Column，但主要配方是 Point + 
 
 ## 5. Milestones
 
-| Milestone          | 主题                        | 候选 ADR / 产出                                                                                                                                                                                                                                                             | 退出边界                                                                                                                                                                                                                                                | 状态   |
-| ------------------ | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| chart v0.1-alpha.1 | **点图 · Scatter & Points** | [alpha.1 roadmap](./alpha.1/roadmap.md)：先建立 ChartSpec / recipe resolution / inspection、三 adapter、style token / mode、presentation + Standard layout / surface，再按 `scatter`、`bubble`、`connected-scatter`、`regression`、`ranged-dot`、`strip` 的顺序逐 type 闭环 | 前五个 type 从同一 JSON-safe 语义生成完整 PlotSpec；`strip` 等待 Plot position-offset；完整 canvas 等待 Standard arbitrary-child surface composite，Core 仅在其 ADR 识别出通用底座缺口时先行；preset、token、palette、presentation 与 identity 规则确定 | 起草中 |
-| chart v0.1-alpha.2 | **线图 · Line & Area**      | `line`、`area`、`range-area`；Path ordering / closure / curve 与系列默认；sparkline、slope、smooth / step line、stacked area、streamgraph Patterns；复用 alpha.1 样式、颜色、label 与 Standard 布局基座                                                                     | 三个线图 type 的 Path 核心配方和边界角色不可撤销；Pattern 不扩张 type union；相同样式与 presentation 契约无需按 family 分叉                                                                                                                             | 待起草 |
-| chart v0.1-alpha.3 | **面图 · Bar & Column**     | `bar`、`waterfall`、`gantt`、`bullet`；Interval bound、内建区间 Transform 与 Reference；stacked / grouped / horizontal / normalized / pyramid Patterns；跨 family override、追加 Plot members、冲突、来源与空间透明收口                                                     | 四个面图 type 只消费 Plot 现有 capability；追加内容不撤销核心配方；三个 family 共用同一 resolver、样式、presentation、diagnostics 与 handle forwarding；无 composition                                                                                  | 待起草 |
+| Milestone          | 主题                        | 候选 ADR / 产出                                                                                                                                                                                                                                                                                | 退出边界                                                                                                                                                                                                                                                      | 状态   |
+| ------------------ | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| chart v0.1-alpha.1 | **点图 · Scatter & Points** | [alpha.1 roadmap](./alpha.1/roadmap.md)：先建立 ChartSpec / recipe resolution / inspection、三 adapter、style token / mode、presentation + Standard layout / surface，再按 `scatter`、`connected-scatter`、`regression`、`ranged-dot`、`strip` 的顺序逐 type 闭环；Bubble 作为 Scatter Pattern | 前四个可实施 type 从同一 JSON-safe 语义生成完整 PlotSpec；`strip` 等待 Plot position-offset；完整 canvas 等待 Standard arbitrary-child surface composite，Core 仅在其 ADR 识别出通用底座缺口时先行；preset、token、palette、presentation 与 identity 规则确定 | 起草中 |
+| chart v0.1-alpha.2 | **线图 · Line & Area**      | `line`、`area`、`range-area`；Path ordering / closure / curve 与系列默认；sparkline、slope、smooth / step line、stacked area、streamgraph Patterns；复用 alpha.1 样式、颜色、label 与 Standard 布局基座                                                                                        | 三个线图 type 的 Path 核心配方和边界角色不可撤销；Pattern 不扩张 type union；相同样式与 presentation 契约无需按 family 分叉                                                                                                                                   | 待起草 |
+| chart v0.1-alpha.3 | **面图 · Bar & Column**     | `bar`、`waterfall`、`gantt`、`bullet`；Interval bound、内建区间 Transform 与 Reference；stacked / grouped / horizontal / normalized / pyramid Patterns；跨 family override、追加 Plot members、冲突、来源与空间透明收口                                                                        | 四个面图 type 只消费 Plot 现有 capability；追加内容不撤销核心配方；三个 family 共用同一 resolver、样式、presentation、diagnostics 与 handle forwarding；无 composition                                                                                        | 待起草 |
 
 里程碑只冻结版本目标和依赖顺序。字段名、默认值、允许覆盖范围、错误 payload、测试 case 与实现文件由对应 ADR 决定。
 
@@ -166,7 +167,7 @@ chart 使用自己的发布家族：`@retikz/chart` / `@retikz/chart-react` / `@
 
 完成当前已确认的三个 alpha 时必须同时满足：
 
-1. 13 个 Canonical Type 均有稳定数据角色、完整核心配方、表现性默认和允许调整范围
+1. 12 个 Canonical Type 均有稳定数据角色、完整核心配方、表现性默认和允许调整范围；Bubble 只计作 Scatter Pattern
 2. 所有内建 type 只使用 plot v0.1 已有 capability，不包含 Chart 专用 provider 或私有 lowering
 3. Pattern 不进入 `ChartSpec.type`，gallery 名称可以追溯到 Canonical Type + 配置
 4. 核心配方删除、替换、关闭或失效时 fail-loud；显式追加内容不能静默覆盖隐式成员

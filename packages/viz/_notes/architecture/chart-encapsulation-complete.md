@@ -80,7 +80,7 @@ Chart authoring / JSON
 
 只声明 `type -> Mark` 映射不算完整配方。比如 waterfall 除主 Interval Mark 外，还需要明确区间派生、字段角色、scale、coordinate、guide 与默认覆盖关系。
 
-Type Recipe 完备还要求类型身份在扩展后持续成立。以 Bubble 为例，Point Mark 及维持气泡语义的数据角色 / encoding 必须保留；追加 Interval Mark 可以作为背景、参照或补充表达，但不能替换 Point Mark，或让 Bubble 退化成只剩 type 名称的任意组合。
+Type Recipe 完备还要求类型身份在扩展后持续成立。以 Connected Scatter 为例，Point、按稳定顺序连接观察值的开放 Path 及二者的共同位置角色必须保留；追加 Interval Mark 可以作为背景、参照或补充表达，但不能替换任一核心 Mark，或让 Connected Scatter 退化成只剩 type 名称的任意组合。
 
 ## 5. Sparse IR、核心配方与默认解析完备
 
@@ -277,7 +277,7 @@ Chart 隐式内容越多，越需要可解释性。完整闭环至少要求：
 - 把 title / caption / source 塞回 PlotSpec，迫使 Plot 长期承担 Chart 展示外壳
 - Chart 自建文字测量、Box / Overlay solver 或开放任意 graphic / ReactNode slots
 - ChartSpec 只保存 `type + x + y`，常用 style、guide、scale、mark 配置无法表达
-- 允许 Bubble override 删除 Point Mark、改成 Interval Mark，或撤销维持气泡语义的核心 encoding
+- 允许 Connected Scatter override 删除 Point 或开放 Path、闭合轨迹，或撤销二者共同的位置角色
 - 追加内容已经成为主要表达、原 type 只剩名义存在，却仍把 Chart 当作通用 Plot 容器
 - 为股票图在 Chart 内建立私有股票几何路径，而不是提供 Plot registry 可识别的 `MarkDefinition`
 - 为 waterfall 在 Chart 内旁路计算数据，而不是提供或复用 Data / Plot transform definition

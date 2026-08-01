@@ -1,8 +1,8 @@
-# ADR-07：Regression 的 mark-local Smooth 配方
+# ADR-06：Regression 的 mark-local Smooth 配方
 
 - 状态：Proposed（公开 adapter 与 docs 受 ADR-04 capability gate 阻塞）
 - 决策日期：2026-07-31
-- 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-06](./06-connected-scatter.md)
+- 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-05](./05-connected-scatter.md)
 
 ## 背景与目标
 

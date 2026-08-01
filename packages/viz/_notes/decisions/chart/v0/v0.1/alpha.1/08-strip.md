@@ -1,8 +1,8 @@
-# ADR-09：Strip 的分类 band 内 jitter 语义
+# ADR-08：Strip 的分类 band 内 jitter 语义
 
 - 状态：Proposed（只冻结延期边界；不构成未来 Strip implementation Gate）
 - 决策日期：2026-07-31
-- 关联：[alpha.1 roadmap §7](./roadmap.md) · [ADR-08](./08-ranged-dot.md) · [Plot 可视化完备设计](../../../../../architecture/plot-visualization-complete.md)
+- 关联：[alpha.1 roadmap §7](./roadmap.md) · [ADR-07](./07-ranged-dot.md) · [Plot 可视化完备设计](../../../../../architecture/plot-visualization-complete.md)
 
 ## 背景与目标
 

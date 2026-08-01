@@ -1,8 +1,8 @@
-# ADR-06：Connected Scatter 的 Point + Path 配方
+# ADR-05：Connected Scatter 的 Point + Path 配方
 
 - 状态：Proposed
 - 决策日期：2026-07-31
-- 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-05](./05-bubble.md)
+- 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-04](./04-scatter.md)
 
 ## 背景与目标
 

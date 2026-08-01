@@ -163,7 +163,7 @@ Type 核心配方定义该 type 的身份，例如：
 
 核心配方不是可撤销的默认值。用户只能在 type 明确允许的范围内调整参数，不能删除、关闭、替换核心成员，也不能把主 Mark 改成另一种 Mark。若需求不再需要这套核心配方，用户应选择其它 Canonical Type 或直接使用 Plot。
 
-以 Bubble 为例，其 Point Mark 及维持气泡语义的数据角色 / encoding 属于核心配方。用户可以追加 Interval Mark 作为背景、参照或补充表达，但不能用 Interval Mark 取代 Point Mark，再继续把结果解释为 Bubble。
+以 Connected Scatter 为例，Point、按稳定顺序连接观察值的开放 Path 及二者的共同位置角色属于核心配方。用户可以调整两种 Mark 的表现或追加其它 Plot 内容，但不能删除其中一个核心 Mark、闭合 Path，或改写二者的共同位置角色后仍把结果解释为 Connected Scatter。
 
 ### 6.2 表现性默认
 

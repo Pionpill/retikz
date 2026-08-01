@@ -1,8 +1,8 @@
-# ADR-08：Ranged Dot 的双端点与 projected Relation
+# ADR-07：Ranged Dot 的双端点与 projected Relation
 
 - 状态：Proposed（公开 adapter 与 docs 受 ADR-04 capability gate 阻塞）
 - 决策日期：2026-07-31
-- 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-07](./07-regression.md)
+- 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-06](./06-regression.md)
 
 ## 背景与目标
 
