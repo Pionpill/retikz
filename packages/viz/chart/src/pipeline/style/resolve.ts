@@ -33,9 +33,13 @@ export const resolveChartStyle = (spec: InternalChartSpecBound): ResolvedChartSt
   return { style, themeMode, tokens, tokenSources, authoredOverrides };
 };
 
-/** 从完整 token 中收窄出 recipe 允许读取的 topology defaults */
-export const chartRecipeStyleContextOf = (context: ResolvedChartStyleContext): ChartRecipeStyleContext => ({
+/** 从完整 token 与最终 palette 中收窄出 recipe 允许读取的表现默认值 */
+export const chartRecipeStyleContextOf = (
+  context: ResolvedChartStyleContext,
+  seriesColor: string,
+): ChartRecipeStyleContext => ({
   axisEnabled: context.tokens[ChartStyleToken.AxisEnabled],
   axisGridEnabled: context.tokens[ChartStyleToken.AxisGridEnabled],
   legendEnabled: context.tokens[ChartStyleToken.LegendEnabled],
+  seriesColor,
 });

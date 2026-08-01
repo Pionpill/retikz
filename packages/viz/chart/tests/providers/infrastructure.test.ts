@@ -29,6 +29,7 @@ const neutralStyle: ChartRecipeStyleContext = {
   axisEnabled: true,
   axisGridEnabled: true,
   legendEnabled: true,
+  seriesColor: '#475569',
 };
 
 describe('Infrastructure Chart recipe', () => {

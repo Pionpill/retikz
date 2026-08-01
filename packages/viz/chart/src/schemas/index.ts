@@ -1,5 +1,6 @@
 export * from './canonical';
 export * from './chart';
+export * from './connected-scatter';
 export * from './constants';
 export * from './infrastructure';
 export * from './inspection';

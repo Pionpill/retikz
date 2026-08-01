@@ -68,6 +68,8 @@ export type ChartRecipeStyleContext = {
   axisGridEnabled: boolean;
   /** 是否允许 recipe 为可图例化 channel 生成 legend */
   legendEnabled: boolean;
+  /** 最终 Plot series palette 的第一项 */
+  seriesColor: string;
 };
 
 /** 保留具体 variant 类型的 Chart recipe */

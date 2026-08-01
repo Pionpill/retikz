@@ -69,7 +69,10 @@ export const resolveChartSpec = (input: unknown): ChartResolution => {
     throw error;
   }
   const style = resolveChartStyle(bound.spec);
-  const seed = bound.createSeed(chartRecipeStyleContextOf(style));
+  const authoredPlotTheme = materializeChartPlotTheme(style.tokens, bound.spec.colors, bound.spec.theme);
+  const seriesColor = authoredPlotTheme.palette?.series?.at(0);
+  if (seriesColor === undefined) throw new Error('Chart style must resolve a non-empty Plot series palette');
+  const seed = bound.createSeed(chartRecipeStyleContextOf(style, seriesColor));
   let merged: ReturnType<typeof mergeChartSeed>;
   try {
     merged = mergeChartSeed(bound.spec, seed);

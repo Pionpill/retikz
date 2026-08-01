@@ -2,6 +2,8 @@ import { defineComposite } from '@retikz/core';
 
 import {
   CHART_NAMESPACE,
+  ConnectedScatterChartSpecSchema,
+  ConnectedScatterChartType,
   InfrastructureChartSpecSchema,
   InfrastructureChartType,
   ScatterChartSpecSchema,
@@ -22,5 +24,13 @@ export const ScatterChartDefinition = defineComposite({
   namespace: CHART_NAMESPACE,
   type: ScatterChartType,
   schema: ScatterChartSpecSchema,
+  expand: node => resolveChartSpec(node).node,
+});
+
+/** Connected Scatter canonical type 的逐类型 composite definition */
+export const ConnectedScatterChartDefinition = defineComposite({
+  namespace: CHART_NAMESPACE,
+  type: ConnectedScatterChartType,
+  schema: ConnectedScatterChartSpecSchema,
   expand: node => resolveChartSpec(node).node,
 });

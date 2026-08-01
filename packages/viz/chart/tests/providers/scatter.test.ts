@@ -11,6 +11,7 @@ const visibleStyle: ChartRecipeStyleContext = {
   axisEnabled: true,
   axisGridEnabled: true,
   legendEnabled: true,
+  seriesColor: '#475569',
 };
 
 const scatter = (overrides: Record<string, unknown> = {}) =>
@@ -143,7 +144,7 @@ describe('Scatter Chart recipe', () => {
   it('uses presentation style only for optional guide topology', () => {
     const seed = ScatterChartRecipe.createSeed(
       scatter({ encoding: { x: { field: 'amount' }, y: { field: 'margin' }, size: { field: 'weight' } } }),
-      { axisEnabled: false, axisGridEnabled: false, legendEnabled: false },
+      { axisEnabled: false, axisGridEnabled: false, legendEnabled: false, seriesColor: '#475569' },
     );
 
     expect(seed.plot.guides).toEqual([]);
