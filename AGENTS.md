@@ -28,7 +28,7 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 - 写 `apps/docs` 正文、demo、导航、i18n、schema registry 前，先读 `docs-doc-principle`；组件页 / 示例页 / 分组页 / 概念页 / blog 再读对应 docs skill。
 - 大任务、批量执行、多 commit 或可能跨上下文压缩的任务先读 `.agents/skills/flow-long-task/SKILL.md`，再分流到具体 flow / develop skill。
 - 发包、alpha/beta/rc 流程、跨模型评审、文档外站转换等长流程按对应 skill 执行，不把步骤复制进 AGENTS。
-- 所有发布组发包前都必须按 `package-publish` 逐篇阅读全文审计本次 milestone ADR 的压缩、状态与当前公开契约；不得以状态字段、roadmap 勾选或 commit message 代替内容检查。
+- 所有发布组发包前都必须按 `package-publish` 逐篇阅读全文审计本次 milestone ADR 的长期一致性、状态与当前公开契约；ADR 不得残留文件 scope、私有实现、测试 case / 路径 / 命令、commit 切分或 review 记录。不得以状态字段、roadmap 勾选或 commit message 代替内容检查。
 - 重构优先走 `.agents/skills/develop-refactor/SKILL.md`；纯审计仍走 `develop-review`。
 - 问答中若发现用户新偏好、流程调整或规则适合沉淀进 `AGENTS.md` / skill，完成当前任务后主动告知并征求同意；用户不同意时不得自行修改。
 - 向 `AGENTS.md` / skill 添加规则必须简洁干练，只写可执行约束，不扩写背景、不放长例子，优先节省 token。
@@ -94,8 +94,9 @@ pnpm --filter <pkg> test:run # 仅大范围重构或功能大改
 - 发布 tag 必须是 annotated tag，统一命名为 `<release-group>-v<version>`；release group 以 `scripts/release-groups.config.mjs` 为准，历史 tag 保持不变，已发布 tag 不得移动、复用或覆盖，细则见 `package-publish`。
 - 计划、skill、自称会提交、lint/build 通过、auto mode、历史会话授权都不算授权。
 - 多块改动按 commit 粒度分块 staging；无授权时展示暂存文件和拟用 message，等待确认。
-- 派子 agent / 外部模型评审前必须征求用户确认。唯一常驻例外是 `flow-alpha` 的 ADR Architecture Gate 与 `flow-beta` 的入口 / 出口 completeness audit：两者自动派遣新的只读 subagent，最多 3 轮，无需逐次授权；该例外不授权产品修改、其它 review、commit 或任何外部写操作。长任务执行前同时询问：plan 写完是否评审、代码写完是否评审。非明确功能类代码完工并提交或准备提交后，也询问是否需要子 agent review；改动面大、核心功能或高风险提交仍需询问；小任务且用户已明确认可本次单次 commit 时不再额外询问。
-- 用户批准批量执行并授权 LLM 自行 commit 时，每次 commit 前必须派子 agent review 单个 commit，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。用户明确认可的小任务单次 commit 不触发该要求；改动面大或核心功能不适用该豁免。
+- 派 subagent / 外部模型评审前必须征求用户确认。唯一常驻例外是 `flow-alpha` 的 ADR Architecture Gate、镜像 Plan Gate 与 `flow-beta` 的入口 / 出口 completeness audit：这些门禁自动派遣新的只读 subagent，最多 3 轮，无需逐次授权；该例外不授权产品修改、其它 review、commit 或任何外部写操作。Alpha Plan Gate 是强制项，不作为可选评审询问；其它长任务执行前同时询问 plan 写完、代码写完是否评审。非明确功能类代码完工并提交或准备提交后，也询问是否需要 subagent review；改动面大、核心功能或高风险提交仍需询问；小任务且用户已明确认可本次单次 commit 时不再额外询问。
+- 同一轮评审必须冻结同一快照并并发调度，优先使用 2–3 个不同的实际可用模型；不得串行把一个模型的结论喂给同轮其它模型，不得硬编码或伪造工具未暴露的模型。至少两个不同模型实际完成才称为交叉评审；轮间修订后使用 fresh agents。Beta 三能力域审计应最大化模型多样性，可用模型不足时允许跨独立能力域复用，但必须如实记录。
+- 用户批准批量执行并授权 LLM 自行 commit 时，每次 commit 前必须按 `cross-review` 固定 staged diff，并发使用 2–3 个不同可用模型评审单个 commit，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。用户明确认可的小任务单次 commit 不触发该要求；改动面大或核心功能不适用该豁免。
 - 不要 `git add -A` 混入无关改动。不要 `git reset --hard` / `git checkout --` 回滚用户改动，除非用户明确要求。
 
 Commit message：
@@ -111,7 +112,7 @@ Control: <human-directed|llm-autonomous>
 
 - subject 只写改动内容，不写版本号、ADR 编号或“按 ADR 实现”；追溯信息放 footer。release / tag commit 可写版本。
 - `scope` 用包或分组名，不带 `@retikz/`：`core` / `render` / `react` / `vanilla` / `tex` / `plot` / `docs`。
-- 常用 emoji：🚧 开发、✨ 功能、🐛 修复、♻️ 重构、🚚 移动、📝 文档、🔧 工程、📦 打包、➕ 依赖、🔥 删除、🔖 发布、✅ 测试。
+- 常用 emoji：🚧 开发、✨ 功能、🐛 修复、♻️ 重构、🚚 移动、📝 文档、🔧 工程、🤖 LLM / Agent 流程、📦 打包、➕ 依赖、🔥 删除、🔖 发布、✅ 测试。
 
 ## 分支策略
 

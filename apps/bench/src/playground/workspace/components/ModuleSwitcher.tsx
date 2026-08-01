@@ -1,7 +1,8 @@
-import type { Dispatch, FC } from 'react';
+import type { FC } from 'react';
 
-import { Boxes, Check, ChevronsUpDown } from 'lucide-react';
+import { Check, ChevronsUpDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 
 import {
   DropdownMenu,
@@ -13,56 +14,44 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 
-import type { LabState, LabStateAction } from '../lab-state';
-import type { BenchModuleIdValue } from '../workspace-model';
+import type { BenchModule } from '../constant';
 
-import { LabActionType } from '../lab-state';
-import { BenchModuleId, benchModules } from '../workspace-model';
+import { benchModules } from '../constant';
 
 /** 模块切换器属性 */
 export type ModuleSwitcherProps = Readonly<{
-  state: LabState;
-  dispatch: Dispatch<LabStateAction>;
+  /** 当前一级路由对应的模块 */
+  module: BenchModule;
 }>;
-
-const moduleLabelKeys = {
-  [BenchModuleId.Core]: 'module.core',
-  [BenchModuleId.Plot]: 'module.plot',
-  [BenchModuleId.Table]: 'module.table',
-} as const satisfies Record<BenchModuleIdValue, string>;
-
-const moduleDescriptionKeys = {
-  [BenchModuleId.Core]: 'module.coreDescription',
-  [BenchModuleId.Plot]: 'module.plotDescription',
-  [BenchModuleId.Table]: 'module.tableDescription',
-} as const satisfies Record<BenchModuleIdValue, string>;
 
 /** sidebar-07 左上角模块切换器 */
 export const ModuleSwitcher: FC<ModuleSwitcherProps> = props => {
-  const { state, dispatch } = props;
+  const { module } = props;
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { isMobile } = useSidebar();
-  const selected = benchModules.find(module => module.id === state.moduleId) ?? benchModules[0];
+  const SelectedIcon = module.icon;
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              title={t('module.switch')}
-              className="h-12 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
+          <SidebarMenuButton
+            asChild
+            size="lg"
+            title={t('module.switch')}
+            className="h-12 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+          >
+            <DropdownMenuTrigger>
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <Boxes className="size-4" />
+                <SelectedIcon className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{t(moduleLabelKeys[selected.id])}</span>
-                <span className="truncate text-xs text-muted-foreground">{t(moduleDescriptionKeys[selected.id])}</span>
+                <span className="truncate font-semibold">{t(module.title)}</span>
+                <span className="truncate text-xs text-muted-foreground">{t(module.description)}</span>
               </div>
               <ChevronsUpDown className="ml-auto" />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
+            </DropdownMenuTrigger>
+          </SidebarMenuButton>
           <DropdownMenuContent
             className="z-[60] w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
             align="start"
@@ -71,23 +60,21 @@ export const ModuleSwitcher: FC<ModuleSwitcherProps> = props => {
           >
             <DropdownMenuLabel className="text-xs text-muted-foreground">{t('module.switch')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {benchModules.map(module => (
-              <DropdownMenuItem
-                key={module.id}
-                disabled={!module.available}
-                className="gap-2 p-2"
-                onClick={() => dispatch({ type: LabActionType.ModuleSelected, moduleId: module.id })}
-              >
-                <div className="flex size-6 items-center justify-center rounded-md border font-mono text-[10px]">
-                  {module.id.charAt(0).toUpperCase()}
-                </div>
-                <span className="flex-1">{t(moduleLabelKeys[module.id])}</span>
-                {state.moduleId === module.id ? <Check className="size-4" /> : null}
-                {module.available ? null : (
-                  <span className="text-[10px] text-muted-foreground">{t('module.soon')}</span>
-                )}
-              </DropdownMenuItem>
-            ))}
+            {benchModules.map(item => {
+              const Icon = item.icon;
+              return (
+                <DropdownMenuItem key={item.id} className="gap-2 p-2" onClick={() => navigate(item.path)}>
+                  <div className="flex size-6 items-center justify-center rounded-md border">
+                    <Icon className="size-3.5" />
+                  </div>
+                  <span className="flex-1">{t(item.title)}</span>
+                  {module.id === item.id ? <Check className="size-4" /> : null}
+                  {item.available ? null : (
+                    <span className="text-[10px] text-muted-foreground">{t('module.soon')}</span>
+                  )}
+                </DropdownMenuItem>
+              );
+            })}
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

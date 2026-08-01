@@ -3,14 +3,14 @@ import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import { defineConfig, loadEnv } from 'vite';
 
+import { resolveBenchPort } from './bench-port';
+import { createBenchReportPlugin } from './report-plugin';
+
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), 'RETIKZ_');
-  const port = Number(env.RETIKZ_BENCH_PORT ?? 5175);
-  if (!Number.isInteger(port) || port < 1 || port > 65_535) {
-    throw new Error('RETIKZ_BENCH_PORT must be an integer between 1 and 65535');
-  }
+  const rawPort = process.env.RETIKZ_BENCH_PORT ?? loadEnv(mode, __dirname, '').RETIKZ_BENCH_PORT;
+
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), createBenchReportPlugin(path.resolve(__dirname, 'results'))],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src/playground'),
@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => {
     server: {
       host: '127.0.0.1',
       open: false,
-      port,
+      port: resolveBenchPort(rawPort),
       strictPort: true,
     },
   };

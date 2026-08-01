@@ -5,6 +5,7 @@
 ## 目录
 
 - [`decisions/`](./decisions)：版本路线、milestone roadmap、ADR。
+- `plans/`：与 ADR 相对路径镜像的 ignored implementation plan、测试契约、任务状态与评审记录；不 stage / commit。
 - [`architecture/`](./architecture)：kernel / core 长期架构设计与能力准入标准。
 - [`analysis/`](./analysis)：kernel / core 相关一次性分析。
 
@@ -24,5 +25,5 @@
 ## 规则
 
 - roadmap 可持续更新；ADR Accepted 后只增补状态 / supersede，不改历史判断。
-- 发版后的 ADR 压缩规则以 `.agents/skills/package-publish/SKILL.md` 为准。
+- ADR 长期一致性与发版审计规则以 `.agents/skills/package-publish/SKILL.md` 为准。
 - 本目录不进入 npm 包；发布包由各自 `package.json` 的 `files` 白名单控制。
