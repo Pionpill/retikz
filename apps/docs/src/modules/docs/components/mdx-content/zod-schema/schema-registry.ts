@@ -378,6 +378,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'LayoutArtifact',
     url: '/standard/layout/reference/contract-artifact#layoutartifactschema',
   },
+  LayoutSpacingArtifactSchema: {
+    schema: StandardIR.LayoutSpacingArtifactSchema,
+    label: 'LayoutSpacingArtifact',
+    url: '/standard/layout/reference/contract-artifact#layoutspacingartifactschema',
+  },
   FlexLayoutArtifactSchema: {
     schema: StandardIR.FlexLayoutArtifactSchema,
     label: 'FlexLayoutArtifact',

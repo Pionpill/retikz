@@ -7,15 +7,21 @@ import type {
   LayoutArtifactItemBaseSchema,
   LayoutArtifactOverflowSchema,
   LayoutArtifactRectSchema,
+  LayoutSpacingArtifactSchema,
   LayoutTrackArtifactSchema,
 } from './artifact-schema';
-import type { LayoutTrackSourceKind } from './constants';
+import type { LayoutSpacingKind, LayoutTrackSourceKind } from './constants';
+
+export type LayoutSpacingKindValue = ValueOf<typeof LayoutSpacingKind>;
 
 /** Layout artifact track 来源取值 */
 export type LayoutTrackSourceKindValue = ValueOf<typeof LayoutTrackSourceKind>;
 
 /** Layout artifact 的 container-local 矩形 */
 export type LayoutArtifactRect = z.infer<typeof LayoutArtifactRectSchema>;
+
+/** Flex/Grid 最终物理布局中的固定或分布式间距区域 */
+export type LayoutSpacingArtifact = z.infer<typeof LayoutSpacingArtifactSchema>;
 
 /** Layout item 的可观察溢出状态 */
 export type LayoutArtifactOverflow = z.infer<typeof LayoutArtifactOverflowSchema>;

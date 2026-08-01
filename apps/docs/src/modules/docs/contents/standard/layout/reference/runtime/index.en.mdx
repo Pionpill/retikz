@@ -66,6 +66,20 @@ Each adapter calls the same `createXxxLayout()` factory as direct authoring and 
 
 Layout Inspector is a runtime-only development overlay. It never enters Standard IR or changes typed layout artifacts. SVG appends a `pointer-events="none"` group after the primary figure. Canvas draws the overlay after the primary bitmap without adding its primitives to hit testing. Both backends derive viewBox, resources, animation, and normal interaction from the primary Scene only.
 
+### Color, pattern, and line style
+
+The overlay uses three independent visual channels instead of overloading color with both geometry class and nesting depth:
+
+| Channel    | Meaning                 | Rule                                                                                                                                                                                                             |
+| ---------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Color      | Final layout occurrence | Core assigns `colorScope` in final entry order. Render cycles a nine-color palette, while warnings stay red                                                                                                      |
+| Pattern    | Spacing semantics       | Margin and fixed gaps use `/`, while padding uses the opposite `\`. These three draw hatches without a base fill. Distributed space uses neither a pattern nor a background fill. Hatch spacing is 12 user units |
+| Line style | Geometry class          | Container, content, item boxes, Flex lines, Grid tracks/cells/spans, Overlay placements, and alignment guides are dashed; anchor crosshairs are solid                                                            |
+
+Regular primitives from one occurrence share a color. Nested containers receive colors from their own final occurrences. The palette repeats from the tenth occurrence, so color is a quick ownership cue; the occurrence locator remains the exact identity.
+
+Paint order is spacing hatch / boundary underlay → family structure → box outline → overflow warning → guide/anchor → label. `bounds.content` and `bounds.slot` control only their outlines; `spacing.padding` and `spacing.margin` independently control both texture and boundary. Margin, padding, and fixed gaps use independent dashed lines for their boundaries. A ring outlines only its outer and inner perimeter, never the seams between its hatch pieces. `distributedSpace` shows only the dashed perimeter of unused content and keeps its interior transparent. If a spacing boundary is already fully covered by a content or slot outline, Flex line, or Grid track, that segment is painted once; enabling any category alone still keeps its complete visible boundary.
+
 ### Three activation scopes
 
 | Scope            | React                                  | Vanilla                           | Cascade behavior                                            |
@@ -74,7 +88,7 @@ Layout Inspector is a runtime-only development overlay. It never enters Standard
 | Authored subtree | `<Scope inspect={{ layout: true }}>`   | `VanillaScopeSpec.inspect`        | Select only authored descendants of that Scope              |
 | One container    | `<FlexLayout inspect>` and equivalents | `flexLayout('id', input, true)`   | Select that occurrence only; nested layouts stay unchanged  |
 
-Policies merge field by field from Layout to the nearest Scope and then the component. `layout: false` only overrides the current cascaded value, so a deeper Scope or component may enable it again; only `enabled: false` creates a hard subtree barrier that descendants cannot cross. Component-level `inspect={false}` disables only that occurrence. With every `inspect` omitted, no inspector runs and `CompileResult.inspection` is `null`.
+Policies merge field by field from Layout to the nearest Scope and then the component. Object-valued `bounds` and `spacing` merge individual fields; switching between a boolean and an object replaces the whole group with the later value. `layout: false` only overrides the current cascaded value, so a deeper Scope or component may enable it again; only `enabled: false` creates a hard subtree barrier that descendants cannot cross. Component-level `inspect={false}` disables only that occurrence. With every `inspect` omitted, no inspector runs and `CompileResult.inspection` is `null`.
 
 ### Shared policy and bounds
 
@@ -87,7 +101,9 @@ Policies merge field by field from Layout to the nearest Scope and then the comp
   description="Per-boundary sparse switches for layout overlays."
 />
 
-`layout: true` uses one canonical profile: container, content, slot, allocation, overflow, and alignment guides are on; visual bounds and labels are off. Object values override only explicit fields, so `{ layout: { bounds: { visual: true } } }` keeps the other default bounds enabled.
+`layout: true` uses one full canonical profile: container, content, slot, allocation, padding, margin, overflow, and alignment guides are on; visual bounds and labels are off. Object values override only explicit fields, so `{ layout: { spacing: { padding: false } } }` disables only padding texture.
+
+The docs playground “Recommended” profile is intentionally smaller: Flex shows the content outline, Flex line regions, and fixed gaps; Grid shows the content outline, track bounds, and fixed gaps; Overlay shows only the content outline. “All” enables every detail, “Off” changes only the master switch, and Reset returns to Recommended.
 
 ### Family options
 
@@ -106,7 +122,9 @@ Policies merge field by field from Layout to the nearest Scope and then the comp
   description="Shared and OverlayLayout-specific inspection options."
 />
 
-Flex enables `lines` and `gaps` by default. Grid enables `tracks`, `gaps`, and `spans`, while `cells` stays off. Overlay enables `placements` and `anchors`, while `stacking` stays off.
+Flex enables `lines`, `gaps`, and `distributedSpace` by default. Grid enables `tracks`, `gaps`, `distributedSpace`, and `spans`, while `cells` stays off. Overlay enables `placements` and `anchors`, while `stacking` stays off.
+
+For Flex and Grid, `gaps` controls resolved authored gaps and `distributedSpace` controls positive free space introduced by `justifyContent` or `alignContent`. Fixed gaps use `/`, opposite the padding hatch; distributed space keeps a transparent interior and contributes only uncovered dashed perimeter segments. The inspector consumes resolved `artifact.spacing` segments and does not classify every empty interval between slots or tracks as a gap.
 
 `inspect` accepts sparse authoring values only; unknown keys or invalid types fail loudly. Core resolves the cascade exactly once, then a Standard inspector reads only the typed artifact from that same compilation. A retained update commits the primary frame, artifacts, and overlay atomically; a failure publishes no partial frame.
 
@@ -128,6 +146,10 @@ Flex enables `lines` and `gaps` by default. Grid enables `tracks`, `gaps`, and `
     {
       label: 'Standard family inspection options',
       path: 'packages/library/standard/src/composites/shared/layout/inspect-schema.ts',
+    },
+    {
+      label: 'Standard spacing, ring, and layered lowering',
+      path: 'packages/library/standard/src/composites/shared/layout/internal/inspect.ts',
     },
     { label: 'Vanilla layout adapter preset', path: 'packages/library/standard-vanilla/src/preset/index.ts' },
   ]}

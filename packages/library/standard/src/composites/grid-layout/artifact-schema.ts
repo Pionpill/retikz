@@ -4,6 +4,7 @@ import {
   LayoutArtifactContainerSchema,
   LayoutArtifactItemBaseSchema,
   LayoutItemKind,
+  LayoutSpacingArtifactSchema,
   LayoutTrackArtifactSchema,
 } from '../shared/layout';
 
@@ -20,6 +21,7 @@ const GridLayoutArtifactBaseSchema = z.strictObject({
   items: z.array(GridLayoutArtifactItemSchema).describe('Items in authored source order.'),
   columns: z.array(LayoutTrackArtifactSchema).describe('Resolved columns in physical start order.'),
   rows: z.array(LayoutTrackArtifactSchema).describe('Resolved rows in physical start order.'),
+  spacing: z.array(LayoutSpacingArtifactSchema).describe('Resolved fixed gaps and distributed free-space segments.'),
 });
 
 /** 校验 Grid artifact 的 authored identity、track 序列与 item spans */

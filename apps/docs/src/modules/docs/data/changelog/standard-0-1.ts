@@ -53,15 +53,15 @@ export const standardV01: Release = {
             {
               label: { zh: 'Typed artifact 与装载', en: 'Typed artifacts and loading' },
               content: {
-                zh: '每种容器返回 strict JSON artifact，记录 container、items 与 line / track / paint order 结果；`StandardLayoutPreset` 可只装载布局 definitions，`StandardAllPreset` 同步纳入三项能力。',
-                en: 'Each container returns a strict JSON artifact with container, item, and line, track, or paint-order results. `StandardLayoutPreset` loads only layout definitions, while `StandardAllPreset` now includes all three.',
+                zh: '每种容器返回 strict JSON artifact，记录 container、items 与 line / track / paint order 结果；Flex 与 Grid 额外以必填 `spacing` 区分固定 gap 和正自由空间分布。`StandardLayoutPreset` 可只装载布局 definitions，`StandardAllPreset` 同步纳入三项能力。',
+                en: 'Each container returns a strict JSON artifact with container, item, and line, track, or paint-order results. Flex and Grid additionally require `spacing` to distinguish fixed gaps from positive free-space distribution. `StandardLayoutPreset` loads only layout definitions, while `StandardAllPreset` now includes all three.',
               },
             },
             {
               label: { zh: '布局检查器', en: 'Layout Inspector' },
               content: {
-                zh: 'Flex、Grid 与 Overlay 可逐个开启辅助层；Layout 提供整图策略，Scope 提供 authored 子树策略。SVG / Canvas、static / retained 与 SSR 共用独立 inspection plane，不改变主图边界、资源或命中测试。',
-                en: 'Flex, Grid, and Overlay can enable overlays per occurrence. Layout supplies a whole-figure policy, while Scope supplies an authored-subtree policy. SVG and Canvas, static and retained hosts, and SSR share an isolated inspection plane that does not change primary bounds, resources, or hit testing.',
+                zh: 'Flex、Grid 与 Overlay 可逐个开启辅助层；Layout 提供整图策略，Scope 提供 authored 子树策略。颜色区分最终 occurrence；margin 与固定 gap 使用间距为 12 user units 的 `/` 斜线，padding 使用反向 `\\` 斜线，三者不铺底色并以单份 dashed boundary 定界；distributed space 仅显示虚线周界，内部保持透明。box、内部结构与 spacing 共线时不重复描边。bounds、盒模型间距、固定 gap 与自由空间可独立控制；文档推荐态保留 content 边界、适用的内部结构线和固定 gap。SVG / Canvas、static / retained 与 SSR 共用独立 inspection plane，不改变主图边界、资源或命中测试。',
+                en: 'Flex, Grid, and Overlay can enable overlays per occurrence. Layout supplies a whole-figure policy, while Scope supplies an authored-subtree policy. Color identifies final occurrences. Margin and fixed gaps use `/` hatches spaced 12 user units apart, while padding uses the opposite `\\` hatch; all three omit a base fill and use one dashed boundary. Distributed space shows only a dashed perimeter and keeps its interior transparent. Coincident box, family-structure, and spacing boundaries are painted once. Bounds, box spacing, fixed gaps, and distributed space are independently selectable; the docs Recommended profile keeps the content outline, applicable internal structure lines, and fixed gaps. SVG and Canvas, static and retained hosts, and SSR share an isolated inspection plane that does not change primary bounds, resources, or hit testing.',
               },
             },
           ],

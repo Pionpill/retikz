@@ -6,6 +6,8 @@ import type {
   LayoutArtifact,
   LayoutArtifactContainer,
   LayoutArtifactItemBase,
+  LayoutSpacingArtifact,
+  LayoutSpacingKindValue,
   OverlayLayoutArtifact,
 } from '../../src';
 
@@ -15,6 +17,7 @@ import {
   LayoutArtifactContainerSchema,
   LayoutArtifactItemBaseSchema,
   LayoutArtifactSchema,
+  LayoutSpacingArtifactSchema,
   OverlayLayoutArtifactSchema,
 } from '../../src';
 
@@ -60,6 +63,21 @@ describe('layout artifact schemas', () => {
     expectTypeOf(LayoutArtifactContainerSchema.parse(container)).toEqualTypeOf<LayoutArtifactContainer>();
   });
 
+  it('validates strict JSON-safe spacing segments and positive main-axis length', () => {
+    const values: Array<LayoutSpacingArtifact> = [
+      { kind: 'gap', axis: 'x', bounds: rect(10, 5, 8, 0) },
+      { kind: 'distributed', axis: 'y', bounds: rect(10, 5, 0, 8) },
+    ];
+
+    expect(values.map(value => LayoutSpacingArtifactSchema.parse(JSON.parse(JSON.stringify(value))))).toEqual(values);
+    expect(() => LayoutSpacingArtifactSchema.parse({ ...values[0], kind: 'unknown' })).toThrow();
+    expect(() => LayoutSpacingArtifactSchema.parse({ ...values[0], axis: 'z' })).toThrow();
+    expect(() => LayoutSpacingArtifactSchema.parse({ ...values[0], bounds: rect(10, 5, 0, 8) })).toThrow();
+    expect(() => LayoutSpacingArtifactSchema.parse({ ...values[1], bounds: rect(10, 5, 8, 0) })).toThrow();
+    expect(() => LayoutSpacingArtifactSchema.parse({ ...values[0], extra: true })).toThrow();
+    expectTypeOf<LayoutSpacingKindValue>().toEqualTypeOf<'gap' | 'distributed'>();
+  });
+
   it('validates Flex line partition in both directions', () => {
     const value = {
       kind: 'flex',
@@ -72,9 +90,11 @@ describe('layout artifact schemas', () => {
         { index: 0, itemKeys: ['a'], mainAxis: 'x', mainStart: 5, mainSize: 90, crossStart: 5, crossSize: 20 },
         { index: 1, itemKeys: ['b'], mainAxis: 'x', mainStart: 5, mainSize: 90, crossStart: 25, crossSize: 30 },
       ],
+      spacing: [{ kind: 'gap', axis: 'x', bounds: rect(48, 5, 4, 20) }],
     } satisfies FlexLayoutArtifact;
 
     expect(FlexLayoutArtifactSchema.parse(value)).toEqual(value);
+    expect(() => FlexLayoutArtifactSchema.parse({ ...value, spacing: undefined })).toThrow();
     expect(() =>
       FlexLayoutArtifactSchema.parse({ ...value, lines: [{ ...value.lines[0], itemKeys: ['a', 'b'] }] }),
     ).toThrow();
@@ -93,9 +113,11 @@ describe('layout artifact schemas', () => {
         { index: 1, start: 50, size: 45, sourceKind: 'fraction', implicit: false },
       ],
       rows: [{ index: 0, start: 5, size: 50, sourceKind: 'content-natural', implicit: true }],
+      spacing: [{ kind: 'distributed', axis: 'x', bounds: rect(45, 5, 5, 50) }],
     } satisfies GridLayoutArtifact;
 
     expect(GridLayoutArtifactSchema.parse(value)).toEqual(value);
+    expect(() => GridLayoutArtifactSchema.parse({ ...value, spacing: undefined })).toThrow();
     expect(() => GridLayoutArtifactSchema.parse({ ...value, columns: [{ ...value.columns[0], index: 1 }] })).toThrow();
     expect(() =>
       GridLayoutArtifactSchema.parse({
@@ -154,8 +176,8 @@ describe('layout artifact schemas', () => {
   it('provides one discriminated public union for all layout payloads', () => {
     const emptyContainer = { ...container, visualBounds: rect(0, 0, 0, 0), visibleBounds: null };
     const values: Array<LayoutArtifact> = [
-      { kind: 'flex', container: emptyContainer, items: [], lines: [] },
-      { kind: 'grid', container: emptyContainer, items: [], columns: [], rows: [] },
+      { kind: 'flex', container: emptyContainer, items: [], lines: [], spacing: [] },
+      { kind: 'grid', container: emptyContainer, items: [], columns: [], rows: [], spacing: [] },
       { kind: 'overlay', container: emptyContainer, items: [], paintOrder: [] },
     ];
 
