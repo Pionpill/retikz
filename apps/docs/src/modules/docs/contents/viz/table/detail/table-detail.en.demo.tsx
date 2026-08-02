@@ -18,6 +18,22 @@ const ScoreTable: FC<ScoreTableProps> = props => {
       id="score-detail"
       dataRef="scores"
       data={scoreRows}
+      style="neutral"
+      rules={[
+        {
+          selector: { fields: ['score'], value: { kind: 'compare', operator: 'lt', value: 0 } },
+          appearance: { content: { color: 'crimson' } },
+        },
+      ]}
+      encodings={[
+        {
+          id: 'group-background',
+          selector: { fields: ['group'], payloadKinds: ['value'] },
+          channel: 'backgroundFill',
+          scale: { name: 'ordinal-color' },
+          legend: false,
+        },
+      ]}
       layout={{
         columnSize: { kind: 'auto' },
         rowSize: { kind: 'auto' },
@@ -29,7 +45,7 @@ const ScoreTable: FC<ScoreTableProps> = props => {
           horizontal: { kind: 'line', stroke: 'lightgray', width: 1 },
         },
       }}
-      {...(embedded ? {} : { width: 360, height: 168, style: { maxWidth: '100%', height: 'auto' } })}
+      {...(embedded ? {} : { width: 360, height: 168, containerStyle: { maxWidth: '100%', height: 'auto' } })}
     >
       <DetailColumn id="name" field="name" header="Name" bodyLayout={{ padding: 6, wrap: true }} />
       <DetailColumn id="group" field="group" header="Group" bodyLayout={{ padding: 6 }} />
@@ -37,6 +53,7 @@ const ScoreTable: FC<ScoreTableProps> = props => {
         id="score"
         field="score"
         header="Score"
+        formatter={{ name: 'number', options: { specifier: '+.0f' } }}
         headerLayout={{ padding: 6 }}
         bodyLayout={{ padding: 6, horizontalAlign: 'end', overflow: 'clip' }}
       />

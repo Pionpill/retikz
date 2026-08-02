@@ -1,6 +1,6 @@
 ---
 title: Contract - Table
-description: Look up the TableSpec root, manual Cells, canonical payloads, and presentation-reference JSON schemas.
+description: Look up TableSpec roots, Cell formatters, rules/encodings, style tokens, and canonical payload JSON schemas.
 ---
 
 Base Table contracts define the top-level identity and Cell content shared by every table type, plus precise manual and custom root variants. See [Detail Table contracts](/viz/table/reference/contract-detail) for detail-only data references and columns, or [Layout contracts](/viz/table/reference/contract-layout) for Cell boxes, tracks, and borders.
@@ -9,15 +9,20 @@ Base Table contracts define the top-level identity and Cell content shared by ev
 
 `IRTableSpec` aggregates `IRDetailTableSpec | IRManualTableSpec | IRCustomTableSpec`. The three variants share `namespace + type` fields and constrain `data` and `structure` independently.
 
-| Field       | Type                                | Default        | Description                                              |
-| ----------- | ----------------------------------- | -------------- | -------------------------------------------------------- |
-| `namespace` | `'table'`                           | —              | Tier 2 composite namespace                               |
-| `type`      | <ApiValues name="TableComposite" /> | —              | Top-level Table node type                                |
-| `id?`       | `string`                            | —              | Optional stable id                                       |
-| `layout?`   | `IRTableLayout`                     | track defaults | Tracks, sparse overrides, gaps, and borders              |
-| `meta?`     | `IRJsonObject`                      | —              | JSON-safe metadata preserved by lowering                 |
-| `data?`     | `IRDataReference`                   | —              | Required by detail, forbidden by manual, optional custom |
-| `structure` | `IRTableStructureOperation`         | —              | Detail, manual, or custom Structure                      |
+| Field          | Type                                | Default        | Description                                              |
+| -------------- | ----------------------------------- | -------------- | -------------------------------------------------------- |
+| `namespace`    | `'table'`                           | —              | Tier 2 composite namespace                               |
+| `type`         | <ApiValues name="TableComposite" /> | —              | Top-level Table node type                                |
+| `id?`          | `string`                            | —              | Optional stable id                                       |
+| `layout?`      | `IRTableLayout`                     | track defaults | Tracks, sparse overrides, gaps, and borders              |
+| `meta?`        | `IRJsonObject`                      | —              | JSON-safe metadata preserved by lowering                 |
+| `rules?`       | `Array<IRTableCellRule>`            | `[]`           | Declaration-ordered Cell overrides                       |
+| `encodings?`   | `Array<IRTableCellVisualEncoding>`  | `[]`           | Ordered raw-value mappings to color channels             |
+| `style?`       | `TableStyleValue`                   | `'neutral'`    | Built-in visual preset                                   |
+| `themeMode?`   | `TableThemeModeValue`               | `'light'`      | Light/dark preset token mode                             |
+| `styleTokens?` | `IRTableStyleTokens`                | `{}`           | Strict partial token overlay for the selected mode       |
+| `data?`        | `IRDataReference`                   | —              | Required by detail, forbidden by manual, optional custom |
+| `structure`    | `IRTableStructureOperation`         | —              | Detail, manual, or custom Structure                      |
 
 ### TableSpecSchema
 
@@ -60,6 +65,40 @@ These payload schemas describe canonical Structure output. Manual authoring uses
 <ZodSchema name="TablePresentationRefSchema" />
 
 `presentation.name` must match a definition injected at runtime. An unregistered name or options that fail the selected provider's `optionsSchema` fail loudly.
+
+## Formatter, rules, and visual encodings
+
+### TableFormatterRefSchema
+
+<ZodSchema name="TableFormatterRefSchema" />
+
+### TableCellSelectorSchema
+
+<ZodSchema name="TableCellSelectorSchema" />
+
+### TableCellRuleSchema
+
+<ZodSchema name="TableCellRuleSchema" />
+
+### TableCellVisualEncodingSchema
+
+<ZodSchema name="TableCellVisualEncodingSchema" />
+
+## Style presets and token overlays
+
+### TableStyleSchema
+
+<ZodSchema name="TableStyleSchema" />
+
+### TableThemeModeSchema
+
+<ZodSchema name="TableThemeModeSchema" />
+
+### TableStyleTokensSchema
+
+<ZodSchema name="TableStyleTokensSchema" />
+
+`neutral` is the default preset; `academic` follows a LaTeX/booktabs direction, `vibrant` uses strong colors with a light surface, and `clean` removes as much nonessential decoration as possible. Every preset provides a complete light/dark token map. User `styleTokens` replace leaves only for the selected mode, while unknown keys identify the exact token and fail loudly.
 
 ## Related
 

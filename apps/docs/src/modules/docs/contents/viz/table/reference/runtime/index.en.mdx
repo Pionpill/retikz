@@ -9,7 +9,7 @@ TableSpec stores only JSON-safe structure. Datasets, Definitions, Core compile o
 
 ## How entries converge
 
-React standalone, Vanilla SSR, direct `compileTable()`, and embedded Tables use different authoring and host surfaces, but they do not duplicate Table normalization, presentation, or layout algorithms.
+React standalone, Vanilla SSR, direct `compileTable()`, and embedded Tables use different authoring and host surfaces, but they do not duplicate Table normalization, formatter/style cascade, presentation, or layout algorithms.
 
 <div className="hidden sm:block">
   <ComponentPreview files="table-runtime-entry" hideCode size="sm" previewClassName="p-3" />
@@ -20,7 +20,7 @@ React standalone, Vanilla SSR, direct `compileTable()`, and embedded Tables use 
 
 Standalone entries build a canonical `children[0]` root Scene and pass Table definitions plus extra composites into Core compile. React delegates rendering to `<Layout>`; Vanilla `renderTable()` renders the same Scene to an SVG string.
 
-An embedded Table does not start a local compile. It contributes its spec, datasets, Structure / Presentation definitions, and extra composites to the outer `<Layout>` or Vanilla adapter. The host performs the shared compile and exposes results through host artifacts.
+An embedded Table does not start a local compile. It contributes its spec, datasets, Formatter / Structure / Presentation / Visual Scale definitions, and extra composites to the outer `<Layout>` or Vanilla adapter. The host performs the shared compile and exposes results through host artifacts.
 
 ## One Table transaction
 
@@ -33,7 +33,7 @@ An embedded Table does not start a local compile. It contributes its spec, datas
   <ComponentPreview files="table-runtime-transaction" hideCode size="xxxl" previewClassName="p-3" />
 </div>
 
-1. **Canonical model**: Table schema validation runs first. A Structure definition normalizes manual, detail, or custom input into one semantic model; Presentation definitions turn Cell payloads into layoutable content.
+1. **Canonical model**: Table schema validation runs first and a Structure definition normalizes one semantic model. Each Cell first resolves its final plan from preset/tokens, Cell configuration, encodings, and ordered rules. Value Cells then run the winning formatter/Presentation; content Cells bypass both and apply their resolved content style.
 2. **Natural proposal probes**: every Cell calls `layoutChild` with `NaturalLayoutProposal` to obtain allocation and visual bounds. These probes measure content but do not commit output.
 3. **Columns and wrap**: natural width, spans, gaps, track configuration, and the parent x-axis `exact.value` or finite `range.max` feed the column solver. Only wrapping Cells issue another `x: range(0, contentWidth)` probe.
 4. **Rows and placement**: final probe heights feed the row solver. The transaction then computes Cell boxes, padding-reduced content boxes, fit / align / overflow placement, and the border conflict graph.
@@ -48,10 +48,34 @@ An embedded Table does not start a local compile. It contributes its spec, datas
 <SourceLinks
   sources={[
     {
-      label: 'Measurement, solving, placement, and replay in one Table transaction',
+      label: 'Cell natural probes, column solving, and wrap probes',
       path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
-      startLine: 263,
-      endLine: 455,
+      startLine: 400,
+      endLine: 451,
+    },
+    {
+      label: 'Row solving, Cell boxes, and content placement',
+      path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
+      startLine: 454,
+      endLine: 511,
+    },
+    {
+      label: 'Border conflict graph construction and probe',
+      path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
+      startLine: 513,
+      endLine: 587,
+    },
+    {
+      label: 'Final replay, Scene root, and manifest publication',
+      path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
+      startLine: 589,
+      endLine: 632,
+    },
+    {
+      label: 'Normalization, Cell plans, formatter, and Presentation',
+      path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
+      startLine: 642,
+      endLine: 665,
     },
     {
       label: 'compileTable root Scene, definition merge, and root artifact selection',
@@ -62,14 +86,20 @@ An embedded Table does not start a local compile. It contributes its spec, datas
     {
       label: 'React standalone Layout and manifest observer wiring',
       path: 'packages/viz/table-react/src/table-view.tsx',
-      startLine: 17,
-      endLine: 60,
+      startLine: 45,
+      endLine: 69,
     },
     {
       label: 'React embedded Table runtime contribution to the outer host',
       path: 'packages/viz/table-react/src/embedded-runtime.ts',
       startLine: 12,
       endLine: 45,
+    },
+    {
+      label: 'Runtime contribution merge and frozen copied containers',
+      path: 'packages/viz/table/src/pipeline/contribution/contribution.ts',
+      startLine: 92,
+      endLine: 178,
     },
   ]}
 />
@@ -86,16 +116,21 @@ An embedded Table does not start a local compile. It contributes its spec, datas
 
 The two `ManualTable` authoring modes are mutually exclusive. Props mode forwards the persisted row-major structure. Marker mode derives width from the maximum occupied position, pads with `null`, and then uses the same `createManualTableSpec()` and Table schema.
 
-`TableLayoutHostProps` precisely reuses the host fields currently supported by Kernel `<Layout ir>`: handlers, output size/viewBox, renderer, animation, resource ids, Core provider definitions, and the TeX lowerer. See the authoritative [Layout API](/kernel/components/layout/overview) for the complete field semantics. Scope styles, full `compile`, `artifacts/onArtifacts`, and `embeddables` are not part of the Table-root public surface.
+`TableLayoutHostProps` precisely reuses the host fields currently supported by Kernel `<Layout ir>`: handlers, output size/viewBox, renderer, animation, resource ids, Core provider definitions, and the TeX lowerer. Standalone host CSS uses `containerStyle`; it is renamed to internal Layout `style` exactly once and never enters TableSpec. See the authoritative [Layout API](/kernel/components/layout/overview) for complete field semantics. Scope styles, full `compile`, `artifacts/onArtifacts`, and `embeddables` are not part of the Table-root public surface.
 
 | Shared prop                | Type                                            | Default | Description                                           |
 | -------------------------- | ----------------------------------------------- | ------- | ----------------------------------------------------- |
+| `containerStyle?`          | `LayoutProps['style']`                          | —       | Standalone host CSS; unsupported when embedded        |
+| `formatterDefinitions?`    | `LowerTablesOptions['formatterDefinitions']`    | `[]`    | Custom Cell formatter definitions                     |
 | `structureDefinitions?`    | `LowerTablesOptions['structureDefinitions']`    | `[]`    | Custom Structure definitions                          |
 | `presentationDefinitions?` | `LowerTablesOptions['presentationDefinitions']` | `[]`    | Custom Cell presentation definitions                  |
+| `visualScaleDefinitions?`  | `LowerTablesOptions['visualScaleDefinitions']`  | `[]`    | Custom Cell visual-scale definitions                  |
 | `composites?`              | `ReadonlyArray<AnyCompositeDefinition>`         | `[]`    | Extra definitions required by Tier 2 Cell content     |
 | `onManifest?`              | `(manifest: TableLayoutManifest) => void`       | —       | Reports the same compile's root manifest after commit |
 
 The standalone runtime builds a canonical `children[0]` Scene. From `Layout.onArtifacts` it selects exactly one artifact with definition key `table.table`, `sourcePath: 'children[0]'`, and `expansionPath: []`. Notifications are deduplicated by serialized manifest content, and SSR render causes no callback side effect.
+
+The four definition categories and composites merge by stable key and object identity when entering a runtime contribution. Runtime stores copied frozen arrays, `lowerOptions`, and envelope, so later caller `push` operations cannot mutate an existing contribution. Definition and composite objects remain caller-owned and are neither cloned nor frozen.
 
 ### Embedded
 
@@ -108,7 +143,7 @@ A Table used as a parent `<Layout>` child requires a non-empty stable id. Datase
 ```ts
 const result = renderTable(spec, {
   data: { scores: rows },
-  lowerOptions: { presentationDefinitions },
+  lowerOptions: { formatterDefinitions, presentationDefinitions, visualScaleDefinitions },
   compile: {
     composites: [customCellComposite],
     shapes: [customShape],
@@ -122,14 +157,14 @@ result.svg;
 result.manifest;
 ```
 
-| `renderTable` option | Type                                 | Default | Description                                      |
-| -------------------- | ------------------------------------ | ------- | ------------------------------------------------ |
-| `data?`              | `ExternalDatasets`                   | `{}`    | Table datasets                                   |
-| `lowerOptions?`      | `LowerTablesOptions`                 | `{}`    | Structure / Presentation definitions             |
-| `compile?`           | `RenderToStringOptions['compile']`   | `{}`    | Core compile options; extra composites live here |
-| `animation?`         | `RenderToStringOptions['animation']` | `{}`    | SSR animation, snapshot, and easing options      |
-| `output?`            | `RenderToStringOptions['output']`    | `{}`    | SVG id prefix and display dimensions             |
-| `artifacts?`         | `boolean`                            | `false` | Return `{ svg, manifest }` when true             |
+| `renderTable` option | Type                                 | Default | Description                                                     |
+| -------------------- | ------------------------------------ | ------- | --------------------------------------------------------------- |
+| `data?`              | `ExternalDatasets`                   | `{}`    | Table datasets                                                  |
+| `lowerOptions?`      | `LowerTablesOptions`                 | `{}`    | Formatter / Structure / Presentation / Visual Scale definitions |
+| `compile?`           | `RenderToStringOptions['compile']`   | `{}`    | Core compile options; extra composites live here                |
+| `animation?`         | `RenderToStringOptions['animation']` | `{}`    | SSR animation, snapshot, and easing options                     |
+| `output?`            | `RenderToStringOptions['output']`    | `{}`    | SVG id prefix and display dimensions                            |
+| `artifacts?`         | `boolean`                            | `false` | Return `{ svg, manifest }` when true                            |
 
 Top-level `composites` has been removed; use `compile.composites`. `renderTable()` calls `compileTable()` exactly once whether `artifacts` is true or false. False only ignores the sidecar and does not change the Scene or transaction.
 
@@ -156,6 +191,10 @@ The manifest is a JSON-safe, detached, recursively frozen typed-artifact payload
 | `lowerTableWithArtifacts()`        | `compileTable()`                                |
 | `renderTable(..., { composites })` | `renderTable(..., { compile: { composites } })` |
 | Embedded Table `onManifest`        | Outer `<Layout onArtifacts>`                    |
+| React host CSS `style={{ ... }}`   | `containerStyle={{ ... }}`                      |
+| Earlier default minimal visuals    | Explicit `style="clean"`                        |
+
+The Table preset continues to use string `style` on a spec/root; do not mix it with host CSS. An omitted preset resolves to `neutral` + `light`, and `styleTokens` is a strict partial overlay for the selected mode.
 
 ## Related
 

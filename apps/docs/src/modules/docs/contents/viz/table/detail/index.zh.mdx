@@ -37,13 +37,25 @@ import { DetailColumn, DetailTable } from '@retikz/table-react';
 
 `columns` 与 `DetailColumn` children 只能二选一；两种写法会得到相同的明细表 spec。除 `columns` 外，`DetailTable` 的根属性在两种写法中完全一致。
 
+Table 会先解析每个 Cell 的最终计划：`style`、`themeMode` 与 `styleTokens` 建立视觉基线，列级配置提供 formatter/presentation 与局部外观，`encodings` 映射原始数据颜色，声明顺序中的 `rules` 最后覆盖匹配 Cell，也可以改写 formatter/presentation 胜者。随后才由胜出的 formatter 把原始字段值转成显示值。它们都是 JSON-safe TableSpec 字段，不会在 React 层提前执行。
+
 ## 例子
 
 ### 基本明细表
 
-列头字符串会自动变成 value Cell。下面三条外部记录按 `DetailColumn` 的声明顺序映射为三行：
+列头字符串会自动变成 value Cell。下面三条外部记录按 `DetailColumn` 的声明顺序映射为三行；分数列使用内置 `number` formatter，分组列使用 `ordinal-color` 背景编码，最后一条有序规则把负分文字标红：
 
 <ComponentPreview files={['table-detail', 'table-detail.data.ts']} size="sm" />
+
+示例显式写出 `style="neutral"`，并用 `containerStyle` 控制 standalone 宿主 CSS。`legend: false` 表示这条编码只改变 Cell 外观，不请求 Legend descriptor。
+
+<ComponentAlert
+  type="tip"
+  title="从旧版视觉或宿主 style 迁移"
+  description={
+    '未写 style 时现在按 neutral/light 解析；要保留旧的极简无装饰视觉，请显式写 style="clean"。React 宿主 CSS 已从 style 改名为 containerStyle；style 现在只接受 Table preset。'
+  }
+/>
 
 ### 布局实验台
 
@@ -109,32 +121,32 @@ const svg = renderTable(spec, { data: { scores: rows } });
     {
       label: '结构规范化与 Cell presentation',
       path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
-      startLine: 264,
-      endLine: 277,
+      startLine: 642,
+      endLine: 665,
     },
     {
       label: '内容测量、轨道求解与 wrap 重排',
       path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
-      startLine: 279,
-      endLine: 330,
+      startLine: 400,
+      endLine: 451,
     },
     {
       label: 'Cell box 与内容放置',
       path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
-      startLine: 333,
-      endLine: 380,
+      startLine: 472,
+      endLine: 511,
     },
     {
       label: 'Border Graph 构建与 probe',
       path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
-      startLine: 383,
-      endLine: 418,
+      startLine: 513,
+      endLine: 587,
     },
     {
       label: '布局范围、replay root 与 manifest 构造',
       path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
-      startLine: 420,
-      endLine: 455,
+      startLine: 589,
+      endLine: 632,
     },
     {
       label: 'Table composite 校验 typed artifact',
@@ -187,14 +199,14 @@ result.manifest;
     {
       label: 'React standalone manifest observer',
       path: 'packages/viz/table-react/src/table-view.tsx',
-      startLine: 40,
-      endLine: 63,
+      startLine: 45,
+      endLine: 60,
     },
     {
       label: 'React embedded 入口拒绝 standalone props',
       path: 'packages/viz/table-react/src/table-runtime.ts',
-      startLine: 204,
-      endLine: 212,
+      startLine: 238,
+      endLine: 246,
     },
     {
       label: 'Vanilla 按 artifacts 选项返回 manifest sidecar',
@@ -209,26 +221,33 @@ result.manifest;
 
 ### DetailTable
 
-| 属性                       | 类型                                                             | 默认值     | 描述                                                              |
-| -------------------------- | ---------------------------------------------------------------- | ---------- | ----------------------------------------------------------------- |
-| `dataRef`                  | `DetailTableProps['dataRef']`                                    | —          | spec 中的外部数据引用名                                           |
-| `data`                     | `DetailTableProps['data']`                                       | —          | 当前明细记录；不写入 spec                                         |
-| `columns?`                 | `DetailTableProps['columns']`                                    | —          | 程序化地按展示顺序声明字段、列头与 presentation；与 children 互斥 |
-| `children?`                | `DetailTableProps['children']`                                   | —          | `DetailColumn` 声明顺序；与 `columns` 互斥                        |
-| `model?`                   | `DetailTableProps['model']`                                      | —          | 可选字段模型                                                      |
-| `header?`                  | `DetailTableProps['header']`                                     | `true`     | 是否生成列头行                                                    |
-| `id?`                      | `DetailTableProps['id']`                                         | —          | 稳定 Table id；嵌入父级 `Layout` 时必填                           |
-| `layout?`                  | `DetailTableProps['layout']`                                     | 轨道默认值 | 默认/索引轨道尺寸、间距与 Table border                            |
-| `meta?`                    | `DetailTableProps['meta']`                                       | —          | 写入 TableSpec 的 JSON 元数据                                     |
-| `structureDefinitions?`    | `DetailTableProps['structureDefinitions']`                       | `[]`       | 自定义结构 definitions                                            |
-| `presentationDefinitions?` | `DetailTableProps['presentationDefinitions']`                    | `[]`       | 自定义 Cell presentation definitions                              |
-| `composites?`              | `DetailTableProps['composites']`                                 | `[]`       | Cell 内嵌 Tier 2 内容所需 definitions                             |
-| `onManifest?`              | `DetailTableProps['onManifest']`                                 | —          | standalone 布局产物通知；嵌入时不支持                             |
-| `width?` / `height?`       | `DetailTableProps['width']`                                      | —          | 宿主显示尺寸；不改变 Table layout proposal                        |
-| `viewBox?`                 | `DetailTableProps['viewBox']`                                    | —          | Scene 相机；不改变轨道求解                                        |
-| `animate?` / `snapshotAt?` | `DetailTableProps['animate']`                                    | —          | 复用 Kernel Layout 的动画宿主合同                                 |
-| `renderer?`                | `DetailTableProps['renderer']`                                   | `'svg'`    | 渲染后端                                                          |
-| `className?` / `style?`    | `DetailTableProps['className']`<br />`DetailTableProps['style']` | —          | 透传给渲染宿主                                                    |
+| 属性                             | 类型                                                                      | 默认值      | 描述                                                              |
+| -------------------------------- | ------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------- |
+| `dataRef`                        | `DetailTableProps['dataRef']`                                             | —           | spec 中的外部数据引用名                                           |
+| `data`                           | `DetailTableProps['data']`                                                | —           | 当前明细记录；不写入 spec                                         |
+| `columns?`                       | `DetailTableProps['columns']`                                             | —           | 程序化地按展示顺序声明字段、列头与 presentation；与 children 互斥 |
+| `children?`                      | `DetailTableProps['children']`                                            | —           | `DetailColumn` 声明顺序；与 `columns` 互斥                        |
+| `model?`                         | `DetailTableProps['model']`                                               | —           | 可选字段模型                                                      |
+| `header?`                        | `DetailTableProps['header']`                                              | `true`      | 是否生成列头行                                                    |
+| `id?`                            | `DetailTableProps['id']`                                                  | —           | 稳定 Table id；嵌入父级 `Layout` 时必填                           |
+| `layout?`                        | `DetailTableProps['layout']`                                              | 轨道默认值  | 默认/索引轨道尺寸、间距与 Table border                            |
+| `rules?`                         | `DetailTableProps['rules']`                                               | `[]`        | 按声明顺序匹配并覆盖 formatter、presentation 或外观               |
+| `encodings?`                     | `DetailTableProps['encodings']`                                           | `[]`        | 把选中 value Cell 的原始值映射到背景或内容颜色                    |
+| `style?`                         | `DetailTableProps['style']`                                               | `'neutral'` | Table preset：neutral、academic、vibrant 或 clean                 |
+| `themeMode?`                     | `DetailTableProps['themeMode']`                                           | `'light'`   | 选择 preset 的 light/dark token map                               |
+| `styleTokens?`                   | `DetailTableProps['styleTokens']`                                         | `{}`        | 当前 mode 下严格、扁平、按叶覆盖的 partial token overlay          |
+| `meta?`                          | `DetailTableProps['meta']`                                                | —           | 写入 TableSpec 的 JSON 元数据                                     |
+| `formatterDefinitions?`          | `DetailTableProps['formatterDefinitions']`                                | `[]`        | 自定义 Cell formatter definitions                                 |
+| `structureDefinitions?`          | `DetailTableProps['structureDefinitions']`                                | `[]`        | 自定义结构 definitions                                            |
+| `presentationDefinitions?`       | `DetailTableProps['presentationDefinitions']`                             | `[]`        | 自定义 Cell presentation definitions                              |
+| `visualScaleDefinitions?`        | `DetailTableProps['visualScaleDefinitions']`                              | `[]`        | 自定义 Cell visual scale definitions                              |
+| `composites?`                    | `DetailTableProps['composites']`                                          | `[]`        | Cell 内嵌 Tier 2 内容所需 definitions                             |
+| `onManifest?`                    | `DetailTableProps['onManifest']`                                          | —           | standalone 布局产物通知；嵌入时不支持                             |
+| `width?` / `height?`             | `DetailTableProps['width']`                                               | —           | 宿主显示尺寸；不改变 Table layout proposal                        |
+| `viewBox?`                       | `DetailTableProps['viewBox']`                                             | —           | Scene 相机；不改变轨道求解                                        |
+| `animate?` / `snapshotAt?`       | `DetailTableProps['animate']`                                             | —           | 复用 Kernel Layout 的动画宿主合同                                 |
+| `renderer?`                      | `DetailTableProps['renderer']`                                            | `'svg'`     | 渲染后端                                                          |
+| `className?` / `containerStyle?` | `DetailTableProps['className']`<br />`DetailTableProps['containerStyle']` | —           | 仅 standalone 透传给渲染宿主；嵌入时拒绝                          |
 
 ### DetailColumn
 
@@ -237,11 +256,14 @@ result.manifest;
 | `id`            | `DetailColumnProps['id']`           | —      | 列的稳定标识                          |
 | `field`         | `DetailColumnProps['field']`        | —      | 从每条记录读取的字段                  |
 | `header?`       | `DetailColumnProps['header']`       | —      | 列头 payload；字符串会转为 value Cell |
+| `formatter?`    | `DetailColumnProps['formatter']`    | —      | 正文原始 value 的 formatter 引用      |
 | `presentation?` | `DetailColumnProps['presentation']` | —      | 正文 value Cell 的可选呈现引用        |
 | `headerLayout?` | `DetailColumnProps['headerLayout']` | —      | 列头 Cell 的布局与四边 border 策略    |
 | `bodyLayout?`   | `DetailColumnProps['bodyLayout']`   | —      | 正文 Cell 的布局与四边 border 策略    |
 
 `detailTable(input)` 接收同一组 spec 输入并返回 `IRDetailTableSpec`。完整的 `Table`、`ManualTable`、schema、adapter 和 lowering 契约见 [API 参考](/viz/table/reference)。
+
+Formatter 与 presentation 只处理 value Cell。直接提供 `content` 的 Cell 已经持有可渲染 child，会绕过两者；同时声明 `content` 与 formatter/presentation 会 fail-loud。
 
 ## 相关
 

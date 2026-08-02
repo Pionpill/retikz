@@ -9,7 +9,7 @@ TableSpec 只保存 JSON-safe 结构；datasets、Definitions、Core compile opt
 
 ## 入口如何汇合
 
-React standalone、Vanilla SSR、直接 `compileTable()` 与 embedded Table 的 authoring 和宿主方式不同，但它们不会复制 Table 的 normalize、presentation 或 layout 算法。
+React standalone、Vanilla SSR、直接 `compileTable()` 与 embedded Table 的 authoring 和宿主方式不同，但它们不会复制 Table 的 normalize、formatter/style cascade、presentation 或 layout 算法。
 
 <div className="hidden sm:block">
   <ComponentPreview files="table-runtime-entry" hideCode size="sm" previewClassName="p-3" />
@@ -20,7 +20,7 @@ React standalone、Vanilla SSR、直接 `compileTable()` 与 embedded Table 的 
 
 Standalone 入口构造 canonical `children[0]` 根 Scene，把 Table definitions 与额外 composites 一起交给 Core compile；React 由 `<Layout>` 管理渲染，Vanilla 的 `renderTable()` 再把同一 Scene 输出为 SVG 字符串。
 
-Embedded Table 不启动局部 compile。它把 spec、datasets、Structure / Presentation definitions 与额外 composites 贡献给外层 `<Layout>` 或 Vanilla adapter，由宿主统一编译并通过宿主 artifacts 观察结果。
+Embedded Table 不启动局部 compile。它把 spec、datasets、Formatter / Structure / Presentation / Visual Scale definitions 与额外 composites 贡献给外层 `<Layout>` 或 Vanilla adapter，由宿主统一编译并通过宿主 artifacts 观察结果。
 
 ## 一次 Table transaction
 
@@ -33,7 +33,7 @@ Embedded Table 不启动局部 compile。它把 spec、datasets、Structure / Pr
   <ComponentPreview files="table-runtime-transaction" hideCode size="xxxl" previewClassName="p-3" />
 </div>
 
-1. **Canonical model**：先通过 Table schema，再由 Structure definition 把 manual、detail 或 custom 输入规范化为统一语义模型；Presentation definition 把 Cell payload 转成可布局内容。
+1. **Canonical model**：先通过 Table schema，再由 Structure definition 规范化语义模型。每个 Cell 先按 preset/token、Cell 配置、encoding 与有序 rules 解析最终计划；value Cell 再执行胜出的 formatter/Presentation，content Cell 则绕过两者并应用解析后的 content style。
 2. **Natural proposal probes**：每个 Cell 先用 `NaturalLayoutProposal` 执行 `layoutChild`，得到内容的 allocation bounds 与 visual bounds；这些 probe 只用于测量。
 3. **列求解与 wrap**：natural 宽度、span、gap、track 配置，以及父级 x 轴 `exact.value` 或有限 `range.max` 一起进入列求解。只有开启 wrap 的 Cell 才按最终内容宽度再发起 `x: range(0, contentWidth)` probe。
 4. **行求解与放置**：最终 probe 的高度进入行求解，随后计算 Cell box、padding 后的 content box、fit / align / overflow placement，并建立 border conflict graph。
@@ -48,10 +48,34 @@ Embedded Table 不启动局部 compile。它把 spec、datasets、Structure / Pr
 <SourceLinks
   sources={[
     {
-      label: '单次 Table transaction 的测量、求解、放置与 replay',
+      label: 'Cell natural probes、列求解与 wrap probes',
       path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
-      startLine: 263,
-      endLine: 455,
+      startLine: 400,
+      endLine: 451,
+    },
+    {
+      label: '行求解、Cell box 与 content placement',
+      path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
+      startLine: 454,
+      endLine: 511,
+    },
+    {
+      label: 'Border conflict graph 的构建与 probe',
+      path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
+      startLine: 513,
+      endLine: 587,
+    },
+    {
+      label: '最终 replay、Scene root 与 manifest 发布',
+      path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
+      startLine: 589,
+      endLine: 632,
+    },
+    {
+      label: '规范化、Cell plan、formatter 与 Presentation',
+      path: 'packages/viz/table/src/pipeline/layout/transaction.ts',
+      startLine: 642,
+      endLine: 665,
     },
     {
       label: 'compileTable 的单根 Scene、definitions 合并与根 artifact 选择',
@@ -62,14 +86,20 @@ Embedded Table 不启动局部 compile。它把 spec、datasets、Structure / Pr
     {
       label: 'React standalone 的 Layout 与 manifest observer 接线',
       path: 'packages/viz/table-react/src/table-view.tsx',
-      startLine: 17,
-      endLine: 60,
+      startLine: 45,
+      endLine: 69,
     },
     {
       label: 'React embedded Table 向外层宿主贡献运行时输入',
       path: 'packages/viz/table-react/src/embedded-runtime.ts',
       startLine: 12,
       endLine: 45,
+    },
+    {
+      label: 'runtime contribution 合并并冻结复制后的容器',
+      path: 'packages/viz/table/src/pipeline/contribution/contribution.ts',
+      startLine: 92,
+      endLine: 178,
     },
   ]}
 />
@@ -86,16 +116,21 @@ Embedded Table 不启动局部 compile。它把 spec、datasets、Structure / Pr
 
 `ManualTable` 的两种 authoring 模式互斥。props 模式直接转发行优先持久化结构；marker 模式根据最大占用位置推导列数并补 `null`，然后交给同一个 `createManualTableSpec()` 与 Table schema。
 
-`TableLayoutHostProps` 精确复用 Kernel `<Layout ir>` 当前支持的宿主字段：handlers、输出尺寸/viewBox、renderer、动画、资源 id、Core provider definitions 与 TeX lowerer。完整字段与语义见 [Layout API](/kernel/components/layout/overview)；Scope style、完整 `compile`、`artifacts/onArtifacts` 与 `embeddables` 不属于 Table 根组件公共面。
+`TableLayoutHostProps` 精确复用 Kernel `<Layout ir>` 当前支持的宿主字段：handlers、输出尺寸/viewBox、renderer、动画、资源 id、Core provider definitions 与 TeX lowerer。standalone 宿主 CSS 使用 `containerStyle`，它只在进入内部 Layout 时改名为 `style`，绝不进入 TableSpec。完整字段与语义见 [Layout API](/kernel/components/layout/overview)；Scope style、完整 `compile`、`artifacts/onArtifacts` 与 `embeddables` 不属于 Table 根组件公共面。
 
 | 共享属性                   | 类型                                            | 默认值 | 描述                                               |
 | -------------------------- | ----------------------------------------------- | ------ | -------------------------------------------------- |
+| `containerStyle?`          | `LayoutProps['style']`                          | —      | standalone 宿主 CSS；embedded 不支持               |
+| `formatterDefinitions?`    | `LowerTablesOptions['formatterDefinitions']`    | `[]`   | 自定义 Cell formatter definitions                  |
 | `structureDefinitions?`    | `LowerTablesOptions['structureDefinitions']`    | `[]`   | 自定义 Structure definitions                       |
 | `presentationDefinitions?` | `LowerTablesOptions['presentationDefinitions']` | `[]`   | 自定义 Cell presentation definitions               |
+| `visualScaleDefinitions?`  | `LowerTablesOptions['visualScaleDefinitions']`  | `[]`   | 自定义 Cell visual scale definitions               |
 | `composites?`              | `ReadonlyArray<AnyCompositeDefinition>`         | `[]`   | Cell 内嵌 Tier 2 内容使用的额外 definitions        |
 | `onManifest?`              | `(manifest: TableLayoutManifest) => void`       | —      | standalone commit 后接收同次 compile 的根 manifest |
 
 standalone runtime 构造 canonical `children[0]` 根 Scene，并从 `Layout.onArtifacts` 只选择 definition key 为 `table.table`、`sourcePath: 'children[0]'`、`expansionPath: []` 的 artifact。回调按 manifest 的序列化内容去重；SSR render 不触发副作用。
+
+四类 definitions 与 composites 进入 runtime contribution 时按稳定 key 和对象 identity 合并。runtime 保存复制后冻结的 arrays、`lowerOptions` 与 envelope，调用方后续 `push` 不会改变已创建 contribution；definition/composite 对象本身仍由调用方拥有，不会被 clone 或 freeze。
 
 ### Embedded
 
@@ -108,7 +143,7 @@ Table 作为父级 `<Layout>` child 时必须有非空稳定 id。datasets、Tab
 ```ts
 const result = renderTable(spec, {
   data: { scores: rows },
-  lowerOptions: { presentationDefinitions },
+  lowerOptions: { formatterDefinitions, presentationDefinitions, visualScaleDefinitions },
   compile: {
     composites: [customCellComposite],
     shapes: [customShape],
@@ -122,14 +157,14 @@ result.svg;
 result.manifest;
 ```
 
-| `renderTable` 选项 | 类型                                 | 默认值  | 描述                                           |
-| ------------------ | ------------------------------------ | ------- | ---------------------------------------------- |
-| `data?`            | `ExternalDatasets`                   | `{}`    | Table 数据集                                   |
-| `lowerOptions?`    | `LowerTablesOptions`                 | `{}`    | Structure / Presentation 扩展定义              |
-| `compile?`         | `RenderToStringOptions['compile']`   | `{}`    | Core compile options；额外 composites 写在这里 |
-| `animation?`       | `RenderToStringOptions['animation']` | `{}`    | SSR 动画/截帧/easing 选项                      |
-| `output?`          | `RenderToStringOptions['output']`    | `{}`    | SVG id 前缀与显示尺寸                          |
-| `artifacts?`       | `boolean`                            | `false` | `true` 返回 `{ svg, manifest }`                |
+| `renderTable` 选项 | 类型                                 | 默认值  | 描述                                                            |
+| ------------------ | ------------------------------------ | ------- | --------------------------------------------------------------- |
+| `data?`            | `ExternalDatasets`                   | `{}`    | Table 数据集                                                    |
+| `lowerOptions?`    | `LowerTablesOptions`                 | `{}`    | Formatter / Structure / Presentation / Visual Scale definitions |
+| `compile?`         | `RenderToStringOptions['compile']`   | `{}`    | Core compile options；额外 composites 写在这里                  |
+| `animation?`       | `RenderToStringOptions['animation']` | `{}`    | SSR 动画/截帧/easing 选项                                       |
+| `output?`          | `RenderToStringOptions['output']`    | `{}`    | SVG id 前缀与显示尺寸                                           |
+| `artifacts?`       | `boolean`                            | `false` | `true` 返回 `{ svg, manifest }`                                 |
 
 顶层 `composites` 已删除；使用 `compile.composites`。无论 `artifacts` 是否为 true，`renderTable()` 都只调用一次 `compileTable()`；false 只忽略 sidecar，不改变 Scene 或 transaction。
 
@@ -156,6 +191,10 @@ manifest 是 JSON-safe、detached、递归冻结的 typed artifact payload；字
 | `lowerTableWithArtifacts()`        | `compileTable()`                                |
 | `renderTable(..., { composites })` | `renderTable(..., { compile: { composites } })` |
 | embedded Table 的 `onManifest`     | 外层 `<Layout onArtifacts>`                     |
+| React 宿主 CSS `style={{ ... }}`   | `containerStyle={{ ... }}`                      |
+| 旧版默认极简视觉                   | 显式 `style="clean"`                            |
+
+Table preset 继续使用 spec/root 的字符串 `style`，不要与宿主 CSS 混用。省略 preset 时运行时按 `neutral` + `light` 解析；`styleTokens` 是当前 mode 下的 strict partial overlay。
 
 ## 相关
 
