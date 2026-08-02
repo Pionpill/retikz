@@ -1,12 +1,13 @@
 ﻿import type { IRNode, IRScope } from '@retikz/core';
 
+import { DataFieldType } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { SIZE_MAX_RADIUS, SIZE_MIN_RADIUS } from '../../../src/providers';
+import { BUILTIN_NODE_CHANNELS, SIZE_MAX_RADIUS, SIZE_MIN_RADIUS } from '../../../src/providers';
 import { PlotSpecSchema } from '../../../src/schemas';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
@@ -59,6 +60,22 @@ const pointSpec = (
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     marks: [{ type: 'point', ...(size ? { size } : {}), encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
   });
+
+const sizeResolutionOf = (
+  size: { kind: 'field'; value: string; scale?: string },
+  rows: Array<Record<string, unknown>>,
+  extraScales: Array<Record<string, unknown>> = [],
+) => {
+  const node = pointSpec(size, extraScales);
+  const resolution = BUILTIN_NODE_CHANNELS.size.resolve({
+    node,
+    rows,
+    fieldTypes: new Map([[size.value, DataFieldType.Continuous]]),
+  })(node.marks[0]);
+  expect(resolution).toBeDefined();
+  if (resolution === undefined) throw new Error('expected field-bound size resolution');
+  return resolution;
+};
 
 describe('size channel 映射节点半径', () => {
   // sqrt 半径映射：domain [0,16]、range [MIN,MAX] 时，v=4 映射到半程半径
@@ -141,6 +158,83 @@ describe('size channel 边界输入', () => {
     expect(outer.children).toHaveLength(0);
   });
 
+  it('empty_data_preserves_explicit_sqrt_definition_in_resolver_and_descriptor', () => {
+    const resolution = sizeResolutionOf(
+      { kind: 'field', value: 'p', scale: 'sizeScale' },
+      [],
+      [{ type: 'sqrt', name: 'sizeScale', domain: [0, 16], range: [3, 11] }],
+    );
+
+    expect(resolution.resolver({ p: 4 })).toBeCloseTo(7, 6);
+    expect(resolution.descriptor).toMatchObject({
+      channel: 'size',
+      scaleName: 'sizeScale',
+      scaleType: 'sqrt',
+      domain: [0, 16],
+      range: [3, 11],
+      field: 'p',
+    });
+  });
+
+  it('all_zero_data_uses_explicit_sqrt_range_in_resolver_and_descriptor', () => {
+    const rows = [{ p: 0 }, { p: 0 }];
+    const resolution = sizeResolutionOf({ kind: 'field', value: 'p', scale: 'sizeScale' }, rows, [
+      { type: 'sqrt', name: 'sizeScale', domain: [0, 16], range: [3, 11] },
+    ]);
+
+    expect(rows.map(row => resolution.resolver(row))).toEqual([3, 3]);
+    expect(resolution.descriptor).toMatchObject({
+      scaleName: 'sizeScale',
+      domain: [0, 16],
+      range: [3, 11],
+    });
+  });
+
+  it('derived_all_zero_scale_reports_the_effective_constant_range', () => {
+    const rows = [{ p: 0 }, { p: 0 }];
+    const resolution = sizeResolutionOf({ kind: 'field', value: 'p' }, rows);
+
+    expect(rows.map(row => resolution.resolver(row))).toEqual([SIZE_MIN_RADIUS, SIZE_MIN_RADIUS]);
+    expect(resolution.descriptor).toMatchObject({
+      domain: [0, 0],
+      range: [SIZE_MIN_RADIUS, SIZE_MIN_RADIUS],
+    });
+  });
+
+  it('explicit_degenerate_domain_uses_the_formal_sqrt_mapping', () => {
+    const resolution = sizeResolutionOf(
+      { kind: 'field', value: 'p', scale: 'sizeScale' },
+      [],
+      [{ type: 'sqrt', name: 'sizeScale', domain: [5, 5], range: [3, 11] }],
+    );
+
+    expect(resolution.resolver({ p: 5 })).toBeCloseTo(7, 6);
+    expect(resolution.descriptor).toMatchObject({ domain: [5, 5], range: [3, 11] });
+  });
+
+  it('nice_sqrt_scale_exposes_the_domain_used_by_the_resolver', () => {
+    const resolution = sizeResolutionOf(
+      { kind: 'field', value: 'p', scale: 'sizeScale' },
+      [{ p: 2.5 }],
+      [{ type: 'sqrt', name: 'sizeScale', domain: [0, 9.1], range: [3, 11], nice: true }],
+    );
+
+    expect(resolution.resolver({ p: 2.5 })).toBeCloseTo(7, 6);
+    expect(resolution.descriptor).toMatchObject({ domain: [0, 10], range: [3, 11] });
+  });
+
+  it('single_positive_default_scale_keeps_resolver_and_descriptor_identity_aligned', () => {
+    const rows = [{ p: 7 }];
+    const resolution = sizeResolutionOf({ kind: 'field', value: 'p' }, rows);
+
+    expect(resolution.resolver(rows[0])).toBeCloseTo(SIZE_MAX_RADIUS, 6);
+    expect(resolution.descriptor).toMatchObject({
+      scaleName: '__size_p',
+      domain: [0, 7],
+      range: [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS],
+    });
+  });
+
   it('no_size_channel_keeps_default_uniform_size', () => {
     const data = [
       { x: 0, y: 0 },
@@ -167,6 +261,13 @@ describe('size channel 错误输入', () => {
     );
   });
 
+  it.each([
+    ['empty', []],
+    ['all-zero', [{ p: 0 }, { p: 0 }]],
+  ])('unknown_size_scale_fails_loud_for_%s_rows', (_label, rows) => {
+    expect(() => sizeResolutionOf({ kind: 'field', value: 'p', scale: 'nope' }, rows)).toThrow(/unknown scale/);
+  });
+
   it('non_sqrt_size_scale_fails_loud', () => {
     const data = [
       { x: 0, y: 0, p: 1 },
@@ -174,5 +275,35 @@ describe('size channel 错误输入', () => {
     ];
     const spec = pointSpec({ kind: 'field', value: 'p', scale: 'mySize' }, [{ type: 'linear', name: 'mySize' }]);
     expect(() => expandOf(spec, { d: data }, cartOpts)).toThrow(/must be a sqrt scale/);
+  });
+
+  it.each([
+    ['empty', []],
+    ['all-zero', [{ p: 0 }, { p: 0 }]],
+  ])('non_sqrt_size_scale_fails_loud_for_%s_rows', (_label, rows) => {
+    expect(() =>
+      sizeResolutionOf({ kind: 'field', value: 'p', scale: 'mySize' }, rows, [{ type: 'linear', name: 'mySize' }]),
+    ).toThrow(/must be a sqrt scale/);
+  });
+
+  it.each([
+    ['empty', []],
+    ['all-zero', [{ p: 0 }, { p: 0 }]],
+  ])('negative_degenerate_sqrt_domain_fails_loud_for_%s_rows', (_label, rows) => {
+    expect(() =>
+      sizeResolutionOf({ kind: 'field', value: 'p', scale: 'sizeScale' }, rows, [
+        { type: 'sqrt', name: 'sizeScale', domain: [-1, -1] },
+      ]),
+    ).toThrow(/domain must be non-negative/);
+  });
+
+  it('field_size_descriptor_uses_explicit_scale_identity', () => {
+    const resolution = sizeResolutionOf(
+      { kind: 'field', value: 'p', scale: 'mySize' },
+      [{ p: 4 }],
+      [{ type: 'sqrt', name: 'mySize' }],
+    );
+
+    expect(resolution.descriptor?.scaleName).toBe('mySize');
   });
 });

@@ -42,6 +42,17 @@ Every `items[]` entry shares:
 
 `slotBounds`, `allocationBounds`, and `visualBounds` are not interchangeable. Fixed geometry may refuse its parent slot, and strokes or labels may expand the visual envelope further.
 
+### LayoutSpacingArtifactSchema
+
+<ZodSchema
+  name="LayoutSpacingArtifactSchema"
+  description="Resolved fixed gap or distributed free-space segment shared by FlexLayout and GridLayout artifacts."
+/>
+
+Main-axis length must be positive, while cross-axis length may be zero. `axis: 'x'` uses `bounds.x/width` as main coordinate and length; `axis: 'y'` uses `bounds.y/height`. Arrays are stable by x → y, main coordinate, cross coordinate, gap → distributed, and generation order.
+
+When one physical interval contains both a gap and distribution, the fixed gap is centered and remaining positive space is split equally on both sides. Leading and trailing segments record only positive space between content edges and the first or last outer box or track. Negative free space, overlap, and zero length do not produce distributed segments.
+
 ## Container-specific artifacts
 
 ### FlexLayoutArtifactSchema
@@ -53,6 +64,8 @@ Every `items[]` entry shares:
 
 `items[].line` identifies the item's line. Each `lines[]` entry records a contiguous `index`, `itemKeys`, physical main axis, main range, and cross range. The two collections must form a complete bidirectional partition.
 
+Required `spacing[]` records each line's main-axis gap/distribution and, for multiple lines, cross-axis gaps and `alignContent` distribution. Space absorbed by `stretch` into line sizes is not recorded again.
+
 ### GridLayoutArtifactSchema
 
 <ZodSchema
@@ -61,6 +74,8 @@ Every `items[]` entry shares:
 />
 
 Each item adds `column`, `row`, `columnSpan`, and `rowSpan`. `columns[]` and `rows[]` are sorted by physical start and record contiguous `index`, `start`, `size`, `sourceKind`, and `implicit` fields.
+
+Required `spacing[]` uses the full content height for column spacing and the full content width for row spacing. Intersections between the two bands remain present and paint deterministically in x-then-y order.
 
 ### OverlayLayoutArtifactSchema
 

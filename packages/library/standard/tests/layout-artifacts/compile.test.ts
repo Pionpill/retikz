@@ -27,7 +27,7 @@ import {
   OverlayLayoutDefinition,
   OverlayPlacementKind,
 } from '../../src';
-import { createLayoutArtifactItem } from '../../src/composites/shared/layout/internal';
+import { createLayoutArtifactItem, sortLayoutSpacing } from '../../src/composites/shared/layout/internal';
 
 const ArtifactLeafSchema = CompositeBaseSchema.extend({
   namespace: z.literal('layout-artifact-test'),
@@ -140,6 +140,33 @@ const compositeArtifacts = (output: ReturnType<typeof compile>) =>
   output.artifacts.filter(artifact => artifact.kind === 'composite');
 
 describe('layout compile artifacts', () => {
+  it('sorts spacing by axis, physical coordinates, kind, and stable generation order', () => {
+    const firstDistributed = {
+      kind: 'distributed',
+      axis: 'x',
+      bounds: { x: 0, y: 0, width: 1, height: 2 },
+    } as const;
+    const secondDistributed = {
+      kind: 'distributed',
+      axis: 'x',
+      bounds: { x: 0, y: 0, width: 2, height: 2 },
+    } as const;
+
+    expect(
+      sortLayoutSpacing([
+        { kind: 'distributed', axis: 'y', bounds: { x: 0, y: 0, width: 2, height: 1 } },
+        secondDistributed,
+        firstDistributed,
+        { kind: 'gap', axis: 'x', bounds: { x: 0, y: 0, width: 1, height: 2 } },
+      ]),
+    ).toEqual([
+      { kind: 'gap', axis: 'x', bounds: { x: 0, y: 0, width: 1, height: 2 } },
+      secondDistributed,
+      firstDistributed,
+      { kind: 'distributed', axis: 'y', bounds: { x: 0, y: 0, width: 2, height: 1 } },
+    ]);
+  });
+
   it('returns canonical zero geometry for empty default-content layouts', () => {
     const output = compile([
       createFlexLayout({}),
@@ -550,6 +577,10 @@ describe('layout compile artifacts', () => {
       items: [],
       columns: [{ index: 0, start: 0, size: 10, sourceKind: 'fixed', implicit: false }],
       rows: [{ index: 0, start: 0, size: 0, sourceKind: 'content-natural', implicit: true }],
+      spacing: [
+        { kind: 'distributed', axis: 'x', bounds: { x: 10, y: 0, width: 30, height: 20 } },
+        { kind: 'distributed', axis: 'y', bounds: { x: 0, y: 0, width: 40, height: 20 } },
+      ],
     });
   });
 

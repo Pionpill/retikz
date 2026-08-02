@@ -7,11 +7,20 @@ import type { AnyVanillaTier2Adapter, VanillaChildSpec } from '@retikz/vanilla';
 import { PlotSpecSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
 import {
+  AxesModule,
   AxesSchema,
+  createStandardBundle,
+  FlexLayoutModule,
   FlexLayoutSchema,
+  FrameModule,
   FrameSchema,
+  GridLayoutModule,
   GridLayoutSchema,
+  GridModule,
   GridSchema,
+  LegendModule,
+  LegendSchema,
+  OverlayLayoutModule,
   OverlayLayoutSchema,
 } from '@retikz/standard';
 import {
@@ -25,6 +34,8 @@ import {
   gridLayout,
   GridLayoutVanillaAdapter,
   GridVanillaAdapter,
+  legend,
+  LegendVanillaAdapter,
   overlayLayout,
   OverlayLayoutVanillaAdapter,
 } from '@retikz/standard-vanilla';
@@ -35,7 +46,7 @@ import { figure, renderToSvgString, scope } from '@retikz/vanilla';
 import type { PreviewIR } from '../utils/build-preview-ir';
 import type { BuildVanillaPreviewOptions, VanillaPreviewArtifact } from './types';
 
-import { formatVanillaValue, irToVanillaCode } from '../utils/ir-to-vanilla-code';
+import { collectStandardPreviewModules, formatVanillaValue, irToVanillaCode } from '../utils/ir-to-vanilla-code';
 
 type CompositeChild = IRChild & { namespace: string; type: string };
 
@@ -73,7 +84,7 @@ const buildCorePreview = (preview: PreviewIR): VanillaPreviewArtifact => {
   };
 };
 
-type StandardKind = 'grid' | 'axes' | 'frame' | 'flexLayout' | 'gridLayout' | 'overlayLayout';
+type StandardKind = 'grid' | 'axes' | 'frame' | 'flexLayout' | 'gridLayout' | 'overlayLayout' | 'legend';
 
 type StandardConversionState = {
   counts: Record<StandardKind, number>;
@@ -188,6 +199,12 @@ const convertStandardChild = (
         const id = nextStandardId('overlayLayout', state);
         return inspect === undefined ? overlayLayout(id, input) : overlayLayout(id, input, inspect);
       }
+      case 'legend': {
+        const { namespace: _namespace, type: _type, ...input } = LegendSchema.parse(child);
+        void _namespace;
+        void _type;
+        return legend(nextStandardId('legend', state), input);
+      }
       default:
         throw new Error(`Unsupported Standard composite "${child.namespace}.${child.type}".`);
     }
@@ -208,12 +225,23 @@ const standardAdapters = (state: StandardConversionState): ReadonlyArray<AnyVani
   ...(state.adapters.has('flexLayout') ? [FlexLayoutVanillaAdapter as AnyVanillaTier2Adapter] : []),
   ...(state.adapters.has('gridLayout') ? [GridLayoutVanillaAdapter as AnyVanillaTier2Adapter] : []),
   ...(state.adapters.has('overlayLayout') ? [OverlayLayoutVanillaAdapter as AnyVanillaTier2Adapter] : []),
+  ...(state.adapters.has('legend') ? [LegendVanillaAdapter as AnyVanillaTier2Adapter] : []),
 ];
+
+const moduleByName = {
+  GridModule,
+  AxesModule,
+  FrameModule,
+  FlexLayoutModule,
+  GridLayoutModule,
+  OverlayLayoutModule,
+  LegendModule,
+} as const;
 
 const buildStandardPreview = (preview: PreviewIR): VanillaPreviewArtifact => {
   const componentInspections = indexComponentInspections(preview);
   const state: StandardConversionState = {
-    counts: { grid: 0, axes: 0, frame: 0, flexLayout: 0, gridLayout: 0, overlayLayout: 0 },
+    counts: { grid: 0, axes: 0, frame: 0, flexLayout: 0, gridLayout: 0, overlayLayout: 0, legend: 0 },
     adapters: new Set(),
     componentInspections,
   };
@@ -224,12 +252,16 @@ const buildStandardPreview = (preview: PreviewIR): VanillaPreviewArtifact => {
       convertStandardChild(child, state, [{ kind: 'sceneChild', index }]),
     ),
   });
+  const moduleNames = collectStandardPreviewModules(preview.ir.children, new Set(state.adapters));
+  const modules = moduleNames.map(name => moduleByName[name]);
+  const compile = modules.length === 0 ? undefined : createStandardBundle(modules).compile;
   return {
     code: irToVanillaCode(preview.ir, { inspect: preview.inspect, componentInspections }),
     svg: renderToSvgString(input, {
       adapters: standardAdapters(state),
       output: outputSize(preview),
       inspect: preview.inspect,
+      ...(compile === undefined ? {} : { compile }),
     }),
   };
 };

@@ -43,6 +43,7 @@ const inspectionAt = (x: number): InspectionPlane => ({
   entries: [
     {
       occurrence: { sourcePath: '$.children[0]', expansionPath: [] },
+      colorScope: 0,
       transform: [1, 0, 0, 1, 0, 0],
       primitives: [
         {
@@ -53,7 +54,8 @@ const inspectionAt = (x: number): InspectionPlane => ({
           width: 20,
           height: 10,
           presentation: 'outline' as const,
-          tone: 'neutral' as const,
+          tone: 'scope' as const,
+          lineStyle: 'dashed' as const,
         },
       ],
     },

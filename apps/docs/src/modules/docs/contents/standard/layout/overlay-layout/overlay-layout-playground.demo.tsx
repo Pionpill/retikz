@@ -5,7 +5,12 @@ import { LayoutItem, OverlayLayout } from '@retikz/standard-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { overlayLayoutPlaygroundControls, previewControlContract } from './overlay-layout-playground.controls';
+import { resolveLayoutInspectionValues } from '../layout-inspection-controls';
+import {
+  overlayLayoutInspectionFamilyControls,
+  overlayLayoutPlaygroundControls,
+  previewControlContract,
+} from './overlay-layout-playground.controls';
 
 export const previewControls = overlayLayoutPlaygroundControls;
 
@@ -21,7 +26,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       style={{ maxWidth: '100%', height: 'auto' }}
     >
       <OverlayLayout
-        inspect={values.inspect}
+        inspect={resolveLayoutInspectionValues(values, overlayLayoutInspectionFamilyControls)}
         size={{ x: { kind: 'fixed', value: 350 }, y: { kind: 'fixed', value: 170 } }}
         padding={12}
         justifyItems={values.justifyItems}

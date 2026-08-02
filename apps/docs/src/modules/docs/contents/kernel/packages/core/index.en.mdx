@@ -60,6 +60,10 @@ The fixed identities are `CORE_OWNER_KEY = '@retikz/core/document'` and `CORE_PR
 
 `CompileOptions.inspection` is a runtime-only authored sidecar. Core resolves cascade policies through `CompositeDefinition.inspector` and assembles strict rect, line, and label DTOs in `CompileResult.inspection`. The plane is isolated from the primary Scene and never enters Snapshot identity, resources, layout bounds, or Patch diff. A Program full fallback regenerates the primary Scene, artifacts, and inspection plane in the same revision.
 
+Every final `InspectionPlaneEntry` has a required non-negative safe-integer `colorScope`. Core stably sorts entries by occurrence and final commit order before numbering them continuously from `0`. Discarded probes consume no number, and numbering is not derived from `sourcePath` text or Scope depth. Regular primitives use `tone: 'scope'`; warnings use the fixed `tone: 'warning'`.
+
+Rectangle DTOs branch strictly on `presentation`: `outline` requires `lineStyle`, while `fill` requires `fillPattern: 'solid' | 'forward-diagonal' | 'backward-diagonal' | 'crosshatch'`; the fields cannot be mixed. Custom inspectors must return the new tone and matching presentation field. Handwritten `InspectionPlane` values must also provide `colorScope` per entry; Core assigns it automatically when assembling the plane through `compileToScene()`.
+
 The initial run performs a full compile. When an update cannot be proven locally safe, the Program falls back to a full compile and publishes one `replaceScene` in `patch.operations`. Callers still consume the same Snapshot / Patch envelope instead of switching protocols.
 
 Core cross-checks an optional ChangeSet against the complete previous and next Snapshots. One unique `update` hint must cover each changed value owned by the Scene root or a stable entity. Add/remove/move hints must completely explain the next identity set and order under their parent, with `parent` and `before` pointing to final positions in the next Snapshot.
@@ -160,7 +164,8 @@ session.update({
 | `CoreProgramDefinition<TComposites>`                   | Artifact-input, owned-artifact, and private/public read generic relationship |
 | `RuntimeScene` / `SceneRuntimeSnapshot` / `ScenePatch` | Deeply readonly Scene and atomic Patch DTOs                                  |
 | `InspectOptions` / `CompileInspectionOptions`          | Layout or Scope cascade policy and compile authored sidecar                  |
-| `InspectionPlane` / `InspectionPrimitive`              | Strict inspection overlay DTOs isolated from the primary Scene               |
+| `InspectionPlane` / `InspectionPlaneEntry`             | Overlay DTOs isolated from the Scene and color-scoped by final occurrence    |
+| `InspectionPrimitive` / `InspectionFillPatternSchema`  | Strict rect, line, label, and renderer-neutral fill-pattern contract         |
 | `CompositeInspectorDefinition`                         | Inspector attached to a layout-aware composite in the same registry          |
 
 ## Source

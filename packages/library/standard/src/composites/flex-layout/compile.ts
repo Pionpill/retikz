@@ -15,13 +15,22 @@ import {
   LayoutIntrinsicMode,
 } from '@retikz/core';
 
+import type { LayoutSpacingArtifact } from '../shared/layout';
 import type { LayoutInsets, LayoutRect } from '../shared/layout/internal';
 import type { FlexLayoutArtifact } from './artifact-types';
 import type { IRFlexLayout, IRFlexLayoutItem } from './types';
 
-import { LayoutAlignment, LayoutAxisSizeKind, LayoutDistribution, LayoutOverflow } from '../shared/layout';
+import {
+  LayoutAlignment,
+  LayoutAxisSizeKind,
+  LayoutDistribution,
+  LayoutOverflow,
+  LayoutSpacingKind,
+} from '../shared/layout';
 import {
   alignAllocationInSlot,
+  appendLayoutSpacing,
+  appendLayoutSpacingInterval,
   compensatedLayoutSum,
   contentRectOf,
   createLayoutArtifactAlignmentGuide,
@@ -31,6 +40,7 @@ import {
   layoutEpsilon,
   normalizeLayoutSpacing,
   resolveLayoutAxisSize,
+  sortLayoutSpacing,
 } from '../shared/layout/internal';
 import { FlexLayoutDirection, FlexLayoutWrap } from './constants';
 import { formFlexLines, resolveFlexLineMainSizes, resolveFlexSpaceDistribution } from './solve';
@@ -693,6 +703,71 @@ export const compileFlexLayout = (
       crossSize: line.finalCrossSize,
     }),
   );
+  const spacing: Array<LayoutSpacingArtifact> = [];
+  for (const line of physicalLines) {
+    const outer = line.itemIndexes
+      .map(sourceIndex => rectAxis(items[sourceIndex].marginBounds, axes.main))
+      .sort((first, second) => first.start - second.start || first.size - second.size);
+    if (outer.length === 0) continue;
+    appendLayoutSpacing(spacing, {
+      kind: LayoutSpacingKind.Distributed,
+      axis: axes.main,
+      mainStart: mainContent.start,
+      mainSize: outer[0].start - mainContent.start,
+      crossStart: line.crossStart,
+      crossSize: line.finalCrossSize,
+    });
+    for (let index = 1; index < outer.length; index += 1) {
+      const previous = outer[index - 1];
+      appendLayoutSpacingInterval(spacing, {
+        axis: axes.main,
+        start: previous.start + previous.size,
+        end: outer[index].start,
+        gap: mainGap,
+        crossStart: line.crossStart,
+        crossSize: line.finalCrossSize,
+      });
+    }
+    const last = outer.at(-1)!;
+    appendLayoutSpacing(spacing, {
+      kind: LayoutSpacingKind.Distributed,
+      axis: axes.main,
+      mainStart: last.start + last.size,
+      mainSize: mainContent.start + mainContent.size - last.start - last.size,
+      crossStart: line.crossStart,
+      crossSize: line.finalCrossSize,
+    });
+  }
+  if (physicalLines.length > 0) {
+    appendLayoutSpacing(spacing, {
+      kind: LayoutSpacingKind.Distributed,
+      axis: axes.cross,
+      mainStart: crossContent.start,
+      mainSize: physicalLines[0].crossStart - crossContent.start,
+      crossStart: mainContent.start,
+      crossSize: mainContent.size,
+    });
+    for (let index = 1; index < physicalLines.length; index += 1) {
+      const previous = physicalLines[index - 1];
+      appendLayoutSpacingInterval(spacing, {
+        axis: axes.cross,
+        start: previous.crossStart + previous.finalCrossSize,
+        end: physicalLines[index].crossStart,
+        gap: crossGap,
+        crossStart: mainContent.start,
+        crossSize: mainContent.size,
+      });
+    }
+    const last = physicalLines.at(-1)!;
+    appendLayoutSpacing(spacing, {
+      kind: LayoutSpacingKind.Distributed,
+      axis: axes.cross,
+      mainStart: last.crossStart + last.finalCrossSize,
+      mainSize: crossContent.start + crossContent.size - last.crossStart - last.finalCrossSize,
+      crossStart: mainContent.start,
+      crossSize: mainContent.size,
+    });
+  }
   return {
     children: [scope],
     allocationBounds: allocation,
@@ -702,6 +777,7 @@ export const compileFlexLayout = (
       container: createLayoutArtifactContainer(allocation, content, items),
       items,
       lines,
+      spacing: sortLayoutSpacing(spacing),
     }),
   };
 };

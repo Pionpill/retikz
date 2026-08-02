@@ -5,7 +5,12 @@ import { GridLayout, LayoutItem } from '@retikz/standard-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { gridLayoutPlaygroundControls, previewControlContract } from './grid-layout-playground.controls';
+import { resolveLayoutInspectionValues } from '../layout-inspection-controls';
+import {
+  gridLayoutInspectionFamilyControls,
+  gridLayoutPlaygroundControls,
+  previewControlContract,
+} from './grid-layout-playground.controls';
 
 export const previewControls = gridLayoutPlaygroundControls;
 
@@ -17,7 +22,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     style={{ maxWidth: '100%', height: 'auto' }}
   >
     <GridLayout
-      inspect={values.inspect}
+      inspect={resolveLayoutInspectionValues(values, gridLayoutInspectionFamilyControls)}
       columns={[
         { kind: 'fraction', factor: 1 },
         { kind: 'fraction', factor: values.fraction },

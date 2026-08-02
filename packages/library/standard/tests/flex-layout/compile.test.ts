@@ -13,6 +13,8 @@ import {
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
+import type { FlexLayoutCompileArtifact } from '../../src';
+
 import {
   createFlexLayout,
   FlexLayoutDefinition,
@@ -184,6 +186,12 @@ const translationOf = (primitives: ReadonlyArray<ScenePrimitive>, id: string): R
   return result;
 };
 
+const flexArtifactOf = (output: ReturnType<typeof compileToScene>): FlexLayoutCompileArtifact => {
+  const artifact = output.artifacts.find(value => value.kind === 'composite' && value.type === 'flexLayout');
+  if (artifact === undefined) throw new Error('Expected FlexLayout compile artifact');
+  return artifact as FlexLayoutCompileArtifact;
+};
+
 describe('FlexLayout compile contract', () => {
   it('uses frozen grow slots, physical gaps and non-zero allocation origins for placement', () => {
     const result = compileFlex(
@@ -320,6 +328,138 @@ describe('FlexLayout compile contract', () => {
     expect(translationOf(row.output.scene.primitives, 'b')).toEqual({ x: 60, y: 0 });
     expect(translationOf(column.output.scene.primitives, 'a')).toEqual({ x: 0, y: 80 });
     expect(translationOf(column.output.scene.primitives, 'b')).toEqual({ x: 0, y: 60 });
+  });
+
+  it('records margins, a centered fixed gap, and space-between as distinct physical segments', () => {
+    const compileDirection = (direction: 'row' | 'row-reverse') =>
+      compileFlex(
+        createFlexLayout({
+          size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 20 } },
+          direction,
+          columnGap: 10,
+          justifyContent: LayoutDistribution.SpaceBetween,
+          alignItems: LayoutAlignment.Start,
+          children: ['a', 'b'].map(key => ({
+            kind: LayoutItemKind.Flex,
+            key,
+            child: leaf(key, 20, 20),
+            basis: 20,
+            shrink: 0,
+            margin: { left: 2, right: 2 },
+          })),
+        }),
+        exactProposal(100, 20),
+      );
+
+    for (const direction of [FlexLayoutDirection.Row, FlexLayoutDirection.RowReverse] as const) {
+      const artifact = flexArtifactOf(compileDirection(direction).output);
+      expect(artifact.value.spacing).toEqual([
+        { kind: 'distributed', axis: 'x', bounds: { x: 24, y: 0, width: 21, height: 20 } },
+        { kind: 'gap', axis: 'x', bounds: { x: 45, y: 0, width: 10, height: 20 } },
+        { kind: 'distributed', axis: 'x', bounds: { x: 55, y: 0, width: 21, height: 20 } },
+      ]);
+    }
+  });
+
+  it('records column and column-reverse spacing from the same final physical intervals', () => {
+    const compileDirection = (direction: 'column' | 'column-reverse') =>
+      compileFlex(
+        createFlexLayout({
+          size: { x: { kind: 'fixed', value: 20 }, y: { kind: 'fixed', value: 100 } },
+          direction,
+          rowGap: 10,
+          justifyContent: LayoutDistribution.SpaceBetween,
+          alignItems: LayoutAlignment.Start,
+          children: ['a', 'b'].map(key => ({
+            kind: LayoutItemKind.Flex,
+            key,
+            child: leaf(key, 20, 20),
+            basis: 20,
+            shrink: 0,
+            margin: { top: 2, bottom: 2 },
+          })),
+        }),
+        exactProposal(20, 100),
+      );
+
+    for (const direction of [FlexLayoutDirection.Column, FlexLayoutDirection.ColumnReverse] as const) {
+      expect(flexArtifactOf(compileDirection(direction).output).value.spacing).toEqual([
+        { kind: 'distributed', axis: 'y', bounds: { x: 0, y: 24, width: 20, height: 21 } },
+        { kind: 'gap', axis: 'y', bounds: { x: 0, y: 45, width: 20, height: 10 } },
+        { kind: 'distributed', axis: 'y', bounds: { x: 0, y: 55, width: 20, height: 21 } },
+      ]);
+    }
+  });
+
+  it('records wrap and wrap-reverse cross gaps with align-content distribution in physical order', () => {
+    const compileWrap = (wrap: 'wrap' | 'wrap-reverse') =>
+      compileFlex(
+        createFlexLayout({
+          size: { x: { kind: 'fixed', value: 30 }, y: { kind: 'fixed', value: 100 } },
+          wrap,
+          rowGap: 10,
+          alignItems: LayoutAlignment.Start,
+          alignContent: LayoutDistribution.SpaceBetween,
+          children: ['a', 'b'].map(key => ({
+            kind: LayoutItemKind.Flex,
+            key,
+            child: leaf(key, 30, 10),
+            basis: 30,
+            shrink: 0,
+          })),
+        }),
+        exactProposal(30, 100),
+      );
+
+    for (const wrap of [FlexLayoutWrap.Wrap, FlexLayoutWrap.WrapReverse] as const) {
+      expect(flexArtifactOf(compileWrap(wrap).output).value.spacing).toEqual([
+        { kind: 'distributed', axis: 'y', bounds: { x: 0, y: 10, width: 30, height: 35 } },
+        { kind: 'gap', axis: 'y', bounds: { x: 0, y: 45, width: 30, height: 10 } },
+        { kind: 'distributed', axis: 'y', bounds: { x: 0, y: 55, width: 30, height: 35 } },
+      ]);
+    }
+  });
+
+  it('does not duplicate align-content stretch or negative main free space as distributed segments', () => {
+    const stretched = compileFlex(
+      createFlexLayout({
+        size: { x: { kind: 'fixed', value: 30 }, y: { kind: 'fixed', value: 100 } },
+        wrap: FlexLayoutWrap.Wrap,
+        rowGap: 10,
+        alignContent: LayoutDistribution.Stretch,
+        children: ['a', 'b'].map(key => ({
+          kind: LayoutItemKind.Flex,
+          key,
+          child: leaf(key, 30, 10),
+          basis: 30,
+          shrink: 0,
+        })),
+      }),
+      exactProposal(30, 100),
+    );
+    const overflowing = compileFlex(
+      createFlexLayout({
+        size: { x: { kind: 'fixed', value: 30 }, y: { kind: 'fixed', value: 10 } },
+        columnGap: 10,
+        justifyContent: LayoutDistribution.End,
+        alignItems: LayoutAlignment.Start,
+        children: ['a', 'b'].map(key => ({
+          kind: LayoutItemKind.Flex,
+          key,
+          child: leaf(key, 20, 10),
+          basis: 20,
+          shrink: 0,
+        })),
+      }),
+      exactProposal(30, 10),
+    );
+
+    expect(flexArtifactOf(stretched.output).value.spacing).toEqual([
+      { kind: 'gap', axis: 'y', bounds: { x: 0, y: 45, width: 30, height: 10 } },
+    ]);
+    expect(flexArtifactOf(overflowing.output).value.spacing).toEqual([
+      { kind: 'gap', axis: 'x', bounds: { x: 0, y: 0, width: 10, height: 10 } },
+    ]);
   });
 
   it('does not raise a discarded numeric basis probe failure', () => {

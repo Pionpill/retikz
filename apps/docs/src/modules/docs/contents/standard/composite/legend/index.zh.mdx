@@ -1,0 +1,257 @@
+---
+title: 图例
+description: 用 JSON-safe Legend 保留已解析样本与含义的对应关系，并通过 Core layout probe、slot 求解和 replay 下沉为普通 Scene。
+---
+
+`<Legend>` 是领域无关的呈现组件：调用方先把颜色、线型、符号或连续变化解析成可绘制样本，再交给 Legend 排列样本、标签和标题。它不读取 Plot scale、Table cell 或逻辑关系模型，也不保存筛选、选择和点击状态。
+
+Legend 有两种内容形态。`items` 保存稳定顺序的离散“样本 + 标签”，`ramp` 保存一个连续样本和沿主轴归一化到 `0..1` 的刻度。React slot 接受一个可转换的绘图 element；转换后仍是 JSON-safe `IRChild`，因此 Core 图元和已注册的其它 Tier 2 composite 可以走同一条编译链路。
+
+## 用法
+
+```tsx
+import { Node, Path, Step } from '@retikz/react';
+import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react';
+```
+
+```tsx
+<Legend kind="items">
+  <LegendTitle>
+    <Node position={[0, 0]} text="状态" />
+  </LegendTitle>
+  <LegendItem
+    itemKey="primary"
+    sample={
+      <Path stroke="dodgerblue">
+        <Step kind="move" to={[0, 0]} />
+        <Step kind="line" to={[32, 0]} />
+      </Path>
+    }
+  >
+    <Node position={[0, 0]} text="主要" />
+  </LegendItem>
+</Legend>
+```
+
+React 通过 `LegendTitle`、`LegendItem`、`LegendRamp` 与 `LegendTick` 组合内容，`kind` 显式选择 `items` 或 `ramp`，不会从 children 猜测 form。每个 required slot 必须转换为恰好一个 `IRChild`；标题字体、字重与文字对齐等样式写在 `LegendTitle` 内的真实 `Node` 上。Vanilla authoring 继续接收 JSON-safe `LegendInput`，直接 IR / 持久化使用完整 `IRLegend`。三条路径最终都由 `LegendSchema` 校验，并交给 `LegendDefinition` 编译。
+
+| 场景        | 公开入口                                                                                      |
+| ----------- | --------------------------------------------------------------------------------------------- |
+| React       | `Legend`、`LegendTitle`、`LegendItem`、`LegendRamp`、`LegendTick`（`@retikz/standard-react`） |
+| Vanilla     | `legend()`、`LegendVanillaAdapter`（`@retikz/standard-vanilla`）                              |
+| IR / 持久化 | `LegendSchema`、`createLegend()`、`LegendDefinition`、`LegendModule`（`@retikz/standard`）    |
+
+完整的挂载、`StandardBundle` 和持久化加载流程见[快速开始](/standard/get-start)。领域包负责生成已经解析好的样本；Standard Legend 只拥有通用呈现、布局与类型化产物。
+
+## 例子
+
+### 离散样本
+
+`itemKey` 会映射为当前 Legend 内稳定且唯一的 canonical `key`。下面用真实 Path 样本表达逻辑图中的直接、间接与参考关系；实线、虚线、点线的含义来自调用方，Legend 不为线型硬编码领域解释。
+
+<ComponentPreview files="legend-basic" size="md" />
+
+### 连续样本
+
+`ramp` 保留一个连续 Core child，并把每个 `offset` 映射到样本物理主轴。端点标签可以超出样本 slot，类型化产物会同时记录真实 allocation、visual 与 visible bounds。
+
+<ComponentPreview files="legend-ramp" size="xs" />
+
+### 控制面板
+
+固定容器分配与 viewBox 后，可以比较内容区域对齐、方向、换行、样本对齐、间距、内边距和溢出策略。`contentAlign` 分别按标题与主体自身的结构宽度，在 Legend 内容框内沿 x 轴对齐；它不是标题内部文字对齐，也不是 Legend 在父容器中的位置。标题输入支持换行，标题对齐只控制多行文字块内各行的位置；单行标题按文字自然宽度参与布局，不会为对齐预留额外空间。`wrap` 只在约束使条目需要额外行或列时改变结构。
+
+<ComponentPreview
+  files="legend-playground"
+  size="md"
+  caption="A–D 的编写顺序与固定容器不变；面板只改变 Legend 的排列和边界策略。"
+/>
+
+## 技术原理
+
+### React 组合边界
+
+`Legend` 只把直属 children 解释为 marker list；数组与 Fragment 会在当前层透明展开，`null`、`undefined` 和 boolean 作为 empty node 忽略。marker 与 slot 都按下表同步校验，失败时会抛出带 marker / slot 名称的错误，不会静默丢弃输入。
+
+| 位置                  | 合法结构                                                                                                                    | fail-loud 条件                                                                                                                |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `kind="items"` 直属层 | `LegendTitle` 0 或 1 个、`LegendItem` 0 个或多个；empty node 可出现在 marker 之间                                           | 重复 title、`LegendRamp` / `LegendTick`、裸文本、数字、DOM element 或未知 wrapper                                             |
+| `kind="ramp"` 直属层  | `LegendTitle` 0 或 1 个；`LegendRamp` 必须且只能有 1 个；`LegendTick` 0 个或多个                                            | 缺失 / 重复 ramp、`LegendItem`、重复 title，以及其它非 marker sibling                                                         |
+| required slot         | `LegendTitle.children`、`LegendItem.sample`、`LegendRamp.children` 展开数组 / Fragment 并去除 empty node 后恰好一个 element | 零个或多个 element、非 element / DOM / 对象型 wrapper（如 `memo` / `forwardRef`）、混合 sibling，或转换结果不是一个 `IRChild` |
+| optional label        | `LegendItem.children`、`LegendTick.children` 仅含 empty node 时省略；否则必须恰好一个可转换的函数 element                   | 多个 element、非 element / DOM / 对象型 wrapper（如 `memo` / `forwardRef`）、混合 sibling，或转换结果不是一个 `IRChild`       |
+
+marker 脱离 `Legend` 单独使用、marker 与 form 不匹配或基数不合法都会立即失败。slot 中的函数 Sugar 仍交给公共 React builder；只有它最终贡献恰好一个 `IRChild` 时才有效。
+
+<ComponentAlert
+  type="tip"
+  title="日常使用可以跳过本节"
+  description="直接读写 Legend IR、排查嵌套能力或消费类型化产物时，再了解 probe 与 replay。"
+/>
+
+### 从 Legend IR 到 Core 输出
+
+`LegendDefinition` 由 Core composite registry 消费。它先对标题、样本和标签执行 minimum / natural probe，求出结构轮廓。内容宽度确定后，标题按 x 轴 range 与 y 轴 natural 再 probe；样本和标签则按最终 slot 执行 exact probe。编译只 replay 被选中的结果，被丢弃的 probe 不发布图元、资源或产物。
+
+<ComponentPreview files="legend-pipeline" hideCode size="xs" />
+
+`LegendDefinition` 返回普通 Core IR children，并在同次编译并列返回 `LegendArtifact`。Core 随后把这些 children 编译进 Scene，而 artifact 保持为独立产物；SVG 与 Canvas renderer 不认识 `standard.legend`，也不提供专属分支。
+
+### 嵌套能力与失败
+
+Core `Node`、`Path`、`Scope` 等图元可以直接作为 `IRChild`。内嵌 Tier 2 composite 仍需在同一 compile options 中注册自己的 Definition；`LegendModule` 只贡献 `LegendDefinition`，不会猜测或全局安装样本依赖。
+
+未注册 Legend 会产生 `COMPOSITE_NOT_REGISTERED`。内嵌 composite 的 probe 失败会保留原始 occurrence 并终止当前 Legend，而不是用空样本继续。重复 `items[].key` / `ticks[].key`、纯空白 key、越界或逆序 tick offset 会在 schema 边界 fail-loud。
+
+### 类型化产物
+
+`LegendArtifact` 是 `items | ramp` 的严格判别联合。两种分支都记录容器、标题和主体边界；离散分支按编写顺序记录每个 key、sourceIndex、样本与标签 placement，连续分支记录样本 placement 以及每个 tick 的物理 anchor。所有坐标都处于 Legend allocation coordinate，领域 owner 可以用稳定 key 与自己的 locator 连接，而不把 provenance 写入 Standard IR。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Legend 输入 schema 与校验',
+      path: 'packages/library/standard/src/composites/legend/schema.ts',
+      startLine: 7,
+      endLine: 132,
+    },
+    {
+      label: 'React items 与 ramp form 组装',
+      path: 'packages/library/standard-react/src/legend/Legend.tsx',
+      startLine: 41,
+      endLine: 92,
+    },
+    {
+      label: '严格 marker 与 slot 转换',
+      path: 'packages/library/standard-react/src/legend/convert-children.ts',
+      startLine: 22,
+      endLine: 128,
+    },
+    {
+      label: 'Legend Definition 输出边界',
+      path: 'packages/library/standard/src/composites/legend/definition.ts',
+      startLine: 13,
+      endLine: 20,
+    },
+    {
+      label: '共享 probe、对齐与 replay',
+      path: 'packages/library/standard/src/composites/legend/compile.ts',
+      startLine: 98,
+      endLine: 222,
+    },
+    {
+      label: 'ramp slot 与产物',
+      path: 'packages/library/standard/src/composites/legend/compile.ts',
+      startLine: 244,
+      endLine: 373,
+    },
+    {
+      label: 'items 换行、slot 与产物',
+      path: 'packages/library/standard/src/composites/legend/compile.ts',
+      startLine: 375,
+      endLine: 561,
+    },
+    {
+      label: '类型化产物 schema',
+      path: 'packages/library/standard/src/composites/legend/artifact-schema.ts',
+      startLine: 42,
+      endLine: 110,
+    },
+  ]}
+/>
+
+## API 参考
+
+### 公开入口
+
+| API                    | 包                         | 职责                                                            | 默认值 |
+| ---------------------- | -------------------------- | --------------------------------------------------------------- | ------ |
+| `Legend`               | `@retikz/standard-react`   | 选择显式 form 并把 marker tree 贡献为 `IRLegend` 与 Definition  | —      |
+| `LegendTitle`          | `@retikz/standard-react`   | 声明可选标题 slot                                               | —      |
+| `LegendItem`           | `@retikz/standard-react`   | 声明离散样本、稳定 key 与可选标签                               | —      |
+| `LegendRamp`           | `@retikz/standard-react`   | 声明连续样本 slot                                               | —      |
+| `LegendTick`           | `@retikz/standard-react`   | 声明归一化刻度与可选标签                                        | —      |
+| `legend(id, input)`    | `@retikz/standard-vanilla` | 创建由 `LegendVanillaAdapter` 消费的 Vanilla embed              | —      |
+| `LegendVanillaAdapter` | `@retikz/standard-vanilla` | 经 `createLegend()` 下沉 embed，并向当前 Figure 贡献 Definition | —      |
+| `createLegend(input)`  | `@retikz/standard`         | 校验 input、应用默认值并补固定 discriminator                    | —      |
+| `LegendModule`         | `@retikz/standard`         | 按需贡献 `LegendDefinition` 的 capability module                | —      |
+| `LegendDefinition`     | `@retikz/standard`         | Core layout-aware composite definition                          | —      |
+
+`@retikz/standard` 还公开导出 `LegendContentKind`、`LegendDirection`、`LegendWrap` 与 `LegendSampleAlignment` 闭合集合；具体取值由下方 `LegendSchema` 展示。
+
+### Legend
+
+| 属性           | 类型                               | 默认值       | 描述                                                       |
+| -------------- | ---------------------------------- | ------------ | ---------------------------------------------------------- |
+| `kind`         | `'items'` \| `'ramp'`              | —            | 显式选择 marker form，不从 children 推断                   |
+| `children`     | `ReactNode`                        | —            | 当前 form 允许的直属 marker；见[组合边界](#react-组合边界) |
+| `titleGap`     | `number`                           | `8`          | 标题与非空主体同时存在时的垂直间距                         |
+| `contentAlign` | `'start'` \| `'center'` \| `'end'` | `'start'`    | 标题与主体结构块在内容框内的物理 x 轴对齐                  |
+| `size`         | `LayoutSizeInput`                  | 内容尺寸     | 复用 Box Layout 的双轴尺寸策略                             |
+| `padding`      | `number` \| `IRBoxSpacing`         | `0`          | 容器四边内边距                                             |
+| `overflow`     | `'visible'` \| `'clip'`            | `'visible'`  | 分配范围之外内容的可见策略                                 |
+| `direction`    | `'vertical'` \| `'horizontal'`     | `'vertical'` | items 排列方向或 ramp 主轴方向                             |
+| `sampleGap`    | `number`                           | `8`          | 样本与其标签区域之间的物理间距                             |
+| `wrap`         | `'nowrap'` \| `'wrap'`             | `'nowrap'`   | 仅 items form：受约束时是否形成额外行或列                  |
+| `columnGap`    | `number`                           | `8`          | 仅 items form：相邻物理列间距                              |
+| `rowGap`       | `number`                           | `8`          | 仅 items form：相邻物理行间距                              |
+| `sampleAlign`  | `'start'` \| `'center'` \| `'end'` | `'center'`   | 仅 items form：样本与标签沿物理 y 轴对齐                   |
+
+### LegendTitle
+
+| 属性       | 类型        | 默认值 | 描述                                                                      |
+| ---------- | ----------- | ------ | ------------------------------------------------------------------------- |
+| `children` | `ReactNode` | —      | required slot；见[组合边界](#react-组合边界)，标题样式由该 child 自己持有 |
+
+### LegendItem
+
+| 属性       | 类型        | 默认值 | 描述                                          |
+| ---------- | ----------- | ------ | --------------------------------------------- |
+| `itemKey`  | `string`    | —      | 必填；映射为 items form 的 canonical `key`    |
+| `sample`   | `ReactNode` | —      | required slot；见[组合边界](#react-组合边界)  |
+| `children` | `ReactNode` | —      | optional label；见[组合边界](#react-组合边界) |
+
+### LegendRamp
+
+| 属性       | 类型        | 默认值 | 描述                                         |
+| ---------- | ----------- | ------ | -------------------------------------------- |
+| `children` | `ReactNode` | —      | required slot；见[组合边界](#react-组合边界) |
+
+### LegendTick
+
+| 属性       | 类型        | 默认值 | 描述                                          |
+| ---------- | ----------- | ------ | --------------------------------------------- |
+| `tickKey`  | `string`    | —      | 必填；映射为 ramp form 的 canonical `key`     |
+| `offset`   | `number`    | —      | 必填；位于 `[0, 1]` 且按编写顺序非递减        |
+| `children` | `ReactNode` | —      | optional label；见[组合边界](#react-组合边界) |
+
+### Vanilla 与 IR
+
+| 参数    | 类型          | 默认值 | 描述                                                        |
+| ------- | ------------- | ------ | ----------------------------------------------------------- |
+| `id`    | `string`      | —      | `legend()` 的 embed 身份，不写入 `IRLegend`                 |
+| `input` | `LegendInput` | —      | `legend()` 与 `createLegend()` 的 JSON-safe plain-data 输入 |
+
+`LegendInput` 省略固定的 `namespace` 与 `type`。常用默认值为：`titleGap: 8`、`contentAlign: 'start'`、内容尺寸、`padding: 0`、`overflow: 'visible'`；离散内容默认 `direction: 'vertical'`、`wrap: 'nowrap'`、`columnGap / rowGap / sampleGap: 8`、`sampleAlign: 'center'`。
+
+### LegendSchema
+
+<ZodSchema name="LegendSchema" expandNested />
+
+`content.kind` 决定 `items` 或 `ramp` 分支。这里显示的是可持久化 `IRLegend`；包含函数的 `LegendDefinition` 与 `LegendModule` 不进入 JSON。
+
+### LegendArtifactSchema
+
+Core composite artifact envelope 另行保存 occurrence、namespace 与 type；本 schema 只解析 envelope 的 `value`。
+
+<details>
+  <summary>查看完整 LegendArtifactSchema 字段</summary>
+
+  <ZodSchema name="LegendArtifactSchema" expandNested />
+</details>
+
+## 相关
+
+- [Tier 2 Composite](/kernel/concepts/design/composite)：Definition 注册、probe 与 lowering 边界
+- [Layout](/kernel/components/layout/overview)：Core 的 proposal、slot、replay 与 artifact 契约
+- [能力装载](/standard/extension/capability-loading)：组合 `LegendModule` 与其它按需能力
+- [Box Layout](/standard/layout)：Legend 复用的尺寸、内边距、溢出和 bounds 语义

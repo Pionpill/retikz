@@ -53,7 +53,10 @@ const assertKnownValues = (
 
 const validateControlContract = (contract: PreviewControlContract): PreviewControlContract => {
   definePreviewControls(contract.controls);
-  const ids = new Set(getPreviewControlFields(contract.controls).map(field => field.id));
+  const ids = new Set([
+    ...getPreviewControlFields(contract.controls).map(field => field.id),
+    ...(contract.stateOnlyIds ?? []),
+  ]);
   assertKnownValues('canonicalValues', contract.canonicalValues, ids);
   for (const preset of contract.presets ?? []) {
     assertKnownValues(`preset "${preset.id}"`, preset.values, ids);

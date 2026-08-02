@@ -48,14 +48,15 @@ description: Use when retikz alpha-stage work needs to execute an ADR-backed fea
 
 ADR 内容和位置以 `develop-design` 为准。它只保留核心功能、基础数据结构 / 公开契约、行为与兼容性、功能边界、被否决方案、测试策略摘要和架构验证。
 
-草案完成后按 `cross-review` 执行 1–3 轮 Architecture Gate：
+草案完成后按 `cross-review` 执行 1–9 轮 Architecture Gate：
 
 1. 每轮冻结 ADR、HEAD、工作区、适用 architecture / completeness / AGENTS 与必要代码证据。
 2. 并发派发 2–3 个实际可用的不同模型，每个按 `develop-completeness` 的 `adr-gate` rubric 只读审查。
 3. 主 AI 收齐同轮结果后归并 `BLOCKING / WARNING / INFO`；同轮评审员互不可见结论。
 4. 修订 ADR 后使用新快照和 fresh agents 开启下一轮。
 5. 最新一轮至少两个不同模型完成、无 BLOCKING、WARNING 已处置时 PASS。
-6. 最多 3 轮；第 3 轮未通过、只有一个模型、快照漂移或分歧无法裁决时 halt。
+6. 当前轮无 BLOCKING、WARNING 已处置时立即 PASS；只有修订后才进入下一轮。
+7. 最多 9 轮；第 9 轮未通过、只有一个模型、快照漂移或分歧无法裁决时 halt，交人工决策。
 
 Gate 不得要求 ADR 增加文件 scope、私有逻辑、测试 case、命令或 commit 切分。Architecture Gate PASS 后仍须人工确认 ADR；确认 ADR 不等于授权实现。
 
@@ -97,14 +98,15 @@ packages/<group>/_notes/decisions/<relative>/<NN>-<slug>.md
 
 ## Plan Gate
 
-修改产品代码前必须按 `cross-review` 对同一份 ADR + `PLAN.md` + `TEST_CONTRACT.md` + HEAD 执行 1–3 轮并发多模型评审：
+修改产品代码前必须按 `cross-review` 对同一份 ADR + `PLAN.md` + `TEST_CONTRACT.md` + HEAD 执行 1–9 轮并发多模型评审：
 
 1. 检查 plan 是否完整追溯 ADR，且没有重定义公开契约、能力归属或功能边界。
 2. 检查文件 scope、代码 / 业务逻辑、任务依赖、测试、docs、命令、commit、风险和回滚是否可执行。
 3. 每轮并发 2–3 个不同可用模型；主 AI 收齐后才修订 plan，同轮不串行喂结论。
 4. 修订只涉及实现细节时更新 plan；涉及公开契约或架构边界时停止，回到 ADR 和 Architecture Gate。
 5. 最新一轮至少两个不同模型完成、无 BLOCKING、WARNING 已处置时 PASS。
-6. 最多 3 轮；未通过、只有一个模型、快照漂移或分歧无法裁决时 halt。
+6. 当前轮无 BLOCKING、WARNING 已处置时立即 PASS；只有修订后才进入下一轮。
+7. 最多 9 轮；第 9 轮未通过、只有一个模型、快照漂移或分歧无法裁决时 halt，交人工决策。
 
 Plan Gate PASS 与实现授权两者都存在时，才能进入 Stage 3。它们都不授权 commit / push。
 
@@ -151,7 +153,7 @@ Architecture Gate 与 Plan Gate 之外的 subagent / 外部模型仍须先获用
 
 ## 失败阈值
 
-- Architecture Gate 或 Plan Gate 最多 3 轮；第三轮未 PASS 必须 halt。
+- Architecture Gate 或 Plan Gate 最多 9 轮；第 9 轮未 PASS 必须 halt 并交人工决策。
 - 任一实施 step 连续 3 轮验证失败，halt 并记录失败输入、日志和判断。
 - Contract Auditor 发现 ADR / plan / 测试 / docs / 行为不一致且一轮修不动，halt 交人工。
 - 批量 worktree 失败时更新其 `TASK_STATE.md` / `REVIEW.md` 并停止，不伪装完工。

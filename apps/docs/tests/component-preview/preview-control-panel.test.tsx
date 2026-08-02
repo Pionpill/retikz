@@ -12,6 +12,7 @@ import type * as ResizableModule from '../../src/components/ui/resizable';
 import type { PreviewControlLayoutMetrics } from '../../src/modules/docs/components/component-preview/control-panel';
 import type {
   PreviewControlContract,
+  PreviewControlPreset,
   PreviewControlsDefinition,
   PreviewControlSection,
   PreviewControlState,
@@ -446,6 +447,50 @@ const PresetPanelHarness: FC = () => {
   );
 };
 
+const preservingPresetDefinition = definePreviewControls({
+  presentation: 'panel',
+  title: 'Inspection',
+  sections: [
+    {
+      controls: [
+        { kind: 'switch', id: 'enabled', label: 'Enabled', defaultValue: true },
+        { kind: 'switch', id: 'detail', label: 'Detail', defaultValue: false },
+      ],
+    },
+  ],
+});
+
+const preservingPresets: ReadonlyArray<PreviewControlPreset> = [
+  { id: 'recommended', label: 'Recommended', values: { enabled: true, detail: false } },
+  { id: 'all', label: 'All', values: { enabled: true, detail: true } },
+  { id: 'off', label: 'Off', values: { enabled: false }, applyMode: 'merge-current' },
+];
+
+const preservingPresetContract = {
+  controls: preservingPresetDefinition,
+  canonicalValues: { enabled: true, detail: false },
+  presetSelector: { label: 'Inspection preset', customLabel: 'Custom' },
+  presets: preservingPresets,
+  relatedApis: [],
+} satisfies PreviewControlContract;
+
+const PreservingPresetPanelHarness: FC = () => {
+  const controlState = usePreviewControlState(preservingPresetDefinition, preservingPresetContract.canonicalValues);
+
+  return (
+    <>
+      <button type="button" aria-label="Enable detail" onClick={() => controlState.setValue('detail', true)} />
+      <PreviewControlPanel
+        definition={preservingPresetDefinition}
+        controlContract={preservingPresetContract}
+        controlState={controlState}
+        onClose={() => undefined}
+      />
+      <output data-slot="preserving-preset-values">{JSON.stringify(controlState.values)}</output>
+    </>
+  );
+};
+
 describe('PreviewControlPanel', () => {
   beforeEach(async () => {
     await i18n.changeLanguage('en');
@@ -474,6 +519,26 @@ describe('PreviewControlPanel', () => {
 
     await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Reset controls"]')?.click());
     expect(trigger?.textContent).toContain('Display sum');
+  });
+
+  it('merge-current preset 只覆盖声明字段并保留当前 detail', async () => {
+    const container = await mount(<PreservingPresetPanelHarness />);
+    await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Enable detail"]')?.click());
+    expect(container.querySelector('[data-slot="preserving-preset-values"]')?.textContent).toBe(
+      JSON.stringify({ enabled: true, detail: true }),
+    );
+
+    const selector = container.querySelector('[data-slot="preview-preset-selector"]');
+    const trigger = selector?.querySelector<HTMLElement>('[data-slot="select-trigger"]');
+    await act(() => trigger?.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true })));
+    const options = Array.from(document.body.querySelectorAll<HTMLElement>('[data-slot="select-item"]'));
+    const off = options.find(option => option.textContent.includes('Off'));
+    await act(() => off?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })));
+
+    expect(container.querySelector('[data-slot="preserving-preset-values"]')?.textContent).toBe(
+      JSON.stringify({ enabled: false, detail: true }),
+    );
+    expect(trigger?.textContent).toContain('Off');
   });
 
   it('根据当前值显示匹配字段与分组，并保留隐藏字段的状态', async () => {

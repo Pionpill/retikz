@@ -18,7 +18,8 @@ describe('Bench report HTTP API', () => {
   it('通过 JSON API 写入并列出当前用例报告', async () => {
     const root = await mkdtemp(join(tmpdir(), 'retikz-bench-api-'));
     temporaryRoots.push(root);
-    const store = createReportStore(root, { createRunId: () => 'run-1' });
+    const runIds = ['run-1', 'run-2'];
+    const store = createReportStore(root, { createRunId: () => runIds.shift() ?? 'unexpected-run' });
     const handler = createBenchReportRequestHandler(store);
     const server = createServer((request, response) =>
       handler(request, response, () => {
@@ -54,8 +55,32 @@ describe('Bench report HTTP API', () => {
         diagnostics: [],
       });
 
+      const detailResponse = await fetch(
+        `${origin}/__bench/reports?moduleId=kernel&caseId=single-entity-update&runId=run-1`,
+      );
+      expect(detailResponse.status).toBe(200);
+      await expect(detailResponse.json()).resolves.toMatchObject({
+        report: { runId: 'run-1', payload: { sessionId: 'session-1' } },
+      });
+
       const invalidResponse = await fetch(`${origin}/__bench/reports?moduleId=..%2Fkernel`);
       expect(invalidResponse.status).toBe(400);
+
+      const forgedIdentityResponse = await fetch(`${origin}/__bench/reports`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          schemaVersion: 99,
+          runId: 'forged-run',
+          moduleId: 'kernel',
+          caseId: 'single-entity-update',
+          status: 'passed',
+          startedAt: '2026-08-01T00:00:00.000Z',
+          completedAt: '2026-08-01T00:00:01.000Z',
+          payload: {},
+        }),
+      });
+      expect(forgedIdentityResponse.status).toBe(400);
     } finally {
       await new Promise<void>((resolve, reject) =>
         server.close(error => (error === undefined ? resolve() : reject(error))),
