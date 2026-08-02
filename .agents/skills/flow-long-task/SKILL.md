@@ -13,7 +13,7 @@ description: Use when retikz work is a large, long-running, batch, multi-commit,
 
 1. 任务 source of truth：Alpha 功能的长期契约用 ADR，执行用其 ignored 镜像 `PLAN.md` / `TEST_CONTRACT.md`；非功能重构用 `superpowers:writing-plans` 产出的 plan；Beta / RC / 发布用 roadmap、plan 或发布清单。
 2. 是否允许批量执行、是否允许 LLM 分步 commit。
-3. Architecture / Plan Gate 使用根规则的常驻只读授权；其它批量自动 commit 前 review、最终整体 review 仍按根规则确认授权。
+3. Architecture / Plan Gate 使用根规则的常驻只读授权；其它批量自动 commit 前 review、最终整体 review 先按根规则判定风险，再确认所需授权。
 4. 临时状态文件位置。Alpha 必须使用 ADR 的 `**/_notes/plans/` 镜像目录；其它任务使用 `.gitignore` 覆盖的 `notes/plans/` 或就近 `**/_notes/plans/`。
 
 未确认 source of truth 前不改代码；Alpha 必须在 Architecture Gate、人工 ADR 确认、镜像 plan 与 Plan Gate 均通过且已有实现授权后执行。未授权 commit 前不 commit；常驻 Gate 之外未授权 subagent / 外部模型前不调度 review。
@@ -62,7 +62,7 @@ notes/plans/<task>/TASK_STATE.md
 
 ## Commit 前 Review
 
-用户批准批量执行并授权 LLM 自行 commit 时，每个 commit 必须单独过 gate。用户在当前对话明确认可的小任务单次 commit 不走本 review gate；改动面大或核心功能不适用该豁免：
+用户批准批量执行并授权 LLM 自行 commit 时，先逐 commit 判定风险。改动面大、核心能力、公开契约、跨包边界或高风险 commit 必须单独过 gate；非 ADR、scope 明确且仅涉及文档、文案、链接、格式或机械性调整，并且不改变公开契约、schema、runtime 行为或跨包边界时，可跳过 subagent review 并在 `TASK_STATE.md` 记录理由。其余情况按根规则询问用户。需要 review 时：
 
 1. 只 stage 本 commit 文件，不用 `git add -A`。
 2. 跑受影响验证；验证失败不进入 review。
@@ -86,11 +86,11 @@ Review 输出只分：
 - `WARNING`：可由人工裁决或记录风险。
 - `INFO`：可选建议。
 
-每个 commit review 最多 3 轮。最新一轮至少两个不同模型完成、无 BLOCKING、WARNING 已裁决时 PASS；只有一个模型、快照漂移或第三轮未通过时 halt。
+每个 commit review 最多 9 轮。最新一轮至少两个不同模型完成、无 BLOCKING、WARNING 已裁决时立即 PASS，不再追加下一轮；只有修订后才使用 fresh agents 复审。只有一个模型、快照漂移或第 9 轮未通过时 halt，交人工决策。
 
 ## 最终整体 Review
 
-全部实现完成后，按用户授权和 `cross-review` 对固定完整 working-tree diff 或 commit range 并发派发 2–3 个不同模型。没有 commit 授权时使用 working-tree diff，不得为了整体 review 提前 commit；已有多个 commit 时使用固定 range。输入包含 ADR / source docs、reviewed plan、`TASK_STATE.md`、commit list（如有）、完整 diff 与验证结果。
+全部实现完成后，先按根规则判定整体 review 风险；低风险明确改动可跳过并记录理由，需要 review 时再按用户授权和 `cross-review` 对固定完整 working-tree diff 或 commit range 并发派发 2–3 个不同模型。没有 commit 授权时使用 working-tree diff，不得为了整体 review 提前 commit；已有多个 commit 时使用固定 range。输入包含 ADR / source docs、reviewed plan、`TASK_STATE.md`、commit list（如有）、完整 diff 与验证结果。
 
 整体 review 检查：
 
@@ -101,10 +101,10 @@ Review 输出只分：
 
 最终 BLOCKING 清空后，再进入 wrapup、roadmap / ADR 状态更新或交付汇报。
 
-整体 review 同样按轮次归并；修订后使用新的完整 working-tree diff 或 commit range 与 fresh agents 进入下一轮，最多 3 轮。不得串行把一个模型的结论喂给同轮其它模型。
+整体 review 同样按轮次归并；当前轮无 BLOCKING、WARNING 已处置时立即 PASS。只有修订后才使用新的完整 working-tree diff 或 commit range 与 fresh agents 进入下一轮，最多 9 轮；第 9 轮仍未 PASS 时交人工。不得串行把一个模型的结论喂给同轮其它模型。
 
 ## 失败与暂停
 
-- ADR / plan 自相矛盾、scope 膨胀、git 状态不明、连续 3 轮验证失败、第三轮 review 仍有 BLOCKING：halt，汇报事实和选项。
+- ADR / plan 自相矛盾、scope 膨胀、git 状态不明、连续 3 轮验证失败、第 9 轮 review 仍有 BLOCKING：halt，汇报事实和选项并交人工决策。
 - 不 push / tag / publish；这些始终需要单独授权。
 - 不提交临时 plan、状态文件、review 报告，除非用户明确要求转为正式文档。

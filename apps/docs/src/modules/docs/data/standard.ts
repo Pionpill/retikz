@@ -16,6 +16,7 @@ export const standardSection: Array<Section> = [
       { id: 'grid', label: 'standard.grid' },
       { id: 'axes', label: 'standard.axes' },
       { id: 'frame', label: 'standard.frame' },
+      { id: 'legend', label: 'standard.legend' },
     ],
   },
   {

@@ -13,6 +13,7 @@ const inspection: InspectionPlane = {
   entries: [
     {
       occurrence: { sourcePath: '$.children[0]', expansionPath: [] },
+      colorScope: 1,
       transform: [1, 0, 0, 1, 12, 8],
       primitives: [
         {
@@ -23,7 +24,7 @@ const inspection: InspectionPlane = {
           width: 30,
           height: 20,
           presentation: 'outline',
-          tone: 'neutral',
+          tone: 'scope',
           lineStyle: 'dashed',
         },
         {
@@ -33,10 +34,33 @@ const inspection: InspectionPlane = {
           y1: 10,
           x2: 30,
           y2: 10,
-          tone: 'guide',
+          tone: 'scope',
           lineStyle: 'dotted',
         },
-        { kind: 'label', role: 'layout.label', x: 4, y: 6, text: 'slot 0', tone: 'accent' },
+        {
+          kind: 'rect',
+          role: 'layout.gap',
+          x: 0,
+          y: 2,
+          width: 20,
+          height: 6,
+          presentation: 'fill',
+          tone: 'scope',
+          fillPattern: 'crosshatch',
+          opacity: 0.5,
+        },
+        {
+          kind: 'rect',
+          role: 'layout.overflow',
+          x: 28,
+          y: 0,
+          width: 4,
+          height: 20,
+          presentation: 'fill',
+          tone: 'warning',
+          fillPattern: 'solid',
+        },
+        { kind: 'label', role: 'layout.label', x: 4, y: 6, text: 'slot 0', tone: 'scope' },
       ],
     },
   ],
@@ -65,12 +89,47 @@ describe('SVG static render frame', () => {
       tag: 'g',
       attrs: { transform: 'matrix(1 0 0 1 12 8)' },
     });
+    const entry = group.children?.[0];
+    expect(entry).not.toBeTypeOf('string');
+    if (entry === undefined || typeof entry === 'string') throw new Error('expected inspection entry group');
+    expect(entry.children?.map(child => (typeof child === 'string' ? child : child.tag))).toEqual([
+      'rect',
+      'line',
+      'path',
+      'rect',
+      'text',
+    ]);
+    expect(entry.children?.[2]).toMatchObject({
+      tag: 'path',
+      attrs: {
+        d: 'M 4.5 7.5 L 9.5 2.5 M 16.5 7.5 L 19.5 4.5 M 14.5 2.5 L 19.5 7.5 M 2.5 2.5 L 7.5 7.5',
+        fill: 'none',
+        stroke: '#7c3aed',
+        'stroke-width': 1,
+        opacity: 0.275,
+      },
+    });
+    expect(
+      entry.children?.some(
+        child =>
+          typeof child !== 'string' &&
+          child.tag === 'rect' &&
+          child.attrs.x === 0 &&
+          child.attrs.y === 2 &&
+          child.attrs.width === 20 &&
+          child.attrs.height === 6,
+      ),
+    ).toBe(false);
 
     const output = renderFrameToSvgString({ primary, inspection }, { idPrefix: 'frame' });
     expect(output).toContain('data-retikz-inspection="layout"');
     expect(output).toContain('<rect');
     expect(output).toContain('<line');
+    expect(output).toContain('<path');
     expect(output).toContain('<text');
+    expect(output).toContain('#7c3aed');
+    expect(output).toContain('#dc2626');
+    expect(output).not.toContain('url(#');
     expect(output).not.toContain('data-retikz-id="layout.');
   });
 

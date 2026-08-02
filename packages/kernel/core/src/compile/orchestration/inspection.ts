@@ -32,7 +32,7 @@ import { cloneAndFreezeJson } from '../../shared/json';
 import { applyTransformChain } from '../transform';
 import { compareCompileOccurrences, freezeOccurrence } from './artifact';
 
-const BaseKeys = new Set(['bounds', 'overflow', 'alignmentGuides', 'labels']);
+const BaseKeys = new Set(['bounds', 'spacing', 'overflow', 'alignmentGuides', 'labels']);
 
 type PreparedInspectionRoot = Readonly<{
   tree: CompositeInspectionAuthoringTree;
@@ -204,6 +204,8 @@ export const lookupCompositeInspectionChildTree = (
 const mergeBase = (current: BaseLayoutInspectOptions, next: BaseLayoutInspectOptions): BaseLayoutInspectOptions => {
   const currentBounds = current.bounds;
   const nextBounds = next.bounds;
+  const currentSpacing = current.spacing;
+  const nextSpacing = next.spacing;
   return {
     ...current,
     ...next,
@@ -214,6 +216,14 @@ const mergeBase = (current: BaseLayoutInspectOptions, next: BaseLayoutInspectOpt
             typeof nextBounds === 'object' && typeof currentBounds === 'object'
               ? { ...currentBounds, ...nextBounds }
               : nextBounds,
+        }),
+    ...(nextSpacing === undefined
+      ? {}
+      : {
+          spacing:
+            typeof nextSpacing === 'object' && typeof currentSpacing === 'object'
+              ? { ...currentSpacing, ...nextSpacing }
+              : nextSpacing,
         }),
   };
 };
@@ -393,8 +403,9 @@ export const sealInspectionPlane = (entries: ReadonlyArray<PendingInspectionEntr
       (left, right) =>
         compareCompileOccurrences(left.entry.occurrence, right.entry.occurrence) || left.index - right.index,
     )
-    .map(({ entry }) => ({
+    .map(({ entry }, colorScope) => ({
       occurrence: freezeOccurrence(entry.occurrence),
+      colorScope,
       transform: matrixOf(entry),
       primitives: entry.primitives,
     }));

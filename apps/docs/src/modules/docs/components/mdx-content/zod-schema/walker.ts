@@ -1,6 +1,6 @@
 ﻿import { z } from 'zod';
 
-import type { ObjectField, SchemaRepr, TypeRepr } from './types';
+import type { DiscriminatedUnionBranch, ObjectField, SchemaPathLiteral, SchemaRepr, TypeRepr } from './types';
 
 import { lookupSchema } from './schema-registry';
 
@@ -75,11 +75,26 @@ function walkTypeImpl(schema: AnySchema, skipRegistry: boolean, ctx: WalkCtx = R
       elements: schema.def.items.map(item => walkTypeImpl(item, false, next)),
     };
   }
+  if (schema instanceof z.ZodDefault) {
+    return { kind: 'default', inner: walkTypeImpl(schema.unwrap(), false, next) };
+  }
+  if (schema instanceof z.ZodNullable) {
+    return { kind: 'nullable', inner: walkTypeImpl(schema.unwrap(), false, next) };
+  }
   if (schema instanceof z.ZodLazy) {
     return walkTypeImpl(schema.unwrap(), false, next);
   }
   if (schema instanceof z.ZodUnion) {
-    return { kind: 'union', members: schema.options.map(member => walkTypeImpl(member, false, next)) };
+    const discriminator = (schema.def as z.core.$ZodUnionDef & { discriminator?: unknown }).discriminator;
+    const branches =
+      typeof discriminator === 'string'
+        ? schema.options.map((member, index) => extractDiscriminatedBranch(member, discriminator, index))
+        : undefined;
+    return {
+      kind: 'union',
+      members: schema.options.map(member => walkTypeImpl(member, false, next)),
+      ...(branches === undefined ? {} : { branches }),
+    };
   }
 
   if (schema instanceof z.ZodObject) {
@@ -91,6 +106,18 @@ function walkTypeImpl(schema: AnySchema, skipRegistry: boolean, ctx: WalkCtx = R
   }
 
   return { kind: 'unknown', note: `unhandled: ${schema._zod.def.type}` };
+}
+
+const isSchemaPathLiteral = (value: unknown): value is SchemaPathLiteral =>
+  value === null || ['string', 'number', 'boolean'].includes(typeof value);
+
+function extractDiscriminatedBranch(schema: AnySchema, discriminator: string, index: number): DiscriminatedUnionBranch {
+  if (!(schema instanceof z.ZodObject)) return { index, discriminator, values: [] };
+  const raw = schema.shape[discriminator] as AnySchema | undefined;
+  if (raw === undefined) return { index, discriminator, values: [] };
+  const { inner } = unwrapOptional(raw);
+  if (!(inner instanceof z.ZodLiteral)) return { index, discriminator, values: [] };
+  return { index, discriminator, values: Array.from(inner.values).filter(isSchemaPathLiteral) };
 }
 
 export function walkType(schema: AnySchema): TypeRepr {
@@ -129,6 +156,7 @@ function unwrapOptional(schema: AnySchema): { inner: AnySchema; optional: boolea
 }
 
 function extractConstraints(schema: AnySchema): Array<string> {
+  while (schema instanceof z.ZodDefault || schema instanceof z.ZodNullable) schema = schema.unwrap();
   const out: Array<string> = [];
   if (schema instanceof z.ZodNumber) {
     const defs = checkDefsOf(schema);

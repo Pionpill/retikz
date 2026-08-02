@@ -45,7 +45,7 @@ description: Use when an Alpha ADR needs a pre-implementation capability gate, o
 
 - 读取完整 Proposed ADR，尤其是核心决策、基础数据结构 / 公开契约、行为与失败语义、功能边界、被否决方案和架构验证。
 - 对照当前代码判断 ADR 是否复用既有机制；尚未实现不妨碍设计门禁。
-- 调用方提供固定快照、评审模型与当前轮次 `1/3`、`2/3` 或 `3/3`；同轮并发与多模型归并由 `cross-review` 负责。
+- 调用方提供固定快照、评审模型与当前轮次 `1/9` 至 `9/9`；同轮并发与多模型归并由 `cross-review` 负责。
 
 ### Gate 重点
 
@@ -62,7 +62,7 @@ description: Use when an Alpha ADR needs a pre-implementation capability gate, o
 
 ```md
 ReviewerVerdict: REVIEWER_PASS | BLOCKED
-Round: <1|2|3>/3
+Round: <1-9>/9
 Reviewer: <actual-model>
 Snapshot: HEAD=<sha>; ADR=<path-and-content-version>
 

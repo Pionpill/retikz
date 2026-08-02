@@ -310,4 +310,70 @@ describe('irToVanillaCode fallback', () => {
     expect(code).toContain('GridLayoutVanillaAdapter');
     expect(code).toContain('OverlayLayoutVanillaAdapter');
   });
+
+  it('为 Legend 生成 authoring builder、adapter 与嵌套 Standard capability bundle', () => {
+    const code = irToVanillaCode(
+      ir([
+        {
+          namespace: 'standard',
+          type: 'legend',
+          titleGap: 8,
+          size: { x: { kind: 'content' }, y: { kind: 'content' } },
+          padding: 0,
+          overflow: 'visible',
+          content: {
+            kind: 'items',
+            direction: 'vertical',
+            wrap: 'nowrap',
+            columnGap: 8,
+            rowGap: 8,
+            sampleGap: 8,
+            sampleAlign: 'center',
+            items: [
+              {
+                key: 'nested',
+                sample: {
+                  namespace: 'standard',
+                  type: 'flexLayout',
+                  size: { x: { kind: 'content' }, y: { kind: 'content' } },
+                  padding: 0,
+                  overflow: 'visible',
+                  direction: 'row',
+                  wrap: 'nowrap',
+                  columnGap: 0,
+                  rowGap: 0,
+                  justifyContent: 'start',
+                  alignItems: 'stretch',
+                  alignContent: 'start',
+                  children: [
+                    {
+                      kind: 'flex',
+                      key: 'grid',
+                      margin: 0,
+                      basis: 'content',
+                      grow: 0,
+                      shrink: 1,
+                      child: {
+                        namespace: 'standard',
+                        type: 'grid',
+                        bounds: { min: [0, 0], max: [20, 20] },
+                        spacing: 10,
+                        lines: { vertical: true, horizontal: true, includeBoundary: false },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      ]),
+      { inspect: { enabled: false } },
+    );
+
+    expect(code).toContain("legend('preview-legend-1'");
+    expect(code).toContain('LegendVanillaAdapter');
+    expect(code).toContain('createStandardBundle([FlexLayoutModule, GridModule])');
+    expect(code).not.toContain('LegendModule');
+  });
 });

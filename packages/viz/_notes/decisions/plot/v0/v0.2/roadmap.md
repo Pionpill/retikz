@@ -13,7 +13,7 @@ v0.1 已完成 GoG 基座：data / encoding / scale / coordinate / mark / stat /
 - **交互能力补全**：tooltip、hover、selection、brush、legend interaction、事件回调、locator 与 provenance 的 runtime 消费；交互是 framework/runtime 能力，PlotSpec 只保留 JSON-safe 的意图和稳定 identity。
 - **layout transform / structured visualization**：tree、network、word cloud、treemap、circle packing、gauge、progress、pictogram 等结构化算法先产出位置 / 尺寸 / 路由等派生字段，再统一进入 plot 的 channel / scale / coordinate / mark / guide / lowering；不新增 `@retikz/struct` 包。
 
-同时收敛 v0.1 的通用 decoration 呈现：Plot 继续拥有 axis / legend / label 的领域解析、coordinate view 绑定、guide resolve、provenance / locator 与交互意图；Standard alpha.2 / alpha.3 就绪后，Plot 把外围 Box Layout 和 Legend 的视觉结构、内部布局与 lowering 迁到 `@retikz/standard`，不再长期维护固定带宽或字符估算的平行呈现主链。
+同时收敛 v0.1 的通用 decoration 呈现：Plot 继续拥有 axis / legend / label 的领域解析、coordinate view 绑定、guide resolve、provenance / locator 与交互意图；Standard alpha.2 就绪后，Plot 把外围 Box Layout 和 Legend 的视觉结构、内部布局与 layout-aware compile 迁到 `@retikz/standard`，不再长期维护固定带宽或字符估算的平行呈现主链。
 
 `@retikz/chart v0.1` 与本 minor 并行迭代：chart 可以拥有 Tier 3 `ChartSpec`，但必须 lower 成 PlotSpec。plot v0.2 新增的 interaction 与 layout transform 能力，可以被 chart v0.1 后续 alpha 消费；chart 不放在 plot v0.2 目录内。
 
@@ -23,7 +23,7 @@ v0.1 beta 收口时先抽出最小 `@retikz/data`：字段类型、field model�
 
 v0.2 默认消费这层共享数据语义；plot 专属的统计 transform、layout transform、coordinate / mark / guide 仍留在 plot。
 
-Standard v0.1 alpha.2 / alpha.3 提供通用 Box Layout 与 Legend 呈现。Plot 可以在领域 schema 保持稳定的前提下，把解析后的 Legend 和外围 decoration item 交给 Standard；若 Standard capability loading、约束测量、artifact 或 provenance bridge 尚未闭环，对应迁移不得以 Plot 私有 fallback 提前实现。
+Standard v0.1 alpha.2 提供通用 Box Layout，并由 ADR-09 提供 Legend 呈现。Plot 可以在领域 schema 保持稳定的前提下，把解析后的 Legend 和外围 decoration item 交给 Standard；若 Standard capability loading、约束测量、artifact 或 provenance bridge 尚未闭环，对应迁移不得以 Plot 私有 fallback 提前实现。
 
 ## Milestones
 
@@ -45,7 +45,7 @@ Standard v0.1 alpha.2 / alpha.3 提供通用 Box Layout 与 Legend 呈现。Plot
 
 - **plot v0.1**：GoG 基座、thin Plot、guide/theme、scope identity、locator/provenance、layer zIndex。
 - **data v0.1 beta**：共享字段、数据引用、formatter、通用 transform 基础契约。
-- **standard v0.1**：alpha.2 Box Layout、alpha.3 Legend、capability module 传递消费与领域无关 layout artifact。
+- **standard v0.1**：alpha.2 Box Layout 与 ADR-09 Legend、capability module 传递消费与领域无关 layout artifact。
 - **chart v0.1**：并行消费 plot v0.2 能力，但不作为本 minor 的实现内容。
 - **core**：交互 runtime 依赖 hydration / hit-test / event plumbing；layout transform 仍 lower 到既有 core Node / Path / Scope，不绕开 core。
 

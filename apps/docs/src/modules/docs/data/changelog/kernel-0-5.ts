@@ -129,10 +129,18 @@ export const kernelV05: Release = {
           version: 'alpha.2',
           date: '2026-07-29',
           summary: {
-            zh: '交付 Core Runtime Program、单 root Node fill 局部增量闭环，以及布局感知 Composite 的双轴 proposal、resolved slot、guide、failure isolation 与 replay。',
-            en: 'Ships the Core Runtime Program and one-root Node fill incremental path, plus two-axis proposals, resolved slots, guides, failure isolation, and replay for layout-aware composites.',
+            zh: '交付 Core Runtime Program、单 root Node fill 局部增量闭环，以及布局感知 Composite 的双轴 proposal、resolved slot、guide、failure isolation、replay 与 occurrence-scoped inspection DTO。',
+            en: 'Ships the Core Runtime Program and one-root Node fill incremental path, plus two-axis proposals, resolved slots, guides, failure isolation, replay, and occurrence-scoped inspection DTOs for layout-aware composites.',
           },
-          items: [],
+          items: [
+            {
+              label: { zh: 'Inspection DTO 规范化', en: 'Normalized inspection DTOs' },
+              content: {
+                zh: '`InspectionPlaneEntry.colorScope` 由 Core 按最终 entry 顺序连续分配；普通 tone 收敛为 `scope`，warning 保持独立。outline rect 必填 `lineStyle`，fill rect 必填后端中立 `fillPattern`。`spacing.padding / margin` 默认开启，支持 boolean 整组切换与对象 sparse merge，并与 `bounds` 解耦后按 Layout → Scope → component-local 级联；不保留旧 tone 或缺字段兼容分支。',
+                en: 'Core assigns `InspectionPlaneEntry.colorScope` continuously in final entry order. Regular tone narrows to `scope`, while warnings remain independent. Outline rects require `lineStyle` and fill rects require a renderer-neutral `fillPattern`. `spacing.padding / margin` default to enabled, support boolean group toggles and sparse object merges, remain independent from `bounds`, and cascade in Layout → Scope → component-local order, with no compatibility branch for old tones or omitted fields.',
+              },
+            },
+          ],
         },
         {
           version: 'alpha.1',
@@ -173,10 +181,18 @@ export const kernelV05: Release = {
           version: 'alpha.2',
           date: '2026-07-29',
           summary: {
-            zh: '交付 retained renderer contract、内置SVG/Canvas事务后端、capability fallback、hydration/resource/animation同步提交与5000规模性能门禁。',
-            en: 'Ships the retained renderer contract, transactional built-in SVG/Canvas backends, capability fallback, synchronized hydration/resource/animation commits, and 5,000-entity performance gates.',
+            zh: '交付 retained renderer contract、内置SVG/Canvas事务后端、共享 inspection palette / hatch、capability fallback、hydration/resource/animation同步提交与5000规模性能门禁。',
+            en: 'Ships the retained renderer contract, transactional built-in SVG/Canvas backends, a shared inspection palette and hatch geometry, capability fallback, synchronized hydration/resource/animation commits, and 5,000-entity performance gates.',
           },
-          items: [],
+          items: [
+            {
+              label: { zh: 'Inspection 后端对齐', en: 'Inspection backend parity' },
+              content: {
+                zh: 'SVG 与 Canvas 共用九色 occurrence palette、固定 warning 红色、alpha 公式和 12 user-unit hatch 几何；共享几何会把 1 user unit 宽的 hatch stroke 收进 rect，pattern 不铺底色或隐式边界。SVG 使用无全局 id 的局部 path，Canvas 在 clip 生命周期内只绘制同坐标纹理线。',
+                en: 'SVG and Canvas share a nine-color occurrence palette, fixed warning red, alpha formulas, and 12-user-unit hatch geometry. Shared geometry keeps each hatch stroke of width 1 user unit inside its rect, and patterns add neither a base fill nor an implicit border. SVG uses local paths with no global id, while Canvas paints the same hatch coordinates inside one clip lifecycle.',
+              },
+            },
+          ],
         },
         {
           version: 'alpha.1',

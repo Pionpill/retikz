@@ -5,10 +5,10 @@ import { I18nextProvider, initReactI18next } from 'react-i18next';
 import { StaticRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
+import { defaultBenchModule } from '../src/playground/app/module-registry';
+import { ModuleSwitcher } from '../src/playground/app/sidebar/ModuleSwitcher';
 import { SidebarProvider } from '../src/playground/components/ui/sidebar';
 import { zh } from '../src/playground/i18n/locales';
-import { ModuleSwitcher } from '../src/playground/workspace/components/ModuleSwitcher';
-import { defaultBenchModule } from '../src/playground/workspace/constant';
 
 describe('ModuleSwitcher', () => {
   it('显示模块图标和加粗标题说明', async () => {

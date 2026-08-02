@@ -12,10 +12,18 @@ export type ListBenchReportsInput = Readonly<{
   caseId?: string;
 }>;
 
+/** 读取单份本地报告所需的稳定标识 */
+export type ReadBenchReportInput = Readonly<{
+  moduleId: string;
+  caseId: string;
+  runId: string;
+}>;
+
 /** 本地报告存储接口 */
 export type BenchReportStore = Readonly<{
   writeReport: (input: WriteBenchReportInput) => Promise<BenchLabReport>;
   listReports: (input: ListBenchReportsInput) => Promise<BenchReportList>;
+  readReport: (input: ReadBenchReportInput) => Promise<BenchLabReport>;
 }>;
 
 /** 本地报告存储构造选项 */
@@ -50,6 +58,15 @@ const createDefaultRunId = (): string => {
   return `${timestamp}-${randomUUID().slice(0, 8)}`;
 };
 
+/** 校验完整报告与其存储路径身份一致 */
+const parseStoredReport = (value: unknown, identity: ReadBenchReportInput): BenchLabReport => {
+  if (!isBenchLabReport(value)) throw new BenchReportValidationError('Report schema is invalid');
+  if (value.moduleId !== identity.moduleId || value.caseId !== identity.caseId || value.runId !== identity.runId) {
+    throw new BenchReportValidationError('Report identity does not match its storage path');
+  }
+  return value;
+};
+
 /** 返回目录中的子目录名 */
 const listDirectories = async (directory: string): Promise<ReadonlyArray<string>> => {
   try {
@@ -74,7 +91,7 @@ export const createReportStore = (resultsRoot: string, options: CreateReportStor
     assertIsoDate('completedAt', input.completedAt);
     const runId = createRunId();
     assertSafeSegment('runId', runId);
-    const report: BenchLabReport = Object.freeze({ schemaVersion: 1, runId, ...input });
+    const report: BenchLabReport = Object.freeze({ ...input, schemaVersion: 1, runId });
     const reportDirectory = join(runsRoot, input.moduleId, input.caseId, runId);
     await mkdir(reportDirectory, { recursive: true });
     const reportPath = join(reportDirectory, 'report.json');
@@ -105,8 +122,9 @@ export const createReportStore = (resultsRoot: string, options: CreateReportStor
         const reportPath = join(caseDirectory, runId, 'report.json');
         try {
           const parsed: unknown = JSON.parse(await readFile(reportPath, 'utf8'));
-          if (!isBenchLabReport(parsed)) throw new Error('report schema is invalid');
-          reports.push(createBenchReportSummary(parsed));
+          reports.push(
+            createBenchReportSummary(parseStoredReport(parsed, { moduleId: input.moduleId, caseId, runId })),
+          );
         } catch (error) {
           diagnostics.push(
             `${relative(resultsRoot, reportPath)}: ${error instanceof Error ? error.message : String(error)}`,
@@ -114,9 +132,18 @@ export const createReportStore = (resultsRoot: string, options: CreateReportStor
         }
       }
     }
-    reports.sort((left, right) => right.completedAt.localeCompare(left.completedAt));
+    reports.sort((left, right) => Date.parse(right.completedAt) - Date.parse(left.completedAt));
     return Object.freeze({ reports: Object.freeze(reports), diagnostics: Object.freeze(diagnostics) });
   };
 
-  return Object.freeze({ writeReport, listReports });
+  const readReport = async (input: ReadBenchReportInput): Promise<BenchLabReport> => {
+    assertSafeSegment('moduleId', input.moduleId);
+    assertSafeSegment('caseId', input.caseId);
+    assertSafeSegment('runId', input.runId);
+    const reportPath = join(runsRoot, input.moduleId, input.caseId, input.runId, 'report.json');
+    const parsed: unknown = JSON.parse(await readFile(reportPath, 'utf8'));
+    return parseStoredReport(parsed, input);
+  };
+
+  return Object.freeze({ writeReport, listReports, readReport });
 };

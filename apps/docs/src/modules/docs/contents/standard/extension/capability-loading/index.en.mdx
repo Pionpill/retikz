@@ -23,7 +23,7 @@ A bundle only combines `CompositeDefinition` values. It does not merge renderer 
 
 ## Define a Capability
 
-The built-in modules are `GridModule`, `AxesModule`, `FrameModule`, `FlexLayoutModule`, `GridLayoutModule`, and `OverlayLayoutModule`. Third-party composites still use Core `defineComposite()` as their source of truth. Wrap a definition in an ordinary structural module only when it needs to participate in the same composition step:
+The built-in modules are `GridModule`, `AxesModule`, `FrameModule`, `FlexLayoutModule`, `GridLayoutModule`, `OverlayLayoutModule`, and `LegendModule`. Third-party composites still use Core `defineComposite()` as their source of truth. Wrap a definition in an ordinary structural module only when it needs to participate in the same composition step:
 
 ```ts
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
@@ -47,7 +47,7 @@ const BadgeModule = {
 } satisfies StandardCapabilityModule;
 ```
 
-`name` is only a bundle-level identity and diagnostic key. Composite lookup still uses each definition's `namespace` and `type`.
+`name` is only a bundle-level diagnostic key for conflicts between different objects. Composite lookup still uses each definition's `namespace` and `type`. Repeating the same module object reference is idempotent and preserves its first position. Different objects cannot share a `name`, even when their structures match.
 
 ## Inject into a Host
 
@@ -68,7 +68,7 @@ Use `StandardLayoutPreset` when only the layout family is needed. It provides Fl
 
 ### React JSX
 
-`<Grid>`, `<Axes>`, `<Frame>`, and the three layout containers contribute definitions through static adapters. Nested layouts share the `standard.layout` namespace and maker, so the outer `Layout` receives one family contribution. Do not also pass the same capability through bundle composites; Core fails loudly on duplicate registration.
+`<Grid>`, `<Axes>`, `<Frame>`, `<Legend>`, and the three layout containers contribute definitions through static adapters. Nested layouts share the `standard.layout` namespace and maker, so the outer `Layout` receives one family contribution. Hosts still combine those contributions by definition identity and Core provider key; Standard does not add a second overwrite priority.
 
 ### Vanilla
 
@@ -83,12 +83,14 @@ mountSvg(container, figure, { adapters: StandardVanillaAdapters });
 
 Direct Standard IR does not use adapters. Put `bundle.compile` in the runtime `compile` option instead.
 
-Use `StandardLayoutVanillaAdapters` for layout embeds only. The complete `StandardVanillaAdapters` appends those three entries after Grid, Axes, and Frame.
+Use `StandardLayoutVanillaAdapters` for layout embeds only. The complete `StandardVanillaAdapters` currently orders Grid, Axes, Frame, the three layouts, and Legend.
+
+Static adapters and explicit bundles are alternative loading sources for the same capability, not mutual deduplication layers. If JSX or an embed already contributes a definition and the host also injects the same provider key through a bundle, Core fails loudly with `duplicate composite registration`.
 
 ## Execution Model
 
 1. A capability module contributes Core definitions in declaration order.
-2. `createStandardBundle()` validates module names, copies names and definition references, and shallow-freezes returned containers.
+2. `createStandardBundle()` first merges repeated module object identities, rejects same-name different objects, copies names and definition references, and shallow-freezes returned containers.
 3. The host passes `bundle.compile.composites` to the Core composite registry.
 4. Core looks up provider keys, validates nodes, and expands Standard IR.
 
@@ -97,27 +99,28 @@ Use `StandardLayoutVanillaAdapters` for layout embeds only. The complete `Standa
     {
       label: 'Public module and bundle contracts',
       path: 'packages/library/standard/src/capability/types.ts',
-      startLine: 3,
+      startLine: 7,
       endLine: 26,
     },
     {
       label: 'Bundle ordering, validation, and freezing',
       path: 'packages/library/standard/src/capability/create.ts',
-      startLine: 5,
-      endLine: 32,
+      startLine: 9,
+      endLine: 37,
     },
   ]}
 />
 
 ## Errors and Limits
 
-| Situation                                  | Result                                                                |
-| ------------------------------------------ | --------------------------------------------------------------------- |
-| Module name is empty or whitespace-only    | `createStandardBundle()` throws immediately                           |
-| A bundle contains a duplicate module name  | Standard throws instead of silently deduplicating                     |
-| Definition provider keys collide           | Core reports `duplicate composite registration`                       |
-| IR references an unselected composite      | Core emits `COMPOSITE_NOT_REGISTERED`, skips that node, and continues |
-| JSX or embed injection duplicates a bundle | Core preserves the duplicate-registration diagnostic                  |
+| Situation                               | Result                                                                |
+| --------------------------------------- | --------------------------------------------------------------------- |
+| Module name is empty or whitespace-only | `createStandardBundle()` throws immediately                           |
+| The same module object appears again    | It merges idempotently at its first position and contributes once     |
+| Different module objects share one name | Standard throws instead of overwriting by name or structure           |
+| Different modules share a provider key  | Core reports `duplicate composite registration`                       |
+| JSX / embed and a bundle inject one key | Core reports `duplicate composite registration` instead of deduping   |
+| IR references an unselected composite   | Core emits `COMPOSITE_NOT_REGISTERED`, skips that node, and continues |
 
 Modules, bundles, and adapters cannot enter persisted IR. `StandardAllPreset` and `StandardVanillaAdapters` grow with the capabilities published by a Standard version; they are not fixed across versions.
 
@@ -131,6 +134,7 @@ Modules, bundles, and adapters cannot enter persisted IR. `StandardAllPreset` an
 | `GridModule`                    | `@retikz/standard`         | Official Grid module                              |
 | `AxesModule`                    | `@retikz/standard`         | Official Axes module                              |
 | `FrameModule`                   | `@retikz/standard`         | Official Frame module                             |
+| `LegendModule`                  | `@retikz/standard`         | Official Legend module                            |
 | `FlexLayoutModule`              | `@retikz/standard`         | Official FlexLayout module                        |
 | `GridLayoutModule`              | `@retikz/standard`         | Official GridLayout module                        |
 | `OverlayLayoutModule`           | `@retikz/standard`         | Official OverlayLayout module                     |

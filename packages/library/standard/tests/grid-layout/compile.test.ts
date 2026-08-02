@@ -13,6 +13,8 @@ import {
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
+import type { GridLayoutCompileArtifact } from '../../src';
+
 import {
   createGridLayout,
   GridLayoutDefinition,
@@ -170,6 +172,12 @@ const translationOf = (primitives: ReadonlyArray<ScenePrimitive>, id: string): R
   const result = visit(primitives, 0, 0);
   if (result === undefined) throw new Error(`Expected Scene group '${id}'`);
   return result;
+};
+
+const gridArtifactOf = (output: ReturnType<typeof compileToScene>): GridLayoutCompileArtifact => {
+  const artifact = output.artifacts.find(value => value.kind === 'composite' && value.type === 'gridLayout');
+  if (artifact === undefined) throw new Error('Expected GridLayout compile artifact');
+  return artifact as GridLayoutCompileArtifact;
 };
 
 describe('GridLayout compile contract', () => {
@@ -478,5 +486,72 @@ describe('GridLayout compile contract', () => {
 
     expect(translationOf(result.output.scene.primitives, 'a')).toEqual({ x: 0, y: 0 });
     expect(translationOf(result.output.scene.primitives, 'b')).toEqual({ x: 80, y: 0 });
+  });
+
+  it('records centered fixed gaps and distributed space on both full content bands', () => {
+    const result = compileGrid(
+      createGridLayout({
+        size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 60 } },
+        columns: [
+          { kind: 'fixed', value: 20 },
+          { kind: 'fixed', value: 20 },
+        ],
+        rows: [
+          { kind: 'fixed', value: 10 },
+          { kind: 'fixed', value: 10 },
+        ],
+        columnGap: 10,
+        rowGap: 10,
+        justifyContent: LayoutDistribution.SpaceBetween,
+        alignContent: LayoutDistribution.SpaceBetween,
+      }),
+      exactProposal(100, 60),
+    );
+
+    expect(gridArtifactOf(result.output).value.spacing).toEqual([
+      { kind: 'distributed', axis: 'x', bounds: { x: 20, y: 0, width: 25, height: 60 } },
+      { kind: 'gap', axis: 'x', bounds: { x: 45, y: 0, width: 10, height: 60 } },
+      { kind: 'distributed', axis: 'x', bounds: { x: 55, y: 0, width: 25, height: 60 } },
+      { kind: 'distributed', axis: 'y', bounds: { x: 0, y: 10, width: 100, height: 15 } },
+      { kind: 'gap', axis: 'y', bounds: { x: 0, y: 25, width: 100, height: 10 } },
+      { kind: 'distributed', axis: 'y', bounds: { x: 0, y: 35, width: 100, height: 15 } },
+    ]);
+  });
+
+  it('records single-track leading and trailing distribution without inventing a gap', () => {
+    const result = compileGrid(
+      createGridLayout({
+        size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 10 } },
+        columns: [{ kind: 'fixed', value: 20 }],
+        rows: [{ kind: 'fixed', value: 10 }],
+        justifyContent: LayoutDistribution.Center,
+      }),
+      exactProposal(100, 10),
+    );
+
+    expect(gridArtifactOf(result.output).value.spacing).toEqual([
+      { kind: 'distributed', axis: 'x', bounds: { x: 0, y: 0, width: 40, height: 10 } },
+      { kind: 'distributed', axis: 'x', bounds: { x: 60, y: 0, width: 40, height: 10 } },
+    ]);
+  });
+
+  it('keeps an authored gap but omits distributed segments under negative free space', () => {
+    const result = compileGrid(
+      createGridLayout({
+        size: { x: { kind: 'fixed', value: 30 }, y: { kind: 'fixed', value: 10 } },
+        columns: [
+          { kind: 'fixed', value: 20 },
+          { kind: 'fixed', value: 20 },
+        ],
+        rows: [{ kind: 'fixed', value: 10 }],
+        columnGap: 10,
+        justifyContent: LayoutDistribution.End,
+      }),
+      exactProposal(30, 10),
+    );
+
+    expect(gridArtifactOf(result.output).value.spacing).toEqual([
+      { kind: 'gap', axis: 'x', bounds: { x: 0, y: 0, width: 10, height: 10 } },
+    ]);
   });
 });

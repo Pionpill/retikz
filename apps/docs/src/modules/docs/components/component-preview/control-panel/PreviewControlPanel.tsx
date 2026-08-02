@@ -47,6 +47,9 @@ const matchesPreviewControlPreset = (
   canonicalValues: Readonly<PreviewControlValues>,
   preset: PreviewControlPreset,
 ): boolean => {
+  if (preset.applyMode === 'merge-current') {
+    return Object.entries(preset.values).every(([key, value]) => previewControlValueEquals(values[key], value));
+  }
   const expected = { ...canonicalValues, ...preset.values };
   const keys = new Set([...Object.keys(values), ...Object.keys(expected)]);
   return Array.from(keys).every(key => previewControlValueEquals(values[key], expected[key]));
@@ -197,7 +200,13 @@ const PreviewControlPanelComponent: FC<PreviewControlPanelProps> = props => {
                       onValueChange={value => {
                         if (typeof value !== 'string') return;
                         const preset = presets.find(candidate => candidate.id === value);
-                        if (preset) controlState.applyValues(preset.values);
+                        if (preset) {
+                          controlState.applyValues(
+                            preset.applyMode === 'merge-current'
+                              ? { ...controlState.values, ...preset.values }
+                              : preset.values,
+                          );
+                        }
                       }}
                     />
                   </div>
