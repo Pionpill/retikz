@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import type { LabRunSession } from '../src/playground/modules/kernel';
 
-import { detailedConfigControls, quickConfigControls } from '../src/playground/app/case-config';
 import { createInitialLabState, reduceLabState } from '../src/playground/app/lab-state';
 import { benchModules, defaultBenchModule } from '../src/playground/app/module-registry';
 import {
@@ -15,7 +14,7 @@ import { getModuleTestSuites } from '../src/playground/app/test-suites';
 
 const session: LabRunSession = {
   id: 'run-1',
-  mode: 'inspect',
+  mode: 'preview',
   scenarioId: 'single-entity-update',
   backend: 'svg',
   startedAt: 1,
@@ -80,6 +79,12 @@ describe('Bench workspace', () => {
   it('用稳定模块和用例标识生成页面路径', () => {
     expect(getBenchTestCase('kernel', 'single-entity-update')?.scenarioId).toBe('single-entity-update');
     expect(getBenchTestCase('plot', 'single-entity-update')).toBeUndefined();
+    expect(getBenchCasePath('kernel', 'single-entity-update', BenchCaseView.Preview)).toBe(
+      '/kernel/cases/single-entity-update/preview',
+    );
+    expect(getBenchCasePath('kernel', 'single-entity-update', BenchCaseView.Benchmark)).toBe(
+      '/kernel/cases/single-entity-update/benchmark',
+    );
     expect(getBenchCasePath('kernel', 'single-entity-update', BenchCaseView.Reports)).toBe(
       '/kernel/cases/single-entity-update/reports',
     );
@@ -96,11 +101,6 @@ describe('Bench workspace', () => {
     const detailsOpen = reduceLabState(createInitialLabState(), { type: 'details-opened' });
     expect(detailsOpen.detailsOpen).toBe(true);
     expect('reportOpen' in detailsOpen).toBe(false);
-  });
-
-  it('Header 只保留高频配置，采样与环境进入详细配置', () => {
-    expect(quickConfigControls.map(control => control.id)).toEqual(['mode', 'backend', 'policy']);
-    expect(detailedConfigControls.map(control => control.id)).toEqual(['sampleRuns', 'warmupRuns', 'environment']);
   });
 
   it('详细配置可以修改预热次数', () => {

@@ -44,17 +44,23 @@
   "header": {
     "collapseSidebar": "收起侧栏",
     "expandSidebar": "展开侧栏",
-    "inspect": "观察",
-    "compare": "对比",
-    "measure": "测量",
+    "caseViews": "用例页面",
     "updatePolicy": "更新策略",
-    "run": "运行",
+    "runPreview": "运行预览",
+    "startBenchmark": "开始基准",
+    "allPolicies": "全部策略",
     "running": "运行中",
+    "settings": "设置",
     "details": "详细配置"
   },
+  "policy": {
+    "static-full": "静态 · 全量",
+    "retained-full": "保留模式 · 全量",
+    "retained-auto": "保留模式 · 自动"
+  },
   "caseView": {
-    "config": "配置",
-    "run": "运行",
+    "preview": "预览",
+    "benchmark": "基准",
     "reports": "报告",
     "scenario": "场景标识",
     "localEnvironment": "本地运行环境",
@@ -62,6 +68,10 @@
     "policy": "更新策略",
     "samples": "采样次数",
     "warmups": "预热次数"
+  },
+  "benchmark": {
+    "emptyTitle": "尚未运行基准测试",
+    "emptyDescription": "开始基准后将使用相同场景比较全部更新策略"
   },
   "settings": {
     "language": "语言",
@@ -75,7 +85,7 @@
     "title": "详细配置",
     "description": "采样参数与当前执行环境",
     "sampling": "采样",
-    "samplingDescription": "观察适合快速检查；对比与测量建议增加采样次数",
+    "samplingDescription": "预览适合快速检查；基准测试可以增加采样次数",
     "sampleRuns": "采样次数",
     "warmupRuns": "预热次数",
     "environment": "运行环境",
@@ -92,7 +102,7 @@
   "stage": {
     "title": "渲染预览",
     "ready": "准备渲染 5,000 个实体",
-    "description": "观察模式会在此保留真实 renderer host",
+    "description": "预览会在此保留真实 renderer host",
     "evidence": "探索数据不能替代 CI 证据 · 使用 pnpm bench:check 执行确定性门禁"
   },
   "status": {
@@ -134,7 +144,7 @@
     "title": "策略对比",
     "description": "更新耗时中位数 · 越低越好",
     "localWallClock": "本机挂钟时间",
-    "empty": "运行对比或测量",
+    "empty": "运行基准测试",
     "emptyDescription": "采样完成后图表才会更新"
   },
   "inspector": {

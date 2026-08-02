@@ -44,17 +44,23 @@
   "header": {
     "collapseSidebar": "Collapse sidebar",
     "expandSidebar": "Expand sidebar",
-    "inspect": "Inspect",
-    "compare": "Compare",
-    "measure": "Measure",
+    "caseViews": "Case views",
     "updatePolicy": "Update policy",
-    "run": "Run",
+    "runPreview": "Run preview",
+    "startBenchmark": "Start benchmark",
+    "allPolicies": "All policies",
     "running": "Running",
+    "settings": "Settings",
     "details": "Detailed settings"
   },
+  "policy": {
+    "static-full": "Static · Full",
+    "retained-full": "Retained · Full",
+    "retained-auto": "Retained · Auto"
+  },
   "caseView": {
-    "config": "Config",
-    "run": "Run",
+    "preview": "Preview",
+    "benchmark": "Benchmark",
     "reports": "Reports",
     "scenario": "Scenario ID",
     "localEnvironment": "Local environment",
@@ -62,6 +68,10 @@
     "policy": "Update policy",
     "samples": "Sample runs",
     "warmups": "Warmup runs"
+  },
+  "benchmark": {
+    "emptyTitle": "No benchmark run yet",
+    "emptyDescription": "Start a benchmark to compare every update policy with the same scenario"
   },
   "settings": {
     "language": "Language",
@@ -75,7 +85,7 @@
     "title": "Detailed settings",
     "description": "Sampling parameters and the current execution environment",
     "sampling": "Sampling",
-    "samplingDescription": "Inspect is best for quick checks; increase samples for Compare and Measure",
+    "samplingDescription": "Preview is best for quick checks; increase samples for Benchmark",
     "sampleRuns": "Sample runs",
     "warmupRuns": "Warmup runs",
     "environment": "Environment",
@@ -92,7 +102,7 @@
   "stage": {
     "title": "Render stage",
     "ready": "Ready to render 5,000 entities",
-    "description": "Inspect keeps a real renderer host on this stage",
+    "description": "Preview keeps a real renderer host on this stage",
     "evidence": "Exploratory numbers are not CI evidence · use pnpm bench:check for deterministic gates"
   },
   "status": {
@@ -134,7 +144,7 @@
     "title": "Policy comparison",
     "description": "Median update duration · lower is better",
     "localWallClock": "Local wall clock",
-    "empty": "Run Compare or Measure",
+    "empty": "Run a benchmark",
     "emptyDescription": "Charts update only after sampling completes"
   },
   "inspector": {

@@ -2,7 +2,7 @@
 
 Kernel 开发使用的 private 性能基准工具，不发布 npm 包。
 
-- `pnpm dev:bench`：启动 React Performance Lab，供开发者本机 Inspect、Compare 与 Measure
+- `pnpm dev:bench`：启动 React Performance Lab，供开发者本机预览 renderer 或运行策略基准
 - `pnpm bench:install-browser`：安装 lockfile 对应的 Chromium build
 - `pnpm bench:check`：只读检查确定性预算与功能 oracle，不采集 timing runner 硬件环境
 - `pnpm bench:report`：在固定 Node / Chromium 环境生成 ignored wall-clock 报告
@@ -25,9 +25,9 @@ SVG与Canvas各用同一5000实体fixture运行`static-full`、`retained-full`�
 
 ## Performance Lab
 
-根页面是面向开发者的交互式实验环境，首版聚焦 Kernel 当前的 `static-full`、`retained-full` 与 `retained-auto`。Inspect 会在真实 SVG / Canvas host 中执行所选策略，展示 Runtime trace、Scene Patch、diagnostics 与确定性工作量；Compare / Measure 使用同一 fixture 完成采样后再刷新图表，避免 React 重绘进入计时窗口。首版 Lab 尚未接入 runner 使用的生命周期探针，界面会明确显示该证据不可用，不会推断 mount、dispose 或 live handles 状态。
+根页面是面向开发者的交互式实验环境，首版聚焦 Kernel 当前的 `static-full`、`retained-full` 与 `retained-auto`。Preview 会在真实 SVG / Canvas host 中执行所选策略；Benchmark 使用同一 fixture 依次采样全部策略并刷新对比图表，避免 React 重绘进入计时窗口。首版 Lab 尚未接入 runner 使用的生命周期探针，界面会明确显示该证据不可用，不会推断 mount、dispose 或 live handles 状态。
 
-工作台参考 shadcn `sidebar-07` 组织模块、测试目录、配置、运行与报告。Sidebar、Collapsible、Tabs、Dropdown Menu、Sheet、Select、Tooltip 等基础组件由 shadcn CLI 下载到 Bench 自己的 `src/playground/components/ui`，业务组件只组合这些官方 vendored 原语。React Router 为 Kernel / Plot / Table 提供固定的 `/kernel`、`/plot`、`/table` 一级入口；模块内再以“测试分组 → 测试方向 → 测试用例”组织侧栏，并用 `/<module>/cases/<case-id>/config|run|reports` 提供不受分类调整影响的稳定用例路由。Header 提供高频运行配置，低频采样和环境信息收进详细配置 Sheet。首版只有 Kernel 的增量性能 / 单实体更新用例可运行，Plot 与 Table 可进入独立占位工作区但不会调用 Kernel runner。
+工作台参考 shadcn `sidebar-07` 组织模块、测试目录、预览、基准与报告。Sidebar、Collapsible、Tabs、Dropdown Menu、Sheet、Select、Tooltip 等基础组件由 shadcn CLI 下载到 Bench 自己的 `src/playground/components/ui`，业务组件只组合这些官方 vendored 原语。React Router 为 Kernel / Plot / Table 提供固定的 `/kernel`、`/plot`、`/table` 一级入口；模块内再以“测试分组 → 测试方向 → 测试用例”组织侧栏，并用 `/<module>/cases/<case-id>/preview|benchmark|reports` 提供不受分类调整影响的稳定用例路由。Header 以 SVG / Canvas 为主选择，Preview 显示当前 Policy，Benchmark 固定运行全部 Policy；低频采样和环境信息收进详细配置 Sheet。首版只有 Kernel 的增量性能 / 单实体更新用例可运行，Plot 与 Table 可进入独立占位工作区但不会调用 Kernel runner。
 
 用例运行报告写入已被 Git 忽略的 `results/runs/<module-id>/<case-id>/<run-id>/report.json`；分组和测试方向不进入文件路径，因此调整侧栏分类不会迁移历史报告。Playground 只通过 Vite 本地服务的 `/__bench/reports` JSON API 读写报告，不直接访问文件系统。报告保存失败不会覆盖已完成的运行结果；ignored 报告仍只用于本地探索，不会自动成为 tracked baseline 或正式门禁输入。
 

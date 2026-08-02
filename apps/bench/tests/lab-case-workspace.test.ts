@@ -1,12 +1,11 @@
 import { createInstance } from 'i18next';
-import { createElement, createRef } from 'react';
+import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { I18nextProvider, initReactI18next } from 'react-i18next';
 import { Route, Routes, StaticRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
 import { App } from '../src/playground/app/App';
-import { CasePage } from '../src/playground/app/case/CasePage';
 import { Header } from '../src/playground/app/header/Header';
 import { createInitialLabState } from '../src/playground/app/lab-state';
 import { defaultBenchModule } from '../src/playground/app/module-registry';
@@ -34,11 +33,30 @@ const resources = {
     },
   },
   caseView: {
-    config: '配置',
-    run: '运行',
+    preview: '预览',
+    benchmark: '基准',
     reports: '报告',
     scenario: '场景标识',
     localEnvironment: '本地运行环境',
+    backend: '渲染后端',
+  },
+  header: {
+    ...zh.header,
+    caseViews: '用例页面',
+    updatePolicy: '更新策略',
+    runPreview: '运行预览',
+    startBenchmark: '开始基准',
+    settings: '设置',
+    allPolicies: '全部策略',
+  },
+  policy: {
+    'static-full': '静态 · 全量',
+    'retained-full': '保留模式 · 全量',
+    'retained-auto': '保留模式 · 自动',
+  },
+  benchmark: {
+    emptyTitle: '尚未运行基准测试',
+    emptyDescription: '开始基准后将比较全部更新策略',
   },
   reportHistory: {
     title: '本地报告',
@@ -48,12 +66,10 @@ const resources = {
   },
 };
 
-describe('CasePage', () => {
-  it('使用稳定链接展示配置、运行和报告页面', async () => {
+describe('App case workspace', () => {
+  it('使用稳定链接展示预览、基准和报告页面', async () => {
     const i18n = createInstance().use(initReactI18next);
     await i18n.init({ lng: 'zh', resources: { zh: { translation: resources } } });
-    const testCase = getBenchTestCase('kernel', 'single-entity-update');
-    if (testCase === undefined) throw new Error('Kernel default case is unavailable');
 
     const renderView = (view: (typeof BenchCaseView)[keyof typeof BenchCaseView]) =>
       renderToStaticMarkup(
@@ -63,81 +79,32 @@ describe('CasePage', () => {
           createElement(
             StaticRouter,
             { location: `/kernel/cases/single-entity-update/${view}` },
-            createElement(CasePage, {
-              module: defaultBenchModule,
-              testCase,
-              view,
-              state: createInitialLabState(),
-              previewHostRef: createRef<HTMLDivElement>(),
-            }),
+            createElement(
+              Routes,
+              null,
+              createElement(Route, {
+                path: '/kernel/cases/:caseId/:view',
+                element: createElement(App, { module: defaultBenchModule }),
+              }),
+            ),
           ),
         ),
       );
 
-    const configMarkup = renderView(BenchCaseView.Config);
-    expect(configMarkup).toContain('href="/kernel/cases/single-entity-update/config"');
-    expect(configMarkup).toContain('href="/kernel/cases/single-entity-update/run"');
-    expect(configMarkup).toContain('href="/kernel/cases/single-entity-update/reports"');
-    expect(configMarkup).toContain('5,000 个稳定实体中修改一个节点');
-    expect(configMarkup).toContain('场景标识');
+    const previewMarkup = renderView(BenchCaseView.Preview);
+    expect(previewMarkup).toContain('href="/kernel/cases/single-entity-update/preview"');
+    expect(previewMarkup).toContain('href="/kernel/cases/single-entity-update/benchmark"');
+    expect(previewMarkup).toContain('href="/kernel/cases/single-entity-update/reports"');
+    expect(previewMarkup).toContain('Kernel 更新遥测');
+    expect(previewMarkup).toContain('渲染预览');
 
-    const runMarkup = renderView(BenchCaseView.Run);
-    expect(runMarkup).toContain('Kernel 更新遥测');
-    expect(runMarkup).toContain('渲染预览');
+    const benchmarkMarkup = renderView(BenchCaseView.Benchmark);
+    expect(benchmarkMarkup).toContain('尚未运行基准测试');
+    expect(benchmarkMarkup).toContain('开始基准后将比较全部更新策略');
 
     const reportsMarkup = renderView(BenchCaseView.Reports);
-    expect(reportsMarkup).toContain('尚无本地报告');
-    expect(reportsMarkup).toContain('本地忽略目录');
-
-    const headerMarkup = renderToStaticMarkup(
-      createElement(
-        I18nextProvider,
-        { i18n },
-        createElement(
-          StaticRouter,
-          { location: '/kernel/cases/single-entity-update/run' },
-          createElement(
-            SidebarProvider,
-            null,
-            createElement(Header, {
-              module: defaultBenchModule,
-              testCase,
-              state: createInitialLabState(),
-              dispatch: () => undefined,
-              onRun: () => undefined,
-            }),
-          ),
-        ),
-      ),
-    );
-    const breadcrumbMarkup = headerMarkup.match(/<nav aria-label="breadcrumb"[\s\S]*?<\/nav>/)?.[0];
-    const breadcrumbClassNames = breadcrumbMarkup?.match(/<nav[^>]*class="([^"]*)"/)?.[1]?.split(' ');
-    expect(breadcrumbMarkup).toBeDefined();
-    expect(breadcrumbClassNames).not.toContain('hidden');
-    expect(breadcrumbMarkup).not.toContain('Kernel');
-    expect(breadcrumbMarkup).not.toContain('性能测试');
-    expect(breadcrumbMarkup).toMatch(/增量测试[\s\S]*data-slot="breadcrumb-separator"[\s\S]*单实体更新/);
-
-    const appMarkup = renderToStaticMarkup(
-      createElement(
-        I18nextProvider,
-        { i18n },
-        createElement(
-          StaticRouter,
-          { location: '/kernel/cases/single-entity-update/config' },
-          createElement(
-            Routes,
-            null,
-            createElement(Route, {
-              path: '/kernel/cases/:caseId/:view',
-              element: createElement(App, { module: defaultBenchModule }),
-            }),
-          ),
-        ),
-      ),
-    );
-    expect(appMarkup).toContain('href="/kernel/cases/single-entity-update/config"');
-    expect(appMarkup).toContain('5,000 个稳定实体中修改一个节点');
+    expect(reportsMarkup).toContain('本地报告');
+    expect(reportsMarkup).toContain('选择一份报告查看详情');
 
     const historyMarkup = renderToStaticMarkup(
       createElement(
@@ -160,5 +127,71 @@ describe('CasePage', () => {
     );
     expect(historyMarkup).toContain('persisted-run');
     expect(historyMarkup).toContain('选择一份报告查看详情');
+  });
+
+  it('按页面上下文展示 Backend、Policy 与运行入口', async () => {
+    const i18n = createInstance().use(initReactI18next);
+    await i18n.init({ lng: 'zh', resources: { zh: { translation: resources } } });
+    const testCase = getBenchTestCase('kernel', 'single-entity-update');
+    if (testCase === undefined) throw new Error('Kernel default case is unavailable');
+
+    const renderHeader = (view: (typeof BenchCaseView)[keyof typeof BenchCaseView]) =>
+      renderToStaticMarkup(
+        createElement(
+          I18nextProvider,
+          { i18n },
+          createElement(
+            StaticRouter,
+            { location: `/kernel/cases/single-entity-update/${view}` },
+            createElement(
+              SidebarProvider,
+              null,
+              createElement(Header, {
+                module: defaultBenchModule,
+                testCase,
+                view,
+                state: createInitialLabState(),
+                dispatch: () => undefined,
+                onRun: () => undefined,
+              }),
+            ),
+          ),
+        ),
+      );
+
+    const previewMarkup = renderHeader(BenchCaseView.Preview);
+    expect(previewMarkup).toMatch(/role="tablist"[^>]*aria-label="用例页面"/);
+    expect(previewMarkup).toMatch(/role="tablist"[^>]*aria-label="渲染后端"/);
+    expect(previewMarkup.match(/role="tab"/g)).toHaveLength(5);
+    expect(previewMarkup).toContain('role="tab" aria-selected="true"');
+    expect(previewMarkup).toContain('href="/kernel/cases/single-entity-update/preview"');
+    expect(previewMarkup).toContain('href="/kernel/cases/single-entity-update/benchmark"');
+    expect(previewMarkup).toContain('href="/kernel/cases/single-entity-update/reports"');
+    expect(previewMarkup).toMatch(/>SVG<\/span>/);
+    expect(previewMarkup).toMatch(/>Canvas<\/span>/);
+    expect(previewMarkup).toMatch(/role="tab"[^>]*aria-label="SVG"/);
+    expect(previewMarkup).toMatch(/role="tab"[^>]*aria-label="Canvas"/);
+    expect(previewMarkup).toContain('aria-label="更新策略"');
+    expect(previewMarkup).toContain('保留模式 · 自动');
+    expect(previewMarkup).not.toContain('Retained · Auto');
+    expect(previewMarkup).toContain('aria-label="运行预览"');
+    expect(previewMarkup).toContain('aria-label="设置"');
+
+    const benchmarkMarkup = renderHeader(BenchCaseView.Benchmark);
+    expect(benchmarkMarkup).toContain('全部策略');
+    expect(benchmarkMarkup).not.toContain('aria-label="更新策略"');
+    expect(benchmarkMarkup).toContain('aria-label="开始基准"');
+
+    const reportsMarkup = renderHeader(BenchCaseView.Reports);
+    expect(reportsMarkup).not.toMatch(/>SVG<\/span>/);
+    expect(reportsMarkup).not.toMatch(/>Canvas<\/span>/);
+    expect(reportsMarkup).not.toContain('aria-label="更新策略"');
+    expect(reportsMarkup).not.toContain('aria-label="运行预览"');
+    expect(reportsMarkup).not.toContain('aria-label="开始基准"');
+    expect(reportsMarkup).toContain('aria-label="设置"');
+    expect(reportsMarkup.match(/role="tab"/g)).toHaveLength(3);
+
+    const breadcrumbMarkup = previewMarkup.match(/<nav aria-label="breadcrumb"[\s\S]*?<\/nav>/)?.[0];
+    expect(breadcrumbMarkup).toMatch(/增量测试[\s\S]*data-slot="breadcrumb-separator"[\s\S]*单实体更新/);
   });
 });

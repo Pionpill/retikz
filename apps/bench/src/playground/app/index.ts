@@ -1,6 +1,5 @@
 export * from './App';
 export * from './case';
-export * from './case-config';
 export * from './configuration';
 export * from './header';
 export * from './lab-state';

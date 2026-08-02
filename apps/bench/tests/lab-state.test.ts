@@ -6,28 +6,18 @@ import { createInitialLabState, reduceLabState } from '../src/playground/app/lab
 import { BenchModuleId } from '../src/playground/app/module-registry';
 
 describe('Performance Lab state', () => {
-  it('使用 Inspect 与 retained-auto 作为默认入口', () => {
+  it('只保留与路由无关的运行配置', () => {
     expect(createInitialLabState()).toMatchObject({
-      mode: 'inspect',
       backend: 'svg',
       policyId: 'retained-auto',
       scenarioId: 'single-entity-update',
       status: 'idle',
     });
+    expect('mode' in createInitialLabState()).toBe(false);
   });
 
   it('使用路由模块初始化工作台', () => {
     expect(createInitialLabState(BenchModuleId.Plot).moduleId).toBe('plot');
-  });
-
-  it('模式切换保留策略与场景选择', () => {
-    const initial = createInitialLabState();
-    const next = reduceLabState(initial, { type: 'mode-selected', mode: 'compare' });
-    expect(next).toMatchObject({
-      mode: 'compare',
-      policyId: 'retained-auto',
-      scenarioId: 'single-entity-update',
-    });
   });
 
   it('运行失败时保留上一次结果并暴露错误', () => {
@@ -42,7 +32,7 @@ describe('Performance Lab state', () => {
   it('报告保存失败不会覆盖成功运行结果', () => {
     const session: LabRunSession = {
       id: 'run-1',
-      mode: 'inspect',
+      mode: 'preview',
       scenarioId: 'single-entity-update',
       backend: 'svg',
       startedAt: 1,

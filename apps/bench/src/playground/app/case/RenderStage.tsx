@@ -15,7 +15,7 @@ export type RenderStageProps = Readonly<{
   previewHostRef: RefObject<HTMLDivElement>;
 }>;
 
-/** 承载 Inspect 模式真实 SVG / Canvas host 的舞台 */
+/** 承载 Preview 模式真实 SVG / Canvas host 的舞台 */
 export const RenderStage: FC<RenderStageProps> = props => {
   const { state, previewHostRef } = props;
   const { t } = useTranslation();

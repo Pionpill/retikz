@@ -21,7 +21,7 @@ describe('TestCatalogNav', () => {
         { i18n },
         createElement(
           StaticRouter,
-          { location: '/kernel/cases/single-entity-update/run' },
+          { location: '/kernel/cases/single-entity-update/preview' },
           createElement(
             SidebarProvider,
             null,
@@ -46,7 +46,7 @@ describe('TestCatalogNav', () => {
     expect(markup).not.toContain('LLM 生成准确性测试');
     expect(markup).toContain('data-state="open"');
     expect(markup).toContain('data-state="closed"');
-    expect(markup).toContain('href="/kernel/cases/single-entity-update/run"');
+    expect(markup).toContain('href="/kernel/cases/single-entity-update/preview"');
     expect(markup).toContain('单实体更新');
     expect(markup).toContain('aria-label="通过"');
     expect(markup.indexOf('单实体更新')).toBeLessThan(markup.indexOf('aria-label="通过"'));

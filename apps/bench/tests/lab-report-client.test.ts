@@ -101,7 +101,7 @@ describe('Bench report client', () => {
     };
     const session = {
       id: 'session-1',
-      mode: 'inspect' as const,
+      mode: 'preview' as const,
       scenarioId: 'single-entity-update',
       backend: 'svg' as const,
       startedAt: 1,

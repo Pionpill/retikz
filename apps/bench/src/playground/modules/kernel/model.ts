@@ -11,9 +11,8 @@ export type LabBackendValue = ValueOf<typeof LabBackend>;
 
 /** Performance Lab 的运行模式 */
 export const LabRunMode = {
-  Inspect: 'inspect',
-  Compare: 'compare',
-  Measure: 'measure',
+  Preview: 'preview',
+  Benchmark: 'benchmark',
 } as const;
 
 /** Performance Lab 的运行模式取值 */
@@ -128,7 +127,7 @@ export type LabPolicyResult = Readonly<{
   lifecycle: Readonly<{ availability: LabLifecycleAvailabilityValue }>;
 }>;
 
-/** 一次 Inspect、Compare 或 Measure 的结果集合 */
+/** 一次 Preview 或 Benchmark 的结果集合 */
 export type LabRunSession = Readonly<{
   id: string;
   mode: LabRunModeValue;

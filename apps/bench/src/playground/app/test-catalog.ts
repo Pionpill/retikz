@@ -7,8 +7,8 @@ import type { BenchModuleIdValue } from './module-registry';
 
 /** Bench 用例页面类型 */
 export const BenchCaseView = {
-  Config: 'config',
-  Run: 'run',
+  Preview: 'preview',
+  Benchmark: 'benchmark',
   Reports: 'reports',
 } as const;
 

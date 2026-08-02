@@ -9,14 +9,14 @@ import type { LabState } from '../lab-state';
 
 import { RenderStage } from './RenderStage';
 
-/** 测试预览工作区属性 */
-export type RunViewProps = Readonly<{
+/** 测试预览页面属性 */
+export type PreviewViewProps = Readonly<{
   state: LabState;
   previewHostRef: RefObject<HTMLDivElement>;
 }>;
 
-/** 当前测试集的说明与真实渲染预览 */
-export const RunView: FC<RunViewProps> = props => {
+/** 展示当前策略的真实渲染预览 */
+export const PreviewView: FC<PreviewViewProps> = props => {
   const { state, previewHostRef } = props;
   const { t } = useTranslation();
   return (

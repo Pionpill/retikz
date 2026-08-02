@@ -118,7 +118,7 @@ const runSamples = (
   return Object.freeze(samples);
 };
 
-/** 把当前 Inspect 策略渲染到持久预览容器 */
+/** 把当前 Preview 策略渲染到持久预览容器 */
 const renderPreview = (input: KernelLabPolicyInput, first: IRScene, second: IRScene): void => {
   const host = input.previewHost;
   if (host === undefined) return;

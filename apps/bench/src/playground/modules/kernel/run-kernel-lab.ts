@@ -29,7 +29,7 @@ export type RunKernelLabOptions = Readonly<{
 
 let sessionSequence = 0;
 
-/** 编排 Inspect、Compare 与 Measure，采样完成前不触发 React 更新 */
+/** 编排 Preview 与 Benchmark，采样完成前不触发 React 更新 */
 export const runKernelLab = async (
   options: RunKernelLabOptions,
   execute: KernelLabPolicyExecutor,
@@ -37,7 +37,7 @@ export const runKernelLab = async (
   getKernelLabScenario(options.scenarioId);
   const startedAt = performance.now();
   const policies =
-    options.mode === LabRunMode.Inspect ? [options.policyId] : kernelLabPolicies.map(policy => policy.id);
+    options.mode === LabRunMode.Preview ? [options.policyId] : kernelLabPolicies.map(policy => policy.id);
   const results: Array<LabPolicyResult> = [];
   for (const policyId of policies) {
     results.push(
@@ -47,7 +47,7 @@ export const runKernelLab = async (
         backend: options.backend,
         warmupRuns: options.warmupRuns,
         sampleRuns: options.sampleRuns,
-        ...(options.mode === LabRunMode.Inspect && options.previewHost !== undefined
+        ...(options.mode === LabRunMode.Preview && options.previewHost !== undefined
           ? { previewHost: options.previewHost }
           : {}),
       }),

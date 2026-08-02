@@ -3,6 +3,7 @@ import type { Dispatch, RefObject } from 'react';
 import { useCallback, useReducer, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import type { LabRunModeValue } from '../modules/kernel';
 import type { LabState, LabStateAction } from './lab-state';
 import type { BenchModule } from './module-registry';
 import type { BenchTestCase } from './test-catalog';
@@ -23,7 +24,8 @@ export type UsePerformanceLabValue = Readonly<{
 /** 管理 Performance Lab 状态并在浏览器中执行 Kernel 场景 */
 export const usePerformanceLab = (
   module: BenchModule,
-  testCase?: BenchTestCase,
+  testCase: BenchTestCase | undefined,
+  mode: LabRunModeValue,
   onReportSaved?: () => void,
 ): UsePerformanceLabValue => {
   const { t } = useTranslation();
@@ -44,7 +46,7 @@ export const usePerformanceLab = (
       const { executeBrowserKernelLabPolicy } = await import('../modules/kernel/browser');
       const session = await runKernelLab(
         {
-          mode: state.mode,
+          mode,
           scenarioId: state.scenarioId,
           backend: state.backend,
           policyId: state.policyId,
@@ -94,9 +96,9 @@ export const usePerformanceLab = (
     module.available,
     module.id,
     module.title,
+    mode,
     onReportSaved,
     state.backend,
-    state.mode,
     state.policyId,
     state.sampleRuns,
     state.scenarioId,

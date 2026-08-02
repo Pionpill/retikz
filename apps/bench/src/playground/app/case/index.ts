@@ -1,5 +1,4 @@
-export * from './CaseConfiguration';
-export * from './CasePage';
+export * from './BenchmarkView';
+export * from './PreviewView';
 export * from './RenderStage';
-export * from './RunView';
 export * from './UnavailableModulePage';

@@ -29,11 +29,11 @@ const createResult = (policyId: LabPolicyResult['policyId']): LabPolicyResult =>
 });
 
 describe('Kernel Performance Lab runner', () => {
-  it('Inspect 只执行当前策略', async () => {
+  it('Preview 只执行当前策略', async () => {
     const execute = vi.fn(input => Promise.resolve(createResult(input.policyId)));
     const session = await runKernelLab(
       {
-        mode: LabRunMode.Inspect,
+        mode: LabRunMode.Preview,
         scenarioId: 'single-entity-update',
         backend: LabBackend.Svg,
         policyId: LabPolicyId.RetainedAuto,
@@ -48,11 +48,11 @@ describe('Kernel Performance Lab runner', () => {
     expect(session.results.map(result => result.policyId)).toEqual(['retained-auto']);
   });
 
-  it.each([LabRunMode.Compare, LabRunMode.Measure])('%s 使用同一 fixture 依次执行三个策略', async mode => {
+  it('Benchmark 使用同一 fixture 依次执行三个策略', async () => {
     const execute = vi.fn(input => Promise.resolve(createResult(input.policyId)));
     const session = await runKernelLab(
       {
-        mode,
+        mode: LabRunMode.Benchmark,
         scenarioId: 'single-entity-update',
         backend: LabBackend.Canvas,
         policyId: LabPolicyId.RetainedAuto,
@@ -81,7 +81,7 @@ describe('Kernel Performance Lab runner', () => {
 
     const session = await runKernelLab(
       {
-        mode: LabRunMode.Inspect,
+        mode: LabRunMode.Preview,
         scenarioId: 'single-entity-update',
         backend: LabBackend.Svg,
         policyId: LabPolicyId.RetainedAuto,

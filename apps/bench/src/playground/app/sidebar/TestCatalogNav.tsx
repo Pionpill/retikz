@@ -118,7 +118,7 @@ export const TestCatalogNav: FC<TestCatalogNavProps> = props => {
                           return (
                             <SidebarMenuSubItem key={testCase.id}>
                               <SidebarMenuSubButton asChild isActive={testCase.id === activeCaseId}>
-                                <NavLink to={getBenchCasePath(module.id, testCase.id, BenchCaseView.Run)}>
+                                <NavLink to={getBenchCasePath(module.id, testCase.id, BenchCaseView.Preview)}>
                                   <span>{t(testCase.title)}</span>
                                   <span
                                     className={`mr-1 ml-auto size-1.5 shrink-0 rounded-full ${statusClasses[status]}`}
