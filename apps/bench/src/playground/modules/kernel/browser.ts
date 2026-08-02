@@ -8,13 +8,8 @@ import { mountCanvas, mountSvg, VanillaViewMode } from '@retikz/vanilla';
 import type { LabOutcomeValue, LabPolicyIdValue, LabPolicyResult } from './model';
 import type { KernelLabPolicyExecutor, KernelLabPolicyInput } from './run-kernel-lab';
 
-import {
-  createBackendHost,
-  createRetainedBenchmarkSession,
-  createSimpleNodeScene,
-  summarizeSamples,
-  updateSimpleNodeFill,
-} from '../../../shared';
+import { createBackendHost, createRetainedBenchmarkSession, summarizeSamples } from '../../../shared';
+import { createKernelLabScenePair } from './kernel-scenario-fixtures';
 import { getKernelLabScenario } from './kernel-scenarios';
 import {
   isValidLabPreviewSize,
@@ -265,8 +260,7 @@ const executeRetainedPolicy = (input: KernelLabPolicyInput, first: IRScene, seco
 /** 在真实 SVG 或 Canvas host 上执行单个 Kernel Lab 策略 */
 export const executeBrowserKernelLabPolicy: KernelLabPolicyExecutor = input => {
   const scenario = getKernelLabScenario(input.scenarioId);
-  const first = createSimpleNodeScene(scenario.entityCount);
-  const second = updateSimpleNodeFill(first, Math.floor(scenario.entityCount / 2), '#22c55e');
+  const { first, second } = createKernelLabScenePair(scenario.id);
   return Promise.resolve(
     input.policyId === LabPolicyId.StaticFull
       ? executeStaticPolicy(input, first, second)

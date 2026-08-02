@@ -98,7 +98,7 @@ describe('Performance Lab execution lifecycle', () => {
     runKernelLabMock.mockResolvedValue({
       id: 'stale-session',
       mode: LabRunMode.Preview,
-      scenarioId: 'single-entity-update',
+      scenarioId: 'node-selection',
       backend: LabBackend.Svg,
       startedAt: 1,
       results: [],

@@ -46,27 +46,27 @@ describe('Bench module routes', () => {
   });
 
   it.each(['/', '/kernel', '/missing'])('将 %s 重定向到默认 Kernel 用例', async path => {
-    await expect(resolvePath(path)).resolves.toBe('/kernel/cases/single-entity-update/preview');
+    await expect(resolvePath(path)).resolves.toBe('/kernel/cases/dense-node-grid/preview');
   });
 
   it.each(['preview', 'benchmark', 'reports'])('保留合法用例页面 %s', async view => {
-    const path = `/kernel/cases/single-entity-update/${view}`;
+    const path = `/kernel/cases/node-selection/${view}`;
     await expect(resolvePath(path)).resolves.toBe(path);
   });
 
   it('向用例工作区暴露当前用例和页面参数', async () => {
-    await expect(resolveParams('/kernel/cases/single-entity-update/benchmark')).resolves.toEqual({
-      caseId: 'single-entity-update',
+    await expect(resolveParams('/kernel/cases/node-selection/benchmark')).resolves.toEqual({
+      caseId: 'node-selection',
       view: 'benchmark',
     });
   });
 
   it.each([
     '/kernel/cases/missing/preview',
-    '/kernel/cases/single-entity-update/missing',
-    '/kernel/cases/single-entity-update/config',
-    '/kernel/cases/single-entity-update/run',
+    '/kernel/cases/node-selection/missing',
+    '/kernel/cases/node-selection/config',
+    '/kernel/cases/node-selection/run',
   ])('将无效用例地址 %s 重定向到默认用例', async path => {
-    await expect(resolvePath(path)).resolves.toBe('/kernel/cases/single-entity-update/preview');
+    await expect(resolvePath(path)).resolves.toBe('/kernel/cases/dense-node-grid/preview');
   });
 });

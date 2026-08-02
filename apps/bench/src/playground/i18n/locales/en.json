@@ -26,9 +26,29 @@
       "incrementalGeneration": "Incremental generation test"
     },
     "case": {
-      "singleEntityUpdate": {
-        "title": "Single entity update",
-        "description": "Change one node among 5,000 stable entities"
+      "denseNodeGrid": {
+        "title": "Dense node grid",
+        "description": "Fully update the styles of 5,000 regularly arranged nodes"
+      },
+      "mixedPrimitives": {
+        "title": "Mixed primitives",
+        "description": "Fully update plain nodes, text nodes, and paths"
+      },
+      "complexPaths": {
+        "title": "Complex paths",
+        "description": "Fully update complex paths with multiple lines and curves"
+      },
+      "nodeDrag": {
+        "title": "Node drag",
+        "description": "Move one node among 5,000 stable nodes"
+      },
+      "nodeSelection": {
+        "title": "Node selection state",
+        "description": "Change the selection style of one among 5,000 stable nodes"
+      },
+      "nodeInsertRemove": {
+        "title": "Node insertion and removal",
+        "description": "Remove one stable node and insert one new node"
       }
     },
     "emptyDirection": "No test cases yet"

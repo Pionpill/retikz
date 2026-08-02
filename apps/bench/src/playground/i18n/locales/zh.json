@@ -26,9 +26,29 @@
       "incrementalGeneration": "增量生成测试"
     },
     "case": {
-      "singleEntityUpdate": {
-        "title": "单实体更新",
-        "description": "5,000 个稳定实体中修改一个节点"
+      "denseNodeGrid": {
+        "title": "密集节点网格",
+        "description": "完整更新 5,000 个规则排列的节点样式"
+      },
+      "mixedPrimitives": {
+        "title": "混合图元",
+        "description": "完整更新普通节点、文本节点与路径的样式"
+      },
+      "complexPaths": {
+        "title": "复杂路径",
+        "description": "完整更新包含多段直线与曲线的复杂路径"
+      },
+      "nodeDrag": {
+        "title": "节点拖动",
+        "description": "5,000 个稳定节点中只移动一个节点"
+      },
+      "nodeSelection": {
+        "title": "节点选中状态",
+        "description": "5,000 个稳定节点中只修改一个节点的选中样式"
+      },
+      "nodeInsertRemove": {
+        "title": "节点增删",
+        "description": "删除一个稳定节点并插入一个新节点"
       }
     },
     "emptyDirection": "尚无测试用例"

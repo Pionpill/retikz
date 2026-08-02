@@ -15,7 +15,7 @@ import { getModuleTestSuites } from '../src/playground/app/test-suites';
 const session: LabRunSession = {
   id: 'run-1',
   mode: 'preview',
-  scenarioId: 'single-entity-update',
+  scenarioId: 'node-selection',
   backend: 'svg',
   startedAt: 1,
   results: [],
@@ -56,7 +56,14 @@ describe('Bench workspace', () => {
     ]);
     expect(defaultBenchModule.id).toBe('kernel');
     expect(new Set(benchModules.map(module => module.icon)).size).toBe(3);
-    expect(getModuleTestSuites('kernel').map(suite => suite.scenarioId)).toEqual(['single-entity-update']);
+    expect(getModuleTestSuites('kernel').map(suite => suite.scenarioId)).toEqual([
+      'dense-node-grid',
+      'mixed-primitives',
+      'complex-paths',
+      'node-drag',
+      'node-selection',
+      'node-insert-remove',
+    ]);
     expect(getModuleTestSuites('plot')).toEqual([]);
   });
 
@@ -71,22 +78,29 @@ describe('Bench workspace', () => {
       'generation-accuracy',
       'incremental-generation',
     ]);
-    expect(
-      groups.flatMap(group => group.directions.flatMap(direction => direction.cases.map(testCase => testCase.id))),
-    ).toEqual(['single-entity-update']);
+    expect(groups[0]?.directions[0]?.cases.map(testCase => testCase.id)).toEqual([
+      'dense-node-grid',
+      'mixed-primitives',
+      'complex-paths',
+    ]);
+    expect(groups[0]?.directions[1]?.cases.map(testCase => testCase.id)).toEqual([
+      'node-drag',
+      'node-selection',
+      'node-insert-remove',
+    ]);
   });
 
   it('用稳定模块和用例标识生成页面路径', () => {
-    expect(getBenchTestCase('kernel', 'single-entity-update')?.scenarioId).toBe('single-entity-update');
-    expect(getBenchTestCase('plot', 'single-entity-update')).toBeUndefined();
-    expect(getBenchCasePath('kernel', 'single-entity-update', BenchCaseView.Preview)).toBe(
-      '/kernel/cases/single-entity-update/preview',
+    expect(getBenchTestCase('kernel', 'node-selection')?.scenarioId).toBe('node-selection');
+    expect(getBenchTestCase('plot', 'node-selection')).toBeUndefined();
+    expect(getBenchCasePath('kernel', 'node-selection', BenchCaseView.Preview)).toBe(
+      '/kernel/cases/node-selection/preview',
     );
-    expect(getBenchCasePath('kernel', 'single-entity-update', BenchCaseView.Benchmark)).toBe(
-      '/kernel/cases/single-entity-update/benchmark',
+    expect(getBenchCasePath('kernel', 'node-selection', BenchCaseView.Benchmark)).toBe(
+      '/kernel/cases/node-selection/benchmark',
     );
-    expect(getBenchCasePath('kernel', 'single-entity-update', BenchCaseView.Reports)).toBe(
-      '/kernel/cases/single-entity-update/reports',
+    expect(getBenchCasePath('kernel', 'node-selection', BenchCaseView.Reports)).toBe(
+      '/kernel/cases/node-selection/reports',
     );
   });
 

@@ -42,14 +42,16 @@ export const isValidLabPreviewDimension = (value: number): boolean =>
 export const isValidLabPreviewSize = (width: number, height: number): boolean =>
   isValidLabPreviewDimension(width) && isValidLabPreviewDimension(height) && width * height <= maximumLabPreviewPixels;
 
-/** Kernel 场景使用的更新形态 */
-export const LabUpdateKind = {
-  Entity: 'entity',
-  Group: 'group',
+/** Kernel 场景中 first / second Scene 的变化形态 */
+export const LabChangeKind = {
+  AllStyle: 'all-style',
+  SinglePosition: 'single-position',
+  SingleStyle: 'single-style',
+  InsertRemove: 'insert-remove',
 } as const;
 
-/** Kernel 场景使用的更新形态取值 */
-export type LabUpdateKindValue = ValueOf<typeof LabUpdateKind>;
+/** Kernel 场景中 first / second Scene 的变化形态取值 */
+export type LabChangeKindValue = ValueOf<typeof LabChangeKind>;
 
 /** Kernel 策略执行结果 */
 export const LabOutcome = {
@@ -85,7 +87,7 @@ export type LabScenario = Readonly<{
   description: string;
   entityCount: number;
   changedEntities: number;
-  updateKind: LabUpdateKindValue;
+  changeKind: LabChangeKindValue;
 }>;
 
 /** Performance Lab 中可选择的策略说明 */

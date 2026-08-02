@@ -5,6 +5,8 @@ import { Gauge, MousePointer2, RefreshCw, Sparkles, Zap } from 'lucide-react';
 
 import type { BenchModuleIdValue } from './module-registry';
 
+import { KernelLabScenarioId } from '../modules/kernel';
+
 /** Bench 用例页面类型 */
 export const BenchCaseView = {
   Preview: 'preview',
@@ -68,12 +70,21 @@ export type BenchTestCaseContext = Readonly<{
   testCase: BenchTestCase;
 }>;
 
-const singleEntityUpdate: BenchTestCase = Object.freeze({
-  id: 'single-entity-update',
-  scenarioId: 'single-entity-update',
-  title: 'catalog.case.singleEntityUpdate.title',
-  description: 'catalog.case.singleEntityUpdate.description',
-});
+/** 用稳定场景 ID 与翻译键创建目录用例 */
+const createTestCase = (id: string, translationKey: string): BenchTestCase =>
+  Object.freeze({
+    id,
+    scenarioId: id,
+    title: `catalog.case.${translationKey}.title`,
+    description: `catalog.case.${translationKey}.description`,
+  });
+
+const denseNodeGrid = createTestCase(KernelLabScenarioId.DenseNodeGrid, 'denseNodeGrid');
+const mixedPrimitives = createTestCase(KernelLabScenarioId.MixedPrimitives, 'mixedPrimitives');
+const complexPaths = createTestCase(KernelLabScenarioId.ComplexPaths, 'complexPaths');
+const nodeDrag = createTestCase(KernelLabScenarioId.NodeDrag, 'nodeDrag');
+const nodeSelection = createTestCase(KernelLabScenarioId.NodeSelection, 'nodeSelection');
+const nodeInsertRemove = createTestCase(KernelLabScenarioId.NodeInsertRemove, 'nodeInsertRemove');
 
 const moduleGroups: Readonly<Partial<Record<BenchModuleIdValue, ReadonlyArray<BenchTestGroup>>>> = Object.freeze({
   kernel: Object.freeze([
@@ -85,13 +96,13 @@ const moduleGroups: Readonly<Partial<Record<BenchModuleIdValue, ReadonlyArray<Be
           id: 'full-performance',
           title: 'catalog.direction.fullPerformance',
           icon: Gauge,
-          cases: Object.freeze([]),
+          cases: Object.freeze([denseNodeGrid, mixedPrimitives, complexPaths]),
         }),
         Object.freeze({
           id: 'incremental-performance',
           title: 'catalog.direction.incrementalPerformance',
           icon: Zap,
-          cases: Object.freeze([singleEntityUpdate]),
+          cases: Object.freeze([nodeDrag, nodeSelection, nodeInsertRemove]),
         }),
         Object.freeze({
           id: 'interaction-performance',

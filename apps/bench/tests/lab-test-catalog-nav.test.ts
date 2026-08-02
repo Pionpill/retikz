@@ -21,14 +21,14 @@ describe('TestCatalogNav', () => {
         { i18n },
         createElement(
           StaticRouter,
-          { location: '/kernel/cases/single-entity-update/preview' },
+          { location: '/kernel/cases/node-selection/preview' },
           createElement(
             SidebarProvider,
             null,
             createElement(TestCatalogNav, {
               module: defaultBenchModule,
-              activeCaseId: 'single-entity-update',
-              caseStatuses: { 'single-entity-update': 'passed' },
+              activeCaseId: 'node-selection',
+              caseStatuses: { 'node-selection': 'passed' },
             }),
           ),
         ),
@@ -46,10 +46,10 @@ describe('TestCatalogNav', () => {
     expect(markup).not.toContain('LLM 生成准确性测试');
     expect(markup).toContain('data-state="open"');
     expect(markup).toContain('data-state="closed"');
-    expect(markup).toContain('href="/kernel/cases/single-entity-update/preview"');
-    expect(markup).toContain('单实体更新');
+    expect(markup).toContain('href="/kernel/cases/node-selection/preview"');
+    expect(markup).toContain('节点选中状态');
     expect(markup).toContain('aria-label="通过"');
-    expect(markup.indexOf('单实体更新')).toBeLessThan(markup.indexOf('aria-label="通过"'));
+    expect(markup.indexOf('节点选中状态')).toBeLessThan(markup.indexOf('aria-label="通过"'));
   });
 
   it('运行时仅显示用例状态点而不显示方向级数字徽标', async () => {
@@ -62,14 +62,14 @@ describe('TestCatalogNav', () => {
         { i18n },
         createElement(
           StaticRouter,
-          { location: '/kernel/cases/single-entity-update/benchmark' },
+          { location: '/kernel/cases/node-selection/benchmark' },
           createElement(
             SidebarProvider,
             null,
             createElement(TestCatalogNav, {
               module: defaultBenchModule,
-              activeCaseId: 'single-entity-update',
-              caseStatuses: { 'single-entity-update': 'running' },
+              activeCaseId: 'node-selection',
+              caseStatuses: { 'node-selection': 'running' },
             }),
           ),
         ),

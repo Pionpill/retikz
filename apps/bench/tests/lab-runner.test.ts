@@ -35,7 +35,7 @@ describe('Kernel Performance Lab runner', () => {
     const session = await runKernelLab(
       {
         mode: LabRunMode.Preview,
-        scenarioId: 'single-entity-update',
+        scenarioId: 'node-selection',
         backend: LabBackend.Svg,
         policyId: LabPolicyId.RetainedAuto,
         warmupRuns: 0,
@@ -61,7 +61,7 @@ describe('Kernel Performance Lab runner', () => {
     const session = await runKernelLab(
       {
         mode: LabRunMode.Benchmark,
-        scenarioId: 'single-entity-update',
+        scenarioId: 'node-selection',
         backend: LabBackend.Canvas,
         policyId: LabPolicyId.RetainedAuto,
         warmupRuns: 3,
@@ -92,7 +92,7 @@ describe('Kernel Performance Lab runner', () => {
     const session = await runKernelLab(
       {
         mode: LabRunMode.Preview,
-        scenarioId: 'single-entity-update',
+        scenarioId: 'node-selection',
         backend: LabBackend.Svg,
         policyId: LabPolicyId.RetainedAuto,
         warmupRuns: 0,

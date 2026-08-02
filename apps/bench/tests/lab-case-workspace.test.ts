@@ -28,9 +28,9 @@ const resources = {
       incrementalGeneration: '增量生成测试',
     },
     case: {
-      singleEntityUpdate: {
-        title: '单实体更新',
-        description: '5,000 个稳定实体中修改一个节点',
+      nodeSelection: {
+        title: '节点选中状态',
+        description: '5,000 个稳定节点中只修改一个节点的选中样式',
       },
     },
   },
@@ -86,7 +86,7 @@ describe('App case workspace', () => {
   it('用共享开始状态展示操作、用例描述与场景标识', async () => {
     const i18n = createInstance().use(initReactI18next);
     await i18n.init({ lng: 'zh', resources: { zh: { translation: resources } } });
-    const testCase = getBenchTestCase('kernel', 'single-entity-update');
+    const testCase = getBenchTestCase('kernel', 'node-selection');
     if (testCase === undefined) throw new Error('Kernel default case is unavailable');
     const renderStartState = (running: boolean) =>
       renderToStaticMarkup(
@@ -104,9 +104,9 @@ describe('App case workspace', () => {
 
     const idleMarkup = renderStartState(false);
     expect(idleMarkup).toContain('aria-label="运行预览"');
-    expect(idleMarkup).toContain('5,000 个稳定实体中修改一个节点');
+    expect(idleMarkup).toContain('5,000 个稳定节点中只修改一个节点的选中样式');
     expect(idleMarkup).toContain('场景标识');
-    expect(idleMarkup).toContain('single-entity-update');
+    expect(idleMarkup).toContain('node-selection');
 
     const runningMarkup = renderStartState(true);
     expect(runningMarkup).toContain('aria-label="运行中"');
@@ -124,7 +124,7 @@ describe('App case workspace', () => {
           { i18n },
           createElement(
             StaticRouter,
-            { location: `/kernel/cases/single-entity-update/${view}` },
+            { location: `/kernel/cases/node-selection/${view}` },
             createElement(
               Routes,
               null,
@@ -138,24 +138,24 @@ describe('App case workspace', () => {
       );
 
     const previewMarkup = renderView(BenchCaseView.Preview);
-    expect(previewMarkup).toContain('href="/kernel/cases/single-entity-update/preview"');
-    expect(previewMarkup).toContain('href="/kernel/cases/single-entity-update/benchmark"');
-    expect(previewMarkup).toContain('href="/kernel/cases/single-entity-update/reports"');
+    expect(previewMarkup).toContain('href="/kernel/cases/node-selection/preview"');
+    expect(previewMarkup).toContain('href="/kernel/cases/node-selection/benchmark"');
+    expect(previewMarkup).toContain('href="/kernel/cases/node-selection/reports"');
     expect(previewMarkup).not.toContain('Kernel 更新遥测');
     expect(previewMarkup).not.toContain('渲染预览');
     expect(previewMarkup).not.toContain('探索数据不能替代 CI 证据');
     expect(previewMarkup).not.toContain('class="lab-panel');
     expect(previewMarkup).toContain('class="lab-preview absolute inset-0');
     expect(previewMarkup.match(/aria-label="运行预览"/g)).toHaveLength(2);
-    expect(previewMarkup).toContain('5,000 个稳定实体中修改一个节点');
-    expect(previewMarkup).toContain('single-entity-update');
+    expect(previewMarkup).toContain('5,000 个稳定节点中只修改一个节点的选中样式');
+    expect(previewMarkup).toContain('node-selection');
     expect(previewMarkup).not.toContain('准备渲染 5,000 个实体');
     expect(previewMarkup).not.toContain('预览会在此保留真实 renderer host');
 
     const benchmarkMarkup = renderView(BenchCaseView.Benchmark);
     expect(benchmarkMarkup.match(/aria-label="开始基准"/g)).toHaveLength(2);
-    expect(benchmarkMarkup).toContain('5,000 个稳定实体中修改一个节点');
-    expect(benchmarkMarkup).toContain('single-entity-update');
+    expect(benchmarkMarkup).toContain('5,000 个稳定节点中只修改一个节点的选中样式');
+    expect(benchmarkMarkup).toContain('node-selection');
     expect(benchmarkMarkup).not.toContain('尚未运行基准测试');
     expect(benchmarkMarkup).not.toContain('开始基准后将比较全部更新策略');
 
@@ -173,7 +173,7 @@ describe('App case workspace', () => {
               schemaVersion: 1,
               runId: 'persisted-run',
               moduleId: 'kernel',
-              caseId: 'single-entity-update',
+              caseId: 'node-selection',
               status: 'passed',
               startedAt: '2026-08-01T00:00:00.000Z',
               completedAt: '2026-08-01T00:00:01.000Z',
@@ -189,7 +189,7 @@ describe('App case workspace', () => {
   it('按页面上下文展示 Backend、Policy 与运行入口', async () => {
     const i18n = createInstance().use(initReactI18next);
     await i18n.init({ lng: 'zh', resources: { zh: { translation: resources } } });
-    const testCase = getBenchTestCase('kernel', 'single-entity-update');
+    const testCase = getBenchTestCase('kernel', 'node-selection');
     if (testCase === undefined) throw new Error('Kernel default case is unavailable');
 
     const renderHeader = (view: (typeof BenchCaseView)[keyof typeof BenchCaseView]) =>
@@ -199,7 +199,7 @@ describe('App case workspace', () => {
           { i18n },
           createElement(
             StaticRouter,
-            { location: `/kernel/cases/single-entity-update/${view}` },
+            { location: `/kernel/cases/node-selection/${view}` },
             createElement(
               SidebarProvider,
               null,
@@ -221,9 +221,9 @@ describe('App case workspace', () => {
     expect(previewMarkup).toMatch(/role="tablist"[^>]*aria-label="渲染后端"/);
     expect(previewMarkup.match(/role="tab"/g)).toHaveLength(5);
     expect(previewMarkup).toContain('role="tab" aria-selected="true"');
-    expect(previewMarkup).toContain('href="/kernel/cases/single-entity-update/preview"');
-    expect(previewMarkup).toContain('href="/kernel/cases/single-entity-update/benchmark"');
-    expect(previewMarkup).toContain('href="/kernel/cases/single-entity-update/reports"');
+    expect(previewMarkup).toContain('href="/kernel/cases/node-selection/preview"');
+    expect(previewMarkup).toContain('href="/kernel/cases/node-selection/benchmark"');
+    expect(previewMarkup).toContain('href="/kernel/cases/node-selection/reports"');
     expect(previewMarkup).toMatch(/>SVG<\/span>/);
     expect(previewMarkup).toMatch(/>Canvas<\/span>/);
     expect(previewMarkup).toMatch(/role="tab"[^>]*aria-label="SVG"/);
@@ -255,7 +255,7 @@ describe('App case workspace', () => {
     expect(reportsMarkup.match(/role="tab"/g)).toHaveLength(3);
 
     const breadcrumbMarkup = previewMarkup.match(/<nav aria-label="breadcrumb"[\s\S]*?<\/nav>/)?.[0];
-    expect(breadcrumbMarkup).toMatch(/增量测试[\s\S]*data-slot="breadcrumb-separator"[\s\S]*单实体更新/);
+    expect(breadcrumbMarkup).toMatch(/增量测试[\s\S]*data-slot="breadcrumb-separator"[\s\S]*节点选中状态/);
   });
 
   it('在设置中提供预览尺寸预设和自定义宽高', async () => {

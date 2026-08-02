@@ -114,7 +114,7 @@ describe('Performance Lab report dashboard', () => {
 
   it('让当前基准与历史报告复用同一个主仪表盘', async () => {
     const i18n = await createI18n();
-    const testCase = getBenchTestCase('kernel', 'single-entity-update');
+    const testCase = getBenchTestCase('kernel', 'node-selection');
     if (testCase === undefined) throw new Error('Kernel default case is unavailable');
     const session = {
       id: 'benchmark-1',
