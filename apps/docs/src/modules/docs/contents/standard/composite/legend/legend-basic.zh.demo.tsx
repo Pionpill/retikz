@@ -9,7 +9,7 @@ const Demo: FC = () => (
   <Layout
     width={360}
     height={190}
-    viewBox={{ x: -16, y: -16, width: 360, height: 190 }}
+    viewBox={{ x: -115.4, y: -16, width: 360, height: 190 }}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
     <Legend kind={LegendContentKind.Items} padding={12} rowGap={10} sampleGap={12}>

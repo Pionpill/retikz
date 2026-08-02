@@ -9,7 +9,7 @@ const Demo: FC = () => (
   <Layout
     width={430}
     height={150}
-    viewBox={{ x: -20, y: -20, width: 430, height: 150 }}
+    viewBox={{ x: -99.6, y: -20, width: 430, height: 150 }}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
     <Legend kind={LegendContentKind.Ramp} direction={LegendDirection.Horizontal} padding={12} sampleGap={8}>

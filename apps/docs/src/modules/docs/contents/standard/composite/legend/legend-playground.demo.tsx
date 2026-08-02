@@ -77,7 +77,7 @@ export const LegendPlaygroundPreview = (values: LegendPlaygroundValues) => (
   <Layout
     width={400}
     height={245}
-    viewBox={{ x: -20, y: -20, width: 400, height: 245 }}
+    viewBox={{ x: -50, y: -20, width: 400, height: 245 }}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
     {values.kind === LegendContentKind.Items ? (

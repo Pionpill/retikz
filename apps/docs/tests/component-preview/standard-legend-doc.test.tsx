@@ -1,4 +1,7 @@
-import { LegendSchema } from '@retikz/standard';
+import type { FC } from 'react';
+
+import { compileToScene } from '@retikz/core';
+import { LegendArtifactSchema, LegendDefinition, LegendSchema } from '@retikz/standard';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -7,6 +10,8 @@ import type { PreviewControlsDefinition } from '@/modules/docs/preview';
 
 import { getPreviewControlFields } from '@/modules/docs/components/component-preview/controls';
 import { buildPreviewIR } from '@/modules/docs/components/component-preview/utils';
+import LegendBasicEnDemo from '@/modules/docs/contents/standard/composite/legend/legend-basic.en.demo';
+import LegendBasicZhDemo from '@/modules/docs/contents/standard/composite/legend/legend-basic.zh.demo';
 import {
   legendPlaygroundControls,
   previewControlContract as legendPlaygroundContract,
@@ -16,6 +21,8 @@ import {
   legendPlaygroundEnControls,
   previewControlContract as legendPlaygroundEnContract,
 } from '@/modules/docs/contents/standard/composite/legend/legend-playground.en.controls';
+import LegendRampEnDemo from '@/modules/docs/contents/standard/composite/legend/legend-ramp.en.demo';
+import LegendRampZhDemo from '@/modules/docs/contents/standard/composite/legend/legend-ramp.zh.demo';
 
 const legendRoot = resolve(process.cwd(), 'src/modules/docs/contents/standard/composite/legend');
 const changelogPath = resolve(process.cwd(), 'src/modules/docs/data/changelog/standard-0-1.ts');
@@ -39,6 +46,20 @@ const fieldContractOf = (definition: PreviewControlsDefinition) =>
 const legendOf = (values: Parameters<typeof LegendPlaygroundPreview>[0]) => {
   const Preview = () => LegendPlaygroundPreview(values);
   return LegendSchema.parse(buildPreviewIR(Preview).ir.children[0]);
+};
+
+const legendHorizontalCenterDelta = (Preview: FC): number => {
+  const preview = buildPreviewIR(Preview);
+  const viewBox = preview.ir.viewBox;
+  if (viewBox === undefined) throw new Error('Expected a fixed Legend demo viewBox');
+  const output = compileToScene(preview.ir, { composites: [LegendDefinition], padding: 0 });
+  const envelope = output.artifacts.find(artifact => artifact.kind === 'composite');
+  if (envelope === undefined) throw new Error('Expected a Legend compile artifact');
+  const artifact = LegendArtifactSchema.parse(envelope.value);
+  const bounds = artifact.container.allocationBounds;
+  const legendCenter = bounds.x + bounds.width / 2;
+  const viewBoxCenter = viewBox.x + viewBox.width / 2;
+  return legendCenter - viewBoxCenter;
 };
 
 describe('Standard Legend documentation', () => {
@@ -196,7 +217,7 @@ describe('Standard Legend documentation', () => {
       {
         id: 'contentAlign',
         kind: 'select',
-        defaultValue: 'start',
+        defaultValue: 'center',
         optionValues: ['start', 'center', 'end'],
         visibleWhen: undefined,
       },
@@ -281,7 +302,7 @@ describe('Standard Legend documentation', () => {
       titleFontStyle: 'normal',
       titleAlign: 'start',
       titleGap: 8,
-      contentAlign: 'start',
+      contentAlign: 'center',
       direction: 'horizontal',
       wrap: 'wrap',
       sampleAlign: 'center',
@@ -320,7 +341,7 @@ describe('Standard Legend documentation', () => {
     const canonical = legendPlaygroundContract.canonicalValues;
 
     expect(legendOf(canonical)).toMatchObject({
-      contentAlign: 'start',
+      contentAlign: 'center',
       titleGap: 8,
       title: {
         text: 'A–D',
@@ -354,13 +375,26 @@ describe('Standard Legend documentation', () => {
       titleGap: 20,
       contentAlign: 'end',
     });
-    expect(legendOf({ ...canonical, contentAlign: 'center' })).toMatchObject({ contentAlign: 'center' });
+    expect(legendOf({ ...canonical, contentAlign: 'start' })).toMatchObject({ contentAlign: 'start' });
     expect(legendOf({ ...canonical, kind: 'ramp', direction: 'horizontal' })).toMatchObject({
       content: { kind: 'ramp', sample: { minimumSize: { width: 160, height: 16 } } },
     });
     expect(legendOf({ ...canonical, kind: 'ramp', direction: 'vertical' })).toMatchObject({
       content: { kind: 'ramp', sample: { minimumSize: { width: 16, height: 120 } } },
     });
+  });
+
+  it('centers each Legend allocation inside its fixed demo viewBox', () => {
+    const PlaygroundDemo: FC = () => LegendPlaygroundPreview(legendPlaygroundContract.canonicalValues);
+    const deltas = [
+      legendHorizontalCenterDelta(LegendBasicZhDemo),
+      legendHorizontalCenterDelta(LegendBasicEnDemo),
+      legendHorizontalCenterDelta(LegendRampZhDemo),
+      legendHorizontalCenterDelta(LegendRampEnDemo),
+      legendHorizontalCenterDelta(PlaygroundDemo),
+    ];
+
+    for (const delta of deltas) expect(delta).toBeCloseTo(0, 5);
   });
 
   it('switches kind by rendering the matching marker tree and keeps title styles on the title child', () => {

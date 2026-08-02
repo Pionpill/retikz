@@ -67,7 +67,7 @@ export const legendPlaygroundEnControls = definePreviewControls({
           kind: 'select',
           id: 'contentAlign',
           label: 'Content block alignment',
-          defaultValue: 'start',
+          defaultValue: 'center',
           options: [
             { value: 'start', label: 'Start' },
             { value: 'center', label: 'Center' },
@@ -163,7 +163,7 @@ const canonicalValues = {
   titleFontStyle: 'normal',
   titleAlign: 'start',
   titleGap: 8,
-  contentAlign: 'start',
+  contentAlign: 'center',
   direction: 'horizontal',
   wrap: 'wrap',
   sampleAlign: 'center',
