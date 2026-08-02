@@ -63,6 +63,18 @@ export const RenderType: FC<RenderTypeProps> = props => {
         </span>
       );
 
+    case 'default':
+      return <RenderType repr={repr.inner} className={className} plain={plain} />;
+
+    case 'nullable':
+      return (
+        <span className={cn('inline-flex items-baseline gap-1', className)}>
+          <RenderType repr={repr.inner} plain={plain} />
+          <span className="text-muted-foreground">|</span>
+          <span className={codeClassName}>null</span>
+        </span>
+      );
+
     case 'union':
       return (
         <span className={cn('inline-flex flex-wrap items-baseline gap-1', className)}>

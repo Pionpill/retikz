@@ -3,7 +3,7 @@ title: Introduction
 description: Learn how the Library extends Core horizontally with optional, dynamically loaded Tier 2 capabilities and which entry point each package owns.
 ---
 
-The Library group contains official drawing capabilities that should not enter minimal Core but remain reusable across domains. Presentation components such as Grid, Axes, and Frame lower compact configuration to Core primitives. FlexLayout, GridLayout, and OverlayLayout provide generic containers on the Core layout-aware composite contract.
+The Library group contains official drawing capabilities that should not enter minimal Core but remain reusable across domains. Presentation components such as Grid, Axes, Frame, and Legend lower compact configuration to Core primitives. FlexLayout, GridLayout, and OverlayLayout provide generic containers on the Core layout-aware composite contract.
 
 ## Boundary with Core
 
@@ -33,4 +33,4 @@ All three packages share the same schemas and lowering from `@retikz/standard`. 
 | Vanilla      | An embed uses a partial adapter list or `StandardVanillaAdapters`; direct IR uses `bundle.compile` instead |
 | Persisted IR | A schema validates JSON and the host selects and injects definitions through `createStandardBundle()`      |
 
-See [Get Started](/standard/get-start) for all three paths, browse [Composites](/standard/composite) or [Layout Containers](/standard/layout), and manage catalogs in [Capability Loading](/standard/extension/capability-loading).
+See [Get Started](/standard/get-start) for all three paths, browse [Composites](/standard/composite) or [Layout Containers](/standard/layout), combine resolved samples with meaning in [Legend](/standard/composite/legend), and manage catalogs in [Capability Loading](/standard/extension/capability-loading).

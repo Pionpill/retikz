@@ -6,7 +6,7 @@
 
 ---
 
-本文只确定 Chart 的长期核心模型。ChartSpec 的精确 schema、Canonical Type 清单、默认值、错误 payload、provenance 产物和实现文件由后续 milestone ADR 冻结。
+本文只确定 Chart 的长期核心模型。ChartSpec 的精确 schema、Canonical Type 清单、默认值、错误 payload 与 provenance 产物由对应能力契约冻结。
 
 ## 1. 核心判断
 
@@ -84,22 +84,22 @@ ChartSpec 必须满足：
 - 多系列复用 Plot 的 series、group、color 等语义，不建立可独立绑定 dataset 的 ECharts 式 `series[]`
 - React、Vanilla 与手写 JSON 最终生成或消费同一份 ChartSpec
 
-ChartSpec 不是缩减版 PlotSpec。图本体配置应沿用 Plot 的结构轴，允许配置 data、transform、encoding、scales、coordinate / composition、mark、guides、theme、layout 和追加 marks，但不要求用户重写 `type` 已经确定的内容。Chart 另外拥有可选的单图展示语义，用于表达 Plot 本体之外的标题、说明、来源与外框；它们不是 Plot GoG 成员，也不建立通用布局系统。
+ChartSpec 不是缩减版 PlotSpec。图本体配置应沿用 Plot 的结构轴，允许配置 data、transform、encoding、scales、coordinate / composition、mark、guides、theme、layout 和追加 marks，但不要求用户重写 `type` 已经确定的内容。Chart 另外拥有可选的单图展示语义，用于表达 Plot 本体之外的标题、说明、来源、自定义绘图内容与外框；它们不是 Plot GoG 成员。Chart 只声明主 Plot 占位与便捷 preset，排列和任意 renderer-neutral child 组合复用 Standard / Core 的正式契约，不建立自己的通用布局系统。
 
 精确字段形态由 ADR 冻结；长期语义先保持：
 
-| 成员                         | Chart 层语义                                                                                                       |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `data`                       | 单一外部数据引用及可选模型，不保存真实数据                                                                         |
-| `encoding`                   | 声明该类型需要的数据角色与用户覆盖的视觉通道                                                                       |
-| `mark`                       | 调整隐式主 Mark 的允许参数，不改变其 Plot Mark type 或存在性                                                       |
-| `transform`                  | 调整隐式主 Transform 的允许参数，并允许追加显式 Transform；必需 Transform 不可撤销                                 |
-| `scales`                     | 调整类型默认 scale，或增加 Plot 可识别的 scale 配置                                                                |
-| `coordinate` / `composition` | 调整类型默认空间与组合；type 可以隐式生成多视图 / track 配方，结构性不变量不能被破坏                               |
-| `guides`                     | 调整、关闭、替换或追加表现性 guide                                                                                 |
-| `theme` / Plot `layout`      | 调整图本体的 Plot 呈现，不建立 Chart 平行 GoG 样式系统                                                             |
-| `marks`                      | 在类型生成的主 Mark 之外追加正式、JSON-safe 的 Plot Mark                                                           |
-| 单图展示                     | 可选表达 title、subtitle、caption、note、source、credit 与外框等语义；具体字段由 ADR 冻结，布局和绘制复用 Standard |
+| 成员                         | Chart 层语义                                                                                                         |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `data`                       | 单一外部数据引用及可选模型，不保存真实数据                                                                           |
+| `encoding`                   | 声明该类型需要的数据角色与用户覆盖的视觉通道                                                                         |
+| `mark`                       | 调整隐式主 Mark 的允许参数，不改变其 Plot Mark type 或存在性                                                         |
+| `transform`                  | 调整隐式主 Transform 的允许参数，并允许追加显式 Transform；必需 Transform 不可撤销                                   |
+| `scales`                     | 调整类型默认 scale，或增加 Plot 可识别的 scale 配置                                                                  |
+| `coordinate` / `composition` | 调整类型默认空间与组合；type 可以隐式生成多视图 / track 配方，结构性不变量不能被破坏                                 |
+| `guides`                     | 调整、关闭、替换或追加表现性 guide                                                                                   |
+| `theme` / Plot `layout`      | 调整图本体的 Plot 呈现，不建立 Chart 平行 GoG 样式系统                                                               |
+| `marks`                      | 在类型生成的主 Mark 之外追加正式、JSON-safe 的 Plot Mark                                                             |
+| 单图展示                     | 以唯一主 Plot 占位、有序 renderer-neutral children、文本 preset 与外框表达完整 Chart；布局和绘制复用 Standard / Core |
 
 这里必须避免把所有文字统称为 `label`：
 
@@ -163,7 +163,7 @@ Type 核心配方定义该 type 的身份，例如：
 
 核心配方不是可撤销的默认值。用户只能在 type 明确允许的范围内调整参数，不能删除、关闭、替换核心成员，也不能把主 Mark 改成另一种 Mark。若需求不再需要这套核心配方，用户应选择其它 Canonical Type 或直接使用 Plot。
 
-以 Bubble 为例，其 Point Mark 及维持气泡语义的数据角色 / encoding 属于核心配方。用户可以追加 Interval Mark 作为背景、参照或补充表达，但不能用 Interval Mark 取代 Point Mark，再继续把结果解释为 Bubble。
+以 Connected Scatter 为例，Point、按稳定顺序连接观察值的开放 Path 及二者的共同位置角色属于核心配方。用户可以调整两种 Mark 的表现或追加其它 Plot 内容，但不能删除其中一个核心 Mark、闭合 Path，或改写二者的共同位置角色后仍把结果解释为 Connected Scatter。
 
 ### 6.2 表现性默认
 
@@ -171,7 +171,7 @@ Type 核心配方定义该 type 的身份，例如：
 
 Chart 的 style、明暗模式和公开 token 消费全仓 [`通用视觉主题设计`](../../../../notes/architecture/visual-theme-design.md)：preset 提供视觉人格，mode 负责 light / dark 适配，公开 strict token map 承载稀疏自定义。Chart 只拥有领域 token、preset 具体值和到 Plot / Standard 正式能力的映射，不建立平行 theme、layout 或 renderer 语义。
 
-标题、说明、来源等单图展示内容没有值时不得由 type 凭空生成，也不构成 Canonical Type 身份。Chart 可以为已声明的展示槽位提供样式、顺序和间距默认，但用户始终可以省略或关闭整套展示外壳。
+标题、说明、来源等单图展示内容没有值时不得由 type 凭空生成，也不构成 Canonical Type 身份。Chart 可以提供文本 preset、默认 column Flex 参数和间距，但 children 的 authored order、重复 preset、自定义 renderer-neutral child 与 item-local Flex 参数由用户决定；用户也可以省略整套展示外壳。
 
 ### 6.3 优先级
 
@@ -181,6 +181,9 @@ Chart 的 style、明暗模式和公开 token 消费全仓 [`通用视觉主题�
 不可撤销的 type 核心配方
   + (Plot 内建默认
      < Chart type 表现性默认
+     < Chart preset / mode tokens
+     < ChartSpec styleTokens
+     < ChartSpec colors
      < ChartSpec theme
      < ChartSpec 允许的具体 GoG 成员覆盖)
 ```
@@ -197,7 +200,7 @@ Chart 的 style、明暗模式和公开 token 消费全仓 [`通用视觉主题�
 - 追加内容不作为替换、关闭或删除类型核心成员的指令
 - 显式 ID 与生成 ID 冲突时 fail-loud，不静默覆盖
 
-具有多个同类隐式成员的 type，需要由后续 ADR 定义稳定、语义化的覆盖目标；不得依赖易漂移的数组下标或不透明生成顺序。
+具有多个同类隐式成员的 type，需要由该 type 的公开契约定义稳定、语义化的覆盖目标；不得依赖易漂移的数组下标或不透明生成顺序。
 
 Chart 保留 Plot 的高扩展性，但扩展的语义边界是增强当前 type，而不是重新定义它。系统必须对可机械判断的核心配方破坏 fail-loud；对于“追加内容是否仍服务该 type”这类无法可靠判定的高层意图，不建立全面禁止规则，但文档与可解释性工具应明确提示：若追加内容已经成为主要表达、使原 type 只剩名义存在，应改用 Plot。
 
@@ -226,9 +229,10 @@ Chart 对 Plot 的封装必须保持 **空间透明**。Chart 可以增加整图
 Chart result
 ├─ Chart presentation space
 │  ├─ frame
-│  ├─ header
-│  ├─ body
-│  └─ footer
+│  └─ authored Flex items
+│     ├─ preset / custom child
+│     ├─ primary Plot item
+│     └─ preset / custom child
 └─ Plot body
    ├─ views
    ├─ arrangements: facet / tracks / overlay
@@ -238,7 +242,7 @@ Chart result
 
 长期句柄分为两层：
 
-- Chart 为整图、frame、header、body、footer 等外层区域提供稳定 identity；具体首批 handle 由后续空间契约 ADR 冻结
+- Chart 为整图、frame、唯一主 Plot item 与 authored presentation item 提供 container-local 稳定 identity；具体公开 handle 由 Core 空间契约冻结
 - Plot 继续生成 view、arrangement、facet panel、track、plotArea、axis region、series、datum 等内部 handle，并拥有这些 handle 的领域语义与 provenance
 - Core 提供 renderer-neutral 的 handle 数据模型、索引与 qualified selector 基础；Chart 只建立外层 namespace / facade，并把指向 Plot body 的后续选择委托给 Plot / Core handle index
 - Standard 对 presentation 与 Plot body 做布局后，可以改变它们的最终全局位置，却不能重命名、扁平化或丢弃 Plot 内部 identity
@@ -255,7 +259,7 @@ Canonical Type 的完整配方可以隐式生成复杂 Plot composition。例如
 | 多个独立 Chart、Plot、Table 或其它内容的静态排列、对齐与空间贴附           | Standard 组合布局 + Core spatial handles；Chart 只暴露可进入的外层 / 内层句柄 |
 | linked selection、filter、scroll、responsive state 等仪表板联动            | 更高层 dashboard / workspace runtime；Chart 不拥有 dashboard IR 或状态机      |
 
-Chart 不复制 Plot composition，也不把 Standard 布局或 dashboard runtime 吸收到自己的 IR。它的职责只是让类型配方可以连续进入 Plot 的复合能力，并保证封装前后同一 Plot 空间仍可被定位、解释和复用。
+Chart 不复制 Plot composition、Standard solver 或 dashboard runtime。Chart presentation 只携带可确定性映射到 Standard FlexLayout 的公开 container / item 契约和 renderer-neutral children；它的职责是让类型配方与这些内容进入各自正式能力链，并保证封装前后同一 Plot 空间仍可被定位、解释和复用。
 
 ## 8. Canonical Type 与 Chart Pattern
 
@@ -284,13 +288,13 @@ Chart lowering 需要完成两个彼此可观察但最终合流的阶段：
 1. 校验 ChartSpec 与 Canonical Type 数据角色及核心配方不变量
 2. 选择完整 type recipe，应用稀疏覆盖并追加显式 Plot operations
 3. 解析 Plot 默认优先级并产出可独立检查、通过 PlotSpec schema 的完整 PlotSpec
-4. 解析可选的 Chart presentation 语义与默认排列
-5. 通过 Standard 通用布局把 presentation children 与 PlotSpec 组合为一个完整 Chart 结果
+4. 解析可选的 Chart presentation children、唯一主 Plot 占位与 Flex defaults
+5. 按 authored order 通过 Standard FlexLayout 把 presentation children 与 PlotSpec 组合为一个完整 Chart 结果
 6. 让 Plot 与 Standard 分别沿自身正式 lowering 链进入 Core
 
-Chart 的最终执行出口不是裸 PlotSpec，也不能是 adapter 私下拼装的 DOM 外壳。长期契约需要同时保证：完整 PlotSpec 可检查，完整 Chart 又是单个 JSON-safe、renderer-neutral 的可组合结果。最终公开函数名与中间结果形态由后续 ADR 冻结，不在架构层预设 `ResolvedChart` 等具体类型。
+Chart 的最终执行出口不是裸 PlotSpec，也不能是 adapter 私下拼装的 DOM 外壳。长期契约需要同时保证：完整 PlotSpec 可检查，完整 Chart 又是单个 JSON-safe、renderer-neutral 的可组合结果。最终公开函数名与中间结果形态由对应公开契约冻结，不在架构层预设 `ResolvedChart` 等具体类型。
 
-Chart 不得自行测量文字、实现 Box / Overlay solver、直接生成私有几何，或在 renderer 中特判 title / source。相同 ChartSpec、datasets 与 definitions 必须解析出等价 PlotSpec 和 presentation composition，并在 React、Vanilla、SSR 与手写 JSON 入口保持一致。
+Chart 不得自行测量文字、实现 layout solver、直接生成私有几何，或在 renderer 中特判 preset / custom child。相同 ChartSpec、datasets 与 definitions 必须解析出等价 PlotSpec 和 presentation composition，并在 React、Vanilla、SSR 与手写 JSON 入口保持一致。
 
 ## 10. 诊断、追溯与可解释性
 
@@ -306,7 +310,7 @@ Chart 的隐式配方不能成为不可观察黑盒。长期需要满足：
 - Chart 外层 handle 与 Plot 内部 handle 的 namespace、qualified selector 和来源可检查
 - Plot 的 view / arrangement / facet panel / track / plotArea identity、provenance / locator / lineage 在 Chart lowering 后继续可用
 
-具体 diagnostics 和 provenance artifact 由后续 ADR 设计，但不得依赖 React-only 状态或 renderer DOM 反推。
+具体 diagnostics 和 provenance artifact 由对应能力契约定义，但不得依赖 React-only 状态或 renderer DOM 反推。
 
 ## 11. Framework authoring 等价性
 
@@ -316,22 +320,22 @@ Chart 家族按模块发布：
 - `@retikz/chart-react`：`<Chart>`、JSX sugar、runtime 接线
 - `@retikz/chart-vanilla`：plain builder、SSR 与 framework-neutral runtime
 
-三条入口共享同一 ChartSpec 与 Chart 解析 / 组合主链。React children 中出现的 Plot 或已支持 presentation 内容必须有可序列化对应物；Vanilla 不得只能消费展开后的 PlotSpec，React 也不得拥有 ChartSpec 无法表示的额外类型语义或 DOM-only 外壳。
+三条入口共享同一 ChartSpec 与 Chart 解析 / 组合主链。React 使用包级扁平导出的 headless components 声明主 Plot、文本 preset 与任意 Retikz drawable child；所有 authoring 都必须归一化为 JSON-safe Chart IR。Vanilla 不得只能消费展开后的 PlotSpec，React 也不得拥有 ChartSpec 无法表示的额外类型语义、普通 DOM child 或 DOM-only 外壳。嵌套 Tier 2 child 的 datasets、definitions 与 inspection 必须由 Kernel adapter 的通用 contribution 聚合机制保真转交，Chart adapter 不建立私有旁路。
 
 ## 12. 缺口流向
 
 当一个 Chart type 无法用现有能力表达时，按根问题处理：
 
-| 缺口                                                                                       | owner                                               |
-| ------------------------------------------------------------------------------------------ | --------------------------------------------------- |
-| 通用 rows / fields / statistics 算法                                                       | `@retikz/data`                                      |
-| 新的 Mark、Transform、Scale、Coordinate、Guide、Composition、interaction 能力轴或 contract | `@retikz/plot`                                      |
-| 符合既有 Plot contract、只服务 Chart 配方的具体 definition                                 | `@retikz/chart` 或独立扩展包，经 Plot registry 消费 |
-| 通用图形、几何、测量、编译或 renderer-neutral primitive                                    | Core / Math / Runtime / Render                      |
-| 跨领域复用的官方绘图 composite 与呈现                                                      | `@retikz/standard`                                  |
-| Chart type 默认、字段角色映射与用户友好配置                                                | `@retikz/chart`                                     |
-| title、subtitle、caption、note、source、credit 等单图展示语义                              | `@retikz/chart`，布局与绘制消费 `@retikz/standard`  |
-| export、toolbox、fullscreen、loading 与其它宿主 chrome / 状态                              | React / Vanilla adapter 或更外层 host               |
+| 缺口                                                                                       | owner                                                          |
+| ------------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| 通用 rows / fields / statistics 算法                                                       | `@retikz/data`                                                 |
+| 新的 Mark、Transform、Scale、Coordinate、Guide、Composition、interaction 能力轴或 contract | `@retikz/plot`                                                 |
+| 符合既有 Plot contract、只服务 Chart 配方的具体 definition                                 | `@retikz/chart` 或独立扩展包，经 Plot registry 消费            |
+| 通用图形、几何、测量、编译或 renderer-neutral primitive                                    | Core / Math / Runtime / Render                                 |
+| 跨领域复用的官方绘图 composite 与呈现                                                      | `@retikz/standard`                                             |
+| Chart type 默认、字段角色映射与用户友好配置                                                | `@retikz/chart`                                                |
+| 主 Plot 占位、title / caption 等文本 preset 与单图展示 inspection                          | `@retikz/chart`，任意 child 复用 Core，布局与绘制消费 Standard |
+| export、toolbox、fullscreen、loading 与其它宿主 chrome / 状态                              | React / Vanilla adapter 或更外层 host                          |
 
 Chart 不允许用“只服务一个 type”为由绕开能力 owner。符合既有 Plot contract 的类型专用 provider 可以留在 Chart，但必须形成 definition / registry / lowering 的正式闭环；只有当需求引入新的能力轴、contract 或底层机制时，才必须先补 Plot / Data / Core 的纵向闭环。
 
@@ -344,7 +348,7 @@ Chart 不允许用“只服务一个 type”为由绕开能力 owner。符合既
 - 不封装 Table；geo-backed type 等 geo 边界确认后再决定
 - 不把 DOM 事件、函数 callback 或宿主状态写入 Chart IR
 - 不把 Chart presentation 塞回 PlotSpec，也不让 adapter 用 DOM-only 外壳补齐静态图表
-- 不把任意 `graphic`、ReactNode 或开放 slots 发展成第二套通用组合系统
+- 不让普通 ReactNode、DOM element 或 renderer object 进入 Chart IR；自定义绘图内容只复用 Core `IRChild` 与 Standard item 契约
 - 不以类型数量作为完备目标，不追逐所有市场别名
 - 不在长期设计中冻结 v0.1 字段、文件结构、测试 case 或实现顺序
 
@@ -356,10 +360,10 @@ Chart 不允许用“只服务一个 type”为由绕开能力 owner。符合既
 2. 各 type 的数据角色及完整隐式配方
 3. 多个隐式同类成员的稳定覆盖定位
 4. 表现性默认的关闭 / 替换语法
-5. Chart presentation 的语义槽位、可见内容与 accessibility metadata 边界
+5. Chart presentation preset、自定义 child 与 accessibility metadata 边界
 6. 完整 PlotSpec inspection、presentation composition 与最终单一结果的 diagnostics / provenance
 7. React children、Vanilla builder 与 JSON IR 的精确 parity
 8. Chart Pattern 的文档元数据、分组与搜索策略
 9. Chart 外层 handle、Plot 内部 handle forwarding 与 qualified selector 的长期空间契约
 
-这些议题由 architecture design 继续收敛或进入对应 ADR；未确认前不得由实现细节反向冻结。
+这些议题由 architecture design 或对应能力契约继续收敛；未确认前不得由实现细节反向冻结。

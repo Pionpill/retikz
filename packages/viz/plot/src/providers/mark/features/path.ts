@@ -29,6 +29,7 @@ import { channelValue } from '../../channel/shared';
 import {
   densifyPolarSegments,
   isCartesianCoordinateFrame,
+  isGenericCoordinateFrame,
   isPolarCoordinateFrame,
   toPolarVertex,
 } from '../../coordinate';
@@ -321,6 +322,11 @@ export const buildOutlinePoints = (
       .filter((vertex): vertex is PolarVertex => vertex !== null);
     return densifyPolarSegments(frame, vertices);
   }
+  if (isGenericCoordinateFrame(frame)) {
+    return ordered
+      .map(row => roleAnchor(mark, row, frame))
+      .filter((point): point is [number, number] => point !== null);
+  }
   return ordered
     .map(row => {
       const [primaryValue, secondaryValue] = resolveRolePosition(mark, row);
@@ -354,6 +360,7 @@ const projectableTopPoint = (
   frame: CoordinateFrame,
   closed: boolean,
 ): boolean => {
+  if (isGenericCoordinateFrame(frame)) return roleAnchor(mark, row, frame) !== null;
   const [primaryValue, secondaryValue] = resolveRolePosition(mark, row);
   if (isPolarCoordinateFrame(frame) && frame.continuousAngle && !closed)
     return toPolarVertex(frame, primaryValue, secondaryValue) !== null;
@@ -708,7 +715,7 @@ const lowerPath = (
   };
 };
 
-/** path 图层下沉：仅 cartesian2D / polar2D 有上沿几何；其余坐标系 fail-loud + attachMarkLayer。 */
+/** 为 Path datum anchor 按当前 coordinate roles 投影稳定坐标 */
 const pathAnchorCoordinates = (
   mark: IRPlotPathMark,
   rows: Array<ExternalRow>,
@@ -734,7 +741,7 @@ const pathAnchorCoordinates = (
   return coordinates;
 };
 
-/** 把 path mark 与数据行下沉为 core IR 图层。 */
+/** 把 path mark 与数据行下沉为 core IR 图层 */
 export const lowerPathLayer = (
   mark: IRPlotMark,
   rows: Array<ExternalRow>,
@@ -742,7 +749,12 @@ export const lowerPathLayer = (
   channels: MarkChannels,
   ctx: MarkLoweringContext | undefined,
 ): IRChild | null => {
-  if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) {
+  const supportsGenericOpenPath =
+    isGenericCoordinateFrame(frame) &&
+    mark.type === PlotMark.Path &&
+    mark.closure === undefined &&
+    mark.closed !== true;
+  if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame) && !supportsGenericOpenPath) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
   const layer = lowerPath(

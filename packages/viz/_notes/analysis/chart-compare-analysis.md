@@ -109,11 +109,11 @@ Flint 的 Vega-Lite gallery 是这里的特例：研究对象是它整理出的 
 
 Flint 对 v0.1 最直接的启发是先选择三个传统 family，同时让它们分别覆盖 Plot 的三个坐标系无关维度 Mark：
 
-| v0.1 family      | Flint 跨库常见名称                                                      | Retikz 技术主干 | v0.1 结论                                                                                  |
-| ---------------- | ----------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------ |
-| Scatter & Points | scatter、connected scatter、bubble、regression、ranged dot、strip       | Point 为主      | 保留传统 family；不同 type 可隐式组合 Path、Reference 或内建 Transform                     |
-| Line & Area      | line、area、range area、sparkline、slope、streamgraph、bump             | Path 为主       | line / area / range-area 进入 type；只改变 curve、guide、stack offset 的名称优先做 Pattern |
-| Bar & Column     | bar、stacked / grouped bar、waterfall、Gantt、bullet、pyramid、lollipop | Interval 为主   | bar / waterfall / Gantt / bullet 进入 type；堆叠、分组、方向等做 Pattern；lollipop 暂缓    |
+| v0.1 family      | Flint 跨库常见名称                                                             | Retikz 技术主干 | v0.1 结论                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------ | --------------- | ------------------------------------------------------------------------------------------ |
+| Scatter & Points | scatter（含 bubble Pattern）、connected scatter、regression、ranged dot、strip | Point 为主      | 保留传统 family；不同 type 可隐式组合 Path、Reference 或内建 Transform                     |
+| Line & Area      | line、area、range area、sparkline、slope、streamgraph、bump                    | Path 为主       | line / area / range-area 进入 type；只改变 curve、guide、stack offset 的名称优先做 Pattern |
+| Bar & Column     | bar、stacked / grouped bar、waterfall、Gantt、bullet、pyramid、lollipop        | Interval 为主   | bar / waterfall / Gantt / bullet 进入 type；堆叠、分组、方向等做 Pattern；lollipop 暂缓    |
 
 三个 family 是用户目录，不是互斥的底层 primitive 白名单。Coordinate 与 family 正交：Point、Path、Interval 可以投影到 Cartesian、Polar 或其它已注册 Coordinate，不因为切换坐标系建立新的技术 family。
 
@@ -184,11 +184,13 @@ Canonical Type 是 `ChartSpec.type` 的稳定判别值，选择一套完整 Plot
 - 表现性默认可以调整、关闭或替换
 - 追加 Plot 内容不能成为删除、关闭或替换核心配方的入口
 
-以 Bubble 为例，Point Mark 与维持气泡语义的数据角色 / size encoding 属于不可撤销核心配方。用户可以追加 Interval Mark 作为背景、参照或补充表达；若 Interval 已成为主要表达，应直接使用 Plot，而不是继续把结果称为 Bubble。
+以 Connected Scatter 为例，Point、按稳定顺序连接观察值的开放 Path 及二者的共同位置角色属于不可撤销核心配方。用户可以调整表现或追加其它 Plot 内容，但不能删除任一核心 Mark、闭合轨迹或改写共同位置角色后仍把结果称为 Connected Scatter。
 
 ### 5.2 Chart Pattern：承接市场名称与常用变体
 
 Chart Pattern 是 Canonical Type 加 modifier、表现配置或 Plot extension 的文档配方，不进入 `type` union。
+
+Bubble 属于 Scatter Pattern：它只把 Scatter 已有的 size channel 绑定为字段，经 Plot 的 sqrt radius scale 表达面积感知语义，没有新增 Mark、Transform、Coordinate 或数据拓扑。只有 circle packing 等引入独立布局或拓扑的需求才重新判断 Canonical Type。
 
 ```text
 候选图表完整 Plot 配方

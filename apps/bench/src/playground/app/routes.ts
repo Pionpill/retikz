@@ -3,16 +3,10 @@ import type { LoaderFunctionArgs, RouteObject } from 'react-router';
 
 import { redirect } from 'react-router';
 
-import type { BenchModule } from '../workspace';
+import type { BenchModule } from './module-registry';
 
-import {
-  BenchCaseView,
-  benchModules,
-  defaultBenchModule,
-  getBenchCasePath,
-  getDefaultBenchTestCase,
-  getModuleTestCases,
-} from '../workspace';
+import { benchModules, defaultBenchModule } from './module-registry';
+import { BenchCaseView, getBenchCasePath, getDefaultBenchTestCase, getModuleTestCases } from './test-catalog';
 
 /** 为模块路由创建 React element */
 export type BenchModuleElementFactory = (module: BenchModule) => ReactNode;
@@ -20,7 +14,7 @@ export type BenchModuleElementFactory = (module: BenchModule) => ReactNode;
 const defaultBenchCase = getDefaultBenchTestCase(defaultBenchModule.id);
 if (defaultBenchCase === undefined) throw new Error('Default Bench module requires a runnable test case');
 
-const defaultBenchPath = getBenchCasePath(defaultBenchModule.id, defaultBenchCase.id, BenchCaseView.Run);
+const defaultBenchPath = getBenchCasePath(defaultBenchModule.id, defaultBenchCase.id, BenchCaseView.Preview);
 
 /** 将无效入口重定向到默认 Bench 用例 */
 const redirectToDefaultCase = () => redirect(defaultBenchPath);
@@ -30,7 +24,7 @@ export const createBenchRoutes = (createModuleElement: BenchModuleElementFactory
   const moduleRoutes = benchModules.flatMap<RouteObject>(module => {
     const testCases = getModuleTestCases(module.id);
     if (testCases.length === 0) return [{ path: module.path, element: createModuleElement(module) }];
-    const moduleDefaultPath = getBenchCasePath(module.id, testCases[0].id, BenchCaseView.Run);
+    const moduleDefaultPath = getBenchCasePath(module.id, testCases[0].id, BenchCaseView.Preview);
     return [
       { path: module.path, loader: () => redirect(moduleDefaultPath) },
       {

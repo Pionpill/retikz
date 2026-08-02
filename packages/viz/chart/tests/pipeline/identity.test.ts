@@ -25,4 +25,31 @@ describe('Chart identity', () => {
     expect(first.node).toEqual(first.plotSpec);
     expect(second.node).toEqual(first.node);
   });
+
+  it('presentation item key 不拼接 Chart id，匿名实例不生成 synthetic id', () => {
+    const presentation = {
+      children: [
+        { key: 'badge', content: { kind: 'child', child: { type: 'scope', id: 'badge', children: [] } } },
+        { content: { kind: 'plot' } },
+        { content: { kind: 'preset', preset: 'title', text: 'Revenue' } },
+      ],
+    } as const;
+    const identified = resolveChartSpec({ ...base, id: 'sales', presentation });
+    const anonymous = resolveChartSpec({ ...base, presentation });
+
+    expect(identified.node).toMatchObject({
+      type: 'scope',
+      id: 'sales',
+      children: [
+        {
+          children: [{ key: 'badge' }, { key: 'chart.plot' }, { key: 'chart.presentation.title' }],
+        },
+      ],
+    });
+    expect(anonymous.node).not.toHaveProperty('id');
+    expect(JSON.stringify(anonymous.node)).not.toContain('sales');
+    expect(anonymous.node).toMatchObject({
+      children: [{ key: 'badge' }, { key: 'chart.plot' }, { key: 'chart.presentation.title' }],
+    });
+  });
 });

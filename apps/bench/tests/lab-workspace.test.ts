@@ -1,22 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
-import type { LabRunSession } from '../src/playground/modules/core';
+import type { LabRunSession } from '../src/playground/modules/kernel';
 
-import { benchModules, defaultBenchModule } from '../src/playground/workspace/constant';
-import { createInitialLabState, reduceLabState } from '../src/playground/workspace/lab-state';
+import { createInitialLabState, reduceLabState } from '../src/playground/app/lab-state';
+import { benchModules, defaultBenchModule } from '../src/playground/app/module-registry';
 import {
   BenchCaseView,
   getBenchCasePath,
   getBenchTestCase,
   getModuleTestGroups,
-} from '../src/playground/workspace/test-catalog';
-import { detailedConfigControls, quickConfigControls } from '../src/playground/workspace/workspace-config';
-import { getModuleTestSuites } from '../src/playground/workspace/workspace-model';
+} from '../src/playground/app/test-catalog';
+import { getModuleTestSuites } from '../src/playground/app/test-suites';
 
 const session: LabRunSession = {
   id: 'run-1',
-  mode: 'inspect',
-  scenarioId: 'single-entity-update',
+  mode: 'preview',
+  scenarioId: 'node-selection',
   backend: 'svg',
   startedAt: 1,
   results: [],
@@ -57,7 +56,14 @@ describe('Bench workspace', () => {
     ]);
     expect(defaultBenchModule.id).toBe('kernel');
     expect(new Set(benchModules.map(module => module.icon)).size).toBe(3);
-    expect(getModuleTestSuites('kernel').map(suite => suite.scenarioId)).toEqual(['single-entity-update']);
+    expect(getModuleTestSuites('kernel').map(suite => suite.scenarioId)).toEqual([
+      'dense-node-grid',
+      'mixed-primitives',
+      'complex-paths',
+      'node-drag',
+      'node-selection',
+      'node-insert-remove',
+    ]);
     expect(getModuleTestSuites('plot')).toEqual([]);
   });
 
@@ -72,16 +78,29 @@ describe('Bench workspace', () => {
       'generation-accuracy',
       'incremental-generation',
     ]);
-    expect(
-      groups.flatMap(group => group.directions.flatMap(direction => direction.cases.map(testCase => testCase.id))),
-    ).toEqual(['single-entity-update']);
+    expect(groups[0]?.directions[0]?.cases.map(testCase => testCase.id)).toEqual([
+      'dense-node-grid',
+      'mixed-primitives',
+      'complex-paths',
+    ]);
+    expect(groups[0]?.directions[1]?.cases.map(testCase => testCase.id)).toEqual([
+      'node-drag',
+      'node-selection',
+      'node-insert-remove',
+    ]);
   });
 
   it('用稳定模块和用例标识生成页面路径', () => {
-    expect(getBenchTestCase('kernel', 'single-entity-update')?.scenarioId).toBe('single-entity-update');
-    expect(getBenchTestCase('plot', 'single-entity-update')).toBeUndefined();
-    expect(getBenchCasePath('kernel', 'single-entity-update', BenchCaseView.Reports)).toBe(
-      '/kernel/cases/single-entity-update/reports',
+    expect(getBenchTestCase('kernel', 'node-selection')?.scenarioId).toBe('node-selection');
+    expect(getBenchTestCase('plot', 'node-selection')).toBeUndefined();
+    expect(getBenchCasePath('kernel', 'node-selection', BenchCaseView.Preview)).toBe(
+      '/kernel/cases/node-selection/preview',
+    );
+    expect(getBenchCasePath('kernel', 'node-selection', BenchCaseView.Benchmark)).toBe(
+      '/kernel/cases/node-selection/benchmark',
+    );
+    expect(getBenchCasePath('kernel', 'node-selection', BenchCaseView.Reports)).toBe(
+      '/kernel/cases/node-selection/reports',
     );
   });
 
@@ -96,11 +115,6 @@ describe('Bench workspace', () => {
     const detailsOpen = reduceLabState(createInitialLabState(), { type: 'details-opened' });
     expect(detailsOpen.detailsOpen).toBe(true);
     expect('reportOpen' in detailsOpen).toBe(false);
-  });
-
-  it('Header 只保留高频配置，采样与环境进入详细配置', () => {
-    expect(quickConfigControls.map(control => control.id)).toEqual(['mode', 'backend', 'policy']);
-    expect(detailedConfigControls.map(control => control.id)).toEqual(['sampleRuns', 'warmupRuns', 'environment']);
   });
 
   it('详细配置可以修改预热次数', () => {

@@ -2,22 +2,43 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createLayoutInspectionControls } from '../layout-inspection-controls';
+
+/** OverlayLayout 辅助层的 family 英文开关 */
+export const overlayLayoutInspectionFamilyControls = [
+  { id: 'inspectPlacements', option: 'placements', label: 'Placement relations', recommended: false },
+  { id: 'inspectAnchors', option: 'anchors', label: 'Positioning anchors', recommended: false },
+  { id: 'inspectStacking', option: 'stacking', label: 'Stacking order', recommended: false },
+] as const;
+
+const inspectionControls = createLayoutInspectionControls({
+  labels: {
+    details: 'Overlay details',
+    container: 'Container bounds',
+    content: 'Content bounds',
+    padding: 'Padding regions',
+    slot: 'Slot bounds',
+    margin: 'Margin regions',
+    allocation: 'Allocation bounds',
+    visual: 'Visual bounds',
+    overflow: 'Overflow warnings',
+    alignmentGuides: 'Alignment guides',
+    labels: 'Text labels',
+    preset: 'Overlay preset',
+    custom: 'Custom',
+    recommended: 'Recommended',
+    all: 'All',
+    off: 'Off',
+  },
+  familyControls: overlayLayoutInspectionFamilyControls,
+});
+
 /** OverlayLayout 局部定位的英文属性面板 */
 export const overlayLayoutPlaygroundEnControls = definePreviewControls({
   presentation: 'panel',
   title: 'OverlayLayout parameters',
   sections: [
-    {
-      label: 'Inspection overlay',
-      controls: [
-        {
-          kind: 'switch',
-          id: 'inspect',
-          label: 'Show layout guides',
-          defaultValue: true,
-        },
-      ],
-    },
+    ...inspectionControls.sections,
     {
       label: 'Shared alignment',
       controls: [
@@ -70,17 +91,22 @@ export const overlayLayoutPlaygroundEnControls = definePreviewControls({
 });
 
 /** 当前 OverlayLayout playground 的稳定英文文档契约 */
+const canonicalValues = {
+  ...inspectionControls.canonicalValues,
+  justifyItems: 'center',
+  alignItems: 'center',
+  badgeX: 300,
+  badgeY: 18,
+  anchor: 'top-right',
+  zIndex: 2,
+};
+
 export const previewControlContract = {
   controls: overlayLayoutPlaygroundEnControls,
-  canonicalValues: {
-    inspect: true,
-    justifyItems: 'center',
-    alignItems: 'center',
-    badgeX: 300,
-    badgeY: 18,
-    anchor: 'top-right',
-    zIndex: 2,
-  },
+  stateOnlyIds: inspectionControls.stateOnlyIds,
+  canonicalValues,
+  presets: inspectionControls.presetsFor(canonicalValues),
+  presetSelector: inspectionControls.presetSelector,
   relatedApis: [
     'OverlayLayout.inspect',
     'OverlayLayout.justifyItems',

@@ -2,22 +2,45 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createLayoutInspectionControls } from '../layout-inspection-controls';
+
+/** GridLayout 辅助层的 family 开关 */
+export const gridLayoutInspectionFamilyControls = [
+  { id: 'inspectTracks', option: 'tracks', label: '轨道边界', recommended: true },
+  { id: 'inspectCells', option: 'cells', label: '单元格边界', recommended: false },
+  { id: 'inspectGaps', option: 'gaps', label: '固定 gap', recommended: true },
+  { id: 'inspectDistributedSpace', option: 'distributedSpace', label: '分布自由空间边界', recommended: false },
+  { id: 'inspectSpans', option: 'spans', label: '跨轨道标记', recommended: false },
+] as const;
+
+const inspectionControls = createLayoutInspectionControls({
+  labels: {
+    details: '辅助层细节',
+    container: '容器边界',
+    content: '内容边界',
+    padding: 'Padding 区域',
+    slot: '槽位边界',
+    margin: 'Margin 区域',
+    allocation: '分配边界',
+    visual: '视觉边界',
+    overflow: '溢出警告',
+    alignmentGuides: '对齐参考线',
+    labels: '文字标签',
+    preset: '辅助层预设',
+    custom: '自定义',
+    recommended: '推荐',
+    all: '全部',
+    off: '关闭',
+  },
+  familyControls: gridLayoutInspectionFamilyControls,
+});
+
 /** GridLayout 轨道分配的中文属性面板 */
 export const gridLayoutPlaygroundControls = definePreviewControls({
   presentation: 'panel',
   title: '网格布局参数',
   sections: [
-    {
-      label: '辅助层',
-      controls: [
-        {
-          kind: 'switch',
-          id: 'inspect',
-          label: '显示布局辅助线',
-          defaultValue: true,
-        },
-      ],
-    },
+    ...inspectionControls.sections,
     {
       label: '轨道与自动放置',
       controls: [
@@ -69,17 +92,22 @@ export const gridLayoutPlaygroundControls = definePreviewControls({
 });
 
 /** 当前 GridLayout playground 的稳定文档契约 */
+const canonicalValues = {
+  ...inspectionControls.canonicalValues,
+  autoFlow: 'row',
+  fraction: 2,
+  columnGap: 8,
+  rowGap: 8,
+  justifyItems: 'stretch',
+  alignItems: 'center',
+};
+
 export const previewControlContract = {
   controls: gridLayoutPlaygroundControls,
-  canonicalValues: {
-    inspect: true,
-    autoFlow: 'row',
-    fraction: 2,
-    columnGap: 8,
-    rowGap: 8,
-    justifyItems: 'stretch',
-    alignItems: 'center',
-  },
+  stateOnlyIds: inspectionControls.stateOnlyIds,
+  canonicalValues,
+  presets: inspectionControls.presetsFor(canonicalValues),
+  presetSelector: inspectionControls.presetSelector,
   relatedApis: [
     'GridLayout.inspect',
     'GridLayout.autoFlow',

@@ -81,7 +81,21 @@ The two `CompositeDefinition` branches are mutually exclusive:
 
 A layout-aware definition with `artifactSchema` may also declare `inspector`. The inspector stays on the same `CompositeDefinition` and registry key; Core does not maintain a second inspector registry. For a selected occurrence, the callback receives the validated artifact from that compile, complete shared options, and definition-local options, and may return only strict rect, line, or label inspection DTOs. An `expand` branch, a compile branch without `artifactSchema`, or a selected occurrence that omits its artifact fails loudly.
 
+Inspection DTOs use independent channels for occurrence identity, spacing pattern, and geometry line style. Core continuously assigns `colorScope` after final entry sorting. Regular primitives use the `scope` tone and warnings use `warning`. A rect's `outline` branch requires `lineStyle`, while its `fill` branch requires `fillPattern`; callers cannot rely on the old `neutral | accent | guide` tones or omitted presentation fields.
+
 `CompileInspectionOptions.root` carries a sparse whole-figure policy. `roots` is an authored-occurrence sidecar built by adapters such as React or Vanilla. It never enters IR and does not require callers to predict dynamic probe or replay paths. With `inspection` omitted, inspectors do not run and the primary Scene and artifacts retain their original behavior.
+
+`BaseLayoutInspectOptions` separates box boundaries from spacing layers through independent `bounds` and `spacing` branches. The canonical Core profile enables both `spacing.padding` and `spacing.margin`. `spacing: false | true` disables or restores both defaults as a group, while an object overrides only the members it provides. Adjacent object values merge sparsely by field; switching between a boolean and an object replaces the whole group with the latter value before canonical defaults fill omitted members. Changing `bounds` never changes `spacing` implicitly, or vice versa.
+
+### LayoutInspectSpacingOptionsInputSchema
+
+Use this sparse schema when `spacing` is an object: specify only the layers to override, while omitted members continue from the adjacent policy or canonical profile.
+
+<ZodSchema name="LayoutInspectSpacingOptionsInputSchema" />
+
+Adapters map `<Layout>`, `<Scope>`, and component-local settings to the whole-figure root, an authored subtree's inherited policy, and its component policy. Core merges them in fixed Layout → Scope → component-local order, and each level overrides only the values it provides; `enabled: false` remains a hard barrier that descendants cannot reopen. The docs Recommended preset explicitly sets padding and margin to `false` without changing Core's full-diagnostic defaults.
+
+Callers that handwrite an `InspectionPlane` must provide a non-negative safe-integer `colorScope` for every entry. Normal `compileToScene()` calls assign it in Core after discarded probes are removed. This breaking contract does not change the outer shapes of `CompileOptions.inspection`, `CompileResult.inspection`, or the primary Scene.
 
 `LayoutProposal` contains exactly `x` and `y`; each axis is a `LayoutAxisProposal`:
 

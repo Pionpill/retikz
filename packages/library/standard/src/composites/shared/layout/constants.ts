@@ -47,3 +47,9 @@ export const LayoutTrackSourceKind = {
   Fraction: 'fraction',
   Minmax: 'minmax',
 } as const;
+
+/** Layout artifact spacing 区域的语义种类 */
+export const LayoutSpacingKind = {
+  Gap: 'gap',
+  Distributed: 'distributed',
+} as const;

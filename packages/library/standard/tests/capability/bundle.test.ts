@@ -4,7 +4,15 @@ import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/co
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { createGrid, createStandardBundle, FrameModule, GridDefinition, GridModule } from '../../src';
+import {
+  createGrid,
+  createLegend,
+  createStandardBundle,
+  FrameModule,
+  GridDefinition,
+  GridModule,
+  LegendModule,
+} from '../../src';
 
 const customDefinition = defineComposite({
   namespace: 'example',
@@ -46,7 +54,14 @@ describe('createStandardBundle()', () => {
     expect(Object.isFrozen(GridDefinition)).toBe(false);
   });
 
-  it('rejects empty and duplicate module names', () => {
+  it('merges repeated references to the same module at their first position', () => {
+    const bundle = createStandardBundle([GridModule, GridModule, FrameModule, GridModule]);
+
+    expect(bundle.modules).toEqual(['standard.grid', 'standard.frame']);
+    expect(bundle.compile.composites).toEqual([GridDefinition, FrameModule.composites[0]]);
+  });
+
+  it('rejects empty names and different module objects that share a name', () => {
     expect(() => createStandardBundle([{ name: '   ', composites: [] }])).toThrow(/non-empty/i);
     expect(() =>
       createStandardBundle([
@@ -95,6 +110,34 @@ describe('createStandardBundle()', () => {
     expect(compileToScene(ir, createStandardBundle([GridModule]).compile)).toEqual(
       compileToScene(ir, { composites: [GridDefinition] }),
     );
+  });
+
+  it('compiles Legend through its module without implicitly collecting sample capabilities', () => {
+    const primitiveLegend = createLegend({
+      content: {
+        kind: 'items',
+        items: [{ key: 'node', sample: { type: 'node', position: [0, 0], text: 'Node' } }],
+      },
+    });
+    const customLegend = createLegend({
+      content: {
+        kind: 'items',
+        items: [{ key: 'custom', sample: { namespace: 'example', type: 'badge', text: 'Custom' } }],
+      },
+    });
+
+    expect(() =>
+      compileToScene(
+        { type: 'scene', version: 1, children: [primitiveLegend] },
+        createStandardBundle([LegendModule]).compile,
+      ),
+    ).not.toThrow();
+    expect(() =>
+      compileToScene(
+        { type: 'scene', version: 1, children: [customLegend] },
+        createStandardBundle([LegendModule]).compile,
+      ),
+    ).toThrow(/example\.badge|composite.*not registered/i);
   });
 
   it('keeps the Core warning when a capability is not selected', () => {

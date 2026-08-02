@@ -5,6 +5,7 @@ import { FlexLayoutVanillaAdapter } from '../flex-layout';
 import { FrameVanillaAdapter } from '../frame';
 import { GridVanillaAdapter } from '../grid';
 import { GridLayoutVanillaAdapter } from '../grid-layout';
+import { LegendVanillaAdapter } from '../legend';
 import { OverlayLayoutVanillaAdapter } from '../overlay-layout';
 
 /** 三种 Standard 布局容器的浅冻结 Vanilla adapter 数组 */
@@ -20,4 +21,5 @@ export const StandardVanillaAdapters: ReadonlyArray<AnyVanillaTier2Adapter> = Ob
   AxesVanillaAdapter,
   FrameVanillaAdapter,
   ...StandardLayoutVanillaAdapters,
+  LegendVanillaAdapter,
 ]);

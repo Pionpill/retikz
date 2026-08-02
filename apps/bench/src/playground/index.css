@@ -129,19 +129,20 @@
 }
 
 .lab-panel {
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) + 6px);
+  border: 1px solid color-mix(in oklab, var(--border) 78%, transparent);
+  border-radius: calc(var(--radius) + 4px);
   background: var(--card);
   color: var(--card-foreground);
-  box-shadow: 0 18px 60px color-mix(in oklab, var(--foreground) 8%, transparent);
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--foreground) 5%, transparent),
+    0 8px 24px color-mix(in oklab, var(--foreground) 3%, transparent);
 }
 
 .lab-label {
   color: var(--muted-foreground);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .lab-grid {
@@ -149,13 +150,6 @@
     linear-gradient(color-mix(in oklab, var(--border) 65%, transparent) 1px, transparent 1px),
     linear-gradient(90deg, color-mix(in oklab, var(--border) 65%, transparent) 1px, transparent 1px);
   background-size: 24px 24px;
-}
-
-.lab-preview > svg,
-.lab-preview > canvas {
-  display: block;
-  width: 100% !important;
-  height: 100% !important;
 }
 
 ::-webkit-scrollbar {

@@ -4,6 +4,7 @@ import type { IRPlotSpec, LowerPlotsOptions } from '@retikz/plot';
 
 import { compileToScene } from '@retikz/core';
 import { createPlotLocator, defineMark, lowerPlots, lowerPlotWithLineage, PlotSpecSchema } from '@retikz/plot';
+import { FlexLayoutDefinition } from '@retikz/standard';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -64,6 +65,28 @@ const barePlotSpec: IRPlotSpec = PlotSpecSchema.parse({
     { type: 'axis', id: '__chart.__infrastructure-fixture.guide.x', dimension: 'x' },
     { type: 'axis', id: '__chart.__infrastructure-fixture.guide.y', dimension: 'y', grid: true },
   ],
+});
+
+const presentedChartSpec = InfrastructureChartSpecSchema.parse({
+  ...chartSpec,
+  presentation: {
+    layout: { rowGap: 8, alignItems: 'start' },
+    children: [
+      { content: { kind: 'preset', preset: 'title', text: 'Revenue' } },
+      { content: { kind: 'plot' } },
+      {
+        key: 'badge',
+        content: { kind: 'child', child: { type: 'node', position: [0, 0], text: 'Draft' } },
+      },
+      {
+        content: {
+          kind: 'preset',
+          preset: 'caption',
+          text: { text: 'Quarterly revenue', font: { style: 'italic' } },
+        },
+      },
+    ],
+  },
 });
 
 const sceneOf = (child: IRScene['children'][number]): IRScene => ({
@@ -145,6 +168,53 @@ describe('Chart composite recursive integration', () => {
     expect(warnings).toEqual([]);
     expect(collectPlotTrace(result.scene.primitives).length).toBeGreaterThan(0);
   });
+
+  it('保留缺失 Standard FlexLayout definition 的 Core 原生诊断', () => {
+    const warnings: Array<CompileWarning> = [];
+
+    compileToScene(sceneOf(presentedChartSpec), {
+      composites: [InfrastructureChartDefinition, ...lowerPlots(datasets, compileOptions)],
+      onWarn: warning => warnings.push(warning),
+    });
+
+    expect(warnings).toEqual([
+      expect.objectContaining({
+        code: 'COMPOSITE_NOT_REGISTERED',
+        message: "No composite registered for 'standard.flexLayout'; the node is skipped.",
+      }),
+    ]);
+  });
+
+  it('通过显式 Chart、FlexLayout 与 Plot definitions 递归 compile presentation content', () => {
+    const warnings: Array<CompileWarning> = [];
+    const resolution = resolveChartSpec(presentedChartSpec);
+
+    expect(InfrastructureChartDefinition.expand(presentedChartSpec)).toEqual(resolution.node);
+    expect(resolution.node).toMatchObject({
+      type: 'scope',
+      id: 'sales',
+      children: [
+        {
+          namespace: 'standard',
+          type: 'flexLayout',
+          children: [
+            { key: 'chart.presentation.title' },
+            { key: 'chart.plot' },
+            { key: 'badge', child: { type: 'node', text: 'Draft' } },
+            { key: 'chart.presentation.caption' },
+          ],
+        },
+      ],
+    });
+
+    const result = compileToScene(sceneOf(presentedChartSpec), {
+      composites: [InfrastructureChartDefinition, FlexLayoutDefinition, ...lowerPlots(datasets, compileOptions)],
+      onWarn: warning => warnings.push(warning),
+    });
+
+    expect(warnings).toEqual([]);
+    expect(collectPlotTrace(result.scene.primitives).length).toBeGreaterThan(0);
+  });
 });
 
 const DiagnosticMarkSchema = z.strictObject({
@@ -206,15 +276,17 @@ describe('Plot definition pass-through', () => {
 
 describe('Plot trace continuity', () => {
   it('preserves Scene trace, locator source identity, and lineage across the Chart wrapper', () => {
-    const resolution = resolveChartSpec(chartSpec);
-    expect(resolution.plotSpec).toEqual(barePlotSpec);
+    const resolution = resolveChartSpec(presentedChartSpec);
+    const { theme: resolvedTheme, ...resolvedCore } = resolution.plotSpec;
+    expect(resolvedTheme).toBeDefined();
+    expect(resolvedCore).toEqual(barePlotSpec);
 
-    const bareScene = compileToScene(sceneOf(barePlotSpec), {
+    const bareScene = compileToScene(sceneOf(resolution.plotSpec), {
       composites: lowerPlots(datasets, compileOptions),
       onWarn: () => undefined,
     }).scene;
-    const wrappedScene = compileToScene(sceneOf(chartSpec), {
-      composites: [InfrastructureChartDefinition, ...lowerPlots(datasets, compileOptions)],
+    const wrappedScene = compileToScene(sceneOf(presentedChartSpec), {
+      composites: [InfrastructureChartDefinition, FlexLayoutDefinition, ...lowerPlots(datasets, compileOptions)],
       onWarn: () => undefined,
     }).scene;
     const bareTrace = collectPlotTrace(bareScene.primitives);

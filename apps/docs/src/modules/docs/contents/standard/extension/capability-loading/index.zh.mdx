@@ -23,7 +23,7 @@ bundle 只组合 `CompositeDefinition`。它不合并 renderer、布局策略、
 
 ## 定义能力
 
-Standard 内置 module 包括 `GridModule`、`AxesModule`、`FrameModule`、`FlexLayoutModule`、`GridLayoutModule` 与 `OverlayLayoutModule`。第三方 composite 仍以 Core `defineComposite()` 为真源；需要和官方能力一起组合时，可用普通结构化 module 分组：
+Standard 内置 module 包括 `GridModule`、`AxesModule`、`FrameModule`、`FlexLayoutModule`、`GridLayoutModule`、`OverlayLayoutModule` 与 `LegendModule`。第三方 composite 仍以 Core `defineComposite()` 为真源；需要和官方能力一起组合时，可用普通结构化 module 分组：
 
 ```ts
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
@@ -47,7 +47,7 @@ const BadgeModule = {
 } satisfies StandardCapabilityModule;
 ```
 
-`name` 只用于 bundle 级去重和诊断；真正的 composite lookup 仍读取 definition 的 `namespace` 与 `type`。
+`name` 只用于 bundle 级异对象冲突诊断；真正的 composite lookup 仍读取 definition 的 `namespace` 与 `type`。同一 module 对象引用重复出现时幂等汇合并保留首次位置；不同对象即使结构相同，也不能共享 `name`。
 
 ## 注入宿主
 
@@ -68,7 +68,7 @@ import { StandardAllPreset } from '@retikz/standard';
 
 ### React JSX
 
-`<Grid>`、`<Axes>`、`<Frame>` 与三种布局容器继续通过组件静态 adapter 贡献 definition。嵌套布局共享 `standard.layout` namespace 与 maker，只向最外层 `Layout` 贡献一次家族 definitions。不要再把同一能力的 bundle composites 传给这个 `Layout`；两路重复时 Core 会 fail-loud。
+`<Grid>`、`<Axes>`、`<Frame>`、`<Legend>` 与三种布局容器继续通过组件静态 adapter 贡献 definition。嵌套布局共享 `standard.layout` namespace 与 maker，只向最外层 `Layout` 贡献一次家族 definitions。宿主组合这些贡献时仍以 definition 对象与 Core provider key 为准，不建立另一套覆盖优先级。
 
 ### Vanilla
 
@@ -83,12 +83,14 @@ mountSvg(container, figure, { adapters: StandardVanillaAdapters });
 
 直接传 Standard IR 时不读取 adapters，只需把 `bundle.compile` 放进 runtime 的 `compile` 选项。
 
-只需要布局 embeds 时使用 `StandardLayoutVanillaAdapters`；完整 `StandardVanillaAdapters` 在 Grid/Axes/Frame 后追加这三项。
+只需要布局 embeds 时使用 `StandardLayoutVanillaAdapters`；完整 `StandardVanillaAdapters` 按 Grid、Axes、Frame、三种布局、Legend 的顺序提供当前目录。
+
+静态 adapter 与显式 bundle 是同一 capability 的两种装载来源，不是相互去重的层。若 JSX / embed 已贡献某个 definition，宿主又通过 bundle 注入相同 provider key，Core 会 fail-loud 报 `duplicate composite registration`。
 
 ## 执行机制
 
 1. capability module 按声明顺序提供 Core definitions。
-2. `createStandardBundle()` 校验 module 名称，复制名称与 definition 引用，并浅冻结返回容器。
+2. `createStandardBundle()` 先按 module 对象 identity 幂等汇合，再拒绝同名异对象，复制名称与 definition 引用并浅冻结返回容器。
 3. 宿主把 `bundle.compile.composites` 交给 Core composite registry。
 4. Core 按 definition 的 provider key 查找、校验并展开 Standard IR。
 
@@ -97,14 +99,14 @@ mountSvg(container, figure, { adapters: StandardVanillaAdapters });
     {
       label: 'module 与 bundle 的公开契约',
       path: 'packages/library/standard/src/capability/types.ts',
-      startLine: 3,
+      startLine: 7,
       endLine: 26,
     },
     {
       label: 'bundle 的顺序、校验与冻结',
       path: 'packages/library/standard/src/capability/create.ts',
-      startLine: 5,
-      endLine: 32,
+      startLine: 9,
+      endLine: 37,
     },
   ]}
 />
@@ -114,10 +116,11 @@ mountSvg(container, figure, { adapters: StandardVanillaAdapters });
 | 情况                             | 结果                                                                 |
 | -------------------------------- | -------------------------------------------------------------------- |
 | module 名为空或只含空白          | `createStandardBundle()` 立即抛错                                    |
-| 同一 bundle 出现重复 name        | Standard 立即抛错，不静默去重                                        |
-| definitions 的 provider key 重复 | Core 报 `duplicate composite registration`                           |
+| 同一 module 对象重复出现         | 幂等汇合，保留首次位置，只贡献一次 definitions                       |
+| 不同 module 对象使用同一 name    | Standard 立即抛错，不按 name 或结构静默覆盖                          |
+| 不同 module 的 provider key 重复 | Core 报 `duplicate composite registration`                           |
+| JSX / embed 与 bundle 重复注入   | Core 报 `duplicate composite registration`，不会按来源自动去重       |
 | IR 引用未选择的 composite        | Core 产生 `COMPOSITE_NOT_REGISTERED`，跳过该节点并继续处理其它 child |
-| JSX / embed 与 bundle 重复注入   | Core 保留重复注册诊断                                                |
 
 module、bundle 与 adapter 都不能进入持久化 IR。`StandardAllPreset` 与 `StandardVanillaAdapters` 会随 Standard 版本增加已发布能力，不是跨版本固定目录。
 
@@ -131,6 +134,7 @@ module、bundle 与 adapter 都不能进入持久化 IR。`StandardAllPreset` �
 | `GridModule`                    | `@retikz/standard`         | Grid 的官方 module                        |
 | `AxesModule`                    | `@retikz/standard`         | Axes 的官方 module                        |
 | `FrameModule`                   | `@retikz/standard`         | Frame 的官方 module                       |
+| `LegendModule`                  | `@retikz/standard`         | Legend 的官方 module                      |
 | `FlexLayoutModule`              | `@retikz/standard`         | FlexLayout 的官方 module                  |
 | `GridLayoutModule`              | `@retikz/standard`         | GridLayout 的官方 module                  |
 | `OverlayLayoutModule`           | `@retikz/standard`         | OverlayLayout 的官方 module               |

@@ -340,8 +340,12 @@ export type PreviewControlPreset = {
   id: string;
   /** 展示给用户的文本 */
   label: string;
-  /** 按 control id 写入的值 */
+  /** 按可见 control id 或 stateOnlyIds 声明 id 写入的值 */
   values: Readonly<PreviewControlValues>;
+  /** 应用 preset 时从 canonical 替换，或只合并到当前值
+   * @default replace
+   */
+  applyMode?: 'replace' | 'merge-current';
 };
 
 /** preset 下拉框的本地化文案 */
@@ -356,6 +360,10 @@ export type PreviewPresetSelectorConfig = {
 export type PreviewControlContract = {
   /** 声明式控件定义 */
   controls: PreviewControlsDefinition;
+  /** 参与 canonical 与 preset 状态但不渲染为控件的 id
+   * @default []
+   */
+  stateOnlyIds?: ReadonlyArray<string>;
   /** 无交互环境、截图与测试使用的 canonical 状态 */
   canonicalValues: Readonly<PreviewControlValues>;
   /** 可选的语义化状态组合 */
