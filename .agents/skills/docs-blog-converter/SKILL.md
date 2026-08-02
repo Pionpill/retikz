@@ -40,7 +40,7 @@ retikz 的渲染依赖 DOM 文本测量（`packages/kernel/react/src/render/brow
 ```bash
 pnpm --filter @retikz/docs dev &
 node .agents/skills/docs-blog-converter/grab-svg.mjs \
-  --url http://localhost:5174/blog/<section>/<slug> \
+  --url http://localhost:7102/blog/<section>/<slug> \
   --out .markdown/<slug> \
   --demos demo1,demo2,demo3
 ```

@@ -6,18 +6,19 @@ import path from 'node:path';
 import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
 
+import { resolveDocsPort } from '../dev-port';
 import { writeLlmsTxt } from './scripts/gen-llms-txt';
 
-/** 读取并校验当前工作区的 docs 开发服务端口 */
-const resolveDocsPort = (mode: string): number => {
-  const rawPort = loadEnv(mode, __dirname, '').RETIKZ_DOCS_PORT || '5173';
-  const port = Number(rawPort);
+const repoRoot = path.resolve(__dirname, '../..');
 
-  if (!Number.isInteger(port) || port < 1 || port > 65535) {
-    throw new Error(`RETIKZ_DOCS_PORT must be an integer between 1 and 65535, received "${rawPort}"`);
-  }
+/** 读取当前工作区的 Docs 开发服务端口 */
+const readDocsPort = (mode: string): number => {
+  const env = loadEnv(mode, repoRoot, '');
 
-  return port;
+  return resolveDocsPort(
+    process.env.RETIKZ_DOCS_PORT ?? env.RETIKZ_DOCS_PORT,
+    process.env.RETIKZ_DEV_SLOT ?? env.RETIKZ_DEV_SLOT,
+  );
 };
 
 /** 在 dev 启动 / build 开始时写出 llms.txt、manifest 与原始 MDX，让 dev 直接服务、build 自动 copy 到 dist/ */
@@ -74,7 +75,7 @@ export default defineConfig(({ command, mode }) => ({
     ],
   },
   server: {
-    port: resolveDocsPort(mode),
+    port: readDocsPort(mode),
     strictPort: true,
     open: false,
   },

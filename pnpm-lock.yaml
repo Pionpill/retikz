@@ -867,6 +867,9 @@ importers:
       '@retikz/plot':
         specifier: workspace:*
         version: link:../plot
+      '@retikz/standard':
+        specifier: workspace:^
+        version: link:../../library/standard
       zod:
         specifier: 'catalog:'
         version: 4.4.3

@@ -15,7 +15,7 @@ chart v0.1 基于 plot v0.1 已完成的 GoG 基座，建立第一套可发布�
 3. 以 Scatter & Points、Line & Area、Bar & Column 三个传统 family 建立首批类型目录
 4. 分别以 Point、Path、Interval 为主要 Mark 骨架，但不把 family 降级为互斥的 primitive 白名单
 5. 用 Chart Pattern 承接方向、堆叠、曲线、紧凑呈现等常用市场名称，避免扩大 public `type` union
-6. 在 alpha.1 建立所有 family 共用的样式入口：有限 style preset、自定义样式覆盖和自定义颜色数组
+6. 在 alpha.1 建立所有 family 共用的样式入口：默认 `neutral` 及 `academic` / `vibrant` / `clean` preset、独立 light / dark mode、公开严格 token map 和自定义颜色数组
 7. 在 alpha.1 把 Chart-level label / presentation 与 Plot 本体交给 Standard 统一布局，形成单一可组合结果
 8. 保持 React、Vanilla 与手写 JSON 等价，并允许在 type 核心配方上追加正式 Plot members
 9. 保持 Chart 外层与 Plot 内部空间、诊断和来源透明
@@ -66,13 +66,14 @@ Chart Pattern 是 Canonical Type 加可复用 modifier、表现配置或正式 P
 | Canonical Type      | 核心配方边界                                              |
 | ------------------- | --------------------------------------------------------- |
 | `scatter`           | 以 Point 为主的二维关系配方                               |
-| `bubble`            | Point + 不可撤销的 size 数据角色 / encoding               |
 | `connected-scatter` | Point + Path + 稳定顺序；仍是单个 PlotSpec 内的 Mark 组合 |
 | `regression`        | Point + 内建 Smooth / regression Transform + Path         |
 | `ranged-dot`        | 起止数值角色 + 端点与连接线                               |
 | `strip`             | 一维分布角色 + 内建 Jitter Transform + Point              |
 
-上述类型只消费 Plot 已有 Mark、Transform、Scale、Coordinate 与 Guide 能力。精确字段角色、排序规则和默认呈现留给 ADR。
+Bubble 作为 Scatter 的 field-bound size Pattern，不进入 `ChartSpec.type`。Scatter 的 size channel 已通过 Plot 正式 sqrt radius scale 表达面积感知语义；只有未来出现 circle packing 等独立布局或拓扑时，才重新判断是否需要新的 Canonical Type。
+
+除受 position-offset capability gate 阻塞的 Strip 外，上述类型只消费 Plot 已有 Mark、Transform、Scale、Coordinate 与 Guide 能力。精确字段角色、排序规则和默认呈现留给 ADR。
 
 ### 3.2 Line & Area
 
@@ -120,8 +121,9 @@ Lollipop Chart 虽然在 Flint 中归 Bar & Column，但主要配方是 Point + 
 - 用户在不破坏 type 核心配方的前提下调整隐式主成员
 - 用户追加 JSON-safe 的正式 Plot members
 - 宿主注入的 Plot definitions 沿既有 registry 被追加内容消费
-- Chart 提供有限 style preset 与自定义样式覆盖，但解析到 Plot theme / mark / layout 和 Standard presentation，不建立平行样式系统
-- 用户提供自定义颜色数组作为 palette 覆盖，并沿 Plot 的 color / scale / theme 语义消费
+- Chart 提供有限 style preset 与公开 JSON-safe `styleTokens`，但解析到 Plot theme / guide / palette、Standard presentation 与正式 canvas surface，不建立平行 renderer 样式系统
+- 用户提供自定义颜色数组作为 token palette 之上的 shorthand，并沿 Plot 的 color / scale / theme 语义消费；raw theme 与显式 scale 继续获得更高优先级
+- light / dark 只改变 paint、palette 与 opacity，不改变 guide topology、tick glyph、尺寸、间距或 typography hierarchy
 - Chart-level label / presentation 通过 Standard 与 Plot 本体组成单一 renderer-neutral 结果
 - Chart 外层 handle 与 Plot 内部 handle、provenance、locator / lineage 保持连续
 
@@ -140,11 +142,11 @@ Lollipop Chart 虽然在 Flint 中归 Bar & Column，但主要配方是 Point + 
 
 ## 5. Milestones
 
-| Milestone          | 主题                        | 候选 ADR / 产出                                                                                                                                                                                                                                                | 退出边界                                                                                                                                                                              | 状态   |
-| ------------------ | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| chart v0.1-alpha.1 | **点图 · Scatter & Points** | [alpha.1 roadmap](./alpha.1/roadmap.md)：先建立 ChartSpec / recipe resolution / inspection、三 adapter、style / palette、presentation + Standard layout，再按 `scatter`、`bubble`、`connected-scatter`、`regression`、`ranged-dot`、`strip` 的顺序逐 type 闭环 | 前五个 type 从同一 JSON-safe 语义生成完整 PlotSpec；`strip` 只有在 Plot position-offset capability 就绪后才能实现；preset、style override、palette、presentation 与 identity 规则确定 | 起草中 |
-| chart v0.1-alpha.2 | **线图 · Line & Area**      | `line`、`area`、`range-area`；Path ordering / closure / curve 与系列默认；sparkline、slope、smooth / step line、stacked area、streamgraph Patterns；复用 alpha.1 样式、颜色、label 与 Standard 布局基座                                                        | 三个线图 type 的 Path 核心配方和边界角色不可撤销；Pattern 不扩张 type union；相同样式与 presentation 契约无需按 family 分叉                                                           | 待起草 |
-| chart v0.1-alpha.3 | **面图 · Bar & Column**     | `bar`、`waterfall`、`gantt`、`bullet`；Interval bound、内建区间 Transform 与 Reference；stacked / grouped / horizontal / normalized / pyramid Patterns；跨 family override、追加 Plot members、冲突、来源与空间透明收口                                        | 四个面图 type 只消费 Plot 现有 capability；追加内容不撤销核心配方；三个 family 共用同一 resolver、样式、presentation、diagnostics 与 handle forwarding；无 composition                | 待起草 |
+| Milestone          | 主题                        | 候选 ADR / 产出                                                                                                                                                                                                                                                                                | 退出边界                                                                                                                                                                                                                                                      | 状态   |
+| ------------------ | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| chart v0.1-alpha.1 | **点图 · Scatter & Points** | [alpha.1 roadmap](./alpha.1/roadmap.md)：先建立 ChartSpec / recipe resolution / inspection、三 adapter、style token / mode、presentation + Standard layout / surface，再按 `scatter`、`connected-scatter`、`regression`、`ranged-dot`、`strip` 的顺序逐 type 闭环；Bubble 作为 Scatter Pattern | 前四个可实施 type 从同一 JSON-safe 语义生成完整 PlotSpec；`strip` 等待 Plot position-offset；完整 canvas 等待 Standard arbitrary-child surface composite，Core 仅在其 ADR 识别出通用底座缺口时先行；preset、token、palette、presentation 与 identity 规则确定 | 起草中 |
+| chart v0.1-alpha.2 | **线图 · Line & Area**      | `line`、`area`、`range-area`；Path ordering / closure / curve 与系列默认；sparkline、slope、smooth / step line、stacked area、streamgraph Patterns；复用 alpha.1 样式、颜色、label 与 Standard 布局基座                                                                                        | 三个线图 type 的 Path 核心配方和边界角色不可撤销；Pattern 不扩张 type union；相同样式与 presentation 契约无需按 family 分叉                                                                                                                                   | 待起草 |
+| chart v0.1-alpha.3 | **面图 · Bar & Column**     | `bar`、`waterfall`、`gantt`、`bullet`；Interval bound、内建区间 Transform 与 Reference；stacked / grouped / horizontal / normalized / pyramid Patterns；跨 family override、追加 Plot members、冲突、来源与空间透明收口                                                                        | 四个面图 type 只消费 Plot 现有 capability；追加内容不撤销核心配方；三个 family 共用同一 resolver、样式、presentation、diagnostics 与 handle forwarding；无 composition                                                                                        | 待起草 |
 
 里程碑只冻结版本目标和依赖顺序。字段名、默认值、允许覆盖范围、错误 payload、测试 case 与实现文件由对应 ADR 决定。
 
@@ -154,8 +156,8 @@ alpha.3 只表示当前三个基础 family 已完成第一轮封装，不表示 
 
 - **plot v0.1**：提供 Point、Path、Interval、Reference、内建 Transform、Scale、Coordinate、Guide、Theme、Plot composition 基座、registry、provenance 与 locator
 - **data v0.1**：提供单一根数据引用、字段模型、通用 transform / statistics contract 与 lineage
-- **standard**：提供 Chart presentation 所需的领域无关组合、布局与呈现
-- **core**：提供 renderer-neutral IR / Scene，以及空间 handle、namespace、index 与 selector 基础
+- **standard**：主责 Chart presentation 所需的领域无关组合、布局、arbitrary-child surface 与呈现
+- **core**：提供 renderer-neutral IR / Scene、空间 handle / namespace / index / selector，以及 Standard ADR 证明必需的通用 layout-aware composite / primitive 底座
 
 chart v0.1 不以 plot v0.2 的 interaction 或 layout transform 作为首版 type 目录依赖，也不吸收 plot v0.3 的复杂组合与空间感知类型。后续 Chart minor 可以消费这些能力，但不得反向扩大 v0.1 的发布边界。
 
@@ -165,13 +167,13 @@ chart 使用自己的发布家族：`@retikz/chart` / `@retikz/chart-react` / `@
 
 完成当前已确认的三个 alpha 时必须同时满足：
 
-1. 13 个 Canonical Type 均有稳定数据角色、完整核心配方、表现性默认和允许调整范围
+1. 12 个 Canonical Type 均有稳定数据角色、完整核心配方、表现性默认和允许调整范围；Bubble 只计作 Scatter Pattern
 2. 所有内建 type 只使用 plot v0.1 已有 capability，不包含 Chart 专用 provider 或私有 lowering
 3. Pattern 不进入 `ChartSpec.type`，gallery 名称可以追溯到 Canonical Type + 配置
 4. 核心配方删除、替换、关闭或失效时 fail-loud；显式追加内容不能静默覆盖隐式成员
 5. ChartSpec 保持单一根 data、100% JSON-safe，并可确定性解析为可检查的完整 PlotSpec
 6. React children、Vanilla builder 与手写 JSON 具有等价表达，不存在 framework-only Chart 能力
-7. style preset、自定义样式覆盖与自定义颜色数组沿 Plot / Standard 正式样式语义解析，不形成 Chart 平行样式系统
+7. 四套 style preset、独立 light / dark、公开严格 token 与自定义颜色数组沿 Plot / Standard / Core 正式能力解析，不形成 Chart 平行 renderer 样式系统
 8. Chart-level label / presentation 复用 Standard 与 Plot 布局为单一结果，Chart 封装不丢失 Plot 内部空间 identity、provenance、locator 或 lineage
 9. 三个 family 的文档导航、Canonical Type 契约页、Pattern gallery、跨库名称参考和当前不支持范围齐全
 

@@ -1,8 +1,4 @@
 {
-  "app": {
-    "title": "Kernel update telemetry",
-    "description": "Snapshot diff → Runtime execution → Scene Patch → retained renderer commit"
-  },
   "module": {
     "kernel": "Kernel",
     "kernelDescription": "Kernel runtime & renderer",
@@ -30,9 +26,29 @@
       "incrementalGeneration": "Incremental generation test"
     },
     "case": {
-      "singleEntityUpdate": {
-        "title": "Single entity update",
-        "description": "Change one node among 5,000 stable entities"
+      "denseNodeGrid": {
+        "title": "Dense node grid",
+        "description": "Fully update the styles of 5,000 regularly arranged nodes"
+      },
+      "mixedPrimitives": {
+        "title": "Mixed primitives",
+        "description": "Fully update plain nodes, text nodes, and paths"
+      },
+      "complexPaths": {
+        "title": "Complex paths",
+        "description": "Fully update complex paths with multiple lines and curves"
+      },
+      "nodeDrag": {
+        "title": "Node drag",
+        "description": "Move one node among 5,000 stable nodes"
+      },
+      "nodeSelection": {
+        "title": "Node selection state",
+        "description": "Change the selection style of one among 5,000 stable nodes"
+      },
+      "nodeInsertRemove": {
+        "title": "Node insertion and removal",
+        "description": "Remove one stable node and insert one new node"
       }
     },
     "emptyDirection": "No test cases yet"
@@ -44,17 +60,45 @@
   "header": {
     "collapseSidebar": "Collapse sidebar",
     "expandSidebar": "Expand sidebar",
-    "inspect": "Inspect",
-    "compare": "Compare",
-    "measure": "Measure",
+    "caseViews": "Case views",
+    "caseDetails": "Test case details",
     "updatePolicy": "Update policy",
-    "run": "Run",
+    "policyGuide": "Policy guide",
+    "runPreview": "Run preview",
+    "startBenchmark": "Start benchmark",
+    "allPolicies": "All policies",
     "running": "Running",
+    "settings": "Settings",
     "details": "Detailed settings"
   },
+  "policy": {
+    "static-full": "Static · Full",
+    "retained-full": "Retained · Full",
+    "retained-auto": "Retained · Auto"
+  },
+  "policyGuide": {
+    "title": "Update policy guide",
+    "close": "Close policy guide",
+    "description": "The three policies control whether execution sessions are retained and whether unchanged work is reused. Comparing them separately shows where a performance difference comes from.",
+    "static-full": {
+      "description": "Fully compiles and draws every update without retaining the Runtime or renderer session. This is the stable, direct full-update baseline."
+    },
+    "retained-full": {
+      "description": "Retains the Runtime and renderer session but still forces a full update every time. This isolates the cost of the retained architecture itself."
+    },
+    "retained-auto": {
+      "description": "Retains the Runtime and renderer session, uses snapshot diff and Scene Patch to reuse unchanged work, and falls back to a full update when needed."
+    },
+    "compareTitle": "How to compare",
+    "compare": {
+      "staticVsRetained": "Observe the architectural cost of retaining the Runtime and renderer session.",
+      "retainedFullVsAuto": "Observe the benefit of automatic incremental updates and content reuse.",
+      "staticVsAuto": "Observe the end-to-end result of retained auto relative to the static baseline."
+    }
+  },
   "caseView": {
-    "config": "Config",
-    "run": "Run",
+    "preview": "Preview",
+    "benchmark": "Benchmark",
     "reports": "Reports",
     "scenario": "Scenario ID",
     "localEnvironment": "Local environment",
@@ -73,9 +117,23 @@
   },
   "config": {
     "title": "Detailed settings",
-    "description": "Sampling parameters and the current execution environment",
+    "description": "Preview output, sampling parameters, and the current execution environment",
+    "preview": "Preview",
+    "previewDescription": "Control the SVG and Canvas preview output size",
+    "previewSize": "Preview size",
+    "customSize": "Custom",
+    "width": "Width",
+    "height": "Height",
+    "previewSizePresets": {
+      "640x400": "640 × 400",
+      "800x400": "800 × 400",
+      "1280x720": "1280 × 720",
+      "1920x1080": "1920 × 1080",
+      "2560x1440": "2560 × 1440 · 2K",
+      "3840x2160": "3840 × 2160 · 4K"
+    },
     "sampling": "Sampling",
-    "samplingDescription": "Inspect is best for quick checks; increase samples for Compare and Measure",
+    "samplingDescription": "Preview is best for quick checks; increase samples for Benchmark",
     "sampleRuns": "Sample runs",
     "warmupRuns": "Warmup runs",
     "environment": "Environment",
@@ -88,12 +146,6 @@
     "notice": "This panel is for local exploration. pnpm bench:check remains the regression gate.",
     "close": "Close detailed settings",
     "done": "Done"
-  },
-  "stage": {
-    "title": "Render stage",
-    "ready": "Ready to render 5,000 entities",
-    "description": "Inspect keeps a real renderer host on this stage",
-    "evidence": "Exploratory numbers are not CI evidence · use pnpm bench:check for deterministic gates"
   },
   "status": {
     "notRun": "Not run",
@@ -110,7 +162,12 @@
     "emptyTitle": "No local reports",
     "emptyDescription": "Run this case to save a report in the local ignored directory.",
     "loadFailed": "Unable to load local reports",
-    "selectHint": "Select a report for details; this version prioritizes the current session result.",
+    "selectHint": "Select a local report to view its complete details.",
+    "openReport": "Open report {{runId}}",
+    "loadingDetail": "Loading report details…",
+    "detailLoadFailed": "Unable to load report details",
+    "detailUnavailable": "This report does not contain displayable run details.",
+    "runFailed": "Run failed",
     "saveFailed": "The run completed, but the report could not be saved: {{error}}"
   },
   "report": {
@@ -134,7 +191,7 @@
     "title": "Policy comparison",
     "description": "Median update duration · lower is better",
     "localWallClock": "Local wall clock",
-    "empty": "Run Compare or Measure",
+    "empty": "Run a benchmark",
     "emptyDescription": "Charts update only after sampling completes"
   },
   "inspector": {

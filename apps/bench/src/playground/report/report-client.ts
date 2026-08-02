@@ -1,8 +1,8 @@
 import type { BenchLabReport, BenchReportList, WriteBenchReportInput } from '../../shared';
-import type { LabRunSession } from '../modules/core';
+import type { LabRunSession } from '../modules/kernel';
 
 import { BenchReportStatus, isBenchLabReport, isBenchReportList } from '../../shared';
-import { LabOutcome } from '../modules/core';
+import { LabOutcome } from '../modules/kernel';
 
 /** 报告客户端使用的 Fetch 边界 */
 export type BenchReportFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
@@ -43,6 +43,23 @@ export const listBenchReports = async (
   const value: unknown = await response.json();
   if (!isBenchReportList(value)) throw new Error('Report list response is invalid');
   return value;
+};
+
+/** 按稳定标识读取一份完整本地报告 */
+export const getBenchReport = async (
+  moduleId: string,
+  caseId: string,
+  runId: string,
+  fetcher: BenchReportFetch = fetch,
+): Promise<BenchLabReport> => {
+  const query = new URLSearchParams({ moduleId, caseId, runId });
+  const response = await fetcher(`${reportApiPath}?${query.toString()}`);
+  if (!response.ok) throw new Error(await readResponseError(response));
+  const value: unknown = await response.json();
+  if (typeof value !== 'object' || value === null || !('report' in value) || !isBenchLabReport(value.report)) {
+    throw new Error('Report detail response is invalid');
+  }
+  return value.report;
 };
 
 /** 把一次用例运行保存到本地报告目录 */

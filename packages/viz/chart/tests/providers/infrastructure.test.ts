@@ -2,7 +2,7 @@ import type { IRPlotSpec } from '@retikz/plot';
 
 import { describe, expect, it } from 'vitest';
 
-import type { ChartRecipeInvariantError } from '../../src/providers';
+import type { ChartRecipeInvariantError, ChartRecipeStyleContext } from '../../src/providers';
 
 import { ChartRecipeInvariantReason, InfrastructureChartRecipe } from '../../src/providers';
 import { InfrastructureChartSpecSchema, InfrastructureChartType } from '../../src/schemas';
@@ -25,10 +25,17 @@ const input = {
   meta: { source: 'test' },
 } as const;
 
+const neutralStyle: ChartRecipeStyleContext = {
+  axisEnabled: true,
+  axisGridEnabled: true,
+  legendEnabled: true,
+  seriesColor: '#475569',
+};
+
 describe('Infrastructure Chart recipe', () => {
   it('生成精确的 pre-merge Plot seed、七个 member 与 grouped patches', () => {
     const spec = InfrastructureChartSpecSchema.parse(input);
-    const seed = InfrastructureChartRecipe.createSeed(spec);
+    const seed = InfrastructureChartRecipe.createSeed(spec, neutralStyle);
 
     expect(InfrastructureChartType).toBe('__infrastructure-fixture');
     expect(seed.plot).toEqual({
@@ -62,7 +69,6 @@ describe('Infrastructure Chart recipe', () => {
           grid: true,
         },
       ],
-      theme: { background: '#ffffff' },
       layout: { autoPadding: true },
       width: 480,
       height: 300,
@@ -172,7 +178,7 @@ describe('Infrastructure Chart recipe', () => {
       data: { reference: 'rows' },
       encoding: { x: 'amount', y: 'margin' },
     });
-    const seed = InfrastructureChartRecipe.createSeed(spec);
+    const seed = InfrastructureChartRecipe.createSeed(spec, neutralStyle);
 
     expect(seed.plot).not.toHaveProperty('id');
     expect(seed.patches).toEqual([]);
@@ -238,7 +244,7 @@ describe('Infrastructure Chart recipe', () => {
     },
   ])('用 typed invariant 报告 $reason', ({ reason, path, mutate }) => {
     const spec = InfrastructureChartSpecSchema.parse(input);
-    const plot = mutate(InfrastructureChartRecipe.createSeed(spec).plot);
+    const plot = mutate(InfrastructureChartRecipe.createSeed(spec, neutralStyle).plot);
 
     expect(() => InfrastructureChartRecipe.validateCore(spec, plot)).toThrowError(
       expect.objectContaining<Partial<ChartRecipeInvariantError>>({ reason, path }),

@@ -9,7 +9,7 @@
  *
  * 例：
  *   node .agents/skills/docs-blog-converter/grab-svg.mjs \
- *     --url http://localhost:5174/blog/journey/origin \
+ *     --url http://localhost:7102/blog/journey/origin \
  *     --out .markdown/origin \
  *     --demos unit-circle,ir-centric,roadmap
  *
