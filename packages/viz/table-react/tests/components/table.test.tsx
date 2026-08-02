@@ -285,6 +285,26 @@ describe('Table React components', () => {
     ).toThrow(/width.*onManifest.*embeddables.*outer.*Layout/i);
   });
 
+  it('rejects containerStyle from all three embedded authoring entries', () => {
+    const containerStyle = { color: 'rebeccapurple' };
+
+    expect(() => adapterOf(Table).contribute({ spec: manualSpec('generic-style'), containerStyle })).toThrow(
+      /containerStyle.*outer.*Layout/i,
+    );
+    expect(() =>
+      adapterOf(DetailTable).contribute({
+        id: 'detail-style',
+        dataRef: 'people',
+        data: [],
+        columns: [{ id: 'name', field: 'name' }],
+        containerStyle,
+      }),
+    ).toThrow(/containerStyle.*outer.*Layout/i);
+    expect(() =>
+      adapterOf(ManualTable).contribute({ id: 'manual-style', rows: [[1]], containerStyle }),
+    ).toThrow(/containerStyle.*outer.*Layout/i);
+  });
+
   it('passes nested composite definitions through standalone Table runtime', () => {
     const schema = CompositeBaseSchema.extend({
       namespace: z.literal('fixture'),

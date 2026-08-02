@@ -1,5 +1,6 @@
 import type { AnyCompositeDefinition, AssertEqual, ValueOf } from '@retikz/core';
 import type { ExternalDatasets, ExternalRow } from '@retikz/data';
+import type { LayoutProps } from '@retikz/react';
 import type {
   IRDetailTableSpec,
   IRManualTableSpec,
@@ -39,7 +40,7 @@ export const TABLE_LAYOUT_HOST_PROP_KEYS = [
   'height',
   'viewBox',
   'className',
-  'style',
+  'containerStyle',
   'renderer',
   'animate',
   'snapshotAt',
@@ -88,7 +89,7 @@ export type ReactTableRuntime = Readonly<{
   /** standalone 模式的 manifest observer */
   onManifest?: (manifest: TableLayoutManifest) => void;
   /** 透传给 Layout 的选定宿主 props */
-  display: TableLayoutHostProps;
+  display: Omit<TableLayoutHostProps, 'containerStyle'> & Pick<LayoutProps, 'style'>;
 }>;
 
 type AnyTableProps = TableProps | DetailTableProps | ManualTableProps;
@@ -103,7 +104,13 @@ const lowerOptionsOf = (props: TableCommonProps): LowerTablesOptions => ({
 
 /** 从共享 props 精确提取 React Layout 宿主选项 */
 const hostPropsOf = (props: TableCommonProps): ReactTableRuntime['display'] =>
-  Object.fromEntries(TABLE_LAYOUT_HOST_PROP_KEYS.flatMap(key => (props[key] === undefined ? [] : [[key, props[key]]])));
+  Object.fromEntries(
+    TABLE_LAYOUT_HOST_PROP_KEYS.flatMap(key => {
+      const value = props[key];
+      if (value === undefined) return [];
+      return [[key === 'containerStyle' ? 'style' : key, value]];
+    }),
+  );
 
 /** 收集 embedded Table 不支持的 standalone-only props */
 const unsupportedEmbeddedPropsOf = (props: TableCommonProps): Array<string> => {
@@ -112,6 +119,22 @@ const unsupportedEmbeddedPropsOf = (props: TableCommonProps): Array<string> => {
   const plainProps = props as TableCommonProps & { embeddables?: unknown };
   if (Object.hasOwn(plainProps, 'embeddables')) unsupported.push('embeddables');
   return unsupported;
+};
+
+/** 在 schema 解析前报告 React 宿主 style 迁移错误 */
+const validateHostStyleMigration = (kind: ReactTableRuntimeKindValue, props: AnyTableProps): void => {
+  const plainProps = props as AnyTableProps & { style?: unknown };
+  if (kind === ReactTableRuntimeKind.Table && Object.hasOwn(plainProps, 'style')) {
+    throw new Error(
+      'table react: Table top-level style is unsupported; use spec.style for the Table preset and containerStyle for standalone host CSS',
+    );
+  }
+  if (plainProps.style !== null && typeof plainProps.style === 'object') {
+    const componentName = kind === ReactTableRuntimeKind.Detail ? 'DetailTable' : 'ManualTable';
+    throw new Error(
+      `table react: ${componentName} style accepts a Table preset; move standalone host CSS to containerStyle`,
+    );
+  }
 };
 
 /** 统一 DetailTable 的 columns props 与 marker children authoring */
@@ -159,6 +182,10 @@ const detailSpecOf = (props: DetailTableProps): IRDetailTableSpec => {
     ...(props.layout === undefined ? {} : { layout: props.layout }),
     ...(props.meta === undefined ? {} : { meta: props.meta }),
     ...(props.rules === undefined ? {} : { rules: props.rules }),
+    ...(props.encodings === undefined ? {} : { encodings: props.encodings }),
+    ...(props.style === undefined ? {} : { style: props.style }),
+    ...(props.themeMode === undefined ? {} : { themeMode: props.themeMode }),
+    ...(props.styleTokens === undefined ? {} : { styleTokens: props.styleTokens }),
   });
 };
 
@@ -171,6 +198,10 @@ const manualSpecOf = (props: ManualTableProps): IRManualTableSpec => {
     ...(props.layout === undefined ? {} : { layout: props.layout }),
     ...(props.meta === undefined ? {} : { meta: props.meta }),
     ...(props.rules === undefined ? {} : { rules: props.rules }),
+    ...(props.encodings === undefined ? {} : { encodings: props.encodings }),
+    ...(props.style === undefined ? {} : { style: props.style }),
+    ...(props.themeMode === undefined ? {} : { themeMode: props.themeMode }),
+    ...(props.styleTokens === undefined ? {} : { styleTokens: props.styleTokens }),
   });
 };
 
@@ -180,6 +211,7 @@ export const resolveReactTableRuntime = (
   props: AnyTableProps,
   options: Readonly<{ embedded?: boolean }> = {},
 ): ReactTableRuntime => {
+  validateHostStyleMigration(kind, props);
   let spec: IRTableSpec;
   let datasets: ExternalDatasets;
   let datasetSource: ExternalDatasets | Array<ExternalRow>;

@@ -16,7 +16,6 @@ export type TableLayoutHostProps = Pick<
   | 'height'
   | 'viewBox'
   | 'className'
-  | 'style'
   | 'renderer'
   | 'animate'
   | 'snapshotAt'
@@ -36,7 +35,10 @@ export type TableLayoutHostProps = Pick<
   | 'pathKinds'
   | 'ribbonWidthProfiles'
   | 'lowerTex'
->;
+> & {
+  /** standalone Layout 宿主容器的 CSS 样式 */
+  containerStyle?: LayoutProps['style'];
+};
 
 /** 三个 Table 组件共享的宿主展示与 lowering props */
 export type TableCommonProps = TableLayoutHostProps &
