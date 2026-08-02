@@ -1,7 +1,8 @@
 import type { FC } from 'react';
 
 import { Layout, Node, Scope } from '@retikz/react';
-import { FlexLayout, LayoutItem } from '@retikz/standard-react';
+import { createFlexLayout, createGrid, LegendContentKind } from '@retikz/standard';
+import { FlexLayout, LayoutItem, Legend } from '@retikz/standard-react';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -40,6 +41,32 @@ const OverlayPlaygroundCanonical: FC = () => overlayPlaygroundSource.canonicalRe
 const scopeInspectionVanillaSource = readFileSync(
   resolve('src/modules/docs/contents/kernel/components/layout/scope/scope-layout-inspection.vanilla.ts'),
   'utf8',
+);
+
+const LegendWithNestedStandardDemo: FC = () => (
+  <Layout width={220} height={140}>
+    <Legend
+      title={{ type: 'node', position: [0, 0], text: 'Legend' }}
+      content={{
+        kind: LegendContentKind.Items,
+        items: [
+          {
+            key: 'nested-grid',
+            sample: createFlexLayout({
+              children: [
+                {
+                  kind: 'flex',
+                  key: 'grid',
+                  child: createGrid({ bounds: { min: [0, 0], max: [20, 20] }, spacing: 10 }),
+                },
+              ],
+            }),
+            label: { type: 'node', position: [0, 0], text: 'Nested' },
+          },
+        ],
+      }}
+    />
+  </Layout>
 );
 
 const ScopedInspectionDemo: FC = () => (
@@ -117,6 +144,17 @@ const demos: ReadonlyArray<Readonly<{ name: string; Component: FC }>> = [
 ];
 
 describe('Standard layout documentation demos', () => {
+  it('loads transitive nested Standard modules for a Legend Vanilla preview', () => {
+    const preview = buildPreviewIR(LegendWithNestedStandardDemo);
+    const vanilla = buildVanillaPreview(preview);
+
+    expect(vanilla.code).toContain("legend('preview-legend-1'");
+    expect(vanilla.code).toContain('createStandardBundle([FlexLayoutModule, GridModule])');
+    expect(vanilla.code).not.toContain('LegendModule');
+    expect(vanilla.code).not.toContain('Unsupported Standard composite');
+    expect(vanilla.svg).toContain('<svg');
+    expect(vanilla.svg).toContain('Nested');
+  });
   it.each([
     ['flex', flexZhContract, flexEnContract],
     ['grid', gridZhContract, gridEnContract],

@@ -6,12 +6,24 @@ import * as PlotIR from '@retikz/plot';
 import * as StandardIR from '@retikz/standard';
 import * as TableIR from '@retikz/table';
 
+import { LegendArtifactSchemaZhLocalization, LegendSchemaZhLocalization } from './legend-schema-localizations';
+
+/** schema 注册项按语言提供的本地化描述 */
+export type SchemaRegistryLocalization = {
+  /** schema 顶层描述 */
+  description?: string;
+  /** canonical path 到本地化字段描述的完整映射 */
+  descriptions: Readonly<Partial<Record<string, string>>>;
+};
+
 export type SchemaRegistryEntry = {
   schema: z.ZodType;
   /** 渲染类型签名时使用的名字（去掉 "Schema" 后缀） */
   label: string;
   /** Reference / contract 页面 URL（含可选 #anchor） */
   url: string;
+  /** docs runtime 使用的可选本地化描述 */
+  localizations?: Partial<Record<'zh' | 'en', SchemaRegistryLocalization>>;
 };
 
 export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
@@ -402,6 +414,18 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: StandardIR.OverlayLayoutArtifactSchema,
     label: 'OverlayLayoutArtifact',
     url: '/standard/layout/reference/contract-artifact#overlaylayoutartifactschema',
+  },
+  LegendSchema: {
+    schema: StandardIR.LegendSchema,
+    label: 'Legend',
+    url: '/standard/composite/legend#legendschema',
+    localizations: { zh: LegendSchemaZhLocalization },
+  },
+  LegendArtifactSchema: {
+    schema: StandardIR.LegendArtifactSchema,
+    label: 'LegendArtifact',
+    url: '/standard/composite/legend#legendartifactschema',
+    localizations: { zh: LegendArtifactSchemaZhLocalization },
   },
 
   TableSpecSchema: {

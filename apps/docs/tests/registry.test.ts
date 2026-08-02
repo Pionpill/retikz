@@ -18,6 +18,7 @@ import {
   ScaleSchema,
   TransformSchema,
 } from '@retikz/plot';
+import { LegendArtifactSchema, LegendSchema } from '@retikz/standard';
 import { TableSpecSchema } from '@retikz/table';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -42,6 +43,14 @@ describe('SCHEMA_REGISTRY', () => {
       PlotLayoutSchema: { schema: PlotLayoutSchema },
       PlotLayerSchema: { schema: PlotLayerSchema },
       PlotThemeSchema: { schema: PlotThemeSchema },
+      LegendSchema: {
+        schema: LegendSchema,
+        url: '/standard/composite/legend#legendschema',
+      },
+      LegendArtifactSchema: {
+        schema: LegendArtifactSchema,
+        url: '/standard/composite/legend#legendartifactschema',
+      },
     });
   });
 
@@ -49,7 +58,7 @@ describe('SCHEMA_REGISTRY', () => {
     for (const [name, entry] of Object.entries(SCHEMA_REGISTRY)) {
       expect(entry.schema, name).toBeDefined();
       expect(entry.label, name).toMatch(/^[A-Z]/);
-      expect(entry.url, name).toMatch(/^\/.+\/(?:reference|contract)\/.+/);
+      expect(entry.url, name).toMatch(/^\/.+\/(?:reference|contract|composite)\/.+/);
     }
   });
 
@@ -63,6 +72,8 @@ describe('SCHEMA_REGISTRY', () => {
       '/kernel/reference/runtime/compile#layoutinspectspacingoptionsinputschema',
     );
     expect(lookupSchema(TableSpecSchema)?.url).toBe('/viz/table/reference/contract-table#tablespecschema');
+    expect(lookupSchema(LegendSchema)?.url).toBe('/standard/composite/legend#legendschema');
+    expect(lookupSchema(LegendArtifactSchema)?.url).toBe('/standard/composite/legend#legendartifactschema');
   });
 
   it('documents the Layout Inspector spacing schema on the Kernel compile reference page', () => {
