@@ -11,6 +11,14 @@ export const LayoutInspectBoundsOptionsInputSchema = z
   })
   .describe('Sparse bounds-guide selection shared by layout inspectors.');
 
+/** Layout Inspector 盒模型间距的 sparse authoring schema */
+export const LayoutInspectSpacingOptionsInputSchema = z
+  .strictObject({
+    padding: z.boolean().optional().describe('Whether to shade resolved container padding.'),
+    margin: z.boolean().optional().describe('Whether to shade resolved child margins.'),
+  })
+  .describe('Sparse box-spacing selection shared by layout inspectors.');
+
 /** 通用 Layout Inspector 的 sparse authoring schema */
 export const BaseLayoutInspectOptionsInputSchema = z
   .strictObject({
@@ -19,6 +27,12 @@ export const BaseLayoutInspectOptionsInputSchema = z
       .optional()
       .describe(
         'Bounds guide selection. true restores the canonical profile, false disables every bounds guide, and an object overrides individual guides.',
+      ),
+    spacing: z
+      .union([z.boolean(), LayoutInspectSpacingOptionsInputSchema])
+      .optional()
+      .describe(
+        'Box-spacing selection. true restores the canonical profile, false disables padding and margin shading, and an object overrides individual spacing layers.',
       ),
     overflow: z.boolean().optional().describe('Whether to shade content that overflows its assigned slot.'),
     alignmentGuides: z.boolean().optional().describe('Whether to draw alignment reference guides.'),
@@ -56,12 +70,22 @@ export type ResolvedLayoutInspectBoundsOptions = Readonly<{
   visual: boolean;
 }>;
 
+/** Layout Inspector 盒模型间距 authoring值 */
+export type LayoutInspectSpacingOptions = z.input<typeof LayoutInspectSpacingOptionsInputSchema>;
+
+/** 完整求值后的 Layout Inspector 盒模型间距开关 */
+export type ResolvedLayoutInspectSpacingOptions = Readonly<{
+  padding: boolean;
+  margin: boolean;
+}>;
+
 /** 通用 Layout Inspector authoring值 */
 export type BaseLayoutInspectOptions = z.input<typeof BaseLayoutInspectOptionsInputSchema>;
 
 /** 完整求值后的通用 Layout Inspector 选项 */
 export type ResolvedBaseLayoutInspectOptions = Readonly<{
   bounds: ResolvedLayoutInspectBoundsOptions;
+  spacing: ResolvedLayoutInspectSpacingOptions;
   overflow: boolean;
   alignmentGuides: boolean;
   labels: boolean;
@@ -76,7 +100,7 @@ export type ResolvedInspectOptions = Readonly<{
   layout: false | ResolvedBaseLayoutInspectOptions;
 }>;
 
-/** 合并 nested bounds sparse 字段，不提前填充 canonical defaults */
+/** 合并 nested bounds 与 spacing sparse 字段，不提前填充 canonical defaults */
 const mergeBaseLayoutInspectOptions = (
   current: BaseLayoutInspectOptions,
   next: BaseLayoutInspectOptions,
@@ -90,6 +114,14 @@ const mergeBaseLayoutInspectOptions = (
           typeof next.bounds === 'object' && typeof current.bounds === 'object'
             ? { ...current.bounds, ...next.bounds }
             : next.bounds,
+      }),
+  ...(next.spacing === undefined
+    ? {}
+    : {
+        spacing:
+          typeof next.spacing === 'object' && typeof current.spacing === 'object'
+            ? { ...current.spacing, ...next.spacing }
+            : next.spacing,
       }),
 });
 
@@ -126,6 +158,11 @@ const DefaultBounds: ResolvedLayoutInspectBoundsOptions = Object.freeze({
   visual: false,
 });
 
+const DefaultSpacing: ResolvedLayoutInspectSpacingOptions = Object.freeze({
+  padding: true,
+  margin: true,
+});
+
 /** 把 sparse Base Layout Inspector 选项求值为唯一 canonical profile */
 export const resolveBaseLayoutInspectOptions = (
   options: BaseLayoutInspectOptions,
@@ -136,8 +173,15 @@ export const resolveBaseLayoutInspectOptions = (
         ? DefaultBounds
         : { container: false, content: false, slot: false, allocation: false, visual: false }
       : { ...DefaultBounds, ...options.bounds };
+  const spacing =
+    typeof options.spacing === 'boolean'
+      ? options.spacing
+        ? DefaultSpacing
+        : { padding: false, margin: false }
+      : { ...DefaultSpacing, ...options.spacing };
   return Object.freeze({
     bounds: Object.freeze(bounds),
+    spacing: Object.freeze(spacing),
     overflow: options.overflow ?? true,
     alignmentGuides: options.alignmentGuides ?? true,
     labels: options.labels ?? false,

@@ -30,6 +30,20 @@ describe('Standard layout inspection options', () => {
   });
 
   it('inherits the Core Base fields while keeping family admission sparse and strict', () => {
+    expect(
+      FlexLayoutInspectOptionsInputSchema.safeParse({
+        spacing: { padding: false },
+        overflow: false,
+        lines: false,
+        distributedSpace: false,
+      }),
+    ).toMatchObject({
+      success: true,
+      data: {
+        spacing: { padding: false },
+        distributedSpace: false,
+      },
+    });
     expect(FlexLayoutInspectOptionsInputSchema.parse({ overflow: false, lines: false })).toEqual({
       overflow: false,
       lines: false,
@@ -47,11 +61,16 @@ describe('Standard layout inspection options', () => {
   });
 
   it('resolves the frozen family canonical defaults', () => {
-    expect(FlexLayoutInspectLocalOptionsSchema.parse({})).toEqual({ lines: true, gaps: true });
+    expect(FlexLayoutInspectLocalOptionsSchema.parse({})).toEqual({
+      lines: true,
+      gaps: true,
+      distributedSpace: true,
+    });
     expect(GridLayoutInspectLocalOptionsSchema.parse({})).toEqual({
       tracks: true,
       cells: false,
       gaps: true,
+      distributedSpace: true,
       spans: true,
     });
     expect(OverlayLayoutInspectLocalOptionsSchema.parse({})).toEqual({

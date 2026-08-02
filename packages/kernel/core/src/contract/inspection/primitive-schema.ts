@@ -2,9 +2,7 @@ import { z } from 'zod';
 
 /** Inspection primitive 的语义色阶 */
 const InspectionTone = {
-  Neutral: 'neutral',
-  Accent: 'accent',
-  Guide: 'guide',
+  Scope: 'scope',
   Warning: 'warning',
 } as const;
 
@@ -19,6 +17,14 @@ const InspectionLineStyle = {
 const InspectionRectPresentation = {
   Outline: 'outline',
   Fill: 'fill',
+} as const;
+
+/** Inspection fill rect 的后端中立纹理 */
+const InspectionFillPattern = {
+  Solid: 'solid',
+  ForwardDiagonal: 'forward-diagonal',
+  BackwardDiagonal: 'backward-diagonal',
+  Crosshatch: 'crosshatch',
 } as const;
 
 /** Inspection primitive 的判别类型 */
@@ -47,27 +53,47 @@ const role = z
 /** Inspection primitive 的语义色阶 schema */
 export const InspectionToneSchema = z.enum(InspectionTone).describe('Semantic tone used by inspection renderers.');
 
+/** Inspection fill pattern schema */
+export const InspectionFillPatternSchema = z
+  .enum(InspectionFillPattern)
+  .describe('Renderer-neutral fill pattern for an inspection rectangle.');
+
 /** Inspection line style schema */
 export const InspectionLineStyleSchema = z
   .enum(InspectionLineStyle)
   .describe('Renderer-neutral stroke pattern for inspection guides.');
 
 /** Inspection rect primitive schema */
-export const InspectionRectPrimitiveSchema = z
+const InspectionRectGeometry = {
+  kind: z.literal(InspectionPrimitiveKind.Rect).describe('Discriminator for an inspection rectangle.'),
+  role,
+  x: finite.describe('Rectangle x coordinate in the occurrence-local coordinate system.'),
+  y: finite.describe('Rectangle y coordinate in the occurrence-local coordinate system.'),
+  width: finite.nonnegative().describe('Non-negative rectangle width.'),
+  height: finite.nonnegative().describe('Non-negative rectangle height.'),
+  tone: InspectionToneSchema,
+  opacity: finite.min(0).max(1).optional().describe('Optional opacity multiplier between 0 and 1.'),
+};
+
+const InspectionRectOutlinePrimitiveSchema = z
   .strictObject({
-    kind: z.literal(InspectionPrimitiveKind.Rect).describe('Discriminator for an inspection rectangle.'),
-    role,
-    x: finite.describe('Rectangle x coordinate in the occurrence-local coordinate system.'),
-    y: finite.describe('Rectangle y coordinate in the occurrence-local coordinate system.'),
-    width: finite.nonnegative().describe('Non-negative rectangle width.'),
-    height: finite.nonnegative().describe('Non-negative rectangle height.'),
-    presentation: z
-      .enum(InspectionRectPresentation)
-      .describe('Whether the rectangle is drawn as an outline or a filled region.'),
-    tone: InspectionToneSchema,
-    lineStyle: InspectionLineStyleSchema.optional().describe('Optional stroke pattern for an outlined rectangle.'),
-    opacity: finite.min(0).max(1).optional().describe('Optional opacity between 0 and 1.'),
+    ...InspectionRectGeometry,
+    presentation: z.literal(InspectionRectPresentation.Outline).describe('Outlined rectangle presentation.'),
+    lineStyle: InspectionLineStyleSchema.describe('Stroke pattern for the rectangle outline.'),
   })
+  .describe('Renderer-neutral outlined rectangle in an inspection plane.');
+
+const InspectionRectFillPrimitiveSchema = z
+  .strictObject({
+    ...InspectionRectGeometry,
+    presentation: z.literal(InspectionRectPresentation.Fill).describe('Filled rectangle presentation.'),
+    fillPattern: InspectionFillPatternSchema.describe('Fill pattern rendered inside the rectangle.'),
+  })
+  .describe('Renderer-neutral filled rectangle in an inspection plane.');
+
+/** Inspection rect primitive schema */
+export const InspectionRectPrimitiveSchema = z
+  .discriminatedUnion('presentation', [InspectionRectOutlinePrimitiveSchema, InspectionRectFillPrimitiveSchema])
   .describe('Renderer-neutral rectangle in an inspection plane.');
 
 /** Inspection line primitive schema */
@@ -81,7 +107,7 @@ export const InspectionLinePrimitiveSchema = z
     y2: finite.describe('End y coordinate in the occurrence-local coordinate system.'),
     tone: InspectionToneSchema,
     lineStyle: InspectionLineStyleSchema,
-    opacity: finite.min(0).max(1).optional().describe('Optional opacity between 0 and 1.'),
+    opacity: finite.min(0).max(1).optional().describe('Optional stroke opacity between 0 and 1.'),
   })
   .describe('Renderer-neutral line in an inspection plane.');
 
@@ -99,8 +125,9 @@ export const InspectionLabelPrimitiveSchema = z
 
 /** Inspection primitive union schema */
 export const InspectionPrimitiveSchema = z
-  .discriminatedUnion('kind', [
-    InspectionRectPrimitiveSchema,
+  .union([
+    InspectionRectOutlinePrimitiveSchema,
+    InspectionRectFillPrimitiveSchema,
     InspectionLinePrimitiveSchema,
     InspectionLabelPrimitiveSchema,
   ])
@@ -124,6 +151,12 @@ const CompileOccurrenceLocatorSchema = z
 export const InspectionPlaneEntrySchema = z
   .strictObject({
     occurrence: CompileOccurrenceLocatorSchema.describe('Composite occurrence that owns these inspection primitives.'),
+    colorScope: z
+      .number()
+      .int()
+      .nonnegative()
+      .safe()
+      .describe('Zero-based final occurrence color scope resolved by Core.'),
     transform: z
       .tuple([finite, finite, finite, finite, finite, finite])
       .describe('Affine transform from occurrence-local coordinates into Scene coordinates.'),

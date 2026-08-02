@@ -40,7 +40,8 @@ const definitionOf = (type: string, inspect = vi.fn()) =>
             width: artifact.width,
             height: artifact.height,
             presentation: 'outline' as const,
-            tone: 'neutral' as const,
+            tone: 'scope' as const,
+            lineStyle: 'dashed' as const,
           },
         ];
       },
@@ -89,6 +90,7 @@ describe('layout inspection compile channel', () => {
       entries: [
         {
           occurrence: { sourcePath: 'children[0]', expansionPath: [] },
+          colorScope: 0,
           transform: [1, 0, 0, 1, 0, 0],
           primitives: [
             {
@@ -99,13 +101,38 @@ describe('layout inspection compile channel', () => {
               width: 40,
               height: 20,
               presentation: 'outline',
-              tone: 'neutral',
+              tone: 'scope',
+              lineStyle: 'dashed',
             },
           ],
         },
       ],
     });
     expect(result.artifacts).toHaveLength(1);
+  });
+
+  it('assigns continuous color scopes after final occurrence ordering', () => {
+    const first = definitionOf('first');
+    const second = definitionOf('second');
+    const result = compileToScene(
+      {
+        version: 1,
+        type: 'scene',
+        children: [
+          { namespace: 'test', type: 'second' },
+          { namespace: 'test', type: 'first' },
+        ],
+      },
+      {
+        composites: [first, second],
+        inspection: { root: { layout: true } },
+      },
+    );
+
+    expect(result.inspection?.entries.map(entry => [entry.occurrence.sourcePath, entry.colorScope])).toEqual([
+      ['children[0]', 0],
+      ['children[1]', 1],
+    ]);
   });
 
   it('merges Layout, authored subtree, and component fields before resolving one canonical request', () => {
@@ -142,10 +169,43 @@ describe('layout inspection compile channel', () => {
             allocation: true,
             visual: true,
           },
+          spacing: { padding: true, margin: true },
           overflow: false,
           alignmentGuides: false,
           labels: true,
         },
+      }),
+    );
+  });
+
+  it('routes spacing through base options and merges Layout, Scope, and component-local values', () => {
+    const observe = vi.fn();
+    const definition = definitionOf('spacingCascade', observe);
+
+    compileToScene(scene('spacingCascade'), {
+      composites: [definition],
+      inspection: {
+        root: { layout: { spacing: false } },
+        roots: [
+          {
+            locator: { path: [{ kind: 'sceneChild', index: 0 }] },
+            tree: {
+              policy: {
+                inherited: { layout: { spacing: { padding: true } } },
+                component: { spacing: { margin: false } },
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    expect(observe).toHaveBeenCalledTimes(1);
+    expect(observe).toHaveBeenCalledWith(
+      { width: 40, height: 20 },
+      expect.objectContaining({
+        baseOptions: expect.objectContaining({ spacing: { padding: true, margin: false } }),
+        options: { guides: true },
       }),
     );
   });
@@ -243,6 +303,62 @@ describe('layout inspection compile channel', () => {
     expect(inspectLeaf).toHaveBeenCalledTimes(1);
     expect(result.inspection?.entries).toHaveLength(1);
     expect(result.inspection?.entries[0].primitives[0]).toMatchObject({ role: 'test.container' });
+  });
+
+  it('does not allocate a color scope to a discarded layoutChild probe', () => {
+    const inspectLeaf = vi.fn();
+    const leaf = definitionOf('discardedProbeLeaf', inspectLeaf);
+    const container = defineComposite({
+      namespace: 'test',
+      type: 'discardedProbeContainer',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('test'),
+        type: z.literal('discardedProbeContainer'),
+        child: z.custom<IRChild>(),
+      }),
+      compile: (node, context: LayoutCompositeCompileContext) => {
+        context.layoutChild(node.child, NaturalLayoutProposal, context.inspection.child(0));
+        const selected = context.layoutChild(node.child, NaturalLayoutProposal, context.inspection.child(0));
+        if (selected.kind === LayoutChildProbeKind.Failed) return context.raise(selected.failure);
+        return { children: [context.replay(selected.result)] };
+      },
+    });
+    const result = compileToScene(
+      {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            namespace: 'test',
+            type: 'discardedProbeContainer',
+            child: { namespace: 'test', type: 'discardedProbeLeaf' },
+          },
+        ],
+      },
+      {
+        composites: [container, leaf],
+        inspection: {
+          roots: [
+            {
+              locator: { path: [{ kind: 'sceneChild', index: 0 }] },
+              tree: {
+                children: [
+                  [
+                    {
+                      locator: { path: [] },
+                      tree: { policy: { component: true } },
+                    },
+                  ],
+                ],
+              },
+            },
+          ],
+        },
+      },
+    );
+
+    expect(inspectLeaf).toHaveBeenCalledTimes(2);
+    expect(result.inspection?.entries.map(entry => entry.colorScope)).toEqual([0]);
   });
 
   it('fails loudly for sparse authored children and out-of-range inspection child handles', () => {

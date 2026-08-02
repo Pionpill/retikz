@@ -1,4 +1,4 @@
-import { createGrid, createStandardBundle, GridModule } from '@retikz/standard';
+import { createGrid, createStandardBundle, GridModule, LegendContentKind } from '@retikz/standard';
 import {
   axes,
   AxesVanillaAdapter,
@@ -8,6 +8,8 @@ import {
   grid,
   GridLayoutVanillaAdapter,
   GridVanillaAdapter,
+  legend,
+  LegendVanillaAdapter,
   OverlayLayoutVanillaAdapter,
   StandardVanillaAdapters,
 } from '@retikz/standard-vanilla';
@@ -21,6 +23,12 @@ const figure = {
     grid('paper', { bounds: { min: [0, 0], max: [20, 20] }, spacing: 10 }),
     axes('plane', { extent: { x: 20, y: 20 } }),
     frame('contract', { children: [{ type: 'node', position: [0, 0], text: 'Contract' }] }),
+    legend('status', {
+      content: {
+        kind: LegendContentKind.Items,
+        items: [{ key: 'node', sample: { type: 'node', position: [0, 0], text: 'N' } }],
+      },
+    }),
   ],
 };
 
@@ -33,6 +41,7 @@ describe('Standard Vanilla capability loading', () => {
       FlexLayoutVanillaAdapter,
       GridLayoutVanillaAdapter,
       OverlayLayoutVanillaAdapter,
+      LegendVanillaAdapter,
     ]);
     expect(Object.isFrozen(StandardVanillaAdapters)).toBe(true);
     expect(Object.isFrozen(GridVanillaAdapter)).toBe(false);
@@ -41,8 +50,8 @@ describe('Standard Vanilla capability loading', () => {
   it('normalizes all current embeds with the all-adapters preset', () => {
     const normalized = normalizeFigureSpec(figure, { adapters: StandardVanillaAdapters });
 
-    expect(normalized.composites).toHaveLength(3);
-    expect(normalized.ir.children.map(child => child.type)).toEqual(['grid', 'axes', 'frame']);
+    expect(normalized.composites).toHaveLength(4);
+    expect(normalized.ir.children.map(child => child.type)).toEqual(['grid', 'axes', 'frame', 'legend']);
   });
 
   it('keeps partial adapter selection explicit', () => {

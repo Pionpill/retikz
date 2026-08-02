@@ -31,8 +31,12 @@ export const RenderTable: FC<Props> = ({ rows }) => {
         </thead>
         <tbody>
           {rows.map((r, i) => (
-            <tr key={`${r.originalName ?? r.name}-${i}`}>
-              <td className={cn(td, 'font-mono whitespace-nowrap')}>{r.isChild ? '' : r.name}</td>
+            <tr key={`${r.path ?? r.originalName ?? r.name}-${i}`} data-schema-path={r.path}>
+              <td className={cn(td, 'font-mono whitespace-nowrap')}>
+                <span style={{ marginInlineStart: `${(r.depth ?? 0) * 16}px` }}>
+                  {r.isChild ? '' : (r.branchLabel ?? r.name)}
+                </span>
+              </td>
               <td className={td}>
                 {r.isChild && r.originalName != null && (
                   <span className="font-mono text-muted-foreground">{`${r.originalName}: `}</span>
@@ -43,7 +47,7 @@ export const RenderTable: FC<Props> = ({ rows }) => {
                 )}
               </td>
               <td className={cn(td, 'whitespace-nowrap text-center')}>
-                {r.optional ? <span className="text-muted-foreground">—</span> : '✓'}
+                {r.isSynthetic === true || r.optional ? <span className="text-muted-foreground">—</span> : '✓'}
               </td>
               <td className={cn(td, 'text-muted-foreground')}>{r.description ?? ''}</td>
             </tr>

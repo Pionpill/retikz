@@ -2,22 +2,48 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createLayoutInspectionControls } from '../layout-inspection-controls';
+
+/** FlexLayout 辅助层的 family 英文开关 */
+export const flexLayoutInspectionFamilyControls = [
+  { id: 'inspectLines', option: 'lines', label: 'Flex line regions', recommended: true },
+  { id: 'inspectGaps', option: 'gaps', label: 'Fixed gaps', recommended: true },
+  {
+    id: 'inspectDistributedSpace',
+    option: 'distributedSpace',
+    label: 'Distributed-space boundaries',
+    recommended: false,
+  },
+] as const;
+
+const inspectionControls = createLayoutInspectionControls({
+  labels: {
+    details: 'Inspection details',
+    container: 'Container bounds',
+    content: 'Content bounds',
+    padding: 'Padding regions',
+    slot: 'Slot bounds',
+    margin: 'Margin regions',
+    allocation: 'Allocation bounds',
+    visual: 'Visual bounds',
+    overflow: 'Overflow warnings',
+    alignmentGuides: 'Alignment guides',
+    labels: 'Text labels',
+    preset: 'Inspection preset',
+    custom: 'Custom',
+    recommended: 'Recommended',
+    all: 'All',
+    off: 'Off',
+  },
+  familyControls: flexLayoutInspectionFamilyControls,
+});
+
 /** FlexLayout 关键分配行为的英文属性面板 */
 export const flexLayoutPlaygroundEnControls = definePreviewControls({
   presentation: 'panel',
   title: 'FlexLayout parameters',
   sections: [
-    {
-      label: 'Inspection overlay',
-      controls: [
-        {
-          kind: 'switch',
-          id: 'inspect',
-          label: 'Show layout guides',
-          defaultValue: true,
-        },
-      ],
-    },
+    ...inspectionControls.sections,
     {
       label: 'Direction and wrapping',
       controls: [
@@ -70,17 +96,22 @@ export const flexLayoutPlaygroundEnControls = definePreviewControls({
 });
 
 /** 当前 FlexLayout playground 的稳定英文文档契约 */
+const canonicalValues = {
+  ...inspectionControls.canonicalValues,
+  direction: 'row',
+  wrap: 'wrap',
+  alignItems: 'center',
+  basis: 92,
+  grow: 1,
+  shrink: 1,
+};
+
 export const previewControlContract = {
   controls: flexLayoutPlaygroundEnControls,
-  canonicalValues: {
-    inspect: true,
-    direction: 'row',
-    wrap: 'wrap',
-    alignItems: 'center',
-    basis: 92,
-    grow: 1,
-    shrink: 1,
-  },
+  stateOnlyIds: inspectionControls.stateOnlyIds,
+  canonicalValues,
+  presets: inspectionControls.presetsFor(canonicalValues),
+  presetSelector: inspectionControls.presetSelector,
   relatedApis: [
     'FlexLayout.inspect',
     'FlexLayout.direction',

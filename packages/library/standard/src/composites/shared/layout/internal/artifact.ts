@@ -7,11 +7,12 @@ import type {
   LayoutArtifactContainer,
   LayoutArtifactItemBase,
   LayoutArtifactRect,
+  LayoutSpacingArtifact,
 } from '../artifact-types';
 import type { LayoutAlignmentValue, LayoutOverflowValue } from '../types';
 import type { LayoutInsets, LayoutRect } from './geometry';
 
-import { LayoutAlignment, LayoutOverflow } from '../constants';
+import { LayoutAlignment, LayoutOverflow, LayoutSpacingKind } from '../constants';
 import { layoutEpsilon } from './distribution';
 import { outsetLayoutRect } from './geometry';
 
@@ -27,6 +28,88 @@ export type CreateLayoutArtifactItemInput = Readonly<{
   overflow: LayoutOverflowValue;
   alignmentGuide?: LayoutArtifactAlignmentGuide;
 }>;
+
+/** 在 resolved spacing 数组中追加一个正主轴长度 segment */
+export const appendLayoutSpacing = (
+  target: Array<LayoutSpacingArtifact>,
+  input: Readonly<{
+    kind: LayoutSpacingArtifact['kind'];
+    axis: LayoutSpacingArtifact['axis'];
+    mainStart: number;
+    mainSize: number;
+    crossStart: number;
+    crossSize: number;
+  }>,
+): void => {
+  if (input.mainSize <= 0) return;
+  target.push(
+    Object.freeze({
+      kind: input.kind,
+      axis: input.axis,
+      bounds: Object.freeze(
+        input.axis === LayoutAlignmentGuideDimension.X
+          ? { x: input.mainStart, y: input.crossStart, width: input.mainSize, height: input.crossSize }
+          : { x: input.crossStart, y: input.mainStart, width: input.crossSize, height: input.mainSize },
+      ),
+    }),
+  );
+};
+
+/** 把相邻物理 box 间隔拆成居中的固定 gap 与两侧 distributed segment */
+export const appendLayoutSpacingInterval = (
+  target: Array<LayoutSpacingArtifact>,
+  input: Readonly<{
+    axis: LayoutSpacingArtifact['axis'];
+    start: number;
+    end: number;
+    gap: number;
+    crossStart: number;
+    crossSize: number;
+  }>,
+): void => {
+  const size = input.end - input.start;
+  if (size <= 0) return;
+  const gapSize = Math.min(input.gap, size);
+  const gapStart = input.start + (size - gapSize) / 2;
+  appendLayoutSpacing(target, {
+    kind: LayoutSpacingKind.Distributed,
+    axis: input.axis,
+    mainStart: input.start,
+    mainSize: gapStart - input.start,
+    crossStart: input.crossStart,
+    crossSize: input.crossSize,
+  });
+  appendLayoutSpacing(target, {
+    kind: LayoutSpacingKind.Gap,
+    axis: input.axis,
+    mainStart: gapStart,
+    mainSize: gapSize,
+    crossStart: input.crossStart,
+    crossSize: input.crossSize,
+  });
+  appendLayoutSpacing(target, {
+    kind: LayoutSpacingKind.Distributed,
+    axis: input.axis,
+    mainStart: gapStart + gapSize,
+    mainSize: input.end - gapStart - gapSize,
+    crossStart: input.crossStart,
+    crossSize: input.crossSize,
+  });
+};
+
+/** 按 axis、主坐标、正交坐标与 kind 返回 canonical spacing 顺序 */
+export const sortLayoutSpacing = (spacing: ReadonlyArray<LayoutSpacingArtifact>): Array<LayoutSpacingArtifact> =>
+  [...spacing].sort((first, second) => {
+    if (first.axis !== second.axis) return first.axis === LayoutAlignmentGuideDimension.X ? -1 : 1;
+    const firstMain = first.axis === LayoutAlignmentGuideDimension.X ? first.bounds.x : first.bounds.y;
+    const secondMain = second.axis === LayoutAlignmentGuideDimension.X ? second.bounds.x : second.bounds.y;
+    if (firstMain !== secondMain) return firstMain - secondMain;
+    const firstCross = first.axis === LayoutAlignmentGuideDimension.X ? first.bounds.y : first.bounds.x;
+    const secondCross = second.axis === LayoutAlignmentGuideDimension.X ? second.bounds.y : second.bounds.x;
+    if (firstCross !== secondCross) return firstCross - secondCross;
+    if (first.kind === second.kind) return 0;
+    return first.kind === LayoutSpacingKind.Gap ? -1 : 1;
+  });
 
 /** 把 child-local rect 平移到 container allocation coordinate */
 export const translateLayoutRect = (

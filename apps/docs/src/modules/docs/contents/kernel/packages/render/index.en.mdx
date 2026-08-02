@@ -33,6 +33,10 @@ Static APIs use `StaticRenderFrame { primary: Scene, inspection }`. Retained ren
 
 SVG appends a `pointer-events="none"` inspection group after the primary figure and assigns no hydration ids. Canvas draws inspection DTOs after the primary bitmap, while `hitTest` continues to read only the primary Scene. The overlay never determines viewBox, resources, animation, or primary identity. A third-party retained renderer must declare `inspectionCapability: 'supported' | 'unsupported'`; receiving a non-null overlay while unsupported fails loudly instead of silently dropping it.
 
+The built-in SVG and Canvas backends share one nine-color occurrence palette, fixed red warning color, alpha rules, and hatch-segment generator. Regular color is `palette[colorScope % 9]`. A `solid` fill uses base alpha `0.14 × opacity`; diagonal and crosshatch patterns draw no base fill and use only `0.55 × opacity` hatch strokes.
+
+`forward-diagonal` appears as `/` in screen coordinates, `backward-diagonal` as `\`, and `crosshatch` combines both. SVG emits only local `<path>` segments already clipped to the rectangle and creates no document-global pattern id. Canvas paints inside a `save → clip → hatch stroke → restore` lifecycle. The canonical pitch is 12 user units and scales with the figure transform. A pattern does not create an implicit border; an upstream inspector emits a separate outline or line primitive when a boundary is required.
+
 ### Static frame APIs
 
 Import `StaticRenderFrame` from `@retikz/render/runtime`; import each materialization function from its SVG or Canvas backend subpath.

@@ -15,16 +15,24 @@ import {
   LayoutIntrinsicMode,
 } from '@retikz/core';
 
-import type { LayoutTrackSourceKindValue } from '../shared/layout';
+import type { LayoutSpacingArtifact, LayoutTrackSourceKindValue } from '../shared/layout';
 import type { LayoutInsets, LayoutRect } from '../shared/layout/internal';
 import type { GridLayoutArtifact } from './artifact-types';
 import type { GridTrackConstraint } from './tracks';
 import type { IRGridLayout, IRGridLayoutItem } from './types';
 
-import { LayoutAlignment, LayoutAxisSizeKind, LayoutOverflow, LayoutTrackSourceKind } from '../shared/layout';
+import {
+  LayoutAlignment,
+  LayoutAxisSizeKind,
+  LayoutOverflow,
+  LayoutSpacingKind,
+  LayoutTrackSourceKind,
+} from '../shared/layout';
 import {
   alignAllocationInSlot,
   alignResolvedLayoutSlot,
+  appendLayoutSpacing,
+  appendLayoutSpacingInterval,
   compensatedLayoutSum,
   contentRectOf,
   createLayoutArtifactAlignmentGuide,
@@ -34,6 +42,7 @@ import {
   layoutEpsilon,
   normalizeLayoutSpacing,
   resolveLayoutAxisSize,
+  sortLayoutSpacing,
 } from '../shared/layout/internal';
 import { resolveGridPlacements } from './placement';
 import {
@@ -520,6 +529,48 @@ export const compileGridLayout = (
         implicit: index >= explicitCount,
       }),
     );
+  const spacing: Array<LayoutSpacingArtifact> = [];
+  const collectTrackSpacing = (
+    axis: LayoutSpacingArtifact['axis'],
+    positioned: typeof positionedColumns,
+    gap: number,
+  ) => {
+    if (positioned.length === 0) return;
+    const mainStart = axis === LayoutAlignmentGuideDimension.X ? content.x : content.y;
+    const mainSize = axis === LayoutAlignmentGuideDimension.X ? content.width : content.height;
+    const crossStart = axis === LayoutAlignmentGuideDimension.X ? content.y : content.x;
+    const crossSize = axis === LayoutAlignmentGuideDimension.X ? content.height : content.width;
+    appendLayoutSpacing(spacing, {
+      kind: LayoutSpacingKind.Distributed,
+      axis,
+      mainStart,
+      mainSize: positioned[0].start - mainStart,
+      crossStart,
+      crossSize,
+    });
+    for (let index = 1; index < positioned.length; index += 1) {
+      const previous = positioned[index - 1];
+      appendLayoutSpacingInterval(spacing, {
+        axis,
+        start: previous.start + previous.size,
+        end: positioned[index].start,
+        gap,
+        crossStart,
+        crossSize,
+      });
+    }
+    const last = positioned.at(-1)!;
+    appendLayoutSpacing(spacing, {
+      kind: LayoutSpacingKind.Distributed,
+      axis,
+      mainStart: last.start + last.size,
+      mainSize: mainStart + mainSize - last.start - last.size,
+      crossStart,
+      crossSize,
+    });
+  };
+  collectTrackSpacing(LayoutAlignmentGuideDimension.X, positionedColumns, node.columnGap);
+  collectTrackSpacing(LayoutAlignmentGuideDimension.Y, positionedRows, node.rowGap);
   return {
     children: [scope],
     allocationBounds: allocation,
@@ -530,6 +581,7 @@ export const compileGridLayout = (
       items,
       columns: trackArtifacts(columns, positionedColumns, node.columns.length),
       rows: trackArtifacts(rows, positionedRows, node.rows.length),
+      spacing: sortLayoutSpacing(spacing),
     }),
   };
 };
