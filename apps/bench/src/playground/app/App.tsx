@@ -35,6 +35,7 @@ export const App: FC<AppProps> = props => {
   const mode = view === BenchCaseView.Benchmark ? LabRunMode.Benchmark : LabRunMode.Preview;
   const reportHistory = useReportHistory(module.id, testCase?.id);
   const { state, dispatch, previewHostRef, run } = usePerformanceLab(module, testCase, mode, reportHistory.refresh);
+  const onRun = (): void => void run();
   const caseStatuses: Partial<Record<string, BenchCaseStatusValue>> = {};
   for (const report of reportHistory.reports) {
     if (caseStatuses[report.caseId] !== undefined) continue;
@@ -56,14 +57,7 @@ export const App: FC<AppProps> = props => {
           dispatch={dispatch}
         />
         <SidebarInset className="h-svh min-w-0 overflow-hidden">
-          <Header
-            module={module}
-            testCase={testCase}
-            view={view}
-            state={state}
-            dispatch={dispatch}
-            onRun={() => void run()}
-          />
+          <Header module={module} testCase={testCase} view={view} state={state} dispatch={dispatch} onRun={onRun} />
           <div className="relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
             {module.available && testCase !== undefined ? (
               <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background">
@@ -74,9 +68,9 @@ export const App: FC<AppProps> = props => {
                   </div>
                 )}
                 {view === BenchCaseView.Preview ? (
-                  <PreviewView state={state} previewHostRef={previewHostRef} />
+                  <PreviewView testCase={testCase} state={state} previewHostRef={previewHostRef} onRun={onRun} />
                 ) : view === BenchCaseView.Benchmark ? (
-                  <BenchmarkView state={state} />
+                  <BenchmarkView testCase={testCase} state={state} onRun={onRun} />
                 ) : (
                   <div className="min-h-0 flex-1 overflow-auto">
                     <ReportHistory
@@ -85,6 +79,11 @@ export const App: FC<AppProps> = props => {
                       diagnostics={reportHistory.diagnostics}
                       error={reportHistory.error}
                       loading={reportHistory.loading}
+                      selectedRunId={reportHistory.selectedRunId}
+                      selectedReport={reportHistory.selectedReport}
+                      detailLoading={reportHistory.detailLoading}
+                      detailError={reportHistory.detailError}
+                      onSelectReport={reportHistory.selectReport}
                     />
                   </div>
                 )}

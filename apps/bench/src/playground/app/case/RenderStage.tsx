@@ -1,54 +1,54 @@
 import type { FC, RefObject } from 'react';
 
-import { Boxes, ScanSearch } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Badge } from '@/components/ui/badge';
-
 import type { LabState } from '../lab-state';
+import type { BenchTestCase } from '../test-catalog';
 
 import { LabStatus } from '../lab-state';
+import { CaseStartState } from './CaseStartState';
 
 /** 真实 renderer 舞台属性 */
 export type RenderStageProps = Readonly<{
+  /** 当前路由对应的测试用例 */
+  testCase: BenchTestCase;
   state: LabState;
   previewHostRef: RefObject<HTMLDivElement>;
+  /** 复用工作台 Preview 运行入口 */
+  onRun: () => void;
 }>;
 
 /** 承载 Preview 模式真实 SVG / Canvas host 的舞台 */
 export const RenderStage: FC<RenderStageProps> = props => {
-  const { state, previewHostRef } = props;
+  const { testCase, state, previewHostRef, onRun } = props;
   const { t } = useTranslation();
+  const [hasOutput, setHasOutput] = useState(false);
+  useEffect(() => {
+    const host = previewHostRef.current;
+    if (host === null) return;
+    const updatePresence = (): void => setHasOutput(host.childElementCount > 0);
+    updatePresence();
+    const observer = new MutationObserver(updatePresence);
+    observer.observe(host, { childList: true });
+    return () => observer.disconnect();
+  }, [previewHostRef]);
   return (
-    <section className="lab-panel flex min-h-[420px] min-w-0 flex-1 flex-col overflow-hidden">
-      <div className="flex items-center justify-between border-b px-4 py-3">
-        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <ScanSearch className="size-4 text-violet-500" />
-          {t('stage.title')}
+    <section className="relative min-h-0 min-w-0 flex-1 overflow-hidden bg-background">
+      <div
+        ref={previewHostRef}
+        className="lab-preview absolute inset-0 z-10 grid place-items-center overflow-hidden bg-background"
+      />
+      {hasOutput ? null : (
+        <div className="absolute inset-0 z-20 grid place-items-center bg-background p-6">
+          <CaseStartState
+            testCase={testCase}
+            actionLabel={t('header.runPreview')}
+            running={state.status === LabStatus.Running}
+            onRun={onRun}
+          />
         </div>
-        <div className="flex gap-2">
-          <Badge variant="outline">{state.backend.toUpperCase()}</Badge>
-          <Badge variant={state.status === LabStatus.Success ? 'secondary' : 'outline'}>
-            {t(`status.${state.status}`)}
-          </Badge>
-        </div>
-      </div>
-      <div className="relative min-h-0 flex-1 overflow-hidden bg-muted/20">
-        <div className="lab-grid absolute inset-0 opacity-30" />
-        <div
-          ref={previewHostRef}
-          className="lab-preview absolute inset-4 z-10 overflow-hidden rounded-xl border bg-background"
-        />
-        {state.status === LabStatus.Idle ? (
-          <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center text-center">
-            <div>
-              <Boxes className="mx-auto size-9 text-muted-foreground/50" />
-              <p className="mt-3 text-sm text-muted-foreground">{t('stage.ready')}</p>
-              <p className="mt-1 text-xs text-muted-foreground/70">{t('stage.description')}</p>
-            </div>
-          </div>
-        ) : null}
-      </div>
+      )}
     </section>
   );
 };

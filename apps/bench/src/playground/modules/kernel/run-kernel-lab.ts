@@ -3,6 +3,16 @@ import type { LabBackendValue, LabPolicyIdValue, LabPolicyResult, LabRunModeValu
 import { getKernelLabScenario, kernelLabPolicies } from './kernel-scenarios';
 import { LabRunMode } from './model';
 
+/** Preview renderer 原子挂载输入 */
+export type KernelLabPreviewInput = Readonly<{
+  /** Preview 挂载容器 */
+  host: HTMLElement;
+  /** Preview 输出宽度 */
+  width: number;
+  /** Preview 输出高度 */
+  height: number;
+}>;
+
 /** 单个 Kernel 策略执行器收到的稳定输入 */
 export type KernelLabPolicyInput = Readonly<{
   policyId: LabPolicyIdValue;
@@ -10,7 +20,8 @@ export type KernelLabPolicyInput = Readonly<{
   backend: LabBackendValue;
   warmupRuns: number;
   sampleRuns: number;
-  previewHost?: HTMLElement;
+  /** Preview renderer 输入；Benchmark 不传 */
+  preview?: KernelLabPreviewInput;
 }>;
 
 /** Performance Lab 的 browser 策略执行函数 */
@@ -24,7 +35,8 @@ export type RunKernelLabOptions = Readonly<{
   policyId: LabPolicyIdValue;
   warmupRuns: number;
   sampleRuns: number;
-  previewHost?: HTMLElement;
+  /** Preview renderer 输入；Benchmark 不传 */
+  preview?: KernelLabPreviewInput;
 }>;
 
 let sessionSequence = 0;
@@ -47,9 +59,7 @@ export const runKernelLab = async (
         backend: options.backend,
         warmupRuns: options.warmupRuns,
         sampleRuns: options.sampleRuns,
-        ...(options.mode === LabRunMode.Preview && options.previewHost !== undefined
-          ? { previewHost: options.previewHost }
-          : {}),
+        ...(options.mode === LabRunMode.Preview && options.preview !== undefined ? { preview: options.preview } : {}),
       }),
     );
   }

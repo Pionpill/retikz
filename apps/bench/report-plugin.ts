@@ -19,6 +19,14 @@ export type BenchReportRequestHandler = (
 
 const reportApiPath = '/__bench/reports';
 const maximumBodyBytes = 1024 * 1024;
+const writeReportInputKeys = Object.freeze([
+  'moduleId',
+  'caseId',
+  'status',
+  'startedAt',
+  'completedAt',
+  'payload',
+] as const);
 
 /** 判断未知值是否为记录 */
 const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
@@ -27,6 +35,8 @@ const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
 /** 校验写报告请求体 */
 const isWriteReportInput = (value: unknown): value is WriteBenchReportInput =>
   isRecord(value) &&
+  Object.keys(value).length === writeReportInputKeys.length &&
+  Object.keys(value).every(key => writeReportInputKeys.some(allowedKey => allowedKey === key)) &&
   typeof value.moduleId === 'string' &&
   typeof value.caseId === 'string' &&
   isBenchReportStatus(value.status) &&
@@ -84,7 +94,13 @@ export const createBenchReportRequestHandler =
       if (request.method === 'GET') {
         const moduleId = url.searchParams.get('moduleId');
         const caseId = url.searchParams.get('caseId') ?? undefined;
+        const runId = url.searchParams.get('runId') ?? undefined;
         if (moduleId === null) throw new BenchReportValidationError('moduleId query is required');
+        if (runId !== undefined) {
+          if (caseId === undefined) throw new BenchReportValidationError('caseId query is required when runId is set');
+          sendJson(response, 200, { report: await store.readReport({ moduleId, caseId, runId }) });
+          return;
+        }
         sendJson(response, 200, await store.listReports({ moduleId, ...(caseId === undefined ? {} : { caseId }) }));
         return;
       }

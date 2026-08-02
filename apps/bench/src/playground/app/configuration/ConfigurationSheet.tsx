@@ -1,16 +1,120 @@
 import type { Dispatch, FC } from 'react';
 
-import { Cpu, DatabaseZap, RotateCcw, TimerReset, X } from 'lucide-react';
+import { Cpu, DatabaseZap, Monitor, RotateCcw, TimerReset, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 import type { LabState, LabStateAction } from '../lab-state';
+import type { LabPreviewSizePresetIdValue } from '../preview-size';
 
+import { maximumLabPreviewDimension, maximumLabPreviewPixels } from '../../modules/kernel';
 import { LabActionType } from '../lab-state';
+import { LabPreviewSizePresetId, labPreviewSizePresets } from '../preview-size';
+
+/** 预览尺寸设置属性 */
+export type PreviewSizeControlsProps = Readonly<{
+  state: LabState;
+  dispatch: Dispatch<LabStateAction>;
+}>;
+
+/** 选择固定预览尺寸或输入自定义宽高 */
+export const PreviewSizeControls: FC<PreviewSizeControlsProps> = props => {
+  const { state, dispatch } = props;
+  const { t } = useTranslation();
+  const maximumWidth = Math.min(maximumLabPreviewDimension, Math.floor(maximumLabPreviewPixels / state.previewHeight));
+  const maximumHeight = Math.min(maximumLabPreviewDimension, Math.floor(maximumLabPreviewPixels / state.previewWidth));
+  const selectedLabel =
+    state.previewSizePresetId === LabPreviewSizePresetId.Custom
+      ? t('config.customSize')
+      : t(`config.previewSizePresets.${state.previewSizePresetId}`);
+  return (
+    <section className="space-y-4">
+      <div>
+        <h3 className="flex items-center gap-2 text-sm font-semibold">
+          <Monitor className="size-4 text-violet-500" />
+          {t('config.preview')}
+        </h3>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">{t('config.previewDescription')}</p>
+      </div>
+      <label className="block space-y-2">
+        <span className="text-xs font-medium text-muted-foreground">{t('config.previewSize')}</span>
+        <Select
+          value={state.previewSizePresetId}
+          onValueChange={presetId =>
+            dispatch({
+              type: LabActionType.PreviewSizePresetSelected,
+              presetId: presetId as LabPreviewSizePresetIdValue,
+            })
+          }
+        >
+          <SelectTrigger aria-label={t('config.previewSize')} className="w-full">
+            <SelectValue>{selectedLabel}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {labPreviewSizePresets.map(preset => (
+              <SelectItem key={preset.id} value={preset.id}>
+                {t(`config.previewSizePresets.${preset.id}`)}
+              </SelectItem>
+            ))}
+            <SelectItem value={LabPreviewSizePresetId.Custom}>{t('config.customSize')}</SelectItem>
+          </SelectContent>
+        </Select>
+      </label>
+      {state.previewSizePresetId === LabPreviewSizePresetId.Custom ? (
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-2">
+          <label className="space-y-2">
+            <span className="text-xs font-medium text-muted-foreground">{t('config.width')}</span>
+            <Input
+              type="number"
+              min={1}
+              max={maximumWidth}
+              step={1}
+              value={state.previewWidth}
+              aria-label={t('config.width')}
+              onChange={event => {
+                const width = event.currentTarget.valueAsNumber;
+                if (!Number.isFinite(width)) return;
+                dispatch({
+                  type: LabActionType.PreviewSizeChanged,
+                  width,
+                  height: state.previewHeight,
+                });
+              }}
+            />
+          </label>
+          <span className="pb-2 text-sm text-muted-foreground" aria-hidden="true">
+            ×
+          </span>
+          <label className="space-y-2">
+            <span className="text-xs font-medium text-muted-foreground">{t('config.height')}</span>
+            <Input
+              type="number"
+              min={1}
+              max={maximumHeight}
+              step={1}
+              value={state.previewHeight}
+              aria-label={t('config.height')}
+              onChange={event => {
+                const height = event.currentTarget.valueAsNumber;
+                if (!Number.isFinite(height)) return;
+                dispatch({
+                  type: LabActionType.PreviewSizeChanged,
+                  width: state.previewWidth,
+                  height,
+                });
+              }}
+            />
+          </label>
+        </div>
+      ) : null}
+    </section>
+  );
+};
 
 /** 详细配置 Sheet 属性 */
 export type ConfigurationSheetProps = Readonly<{
@@ -46,6 +150,8 @@ export const ConfigurationSheet: FC<ConfigurationSheetProps> = props => {
         </SheetHeader>
 
         <div className="min-h-0 flex-1 space-y-7 overflow-y-auto px-4">
+          <PreviewSizeControls state={state} dispatch={dispatch} />
+
           <section className="space-y-4">
             <div>
               <h3 className="text-sm font-semibold">{t('config.sampling')}</h3>

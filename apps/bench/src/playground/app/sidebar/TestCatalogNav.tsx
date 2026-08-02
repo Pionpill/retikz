@@ -11,7 +11,6 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
@@ -57,18 +56,6 @@ const findActiveDirectionId = (
 ): string | undefined =>
   directions.find(direction => direction.cases.some(testCase => testCase.id === activeCaseId))?.id;
 
-/** 返回方向中需要聚合提示的状态数量 */
-const countAttentionStatuses = (
-  direction: BenchTestDirection,
-  caseStatuses: Readonly<Partial<Record<string, BenchCaseStatusValue>>>,
-): number =>
-  direction.cases.filter(testCase => {
-    const status = caseStatuses[testCase.id];
-    return (
-      status === BenchCaseStatus.Running || status === BenchCaseStatus.Warning || status === BenchCaseStatus.Failed
-    );
-  }).length;
-
 /** 按分组、方向和用例展示当前模块的测试目录 */
 export const TestCatalogNav: FC<TestCatalogNavProps> = props => {
   const { module, activeCaseId, caseStatuses = {} } = props;
@@ -86,7 +73,6 @@ export const TestCatalogNav: FC<TestCatalogNavProps> = props => {
           {group.directions.map(direction => {
             const Icon = direction.icon;
             const isOpen = openDirectionId === direction.id;
-            const attentionCount = countAttentionStatuses(direction, caseStatuses);
             return (
               <Collapsible
                 key={direction.id}
@@ -103,7 +89,6 @@ export const TestCatalogNav: FC<TestCatalogNavProps> = props => {
                       <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
-                  {attentionCount === 0 ? null : <SidebarMenuBadge>{attentionCount}</SidebarMenuBadge>}
                   <CollapsibleContent>
                     <SidebarMenuSub className="ml-3.5 mr-0 pl-2.5 pr-0">
                       {direction.cases.length === 0 ? (

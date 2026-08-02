@@ -28,6 +28,20 @@ export const LabPolicyId = {
 /** 可比较的 Kernel 更新策略取值 */
 export type LabPolicyIdValue = ValueOf<typeof LabPolicyId>;
 
+/** 预览输出允许的单边上限 */
+export const maximumLabPreviewDimension = 8192;
+
+/** 预览输出允许的总像素上限，与 4K 预设一致 */
+export const maximumLabPreviewPixels = 3840 * 2160;
+
+/** 判断预览输出单边是否在安全整数范围内 */
+export const isValidLabPreviewDimension = (value: number): boolean =>
+  Number.isInteger(value) && value >= 1 && value <= maximumLabPreviewDimension;
+
+/** 判断预览输出尺寸是否同时满足单边和总像素预算 */
+export const isValidLabPreviewSize = (width: number, height: number): boolean =>
+  isValidLabPreviewDimension(width) && isValidLabPreviewDimension(height) && width * height <= maximumLabPreviewPixels;
+
 /** Kernel 场景使用的更新形态 */
 export const LabUpdateKind = {
   Entity: 'entity',

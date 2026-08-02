@@ -1,8 +1,4 @@
 {
-  "app": {
-    "title": "Kernel 更新遥测",
-    "description": "Snapshot diff → Runtime execution → Scene Patch → retained renderer commit"
-  },
   "module": {
     "kernel": "Kernel",
     "kernelDescription": "Kernel 运行时与渲染器",
@@ -45,7 +41,9 @@
     "collapseSidebar": "收起侧栏",
     "expandSidebar": "展开侧栏",
     "caseViews": "用例页面",
+    "caseDetails": "测试基础信息",
     "updatePolicy": "更新策略",
+    "policyGuide": "策略说明",
     "runPreview": "运行预览",
     "startBenchmark": "开始基准",
     "allPolicies": "全部策略",
@@ -58,6 +56,26 @@
     "retained-full": "保留模式 · 全量",
     "retained-auto": "保留模式 · 自动"
   },
+  "policyGuide": {
+    "title": "更新策略说明",
+    "close": "关闭策略说明",
+    "description": "三种策略分别控制是否保留运行会话，以及更新时是否复用未变化内容。拆开比较可以定位性能差异来自哪里。",
+    "static-full": {
+      "description": "每次更新都完整编译并完整绘制，不保留 Runtime 与 renderer 会话。它是稳定、直接的全量基线。"
+    },
+    "retained-full": {
+      "description": "保留 Runtime 与 renderer 会话，但每次仍强制完整更新。它用于观察保留式架构本身的成本。"
+    },
+    "retained-auto": {
+      "description": "保留 Runtime 与 renderer 会话，通过 snapshot diff 与 Scene Patch 自动复用未变化内容，必要时回退到全量更新。"
+    },
+    "compareTitle": "如何比较",
+    "compare": {
+      "staticVsRetained": "观察保留 Runtime 与 renderer 会话带来的架构成本。",
+      "retainedFullVsAuto": "观察自动增量更新与内容复用带来的收益。",
+      "staticVsAuto": "观察保留模式自动策略相对静态基线的端到端实际效果。"
+    }
+  },
   "caseView": {
     "preview": "预览",
     "benchmark": "基准",
@@ -69,10 +87,6 @@
     "samples": "采样次数",
     "warmups": "预热次数"
   },
-  "benchmark": {
-    "emptyTitle": "尚未运行基准测试",
-    "emptyDescription": "开始基准后将使用相同场景比较全部更新策略"
-  },
   "settings": {
     "language": "语言",
     "theme": "主题",
@@ -83,7 +97,21 @@
   },
   "config": {
     "title": "详细配置",
-    "description": "采样参数与当前执行环境",
+    "description": "预览输出、采样参数与当前执行环境",
+    "preview": "预览",
+    "previewDescription": "控制 SVG 与 Canvas 的预览输出尺寸",
+    "previewSize": "预览尺寸",
+    "customSize": "自定义",
+    "width": "宽度",
+    "height": "高度",
+    "previewSizePresets": {
+      "640x400": "640 × 400",
+      "800x400": "800 × 400",
+      "1280x720": "1280 × 720",
+      "1920x1080": "1920 × 1080",
+      "2560x1440": "2560 × 1440 · 2K",
+      "3840x2160": "3840 × 2160 · 4K"
+    },
     "sampling": "采样",
     "samplingDescription": "预览适合快速检查；基准测试可以增加采样次数",
     "sampleRuns": "采样次数",
@@ -98,12 +126,6 @@
     "notice": "当前面板用于本地探索。正式回归门禁仍由 pnpm bench:check 产生",
     "close": "关闭详细配置",
     "done": "完成"
-  },
-  "stage": {
-    "title": "渲染预览",
-    "ready": "准备渲染 5,000 个实体",
-    "description": "预览会在此保留真实 renderer host",
-    "evidence": "探索数据不能替代 CI 证据 · 使用 pnpm bench:check 执行确定性门禁"
   },
   "status": {
     "notRun": "尚未运行",
@@ -120,7 +142,12 @@
     "emptyTitle": "尚无本地报告",
     "emptyDescription": "运行当前用例后，报告会保存在本地忽略目录中",
     "loadFailed": "无法读取本地报告",
-    "selectHint": "选择一份报告查看详情；当前版本优先展示本次会话结果",
+    "selectHint": "选择一份本地报告查看完整详情",
+    "openReport": "打开报告 {{runId}}",
+    "loadingDetail": "正在读取报告详情…",
+    "detailLoadFailed": "无法读取报告详情",
+    "detailUnavailable": "这份报告不包含可展示的运行详情",
+    "runFailed": "运行失败",
     "saveFailed": "运行已完成，但报告保存失败：{{error}}"
   },
   "report": {

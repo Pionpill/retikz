@@ -45,6 +45,23 @@ export const listBenchReports = async (
   return value;
 };
 
+/** 按稳定标识读取一份完整本地报告 */
+export const getBenchReport = async (
+  moduleId: string,
+  caseId: string,
+  runId: string,
+  fetcher: BenchReportFetch = fetch,
+): Promise<BenchLabReport> => {
+  const query = new URLSearchParams({ moduleId, caseId, runId });
+  const response = await fetcher(`${reportApiPath}?${query.toString()}`);
+  if (!response.ok) throw new Error(await readResponseError(response));
+  const value: unknown = await response.json();
+  if (typeof value !== 'object' || value === null || !('report' in value) || !isBenchLabReport(value.report)) {
+    throw new Error('Report detail response is invalid');
+  }
+  return value.report;
+};
+
 /** 把一次用例运行保存到本地报告目录 */
 export const saveBenchReport = async (
   input: WriteBenchReportInput,

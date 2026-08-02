@@ -59,29 +59,57 @@ export const MetricsSummary: FC<MetricsSummaryProps> = props => {
       id: 'speedup',
       label: t('metrics.autoVsStatic'),
       value: speedupLabel,
-      detail: summary.bestPolicyId === undefined ? '—' : t('metrics.best', { policy: summary.bestPolicyId }),
+      detail:
+        summary.bestPolicyId === undefined
+          ? '—'
+          : t('metrics.best', {
+              policy: t(`policy.${summary.bestPolicyId}`, { defaultValue: summary.bestPolicyId }),
+            }),
       icon: Zap,
-      accent: 'text-amber-600 dark:text-amber-400',
+      accent:
+        summary.speedupPercent === undefined
+          ? 'text-muted-foreground'
+          : summary.speedupPercent >= 0
+            ? 'text-emerald-600 dark:text-emerald-400'
+            : 'text-orange-600 dark:text-orange-400',
     },
   ];
   return (
-    <section className={`grid gap-3 ${compact ? 'grid-cols-2' : 'sm:grid-cols-2 xl:grid-cols-4'}`}>
-      {cards.map(card => {
+    <section
+      data-slot="lab-metrics-summary"
+      className={
+        compact
+          ? 'grid gap-0 border-b border-border/60 sm:grid-cols-2'
+          : 'grid gap-0 border-b border-border/60 md:grid-cols-2 xl:grid-cols-[1.4fr_repeat(3,minmax(0,1fr))]'
+      }
+    >
+      {cards.map((card, index) => {
         const Icon = card.icon;
+        const primary = index === 0;
         return (
-          <article key={card.id} className={compact ? 'lab-panel p-3' : 'lab-panel p-4'}>
+          <article
+            key={card.id}
+            data-slot={primary ? 'lab-metric-primary' : 'lab-metric-supporting'}
+            className={`${primary ? 'bg-primary/[0.035]' : ''} min-w-0 p-4 ${
+              compact
+                ? primary
+                  ? 'sm:col-span-2 sm:p-5'
+                  : 'border-t border-border/60 sm:border-l sm:first-of-type:border-l-0'
+                : primary
+                  ? 'md:col-span-2 md:p-5 xl:col-span-1 xl:p-6'
+                  : 'border-t border-border/60 md:odd:border-l xl:border-t-0 xl:border-l xl:p-5'
+            }`}
+          >
             <div className="flex items-start justify-between">
               <span className="lab-label">{card.label}</span>
-              <Icon className={`size-4 ${card.accent}`} />
+              <span className={`grid size-7 place-items-center rounded-lg bg-background/70 ${card.accent}`}>
+                <Icon className="size-3.5" />
+              </span>
             </div>
-            <div
-              className={
-                compact ? 'mt-2 flex flex-wrap items-baseline gap-2' : 'mt-3 flex flex-wrap items-baseline gap-2'
-              }
-            >
+            <div className={`${primary ? 'mt-4' : 'mt-3'} flex flex-wrap items-baseline gap-2`}>
               <span
-                className={`font-mono font-semibold tracking-tight text-foreground ${
-                  compact ? 'text-base' : card.id === 'path' || card.id === 'speedup' ? 'text-xl' : 'text-2xl'
+                className={`font-mono font-semibold tracking-tight ${card.id === 'speedup' ? card.accent : 'text-foreground'} ${
+                  primary ? (compact ? 'text-2xl' : 'text-3xl') : compact ? 'text-base' : 'text-lg'
                 }`}
               >
                 {card.value}
@@ -90,7 +118,7 @@ export const MetricsSummary: FC<MetricsSummaryProps> = props => {
                 <Badge variant={summary.incrementalActive ? 'secondary' : 'outline'}>{selected.policyId}</Badge>
               ) : null}
             </div>
-            <p className={`${compact ? 'mt-1.5' : 'mt-2'} truncate text-[10px] text-muted-foreground`}>{card.detail}</p>
+            <p className={`${primary ? 'mt-3' : 'mt-2'} truncate text-[11px] text-muted-foreground`}>{card.detail}</p>
           </article>
         );
       })}

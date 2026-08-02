@@ -51,4 +51,32 @@ describe('TestCatalogNav', () => {
     expect(markup).toContain('aria-label="通过"');
     expect(markup.indexOf('单实体更新')).toBeLessThan(markup.indexOf('aria-label="通过"'));
   });
+
+  it('运行时仅显示用例状态点而不显示方向级数字徽标', async () => {
+    const i18n = createInstance().use(initReactI18next);
+    await i18n.init({ lng: 'zh', resources: { zh: { translation: zh } } });
+
+    const markup = renderToStaticMarkup(
+      createElement(
+        I18nextProvider,
+        { i18n },
+        createElement(
+          StaticRouter,
+          { location: '/kernel/cases/single-entity-update/benchmark' },
+          createElement(
+            SidebarProvider,
+            null,
+            createElement(TestCatalogNav, {
+              module: defaultBenchModule,
+              activeCaseId: 'single-entity-update',
+              caseStatuses: { 'single-entity-update': 'running' },
+            }),
+          ),
+        ),
+      ),
+    );
+
+    expect(markup).toContain('aria-label="运行中"');
+    expect(markup).not.toContain('data-sidebar="menu-badge"');
+  });
 });

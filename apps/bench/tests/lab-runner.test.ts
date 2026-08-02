@@ -31,6 +31,7 @@ const createResult = (policyId: LabPolicyResult['policyId']): LabPolicyResult =>
 describe('Kernel Performance Lab runner', () => {
   it('Preview 只执行当前策略', async () => {
     const execute = vi.fn(input => Promise.resolve(createResult(input.policyId)));
+    const previewHost = {} as HTMLElement;
     const session = await runKernelLab(
       {
         mode: LabRunMode.Preview,
@@ -39,12 +40,19 @@ describe('Kernel Performance Lab runner', () => {
         policyId: LabPolicyId.RetainedAuto,
         warmupRuns: 0,
         sampleRuns: 1,
+        preview: { host: previewHost, width: 2560, height: 1440 },
       },
       execute,
     );
 
     expect(execute).toHaveBeenCalledTimes(1);
-    expect(execute).toHaveBeenCalledWith(expect.objectContaining({ policyId: 'retained-auto', sampleRuns: 1 }));
+    expect(execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        policyId: 'retained-auto',
+        sampleRuns: 1,
+        preview: { host: previewHost, width: 2560, height: 1440 },
+      }),
+    );
     expect(session.results.map(result => result.policyId)).toEqual(['retained-auto']);
   });
 
@@ -58,6 +66,7 @@ describe('Kernel Performance Lab runner', () => {
         policyId: LabPolicyId.RetainedAuto,
         warmupRuns: 3,
         sampleRuns: 12,
+        preview: { host: {} as HTMLElement, width: 640, height: 400 },
       },
       execute,
     );
@@ -69,6 +78,7 @@ describe('Kernel Performance Lab runner', () => {
     ]);
     expect(session.results).toHaveLength(3);
     expect(session.results.every(result => result.timing.samples === 1)).toBe(true);
+    expect(execute.mock.calls.every(([input]) => !('preview' in input))).toBe(true);
   });
 
   it('在执行策略前记录会话开始时间', async () => {

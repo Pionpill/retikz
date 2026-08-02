@@ -16,7 +16,14 @@ import {
   updateSimpleNodeFill,
 } from '../../../shared';
 import { getKernelLabScenario } from './kernel-scenarios';
-import { LabBackend, LabLifecycleAvailability, LabOutcome, LabPolicyId, LabResultSource } from './model';
+import {
+  isValidLabPreviewSize,
+  LabBackend,
+  LabLifecycleAvailability,
+  LabOutcome,
+  LabPolicyId,
+  LabResultSource,
+} from './model';
 
 /** 公共 trace 与 wall-clock 样本到 Lab 结果的映射输入 */
 export type CreateLabPolicyResultInput = Readonly<{
@@ -29,6 +36,27 @@ export type CreateLabPolicyResultInput = Readonly<{
 
 const previewCleanup = new WeakMap<HTMLElement, () => void>();
 let measureSequence = 0;
+
+/** 使用工作台配置创建 Vanilla Preview 输出选项 */
+export const createPreviewOutput = (width: number, height: number) => {
+  if (!isValidLabPreviewSize(width, height)) {
+    throw new Error(`Kernel Lab preview size is invalid: ${width.toString()}x${height.toString()}`);
+  }
+  return Object.freeze({ width, height, idPrefix: 'performance-lab' });
+};
+
+/** 保留 renderer intrinsic 尺寸并把预览输出等比收进可用舞台 */
+export const fitPreviewOutput = (host: HTMLElement): void => {
+  const output = host.firstElementChild;
+  if (!(output instanceof SVGSVGElement) && !(output instanceof HTMLCanvasElement)) {
+    throw new Error('Kernel Lab preview output must be an SVG or Canvas element');
+  }
+  output.style.display = 'block';
+  output.style.width = 'auto';
+  output.style.height = 'auto';
+  output.style.maxWidth = '100%';
+  output.style.maxHeight = '100%';
+};
 
 /** 把 Runtime update trace 收敛为 Lab 支持的执行结果 */
 const resolveLabOutcome = (record: PerformanceTraceRecord): LabOutcomeValue => {
@@ -120,11 +148,12 @@ const runSamples = (
 
 /** 把当前 Preview 策略渲染到持久预览容器 */
 const renderPreview = (input: KernelLabPolicyInput, first: IRScene, second: IRScene): void => {
-  const host = input.previewHost;
-  if (host === undefined) return;
+  const preview = input.preview;
+  if (preview === undefined) return;
+  const { host, width, height } = preview;
   previewCleanup.get(host)?.();
   host.replaceChildren();
-  const output = { width: 640, height: 400, idPrefix: 'performance-lab' };
+  const output = createPreviewOutput(width, height);
   const animation = { enabled: false };
   let dispose: () => void;
   if (input.policyId === LabPolicyId.StaticFull) {
@@ -154,6 +183,7 @@ const renderPreview = (input: KernelLabPolicyInput, first: IRScene, second: IRSc
       dispose = view.dispose;
     }
   }
+  fitPreviewOutput(host);
   previewCleanup.set(host, dispose);
 };
 

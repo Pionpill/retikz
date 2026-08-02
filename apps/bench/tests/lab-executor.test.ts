@@ -1,9 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
 import { LabLifecycleAvailability, LabOutcome, LabPolicyId } from '../src/playground/modules/kernel';
-import { createLabPolicyResult } from '../src/playground/modules/kernel/browser';
+import { createLabPolicyResult, createPreviewOutput } from '../src/playground/modules/kernel/browser';
 
 describe('browser Kernel Lab 结果映射', () => {
+  it('使用工作台配置生成预览输出尺寸', () => {
+    expect(createPreviewOutput(3840, 2160)).toEqual({
+      width: 3840,
+      height: 2160,
+      idPrefix: 'performance-lab',
+    });
+  });
+
   it('从公共 trace 与 timing 生成 retained-auto 增量结果', () => {
     const result = createLabPolicyResult({
       policyId: LabPolicyId.RetainedAuto,

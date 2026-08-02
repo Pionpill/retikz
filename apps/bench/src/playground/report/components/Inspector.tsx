@@ -25,10 +25,12 @@ export const Inspector: FC<InspectorProps> = props => {
   const { result, compact = false } = props;
   const { t } = useTranslation();
   return (
-    <section className="lab-panel overflow-hidden">
-      <div className="flex items-center justify-between border-b px-4 py-3">
+    <section data-slot="lab-inspector" className="space-y-3">
+      <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <Braces className="size-4 text-emerald-600 dark:text-emerald-400" />
+          <span className="grid size-7 place-items-center rounded-lg bg-primary/10 text-primary">
+            <Braces className="size-3.5" />
+          </span>
           {t('inspector.title')}
         </div>
         {result === undefined ? (
@@ -37,7 +39,10 @@ export const Inspector: FC<InspectorProps> = props => {
           <Badge variant="secondary">{result.policyId}</Badge>
         )}
       </div>
-      <div className={`grid divide-y ${compact ? 'grid-cols-1' : 'lg:grid-cols-4 lg:divide-x lg:divide-y-0'}`}>
+      <div
+        data-slot="lab-inspector-grid"
+        className={`grid gap-3 ${compact ? 'grid-cols-1 sm:grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'}`}
+      >
         {rows.map(row => {
           const Icon = row.icon;
           const content = (() => {
@@ -68,9 +73,16 @@ export const Inspector: FC<InspectorProps> = props => {
             return t('inspector.lifecycleUnavailable');
           })();
           return (
-            <article key={row.id} className={compact ? 'min-h-0 p-3' : 'min-h-32 p-4'}>
-              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-                <Icon className="size-3.5" />
+            <article
+              key={row.id}
+              data-slot="lab-inspector-card"
+              className={`lab-panel ${compact ? 'min-h-0 p-3' : 'min-h-32 p-4'}`}
+            >
+              <div
+                data-slot="lab-inspector-card-title"
+                className="flex items-center gap-2 text-xs font-semibold text-foreground"
+              >
+                <Icon className="size-3.5 text-muted-foreground" />
                 {t(row.labelKey)}
               </div>
               <pre
