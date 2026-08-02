@@ -112,6 +112,24 @@ describe('SCHEMA_REGISTRY', () => {
     },
   );
 
+  it('keeps every Standard composite registry URL on a documented English heading', () => {
+    const entries = Object.entries(SCHEMA_REGISTRY).filter(([, entry]) => entry.url.startsWith('/standard/composite/'));
+
+    for (const [name, entry] of entries) {
+      const [route, anchor] = entry.url.split('#');
+      expect(anchor, name).toBeTruthy();
+      const source = readFileSync(
+        resolve(process.cwd(), 'src/modules/docs/contents', route.slice(1), 'index.en.mdx'),
+        'utf8',
+      );
+      const headingAnchors = Array.from(source.matchAll(/^#{2,6}\s+(.+)$/gm), match =>
+        match[1].toLowerCase().replaceAll(/[^a-z0-9]/g, ''),
+      );
+
+      expect(headingAnchors, `${name} -> ${entry.url}`).toContain(anchor);
+    }
+  });
+
   it('returns undefined for unregistered schemas', () => {
     expect(lookupSchema(z.string())).toBeUndefined();
   });

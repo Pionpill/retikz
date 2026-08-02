@@ -15,8 +15,8 @@ export const standardV01: Release = {
         {
           label: { zh: '首批语义 composite', en: 'First semantic composites' },
           content: {
-            zh: '`Grid`、`Axes` 与 `Frame` 分别保存规则网格、静态数学坐标轴和带 Node-like header 的可视分组语义；lowering 后只产生既有 Core Path、Node 与 Scope。',
-            en: '`Grid`, `Axes`, and `Frame` preserve rule-based grids, static mathematical axes, and bordered groups with Node-like headers; lowering emits only existing Core Path, Node, and Scope IR.',
+            zh: '`Grid`、`Axes`、`Frame` 与 `Legend` 分别保存规则网格、静态数学坐标轴、带 Node-like header 的可视分组，以及已解析样本与含义的对应关系；lowering 后只产生既有 Core Scene primitives。',
+            en: '`Grid`, `Axes`, `Frame`, and `Legend` preserve rule-based grids, static mathematical axes, bordered groups with Node-like headers, and resolved sample-to-meaning mappings; lowering emits only existing Core Scene primitives.',
           },
         },
         {
@@ -39,8 +39,8 @@ export const standardV01: Release = {
           version: 'alpha.2',
           date: '2026-07-30',
           summary: {
-            zh: '新增三种通用布局容器、公共 LayoutItem、typed artifacts、布局 capability preset 与开发期布局检查器。',
-            en: 'Adds three general layout containers, shared LayoutItem vocabulary, typed artifacts, a layout capability preset, and a development-time Layout Inspector.',
+            zh: '新增三种通用布局容器、公共 LayoutItem、领域无关 Legend、typed artifacts、能力 preset 与开发期布局检查器。',
+            en: 'Adds three general layout containers, shared LayoutItem vocabulary, a domain-neutral Legend, typed artifacts, capability presets, and a development-time Layout Inspector.',
           },
           items: [
             {
@@ -55,6 +55,13 @@ export const standardV01: Release = {
               content: {
                 zh: '每种容器返回 strict JSON artifact，记录 container、items 与 line / track / paint order 结果；Flex 与 Grid 额外以必填 `spacing` 区分固定 gap 和正自由空间分布。`StandardLayoutPreset` 可只装载布局 definitions，`StandardAllPreset` 同步纳入三项能力。',
                 en: 'Each container returns a strict JSON artifact with container, item, and line, track, or paint-order results. Flex and Grid additionally require `spacing` to distinguish fixed gaps from positive free-space distribution. `StandardLayoutPreset` loads only layout definitions, while `StandardAllPreset` now includes all three.',
+              },
+            },
+            {
+              label: { zh: '通用 Legend 呈现', en: 'Generic Legend presentation' },
+              content: {
+                zh: '`standard.legend` 接收已解析的离散样本或连续 ramp，使用 Core minimum / natural / exact probe 与 replay 求解标题、标签、换行和溢出，并发布按 key 与 authored order 稳定的 strict typed artifact。`LegendModule` 已进入 `StandardAllPreset`；同一 module object 可幂等汇合，同名异对象仍 fail-loud。',
+                en: '`standard.legend` accepts resolved discrete samples or a continuous ramp, solves titles, labels, wrapping, and overflow through Core minimum, natural, and exact probes plus replay, and publishes a strict typed artifact stable by key and authored order. `LegendModule` joins `StandardAllPreset`; repeating the same module object is idempotent while same-name different objects still fail loudly.',
               },
             },
             {
@@ -120,8 +127,8 @@ export const standardV01: Release = {
           version: 'alpha.2',
           date: '2026-07-30',
           summary: {
-            zh: '新增三种布局 builder、对应 adapters 与无 DOM 的嵌套编译 / SSR 接线。',
-            en: 'Adds three layout builders, their adapters, and DOM-free nested compilation and SSR wiring.',
+            zh: '新增三种布局 builder、`legend()`、对应 adapters 与无 DOM 的嵌套编译 / SSR 接线。',
+            en: 'Adds three layout builders, `legend()`, their adapters, and DOM-free nested compilation and SSR wiring.',
           },
           items: [
             {
@@ -136,6 +143,13 @@ export const standardV01: Release = {
               content: {
                 zh: '`flexLayout()`、`gridLayout()` 与 `overlayLayout()` 的第三个参数可为当前容器开启、关闭或细化检查辅助层；省略时继承宿主策略。',
                 en: 'The third argument of `flexLayout()`, `gridLayout()`, and `overlayLayout()` enables, disables, or refines the inspection overlay for that container; omission inherits the host policy.',
+              },
+            },
+            {
+              label: { zh: 'Legend embed', en: 'Legend embed' },
+              content: {
+                zh: '`legend(id, input)` 与 `LegendVanillaAdapter` 复用 Standard Legend schema、factory、Definition 与 artifact 语义，并加入当前版本完整 adapter 目录。',
+                en: '`legend(id, input)` and `LegendVanillaAdapter` reuse the Standard Legend schema, factory, Definition, and artifact semantics and join the current complete adapter catalog.',
               },
             },
           ],
@@ -172,8 +186,8 @@ export const standardV01: Release = {
           version: 'alpha.2',
           date: '2026-07-30',
           summary: {
-            zh: '新增 FlexLayout、GridLayout、OverlayLayout 与只能作为直属语义 child 的 LayoutItem。',
-            en: 'Adds FlexLayout, GridLayout, OverlayLayout, and LayoutItem as their direct semantic child.',
+            zh: '新增 Legend 与 FlexLayout、GridLayout、OverlayLayout 三种通用布局容器。LayoutItem 只能作为这些布局容器的直属语义 child。',
+            en: 'Adds Legend and three general layout containers: FlexLayout, GridLayout, and OverlayLayout. LayoutItem is the containers’ direct semantic child.',
           },
           items: [
             {
@@ -188,6 +202,13 @@ export const standardV01: Release = {
               content: {
                 zh: '`FlexLayout`、`GridLayout` 与 `OverlayLayout` 新增 `inspect` prop，可为当前 occurrence 开启、关闭或细化辅助层；省略时继承 Layout / Scope。',
                 en: '`FlexLayout`, `GridLayout`, and `OverlayLayout` add an `inspect` prop that enables, disables, or refines the overlay for the current occurrence; omission inherits Layout or Scope.',
+              },
+            },
+            {
+              label: { zh: 'Legend plain-data props', en: 'Legend plain-data props' },
+              content: {
+                zh: '`<Legend>` 接收与 `LegendInput` 相同的 JSON-safe plain data，不提供 React children 模板；静态 Tier 2 adapter 在当前 Layout 局部贡献 `LegendDefinition`。',
+                en: '`<Legend>` accepts the same JSON-safe plain data as `LegendInput` without a React children template. Its static Tier 2 adapter contributes `LegendDefinition` locally to the current Layout.',
               },
             },
           ],
