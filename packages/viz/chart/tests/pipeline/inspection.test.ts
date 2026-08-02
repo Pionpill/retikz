@@ -26,9 +26,16 @@ describe('Chart inspection', () => {
       ],
     });
 
-    expect(result.inspection).toEqual({
+    const { style, ...inspection } = result.inspection;
+    expect(style).toMatchObject({ preset: 'neutral', mode: 'light', authoredOverrides: [] });
+    expect(style.tokenSources).toHaveLength(75);
+    expect(inspection).toEqual({
       chart: { type: '__infrastructure-fixture', id: 'sales' },
       plot: { id: 'sales/plot' },
+      presentation: {
+        contentKind: 'plot',
+        items: [{ key: 'chart.plot', contentKind: 'plot', sourcePath: '$resolved/plot' }],
+      },
       members: [
         {
           target: 'extension.transform.0',
@@ -155,5 +162,64 @@ describe('Chart inspection', () => {
         sources: [{ kind: 'user-override', path: '$spec/guides/0' }],
       },
     ]);
+  });
+
+  it('按 authored order 记录 presentation item identity 与 source，不复制 payload', () => {
+    const result = resolveChartSpec({
+      namespace: 'chart',
+      type: '__infrastructure-fixture',
+      data: { reference: 'rows' },
+      encoding: { x: 'amount', y: 'margin' },
+      presentation: {
+        children: [
+          {
+            key: 'badge',
+            content: { kind: 'child', child: { type: 'scope', id: 'badge', children: [] } },
+          },
+          {
+            key: 'closing-credit',
+            content: {
+              kind: 'preset',
+              preset: 'credit',
+              text: { text: [{ runs: [{ text: 'Retikz', font: { style: 'italic' } }] }] },
+            },
+          },
+          { content: { kind: 'plot' } },
+          {
+            content: { kind: 'preset', preset: 'title', text: { text: 'Revenue', font: { size: 20 } } },
+          },
+        ],
+      },
+    });
+
+    expect(result.inspection.presentation).toEqual({
+      contentKind: 'flex-layout',
+      items: [
+        {
+          key: 'badge',
+          contentKind: 'child',
+          sourcePath: '$spec/presentation/children/0',
+        },
+        {
+          key: 'closing-credit',
+          contentKind: 'preset',
+          preset: 'credit',
+          sourcePath: '$spec/presentation/children/1',
+        },
+        {
+          key: 'chart.plot',
+          contentKind: 'plot',
+          sourcePath: '$spec/presentation/children/2',
+        },
+        {
+          key: 'chart.presentation.title',
+          contentKind: 'preset',
+          preset: 'title',
+          sourcePath: '$spec/presentation/children/3',
+        },
+      ],
+    });
+    expect(JSON.stringify(result.inspection.presentation)).not.toContain('Revenue');
+    expect(JSON.stringify(result.inspection.presentation)).not.toContain('font');
   });
 });

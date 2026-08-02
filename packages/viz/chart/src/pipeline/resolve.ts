@@ -12,6 +12,8 @@ import { CHART_NAMESPACE } from '../schemas';
 import { ChartResolveError, ChartResolveErrorCode } from './errors';
 import { createChartInspection } from './inspection';
 import { ChartMemberParseError, mergeChartSeed } from './merge';
+import { resolveChartPresentation } from './presentation';
+import { chartRecipeStyleContextOf, materializeChartPlotTheme, resolveChartStyle } from './style';
 
 /** Chart resolver 的内部成功结果 */
 export type ChartResolution = {
@@ -67,7 +69,11 @@ export const resolveChartSpec = (input: unknown): ChartResolution => {
     if (error instanceof z.ZodError) throw invalidSchemaError(ChartResolveErrorCode.InvalidChartSpec, error);
     throw error;
   }
-  const seed = bound.createSeed();
+  const style = resolveChartStyle(bound.spec);
+  const authoredPlotTheme = materializeChartPlotTheme(style.tokens, bound.spec.colors, bound.spec.theme);
+  const seriesColor = authoredPlotTheme.palette?.series?.at(0);
+  if (seriesColor === undefined) throw new Error('Chart style must resolve a non-empty Plot series palette');
+  const seed = bound.createSeed(chartRecipeStyleContextOf(style, seriesColor));
   let merged: ReturnType<typeof mergeChartSeed>;
   try {
     merged = mergeChartSeed(bound.spec, seed);
@@ -77,6 +83,14 @@ export const resolveChartSpec = (input: unknown): ChartResolution => {
     }
     throw error;
   }
+  merged = {
+    ...merged,
+    plotSpec: {
+      ...merged.plotSpec,
+      ...(bound.spec.colors === undefined ? {} : { colors: bound.spec.colors }),
+      theme: materializeChartPlotTheme(style.tokens, bound.spec.colors, bound.spec.theme, merged.plotSpec.theme),
+    },
+  };
   try {
     bound.validateCore(merged.plotSpec);
   } catch (error) {
@@ -97,7 +111,9 @@ export const resolveChartSpec = (input: unknown): ChartResolution => {
     throw error;
   }
   const spec: InternalChartSpecBound = bound.spec;
-  const inspection = createChartInspection(spec, plotSpec, merged.members);
-  const node: IRChild = spec.id === undefined ? plotSpec : { type: 'scope', id: spec.id, children: [plotSpec] };
+  const presentation = resolveChartPresentation(spec.presentation, plotSpec, style.tokens);
+  const inspection = createChartInspection(spec, plotSpec, merged.members, style, presentation.inspection);
+  const node: IRChild =
+    spec.id === undefined ? presentation.content : { type: 'scope', id: spec.id, children: [presentation.content] };
   return { plotSpec, node, inspection };
 };

@@ -1,6 +1,6 @@
-# v0.5.0-alpha.2 增量性能、Runtime 策略与 Box Layout 基建
+# v0.5.0-alpha.2 增量性能、Runtime 策略、Box Layout 与 Theme 基建
 
-- 状态：实现、测试、双语文档与 Accepted 收口完成（ADR-01～08）
+- 状态：ADR-01～08 已完成实现、测试、双语文档与 Accepted 收口；ADR-09 Proposed
 - 目标版本：`0.5.0-alpha.2`
 - 关联：[v0.5 roadmap](../roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
@@ -8,20 +8,23 @@
 
 alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，并补齐 Standard Box Layout 所需的通用 Core child layout contract：完整 Snapshot 仍是真源，同步 Runtime 根据 ChangeSet 或前后 Snapshot 做局部失效，Core 只重算必要 contribution，renderer 只提交必要 Scene Patch；任何阶段无法证明局部等价时扩大失效范围或完整重建。Box、Flex、Grid、Overlay solver 的领域规则与 baseline alignment policy 仍由 Standard 拥有，Kernel 提供双轴 proposal、minimum / natural probe、resolved slot、真实 allocation / visual bounds、alignment guide、隔离失败与 replay wrapper。
 
+本 milestone 另补一条可持久化的通用 Theme 环境：Scene / Scope 保存共享 style 与 mode，Core 按字段继承并把完整有效 Theme 交给 Composite；领域 owner 继续拥有自己的 token vocabulary、preset 具体值和 mapping，Core primitive 与 renderer 不按主题分支。
+
 本 milestone 不以极限大数据吞吐为目标，而以中等规模图形持续更新时减少无效工作、缩短更新延迟和 renderer commit 为验收重点。首次完整渲染不得明显退化。
 
 ## ADR 索引
 
-| ADR                                                  | 状态     | 主题                             | 交付                                                                                       |
-| ---------------------------------------------------- | -------- | -------------------------------- | ------------------------------------------------------------------------------------------ |
-| [ADR-01](./01-performance-observability-baseline.md) | Accepted | 性能观测与 baseline              | 冻结场景、指标、tracing 与回归预算                                                         |
-| [ADR-02](./02-runtime-identity-owner-registry.md)    | Accepted | Runtime identity / owner         | 冻结 identity、Snapshot、owned value、Owner Definition 与 registry                         |
-| [ADR-03](./03-program-transaction-lifecycle.md)      | Accepted | Program / transaction lifecycle  | 冻结依赖图、revision、candidate、fallback、observer 与同步原子提交                         |
-| [ADR-04](./04-incremental-core-compile.md)           | Accepted | Core 增量编译                    | 冻结完整 Program、stable Diff、fallback 与首个安全局部更新闭环                             |
-| [ADR-05](./05-scene-patch-retained-renderer.md)      | Accepted | Scene Patch 与 retained renderer | 冻结 identity topology、commit participant 与 SVG/Canvas retained lifecycle                |
-| [ADR-06](./06-box-layout-composite-contract.md)      | Accepted | Box Layout Composite contract    | 冻结双轴 constraint、allocation / slot-size feedback、nested propagation 与 replay wrapper |
-| [ADR-07](./07-runtime-execution-policy.md)           | Accepted | Runtime 执行模式与更新策略       | 显式选择 static / retained，并在 retained Session 中选择 auto / full 更新                  |
-| [ADR-08](./08-layout-proposal-probe-contract.md)     | Accepted | Layout proposal / probe contract | 冻结双轴 proposal、minimum / natural、resolved slot、guide、failure isolation 与 replay    |
+| ADR                                                  | 状态     | 主题                                 | 交付                                                                                       |
+| ---------------------------------------------------- | -------- | ------------------------------------ | ------------------------------------------------------------------------------------------ |
+| [ADR-01](./01-performance-observability-baseline.md) | Accepted | 性能观测与 baseline                  | 冻结场景、指标、tracing 与回归预算                                                         |
+| [ADR-02](./02-runtime-identity-owner-registry.md)    | Accepted | Runtime identity / owner             | 冻结 identity、Snapshot、owned value、Owner Definition 与 registry                         |
+| [ADR-03](./03-program-transaction-lifecycle.md)      | Accepted | Program / transaction lifecycle      | 冻结依赖图、revision、candidate、fallback、observer 与同步原子提交                         |
+| [ADR-04](./04-incremental-core-compile.md)           | Accepted | Core 增量编译                        | 冻结完整 Program、stable Diff、fallback 与首个安全局部更新闭环                             |
+| [ADR-05](./05-scene-patch-retained-renderer.md)      | Accepted | Scene Patch 与 retained renderer     | 冻结 identity topology、commit participant 与 SVG/Canvas retained lifecycle                |
+| [ADR-06](./06-box-layout-composite-contract.md)      | Accepted | Box Layout Composite contract        | 冻结双轴 constraint、allocation / slot-size feedback、nested propagation 与 replay wrapper |
+| [ADR-07](./07-runtime-execution-policy.md)           | Accepted | Runtime 执行模式与更新策略           | 显式选择 static / retained，并在 retained Session 中选择 auto / full 更新                  |
+| [ADR-08](./08-layout-proposal-probe-contract.md)     | Accepted | Layout proposal / probe contract     | 冻结双轴 proposal、minimum / natural、resolved slot、guide、failure isolation 与 replay    |
+| [ADR-09](./09-inherited-theme-context.md)            | Proposed | 可继承 Theme IR 与 Composite context | 冻结 Scene / Scope Theme、字段级继承、Composite 消费与领域边界                             |
 
 ## 当前进度
 
@@ -31,6 +34,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-06 已完成双轴 constraint、`slotSize`、显式 composite allocation、完整 replay wrapper、Table consumer 迁移、对抗测试与双语文档，并于 2026-07-28 获人工接受。
 - ADR-07 已完成 Architecture Gate、Runtime/Core/Render/React/Vanilla实现、SVG/Canvas三策略Bench A/B、对抗测试与双语文档，并于2026-07-29获人工接受。
 - ADR-08 已完成双轴 proposal、resolved slot、真实 allocation / visual bounds、alignment guide、隔离 failure、one-use replay、Table consumer 迁移、对抗测试与双语文档；Architecture Gate Round 3/3 PASS，并于 2026-07-30 获人工接受。
+- ADR-09 已完成 Architecture Gate Round 2/3 PASS；仍为 Proposed，尚未获得人工 ADR 接受或实现授权。
 
 ## 执行批次
 
@@ -44,6 +48,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | 5    | ADR-05 | ADR-04 可产出稳定 Scene Patch                          | SVG / Canvas patch 与完整 redraw 等价，并有可测收益                        |
 | 6    | ADR-07 | ADR-03～05 Accepted                                    | static / retained 与 auto / full 可显式选择、对比并保持默认行为不变        |
 | 7    | ADR-08 | ADR-06 Accepted；Standard alpha.2 Core Gate 缺口已明确 | proposal / probe / slot / guide / failure / replay contract 稳定           |
+| 8    | ADR-09 | 通用视觉主题 owner 与 Scene / Scope 继承方向已人工确认 | Theme IR、Composite context、第三方消费边界与入口等价性稳定                |
 
 批次存在硬依赖，不并行实施。每条 ADR 分别完成 `test-contract`、Architecture Gate 与人工实现授权。
 
@@ -55,6 +60,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 4. 增量与完整重建可观察等价；fallback 只影响性能。
 5. React / Vanilla、SVG / Canvas 共享契约，adapter 与 renderer 不建立平行 IR 或更新协议。
 6. 内置与第三方 Program 使用同一 full-run、incremental、fallback 与 diagnostics 边界。
+7. Theme 选择持久化在 Scene / Scope IR；Core 只解析继承并传递有效环境，领域 owner 自行物化默认 token，renderer 不读取 style / mode。
 
 ## Milestone 验收
 
@@ -65,6 +71,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - 同时记录同环境median/p95/max、访问/复用/变更实体数、Patch/trace基数、renderer commit与live handles。
 - 首次完整渲染和静态 SSR / 导出路径没有超出 ADR-01 冻结的回归预算。
 - React 与 Vanilla 暴露等价的同步 update 语义；不承诺 Concurrent 或 progressive presentation。
+- Scene / Scope Theme 可 JSON 往返并按字段继承，两类第三方 Composite 在相同位置读取同一有效 Theme；runtime Scope 与 probe / replay 语义明确，Core-only 子树保持输出不变。领域默认物化与旧字段迁移由各领域后续 ADR 验收。
 
 ## 后续性能遗留
 

@@ -59,6 +59,40 @@ export const collectChannelDescriptors = (
   return out;
 };
 
+/** 判断两个 descriptor 数组字段是否逐项一致 */
+const descriptorValuesEqual = (
+  left: ReadonlyArray<ScaleDescriptor['domain'][number]>,
+  right: ReadonlyArray<ScaleDescriptor['domain'][number]>,
+): boolean => left.length === right.length && left.every((value, index) => Object.is(value, right[index]));
+
+/**
+ * 校验同一 size scale identity 的重复 descriptor 是否等价
+ * @description 多个 mark 可共享同一 size scale；legend 只在它们完整描述同一映射时合并
+ */
+const assertEquivalentSizeDescriptors = (descriptors: ReadonlyArray<ScaleDescriptor>): void => {
+  if (descriptors.length < 2) return;
+  const first = descriptors[0];
+  const equivalent = descriptors
+    .slice(1)
+    .every(
+      descriptor =>
+        descriptor.channel === first.channel &&
+        descriptor.scaleName === first.scaleName &&
+        descriptor.scaleType === first.scaleType &&
+        descriptor.field === first.field &&
+        descriptor.fieldType === first.fieldType &&
+        descriptor.colorScale === undefined &&
+        first.colorScale === undefined &&
+        descriptorValuesEqual(descriptor.domain, first.domain) &&
+        descriptorValuesEqual(descriptor.range, first.range),
+    );
+  if (!equivalent) {
+    throw new Error(
+      `lowerPlots: legend channel "size" has conflicting size descriptors for scale "${first.scaleName ?? 'implicit'}"`,
+    );
+  }
+};
+
 const selectLegendDescriptor = (
   guide: IRPlotLegendGuide,
   descriptors: ReadonlyArray<ScaleDescriptor>,
@@ -69,6 +103,17 @@ const selectLegendDescriptor = (
     descriptor =>
       descriptor.channel === guide.channel && (guide.scale === undefined || descriptor.scaleName === guide.scale),
   );
+  if (guide.channel === 'size') {
+    const descriptorsByIdentity = new Map<string, Array<ScaleDescriptor>>();
+    for (const descriptor of matched) {
+      const identity =
+        descriptor.scaleName ?? `${descriptor.channel}:${descriptor.field ?? ''}:${descriptor.scaleType}`;
+      const group = descriptorsByIdentity.get(identity);
+      if (group === undefined) descriptorsByIdentity.set(identity, [descriptor]);
+      else group.push(descriptor);
+    }
+    for (const group of descriptorsByIdentity.values()) assertEquivalentSizeDescriptors(group);
+  }
   if (guide.scale !== undefined) {
     if (matched.length === 0) {
       const scale = scaleByName.get(guide.scale);

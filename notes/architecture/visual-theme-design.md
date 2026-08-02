@@ -51,19 +51,22 @@ Plot、Table、Chart 等能力都需要开箱即用的视觉默认，也需要�
 
 ## 3. Theme 核心模型
 
-一个可视化主题由三个正交部分组成：
+一个可视化主题由持久化环境与领域覆盖组成：
 
 ```text
-theme = preset + mode + token overrides
+theme environment = style + mode
+domain theme = effective theme environment + token overrides
 ```
 
-### 3.1 Preset
+`style` 选择通用视觉人格，`mode` 选择明暗环境。两者由 Core Theme IR 统一表达，可写在 Scene 或 Scope；compile 按字段继承并把完整有效值交给 Composite。领域 token override 仍留在对应领域 spec，由领域 resolver 在有效环境之上解析。
 
-Preset 定义视觉人格，例如信息层级、装饰密度、数据色彩倾向和默认 guide 呈现。对一个具体消费域而言，built-in preset 最终必须解析为该域完整、合法的 resolved token map，不能在 consumer 中依赖未声明的隐式默认。
+### 3.1 Theme style
 
-四个通用 preset 名称与人格由本文维护。各领域可以使用不同 token vocabulary 和具体值实现同一人格；“通用”不表示所有包必须共享同一份物理 token object。
+Theme style 定义视觉人格，例如信息层级、装饰密度、数据色彩倾向和默认 guide 呈现。Core 拥有四个闭合名称及其跨领域人格，领域 owner 负责把当前 style 解析为自己的完整、合法 resolved token map，不能在 consumer 中依赖未声明的隐式默认。
 
-### 3.2 Mode
+四个通用 style 名称与人格由本文维护。各领域可以使用不同 token vocabulary 和具体值实现同一人格；“通用”不表示所有包必须共享同一份物理 token object。
+
+### 3.2 Theme mode
 
 Mode 定义 canvas 明暗环境及相应的 paint、opacity、对比度和 palette 适配。基础 mode 为 `light` 与 `dark`。
 
@@ -73,10 +76,10 @@ Mode 不定义新的视觉人格。同一个 preset 切换 mode 时，应保持�
 
 用户以 sparse token map 覆盖 preset 与 mode 的结果。覆盖使用与内置主题相同的 canonical key 和 value contract，不建立“内置字段 + 自定义补丁”两套协议。
 
-主题输入可以由各领域设计合适的公开表面，但必须能无歧义地表达：
+Theme 环境与领域输入必须共同无歧义地表达：
 
-- 选择 preset
-- 选择 mode
+- 在 Scene / Scope 选择 style
+- 在 Scene / Scope 选择 mode
 - 提供 sparse token map
 - 检查最终 complete resolved token map
 
@@ -154,7 +157,7 @@ Theme resolver 只决定有效 token 值，不拥有这些值最终代表的绘�
 每个支持主题的领域都应提供：
 
 - 自己的 strict token vocabulary
-- 四个通用 preset 的合法实现
+- 对 Core 四种 Theme style 的合法实现
 - light / dark 两种完整解析结果
 - sparse user override schema
 - deterministic resolver
@@ -182,7 +185,7 @@ Theme resolver 只决定有效 token 值，不拥有这些值最终代表的绘�
 
 ## 7. 四个通用 preset
 
-`neutral` 是默认 preset；默认 mode 由具体入口的版本 ADR 冻结。
+`neutral` 是默认 style，`light` 是默认 mode；具体领域仍需为这个组合提供完整合法的默认 token map。
 
 | Preset     | 中文语义 | 稳定视觉人格                                         | 不应退化为                           |
 | ---------- | -------- | ---------------------------------------------------- | ------------------------------------ |
@@ -205,11 +208,13 @@ Theme resolver 只决定有效 token 值，不拥有这些值最终代表的绘�
 
 ### 8.1 通用优先级
 
-主题只处理可撤销的表现性默认。统一低到高优先级为：
+主题只处理可撤销的表现性默认。环境先在 Core 绘图树中解析，再进入领域优先级：
 
 ```text
-preset
-  -> mode
+Core default neutral + light
+  -> Scene theme
+  -> outer-to-inner Scope theme
+  -> domain preset tokens
   -> user token overrides
   -> domain shorthand / native theme
   -> explicit component config
@@ -217,8 +222,8 @@ preset
 
 其中：
 
-- preset 提供完整人格基线
-- mode 替换依赖 canvas 明暗环境的 token
+- Scene / Scope theme 按字段继承并选定有效 style / mode
+- domain preset tokens 为有效 style / mode 提供完整人格基线
 - user token overrides 对 canonical key 做稀疏覆盖
 - domain shorthand / native theme 是更贴近该领域既有结构的显式输入，例如颜色 shorthand 或 Plot theme
 - explicit component config 是最具体的局部配置，例如某一条 axis、某个 legend 或单个 mark 的属性
@@ -242,27 +247,29 @@ preset
 
 ## 9. Owner 与 package 边界
 
-| 层级 / 包                         | 拥有                                                                 | 不拥有                                                  |
-| --------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------- |
-| 根架构                            | 通用 theme 模型、preset 人格、token 治理、cascade 与跨包不变量       | 具体 key、hex、尺寸、schema 和版本范围                  |
-| Chart / Plot / Table / future Geo | 领域 token vocabulary、preset 具体值、领域 mapping、resolver 与诊断  | Core drawing、Standard layout、renderer 私有默认        |
-| `@retikz/standard`                | 去除领域词汇后的通用 presentation / layout / composite capability    | Plot guide、Table model、Chart type 与数据 palette 语义 |
-| `@retikz/core`                    | 权威 drawing / text / paint fragment、Scene 与 renderer-neutral 表达 | 领域主题、preset 名称与领域 token cascade               |
-| React / Vanilla adapters          | 同一 JSON-safe theme 输入的 authoring 表面与宿主注入                 | 新 token、不同默认、CSS-only 主题语义                   |
-| SVG / Canvas renderer             | 对统一 Scene 的等价呈现                                              | preset 解析、token merge 与领域 mapping                 |
-| `apps/docs` / host application    | 站点或产品 UI 主题、CSS variables、chrome 与交互外壳                 | 改写可视化 spec 的主题契约或静默补可视化默认            |
+| 层级 / 包                         | 拥有                                                                                                                | 不拥有                                                   |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| 根架构                            | 通用 theme 模型、style 人格、token 治理、cascade 与跨包不变量                                                       | 具体 key、hex、尺寸、schema 和版本范围                   |
+| Chart / Plot / Table / future Geo | 领域 token vocabulary、preset 具体值、领域 mapping、resolver 与诊断                                                 | Core drawing、Standard layout、renderer 私有默认         |
+| `@retikz/standard`                | 去除领域词汇后的通用 presentation / layout / composite capability                                                   | Plot guide、Table model、Chart type 与数据 palette 语义  |
+| `@retikz/core`                    | Theme style / mode 词汇、Scene / Scope Theme IR、继承与 Composite context，以及权威 drawing / text / paint fragment | 领域 token、preset 具体值、领域 mapping 与 token cascade |
+| React / Vanilla adapters          | 同一 JSON-safe Scene / Scope Theme 的等价 authoring 表面                                                            | 新 token、不同默认、CSS-only 主题语义                    |
+| SVG / Canvas renderer             | 对统一 Scene 的等价呈现                                                                                             | preset 解析、token merge 与领域 mapping                  |
+| `apps/docs` / host application    | 站点或产品 UI 主题、CSS variables、chrome 与交互外壳                                                                | 改写可视化 spec 的主题契约或静默补可视化默认             |
 
-一个应用可以同时使用 shadcn UI 主题和 retikz visual theme，但两者是相邻系统：宿主可以显式选择或桥接 preset / mode / token，不能假定同名 CSS variable 自动成为 retikz 主题真源。
+一个应用可以同时使用 shadcn UI 主题和 retikz visual theme，但两者是相邻系统：宿主可以显式选择或桥接 style / mode / token，不能假定同名 CSS variable 自动成为 retikz 主题真源。
 
 ## 10. Diagnostics 与 inspection
 
 主题解析必须可解释。每个领域应能在适合自己的公开或开发者 inspection 产物中提供：
 
-- 实际采用的 preset 与 mode
+- 实际采用的 style 与 mode
 - 通过 required schema 的 complete resolved token map
-- 每个有效值来自 preset、mode、user token、domain shorthand 还是 local config
+- 每个领域 token 来自 effective Scene / Scope Theme 所选 preset、user token、domain shorthand 还是 local config
 - token 映射到的正式 owner 配置或产物
 - 无法消费、冲突或被更高优先级覆盖时的诊断
+
+Core 的 `ResolvedTheme` 只携带完整有效的 style / mode，不公开逐字段 winning Scene / Scope 或 locator。领域 inspection 可以把 preset/token 来源归类为 effective Theme，但不能把未提供的字段级继承来源伪装成可追踪 lineage；若未来需要这类来源查询，应由独立 Core inspection contract 冻结。
 
 未知 key、错误 value、缺失 required token、空 palette、非法图元与无法映射的 token 必须 fail-loud。错误至少应指出 token key、输入层和期望 contract；不得静默丢弃、回退为 renderer 默认或只在某个 adapter 打 warning。
 
@@ -284,6 +291,9 @@ preset
 10. SVG、Canvas 等 renderer 消费同一 lowering 结果，不维护各自的主题默认
 11. inspection 能解释关键 token 的最终值、来源与 owner 映射
 12. 四个 preset 在典型内容和两种 mode 下完成可读性、层级、数据区分度与对比度的视觉验收
+13. Scene / Scope Theme 可 JSON 往返并按字段继承，嵌套 Composite 读取所在位置的同一有效 style / mode
+14. Theme 变化不直接改变 Core primitive；只有消费 Theme 的 Composite 重新物化领域默认
+15. Theme context 只承诺有效值；没有独立 lineage contract 时，consumer 不依赖 Core 私有 traversal 状态推断 winning Scope
 
 覆盖率或快照数量不能替代行为、不变量、反例和最低测试层组成的 test-contract 矩阵。
 
