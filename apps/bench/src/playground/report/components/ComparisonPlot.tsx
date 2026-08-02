@@ -11,7 +11,7 @@ export type ComparisonPlotProps = Readonly<{
   height: number;
 }>;
 
-const policyColors = ['#64748b', '#8b5cf6', '#06b6d4'];
+const policyColors = ['#93c5fd', '#3b82f6', '#1d4ed8'];
 
 /** 使用 retikz Plot 绘制策略耗时柱状图 */
 export const ComparisonPlot: FC<ComparisonPlotProps> = props => {
@@ -30,7 +30,7 @@ export const ComparisonPlot: FC<ComparisonPlotProps> = props => {
       renderer="svg"
       style={{ width: '100%', height: '100%', color: 'var(--muted-foreground)' }}
     >
-      <IntervalMark x="policy" y="median" color="policy" fillOpacity={0.82} />
+      <IntervalMark x="policy" y="median" color="policy" fillOpacity={0.9} />
       <Scale
         dimension="x"
         type="band"

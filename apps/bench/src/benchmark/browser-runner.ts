@@ -6,7 +6,7 @@ import { createServer, loadEnv } from 'vite';
 
 import type { BrowserBenchmarkOptions, BrowserBenchmarkResult, RetikzBenchWindow } from './browser-contract';
 
-import { resolveBenchPort } from '../../bench-port';
+import { resolveBenchPort } from '../../../dev-port';
 
 /** environment.json 中与 Chromium runner 相关的冻结字段 */
 export type BrowserRunnerEnvironment = Readonly<{
@@ -20,15 +20,19 @@ export type BrowserRunnerEnvironment = Readonly<{
 }>;
 
 const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+const repoRoot = resolve(appRoot, '../..');
 
 /** 返回与交互式 Performance Lab 隔离的无头 runner 页面 */
 export const getBrowserRunnerPath = (): '/runner.html' => '/runner.html';
 
 /** 读取并校验固定 bench 服务端口 */
 export const readBenchPort = (): number => {
-  const rawPort = process.env.RETIKZ_BENCH_PORT ?? loadEnv('development', appRoot, '').RETIKZ_BENCH_PORT;
+  const env = loadEnv('development', repoRoot, '');
 
-  return resolveBenchPort(rawPort);
+  return resolveBenchPort(
+    process.env.RETIKZ_BENCH_PORT ?? env.RETIKZ_BENCH_PORT,
+    process.env.RETIKZ_DEV_SLOT ?? env.RETIKZ_DEV_SLOT,
+  );
 };
 
 /** 读取 lockfile 安装的 Playwright 版本 */

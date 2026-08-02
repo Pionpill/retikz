@@ -57,6 +57,10 @@ describe('Bench report store', () => {
       { runId: 'run-2', status: 'warning' },
       { runId: 'run-1', status: 'passed' },
     ]);
+
+    await expect(
+      store.readReport({ moduleId: 'kernel', caseId: 'single-entity-update', runId: 'run-1' }),
+    ).resolves.toEqual(first);
   });
 
   it('拒绝可能逃逸报告根目录的标识', async () => {
@@ -75,6 +79,32 @@ describe('Bench report store', () => {
     ).rejects.toThrow('Invalid moduleId');
   });
 
+  it('按时间点而不是 ISO 字符串字典序排列报告', async () => {
+    const root = await createTemporaryRoot();
+    const runIds = ['earlier-run', 'later-run'];
+    const store = createReportStore(root, { createRunId: () => runIds.shift() ?? 'unexpected-run' });
+    await store.writeReport({
+      moduleId: 'kernel',
+      caseId: 'single-entity-update',
+      status: BenchReportStatus.Passed,
+      startedAt: '2026-08-01T08:59:59+08:00',
+      completedAt: '2026-08-01T09:00:00+08:00',
+      payload: {},
+    });
+    await store.writeReport({
+      moduleId: 'kernel',
+      caseId: 'single-entity-update',
+      status: BenchReportStatus.Passed,
+      startedAt: '2026-08-01T01:59:59Z',
+      completedAt: '2026-08-01T02:00:00Z',
+      payload: {},
+    });
+
+    const listed = await store.listReports({ moduleId: 'kernel', caseId: 'single-entity-update' });
+
+    expect(listed.reports.map(report => report.runId)).toEqual(['later-run', 'earlier-run']);
+  });
+
   it('跳过损坏报告并返回可诊断信息', async () => {
     const root = await createTemporaryRoot();
     const reportDirectory = join(root, 'runs', 'kernel', 'single-entity-update', 'broken-run');
@@ -87,5 +117,32 @@ describe('Bench report store', () => {
     expect(listed.reports).toEqual([]);
     expect(listed.diagnostics).toHaveLength(1);
     expect(listed.diagnostics[0]).toContain('broken-run');
+  });
+
+  it('跳过身份与存储路径不一致的报告', async () => {
+    const root = await createTemporaryRoot();
+    const reportDirectory = join(root, 'runs', 'kernel', 'single-entity-update', 'stored-run');
+    await mkdir(reportDirectory, { recursive: true });
+    await writeFile(
+      join(reportDirectory, 'report.json'),
+      JSON.stringify({
+        schemaVersion: 1,
+        runId: 'different-run',
+        moduleId: 'kernel',
+        caseId: 'single-entity-update',
+        status: 'passed',
+        startedAt: '2026-08-01T00:00:00.000Z',
+        completedAt: '2026-08-01T00:00:01.000Z',
+        payload: {},
+      }),
+      'utf8',
+    );
+    const store = createReportStore(root);
+
+    const listed = await store.listReports({ moduleId: 'kernel', caseId: 'single-entity-update' });
+
+    expect(listed.reports).toEqual([]);
+    expect(listed.diagnostics).toHaveLength(1);
+    expect(listed.diagnostics[0]).toContain('identity does not match');
   });
 });
