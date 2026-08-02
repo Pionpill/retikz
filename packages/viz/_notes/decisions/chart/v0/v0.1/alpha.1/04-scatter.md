@@ -1,6 +1,6 @@
 # ADR-04：Scatter 首个 Canonical Type
 
-- 状态：Proposed（公开 adapter 与 release surface 受 ADR-01 / ADR-03 及 Plot size / legend capability gates 阻塞）
+- 状态：Accepted（公开 adapter 与 release surface 仍受 ADR-01 / ADR-03 的外部 capability gates 阻塞）
 - 决策日期：2026-07-31
 - 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-01](./01-chart-infrastructure.md) · [ADR-03](./03-presentation-standard-layout.md)
 
@@ -102,6 +102,10 @@ field-bound size 与默认 size legend 只有在 Plot owner 补齐以下现有 c
 ## 测试策略摘要
 
 需要 strict schema、exact Plot recipe、size field / constant、size scale / legend interaction、退化数据、多 descriptor 诊断、coordinate / composition、custom definition、core invariant、inspection / trace 与三入口 parity 证据。关键不变量是主 Point 与 x / y 始终存在，size 只从 `encoding.size` 进入；field-bound size 沿 Plot 正式 sqrt channel 与 descriptor / guide 主链闭环且不产生 Bubble 私有路径，兼容 coordinate 通过 Plot 正式 roles 投影，追加 marks 不替换核心，presentation 前后 datum identity 与 provenance 连续。
+
+## 完工摘要
+
+Scatter 的封闭 schema、Point 核心配方、size channel / legend 消歧、兼容 coordinate 投影、inspection 与 trace 已沿 Chart 到 Plot 的正式主链闭环。验证层覆盖基础契约、解析结果、退化数据、扩展边界与可观察 identity；公开 adapter、presentation、release surface 与面向发布的文档继续等待 ADR-01 / ADR-03 所列外部 capability gates，不由本 ADR 局部绕过。
 
 ## 不在本 ADR 范围
 

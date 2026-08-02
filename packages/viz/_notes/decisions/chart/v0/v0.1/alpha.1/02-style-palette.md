@@ -60,21 +60,21 @@ token map 是闭合数据，不执行代码、不按名称 dispatch，也不拥�
 
 ### Chart、Plot 与 presentation
 
-| Token                      | Value contract             | 正式消费方                       |
-| -------------------------- | -------------------------- | -------------------------------- |
-| `chart.canvas.fill`        | paint                      | Standard Chart surface           |
-| `chart.padding`            | Standard padding           | Standard surface inset           |
-| `chart.gap`                | finite non-negative number | presentation vertical gap        |
-| `chart.font.family`        | non-empty string           | Chart / Plot typography fallback |
-| `chart.<slot>.foreground`  | paint                      | slot text foreground             |
-| `chart.<slot>.font.size`   | Core font size             | slot font size                   |
-| `chart.<slot>.font.weight` | Core font weight           | slot font weight                 |
-| `chart.<slot>.lineHeight`  | Core line height           | slot line height                 |
-| `chart.<slot>.align`       | Core text align            | slot text align                  |
-| `plot.surface.fill`        | paint                      | Plot background                  |
-| `plot.foreground`          | paint                      | Plot guide typography fallback   |
-| `plot.label.foreground`    | paint                      | Plot static label foreground     |
-| `plot.label.font.size`     | Core font size             | Plot static label size           |
+| Token                      | Value contract             | 正式消费方                          |
+| -------------------------- | -------------------------- | ----------------------------------- |
+| `chart.canvas.fill`        | paint                      | Standard Chart surface              |
+| `chart.padding`            | Standard padding           | Standard surface inset              |
+| `chart.gap`                | finite non-negative number | presentation default column row gap |
+| `chart.font.family`        | non-empty string           | Chart / Plot typography fallback    |
+| `chart.<slot>.foreground`  | paint                      | slot text foreground                |
+| `chart.<slot>.font.size`   | Core font size             | slot font size                      |
+| `chart.<slot>.font.weight` | Core font weight           | slot font weight                    |
+| `chart.<slot>.lineHeight`  | Core line height           | slot line height                    |
+| `chart.<slot>.align`       | Core text align            | slot text align                     |
+| `plot.surface.fill`        | paint                      | Plot background                     |
+| `plot.foreground`          | paint                      | Plot guide typography fallback      |
+| `plot.label.foreground`    | paint                      | Plot static label foreground        |
+| `plot.label.font.size`     | Core font size             | Plot static label size              |
 
 `<slot>` 是闭合集合 `title`、`subtitle`、`caption`、`note`、`source`、`credit`；上表的五个 slot token 分别对六个 slot 展开，不接受其它 key。
 
@@ -235,7 +235,8 @@ clean:    #56B4E9 #F0B44D #4DD4AC #E58AC8 #7AC7F0 #FF7A59 #F6E36B #E5E7EB
 低到高优先级固定为：
 
 ```text
-type recipe presentational defaults
+Plot built-in defaults
+  < type recipe presentational defaults
   < built-in style tokens[style][themeMode]
   < user styleTokens
   < colors

@@ -1,6 +1,6 @@
 # ADR-07：Ranged Dot 的双端点与 projected Relation
 
-- 状态：Proposed（公开 adapter 与 docs 受 ADR-04 capability gate 阻塞）
+- 状态：Proposed（公开 adapter 与 docs 受 ADR-04 capability gate 阻塞；可执行 lowering 另受 range-row atomicity gate 阻塞）
 - 决策日期：2026-07-31
 - 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-06](./06-regression.md)
 
@@ -48,6 +48,8 @@ Shared 与 endpoint Point patch 都精确复用 ADR-04 `ScatterPointPatch`，并
 - category / start / end 是严格 field-only roles，不接受无消费语义的 binding-level scale
 - start 与 end 不自动排序；start > end 时仍按 authored 角色连接
 - start === end 时保留两个重合 Point 与零长度 Relation，不由 Chart 删除
+- 非空输入中，每一行的 category / start / end 必须同时存在并能按正式 field 与 position contract 投影；任一角色缺失、为 null 或不可投影时整张 Chart 在 mark lowering 前 fail-loud，不允许留下孤立端点或只省略 Relation
+- 完全空 rows 是合法空结果，三个核心 members 都不产生 datum geometry，也不报 range-row 错误；它不改变 resolved PlotSpec、稳定目标或 inspection
 - color 通过 Plot 正式 encoding 同时作用于两个 Point 与 Relation；Point / Relation local style 按各自 owner 规则覆盖
 - 缺省位置 scale 由 Plot 联合三个 marks 的 projected fields 推断
 - coordinate / composition 必须提供二维 role；三个 marks 与 axes 始终属于同一 active/default view
@@ -60,12 +62,19 @@ Shared 与 endpoint Point patch 都精确复用 ADR-04 `ScatterPointPatch`，并
 - Plot 拥有 Point / Relation、projected target、scale inference、coordinate projection、routing、lowering 与 locator / provenance
 - Chart 不 reshape dataset、不复制 Relation 几何，也不为 Relation 伪造 Point anchor identity
 
+## Range-row atomicity capability gate
+
+Ranged Dot 只有在 Plot owner 能对共享同一 row 的复合 Mark recipe 执行正式原子行校验后才能进入可执行 lowering。该校验必须在 Point / Relation 各自跳过不可投影值之前运行，复用 Plot 的 field resolution、data model、coordinate role projection 与诊断，不由 Chart 预扫描或清洗 rows；同一规则覆盖内置与自定义兼容 coordinate。失败必须定位 row identity 与 category / start / end 中的非法角色。
+
+该 gate 未解除时，可以构造并检查 Ranged Dot 的 owner-private ChartSpec 与完整 PlotSpec，但不得依赖当前三个 Mark 各自跳过非法值的行为执行 lowering。Chart 不增加私有 filter transform、不 reshape 数据，也不修改 Relation 几何来伪造原子性。
+
 ## 架构验证
 
 - Canonical Type 判定：同一 row 的两个端点与 range relation 是稳定复合语义
 - 内部表达：完全组合 Plot Point + Relation projected target，无新 transform 或 geometry
 - 外部扩展：可追加 Reference / label 等正式 Plot marks，但不能替换三个核心 members
 - trace：两个 Point 对同一 row 保持相同 row lineage；Relation 保持 mark-level lineage，不承诺不存在的 per-row datum locator
+- 依赖结论：复合 Mark 的 range-row atomicity 属于 Plot 输入到 Mark lowering 的一致性闭环，先下沉修复；gate 解除前 Ranged Dot 只形成 owner-private spec / recipe，不进入可执行 lowering
 
 ## 被否决方案
 
@@ -75,7 +84,7 @@ Shared 与 endpoint Point patch 都精确复用 ADR-04 `ScatterPointPatch`，并
 
 ## 测试策略摘要
 
-需要 schema、三 Mark recipe、shared / endpoint / range patch precedence、projected target、coordinate / composition、层级 gate、degenerate range、inspection / trace 与三入口 parity 证据。关键不变量是两个端点与 Relation 始终存在、投影同一 row、层级稳定且 presentation 不改变 Point lineage。
+需要 schema、三 Mark recipe、shared / endpoint / range patch precedence、projected target、coordinate / composition、层级 gate、degenerate range、range-row atomicity、inspection / trace 与三入口 parity 证据。原子性证据必须覆盖非空 row 任一核心角色非法时整体失败，以及完全空 rows 的合法退化。关键不变量是两个端点与 Relation 始终存在、投影同一 row、层级稳定且 presentation 不改变 Point lineage。
 
 ## 不在本 ADR 范围
 
