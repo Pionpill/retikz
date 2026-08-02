@@ -12,6 +12,7 @@ import { CHART_NAMESPACE } from '../schemas';
 import { ChartResolveError, ChartResolveErrorCode } from './errors';
 import { createChartInspection } from './inspection';
 import { ChartMemberParseError, mergeChartSeed } from './merge';
+import { resolveChartPresentation } from './presentation';
 import { chartRecipeStyleContextOf, materializeChartPlotTheme, resolveChartStyle } from './style';
 
 /** Chart resolver 的内部成功结果 */
@@ -110,7 +111,9 @@ export const resolveChartSpec = (input: unknown): ChartResolution => {
     throw error;
   }
   const spec: InternalChartSpecBound = bound.spec;
-  const inspection = createChartInspection(spec, plotSpec, merged.members, style);
-  const node: IRChild = spec.id === undefined ? plotSpec : { type: 'scope', id: spec.id, children: [plotSpec] };
+  const presentation = resolveChartPresentation(spec.presentation, plotSpec, style.tokens);
+  const inspection = createChartInspection(spec, plotSpec, merged.members, style, presentation.inspection);
+  const node: IRChild =
+    spec.id === undefined ? presentation.content : { type: 'scope', id: spec.id, children: [presentation.content] };
   return { plotSpec, node, inspection };
 };

@@ -29,6 +29,31 @@ describe('Chart resolution errors', () => {
   it.each([
     [{ namespace: 'chart', type: 'missing' }, 'unknown-type', ['type']],
     [{ ...base, mark: { unknownKey: true } }, 'invalid-chart-spec', ['mark', 'unknownKey']],
+    [
+      { ...base, presentation: { children: [{ content: { kind: 'preset', preset: 'title', text: 'A' } }] } },
+      'invalid-chart-spec',
+      ['presentation', 'children'],
+    ],
+    [
+      {
+        ...base,
+        presentation: {
+          children: [{ content: { kind: 'preset', preset: 'title', text: '' } }, { content: { kind: 'plot' } }],
+        },
+      },
+      'invalid-chart-spec',
+      ['presentation', 'children', 0, 'content', 'text'],
+    ],
+    [
+      { ...base, presentation: { layout: { rowGap: -1 }, children: [{ content: { kind: 'plot' } }] } },
+      'invalid-chart-spec',
+      ['presentation', 'layout', 'rowGap'],
+    ],
+    [
+      { ...base, presentation: { children: [{ key: 'main', content: { kind: 'plot' } }] } },
+      'invalid-chart-spec',
+      ['presentation', 'children', 0, 'key'],
+    ],
     [{ ...base, components: [{ target: 'missing', grid: true }] }, 'unknown-target', ['components', 0, 'target']],
     [
       {

@@ -41,6 +41,23 @@ describe('Chart shared schemas', () => {
     ).toThrow();
   });
 
+  it('通过 shared owner fragment 接受 presentation', () => {
+    expect(
+      ChartSharedSchema.parse({
+        data: { reference: 'rows' },
+        presentation: {
+          layout: { rowGap: 6, alignItems: 'start' },
+          children: [{ content: { kind: 'preset', preset: 'title', text: 'Revenue' } }, { content: { kind: 'plot' } }],
+        },
+      }),
+    ).toMatchObject({
+      presentation: {
+        layout: { rowGap: 6, alignItems: 'start' },
+        children: [{ content: { kind: 'preset', preset: 'title', text: 'Revenue' } }, { content: { kind: 'plot' } }],
+      },
+    });
+  });
+
   it('接受 owner composition 字段作为唯一空间根', () => {
     expect(
       ChartSharedSchema.parse({
@@ -95,6 +112,10 @@ describe('Chart shared schemas', () => {
         chart: { type: 'scatter', id: 'sales' },
         plot: { id: 'sales/plot' },
         style,
+        presentation: {
+          contentKind: 'plot',
+          items: [{ key: 'chart.plot', contentKind: 'plot', sourcePath: '$resolved/plot' }],
+        },
         members: [
           {
             target: 'mark.main',
@@ -110,6 +131,10 @@ describe('Chart shared schemas', () => {
       chart: { type: 'scatter', id: 'sales' },
       plot: { id: 'sales/plot' },
       style,
+      presentation: {
+        contentKind: 'plot',
+        items: [{ key: 'chart.plot', contentKind: 'plot', sourcePath: '$resolved/plot' }],
+      },
       members: [
         {
           target: 'mark.main',
@@ -132,8 +157,61 @@ describe('Chart shared schemas', () => {
             { kind: 'colors', path: '$spec/colors' },
           ],
         },
+        presentation: {
+          contentKind: 'plot',
+          items: [{ key: 'chart.plot', contentKind: 'plot', sourcePath: '$resolved/plot' }],
+        },
         members: [],
       }).success,
     ).toBe(false);
+
+    const inspectionBase = {
+      chart: { type: 'scatter' },
+      plot: {},
+      style,
+      members: [],
+    } as const;
+    expect(
+      ChartInspectionSchema.parse({
+        ...inspectionBase,
+        presentation: {
+          contentKind: 'flex-layout',
+          items: [
+            {
+              key: 'chart.presentation.credit',
+              contentKind: 'preset',
+              preset: 'credit',
+              sourcePath: '$spec/presentation/children/0',
+            },
+            { key: 'chart.plot', contentKind: 'plot', sourcePath: '$spec/presentation/children/1' },
+            { key: 'badge', contentKind: 'child', sourcePath: '$spec/presentation/children/2' },
+          ],
+        },
+      }).presentation.items.map(item => item.key),
+    ).toEqual(['chart.presentation.credit', 'chart.plot', 'badge']);
+
+    for (const presentation of [
+      { contentKind: 'flex-layout', items: [] },
+      {
+        contentKind: 'plot',
+        items: [{ key: 'chart.presentation.title', contentKind: 'preset', preset: 'title', sourcePath: '$spec/x' }],
+      },
+      {
+        contentKind: 'flex-layout',
+        items: [
+          { key: 'chart.plot', contentKind: 'plot', sourcePath: '$spec/0' },
+          { key: 'chart.plot', contentKind: 'plot', sourcePath: '$spec/1' },
+        ],
+      },
+      {
+        contentKind: 'flex-layout',
+        items: [
+          { key: 'chart.plot', contentKind: 'plot', sourcePath: '$spec/0' },
+          { key: 'chart.plot', contentKind: 'child', sourcePath: '$spec/1' },
+        ],
+      },
+    ] as const) {
+      expect(ChartInspectionSchema.safeParse({ ...inspectionBase, presentation }).success).toBe(false);
+    }
   });
 });

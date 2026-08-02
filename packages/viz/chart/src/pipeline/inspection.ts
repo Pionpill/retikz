@@ -4,7 +4,7 @@ import type { IRPlotSpec } from '@retikz/plot';
 import { JsonObjectSchema } from '@retikz/core';
 
 import type { InternalChartSpecBound } from '../providers';
-import type { IRChartInspection } from '../schemas';
+import type { IRChartInspection, IRChartPresentationInspection } from '../schemas';
 import type { MergedChartMember } from './merge';
 import type { ResolvedChartStyleContext } from './style';
 
@@ -36,6 +36,7 @@ export const createChartInspection = (
   plotSpec: IRPlotSpec,
   members: ReadonlyArray<MergedChartMember>,
   style: ResolvedChartStyleContext,
+  presentation: IRChartPresentationInspection,
 ): IRChartInspection => {
   const values = normalizedValues(plotSpec);
   return ChartInspectionSchema.parse({
@@ -48,6 +49,7 @@ export const createChartInspection = (
       tokenSources: style.tokenSources,
       authoredOverrides: style.authoredOverrides,
     },
+    presentation,
     members: orderedMembers(members).map((member, index) => ({
       target: member.target,
       kind: member.kind,

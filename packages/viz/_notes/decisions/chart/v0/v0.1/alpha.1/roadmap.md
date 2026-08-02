@@ -11,7 +11,7 @@ alpha.1 证明一条统一的 type-first 路径可以在不裁剪 Plot 能力的
 1. 建立 `@retikz/chart`、`@retikz/chart-react`、`@retikz/chart-vanilla` 三包及封闭 type recipe 主链
 2. 让 ChartSpec 保持 JSON-safe、单根 data、结构轴与 Plot 自洽，并可确定性解析为完整 PlotSpec
 3. 提供默认 `neutral` 及 `academic` / `vibrant` / `clean` 四套 style preset、独立 light / dark mode、公开严格 `styleTokens`，并与 `colors`、Plot `theme`、显式 GoG 配置形成统一优先级
-4. 用 Standard FlexLayout 组合可选 title、subtitle、caption、note、source、credit 与 Plot body
+4. 用 Standard FlexLayout 按 authored order 组合唯一主 Plot 占位、可选文本 preset 与任意 renderer-neutral `IRChild`
 5. 按 `scatter`、`connected-scatter`、`regression`、`ranged-dot`、`strip` 顺序逐 type 建立闭环，并把 Bubble 作为 field-bound size 的 Scatter Pattern
 6. 保持手写 JSON、React JSX、Vanilla builder 的 ChartSpec、完整 PlotSpec 与最终组合结果等价
 
@@ -25,7 +25,7 @@ ChartSpec
   -> core recipe + allowed override + explicit Plot extension
   -> complete PlotSpec
   -> optional presentation resolver
-  -> owner-private content: PlotSpec | Standard FlexLayout<Core text nodes | PlotSpec>
+  -> owner-private content: PlotSpec | Standard FlexLayout<IRChild with exactly one primary Plot placeholder>
   -> Standard surface(content)
   -> Standard / Plot composite expansion
   -> Core IR / Scene
@@ -39,7 +39,7 @@ Chart 不提供 `defineChart`、Chart registry 或自定义 type。官方 recipe
 | --- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------- |
 | 01  | Chart 基础设施与封闭 recipe 主链 | 可实施内部 schema / resolver / inspection / authoring normalizer；逐 type composite contract；首个公开入口在 ADR-04 原子接线     | 内部子集依赖 Plot v0.1、Data v0.1；公开 adapter 依赖 Kernel gate | 内部完成 / 公开接线受门控 |
 | 02  | Style preset、mode 与 token      | `neutral` / `academic` / `vibrant` / `clean` × light / dark、公开严格 token、colors / theme / member 优先级、canvas surface gate | ADR-01、Standard arbitrary-child surface composite               | 待人工 Accept / 底座阻塞  |
-| 03  | Presentation 与 Standard layout  | 六个可选展示槽位、owner-private content、最终 Standard surface canonical node 与当前 identity 边界                               | ADR-01、ADR-02、Standard FlexLayout + surface                    | 待人工 Accept / 底座阻塞  |
+| 03  | Presentation 与 Standard layout  | 唯一主 Plot 占位、有序 preset / custom children、完整 Flex item / container authoring；headless adapter parity 继续受门控        | owner-local 依赖 ADR-01、ADR-02 与 Standard FlexLayout；公开接线依赖 surface、Kernel contribution 聚合与 Core spatial transparency | Proposed / owner-local 已实现 / 等待 ADR-02 Accept 后复验 |
 | 04  | Scatter                          | 首个公开 ChartSpec variant、Point 主 Mark、二维角色                                                                              | ADR-01–03、Plot size / legend capability                         | 待人工 Accept / 底座阻塞  |
 | 05  | Connected Scatter                | Point + Path + 稳定 order                                                                                                        | ADR-04                                                           | 待人工 Accept             |
 | 06  | Regression                       | Point + mark-local Smooth + Path                                                                                                 | ADR-05                                                           | 待人工 Accept             |
@@ -47,6 +47,8 @@ Chart 不提供 `defineChart`、Chart registry 或自定义 type。官方 recipe
 | 08  | Strip                            | 分类位置 + 数据驱动 offset + Point                                                                                               | ADR-07 + Plot offset capability                                  | **阻塞**                  |
 
 实施是严格串行链。类型 ADR 必须把自己的 variant 加入同一个 `ChartSpecSchema` discriminated union 和同一个封闭 resolver，不复制 package、style、presentation、diagnostics 或 adapter 主链。
+
+ADR-03 的 owner-local contract 已有实现证据，但在 ADR-02 Accepted 并完成依赖复验前仍保持 Proposed；React / Vanilla headless runtime、完整 surface、nested contribution 与 spatial transparency 继续作为公开接线前置。
 
 ## 4. 共用 ChartSpec 结构轴
 
@@ -145,7 +147,7 @@ Chart presentation 的 canonical result 是 Standard FlexLayout 内含完整 Plo
 
 `chart.canvas.fill` 与 `chart.padding` 必须覆盖完整 Chart，而不只是 Plot panel。当前 Standard Frame 只接受直接 Core Node；OverlayLayout 虽可承载任意 child，但没有按父 allocation 动态铺满的 renderer-neutral background child。
 
-ADR-02 / ADR-03 因此等待 `@retikz/standard` owner 的独立 arbitrary-child surface/background composite。Core 只在 Standard ADR 证明缺少通用 layout-aware composite / primitive 底座时通过 dependency ADR 先行协作。该 gate 未解除时：
+ADR-02 的完整 canvas 与 ADR-03 的公开组合入口因此等待 `@retikz/standard` owner 的独立 arbitrary-child surface/background composite。Core 只在 Standard ADR 证明缺少通用 layout-aware composite / primitive 底座时通过 dependency ADR 先行协作。该 gate 未解除时：
 
 - 不允许 Chart 私造 layout / bbox / background primitive 主链
 - 不允许 React / Vanilla 用 DOM / CSS 主题替代 JSON / Canvas 能力
@@ -156,7 +158,7 @@ ADR-02 / ADR-03 因此等待 `@retikz/standard` owner 的独立 arbitrary-child 
 
 Chart presentation 会在 Plot 外增加 surface 与 layout，但公开入口不能把 Plot 变成只能观察整体 bbox 的黑盒。ADR-04 的公开 adapter 与 docs 接线前，需要 Core owner 的 qualified spatial handle / selector capability 满足：
 
-- 稳定标识整个 Chart、Plot body 与每个实际存在的 presentation slot
+- 稳定标识整个 Chart、Plot body 与每个实际存在的 presentation item
 - selector 可以从 Chart namespace 穿过 Plot body，继续定位 Plot 拥有的 view / track / facet / plotArea / axis / series / datum handle
 - Standard probe / replay 改变 geometry 后不丢失或重命名上述 identity、payload、locator 与 provenance
 - 多个 Chart 的局部 handle 经过 qualified namespace 后不冲突

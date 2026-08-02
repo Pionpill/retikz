@@ -4,6 +4,7 @@ export * from './connected-scatter';
 export * from './constants';
 export * from './infrastructure';
 export * from './inspection';
+export * from './presentation';
 export * from './scatter';
 export * from './shared';
 export * from './style';
