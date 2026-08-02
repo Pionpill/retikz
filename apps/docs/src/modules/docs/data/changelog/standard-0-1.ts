@@ -205,10 +205,10 @@ export const standardV01: Release = {
               },
             },
             {
-              label: { zh: 'Legend plain-data props', en: 'Legend plain-data props' },
+              label: { zh: 'Legend 无头组合 API', en: 'Headless Legend composition API' },
               content: {
-                zh: '`<Legend>` 接收与 `LegendInput` 相同的 JSON-safe plain data，不提供 React children 模板；静态 Tier 2 adapter 在当前 Layout 局部贡献 `LegendDefinition`。',
-                en: '`<Legend>` accepts the same JSON-safe plain data as `LegendInput` without a React children template. Its static Tier 2 adapter contributes `LegendDefinition` locally to the current Layout.',
+                zh: 'BREAKING：`<Legend kind>` 改用 `LegendTitle`、`LegendItem`、`LegendRamp` 与 `LegendTick` 组合可绘制 JSX slot；旧 React `content` / `title` props 已移除。Vanilla 与持久化 `LegendInput` 保持 JSON-safe plain data，静态 Tier 2 adapter 仍在当前 Layout 局部贡献 `LegendDefinition`。',
+                en: 'BREAKING: `<Legend kind>` now composes drawable JSX slots through `LegendTitle`, `LegendItem`, `LegendRamp`, and `LegendTick`; the old React `content` and `title` props are removed. Vanilla and persisted `LegendInput` remain JSON-safe plain data, while the static Tier 2 adapter still contributes `LegendDefinition` locally to the current Layout.',
               },
             },
           ],

@@ -1,8 +1,8 @@
 import type { FC } from 'react';
 
 import { Layout, Node, Scope } from '@retikz/react';
-import { createFlexLayout, createGrid, LegendContentKind } from '@retikz/standard';
-import { FlexLayout, LayoutItem, Legend } from '@retikz/standard-react';
+import { createGrid, LegendContentKind } from '@retikz/standard';
+import { FlexLayout, LayoutItem, Legend, LegendItem, LegendTitle } from '@retikz/standard-react';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -45,27 +45,25 @@ const scopeInspectionVanillaSource = readFileSync(
 
 const LegendWithNestedStandardDemo: FC = () => (
   <Layout width={220} height={140}>
-    <Legend
-      title={{ type: 'node', position: [0, 0], text: 'Legend' }}
-      content={{
-        kind: LegendContentKind.Items,
-        items: [
-          {
-            key: 'nested-grid',
-            sample: createFlexLayout({
-              children: [
-                {
-                  kind: 'flex',
-                  key: 'grid',
-                  child: createGrid({ bounds: { min: [0, 0], max: [20, 20] }, spacing: 10 }),
-                },
-              ],
-            }),
-            label: { type: 'node', position: [0, 0], text: 'Nested' },
-          },
-        ],
-      }}
-    />
+    <Legend kind={LegendContentKind.Items}>
+      <LegendTitle>
+        <Node position={[0, 0]} text="Legend" />
+      </LegendTitle>
+      <LegendItem
+        itemKey="nested-grid"
+        sample={
+          <FlexLayout>
+            <LayoutItem
+              kind="flex"
+              itemKey="grid"
+              ir={createGrid({ bounds: { min: [0, 0], max: [20, 20] }, spacing: 10 })}
+            />
+          </FlexLayout>
+        }
+      >
+        <Node position={[0, 0]} text="Nested" />
+      </LegendItem>
+    </Legend>
   </Layout>
 );
 

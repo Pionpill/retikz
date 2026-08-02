@@ -1,7 +1,7 @@
 # ADR-09：通用 Legend 的已解析呈现契约
 
 - 状态：Proposed
-- 决策日期：2026-08-01
+- 决策日期：2026-08-02
 - 关联：[alpha.2 roadmap](./roadmap.md) · [Standard v0.1 roadmap](../roadmap.md) · [Standard Drawing Library 设计](../../../../../architecture/standard-library-design.md) · [能力完备性总纲](../../../../../../../../notes/architecture/capability-design.md) · [Plot completeness](../../../../../../../viz/_notes/architecture/plot-visualization-complete.md) · [Table completeness](../../../../../../../viz/_notes/architecture/table-visualization-complete.md)
 
 ## 背景
@@ -95,7 +95,7 @@ type LegendTickInput = {
 };
 ```
 
-以上是允许省略固定 discriminator 与默认字段的 author input 最小公开结构；实际类型由 strict schema 推导，不维护手写平行类型。`createLegend()`、React 与 Vanilla 接收 `LegendInput`，统一注入 `namespace: 'standard'` / `type: 'legend'` 并解析。schema 解析后的 canonical `IRLegend` 必须显式包含固定 discriminator、`titleGap`、`contentAlign`、`size.x / size.y`、`padding`、`overflow`，items form 必须包含 `direction`、`wrap`、`columnGap`、`rowGap`、`sampleGap`、`sampleAlign`，ramp form 必须包含 `direction` 与 `sampleGap`；只有 `title`、item / tick 的 `label` 继续可省略。直接 IR authoring 接受完整 canonical `IRLegend`；factory、React 与 Vanilla 产生该 parsed output，持久化、diff、compile 与 parity 都以它为真值，不能由 adapter 决定是否保留默认字段。
+以上是允许省略固定 discriminator 与默认字段的持久化 author input 最小公开结构；实际类型由 strict schema 推导，不维护手写平行类型。`createLegend()` 与 Vanilla 接收 `LegendInput`，React 则把组合式 JSX authoring 同步转换为同一输入；三者统一注入 `namespace: 'standard'` / `type: 'legend'` 并解析。schema 解析后的 canonical `IRLegend` 必须显式包含固定 discriminator、`titleGap`、`contentAlign`、`size.x / size.y`、`padding`、`overflow`，items form 必须包含 `direction`、`wrap`、`columnGap`、`rowGap`、`sampleGap`、`sampleAlign`，ramp form 必须包含 `direction` 与 `sampleGap`；只有 `title`、item / tick 的 `label` 继续可省略。直接 IR authoring 接受完整 canonical `IRLegend`；factory、React 与 Vanilla 产生该 parsed output，持久化、diff、compile 与 parity 都以它为真值，不能由 adapter 决定是否保留默认字段。
 
 `sample` 可以是 Node、Path、Scope 或任意已注册 Composite。实线、虚线与点线直接使用具有对应 stroke 的 Path；色块或 symbol 使用 Node；连续颜色或透明度使用相应 Core child；未来 Stage、Decision、Connector 等能力可以直接提供自己的 composite sample。
 
@@ -257,19 +257,64 @@ Legend 通过 `LegendDefinition` 与 `LegendModule` 接入现有 Standard capabi
 
 LegendModule 只贡献 Legend 自身 definition。LegendDefinition 复用 Standard 已有 Box 词汇与 Core layout-aware contract，但不要求调用方同时加载 FlexLayout、GridLayout 或 OverlayLayout module，也不自动收集 sample 所需的未知 Tier 2 capability。sample 缺失 definition 时必须保留明确的 provider key 与 occurrence diagnostic。
 
-### 7. React 与 Vanilla 表达同一契约
+### 7. React 使用无头组合 authoring，Vanilla 保持 plain-data authoring
 
-直接 IR、Standard React 与 Standard Vanilla 必须构造同一个 `IRLegend`：
+直接 IR、Standard React 与 Standard Vanilla 必须构造同一个 `IRLegend`，但可以使用符合各自宿主习惯的 authoring surface。Vanilla 没有组件树，继续接收 plain-data `LegendInput`；React 使用平级 named exports `Legend`、`LegendTitle`、`LegendItem`、`LegendRamp` 与 `LegendTick`，不建立 `Legend.Xxx` namespace：
 
-- alpha.2 React props 与 Vanilla builder 都接收 plain-data `LegendInput`，并以 JSON-safe `IRChild` 作为 sample；两者都经过同一 schema / factory 得到 canonical `IRLegend`，本 ADR 不承诺 ReactNode sample template 或 children sugar
-- Vanilla builder 只构造同一 canonical output，不维护独立 sample 类型、layout solver 或 registry
-- 相同 Standard input 与 compile environment 在两种 adapter 下得到等价的 Core 语义与 Legend artifact
+```tsx
+<Legend kind="items" direction="vertical">
+  <LegendTitle>
+    <Node position={[0, 0]} text="关系类型" />
+  </LegendTitle>
+  <LegendItem
+    itemKey="direct"
+    sample={
+      <Path dashed>
+        <Step kind="move" to={[0, 0]} />
+        <Step kind="line" to={[24, 0]} />
+      </Path>
+    }
+  >
+    <Node position={[0, 0]} text="直接关系" />
+  </LegendItem>
+</Legend>
+```
 
-领域 React / Vanilla adapter 只负责把领域 authoring 送入领域 resolver，再生成 Standard Legend input；不得复制通用 Legend layout 或 renderer。
+```tsx
+<Legend kind="ramp" direction="horizontal">
+  <LegendTitle>
+    <Node position={[0, 0]} text="强度" />
+  </LegendTitle>
+  <LegendRamp>
+    <Rectangle corner1={[0, 0]} corner2={[120, 12]} />
+  </LegendRamp>
+  <LegendTick tickKey="minimum" offset={0}>
+    <Node position={[0, 0]} text="低" />
+  </LegendTick>
+  <LegendTick tickKey="maximum" offset={1}>
+    <Node position={[0, 0]} text="高" />
+  </LegendTick>
+</Legend>
+```
+
+`Legend` props 是以显式 `kind` 判别的联合。两种 form 共用 `titleGap`、`contentAlign`、`size`、`padding` 与 `overflow`；`items` form 把 `direction`、`wrap`、`columnGap`、`rowGap`、`sampleGap` 与 `sampleAlign` 提升为容器 props，`ramp` form 把 `direction` 与 `sampleGap` 提升为容器 props。React 不根据 children 推断 form，也不继续接受 plain-data `content` 或 `title` prop。
+
+`Legend` 最多接受一个 `LegendTitle` marker；省略 marker 表示没有 title，marker 一旦出现，其 children 就是 required title slot。`LegendItem` 以必填 `itemKey` 与 required `sample` prop 声明离散项，并以可选 children 声明 label；ramp form 必须且只能包含一个 `LegendRamp` marker，其 children 是 required continuous sample slot；`LegendTick` 以必填 `tickKey`、`offset` 与可选 label children 声明连续刻度。`itemKey` 与 `tickKey` 分别映射 canonical `key`，避免与 React 保留的元素 `key` 混淆。title、item sample 与 ramp sample 必须各同步转换为恰好一个 JSON-safe `IRChild`；item / tick label 可以省略或只包含 React empty node，此时 canonical label 缺省，提供任意非空内容时必须转换为恰好一个 `IRChild`。
+
+marker 不复制文字、样式或对齐 props。标题与标签的字重、字号、字体、颜色和内部文字对齐由其实际 child 持有；`contentAlign` 仍只负责 Legend title slot 与 body structural block 的容器级物理 x 轴对齐。React controls 可以编辑 child props，但不能把这些展示字段提升为第二套 Legend schema。
+
+这些子组件是只由 `Legend` 静态读取的 authoring marker，不进入 IR、layout 或 render 栈。`Legend` 在直接 marker 列表中透明展开数组与 `Fragment`，把 `null`、`undefined` 与 boolean 按 React empty node 处理，并拒绝其余所有非 marker leaf；item 与 tick 保持 authored order。其它直接 child、重复 title、缺失或重复 ramp、form 与 marker 不匹配、以及 marker 脱离 `Legend` 使用都 fail-loud。
+
+每个 title、sample 或 label slot 使用同一严格 authoring 边界：先透明展开该 slot 直属的数组与 `Fragment`，只移除 React empty node；剩余 leaf 必须全部是 React element，并且 required slot 必须恰好一个，optional label slot 可以是零个或恰好一个。字符串、数字、宿主元素、未知对象包装元素，以及与合法元素混合出现的任意非空直接 sibling 都必须在转换前拒绝，不能因通用 JSX 转换器忽略直接 slot 输入而被接受。通过该边界的单一 element 再交给现有 React → IR 转换路径，且转换结果仍必须恰好一个 `IRChild`；函数式 Sugar 的内部展开继续遵循该组件与公共转换路径的既有契约，不属于 Legend marker 的 sibling grammar，Legend 不重写其 builder。
+
+上述严格 slot grammar 由 `@retikz/standard-react` 拥有，因为它约束的是 Legend marker 的局部组合方式；本 ADR 不扩张 `@retikz/react` 的通用 children 语义，也不复制其 Kernel / Sugar 转换。该 React sugar 不建立私有 schema、registry、layout 或 capability discovery；nested Tier 2 sample 仍须由同一次 compile environment 显式提供 definition。
+
+React adapter 把 marker tree 同步转换为 `LegendInput` 后，必须调用同一 factory 获得 canonical `IRLegend`。Vanilla builder 只构造同一 canonical output，不维护独立 sample 类型、layout solver 或 registry。相同语义输入与 compile environment 在两种 adapter 下得到等价的 Core 语义与 Legend artifact；领域 React / Vanilla adapter 只负责把领域 authoring 送入领域 resolver，再生成 Standard Legend input，不得复制通用 Legend layout 或 renderer。
 
 ## 用户可观察行为与失败语义
 
 - strict schema 拒绝未知字段、非 JSON 值、空白 key、重复 key、负 spacing、非法 `contentAlign`、非法 overflow 与 form 不匹配字段
+- React 拒绝旧 `content` / `title` props、未知或 form 不匹配的 marker、重复 title、空 `LegendTitle`、缺失或重复 ramp、空 required sample、slot 中的非空非 element / 混合 sibling，以及不能转换为恰好一个 `IRChild` 的非空 title / sample / label；只有可选 label slot 中的 `null`、`undefined` 与 boolean 可以共同表示缺省，其它 slot 只把它们作为基数计算前的 React empty node，不会让 required slot 变为可选
 - 根 `size` 默认两轴 content；content / fixed / fill 对 intrinsic、range 与 exact proposal 的 allocation、无界 fill 失败、有限空间 wrap 与 overflow 均沿用共享 Box 合同
 - ramp offset 非有限、超出 `[0, 1]` 或逆序时在输入校验阶段拒绝
 - title/sample/label custom composite 未注册、引用未解析或者 probe/replay 失败时形成 Core failed probe 并由 Legend 提升，不产生 warning + skip 或 placeholder；duplicate id 保持 Core warning + last-wins
@@ -279,7 +324,7 @@ LegendModule 只贡献 Legend 自身 definition。LegendDefinition 复用 Standa
 
 ## 迁移与兼容性
 
-Standard alpha.2 尚未发布，本 ADR 可以直接新增公共能力并调整 capability bundle 重复 module 语义，不保留 alpha.3 规划 alias 或旧字段。
+Standard alpha.2 尚未发布，本 ADR 可以直接新增公共能力并调整 capability bundle 重复 module 语义。React 直接移除接受 plain-data `content` / `title` 的旧 props，不保留双入口、兼容 alias 或 deprecation bridge；`LegendInput`、canonical `IRLegend` 与 Vanilla authoring 不受该 React surface 调整影响。
 
 Plot 当前 `IRPlotLegendGuide`、Table 当前 Legend descriptor 与未来逻辑组件仍是各自领域真源。本 ADR 不直接修改这些领域 API；它们迁移时只把解析后的呈现段改为构造 `IRLegend`，并保持自己的默认值、locator、provenance 与交互契约。
 
@@ -294,6 +339,9 @@ Plot 当前 `IRPlotLegendGuide`、Table 当前 Legend descriptor 与未来逻辑
 - **使用自由富文本 Legend**：无法稳定定位 item、测量 sample、生成 artifact 或由工具链安全修改
 - **自动扫描 Scene 或领域 IR 生成 Legend**：依赖 lowering 结果反推语义，无法保留 formatter、领域 identity 与确定顺序
 - **由 Legend 自动打包所有 sample capability**：需要反向发现未知 Tier 2 definition，破坏显式 loading 与依赖方向
+- **React 继续接收完整 plain-data `content`**：使 JSX 作者必须离开组件树拼装 sample / label，并让 controls 与条件组合维护第二套对象结构
+- **通过 React Context 运行时注册 marker**：引入 render 时机、SSR 与顺序依赖，而同步静态读取已足以确定生成同一 JSON-safe 输入
+- **从 marker children 自动推断 `items | ramp`**：条件 children 会让 form 与错误边界隐式漂移，也无法让 controls 直接切换稳定 discriminator
 - **将 Legend 下沉 Core**：Legend 是可选的高层解释性绘图结构，不是 Drawing Complete 的基础图元
 
 ## 测试策略摘要
@@ -302,7 +350,7 @@ Plot 当前 `IRPlotLegendGuide`、Table 当前 Legend descriptor 与未来逻辑
 - compile contract 使用 Core primitive、显式文本 Node、registered custom composite 与 nested Standard component 证明 title/sample/label 的开放性、Core 引用语义与缺失 capability 诊断
 - layout contract 证明 heterogeneous sample、title、空内容、content / fixed / fill 对各类父 proposal 的双轴 allocation、title / body content alignment、约束换行、ramp tick、overflow / clip 与 artifact bounds 只经 layout-aware probe/replay
 - capability loading 证明直接 module、领域传递 module、all preset、同 identity 幂等与同名冲突的确定结果
-- adapter parity 证明直接 IR、React 与 Vanilla 产生同一 Standard input、Core 语义与 typed artifact
+- adapter parity 证明直接 IR、React 无头 marker tree 与 Vanilla plain data 产生同一 Standard input、Core 语义与 typed artifact；React 类型与失败证据同时锁定显式 form、marker 合法组合、Fragment 顺序、empty node、严格单 element / 单 `IRChild` 转换、混合 sibling 拒绝和旧 props 移除
 - 跨领域集成证据证明 Plot、Table 与逻辑组件可以生成同一通用 input，同时领域 provenance / locator 与交互状态不进入 Standard
 - renderer 只验证同一 Scene 的 SVG / Canvas parity，不建立 Legend renderer 分支或以 renderer 回读作为布局 oracle
 
@@ -316,7 +364,7 @@ Plot 当前 `IRPlotLegendGuide`、Table 当前 Legend descriptor 与未来逻辑
 - **内部表达链路**：strict Legend schema → layout-aware CompositeDefinition → Standard Box Layout → Core IR + typed artifact
 - **外部扩展链路**：视觉 sample 直接使用 Core IR 或任意注册 CompositeDefinition；不新增 Legend 专用 provider family
 - **define-registry**：Legend 自身沿用 Core CompositeDefinition registry；sample 开放性也由同一 registry 提供，因此新的 LegendSampleDefinition / registry 不适用
-- **下游执行 / adapter 等价性**：renderer 不认识 Legend 私有类型；直接 IR、React、Vanilla 与领域 adapters 复用同一 compile 主链
+- **下游执行 / adapter 等价性**：renderer 不认识 Legend 私有类型；React marker 只作为同步 authoring sugar 降为同一 `LegendInput`，直接 IR、React、Vanilla 与领域 adapters 复用同一 compile 主链
 - **不支持边界与诊断**：不拥有 scale / channel / Table rule / relation model、formatter、interaction、自动 placement 或 renderer measurement；非法输入、缺失 capability、引用错误与布局失败均 fail-loud
 - **本轮结论**：扩展 Standard，复用现有 Core registry 与 Standard Box Layout；领域包单向依赖，不在 Core 或领域包建立平行 Legend
 

@@ -2,11 +2,13 @@ import type { IRChild, Scene } from '@retikz/core';
 import type { LegendInput } from '@retikz/standard';
 
 import { compileToScene } from '@retikz/core';
+import { Node } from '@retikz/react';
 import { drawScene } from '@retikz/render/canvas';
 import { renderToSvgString } from '@retikz/render/svg';
 import { createLegend, LegendContentKind, LegendDefinition, LegendSchema } from '@retikz/standard';
-import { Legend } from '@retikz/standard-react';
+import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react';
 import { legend, LegendVanillaAdapter } from '@retikz/standard-vanilla';
+import { createElement, Fragment } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 const recordingContext = (calls: Array<string>): CanvasRenderingContext2D =>
@@ -63,6 +65,7 @@ const compileLegendScene = (): Scene =>
 describe('Standard Legend renderer boundary', () => {
   it('keeps direct, React, and Vanilla canonical IR, Scene, and typed artifact equivalent', () => {
     const input = {
+      title: { type: 'node', position: [0, 0], text: 'Legend' },
       contentAlign: 'end',
       size: { x: { kind: 'fixed', value: 120 } },
       content: {
@@ -71,7 +74,22 @@ describe('Standard Legend renderer boundary', () => {
       },
     } satisfies LegendInput;
     const direct = createLegend(input);
-    const react = LegendSchema.parse(Legend.embeddableAdapter.contribute(input).node);
+    const react = LegendSchema.parse(
+      Legend.embeddableAdapter.contribute({
+        kind: LegendContentKind.Items,
+        contentAlign: 'end',
+        size: { x: { kind: 'fixed', value: 120 } },
+        children: createElement(
+          Fragment,
+          null,
+          createElement(LegendTitle, null, createElement(Node, { position: [0, 0], text: 'Legend' })),
+          createElement(LegendItem, {
+            itemKey: 'line',
+            sample: createElement(Node, { position: [0, 0], text: 'A' }),
+          }),
+        ),
+      }).node,
+    );
     const embed = legend('legend', input);
     const vanilla = LegendSchema.parse(
       LegendVanillaAdapter.lower(embed.props, {

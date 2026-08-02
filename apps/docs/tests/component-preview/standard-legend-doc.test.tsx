@@ -18,8 +18,11 @@ import {
 } from '@/modules/docs/contents/standard/composite/legend/legend-playground.en.controls';
 
 const legendRoot = resolve(process.cwd(), 'src/modules/docs/contents/standard/composite/legend');
+const changelogPath = resolve(process.cwd(), 'src/modules/docs/data/changelog/standard-0-1.ts');
 
 const readPage = (language: 'zh' | 'en'): string => readFileSync(resolve(legendRoot, `index.${language}.mdx`), 'utf8');
+
+const readLegendFile = (fileName: string): string => readFileSync(resolve(legendRoot, fileName), 'utf8');
 
 const headings = (source: string): Array<string> =>
   Array.from(source.matchAll(/^(#{2,6})\s+(.+)$/gm), match => `${match[1]} ${match[2]}`);
@@ -85,6 +88,67 @@ describe('Standard Legend documentation', () => {
     expect(en).toMatch(
       /<details>[\s\S]*<summary>View all LegendArtifactSchema fields<\/summary>[\s\S]*<ZodSchema\s+name="LegendArtifactSchema"\s+expandNested\s*\/>[\s\S]*<\/details>/,
     );
+  });
+
+  it('documents the five headless React exports and keeps Vanilla and IR plain-data authoring separate', () => {
+    const zh = readPage('zh');
+    const en = readPage('en');
+    const changelog = readFileSync(changelogPath, 'utf8');
+
+    for (const source of [zh, en]) {
+      for (const component of ['Legend', 'LegendTitle', 'LegendItem', 'LegendRamp', 'LegendTick']) {
+        expect(source).toContain(`### ${component}`);
+      }
+      expect(source).toMatch(/<Legend\s+kind=(?:"items"|\{LegendContentKind\.Items\})/);
+      expect(source).toContain('<LegendTitle>');
+      expect(source).toContain('<LegendItem');
+      expect(source).toContain('Vanilla');
+      expect(source).toContain('LegendInput');
+      expect(source).not.toContain('React 接收 plain-data props');
+      expect(source).not.toContain('React receives plain-data props');
+      expect(source).not.toContain('不提供 `children` 模板入口');
+      expect(source).not.toContain('does not expose a `children` template');
+    }
+
+    for (const fileName of [
+      'legend-basic.zh.demo.tsx',
+      'legend-basic.en.demo.tsx',
+      'legend-ramp.zh.demo.tsx',
+      'legend-ramp.en.demo.tsx',
+      'legend-playground.demo.tsx',
+    ]) {
+      expect(readLegendFile(fileName)).not.toMatch(/\bcontent=\{/);
+    }
+    expect(readLegendFile('legend-basic.zh.demo.tsx')).toContain('<LegendItem');
+    expect(readLegendFile('legend-ramp.zh.demo.tsx')).toContain('<LegendRamp>');
+    expect(readLegendFile('legend-ramp.zh.demo.tsx')).toContain('<LegendTick');
+    expect(readLegendFile('legend-playground.demo.tsx')).toContain('<LegendTitle>');
+    expect(changelog).toContain('LegendTitle');
+    expect(changelog).toContain('LegendItem');
+    expect(changelog).toContain('LegendRamp');
+    expect(changelog).toContain('LegendTick');
+    expect(changelog).toMatch(/BREAKING/);
+    expect(changelog).not.toContain('Legend plain-data props');
+  });
+
+  it('documents the strict marker and slot composition boundary in both languages', () => {
+    const zh = readPage('zh');
+    const en = readPage('en');
+
+    expect(zh).toContain('### React 组合边界');
+    expect(en).toContain('### React composition boundary');
+    expect(zh).toContain('`LegendTitle` 0 或 1 个、`LegendItem` 0 个或多个');
+    expect(en).toContain('zero or one `LegendTitle` and zero or more `LegendItem` markers');
+    expect(zh).toContain('`LegendRamp` 必须且只能有 1 个');
+    expect(en).toContain('exactly one `LegendRamp` is required');
+    expect(zh).toContain('required slot');
+    expect(en).toContain('required slot');
+    expect(zh).toContain('optional label');
+    expect(en).toContain('optional label');
+    expect(zh).toMatch(/optional label[^\n]*恰好一个可转换的函数 element[^\n]*DOM \/ 对象型 wrapper/);
+    expect(en).toMatch(/optional label[^\n]*exactly one convertible function element[^\n]*DOM \/ object wrappers/);
+    expect(zh).toContain('[组合边界](#react-组合边界)');
+    expect(en).toContain('[composition boundary](#react-composition-boundary)');
   });
 
   it('exposes bilingual title and content-kind controls with branch-specific fields', () => {
@@ -230,18 +294,23 @@ describe('Standard Legend documentation', () => {
     expect(legendPlaygroundEnContract.canonicalValues).toEqual(legendPlaygroundContract.canonicalValues);
     expect(legendPlaygroundEnContract.relatedApis).toEqual(legendPlaygroundContract.relatedApis);
     expect(legendPlaygroundContract.relatedApis).toEqual([
-      'Legend.title',
+      'Legend.kind',
+      'LegendTitle.children',
+      'LegendItem.sample',
+      'LegendItem.children',
+      'LegendRamp.children',
+      'LegendTick.offset',
+      'LegendTick.children',
       'Legend.titleGap',
       'Node.font',
       'Node.align',
       'Legend.contentAlign',
-      'Legend.content.kind',
-      'Legend.content.direction',
-      'Legend.content.wrap',
-      'Legend.content.sampleAlign',
-      'Legend.content.columnGap',
-      'Legend.content.rowGap',
-      'Legend.content.sampleGap',
+      'Legend.direction',
+      'Legend.wrap',
+      'Legend.sampleAlign',
+      'Legend.columnGap',
+      'Legend.rowGap',
+      'Legend.sampleGap',
       'Legend.padding',
       'Legend.overflow',
     ]);
@@ -292,6 +361,20 @@ describe('Standard Legend documentation', () => {
     expect(legendOf({ ...canonical, kind: 'ramp', direction: 'vertical' })).toMatchObject({
       content: { kind: 'ramp', sample: { minimumSize: { width: 16, height: 120 } } },
     });
+  });
+
+  it('switches kind by rendering the matching marker tree and keeps title styles on the title child', () => {
+    const source = readLegendFile('legend-playground.demo.tsx');
+
+    expect(source).toMatch(
+      /values\.kind === LegendContentKind\.Items[\s\S]*<Legend[\s\S]*kind=\{LegendContentKind\.Items\}/,
+    );
+    expect(source).toMatch(/<LegendItem[\s\S]*sample=\{/);
+    expect(source).toMatch(/<Legend[\s\S]*kind=\{LegendContentKind\.Ramp\}/);
+    expect(source).toContain('<LegendRamp>');
+    expect(source).toContain('<LegendTick');
+    expect(source).toMatch(/<LegendTitle>[\s\S]*<Node[\s\S]*font=\{/);
+    expect(source).not.toMatch(/<Legend[^>]+title=\{/);
   });
 
   it('distinguishes title text alignment from Legend content-block alignment in both languages', () => {
