@@ -64,7 +64,7 @@ Gate 的验收要求由 [ADR-01](./01-core-constrained-layout-gate.md) 冻结。
 - manual `rows` 覆盖矩形校验、null 语义、span occupancy、adapter parity、JSON round-trip、layout/manifest source 与旧 API 拒绝路径
 - `deps-guard` 确认 Table 不依赖 Core 内部 compile 路径、DOM、renderer 或 Plot
 
-执行期测试契约保留在 ignored `notes/plans/table-alpha2-*/TEST_CONTRACT.md`；长期证据由正式 Table / React / Vanilla 测试与双语 docs 承载。
+长期证据由正式 Table / React / Vanilla 测试与双语 docs 承载。
 
 ## 完成标准
 
@@ -79,7 +79,7 @@ Gate 的验收要求由 [ADR-01](./01-core-constrained-layout-gate.md) 冻结。
 
 ## 不在 alpha.2 范围
 
-- formatter、条件视觉编码、theme 与 Legend descriptor；进入 alpha.3，通用 Legend 呈现消费 Standard alpha.3
+- formatter、条件视觉编码、theme 与 Legend descriptor；进入 alpha.3，通用 Legend 呈现消费 Standard alpha.2 ADR-09
 - group、hierarchy、subtotal 与 grand total；进入 alpha.4
 - pivot、matrix 与多层 header；进入 alpha.5
 - fragmentation 与重复 header；进入 alpha.6
