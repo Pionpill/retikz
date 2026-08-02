@@ -1,4 +1,4 @@
-﻿import type { IRNode, IRScope } from '@retikz/core';
+﻿import type { IRNode, IRPath, IRScope } from '@retikz/core';
 
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -30,6 +30,9 @@ const firstLayer = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOp
 
 const positionsOf = (layer: IRScope): Array<[number, number]> =>
   layer.children.map(child => (child as IRNode).position as [number, number]);
+
+const isNumericPosition = (value: unknown): value is [number, number] =>
+  Array.isArray(value) && value.length === 2 && value.every(part => typeof part === 'number');
 
 const WIDTH = 480;
 const HEIGHT = 240;
@@ -327,19 +330,70 @@ describe('custom coordinate — 契约 / fail-loud', () => {
     );
   });
 
-  // 非 point mark（line）→ fail-loud（custom 本轮仅 point）
-  it('non_point_mark_fails_loud', () => {
+  it('custom_open_path_uses_project_roles', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
       scales: [],
-      coordinate: { type: 'sine' },
-      marks: [{ type: 'path', encoding: { x: { field: 'v' } } }],
+      coordinate: { type: 'bridge', archHeight: ARCH_HEIGHT },
+      marks: [{ type: 'path', order: 'x', closed: false, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     });
-    expect(() => expandOf(spec, { d: [{ v: 1 }, { v: 2 }] }, opts([sineCoordinate]))).toThrow(
-      /custom coordinate|point only|not supported/i,
-    );
+    const rows = [
+      { x: 0, y: 0 },
+      { x: 5, y: 10 },
+      { x: 10, y: 0 },
+    ];
+    const layer = firstLayer(spec, { d: rows }, opts([bridgeCoordinate]));
+    const path = layer.children[0] as IRPath;
+    const positions = path.children.flatMap(step => {
+      if (step.kind !== 'move' && step.kind !== 'line') return [];
+      const position = step.to;
+      return isNumericPosition(position) ? [position] : [];
+    });
+
+    expect(positions).toHaveLength(3);
+    rows.forEach((row, index) => {
+      const screenX = ((row.x + 0.5) / 11) * WIDTH;
+      const screenY = HEIGHT - 40 + ((row.y + 0.5) / 11) * (40 - (HEIGHT - 40));
+      const t = screenX / WIDTH;
+      expect(positions[index][0]).toBeCloseTo(screenX, 6);
+      expect(positions[index][1]).toBeCloseTo(screenY - ARCH_HEIGHT * (1 - (2 * t - 1) ** 2), 6);
+    });
+  });
+
+  it.each([
+    ['closed cycle', { closed: true }],
+    ['cycle closure', { closure: { kind: 'cycle' } }],
+    ['baseline closure', { closure: { kind: 'baseline' } }],
+    ['stack closure', { closure: { kind: 'stack', baselineField: 'baseline' } }],
+  ])('custom_path_%s_remains_fail_loud', (_label, pathShape) => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [],
+      coordinate: { type: 'bridge' },
+      marks: [
+        {
+          type: 'path',
+          ...pathShape,
+          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+        },
+      ],
+    });
+    expect(() =>
+      firstLayer(
+        spec,
+        {
+          d: [
+            { x: 0, y: 0 },
+            { x: 10, y: 10 },
+          ],
+        },
+        opts([bridgeCoordinate]),
+      ),
+    ).toThrow(/path mark is not supported under the bridge coordinate system/);
   });
 
   // 曲线轴：工厂回传 roleScales → <Axis> 沿投影画弯曲轴线（产出轴层 + 至少一条 path）

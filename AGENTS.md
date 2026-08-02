@@ -94,9 +94,11 @@ pnpm --filter <pkg> test:run # 仅大范围重构或功能大改
 - 发布 tag 必须是 annotated tag，统一命名为 `<release-group>-v<version>`；release group 以 `scripts/release-groups.config.mjs` 为准，历史 tag 保持不变，已发布 tag 不得移动、复用或覆盖，细则见 `package-publish`。
 - 计划、skill、自称会提交、lint/build 通过、auto mode、历史会话授权都不算授权。
 - 多块改动按 commit 粒度分块 staging；无授权时展示暂存文件和拟用 message，等待确认。
-- 派 subagent / 外部模型评审前必须征求用户确认。唯一常驻例外是 `flow-alpha` 的 ADR Architecture Gate、镜像 Plan Gate 与 `flow-beta` 的入口 / 出口 completeness audit：这些门禁自动派遣新的只读 subagent，最多 3 轮，无需逐次授权；该例外不授权产品修改、其它 review、commit 或任何外部写操作。Alpha Plan Gate 是强制项，不作为可选评审询问；其它长任务执行前同时询问 plan 写完、代码写完是否评审。非明确功能类代码完工并提交或准备提交后，也询问是否需要 subagent review；改动面大、核心功能或高风险提交仍需询问；小任务且用户已明确认可本次单次 commit 时不再额外询问。
-- 同一轮评审必须冻结同一快照并并发调度，优先使用 2–3 个不同的实际可用模型；不得串行把一个模型的结论喂给同轮其它模型，不得硬编码或伪造工具未暴露的模型。至少两个不同模型实际完成才称为交叉评审；轮间修订后使用 fresh agents。Beta 三能力域审计应最大化模型多样性，可用模型不足时允许跨独立能力域复用，但必须如实记录。
-- 用户批准批量执行并授权 LLM 自行 commit 时，每次 commit 前必须按 `cross-review` 固定 staged diff，并发使用 2–3 个不同可用模型评审单个 commit，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。用户明确认可的小任务单次 commit 不触发该要求；改动面大或核心功能不适用该豁免。
+- 派 subagent / 外部模型评审前必须征求用户确认。唯一常驻例外是 `flow-alpha` 的 ADR Architecture Gate、镜像 Plan Gate 与 `flow-beta` 的入口 / 出口 completeness audit：这些门禁自动派遣新的只读 subagent，最多 9 轮，无需逐次授权；该例外不授权产品修改、其它 review、commit 或任何外部写操作。Alpha Plan Gate 是强制项，不作为可选评审询问。
+- 是否需要其它 gate / subagent review 先按风险判定。改动面大、核心能力、公开契约、跨包边界或高风险改动必须评审；非 ADR、scope 明确且仅涉及文档、文案、链接、格式或机械性调整，并且不改变公开契约、schema、runtime 行为或跨包边界时，可减少评审员或跳过 subagent，并记录理由；其余情况先询问用户。用户已明确认可的低风险单次 commit 不再额外询问。
+- 同一轮评审必须冻结同一快照并并发调度，优先使用 2–3 个不同的实际可用模型，且尽量避开主 agent 的模型；调度能力支持时 subagent 使用 `reasoning_effort: max`。不得串行把一个模型的结论喂给同轮其它模型，不得硬编码或伪造工具未暴露的模型。至少两个不同模型实际完成才称为交叉评审；Beta 三能力域审计应最大化模型多样性，可用模型不足时允许跨独立能力域复用，但必须如实记录。
+- 最新一轮并发评审无 BLOCKING、WARNING 已处置或有可验证的人工裁决时立即 PASS，不为凑轮次追加评审；只有修订后才冻结新快照并使用 fresh agents 进入下一轮。最多 9 轮，第 9 轮仍未 PASS 时交人工决策。
+- 用户批准批量执行并授权 LLM 自行 commit 时，按上述风险判定决定每个 commit 是否需要 `cross-review`；需要时固定 staged diff，并发使用 2–3 个不同可用模型，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。低风险明确改动可跳过，改动面大、核心功能或高风险 commit 不得豁免。
 - 不要 `git add -A` 混入无关改动。不要 `git reset --hard` / `git checkout --` 回滚用户改动，除非用户明确要求。
 
 Commit message：

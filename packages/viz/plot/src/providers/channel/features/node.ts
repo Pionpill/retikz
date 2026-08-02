@@ -212,6 +212,7 @@ export const resolveSizeChannel = (
       return { resolver: () => radius };
     }
     const field = channel.value;
+    const scaleName = channel.scale ?? `__size_${field}`;
     const numeric = rows.map(row => resolveFieldPath(row, field)).filter(isFiniteNumber);
     if (numeric.some(value => value < 0)) {
       throw new Error(
@@ -219,27 +220,14 @@ export const resolveSizeChannel = (
       );
     }
     const positives = numeric.filter(value => value > 0);
-    // 无正值（全 0 / 空）→ 退化为常量最小半径，不建 scale（避免退化 domain）；descriptor 仍给退化 domain 供 legend 不崩
-    if (positives.length === 0) {
-      return {
-        resolver: () => SIZE_MIN_RADIUS,
-        descriptor: {
-          channel: 'size',
-          scaleType: PlotScale.Sqrt,
-          domain: [0, 0],
-          range: [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS],
-          field,
-          fieldType: fieldTypes.get(field),
-        },
-      };
-    }
-    const maxPositive = Math.max(...positives);
+    const maxPositive = positives.length === 0 ? 0 : Math.max(...positives);
     let def: IRPlotSqrtScale = {
       type: PlotScale.Sqrt,
-      name: channel.scale ?? `__size_${field}`,
+      name: scaleName,
       domain: [0, maxPositive],
       range: [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS],
     };
+    let hasAuthoredDomain = false;
     if (channel.scale !== undefined) {
       const found = scaleByName.get(channel.scale);
       if (!found) throw new Error(`lowerPlots: size channel references unknown scale "${channel.scale}"`);
@@ -247,16 +235,19 @@ export const resolveSizeChannel = (
         throw new Error(
           `lowerPlots: size channel scale "${channel.scale}" must be a sqrt scale (size is a radius / area-perceptual channel)`,
         );
+      hasAuthoredDomain = found.domain !== undefined;
       def = {
         ...found,
         domain: found.domain ?? [0, maxPositive],
         range: found.range ?? [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS],
       };
     }
-    const scale = resolveSqrtScale(def, numeric, [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS]);
-    // domain/range 取已解析的 def（与逐行 scale 同源）：legend 梯度符号据此选代表值 + 算半径
-    const domain = def.domain ?? [0, maxPositive];
-    const range = def.range ?? [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS];
+    const resolvedScale = resolveSqrtScale(def, numeric, [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS]);
+    const domain = resolvedScale.domain();
+    const resolvedRange = resolvedScale.range();
+    const usesDerivedMinimum = !hasAuthoredDomain && positives.length === 0;
+    const range = usesDerivedMinimum ? [resolvedRange[0], resolvedRange[0]] : resolvedRange;
+    const scale = usesDerivedMinimum ? (): number => range[0] : resolvedScale;
     return {
       resolver: row => {
         const value = resolveFieldPath(row, field);
@@ -269,6 +260,7 @@ export const resolveSizeChannel = (
         range: [...range],
         field,
         fieldType: fieldTypes.get(field),
+        scaleName,
       },
     };
   };

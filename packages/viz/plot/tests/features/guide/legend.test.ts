@@ -195,6 +195,46 @@ const sizeLegendSpec = (legend: Record<string, unknown> = {}): IRPlotSpec =>
     guides: [{ type: 'legend', channel: 'size', ...legend }],
   });
 
+const multiSizeLegendSpec = ({
+  firstScale = 'sharedSize',
+  secondScale = 'sharedSize',
+  secondField = 'population',
+  guideScale,
+}: {
+  firstScale?: string;
+  secondScale?: string;
+  secondField?: string;
+  guideScale?: string;
+} = {}): IRPlotSpec => {
+  const sizeScaleNames = [...new Set([firstScale, secondScale])];
+  return PlotSpecSchema.parse({
+    namespace: 'plot',
+    type: 'plot',
+    data: { reference: 'd' },
+    scales: [
+      { type: 'linear', name: 'x' },
+      { type: 'linear', name: 'y' },
+      ...sizeScaleNames.map(name => ({ type: 'sqrt' as const, name })),
+    ],
+    coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+    marks: [
+      {
+        type: 'point',
+        size: { kind: 'field', value: 'population', scale: firstScale },
+        encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+      },
+      {
+        type: 'point',
+        size: { kind: 'field', value: secondField, scale: secondScale },
+        encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+      },
+    ],
+    guides: [{ type: 'legend', channel: 'size', ...(guideScale === undefined ? {} : { scale: guideScale }) }],
+  });
+};
+
+const MULTI_SIZE_ROWS = CONTINUOUS_ROWS.map(row => ({ ...row, secondaryPopulation: row.population }));
+
 /** shape 散点 + shape legend（categorical → glyph 调色板） */
 const shapeLegendSpec = (legend: Record<string, unknown> = {}): IRPlotSpec =>
   PlotSpecSchema.parse({
@@ -410,6 +450,38 @@ describe('lowerPlots legend — 边界（contract）', () => {
     const labels = labelsOf(legend as IRScope);
     expect(labels).toHaveLength(1);
     expect(labels[0].text).toBe('A');
+  });
+
+  it('size_legend_without_scale_rejects_multiple_scale_identities', () => {
+    expect(() =>
+      expandOf(multiSizeLegendSpec({ firstScale: 'sizeA', secondScale: 'sizeB' }), { d: MULTI_SIZE_ROWS }),
+    ).toThrow(/multiple scales/);
+  });
+
+  it('size_legend_with_scale_selects_the_exact_identity', () => {
+    const outer = expandOf(multiSizeLegendSpec({ firstScale: 'sizeA', secondScale: 'sizeB', guideScale: 'sizeB' }), {
+      d: MULTI_SIZE_ROWS,
+    });
+
+    expect(findLegendLayer(outer)).toBeDefined();
+  });
+
+  it.each([
+    ['implicit selector', undefined],
+    ['explicit selector', 'sharedSize'],
+  ])('size_legend_merges_equivalent_duplicate_identity_with_%s', (_label, guideScale) => {
+    const outer = expandOf(multiSizeLegendSpec({ guideScale }), { d: MULTI_SIZE_ROWS });
+
+    expect(findLegendLayer(outer)).toBeDefined();
+  });
+
+  it.each([
+    ['implicit selector', undefined],
+    ['explicit selector', 'sharedSize'],
+  ])('size_legend_rejects_conflicting_duplicate_identity_with_%s', (_label, guideScale) => {
+    expect(() =>
+      expandOf(multiSizeLegendSpec({ secondField: 'secondaryPopulation', guideScale }), { d: MULTI_SIZE_ROWS }),
+    ).toThrow(/conflicting size descriptors/);
   });
 
   // quantize / quantile 分箱标签：每档一区间标签

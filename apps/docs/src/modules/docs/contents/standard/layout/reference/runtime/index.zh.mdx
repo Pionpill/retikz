@@ -66,6 +66,20 @@ React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 De
 
 布局检查器（Layout Inspector）是运行时开发辅助层，不进入 Standard IR，也不修改类型化布局产物。SVG 把它绘制在主图之后的 `pointer-events="none"` 分组中；Canvas 在主图之后单独绘制，但不把辅助图元加入命中测试。两种后端都只用主 Scene 决定 viewBox、资源、动画和正常交互。
 
+### 颜色、纹理与线型
+
+辅助层用三条正交通道表达不同信息，不再用一种颜色同时暗示边界类别与嵌套层级：
+
+| 通道 | 表达内容            | 规则                                                                                                                                 |
+| ---- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 颜色 | 最终布局 occurrence | Core 按最终 entry 顺序分配 `colorScope`；Render 在九色数组中循环取色，warning 始终为红色                                             |
+| 纹理 | 空间语义            | margin 与固定 gap 为 `/`，padding 为反向 `\`；三者只绘斜线、不铺底色；distributed space 不使用纹理或背景色；斜线间距为 12 user units |
+| 线型 | 几何类别            | 容器、内容、item box、Flex line、Grid track/cell/span、Overlay placement 与 alignment guide 统一使用虚线；anchor crosshair 使用实线  |
+
+同一个 occurrence 的普通辅助图元共享颜色；嵌套容器按各自最终 occurrence 取得颜色。颜色数组在第十个 occurrence 开始循环，因此颜色只用于快速归属，精确身份仍由 occurrence locator 表达。
+
+绘制顺序固定为 spacing hatch / boundary underlay → family structure → box outline → overflow warning → guide/anchor → label。`bounds.content` 与 `bounds.slot` 只控制对应 outline；`spacing.padding` 与 `spacing.margin` 独立控制两种纹理和边界。margin、padding 与固定 gap 使用独立 dashed line 表达边界；ring 只描内外周长，不描四块纹理分片之间的接缝。`distributedSpace` 只显示未占用 content 的 dashed perimeter，内部保持透明留白。若 spacing boundary 已被 content/slot outline 或 Flex line / Grid track 完整覆盖，同一线段只绘制一次；单独开启任一类别时仍保留其完整可见边界。
+
 ### 三种开启范围
 
 | 范围          | React                                 | Vanilla                            | 级联语义                                      |
@@ -74,7 +88,7 @@ React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 De
 | authored 子树 | `<Scope inspect={{ layout: true }}>`  | `VanillaScopeSpec.inspect`         | 只作用于该 Scope 的 authored 后代             |
 | 单个容器      | `<FlexLayout inspect>` 等             | `flexLayout('id', input, true)` 等 | 只作用于当前 occurrence，不自动传播到嵌套布局 |
 
-策略按 Layout → 最近的 Scope → 当前组件逐字段合并。`layout: false` 只把当前级联值覆盖为关闭，更深的 Scope 或组件仍可重新开启；`enabled: false` 才是后代不能越过的子树硬屏障。组件自身的 `inspect={false}` 只关闭当前 occurrence。省略所有 `inspect` 时不运行检查器，`CompileResult.inspection` 为 `null`。
+策略按 Layout → 最近的 Scope → 当前组件逐字段合并。`bounds` 与 `spacing` 的对象形式逐项合并，boolean 与对象互换时由后写值替换整组。`layout: false` 只把当前级联值覆盖为关闭，更深的 Scope 或组件仍可重新开启；`enabled: false` 才是后代不能越过的子树硬屏障。组件自身的 `inspect={false}` 只关闭当前 occurrence。省略所有 `inspect` 时不运行检查器，`CompileResult.inspection` 为 `null`。
 
 ### 通用策略与边界
 
@@ -93,6 +107,7 @@ React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 De
   description="所有布局检查器共享的稀疏选项。"
   descriptions={{
     bounds: 'false 关闭全部边界，true 恢复默认边界组合，对象形式逐项覆盖容器、内容、父级分配、真实占用与视觉边界。',
+    spacing: 'false 关闭 padding 与 margin 纹理，true 恢复默认组合，对象形式逐项覆盖两种盒模型间距。',
     overflow: '是否显示真实占用或视觉包络超出父级分配区域的阴影。',
     alignmentGuides: '是否显示容器最终采用的对齐参考线。',
     labels: '是否显示辅助层文字标签；默认关闭。',
@@ -111,7 +126,9 @@ React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 De
   }}
 />
 
-`layout: true` 使用唯一默认轮廓：`container`、`content`、`slot`、`allocation`、`overflow` 与 `alignmentGuides` 开启，`visual` 与 `labels` 关闭。对象形式只覆盖显式字段；例如 `{ layout: { bounds: { visual: true } } }` 不会关闭其它默认边界。
+`layout: true` 使用唯一完整轮廓：`container`、`content`、`slot`、`allocation`、padding、margin、`overflow` 与 `alignmentGuides` 开启，`visual` 与 `labels` 关闭。对象形式只覆盖显式字段；例如 `{ layout: { spacing: { padding: false } } }` 只关闭 padding 纹理。
+
+文档 playground 的“推荐”不是完整轮廓：Flex 显示 content outline、Flex 行区域与固定 gap，Grid 显示 content outline、轨道边界与固定 gap，Overlay 只显示 content outline。选择“全部”会打开每个细节；“关闭”只关闭总开关；Reset 回到推荐值。
 
 ### 容器专属选项
 
@@ -120,11 +137,13 @@ React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 De
   description="FlexLayout 的通用与专属检查选项。"
   descriptions={{
     bounds: 'false 关闭全部边界，true 恢复默认边界组合，对象形式逐项覆盖。',
+    spacing: '独立控制 padding 与 margin 纹理。',
     overflow: '是否显示溢出阴影。',
     alignmentGuides: '是否显示对齐参考线。',
     labels: '是否显示辅助标签。',
     lines: '是否显示每条弹性布局行的区域；默认开启。',
-    gaps: '是否显示行间距与列间距区域；默认开启。',
+    gaps: '是否显示作者声明的固定 gap；默认开启。',
+    distributedSpace: '是否以虚线边界显示内容分布产生的正自由空间；内部不填色，默认开启。',
   }}
 />
 
@@ -133,12 +152,14 @@ React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 De
   description="GridLayout 的通用与专属检查选项。"
   descriptions={{
     bounds: 'false 关闭全部边界，true 恢复默认边界组合，对象形式逐项覆盖。',
+    spacing: '独立控制 padding 与 margin 纹理。',
     overflow: '是否显示溢出阴影。',
     alignmentGuides: '是否显示对齐参考线。',
     labels: '是否显示辅助标签。',
     tracks: '是否显示已求解的行列轨道；默认开启。',
     cells: '是否显示每个网格单元格；默认关闭。',
-    gaps: '是否显示轨道间距区域；默认开启。',
+    gaps: '是否显示作者声明的固定轨道 gap；默认开启。',
+    distributedSpace: '是否以虚线边界显示内容分布产生的正自由空间；内部不填色，默认开启。',
     spans: '是否显示跨轨道子项的范围；默认开启。',
   }}
 />
@@ -148,6 +169,7 @@ React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 De
   description="OverlayLayout 的通用与专属检查选项。"
   descriptions={{
     bounds: 'false 关闭全部边界，true 恢复默认边界组合，对象形式逐项覆盖。',
+    spacing: '独立控制 padding 与 margin 纹理。',
     overflow: '是否显示溢出阴影。',
     alignmentGuides: '是否显示对齐参考线。',
     labels: '是否显示辅助标签。',
@@ -177,6 +199,10 @@ React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 De
     {
       label: 'Standard 布局专属检查选项',
       path: 'packages/library/standard/src/composites/shared/layout/inspect-schema.ts',
+    },
+    {
+      label: 'Standard spacing、ring 与分层 lowering',
+      path: 'packages/library/standard/src/composites/shared/layout/internal/inspect.ts',
     },
     { label: 'Vanilla 布局适配器预设', path: 'packages/library/standard-vanilla/src/preset/index.ts' },
   ]}

@@ -42,16 +42,16 @@ Core IR / schema
 
 ## 4. 能力面
 
-| 能力面                | 目标                                                            | 主责交界                                        | 不属于 Drawing Complete                     |
-| --------------------- | --------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------- |
-| Primitive / Scene     | 定义后端中立的最小可渲染图元                                    | core 定义，render 执行                          | SVG-only / Canvas-only 快捷 API             |
-| Geometry              | 提供纯函数几何计算和图形构造基础                                | math 提供通用计算，core 赋予图形语义            | 单一 domain layout、DOM 测量                |
-| Target / Coordinate   | 支持节点、锚点、边界、局部坐标和命名引用                        | core                                            | plot scale、geo projection                  |
-| Transform             | 表达结构化图形空间变换                                          | core 定义，render 执行                          | 数据 transform、runtime 状态机              |
-| Constraint / Layout   | 承载跨图形通用定位和约束                                        | core；纯算法可下沉 math                         | flow / graph / table 领域布局               |
-| Style / Resource      | 表达 paint、marker、pattern、clip、effect 等资源                | core 定义，render 实现或诊断                    | 无法形成后端中立语义的私有效果              |
-| Composition           | 用 scope、group、zIndex、meta 组合复杂图形                      | core                                            | 上层私有节点树、不可持久化组合              |
-| Interaction Readiness | 提供 target、hit area、role、intent、provenance 与查询 manifest | core 定义 headless 契约，adapter / runtime 消费 | UI、selection 状态机、DOM handler、键盘策略 |
+| 能力面                | 目标                                                                                              | 主责交界                                                | 不属于 Drawing Complete                        |
+| --------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ---------------------------------------------- |
+| Primitive / Scene     | 定义后端中立的最小可渲染图元                                                                      | core 定义，render 执行                                  | SVG-only / Canvas-only 快捷 API                |
+| Geometry              | 提供纯函数几何计算和图形构造基础                                                                  | math 提供通用计算，core 赋予图形语义                    | 单一 domain layout、DOM 测量                   |
+| Target / Coordinate   | 支持节点、锚点、边界、局部坐标和命名引用                                                          | core                                                    | plot scale、geo projection                     |
+| Transform             | 表达结构化图形空间变换                                                                            | core 定义，render 执行                                  | 数据 transform、runtime 状态机                 |
+| Constraint / Layout   | 承载跨图形通用定位和约束                                                                          | core；纯算法可下沉 math                                 | flow / graph / table 领域布局                  |
+| Style / Resource      | 表达 paint、marker、pattern、clip、effect，并为 Composite 提供可持久化的 Scene / Scope Theme 环境 | core 定义与解析，领域 owner 物化默认，render 实现或诊断 | 领域 token vocabulary、preset 具体值与私有效果 |
+| Composition           | 用 scope、group、zIndex、meta 组合复杂图形                                                        | core                                                    | 上层私有节点树、不可持久化组合                 |
+| Interaction Readiness | 提供 target、hit area、role、intent、provenance 与查询 manifest                                   | core 定义 headless 契约，adapter / runtime 消费         | UI、selection 状态机、DOM handler、键盘策略    |
 
 Interaction Readiness 是横切闭环条件，不把 Drawing Complete 扩张成交互运行时。静态图形可以没有交互 intent；一旦声明交互语义，就必须可追踪、可定位且不依赖 adapter 从 primitive 反推。
 
@@ -66,6 +66,7 @@ Interaction Readiness 是横切闭环条件，不把 Drawing Complete 扩张成�
 - 能编译成 renderer-agnostic Scene 或同步的 headless manifest。
 - 不依赖 React、DOM、Canvas / SVG 实例或 plot 数据语义。
 - 缺失时会迫使多个上层模块复制图形、几何、target 或 renderer 语义。
+- 跨领域视觉环境需要随 Scene / Scope 持久化并按绘图树继承，但具体 token 与映射仍由领域 owner 拥有。
 
 不满足时优先放到 math、render、plot / domain 包或 adapter。
 

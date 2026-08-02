@@ -1,7 +1,12 @@
 import { LayoutAlignmentGuideDimension } from '@retikz/core';
 import { z } from 'zod';
 
-import { LayoutArtifactContainerSchema, LayoutArtifactItemBaseSchema, LayoutItemKind } from '../shared/layout';
+import {
+  LayoutArtifactContainerSchema,
+  LayoutArtifactItemBaseSchema,
+  LayoutItemKind,
+  LayoutSpacingArtifactSchema,
+} from '../shared/layout';
 
 const FlexLayoutArtifactItemSchema = LayoutArtifactItemBaseSchema.extend({
   line: z.number().int().safe().nonnegative().describe('Resolved physical flex line index containing the item.'),
@@ -24,6 +29,7 @@ const FlexLayoutArtifactBaseSchema = z.strictObject({
   container: LayoutArtifactContainerSchema.describe('Resolved container geometry.'),
   items: z.array(FlexLayoutArtifactItemSchema).describe('Items in authored source order.'),
   lines: z.array(FlexLayoutLineArtifactSchema).describe('Lines in final physical cross-axis order.'),
+  spacing: z.array(LayoutSpacingArtifactSchema).describe('Resolved fixed gaps and distributed free-space segments.'),
 });
 
 /** 校验 Flex artifact 的 authored identity 与 line 双向 partition */

@@ -13,7 +13,7 @@ import {
 } from '@retikz/plot';
 
 import type { InfrastructureChartSpec } from '../../schemas';
-import type { ChartRecipe, ChartRecipeSeed } from './types';
+import type { ChartRecipe, ChartRecipeSeed, ChartRecipeStyleContext } from './types';
 
 import { ChartInspectionMemberKind, InfrastructureChartSpecSchema, InfrastructureChartType } from '../../schemas';
 import { ChartRecipeInvariantError, ChartRecipeInvariantReason } from './invariant';
@@ -21,7 +21,7 @@ import { ChartRecipeInvariantError, ChartRecipeInvariantReason } from './invaria
 const recipeId = (target: string): string => `__chart.${InfrastructureChartType}.${target}`;
 
 /** 从私有 fixture 输入建立 resolver 消费的不可变 recipe seed */
-const createInfrastructureSeed = (spec: InfrastructureChartSpec): ChartRecipeSeed => {
+const createInfrastructureSeed = (spec: InfrastructureChartSpec, style: ChartRecipeStyleContext): ChartRecipeSeed => {
   const transform = { kind: DataTransform.Sort, field: spec.encoding.x, order: DataSortOrder.Ascending } as const;
   const scaleX = { type: PlotScale.Linear, name: 'x' } as const;
   const scaleY = { type: PlotScale.Linear, name: 'y' } as const;
@@ -40,8 +40,27 @@ const createInfrastructureSeed = (spec: InfrastructureChartSpec): ChartRecipeSee
     type: PlotGuide.Axis,
     id: recipeId('guide.y'),
     dimension: 'y',
-    grid: true,
+    ...(style.axisGridEnabled ? { grid: true } : {}),
   } as const;
+  const patchedGuideTargets = new Set((spec.components ?? []).map(component => component.target));
+  const defaultGuides = style.axisEnabled
+    ? [guideX, guideY]
+    : [
+        ...(patchedGuideTargets.has('guide.x') ? [guideX] : []),
+        ...(patchedGuideTargets.has('guide.y') ? [guideY] : []),
+      ];
+  const guideMembers = defaultGuides.map((guide, index) => {
+    const target = guide.dimension === 'x' ? 'guide.x' : 'guide.y';
+    return {
+      target,
+      kind: ChartInspectionMemberKind.Guide,
+      core: false,
+      value: guide,
+      plotPath: ['guides', index] as const,
+      patchablePaths: [['grid']],
+      sourcePath: `$recipe/__infrastructure-fixture/${target}`,
+    };
+  });
   const plot: IRPlotSpec = {
     namespace: PLOT_NAMESPACE,
     type: PlotComposite.Plot,
@@ -51,8 +70,7 @@ const createInfrastructureSeed = (spec: InfrastructureChartSpec): ChartRecipeSee
     scales: [scaleX, scaleY],
     coordinate,
     marks: [mark],
-    guides: [guideX, guideY],
-    ...(spec.theme === undefined ? {} : { theme: spec.theme }),
+    guides: defaultGuides,
     ...(spec.layout === undefined ? {} : { layout: spec.layout }),
     ...(spec.width === undefined ? {} : { width: spec.width }),
     ...(spec.height === undefined ? {} : { height: spec.height }),
@@ -107,24 +125,7 @@ const createInfrastructureSeed = (spec: InfrastructureChartSpec): ChartRecipeSee
         patchablePaths: [['size'], ['opacity']],
         sourcePath: '$recipe/__infrastructure-fixture/mark.main',
       },
-      {
-        target: 'guide.x',
-        kind: ChartInspectionMemberKind.Guide,
-        core: false,
-        value: guideX,
-        plotPath: ['guides', 0],
-        patchablePaths: [['grid']],
-        sourcePath: '$recipe/__infrastructure-fixture/guide.x',
-      },
-      {
-        target: 'guide.y',
-        kind: ChartInspectionMemberKind.Guide,
-        core: false,
-        value: guideY,
-        plotPath: ['guides', 1],
-        patchablePaths: [['grid']],
-        sourcePath: '$recipe/__infrastructure-fixture/guide.y',
-      },
+      ...guideMembers,
     ],
     patches: [
       ...(spec.mark === undefined

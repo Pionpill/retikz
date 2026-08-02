@@ -7,12 +7,17 @@ import { renderFrameToCanvas, renderToCanvas } from '../../src/canvas';
 type CanvasCall = {
   name: string;
   args: Array<unknown>;
+  fillStyle: string | CanvasGradient | CanvasPattern;
+  globalAlpha: number;
+  lineWidth: number;
+  strokeStyle: string | CanvasGradient | CanvasPattern;
 };
 
 type SpyCanvasContext = Pick<
   CanvasRenderingContext2D,
   | 'beginPath'
   | 'clearRect'
+  | 'clip'
   | 'fill'
   | 'fillText'
   | 'lineTo'
@@ -37,10 +42,17 @@ const createSpyCanvasContext = (): SpyCanvasContext => {
   const record =
     (name: string) =>
     (...args: Array<unknown>) => {
-      calls.push({ name, args });
+      calls.push({
+        name,
+        args,
+        fillStyle: context.fillStyle,
+        globalAlpha: context.globalAlpha,
+        lineWidth: context.lineWidth,
+        strokeStyle: context.strokeStyle,
+      });
     };
 
-  return {
+  const context: SpyCanvasContext = {
     calls,
     fillStyle: '#000',
     globalAlpha: 1,
@@ -48,6 +60,7 @@ const createSpyCanvasContext = (): SpyCanvasContext => {
     strokeStyle: '#000',
     beginPath: record('beginPath'),
     clearRect: record('clearRect'),
+    clip: record('clip'),
     fill: record('fill'),
     fillText: record('fillText'),
     lineTo: record('lineTo'),
@@ -60,6 +73,7 @@ const createSpyCanvasContext = (): SpyCanvasContext => {
     stroke: record('stroke'),
     transform: record('transform'),
   };
+  return context;
 };
 
 const createCanvas = (context: CanvasRenderingContext2D | null) => {
@@ -89,6 +103,7 @@ describe('renderToCanvas 规格', () => {
       entries: [
         {
           occurrence: { sourcePath: '$.children[0]', expansionPath: [] },
+          colorScope: 1,
           transform: [1, 0, 0, 1, 12, 8],
           primitives: [
             {
@@ -98,8 +113,31 @@ describe('renderToCanvas 规格', () => {
               y1: 0,
               x2: 20,
               y2: 0,
-              tone: 'guide',
+              tone: 'scope',
               lineStyle: 'dotted',
+            },
+            {
+              kind: 'rect',
+              role: 'layout.gap',
+              x: 0,
+              y: 2,
+              width: 20,
+              height: 6,
+              presentation: 'fill',
+              tone: 'scope',
+              fillPattern: 'crosshatch',
+              opacity: 0.5,
+            },
+            {
+              kind: 'rect',
+              role: 'layout.overflow',
+              x: 22,
+              y: 2,
+              width: 4,
+              height: 6,
+              presentation: 'fill',
+              tone: 'warning',
+              fillPattern: 'solid',
             },
           ],
         },
@@ -112,6 +150,37 @@ describe('renderToCanvas 规格', () => {
     const lineIndex = context.calls.findIndex(call => call.name === 'lineTo');
     expect(rectIndex).toBeGreaterThanOrEqual(0);
     expect(lineIndex).toBeGreaterThan(rectIndex);
+    const clipIndex = context.calls.findIndex(call => call.name === 'clip');
+    const patternSaveIndex = context.calls.slice(0, clipIndex).findLastIndex(call => call.name === 'save');
+    const hatchStrokeIndex = context.calls.findIndex((call, index) => call.name === 'stroke' && index > clipIndex);
+    const patternRestoreIndex = context.calls.findIndex((call, index) => call.name === 'restore' && index > clipIndex);
+    const fillIndices = context.calls.flatMap((call, index) => (call.name === 'fill' ? [index] : []));
+    expect(clipIndex).toBeGreaterThan(patternSaveIndex);
+    expect(fillIndices).toHaveLength(2);
+    expect(fillIndices[0]).toBeLessThan(patternSaveIndex);
+    expect(fillIndices[1]).toBeGreaterThan(patternRestoreIndex);
+    expect(hatchStrokeIndex).toBeGreaterThan(clipIndex);
+    expect(patternRestoreIndex).toBeGreaterThan(hatchStrokeIndex);
+    expect(
+      context.calls
+        .slice(clipIndex, hatchStrokeIndex)
+        .filter(call => call.name === 'moveTo' || call.name === 'lineTo')
+        .map(call => [call.name, ...call.args]),
+    ).toEqual([
+      ['moveTo', 4.5, 7.5],
+      ['lineTo', 9.5, 2.5],
+      ['moveTo', 16.5, 7.5],
+      ['lineTo', 19.5, 4.5],
+      ['moveTo', 14.5, 2.5],
+      ['lineTo', 19.5, 7.5],
+      ['moveTo', 2.5, 2.5],
+      ['lineTo', 7.5, 7.5],
+    ]);
+    expect(context.calls[hatchStrokeIndex]).toMatchObject({
+      globalAlpha: 0.275,
+      lineWidth: 1,
+      strokeStyle: '#7c3aed',
+    });
     expect(context.calls.filter(call => call.name === 'setTransform')).toHaveLength(2);
     expect(context.calls.filter(call => call.name === 'setTransform')[1].args).toEqual([3, 0, 0, 3, -30, -60]);
   });

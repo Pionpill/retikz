@@ -2370,19 +2370,31 @@ describe('preview controls registry', () => {
       expect(englishContract, englishKey).toBeDefined();
       if (!englishContract) continue;
 
-      const ids = getPreviewControlFields(contract.controls)
-        .map(field => field.id)
-        .sort();
+      const ids = [
+        ...getPreviewControlFields(contract.controls).map(field => field.id),
+        ...(contract.stateOnlyIds ?? []),
+      ].sort();
       expect(Object.keys(contract.canonicalValues).sort(), key).toEqual(ids);
       expect(contract.relatedApis.length, key).toBeGreaterThan(0);
       expect(controlDefinitionContractOf(englishContract.controls), englishKey).toEqual(
         controlDefinitionContractOf(contract.controls),
       );
+      expect(englishContract.stateOnlyIds, englishKey).toEqual(contract.stateOnlyIds);
       expect(englishContract.canonicalValues, englishKey).toEqual(contract.canonicalValues);
       expect(
-        englishContract.presets?.map(preset => ({ id: preset.id, values: preset.values })),
+        englishContract.presets?.map(preset => ({
+          id: preset.id,
+          values: preset.values,
+          applyMode: preset.applyMode,
+        })),
         englishKey,
-      ).toEqual(contract.presets?.map(preset => ({ id: preset.id, values: preset.values })));
+      ).toEqual(
+        contract.presets?.map(preset => ({
+          id: preset.id,
+          values: preset.values,
+          applyMode: preset.applyMode,
+        })),
+      );
       expect(englishContract.relatedApis, englishKey).toEqual(contract.relatedApis);
     }
   });

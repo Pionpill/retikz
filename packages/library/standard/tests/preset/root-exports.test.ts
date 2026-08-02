@@ -1,6 +1,7 @@
 import {
   AxesDefinition,
   AxesModule,
+  createLegend,
   createStandardBundle,
   FlexLayoutDefinition,
   FlexLayoutModule,
@@ -10,6 +11,10 @@ import {
   GridLayoutDefinition,
   GridLayoutModule,
   GridModule,
+  LegendArtifactSchema,
+  LegendDefinition,
+  LegendModule,
+  LegendSchema,
   OverlayLayoutDefinition,
   OverlayLayoutModule,
   StandardAllPreset,
@@ -25,6 +30,13 @@ describe('@retikz/standard root exports', () => {
     expect(FlexLayoutModule.composites).toEqual([FlexLayoutDefinition]);
     expect(GridLayoutModule.composites).toEqual([GridLayoutDefinition]);
     expect(OverlayLayoutModule.composites).toEqual([OverlayLayoutDefinition]);
+    expect(LegendModule.composites).toEqual([LegendDefinition]);
+    expect(LegendDefinition.schema).toBe(LegendSchema);
+    expect(LegendDefinition.artifactSchema).toBe(LegendArtifactSchema);
+    expect(createLegend({ content: { kind: 'items', items: [] } })).toMatchObject({
+      namespace: 'standard',
+      type: 'legend',
+    });
     expect(createStandardBundle([GridModule]).compile.composites).toEqual([GridDefinition]);
     expect(StandardLayoutPreset.compile.composites).toEqual([
       FlexLayoutDefinition,
@@ -38,6 +50,7 @@ describe('@retikz/standard root exports', () => {
       'standard.flexLayout',
       'standard.gridLayout',
       'standard.overlayLayout',
+      'standard.legend',
     ]);
   });
 });

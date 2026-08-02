@@ -39,6 +39,26 @@ description: 查询 Standard 布局容器的类型化编译产物、边界语义
 
 `slotBounds`、`allocationBounds` 与 `visualBounds` 不能互换：固定几何可以拒绝父级分配的区域，而描边或标签还可能让视觉包络继续扩大。
 
+### LayoutSpacingArtifactSchema
+
+<ZodSchema
+  name="LayoutSpacingArtifactSchema"
+  description="FlexLayout 与 GridLayout 产物共用的固定 gap 或分布式自由空间片段。"
+  descriptions={{
+    kind: '间距片段的语义判别字段。',
+    axis: '间距片段的物理主轴。',
+    bounds: '当前容器 allocation 坐标中的最终矩形。',
+    'bounds.x': '间距矩形的水平原点。',
+    'bounds.y': '间距矩形的垂直原点。',
+    'bounds.width': '间距矩形的非负宽度；x 主轴时必须为正。',
+    'bounds.height': '间距矩形的非负高度；y 主轴时必须为正。',
+  }}
+/>
+
+主轴长度必须为正，正交轴长度可以为零。`axis: 'x'` 使用 `bounds.x/width` 作为主坐标与长度；`axis: 'y'` 使用 `bounds.y/height`。数组按 x → y、主坐标、正交坐标、gap → distributed 和生成顺序稳定排列。
+
+相邻 item 或 track 的物理间隔同时包含 gap 与 distribution 时，固定 gap 在间隔中居中，剩余正空间平分在两侧。leading / trailing 只记录内容边缘与首末 outer box 或 track 之间的正空间；负 free space、重叠与零长度不会生成 distributed segment。
+
 ## 容器专属产物
 
 ### FlexLayoutArtifactSchema
@@ -67,10 +87,18 @@ description: 查询 Standard 布局容器的类型化编译产物、边界语义
     'container.visibleBounds': '容器内仍可见的视觉并集；没有正面积时为 null。',
     items: '按作者声明顺序排列的子项结果。',
     lines: '按最终物理交叉轴顺序排列的布局行。',
+    spacing: '按 canonical 物理顺序排列的固定 gap 与自由空间分布区域。',
+    'spacing.kind': '固定 gap 或对齐产生的自由空间。',
+    'spacing.axis': '该间距区域的物理主轴。',
+    'spacing.bounds': '当前容器分配坐标中的间距矩形。',
+    'spacing.bounds.x': '间距矩形的水平原点。',
+    'spacing.bounds.y': '间距矩形的垂直原点。',
+    'spacing.bounds.width': '间距矩形的非负宽度；x 主轴时必须为正。',
+    'spacing.bounds.height': '间距矩形的非负高度；y 主轴时必须为正。',
   }}
 />
 
-`items[].line` 指向所属布局行；`lines[]` 记录连续 `index`、`itemKeys`、物理主轴、主轴范围与交叉轴范围。两者必须形成完整的双向分组关系。
+`items[].line` 指向所属布局行；`lines[]` 记录连续 `index`、`itemKeys`、物理主轴、主轴范围与交叉轴范围。两者必须形成完整的双向分组关系。必填的 `spacing[]` 同时记录每条 line 的主轴 gap / distribution，以及多 line 时的交叉轴 gap / `alignContent` 分布；`stretch` 已吸收到 line 尺寸，不重复记录。
 
 ### GridLayoutArtifactSchema
 
@@ -99,10 +127,18 @@ description: 查询 Standard 布局容器的类型化编译产物、边界语义
     items: '按作者声明顺序排列的子项结果。',
     columns: '按物理起点顺序排列的已求解列轨道。',
     rows: '按物理起点顺序排列的已求解行轨道。',
+    spacing: '按 canonical 物理顺序排列的固定 gap 与内容分布区域。',
+    'spacing.kind': '固定 gap 或内容对齐产生的自由空间。',
+    'spacing.axis': '该间距区域的物理主轴。',
+    'spacing.bounds': '当前容器分配坐标中的间距矩形。',
+    'spacing.bounds.x': '间距矩形的水平原点。',
+    'spacing.bounds.y': '间距矩形的垂直原点。',
+    'spacing.bounds.width': '间距矩形的非负宽度；x 主轴时必须为正。',
+    'spacing.bounds.height': '间距矩形的非负高度；y 主轴时必须为正。',
   }}
 />
 
-`items[]` 增加 `column`、`row`、`columnSpan` 与 `rowSpan`。`columns[]` 和 `rows[]` 按物理起点排序，并记录连续 `index`、`start`、`size`、`sourceKind` 与 `implicit`。
+`items[]` 增加 `column`、`row`、`columnSpan` 与 `rowSpan`。`columns[]` 和 `rows[]` 按物理起点排序，并记录连续 `index`、`start`、`size`、`sourceKind` 与 `implicit`。必填的 `spacing[]` 使用完整 content height 记录列间距，使用完整 content width 记录行间距；两种 band 的交叉区域会保留并按 x 后 y 的顺序稳定叠加。
 
 ### OverlayLayoutArtifactSchema
 

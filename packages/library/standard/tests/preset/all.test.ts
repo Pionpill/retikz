@@ -13,6 +13,8 @@ import {
   GridLayoutDefinition,
   GridLayoutModule,
   GridModule,
+  LegendDefinition,
+  LegendModule,
   OverlayLayoutDefinition,
   OverlayLayoutModule,
   StandardAllPreset,
@@ -27,6 +29,7 @@ describe('StandardAllPreset', () => {
       'standard.flexLayout',
       'standard.gridLayout',
       'standard.overlayLayout',
+      'standard.legend',
     ]);
     expect(StandardAllPreset.compile.composites).toEqual([
       GridDefinition,
@@ -35,6 +38,7 @@ describe('StandardAllPreset', () => {
       FlexLayoutDefinition,
       GridLayoutDefinition,
       OverlayLayoutDefinition,
+      LegendDefinition,
     ]);
     expect(StandardAllPreset.compile.composites).toEqual([
       GridModule.composites[0],
@@ -43,13 +47,14 @@ describe('StandardAllPreset', () => {
       FlexLayoutModule.composites[0],
       GridLayoutModule.composites[0],
       OverlayLayoutModule.composites[0],
+      LegendModule.composites[0],
     ]);
     expect(Object.isFrozen(StandardAllPreset)).toBe(true);
   });
 
   it('does not globally register capabilities when it is imported', () => {
     const warningCodes: Array<string> = [];
-    expect(StandardAllPreset.compile.composites).toHaveLength(6);
+    expect(StandardAllPreset.compile.composites).toHaveLength(7);
 
     compileToScene(
       {
