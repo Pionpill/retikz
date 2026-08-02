@@ -9,17 +9,22 @@ import type { StandardBundle, StandardCapabilityModule } from './types';
 export const createStandardBundle = (modules: ReadonlyArray<StandardCapabilityModule>): StandardBundle => {
   const moduleNames: Array<string> = [];
   const composites: Array<AnyCompositeDefinition> = [];
-  const seenNames = new Set<string>();
+  const seenModules = new Set<StandardCapabilityModule>();
+  const modulesByName = new Map<string, StandardCapabilityModule>();
 
   for (const module of modules) {
+    if (seenModules.has(module)) {
+      continue;
+    }
     if (module.name.trim().length === 0) {
       throw new Error('Standard capability module name must be non-empty');
     }
-    if (seenNames.has(module.name)) {
+    if (modulesByName.has(module.name)) {
       throw new Error(`Duplicate Standard capability module name: ${module.name}`);
     }
 
-    seenNames.add(module.name);
+    seenModules.add(module);
+    modulesByName.set(module.name, module);
     moduleNames.push(module.name);
     composites.push(...module.composites);
   }

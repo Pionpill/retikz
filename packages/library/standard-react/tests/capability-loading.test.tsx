@@ -1,6 +1,6 @@
 import { Layout, Node } from '@retikz/react';
-import { createGrid, StandardAllPreset } from '@retikz/standard';
-import { Axes, FlexLayout, Frame, FrameTitle, Grid, LayoutItem } from '@retikz/standard-react';
+import { createGrid, LegendContentKind, StandardAllPreset } from '@retikz/standard';
+import { Axes, FlexLayout, Frame, FrameTitle, Grid, LayoutItem, Legend } from '@retikz/standard-react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
@@ -20,6 +20,12 @@ describe('Standard React capability loading', () => {
               <Node position={[30, 30]} text="Layout" />
             </LayoutItem>
           </FlexLayout>
+          <Legend
+            content={{
+              kind: LegendContentKind.Items,
+              items: [{ key: 'node', sample: { type: 'node', position: [0, 0], text: 'N' } }],
+            }}
+          />
         </Layout>,
       ),
     ).not.toThrow();
