@@ -15,6 +15,15 @@ are derived by Table. Scalar entries are value shorthands, `null` leaves a coord
 `{ value: null }` stores a real null Cell. Both helpers return plain, JSON-safe precise specs while
 sharing structure normalization, presentation, layout, and lowering.
 
+Table first resolves one deterministic Cell plan: built-in preset, user token overlay, Cell-local
+formatter/presentation/appearance, ordered visual encodings, and ordered root rules contribute in
+increasing priority. Value Cells then run the winning formatter and presentation with that final
+appearance.
+The built-in `neutral`, `academic`, `vibrant`, and `clean` presets provide complete light/dark token
+maps; `styleTokens` is a strict partial overlay for the selected mode. Unknown token keys fail
+loudly. Content Cells already own renderable children and therefore bypass formatter and
+presentation dispatch.
+
 Use `lowerTables(datasets, options)` to register the layout-aware Table composite definition with
 `@retikz/core`. For a standalone Table, `compileTable(spec, datasets, options)` performs one Core
 compile and returns its `scene`, complete `artifacts`, and the exact root `TableLayoutManifest` from
@@ -28,8 +37,14 @@ from the same layout transaction as the Scene.
   `@retikz/plot`.
 
 Adapter authors can use `createTableRuntimeContribution()` and `makeTableRuntimeComposites()` to
-merge runtime datasets and definitions with the same conflict rules as the built-in React and
-Vanilla adapters. This extension contract is runtime-only and does not enter Table IR.
+merge runtime datasets, formatter/structure/presentation/visual-scale definitions, and composites
+with the same identity-based conflict rules as the built-in React and Vanilla adapters. The
+contribution stores detached frozen containers while leaving caller-owned definition objects
+unchanged. This extension contract is runtime-only and does not enter Table IR.
+
+Table can emit JSON-safe Legend descriptors for opted-in visual encodings. Composing those
+descriptors with Standard Legend and layout components remains a later integration step; this
+package does not expose a Table-local Legend or a final joined manifest helper.
 
 ## Install
 

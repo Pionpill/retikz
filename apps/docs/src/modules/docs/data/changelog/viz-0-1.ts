@@ -972,6 +972,44 @@ export const vizV01: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.3',
+          date: '2026-08-03',
+          summary: {
+            zh: '补齐 Cell formatter、扁平 selector 与有序 rule cascade、视觉 encoding、neutral/academic/vibrant/clean style preset，以及可追溯的 style token resolution。',
+            en: 'Adds Cell formatters, flat selectors with an ordered rule cascade, visual encodings, neutral/academic/vibrant/clean style presets, and traceable style-token resolution.',
+          },
+          items: [
+            {
+              label: { zh: 'Formatter 与 Presentation 分层', en: 'Formatter and Presentation layers' },
+              content: {
+                zh: 'value Cell 先通过可注册 formatter 得到显示 scalar，再把 `rawValue`、`value`、`context` 与最终 `appearance` 交给 Presentation；content Cell fail-loud 拒绝 formatter/presentation。',
+                en: 'Value Cells pass through a registered formatter before Presentation receives `rawValue`, `value`, `context`, and final `appearance`; content Cells reject formatter/presentation loudly.',
+              },
+            },
+            {
+              label: { zh: '确定性视觉级联', en: 'Deterministic visual cascade' },
+              content: {
+                zh: '闭合 selector、ordinal/threshold/sequential scale 与单通道 encoding 使用 canonical raw value；preset tokens < user overlay < Cell < encodings < ordered rules，manifest 保留 winner/source trace。',
+                en: 'Closed selectors, ordinal/threshold/sequential scales, and single-channel encodings use canonical raw values. Preset tokens < user overlay < Cell < encodings < ordered rules, with winner/source trace retained in manifests.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：默认 neutral', en: 'BREAKING: Neutral is the default' },
+              content: {
+                zh: '省略 style/themeMode 时按 neutral/light 解析；要保留 alpha.2 的极简无装饰视觉需显式写 `style: "clean"`。未知 style token 会报告精确 key 并 fail-loud。',
+                en: 'Omitted style/themeMode now resolves as neutral/light. Use `style: "clean"` explicitly for the alpha.2 minimal undecorated look. Unknown style-token keys identify the exact key and fail loudly.',
+              },
+            },
+            {
+              label: { zh: 'Legend 组合仍待后续', en: 'Legend composition remains deferred' },
+              content: {
+                zh: '本阶段可生成 JSON-safe encoding descriptor，但不提供 Table-local Legend、`legendLayout` 或最终 joined manifest；Standard Legend/Flex 组合在后续集成。',
+                en: 'This phase can emit JSON-safe encoding descriptors but does not expose a Table-local Legend, `legendLayout`, or final joined manifest; Standard Legend/Flex composition follows in a later integration.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.2',
           date: '2026-07-29',
           summary: {
@@ -1088,6 +1126,37 @@ export const vizV01: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.3',
+          date: '2026-08-03',
+          summary: {
+            zh: 'Detail/Manual React authoring 补齐 formatter、rules/encodings 与 style token 字段，并把宿主 CSS 与 Table preset 明确拆开。',
+            en: 'Completes Detail/Manual React authoring for formatter, rules/encodings, and style-token fields while separating host CSS from the Table preset.',
+          },
+          items: [
+            {
+              label: { zh: 'BREAKING：宿主 CSS 改用 containerStyle', en: 'BREAKING: Host CSS uses containerStyle' },
+              content: {
+                zh: '三个 standalone root 的宿主 CSS prop 从 `style` 改为 `containerStyle`；Detail/Manual 的 `style` 只选择 Table preset，generic `Table` 则使用 `spec.style`。三种 root 的旧 CSS-object `style` 都会在 schema 前给出迁移诊断，不保留 overload 或 alias。',
+                en: 'Host CSS on all three standalone roots moves from `style` to `containerStyle`. Detail/Manual `style` selects a Table preset, while generic `Table` uses `spec.style`. Each root reports the old CSS-object `style` before schema construction, with no overload or alias.',
+              },
+            },
+            {
+              label: { zh: '完整 root 与 Cell authoring', en: 'Complete root and Cell authoring' },
+              content: {
+                zh: 'DetailColumn 与 value/children Cell 转发 formatter；Detail/Manual 两种模式均转发 `rules`、`encodings`、`style`、`themeMode` 与 `styleTokens`。content Cell 在类型和 runtime 同时拒绝 formatter/presentation。',
+                en: 'DetailColumn and value/children Cells forward formatters. Both Detail/Manual modes forward `rules`, `encodings`, `style`, `themeMode`, and `styleTokens`; content Cells reject formatter/presentation in types and runtime.',
+              },
+            },
+            {
+              label: { zh: 'runtime contribution 容器隔离', en: 'Runtime contribution container isolation' },
+              content: {
+                zh: '四类 definitions、composites、lowerOptions 与 envelope 使用复制后冻结的容器，同时保留调用方 definition/composite 对象 identity 与所有权。',
+                en: 'The four definition categories, composites, lowerOptions, and envelope use copied frozen containers while preserving caller definition/composite object identity and ownership.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.2',
           date: '2026-07-29',
           summary: {
@@ -1182,6 +1251,37 @@ export const vizV01: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.3',
+          date: '2026-08-03',
+          summary: {
+            zh: 'plain helpers、embedded adapter 与 SSR 复用 alpha.3 的完整 JSON-safe authoring 和四类 runtime definitions。',
+            en: 'Plain helpers, the embedded adapter, and SSR now reuse complete alpha.3 JSON-safe authoring and all four runtime definition categories.',
+          },
+          items: [
+            {
+              label: { zh: 'spec fidelity', en: 'Spec fidelity' },
+              content: {
+                zh: '`detailTable()` / `manualTable()` 保留 formatter、rules/encodings 与 style token 字段；embedded contextualization 只改根 id，不重排或重写这些字段。',
+                en: '`detailTable()` / `manualTable()` preserve formatter, rules/encodings, and style-token fields. Embedded contextualization changes only the root id without reordering or rewriting them.',
+              },
+            },
+            {
+              label: { zh: 'runtime parity', en: 'Runtime parity' },
+              content: {
+                zh: '浏览器 adapter 通过 runtime contribution 聚合 Formatter、Structure、Presentation、Visual Scale definitions 与额外 composites；`renderTable()` 则把同类输入直接交给 `compileTable()`。两者共享 Table lowering/compile 语义，而不是同一 contribution 路径。',
+                en: 'The browser adapter aggregates Formatter, Structure, Presentation, and Visual Scale definitions plus extra composites through a runtime contribution. `renderTable()` passes the same input categories directly to `compileTable()`; both share Table lowering/compile semantics, not one contribution path.',
+              },
+            },
+            {
+              label: { zh: 'Legend 产物未合并', en: 'Legend artifacts are not joined yet' },
+              content: {
+                zh: 'Vanilla/SSR 不预测或手工拼接 Standard Legend artifact；最终 Table+Legend manifest 等后续跨包门禁完成后再提供。',
+                en: 'Vanilla/SSR does not predict or manually join Standard Legend artifacts; a final Table+Legend manifest follows after the remaining cross-package gates.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.2',
           date: '2026-07-29',

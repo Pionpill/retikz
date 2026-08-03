@@ -14,7 +14,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import type { DetailTableProps, ManualTableProps } from '../../src';
+import type { DetailTableProps, ManualTableProps, TableProps } from '../../src';
 import type { CellProps } from '../../src/components/cell';
 import type { DetailColumnProps } from '../../src/components/detail-column';
 
@@ -71,8 +71,8 @@ describe('Table React composition authoring collectors', () => {
     const structure = buildManualStructure(
       <>
         <Row kind="columnHeader">
-          <Cell>Name</Cell>
-          <Cell value={false} presentation={{ name: 'text' }} />
+          <Cell formatter={{ name: 'identity' }}>Name</Cell>
+          <Cell value={false} formatter={{ name: 'boolean' }} presentation={{ name: 'text' }} />
         </Row>
         <Row>
           <Cell content={content} />
@@ -84,7 +84,10 @@ describe('Table React composition authoring collectors', () => {
     expect(structure).toEqual({
       rowKinds: ['columnHeader', 'body'],
       rows: [
-        [{ value: 'Name' }, { value: false, presentation: { name: 'text' } }],
+        [
+          { value: 'Name', formatter: { name: 'identity' } },
+          { value: false, formatter: { name: 'boolean' }, presentation: { name: 'text' } },
+        ],
         [{ content }, { value: null }],
       ],
     });
@@ -92,7 +95,10 @@ describe('Table React composition authoring collectors', () => {
       createManualTableSpec({
         rowKinds: ['columnHeader', 'body'],
         rows: [
-          [{ value: 'Name' }, { value: false, presentation: { name: 'text' } }],
+          [
+            { value: 'Name', formatter: { name: 'identity' } },
+            { value: false, formatter: { name: 'boolean' }, presentation: { name: 'text' } },
+          ],
           [{ content }, { value: null }],
         ],
       }),
@@ -223,10 +229,14 @@ describe('Table React composition authoring collectors', () => {
     );
   });
 
-  it('rejects presentation paired with a content Cell payload', () => {
-    const invalid = <Cell {...({ content, presentation: { name: 'text' } } as unknown as CellProps)} />;
+  it('rejects formatter and presentation paired with content Cell payloads with their address', () => {
+    const invalidFormatter = <Cell {...({ content, formatter: { name: 'identity' } } as unknown as CellProps)} />;
+    const invalidPresentation = <Cell {...({ content, presentation: { name: 'text' } } as unknown as CellProps)} />;
 
-    expect(() => buildManualStructure(<Row>{invalid}</Row>)).toThrow(
+    expect(() => buildManualStructure(<Row>{invalidFormatter}</Row>)).toThrow(
+      'table react: Cell at row 0, column 0 content cannot be combined with formatter',
+    );
+    expect(() => buildManualStructure(<Row>{invalidPresentation}</Row>)).toThrow(
       'table react: Cell at row 0, column 0 content cannot be combined with presentation',
     );
   });
@@ -324,9 +334,18 @@ describe('Table React composition root integration', () => {
       }),
     ];
     const onManifest = vi.fn();
-    const style = { color: 'rebeccapurple' };
+    const containerStyle = { color: 'rebeccapurple' };
     const rules: NonNullable<DetailTableProps['rules']> = [
       { selector: { fields: ['name'] }, appearance: { background: { fill: '#f3f4f6' } } },
+    ];
+    const encodings: NonNullable<DetailTableProps['encodings']> = [
+      {
+        id: 'name-color',
+        selector: { fields: ['name'] },
+        channel: 'backgroundFill',
+        scale: { name: 'ordinal-color' },
+        legend: false,
+      },
     ];
     const runtime = resolveReactTableRuntime(ReactTableRuntimeKind.Detail, {
       id: 'detail-root-props',
@@ -337,6 +356,10 @@ describe('Table React composition root integration', () => {
       layout: { columnSize: { kind: 'fixed', value: 96 } },
       meta: { source: 'root-props-test' },
       rules,
+      encodings,
+      style: 'academic',
+      themeMode: 'dark',
+      styleTokens: { 'cell.content.color': '#fafafa' },
       children: <DetailColumn id="name" field="name" formatter={{ name: 'root-props-formatter' }} />,
       structureDefinitions,
       formatterDefinitions,
@@ -346,7 +369,7 @@ describe('Table React composition root integration', () => {
       width: 640,
       height: 320,
       className: 'table-fixture',
-      style,
+      containerStyle,
       renderer: 'svg',
       viewBox: { x: 0, y: 0, width: 320, height: 180 },
       animate: false,
@@ -367,6 +390,10 @@ describe('Table React composition root integration', () => {
       layout: { columnSize: { kind: 'fixed', value: 96 } },
       meta: { source: 'root-props-test' },
       rules,
+      encodings,
+      style: 'academic',
+      themeMode: 'dark',
+      styleTokens: { 'cell.content.color': '#fafafa' },
     });
     expect(runtime.datasets).toMatchObject({ people: [{ name: 'Ada' }] });
     expect(runtime.lowerOptions).toEqual({
@@ -381,7 +408,7 @@ describe('Table React composition root integration', () => {
       width: 640,
       height: 320,
       className: 'table-fixture',
-      style,
+      style: containerStyle,
       renderer: 'svg',
       viewBox: { x: 0, y: 0, width: 320, height: 180 },
       animate: false,
@@ -424,6 +451,67 @@ describe('Table React composition root integration', () => {
     expect(output).toBe(renderToStaticMarkup(<ManualTable {...propsMode} />));
     expect(output).toContain('Ada');
     expect(output).toContain('98');
+  });
+
+  it('preserves every ManualTable root authoring field in rows and marker modes', () => {
+    const root = {
+      id: 'manual-root-fields',
+      rules: [{ selector: { locations: ['body' as const] }, appearance: { content: { color: '#b91c1c' } } }],
+      encodings: [
+        {
+          id: 'score-color',
+          selector: { locations: ['body' as const] },
+          channel: 'backgroundFill' as const,
+          scale: { name: 'ordinal-color' },
+          legend: false as const,
+        },
+      ],
+      style: 'vibrant' as const,
+      themeMode: 'dark' as const,
+      styleTokens: { 'cell.content.color': '#fafafa' },
+    };
+    const propsRuntime = resolveReactTableRuntime(ReactTableRuntimeKind.Manual, {
+      ...root,
+      rows: [[{ value: 98, formatter: { name: 'number' } }]],
+    });
+    const markerRuntime = resolveReactTableRuntime(ReactTableRuntimeKind.Manual, {
+      ...root,
+      children: (
+        <Row>
+          <Cell value={98} formatter={{ name: 'number' }} />
+        </Row>
+      ),
+    });
+
+    expect(markerRuntime.spec).toEqual(propsRuntime.spec);
+    expect(markerRuntime.spec).toMatchObject(root);
+    expect(markerRuntime.spec.structure).toEqual({
+      kind: 'manual',
+      rows: [[{ value: 98, formatter: { name: 'number' } }]],
+    });
+  });
+
+  it('reports stable host-style migration diagnostics before schema construction', () => {
+    const generic = {
+      spec: createManualTableSpec({ rows: [[1]] }),
+      style: { color: 'rebeccapurple' },
+    } as unknown as TableProps;
+    const detail = {
+      dataRef: 'people',
+      data: [],
+      columns: [{ id: 'score', field: 'score' }],
+      style: { color: 'rebeccapurple' },
+    } as unknown as DetailTableProps;
+    const manual = {
+      rows: [[1]],
+      style: { color: 'rebeccapurple' },
+    } as unknown as ManualTableProps;
+
+    expect(() => resolveReactTableRuntime(ReactTableRuntimeKind.Table, generic)).toThrow(
+      /Table.*spec\.style.*containerStyle/,
+    );
+    expect(() => resolveReactTableRuntime(ReactTableRuntimeKind.Detail, detail)).toThrow(/DetailTable.*containerStyle/);
+    expect(() => resolveReactTableRuntime(ReactTableRuntimeKind.Manual, manual)).toThrow(/ManualTable.*containerStyle/);
   });
 
   it('uses rule-selected custom formatter definitions in standalone rendering', () => {
