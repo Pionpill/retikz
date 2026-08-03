@@ -1,8 +1,10 @@
 # ADR-03：ternary2D 坐标系 + a/b/c 位置角色通道 + 三角轴 guide
 
-- 状态：Accepted
+- 状态：Superseded
 - 决策日期：2026-06-08
-- 关联：[plot v0.1-alpha.9 roadmap](./roadmap.md) · [plot-design §3.5 CoordinateSystem / §3.6 Encoding](../../../../../architecture/plot-design.md) · 依赖：[ADR-01 frame 角色泛化](./01-coordinate-frame-roles.md)（projectRoles + 位置 encoding 角色化 + 维度校验）
+- 关联：[plot v0.1-alpha.9 roadmap](./roadmap.md) · [plot-design §3.5 CoordinateSystem / §3.6 Encoding](../../../../../architecture/plot-design.md) · 依赖：[ADR-01 frame 角色泛化](./01-coordinate-frame-roles.md)（projectRoles + 位置 encoding 角色化 + 维度校验）· 替代决策：[beta.2 ADR-03](../beta.2/03-ternary2d-removal.md)
+
+> 内置 `ternary2D` 已在 beta.2 移除：专用 IR、guide、mark 与 adapter 表面不进入 v0.1 stable；特殊投影统一通过 `CoordinateDefinition` 扩展链表达。本 ADR 只保留被替代决策的历史上下文。
 
 ## 背景
 

@@ -1,8 +1,10 @@
 # ADR-04：三包 DSL + 文档露出（cartesian1D / polar1D / ternary2D 表面 + 端到端验收）
 
-- 状态：Accepted
+- 状态：Superseded
 - 决策日期：2026-06-08
-- 关联：[plot v0.1-alpha.9 roadmap](./roadmap.md) · [plot-design §3.5 CoordinateSystem](../../../../../architecture/plot-design.md) · 依赖：[ADR-01](./01-coordinate-frame-roles.md) / [ADR-02](./02-cartesian1d.md) / [ADR-03](./03-ternary2d.md)（IR + lowering 全就位）· 前身：[alpha.4 ADR-05 bindings-dsl](../alpha.4/05-bindings-dsl.md)
+- 关联：[plot v0.1-alpha.9 roadmap](./roadmap.md) · [plot-design §3.5 CoordinateSystem](../../../../../architecture/plot-design.md) · 依赖：[ADR-01](./01-coordinate-frame-roles.md) / [ADR-02](./02-cartesian1d.md) / [ADR-03](./03-ternary2d.md)（IR + lowering 全就位）· 前身：[alpha.4 ADR-05 bindings-dsl](../alpha.4/05-bindings-dsl.md) · 替代决策：[beta.2 ADR-03](../beta.2/03-ternary2d-removal.md)
+
+> 本 ADR 的 `ternary2D` authoring 与文档决策已在 beta.2 被替代：内置表面不进入 v0.1 stable，自定义坐标仍通过统一 definition / registry 暴露。cartesian1D / polar1D 的现行契约不受影响。
 
 ## 背景
 
