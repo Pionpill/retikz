@@ -139,7 +139,7 @@ Headless interaction 与 progressive compile 的 ADR、实现、测试与文档�
 
 ### 根问题
 
-现有 `CompositeDefinition.expand()` 在完整 compile context 创建前做无上下文结构展开，无法让上层布局组件根据任意 `IRChild` 的真实测量、provider、引用和父级约束反馈求解，也不能复用已完成布局生成最终 Scene。Table alpha.2 若在自身复制 Core 测量或二次 lower，会形成平行布局语义。
+`CompositeDefinition.expand()` 在完整 compile context 创建前做结构展开；按 ADR-09 只读取继承的有效 Theme，仍无法让上层布局组件根据任意 `IRChild` 的真实测量、provider、引用和父级约束反馈求解，也不能复用已完成布局生成最终 Scene。Table alpha.2 若在自身复制 Core 测量或二次 lower，会形成平行布局语义。
 
 ### 决策边界
 

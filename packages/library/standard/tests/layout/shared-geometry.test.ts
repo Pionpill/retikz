@@ -9,7 +9,7 @@ import {
   normalizeLayoutSpacing,
   outsetLayoutRect,
   resolveLayoutAxisSize,
-} from '../../src/composites/shared/layout/internal';
+} from '../../src/composites/layout/internal';
 
 describe('shared layout size resolution', () => {
   it('selects minimum or natural content contribution and clamps through author and parent ranges', () => {

@@ -4,7 +4,7 @@ import {
   compensatedLayoutSum,
   distributeWeightedLayoutSizes,
   layoutEpsilon,
-} from '../../src/composites/shared/layout/internal';
+} from '../../src/composites/layout/internal';
 
 describe('shared weighted layout distribution', () => {
   it('freezes an item at max and redistributes remaining growth by stable source order', () => {

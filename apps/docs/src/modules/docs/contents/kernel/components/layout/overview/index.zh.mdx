@@ -47,6 +47,16 @@ children 直接放 Kernel / Sugar 组件树即可，没有额外的固定组合�
 
 `ir` 与 `children` 是两种入口；同时传入时采用 `ir`。需要生成、持久化或转换 IR 时，继续阅读[架构](/kernel/concepts/design/principles)与[复合](/kernel/concepts/design/composite)。
 
+### 可继承 Theme
+
+`theme` 是传给 Tier 2 Composite 的可持久化环境，不是 Core 图元的隐式样式。根 `<Layout theme>` 建立全图选择，内层 `<Scope theme>` 只覆盖自己声明的 `style` 或 `mode`；默认值是 `neutral + light`。
+
+下面的第三方 `ThemeCard` 自己拥有完整的 token / color mapping。Core 只把当前位置解析后的 `style / mode` 交给它；最终颜色在 Composite 展开时物化，因此 SVG / Canvas renderer 都不需要认识 Theme。
+
+<ComponentPreview files="theme-inheritance" size="sm" />
+
+当 `ir` 已包含根 Theme 时，显式 `theme` prop 会逐字段覆盖它，未声明字段继续采用持久化值；两份输入对象都不会被修改。Theme 不会自动改变普通 Node / Path 的 fill、stroke 或 font。
+
 ### 读取编译产物
 
 这里的 DTO 是 Data Transfer Object（数据传输对象）：`CompiledNodeLayout` 是 Core 完成 Node 布局后复制并冻结的数据快照。它记录 Node id、正文盒的中心 / 尺寸 / 全局边界、外框的位置 / 尺寸 / 旋转，以及正文行数和是否包含 TeX；artifact 外层的 `occurrence` 另行标识该 Node 在本次编译中的来源。
@@ -114,8 +124,8 @@ retained 路径让 Core Program 与 Render participant 在一次 transaction 中
     {
       label: 'React 输入与 Core options 接线',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 410,
-      endLine: 474,
+      startLine: 442,
+      endLine: 522,
     },
     {
       label: 'React retained Session 创建与清理',
@@ -150,8 +160,8 @@ retained 路径让 Core Program 与 Render participant 在一次 transaction 中
     {
       label: 'Static 与 retained host 分派',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 479,
-      endLine: 524,
+      startLine: 539,
+      endLine: 584,
     },
   ]}
 />
@@ -179,8 +189,8 @@ retained 路径让 Core Program 与 Render participant 在一次 transaction 中
     {
       label: 'viewBox 注入 IR',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 417,
-      endLine: 426,
+      startLine: 465,
+      endLine: 475,
     },
     {
       label: '显式与自动 layout 决策',
@@ -210,8 +220,8 @@ retained 路径让 Core Program 与 Render participant 在一次 transaction 中
     {
       label: 'renderer 与动画模式解析',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 347,
-      endLine: 367,
+      startLine: 396,
+      endLine: 416,
     },
     {
       label: 'retained host 的后端与静态截帧配置',
@@ -232,13 +242,14 @@ retained 路径让 Core Program 与 Render participant 在一次 transaction 中
 
 ### 输入与视框
 
-| 属性       | 类型                 | 默认值 | 描述                                         |
-| ---------- | -------------------- | ------ | -------------------------------------------- |
-| `children` | `ReactNode`          | —      | Kernel / Sugar 组件树；未传 `ir` 时使用      |
-| `ir`       | `IRScene`            | —      | 已构造的 Core IR；同时传 children 时采用本项 |
-| `width`    | `number` \| `string` | —      | SVG / Canvas 在页面上的显示宽度              |
-| `height`   | `number` \| `string` | —      | SVG / Canvas 在页面上的显示高度              |
-| `viewBox`  | `IRViewBox`          | —      | 内部坐标范围；覆盖 IR viewBox 与自动范围     |
+| 属性       | 类型                 | 默认值 | 描述                                                |
+| ---------- | -------------------- | ------ | --------------------------------------------------- |
+| `children` | `ReactNode`          | —      | Kernel / Sugar 组件树；未传 `ir` 时使用             |
+| `ir`       | `IRScene`            | —      | 已构造的 Core IR；同时传 children 时采用本项        |
+| `theme`    | `IRTheme`            | —      | 根 Theme 稀疏覆盖；`ir` 模式下逐字段覆盖 `ir.theme` |
+| `width`    | `number` \| `string` | —      | SVG / Canvas 在页面上的显示宽度                     |
+| `height`   | `number` \| `string` | —      | SVG / Canvas 在页面上的显示高度                     |
+| `viewBox`  | `IRViewBox`          | —      | 内部坐标范围；覆盖 IR viewBox 与自动范围            |
 
 ### 编译基础
 

@@ -5,7 +5,7 @@ import {
   formFlexLines,
   resolveFlexLineMainSizes,
   resolveFlexSpaceDistribution,
-} from '../../src/composites/flex-layout/solve';
+} from '../../src/composites/layout/flex-layout/solve';
 
 const item = (
   key: string,

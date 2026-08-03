@@ -1,5 +1,6 @@
-import type { AnyCompositeDefinition } from '../../contract';
+import type { AnyCompositeDefinition, CompositeExpandContext } from '../../contract';
 import type { IRChild, IRScene } from '../../schemas';
+import type { ResolvedTheme } from '../../shared';
 import type { LoweredIRScene } from '../types';
 import type { CompileWarning } from '../warning';
 
@@ -7,6 +8,7 @@ import { CompileWarningCode } from '../constants';
 import { CompileInvariantError } from '../probe-failure';
 import { parseProviderPayload } from '../provider-payload';
 import { validateExpandCompositeOutput } from './composite-output';
+import { DEFAULT_RESOLVED_THEME, resolveTheme } from './theme';
 
 /** composite 嵌套展开最大深度 */
 export const DEFAULT_MAX_COMPOSITE_DEPTH = 32;
@@ -24,7 +26,7 @@ type LowerOptions = {
 
 type CallableExpandDefinition = {
   schema: AnyCompositeDefinition['schema'];
-  expand: (node: unknown) => IRChild | Array<IRChild>;
+  expand: (node: unknown, context: CompositeExpandContext) => IRChild | Array<IRChild>;
 };
 
 /** 只在紧邻 schema parse 的边界恢复已擦除 expand callback */
@@ -41,11 +43,16 @@ const lowerCompositeTree = (
   options: LowerOptions,
 ): IRScene => {
   const { onWarn, onUnregistered, maxDepth = DEFAULT_MAX_COMPOSITE_DEPTH } = options;
+  const rootTheme = resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme');
 
-  const expandList = (children: ReadonlyArray<IRChild>, depth: number, path: string): Array<IRChild> =>
-    children.flatMap((child, index) => expandChild(child, depth, `${path}[${index}]`));
+  const expandList = (
+    children: ReadonlyArray<IRChild>,
+    depth: number,
+    path: string,
+    theme: ResolvedTheme,
+  ): Array<IRChild> => children.flatMap((child, index) => expandChild(child, depth, `${path}[${index}]`, theme));
 
-  const expandChild = (child: IRChild, depth: number, path: string): Array<IRChild> => {
+  const expandChild = (child: IRChild, depth: number, path: string, theme: ResolvedTheme): Array<IRChild> => {
     if ('namespace' in child) {
       const key = `${child.namespace}.${child.type}`;
       const definition = registry.get(key);
@@ -77,17 +84,18 @@ const lowerCompositeTree = (
         schema: callable.schema,
         value: child,
       });
-      const produced = callable.expand(parsed);
+      const produced = callable.expand(parsed, Object.freeze({ theme }));
       const list = validateExpandCompositeOutput(`Composite '${key}' at ${path}`, produced);
-      return expandList(list, depth + 1, path);
+      return expandList(list, depth + 1, `${path}::expand`, theme);
     }
     if (child.type === 'scope') {
-      return [{ ...child, children: expandList(child.children, depth, `${path}.children`) }];
+      const scopeTheme = resolveTheme(theme, child.theme, `${path}.theme`);
+      return [{ ...child, children: expandList(child.children, depth, `${path}.children`, scopeTheme) }];
     }
     return [child];
   };
 
-  return { ...ir, children: expandList(ir.children, 0, 'children') };
+  return { ...ir, children: expandList(ir.children, 0, 'children', rootTheme) };
 };
 
 /** 把 composite 节点完整展开为 Tier 1 IR；layout-aware 分支 fail-loud */

@@ -1,8 +1,8 @@
 # ADR-03：Plot 比例尺（LinearScale + Scale union）
 
-- 状态：Accepted（已实现）
+- 状态：Accepted
 - 决策日期：2026-06-03
-- 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.5 / §11.1](../../../../../architecture/plot-design.md) · 根节点：[ADR-01 PlotSpec](./01-plot-spec-root.md) · 引用方：[ADR-04 coordinate](./04-plot-coordinate.md)
+- 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.5 / §11.1](../../../../../architecture/plot-design.md) · 根节点：[ADR-01 IRPlotSpec](./01-plot-spec-root.md) · 引用方：[ADR-04 coordinate](./04-plot-coordinate.md)
 
 ## 背景 / 约束
 
@@ -37,7 +37,7 @@ export type ScaleType = ValueOf<typeof PlotScale>;
 
 ### 未来兼容性考虑
 
-alpha.3 多 scale 类型后，lowering 可据 ADR-02 `DataModel` 的字段 `type` 推断默认 scale 类型（quantitative → linear、nominal → band…）；本 ADR 不实现推断，仅记此联动。
+多 scale 类型下，lowering 可据 `IRDataModel` 的字段 `type` 推断默认 scale 类型；本 ADR 不定义后续 Data owner 的类型集合，只保留这项联动。
 
 ## 不在本 ADR 范围
 
@@ -46,7 +46,3 @@ alpha.3 多 scale 类型后，lowering 可据 ADR-02 `DataModel` 的字段 `type
 - **domain / range 推断、scale 求值、重名检测** → ADR-06 lowering。
 
 ---
-
-> **实现指针**：level `red`（动 `plot/src/ir/**`）、additive 非 breaking。真源以代码为准——`PlotScale` / `LinearScaleSchema` / `ScaleSchema` / `Scale`（`plot/src/ir/scale.ts`，复用 core `ValueOf`）。测试在 `packages/viz/plot/tests/ir/scale.schema.test.ts`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / 依赖现有元素）见本文件 git 历史。
-
-> 🔖 封板压缩 commit `9115e6b4`；压缩前完整施工蓝图 = `git show 9115e6b4^:_notes/decisions/plot/v0/v0.1/alpha.1/03-plot-scale.md`。

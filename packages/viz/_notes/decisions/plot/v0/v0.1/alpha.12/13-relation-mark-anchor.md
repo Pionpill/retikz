@@ -2,7 +2,6 @@
 
 状态：Accepted
 决策日期：2026-06-26
-关联：[plot v0.1-alpha.12 roadmap](./roadmap.md) · [ADR-03 mark abstraction](./03-mark-abstraction-registry.md) · [ADR-04 mark surface convergence](./04-mark-surface-convergence.md) · [alpha.3 ADR-05 relation](../alpha.3/05-relation.md) · [core Path target schema](../../../../../../../kernel/core/src/schemas/path/target/schema.ts)
 
 ## 背景
 
@@ -26,7 +25,7 @@ ADR-03/04 早期草稿曾规划 `LinkMark` / `link` 作为 `ribbon` 的替代，
 
 默认 route 是 `move(source) -> line(via...) -> line(target)`。显式 `route` 使用 core step 的 JSON-safe 子集；step target 扩展为 PlotTargetRef。`path` passthrough core Path 顶层能力，但对象字段首批只做常量传递。
 
-## 实现指针
+## 最终形态
 
 - lowering 前创建 plot-local `AnchorRegistry`，传给所有 mark definition。
 - `MarkDefinition.lower` 接收完整 lowering context：provenance、anchors、anchor id generators 等。
@@ -46,5 +45,3 @@ ADR-03/04 早期草稿曾规划 `LinkMark` / `link` 作为 `ribbon` 的替代，
 - 不实现 AnnotationMark / CalloutMark，只预留 PlotTargetRef。
 - 不做 graph layout、force layout 或 automatic edge routing。
 - 不改变 locator provenance，也不删除 `datumIdField`。
-
-> 🔖 本文件压缩前完整施工蓝图 = `git show 20392fb1f39f0383e9d8f8a29f31850da99b8825:_notes/decisions/graph/v0/v0.1/alpha.12/13-relation-mark-anchor.md`（封板全文）。

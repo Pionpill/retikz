@@ -23,31 +23,14 @@ scale definition 按 family 分层。位置 scale 产出 `PositionScale`，颜�
 
 `options.colorSchemes` 作为 color 子轴的命名调色板扩展点；配色表是运行时能力，IR 只记录 scheme 名称或 scale 配置。
 
-## 实现状态
+## 最终形态
 
-核心 scale registry 已在 2026-06-19 落地。最终命名使用 `ScaleOperation`。channel 同源取值保持确定性重算。
+核心 scale registry 已在 2026-06-19 落地。最终命名使用 `IRPlotScaleOperation`。channel 同源取值保持确定性重算。
 
 与蓝图相比的 staged 项：
 
 - React `<Scale type={custom}>` 糖未在本轮放宽。
 - 自定义 scale 经程序化 `scaleDefinitions` / `colorSchemes` 可用。
-
-## 实现指针
-
-最终行为以代码为准，主要落在：
-
-- `packages/viz/plot/src/contract/scale.ts`
-- `packages/viz/plot/src/providers/scale/**`
-- `packages/viz/plot/src/schemas/scale/**`
-- `packages/viz/plot/src/providers/channel/**`
-- `packages/viz/plot/src/features/guide/**`
-
-验证覆盖：
-
-- `packages/viz/plot/tests/lower/scale-family.test.ts`
-- `packages/viz/plot/tests/lower/type-driven-scale.test.ts`
-- `packages/viz/plot/tests/coordinate/registry.test.ts`
-- scale / guide / channel 相关 lower 测试
 
 ## 影响
 
@@ -60,5 +43,3 @@ scale 轴从“内置分支 + 局部补丁”收敛为 definition registry。后
 - 自定义 visual channel 的 delivery；由 ADR-11 处理。
 - React `<Scale>` 对所有 custom type 的声明糖完全放开。
 - 新增 core 渲染能力。
-
-> 🔖 本文件压缩前完整施工蓝图 = `git show 20392fb1f39f0383e9d8f8a29f31850da99b8825:_notes/decisions/graph/v0/v0.1/alpha.12/07-scale-registry.md`（封板全文）。

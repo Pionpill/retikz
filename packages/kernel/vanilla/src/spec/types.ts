@@ -35,6 +35,8 @@ export type VanillaFigureSpec = {
   version: 1;
   /** 可选图形身份标识 */
   id?: string;
+  /** 写入 Scene 根并由后代 Composite 继承的 Theme */
+  theme?: IRScene['theme'];
   /** 可选显式视口 */
   viewBox?: IRViewBox;
   /** 场景根时间轴动画轨道 */

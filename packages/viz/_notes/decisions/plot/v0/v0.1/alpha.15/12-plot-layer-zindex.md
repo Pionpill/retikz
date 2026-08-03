@@ -1,6 +1,6 @@
 # ADR-12: Plot 元素层级与 zIndex 策略
 
-- 状态：Accepted（已实现）
+- 状态：Accepted
 - 决策日期：2026-07-05
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.15 roadmap](./roadmap.md) · [plot-design.md §3.9 Guide](../../../../../architecture/plot-design.md#39-guide)
 
@@ -16,7 +16,7 @@ core 已经提供了合适的底层能力：`IRScope.zIndex` 表示同父级元�
 
 ## 决策：Plot lowering 生成语义 layer scope，并通过 core zIndex 排序
 
-Plot 定义内部默认层级常量 `PlotLayerZIndex`，所有由 Plot lowering 生成的可见语义层都写入 core `zIndex`。root children 的声明顺序仍保持可读，但不再作为唯一层级来源。用户需要跨默认层级覆盖时，通过 JSON-safe 的 `layer.zIndex` 明确覆盖语义 layer 的 core zIndex；datum / path / node 级别的 `zIndex` 继续留给 mark 内部图元。
+Plot 公开默认层级常量 `PlotLayerZIndex`，所有由 Plot lowering 生成的可见语义层都写入 core `zIndex`。root children 的声明顺序仍保持可读，但不再作为唯一层级来源。用户需要跨默认层级覆盖时，通过 JSON-safe 的 `layer.zIndex` 明确覆盖语义 layer 的 core zIndex；datum / path / node 级别的 `zIndex` 继续留给 mark 内部图元。
 
 ```ts
 export const PlotLayerZIndex = {
@@ -34,7 +34,7 @@ type PlotLayer = {
   zIndex?: number;
 };
 
-type MarkOperation = {
+type IRPlotMarkOperation = {
   layer?: PlotLayer;
 };
 
@@ -55,7 +55,7 @@ type PlotLabel = {
 
 | 默认 zIndex | 层          | 当前元素                                                      |
 | ----------: | ----------- | ------------------------------------------------------------- |
-|       -1000 | background  | `plotBackgroundNode`                                          |
+|       -1000 | background  | plot background                                               |
 |        -300 | grid        | axis major / minor grid scope                                 |
 |           0 | mark        | point、path、interval、reference、relation、custom mark layer |
 |         200 | axis        | axis line、tick mark、tick label、axis title                  |
@@ -70,10 +70,10 @@ type PlotLabel = {
 - `mark.layer.zIndex` 只作用于 mark lowering 返回的外层 scope，不下传到 datum Node / Path。它与现有 `mark.zIndex` 不同：`mark.zIndex` 仍表示 mark 图元内部样式，可字段绑定；`mark.layer.zIndex` 表示整层排序，只能是 JSON-safe 常量。
 - `axis.layer.zIndex` 同时覆盖该 axis 的 axis layer；grid 仍是 axis 的子语义层，默认使用 `Grid`。如果后续需要 axis grid 单独覆盖 zIndex，应扩展 `axis.grid.layer`，不复用 axis layer 的 zIndex。
 - `legend.layer.zIndex` 作用于整个 legend scope。legend 内部 swatch / ramp / label 的相对顺序仍由 legend lowering 自己决定。
-- `PlotLabel.layer.zIndex` 作用于该 label 所在的 plot label scope。首轮实现可以继续把多个 plot labels 放在同一个 label scope 内；只要任意 label 指定了不同 zIndex，lowering 必须拆成多个 label scope 或把 zIndex 下发到对应 node，保证用户覆盖生效。
-- facet panel 内部继续遵循 grid -> marks -> axis 的语义层级；facet label 放在 panelScopes 之后，默认 zIndex 为 `FacetLabel`。
-- `CoordinateViewPlacementSchema.overlay.zIndex` 保持局部排序语义：它只控制共享 overlay panel 内不同 coordinate view 的 mark layer 顺序，不允许越过 grid / axis / legend 等语义层。实现时可作为 mark layer 的 tie-breaker 或 mark 子排序键，不应直接映射为可跨层的 core zIndex。
-- `plotAreaCarrier` 是透明 bbox / anchor 载体，不属于可见层级；不要为了解决视觉排序给它增加公开层级语义。
+- `PlotLabel.layer.zIndex` 作用于对应 plot label scope；不同 zIndex 的 labels 必须保持独立排序语义。
+- facet panel 内部继续遵循 grid -> marks -> axis 的语义层级；facet label 默认使用 `FacetLabel`。
+- `CoordinateViewPlacementSchema.overlay.zIndex` 只控制共享 overlay panel 内不同 coordinate view 的 mark layer 顺序，不允许越过 grid / axis / legend 等语义层。
+- 透明 bbox / anchor 载体不属于可见层级，也不获得公开层级语义。
 
 理由：
 
@@ -91,7 +91,3 @@ type PlotLabel = {
 - 自动根据 mark type 推断 reference underlay / annotation overlay。
 
 ---
-
-> **实现指针**：本 ADR 已随 plot v0.1-alpha.15 发布落地；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在发布 tag 历史中。
-
-> 🔖 发布后压缩；压缩前完整施工蓝图 = `git show plot-v0.1.0-alpha.15:packages/viz/_notes/decisions/v0/v0.1/alpha.15/12-plot-layer-zindex.md`。

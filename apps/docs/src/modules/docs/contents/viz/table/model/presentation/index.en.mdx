@@ -1,9 +1,9 @@
 ---
 title: Content Presentation
-description: Understand how ordinary Cell values become renderable content and how Cells can directly provide text, nodes, or composite graphics.
+description: Understand how Table resolves each Cell's formatter, presentation, and appearance winners before turning a raw value into styled renderable content.
 ---
 
-Structure has decided which Cell this is and where it belongs, but a scalar value is not yet measurable, renderable graphics content. Presentation turns value Cells into Core children while allowing Cells that already own graphics content to continue directly.
+Structure has decided which Cell this is and where it belongs, but a raw scalar is neither its final display text nor measurable graphics content. Table first resolves a final Cell plan from preset/tokens, Cell configuration, encodings, and ordered rules. It then runs the winning formatter and Presentation to turn the value and final appearance into a Core child.
 
 <ComponentAlert
   type="tip"
@@ -11,52 +11,76 @@ Structure has decided which Cell this is and where it belongs, but a scalar valu
   description="Plain text tables use the built-in text presentation automatically. Read this page when you need a custom value presentation or direct graphics content."
 />
 
+## From raw value to styled content
+
+<ComponentPreview files="table-presentation-flow" hideCode size="xxxl" />
+
+The upper half of the figure is a candidate cascade, not value execution order. The built-in preset establishes the appearance baseline and user tokens replace its leaves. Cell configuration then supplies formatter and presentation references plus local appearance, encodings write color channels, and ordered rules apply the last matching overrides. Once the Cell plan contains the winning references and final `appearance`, the lower half runs the formatter on the raw value. Presentation then receives `rawValue`, formatted `value`, `context`, and that final `appearance` before producing the styled child.
+
+Selectors and encodings always read the canonical raw value, not formatted text. Displaying `-3` as `−3` therefore changes neither numeric rule matching nor a scale domain.
+
 ## Two content paths
 
-<ComponentPreview files="table-presentation-flow" hideCode size="xs" />
+Both paths produce one Core child with the same identity and order as the source Cell. They differ in who constructs the content:
 
-Both paths in the figure produce one Core child with the same identity and order as the source Cell. They differ in who constructs that child:
-
-| Payload   | Stored value                                                              | How it becomes a Core child              |
-| --------- | ------------------------------------------------------------------------- | ---------------------------------------- |
-| `value`   | Ordinary values such as `string`, `number`, and `boolean`                 | Resolve and invoke a registry Definition |
-| `content` | Any renderable content, such as text, icons, Nodes, or composite graphics | Validate and use directly                |
+| Payload   | Stored value                                                              | How it becomes a Core child                |
+| --------- | ------------------------------------------------------------------------- | ------------------------------------------ |
+| `value`   | Ordinary values such as `string`, `number`, and `boolean`                 | Formatter and Presentation registries      |
+| `content` | Any renderable content, such as text, icons, Nodes, or composite graphics | Validate directly; bypass both Definitions |
 
 `value` stores ordinary Cell values, such as a name string, an amount number, or a boolean state. Presentation decides how those values are displayed.
 
-`content` stores any renderable content directly, such as styled text, an icon, a Node, or a composite graphic. It skips Presentation, so presentation options apply only to the value path.
+`content` stores any renderable content directly, such as styled text, an icon, a Node, or a composite graphic. It bypasses formatter and Presentation but still receives content styles resolved from style and rules; encodings select value Cells only. Pairing a content payload with formatter or presentation fails loudly. A matching root rule that tries to override either reference for a content Cell also fails during cascade instead of being ignored.
+
+## Formatter and Presentation ABI
+
+A custom formatter only performs scalar-to-scalar conversion, and its output must remain a JSON scalar. Presentation owns scalar-to-Core-child conversion:
+
+| Definition                   | Callback input                                      | Output              |
+| ---------------------------- | --------------------------------------------------- | ------------------- |
+| `CellFormatterDefinition`    | `{ value, context }`, where value is the raw scalar | JSON scalar         |
+| `CellPresentationDefinition` | `{ rawValue, value, context, appearance }`          | JSON-safe `IRChild` |
+
+`context` contains stable Cell identity, address, roles, and provenance. Presentation `value` is the formatter output, while `rawValue` preserves the original value for rules, diagnostics, and domain semantics. `appearance` already merges preset tokens, encodings, and rules.
 
 ## Built-in and custom use the same entry
 
-A value Cell uses the built-in `text` presentation when no presentation is named. It converts the scalar into a zero-padding Core Node without stroke or fill; `null` becomes an empty string.
+A value Cell uses built-in identity when no formatter is named and built-in `text` when no presentation is named. `text` converts the scalar into a zero-padding Core Node without stroke or fill; `null` becomes an empty string.
 
-A custom Presentation Definition has a stable name, a precise options schema, and `present()`. Runtime merges built-in and custom Definitions into one registry, then resolves `presentation.name`. Duplicate or missing names, invalid options, and non-JSON-safe outputs all fail loudly.
+Custom Formatter and Presentation Definitions each have a stable name, a precise options schema, and one callback. Runtime merges built-in and custom Definitions into their respective registries. Empty keys and duplicate registrations fail loudly while identifying the provider key during registry construction. During per-Cell dispatch, an unregistered name, invalid options, non-scalar formatter output, or non-JSON-safe Presentation output fails loudly while retaining the Definition name and Cell id.
 
 Presentation output must still pass the Core child schema. Built-in text and custom graphics therefore share measurement, layout, replay, and renderers instead of introducing a second Table-specific rendering language.
 
 ## What Presentation does not own
 
-| Neighbor  | Presentation reads       | Presentation does not decide        |
-| --------- | ------------------------ | ----------------------------------- |
-| Structure | Cell id and payload      | Address, roles, provenance, or span |
-| Layout    | The produced Core child  | Tracks, padding, fit, or overflow   |
-| Renderer  | No direct renderer input | SVG, Canvas, or SSR implementation  |
+| Neighbor  | Presentation reads        | Presentation does not decide         |
+| --------- | ------------------------- | ------------------------------------ |
+| Structure | Cell id and payload       | Address, roles, provenance, or span  |
+| Style     | Final `appearance`        | Selector, encoding, and rule winners |
+| Layout    | The produced styled child | Tracks, padding, fit, or overflow    |
+| Renderer  | No direct renderer input  | SVG, Canvas, or SSR implementation   |
 
 The same Presentation Definition can therefore serve different table forms, while the same Cell can change layout policy independently of how its value is presented.
 
 <SourceLinks
   sources={[
     {
-      label: 'value/content dispatch and Definition invocation',
+      label: 'Core child validation, Presentation invocation, and content style',
       path: 'packages/viz/table/src/pipeline/presentation/present.ts',
-      startLine: 24,
-      endLine: 52,
+      startLine: 15,
+      endLine: 48,
     },
     {
-      label: 'PresentedTableModel preserves Cell identity and order',
+      label: 'Presentation carriers align with Cell identity and order',
       path: 'packages/viz/table/src/pipeline/presentation/table.ts',
-      startLine: 8,
-      endLine: 19,
+      startLine: 67,
+      endLine: 96,
+    },
+    {
+      label: 'value/content dispatch retains source order, identity, values, and appearance',
+      path: 'packages/viz/table/src/pipeline/presentation/table.ts',
+      startLine: 99,
+      endLine: 147,
     },
   ]}
 />

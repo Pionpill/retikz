@@ -258,4 +258,62 @@ describe('Table runtime contribution', () => {
 
     expect(() => makeTableRuntimeComposites(mergeContributions(first, second))).not.toThrow();
   });
+
+  it('freezes copied runtime containers without cloning or freezing caller definitions', () => {
+    const structure = structureOf('original-structure');
+    const formatter = formatterOf('original-formatter');
+    const presentation = presentationOf('original-presentation');
+    const visualScale = visualScaleOf('original-scale');
+    const composite = compositeOf('fixture', 'original');
+    const structureDefinitions = [structure];
+    const formatterDefinitions = [formatter];
+    const presentationDefinitions = [presentation];
+    const visualScaleDefinitions = [visualScale];
+    const composites = [composite];
+    const originalFrozenStates = [structure, formatter, presentation, visualScale, composite].map(value =>
+      Object.isFrozen(value),
+    );
+
+    const contribution = createTableRuntimeContribution({
+      reference: 'frozen',
+      lowerOptions: {
+        structureDefinitions,
+        formatterDefinitions,
+        presentationDefinitions,
+        visualScaleDefinitions,
+      },
+      composites,
+    });
+    const envelope = contribution.datasets['@@retikz/table/runtime/frozen'] as Readonly<{
+      lowerOptions: LowerTablesOptions;
+      composites: ReadonlyArray<AnyCompositeDefinition>;
+    }>;
+
+    structureDefinitions.push(structureOf('late-structure'));
+    formatterDefinitions.push(formatterOf('late-formatter'));
+    presentationDefinitions.push(presentationOf('late-presentation'));
+    visualScaleDefinitions.push(visualScaleOf('late-scale'));
+    composites.push(compositeOf('fixture', 'late'));
+
+    expect(Object.isFrozen(envelope)).toBe(true);
+    expect(Object.isFrozen(envelope.lowerOptions)).toBe(true);
+    expect(Object.isFrozen(envelope.lowerOptions.structureDefinitions)).toBe(true);
+    expect(Object.isFrozen(envelope.lowerOptions.formatterDefinitions)).toBe(true);
+    expect(Object.isFrozen(envelope.lowerOptions.presentationDefinitions)).toBe(true);
+    expect(Object.isFrozen(envelope.lowerOptions.visualScaleDefinitions)).toBe(true);
+    expect(Object.isFrozen(envelope.composites)).toBe(true);
+    expect(envelope.lowerOptions.structureDefinitions).toEqual([structure]);
+    expect(envelope.lowerOptions.formatterDefinitions).toEqual([formatter]);
+    expect(envelope.lowerOptions.presentationDefinitions).toEqual([presentation]);
+    expect(envelope.lowerOptions.visualScaleDefinitions).toEqual([visualScale]);
+    expect(envelope.composites).toEqual([composite]);
+    expect(envelope.lowerOptions.structureDefinitions?.[0]).toBe(structure);
+    expect(envelope.lowerOptions.formatterDefinitions?.[0]).toBe(formatter);
+    expect(envelope.lowerOptions.presentationDefinitions?.[0]).toBe(presentation);
+    expect(envelope.lowerOptions.visualScaleDefinitions?.[0]).toBe(visualScale);
+    expect(envelope.composites[0]).toBe(composite);
+    expect([structure, formatter, presentation, visualScale, composite].map(value => Object.isFrozen(value))).toEqual(
+      originalFrozenStates,
+    );
+  });
 });

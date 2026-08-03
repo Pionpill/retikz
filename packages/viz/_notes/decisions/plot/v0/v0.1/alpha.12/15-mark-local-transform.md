@@ -12,7 +12,7 @@ transform 是 Statistics 层能力，不是 relation 几何能力。把局部 tr
 
 ## 决策
 
-所有 mark operation 共享可选字段 `transform?: Array<TransformOperation>`。执行顺序固定为：
+所有 mark operation 共享可选字段 `transform?: Array<IRPlotTransform>`。执行顺序固定为：
 
 1. ingest / fieldMaps / format / resolveField / normalize 得到 canonical rows。
 2. root `spec.transform` 先执行，得到 `rootRows`。
@@ -21,7 +21,7 @@ transform 是 Statistics 层能力，不是 relation 几何能力。把局部 tr
 
 `transform` 字段名与 root `spec.transform` 对齐，避免使用 `transforms` 与 core Scope 几何 transform 混名。自定义 mark 也通过公共 pipeline 获得已经 transform 后的 rows，`MarkDefinition.lower` 不需要自己重复实现局部 transform。
 
-## 实现指针
+## 最终形态
 
 - `MarkDataView` 是 render 与 locator 共享的数据视图产物。
 - `mark.transform` 省略或为空数组时，与使用 root rows 等价。
@@ -41,6 +41,4 @@ transform 是 Statistics 层能力，不是 relation 几何能力。把局部 tr
 - 不新增 transform kind。
 - 不引入 per-mark independent dataset、named data view 或 join。
 - 不把 `<Transform>` 子组件变成某个 mark 的子节点。
-- 不把 runtime callback 写进 PlotSpec。
-
-> 🔖 本文件压缩前完整施工蓝图 = `git show 20392fb1f39f0383e9d8f8a29f31850da99b8825:_notes/decisions/graph/v0/v0.1/alpha.12/15-mark-local-transform.md`（封板全文）。
+- 不把 runtime callback 写进 IRPlotSpec。

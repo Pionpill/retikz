@@ -1,6 +1,7 @@
 # ADR-05：三包 guide 露出（`<Axis>` 子组件（含 `grid` prop）、默认自动出、`bare` 开关）
 
-- 状态：Accepted（已实现）
+- 状态：Superseded
+- 替代：[alpha.10 ADR-01](../alpha.10/01-plot-thin-container.md) 与 [beta.2 ADR-02](../beta.2/02-plot-vanilla-plain-api.md)；Plot 不再注入默认 axes，binding 统一由共享 authoring normalization 处理
 - 决策日期：2026-06-04
 - 关联：[plot v0.1-alpha.2 待办](./roadmap.md) · [plot v0.1 roadmap 拆分策略（三包 lockstep）](../roadmap.md) · 依赖：[ADR-01 guide IR](./01-guide-ir.md) · [ADR-04 guide lowering](./04-guide-lowering.md) · 基座：[alpha.1 ADR-08 组合 DSL](../alpha.1/08-plot-react-dsl.md) · [alpha.1 ADR-07 薄包装](../alpha.1/07-plot-bindings.md)
 
@@ -10,13 +11,11 @@
 
 ## 决策：`<Axis>` 配置子组件（网格走 `grid` prop）；无 axis 子组件→默认全套；有则显式所得；`bare`→纯绘图
 
-`<Axis>` 与 `<LineMark>`/`<PointMark>` 同构——**配置载体**（返回 `null`、不进 render 栈、无 hooks），由 `buildPlotSpec` 同步内省装配进 `PlotSpec.guides`。**网格不是独立组件**：它是这根轴的 `grid` 布尔 prop（`<Axis dimension="y" grid />`），与 IR `axis.grid` 一一对应。装配规则：
+`<Axis>` 与 `<LineMark>`/`<PointMark>` 同构——**配置载体**（返回 `null`、不进 render 栈、无 hooks），由 `buildPlotSpec` 同步内省装配进 `IRPlotSpec.guides`。**网格不是独立组件**：它是这根轴的 `grid` 布尔 prop（`<Axis dimension="y" grid />`），与 IR `axis.grid` 一一对应。装配规则：
 
 - **`bare`**：`<Plot bare>` → `guides: []` 且布局不留 margin（plot area = 整图）= alpha.1 行为；忽略任何 `<Axis>`（bare 优先、静默）。
 - **无任何 `<Axis>`**：默认填 `DEFAULT_GUIDES = [axis x, {axis y, grid:true}]`（双轴 + **仅 y 轴带网格**：横线读数值，对齐 d3 / Observable Plot 常规、不过密；x 网格写 `<Axis dimension="x" grid />`）。
 - **写了任意 `<Axis>`**：**完全显式所得**（不再补默认）——所见即所得、可预测，无「显式+默认混合」的惊讶。
-
-`<Plot>` 加 `bare?: boolean`（DSL 入口），透传 `fontSize` / `margin`（[ADR-03](./03-plot-area-layout.md)）给 `lowerPlots`。**vanilla 无新组件**：`renderPlot(spec, data, opts)` 的 `spec.guides` 即所得，「默认自动出」「bare」是 DSL builder 便利，vanilla 显式列 `guides`（或不列 = 无轴）；文档 vanilla 视图展示带 `guides` 的 spec。builder 把默认 / bare 都落成显式 `guides`，两表面同一 IR，渲染走 [ADR-04](./04-guide-lowering.md)。真源见 `react/src/components/guides.tsx`（`Axis` / `AxisProps`）、`react/src/components/buildPlotSpec.ts`（`collectGuides` + `DEFAULT_GUIDES` + bare）、`react/src/Plot.tsx`。
 
 命名决策（字面即决策）：
 
@@ -44,12 +43,3 @@
 - **per-coordinate `<Axis>`（facet 内）** → facet milestone（[ADR-01](./01-guide-ir.md) 预留）。
 
 ---
-
-> **实现指针**：level `red`（动 `react/src/index.ts` 公开 API 加 DSL 组件）、无 IR schema 改动（装配现有 guide IR，产出过 `PlotSpecSchema` 校验）。三包 lockstep：react 出组件、vanilla 文档示例带 `guides`、docs 出带轴 demo。
->
-> - 用户 API 与示例见文档站 plot introduction 页（`<Axis dimension grid tickCount tickLabels id>` / `<Plot bare>` / `fontSize` / `margin`，react + vanilla 两视图）。
-> - 真源以代码为准：`Axis` / `AxisProps`（`react/src/components/guides.tsx`）、`collectGuides` / `DEFAULT_GUIDES` / bare 装配（`react/src/components/buildPlotSpec.ts`）、`bare` + 透传（`react/src/Plot.tsx`）、导出（`react/src/components/index.ts` / `react/src/index.ts`）；vanilla `renderPlot` 无改动（已支持任意 spec）。
-> - 测试见 `react/tests/components/`（默认全套 / 显式所得 / `grid` prop / bare 空 guides / 字段对齐 / 产物过 schema / 端到端渲出轴线 + 刻度文字 + y 网格 / bare 等价无 guides 几何）。
-> - 完整原文（buildPlotSpec 草案 / DSL 表面示例 / 待决策点 / 测试象限 / 文件 scope）见本文件 git 历史。
-
-> 🔖 封板压缩 commit `7acbf962`；压缩前完整施工蓝图 = `git show 7acbf962^:_notes/decisions/plot/v0/v0.1/alpha.2/05-guide-bindings-dsl.md`。

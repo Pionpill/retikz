@@ -19,19 +19,19 @@ import {
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { LegendItemsArtifact } from '../../src/composites/legend/artifact-types';
-import type { LegendCompileArtifact } from '../../src/composites/legend/definition';
-import type { LegendInput } from '../../src/composites/legend/types';
+import type { LegendItemsArtifact } from '../../src/composites/presentation/legend/artifact-types';
+import type { LegendCompileArtifact } from '../../src/composites/presentation/legend/definition';
+import type { LegendInput } from '../../src/composites/presentation/legend/types';
 
+import { LayoutAlignment } from '../../src/composites/layout/shared';
 import {
   LegendContentKind,
   LegendDirection,
   LegendSampleAlignment,
   LegendWrap,
-} from '../../src/composites/legend/constants';
-import { LegendDefinition } from '../../src/composites/legend/definition';
-import { createLegend } from '../../src/composites/legend/factory';
-import { LayoutAlignment } from '../../src/composites/shared/layout';
+} from '../../src/composites/presentation/legend/constants';
+import { LegendDefinition } from '../../src/composites/presentation/legend/definition';
+import { createLegend } from '../../src/composites/presentation/legend/factory';
 
 const LeafSchema = CompositeBaseSchema.extend({
   namespace: z.literal('legend-test'),

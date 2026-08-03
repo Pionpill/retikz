@@ -27,6 +27,7 @@ import type {
 
 import { DEFAULT_LAYER_ID, VanillaLayerCache } from './constants';
 import { createRuntimeMetaSnapshot } from './runtime-meta';
+import { cloneThemeInput } from './theme-input';
 
 /** 单个嵌入节点贡献的待聚合记录 */
 type ContributionRecord = {
@@ -304,9 +305,9 @@ const normalizeChild = (child: VanillaChildSpec, ctx: NormalizeContext): IRChild
       inspectionPath: [...ctx.inspectionPath, { kind: 'scopeChild', index }],
     }),
   );
-  const { inspect: _inspect, ...scope } = child;
+  const { inspect: _inspect, theme, ...scope } = child;
   void _inspect;
-  return { ...scope, children };
+  return { ...scope, ...(theme === undefined ? {} : { theme: cloneThemeInput(theme) }), children };
 };
 
 /** 把 Vanilla 普通规格规范化为核心 IR 与运行时元数据 */
@@ -370,6 +371,7 @@ export const normalizeFigureSpec = (
   const ir: IRScene = {
     type: 'scene',
     version: 1,
+    ...(figure.theme === undefined ? {} : { theme: cloneThemeInput(figure.theme) }),
     children,
     ...(figure.viewBox ? { viewBox: figure.viewBox } : {}),
     ...(figure.animations ? { animations: figure.animations } : {}),

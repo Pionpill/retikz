@@ -1,6 +1,6 @@
 ---
 title: 复合
-description: composite 让 domain 包保留可序列化的 Tier 2 意图，并通过无上下文展开或布局感知编译下沉为 core Tier 1 图元。
+description: composite 让 domain 包保留可序列化的 Tier 2 意图，并通过轻量上下文展开或布局感知编译下沉为 core Tier 1 图元。
 ---
 
 retikz 的 IR 子节点分两层：**Tier 1** 是 core 内置的 `node` / `path` / `coordinate` / `scope`；**Tier 2 composite** 是 domain 包提供的高层节点，例如 `@retikz/plot` 的整张统计图 spec。
@@ -40,11 +40,17 @@ Core 只按顶层 `namespace + type` 路由 composite，不读取领域 schema �
 | `namespace`      | 划分 domain                            | 与 schema literal 一致                |
 | `type`           | 标识 domain 内的节点类型               | 与 schema literal 一致                |
 | `schema`         | 校验完整高层节点并填充默认值           | object 或共享 key 的直接 object union |
-| `expand`         | 无上下文生成一个或多个 Tier 1 / Tier 2 | 与 `compile` 互斥，最终收敛到 Tier 1  |
+| `expand`         | 读取有效 Theme 后生成 Tier 1 / Tier 2  | 与 `compile` 互斥，最终收敛到 Tier 1  |
 | `compile`        | 在完整编译环境中测量、约束并放置子内容 | 与 `expand` 互斥                      |
 | `artifactSchema` | 校验 `compile` 同次返回的领域 artifact | 有 artifact 类型时必填                |
 
 编译器按 `${namespace}.${type}` 查注册表，校验节点后调用对应分支。嵌套 composite 会继续处理，直到最终输出只含 Tier 1 与已提交 replay。未注册节点产生 warning 并跳过，循环或超过深度限制则报错。完整字段、诊断与独立 lowering 入口见[编译](/kernel/reference/runtime/compile)。
+
+## Theme 上下文
+
+`expand(node, context)` 与布局感知 `compile(node, context)` 都能读取冻结的 `context.theme`。它始终是完整的 `{ style, mode }`：Core 从 `neutral + light` 开始，按 Scene → 外层 Scope → 内层 Scope 逐字段合并。
+
+Composite 负责把这两个共享选择映射为自己拥有的领域 token、palette 或其它默认，再输出已经物化的正式 IR。Core 不拥有具体色值，Core primitive 与 renderer 也不解释 Theme。普通输出 Scope 与 `context.scope({ theme }, children)` 可以建立更内层环境；replay child 则保留 probe 时已经解析的 Theme，不会在提交位置被重新解释。
 
 ## 布局感知编译
 
@@ -171,7 +177,7 @@ PGFPlots 位于 TikZ 基础图元之上；同样地，`@retikz/plot` 通过 comp
       label: 'proposal、probe、guide 与 callback 公共合同',
       path: 'packages/kernel/core/src/contract/composite/types.ts',
       startLine: 20,
-      endLine: 205,
+      endLine: 214,
     },
     {
       label: 'proposal 校验、冻结与 slot 求值',
@@ -182,26 +188,26 @@ PGFPlots 位于 TikZ 基础图元之上；同样地，`@retikz/plot` 通过 comp
     {
       label: 'compile-local replay 与 Scope builder',
       path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
-      startLine: 197,
-      endLine: 260,
+      startLine: 214,
+      endLine: 277,
     },
     {
       label: 'replay root 的 placement 与各类 sink 提交',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 995,
-      endLine: 1132,
+      startLine: 1019,
+      endLine: 1165,
     },
     {
       label: '完整 runtime handle tree 的原子预检与 token 消费',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1148,
-      endLine: 1224,
+      startLine: 1182,
+      endLine: 1257,
     },
     {
       label: '隔离 child probe、failure 与 resolved result',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1380,
-      endLine: 1501,
+      startLine: 1511,
+      endLine: 1558,
     },
     {
       label: 'failure ownership 与受控 raise',

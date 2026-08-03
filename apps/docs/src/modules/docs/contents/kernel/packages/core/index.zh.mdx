@@ -5,6 +5,12 @@ description: 把完整 Core IR 编译为确定性 Scene，并通过 Core Runtime
 
 `@retikz/core` 拥有 IR、Definition、registry、编译与 Scene 语义。`compileToScene()` 仍是无状态的完整编译入口；需要跨 revision 管理状态时，`CoreOwnerDefinition` 与 `createCoreProgram()` 把同一编译语义接入 `@retikz/runtime`。
 
+## Theme 环境
+
+Core 公开 `ThemeStyle`、`ThemeMode`、`ThemeSchema` 与 `ResolvedTheme`。`IRScene.theme` 和 `IRScope.theme` 是稀疏、JSON-safe 的覆盖；compile 从 `neutral + light` 开始按 Scene → Scope 逐字段继承，并把完整只读值传给 `CompositeDefinition.expand` 与布局感知 `compile`。
+
+Theme 只是一条 Composite 环境通道。领域包和第三方 Composite 拥有自己的 token / palette 映射；Core primitive、最终 Scene 与 renderer 都不按 Theme 分支。契约和失败语义见[编译](/kernel/reference/runtime/compile#composite)，schema 见[场景](/kernel/reference/schema/scene#theme)。
+
 ## 完整 Snapshot 与 Core Program
 
 调用方始终提交完整 IR Snapshot。Core owner 负责复制、冻结和比较文档；Core Program 读取 typed Snapshot，产生完整 `CompileResult`、`SceneRuntimeSnapshot` 与可选 `ScenePatch`，最后由 Runtime Session 原子发布。
@@ -155,6 +161,8 @@ session.update({
 | ------------------------------------------------------ | ------------------------------------------------------------- |
 | `CORE_OWNER_KEY` / `CORE_PROGRAM_ID`                   | Core document owner 与 compile Program 的固定 identity        |
 | `CoreOwnerDefinition`                                  | 完整 IR Snapshot 的 capture/read/equality Definition          |
+| `ThemeStyle` / `ThemeMode` / `ThemeSchema`             | 闭合 Theme 词汇、严格 IR schema 与 Scene / Scope 继承入口     |
+| `IRTheme` / `ResolvedTheme`                            | 稀疏持久化覆盖与 Composite 收到的完整只读环境                 |
 | `createCoreProgram(options, runtimeOptions?)`          | 创建保留 composite artifact 泛型的 Runtime Program Definition |
 | `CoreChange`                                           | `add` / `update` / `remove` / `move` change hint union        |
 | `CoreProgramOptions<TComposites>`                      | `CompileOptions` 去掉 `trace` 后的 Program 生命周期配置       |

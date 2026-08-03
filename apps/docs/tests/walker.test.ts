@@ -203,4 +203,28 @@ describe('walker — top-level entry + object + optional + constraints', () => {
       additionalProperties: true,
     });
   });
+
+  it('unwraps a top-level pipe while preserving its description', async () => {
+    const { ThemeSchema } = await import('@retikz/core');
+    const r = walk(ThemeSchema);
+
+    expect(r.kind).toBe('object');
+    if (r.kind !== 'object') throw new Error('expected object');
+    expect(r.description).toMatch(/JSON-serializable Theme/);
+    expect(r.fields.map(field => field.name)).toEqual(['style', 'mode']);
+  });
+
+  it('prefers a field wrapper description over the referenced schema description', async () => {
+    const { SceneSchema, ScopeSchema } = await import('@retikz/core');
+    const scene = walk(SceneSchema);
+    const scope = walk(ScopeSchema);
+
+    if (scene.kind !== 'object' || scope.kind !== 'object') throw new Error('expected objects');
+    expect(scene.fields.find(field => field.name === 'theme')?.description).toBe(
+      'Sparse root Theme inherited by every Scene child.',
+    );
+    expect(scope.fields.find(field => field.name === 'theme')?.description).toBe(
+      'Sparse Theme override inherited by this Scope descendants.',
+    );
+  });
 });

@@ -24,7 +24,7 @@ internal-only 改动通常不写 changelog；breaking 必写迁移说明。
 
 ## Contract Auditor
 
-Alpha 红黄改动建议做第二关对账。调用 subagent / 外部模型前仍按根规则取得授权；一旦执行，必须按 `cross-review` 对固定快照并发使用 2–3 个不同可用模型，不能串行传递同轮结论。目标不是找代码 bug，而是检查六方一致：
+Alpha 红黄改动建议做第二关对账。调用 subagent / 外部模型前仍按根规则取得授权；一旦执行，必须按 `cross-review` 对固定快照并发使用 2–3 个 fresh 独立 reviewer，并按异模型优先或同模型双实例降级规则选择阵容，不能串行传递同轮结论。目标不是找代码 bug，而是检查六方一致：
 
 1. ADR 承诺。
 2. reviewed `PLAN.md` 与执行偏差。
@@ -33,7 +33,7 @@ Alpha 红黄改动建议做第二关对账。调用 subagent / 外部模型前�
 5. docs mdx + demo。
 6. 实际代码 + 测试。
 
-输入给 ADR、plan、测试契约矩阵、changelog 草稿、commit / diff、相关 docs、schema / public API / tests diff。只能使用一个模型时不得宣称交叉评审；按根授权由人工决定是否接受单模型退化。
+输入给 ADR、plan、测试契约矩阵、changelog 草稿、commit / diff、相关 docs、schema / public API / tests diff。只有一个非主模型可用时启动两个该模型的 fresh 独立实例并记录降级；只有一个 reviewer 实例完成时不得宣称交叉评审，按根授权由人工决定是否接受单 reviewer 退化。
 
 结果处理：
 

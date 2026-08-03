@@ -11,6 +11,7 @@ description: IR 根 —— 一份 retikz 绘制的 JSON 化描述
   descriptions={{
     version: 'IR 主版本号；schema 出现破坏性变更时才递增',
     type: '判别字段，标记该对象为 scene 根节点',
+    theme: '全图稀疏 Theme；从 neutral + light 基线开始逐字段覆盖，并由后代 Scope 继续继承',
     children: 'scene 的顶层子节点列表；node 注册的 id 可被 path 引用',
     viewBox:
       '显式视框 `{ x, y, width, height }`，覆盖自动算的布局范围（固定尺寸 / 裁剪 / 多图对齐）；设值后 Scene.layout 直接用它、忽略 padding；省略则自动取 AABB + padding',
@@ -18,6 +19,12 @@ description: IR 根 —— 一份 retikz 绘制的 JSON 化描述
       'scene 级（镜头）时间轴动画 track 数组；`viewBox` 属性可动画化做缩放 / 平移。静态 `layout` 始终是末态（settled）取景，镜头动画不影响它',
   }}
 />
+
+## Theme
+
+`ThemeSchema` 是 Scene 与 Scope 共用的稀疏环境。`style` 与 `mode` 独立继承；默认解析为 `neutral + light`。它只交给当前位置的 Tier 2 Composite，普通 Core 图元与最终 Scene 不按 Theme 分支。
+
+<ZodSchema name="ThemeSchema" />
 
 <span id="viewbox"></span>
 

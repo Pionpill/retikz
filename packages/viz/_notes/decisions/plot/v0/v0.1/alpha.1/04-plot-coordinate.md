@@ -1,8 +1,8 @@
 # ADR-04：Plot 坐标系（Cartesian2D + Coordinate union，持有位置 scale 绑定）
 
-- 状态：Accepted（已实现）
+- 状态：Accepted
 - 决策日期：2026-06-03
-- 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.5](../../../../../architecture/plot-design.md) · 根节点：[ADR-01 PlotSpec](./01-plot-spec-root.md) · 关联方：[ADR-03 scale](./03-plot-scale.md) · [ADR-05 encoding+mark](./05-plot-encoding-mark.md)
+- 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.5](../../../../../architecture/plot-design.md) · 根节点：[ADR-01 IRPlotSpec](./01-plot-spec-root.md) · 关联方：[ADR-03 scale](./03-plot-scale.md) · [ADR-05 encoding+mark](./05-plot-encoding-mark.md)
 
 ## 背景 / 约束
 
@@ -39,7 +39,3 @@ export type CoordinateType = ValueOf<typeof PlotCoordinate>;
 - **非位置通道的 scale 绑定** → alpha.3（ADR-05 后续扩展）。
 
 ---
-
-> **实现指针**：level `red`（动 `plot/src/ir/**`）、additive 非 breaking。真源以代码为准——`PlotCoordinate` / `Cartesian2DSchema` / `CoordinateSchema` / `Coordinate`（`plot/src/ir/coordinate.ts`，复用 core `ValueOf`）；x/y 是字符串、语义指向 `scales[].name` 但 schema 不 import scale、不校验存在性。测试在 `packages/viz/plot/tests/ir/coordinate.schema.test.ts`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / 依赖现有元素）见本文件 git 历史。
-
-> 🔖 封板压缩 commit `9115e6b4`；压缩前完整施工蓝图 = `git show 9115e6b4^:_notes/decisions/plot/v0/v0.1/alpha.1/04-plot-coordinate.md`。

@@ -1,6 +1,7 @@
 # ADR-04：opacity 通道（仅 PointMark）
 
-- 状态：Accepted
+- 状态：Superseded
+- 替代：[alpha.12 ADR-12](../alpha.12/12-channel-core-coverage.md)；opacity 已从 PointMark 专属能力扩展为按宿主落到 Node、Path 或 Scope 的共享 mark channel
 - 决策日期：2026-06-08
 - 关联：[plot v0.1-alpha.7 roadmap](./roadmap.md) · [plot-design §3.3 Aesthetics](../../../../../architecture/plot-design.md) · 依赖：[ADR-02 通道→scale resolver](./02-channel-scale-resolver-size.md)（opacity 复用其 resolver + PointEncoding）
 
@@ -46,7 +47,7 @@ export const OpacityChannelSchema = z
 
 - **field（continuous）**：经 ADR-02 resolver 合成 `linear` scale，domain = 数据 extent，range `[OPACITY_MIN, 1]`（默认下界，避免最小值全透明不可见）。continuous only——categorical opacity 无意义、顺延；temporal fail-loud。
 - **value**：常量 ∈ `[0,1]`，绕过 scale。
-- **取值范围（拍死，评审 P1）**：opacity field 是**连续强度通道**，合成的 linear scale **开 `clamp`**——任意字段值（含负数 / 显式 domain 外的值）都 **clamp 到 `[OPACITY_MIN, 1]`，不 fail-loud**。这与 size 的「负值 fail-loud」**有意不同**：size 有面积语义、负半径无意义；opacity 无此约束，负强度 clamp 到最淡即可。唯一的硬边界是 `value` 常量由 schema 限 `[0,1]`；temporal 字段仍 fail-loud（opacity 是连续编码）。
+- **取值范围**：opacity field 是**连续强度通道**，合成的 linear scale **开 `clamp`**——任意字段值（含负数 / 显式 domain 外的值）都 **clamp 到 `[OPACITY_MIN, 1]`，不 fail-loud**。这与 size 的「负值 fail-loud」**有意不同**：size 有面积语义、负半径无意义；opacity 无此约束，负强度 clamp 到最淡即可。唯一的硬边界是 `value` 常量由 schema 限 `[0,1]`；temporal 字段仍 fail-loud（opacity 是连续编码）。
 - **lowering**：per-datum 写 core node 的不透明度字段；与 size 同理，per-datum 值**落到每个 node**（覆盖 `colorGroupedScope` 子 Scope nodeDefault）。
 
 理由：
@@ -60,6 +61,3 @@ export const OpacityChannelSchema = z
 - **opacity 作用于 bar/area/line/sector** → 顺延（⑤ 仅 PointMark）。
 - **categorical → 离散 opacity 档** → 顺延（本轮 continuous only）。
 - **stroke/fill 分别控制 opacity** → 顺延（本轮整节点 opacity）。
-
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/encoding.ts`、`packages/viz/plot/src/lower/{channel,mark}.ts` 与 `packages/viz/plot-react/src/components/marks.tsx`，测试见 `packages/viz/plot/tests/{ir/encoding.schema,ir/mark.schema,lower/opacity-channel}.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.7/04-opacity-channel.md`（封板全文）。

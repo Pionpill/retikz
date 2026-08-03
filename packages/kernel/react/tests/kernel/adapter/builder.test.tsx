@@ -1,4 +1,4 @@
-import { compileToScene, NodeTextColor } from '@retikz/core';
+import { compileToScene, NodeTextColor, ThemeMode, ThemeStyle } from '@retikz/core';
 import { Fragment } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -13,6 +13,21 @@ import { Draw } from '../../../src/sugar';
 import { EdgeLabel } from '../../../src/sugar';
 
 describe('buildIR', () => {
+  it('<Scope theme> 透传为可继承 IRScope Theme', () => {
+    const ir = buildIR(
+      <Scope theme={{ style: ThemeStyle.Academic, mode: ThemeMode.Dark }}>
+        <Node id="inside" position={[0, 0]} />
+      </Scope>,
+    );
+
+    expect(ir.children).toEqual([
+      {
+        type: 'scope',
+        theme: { style: 'academic', mode: 'dark' },
+        children: [{ type: 'node', id: 'inside', position: [0, 0] }],
+      },
+    ]);
+  });
   it('构建 axis-line Step 并保留 axis / target / label', () => {
     const out = buildIR(
       <Path>

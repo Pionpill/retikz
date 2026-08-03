@@ -28,6 +28,20 @@ export type SchemaRegistryEntry = {
 
 export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   SceneSchema: { schema: IR.SceneSchema, label: 'Scene', url: '/kernel/reference/schema/scene' },
+  ThemeSchema: {
+    schema: IR.ThemeSchema,
+    label: 'Theme',
+    url: '/kernel/reference/schema/scene#theme',
+    localizations: {
+      zh: {
+        description: 'Scene 或 Scope 的稀疏、可序列化 Theme 覆盖',
+        descriptions: {
+          style: '视觉人格：neutral、academic、vibrant 或 clean；省略时继承外层值',
+          mode: '明暗环境：light 或 dark；省略时继承外层值',
+        },
+      },
+    },
+  },
   ChildSchema: { schema: IR.ChildSchema, label: 'Child', url: '/kernel/reference/schema/scene#child' },
   ViewBoxSchema: { schema: IR.ViewBoxSchema, label: 'ViewBox', url: '/kernel/reference/schema/scene#viewbox' },
   CompositeNodeSchema: {
@@ -472,6 +486,41 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: TableIR.TablePresentationRefSchema,
     label: 'TablePresentationRef',
     url: '/viz/table/reference/contract-table#tablepresentationrefschema',
+  },
+  TableFormatterRefSchema: {
+    schema: TableIR.TableFormatterRefSchema,
+    label: 'TableFormatterRef',
+    url: '/viz/table/reference/contract-table#tableformatterrefschema',
+  },
+  TableCellSelectorSchema: {
+    schema: TableIR.TableCellSelectorSchema,
+    label: 'TableCellSelector',
+    url: '/viz/table/reference/contract-table#tablecellselectorschema',
+  },
+  TableCellRuleSchema: {
+    schema: TableIR.TableCellRuleSchema,
+    label: 'TableCellRule',
+    url: '/viz/table/reference/contract-table#tablecellruleschema',
+  },
+  TableCellVisualEncodingSchema: {
+    schema: TableIR.TableCellVisualEncodingSchema,
+    label: 'TableCellVisualEncoding',
+    url: '/viz/table/reference/contract-table#tablecellvisualencodingschema',
+  },
+  TableStyleSchema: {
+    schema: TableIR.TableStyleSchema,
+    label: 'TableStyle',
+    url: '/viz/table/reference/contract-table#tablestyleschema',
+  },
+  TableThemeModeSchema: {
+    schema: TableIR.TableThemeModeSchema,
+    label: 'TableThemeMode',
+    url: '/viz/table/reference/contract-table#tablethememodeschema',
+  },
+  TableStyleTokensSchema: {
+    schema: TableIR.TableStyleTokensSchema,
+    label: 'TableStyleTokens',
+    url: '/viz/table/reference/contract-table#tablestyletokensschema',
   },
   TableCellSpanSchema: {
     schema: TableIR.TableCellSpanSchema,

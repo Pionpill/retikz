@@ -25,12 +25,12 @@ transform 仍是唯一统计入口；mark 只消费 transform 后的 rows。内�
 
 长尾能力分两级扩展：
 
-- 完整新数据语义继续用 ADR-06 的 `defineTransform`。
+- 完整新数据语义继续用 Data 的 `defineTransform`。
 - 可嵌入通用 transform 的统计子语义通过 `defineStatReducer` / `defineRowSelector` 注入，并由 `options.statReducerDefinitions` / `options.rowSelectorDefinitions` 传入。
 
-旧 `aggregate` 被 `summarize` 替代，旧 `derive-relation` 被 `relate` 替代；`bin` 的 `reduce` / `reduceField` / `valueField` 改为共享 `metrics`。字段名不再自动猜测，reducer 输出必须显式 `as`。
+旧 `aggregate` 被 `summarize` 替代，旧 `derive-relation` 被 `relate` 替代；`bin` 的 `reduce` / `reduceField` / `valueField` 改为共享 `metrics`。字段名不再自动猜测，reducer 输出必须显式 `as`。最终 owner 边界是：`summarize` / `select` / `annotate` 与 reducer / selector definitions 属于 Data，`relate` 与 `bin` 等 plot-only transform 属于 Plot。
 
-## 实现指针
+## 最终形态
 
 - `groupBy` 省略或 `[]` 都表示全局单组。
 - `select` 默认输出原始行并保留 source provenance；`top` / `bottom` / `tie:'all'` 可每组输出多行。
@@ -48,10 +48,8 @@ transform 仍是唯一统计入口；mark 只消费 transform 后的 rows。内�
 
 ## 不在本 ADR 范围
 
-- 不引入表达式语言或函数进入 PlotSpec。
+- 不引入表达式语言或函数进入 IRPlotSpec。
 - 不做 named data view、join、facet scoped dataset。
 - 不设计 rolling window、lag / lead、moving average 等时间序列窗口能力。
 - 不做几何 routing；`relate` 只产 relation rows，routing 仍归 ADR-14。
 - 不实现 chart preset 层快捷组件。
-
-> 🔖 本文件压缩前完整施工蓝图 = `git show 20392fb1f39f0383e9d8f8a29f31850da99b8825:_notes/decisions/graph/v0/v0.1/alpha.12/16-statistical-transform-algebra.md`（封板全文）。

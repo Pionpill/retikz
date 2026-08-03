@@ -1,6 +1,7 @@
 # ADR-02：通用「通道 → scale」抽象 + size 通道（仅 PointMark，radius scale）
 
-- 状态：Accepted
+- 状态：Superseded
+- 替代：[alpha.12 ADR-10](../alpha.12/10-channel-registry.md) 与 [ADR-12](../alpha.12/12-channel-core-coverage.md)；通道解析已收敛为 definition / registry，size 保留为 PointMark 的 mark-local channel
 - 决策日期：2026-06-08
 - 关联：[plot v0.1-alpha.7 roadmap](./roadmap.md) · [plot v0 roadmap 阶段二](../../roadmap.md) · [plot-design §3.3 Aesthetics / §3.4 Scale](../../../../../architecture/plot-design.md) · 依赖：[ADR-01 连续 scale 家族](./01-continuous-scale-family.md)（size 派生到 sqrt）· 下游：[ADR-03 color·series](./03-color-series.md)（color 迁入本 resolver）
 
@@ -85,6 +86,3 @@ export const PointEncodingSchema = EncodingSchema.extend({
 - **opacity / shape 通道**（复用本 resolver）→ 同属 alpha.7，见 [ADR-04](./04-opacity-channel.md) / [ADR-05](./05-shape-channel.md)（2026-06-08 从 alpha.8 前移）。
 - **常量半径的 React `size={number}` 表面** → 后续（IR 已支持 `size.value`）。
 - **自定义通道注册表（`ChannelDefinition` 对外开放）** → 另立里程碑（plot-design §11「先内置，后开放自定义」）；本轮 resolver 仅留接缝，用户要任意视觉控制走 Kernel（`<Node>` / `<Path>`）。
-
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/{encoding,mark}.ts`、`packages/viz/plot/src/lower/{channel,mark,scale}.ts` 与 `packages/viz/plot-react/src/components/marks.tsx`，测试见 `packages/viz/plot/tests/{ir/encoding.schema,ir/mark.schema,lower/size-channel,lower/channel-resolver}.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.7/02-channel-scale-resolver-size.md`（封板全文）。

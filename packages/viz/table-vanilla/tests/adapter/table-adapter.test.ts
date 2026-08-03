@@ -2,7 +2,7 @@ import type { IRDetailTableSpec, IRTableSpec } from '@retikz/table';
 import type { VanillaEmbedContext } from '@retikz/vanilla';
 
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
-import { createManualTableSpec } from '@retikz/table';
+import { createManualTableSpec, TableSpecSchema } from '@retikz/table';
 import { embed, figure, layer, normalizeFigureSpec, renderToSvgString } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -38,6 +38,36 @@ describe('Table Vanilla adapter', () => {
     expect(() =>
       adapter.lower({ spec: { namespace: 'table' } as unknown as IRTableSpec }, contextOf('invalid')),
     ).toThrow();
+  });
+
+  it('contextualizes only the Table id and preserves root authoring fields', () => {
+    const adapter = createTableAdapter();
+    const spec = createManualTableSpec({
+      id: 'scores',
+      rows: [[98]],
+      rules: [{ selector: { cellIds: ['cell.r0.c0'] }, appearance: { content: { color: '#b91c1c' } } }],
+      encodings: [
+        {
+          id: 'score-color',
+          selector: { locations: ['body'] },
+          channel: 'backgroundFill',
+          scale: { name: 'ordinal-color' },
+          legend: false,
+        },
+      ],
+      style: 'academic',
+      themeMode: 'dark',
+      styleTokens: { 'cell.content.color': '#fafafa' },
+    });
+
+    const lowered = TableSpecSchema.parse(adapter.lower({ spec }, contextOf('panel')).node);
+
+    expect(lowered).toEqual({ ...spec, id: 'panel/scores' });
+    expect(lowered.rules).toEqual(spec.rules);
+    expect(lowered.encodings).toEqual(spec.encodings);
+    expect(lowered.style).toBe(spec.style);
+    expect(lowered.themeMode).toBe(spec.themeMode);
+    expect(lowered.styleTokens).toEqual(spec.styleTokens);
   });
 
   it('returns the shared stable composite maker for every lower call', () => {

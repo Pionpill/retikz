@@ -1,6 +1,7 @@
-﻿# ADR-01：数据模型类型层——字段类型集补全 + 缺省推断 + encoding 字段引用/类型校验
+# ADR-01：数据模型类型层——字段类型集补全 + 缺省推断 + encoding 字段引用/类型校验
 
-- 状态：Accepted
+- 状态：Superseded
+- 替代：[Data beta.1 ADR-01](../../../../data/v0/v0.1/beta.1/01-plot-data-migration.md)；数据模型的所有权与最终公开契约已迁入 `@retikz/data`
 - 决策日期：2026-06-07
 - 关联：[plot v0.1-alpha.6 待办](./roadmap.md) · [plot v0 roadmap 阶段二](../../roadmap.md) · [plot-design §3.1 Data / §3.2 Dimension / §3.6 Encoding](../../../../../architecture/plot-design.md) · 前身：[alpha.1 ADR-02 DataRef/DataModel](../alpha.1/02-plot-data.md) · 下游：ADR-02（数据模型可移植契约）/ ADR-03（type-driven scale）
 
@@ -23,7 +24,7 @@
 
 本 ADR 产出一个**纯函数解析步**，在 lowering ingest 期把「`data.model`（可选）+ 绑定数据 + **用户源字段集**」解析成一份 `Map<logicalField, FieldType>`，作为 ADR-02（coercion 选型）/ ADR-03（scale 选型）及后续的类型真源；同时补全类型集、加引用校验。
 
-> **strict / infer 二选一**（评审 P1）：声明 `model` ⇒ **strict**——所有用户源字段引用必须在 `model` 列出；不声明 `model` ⇒ **全推断**。**不存在「部分声明 + 部分推断」混合**（消除「字段未列出时回退推断」的歧义）。
+> **strict / infer 二选一**：声明 `model` ⇒ **strict**——所有用户源字段引用必须在 `model` 列出；不声明 `model` ⇒ **全推断**。**不存在「部分声明 + 部分推断」混合**（消除「字段未列出时回退推断」的歧义）。
 
 **(1) 字段类型集补 `proportion`**（`interval` 不加为 field type，见待决策点）：
 
@@ -38,7 +39,7 @@ export const DataFieldType = {
 export type FieldType = ValueOf<typeof DataFieldType>;
 ```
 
-**(2) 字段分类（strict 校验范围的关键，评审 P1）**：lowering 里的字段引用分三类，**只有「用户源字段」参与 model strict 校验与类型解析**：
+**(2) 字段分类**：lowering 里的字段引用分三类，**只有「用户源字段」参与 model strict 校验与类型解析**：
 
 | 类别                              | 来源                      | 例                                                                                                                                                   | 参与 model strict？             |
 | --------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
@@ -86,6 +87,3 @@ export type FieldType = ValueOf<typeof DataFieldType>;
 - **`interval` 双通道编码**（xStart/xEnd）→ alpha.9+。
 - **新 scale 类型**（log/pow/quantize/gradient）→ alpha.7-8。
 - **值级校验**（声明 temporal 但值不可解析）→ 暂不做（沿用跳过语义，见待决策点）。
-
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/data.ts` 与 `packages/viz/plot/src/lower/{infer,validate,expand}.ts`，测试见 `packages/viz/plot/tests/lower/data-model.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.6/01-data-model.md`（封板全文）。

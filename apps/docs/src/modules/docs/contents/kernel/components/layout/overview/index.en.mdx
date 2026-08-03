@@ -47,6 +47,16 @@ For everyday authoring, pass children directly. `<Layout>` converts the componen
 
 `ir` and `children` are two entry modes; if both are present, `ir` is used. For IR generation, persistence, and conversion, continue with [Architecture](/kernel/concepts/design/principles) and [Composite](/kernel/concepts/design/composite).
 
+### Inherited Theme
+
+`theme` is a persistent environment for Tier 2 composites, not implicit styling for Core primitives. A root `<Layout theme>` selects the whole-figure environment, while an inner `<Scope theme>` overrides only the `style` or `mode` fields it provides. The default is `neutral + light`.
+
+The third-party `ThemeCard` below owns its complete token and color mapping. Core only passes the resolved `style / mode` at each position. The composite materializes concrete colors while expanding, so neither the SVG nor Canvas renderer needs to understand Theme.
+
+<ComponentPreview files="theme-inheritance" size="sm" />
+
+When `ir` already carries a root Theme, an explicit `theme` prop overrides it per field and preserves omitted persisted fields. Neither input object is mutated. Theme does not automatically change a plain Node or Path fill, stroke, or font.
+
 ### Reading Compile Artifacts
 
 DTO means Data Transfer Object here: `CompiledNodeLayout` is a detached, frozen snapshot produced after Core finishes laying out a Node. It records the Node id, content-box center / size / global bounds, frame position / size / rotation, line count, and whether the content contains TeX; the artifact envelope's `occurrence` separately identifies where that Node came from in the current compile.
@@ -118,8 +128,8 @@ Semantic ownership does not drift with the entry point: React declares only a st
     {
       label: 'React input and Core options wiring',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 410,
-      endLine: 474,
+      startLine: 442,
+      endLine: 522,
     },
     {
       label: 'Create and clean up the React retained Session',
@@ -154,8 +164,8 @@ Semantic ownership does not drift with the entry point: React declares only a st
     {
       label: 'Static and retained host dispatch',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 479,
-      endLine: 524,
+      startLine: 539,
+      endLine: 584,
     },
   ]}
 />
@@ -183,8 +193,8 @@ If a figure is clipped or has too much empty space, inspect **View Code → IR**
     {
       label: 'viewBox injection into IR',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 417,
-      endLine: 426,
+      startLine: 465,
+      endLine: 475,
     },
     {
       label: 'explicit versus automatic layout',
@@ -214,8 +224,8 @@ The renderer Provider fills only an omitted renderer, so an explicit descendant 
     {
       label: 'renderer and animation mode resolution',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 347,
-      endLine: 367,
+      startLine: 396,
+      endLine: 416,
     },
     {
       label: 'retained-host backend and snapshot configuration',
@@ -236,13 +246,14 @@ The renderer Provider fills only an omitted renderer, so an explicit descendant 
 
 ### Input and Viewport
 
-| Prop       | Type                 | Default | Description                                       |
-| ---------- | -------------------- | ------- | ------------------------------------------------- |
-| `children` | `ReactNode`          | —       | Kernel / Sugar tree, used when `ir` is omitted    |
-| `ir`       | `IRScene`            | —       | Pre-built Core IR; wins when children also exist  |
-| `width`    | `number` \| `string` | —       | SVG / Canvas display width                        |
-| `height`   | `number` \| `string` | —       | SVG / Canvas display height                       |
-| `viewBox`  | `IRViewBox`          | —       | Internal range; overrides IR and automatic layout |
+| Prop       | Type                 | Default | Description                                                  |
+| ---------- | -------------------- | ------- | ------------------------------------------------------------ |
+| `children` | `ReactNode`          | —       | Kernel / Sugar tree, used when `ir` is omitted               |
+| `ir`       | `IRScene`            | —       | Pre-built Core IR; wins when children also exist             |
+| `theme`    | `IRTheme`            | —       | Sparse root Theme; overrides `ir.theme` per field in IR mode |
+| `width`    | `number` \| `string` | —       | SVG / Canvas display width                                   |
+| `height`   | `number` \| `string` | —       | SVG / Canvas display height                                  |
+| `viewBox`  | `IRViewBox`          | —       | Internal range; overrides IR and automatic layout            |
 
 ### Compile Basics
 

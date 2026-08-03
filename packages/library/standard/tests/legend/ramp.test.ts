@@ -11,10 +11,10 @@ import {
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { LegendContentKind, LegendDirection } from '../../src/composites/legend/constants';
-import { LegendDefinition } from '../../src/composites/legend/definition';
-import { createLegend } from '../../src/composites/legend/factory';
-import { LayoutAlignment } from '../../src/composites/shared/layout';
+import { LayoutAlignment } from '../../src/composites/layout/shared';
+import { LegendContentKind, LegendDirection } from '../../src/composites/presentation/legend/constants';
+import { LegendDefinition } from '../../src/composites/presentation/legend/definition';
+import { createLegend } from '../../src/composites/presentation/legend/factory';
 
 const LeafSchema = CompositeBaseSchema.extend({
   namespace: z.literal('legend-ramp-test'),

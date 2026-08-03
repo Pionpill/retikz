@@ -20,7 +20,7 @@ ADR-07 收敛了 scale registry，但 visual channel 仍有缺口：color 通道
 
 本 ADR 不改 IR schema，是 yellow level 收敛。它先把内置通道从 hardcode 分支迁入 registry；自定义通道的公开 options 与 `encoding.channels` 由 ADR-11 处理。
 
-## 实现状态
+## 最终形态
 
 该 ADR 在 2026-06-20 实现，并在 2026-06-21 与 ADR-11 一起收敛到统一 registry / delivery 形态。
 
@@ -29,22 +29,6 @@ ADR-07 收敛了 scale registry，但 visual channel 仍有缺口：color 通道
 - 原计划放宽 `ChannelScaleResolution.of`，后续撤回。
 - size / opacity / shape 走已泛型的 `ChannelResolution<T>`。
 - `ChannelScaleResolution` 继续保持 color-string 语义。
-
-## 实现指针
-
-最终行为以代码为准，主要落在：
-
-- `packages/viz/plot/src/contract/channel.ts`
-- `packages/viz/plot/src/providers/channel/**`
-- `packages/viz/plot/src/providers/scale/**`
-- `packages/viz/plot/src/features/guide/**`
-
-验证覆盖：
-
-- `packages/viz/plot/tests/lower/size-channel.test.ts`
-- `packages/viz/plot/tests/lower/opacity-channel.test.ts`
-- `packages/viz/plot/tests/lower/shape-channel.test.ts`
-- legend / guide / channel delivery 相关测试
 
 ## 影响
 
@@ -55,5 +39,3 @@ ADR-07 收敛了 scale registry，但 visual channel 仍有缺口：color 通道
 - 自定义 visual channel 的公开入口；由 ADR-11 处理。
 - path / scope channel coverage 对账；由 ADR-12 处理。
 - PaintSpec、Shadow、ArrowDetail 等对象值通道。
-
-> 🔖 本文件压缩前完整施工蓝图 = `git show 20392fb1f39f0383e9d8f8a29f31850da99b8825:_notes/decisions/graph/v0/v0.1/alpha.12/10-channel-registry.md`（封板全文）。

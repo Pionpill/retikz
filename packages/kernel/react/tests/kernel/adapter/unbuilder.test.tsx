@@ -61,6 +61,26 @@ const toElements = (node: ReturnType<typeof convertIRToReactNode>): Array<ReactE
 };
 
 describe('convertIRToReactNode', () => {
+  it('Scope Theme 随 children bridge 往返，Scene 根 Theme保持 children-only 边界', () => {
+    const ir: IRScene = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      theme: { style: 'clean', mode: 'dark' },
+      children: [
+        {
+          type: 'scope',
+          theme: { mode: 'light' },
+          children: [{ type: 'node', id: 'inside', position: [0, 0] }],
+        },
+      ],
+    };
+
+    expect(buildIR(convertIRToReactNode(ir))).toEqual({
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: ir.children,
+    });
+  });
   it('axis-line IR → React → IR 保留 axis / target / label', () => {
     const input: IRScene = {
       version: CURRENT_IR_VERSION,

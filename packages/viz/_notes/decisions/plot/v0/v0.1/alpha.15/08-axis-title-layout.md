@@ -1,6 +1,6 @@
 # ADR-08：Axis title 布局与锚点策略
 
-- 状态：Accepted（已实现）
+- 状态：Accepted
 - 决策日期：2026-07-04
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.15 roadmap](./roadmap.md) · [plot-design.md §3.9 Guide](../../../../../architecture/plot-design.md#39-guide)
 
@@ -77,13 +77,13 @@ type AxisTitle = {
 4. 结构化 `anchor` 让端点标题、旋转标题和多行标题的对齐方式可预测，不再依赖自由字符串。
 5. `layout` 把自动避让做成显式策略，chart preset 可以组合默认规则，底层 guide 不需要写死某个截图场景。
 
-## 实现记录
+## 最终形态
 
-- `title.gap` 已破坏性替换为 `title.padding`，guide local 与 theme axis title 都不再接收 `gap`。
-- `title.placement` 的 schema 直接复用 core `GeometryLabelPosition`，plot 导出的 `AxisTitlePlacementKeyword` 也改为 core 常量别名。
-- `title.shift.along/normal` 已在 cartesian、polar angular、polar radial、ternary 和 custom axis lowering 中按局部切向 / 外法线解释。
-- `title.anchor.align` 已下沉为 core Node 现有的 `align`；`anchor.baseline` 先作为 schema 级契约保留，等待 core Node 暴露文本基线能力后再完整下沉。
-- `title.layout` 已进入 schema，当前 lowering 仍沿用既有 padding / label band 估算，后续避让 arrow endpoint、旋转 tick label band 和 title overflow 时复用该字段。
+- `title.gap` 破坏性替换为 `title.padding`，guide local 与 theme axis title 都不再接收 `gap`。
+- `title.placement` 直接复用 core `GeometryLabelPosition`，plot 导出的 `AxisTitlePlacementKeyword` 是同一常量集合的别名。
+- `title.shift.along/normal` 在 cartesian、polar angular、polar radial 和 custom axis 中分别按局部切向与外法线解释。
+- `title.anchor.align` 使用 core Node 的 `align`；`anchor.baseline` 保留为 schema 契约，等待 core 文本基线能力后再完整生效。
+- `title.layout` 使用确定性的 padding 与 label band 估算，为后续 arrow endpoint、旋转 label band 和 title overflow 避让保留兼容入口。
 
 ## 不在本 ADR 范围
 
@@ -91,11 +91,7 @@ type AxisTitle = {
 - axis title ellipsis、wrap、text truncation。
 - renderer 真实文本测量。
 - title 背景、边框、leader line、pin。
-- chart preset 默认规则；后续 chart 可以消费本 PlotSpec 能力。
+- chart preset 默认规则；后续 chart 可以消费本 IRPlotSpec 能力。
 - 修改 core `GeometryLabelPosition` 的关键字集合。
 
 ---
-
-> **实现指针**：本 ADR 已随 plot v0.1-alpha.15 发布落地；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在发布 tag 历史中。
-
-> 🔖 发布后压缩；压缩前完整施工蓝图 = `git show plot-v0.1.0-alpha.15:packages/viz/_notes/decisions/v0/v0.1/alpha.15/08-axis-title-layout.md`。
