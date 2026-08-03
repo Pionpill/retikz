@@ -304,6 +304,8 @@ describe('preview controls registry', () => {
     expect(Object.keys(componentPreviewExports).sort()).toEqual([
       'ComponentPreview',
       'ComponentPreviewCard',
+      'ComponentPreviewThumbnail',
+      'DemoLocationContext',
       'definePreviewControls',
       'formatIR',
       'usePreviewControls',

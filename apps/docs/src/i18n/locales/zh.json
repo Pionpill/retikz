@@ -22,7 +22,14 @@
     "groupContact": "联系作者",
     "contactGithub": "GitHub 主页",
     "expandSection": "展开",
-    "collapseSection": "收起"
+    "collapseSection": "收起",
+    "showcaseExamples": "使用示例",
+    "showcaseExamplesEmpty": "当前图表暂时没有其它使用示例。",
+    "showcaseFamily": "同类图表",
+    "showcaseFamilyTooltip": "家族",
+    "showcaseUsageTooltip": "用途",
+    "showcaseApi": "API",
+    "showcaseFamilyEmpty": "当前分组暂时没有其它主要图表。"
   },
   "kernel": {
     "label": "内核",
@@ -145,6 +152,11 @@
     "changelog": "更新日志",
     "changelogV01": "v0.1",
     "data": "Data · 数据",
+    "chart": "Chart · 图表",
+    "chartScatterPoints": "点图",
+    "chartScatter": "散点图",
+    "chartBubble": "气泡图",
+    "chartPurposeDistribution": "分布",
     "table": "Table · 表格",
     "detailTable": "明细表",
     "tableModel": "表格模型",

@@ -22,7 +22,14 @@
     "groupContact": "Contact",
     "contactGithub": "GitHub profile",
     "expandSection": "Expand",
-    "collapseSection": "Collapse"
+    "collapseSection": "Collapse",
+    "showcaseExamples": "Examples",
+    "showcaseExamplesEmpty": "There are no other examples for this chart yet.",
+    "showcaseFamily": "Family",
+    "showcaseFamilyTooltip": "Family",
+    "showcaseUsageTooltip": "Usage",
+    "showcaseApi": "API",
+    "showcaseFamilyEmpty": "There are no other primary charts in this family yet."
   },
   "kernel": {
     "label": "Kernel",
@@ -145,6 +152,11 @@
     "changelog": "Changelog",
     "changelogV01": "v0.1",
     "data": "Data",
+    "chart": "Chart",
+    "chartScatterPoints": "Scatter & Points",
+    "chartScatter": "Scatter",
+    "chartBubble": "Bubble Chart",
+    "chartPurposeDistribution": "Distribution",
     "table": "Table",
     "detailTable": "Detail Table",
     "tableModel": "Table Model",

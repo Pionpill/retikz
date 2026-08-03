@@ -1,0 +1,28 @@
+---
+title: 点图
+description: 用点的位置及点之间的关系展示单个观测，并按图表结构选择合适的点图。
+---
+
+点图以一个或多个数据点为视觉主体。这个分组按稳定的图表结构组织常用类型；如果只需要比较两个连续变量，从散点图开始。
+
+## 职责一览
+
+| 图表                                | 职责                                 | 适合场景                         |
+| ----------------------------------- | ------------------------------------ | -------------------------------- |
+| [散点图](/viz/chart/points/scatter) | 用二维位置展示两个连续变量的关系     | 查看分布、聚类、离群点或相关趋势 |
+| [气泡图](/viz/chart/points/bubble)  | 在二维位置上用面积补充第三个定量变量 | 同时比较关系与量级               |
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/chart/points/scatter">
+    <span className="font-semibold">散点图</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      比较两个连续变量，并用颜色或尺寸补充分类与量级
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/points/bubble">
+    <span className="font-semibold">气泡图</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">在位置关系上补充面积编码</span>
+  </LinkedCard>
+</div>

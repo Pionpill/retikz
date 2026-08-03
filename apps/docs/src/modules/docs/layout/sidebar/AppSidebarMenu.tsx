@@ -66,6 +66,7 @@ export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
                 ))}
               <ul className="flex flex-col gap-0.5">
                 {category.modules.map(module => {
+                  const ModuleIcon = module.Icon;
                   const modulePath = category.ungrouped
                     ? `/${moduleId}/${module.value}`
                     : `/${moduleId}/${category.value}/${module.value}`;
@@ -84,6 +85,7 @@ export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
                             onNavigate?.();
                           }}
                         >
+                          {ModuleIcon && <ModuleIcon className="mr-1.5 size-3.5 shrink-0" />}
                           <span className="truncate">{module.label}</span>
                         </button>
                       </li>
@@ -96,6 +98,7 @@ export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
                       item={{
                         value: module.value,
                         label: module.label,
+                        Icon: module.Icon,
                         children: module.children,
                       }}
                       path={modulePath.toLowerCase()}

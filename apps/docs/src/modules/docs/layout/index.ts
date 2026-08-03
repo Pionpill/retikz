@@ -1,3 +1,4 @@
+export * from './doc-page-presentation';
 export * from './DocLayout';
 export * from './DocPage';
 export * from './sidebar';

@@ -1,0 +1,49 @@
+---
+title: 气泡图
+description: 在二维位置上用气泡面积表达第三个定量变量，比较关系与量级。
+family: point
+usage: distribution
+---
+
+<ShowcaseGallery
+  examples={[
+    {
+      id: 'bubble-basic',
+      title: '基础气泡',
+      description: '用位置比较两个变量，再用面积表达量级。',
+      preview: {
+        files: ['bubble-basic', 'bubble-basic.data.ts'],
+        controls: { name: 'bubble-basic' },
+        size: 'xl',
+        caption: '在功率与价格之间切换面积字段；功率缺失的数据不会生成气泡。',
+      },
+    },
+  ]}
+>
+  这是基于公开 Plot API 的非契约概念预览，不是 `@retikz/chart` 的 API 文档。页面使用 `@retikz/plot-react` 根入口公开的 `Plot`、`PointMark` 与 `Axis` 组合 API，图表尺寸固定为 `800 × 400`。
+
+## 尺寸与面积
+
+气泡图保留散点的二维位置，再把第三个定量字段交给 `PointMark.size`。Plot 使用 sqrt scale 计算半径，使屏幕上的气泡面积随数值变化，避免把半径线性放大造成视觉夸张。
+
+| 属性   | 类型                     | 默认值 | 描述                                             |
+| ------ | ------------------------ | ------ | ------------------------------------------------ |
+| `size` | `PointMarkProps['size']` | —      | 定量字段映射到气泡半径；气泡视图始终使用字段绑定 |
+
+字段尺寸为缺失值、`null`、`NaN` 或无穷值时，该行不生成 Point glyph；字段 descriptor 与可选 legend 属于数据集级信息，仍会保留。负数尺寸会直接报错，不会被跳过或截断。气泡需要 glyph 承载面积，因此本预设不使用 `text`；需要文字时使用 `label`，让标签与气泡同时存在。
+
+## Point Mark
+
+除尺寸语义外，气泡继续复用完整的公开 Point 能力。位置、颜色、形状、透明度、标签、transform 与自定义坐标 role 都由 `PointMark` 控制。
+
+| 属性                           | 类型                                              | 默认值 | 描述                           |
+| ------------------------------ | ------------------------------------------------- | ------ | ------------------------------ |
+| `x` / `y`                      | `PointMarkProps['x' \| 'y']`                      | —      | 二维位置字段                   |
+| `color` / `shape` / `opacity`  | `PointMarkProps['color' \| 'shape' \| 'opacity']` | 主题值 | 分类与视觉样式                 |
+| `label` / `labelPosition`      | `DatumLabelProps['label' \| 'labelPosition']`     | —      | 保留气泡并附加 datum 标签      |
+| `transform` / `coordinateView` | `PointMarkProps['transform' \| 'coordinateView']` | —      | 当前 mark 的数据变换与坐标视图 |
+| `channels` / `z` / `facetId`   | `PointMarkProps['channels' \| 'z' \| 'facetId']`  | —      | 扩展 channel 与组合坐标 role   |
+
+{/* @include viz/chart/shared-api */}
+
+</ShowcaseGallery>
