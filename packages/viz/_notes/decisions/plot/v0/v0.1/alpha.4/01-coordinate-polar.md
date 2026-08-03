@@ -6,7 +6,7 @@
 - 决策日期：2026-06-06
 - 关联：[plot v0.1-alpha.4 roadmap](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.5 coordinate / §3.6 encoding / §8.3 投影分层](../../../../../architecture/plot-design.md)
 
-> **实现期修订（review pass，2026-06-06，以本节为准）**：原「hybrid 位置通道（默认 x/y + 可选 angle/radius）」**已废**——改为 **位置通道仅 `x` / `y`、且必填**，无 angle/radius 通道；坐标系把 x/y 重解释为 angle/radius（纯 ggplot 模型）。理由：双形态对 LLM 有歧义，且 zod `refine` 不进 JSON Schema、约束不了 constrained-decoding 生成；x/y 必填则**形状层**即可结构性约束生成。连带变更：encoding 拆 `PositionEncodingSchema`(x/y 必填) + `StyleEncodingSchema`(color)，**sector 用样式-only 编码**（无 x/y）；删除 `assertEncodingChannels` 跨字段校验（schema 已结构性强制，无需运行时校验）；运行时类型 `CoordinateFrame`（非 `ResolvedCoordinateFrame`），`PolarFrame` 另含 `continuousAngle` / `projectPolar`（ADR-03 段内采样用）。**下文 §1、待决策点、schema 表中凡涉及 angle/radius 通道 / x+angle 优先级 / hybrid 的部分，一律以本修订为准。** DSL 简写见 ADR-05（`coordinate="polar2D"`）。
+> **实现期修订**：原「hybrid 位置通道（默认 x/y + 可选 angle/radius）」**已废**——改为 **位置通道仅 `x` / `y`、且必填**，无 angle/radius 通道；坐标系把 x/y 重解释为 angle/radius（纯 ggplot 模型）。理由：双形态对 LLM 有歧义，且 zod `refine` 不进 JSON Schema、约束不了 constrained-decoding 生成；x/y 必填则**形状层**即可结构性约束生成。连带变更：encoding 拆 `PositionEncodingSchema`(x/y 必填) + `StyleEncodingSchema`(color)，**sector 用样式-only 编码**（无 x/y）；删除 `assertEncodingChannels` 跨字段校验（schema 已结构性强制，无需运行时校验）；运行时类型 `CoordinateFrame`（非 `ResolvedCoordinateFrame`），`PolarFrame` 另含 `continuousAngle` / `projectPolar`（ADR-03 段内采样用）。**下文 §1、待决策点、schema 表中凡涉及 angle/radius 通道 / x+angle 优先级 / hybrid 的部分，一律以本修订为准。** DSL 简写见 ADR-05（`coordinate="polar2D"`）。
 
 ## 背景
 
@@ -106,7 +106,7 @@ export const Polar2DSchema = z.object({
 1. **(i) 投影整形的地基**：把投影做成可替换中间层，mark 取点坐标系无关，加坐标系 O(1)——这是 retikz 选 (i) 而非 Vega 式分立 mark 的全部价值，地基没切干净后面全废。
 2. **polar 零新机制**：角 / 径复用 `PositionScale`（range = 角度区间 / 半径区间），band/linear/time 全自动适配，投影只多一步三角变换；不引入平行的 scale / tick / range 体系，IR 与 lowering 复杂度可控。
 3. **位置通道仅 x/y 必填最利 AI 与跨坐标系复用**：单一形态无歧义、x/y 必填进 JSON Schema 约束生成（refine 不进 JSON Schema、约束不了），cartesian spec 改 coordinate 即跨系（纯 ggplot），无「选错通道」之虞。
-4. **帧契约单点拥有**：02/03/04 共用同一 `CoordinateFrame`，杜绝各造临时投影框架的伪并行（评审 P1-1）。
+4. **帧契约单点拥有**：02/03/04 共用同一 `CoordinateFrame`，杜绝各造临时投影框架的伪并行。
 
 ## 不在本 ADR 范围
 
@@ -116,6 +116,3 @@ export const Polar2DSchema = z.object({
 - **`@retikz/plot-react` / `@retikz/plot-vanilla` 的 polar authoring 表面 + docs demo** → ADR-05（roadmap P2-1：01~04 core-internal）。
 - **theta 翻转 / direction / 起始 12 点钟 / partial-arc 紧 bbox** → 见待决策点，倾向留后续非破坏放宽。
 - **ternary / linear1D 坐标系** → 后续 milestone。
-
-> 实现指针：最终 schema / 类型 / 行为以代码为准；完整施工契约（Level / Schema 改动 / 文件 scope / 测试象限 / 依赖现有元素）+ DSL 示例 + 影响清单见本文件封板前全文。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 62562f1d:_notes/decisions/plot/v0/v0.1/alpha.4/01-coordinate-polar.md`（封板全文）。

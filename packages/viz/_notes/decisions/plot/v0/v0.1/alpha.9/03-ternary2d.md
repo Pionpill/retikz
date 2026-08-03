@@ -20,7 +20,7 @@ ADR-01 把 frame 泛化成 N 通道、x/y 转可选后，ternary2D（三元图�
 
 投影：每行 (a,b,c) 先**自动归一化** `s=a+b+c`、`(a/s, b/s, c/s)`，再重心坐标 → 等边三角内屏幕点。`s≤0`、含负、或各分量有限但相加上溢 `Infinity`（数量级过大、归一系数塌成 0 会静默落原点）→ fail-loud（容忍任意正三元组、自动归一，非法 fail-loud；非有限单分量按缺失值跳过）。归一化在 lowering，不写 schema refine。
 
-`Ternary2DSchema` 仅 `type`，本轮无几何配置——**不暴露 a/b/c scale 名字段**（评审指出「字段进 IR/LLM 契约却无运行效果、接受未知 scale 名静默无效」有害；多余 key 被 zod 剥离，同 polar2D 剥 x/y）；coordinate 内归一、domain 固定 [0,1] 占比，待真做 per-component scale 再加。
+`Ternary2DSchema` 仅 `type`，本轮无几何配置——**不暴露 a/b/c scale 名字段**；coordinate 内归一、domain 固定 [0,1] 占比，待真做 per-component scale 再加。
 
 **mark 支持矩阵**（决策 ⑥）：本轮 **point** 为主——ternary + point = 三角内散点。`line` / `area` 顺延需求驱动；`interval` / `sector` **fail-loud**。三角轴 guide：三条边各一刻度轴（0→100%）+ 三向网格（平行各边的等值线）。
 
@@ -38,9 +38,3 @@ ADR-01 把 frame 泛化成 N 通道、x/y 转可选后，ternary2D（三元图�
 - ternary 等值线 / 密度 → 顺延。
 - 四元及以上（quaternary）→ 不做（三角是 2D 投影上限）。
 - React/vanilla 表面 + docs → [ADR-04](./04-dsl-docs.md)。
-
-## 实现指针
-
-最终形态见 `packages/viz/plot/src/ir/{coordinate,encoding,guide}.ts`（`Ternary2DSchema` / a/b/c 通道 / `GuideDimension` A/B/C）、`src/lower/project.ts`（ternary frame + 重心投影 + 归一化 + 上溢 fail-loud）、`src/lower/layout.ts`（三角占位）、`src/lower/guide.ts`（三角轴 + 三向网格）；测试 `tests/lower/ternary2d.test.ts` + `tests/ir/{coordinate,encoding,guide}.schema.test.ts`，「和上溢 Infinity」回归见 `tests/lower/` adversarial 用例。
-
-> 🔖 本文件压缩前完整施工蓝图 = `git show 329fb8b7:_notes/decisions/plot/v0/v0.1/alpha.9/03-ternary2d.md`（封板全文）。

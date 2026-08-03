@@ -21,8 +21,6 @@ plot v0.1 从 [alpha.1](../alpha.1/roadmap.md) 起就为此**埋了零成本字�
 
 ### localNamespace 下「可连接范围」的边界（先厘清，否则 id 语义会被高估）
 
-root scope 是 `localNamespace`（alpha.1 就位）。core 语义（[scope schema types](../../../../../../../kernel/core/src/schemas/scope/types.ts) `localNamespace` describe）：**localNamespace 内部 id 不上浮到父帧，只有 scope 自己的 `id` 注册进父帧**。因此：
-
 - **整图 `sales` 可被外部引用**（root `Scope.id` 在父帧注册 bbox 句柄）——v0.1「可被组合」的义务由此满足：外层 annotation / connector 连到整图。
 - **内部 `<plotId>.mark.0` / `.series.north` / `.datum.Q1` **不**自动对外可见**——它们活在 plot 的 local namespace 里。其用途是**三项 plot-local 能力**：① plot 内部连接（同 namespace 内 path step 可引用）；② [ADR-02](./02-datum-locator.md) locator 寻址（locator 是 plot 侧纯函数、不走 core 命名空间查找，故不受 localNamespace 限制）；③ 与 meta 关联的稳定命名。
 - **外部直接连到子元素**（如从图外 path 指到 `sales.series.north`）需要一套「export anchor / proxy」机制——把选定子锚点在父帧再注册一个代理 bbox。**该机制留 v0.5 跨域组合**（见「不在本 ADR 范围」），v0.1 不做；本 ADR 的内部 id **不承诺外部可达**。
@@ -39,15 +37,11 @@ root scope 是 `localNamespace`（alpha.1 就位）。core 语义（[scope schem
 | **datum**（opt-in）        | 可见 mark 的 `Node`（point / interval / sector） | `<plotId>.datum.<idFieldValue>`（配 `datumIdField` 时）                                                                                                         | 见下「datum 来源标识」（per-datum，`provenance` 开时）    |
 | **guide 层**               | 轴 / 网格 `Scope`（`guide.id` 已绑）             | 用户 `guide.id`（仅 **axis** 层）→ `<plotId>.<guideId>`；缺省 / **grid** 层 → `<plotId>.<axis\|grid>.<dimension>`（grid 恒用结构 id，避免与 axis 的用户句柄撞） | `{ source:'plot', layer:'axis'\|'grid', dimension }`      |
 
-**series 只在 line/area 有结构落点（P1 评审修正）**：现 lowering 对 point/interval/sector **按 color 分子 Scope（样式分层），不按 `mark.series` 分**（[colorGroupedScope](../../../../../../plot/src/providers/mark/shared/common.ts)）；只有 line/area 多系列才是「每 series 一条 Path」（[path mark provider](../../../../../../plot/src/providers/mark/features/path.ts)）。故 v0.1：
-
 - **line/area**：series 是真实结构维度 → series id/meta 绑到**每条 series `Path`**（消费 core ADR-08 `Path.meta`）。
 - **point/interval/sector**：现无 series 子 Scope（grouping 是 color）→ **只给 layer 级 id/meta**；series 值由 **datum meta 承载**（per-datum meta 带 `series`），provenance 不丢。
 - **把 color 分组重构成 series 分组**（color 仅作样式分层、series 作结构维度）是更彻底的模型，但属较大 lowering 重构 → **归 backlog**，不在 v0.1 收尾。
 
-### datum 来源标识（index 语义，P1 评审修正）
-
-lowering 先 `applyTransforms`（sort 重排行、stack 派生新行对象）再下沉（[expand/lower.ts](../../../../../../plot/src/pipeline/expand/lower.ts) / [transform orchestrate](../../../../../../plot/src/providers/transform/orchestrate.ts)），故「第几行」有歧义。per-datum meta **同时带三者**：
+### datum 来源标识
 
 ```ts
 meta = {
@@ -62,7 +56,7 @@ meta = {
 - **`transformedIndex`** 始终有（lowering 迭代序，与渲染一一对应）。
 - **`sourceIndex`** best-effort：sort 仅重排、保留行对象，可携带原序；stack 等**派生新行**的 transform 可能无法回指单一源行 → 该情形 `sourceIndex` 省略（不伪造）。交互命中要「反查原始 datum」时优先用 `sourceIndex`，缺失则退 `transformedIndex` + `dataReference` 自行对账。
 
-### 基数与默认兼容性（P1 评审修正：默认逐字节等价）
+### 基数与默认兼容性
 
 - **`provenance` 总开关（默认关）**：`LowerPlotsOptions.provenance`（布尔，默认 `false`）。**关 → 完全不写任何 meta、不合成内部 id**，lowering 产物**逐字节等价 alpha.4**（无新 key）。开 → 写 layer/series meta + 合成 `<plotId>.mark.<i>` / `.series.<v>` 内部 id。
 - **用户显式 id 不受开关约束**：root `node.id` 仍如现状绑 `Scope.id`（alpha.4 已有行为）；`mark.id` 设了即绑 layer scope.id（接通 alpha.1 预留——「设了却被忽略」是现状 bug）。即默认产物变化**仅发生在用户主动命名处**（opt-in by naming）。
@@ -87,7 +81,7 @@ meta = {
 ] }
 ```
 
-### datumIdField 严格性（P2 评审拍板，移出待决策）
+### datumIdField 严格性
 
 - **缺字段**：`datumIdField` 指定的属性在某行不存在（`undefined`）→ **抛清晰错误**（不静默跳过——anchor 不完整会让下游定位静默失败）。
 - **重复值**：两行产出同一 `<plotId>.datum.<值>` → **抛清晰错误**（**不沿用 core nodeIndex 的 last-wins**——anchor 必须稳定唯一，重复即用户数据/配置错，fail loud）。
@@ -108,7 +102,7 @@ meta = {
 - **`sourceIndex` 经 symbol tag、`transform.ts` 未改**：原文件 scope 列 `transform.ts`「按需」改。实际用 `provenance.ts` 的 `SOURCE_INDEX` symbol 在 ingest 打标（object spread 跨 stack、sort 保 identity 自动存活），`transform.ts` 无需改动。
 - **provenance 启用判定收口在 expand**：`provenance / datumProvenance / datumIdField` 任一开即启用（后两者蕴含 provenance），统一在 `expandPlot` 判定。
 - **guide id 默认形 + axis-only 用户句柄**：见上表 guide 行（用户 `guide.id` 仅挂 axis 层、grid 恒结构 id）。
-- **datum-id 注册器提升到 plot 级（cross-review 修复）**：原实现每 mark 各自建注册器，同图多个 datum-bearing mark（如 point + bar）+ 同 `datumIdField` 会各自生成 `<plotId>.datum.<值>` → 同命名空间撞 id。改为 **plot 级共享注册器**（`expandPlot` 建一次、贯穿所有 mark），跨 mark 重复 id 同样 **fail loud**（与单 mark 内重复一致）——一个 plot 内多 datum mark 想绑 id 须用不同字段/值消歧。
+- **datum-id 注册器提升到 plot 级**：原实现每 mark 各自建注册器，同图多个 datum-bearing mark（如 point + bar）+ 同 `datumIdField` 会各自生成 `<plotId>.datum.<值>` → 同命名空间撞 id。改为 **plot 级共享注册器**（`expandPlot` 建一次、贯穿所有 mark），跨 mark 重复 id 同样 **fail loud**（与单 mark 内重复一致）——一个 plot 内多 datum mark 想绑 id 须用不同字段/值消歧。
 
 ## 不在本 ADR 范围
 
@@ -120,6 +114,3 @@ meta = {
 - **color 分组 → series 分组重构**：让 point/interval/sector 也按 `series` 分子 Scope（color 退为样式分层）、从而都有 series 级 id/meta——属较大 lowering 重构，**backlog**。v0.1 这三类 mark 的 series 信息走 datum meta。
 - **`sourceIndex` 全链路强追踪**：跨所有 transform（含派生行）精确回指源行——backlog；v0.1 best-effort。
 - **legend / 跨域组合 UI**：v0.5。
-
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/pipeline/expand/`、`packages/viz/plot/src/providers/{mark,guide}/`、plot React/vanilla options 透传与 provenance 测试，测试见 `packages/viz/plot/tests/pipeline/scope-id-meta.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.5/01-scope-id-meta.md`（封板全文）。

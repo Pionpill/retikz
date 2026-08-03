@@ -13,7 +13,7 @@ plot 不应复制 data transform，也不应保存 SQL、权限或 AI prompt。p
 
 ## 决策
 
-新增 runtime-only `PlotLineageOptions`、`PlotLineageRun`、`lowerPlotWithLineage()` 与 `createPlotLineageLocator()`。完整图元链路只通过返回值暴露，不写入 PlotSpec，不塞进 Scene meta；Scene meta 继续只承载当前轻量 provenance。
+新增 runtime-only `PlotLineageOptions`、`PlotLineageRun`、`lowerPlotWithLineage()` 与 `createPlotLineageLocator()`。完整图元链路只通过返回值暴露，不写入 IRPlotSpec，不塞进 Scene meta；Scene meta 继续只承载当前轻量 provenance。
 
 默认规则：
 
@@ -85,12 +85,7 @@ plot contract 新增图元链路类型；pipeline 新增 `lowerPlotWithLineage()
 - locator lineage 与 anchor meta 对齐。
 - Scene meta 不写完整 lineage。
 - React / Vanilla adapter 覆盖链路 API 与默认关闭行为。
-- 完成提交：`9bfdafac6`、`0eed8d58a`。
 
 ## 遗留风险
 
 `lowerPlotWithLineage()` 为保持 `lowerPlots()` shape 不变，会独立执行一次链路记录。自定义 transform 必须保持确定性；随机或有状态 transform 应由宿主先固化输入或通过自定义 definition 记录额外审计信息。
-
-## 实现指针
-
-本 ADR 已在 plot v0.1-beta.2 收尾时压缩；当前真源以代码、测试、文档站和 changelog 为准。完整施工契约保留在该 ADR 的 Accepted 历史版本中。

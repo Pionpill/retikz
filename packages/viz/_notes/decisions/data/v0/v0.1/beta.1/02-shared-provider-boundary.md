@@ -42,9 +42,9 @@ data 的默认 transform registry 只注册 data 内置项。data 不负责把 p
 data-first 使用方式只依赖通用 transform：
 
 ```ts
-import { applyTransforms, type TransformOperation } from '@retikz/data';
+import { applyTransforms, type IRDataTransform } from '@retikz/data';
 
-const operations: Array<TransformOperation> = [
+const operations: Array<IRDataTransform> = [
   { kind: 'sort', field: 'month', order: 'ascending' },
   { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'revenue', as: 'total' }] },
 ];
@@ -56,23 +56,14 @@ const rows = applyTransforms(sourceRows, operations);
 
 ## 最终实现
 
-`@retikz/data` 的内置 transform 常量、schema、默认 provider 集合和 registry 已收窄为 `sort` / `summarize` / `select` / `annotate`。plot-only transform 的 schema、类型、provider implementation 与默认注册转入 `@retikz/plot`，由 plot 的组合 registry 消费 data pipeline。
+`@retikz/data` 的内置 transform 集合已收窄为 `sort` / `summarize` / `select` / `annotate`。plot-only transform 的 schema、类型、definition 与默认注册由 `@retikz/plot` 拥有，并通过组合 registry 消费 data pipeline。
 
 data 仍保留 reducer / selector registry、transform extension surface、provenance helper 和 apply pipeline，供 plot 与后续宿主复用。
 
 ## 验证
 
-- data 默认 registry 覆盖保留的通用 transform，并拒绝未显式注册的 plot-only transform。
-- reducer / selector registry 与 provenance 在 data 内置 transform 和外部 transform 中继续可组合。
-- plot 侧通过自己的 registry 恢复 `stack`、`bin`、`density`、`smooth` 等 plot-only transform 行为。
-- beta.1 roadmap 记录完成提交：`39470d2b` / `22ceb713`。
+验证覆盖 data 默认 registry 的内置边界、未注册 transform 的失败语义、reducer / selector 与 provenance 的组合能力，以及 plot 组合 registry 对 plot-only transform 的消费。
 
 ## 遗留风险
 
 `bin` 的长期归属仍需以后续宿主需求判断。若 table / geo 出现共同的“数值分桶 + 通用区间统计”需求，应另开 ADR 设计 data-native bin，不复用 plot 当前默认字段与 histogram 语义。
-
-## 实现指针
-
-本 ADR 已随 viz `0.1.0-beta.1` 收尾压缩；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在历史中。
-
-> 🔖 压缩前完整施工蓝图 = `git show 3c76d64d1402545454f1ae301d8588313abb7d5d:packages/viz/_notes/decisions/data/v0/v0.1/beta.1/02-shared-provider-boundary.md`。

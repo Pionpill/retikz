@@ -1,9 +1,9 @@
 # ADR-07: axis-level grid targeting
 
-- 状态：Accepted（实现字段以 ADR-09 为准）
+- 状态：Superseded
+- 替代：[ADR-09](./09-composition-api-structure.md)；grid targeting 保留，selector 与默认投放字段迁入最终 view / arrangement / resolve 模型
 - 决策日期：2026-06-29
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.14 roadmap](./roadmap.md) · [ADR-01 coordinate composition registry](./01-coordinate-composition-registry.md) · [ADR-02 facet grid data routing](./02-facet-grid-data-routing.md) · [ADR-04 shared scaffold tracks](./04-shared-scaffold-tracks.md) · [ADR-05 composition guides layout](./05-composition-guides-layout.md) · [ADR-06 scope provenance surface](./06-scope-provenance-surface.md)
-- 压缩前全文：`git show b7744b60565aa579a6f1deb892b56021633c6754:packages/graph/_notes/decisions/v0/v0.1/alpha.14/07-axis-grid-targeting.md`
 
 ## 背景
 

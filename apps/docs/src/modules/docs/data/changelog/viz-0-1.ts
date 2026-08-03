@@ -4,10 +4,11 @@ import { esmOnlyChangeItem } from './esm-only';
 
 export const vizV01: Release = {
   minor: 'v0.1',
-  stableDate: '2026-07-30',
+  stableDate: null,
   packages: [
     {
       pkg: '@retikz/data',
+      stableDate: '2026-08-03',
       version: 'v0.1',
       description: {
         zh: 'viz 组的纯数据处理层：承载数据模型、字段解析、format、statistics 子算子、transform contract / registry / pipeline 与 provenance，不绑定宿主语义。',
@@ -175,6 +176,7 @@ export const vizV01: Release = {
     },
     {
       pkg: '@retikz/plot',
+      stableDate: '2026-08-03',
       version: 'v0.1',
       description: {
         zh: 'Tier 2 图表层的 IR 与下沉核心：把一张图声明成 JSON 可序列化的 Plot IR（grammar of graphics），经 lowerPlots 在 compile 期下沉成 core 图元；数据与 IR 解耦，core 不认识任何 chart 语义。',
@@ -184,8 +186,8 @@ export const vizV01: Release = {
         {
           label: { zh: 'Plot IR + lowerPlots', en: 'Plot IR + lowerPlots' },
           content: {
-            zh: '一份 `PlotSpec`（坐标系 / 比例尺 / mark / 字段绑定）描述「画什么」，`lowerPlots`（core `lowerComposites` 钩子的实现）把它展开成 core 的 node / path，交给现有 svg / canvas / vanilla renderer。',
-            en: 'A single `PlotSpec` (coordinate system / scales / marks / field bindings) describes what to draw, and `lowerPlots` (the implementation of core’s `lowerComposites` hook) expands it into core `node` / `path` for the existing svg / canvas / vanilla renderers.',
+            zh: '一份 `IRPlotSpec`（坐标系 / 比例尺 / mark / 字段绑定）描述「画什么」，`lowerPlots`（core `lowerComposites` 钩子的实现）把它展开成 core 的 node / path，交给现有 svg / canvas / vanilla renderer。',
+            en: 'A single `IRPlotSpec` (coordinate system / scales / marks / field bindings) describes what to draw, and `lowerPlots` (the implementation of core’s `lowerComposites` hook) expands it into core `node` / `path` for the existing svg / canvas / vanilla renderers.',
           },
         },
         {
@@ -297,15 +299,15 @@ export const vizV01: Release = {
             {
               label: { zh: '数据 API 不再从 plot 转发', en: 'Data APIs are no longer re-exported from plot' },
               content: {
-                zh: '`DataModel`、`ExternalDatasets`、`defineTransform`、`applyTransforms` 等 data-only 类型和 helper 需要从 `@retikz/data` 顶层入口导入；plot 顶层只保留 plot 自己拥有的 schema、provider 与 lowering API。',
-                en: '`DataModel`, `ExternalDatasets`, `defineTransform`, `applyTransforms`, and other data-only types / helpers must be imported from `@retikz/data`; the plot root only exposes plot-owned schemas, providers, and lowering APIs.',
+                zh: '`IRDataModel`、`ExternalDatasets`、`defineTransform`、`applyTransforms` 等 data-only 类型和 helper 需要从 `@retikz/data` 顶层入口导入；plot 顶层只保留 plot 自己拥有的 schema、provider 与 lowering API。',
+                en: '`IRDataModel`, `ExternalDatasets`, `defineTransform`, `applyTransforms`, and other data-only types / helpers must be imported from `@retikz/data`; the plot root only exposes plot-owned schemas, providers, and lowering APIs.',
               },
             },
             {
               label: { zh: 'plot-only transform 回到 plot', en: 'Plot-only transforms moved back to plot' },
               content: {
-                zh: 'plot 的默认 registry 组合 `@retikz/data` 共享 transform 与 plot 自己的统计 / 几何 transform，现有 PlotSpec 的 mark-local transform 与 lowering 行为保持不变。',
-                en: 'The plot default registry combines shared transforms from `@retikz/data` with plot-owned statistical / geometric transforms, preserving existing PlotSpec mark-local transform and lowering behavior.',
+                zh: 'plot 的默认 registry 组合 `@retikz/data` 共享 transform 与 plot 自己的统计 / 几何 transform，现有 IRPlotSpec 的 mark-local transform 与 lowering 行为保持不变。',
+                en: 'The plot default registry combines shared transforms from `@retikz/data` with plot-owned statistical / geometric transforms, preserving existing IRPlotSpec mark-local transform and lowering behavior.',
               },
             },
             {
@@ -321,8 +323,8 @@ export const vizV01: Release = {
           version: 'alpha.15',
           date: '2026-07-05',
           summary: {
-            zh: 'Guide + Theme 收口：axis domain / tick / line / title / grid、legend / palette / size symbol、plot labels 与 layer zIndex 进入稳定的 PlotSpec / theme 契约。',
-            en: 'Guide + Theme wrap-up: axis domain / ticks / lines / titles / grids, legends / palettes / size symbols, plot labels, and layer zIndex now share stable PlotSpec / theme contracts.',
+            zh: 'Guide + Theme 收口：axis domain / tick / line / title / grid、legend / palette / size symbol、plot labels 与 layer zIndex 进入稳定的 IRPlotSpec / theme 契约。',
+            en: 'Guide + Theme wrap-up: axis domain / ticks / lines / titles / grids, legends / palettes / size symbols, plot labels, and layer zIndex now share stable IRPlotSpec / theme contracts.',
           },
           items: [
             {
@@ -335,8 +337,8 @@ export const vizV01: Release = {
             {
               label: { zh: 'grid / legend / theme', en: 'Grid / legend / theme' },
               content: {
-                zh: '`PlotSpec.theme` 统一 axis、grid、legend、palette、typography 与 background token；axis grid 支持独立 tick source、density、minor grid、bandPosition、dashOffset 与 lineCap；size legend 默认把大符号压入 symbol 盒子并按最终尺寸预留空间。 [图例](/viz/plot/guide/legend)',
-                en: '`PlotSpec.theme` now unifies axis, grid, legend, palette, typography, and background tokens. Axis grids support independent tick sources, density, minor grids, bandPosition, dashOffset, and lineCap; size legends fit large symbols into symbol boxes and reserve space from the final size. [Legend](/viz/plot/guide/legend)',
+                zh: '`IRPlotSpec.theme` 统一 axis、grid、legend、palette、typography 与 background token；axis grid 支持独立 tick source、density、minor grid、bandPosition、dashOffset 与 lineCap；size legend 默认把大符号压入 symbol 盒子并按最终尺寸预留空间。 [图例](/viz/plot/guide/legend)',
+                en: '`IRPlotSpec.theme` now unifies axis, grid, legend, palette, typography, and background tokens. Axis grids support independent tick sources, density, minor grids, bandPosition, dashOffset, and lineCap; size legends fit large symbols into symbol boxes and reserve space from the final size. [Legend](/viz/plot/guide/legend)',
               },
             },
             {
@@ -352,8 +354,8 @@ export const vizV01: Release = {
           version: 'alpha.14',
           date: '2026-07-03',
           summary: {
-            zh: 'Coordinate composition 坐标复合：PlotSpec 支持多个 coordinate view、arrangement、facet panel、same-panel 多轴 overlay 与 shared scaffold tracks；mark / guide / locator / provenance 都按同一 view identity 路由。',
-            en: 'Coordinate composition: PlotSpec now supports multiple coordinate views, arrangements, facet panels, same-panel multi-axis overlays, and shared-scaffold tracks; marks, guides, locators, and provenance all route through the same view identity.',
+            zh: 'Coordinate composition 坐标复合：IRPlotSpec 支持多个 coordinate view、arrangement、facet panel、same-panel 多轴 overlay 与 shared scaffold tracks；mark / guide / locator / provenance 都按同一 view identity 路由。',
+            en: 'Coordinate composition: IRPlotSpec now supports multiple coordinate views, arrangements, facet panels, same-panel multi-axis overlays, and shared-scaffold tracks; marks, guides, locators, and provenance all route through the same view identity.',
           },
           items: [],
         },
@@ -388,8 +390,8 @@ export const vizV01: Release = {
           version: 'alpha.10',
           date: '2026-06-13',
           summary: {
-            zh: 'Plot 容器封板配套：`PlotSpec` 增自描述 `width` / `height` 与默认调色板 `colors`，lowering 可在有 `id` 时暴露外部可见的面板 bbox 与 `plotArea` anchor，支撑同一 core `<Layout>` 中组合多张 plot。',
-            en: 'Plot-container wrap-up support: `PlotSpec` adds intrinsic `width` / `height` and a default `colors` palette, and lowering can expose an externally visible panel bbox plus `plotArea` anchor when `id` is present, enabling multiple plots inside one core `<Layout>`.',
+            zh: 'Plot 容器封板配套：`IRPlotSpec` 增自描述 `width` / `height` 与默认调色板 `colors`，lowering 可在有 `id` 时暴露外部可见的面板 bbox 与 `plotArea` anchor，支撑同一 core `<Layout>` 中组合多张 plot。',
+            en: 'Plot-container wrap-up support: `IRPlotSpec` adds intrinsic `width` / `height` and a default `colors` palette, and lowering can expose an externally visible panel bbox plus `plotArea` anchor when `id` is present, enabling multiple plots inside one core `<Layout>`.',
           },
           items: [],
         },
@@ -478,6 +480,7 @@ export const vizV01: Release = {
     },
     {
       pkg: '@retikz/plot-react',
+      stableDate: '2026-08-03',
       version: 'v0.1',
       description: {
         zh: 'plot 的 React authoring 面：把 Plot IR + 数据包成一个 `<Plot>` 组件，支持 spec 入口与组合 DSL 两种写法。',
@@ -506,8 +509,8 @@ export const vizV01: Release = {
           version: 'beta.2',
           date: '2026-07-27',
           summary: {
-            zh: 'React `<Plot>` 复用共享 authoring normalization，补齐 spec layout 透传，并让空 mark 的组合 DSL 也走完整 PlotSpec 校验。',
-            en: 'React `<Plot>` reuses shared authoring normalization, forwards spec layout, and sends empty-mark composition DSL output through full PlotSpec validation.',
+            zh: 'React `<Plot>` 复用共享 authoring normalization，补齐 spec layout 透传，并让空 mark 的组合 DSL 也走完整 IRPlotSpec 校验。',
+            en: 'React `<Plot>` reuses shared authoring normalization, forwards spec layout, and sends empty-mark composition DSL output through full IRPlotSpec validation.',
           },
           items: [
             esmOnlyChangeItem,
@@ -528,15 +531,15 @@ export const vizV01: Release = {
             {
               label: { zh: 'spec 入口支持 layout 覆盖', en: 'Spec entry supports layout overrides' },
               content: {
-                zh: '使用 `<Plot spec={...} layout={...}>` 时，layout 与 colors / theme 一样合并进传入的 PlotSpec，再交给 lowering。',
-                en: 'When using `<Plot spec={...} layout={...}>`, layout is merged into the supplied PlotSpec alongside colors and theme before lowering.',
+                zh: '使用 `<Plot spec={...} layout={...}>` 时，layout 与 colors / theme 一样合并进传入的 IRPlotSpec，再交给 lowering。',
+                en: 'When using `<Plot spec={...} layout={...}>`, layout is merged into the supplied IRPlotSpec alongside colors and theme before lowering.',
               },
             },
             {
               label: { zh: '空图层也执行 schema 校验', en: 'Empty mark lists are schema-validated' },
               content: {
-                zh: '组合 DSL 即使没有 mark，也会解析完整 `PlotSpecSchema`；布局、guide、label 等字段错误不会再因为空 mark 被跳过。',
-                en: 'Composition DSL output now parses the full `PlotSpecSchema` even when no marks are present, so layout, guide, label, and related field errors are no longer skipped.',
+                zh: '组合 DSL 即使没有 mark，也会解析完整 `PlotSpecSchema` 并返回 `IRPlotSpec`；布局、guide、label 等字段错误不会再因为空 mark 被跳过。',
+                en: 'Composition DSL output now parses the full `PlotSpecSchema` into `IRPlotSpec` even when no marks are present, so layout, guide, label, and related field errors are no longer skipped.',
               },
             },
           ],
@@ -545,8 +548,8 @@ export const vizV01: Release = {
           version: 'beta.1',
           date: '2026-07-06',
           summary: {
-            zh: 'React adapter 直接依赖 `@retikz/data`，组合 DSL 继续只装配 PlotSpec，不接管 data 的纯处理层。',
-            en: 'The React adapter now depends directly on `@retikz/data`; the composition DSL still only assembles PlotSpecs and does not own the pure data-processing layer.',
+            zh: 'React adapter 直接依赖 `@retikz/data`，组合 DSL 继续只装配 IRPlotSpec，不接管 data 的纯处理层。',
+            en: 'The React adapter now depends directly on `@retikz/data`; the composition DSL still only assembles IRPlotSpec values and does not own the pure data-processing layer.',
           },
           items: [
             {
@@ -559,8 +562,8 @@ export const vizV01: Release = {
             {
               label: { zh: '<Transform> 仍属于宿主 DSL', en: '`<Transform>` remains host DSL' },
               content: {
-                zh: '没有新增 `@retikz/data-react`；React 侧的 `<Transform>` 仍只负责生成 PlotSpec 片段，运行时 transform pipeline 由 plot + data registry 组合处理。',
-                en: 'No `@retikz/data-react` package is added; React `<Transform>` still only generates PlotSpec fragments, while runtime transform pipelines are handled by the combined plot + data registries.',
+                zh: '没有新增 `@retikz/data-react`；React 侧的 `<Transform>` 仍只负责生成 IRPlotSpec 片段，运行时 transform pipeline 由 plot + data registry 组合处理。',
+                en: 'No `@retikz/data-react` package is added; React `<Transform>` still only generates IRPlotSpec fragments, while runtime transform pipelines are handled by the combined plot + data registries.',
               },
             },
           ],
@@ -576,8 +579,8 @@ export const vizV01: Release = {
             {
               label: { zh: 'Axis / Legend props', en: 'Axis / Legend props' },
               content: {
-                zh: '`<Axis>` 透传 line extent / arrow、crossing、ticks interval / density / mark、tickLabels layout、title placement / orientation / anchor / shift、grid source / minor / bandPosition 等字段；`<Legend>` 透传 size symbol fit 与 theme 样式入口，组件只装配同一份 PlotSpec。 [坐标轴](/viz/plot/guide/axis)',
-                en: '`<Axis>` passes through line extent / arrows, crossing, tick interval / density / marks, tick-label layout, title placement / orientation / anchor / shift, and grid source / minor / bandPosition fields. `<Legend>` passes through size-symbol fit and theme styling entries while still assembling the same PlotSpec. [Axis](/viz/plot/guide/axis)',
+                zh: '`<Axis>` 透传 line extent / arrow、crossing、ticks interval / density / mark、tickLabels layout、title placement / orientation / anchor / shift、grid source / minor / bandPosition 等字段；`<Legend>` 透传 size symbol fit 与 theme 样式入口，组件只装配同一份 IRPlotSpec。 [坐标轴](/viz/plot/guide/axis)',
+                en: '`<Axis>` passes through line extent / arrows, crossing, tick interval / density / marks, tick-label layout, title placement / orientation / anchor / shift, and grid source / minor / bandPosition fields. `<Legend>` passes through size-symbol fit and theme styling entries while still assembling the same IRPlotSpec. [Axis](/viz/plot/guide/axis)',
               },
             },
             {
@@ -593,8 +596,8 @@ export const vizV01: Release = {
           version: 'alpha.14',
           date: '2026-07-03',
           summary: {
-            zh: 'React DSL 暴露坐标复合 authoring 面：`<Facet>`、`<Scaffold>` / `<Track>`、axis id 绑定与 mark 级坐标选择都展开到同一 PlotSpec composition。',
-            en: 'The React DSL exposes coordinate-composition authoring: `<Facet>`, `<Scaffold>` / `<Track>`, axis-id binding, and mark-level coordinate selection all expand to the same PlotSpec composition.',
+            zh: 'React DSL 暴露坐标复合 authoring 面：`<Facet>`、`<Scaffold>` / `<Track>`、axis id 绑定与 mark 级坐标选择都展开到同一 IRPlotSpec composition。',
+            en: 'The React DSL exposes coordinate-composition authoring: `<Facet>`, `<Scaffold>` / `<Track>`, axis-id binding, and mark-level coordinate selection all expand to the same IRPlotSpec composition.',
           },
           items: [],
         },
@@ -602,8 +605,8 @@ export const vizV01: Release = {
           version: 'alpha.13',
           date: '2026-06-28',
           summary: {
-            zh: 'React DSL 透传 alpha.13 的 ribbon、统计 transform、host label 与 sector pull；仍保持薄适配，只装配同一份 PlotSpec。',
-            en: 'The React DSL exposes alpha.13 ribbons, statistic transforms, host labels, and sector pull while staying a thin adapter that assembles the same PlotSpec.',
+            zh: 'React DSL 透传 alpha.13 的 ribbon、统计 transform、host label 与 sector pull；仍保持薄适配，只装配同一份 IRPlotSpec。',
+            en: 'The React DSL exposes alpha.13 ribbons, statistic transforms, host labels, and sector pull while staying a thin adapter that assembles the same IRPlotSpec.',
           },
           items: [],
         },
@@ -719,6 +722,7 @@ export const vizV01: Release = {
     },
     {
       pkg: '@retikz/plot-vanilla',
+      stableDate: '2026-08-03',
       version: 'v0.1',
       description: {
         zh: 'Plot 的无框架 authoring、Kernel Vanilla Tier 2 与 SSR 面：plain spec 可组合进 figure / layer，也可在 Node 或构建期直接输出 SVG。',
@@ -728,8 +732,8 @@ export const vizV01: Release = {
         {
           label: { zh: 'plain authoring 与 Tier 2', en: 'Plain authoring and Tier 2' },
           content: {
-            zh: '`plot()` 返回无方法的 canonical PlotSpec；`embedPlot()` + `createPlotAdapter()` 复用 Kernel Vanilla figure / layer 与统一 runtime。',
-            en: '`plot()` returns a method-free canonical PlotSpec; `embedPlot()` + `createPlotAdapter()` reuse Kernel Vanilla figures / layers and the shared runtime.',
+            zh: '`plot()` 返回无方法的 canonical IRPlotSpec；`embedPlot()` + `createPlotAdapter()` 复用 Kernel Vanilla figure / layer 与统一 runtime。',
+            en: '`plot()` returns a method-free canonical IRPlotSpec; `embedPlot()` + `createPlotAdapter()` reuse Kernel Vanilla figures / layers and the shared runtime.',
           },
         },
         {
@@ -776,8 +780,8 @@ export const vizV01: Release = {
             {
               label: { zh: '共享规范化与 Tier 2 嵌入', en: 'Shared normalization and Tier 2 embedding' },
               content: {
-                zh: '`plot()` 与 React DSL 共享 `@retikz/plot` 的 axis / facet / scaffold binding normalization；`embedPlot()` + `createPlotAdapter()` 可把同一 PlotSpec 放入 Kernel Vanilla figure / layer，datasets 仍留在运行时。',
-                en: '`plot()` and the React DSL share axis / facet / scaffold binding normalization in `@retikz/plot`. `embedPlot()` + `createPlotAdapter()` place the same PlotSpec inside Kernel Vanilla figures / layers while datasets remain runtime-only.',
+                zh: '`plot()` 与 React DSL 共享 `@retikz/plot` 的 axis / facet / scaffold binding normalization；`embedPlot()` + `createPlotAdapter()` 可把同一 IRPlotSpec 放入 Kernel Vanilla figure / layer，datasets 仍留在运行时。',
+                en: '`plot()` and the React DSL share axis / facet / scaffold binding normalization in `@retikz/plot`. `embedPlot()` + `createPlotAdapter()` place the same IRPlotSpec inside Kernel Vanilla figures / layers while datasets remain runtime-only.',
               },
             },
           ],
@@ -800,8 +804,8 @@ export const vizV01: Release = {
             {
               label: { zh: '无额外渲染语义', en: 'No additional rendering semantics' },
               content: {
-                zh: 'Vanilla 侧仍然只把 PlotSpec + datasets 送入共享 lowering；plot-only transform 的可用性来自 plot 默认 registry，而不是 vanilla 自己维护 provider。',
-                en: 'The vanilla side still sends PlotSpecs + datasets into shared lowering; plot-only transform availability comes from the plot default registry, not vanilla-owned providers.',
+                zh: 'Vanilla 侧仍然只把 IRPlotSpec + datasets 送入共享 lowering；plot-only transform 的可用性来自 plot 默认 registry，而不是 vanilla 自己维护 provider。',
+                en: 'The vanilla side still sends IRPlotSpec values + datasets into shared lowering; plot-only transform availability comes from the plot default registry, not vanilla-owned providers.',
               },
             },
           ],
@@ -817,8 +821,8 @@ export const vizV01: Release = {
             {
               label: { zh: 'SSR 复用同一下沉路径', en: 'SSR reuses the same lowering path' },
               content: {
-                zh: '`renderPlot(spec, datasets)` 消费含 guide / theme / labels / layer 的 PlotSpec，经共享 lowering 自动输出轴线箭头、tick marker、adaptive tick label、minor grid、size legend 与 plot-level labels；vanilla 侧不引入独立渲染语义。',
-                en: '`renderPlot(spec, datasets)` consumes PlotSpecs with guide / theme / labels / layer fields and emits axis arrows, tick markers, adaptive tick labels, minor grids, size legends, and plot-level labels through shared lowering; vanilla introduces no separate rendering semantics.',
+                zh: '`renderPlot(spec, datasets)` 消费含 guide / theme / labels / layer 的 IRPlotSpec，经共享 lowering 自动输出轴线箭头、tick marker、adaptive tick label、minor grid、size legend 与 plot-level labels；vanilla 侧不引入独立渲染语义。',
+                en: '`renderPlot(spec, datasets)` consumes IRPlotSpec values with guide / theme / labels / layer fields and emits axis arrows, tick markers, adaptive tick labels, minor grids, size legends, and plot-level labels through shared lowering; vanilla introduces no separate rendering semantics.',
               },
             },
           ],
@@ -944,6 +948,7 @@ export const vizV01: Release = {
     },
     {
       pkg: '@retikz/table',
+      stableDate: null,
       version: 'v0.1',
       description: {
         zh: 'renderer-agnostic 的静态表格核心：用 JSON-safe TableSpec 表达结构、Cell、约束轨道与 border，并在同次 Core compile 中产出 Scene 与 typed manifest。',
@@ -1059,6 +1064,7 @@ export const vizV01: Release = {
     },
     {
       pkg: '@retikz/table-react',
+      stableDate: null,
       version: 'v0.1',
       description: {
         zh: 'Table 的 React authoring 与宿主接线：提供通用、明细和手工三种组件，并复用同一 Table runtime 与 Core renderer。',
@@ -1153,6 +1159,7 @@ export const vizV01: Release = {
     },
     {
       pkg: '@retikz/table-vanilla',
+      stableDate: null,
       version: 'v0.1',
       description: {
         zh: 'Table 的无框架 authoring、Tier 2 adapter 与 SSR 入口：plain spec 可进入 Kernel figure/layer、mount/update 或直接输出 SVG。',

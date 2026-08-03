@@ -2,7 +2,8 @@
 
 > 在 ADR-01 的 `CoordinateFrame` 之上落「连续」家族：新建 area mark（线↔baseline 区域，cartesian + polar），line / area 在 polar 投影成弯弧 Path，加 `closed`（首尾相连）支撑雷达 / 填充雷达。下沉 core `Path`。
 
-- 状态：Accepted
+- 状态：Superseded
+- 替代：[alpha.12 ADR-03](../alpha.12/03-mark-abstraction-registry.md) 与 [ADR-04](../alpha.12/04-mark-surface-convergence.md)；line / area 已统一为 PathMark 与 closure
 - 决策日期：2026-06-06
 - 关联：[plot v0.1-alpha.4 roadmap](./roadmap.md) · [ADR-01](./01-coordinate-polar.md) · [plot-design.md §3.7 mark / §8.3 投影分层](../../../../../architecture/plot-design.md)
 
@@ -83,6 +84,3 @@ export const AreaMarkSchema = z.object({
 - polar guide → ADR-04；sector 家族 → ADR-02。
 - authoring 表面 + docs → ADR-05。
 - 双线 area（line↔line band）、曲线插值（基数 / 单调样条）、area 堆叠 → 后续。
-
-> 实现指针：最终 schema / 类型 / 行为以代码为准；完整施工契约（Level / Schema 改动 / 文件 scope / 测试象限 / 依赖现有元素）+ DSL 示例 + 影响清单见本文件封板前全文。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 62562f1d:_notes/decisions/plot/v0/v0.1/alpha.4/03-continuous-mark.md`（封板全文）。

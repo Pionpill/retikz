@@ -61,7 +61,7 @@ export const PlotScale = {
 // ScaleSchema 追加二者进 discriminatedUnion('type', [...])
 ```
 
-**React / vanilla 入口（决策 ⑧，修评审 P1）**：当前 `buildPlotSpec.ts:102` 把所有 color 绑死 `AUTO_COLOR`、`:289` 固定 push **ordinal**。本轮改成 **type-driven 派生**——color 字段类型为 continuous/temporal 时（有 model 或推断得知），自动派生 `sequential`（连续）；categorical 仍 `ordinal`。显式覆盖（指定 scheme / diverging / midpoint）走后续 `<ColorScale>` DSL（与 alpha.7 `scaleX/scaleY` 同样「先自动、后显式」节奏；本轮 React 仅做自动派生 sequential，diverging / 自定义 scheme 经 vanilla IR 全量可用，React 显式表面顺延）。
+**React / vanilla 入口**：当前 `buildPlotSpec.ts:102` 把所有 color 绑死 `AUTO_COLOR`、`:289` 固定 push **ordinal**。本轮改成 **type-driven 派生**——color 字段类型为 continuous/temporal 时（有 model 或推断得知），自动派生 `sequential`（连续）；categorical 仍 `ordinal`。显式覆盖（指定 scheme / diverging / midpoint）走后续 `<ColorScale>` DSL（与 alpha.7 `scaleX/scaleY` 同样「先自动、后显式」节奏；本轮 React 仅做自动派生 sequential，diverging / 自定义 scheme 经 vanilla IR 全量可用，React 显式表面顺延）。
 
 理由：
 
@@ -77,6 +77,3 @@ export const PlotScale = {
 - **path / stroke gradient**（一条 line 沿程渐变）→ 顺延需求驱动；本轮 line/area 连续色 fail-loud。
 - **React 显式 `<ColorScale>` DSL / diverging React 入口** → 顺延。
 - **多 hue 自定义插值 / 自定义 interpolator 函数** → 不做（IR 须可序列化，只命名 scheme + range 端点）。
-
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/scale.ts`、`packages/viz/plot/src/lower/{scale,expand}.ts` 与 `packages/viz/plot-react/src/components/buildPlotSpec.ts`，测试见 `packages/viz/plot/tests/{ir/scale.schema,lower/continuous-color}.test.ts` 和 `packages/viz/plot-react/tests/components/buildPlotSpec.test.tsx`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.8/01-continuous-color-scale.md`（封板全文）。

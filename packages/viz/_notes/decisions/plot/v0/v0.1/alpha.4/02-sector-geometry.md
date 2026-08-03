@@ -2,11 +2,12 @@
 
 > 在 ADR-01 的 `CoordinateFrame` 之上落「区间 / 扇形」家族：interval 在 polar 下成 sector（径向柱 / 玫瑰），新增 sector mark（饼图 / 环图）。两者都下沉 core 参数化可连接 `sector` Node。**累积角是 transform 阶段职责**，不进 mark。
 
-- 状态：Accepted
+- 状态：Superseded
+- 替代：[alpha.12 ADR-03](../alpha.12/03-mark-abstraction-registry.md)；独立 SectorMark 已收编为 IntervalMark 在 polar coordinate 下的投影结果
 - 决策日期：2026-06-06
 - 关联：[plot v0.1-alpha.4 roadmap](./roadmap.md) · [ADR-01](./01-coordinate-polar.md) · [plot-design.md §3.3 transform / §3.7 mark / §8.3 投影分层](../../../../../architecture/plot-design.md)
 
-> **实现期修订（review pass，2026-06-06）**：随 ADR-01 把位置通道收成 x/y 必填（删 angle/radius），**`SectorMark` 用样式-only 编码 `StyleEncodingSchema`**（只 color，无 x/y——角度来自累积界 startField/endField、半径常量满铺）；其余位置 mark 用 x/y 必填的 `EncodingSchema`。负值累积界 → reject（fail loud，已在「待决策点」与代码落地）。下文 schema 草案 / 示例以此为准。
+> **实现期修订**：随 ADR-01 把位置通道收成 x/y 必填（删 angle/radius），**`SectorMark` 用样式-only 编码 `StyleEncodingSchema`**（只 color，无 x/y——角度来自累积界 startField/endField、半径常量满铺）；其余位置 mark 用 x/y 必填的 `EncodingSchema`。负值累积界 → reject（fail loud，已在「待决策点」与代码落地）。下文 schema 草案 / 示例以此为准。
 
 ## 背景
 
@@ -93,6 +94,3 @@ export const SectorMarkSchema = z.object({
 - 连续 mark（line/area polar、area mark、closed/雷达）→ ADR-03。
 - authoring 表面 + docs → ADR-05。
 - 嵌套多环 donut（sector series 多层）、扇形 label 引线 → 后续。
-
-> 实现指针：最终 schema / 类型 / 行为以代码为准；完整施工契约（Level / Schema 改动 / 文件 scope / 测试象限 / 依赖现有元素）+ DSL 示例 + 影响清单见本文件封板前全文。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 62562f1d:_notes/decisions/plot/v0/v0.1/alpha.4/02-sector-geometry.md`（封板全文）。

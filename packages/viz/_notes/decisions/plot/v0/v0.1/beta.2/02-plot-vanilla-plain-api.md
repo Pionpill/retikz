@@ -31,7 +31,7 @@ axis、facet、scaffold 与 track binding 还分别在 Vanilla builder 和 React
 
 - `plot(input)`：委托 `createPlotSpec()`，返回无方法的 canonical `IRPlotSpec`。
 - `embedPlot(id, spec)`：返回标准 `VanillaEmbedSpec`，不执行 lowering。
-- `createPlotAdapter(datasets, options?)`：把 PlotSpec 接入 Kernel Vanilla figure / layer；datasets 与 options 保留在 runtime 闭包，不进入 IR。
+- `createPlotAdapter(datasets, options?)`：把 IRPlotSpec 接入 Kernel Vanilla figure / layer；datasets 与 options 保留在 runtime 闭包，不进入 IR。
 - `renderPlot(spec, datasets, options?)`：继续作为独立 DOM-free SSR 与 lineage 入口，签名和返回重载不变。
 
 删除 `plotBuilder`、`PlotBuilder` 与 `PlotBuilderConfig`，不保留 legacy alias。adapter 会重新校验嵌入 spec，以 embed id 派生 root identity，并让同一 adapter 的多个 embed 共享 datasets 与稳定 composite maker。
@@ -80,13 +80,3 @@ const spec = plot({
 - 不实现增量 compile / lowering、dependency graph、cache、patch、invalidate 或 scheduler。
 - 不实现 renderer diff、dirty rectangle、batching 或 GPU 后端。
 - 不把 datasets 或 lineage 写入 Plot IR。
-
-## 实现指针
-
-- 共享 authoring：`packages/viz/plot/src/contract/authoring/`
-- React adapter：`packages/viz/plot-react/src/components/build-plot-spec.ts`
-- Vanilla plain / adapter / runtime：`packages/viz/plot-vanilla/src/{spec,adapter,runtime}/`
-- 用户说明：Plot 总览、runtime reference、三包 README 与 viz v0.1 changelog
-- 完成提交：`89a56d7d7`、`e30d5ec69`、`87fcd3c66`、`429ef8d2f`
-
-> 本 ADR 已在 plot v0.1-beta.2 收尾时压缩；完整施工契约保留在该 ADR 的 Proposed 历史版本中。

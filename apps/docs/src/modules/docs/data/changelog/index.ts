@@ -48,6 +48,16 @@ const groupOfPackage = (pkg: PackageId): 'kernel' | 'standard' | 'viz' | 'other'
   PACKAGE_GROUPS.find(group => group.members.includes(pkg))?.id;
 
 /**
+ * 计算过滤后包集合的 stable 发布日
+ * @description 所有包组日期一致时返回该日期；混合已发布与开发中状态时返回 null
+ */
+const stableDateForPackages = (release: Release, packages: Array<Release['packages'][number]>): string | null => {
+  const dates = new Set(packages.map(block => block.stableDate ?? release.stableDate));
+  const [stableDate] = dates;
+  return dates.size === 1 ? (stableDate ?? null) : null;
+};
+
+/**
  * 按文档模块与可选分组取 changelog 切片
  * @description Viz 的 Data / Table / Plot 分区分别只返回所属包；其余位置按模块包组过滤。过滤后无包块的里程碑会被丢弃，入参不会被修改
  */
@@ -57,12 +67,16 @@ export const changelogForModule = (moduleId: string, sectionId?: string): Array<
   const vizSectionPackages = moduleId === 'viz' && sectionId ? VIZ_SECTION_PACKAGES.get(sectionId) : undefined;
   if (moduleId === 'viz' && sectionId && !vizSectionPackages) return [];
   return changelog
-    .map(release => ({
-      ...release,
-      packages: release.packages.filter(block => {
+    .map(release => {
+      const packages = release.packages.filter(block => {
         if (vizSectionPackages) return vizSectionPackages.has(block.pkg);
         return groupOfPackage(block.pkg) === group;
-      }),
-    }))
+      });
+      return {
+        ...release,
+        stableDate: stableDateForPackages(release, packages),
+        packages,
+      };
+    })
     .filter(release => release.packages.length > 0);
 };

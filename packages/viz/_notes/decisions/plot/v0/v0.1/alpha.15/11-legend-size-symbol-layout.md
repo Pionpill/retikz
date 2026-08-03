@@ -1,6 +1,6 @@
 # ADR-11: Legend size symbol 布局与缩放策略
 
-- 状态：Accepted（首轮实现）
+- 状态：Accepted
 - 决策日期：2026-07-04
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.15 roadmap](./roadmap.md) · [plot-design.md §3.9 Guide](../../../../../architecture/plot-design.md#39-guide)
 
@@ -52,11 +52,7 @@ type LegendStyle = {
 
 - legend 整体 `maxWidth` / `maxHeight`、滚动、分页、自动换行和列布局。
 - color ramp 的自动压缩或 tick label 避让。
-- 与后续全局 `LayoutClaim` solver 的统一 overflow 策略。
+- 与全局 decoration layout 的统一 overflow 策略。
 - chart preset 对 size legend 的二次默认值包装。
 
 ---
-
-> **实现指针**：本 ADR 已随 plot v0.1-alpha.15 发布落地；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在发布 tag 历史中。
-
-> 🔖 发布后压缩；压缩前完整施工蓝图 = `git show plot-v0.1.0-alpha.15:packages/viz/_notes/decisions/v0/v0.1/alpha.15/11-legend-size-symbol-layout.md`。

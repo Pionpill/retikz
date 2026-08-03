@@ -1,6 +1,6 @@
 # ADR-01：band / point scale（分类域 + bandwidth；projector 抽象为 PositionScale）
 
-- 状态：Accepted（已实现）
+- 状态：Accepted
 - 决策日期：2026-06-05
 - 关联：[plot v0.1-alpha.3 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.4 scale / §3.5 coordinate / §4.3 管线](../../../../../architecture/plot-design.md) · 回溯：[alpha.1 ADR-03 scale](../alpha.1/03-plot-scale.md) · [alpha.2 ADR-02 d3-scale](../alpha.2/02-d3-scale.md) · 消费方：[ADR-02 bar mark](./02-interval-mark.md) · [ADR-05 relation](./05-relation.md)
 
@@ -14,8 +14,6 @@
 本 ADR 定 band / point 的 **scale IR + lowering 解析 + projector 抽象 + guide 适配**；不含柱几何（[ADR-02](./02-interval-mark.md)）、分组 / 堆叠（[ADR-05](./05-relation.md)）。
 
 ## 决策：scale union 加 band / point；lowering 引入统一 `PositionScale`（coordinate + bandwidth），分类域按数据序去重
-
-`ScaleSchema` 从「仅 linear」升为含 `band` / `point` 的 discriminated union（`type` 判别位已在，非破坏）。lowering 不再把 d3 scale 直接当函数用，而是经一层 **`PositionScale`** 归一化：暴露 `coordinate(value)`（连续 = `scale(value)`；band = 居中 `scale(v)+bandwidth/2`；point = `scale(v)`）、`bandwidth`（连续 / point = 0，band = `scale.bandwidth()`）、`ticks(count?)`（连续走 alpha.2 `scaleTicks`；band/point = 类别落位 + 类别串标签）。projector 与 guide 都改吃 `PositionScale`，linear 行为逐字不变（`bandwidth=0`、`coordinate=scale(value)`）。schema 见 `plot/src/ir/scale.ts`，`PositionScale` / `inferCategoryDomain` 见 `plot/src/lower/scale.ts`。
 
 判别串保持裸字面量第一形态（JSON / LLM 写 `{ type: 'band' }`），常量供手写补全：
 
@@ -49,15 +47,6 @@ export type ScaleType = ValueOf<typeof PlotScale>;
 - **ordinal·color scale**（分类 → 颜色）→ [ADR-04](./04-color-scale.md)；**time scale** → [ADR-06](./06-time-scale.md)。
 - **类别过多的标签 thinning / 旋转 / 自动隐藏** → 后续。
 - **log / pow / sqrt / quantize / threshold scale** → 后续。
-- 面向用户的 scale 选择（`<BarMark>` 自动用 band x）见 [ADR-07](./07-bindings-dsl.md) 与[文档站](https://pionpill.github.io/retikz/)。
+- 面向用户的 scale 选择与 `<IntervalMark>` band authoring 见 [ADR-07](./07-bindings-dsl.md) 与[文档站](https://pionpill.github.io/retikz/)。
 
 ---
-
-> **实现指针**：level `red`（动 `plot/src/ir/**` scale schema + `src/lower/**` PositionScale / projector 契约边界）、非 breaking（linear 经 `PositionScale` 后投影 / 刻度与 alpha.2 逐字相等）。
->
-> - 真源以代码为准：`ScaleSchema` / `BandScaleSchema` / `PointScaleSchema` / `CategoryValueSchema` / `PlotScale`（`plot/src/ir/scale.ts`）；`PositionScale` / `inferCategoryDomain` / band·point resolver（`plot/src/lower/scale.ts`）；projector 改吃 `PositionScale.coordinate`、`axisValues` 按 scale.type 分流（`plot/src/lower/project.ts` / `expand.ts`）。`scaleBand` / `scalePoint` 复用 alpha.2 已引入的 d3-scale。对外 barrel 公开 `BandScaleSchema` / `PointScaleSchema` / `CategoryValueSchema`，`PlotScale` 增成员；对 core 无影响（band/point 在 lowering 内部，IR 仍纯 JSON）。
-> - 被消费：[ADR-02](./02-interval-mark.md) 用 `bandwidth` 定柱宽、`coordinate` 定柱位；[ADR-05](./05-relation.md) dodge 在 band 内切子带；guide lowering 复用 `PositionScale.ticks`。
-> - 测试见 `plot/tests/ir/scale.schema.test.ts`（band/point accept/reject、padding 越界、domain 元素校验）与 `plot/tests/lower/scale.test.ts`（分类域保序去重 / 过滤非标量、band coordinate 居中、bandwidth 取值、band 刻度落中心、linear 经 PositionScale 逐字等价），及 `plot/tests/lower/lowerPlots.test.ts`（守 linear 向后兼容）。
-> - 完整施工契约（Schema 改动表 / 测试象限 / 文件 scope）见本 ADR Proposed commit。
-
-> 🔖 封板压缩 commit `82295fcc`；压缩前完整施工蓝图 = `git show 82295fcc^:_notes/decisions/plot/v0/v0.1/alpha.3/01-band-scale.md`。

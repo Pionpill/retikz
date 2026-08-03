@@ -1,6 +1,7 @@
 # ADR-05：shape 通道（仅 PointMark）
 
-- 状态：Accepted
+- 状态：Superseded
+- 替代：[alpha.12 ADR-10](../alpha.12/10-channel-registry.md) 与 [ADR-12](../alpha.12/12-channel-core-coverage.md)；shape 保留为 PointMark glyph channel，并由统一 channel registry 解析
 - 决策日期：2026-06-08
 - 关联：[plot v0.1-alpha.7 roadmap](./roadmap.md) · [plot-design §3.3 Aesthetics](../../../../../architecture/plot-design.md) · 依赖：[ADR-02 通道→scale resolver](./02-channel-scale-resolver-size.md)（shape 复用 PointEncoding）· 关联：[ADR-03 color](./03-color-series.md)（同为分类→离散输出，ordinal 式映射）
 
@@ -38,9 +39,9 @@ export const ShapeChannelSchema = z
 // PointEncodingSchema 扩成 { ...Encoding, size?, opacity?, shape? }
 ```
 
-- **不开放 `shape.scale`（拍死，评审 P1）**：本轮 shape channel **无 `scale` 字段**。理由：现有 `resolveOrdinalScale` 默认 range 是**颜色**，shape 引用一个无 range 的 ordinal scale 会把颜色串写进 `node.shape`（坏）；显式自定义 shape range 留后续，需另立「range 必须全是可 lower 的 shape 名」的契约。本轮只走自动调色板。
+- **不开放 `shape.scale`**：本轮 shape channel **无 `scale` 字段**。理由：现有 `resolveOrdinalScale` 默认 range 是**颜色**，shape 引用一个无 range 的 ordinal scale 会把颜色串写进 `node.shape`（坏）；显式自定义 shape range 留后续，需另立「range 必须全是可 lower 的 shape 名」的契约。本轮只走自动调色板。
 - **field（categorical）**：domain = 分类去重，按出现序映射到**默认 shape 调色板** `PLOT_SHAPE_PALETTE`（循环复用）。continuous / temporal fail-loud（形状是分类编码，连续→形状无意义）。
-- **默认调色板（拍死，评审 P1）**：`['circle', 'rectangle', 'diamond']`——**直用 core 内置 shape 名，无 plot-only 别名**（不引入 `square` 这种 core 不认识、compile 不消解的别名）；文档可把 `rectangle` glyph 口语称「方块 / square」，但 IR / value 一律用 `rectangle`。3 形状够分辨；更多 glyph（triangle / cross / star，需 polygon params 或 shape 注册表）顺延。
+- **默认调色板**：`['circle', 'rectangle', 'diamond']`——**直用 core 内置 shape 名，无 plot-only 别名**（不引入 `square` 这种 core 不认识、compile 不消解的别名）；文档可把 `rectangle` glyph 口语称「方块 / square」，但 IR / value 一律用 `rectangle`。3 形状够分辨；更多 glyph（triangle / cross / star，需 polygon params 或 shape 注册表）顺延。
 - **value**：常量 shape 名 = **core 内置或注册扩展 shape 名**（开放字符串，与 core `NodeShape` 一致）；非法名留 core 渲染期处理。不接受 plot-only 别名。
 - **lowering**：per-datum 写 core node `shape`；与 size / opacity 同理，per-datum 落到每个 node（覆盖 `colorGroupedScope` / pointStyle 的默认 `shape: 'circle'`）。
 
@@ -55,6 +56,3 @@ export const ShapeChannelSchema = z
 - **更多 glyph**（triangle / cross / star）→ 顺延（需 polygon params / shape 注册表）。
 - **shape 作用于非 point mark** → 无意义，不做。
 - **显式自定义 shape 调色板（range）** → 顺延（本轮默认调色板；显式 ordinal scale range 可作逃生舱，按需）。
-
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/encoding.ts`、`packages/viz/plot/src/lower/{channel,mark}.ts` 与 `packages/viz/plot-react/src/components/marks.tsx`，测试见 `packages/viz/plot/tests/{ir/encoding.schema,ir/mark.schema,lower/shape-channel}.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.7/05-shape-channel.md`（封板全文）。

@@ -1,6 +1,7 @@
 # ADR-02：interval(bar) mark（baseline→value 矩形，bandwidth 定柱宽，下沉 rectangle Node）
 
-- 状态：Accepted（已实现）
+- 状态：Superseded
+- 替代：[alpha.12 ADR-03](../alpha.12/03-mark-abstraction-registry.md)；IntervalMark 最终使用 coordinate-independent bounds × coordinate 投影契约
 - 决策日期：2026-06-05
 - 关联：[plot v0.1-alpha.3 待办](./roadmap.md) · [plot-design.md §3.7 mark / §4.5 mark 构造](../../../../../architecture/plot-design.md) · 回溯：[alpha.1 ADR-05 encoding/mark](../alpha.1/05-plot-encoding-mark.md) · [alpha.1 ADR-06 lowering](../alpha.1/06-plot-lowering.md) · 依赖：[ADR-01 band scale](./01-band-scale.md) · 消费方：[ADR-05 relation](./05-relation.md)
 
@@ -21,8 +22,6 @@
 ```ts
 export const PlotMark = { Point: 'point', Line: 'line', Interval: 'interval' } as const;
 ```
-
-真源见 `packages/viz/plot/src/ir/mark.ts`（schema）与 `src/lower/mark.ts`（interval 分支）。
 
 理由：
 
@@ -46,11 +45,3 @@ export const PlotMark = { Point: 'point', Line: 'line', Interval: 'interval' } a
 - **颜色编码（按字段着色）** → [ADR-04](./04-color-scale.md)（本 ADR 柱统一 currentColor）。
 - **横向柱（y 分类 / x 数值）、自定义 baseline、start-end 双端区间（甘特）、圆角 / 描边样式** → 后续。
 - **area / sector / rule / text mark** → 后续。
-
-> **实现指针**：level `red`（动 `plot/src/ir/**` mark schema + `src/lower/**` 下沉契约）、非 breaking（仅扩 union 成员，守 alpha.1 mark 跳过语义）。
->
-> - 真源以代码为准：`IntervalMarkSchema` / `PlotMark`（含 `Interval`）/ `MarkSchema`（`packages/viz/plot/src/ir/mark.ts`）；interval 下沉分支与 baseline=0 入 y 域见 `src/lower/mark.ts` / `src/lower/expand.ts`，消费 [ADR-01](./01-band-scale.md) projector 的 `xBandwidth` / `xCoordinate` / `yCoordinate`。柱下沉目标是 core `NodeSchema`（`shape:'rectangle'` / `minimumWidth` / `minimumHeight` / `padding`），仅用既有字段不改 core。
-> - 测试见 `packages/viz/plot/tests/ir/mark.schema.test.ts`（schema accept/reject）与 `tests/lower/lowerPlots.test.ts`（柱宽=bandwidth、柱高=|baseline−value|、柱中心、负值跨 baseline、0 值仍产 Node、缺失跳过 / 全跳过 null 图层、与 point/line 共存、band 轴对齐、Node 盒=柱）。
-> - 完整施工契约（Schema 改动表 / 测试象限 / 文件 scope）见本 ADR Proposed commit。
-
-> 🔖 封板压缩 commit `82295fcc`；压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.3/02-interval-mark.md`。

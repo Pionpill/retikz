@@ -91,6 +91,8 @@ export type SubVersion = {
 /** 一个包在某中版本里程碑下的整块内容 */
 export type PackageBlock = {
   pkg: PackageId;
+  /** 当前包组的 stable 发布日；省略时继承所属里程碑日期 */
+  stableDate?: string | null;
   /** 该包在此里程碑的中版本,如 'v0.2' */
   version: string;
   /** <=200 字符中版本级摘要 */

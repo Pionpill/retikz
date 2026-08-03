@@ -1,6 +1,7 @@
-﻿# ADR-09：FieldFormat registry
+# ADR-09：FieldFormat registry
 
-状态：Accepted
+状态：Superseded
+替代：[Data beta.1 ADR-01](../../../../data/v0/v0.1/beta.1/01-plot-data-migration.md)；FieldFormat schema、definition 与 registry 已迁入 `@retikz/data`
 发布：`@retikz/plot` `0.1.0-alpha.12`
 
 ## 背景
@@ -23,23 +24,9 @@ IR 侧保留 JSON-safe 形态：内置格式仍是既有枚举 / 字符串，自
 
 由于 format 的判别是裸字符串，本 ADR 没有引入 `extractXxxKind` 之类的通用抽象，也没有做泛型擦除型 `AnyFieldFormatDefinition`。`resolveField.parse` 逃生舱保留，用于动态 / 跨源解析场景；`fieldType`、`resolveField`、`resolveLabel` 不做 registry 化。
 
-## 实现状态
+## 最终形态
 
 该 ADR 已在 2026-06-19 落地。自定义 format 可通过 `data.model` + `formatDefinitions` 使用。
-
-## 实现指针
-
-最终行为以代码为准，主要落在：
-
-- `packages/viz/plot/src/contract/format.ts`
-- `packages/viz/plot/src/providers/format/**`
-- `packages/viz/plot/src/providers/data/**`
-- `packages/viz/plot/src/schemas/data/**`
-
-验证覆盖：
-
-- `packages/viz/plot/tests/lower/type-driven-scale.test.ts`
-- data coerce / format registry 相关测试
 
 ## 影响
 
@@ -52,5 +39,3 @@ IR 侧保留 JSON-safe 形态：内置格式仍是既有枚举 / 字符串，自
 - `fieldType` 语义模型 registry。
 - `resolveField` / `resolveLabel` 函数 hook registry 化。
 - 异步数据加载与外部 I/O。
-
-> 🔖 本文件压缩前完整施工蓝图 = `git show 20392fb1f39f0383e9d8f8a29f31850da99b8825:_notes/decisions/graph/v0/v0.1/alpha.12/09-field-format-registry.md`（封板全文）。

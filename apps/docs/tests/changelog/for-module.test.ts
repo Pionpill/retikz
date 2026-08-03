@@ -48,6 +48,13 @@ describe('changelogForModule', () => {
     ]);
   });
 
+  it('Viz 分区按各发布组日期展示 stable 状态', () => {
+    expect(changelogForModule('viz', 'data')[0]?.stableDate).toBe('2026-08-03');
+    expect(changelogForModule('viz', 'plot')[0]?.stableDate).toBe('2026-08-03');
+    expect(changelogForModule('viz', 'table')[0]?.stableDate).toBeNull();
+    expect(changelogForModule('viz')[0]?.stableDate).toBeNull();
+  });
+
   it('旧 Viz 发布分区不再返回更新日志', () => {
     expect(changelogForModule('viz', 'releases')).toEqual([]);
   });
