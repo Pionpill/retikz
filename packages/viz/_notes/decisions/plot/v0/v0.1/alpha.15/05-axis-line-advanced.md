@@ -1,6 +1,6 @@
 # ADR-05：Axis line 进阶几何
 
-- 状态：Accepted（已实现）
+- 状态：Accepted
 - 决策日期：2026-07-04
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.15 roadmap](./roadmap.md) · [plot-design.md §3.9 Guide](../../../../../architecture/plot-design.md#39-guide)
 
@@ -118,7 +118,7 @@ type AxisOriginPlacement = {
 
 本 ADR 只要求 cartesian lowering 支持 `origin`。polar / ternary / custom coordinate 遇到 `placement.kind: 'origin'` 必须 fail-loud，并提示该 placement 只支持 cartesian axis。`line.arrow` 与 `line.extent` 可先支持 cartesian；非 cartesian axis 如需箭头，应在对应 coordinate provider 明确轴方向后另行接入，避免用屏幕 start/end 误导用户。
 
-Theme 不接收 `line.arrow`、`line.extent` 或 `placement.origin`。这些字段改变 guide 结构和几何语义，不是纯视觉默认。`lineCap` 属于纯线条样式，可进入 theme 的 axis line 默认。实现时必须把 theme 的 `axis.line` 改为只包含纯线条样式的 schema，避免 `PlotSpec.theme.axis.line.arrow` 这种全局结构开关静默生效。未来如果需要全局箭头视觉默认，应另设 `theme.axis.arrow` 之类的纯 detail 默认，而不是把结构开关塞进 line style。
+Theme 不接收 `line.arrow`、`line.extent` 或 `placement.origin`。这些字段改变 guide 结构和几何语义，不是纯视觉默认。`lineCap` 属于纯线条样式，可进入 theme 的 axis line 默认；theme 的 `axis.line` 只包含纯线条样式，避免 `IRPlotSpec.theme.axis.line.arrow` 这种全局结构开关静默生效。
 
 理由：
 
@@ -128,9 +128,9 @@ Theme 不接收 `line.arrow`、`line.extent` 或 `placement.origin`。这些字�
 4. `lineCap` 已是 core Path 的稳定字段，补入 axis line 能覆盖圆头 / 方头 baseline，成本低且与常见 axis domain cap 能力对齐。
 5. Theme 只保留视觉 token 默认，避免全局 theme 不小心改变 axis 的结构和阅读语义。
 
-## 实现补充：交叉值、端点刻度与标题位置
+## 最终约束：交叉值、端点刻度与标题位置
 
-在实现 ADR-05 后，数学坐标系示例暴露出三个和 axis line 端点相关但不应写死在 chart preset 里的低层策略。最终补充为可配置字段，而不是只针对现有截图做特殊分支：
+数学坐标系需要三个不应写死在 chart preset 里的 axis line 端点策略，因此补充为可配置字段：
 
 - 原点交叉冲突通过 `axis.crossing` 表达。`crossing.value` 默认是 `0`，`crossing.tick: 'hide'` 可隐藏交叉值 tick mark，`crossing.label: 'hide' | 'corner'` 可隐藏或把共用原点 label 放到指定角落。chart / math-axis preset 可以默认组合出“隐藏交叉 tick，单个左下角 label”的规则，但 plot guide 只提供配置能力。
 - 箭头端点附近的刻度避让通过 `ticks.endpoint` 表达。省略该字段时，有 axis arrow 的端点默认会避让附近 tick mark；`ticks.endpoint: false` 可关闭该默认避让。默认只影响 mark，不改变 tick source、grid 或 tick label；需要连 label 一起隐藏时使用 `affect: 'mark-and-label'`。
@@ -143,8 +143,6 @@ Theme 不接收 `line.arrow`、`line.extent` 或 `placement.origin`。这些字�
 
 core 已经具备稳定 `dashOffset` / stroke dash offset 能力。plot 不需要在 ADR-05 里为 axis line 单独设计 `dashOffset`，而应按 ADR-02 把它作为普通 `GuideLineStyleSchema` 字段接入 axis line、tick line、grid line、legend 可描边部件与 theme line style。
 
-历史需求输入见 [`core dashOffset 能力补全请求`](../../../../../../../kernel/_notes/analysis/core-dash-offset-capability-request.md)，该 note 现在只作为追溯，不再阻塞 plot 实现。
-
 ## 不在本 ADR 范围
 
 - polar / ternary / custom coordinate 的 axis arrow 方向定义。
@@ -154,10 +152,6 @@ core 已经具备稳定 `dashOffset` / stroke dash offset 能力。plot 不需�
 - axis line 专用 dash offset 结构字段。`dashOffset` 已由 core 提供，plot 应通过 ADR-02 的 `GuideLineStyleSchema` 作为普通线条样式复用，不在 ADR-05 另造字段。
 - theme 级 axis arrow 默认。
 - 新增 arrow provider 或修改 core arrow registry。
-- chart preset；后续 chart 可消费本 PlotSpec 能力。
+- chart preset；后续 chart 可消费本 IRPlotSpec 能力。
 
 ---
-
-> **实现指针**：本 ADR 已随 plot v0.1-alpha.15 发布落地；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在发布 tag 历史中。
-
-> 🔖 发布后压缩；压缩前完整施工蓝图 = `git show plot-v0.1.0-alpha.15:packages/viz/_notes/decisions/v0/v0.1/alpha.15/05-axis-line-advanced.md`。

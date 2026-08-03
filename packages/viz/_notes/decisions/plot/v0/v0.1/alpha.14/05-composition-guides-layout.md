@@ -1,9 +1,9 @@
 # ADR-05：composition guides, axes, grid, spacing
 
-- 状态：Accepted（实现字段以 ADR-09 为准）
+- 状态：Superseded
+- 替代：[ADR-09](./09-composition-api-structure.md)；旧 guidePolicy / layout 已拆为 resolve、header 与 spacing
 - 决策日期：2026-06-28
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.14 roadmap](./roadmap.md) · [ADR-02 facet grid data routing](./02-facet-grid-data-routing.md) · [ADR-03 same-panel multi-axis overlay](./03-same-panel-multi-axis.md) · [ADR-04 shared scaffold tracks](./04-shared-scaffold-tracks.md)
-- 压缩前全文：`git show b7744b60565aa579a6f1deb892b56021633c6754:packages/graph/_notes/decisions/v0/v0.1/alpha.14/05-composition-guides-layout.md`
 
 ## 背景
 
@@ -15,7 +15,7 @@ ADR-02～04 分别引入 facet panel、same-panel overlay 和 shared scaffold tr
 
 ## 决策：composition.layout 与 composition.guidePolicy 统一管理 spacing 和 guide 策略
 
-`PlotSpec.composition` 新增 `layout` 与 `guidePolicy`。`layout` 管 panel / track / axis 的固定间距；`guidePolicy` 管 axes / grid / labels 在多 scope 下的默认行为。单个 `AxisGuide` 仍可通过 `coordinateScope`、`placement`、`grid` 覆盖具体轴。
+`IRPlotSpec.composition` 新增 `layout` 与 `guidePolicy`。`layout` 管 panel / track / axis 的固定间距；`guidePolicy` 管 axes / grid / labels 在多 scope 下的默认行为。单个 `AxisGuide` 仍可通过 `coordinateScope`、`placement`、`grid` 覆盖具体轴。
 
 ```ts
 const CompositionAxisPolicy = {

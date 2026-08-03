@@ -18,9 +18,9 @@ legend 是 GoG 一等 guide（plot-design §3.9）：与 axis 并列、由 scale
 | size                             | 梯度符号（graduated symbols：几个代表性大小圈 + 值） |
 | opacity                          | 梯度透明度条                                         |
 
-四个评审 P1/P2 要点必须在本 ADR 钉死：
+以下约束必须在本 ADR 固定：
 
-- **P1 ⑥ target 歧义**：一张 plot 可有多个 color scale、多个 mark 各绑 size/opacity/shape，且 alpha.7 的 size/opacity/shape 默认 scale **在 resolver 内部合成、未必物化进 `PlotSpec.scales`**（`lower/channel.ts` 的 `makeSizeResolver` 等只返回逐行函数 `(row)=>radius`，无 domain/range descriptor）。legend 拿不到 domain/range 就画不出。
+- **P1 ⑥ target 歧义**：一张 plot 可有多个 color scale、多个 mark 各绑 size/opacity/shape，且 alpha.7 的 size/opacity/shape 默认 scale **在 resolver 内部合成、未必物化进 `IRPlotSpec.scales`**（`lower/channel.ts` 的 `makeSizeResolver` 等只返回逐行函数 `(row)=>radius`，无 domain/range descriptor）。legend 拿不到 domain/range 就画不出。
 - **P1 ⑦ 默认 axes 冲突**：`buildPlotSpec.ts:293` 现规则是「只要有任何 guide 就不加默认 axes」——加 `<Legend>` 会让默认 x/y 轴消失。
 - **P2 ⑨ 标签契约**：连续 ramp / 时间色 / 分箱区间各需标签规则。
 - **P2 ⑩ 占位**：legend 占空间，须先估尺寸再决定 plotArea，否则只能 overlay / 出界——牵动 `lower/layout.ts` / `expand.ts`。
@@ -50,7 +50,7 @@ export const LegendChannel = { Color: 'color', Size: 'size', Opacity: 'opacity',
 
 **(2) target = channel + 可选 scale**（决策 ⑥）：legend 按**它可视化哪个非位置通道**绑定（与 encoding 通道一一对应、用户心智一致）；`scale?` 在「同通道多 scale」时消歧（省略 = 该通道唯一 scale，多于一个且未指定 → fail-loud）。legend 渲染形态（swatch / ramp / 分箱）由 lowering **据绑定 scale 的类型自动选**，用户不手填形态。
 
-**(3) resolver 暴露可复用 scale descriptor**（决策 ⑥ 配套，修 P1 核心）：alpha.7 `lower/channel.ts` 的 `makeSizeResolver` / `makeOpacityResolver` / `makeShapeResolver` 改成不仅返回逐行 `XxxOf` 函数，**同时产出 `ScaleDescriptor`**——含 `{ channel, scaleType, domain, range, field?, fieldType? }`，legend 据此画刻度 / swatch。color 的 descriptor 从 `PlotSpec.scales` 里的具名 color scale 取（已物化）。统一一个 `LegendSource` 注册表（lowering 内部，不进 IR）：通道 → descriptor，供 `lowerLegend` 查。
+**(3) resolver 暴露可复用 scale descriptor**（决策 ⑥ 配套，修 P1 核心）：alpha.7 `lower/channel.ts` 的 `makeSizeResolver` / `makeOpacityResolver` / `makeShapeResolver` 改成不仅返回逐行 `XxxOf` 函数，**同时产出 `ScaleDescriptor`**——含 `{ channel, scaleType, domain, range, field?, fieldType? }`，legend 据此画刻度 / swatch。color 的 descriptor 从 `IRPlotSpec.scales` 里的具名 color scale 取（已物化）。统一一个 `LegendSource` 注册表（lowering 内部，不进 IR）：通道 → descriptor，供 `lowerLegend` 查。
 
 ```ts
 // lower/channel.ts —— 概念伪码（resolver 双产出）
@@ -76,17 +76,13 @@ export type ScaleDescriptor = {
 3. **Legend 不杀 axes**：把「有 guide 即清默认」改成 by-type，是 `<Legend>` 可用的前提，否则一加图例坐标轴就没了。
 4. **诚实的结构上限**：估算非测量，承认 plot-design §13.1 的 JSON IR 无 text metrics 上限，不假装做自适应。
 
-**实现校准（2026-06-08，与实现/测试对齐）**：
+## 最终形态
 
-- **legend 矩形 = core Node（shape rectangle），非 Path**：swatch / ramp / 分箱色块下沉成 `{ type:'node', shape:'rectangle', minimumWidth/Height, fill }`，**与 bar mark 同款**（`lower/mark.ts` barStyle）。原本曾用单 step rectangle Path，但违反 core `PathSchema.children.min(2)`（self-contained rectangle step 仍受 min(2) 约束）——产出 core 非法 IR（adversarial 第一关 BLOCKING 抓出）。改 Node 既合 core schema 又符「一切可见物是 Node」理念，无需改 core。配 `ChildSchema` 合法性回归测试守约束。连续 ramp 用 core `linearGradient` paint server（Node.fill 接 PaintSpec，核验 core 支持）。
-- **默认 axes 合并语义校准（决策 ⑦）**：实际落地为 **「显式 `Axis` 抑制默认 axes（保留既有 `dsl_explicit_axis_only` 行为不变）；`Legend` 不抑制默认 axes」**。决策 ⑦ 原文「显式 x 轴 → y 默认仍补」的 per-dimension 细化**未采纳**——既有 React 行为是「任一显式 Axis 即不补默认」，本轮只修 P1 真 bug（Legend 杀 axes），不改无关的既有 axis 行为。per-dimension 默认轴补齐留作未来增强（需同改 `dsl_explicit_axis_only` 期望）。
-- **标题 Node**：决策 ⑨「省略 title → 用绑定字段名」**未物化成自动可见标题**——仅用户显式 `title` 时渲染标题 Node，省略时无标题。后续可补「字段名缺省标题」。
-- **多 LLM review 后续修（Accepted 后）**：三处 review findings 已修 + 回归测试：
-  - **P1 sector color legend**：`resolveColorLegend` 此前跳过 `PlotMark.Sector`，致饼/环图 `<Legend channel="color">` 抛「无绑定 color scale」或出空图例。sector 的 `color.field` 同 point/bar 按 datum 着色（ADR-01 B/C），已纳入 color 绑定收集。
-  - **P1 shape glyph**：shape legend 条目带 `entry.shape` 但 `lowerLegend` 此前只画矩形 swatch、不应用形状，致 `<Legend channel="shape">` 渲成清一色矩形。已让 shape 条目的 swatch 画成编码的 glyph（circle/rectangle/diamond）。
-  - **P2 legend.scale 类型守卫**：`legend.scale` 此前只校验存在、不校验是 color scale，`scale: 'x'`（位置 linear）会落空 ordinal 出空图例。已加 `COLOR_SCALE_TYPES` 守卫——color legend 绑非颜色 scale（位置 linear/band/point/time/log/pow/sqrt）即 fail-loud（了结原 adversarial 第一关 legend.scale WARNING，不再 backlog）。
-- **占位落地为固定带宽**：决策 ⑩ 写「`estimateLabelWidth` + swatch 尺寸估」，实际 `legendReserveOf` 用固定 `LEGEND_BAND_EXTENT` 在对应边预留，不按标签长度估——长标签可能溢出（plot-design §13.1 允许）。后续可按标签宽细化。
-- **ramp 刻度域取配置 domain（contract-audit W2 修）**：连续 ramp 的取色 / 刻度域显式 `domain` 优先（sequential `[min,max]`、diverging `[low,high]`），与实绘取色同基准；缺省回退数据 extent。早期曾固定取数据 extent，致显式 domain 时图例刻度与颜色错位，已修 + 回归测试。
+- swatch、ramp 与分箱色块下沉为 core Node；连续 ramp 使用 core gradient paint，避免为 legend 引入独立渲染 primitive。
+- Legend 本身不改变 Axis 是否存在；Plot 的默认 axis 注入后来由 alpha.10 移除，显式 guide 是 canonical 行为。
+- title 仅在用户显式声明时渲染，不从字段名隐式生成可见标题。
+- color legend 覆盖 interval / sector 等 datum color，shape legend 使用编码 glyph；legend 绑定不兼容的 scale family 时 fail-loud。
+- 连续 legend 的取色与 ticks 使用显式 scale domain，省略时才从数据推断；最终布局与 theme token 由 alpha.15 guide / theme ADR 承接。
 
 ## 不在本 ADR 范围
 
@@ -95,6 +91,3 @@ export type ScaleDescriptor = {
 - **测量驱动自适应**（标签防重叠 / 宽度自适应 / 旋转）→ 结构上限，不做（plot-design §13.1）。
 - **reference line / band 等其它 guide** → 后续（本轮只 axis + legend）。
 - **legend 内排序 / 自定义 swatch 模板** → 顺延。
-
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/guide.ts`、`packages/viz/plot/src/lower/{channel,guide,layout,expand}.ts` 与 `packages/viz/plot-react/src/components/`，测试见 `packages/viz/plot/tests/{ir/guide.schema,lower/legend}.test.ts` 和 `packages/viz/plot-react/tests/components/buildPlotSpec.test.tsx`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.8/03-legend-guide.md`（封板全文）。

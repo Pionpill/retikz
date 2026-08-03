@@ -1,6 +1,7 @@
 # ADR-03：绘图区布局（margin convention：整图 → 估算 label/axis 占位 → plot area；mark 改投影到 plot area）
 
-- 状态：Accepted（已实现）
+- 状态：Superseded
+- 替代：[alpha.15 ADR-10](../alpha.15/10-plot-decoration-layout.md)；早期 margin 估算已收敛为统一 decoration layout claim 模型
 - 决策日期：2026-06-04
 - 关联：[plot v0.1-alpha.2 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §8 lowering](../../../../../architecture/plot-design.md) · 依赖：[ADR-02 d3-scale](./02-d3-scale.md) · 改动：[alpha.1 ADR-06 lowerPlots](../alpha.1/06-plot-lowering.md) · 消费方：[ADR-04 guide lowering](./04-guide-lowering.md)
 
@@ -20,8 +21,6 @@ mark 投影从整图 range 改为 plot area range（改 alpha.1 `expand.ts`）�
 
 **guide 框取 scale 实际 range**：guide 轴线 / 刻度 / 网格不直接用 margin 算出的 plotArea 边，而用 `xScale.range()` / `yScale.range()` 的**实际输出区间**派生 frame——无显式 range 时二者相同；用户给某 scale 显式 `range`（不被 plot area 覆盖）时，轴线/网格随实际绘制区走、与刻度/mark 严格对齐，不因显式 range 错位。
 
-估算常量（经验值，`plot/src/lower/layout.ts`）：`DEFAULT_FONT_SIZE=11`、`CHAR_WIDTH_FACTOR=0.6`（数字字宽 ≈ 0.6em）、`AXIS_TICK_LENGTH=6`、`AXIS_LABEL_GAP=4`。后三者 + `estimateLabelWidth` 导出供 [ADR-04](./04-guide-lowering.md) 复用，避免跨文件复制常量/算法（`estimateLabelWidth` 单一来源：left margin 与 y label 水平偏移都调它）。真源见 `plot/src/lower/layout.ts`、`plot/src/lower/expand.ts`。
-
 理由：
 
 1. **margin 按 guide 存在与否估算 → 向后兼容**：无 axis guide 时 margin 全 0、plot area = 整图，alpha.1 mark 投影坐标逐字不变，`bare` 天然落这条路径。
@@ -40,14 +39,6 @@ mark 投影从整图 range 改为 plot area range（改 alpha.1 `expand.ts`）�
 - **真实 measureText 精确布局** → 后续（需 core 支持 plot 两遍编译或 plot 自带 measurer）。
 - **plot area 作 `plot.plotArea` anchor 绑定**（§14）→ alpha.5（alpha.2 先内部算出来用）。
 - **非数字 label 的占位估算**（`CHAR_WIDTH_FACTOR=0.6` 是数字经验值，ordinal / 长文本偏窄会裁）→ alpha.3（band/ordinal 轴）。
-- **margin 配置进 IR（`PlotSpec.margin`，随 spec 持久化）** → 否决，当前放 `LowerPlotsOptions`（布局是渲染参数、非数据，与 width/height 一致）；如未来需持久化再议。
+- **margin 配置进 IR（`IRPlotSpec.margin`，随 spec 持久化）** → 否决，当前放 `LowerPlotsOptions`（布局是渲染参数、非数据，与 width/height 一致）；如未来需持久化再议。
 
 ---
-
-> **实现指针**：level `red`（动 `plot/src/lower/**`）、非 breaking（无 guides 投影逐字不变）。
->
-> - 真源以代码为准：`computePlotArea` / `Rect` / `Margins` / `estimateLabelWidth` / `DEFAULT_FONT_SIZE` / `AXIS_TICK_LENGTH` / `AXIS_LABEL_GAP`（`plot/src/lower/layout.ts`）；mark 投影改 plot area + 编排顺序 + `LowerPlotsOptions.fontSize`/`margin`（`plot/src/lower/expand.ts`）；投影器（`plot/src/lower/project.ts`）。`margin`/`fontSize` 是运行时选项（TS 类型，非 zod、不进 IR）。
-> - 测试见 `plot/tests/lower/layout.test.ts`（无轴 margin 全 0、有轴缩进、y label 越长 left 越大、margin 逐边覆盖、超尺寸抛错）与 `plot/tests/lower/lowerPlots.test.ts`（守 alpha.1 无 guides 投影 + 有 guides 落 plot area）。
-> - 完整原文（草案代码 / 待决策点 / 测试象限）见本文件 git 历史。
-
-> 🔖 封板压缩 commit `7acbf962`；压缩前完整施工蓝图 = `git show 7acbf962^:_notes/decisions/plot/v0/v0.1/alpha.2/03-plot-area-layout.md`。

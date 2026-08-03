@@ -1,6 +1,6 @@
 # v0.5.0-alpha.2 增量性能、Runtime 策略、Box Layout 与 Theme 基建
 
-- 状态：ADR-01～08 已完成实现、测试、双语文档与 Accepted 收口；ADR-09 Proposed
+- 状态：ADR-01～09 已完成实现、测试、双语文档与 Accepted 收口
 - 目标版本：`0.5.0-alpha.2`
 - 关联：[v0.5 roadmap](../roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
@@ -24,7 +24,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | [ADR-06](./06-box-layout-composite-contract.md)      | Accepted | Box Layout Composite contract        | 冻结双轴 constraint、allocation / slot-size feedback、nested propagation 与 replay wrapper |
 | [ADR-07](./07-runtime-execution-policy.md)           | Accepted | Runtime 执行模式与更新策略           | 显式选择 static / retained，并在 retained Session 中选择 auto / full 更新                  |
 | [ADR-08](./08-layout-proposal-probe-contract.md)     | Accepted | Layout proposal / probe contract     | 冻结双轴 proposal、minimum / natural、resolved slot、guide、failure isolation 与 replay    |
-| [ADR-09](./09-inherited-theme-context.md)            | Proposed | 可继承 Theme IR 与 Composite context | 冻结 Scene / Scope Theme、字段级继承、Composite 消费与领域边界                             |
+| [ADR-09](./09-inherited-theme-context.md)            | Accepted | 可继承 Theme IR 与 Composite context | 冻结 Scene / Scope Theme、字段级继承、Composite 消费与领域边界                             |
 
 ## 当前进度
 
@@ -34,7 +34,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-06 已完成双轴 constraint、`slotSize`、显式 composite allocation、完整 replay wrapper、Table consumer 迁移、对抗测试与双语文档，并于 2026-07-28 获人工接受。
 - ADR-07 已完成 Architecture Gate、Runtime/Core/Render/React/Vanilla实现、SVG/Canvas三策略Bench A/B、对抗测试与双语文档，并于2026-07-29获人工接受。
 - ADR-08 已完成双轴 proposal、resolved slot、真实 allocation / visual bounds、alignment guide、隔离 failure、one-use replay、Table consumer 迁移、对抗测试与双语文档；Architecture Gate Round 3/3 PASS，并于 2026-07-30 获人工接受。
-- ADR-09 已完成 Architecture Gate Round 2/3 PASS；仍为 Proposed，尚未获得人工 ADR 接受或实现授权。
+- ADR-09 已完成严格 JSON Theme IR、Scene / Scope 字段级继承、expand 与 layout-aware Composite context、runtime Scope、probe / replay、lowering、retained fallback、React / Vanilla parity、renderer parity、对抗复验与双语文档；Architecture Gate Round 2 PASS、Plan Gate Round 4 PASS，并于 2026-08-03 完成 Accepted 收口。
 
 ## 执行批次
 

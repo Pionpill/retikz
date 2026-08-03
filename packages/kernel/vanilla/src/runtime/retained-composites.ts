@@ -61,10 +61,10 @@ const createExpandDelegate = (
   namespace: initial.namespace,
   type: initial.type,
   schema: initial.schema,
-  expand: node => {
+  expand: (node, context) => {
     const expand = slot.current.expand;
     if (typeof expand !== 'function') return invalidDefinitions(slot.current);
-    return expand(node);
+    return expand(node, context);
   },
 });
 

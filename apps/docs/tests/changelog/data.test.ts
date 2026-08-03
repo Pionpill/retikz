@@ -24,6 +24,7 @@ const SubVersion = z.object({
 });
 const PackageBlock = z.object({
   pkg: z.enum(PACKAGE_IDS),
+  stableDate: z.string().regex(DATE).nullable().optional(),
   version: z.string().min(1),
   description: z.object({ zh: z.string().min(1).max(200), en: z.string().min(1).max(200) }),
   highlights: z.array(ChangeItem),

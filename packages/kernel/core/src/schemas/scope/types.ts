@@ -13,6 +13,7 @@ import { type IRJsonObject } from '../json';
 import { type IRNode } from '../node';
 import { type IRPaintSpec } from '../paint';
 import { type IRPathBase } from '../path';
+import { type IRTheme } from '../theme';
 import { type IRTransform } from '../transform';
 
 /** every node 默认样式（排除 type / id / position / text / label 的全部 node 样式字段） */
@@ -43,6 +44,8 @@ export type StyleChannel = ValueOf<typeof ScopeStyleChannel>;
  */
 export type IRScope = {
   type: 'scope';
+  /** 仅覆盖已声明字段的局部 Theme */
+  theme?: IRTheme;
   id?: string;
   /**
    * 是否为子树开启局部命名空间

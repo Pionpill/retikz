@@ -1,14 +1,12 @@
-import { ChannelSchema, PathMarkSchema } from '@retikz/plot';
+import { ChannelSchema, PathMarkSchema, PointMarkSchema } from '@retikz/plot';
 import { z } from 'zod';
 
-import { ScatterPointPatchSchema, StrictColorChannelSchema } from './canonical';
-import { CHART_NAMESPACE } from './constants';
+import { StrictColorChannelSchema } from './canonical';
+import { CHART_NAMESPACE, ChartType } from './constants';
+import { omitUndefinedProperties } from './normalize';
 import { assertChartSpatialRoot, ChartSharedBaseSchema } from './shared';
 
-/** Connected Scatter canonical type 判别值 */
-export const ConnectedScatterChartType = 'connected-scatter' as const;
-
-const ConnectedPointPatchFields = ScatterPointPatchSchema.pick({
+const ConnectedPointPatchFields = PointMarkSchema.pick({
   color: true,
   textColor: true,
   shape: true,
@@ -75,7 +73,7 @@ export const ConnectedPathPatchSchema = z
 export const ConnectedScatterChartSpecSchema = z
   .strictObject({
     namespace: z.literal(CHART_NAMESPACE).describe('Chart composite namespace discriminator'),
-    type: z.literal(ConnectedScatterChartType).describe('Connected Scatter Chart variant discriminator'),
+    type: z.literal(ChartType.ConnectedScatter).describe('Connected Scatter Chart variant discriminator'),
     ...ChartSharedBaseSchema.shape,
     encoding: z
       .strictObject({
@@ -95,7 +93,8 @@ export const ConnectedScatterChartSpecSchema = z
       .describe('Optional Connected Scatter component patches'),
   })
   .describe('Owner-private Connected Scatter Chart variant input')
-  .superRefine(assertChartSpatialRoot);
+  .superRefine(assertChartSpatialRoot)
+  .overwrite(omitUndefinedProperties);
 
 /** Connected Scatter 的 JSON-safe ChartSpec */
 export type IRConnectedScatterChartSpec = z.infer<typeof ConnectedScatterChartSpecSchema>;

@@ -1,6 +1,6 @@
 # ADR-06：Axis tick 来源、标记与密度策略
 
-- 状态：Accepted（已实现）
+- 状态：Accepted
 - 决策日期：2026-07-04
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.15 roadmap](./roadmap.md) · [plot-design.md §3.9 Guide](../../../../../architecture/plot-design.md#39-guide)
 
@@ -163,16 +163,16 @@ type PlotAxisTheme = {
 4. density 对 tick mark 和 grid 使用同一可见 tick set，避免 tick mark 抽稀但 grid 不抽稀的默认不一致。
 5. Theme 只给 tick mark 外观默认，不控制 tick source 或 density，避免全局 theme 改变图表阅读粒度。
 
-## 实现补充：三角形方向语义
+## 最终约束：三角形方向语义
 
-实现复核时确认，内置 `triangle` 只是复用 core polygon shape，并不为 plot 单独定义新的三角形坐标系。`orientation` 的语义保持为 tick 法线 / 轴线切线策略：
+内置 `triangle` 复用 core polygon shape，不为 plot 单独定义新的三角形坐标系。`orientation` 的语义保持为 tick 法线 / 轴线切线策略：
 
 - `outward` 始终沿 tick 外法线方向。对于默认 bottom x axis，外法线是向下。
 - `inward` 始终沿 tick 内法线方向。对于默认 bottom x axis，内法线朝向绘图区，因此三角尖端朝上。
 - `axis` 沿轴线切向，`fixed` 使用显式 `rotate` 或 0。
 - `custom` shape 不继承 triangle 的任何额外 base rotation；用户自定义 shape 的 canonical direction 由自定义 shape 自己决定。
 
-因此文档和 demo 中“底部 x 轴三角刻度朝上”的示例使用 `orientation: 'inward'`。实现只补充回归测试锁定该语义，不额外修改 triangle lowering 的默认旋转，避免破坏 top / left / right 轴和 custom shape 的既有方向规则。
+因此“底部 x 轴三角刻度朝上”使用 `orientation: 'inward'`。triangle 的默认旋转不额外改变，避免破坏 top / left / right 轴和 custom shape 的既有方向规则。
 
 ## 不在本 ADR 范围
 
@@ -182,10 +182,6 @@ type PlotAxisTheme = {
 - grid 独立 density。grid 继续使用 axis visible tick set。
 - legend ramp tick mark 形态。legend ramp 可以复用 tick density 的 helper，但不新增 ramp tick mark。
 - 新增 core shape provider 或修改 core shape registry。
-- chart preset；后续 chart 可消费本 PlotSpec 能力。
+- chart preset；后续 chart 可消费本 IRPlotSpec 能力。
 
 ---
-
-> **实现指针**：本 ADR 已随 plot v0.1-alpha.15 发布落地；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在发布 tag 历史中。
-
-> 🔖 发布后压缩；压缩前完整施工蓝图 = `git show plot-v0.1.0-alpha.15:packages/viz/_notes/decisions/v0/v0.1/alpha.15/06-axis-tick-marker-density.md`。

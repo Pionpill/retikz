@@ -116,6 +116,59 @@ export const vizSection: Array<Section> = [
     ],
   },
   {
+    id: 'chart',
+    label: 'viz.chart',
+    pages: [
+      {
+        id: 'points',
+        label: 'viz.chartScatterPoints',
+        icon: 'chart-scatter',
+        children: [
+          {
+            id: 'scatter',
+            label: 'viz.chartScatter',
+            meta: {
+              pageType: 'concept',
+              audience: 'user',
+              capability: 'showcase.scatter',
+              sourceOfTruth: 'docs',
+              layout: 'showcase',
+              showcase: {
+                family: 'points',
+                role: 'primary',
+                preview: 'scatter-basic',
+                order: 10,
+              },
+            },
+          },
+          {
+            id: 'bubble',
+            label: 'viz.chartBubble',
+            meta: {
+              pageType: 'concept',
+              audience: 'user',
+              capability: 'showcase.bubble',
+              sourceOfTruth: 'docs',
+              layout: 'showcase',
+              showcase: {
+                family: 'points',
+                role: 'primary',
+                preview: 'bubble-basic',
+                order: 20,
+              },
+            },
+          },
+        ],
+        meta: {
+          pageType: 'group',
+          audience: 'user',
+          capability: 'chart.points',
+          sourceOfTruth: 'architecture',
+        },
+      },
+    ],
+  },
+  {
     id: 'table',
     label: 'viz.table',
     document: true,

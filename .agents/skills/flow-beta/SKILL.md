@@ -90,7 +90,7 @@ beta 的核心风险是重构回归和 breaking 漏迁移。Stage 2 始终评估
 - WARNING：人工裁决。
 - INFO：可选采纳。
 
-用户同意评审后，Stage 2 复用 `cross-review`：固定 TODO、完整 diff / commit range、public surface diff 与测试证据，同轮并发派遣 2–3 个不同可用模型，互不传递结论；主 AI 只在全部结果返回后归并。至少两个实际不同模型完成才称为交叉评审；只剩一个模型时 halt 交人工决定是否接受单模型退化。
+用户同意评审后，Stage 2 复用 `cross-review`：固定 TODO、完整 diff / commit range、public surface diff 与测试证据，同轮并发派遣 2–3 个 fresh 独立 reviewer，互不传递结论；优先不同模型，只有一个非主模型时使用两个同模型 fresh 实例并标注降级。主 AI 只在全部结果返回后归并；只有一个 fresh 独立 reviewer 完成时 halt 交人工决定是否接受单 reviewer 退化。
 
 Stage 2 最多 9 轮，不因 finding 改名、拆分或出现新 ID 重新计数；最新一轮无 BLOCKING、WARNING 已处置时立即 PASS。只有修订发生后才使用 fresh agents 评审新的固定快照；第 9 轮仍有任一 BLOCKING 时 halt，交给人工决定继续、缩 scope 或放弃。
 
@@ -124,7 +124,7 @@ Stage 2 最多 9 轮，不因 finding 改名、拆分或出现新 ID 重新计�
 - 呈现平行 / 堆叠 / 混合布局，人工 ack 后建 worktree。
 - 每个 worktree 写 `REVIEW.md` 并 halt。
 - 不 push / merge / 切回 base / 删除 worktree / 删除 `REVIEW.md`。
-- 若批量执行中用户授权 LLM 自行 commit，逐 commit 按根规则与 `flow-long-task` 判定风险；需要评审时再用 `cross-review` 固定 staged diff，并发使用 2–3 个不同可用模型。低风险明确改动可跳过，改动面大、核心功能或高风险 commit 不得豁免。
+- 若批量执行中用户授权 LLM 自行 commit，逐 commit 按根规则与 `flow-long-task` 判定风险；需要评审时再用 `cross-review` 固定 staged diff，并发使用 2–3 个 fresh 独立 reviewer，并按异模型优先或同模型双实例降级规则选择阵容。低风险明确改动可跳过，改动面大、核心功能或高风险 commit 不得豁免。
 
 ## 失败与换流
 

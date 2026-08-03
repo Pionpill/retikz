@@ -163,7 +163,7 @@ describe('plot lineage runtime', () => {
     const child = definition.expand(pointSpec());
 
     expect(Array.isArray(child)).toBe(false);
-    expect(scopeChildrenOf(child as IRChild).some(scope => scope.meta?.source === 'plot')).toBe(false);
+    expect(scopeChildrenOf(child).some(scope => scope.meta?.source === 'plot')).toBe(false);
   });
 
   it('records minimal mark lineage without writing full lineage into scene meta', () => {

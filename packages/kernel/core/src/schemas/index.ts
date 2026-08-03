@@ -21,4 +21,5 @@ export * from './stroke';
 export * from './style';
 export * from './tex';
 export * from './text';
+export * from './theme';
 export * from './transform';

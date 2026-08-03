@@ -3,7 +3,7 @@ title: Contract - Detail Table
 description: Look up the precise JSON schemas for external data references, detail columns, and the record-per-row Structure.
 ---
 
-Detail Table contracts persist “one external record becomes one row” as a serializable rule without copying records into IR. `data.reference` points to a runtime dataset, while `structure.columns` controls field access, column order, headers, and body presentations.
+Detail Table contracts persist “one external record becomes one row” as a serializable rule without copying records into IR. `data.reference` points to a runtime dataset, while `structure.columns` controls field access, column order, headers, and body formatter/presentation references. Shared root fields carry rules, encodings, and style tokens.
 
 ## DetailTableSpec
 
@@ -34,6 +34,8 @@ Field paths support dotted access. Runtime resolution fails when a declared fiel
 
 Authoring-side `TableDetailColumnInput` also accepts a string `header`. `createDetailTableSpec()`, `DetailTable`, and `detailTable()` normalize it to `{ kind: 'value', value: header }`.
 `headerLayout` and `bodyLayout` reuse [TableCellLayoutSchema](/viz/table/reference/contract-layout#tablecelllayoutschema) to configure padding, alignment, wrapping, fit, overflow, and borders independently for header and body Cells.
+
+A column `formatter` is the default reference for its body value Cells, and root `rules` can override it in Cell-selector declaration order. Formatting changes only the display scalar: field selection, visual encodings, and value predicates continue to read the raw pre-formatter value.
 
 ## When to use the precise schema
 

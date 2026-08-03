@@ -1,6 +1,6 @@
 # ADR-09：可继承 Theme IR 与 Composite 编译上下文
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-03
 - 关联：[alpha.2 roadmap](./roadmap.md) · [通用视觉主题设计](../../../../../../../notes/architecture/visual-theme-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
@@ -92,25 +92,27 @@ type CompositeCompileScopeProps = Readonly<{
 }>;
 ```
 
-无布局 Composite 的展开入口接收 `CompositeExpandContext`；既有只声明 node 参数的回调可以继续忽略新增上下文。Layout-aware Composite 的 `context.scope()` 接受同一个严格、稀疏的 `IRTheme`，普通 output child 在该 runtime Scope 的有效 Theme 下继续编译。完整 compile 与只 lowering 到 Kernel IR 的入口必须使用相同 Theme 继承语义。
+无布局 Composite 的展开入口接收 `CompositeExpandContext`；既有只声明 node 参数的回调可以继续忽略新增上下文。Layout-aware Composite 的 `context.scope()` 接受同一个严格、稀疏的 `IRTheme`，普通 output child 在该 runtime Scope 的有效 Theme 下继续编译。完整 compile 与只 lowering 到 Kernel IR 的入口必须对无布局 `expand` 分支使用相同 Theme 继承语义；`lowerIRToKernel()` 不具备完整测量、probe 与 replay 环境，遇到 layout-aware definition 时继续在调用 callback 前 fail-loud，本决策不扩展其 lowering-only 支持边界。
 
 Opaque replay child 已在 `layoutChild()` probe 时物化，runtime Scope 不能事后重新解释它的 Theme。需要让 replay child 使用更内层 Theme 时，Composite 必须先把原始 child 包在携带该 Theme 的普通 `IRScope` 中再 probe，并 replay 该 Scope 的结果；Core 对 scope props 与 probe 输入使用相同 Theme schema 和字段级继承规则。这样 replay 结果始终保持 probe 与提交等价，不引入隐式二次编译。
 
 React `<Layout theme>` 写入根 `IRScene.theme`，`<Scope theme>` 写入 `IRScope.theme`。Vanilla Figure / Scope 表达同一 IR。`Layout` 同时接收持久化 `ir` 与显式 `theme` 时，宿主 prop 按字段覆盖根 IR Theme；未覆盖字段保留持久化值，输入对象本身不被修改。
+
+`convertIRToReactNode()` 继续是只把 Scene children 还原成 Kernel JSX 的 children-only bridge，不承诺携带 `IRScene` 的 `theme`、`viewBox` 或根 animation 等字段，也不得静默伪装成完整 Scene 往返。需要保留根 Theme 时，调用方应优先直接使用 `<Layout ir={ir}>`；确需反向生成 children 时，必须把同一 `ir.theme` 显式传给外层 `<Layout theme={ir.theme}>`。Scope Theme 仍随 `<Scope theme>` 正常往返。该限制属于公开入口契约，不在实现阶段改成隐式合成根 Scope 或新的返回容器。
 
 ## 行为、失败语义与兼容性
 
 - 默认行为：未声明 Theme 时，所有 Composite 收到 `{ style: 'neutral', mode: 'light' }`
 - 继承行为：解析顺序固定为 Core 默认值、Scene Theme、从外到内的 Scope Theme；每层只覆盖自己显式声明的字段
 - 作用范围：Scope Theme 只影响其后代 Composite；普通 Core Node、Path、Coordinate 和 Scope 自身不会自动获得 fill、stroke、font 或其它样式
-- lowering 行为：Composite 在当前有效 Theme 下生成正式领域 IR 或 Core IR；最终 Scene 只保留已经物化的样式，不携带 Theme，也不要求 renderer 理解 preset
+- lowering 行为：无布局 Composite 在当前有效 Theme 下生成正式领域 IR 或 Core IR；完整 compile 继续支持 layout-aware Composite，`lowerIRToKernel()` 对 layout-aware definition 保持 callback 前 fail-loud。最终 Scene 只保留已经物化的样式，不携带 Theme，也不要求 renderer 理解 preset
 - 嵌套行为：Composite 展开或 probe 的子节点继承调用点 Theme；普通输出 Scope 或 runtime Scope 可以通过自己的 Theme 建立更内层环境。Opaque replay 保留 probe 时的有效 Theme；要切换 Theme 必须在 probe 输入中显式包裹带 Theme 的 `IRScope`
 - retained 行为：Theme 是 compile 输入。Theme 变化必须使可能消费它的后代 Composite 失效；不能证明更窄依赖时走完整重编译，并与 fresh compile 等价
-- 失败与诊断：Theme 对象拒绝未知字段和非法 style / mode；错误指向对应 Scene / Scope theme 路径。领域 token、palette 或映射失败继续由领域 owner fail-loud
+- 失败与诊断：Theme 必须是普通 JSON 对象，并拒绝未知字段和非法 style / mode；错误指向对应 Scene / Scope theme 的具体字段路径。领域 token、palette 或映射失败继续由领域 owner fail-loud
 - 重置语义：不新增 `resetTheme`。需要回到基线时显式写入完整 `neutral + light`
 - Core 兼容性：Scene / Scope 的可选字段和 Composite callback 的只读上下文是可忽略的新增能力，IR major version 保持不变
 - 领域兼容性：Chart、Table 等后续迁移会在各自版本 ADR 中移除重复的 Style / ThemeMode 常量与 spec 字段；`0.x` 不保留别名或双读桥接。本 ADR 不修改任何领域公开 schema，也不选择首个迁移领域
-- React / Vanilla 等价性：两套 authoring 都生成同一 Theme IR；standalone 入口可把 Theme 作为 Layout 宿主属性，嵌入现有 Layout 时通过外层 Layout / Scope 选择局部 Theme
+- React / Vanilla 等价性：两套 authoring 都生成同一 Theme IR；standalone 入口可把 Theme 作为 Layout 宿主属性，嵌入现有 Layout 时通过外层 Layout / Scope 选择局部 Theme。React 的 children-only `convertIRToReactNode()` 不代表 Scene 根字段，根 Theme 由 `<Layout ir>` 保留，或由调用方同时传入 `<Layout theme={ir.theme}>`
 
 ## 功能与包边界
 
@@ -160,6 +162,12 @@ effective Scene / Scope Theme
 ## 测试策略摘要
 
 需要 schema、IR JSON 往返、Scene / Scope 字段级继承、默认解析、第三方 expand 与 layout-aware Composite context、runtime Scope、probe / replay、嵌套 lowering、retained 与 fresh compile 等价、React / Vanilla authoring parity 及 renderer parity 证据。关键不变量是同一 Theme IR 在所有入口得到同一有效 Theme，Scope 只影响后代，Core-only 图元不因 Theme 改变输出，opaque replay 保持 probe Theme，非法输入 fail-loud，最终 Scene 不要求 renderer 认识 Theme。真实领域的 preset/token 映射与旧字段迁移由后续领域 ADR 提供自己的消费、inspection 和显式配置优先级证据。
+
+## 最终实现
+
+Core 已交付严格且 JSON-safe 的 Theme schema、Scene / Scope 字段级继承、完整冻结的 Composite context、runtime Scope、expand / full compile / lowering-only 一致的来源诊断，以及 Theme 变化时与 fresh compile 等价的 retained full fallback。React 与 Vanilla 均构造同一 Theme IR，保留合法普通对象的输入脱离与宿主逐字段覆盖，并把伪造的非 JSON 对象交回 Core fail-loud。最终 Scene 与 SVG / Canvas renderer 仍不读取 Theme；第三方 Composite 已证明可以在领域 owner 内独立物化完整 token mapping。
+
+契约由 schema、compile、adapter 与 renderer parity 层级共同锁定；真实领域的 preset / token 映射与旧字段迁移仍由后续领域 ADR 负责。
 
 ## 不在本 ADR 范围
 

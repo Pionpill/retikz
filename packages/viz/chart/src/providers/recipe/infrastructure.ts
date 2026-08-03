@@ -15,10 +15,10 @@ import {
 import type { InfrastructureChartSpec } from '../../schemas';
 import type { ChartRecipe, ChartRecipeSeed, ChartRecipeStyleContext } from './types';
 
-import { ChartInspectionMemberKind, InfrastructureChartSpecSchema, InfrastructureChartType } from '../../schemas';
+import { ChartInspectionMemberKind, ChartType, InfrastructureChartSpecSchema } from '../../schemas';
 import { ChartRecipeInvariantError, ChartRecipeInvariantReason } from './invariant';
 
-const recipeId = (target: string): string => `__chart.${InfrastructureChartType}.${target}`;
+const recipeId = (target: string): string => `__chart.${ChartType.InfrastructureFixture}.${target}`;
 
 /** 从私有 fixture 输入建立 resolver 消费的不可变 recipe seed */
 const createInfrastructureSeed = (spec: InfrastructureChartSpec, style: ChartRecipeStyleContext): ChartRecipeSeed => {
@@ -186,7 +186,7 @@ const validateInfrastructureCore = (spec: InfrastructureChartSpec, plotSpec: IRP
 
 /** 私有基础设施 fixture recipe */
 export const InfrastructureChartRecipe: ChartRecipe<InfrastructureChartSpec> = {
-  type: InfrastructureChartType,
+  type: ChartType.InfrastructureFixture,
   schema: InfrastructureChartSpecSchema,
   createSeed: createInfrastructureSeed,
   validateCore: validateInfrastructureCore,

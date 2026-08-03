@@ -44,9 +44,9 @@ plot 用户继续在 plot spec 中使用 data transform 与 plot transform 的�
 
 ```ts
 import { compileToScene } from '@retikz/core';
-import { lowerPlots, type PlotSpec } from '@retikz/plot';
+import { lowerPlots, type IRPlotSpec } from '@retikz/plot';
 
-const spec: PlotSpec = {
+const spec: IRPlotSpec = {
   type: 'plot',
   data: { ref: 'sales' },
   transform: [
@@ -75,14 +75,7 @@ data 的默认内置集合已按 [data ADR-02](../../../../data/v0/v0.1/beta.1/0
 - `density`、`smooth`、`bin`、`relate` 等 plot-only transform 通过 plot 内置 registry 执行。
 - mark-local transform、scale domain、locator provenance 使用同一 plot registry。
 - schema 能拒绝无效 plot-only transform 形态，避免被 data external passthrough 接住。
-- beta.1 roadmap 记录完成提交：`23bba402` / `22ceb713`。
 
 ## 遗留风险
 
 后续若新增 table / geo，应复用 data transform contract / pipeline 并注册自己的宿主 transform，不应复用 plot-only definitions。`bin`、`normalize` 等能力若出现跨宿主共同需求，需要重新设计 data-native 形态。
-
-## 实现指针
-
-本 ADR 已随 viz `0.1.0-beta.1` 收尾压缩；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在历史中。
-
-> 🔖 压缩前完整施工蓝图 = `git show 3c76d64d1402545454f1ae301d8588313abb7d5d:packages/viz/_notes/decisions/plot/v0/v0.1/beta.1/02-plot-transform-registration.md`。

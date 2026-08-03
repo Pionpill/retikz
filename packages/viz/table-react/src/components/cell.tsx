@@ -1,6 +1,6 @@
 import type { IRChild } from '@retikz/core';
 import type { IRDataScalarValue } from '@retikz/data';
-import type { IRManualTableCell, IRTablePresentationRef } from '@retikz/table';
+import type { IRManualTableCell, IRTableFormatterRef, IRTablePresentationRef } from '@retikz/table';
 import type { FC } from 'react';
 
 type ManualTableCellObject = Extract<IRManualTableCell, object>;
@@ -9,6 +9,8 @@ type CellSharedProps = Omit<ManualTableCellObject, 'value' | 'content' | 'presen
 type CellValueProps = {
   /** 作为 value payload 写入的 JSON 标量 */
   value: IRDataScalarValue;
+  /** value payload 使用的可选 Cell formatter */
+  formatter?: IRTableFormatterRef;
   /** value payload 使用的可选 Cell presentation */
   presentation?: IRTablePresentationRef;
   /** value payload 不接受 content */
@@ -24,6 +26,8 @@ type CellContentProps = {
   value?: never;
   /** content payload 不接受 presentation */
   presentation?: never;
+  /** content payload 不接受 formatter */
+  formatter?: never;
   /** content payload 不接受 children */
   children?: never;
 };
@@ -33,6 +37,8 @@ type CellChildrenProps = {
   children: IRDataScalarValue;
   /** children value payload 使用的可选 Cell presentation */
   presentation?: IRTablePresentationRef;
+  /** children value payload 使用的可选 Cell formatter */
+  formatter?: IRTableFormatterRef;
   /** children value payload 不接受 value */
   value?: never;
   /** children value payload 不接受 content */

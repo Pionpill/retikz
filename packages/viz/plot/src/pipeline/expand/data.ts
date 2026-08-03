@@ -12,6 +12,7 @@ import {
   collectFormatFields,
   DEFAULT_TRANSFORM_CONTEXT,
   normalizeRows,
+  resolveFieldPath,
   resolveFieldTypes,
   resolveFormatRegistry,
   resolveRowSelectorRegistry,
@@ -78,6 +79,8 @@ export const prepareRows = (
   ingested: Array<ExternalRow>,
 ): {
   fieldTypes: DataFieldTypeMap;
+  /** 最终字段类型具有 model、format、resolver 或有效观测依据的字段 */
+  fieldTypeEvidence: ReadonlySet<string>;
   normalized: Array<ExternalRow>;
   transformRegistry: Map<string, AnyTransformDefinition>;
   transformContext: TransformContext;
@@ -106,15 +109,44 @@ export const prepareRows = (
     userSourceFields,
     formatRegistry,
   );
+  const fieldTypeEvidence = new Set(
+    (spec.data.model ?? [])
+      .filter(field => userSourceFields.has(field.name) && (field.type !== undefined || field.format !== undefined))
+      .map(field => field.name),
+  );
+  const resolveField = options.resolveField;
+  const trackedResolveField: LowerPlotsOptions['resolveField'] =
+    resolveField === undefined
+      ? undefined
+      : (field, context) => {
+          const resolution = resolveField(field, context);
+          if (resolution?.type !== undefined) fieldTypeEvidence.add(field);
+          return resolution;
+        };
   const { fieldTypes, parsers: resolverParsers } = applyFieldResolver(
     formatTypes,
     userSourceFields,
     spec.data.model,
     spec.data.reference,
     fieldMap,
-    options.resolveField,
+    trackedResolveField,
   );
   const parsers = new Map([...formatParsers, ...resolverParsers]);
   const normalized = normalizeRows(ingested, fieldTypes, fieldMap, parsers);
-  return { fieldTypes, normalized, transformRegistry, transformContext, scaleRegistry, markRegistry };
+  for (const field of userSourceFields) {
+    const hasUsableObservation = normalized.some(row => {
+      const value = resolveFieldPath(row, field);
+      return typeof value === 'number' ? Number.isFinite(value) : value !== undefined && value !== null;
+    });
+    if (hasUsableObservation) fieldTypeEvidence.add(field);
+  }
+  return {
+    fieldTypes,
+    fieldTypeEvidence,
+    normalized,
+    transformRegistry,
+    transformContext,
+    scaleRegistry,
+    markRegistry,
+  };
 };

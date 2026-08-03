@@ -9,10 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib';
 
-import type { SidebarSubModuleData } from './types';
+import type { SidebarModuleData } from './types';
 
 export type AppSidebarMenuItemProps = {
-  item: SidebarSubModuleData;
+  item: SidebarModuleData;
   /** 拼好的完整路径（lower-case） */
   path: string;
   /** 点击具体文档入口后的回调 */
@@ -44,6 +44,7 @@ export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
   const normalizedPath = normalizeDocPath(path);
   const isActive = normalizedPathname === normalizedPath;
   const isActiveBranch = hasChildren && normalizedPathname.startsWith(`${normalizedPath}/`);
+  const ItemIcon = item.Icon;
 
   const [manualOpen, setManualOpen] = useState(false);
   const [collapsedAtPath, setCollapsedAtPath] = useState<string | null>(null);
@@ -70,6 +71,7 @@ export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
             onNavigate?.();
           }}
         >
+          {ItemIcon && <ItemIcon className="mr-1.5 size-3.5 shrink-0" />}
           <span className="truncate">{item.label}</span>
         </button>
       </li>
@@ -89,6 +91,7 @@ export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
               onNavigate?.();
             }}
           >
+            {ItemIcon && <ItemIcon className="mr-1.5 size-3.5 shrink-0" />}
             <span className="truncate">{item.label}</span>
           </button>
           <CollapsibleTrigger asChild>

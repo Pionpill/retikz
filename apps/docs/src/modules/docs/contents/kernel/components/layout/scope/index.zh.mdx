@@ -27,6 +27,7 @@ import { Scope } from '@retikz/react';
 | 按自身锚点对齐子图 | `placement`            | 只引用此前完成的目标     |
 | 从外部引用整组     | `id` + `boundingShape` | 不把 path 走线计入包络   |
 | 隔离可复用子图 id  | `localNamespace`       | `scope.id` 仍注册到外层  |
+| 切换局部领域主题   | `theme`                | Core 图元不会自动着色    |
 | 统一默认值         | `color` / `*Default`   | 元素显式值仍然优先       |
 | 限制可见区域       | `clip`                 | 不定义 renderer 专属语义 |
 | 调整整组栈序       | `zIndex`               | 不重排组内 children      |
@@ -34,7 +35,7 @@ import { Scope } from '@retikz/react';
 <ComponentAlert
   type="warn"
   title="不要为代码层级组织而包 Scope"
-  description="没有共享变换、引用、命名空间、默认值或裁剪时，Scope 只会增加不必要的上下文边界。"
+  description="没有局部 Theme、共享变换、引用、命名空间、默认值或裁剪时，Scope 只会增加不必要的上下文边界。"
 />
 
 ### 变换输入
@@ -102,6 +103,12 @@ import { Scope } from '@retikz/react';
   size="sm"
   caption="辅助层不属于主图；右侧 FlexLayout 仍正常排布，只是不生成检查图元。"
 />
+
+### 局部 Theme
+
+`<Scope theme>` 把稀疏 Theme 写入 `IRScope.theme`，只影响其后代 Composite。字段逐项继承：例如 `{ mode: ThemeMode.Dark }` 只切换明暗环境，仍保留外层的 `style`。完整示例见 [Layout 的可继承 Theme](/kernel/components/layout/overview#可继承-theme)。
+
+Theme 与样式默认值是两条独立通道：`resetStyle` 不重置 Theme，Theme 也不直接填充 Node / Path 的颜色。需要恢复基线时显式设置 `{ style: ThemeStyle.Neutral, mode: ThemeMode.Light }`。
 
 ### 样式默认值
 
@@ -185,8 +192,8 @@ zero scale 作为纯视觉变换合法；需要跨该 chain 反投影目标时�
     {
       label: 'Scope 父子 frame 编排',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 668,
-      endLine: 856,
+      startLine: 733,
+      endLine: 878,
     },
   ]}
 />
@@ -204,14 +211,14 @@ Scope 包络只收集 node、coordinate 与嵌套 Scope layout，不包含 path 
     {
       label: 'Scope 固有包络',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 510,
-      endLine: 522,
+      startLine: 521,
+      endLine: 532,
     },
     {
       label: 'Scope Group 输出与子树编排',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 668,
-      endLine: 856,
+      startLine: 700,
+      endLine: 878,
     },
     {
       label: '矩形与圆形 synthetic layout',
@@ -235,6 +242,7 @@ Scope 包络只收集 node、coordinate 与嵌套 Scope layout，不包含 path 
 | 属性             | 类型                                    | 默认值        | 描述                                                                                    |
 | ---------------- | --------------------------------------- | ------------- | --------------------------------------------------------------------------------------- |
 | `children`       | `ReactNode`                             | —             | Node / Path / Coordinate / 嵌套 Scope                                                   |
+| `theme`          | `IRTheme`                               | 继承          | 逐字段覆盖后代 Composite 的有效 Theme；不改变 Core 图元样式                             |
 | `transforms`     | `Array<IRTransformInput>`               | —             | 七种局部变换；数组最后一项先作用                                                        |
 | `placement`      | `IRScopePlacement`                      | —             | 把 transforms 后的 `selfAnchor`（缺省 center）对齐父坐标系 target                       |
 | `id`             | `string`                                | —             | 把 Scope 包络注册成外部可引用句柄                                                       |

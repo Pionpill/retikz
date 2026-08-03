@@ -201,7 +201,9 @@ export type ConvertIRToReactNodeOptions = LowerIRToKernelOptions;
 
 /**
  * 把 IR JSON 反向还原为 Kernel element 数组（带 key、不裹外壳）
- * @description Tier 1 IR 保持结构等价；Tier 2 composite 先按 definitions lowering，再生成语义等价的 Kernel JSX
+ * @description 只还原 `ir.children`：根 `theme`、`viewBox` 与 `animations` 不进入返回值。完整 Scene 直接使用
+ *   `<Layout ir={ir}>`；把返回 children 装入新 Layout 时，显式传 `theme={ir.theme}` 并按需保留其余根字段。
+ *   Tier 1 children 保持结构等价；Tier 2 composite 先按 definitions lowering，再生成语义等价的 Kernel JSX
  */
 export const convertIRToReactNode = (ir: IRScene, options: ConvertIRToReactNodeOptions = {}): ReactNode => {
   try {

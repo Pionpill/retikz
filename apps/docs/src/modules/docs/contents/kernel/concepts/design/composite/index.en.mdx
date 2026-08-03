@@ -1,6 +1,6 @@
 ---
 title: Tier 2 Composites
-description: Composites preserve serializable Tier 2 intent, then lower through either context-free expansion or layout-aware compile into core Tier 1 primitives.
+description: Composites preserve serializable Tier 2 intent, then lower through either lightweight-context expansion or layout-aware compile into core Tier 1 primitives.
 ---
 
 retikz IR has two child tiers: **Tier 1** is core's built-in `node` / `path` / `coordinate` / `scope`; a **Tier 2 composite** is a high-level node supplied by a domain package, such as a complete chart spec from `@retikz/plot`.
@@ -40,11 +40,17 @@ Core routes composites only by the top-level `namespace + type`; it does not int
 | `namespace`      | Partition the domain                                   | Matches the schema literal                        |
 | `type`           | Identify a node type inside the domain                 | Matches the schema literal                        |
 | `schema`         | Validate the full node and apply defaults              | Object or direct object union with one shared key |
-| `expand`         | Context-free emission of Tier 1 or nested Tier 2       | Exclusive with `compile`; must reach Tier 1       |
+| `expand`         | Emit Tier 1 or nested Tier 2 from the effective Theme  | Exclusive with `compile`; must reach Tier 1       |
 | `compile`        | Measure, constrain, and place children in full compile | Exclusive with `expand`                           |
 | `artifactSchema` | Validate a domain artifact returned by `compile`       | Required when the definition has an artifact type |
 
 The compiler looks up `${namespace}.${type}`, validates the node, and calls the selected branch. Nested composites continue until final output contains only Tier 1 and committed replay results. An unregistered node warns and is skipped; cycles or excess depth throw. See [Compile](/kernel/reference/runtime/compile) for complete fields, diagnostics, and standalone lowering behavior.
+
+## Theme context
+
+Both `expand(node, context)` and layout-aware `compile(node, context)` receive a frozen `context.theme`. It is always a complete `{ style, mode }` value. Core starts at `neutral + light`, then merges Scene → outer Scope → inner Scope per field.
+
+The composite maps those shared choices into its own domain tokens, palette, or other defaults and emits already-materialized IR. Core owns no concrete colors, and neither Core primitives nor renderers interpret Theme. Ordinary output Scopes and `context.scope({ theme }, children)` may establish a deeper environment. A replay child keeps the Theme resolved during its probe and is not reinterpreted where it is committed.
 
 ## Layout-aware compile
 
@@ -171,7 +177,7 @@ If you are implementing a domain adapter, injecting `composites` / `embeddables`
       label: 'Public proposal, probe, guide, and callback contracts',
       path: 'packages/kernel/core/src/contract/composite/types.ts',
       startLine: 20,
-      endLine: 205,
+      endLine: 214,
     },
     {
       label: 'Validate and freeze proposals and resolve slots',
@@ -182,26 +188,26 @@ If you are implementing a domain adapter, injecting `composites` / `embeddables`
     {
       label: 'Build compile-local replay and Scope children',
       path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
-      startLine: 197,
-      endLine: 260,
+      startLine: 214,
+      endLine: 277,
     },
     {
       label: 'Place replay roots and commit their transaction sinks',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 995,
-      endLine: 1132,
+      startLine: 1019,
+      endLine: 1165,
     },
     {
       label: 'Preflight the complete runtime handle tree before consuming tokens',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1148,
-      endLine: 1224,
+      startLine: 1182,
+      endLine: 1257,
     },
     {
       label: 'Isolate child probes, failures, and resolved results',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1380,
-      endLine: 1501,
+      startLine: 1511,
+      endLine: 1558,
     },
     {
       label: 'Own failures and raise selected failures',

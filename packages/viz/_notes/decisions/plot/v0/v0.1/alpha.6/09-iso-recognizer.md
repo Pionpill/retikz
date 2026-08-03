@@ -1,6 +1,7 @@
 # ADR-09：扩宽 temporal 推断识别器——认空格分隔的带时区 ISO datetime（SQL 时间戳），归一化空格→T
 
-- 状态：Accepted
+- 状态：Superseded
+- 替代：[Data beta.1 ADR-01](../../../../data/v0/v0.1/beta.1/01-plot-data-migration.md)；时间识别与 coercion 已迁入 `@retikz/data`
 - 决策日期：2026-06-07
 - 关联：[plot v0.1-alpha.6 roadmap](./roadmap.md) · 本里程碑 [ADR-01 数据模型](./01-data-model.md)（temporal 推断严格 ISO 的原始决策）/ [ADR-06 声明式 format](./06-declarative-format.md)（歧义格式走声明）
 
@@ -41,6 +42,3 @@ ADR-01 把 temporal 推断钉死在严格 ISO（`YYYY-MM-DD` / 带时区 ISO dat
 - **公开行为（非破坏，纯放宽）**：原本被推断成 categorical 的"空格分隔带时区 ISO"字段，现推断成 temporal；原本声明 temporal 却因空格被判 NaN 跳过的值，现正确解析。不影响任何既有被接受的形态。
 - **文档站**：`grammar/data` 的"推断是尽力而为"提示补一句"空格分隔的带时区写法（SQL 时间戳）也认"。
 - **core**：无。
-
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/lower/{infer,scale}.ts`，测试见 `packages/viz/plot/tests/lower/iso-recognizer.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.6/09-iso-recognizer.md`（封板全文）。

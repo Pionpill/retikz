@@ -9,6 +9,7 @@ import { NodeSchema } from '../node';
 import { PathSchema } from '../path';
 import { registerRecursiveChildSchema } from '../recursive';
 import { ScopeSchema } from '../scope';
+import { ThemeSchema } from '../theme';
 
 export const ChildSchema: z.ZodType<IRChild> = z.lazy(() =>
   z.union([
@@ -36,6 +37,7 @@ export const SceneSchema = z
   .strictObject({
     type: z.literal('scene').describe('Discriminator marking this object as the root scene'),
     version: z.literal(1).describe('IR major version number; bump only on breaking schema changes'),
+    theme: ThemeSchema.optional().describe('Sparse root Theme inherited by every Scene child.'),
     children: z
       .array(ChildSchema)
       .describe('Top-level children of the scene; nodes register ids that paths can reference'),

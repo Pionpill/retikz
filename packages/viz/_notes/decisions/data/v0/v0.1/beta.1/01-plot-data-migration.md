@@ -39,32 +39,24 @@
 import {
   applyTransforms,
   defineTransform,
-  type DataModel,
   type ExternalDatasets,
-  type TransformOperation,
+  type IRDataModel,
+  type IRDataTransform,
 } from '@retikz/data';
 ```
 
-`@retikz/plot` 不为被迁走的数据 API 提供兼容 re-export。依赖 `@retikz/plot/src/providers/data/*`、`@retikz/plot/src/schemas/transform/*` 等深导入的用户需要迁移到 `@retikz/data` 顶层入口或 plot 对应 owner 入口。
+`@retikz/plot` 不为被迁走的数据 API 提供兼容 re-export。依赖 plot 私有数据实现的用户需要迁移到 `@retikz/data` 顶层入口或 plot 对应 owner 入口。
 
 ## 最终实现
 
-`@retikz/data` 已建立 `shared`、`schemas`、`contract`、`providers`、`pipeline` 和顶层 barrel。原 plot 中的数据 schema、字段解析、format、statistics、通用 transform registry / apply pipeline 与 provenance helper 已迁入 data。plot / plot-react / plot-vanilla 已改为直接依赖 `@retikz/data`，plot 侧只保留 channel、label、locator、mark-local 等 GoG 组合逻辑。
+`@retikz/data` 已成为数据 schema、字段解析、format、statistics、通用 transform registry、apply pipeline 与 provenance 的公开 owner。plot / plot-react / plot-vanilla 直接依赖 `@retikz/data`，plot 侧只保留 channel、label、locator、mark-local 等 GoG 组合逻辑。
 
 通用 data 包先迁出完整数据处理层，再由 [ADR-02](./02-shared-provider-boundary.md) 收窄 data 默认内置 provider 边界；plot-only transform 的归属由 [plot ADR-02](../../../../plot/v0/v0.1/beta.1/02-plot-transform-registration.md) 记录。
 
 ## 验证
 
-- data schema、field resolver、format、statistics、transform pipeline 与 provenance 行为已迁移到 `packages/viz/data/tests/` 覆盖。
-- plot lowering、scale domain、locator、adapter 类型来源和 public barrel 边界已在 plot / adapter 测试中覆盖。
-- beta.1 roadmap 记录完成提交：`a732efd7` / `55ac99f4` / `39470d2b` / `22ceb713`。
+验证覆盖 data schema、字段解析、format、statistics、transform pipeline 与 provenance，以及 plot lowering、scale domain、locator、adapter 类型来源和公共入口边界。
 
 ## 遗留风险
 
 table / geo 等后续宿主是否直接复用 `TransformOperation`，还是组合自己的宿主 transform union，留到对应宿主 ADR 决定。`bin` 等部分能力若未来出现跨宿主共同语义，应另开 data-native ADR，而不是复用 plot 当前字段与 histogram 语义。
-
-## 实现指针
-
-本 ADR 已随 viz `0.1.0-beta.1` 收尾压缩；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在历史中。
-
-> 🔖 压缩前完整施工蓝图 = `git show 3c76d64d1402545454f1ae301d8588313abb7d5d:packages/viz/_notes/decisions/data/v0/v0.1/beta.1/01-plot-data-migration.md`。

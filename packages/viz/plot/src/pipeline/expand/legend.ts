@@ -33,6 +33,7 @@ export const collectChannelDescriptors = (
     node: IRPlotSpec;
     rows: Array<ExternalRow>;
     fieldTypes: DataFieldTypeMap;
+    fieldTypeEvidence?: ReadonlySet<string>;
     scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>;
     resolveColorScheme: (name: string) => (t: number) => string;
     palette: ReturnType<typeof resolvePlotTheme>['palette'];

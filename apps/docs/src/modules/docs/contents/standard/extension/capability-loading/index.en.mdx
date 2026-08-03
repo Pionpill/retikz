@@ -38,7 +38,7 @@ const BadgeDefinition = defineComposite({
     type: z.literal('badge'),
     text: z.string(),
   }),
-  expand: node => ({ type: 'node', position: [0, 0], text: node.text }),
+  expand: (node, _context) => ({ type: 'node', position: [0, 0], text: node.text }),
 });
 
 const BadgeModule = {

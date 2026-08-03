@@ -1,16 +1,17 @@
 # ADR-08：React 组合 DSL（`<Plot>` + `<LineMark>` / `<PointMark>`，自动推断 scale / coordinate）
 
-- 状态：Accepted（已实现）
+- 状态：Superseded
+- 替代：[alpha.12 ADR-04](../alpha.12/04-mark-surface-convergence.md)、[alpha.14 ADR-09](../alpha.14/09-composition-api-structure.md) 与 [beta.2 ADR-02](../beta.2/02-plot-vanilla-plain-api.md)；React DSL 现生成 canonical `IRPlotSpec` 并共享 binding normalization
 - 决策日期：2026-06-03
 - 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap 拆分策略](../roadmap.md) · [plot-design.md §5.2 Primitive API / §6.1](../../../../../architecture/plot-design.md) · 依赖：[ADR-07 薄包装](./07-plot-bindings.md) · [ADR-01~06](./01-plot-spec-root.md) · core 抽象分层（Sugar = builder、不在 render 栈）见 CLAUDE.md / AGENTS.md
 
 ## 背景 / 约束
 
-ADR-07 的 `<Plot spec={…} data={…}/>` 要求用户手写整份 PlotSpec 对象。对照 Recharts / Observable Plot（plot-design §6.1 明确「像 Recharts 那样自由组合」），更友好的是用 JSX 子组件声明图层、由 adapter 拼成 PlotSpec：用户不写 `scales` / `coordinate` / `namespace` / `data.ref` 这些结构噪声——alpha.1 只有 linear + cartesian2D，这些可由 mark 的 x/y 自动推断。这正是「JSX 是 authoring 面、PlotSpec 是规范化 IR，builder 在中间装配」。
+ADR-07 的 `<Plot spec={…} data={…}/>` 要求用户手写整份 IRPlotSpec 对象。对照 Recharts / Observable Plot（plot-design §6.1 明确「像 Recharts 那样自由组合」），更友好的是用 JSX 子组件声明图层、由 adapter 拼成 IRPlotSpec：用户不写 `scales` / `coordinate` / `namespace` / `data.ref` 这些结构噪声——alpha.1 只有 linear + cartesian2D，这些可由 mark 的 x/y 自动推断。这正是「JSX 是 authoring 面、IRPlotSpec 是规范化 IR，builder 在中间装配」。
 
-## 决策：children 经 builder 装配成 PlotSpec，自动建 linear scale + cartesian2D
+## 决策：children 经 builder 装配成 IRPlotSpec，自动建 linear scale + cartesian2D
 
-`<Plot>` 不在 render 栈上跑子组件，而是**同步读取 `props.children` 的元素 + props**（像 core Sugar：builder 调用、**不能用 hooks**），装配出 PlotSpec，再走 ADR-07 渲染路径；mark 组件本身只承载配置（不渲染）。`buildPlotSpec` 是纯函数：从 `<LineMark>` / `<PointMark>` 读 type + x/y/order，自动建每轴 linear scale + cartesian2D 绑定（内部固定 scale 名、用户不可见），产出现有 `PlotSpecSchema` 实例。
+`<Plot>` 不在 render 栈上跑子组件，而是**同步读取 `props.children` 的元素 + props**（像 core Sugar：builder 调用、**不能用 hooks**），装配出 IRPlotSpec，再走 ADR-07 渲染路径；mark 组件本身只承载配置（不渲染）。`buildPlotSpec` 是纯函数：从 `<LineMark>` / `<PointMark>` 读 type + x/y/order，自动建每轴 linear scale + cartesian2D 绑定（内部固定 scale 名、用户不可见），产出现有 `PlotSpecSchema` 实例。
 
 组件集（alpha.1）：
 
@@ -23,8 +24,8 @@ ADR-07 的 `<Plot spec={…} data={…}/>` 要求用户手写整份 PlotSpec 对
 理由：
 
 1. **结构噪声归零**：用户只声明「画什么」（mark + 绑哪个字段），scales / coordinate / namespace / ref 由 builder 补——对齐 Recharts / ggplot 的隐式 scale 体验（plot-design §6.1）。
-2. **JSX ≠ IR，builder 装配**：DSL 形态自由、PlotSpec 仍规范化；二者解耦，DSL 升级不动 IR。
-3. **builder 纯函数 + 等价性硬规则**：`buildPlotSpec` 是纯函数，产出 PlotSpec 必须**等价于手写**（每种 DSL 组合配一条 `expect(buildPlotSpec(<DSL/>)).toEqual(handWritten)` 测试，仿 core Sugar=Kernel 等价性）。
+2. **JSX ≠ IR，builder 装配**：DSL 形态自由、IRPlotSpec 仍规范化；二者解耦，DSL 升级不动 IR。
+3. **builder 纯函数 + 等价性硬规则**：`buildPlotSpec` 是纯函数，产出 IRPlotSpec 必须**等价于手写**（每种 DSL 组合配一条 `expect(buildPlotSpec(<DSL/>)).toEqual(handWritten)` 测试，仿 core Sugar=Kernel 等价性）。
 4. **复用 ADR-07 渲染路径**：装配后仍走 `<Layout ir composites={lowerPlots(...)}>`，不引入新渲染机制；data 仍走 datasets 注入、不进 IR。
 5. **不在 render 栈 / 无 hooks**：mark 组件是配置载体，`<Plot>` 同步内省 children；与 core Sugar 一致，避免 hooks 误用。
 
@@ -48,7 +49,3 @@ ADR-07 的 `<Plot spec={…} data={…}/>` 要求用户手写整份 PlotSpec 对
 - **交互（事件 / 回调 / 水合）** → v0.3。
 
 ---
-
-> **实现指针**：level `red`（公开 API 加 DSL 组件，动 `react/src/index.ts`）、无 IR schema 改动（`buildPlotSpec` 产出现有 `PlotSpecSchema` 实例）。真源以代码为准——`buildPlotSpec`（纯装配 + `collectMarks`）、`LineMark` / `PointMark` 配置组件均在 `react/src/components/`；`<Plot>` 薄/组合分流在 `react/src/Plot.tsx`（`PlotProps` / `PlotSpecProps` / `PlotDslProps`）。约束「Sugar = builder、不在 render 栈、无 hooks」（core 抽象分层）。测试在 `packages/viz/plot-react/tests/components/{buildPlotSpec,Plot.composition}.test.tsx`（等价性 + 渲染）。完整施工契约（文件 scope / 测试象限 / 依赖现有元素）见本文件 git 历史。
-
-> 🔖 封板压缩 commit `9115e6b4`；压缩前完整施工蓝图 = `git show 9115e6b4^:_notes/decisions/plot/v0/v0.1/alpha.1/08-plot-react-dsl.md`。

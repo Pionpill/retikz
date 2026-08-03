@@ -1,6 +1,6 @@
 import type { IRScene } from '@retikz/core';
 
-import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { compileToScene, CompositeBaseSchema, defineComposite, ThemeMode, ThemeStyle } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -19,31 +19,49 @@ const labeledBox = defineComposite({
     type: z.literal('labeledBox'),
     text: z.string(),
   }),
-  expand: node => ({ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: node.text }),
+  expand: (node, context) => ({
+    type: 'node',
+    id: 'lb',
+    position: [0, 0],
+    shape: 'rectangle',
+    text: node.text,
+    fill: context.theme.style === ThemeStyle.Academic && context.theme.mode === ThemeMode.Dark ? '#123456' : '#abcdef',
+  }),
 });
 
 const ir: IRScene = {
   version: 1,
   type: 'scene',
+  theme: { style: ThemeStyle.Academic, mode: ThemeMode.Dark },
   children: [{ namespace: 'example', type: 'labeledBox', text: 'Hi' }],
 };
 
 describe('Tier 2 composite —— renderer 对照', () => {
   it('composite IR → Scene → svg 渲染出 rect', () => {
     const scene = compileToScene(ir, { composites: [labeledBox] }).scene;
-    expect(renderToSvgString(scene, { idPrefix: 'r' })).toContain('<rect');
+    const svg = renderToSvgString(scene, { idPrefix: 'r' });
+    expect(svg).toContain('<rect');
+    expect(svg).toContain('fill="#123456"');
+    expect(scene).not.toHaveProperty('theme');
   });
 
-  it('同 Scene → canvas drawScene 消费、不抛、产绘制调用（svg / canvas 同 Scene）', () => {
+  it('Theme-aware Composite物化后的同一 Scene由SVG与Canvas等价消费', () => {
     const scene = compileToScene(ir, { composites: [labeledBox] }).scene;
     const calls: Array<string> = [];
+    const fillStyles: Array<string> = [];
     const ctx = new Proxy({} as CanvasRenderingContext2D, {
       get: () => () => {
         calls.push('call');
       },
-      set: () => true,
+      set: (_target, property, value) => {
+        if (property === 'fillStyle') fillStyles.push(String(value));
+        return true;
+      },
     });
+    const svg = renderToSvgString(scene, { idPrefix: 'r' });
     expect(() => drawScene(ctx, scene)).not.toThrow();
+    expect(svg).toContain('fill="#123456"');
+    expect(fillStyles).toContain('#123456');
     expect(calls.length).toBeGreaterThan(0);
   });
 });

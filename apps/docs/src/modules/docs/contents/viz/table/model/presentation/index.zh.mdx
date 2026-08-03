@@ -1,9 +1,9 @@
 ---
 title: 内容呈现
-description: 理解普通 Cell 值如何转成可渲染内容，以及 Cell 如何直接提供文本、节点或组合图形。
+description: 理解 Table 如何先解析 Cell 的 formatter、presentation 与外观胜者，再把原始值变成带样式的可渲染内容。
 ---
 
-Structure 已经决定 Cell 是谁、位于哪里，但标量值还不是可测量、可渲染的图形内容。Presentation 层把 value Cell 转成 Core child，同时允许已经持有图形内容的 Cell 直接进入下一阶段。
+Structure 已经决定 Cell 是谁、位于哪里，但原始标量还不是最终显示文本，也不是可测量的图形内容。Table 先从 preset/token、Cell 配置、encoding 与有序 rules 解析最终 Cell plan，再执行胜出的 formatter 与 Presentation，把值和最终外观一起转成 Core child。
 
 <ComponentAlert
   type="tip"
@@ -11,26 +11,43 @@ Structure 已经决定 Cell 是谁、位于哪里，但标量值还不是可测�
   description="普通文本表格会自动使用内置 text presentation；只有需要自定义值呈现或直接嵌入图形内容时才需要本页。"
 />
 
+## 从原始值到带样式内容
+
+<ComponentPreview files="table-presentation-flow" hideCode size="xxxl" />
+
+图的上半部分是候选级联，而不是值的执行顺序：内置 preset 建立外观基线，用户 tokens 按叶覆盖它；Cell 配置继续提供 formatter、presentation 与局部外观，encoding 写入颜色通道，有序 rules 最后覆盖匹配项。得到包含胜出引用和最终 `appearance` 的 Cell plan 后，下半部分才用原始值执行 formatter；Presentation 随后收到 `rawValue`、格式化后的 `value`、`context` 与最终 `appearance`，生成带样式 child。
+
+选择器和 encoding 始终读取 canonical raw value，而不是格式化后的文本。因此把 `-3` 显示成 `−3` 不会改变数值规则，也不会改变 scale domain。
+
 ## 两种内容路径
 
-<ComponentPreview files="table-presentation-flow" hideCode size="xs" />
-
-图中的两条路径最终都得到一个与原 Cell 同 identity、同顺序的 Core child。差别在于谁负责构造它：
+两条路径最终都得到一个与原 Cell 同 identity、同顺序的 Core child。差别在于谁负责构造内容：
 
 | payload   | 保存什么                                   | 如何得到 Core child                 |
 | --------- | ------------------------------------------ | ----------------------------------- |
-| `value`   | `string`、`number`、`boolean` 等常规值     | registry 解析 Definition 后调用     |
-| `content` | 文本、图标、Node、组合图形等任意可渲染内容 | 校验后直接使用，不调用 presentation |
+| `value`   | `string`、`number`、`boolean` 等常规值     | formatter 与 Presentation registry  |
+| `content` | 文本、图标、Node、组合图形等任意可渲染内容 | 校验后直接使用，绕过两种 Definition |
 
 `value` 保存普通单元格值，例如姓名字符串、金额数字或布尔状态；Presentation 决定这些值最终如何显示。
 
-`content` 直接保存任意可渲染内容，例如带样式文本、图标、Node 或组合图形。它不再调用 Presentation，因此 presentation options 只属于 value 路径。
+`content` 直接保存任意可渲染内容，例如带样式文本、图标、Node 或组合图形。它绕过 formatter 与 Presentation，但仍接收 style/rules 解析出的 content style；编码只选择 value Cell。content payload 同时声明 formatter/presentation 会 fail-loud；匹配 content Cell 的根 rule 若尝试覆盖其中任一引用，也会在级联阶段直接报错，而不是静默忽略。
+
+## Formatter 与 Presentation ABI
+
+自定义 formatter 只负责 scalar-to-scalar 转换，返回值仍必须是 JSON scalar。Presentation 才负责 scalar-to-Core-child：
+
+| Definition                   | 回调输入                                       | 输出                |
+| ---------------------------- | ---------------------------------------------- | ------------------- |
+| `CellFormatterDefinition`    | `{ value, context }`，其中 value 是原始 scalar | JSON scalar         |
+| `CellPresentationDefinition` | `{ rawValue, value, context, appearance }`     | JSON-safe `IRChild` |
+
+`context` 包含稳定 Cell identity、地址、角色和来源。Presentation 的 `value` 是 formatter 输出，`rawValue` 保留规则、诊断与业务语义使用的原值；`appearance` 已经合并 preset/token、encoding 与 rules。
 
 ## 内置与自定义走同一入口
 
-未指定 presentation 时，value Cell 使用内置 `text`。它把 scalar 转成无描边、无填充、零 padding 的 Core Node；`null` 呈现为空字符串。
+未指定 formatter 时，value Cell 使用内置 identity；未指定 presentation 时使用内置 `text`。`text` 把 scalar 转成无描边、无填充、零 padding 的 Core Node；`null` 呈现为空字符串。
 
-自定义 Presentation Definition 由稳定名称、精确 options schema 与 `present()` 组成。运行时把内置和自定义 Definition 合并进同一个 registry，再按 `presentation.name` 解析；重复名称、未注册名称、非法 options 或非 JSON-safe 输出都会 fail-loud。
+自定义 Formatter/Presentation Definition 都由稳定名称、精确 options schema 与单个回调组成。运行时分别把内置和自定义 Definition 合并进对应 registry。registry 构建阶段的空 key 或重复注册会 fail-loud，并指出 provider key；按 Cell dispatch 时，未注册名称、非法 options、formatter 返回非 scalar 或 Presentation 返回非 JSON-safe child 也会 fail-loud，并保留 Definition 名与 Cell id。
 
 Presentation 的输出仍需通过 Core child schema。这样内置文本与自定义图形共用后续测量、布局、replay 和 renderer，而不是为表格建立第二套渲染语义。
 
@@ -39,7 +56,8 @@ Presentation 的输出仍需通过 Core child schema。这样内置文本与自�
 | 相邻职责  | Presentation 会读取 | Presentation 不决定              |
 | --------- | ------------------- | -------------------------------- |
 | Structure | Cell id、payload    | 行列地址、角色、来源与 span      |
-| Layout    | 产出的 Core child   | 轨道尺寸、padding、fit、overflow |
+| Style     | 最终 `appearance`   | selector、encoding 与 rule 胜者  |
+| Layout    | 产出的 styled child | 轨道尺寸、padding、fit、overflow |
 | Renderer  | 不直接接触 renderer | SVG、Canvas 或 SSR 的输出实现    |
 
 因此，同一个 Presentation Definition 可以被不同表型复用；同一个 Cell 的布局策略也可以独立于值的呈现方式调整。
@@ -47,16 +65,22 @@ Presentation 的输出仍需通过 Core child schema。这样内置文本与自�
 <SourceLinks
   sources={[
     {
-      label: 'value/content 分流与 Definition 调用',
+      label: 'Core child 校验、Presentation 调用与 content style',
       path: 'packages/viz/table/src/pipeline/presentation/present.ts',
-      startLine: 24,
-      endLine: 52,
+      startLine: 15,
+      endLine: 48,
     },
     {
-      label: '保持 Cell identity 与顺序的 PresentedTableModel',
+      label: '校验 presentation carrier 与 Cell 的 identity 和顺序',
       path: 'packages/viz/table/src/pipeline/presentation/table.ts',
-      startLine: 8,
-      endLine: 19,
+      startLine: 67,
+      endLine: 96,
+    },
+    {
+      label: 'value/content 分流并按原顺序保留 Cell id、值与最终外观',
+      path: 'packages/viz/table/src/pipeline/presentation/table.ts',
+      startLine: 99,
+      endLine: 147,
     },
   ]}
 />

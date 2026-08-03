@@ -46,13 +46,13 @@ radial axis（radius 维）:
 
 ### 3. layout 完全归 ADR-01（本 ADR 零触碰 layout）
 
-极坐标的圆心 / outerRadius / 角向标签外圈留白**全部由 ADR-01 的 `computePolarFrame` 算定**（roadmap P1-1：frame 单点拥有）。本 ADR **完全不碰 `lower/layout.ts`**，只读 frame 给定的 `center` / `outerRadius` / `innerRadius` 画 guide——杜绝执行顺序上 04 反向修改 01 的 layout（评审 P1）。角向标签所需的尺寸常量（字号 / gap）与估算逻辑一并落在 ADR-01 的 `computePolarFrame` 里；ADR-04 的标签只按 frame 已留白的 outerRadius 外侧定位，不参与留白计算。
+极坐标的圆心 / outerRadius / 角向标签外圈留白**全部由 ADR-01 的 `computePolarFrame` 算定**（roadmap P1-1：frame 单点拥有）。本 ADR **完全不碰 `lower/layout.ts`**，只读 frame 给定的 `center` / `outerRadius` / `innerRadius` 画 guide——杜绝执行顺序上 04 反向修改 01 的 layout。角向标签所需的尺寸常量（字号 / gap）与估算逻辑一并落在 ADR-01 的 `computePolarFrame` 里；ADR-04 的标签只按 frame 已留白的 outerRadius 外侧定位，不参与留白计算。
 
 理由：
 
 1. **guide 几何 = f(guide, coordinate)**：与 mark 同理，guide 不写死直线，按 frame.type 产直线 / 弧；加坐标系不改 guide 主体。
 2. **维度角色化复用 hybrid**：guide 维度与位置通道同一套 x/y↔angle/radius 角色映射，认知一致、IR 改动最小（仅加枚举成员）。
-3. **frame 单点拥有杜绝伪并行**：guide 不自算圆心 / 半径，全取 ADR-01 frame——04 与 02/03 真并行（评审 P1-1）。
+3. **frame 单点拥有杜绝伪并行**：guide 不自算圆心 / 半径，全取 ADR-01 frame——04 与 02/03 真并行。
 4. **复用 core Path arc**：同心环 / 弧轴用 core 既有 `arc` step，不在 plot 造曲线机制。
 
 ## 不在本 ADR 范围
@@ -60,6 +60,3 @@ radial axis（radius 维）:
 - mark 几何（sector / 连续）→ ADR-02 / 03；frame / layout 决策 → ADR-01。
 - authoring 表面 + docs → ADR-05。
 - legend（与 color scale 配套）、轴标题、刻度旋转 / 抽稀防重叠 → 后续。
-
-> 实现指针：最终 schema / 类型 / 行为以代码为准；完整施工契约（Level / Schema 改动 / 文件 scope / 测试象限 / 依赖现有元素）+ DSL 示例 + 影响清单见本文件封板前全文。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 62562f1d:_notes/decisions/plot/v0/v0.1/alpha.4/04-polar-guide.md`（封板全文）。

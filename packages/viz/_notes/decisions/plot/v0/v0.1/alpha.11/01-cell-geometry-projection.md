@@ -19,8 +19,6 @@
 
 **分级在输出、统一在机制**：投影后是不是闭式 shape 的判断**挪进坐标系**（每个 frame 最懂自己的投影），mark 侧 lowering 收敛成单路径。
 
-核心数据结构（最终形态见 `packages/viz/plot/src/lower/project.ts`）：
-
 ```ts
 // 正交 cell：primary/secondary 各一段 scale 输出空间区间（cartesian=像素带/像素；polar=角度带/半径）
 type Cell = { primary: [number, number]; secondary: [number, number] };
@@ -67,7 +65,3 @@ contour 不是引擎自动产物，而是**曲线 frame 在自己的 `projectCel
 - **production 曲线坐标系出柱的具体例子**（拱形 x 轴 / 螺旋等给 `projectCell` 的实现）：gate 于具体 custom frame 落地，需求驱动。本 ADR 只交付契约 + cartesian2D/polar2D 内建 `projectCell` + `densifyCellContour` helper + 测试专用曲线 frame 验证 contour 全链路。
 - **柱圆角（cornerRadius）prop**：core `rectangle` / `contour` 都支持，但 mark 层是否暴露「圆角柱」是样式议题，归 Theme（alpha.15）。
 - **小 IR 优化**：contour 兜底是 O(顶点) IR，不解决 plot-design §16.1 软肋 #1（高基数 O(N) Node）。
-
-实现指针：契约与 `densifyCellContour` 在 `packages/viz/plot/src/lower/project.ts`（`Cell` / `CellGeometry` / `projectCell`）；mark 单路径装配在 `packages/viz/plot/src/lower/mark.ts`；锚点同源在 `packages/viz/plot/src/lower/anchor.ts`；core `contour` shape 在 `packages/kernel/core/src/shapes/contour-shape.ts`。测试在 `packages/viz/plot/tests/lower/cell-geometry.test.ts`（含回归基线、三态装配、曲线 frame contour、AABB 中心、fail-loud、连接性、locator parity），回归基线另见同目录 `mark`/`anchor`/`sector` 相关测试。
-
-> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.11/01-cell-geometry-projection.md`（封板全文）。

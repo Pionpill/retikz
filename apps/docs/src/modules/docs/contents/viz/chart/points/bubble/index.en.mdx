@@ -1,0 +1,49 @@
+---
+title: Bubble Chart
+description: Encode a third quantitative variable with bubble area while preserving two-dimensional position.
+family: point
+usage: distribution
+---
+
+<ShowcaseGallery
+  examples={[
+    {
+      id: 'bubble-basic',
+      title: 'Basic bubble chart',
+      description: 'Compare two variables by position and encode magnitude with area.',
+      preview: {
+        files: ['bubble-basic', 'bubble-basic.data.ts'],
+        controls: { name: 'bubble-basic' },
+        size: 'xl',
+        caption: 'Switch the area field between power and price; a row without power does not produce a bubble.',
+      },
+    },
+  ]}
+>
+  This is a non-contract conceptual preview built with the public Plot API, not API documentation for `@retikz/chart`. It uses the `Plot`, `PointMark`, and `Axis` composition API exported from the `@retikz/plot-react` root, with a fixed `800 × 400` chart size.
+
+## Size and Area
+
+A bubble chart preserves the scatter plot's two-dimensional position and passes a third quantitative field to `PointMark.size`. Plot uses a sqrt scale to calculate radius so that visible bubble area follows the value instead of exaggerating it through a linear radius.
+
+| Prop   | Type                     | Default | Description                                                    |
+| ------ | ------------------------ | ------- | -------------------------------------------------------------- |
+| `size` | `PointMarkProps['size']` | —       | Maps a quantitative field to bubble radius; always field-bound |
+
+When field-bound size is missing, `null`, `NaN`, or infinite, that row produces no Point glyph. The field descriptor and optional legend are dataset-level information and remain available. A negative size raises an error instead of being skipped or clamped. A bubble needs a glyph to carry area, so this preset does not use `text`; use `label` when text must remain attached to the bubble.
+
+## Point Mark
+
+Beyond size semantics, bubbles reuse the complete public Point capability. Position, color, shape, opacity, labels, transforms, and custom coordinate roles are all controlled through `PointMark`.
+
+| Prop                           | Type                                              | Default | Description                                  |
+| ------------------------------ | ------------------------------------------------- | ------- | -------------------------------------------- |
+| `x` / `y`                      | `PointMarkProps['x' \| 'y']`                      | —       | Two-dimensional position fields              |
+| `color` / `shape` / `opacity`  | `PointMarkProps['color' \| 'shape' \| 'opacity']` | Theme   | Category and visual styling                  |
+| `label` / `labelPosition`      | `DatumLabelProps['label' \| 'labelPosition']`     | —       | Preserve the bubble and attach a datum label |
+| `transform` / `coordinateView` | `PointMarkProps['transform' \| 'coordinateView']` | —       | Mark-local transforms and coordinate view    |
+| `channels` / `z` / `facetId`   | `PointMarkProps['channels' \| 'z' \| 'facetId']`  | —       | Extension channels and composition roles     |
+
+{/* @include viz/chart/shared-api */}
+
+</ShowcaseGallery>

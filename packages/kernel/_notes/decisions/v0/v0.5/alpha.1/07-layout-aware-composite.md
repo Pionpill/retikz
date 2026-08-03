@@ -11,7 +11,7 @@
 
 Table v0.1 alpha.2 需要让 `auto` / `minmax` 轨道读取每个 Cell 中任意 `IRChild` 的真实尺寸，先求解列宽和行高，再把确定的 Cell 内容宽度反馈给文本布局以重新换行。相同需求也会出现在需要按真实子内容反馈求解的图例、面板、流程和其它 Tier 2 layout composite 中，不属于 Table 私有测量算法。
 
-现有 `CompositeDefinition.expand()` 只在完整 compile context 创建前做无上下文结构展开。它拿不到宿主文字测量、TeX lowering、provider registries、namespace / reference 环境、继承样式和父级约束，也不能保留一次布局结果供最终输出复用。Table alpha.1 因此只能使用固定轨道，并把普通 composite lowering 与 `lowerTableWithArtifacts()` 分开调用；需要 Scene 与 manifest 时，同一 Table resolve 会执行两次。
+`CompositeDefinition.expand()` 在完整 compile context 创建前做结构展开。按 ADR-09，它只读取继承的有效 Theme；仍拿不到宿主文字测量、TeX lowering、provider registries、namespace / reference 环境、继承样式和父级约束，也不能保留一次布局结果供最终输出复用。Table alpha.1 因此只能使用固定轨道，并把普通 composite lowering 与 `lowerTableWithArtifacts()` 分开调用；需要 Scene 与 manifest 时，同一 Table resolve 会执行两次。
 
 Core 已有 `CompileOptions.onNodeLayout`，但 observer 只能事后捕获真实 Node，不能在父布局求解期间约束任意 `IRChild`，也不能表达 nested composite、allocation / visual bounds 或 replay。继续增加 callback、全局 `Map`、closure capture 或 Scene meta 会让 artifact 所有权、并发和 occurrence identity 变成隐藏通道。
 
@@ -47,7 +47,7 @@ type CompositeDefinition<
   schema: ZodType<TNode>;
 } & (
   | {
-      expand: (node: TNode) => IRChild | Array<IRChild>;
+      expand: (node: TNode, context: CompositeExpandContext) => IRChild | Array<IRChild>;
       compile?: never;
       artifactSchema?: never;
     }
@@ -55,7 +55,7 @@ type CompositeDefinition<
 );
 ```
 
-- `expand` 保持无上下文、结构性、可由 `lowerIRToKernel()` 执行的现有语义。
+- `expand` 保持结构性、可由 `lowerIRToKernel()` 执行；按 ADR-09 接收只含有效 Theme 的受限 context，不获得完整 compile 环境。
 - `compile` 只在完整 `compileToScene()` traversal 中执行，拥有当前 composite occurrence 的父约束，并只通过受限 context 布局子内容。
 - 同一定义不能同时声明 `expand` 与 `compile`；`defineComposite()` 在类型和运行时都 fail-loud。
 - `schema`、definition key 校验、内置与自定义 registry 合并和重复 key 诊断保持同一条路径。
@@ -213,7 +213,7 @@ type AnyExpandCompositeDefinition = {
   namespace: string;
   type: string;
   schema: ZodType;
-  expand: (node: never) => IRChild | Array<IRChild>;
+  expand: (node: never, context: CompositeExpandContext) => IRChild | Array<IRChild>;
   compile?: never;
   artifactSchema?: never;
 };

@@ -142,12 +142,15 @@ const expandPlot = (node: IRPlotSpec, datasets: ExternalDatasets, options: Lower
 
   // fieldMaps 校验 + 用户源字段类型解析（strict）+ ingest 恒归一化。与 locator 共用 prepareRows 保 parity。
   // 类型 Map 是 type-driven scale / coercion 的单一真源；归一化置于 transform 前、无论有无 model 都跑（恒 canonical）。
-  const { fieldTypes, normalized, transformRegistry, transformContext, scaleRegistry, markRegistry } = prepareRows(
-    node,
-    datasets,
-    options,
-    ingested,
-  );
+  const {
+    fieldTypes,
+    fieldTypeEvidence,
+    normalized,
+    transformRegistry,
+    transformContext,
+    scaleRegistry,
+    markRegistry,
+  } = prepareRows(node, datasets, options, ingested);
   // scheme 解析器：内置 scheme + options.colorSchemes；channel scale 取色 / legend ramp 共用。
   const resolveColorScheme = makeColorSchemeResolver(options.colorSchemes);
   if (options.validateData) {
@@ -217,7 +220,15 @@ const expandPlot = (node: IRPlotSpec, datasets: ExternalDatasets, options: Lower
   const arrangementResolveOf = (arrangement: CoordinateArrangement | undefined): CompositionResolve | undefined =>
     resolveArrangementPolicy(compositionResolve, arrangement);
 
-  const channelCtx = { node, rows, fieldTypes, scaleRegistry, resolveColorScheme, palette: resolvedTheme.palette };
+  const channelCtx = {
+    node,
+    rows,
+    fieldTypes,
+    fieldTypeEvidence,
+    scaleRegistry,
+    resolveColorScheme,
+    palette: resolvedTheme.palette,
+  };
   // 通道 registry：内置 definition 先注册，自定义 definition 再合并；mark / node / path 通道统一解析。
   const channelRegistry = resolveChannelRegistry({
     custom: options.channelDefinitions,
@@ -726,14 +737,12 @@ const expandPlot = (node: IRPlotSpec, datasets: ExternalDatasets, options: Lower
  * 构造 plot 的 Tier 2 下沉逻辑，供 core `CompileOptions.composites` 注入
  * @description 数据闭进函数、不进 IR；返回的 CompositeDefinition 把 plot composite 节点展开成 core Scope/Node/Path
  */
-export const lowerPlots = (
-  datasets: ExternalDatasets,
-  options: LowerPlotsOptions = {},
-): Array<ExpandCompositeDefinition<IRPlotSpec, 'plot', 'plot'>> => [
-  defineComposite({
-    namespace: 'plot',
-    type: 'plot',
-    schema: PlotSpecSchema,
-    expand: (node: IRPlotSpec) => expandPlot(node, datasets, options),
-  }),
-];
+export const lowerPlots = (datasets: ExternalDatasets, options: LowerPlotsOptions = {}) =>
+  [
+    defineComposite({
+      namespace: 'plot',
+      type: 'plot',
+      schema: PlotSpecSchema,
+      expand: (node: IRPlotSpec) => expandPlot(node, datasets, options),
+    }),
+  ] satisfies Array<ExpandCompositeDefinition<IRPlotSpec, 'plot', 'plot'>>;

@@ -6,10 +6,11 @@ import type {
   IRChild,
   IRClipSpec,
   IRJsonObject,
+  IRTheme,
   JsonValue,
   ScopeBoundingShapeValue,
 } from '../../schemas';
-import type { ValueOf } from '../../shared';
+import type { ResolvedTheme, ValueOf } from '../../shared';
 import type {
   CompositeInspectionChild,
   CompositeInspectorContext,
@@ -145,6 +146,8 @@ export type CompositeCompileChild = Readonly<{
 
 /** runtime Scope 允许的结构属性 */
 export type CompositeCompileScopeProps = Readonly<{
+  /** 仅覆盖已声明字段的局部 Theme */
+  theme?: IRTheme;
   /** 注册到父命名空间的 Scope id */
   id?: string;
   /** 是否隔离 Scope 子树内部命名 */
@@ -173,6 +176,8 @@ export type CompositeReplayWrapper = Readonly<{
 
 /** layout-aware composite 可见的受限编译上下文 */
 export type LayoutCompositeCompileContext = Readonly<{
+  /** 当前 composite 位置完整、只读的有效 Theme */
+  theme: ResolvedTheme;
   /** 当前 composite occurrence 从父级收到的完整双轴 proposal */
   proposal: LayoutProposal;
   /** 在完整 compile 环境中 probe 任意 child */
@@ -200,6 +205,12 @@ export type LayoutCompositeCompileContext = Readonly<{
     props: CompositeCompileScopeProps,
     children: ReadonlyArray<IRChild | CompositeCompileChild>,
   ) => CompositeCompileChild;
+}>;
+
+/** 无布局 Composite 展开时可见的只读编译上下文 */
+export type CompositeExpandContext = Readonly<{
+  /** 当前 composite 位置完整、只读的有效 Theme */
+  theme: ResolvedTheme;
 }>;
 
 /** layout-aware composite 的最终输出 */
@@ -262,7 +273,7 @@ type LayoutCompositeBranch<
 
 /**
  * Tier 2 composite 注册项
- * @description 精确描述单个 composite 的 schema，以及互斥的无上下文 expand 或完整编译期 compile 分支
+ * @description 精确描述单个 composite 的 schema，以及互斥的轻量 expand 或完整编译期 compile 分支
  */
 export type CompositeDefinition<
   TNode,
@@ -280,8 +291,8 @@ export type CompositeDefinition<
   schema: ZodType<TNode>;
 } & (
   | {
-      /** 把该 composite 节点无上下文展开为下一层 IR */
-      expand: (node: TNode) => IRChild | Array<IRChild>;
+      /** 把该 composite 节点按当前位置上下文展开为下一层 IR */
+      expand: (node: TNode, context: CompositeExpandContext) => IRChild | Array<IRChild>;
       compile?: never;
       artifactSchema?: never;
       inspector?: never;
@@ -289,7 +300,7 @@ export type CompositeDefinition<
   | LayoutCompositeBranch<TNode, TArtifact, TLocalShape, TResolvedLocalOptions>
 );
 
-/** 精确描述单个无上下文 expand composite definition */
+/** 精确描述单个轻量 expand composite definition */
 export type ExpandCompositeDefinition<
   TNode,
   TNamespace extends string = string,
@@ -309,12 +320,12 @@ export type LayoutCompositeDefinition<
   { compile: unknown }
 >;
 
-/** 异构 registry 中擦除后的无上下文 composite */
+/** 异构 registry 中擦除后的轻量 expand composite */
 export type AnyExpandCompositeDefinition = {
   namespace: string;
   type: string;
   schema: ZodType;
-  expand: (node: never) => IRChild | Array<IRChild>;
+  expand: (node: never, context: CompositeExpandContext) => IRChild | Array<IRChild>;
   compile?: never;
   artifactSchema?: never;
   inspector?: never;

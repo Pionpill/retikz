@@ -5,16 +5,16 @@ description: Use when retikz needs multiple independent LLMs to review the same 
 
 # Cross Review：多 LLM 交叉评审
 
-本 skill 用多个相互独立的模型评审同一份固定快照，再由主 AI 归并、对齐和裁决。快照可以是 ADR、implementation plan、test contract、代码、diff、commit range 或发布范围。不同模型必须看到相同输入，同轮并发且互不可见结论。
+本 skill 用多个 fresh、相互独立的 reviewer 实例评审同一份固定快照，再由主 AI 归并、对齐和裁决。快照可以是 ADR、implementation plan、test contract、代码、diff、commit range 或发布范围。reviewer 必须看到相同输入，同轮并发且互不可见结论；优先使用不同模型，只有一个非主 agent 模型可用时使用两个同模型独立实例。
 
 与 [`cross-test`](../cross-test/SKILL.md) 区别：cross-test 通过测试打破实现；cross-review 只读审查固定材料。两者可以串联使用。
 
 ## 核心理念
 
 1. **评审固定快照**——一轮锁定明确、可复现的输入，记录 HEAD、工作区摘要、文件清单与材料版本。评审期间快照变化则本轮作废。
-2. **真多模型，不糊弄**——“多 LLM”只有在**确有多个不同模型实际跑完**时才成立。如实记录本轮跑了哪几个模型、哪个失败/超时。绝不能只跑一个模型却包装成多视角；也不能把同一模型同一上下文重复算成独立视角。
+2. **真独立评审，不糊弄**——每轮至少需要两个 fresh、独立上下文的外部 reviewer 实例完成。优先使用不同模型；只有一个非主 agent 模型可用时，并发启动两个该模型的 fresh 实例。如实记录模型、实例、失败/超时与多样性降级；不能把同一上下文的重试或单实例包装成多视角。
 3. **主 AI 是编排者与裁决者，不是第 N 个匿名评审员**——主 AI 的职责是：解析范围、派发评审、读各家原始输出、归并去重、标注共识/分歧、对冲突做技术裁决。主 AI 自己的判断要和外部模型的判断分开标注，不能混为一谈。
-4. **只读评审，绝不改仓库**——评审员只读不写；修订只能由主 AI 在收齐本轮结果后执行。评审跑完后复核工作区。任何修改、commit、push 都不在本 skill 职责内。
+4. **只读评审，绝不改仓库**——评审员只读不写；主 AI 收齐并归并本轮结果后，只要存在需修问题，就先生成修复 plan、修改并验证，再冻结新快照。未完成修订不得启动下一轮。评审跑完后复核工作区。commit、push 不在本 skill 职责内。
 5. **不伪造、不夸大**——不替模型编造它没说的 finding，不把单模型的猜测升级成“共识”，不把风格偏好硬说成 BLOCKING。模型说不准的就标 WARNING / 待人工确认。
 
 ## 可用评审员
@@ -39,7 +39,13 @@ PowerShell：
 Get-Command codex, claude -ErrorAction SilentlyContinue | Select-Object Name, Source
 ```
 
-至少有 **2 个实际不同的模型**完成才算 cross-review。同厂商不同模型可以成立，但要说明多样性局限；同一模型重复运行不能算多模型。优先选择与主 agent 不同的模型；例如主 agent 为 sol 时，先选实际暴露的 terra，再选实际暴露的 luna 或其它非 sol 模型。某名称未被工具暴露时必须跳过并如实记录；调度能力支持时为 subagent 设置 `reasoning_effort: max`。只剩一个模型时：强制 Gate halt 交人工；可选评审须经人工明确接受后才能降级，且不得称为交叉评审。
+至少有 **2 个 fresh、独立上下文的外部 reviewer 实例**完成才算 cross-review，主 agent 不算外部 reviewer。阵容按以下顺序选择：
+
+1. 优先 2–3 个实际不同且不同于主 agent 的模型；同厂商不同模型可以成立，但记录多样性局限。
+2. 只有一个非主 agent 模型可用时，并发启动两个该模型的 fresh 独立实例；例如主 agent 为 Sol、只有 Terra 可用时，启动两个 Terra，并标注“同模型降级评审”。
+3. 如果连两个 fresh 独立实例都无法完成，Gate halt；可选评审须经人工明确接受单 reviewer 降级，且不得称为 cross-review。
+
+subagent 必须避开主 agent 模型；不得派主 agent 同模型 subagent 填数。某名称未被工具暴露时必须跳过并如实记录，不得硬编码、伪造或静默换成主 agent 模型；调度能力支持时按风险与实际可用档位设置 `reasoning_effort: high` 至 `max`，并记录调度值与 reviewer 自报值。
 
 ## 输入范围
 
@@ -140,7 +146,7 @@ git --no-pager log --oneline -1
 ### 2. 选评审员阵容
 
 - 从当前工具元数据和可用 CLI 探测模型。
-- 每轮选择 2–3 个实际不同的模型；先尽量避开主 agent 的模型，再优先跨 model family / 厂商；调度能力支持时使用 `reasoning_effort: max`。
+- 每轮选择 2–3 个 fresh、独立上下文且不同于主 agent 的 reviewer 实例，优先跨 model family / 厂商；只有一个非主 agent 模型时，使用两个该模型的 fresh 实例。调度能力支持时按风险使用 `reasoning_effort: high` 至 `max`，不写死单一档位。无法同时完成两个独立实例时暂停，不用主 agent 同模型 subagent 填位。
 - 记录计划阵容、实际完成阵容、失败 / 超时和降级说明。
 - 同轮使用 fresh agent / fresh context；collaboration subagent 使用 `fork_turns: "none"` 或等价无历史上下文方式，由 prompt 完整传入固定材料。上一轮评审员不得携带旧结论进入新轮。
 
@@ -200,7 +206,7 @@ claude -p --model <model> \
 主 AI 把各家 finding 归并：
 
 - **去重对齐**：同一处问题不同模型的描述合并成一条，记下“哪些模型提了”。
-- **共识 / 分歧标注**：≥2 个独立模型都提 → 共识（可信度高）；只有 1 个模型提 → 分歧/单点（需主 AI 判断是真问题还是误报）。
+- **共识 / 分歧标注**：≥2 个独立 reviewer 实例都提 → 共识；不同模型时标“跨模型共识”，同一模型时标“同模型实例共识”并说明多样性局限；只有 1 个实例提 → 分歧/单点（需主 AI 判断是真问题还是误报）。
 - **冲突裁决**：模型之间结论矛盾时，主 AI 给出技术判断与依据，并标明这是主 AI 的裁决而非外部共识。
 - **过滤噪声**：明显的风格偏好、对本仓规范的误解（如把规定的 `Array<T>` 当问题）降级或剔除，并说明原因。
 
@@ -210,13 +216,13 @@ claude -p --model <model> \
 
 一轮表示“同一快照上的一组并发多模型评审”，不是一个评审员：
 
-1. Round 1 同时派发全部模型并收齐结果。
-2. 主 AI 归并后才修订 ADR、plan 或代码；同轮评审员不参与修改。
-3. 有 BLOCKING 或需修订的 WARNING 时，完成修订与必要验证，再冻结新快照进入下一轮。
+1. 同时派发本轮全部模型并收齐结果；同轮 reviewer 都检查同一固定快照，不因先返回的问题取消其余并发评审。
+2. 主 AI 归并并核实本轮全部 finding；同轮评审员不参与修改。
+3. 有 BLOCKING 或需修订的 WARNING 时，先写 finding → 修改 → 验证的修复 plan，再完成修订与必要验证；没有实际修订与验证不得进入下一轮。
 4. 下一轮使用 fresh agents，并重新并发派发；不能让上一轮单一评审员口头确认代替完整复审。
 5. 最新一轮所有实际评审员完成、无 BLOCKING、WARNING 均已修订或有可验证的人工裁决时 PASS。
 6. 满足 PASS 条件后立即结束，不为凑轮次追加评审；只有完成修订后才进入下一轮。
-7. 最多 9 轮。第 9 轮仍未 PASS、模型分歧无法裁决、快照漂移或只剩一个模型时 halt，交人工决策。
+7. 最多 9 轮。第 9 轮仍未 PASS、分歧无法裁决、快照漂移或无法完成两个 fresh 独立 reviewer 实例时 halt，交人工决策。
 
 ### 7. 输出分级报告
 
@@ -258,7 +264,7 @@ git status --short    # 应与评审前一致；codex/claude 评审不应改任�
 | codex     | <model2> | OpenAI    | ok            |
 | claude -p | <model>  | Anthropic | ok            |
 
-多样性说明：<是否跨厂商；若仅同厂商不同模型，写明局限>
+多样性说明：<是否跨厂商 / 跨模型；若为同模型 fresh 实例降级，写明局限>
 
 ## 结论概览
 
@@ -317,14 +323,18 @@ git status --short    # 应与评审前一致；codex/claude 评审不应改任�
 - 不自行 commit / push / tag / publish；按 `AGENTS.md` 等用户授权。
 - 不把 plan review 或 reports 临时产物提交进库。
 - 同轮不串行喂结论；轮间必须先归并、修订和冻结新快照。
-- 只跑得起一个模型时，不假装是交叉评审；强制 Gate halt，可选评审等待人工接受降级。
+- 不因同轮某个 reviewer 先返回问题而取消其余并发评审；收齐本轮后统一修复。
+- 不在相同未修订快照上启动下一轮；不得把“下一轮继续确认”当作本轮修复。
+- 不派与主 agent 相同模型的 subagent 填补阵容；Luna 等模型未被工具真实暴露时不伪造。
+- 只有一个非主 agent 模型时，启动两个 fresh 独立实例；不把同一上下文重试算成两路，也不把同模型实例共识冒充跨模型共识。
+- 只有一个 fresh 独立 reviewer 实例完成时，不假装是 cross-review；强制 Gate halt，可选评审等待人工接受单 reviewer 降级。
 
 ## 完成标志
 
 - 已锁定并记录评审的固定范围与基准快照。
-- 已确认评审员阵容（至少 2 个实际不同模型），并在同一轮并发跑完。
+- 已确认评审员阵容（至少 2 个 fresh、独立上下文且不同于主 agent 的外部 reviewer 实例），并在同一轮并发跑完；只有一个非主模型时已使用两个同模型 fresh 实例并记录降级。
 - 已收集各家原始输出，对失败/超时的如实记录。
 - 已归并去重、标注每条 finding 的提出模型与共识/分歧，并对冲突给出主 AI 裁决。
-- 无问题时已在当前轮立即 PASS；需要修订时已使用新快照和 fresh agents 复审；最多 9 轮，未通过时已 halt 交人工。
+- 无问题时已在当前轮立即 PASS；需要修订时已先生成修复 plan、完成修改与验证，再使用新快照和 fresh agents 复审；最多 9 轮，未通过时已 halt 交人工。
 - 已输出三档分级报告；有 BLOCKING/WARNING 或用户要求时已写入 `notes/reports/cross-review-YYYY-MM-DD-<scope>.md`，且未 stage / commit 该 ignored 报告文件。
 - 已 `git status` 复核仓库未被评审过程改动。

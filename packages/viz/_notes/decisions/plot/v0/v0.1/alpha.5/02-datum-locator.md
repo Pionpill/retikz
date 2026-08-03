@@ -43,7 +43,7 @@ type PlotLocator = {
 };
 
 /** 用与 lowerPlots 同一份 spec + datasets + options 建 locator（复用 ADR-01 resolveFrame，投影单一真源）*/
-const createPlotLocator: (spec: PlotSpec, datasets: ExternalDatasets, options?: LowerPlotsOptions) => PlotLocator;
+const createPlotLocator: (spec: IRPlotSpec, datasets: ExternalDatasets, options?: LowerPlotsOptions) => PlotLocator;
 ```
 
 ### 一致性保证（命中预演的核心）
@@ -57,15 +57,13 @@ spec + data + options
    两条路同源 ⇒ locator(i).position === lowering 第 i 行 Node.position（测试断言）
 ```
 
-### 不逐点预注册（复杂度据实，P2 评审修正）
+### 不逐点预注册
 
 locator 是**纯函数、不进 IR、不注册任何 core 元素**，不预建 N 个锚点、不碰 `nodeIndex`。复杂度据实：
 
 - **`datum(i)` O(1)**——按需算第 i 行的 frame 投影，一次投影一个点。
 - **`series(v)` O(k)**——centroid 需扫该 series 的 k 行（或首次惰性预建一次 series→行 索引、后续 O(1)）；**不是 O(1)**。
 - 万级散点下 locator 内存 = spec + 数据引用；解析单 datum = 一次投影。
-
-**未渲染 datum → null**：lowering 会跳过投影无效 / 零尺寸的行（mark providers 的 `Number.isFinite` / `isFiniteNumber` 守卫，例如 [interval provider](../../../../../../plot/src/providers/mark/features/interval.ts)）。locator 必须对**这些行同样返回 null**（命中预演与实际渲染一致：没渲染的 datum 不可命中）。`series(v)` 的 centroid 只计入已渲染成员。
 
 `meta` 即便 lowering 没开 `datumProvenance`（ADR-01 默认关），locator 也按需合成同构 meta——provenance 零 IR 代价可得。
 
@@ -78,9 +76,8 @@ locator 是**纯函数、不进 IR、不注册任何 core 元素**，不预建 N
 
 ## 实现期偏离（2026-06-07，Contract Auditor 对账后记）
 
-- **`datumAnchor` 落在 `src/lower/anchor.ts`（非 `mark.ts`）**：原文件 scope 写从 `mark.ts` 抽 `datumAnchor`。实际抽进独立 `anchor.ts`，由 `mark.ts` 与 `locate.ts` 共同 import——避免 `mark.ts → locate.ts → expand.ts → mark.ts` 循环依赖，且单一真源效果不变（point / interval-cartesian 与 lowering 逐点一致由二者同调 `datumAnchor` 保证）。
-- **placement 全量收成单一真源（cross-review 修复）**：初版只有 plain bar / point / sector 走 `datumAnchor`，**dodge / stack / polar-dodge interval 的摆放仍内联在 `mark.ts`** → locator 重算时漂移。已抽出 `buildIntervalContext` + `intervalRect`（cartesian 三变体）+ `intervalWedge`（polar 三变体）+ `sectorWedge`，`mark.ts` 所有 interval 路径与 locator **共用这同一套**，`mark.ts` 内不再留任何 inline 摆放数学。补 dodge/stack/polar-dodge 的 anchor↔lowering parity 测试。
-- **locator datum-id fail-loud 与 lowering 对齐（cross-review 修复）**：`createPlotLocator` 构造时用与 lowering 同一 plot 级注册器对所有 datum mark × 已渲染行跑校验，缺字段 / 重复 → 与 `lowerPlots` 同样**抛错**（`resolve()` 仍对坏地址返回 null、不抛）。`resolve` 地址语义明确为「索引/值地址」（`datum.<transformedIndex>` / `series.<value>`），非绑定的 `Node.id`；series 值匹配加 `String()` 兜底（数值可寻址，含 `.` 的值不可经 resolve 寻址）。
+- **placement 全量收成单一真源**：初版只有 plain bar / point / sector 走 `datumAnchor`，**dodge / stack / polar-dodge interval 的摆放仍内联在 `mark.ts`** → locator 重算时漂移。已抽出 `buildIntervalContext` + `intervalRect`（cartesian 三变体）+ `intervalWedge`（polar 三变体）+ `sectorWedge`，`mark.ts` 所有 interval 路径与 locator **共用这同一套**，`mark.ts` 内不再留任何 inline 摆放数学。补 dodge/stack/polar-dodge 的 anchor↔lowering parity 测试。
+- **locator datum-id fail-loud 与 lowering 对齐**：`createPlotLocator` 构造时用与 lowering 同一 plot 级注册器对所有 datum mark × 已渲染行跑校验，缺字段 / 重复 → 与 `lowerPlots` 同样**抛错**（`resolve()` 仍对坏地址返回 null、不抛）。`resolve` 地址语义明确为「索引/值地址」（`datum.<transformedIndex>` / `series.<value>`），非绑定的 `Node.id`；series 值匹配加 `String()` 兜底（数值可寻址，含 `.` 的值不可经 resolve 寻址）。
 
 ## 不在本 ADR 范围
 
@@ -88,6 +85,3 @@ locator 是**纯函数、不进 IR、不注册任何 core 元素**，不预建 N
 - **事件回调（onHover / onClick）**：v0.3，落 `@retikz/plot-react` / `-vanilla`。
 - **line / area 的顶点级具名锚点**：本 ADR `datum(i)` 给 line/area 顶点位置但不绑具名 id；逐顶点可连接锚点留后续。
 - **series bbox / 外接锚点**：本 ADR series 锚点取 centroid；bbox 留后续。
-
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/features/interaction/locate.ts`、`packages/viz/plot/src/providers/mark/`、`packages/viz/plot/src/pipeline/expand/` 与 `packages/viz/plot/src/index.ts` public export，测试见 `packages/viz/plot/tests/features/interaction/locate.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.5/02-datum-locator.md`（封板全文）。

@@ -1,9 +1,9 @@
 # ADR-04：shared scaffold tracks
 
-- 状态：Accepted（实现字段以 ADR-09 为准）
+- 状态：Superseded
+- 替代：[ADR-09](./09-composition-api-structure.md)；shared tracks 保留，公开结构统一进入 tracks arrangement
 - 决策日期：2026-06-28
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.14 roadmap](./roadmap.md) · [ADR-01 coordinate composition registry](./01-coordinate-composition-registry.md) · [ADR-03 same-panel multi-axis overlay](./03-same-panel-multi-axis.md)
-- 压缩前全文：`git show b7744b60565aa579a6f1deb892b56021633c6754:packages/graph/_notes/decisions/v0/v0.1/alpha.14/04-shared-scaffold-tracks.md`
 
 ## 背景
 
@@ -15,12 +15,12 @@ ADR-01 已预留 `placement.kind = 'track'` 与 `scaffold` / `track` 引用。AD
 
 ## 决策：composition.scaffolds 声明共享坐标骨架，track scope 挂载到 scaffold track
 
-`PlotSpec.composition` 新增 `scaffolds`。每个 scaffold 声明一个基础 coordinate、共享 role 列表和 track 列表。track scope 通过 ADR-01 的 `placement: { kind: 'track', scaffold, track }` 挂载到某个 track。共享 role 的 scale/domain/range 由 scaffold 管理；local role 的 range 由 track band 管理。
+`IRPlotSpec.composition` 新增 `scaffolds`。每个 scaffold 声明一个基础 coordinate、共享 role 列表和 track 列表。track scope 通过 ADR-01 的 `placement: { kind: 'track', scaffold, track }` 挂载到某个 track。共享 role 的 scale/domain/range 由 scaffold 管理；local role 的 range 由 track band 管理。
 
 ```ts
 type SharedScaffoldSpec = {
   id: string;
-  coordinate: CoordinateOperation;
+  coordinate: IRPlotCoordinateOperation;
   sharedRoles: Array<string>;
   tracks: Array<ScaffoldTrackSpec>;
   frame?: ScaffoldFrameModeValue;

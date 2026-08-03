@@ -4,19 +4,17 @@
 - 决策日期：2026-07-31
 - 关联：[alpha.3 roadmap](./roadmap.md) · [alpha.1 Cell presentation](../alpha.1/03-cell-presentation.md) · [Table 完备设计](../../../../../architecture/table-visualization-complete.md) · [Table 总设计](../../../../../architecture/table-design.md)
 
-## 背景
+## 背景与目标
 
-alpha.2 的 value Cell 直接把 Data scalar 交给 presentation。内置 `text` 只执行 `null → ''` 和其余值的 `String(value)`，无法把数值、百分比、布尔值或缺失值转换为面向读者的展示值。把格式化塞进每个 presentation 会让同一数值规则在 text、badge、未来 data bar 等内容中重复。
+alpha.2 的 value Cell 直接把 Data scalar 交给 presentation。内置 text presentation 只能做基础字符串显示，不能复用数值、百分比、布尔值或缺失值的展示规则；把格式化塞进每个 presentation 又会让 text、badge 和未来 presentation 重复实现同一逻辑。
 
-Data 的 field format 负责把外部输入解析为规范数据值，不负责展示格式。当前 Table detail normalization 尚未接入 Data format registry：它从 external row 读取字段后，只以 `ScalarValueSchema` 收窄并写入 `SemanticTableCell.payload.value`。
+Data field format 负责把外部输入解析成规范数据值，Table formatter 负责把已经进入 canonical Table model 的 JSON scalar 转换为展示 scalar。两者不能互相替代。本 ADR 的目标是在 presentation 前增加独立、JSON-safe、可扩展且可诊断的格式化能力，并保持省略 formatter 时的既有 scalar 显示语义。
 
-因此本 ADR 的 `rawValue` 精确定义为“formatter 前、已经进入 SemanticTableModel 的 JSON scalar”，不是未经校验的外部值，也不承诺已经执行 Data model 的 field format。Table formatter 禁止代替 Data parsing：例如 external row 中的 `"12.5"` 不会因为 Data model 声明 `number-string` 就自动变成 number，内置 `number` formatter会按类型失败。Table 接入 Data normalization / formatDefinitions 需要独立 ADR 或后续 milestone，并保持 Data 主责。
+## 决策
 
-Formatter 必须保持 JSON-safe authoring，同时允许内置与自定义实现经过同一 Definition / registry。默认路径还必须与 alpha.2 行为兼容：省略 formatter 时，原 scalar 原样进入现有 `text` presentation。
+### 公开 authoring 契约
 
-## 决策：在 presentation 前增加独立的 formatted value 阶段
-
-value Cell 增加可选 formatter 引用：
+value Cell、manual rich value Cell 与 detail column 共享同一 formatter ref：
 
 ```ts
 type IRTableFormatterRef = {
@@ -30,23 +28,18 @@ type IRTableCellValuePayload = {
   formatter?: IRTableFormatterRef;
   presentation?: IRTablePresentationRef;
 };
-```
 
-同一字段同步进入 manual value Cell 与 detail column：
-
-```ts
 type IRTableDetailColumn = {
-  // existing fields
   formatter?: IRTableFormatterRef;
   presentation?: IRTablePresentationRef;
 };
 ```
 
-`formatter` 省略时使用内置 `identity`。引用名只在 schema 校验非空与 JSON 形态；未注册名称、options 不合法和 provider 产物不合法均在 presentation pipeline fail-loud。
+content Cell 不接受 formatter。schema 只验证 ref 的 JSON 形态和非空名称；注册、options 与 provider 输出在 Table pipeline 消费时验证并 fail-loud。
 
-### 共享 Cell 上下文
+### 共享 Cell context
 
-Formatter 使用以下只读上下文；ADR-02 再把同一 context 接入 Presentation。它不暴露 dataset row、pipeline mutable state、renderer 或 compile context：
+Formatter 与 ADR-02 的 Presentation 共享同一只读 context：
 
 ```ts
 type TableCellContext = Readonly<{
@@ -61,7 +54,7 @@ type TableCellContext = Readonly<{
 }>;
 ```
 
-`source` 只复用 canonical model 已有的最小 runtime identity；formatter 不能再次读取外部数据，也不能改写来源。
+它只暴露 canonical Cell identity 与最小来源，不暴露 raw value、整行 datum、可变 pipeline state、renderer 或 compile context。Formatter 通过 `CellFormatterInput.value` 接收 formatter 前、已经进入 canonical Table model 的 JSON scalar；ADR-02 的 Presentation 才把同一语义命名为 `rawValue`。该值不是未经校验的外部输入，也不承诺已经执行 Data field format。
 
 ### Formatter Definition
 
@@ -82,88 +75,27 @@ const defineCellFormatter = <TOptions extends IRJsonObject>(
 ): CellFormatterDefinition<TOptions> => definition;
 ```
 
-异构 `AnyCellFormatterDefinition` 沿用 presentation 的 `ZodType + never` 收窄方式。`resolveCellFormatterRegistry()` 先注册内置项，再注册 custom definitions；空名称、内置冲突与重复 custom name 都 fail-loud。pipeline 只消费 resolver 返回的 registry，不维护内置分支。
+内置与自定义 formatter 使用同一 Definition、registry、options guard、dispatch 和输出 guard。内置项先注册；空名称、重复名称或覆盖内置项均 fail-loud。options schema 的结果仍必须是 JSON object，provider 输出必须重新满足 Data scalar 契约。所有错误稳定携带 formatter name 与 Cell id，并保留原始 cause。
 
-每次调用固定执行：
+Formatter 只返回 JSON scalar。`IRChild` 仍只由 Presentation 产生；函数、Date、class、数组、对象或 `undefined` 都不是合法 formatter 输出。
 
-1. 解析 formatter ref 与 options JSON object
-2. 由对应 `optionsSchema` 精确解析，并再次验证 schema transform / default 产物仍是 JSON object
-3. 调用 definition
-4. 用 Data `ScalarValueSchema` 重新解析返回值，得到 detached scalar
-5. 以 `table: formatter "<name>" for cell "<cellId>"` 包装诊断
+### 默认值与内置 formatter
 
-Formatter 只返回 JSON scalar。任意 `IRChild` 仍由 Presentation 产生；函数、Date、class、数组、对象或 `undefined` 均被拒绝。
+省略 formatter 时运行时解析为 `identity`，但 authoring IR 不物化默认 ref。
 
-### 内置 formatter
+- `identity`：只接受空 options，原样返回 string、number、boolean 或 null
+- `number`：接受 `specifier?: string` 与 `nullText?: string`；默认 specifier 为 `~g`，非 null 输入必须是 number，不做 numeric-string coercion
+- `boolean`：接受 `trueText?`、`falseText?` 与 `nullText?`；非 null 输入必须是 boolean，不做 truthy coercion
 
-alpha.3 提供三个最小内置项：
+`number` 使用固定、私有的 d3 locale：小数点 `.`、千分位 `,`、三位分组、货币前缀 `$`、百分号 `%`、负号 `−`、NaN 文本 `NaN`。它不得读取或修改 d3 的进程级默认 locale，因此相同输入在 direct、React、Vanilla 与 SSR 中产生相同输出。未提供 `nullText` 时 null 保持 null，显式空字符串是有效输出。
 
-- `identity`：strict empty options，原样返回 scalar；为省略 formatter 的默认项
-- `number`：接受 `{ specifier?: string; nullText?: string }`；非 null 输入必须是 number，使用私有固定 d3 locale 的 `formatLocale(...).format(specifier)`，`specifier` 省略为 `~g`，null 在未提供 `nullText` 时保持 null
-- `boolean`：接受 `{ trueText?: string; falseText?: string; nullText?: string }`；非 null 输入必须是 boolean，否则 fail-loud，不做 truthy coercion；默认分别为 `true`、`false`，null 在未提供 `nullText` 时保持 null
+日期、货币与 locale-sensitive formatter 需要显式 locale、timezone 与 temporal input contract，不在本 ADR 中隐式依赖宿主环境。
 
-number formatter 的固定 locale definition 为：
+### 用户可观察顺序与兼容性
 
-```ts
-{
-  decimal: '.',
-  thousands: ',',
-  grouping: [3],
-  currency: ['$', ''],
-  percent: '%',
-  minus: '−',
-  nan: 'NaN',
-}
-```
+公开行为顺序为：canonical raw scalar → formatter → presentation。formatter 不修改 canonical model，不重排 Cell，也不处理 content Cell；规则和 visual scale 仍以 raw scalar 为条件语义，展示字符串不能反向改变筛选或 domain。
 
-实现不得调用或读取 `formatDefaultLocale()`，也不得复用 d3 module-level default `format()`；进程内其它代码修改 d3 default locale 不影响 Table 输出。
-
-日期、货币与 locale-sensitive formatter 不在本 ADR 中。它们需要显式 locale / timezone 与 temporal 输入合同，不能依赖宿主默认 locale 或 `Date` 对象。
-
-### FormattedTableModel 与阶段接口
-
-格式化不修改 `SemanticTableModel`，而是产生同 identity、同顺序的只读中间模型：
-
-```ts
-type FormattedTableCell =
-  | {
-      kind: 'value';
-      cellId: string;
-      rawValue: IRDataScalarValue;
-      value: IRDataScalarValue;
-      formatterName: string;
-    }
-  | {
-      kind: 'content';
-      cellId: string;
-      content: IRChild;
-    };
-
-type FormattedTableModel = Readonly<{
-  semantic: SemanticTableModel;
-  cells: ReadonlyArray<FormattedTableCell>;
-}>;
-```
-
-content Cell 仍通过 Core `ChildSchema` / JSON-safe guard 并保持原内容，不接受 formatter。`cells` 与 semantic Cells 必须等长、同序且 `cellId` 一致；根、数组、Cell 与 provider 产物都 detached / recursive frozen。
-
-阶段接口固定为：
-
-```ts
-const formatTable = (
-  model: SemanticTableModel,
-  definitions?: ReadonlyArray<AnyCellFormatterDefinition>,
-): FormattedTableModel;
-
-const presentTable = (
-  model: FormattedTableModel,
-  definitions?: ReadonlyArray<AnyCellPresentationDefinition>,
-): PresentedTableModel;
-```
-
-在 ADR-01 单独实现完成时，现有 Presentation ABI 暂时保持 `{ value, cellId }`：value Cell 把 formatted `value` 作为 `CellPresentationInput.value`，content Cell直接通过。ADR-02 独占 breaking migration，届时 Presentation 才接收 `rawValue`、formatted `value`、`context` 与 `appearance`。ADR-01 不修改 `contract/presentation/**` 的 callback 类型。
-
-后续规则的 value predicate 与视觉 scale读取 Formatted model 的 `rawValue`，避免展示字符串反向改变条件语义。
+默认 `identity + text` 与 alpha.2 的 scalar 显示兼容。Table runtime options 增加 formatter definitions；framework-neutral、React、Vanilla 与 SSR 只 author 或透传同一 ref/Definition，不在 adapter 中执行 formatter 或增加 callback shorthand。
 
 ## DSL 表面
 
@@ -176,123 +108,46 @@ const revenue = {
     options: { specifier: '$,.2f', nullText: '—' },
   },
 };
-
-const availability = {
-  value: null,
-  formatter: {
-    name: 'boolean',
-    options: { trueText: 'Available', falseText: 'Unavailable', nullText: 'Unknown' },
-  },
-};
 ```
 
-## 测试设计
+## 功能与包边界
 
-详细行为矩阵见 ignored 文件 `notes/plans/table-alpha3-design/TEST_CONTRACT-01.md`。长期测试摘要：
+- Table 拥有展示 scalar 的 formatter ref、Definition、registry 消费与诊断
+- Data 继续拥有输入解析、field format 与 scalar schema
+- Presentation 继续拥有 scalar 到 `IRChild` 的生成
+- adapters 只表达同一 TableSpec 并传递 definitions
 
-- schema 覆盖 formatter ref、manual/detail 两入口、JSON round-trip 与旧 payload 兼容
-- registry 覆盖内置/custom 同路、重复 key、未知 key、options 与输出 guard
-- formatted model 覆盖 identity、number、boolean、null、content bypass、identity/order/freeze
-- direct / React / Vanilla 对同一完整 spec 与 formatter definitions 产生等价 Table transaction；detail column 与 plain manual authoring 由 schema-derived input 自动获得 formatter，ADR-01 覆盖其最小 parity；需要手写 prop union 的 React manual `Cell` 延后 ADR-07
+Formatter 是具有算法 dispatch 的开放能力，因此采用 Definition / registry；不建立内置白名单与 custom 旁路。
 
-## 影响
+## 测试策略摘要
 
-- ⚠️ additive public API：新增 formatter schema、Definition / registry 与 `LowerTablesOptions.formatterDefinitions`
-- `@retikz/table` 新增 `d3-format` 运行依赖与对应类型开发依赖
-- value payload 与 detail column schema 增加 formatter 引用；`TableDetailColumnInput`、React `DetailColumnProps`、framework-neutral / Vanilla detail 与 plain manual inputs 因 schema 派生自动同步，本 ADR 负责验证；React manual `Cell` 的显式 prop union 由 ADR-07 收口
-- presentation pipeline 从 `SemanticTableModel` 直接呈现改为先构造 `FormattedTableModel`
-- 默认 `identity + text` 保持 alpha.2 的 scalar 显示行为
-- `LowerTablesOptions`、Table runtime contribution、React root Table lower-options passthrough 与 Vanilla render lower options 接入 formatter definitions；不让 adapter 执行 formatter
+- schema 与公开 API 证明 ref、manual/detail authoring、JSON round-trip 和 content exclusion
+- Definition/registry 证明内置与 custom 同路、冲突诊断、options/output guard 与 deterministic locale
+- pipeline 证明 identity/order/freeze、raw/formatted 分离、content bypass 和 formatter-before-presentation
+- adapter parity 证明 direct、React、Vanilla、SSR 消费同一 spec 与 definitions
 
-## 能力完备性检查
+详细 case、路径、命令和正式证据位于对应 ignored mirror plan 的 `TEST_CONTRACT.md`。
 
-- **所属能力域与能力面**：Tabular Visualization Complete / Presentation
-- **解决的问题**：把规范 Data scalar 转换为可复用的展示 scalar，而不把展示规则放进 Data parser 或每个 presentation
-- **主责包与协作包**：Table 拥有 formatter；Data 提供 scalar schema；adapters 只暴露 ref 与 definitions
-- **是否可由现有能力组合**：现有 presentation registry 可复用模式，但不能独立复用展示值，需要扩展当前域
-- **是否需要下沉**：不下沉 Data；Data field format 是输入解析，不是显示格式化
-- **内部表达链路**：Semantic JSON scalar → formatter ref → registry → `FormattedTableModel` → 现有 Presentation ABI
-- **外部扩展链路**：`defineCellFormatter()` → custom definitions → runtime contribution merge → same dispatch
-- **下游执行 / adapter 等价性**：formatted scalar 进入同一 Presentation；React / Vanilla 只透传 spec / definitions，不执行 formatter
-- **不支持边界与诊断**：不读取整行数据、不执行 Data field parsing、不返回对象 / child、不依赖 locale 默认值；所有 lookup / options / output 错误带 Cell identity
-- **本轮结论**：扩展 Table Presentation 域；不修改 Data parsing 或 Core
+## 能力完备性与架构验证
+
+- **所属能力域**：Tabular Visualization Complete / Presentation
+- **问题归属**：展示格式化属于 Table，不属于 Data parsing 或 Core drawing
+- **内部闭环**：canonical scalar → formatter ref → registry → guarded scalar → Presentation
+- **外部扩展**：`defineCellFormatter()` 与内置项经过同一链路
+- **下游等价**：adapters 只透传；renderer 只接收 Presentation 产出的 Core IR
+- **结论**：扩展 Table Presentation 域，不修改 Data parsing 或 Core
+
+## 被否决方案
+
+- 把格式化并入 Presentation：会让不同 presentation 重复同一数值规则
+- 复用 Data field format：混淆输入解析与展示格式化
+- 在 adapter 中接受函数 formatter：破坏 JSON IR、SSR 与跨入口等价性
+- 让 formatter 返回 `IRChild`：与 Presentation 的单一职责和扩展合同重叠
 
 ## 不在本 ADR 范围
 
 - 日期、货币、locale 与 timezone 预设
-- Table 对 Data field format / normalization 的消费；本轮 rawValue 只表示 canonical JSON scalar
+- Table 对 Data field format / normalization 的消费
 - selector / rule 决定 formatter 的级联顺序
-- Presentation appearance、条件视觉编码、theme 与 Legend
+- Presentation appearance、条件视觉编码、style tokens 与 Legend
 - content Cell 的内容重写
-
----
-
-## 实现契约
-
-### Level
-
-`red`：修改 Table public schema、package root public API 与 pipeline 主链。
-
-### Schema 改动
-
-| 文件                          | 操作     | 字段名                                   | 类型                   | 默认值          | describe 中文摘要                 |
-| ----------------------------- | -------- | ---------------------------------------- | ---------------------- | --------------- | --------------------------------- |
-| `schemas/formatter/schema.ts` | 新增     | `name`                                   | non-empty string       | —               | 已注册 formatter 名称             |
-| `schemas/formatter/schema.ts` | 新增     | `options`                                | `JsonObjectSchema?`    | `{}` at runtime | formatter JSON options            |
-| `schemas/cell/schema.ts`      | 新增     | `TableCellValuePayloadSchema.formatter`  | `IRTableFormatterRef?` | `identity`      | canonical value payload formatter |
-| `schemas/cell/schema.ts`      | 新增     | `ManualTableValueCellSchema.formatter`   | `IRTableFormatterRef?` | `identity`      | manual rich value Cell formatter  |
-| `schemas/cell/schema.ts`      | 保持拒绝 | `ManualTableContentCellSchema.formatter` | 不存在                 | —               | direct content 不接受 formatter   |
-| `schemas/structure/schema.ts` | 新增     | `formatter`                              | `IRTableFormatterRef?` | `identity`      | detail body formatter             |
-
-schema `.describe(...)` 使用英文；`IRTableFormatterRef` 从 schema 推导。
-
-### 文件 scope
-
-- `packages/viz/table/package.json`
-- `packages/viz/table/src/schemas/{formatter,cell,structure,table}/**`
-- `packages/viz/table/src/contract/{formatter,model,authoring}/**`
-- `packages/viz/table/src/providers/formatter/**`
-- `packages/viz/table/src/pipeline/{presentation,contribution}/**`
-- `packages/viz/table/src/{schemas,contract,providers,pipeline,index}.ts`
-- `packages/viz/table/tests/{ir,formatter,presentation,pipeline,public-api}/**`
-- `packages/viz/table-react/src/{Table.tsx,table-runtime.ts,table-view.tsx,embedded-runtime.ts}` 与对应 runtime tests（只接 definitions / root spec passthrough）
-- `packages/viz/table-react/tests/**`（schema-derived `DetailColumnProps` formatter type parity；不修改 `DetailColumn` 组件）
-- `packages/viz/table-vanilla/src/{adapter,runtime}/**` 与对应 runtime tests（只接 definitions / root spec passthrough）
-- `pnpm-lock.yaml`
-- alpha.3 对应 docs 文件（由 ADR-07 统一完成）
-
-### 测试象限
-
-**Happy path**
-
-- 省略 formatter 时 identity 保留 string / number / boolean / null
-- number 以私有固定 d3 locale 与 specifier 产生确定字符串，外部修改 d3 default locale 后结果不变
-- boolean 按 options 产生标签，custom formatter 经同一 registry 工作
-
-**边界**
-
-- nullText 省略时保留 null，显式空字符串仍作为有效输出
-- manual、detail header/body 与 custom structure 保持 cellId / source / 顺序
-- provider input/output 与模型均不可变
-
-**错误路径**
-
-- 空名、未知名、重复 key、内置覆盖均 fail-loud
-- options 含函数、schema transform 产生非 JSON、provider 返回对象 / undefined 均拒绝
-- number formatter 收到非 number scalar时带 formatter/cell 前缀报错；Data model format 声明不能替代尚未接入的 Data normalization
-- boolean formatter 收到 string / number 时带 formatter/cell 前缀报错，不做 truthy coercion
-
-**交互**
-
-- formatter 与 explicit presentation 串联，旧 Presentation ABI 的 `value` 收到 formatted value并保留 explicit presentation options；raw / formatted / context 同时可见只由 ADR-02 验收
-- schema-derived `DetailColumnProps`、framework-neutral / Vanilla detail 与 plain manual inputs 接受相同 formatter ref；React manual `Cell` prop 延后 ADR-07
-- React / Vanilla runtime contribution 合并 formatter definitions 并保持冲突诊断
-- content Cell 不进入 formatter，非法 formatter 组合由 schema 或 pipeline 拒绝
-
-### 依赖的现有元素
-
-- `IRDataScalarValue` / `ScalarValueSchema`（Data）—— formatter 输入与输出真源
-- Data normalization / format registry（Data）——本 ADR 不消费；作为明确延期边界与反例
-- `TableCellSource` / `SemanticTableModel`（Table contract）——只读 Cell 上下文
-- `CellPresentationDefinition` registry 模式——复用 define / resolver / guarded dispatch 结构
-- `deepFreeze()` 与 runtime contribution merge——保持不可变与跨 adapter definition 聚合

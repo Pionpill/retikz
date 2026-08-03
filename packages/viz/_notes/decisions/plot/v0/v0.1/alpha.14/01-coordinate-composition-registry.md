@@ -1,13 +1,13 @@
 # ADR-01：coordinate composition registry + guide binding
 
-- 状态：Accepted（实现字段以 ADR-09 为准）
+- 状态：Superseded
+- 替代：[ADR-09](./09-composition-api-structure.md)；坐标 identity 保留，但公开字段由 scope 模型重构为 views / arrangements / resolve
 - 决策日期：2026-06-28
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.14 roadmap](./roadmap.md) · [plot-design.md §7](../../../../../architecture/plot-design.md) · [alpha.2 ADR-01 guide IR](../alpha.2/01-guide-ir.md) · [alpha.10 ADR-02 plot composable foundation](../alpha.10/02-plot-composable.md)
-- 压缩前全文：`git show b7744b60565aa579a6f1deb892b56021633c6754:packages/graph/_notes/decisions/v0/v0.1/alpha.14/01-coordinate-composition-registry.md`
 
 ## 背景
 
-当前 `PlotSpec` 只有一个顶层 `coordinate`。这对普通单图足够，但无法表达 alpha.14 需要的三类复合图形：facet grid 需要多个 panel coordinate scope；same-panel dual-axis 需要同一 panel 内多个位置坐标或位置 scale 叠加；shared scaffold tracks 需要多个局部图层共享部分坐标基底，再各自管理局部 range。
+当前 `IRPlotSpec` 只有一个顶层 `coordinate`。这对普通单图足够，但无法表达 alpha.14 需要的三类复合图形：facet grid 需要多个 panel coordinate scope；same-panel dual-axis 需要同一 panel 内多个位置坐标或位置 scale 叠加；shared scaffold tracks 需要多个局部图层共享部分坐标基底，再各自管理局部 range。
 
 这些需求不能分别在 facet、dual-axis、track 里各自发明字段。否则 mark 引用坐标、axis 绑定坐标、locator 返回 provenance、React / Vanilla authoring surface 都会出现三套相似但不兼容的机制，后续 v0.3 composite 也无法把高层复合图形稳定 lower 到 plot primitive。
 
@@ -17,7 +17,7 @@ alpha.2 的 guide IR 已明确暂缓 `guide.coordinate` 与双轴；alpha.10 的
 
 ## 决策：引入 coordinate composition registry 作为 Plot 内多坐标空间的唯一身份层
 
-`PlotSpec` 新增可选 `composition`。当 `composition` 存在时，Plot 内部的坐标空间由 `composition.scopes` 注册，每个 scope 拥有稳定 `id`、自己的 `coordinate`、可选 `placement`，并可被 mark 与 axis guide 通过 `coordinateScope` 引用。省略 `coordinateScope` 时绑定到 `composition.defaultScope`。
+`IRPlotSpec` 新增可选 `composition`。当 `composition` 存在时，Plot 内部的坐标空间由 `composition.scopes` 注册，每个 scope 拥有稳定 `id`、自己的 `coordinate`、可选 `placement`，并可被 mark 与 axis guide 通过 `coordinateScope` 引用。省略 `coordinateScope` 时绑定到 `composition.defaultScope`。
 
 旧的单坐标写法仍作为 shorthand 保留：没有 `composition` 时，顶层 `coordinate` 会被规范化成一个隐式默认 scope。新写多 scope spec 时，`composition` 是 canonical surface，避免顶层 `coordinate` 与 `composition.scopes` 同时成为坐标真源。
 
@@ -32,7 +32,7 @@ type CoordinateScopePlacement =
 
 type CoordinateScopeSpec = {
   id: CoordinateScopeId;
-  coordinate: CoordinateOperation;
+  coordinate: IRPlotCoordinateOperation;
   placement?: CoordinateScopePlacement;
   meta?: JsonObject;
 };
@@ -42,8 +42,8 @@ type CoordinateCompositionSpec = {
   scopes: Array<CoordinateScopeSpec>;
 };
 
-type PlotSpec = {
-  coordinate?: CoordinateOperation;
+type IRPlotSpec = {
+  coordinate?: IRPlotCoordinateOperation;
   composition?: CoordinateCompositionSpec;
   marks: Array<MarkSpec & { coordinateScope?: CoordinateScopeId }>;
   guides?: Array<AxisGuideSpec | LegendGuideSpec>;

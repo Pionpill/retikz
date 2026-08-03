@@ -102,10 +102,15 @@ export const lowerPoint = (
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
-    const applyChannelDeliveries = (node: IRNode, nodeKind: 'pointGlyph' | 'pointText'): void => {
+    const resolveChannelDeliveries = () =>
+      (channels.nodeDeliveries ?? []).map(entry => ({ entry, value: entry.resolver(row) }));
+    const applyChannelDeliveries = (
+      node: IRNode,
+      nodeKind: 'pointGlyph' | 'pointText',
+      deliveries: ReturnType<typeof resolveChannelDeliveries>,
+    ): void => {
       if (constantZIndex !== undefined) node.zIndex = constantZIndex;
-      for (const entry of channels.nodeDeliveries ?? []) {
-        const value = entry.resolver(row);
+      for (const { entry, value } of deliveries) {
         if (value !== undefined) entry.deliver(node, value, { mark, row, nodeKind });
       }
     };
@@ -115,9 +120,10 @@ export const lowerPoint = (
       if (!point) continue;
       const text = textOf?.(row);
       if (text === undefined) continue;
+      const deliveries = resolveChannelDeliveries();
       const position: [number, number] = dx === 0 && dy === 0 ? point : [point[0] + dx, point[1] + dy];
       const base: IRNode = { type: 'node', position, text };
-      applyChannelDeliveries(base, 'pointText');
+      applyChannelDeliveries(base, 'pointText', deliveries);
       placed.push({
         color: colorOf?.(row),
         node: attachDatumAnchor(
@@ -133,12 +139,14 @@ export const lowerPoint = (
     // 散点 glyph：锚点与 locator 共享同一 role 投影（point → frame.projectRoles），杜绝两套投影漂移
     const point = roleAnchor(mark, row, frame);
     if (!point) continue;
+    const deliveries = resolveChannelDeliveries();
+    if (deliveries.some(({ entry, value }) => entry.channel === 'size' && value === undefined)) continue;
     const base: IRNode = { type: 'node', position: point };
     const fill = fillOf?.(row);
     if (fill !== undefined) base.fill = fill;
     const stroke = strokeOf?.(row);
     if (stroke !== undefined) base.stroke = stroke;
-    applyChannelDeliveries(base, 'pointGlyph');
+    applyChannelDeliveries(base, 'pointGlyph', deliveries);
     const node = attachDatumLabel(
       attachDatumAnchor(
         decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined),

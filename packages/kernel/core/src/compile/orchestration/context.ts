@@ -10,6 +10,7 @@
   ShapeDefinition,
 } from '../../contract';
 import type { IRScene } from '../../schemas';
+import type { ResolvedTheme } from '../../shared';
 import type { CompileOptions } from '../types';
 import type { CompileWarning } from '../warning';
 import type { PreparedCompileInspection } from './inspection';
@@ -30,6 +31,7 @@ import { fallbackMeasurer } from '../text';
 import { formatCompileWarning } from '../warning';
 import { DEFAULT_MAX_COMPOSITE_DEPTH } from './composite';
 import { prepareCompileInspection } from './inspection';
+import { DEFAULT_RESOLVED_THEME, resolveTheme } from './theme';
 
 /**
  * 标准化后的 compile 依赖上下文
@@ -38,6 +40,8 @@ import { prepareCompileInspection } from './inspection';
 export type CompileContext = {
   /** canonical 输入 IR；composite 分支在 traversal 中保留 occurrence provenance 后处理 */
   loweredIr: IRScene;
+  /** Scene 根解析后的完整 Theme */
+  theme: ResolvedTheme;
   /** 文字度量函数 */
   measureText: NonNullable<CompileOptions['measureText']>;
   /** 运行时注入的 TeX lowering 钩子 */
@@ -106,6 +110,7 @@ export const createCompileContext = (ir: IRScene, options: CompileOptions): Comp
 
   return {
     loweredIr: ir,
+    theme: resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme'),
     measureText: options.measureText ?? fallbackMeasurer,
     lowerTex: options.lowerTex,
     onWarn,

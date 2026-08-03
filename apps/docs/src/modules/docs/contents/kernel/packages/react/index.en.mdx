@@ -33,6 +33,8 @@ export const Diagram = () => (
 
 `<Layout>` emits SVG by default; pass `renderer="canvas"` when you need a raster bitmap. Start with [Getting Started](/kernel/get-start), then see [Layout](/kernel/components/layout/overview) for the complete host options.
 
+`<Layout theme>` writes the root `IRScene.theme`, while `<Scope theme>` writes a local `IRScope.theme`. Both author only sparse `style / mode` values; composites choose concrete domain tokens during compile. When `ir` and an explicit `theme` are both present, the prop overrides `ir.theme` per field without mutating either input. See [Layout: Inherited Theme](/kernel/components/layout/overview#inherited-theme) for the complete example.
+
 ## Why @retikz/react exists
 
 ### JSX reduces authoring overhead
@@ -166,8 +168,8 @@ Changing `updateStrategy` between `auto` and `full` on a retained host disposes 
     {
       label: 'Static / retained host dispatch',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 479,
-      endLine: 524,
+      startLine: 539,
+      endLine: 584,
     },
     {
       label: 'Retained Session recreation on strategy changes',
@@ -213,8 +215,8 @@ Changing `updateStrategy` between `auto` and `full` on a retained host disposes 
     {
       label: 'Layout wiring builder to compile',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 410,
-      endLine: 474,
+      startLine: 442,
+      endLine: 522,
     },
     {
       label: 'Core IR to Scene compiler',
@@ -241,8 +243,8 @@ Event handlers are functions and cannot enter JSON IR. In children mode, React s
     {
       label: 'Layout retained-host wiring',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 486,
-      endLine: 508,
+      startLine: 562,
+      endLine: 584,
     },
     {
       label: 'Retained host shell declaration',

@@ -65,13 +65,13 @@ Schema 或数据结构只有在它是基础公开契约、跨包接口或非法�
 ADR 草案完成后、人工 ack 前，使用 `develop-completeness` 的 `adr-gate` rubric，并按 `cross-review` 执行并发多模型评审：
 
 1. 冻结 ADR、当前 HEAD、工作区摘要、适用 architecture / completeness / AGENTS 与必要代码证据。
-2. 每轮并发派发 2–3 个实际可用的不同模型；模型名以工具元数据为准，同轮互不可见结论。
+2. 每轮按 `cross-review` 并发派发 2–3 个 fresh 独立 reviewer；优先不同模型，只有一个非主模型时使用两个同模型 fresh 实例，同轮互不可见结论。
 3. 每个评审员只返回 `BLOCKING / WARNING / INFO`，检查问题归属、基础契约、包边界、define-registry、端到端闭环与非目标。
 4. 不得因 Gate 要求把文件 scope、private 逻辑、测试 case 或执行命令补回 ADR。
 5. 主 AI 收齐本轮结果后归并并修订 ADR；发生修订时冻结新快照，用 fresh agents 进入下一轮。
-6. 最新一轮至少两个不同模型实际完成、无 BLOCKING、WARNING 已修订或有可验证的人工裁决时 PASS。
+6. 最新一轮至少两个 fresh 独立 reviewer 实际完成、无 BLOCKING、WARNING 已修订或有可验证的人工裁决时 PASS。
 7. 当前轮无 BLOCKING、WARNING 已处置时立即 PASS；只有修订后才进入下一轮。
-8. 最多 9 轮；第 9 轮未 PASS、只剩一个模型、快照漂移或分歧无法裁决时 halt，交人工决策。
+8. 最多 9 轮；第 9 轮未 PASS、无法完成两个 fresh 独立 reviewer、快照漂移或分歧无法裁决时 halt，交人工决策。
 
 该 Gate 是 `flow-alpha` 的常驻只读授权；不授权实现、commit、push、扩大功能 scope 或其它外部写操作。
 

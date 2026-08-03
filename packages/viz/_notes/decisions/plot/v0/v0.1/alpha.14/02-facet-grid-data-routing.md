@@ -1,23 +1,23 @@
 # ADR-02：facet grid data routing
 
-- 状态：Accepted（实现字段以 ADR-09 为准）
+- 状态：Superseded
+- 替代：[ADR-09](./09-composition-api-structure.md)；facet 数据路由保留，公开结构统一进入 facet arrangement
 - 决策日期：2026-06-28
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.14 roadmap](./roadmap.md) · [ADR-01 coordinate composition registry](./01-coordinate-composition-registry.md) · [plot-design.md §7](../../../../../architecture/plot-design.md)
-- 压缩前全文：`git show b7744b60565aa579a6f1deb892b56021633c6754:packages/graph/_notes/decisions/v0/v0.1/alpha.14/02-facet-grid-data-routing.md`
 
 ## 背景
 
 分面（facet）解决的是“按数据字段把一张图拆成多个小图”。它不是双轴，也不是 shared scaffold track：facet 会拆数据、生成多个 panel、每个 panel 有自己的 coordinate scope；双轴不拆 panel；track 共享坐标骨架但不一定按数据字段拆行。
 
-当前 `PlotSpec` 只能绑定一份 transform 后的数据和一个默认 coordinate scope。用户若想画小多图，只能手写多张 Plot 或在上层组合里复制 spec。这会导致 scale 共享、panel 排序、空 panel、guide 布局和 provenance 都散在外层，Plot 内部无法知道“这些 panel 属于同一个 facet grid”。
+当前 `IRPlotSpec` 只能绑定一份 transform 后的数据和一个默认 coordinate scope。用户若想画小多图，只能手写多张 Plot 或在上层组合里复制 spec。这会导致 scale 共享、panel 排序、空 panel、guide 布局和 provenance 都散在外层，Plot 内部无法知道“这些 panel 属于同一个 facet grid”。
 
-ADR-01 已经给 Plot 内部 coordinate scope 建立了 identity 和 mark / axis guide 绑定。ADR-02 在其上增加 facet grid 的数据路由：从一份 PlotSpec 数据中按 row / column 字段派生 panel key，给每个 panel 生成局部 rows 和 coordinate scope，再按共享或独立 position scale 策略训练坐标。
+ADR-01 已经给 Plot 内部 coordinate scope 建立了 identity 和 mark / axis guide 绑定。ADR-02 在其上增加 facet grid 的数据路由：从一份 IRPlotSpec 数据中按 row / column 字段派生 panel key，给每个 panel 生成局部 rows 和 coordinate scope，再按共享或独立 position scale 策略训练坐标。
 
 本 ADR 只定义 facet 的数据拆分、panel key、排序、空 panel 与 position scale sharing。panel 之间的统一外轴、标题、间距和 label 视觉策略由 ADR-05 收敛。
 
 ## 决策：在 composition 下引入 facet grid 生成器
 
-`PlotSpec.composition` 新增 `facets`，每个 facet grid 生成一组 panel coordinate scope。facet grid 至少声明一个维度：`row` 或 `column`。每个维度绑定一个数据字段，生成稳定的 panel key；panel scope id 由 `id` 和 key 规范化得到，mark 默认在每个 panel 内以该 panel rows lower。
+`IRPlotSpec.composition` 新增 `facets`，每个 facet grid 生成一组 panel coordinate scope。facet grid 至少声明一个维度：`row` 或 `column`。每个维度绑定一个数据字段，生成稳定的 panel key；panel scope id 由 `id` 和 key 规范化得到，mark 默认在每个 panel 内以该 panel rows lower。
 
 ```ts
 type FacetValue = string | number | boolean | null;
@@ -44,7 +44,7 @@ type FacetGridSpec = {
   column?: FacetDimensionSpec;
   empty?: 'drop' | 'show';
   scales?: FacetScaleSharingSpec;
-  coordinate?: CoordinateOperation;
+  coordinate?: IRPlotCoordinateOperation;
   scopeIdTemplate?: string;
 };
 

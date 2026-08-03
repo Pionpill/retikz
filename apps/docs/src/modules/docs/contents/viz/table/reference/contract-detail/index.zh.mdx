@@ -3,7 +3,7 @@ title: 契约 - 明细表
 description: 查询外部数据引用、detail columns 与 record-per-row Structure 的精确 JSON schema。
 ---
 
-明细表契约把“每条外部记录生成一行”保存为可序列化规则，而不把记录本身写进 IR。`data.reference` 指向运行时 dataset，`structure.columns` 决定字段读取、列顺序、列头与正文 presentation。
+明细表契约把“每条外部记录生成一行”保存为可序列化规则，而不把记录本身写进 IR。`data.reference` 指向运行时 dataset，`structure.columns` 决定字段读取、列顺序、列头与正文 formatter/presentation；共享根字段再承载 rules、encodings 与 style tokens。
 
 ## DetailTableSpec
 
@@ -24,6 +24,11 @@ description: 查询外部数据引用、detail columns 与 record-per-row Struct
     type: '顶层 Table 规格的 composite 类型判别值。',
     id: '可选稳定 Table id；省略时由 lowering 生成根 Scope id。',
     layout: '轨道、gap 与 border 布局配置；省略字段使用 pipeline 默认值。',
+    rules: '按声明顺序应用的 Cell formatter、presentation 与外观覆盖。',
+    encodings: '按声明顺序把匹配 value Cell 的原始值映射到闭合颜色通道。',
+    style: '内置 Table style preset；省略时运行时使用 neutral。',
+    themeMode: '显式 style token mode；省略时运行时使用 light。',
+    styleTokens: '当前 mode 下按叶覆盖的严格 partial token map。',
     meta: '由 lowering 原样保留的 JSON-safe 元数据。',
     data: '明细表必需的外部数据引用；实际记录不写入 IR。',
     structure: '每条源记录生成一行的 detail Structure。',
@@ -55,11 +60,12 @@ description: 查询外部数据引用、detail columns 与 record-per-row Struct
 
 <ZodSchema
   name="TableDetailColumnSchema"
-  description="明细列：稳定 id、字段路径、列头、正文 presentation 与列头/正文 Cell 布局。"
+  description="明细列：稳定 id、字段路径、列头、正文 formatter/presentation 与列头/正文 Cell 布局。"
   descriptions={{
     id: '稳定的明细列 id；同一 Structure 中不能重复。',
     field: '从每条源记录读取的数据字段名或点路径。',
     header: '可选列头 payload；省略时把列 id 作为文本呈现。',
+    formatter: '应用于该列正文原始值的可选 formatter provider 引用。',
     presentation: '应用于该列正文值的可选 presentation provider 引用。',
     headerLayout: '应用于该列列头 Cell 的可选布局与四边 border 策略。',
     bodyLayout: '应用于该列所有正文 Cell 的可选布局与四边 border 策略。',
@@ -68,6 +74,8 @@ description: 查询外部数据引用、detail columns 与 record-per-row Struct
 
 作者侧 `TableDetailColumnInput` 额外允许把 `header` 写成字符串；`createDetailTableSpec()`、`DetailTable` 和 `detailTable()` 会把它规范化为 `{ kind: 'value', value: header }`。
 `headerLayout` / `bodyLayout` 共用 [TableCellLayoutSchema](/viz/table/reference/contract-layout#tablecelllayoutschema)，可分别设置 padding、对齐、wrap、fit、overflow 与 border。
+
+列 `formatter` 是 body value Cell 的默认引用；根 `rules` 可以按 Cell selector 有序覆盖它。formatter 只改变显示 scalar，字段选择、visual encoding 和 value predicate 始终读取 formatter 前的原始值。
 
 ## 精确 schema 的使用边界
 

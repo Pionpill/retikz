@@ -17,8 +17,10 @@ import type {
   VanillaScopeSpec,
 } from './types';
 
+import { cloneThemeInput } from './theme-input';
+
 /** Vanilla 图形辅助函数的输入配置 */
-export type VanillaFigureInput = Pick<VanillaFigureSpec, 'id' | 'viewBox' | 'animations'> &
+export type VanillaFigureInput = Pick<VanillaFigureSpec, 'id' | 'theme' | 'viewBox' | 'animations'> &
   ({ children?: Array<VanillaChildSpec>; layers?: never } | { layers: Array<VanillaLayerSpec>; children?: never });
 
 /** Vanilla 节点普通规格辅助函数 */
@@ -91,11 +93,15 @@ export const path: PathFn = (
 export const scope = (
   config: Omit<VanillaScopeSpec, 'type' | 'children'>,
   children: Array<VanillaChildSpec>,
-): VanillaScopeSpec => ({
-  type: 'scope',
-  ...config,
-  children,
-});
+): VanillaScopeSpec => {
+  const { theme, ...rest } = config;
+  return {
+    type: 'scope',
+    ...rest,
+    ...(theme === undefined ? {} : { theme: cloneThemeInput(theme) }),
+    children,
+  };
+};
 
 /** Vanilla 分层普通规格辅助函数 */
 export const layer = (
@@ -132,6 +138,7 @@ export const figure = (input?: VanillaFigureInput | Array<VanillaChildSpec>): Va
     type: 'figure' as const,
     version: 1 as const,
     ...(input?.id !== undefined ? { id: input.id } : {}),
+    ...(input?.theme !== undefined ? { theme: cloneThemeInput(input.theme) } : {}),
     ...(input?.viewBox !== undefined ? { viewBox: input.viewBox } : {}),
     ...(input?.animations !== undefined ? { animations: input.animations } : {}),
   };

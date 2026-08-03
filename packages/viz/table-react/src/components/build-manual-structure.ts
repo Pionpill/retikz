@@ -35,7 +35,7 @@ const parseScalarValue = (value: unknown, row: number, column: number): IRDataSc
 
 /** 把单个 Cell marker 转成 addressless manual Table Cell */
 const buildCell = (element: ReactElement<CellProps, typeof Cell>, row: number, column: number): IRManualTableCell => {
-  const { children, value, content, presentation, ...fields } = element.props;
+  const { children, value, content, formatter, presentation, ...fields } = element.props;
   const hasChildren = Object.hasOwn(element.props, 'children');
   const hasValue = Object.hasOwn(element.props, 'value');
   const hasContent = Object.hasOwn(element.props, 'content');
@@ -43,6 +43,9 @@ const buildCell = (element: ReactElement<CellProps, typeof Cell>, row: number, c
     throw new Error(`table react: Cell at row ${row}, column ${column} requires exactly one payload source`);
   }
   if (hasContent) {
+    if (formatter !== undefined) {
+      throw new Error(`table react: Cell at row ${row}, column ${column} content cannot be combined with formatter`);
+    }
     if (presentation !== undefined) {
       throw new Error(`table react: Cell at row ${row}, column ${column} content cannot be combined with presentation`);
     }
@@ -58,6 +61,7 @@ const buildCell = (element: ReactElement<CellProps, typeof Cell>, row: number, c
   return {
     ...fields,
     value: scalar,
+    ...(formatter === undefined ? {} : { formatter }),
     ...(presentation === undefined ? {} : { presentation }),
   };
 };

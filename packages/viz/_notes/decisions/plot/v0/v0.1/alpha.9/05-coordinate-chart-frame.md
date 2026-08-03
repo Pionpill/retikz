@@ -31,12 +31,3 @@ alpha.12 证明“内置坐标系走 bespoke 分支、自定义坐标系走 cust
 ## 兼容性
 
 实验性 `PlotCoordinate.Custom`、`createCustomFrame` 与 Record 形态 coordinates 未作为稳定版本发布，不保留 alias。迁移到 `defineCoordinate()`、`CoordinateDefinition`、`createCoordinateFrame()` 与数组形态 `coordinates`。
-
-## 实现指针
-
-- 当前 definition：`packages/viz/plot/src/contract/coordinate/define.ts`
-- 当前 registry：`packages/viz/plot/src/providers/coordinate/registry.ts`
-- 当前 guide 消费：`packages/viz/plot/src/pipeline/guide/guide.ts`
-- 用户文档：`/viz/plot/coordinate/custom-coordinate`
-
-> 本 ADR 已在 plot v0.1-beta.2 收尾时压缩；完整实验性方案保留在本文件的 Proposed 历史版本中。
