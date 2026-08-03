@@ -6,6 +6,7 @@ import {
   InspectOptionsInputSchema,
   InspectOptionsSchema,
   LayoutInspectBoundsOptionsInputSchema,
+  LayoutInspectSpacingOptionsInputSchema,
   mergeInspectOptions,
   resolveBaseLayoutInspectOptions,
 } from '../../../src';
@@ -14,6 +15,7 @@ describe('layout inspection option schemas', () => {
   it('describes every public schema and authoring field for schema reference consumers', () => {
     const schemas = [
       LayoutInspectBoundsOptionsInputSchema,
+      LayoutInspectSpacingOptionsInputSchema,
       BaseLayoutInspectOptionsInputSchema,
       InspectOptionsInputSchema,
       BaseLayoutInspectOptionsSchema,
@@ -21,6 +23,7 @@ describe('layout inspection option schemas', () => {
     ];
     const fields = [
       ...Object.values(LayoutInspectBoundsOptionsInputSchema.shape),
+      ...Object.values(LayoutInspectSpacingOptionsInputSchema.shape),
       ...Object.values(BaseLayoutInspectOptionsInputSchema.shape),
       ...Object.values(InspectOptionsInputSchema.shape),
     ];
@@ -33,6 +36,10 @@ describe('layout inspection option schemas', () => {
     expect(BaseLayoutInspectOptionsInputSchema.parse({ overflow: false })).toEqual({ overflow: false });
     expect(BaseLayoutInspectOptionsInputSchema.parse({ bounds: { visual: true } })).toEqual({
       bounds: { visual: true },
+    });
+    expect(BaseLayoutInspectOptionsInputSchema.safeParse({ spacing: { padding: false } })).toMatchObject({
+      success: true,
+      data: { spacing: { padding: false } },
     });
     expect(() => BaseLayoutInspectOptionsInputSchema.parse({ gap: true })).toThrow();
     expect(() => BaseLayoutInspectOptionsInputSchema.parse({ bounds: { clip: true } })).toThrow();
@@ -49,6 +56,7 @@ describe('layout inspection option schemas', () => {
         allocation: true,
         visual: false,
       },
+      spacing: { padding: true, margin: true },
       overflow: true,
       alignmentGuides: true,
       labels: false,
@@ -83,6 +91,31 @@ describe('layout inspection option schemas', () => {
         allocation: true,
         visual: true,
       },
+    });
+  });
+
+  it('expands box spacing booleans and keeps spacing independent from bounds', () => {
+    expect(resolveBaseLayoutInspectOptions({ bounds: { content: true }, spacing: false })).toMatchObject({
+      bounds: { content: true },
+      spacing: { padding: false, margin: false },
+    });
+    expect(resolveBaseLayoutInspectOptions({ spacing: true })).toMatchObject({
+      spacing: { padding: true, margin: true },
+    });
+    expect(resolveBaseLayoutInspectOptions({ spacing: { padding: false } })).toMatchObject({
+      spacing: { padding: false, margin: true },
+    });
+  });
+
+  it('merges nested spacing objects without clearing siblings and replaces boolean/object groups', () => {
+    expect(
+      mergeInspectOptions({ layout: { spacing: { padding: false } } }, { layout: { spacing: { margin: false } } }),
+    ).toEqual({ layout: { spacing: { padding: false, margin: false } } });
+    expect(mergeInspectOptions({ layout: { spacing: false } }, { layout: { spacing: { padding: true } } })).toEqual({
+      layout: { spacing: { padding: true } },
+    });
+    expect(mergeInspectOptions({ layout: { spacing: { padding: false } } }, { layout: { spacing: true } })).toEqual({
+      layout: { spacing: true },
     });
   });
 

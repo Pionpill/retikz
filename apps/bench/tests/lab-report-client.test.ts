@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   createLabSessionReportStatus,
+  getBenchReport,
   listBenchReports,
   saveBenchReport,
 } from '../src/playground/report/report-client';
@@ -88,6 +89,22 @@ describe('Bench report client', () => {
     await expect(listBenchReports('kernel', undefined, invalidFetcher)).rejects.toThrow('response is invalid');
   });
 
+  it('按稳定标识读取一份完整报告', async () => {
+    const requests: Array<string> = [];
+    const fetcher = (input: RequestInfo | URL): Promise<Response> => {
+      requests.push(String(input));
+      return Promise.resolve(
+        new Response(JSON.stringify({ report }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+    };
+
+    await expect(getBenchReport('kernel', 'single-entity-update', 'run-1', fetcher)).resolves.toEqual(report);
+    expect(requests).toEqual(['/__bench/reports?moduleId=kernel&caseId=single-entity-update&runId=run-1']);
+  });
+
   it('只根据明确运行证据区分通过与警告', () => {
     const baseResult = {
       policyId: 'retained-auto' as const,
@@ -101,7 +118,7 @@ describe('Bench report client', () => {
     };
     const session = {
       id: 'session-1',
-      mode: 'inspect' as const,
+      mode: 'preview' as const,
       scenarioId: 'single-entity-update',
       backend: 'svg' as const,
       startedAt: 1,

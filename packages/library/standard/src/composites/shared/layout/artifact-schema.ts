@@ -1,6 +1,7 @@
+import { LayoutAlignmentGuideDimension } from '@retikz/core';
 import { z } from 'zod';
 
-import { LayoutTrackSourceKind } from './constants';
+import { LayoutSpacingKind, LayoutTrackSourceKind } from './constants';
 
 const LayoutArtifactAxisOverflowSchema = z.strictObject({
   x: z.boolean().describe('Whether the translated bounds extend outside the assigned slot on the x axis.'),
@@ -20,6 +21,31 @@ export const LayoutArtifactRectSchema = z
     height: z.number().nonnegative().describe('Finite non-negative rectangle height.'),
   })
   .describe('Finite rectangle in the current layout container allocation coordinate.');
+
+const LayoutSpacingArtifactBaseSchema = z.strictObject({
+  kind: z.enum(LayoutSpacingKind).describe('Spacing semantic discriminator.'),
+  axis: z.enum(LayoutAlignmentGuideDimension).describe('Physical main axis of the spacing segment.'),
+  bounds: LayoutArtifactRectSchema.describe('Spacing segment in container allocation coordinates.'),
+});
+
+/** 校验 spacing segment 在其物理主轴上具有正长度 */
+const refineLayoutSpacingArtifact = (
+  spacing: z.infer<typeof LayoutSpacingArtifactBaseSchema>,
+  context: z.RefinementCtx,
+) => {
+  const mainLength = spacing.axis === LayoutAlignmentGuideDimension.X ? spacing.bounds.width : spacing.bounds.height;
+  if (mainLength <= 0) {
+    context.addIssue({
+      code: 'custom',
+      path: ['bounds', spacing.axis === LayoutAlignmentGuideDimension.X ? 'width' : 'height'],
+      message: 'Spacing main-axis length must be positive.',
+    });
+  }
+};
+
+export const LayoutSpacingArtifactSchema = LayoutSpacingArtifactBaseSchema.superRefine(
+  refineLayoutSpacingArtifact,
+).describe('Resolved fixed gap or distributed free-space segment.');
 
 export const LayoutArtifactOverflowSchema = z
   .strictObject({

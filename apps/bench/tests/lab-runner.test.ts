@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { LabPolicyResult } from '../src/playground/modules/core';
+import type { LabPolicyResult } from '../src/playground/modules/kernel';
 
 import {
   LabBackend,
@@ -10,7 +10,7 @@ import {
   LabResultSource,
   LabRunMode,
   runKernelLab,
-} from '../src/playground/modules/core';
+} from '../src/playground/modules/kernel';
 
 const createResult = (policyId: LabPolicyResult['policyId']): LabPolicyResult => ({
   policyId,
@@ -29,35 +29,44 @@ const createResult = (policyId: LabPolicyResult['policyId']): LabPolicyResult =>
 });
 
 describe('Kernel Performance Lab runner', () => {
-  it('Inspect 只执行当前策略', async () => {
+  it('Preview 只执行当前策略', async () => {
     const execute = vi.fn(input => Promise.resolve(createResult(input.policyId)));
+    const previewHost = {} as HTMLElement;
     const session = await runKernelLab(
       {
-        mode: LabRunMode.Inspect,
-        scenarioId: 'single-entity-update',
+        mode: LabRunMode.Preview,
+        scenarioId: 'node-selection',
         backend: LabBackend.Svg,
         policyId: LabPolicyId.RetainedAuto,
         warmupRuns: 0,
         sampleRuns: 1,
+        preview: { host: previewHost, width: 2560, height: 1440 },
       },
       execute,
     );
 
     expect(execute).toHaveBeenCalledTimes(1);
-    expect(execute).toHaveBeenCalledWith(expect.objectContaining({ policyId: 'retained-auto', sampleRuns: 1 }));
+    expect(execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        policyId: 'retained-auto',
+        sampleRuns: 1,
+        preview: { host: previewHost, width: 2560, height: 1440 },
+      }),
+    );
     expect(session.results.map(result => result.policyId)).toEqual(['retained-auto']);
   });
 
-  it.each([LabRunMode.Compare, LabRunMode.Measure])('%s 使用同一 fixture 依次执行三个策略', async mode => {
+  it('Benchmark 使用同一 fixture 依次执行三个策略', async () => {
     const execute = vi.fn(input => Promise.resolve(createResult(input.policyId)));
     const session = await runKernelLab(
       {
-        mode,
-        scenarioId: 'single-entity-update',
+        mode: LabRunMode.Benchmark,
+        scenarioId: 'node-selection',
         backend: LabBackend.Canvas,
         policyId: LabPolicyId.RetainedAuto,
         warmupRuns: 3,
         sampleRuns: 12,
+        preview: { host: {} as HTMLElement, width: 640, height: 400 },
       },
       execute,
     );
@@ -69,6 +78,7 @@ describe('Kernel Performance Lab runner', () => {
     ]);
     expect(session.results).toHaveLength(3);
     expect(session.results.every(result => result.timing.samples === 1)).toBe(true);
+    expect(execute.mock.calls.every(([input]) => !('preview' in input))).toBe(true);
   });
 
   it('在执行策略前记录会话开始时间', async () => {
@@ -81,8 +91,8 @@ describe('Kernel Performance Lab runner', () => {
 
     const session = await runKernelLab(
       {
-        mode: LabRunMode.Inspect,
-        scenarioId: 'single-entity-update',
+        mode: LabRunMode.Preview,
+        scenarioId: 'node-selection',
         backend: LabBackend.Svg,
         policyId: LabPolicyId.RetainedAuto,
         warmupRuns: 0,

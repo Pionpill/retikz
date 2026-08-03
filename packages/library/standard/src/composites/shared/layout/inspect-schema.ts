@@ -5,7 +5,13 @@ import { z } from 'zod';
 export const FlexLayoutInspectLocalOptionsInputSchema = z
   .strictObject({
     lines: z.boolean().optional().describe('Whether to draw FlexLayout line regions.'),
-    gaps: z.boolean().optional().describe('Whether to shade FlexLayout row and column gaps.'),
+    gaps: z.boolean().optional().describe('Whether to shade authored FlexLayout row and column gaps.'),
+    distributedSpace: z
+      .boolean()
+      .optional()
+      .describe(
+        'Whether to draw only the dashed perimeter of positive free space introduced by FlexLayout content distribution, leaving its interior transparent.',
+      ),
   })
   .describe('Sparse FlexLayout-specific inspection options.');
 
@@ -14,7 +20,13 @@ export const GridLayoutInspectLocalOptionsInputSchema = z
   .strictObject({
     tracks: z.boolean().optional().describe('Whether to draw GridLayout track boundaries.'),
     cells: z.boolean().optional().describe('Whether to draw individual GridLayout cell bounds.'),
-    gaps: z.boolean().optional().describe('Whether to shade GridLayout row and column gaps.'),
+    gaps: z.boolean().optional().describe('Whether to shade authored GridLayout row and column gaps.'),
+    distributedSpace: z
+      .boolean()
+      .optional()
+      .describe(
+        'Whether to draw only the dashed perimeter of positive free space introduced by GridLayout content distribution, leaving its interior transparent.',
+      ),
     spans: z.boolean().optional().describe('Whether to mark items that span multiple GridLayout tracks.'),
   })
   .describe('Sparse GridLayout-specific inspection options.');
@@ -45,7 +57,11 @@ export const OverlayLayoutInspectOptionsInputSchema = BaseLayoutInspectOptionsIn
 
 /** FlexLayout family-local canonical schema */
 export const FlexLayoutInspectLocalOptionsSchema = FlexLayoutInspectLocalOptionsInputSchema.transform(value =>
-  Object.freeze({ lines: value.lines ?? true, gaps: value.gaps ?? true }),
+  Object.freeze({
+    lines: value.lines ?? true,
+    gaps: value.gaps ?? true,
+    distributedSpace: value.distributedSpace ?? true,
+  }),
 ).describe('Canonical FlexLayout-specific inspection options.');
 
 /** GridLayout family-local canonical schema */
@@ -54,6 +70,7 @@ export const GridLayoutInspectLocalOptionsSchema = GridLayoutInspectLocalOptions
     tracks: value.tracks ?? true,
     cells: value.cells ?? false,
     gaps: value.gaps ?? true,
+    distributedSpace: value.distributedSpace ?? true,
     spans: value.spans ?? true,
   }),
 ).describe('Canonical GridLayout-specific inspection options.');

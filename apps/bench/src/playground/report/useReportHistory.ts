@@ -1,8 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import type { BenchReportSummary } from '../../shared';
+import type { BenchLabReport, BenchReportSummary } from '../../shared';
 
-import { listBenchReports } from './report-client';
+import { getBenchReport, listBenchReports } from './report-client';
+
+/** 当前选择的报告身份 */
+type SelectedReportIdentity = Readonly<{
+  moduleId: string;
+  caseId: string;
+  runId: string;
+}>;
 
 /** 本地报告历史 Hook 返回值 */
 export type UseReportHistoryValue = Readonly<{
@@ -10,6 +17,11 @@ export type UseReportHistoryValue = Readonly<{
   diagnostics: ReadonlyArray<string>;
   loading: boolean;
   error?: string;
+  selectedRunId?: string;
+  selectedReport?: BenchLabReport;
+  detailLoading: boolean;
+  detailError?: string;
+  selectReport: (runId: string) => void;
   refresh: () => void;
 }>;
 
@@ -19,8 +31,19 @@ export const useReportHistory = (moduleId: string, caseId?: string): UseReportHi
   const [diagnostics, setDiagnostics] = useState<ReadonlyArray<string>>([]);
   const [loading, setLoading] = useState(caseId !== undefined);
   const [error, setError] = useState<string>();
+  const [selection, setSelection] = useState<SelectedReportIdentity>();
+  const [selectedReport, setSelectedReport] = useState<BenchLabReport>();
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string>();
   const [revision, setRevision] = useState(0);
   const refresh = useCallback(() => setRevision(current => current + 1), []);
+  const selectReport = useCallback(
+    (runId: string) => {
+      if (caseId === undefined) return;
+      setSelection(Object.freeze({ moduleId, caseId, runId }));
+    },
+    [caseId, moduleId],
+  );
 
   useEffect(() => {
     let active = true;
@@ -55,5 +78,48 @@ export const useReportHistory = (moduleId: string, caseId?: string): UseReportHi
     };
   }, [caseId, moduleId, revision]);
 
-  return Object.freeze({ reports, diagnostics, loading, ...(error === undefined ? {} : { error }), refresh });
+  useEffect(() => {
+    let active = true;
+    if (selection === undefined) {
+      setSelectedReport(undefined);
+      setDetailLoading(false);
+      setDetailError(undefined);
+      return () => {
+        active = false;
+      };
+    }
+    setSelectedReport(undefined);
+    setDetailLoading(true);
+    setDetailError(undefined);
+    void getBenchReport(selection.moduleId, selection.caseId, selection.runId)
+      .then(report => {
+        if (active) setSelectedReport(report);
+      })
+      .catch(reason => {
+        if (active) setDetailError(reason instanceof Error ? reason.message : String(reason));
+      })
+      .finally(() => {
+        if (active) setDetailLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [selection]);
+
+  const selectionMatchesCurrentCase = selection?.moduleId === moduleId && selection.caseId === caseId;
+  const visibleSelectedReport =
+    selectionMatchesCurrentCase && selectedReport?.runId === selection.runId ? selectedReport : undefined;
+
+  return Object.freeze({
+    reports,
+    diagnostics,
+    loading,
+    ...(error === undefined ? {} : { error }),
+    ...(selectionMatchesCurrentCase ? { selectedRunId: selection.runId } : {}),
+    ...(visibleSelectedReport === undefined ? {} : { selectedReport: visibleSelectedReport }),
+    detailLoading: selectionMatchesCurrentCase && detailLoading,
+    ...(selectionMatchesCurrentCase && detailError !== undefined ? { detailError } : {}),
+    selectReport,
+    refresh,
+  });
 };

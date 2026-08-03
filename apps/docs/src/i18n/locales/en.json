@@ -131,6 +131,7 @@
     "grid": "Grid",
     "axes": "Axes",
     "frame": "Frame",
+    "legend": "Legend",
     "layout": "Layout",
     "flexLayout": "FlexLayout",
     "gridLayout": "GridLayout",

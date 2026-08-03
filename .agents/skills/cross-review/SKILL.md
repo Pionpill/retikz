@@ -39,7 +39,7 @@ PowerShell：
 Get-Command codex, claude -ErrorAction SilentlyContinue | Select-Object Name, Source
 ```
 
-至少有 **2 个实际不同的模型**完成才算 cross-review。同厂商不同模型可以成立，但要说明多样性局限；同一模型重复运行不能算多模型。可用时优先并发选择 2–3 个不同模型，例如 sol、terra、luna；某名称未被工具暴露时必须跳过并如实记录。只剩一个模型时：强制 Gate halt 交人工；可选评审须经人工明确接受后才能降级，且不得称为交叉评审。
+至少有 **2 个实际不同的模型**完成才算 cross-review。同厂商不同模型可以成立，但要说明多样性局限；同一模型重复运行不能算多模型。优先选择与主 agent 不同的模型；例如主 agent 为 sol 时，先选实际暴露的 terra，再选实际暴露的 luna 或其它非 sol 模型。某名称未被工具暴露时必须跳过并如实记录；调度能力支持时为 subagent 设置 `reasoning_effort: max`。只剩一个模型时：强制 Gate halt 交人工；可选评审须经人工明确接受后才能降级，且不得称为交叉评审。
 
 ## 输入范围
 
@@ -140,7 +140,7 @@ git --no-pager log --oneline -1
 ### 2. 选评审员阵容
 
 - 从当前工具元数据和可用 CLI 探测模型。
-- 每轮选择 2–3 个实际不同的模型；优先跨 model family / 厂商。
+- 每轮选择 2–3 个实际不同的模型；先尽量避开主 agent 的模型，再优先跨 model family / 厂商；调度能力支持时使用 `reasoning_effort: max`。
 - 记录计划阵容、实际完成阵容、失败 / 超时和降级说明。
 - 同轮使用 fresh agent / fresh context；collaboration subagent 使用 `fork_turns: "none"` 或等价无历史上下文方式，由 prompt 完整传入固定材料。上一轮评审员不得携带旧结论进入新轮。
 
@@ -215,7 +215,8 @@ claude -p --model <model> \
 3. 有 BLOCKING 或需修订的 WARNING 时，完成修订与必要验证，再冻结新快照进入下一轮。
 4. 下一轮使用 fresh agents，并重新并发派发；不能让上一轮单一评审员口头确认代替完整复审。
 5. 最新一轮所有实际评审员完成、无 BLOCKING、WARNING 均已修订或有可验证的人工裁决时 PASS。
-6. 最多 3 轮。第 3 轮仍未 PASS、模型分歧无法裁决、快照漂移或只剩一个模型时 halt。
+6. 满足 PASS 条件后立即结束，不为凑轮次追加评审；只有完成修订后才进入下一轮。
+7. 最多 9 轮。第 9 轮仍未 PASS、模型分歧无法裁决、快照漂移或只剩一个模型时 halt，交人工决策。
 
 ### 7. 输出分级报告
 
@@ -303,7 +304,7 @@ git status --short    # 应与评审前一致；codex/claude 评审不应改任�
 ## 与其它 skill 协同
 
 - **cross-test**：cross-review 找出的疑似 BLOCKING，转 cross-test 写 fail 测试坐实，再修。
-- **flow-alpha**：Architecture Gate 与 Plan Gate 复用本 skill 的固定快照、并发模型和 1–3 轮协议。
+- **flow-alpha**：Architecture Gate 与 Plan Gate 复用本 skill 的固定快照、并发模型和 1–9 轮协议。
 - **flow-beta / flow-rc / flow-long-task / develop-refactor**：已有 review gate 复用同一轮次协议；本 skill 不扩大各自授权。
 - 评审发现用户可见行为/契约问题且需要改 → 走对应 develop / docs skill，**本 skill 不直接改代码**。
 
@@ -324,6 +325,6 @@ git status --short    # 应与评审前一致；codex/claude 评审不应改任�
 - 已确认评审员阵容（至少 2 个实际不同模型），并在同一轮并发跑完。
 - 已收集各家原始输出，对失败/超时的如实记录。
 - 已归并去重、标注每条 finding 的提出模型与共识/分歧，并对冲突给出主 AI 裁决。
-- 需要修订时已使用新快照和 fresh agents 复审；最多 3 轮，未通过时已 halt。
+- 无问题时已在当前轮立即 PASS；需要修订时已使用新快照和 fresh agents 复审；最多 9 轮，未通过时已 halt 交人工。
 - 已输出三档分级报告；有 BLOCKING/WARNING 或用户要求时已写入 `notes/reports/cross-review-YYYY-MM-DD-<scope>.md`，且未 stage / commit 该 ignored 报告文件。
 - 已 `git status` 复核仓库未被评审过程改动。

@@ -5,7 +5,12 @@ import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { flexLayoutPlaygroundControls, previewControlContract } from './flex-layout-playground.controls';
+import { resolveLayoutInspectionValues } from '../layout-inspection-controls';
+import {
+  flexLayoutInspectionFamilyControls,
+  flexLayoutPlaygroundControls,
+  previewControlContract,
+} from './flex-layout-playground.controls';
 
 export const previewControls = flexLayoutPlaygroundControls;
 
@@ -17,7 +22,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     style={{ maxWidth: '100%', height: 'auto' }}
   >
     <FlexLayout
-      inspect={values.inspect}
+      inspect={resolveLayoutInspectionValues(values, flexLayoutInspectionFamilyControls)}
       size={{ x: { kind: 'fixed', value: 340 }, y: { kind: 'fixed', value: 170 } }}
       padding={12}
       columnGap={8}

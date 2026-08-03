@@ -1,16 +1,16 @@
-# Standard v0.1 alpha.2 Roadmap：通用布局容器
+# Standard v0.1 alpha.2 Roadmap：通用布局与 Legend
 
-> 状态：已完成，ADR-01～07 均已 Accepted
+> 状态：进行中；ADR-01～07 已 Accepted，ADR-08～09 Proposed，alpha.2 为 Layout Inspector 视觉语义与通用 Legend 收口重新打开
 >
-> 主题：由 Standard 提供 renderer-agnostic 的高层 Box Layout 容器，用确定性绘图布局替代调用方对 CSS 布局或私有 solver 的依赖
+> 主题：由 Standard 提供 renderer-agnostic 的高层 Box Layout 容器与已解析 Legend 呈现，让调用方复用确定性布局、视觉解释结构与 artifact
 >
 > 关联：[Standard v0.1 roadmap](../roadmap.md) · [Standard library design](../../../../../architecture/standard-library-design.md) · [能力完备性与模块边界](../../../../../../../../notes/architecture/capability-design.md) · [Core layout-aware composite ADR](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.1/07-layout-aware-composite.md) · [Core proposal / probe ADR](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/08-layout-proposal-probe-contract.md)
 
 ## 定位
 
-alpha.2 只建设 Standard 自身的通用布局能力。`@retikz/standard` 拥有布局容器的 JSON-safe IR、公共 Box 词汇、纯 solver、layout-aware compile、artifact 与 diagnostics；`@retikz/standard-react` 和 `@retikz/standard-vanilla` 等价暴露 authoring 入口。
+alpha.2 建设 Standard 自身的通用布局能力，并在该底座上增加领域无关 Legend。`@retikz/standard` 拥有布局容器与 Legend 的 JSON-safe IR、公共 Box 词汇、layout-aware compile、artifact 与 diagnostics；`@retikz/standard-react` 和 `@retikz/standard-vanilla` 等价暴露 authoring 入口。
 
-Plot、Table、Gantt 与未来其它 Tier 2 可以在各自 milestone 内采用这些容器，但采用哪一种容器属于其内部技术实现。alpha.2 不迁移任何其它 Tier 2，不在其它 Tier 2 的领域 IR、公共 API、文档或 artifact 中暴露 Flex / Grid / Overlay 选型。
+Plot、Table、Gantt 与未来其它 Tier 2 可以在各自 milestone 内采用这些容器，并把已经解析好的视觉样本交给 Standard Legend。采用哪一种容器仍属于其内部技术实现；alpha.2 不迁移其它 Tier 2，也不把 field、channel、scale、Cell、relation role、provenance 或交互状态写入 Standard。
 
 依赖方向固定为：
 
@@ -31,6 +31,7 @@ Standard Layout 直接使用时可以是持久化真源；被其它 Tier 2 使�
 - 建立一致的作者层尺寸、Box、alignment、distribution、overflow 与 item identity 词汇
 - 以固定的 minimum / natural 两级上下文化 contribution 支撑文本重排、公式、固定图形与嵌套容器
 - 明确区分 resolved slot、真实 allocation bounds 与 visual bounds，输出稳定的 `LayoutArtifact`
+- 建立 `items | ramp` 两种 Legend 呈现 form，以任意 `IRChild` 作为视觉 sample，并输出稳定的 item / tick artifact
 - 复用 alpha.1 的 definition、module、bundle、preset 与 adapter 机制，不建立新的全局入口
 
 本 milestone 不追求 CSS 兼容，而是从成熟布局模型中提取适合确定性绘图编译的有限 profile：
@@ -73,6 +74,13 @@ Core 不拥有 Flex / Grid / Overlay IR、LayoutItem、solver、item key 或 Sta
 
 adapter 不复制 Standard schema、solver、layout state、diagnostics 或 lowering。
 
+### Legend 与领域包边界
+
+- Standard 拥有 title、items、ramp、sample / label 布局、normalized tick、overflow 与领域无关 artifact
+- Plot、Table、逻辑组件与未来 Tier 2 拥有领域解析、formatter、theme mapping、provenance / locator 与交互意图
+- sample 使用 Core primitive 或既有 CompositeDefinition registry，不建立 Legend 专用 sample union、definition family 或 renderer 分支
+- Legend 不拥有相对 Plot/Table 主体的停靠、碰撞、分页、滚动或自动 placement
+
 ## 关键设计不变量
 
 - Layout 使用 Core 的屏幕物理坐标，容器内部以局部 allocation box 组织 child；领域数学坐标不改变 Layout 坐标语义
@@ -83,6 +91,7 @@ adapter 不复制 Standard schema、solver、layout state、diagnostics 或 lowe
 - 有确定几何结果的空间不足保留 slot 与真实 bounds，并由 Standard artifact / overflow policy 处理；定义歧义、非法输入和无法求值的 fill 必须 fail-loud
 - Flex、Grid 与 Overlay 是三个明确 solver，不建立万能 Layout 或可替换 layout solver registry
 - Generic container 只消费任意 `IRChild`，不理解 Plot、Table、Gantt、Graph 或文档领域语义
+- Legend 只消费领域已解析的 visual sample、label 与 normalized tick，不理解 scale、channel、Cell 或 relation role
 
 具体 schema 字段、默认值、Box edge 口径、Flex freeze/redistribute、Grid track 求解、Overlay placement 与 artifact payload 由对应 ADR 冻结，roadmap 不替代公开契约或算法设计。
 
@@ -108,15 +117,17 @@ ADR-01 不重新设计或私有补齐 Core contract；在可消费的 Kernel 版
 
 ## ADR 顺序
 
-| ADR | 主题                                     | 主要决策                                                                                                    | 依赖                                               | 最终状态 |
-| --- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | -------- |
-| 01  | Layout Profile 与 Core Gate              | 冻结 alpha.2 能力矩阵、坐标、proposal / contribution / solve / placement 边界，以行为测试确认 Core 前置能力 | alpha.1 capability loading；Core ADR-08 可消费版本 | Accepted |
-| 02  | Box、LayoutItem 与共享词汇               | 冻结尺寸、spacing、alignment、distribution、overflow、key/path、artifact 公共结构与 diagnostics             | ADR-01 PASS                                        | Accepted |
-| 03  | FlexLayout                               | 冻结 schema、line formation、wrap、grow/shrink、free-space distribution、cross-axis feedback 与 nested Flex | ADR-01～02                                         | Accepted |
-| 04  | GridLayout                               | 冻结 tracks、span、implicit tracks、稳定 auto-placement、track sizing、双轴 feedback 与 nested Grid         | ADR-01～03                                         | Accepted |
-| 05  | OverlayLayout                            | 冻结 aligned/positioned placement、anchor、offset、size participation、paint order、clip 与 nested Overlay  | ADR-01～04                                         | Accepted |
-| 06  | Artifact、capability、adapter 与文档收口 | 冻结 artifact schema，接入 module/bundle/preset、React/Vanilla，完成 docs 与跨入口等价性                    | ADR-02～05                                         | Accepted |
-| 07  | Layout Inspector                         | 冻结组件局部、Scope 子树与 Layout 全图策略，以独立 inspection plane 可视化真实 artifact 且不污染主 Scene    | ADR-02～06；Kernel inspection Gate                 | Accepted |
+| ADR                          | 主题                                     | 主要决策                                                                                                                                      | 依赖                                               | 最终状态 |
+| ---------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | -------- |
+| 01                           | Layout Profile 与 Core Gate              | 冻结 alpha.2 能力矩阵、坐标、proposal / contribution / solve / placement 边界，以行为测试确认 Core 前置能力                                   | alpha.1 capability loading；Core ADR-08 可消费版本 | Accepted |
+| 02                           | Box、LayoutItem 与共享词汇               | 冻结尺寸、spacing、alignment、distribution、overflow、key/path、artifact 公共结构与 diagnostics                                               | ADR-01 PASS                                        | Accepted |
+| 03                           | FlexLayout                               | 冻结 schema、line formation、wrap、grow/shrink、free-space distribution、cross-axis feedback 与 nested Flex                                   | ADR-01～02                                         | Accepted |
+| 04                           | GridLayout                               | 冻结 tracks、span、implicit tracks、稳定 auto-placement、track sizing、双轴 feedback 与 nested Grid                                           | ADR-01～03                                         | Accepted |
+| 05                           | OverlayLayout                            | 冻结 aligned/positioned placement、anchor、offset、size participation、paint order、clip 与 nested Overlay                                    | ADR-01～04                                         | Accepted |
+| 06                           | Artifact、capability、adapter 与文档收口 | 冻结 artifact schema，接入 module/bundle/preset、React/Vanilla，完成 docs 与跨入口等价性                                                      | ADR-02～05                                         | Accepted |
+| 07                           | Layout Inspector                         | 冻结组件局部、Scope 子树与 Layout 全图策略，以独立 inspection plane 可视化真实 artifact 且不污染主 Scene                                      | ADR-02～06；Kernel inspection Gate                 | Accepted |
+| 08                           | Layout Inspector 视觉语义                | 以 occurrence palette、spacing pattern 与统一 dashed 边界规范 nested overlay，区分固定 gap / distributed space，并拆分 bounds 与 spacing 开关 | ADR-07；Core inspection DTO 与 Render parity Gate  | Proposed |
+| [09](./09-generic-legend.md) | 通用 Legend 已解析呈现                   | 冻结 items / ramp、任意 IRChild sample、Core 引用语义、约束布局、typed artifact、capability 幂等汇合与跨 adapter 等价                         | ADR-02～06；Plot/Table 真实 descriptor             | Proposed |
 
 每份 ADR 均从 `Proposed` 完成 test-contract、Architecture Gate 与人工确认后进入实现，并在收尾时压缩为长期 `Accepted` 记录。
 
@@ -145,6 +156,10 @@ Core ADR-08 实现 / 出口审计 / 可消费版本
                     │
                     ▼
 07 Layout Inspector + Kernel inspection Gate
+            ┌───────┴────────┐
+            ▼                ▼
+08 visual semantics    09 generic Legend
+ + truthful spacing     + resolved samples
 ```
 
 - ADR-02 只抽取 Flex、Grid 与 Overlay 确认共享的公开词汇和不变量，不建立未被本 milestone 消费的通用 framework
@@ -154,6 +169,9 @@ Core ADR-08 实现 / 出口审计 / 可消费版本
 - LayoutItem key 是容器内 authored identity，不替代后续语义组件的全局 identity、Target 或 Connector contract
 - 每项 capability 接入 alpha.1 已建立的 module、bundle、all preset 与 adapter 机制，不使用包根导入副作用或隐式全局注册
 - Frame 默认继续使用现有纯 `expand` 主链；没有独立 ADR 证明时不迁入 layout-aware compile
+- ADR-08 重新打开 alpha.2，只收口既有 Layout Inspector 的公开 DTO、resolved spacing artifact、正交 inspection authoring option 与双后端视觉语义；不新增交互能力或其它 Tier 2 适配
+- ADR-09 与 ADR-08 在 ADR-06 之后没有产品依赖，可以独立完成 Gate；Legend 复用已发布前的 Box Layout 底座，不等待独立 alpha.3
+- ADR-09 只发布 Standard 可消费组件与跨包契约；Plot/Table/逻辑组件的实际迁移仍由各自 milestone 负责
 
 ## Architecture Gate
 
@@ -168,6 +186,8 @@ Gate 至少证明：
 - 内置与自定义能力进入同一 Core Composite registry，module、bundle、preset 与直接 definitions 的结果等价
 - React 与 Vanilla 只负责 authoring / adapter 接线，相同 Standard 输入与 compile environment 产生等价结果
 - 空 children、单 child、零尺寸、非法数值、空间不足、重复 key 与超深 nested layout 均有明确结果或 fail-loud diagnostics
+- Legend 的 items / ramp form、任意 IRChild sample、Core 引用语义、normalized tick、空内容与 typed artifact 具有确定契约
+- 领域传递与调用方直接提供同一 LegendModule object reference 时幂等，同名不同 object identity 与真实 composite key 冲突继续 fail-loud
 
 以下方案不能通过 Gate：
 
@@ -186,6 +206,7 @@ Gate 至少证明：
 - Overlay tests 覆盖非中心 bounds、alignment / position / offset、paint order、size participation、clip、空 / 单项输入与 nested layout
 - compile integration tests 验证 probe / replay 同源、一次性 replay、wrapper 坐标顺序、artifact occurrence 与 provider / reference / resource 环境
 - capability loading tests 验证按项 definition、部分 bundle、all preset、React 静态 adapter 与 Vanilla adapters 的等价性和冲突诊断
+- Legend tests 验证 line / node / registered composite sample、items / ramp、约束换行、normalized tick、引用失败、artifact 与 module 幂等汇合
 - renderer parity 只比较同一 Scene 语义，不把 SVG / Canvas 回读当作布局 oracle
 - 双语 docs 同步三个 Layout、LayoutItem、capability loading、nested layout 与 overflow 用法；不在其它 Tier 2 文档中承诺其内部 Layout 选型
 
@@ -193,22 +214,26 @@ Gate 至少证明：
 
 - [x] Core ADR-08 已 Accepted，并有 Standard 可消费的 Kernel 版本
 - [x] ADR-01～07 均完成 test contract、Architecture Gate、人工设计确认并进入 Accepted
+- [ ] ADR-08 完成 test contract、Architecture Gate、实现、自测、双语文档与视觉验证并进入 Accepted
+- [ ] ADR-09 完成 test contract、Architecture Gate、实现、自测、双语文档与真实直接 authoring 消费并进入 Accepted
 - [x] FlexLayout、GridLayout、OverlayLayout、LayoutItem 与 layout artifact 的 schema、solver、layout-aware compile、diagnostics 与公共 exports 形成闭环
 - [x] 全部能力接入 module、bundle、all preset、React 与 Vanilla，不引入隐式注册或 adapter 私有语义
 - [x] 任意 `IRChild`、nested layout、文本双轴 proposal、baseline、non-zero bounds、overflow / clip 和失败路径均有自动化证据
 - [x] Flex/Grid/Overlay Inspector 支持单组件、Scope 子树与 Layout 全图开关，SVG/Canvas、static/retained 等价且不污染主 Scene
+- [ ] Layout Inspector 用颜色区分 final occurrence；margin/padding/gap 只绘制无底色的 12-unit 斜线和单份 dashed boundary，distributed 仅绘制 dashed perimeter、内部保持透明；box 与内部结构统一 dashed 且共线不重画；bounds 与 spacing 可独立配置，推荐态显示 content outline、内部结构线与固定 gap，且 Flex/Grid 不再从相邻空白误判 gap
+- [ ] Legend 以 items / ramp 结构接收任意 IRChild sample，直接 IR、React、Vanilla 具有等价 Scene / artifact，且同一 LegendModule 的直接与传递消费安全汇合
 - [x] 现有 `Grid` 与新 `GridLayout` 无概念、schema、definition key 或文档歧义
-- [x] Standard 中英文文档和真实示例完整，不修改其它 Tier 2 的领域文档或公开契约
-- [x] Standard 三包与 docs 完成受影响范围的格式、lint、类型、测试、构建和 package exports 验证
-- [x] adversarial testing 无未处理 BLOCKING，milestone 经人工确认可以收口
+- [ ] Standard 中英文文档和真实示例完整，不修改其它 Tier 2 的领域文档或公开契约
+- [ ] Standard 三包与 docs 完成受影响范围的格式、lint、类型、测试、构建和 package exports 验证
+- [ ] adversarial testing 无未处理 BLOCKING，milestone 经人工确认可以收口
 
 ## 不在 alpha.2 范围
 
-- Plot、Table、Gantt 或其它 Tier 2 的适配、迁移、文档与公开 artifact 变化
+- Plot、Table、Gantt、逻辑组件或其它 Tier 2 的实际适配、迁移、文档与领域 artifact 变化
 - 完整 CSS layout、DOM / CSS intrinsic reflow、浏览器历史默认值、writing mode、百分比、`calc()`、viewport/container query
 - subgrid、masonry、dense auto-placement、named area、named line、负 margin 与额外 canonical Row / Column / Stack IR
 - Tree、Layered、Force、Circular、GraphModel、rank、cluster、port constraint、edge routing 与碰撞避让
 - 自动 label placement、全局绝对画布、selection、history、viewport 与编辑器运行时
 - 新的 Scene primitive、renderer 语义、全局 layout registry 或 Standard 私有 compile pipeline
 - 异步测量、renderer 回读、跨 compile cache、增量 solver 或 replay 持久化
-- alpha.3 的 Legend、alpha.4 的 Stage / Decision / Terminal / Junction，以及 alpha.5 的 Connector / Callout
+- Stage / Decision / Terminal / Junction、Connector / Callout 与其它逻辑语义组件

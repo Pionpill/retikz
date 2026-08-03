@@ -54,7 +54,7 @@ Switch the non-dense auto-placement direction, fraction weight, gaps, and cell a
 <ComponentPreview
   files="grid-layout-playground"
   size="lg"
-  caption="Layout guides are enabled by default and can be disabled under Inspection overlay. They are not part of the figure, layout bounds, or hit testing."
+  caption="Recommended shows the content outline, track bounds, and fixed gaps; use Inspection overlay to reveal padding, margin, distributed-space boundaries, and other details."
 />
 
 ## How it works
@@ -91,7 +91,7 @@ This physical x-to-y order lets text determine height after column width is know
 | ---------- | --------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `inspect?` | `boolean` \| `GridLayoutInspectOptions` | Inherited | Omission inherits Layout or the nearest Scope; `false` disables only this occurrence and leaves nested layouts unchanged |
 
-The object form controls `tracks`, `cells`, `gaps`, and `spans` independently. See [Runtime Reference](/standard/layout/reference/runtime#layout-inspector) for shared fields and root or Scope policies.
+The object form controls `tracks`, `cells`, fixed `gaps`, `distributedSpace`, and `spans` independently. See [Runtime Reference](/standard/layout/reference/runtime#layout-inspector) for shared fields and root or Scope policies.
 
 ### `GridLayoutInput`
 

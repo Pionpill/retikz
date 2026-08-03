@@ -131,6 +131,7 @@
     "grid": "网格",
     "axes": "坐标轴",
     "frame": "分组框",
+    "legend": "图例",
     "layout": "布局容器",
     "flexLayout": "弹性布局",
     "gridLayout": "网格布局",

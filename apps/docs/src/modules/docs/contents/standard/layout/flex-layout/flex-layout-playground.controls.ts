@@ -2,22 +2,43 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createLayoutInspectionControls } from '../layout-inspection-controls';
+
+/** FlexLayout 辅助层的 family 开关 */
+export const flexLayoutInspectionFamilyControls = [
+  { id: 'inspectLines', option: 'lines', label: 'Flex 行区域', recommended: true },
+  { id: 'inspectGaps', option: 'gaps', label: '固定 gap', recommended: true },
+  { id: 'inspectDistributedSpace', option: 'distributedSpace', label: '分布自由空间边界', recommended: false },
+] as const;
+
+const inspectionControls = createLayoutInspectionControls({
+  labels: {
+    details: '辅助层细节',
+    container: '容器边界',
+    content: '内容边界',
+    padding: 'Padding 区域',
+    slot: '槽位边界',
+    margin: 'Margin 区域',
+    allocation: '分配边界',
+    visual: '视觉边界',
+    overflow: '溢出警告',
+    alignmentGuides: '对齐参考线',
+    labels: '文字标签',
+    preset: '辅助层预设',
+    custom: '自定义',
+    recommended: '推荐',
+    all: '全部',
+    off: '关闭',
+  },
+  familyControls: flexLayoutInspectionFamilyControls,
+});
+
 /** FlexLayout 关键分配行为的中文属性面板 */
 export const flexLayoutPlaygroundControls = definePreviewControls({
   presentation: 'panel',
   title: '弹性布局参数',
   sections: [
-    {
-      label: '辅助层',
-      controls: [
-        {
-          kind: 'switch',
-          id: 'inspect',
-          label: '显示布局辅助线',
-          defaultValue: true,
-        },
-      ],
-    },
+    ...inspectionControls.sections,
     {
       label: '方向与换行',
       controls: [
@@ -70,17 +91,22 @@ export const flexLayoutPlaygroundControls = definePreviewControls({
 });
 
 /** 当前 FlexLayout playground 的稳定文档契约 */
+const canonicalValues = {
+  ...inspectionControls.canonicalValues,
+  direction: 'row',
+  wrap: 'wrap',
+  alignItems: 'center',
+  basis: 92,
+  grow: 1,
+  shrink: 1,
+};
+
 export const previewControlContract = {
   controls: flexLayoutPlaygroundControls,
-  canonicalValues: {
-    inspect: true,
-    direction: 'row',
-    wrap: 'wrap',
-    alignItems: 'center',
-    basis: 92,
-    grow: 1,
-    shrink: 1,
-  },
+  stateOnlyIds: inspectionControls.stateOnlyIds,
+  canonicalValues,
+  presets: inspectionControls.presetsFor(canonicalValues),
+  presetSelector: inspectionControls.presetSelector,
   relatedApis: [
     'FlexLayout.inspect',
     'FlexLayout.direction',
