@@ -5,7 +5,7 @@ import { defineComposite } from '@retikz/core';
 import type { IRGrid } from './types';
 
 import { STANDARD_NAMESPACE } from '../../shared';
-import { lowerGrid } from './lower';
+import { lowerGrid } from './pipeline';
 import { GridSchema } from './schema';
 
 /** Standard Grid 的官方 Core composite definition */

@@ -5,7 +5,7 @@ import { defineComposite } from '@retikz/core';
 import type { IRFrame } from './types';
 
 import { STANDARD_NAMESPACE } from '../../shared';
-import { lowerFrame } from './lower';
+import { lowerFrame } from './pipeline';
 import { FrameSchema } from './schema';
 
 /** Standard Frame 的官方 Core composite definition */

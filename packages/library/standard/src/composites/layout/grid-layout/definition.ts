@@ -7,7 +7,7 @@ import type { GridLayoutArtifact, IRGridLayout } from './types';
 
 import { STANDARD_NAMESPACE } from '../../shared';
 import { GridLayoutInspectLocalOptionsInputSchema, GridLayoutInspectLocalOptionsSchema } from '../shared';
-import { compileGridLayout } from './compile';
+import { compileGridLayout } from './pipeline';
 import { inspectGridLayoutArtifact } from './inspection';
 import { GridLayoutArtifactSchema, GridLayoutSchema } from './schema';
 

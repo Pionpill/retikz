@@ -5,7 +5,7 @@ import { defineComposite } from '@retikz/core';
 import type { IRLegend, LegendArtifact } from './types';
 
 import { STANDARD_NAMESPACE } from '../../shared';
-import { compileLegend } from './compile';
+import { compileLegend } from './pipeline';
 import { LegendArtifactSchema, LegendSchema } from './schema';
 
 /** Standard Legend 的官方 Core layout-aware composite definition */

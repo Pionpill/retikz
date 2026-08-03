@@ -91,7 +91,7 @@ packages/library/standard/src/
   index.ts                 # 只聚合稳定公开入口
 ```
 
-- `arrows/`、`shapes/` 等目录是能力 owner；目录内部再按复杂度增量创建 `schema.ts`、`types.ts`、`define.ts`、`definitions.ts`、`registry.ts`、`lower.ts`、`factory.ts` 等文件。它们仍遵守 `shared → schema / contract → provider → pipeline` 的依赖方向，但不把这些层提升为 Standard 根目录 owner
+- `arrows/`、`shapes/` 等目录是能力 owner；目录内部再按复杂度增量创建 `schema.ts`、`types.ts`、`define.ts`、`definitions.ts`、`registry.ts`、`pipeline.ts`、`factory.ts` 等文件。它们仍遵守 `shared → schema / contract → provider → pipeline` 的依赖方向，但不把这些层提升为 Standard 根目录 owner
 - 每个 Standard composite 各自拥有 JSON-safe schema、composite definition、factory 与 lowering。轻量、无布局能力通过 expand 输出公开 Core `IRChild` contribution；需要测量或 artifact 的能力通过 Core layout-aware compile 输出 Core children 与 typed artifact。两条分支都不得构造平行 Standard Scene 或 renderer descriptor
 - `composites/shared/` 只拥有跨 composite 的 JSON-safe 样式 schema；格点枚举等无状态纯函数仍在 `shared/grid/`，不得让任一 composite owner 成为另一个可选 capability 的前置依赖
 - 没有 v0.1 实现的机制目录不应预建；上图表达稳定 owner 位置，不是本版必须创建的空目录清单

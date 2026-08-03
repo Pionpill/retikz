@@ -5,7 +5,7 @@ import { defineComposite } from '@retikz/core';
 import type { IRAxes } from './types';
 
 import { STANDARD_NAMESPACE } from '../../shared';
-import { lowerAxes } from './lower';
+import { lowerAxes } from './pipeline';
 import { AxesSchema } from './schema';
 
 /** Standard Axes 的官方 Core composite definition */

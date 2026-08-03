@@ -7,7 +7,7 @@ import type { FlexLayoutArtifact, IRFlexLayout } from './types';
 
 import { STANDARD_NAMESPACE } from '../../shared';
 import { FlexLayoutInspectLocalOptionsInputSchema, FlexLayoutInspectLocalOptionsSchema } from '../shared';
-import { compileFlexLayout } from './compile';
+import { compileFlexLayout } from './pipeline';
 import { inspectFlexLayoutArtifact } from './inspection';
 import { FlexLayoutArtifactSchema, FlexLayoutSchema } from './schema';
 

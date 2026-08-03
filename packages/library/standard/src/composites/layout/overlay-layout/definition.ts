@@ -7,7 +7,7 @@ import type { IROverlayLayout, OverlayLayoutArtifact } from './types';
 
 import { STANDARD_NAMESPACE } from '../../shared';
 import { OverlayLayoutInspectLocalOptionsInputSchema, OverlayLayoutInspectLocalOptionsSchema } from '../shared';
-import { compileOverlayLayout } from './compile';
+import { compileOverlayLayout } from './pipeline';
 import { inspectOverlayLayoutArtifact } from './inspection';
 import { OverlayLayoutArtifactSchema, OverlayLayoutSchema } from './schema';
 
