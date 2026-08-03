@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { ChartSpecSchema } from '../../src/schemas/chart';
 import {
+  ChartSpecSchema,
+  ChartType,
   ConnectedPathPatchSchema,
   ConnectedPointPatchSchema,
   ConnectedScatterChartSpecSchema,
-  ConnectedScatterChartType,
-} from '../../src/schemas/connected-scatter';
+} from '../../src/schemas';
 
 const minimalConnectedScatter = {
   namespace: 'chart',
@@ -76,7 +76,7 @@ describe('Connected Scatter Chart schema', () => {
   it('parses the minimal variant and survives a JSON round trip', () => {
     const parsed = ConnectedScatterChartSpecSchema.parse(minimalConnectedScatter);
 
-    expect(ConnectedScatterChartType).toBe('connected-scatter');
+    expect(ChartType.ConnectedScatter).toBe('connected-scatter');
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
     expect(ChartSpecSchema.parse(minimalConnectedScatter)).toEqual(parsed);
   });

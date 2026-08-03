@@ -11,7 +11,7 @@ import {
   JsonValueSchema,
   ShapeRefSchema,
 } from '@retikz/core';
-import { inferCategoryDomain, resolveFieldPath } from '@retikz/data';
+import { inferCategoryDomain, inferFieldType, resolveFieldPath } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
@@ -212,6 +212,26 @@ export const resolveSizeChannel = (
       return { resolver: () => radius };
     }
     const field = channel.value;
+    const hasAuthoritativeType =
+      ctx.fieldTypeEvidence?.has(field) ??
+      node.data.model?.some(
+        candidate => candidate.name === field && (candidate.type !== undefined || candidate.format !== undefined),
+      ) ??
+      false;
+    const hasUsableObservation = rows.some(row => {
+      const value = resolveFieldPath(row, field);
+      return typeof value === 'number' ? isFiniteNumber(value) : value !== undefined && value !== null;
+    });
+    const effectiveFieldType = hasAuthoritativeType
+      ? fieldTypes.get(field)
+      : hasUsableObservation
+        ? inferFieldType(rows, field)
+        : undefined;
+    if (effectiveFieldType !== undefined && effectiveFieldType !== DataFieldType.Continuous) {
+      throw new Error(
+        `lowerPlots: size channel field "${field}" is ${effectiveFieldType}; size requires a continuous field`,
+      );
+    }
     const scaleName = channel.scale ?? `__size_${field}`;
     const numeric = rows.map(row => resolveFieldPath(row, field)).filter(isFiniteNumber);
     if (numeric.some(value => value < 0)) {
@@ -259,7 +279,7 @@ export const resolveSizeChannel = (
         domain: [...domain],
         range: [...range],
         field,
-        fieldType: fieldTypes.get(field),
+        fieldType: effectiveFieldType,
         scaleName,
       },
     };

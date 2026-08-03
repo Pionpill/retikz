@@ -1,8 +1,9 @@
 # ADR-05：Plot 编码与图元（Channel / Encoding + Point / Line / Mark union）
 
-- 状态：Accepted（已实现）
+- 状态：Superseded
+- 替代：[alpha.12 ADR-03](../alpha.12/03-mark-abstraction-registry.md) 与 [ADR-04](../alpha.12/04-mark-surface-convergence.md)；旧 shape-oriented mark / encoding surface 已收敛为抽象 mark 与 mark-local channels
 - 决策日期：2026-06-03
-- 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.7 mark / §3.8 order](../../../../../architecture/plot-design.md) · 根节点：[ADR-01 PlotSpec](./01-plot-spec-root.md) · 依赖：[ADR-02 data](./02-plot-data.md) · 关联：[ADR-04 coordinate](./04-plot-coordinate.md)
+- 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.7 mark / §3.8 order](../../../../../architecture/plot-design.md) · 根节点：[ADR-01 IRPlotSpec](./01-plot-spec-root.md) · 依赖：[ADR-02 data](./02-plot-data.md) · 关联：[ADR-04 coordinate](./04-plot-coordinate.md)
 
 ## 背景 / 约束
 
@@ -48,7 +49,3 @@ export type MarkType = ValueOf<typeof PlotMark>;
 - **encoding → 几何的 lowering** → ADR-06。
 
 ---
-
-> **实现指针**：level `red`（动 `plot/src/ir/**`）、additive 非 breaking。真源以代码为准——`ChannelSchema`（field/value refine 互斥）/ `EncodingSchema`（`plot/src/ir/encoding.ts`，复用 ADR-02 `ScalarValueSchema`）、`PlotMark` / `PointMarkSchema` / `LineMarkSchema` / `MarkSchema` + `Channel` / `Encoding` / `Mark` 类型（`plot/src/ir/mark.ts`，复用 core `ValueOf`）。测试在 `packages/viz/plot/tests/ir/{encoding,mark}.schema.test.ts`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / 依赖现有元素）见本文件 git 历史。
-
-> 🔖 封板压缩 commit `9115e6b4`；压缩前完整施工蓝图 = `git show 9115e6b4^:_notes/decisions/plot/v0/v0.1/alpha.1/05-plot-encoding-mark.md`。

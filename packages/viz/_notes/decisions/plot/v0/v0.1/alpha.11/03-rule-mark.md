@@ -1,6 +1,7 @@
 # ADR-03：rule mark——数据驱动的常量位置参考标注，line 形态下沉 core `Path`、band 形态复用 ADR-01 `projectCell`；与 reference-line guide 划清「数据 vs scale 派生」分工
 
-- 状态：Accepted
+- 状态：Superseded
+- 替代：[alpha.12 ADR-03](../alpha.12/03-mark-abstraction-registry.md) 与 [ADR-04](../alpha.12/04-mark-surface-convergence.md)；rule surface 已收敛为 `ReferenceMark`
 - 决策日期：2026-06-16
 - 关联：[plot v0.1 roadmap](../roadmap.md)「Geometry 基础」 · [alpha.11 roadmap](./roadmap.md) · [plot-design.md §3.7 mark 表 rule / §3.9 guide / §3.10 layer](../../../../../architecture/plot-design.md) · 同 milestone [ADR-01 区间几何投影](./01-cell-geometry-projection.md)
 
@@ -40,8 +41,6 @@
 // encoding 复用 positionalEncoding（x/y 下界 + color）；上界不入 encoding
 ```
 
-DSL / API 两套表面（IR `{value}`/`{field}` 互斥；React `<RuleMark>` 扁平 props，数字→value、字符串→field）的完整示例见文档站 `apps/docs/src/modules/docs/contents/viz/components/mark/rule/`（zh / en）。
-
 ## 理由
 
 1. **rule 数据驱动 + 参与 layer z-order，本质就是 mark**——能 per-datum、能被 color 编码、要和 bar / line 在同一 coordinate scope 内按声明序叠放（§3.10）。这些是 mark 层属性，axis-guide（scale 的刻度身）给不了。与 Observable Plot / Vega-Lite 一致。
@@ -61,16 +60,3 @@ DSL / API 两套表面（IR `{value}`/`{field}` 互斥；React `<RuleMark>` 扁�
 - **1D / ternary / custom 坐标系下的 rule line**：几何语义（对侧轴域 / 满铺定义）未定，fail-loud；band 支持面随 `projectCell`（继承 ADR-01），无 `projectCell` 的坐标系 band 同样 fail-loud；后续按需求驱动单独评估。
 - **dash / 线型 / 标签**（rule 上挂文字标注）：样式归 Theme（alpha.15）、标签归 text mark（ADR-04）+ anchor 引用 rule，本 ADR 只画线 / 带。
 - **chart preset / 高层封装**（一行出带参考线的图表）：后随单独评估。
-
-## 实现指针
-
-- 实现 commit：`d0071529`（后续对抗审查修复见 `f0085156` 的 ribbon/rule 边界修复）。
-- IR schema：`packages/viz/plot/src/ir/mark.ts`（`PlotMark.Rule` + `RuleMarkSchema` + 并入 `MarkSchema` discriminatedUnion + `RuleMark` 类型）。
-- lowering：`packages/viz/plot/src/lower/mark.ts`（`lowerRule`，line 产 core Path、band 经 `frame.projectCell` 出 Node）。
-- React sugar：`packages/viz/plot-react/src/components/marks.tsx`（`RuleMark` / `RuleMarkProps`）+ `packages/viz/plot-react/src/components/build-plot-spec.ts`（扁平 props → rule IR 装配 + fail-loud 校验）。
-- 测试：`packages/viz/plot/tests/lower/rule.test.ts`、`packages/viz/plot-react/tests/components/build-plot-spec.test.tsx`、`packages/viz/plot-vanilla/tests/render-plot.test.ts`。
-- 文档 + demo：`apps/docs/src/modules/docs/contents/viz/components/mark/rule/`（line / band / per-datum demo，zh / en）。
-
----
-
-> 🔖 本文件压缩前完整施工蓝图 = `git show 6902289a:_notes/decisions/plot/v0/v0.1/alpha.11/03-rule-mark.md`（封板全文）。

@@ -1,6 +1,7 @@
-﻿# ADR-01：bin + aggregate transform
+# ADR-01：bin + aggregate transform
 
-状态：Accepted
+状态：Superseded
+替代：[ADR-16](./16-statistical-transform-algebra.md) 与 [beta.1 ADR-02](../beta.1/02-plot-transform-registration.md)；`aggregate` 已由 Data 的 `summarize` 替代，`bin` 保留为 Plot 自行注册的 plot-only transform
 发布：`@retikz/plot` / `@retikz/plot-react` / `@retikz/plot-vanilla` `0.1.0-alpha.12`
 
 ## 背景
@@ -36,23 +37,6 @@ React 侧不为每个统计 transform 继续扩展 mark prop 自动装配，而�
 
 Vanilla / SSR 侧不需要额外 API，`renderPlot(spec, datasets, options)` 通过同一 Plot IR 与 lowering 自动消费 transform。
 
-## 实现指针
-
-最终行为以代码为准，主要落在：
-
-- `packages/viz/plot/src/schemas/transform/**`
-- `packages/viz/plot/src/providers/transform/**`
-- `packages/viz/plot/src/providers/statistics/**`
-- `packages/viz/plot/src/pipeline/{expand,provenance}.ts`
-- `packages/viz/plot-react/src/components/{transform,build-plot-spec}.ts`
-
-验证覆盖：
-
-- `packages/viz/plot/tests/transform/statistics.test.ts`
-- `packages/viz/plot/tests/lower/transform.test.ts`
-- `packages/viz/plot-react/tests/components/build-plot-spec.test.tsx`
-- `packages/viz/plot-vanilla/tests/render-plot.test.ts`
-
 ## 影响
 
 用户可直接用 Plot IR 或 React composition DSL 声明 histogram、分组聚合柱等统计图。lowering 仍保持同步、确定、renderer-agnostic，输出继续下沉到 core IR。
@@ -65,5 +49,3 @@ Vanilla / SSR 侧不需要额外 API，`renderPlot(spec, datasets, options)` 通
 - mark-local transform；本轮只处理 root transform pipeline。
 - 数据加载、CSV / URL / JSON I/O。
 - 把真实数据写入 IR。
-
-> 🔖 本文件压缩前完整施工蓝图 = `git show 20392fb1f39f0383e9d8f8a29f31850da99b8825:_notes/decisions/graph/v0/v0.1/alpha.12/01-bin-aggregate.md`（封板全文）。

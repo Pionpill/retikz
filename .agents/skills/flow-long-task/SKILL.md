@@ -66,7 +66,7 @@ notes/plans/<task>/TASK_STATE.md
 
 1. 只 stage 本 commit 文件，不用 `git add -A`。
 2. 跑受影响验证；验证失败不进入 review。
-3. 按 `cross-review` 冻结 staged diff，同轮并发派发 2–3 个实际可用的不同模型。
+3. 按 `cross-review` 冻结 staged diff，同轮并发派发 2–3 个 fresh 独立 reviewer；优先不同模型，只有一个非主模型时使用两个同模型 fresh 实例。
 4. 主 AI 收齐同轮结果后归并；修复 BLOCKING 后冻结新 staged snapshot，用 fresh agents 复审。WARNING 需要人工裁决或记录理由。
 5. commit 成功后更新 `TASK_STATE.md`。
 
@@ -86,11 +86,11 @@ Review 输出只分：
 - `WARNING`：可由人工裁决或记录风险。
 - `INFO`：可选建议。
 
-每个 commit review 最多 9 轮。最新一轮至少两个不同模型完成、无 BLOCKING、WARNING 已裁决时立即 PASS，不再追加下一轮；只有修订后才使用 fresh agents 复审。只有一个模型、快照漂移或第 9 轮未通过时 halt，交人工决策。
+每个 commit review 最多 9 轮。最新一轮至少两个 fresh 独立 reviewer 完成、无 BLOCKING、WARNING 已裁决时立即 PASS，不再追加下一轮；只有修订后才使用 fresh agents 复审。无法完成两个 fresh 独立 reviewer、快照漂移或第 9 轮未通过时 halt，交人工决策。
 
 ## 最终整体 Review
 
-全部实现完成后，先按根规则判定整体 review 风险；低风险明确改动可跳过并记录理由，需要 review 时再按用户授权和 `cross-review` 对固定完整 working-tree diff 或 commit range 并发派发 2–3 个不同模型。没有 commit 授权时使用 working-tree diff，不得为了整体 review 提前 commit；已有多个 commit 时使用固定 range。输入包含 ADR / source docs、reviewed plan、`TASK_STATE.md`、commit list（如有）、完整 diff 与验证结果。
+全部实现完成后，先按根规则判定整体 review 风险；低风险明确改动可跳过并记录理由，需要 review 时再按用户授权和 `cross-review` 对固定完整 working-tree diff 或 commit range 并发派发 2–3 个 fresh 独立 reviewer，并由 `cross-review` 选择异模型优先或同模型双实例降级阵容。没有 commit 授权时使用 working-tree diff，不得为了整体 review 提前 commit；已有多个 commit 时使用固定 range。输入包含 ADR / source docs、reviewed plan、`TASK_STATE.md`、commit list（如有）、完整 diff 与验证结果。
 
 整体 review 检查：
 

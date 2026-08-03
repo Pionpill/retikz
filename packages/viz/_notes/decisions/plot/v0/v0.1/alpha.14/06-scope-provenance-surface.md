@@ -1,13 +1,13 @@
 # ADR-06：locator, provenance, and adapters surface
 
-- 状态：Accepted（实现字段以 ADR-09 为准）
+- 状态：Superseded
+- 替代：[ADR-09](./09-composition-api-structure.md)；scope identity 已重命名为 coordinate view，locator / provenance 使用最终 view 与 arrangement 上下文
 - 决策日期：2026-06-28
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.14 roadmap](./roadmap.md) · [ADR-01 coordinate composition registry](./01-coordinate-composition-registry.md) · [ADR-02 facet grid data routing](./02-facet-grid-data-routing.md) · [ADR-03 same-panel multi-axis overlay](./03-same-panel-multi-axis.md) · [ADR-04 shared scaffold tracks](./04-shared-scaffold-tracks.md) · [ADR-05 composition guides layout](./05-composition-guides-layout.md)
-- 压缩前全文：`git show b7744b60565aa579a6f1deb892b56021633c6754:packages/graph/_notes/decisions/v0/v0.1/alpha.14/06-scope-provenance-surface.md`
 
 ## 背景
 
-ADR-01～05 让 Plot 内部出现多个 coordinate scope、facet panel、overlay axis 和 scaffold track。只让 renderer 画出来还不够：locator / provenance 必须能回答“这个 datum 属于哪个 panel、哪个 coordinate scope、哪个 track”；React / Vanilla authoring surface 也必须能表达同一份 PlotSpec，而不是只让手写 JSON 可用。
+ADR-01～05 让 Plot 内部出现多个 coordinate scope、facet panel、overlay axis 和 scaffold track。只让 renderer 画出来还不够：locator / provenance 必须能回答“这个 datum 属于哪个 panel、哪个 coordinate scope、哪个 track”；React / Vanilla authoring surface 也必须能表达同一份 IRPlotSpec，而不是只让手写 JSON 可用。
 
 当前 locator 以 markIndex / transformedIndex / series 为主，默认假设单 coordinate frame。多 scope 后，同一个 datum key 可能在多个 panel 或 track 中出现；同一 mark 也可能被 facet 复制多次。若 locator 不带 scope identity，hit-test、外部连线、交互高亮都会歧义。
 
@@ -51,7 +51,7 @@ type PlotLocator = {
 React / Vanilla 只提供两类薄壳：
 
 1. 手写 `spec` 仍可完整传入。
-2. JSX / builder 的 mark、axis、plot composition props 只映射到同名 PlotSpec 字段，不引入 React-only 或 Vanilla-only 语义。
+2. JSX / builder 的 mark、axis、plot composition props 只映射到同名 IRPlotSpec 字段，不引入 React-only 或 Vanilla-only 语义。
 
 理由：
 

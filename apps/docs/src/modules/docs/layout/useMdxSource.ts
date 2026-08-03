@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { Lang } from '@/i18n';
 
 import { LANGS } from '@/i18n';
+import { expandMdxIncludes } from '@/modules/docs/lib';
 
 import { useDocLocation } from './useDocLocation';
 import { docPathSegments } from './utils';
@@ -44,6 +45,8 @@ export type UseMdxSourceResult = {
   notFound: boolean;
   /** 实际命中的语言；缺当前语言回退到其它语言时即为 fallback 后的 lang */
   resolvedLang: Lang | null;
+  /** 当前页面源码加载或 include 展开失败时的可见诊断 */
+  error: string | null;
 };
 
 /**
@@ -68,11 +71,12 @@ export const useMdxSource = (): UseMdxSourceResult => {
   const resolvedLang = resolved?.lang ?? null;
   const pendingSegments = resolved?.segments ?? null;
 
-  const [state, setState] = useState<{ loader: MdxLoader | null; source: string; segments: Array<string> }>({
-    loader: null,
-    source: '',
-    segments: [],
-  });
+  const [state, setState] = useState<{
+    loader: MdxLoader | null;
+    source: string;
+    segments: Array<string>;
+    error: string | null;
+  }>({ loader: null, source: '', segments: [], error: null });
 
   useEffect(() => {
     if (!loader) return;
@@ -80,10 +84,22 @@ export const useMdxSource = (): UseMdxSourceResult => {
     const { signal } = controller;
     // 快照本 loader 对应的 segments：loader 与 segments 一一对应（同 key 同 loader），在 effect 入口闭包捕获即正确
     const segments = pendingSegments ?? [];
-    void loader().then(source => {
-      if (signal.aborted) return;
-      setState({ loader, source, segments });
-    });
+    const sourceLang = resolvedLang ?? lang;
+    void loader()
+      .then(source => expandMdxIncludes(source, sourceLang))
+      .then(source => {
+        if (signal.aborted) return;
+        setState({ loader, source, segments, error: null });
+      })
+      .catch(error => {
+        if (signal.aborted) return;
+        setState({
+          loader,
+          source: '',
+          segments,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      });
     return () => {
       controller.abort();
     };
@@ -92,11 +108,13 @@ export const useMdxSource = (): UseMdxSourceResult => {
   }, [loader]);
 
   const isCurrent = state.loader === loader;
+  const error = loader && isCurrent ? state.error : null;
   return {
-    source: loader && isCurrent ? state.source : null,
-    segments: loader && isCurrent ? state.segments : null,
+    source: loader && isCurrent && error === null ? state.source : null,
+    segments: loader && isCurrent && error === null ? state.segments : null,
     isLoading: !!loader && !isCurrent,
     notFound: !loader,
     resolvedLang,
+    error,
   };
 };

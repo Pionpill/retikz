@@ -25,17 +25,17 @@ transform 是 grammar-of-graphics 的 Statistics 层，长尾需求明确，因�
 
 IR schema 继续静态化：内置 transform 是闭合 union；未知非内置 kind 由 passthrough custom operation 接纳，并在 lowering 期按 definition schema 校验。custom passthrough 必须排除内置 kind，避免内置错误配置绕过静态校验。
 
-## 实现指针
+## 最终形态
 
-- `applyTransforms` 与字段收集都从 registry 查表，不再维护并行 switch。
-- `prepareRows` 解析 transform registry，并供 expand 与 locator 共用。
+- transform 执行与字段收集都从 registry 查表，不再维护并行 switch。
+- root lowering 与 locator 共用同一 transform registry 和 canonical rows。
 - React `<Transform kind="...">` 与 `dataTransforms` 接受内置和自定义 operation；definition 单独从 `<Plot transformDefinitions>` 透传。
 - `transformDefinitions` 不与 core `Scope.transforms` 或 plot `dataTransforms` 混名。
 
 ## 影响
 
-- `@retikz/plot` 公开 `defineTransform`、`TransformDefinition`、`TransformContext`、`TransformOperation`。
-- 自定义统计 transform 可通过 options 注入，IR 仍 100% JSON-safe。
+- `@retikz/data` 公开共享 `defineTransform`、definition / registry 与 pipeline；`@retikz/plot` 组合 Data 内置、Plot 内置和用户 definitions。
+- 自定义统计 transform 可通过 runtime options 注入，IR 仍 100% JSON-safe。
 - locator 与渲染使用同一 transform registry，避免交互与画面不一致。
 - 后续 ADR-15/16 的 mark-local transform 与统计代数复用本 registry。
 
@@ -46,4 +46,4 @@ IR schema 继续静态化：内置 transform 是闭合 union；未知非内置 k
 - 不引入全局 `registerTransform()` 单例。
 - 不公开跨运行时 definition schema 注册中心。
 
-> 🔖 本文件压缩前完整施工蓝图 = `git show 20392fb1f39f0383e9d8f8a29f31850da99b8825:_notes/decisions/graph/v0/v0.1/alpha.12/06-transform-registry.md`（封板全文）。
+最终 owner 边界由 [beta.1 ADR-02](../beta.1/02-plot-transform-registration.md) 固定：通用 transform 属于 Data，`stack` / `bin` / `normalize` / `derive-interval` / `relate` / `jitter` / `density` / `smooth` 属于 Plot。

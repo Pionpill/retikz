@@ -44,9 +44,9 @@ scale family 算法固定如下：
 
 `ticks.values` 的解析不使用 `tickLabels.format` 反推。数值 / 连续 scale 只接受 number tick；time scale 接受 number epoch ms 或严格 ISO-like string，并经现有时间 coercion 路径解析；分类 scale 接受 string 或 number category。解析失败在 lowering 阶段 fail-loud。`tickLabels.format` 只负责 label 输出：数值走 d3-format，time 走 UTC d3-time-format，分类 tick 忽略 `tickLabels.format` 并用 category string。
 
-实现上必须把 domain padding 算法收敛到 `providers/scale/shared/**` 的 `resolvePaddedDomain` 一类纯 helper。各 position scale resolver 只传入 scale family、source domain、显式 / 推断 domain 来源、`domainPadding`、`singleValueSpan`、`nice` 语义，不在 `resolveLinearScale`、`resolveLogScale`、`resolveSqrtScale` 等函数里重复写 family 分支。
+所有 position scale family 必须复用同一套 domain padding 规则，只按 family、source domain、显式或推断来源、`domainPadding`、`singleValueSpan` 与 `nice` 语义分派，不各自复制边界算法。
 
-tick 解析也必须走 guide family 共享 helper：`GuideTickSourceSchema` 提供 `count` / `values`，`GuideTickLabelFormatSchema` 提供 `format`，`resolveGuideTicks(scale, tickSource, labelFormat)` 统一返回 tick values 与 labels。Axis tick label、axis grid 和 legend ramp tick 后续都消费同一个 resolved tick set。
+`GuideTickSourceSchema` 提供 `count` / `values`，`GuideTickLabelFormatSchema` 提供 `format`。Axis tick label、axis grid 和 legend ramp 必须消费同一个已解析 tick set，避免候选值与标签语义漂移。
 
 ```ts
 const plot = {
@@ -81,7 +81,3 @@ const plot = {
 - Interaction 的 hover / tooltip / selection tick state。
 
 ---
-
-> **实现指针**：本 ADR 已随 plot v0.1-alpha.15 发布落地；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在发布 tag 历史中。
-
-> 🔖 发布后压缩；压缩前完整施工蓝图 = `git show plot-v0.1.0-alpha.15:packages/viz/_notes/decisions/v0/v0.1/alpha.15/01-axis-domain-tick-strategy.md`。

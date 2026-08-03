@@ -16,8 +16,8 @@
     "maxPackedBytes": 460800
   },
   "@retikz/plot-react": {
-    "maxFiles": 50,
-    "maxPackedBytes": 71680
+    "maxFiles": 90,
+    "maxPackedBytes": 92160
   },
   "@retikz/plot-vanilla": {
     "maxFiles": 30,
@@ -36,20 +36,20 @@
     "maxPackedBytes": 51200
   },
   "@retikz/standard": {
-    "maxFiles": 130,
-    "maxPackedBytes": 40960
+    "maxFiles": 340,
+    "maxPackedBytes": 133120
   },
   "@retikz/standard-react": {
-    "maxFiles": 30,
-    "maxPackedBytes": 10240
+    "maxFiles": 70,
+    "maxPackedBytes": 20480
   },
   "@retikz/standard-vanilla": {
-    "maxFiles": 20,
+    "maxFiles": 40,
     "maxPackedBytes": 10240
   },
   "@retikz/table": {
-    "maxFiles": 260,
-    "maxPackedBytes": 102400
+    "maxFiles": 420,
+    "maxPackedBytes": 225280
   },
   "@retikz/table-react": {
     "maxFiles": 50,

@@ -82,15 +82,15 @@ alpha.9 的结构性核心与 alpha.4 同构——**再逼一次 frame 抽象**�
 
 ## ADR 清单
 
-> ADR-01~04 **Accepted + 已实现**（Spec-First TDD：tests-first → 实现 → adversarial bug hunt + contract audit；BLOCKING「ternary 和上溢」已修并升回归）。三包 + 文档四方一致、坐标系族 milestone 可交付。决策点 ①~⑦ + ①b 已在各 ADR「决策」段落定。
+> ADR-01~04 均已实现；其中 ADR-03 / 04 的内置 `ternary2D` 决策后来由 [beta.2 ADR-03](../beta.2/03-ternary2d-removal.md) 取代，不进入 v0.1 stable。cartesian1D / polar1D 与通用 N-role coordinate 扩展契约继续有效。
 > **ADR-05（Superseded）**：alpha.9 的实验性 custom coordinate 曾提出单 role 轴标架 `frameAlong` 与独立工厂注入；其中局部标架能力保留，custom operation、roles 与注入公共面已由 [alpha.12 ADR-05 coordinate registry](../alpha.12/05-coordinate-registry.md) 统一取代。
 
 | ADR                                  | 主题                                                                                                                                                                                                                    | Level | 依赖      | 状态       |
 | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | --------- | ---------- |
 | [01](./01-coordinate-frame-roles.md) | coordinate frame N 通道泛化 + **位置 encoding 角色化**（x/y 转可选 + 按 coordinate 校验必填角色集，评审 P1）+ 每坐标系合法 dimension 集契约 + guide 维度校验（修 cross-review P2）                                      | red   | —         | Accepted   |
 | [02](./02-cartesian1d.md)            | **一维坐标系族**：cartesian1D（直线，单维 + 塌缩维基线；rug/timeline）+ **polar1D（圆周，单角向 + 固定半径；环形/周期，复用 alpha.4 角向投影）**+ 1D 轴 / 角向 1D 轴 guide；histogram 留 alpha.12；mark 矩阵 point 为主 | red   | ADR-01    | Accepted   |
-| [03](./03-ternary2d.md)              | ternary2D 坐标系 + 三角轴 guide（**加 a/b/c 位置角色通道** + 重心投影 + 自动归一化 + 三角轴 / 三向网格；取 continuous 字段，proportion 已并入 continuous；mark 矩阵 point 为主）                                        | red   | ADR-01    | Accepted   |
-| [04](./04-dsl-docs.md)               | 三包 DSL + 文档露出（`coordinate="cartesian1D"`/`"ternary2D"`、PointMark x/y 可选 + a/b/c、1D/三角轴表面；react + vanilla + docs demo；端到端验收）                                                                     | red   | ADR-01–03 | Accepted   |
+| [03](./03-ternary2d.md)              | ternary2D 坐标系 + 三角轴 guide（**加 a/b/c 位置角色通道** + 重心投影 + 自动归一化 + 三角轴 / 三向网格；取 continuous 字段，proportion 已并入 continuous；mark 矩阵 point 为主）                                        | red   | ADR-01    | Superseded |
+| [04](./04-dsl-docs.md)               | 三包 DSL + 文档露出（`coordinate="cartesian1D"`/`"ternary2D"`、PointMark x/y 可选 + a/b/c、1D/三角轴表面；react + vanilla + docs demo；端到端验收）                                                                     | red   | ADR-01–03 | Superseded |
 | [05](./05-coordinate-chart-frame.md) | **坐标系局部标架与实验性 custom coordinate**：`frameAlong` 几何能力保留；旧 `{ type:'custom', name, roles, params }`、独立工厂表与 `createCustomFrame` 公共面由 alpha.12 coordinate registry 统一取代                   | red   | ADR-01    | Superseded |
 
 ## 贯穿原则落点

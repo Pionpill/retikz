@@ -1,6 +1,6 @@
 # ADR-04：guide lowering（Axis（含 grid 子属性）+ ticks + plot area → core Path / Node(text)，绑 anchor id）
 
-- 状态：Accepted（已实现）
+- 状态：Accepted
 - 决策日期：2026-06-04
 - 关联：[plot v0.1-alpha.2 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §8 lowering / §3.9 guide / §14 anchor](../../../../../architecture/plot-design.md) · 依赖：[ADR-01 guide IR](./01-guide-ir.md) · [ADR-02 d3-scale](./02-d3-scale.md) · [ADR-03 布局](./03-plot-area-layout.md) · 改动：[alpha.1 ADR-06 lowerPlots](../alpha.1/06-plot-lowering.md)
 
@@ -20,8 +20,6 @@ guide 的 `grid` 子属性意味着**一个 axis 可能同时产两组几何、�
 
 - 轴层：`pathDefault:{ stroke:'currentColor' }` + `nodeDefault:{ font:{ size: fontSize }, stroke:'none', fill:'none', padding:0 }`——core 省略 `shape` 默认仍是 rectangle，故显式去描边/填充 + 零 padding 才得「只文字」；字号字段是 **`font.size`**（不是 `fontSize`）。
 - 网格层：`pathDefault:{ stroke:'currentColor', drawOpacity:0.15 }`——core path 透明度字段是 **`drawOpacity`**（不是 `strokeOpacity`），值 `0.15` 随 currentColor 主题走、不写死颜色。
-
-延续 alpha.1「用 scope 承载共享样式、减小 IR 体积」原则。真源见 `plot/src/lower/guide.ts`（`lowerGuide` / `GuideContext` / `LoweredGuide`）、`plot/src/lower/expand.ts`（编排 + `assertUniqueAxisDimension`）。
 
 理由：
 
@@ -46,11 +44,3 @@ guide 的 `grid` 子属性意味着**一个 axis 可能同时产两组几何、�
 - **anchor / datum locator 命中解析** → alpha.5（本 ADR 只埋 id）。
 
 ---
-
-> **实现指针**：level `red`（动 `plot/src/lower/**`，下沉 core IR 契约边界）、无 IR schema 改动（消费 [ADR-01](./01-guide-ir.md) guide IR、产 core IR）。
->
-> - 真源以代码为准：`lowerGuide` / `GuideContext` / `LoweredGuide`（`plot/src/lower/guide.ts`）、编排 grid→mark→axis + `assertUniqueAxisDimension` + 按维度预算 ticks（`plot/src/lower/expand.ts`）；消费 core `IRScope`/`IRPath`/`IRStep`/`IRNode`（仅产不改 core），样式字段名以 core schema 为准（`font.size` / `drawOpacity` / `stroke:'none'`）。
-> - 测试见 `plot/tests/lower/guide.test.ts`（轴层结构、x/y 网格线、`tickLabels:false` 无 label、id→scope.id、刻度像素 = 投影器映射、样式上提、`duplicate_axis_dimension_rejected`）与 `plot/tests/lower/lowerPlots.test.ts`（端到端 z-order + compile 带 guide 的 scene）。
-> - 完整原文（lowerGuide 草案 / 下沉规则表 / 待决策点 / 测试象限）见本文件 git 历史。
-
-> 🔖 封板压缩 commit `7acbf962`；压缩前完整施工蓝图 = `git show 7acbf962^:_notes/decisions/plot/v0/v0.1/alpha.2/04-guide-lowering.md`。

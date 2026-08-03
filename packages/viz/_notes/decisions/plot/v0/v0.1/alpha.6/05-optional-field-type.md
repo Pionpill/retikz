@@ -1,12 +1,11 @@
-﻿# ADR-05：`FieldDef.type` 改可选——部分声明 model，name-only 字段自动推断（解耦「字段存在」与「测量类型」）
+# ADR-05：`FieldDef.type` 改可选——部分声明 model，name-only 字段自动推断（解耦「字段存在」与「测量类型」）
 
-- 状态：Accepted
+- 状态：Superseded
+- 替代：[Data beta.1 ADR-01](../../../../data/v0/v0.1/beta.1/01-plot-data-migration.md)；可选字段类型现由 `IRDataFieldDefinition` 定义
 - 决策日期：2026-06-07
 - 关联：[plot v0.1-alpha.6 roadmap](./roadmap.md) · 本里程碑 [ADR-01 数据模型](./01-data-model.md)（strict / infer 二选一，本 ADR 放宽成部分声明）· [ADR-04 resolveField](./04-field-resolver.md)（优先级链衔接）· [plot-design.md §3.1 数据模型](../../../../../architecture/plot-design.md)
 
 ## 背景
-
-`FieldDefSchema`（`packages/viz/plot/src/ir/data.ts`）当前要求 `{ name, type }` 两字段都填，`type` 必填。而 `resolveFieldTypes`（`packages/viz/plot/src/lower/validate.ts`）是**非此即彼**：声明了 `model` → 全用声明类型（缺字段名抛 strict unknown）；无 `model` → 全部 `inferFieldType` 推断（ADR-01 拍板「model strict / infer 二选一，无混合」）。
 
 这把 `model` 强行绑死了两件**本应分开**的事：
 
@@ -56,6 +55,3 @@ for (const field of userSourceFields) {
 - **声明式 `format` 词表**（ADR-04 已列后续）——与本 ADR 正交。
 - **「可移植性是否必须有 type」的强约束改动**——本 ADR 只让 type 可省；fieldMaps 移植本就只需 name，不在此扩。
 - **推断质量提升**（更聪明的类型嗅探）——沿用 ADR-01 的抽样推断，不在本 ADR 动。
-
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/data.ts` 与 `packages/viz/plot/src/lower/validate.ts`，测试见 `packages/viz/plot/tests/lower/data-model.test.ts` 和 `packages/viz/plot/tests/ir/data.schema.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.6/05-optional-field-type.md`（封板全文）。

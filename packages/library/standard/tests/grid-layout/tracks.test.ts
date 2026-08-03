@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { LayoutDistribution } from '../../src';
-import { solveGridTracks } from '../../src/composites/grid-layout/tracks';
+import { solveGridTracks } from '../../src/composites/layout/grid-layout/tracks';
 
 describe('GridLayout track solver', () => {
   it('builds separate minimum and natural profiles and resolves finite fractions', () => {

@@ -2,7 +2,8 @@ export type { ComponentPreviewProps } from './ComponentPreview';
 export { ComponentPreview } from './ComponentPreview';
 export type { ComponentPreviewCardProps } from './ComponentPreviewCard';
 export { ComponentPreviewCard } from './ComponentPreviewCard';
-export { usePreviewControls } from './context';
+export * from './ComponentPreviewThumbnail';
+export { DemoLocationContext, usePreviewControls } from './context';
 export { definePreviewControls } from './controls';
 export type {
   AlignKey,

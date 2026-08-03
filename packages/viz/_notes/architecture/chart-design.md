@@ -88,18 +88,18 @@ ChartSpec 不是缩减版 PlotSpec。图本体配置应沿用 Plot 的结构轴�
 
 精确字段形态由 ADR 冻结；长期语义先保持：
 
-| 成员                         | Chart 层语义                                                                                                         |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `data`                       | 单一外部数据引用及可选模型，不保存真实数据                                                                           |
-| `encoding`                   | 声明该类型需要的数据角色与用户覆盖的视觉通道                                                                         |
-| `mark`                       | 调整隐式主 Mark 的允许参数，不改变其 Plot Mark type 或存在性                                                         |
-| `transform`                  | 调整隐式主 Transform 的允许参数，并允许追加显式 Transform；必需 Transform 不可撤销                                   |
-| `scales`                     | 调整类型默认 scale，或增加 Plot 可识别的 scale 配置                                                                  |
-| `coordinate` / `composition` | 调整类型默认空间与组合；type 可以隐式生成多视图 / track 配方，结构性不变量不能被破坏                                 |
-| `guides`                     | 调整、关闭、替换或追加表现性 guide                                                                                   |
-| `theme` / Plot `layout`      | 调整图本体的 Plot 呈现，不建立 Chart 平行 GoG 样式系统                                                               |
-| `marks`                      | 在类型生成的主 Mark 之外追加正式、JSON-safe 的 Plot Mark                                                             |
-| 单图展示                     | 以唯一主 Plot 占位、有序 renderer-neutral children、文本 preset 与外框表达完整 Chart；布局和绘制复用 Standard / Core |
+| 成员                         | Chart 层语义                                                                                                                                                         |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data`                       | 单一外部数据引用及可选模型，不保存真实数据                                                                                                                           |
+| `encoding`                   | 声明该类型需要的数据角色与用户覆盖的视觉通道                                                                                                                         |
+| `mark`                       | 投影隐式主 Mark 的完整 Plot 契约，只排除 type、稳定 identity、核心 encoding role、必需 transform 与 view ownership 等 recipe-owned 成员，不改变其 Mark type 或存在性 |
+| `transform`                  | 调整隐式主 Transform 的允许参数，并允许追加显式 Transform；必需 Transform 不可撤销                                                                                   |
+| `scales`                     | 调整类型默认 scale，或增加 Plot 可识别的 scale 配置                                                                                                                  |
+| `coordinate` / `composition` | 调整类型默认空间与组合；type 可以隐式生成多视图 / track 配方，结构性不变量不能被破坏                                                                                 |
+| `guides`                     | 调整、关闭、替换或追加表现性 guide                                                                                                                                   |
+| `theme` / Plot `layout`      | 调整图本体的 Plot 呈现，不建立 Chart 平行 GoG 样式系统                                                                                                               |
+| `marks`                      | 在类型生成的主 Mark 之外追加正式、JSON-safe 的 Plot Mark                                                                                                             |
+| 单图展示                     | 以唯一主 Plot 占位、有序 renderer-neutral children、文本 preset 与外框表达完整 Chart；布局和绘制复用 Standard / Core                                                 |
 
 这里必须避免把所有文字统称为 `label`：
 
@@ -194,11 +194,13 @@ Chart 的 style、明暗模式和公开 token 消费全仓 [`通用视觉主题�
 
 ### 6.4 主成员覆盖与额外成员追加
 
-- `mark` 调整隐式主 Mark
+- `mark` 不是 Chart 重新定义的字段白名单，而是对应 Plot 主 Mark 契约的能力投影。除 type、稳定 identity、核心 encoding role、必需 transform 与 view ownership 等 recipe-owned 成员外，其余公开成员随 Plot 契约完整可配；同一 encoding 对象内只锁定核心 role，其余内建与扩展 channel 继续投影
 - 类型专属的 transform 配置调整隐式主 Transform
 - `marks` 与显式 Plot children 追加新的 Mark、Transform 或其它正式 Plot 内容
 - 追加内容不作为替换、关闭或删除类型核心成员的指令
 - 显式 ID 与生成 ID 冲突时 fail-loud，不静默覆盖
+
+能力投影必须直接复用 Plot 的 schema / public type 真源，不复制 Chart 版 Axis、Label、Mark、Scale 或 Transform 契约，也不维护随 Plot 字段增长而漂移的手工 allowlist。Chart 可以为 recipe-owned 成员提供更高层的 type-specific authoring；同一非核心值同时由高层 authoring 与 `mark` 投影给出时，显式 `mark` 配置优先，因为它是用户对最终元素的精确操作。由 Mark 最终有效配置派生的表现性默认必须在投影后计算或复验，不能继续解释已被覆盖的高层输入。
 
 具有多个同类隐式成员的 type，需要由该 type 的公开契约定义稳定、语义化的覆盖目标；不得依赖易漂移的数组下标或不透明生成顺序。
 

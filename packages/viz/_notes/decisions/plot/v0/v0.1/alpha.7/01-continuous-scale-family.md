@@ -6,14 +6,12 @@
 
 ## 背景
 
-当前 `PlotScale` 只有 5 个成员——`linear` / `band` / `point` / `ordinal` / `time`（`packages/viz/plot/src/ir/scale.ts:8`），连续数值映射仅 `linear`（`time` 是时间专用）。真实数据有两类常见诉求落不下：
-
 1. **跨数量级**：人口、收入、计数、地震能量等跨多个 10 倍区间的数据，线性轴把小值压成一团，需 **log** 轴。
 2. **感知/几何编码**：面积正确的尺寸编码（散点 bubble）要 **sqrt**（半径 ∝ √值，面积 ∝ 值）；更一般的幂次需 **pow**。alpha.7 的 `size` 通道（[ADR-02](./02-channel-scale-resolver-size.md)）**直接依赖 sqrt**。
 
 同类库共识：**Vega-Lite** 连续 scale = linear/log/pow/sqrt/symlog；**Observable Plot** 同（`r` 通道默认 sqrt）；**ggplot2** 有 `scale_*_log10` / `scale_*_sqrt` / `trans`。连续 scale 家族是图形语法的基础能力。
 
-把 sqrt 放在本 ADR（而非 size ADR 内部自造一份）是评审采纳的依赖重排：**sqrt 作为公开 `PlotScale.Sqrt` 单一真源**，size 通道复用之，消除「size 先内部 sqrt、后又公开 Sqrt」的重复实现。
+把 sqrt 放在本 ADR（而非 size ADR 内部自造一份）是依赖重排：**sqrt 作为公开 `PlotScale.Sqrt` 单一真源**，size 通道复用之，消除「size 先内部 sqrt、后又公开 Sqrt」的重复实现。
 
 **baseline 冲突**：`interval`（柱）/ `area`（面积）的 `baseline=0` 是结构语义——lowering 把 baseline 0 注入位置 scale 的 domain（`lower/expand.ts`）、area baseline 默认 0（`ir/mark.ts:135`）。而 `log(0) = -∞`、`pow`（exponent<1）在 0 处不可导，所以**非线性连续 scale 与 bar/area 天然冲突**。本轮按 **L1** 处理：限制非线性连续 scale 只作用 point/line，bar/area 撞上即 fail-loud。
 
@@ -62,6 +60,3 @@ export const PlotScale = {
 - **离散化 scale**（quantize / threshold / quantile）→ alpha.8。
 - **React `<Scale>` 组件 / pow 自定义 exponent 的 React 表面** → 后续。
 - **polar radius 用 log** → 需求驱动（本轮 L1 守卫覆盖 cartesian；polar 径向暂不特别支持非线性）。
-
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/scale.ts`、`packages/viz/plot/src/lower/{scale,expand}.ts` 与 React `scaleX/scaleY` DSL，测试见 `packages/viz/plot/tests/{ir/scale.schema,lower/scale-family}.test.ts` 和 `packages/viz/plot-react/tests/components/buildPlotSpec.test.tsx`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.7/01-continuous-scale-family.md`（封板全文）。

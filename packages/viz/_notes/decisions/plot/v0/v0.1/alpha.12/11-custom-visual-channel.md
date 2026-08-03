@@ -24,7 +24,7 @@ registry 合并顺序为内置先注册、自定义后合并。冲突、未知�
 
 自定义 channel 的 legend 在本轮推迟，避免在 channel delivery 尚未完全稳定时扩大 guide contract。
 
-## 实现状态
+## 最终形态
 
 该 ADR 已在 2026-06-21 落地。
 
@@ -32,23 +32,7 @@ registry 合并顺序为内置先注册、自定义后合并。冲突、未知�
 
 - `encoding.channels` 落在 `PointEncodingSchema`，不是全 mark 通用入口。
 - 自定义通道 legend 推迟。
-- 评审后修正了 custom channel 的二等路径，统一走 registry / delivery。
-
-## 实现指针
-
-最终行为以代码为准，主要落在：
-
-- `packages/viz/plot/src/contract/channel.ts`
-- `packages/viz/plot/src/providers/channel/**`
-- `packages/viz/plot/src/schemas/encoding/**`
-- `packages/viz/plot/src/providers/mark/features/point.ts`
-
-验证覆盖：
-
-- `packages/viz/plot/tests/lower/node-channel-registry.test.ts`
-- `packages/viz/plot/tests/lower/size-channel.test.ts`
-- `packages/viz/plot/tests/lower/opacity-channel.test.ts`
-- 自定义 channel delivery 相关测试
+- 最终 custom channel 的二等路径，统一走 registry / delivery。
 
 ## 影响
 
@@ -62,5 +46,3 @@ visual channel 完成“内置 / 自定义同机制”的收敛。自定义通�
 - path / scope channel 内置 coverage。
 - 新 core 样式属性或 renderer 能力。
 - 所有 mark 的通用 `encoding.channels`。
-
-> 🔖 本文件压缩前完整施工蓝图 = `git show 20392fb1f39f0383e9d8f8a29f31850da99b8825:_notes/decisions/graph/v0/v0.1/alpha.12/11-custom-visual-channel.md`（封板全文）。

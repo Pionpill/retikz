@@ -1,6 +1,7 @@
-﻿# ADR-02：数据模型作为可移植契约——逻辑字段 + 绑定期 fieldMaps 映射 + 按 DataFieldType 值强制
+# ADR-02：数据模型作为可移植契约——逻辑字段 + 绑定期 fieldMaps 映射 + 按 DataFieldType 值强制
 
-- 状态：Accepted
+- 状态：Superseded
+- 替代：[Data beta.1 ADR-01](../../../../data/v0/v0.1/beta.1/01-plot-data-migration.md)；数据归一化、字段映射与外部数据集契约已迁入 `@retikz/data`
 - 决策日期：2026-06-07
 - 关联：[plot v0.1-alpha.6 待办](./roadmap.md) · [plot v0 roadmap 阶段二](../../roadmap.md) · [plot-design §3.1 Data / §8.2 数据绑定](../../../../../architecture/plot-design.md) · 依赖：[ADR-01 数据模型类型层](./01-data-model.md) · 前身：[alpha.1 ADR-02 DataRef/DataModel](../alpha.1/02-plot-data.md)
 
@@ -37,7 +38,7 @@ lowerPlots(datasets, { fieldMaps: { sales: { quarter: 'period', share: 'ratio' }
 
 **`fieldMaps` 校验（fail-loud）**：
 
-- **仅在声明 `model` 时可用**（评审 P1）：无 `model` 却传 fieldMaps → throw（无逻辑字段契约，改名无所指）；
+- **仅在声明 `model` 时可用**：无 `model` 却传 fieldMaps → throw（无逻辑字段契约，改名无所指）；
 - `fieldMaps[ref]` 的**逻辑名必须在该 plot 的 `data.model`** → 否则 throw；
 - `ref` **须在 `datasets`** → 否则 throw；datasets 里未被本 plot 用到的 ref 不管。
 
@@ -52,7 +53,7 @@ lowerPlots(datasets, { fieldMaps: { sales: { quarter: 'period', share: 'ratio' }
 
 非法值沿用 alpha.1「→ NaN/null 跳过该 datum」语义，不报错。
 
-**(4) 统一字段访问 = ingest 归一化（评审 P1）**：(2)(3) **不是「喂 scale 前才做」**——字段读取散在 transform（直读 `op.y`）/ scale / mark / anchor（`channelValue` 直读）/ locator / provenance 多处；若只在 scale 前 coerce，数字串进 stack 会被当 0。故在 **ingest 一次性**把每个用户源字段「(fieldMap) 解析物理路径 → 按 resolved `FieldType`（ADR-01 类型 `Map`）coerce」写成 **canonical rows**（扁平、逻辑名键、已强制值）；**全下游统一读 canonical rows（按逻辑名）**，无第二处 coerce。transform 派生字段（stack `y0`/`y1`）叠加在 canonical 之上、本就是数值。归一化须**保留 alpha.5 provenance 的 source-index 标记**（`SOURCE_INDEX` symbol 随行转移到 canonical row）。
+**(4) 统一字段访问 = ingest 归一化**：(2)(3) **不是「喂 scale 前才做」**——字段读取散在 transform（直读 `op.y`）/ scale / mark / anchor（`channelValue` 直读）/ locator / provenance 多处；若只在 scale 前 coerce，数字串进 stack 会被当 0。故在 **ingest 一次性**把每个用户源字段「(fieldMap) 解析物理路径 → 按 resolved `FieldType`（ADR-01 类型 `Map`）coerce」写成 **canonical rows**（扁平、逻辑名键、已强制值）；**全下游统一读 canonical rows（按逻辑名）**，无第二处 coerce。transform 派生字段（stack `y0`/`y1`）叠加在 canonical 之上、本就是数值。归一化须**保留 alpha.5 provenance 的 source-index 标记**（`SOURCE_INDEX` symbol 随行转移到 canonical row）。
 
 **三需求兑现**：① = (1) 恒等绑定；② = (2) fieldMaps；③ = (3) coercion；统一性 = (4) ingest 归一化。三者正交叠加：换个字段名不同、Date 存日期的源，给 `fieldMaps` + 靠 temporal coercion，spec 零改。
 
@@ -62,8 +63,8 @@ lowerPlots(datasets, { fieldMaps: { sales: { quarter: 'period', share: 'ratio' }
 2. **三档渐进**：同名同类型零配置（恒等）；改名给 fieldMaps；换表示靠 coercion。每档独立、按需启用。
 3. **适配层在数据世界、不进 IR**：`fieldMaps` / coercion 都在 `lowerPlots` 绑定期，IR 仍 100% JSON-safe、源无关。
 4. **coercion 让 DataFieldType 成真正的类型契约**：类型定义「接受哪些表示」，而非绑死单一 JS 类型——这正是需求 3 的本质。
-5. **统一访问器，杜绝半 coerce**：ingest 归一化是**唯一** coerce 点，transform / scale / mark / locator 全读 canonical rows——根治「数字串在 stack 被当 0」类 bug（评审 P1）。
-6. **temporal 收口**：扩展现有 `coerceTimestamp`（加 `Date` 分支 + 严格 ISO guard）成统一 temporal coercion，与 ADR-01 推断 guard **同一套正则**，不打架（评审 P2）。
+5. **统一访问器，杜绝半 coerce**：ingest 归一化是**唯一** coerce 点，transform / scale / mark / locator 全读 canonical rows——根治「数字串在 stack 被当 0」类 bug。
+6. **temporal 收口**：扩展现有 `coerceTimestamp`（加 `Date` 分支 + 严格 ISO guard）成统一 temporal coercion，与 ADR-01 推断 guard **同一套正则**，不打架。
 
 ## 文档型 / 嵌套数据支持与错误处理
 
@@ -86,6 +87,3 @@ retikz「数据不进 IR、外部数据是任意可嵌套 JS」（plot-design §
 - **type-driven scale 选型 / 类型↔scale 校验** → ADR-03。
 - **远程 / 流式数据源、大数据采样** → 后续。
 - **运行时响应式换源（不重 lower）** → v0.1 之后交互/性能轴。
-
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/lower/{coerce,expand,scale,field}.ts`、plot React/vanilla 入口透传与 public export，测试见 `packages/viz/plot/tests/lower/data-portability.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.6/02-data-portability.md`（封板全文）。

@@ -132,6 +132,7 @@ import {
   stableSortByZIndex,
 } from './primitive';
 import { createRuntimeTopologyTracker } from './runtime-topology';
+import { resolveTheme } from './theme';
 import { optionalVisualBoundsOfPrimitives, visualBoundsOfPrimitives } from './visual-bounds';
 
 /** 编译 child 树，完成 namespace 注册、延迟 path 回填、zIndex 排序和自动 layout bbox 收集 */
@@ -742,6 +743,11 @@ export const compileChildrenToPrimitives = (
     preResolvedClipShape?: ClipShape,
   ): void => {
     const { locatorPrefix, styleStack } = frame;
+    const themePath =
+      generatedOccurrence === undefined
+        ? `${locatorPrefix}children[${index}].scope.theme`
+        : `${formatCompileOccurrence(generatedOccurrence)}.scope.theme`;
+    const theme = resolveTheme(frame.theme, child.theme, themePath);
     const placementTarget =
       preLoweredTransforms === undefined ? resolveScopePlacementTarget(child, index, frame) : undefined;
     // runtime Scope 可能包住在当前 frame 外完成的 replay probe，因此它的数值 transform
@@ -776,6 +782,7 @@ export const compileChildrenToPrimitives = (
         layoutSink: scopeLayouts,
         pathSink: scopePendingPaths,
         styleStack: [...styleStack, createStyleFrame(child)],
+        theme,
         publicationSink: scopePublications,
         boundsSink: scopeBounds,
         allocationSink: scopeAllocations,
@@ -1252,6 +1259,7 @@ export const compileChildrenToPrimitives = (
   /** 把 runtime Scope props 投影到普通 Scope orchestration 接受的结构 child */
   const runtimeScopeChildOf = (props: CompositeCompileScopeProps): ScopeChild => ({
     type: 'scope',
+    ...(props.theme === undefined ? {} : { theme: props.theme }),
     ...(props.id === undefined ? {} : { id: props.id }),
     ...(props.localNamespace === undefined ? {} : { localNamespace: props.localNamespace }),
     ...(props.clip === undefined ? {} : { clip: props.clip }),
@@ -1377,9 +1385,9 @@ export const compileChildrenToPrimitives = (
     });
     if (definition.expand !== undefined) {
       const callable = definition as unknown as {
-        expand: (node: unknown) => IRChild | Array<IRChild>;
+        expand: (node: unknown, context: Readonly<{ theme: TraversalFrame['theme'] }>) => IRChild | Array<IRChild>;
       };
-      const produced = callable.expand(parsed);
+      const produced = callable.expand(parsed, Object.freeze({ theme: frame.theme }));
       const expanded = validateExpandCompositeOutput(`Composite '${key}'`, produced);
       for (const [outputIndex, output] of expanded.entries()) {
         compileChild(
@@ -1420,6 +1428,7 @@ export const compileChildrenToPrimitives = (
     let layoutProbeIndex = 0;
     try {
       callbackResult = callable.compile(parsed, {
+        theme: frame.theme,
         proposal: cloneLayoutProposal(frame.childProposal ?? NaturalLayoutProposal, key, occurrence),
         inspection: createLayoutCompositeInspectionContext(runtime.context.session, owner, inspection.tree),
         layoutChild: (nextChild, proposal, inspectionChild) => {
@@ -1485,6 +1494,7 @@ export const compileChildrenToPrimitives = (
               namespaceStack,
               scopeChain: frame.scopeChain,
               styleStack: frame.styleStack,
+              theme: frame.theme,
               occurrence: probeOccurrence,
               compositeDepth: compositeDepth + 1,
               generated: true,
@@ -1790,6 +1800,7 @@ export const compileChildrenToPrimitives = (
       layoutSink: rootLayouts,
       pathSink: rootPendingPaths,
       styleStack: options.styleStack ?? [],
+      theme: options.theme ?? context.theme,
       publicationSink: [],
       boundsSink: rootBounds,
       allocationSink: rootAllocations,

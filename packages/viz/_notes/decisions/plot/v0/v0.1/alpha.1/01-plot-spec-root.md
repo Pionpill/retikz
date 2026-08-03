@@ -1,6 +1,6 @@
 # ADR-01：Plot 根节点（`plot` composite 节点 + 数据引用 + JSON 透传约束）
 
-- 状态：Accepted（已实现）
+- 状态：Accepted
 - 决策日期：2026-06-03
 - 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3 / §8 / §8.1 / §11 / §13.1](../../../../../architecture/plot-design.md) · 子结构：[ADR-02 data](./02-plot-data.md) · [ADR-03 scale](./03-plot-scale.md) · [ADR-04 coordinate](./04-plot-coordinate.md) · [ADR-05 encoding+mark](./05-plot-encoding-mark.md)
 
@@ -13,7 +13,7 @@
 
 ## 决策：`plot` composite 节点，挂 data 引用 / scales / coordinate / marks + id / meta 预留
 
-Plot IR 根是 `{ namespace: 'plot', type: 'plot', ... }`，extend core 的 `CompositeBaseSchema`，挂四块：**数据引用** `data`（具名 `ref` + 可选 `model`，**不含值**）、命名 `scales` 数组、单个 `coordinate`、`marks` 图层数组（`.min(1)`，数组顺序 = 稳定 z-order）。根**不重复**任何子结构内部决策——`data` / `scales` / `coordinate` / `marks` 分别引用 ADR-02 ~ ADR-05；根 ADR 改动面仅 `plot/src/ir/plot.ts`，子结构演进不动根、根加槽位不动子结构。
+Plot IR 根是 `{ namespace: 'plot', type: 'plot', ... }`，扩展 core composite 基础契约，承载数据引用、命名 scales、coordinate 或 composition、marks、guides、theme 与 layout。真实数据和 runtime definitions 不进入 IR；根节点只组合各 owner 的公开 schema，不复制它们的内部语义。
 
 实际数据在编译期经 `lowerPlots(datasets)` 闭包注入（`data.ref` 按名查 `datasets`），renderer 后端只见 lowered 后含具体数字的 core IR，碰不到 plot 原始数据。`meta` 复用 core 的 `JsonObjectSchema`（递归 JSON 对象），全字段 JSON 可序列化（无函数 / ReactNode / Map）。
 
@@ -27,7 +27,7 @@ export const PlotComposite = { Plot: 'plot' } as const;
 export type PlotNodeType = ValueOf<typeof PlotComposite>;
 ```
 
-- 根类型名取 `PlotSpec`（非 `PlotIR` / `Plot`）——「spec」表意「声明式规格」，与 Vega-Lite 习惯一致、对 AI 友好。
+- 根类型名取 `IRPlotSpec`（非 `PlotIR` / `Plot`）——「spec」表意「声明式规格」，与 Vega-Lite 习惯一致、对 AI 友好。
 - composite `type` 取 `'plot'`（路由键 `plot.plot`，非 `'spec'`）——alpha.1 plot 只有一种顶层节点；alpha.2+ 若出 axis / legend 等独立 composite，用各自 `type`（`plot.axis`…），根仍是 `plot.plot`。
 - `namespace` / `type` 收窄为 literal，使根能作为 core open composite child 被 `lowerComposites` 按 `plot.plot` 路由展开。
 
@@ -57,7 +57,3 @@ export type PlotNodeType = ValueOf<typeof PlotComposite>;
 - **框架绑定 authoring（`<Plot>` JSX / data prop 拆分 / vanilla plot builder）** → ADR-07 / ADR-08。
 
 ---
-
-> **实现指针**：level `red`（动 `plot/src/ir/plot.ts` + 首次公开 `plot/src/index.ts`）、additive 非 breaking。真源以代码为准——`PLOT_NAMESPACE` / `PlotComposite` / `PlotSpecSchema` / `PlotSpec`（`plot/src/ir/plot.ts`，extend core `CompositeBaseSchema`，复用 `JsonObjectSchema` / `ValueOf`），barrel 在 `plot/src/ir/index.ts` + `plot/src/index.ts`。用户侧示例见文档站 plot 分组。测试在 `packages/viz/plot/tests/ir/plot-spec.schema.test.ts`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / 依赖现有元素）见本文件 git 历史。
-
-> 🔖 封板压缩 commit `9115e6b4`；压缩前完整施工蓝图 = `git show 9115e6b4^:_notes/decisions/plot/v0/v0.1/alpha.1/01-plot-spec-root.md`。

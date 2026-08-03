@@ -1,6 +1,7 @@
 # ADR-07：三包 DSL 露出（&lt;BarMark&gt;、series/stack/color props、scale 类型选择；vanilla / docs 同步）
 
-- 状态：Accepted（已实现）
+- 状态：Superseded
+- 替代：[beta.2 ADR-02](../beta.2/02-plot-vanilla-plain-api.md)；React / Vanilla authoring 最终共用 framework-neutral normalization
 - 决策日期：2026-06-05
 - 关联：[plot v0.1-alpha.3 待办](./roadmap.md) · [plot-design.md §5.2 Primitive API / §6 包结构](../../../../../architecture/plot-design.md) · 回溯：[alpha.1 ADR-07 bindings](../alpha.1/07-plot-bindings.md) · [alpha.1 ADR-08 react DSL](../alpha.1/08-plot-react-dsl.md) · [alpha.2 ADR-05 guide DSL](../alpha.2/05-guide-bindings-dsl.md) · 依赖：[ADR-01](./01-band-scale.md)~[ADR-06](./06-time-scale.md)
 
@@ -14,7 +15,7 @@
 
 ## 决策：builder 升级——按 mark/props 推 scale 类型、装配 transform、补 color/series/arrangement；&lt;BarMark&gt; 新增；vanilla/docs 同步
 
-`buildPlotSpec` 从「写死 linear」升为**按收集到的 mark 推断 scale 类型**：x scale 类型 = 若存在 `<BarMark>` 则 band、否则按显式 `scaleX` prop（`linear`/`time`/`point`）、缺省 linear；y 缺省 linear；任一 mark 带 `color` → 自动加一条 ordinal scale 并把 color 通道 `scale` 指向它。`<BarMark stack>` 时同时往 `transform` 推一条 stack op（`x`/`y`/`groupBy` 取自该 mark 的 x/y/series），并给 mark 设 `arrangement:'stack'`；`<BarMark series>` 无 stack → `arrangement:'dodge'`。产出仍须**等价于手写 PlotSpec**（仿 core Sugar=Kernel；每能力配 `toEqual` 等价性测试）。
+`buildPlotSpec` 从「写死 linear」升为**按收集到的 mark 推断 scale 类型**：x scale 类型 = 若存在 `<BarMark>` 则 band、否则按显式 `scaleX` prop（`linear`/`time`/`point`）、缺省 linear；y 缺省 linear；任一 mark 带 `color` → 自动加一条 ordinal scale 并把 color 通道 `scale` 指向它。`<BarMark stack>` 时同时往 `transform` 推一条 stack op（`x`/`y`/`groupBy` 取自该 mark 的 x/y/series），并给 mark 设 `arrangement:'stack'`；`<BarMark series>` 无 stack → `arrangement:'dodge'`。产出仍须**等价于手写 IRPlotSpec**（仿 core Sugar=Kernel；每能力配 `toEqual` 等价性测试）。
 
 决策性的用户表面（字面即决策，完整示例见文档站）：
 
@@ -50,12 +51,3 @@
 - **plot 文档站正文散文**（非 demo）→ 文档优化轨（本分支单独推进）。
 
 ---
-
-> **实现指针**：level `red`（动 `packages/viz/plot-react/src/**` 含 `index.ts` 公开表面）、无 IR schema 改动（builder 装配 [ADR-01](./01-band-scale.md)~[ADR-06](./06-time-scale.md) 既有 scale / mark / transform schema）。跨 3 包 lockstep（@retikz/plot-react / plot-vanilla / docs）：react 出 `<BarMark>` + props、vanilla `renderPlot` 验证端到端、docs 出柱状 / 分组 / 堆叠 / 多线 / 时间轴 / 着色散点 demo。
->
-> - 用户 API 与示例见文档站 plot 基础组件 / 封装组件页（`<BarMark x y color series stack>` / `<Plot scaleX>` / `LineMark`-`PointMark` 的 `color?` / line 的 `series?`，react + vanilla 两视图）。
-> - 真源以代码为准：`BarMark` / `BarMarkProps` + `LineMark`/`PointMark` 扩 props（`packages/viz/plot-react/src/components/marks.tsx`）、scale 推断 + transform 装配 + `options.scaleX`（`packages/viz/plot-react/src/components/buildPlotSpec.ts`）、`PlotDslProps.scaleX` 透传（`packages/viz/plot-react/src/Plot.tsx`）、导出（`packages/viz/plot-react/src/components/index.ts`）；vanilla `renderPlot`（`packages/viz/plot-vanilla/src/renderPlot.ts`，spec 进 SVG 出、不随 mark 种类变）。
-> - 测试见 `packages/viz/plot-react/tests/components/buildPlotSpec.test.tsx`（BarMark 等价 / 自动 band / color→ordinal / series 默认 color / stack 装配 transform + 字段对齐 / dodge 默认 / `scaleX="time"` / 多 mark / bare 守旧 / 混合 bar+line band x / 等价性 `toEqual`）、`Plot.composition.test.tsx`（`scaleX` 透传端到端）、`packages/viz/plot-vanilla/tests/renderPlot.test.ts`（端到端出柱状 SVG）；docs demo 见 `apps/docs/src/modules/docs/contents/viz/**`（`*.demo.tsx` + `<ComponentPreview>`）。
-> - 完整施工契约（文件 scope / 测试象限 / 依赖现有元素）见本 ADR Proposed commit。
-
-> 🔖 封板压缩 commit `82295fcc`；压缩前完整施工蓝图 = `git show 82295fcc^:_notes/decisions/plot/v0/v0.1/alpha.3/07-bindings-dsl.md`。

@@ -14,6 +14,7 @@ description: Scope 的分组、局部命名空间、样式默认值、变换、�
   description="作用域容器：组织子树，并提供局部变换、样式默认值与裁剪。"
   descriptions={{
     type: '判别字段，标记此子节点为 scope',
+    theme: '当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite',
     color: '作用域级主色；可向 node、path、label 与 arrow 的对应颜色字段级联',
     fill: '作用域级默认填充；CSS color 字符串或 PaintSpec',
     fillOpacity: '作用域级默认填充不透明度 0..1',

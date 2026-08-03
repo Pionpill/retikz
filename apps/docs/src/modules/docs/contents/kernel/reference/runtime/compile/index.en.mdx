@@ -76,8 +76,10 @@ Definitions passed here are appended to the corresponding `BUILTIN_*` collection
 
 The two `CompositeDefinition` branches are mutually exclusive:
 
-- `expand(node)` performs context-free structural expansion;
+- `expand(node, context)` performs structural expansion in the current Theme context;
 - `compile(node, context)` evaluates real child content through `context.proposal` and `layoutChild(child, proposal)` in the complete compile environment.
+
+Both branches read the complete, frozen `ResolvedTheme` at their position from `context.theme`. Resolution is fixed as `neutral + light` → Scene → outer Scope → inner Scope, with each layer overriding only explicit fields. `lowerIRToKernel()` uses the same resolver for `expand`, while a layout-aware definition still fails before its callback. Theme only lets a composite materialize domain-owned defaults; the final Scene and renderers neither carry nor interpret it.
 
 A layout-aware definition with `artifactSchema` may also declare `inspector`. The inspector stays on the same `CompositeDefinition` and registry key; Core does not maintain a second inspector registry. For a selected occurrence, the callback receives the validated artifact from that compile, complete shared options, and definition-local options, and may return only strict rect, line, or label inspection DTOs. An `expand` branch, a compile branch without `artifactSchema`, or a selected occurrence that omits its artifact fails loudly.
 
@@ -130,18 +132,19 @@ A layout-aware `compile` result may declare container `allocationBounds` and `al
 
 The parent solver selects a successful transaction with `context.replay(result, wrapper?)`. `wrapper.transforms` first places the child in parent allocation coordinates; `wrapper.clip` then clips in that parent coordinate system. It only tightens final Scene visual contribution without changing allocation or rewriting an existing `LayoutChildResult.visualBounds`. Final emission reuses the saved layout without expanding, measuring, or laying it out again.
 
-`context.scope(props, children)` recursively wraps ordinary `IRChild` values, replay children, and other runtime Scope children. It exposes exactly the eight structural fields whose semantics remain deterministic after replay:
+`context.scope(props, children)` recursively wraps ordinary `IRChild` values, replay children, and other runtime Scope children. It exposes exactly the nine structural fields whose semantics remain deterministic after replay:
 
-| Field            | Purpose                                         |
-| ---------------- | ----------------------------------------------- |
-| `id`             | Register Scope identity in the parent namespace |
-| `localNamespace` | Isolate names inside the Scope subtree          |
-| `transforms`     | Apply lowered numeric Scene transforms          |
-| `clip`           | Clip in the Scope's local coordinate system     |
-| `zIndex`         | Sort the Scope as one sibling unit              |
-| `boundingShape`  | Describe the envelope of an identified Scope    |
-| `meta`           | Pass JSON metadata to the Scene group           |
-| `animations`     | Pass Group animation tracks                     |
+| Field            | Purpose                                                               |
+| ---------------- | --------------------------------------------------------------------- |
+| `theme`          | Establish a sparse Theme override for ordinary descendant IR children |
+| `id`             | Register Scope identity in the parent namespace                       |
+| `localNamespace` | Isolate names inside the Scope subtree                                |
+| `transforms`     | Apply lowered numeric Scene transforms                                |
+| `clip`           | Clip in the Scope's local coordinate system                           |
+| `zIndex`         | Sort the Scope as one sibling unit                                    |
+| `boundingShape`  | Describe the envelope of an identified Scope                          |
+| `meta`           | Pass JSON metadata to the Scene group                                 |
+| `animations`     | Pass Group animation tracks                                           |
 
 `context.replay()` and `context.scope()` return runtime-only opaque handles that never enter IR, Scene, or renderer contracts. Failures, layout results, handles, and replays are checked by callback-local / compile-local identity. They cannot cross compiles or callbacks, be serialized, be forged through spreading, or be reused. The complete runtime output tree formed by replay and runtime Scope handles is preflighted before any sink write; ordinary `IRChild` values then continue through the existing compile dispatch. Wrappers and Scope props are detached, validated, and frozen when built.
 
@@ -245,7 +248,7 @@ A custom renderer must consume `resources` and `animations`, otherwise gradients
       label: 'Public layout proposal, probe, guide, and context contracts',
       path: 'packages/kernel/core/src/contract/composite/types.ts',
       startLine: 20,
-      endLine: 205,
+      endLine: 214,
     },
     {
       label: 'Proposal runtime validation and resolved slots',
@@ -262,38 +265,38 @@ A custom renderer must consume `resources` and `animations`, otherwise gradients
     {
       label: 'Build compile-local replay and Scope children',
       path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
-      startLine: 197,
-      endLine: 260,
+      startLine: 214,
+      endLine: 277,
     },
     {
       label: 'Place replay roots and commit their transaction sinks',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 995,
-      endLine: 1132,
+      startLine: 1019,
+      endLine: 1165,
     },
     {
       label: 'Preflight the complete runtime handle tree before consuming tokens',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1148,
-      endLine: 1224,
+      startLine: 1182,
+      endLine: 1257,
     },
     {
       label: 'Emit recursive runtime Scopes',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1226,
-      endLine: 1313,
+      startLine: 1259,
+      endLine: 1347,
     },
     {
       label: 'Isolate child probes, failures, and resolved results',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1380,
-      endLine: 1501,
+      startLine: 1511,
+      endLine: 1558,
     },
     {
       label: 'Validate and commit callback results, artifacts, and container allocation',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1517,
-      endLine: 1628,
+      startLine: 1575,
+      endLine: 1709,
     },
     {
       label: 'Failure ownership and controlled raise',

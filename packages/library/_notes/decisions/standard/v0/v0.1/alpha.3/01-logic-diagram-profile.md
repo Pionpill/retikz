@@ -74,7 +74,7 @@ type LogicOuterArtifact = {
 
 `LogicLayoutItemArtifact` 只保存单一 region / content 的 placement，不伪造不存在的 item key 或 source index。`LogicOuterArtifact.allocationBounds` 必须等于同一 artifact 的 `container.allocationBounds`；`shellVisualBounds` 只包含 outer shape 的 fill、outline 与 shadow，完全透明且无可见 outline / shadow 时为 null。`visualBounds` 是 shell、content item visual 与该组件 decoration 的 union，无正面积时使用 canonical `(0, 0, 0, 0)`；`visibleBounds` 是 shell、content item visible 与不受 content overflow 裁剪的 decoration 的 union，全部无正面积时为 null。`container` 始终保留 alpha.2 原义：其 visual / visible 只来自 authored content items，不包含 outer shell、divider 或 leader。
 
-`Connector` 例外地使用无上下文 expand 分支直接 lower 为同 id 的 Core Path，不声明重复的 Connector typed artifact，也不承诺 Core 当前没有公开的 Path occurrence artifact。它的路径几何与可见范围由 Core Path 主链拥有；Standard canonical Connector IR 继续是 role、routing 与 endpoint 的语义真源。Core 按现有 Scene contract 把 id stamp 到代表整条 Path 的最外层主体 primitive 或 transform group；label、mark 与其它附属 primitive 不建立第二个 Connector identity。领域 provenance 在 lowering 前通过 authored Connector id join，不从 Scene 反推 Standard 关系语义。
+`Connector` 例外地使用轻量、无布局的 expand 分支直接 lower 为同 id 的 Core Path，不声明重复的 Connector typed artifact，也不承诺 Core 当前没有公开的 Path occurrence artifact。它的路径几何与可见范围由 Core Path 主链拥有；Standard canonical Connector IR 继续是 role、routing 与 endpoint 的语义真源。Core 按现有 Scene contract 把 id stamp 到代表整条 Path 的最外层主体 primitive 或 transform group；label、mark 与其它附属 primitive 不建立第二个 Connector identity。领域 provenance 在 lowering 前通过 authored Connector id join，不从 Scene 反推 Standard 关系语义。
 
 ## 行为、失败语义与兼容性
 

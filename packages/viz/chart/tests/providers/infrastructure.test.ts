@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import type { ChartRecipeInvariantError, ChartRecipeStyleContext } from '../../src/providers';
 
 import { ChartRecipeInvariantReason, InfrastructureChartRecipe } from '../../src/providers';
-import { InfrastructureChartSpecSchema, InfrastructureChartType } from '../../src/schemas';
+import { ChartType, InfrastructureChartSpecSchema } from '../../src/schemas';
 
 const input = {
   namespace: 'chart',
@@ -37,7 +37,7 @@ describe('Infrastructure Chart recipe', () => {
     const spec = InfrastructureChartSpecSchema.parse(input);
     const seed = InfrastructureChartRecipe.createSeed(spec, neutralStyle);
 
-    expect(InfrastructureChartType).toBe('__infrastructure-fixture');
+    expect(ChartType.InfrastructureFixture).toBe('__infrastructure-fixture');
     expect(seed.plot).toEqual({
       namespace: 'plot',
       type: 'plot',
@@ -174,7 +174,7 @@ describe('Infrastructure Chart recipe', () => {
   it('省略 id 和 patch 时不生成对应字段或 patch group', () => {
     const spec = InfrastructureChartSpecSchema.parse({
       namespace: 'chart',
-      type: InfrastructureChartType,
+      type: ChartType.InfrastructureFixture,
       data: { reference: 'rows' },
       encoding: { x: 'amount', y: 'margin' },
     });

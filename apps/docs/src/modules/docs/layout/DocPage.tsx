@@ -10,14 +10,17 @@ import {
   ChangelogOverview,
   ChangelogVersionDetail,
   InlineMdx,
+  isShowcaseFamilyValue,
+  isShowcaseUsageValue,
   MdxContent,
-  mdxHasToc,
   MdxToc,
+  ShowcaseMetadataBadges,
 } from '@/modules/docs/components';
 import { changelogForModule, changelogPageDescription, changelogVersionSlug } from '@/modules/docs/data';
 import { useTocStore } from '@/modules/docs/store';
 
 import { BlogFrontmatter } from './BlogFrontmatter';
+import { resolveDocPagePresentation } from './doc-page-presentation';
 import { DocPageActions } from './DocPageActions';
 import { DocPageFooterNav } from './DocPageFooterNav';
 import { useDocLocation } from './useDocLocation';
@@ -40,7 +43,7 @@ export const DocPage: FC<DocPageProps> = props => {
   const loc = useDocLocation();
   const { section, target } = useDocPageNode(loc);
 
-  const { source, segments: sourceSegments, notFound, resolvedLang } = useMdxSource();
+  const { source, segments: sourceSegments, notFound, resolvedLang, error } = useMdxSource();
   const tocOpen = useTocStore(state => state.tocOpen);
 
   /** changelog 页走数据驱动渲染，不走 mdx 管线。 */
@@ -63,11 +66,16 @@ export const DocPage: FC<DocPageProps> = props => {
   const [frontmatter, setFrontmatter] = useState<MdxFrontmatter>({});
   const { stableSource, stableSegments } = useStableMdxSource(source, sourceSegments);
 
-  /** 当前页是否有右栏目录内容：changelog 页无目录，mdx 页需含 h1-h3。无内容时右栏不渲染、不占位 */
-  const hasToc = useMemo(
-    () => !isChangelog && stableSource != null && mdxHasToc(stableSource),
-    [isChangelog, stableSource],
+  const pagePresentation = useMemo(
+    () =>
+      resolveDocPagePresentation({
+        layout: target?.meta?.layout ?? 'article',
+        source: stableSource,
+        isChangelog,
+      }),
+    [target?.meta?.layout, stableSource, isChangelog],
   );
+  const { contentClassName, hasToc } = pagePresentation;
   const aiChatLang: 'zh' | 'en' = (i18n.resolvedLanguage ?? 'zh').startsWith('en') ? 'en' : 'zh';
   const aiChatTitleKey = target?.label ?? null;
   useDocPageEffects({
@@ -96,6 +104,9 @@ export const DocPage: FC<DocPageProps> = props => {
   }
 
   const title = t(target.label);
+  const isShowcase = target.meta?.layout === 'showcase';
+  const showcaseFamily = isShowcase && isShowcaseFamilyValue(frontmatter.family) ? frontmatter.family : undefined;
+  const showcaseUsage = isShowcase && isShowcaseUsageValue(frontmatter.usage) ? frontmatter.usage : undefined;
   const description = isChangelog
     ? isChangelogOverview
       ? changelogPageDescription[aiChatLang]
@@ -107,7 +118,7 @@ export const DocPage: FC<DocPageProps> = props => {
   return (
     <main className={cn('@container flex min-w-0 flex-1 w-full', className)} {...resProps}>
       <div className="flex min-w-0 flex-1 justify-center p-6">
-        <div className="flex min-w-0 max-w-200 flex-1 flex-col gap-6">
+        <div className={cn('flex min-w-0 flex-1 flex-col gap-6', contentClassName)}>
           <header className="flex flex-col items-start w-full justify-between gap-2">
             <div className="flex w-full items-start justify-between gap-3">
               <h1 className="scroll-m-24 min-w-0 flex-1 text-2xl @[40rem]:text-3xl font-semibold tracking-tight">
@@ -125,6 +136,7 @@ export const DocPage: FC<DocPageProps> = props => {
               />
             )}
             {description && <InlineMdx source={description} className="text-muted-foreground" />}
+            {isShowcase && <ShowcaseMetadataBadges family={showcaseFamily} usage={showcaseUsage} />}
             {loc.sectionId === 'blog' && resolvedLang && resolvedLang !== i18n.resolvedLanguage && (
               <div
                 role="alert"
@@ -147,6 +159,13 @@ export const DocPage: FC<DocPageProps> = props => {
               ) : (
                 <p className="text-sm text-muted-foreground">{t('common.contentPlaceholder', { title })}</p>
               )
+            ) : error ? (
+              <div
+                role="alert"
+                className="w-full rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+              >
+                {error}
+              </div>
             ) : notFound ? (
               <p className="text-sm text-muted-foreground">{t('common.contentPlaceholder', { title })}</p>
             ) : (

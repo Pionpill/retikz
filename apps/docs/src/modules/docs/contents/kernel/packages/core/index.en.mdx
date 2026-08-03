@@ -5,6 +5,12 @@ description: Compile complete Core IR into a deterministic Scene, then publish c
 
 `@retikz/core` owns IR, Definitions, registries, compilation, and Scene semantics. `compileToScene()` remains the stateless full-compile entry; for state across revisions, `CoreOwnerDefinition` and `createCoreProgram()` connect the same compile semantics to `@retikz/runtime`.
 
+## Theme environment
+
+Core exports `ThemeStyle`, `ThemeMode`, `ThemeSchema`, and `ResolvedTheme`. `IRScene.theme` and `IRScope.theme` are sparse, JSON-safe overrides. Compile starts from `neutral + light`, inherits each field through Scene → Scope, and passes the complete readonly value to `CompositeDefinition.expand` and layout-aware `compile`.
+
+Theme is only a composite environment channel. Domain packages and third-party composites own their token and palette mappings; Core primitives, the final Scene, and renderers do not branch on Theme. See [Compile](/kernel/reference/runtime/compile#composites) for behavior and failures and [Scene](/kernel/reference/schema/scene#theme) for the schema.
+
 ## Complete Snapshots And The Core Program
 
 Callers always submit a complete IR Snapshot. The Core owner copies, freezes, and compares the document. The Core Program reads that typed Snapshot, produces a complete `CompileResult`, `SceneRuntimeSnapshot`, and optional `ScenePatch`, then lets the Runtime Session publish them atomically.
@@ -155,6 +161,8 @@ session.update({
 | ------------------------------------------------------ | ---------------------------------------------------------------------------- |
 | `CORE_OWNER_KEY` / `CORE_PROGRAM_ID`                   | Fixed identities for the Core document owner and compile Program             |
 | `CoreOwnerDefinition`                                  | Capture/read/equality Definition for complete IR Snapshots                   |
+| `ThemeStyle` / `ThemeMode` / `ThemeSchema`             | Closed Theme vocabulary, strict IR schema, and Scene / Scope inheritance     |
+| `IRTheme` / `ResolvedTheme`                            | Sparse persisted override and complete readonly composite environment        |
 | `createCoreProgram(options, runtimeOptions?)`          | Create a Runtime Program Definition while preserving composite artifacts     |
 | `CoreChange`                                           | `add` / `update` / `remove` / `move` change-hint union                       |
 | `CoreProgramOptions<TComposites>`                      | Program-lifetime `CompileOptions` without `trace`                            |

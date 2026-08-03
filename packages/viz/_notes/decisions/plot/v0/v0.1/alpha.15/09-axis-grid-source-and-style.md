@@ -51,28 +51,25 @@ type AxisGridLineStyle = GuideLineStyle & {
 主 grid 和 minor grid 的关系：
 
 1. 两者分别产生各自 grid line Path，允许拥有不同样式。
-2. 主 grid 默认 `drawOpacity` 沿用当前内置 `0.15`；minor grid 默认应更轻，例如 `0.08`，具体数值在实现时落到 shared 常量或 theme default。
+2. 主 grid 默认 `drawOpacity` 为 `0.15`，minor grid 默认更轻，为 `0.08`。
 3. 当 minor tick 与 major tick 位置重合时，minor grid 应去重或跳过重合线，避免重复描边导致视觉加深。
 4. `grid.applyTo/select` 仍只属于整个 grid 配置。minor grid 跟随同一个 projection target，不单独选择 facet / track。
 
 理由：
 
 1. `grid.ticks` 解决“axis tick 与背景网格不同密度”的需求，同时默认保持 grid 与 axis tick 同源。
-2. `grid.minor` 用显式 `ticks` 避免隐式 minor tick 规则；未来 chart preset 可以基于 scale family 自动生成，但底层 PlotSpec 保持可解释。
+2. `grid.minor` 用显式 `ticks` 避免隐式 minor tick 规则；未来 chart preset 可以基于 scale family 自动生成，但底层 IRPlotSpec 保持可解释。
 3. `bandPosition` 比布尔 `offset` 更通用，能表达 band 起点、中心、终点以及 0.25 / 0.75 等比例位置。
 4. `lineCap` 与 axis line 能力对齐，且只复用 core Path 已有字段，不新增 renderer 语义。
 5. 本 ADR 不定义局部 grid 层级字段；全局 layer / z-order 模型已由 ADR-12 定型。
 
-## 实现记录
+## 最终形态
 
-2026-07-04 已落地首轮实现：
+- `AxisGridLineStyleSchema`、`AxisGridComponentSchema` 与 `PlotAxisThemeSchema.grid` 覆盖 grid 的 source、density、minor、band position 与线条样式；theme 仍只接收视觉 token。
+- cartesian 与 polar axis 支持 `grid.ticks`、`grid.density`、`grid.minor`、`grid.bandPosition` 与 `lineCap`；custom axis 不自动生成 grid。
+- major / minor grid 分别生成 path，投影重合的 minor line 会跳过，避免重复描边。
 
-- `AxisGridLineStyleSchema`、`AxisGridComponentSchema` 与 `PlotAxisThemeSchema.grid` 已按本 ADR 扩展；theme 仍只接收视觉 token，不接收 source / projection 字段。
-- `lowerGuide` 已支持 cartesian、polar angular、polar radial、ternary 的 `grid.ticks`、`grid.density`、`grid.minor`、`grid.bandPosition` 与 `lineCap`；custom axis 仍按本 ADR 维持不生成 grid。
-- major / minor grid 分别生成 path；minor 与 major 投影重合的位置会跳过，minor 默认 `drawOpacity` 为 `0.08`。
-- 文档轴页面已新增网格来源 demo，并更新 `grid` API 表。
-
-全局 grid layer / z-order 已由 ADR-12 落地。后续如果要把 axis.grid.layer 覆盖、data-driven per-line style 或 custom coordinate grid surface 纳入能力，需要另开 ADR。
+全局 grid layer / z-order 由 ADR-12 负责。axis grid 独立 layer 覆盖、data-driven per-line style 与 custom coordinate grid surface 不在本 ADR 范围。
 
 ## 不在本 ADR 范围
 
@@ -80,12 +77,8 @@ type AxisGridLineStyle = GuideLineStyle & {
 - data-driven / per-line style encoding，例如按 index 或 value 给不同 grid line 着色。
 - reference line / reference band / alternate plot bands；这些应是独立 mark 或 reference guide，不塞进 axis grid。
 - custom coordinate grid surface。
-- 自动 minor tick 生成规则。底层 PlotSpec 只接收显式 `grid.minor.ticks`；chart preset 可以后续生成该配置。
+- 自动 minor tick 生成规则。底层 IRPlotSpec 只接收显式 `grid.minor.ticks`；chart preset 可以后续生成该配置。
 - grid label、grid interaction、hover highlight。
 - 修改 core Path / renderer 契约。
 
 ---
-
-> **实现指针**：本 ADR 已随 plot v0.1-alpha.15 发布落地；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在发布 tag 历史中。
-
-> 🔖 发布后压缩；压缩前完整施工蓝图 = `git show plot-v0.1.0-alpha.15:packages/viz/_notes/decisions/v0/v0.1/alpha.15/09-axis-grid-source-and-style.md`。

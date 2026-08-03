@@ -1,12 +1,20 @@
 import type { TFunction } from 'i18next';
+import type { LucideIcon } from 'lucide-react';
 
-import type { Page, Section, SubPage } from '@/modules/docs/data';
+import { ChartScatter } from 'lucide-react';
+
+import type { DocSidebarIcon, Page, Section, SubPage } from '@/modules/docs/data';
 
 import type { SidebarCategoryData, SidebarSubModuleData } from './sidebar';
 import type { DocLocation, LeafNode } from './types';
 
 /** Viz 内拥有独立更新日志的分区 */
 const VIZ_CHANGELOG_SECTIONS = new Set(['data', 'table', 'plot']);
+
+/** 文档数据中的稳定图标 id 到 Lucide 组件的唯一映射 */
+const DOC_SIDEBAR_ICONS: Record<DocSidebarIcon, LucideIcon> = {
+  'chart-scatter': ChartScatter,
+};
 
 /** 是否为数据驱动渲染的 changelog 页面 */
 export const isChangelogLocation = (loc: DocLocation | null): boolean =>
@@ -112,6 +120,7 @@ export const buildSidebarCategories = (
     modules: section.pages.map(page => ({
       value: page.id,
       label: t(page.label),
+      ...(page.icon === undefined ? {} : { Icon: DOC_SIDEBAR_ICONS[page.icon] }),
       children: mapSidebarChildren(t, page.children),
     })),
   }));

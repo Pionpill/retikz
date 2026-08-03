@@ -21,20 +21,21 @@ import { Scope } from '@retikz/react';
 
 ### When to use Scope
 
-| Task                  | Entry point            | Scope stops at                  |
-| --------------------- | ---------------------- | ------------------------------- |
-| Transform a subfigure | `transforms`           | It does not place raw children  |
-| Align a subfigure     | `placement`            | Only completed targets are seen |
-| Reference a group     | `id` + `boundingShape` | Path routes do not enter bounds |
-| Isolate reusable ids  | `localNamespace`       | `scope.id` stays in the parent  |
-| Share defaults        | `color` / `*Default`   | Explicit element values win     |
-| Limit visibility      | `clip`                 | No renderer-specific semantics  |
-| Move a whole stack    | `zIndex`               | Child order stays unchanged     |
+| Task                        | Entry point            | Scope stops at                    |
+| --------------------------- | ---------------------- | --------------------------------- |
+| Transform a subfigure       | `transforms`           | It does not place raw children    |
+| Align a subfigure           | `placement`            | Only completed targets are seen   |
+| Reference a group           | `id` + `boundingShape` | Path routes do not enter bounds   |
+| Isolate reusable ids        | `localNamespace`       | `scope.id` stays in the parent    |
+| Switch a local domain theme | `theme`                | Core primitives are not recolored |
+| Share defaults              | `color` / `*Default`   | Explicit element values win       |
+| Limit visibility            | `clip`                 | No renderer-specific semantics    |
+| Move a whole stack          | `zIndex`               | Child order stays unchanged       |
 
 <ComponentAlert
   type="warn"
   title="Do not wrap Scope for code structure alone"
-  description="Without shared transforms, references, namespaces, defaults, or clipping, Scope only adds an unnecessary context boundary."
+  description="Without a local Theme, shared transforms, references, namespaces, defaults, or clipping, Scope only adds an unnecessary context boundary."
 />
 
 ### Transform inputs
@@ -102,6 +103,12 @@ Use `localNamespace` only when a reusable subfigure truly carries fixed ids. The
   size="sm"
   caption="The guides are not part of the primary figure. The right FlexLayout still lays out normally; it only omits inspection primitives."
 />
+
+### Local Theme
+
+`<Scope theme>` writes a sparse value to `IRScope.theme` and affects descendant composites only. Fields inherit independently: `{ mode: ThemeMode.Dark }` changes the light/dark environment while retaining the outer `style`. See [Layout: Inherited Theme](/kernel/components/layout/overview#inherited-theme) for the complete example.
+
+Theme and style defaults are independent channels. `resetStyle` does not reset Theme, and Theme does not fill Node or Path colors. To return to the baseline, set `{ style: ThemeStyle.Neutral, mode: ThemeMode.Light }` explicitly.
 
 ### Style defaults
 
@@ -189,8 +196,8 @@ Equal ids in different frames are valid shadowing. A duplicate in one frame emit
     {
       label: 'Parent and child frame orchestration',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 668,
-      endLine: 856,
+      startLine: 733,
+      endLine: 878,
     },
   ]}
 />
@@ -208,14 +215,14 @@ The Scope envelope collects node, coordinate, and nested-Scope layouts, not path
     {
       label: 'Scope intrinsic envelope',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 510,
-      endLine: 522,
+      startLine: 521,
+      endLine: 532,
     },
     {
       label: 'Scope Group output and child orchestration',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 668,
-      endLine: 856,
+      startLine: 700,
+      endLine: 878,
     },
     {
       label: 'Rectangle and circle synthetic layouts',
@@ -239,6 +246,7 @@ The Scope envelope collects node, coordinate, and nested-Scope layouts, not path
 | Prop             | Type                                    | Default       | Description                                                                                                        |
 | ---------------- | --------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `children`       | `ReactNode`                             | —             | Node / Path / Coordinate / nested Scope                                                                            |
+| `theme`          | `IRTheme`                               | Inherited     | Per-field Theme override for descendant composites; does not style Core primitives                                 |
 | `transforms`     | `Array<IRTransformInput>`               | —             | Seven local transforms; the last acts first                                                                        |
 | `placement`      | `IRScopePlacement`                      | —             | Align transformed `selfAnchor` (center by default) with a target in the parent frame                               |
 | `id`             | `string`                                | —             | Register the Scope envelope as a group handle                                                                      |

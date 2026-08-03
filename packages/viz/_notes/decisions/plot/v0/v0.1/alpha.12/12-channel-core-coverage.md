@@ -25,7 +25,7 @@ plot channel coverage 以 core IR 既有能力为边界，但只纳入稳定 sca
 
 首批补齐的用户可见字段包括：`opacity`、`fillOpacity`、`drawOpacity`、`strokeWidth`、`zIndex`、`lineCap`、`lineJoin`、`roundedCorners`、`textColor`，以及 datum `label` 到 core `NodeLabelSchema` 的稳定字段子集。
 
-## 实现指针
+## 最终形态
 
 - 共享 scalar channel 首选提升为 `MarkChannelDefinition`，让具体 mark lowering 选择 Node / Path / Scope 落点。
 - path-only enum / scalar 可放入 Path channel provider。
@@ -45,5 +45,3 @@ plot channel coverage 以 core IR 既有能力为边界，但只纳入稳定 sca
 - 不做数据驱动 PaintSpec、Font、DropShadow、ArrowDetail、AnimationTrack。
 - 不新增 core 渲染能力。
 - 不设计 React `<Channel>` 声明式糖。
-
-> 🔖 本文件压缩前完整施工蓝图 = `git show 20392fb1f39f0383e9d8f8a29f31850da99b8825:_notes/decisions/graph/v0/v0.1/alpha.12/12-channel-core-coverage.md`（封板全文）。

@@ -40,9 +40,3 @@ polar1D 复用 alpha.4 `createPolarFrame` / `projectPolar` + 角向轴，不重�
 - 1D + line / area / interval / sector → fail-loud（point 为主）；line 需求驱动。
 - dot plot 堆叠 / beeswarm / 环形堆叠 → 顺延。
 - ternary2D → [ADR-03](./03-ternary2d.md)。
-
-## 实现指针
-
-最终形态见 `packages/viz/plot/src/ir/coordinate.ts`（`Cartesian1DSchema` / `Polar1DSchema` / `Cartesian1DOrientation`）、`src/lower/project.ts`（cartesian1D 直线+基线 frame、polar1D 复用 createPolarFrame/projectPolar）、`src/lower/layout.ts`（1D 直线 / 圆周占位）、`src/lower/guide.ts`（1D 直线轴 + 角向 1D 轴）；测试 `tests/lower/coordinate-1d.test.ts` + `tests/ir/coordinate.schema.test.ts`。
-
-> 🔖 本文件压缩前完整施工蓝图 = `git show 329fb8b7:_notes/decisions/plot/v0/v0.1/alpha.9/02-cartesian1d.md`（封板全文）。

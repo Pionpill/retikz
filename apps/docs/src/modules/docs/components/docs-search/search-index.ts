@@ -1,7 +1,7 @@
 import type { Lang } from '@/i18n';
 
 import { LANGS } from '@/i18n';
-import { parseDocSource } from '@/modules/docs/lib';
+import { expandMdxIncludes, parseDocSource } from '@/modules/docs/lib';
 
 type MdxLoader = () => Promise<string>;
 
@@ -58,7 +58,8 @@ export const loadSearchIndex = (): Promise<SearchIndex> => {
         const parsed = parseKey(key);
         if (!parsed) return;
         const raw = await loader();
-        const page = extractIndexedPage(raw);
+        const expanded = await expandMdxIncludes(raw, parsed.lang);
+        const page = extractIndexedPage(expanded);
         const bucket = out[parsed.path] ?? (out[parsed.path] = {});
         bucket[parsed.lang] = page;
       }),

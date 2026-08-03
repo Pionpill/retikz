@@ -11,7 +11,7 @@ coordinate、scale、transform 都已经朝 runtime definition / registry 方向
 
 ## 决策
 
-Plot IR 增加 custom mark passthrough，`PlotSpec.marks` 接收 `MarkOperation`。内置 mark 继续走静态 union；未知 mark type 通过 custom schema 保留 JSON-serializable 配置。
+Plot IR 增加 custom mark passthrough，`IRPlotSpec.marks` 接收 `IRPlotMarkOperation`。内置 mark 继续走静态 union；未知 mark type 通过 custom schema 保留 JSON-serializable 配置。
 
 新增 / 收敛 mark runtime definition：
 
@@ -23,7 +23,7 @@ lowering 不再在所有阶段假设 mark 一定是内置 union 成员。`pipeli
 
 自定义 mark 的 runtime 逻辑不进入 IR。IR 只保存 `{ type, ...config }`。
 
-## 实现状态
+## 最终形态
 
 该 ADR 已在 2026-06-19 落地。自定义 mark 可经 spec 入口 + `markDefinitions` 使用。
 
@@ -31,22 +31,6 @@ lowering 不再在所有阶段假设 mark 一定是内置 union 成员。`pipeli
 
 - 自定义 bounds 仍留后续。
 - 通用 `<Mark>` React 组件未在本轮提供。
-
-## 实现指针
-
-最终行为以代码为准，主要落在：
-
-- `packages/viz/plot/src/contract/mark.ts`
-- `packages/viz/plot/src/providers/mark/**`
-- `packages/viz/plot/src/schemas/mark/**`
-- `packages/viz/plot/src/pipeline/expand/`
-- `packages/viz/plot/src/features/interaction/locate.ts`
-
-验证覆盖：
-
-- `packages/viz/plot/tests/lower/mark-registry.test.ts`
-- `packages/viz/plot/tests/lower/mark-value-resolver.test.ts`
-- custom mark / locator / scale 推断相关测试
 
 ## 影响
 
@@ -57,5 +41,3 @@ mark 扩展点与其它 runtime extension contract 对齐。内置与自定义 m
 - 抽象 mark 模型的破坏性重命名；由 ADR-03 / ADR-04 描述。
 - React 通用 `<Mark>` 声明组件。
 - 新 renderer primitive 或 core 渲染能力。
-
-> 🔖 本文件压缩前完整施工蓝图 = `git show 20392fb1f39f0383e9d8f8a29f31850da99b8825:_notes/decisions/graph/v0/v0.1/alpha.12/08-mark-custom-registry.md`（封板全文）。

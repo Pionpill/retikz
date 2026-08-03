@@ -36,6 +36,8 @@ const view = mount(document.querySelector('#diagram')!, spec);
 
 `renderToSvgString` 不依赖 DOM，适合 SSR、构建期生成或保存 SVG；`mount` 用于浏览器宿主，默认创建 SVG，也可以通过 `renderer: 'canvas'` 切换到 Canvas。返回的 `view` 负责后续 `update`、交互水合、动画控制与释放。
 
+`figure({ theme: { style, mode } })` 会把稀疏 Theme 写入根 `IRScene.theme`，`scope({ theme }, children)` 复用同一局部继承契约。helper 与 normalization 会复制 Theme 对象，不修改调用方输入；React 与 Vanilla 因而能把同一 Theme IR 交给同一条 Core compile 管线。
+
 ## 为什么需要 @retikz/vanilla
 
 ### 用普通数据组织图形
@@ -86,8 +88,8 @@ plain spec 路径会先由 `normalizeFigureSpec` 生成 Core IR，再由 Core Pr
     {
       label: 'plain spec 归一为 Core IR 与 metadata',
       path: 'packages/kernel/vanilla/src/spec/normalize.ts',
-      startLine: 194,
-      endLine: 255,
+      startLine: 314,
+      endLine: 386,
     },
     {
       label: 'SSR 与 static mount 的一次性 Scene 入口',
@@ -270,12 +272,12 @@ plain-spec retained update 可以替换同一 composite key/schema/执行分支�
 
 | API                             | 类型          | 说明                                           |
 | ------------------------------- | ------------- | ---------------------------------------------- |
-| `figure`                        | authoring     | 构造 plain spec 根对象                         |
+| `figure`                        | authoring     | 构造可携带根 Theme 的 plain spec 根对象        |
 | `layer`                         | authoring     | 构造带顺序与 metadata 的 layer 边界            |
 | `node`                          | authoring     | 构造具名或匿名 node                            |
 | `coordinate`                    | authoring     | 构造必须带 id 的具名 coordinate                |
 | `path`                          | authoring     | 构造 path，`way` 复用 Draw way DSL             |
-| `scope`                         | authoring     | 构造样式与 namespace 作用域                    |
+| `scope`                         | authoring     | 构造 Theme、样式与 namespace 作用域            |
 | `embed`                         | authoring     | 构造 Tier 2 嵌入节点                           |
 | `VanillaLayerCache`             | authoring     | 提供未来 layer 失效优化使用的 metadata hint    |
 | `VanillaViewMode`               | runtime       | retained / static view 的公开 const object     |
@@ -283,7 +285,8 @@ plain-spec retained update 可以替换同一 composite key/schema/执行分支�
 | `VanillaRetainedRuntimeOptions` | type          | retained mode、更新策略与 renderer factory     |
 | `VanillaStaticRuntimeOptions`   | type          | 只允许 `mode: "static"` 的封闭配置             |
 | `CommonOptions`                 | type          | 输出、compile、根 inspect、动画与 adapter 配置 |
-| `VanillaScopeSpec`              | type          | 可携带 authored 子树 inspect 策略的 Scope spec |
+| `VanillaFigureSpec`             | type          | 可携带根 `theme` 的 version 1 plain spec       |
+| `VanillaScopeSpec`              | type          | 可携带局部 Theme 与 authored inspect 的 Scope  |
 | `VanillaEmbedSpec`              | type          | 可携带 occurrence-local inspect 的 Tier 2 spec |
 | `isVanillaFigureSpec`           | normalization | 判断输入是否为 version 1 plain spec            |
 | `normalizeFigureSpec`           | normalization | 生成 Core IR、composites 与 runtime metadata   |

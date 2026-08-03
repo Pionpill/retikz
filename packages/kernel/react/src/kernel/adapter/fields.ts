@@ -90,6 +90,7 @@ void _assertPathFieldsCheck;
  *   （级联 graphic state + 四通道 every-X + resetStyle）；同 NODE_FIELDS 互锁防漂移，builder / unbuilder 共用
  */
 export const SCOPE_FIELDS = [
+  'theme',
   'id',
   'localNamespace',
   'transforms',

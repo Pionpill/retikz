@@ -101,6 +101,28 @@ describe('mark-local transform', () => {
     expect([...fields].sort()).toEqual(['category', 'value']);
   });
 
+  it('mark_local_same_name_output_keeps_source_field', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'value' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'value' },
+      marks: [
+        {
+          type: 'point',
+          transform: [{ kind: 'normalize', field: 'value', as: 'value' }],
+          encoding: { x: { field: 'x' }, y: { field: 'value' } },
+        },
+      ],
+    });
+
+    expect([...collectSourceFields(spec)].sort()).toEqual(['value', 'x']);
+  });
+
   it('custom_mark_receives_local_transform_rows', () => {
     const record = { rows: [] as Array<ExternalRow> };
     const spec = PlotSpecSchema.parse({
