@@ -4,9 +4,9 @@ import { describe, expect, it } from 'vitest';
 
 import type { FlexLayoutArtifact, GridLayoutArtifact, OverlayLayoutArtifact } from '../../src';
 
-import { inspectFlexLayoutArtifact } from '../../src/composites/flex-layout/inspection';
-import { inspectGridLayoutArtifact } from '../../src/composites/grid-layout/inspection';
-import { inspectOverlayLayoutArtifact } from '../../src/composites/overlay-layout/inspection';
+import { inspectFlexLayoutArtifact } from '../../src/composites/layout/flex-layout/inspection';
+import { inspectGridLayoutArtifact } from '../../src/composites/layout/grid-layout/inspection';
+import { inspectOverlayLayoutArtifact } from '../../src/composites/layout/overlay-layout/inspection';
 
 const base: ResolvedBaseLayoutInspectOptions = {
   bounds: { container: true, content: true, slot: true, allocation: true, visual: false },
