@@ -45,6 +45,16 @@ describe('layout utils', () => {
     expect(categories[1]?.modules[0]?.children?.map(child => child.value)).toEqual(['a', 'b']);
   });
 
+  it('将 Showcase 图标放在一级页面条目而非分组标题', () => {
+    const t = ((key: string) => key) as TFunction;
+    const categories = buildSidebarCategories(t, 'viz', vizSection);
+    const chart = categories.find(category => category.value === 'chart');
+    const points = chart?.modules.find(module => module.value === 'points');
+
+    expect(points?.Icon).toBeDefined();
+    expect(points?.children?.map(child => child.value)).toEqual(['scatter', 'bubble']);
+  });
+
   it('Plot 末尾注册 API 参考与更新日志路由', () => {
     const plotPaths = flattenLeaves('viz', vizSection)
       .map(node => node.path)
@@ -72,6 +82,36 @@ describe('layout utils', () => {
     expect(paths).toContain('/viz/data/changelog/v0-1');
     expect(paths).toContain('/viz/table/changelog/v0-1');
     expect(paths.some(path => path.startsWith('/viz/releases/'))).toBe(false);
+  });
+
+  it('在 Chart 下以点图家族收纳平级的 Scatter 与 Bubble Showcase', () => {
+    expect(vizSection.map(section => section.id).filter(Boolean)).toEqual(['data', 'chart', 'table', 'plot']);
+
+    const chart = vizSection.find(section => section.id === 'chart');
+    const points = chart?.pages.find(page => page.id === 'points');
+    const scatter = points?.children?.find(page => page.id === 'scatter');
+    const bubble = points?.children?.find(page => page.id === 'bubble');
+    const chartPaths = flattenLeaves('viz', vizSection)
+      .map(node => node.path)
+      .filter(path => path.startsWith('/viz/chart/'));
+
+    expect(points?.meta).toMatchObject({ pageType: 'group', capability: 'chart.points' });
+    expect(scatter?.meta).toMatchObject({
+      pageType: 'concept',
+      layout: 'showcase',
+      capability: 'showcase.scatter',
+      showcase: { family: 'points', role: 'primary', preview: 'scatter-basic', order: 10 },
+    });
+    expect(bubble?.meta).toMatchObject({
+      pageType: 'concept',
+      audience: 'user',
+      layout: 'showcase',
+      capability: 'showcase.bubble',
+      sourceOfTruth: 'docs',
+      showcase: { family: 'points', role: 'primary', preview: 'bubble-basic', order: 20 },
+    });
+    expect(chartPaths).toEqual(['/viz/chart/points/scatter', '/viz/chart/points/bubble']);
+    expect(chartPaths).not.toContain('/viz/chart/scatter');
   });
 
   it.each(['data', 'table', 'plot'])('识别 Viz %s 的数据驱动更新日志路由', sectionId => {

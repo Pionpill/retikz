@@ -163,7 +163,7 @@ const getTypeScript = () => {
 };
 
 const property = (ts, object, name) =>
-  object.properties.find(
+  object?.properties.find(
     item =>
       ts.isPropertyAssignment(item) &&
       ((ts.isIdentifier(item.name) && item.name.text === name) ||
@@ -182,12 +182,21 @@ const arrayProperty = (ts, object, name) => {
     : [];
 };
 
-const collectRegisteredRoutes = async repoRoot => {
+const objectProperty = (ts, object, name) => {
+  const item = property(ts, object, name);
+  return item && ts.isObjectLiteralExpression(item.initializer) ? item.initializer : undefined;
+};
+
+const collectDocsData = async repoRoot => {
   const dataRoot = path.join(repoRoot, 'apps/docs/src/modules/docs/data');
-  if (!(await exists(dataRoot))) return new Set();
+  if (!(await exists(dataRoot))) {
+    return { registeredRoutes: new Set(), showcaseDataErrors: new Map(), showcasePages: new Map() };
+  }
 
   const ts = getTypeScript();
   const routes = new Set();
+  const showcaseDataErrors = new Map();
+  const showcasePages = new Map();
   const entries = await readdir(dataRoot, { withFileTypes: true });
   const files = entries
     .filter(
@@ -202,7 +211,35 @@ const collectRegisteredRoutes = async repoRoot => {
     const moduleId = path.basename(file, '.ts');
     const source = await readFile(file, 'utf8');
     const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const dataLabel = relativeLabel(repoRoot, file);
     routes.add(`/${moduleId}`);
+
+    const visitPage = (page, base) => {
+      const pageId = stringProperty(ts, page, 'id');
+      if (!pageId) return;
+
+      const pageRoute = `${base}/${pageId}`;
+      routes.add(pageRoute);
+
+      const meta = objectProperty(ts, page, 'meta');
+      const showcase = objectProperty(ts, meta, 'showcase');
+      const layout = stringProperty(ts, meta, 'layout');
+      const preview = stringProperty(ts, showcase, 'preview');
+      const dataErrors = [];
+      if (layout === 'showcase') {
+        showcasePages.set(pageRoute, { preview });
+        if (showcase === undefined) {
+          dataErrors.push(`${dataLabel}: ${pageRoute}.meta.showcase: metadata is required`);
+        } else if (preview === undefined) {
+          dataErrors.push(`${dataLabel}: ${pageRoute}.meta.showcase.preview: string literal is required`);
+        }
+      } else if (showcase !== undefined) {
+        dataErrors.push(`${dataLabel}: ${pageRoute}.meta.layout: "showcase" is required by showcase metadata`);
+      }
+      if (dataErrors.length > 0) showcaseDataErrors.set(pageRoute, dataErrors);
+
+      for (const child of arrayProperty(ts, page, 'children')) visitPage(child, pageRoute);
+    };
 
     const visit = node => {
       if (ts.isVariableDeclaration(node) && ts.isArrayLiteralExpression(node.initializer)) {
@@ -211,17 +248,7 @@ const collectRegisteredRoutes = async repoRoot => {
           const sectionBase = sectionId ? `/${moduleId}/${sectionId}` : `/${moduleId}`;
           if (sectionId) routes.add(sectionBase);
 
-          for (const page of arrayProperty(ts, section, 'pages')) {
-            const pageId = stringProperty(ts, page, 'id');
-            if (!pageId) continue;
-            const pageRoute = `${sectionBase}/${pageId}`;
-            routes.add(pageRoute);
-
-            for (const child of arrayProperty(ts, page, 'children')) {
-              const childId = stringProperty(ts, child, 'id');
-              if (childId) routes.add(`${pageRoute}/${childId}`);
-            }
-          }
+          for (const page of arrayProperty(ts, section, 'pages')) visitPage(page, sectionBase);
         }
       }
       ts.forEachChild(node, visit);
@@ -230,7 +257,223 @@ const collectRegisteredRoutes = async repoRoot => {
     visit(sourceFile);
   }
 
-  return routes;
+  return { registeredRoutes: routes, showcaseDataErrors, showcasePages };
+};
+
+const collectFrontmatter = content => {
+  const block = content.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
+  const values = new Map();
+  if (!block) return values;
+
+  for (const line of block[1].split(/\r?\n/)) {
+    const match = line.match(/^([A-Za-z][\w-]*):\s*(.*?)\s*$/);
+    if (!match) continue;
+    values.set(match[1], match[2].replace(/^(['"])(.*)\1$/, '$2'));
+  }
+
+  return values;
+};
+
+const scanBalanced = (source, start, open, close) => {
+  let depth = 0;
+  let quote;
+  let escaped = false;
+
+  for (let index = start; index < source.length; index += 1) {
+    const character = source[index];
+    if (quote !== undefined) {
+      if (escaped) escaped = false;
+      else if (character === '\\') escaped = true;
+      else if (character === quote) quote = undefined;
+      continue;
+    }
+    if (character === "'" || character === '"' || character === '`') {
+      quote = character;
+      continue;
+    }
+    if (character === open) depth += 1;
+    if (character === close) {
+      depth -= 1;
+      if (depth === 0) return index;
+    }
+  }
+
+  return -1;
+};
+
+const collectShowcaseTags = content => {
+  const tags = [];
+  let cursor = 0;
+
+  while (cursor < content.length) {
+    const start = content.indexOf('<ShowcaseGallery', cursor);
+    if (start < 0) break;
+
+    let braceDepth = 0;
+    let quote;
+    let escaped = false;
+    let end = -1;
+    for (let index = start; index < content.length; index += 1) {
+      const character = content[index];
+      if (quote !== undefined) {
+        if (escaped) escaped = false;
+        else if (character === '\\') escaped = true;
+        else if (character === quote) quote = undefined;
+        continue;
+      }
+      if (character === "'" || character === '"' || character === '`') {
+        quote = character;
+        continue;
+      }
+      if (character === '{') braceDepth += 1;
+      if (character === '}') braceDepth -= 1;
+      if (character === '>' && braceDepth === 0) {
+        end = index;
+        break;
+      }
+    }
+
+    if (end < 0) break;
+    tags.push(content.slice(start, end + 1));
+    cursor = end + 1;
+  }
+
+  return tags;
+};
+
+const expressionAttribute = (tag, name) => {
+  const match = new RegExp(`\\b${name}\\s*=\\s*\\{`).exec(tag);
+  if (!match) return undefined;
+  const start = match.index + match[0].length - 1;
+  const end = scanBalanced(tag, start, '{', '}');
+  return end < 0 ? undefined : tag.slice(start + 1, end);
+};
+
+const parseExpression = expression => {
+  const ts = getTypeScript();
+  const sourceFile = ts.createSourceFile(
+    'showcase-expression.ts',
+    `const value = ${expression};`,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TS,
+  );
+  const statement = sourceFile.statements.find(ts.isVariableStatement);
+  return statement?.declarationList.declarations[0]?.initializer;
+};
+
+const collectPreviewFiles = (ts, preview, fieldPath) => {
+  const errors = [];
+  const files = [];
+  const item = property(ts, preview, 'files');
+  if (!item) return { errors: [`${fieldPath}: static string or array is required`], files };
+  if (ts.isStringLiteral(item.initializer)) return { errors, files: [item.initializer.text] };
+  if (!ts.isArrayLiteralExpression(item.initializer)) {
+    return { errors: [`${fieldPath}: static string or array is required`], files };
+  }
+
+  for (let index = 0; index < item.initializer.elements.length; index += 1) {
+    const element = item.initializer.elements[index];
+    if (ts.isStringLiteral(element)) {
+      files.push(element.text);
+      continue;
+    }
+    if (ts.isObjectLiteralExpression(element)) {
+      const file = stringProperty(ts, element, 'file');
+      if (file !== undefined) {
+        files.push(file);
+        continue;
+      }
+    }
+    errors.push(`${fieldPath}[${index}]: static string or { file } is required`);
+  }
+
+  return { errors, files };
+};
+
+const collectShowcaseExamples = content => {
+  const ts = getTypeScript();
+  const examples = [];
+  const errors = [];
+
+  for (const tag of collectShowcaseTags(content)) {
+    const expression = expressionAttribute(tag, 'examples');
+    const initializer = expression === undefined ? undefined : parseExpression(expression);
+    if (!initializer || !ts.isArrayLiteralExpression(initializer)) {
+      errors.push('ShowcaseGallery.examples: static array is required');
+      continue;
+    }
+
+    for (let index = 0; index < initializer.elements.length; index += 1) {
+      const element = initializer.elements[index];
+      const examplePath = `examples[${index}]`;
+      if (!ts.isObjectLiteralExpression(element)) {
+        errors.push(`${examplePath}: static object is required`);
+        continue;
+      }
+      const preview = objectProperty(ts, element, 'preview');
+      if (preview === undefined) {
+        errors.push(`${examplePath}.preview: static object is required`);
+        continue;
+      }
+
+      const fileResult = collectPreviewFiles(ts, preview, `${examplePath}.preview.files`);
+      errors.push(...fileResult.errors);
+      const controlsItem = property(ts, preview, 'controls');
+      let controls;
+      if (controlsItem !== undefined) {
+        if (!ts.isObjectLiteralExpression(controlsItem.initializer)) {
+          errors.push(`${examplePath}.preview.controls: static object is required`);
+        } else {
+          controls = stringProperty(ts, controlsItem.initializer, 'name');
+          if (controls === undefined) {
+            errors.push(`${examplePath}.preview.controls.name: static string is required`);
+          }
+        }
+      }
+
+      const id = stringProperty(ts, element, 'id');
+      if (id === undefined) errors.push(`${examplePath}.id: static string is required`);
+      examples.push({
+        id,
+        index,
+        files: fileResult.files,
+        controls,
+      });
+    }
+  }
+
+  return { errors, examples };
+};
+
+const constObjectValues = (ts, sourceFile, name) => {
+  const values = new Set();
+  const visit = node => {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === name && node.initializer) {
+      const initializer = ts.isAsExpression(node.initializer) ? node.initializer.expression : node.initializer;
+      if (ts.isObjectLiteralExpression(initializer)) {
+        for (const item of initializer.properties) {
+          if (ts.isPropertyAssignment(item) && ts.isStringLiteral(item.initializer)) values.add(item.initializer.text);
+        }
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+  return values;
+};
+
+const collectShowcaseTaxonomy = async repoRoot => {
+  const file = path.join(repoRoot, 'apps/docs/src/modules/docs/components/showcase/frontmatter.ts');
+  if (!(await exists(file))) return undefined;
+
+  const ts = getTypeScript();
+  const source = await readFile(file, 'utf8');
+  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  return {
+    family: constObjectValues(ts, sourceFile, 'ShowcaseFamily'),
+    usage: constObjectValues(ts, sourceFile, 'ShowcaseUsage'),
+  };
 };
 
 const previewCandidates = (directory, id, language) => {
@@ -246,7 +489,19 @@ const previewCandidates = (directory, id, language) => {
   ];
 };
 
-const validateFile = async ({ contentsRoot, file, registeredRoutes, repoRoot }) => {
+const localizedPreviewCandidates = (directory, id, language) => {
+  if (/\.[cm]?[jt]sx?$/.test(id) || id.endsWith('.json')) return [path.join(directory, id)];
+  return [path.join(directory, `${id}.${language}.demo.tsx`), path.join(directory, `${id}.demo.tsx`)];
+};
+
+const controlsCandidates = (directory, name, language) =>
+  language === 'en'
+    ? [path.join(directory, `${name}.en.controls.ts`)]
+    : [path.join(directory, `${name}.zh.controls.ts`), path.join(directory, `${name}.controls.ts`)];
+
+const anyExists = async candidates => (await Promise.all(candidates.map(exists))).some(Boolean);
+
+const validateFile = async ({ contentsRoot, file, registeredRoutes, repoRoot, showcase, showcaseTaxonomy }) => {
   const errors = [];
   const content = await readFile(file, 'utf8');
   const language = languageOf(file);
@@ -301,6 +556,55 @@ const validateFile = async ({ contentsRoot, file, registeredRoutes, repoRoot }) 
     }
   }
 
+  if (showcase !== undefined) {
+    const directory = path.dirname(file);
+    const frontmatter = collectFrontmatter(content);
+    const showcaseExamples = collectShowcaseExamples(content);
+    const { examples } = showcaseExamples;
+    errors.push(...showcaseExamples.errors.map(error => `${label}: ${error}`));
+
+    for (const field of ['family', 'usage']) {
+      const value = frontmatter.get(field);
+      if (value === undefined || value.length === 0) {
+        errors.push(`${label}: frontmatter.${field}: value is required`);
+      } else if (!showcaseTaxonomy?.[field]?.has(value)) {
+        errors.push(`${label}: frontmatter.${field}: unsupported value: ${value}`);
+      }
+    }
+
+    if (showcase.preview !== undefined) {
+      if (!(await anyExists(localizedPreviewCandidates(directory, showcase.preview, language)))) {
+        errors.push(`${label}: showcase.preview: demo does not exist: ${showcase.preview}`);
+      }
+      if (!examples.some(example => example.id === showcase.preview || example.files[0] === showcase.preview)) {
+        errors.push(`${label}: showcase.preview: does not match a ShowcaseGallery example: ${showcase.preview}`);
+      }
+    }
+
+    if (examples.length === 0) errors.push(`${label}: ShowcaseGallery.examples: no static examples found`);
+    for (const example of examples) {
+      const exampleIndex = example.index;
+      for (let fileIndex = 0; fileIndex < example.files.length; fileIndex += 1) {
+        const id = example.files[fileIndex];
+        const candidates =
+          fileIndex === 0 ? localizedPreviewCandidates(directory, id, language) : [path.join(directory, id)];
+        if (!(await anyExists(candidates))) {
+          const kind = fileIndex === 0 ? 'demo' : 'file';
+          errors.push(`${label}: examples[${exampleIndex}].preview.files[${fileIndex}]: ${kind} does not exist: ${id}`);
+        }
+      }
+
+      if (
+        example.controls !== undefined &&
+        !(await anyExists(controlsCandidates(directory, example.controls, language)))
+      ) {
+        errors.push(
+          `${label}: examples[${exampleIndex}].preview.controls.name: controls do not exist: ${example.controls}`,
+        );
+      }
+    }
+  }
+
   return {
     content,
     errors,
@@ -337,7 +641,8 @@ export const auditDocs = async ({ contentsRoot, repoRoot, scope = '.' }) => {
   const files = (await walk(scopeRoot)).filter(file => /index\.(?:zh|en)\.mdx$/.test(file));
   const directories = [...new Set(files.map(file => path.dirname(file)))].sort();
   const errors = [];
-  const registeredRoutes = await collectRegisteredRoutes(repoRoot);
+  const { registeredRoutes, showcaseDataErrors, showcasePages } = await collectDocsData(repoRoot);
+  const showcaseTaxonomy = await collectShowcaseTaxonomy(repoRoot);
   let checkedPages = 0;
 
   for (const directory of directories) {
@@ -354,8 +659,15 @@ export const auditDocs = async ({ contentsRoot, repoRoot, scope = '.' }) => {
       errors.push(`${relativeLabel(repoRoot, directory)}: missing bilingual peer index.en.mdx`);
     }
 
-    const zh = hasZh ? await validateFile({ contentsRoot, file: zhFile, registeredRoutes, repoRoot }) : undefined;
-    const en = hasEn ? await validateFile({ contentsRoot, file: enFile, registeredRoutes, repoRoot }) : undefined;
+    const route = `/${slash(path.relative(contentsRoot, directory))}`;
+    const showcase = showcasePages.get(route);
+    errors.push(...(showcaseDataErrors.get(route) ?? []));
+    const zh = hasZh
+      ? await validateFile({ contentsRoot, file: zhFile, registeredRoutes, repoRoot, showcase, showcaseTaxonomy })
+      : undefined;
+    const en = hasEn
+      ? await validateFile({ contentsRoot, file: enFile, registeredRoutes, repoRoot, showcase, showcaseTaxonomy })
+      : undefined;
 
     if (zh) errors.push(...zh.errors);
     if (en) errors.push(...en.errors);

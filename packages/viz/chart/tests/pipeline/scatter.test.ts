@@ -166,7 +166,6 @@ describe('Scatter Chart pipeline', () => {
     expect(field.guides).toContainEqual({
       type: 'legend',
       channel: 'size',
-      scale: '__size_weight',
     });
 
     const constant = resolveChartSpec({
@@ -179,6 +178,85 @@ describe('Scatter Chart pipeline', () => {
     const authored = resolveChartSpec({
       ...base,
       encoding: { ...base.encoding, size: { field: 'weight' } },
+      guides: [{ type: 'axis', id: 'authored-axis', dimension: 'x' }],
+    }).plotSpec;
+    expect(authored.guides).toEqual([{ type: 'axis', id: 'authored-axis', dimension: 'x' }]);
+  });
+
+  it('deep-merges Point encoding capabilities while keeping x/y and canonical identity', () => {
+    const resolution = resolveChartSpec({
+      ...base,
+      mark: {
+        color: { kind: 'constant', value: '#dc2626' },
+        encoding: {
+          text: { field: 'label' },
+          color: { value: '#2563eb' },
+          channels: { halo: { value: 0.5 } },
+          depth: { field: 'depth' },
+        },
+      },
+    });
+
+    expect(resolution.plotSpec.marks[0]).toMatchObject({
+      type: 'point',
+      id: '__chart.scatter.mark.main',
+      color: { kind: 'constant', value: '#dc2626' },
+      encoding: {
+        x: { field: 'x' },
+        y: { field: 'y' },
+        text: { field: 'label' },
+        color: { value: '#2563eb' },
+        channels: { halo: { value: 0.5 } },
+        depth: { field: 'depth' },
+      },
+    });
+    expect(resolution.inspection.members.find(member => member.target === 'mark.main')?.sources).toEqual([
+      { kind: 'type-default', path: '$recipe/scatter/mark.main' },
+      { kind: 'user-override', path: '$spec/mark' },
+    ]);
+  });
+
+  it('binds automatic size guides only to the final effective size descriptor', () => {
+    const constantOverride = resolveChartSpec({
+      ...base,
+      encoding: { ...base.encoding, size: { field: 'weight', scale: 'weight-radius' } },
+      mark: { size: { kind: 'constant', value: 7 } },
+    }).plotSpec;
+    expect(constantOverride.marks[0]).toMatchObject({ size: { kind: 'constant', value: 7 } });
+    expect(constantOverride.guides?.some(guide => guide.type === 'legend')).toBe(false);
+
+    const fieldOverride = resolveChartSpec({
+      ...base,
+      encoding: { ...base.encoding, size: { value: 4 } },
+      mark: { size: { kind: 'field', value: 'importance', scale: 'importance-radius' } },
+    }).plotSpec;
+    expect(fieldOverride.guides).toContainEqual({
+      type: 'legend',
+      channel: 'size',
+      scale: 'importance-radius',
+    });
+
+    for (const textMode of [
+      {
+        ...base,
+        encoding: { ...base.encoding, size: { field: 'weight' } },
+        mark: { encoding: { text: { field: 'label' } } },
+      },
+      {
+        ...base,
+        mark: {
+          size: { kind: 'field', value: 'importance', scale: 'importance-radius' },
+          encoding: { text: { field: 'label' } },
+        },
+      },
+    ] as const) {
+      const textPlot = resolveChartSpec(textMode).plotSpec;
+      expect(textPlot.guides?.some(guide => guide.type === 'legend' && guide.channel === 'size')).toBe(false);
+    }
+
+    const authored = resolveChartSpec({
+      ...base,
+      mark: { size: { kind: 'field', value: 'importance', scale: 'importance-radius' } },
       guides: [{ type: 'axis', id: 'authored-axis', dimension: 'x' }],
     }).plotSpec;
     expect(authored.guides).toEqual([{ type: 'axis', id: 'authored-axis', dimension: 'x' }]);
@@ -282,6 +360,19 @@ describe('Scatter Chart pipeline', () => {
 
     expect(warnings).toEqual([]);
     expect(collectPrimitiveIds(result.scene.primitives)).toContain('sales/plot.legend.size');
+  });
+
+  it('does not lower a size legend for Scatter text mode', () => {
+    const chart = {
+      ...base,
+      encoding: { ...base.encoding, size: { field: 'weight' } },
+      mark: { encoding: { text: { value: 'point' } } },
+    } as const;
+    const result = compileToScene(sceneOf(chart), {
+      composites: [ScatterChartDefinition, ...lowerPlots(datasets, { width: 320, height: 180 })],
+    });
+
+    expect(collectPrimitiveIds(result.scene.primitives)).not.toContain('sales/plot.legend.size');
   });
 
   it('passes a custom two-dimensional coordinate definition only through Plot lowering', () => {

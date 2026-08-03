@@ -183,6 +183,8 @@ export type ChannelContext = {
   node: IRPlotSpec;
   rows: Array<ExternalRow>;
   fieldTypes: DataFieldTypeMap;
+  /** 最终字段类型具有声明、resolver 或有效数据观测依据的字段；省略时由 definition 就地判断 */
+  fieldTypeEvidence?: ReadonlySet<string>;
   scaleRegistry?: ReadonlyMap<string, AnyScaleDefinition>;
   resolveColorScheme?: (name: string) => (t: number) => string;
   palette?: ChannelPaletteContext;

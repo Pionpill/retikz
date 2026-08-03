@@ -16,7 +16,7 @@ Chart type 是官方维护的封闭目录，不提供 `defineChart`、Chart regi
 
 每个 recipe 负责声明该 type 的完整 Plot 配方、不可撤销的核心成员、可调整的表现性默认和稳定语义目标；统一 resolver 负责应用覆盖与扩展、复验核心不变量、生成最终 PlotSpec、结构化诊断和 inspection。不同 type 不得各自发明 merge、错误或 adapter 语义。
 
-ADR-04 加入首个 Canonical Type 且上游 gates 满足时，才原子公开 ChartSpec、type definitions 与 React / Vanilla authoring。在此之前不得公开没有 Canonical Type 的空 Chart surface。
+ADR-04 加入首批 `scatter` / `bubble` Canonical Types 且上游 gates 满足时，才原子公开 ChartSpec、type definitions 与 React / Vanilla authoring。在此之前不得公开没有 Canonical Type 的空 Chart surface。
 
 ## 基础数据结构与公开契约
 

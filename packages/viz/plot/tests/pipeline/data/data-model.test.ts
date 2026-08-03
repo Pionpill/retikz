@@ -274,6 +274,42 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
     expect(collectSourceFields(spec).has('amount')).toBe(true);
   });
 
+  it('normalize_explicit_same_name_output_keeps_source_field', () => {
+    const spec = buildSpec({
+      transform: [{ kind: 'normalize', field: 'amount', as: 'amount' }],
+      marks: [{ type: 'point', encoding: { x: { field: 'amount' }, y: { field: 'amount' } } }],
+    });
+
+    expect(collectSourceFields(spec).has('amount')).toBe(true);
+  });
+
+  it('chained_transform_outputs_do_not_become_source_fields', () => {
+    const spec = buildSpec({
+      transform: [
+        { kind: 'normalize', field: 'amount', as: 'share' },
+        { kind: 'normalize', field: 'share', as: 'finalShare' },
+      ],
+      marks: [{ type: 'point', encoding: { x: { field: 'finalShare' }, y: { field: 'finalShare' } } }],
+    });
+
+    expect([...collectSourceFields(spec)]).toEqual(['amount']);
+  });
+
+  it('mark_local_outputs_do_not_hide_another_mark_source_field', () => {
+    const spec = buildSpec({
+      marks: [
+        {
+          type: 'point',
+          transform: [{ kind: 'normalize', field: 'value', as: 'derived' }],
+          encoding: { x: { field: 'derived' }, y: { field: 'derived' } },
+        },
+        { type: 'point', encoding: { x: { field: 'derived' }, y: { field: 'derived' } } },
+      ],
+    });
+
+    expect([...collectSourceFields(spec)].sort()).toEqual(['derived', 'value']);
+  });
+
   it('derive_interval_inputs_in_outputs_out', () => {
     const spec = buildSpec({
       transform: [{ kind: 'derive-interval', startFrom: 'start', endFrom: 'end', startField: 'lo', endField: 'hi' }],

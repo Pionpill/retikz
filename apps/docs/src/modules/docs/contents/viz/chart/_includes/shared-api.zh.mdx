@@ -1,0 +1,132 @@
+## Axis
+
+`Axis` 直接使用 Plot 的完整轴契约。除选择维度外，可以独立控制轴线、tick 图元、标签、网格、标题、放置位置和图层。
+
+| 属性                                 | 类型                                                | 默认值  | 描述                                                                 |
+| ------------------------------------ | --------------------------------------------------- | ------- | -------------------------------------------------------------------- |
+| `dimension`                          | `AxisProps['dimension']`                            | —       | 需要装饰的坐标 role；内置二维坐标使用 `x` 或 `y`                     |
+| `scale`                              | `AxisProps['scale']`                                | —       | 当前维度的位置 scale 快捷配置                                        |
+| `line`                               | `AxisProps['line']`                                 | 主题值  | 轴线的显示、颜色、宽度、透明度、范围和端点箭头                       |
+| `ticks`                              | `AxisProps['ticks']`                                | 自动    | tick 来源、数量、间隔、密度、端点策略与 line/shape/custom-shape 图元 |
+| `crossing`                           | `AxisProps['crossing']`                             | —       | 轴交叉值处的 tick 与标签冲突策略                                     |
+| `tickLabels`                         | `AxisProps['tickLabels']`                           | 显示    | 格式、间距、旋转、锚点、字体与自动旋转/隐藏/边界布局                 |
+| `grid`                               | `AxisProps['grid']`                                 | `false` | 主/次网格的 tick 来源、密度、样式与组合视图目标                      |
+| `title`                              | `AxisProps['title']`                                | —       | 标题文本、位置、锚点、偏移、字体与自适应布局                         |
+| `placement`                          | `AxisProps['placement']`                            | `auto`  | side、edge 或 origin 放置策略                                        |
+| `coordinateView`                     | `AxisProps['coordinateView']`                       | —       | 绑定命名组合视图                                                     |
+| `facetId` / `scaffoldId` / `trackId` | `AxisProps['facetId' \| 'scaffoldId' \| 'trackId']` | —       | 绑定对应的组合布局声明                                               |
+| `layer`                              | `AxisProps['layer']`                                | —       | 轴 scope 的语义图层覆盖                                              |
+| `id`                                 | `AxisProps['id']`                                   | —       | 稳定的轴句柄                                                         |
+
+## Legend
+
+`Legend` 直接解释颜色、尺寸、透明度或形状通道。多个 scale 驱动同一通道时必须用 `scale` 消歧；否则 Plot 会明确报错，不会猜测图例来源。
+
+| 属性         | 类型                        | 默认值    | 描述                                          |
+| ------------ | --------------------------- | --------- | --------------------------------------------- |
+| `channel`    | `LegendProps['channel']`    | —         | 要解释的非位置通道                            |
+| `scale`      | `LegendProps['scale']`      | 自动      | 绑定唯一 scale；同通道多 scale 时必须显式提供 |
+| `title`      | `LegendProps['title']`      | —         | 字符串、多行文本或 styled text block          |
+| `position`   | `LegendProps['position']`   | `'right'` | 图例预留带所在边                              |
+| `orient`     | `LegendProps['orient']`     | 按位置    | 条目横向或纵向排布                            |
+| `ticks`      | `LegendProps['ticks']`      | 自动      | ramp 或 size 图例的刻度来源                   |
+| `tickLabels` | `LegendProps['tickLabels']` | 显示      | 条目/刻度标签开关与格式                       |
+| `style`      | `LegendProps['style']`      | 主题值    | 图例本地容器、条目、ramp 与文字 token         |
+| `layer`      | `LegendProps['layer']`      | —         | 图例 scope 的语义图层覆盖                     |
+
+## Label
+
+datum 标签由各位置 mark 共用 `DatumLabelProps`；整图标题和说明分别使用 `TitleLabel` 与 `CaptionLabel`。两者都进入 Plot 的标签与空间预留管线。
+
+| 属性                                         | 类型                                                                     | 默认值   | 描述                                                    |
+| -------------------------------------------- | ------------------------------------------------------------------------ | -------- | ------------------------------------------------------- |
+| `label`                                      | `DatumLabelProps['label']`                                               | —        | datum 标签内容字段                                      |
+| `labelDisplayFormat`                         | `DatumLabelProps['labelDisplayFormat']`                                  | —        | 数值或时间字段的显示格式                                |
+| `labelPosition`                              | `DatumLabelProps['labelPosition']`                                       | `top`    | 标签相对宿主图元的位置                                  |
+| `labelDistance`                              | `DatumLabelProps['labelDistance']`                                       | `12`     | 标签与宿主边界的距离                                    |
+| `labelPin`                                   | `DatumLabelProps['labelPin']`                                            | `false`  | 是否绘制引线及其样式                                    |
+| `labelTextColor` / `labelOpacity`            | `DatumLabelProps['labelTextColor' \| 'labelOpacity']`                    | 主题值   | 标签颜色与透明度                                        |
+| `labelFont`                                  | `DatumLabelProps['labelFont']`                                           | 主题值   | datum 标签字体                                          |
+| `labelRotate`                                | `DatumLabelProps['labelRotate']`                                         | `'none'` | 标签旋转策略或角度                                      |
+| `labelKeepUpright`                           | `DatumLabelProps['labelKeepUpright']`                                    | `false`  | 旋转后是否保持文字正向                                  |
+| `resolveLabel`                               | `DatumLabelProps['resolveLabel']`                                        | —        | runtime-only 的完全自定义内容函数；需同时提供 mark `id` |
+| `TitleLabel` / `CaptionLabel` 的 `text`      | `TitleLabelProps['text']` \| `CaptionLabelProps['text']`                 | —        | 字符串、多行文本或 styled text block                    |
+| `TitleLabel` / `CaptionLabel` 的 `placement` | `TitleLabelProps['placement']` \| `CaptionLabelProps['placement']`       | 按 role  | side 或归一化 point 放置                                |
+| `reserveSpace`                               | `TitleLabelProps['reserveSpace']` \| `CaptionLabelProps['reserveSpace']` | 按 role  | 是否参与 Plot 的标签空间预留                            |
+
+## Scale
+
+`Scale` 要求同时提供 `dimension` 与 `type`。`type` 决定后续可用字段；连续、point 与 band 分支不能混用。颜色、尺寸、透明度和形状等非位置通道仍由 mark 字段绑定与 Plot scale registry 解析。
+
+| 属性        | 类型                      | 默认值 | 描述                               |
+| ----------- | ------------------------- | ------ | ---------------------------------- |
+| `dimension` | `ScaleProps['dimension']` | —      | 要配置的 `x` 或 `y` 位置维度       |
+| `type`      | `ScaleProps['type']`      | —      | 必填判别字段，选择下面一种配置分支 |
+
+### 连续 scale
+
+适用于 `linear`、`time`、`log`、`sqrt`、`symlog` 与 `radial`。
+
+| 属性              | 类型                                                         | 默认值                | 描述                    |
+| ----------------- | ------------------------------------------------------------ | --------------------- | ----------------------- |
+| `domain`          | `ScaleProps['domain']`                                       | 数据推断              | 连续数值或时间 domain   |
+| `domainPadding`   | `Extract<ScaleProps, { type: 'linear' }>['domainPadding']`   | 推断 domain 为 `0.05` | 连续 domain 留白        |
+| `singleValueSpan` | `Extract<ScaleProps, { type: 'linear' }>['singleValueSpan']` | 按 scale              | 单值 domain 的展开跨度  |
+| `base`            | `Extract<ScaleProps, { type: 'log' }>['base']`               | `10`                  | 仅 `type="log"` 可用    |
+| `constant`        | `Extract<ScaleProps, { type: 'symlog' }>['constant']`        | `1`                   | 仅 `type="symlog"` 可用 |
+
+### Point scale
+
+| 属性                | 类型                                                           | 默认值   | 描述                       |
+| ------------------- | -------------------------------------------------------------- | -------- | -------------------------- |
+| `domain`            | `ScaleProps['domain']`                                         | 数据顺序 | 分类 domain                |
+| `padding` / `align` | `Extract<ScaleProps, { type: 'point' }>['padding' \| 'align']` | `0.5`    | 首尾留白比例与范围对齐方式 |
+
+### Band scale
+
+| 属性                            | 类型                                                                      | 默认值                    | 描述                     |
+| ------------------------------- | ------------------------------------------------------------------------- | ------------------------- | ------------------------ |
+| `domain`                        | `ScaleProps['domain']`                                                    | 数据顺序                  | 分类 domain              |
+| `paddingInner` / `paddingOuter` | `Extract<ScaleProps, { type: 'band' }>['paddingInner' \| 'paddingOuter']` | `0.1` / 同 `paddingInner` | band 内部与首尾留白      |
+| `align`                         | `Extract<ScaleProps, { type: 'band' }>['align']`                          | `0.5`                     | 首尾留白在范围两端的分配 |
+
+## Transform
+
+`Transform` 的 props 就是公开的 `IRPlotTransform` 判别联合。多个 transform 按声明顺序执行，也可通过 `Plot.dataTransforms` 传入同一数组；`PointMark.transform` 等 mark-local 入口只作用于对应图层的数据视图。
+
+| 入口                           | 类型                                                                                                                                                                             | 默认值 | 描述                                                                                |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------- |
+| `<Transform {...operation} />` | `TransformProps`                                                                                                                                                                 | —      | 声明一个完整 transform operation                                                    |
+| `Plot.dataTransforms`          | `PlotDslProps['dataTransforms']`                                                                                                                                                 | `[]`   | 在 mark 收集前执行的整图 transform 链                                               |
+| `mark.transform`               | `PointMarkProps['transform']`                                                                                                                                                    | `[]`   | 只作用于当前 mark 的 transform 链                                                   |
+| 内置 `kind`                    | `'sort'` \| `'summarize'` \| `'select'` \| `'annotate'` \| `'stack'` \| `'bin'` \| `'normalize'` \| `'derive-interval'` \| `'relate'` \| `'jitter'` \| `'density'` \| `'smooth'` | —      | 选择内置 operation，并开放该分支字段                                                |
+| 自定义 `kind`                  | `string`                                                                                                                                                                         | —      | 可使用已注册且不与保留名称冲突的外部 transform kind；其余字段由对应 definition 校验 |
+
+## Theme 与 Layout
+
+主题只提供默认 token；Axis、Legend、Label、Scale 与 mark 上的显式值优先。浅色与深色主题可以分别提供 `PlotProps['theme']`，无需改变图表结构。
+
+| 属性                                  | 类型                                                           | 默认值        | 描述                                                         |
+| ------------------------------------- | -------------------------------------------------------------- | ------------- | ------------------------------------------------------------ |
+| `Plot.colors`                         | `PlotProps['colors']`                                          | 内置 palette  | 分类颜色 scale 与未编码 mark 的颜色序列                      |
+| `Plot.theme.background`               | `NonNullable<PlotProps['theme']>['background']`                | 透明          | 面板背景色                                                   |
+| `Plot.theme.typography` / `labelText` | `NonNullable<PlotProps['theme']>['typography' \| 'labelText']` | 内置          | guide 与静态标签的文字 token                                 |
+| `Plot.theme.axis`                     | `NonNullable<PlotProps['theme']>['axis']`                      | 内置          | `line`、`ticks.mark`、`tickLabels`、`title`、`grid` 默认样式 |
+| `Plot.theme.legend`                   | `NonNullable<PlotProps['theme']>['legend']`                    | 内置          | 图例容器、条目、ramp 与文字默认样式                          |
+| `Plot.theme.palette`                  | `NonNullable<PlotProps['theme']>['palette']`                   | 内置          | categorical、series、sector、sequential、diverging palette   |
+| `Plot.layout.mode`                    | `NonNullable<PlotProps['layout']>['mode']`                     | `'auto'`      | 自动预留装饰空间或只使用显式 padding                         |
+| `Plot.layout.autoPadding`             | `NonNullable<PlotProps['layout']>['autoPadding']`              | `true`        | 标签是否可以扩展外边距                                       |
+| `Plot.layout.padding`                 | `NonNullable<PlotProps['layout']>['padding']`                  | `0`           | 自动布局前的外边距                                           |
+| `Plot.width` / `height`               | `PlotProps['width' \| 'height']`                               | `480` / `300` | Plot 逻辑尺寸；本页 showcase 固定为 `800 × 400`              |
+
+## Additional Marks
+
+本页主示例使用一个主要 mark；需要参考线、趋势、区间或关系时，可以继续组合 Plot 的公开 mark。附加 mark 使用同一数据、scale、coordinate、transform、label、theme 与 lowering 管线。
+
+| 组件            | Props                | 主要用途                           | 共享能力                                                     |
+| --------------- | -------------------- | ---------------------------------- | ------------------------------------------------------------ |
+| `PathMark`      | `PathMarkProps`      | 折线、连接轨迹、闭合区域           | `transform`、`coordinateView`、`layer`、`channels`、路径样式 |
+| `IntervalMark`  | `IntervalMarkProps`  | 柱、直方、区间、饼环、heatmap      | datum label、transform、通道样式、组合视图                   |
+| `ReferenceMark` | `ReferenceMarkProps` | 阈值线、容差带、参考区域           | line/band/region、标签、路径与填充样式                       |
+| `RelationMark`  | `RelationMarkProps`  | source 到 target 的 path 或 ribbon | 关系几何、标签、颜色与扩展通道                               |
+| `PointMark`     | `PointMarkProps`     | 追加注释点或第二组点               | 与主 Point 相同的完整能力；必须使用不同 `id`                 |

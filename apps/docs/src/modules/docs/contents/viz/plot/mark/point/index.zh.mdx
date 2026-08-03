@@ -98,6 +98,8 @@ PointMark 在每个位置生成的是 core Node，而不是固定的圆。`shape
 | 装饰 | `size`、`shape`、颜色与 Node 样式写入 datum Node；`label` 保留点本身并挂到 `Node.label`  |
 | 分层 | 没有颜色通道时共享 `nodeDefault`；按字段着色时按颜色组织子层，最后附加 mark 图层信息     |
 
+普通 glyph 模式下，字段尺寸为缺失值、`null`、`NaN` 或无穷值时，该行不会生成 Point glyph；尺寸字段 descriptor、scale identity 与可选 legend 是数据集级信息，仍会保留。负数尺寸会直接报错，不会被跳过或截断。设置 `text` 后使用既有文本 Node 路径，不受这条仅针对 glyph 的尺寸守门影响。
+
 因此坐标系只决定“点在哪里”，PointMark 决定“每行生成什么 Node”，而具体形状、文字与视觉样式仍复用 [Node](/kernel/components/node/overview) 的能力。每个 mark 默认处于独立图层；调整整个 mark 与轴、图例的前后关系时使用 `layer={{ zIndex }}`，`zIndex` prop 只控制当前 mark 内 datum Node 的顺序。
 
 <SourceLinks
@@ -120,6 +122,12 @@ PointMark 在每个位置生成的是 core Node，而不是固定的圆。`shape
       startLine: 82,
       endLine: 168,
     },
+    {
+      label: '尺寸字段校验、resolver 与 descriptor',
+      path: 'packages/viz/plot/src/providers/channel/features/node.ts',
+      startLine: 202,
+      endLine: 276,
+    },
   ]}
 />
 
@@ -132,7 +140,7 @@ PointMark 在每个位置生成的是 core Node，而不是固定的圆。`shape
 | `id?`                                | `string`                                                                                                                                                                        | —                                            | mark 句柄；使用 `resolveLabel` 时必填                                |
 | `x?` / `y?` / `z?`                   | `FieldName`                                                                                                                                                                     | —                                            | 位置角色字段；内置坐标使用 `x` 或 `x` / `y`，`z` 留给自定义坐标 role |
 | `color?`                             | `PointMarkProps['color']`                                                                                                                                                       | —                                            | 点的语义颜色；字段绑定会建立颜色通道与比例尺                         |
-| `size?`                              | `PointMarkProps['size']`                                                                                                                                                        | —                                            | 普通点的尺寸；数值字段经 sqrt scale 映射为半径                       |
+| `size?`                              | `PointMarkProps['size']`                                                                                                                                                        | —                                            | 普通点的尺寸；数值字段经 sqrt scale 映射为半径，无效值跳过该 glyph   |
 | `shape?`                             | `PointMarkProps['shape']`                                                                                                                                                       | —                                            | 普通点的形状；分类字段映射到 shape 调色板                            |
 | `text?`                              | `FieldName`                                                                                                                                                                     | —                                            | 把点本身替换为无边框文本 Node                                        |
 | `displayFormat?`                     | `string`                                                                                                                                                                        | —                                            | `text` 的 d3 数值或时间格式                                          |
