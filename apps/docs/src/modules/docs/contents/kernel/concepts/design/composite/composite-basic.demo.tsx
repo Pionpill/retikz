@@ -24,7 +24,8 @@ const barChart = defineComposite({
     type: z.literal('barChart'),
     data: z.array(z.number()),
   }),
-  expand: node => {
+  expand: (node, _context) => {
+    void _context;
     const peak = Math.max(...node.data, 1);
     const step = BAR_WIDTH + GAP;
     const span = (node.data.length - 1) * step + BAR_WIDTH;

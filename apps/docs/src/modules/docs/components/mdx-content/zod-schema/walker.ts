@@ -84,6 +84,9 @@ function walkTypeImpl(schema: AnySchema, skipRegistry: boolean, ctx: WalkCtx = R
   if (schema instanceof z.ZodLazy) {
     return walkTypeImpl(schema.unwrap(), false, next);
   }
+  if (schema instanceof z.ZodPipe) {
+    return walkTypeImpl(schema.out, false, next);
+  }
   if (schema instanceof z.ZodUnion) {
     const discriminator = (schema.def as z.core.$ZodUnionDef & { discriminator?: unknown }).discriminator;
     const branches =
@@ -128,6 +131,7 @@ export function walk(schema: AnySchema): SchemaRepr {
   let s = schema;
   while (s instanceof z.ZodLazy) s = s.unwrap();
   const topDesc = descriptionOf(s);
+  while (s instanceof z.ZodPipe) s = s.out;
 
   if (s instanceof z.ZodObject) {
     return { kind: 'object', description: topDesc, fields: extractFields(s, { seen: new Set([s]), depth: 1 }) };
@@ -142,7 +146,7 @@ function extractFields(obj: z.ZodObject, ctx: WalkCtx = ROOT_CTX): Array<ObjectF
       name,
       type: walkTypeImpl(inner, false, ctx),
       optional,
-      description: descriptionOf(inner) ?? descriptionOf(raw),
+      description: descriptionOf(raw) ?? descriptionOf(inner),
       constraints: extractConstraints(inner),
     };
   });

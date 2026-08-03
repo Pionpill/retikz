@@ -7,6 +7,12 @@ description: The top-level IR root — a JSON-serializable description of one re
 
 <ZodSchema name="SceneSchema" />
 
+## Theme
+
+`ThemeSchema` is the sparse environment shared by Scene and Scope. `style` and `mode` inherit independently, starting from `neutral + light`. Only Tier 2 composites receive the resolved value; plain Core primitives and the final Scene do not branch on Theme.
+
+<ZodSchema name="ThemeSchema" />
+
 <span id="viewbox"></span>
 
 ## ViewBox

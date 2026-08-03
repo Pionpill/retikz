@@ -10,6 +10,7 @@ import { NodeTargetSchema, PositionSchema } from '../position';
 import { getRecursiveChildSchema } from '../recursive';
 import { ScopeSelfPointSchema } from '../scope-point';
 import { CascadingGraphicStyleSchema, CssColorSchema, OpacitySchema } from '../style';
+import { ThemeSchema } from '../theme';
 import { TransformSchema } from '../transform';
 import { ScopeBoundingShape, ScopeStyleChannel } from './constants';
 
@@ -74,6 +75,7 @@ export const ScopeSchema = z
   .object({
     type: z.literal('scope').describe('Discriminator marking this child as a scope container.'),
     ...CascadingGraphicStyleSchema.shape,
+    theme: ThemeSchema.optional().describe('Sparse Theme override inherited by this Scope descendants.'),
     id: z
       .string()
       .min(1)

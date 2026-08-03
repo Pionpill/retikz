@@ -1,3 +1,5 @@
+import { ZodError } from 'zod';
+
 import type {
   CompositeCompileChild,
   CompositeCompileScopeProps,
@@ -13,6 +15,15 @@ import { CompositeContractError } from '../probe-failure';
 import { withProviderOutputValidationBoundary } from '../scene-primitive';
 
 const builtinChildTypes = new Set(['node', 'path', 'coordinate', 'scope']);
+
+/** 从 Scope schema 失败中提取可读的 Theme 字段路径 */
+const readThemeIssuePath = (error: unknown): string | undefined => {
+  if (!(error instanceof ZodError)) return undefined;
+  const issue = error.issues[0];
+  const segments = issue.path.map(String);
+  if (issue.code === 'unrecognized_keys') segments.push(issue.keys[0]);
+  return segments.join('.');
+};
 
 /** 脱离普通 callback child，并只校验主链 dispatch 所需的顶层判别结构 */
 const snapshotCompositeCallbackChild = (owner: string, value: unknown, location: string): IRChild => {
@@ -114,6 +125,7 @@ const cloneScopeProps = (props: unknown, owner: CompositeCompileOwner): Composit
   }
   const raw = props as Record<string, unknown>;
   const allowedKeys = new Set([
+    'theme',
     'id',
     'localNamespace',
     'transforms',
@@ -134,9 +146,13 @@ const cloneScopeProps = (props: unknown, owner: CompositeCompileOwner): Composit
   try {
     parsed = ScopeSchema.parse({ type: 'scope', ...structural, children: [] });
   } catch (error) {
-    throw new CompositeContractError(`${owner.label} received invalid or unsupported runtime Scope props.`, {
-      cause: error,
-    });
+    const themeIssuePath = structural.theme === undefined ? undefined : readThemeIssuePath(error);
+    throw new CompositeContractError(
+      structural.theme === undefined
+        ? `${owner.label} received invalid or unsupported runtime Scope props.`
+        : `${owner.label} received invalid runtime Scope ${themeIssuePath ?? 'theme'}.`,
+      { cause: error },
+    );
   }
   if (rawTransforms !== undefined && !Array.isArray(rawTransforms)) {
     throw new CompositeContractError(`${owner.label} received invalid runtime Scope transforms.`);
@@ -146,6 +162,7 @@ const cloneScopeProps = (props: unknown, owner: CompositeCompileOwner): Composit
       ? undefined
       : Array.from(rawTransforms, (transform, index) => cloneTransform(transform, owner, index));
   const parsedProps: CompositeCompileScopeProps = {
+    ...(parsed.theme === undefined ? {} : { theme: parsed.theme }),
     ...(parsed.id === undefined ? {} : { id: parsed.id }),
     ...(parsed.localNamespace === undefined ? {} : { localNamespace: parsed.localNamespace }),
     ...(parsed.clip === undefined ? {} : { clip: parsed.clip }),

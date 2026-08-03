@@ -45,6 +45,7 @@ export const createCoreSnapshotIndex = (source: Readonly<IRScene>): CoreSnapshot
   const rootValue: CoreSnapshotRootValue = Object.freeze({
     type: source.type,
     version: source.version,
+    ...(source.theme === undefined ? {} : { theme: source.theme }),
     ...(source.viewBox === undefined ? {} : { viewBox: source.viewBox }),
     ...(source.animations === undefined ? {} : { animations: source.animations }),
   });

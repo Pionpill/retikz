@@ -23,7 +23,8 @@ const pipeline = defineComposite({
     stages: z.array(z.string()).min(2),
     arrows: z.array(z.string()),
   }),
-  expand: node => {
+  expand: (node, _context) => {
+    void _context;
     const boxes = node.stages.map((label, i) => ({
       type: 'node' as const,
       id: `stage-${i}`,

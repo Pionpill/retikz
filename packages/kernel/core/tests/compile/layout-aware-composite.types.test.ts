@@ -12,6 +12,7 @@ import type {
   CompositeCompileArtifact,
   CompositeCompileChild,
   CompositeCompileScopeProps,
+  CompositeExpandContext,
   CompositeReplayWrapper,
   IRChild,
   IRScene,
@@ -24,6 +25,7 @@ import type {
   LayoutCompositeCompileResult,
   LayoutProposal,
   NodeLayoutCompileArtifact,
+  ResolvedTheme,
 } from '../../src';
 
 import {
@@ -102,12 +104,14 @@ const wrapped = defineComposite({
     const placed = context.replay(laid, replayWrapper);
     const scopeProps = {
       id: 'cell',
+      theme: { mode: 'dark' },
       clip: { kind: 'rect', x: 0, y: 0, width: 20, height: 10 },
       meta: { role: 'cell' },
     } satisfies CompositeCompileScopeProps;
     const wrapper = context.scope(scopeProps, [placed]);
 
     expectTypeOf(wrapper).toEqualTypeOf<CompositeCompileChild>();
+    expectTypeOf(context.theme).toEqualTypeOf<ResolvedTheme>();
     expectTypeOf(laid).toEqualTypeOf<LayoutChildResult>();
     expectTypeOf(laid.slotSize).toEqualTypeOf<Readonly<{ width: number; height: number }>>();
 
@@ -174,6 +178,15 @@ const wrapped = defineComposite({
 });
 
 describe('layout-aware composite type contracts', () => {
+  it('公开 expand 与 layout-aware 的完整只读 Theme context', () => {
+    const expandContext = {} as CompositeExpandContext;
+    expectTypeOf(expandContext.theme).toEqualTypeOf<ResolvedTheme>();
+    const assertReadonly = (context: CompositeExpandContext): void => {
+      // @ts-expect-error 解析后的 Theme 是只读值
+      context.theme.mode = 'dark';
+    };
+    void assertReadonly;
+  });
   it('removes the legacy child layout public types', () => {
     void expectTypeOf<ChildLayoutAxisConstraint>();
     void expectTypeOf<ChildLayoutConstraint>();
