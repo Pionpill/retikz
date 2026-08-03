@@ -35,6 +35,14 @@ shared/schemas <- parsers
 
 右侧消费左侧；左侧不反向读取右侧。`parsers/` 是入 IR 前的纯函数旁路，只依赖 `shared` / `schemas`，输出 IR 节点或片段，供 adapter / Sugar 复用；不得依赖 `compile`、`providers` 或运行时 registry。跨层复用的纯函数优先下沉到 `shared`，IR 契约回 `schemas`，作者协议回 `contract`，内置实现回 `providers`，编排消费留在 `pipeline/compile`，字符串 / DSL shorthand 归 `parsers`。
 
+## 原子契约与组合
+
+- `shared`、`schemas` 与 `contract` 向上导出的公共内容，优先按稳定语义提供可独立复用的原子契约；上层包负责组合，不为单一消费方把组合结果下沉成底层 bundle
+- 原子边界按可观察语义、不变量和扩展边界划分，不把每个字段机械拆成独立公共 API
+- 多个 Tier 2 反复从同一个大型底层 schema `pick` / `omit` 出相同字段子集时，先检查拥有该语义的下层是否缺少命名契约，再决定是否新增或复用原子 schema / type / contract
+- Tier 2 自己的默认值、禁用字段、输入收窄和领域组合仍留在 Tier 2；不要为了消除一次 `pick` 把消费方专属限制错误下沉
+- 原子契约必须继续复用同一 JSON / IR / registry / pipeline 真源，不得因组合便利复制一套平行词汇或消费路径
+
 ## JSDoc
 
 - 中文注释和 JSDoc 的末句不写句号；多句内容只保留句间句号。
@@ -108,3 +116,4 @@ render/        React 宿主渲染接线，可再按 svg / canvas / text 分组
 2. import 是否沿允许依赖方向走？
 3. 新文件是否职责单一，必要时按共性文件拆分？
 4. barrel 是否只导出稳定 API，没有业务逻辑？
+5. 底层是否已经提供足够原子的公共契约？若需要重复 `pick` / `omit`，是否应先补下层命名契约而不是继续局部投影？

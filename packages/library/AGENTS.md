@@ -2,6 +2,8 @@
 
 本文件覆盖 `packages/library/`。全仓通用规则见根 [`AGENTS.md`](../../AGENTS.md)。
 
+涉及 Standard 能力归属、Core / Standard 边界或公共契约拆分时，先读 [`Standard Drawing Library 设计`](_notes/architecture/standard-library-design.md)，并按根规则读取能力完备性文档与 `standard-structure` skill
+
 ## 分组职责
 
 `library` 是官方维护、相对 Core 可选安装、供作者和官方 Tier 2 包跨领域复用的绘图能力库分组。它承接移除 Plot、Table、Graph、Flow、Workspace 等领域词汇后仍成立的常用 Drawing Complete 能力，例如可注册的箭头 / shape / connector 定义、通用容器与排版 composite，以及它们的 React / Vanilla authoring。
