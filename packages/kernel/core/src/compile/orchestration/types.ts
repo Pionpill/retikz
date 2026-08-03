@@ -5,6 +5,7 @@ import type {
   AnyCompositeInspectorDefinition,
   BaseLayoutInspectOptions,
   ClipShape,
+  CompileOccurrenceLocator,
   CompositeCompileChild,
   CompositeCompileScopeProps,
   CompositeInspectionAuthoringTree,
@@ -20,8 +21,8 @@ import type {
   SceneResource,
   Transform,
 } from '../../contract';
-import type { CompileOccurrenceLocator } from '../../contract';
 import type { IRChild, IRPathBase, IRPosition, JsonValue, ResolvedDropShadow } from '../../schemas';
+import type { ResolvedTheme } from '../../shared';
 import type { NamespaceFrameChange, NamespaceStack } from '../namespace';
 import type { NodeLayout } from '../node';
 import type { LayoutProbeFailureEntry } from '../probe-failure';
@@ -189,6 +190,8 @@ export type TraversalCompileOptions = {
   scopeChain?: ReadonlyArray<Transform>;
   /** probe 继承的样式栈 */
   styleStack?: ReadonlyArray<StyleFrame>;
+  /** 隔离 traversal 继承的完整 Theme */
+  theme?: ResolvedTheme;
   /** 当前 child 根 occurrence；省略时按 canonical IR path 分配 */
   occurrence?: CompileOccurrenceLocator;
   /** 当前 traversal 的 composite 深度 */
@@ -280,6 +283,8 @@ export type TraversalFrame = {
   pathSink: Array<PendingPathEmission>;
   /** 当前层样式继承栈 */
   styleStack: ReadonlyArray<StyleFrame>;
+  /** 当前层后代读取的完整 Theme */
+  theme: ResolvedTheme;
   /** 当前层及后代注册的全局 layout 对象，供 Scope 收尾时原位升级到最终几何 */
   publicationSink: Array<NodeLayout>;
   /** 当前层自动 viewBox 几何贡献；Scope 收尾后再投到父 frame */

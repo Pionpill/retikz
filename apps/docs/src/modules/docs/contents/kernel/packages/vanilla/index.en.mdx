@@ -36,6 +36,8 @@ const view = mount(document.querySelector('#diagram')!, spec);
 
 `renderToSvgString` does not depend on the DOM, so it works for SSR, build-time generation, or saving SVG. `mount` targets browser hosts, creates SVG by default, and can switch to Canvas with `renderer: 'canvas'`. The returned view owns later updates, interaction hydration, animation controls, and disposal.
 
+`figure({ theme: { style, mode } })` writes a sparse root `IRScene.theme`, and `scope({ theme }, children)` uses the same local inheritance contract. Helpers and normalization copy Theme objects rather than mutating caller input, so React and Vanilla can feed the same Theme IR into the same Core compile pipeline.
+
 ## Why @retikz/vanilla Exists
 
 ### Authoring With Plain Data
@@ -86,8 +88,8 @@ The plain-spec path first uses `normalizeFigureSpec` to produce Core IR. The Cor
     {
       label: 'Normalize a plain spec into Core IR and metadata',
       path: 'packages/kernel/vanilla/src/spec/normalize.ts',
-      startLine: 194,
-      endLine: 255,
+      startLine: 314,
+      endLine: 386,
     },
     {
       label: 'One-shot Scene entry for SSR and static mounts',
@@ -270,12 +272,12 @@ Prefer [`@retikz/react`](/kernel/packages/react) for JSX authoring and React hos
 
 | API                             | Kind          | Description                                                         |
 | ------------------------------- | ------------- | ------------------------------------------------------------------- |
-| `figure`                        | authoring     | Builds the plain spec root                                          |
+| `figure`                        | authoring     | Builds a plain spec root with an optional root Theme                |
 | `layer`                         | authoring     | Builds a layer with ordering and metadata                           |
 | `node`                          | authoring     | Builds a named or anonymous node                                    |
 | `coordinate`                    | authoring     | Builds a named coordinate with a required id                        |
 | `path`                          | authoring     | Builds a path; `way` reuses Draw way DSL                            |
-| `scope`                         | authoring     | Builds a style and namespace scope                                  |
+| `scope`                         | authoring     | Builds a Theme, style, and namespace scope                          |
 | `embed`                         | authoring     | Builds a Tier 2 embed node                                          |
 | `VanillaLayerCache`             | authoring     | Provides a metadata hint for future layer invalidation optimization |
 | `VanillaViewMode`               | runtime       | Public const object for retained / static view modes                |
@@ -283,7 +285,8 @@ Prefer [`@retikz/react`](/kernel/packages/react) for JSX authoring and React hos
 | `VanillaRetainedRuntimeOptions` | type          | Retained mode, update strategy, and renderer factory                |
 | `VanillaStaticRuntimeOptions`   | type          | Closed config that only permits `mode: "static"`                    |
 | `CommonOptions`                 | type          | Output, compile, root inspect, animation, and adapter options       |
-| `VanillaScopeSpec`              | type          | Scope spec with an optional authored-subtree inspect policy         |
+| `VanillaFigureSpec`             | type          | Version 1 plain spec with an optional root `theme`                  |
+| `VanillaScopeSpec`              | type          | Scope spec with local Theme and authored inspection                 |
 | `VanillaEmbedSpec`              | type          | Tier 2 spec with optional occurrence-local inspect options          |
 | `isVanillaFigureSpec`           | normalization | Checks for a version 1 plain spec                                   |
 | `normalizeFigureSpec`           | normalization | Produces Core IR, composites, and runtime metadata                  |

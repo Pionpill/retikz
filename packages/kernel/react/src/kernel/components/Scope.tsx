@@ -11,6 +11,8 @@ import { TIKZ_SCOPE } from '../protocol';
  */
 export type ScopeProps = ScopeStyleProps &
   HydrationEventProps & {
+    /** 仅覆盖已声明字段并由后代 Composite 继承的局部 Theme */
+    theme?: IRScope['theme'];
     /**
      * 可选 scope 引用 id；设值后可把整个 scope 的包络当作引用目标
      * @description 外部 path / position 可用 `scope.id` / `scope.id.<anchor>` / `scope.id.<deg>` 引用该包络；

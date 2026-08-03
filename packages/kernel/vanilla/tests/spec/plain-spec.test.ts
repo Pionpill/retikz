@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import type { AnyCompositeDefinition } from '@retikz/core';
 
-import { CompositeBaseSchema, defineComposite, NodeTextColor } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, NodeTextColor, ThemeMode, ThemeStyle } from '@retikz/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
@@ -59,6 +59,109 @@ const createCanvasContext = (): CanvasRenderingContext2D => {
 };
 
 describe('@retikz/vanilla plain spec', () => {
+  class ThemeInstance {
+    style = ThemeStyle.Academic;
+  }
+
+  it('figure helper 与 Scope 原样写入同一 Core Theme IR', () => {
+    const rootTheme = { style: ThemeStyle.Academic, mode: ThemeMode.Dark };
+    const spec = figure({
+      theme: rootTheme,
+      children: [scope({ theme: { mode: ThemeMode.Light } }, [node('inside', { position: [0, 0] })])],
+    });
+
+    expect(spec.theme).toEqual(rootTheme);
+    expect(spec.theme).not.toBe(rootTheme);
+    const normalized = normalizeFigureSpec(spec);
+    expect(normalized.ir.theme).not.toBe(spec.theme);
+    expect(normalized.ir).toEqual({
+      type: 'scene',
+      version: 1,
+      theme: rootTheme,
+      children: [
+        {
+          type: 'scope',
+          theme: { mode: 'light' },
+          children: [{ type: 'node', id: 'inside', position: [0, 0] }],
+        },
+      ],
+    });
+  });
+
+  it('scope helper 与 normalize 都脱离嵌套 Scope Theme输入', () => {
+    const localTheme = { mode: ThemeMode.Dark };
+    const scoped = scope({ theme: localTheme }, [node('inside', { position: [0, 0] })]);
+
+    expect(scoped.theme).not.toBe(localTheme);
+
+    const normalized = normalizeFigureSpec({
+      type: 'figure',
+      version: 1,
+      children: [scoped],
+    });
+    const normalizedScope = normalized.ir.children[0];
+    expect(normalizedScope).toMatchObject({ type: 'scope', theme: localTheme });
+    expect(normalizedScope.type).toBe('scope');
+    if (normalizedScope.type !== 'scope' || 'namespace' in normalizedScope) throw new Error('expected Scope');
+    expect(normalizedScope.theme).not.toBe(scoped.theme);
+  });
+
+  it.each([
+    ['figure helper null', figure({ theme: null as never, children: [] }), /scene\.theme/i],
+    ['figure helper number', figure({ theme: 1 as never, children: [] }), /scene\.theme/i],
+    [
+      'Scope helper string',
+      figure({ children: [scope({ theme: 'dark' as never }, [])] }),
+      /children\[0\]\.scope\.theme/i,
+    ],
+    ['direct spec number', { type: 'figure', version: 1, theme: 1, children: [] } as never, /scene\.theme/i],
+    ['figure helper Date', figure({ theme: new Date() as never, children: [] }), /scene\.theme/i],
+    ['figure helper Map', figure({ theme: new Map() as never, children: [] }), /scene\.theme/i],
+    ['figure helper Set', figure({ theme: new Set() as never, children: [] }), /scene\.theme/i],
+    ['figure helper class', figure({ theme: new ThemeInstance(), children: [] }), /scene\.theme/i],
+    [
+      'Scope helper inherited field',
+      figure({ children: [scope({ theme: Object.create({ style: ThemeStyle.Academic }) as never }, [])] }),
+      /children\[0\]\.scope\.theme/i,
+    ],
+  ])('伪造的 %s Theme输入保留到 Core并严格拒绝', (_label, spec, expected) => {
+    expect(() => renderToSvgString(spec)).toThrow(expected);
+  });
+
+  it('Theme helper不读取 accessor或洗掉隐藏字段', () => {
+    let accessorReads = 0;
+    const accessorTheme = {};
+    Object.defineProperty(accessorTheme, 'mode', {
+      enumerable: true,
+      get: () => {
+        accessorReads += 1;
+        return ThemeMode.Dark;
+      },
+    });
+    const hiddenTheme = { style: ThemeStyle.Academic };
+    Object.defineProperty(hiddenTheme, 'palette', { value: 'paper', enumerable: false });
+
+    expect(() => renderToSvgString(figure({ theme: accessorTheme, children: [] }))).toThrow(/scene\.theme/i);
+    expect(accessorReads).toBe(0);
+    expect(() => renderToSvgString(figure({ children: [scope({ theme: hiddenTheme }, [])] }))).toThrow(
+      /children\[0\]\.scope\.theme/i,
+    );
+  });
+
+  it('Theme helper不吞掉自有__proto__未知字段', () => {
+    const rootTheme = { style: ThemeStyle.Academic };
+    Object.defineProperty(rootTheme, '__proto__', { value: 'root', enumerable: true });
+    const localTheme = { mode: ThemeMode.Dark };
+    Object.defineProperty(localTheme, '__proto__', { value: 'scope', enumerable: true });
+
+    expect(() => renderToSvgString(figure({ theme: rootTheme, children: [] }))).toThrow(
+      /scene\.theme\.__proto__/i,
+    );
+    expect(() => renderToSvgString(figure({ children: [scope({ theme: localTheme }, [])] }))).toThrow(
+      /children\[0\]\.scope\.theme\.__proto__/i,
+    );
+  });
+
   it('path helper 共享 parseWay 的 axis-line lowering', () => {
     expect(
       path('axis', {
@@ -238,9 +341,7 @@ describe('@retikz/vanilla plain spec', () => {
 
   it('embed-special-reference：特殊原型键同引用复用并作为 own property 传给 maker', () => {
     const sharedData = { rows: [1] };
-    const makeComposites = vi.fn<
-      (mergedDatasets: Record<string, unknown>) => Array<AnyCompositeDefinition>
-    >(() => [
+    const makeComposites = vi.fn<(mergedDatasets: Record<string, unknown>) => Array<AnyCompositeDefinition>>(() => [
       boxComposite,
     ]);
     const adapter: VanillaTier2Adapter<{ text: string; data: object }> = {

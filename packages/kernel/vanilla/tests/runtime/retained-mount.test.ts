@@ -326,12 +326,40 @@ describe('@retikz/vanilla retained mount', () => {
     const delegate = retained.definitions[0];
     if (typeof delegate.expand !== 'function') throw new Error('expected expand delegate');
     const node = { namespace: 'fixture', type: 'datasetBox' } as never;
+    const context = { theme: { style: 'neutral', mode: 'light' } } as const;
 
     const prepared = retained.prepare([candidate]);
-    expect(delegate.expand(node)).toMatchObject({ fill: '#22c55e' });
+    expect(delegate.expand(node, context)).toMatchObject({ fill: '#22c55e' });
     prepared.rollback();
 
-    expect(delegate.expand(node)).toMatchObject({ fill: '#ef4444' });
+    expect(delegate.expand(node, context)).toMatchObject({ fill: '#ef4444' });
+  });
+
+  it('retained expand delegate透明转发 Core Theme context', () => {
+    const schema = CompositeBaseSchema.extend({
+      namespace: z.literal('fixture'),
+      type: z.literal('themeDelegate'),
+    });
+    const initialExpand = vi.fn((_node, context) => ({
+      type: 'node' as const,
+      position: [0, 0] as [number, number],
+      fill: context.theme.mode === 'dark' ? '#111111' : '#eeeeee',
+    }));
+    const initial = defineComposite({
+      namespace: 'fixture',
+      type: 'themeDelegate',
+      schema,
+      expand: initialExpand,
+    });
+    const retained = createRetainedCompositeDefinitions([initial]);
+    const delegate = retained.definitions[0];
+    if (typeof delegate.expand !== 'function') throw new Error('expected expand delegate');
+    const context = { theme: { style: 'academic', mode: 'dark' } } as const;
+
+    expect(delegate.expand({ namespace: 'fixture', type: 'themeDelegate' } as never, context)).toMatchObject({
+      fill: '#111111',
+    });
+    expect(initialExpand).toHaveBeenCalledWith(expect.any(Object), context);
   });
 
   it('renderer transaction 失败后 session 恢复旧 composite callback', () => {

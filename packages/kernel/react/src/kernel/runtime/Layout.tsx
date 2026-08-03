@@ -77,6 +77,52 @@ const warnOnce = (message: string): void => {
   console.warn(message);
 };
 
+/** 读取可安全复制的 Theme 自有数据字段，不触发 accessor */
+const cloneThemeFields = (input: unknown, omitKnownUndefined: boolean): Record<string, unknown> | undefined => {
+  if (input === null || typeof input !== 'object' || Array.isArray(input)) return undefined;
+  const prototype = Object.getPrototypeOf(input);
+  if (prototype !== Object.prototype && prototype !== null) return undefined;
+
+  const output: Record<string, unknown> = {};
+  for (const key of Reflect.ownKeys(input)) {
+    if (typeof key !== 'string') return undefined;
+    const descriptor = Object.getOwnPropertyDescriptor(input, key);
+    if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) return undefined;
+    if (descriptor.value === undefined) {
+      if (omitKnownUndefined && (key === 'style' || key === 'mode')) continue;
+      return undefined;
+    }
+    Object.defineProperty(output, key, {
+      value: descriptor.value,
+      configurable: true,
+      enumerable: true,
+      writable: true,
+    });
+  }
+  return output;
+};
+
+/**
+ * 把宿主 Theme 逐字段叠加到持久化 Scene
+ * @description 对合法对象忽略值为 undefined 的已知字段，同时保留未知字段供 Core 严格校验；非法宿主或持久化输入原样交给 Core 诊断
+ */
+const overlaySceneTheme = (base: IRScene, input: unknown): IRScene => {
+  if (input === undefined) return base;
+  const baseTheme = base.theme === undefined ? {} : cloneThemeFields(base.theme, false);
+  if (baseTheme === undefined) return base;
+  const inputTheme = cloneThemeFields(input, true);
+  if (inputTheme === undefined) {
+    return { ...base, theme: input as IRScene['theme'] };
+  }
+  return {
+    ...base,
+    theme: {
+      ...baseTheme,
+      ...inputTheme,
+    },
+  };
+};
+
 const withDefaultFontFamily = (measureText: TextMeasurer, defaultFontFamily: string | undefined): TextMeasurer => {
   if (defaultFontFamily === undefined) return measureText;
   return (text, font) =>
@@ -140,6 +186,11 @@ const aggregateEmbeddableComposites = (
 export type LayoutProps = ScopeStyleProps & {
   /** 直接喂 IR JSON（持久化 / AI / 编辑器场景），与 children 二选一 */
   ir?: IRScene;
+  /**
+   * 写入 Scene 根并由后代 Composite 继承的 Theme
+   * @description 与 `ir` 同时使用时按字段覆盖 `ir.theme`，未声明字段保留持久化值
+   */
+  theme?: IRScene['theme'];
   /** Kernel/Sugar JSX children */
   children?: ReactNode;
   /** 全图 Layout Inspector 策略；只进入 compile sidecar，不进入 IR */
@@ -297,6 +348,7 @@ export type LayoutProps = ScopeStyleProps & {
 export const Layout: FC<LayoutProps> = props => {
   const {
     ir: irFromProp,
+    theme,
     children,
     inspect,
     width,
@@ -417,14 +469,15 @@ export const Layout: FC<LayoutProps> = props => {
   );
   const ir = useMemo(() => {
     const base = built.ir;
+    const withTheme = overlaySceneTheme(base, theme);
     // viewBox prop 注入 IR 根（显式 > IR 内置）；prop 缺省时保留 base 自带的 viewBox
-    const withViewBox = viewBox !== undefined ? { ...base, viewBox } : base;
+    const withViewBox = viewBox !== undefined ? { ...withTheme, viewBox } : withTheme;
     // animations prop 注入 IR 根（镜头，cameraTo）；缺省保留 base 自带，并用追加语义兼容 `ir` prop
     if (rootAnimations === undefined) return withViewBox;
     const animations =
       withViewBox.animations !== undefined ? [...withViewBox.animations, ...rootAnimations] : rootAnimations;
     return { ...withViewBox, animations };
-  }, [built, viewBox, rootAnimations]);
+  }, [built, theme, viewBox, rootAnimations]);
   // 可嵌入贡献按 namespace 聚合成 composite 定义，再拼接用户显式 composites（用户优先级后置、可覆盖语义由 compile 决定）
   const aggregatedComposites = useMemo(() => {
     const fromEmbeddables = aggregateEmbeddableComposites(built.contributions);

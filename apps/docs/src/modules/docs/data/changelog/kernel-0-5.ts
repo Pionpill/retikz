@@ -123,14 +123,21 @@ export const kernelV05: Release = {
             en: '`createCoreProgram()` atomically derives a complete CompileResult, a Scene Snapshot with canonical identity topology, and a Patch from complete IR Snapshots inside Runtime transactions. ChangeSets are cross-checked against previous and next Snapshots. The current safe local path recompiles only one root Node solid fill, while references, resources, Scopes, Paths, composites, and other changes conservatively use full fallback.',
           },
         },
+        {
+          label: { zh: '可继承 Theme 环境', en: 'Inherited Theme environment' },
+          content: {
+            zh: '`IRScene.theme` 与 `IRScope.theme` 以 `neutral + light` 为基线逐字段继承；无布局与布局感知 Composite 都收到完整只读 Theme，并由领域 owner 自行映射 token。Core 图元、最终 Scene 与 SVG / Canvas renderer 不解释 Theme。',
+            en: '`IRScene.theme` and `IRScope.theme` inherit per field from a `neutral + light` baseline. Both expand and layout-aware composites receive the complete readonly Theme and let the domain owner map its own tokens. Core primitives, the final Scene, and SVG / Canvas renderers do not interpret Theme.',
+          },
+        },
       ],
       subVersions: [
         {
           version: 'alpha.2',
           date: '2026-07-29',
           summary: {
-            zh: '交付 Core Runtime Program、单 root Node fill 局部增量闭环，以及布局感知 Composite 的双轴 proposal、resolved slot、guide、failure isolation、replay 与 occurrence-scoped inspection DTO。',
-            en: 'Ships the Core Runtime Program and one-root Node fill incremental path, plus two-axis proposals, resolved slots, guides, failure isolation, replay, and occurrence-scoped inspection DTOs for layout-aware composites.',
+            zh: '交付 Core Runtime Program、单 root Node fill 局部增量闭环、布局感知 Composite proposal / probe 合同，以及 Scene / Scope 可继承 Theme 环境。',
+            en: 'Ships the Core Runtime Program, the one-root Node fill incremental path, layout-aware composite proposal / probe contracts, and the inherited Scene / Scope Theme environment.',
           },
           items: [
             {
@@ -138,6 +145,13 @@ export const kernelV05: Release = {
               content: {
                 zh: '`InspectionPlaneEntry.colorScope` 由 Core 按最终 entry 顺序连续分配；普通 tone 收敛为 `scope`，warning 保持独立。outline rect 必填 `lineStyle`，fill rect 必填后端中立 `fillPattern`。`spacing.padding / margin` 默认开启，支持 boolean 整组切换与对象 sparse merge，并与 `bounds` 解耦后按 Layout → Scope → component-local 级联；不保留旧 tone 或缺字段兼容分支。',
                 en: 'Core assigns `InspectionPlaneEntry.colorScope` continuously in final entry order. Regular tone narrows to `scope`, while warnings remain independent. Outline rects require `lineStyle` and fill rects require a renderer-neutral `fillPattern`. `spacing.padding / margin` default to enabled, support boolean group toggles and sparse object merges, remain independent from `bounds`, and cascade in Layout → Scope → component-local order, with no compatibility branch for old tones or omitted fields.',
+              },
+            },
+            {
+              label: { zh: 'Theme Composite 上下文', en: 'Theme composite context' },
+              content: {
+                zh: '`ThemeStyle` / `ThemeMode`、严格 `ThemeSchema` 与 `ResolvedTheme` 成为 Core 公共契约；Theme 变化进入 retained compile input，无法证明更窄依赖时保守 full fallback，并保持与 fresh compile 等价。',
+                en: '`ThemeStyle`, `ThemeMode`, strict `ThemeSchema`, and `ResolvedTheme` become public Core contracts. Theme changes enter retained compile input and conservatively full-fallback when a narrower dependency cannot be proven, preserving fresh-compile equivalence.',
               },
             },
           ],

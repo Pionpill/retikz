@@ -28,6 +28,20 @@ export type SchemaRegistryEntry = {
 
 export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   SceneSchema: { schema: IR.SceneSchema, label: 'Scene', url: '/kernel/reference/schema/scene' },
+  ThemeSchema: {
+    schema: IR.ThemeSchema,
+    label: 'Theme',
+    url: '/kernel/reference/schema/scene#theme',
+    localizations: {
+      zh: {
+        description: 'Scene 或 Scope 的稀疏、可序列化 Theme 覆盖',
+        descriptions: {
+          style: '视觉人格：neutral、academic、vibrant 或 clean；省略时继承外层值',
+          mode: '明暗环境：light 或 dark；省略时继承外层值',
+        },
+      },
+    },
+  },
   ChildSchema: { schema: IR.ChildSchema, label: 'Child', url: '/kernel/reference/schema/scene#child' },
   ViewBoxSchema: { schema: IR.ViewBoxSchema, label: 'ViewBox', url: '/kernel/reference/schema/scene#viewbox' },
   CompositeNodeSchema: {
