@@ -1,32 +1,32 @@
 import { ChannelSchema, OpacityChannelSchema, ShapeChannelSchema } from '@retikz/plot';
 import { z } from 'zod';
 
-import { ScatterPointPatchSchema, StrictColorChannelSchema, StrictSizeChannelSchema } from './canonical';
+import { BubblePointPatchSchema, StrictColorChannelSchema, StrictSizeFieldChannelSchema } from './canonical';
 import { CHART_NAMESPACE, ChartType } from './constants';
 import { omitUndefinedProperties } from './normalize';
 import { assertChartSpatialRoot, ChartSharedBaseSchema } from './shared';
 
-/** Scatter 的完整 owner-private 输入 schema */
-export const ScatterChartSpecSchema = z
+/** Bubble 的完整 owner-private 输入 schema */
+export const BubbleChartSpecSchema = z
   .strictObject({
     namespace: z.literal(CHART_NAMESPACE).describe('Chart composite namespace discriminator'),
-    type: z.literal(ChartType.Scatter).describe('Scatter Chart variant discriminator'),
+    type: z.literal(ChartType.Bubble).describe('Bubble Chart variant discriminator'),
     ...ChartSharedBaseSchema.shape,
     encoding: z
       .strictObject({
         x: ChannelSchema.describe('Required primary position channel'),
         y: ChannelSchema.describe('Required secondary position channel'),
+        size: StrictSizeFieldChannelSchema.describe('Required quantitative field mapped to Point glyph area'),
         color: StrictColorChannelSchema.optional().describe('Optional strict point color channel'),
-        size: StrictSizeChannelSchema.optional().describe('Optional strict point radius channel'),
         opacity: OpacityChannelSchema.optional().describe('Optional Plot-owned point opacity channel'),
         shape: ShapeChannelSchema.optional().describe('Optional Plot-owned categorical point shape channel'),
       })
-      .describe('Required Scatter position roles and optional visual channels'),
-    mark: ScatterPointPatchSchema.optional().describe('Optional visual patch for the primary Point mark'),
+      .describe('Required Bubble position and quantitative size roles with optional visual channels'),
+    mark: BubblePointPatchSchema.optional().describe('Optional visual patch for the primary Point glyph'),
   })
-  .describe('Owner-private Scatter Chart variant input')
+  .describe('Owner-private Bubble Chart variant input')
   .superRefine(assertChartSpatialRoot)
   .overwrite(omitUndefinedProperties);
 
-/** Scatter 的 JSON-safe ChartSpec */
-export type IRScatterChartSpec = z.infer<typeof ScatterChartSpecSchema>;
+/** Bubble 的 JSON-safe ChartSpec */
+export type IRBubbleChartSpec = z.infer<typeof BubbleChartSpecSchema>;

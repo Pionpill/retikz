@@ -1,11 +1,9 @@
 import { PointOpacityStyleSchema, PointSizeStyleSchema } from '@retikz/plot';
 import { z } from 'zod';
 
-import { CHART_NAMESPACE } from './constants';
+import { CHART_NAMESPACE, ChartType } from './constants';
+import { omitUndefinedProperties } from './normalize';
 import { assertChartSpatialRoot, ChartSharedBaseSchema } from './shared';
-
-/** 私有基础设施 fixture 的 Chart type */
-export const InfrastructureChartType = '__infrastructure-fixture' as const;
 
 /** 私有 fixture 主 mark 的稀疏 patch */
 export const InfrastructureMarkPatchSchema = z
@@ -29,7 +27,7 @@ export const InfrastructureComponentPatchSchema = z
 /** 私有基础设施 fixture 的最终输入 schema */
 export const InfrastructureChartSpecSchema = ChartSharedBaseSchema.extend({
   namespace: z.literal(CHART_NAMESPACE).describe('Chart composite namespace'),
-  type: z.literal(InfrastructureChartType).describe('Private infrastructure fixture discriminator'),
+  type: z.literal(ChartType.InfrastructureFixture).describe('Private infrastructure fixture discriminator'),
   encoding: z
     .strictObject({
       x: z.string().min(1).describe('Field bound to the fixture x channel'),
@@ -40,7 +38,8 @@ export const InfrastructureChartSpecSchema = ChartSharedBaseSchema.extend({
   components: z.array(InfrastructureComponentPatchSchema).optional().describe('Sparse target-level component patches'),
 })
   .describe('Private infrastructure Chart variant input')
-  .superRefine(assertChartSpatialRoot);
+  .superRefine(assertChartSpatialRoot)
+  .overwrite(omitUndefinedProperties);
 
 /** 私有基础设施 fixture 的 JSON-safe spec */
 export type InfrastructureChartSpec = z.infer<typeof InfrastructureChartSpecSchema>;

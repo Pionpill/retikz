@@ -89,7 +89,6 @@ describe('Scatter Chart recipe', () => {
     expect(fieldSeed.plot.guides).toContainEqual({
       type: 'legend',
       channel: 'size',
-      scale: '__size_weight',
     });
 
     const constantSeed = ScatterChartRecipe.createSeed(
@@ -139,6 +138,90 @@ describe('Scatter Chart recipe', () => {
         ],
       },
     ]);
+  });
+
+  it('emits authored Point encoding leaves without replacing recipe-owned positions', () => {
+    const seed = ScatterChartRecipe.createSeed(
+      scatter({
+        mark: {
+          encoding: {
+            text: { field: 'label' },
+            color: { field: 'group', scale: 'colors' },
+            channels: { halo: { value: 0.5 } },
+            depth: { field: 'depth' },
+          },
+        },
+      }),
+      visibleStyle,
+    );
+
+    expect(seed.patches).toEqual([
+      {
+        target: 'mark.main',
+        inputPath: ['mark'],
+        sourcePath: '$spec/mark',
+        changes: [
+          { path: ['encoding', 'text'], value: { field: 'label' } },
+          { path: ['encoding', 'color'], value: { field: 'group', scale: 'colors' } },
+          { path: ['encoding', 'channels'], value: { halo: { value: 0.5 } } },
+          { path: ['encoding', 'depth'], value: { field: 'depth' } },
+        ],
+      },
+    ]);
+    expect(seed.members.find(member => member.target === 'mark.main')?.patchablePaths).toEqual(
+      expect.arrayContaining([
+        ['encoding', 'text'],
+        ['encoding', 'color'],
+        ['encoding', 'channels'],
+        ['encoding', 'depth'],
+      ]),
+    );
+  });
+
+  it('treats explicit undefined encoding patches as omitted values', () => {
+    const seed = ScatterChartRecipe.createSeed(scatter({ mark: { encoding: { text: undefined } } }), visibleStyle);
+
+    expect(seed.patches).toEqual([]);
+  });
+
+  it('derives the automatic size legend from the final effective Point size', () => {
+    const constantOverride = ScatterChartRecipe.createSeed(
+      scatter({
+        encoding: { x: { field: 'amount' }, y: { field: 'margin' }, size: { field: 'weight' } },
+        mark: { size: { kind: 'constant', value: 6 } },
+      }),
+      visibleStyle,
+    );
+    expect(constantOverride.plot.guides?.some(guide => guide.type === 'legend')).toBe(false);
+
+    const fieldOverride = ScatterChartRecipe.createSeed(
+      scatter({
+        encoding: { x: { field: 'amount' }, y: { field: 'margin' }, size: { value: 4 } },
+        mark: { size: { kind: 'field', value: 'importance', scale: 'importance-radius' } },
+      }),
+      visibleStyle,
+    );
+    expect(fieldOverride.plot.guides).toContainEqual({
+      type: 'legend',
+      channel: 'size',
+      scale: 'importance-radius',
+    });
+
+    for (const textMode of [
+      scatter({
+        encoding: { x: { field: 'amount' }, y: { field: 'margin' }, size: { field: 'weight' } },
+        mark: { encoding: { text: { field: 'label' } } },
+      }),
+      scatter({
+        mark: {
+          size: { kind: 'field', value: 'importance', scale: 'importance-radius' },
+          encoding: { text: { field: 'label' } },
+        },
+      }),
+    ]) {
+      const textSeed = ScatterChartRecipe.createSeed(textMode, visibleStyle);
+      expect(textSeed.plot.guides?.some(guide => guide.type === 'legend' && guide.channel === 'size')).toBe(false);
+    }
   });
 
   it('uses presentation style only for optional guide topology', () => {

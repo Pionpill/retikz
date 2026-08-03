@@ -14,6 +14,23 @@ const base = {
   encoding: { x: 'amount', y: 'margin' },
 } as const;
 
+const bubble = {
+  namespace: 'chart',
+  type: 'bubble',
+  data: { reference: 'rows' },
+  encoding: {
+    x: { field: 'amount' },
+    y: { field: 'margin' },
+    size: { field: 'volume' },
+  },
+} as const;
+
+const scatter = {
+  ...bubble,
+  type: 'scatter',
+  encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
+} as const;
+
 const resolveErrorOf = (input: unknown): ChartResolveError => {
   try {
     resolveChartSpec(input);
@@ -102,6 +119,46 @@ describe('Chart resolution errors', () => {
   ] as const)('把失败映射为 %s', (input, code, path) => {
     const error = resolveErrorOf(input);
     expect({ code: error.code, path: error.path }).toEqual({ code, path });
+  });
+
+  it.each([
+    [{ ...bubble, encoding: { x: { field: 'amount' }, y: { field: 'margin' } } }, ['encoding', 'size']],
+    [{ ...bubble, encoding: { ...bubble.encoding, size: { value: 8 } } }, ['encoding', 'size', 'field']],
+    [
+      { ...bubble, encoding: { ...bubble.encoding, size: { field: 'volume', value: 8 } } },
+      ['encoding', 'size', 'value'],
+    ],
+    [
+      { ...bubble, encoding: { ...bubble.encoding, color: { value: '#2563eb', scale: 'color' } } },
+      ['encoding', 'color'],
+    ],
+    [{ ...bubble, mark: { size: { kind: 'constant', value: 8 } } }, ['mark', 'size']],
+    [{ ...bubble, mark: { encoding: { size: { field: 'otherVolume' } } } }, ['mark', 'encoding', 'size']],
+    [
+      { ...bubble, mark: { encoding: { channels: { size: { field: 'otherVolume' } } } } },
+      ['mark', 'encoding', 'channels', 'size'],
+    ],
+    [{ ...bubble, mark: { encoding: { text: { field: 'name' } } } }, ['mark', 'encoding', 'text']],
+    [{ ...bubble, mark: { encoding: { x: { field: 'otherX' } } } }, ['mark', 'encoding', 'x']],
+    [{ ...bubble, mark: { encoding: { y: { field: 'otherY' } } } }, ['mark', 'encoding', 'y']],
+  ] as const)('为 Bubble 保留精确的无效输入路径 %s', (input, path) => {
+    const error = resolveErrorOf(input);
+    expect({ code: error.code, path: error.path }).toEqual({ code: 'invalid-chart-spec', path });
+  });
+
+  it('把显式 undefined encoding patch 规范化为缺省值', () => {
+    expect(() =>
+      resolveChartSpec({
+        ...bubble,
+        mark: { encoding: { text: undefined, size: undefined } },
+      }),
+    ).not.toThrow();
+    expect(() =>
+      resolveChartSpec({
+        ...scatter,
+        mark: { encoding: { text: undefined } },
+      }),
+    ).not.toThrow();
   });
 
   it.each([
