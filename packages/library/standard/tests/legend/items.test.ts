@@ -19,8 +19,8 @@ import {
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { LegendItemsArtifact } from '../../src/composites/presentation/legend/artifact-types';
 import type { LegendCompileArtifact } from '../../src/composites/presentation/legend/definition';
+import type { LegendItemsArtifact } from '../../src/composites/presentation/legend/types';
 import type { LegendInput } from '../../src/composites/presentation/legend/types';
 
 import { LayoutAlignment } from '../../src/composites/layout/shared';

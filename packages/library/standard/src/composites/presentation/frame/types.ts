@@ -2,8 +2,7 @@ import type { ValueOf } from '@retikz/core';
 import type { z } from 'zod';
 
 import type { FrameHeaderDirection } from './constants';
-import type { FrameDescriptionSchema, FrameTitleSchema } from './header-schema';
-import type { FrameSchema } from './schema';
+import type { FrameDescriptionSchema, FrameSchema, FrameTitleSchema } from './schema';
 
 /** Frame 标题区排列方向取值 */
 export type FrameHeaderDirectionValue = ValueOf<typeof FrameHeaderDirection>;

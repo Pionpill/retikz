@@ -1,7 +1,7 @@
 import type { InspectionLinePrimitive, InspectionPrimitive } from '@retikz/core';
 
 import type { ResolvedGridLayoutInspectLocalOptions, StandardLayoutInspectContext } from '../shared';
-import type { GridLayoutArtifact } from './artifact-types';
+import type { GridLayoutArtifact } from './types';
 
 import { inspectLayoutArtifactBase, inspectLayoutSpacing, normalizeLayoutBoundaryGroups } from '../internal';
 
