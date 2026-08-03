@@ -356,9 +356,9 @@ describe('irToVanillaCode fallback', () => {
                       child: {
                         namespace: 'standard',
                         type: 'grid',
-                        bounds: { min: [0, 0], max: [20, 20] },
+                        bounds: { start: [0, 0], end: [20, 20] },
                         spacing: 10,
-                        lines: { vertical: true, horizontal: true, includeBoundary: false },
+                        lines: { includeBoundary: false },
                       },
                     },
                   ],

@@ -20,7 +20,7 @@ const figure = {
   type: 'figure' as const,
   version: 1 as const,
   children: [
-    grid('paper', { bounds: { min: [0, 0], max: [20, 20] }, spacing: 10 }),
+    grid('paper', { bounds: { start: [0, 0], end: [20, 20] }, spacing: 10 }),
     axes('plane', { extent: { x: 20, y: 20 } }),
     frame('contract', { children: [{ type: 'node', position: [0, 0], text: 'Contract' }] }),
     legend('status', {
@@ -64,7 +64,7 @@ describe('Standard Vanilla definition loading', () => {
     const ir = {
       type: 'scene' as const,
       version: 1 as const,
-      children: [createGrid({ bounds: { min: [0, 0], max: [20, 20] }, spacing: 10 })],
+      children: [createGrid({ bounds: { start: [0, 0], end: [20, 20] }, spacing: 10 })],
     };
 
     expect(() => renderToSvgString(ir, { compile: { composites: [GridDefinition] } })).not.toThrow();
@@ -76,7 +76,7 @@ describe('Standard Vanilla definition loading', () => {
         {
           type: 'figure',
           version: 1,
-          children: [grid('paper', { bounds: { min: [0, 0], max: [20, 20] }, spacing: 10 })],
+          children: [grid('paper', { bounds: { start: [0, 0], end: [20, 20] }, spacing: 10 })],
         },
         {
           adapters: [GridVanillaAdapter],

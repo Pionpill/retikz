@@ -30,7 +30,7 @@ describe('<Axes>', () => {
   it('coexists with Grid under distinct host contribution namespaces', () => {
     const result = buildIRWithContributions(
       <>
-        <Grid bounds={{ min: [-2, -1], max: [2, 1] }} spacing={1} />
+        <Grid bounds={{ start: [-2, -1], end: [2, 1] }} spacing={1} />
         <Axes {...input} />
       </>,
     );

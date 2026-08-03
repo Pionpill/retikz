@@ -56,7 +56,7 @@ const LegendWithNestedStandardDemo: FC = () => (
             <LayoutItem
               kind="flex"
               itemKey="grid"
-              ir={createGrid({ bounds: { min: [0, 0], max: [20, 20] }, spacing: 10 })}
+              ir={createGrid({ bounds: { start: [0, 0], end: [20, 20] }, spacing: 10 })}
             />
           </FlexLayout>
         }

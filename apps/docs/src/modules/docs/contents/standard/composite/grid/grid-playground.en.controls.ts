@@ -8,12 +8,12 @@ export const gridPlaygroundEnControls = definePreviewControls({
   title: 'Grid parameters',
   sections: [
     {
-      label: 'Bounds and spacing',
+      label: 'Bounds and lines',
       controls: [
         {
           kind: 'point',
-          id: 'boundsMin',
-          label: 'bounds.min',
+          id: 'boundsStart',
+          label: 'bounds.start',
           defaultValue: [60, 50],
           min: [24, 24],
           max: [80, 64],
@@ -21,8 +21,8 @@ export const gridPlaygroundEnControls = definePreviewControls({
         },
         {
           kind: 'point',
-          id: 'boundsMax',
-          label: 'bounds.max',
+          id: 'boundsEnd',
+          label: 'bounds.end',
           defaultValue: [340, 230],
           min: [184, 124],
           max: [360, 244],
@@ -93,17 +93,6 @@ export const gridPlaygroundEnControls = definePreviewControls({
           max: 280,
           step: 4,
           visibleWhen: { controlId: 'originEnabled', oneOf: [true] },
-        },
-        {
-          kind: 'select',
-          id: 'direction',
-          label: 'Direction',
-          defaultValue: 'both',
-          options: [
-            { value: 'both', label: 'Both' },
-            { value: 'vertical', label: 'Vertical only' },
-            { value: 'horizontal', label: 'Horizontal only' },
-          ],
         },
         { kind: 'switch', id: 'includeBoundary', label: 'includeBoundary', defaultValue: false },
         { kind: 'color', id: 'lineStroke', label: 'Line color', defaultValue: '#d3d3d3' },
@@ -264,8 +253,8 @@ export const gridPlaygroundEnControls = definePreviewControls({
 export const previewControlContract = {
   controls: gridPlaygroundEnControls,
   canonicalValues: {
-    boundsMin: [60, 50],
-    boundsMax: [340, 230],
+    boundsStart: [60, 50],
+    boundsEnd: [340, 230],
     spacingMode: 'uniform',
     spacing: 24,
     spacingX: 24,
@@ -273,7 +262,6 @@ export const previewControlContract = {
     originEnabled: false,
     originX: 200,
     originY: 140,
-    direction: 'both',
     includeBoundary: false,
     lineStroke: '#d3d3d3',
     lineStrokeWidth: 1,
@@ -297,15 +285,5 @@ export const previewControlContract = {
     borderFill: '#ffffff',
     borderFillOpacity: 0,
   },
-  relatedApis: [
-    'Grid.bounds',
-    'Grid.spacing',
-    'Grid.origin',
-    'Grid.lines.vertical',
-    'Grid.lines.horizontal',
-    'Grid.lines.includeBoundary',
-    'Grid.lines.style',
-    'Grid.major',
-    'Grid.border',
-  ],
+  relatedApis: ['Grid.bounds', 'Grid.spacing', 'Grid.origin', 'Grid.lines', 'Grid.major', 'Grid.border'],
 } satisfies PreviewControlContract;

@@ -29,7 +29,7 @@ React JSX 和 Vanilla embed 仍由各自 adapter 负责 authoring。它们会为
 ```ts
 import { GridDefinition, createGrid, GridSchema } from '@retikz/standard';
 
-const grid = GridSchema.parse(createGrid({ bounds: { min: [20, 20], max: [260, 150] }, spacing: 20 }));
+const grid = GridSchema.parse(createGrid({ bounds: { start: [20, 20], end: [260, 150] }, spacing: 20 }));
 const compileOptions = { composites: [GridDefinition] };
 ```
 

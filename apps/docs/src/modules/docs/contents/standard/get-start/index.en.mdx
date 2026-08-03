@@ -23,7 +23,7 @@ if (container === null) throw new Error('Missing #diagram container');
 
 createRoot(container).render(
   <Layout width={280} height={170}>
-    <Grid bounds={{ min: [20, 20], max: [260, 150] }} spacing={20} lines={{ style: { stroke: 'lightgray' } }} />
+    <Grid bounds={{ start: [20, 20], end: [260, 150] }} spacing={20} lines={{ style: { stroke: 'lightgray' } }} />
   </Layout>,
 );
 ```
@@ -48,7 +48,7 @@ const figure = {
   viewBox: { x: 0, y: 0, width: 280, height: 170 },
   children: [
     grid('paper-grid', {
-      bounds: { min: [20, 20], max: [260, 150] },
+      bounds: { start: [20, 20], end: [260, 150] },
       spacing: 20,
       lines: { style: { stroke: 'lightgray' } },
     }),
@@ -85,7 +85,7 @@ localStorage.setItem(
   storageKey,
   JSON.stringify(
     createGrid({
-      bounds: { min: [20, 20], max: [260, 150] },
+      bounds: { start: [20, 20], end: [260, 150] },
       spacing: 20,
       lines: { style: { stroke: 'lightgray' } },
     }),

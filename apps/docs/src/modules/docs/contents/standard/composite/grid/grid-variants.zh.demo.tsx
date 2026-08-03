@@ -10,37 +10,38 @@ const Demo: FC = () => (
       分轴间距
     </Node>
     <Grid
-      bounds={{ min: [18, 42], max: [172, 122] }}
+      bounds={{ start: [18, 42], end: [172, 122] }}
       spacing={{ x: 20, y: 14 }}
       lines={{ includeBoundary: true, style: { stroke: 'lightgray' } }}
     />
 
     <Node position={[285, 18]} stroke="none" fill="none" padding={0} font={{ size: 12 }}>
-      单方向网格线
+      中心加尺寸
     </Node>
     <Grid
-      bounds={{ min: [208, 42], max: [362, 122] }}
+      bounds={{ position: [285, 82], width: 154, height: 80 }}
       spacing={18}
-      lines={{ horizontal: false, includeBoundary: true, style: { stroke: 'lightgray' } }}
+      origin={[0, 0]}
+      lines={{ includeBoundary: true, style: { stroke: 'lightgray' } }}
     />
 
     <Node position={[475, 18]} stroke="none" fill="none" padding={0} font={{ size: 12 }}>
       普通线与主线
     </Node>
     <Grid
-      bounds={{ min: [398, 42], max: [552, 122] }}
+      bounds={{ start: [398, 42], end: [552, 122] }}
       spacing={12}
       lines={{ includeBoundary: true, style: { stroke: 'lightgray' } }}
       major={{ every: 3, style: { stroke: 'gray', strokeWidth: 1.5 } }}
     />
 
     <Node position={[665, 18]} stroke="none" fill="none" padding={0} font={{ size: 12 }}>
-      对齐、边界与外框
+      反向角点与外框
     </Node>
     <Grid
-      bounds={{ min: [588, 42], max: [742, 122] }}
+      bounds={{ start: [742, 122], end: [588, 42] }}
       spacing={20}
-      origin={[665, 82]}
+      origin={[600, 60]}
       lines={{ includeBoundary: true, style: { stroke: 'lightgray' } }}
       border={{ padding: 4, order: 'behind', extendLines: true, style: { stroke: 'gray' } }}
     />
