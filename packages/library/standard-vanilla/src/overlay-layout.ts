@@ -3,7 +3,8 @@ import type { VanillaEmbedSpec, VanillaTier2Adapter } from '@retikz/vanilla';
 
 import { createOverlayLayout, OverlayLayoutInspectOptionsInputSchema } from '@retikz/standard';
 
-import { makeVanillaStandardLayoutComposites, StandardLayoutVanillaNamespace } from './layout-family';
+import { StandardLayoutVanillaNamespace } from './constants';
+import { makeVanillaStandardLayoutComposites } from './layout-family';
 
 /** Vanilla OverlayLayout embed 的稳定 kind */
 const OverlayLayoutEmbedKind = 'standard.overlayLayout';

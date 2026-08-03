@@ -12,6 +12,7 @@ import {
   LegendDefinition,
   LegendSchema,
   OverlayLayoutDefinition,
+  STANDARD_NAMESPACE,
 } from '../src';
 
 describe('@retikz/standard root exports', () => {
@@ -23,6 +24,7 @@ describe('@retikz/standard root exports', () => {
     expect(GridLayoutDefinition).toBe(standardExports.GridLayoutDefinition);
     expect(LegendDefinition).toBe(standardExports.LegendDefinition);
     expect(OverlayLayoutDefinition).toBe(standardExports.OverlayLayoutDefinition);
+    expect(STANDARD_NAMESPACE).toBe(standardExports.STANDARD_NAMESPACE);
     expect(LegendDefinition.schema).toBe(LegendSchema);
     expect(LegendDefinition.artifactSchema).toBe(LegendArtifactSchema);
     expect(createGrid({ bounds: { min: [0, 0], max: [10, 10] }, spacing: 10 })).toMatchObject({

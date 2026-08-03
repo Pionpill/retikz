@@ -6,6 +6,7 @@ import { createLegend, LegendContentKind, LegendDefinition } from '@retikz/stand
 
 import type { StandardEmbeddableComponent } from '../shared';
 
+import { StandardLegendReactNamespace } from '../shared';
 import { convertLegendItemsChildren, convertLegendRampChildren } from './convert-children';
 
 type LegendItemsContentInput = Extract<LegendInput['content'], { kind: 'items' }>;
@@ -77,7 +78,7 @@ const createRampLegend = (props: LegendRampFormProps) => {
 
 const legendEmbeddableAdapter: EmbeddableTier2Adapter<LegendProps> = {
   displayName: 'Legend',
-  namespace: 'standard.legend',
+  namespace: StandardLegendReactNamespace,
   contribute: props => {
     if ('content' in props || 'title' in props || !('kind' in props)) {
       throw new Error(

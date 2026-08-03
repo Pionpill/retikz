@@ -1,6 +1,7 @@
 import { CompositeBaseSchema, LayoutAlignmentGuideDimension } from '@retikz/core';
 import { z } from 'zod';
 
+import { STANDARD_NAMESPACE } from '../../shared';
 import {
   LayoutAlignment,
   LayoutArtifactContainerSchema,
@@ -54,7 +55,7 @@ export const FlexLayoutItemSchema = LayoutItemBaseSchema.extend({
   .describe('Canonical JSON-safe item owned by FlexLayout.');
 
 const FlexLayoutBaseSchema = CompositeBaseSchema.extend({
-  namespace: z.literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
+  namespace: z.literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
   type: z.literal('flexLayout').describe('Composite type for deterministic one-dimensional box layout.'),
   ...LayoutContainerBoxSchema.shape,
   direction: z.enum(FlexLayoutDirection).default(FlexLayoutDirection.Row).describe('Physical main-axis direction.'),

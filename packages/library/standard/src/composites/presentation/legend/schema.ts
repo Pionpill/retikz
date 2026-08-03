@@ -8,6 +8,7 @@ import {
   LayoutArtifactRectSchema,
   LayoutContainerBoxSchema,
 } from '../../layout/shared';
+import { STANDARD_NAMESPACE } from '../../shared';
 import { LegendContentKind, LegendDirection, LegendSampleAlignment, LegendWrap } from './constants';
 
 export const LegendItemSchema = z
@@ -70,7 +71,7 @@ const LegendContentSchema = z
   .describe('Structured discrete or continuous content of a Standard Legend.');
 
 const LegendBaseSchema = CompositeBaseSchema.extend({
-  namespace: z.literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
+  namespace: z.literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
   type: z.literal('legend').describe('Composite type for an already-resolved visual legend.'),
   title: ChildSchema.optional().describe('Optional JSON-safe Core child displayed above the legend body.'),
   titleGap: z

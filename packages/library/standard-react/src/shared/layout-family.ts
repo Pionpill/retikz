@@ -14,15 +14,13 @@ import { Children, Fragment, isValidElement } from 'react';
 import type { LayoutItemProps } from '../layout-item';
 
 import { LayoutItem } from '../layout-item';
+import { StandardLayoutReactNamespace } from './constants';
 
 type LayoutItemInputByKind = Readonly<{
   flex: FlexLayoutItemInput;
   grid: GridLayoutItemInput;
   overlay: OverlayLayoutItemInput;
 }>;
-
-/** 三种 Standard layout React adapter 共用的 contribution namespace */
-export const StandardLayoutReactNamespace = 'standard.layout';
 
 /** 为每次 React family contribution 返回可变的布局 definition 副本 */
 export const makeReactStandardLayoutComposites = (): ReturnType<EmbeddableContribution['makeComposites']> => [

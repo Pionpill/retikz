@@ -1,6 +1,7 @@
 import { CompositeBaseSchema, PositionSchema } from '@retikz/core';
 import { z } from 'zod';
 
+import { STANDARD_NAMESPACE } from '../../shared';
 import { getLatticeRangeError } from '../shared/lattice';
 import {
   StandardGridSpacingSchema,
@@ -40,7 +41,7 @@ const GridBorderSchema = z.strictObject({
 });
 
 const GridBaseSchema = CompositeBaseSchema.extend({
-  namespace: z.literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
+  namespace: z.literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
   type: z.literal('grid').describe('Composite type for a regular Cartesian grid.'),
   bounds: GridBoundsSchema.describe('Strict two-dimensional bounds with min less than max on both axes.'),
   spacing: StandardGridSpacingSchema.describe('Uniform or axis-specific positive grid spacing.'),

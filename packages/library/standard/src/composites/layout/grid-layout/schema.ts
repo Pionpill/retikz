@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { STANDARD_NAMESPACE } from '../../shared';
 import {
   LayoutAlignment,
   LayoutAlignmentSchema,
@@ -92,7 +93,7 @@ export const GridLayoutItemSchema = LayoutItemBaseSchema.extend({
 const ImplicitTrackDefault = Object.freeze({ kind: 'content' as const, mode: 'natural' as const });
 
 const GridLayoutBaseSchema = LayoutContainerBoxSchema.extend({
-  namespace: z.literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
+  namespace: z.literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
   type: z.literal('gridLayout').describe('Composite type for deterministic two-dimensional track layout.'),
   columns: z
     .array(GridTrackSchema)

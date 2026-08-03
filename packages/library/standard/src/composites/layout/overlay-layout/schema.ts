@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { STANDARD_NAMESPACE } from '../../shared';
 import {
   LayoutAlignment,
   LayoutAlignmentSchema,
@@ -62,7 +63,7 @@ export const OverlayLayoutItemSchema = LayoutItemBaseSchema.extend({
 }).describe('Canonical JSON-safe item owned by OverlayLayout.');
 
 const OverlayLayoutBaseSchema = LayoutContainerBoxSchema.extend({
-  namespace: z.literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
+  namespace: z.literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
   type: z.literal('overlayLayout').describe('Composite type for deterministic overlay layout.'),
   justifyItems: LayoutEdgeAlignmentSchema.default(LayoutAlignment.Center).describe(
     'Default horizontal alignment inherited by aligned and positioned items.',

@@ -5,6 +5,7 @@ import { defineComposite } from '@retikz/core';
 import type { ResolvedGridLayoutInspectLocalOptions } from '../shared';
 import type { GridLayoutArtifact, IRGridLayout } from './types';
 
+import { STANDARD_NAMESPACE } from '../../shared';
 import { GridLayoutInspectLocalOptionsInputSchema, GridLayoutInspectLocalOptionsSchema } from '../shared';
 import { compileGridLayout } from './compile';
 import { inspectGridLayoutArtifact } from './inspection';
@@ -13,13 +14,13 @@ import { GridLayoutArtifactSchema, GridLayoutSchema } from './schema';
 /** Standard GridLayout 的官方 Core layout-aware composite definition */
 export const GridLayoutDefinition: LayoutCompositeDefinition<
   IRGridLayout,
-  'standard',
+  typeof STANDARD_NAMESPACE,
   'gridLayout',
   GridLayoutArtifact,
   typeof GridLayoutInspectLocalOptionsInputSchema.shape,
   ResolvedGridLayoutInspectLocalOptions
 > = defineComposite({
-  namespace: 'standard',
+  namespace: STANDARD_NAMESPACE,
   type: 'gridLayout',
   schema: GridLayoutSchema,
   compile: compileGridLayout,

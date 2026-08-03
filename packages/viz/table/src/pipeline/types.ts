@@ -15,6 +15,7 @@ import type {
   TableLayoutManifest,
   TableLayoutManifestSchema,
 } from '../contract';
+import type { TABLE_NAMESPACE } from '../schemas';
 
 /** Table lowering 的运行时扩展选项 */
 export type LowerTablesOptions = Readonly<{
@@ -30,7 +31,7 @@ export type LowerTablesOptions = Readonly<{
 
 /** Table layout-aware composite 的 typed artifact */
 export type TableCompileArtifact = CompositeCompileArtifact<
-  'table',
+  typeof TABLE_NAMESPACE,
   'table',
   z.output<typeof TableLayoutManifestSchema>
 >;

@@ -5,6 +5,7 @@ import { defineComposite } from '@retikz/core';
 import type { ResolvedFlexLayoutInspectLocalOptions } from '../shared';
 import type { FlexLayoutArtifact, IRFlexLayout } from './types';
 
+import { STANDARD_NAMESPACE } from '../../shared';
 import { FlexLayoutInspectLocalOptionsInputSchema, FlexLayoutInspectLocalOptionsSchema } from '../shared';
 import { compileFlexLayout } from './compile';
 import { inspectFlexLayoutArtifact } from './inspection';
@@ -13,13 +14,13 @@ import { FlexLayoutArtifactSchema, FlexLayoutSchema } from './schema';
 /** Standard FlexLayout 的官方 Core layout-aware composite definition */
 export const FlexLayoutDefinition: LayoutCompositeDefinition<
   IRFlexLayout,
-  'standard',
+  typeof STANDARD_NAMESPACE,
   'flexLayout',
   FlexLayoutArtifact,
   typeof FlexLayoutInspectLocalOptionsInputSchema.shape,
   ResolvedFlexLayoutInspectLocalOptions
 > = defineComposite({
-  namespace: 'standard',
+  namespace: STANDARD_NAMESPACE,
   type: 'flexLayout',
   schema: FlexLayoutSchema,
   compile: compileFlexLayout,
