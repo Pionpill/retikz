@@ -1,7 +1,9 @@
 ﻿import type { IRNode, IRScope } from '@retikz/core';
+import type { DataFieldTypeValue } from '@retikz/data';
 
-import { DataFieldType } from '@retikz/data';
+import { DataFieldType, defineTransform } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlotSpec } from '../../../src/schemas';
@@ -11,6 +13,26 @@ import { BUILTIN_NODE_CHANNELS, SIZE_MAX_RADIUS, SIZE_MIN_RADIUS } from '../../.
 import { PlotSpecSchema } from '../../../src/schemas';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
+
+/** size channel 集成测试使用的派生字段 transform 判别值 */
+const SizeChannelTestTransform = {
+  DeriveValue: 'size-channel-test-derive-value',
+} as const;
+
+/** 为每行写入指定派生值，用于验证 transform 输出字段的最终类型推断 */
+const deriveSizeValueTransform = defineTransform({
+  schema: z
+    .strictObject({
+      kind: z
+        .literal(SizeChannelTestTransform.DeriveValue)
+        .describe('Discriminator for the size channel test transform'),
+      as: z.string().min(1).describe('Output field receiving the derived value'),
+      value: z.union([z.string(), z.number()]).describe('Scalar value written to every output row'),
+    })
+    .describe('Test-only transform that writes a derived size field'),
+  outputFields: operation => [operation.as],
+  apply: (rows, operation) => rows.map(row => ({ ...row, [operation.as]: operation.value })),
+});
 
 const expandOf = (
   spec: IRPlotSpec,
@@ -51,26 +73,51 @@ const radiusOf = (node: IRNode): number | undefined => {
 const pointSpec = (
   size: { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: number } | undefined,
   extraScales: Array<Record<string, unknown>> = [],
+  model?: Array<{ name: string; type?: DataFieldTypeValue; format?: string }>,
 ): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
-    data: { reference: 'd' },
+    data: { reference: 'd', ...(model === undefined ? {} : { model }) },
     scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, ...extraScales],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     marks: [{ type: 'point', ...(size ? { size } : {}), encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+  });
+
+const derivedSizePointSpec = (value: string | number): IRPlotSpec =>
+  PlotSpecSchema.parse({
+    namespace: 'plot',
+    type: 'plot',
+    data: { reference: 'd' },
+    scales: [
+      { type: 'linear', name: 'x' },
+      { type: 'linear', name: 'y' },
+    ],
+    coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+    marks: [
+      {
+        type: 'point',
+        transform: [{ kind: SizeChannelTestTransform.DeriveValue, as: 'derivedSize', value }],
+        size: { kind: 'field', value: 'derivedSize' },
+        encoding: { x: { field: 'x' }, y: { field: 'y' } },
+      },
+    ],
   });
 
 const sizeResolutionOf = (
   size: { kind: 'field'; value: string; scale?: string },
   rows: Array<Record<string, unknown>>,
   extraScales: Array<Record<string, unknown>> = [],
+  options: {
+    fieldType?: DataFieldTypeValue;
+    model?: Array<{ name: string; type?: DataFieldTypeValue }>;
+  } = {},
 ) => {
-  const node = pointSpec(size, extraScales);
+  const node = pointSpec(size, extraScales, options.model);
   const resolution = BUILTIN_NODE_CHANNELS.size.resolve({
     node,
     rows,
-    fieldTypes: new Map([[size.value, DataFieldType.Continuous]]),
+    fieldTypes: new Map([[size.value, options.fieldType ?? DataFieldType.Continuous]]),
   })(node.marks[0]);
   expect(resolution).toBeDefined();
   if (resolution === undefined) throw new Error('expected field-bound size resolution');
@@ -135,6 +182,57 @@ describe('size channel 映射节点半径', () => {
 });
 
 describe('size channel 边界输入', () => {
+  it('field_size_omits_glyphs_for_missing_null_and_non_finite_values', () => {
+    const data = [
+      { x: 0, y: 0, p: undefined },
+      { x: 1, y: 1, p: null },
+      { x: 2, y: 2, p: Number.NaN },
+      { x: 3, y: 3, p: Number.POSITIVE_INFINITY },
+      { x: 4, y: 4, p: 9 },
+    ];
+    const nodes = collectNodes(
+      firstLayer(
+        pointSpec({ kind: 'field', value: 'p' }),
+        { d: data },
+        { ...cartOpts, provenance: true, datumProvenance: true },
+      ),
+    );
+
+    expect(nodes).toHaveLength(1);
+    expect(nodes[0]?.meta).toMatchObject({ transformedIndex: 4 });
+    expect(radiusOf(nodes[0])).toBeCloseTo(SIZE_MAX_RADIUS, 6);
+  });
+
+  it('field_size_does_not_filter_generic_point_text_mode', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        {
+          type: 'point',
+          size: { kind: 'field', value: 'p' },
+          encoding: { x: { field: 'x' }, y: { field: 'y' }, text: { field: 'name' } },
+        },
+      ],
+    });
+    const data = [
+      { x: 0, y: 0, p: undefined, name: 'missing' },
+      { x: 1, y: 1, p: null, name: 'null' },
+      { x: 2, y: 2, p: Number.NaN, name: 'nan' },
+      { x: 3, y: 3, p: Number.POSITIVE_INFINITY, name: 'infinity' },
+    ];
+    const nodes = collectNodes(firstLayer(spec, { d: data }, { ...cartOpts, provenance: true, datumProvenance: true }));
+
+    expect(nodes.map(node => node.text)).toEqual(['missing', 'null', 'nan', 'infinity']);
+    expect(nodes.map(node => node.meta?.transformedIndex)).toEqual([0, 1, 2, 3]);
+  });
+
   it('no_positive_values_all_min_radius', () => {
     const data = [
       { x: 0, y: 0, p: 0 },
@@ -174,6 +272,23 @@ describe('size channel 边界输入', () => {
       range: [3, 11],
       field: 'p',
     });
+  });
+
+  it.each([
+    ['empty', []],
+    ['all-missing', [{ p: undefined }, { p: null }, { p: Number.NaN }]],
+  ])('untyped_%s_rows_preserve_the_size_descriptor', (_label, rows) => {
+    const resolution = sizeResolutionOf({ kind: 'field', value: 'p' }, rows, [], {
+      fieldType: DataFieldType.Categorical,
+    });
+
+    expect(resolution.descriptor).toMatchObject({
+      channel: 'size',
+      field: 'p',
+      scaleName: '__size_p',
+      scaleType: 'sqrt',
+    });
+    expect(resolution.descriptor?.fieldType).toBeUndefined();
   });
 
   it('all_zero_data_uses_explicit_sqrt_range_in_resolver_and_descriptor', () => {
@@ -246,6 +361,163 @@ describe('size channel 边界输入', () => {
 });
 
 describe('size channel 错误输入', () => {
+  it.each([
+    ['categorical', 'large'],
+    ['temporal', '2026-08-02'],
+  ])('observed_derived_%s_size_field_fails_loud', (_label, value) => {
+    expect(() =>
+      expandOf(
+        derivedSizePointSpec(value),
+        { d: [{ x: 0, y: 0 }] },
+        { ...cartOpts, transformDefinitions: [deriveSizeValueTransform] },
+      ),
+    ).toThrow(/size requires a continuous field/);
+  });
+
+  it('observed_derived_continuous_size_descriptor_reports_its_type', () => {
+    const node = pointSpec({ kind: 'field', value: 'derivedSize' });
+    const resolution = BUILTIN_NODE_CHANNELS.size.resolve({
+      node,
+      rows: [{ derivedSize: 4 }],
+      fieldTypes: new Map(),
+      fieldTypeEvidence: new Set(),
+    })(node.marks[0]);
+
+    expect(resolution?.descriptor?.fieldType).toBe(DataFieldType.Continuous);
+  });
+
+  it('resolve_field_type_overrides_model_for_size_validation', () => {
+    const rows = [{ x: 0, y: 0, p: 4 }];
+    const model = [
+      { name: 'x', type: DataFieldType.Continuous },
+      { name: 'y', type: DataFieldType.Continuous },
+    ];
+    const resolver =
+      (type: DataFieldTypeValue): LowerPlotsOptions['resolveField'] =>
+      field =>
+        field === 'p' ? { type } : undefined;
+
+    expect(() =>
+      expandOf(
+        pointSpec({ kind: 'field', value: 'p' }, [], [...model, { name: 'p', type: DataFieldType.Categorical }]),
+        { d: rows },
+        { ...cartOpts, resolveField: resolver(DataFieldType.Continuous) },
+      ),
+    ).not.toThrow();
+    expect(() =>
+      expandOf(
+        pointSpec({ kind: 'field', value: 'p' }, [], [...model, { name: 'p', type: DataFieldType.Continuous }]),
+        { d: rows },
+        { ...cartOpts, resolveField: resolver(DataFieldType.Categorical) },
+      ),
+    ).toThrow(/size requires a continuous field/);
+  });
+
+  it('resolve_field_type_overrides_format_and_runs_once_per_field', () => {
+    const spec = pointSpec(
+      { kind: 'field', value: 'p' },
+      [],
+      [
+        { name: 'x', type: DataFieldType.Continuous },
+        { name: 'y', type: DataFieldType.Continuous },
+        { name: 'p', format: 'iso' },
+      ],
+    );
+    let sizeFieldCalls = 0;
+    const resolveField: LowerPlotsOptions['resolveField'] = field => {
+      if (field !== 'p') return undefined;
+      sizeFieldCalls += 1;
+      return { type: DataFieldType.Continuous };
+    };
+
+    expect(() => expandOf(spec, { d: [{ x: 0, y: 0, p: undefined }] }, { ...cartOpts, resolveField })).not.toThrow();
+    expect(sizeFieldCalls).toBe(1);
+  });
+
+  it('mark_local_same_name_transform_keeps_source_type_evidence', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: {
+        reference: 'd',
+        model: [
+          { name: 'x', type: DataFieldType.Continuous },
+          { name: 'y', type: DataFieldType.Continuous },
+          { name: 'p', type: DataFieldType.Categorical },
+        ],
+      },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        {
+          type: 'point',
+          transform: [{ kind: 'normalize', field: 'p', as: 'p' }],
+          size: { kind: 'field', value: 'p' },
+          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+        },
+      ],
+    });
+
+    expect(() => expandOf(spec, { d: [{ x: 0, y: 0, p: 'large' }] }, cartOpts)).toThrow(
+      /size requires a continuous field/,
+    );
+  });
+
+  it.each([
+    ['empty', []],
+    ['all-missing', [{ x: 0, y: 0, p: undefined }]],
+  ])('resolve_field_type_remains_authoritative_for_%s_rows', (_label, rows) => {
+    const spec = pointSpec({ kind: 'field', value: 'p' });
+    const resolveField: LowerPlotsOptions['resolveField'] = field =>
+      field === 'p' ? { type: DataFieldType.Categorical } : undefined;
+
+    expect(() => expandOf(spec, { d: rows }, { ...cartOpts, resolveField })).toThrow(
+      /size requires a continuous field/,
+    );
+  });
+
+  it('format_implied_type_remains_authoritative_for_all_missing_rows', () => {
+    const spec = pointSpec(
+      { kind: 'field', value: 'p' },
+      [],
+      [
+        { name: 'x', type: DataFieldType.Continuous },
+        { name: 'y', type: DataFieldType.Continuous },
+        { name: 'p', format: 'iso' },
+      ],
+    );
+
+    expect(() => expandOf(spec, { d: [{ x: 0, y: 0, p: undefined }] }, cartOpts)).toThrow(
+      /size requires a continuous field/,
+    );
+  });
+
+  it.each([
+    ['categorical', DataFieldType.Categorical],
+    ['temporal', DataFieldType.Temporal],
+  ])('explicit_%s_size_field_fails_for_positive_empty_and_all_missing_rows', (_label, fieldType) => {
+    const model = [{ name: 'p', type: fieldType }];
+    const rowSets = [[{ p: 4 }], [], [{ p: undefined }, { p: null }, { p: Number.NaN }]];
+
+    for (const rows of rowSets) {
+      expect(() => sizeResolutionOf({ kind: 'field', value: 'p' }, rows, [], { fieldType, model })).toThrow(
+        /size requires a continuous field/,
+      );
+    }
+  });
+
+  it.each([
+    ['categorical', [{ x: 0, y: 0, p: 'large' }]],
+    ['temporal', [{ x: 0, y: 0, p: '2026-08-02' }]],
+  ])('observed_untyped_%s_size_field_fails_loud', (_label, rows) => {
+    expect(() => expandOf(pointSpec({ kind: 'field', value: 'p' }), { d: rows }, cartOpts)).toThrow(
+      /size requires a continuous field/,
+    );
+  });
+
   it('negative_field_value_fails_loud', () => {
     const data = [
       { x: 0, y: 0, p: 1 },
