@@ -14,19 +14,19 @@ description: 'Use when 发布或准备发布 retikz npm 包、核对发布版本
 - 目标版本必须先写入仓库、验证并提交，再 tag / publish。
 - 必须按 npm registry 校验版本连续性；不要把仓库里的预 bump 开发版本当成已发布版本。
 - ADR 长期一致性审计是所有发布组不可跳过的前置门槛；必须逐篇阅读全文，不得以状态字段、roadmap 勾选或 commit message 代替。
-- `npm view` / login / dry-run / publish 都显式使用 `--registry https://registry.npmjs.org/`。
+- `npm view` / login / dry-run / publish，以及验证真实用户依赖闭包的 `pnpm install`，都显式使用 `--registry https://registry.npmjs.org/`；不得继承用户级镜像 registry。
 
 ## 发布组
 
 发布组真源是 `scripts/release-groups.config.mjs`。每个可发布包的 `package.json` 必须声明 `retikz.domain`、`retikz.releaseGroup`、`retikz.layer`、`retikz.publishable`。若下表、skill 文本与配置或 manifest 不一致，先修配置 / manifest / skill 并运行 `pnpm run check:release-groups`。
 
-| 组       | 包                                                                                                  | 发布顺序                                          | tag                   |
-| -------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------- | --------------------- |
-| kernel   | `@retikz/math`, `@retikz/core`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla`, `@retikz/tex` | math -> core -> render -> react -> vanilla -> tex | `kernel-v<version>`   |
-| data     | `@retikz/data`                                                                                      | data                                              | `data-v<version>`     |
-| plot     | `@retikz/plot`, `@retikz/plot-react`, `@retikz/plot-vanilla`                                        | plot -> plot-react -> plot-vanilla                | `plot-v<version>`     |
-| table    | `@retikz/table`, `@retikz/table-vanilla`, `@retikz/table-react`                                     | table -> table-vanilla -> table-react             | `table-v<version>`    |
-| standard | `@retikz/standard`, `@retikz/standard-vanilla`, `@retikz/standard-react`                            | standard -> standard-vanilla -> standard-react    | `standard-v<version>` |
+| 组       | 包                                                                                                                     | 发布顺序                                                     | tag                   |
+| -------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | --------------------- |
+| kernel   | `@retikz/math`, `@retikz/runtime`, `@retikz/core`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla`, `@retikz/tex` | math -> runtime -> core -> render -> react -> vanilla -> tex | `kernel-v<version>`   |
+| data     | `@retikz/data`                                                                                                         | data                                                         | `data-v<version>`     |
+| plot     | `@retikz/plot`, `@retikz/plot-react`, `@retikz/plot-vanilla`                                                           | plot -> plot-react -> plot-vanilla                           | `plot-v<version>`     |
+| table    | `@retikz/table`, `@retikz/table-react`, `@retikz/table-vanilla`                                                        | table -> table-react -> table-vanilla                        | `table-v<version>`    |
+| standard | `@retikz/standard`, `@retikz/standard-react`, `@retikz/standard-vanilla`                                               | standard -> standard-react -> standard-vanilla               | `standard-v<version>` |
 
 不发布：`@retikz/docs`、`@retikz/eval` 是 private app。
 
@@ -132,6 +132,8 @@ pnpm run test:publish-artifacts
 pnpm --filter @retikz/core publish --dry-run --no-git-checks --access public --tag <tag> --registry https://registry.npmjs.org/
 ```
 
+冻结目标 tarball 后，必须额外验证真实用户依赖闭包：只把本次目标包 override 到 frozen exact tarball，其余 `@retikz/*` 禁止使用 workspace 或本地 support tarball；在全新 consumer 中运行 `pnpm install --registry=https://registry.npmjs.org/`，保存 lockfile 并核对解析版本，再对全部公开 export 执行 ESM import 与严格 TypeScript smoke。若另有全 workspace tarball fixture，两者必须都通过；本地闭包通过不能替代官方 registry 闭包。
+
 逐包检查 dry-run 输出：
 
 - tarball 只包含 `dist/`、`LICENSE`、`README.md`、`package.json`；
@@ -213,6 +215,7 @@ pnpm --filter @retikz/<pkg> publish --access public --tag <tag> --no-git-checks 
 - [ ] `pnpm run build` 通过。
 - [ ] 发布组内每个包 dry-run 通过。
 - [ ] 已检查 tarball、`workspace:*` 精确版本解析和 `workspace:^` 兼容范围解析。
+- [ ] frozen exact tarball 已在显式官方 registry 的 clean consumer 中通过真实依赖闭包、ESM 与 TypeScript smoke；未继承镜像 registry。
 - [ ] 当前对话已授权 commit / tag / publish / push。
 - [ ] tag 前已确认 HEAD 版本。
 - [ ] tag 为 annotated tag，本地和远端均无同名 tag，历史或已发布 tag 未被移动、复用或覆盖。
