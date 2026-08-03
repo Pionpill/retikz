@@ -1,6 +1,7 @@
 # ADR-03：color 真通道收口 + series 一等化（B/C 规则）
 
-- 状态：Accepted
+- 状态：Superseded
+- 替代：[alpha.8 ADR-01](../alpha.8/01-continuous-color-scale.md) 与 [alpha.12 ADR-10](../alpha.12/10-channel-registry.md)；color 已支持类型驱动的离散与连续 scale，并统一进入 channel registry
 - 决策日期：2026-06-08
 - 关联：[plot v0.1-alpha.7 roadmap](./roadmap.md) · [plot v0 roadmap 阶段二](../../roadmap.md) · [plot-design §3.3 Aesthetics / §3.7 Series](../../../../../architecture/plot-design.md) · 依赖：[ADR-02 通道→scale resolver](./02-channel-scale-resolver-size.md)（color 迁入）· 关联：[alpha.5 ADR-02 datum locator](../alpha.5/02-datum-locator.md)（隐式拆等价性）
 
@@ -9,7 +10,7 @@
 color 通道名义上是「真 scale 通道」，实则半成品，且 color 与 series 的边界含糊：
 
 1. **color resolver 恒走 ordinal、不查字段类型**：`makeColorResolver`（`lower/expand.ts:372`）无论字段是 categorical 还是 continuous/temporal，一律合成 ordinal scale 调色。数值字段会被**静默当分类**调色（错误编码），而连续色阶本应是 alpha.8 的事（[alpha.6 ADR-03](../alpha.6/03-type-driven-scale.md) 明确连续/temporal color 留 alpha.8）。
-2. **单系列 path 的 `color.field` 静默丢弃**：line/area 有 series 时取每组首行颜色（`lower/mark.ts:344` / `:395`）；**无 series 时 `color.field` 被忽略、回退 `currentColor`**（`lower/mark.ts:355`），而 React `<LineMark color>` 文档写成「颜色字段」（`marks.tsx:13`）、`buildPlotSpec` 也把 `color` 转 `{field, scale: __color}`（`buildPlotSpec.ts:97`）——表面承诺与行为不符（cross-review P2 债）。
+2. **单系列 path 的 `color.field` 静默丢弃**：line/area 有 series 时取每组首行颜色（`lower/mark.ts:344` / `:395`）；**无 series 时 `color.field` 被忽略、回退 `currentColor`**（`lower/mark.ts:355`），而 React `<LineMark color>` 文档写成「颜色字段」（`marks.tsx:13`）、`buildPlotSpec` 也把 `color` 转 `{field, scale: __color}`（`buildPlotSpec.ts:97`）——表面承诺与行为不符。
 3. **series 与 color 关系未定调**：retikz 的 `series` 是 mark 级显式字段（`ir/mark.ts:63`），color 是独立通道——但「单系列 + color 字段」该怎样、是否隐式分组，从未写死。
 
 同类库谱系：**ggplot2** 离散 `colour` 同时 = 分组 + 上色 + 图例（`group` 才是真分组键，通常隐式）；**Vega-Lite** `detail` 只分组不上色、`color` 分组+上色，二者可分离；**Observable Plot** `z` 分组、`fill/stroke` 上色，可分离；**Highcharts** 显式 `series` 数组。retikz 取「**显式 series 一等 + color 兜底拆分**」的折中——既修债，又不滑向 ggplot「所有离散 aesthetic 自动分组」。
@@ -57,6 +58,3 @@ if (mark.series && colorField && !colorConstantWithinSeries(...)) throw new Erro
 - **legend**（由 color/series 派生图例）→ alpha.8。
 - **point/bar/sector 的隐式 series** → 不做（它们按 datum 着色，无 path 整体性问题）。
 - **size 通道** → [ADR-02](./02-channel-scale-resolver-size.md)。
-
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/lower/{expand,mark,channel}.ts` 与 React mark 构造，测试见 `packages/viz/plot/tests/lower/color-series.test.ts` 和 `packages/viz/plot-react/tests/components/buildPlotSpec.test.tsx`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.7/03-color-series.md`（封板全文）。

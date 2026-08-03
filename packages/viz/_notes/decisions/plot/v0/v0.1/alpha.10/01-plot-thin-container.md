@@ -20,7 +20,7 @@
 3. **保留显式 guide**：`<Axis>` / `<Legend>` 正常收集、生效、留边距；网格仍通过 `<Axis grid>` 声明，不新增 `<Grid>`。
 4. **删除 `bare`**：薄 Plot 默认态已表达「不写 guide 就只画数据层」，保留 `bare` 会形成第二套忽略显式 guide / margin 的模式。
 5. **用 `<Scale>` 替代 `scaleX` / `scaleY`**：显式位置 scale 改由 `<Scale dimension="x|y|angle|radius" type="linear|time|point|log|sqrt" />` 声明；polar 下 `x/y` 可作为 `angle/radius` 别名。
-6. **新增 Plot 级调色板**：`PlotSpec.colors` / `<Plot colors>` 控制默认 mark 颜色与分类 color scale range；缺省仍用 `schemeCategory10`。
+6. **新增 Plot 级调色板**：`IRPlotSpec.colors` / `<Plot colors>` 控制默认 mark 颜色与分类 color scale range；缺省仍用 `schemeCategory10`。
 7. **抽出装饰函数**：默认轴 / 网格补齐逻辑保留为 `decorateDefaultGuides(spec)`，本轮 `<Plot>` 不调用，由后续 v0.2 `<Chart>` 复用。
 
 定稿 schema：
@@ -45,9 +45,3 @@ PlotSpecSchema.colors: z.array(z.string().min(1)).min(1).optional()
 
 - 不实现 `<Chart>`、不下沉 chart 装饰模块（开箱即用装饰留待 v0.2 `<Chart>` 复用 `decorateDefaultGuides`）。
 - 不新增 `<Grid>`。
-
-## 实现指针
-
-落地于 `@retikz/plot`（`plot/src/ir/plot.ts`、`lower/*`）与 `@retikz/plot-react`（`react/src/Plot.tsx`、`components/build-plot-spec.ts`、`components/scales.tsx`），行为与 schema 覆盖见 `packages/viz/plot-react/tests/**`、`packages/viz/plot/tests/**`；文档同步见 `apps/docs/src/modules/docs/contents/viz/**`。
-
-> 🔖 本文件压缩前完整施工蓝图 = `git show 13765be7:_notes/decisions/plot/v0/v0.1/alpha.10/01-plot-thin-container.md`（封板全文）。

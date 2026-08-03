@@ -13,7 +13,7 @@ beta.1 直接采用破坏式迁移。现有 `<Plot data model dataTransforms>`�
 
 ## 决策
 
-`@retikz/plot` 新增 `@retikz/data` 依赖，内部从 data 包消费数据 schema、field helper、format、statistics、transform pipeline 与 provenance。plot 顶层 public API 只导出 plot 自己拥有的 schema / provider / lowering 能力，不保留 `DataModel`、`ExternalDatasets`、`defineTransform`、`applyTransforms` 等 data re-export。
+`@retikz/plot` 新增 `@retikz/data` 依赖，内部从 data 包消费数据 schema、field helper、format、statistics、transform pipeline 与 provenance。plot 顶层 public API 只导出 plot 自己拥有的 schema / provider / lowering 能力，不保留 `IRDataModel`、`ExternalDatasets`、`defineTransform`、`applyTransforms` 等 data re-export。
 
 适配规则：
 
@@ -33,19 +33,19 @@ beta.1 直接采用破坏式迁移。现有 `<Plot data model dataTransforms>`�
 plot 入口保持 plot 自身 API：
 
 ```ts
-import { lowerPlots, type PlotSpec, type TransformOperation } from '@retikz/plot';
+import { lowerPlots, type IRPlotSpec, type IRPlotTransform } from '@retikz/plot';
 ```
 
 data API 从 data 包获取：
 
 ```ts
-import { defineTransform, type ExternalDatasets } from '@retikz/data';
-import { lowerPlots, type PlotSpec, type TransformOperation } from '@retikz/plot';
+import { type ExternalDatasets, type IRDataTransform } from '@retikz/data';
+import { lowerPlots, type IRPlotSpec, type IRPlotTransform } from '@retikz/plot';
 ```
 
-`TransformOperation` 仍属于 plot schema：它包含共享 data transform、plot-only transform 与外部 transform passthrough。共享 transform definition helper 与外部数据集类型属于 data。
+`IRPlotTransform` 仍属于 plot schema：它包含共享 data transform、plot-only transform 与外部 transform passthrough。共享 transform definition helper 与外部数据集类型属于 data。
 
-依赖 `@retikz/plot` 获取 data API 或依赖 `@retikz/plot/src/...` 深导入的用户，需要改为 `@retikz/data` 或 `@retikz/plot` 对应顶层 owner 入口。
+依赖 `@retikz/plot` 获取 data API 或依赖 Plot 私有深导入的用户，需要改为 `@retikz/data` 或 `@retikz/plot` 对应顶层 owner 入口。
 
 ## 最终实现
 
@@ -58,14 +58,7 @@ plot-only transform 的 schema 和 provider 回归 plot，由 [ADR-02](./02-plot
 - plot lowering 使用 data 包后，transform / field / format / provenance 行为保持通过测试。
 - plot 顶层不再 re-export data-only surface，并由 public barrel 边界测试覆盖。
 - plot-react 与 plot-vanilla 通过直接 data dependency 完成类型检查与 adapter 测试。
-- beta.1 roadmap 记录完成提交：`21b1019e` / `23bba402` / `22ceb713`。
 
 ## 遗留风险
 
 adapter 暴露面中仍出现的 data 类型必须持续从 `@retikz/data` 消费，不能经 plot 转发。后续若新增 chart / table 宿主，应复用 data 包而不是复用 plot adapter 入口。
-
-## 实现指针
-
-本 ADR 已随 viz `0.1.0-beta.1` 收尾压缩；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在历史中。
-
-> 🔖 压缩前完整施工蓝图 = `git show 3c76d64d1402545454f1ae301d8588313abb7d5d:packages/viz/_notes/decisions/plot/v0/v0.1/beta.1/01-data-package-adapter.md`。

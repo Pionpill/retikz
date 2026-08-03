@@ -4,5 +4,5 @@ import type { ExternalRow } from '@retikz/data';
 export const scoreRows: Array<ExternalRow> = [
   { name: 'Alpha', group: 'A', score: 92 },
   { name: 'Beta', group: 'B', score: 86 },
-  { name: 'Gamma', group: 'A', score: 78 },
+  { name: 'Gamma', group: 'A', score: -3 },
 ];

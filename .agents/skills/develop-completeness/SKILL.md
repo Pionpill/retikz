@@ -85,7 +85,7 @@ Snapshot: HEAD=<sha>; ADR=<path-and-content-version>
 - <可选建议>
 ```
 
-单个评审员无 BLOCKING，且每个 WARNING 已修复或在 ADR 中记录可验证的接受理由时可以返回 `REVIEWER_PASS`。该值只表示一份 reviewer 输出合格，不能解析为 Gate PASS。Architecture Gate 的 `GateVerdict: PASS` 只能由编排者在 `cross-review` 最新一轮至少两个不同模型实际完成并归并通过后产生。时间压力、已有实现、用户离线或“后续再补”都不能降低 finding 等级。
+单个评审员无 BLOCKING，且每个 WARNING 已修复或在 ADR 中记录可验证的接受理由时可以返回 `REVIEWER_PASS`。该值只表示一份 reviewer 输出合格，不能解析为 Gate PASS。Architecture Gate 的 `GateVerdict: PASS` 只能由编排者在 `cross-review` 最新一轮至少两个 fresh 独立 reviewer 实例完成并归并通过后产生；优先不同模型，只有一个非主模型时允许两个同模型 fresh 实例并必须记录多样性降级。时间压力、已有实现、用户离线或“后续再补”都不能降低 finding 等级。
 
 ## `code-audit`
 

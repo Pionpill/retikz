@@ -1,8 +1,9 @@
-﻿# ADR-02：Plot 数据引用与数据模型（DataRef / DataModel + 外部数据契约）
+# ADR-02：Plot 数据引用与数据模型（DataRef / DataModel + 外部数据契约）
 
-- 状态：Accepted（已实现）
+- 状态：Superseded
+- 替代：[Data beta.1 ADR-01](../../../../data/v0/v0.1/beta.1/01-plot-data-migration.md)；数据引用、模型、外部 datasets 与解析能力的最终 owner 为 `@retikz/data`
 - 决策日期：2026-06-03
-- 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3 核心概念 / §8 lowering](../../../../../architecture/plot-design.md) · 根节点：[ADR-01 PlotSpec](./01-plot-spec-root.md) · 消费方：[ADR-05 encoding+mark](./05-plot-encoding-mark.md)
+- 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3 核心概念 / §8 lowering](../../../../../architecture/plot-design.md) · 根节点：[ADR-01 IRPlotSpec](./01-plot-spec-root.md) · 消费方：[ADR-05 encoding+mark](./05-plot-encoding-mark.md)
 
 ## 背景 / 约束
 
@@ -48,7 +49,3 @@ export type FieldType = ValueOf<typeof DataFieldType>;
 - **nominal / ordinal / temporal 的 lowering 消费**（alpha.1 只 quantitative）→ alpha.3。
 
 ---
-
-> **实现指针**：level `red`（动 `plot/src/ir/**`）、additive 非 breaking。真源以代码为准——`DataFieldType` / `FieldDefSchema` / `DataModelSchema` / `DataRefSchema` / `ScalarValueSchema` + 派生类型 + `ExternalRow` / `ExternalDatasets` TS 契约（`plot/src/ir/data.ts`，复用 core `ValueOf`）。外部数据是 TS 类型、非 IR zod schema。测试在 `packages/viz/plot/tests/ir/data.schema.test.ts`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / 依赖现有元素）见本文件 git 历史。
-
-> 🔖 封板压缩 commit `9115e6b4`；压缩前完整施工蓝图 = `git show 9115e6b4^:_notes/decisions/plot/v0/v0.1/alpha.1/02-plot-data.md`。

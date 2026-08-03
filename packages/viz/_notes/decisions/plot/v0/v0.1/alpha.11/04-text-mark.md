@@ -1,6 +1,7 @@
 # ADR-04：text mark——datum label 数据标签，优先挂宿主 Node.label、兜底新建带 `text` 的核心 Node
 
-- 状态：Accepted
+- 状态：Superseded
+- 替代：[alpha.12 ADR-03](../alpha.12/03-mark-abstraction-registry.md) 与 [alpha.13 ADR-07](../alpha.13/07-mark-label-surface.md)；独立 text mark 已并入 `PointMark` 文本 glyph，宿主标签统一走 mark label surface
 - 决策日期：2026-06-16
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.11 roadmap](./roadmap.md) · [plot-design.md §3.6 通道 / §3.7 mark 表（text=数据标签 label）](../../../../../architecture/plot-design.md) · [alpha.11 ADR-01：cell 几何投影](./01-cell-geometry-projection.md)（投影路径参照）
 
@@ -26,7 +27,7 @@ text mark 的位置投影复用 point 同源路径（坐标系无关）。差别
 
 **下沉目标始终是 core `Node`（其 `label` 或 `text`），不是 core Text primitive**——core 没有独立顶层 Text 实体，文本唯二载体就是 `Node.label` / `Node.text`。决不在 plot 侧用 dx/dy/anchor 重造 core 已有的边框相对定位。
 
-被否决：初版「datum label 一律新建 Node + 内部 `text` + 手动 dx/dy/anchor」。理由——等于在 plot 侧把 core `Node.label` 已有的「边框相对定位 + distance + 引线」重造一遍（评审反馈①）；core `Node.label` 纯消费即可拿到这些能力，无需 plot 新能力，故提为首选。
+被否决：初版「datum label 一律新建 Node + 内部 `text` + 手动 dx/dy/anchor」。理由——等于在 plot 侧把 core `Node.label` 已有的「边框相对定位 + distance + 引线」重造一遍；core `Node.label` 纯消费即可拿到这些能力，无需 plot 新能力，故提为首选。
 
 ### 决策线 B：text 内容三层（进 IR）+ 运行时逃生舱（不进 IR）
 
@@ -35,7 +36,7 @@ text mark 的位置投影复用 point 同源路径（坐标系无关）。差别
 - **`field`（进 IR）**：取该行字段值转字符串作标签。
 - **`value`（进 IR）**：常量串，所有行同一标签。
 - **`format`（进 IR）**：可选 JSON 安全格式串（数字 / 时间），仅在有 `field` 时有意义。串是声明、非函数，不破坏可序列化。方言对齐 d3-format / d3-time-format 风格，运行时按 field 值类型分派。
-- **运行时 `resolveLabel(row) => string`（不进 IR，逃生舱）**：任意模板 / 拼接。经 compile / render options 注入、不写进 PlotSpec，故不破坏 IR JSON 可序列化。是声明三层都覆盖不了的完全自定义出口（评审反馈②）。
+- **运行时 `resolveLabel(row) => string`（不进 IR，逃生舱）**：任意模板 / 拼接。经 compile / render options 注入、不写进 IRPlotSpec，故不破坏 IR JSON 可序列化。是声明三层都覆盖不了的完全自定义出口。
 
 优先级（运行时高于声明、具体高于通用）：`resolveLabel` > `format`(套在 `field` 上) > `field` > `value`。`field` / `value` 互斥（schema refine）；`format` 仅与 `field` 同用。
 
@@ -74,13 +75,3 @@ text mark 的位置投影复用 point 同源路径（坐标系无关）。差别
 - 三包 lockstep（plot core / react / vanilla）；vanilla `render-plot.ts` mark 无关、纯 spec 驱动，**零代码改动**——新 text mark 经 schema 校验后自动经 `lowerPlots` 贯通三包。
 - 对外 API 均为**纯新增、非 breaking**：位置 mark 新增可选 `label` + React `label*` props + `resolveLabel`（priority-1）；新增 IR text mark（`type:'text'`）+ React `<TextMark>` sugar（priority-2）。
 - core 无需新能力，priority-1 仅消费 `Node.label`、priority-2 仅消费 `Node.text` / `textColor`。
-
-## 实现指针
-
-- IR schema：`packages/viz/plot/src/ir/encoding.ts`（`TextChannelSchema` / `MarkLabelSchema` / `TextEncodingSchema`）、`packages/viz/plot/src/ir/mark.ts`（`PlotMark.Text` / `TextMarkSchema` / 位置 mark 的可选 `label` / 并入 `MarkSchema`）。
-- lowering：`packages/viz/plot/src/lower/mark.ts`（宿主 label 装配 + `lowerText` 兜底 + `labelOf` 解析）、`lower/field.ts`（`format` 套用与 `resolveLabel` 注入接入点）、`lower/expand.ts` / `lower/validate.ts`（text 排除出 1D/ternary/custom fail-loud 网）、`lower/anchor.ts`（text 走 point 同投影路径）。
-- React：`packages/viz/plot-react/src/components/marks.tsx`（`label*` props + `resolveLabel` + `TextMark`）、`build-plot-spec.ts`（扁平 props → IR 装配）。
-- 测试：`packages/viz/plot/tests/lower/text-mark.test.ts`、`packages/viz/plot-react/tests/components/text-mark-assembly.test.tsx`、`packages/viz/plot-vanilla/tests/render-plot.test.ts`（宿主 label + 自由 TextMark 的 SSR 断言）。
-- 文档：`apps/docs/src/modules/docs/contents/viz/components/mark/text/`（zh / en + 三组 demo）。
-
-> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.11/04-text-mark.md`（封板全文）。

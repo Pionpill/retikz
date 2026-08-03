@@ -1,12 +1,10 @@
 # ADR-07：`FieldDef.order`——分类轴顺序 + 有序性参数（不复活 ordinal 类型，有序由参数判定）
 
-- 状态：Accepted
+- 状态：Superseded
+- 替代：[Data beta.1 ADR-01](../../../../data/v0/v0.1/beta.1/01-plot-data-migration.md)；分类顺序现属于 `IRDataFieldDefinition` 数据契约
 - 决策日期：2026-06-07
-- 关联：[plot v0.1-alpha.6 roadmap](./roadmap.md) · 本里程碑 [ADR-01 数据模型](./01-data-model.md) / [ADR-03 type-driven scale](./03-type-driven-scale.md) · 前序：字段类型简化为 3 类（合并掉 ordinal，commit `30f2cce1`）· [plot-design.md §3.1 数据模型 / §3.5 scale](../../../../../architecture/plot-design.md)
 
 ## 背景
-
-字段类型简化成 `continuous / categorical / temporal` 三类（commit `30f2cce1`），合并掉了 `ordinal`——代价是丢了「有序类别」语义：`categorical` 的轴/图例顺序**只能按数据出现序**（`inferCategoryDomain` 去重保序），用户无法控制。`['S','M','L','XL']` 这种本该有序的尺码，画出来全凭数据里第一次出现的次序，乱且不可控；想按字母 / 数值排序也没有开关。这是合并 ordinal 时欠的债，会很快成真实痛点（ggplot 的 factor level、Vega-Lite 的 `sort`、ECharts 的显式 domain 都把它当核心能力）。
 
 **不复活 `ordinal` 类型**（那会让类型集重新膨胀、且与「3 类简单心智」决策冲突）。改用一个 **`FieldDef.order` 参数**：既给出顺序，又**由它是否设置来判定该分类是否有序**——一个参数解决「有序性」与「具体顺序」两件事。
 
@@ -45,9 +43,7 @@ DSL：
 - **`Array`**：显式类别顺序作域；数据中出现、但不在数组里的值 → **追加到末尾**（见待决策点），该字段视为有序。
 - **有序性 = `order` 非 `'appearance'`**：不另加 `ordered` 布尔——参数本身判定有序，符合「通过参数判断是否有序」。
 
-### order 如何落到 scale（cross-review #2，钉死）
-
-现 `resolvePositionScale(def, values, fallbackRange)` 只收**合并后的 values**、不知字段名（[registry.ts:68](../../../../../../plot/src/providers/scale/registry.ts)），而 `collectValues` 跨该 role 所有 mark 合并取值——order 挂 FieldDef，必须在**知道字段名的那一层**（`resolveScaleForRole`，[expand/frame/resolve.ts](../../../../../../plot/src/pipeline/expand/frame/resolve.ts)）解析成域，再作为 `def.domain` 下传，而非改 `resolvePositionScale` 签名。规则照搬现成的 `roleFieldTypes` / 混类型 fail-loud 套路：
+### order 如何落到 scale
 
 - **单字段绑该 role**：取该字段 `order`，按 order 算出有序类别域，注入 `scale.domain`（band/point/ordinal 同此域）。
 - **多字段共该 role（不同字段不同 order）**：若解析出**冲突的 order**（≥2 个不同非默认 order）→ **fail-loud**（与「混类型 fail-loud」同档），提示显式给 scale domain。多字段同 order 或仅一个有 order → 用那个。
@@ -61,9 +57,9 @@ DSL：
 3. **挂 FieldDef 而非 scale**：order 是**字段的数据语义**（这一列类别本身有序），故同一字段无论用作位置（band）还是颜色（ordinal），顺序一致——挂 FieldDef 天然覆盖两处；scale 级显式 domain 留作更低层覆盖（不在本 ADR）。
 4. **可序列化 / LLM 友好**：`order` 是枚举或数组、进 IR，spec 仍 100% JSON 可序列化、LLM 能生成。
 
-## 已钉死（cross-review 合入 2026-06-07）
+## 最终约束
 
-- **`order` 配非 categorical 字段 → fail-loud**（cross-review #3）：`order` 是 public schema 行为，不能留到实现期再选。`order` 只允许 resolved type 为 `categorical` 的字段；配 `continuous` / `temporal` → lowering **报错**（不静默忽略——忽略会让用户误以为排序生效，与 retikz fail-loud 取向冲突）。schema 层无法拦（type 可推断、可省），故在 lowering 解析 order→域时校验。
+- **`order` 配非 categorical 字段 → fail-loud**：`order` 是 public schema 行为，不能留到实现期再选。`order` 只允许 resolved type 为 `categorical` 的字段；配 `continuous` / `temporal` → lowering **报错**（不静默忽略——忽略会让用户误以为排序生效，与 retikz fail-loud 取向冲突）。schema 层无法拦（type 可推断、可省），故在 lowering 解析 order→域时校验。
 - **多字段同 role 冲突 order → fail-loud**：见上「order 如何落到 scale」。
 - **显式 scale domain 压过 order**：见上。
 
@@ -80,6 +76,3 @@ DSL：
 - **scale 级显式 `domain`**（band/point 直接给域数组）——更低层覆盖，留后续，避免与 FieldDef.order 双真源。
 - **顺序色板 / 有序图例**（sequential palette、ordered legend 渲染）——order 给了「有序」信号，但消费它的视觉能力属 alpha.7+ 通道/图例工作。
 - **`sortBy` 按另一字段聚合排序**（Vega-Lite `sort:{field,op}`）——需聚合，依赖 transform 家族，留后续。
-
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/data.ts` 与 `packages/viz/plot/src/lower/{scale,expand}.ts`，测试见 `packages/viz/plot/tests/lower/category-order.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.6/07-category-order.md`（封板全文）。

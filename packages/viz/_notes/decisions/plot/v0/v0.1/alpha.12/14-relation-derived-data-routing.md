@@ -2,7 +2,6 @@
 
 状态：Accepted
 决策日期：2026-06-26
-关联：[plot v0.1-alpha.12 roadmap](./roadmap.md) · [ADR-06 transform registry](./06-transform-registry.md) · [ADR-13 RelationMark](./13-relation-mark-anchor.md) · [core Path step schema](../../../../../../../kernel/core/src/schemas/path/step/schema.ts)
 
 ## 背景
 
@@ -27,13 +26,13 @@ RelationMark 获得两组能力：
 
 `via` 可以与 routing 组合；route 是完全显式的 core step 结构，routing 是快捷算法。
 
-## 实现状态
+## 最终形态
 
 本 ADR 的 mark-local transform 入口后来被 [ADR-15](./15-mark-local-transform.md) 提升为所有 mark 的公共字段。`derive-relation` 的私有统计语法后来被 [ADR-16](./16-statistical-transform-algebra.md) 收敛为通用 `relate` transform 与共享 selector / pair measure 代数。
 
 因此本 ADR 保留的长期决策是：relation 的数据派生走 transform 管线，几何路径走 routing / route，二者分层；RelationMark 不拥有私有统计 callback。
 
-## 实现指针
+## 最终形态
 
 - mark data view 的 rows 必须同时服务 scale domain、channel domain、lowering 与 locator。
 - relation projected target 的字段来自 relation view rows，并参与 position scale domain；纯 anchor / node target 不贡献 domain。
@@ -50,7 +49,5 @@ RelationMark 获得两组能力：
 
 - 不新增 named dataset、join 或独立 relation table 数据源。
 - 不做 obstacle avoidance、edge bundling 或 graph layout。
-- 不把函数写入 PlotSpec。
+- 不把函数写入 IRPlotSpec。
 - 不修 core fold label；plot 可在 lowering 策略上避开。
-
-> 🔖 本文件压缩前完整施工蓝图 = `git show 20392fb1f39f0383e9d8f8a29f31850da99b8825:_notes/decisions/graph/v0/v0.1/alpha.12/14-relation-derived-data-routing.md`（封板全文）。

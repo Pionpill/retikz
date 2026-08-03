@@ -1,6 +1,7 @@
-﻿# ADR-03：transform 阶段（sort / stack；groupBy 作为 stack 的分组参数）
+# ADR-03：transform 阶段（sort / stack；groupBy 作为 stack 的分组参数）
 
-- 状态：Accepted（已实现）
+- 状态：Superseded
+- 替代：[alpha.12 ADR-06](../alpha.12/06-transform-registry.md)、[ADR-16](../alpha.12/16-statistical-transform-algebra.md) 与 [beta.1 ADR-02](../beta.1/02-plot-transform-registration.md)；transform 已收敛为 Data / Plot owner 分层的 registry 与统计代数
 - 决策日期：2026-06-05
 - 关联：[plot v0.1-alpha.3 待办](./roadmap.md) · [plot-design.md §3.3 transform / §4.1 管线第 1 段 / §3.8 relation](../../../../../architecture/plot-design.md) · 回溯：[alpha.1 ADR-06 lowering](../alpha.1/06-plot-lowering.md) · 消费方：[ADR-05 relation](./05-relation.md) · [ADR-02 bar mark](./02-interval-mark.md)
 
@@ -12,14 +13,12 @@
 - **堆叠柱 / 堆叠面积**需先算每个 (x 类别, 系列) 的累积区间 `[y0, y1]`——这是 **stack** 的产物，mark 只负责画 `y0→y1` 的矩形（[ADR-02](./02-interval-mark.md) 的 baseline 从固定 0 推广到 `y0`）。**有序折线 / 柱**需 **sort**（alpha.1 line mark 内联的 `order` 是 mark 局部捷径，堆叠 / 多系列排序超出单 mark）。
 - plot-design §3.3 的 transform 是大集合（filter / sort / groupBy / aggregate / bin / stack / cumulative / dodge / derive）；alpha.3 只做**堆叠柱所需的最小集**。
 
-## 决策：PlotSpec 加可选 `transform` 数组（有序管线），lowering 在 scale 域推断前依次应用；首批 sort / stack，纯行→行
+## 决策：IRPlotSpec 加可选 `transform` 数组（有序管线），lowering 在 scale 域推断前依次应用；首批 sort / stack，纯行→行
 
 `PlotSpecSchema` 顶层加 `transform?`：一个**有序的 transform op 数组**，每个 op 是按 `kind` 判别的纯函数 `rows → rows`（可派生新字段，不引入数据值进 IR——IR 只存声明，数据仍走 `lowerPlots(datasets)`）。`expandPlot` 在「取 rows」之后、「scale 域推断 / mark 下沉」之前，按数组顺序折叠应用。首批两种：
 
 - **sort**：按字段升 / 降序重排行。
 - **stack**：按 `groupBy`（系列字段）在每个 `x`（分组键）内对 `y`（数值字段）累加，给每行派生 `y0` / `y1`（写到可配置的输出字段，默认 `y0` / `y1`），供堆叠 mark 消费。
-
-判别值集为干净判别串、暴露给用户（裸 `'sort'` / `'stack'` 等价），真源见 `src/ir/transform.ts`：
 
 ```ts
 export const DataTransform = { Sort: 'sort', Stack: 'stack' } as const;
@@ -44,8 +43,6 @@ export type TransformType = ValueOf<typeof DataTransform>;
 
 ### 命名冲突说明
 
-plot 的 `TransformSchema`（数据 transform）与 core 的 `TransformSchema`（几何 transform，`packages/kernel/core/src/ir/transform.ts`）**同名不同物**——命名空间隔离（各自包内），不冲突。
-
 DSL 表面（`<BarMark stack>` 自动装配 stack transform）见 [ADR-07](./07-bindings-dsl.md) 与[文档站](https://pionpill.github.io/retikz/)。
 
 ## 不在本 ADR 范围
@@ -56,11 +53,3 @@ DSL 表面（`<BarMark stack>` 自动装配 stack transform）见 [ADR-07](./07-
 - **居中 / 百分比堆叠（streamgraph / normalize）、负值堆叠** → 后续。
 
 ---
-
-> **实现指针**：level `red`（动 `plot/src/ir/**` transform schema + PlotSpec 槽位 + `src/lower/**` 管线段）、非 breaking（`transform?` optional，rows 流向从「直用」变「先 transform」）。
->
-> - 真源以代码为准：`DataTransform` / `SortTransformSchema` / `StackTransformSchema` / `TransformSchema`（`packages/viz/plot/src/ir/transform.ts`）、`applyTransforms` + sort / stack 实现（`packages/viz/plot/src/lower/transform.ts`，复用 alpha.1 `compareByPath` / `channelValue` / `isFiniteNumber`）；`expandPlot`（`src/lower/expand.ts`）取 rows 后插入 transform 段。`@retikz/plot` 公开 `TransformSchema` / 子 schema / `DataTransform`。
-> - 测试见 `packages/viz/plot/tests/ir/transform.schema.test.ts`（accept/reject、unknown kind 拒）与 `tests/lower/transform.test.ts`（sort 升 / 降 / 稳定；stack 派生 y0/y1、首段 y0=0、单 / 多系列、空 rows、缺字段按 0 计入、自定义输出字段；多 op 管线顺序；stack 喂 y 域推断）。
-> - 完整施工契约（Schema 改动表 / 测试象限 / 文件 scope）见本 ADR Proposed commit。
-
-> 🔖 封板压缩 commit `82295fcc`；压缩前完整施工蓝图 = `git show 82295fcc^:_notes/decisions/plot/v0/v0.1/alpha.3/03-transform.md`。

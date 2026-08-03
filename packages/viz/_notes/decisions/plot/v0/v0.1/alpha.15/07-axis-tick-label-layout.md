@@ -1,6 +1,6 @@
 # ADR-07：Axis tick label 自适应布局
 
-- 状态：Accepted（已实现）
+- 状态：Accepted
 - 决策日期：2026-07-04
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.15 roadmap](./roadmap.md) · [plot-design.md §3.9 Guide](../../../../../architecture/plot-design.md#39-guide)
 
@@ -20,7 +20,7 @@ ADR-06 处理的是 ticks 本身：候选 tick source、visible tick density、t
 | 首尾保留                |      `labelFlush` / bound 相关 |                     手动 | `showMinLabel/showMaxLabel` |                           自动 |            `includeBounds` |               keepHeader / keepTail | 新增                |
 | 边界溢出                |    `labelBound` / `labelFlush` |      margins / text mark |             overflow 类配置 |        overflow justify/remove | labelOffset 注明会裁剪风险 |                           transform | 新增简化版          |
 | 省略号 / 换行           |                   `labelLimit` | text `lineWidth` 可 wrap |     overflow / width 类配置 | wrap by disabling autoRotation |             无通用自动换行 |             autoEllipsis / autoWrap | 延后，不在本 ADR    |
-| 函数 formatter / 表达式 |                    `labelExpr` |      `tickFormat` 可函数 |            formatter 可函数 |                      formatter |                   callback |               labelFormatter 可函数 | 不进 PlotSpec IR    |
+| 函数 formatter / 表达式 |                    `labelExpr` |      `tickFormat` 可函数 |            formatter 可函数 |                      formatter |                   callback |               labelFormatter 可函数 | 不进 IRPlotSpec IR  |
 
 资料来源：[Vega axes](https://vega.github.io/vega/docs/axes/)、[Vega-Lite axis](https://vega.github.io/vega-lite/docs/axis.html)、[Observable Plot axis mark](https://observablehq.com/plot/marks/axis)、[ECharts axisLabel changelog](https://echarts.apache.org/zh/changelog.html)、[Highcharts axis labels autoRotation](https://api.highcharts.com/highcharts/xAxis.labels.autoRotation)、[Chart.js common tick options](https://www.chartjs.org/docs/latest/axes/cartesian/_common_ticks.html)、[G2 axis](https://g2.antv.antgroup.com/en/manual/component/axis)。
 
@@ -94,7 +94,7 @@ tickLabels: {
 - `overflow: 'flush'` 对首尾附近 label 做边缘对齐，减少被裁剪概率。
 - `tolerance` 省略为 1。
 
-自适应布局使用 plot 现有文本估算能力，例如 `estimateLabelWidth` 与 font size。它不是 renderer 真实测量，不承诺像浏览器排版一样精确；但它必须确定性、JSON-safe、与 SVG / Canvas renderer 无关。未来如果 core 提供稳定 text measurement，可在不改 PlotSpec 的前提下替换内部测量。
+自适应布局使用确定性的文本宽度估算与 font size，不依赖 renderer 真实测量，也不承诺与浏览器排版完全一致。未来如果 core 提供稳定 text measurement，可以在不改 IRPlotSpec 的前提下替换估算策略。
 
 Theme 可以给 `tickLabels.layout` 提供视觉默认，但不能把 `tickLabels.format`、label 文本内容或 tick source 放进 theme。局部 guide 的 `tickLabels.layout` 覆盖 theme。
 
@@ -106,7 +106,7 @@ Theme 可以给 `tickLabels.layout` 提供视觉默认，但不能把 `tickLabel
 4. 固定 `rotate` 继续保留，兼容现有 schema，并让用户能强制 0 / 45 / 90 等角度。
 5. 暂不做 ellipsis / wrap，避免在没有真实文本测量和文本截断契约时把问题扩大。
 
-## 实现补充：旋转标签端点对齐
+## 最终约束：旋转标签端点对齐
 
 实现后补充一个布局细节：cartesian tick label 发生旋转时，不能只改变 bbox 估算，还需要把文字节点沿 tick 外侧法线外移到旋转后端点对齐的位置，否则竖排长标签的中心仍靠近轴线，视觉上会压到或穿过 baseline。
 
@@ -128,10 +128,6 @@ Theme 可以给 `tickLabels.layout` 提供视觉默认，但不能把 `tickLabel
 - label formatter 函数或表达式。
 - interaction state，例如 hover / selected label。
 - label 背景、描边、pin / leader line。
-- chart preset；后续 chart 可消费本 PlotSpec 能力。
+- chart preset；后续 chart 可消费本 IRPlotSpec 能力。
 
 ---
-
-> **实现指针**：本 ADR 已随 plot v0.1-alpha.15 发布落地；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在发布 tag 历史中。
-
-> 🔖 发布后压缩；压缩前完整施工蓝图 = `git show plot-v0.1.0-alpha.15:packages/viz/_notes/decisions/v0/v0.1/alpha.15/07-axis-tick-label-layout.md`。

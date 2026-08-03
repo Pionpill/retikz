@@ -1,4 +1,4 @@
-﻿# ADR-02：normalize + derive-interval + jitter
+# ADR-02：normalize + derive-interval + jitter
 
 状态：Accepted
 发布：`@retikz/plot` / `@retikz/plot-react` / `@retikz/plot-vanilla` `0.1.0-alpha.12`
@@ -36,23 +36,6 @@ React 侧复用 ADR-01 引入的统一 transform 表面：
 
 Vanilla / SSR 侧继续通过 Plot IR 自动消费，无额外 API。
 
-## 实现指针
-
-最终行为以代码为准，主要落在：
-
-- `packages/viz/plot/src/schemas/transform/**`
-- `packages/viz/plot/src/providers/transform/**`
-- `packages/viz/plot/src/providers/statistics/**`
-- `packages/viz/plot/src/pipeline/{expand,provenance}.ts`
-- `packages/viz/plot-react/src/components/{transform,build-plot-spec}.ts`
-
-验证覆盖：
-
-- `packages/viz/plot/tests/transform/statistics.test.ts`
-- `packages/viz/plot/tests/lower/transform.test.ts`
-- `packages/viz/plot-react/tests/components/build-plot-spec.test.tsx`
-- `packages/viz/plot-vanilla/tests/render-plot.test.ts`
-
 ## 影响
 
 alpha.12 后，Plot pipeline 可以表达百分比堆叠、派生区间柱、可复现 jitter 散点等常见统计图形。所有变换仍保持 JSON-serializable IR 与确定性 lowering。
@@ -65,5 +48,3 @@ alpha.12 后，Plot pipeline 可以表达百分比堆叠、派生区间柱、可
 - 高级统计 transform。
 - mark-local transform。
 - 真实数据加载或异步数据处理。
-
-> 🔖 本文件压缩前完整施工蓝图 = `git show 20392fb1f39f0383e9d8f8a29f31850da99b8825:_notes/decisions/graph/v0/v0.1/alpha.12/02-derive-normalize-jitter.md`（封板全文）。

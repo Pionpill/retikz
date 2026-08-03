@@ -1,6 +1,7 @@
 # ADR-02：rect mark——双维 band 正交 cell 的 heatmap 格，复用 ADR-01 `projectCell` 几何 + sequential color 取值
 
-- 状态：Accepted
+- 状态：Superseded
+- 替代：[alpha.12 ADR-03](../alpha.12/03-mark-abstraction-registry.md) 与 [ADR-04](../alpha.12/04-mark-surface-convergence.md)；独立 rect surface 已收编为 `IntervalMark` 的 bounds × coordinate 形态
 - 决策日期：2026-06-16
 - 关联：[alpha.11 roadmap](./roadmap.md) · [alpha.11 ADR-01：cell-geometry-projection](./01-cell-geometry-projection.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.7 mark 表 / §8.3 mark 几何 × coordinate / §8.1 可连接性](../../../../../architecture/plot-design.md)
 
@@ -49,7 +50,3 @@ React sugar `<RectMark>` 与 `<BarMark>` / `<PointMark>` 同风格：`x` / `y` /
 纯新增 mark + `<RectMark>` 组件，非 breaking。三包 lockstep 交付：plot 改 IR + lowering；plot-react 加组件 + build-plot-spec 推断（`hasRect` 强制 x/y 双 band，与显式 `<Scale>` 冲突时 fail-loud）；plot-vanilla **无 src 改动**——`renderPlot(spec, data)` mark 无关、纯 spec 驱动，新 mark 经 IR + lowering 自动渲染。
 
 ---
-
-实现指针：mark IR / cell 构造 / 下沉装配 / color 白名单见 commit `74df2ab1`，落地于 `packages/viz/plot/src/ir/mark.ts`、`packages/viz/plot/src/lower/{anchor,mark,expand}.ts`（消费 ADR-01 `packages/viz/plot/src/lower/project.ts` 的 `projectCell` / `Cell` / `CellGeometry`）；React sugar 见 `packages/viz/plot-react/src/components/{marks.tsx,build-plot-spec.ts}`。测试见 `packages/viz/plot/tests/lower/rect.test.ts`、`packages/viz/plot/tests/ir/mark.test.ts`、`packages/viz/plot-react/tests/components/build-plot-spec.test.tsx`、`packages/viz/plot-vanilla/tests/render-plot.test.ts`（SSR heatmap）。文档见 `apps/docs/src/modules/docs/contents/viz/components/mark/rect/`。
-
-> 🔖 本文件压缩前完整施工蓝图 = `git show 6902289a:_notes/decisions/plot/v0/v0.1/alpha.11/02-rect-mark.md`（封板全文）。

@@ -7,7 +7,7 @@ import { act } from 'react-dom/test-utils';
 import { MemoryRouter, useNavigate } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { AppSidebarMenuItem } from '@/modules/docs/layout/sidebar';
+import { AppSidebarMenu, AppSidebarMenuItem } from '@/modules/docs/layout/sidebar';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -51,6 +51,8 @@ const renderMenuItem = (): HTMLElement => {
 const findButton = (container: HTMLElement, label: string): HTMLButtonElement | undefined =>
   Array.from(container.querySelectorAll('button')).find(button => button.textContent.trim() === label);
 
+const ShowcaseIcon = (props: { className?: string }) => <svg aria-label="Showcase icon" {...props} />;
+
 afterEach(() => {
   roots.splice(0).forEach(root => act(() => root.unmount()));
   document.body.replaceChildren();
@@ -71,5 +73,46 @@ describe('<AppSidebarMenuItem>', () => {
     const activeLeaf = findButton(container, 'Principles');
     expect(activeLeaf).toBeDefined();
     expect(activeLeaf?.className).toContain('bg-accent');
+  });
+});
+
+describe('<AppSidebarMenu>', () => {
+  it('在一级页面 label 左侧渲染 Showcase 图标', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    roots.push(root);
+
+    act(() => {
+      root.render(
+        <MemoryRouter initialEntries={['/viz/chart/points/scatter']}>
+          <AppSidebarMenu
+            moduleId="viz"
+            categories={[
+              {
+                value: 'chart',
+                label: 'Chart',
+                modules: [
+                  {
+                    value: 'points',
+                    label: 'Scatter & Points',
+                    Icon: ShowcaseIcon,
+                    children: [{ value: 'scatter', label: 'Scatter' }],
+                  },
+                ],
+              },
+            ]}
+          />
+        </MemoryRouter>,
+      );
+    });
+
+    const chartLabel = container.querySelector('h4');
+    const pointsButton = findButton(container, 'Scatter & Points');
+    const scatterButton = findButton(container, 'Scatter');
+
+    expect(chartLabel?.querySelector('svg')).toBeNull();
+    expect(pointsButton?.querySelector('svg[aria-label="Showcase icon"]')).not.toBeNull();
+    expect(scatterButton?.querySelector('svg')).toBeNull();
   });
 });

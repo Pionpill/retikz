@@ -6,7 +6,7 @@ import { z as zod } from 'zod';
 
 import type { ChartRecipe, ChartRecipeSeed, ChartRecipeStyleContext } from '../../src/providers';
 
-import { chartRecipeOf } from '../../src/providers';
+import { chartRecipeOf, ConnectedScatterChartRecipe, InfrastructureChartRecipe } from '../../src/providers';
 import { assertChartSpatialRoot, ChartSharedBaseSchema } from '../../src/schemas';
 
 const minimalPlot = (field: string): IRPlotSpec => ({
@@ -32,6 +32,35 @@ const styleContext: ChartRecipeStyleContext = {
 };
 
 describe('Chart recipe typing', () => {
+  it('让每个 recipe leaf bind 都移除显式 undefined 并保持 JSON round-trip', () => {
+    const infrastructure = chartRecipeOf(InfrastructureChartRecipe).bind({
+      namespace: 'chart',
+      type: '__infrastructure-fixture',
+      id: undefined,
+      data: { reference: 'rows' },
+      encoding: { x: 'amount', y: 'margin' },
+      mark: { size: undefined, opacity: { kind: 'constant', value: 0.5 } },
+    }).spec;
+    const connectedScatter = chartRecipeOf(ConnectedScatterChartRecipe).bind({
+      namespace: 'chart',
+      type: 'connected-scatter',
+      id: undefined,
+      data: { reference: 'rows' },
+      encoding: {
+        x: { field: 'amount', scale: undefined },
+        y: { field: 'margin' },
+        order: 'month',
+        series: undefined,
+      },
+      components: { connection: undefined },
+    }).spec;
+
+    expect(Object.hasOwn(infrastructure, 'id')).toBe(false);
+    expect(JSON.parse(JSON.stringify(infrastructure))).toEqual(infrastructure);
+    expect(Object.hasOwn(connectedScatter, 'id')).toBe(false);
+    expect(JSON.parse(JSON.stringify(connectedScatter))).toEqual(connectedScatter);
+  });
+
   it('异构 recipe 绑定后只解析一次并恢复各自的精确 spec', () => {
     let parseCountA = 0;
     let parseCountB = 0;

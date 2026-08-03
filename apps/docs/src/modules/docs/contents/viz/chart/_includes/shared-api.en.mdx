@@ -1,0 +1,132 @@
+## Axis
+
+`Axis` uses the complete Plot axis contract. In addition to choosing a dimension, it controls the axis line, tick glyphs, labels, grid, title, placement, and layer independently.
+
+| Prop                                 | Type                                                | Default | Description                                                                               |
+| ------------------------------------ | --------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------- |
+| `dimension`                          | `AxisProps['dimension']`                            | —       | Coordinate role to decorate; built-in 2D coordinates use `x` or `y`                       |
+| `scale`                              | `AxisProps['scale']`                                | —       | Position-scale shortcut for this dimension                                                |
+| `line`                               | `AxisProps['line']`                                 | Theme   | Axis visibility, color, width, opacity, extent, and endpoint arrows                       |
+| `ticks`                              | `AxisProps['ticks']`                                | Auto    | Tick source, count, interval, density, endpoint policy, and line/shape/custom-shape glyph |
+| `crossing`                           | `AxisProps['crossing']`                             | —       | Tick and label conflict policy at an axis crossing value                                  |
+| `tickLabels`                         | `AxisProps['tickLabels']`                           | Visible | Format, gap, rotation, anchor, font, and auto rotate/hide/bounds layout                   |
+| `grid`                               | `AxisProps['grid']`                                 | `false` | Major/minor tick sources, density, style, and composition-view targets                    |
+| `title`                              | `AxisProps['title']`                                | —       | Title text, placement, anchor, shift, font, and adaptive layout                           |
+| `placement`                          | `AxisProps['placement']`                            | `auto`  | Side, edge, or origin placement                                                           |
+| `coordinateView`                     | `AxisProps['coordinateView']`                       | —       | Named composition view binding                                                            |
+| `facetId` / `scaffoldId` / `trackId` | `AxisProps['facetId' \| 'scaffoldId' \| 'trackId']` | —       | Binding to the corresponding composition declaration                                      |
+| `layer`                              | `AxisProps['layer']`                                | —       | Semantic layer override for the axis scope                                                |
+| `id`                                 | `AxisProps['id']`                                   | —       | Stable axis handle                                                                        |
+
+## Legend
+
+`Legend` explains a color, size, opacity, or shape channel directly. When multiple scales drive the same channel, `scale` is required to disambiguate the source; Plot fails loudly instead of guessing.
+
+| Prop         | Type                        | Default     | Description                                             |
+| ------------ | --------------------------- | ----------- | ------------------------------------------------------- |
+| `channel`    | `LegendProps['channel']`    | —           | Non-position channel to explain                         |
+| `scale`      | `LegendProps['scale']`      | Auto        | Bind the only scale; required when the channel has many |
+| `title`      | `LegendProps['title']`      | —           | String, multiline text, or styled text block            |
+| `position`   | `LegendProps['position']`   | `'right'`   | Side whose reserved band contains the legend            |
+| `orient`     | `LegendProps['orient']`     | By position | Horizontal or vertical item flow                        |
+| `ticks`      | `LegendProps['ticks']`      | Auto        | Tick source for ramp or size legends                    |
+| `tickLabels` | `LegendProps['tickLabels']` | Visible     | Item/tick-label visibility and formatting               |
+| `style`      | `LegendProps['style']`      | Theme       | Local container, item, ramp, and text tokens            |
+| `layer`      | `LegendProps['layer']`      | —           | Semantic layer override for the legend scope            |
+
+## Label
+
+Datum labels are shared by position marks through `DatumLabelProps`; chart-level headings and captions use `TitleLabel` and `CaptionLabel`. Both participate in Plot label placement and space reservation.
+
+| Prop                                      | Type                                                                     | Default  | Description                                                     |
+| ----------------------------------------- | ------------------------------------------------------------------------ | -------- | --------------------------------------------------------------- |
+| `label`                                   | `DatumLabelProps['label']`                                               | —        | Datum-label content field                                       |
+| `labelDisplayFormat`                      | `DatumLabelProps['labelDisplayFormat']`                                  | —        | Display format for numeric or temporal fields                   |
+| `labelPosition`                           | `DatumLabelProps['labelPosition']`                                       | `top`    | Label position relative to the host mark                        |
+| `labelDistance`                           | `DatumLabelProps['labelDistance']`                                       | `12`     | Distance from the host boundary                                 |
+| `labelPin`                                | `DatumLabelProps['labelPin']`                                            | `false`  | Leader-line visibility and style                                |
+| `labelTextColor` / `labelOpacity`         | `DatumLabelProps['labelTextColor' \| 'labelOpacity']`                    | Theme    | Label color and opacity                                         |
+| `labelFont`                               | `DatumLabelProps['labelFont']`                                           | Theme    | Datum-label font                                                |
+| `labelRotate`                             | `DatumLabelProps['labelRotate']`                                         | `'none'` | Label rotation strategy or angle                                |
+| `labelKeepUpright`                        | `DatumLabelProps['labelKeepUpright']`                                    | `false`  | Keep text upright after rotation                                |
+| `resolveLabel`                            | `DatumLabelProps['resolveLabel']`                                        | —        | Runtime-only custom content function; also requires a mark `id` |
+| `TitleLabel` / `CaptionLabel` `text`      | `TitleLabelProps['text']` \| `CaptionLabelProps['text']`                 | —        | String, multiline text, or styled text block                    |
+| `TitleLabel` / `CaptionLabel` `placement` | `TitleLabelProps['placement']` \| `CaptionLabelProps['placement']`       | By role  | Side or normalized-point placement                              |
+| `reserveSpace`                            | `TitleLabelProps['reserveSpace']` \| `CaptionLabelProps['reserveSpace']` | By role  | Whether the label reserves Plot layout space                    |
+
+## Scale
+
+`Scale` requires both `dimension` and `type`. The `type` discriminator decides which remaining fields are legal; continuous, point, and band branches cannot be mixed. Non-position channels still resolve through mark bindings and the Plot scale registry.
+
+| Prop        | Type                      | Default | Description                                     |
+| ----------- | ------------------------- | ------- | ----------------------------------------------- |
+| `dimension` | `ScaleProps['dimension']` | —       | The `x` or `y` position dimension               |
+| `type`      | `ScaleProps['type']`      | —       | Required discriminator selecting a branch below |
+
+### Continuous scales
+
+Use `linear`, `time`, `log`, `sqrt`, `symlog`, or `radial`.
+
+| Prop              | Type                                                         | Default                     | Description                              |
+| ----------------- | ------------------------------------------------------------ | --------------------------- | ---------------------------------------- |
+| `domain`          | `ScaleProps['domain']`                                       | Data                        | Continuous numeric or temporal domain    |
+| `domainPadding`   | `Extract<ScaleProps, { type: 'linear' }>['domainPadding']`   | `0.05` for inferred domains | Continuous-domain padding                |
+| `singleValueSpan` | `Extract<ScaleProps, { type: 'linear' }>['singleValueSpan']` | By scale                    | Expansion span for a single-value domain |
+| `base`            | `Extract<ScaleProps, { type: 'log' }>['base']`               | `10`                        | Available only for `type="log"`          |
+| `constant`        | `Extract<ScaleProps, { type: 'symlog' }>['constant']`        | `1`                         | Available only for `type="symlog"`       |
+
+### Point scale
+
+| Prop                | Type                                                           | Default    | Description                       |
+| ------------------- | -------------------------------------------------------------- | ---------- | --------------------------------- |
+| `domain`            | `ScaleProps['domain']`                                         | Data order | Categorical domain                |
+| `padding` / `align` | `Extract<ScaleProps, { type: 'point' }>['padding' \| 'align']` | `0.5`      | Outer padding and range alignment |
+
+### Band scale
+
+| Prop                            | Type                                                                      | Default                | Description                          |
+| ------------------------------- | ------------------------------------------------------------------------- | ---------------------- | ------------------------------------ |
+| `domain`                        | `ScaleProps['domain']`                                                    | Data order             | Categorical domain                   |
+| `paddingInner` / `paddingOuter` | `Extract<ScaleProps, { type: 'band' }>['paddingInner' \| 'paddingOuter']` | `0.1` / `paddingInner` | Inner and outer band padding         |
+| `align`                         | `Extract<ScaleProps, { type: 'band' }>['align']`                          | `0.5`                  | Distribution of padding across range |
+
+## Transform
+
+`Transform` props are the public `IRPlotTransform` discriminated union. Multiple operations run in declaration order and the same array can be passed through `Plot.dataTransforms`; mark-local entries such as `PointMark.transform` affect only that mark's data view.
+
+| Entry                          | Type                                                                                                                                                                             | Default | Description                                                                                                                     |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `<Transform {...operation} />` | `TransformProps`                                                                                                                                                                 | —       | One complete transform operation                                                                                                |
+| `Plot.dataTransforms`          | `PlotDslProps['dataTransforms']`                                                                                                                                                 | `[]`    | Plot-level transform chain before mark collection                                                                               |
+| `mark.transform`               | `PointMarkProps['transform']`                                                                                                                                                    | `[]`    | Transform chain local to one mark                                                                                               |
+| Built-in `kind`                | `'sort'` \| `'summarize'` \| `'select'` \| `'annotate'` \| `'stack'` \| `'bin'` \| `'normalize'` \| `'derive-interval'` \| `'relate'` \| `'jitter'` \| `'density'` \| `'smooth'` | —       | Select a built-in operation and expose its branch fields                                                                        |
+| Custom `kind`                  | `string`                                                                                                                                                                         | —       | Any registered external transform kind that does not collide with reserved names; its definition validates the remaining fields |
+
+## Theme and Layout
+
+Theme values are defaults only; explicit Axis, Legend, Label, Scale, and mark values win. Light and dark themes can provide separate `PlotProps['theme']` values without changing chart structure.
+
+| Prop                                  | Type                                                           | Default       | Description                                                          |
+| ------------------------------------- | -------------------------------------------------------------- | ------------- | -------------------------------------------------------------------- |
+| `Plot.colors`                         | `PlotProps['colors']`                                          | Built in      | Color sequence for categorical scales and unencoded marks            |
+| `Plot.theme.background`               | `NonNullable<PlotProps['theme']>['background']`                | Transparent   | Panel background fill                                                |
+| `Plot.theme.typography` / `labelText` | `NonNullable<PlotProps['theme']>['typography' \| 'labelText']` | Built in      | Text tokens for guides and static labels                             |
+| `Plot.theme.axis`                     | `NonNullable<PlotProps['theme']>['axis']`                      | Built in      | Defaults for `line`, `ticks.mark`, `tickLabels`, `title`, and `grid` |
+| `Plot.theme.legend`                   | `NonNullable<PlotProps['theme']>['legend']`                    | Built in      | Defaults for legend container, entries, ramps, and text              |
+| `Plot.theme.palette`                  | `NonNullable<PlotProps['theme']>['palette']`                   | Built in      | Categorical, series, sector, sequential, and diverging palettes      |
+| `Plot.layout.mode`                    | `NonNullable<PlotProps['layout']>['mode']`                     | `'auto'`      | Reserve decoration space automatically or use explicit padding only  |
+| `Plot.layout.autoPadding`             | `NonNullable<PlotProps['layout']>['autoPadding']`              | `true`        | Whether labels may expand outer padding                              |
+| `Plot.layout.padding`                 | `NonNullable<PlotProps['layout']>['padding']`                  | `0`           | Outer padding before automatic layout                                |
+| `Plot.width` / `height`               | `PlotProps['width' \| 'height']`                               | `480` / `300` | Logical Plot size; this showcase fixes it at `800 × 400`             |
+
+## Additional Marks
+
+The main example uses one primary mark. Reference lines, trends, intervals, or relations can still use public Plot marks. Additional marks share the same data, scales, coordinate, transforms, labels, theme, and lowering pipeline.
+
+| Component       | Props                | Main use                                                | Shared capabilities                                                |
+| --------------- | -------------------- | ------------------------------------------------------- | ------------------------------------------------------------------ |
+| `PathMark`      | `PathMarkProps`      | Lines, connected trajectories, and closed regions       | `transform`, `coordinateView`, `layer`, `channels`, and path style |
+| `IntervalMark`  | `IntervalMarkProps`  | Bars, histograms, intervals, sectors, and heatmaps      | Datum labels, transforms, channel styles, and composition views    |
+| `ReferenceMark` | `ReferenceMarkProps` | Threshold lines, tolerance bands, and reference regions | Line/band/region geometry, labels, path and fill style             |
+| `RelationMark`  | `RelationMarkProps`  | Source-to-target paths or ribbons                       | Relation geometry, labels, color, and extension channels           |
+| `PointMark`     | `PointMarkProps`     | Annotation points or a second point layer               | The same complete Point capabilities; must use a distinct `id`     |

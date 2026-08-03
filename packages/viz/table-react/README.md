@@ -14,11 +14,19 @@ import { DetailTable } from '@retikz/table-react';
   id="scores"
   dataRef="scores"
   data={rows}
+  style="neutral"
   columns={[
     { id: 'name', field: 'name', header: 'Name', bodyLayout: { padding: 6, wrap: true } },
-    { id: 'score', field: 'score', header: 'Score', bodyLayout: { horizontalAlign: 'end' } },
+    {
+      id: 'score',
+      field: 'score',
+      header: 'Score',
+      formatter: { name: 'number', options: { specifier: '.0f' } },
+      bodyLayout: { horizontalAlign: 'end' },
+    },
   ]}
   layout={{ columnSize: { kind: 'auto' }, rowSize: { kind: 'auto' } }}
+  containerStyle={{ maxWidth: '100%', height: 'auto' }}
 />;
 ```
 
@@ -60,13 +68,26 @@ complete TableSpec.
 
 For persisted or props-based authoring, scalar entries are value shorthands, `null` means no Cell,
 and `{ value: null }` means a real null-valued Cell. Rich value/content objects carry span, layout,
-presentation, semantic fields, or direct Core/Tier 2 content.
+formatter/presentation references, semantic fields, or direct Core/Tier 2 content. Formatter and
+presentation references only apply to scalar value Cells; content Cells reject both because they
+already carry renderable children.
+
+Detail and manual roots forward the JSON-safe `rules`, `encodings`, `style`, `themeMode`, and
+`styleTokens` fields to the same TableSpec contract as plain authoring. `style` selects the Table
+preset. Standalone host CSS uses `containerStyle`; the former CSS-object `style` prop is removed,
+and embedded Tables reject `containerStyle` together with the other standalone-only host props.
 
 All three root components work standalone or as Tier 2 children of `@retikz/react` `Layout`.
 Standalone roots reuse the supported `Layout` host surface and observe `onManifest` from the same
 compile artifact. Embedded usage requires a stable spec id and rejects standalone host props or local
 `onManifest`; move them to the outer `Layout`. Datasets, custom definitions, and extra composites
 remain runtime inputs outside Table IR.
+
+Formatter, structure, presentation, and visual-scale definitions use the same `LowerTablesOptions`
+and lowering contract in standalone and embedded modes. Embedded roots additionally package those
+runtime inputs through `createTableRuntimeContribution()` for the outer Layout. Current visual
+encodings can suppress or emit descriptor data, but rendered Standard Legend composition and a
+final joined manifest are not yet part of this adapter.
 
 ## Install
 

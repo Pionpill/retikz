@@ -1,6 +1,6 @@
 # ADR-06：最薄 lowering 纵向闭环（lowerPlots：Plot IR + 数据 → core IR）
 
-- 状态：Accepted（已实现）
+- 状态：Accepted
 - 决策日期：2026-06-03
 - 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot-design.md §8 / §8.1 / §8.2 / §8.3](../../../../../architecture/plot-design.md) · 依赖：[ADR-01](./01-plot-spec-root.md) · [ADR-02](./02-plot-data.md) · [ADR-03](./03-plot-scale.md) · [ADR-04](./04-plot-coordinate.md) · [ADR-05](./05-plot-encoding-mark.md)
 
@@ -45,7 +45,3 @@ ADR-01~05 定了 Plot IR（配置）但**零行为**。本 ADR 落「逻辑」�
 - **主题 / config 默认层** → 后续。
 
 ---
-
-> **实现指针**：level `red`（动 `plot/src/lower/**` + `plot/src/index.ts`）、无 IR schema 改动（尺寸是 `lowerPlots` 运行时选项、不进 IR）。真源以代码为准——`lowerPlots` / `LowerPlotsOptions`（编排 + 入口 + `defineComposite`）及 `field`（路径解析 / 取值 / 排序）/ `scale`（线性映射 + domain·range 求解）/ `project`（坐标系投影）/ `mark`（point→Node / line→Path）helper，均在 `plot/src/lower/`，barrel `plot/src/lower/index.ts`；仅消费 core `compileToScene` / `defineComposite` / `CompositeDefinition` / IR 类型，不改 core。测试在 `packages/viz/plot/tests/lower/`。完整施工契约（文件 scope / 测试象限 / 依赖现有元素）见本文件 git 历史。
-
-> 🔖 封板压缩 commit `9115e6b4`；压缩前完整施工蓝图 = `git show 9115e6b4^:_notes/decisions/plot/v0/v0.1/alpha.1/06-plot-lowering.md`。

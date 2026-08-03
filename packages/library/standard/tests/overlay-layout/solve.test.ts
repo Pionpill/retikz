@@ -8,7 +8,7 @@ import {
   placeOverlayItem,
   resolveOverlayProfile,
   sortOverlayPaintOrder,
-} from '../../src/composites/overlay-layout/solve';
+} from '../../src/composites/layout/overlay-layout/solve';
 
 const result = (
   width: number,

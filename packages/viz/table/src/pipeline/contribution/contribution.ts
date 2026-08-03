@@ -153,25 +153,25 @@ export const createTableRuntimeContribution = (input: TableRuntimeContributionIn
     throw new Error(`table: runtime contribution dataset conflict for reserved reference "${runtimeReference}"`);
   }
 
-  const lowerOptions: LowerTablesOptions = {
+  const lowerOptions: LowerTablesOptions = Object.freeze({
     ...(input.lowerOptions ?? {}),
     ...(input.lowerOptions?.structureDefinitions === undefined
       ? {}
-      : { structureDefinitions: [...input.lowerOptions.structureDefinitions] }),
+      : { structureDefinitions: Object.freeze([...input.lowerOptions.structureDefinitions]) }),
     ...(input.lowerOptions?.presentationDefinitions === undefined
       ? {}
-      : { presentationDefinitions: [...input.lowerOptions.presentationDefinitions] }),
+      : { presentationDefinitions: Object.freeze([...input.lowerOptions.presentationDefinitions]) }),
     ...(input.lowerOptions?.formatterDefinitions === undefined
       ? {}
-      : { formatterDefinitions: [...input.lowerOptions.formatterDefinitions] }),
+      : { formatterDefinitions: Object.freeze([...input.lowerOptions.formatterDefinitions]) }),
     ...(input.lowerOptions?.visualScaleDefinitions === undefined
       ? {}
-      : { visualScaleDefinitions: [...input.lowerOptions.visualScaleDefinitions] }),
-  };
+      : { visualScaleDefinitions: Object.freeze([...input.lowerOptions.visualScaleDefinitions]) }),
+  });
   const envelope: TableRuntimeEnvelope = Object.freeze({
     [TableRuntimeEnvelopeMarker]: true,
     lowerOptions,
-    composites: [...(input.composites ?? [])],
+    composites: Object.freeze([...(input.composites ?? [])]),
   });
   return {
     datasets: Object.fromEntries([...Object.entries(data), [runtimeReference, envelope]]),

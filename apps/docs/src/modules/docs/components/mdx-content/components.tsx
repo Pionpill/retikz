@@ -8,6 +8,7 @@ import { cn } from '@/lib';
 
 import { ComponentPreview } from '../component-preview';
 import { CodeBlock } from '../highlight-code';
+import { ShowcaseGallery, ShowcaseTabs } from '../showcase';
 import { ApiValues } from './api-values';
 import { Comparison } from './comparison';
 import { ComponentAlert } from './component-alert';
@@ -173,5 +174,7 @@ export const mdxComponents: MDXComponents = {
   LinkedCard,
   PackageManagerInstall,
   SourceLinks,
+  ShowcaseGallery,
+  ShowcaseTabs,
   ZodSchema,
 };

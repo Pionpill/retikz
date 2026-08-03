@@ -487,6 +487,41 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'TablePresentationRef',
     url: '/viz/table/reference/contract-table#tablepresentationrefschema',
   },
+  TableFormatterRefSchema: {
+    schema: TableIR.TableFormatterRefSchema,
+    label: 'TableFormatterRef',
+    url: '/viz/table/reference/contract-table#tableformatterrefschema',
+  },
+  TableCellSelectorSchema: {
+    schema: TableIR.TableCellSelectorSchema,
+    label: 'TableCellSelector',
+    url: '/viz/table/reference/contract-table#tablecellselectorschema',
+  },
+  TableCellRuleSchema: {
+    schema: TableIR.TableCellRuleSchema,
+    label: 'TableCellRule',
+    url: '/viz/table/reference/contract-table#tablecellruleschema',
+  },
+  TableCellVisualEncodingSchema: {
+    schema: TableIR.TableCellVisualEncodingSchema,
+    label: 'TableCellVisualEncoding',
+    url: '/viz/table/reference/contract-table#tablecellvisualencodingschema',
+  },
+  TableStyleSchema: {
+    schema: TableIR.TableStyleSchema,
+    label: 'TableStyle',
+    url: '/viz/table/reference/contract-table#tablestyleschema',
+  },
+  TableThemeModeSchema: {
+    schema: TableIR.TableThemeModeSchema,
+    label: 'TableThemeMode',
+    url: '/viz/table/reference/contract-table#tablethememodeschema',
+  },
+  TableStyleTokensSchema: {
+    schema: TableIR.TableStyleTokensSchema,
+    label: 'TableStyleTokens',
+    url: '/viz/table/reference/contract-table#tablestyletokensschema',
+  },
   TableCellSpanSchema: {
     schema: TableIR.TableCellSpanSchema,
     label: 'TableCellSpan',

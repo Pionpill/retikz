@@ -9,4 +9,31 @@ describe('docs search index frontmatter', () => {
     expect(index['/kernel/get-start']?.zh?.description).toContain('安装 retikz');
     expect(index['/kernel/components/layout']?.en?.description.startsWith("'")).toBe(false);
   });
+
+  it('索引 Chart 页面内联展开后的共享 API 标题', async () => {
+    const index = await loadSearchIndex();
+
+    expect(index['/viz/chart/points/scatter']?.zh?.headings).toEqual(
+      expect.arrayContaining([
+        'Point Mark',
+        'Axis',
+        'Label',
+        'Scale',
+        'Transform',
+        'Theme 与 Layout',
+        'Additional Marks',
+      ]),
+    );
+    expect(index['/viz/chart/points/scatter']?.en?.headings).toEqual(
+      expect.arrayContaining([
+        'Point Mark',
+        'Axis',
+        'Label',
+        'Scale',
+        'Transform',
+        'Theme and Layout',
+        'Additional Marks',
+      ]),
+    );
+  });
 });

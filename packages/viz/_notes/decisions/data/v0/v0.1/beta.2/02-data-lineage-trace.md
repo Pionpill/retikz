@@ -60,17 +60,8 @@ data contract 新增 lineage 类型与 recorder 抽象；pipeline 新增 `create
 
 ## 验证
 
-- `lineage: {}` 记录 source 与 transform step 摘要。
-- field flow、reducer、selector、row sample、calculation details 可独立开关。
-- sample / calculation details 对非法 `maxRows` 或空字段白名单 fail-loud。
-- sink 与 `retainEvents` 行为覆盖。
-- 未注册 transform 仍按原路径抛错，不生成伪成功链路。
-- 完成提交：`6d5a45d27`。
+验证覆盖默认摘要、可选细节、采样上限与字段白名单、sink 保留策略，以及未注册 transform 的失败语义；链路能力保持 runtime-only，不改变原始数据处理结果。
 
 ## 遗留风险
 
 完整链路可能仍然很大。宿主应优先使用 summary / sink / 字段白名单，并只为审计面板或用户主动查看的对象保留细粒度事件。
-
-## 实现指针
-
-本 ADR 已在 data v0.1-beta.2 收尾时压缩；当前真源以代码、测试、文档站和 changelog 为准。完整施工契约保留在该 ADR 的 Accepted 历史版本中。

@@ -1,6 +1,7 @@
-﻿# ADR-06：声明式 `FieldDef.format`——可序列化的字段值解析词表，让 `resolveField` 退为纯逃生舱
+# ADR-06：声明式 `FieldDef.format`——可序列化的字段值解析词表，让 `resolveField` 退为纯逃生舱
 
-- 状态：Accepted
+- 状态：Superseded
+- 替代：[Data beta.1 ADR-01](../../../../data/v0/v0.1/beta.1/01-plot-data-migration.md)；声明式字段格式与 format registry 已迁入 `@retikz/data`
 - 决策日期：2026-06-07
 - 关联：[plot v0.1-alpha.6 roadmap](./roadmap.md) · 本里程碑 [ADR-02 可移植契约](./02-data-portability.md)（coercion）/ [ADR-04 resolveField](./04-field-resolver.md)（函数逃生舱）/ [ADR-05 type 可选](./05-optional-field-type.md) · [plot-design.md §3.1 数据模型](../../../../../architecture/plot-design.md)
 
@@ -16,7 +17,7 @@ Vega-Lite 的对策是 `data.format.parse`：在 spec 里**声明式**写 `{ "da
 
 `format` 是按 `DataFieldFormat`（`as const` 词表）取值的字符串，进 `data.model`、JSON 可序列化。lowering 时按 `(type, format)` 选内置 parser，喂 `normalizeRows`。
 
-**`format` ↔ `type` 关系（钉死，cross-review #1）**：每个 format 词项**唯一绑定一个 type**（`epochSeconds`/`epochMillis`/`slashDate`/`iso` → `temporal`；`numberString`/`percent` → `continuous`）。由此：
+**`format` ↔ `type` 关系**：每个 format 词项**唯一绑定一个 type**（`epochSeconds`/`epochMillis`/`slashDate`/`iso` → `temporal`；`numberString`/`percent` → `continuous`）。由此：
 
 - **`type` 省略 + 写 `format`**：format **蕴含** type——`{ name:'ratio', format:'percent' }` 等价 `{ name:'ratio', type:'continuous', format:'percent' }`，不再被推断误判成 categorical。format 是比推断更强的类型信号（仅次于显式 `type` / `resolveField.type`）。优先级：`resolveField.type > 显式 type > format 蕴含 > 推断`。
 - **`type` 写了 + 与 format 蕴含的 type 冲突**（`{ type:'continuous', format:'slashDate' }`）：lowering **fail-loud**，不静默。
@@ -68,10 +69,10 @@ DSL：
 3. **closed 词表而非任意 pattern 串**：先上**封闭枚举**覆盖高频场景，零新依赖；完整 strptime/d3-time-format pattern（`'%Y/%m/%d'`）留待 phase 2（需引 d3-time-format，catalog 登记）——见「不在本 ADR 范围」。
 4. **统一解析优先级**：`resolveField.parse`（函数）> `FieldDef.format`（声明式）> 内置默认 coerce。三者都汇到 `normalizeRows` 的 per-field parser 槽。
 
-## 已钉死（cross-review 合入 2026-06-07）
+## 最终约束
 
-- **`slashDate` 只收严格 `YYYY/MM/DD`**：按 **UTC 零点**转 epoch ms。`DD/MM/YYYY`、`MM/DD/YYYY` 地区歧义布局**不收**——留 phase 2 完整 pattern 串（`'%d/%m/%Y'`）显式指定，避免「同一 `01/02/2024` 在不同环境解析成不同日期」的隐式歧义。（cross-review #6）
-- **`format` 蕴含 `type`、冲突 fail-loud**：见上「决策」段；不存在「写了 format 却被推断成 categorical」的失效路径。（cross-review #1）
+- **`slashDate` 只收严格 `YYYY/MM/DD`**：按 **UTC 零点**转 epoch ms。`DD/MM/YYYY`、`MM/DD/YYYY` 地区歧义布局**不收**——留 phase 2 完整 pattern 串（`'%d/%m/%Y'`）显式指定，避免「同一 `01/02/2024` 在不同环境解析成不同日期」的隐式歧义。
+- **`format` 蕴含 `type`、冲突 fail-loud**：见上「决策」段；不存在「写了 format 却被推断成 categorical」的失效路径。
 
 ## 影响
 
@@ -86,6 +87,3 @@ DSL：
 - **完整日期 pattern 串**（d3-time-format / strptime `'%Y/%m/%d'`）——需新依赖，phase 2 单独 ADR。
 - **resolveField 函数逃生舱**——已是 ADR-04，本 ADR 只把它降为「词表外」兜底。
 - **数字 locale / 千分位完整支持**——先 `numberString` 宽松版，完整 locale 留后续。
-
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/data.ts` 与 `packages/viz/plot/src/lower/{coerce,validate,expand}.ts`，测试见 `packages/viz/plot/tests/lower/field-format.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.6/06-declarative-format.md`（封板全文）。

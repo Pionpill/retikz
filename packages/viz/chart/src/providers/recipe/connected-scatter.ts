@@ -16,7 +16,7 @@ import {
 import type { IRConnectedScatterChartSpec } from '../../schemas';
 import type { ChartPatchChange, ChartRecipe, ChartRecipeSeed, ChartRecipeStyleContext } from './types';
 
-import { ChartInspectionMemberKind, ConnectedScatterChartSpecSchema, ConnectedScatterChartType } from '../../schemas';
+import { ChartInspectionMemberKind, ChartType, ConnectedScatterChartSpecSchema } from '../../schemas';
 import { ChartRecipeInvariantError, ChartRecipeInvariantReason } from './invariant';
 import { chartRecipeId, createChartAxisGuides, createChartCartesian2DSeed, plotMarkValueOf } from './shared';
 
@@ -104,7 +104,7 @@ const createConnectedScatterSeed = (
   spec: IRConnectedScatterChartSpec,
   style: ChartRecipeStyleContext,
 ): ChartRecipeSeed => {
-  const cartesian = createChartCartesian2DSeed(ConnectedScatterChartType);
+  const cartesian = createChartCartesian2DSeed(ChartType.ConnectedScatter);
   const coordinateView = spec.composition?.defaultView;
   const authoredColor = spec.encoding.color;
   const authoredSeries = spec.encoding.series;
@@ -115,18 +115,19 @@ const createConnectedScatterSeed = (
   let colorScale: IRPlotScaleOperation | undefined;
   let colorScaleName: string | undefined;
 
-  if (authoredColor !== undefined && 'field' in authoredColor) {
-    colorScaleName = authoredColor.scale ?? chartRecipeId(ConnectedScatterChartType, 'scale.color');
+  if (authoredColor?.field !== undefined) {
+    colorScaleName = authoredColor.scale ?? chartRecipeId(ChartType.ConnectedScatter, 'scale.color');
     const fieldColor = { field: authoredColor.field, scale: colorScaleName };
     pointColor = plotMarkValueOf(fieldColor);
     connectionColor = fieldColor;
     connectionSeries ??= authoredColor.field;
     if (authoredColor.scale === undefined) colorScale = { type: PlotScale.Ordinal, name: colorScaleName };
-  } else if (authoredColor !== undefined) {
-    pointColor = plotMarkValueOf(authoredColor);
-    connectionStroke = plotMarkValueOf(authoredColor);
+  } else if (authoredColor?.value !== undefined) {
+    const constantColor = { value: authoredColor.value };
+    pointColor = plotMarkValueOf(constantColor);
+    connectionStroke = plotMarkValueOf(constantColor);
   } else if (authoredSeries !== undefined) {
-    colorScaleName = chartRecipeId(ConnectedScatterChartType, 'scale.series-color');
+    colorScaleName = chartRecipeId(ChartType.ConnectedScatter, 'scale.series-color');
     const fieldColor = { field: authoredSeries, scale: colorScaleName };
     pointColor = plotMarkValueOf(fieldColor);
     connectionColor = fieldColor;
@@ -139,7 +140,7 @@ const createConnectedScatterSeed = (
 
   const connection = PathMarkSchema.parse({
     type: PlotMark.Path,
-    id: chartRecipeId(ConnectedScatterChartType, 'mark.connection'),
+    id: chartRecipeId(ChartType.ConnectedScatter, 'mark.connection'),
     order: spec.encoding.order,
     ...(connectionSeries === undefined ? {} : { series: connectionSeries }),
     closed: false,
@@ -153,12 +154,12 @@ const createConnectedScatterSeed = (
   });
   const points = PointMarkSchema.parse({
     type: PlotMark.Point,
-    id: chartRecipeId(ConnectedScatterChartType, 'mark.points'),
+    id: chartRecipeId(ChartType.ConnectedScatter, 'mark.points'),
     color: pointColor,
     ...(coordinateView === undefined ? {} : { coordinateView }),
     encoding: { x: spec.encoding.x, y: spec.encoding.y },
   });
-  const axisGuides = createChartAxisGuides(ConnectedScatterChartType, style, coordinateView);
+  const axisGuides = createChartAxisGuides(ChartType.ConnectedScatter, style, coordinateView);
   const colorGuide: IRPlotGuide | undefined =
     style.legendEnabled && spec.guides === undefined && colorScaleName !== undefined
       ? { type: PlotGuide.Legend, channel: 'color', scale: colorScaleName }
@@ -291,13 +292,13 @@ const sameChannel = (left: unknown, right: unknown): boolean => JSON.stringify(l
 /** 验证 merge 后的 PlotSpec 仍保留 Connected Scatter 的不可撤销语义 */
 const validateConnectedScatterCore = (spec: IRConnectedScatterChartSpec, plotSpec: IRPlotSpec): void => {
   const requiredScaleNames = [
-    chartRecipeId(ConnectedScatterChartType, 'scale.x'),
-    chartRecipeId(ConnectedScatterChartType, 'scale.y'),
+    chartRecipeId(ChartType.ConnectedScatter, 'scale.x'),
+    chartRecipeId(ChartType.ConnectedScatter, 'scale.y'),
   ];
   if (spec.encoding.color !== undefined && 'field' in spec.encoding.color) {
-    requiredScaleNames.push(spec.encoding.color.scale ?? chartRecipeId(ConnectedScatterChartType, 'scale.color'));
+    requiredScaleNames.push(spec.encoding.color.scale ?? chartRecipeId(ChartType.ConnectedScatter, 'scale.color'));
   } else if (spec.encoding.color === undefined && spec.encoding.series !== undefined) {
-    requiredScaleNames.push(chartRecipeId(ConnectedScatterChartType, 'scale.series-color'));
+    requiredScaleNames.push(chartRecipeId(ChartType.ConnectedScatter, 'scale.series-color'));
   }
   if (requiredScaleNames.some(name => !plotSpec.scales.some(scale => scale.name === name))) {
     throw new ChartRecipeInvariantError(ChartRecipeInvariantReason.RequiredScale, ['scales']);
@@ -331,8 +332,8 @@ const validateConnectedScatterCore = (spec: IRConnectedScatterChartSpec, plotSpe
   if (
     !connection.success ||
     !points.success ||
-    connection.data.id !== chartRecipeId(ConnectedScatterChartType, 'mark.connection') ||
-    points.data.id !== chartRecipeId(ConnectedScatterChartType, 'mark.points') ||
+    connection.data.id !== chartRecipeId(ChartType.ConnectedScatter, 'mark.connection') ||
+    points.data.id !== chartRecipeId(ChartType.ConnectedScatter, 'mark.points') ||
     connection.data.closed !== false ||
     connection.data.order !== spec.encoding.order ||
     connection.data.series !== expectedSeries ||
@@ -349,7 +350,7 @@ const validateConnectedScatterCore = (spec: IRConnectedScatterChartSpec, plotSpe
 
 /** Connected Scatter canonical type 的内建 recipe */
 export const ConnectedScatterChartRecipe: ChartRecipe<IRConnectedScatterChartSpec> = {
-  type: ConnectedScatterChartType,
+  type: ChartType.ConnectedScatter,
   schema: ConnectedScatterChartSpecSchema,
   createSeed: createConnectedScatterSeed,
   validateCore: validateConnectedScatterCore,

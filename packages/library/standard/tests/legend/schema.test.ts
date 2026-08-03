@@ -7,17 +7,17 @@ import type {
   IRLegendRampContent,
   IRLegendTick,
   LegendInput,
-} from '../../src/composites/legend/types';
+} from '../../src/composites/presentation/legend/types';
 
+import { LayoutAlignment } from '../../src/composites/layout/shared';
 import {
   LegendContentKind,
   LegendDirection,
   LegendSampleAlignment,
   LegendWrap,
-} from '../../src/composites/legend/constants';
-import { createLegend } from '../../src/composites/legend/factory';
-import { LegendSchema } from '../../src/composites/legend/schema';
-import { LayoutAlignment } from '../../src/composites/shared/layout';
+} from '../../src/composites/presentation/legend/constants';
+import { createLegend } from '../../src/composites/presentation/legend/factory';
+import { LegendSchema } from '../../src/composites/presentation/legend/schema';
 
 const sample = { type: 'node', position: [0, 0], text: 'Sample' } as const;
 const label = { type: 'node', position: [0, 0], text: 'Label' } as const;

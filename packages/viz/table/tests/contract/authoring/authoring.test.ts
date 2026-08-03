@@ -62,6 +62,57 @@ describe('Table plain authoring', () => {
     expect(TableSpecSchema.parse(spec)).toEqual(spec);
   });
 
+  it('preserves and detaches detail formatter, rules, encodings, and style fields', () => {
+    const formatter = { name: 'number', options: { maximumFractionDigits: 1 } };
+    const rules: NonNullable<DetailTableSpecInput['rules']> = [
+      { selector: { fields: ['score'] }, appearance: { content: { color: '#b91c1c' } } },
+    ];
+    const encodings: NonNullable<DetailTableSpecInput['encodings']> = [
+      {
+        id: 'score-color',
+        selector: { fields: ['score'] },
+        channel: 'backgroundFill',
+        scale: { name: 'ordinal-color' },
+        legend: false,
+      },
+    ];
+    const styleTokens = { 'cell.content.color': '#27272a' } as const;
+    const input: DetailTableSpecInput = {
+      dataRef: 'scores',
+      columns: [{ id: 'score', field: 'score', formatter }],
+      rules,
+      encodings,
+      style: 'academic',
+      themeMode: 'dark',
+      styleTokens,
+    };
+    const spec = createDetailTableSpec(input);
+
+    expect(spec).toMatchObject({
+      structure: { columns: [{ id: 'score', field: 'score', formatter }] },
+      rules,
+      encodings,
+      style: 'academic',
+      themeMode: 'dark',
+      styleTokens,
+    });
+    expect(spec.structure.columns[0]).not.toBe(input.columns[0]);
+    expect(spec.rules).not.toBe(rules);
+    expect(spec.encodings).not.toBe(encodings);
+    expect(spec.styleTokens).not.toBe(styleTokens);
+
+    formatter.options.maximumFractionDigits = 3;
+    rules[0].selector.fields!.push('ignored');
+    encodings[0].selector.fields!.push('ignored');
+
+    expect(spec.structure.columns[0]?.formatter).toEqual({
+      name: 'number',
+      options: { maximumFractionDigits: 1 },
+    });
+    expect(spec.rules?.[0]?.selector.fields).toEqual(['score']);
+    expect(spec.encodings?.[0]?.selector.fields).toEqual(['score']);
+  });
+
   it('assembles a row-major manual structure without modifying its input', () => {
     const rows: ManualTableSpecInput['rows'] = [
       ['Name', 'Score'],
@@ -90,6 +141,63 @@ describe('Table plain authoring', () => {
     expect('data' in spec).toBe(false);
     expect(JSON.parse(JSON.stringify(spec))).toEqual(spec);
     expect(TableSpecSchema.parse(spec)).toEqual(spec);
+  });
+
+  it('preserves and detaches manual formatter, rules, encodings, and style fields', () => {
+    const rows: ManualTableSpecInput['rows'] = [
+      [{ value: 98, formatter: { name: 'number', options: { maximumFractionDigits: 0 } } }],
+    ];
+    const rules: NonNullable<ManualTableSpecInput['rules']> = [
+      { selector: { cellIds: ['cell.r0.c0'] }, appearance: { background: { fill: '#fef2f2' } } },
+    ];
+    const encodings: NonNullable<ManualTableSpecInput['encodings']> = [
+      {
+        id: 'score-color',
+        selector: { locations: ['body'] },
+        channel: 'backgroundFill',
+        scale: { name: 'ordinal-color' },
+        legend: false,
+      },
+    ];
+    const styleTokens = { 'cell.background.fill': '#18181b' } as const;
+    const input: ManualTableSpecInput = {
+      rows,
+      rules,
+      encodings,
+      style: 'vibrant',
+      themeMode: 'light',
+      styleTokens,
+    };
+    const spec = createManualTableSpec(input);
+
+    expect(spec).toMatchObject({
+      structure: { rows },
+      rules,
+      encodings,
+      style: 'vibrant',
+      themeMode: 'light',
+      styleTokens,
+    });
+    expect(spec.structure.rows).not.toBe(rows);
+    expect(spec.structure.rows[0]?.[0]).not.toBe(rows[0]?.[0]);
+    expect(spec.rules).not.toBe(rules);
+    expect(spec.encodings).not.toBe(encodings);
+    expect(spec.styleTokens).not.toBe(styleTokens);
+
+    const inputCell = rows[0]?.[0];
+    if (typeof inputCell !== 'object' || inputCell === null || !('formatter' in inputCell)) {
+      throw new Error('expected rich value Cell fixture');
+    }
+    inputCell.formatter!.options!.maximumFractionDigits = 2;
+    rules[0].selector.cellIds!.push('ignored');
+    encodings[0].selector.locations!.push('columnHeader');
+
+    expect(spec.structure.rows[0]?.[0]).toEqual({
+      value: 98,
+      formatter: { name: 'number', options: { maximumFractionDigits: 0 } },
+    });
+    expect(spec.rules?.[0]?.selector.cellIds).toEqual(['cell.r0.c0']);
+    expect(spec.encodings?.[0]?.selector.locations).toEqual(['body']);
   });
 
   it('delegates invalid detail and manual inputs to the Table schema', () => {

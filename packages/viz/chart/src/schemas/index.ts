@@ -1,3 +1,4 @@
+export * from './bubble';
 export * from './canonical';
 export * from './chart';
 export * from './connected-scatter';

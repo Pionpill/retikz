@@ -1,5 +1,6 @@
 import type { AnyChartRecipe, ChartRecipe, InternalChartSpecBound } from './types';
 
+import { BubbleChartRecipe } from './bubble';
 import { ConnectedScatterChartRecipe } from './connected-scatter';
 import { InfrastructureChartRecipe } from './infrastructure';
 import { ScatterChartRecipe } from './scatter';
@@ -21,5 +22,6 @@ export const chartRecipeOf = <TSpec extends InternalChartSpecBound>(recipe: Char
 export const BUILTIN_CHART_RECIPES = [
   chartRecipeOf(InfrastructureChartRecipe),
   chartRecipeOf(ScatterChartRecipe),
+  chartRecipeOf(BubbleChartRecipe),
   chartRecipeOf(ConnectedScatterChartRecipe),
 ] as const;

@@ -63,10 +63,10 @@ export const PlotScale = {
 理由：
 
 1. **补全 GoG 离散化三件套**：quantize/threshold/quantile 覆盖「等宽 / 业务断点 / 抗偏斜」三类真实需求，d3 现成。
-2. **颜色复用 ADR-01**：不另造配色词表——同一 `PlotColorScheme` + range，离散色 = 连续 scheme 的采样。这是 dep ADR-01 的实质（修评审 P2 的依赖含糊）。
+2. **颜色复用 ADR-01**：不另造配色词表——同一 `PlotColorScheme` + range，离散色 = 连续 scheme 的采样。这是 dep ADR-01 的实质。
 3. **fail-loud 契约清晰**：threshold 断点升序 + 色数匹配强校验、quantile 不接受显式数值 domain，避免静默截断 / 语义冲突。
 
-**实现校准（2026-06-08，与实现/测试对齐）**：
+**最终校准（2026-06-08，与实现/测试对齐）**：
 
 - **quantile 显式 domain = schema strip（非硬抛）**：决策⑤原写「给显式 domain → fail-loud」，落地为 `QuantileColorScaleSchema` 不定义 `domain` 字段、由 `z.object` 默认 strip（与全仓 scale schema 均裸 `z.object` 风格一致，不给 quantile 单独 `.strict()`）。效果是显式 domain 被静默剥离、lowering 不读、分位纯由数据定——目的达成（用户 domain 不生效），但形式是 strip 而非抛错。
 - **count×range 一致性也 fail-loud**：除 threshold 的 `range.length === breakpoints.length + 1`，quantize/quantile 在 **`count` 显式且 ≠ `range.length`** 时也 fail-loud（与 threshold 对称，修 adversarial WARNING；只给 range 省 count 仍宽容，档数 = range.length）。
@@ -78,6 +78,3 @@ export const PlotScale = {
 - **bin transform**（数据层分箱产新字段）→ alpha.12 Statistics（与 scale 层离散化正交：transform 改数据、scale 改映射）。
 - **React 离散化 scale 显式表面 / `<ColorScale>` DSL** → 顺延。
 - **legend 分箱 swatch 渲染** → [ADR-03](./03-legend-guide.md)。
-
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/scale.ts` 与 `packages/viz/plot/src/lower/{scale,expand}.ts`，测试见 `packages/viz/plot/tests/{ir/scale.schema,lower/discretization-scale}.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.8/02-discretization-scale.md`（封板全文）。

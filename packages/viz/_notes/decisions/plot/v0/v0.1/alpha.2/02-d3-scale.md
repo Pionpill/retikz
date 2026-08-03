@@ -1,6 +1,6 @@
 # ADR-02：采用 d3-scale 作 scale / 刻度 / 格式化基础（回溯 alpha.1 自写 linear）
 
-- 状态：Accepted（已实现）
+- 状态：Accepted
 - 决策日期：2026-06-04
 - 关联：[plot v0.1-alpha.2 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.5 scale / §3.9 guide / §13（plot 可拉 d3-scale）](../../../../../architecture/plot-design.md) · 回溯：[alpha.1 ADR-06 lowerPlots](../alpha.1/06-plot-lowering.md) · 消费方：[ADR-03 布局](./03-plot-area-layout.md) · [ADR-04 guide lowering](./04-guide-lowering.md)
 
@@ -12,8 +12,6 @@
 - **plot 是 Tier 2、可依赖 d3**——「运行时只准 zod」是 **core** 的白名单，plot 不进 core；plot-design §13 本就预期「图表会拉 d3-scale / 颜色映射」。`d3-scale` 的 `scaleLinear` 现成提供 domain/range/clamp/nice/ticks/tickFormat/invert：`scale.ticks(count)` 是成熟 1/2/5×10ⁿ 算法、`scale.tickFormat(count)` 是去尾零 + 自适应精度。alpha.3 的 band/time/ordinal/log 与颜色映射也都在 d3-scale 家族。自写既多 bug 又重复造轮子。
 
 ## 决策：plot 自 alpha.2 起以 d3-scale 为 scale/tick/format 基础；alpha.1 自写 linear 回溯重构为 scaleLinear
-
-`resolveLinearScale` 重写为基于 `d3.scaleLinear()`（domain 经 `d3-array` `extent` 推断或显式给定、range 由坐标系/plot area 给）；刻度与标签直接取 `scale.ticks(count)` / `scale.tickFormat(count)`。删除自写的 `linear` / `linearTicks` / `formatTickLabel` / `computeTicks`，原计划的 `lower/ticks.ts` 作废。plot 包加 `d3-scale` + `d3-array` 运行时依赖（catalog 登记）；**d3 只在 lowering 内部算、不进 IR**（IR 仍纯 JSON，core/render 不碰 d3）。返回的 d3 `ScaleLinear` 本身可作 `(value)=>number` 调用，投影器照常用，并暴露 `.ticks`/`.tickFormat` 供 guide。新增 `scaleTicks(scale, count)` 产 `{ values, labels }`、`DEFAULT_TICK_COUNT = 5`。真源见 `plot/src/lower/scale.ts`。
 
 理由：
 
@@ -37,11 +35,3 @@
 - **刻度怎么画（轴线 / tick / label）与位置（plot area）** → [ADR-04](./04-guide-lowering.md) / [ADR-03](./03-plot-area-layout.md)。
 
 ---
-
-> **实现指针**：level `red`（动 `plot/src/lower/**` + plot 包依赖）、非 breaking（守 alpha.1 投影 / single-datum 行为）。
->
-> - 真源以代码为准：`resolveLinearScale` / `scaleTicks` / `TickSet` / `DEFAULT_TICK_COUNT`（`plot/src/lower/scale.ts`，基于 `d3-scale` + `d3-array`）；d3 是 lowering 内部依赖、不进 IR / 不进包 barrel。`d3-scale` / `d3-array` 版本在 `pnpm-workspace.yaml` catalog。
-> - 测试见 `plot/tests/lower/scale.test.ts`（映射与 alpha.1 等价、nice 刻度、去尾零标签、tickCount 密度、single-datum 中点、空集 extent、退化/非有限 domain 锁定）与 `plot/tests/lower/lowerPlots.test.ts`（守 alpha.1 投影逐字不变）。
-> - 完整原文（d3 子包选择 / 测试象限 / 文件 scope）见本文件 git 历史。
-
-> 🔖 封板压缩 commit `7acbf962`；压缩前完整施工蓝图 = `git show 7acbf962^:_notes/decisions/plot/v0/v0.1/alpha.2/02-d3-scale.md`。
