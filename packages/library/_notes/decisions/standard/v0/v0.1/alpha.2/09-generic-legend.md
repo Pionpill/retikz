@@ -243,19 +243,17 @@ artifact 中不保存 field、channel、scale、datum、Cell、relation role、f
 
 sample 自身产生的 nested typed artifact 继续作为独立 Core artifact envelope 返回，不复制进 Legend artifact。本版本不承诺从 item/tick key 关联到 nested sample artifact，也不得从内部 probe / replay index 反推该关联；未来确需跨 artifact join 时先补 Core 通用 occurrence 关联合同。
 
-### 6. capability loading 保持显式，并允许同一 module 幂等汇合
+### 6. direct definition loading 保持显式
 
-Legend 通过 `LegendDefinition` 与 `LegendModule` 接入现有 Standard capability bundle、all preset、React static adapter 与 Vanilla adapter。
+Legend 通过 `LegendDefinition` 接入 Core `CompileOptions.composites`、React static adapter 与 Vanilla adapter。调用方只把当前 compile 所需的 definitions 显式传给 Core，不经过 Standard 的组合层
 
-领域包需要 Legend 时显式组合同一个 public `LegendModule` object，不依赖 import side effect、全局 registry 或 Core 反向发现。module identity 是同一次 JavaScript composition 中的对象引用 identity，不增加可序列化 token，也不使用 name 或结构相等模拟 identity。调用方又显式提供同一 module 时：
+领域包需要 Legend 时显式提供同一个 public `LegendDefinition` object，不依赖 import side effect、全局 registry 或 Core 反向发现。definition 直接进入 Core 唯一 registry；调用方又显式提供同一 definition 时，重复 composite key 继续由 Core fail-loud 诊断：
 
-- 同一 object reference 的重复输入按首次出现位置幂等合并，definitions 只贡献一次
-- name 相同但 object reference 不同的输入继续 fail-loud，即使字段结构相同
-- 不同 module 贡献相同 composite key 时继续交给 Core 唯一 registry 诊断
+- 重复输入不会被 Standard 静默去重
+- 不同 object 但相同 composite key 的输入继续由 Core 诊断
+- 缺失 sample 所需 definition 时保留明确的 provider key 与 occurrence diagnostic
 
-该规则只解决领域包传递依赖与调用方直接依赖的安全汇合，不允许 name-only 静默覆盖，也不把 package version negotiation 放进 runtime。
-
-LegendModule 只贡献 Legend 自身 definition。LegendDefinition 复用 Standard 已有 Box 词汇与 Core layout-aware contract，但不要求调用方同时加载 FlexLayout、GridLayout 或 OverlayLayout module，也不自动收集 sample 所需的未知 Tier 2 capability。sample 缺失 definition 时必须保留明确的 provider key 与 occurrence diagnostic。
+LegendDefinition 只贡献 Legend 自身 definition。它复用 Standard 已有 Box 词汇与 Core layout-aware contract，但不要求调用方同时提供 FlexLayout、GridLayout 或 OverlayLayout definition，也不自动收集 sample 所需的未知 Tier 2 capability
 
 ### 7. React 使用无头组合 authoring，Vanilla 保持 plain-data authoring
 
@@ -324,7 +322,7 @@ React adapter 把 marker tree 同步转换为 `LegendInput` 后，必须调用�
 
 ## 迁移与兼容性
 
-Standard alpha.2 尚未发布，本 ADR 可以直接新增公共能力并调整 capability bundle 重复 module 语义。React 直接移除接受 plain-data `content` / `title` 的旧 props，不保留双入口、兼容 alias 或 deprecation bridge；`LegendInput`、canonical `IRLegend` 与 Vanilla authoring 不受该 React surface 调整影响。
+Standard alpha.2 尚未发布，本 ADR 可以直接新增公共能力；Definition 重复注册继续由 Core 统一诊断。React 直接移除接受 plain-data `content` / `title` 的旧 props，不保留双入口、兼容 alias 或 deprecation bridge；`LegendInput`、canonical `IRLegend` 与 Vanilla authoring 不受该 React surface 调整影响。
 
 Plot 当前 `IRPlotLegendGuide`、Table 当前 Legend descriptor 与未来逻辑组件仍是各自领域真源。本 ADR 不直接修改这些领域 API；它们迁移时只把解析后的呈现段改为构造 `IRLegend`，并保持自己的默认值、locator、provenance 与交互契约。
 
@@ -349,7 +347,7 @@ Plot 当前 `IRPlotLegendGuide`、Table 当前 Legend descriptor 与未来逻辑
 - schema / contract 证据锁定 strict JSON、content union、默认 size / gap、identity、normalized tick 与非法状态拒绝
 - compile contract 使用 Core primitive、显式文本 Node、registered custom composite 与 nested Standard component 证明 title/sample/label 的开放性、Core 引用语义与缺失 capability 诊断
 - layout contract 证明 heterogeneous sample、title、空内容、content / fixed / fill 对各类父 proposal 的双轴 allocation、title / body content alignment、约束换行、ramp tick、overflow / clip 与 artifact bounds 只经 layout-aware probe/replay
-- capability loading 证明直接 module、领域传递 module、all preset、同 identity 幂等与同名冲突的确定结果
+- Definition 接入证明直接 Definition、领域显式传递、重复 composite key 与缺失 nested Definition 的确定结果
 - adapter parity 证明直接 IR、React 无头 marker tree 与 Vanilla plain data 产生同一 Standard input、Core 语义与 typed artifact；React 类型与失败证据同时锁定显式 form、marker 合法组合、Fragment 顺序、empty node、严格单 element / 单 `IRChild` 转换、混合 sibling 拒绝和旧 props 移除
 - 跨领域集成证据证明 Plot、Table 与逻辑组件可以生成同一通用 input，同时领域 provenance / locator 与交互状态不进入 Standard
 - renderer 只验证同一 Scene 的 SVG / Canvas parity，不建立 Legend renderer 分支或以 renderer 回读作为布局 oracle
@@ -359,7 +357,7 @@ Plot 当前 `IRPlotLegendGuide`、Table 当前 Legend descriptor 与未来逻辑
 - **所属能力域与能力面**：Drawing Complete 在 Core 之上的可选通用 Tier 2 呈现；协作 Visualization Complete 与 Tabular Visualization Complete
 - **解决的问题**：让多个领域把已经解析好的视觉解释结构复用为同一持久化 schema、约束布局、compile 与 artifact
 - **主责包与协作包**：Standard 主责 Legend 呈现；Plot/Table/逻辑组件主责领域解析、formatter、provenance / locator 与交互；Core/Math 提供 IR、text、measurement、replay 与 registry；adapters 等价暴露
-- **是否可由现有能力组合**：Core layout-aware composite 与 Standard Box Layout 已提供机制，但缺少 Legend 持久化语义、definition、artifact 与 module，需要扩展 Standard
+- **是否可由现有能力组合**：Core layout-aware composite 与 Standard Box Layout 已提供机制，但缺少 Legend 持久化语义、Definition 与 artifact，需要扩展 Standard
 - **是否需要下沉到依赖能力域**：不下沉 Legend；若任意 IRChild 仍无法沿当前 reference、probe / replay 合同布局，只补 Core 通用机制，不在 Standard 建旁路
 - **内部表达链路**：strict Legend schema → layout-aware CompositeDefinition → Standard Box Layout → Core IR + typed artifact
 - **外部扩展链路**：视觉 sample 直接使用 Core IR 或任意注册 CompositeDefinition；不新增 Legend 专用 provider family

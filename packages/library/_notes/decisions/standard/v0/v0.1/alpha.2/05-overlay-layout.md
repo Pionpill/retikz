@@ -64,7 +64,7 @@ export type IROverlayLayout = Readonly<{
 
 `IROverlayLayout`和item/placement均由schema parsed output推导；`OverlayLayoutInput`与item input使用 `z.input` 接受默认省略。`createOverlayLayout(input)` 返回canonical IR。
 
-公开导出 `OverlayPlacementSchema`、`OverlayLayoutItemSchema`、`OverlayLayoutSchema` 及对应 `IROverlayPlacement` / `OverlayPlacementInput`、`IROverlayLayoutItem` / `OverlayLayoutItemInput`、`IROverlayLayout` / `OverlayLayoutInput`；公开 `OverlayPlacementKind` / `OverlayPlacementKindValue`、`LayoutSizeParticipation` / `LayoutSizeParticipationValue`、`createOverlayLayout`、`OverlayLayoutDefinition`、`OverlayLayoutModule`。layout、item与placement各分支都是strict object/discriminated union，unknown field fail-loud；`at`、`anchor`、`offset` 三个嵌套point object也分别使用strict object，并把unknown field诊断定位到对应point字段。
+公开导出 `OverlayPlacementSchema`、`OverlayLayoutItemSchema`、`OverlayLayoutSchema` 及对应 `IROverlayPlacement` / `OverlayPlacementInput`、`IROverlayLayoutItem` / `OverlayLayoutItemInput`、`IROverlayLayout` / `OverlayLayoutInput`；公开 `OverlayPlacementKind` / `OverlayPlacementKindValue`、`LayoutSizeParticipation` / `LayoutSizeParticipationValue`、`createOverlayLayout`、`OverlayLayoutDefinition`。layout、item与placement各分支都是strict object/discriminated union，unknown field fail-loud；`at`、`anchor`、`offset` 三个嵌套point object也分别使用strict object，并把unknown field诊断定位到对应point字段。
 
 默认值：
 
@@ -195,9 +195,9 @@ natural contribution、anchor translation、alignment、baseline aggregation、s
 
 ## 影响
 
-- 新增 `standard.overlayLayout` 公开schema/factory/definition/module
+- 新增 `standard.overlayLayout` 公开 schema / factory / Definition
 - 不新增全局坐标、Scene primitive、renderer或editor API
-- StandardAllPreset、React/Vanilla和docs由ADR-06统一接线
+- React / Vanilla 和 docs 由 alpha.3 ADR-06 统一接线
 
 ## 能力完备性检查
 
@@ -222,7 +222,7 @@ natural contribution、anchor translation、alignment、baseline aggregation、s
 
 ## 最终实现摘要
 
-- 实现 `standard.overlayLayout` strict schema、factory、Definition、capability module，以及 aligned/positioned contribution 与 placement solver
+- 实现 `standard.overlayLayout` strict schema、factory、Definition，以及 aligned/positioned contribution 与 placement solver
 - positioned item 使用 content-local `at`、归一化 `anchor` 和可选 exact slot；`sizeParticipation`、alignment、offset 与稳定 `zIndex` paint order 保持正交
 - compile 复用 Core Scope transform/clip/replay；typed item/paint-order artifact 与 adapter/docs 由 ADR-06 收口
 

@@ -1,155 +1,118 @@
 ---
-title: 能力装载
-description: 用 capability module 与显式 bundle 为直接 IR、React 和 Vanilla 选择 Standard definitions，不引入全局注册。
+title: 直接 Definition 装载
+description: 通过 Core 的 CompileOptions.composites 按需注入 Standard Definition，不引入 Standard 自己的 bundle、preset 或全局注册
 ---
 
-直接编译持久化 Standard IR 时，先组合当前任务需要的 module，再把 bundle 的编译片段交给 Core：
+持久化 Standard IR 只保存 JSON-safe 数据，Definition 中的函数必须由宿主在编译时显式注入。Standard 直接复用 Core 的 `CompileOptions.composites`：
 
 ```ts
 import { compileToScene } from '@retikz/core';
-import { createStandardBundle, FrameModule, GridModule } from '@retikz/standard';
+import { FrameDefinition, GridDefinition } from '@retikz/standard';
 
-const drawingBundle = createStandardBundle([GridModule, FrameModule]);
-const scene = compileToScene(persistedIR, drawingBundle.compile);
+const scene = compileToScene(persistedIR, {
+  composites: [GridDefinition, FrameDefinition],
+});
 ```
 
-module 和 bundle 都是运行时配置；它们包含 definition 函数，不能写入 JSON IR。
+Standard 不再提供 `StandardCapabilityModule`、`StandardBundle`、`createStandardBundle()`、`*Module`、`StandardAllPreset` 或 `StandardLayoutPreset`。调用方按当前图实际使用的 composite 选择 Definition，定义数组直接进入 Core 唯一 registry
 
 ## 适用边界
 
-使用 bundle 的场景包括服务端编译、文件恢复、LLM 生成 IR 和需要稳定能力目录的工具链。仅使用 React JSX 时，组件静态 adapter 已按当前图贡献 definition，不需要额外 preset。
+这条路径适用于服务端编译、文件恢复、LLM 生成 IR 和需要控制依赖集合的工具链。它解决的是“编译时使用哪些 Definition”，不负责动态 import、运行时包分割、renderer 配置、布局策略或宿主生命周期
 
-bundle 只组合 `CompositeDefinition`。它不合并 renderer、布局策略、warning handler、React Context 或 Vanilla 生命周期，也不会在 import 时修改全局状态。
+React JSX 和 Vanilla embed 仍由各自 adapter 负责 authoring。它们会为当前内容贡献相同的 Definition；直接 IR 则由宿主显式传入 `composites`
 
 ## 定义能力
 
-Standard 内置 module 包括 `GridModule`、`AxesModule`、`FrameModule`、`FlexLayoutModule`、`GridLayoutModule`、`OverlayLayoutModule` 与 `LegendModule`。第三方 composite 仍以 Core `defineComposite()` 为真源；需要和官方能力一起组合时，可用普通结构化 module 分组：
+每个 Standard composite owner 直接导出自己的 Definition、factory、schema、artifact 和 lowering：
 
 ```ts
-import { CompositeBaseSchema, defineComposite } from '@retikz/core';
-import type { StandardCapabilityModule } from '@retikz/standard';
-import { z } from 'zod';
+import { GridDefinition, createGrid, GridSchema } from '@retikz/standard';
 
-const BadgeDefinition = defineComposite({
-  namespace: 'example',
-  type: 'badge',
-  schema: CompositeBaseSchema.extend({
-    namespace: z.literal('example'),
-    type: z.literal('badge'),
-    text: z.string(),
-  }),
-  expand: (node, _context) => ({ type: 'node', position: [0, 0], text: node.text }),
-});
-
-const BadgeModule = {
-  name: 'example.badge',
-  composites: [BadgeDefinition],
-} satisfies StandardCapabilityModule;
+const grid = GridSchema.parse(createGrid({ bounds: { min: [20, 20], max: [260, 150] }, spacing: 20 }));
+const compileOptions = { composites: [GridDefinition] };
 ```
 
-`name` 只用于 bundle 级异对象冲突诊断；真正的 composite lookup 仍读取 definition 的 `namespace` 与 `type`。同一 module 对象引用重复出现时幂等汇合并保留首次位置；不同对象即使结构相同，也不能共享 `name`。
+第三方 composite 同样使用 Core 的 `defineComposite()` 产生 Definition，再把它和所需的 Standard Definition 一起传给 `CompileOptions.composites`。Definition 的 `namespace` 与 `type` 是 Core lookup key；JSON IR 只保存对应 discriminator 和数据
 
 ## 注入宿主
 
-### 直接 IR 与 React IR 模式
-
-Core、React 的 `ir` prop 和 Vanilla 的直接 IR 路径都消费同一组 definitions：
+### 直接 IR 与 React `ir` 模式
 
 ```tsx
 import { Layout } from '@retikz/react';
-import { StandardAllPreset } from '@retikz/standard';
+import { FrameDefinition, GridDefinition } from '@retikz/standard';
 
-<Layout ir={persistedIR} composites={StandardAllPreset.compile.composites} />;
+<Layout ir={persistedIR} composites={[GridDefinition, FrameDefinition]} />;
 ```
 
-`StandardAllPreset` 包含当前版本发布的全部 Standard modules。需要更小集合时，使用 `createStandardBundle([GridModule, FrameModule])`。
-
-只需要布局家族时使用 `StandardLayoutPreset`。它按 FlexLayout、GridLayout、OverlayLayout 顺序提供三项 definitions。
+缺少某个 Definition 时，Core 保留 `COMPOSITE_NOT_REGISTERED` 诊断。Core 原生 child 和其它已注册 composite 仍按 Core 规则处理
 
 ### React JSX
 
-`<Grid>`、`<Axes>`、`<Frame>`、`<Legend>` 与三种布局容器继续通过组件静态 adapter 贡献 definition。嵌套布局共享 `standard.layout` namespace 与 maker，只向最外层 `Layout` 贡献一次家族 definitions。宿主组合这些贡献时仍以 definition 对象与 Core provider key 为准，不建立另一套覆盖优先级。
+`<Grid>`、`<Axes>`、`<Frame>`、`<Legend>` 和三个布局容器继续通过静态 adapter 贡献 Definition。嵌套布局共享 `standard.layout` contribution；Standard 不创建第二套 registry，也不把 adapter 的内部有序数组发布成 Standard preset
 
 ### Vanilla
 
-Vanilla embed 由 adapter 做 authoring 下沉。部分加载显式传所需 adapters；需要当前完整目录时使用浅冻结数组 `StandardVanillaAdapters`：
+Vanilla builder 继续使用 adapter 做 authoring；当前使用的 adapter 可以按需传入，也可以使用 `StandardVanillaAdapters` 这一 adapter 便利数组：
 
 ```ts
-import { StandardVanillaAdapters } from '@retikz/standard-vanilla';
-import { mountSvg } from '@retikz/vanilla';
+import { GridDefinition } from '@retikz/standard';
+import { renderToSvgString } from '@retikz/vanilla';
 
-mountSvg(container, figure, { adapters: StandardVanillaAdapters });
+const svg = renderToSvgString(persistedIR, {
+  compile: { composites: [GridDefinition] },
+});
 ```
 
-直接传 Standard IR 时不读取 adapters，只需把 `bundle.compile` 放进 runtime 的 `compile` 选项。
-
-只需要布局 embeds 时使用 `StandardLayoutVanillaAdapters`；完整 `StandardVanillaAdapters` 按 Grid、Axes、Frame、三种布局、Legend 的顺序提供当前目录。
-
-静态 adapter 与显式 bundle 是同一 capability 的两种装载来源，不是相互去重的层。若 JSX / embed 已贡献某个 definition，宿主又通过 bundle 注入相同 provider key，Core 会 fail-loud 报 `duplicate composite registration`。
+`StandardLayoutVanillaAdapters` 和 `StandardVanillaAdapters` 属于 `@retikz/standard-vanilla` 的 authoring 便利入口，不是 Standard 的 compile preset
 
 ## 执行机制
 
-1. capability module 按声明顺序提供 Core definitions。
-2. `createStandardBundle()` 先按 module 对象 identity 幂等汇合，再拒绝同名异对象，复制名称与 definition 引用并浅冻结返回容器。
-3. 宿主把 `bundle.compile.composites` 交给 Core composite registry。
-4. Core 按 definition 的 provider key 查找、校验并展开 Standard IR。
+1. 宿主从 `@retikz/standard` 选择当前图需要的 Definition
+2. 宿主把 Definition 数组放入 Core `CompileOptions.composites`
+3. Core 按 `namespace` / `type` 建立本次编译的 composite registry
+4. Core 校验 IR、展开 Definition，并产生 Scene、diagnostic 和适用的 typed artifact
 
 <SourceLinks
   sources={[
     {
-      label: 'module 与 bundle 的公开契约',
-      path: 'packages/library/standard/src/capability/types.ts',
-      startLine: 7,
-      endLine: 26,
+      label: 'Grid Definition 与公开 composite contract',
+      path: 'packages/library/standard/src/composites/presentation/grid/definition.ts',
     },
     {
-      label: 'bundle 的顺序、校验与冻结',
-      path: 'packages/library/standard/src/capability/create.ts',
-      startLine: 9,
-      endLine: 37,
+      label: 'Layout Definition',
+      path: 'packages/library/standard/src/composites/layout/flex-layout/definition.ts',
     },
   ]}
 />
 
 ## 错误与限制
 
-| 情况                             | 结果                                                                 |
-| -------------------------------- | -------------------------------------------------------------------- |
-| module 名为空或只含空白          | `createStandardBundle()` 立即抛错                                    |
-| 同一 module 对象重复出现         | 幂等汇合，保留首次位置，只贡献一次 definitions                       |
-| 不同 module 对象使用同一 name    | Standard 立即抛错，不按 name 或结构静默覆盖                          |
-| 不同 module 的 provider key 重复 | Core 报 `duplicate composite registration`                           |
-| JSX / embed 与 bundle 重复注入   | Core 报 `duplicate composite registration`，不会按来源自动去重       |
-| IR 引用未选择的 composite        | Core 产生 `COMPOSITE_NOT_REGISTERED`，跳过该节点并继续处理其它 child |
-
-module、bundle 与 adapter 都不能进入持久化 IR。`StandardAllPreset` 与 `StandardVanillaAdapters` 会随 Standard 版本增加已发布能力，不是跨版本固定目录。
+| 情况                                             | 结果                                                             |
+| ------------------------------------------------ | ---------------------------------------------------------------- |
+| IR 引用未注入的 Standard composite               | Core 产生 `COMPOSITE_NOT_REGISTERED`，保持明确诊断               |
+| 同一个 Definition 在数组中重复出现               | 不由 Standard 静默去重，交给 Core 的 duplicate registration 诊断 |
+| 不同对象使用相同 `namespace` / `type`            | Core 产生 `duplicate composite registration`                     |
+| Definition 进入持久化 JSON                       | 不允许；JSON 只保存 schema 定义的数据                            |
+| 直接 IR 与 JSX / embed 同时注入相同 provider key | Core fail-loud，不建立 Standard 优先级覆盖规则                   |
 
 ## API 参考
 
-| 导出                            | 所属包                     | 职责                                      |
-| ------------------------------- | -------------------------- | ----------------------------------------- |
-| `StandardCapabilityModule`      | `@retikz/standard`         | 用稳定名称分组 Core composite definitions |
-| `StandardBundle`                | `@retikz/standard`         | 保存 module 名称和必填 compile 片段       |
-| `createStandardBundle()`        | `@retikz/standard`         | 校验、组合并冻结选定 modules              |
-| `GridModule`                    | `@retikz/standard`         | Grid 的官方 module                        |
-| `AxesModule`                    | `@retikz/standard`         | Axes 的官方 module                        |
-| `FrameModule`                   | `@retikz/standard`         | Frame 的官方 module                       |
-| `LegendModule`                  | `@retikz/standard`         | Legend 的官方 module                      |
-| `FlexLayoutModule`              | `@retikz/standard`         | FlexLayout 的官方 module                  |
-| `GridLayoutModule`              | `@retikz/standard`         | GridLayout 的官方 module                  |
-| `OverlayLayoutModule`           | `@retikz/standard`         | OverlayLayout 的官方 module               |
-| `StandardLayoutPreset`          | `@retikz/standard`         | 三种布局 definitions 的 bundle            |
-| `StandardAllPreset`             | `@retikz/standard`         | 当前版本全部 Standard modules 的 bundle   |
-| `StandardLayoutVanillaAdapters` | `@retikz/standard-vanilla` | 三种布局 Vanilla adapters                 |
-| `StandardVanillaAdapters`       | `@retikz/standard-vanilla` | 当前版本全部 Standard Vanilla adapters    |
+| 导出                                                                      | 所属包                     | 职责                                           |
+| ------------------------------------------------------------------------- | -------------------------- | ---------------------------------------------- |
+| `GridDefinition`、`AxesDefinition`、`FrameDefinition`                     | `@retikz/standard`         | 对应 presentation composite 的 Core Definition |
+| `FlexLayoutDefinition`、`GridLayoutDefinition`、`OverlayLayoutDefinition` | `@retikz/standard`         | 对应布局 composite 的 Core Definition          |
+| `LegendDefinition`                                                        | `@retikz/standard`         | Legend 的 Core Definition 与 artifact contract |
+| `GridSchema`、`createGrid()` 等                                           | `@retikz/standard`         | 校验和构造 JSON-safe Standard 输入             |
+| `StandardLayoutVanillaAdapters`                                           | `@retikz/standard-vanilla` | 三种布局 authoring adapter 便利数组            |
+| `StandardVanillaAdapters`                                                 | `@retikz/standard-vanilla` | 当前 Standard Vanilla adapter 便利数组         |
 
-`StandardCapabilityModule` 包含 `name: string` 与 `composites: ReadonlyArray<CompositeDefinition>`。`StandardBundle` 包含 `modules: ReadonlyArray<string>` 和必填的 `compile.composites`；空 bundle 也返回空数组，无需空值分支。
-
-三个包都只公开根 package entry。所有能力是根入口 named export；不会为每个组件维护 `/grid`、`/axes` 等 package subpath。
+三个 Standard 包仍只发布根入口；Definition 是 named export，消费方 bundler 可按引用进行 tree-shaking。按需使用指编译时选择 Definition，不等同于运行时动态加载
 
 ## 相关
 
-- [快速开始](/standard/get-start)：从 React、Vanilla 与持久化 JSON 跑通一个 Grid
-- [复合](/standard/composite)：查看当前 Standard composite 目录
-- [布局容器](/standard/layout)：查看 Flex、Grid、Overlay 与 typed artifacts
-- [Core 扩展机制](/kernel/reference/runtime/extensions)：定义和注册第三方 Core definitions
+- [快速开始](/standard/get-start)：从 React、Vanilla 和持久化 JSON 使用 Grid
+- [复合组件](/standard/composite)：浏览 Standard composite 目录
+- [布局容器](/standard/layout)：Flex、Grid、Overlay 与 typed artifact
+- [Core 扩展机制](/kernel/reference/runtime/extensions)：定义和注册第三方 Core Definition

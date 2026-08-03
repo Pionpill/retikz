@@ -88,7 +88,7 @@ export type IRGridLayout = Readonly<{
 - schema：`GridTrackBreadthSchema`、`GridTrackSchema`、`GridPlacementSchema`、`GridLayoutItemSchema`、`GridLayoutSchema`
 - parsed/input type：`IRGridTrackBreadth` / `GridTrackBreadthInput`、`IRGridTrack` / `GridTrackInput`、`IRGridPlacement` / `GridPlacementInput`、`IRGridLayoutItem` / `GridLayoutItemInput`、`IRGridLayout` / `GridLayoutInput`
 - const/value：`GridAutoFlow` / `GridAutoFlowValue`、`GridOverlap` / `GridOverlapValue`、`GRID_LAYOUT_MAX_TRACKS_PER_AXIS`
-- capability：`createGridLayout`、`GridLayoutDefinition`、`GridLayoutModule`
+- capability：`createGridLayout`、`GridLayoutDefinition`
 
 layout、item、placement、track与breadth对象全部使用strict schema；unknown field fail-loud。placement refinement把错误定位到对应`column/row.start/span`，minmax refinement定位到`min/max`。
 
@@ -259,9 +259,9 @@ overflow=clip 使用 container allocation Scope clip；clip不改变 tracks。ne
 ## 影响
 
 - 新增 `standard.gridLayout`，不修改现有 `standard.grid`
-- 新增公开 track/item/container schema、factory、definition和module
+- 新增公开 track/item/container schema、factory 和 Definition
 - 不依赖或修改 Table；不把 track solver下沉Core
-- StandardAllPreset、adapter和docs由ADR-06统一接线
+- adapter 和 docs 由 alpha.3 ADR-06 统一接线
 
 ## 能力完备性检查
 
@@ -286,7 +286,7 @@ overflow=clip 使用 container allocation Scope clip；clip不改变 tracks。ne
 
 ## 最终实现摘要
 
-- 实现 `standard.gridLayout` strict schema、factory、Definition、capability module、显式/隐式 tracks、span 与稳定 non-dense auto-placement
+- 实现 `standard.gridLayout` strict schema、factory、Definition、显式/隐式 tracks、span 与稳定 non-dense auto-placement
 - track solver 支持 fixed、minimum/natural content、fraction 与 minmax，采用有界 aggregation、water-fill/fraction freeze 和物理 x→y contextual feedback
 - 与现有可视格线 `standard.grid` 保持独立；typed track/item artifact 与 adapter/docs 由 ADR-06 收口
 

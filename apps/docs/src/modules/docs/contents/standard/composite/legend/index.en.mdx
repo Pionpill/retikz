@@ -39,9 +39,9 @@ React composes content through `LegendTitle`, `LegendItem`, `LegendRamp`, and `L
 | ---------------- | --------------------------------------------------------------------------------------------------- |
 | React            | `Legend`, `LegendTitle`, `LegendItem`, `LegendRamp`, and `LegendTick` from `@retikz/standard-react` |
 | Vanilla          | `legend()` and `LegendVanillaAdapter` from `@retikz/standard-vanilla`                               |
-| IR / persistence | `LegendSchema`, `createLegend()`, `LegendDefinition`, and `LegendModule` from `@retikz/standard`    |
+| IR / persistence | `LegendSchema`, `createLegend()`, and `LegendDefinition` from `@retikz/standard`                    |
 
-See [Get Started](/standard/get-start) for complete mounting, `StandardBundle`, and persistence flows. Domain packages produce resolved samples; Standard Legend owns only generic presentation, layout, and typed artifacts.
+See [Get Started](/standard/get-start) for complete mounting, direct Definition injection, and persistence flows. Domain packages produce resolved samples; Standard Legend owns only generic presentation, layout, and typed artifacts.
 
 ## Examples
 
@@ -98,7 +98,7 @@ The Core composite registry consumes `LegendDefinition`. It first runs minimum a
 
 ### Nested capabilities and failures
 
-Core `Node`, `Path`, and `Scope` values can be used directly as `IRChild`. A nested Tier 2 composite still needs its own Definition in the same compile options. `LegendModule` contributes only `LegendDefinition`; it does not guess or globally install sample dependencies.
+Core `Node`, `Path`, and `Scope` values can be used directly as `IRChild`. A nested Tier 2 composite still needs its own Definition in the same compile options. The injected `LegendDefinition` does not guess or globally install sample dependencies.
 
 An unregistered Legend produces `COMPOSITE_NOT_REGISTERED`. If a nested composite probe fails, Legend preserves the original occurrence and fails the current Legend instead of continuing with an empty sample. Duplicate `items[].key` / `ticks[].key`, whitespace-only keys, out-of-range offsets, and decreasing tick offsets fail loudly at the schema boundary.
 
@@ -152,7 +152,7 @@ An unregistered Legend produces `COMPOSITE_NOT_REGISTERED`. If a nested composit
     },
     {
       label: 'Typed artifact schema',
-      path: 'packages/library/standard/src/composites/presentation/legend/artifact-schema.ts',
+      path: 'packages/library/standard/src/composites/presentation/legend/schema.ts',
       startLine: 42,
       endLine: 110,
     },
@@ -173,7 +173,7 @@ An unregistered Legend produces `COMPOSITE_NOT_REGISTERED`. If a nested composit
 | `legend(id, input)`    | `@retikz/standard-vanilla` | Create an embed consumed by `LegendVanillaAdapter`                    | —       |
 | `LegendVanillaAdapter` | `@retikz/standard-vanilla` | Lower an embed through `createLegend()` and contribute its Definition | —       |
 | `createLegend(input)`  | `@retikz/standard`         | Validate input, apply defaults, and add fixed discriminators          | —       |
-| `LegendModule`         | `@retikz/standard`         | Capability module that contributes `LegendDefinition` on demand       | —       |
+| `LegendDefinition`     | `@retikz/standard`         | Core Definition injected for the Legend composite on demand           | —       |
 | `LegendDefinition`     | `@retikz/standard`         | Core layout-aware composite definition                                | —       |
 
 `@retikz/standard` also exports the closed value objects `LegendContentKind`, `LegendDirection`, `LegendWrap`, and `LegendSampleAlignment`; `LegendSchema` below shows their concrete values.
@@ -237,7 +237,7 @@ An unregistered Legend produces `COMPOSITE_NOT_REGISTERED`. If a nested composit
 
 <ZodSchema name="LegendSchema" expandNested />
 
-`content.kind` selects the `items` or `ramp` branch. This is persisted `IRLegend`; function-bearing `LegendDefinition` and `LegendModule` values do not enter JSON.
+`content.kind` selects the `items` or `ramp` branch. This is persisted `IRLegend`; the function-bearing `LegendDefinition` does not enter JSON.
 
 ### LegendArtifactSchema
 
@@ -253,5 +253,5 @@ The Core composite artifact envelope separately records occurrence, namespace, a
 
 - [Tier 2 Composite](/kernel/concepts/design/composite): Definition registration, probes, and lowering boundaries
 - [Layout](/kernel/components/layout/overview): Core proposals, slots, replay, and artifact contracts
-- [Capability loading](/standard/extension/capability-loading): combine `LegendModule` with other on-demand capabilities
+- [Direct Definition Loading](/standard/extension/capability-loading): pass `LegendDefinition` and other selected Definitions to Core
 - [Box Layout](/standard/layout): sizing, padding, overflow, and bounds semantics reused by Legend

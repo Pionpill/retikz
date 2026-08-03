@@ -31,7 +31,7 @@ import { GridLayout, LayoutItem } from '@retikz/standard-react';
 </Layout>
 ```
 
-JSON/IR 路径使用 `createGridLayout()` 与 `GridLayoutDefinition`；Vanilla 使用 `gridLayout()` 与 `GridLayoutVanillaAdapter`。完整布局家族可通过 `StandardLayoutPreset` 或 `StandardLayoutVanillaAdapters` 装载。
+JSON/IR 路径使用 `createGridLayout()` 与 `GridLayoutDefinition`；Vanilla 使用 `gridLayout()` 与 `GridLayoutVanillaAdapter`。完整布局家族可在 `composites` 中传入三个 layout Definition，或使用 `StandardLayoutVanillaAdapters` 装载 Vanilla embed
 
 | 场景        | 公开入口                                                                                   |
 | ----------- | ------------------------------------------------------------------------------------------ |

@@ -23,7 +23,7 @@ v0.1 beta 收口时先抽出最小 `@retikz/data`：字段类型、field model�
 
 v0.2 默认消费这层共享数据语义；plot 专属的统计 transform、layout transform、coordinate / mark / guide 仍留在 plot。
 
-Standard v0.1 alpha.2 提供通用 Box Layout，并由 ADR-09 提供 Legend 呈现。Plot 可以在领域 schema 保持稳定的前提下，把解析后的 Legend 和外围 decoration item 交给 Standard；若 Standard capability loading、约束测量、artifact 或 provenance bridge 尚未闭环，对应迁移不得以 Plot 私有 fallback 提前实现。
+Standard v0.1 alpha.2 提供通用 Box Layout，并由 ADR-09 提供 Legend 呈现。Plot 可以在领域 schema 保持稳定的前提下，把解析后的 Legend 和外围 decoration item 交给 Standard；若 Standard direct Definition 接入、约束测量、artifact 或 provenance bridge 尚未闭环，对应迁移不得以 Plot 私有 fallback 提前实现。
 
 ## Milestones
 
@@ -45,7 +45,7 @@ Standard v0.1 alpha.2 提供通用 Box Layout，并由 ADR-09 提供 Legend 呈�
 
 - **plot v0.1**：GoG 基座、thin Plot、guide/theme、scope identity、locator/provenance、layer zIndex。
 - **data v0.1 beta**：共享字段、数据引用、formatter、通用 transform 基础契约。
-- **standard v0.1**：alpha.2 Box Layout 与 ADR-09 Legend、capability module 传递消费与领域无关 layout artifact。
+- **standard v0.1**：alpha.2 Box Layout 与 ADR-09 Legend、直接 Definition 传递消费与领域无关 layout artifact。
 - **chart v0.1**：并行消费 plot v0.2 能力，但不作为本 minor 的实现内容。
 - **core**：交互 runtime 依赖 hydration / hit-test / event plumbing；layout transform 仍 lower 到既有 core Node / Path / Scope，不绕开 core。
 

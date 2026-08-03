@@ -52,7 +52,7 @@ type IRGrid = {
 
 React `<Grid>` 与 Vanilla `grid()` 接收同一 `GridInput` 并生成同一 `IRGrid`。两者分别通过既有 `EmbeddableTier2Adapter` 与 `VanillaTier2Adapter` 在当前图内贡献同一 `GridDefinition`，不写全局状态。
 
-adapter contribution key 固定为 `standard.grid`，maker 是稳定模块级函数。同图多个 Grid 可以合并，并可与其它 `standard.*` composite 共存。直接 IR、服务端编译或工具链则通过 `GridModule`、部分 bundle 或 `StandardAllPreset` 显式提供 definition。
+adapter contribution key 固定为 `standard.grid`，maker 是稳定模块级函数。同图多个 Grid 可以合并，并可与其它 `standard.*` composite 共存。直接 IR、服务端编译或工具链则通过 `composites: [GridDefinition]` 显式提供 definition
 
 ## 被否决的方案
 

@@ -76,7 +76,7 @@ Persist a complete `IRGrid` rather than only `GridInput`. Complete IR includes `
 
 ```ts
 import { SceneSchema } from '@retikz/core';
-import { createGrid, createStandardBundle, GridModule, GridSchema } from '@retikz/standard';
+import { createGrid, GridDefinition, GridSchema } from '@retikz/standard';
 import { mountSvg } from '@retikz/vanilla';
 
 const storageKey = 'retikz:grid';
@@ -102,22 +102,22 @@ const scene = SceneSchema.parse({
   viewBox: { x: 0, y: 0, width: 280, height: 170 },
   children: [storedGrid],
 });
-const gridBundle = createStandardBundle([GridModule]);
+const gridCompile = { composites: [GridDefinition] };
 
 const container = document.querySelector('#diagram');
 if (container === null) throw new Error('Missing #diagram container');
 
 mountSvg(container, scene, {
-  compile: gridBundle.compile,
+  compile: gridCompile,
   output: { width: 280, height: 170 },
 });
 ```
 
-If the bundle does not select `GridModule`, Core emits `COMPOSITE_NOT_REGISTERED` and skips the Grid. Other registered or native Core children still compile. Use `StandardAllPreset.compile` when the host needs every current Standard capability.
+If `GridDefinition` is not provided, Core emits `COMPOSITE_NOT_REGISTERED` and skips the Grid. Other registered or native Core children still compile. When a figure needs more Standard composites, place the corresponding Definitions in the same `composites` array
 
 ## Next: replace handwritten coordinates with a layout container
 
-Layout JSX uses `FlexLayout`, `GridLayout`, `OverlayLayout`, and direct `LayoutItem` children. The three containers share one `standard.layout` contribution. Direct IR can inject `StandardLayoutPreset.compile`, while Vanilla can pass `StandardLayoutVanillaAdapters`.
+Layout JSX uses `FlexLayout`, `GridLayout`, `OverlayLayout`, and direct `LayoutItem` children. The three containers share one `standard.layout` contribution. Direct IR can inject `[FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition]`, while Vanilla can pass `StandardLayoutVanillaAdapters`
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
@@ -137,11 +137,11 @@ import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 
 ## Next Steps
 
-| Page                                                         | Continue with                                                   |
-| ------------------------------------------------------------ | --------------------------------------------------------------- |
-| [Grid](/standard/composite/grid)                             | Spacing, major lines, boundaries, and border                    |
-| [Axes](/standard/composite/axes)                             | Arrows, ticks, labels, and directional grid                     |
-| [Frame](/standard/composite/frame)                           | Automatic bounds, gap, border, and label                        |
-| [Legend](/standard/composite/legend)                         | Discrete samples, continuous ramps, probes, and typed artifacts |
-| [Layout Containers](/standard/layout)                        | Flex, Grid, Overlay, and typed artifacts                        |
-| [Capability Loading](/standard/extension/capability-loading) | Modules, partial bundles, the all preset, and host boundaries   |
+| Page                                                                | Continue with                                                   |
+| ------------------------------------------------------------------- | --------------------------------------------------------------- |
+| [Grid](/standard/composite/grid)                                    | Spacing, major lines, boundaries, and border                    |
+| [Axes](/standard/composite/axes)                                    | Arrows, ticks, labels, and directional grid                     |
+| [Frame](/standard/composite/frame)                                  | Automatic bounds, gap, border, and label                        |
+| [Legend](/standard/composite/legend)                                | Discrete samples, continuous ramps, probes, and typed artifacts |
+| [Layout Containers](/standard/layout)                               | Flex, Grid, Overlay, and typed artifacts                        |
+| [Direct Definition Loading](/standard/extension/capability-loading) | Definition selection, Core injection, and host boundaries       |
