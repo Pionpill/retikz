@@ -27,7 +27,7 @@ import {
   OverlayLayoutDefinition,
   OverlayPlacementKind,
 } from '../../src';
-import { createLayoutArtifactItem, sortLayoutSpacing } from '../../src/composites/shared/layout/internal';
+import { createLayoutArtifactItem, sortLayoutSpacing } from '../../src/composites/layout/internal';
 
 const ArtifactLeafSchema = CompositeBaseSchema.extend({
   namespace: z.literal('layout-artifact-test'),

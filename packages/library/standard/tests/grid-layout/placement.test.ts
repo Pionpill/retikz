@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { GRID_LAYOUT_MAX_TRACKS_PER_AXIS, GridAutoFlow, GridOverlap } from '../../src';
-import { resolveGridPlacements } from '../../src/composites/grid-layout/placement';
+import { resolveGridPlacements } from '../../src/composites/layout/grid-layout/placement';
 
 const item = (
   key: string,

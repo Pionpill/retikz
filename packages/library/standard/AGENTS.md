@@ -12,8 +12,9 @@
 
 ## 源码组织
 
-- Standard 按横向能力组织，`composites/<capability>/` 是 schema、types、definition、factory 与 lowering 的默认 owner
-- 能力专有内容留在能力目录；两个及以上 composite 确认复用的稳定契约或纯逻辑才进入 `composites/shared/`
-- `composites/shared/` 按职责使用 `schemas/`、`types/` 或语义子域；包内共享但不公开的子域可以有自己的 barrel，但不得进入向上公共 barrel
+- Standard 按能力家族组织：呈现复合能力以 `composites/presentation/<capability>/` 为 owner，布局家族以 `composites/layout/<capability>/` 为 owner
+- 呈现共享契约进入 `composites/presentation/shared/`；布局公开共享契约进入 `composites/layout/shared/`
+- 布局私有纯逻辑进入 `composites/layout/internal/`；`internal/` 不得进入向上公共 barrel
+- 各 family 的 shared 目录按职责使用 `schemas/`、`types/` 或语义子域；包内共享但不公开的子域可以有自己的 barrel，但不得进入向上公共 barrel
 - 新能力仍需在 ADR 中确认 package metadata、release group、schema、definition / registry、lowering 和文档闭环
 - package exports 只保留根入口；组件增长通过根入口 named exports 与 `sideEffects: false` 支持按需消费，不逐组件扩展 subpath
