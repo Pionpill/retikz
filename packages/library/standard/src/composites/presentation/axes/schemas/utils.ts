@@ -1,11 +1,8 @@
-import { enumerateLattice } from '../shared/lattice';
-import { AxesTickExtent, AxesTickSourceKind } from './constants';
+import { enumerateLattice } from '../../shared/lattice';
+import { AxesTickExtent, AxesTickSourceKind } from '../constants';
 
-/** 单轴正负方向的绘图长度 */
-export interface AxesResolvedExtent {
-  /** 负方向长度 */
+interface AxesResolvedExtent {
   negative: number;
-  /** 正方向长度 */
   positive: number;
 }
 

@@ -10,7 +10,7 @@ describe('Standard React definition loading', () => {
       renderToStaticMarkup(
         <Layout width={120} height={80}>
           <Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />
-          <Axes extent={{ x: 20, y: 20 }} />
+          <Axes x={{ extent: 20 }} y={{ extent: 20 }} />
           <Frame id="contract">
             <FrameTitle text="Contract" />
             <Node position={[0, 0]} text="Body" />

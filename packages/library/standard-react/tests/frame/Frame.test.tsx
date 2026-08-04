@@ -134,7 +134,7 @@ describe('<Frame>', () => {
     const result = buildIRWithContributions(
       <>
         <Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />
-        <Axes extent={{ x: 20, y: 20 }} />
+        <Axes x={{ extent: 20 }} y={{ extent: 20 }} />
         <Frame id="group/frame">
           <FrameTitle>Group</FrameTitle>
           <Node position={[0, 0]} text="A" />

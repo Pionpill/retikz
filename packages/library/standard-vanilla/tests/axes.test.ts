@@ -7,14 +7,18 @@ import { describe, expect, it } from 'vitest';
 import { axes, AxesVanillaAdapter, grid, GridVanillaAdapter } from '../src';
 
 const input: AxesInput = {
-  origin: [100, 80],
-  extent: { x: 40, y: { negative: 20, positive: 40 } },
-  grid: { spacing: 1, offset: [0.5, -0.5], style: { dashPattern: [2, 1] } },
+  origin: { position: [100, 80], label: '0' },
   x: {
+    extent: 40,
+    grid: { spacing: 1, offset: 0.5, style: { dashPattern: [2, 1] } },
     line: { arrows: 'both', arrowDetail: { shape: 'openStealth', scale: 1.25 } },
     ticks: { source: { kind: 'spacing', spacing: 10, extent: 'positive' } },
   },
-  y: { ticks: { source: { kind: 'values', values: [-20, 20, 40] } } },
+  y: {
+    extent: { negative: 20, positive: 40 },
+    grid: { spacing: 1, offset: -0.5, style: { dashPattern: [2, 1] } },
+    ticks: { source: { kind: 'values', values: [-20, 20, 40] } },
+  },
 };
 
 describe('axes()', () => {

@@ -7,17 +7,19 @@ import { AxesDefinition, createAxes, lowerAxes } from '../../../src';
 
 const endpoints = (path: IRPath) => path.children.map(step => ('to' in step ? step.to : undefined));
 
+const hiddenAxis = { extent: 20, line: false, ticks: false, grid: false, label: false } as const;
+
 describe('lowerAxes', () => {
-  it('lowers asymmetric extents, grid, axes, ticks, and static labels in stable order', () => {
+  it('lowers asymmetric extents, independent grids, axes, ticks, and static labels in stable order', () => {
     const lowered = lowerAxes(
       createAxes({
-        origin: [100, 80],
-        extent: {
-          x: { negative: 40, positive: 60 },
-          y: { negative: 20, positive: 40 },
+        origin: {
+          position: [100, 80],
+          label: '0',
         },
-        grid: { spacing: 20, style: { stroke: '#e2e8f0' } },
         x: {
+          extent: { negative: 40, positive: 60 },
+          grid: { spacing: 20, style: { stroke: '#e2e8f0' } },
           ticks: {
             source: { kind: 'spacing', spacing: 20 },
             endpointGap: 0,
@@ -31,6 +33,8 @@ describe('lowerAxes', () => {
           },
         },
         y: {
+          extent: { negative: 20, positive: 40 },
+          grid: { spacing: 20, style: { stroke: '#e2e8f0' } },
           ticks: {
             source: { kind: 'values', values: [-20, 20, 40] },
             endpointGap: 0,
@@ -38,7 +42,6 @@ describe('lowerAxes', () => {
           },
           label: { text: 'y', end: 'negative', offset: 10 },
         },
-        originLabel: '0',
       }),
     );
 
@@ -67,9 +70,9 @@ describe('lowerAxes', () => {
       [120, 77],
       [140, 77],
       [160, 77],
-      [97, 100],
-      [97, 60],
-      [97, 40],
+      [100 - 3, 100],
+      [100 - 3, 60],
+      [100 - 3, 40],
     ]);
 
     expect(lowered.slice(20)).toEqual([
@@ -93,9 +96,8 @@ describe('lowerAxes', () => {
   it('places arrow marks at independently configured axis endpoints', () => {
     const lowered = lowerAxes(
       createAxes({
-        extent: { x: 20, y: 20 },
-        x: { line: { arrows: 'negative' }, label: false },
-        y: { line: { arrows: 'both' }, label: false },
+        x: { extent: 20, line: { arrows: 'negative' }, label: false },
+        y: { extent: 20, line: { arrows: 'both' }, label: false },
       }),
     ) as Array<IRPath>;
 
@@ -109,9 +111,8 @@ describe('lowerAxes', () => {
   it('merges shared and endpoint arrow details onto negative and positive marks', () => {
     const lowered = lowerAxes(
       createAxes({
-        extent: { x: 20, y: 20 },
-        y: false,
         x: {
+          extent: 20,
           line: {
             arrows: 'both',
             arrowDetail: {
@@ -124,6 +125,7 @@ describe('lowerAxes', () => {
           },
           label: false,
         },
+        y: hiddenAxis,
       }),
     ) as Array<IRPath>;
 
@@ -139,14 +141,22 @@ describe('lowerAxes', () => {
     ]);
   });
 
-  it('uses axis-local grid offsets without moving the axes origin or extent', () => {
+  it('uses independent axis-local grid offsets without moving the shared origin or extents', () => {
     const lowered = lowerAxes(
       createAxes({
-        origin: [100, 80],
-        extent: { x: 20, y: 20 },
-        grid: { spacing: 10, offset: [5, -5] },
-        x: { line: false, label: false },
-        y: { line: false, label: false },
+        origin: { position: [100, 80] },
+        x: {
+          extent: 20,
+          line: false,
+          grid: { spacing: 10, offset: 5, style: { stroke: '#ef4444' } },
+          label: false,
+        },
+        y: {
+          extent: 20,
+          line: false,
+          grid: { spacing: 10, offset: -5, style: { stroke: '#3b82f6' } },
+          label: false,
+        },
       }),
     ) as Array<IRPath>;
 
@@ -184,31 +194,33 @@ describe('lowerAxes', () => {
         [120, 65],
       ],
     ]);
+    expect((lowered[0] as IRPath).stroke).toBe('#ef4444');
+    expect((lowered[4] as IRPath).stroke).toBe('#3b82f6');
   });
 
   it('supports a single number line and keeps ticks when its line is hidden', () => {
     const numberLine = lowerAxes(
       createAxes({
-        origin: [50, 40],
-        extent: { x: 30, y: 20 },
-        y: false,
+        origin: { position: [50, 40] },
         x: {
+          extent: 30,
           line: { arrows: 'both' },
           ticks: { source: { kind: 'spacing', spacing: 10, extent: 'positive' }, endpointGap: 0 },
           label: 't',
         },
+        y: hiddenAxis,
       }),
     );
     const hiddenLine = lowerAxes(
       createAxes({
-        origin: [50, 40],
-        extent: { x: 30, y: 20 },
-        y: false,
+        origin: { position: [50, 40] },
         x: {
+          extent: 30,
           line: false,
           ticks: { source: { kind: 'values', values: [-20, 20] } },
           label: false,
         },
+        y: hiddenAxis,
       }),
     );
 
@@ -223,9 +235,9 @@ describe('lowerAxes', () => {
   it('places tick segments on the configured perpendicular side and keeps labels on their default side', () => {
     const lowered = lowerAxes(
       createAxes({
-        origin: [50, 40],
-        extent: { x: 20, y: 20 },
+        origin: { position: [50, 40] },
         x: {
+          extent: 20,
           line: false,
           ticks: {
             source: { kind: 'values', values: [10] },
@@ -236,6 +248,7 @@ describe('lowerAxes', () => {
           label: false,
         },
         y: {
+          extent: 20,
           line: false,
           ticks: {
             source: { kind: 'values', values: [10] },
@@ -265,9 +278,9 @@ describe('lowerAxes', () => {
   it('filters spacing and explicit ticks near either endpoint while preserving the exact gap boundary', () => {
     const lowered = lowerAxes(
       createAxes({
-        origin: [30, 30],
-        extent: { x: 20, y: 20 },
+        origin: { position: [30, 30] },
         x: {
+          extent: 20,
           line: false,
           ticks: {
             source: { kind: 'values', values: [-20, -14, -13, 13, 14, 20] },
@@ -276,6 +289,7 @@ describe('lowerAxes', () => {
           label: false,
         },
         y: {
+          extent: 20,
           line: false,
           ticks: { source: { kind: 'spacing', spacing: 10 } },
           label: false,
@@ -297,14 +311,14 @@ describe('lowerAxes', () => {
   it('keeps endpoint ticks when endpointGap is zero', () => {
     const lowered = lowerAxes(
       createAxes({
-        origin: [30, 30],
-        extent: { x: 20, y: 20 },
-        y: false,
+        origin: { position: [30, 30] },
         x: {
+          extent: 20,
           line: false,
           ticks: { source: { kind: 'values', values: [-20, 20] }, endpointGap: 0 },
           label: false,
         },
+        y: hiddenAxis,
       }),
     ) as Array<IRPath>;
 
@@ -317,11 +331,9 @@ describe('lowerAxes', () => {
   it('uses a ten-unit origin-label offset for shorthand text', () => {
     const lowered = lowerAxes(
       createAxes({
-        origin: [50, 40],
-        extent: { x: 20, y: 20 },
-        x: { line: false, label: false },
-        y: false,
-        originLabel: '0',
+        origin: { position: [50, 40], label: '0' },
+        x: { extent: 20, line: false, label: false },
+        y: hiddenAxis,
       }),
     );
 
@@ -336,7 +348,12 @@ describe('lowerAxes', () => {
       {
         type: 'scene',
         version: 1,
-        children: [createAxes({ extent: { x: 20, y: 20 }, x: { label: false }, y: { label: false } })],
+        children: [
+          createAxes({
+            x: { extent: 20, label: false },
+            y: { extent: 20, label: false },
+          }),
+        ],
       },
       { composites: [AxesDefinition], onWarn: warning => warnings.push(warning.code) },
     ).scene;
@@ -351,7 +368,10 @@ describe('lowerAxes', () => {
       {
         type: 'scene',
         version: 1,
-        children: [createAxes({ extent: { x: 20, y: 20 } }), { type: 'node', position: [4, 4], text: 'kept' }],
+        children: [
+          createAxes({ x: { extent: 20 }, y: { extent: 20 } }),
+          { type: 'node', position: [4, 4], text: 'kept' },
+        ],
       },
       { onWarn: warning => warnings.push(warning.code) },
     );

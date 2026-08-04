@@ -4,79 +4,75 @@ import type { IRStandardPathStrokeStyle } from '../shared/types';
 import type { IRAxes } from './types';
 
 import { enumerateLattice } from '../shared/lattice';
-import { enumerateAxesTickValues, resolveAxesExtent } from './axis';
 import { AxesArrowMode, AxesLabelEnd, AxesTickSide } from './constants';
+import { enumerateAxesTickValues, resolveAxesExtent } from './schemas/utils';
 
 type AxesChild = IRPath | IRNode;
-type AxesAxis = Exclude<IRAxes['x'], false>;
+type AxesAxis = IRAxes['x'];
 type AxesTicks = Exclude<AxesAxis['ticks'], false | undefined>;
 type AxesTickLabels = Exclude<AxesTicks['labels'], false | undefined>;
 type AxesTextStyle = NonNullable<AxesTickLabels['style']>;
 type AxesAxisLabel = Exclude<AxesAxis['label'], false>;
-type AxesOriginLabel = Exclude<IRAxes['originLabel'], false>;
+type AxesOriginLabel = Exclude<IRAxes['origin']['label'], false>;
 
 /** 将 Standard Axes 规则确定性下沉为已有 Core Path 与 Node */
 export const lowerAxes = (axes: IRAxes): Array<AxesChild> => {
   const children: Array<AxesChild> = [];
-  const [originX, originY] = axes.origin;
-  const extentX = resolveAxesExtent(axes.extent.x);
-  const extentY = resolveAxesExtent(axes.extent.y);
+  const [originX, originY] = axes.origin.position;
+  const extentX = resolveAxesExtent(axes.x.extent);
+  const extentY = resolveAxesExtent(axes.y.extent);
   const minX = originX - extentX.negative;
   const maxX = originX + extentX.positive;
   const minY = originY - extentY.positive;
   const maxY = originY + extentY.negative;
 
-  if (axes.grid !== undefined) {
-    const [spacingX, spacingY] =
-      typeof axes.grid.spacing === 'number'
-        ? [axes.grid.spacing, axes.grid.spacing]
-        : [axes.grid.spacing.x, axes.grid.spacing.y];
-    const [offsetX, offsetY] = axes.grid.offset;
-    const verticalStyle = { ...axes.grid.style, ...axes.grid.vertical };
-    const horizontalStyle = { ...axes.grid.style, ...axes.grid.horizontal };
-
+  const xGrid = axes.x.grid;
+  if (xGrid !== undefined && xGrid !== false) {
     enumerateLattice({
       min: -extentX.negative,
       max: extentX.positive,
-      spacing: spacingX,
-      origin: offsetX,
+      spacing: xGrid.spacing,
+      origin: xGrid.offset,
       includeBoundary: false,
     }).forEach(line => {
-      children.push(createLinePath([originX + line.value, minY], [originX + line.value, maxY], verticalStyle));
+      children.push(createLinePath([originX + line.value, minY], [originX + line.value, maxY], xGrid.style));
     });
+  }
+  const yGrid = axes.y.grid;
+  if (yGrid !== undefined && yGrid !== false) {
     enumerateLattice({
       min: -extentY.negative,
       max: extentY.positive,
-      spacing: spacingY,
-      origin: offsetY,
+      spacing: yGrid.spacing,
+      origin: yGrid.offset,
       includeBoundary: false,
     }).forEach(line => {
       const y = originY - line.value;
-      children.push(createLinePath([minX, y], [maxX, y], horizontalStyle));
+      children.push(createLinePath([minX, y], [maxX, y], yGrid.style));
     });
   }
 
-  if (axes.x !== false && axes.x.line !== false) {
+  if (axes.x.line !== false) {
     children.push(createAxisPath([minX, originY], [maxX, originY], axes.x.line));
   }
-  if (axes.y !== false && axes.y.line !== false) {
+  if (axes.y.line !== false) {
     children.push(createAxisPath([originX, maxY], [originX, minY], axes.y.line));
   }
 
-  if (axes.x !== false) appendAxisTicks(children, 'x', axes.x, axes.extent.x, axes.origin);
-  if (axes.y !== false) appendAxisTicks(children, 'y', axes.y, axes.extent.y, axes.origin);
+  appendAxisTicks(children, 'x', axes.x, axes.x.extent, axes.origin.position);
+  appendAxisTicks(children, 'y', axes.y, axes.y.extent, axes.origin.position);
 
-  if (axes.x !== false) appendTickLabels(children, 'x', axes.x, axes.origin);
-  if (axes.y !== false) appendTickLabels(children, 'y', axes.y, axes.origin);
+  appendTickLabels(children, 'x', axes.x, axes.origin.position);
+  appendTickLabels(children, 'y', axes.y, axes.origin.position);
 
-  if (axes.x !== false && axes.x.label !== false) {
-    children.push(createAxisLabel('x', axes.x.label, axes.origin, extentX));
+  if (axes.x.label !== false) {
+    children.push(createAxisLabel('x', axes.x.label, axes.origin.position, extentX));
   }
-  if (axes.y !== false && axes.y.label !== false) {
-    children.push(createAxisLabel('y', axes.y.label, axes.origin, extentY));
+  if (axes.y.label !== false) {
+    children.push(createAxisLabel('y', axes.y.label, axes.origin.position, extentY));
   }
-  if (axes.originLabel !== false) {
-    children.push(createOriginLabel(axes.originLabel, axes.origin));
+  if (axes.origin.label !== false) {
+    children.push(createOriginLabel(axes.origin.label, axes.origin.position));
   }
 
   return children;
@@ -86,7 +82,7 @@ const appendAxisTicks = (
   children: Array<AxesChild>,
   axisName: 'x' | 'y',
   axis: AxesAxis,
-  extentInput: IRAxes['extent']['x'],
+  extentInput: AxesAxis['extent'],
   origin: IRPosition,
 ): void => {
   if (axis.ticks === undefined || axis.ticks === false) return;
