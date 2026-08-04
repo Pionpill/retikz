@@ -67,8 +67,7 @@ type LegendItemsContentInput = {
   kind: 'items';
   direction?: 'vertical' | 'horizontal';
   wrap?: 'nowrap' | 'wrap';
-  columnGap?: number;
-  rowGap?: number;
+  gap?: number | { row: number; column: number };
   sampleGap?: number;
   sampleAlign?: 'start' | 'center' | 'end';
   items: Array<LegendItemInput>;
@@ -95,7 +94,7 @@ type LegendTickInput = {
 };
 ```
 
-以上是允许省略固定 discriminator 与默认字段的持久化 author input 最小公开结构；实际类型由 strict schema 推导，不维护手写平行类型。`createLegend()` 与 Vanilla 接收 `LegendInput`，React 则把组合式 JSX authoring 同步转换为同一输入；三者统一注入 `namespace: 'standard'` / `type: 'legend'` 并解析。schema 解析后的 canonical `IRLegend` 必须显式包含固定 discriminator、`titleGap`、`contentAlign`、`size.x / size.y`、`padding`、`overflow`，items form 必须包含 `direction`、`wrap`、`columnGap`、`rowGap`、`sampleGap`、`sampleAlign`，ramp form 必须包含 `direction` 与 `sampleGap`；只有 `title`、item / tick 的 `label` 继续可省略。直接 IR authoring 接受完整 canonical `IRLegend`；factory、React 与 Vanilla 产生该 parsed output，持久化、diff、compile 与 parity 都以它为真值，不能由 adapter 决定是否保留默认字段。
+以上是允许省略固定 discriminator 与默认字段的持久化 author input 最小公开结构；实际类型由 strict schema 推导，不维护手写平行类型。`createLegend()` 与 Vanilla 接收 `LegendInput`，React 则把组合式 JSX authoring 同步转换为同一输入；三者统一注入 `namespace: 'standard'` / `type: 'legend'` 并解析。schema 解析后的 canonical `IRLegend` 必须显式包含固定 discriminator、`titleGap`、`contentAlign`、`size.x / size.y`、`padding`、`overflow`，items form 必须包含 `direction`、`wrap`、canonical `gap: { row: number; column: number }`、`sampleGap`、`sampleAlign`，ramp form 必须包含 `direction` 与 `sampleGap`；输入层的 `gap` 允许标量 shorthand，解析时将其复制到两个物理轴；只有 `title`、item / tick 的 `label` 继续可省略。直接 IR authoring 接受完整 canonical `IRLegend`；factory、React 与 Vanilla 产生该 parsed output，持久化、diff、compile 与 parity 都以它为真值，不能由 adapter 决定是否保留默认字段。
 
 `sample` 可以是 Node、Path、Scope 或任意已注册 Composite。实线、虚线与点线直接使用具有对应 stroke 的 Path；色块或 symbol 使用 Node；连续颜色或透明度使用相应 Core child；未来 Stage、Decision、Connector 等能力可以直接提供自己的 composite sample。
 
@@ -120,13 +119,13 @@ title 始终位于 body 上方；只有 title 与非空 body 同时存在时才�
 
 - `direction` 默认 `vertical`
 - `wrap` 默认 `nowrap`
-- `columnGap`、`rowGap`、`sampleGap` 与 `titleGap` 默认均为 8 user units；gap 只出现在两个实际存在的相邻区域之间，不形成首尾留白
+- `gap` 的 `row` 与 `column`、`sampleGap` 与 `titleGap` 默认均为 8 user units；标量 `gap` shorthand 同时设置两个物理轴，gap 只出现在两个实际存在的相邻区域之间，不形成首尾留白
 - `contentAlign` 只分配 content box 与 title / body structural width 之间的物理 x 轴剩余空间，不引入 stretch、space-between 或逐 item 对齐语义
 - 每个 item 内部固定为 sample 在左、可选 label 在右；label 存在时由 `sampleGap` 分隔，`sampleAlign` 沿物理 y 轴对齐两者且默认 `center`
 - vertical 模式沿 y 轴按声明顺序排列 item；同一 wrap column 内使用最大的 natural sample slot width，使 label 从同一物理 x 起点开始
 - horizontal 模式沿 x 轴按声明顺序排列 item；每个 item 的 label 跟随自身 sample，不对不同 item 建立共享 sample 列
 - 开启 wrap 时只依据 size policy / 父 proposal 解析出的 content-box budget 与真实 intrinsic contribution，按 authored order 使用 greedy line formation：horizontal 超出 resolved width 时形成新 row，vertical 超出扣除 title 后的 resolved body height 时形成新 column；加入当前 line 前先计入相邻物理 gap，超限则从该 item 开新 line，不回溯、不均衡
-- wrap budget 始终取 resolved content-box 主轴尺寸；单个 item 自身超过该 budget 时独占一条 line，保留真实 allocation / visual overflow，不拆分或缩放；`rowGap` 与 `columnGap` 始终按物理轴解释
+- wrap budget 始终取 resolved content-box 主轴尺寸；单个 item 自身超过该 budget 时独占一条 line，保留真实 allocation / visual overflow，不拆分或缩放；canonical `gap.row` 与 `gap.column` 始终按物理轴解释
 - sample 保持自身 intrinsic geometry，Legend 不因 primitive kind 自动改写颜色、stroke、半径或比例
 
 `ramp` form 负责一个连续视觉样本及其 normalized ticks：
@@ -156,7 +155,7 @@ root allocation 与内部布局按以下单向顺序求值，不做 child-result
 2. items main axis 先以未换行的 minimum / natural profile 调用共享 resolver 得到 preliminary allocation，再以每个 item 的 natural outer size 和真实 gap 对其 content-box main size执行一次 authored-order greedy line formation。每条已形成 line 同时保存 minimum / natural profile。`content` 在非 exact proposal 下以形成后的 line profile 再次调用同一 resolver 得到 final main allocation；`fixed`、`fill` 与任意 exact proposal 保持 preliminary allocation，不做 shrink-to-fit
 3. content 的第二次求值只替换 body main-axis profile，继续使用同一 title、padding、size policy 与父 proposal，不再次成行。intrinsic minimum 使用形成后最宽 line 的 minimum profile；intrinsic natural 与 range 使用最宽 line 的 natural profile。因而 natural/range shrink-to-fit 后仍容纳已形成 line，intrinsic minimum 可以小于 natural structural slot并显式形成 allocation overflow；父 `min` 可以扩张 final allocation。若作者边界与父 proposal 无交集，仍按共享 Box 合同保留作者硬边界并让 overflow 可见
 4. horizontal items 先完成 x 的 preliminary → rows → final 顺序，再在 final content width 下 probe title，并以 rows cross contribution、final title height、effective titleGap 与 padding 求 y allocation
-5. vertical items 先按单 column 与 title intrinsic width 求 preliminary x、在该 content width 下 probe title，再按 title + 单 column profile 求 preliminary y；以 `max(0, contentHeight - titleHeight - effectiveTitleGap)` 成 column，并按第 3 步得到 final y。全部 column 的 structural cross extent——各 column structural width 之和加真实相邻 `columnGap`——随后只用于 x 轴 reconciliation：`content` 在非 exact proposal 下以该 extent、既有 title width、padding、作者边界与同一父 proposal再次调用共享 resolver；`fixed`、`fill` 与任意 exact proposal保持 preliminary x。reconciled x 不触发 title re-probe 或 column reflow；若完整 columns extent 宽于保留的 allocation，只按 `contentAlign` 形成 structural overflow
+5. vertical items 先按单 column 与 title intrinsic width 求 preliminary x、在该 content width 下 probe title，再按 title + 单 column profile 求 preliminary y；以 `max(0, contentHeight - titleHeight - effectiveTitleGap)` 成 column，并按第 3 步得到 final y。全部 column 的 structural cross extent——各 column structural width 之和加真实相邻 `gap.column`——随后只用于 x 轴 reconciliation：`content` 在非 exact proposal 下以该 extent、既有 title width、padding、作者边界与同一父 proposal再次调用共享 resolver；`fixed`、`fill` 与任意 exact proposal保持 preliminary x。reconciled x 不触发 title re-probe 或 column reflow；若完整 columns extent 宽于保留的 allocation，只按 `contentAlign` 形成 structural overflow
 6. ramp 不形成 line，也不从 container available 反推 sample slot；它先由 sample 与全部 tick label 的 intrinsic natural `slotSize` 建立并规范化 body structural bounds，再依次求 root x、title final probe 与 root y
 
 wrap 的唯一 main-axis budget 是 preliminary container allocation 减去 padding，并在 vertical 方向继续扣除 title 与 effective `titleGap` 后的非负 body size。content、fixed、fill 在 intrinsic / range / exact 下都使用这个规则：默认 natural content 的 preliminary allocation 本身可以容纳单 line，因此通常不换行；intrinsic minimum、authored `max`、fixed、finite range / fill 或 exact 产生更小 allocation 时可以换行；unbounded range 的 content 使用 natural contribution，fill 仍 fail-loud。作者 `max` 既限制 preliminary allocation，也因此形成 wrap budget，不存在“只 clamp allocation 但按更大父空间排版”的第二语义。content shrink-to-fit 发生在 line formation 后；fixed / fill / exact 不收缩，任何 final allocation 都不触发第二次换行。
@@ -295,7 +294,7 @@ LegendDefinition 只贡献 Legend 自身 definition。它复用 Standard 已有 
 </Legend>
 ```
 
-`Legend` props 是以显式 `kind` 判别的联合。两种 form 共用 `titleGap`、`contentAlign`、`size`、`padding` 与 `overflow`；`items` form 把 `direction`、`wrap`、`columnGap`、`rowGap`、`sampleGap` 与 `sampleAlign` 提升为容器 props，`ramp` form 把 `direction` 与 `sampleGap` 提升为容器 props。React 不根据 children 推断 form，也不继续接受 plain-data `content` 或 `title` prop。
+`Legend` props 是以显式 `kind` 判别的联合。两种 form 共用 `titleGap`、`contentAlign`、`size`、`padding` 与 `overflow`；`items` form 把 `direction`、`wrap`、`gap`、`sampleGap` 与 `sampleAlign` 提升为容器 props，`ramp` form 把 `direction` 与 `sampleGap` 提升为容器 props。React 不根据 children 推断 form，也不继续接受 plain-data `content` 或 `title` prop。
 
 `Legend` 最多接受一个 `LegendTitle` marker；省略 marker 表示没有 title，marker 一旦出现，其 children 就是 required title slot。`LegendItem` 以必填 `itemKey` 与 required `sample` prop 声明离散项，并以可选 children 声明 label；ramp form 必须且只能包含一个 `LegendRamp` marker，其 children 是 required continuous sample slot；`LegendTick` 以必填 `tickKey`、`offset` 与可选 label children 声明连续刻度。`itemKey` 与 `tickKey` 分别映射 canonical `key`，避免与 React 保留的元素 `key` 混淆。title、item sample 与 ramp sample 必须各同步转换为恰好一个 JSON-safe `IRChild`；item / tick label 可以省略或只包含 React empty node，此时 canonical label 缺省，提供任意非空内容时必须转换为恰好一个 `IRChild`。
 
@@ -344,7 +343,7 @@ Plot 当前 `IRPlotLegendGuide`、Table 当前 Legend descriptor 与未来逻辑
 
 ## 测试策略摘要
 
-- schema / contract 证据锁定 strict JSON、content union、默认 size / gap、identity、normalized tick 与非法状态拒绝
+- schema / contract 证据锁定 strict JSON、content union、默认 size / gap、标量 gap shorthand 的 canonical 归一、identity、normalized tick 与非法状态拒绝
 - compile contract 使用 Core primitive、显式文本 Node、registered custom composite 与 nested Standard component 证明 title/sample/label 的开放性、Core 引用语义与缺失 capability 诊断
 - layout contract 证明 heterogeneous sample、title、空内容、content / fixed / fill 对各类父 proposal 的双轴 allocation、title / body content alignment、约束换行、ramp tick、overflow / clip 与 artifact bounds 只经 layout-aware probe/replay
 - Definition 接入证明直接 Definition、领域显式传递、重复 composite key 与缺失 nested Definition 的确定结果

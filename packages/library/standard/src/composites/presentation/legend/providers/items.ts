@@ -71,11 +71,11 @@ const profileLine = (
       itemIndexes: Object.freeze([...itemIndexes]),
       minimumMainSize: compensatedLayoutSum([
         ...minimum.map(size => size.width),
-        content.columnGap * Math.max(0, itemIndexes.length - 1),
+        content.gap.column * Math.max(0, itemIndexes.length - 1),
       ]),
       naturalMainSize: compensatedLayoutSum([
         ...natural.map(size => size.width),
-        content.columnGap * Math.max(0, itemIndexes.length - 1),
+        content.gap.column * Math.max(0, itemIndexes.length - 1),
       ]),
       minimumCrossSize: minimum.length === 0 ? 0 : Math.max(...minimum.map(size => size.height)),
       naturalCrossSize: natural.length === 0 ? 0 : Math.max(...natural.map(size => size.height)),
@@ -101,11 +101,11 @@ const profileLine = (
     itemIndexes: Object.freeze([...itemIndexes]),
     minimumMainSize: compensatedLayoutSum([
       ...minimum.map(size => size.height),
-      content.rowGap * Math.max(0, itemIndexes.length - 1),
+      content.gap.row * Math.max(0, itemIndexes.length - 1),
     ]),
     naturalMainSize: compensatedLayoutSum([
       ...natural.map(size => size.height),
-      content.rowGap * Math.max(0, itemIndexes.length - 1),
+      content.gap.row * Math.max(0, itemIndexes.length - 1),
     ]),
     minimumCrossSize,
     naturalCrossSize,
@@ -153,7 +153,7 @@ export const formLegendItemLines = (
     ]);
   }
 
-  const gap = content.direction === LegendDirection.Horizontal ? content.columnGap : content.rowGap;
+  const gap = content.direction === LegendDirection.Horizontal ? content.gap.column : content.gap.row;
   const lines: Array<Array<number>> = [];
   let current: Array<number> = [];
   let used = 0;
@@ -188,7 +188,7 @@ export const formedLinesCrossProfile = (
   content: IRLegendItemsContent,
   lines: ReadonlyArray<LegendItemLine>,
 ): Readonly<{ minimum: number; natural: number }> => {
-  const gap = content.direction === LegendDirection.Horizontal ? content.rowGap : content.columnGap;
+  const gap = content.direction === LegendDirection.Horizontal ? content.gap.row : content.gap.column;
   const gapTotal = gap * Math.max(0, lines.length - 1);
   return Object.freeze({
     minimum: compensatedLayoutSum([...lines.map(line => line.minimumCrossSize), gapTotal]),
@@ -238,9 +238,9 @@ export const placeLegendItems = (
                 height: label.height,
               });
         bySource[sourceIndex] = Object.freeze({ sourceIndex, sample: sampleSlot, label: labelSlot });
-        itemX += sample.width + (label === undefined ? 0 : content.sampleGap + label.width) + content.columnGap;
+        itemX += sample.width + (label === undefined ? 0 : content.sampleGap + label.width) + content.gap.column;
       }
-      rowY += line.naturalCrossSize + content.rowGap;
+      rowY += line.naturalCrossSize + content.gap.row;
     }
   } else {
     let columnX = origin.x;
@@ -267,9 +267,9 @@ export const placeLegendItems = (
                 height: label.height,
               });
         bySource[sourceIndex] = Object.freeze({ sourceIndex, sample: sampleSlot, label: labelSlot });
-        itemY += itemHeight + content.rowGap;
+        itemY += itemHeight + content.gap.row;
       }
-      columnX += line.naturalCrossSize + content.columnGap;
+      columnX += line.naturalCrossSize + content.gap.column;
     }
   }
 

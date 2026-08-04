@@ -11,6 +11,20 @@ import {
 import { STANDARD_NAMESPACE } from '../../shared';
 import { LegendContentKind, LegendDirection, LegendSampleAlignment, LegendWrap } from './constants';
 
+const LegendGapSchema = z
+  .union([
+    z.number().nonnegative().describe('Uniform physical gap applied to both rows and columns.'),
+    z
+      .strictObject({
+        row: z.number().nonnegative().describe('Physical vertical gap between adjacent rows.'),
+        column: z.number().nonnegative().describe('Physical horizontal gap between adjacent columns.'),
+      })
+      .describe('Independent physical row and column gaps.'),
+  ])
+  .transform(gap => (typeof gap === 'number' ? { row: gap, column: gap } : gap))
+  .default({ row: 8, column: 8 })
+  .describe('Physical gaps between adjacent rows and columns; a number applies uniformly to both axes.');
+
 export const LegendItemSchema = z
   .strictObject({
     key: z.string().min(1).describe('Container-local stable identity for this discrete legend item.'),
@@ -30,8 +44,7 @@ export const LegendItemsContentSchema = z
       .enum(LegendWrap)
       .default(LegendWrap.NoWrap)
       .describe('Whether constrained items form additional rows or columns.'),
-    columnGap: z.number().nonnegative().default(8).describe('Physical horizontal gap between adjacent regions.'),
-    rowGap: z.number().nonnegative().default(8).describe('Physical vertical gap between adjacent regions.'),
+    gap: LegendGapSchema,
     sampleGap: z.number().nonnegative().default(8).describe('Horizontal gap between an item sample and its label.'),
     sampleAlign: z
       .enum(LegendSampleAlignment)

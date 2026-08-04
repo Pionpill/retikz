@@ -94,8 +94,9 @@ const createLegendSchemaDescriptions = (): Readonly<DescriptionMap> => {
   setDescription(descriptions, childPath(items, 'kind'), '离散样本与标签列表的判别字段');
   setDescription(descriptions, childPath(items, 'direction'), '按编写顺序放置条目的物理主轴方向');
   setDescription(descriptions, childPath(items, 'wrap'), '受约束时条目是否形成额外的行或列');
-  setDescription(descriptions, childPath(items, 'columnGap'), '相邻区域之间的水平间距');
-  setDescription(descriptions, childPath(items, 'rowGap'), '相邻区域之间的垂直间距');
+  setDescription(descriptions, childPath(items, 'gap'), '相邻行列之间的物理间距；标量同时应用于两轴');
+  setDescription(descriptions, childPath(childPath(items, 'gap'), 'row'), '相邻物理行之间的垂直间距');
+  setDescription(descriptions, childPath(childPath(items, 'gap'), 'column'), '相邻物理列之间的水平间距');
   setDescription(descriptions, childPath(items, 'sampleGap'), '单个条目中样本与标签的水平间距');
   setDescription(descriptions, childPath(items, 'sampleAlign'), '单个条目中样本与标签在 y 轴上的对齐方式');
   const itemList = childPath(items, 'items');

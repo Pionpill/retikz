@@ -8,24 +8,35 @@ import { LegendDirection } from '../constants';
 
 /** 已取得 natural slot 的 ramp tick */
 export type MeasuredLegendRampTick = Readonly<{
+  /** tick 的稳定 authored identity */
   key: string;
+  /** tick 在 authored ticks 数组中的来源索引 */
   sourceIndex: number;
+  /** tick 沿 sample 主轴的归一化位置 */
   offset: number;
+  /** tick label 的 natural probe 结果 */
   label?: LayoutChildResult;
 }>;
 
 /** normalized ramp tick 的结构 anchor 与可选 label slot */
 export type LegendRampTickStructure = Readonly<{
+  /** tick 的稳定 authored identity */
   key: string;
+  /** tick 在 authored ticks 数组中的来源索引 */
   sourceIndex: number;
+  /** tick 在 sample 边缘上的结构锚点 */
   anchor: Readonly<{ x: number; y: number }>;
+  /** tick label 的结构 slot，缺少 label 时为 null */
   labelSlot: LayoutRect | null;
 }>;
 
 /** ramp sample 与 tick labels 的 normalized body-local structure */
 export type LegendRampStructure = Readonly<{
+  /** sample 与所有 tick label 的整体结构边界 */
   bounds: LayoutRect;
+  /** ramp sample 的结构 slot */
   sampleSlot: LayoutRect;
+  /** 按 authored order 保存的 tick 结构 */
   ticks: ReadonlyArray<LegendRampTickStructure>;
 }>;
 

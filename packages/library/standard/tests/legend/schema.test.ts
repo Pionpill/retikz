@@ -53,8 +53,7 @@ describe('Legend schema and factory', () => {
         kind: 'items',
         direction: 'vertical',
         wrap: 'nowrap',
-        columnGap: 8,
-        rowGap: 8,
+        gap: { row: 8, column: 8 },
         sampleGap: 8,
         sampleAlign: 'center',
         items: [{ key: 'primary', sample, label }],
@@ -66,6 +65,23 @@ describe('Legend schema and factory', () => {
       expectTypeOf(parsed.content).toEqualTypeOf<IRLegendItemsContent>();
       expectTypeOf(parsed.content.items).toEqualTypeOf<Array<IRLegendItem>>();
     }
+    expectTypeOf<IRLegendItemsContent['gap']>().toEqualTypeOf<{ row: number; column: number }>();
+  });
+
+  it('normalizes uniform gap shorthand while preserving independent axis values and explicit zero', () => {
+    const uniform = createLegend({
+      content: { kind: LegendContentKind.Items, gap: 5, items: [] },
+    });
+    const independent = createLegend({
+      content: { kind: LegendContentKind.Items, gap: { row: 6, column: 5 }, items: [] },
+    });
+    const zero = createLegend({
+      content: { kind: LegendContentKind.Items, gap: 0, items: [] },
+    });
+
+    expect(uniform.content).toMatchObject({ gap: { row: 5, column: 5 } });
+    expect(independent.content).toMatchObject({ gap: { row: 6, column: 5 } });
+    expect(zero.content).toMatchObject({ gap: { row: 0, column: 0 } });
   });
 
   it('creates canonical ramp IR and survives a real JSON round-trip', () => {
@@ -145,8 +161,7 @@ describe('Legend schema and factory', () => {
           kind: LegendContentKind.Items,
           direction: LegendDirection.Horizontal,
           wrap: LegendWrap.Wrap,
-          columnGap: 5,
-          rowGap: 6,
+          gap: { row: 6, column: 5 },
           sampleGap: 7,
           sampleAlign: LegendSampleAlignment.End,
           items: [],
@@ -160,8 +175,7 @@ describe('Legend schema and factory', () => {
       content: {
         direction: 'horizontal',
         wrap: 'wrap',
-        columnGap: 5,
-        rowGap: 6,
+        gap: { row: 6, column: 5 },
         sampleGap: 7,
         sampleAlign: 'end',
       },
@@ -173,6 +187,8 @@ describe('Legend schema and factory', () => {
 
     expectIssuePath({ ...root, extra: true }, '');
     expectIssuePath({ ...root, content: { ...root.content, extra: true } }, 'content');
+    expectIssuePath({ ...root, content: { ...root.content, columnGap: 1 } }, 'content');
+    expectIssuePath({ ...root, content: { ...root.content, rowGap: 1 } }, 'content');
     expectIssuePath(
       {
         ...root,
@@ -249,8 +265,16 @@ describe('Legend schema and factory', () => {
 
     expect(() => createLegend({ titleGap: -1, content: items })).toThrow();
     expect(() => createLegend({ padding: -1, content: items })).toThrow();
-    expect(() => createLegend({ content: { ...items, columnGap: -1 } })).toThrow();
-    expect(() => createLegend({ content: { ...items, rowGap: Number.POSITIVE_INFINITY } })).toThrow();
+    expect(() => createLegend({ content: { ...items, gap: -1 } })).toThrow();
+    expect(() => createLegend({ content: { ...items, gap: { row: Number.POSITIVE_INFINITY, column: 8 } } })).toThrow();
+    expectIssuePath(
+      {
+        namespace: 'standard',
+        type: 'legend',
+        content: { ...items, gap: { row: 8, column: -1 } },
+      },
+      'content.gap.column',
+    );
     expect(() => createLegend({ content: { ...items, sampleGap: Number.NaN } })).toThrow();
     expectIssuePath(
       {

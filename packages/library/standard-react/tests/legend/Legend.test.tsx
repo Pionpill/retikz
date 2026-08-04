@@ -55,6 +55,7 @@ describe('<Legend>', () => {
     const itemsProps = {
       kind: LegendContentKind.Items,
       contentAlign: LayoutAlignment.End,
+      gap: { row: 6, column: 5 },
       children: (
         <>
           <LegendTitle>
@@ -93,6 +94,7 @@ describe('<Legend>', () => {
         contentAlign: LayoutAlignment.End,
         content: {
           kind: LegendContentKind.Items,
+          gap: { row: 6, column: 5 },
           items: [
             {
               key: 'active',

@@ -283,7 +283,7 @@ describe('Legend items compile contract', () => {
         titleGap: 2,
         content: {
           kind: LegendContentKind.Items,
-          rowGap: 5,
+          gap: { row: 5, column: 8 },
           sampleGap: 3,
           items: [
             { key: 'a', sample: leaf('sample-a', 10, 10), label: leaf('label-a', 20, 8) },
@@ -342,8 +342,7 @@ describe('Legend items compile contract', () => {
           kind: LegendContentKind.Items,
           direction: LegendDirection.Horizontal,
           wrap: LegendWrap.Wrap,
-          columnGap: 10,
-          rowGap: 4,
+          gap: { row: 4, column: 10 },
           items: [
             { key: 'wide', sample: leaf('wide', 120, 10) },
             { key: 'narrow', sample: leaf('narrow', 80, 10) },
@@ -365,7 +364,7 @@ describe('Legend items compile contract', () => {
       kind: LegendContentKind.Items,
       direction: LegendDirection.Horizontal,
       wrap: LegendWrap.Wrap,
-      columnGap: 10,
+      gap: { row: 8, column: 10 },
       items: [
         { key: 'wide', sample: leaf('wide', 120, 10, { minimumWidth: 60 }) },
         { key: 'narrow', sample: leaf('narrow', 80, 10, { minimumWidth: 40 }) },

@@ -12,7 +12,7 @@ const Demo: FC = () => (
     viewBox={{ x: -115.4, y: -16, width: 360, height: 190 }}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <Legend kind={LegendContentKind.Items} padding={12} rowGap={10} sampleGap={12}>
+    <Legend kind={LegendContentKind.Items} gap={{ row: 10, column: 8 }} padding={12} sampleGap={12}>
       <LegendTitle>
         <Node id="relation-title" position={[0, 0]} text="关系" stroke="none" />
       </LegendTitle>

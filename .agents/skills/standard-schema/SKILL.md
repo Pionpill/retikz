@@ -60,6 +60,8 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 
 同一概念出现多个同前缀一级字段时，优先收敛成一个对象字段；对象子字段用命名 schema/type 承载，并通过 `shape` spread、`.extend()` 或对象 spread 复用，不重复声明同一份字段 shape。
 
+当同一对象需要提供标量 shorthand 与完整对象输入时，只允许输入形态保留 `number | object` 等便利联合；在 schema parse 边界一次性归一为完整对象，canonical `z.infer` IR 不保留等价的 `number | object` 联合。默认值、显式 `0`、字段 refinement 与 strict unknown-field 语义必须在归一化前后保持一致，provider / pipeline / adapter 只消费归一后的对象，不重复分支判断。
+
 上层需要与允许依赖层完全同义的字段时，从该层公开的权威 schema 用 `.pick()`、`.omit()`、`.extend()` 或 `.shape` 精确复用。只选择所需字段，不从 primitive schema 重复拼装同一契约，也不整段引入包含无关字段的 BaseSchema；复用后验证默认值、refinement 与未知字段拒绝行为保持预期。
 
 适用场景：
@@ -111,4 +113,5 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 4. `.describe(...)` 是否短而准确，且没有上下文膨胀？
 5. 对象字段顺序、shared spread、union 拆分是否符合规则？
 6. 是否能用 `BaseSchema + superRefine` 避免重复 object？
-7. schema 改动是否需要同步 `types.ts`、docs、schema registry 和测试？
+7. 输入 shorthand 与 canonical IR 形态是否在 schema 边界完成一次归一，避免下游重复处理等价联合？
+8. schema 改动是否需要同步 `types.ts`、docs、schema registry 和测试？
