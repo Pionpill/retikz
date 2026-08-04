@@ -2,58 +2,54 @@
 
 > 本文件汇总 plot v0.2 minor 的路线与 milestone 索引。具体执行记录放各 milestone 的 `roadmap.md`，长期决策放同目录 `NN-*.md` ADR。
 > 关联：[`plot v0 roadmap`](../roadmap.md) · [`plot v0.1 roadmap`](../v0.1/roadmap.md) · [`plot-design.md §5 / §10 / §13`](../../../../architecture/plot-design.md)
-> ⚠️ 草案：本 minor 由 2026-07-05「v0.1 GoG 基座完成后的能力轴」讨论开出，待人工 review。
+> ⚠️ 草案：本 minor 由 2026-07-05「v0.1 GoG 基座完成后的能力轴」讨论开出，并于 2026-08-04 按映射、Kernel 前置能力与交互顺序重排，待人工 review。
 
 ## 定位
 
-**v0.2 承载 plot 的运行时交互与 layout transform / structured visualization 能力。**
+**v0.2 先重构 Plot 的空间映射关系，再在 Kernel 底层能力就绪后补性能与交互。**
 
-v0.1 已完成 GoG 基座：data / encoding / scale / coordinate / mark / stat / coordinate composition / guide / theme 都已进入 PlotSpec 语义。v0.2 不再补图形语法基础件，而是把两条后续能力轴落到可用：
+v0.1 已完成 GoG 基座：data / encoding / scale / coordinate / mark / stat / coordinate composition / guide / theme 都已进入 PlotSpec 语义。v0.2 不再把短期主线写成 Plot 自建 Runtime，而是按三条有依赖的能力轴推进：
 
-- **交互能力补全**：tooltip、hover、selection、brush、legend interaction、事件回调、locator 与 provenance 的 runtime 消费；交互是 framework/runtime 能力，PlotSpec 只保留 JSON-safe 的意图和稳定 identity。
-- **layout transform / structured visualization**：tree、network、word cloud、treemap、circle packing、gauge、progress、pictogram 等结构化算法先产出位置 / 尺寸 / 路由等派生字段，再统一进入 plot 的 channel / scale / coordinate / mark / guide / lowering；不新增 `@retikz/struct` 包。
+- **空间映射重构**：把坐标系映射与结构化算法映射统一提升为 `Spatial Mapping` 概念，同时保留 `Coordinate Mapping` 与 `Structured Mapping` 的专门契约；允许 `nodes`、`links` 等任意命名内容，建立通用局部坐标契约，并从 dimension / axis 粒度扩展坐标系及其法向 / 切向组合关系。
+- **性能优化**：待 Kernel 提供 identity、revision、transaction、incremental、retained Scene 等底层能力后，Plot 只负责自身领域依赖、最小失效边界、增量 lowering 与 provenance，不复制 Kernel Runtime。
+- **交互优化**：待 Kernel 提供 headless interaction 的事件、ownership、behavior、presentation 与 intent 基础后，Plot 负责 datum / series / view / panel 等领域交互语义，不复制事件归一化或通用行为状态机。
 
-同时收敛 v0.1 的通用 decoration 呈现：Plot 继续拥有 axis / legend / label 的领域解析、coordinate view 绑定、guide resolve、provenance / locator 与交互意图；Standard alpha.2 就绪后，Plot 把外围 Box Layout 和 Legend 的视觉结构、内部布局与 layout-aware compile 迁到 `@retikz/standard`，不再长期维护固定带宽或字符估算的平行呈现主链。
+`@retikz/chart v0.1` 与本 minor 并行迭代。Chart 需求不单独形成 Plot milestone：若需求暴露的是通用 Plot 缺口，就插入最匹配的 alpha；Chart-specific recipe、type、presentation 与默认值仍归 Chart。所有 Chart 能力必须继续 lower 成 PlotSpec，不能反向改变 Plot 的领域边界。
 
-`@retikz/chart v0.1` 与本 minor 并行迭代：chart 可以拥有 Tier 3 `ChartSpec`，但必须 lower 成 PlotSpec。plot v0.2 新增的 interaction 与 layout transform 能力，可以被 chart v0.1 后续 alpha 消费；chart 不放在 plot v0.2 目录内。
+同时继续收敛 v0.1 的通用 decoration 呈现：Plot 拥有 axis / legend / label 的领域解析、coordinate view 绑定、guide resolve、provenance / locator 与交互意图；Standard alpha.2 就绪后，Plot 把外围 Box Layout 和 Legend 的视觉结构、内部布局与 layout-aware compile 迁到 `@retikz/standard`，不维护平行呈现主链。
 
 ## 前置能力
 
-v0.1 beta 收口时先抽出最小 `@retikz/data`：字段类型、field model、数据引用、dataset normalization、field resolver / parser / formatter、通用 transform 基础接口，以及跨 plot / table / geo 都稳定复用的 channel / scale 词表。
-
-v0.2 默认消费这层共享数据语义；plot 专属的统计 transform、layout transform、coordinate / mark / guide 仍留在 plot。
-
-Standard v0.1 alpha.2 提供通用 Box Layout，并由 ADR-09 提供 Legend 呈现。Plot 可以在领域 schema 保持稳定的前提下，把解析后的 Legend 和外围 decoration item 交给 Standard；若 Standard direct Definition 接入、约束测量、artifact 或 provenance bridge 尚未闭环，对应迁移不得以 Plot 私有 fallback 提前实现。
+- **plot v0.1**：GoG 基座、thin Plot、guide / theme、scope identity、locator / provenance、layer zIndex 与 coordinate registry。
+- **data v0.1 beta**：共享字段、数据引用、formatter、通用 transform 基础契约。
+- **Kernel**：alpha.1 映射重构只消费现有静态 Core lowering；alpha.2 性能优化必须等待 Kernel 的同步原子增量链路；alpha.3 交互优化还必须等待 Kernel 的 headless interaction 基础。
+- **standard v0.1**：alpha.2 Box Layout 与 Legend、直接 Definition 传递、领域无关 layout artifact；Plot 不在 Standard 缺口闭合前建立私有 fallback。
 
 ## Milestones
 
-| Milestone                            | 主题                                                     | 模块 / 产出                                                                                                                            | 状态   |
-| ------------------------------------ | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| [v0.2-alpha.1](./alpha.1/roadmap.md) | **interaction foundation + layout transform foundation** | 接通 locator / provenance runtime 消费、交互事件与 overlay 基础；建立 plot layout transform registry 与首批结构化布局的输入 / 输出契约 | 草拟中 |
+| Milestone                            | 主题                     | 模块 / 产出                                                                                                             | 状态               |
+| ------------------------------------ | ------------------------ | ----------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| [v0.2-alpha.1](./alpha.1/roadmap.md) | **Spatial Mapping 重构** | 统一映射逻辑概念；建立 Coordinate Mapping / Structured Mapping 专门契约、任意内容端口、通用局部坐标与自定义坐标扩展边界 | 草拟中             |
+| [v0.2-alpha.2](./alpha.2/roadmap.md) | **性能优化**             | 消费 Kernel 增量运行时，建立 Plot 领域依赖、失效、增量 lowering、fallback 与性能观测闭环                                | 待 Kernel 前置能力 |
+| [v0.2-alpha.3](./alpha.3/roadmap.md) | **交互优化**             | 消费 Kernel headless interaction，建立 Plot datum / series / view / panel 的交互目标、意图与 presentation 协作边界      | 待 Kernel 前置能力 |
 
-后续 alpha 依需求拆分：
+具体结构化算法与 Chart type 不预先批量排入 Plot。只有 Chart 或其它下游提出通用缺口时，才在上述 alpha 中增加候选 ADR，并先确认能力归属。
 
-- tooltip / hover / selection / brush / legend interaction；
-- transition / animation 与数据过滤型交互的重 lower 策略；
-- 增量 lowering / compile、共享解析上下文与分层物化、依赖失效模型，以及复用 Tier1 static / dynamic runtime 的按需渲染；v0.1 beta.2 只保留 plain spec、稳定 identity 与 owner 边界，不提前冻结 cache / patch API；
-- decoration layout 收敛：Plot 统一领域 `LayoutClaim`、coordinate view target、稳定迭代、碰撞避让、优先级与溢出策略；通用 Box allocation、Legend 内部布局与 `IRChild` 测量 / replay 分别消费 Standard 与 Core，不在 Plot 建立第二套容器 solver。v0.1 beta.2 不提前公开未实现的 `maxIterations` / `collision` / `priority` / `overflow` / `target:'view'` 字段；
-- Legend 呈现迁移：保留 Plot legend guide、scale / formatter resolution、theme mapping、provenance / locator 与 interaction，解析后构造 Standard Legend 输入；迁移前后可观察行为变化由独立 ADR 冻结；
-- tree / network / word cloud / treemap / gauge / progress / pictogram 等 layout transform；
-- layout transform 与 chart type 的消费边界。
+## 版本顺序
 
-## 依赖
+```text
+alpha.1 Spatial Mapping
+  → alpha.2 Plot incremental performance
+  → alpha.3 Plot interaction
+```
 
-- **plot v0.1**：GoG 基座、thin Plot、guide/theme、scope identity、locator/provenance、layer zIndex。
-- **data v0.1 beta**：共享字段、数据引用、formatter、通用 transform 基础契约。
-- **standard v0.1**：alpha.2 Box Layout 与 ADR-09 Legend、直接 Definition 传递消费与领域无关 layout artifact。
-- **chart v0.1**：并行消费 plot v0.2 能力，但不作为本 minor 的实现内容。
-- **core**：交互 runtime 依赖 hydration / hit-test / event plumbing；layout transform 仍 lower 到既有 core Node / Path / Scope，不绕开 core。
+alpha.2 与 alpha.3 可以提前规划，但在对应 Kernel 能力未 Accepted 前不进入 Plot 实现。alpha.3 依赖 alpha.2 的稳定 identity、依赖传播与增量提交边界；三包仍保持 Plot、Plot React、Plot Vanilla 的等价契约。
 
 ## 与 v0.1 / v0.3 的关系
 
-v0.1 = GoG 基座完整；v0.2 = 交互能力 + 结构化 layout transform；v0.3 = 渐进式 AI 生成 + 跨域复合。
+v0.1 = GoG 基座完整；v0.2 = 空间映射重构，以及 Kernel 能力就绪后的性能与交互；v0.3 = 渐进式 AI 生成与跨域复合候选。
 
-v0.2 的复合范围只限 plot 自身交互 overlay、decoration 领域编排与 layout transform 生成的 mark 组合；复用 Standard 通用绘图 composite 不算 Plot/Table 领域耦合。plot 与 table / diagram / 任意业务内容的领域级 composition 留给 v0.3。
+v0.2 的复合范围只限 Plot 自身映射、性能 / 交互语义与 decoration 领域编排；复用 Standard 通用绘图 composite 不算 Plot / Table 领域耦合。具体 Chart type、业务 presentation、dashboard 状态与跨域 composition 不因本 roadmap 进入 Plot。
 
 ## ADR 约定
 
