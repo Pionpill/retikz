@@ -70,5 +70,5 @@ Alpha 按 reviewed `PLAN.md` 的文件 scope 使用 `flow-alpha` red / yellow / 
 - Alpha 的 plan、测试契约与任务状态已按真实执行更新，未把施工细节回写 ADR。
 - 相关测试、lint、类型检查通过，或阻塞原因已明确报告。
 - 用户可见改动已有 docs 同步计划或已进入 `develop-document`。
-- 非明确功能类代码完工并提交或准备提交后，询问用户是否需要子 agent review；改动面大、核心功能或高风险提交仍需询问；小任务且用户已明确认可本次单次 commit 时不再额外询问。
+- Review、subagent 和循环次数按任务开始时确认的执行计划完成；实现结束后不临时追加询问。小型任务默认由主 agent 自审。
 - 未经当前对话授权不 commit / push / publish。

@@ -45,7 +45,7 @@ description: Use when an Alpha ADR needs a pre-implementation capability gate, o
 
 - 读取完整 Proposed ADR，尤其是核心决策、基础数据结构 / 公开契约、行为与失败语义、功能边界、被否决方案和架构验证。
 - 对照当前代码判断 ADR 是否复用既有机制；尚未实现不妨碍设计门禁。
-- 调用方提供固定快照、评审模型与当前轮次 `1/9` 至 `9/9`；同轮并发与多模型归并由 `cross-review` 负责。
+- 调用方提供固定快照和当前检查轮次；默认由主 agent 执行，执行计划已授权常规 reviewer 时记录其实际模型与循环上限。
 
 ### Gate 重点
 
@@ -62,7 +62,7 @@ description: Use when an Alpha ADR needs a pre-implementation capability gate, o
 
 ```md
 ReviewerVerdict: REVIEWER_PASS | BLOCKED
-Round: <1-9>/9
+Round: <current>/<plan-limit>
 Reviewer: <actual-model>
 Snapshot: HEAD=<sha>; ADR=<path-and-content-version>
 
@@ -85,7 +85,7 @@ Snapshot: HEAD=<sha>; ADR=<path-and-content-version>
 - <可选建议>
 ```
 
-单个评审员无 BLOCKING，且每个 WARNING 已修复或在 ADR 中记录可验证的接受理由时可以返回 `REVIEWER_PASS`。该值只表示一份 reviewer 输出合格，不能解析为 Gate PASS。Architecture Gate 的 `GateVerdict: PASS` 只能由编排者在 `cross-review` 最新一轮至少两个 fresh 独立 reviewer 实例完成并归并通过后产生；优先不同模型，只有一个非主模型时允许两个同模型 fresh 实例并必须记录多样性降级。时间压力、已有实现、用户离线或“后续再补”都不能降低 finding 等级。
+单个评审员无 BLOCKING，且每个 WARNING 已修复或在 ADR 中记录可验证的接受理由时可以返回 `REVIEWER_PASS`。该值只表示 reviewer 输出合格；Architecture Gate 的 `GateVerdict: PASS` 由主 agent 结合固定快照、rubric、自审或执行计划已授权的单 reviewer 结果裁决。时间压力、已有实现、用户离线或“后续再补”都不能降低 finding 等级。
 
 ## `code-audit`
 
@@ -164,7 +164,7 @@ PASS | BLOCKED | ESCALATE_ALPHA
 - 覆盖共同检查矩阵，使用当前代码证据而非只读 ADR 自述。
 - 只检查长期功能和架构契约，不把 plan 细节反向写入 ADR。
 - 输出严格符合 findings 契约，没有修改任何文件。
-- 单模型结论已明确；最终多模型 PASS 由调用方按 `cross-review` 汇总。
+- 主 agent 自审或计划内单 reviewer 结论已明确；Gate PASS 由调用方归并。
 
 ### `code-audit`
 

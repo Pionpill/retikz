@@ -8,7 +8,15 @@ import {
   RibbonSamplingSchema,
   RibbonTaperInterpolation,
 } from '@retikz/core';
-import { AnchorRefSchema, PathBaseSchema, PositionSchema, StepLabelSchema } from '@retikz/core';
+import {
+  AnchorRefSchema,
+  PathDecorationSchema,
+  PathFillSchema,
+  PathGeometrySchema,
+  PathStrokeSchema,
+  PositionSchema,
+  StepLabelSchema,
+} from '@retikz/core';
 import { AxisScaleSchema, BoxSizeSchema } from '@retikz/core';
 import {
   BlendMode,
@@ -153,16 +161,17 @@ export const RelationStepLabelSchema = StepLabelSchema.extend({
   text: relationLabelTextSchema.describe('Constant core step label text, mixed text, or a data-field binding'),
 }).describe('Relation path step label; lowered to core StepLabelSchema after field bindings are resolved');
 
-export const RelationPathSpecificOptionsSchema = PathBaseSchema.pick({
-  dashPattern: true,
-  fillRule: true,
-  lineCap: true,
-  lineJoin: true,
-  roundedCorners: true,
-  rotate: true,
-  scale: true,
-  marks: true,
-})
+export const RelationPathSpecificOptionsSchema = z
+  .strictObject({
+    dashPattern: PathStrokeSchema.shape.dashPattern,
+    fillRule: PathFillSchema.shape.fillRule,
+    lineCap: PathStrokeSchema.shape.lineCap,
+    lineJoin: PathStrokeSchema.shape.lineJoin,
+    roundedCorners: PathGeometrySchema.shape.roundedCorners,
+    rotate: PathGeometrySchema.shape.rotate,
+    scale: PathGeometrySchema.shape.scale,
+    marks: PathDecorationSchema.shape.marks,
+  })
   .partial()
   .describe('Core Path options used only when RelationMark kind is path');
 
@@ -588,7 +597,7 @@ const corePathStyle = {
   thickness: PathThicknessStyleSchema.optional().describe(
     'Core Path thickness: field-bound datum channel or constant preset',
   ),
-  marks: PathBaseSchema.shape.marks
+  marks: PathDecorationSchema.shape.marks
     .optional()
     .describe('Static core Path marks placed along the lowered path; use endpoint marks for arrows'),
   dashPattern: NodeDashPatternStyleSchema.optional().describe(

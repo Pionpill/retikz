@@ -1,6 +1,6 @@
 # v0.5.0-alpha.2 增量性能、Runtime 策略、Box Layout 与 Theme 基建
 
-- 状态：ADR-01～09 已完成实现、测试、双语文档与 Accepted 收口；ADR-10 为 Proposed 架构草案，不进入当前 alpha.2 实施批次
+- 状态：ADR-01～10 已完成实现、测试、双语文档与 Accepted 收口
 - 目标版本：`0.5.0-alpha.2`
 - 关联：[v0.5 roadmap](../roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
@@ -25,7 +25,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | [ADR-07](./07-runtime-execution-policy.md)           | Accepted | Runtime 执行模式与更新策略           | 显式选择 static / retained，并在 retained Session 中选择 auto / full 更新                  |
 | [ADR-08](./08-layout-proposal-probe-contract.md)     | Accepted | Layout proposal / probe contract     | 冻结双轴 proposal、minimum / natural、resolved slot、guide、failure isolation 与 replay    |
 | [ADR-09](./09-inherited-theme-context.md)            | Accepted | 可继承 Theme IR 与 Composite context | 冻结 Scene / Scope Theme、字段级继承、Composite 消费与领域边界                             |
-| [ADR-10](./10-core-atomic-contracts.md)              | Proposed | Core 原子绘图契约与 Tier 2 组合边界  | 冻结 Core fragment、Tier 2 组合、领域收窄与单一真源原则                                    |
+| [ADR-10](./10-core-atomic-contracts.md)              | Accepted | Core 原子契约与 Tier 2 / Tier 3 组合 | 冻结 Core fragment、上层组合、领域收窄与单一真源原则                                       |
 
 ## 当前进度
 
@@ -36,7 +36,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-07 已完成 Architecture Gate、Runtime/Core/Render/React/Vanilla实现、SVG/Canvas三策略Bench A/B、对抗测试与双语文档，并于2026-07-29获人工接受。
 - ADR-08 已完成双轴 proposal、resolved slot、真实 allocation / visual bounds、alignment guide、隔离 failure、one-use replay、Table consumer 迁移、对抗测试与双语文档；Architecture Gate Round 3/3 PASS，并于 2026-07-30 获人工接受。
 - ADR-09 已完成严格 JSON Theme IR、Scene / Scope 字段级继承、expand 与 layout-aware Composite context、runtime Scope、probe / replay、lowering、retained fallback、React / Vanilla parity、renderer parity、对抗复验与双语文档；Architecture Gate Round 2 PASS、Plan Gate Round 4 PASS，并于 2026-08-03 完成 Accepted 收口。
-- ADR-10 已形成 Core 原子绘图契约与 Tier 2 组合边界的 Proposed 草案；本 ADR 只记录后续架构约束，不改变 alpha.2 已完成的交付事实，也未获得实现授权。
+- ADR-10 已于 2026-08-04 完成 Architecture Gate、Plan Gate、Core 原子 schema/type 实现、Tier 2 / Tier 3 直接消费迁移、测试与双语文档，并获人工接受。
 
 ## 执行批次
 
@@ -51,8 +51,9 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | 6    | ADR-07 | ADR-03～05 Accepted                                    | static / retained 与 auto / full 可显式选择、对比并保持默认行为不变        |
 | 7    | ADR-08 | ADR-06 Accepted；Standard alpha.2 Core Gate 缺口已明确 | proposal / probe / slot / guide / failure / replay contract 稳定           |
 | 8    | ADR-09 | 通用视觉主题 owner 与 Scene / Scope 继承方向已人工确认 | Theme IR、Composite context、第三方消费边界与入口等价性稳定                |
+| 9    | ADR-10 | ADR-09 Accepted；原子 schema/type 目标已获人工确认     | Core 原子契约、兼容聚合与 Tier 2 / Tier 3 组合边界稳定                     |
 
-批次存在硬依赖，不并行实施。每条 ADR 分别完成 `test-contract`、Architecture Gate 与人工实现授权。
+批次存在硬依赖，不并行实施。每条 ADR 依次完成 Architecture Gate、人工确认、`test-contract` / Plan Gate 与人工实现授权。
 
 ## 共同不变量
 
@@ -74,6 +75,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - 首次完整渲染和静态 SSR / 导出路径没有超出 ADR-01 冻结的回归预算。
 - React 与 Vanilla 暴露等价的同步 update 语义；不承诺 Concurrent 或 progressive presentation。
 - Scene / Scope Theme 可 JSON 往返并按字段继承，两类第三方 Composite 在相同位置读取同一有效 Theme；runtime Scope 与 probe / replay 语义明确，Core-only 子树保持输出不变。领域默认物化与旧字段迁移由各领域后续 ADR 验收。
+- Core 提供可独立复用的 style、stroke 与 Path 原子 schema/type；既有聚合 schema、IR、compile、Scene 与 Tier 2 / Tier 3 可观察行为保持等价。
 
 ## 后续性能遗留
 

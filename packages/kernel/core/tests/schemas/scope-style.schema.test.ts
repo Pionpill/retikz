@@ -42,8 +42,28 @@ describe('NodeDefaultSchema（every node 默认）', () => {
 });
 
 describe('PathDefaultSchema（every path 默认）', () => {
-  it('接受 path 样式字段子集', () => {
-    expect(PathDefaultSchema.safeParse({ stroke: 'red', dashPattern: [4, 2] }).success).toBe(true);
+  it('接受完整 path 默认原子字段集合（不含 children）', () => {
+    expect(
+      PathDefaultSchema.safeParse({
+        color: 'crimson',
+        fill: '#fee2e2',
+        fillOpacity: 0.4,
+        stroke: 'red',
+        strokeWidth: 2,
+        strokeOpacity: 0.7,
+        opacity: 0.8,
+        shadow: 'sm',
+        blendMode: 'multiply',
+        dashPattern: [4, 2],
+        dashOffset: -1,
+        lineCap: 'round',
+        lineJoin: 'bevel',
+        fillRule: 'evenodd',
+        roundedCorners: 3,
+        rotate: 30,
+        scale: { x: 1.5, y: 2 },
+      }).success,
+    ).toBe(true);
   });
 
   it('接受 color 主色字段', () => {
@@ -61,6 +81,22 @@ describe('PathDefaultSchema（every path 默认）', () => {
   it('拒被排除字段 children / type', () => {
     expect(PathDefaultSchema.safeParse({ children: [] }).success).toBe(false);
     expect(PathDefaultSchema.safeParse({ type: 'path' }).success).toBe(false);
+  });
+
+  it('拒 instance / structure / decoration 字段', () => {
+    for (const value of [
+      { id: 'path' },
+      { zIndex: 1 },
+      { meta: { source: 'scope' } },
+      { animations: [] },
+      { kind: 'stroke' },
+      { kindOptions: {} },
+      { ribbon: { width: 1 } },
+      { label: { text: 'edge' } },
+      { marks: [] },
+    ]) {
+      expect(PathDefaultSchema.safeParse(value).success).toBe(false);
+    }
   });
 
   it('拒未知字段（strict）', () => {

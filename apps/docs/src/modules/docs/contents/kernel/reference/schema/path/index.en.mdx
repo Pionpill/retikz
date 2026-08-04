@@ -5,9 +5,55 @@ description: A drawn path container, its step actions, and step targets
 
 A `path` is the outer container for a drawn line. Its `children` field is an ordered array of `Step` actions. Compile lowers those steps into renderer-agnostic `PathPrim.commands`; SVG / Canvas adapters then materialize their platform commands. Each step's destination is a `Target`.
 
+Core also exposes five reusable strict fragments for Path fields: stroke, fill, geometry, decoration, and structure. A fragment only owns local JSON fields and local invariants; it is not an independent compile / lowering entry point and does not add drawing capability. Standard, Plot, and other Tier 2 owners may compose the fragments with their own defaults and field restrictions.
+
+<span id="pathstroke"></span>
+
+## PathStroke
+
+`PathStrokeSchema` combines the shared `StrokeStyleSchema` with Path endpoint caps and corner joins. It describes stroke fields only, not Path identity, kind refinements, or decoration.
+
+<ZodSchema name="PathStrokeSchema" />
+
+<span id="pathfill"></span>
+
+## PathFill
+
+`PathFillSchema` controls the winding rule for closed, self-intersecting, or nested sub-paths. The fill paint itself remains part of the graphic-style fields.
+
+<ZodSchema name="PathFillSchema" />
+
+<span id="pathgeometry"></span>
+
+## PathGeometry
+
+`PathGeometrySchema` describes corner rounding, whole-path transforms, and the ordered step children. `children` appears only in a complete Path or in an owner that defines geometry.
+
+<ZodSchema name="PathGeometrySchema" />
+
+<span id="pathdecoration"></span>
+
+## PathDecoration
+
+`PathDecorationSchema` groups host labels and marks placed along a path. It does not carry Path identity or kind selection.
+
+<ZodSchema name="PathDecorationSchema" />
+
+<span id="pathstructure"></span>
+
+## PathStructure
+
+`PathStructureSchema` selects the Path provider and ribbon options. The cross-field relationship among `kind`, `kindOptions`, and `ribbon` remains a refinement of the complete `PathSchema`.
+
+<ZodSchema name="PathStructureSchema" />
+
 ## Path
 
 <ZodSchema name="PathSchema" />
+
+`PathSchema` remains the single complete, compile-valid Path entry. It combines the fragments above with the existing `DrawableInstanceSchema` and `DrawableStyleSchema`, then keeps its kind-specific refinement: the default `stroke` kind requires `children` and rejects `ribbon` / `kindOptions`; `ribbon` requires `ribbon`, with centerline and boundary modes constraining `children`, `upper`, and `lower`; only custom kinds may use `kindOptions`. Existing Path, Scene, and lowering behavior remains compatible.
+
+`PathDefaultSchema` is an explicit Core Scope-owner composition of `GraphicStyleSchema`, `PathStrokeSchema`, `PathFillSchema`, and `PathGeometrySchema` without `children`. It excludes instance, structure, decoration, and `children` fields; it is not an accidental projection of complete Path and is not an independent compile entry. The default `stroke` path consumes every applicable field, while `ribbon` inherits only the `GraphicStyleSchema` subset: dash, cap, join, fill rule, and path-geometry defaults remain accepted by the channel but are silently ignored for ribbons. Tier 2 owners may retain their own defaults and field restrictions when composing these fragments.
 
 React `<Path thickness>` is component / builder sugar that becomes `strokeWidth` before IR is produced, so it is not part of `PathSchema`. See [Path styling](/kernel/components/draw/path#styling) for the preset values.
 
