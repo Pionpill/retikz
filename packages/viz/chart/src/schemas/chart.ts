@@ -1,10 +1,10 @@
 import { z } from 'zod';
 
-import { BubbleChartSpecSchema } from './bubble';
-import { ConnectedScatterChartSpecSchema } from './connected-scatter';
-import { InfrastructureChartSpecSchema } from './infrastructure';
-import { omitUndefinedProperties } from './normalize';
-import { ScatterChartSpecSchema } from './scatter';
+import { BubbleChartSpecSchema } from '../families/scatter-points/bubble';
+import { ConnectedScatterChartSpecSchema } from '../families/scatter-points/connected-scatter';
+import { ScatterChartSpecSchema } from '../families/scatter-points/scatter';
+import { InfrastructureChartSpecSchema } from '../internal/fixture';
+import { omitUndefinedProperties } from '../shared';
 
 type InternalChartSpec =
   | z.infer<typeof InfrastructureChartSpecSchema>

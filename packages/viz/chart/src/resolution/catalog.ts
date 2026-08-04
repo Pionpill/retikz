@@ -1,0 +1,27 @@
+import type { AnyChartRecipe, ChartRecipe, InternalChartSpecBound } from '../families/shared';
+
+import { BubbleChartRecipe } from '../families/scatter-points/bubble';
+import { ConnectedScatterChartRecipe } from '../families/scatter-points/connected-scatter';
+import { ScatterChartRecipe } from '../families/scatter-points/scatter';
+import { InfrastructureChartRecipe } from '../internal/fixture';
+
+/** 把具体 variant recipe 绑定为异构 tuple 可统一消费的闭包表面 */
+export const chartRecipeOf = <TSpec extends InternalChartSpecBound>(recipe: ChartRecipe<TSpec>): AnyChartRecipe => ({
+  type: recipe.type,
+  bind: input => {
+    const spec = recipe.schema.parse(input);
+    return {
+      spec,
+      createSeed: style => recipe.createSeed(spec, style),
+      validateCore: plotSpec => recipe.validateCore(spec, plotSpec),
+    };
+  },
+});
+
+/** 当前版本封闭的内建 Chart recipe tuple */
+export const BUILTIN_CHART_RECIPES = [
+  chartRecipeOf(InfrastructureChartRecipe),
+  chartRecipeOf(ScatterChartRecipe),
+  chartRecipeOf(BubbleChartRecipe),
+  chartRecipeOf(ConnectedScatterChartRecipe),
+] as const;

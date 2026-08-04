@@ -52,8 +52,8 @@ describe('collectShowcasePages', () => {
             id: 'points',
             label: 'common.notFound',
             children: [
-              { id: 'bubble', label: 'common.notFound', meta: showcaseMeta('points', 20) },
-              { id: 'scatter', label: 'common.notFound', meta: showcaseMeta('points', 10) },
+              { id: 'bubble', label: 'common.notFound', meta: showcaseMeta('scatter-points', 20) },
+              { id: 'scatter', label: 'common.notFound', meta: showcaseMeta('scatter-points', 10) },
             ],
           },
           {
@@ -76,13 +76,13 @@ describe('collectShowcasePages', () => {
         path: '/viz/chart/points/scatter',
         segments: ['viz', 'chart', 'points', 'scatter'],
         label: 'common.notFound',
-        metadata: showcaseMeta('points', 10).showcase,
+        metadata: showcaseMeta('scatter-points', 10).showcase,
       },
       {
         path: '/viz/chart/points/bubble',
         segments: ['viz', 'chart', 'points', 'bubble'],
         label: 'common.notFound',
-        metadata: showcaseMeta('points', 20).showcase,
+        metadata: showcaseMeta('scatter-points', 20).showcase,
       },
     ]);
   });
@@ -92,7 +92,7 @@ describe('collectShowcasePages', () => {
       path: '/viz/chart/points/scatter',
       segments: ['viz', 'chart', 'points', 'scatter'],
       label: 'viz.chartScatter',
-      metadata: { family: 'points', role: 'primary', preview: 'scatter-basic', order: 10 },
+      metadata: { family: 'scatter-points', role: 'primary', preview: 'scatter-basic', order: 10 },
     });
   });
 
@@ -101,7 +101,7 @@ describe('collectShowcasePages', () => {
       path: '/viz/chart/points/bubble',
       segments: ['viz', 'chart', 'points', 'bubble'],
       label: 'viz.chartBubble',
-      metadata: { family: 'points', role: 'primary', preview: 'bubble-basic', order: 20 },
+      metadata: { family: 'scatter-points', role: 'primary', preview: 'bubble-basic', order: 20 },
     });
 
     const chartSection = vizSection.find(section => section.id === 'chart');
@@ -143,13 +143,15 @@ describe('collectShowcasePages', () => {
         id: 'chart',
         label: 'common.notFound',
         pages: [
-          { id: 'scatter', label: 'common.notFound', meta: showcaseMeta('points', 10) },
-          { id: 'bubble', label: 'common.notFound', meta: showcaseMeta('points', 10) },
+          { id: 'scatter', label: 'common.notFound', meta: showcaseMeta('scatter-points', 10) },
+          { id: 'bubble', label: 'common.notFound', meta: showcaseMeta('scatter-points', 10) },
         ],
       },
     ];
 
-    expect(() => collectShowcasePages('viz', sections)).toThrow('Duplicate Showcase order 10 in family "points"');
+    expect(() => collectShowcasePages('viz', sections)).toThrow(
+      'Duplicate Showcase order 10 in family "scatter-points"',
+    );
   });
 
   it('Showcase 布局缺少关系元数据时明确失败', () => {
@@ -231,7 +233,7 @@ describe('collectShowcasePages', () => {
   ] as const)('%s Bubble 先说明尺寸语义，再复用共享 API', async (lang, expectedHeadings) => {
     const source = readFileSync(bubbleContentPath(lang), 'utf8');
     expect(source).toContain('{/* @include viz/chart/shared-api */}');
-    expect(source).toContain('family: point');
+    expect(source).toContain('family: scatter-points');
     expect(source).toContain('usage: distribution');
     expect(source).toContain("files: ['bubble-basic', 'bubble-basic.data.ts']");
     expect(source).toContain("size: 'xl'");

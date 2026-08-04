@@ -1,16 +1,10 @@
+export type { ChartContributionSourceValue, IRChartInspection, IRChartInspectionMember } from './inspection';
+export { ChartContributionSource, ChartInspectionMemberSchema, ChartInspectionSchema } from './inspection';
 export type {
-  ChartContributionSourceValue,
   ChartPresentationDefaultItemKeyValue,
   ChartPresentationItemContentKindValue,
   ChartPresentationPresetValue,
   ChartPresentationResolvedContentKindValue,
-  ChartStyleAuthoredOverrideValue,
-  ChartStyleTokenSourceValue,
-  ChartStyleTokenValue,
-  ChartStyleValue,
-  ChartThemeModeValue,
-  IRChartInspection,
-  IRChartInspectionMember,
   IRChartPresentation,
   IRChartPresentationChildContent,
   IRChartPresentationChildItem,
@@ -26,16 +20,9 @@ export type {
   IRChartPresentationStyledText,
   IRChartPresentationText,
   IRChartPresentationTextBlock,
-  IRChartResolvedStyleTokens,
-  IRChartShared,
-  IRChartStyleSurface,
-  IRChartStyleTokenOverrides,
-} from './schemas';
+} from './presentation';
 export {
   CHART_PRESENTATION_DEFAULT_ITEM_KEY_BY_PRESET,
-  ChartContributionSource,
-  ChartInspectionMemberSchema,
-  ChartInspectionSchema,
   ChartPresentationChildContentSchema,
   ChartPresentationChildItemSchema,
   ChartPresentationDefaultItemKey,
@@ -55,8 +42,21 @@ export {
   ChartPresentationStyledTextSchema,
   ChartPresentationTextBlockSchema,
   ChartPresentationTextSchema,
+} from './presentation';
+export type { IRChartShared } from './schemas';
+export { ChartSharedSchema } from './schemas';
+export type {
+  ChartStyleAuthoredOverrideValue,
+  ChartStyleTokenSourceValue,
+  ChartStyleTokenValue,
+  ChartStyleValue,
+  ChartThemeModeValue,
+  IRChartResolvedStyleTokens,
+  IRChartStyleSurface,
+  IRChartStyleTokenOverrides,
+} from './style';
+export {
   ChartResolvedStyleTokensSchema,
-  ChartSharedSchema,
   ChartStyle,
   ChartStyleAuthoredOverride,
   ChartStyleSurfaceSchema,
@@ -64,4 +64,4 @@ export {
   ChartStyleTokenOverridesSchema,
   ChartStyleTokenSource,
   ChartThemeMode,
-} from './schemas';
+} from './style';

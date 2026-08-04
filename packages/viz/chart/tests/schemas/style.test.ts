@@ -8,7 +8,7 @@ import {
   ChartStyleToken,
   ChartStyleTokenOverridesSchema,
   ChartThemeMode,
-} from '../../src/schemas';
+} from '../../src/style';
 
 describe('Chart style schema', () => {
   it('冻结四个 preset、两个 mode 与完整 canonical token 列表', () => {
