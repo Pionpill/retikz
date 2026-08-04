@@ -18,6 +18,7 @@ import {
 } from '../../src/composites/presentation/legend/constants';
 import { createLegend } from '../../src/composites/presentation/legend/factory';
 import { LegendSchema } from '../../src/composites/presentation/legend/schema';
+import { fullScopeProps } from '../composites/presentation/scope-props';
 
 const sample = { type: 'node', position: [0, 0], text: 'Sample' } as const;
 const label = { type: 'node', position: [0, 0], text: 'Label' } as const;
@@ -32,6 +33,18 @@ const expectIssuePath = (value: unknown, path: string): void => {
 };
 
 describe('Legend schema and factory', () => {
+  it('reuses the complete Core Scope authored surface', () => {
+    const parsed = LegendSchema.parse({
+      namespace: 'standard',
+      type: 'legend',
+      ...fullScopeProps,
+      content: { kind: LegendContentKind.Items, items: [] },
+    });
+
+    expect(parsed).toMatchObject(fullScopeProps);
+    expect(LegendSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
+  });
+
   it('creates canonical items IR with every schema default persisted', () => {
     const input = {
       content: {

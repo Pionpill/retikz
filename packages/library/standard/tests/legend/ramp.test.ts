@@ -1,4 +1,4 @@
-import type { IRChild, LayoutChildResult, LayoutProposal } from '@retikz/core';
+import type { GroupPrim, IRChild, LayoutChildResult, LayoutProposal, ScenePrimitive } from '@retikz/core';
 
 import {
   ChildSchema,
@@ -15,6 +15,7 @@ import { LayoutAlignment } from '../../src/composites/layout/shared';
 import { LegendContentKind, LegendDirection } from '../../src/composites/presentation/legend/constants';
 import { LegendDefinition } from '../../src/composites/presentation/legend/definition';
 import { createLegend } from '../../src/composites/presentation/legend/factory';
+import { fullScopeProps } from '../composites/presentation/scope-props';
 
 const LeafSchema = CompositeBaseSchema.extend({
   namespace: z.literal('legend-ramp-test'),
@@ -90,7 +91,41 @@ const compileRamp = (child: IRChild, proposal?: LayoutProposal) => {
   return { observed, output, artifact: envelope.value };
 };
 
+const groupsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<GroupPrim> =>
+  primitives.flatMap(primitive => (primitive.type === 'group' ? [primitive, ...groupsOf(primitive.children)] : []));
+
 describe('Legend ramp compile contract', () => {
+  it('keeps ramp authored Scope props separate from allocation and replay scopes', () => {
+    const { output } = compileRamp(
+      createLegend({
+        ...fullScopeProps,
+        id: 'ramp-root',
+        overflow: 'clip',
+        size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 30 } },
+        content: {
+          kind: LegendContentKind.Ramp,
+          sample: leaf('sample', 80, 10),
+          ticks: [{ key: 'middle', offset: 0.5, label: leaf('label', 20, 8) }],
+        },
+      }),
+    );
+
+    const root = groupsOf(output.scene.primitives).find(group => group.id === 'ramp-root');
+
+    expect(root).toBeDefined();
+    if (root === undefined) throw new Error('Expected authored Legend root Scope');
+    expect(root).toMatchObject({
+      id: 'ramp-root',
+      meta: { source: 'scope-props-test' },
+    });
+    expect(root.transforms).toEqual(expect.arrayContaining([{ kind: 'translate', x: 4, y: 5 }]));
+    expect(root.clipRef).toBeDefined();
+    const allocation = root.children.find(child => child.type === 'group' && child.id === undefined);
+    expect(allocation).toMatchObject({ type: 'group', clipRef: expect.any(String) });
+    expect(allocation).not.toHaveProperty('meta');
+    expect(groupsOf(output.scene.primitives).filter(group => group.clipRef !== undefined)).toHaveLength(2);
+  });
+
   it.each([
     [LayoutAlignment.Start, 0, 0],
     [LayoutAlignment.Center, 70, 20],

@@ -1,8 +1,22 @@
 import { describe, expect, it } from 'vitest';
 
 import { AxesSchema } from '../../../src';
+import { fullScopeProps } from '../presentation/scope-props';
 
 describe('AxesSchema', () => {
+  it('reuses the complete Core Scope authored surface', () => {
+    const parsed = AxesSchema.parse({
+      namespace: 'standard',
+      type: 'axes',
+      ...fullScopeProps,
+      x: { extent: 20 },
+      y: { extent: 20 },
+    });
+
+    expect(parsed).toMatchObject(fullScopeProps);
+    expect(AxesSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
+  });
+
   it('fills origin and per-axis defaults and remains JSON round-trippable', () => {
     const parsed = AxesSchema.parse({
       namespace: 'standard',

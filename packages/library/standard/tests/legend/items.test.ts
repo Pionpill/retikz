@@ -1,5 +1,6 @@
 import type {
   CompileWarning,
+  GroupPrim,
   IRChild,
   LayoutChildResult,
   LayoutProposal,
@@ -32,6 +33,7 @@ import {
 } from '../../src/composites/presentation/legend/constants';
 import { LegendDefinition } from '../../src/composites/presentation/legend/definition';
 import { createLegend } from '../../src/composites/presentation/legend/factory';
+import { fullScopeProps } from '../composites/presentation/scope-props';
 
 const LeafSchema = CompositeBaseSchema.extend({
   namespace: z.literal('legend-test'),
@@ -189,7 +191,81 @@ const pathsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePathPrim
     primitive.type === 'path' ? [primitive] : primitive.type === 'group' ? pathsOf(primitive.children) : [],
   );
 
+const groupsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<GroupPrim> =>
+  primitives.flatMap(primitive => (primitive.type === 'group' ? [primitive, ...groupsOf(primitive.children)] : []));
+
 describe('Legend items compile contract', () => {
+  it('keeps authored Scope props on one root and allocation clip on an anonymous nested Scope', () => {
+    const { output } = compileLegend(
+      createLegend({
+        ...fullScopeProps,
+        id: 'legend-root',
+        overflow: 'clip',
+        size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 40 } },
+        content: {
+          kind: LegendContentKind.Items,
+          items: [{ key: 'active', sample: leaf('sample', 80, 12), label: leaf('label', 20, 8) }],
+        },
+      }),
+    );
+    const root = groupsOf(output.scene.primitives).find(group => group.id === 'legend-root');
+
+    expect(root).toBeDefined();
+    if (root === undefined) throw new Error('Expected authored Legend root Scope');
+    expect(root).toMatchObject({
+      id: 'legend-root',
+      meta: { source: 'scope-props-test' },
+    });
+    expect(root.transforms).toEqual(expect.arrayContaining([{ kind: 'translate', x: 4, y: 5 }]));
+    expect(root.clipRef).toBeDefined();
+
+    const allocation = root.children.find(child => child.type === 'group' && child.id === undefined);
+    expect(allocation).toMatchObject({ type: 'group', clipRef: expect.any(String) });
+    expect(allocation).not.toHaveProperty('meta');
+    expect(allocation).not.toHaveProperty('zIndex');
+    expect(groupsOf(output.scene.primitives).filter(group => group.clipRef !== undefined)).toHaveLength(2);
+  });
+
+  it('keeps an empty authored Legend root without manufacturing a placeholder child', () => {
+    const { output } = compileLegend(
+      createLegend({
+        id: 'empty-legend',
+        content: { kind: LegendContentKind.Items, items: [] },
+      }),
+    );
+    const root = groupsOf(output.scene.primitives).find(group => group.id === 'empty-legend');
+
+    expect(root).toBeDefined();
+    expect(root?.children).not.toContainEqual(expect.objectContaining({ type: 'node', text: '' }));
+  });
+
+  it('uses the authored root zIndex when ordering the complete Legend group', () => {
+    const output = compileToScene(
+      {
+        type: 'scene',
+        version: 1,
+        children: [
+          createLegend({
+            id: 'legend-order',
+            zIndex: 2,
+            content: {
+              kind: LegendContentKind.Items,
+              items: [{ key: 'item', sample: { type: 'node', position: [0, 0], text: 'item' } }],
+            },
+          }),
+          { type: 'node', id: 'above-legend', position: [20, 0], text: 'above', zIndex: 5 },
+        ],
+      },
+      { composites: [LegendDefinition], padding: 0 },
+    );
+    const groups = groupsOf(output.scene.primitives);
+    const legendIndex = groups.findIndex(group => group.id === 'legend-order');
+    const aboveIndex = groups.findIndex(group => group.id === 'above-legend');
+
+    expect(legendIndex).toBeGreaterThanOrEqual(0);
+    expect(aboveIndex).toBeGreaterThan(legendIndex);
+  });
+
   it.each([
     [LayoutAlignment.Start, 0, 0],
     [LayoutAlignment.Center, 40, 30],

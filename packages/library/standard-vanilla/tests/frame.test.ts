@@ -17,7 +17,7 @@ import {
 
 const input: FrameVanillaInput = {
   padding: 12,
-  border: { cornerRadius: 6 },
+  border: { style: { stroke: '#0284c7', zIndex: 4 }, cornerRadius: 6 },
   headerDirection: 'vertical',
   title: frameTitle({ text: 'Contract', font: { family: 'serif' } }),
   description: frameDescription({ text: 'One registry contract.', maxTextWidth: 220 }),

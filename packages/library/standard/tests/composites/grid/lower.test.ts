@@ -4,6 +4,7 @@ import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { createGrid, GridDefinition, lowerGrid } from '../../../src';
+import { fullScopeProps } from '../presentation/scope-props';
 
 const findGridGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrim | undefined => {
   for (const primitive of primitives) {
@@ -72,26 +73,14 @@ describe('GridDefinition', () => {
   it('preserves authored Scope props on one stable root', () => {
     const lowered = lowerGrid(
       createGrid({
-        id: 'grid-root',
-        localNamespace: true,
-        zIndex: 4,
-        stroke: '#334155',
-        transforms: [{ kind: 'translate', x: 2, y: 3 }],
-        meta: { source: 'test' },
+        ...fullScopeProps,
         bounds: { start: [0, 0], end: [20, 10] },
       }),
     );
 
-    expect(lowered).toMatchObject({
-      type: 'scope',
-      id: 'grid-root',
-      localNamespace: true,
-      zIndex: 4,
-      stroke: '#334155',
-      transforms: [{ kind: 'translate', x: 2, y: 3 }],
-      meta: { source: 'test' },
-    });
+    expect(lowered).toMatchObject({ type: 'scope', ...fullScopeProps });
     expect(lowered.children).toHaveLength(5);
+    expect(lowered.children.every(child => child.id === undefined)).toBe(true);
   });
 
   it('normalizes reversed corners independently on both axes', () => {
@@ -173,6 +162,27 @@ describe('GridDefinition', () => {
         { type: 'step', kind: 'line', to: [-10, 5] },
       ],
     });
+  });
+
+  it('keeps centered-position allocation separate from the authored root Scope', () => {
+    const lowered = lowerGrid(
+      createGrid({
+        ...fullScopeProps,
+        bounds: { position: [30, 20], width: 25, height: 15 },
+        line: { spacing: 10 },
+      }),
+    );
+    const allocationScope = lowered.children[0];
+
+    expect(lowered).toMatchObject({ type: 'scope', ...fullScopeProps });
+    expect(allocationScope).toMatchObject({
+      type: 'scope',
+      transforms: [{ kind: 'offset-translate', of: [30, 20] }],
+    });
+    expect(allocationScope).not.toHaveProperty('id');
+    expect(allocationScope).not.toHaveProperty('meta');
+    expect(allocationScope).not.toHaveProperty('clip');
+    expect(allocationScope).not.toHaveProperty('placement');
   });
 
   it('keeps center origin local and defaults it to the local top-left corner', () => {

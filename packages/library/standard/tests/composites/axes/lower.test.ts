@@ -4,6 +4,7 @@ import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { AxesDefinition, createAxes, lowerAxes } from '../../../src';
+import { fullScopeProps } from '../presentation/scope-props';
 
 const endpoints = (path: IRPath) => path.children.map(step => ('to' in step ? step.to : undefined));
 const lowerAxesChildren = (input: Parameters<typeof lowerAxes>[0]): Array<IRNode | IRPath> =>
@@ -102,27 +103,15 @@ describe('lowerAxes', () => {
   it('preserves authored Scope props on one stable root', () => {
     const lowered = lowerAxes(
       createAxes({
-        id: 'axes-root',
-        localNamespace: true,
-        zIndex: 3,
-        stroke: '#334155',
-        transforms: [{ kind: 'translate', x: 4, y: 5 }],
-        meta: { source: 'test' },
+        ...fullScopeProps,
         x: { extent: 20, label: false },
         y: { extent: 20, label: false },
       }),
     );
 
-    expect(lowered).toMatchObject({
-      type: 'scope',
-      id: 'axes-root',
-      localNamespace: true,
-      zIndex: 3,
-      stroke: '#334155',
-      transforms: [{ kind: 'translate', x: 4, y: 5 }],
-      meta: { source: 'test' },
-    });
+    expect(lowered).toMatchObject({ type: 'scope', ...fullScopeProps });
     expect(lowered.children).toHaveLength(2);
+    expect(lowered.children.every(child => child.id === undefined)).toBe(true);
   });
 
   it('places arrow marks at independently configured axis endpoints', () => {

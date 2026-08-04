@@ -30,6 +30,17 @@ const itemLabel = <Node position={[0, 0]} text="Active" />;
 const contribute = (props: LegendProps) => Legend.embeddableAdapter.contribute(props);
 
 describe('<Legend>', () => {
+  it('forwards authored root Scope identity and metadata through both forms', () => {
+    const contribution = contribute({
+      kind: LegendContentKind.Items,
+      id: 'authored-legend',
+      meta: { source: 'react' },
+      children: <LegendItem itemKey="active" sample={itemSample} />,
+    });
+
+    expect(contribution.node).toMatchObject({ id: 'authored-legend', meta: { source: 'react' } });
+  });
+
   it('exports explicit items and ramp forms with required marker props', () => {
     expect(Legend).toBeTypeOf('function');
     expect(LegendTitle).toBeTypeOf('function');

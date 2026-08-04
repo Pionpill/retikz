@@ -22,6 +22,19 @@ const input: AxesInput = {
 };
 
 describe('axes()', () => {
+  it('keeps an authored root id distinct from the Vanilla embed id', () => {
+    const embed = axes('host-occurrence', { ...input, id: 'authored-axes', meta: { source: 'vanilla' } });
+    const contribution = AxesVanillaAdapter.lower(embed.props, {
+      id: embed.id,
+      kind: embed.kind,
+      namespace: AxesVanillaAdapter.namespace,
+      layerId: 'main',
+      identityPath: ['main', embed.id],
+    });
+
+    expect(contribution.node).toMatchObject({ id: 'authored-axes', meta: { source: 'vanilla' } });
+  });
+
   it('creates an embed that contributes canonical Axes IR', () => {
     const embed = axes('plane', input);
     const contribution = AxesVanillaAdapter.lower(embed.props, {

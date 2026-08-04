@@ -22,6 +22,18 @@ const input: AxesInput = {
 };
 
 describe('<Axes>', () => {
+  it('forwards authored root Scope identity instead of deriving it from React host state', () => {
+    const authored = {
+      ...input,
+      id: 'authored-axes',
+      localNamespace: true,
+      meta: { source: 'react' },
+    };
+    const contribution = Axes.embeddableAdapter.contribute(authored);
+
+    expect(contribution.node).toMatchObject({ id: 'authored-axes', localNamespace: true, meta: { source: 'react' } });
+  });
+
   it('contributes canonical Axes IR through one stable local definition maker', () => {
     const first = Axes.embeddableAdapter.contribute(input);
     const second = Axes.embeddableAdapter.contribute(input);

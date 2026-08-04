@@ -1,10 +1,25 @@
 import { describe, expect, it } from 'vitest';
 
 import { FrameDescriptionSchema, FrameHeaderDirection, FrameSchema, FrameTitleSchema } from '../../../src';
+import { fullScopeProps } from '../presentation/scope-props';
 
 const node = { type: 'node', position: [0, 0], text: 'A' } as const;
 
 describe('FrameSchema', () => {
+  it('reuses the complete Core Scope authored surface while keeping border fields nested', () => {
+    const parsed = FrameSchema.parse({
+      namespace: 'standard',
+      type: 'frame',
+      ...fullScopeProps,
+      id: 'frame-root',
+      border: { style: { stroke: '#0284c7' }, cornerRadius: 4 },
+      children: [node],
+    });
+
+    expect(parsed).toMatchObject({ ...fullScopeProps, id: 'frame-root', border: { cornerRadius: 4 } });
+    expect(FrameSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
+  });
+
   it('fills stable border, padding, and header gap defaults and round-trips through JSON', () => {
     const parsed = FrameSchema.parse({
       namespace: 'standard',
