@@ -50,7 +50,7 @@ describe('frame()', () => {
         type: 'figure',
         version: 1,
         children: [
-          grid('paper', { bounds: { start: [-2, -1], end: [2, 1] }, spacing: 1 }),
+          grid('paper', { bounds: { start: [-2, -1], end: [2, 1] }, line: { spacing: 1 } }),
           axes('plane', { extent: { x: 20, y: 20 } }),
           frame('definition-contract', input),
         ],

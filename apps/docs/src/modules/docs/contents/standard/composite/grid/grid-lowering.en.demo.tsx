@@ -10,7 +10,7 @@ const Demo: FC = () => (
       position={[-310, 0]}
       text={[
         { text: 'Grid IR', font: { size: 14, weight: 'bold' } },
-        { text: 'bounds · lines · position', fill: 'gray', font: { size: 12 } },
+        { text: 'bounds · line · position', fill: 'gray', font: { size: 12 } },
       ]}
       stroke="darkorange"
       fill="darkorange"
@@ -49,7 +49,7 @@ const Demo: FC = () => (
       position={[165, 0]}
       text={[
         { text: 'Classify and assemble', font: { size: 14, weight: 'bold' } },
-        { text: 'lines · majors · border', fill: 'gray', font: { size: 12 } },
+        { text: 'line · major · border', fill: 'gray', font: { size: 12 } },
       ]}
       stroke="gray"
       fill="gray"

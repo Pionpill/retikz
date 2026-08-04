@@ -29,7 +29,7 @@ Each Standard composite owner directly exports its Definition, factory, schema, 
 ```ts
 import { createGrid, GridDefinition, GridSchema } from '@retikz/standard';
 
-const grid = GridSchema.parse(createGrid({ bounds: { start: [20, 20], end: [260, 150] }, spacing: 20 }));
+const grid = GridSchema.parse(createGrid({ bounds: { start: [20, 20], end: [260, 150] }, line: { spacing: 20 } }));
 const compileOptions = { composites: [GridDefinition] };
 ```
 

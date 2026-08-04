@@ -8,7 +8,7 @@ import { createGrid, createLegend, GridDefinition, LegendDefinition } from '../s
 const gridScene: IRScene = {
   type: 'scene',
   version: 1,
-  children: [createGrid({ bounds: { start: [0, 0], end: [10, 10] }, spacing: 10 })],
+  children: [createGrid({ bounds: { start: [0, 0], end: [10, 10] }, line: { spacing: 10 } })],
 };
 
 describe('Standard direct definition loading', () => {
@@ -41,7 +41,7 @@ describe('Standard direct definition loading', () => {
         items: [
           {
             key: 'grid',
-            sample: createGrid({ bounds: { start: [0, 0], end: [10, 10] }, spacing: 10 }),
+            sample: createGrid({ bounds: { start: [0, 0], end: [10, 10] }, line: { spacing: 10 } }),
           },
         ],
       },

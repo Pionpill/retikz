@@ -11,8 +11,10 @@ const Demo: FC = () => (
     </Node>
     <Grid
       bounds={{ start: [18, 42], end: [172, 122] }}
-      spacing={{ x: 20, y: 14 }}
-      lines={{ includeBoundary: true, style: { stroke: 'lightgray' } }}
+      line={{
+        vertical: { spacing: 20, includeBoundary: true, style: { stroke: 'lightgray' } },
+        horizontal: { spacing: 14, includeBoundary: true, style: { stroke: 'lightgray' } },
+      }}
     />
 
     <Node position={[285, 18]} stroke="none" fill="none" padding={0} font={{ size: 12 }}>
@@ -20,9 +22,7 @@ const Demo: FC = () => (
     </Node>
     <Grid
       bounds={{ position: [285, 82], width: 154, height: 80 }}
-      spacing={18}
-      origin={[0, 0]}
-      lines={{ includeBoundary: true, style: { stroke: 'lightgray' } }}
+      line={{ spacing: 18, origin: 0, includeBoundary: true, style: { stroke: 'lightgray' } }}
     />
 
     <Node position={[475, 18]} stroke="none" fill="none" padding={0} font={{ size: 12 }}>
@@ -30,9 +30,12 @@ const Demo: FC = () => (
     </Node>
     <Grid
       bounds={{ start: [398, 42], end: [552, 122] }}
-      spacing={12}
-      lines={{ includeBoundary: true, style: { stroke: 'lightgray' } }}
-      major={{ every: 3, style: { stroke: 'gray', strokeWidth: 1.5 } }}
+      line={{
+        spacing: 12,
+        includeBoundary: true,
+        style: { stroke: 'lightgray' },
+        major: { every: 3, style: { stroke: 'gray', strokeWidth: 1.5 } },
+      }}
     />
 
     <Node position={[665, 18]} stroke="none" fill="none" padding={0} font={{ size: 12 }}>
@@ -40,9 +43,10 @@ const Demo: FC = () => (
     </Node>
     <Grid
       bounds={{ start: [742, 122], end: [588, 42] }}
-      spacing={20}
-      origin={[600, 60]}
-      lines={{ includeBoundary: true, style: { stroke: 'lightgray' } }}
+      line={{
+        vertical: { spacing: 20, origin: 600, includeBoundary: true, style: { stroke: 'lightgray' } },
+        horizontal: { spacing: 20, origin: 60, includeBoundary: true, style: { stroke: 'lightgray' } },
+      }}
       border={{ padding: 4, order: 'behind', extendLines: true, style: { stroke: 'gray' } }}
     />
   </Layout>

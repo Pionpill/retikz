@@ -36,8 +36,7 @@ const Demo: FC = () => {
       {/* background grid */}
       <Grid
         bounds={{ start: [-100, -100], end: [100, 100] }}
-        spacing={50}
-        lines={{ style: { stroke: 'lightgray', strokeWidth: 0.5 } }}
+        line={{ spacing: 50, style: { stroke: 'lightgray', strokeWidth: 0.5 } }}
       />
 
       {/* unit circle */}

@@ -7,11 +7,11 @@ describe('<Grid>', () => {
   it('contributes the same Standard Grid IR and a stable local definition maker', () => {
     const first = Grid.embeddableAdapter.contribute({
       bounds: { start: [0, 0], end: [20, 10] },
-      spacing: 10,
+      line: { spacing: 10 },
     });
     const second = Grid.embeddableAdapter.contribute({
       bounds: { start: [0, 0], end: [20, 10] },
-      spacing: 10,
+      line: { spacing: 10 },
     });
 
     expect(first.node).toMatchObject({ namespace: 'standard', type: 'grid' });
@@ -22,7 +22,7 @@ describe('<Grid>', () => {
   it('accepts a center-form Cartesian position through the shared Grid input', () => {
     const input = {
       bounds: { position: [20, 10], width: 40, height: 20 },
-      spacing: 10,
+      line: { spacing: 10 },
     } as const;
 
     expect(Grid.embeddableAdapter.contribute(input).node).toEqual(createGrid(input));
@@ -35,7 +35,7 @@ describe('<Grid>', () => {
         width: 20,
         height: 10,
       },
-      spacing: 10,
+      line: { spacing: 10 },
     } as const;
 
     expect(Grid.embeddableAdapter.contribute(input).node).toEqual(createGrid(input));

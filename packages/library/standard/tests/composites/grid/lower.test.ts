@@ -21,7 +21,7 @@ const firstStepPosition = (child: LoweredChild): unknown => {
 
 describe('GridDefinition', () => {
   it('lowers a uniform grid to ordered Core paths', () => {
-    const lowered = lowerGrid(createGrid({ bounds: { start: [0, 0], end: [20, 10] }, spacing: 10 }));
+    const lowered = lowerGrid(createGrid({ bounds: { start: [0, 0], end: [20, 10] } }));
 
     expect(lowered).toEqual([
       {
@@ -63,19 +63,28 @@ describe('GridDefinition', () => {
   });
 
   it('normalizes reversed corners independently on both axes', () => {
-    const ordered = lowerGrid(createGrid({ bounds: { start: [0, 0], end: [20, 10] }, spacing: 10 }));
-    const reversed = lowerGrid(createGrid({ bounds: { start: [20, 0], end: [0, 10] }, spacing: 10 }));
+    const ordered = lowerGrid(createGrid({ bounds: { start: [0, 0], end: [20, 10] }, line: { spacing: 10 } }));
+    const reversed = lowerGrid(createGrid({ bounds: { start: [20, 0], end: [0, 10] }, line: { spacing: 10 } }));
 
     expect(reversed).toEqual(ordered);
   });
 
-  it('uses axis-specific spacing and shared line and major styles', () => {
+  it('uses direction-specific spacing, line styles, and major styles', () => {
     const lowered = lowerGrid(
       createGrid({
         bounds: { start: [0, 0], end: [25, 20] },
-        spacing: { x: 10, y: 5 },
-        lines: { style: { stroke: '#94a3b8', strokeWidth: 0.75 } },
-        major: { every: 2, style: { strokeWidth: 2 } },
+        line: {
+          vertical: {
+            spacing: 10,
+            style: { stroke: '#94a3b8', strokeWidth: 0.75 },
+            major: { every: 2, style: { strokeWidth: 2 } },
+          },
+          horizontal: {
+            spacing: 5,
+            style: { stroke: '#64748b', strokeWidth: 0.5 },
+            major: { every: 2, style: { strokeWidth: 3 } },
+          },
+        },
       }),
     );
 
@@ -95,28 +104,30 @@ describe('GridDefinition', () => {
     expect(lowered[0]).toMatchObject({ stroke: '#94a3b8', strokeWidth: 2 });
     expect(lowered[1]).toMatchObject({ stroke: '#94a3b8', strokeWidth: 0.75 });
     expect(lowered[2]).toMatchObject({ stroke: '#94a3b8', strokeWidth: 2 });
-    expect(lowered[3]).toMatchObject({ stroke: '#94a3b8', strokeWidth: 2 });
-    expect(lowered[4]).toMatchObject({ stroke: '#94a3b8', strokeWidth: 0.75 });
-    expect(lowered[5]).toMatchObject({ stroke: '#94a3b8', strokeWidth: 2 });
-    expect(lowered[6]).toMatchObject({ stroke: '#94a3b8', strokeWidth: 0.75 });
-    expect(lowered[7]).toMatchObject({ stroke: '#94a3b8', strokeWidth: 2 });
+    expect(lowered[3]).toMatchObject({ stroke: '#64748b', strokeWidth: 3 });
+    expect(lowered[4]).toMatchObject({ stroke: '#64748b', strokeWidth: 0.5 });
+    expect(lowered[5]).toMatchObject({ stroke: '#64748b', strokeWidth: 3 });
+    expect(lowered[6]).toMatchObject({ stroke: '#64748b', strokeWidth: 0.5 });
+    expect(lowered[7]).toMatchObject({ stroke: '#64748b', strokeWidth: 3 });
   });
 
-  it('allows one line direction to be disabled', () => {
+  it('disables all grid lines without disabling the border', () => {
     const lowered = lowerGrid(
       createGrid({
         bounds: { start: [0, 0], end: [20, 10] },
-        spacing: 10,
-        lines: { vertical: true, horizontal: false },
+        line: false,
+        border: { padding: 2, style: { stroke: '#64748b' } },
       }),
     );
 
-    expect(lowered).toHaveLength(3);
-    expect(lowered.every(child => child.type === 'path')).toBe(true);
+    expect(lowered).toHaveLength(1);
+    expect(lowered[0]).toMatchObject({ type: 'path', stroke: '#64748b' });
   });
 
   it('lowers center bounds in local coordinates inside an offset Scope', () => {
-    const lowered = lowerGrid(createGrid({ bounds: { position: [10, 5], width: 20, height: 10 }, spacing: 10 }));
+    const lowered = lowerGrid(
+      createGrid({ bounds: { position: [10, 5], width: 20, height: 10 }, line: { spacing: 10 } }),
+    );
 
     expect(lowered).toHaveLength(1);
     expect(lowered[0]).toMatchObject({
@@ -134,13 +145,12 @@ describe('GridDefinition', () => {
 
   it('keeps center origin local and defaults it to the local top-left corner', () => {
     const defaultOrigin = lowerGrid(
-      createGrid({ bounds: { position: [30, 20], width: 25, height: 15 }, spacing: 10 }),
+      createGrid({ bounds: { position: [30, 20], width: 25, height: 15 }, line: { spacing: 10 } }),
     )[0] as IRScope;
     const explicitOrigin = lowerGrid(
       createGrid({
         bounds: { position: [30, 20], width: 25, height: 15 },
-        spacing: 10,
-        origin: [0, 0],
+        line: { spacing: 10, origin: 0 },
       }),
     )[0] as IRScope;
 
@@ -160,10 +170,10 @@ describe('GridDefinition', () => {
 
   it('lowers zero-width and zero-height center bounds to finite degenerate paths', () => {
     const zeroWidth = lowerGrid(
-      createGrid({ bounds: { position: [10, 5], width: 0, height: 10 }, spacing: 10 }),
+      createGrid({ bounds: { position: [10, 5], width: 0, height: 10 }, line: { spacing: 10 } }),
     )[0] as IRScope;
     const zeroHeight = lowerGrid(
-      createGrid({ bounds: { position: [10, 5], width: 20, height: 0 }, spacing: 10 }),
+      createGrid({ bounds: { position: [10, 5], width: 20, height: 0 }, line: { spacing: 10 } }),
     )[0] as IRScope;
 
     expect(zeroWidth.children).toHaveLength(3);
@@ -182,10 +192,13 @@ describe('GridDefinition', () => {
     const lowered = lowerGrid(
       createGrid({
         bounds: { start: [1, 0], end: [25, 10] },
-        spacing: 10,
-        origin: [0, 0],
-        lines: { includeBoundary: true, style: { stroke: '#cbd5e1', strokeWidth: 0.5 } },
-        major: { every: 2, style: { strokeWidth: 2 } },
+        line: {
+          spacing: 10,
+          origin: 0,
+          includeBoundary: true,
+          style: { stroke: '#cbd5e1', strokeWidth: 0.5 },
+          major: { every: 2, style: { strokeWidth: 2 } },
+        },
       }),
     );
 
@@ -211,7 +224,7 @@ describe('GridDefinition', () => {
     const lowered = lowerGrid(
       createGrid({
         bounds: { start: [0, 0], end: [10, 10] },
-        spacing: 10,
+        line: { spacing: 10 },
         border: {
           padding: 2,
           order: 'behind',
@@ -246,7 +259,7 @@ describe('GridDefinition', () => {
       {
         type: 'scene',
         version: 1,
-        children: [createGrid({ bounds: { position: [10, 5], width: 20, height: 10 }, spacing: 10 })],
+        children: [createGrid({ bounds: { position: [10, 5], width: 20, height: 10 }, line: { spacing: 10 } })],
       },
       { composites: [GridDefinition], onWarn: warning => warnings.push(warning.code) },
     ).scene;
@@ -270,7 +283,7 @@ describe('GridDefinition', () => {
               width: 20,
               height: 10,
             },
-            spacing: 10,
+            line: { spacing: 10 },
           }),
         ],
       },
@@ -291,7 +304,7 @@ describe('GridDefinition', () => {
         children: [
           createGrid({
             bounds: { position: { origin: 'missing', angle: 0, radius: 20 }, width: 20, height: 10 },
-            spacing: 10,
+            line: { spacing: 10 },
           }),
         ],
       },
@@ -307,7 +320,7 @@ describe('GridDefinition', () => {
       {
         type: 'scene',
         version: 1,
-        children: [createGrid({ bounds: { start: [0, 0], end: [10, 10] }, spacing: 10 })],
+        children: [createGrid({ bounds: { start: [0, 0], end: [10, 10] }, line: { spacing: 10 } })],
       },
       { onWarn: warning => warnings.push(warning.code) },
     );
@@ -321,8 +334,10 @@ describe('GridDefinition', () => {
         namespace: 'standard',
         type: 'grid',
         bounds: { start: [-1, -1], end: [1, 1] },
-        spacing: { x: Number.MIN_VALUE, y: Number.MIN_VALUE },
-        lines: { vertical: true, horizontal: true, includeBoundary: false },
+        line: {
+          vertical: { spacing: Number.MIN_VALUE, includeBoundary: false },
+          horizontal: { spacing: Number.MIN_VALUE, includeBoundary: false },
+        },
       }),
     ).toThrow(/finite safe integers/i);
     expect(() =>
@@ -330,8 +345,10 @@ describe('GridDefinition', () => {
         namespace: 'standard',
         type: 'grid',
         bounds: { position: [0, 0], width: 2, height: 2 },
-        spacing: { x: Number.MIN_VALUE, y: Number.MIN_VALUE },
-        lines: { vertical: true, horizontal: true, includeBoundary: false },
+        line: {
+          vertical: { spacing: Number.MIN_VALUE, includeBoundary: false },
+          horizontal: { spacing: Number.MIN_VALUE, includeBoundary: false },
+        },
       }),
     ).toThrow(/finite safe integers/i);
   });

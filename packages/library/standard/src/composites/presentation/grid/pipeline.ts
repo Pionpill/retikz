@@ -1,30 +1,37 @@
 import type { IRPath, IRScope } from '@retikz/core';
 
 import type { IRStandardPathBorderStyle, IRStandardPathStrokeStyle } from '../shared/types';
-import type { IRGrid } from './types';
+import type { IRGrid, IRGridLine } from './types';
 
 import { enumerateLattice } from '../shared/lattice';
-import { GridBorderOrder } from './constants';
+import { DEFAULT_GRID_LINE_SPACING, GridBorderOrder } from './constants';
 
-type GridLineBounds = {
+type GridBounds = {
   minX: number;
   maxX: number;
   minY: number;
   maxY: number;
+};
+
+type GridLineBounds = GridBounds & {
   lineMinX: number;
   lineMaxX: number;
   lineMinY: number;
   lineMaxY: number;
 };
 
-type NormalizedGrid = GridLineBounds & {
+type NormalizedGrid = GridBounds & {
   position?: Extract<IRGrid['bounds'], { position: unknown }>['position'];
 };
+
+type GridLineConfig = IRGridLine;
+type GridLinePair = { vertical: GridLineConfig; horizontal: GridLineConfig };
 
 /** 将 Standard Grid 规则确定性下沉为已有 Core Path 或带中心定位的 Scope */
 export const lowerGrid = (grid: IRGrid): Array<IRPath | IRScope> => {
   const normalized = normalizeGrid(grid);
   const { minX, minY, maxX, maxY } = normalized;
+  const line = normalizeGridLine(grid.line);
   const borderPadding = grid.border?.padding ?? 0;
   const lineBounds: GridLineBounds = {
     minX,
@@ -42,26 +49,9 @@ export const lowerGrid = (grid: IRGrid): Array<IRPath | IRScope> => {
     paths.push(createGridBorderPath(minX, minY, maxX, maxY, borderPadding, grid.border.style));
   }
 
-  const [spacingX, spacingY] =
-    typeof grid.spacing === 'number' ? [grid.spacing, grid.spacing] : [grid.spacing.x, grid.spacing.y];
-
-  if (grid.lines.vertical) {
-    appendGridLines(paths, 'vertical', normalized, lineBounds, {
-      spacing: spacingX,
-      origin: grid.origin?.[0] ?? normalized.minX,
-      includeBoundary: grid.lines.includeBoundary,
-      style: grid.lines.style,
-      major: grid.major,
-    });
-  }
-  if (grid.lines.horizontal) {
-    appendGridLines(paths, 'horizontal', normalized, lineBounds, {
-      spacing: spacingY,
-      origin: grid.origin?.[1] ?? normalized.minY,
-      includeBoundary: grid.lines.includeBoundary,
-      style: grid.lines.style,
-      major: grid.major,
-    });
+  if (line !== false) {
+    appendGridLines(paths, 'vertical', normalized, lineBounds, line.vertical);
+    appendGridLines(paths, 'horizontal', normalized, lineBounds, line.horizontal);
   }
 
   if (grid.border !== undefined && grid.border.order === GridBorderOrder.Front) {
@@ -106,11 +96,20 @@ const normalizeGrid = (grid: IRGrid): NormalizedGrid => {
     minY,
     maxY,
     position,
-    lineMinX: grid.border?.extendLines ? minX - grid.border.padding : minX,
-    lineMaxX: grid.border?.extendLines ? maxX + grid.border.padding : maxX,
-    lineMinY: grid.border?.extendLines ? minY - grid.border.padding : minY,
-    lineMaxY: grid.border?.extendLines ? maxY + grid.border.padding : maxY,
   };
+};
+
+const normalizeGridLine = (line: IRGrid['line'] | undefined): GridLinePair | false => {
+  if (line === false) return false;
+  if (line === true || line === undefined) {
+    const defaultLine: GridLineConfig = {
+      spacing: DEFAULT_GRID_LINE_SPACING,
+      includeBoundary: false,
+    };
+    return { vertical: defaultLine, horizontal: defaultLine };
+  }
+  if ('vertical' in line) return line;
+  return { vertical: line, horizontal: line };
 };
 
 const appendGridLines = (
@@ -118,20 +117,14 @@ const appendGridLines = (
   axis: 'vertical' | 'horizontal',
   normalized: NormalizedGrid,
   bounds: GridLineBounds,
-  line: {
-    spacing: number;
-    origin: number;
-    includeBoundary: boolean;
-    style?: IRStandardPathStrokeStyle;
-    major?: IRGrid['major'];
-  },
+  line: GridLineConfig,
 ): void => {
   const isVertical = axis === 'vertical';
   const lattice = enumerateLattice({
     min: isVertical ? normalized.minX : normalized.minY,
     max: isVertical ? normalized.maxX : normalized.maxY,
     spacing: line.spacing,
-    origin: line.origin,
+    origin: line.origin ?? (isVertical ? normalized.minX : normalized.minY),
     includeBoundary: line.includeBoundary,
   });
 
@@ -143,7 +136,7 @@ const appendGridLines = (
   });
 };
 
-const isMajorLine = (index: number | undefined, major: IRGrid['major']): boolean => {
+const isMajorLine = (index: number | undefined, major: GridLineConfig['major']): boolean => {
   if (major === undefined || index === undefined) return false;
   return (((index - major.offset) % major.every) + major.every) % major.every === 0;
 };

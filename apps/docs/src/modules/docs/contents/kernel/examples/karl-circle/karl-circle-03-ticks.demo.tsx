@@ -18,8 +18,7 @@ const Demo: FC = () => {
       {/* 背景网格由 Standard Grid 声明，lowering 后复用 Core Path */}
       <Grid
         bounds={{ start: [-100, -100], end: [100, 100] }}
-        spacing={50}
-        lines={{ style: { stroke: 'lightgray', strokeWidth: 0.5 } }}
+        line={{ spacing: 50, style: { stroke: 'lightgray', strokeWidth: 0.5 } }}
       />
 
       {/* 单位圆（半径 100px） */}

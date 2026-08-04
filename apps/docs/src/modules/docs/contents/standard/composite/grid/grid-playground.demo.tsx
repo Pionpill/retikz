@@ -14,8 +14,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     start: values.boundsStart,
     end: values.boundsEnd,
   };
-  const spacing = values.spacingMode === 'uniform' ? values.spacing : { x: values.spacingX, y: values.spacingY };
-  const origin: [number, number] | undefined = values.originEnabled ? [values.originX, values.originY] : undefined;
   const lineStyle = {
     stroke: values.lineStroke,
     strokeWidth: values.lineStrokeWidth,
@@ -49,12 +47,25 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         },
       }
     : undefined;
+  const line = {
+    vertical: {
+      spacing: values.spacingMode === 'uniform' ? values.spacing : values.spacingX,
+      ...(values.originEnabled ? { origin: values.originX } : {}),
+      includeBoundary: values.includeBoundary,
+      style: lineStyle,
+      ...(major === undefined ? {} : { major }),
+    },
+    horizontal: {
+      spacing: values.spacingMode === 'uniform' ? values.spacing : values.spacingY,
+      ...(values.originEnabled ? { origin: values.originY } : {}),
+      includeBoundary: values.includeBoundary,
+      style: lineStyle,
+      ...(major === undefined ? {} : { major }),
+    },
+  };
   const gridInput = {
     bounds,
-    spacing,
-    ...(origin === undefined ? {} : { origin }),
-    lines: { includeBoundary: values.includeBoundary, style: lineStyle },
-    ...(major === undefined ? {} : { major }),
+    line,
     ...(border === undefined ? {} : { border }),
   };
 

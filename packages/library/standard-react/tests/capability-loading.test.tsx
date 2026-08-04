@@ -9,7 +9,7 @@ describe('Standard React definition loading', () => {
     expect(() =>
       renderToStaticMarkup(
         <Layout width={120} height={80}>
-          <Grid bounds={{ start: [0, 0], end: [20, 20] }} spacing={10} />
+          <Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />
           <Axes extent={{ x: 20, y: 20 }} />
           <Frame id="contract">
             <FrameTitle text="Contract" />
@@ -31,7 +31,7 @@ describe('Standard React definition loading', () => {
   it('keeps nested Tier 2 capability loading explicit at the Legend boundary', () => {
     const legend = (
       <Legend kind={LegendContentKind.Items}>
-        <LegendItem itemKey="grid" sample={<Grid bounds={{ start: [0, 0], end: [20, 20] }} spacing={10} />} />
+        <LegendItem itemKey="grid" sample={<Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />} />
       </Legend>
     );
 
@@ -54,7 +54,10 @@ describe('Standard React definition loading', () => {
         .contribute({
           kind: LegendContentKind.Items,
           children: (
-            <LegendItem itemKey="grid" sample={<Grid bounds={{ start: [0, 0], end: [20, 20] }} spacing={10} />} />
+            <LegendItem
+              itemKey="grid"
+              sample={<Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />}
+            />
           ),
         })
         .makeComposites({}),
@@ -65,7 +68,7 @@ describe('Standard React definition loading', () => {
     const ir = {
       type: 'scene' as const,
       version: 1 as const,
-      children: [createGrid({ bounds: { start: [0, 0], end: [20, 20] }, spacing: 10 })],
+      children: [createGrid({ bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })],
     };
 
     const svg = renderToStaticMarkup(<Layout ir={ir} composites={[GridDefinition]} width={120} height={80} />);
@@ -77,7 +80,7 @@ describe('Standard React definition loading', () => {
     expect(() =>
       renderToStaticMarkup(
         <Layout composites={[GridDefinition]} width={120} height={80}>
-          <Grid bounds={{ start: [0, 0], end: [20, 20] }} spacing={10} />
+          <Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />
         </Layout>,
       ),
     ).toThrow(/duplicate composite registration.*standard\.grid/i);

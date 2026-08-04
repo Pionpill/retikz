@@ -27,7 +27,7 @@ describe('@retikz/standard root exports', () => {
     expect(STANDARD_NAMESPACE).toBe(standardExports.STANDARD_NAMESPACE);
     expect(LegendDefinition.schema).toBe(LegendSchema);
     expect(LegendDefinition.artifactSchema).toBe(LegendArtifactSchema);
-    expect(createGrid({ bounds: { start: [0, 0], end: [10, 10] }, spacing: 10 })).toMatchObject({
+    expect(createGrid({ bounds: { start: [0, 0], end: [10, 10] }, line: { spacing: 10 } })).toMatchObject({
       namespace: 'standard',
       type: 'grid',
     });

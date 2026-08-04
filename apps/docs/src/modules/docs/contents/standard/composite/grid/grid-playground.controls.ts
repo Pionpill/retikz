@@ -285,5 +285,5 @@ export const previewControlContract = {
     borderFill: '#ffffff',
     borderFillOpacity: 0,
   },
-  relatedApis: ['Grid.bounds', 'Grid.spacing', 'Grid.origin', 'Grid.lines', 'Grid.major', 'Grid.border'],
+  relatedApis: ['Grid.bounds', 'Grid.line', 'Grid.border'],
 } satisfies PreviewControlContract;

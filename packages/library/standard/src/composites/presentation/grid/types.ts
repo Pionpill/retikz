@@ -2,10 +2,16 @@ import type { ValueOf } from '@retikz/core';
 import type { z } from 'zod';
 
 import type { GridBorderOrder } from './constants';
-import type { GridSchema } from './schema';
+import type { GridLineInputSchema, GridSchema } from './schema';
 
 /** Grid 边框 sibling 绘制顺序取值 */
 export type GridBorderOrderValue = ValueOf<typeof GridBorderOrder>;
+
+/** 单个 Grid 方向的线条输入配置 */
+export type GridLineInput = z.input<typeof GridLineInputSchema>;
+
+/** 经 schema 默认值规范化后的单个 Grid 方向线条配置 */
+export type IRGridLine = z.infer<typeof GridLineInputSchema>;
 
 /** 持久化的 Standard Grid composite */
 export type IRGrid = z.infer<typeof GridSchema>;
