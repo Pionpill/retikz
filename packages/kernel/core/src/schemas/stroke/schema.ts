@@ -14,3 +14,15 @@ export const StrokeDashOffsetSchema = z
 export const PathLineCapSchema = z.enum(PathLineCap).describe('Path stroke endpoint cap keyword.');
 
 export const PathLineJoinSchema = z.enum(PathLineJoin).describe('Path stroke corner join keyword.');
+
+export const StrokeStyleSchema = z
+  .strictObject({
+    strokeWidth: z.number().nonnegative().optional().describe('Stroke width in user units.'),
+    dashPattern: StrokeDashPatternSchema.optional().describe(
+      'Stroke dash pattern lengths in user units. Omitted fields mean solid line.',
+    ),
+    dashOffset: StrokeDashOffsetSchema.optional().describe(
+      'Stroke dash offset in user units. Positive and negative finite values are allowed.',
+    ),
+  })
+  .describe('Shared stroke style fields for drawable geometry.');
