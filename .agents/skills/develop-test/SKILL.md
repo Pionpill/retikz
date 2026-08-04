@@ -31,7 +31,7 @@ description: Use when retikz alpha implementation tests have passed but red or y
 
 ## 执行方式
 
-优先用独立线程、子代理或外部模型当 Bug Hunter；不可用时主 AI 自己执行并说明退化。
+默认由主 agent 执行 Bug Hunter。大型任务执行计划已授权常规 reviewer 时，可由一个子代理或外部模型执行；修复后复用同一 reviewer，不能在本阶段临时追加 agent。
 
 Bug Hunter 只做三件事：
 

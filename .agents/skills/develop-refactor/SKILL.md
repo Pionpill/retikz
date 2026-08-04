@@ -1,6 +1,6 @@
 ---
 name: develop-refactor
-description: Use when retikz work is primarily refactoring, reorganization, renaming cleanup, modularization, or internal simplification and should start from a reviewed implementation plan before code changes.
+description: Use when retikz work is primarily refactoring, reorganization, renaming cleanup, modularization, or internal simplification and needs a size-appropriate execution strategy.
 ---
 
 # 重构流程
@@ -9,19 +9,16 @@ description: Use when retikz work is primarily refactoring, reorganization, rena
 
 ## 启动确认
 
-长任务执行前先按根规则判定风险。非 ADR、scope 明确且仅涉及文档、文案、链接、格式或机械性调整，并且不改变公开契约、schema、runtime 行为或跨包边界时，可跳过 subagent review 并记录理由。需要或适合评审时再问用户：
+先按根规则判级：变量 / 私有命名和机械搬迁通常为小型，优化型重构通常为中型，改变功能结构、跨包架构或公开能力的功能型重构为大型。小型直接执行；中大型在动代码前一次确认计划、review、subagent 与 Git 权限，执行中不分别询问 plan review 和完工 review。
 
-1. plan 写完是否派子 agent / 外部模型评审。
-2. 代码写完是否派子 agent / 外部模型评审。
-
-用户未确认前不派 subagent / 外部模型。用户同意 review 后按 `cross-review` 使用同一固定快照、2–3 个 fresh 独立 reviewer 并发评审；优先不同模型，只有一个非主模型时使用两个同模型 fresh 实例并标注降级。用户拒绝时由主 AI 自审并说明退化路径。只有一个 fresh 独立 reviewer 完成时不称为交叉评审；仅可选 plan / 完工 review 可由人工决定是否接受单 reviewer 退化，`flow-long-task` 的批量自动 commit gate 不允许退化。
+中型默认由主 agent 实现和自审；计划已授权时使用一个只读 reviewer 循环。大型功能型重构读取 `flow-long-task`，只有最终整体 review 已在计划中授权或用户明确要求时使用 `cross-review`。
 
 ## Plan First
 
-- 先写 plan，通常使用 `superpowers:writing-plans`。
+- 中大型先写 plan，通常使用 `superpowers:writing-plans`；小型不强制临时 plan。
 - plan 放 `.gitignore` 已覆盖的临时目录：`notes/plans/` 或就近 `**/_notes/plans/`，默认不 stage / commit。
 - plan 至少写清：目标、非目标、文件 scope、分步策略、行为等价性、验证命令、回滚点、预期提交粒度。
-- plan 写完后，按风险与用户选择执行 1–9 轮 `cross-review` 或主 AI 自审，再润色 plan；同轮模型并发且互不可见结论，无问题时立即 PASS，只有修订后才用 fresh agents 复审。未经 review / 自审润色不进入实现。
+- plan 写完后由主 agent 自审；已授权常规 reviewer 时交一个只读 subagent，修订后复用同一 reviewer，直到通过或达到计划循环上限。常规 plan review 不使用 `cross-review`。
 
 ## Review 重点
 
@@ -35,11 +32,10 @@ description: Use when retikz work is primarily refactoring, reorganization, rena
 
 ## 执行规则
 
-- 小重构：review / 自审后直接执行，跑受影响验证，完工后不 commit，留给用户 review。
-- 大重构：实现前需要用户批准 scope；允许按步骤提交代码，但每步 commit 前仍需用户确认。
-- 若大重构属于用户批准的批量执行，且授权 LLM 自行 commit，每次 commit 前按 `flow-long-task` 与 `cross-review` 并发评审固定 staged diff，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。用户明确认可的小任务单次 commit 不触发该要求；改动面大或核心功能不适用该豁免。
-- 用户要求代码完工 review 时，固定完整 diff / commit range，并按 `cross-review` 并发使用 2–3 个 fresh 独立 reviewer，并按异模型优先或同模型双实例降级规则选择阵容；不得串行把一个 reviewer 的结论喂给同轮其它 reviewer。
-- 完工并提交或准备提交后按根规则重新判定 review 风险；低风险明确改动可跳过 subagent，改动面大、核心功能或高风险提交必须询问用户，其余可选评审按用户选择执行。
+- 小型重构：主 agent 直接执行并跑受影响验证，不自动派 agent。
+- 中型优化重构：按已确认计划连续执行；计划有 reviewer 时使用单 reviewer 循环。
+- 大型功能型重构：按 `flow-long-task` 执行；计划已授权自动 commit 时按确认粒度提交，不在每个 commit 前重新询问。
+- 常规 staged diff / 完工 review 不使用 `cross-review`；计划已授权时固定快照给一个 reviewer，主 agent 修改验证后复用该 reviewer。只有大型任务最终整体 review 或用户明确要求时才进入 `cross-review`。
 - 发现必须改公开契约、文档可见行为或 roadmap 外目标时，halt 并请用户裁决是否换流。
 
 ## 验证
@@ -56,7 +52,7 @@ pnpm --filter <pkg> exec vitest run [test-file]
 
 ## 完成标志
 
-- plan 已写入忽略目录，并按用户选择完成 `cross-review` 或主 AI 自审。
+- 中大型 plan 已写入忽略目录并完成主 agent 自审或计划内单 reviewer 循环；小型任务已记录直接执行依据。
 - 实现未超出 scope；若超出，已有用户裁决。
 - 受影响验证通过或阻塞原因明确。
-- 小重构未 commit；大重构只在用户逐步确认后 commit。
+- Git 操作未超出任务开始时确认的权限；未经授权不 commit。

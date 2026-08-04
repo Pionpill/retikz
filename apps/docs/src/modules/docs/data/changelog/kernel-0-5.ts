@@ -154,6 +154,13 @@ export const kernelV05: Release = {
                 en: '`ThemeStyle`, `ThemeMode`, strict `ThemeSchema`, and `ResolvedTheme` become public Core contracts. Theme changes enter retained compile input and conservatively full-fallback when a narrower dependency cannot be proven, preserving fresh-compile equivalence.',
               },
             },
+            {
+              label: { zh: '原子绘图 schema / type 片段', en: 'Atomic drawing schema/type fragments' },
+              content: {
+                zh: 'Core 公开 `GraphicPaint`、`GraphicOpacity`、`GraphicEffects`、`StrokeStyle` 与五个 `Path` fragment 的严格 schema 及 `IRXxx` 类型；完整 `PathSchema`、`PathDefaultSchema` 与既有 compile / Scene / lowering 语义保持不变，fragment 只提供可组合的 JSON 契约，不成为独立编译入口。',
+                en: 'Core exposes strict schemas and `IRXxx` types for `GraphicPaint`, `GraphicOpacity`, `GraphicEffects`, `StrokeStyle`, and five `Path` fragments. Complete `PathSchema`, `PathDefaultSchema`, and existing compile, Scene, and lowering semantics remain unchanged; fragments are composable JSON contracts, not independent compile entries.',
+              },
+            },
           ],
         },
         {

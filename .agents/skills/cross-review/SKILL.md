@@ -1,11 +1,11 @@
 ---
 name: cross-review
-description: Use when retikz needs multiple independent LLMs to review the same fixed code, ADR, implementation plan, test contract, commit, or working-tree snapshot before a gate or delivery decision.
+description: Use when an approved large retikz task reaches final whole-change review, or the user explicitly requests multiple independent LLMs to cross-validate a fixed snapshot.
 ---
 
 # Cross Review：多 LLM 交叉评审
 
-本 skill 用多个 fresh、相互独立的 reviewer 实例评审同一份固定快照，再由主 AI 归并、对齐和裁决。快照可以是 ADR、implementation plan、test contract、代码、diff、commit range 或发布范围。reviewer 必须看到相同输入，同轮并发且互不可见结论；优先使用不同模型，只有一个非主 agent 模型可用时使用两个同模型独立实例。
+本 skill 只用于已授权的大型任务最终整体评审，或用户明确要求的多模型交叉验证。它用多个 fresh、相互独立的 reviewer 评审同一份固定快照，再由主 AI 归并和裁决。中小型任务、常规 plan gate、阶段检查和逐 commit review 不自动使用本 skill；常规 long-task review 使用单 subagent 循环。
 
 与 [`cross-test`](../cross-test/SKILL.md) 区别：cross-test 通过测试打破实现；cross-review 只读审查固定材料。两者可以串联使用。
 
@@ -16,6 +16,15 @@ description: Use when retikz needs multiple independent LLMs to review the same 
 3. **主 AI 是编排者与裁决者，不是第 N 个匿名评审员**——主 AI 的职责是：解析范围、派发评审、读各家原始输出、归并去重、标注共识/分歧、对冲突做技术裁决。主 AI 自己的判断要和外部模型的判断分开标注，不能混为一谈。
 4. **只读评审，绝不改仓库**——评审员只读不写；主 AI 收齐并归并本轮结果后，只要存在需修问题，就先生成修复 plan、修改并验证，再冻结新快照。未完成修订不得启动下一轮。评审跑完后复核工作区。commit、push 不在本 skill 职责内。
 5. **不伪造、不夸大**——不替模型编造它没说的 finding，不把单模型的猜测升级成“共识”，不把风格偏好硬说成 BLOCKING。模型说不准的就标 WARNING / 待人工确认。
+
+## 启动授权
+
+满足以下任一条件才可启动：
+
+- 大型任务的已确认执行计划明确包含最终 `cross-review`，并写明快照、预计轮数、最大轮数、reviewer 数量与模型策略
+- 用户对当前固定材料明确要求交叉验证；该请求默认只授权一轮，除非同时声明可修订和复审的最大轮数
+
+加载本 skill、风险较高、flow 引用或已有 subagent 权限都不等于授权。未授权时返回调用方使用主 agent 自审或已确认的单 reviewer 循环。执行中不得临时扩大 reviewer 数量或轮数。
 
 ## 可用评审员
 
@@ -57,7 +66,7 @@ subagent 必须避开主 agent 模型；不得派主 agent 同模型 subagent �
 | 版本代码（tag / 分支）    | tag / branch + 目标相对 base 的 diff                          |
 | 固定代码块 / 当前工作区   | 文件清单或完整 uncommitted diff + HEAD + `git status --short` |
 
-调用方必须给出固定范围和评审目标；不要默认全仓。Architecture / Plan Gate 的自动授权只来自根 `AGENTS.md` 与对应 flow，不由本 skill 自行扩张。
+调用方必须给出固定范围、评审目标和已授权轮数；不要默认全仓。ADR、plan 或 commit 只有在用户明确要求交叉验证时才可作为独立评审对象；本 skill 不提供自动 gate 授权。
 
 ## 文档评审方向
 
@@ -146,7 +155,7 @@ git --no-pager log --oneline -1
 ### 2. 选评审员阵容
 
 - 从当前工具元数据和可用 CLI 探测模型。
-- 每轮选择 2–3 个 fresh、独立上下文且不同于主 agent 的 reviewer 实例，优先跨 model family / 厂商；只有一个非主 agent 模型时，使用两个该模型的 fresh 实例。调度能力支持时按风险使用 `reasoning_effort: high` 至 `max`，不写死单一档位。无法同时完成两个独立实例时暂停，不用主 agent 同模型 subagent 填位。
+- 每轮按已确认计划选择 2–3 个 fresh、独立上下文且不同于主 agent 的 reviewer 实例，优先跨 model family / 厂商；只有一个非主 agent 模型时，使用两个该模型的 fresh 实例。调度能力支持时按风险使用 `reasoning_effort: high` 至 `max`，不写死单一档位。无法同时完成两个独立实例时暂停，不用主 agent 同模型 subagent 填位。
 - 记录计划阵容、实际完成阵容、失败 / 超时和降级说明。
 - 同轮使用 fresh agent / fresh context；collaboration subagent 使用 `fork_turns: "none"` 或等价无历史上下文方式，由 prompt 完整传入固定材料。上一轮评审员不得携带旧结论进入新轮。
 
@@ -222,7 +231,7 @@ claude -p --model <model> \
 4. 下一轮使用 fresh agents，并重新并发派发；不能让上一轮单一评审员口头确认代替完整复审。
 5. 最新一轮所有实际评审员完成、无 BLOCKING、WARNING 均已修订或有可验证的人工裁决时 PASS。
 6. 满足 PASS 条件后立即结束，不为凑轮次追加评审；只有完成修订后才进入下一轮。
-7. 最多 9 轮。第 9 轮仍未 PASS、分歧无法裁决、快照漂移或无法完成两个 fresh 独立 reviewer 实例时 halt，交人工决策。
+7. 不超过用户已授权的最大轮数；未声明时只有一轮。达到上限仍未 PASS、分歧无法裁决、快照漂移或无法完成两个 fresh 独立 reviewer 时停止并交人工。
 
 ### 7. 输出分级报告
 
@@ -310,8 +319,7 @@ git status --short    # 应与评审前一致；codex/claude 评审不应改任�
 ## 与其它 skill 协同
 
 - **cross-test**：cross-review 找出的疑似 BLOCKING，转 cross-test 写 fail 测试坐实，再修。
-- **flow-alpha**：Architecture Gate 与 Plan Gate 复用本 skill 的固定快照、并发模型和 1–9 轮协议。
-- **flow-beta / flow-rc / flow-long-task / develop-refactor**：已有 review gate 复用同一轮次协议；本 skill 不扩大各自授权。
+- **flow-alpha / flow-beta / flow-rc / flow-long-task / develop-refactor**：常规阶段使用主 agent 或已授权单 reviewer；只有大型任务最终整体 review 或用户明确要求时调用本 skill。
 - 评审发现用户可见行为/契约问题且需要改 → 走对应 develop / docs skill，**本 skill 不直接改代码**。
 
 ## 禁止事项
@@ -332,9 +340,9 @@ git status --short    # 应与评审前一致；codex/claude 评审不应改任�
 ## 完成标志
 
 - 已锁定并记录评审的固定范围与基准快照。
-- 已确认评审员阵容（至少 2 个 fresh、独立上下文且不同于主 agent 的外部 reviewer 实例），并在同一轮并发跑完；只有一个非主模型时已使用两个同模型 fresh 实例并记录降级。
+- 已确认用户授权、评审员阵容和最大轮数；至少 2 个 fresh、独立上下文且不同于主 agent 的外部 reviewer 实例在同一轮并发跑完，只有一个非主模型时已记录同模型降级。
 - 已收集各家原始输出，对失败/超时的如实记录。
 - 已归并去重、标注每条 finding 的提出模型与共识/分歧，并对冲突给出主 AI 裁决。
-- 无问题时已在当前轮立即 PASS；需要修订时已先生成修复 plan、完成修改与验证，再使用新快照和 fresh agents 复审；最多 9 轮，未通过时已 halt 交人工。
+- 无问题时已在当前轮立即 PASS；需要修订时已先完成修改与验证，再在授权轮数内使用新快照和 fresh agents 复审；达到授权上限未通过时已停止交人工。
 - 已输出三档分级报告；有 BLOCKING/WARNING 或用户要求时已写入 `notes/reports/cross-review-YYYY-MM-DD-<scope>.md`，且未 stage / commit 该 ignored 报告文件。
 - 已 `git status` 复核仓库未被评审过程改动。

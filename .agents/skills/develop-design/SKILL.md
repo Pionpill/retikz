@@ -62,18 +62,17 @@ Schema 或数据结构只有在它是基础公开契约、跨包接口或非法�
 
 ## Alpha Architecture Gate
 
-ADR 草案完成后、人工 ack 前，使用 `develop-completeness` 的 `adr-gate` rubric，并按 `cross-review` 执行并发多模型评审：
+ADR 草案完成后、人工 ack 前，使用 `develop-completeness` 的 `adr-gate` rubric 执行 Architecture Gate：
 
 1. 冻结 ADR、当前 HEAD、工作区摘要、适用 architecture / completeness / AGENTS 与必要代码证据。
-2. 每轮按 `cross-review` 并发派发 2–3 个 fresh 独立 reviewer；优先不同模型，只有一个非主模型时使用两个同模型 fresh 实例，同轮互不可见结论。
-3. 每个评审员只返回 `BLOCKING / WARNING / INFO`，检查问题归属、基础契约、包边界、define-registry、端到端闭环与非目标。
+2. 主 agent 先自审；大型任务执行计划已授权常规 reviewer 时，派一个只读 subagent，并在修订后复用同一 reviewer 循环。
+3. reviewer 只返回 `BLOCKING / WARNING / INFO`，检查问题归属、基础契约、包边界、define-registry、端到端闭环与非目标。
 4. 不得因 Gate 要求把文件 scope、private 逻辑、测试 case 或执行命令补回 ADR。
-5. 主 AI 收齐本轮结果后归并并修订 ADR；发生修订时冻结新快照，用 fresh agents 进入下一轮。
-6. 最新一轮至少两个 fresh 独立 reviewer 实际完成、无 BLOCKING、WARNING 已修订或有可验证的人工裁决时 PASS。
-7. 当前轮无 BLOCKING、WARNING 已处置时立即 PASS；只有修订后才进入下一轮。
-8. 最多 9 轮；第 9 轮未 PASS、无法完成两个 fresh 独立 reviewer、快照漂移或分歧无法裁决时 halt，交人工决策。
+5. 主 agent 核实 finding 并修订 ADR；发生修订时冻结新快照，在计划循环上限内交同一 reviewer 复核。
+6. 无 BLOCKING、WARNING 已修订或有可验证人工裁决时 PASS。
+7. 达到计划循环上限、快照漂移或分歧无法裁决时停止并交人工。
 
-该 Gate 是 `flow-alpha` 的常驻只读授权；不授权实现、commit、push、扩大功能 scope 或其它外部写操作。
+该 Gate 不提供自动 subagent 授权，也不授权实现、commit、push、扩大功能 scope 或其它外部写操作。多模型 `cross-review` 只在大型任务最终整体 review 或用户明确要求时使用。
 
 ## Implementation plan 交接
 
@@ -94,12 +93,12 @@ packages/viz/_notes/decisions/chart/v0/v0.1/alpha.1/01-example.md
 
 Plan 可以细化实现，不能改变 ADR 的公开契约、所有权和功能边界；发现冲突时停止 plan，回到 ADR 修订和 Architecture Gate。
 
-Plan 写完后必须按 `cross-review` 完成 1–9 轮并发多模型 Plan Gate；通过前不得修改产品代码。具体编排由 `flow-alpha` 负责。
+Plan 写完后必须完成 Plan Gate；默认由主 agent 自审，执行计划已授权时使用一个 reviewer 循环。通过前不得修改产品代码，具体编排由 `flow-alpha` 负责。
 
 ## 完成标志
 
 - ADR 为长期形态且状态为 `Proposed`，不含施工细节或临时压缩段。
-- 能力性迭代已完成 Architecture Gate PASS；或第 9 轮后已 halt 等待人工。
+- 能力性迭代已完成 Architecture Gate PASS；或达到计划循环上限后已停止等待人工。
 - 人工明确确认 ADR；是否进入实现另行授权。
 - 需要实现时，已明确镜像 plan 路径，但尚未用 plan 反向改写 ADR。
 - 未经当前对话授权不 commit / push。

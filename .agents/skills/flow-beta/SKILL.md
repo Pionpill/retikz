@@ -18,23 +18,23 @@ description: Use when retikz beta-stage roadmap TODO work needs refactoring, ren
 
 发现需要新功能时立即 halt，登记到下个 alpha 窗口，改走 `flow-alpha`。
 
-长重构或 scope 不清时，先走 `develop-refactor` 写 plan；启动时询问用户 plan 写完是否评审、代码写完是否评审。
+Beta 优化通常是中型任务；执行前按根规则一次确认 scope、步骤、验证和是否使用一个常规 reviewer。长重构或 scope 不清时先走 `develop-refactor` 写 plan；不在 plan 与代码完成后分别追加询问。
 
 ## 阶段
 
 | #   | 阶段         | 执行                                | 通过条件                                                                |
 | --- | ------------ | ----------------------------------- | ----------------------------------------------------------------------- |
-| 0   | 全局入口审计 | `develop-completeness` `code-audit` | 三能力域报告完成；候选 TODO scope 经人工确认                            |
+| 0   | 全局入口审计 | `develop-completeness` `code-audit` | 三能力域结论完成；候选 TODO scope 经人工确认                            |
 | 1   | 实现         | `develop-implement` 简化路径        | 受影响模块 lint / tsc / 测试全过                                        |
-| 2   | TODO 评估    | 本 skill 按用户选择调度             | BLOCKING 清空，WARNING 经人工裁决                                       |
+| 2   | TODO 评估    | 主 agent 或计划内单 reviewer        | BLOCKING 清空，WARNING 经人工裁决                                       |
 | 3   | TODO 收尾    | `develop-wrapup` 简化路径           | roadmap TODO 标完成；breaking / visible 按需 changelog；人工授权 commit |
-| 4   | 全局出口复审 | `develop-completeness` `code-audit` | 最新三能力域审计均 PASS；或熔断后等待人工裁决                           |
+| 4   | 全局出口复审 | `develop-completeness` `code-audit` | 最新三能力域结论均 PASS；或熔断后等待人工裁决                           |
 
 beta 不开新功能 ADR，不走 alpha 的设计 / adversarial 自测 / 必选文档阶段。用户可见改动仍按 docs skills 补文档。Stage 0 / 4 是 milestone 级门禁，不替代每条 TODO 的 Stage 2。
 
 ## Stage 0 全局入口审计
 
-任何 beta TODO 实施、建批量 worktree 或修改 roadmap 状态前，自动并行派遣三个新的只读 subagent：
+任何 beta TODO 实施、建批量 worktree 或修改 roadmap 状态前，检查三个能力域：
 
 | 能力域        | `develop-completeness` 参数                   | 范围                                          |
 | ------------- | --------------------------------------------- | --------------------------------------------- |
@@ -42,13 +42,15 @@ beta 不开新功能 ADR，不走 alpha 的设计 / adversarial 自测 / 必选�
 | Data          | `code-audit` + `beta-entry` + `Data`          | data 及其消费边界                             |
 | Visualization | `code-audit` + `beta-entry` + `Visualization` | plot / plot-react / plot-vanilla 及上下游接口 |
 
-三个审计使用同一 HEAD 基线，各自写 ignored report，不修改产品文件、roadmap 或暂存区。派遣时显式记录每个 subagent 的实际模型，优先避开主 agent 的模型，并在调度能力支持时使用 `reasoning_effort: max`；有三个不同模型时分别分配，没有时允许跨能力域复用，但不得伪造不存在的模型。三个能力域互相独立，同轮并发执行，不把任一域结论先喂给其它域。主 AI 汇总：
+默认由主 agent 基于同一 HEAD 审计三个能力域。中型执行计划已授权常规 reviewer 时，只派一个只读 subagent 审计全部三个域，并在修订后复用同一 reviewer；不为能力域分别派 agent。报告保持 ignored，不修改产品文件、roadmap 或暂存区。主 agent 汇总：
 
 - 能力矩阵与 `BLOCKING / WARNING / INFO / ESCALATE_ALPHA`。
 - 跨域重复所有权、依赖方向和 public surface 问题。
 - 去重、可执行的 beta TODO 候选及建议顺序。
 
-候选 TODO scope 必须经人工确认后才能进入 Stage 1。`ESCALATE_ALPHA` 不得伪装成 beta cleanup；交人工决定退回 Alpha 或延期。三个报告完成且无冲突时当前轮立即结束；只有需修订或报告冲突时才进入下一轮。总计最多 9 轮，每轮都使用新的 subagent、同一轮固定 HEAD，并重新记录实际模型；第 9 轮仍不收敛则 halt 交人工。
+候选 TODO scope 必须经人工确认后才能进入 Stage 1。`ESCALATE_ALPHA` 不得伪装成 beta cleanup；交人工决定退回 Alpha 或延期。存在修订时按执行计划复用同一 reviewer 检查新快照；达到计划循环上限仍不收敛则停止交人工。
+
+若本次任务只负责 Stage 0 生成候选 TODO，交付候选后结束；确认 TODO 后的 Stage 1–4 作为新的中型执行计划一次授权。执行既有已确认 TODO 时不重复确认 scope。
 
 ## 判级
 
@@ -69,7 +71,7 @@ beta 允许调整既有契约的 breaking，不允许用 breaking 包装净新�
 
 ## Stage 2 TODO 评估
 
-beta 的核心风险是重构回归和 breaking 漏迁移。Stage 2 始终评估，但是否派 TODO review subagent / 外部模型先按风险判定：breaking、用户可见行为、跨包契约、核心能力、大范围或高风险改动必须先取得用户确认再评审；非 ADR、scope 明确且仅涉及文档、文案、链接、格式或机械性调整，并且不改变公开契约、schema、runtime 行为或跨包边界时，可由主 AI 自审并记录跳过理由；其余情况先询问用户。必须评审的改动若用户拒绝或工具不可用，则由主 AI 自审并说明退化路径，且结论须经人工明确接受后才能通过 Stage 2。至少准备以下评估材料：
+beta 的核心风险是重构回归和 breaking 漏迁移。Stage 2 始终由主 agent 评估；只有执行计划已授权时才使用一个常规 reviewer，不在此阶段临时询问或升级为 `cross-review`。至少准备以下材料：
 
 - TODO 原文。
 - 适用时的 `test-contract` 矩阵与每行证据。
@@ -90,9 +92,7 @@ beta 的核心风险是重构回归和 breaking 漏迁移。Stage 2 始终评估
 - WARNING：人工裁决。
 - INFO：可选采纳。
 
-用户同意评审后，Stage 2 复用 `cross-review`：固定 TODO、完整 diff / commit range、public surface diff 与测试证据，同轮并发派遣 2–3 个 fresh 独立 reviewer，互不传递结论；优先不同模型，只有一个非主模型时使用两个同模型 fresh 实例并标注降级。主 AI 只在全部结果返回后归并；只有一个 fresh 独立 reviewer 完成时 halt 交人工决定是否接受单 reviewer 退化。
-
-Stage 2 最多 9 轮，不因 finding 改名、拆分或出现新 ID 重新计数；最新一轮无 BLOCKING、WARNING 已处置时立即 PASS。只有修订发生后才使用 fresh agents 评审新的固定快照；第 9 轮仍有任一 BLOCKING 时 halt，交给人工决定继续、缩 scope 或放弃。
+执行计划已授权 reviewer 时，固定 TODO、完整 diff / commit range、public surface diff 与测试证据交给一个只读 subagent。主 agent 核实 finding、修改并验证后，复用同一 reviewer 检查新快照。无 BLOCKING、WARNING 已处置时 PASS；达到计划循环上限仍有 BLOCKING 时停止并交人工。
 
 ## Stage 3 TODO 收尾规则
 
@@ -102,19 +102,18 @@ Stage 2 最多 9 轮，不因 finding 改名、拆分或出现新 ID 重新计�
 - 不改 ADR 状态；beta 无新 ADR。
 - roadmap TODO 标完成并记录 commit hash。
 - commit 必须等待当前对话人工授权；多 TODO 可按 review 友好的逻辑块分批 commit。
-- 完工并提交或准备提交后按根规则重新判定 review 风险；低风险明确改动可跳过 subagent，改动面大、核心功能或高风险提交必须询问用户，其余可选评审按用户选择执行。
+- 完工 review 按任务开始时确认的计划执行，不在提交前重新追加 subagent 询问。
 
 ## Stage 4 全局出口复审
 
-所有获批 TODO 完成并集成到同一 beta milestone 分支后，自动执行：
+所有获批 TODO 完成并集成到同一 beta milestone 分支后：
 
-1. 记录当前 milestone HEAD，重新并行派遣三个新的只读 subagent，分别以 `code-audit` + `beta-exit` 审计 Drawing、Data、Visualization；三者必须使用该轮同一 HEAD，不能复用 Stage 0 或上一轮主体。显式记录实际模型，优先避开主 agent 的模型，并在调度能力支持时使用 `reasoning_effort: max`；有三个不同模型时分别分配，可用模型不足时允许跨能力域复用但必须如实记录。审计期间 HEAD 变化则本轮作废并计入轮次。
-2. 主 AI 汇总最新报告。任一能力域为 `ESCALATE_ALPHA` 时立即 halt，交人工决定退回 Alpha 或延期。
-3. 有 BLOCKING 时，仅当修复属于人工已批准 TODO scope、已有当前任务实施授权，且不净新增公开能力、公开组件、IR 形态、schema 字段或用户可见行为契约，主 AI 才自动修复。修复后重新执行适用的 Stage 1 验证与 Stage 2 评估，再派三个新的 subagent 全量复审；超出原 scope 或授权时先 halt 请求人工扩 scope。
-4. 只有最新一轮三个能力域都明确 `PASS`，且 WARNING 已记录处置或风险归属，Stage 4 才通过。任何修复都必须由下一轮新的三域审计验证，不能由主 AI 自审放行。
-5. 最新一轮满足 PASS 条件时立即结束，不为凑轮次复审；只有修订后才进入下一轮。最多 9 轮，第 9 轮未 PASS、其后仍需修复、subagent 不可用或报告冲突时 halt，交人工决策；禁止第 10 轮、降低 finding 等级或扩大 beta 边界。
+1. 记录当前 milestone HEAD，由主 agent 对同一快照复核 Drawing、Data、Visualization；执行计划已授权 reviewer 时，交同一个只读 subagent 做三域复核。
+2. 任一能力域为 `ESCALATE_ALPHA` 时立即停止，交人工决定退回 Alpha 或延期。
+3. 有 BLOCKING 时，仅在已批准 TODO scope 与实现授权内修复，重新执行 Stage 1 验证和 Stage 2 评估；计划有 reviewer 时复用同一 reviewer 检查新快照。
+4. 三个能力域都为 `PASS` 且 WARNING 已处置时通过；达到计划循环上限、报告冲突或需要扩大 beta 边界时停止交人工。
 
-自动授权只覆盖 Stage 0 / 4 的只读审计 subagent。主 AI 的 beta 范围修复仍不得自动 commit、push、改变发布授权或实施 `ESCALATE_ALPHA` 项。
+Beta 不提供自动 subagent 权限。只有用户明确要求交叉验证时才使用 `cross-review`；普通 Beta 收尾不自动升级为多模型评审。
 
 ## 批量 worktree
 
@@ -124,22 +123,22 @@ Stage 2 最多 9 轮，不因 finding 改名、拆分或出现新 ID 重新计�
 - 呈现平行 / 堆叠 / 混合布局，人工 ack 后建 worktree。
 - 每个 worktree 写 `REVIEW.md` 并 halt。
 - 不 push / merge / 切回 base / 删除 worktree / 删除 `REVIEW.md`。
-- 若批量执行中用户授权 LLM 自行 commit，逐 commit 按根规则与 `flow-long-task` 判定风险；需要评审时再用 `cross-review` 固定 staged diff，并发使用 2–3 个 fresh 独立 reviewer，并按异模型优先或同模型双实例降级规则选择阵容。低风险明确改动可跳过，改动面大、核心功能或高风险 commit 不得豁免。
+- 若批量执行计划授权 LLM 自行 commit，逐 commit 复用计划内的常规单 reviewer 循环；不逐 commit 使用 `cross-review`。
 
 ## 失败与换流
 
 - 净新增公开能力、公开组件、IR 形态、schema 字段或用户可见行为契约：halt，转下个 alpha。
-- Stage 2 第 9 轮仍有任一 BLOCKING：halt，交人工决策。
+- Stage 2 达到计划循环上限仍有任一 BLOCKING：停止并交人工决策。
 - 评估意见冲突：halt，人工裁决并记录理由。
 - 发现测试被弱化：halt，恢复断言或重新评估 TODO 范围。
 
 ## 完成标准
 
-- Stage 0 三能力域入口报告已完成，候选 TODO scope 已获人工确认。
+- Stage 0 三能力域入口结论已完成，候选 TODO scope 已获人工确认。
 - 实现和必要测试已落。
 - 受影响模块验证通过。
 - 评估 / 自审合并，BLOCKING 清空，WARNING 已裁决。
 - roadmap TODO 标完成。
 - breaking 有 changelog + 迁移路径；visible 按需文档同步。
-- Stage 4 最新一轮 Drawing / Data / Visualization 报告均 PASS；或已熔断并停止等待人工，未伪装完成。
+- Stage 4 最新 Drawing / Data / Visualization 结论均 PASS；或已熔断并停止等待人工，未伪装完成。
 - 用户明确 ack 后才 commit / 进入下一条 TODO。

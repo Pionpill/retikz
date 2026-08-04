@@ -24,15 +24,37 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 
 ## 动态规则
 
+- 任务开始先按“任务规模与执行策略”判定小 / 中 / 大，再加载对应 flow；多个条件并存时取最高级。
 - 改文件分层、依赖方向、shared / schemas / contract / providers / pipeline / compile，或 define-registry 能力前，先读 `.agents/skills/standard-structure/SKILL.md`，再按实际层级读取 `standard-shared` / `standard-schema` / `standard-contract` / `standard-providers` / `standard-pipeline-compile`。
 - 写 `apps/docs` 正文、demo、导航、i18n、schema registry 前，先读 `docs-doc-principle`；组件页 / 示例页 / 分组页 / 概念页 / blog 再读对应 docs skill。
-- 大任务、批量执行、多 commit 或可能跨上下文压缩的任务先读 `.agents/skills/flow-long-task/SKILL.md`，再分流到具体 flow / develop skill。
+- 只有大型任务在执行计划获用户确认后才读 `flow-long-task`；主模型为 Sol 且计划已授权多 agent 协作时再读 `codex-develop-flow`，最后分流到具体 flow / develop skill。中型任务不读 `flow-long-task`；只有包含可分离功能实现且计划明确授权 Sol / Luna 分工时可单独读 `codex-develop-flow`。中小型任务不因多文件、多步骤或可能多 commit 自动升级。
 - 发包、alpha/beta/rc 流程、跨模型评审、文档外站转换等长流程按对应 skill 执行，不把步骤复制进 AGENTS。
 - 所有发布组发包前都必须按 `package-publish` 逐篇阅读全文审计本次 milestone ADR 的长期一致性、状态与当前公开契约；ADR 不得残留文件 scope、私有实现、测试 case / 路径 / 命令、commit 切分或 review 记录。不得以状态字段、roadmap 勾选或 commit message 代替内容检查。
 - 重构优先走 `.agents/skills/develop-refactor/SKILL.md`；纯审计仍走 `develop-review`。
 - 问答中若发现用户新偏好、流程调整或规则适合沉淀进 `AGENTS.md` / skill，完成当前任务后主动告知并征求同意；用户不同意时不得自行修改。
 - 向 `AGENTS.md` / skill 添加规则必须简洁干练，只写可执行约束，不扩写背景、不放长例子，优先节省 token。
 - 对用户问题保持中立客观，优先考虑功能拓展性和抽象程度；有更好方案或质疑时先对齐讨论，只有把握 ≥ 90% 才编辑内容。
+
+## 任务规模与执行策略
+
+任务开始先按实际语义、风险和依赖判断规模；文件数与代码行数只能辅助判断，不能单独升级：
+
+| 规模 | 默认范围                                                                  | 执行策略                                                                                                                                                |
+| ---- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 小   | 局部文档改动、局部 bugfix、变量或私有命名调整、格式与机械修改             | 主 agent 直接执行，做受影响范围验证；默认不写临时 plan、不调度 subagent、不使用 `flow-long-task` / `codex-develop-flow` / `cross-review`                |
+| 中   | 临时 plan 修复、文档大调整、优化型重构、范围清楚的多文件改动              | 执行前在对话中给出一次执行计划并等待用户确认；默认由主 agent 执行，可按获批计划使用一个 subagent 做实现或循环 review                                    |
+| 大   | ADR 执行、功能型重构、新增或重塑公开能力、跨包架构 / 公开契约的大范围变更 | 执行前确认完整计划；按需使用 `flow-long-task`，Sol 主控且用户授权时使用 `codex-develop-flow`；只有最终整体 review 或用户明确要求时才使用 `cross-review` |
+
+局部 bugfix 若扩展为公开契约、跨包行为或功能重构，升级到中 / 大；优化型重构若改变功能或能力边界，升级为大。任务执行中发现规模判断失效、scope 超出已确认计划或需要新增外部权限时停止并重新确认。
+
+中大型任务的执行计划必须在对话中一次说明并由用户确认：
+
+- 规模与判断依据、目标、非目标、预期文件 / 包范围和主要步骤。
+- 验证命令、提交边界、预计常规 review 次数与最大循环次数、是否进行最终 `cross-review`。
+- 是否调度 subagent、使用哪些实际可用模型、角色、并发波次和文件所有权；未写入计划即视为不授权。
+- 是否 stage / commit；计划 commit 时先读取实际生效的 `user.name` / `user.email` 并一并确认。push / tag / publish 仍分别明确授权。
+
+用户确认后，计划内的实现、验证和已声明 subagent / review 连续执行，不在每个阶段重复询问。只有 scope / 架构 / 公开契约超出计划、授权动作变化、外部阻塞或达到计划内失败阈值时才中断交人工。小型任务无需计划确认，按明确请求直接执行。
 
 ## 文件与依赖
 
@@ -89,16 +111,15 @@ pnpm --filter <pkg> test:run # 仅大范围重构或功能大改
 
 ## Git 与发布授权
 
-- 当前项目首次执行 `git commit` 前，必须读取并向用户确认实际生效的 `user.name` / `user.email`（优先仓库 local 配置）；身份未变化时，当前对话后续提交无需重复确认。
+- 当前项目首次执行 `git commit` 前，必须读取并向用户确认实际生效的 `user.name` / `user.email`（优先仓库 local 配置）；中大型任务把身份放入执行计划一次确认，小型任务在 commit 前确认。身份未变化时，当前对话后续提交无需重复确认。
 - AI 执行 `git commit` / `git push` / `git tag` / `npm publish` 前，必须在当前对话拿到用户明确授权；push / tag / publish 始终单独授权。
 - 发布 tag 必须是 annotated tag，统一命名为 `<release-group>-v<version>`；release group 以 `scripts/release-groups.config.mjs` 为准，历史 tag 保持不变，已发布 tag 不得移动、复用或覆盖，细则见 `package-publish`。
-- 计划、skill、自称会提交、lint/build 通过、auto mode、历史会话授权都不算授权。
+- 未获用户明确确认的计划、skill、自称会提交、lint/build 通过、auto mode、历史会话授权都不算授权；用户确认的中大型执行计划只授权其中逐项写明的操作。
 - 多块改动按 commit 粒度分块 staging；无授权时展示暂存文件和拟用 message，等待确认。
-- 派 subagent / 外部模型评审前必须征求用户确认。唯一常驻例外是 `flow-alpha` 的 ADR Architecture Gate、镜像 Plan Gate 与 `flow-beta` 的入口 / 出口 completeness audit：这些门禁自动派遣新的只读 subagent，最多 9 轮，无需逐次授权；该例外不授权产品修改、其它 review、commit 或任何外部写操作。Alpha Plan Gate 是强制项，不作为可选评审询问。
-- 是否需要其它 gate / subagent review 先按风险判定。改动面大、核心能力、公开契约、跨包边界或高风险改动必须评审；非 ADR、scope 明确且仅涉及文档、文案、链接、格式或机械性调整，并且不改变公开契约、schema、runtime 行为或跨包边界时，可减少评审员或跳过 subagent，并记录理由；其余情况先询问用户。用户已明确认可的低风险单次 commit 不再额外询问。
-- 同一轮评审必须冻结同一快照并并发调度至少两个 fresh、独立上下文的外部 reviewer，优先使用 2–3 个不同于主 agent 的实际可用模型；只有一个非主 agent 模型可用时，并发启动两个该模型的 fresh 实例并如实记录同模型降级。调度能力支持时 subagent 按风险使用 `reasoning_effort: high` 至 `max`，并记录实际值。不得用主 agent 同模型 subagent 填位，不得串行喂结论，不得硬编码或伪造工具未暴露的模型。至少两个独立外部 reviewer 实例实际完成才称为交叉评审；同模型实例结论只记为同模型共识，不冒充跨模型共识。Beta 三能力域审计应最大化模型多样性，可用模型不足时允许跨独立能力域复用，但必须如实记录。
-- 最新一轮并发评审无 BLOCKING、WARNING 已处置或有可验证的人工裁决时立即 PASS，不为凑轮次追加评审；只有修订后才冻结新快照并使用 fresh agents 进入下一轮。最多 9 轮，第 9 轮仍未 PASS 时交人工决策。
-- 用户批准批量执行并授权 LLM 自行 commit 时，按上述风险判定决定每个 commit 是否需要 `cross-review`；需要时固定 staged diff，并发使用 2–3 个 fresh 独立 reviewer，并按异模型优先或同模型双实例降级规则选择阵容，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。低风险明确改动可跳过，改动面大、核心功能或高风险 commit 不得豁免。
+- 调度 subagent / 外部模型必须来自用户已确认的中大型任务执行计划，或用户对当前小任务的单独明确授权；不得在执行中以“风险较高”为由临时追加。计划必须写明角色、数量、并发方式、review 时点与最大循环次数。
+- 中大型任务的常规 plan / 实现 / commit review 默认只使用一个只读 subagent；主 agent 按 finding 修改并验证后，复用同一 reviewer 继续循环，达到计划上限时停止交人工。小型任务默认由主 agent 自审。
+- `cross-review` 只在大型任务最终整体 review，或用户明确要求多模型交叉验证时使用；执行前必须在计划中或当次请求中授权，不用于常规 plan gate、逐 commit review 或中小型任务的默认完工检查。
+- 获准 `cross-review` 时固定同一快照，并发使用 2–3 个 fresh、独立且不同于主 agent 的 reviewer；模型不足时可用同一非主模型的两个 fresh 实例并如实记录。每轮与最大轮数以已确认计划为准；未声明时只授权一轮。修订后只有仍在已授权轮数内才冻结新快照复审。
 - 不要 `git add -A` 混入无关改动。不要 `git reset --hard` / `git checkout --` 回滚用户改动，除非用户明确要求。
 
 Commit message：

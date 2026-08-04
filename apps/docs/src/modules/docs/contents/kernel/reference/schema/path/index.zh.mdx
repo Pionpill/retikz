@@ -5,6 +5,89 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 `path` 是一条笔画的外壳容器；它的 `children` 字段是一个 `Step` 动作有序数组。compile 按顺序把 step 降为渲染目标无关的 `PathPrim.commands`，SVG / Canvas adapter 再物化为各自的平台命令。
 
+Core 另外公开五个可复用的严格 fragment，按描边、填充、几何、装饰和结构边界组织 Path 字段。fragment 只负责局部 JSON 字段与局部不变量，不是独立的 compile / lowering 入口，也不新增绘图能力；Standard、Plot 等 Tier 2 owner 可以按自己的默认值和字段限制组合它们。
+
+<span id="pathstroke"></span>
+
+## 路径描边
+
+`PathStrokeSchema` 由共享的 `StrokeStyleSchema` 加上 Path 端点线帽和拐角连接组成。它只表达描边字段，不包含 Path 身份、kind refinement 或装饰。
+
+<ZodSchema
+  name="PathStrokeSchema"
+  description="Path 共用的描边宽度、虚线、端点线帽与拐角连接字段。"
+  descriptions={{
+    strokeWidth: '描边宽度（用户单位）',
+    dashPattern: 'dash/gap 长度序列（如 [4, 2]）；省略 = 实线',
+    dashOffset: '虚线起点偏移（用户单位），可为正数、0 或负数；省略 = 0',
+    lineCap: '描边端点形状：`butt` 默认 / `round` / `square`',
+    lineJoin: '描边拐角形状：`miter` 默认 / `round` / `bevel`',
+  }}
+/>
+
+<span id="pathfill"></span>
+
+## 路径填充
+
+`PathFillSchema` 只控制闭合、自交或嵌套子路径的填充绕行规则；填充 paint 本身仍属于图形样式字段。
+
+<ZodSchema
+  name="PathFillSchema"
+  description="控制 Path 填充绕行规则的字段片段。"
+  descriptions={{
+    fillRule: '自交 / 嵌套子路径填充规则；`nonzero`（默认）方向缠绕，`evenodd` 交错',
+  }}
+/>
+
+<span id="pathgeometry"></span>
+
+## 路径几何
+
+`PathGeometrySchema` 描述 Path 的圆角、整条变换和 step 子序列。`children` 只在完整 Path 或需要定义几何的 owner 中出现。
+
+<ZodSchema
+  name="PathGeometrySchema"
+  description="Path 的圆角、旋转、缩放和 step 子序列字段。"
+  descriptions={{
+    roundedCorners: '线段相交处的几何圆角半径；与只改变描边外观的 `lineJoin` 不同',
+    rotate: '整条 path 旋转角（度，绕包围盒中心）',
+    scale: '整条 path 缩放：数字等比，或 `{ x, y }` 非等比，绕包围盒中心',
+    children: 'step 动作序列，至少两个；首项通常应是 `move`',
+  }}
+/>
+
+<span id="pathdecoration"></span>
+
+## 路径装饰
+
+`PathDecorationSchema` 收拢宿主标签与沿路径放置的标记。它不携带 Path 的身份或 kind 选择。
+
+<ZodSchema
+  name="PathDecorationSchema"
+  description="Path 宿主标签和沿路径标记字段。"
+  descriptions={{
+    label: '附着在 Path 或其它 path-like 宿主上的几何标签',
+    marks: '沿路径按归一化位置放置的标记；方向随路径切线',
+  }}
+/>
+
+<span id="pathstructure"></span>
+
+## 路径结构
+
+`PathStructureSchema` 选择 Path provider 与 ribbon 参数。`kind`、`kindOptions`、`ribbon` 的跨字段关系仍由完整 `PathSchema` refinement 负责。
+
+<ZodSchema
+  name="PathStructureSchema"
+  description="Path kind provider 与 ribbon 选项的结构字段。"
+  descriptions={{
+    type: '判别字段，标记此子节点为 path',
+    kind: 'Path kind provider 名；省略时使用内置 `stroke`',
+    kindOptions: '自定义 Path kind provider 的 JSON-safe 参数对象；内置 `stroke` 与 `ribbon` 不使用',
+    ribbon: '带状路径专属选项；仅在 `kind` 为 `ribbon` 时有效',
+  }}
+/>
+
 <span id="path"></span>
 
 ## 路径
@@ -14,6 +97,9 @@ description: 笔画外壳、step 动作序列与 step 目标点
   description="路径图元：一组按顺序执行的 step 组成一条可描边、可填充、可带箭头的笔画。"
   descriptions={{
     type: '判别字段，标记此子节点为 path',
+    kind: 'Path kind provider 名；省略时使用内置 `stroke`',
+    kindOptions: '自定义 Path kind provider 的 JSON-safe 参数对象；内置 `stroke` 与 `ribbon` 不使用',
+    ribbon: '带状路径专属选项；仅在 `kind` 为 `ribbon` 时有效',
     color: '主色（TikZ color=）；stroke / 箭头 / step label 未单设则随它（跟主色不跟 stroke）',
     stroke: '描边 paint：任意 CSS color 字符串，或 PaintSpec（线性 / 径向渐变、pattern、image）；默认 currentColor',
     strokeWidth: '描边宽度（用户单位），默认 1',
@@ -26,16 +112,24 @@ description: 笔画外壳、step 动作序列与 step 目标点
     opacity: '整路径不透明度 0..1，同时作用于描边与填充',
     fillOpacity: '填充不透明度 0..1，只影响闭合区域',
     strokeOpacity: '描边不透明度 0..1，只影响描边',
+    shadow: '主几何阴影预设或显式阴影对象',
+    blendMode: '主几何与下方内容的混合模式',
     id: '可选稳定 id：供其它元素 anchor 引用，也是水合事件绑定的挂点（带 id 才能给 path 绑 onClick 等 handler）',
     meta: 'provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 Tier 2 lowering 注入（标记来自哪个 datum / series / layer），须为 JSON 对象',
     animations: '声明式动画 track 数组（关键帧 + 时长 / 缓动 / 触发器）；用法与 preset 见动画组件文档',
     zIndex: '显式栈序：大者在上；缺省 0、同值保持声明顺序；只在同层子节点间生效',
     rotate: '整条 path 旋转角（度，绕包围盒中心）',
     scale: '整条 path 缩放（数字等比，或 `{ x, y }` 非等比，绕包围盒中心）',
+    roundedCorners: '线段相交处的几何圆角半径；与只改变描边外观的 `lineJoin` 不同',
+    label: '附着在 Path 或其它 path-like 宿主上的几何标签',
     marks: "沿路径放方向标记：每项 `{ pos, mark }`，`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线",
     children: 'step 动作序列；首项通常应是 `move`',
   }}
 />
+
+`PathSchema` 仍是唯一的完整、可提交 compile 的 Path 入口。它把上述 fragment 与现有 `DrawableInstanceSchema`、`DrawableStyleSchema` 组合，并继续由 refinement 校验 kind-specific 关系：默认 `stroke` 必须有 `children` 且不能带 `ribbon` / `kindOptions`；`ribbon` 必须有 `ribbon`，centerline 与 boundary 模式分别约束 `children`、`upper` 和 `lower`；custom kind 才能使用 `kindOptions`。这些完整 Path、Scene 与 lowering 行为保持兼容。
+
+`PathDefaultSchema` 是 Core Scope owner 显式由 `GraphicStyleSchema`、`PathStrokeSchema`、`PathFillSchema` 和去掉 `children` 的 `PathGeometrySchema` 组合出的默认通道。它排除 instance、structure、decoration 字段和 `children`，不从完整 Path 偶然投影，也不是独立 compile 入口。默认 `stroke` path 消费其中全部适用字段；`ribbon` 只继承 `GraphicStyleSchema` 子集，dash、cap、join、fillRule 和 path geometry 等字段即使被默认通道接受也不会应用，且保持静默忽略。各 Tier 2 owner 仍可在此基础上保留自己的默认值和字段限制。
 
 React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换算成 `strokeWidth`，不属于 `PathSchema`；完整档位见 [Path 样式](/kernel/components/draw/path#样式)。
 

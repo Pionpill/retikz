@@ -5,18 +5,18 @@ import { ClipSpecSchema } from '../clip';
 import { FontSchema } from '../font';
 import { JsonObjectSchema } from '../json';
 import { NodeSchema } from '../node';
-import { ArrowDetailSchema, PathBaseSchema } from '../path';
+import { ArrowDetailSchema, PathFillSchema, PathGeometrySchema, PathStrokeSchema } from '../path';
 import { NodeTargetSchema, PositionSchema } from '../position';
 import { getRecursiveChildSchema } from '../recursive';
 import { ScopeSelfPointSchema } from '../scope-point';
-import { CascadingGraphicStyleSchema, CssColorSchema, OpacitySchema } from '../style';
+import { CascadingGraphicStyleSchema, CssColorSchema, GraphicStyleSchema, OpacitySchema } from '../style';
 import { ThemeSchema } from '../theme';
 import { TransformSchema } from '../transform';
 import { ScopeBoundingShape, ScopeStyleChannel } from './constants';
 
 // ===========================================================================
-// every-X 四通道默认 schema —— 各从对应元素 schema `.omit()` 派生（单一真源，禁手抄）
-// 全字段 optional（继承自源 schema）、顶层 `.strict()` 严拒未知 / 被排除字段
+// every-X 四通道默认 schema —— Node 继续从对应元素 schema `.omit()` 派生，Path 由原子片段显式组合
+// 全字段 optional（继承自源 schema 或原子片段）、顶层 `.strict()` 严拒未知 / 被排除字段
 // ===========================================================================
 
 export const NodeDefaultSchema = NodeSchema.omit({
@@ -30,19 +30,14 @@ export const NodeDefaultSchema = NodeSchema.omit({
   animations: true,
 }).strict();
 
-export const PathDefaultSchema = PathBaseSchema.omit({
-  type: true,
-  kind: true,
-  kindOptions: true,
-  ribbon: true,
-  label: true,
-  id: true,
-  children: true,
-  marks: true,
-  zIndex: true,
-  meta: true,
-  animations: true,
-}).strict();
+export const PathDefaultSchema = z
+  .strictObject({
+    ...GraphicStyleSchema.shape,
+    ...PathStrokeSchema.shape,
+    ...PathFillSchema.shape,
+    ...PathGeometrySchema.omit({ children: true }).shape,
+  })
+  .describe('Default style and path geometry applied to path-like drawables in this scope.');
 
 export const LabelDefaultSchema = z
   .object({
