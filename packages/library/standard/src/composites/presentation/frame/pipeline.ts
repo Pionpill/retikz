@@ -108,7 +108,6 @@ export const lowerFrame = (frame: IRFrame): IRScope => {
     zIndex: 0,
     children,
   };
-  const loweredChildren: IRScope['children'] = [border, content];
 
   const lowerTitle = (target: IRNodeTarget): IRNode | undefined =>
     title === undefined
@@ -134,10 +133,11 @@ export const lowerFrame = (frame: IRFrame): IRScope => {
     anchor: 'top-left',
     offset: [0, gap === 0 ? 0 : -gap],
   };
+  const loweredHeaders: Array<IRNode> = [];
 
   if (headerDirection === FrameHeaderDirection.Horizontal) {
     const loweredTitle = lowerTitle(contentTopTarget);
-    if (loweredTitle !== undefined) loweredChildren.push(loweredTitle);
+    if (loweredTitle !== undefined) loweredHeaders.push(loweredTitle);
     const loweredDescription = lowerDescription(
       loweredTitle === undefined
         ? contentTopTarget
@@ -147,10 +147,10 @@ export const lowerFrame = (frame: IRFrame): IRScope => {
             offset: [gap, 0],
           },
     );
-    if (loweredDescription !== undefined) loweredChildren.push(loweredDescription);
+    if (loweredDescription !== undefined) loweredHeaders.push(loweredDescription);
   } else {
     const loweredDescription = lowerDescription(contentTopTarget);
-    if (loweredDescription !== undefined) loweredChildren.push(loweredDescription);
+    if (loweredDescription !== undefined) loweredHeaders.push(loweredDescription);
     const loweredTitle = lowerTitle(
       loweredDescription === undefined
         ? contentTopTarget
@@ -160,7 +160,7 @@ export const lowerFrame = (frame: IRFrame): IRScope => {
             offset: [0, gap === 0 ? 0 : -gap],
           },
     );
-    if (loweredTitle !== undefined) loweredChildren.push(loweredTitle);
+    if (loweredTitle !== undefined) loweredHeaders.push(loweredTitle);
   }
 
   return {
@@ -169,6 +169,6 @@ export const lowerFrame = (frame: IRFrame): IRScope => {
     localNamespace: false,
     boundingShape: 'rectangle',
     ...(zIndex !== undefined ? { zIndex } : {}),
-    children: loweredChildren,
+    children: [border, content, ...loweredHeaders],
   };
 };
