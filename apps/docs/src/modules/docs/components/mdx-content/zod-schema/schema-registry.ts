@@ -140,6 +140,31 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   ShapeRefSchema: { schema: IR.ShapeRefSchema, label: 'ShapeRef', url: '/kernel/reference/schema/entity#shaperef' },
   BoundarySchema: { schema: IR.BoundarySchema, label: 'Boundary', url: '/kernel/reference/schema/entity#boundary' },
 
+  PathStrokeSchema: {
+    schema: IR.PathStrokeSchema,
+    label: 'PathStroke',
+    url: '/kernel/reference/schema/path#pathstroke',
+  },
+  PathFillSchema: {
+    schema: IR.PathFillSchema,
+    label: 'PathFill',
+    url: '/kernel/reference/schema/path#pathfill',
+  },
+  PathGeometrySchema: {
+    schema: IR.PathGeometrySchema,
+    label: 'PathGeometry',
+    url: '/kernel/reference/schema/path#pathgeometry',
+  },
+  PathDecorationSchema: {
+    schema: IR.PathDecorationSchema,
+    label: 'PathDecoration',
+    url: '/kernel/reference/schema/path#pathdecoration',
+  },
+  PathStructureSchema: {
+    schema: IR.PathStructureSchema,
+    label: 'PathStructure',
+    url: '/kernel/reference/schema/path#pathstructure',
+  },
   PathSchema: { schema: IR.PathSchema, label: 'Path', url: '/kernel/reference/schema/path#path' },
   DrawableStyleSchema: {
     schema: IR.DrawableStyleSchema,
@@ -211,6 +236,26 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/reference/schema/placement#nodetarget',
   },
 
+  GraphicPaintSchema: {
+    schema: IR.GraphicPaintSchema,
+    label: 'GraphicPaint',
+    url: '/kernel/reference/schema/style#graphicpaint',
+  },
+  GraphicOpacitySchema: {
+    schema: IR.GraphicOpacitySchema,
+    label: 'GraphicOpacity',
+    url: '/kernel/reference/schema/style#graphicopacity',
+  },
+  GraphicEffectsSchema: {
+    schema: IR.GraphicEffectsSchema,
+    label: 'GraphicEffects',
+    url: '/kernel/reference/schema/style#graphiceffects',
+  },
+  StrokeStyleSchema: {
+    schema: IR.StrokeStyleSchema,
+    label: 'StrokeStyle',
+    url: '/kernel/reference/schema/style#strokestyle',
+  },
   PaintValueSchema: {
     schema: IR.PaintValueSchema,
     label: 'PaintValue',
