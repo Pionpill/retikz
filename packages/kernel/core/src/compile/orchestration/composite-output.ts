@@ -9,7 +9,7 @@ import type {
 import type { IRChild } from '../../schemas';
 import type { CompositeCompileOwner, CompositeCompileSession, CompositeRuntimeOutputChild } from './types';
 
-import { ScopeSchema } from '../../schemas';
+import { ScopePropsSchema } from '../../schemas';
 import { cloneAndFreezeJson } from '../../shared/json';
 import { CompositeContractError } from '../probe-failure';
 import { withProviderOutputValidationBoundary } from '../scene-primitive';
@@ -70,14 +70,35 @@ const deepFreeze = <T>(value: T): T => {
   return value;
 };
 
-/** 校验 Scene numeric transform 并复制为 detached frozen value */
-const cloneTransform = (value: unknown, owner: CompositeCompileOwner, index: number): Transform => {
+/** 以普通 Scope props schema 校验、脱离并冻结完整 authored Scope props */
+const cloneScopeProps = (props: unknown, owner: CompositeCompileOwner): CompositeCompileScopeProps => {
+  if (props === null || typeof props !== 'object' || Array.isArray(props)) {
+    throw new CompositeContractError(`${owner.label} received invalid runtime Scope props.`);
+  }
+  let parsed: ReturnType<typeof ScopePropsSchema.parse>;
+  try {
+    parsed = ScopePropsSchema.parse(props);
+  } catch (error) {
+    const raw = props as Record<string, unknown>;
+    const themeIssuePath = raw.theme === undefined ? undefined : readThemeIssuePath(error);
+    throw new CompositeContractError(
+      themeIssuePath === undefined
+        ? `${owner.label} received invalid or unsupported runtime Scope props.`
+        : `${owner.label} received invalid runtime Scope ${themeIssuePath}.`,
+      { cause: error },
+    );
+  }
+  return deepFreeze(parsed);
+};
+
+/** 校验 replay wrapper 的已 lowering Scene transform 并复制为 detached frozen value */
+const cloneReplayTransform = (value: unknown, owner: CompositeCompileOwner, index: number): Transform => {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
-    throw new CompositeContractError(`${owner.label} received an invalid runtime Scope transform at index ${index}.`);
+    throw new CompositeContractError(`${owner.label} received an invalid replay wrapper transform at index ${index}.`);
   }
   const fail = (): never => {
     throw new CompositeContractError(
-      `${owner.label} received an invalid or non-finite runtime Scope transform at index ${index}.`,
+      `${owner.label} received an invalid or non-finite replay wrapper transform at index ${index}.`,
     );
   };
   const assertFinite: (number: unknown) => asserts number is number = number => {
@@ -118,65 +139,6 @@ const cloneTransform = (value: unknown, owner: CompositeCompileOwner, index: num
   }
 };
 
-/** 以普通 Scope schema 校验结构字段，同时保留已 lowering 的 Scene transforms */
-const cloneScopeProps = (props: unknown, owner: CompositeCompileOwner): CompositeCompileScopeProps => {
-  if (props === null || typeof props !== 'object' || Array.isArray(props)) {
-    throw new CompositeContractError(`${owner.label} received invalid runtime Scope props.`);
-  }
-  const raw = props as Record<string, unknown>;
-  const allowedKeys = new Set([
-    'theme',
-    'id',
-    'localNamespace',
-    'transforms',
-    'clip',
-    'zIndex',
-    'boundingShape',
-    'meta',
-    'animations',
-  ]);
-  const unsupportedKeys = Object.keys(raw).filter(key => !allowedKeys.has(key));
-  if (unsupportedKeys.length > 0) {
-    throw new CompositeContractError(
-      `${owner.label} received unsupported runtime Scope props: ${unsupportedKeys.map(key => `'${key}'`).join(', ')}.`,
-    );
-  }
-  const { transforms: rawTransforms, ...structural } = raw;
-  let parsed: ReturnType<typeof ScopeSchema.parse>;
-  try {
-    parsed = ScopeSchema.parse({ type: 'scope', ...structural, children: [] });
-  } catch (error) {
-    const themeIssuePath = structural.theme === undefined ? undefined : readThemeIssuePath(error);
-    throw new CompositeContractError(
-      structural.theme === undefined
-        ? `${owner.label} received invalid or unsupported runtime Scope props.`
-        : `${owner.label} received invalid runtime Scope ${themeIssuePath ?? 'theme'}.`,
-      { cause: error },
-    );
-  }
-  if (rawTransforms !== undefined && !Array.isArray(rawTransforms)) {
-    throw new CompositeContractError(`${owner.label} received invalid runtime Scope transforms.`);
-  }
-  const clonedTransforms =
-    rawTransforms === undefined
-      ? undefined
-      : Array.from(rawTransforms, (transform, index) => cloneTransform(transform, owner, index));
-  const parsedProps: CompositeCompileScopeProps = {
-    ...(parsed.theme === undefined ? {} : { theme: parsed.theme }),
-    ...(parsed.id === undefined ? {} : { id: parsed.id }),
-    ...(parsed.localNamespace === undefined ? {} : { localNamespace: parsed.localNamespace }),
-    ...(parsed.clip === undefined ? {} : { clip: parsed.clip }),
-    ...(parsed.zIndex === undefined ? {} : { zIndex: parsed.zIndex }),
-    ...(parsed.boundingShape === undefined ? {} : { boundingShape: parsed.boundingShape }),
-    ...(parsed.meta === undefined ? {} : { meta: parsed.meta }),
-    ...(parsed.animations === undefined ? {} : { animations: parsed.animations }),
-  };
-  return deepFreeze({
-    ...parsedProps,
-    ...(clonedTransforms === undefined ? {} : { transforms: clonedTransforms }),
-  });
-};
-
 /** 校验并冻结 replay 专用的 transform / clip 外壳 */
 const cloneReplayWrapper = (wrapper: unknown, owner: CompositeCompileOwner): CompositeReplayWrapper | undefined => {
   if (wrapper === undefined) return undefined;
@@ -195,16 +157,16 @@ const cloneReplayWrapper = (wrapper: unknown, owner: CompositeCompileOwner): Com
   if (rawTransforms !== undefined && !Array.isArray(rawTransforms)) {
     throw new CompositeContractError(`${owner.label} received invalid replay wrapper transforms; expected an array.`);
   }
-  let parsed: ReturnType<typeof ScopeSchema.parse>;
+  let parsed: ReturnType<typeof ScopePropsSchema.parse>;
   try {
-    parsed = ScopeSchema.parse({ type: 'scope', ...(rawClip === undefined ? {} : { clip: rawClip }), children: [] });
+    parsed = ScopePropsSchema.parse(rawClip === undefined ? {} : { clip: rawClip });
   } catch (error) {
     throw new CompositeContractError(`${owner.label} received an invalid replay wrapper clip.`, { cause: error });
   }
   const transforms =
     rawTransforms === undefined
       ? undefined
-      : Array.from(rawTransforms, (transform, index) => cloneTransform(transform, owner, index));
+      : Array.from(rawTransforms, (transform, index) => cloneReplayTransform(transform, owner, index));
   return deepFreeze({
     ...(transforms === undefined ? {} : { transforms }),
     ...(parsed.clip === undefined ? {} : { clip: parsed.clip }),

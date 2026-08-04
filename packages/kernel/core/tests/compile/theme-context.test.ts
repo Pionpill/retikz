@@ -1,7 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import type { AnyCompositeDefinition, IRChild, IRScene, LayoutCompositeCompileContext, ResolvedTheme } from '../../src';
+import type {
+  AnyCompositeDefinition,
+  IRChild,
+  IRScene,
+  LayoutCompositeCompileContext,
+  ResolvedTheme,
+  ScenePrimitive,
+} from '../../src';
 
 import {
   compileToScene,
@@ -268,6 +275,55 @@ describe('Theme compile context', () => {
     });
 
     expect(observed).toEqual([{ style: 'neutral', mode: 'dark' }]);
+  });
+
+  it('runtime Scope Theme 在 replay child 上沿 Core probe/replay channel 生效', () => {
+    const leaf = defineComposite({
+      namespace: 'theme-test',
+      type: 'runtime-theme-leaf',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('theme-test'),
+        type: z.literal('runtime-theme-leaf'),
+      }),
+      compile: (_node, context) => ({
+        children: [
+          {
+            type: 'node',
+            position: [0, 0],
+            fill: context.theme.mode === ThemeMode.Dark ? '#111111' : '#eeeeee',
+          },
+        ],
+      }),
+    });
+    const owner = defineComposite({
+      namespace: 'theme-test',
+      type: 'runtime-theme-owner',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('theme-test'),
+        type: z.literal('runtime-theme-owner'),
+      }),
+      compile: (_node, context) => {
+        const probe = context.layoutChild(
+          { namespace: 'theme-test', type: 'runtime-theme-leaf' },
+          NaturalLayoutProposal,
+        );
+        if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+        return { children: [context.scope({ theme: { mode: ThemeMode.Dark } }, [context.replay(probe.result)])] };
+      },
+    });
+
+    const result = compileToScene(sceneOf([{ namespace: 'theme-test', type: 'runtime-theme-owner' }]), {
+      composites: [leaf, owner],
+      padding: 0,
+    });
+    const hasDarkFill = (primitives: ReadonlyArray<ScenePrimitive>): boolean =>
+      primitives.some(primitive =>
+        primitive.type === 'group'
+          ? hasDarkFill(primitive.children)
+          : primitive.type === 'rect' && primitive.fill === '#111111',
+      );
+
+    expect(hasDarkFill(result.scene.primitives)).toBe(true);
   });
 
   it('Core-only 图元与最终 Scene不携带或解释 Theme', () => {
