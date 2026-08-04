@@ -29,18 +29,20 @@ description: Use when retikz alpha-stage work needs to execute an ADR-backed fea
 | 单条          | 一次完成一条 ADR 的六阶段                       |
 | 批量 worktree | 多条已确认 ADR，各自使用 reviewed plan 独立执行 |
 
-含“批量 / 一次跑完 / 离线”或至少两个 ADR 编号时，先呈现候选 ADR、依赖与 base 分支，等人工确认。Architecture Gate 与 Plan Gate 是根 `AGENTS.md` 的常驻只读授权；不授权产品修改、commit、push 或其它 review。
+Alpha ADR 执行属于大型任务。进入流程前先按根 `AGENTS.md` 给出完整执行计划，一次确认 scope、阶段、subagent、常规单 reviewer、最终 `cross-review`、Git 身份和操作权限。含“批量 / 一次跑完 / 离线”或至少两个 ADR 编号时，还要确认候选 ADR、依赖与 base 分支。不存在自动 subagent 授权。
+
+新 ADR 的设计和既有 ADR 的执行分成两次授权边界：设计任务的计划只覆盖 Stage 1，交付草案后结束；人工确认 ADR 后，Stage 2–6 以新的大型执行计划一次确认并连续执行。已有人工确认 ADR 的任务可直接规划 Stage 2–6。这样不在同一执行计划中途追加例行确认，也不把 ADR 草案自动视为实现授权。
 
 ## 六阶段
 
-| #   | 阶段     | 执行                                                           | 通过条件                                                               |
-| --- | -------- | -------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| 1   | ADR 设计 | `develop-design` + `develop-completeness` + `cross-review`     | ADR 为长期形态；Architecture Gate PASS；人工确认 ADR                   |
-| 2   | 实施计划 | `superpowers:writing-plans` + `test-contract` + `cross-review` | 镜像 plan 完成；Plan Gate PASS；已获得实现授权                         |
-| 3   | 实现     | `develop-implement`                                            | 按 plan 完成 Spec-First / 常规实现；lint / tsc / 必要测试通过          |
-| 4   | 自测     | `develop-test`                                                 | Adversarial Bug Hunter 的 BLOCKING 清空                                |
-| 5   | 文档     | `develop-document`                                             | 用户可见能力有 zh / en 文档、demo 与 API 表                            |
-| 6   | 收尾     | `develop-wrapup`                                               | 长期 ADR 与最终行为一致；changelog、Accepted、roadmap、commit 授权完成 |
+| #   | 阶段     | 执行                                          | 通过条件                                                               |
+| --- | -------- | --------------------------------------------- | ---------------------------------------------------------------------- |
+| 1   | ADR 设计 | `develop-design` + `develop-completeness`     | ADR 为长期形态；Architecture Gate PASS；人工确认 ADR                   |
+| 2   | 实施计划 | `superpowers:writing-plans` + `test-contract` | 镜像 plan 完成；Plan Gate PASS；已获得实现授权                         |
+| 3   | 实现     | `develop-implement`                           | 按 plan 完成 Spec-First / 常规实现；lint / tsc / 必要测试通过          |
+| 4   | 自测     | `develop-test`                                | Adversarial Bug Hunter 的 BLOCKING 清空                                |
+| 5   | 文档     | `develop-document`                            | 用户可见能力有 zh / en 文档、demo 与 API 表                            |
+| 6   | 收尾     | `develop-wrapup`                              | 长期 ADR 与最终行为一致；changelog、Accepted、roadmap、commit 授权完成 |
 
 文档不是可选项。用户可见功能必须补 docs；完工汇报先给文档页和访问路由，再讲代码。
 
@@ -48,15 +50,12 @@ description: Use when retikz alpha-stage work needs to execute an ADR-backed fea
 
 ADR 内容和位置以 `develop-design` 为准。它只保留核心功能、基础数据结构 / 公开契约、行为与兼容性、功能边界、被否决方案、测试策略摘要和架构验证。
 
-草案完成后按 `cross-review` 执行 1–9 轮 Architecture Gate：
+草案完成后执行 Architecture Gate：
 
-1. 每轮冻结 ADR、HEAD、工作区、适用 architecture / completeness / AGENTS 与必要代码证据。
-2. 按 `cross-review` 并发派发 2–3 个 fresh 独立 reviewer，优先不同模型；只有一个非主模型时使用两个同模型 fresh 实例，每个按 `develop-completeness` 的 `adr-gate` rubric 只读审查。
-3. 主 AI 收齐同轮结果后归并 `BLOCKING / WARNING / INFO`；同轮评审员互不可见结论。
-4. 修订 ADR 后使用新快照和 fresh agents 开启下一轮。
-5. 最新一轮至少两个 fresh 独立 reviewer 完成、无 BLOCKING、WARNING 已处置时 PASS。
-6. 当前轮无 BLOCKING、WARNING 已处置时立即 PASS；只有修订后才进入下一轮。
-7. 最多 9 轮；第 9 轮未通过、无法完成两个 fresh 独立 reviewer、快照漂移或分歧无法裁决时 halt，交人工决策。
+1. 冻结 ADR、HEAD、工作区、适用 architecture / completeness / AGENTS 与必要代码证据。
+2. 主 agent 按 `develop-completeness` 的 `adr-gate` rubric 自审；执行计划已授权时，增加一个只读 reviewer。
+3. reviewer 输出 `BLOCKING / WARNING / INFO`；主 agent 核实后修订 ADR，并在计划上限内复用同一 reviewer 检查新快照。
+4. 无 BLOCKING、WARNING 已处置时 PASS；达到计划循环上限、快照漂移或分歧无法裁决时停止交人工。
 
 Gate 不得要求 ADR 增加文件 scope、私有逻辑、测试 case、命令或 commit 切分。Architecture Gate PASS 后仍须人工确认 ADR；确认 ADR 不等于授权实现。
 
@@ -94,19 +93,17 @@ packages/<group>/_notes/decisions/<relative>/<NN>-<slug>.md
 
 ### `TASK_STATE.md` 与 `REVIEW.md`
 
-长任务按 `flow-long-task` 维护 `TASK_STATE.md`。`REVIEW.md` 记录每轮快照、实际模型、失败 / 超时、合并 findings、人工裁决和最终 Plan Gate 状态。
+长任务按 `flow-long-task` 维护 `TASK_STATE.md`。`REVIEW.md` 记录常规单 reviewer 循环、实际模型、findings、人工裁决和最终 Plan Gate 状态；未授权 reviewer 时记录主 agent 自审结论。
 
 ## Plan Gate
 
-修改产品代码前必须按 `cross-review` 对同一份 ADR + `PLAN.md` + `TEST_CONTRACT.md` + HEAD 执行 1–9 轮并发多模型评审：
+修改产品代码前必须对同一份 ADR + `PLAN.md` + `TEST_CONTRACT.md` + HEAD 执行 Plan Gate：
 
 1. 检查 plan 是否完整追溯 ADR，且没有重定义公开契约、能力归属或功能边界。
 2. 检查文件 scope、代码 / 业务逻辑、任务依赖、测试、docs、命令、commit、风险和回滚是否可执行。
-3. 每轮按 `cross-review` 并发 2–3 个 fresh 独立 reviewer；优先不同模型，只有一个非主模型时使用两个同模型 fresh 实例。主 AI 收齐后才修订 plan，同轮不串行喂结论。
+3. 主 agent 自审；执行计划已授权时，使用一个只读 reviewer，并在修订后复用同一 reviewer 循环。
 4. 修订只涉及实现细节时更新 plan；涉及公开契约或架构边界时停止，回到 ADR 和 Architecture Gate。
-5. 最新一轮至少两个 fresh 独立 reviewer 完成、无 BLOCKING、WARNING 已处置时 PASS。
-6. 当前轮无 BLOCKING、WARNING 已处置时立即 PASS；只有修订后才进入下一轮。
-7. 最多 9 轮；第 9 轮未通过、无法完成两个 fresh 独立 reviewer、快照漂移或分歧无法裁决时 halt，交人工决策。
+5. 无 BLOCKING、WARNING 已处置时 PASS；达到计划循环上限或分歧无法裁决时停止交人工。
 
 Plan Gate PASS 与实现授权两者都存在时，才能进入 Stage 3。它们都不授权 commit / push。
 
@@ -130,7 +127,11 @@ red 走 Spec-First；yellow 按风险决定；green 直接实现并按受影响�
 
 ## 其它独立视角
 
-Architecture Gate 与 Plan Gate 之外的 subagent / 外部模型仍须先获用户确认。Spec Writer、Bug Hunter、Contract Auditor 各自按对应 develop skill 执行；需要多模型交叉评审时复用 `cross-review`，不得串行传递同轮结论。
+所有 subagent 都必须已写入根规则要求的执行计划。Spec Writer、Bug Hunter、Contract Auditor 按对应 develop skill 和计划执行；中间阶段不临时追加 agent。最终 `cross-review` 仅在执行计划已授权或用户明确要求时运行。
+
+## 最终整体 Review
+
+Stage 3–5 完成并通过验证后，按 `flow-long-task` 执行计划中声明的最终检查。未授权 `cross-review` 时由主 agent 做 ADR、plan、实现、测试、docs 与 changelog 一致性检查；已授权时只在此处对完整固定快照执行多模型交叉评审，不在 Architecture Gate、Plan Gate 或逐 commit 阶段重复使用。
 
 ## 批量 worktree
 
@@ -148,12 +149,12 @@ Architecture Gate 与 Plan Gate 之外的 subagent / 外部模型仍须先获用
 
 - 只动自身 scope，不 push / merge / 切回 base / 删除 worktree。
 - 未获当前对话授权不 commit；获授权也只按 plan 粒度。
-- 自动 commit 场景按 `flow-long-task` 用 `cross-review` 评审 staged diff。
+- 自动 commit 场景按 `flow-long-task` 使用计划内的常规单 reviewer 循环，不逐 commit 使用 `cross-review`。
 - 所有分支经人工 review、合并后，统一执行 Stage 6。
 
 ## 失败阈值
 
-- Architecture Gate 或 Plan Gate 最多 9 轮；第 9 轮未 PASS 必须 halt 并交人工决策。
+- Architecture Gate 或 Plan Gate 达到执行计划声明的单 reviewer 循环上限仍未 PASS 时停止并交人工决策。
 - 任一实施 step 连续 3 轮验证失败，halt 并记录失败输入、日志和判断。
 - Contract Auditor 发现 ADR / plan / 测试 / docs / 行为不一致且一轮修不动，halt 交人工。
 - 批量 worktree 失败时更新其 `TASK_STATE.md` / `REVIEW.md` 并停止，不伪装完工。
@@ -161,8 +162,9 @@ Architecture Gate 与 Plan Gate 之外的 subagent / 外部模型仍须先获用
 ## 完成检查
 
 - ADR 始终保持长期形态；Proposed → Accepted 只更新状态、最终摘要和真实遗留风险。
-- Architecture Gate 与 Plan Gate 都在实现前 PASS，且每个有效轮次至少两个 fresh 独立 reviewer 实例完成；同模型降级已如实记录。
+- Architecture Gate 与 Plan Gate 都在实现前 PASS；已按执行计划完成主 agent 自审或常规单 reviewer 循环。
 - 实现按 reviewed plan 执行；偏差进入正确真源，没有把施工细节回写 ADR。
 - Spec-First 需要时能证明测试先于实现，且实现未擅改基础契约。
 - Adversarial BLOCKING 清空，docs / changelog zh-en 对齐。
+- 已按执行计划完成最终主 agent 检查或获授权的 `cross-review`。
 - roadmap 状态与实际完成一致；commit、push、发布均有独立授权。

@@ -9,14 +9,14 @@ description: Use when auditing a retikz module or subsystem read-only to find be
 
 ## 边界
 
-| 场景                               | 用哪个 skill                |
-| ---------------------------------- | --------------------------- |
-| 横向审一个模块，找 beta TODO 候选  | develop-review              |
-| 审计已有测试是否过期、重复或临时   | test-review                 |
-| 固定 commit / PR / diff 多模型评审 | cross-review                |
-| 为疑似 bug 写测试坐实              | cross-test                  |
-| 已登记 TODO 要修                   | flow-beta                   |
-| 新功能 / 新 IR / 新公开字段        | flow-alpha / develop-design |
+| 场景                              | 用哪个 skill                |
+| --------------------------------- | --------------------------- |
+| 横向审一个模块，找 beta TODO 候选 | develop-review              |
+| 审计已有测试是否过期、重复或临时  | test-review                 |
+| 用户明确要求固定快照多模型评审    | cross-review                |
+| 为疑似 bug 写测试坐实             | cross-test                  |
+| 已登记 TODO 要修                  | flow-beta                   |
+| 新功能 / 新 IR / 新公开字段       | flow-alpha / develop-design |
 
 ## 启动前
 
@@ -101,5 +101,5 @@ notes/reports/develop-review-YYYY-MM-DD-<module>.md
 
 - 报告声明了范围、基准、版本通道和覆盖率。
 - finding 都有位置证据、成因、建议和预估 Level。
-- 高风险项标明是否建议 cross-review 或 cross-test。
+- 高风险项标明是否建议在后续大型任务最终阶段使用 `cross-review`，或用 `cross-test` 坐实；本次审计不自动调度。
 - 审计后 `git status --short` 与基线相比，除 ignored 报告外没有产品文件变化。

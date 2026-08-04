@@ -23,7 +23,7 @@ description: Use when changing any retikz apps/docs content, route data, i18n, d
    - 位置、引用、边界或教学辅助线 demo：[`references/demo-visual-language.md`](references/demo-visual-language.md)
    - Reference / `<ZodSchema>`：[`references/reference-pages.md`](references/reference-pages.md)
    - 叙述图：[`docs-figure-contract`](../docs-figure-contract/SKILL.md)；解释实现流程再读 `docs-figure-logic`
-   - 大改或新增页面的完稿评审：必须使用 [`docs-doc-review`](../docs-doc-review/SKILL.md)
+   - 大改或新增页面的完稿评审：使用 [`docs-doc-review`](../docs-doc-review/SKILL.md)
 
 不要为“可能用到”预读所有资源；按页面真实内容加载。
 
@@ -142,11 +142,11 @@ node .agents/skills/docs-doc-principle/scripts/check-doc-integrity.mjs --scope <
 
 命中任一条件即视为文档大改：新增页面；重写页面主线或章节顺序；新增或替换 demo、controls、API 表；同时对多个小节或页面做语义调整。纯错字、链接、格式和局部措辞修改不触发。
 
-- 任务开始时先征求用户对完稿后只读 subagent review 的授权；当前对话已授权时不重复询问
-- 改稿与机械验证完成后，必须派遣一个新的只读 subagent，并要求它完整使用 `docs-doc-review`
-- 主 agent 自评不能替代独立评审；时间紧、机械检查通过或用户希望尽快结束也不能把已授权的评审降为可选
+- 文档大改按中型任务处理，开始时在一次执行计划中确认 scope、验证以及是否使用一个只读 subagent review
+- 未授权 subagent 时由主 agent 使用 `docs-doc-review` 自审；已授权时在改稿和机械验证后派一个只读 reviewer
+- 已授权 reviewer 时不能因时间紧或机械检查通过而跳过，也不在完稿后追加第二个 reviewer
 - 给 subagent 原始页面、diff、demo 与必要实现依据，不预告预期结论；由它从入门读者视角独立找出术语、理解跳跃和顺序问题
-- 修正 BLOCKING 后继续复核，直到阻塞关闭；未获授权或用户拒绝评审时，明确报告“未执行独立读者评审”，不得宣称完整评审通过
+- 修正 BLOCKING 后复用同一 reviewer，直到阻塞关闭或达到计划循环上限；未授权时明确报告“未执行独立读者评审”
 
 完成前还要人工确认：
 
