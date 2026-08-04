@@ -1,10 +1,10 @@
 import type { LayoutChildResult } from '@retikz/core';
 
-import type { LayoutRect } from '../../layout/internal';
-import type { IRLegendRampContent } from './types';
+import type { LayoutRect } from '../../../layout/internal';
+import type { IRLegendRampContent } from '../types';
 
-import { unionLayoutArtifactRects } from '../../layout/internal';
-import { LegendDirection } from './constants';
+import { unionLayoutArtifactRects } from '../../../layout/internal';
+import { LegendDirection } from '../constants';
 
 /** 已取得 natural slot 的 ramp tick */
 export type MeasuredLegendRampTick = Readonly<{

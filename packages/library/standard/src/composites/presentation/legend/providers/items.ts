@@ -1,10 +1,10 @@
 import type { LayoutChildResult } from '@retikz/core';
 
-import type { LayoutRect } from '../../layout/internal';
-import type { IRLegendItem, IRLegendItemsContent } from './types';
+import type { LayoutRect } from '../../../layout/internal';
+import type { IRLegendItem, IRLegendItemsContent } from '../types';
 
-import { compensatedLayoutSum } from '../../layout/internal';
-import { LegendDirection, LegendSampleAlignment, LegendWrap } from './constants';
+import { compensatedLayoutSum } from '../../../layout/internal';
+import { LegendDirection, LegendSampleAlignment, LegendWrap } from '../constants';
 
 /** Legend child 在 minimum 与 natural probe 下的结构结果 */
 export type MeasuredLegendChild = Readonly<{

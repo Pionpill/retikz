@@ -11,7 +11,7 @@ import { LayoutAxisProposalKind, LayoutChildProbeKind, LayoutIntrinsicMode } fro
 
 import type { LayoutRect } from '../../layout/internal';
 import type { LayoutArtifactItemBase } from '../../layout/shared';
-import type { LegendItemLine, LegendItemSlots, MeasuredLegendChild, MeasuredLegendItem } from './items';
+import type { LegendItemLine, LegendItemSlots, MeasuredLegendChild, MeasuredLegendItem } from './providers';
 import type {
   IRLegend,
   IRLegendItem,
@@ -39,8 +39,8 @@ import {
   formLegendItemLines,
   intrinsicItemsMainProfile,
   placeLegendItems,
-} from './items';
-import { createLegendRampStructure, translateLegendRampStructure } from './ramp';
+} from './providers';
+import { createLegendRampStructure, translateLegendRampStructure } from './providers';
 
 /** 绑定待 probe 的 child 与稳定 inspection occurrence */
 type ChildHandle = Readonly<{ child: IRChild; occurrence: number }>;
