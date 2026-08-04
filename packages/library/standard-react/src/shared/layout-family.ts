@@ -8,12 +8,13 @@ import type {
 import type { ReactElement, ReactNode } from 'react';
 
 import { buildIRWithContributions } from '@retikz/react';
-import { StandardLayoutPreset } from '@retikz/standard';
+import { FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition } from '@retikz/standard';
 import { Children, Fragment, isValidElement } from 'react';
 
 import type { LayoutItemProps } from '../layout-item';
 
 import { LayoutItem } from '../layout-item';
+import { StandardLayoutReactNamespace } from './constants';
 
 type LayoutItemInputByKind = Readonly<{
   flex: FlexLayoutItemInput;
@@ -21,11 +22,12 @@ type LayoutItemInputByKind = Readonly<{
   overlay: OverlayLayoutItemInput;
 }>;
 
-/** 三种 Standard layout React adapter 共用的 contribution namespace */
-export const StandardLayoutReactNamespace = 'standard.layout';
-
 /** 为每次 React family contribution 返回可变的布局 definition 副本 */
-export const makeReactStandardLayoutComposites = () => [...StandardLayoutPreset.compile.composites];
+export const makeReactStandardLayoutComposites = (): ReturnType<EmbeddableContribution['makeComposites']> => [
+  FlexLayoutDefinition,
+  GridLayoutDefinition,
+  OverlayLayoutDefinition,
+];
 
 /** 透明展开 Fragment 和数组，同时保留需要由 container 验证的直属节点 */
 const flattenLayoutChildren = (children: ReactNode): Array<ReactNode> => {

@@ -6,6 +6,8 @@ import { createGrid, GridDefinition } from '@retikz/standard';
 
 import type { StandardEmbeddableComponent } from '../shared';
 
+import { StandardGridReactNamespace } from '../shared';
+
 /** React Grid 组件接受的 Standard authoring 输入 */
 export type GridProps = GridInput;
 
@@ -14,7 +16,7 @@ const makeGridComposites = () => [GridDefinition];
 
 const gridEmbeddableAdapter: EmbeddableTier2Adapter<GridProps> = {
   displayName: 'Grid',
-  namespace: 'standard.grid',
+  namespace: StandardGridReactNamespace,
   contribute: props => ({
     node: createGrid(props),
     datasets: {},

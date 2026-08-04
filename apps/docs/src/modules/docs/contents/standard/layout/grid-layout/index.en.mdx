@@ -31,7 +31,7 @@ import { GridLayout, LayoutItem } from '@retikz/standard-react';
 </Layout>
 ```
 
-Use `createGridLayout()` with `GridLayoutDefinition` for JSON/IR, or `gridLayout()` with `GridLayoutVanillaAdapter` for Vanilla. Load the complete family through `StandardLayoutPreset` or `StandardLayoutVanillaAdapters`.
+Use `createGridLayout()` with `GridLayoutDefinition` for JSON/IR, or `gridLayout()` with `GridLayoutVanillaAdapter` for Vanilla. For the complete family, pass the three layout Definitions in `composites`, or use `StandardLayoutVanillaAdapters` for Vanilla embeds.
 
 | Scenario         | Public entry                                                                              |
 | ---------------- | ----------------------------------------------------------------------------------------- |
@@ -82,7 +82,7 @@ This physical x-to-y order lets text determine height after column width is know
     },
     { label: 'Grid placement', path: 'packages/library/standard/src/composites/layout/grid-layout/placement.ts' },
     { label: 'Grid track solver', path: 'packages/library/standard/src/composites/layout/grid-layout/tracks.ts' },
-    { label: 'GridLayout compile', path: 'packages/library/standard/src/composites/layout/grid-layout/compile.ts' },
+    { label: 'GridLayout compile', path: 'packages/library/standard/src/composites/layout/grid-layout/pipeline.ts' },
   ]}
 />
 

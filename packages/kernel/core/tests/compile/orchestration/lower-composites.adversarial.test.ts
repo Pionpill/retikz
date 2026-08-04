@@ -38,7 +38,34 @@ describe('lowerComposites — adversarial', () => {
       expand: () => [],
     });
     const ir: IRScene = { version: 1, type: 'scene', children: [] };
-    expect(() => compileToScene(ir, { composites: [dupA, dupB] }).scene).toThrow(/duplicate composite registration: "x\.y"/);
+    expect(() => compileToScene(ir, { composites: [dupA, dupB] }).scene).toThrow(
+      /duplicate composite registration: "x\.y"/,
+    );
+  });
+
+  it('same-namespace-different-type-is-allowed: namespace 只是路由前缀，不维护官方白名单', () => {
+    const first = defineComposite({
+      namespace: 'standard',
+      type: 'userExtensionA',
+      schema: CompositeBaseSchema.extend({ namespace: z.literal('standard'), type: z.literal('userExtensionA') }),
+      expand: () => ({ type: 'node', id: 'first', position: [0, 0], text: 'first' }),
+    });
+    const second = defineComposite({
+      namespace: 'standard',
+      type: 'userExtensionB',
+      schema: CompositeBaseSchema.extend({ namespace: z.literal('standard'), type: z.literal('userExtensionB') }),
+      expand: () => ({ type: 'node', id: 'second', position: [20, 0], text: 'second' }),
+    });
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { namespace: 'standard', type: 'userExtensionA' },
+        { namespace: 'standard', type: 'userExtensionB' },
+      ],
+    };
+    const scene = compileToScene(ir, { composites: [first, second] }).scene;
+    expect(flattenPrims(scene.primitives).filter(primitive => primitive.type === 'text')).toHaveLength(2);
   });
 
   it('non-zodobject-schema-throws: schema 非 ZodObject（z.string）→ 注册期可诊断 throw', () => {

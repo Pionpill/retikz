@@ -10,7 +10,7 @@ const Demo: FC = () => (
       position={[-310, 0]}
       text={[
         { text: 'Grid IR', font: { size: 14, weight: 'bold' } },
-        { text: 'bounds · spacing · styles', fill: 'gray', font: { size: 12 } },
+        { text: 'bounds · line · position', fill: 'gray', font: { size: 12 } },
       ]}
       stroke="darkorange"
       fill="darkorange"
@@ -23,7 +23,7 @@ const Demo: FC = () => (
       position={[-160, 0]}
       text={[
         { text: 'Normalize input', font: { size: 14, weight: 'bold' } },
-        { text: 'origin · spacing · extents', fill: 'gray', font: { size: 12 } },
+        { text: 'sort corners · local center', fill: 'gray', font: { size: 12 } },
       ]}
       stroke="gray"
       fill="gray"
@@ -49,7 +49,7 @@ const Demo: FC = () => (
       position={[165, 0]}
       text={[
         { text: 'Classify and assemble', font: { size: 14, weight: 'bold' } },
-        { text: 'lines · majors · border', fill: 'gray', font: { size: 12 } },
+        { text: 'line · major · border', fill: 'gray', font: { size: 12 } },
       ]}
       stroke="gray"
       fill="gray"
@@ -61,8 +61,8 @@ const Demo: FC = () => (
       id="paths"
       position={[315, 0]}
       text={[
-        { text: 'Core Path[]', font: { size: 14, weight: 'bold' } },
-        { text: 'move · line · cycle', fill: 'gray', font: { size: 12 } },
+        { text: 'Core Path[] / Scope', font: { size: 14, weight: 'bold' } },
+        { text: 'Core resolves center position', fill: 'gray', font: { size: 12 } },
       ]}
       stroke="dodgerblue"
       fill="dodgerblue"

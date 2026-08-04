@@ -1,9 +1,21 @@
 import { BoxSpacingSchema, CompositeBaseSchema, NodeSchema, RectangleStepSchema } from '@retikz/core';
 import { z } from 'zod';
 
+import { STANDARD_NAMESPACE } from '../../shared';
 import { StandardPathBorderStyleSchema } from '../shared/schemas';
 import { FrameHeaderDirection } from './constants';
-import { FrameDescriptionSchema, FrameTitleSchema } from './header-schema';
+const FrameHeaderShape = {
+  ...NodeSchema.omit({ type: true, position: true, text: true }).shape,
+  text: NodeSchema.shape.text.unwrap().describe('Required Core Node text rendered as Frame header content.'),
+};
+
+export const FrameTitleSchema = z
+  .strictObject(FrameHeaderShape)
+  .describe('Node-like primary title authored without an explicit position.');
+
+export const FrameDescriptionSchema = z
+  .strictObject(FrameHeaderShape)
+  .describe('Node-like supporting description authored without an explicit position.');
 
 const FrameBorderStyleSchema = StandardPathBorderStyleSchema.omit({
   color: true,
@@ -14,7 +26,7 @@ const FrameBorderStyleSchema = StandardPathBorderStyleSchema.omit({
 const FramePaddingSchema = z.union([z.number().nonnegative(), BoxSpacingSchema]);
 
 const FrameBaseSchema = CompositeBaseSchema.extend({
-  namespace: z.literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
+  namespace: z.literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
   type: z.literal('frame').describe('Composite type for a bordered semantic group of Core nodes.'),
   ...FrameBorderStyleSchema.shape,
   id: z.string().min(1).describe('Stable identity for the lowered outer Scope.'),

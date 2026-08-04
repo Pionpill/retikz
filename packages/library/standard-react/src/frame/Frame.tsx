@@ -8,6 +8,8 @@ import { Children, createElement, Fragment, isValidElement } from 'react';
 
 import type { StandardEmbeddableComponent } from '../shared';
 
+import { StandardFrameReactNamespace } from '../shared';
+
 /** React Frame 组件接受的 Standard authoring 输入 */
 export type FrameProps = Omit<FrameInput, 'children' | 'title' | 'description'> & {
   /** FrameTitle、FrameDescription 与参与 body bounds 的 Core Node children */
@@ -87,7 +89,7 @@ const readFrameParts = (children: ReactNode): FrameParts => {
 
 const frameEmbeddableAdapter: EmbeddableTier2Adapter<FrameProps> = {
   displayName: 'Frame',
-  namespace: 'standard.frame',
+  namespace: StandardFrameReactNamespace,
   contribute: props => {
     if ('title' in props || 'description' in props) {
       throw new Error('React Frame headers must use direct FrameTitle and FrameDescription children.');

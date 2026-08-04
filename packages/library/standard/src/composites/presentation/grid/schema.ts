@@ -1,33 +1,57 @@
-import { CompositeBaseSchema, PositionSchema } from '@retikz/core';
+import { CompositeBaseSchema, PolarPositionSchema, PositionSchema } from '@retikz/core';
 import { z } from 'zod';
 
+import { STANDARD_NAMESPACE } from '../../shared';
 import { getLatticeRangeError } from '../shared/lattice';
-import {
-  StandardGridSpacingSchema,
-  StandardPathBorderStyleSchema,
-  StandardPathStrokeStyleSchema,
-} from '../shared/schemas';
-import { GridBorderOrder } from './constants';
+import { StandardPathBorderStyleSchema, StandardPathStrokeStyleSchema } from '../shared/schemas';
+import { DEFAULT_GRID_LINE_SPACING, GridBorderOrder } from './constants';
 
-const GridBoundsSchema = z.strictObject({
-  min: PositionSchema.describe('Inclusive minimum corner of the grid bounds.'),
-  max: PositionSchema.describe('Inclusive maximum corner of the grid bounds.'),
+const GridCartesianBoundsSchema = z.strictObject({
+  start: PositionSchema.describe('First inclusive Cartesian corner of the grid bounds.'),
+  end: PositionSchema.describe('Second inclusive Cartesian corner of the grid bounds.'),
 });
 
-const GridLinesSchema = z
-  .strictObject({
-    vertical: z.boolean().default(true).describe('Whether vertical grid lines are emitted.'),
-    horizontal: z.boolean().default(true).describe('Whether horizontal grid lines are emitted.'),
-    includeBoundary: z.boolean().default(false).describe('Whether missing bounds edges are added as grid lines.'),
-    style: StandardPathStrokeStyleSchema.optional().describe('Style for ordinary grid lines.'),
-  })
-  .default({ vertical: true, horizontal: true, includeBoundary: false });
+const GridCenteredBoundsSchema = z.strictObject({
+  position: z
+    .union([PositionSchema, PolarPositionSchema])
+    .describe('Geometric grid center; PolarPosition is resolved by Core during Scene compilation.'),
+  width: z.number().nonnegative().describe('Non-negative grid width in user units.'),
+  height: z.number().nonnegative().describe('Non-negative grid height in user units.'),
+});
 
-const GridMajorSchema = z.strictObject({
+const GridBoundsSchema = z
+  .union([GridCartesianBoundsSchema, GridCenteredBoundsSchema])
+  .describe('Either two unordered Cartesian corners or a center position with width and height.');
+
+const GridLineMajorSchema = z.strictObject({
   every: z.number().int().positive().describe('Positive origin-relative lattice interval for major lines.'),
   offset: z.number().int().default(0).describe('Origin-relative lattice index offset for major lines.'),
   style: StandardPathStrokeStyleSchema.optional().describe('Style fields overriding ordinary grid-line style.'),
 });
+
+export const GridLineInputSchema = z
+  .strictObject({
+    spacing: z
+      .number()
+      .positive()
+      .default(DEFAULT_GRID_LINE_SPACING)
+      .describe('Positive distance between adjacent grid lines in this direction.'),
+    origin: z.number().optional().describe('Optional origin-relative lattice coordinate for this direction.'),
+    includeBoundary: z.boolean().default(false).describe('Whether missing bounds edges are added as grid lines.'),
+    style: StandardPathStrokeStyleSchema.optional().describe('Style for ordinary grid lines.'),
+    major: GridLineMajorSchema.optional().describe('Optional major-line interval and style override.'),
+  })
+  .describe('Configuration shared by one grid-line direction.');
+
+const GridLinePairSchema = z.strictObject({
+  vertical: GridLineInputSchema.describe('Configuration for vertical grid lines.'),
+  horizontal: GridLineInputSchema.describe('Configuration for horizontal grid lines.'),
+});
+
+export const GridLineSchema = z
+  .union([z.boolean(), GridLineInputSchema, GridLinePairSchema])
+  .default(true)
+  .describe('Disabled, shared, or direction-specific grid-line configuration.');
 
 const GridBorderSchema = z.strictObject({
   padding: z.number().nonnegative().default(0).describe('Uniform outward border padding in user units.'),
@@ -40,77 +64,97 @@ const GridBorderSchema = z.strictObject({
 });
 
 const GridBaseSchema = CompositeBaseSchema.extend({
-  namespace: z.literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
+  namespace: z.literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
   type: z.literal('grid').describe('Composite type for a regular Cartesian grid.'),
-  bounds: GridBoundsSchema.describe('Strict two-dimensional bounds with min less than max on both axes.'),
-  spacing: StandardGridSpacingSchema.describe('Uniform or axis-specific positive grid spacing.'),
-  origin: PositionSchema.optional().describe('Optional lattice origin. Omitted uses bounds.min during lowering.'),
-  lines: GridLinesSchema.describe('Visible grid directions and optional boundary insertion.'),
-  major: GridMajorSchema.optional().describe('Optional major-line interval and style override.'),
+  bounds: GridBoundsSchema.describe('Unordered Cartesian corners or a center position with non-negative dimensions.'),
+  line: GridLineSchema,
   border: GridBorderSchema.optional().describe('Optional padded border and its drawing order.'),
 });
 
 type GridRefinementInput = z.infer<typeof GridBaseSchema>;
+type GridLineConfig = z.infer<typeof GridLineInputSchema>;
+type GridLinePair = { vertical: GridLineConfig; horizontal: GridLineConfig };
+
+type GridNumericBounds = {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+};
+
+const getGridNumericBounds = (grid: GridRefinementInput): GridNumericBounds => {
+  if ('start' in grid.bounds) {
+    const [startX, startY] = grid.bounds.start;
+    const [endX, endY] = grid.bounds.end;
+    return {
+      minX: Math.min(startX, endX),
+      minY: Math.min(startY, endY),
+      maxX: Math.max(startX, endX),
+      maxY: Math.max(startY, endY),
+    };
+  }
+
+  return {
+    minX: -grid.bounds.width / 2,
+    minY: -grid.bounds.height / 2,
+    maxX: grid.bounds.width / 2,
+    maxY: grid.bounds.height / 2,
+  };
+};
 
 const refineGrid = (grid: GridRefinementInput, ctx: z.RefinementCtx): void => {
-  if (grid.bounds.min[0] >= grid.bounds.max[0]) {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['bounds', 'max', 0],
-      message: 'bounds.min[0] must be less than bounds.max[0].',
-    });
-  }
-  if (grid.bounds.min[1] >= grid.bounds.max[1]) {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['bounds', 'max', 1],
-      message: 'bounds.min[1] must be less than bounds.max[1].',
-    });
-  }
-  if (!grid.lines.vertical && !grid.lines.horizontal) {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['lines'],
-      message: 'At least one grid line direction must be enabled.',
-    });
-  }
+  const line = resolveGridLines(grid.line);
+  if (line === false) return;
 
-  const [originX, originY] = grid.origin ?? grid.bounds.min;
-  const [spacingX, spacingY] =
-    typeof grid.spacing === 'number' ? [grid.spacing, grid.spacing] : [grid.spacing.x, grid.spacing.y];
-  const verticalError = grid.lines.vertical
-    ? getLatticeRangeError({
-        min: grid.bounds.min[0],
-        max: grid.bounds.max[0],
-        spacing: spacingX,
-        origin: originX,
-        includeBoundary: grid.lines.includeBoundary,
-      })
-    : undefined;
-  const horizontalError = grid.lines.horizontal
-    ? getLatticeRangeError({
-        min: grid.bounds.min[1],
-        max: grid.bounds.max[1],
-        spacing: spacingY,
-        origin: originY,
-        includeBoundary: grid.lines.includeBoundary,
-      })
-    : undefined;
+  const bounds = getGridNumericBounds(grid);
+  const verticalError = getLatticeRangeError({
+    min: bounds.minX,
+    max: bounds.maxX,
+    spacing: line.vertical.spacing,
+    origin: line.vertical.origin ?? bounds.minX,
+    includeBoundary: line.vertical.includeBoundary,
+  });
+  const horizontalError = getLatticeRangeError({
+    min: bounds.minY,
+    max: bounds.maxY,
+    spacing: line.horizontal.spacing,
+    origin: line.horizontal.origin ?? bounds.minY,
+    includeBoundary: line.horizontal.includeBoundary,
+  });
 
   if (verticalError !== undefined) {
     ctx.addIssue({
       code: 'custom',
-      path: typeof grid.spacing === 'number' ? ['spacing'] : ['spacing', 'x'],
+      path: getGridLineSpacingPath(grid.line, 'vertical'),
       message: verticalError,
     });
   }
   if (horizontalError !== undefined) {
     ctx.addIssue({
       code: 'custom',
-      path: typeof grid.spacing === 'number' ? ['spacing'] : ['spacing', 'y'],
+      path: getGridLineSpacingPath(grid.line, 'horizontal'),
       message: horizontalError,
     });
   }
+};
+
+const resolveGridLines = (line: GridRefinementInput['line']): GridLinePair | false => {
+  if (line === false) return false;
+  if (line === true) {
+    const defaultLine: GridLineConfig = { spacing: DEFAULT_GRID_LINE_SPACING, includeBoundary: false };
+    return { vertical: defaultLine, horizontal: defaultLine };
+  }
+  if ('vertical' in line) return line;
+  return { vertical: line, horizontal: line };
+};
+
+const getGridLineSpacingPath = (
+  line: GridRefinementInput['line'],
+  direction: 'vertical' | 'horizontal',
+): Array<string> => {
+  if (line === true) return ['line'];
+  if (typeof line === 'object' && 'vertical' in line) return ['line', direction, 'spacing'];
+  return ['line', 'spacing'];
 };
 
 export const GridSchema = GridBaseSchema.superRefine(refineGrid);

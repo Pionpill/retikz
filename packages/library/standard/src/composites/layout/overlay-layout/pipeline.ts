@@ -16,8 +16,7 @@ import {
 } from '@retikz/core';
 
 import type { LayoutInsets, LayoutRect } from '../internal';
-import type { OverlayLayoutArtifact } from './artifact-types';
-import type { IROverlayLayout, IROverlayLayoutItem } from './types';
+import type { IROverlayLayout, IROverlayLayoutItem, OverlayLayoutArtifact } from './types';
 
 import {
   alignResolvedLayoutSlot,

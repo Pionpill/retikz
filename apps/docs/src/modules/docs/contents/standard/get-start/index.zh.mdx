@@ -23,7 +23,7 @@ if (container === null) throw new Error('Missing #diagram container');
 
 createRoot(container).render(
   <Layout width={280} height={170}>
-    <Grid bounds={{ min: [20, 20], max: [260, 150] }} spacing={20} lines={{ style: { stroke: 'lightgray' } }} />
+    <Grid bounds={{ start: [20, 20], end: [260, 150] }} line={{ spacing: 20, style: { stroke: 'lightgray' } }} />
   </Layout>,
 );
 ```
@@ -48,9 +48,8 @@ const figure = {
   viewBox: { x: 0, y: 0, width: 280, height: 170 },
   children: [
     grid('paper-grid', {
-      bounds: { min: [20, 20], max: [260, 150] },
-      spacing: 20,
-      lines: { style: { stroke: 'lightgray' } },
+      bounds: { start: [20, 20], end: [260, 150] },
+      line: { spacing: 20, style: { stroke: 'lightgray' } },
     }),
   ],
 } satisfies VanillaFigureSpec;
@@ -76,7 +75,7 @@ mountSvg(container, figure, {
 
 ```ts
 import { SceneSchema } from '@retikz/core';
-import { createGrid, createStandardBundle, GridModule, GridSchema } from '@retikz/standard';
+import { createGrid, GridDefinition, GridSchema } from '@retikz/standard';
 import { mountSvg } from '@retikz/vanilla';
 
 const storageKey = 'retikz:grid';
@@ -85,9 +84,8 @@ localStorage.setItem(
   storageKey,
   JSON.stringify(
     createGrid({
-      bounds: { min: [20, 20], max: [260, 150] },
-      spacing: 20,
-      lines: { style: { stroke: 'lightgray' } },
+      bounds: { start: [20, 20], end: [260, 150] },
+      line: { spacing: 20, style: { stroke: 'lightgray' } },
     }),
   ),
 );
@@ -102,22 +100,22 @@ const scene = SceneSchema.parse({
   viewBox: { x: 0, y: 0, width: 280, height: 170 },
   children: [storedGrid],
 });
-const gridBundle = createStandardBundle([GridModule]);
+const gridCompile = { composites: [GridDefinition] };
 
 const container = document.querySelector('#diagram');
 if (container === null) throw new Error('Missing #diagram container');
 
 mountSvg(container, scene, {
-  compile: gridBundle.compile,
+  compile: gridCompile,
   output: { width: 280, height: 170 },
 });
 ```
 
-如果 bundle 没有选择 `GridModule`，Core 会产生 `COMPOSITE_NOT_REGISTERED` 诊断并跳过 Grid；其它已注册或 Core 原生 child 仍会继续编译。需要当前全部 Standard 能力时，可以直接使用 `StandardAllPreset.compile`。
+如果 `GridDefinition` 没有传入，Core 会产生 `COMPOSITE_NOT_REGISTERED` 诊断并跳过 Grid；其它已注册或 Core 原生 child 仍会继续编译。需要多个 Standard composite 时，直接把对应 Definition 放入同一个 `composites` 数组
 
 ## 下一步：用布局容器替代手写坐标
 
-布局 JSX 使用 `FlexLayout`、`GridLayout`、`OverlayLayout` 与直属 `LayoutItem`。三者共享一次 `standard.layout` contribution；直接 IR 可注入 `StandardLayoutPreset.compile`，Vanilla 可传 `StandardLayoutVanillaAdapters`。
+布局 JSX 使用 `FlexLayout`、`GridLayout`、`OverlayLayout` 与直属 `LayoutItem`。三者共享一次 `standard.layout` contribution；直接 IR 可注入 `[FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition]`，Vanilla 可传 `StandardLayoutVanillaAdapters`
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
@@ -137,11 +135,11 @@ import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 
 ## 接下来
 
-| 页面                                               | 继续了解什么                                 |
-| -------------------------------------------------- | -------------------------------------------- |
-| [网格](/standard/composite/grid)                   | 格距、主线、边界和边框                       |
-| [坐标轴](/standard/composite/axes)                 | 箭头、刻度、轴名和分方向网格                 |
-| [分组框](/standard/composite/frame)                | 自动 bounds、间距、边框和标签                |
-| [图例](/standard/composite/legend)                 | 离散样本、连续 ramp、probe 与 typed artifact |
-| [布局容器](/standard/layout)                       | Flex、Grid、Overlay 与 typed artifacts       |
-| [能力装载](/standard/extension/capability-loading) | module、部分 bundle、all preset 与宿主边界   |
+| 页面                                                           | 继续了解什么                                 |
+| -------------------------------------------------------------- | -------------------------------------------- |
+| [网格](/standard/composite/grid)                               | 格距、主线、边界和边框                       |
+| [坐标轴](/standard/composite/axes)                             | 箭头、刻度、轴名和分方向网格                 |
+| [分组框](/standard/composite/frame)                            | 自动 bounds、间距、边框和标签                |
+| [图例](/standard/composite/legend)                             | 离散样本、连续 ramp、probe 与 typed artifact |
+| [布局容器](/standard/layout)                                   | Flex、Grid、Overlay 与 typed artifacts       |
+| [直接 Definition 装载](/standard/extension/capability-loading) | Definition 选择、Core 注入与宿主边界         |

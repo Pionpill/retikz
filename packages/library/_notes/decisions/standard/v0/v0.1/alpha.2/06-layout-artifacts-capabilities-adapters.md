@@ -1,16 +1,18 @@
-# ADR-06：用 Typed Artifact、Capability 与等价 Adapter 收口布局容器
+# ADR-06：用 Typed Artifact、Definition 与等价 Adapter 收口布局容器
 
-- 状态：Accepted
+- 状态：Accepted（artifact、Definition 与 adapter 契约仍生效；组合接线由 [alpha.3 ADR-06](../alpha.3/06-direct-definition-loading.md) 统一）
 - 决策日期：2026-07-30
 - 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-02](./02-box-layout-item-vocabulary.md) · [ADR-03](./03-flex-layout.md) · [ADR-04](./04-grid-layout.md) · [ADR-05](./05-overlay-layout.md) · [alpha.1 ADR-05](../alpha.1/05-capability-loading.md)
 
 ## 背景
 
+本 ADR 的 typed artifact、layout adapter、authoring 与 Core layout-aware contract 仍然有效。文中 alpha.1 capability loading 的历史接线仅作为实施记录保留；当前直接 IR 以 alpha.3 ADR-06 的 direct definition contract 为准
+
 Flex/Grid/Overlay 能产生正确 Scene 还不等于能力闭环。上层 Tier 2、headless 工具和调试器需要稳定读取 container/item slot、真实 bounds、line/track/placement与 overflow；React、Vanilla和直接 JSON必须通过同一 Standard IR与Core registry得到等价结果。
 
-Core layout-aware Composite已经提供typed artifact envelope、occurrence locator和artifact schema验证。Standard应返回领域内artifact payload，而不是把solver对象、replay token或Scene primitive泄漏给调用方。alpha.1 capability module/bundle/preset也已经足够组合三项新definitions，不需要布局专属registry。
+Core layout-aware Composite已经提供typed artifact envelope、occurrence locator和artifact schema验证。Standard应返回领域内artifact payload，而不是把solver对象、replay token或Scene primitive泄漏给调用方。三项布局 Definition 直接进入 Core `CompileOptions.composites`，不需要布局专属 registry 或 Standard 组合层。
 
-## 决策：公开三种可判别 artifact，并沿用 alpha.1 capability loading 完成三包接线
+## 决策：公开三种可判别 artifact，并沿用直接 Definition 完成三包接线
 
 ### Shared artifact contract
 
@@ -159,21 +161,17 @@ export type IRLayoutItem = z.infer<typeof LayoutItemSchema>;
 
 各container仍直接消费自己的精确item schema，不通过宽union后再运行时猜kind。该聚合不拥有solver或registry，只为通用authoring、schema registry和类型收窄提供单一公共入口。
 
-### Capability loading
+### Direct Definition loading
 
-每个definition提供独立module：
-
-- `FlexLayoutModule`，name `standard.flexLayout`
-- `GridLayoutModule`，name `standard.gridLayout`
-- `OverlayLayoutModule`，name `standard.overlayLayout`
-
-新增：
+每个 layout composite 直接提供自己的 Definition：
 
 ```ts
-export const StandardLayoutPreset = createStandardBundle([FlexLayoutModule, GridLayoutModule, OverlayLayoutModule]);
+const layoutCompile = {
+  composites: [FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition],
+};
 ```
 
-`StandardAllPreset` 在现有 Grid、Axes、Frame之后按FlexLayout、GridLayout、OverlayLayout顺序扩展。import仍无副作用；direct definition、单module、StandardLayoutPreset、custom bundle和StandardAllPreset全部交给Core唯一Composite registry。重复definition不在Standard去重，由Core给出权威冲突诊断。
+直接 Definition、React / Vanilla adapter contribution 与第三方 Definition 全部交给 Core 唯一 Composite registry。重复 Definition 不在 Standard 去重，由 Core 给出权威冲突诊断。
 
 不新增 `defineLayout`、layout registry、compile option或package subpath。
 
@@ -190,7 +188,7 @@ export const StandardLayoutPreset = createStandardBundle([FlexLayoutModule, Grid
 - item kind必须与父container匹配；LayoutItem脱离container或container出现普通direct child均fail-loud
 - 默认值只由Standard schema产生，adapter不复制solver或schema defaults
 
-嵌套Standard Layout JSX必须闭环。三个React adapter精确共用contribution namespace `standard.layout`、同一个React包模块级函数引用`makeReactStandardLayoutComposites`，该函数每次返回`[...StandardLayoutPreset.compile.composites]`可变Array副本并保持Flex/Grid/Overlay顺序，datasets始终为空。namespace与maker必须同时相同，保证Kernel按namespace聚合时只调用一次maker，不向Core提交重复definition。
+嵌套Standard Layout JSX必须闭环。三个React adapter精确共用contribution namespace `standard.layout`、同一个React包模块级函数引用`makeReactStandardLayoutComposites`，该函数每次返回 `[FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition]` 的可变 Array 副本并保持 Flex / Grid / Overlay 顺序，datasets始终为空。namespace与maker必须同时相同，保证Kernel按namespace聚合时只调用一次maker，不向Core提交重复definition。
 
 Layout container解析每个LayoutItem的drawable child时调用React公开JSX转换入口并读取contributions：零个或多个IRChild都fail-loud；恰好一个IRChild时，只接受所有contribution均满足`namespace === 'standard.layout'`、`makeComposites === makeReactStandardLayoutComposites`且datasets为空。符合者折叠为该container自己的同一family contribution；任一foreign namespace、不同maker或非空datasets立即抛稳定`Standard LayoutItem cannot forward foreign Tier 2 contributions`诊断。
 
@@ -205,7 +203,7 @@ LayoutItem中的foreign Tier 2 React embeddable若产生额外contribution必须
 - `overlayLayout(id, input)` / `OverlayLayoutVanillaAdapter`
 - shallow-frozen `StandardLayoutVanillaAdapters`，顺序Flex/Grid/Overlay
 
-三个Vanilla adapter同样精确使用namespace `standard.layout`、同一个Vanilla包模块级`makeVanillaStandardLayoutComposites`引用与空datasets；maker每次返回`[...StandardLayoutPreset.compile.composites]`Array副本并保持Flex/Grid/Overlay顺序。React与Vanilla只需各自在本包内共享稳定引用，不要求跨包函数identity相同。`StandardVanillaAdapters`在现有Grid/Axes/Frame后追加三项。Vanilla nested layout child只能是`createFlexLayout/createGridLayout/createOverlayLayout`返回的canonical IRChild；`VanillaEmbedSpec`只允许出现在宿主spec traversal层，不能塞进Layout item的JSON `child`。plain input/factory直接使用Standard schema；adapter不保存DOM、renderer或layout state。
+三个Vanilla adapter同样精确使用namespace `standard.layout`、同一个Vanilla包模块级`makeVanillaStandardLayoutComposites`引用与空datasets；maker每次返回 `[FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition]` Array 副本并保持 Flex / Grid / Overlay 顺序。React与Vanilla只需各自在本包内共享稳定引用，不要求跨包函数identity相同。`StandardVanillaAdapters`在现有Grid/Axes/Frame后追加三项。Vanilla nested layout child只能是`createFlexLayout/createGridLayout/createOverlayLayout`返回的canonical IRChild；`VanillaEmbedSpec`只允许出现在宿主spec traversal层，不能塞进Layout item的JSON `child`。plain input/factory直接使用Standard schema；adapter不保存DOM、renderer或layout state。
 
 foreign/custom canonical IR child的definitions仍由宿主compile options显式提供，Standard不扫描IR猜测registry。测试必须分别证明nested Standard只产生一组family definitions、foreign/custom IR加宿主definitions可compile，以及重复family definition仍由Core权威诊断。
 
@@ -220,7 +218,7 @@ foreign/custom canonical IR child的definitions仍由宿主compile options显式
 同步：
 
 - Standard composite分组页、introduction和get-start
-- capability-loading页的三modules、StandardLayoutPreset、StandardAllPreset与adapter数组
+- direct-definition-loading 页的 Definition 注入、adapter 数组与宿主边界
 - schema registry/API表、sidebar/data/i18n、source links
 - Standard v0.1 changelog草稿
 - 一个nested三容器示例、一个typedartifact headless示例、一个overflow/clip对比
@@ -245,21 +243,21 @@ foreign/custom canonical IR child的definitions仍由宿主compile options显式
 
 ```ts
 const result = compileToScene(ir, {
-  composites: StandardLayoutPreset.compile.composites,
+  composites: [FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition],
 });
 
 const flex = result.artifacts.find(artifact => artifact.kind === 'composite' && artifact.type === 'flexLayout');
 const flexValue = FlexLayoutArtifactSchema.parse(flex?.value);
 ```
 
-`StandardLayoutPreset.compile.composites`按现有bundle contract擦除为通用definition数组，因此只判断envelope type不会让`value`在TypeScript中自动收窄；headless调用方使用公开payload schema解析，或直接携带精确definition tuple取得`CompositeArtifactOf`类型。
+`composites` 直接接收通用 Definition 数组，因此只判断 envelope type 不会让 `value` 在 TypeScript 中自动收窄；headless 调用方使用公开 payload schema 解析，或直接携带精确 Definition tuple 取得 `CompositeArtifactOf` 类型。
 
 ## 被否决的方案
 
 - 只返回Scene不提供artifact：Tier 2会重新推导slot/track/overflow，形成第二真源
 - artifact保存solver对象或replay token：不可序列化且泄漏compile-local能力
 - 把item key拼成全局path：nested owner和Core occurrence职责混淆
-- 为布局新建registry/preset runtime：alpha.1 module/bundle已经足够
+- 为布局新建 registry 或 compile runtime：Core 的 `CompileOptions.composites` 已足够
 - React读取React key作为IR identity：key不是普通prop，SSR/转换路径也不稳定
 - LayoutItem允许多个children并隐式生成items：无法给每项稳定key和per-item策略
 - React静默接受foreign Tier 2 nested contribution：会得到IR但缺definition/dataset，错误延迟到compile
@@ -268,7 +266,7 @@ const flexValue = FlexLayoutArtifactSchema.parse(flex?.value);
 ## 测试设计
 
 - artifact schema/type：三种kind、rect空间、line/track/paint order、overflow/clip、envelope occurrence与JSON round-trip
-- capability：独立modules、layout preset、all preset顺序、third-party module、duplicate Core diagnostic和无import副作用
+- direct definition：单项与完整布局 Definition、third-party Definition、duplicate Core diagnostic 和无 import 副作用
 - React：LayoutItem union、itemKey、single child/ir互斥、nestedStandard、foreignTier2 rejection和direct definition parity
 - Vanilla：三builders、partial/all adapter、nestedStandard、SSR/directIR parity
 - docs/schema registry/source link/integrity与真实demo
@@ -279,7 +277,7 @@ const flexValue = FlexLayoutArtifactSchema.parse(flex?.value);
 ## 影响
 
 - 修改三种definition以声明typed artifact
-- 扩展Standard根导出、preset和三包authoring表面
+- 扩展 Standard 根导出与三包 authoring 表面
 - 新增用户可见文档、demo、API表与changelog
 - 不改变Core、renderer或其它Tier 2公开契约
 
@@ -287,11 +285,11 @@ const flexValue = FlexLayoutArtifactSchema.parse(flex?.value);
 
 - 所属能力域与能力面：Standard通用布局的可观察产物、加载与跨入口闭环
 - 解决的问题：让布局语义可持久化authoring、可组合注册、可诊断compile并由headless调用方读取
-- 主责包与协作包：Standard主责artifact/schema/module；Core主责envelope/registry；React/Vanilla主责等价authoring；docs主责用户证据
-- 是否可由现有能力组合：组合Core typedartifact和alpha.1 bundle机制，同时扩展Standardadapter/docs
+- 主责包与协作包：Standard主责 artifact / schema / Definition；Core主责 envelope / registry；React / Vanilla 主责等价 authoring；docs 主责用户证据
+- 是否可由现有能力组合：复用 Core typed artifact 与 `CompileOptions.composites`，同时扩展 Standard adapter / docs
 - 是否需要下沉到依赖能力域：否；foreignTier2 React nesting若未来通用化需独立上移到Core React ADR
 - 内部表达链路：canonicalIR → definition/solver → typedartifact + Scene
-- 外部扩展链路：custom child/Composite继续Core registry；Standard modules与第三方结构module同路
+- 外部扩展链路：custom child / Composite 继续 Core registry；Standard Definition 与第三方 Definition 同路
 - 下游执行 / adapter 等价性：directJSON、React、Vanilla产出相同IR并得到等价Scene/artifact
 - 不支持边界与诊断：foreignTier2 nested JSX明确拒绝；IR+显式definitions仍完整支持
 - 本轮结论：组合现有Core能力并扩展Standard跨入口闭环
@@ -302,18 +300,18 @@ const flexValue = FlexLayoutArtifactSchema.parse(flex?.value);
 - 通用nestedTier2 React contribution协议修改
 - artifact增量diff、跨compile cache或interactive inspection runtime
 - renderer-specific layout debug overlay
-- package subpath、global registration或implicit preset
+- package subpath、global registration 或隐式 Definition 收集
 
 ## 最终实现摘要
 
 - 公开 `LayoutArtifactSchema` 与 Flex/Grid/Overlay 三种 strict typed payload，统一 container/item rect、overflow、visible bounds 与 alignment guide，并分别补充 line、track、span 与 paint order
-- 新增三项 capability modules、`StandardLayoutPreset`、`StandardAllPreset` 接线以及稳定的 React/Vanilla adapter family；direct JSON、React 与 Vanilla 进入同一 Core registry/compile 路径
+- 新增三项 layout Definition 接线以及稳定的 React / Vanilla adapter family；direct JSON、React 与 Vanilla 进入同一 Core registry / compile 路径
 - 新增 `/standard/layout` 分组、三个组件页、契约参考页、双语 controls/demo、schema registry、changelog 与 ComponentPreview IR→Vanilla 支持
 
 ## 验证结果
 
 - Standard、Standard React、Standard Vanilla 与 Docs 的 lint、`tsc --noEmit` 和包级测试通过
-- artifact schema/compile、preset、adapter、capability loading、SSR/nested 与 docs canonical IR→Vanilla SVG 测试通过
+- artifact schema / compile、Definition loading、adapter、SSR / nested 与 docs canonical IR→Vanilla SVG 测试通过
 - docs integrity、production build，以及桌面/500px、zh/en、React/IR/Vanilla、controls 极值与 console 的真实页面检查通过
 
 ## 遗留风险

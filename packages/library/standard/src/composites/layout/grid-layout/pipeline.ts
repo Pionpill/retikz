@@ -17,9 +17,8 @@ import {
 
 import type { LayoutInsets, LayoutRect } from '../internal';
 import type { LayoutSpacingArtifact, LayoutTrackSourceKindValue } from '../shared';
-import type { GridLayoutArtifact } from './artifact-types';
 import type { GridTrackConstraint } from './tracks';
-import type { IRGridLayout, IRGridLayoutItem } from './types';
+import type { GridLayoutArtifact, IRGridLayout, IRGridLayoutItem } from './types';
 
 import {
   alignAllocationInSlot,

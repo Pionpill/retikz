@@ -1,23 +1,21 @@
 ---
 title: Runtime
-description: Look up Standard layout definitions, capability presets, Core probe/replay, and how React and Vanilla adapters join one compilation.
+description: Look up Standard layout definitions, Core probe/replay, and how React and Vanilla adapters join one compilation.
 ---
 
-Layout schemas persist container and item configuration. Definitions, capability presets, the Core compile context, and adapters are runtime objects. Standard owns generic layout solving, while Core proposes two-axis conditions to children, isolates probe candidates, replays selected candidates, and publishes typed artifacts.
+Layout schemas persist container and item configuration. Definitions, the Core compile context, and adapters are runtime objects. Standard owns generic layout solving, while Core proposes two-axis conditions to children, isolates probe candidates, replays selected candidates, and publishes typed artifacts.
 
-> This page covers capability loading and execution rather than schema fields. See [Contract - Input](/standard/layout/reference/contract-input) for persisted configuration and [Contract - Artifact](/standard/layout/reference/contract-artifact) for solved results.
+> This page covers Definition loading and execution rather than schema fields. See [Contract - Input](/standard/layout/reference/contract-input) for persisted configuration and [Contract - Artifact](/standard/layout/reference/contract-artifact) for solved results.
 
-## Loading capability
+## Loading definitions
 
 | Granularity    | Public entry                                                              | Purpose                                                   |
 | -------------- | ------------------------------------------------------------------------- | --------------------------------------------------------- |
 | One definition | `FlexLayoutDefinition`, `GridLayoutDefinition`, `OverlayLayoutDefinition` | Register one layout composite with Core                   |
-| One module     | `FlexLayoutModule`, `GridLayoutModule`, `OverlayLayoutModule`             | Load one member through the Standard capability system    |
-| Layout preset  | `StandardLayoutPreset`                                                    | Load all three layout definitions                         |
 | React          | `FlexLayout`, `GridLayout`, `OverlayLayout`, `LayoutItem`                 | Build canonical IR and contribute definitions to `Layout` |
 | Vanilla        | `StandardLayoutVanillaAdapters`                                           | Recognize all three embeds in figure, mount, or SSR hosts |
 
-`StandardLayoutPreset.compile.composites` is the Core definition array passed to `compileToScene()`. The preset does not introduce another compilation pipeline. React and Vanilla adapters produce the same Standard IR and contribute the same definitions.
+Pass one or more of the three layout Definitions directly in `CompileOptions.composites`. React and Vanilla adapters produce the same Standard IR and contribute the same Definitions; their adapter convenience arrays do not become Standard compile presets.
 
 ## One layout transaction
 
@@ -37,16 +35,23 @@ Nested layouts remain in the same Core compilation. An inner container receives 
 
 ```ts
 import { compileToScene } from '@retikz/core';
-import { FlexLayoutArtifactSchema, StandardLayoutPreset } from '@retikz/standard';
+import {
+  FlexLayoutArtifactSchema,
+  FlexLayoutDefinition,
+  GridLayoutDefinition,
+  OverlayLayoutDefinition,
+} from '@retikz/standard';
 
-const output = compileToScene(scene, StandardLayoutPreset.compile);
+const output = compileToScene(scene, {
+  composites: [FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition],
+});
 const envelope = output.artifacts.find(
   artifact => artifact.kind === 'composite' && artifact.namespace === 'standard' && artifact.type === 'flexLayout',
 );
 const artifact = FlexLayoutArtifactSchema.parse(envelope?.value);
 ```
 
-Hosts that need one container may put its definition in `compile.composites`; use `StandardLayoutPreset.compile` for the complete family. `occurrence.sourcePath` and `occurrence.expansionPath` distinguish nested or repeated instances. Parse `value` with the matching `XxxLayoutArtifactSchema`.
+Hosts that need one container may put only that Definition in `compile.composites`; add the other Definitions when the figure uses the complete family. `occurrence.sourcePath` and `occurrence.expansionPath` distinguish nested or repeated instances. Parse `value` with the matching `XxxLayoutArtifactSchema`.
 
 ## React
 
@@ -60,7 +65,7 @@ React containers start no local compilation and perform no DOM measurement. They
 
 `flexLayout()`, `gridLayout()`, and `overlayLayout()` return `VanillaEmbedSpec` values. Figure, mount, or SSR hosts need the matching adapter; use `StandardLayoutVanillaAdapters` for the complete family.
 
-Each adapter calls the same `createXxxLayout()` factory as direct authoring and contributes a copy of `StandardLayoutPreset.compile.composites`. Vanilla therefore shares schemas, definitions, solvers, and artifact semantics with direct Core compilation and React.
+Each adapter calls the same `createXxxLayout()` factory as direct authoring and contributes the layout Definitions required by its family. Vanilla therefore shares schemas, definitions, solvers, and artifact semantics with direct Core compilation and React.
 
 ## Layout Inspector
 
@@ -130,7 +135,10 @@ For Flex and Grid, `gaps` controls resolved authored gaps and `distributedSpace`
 
 <SourceLinks
   sources={[
-    { label: 'Layout capability preset', path: 'packages/library/standard/src/preset/layout.ts' },
+    {
+      label: 'FlexLayout Definition',
+      path: 'packages/library/standard/src/composites/layout/flex-layout/definition.ts',
+    },
     {
       label: 'FlexLayout definition and typed artifact',
       path: 'packages/library/standard/src/composites/layout/flex-layout/definition.ts',
@@ -145,13 +153,13 @@ For Flex and Grid, `gaps` controls resolved authored gaps and `distributedSpace`
     },
     {
       label: 'Standard family inspection options',
-      path: 'packages/library/standard/src/composites/layout/shared/inspect-schema.ts',
+      path: 'packages/library/standard/src/composites/layout/shared/schema.ts',
     },
     {
       label: 'Standard spacing, ring, and layered lowering',
       path: 'packages/library/standard/src/composites/layout/internal/inspect.ts',
     },
-    { label: 'Vanilla layout adapter preset', path: 'packages/library/standard-vanilla/src/preset/index.ts' },
+    { label: 'Vanilla layout adapter array', path: 'packages/library/standard-vanilla/src/preset/index.ts' },
   ]}
 />
 

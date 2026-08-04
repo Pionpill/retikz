@@ -22,9 +22,10 @@ const group = frame('contract', {
 });
 ```
 
-`StandardVanillaAdapters` is an explicit all-capabilities convenience array.
-Callers can still pass only the adapters they use, while direct persisted IR
-uses a bundle from `@retikz/standard`.
+`StandardVanillaAdapters` is an explicit all-adapters convenience array.
+Callers can still pass only the adapters they use. Direct persisted IR uses
+the selected `Definition` values from `@retikz/standard` through Core compile
+options.
 
 See the [Standard documentation](https://pionpill.github.io/retikz/standard/introduction)
 for complete examples.

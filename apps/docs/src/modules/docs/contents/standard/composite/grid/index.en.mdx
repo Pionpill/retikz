@@ -1,9 +1,9 @@
 ---
 title: Grid
-description: Describe regular guide lines, major lines, and borders as JSON-safe Tier 2 Grid IR that lowers to Core Paths when loaded.
+description: Describe regular guide lines, major lines, and borders as JSON-safe Tier 2 Grid IR that lowers to Core Paths or Scopes when loaded.
 ---
 
-`<Grid>` is an optional Standard Tier 2 component. It retains bounds, spacing, alignment, major lines, and borders as compact JSON fields; it lowers to Core `Path` only when the current figure loads `GridDefinition`.
+`<Grid>` is an optional Standard Tier 2 component. It retains bounds, line configuration, and border styles as compact JSON fields; it lowers to Core `Path` nodes or a center-translating `Scope` when the current figure loads `GridDefinition`.
 
 ## Usage
 
@@ -14,7 +14,7 @@ import { Grid } from '@retikz/standard-react';
 
 ```tsx
 <Layout width={280} height={170}>
-  <Grid bounds={{ min: [20, 20], max: [260, 150] }} spacing={20} lines={{ style: { stroke: 'lightgray' } }} />
+  <Grid bounds={{ start: [20, 20], end: [260, 150] }} line={{ spacing: 20, style: { stroke: 'lightgray' } }} />
 </Layout>
 ```
 
@@ -32,36 +32,37 @@ See [Get Started](/standard/get-start) for complete Vanilla mounting and persist
 
 ### Basic grid
 
-You only need two required props to define a grid:
+You define a grid with `bounds` and `line`; spacing, alignment, styles, and major lines are configured inside that one property:
 
-- `bounds` uses `min` and `max` corners to limit the rectangular area covered by the grid. `min` must be less than `max` on both axes; grid lines normally extend only within this area
-- `spacing` sets the distance between adjacent lines. A number uses one distance for both directions; `{ x, y }` uses `x` between vertical lines and `y` between horizontal lines
+- `bounds` accepts unordered `start` and `end` Cartesian corners, or a center `position` with `width` and `height`
+- `start` and `end` are sorted independently on x and y during lowering, so reversed and equal coordinates are valid; corner positions must be Cartesian `Position` values
+- centered `position` is the geometric center and accepts `Position` or `PolarPosition`; Core resolves PolarPosition, while the grid itself remains Cartesian
+- `line` may be omitted or set to `true` to enable both directions with default spacing `10`; `false` disables all grid lines while leaving `border` independent
+- a shared `line` object applies one `GridLineInput` to both directions; `{ vertical, horizontal }` configures each direction independently
+- each `GridLineInput` accepts positive `spacing`, an optional scalar `origin`, `includeBoundary`, ordinary-line `style`, and periodic `major` settings
+- `origin` uses scene coordinates for corner bounds and center-local coordinates for centered bounds
+- `border` can be configured independently and remains available when `line` is `false`
 
 The grid below covers `[20, 20]` through `[260, 150]` and emits a line every 20 user units in both directions.
 
 <ComponentPreview files="grid-basic" size="sm" />
 
-Optional props then answer four kinds of decisions:
-
-- `origin` moves the lattice alignment base and the starting point for major-line counting
-- `lines` selects vertical lines, horizontal lines, range boundaries, and ordinary-line style
-- `major` emphasizes every Nth lattice line and overrides selected ordinary-line style fields
-- `border` adds an independent outer frame and controls padding, drawing order, and whether lines reach that frame
+`line.origin` follows the bounds form. Corner bounds use scene coordinates and default to the normalized start; centered bounds use center-local coordinates and default to `[-width / 2, -height / 2]`. Set `line: { origin: 0 }` in a centered configuration to align both lattices through the geometric center. Direction-specific configurations can use different scalar origins. Core resolves the center `PolarPosition`.
 
 ### Common variants
 
-These four side-by-side cases compare per-axis spacing, a single line direction, periodic major lines, and the combined effect of `origin`, `includeBoundary`, and `border`.
+These four side-by-side cases compare direction-specific line settings, center-plus-size bounds, periodic major lines, and reversed corners with a padded border.
 
 <ComponentPreview files="grid-variants" size="sm" />
 
 ### Controls
 
-Use the panel to change bounds, spacing, direction, alignment, major lines, and the border. The preview keeps a fixed view, so each change is visible as a change in position, density, or drawing order.
+Use the panel to change corner bounds, uniform or direction-specific spacing, line alignment, major lines, and the border. The preview keeps a fixed view, so each change is visible as a change in position, density, or drawing order.
 
 <ComponentPreview
   files="grid-playground"
   size="lg"
-  caption="Switch between uniform and per-axis spacing, or enable origin, major, and border to see how the fields combine."
+  caption="Adjust bounds, line spacing, line origins, major settings, and border to see how the fields determine the final grid."
 />
 
 ## How it works
@@ -72,9 +73,11 @@ Use the panel to change bounds, spacing, direction, alignment, major lines, and 
   description="You only need this lowering model when working with Grid IR directly or debugging compile diagnostics."
 />
 
-Grid IR does not become a renderer primitive. Lowering first normalizes bounds, origin, and spacing, enumerates lattice points for the x and y directions, identifies major lines by their `origin`-relative indices, and assembles ordinary Core `Path` nodes in border order.
+Grid IR does not become a renderer primitive. Corner bounds are normalized independently on both axes; centered bounds are expanded in a center-local rectangle. Standard normalizes the shared or direction-specific `line` input, enumerates each lattice, applies ordinary and major styles, and assembles Core `Path` nodes in border order.
 
-The figure follows this deterministic transformation from left to right. Grid's responsibility ends once the output reaches `Core Path[]`.
+Centered bounds additionally use an existing Core `Scope` to carry the center translation. Cartesian Position, recursive PolarPosition, and node references are therefore resolved by Core Scene compilation; Standard does not add a second position resolver, and this is not a polar grid.
+
+The figure follows this deterministic transformation from left to right. Grid's responsibility ends once the output reaches `Core Path[]` or a positioned `Scope`.
 
 <ComponentPreview files="grid-lowering" hideCode size="xs" />
 
@@ -85,24 +88,21 @@ A handwritten `IRGrid` without a loaded definition is never silently interpreted
 <SourceLinks
   sources={[
     { label: 'Grid schema and contract', path: 'packages/library/standard/src/composites/presentation/grid/schema.ts' },
-    { label: 'Grid lowering', path: 'packages/library/standard/src/composites/presentation/grid/lower.ts' },
+    { label: 'Grid lowering', path: 'packages/library/standard/src/composites/presentation/grid/pipeline.ts' },
   ]}
 />
 
 ## API Reference
 
-`GridProps` is a public alias of `GridInput`, and the Vanilla adapter accepts that same `GridInput`. `createGrid` validates it and returns `IRGrid` with schema defaults applied. `Position` in the table below comes from `@retikz/math`.
+`GridProps` is a public alias of `GridInput`, and the Vanilla adapter accepts that same `GridInput`. `createGrid` validates it and returns `IRGrid` with schema defaults applied. `Position` and `PolarPosition` in the table below come from Core's positioning contract.
 
 ### `GridInput`
 
-| Prop      | Type                                                                                                                                                                            | Default                                                                                                            | Description                                                                                                                                                                                                           |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bounds`  | `GridInput['bounds']`<br />- `min: Position`<br />- `max: Position`                                                                                                             | —<br />- —<br />- —                                                                                                | Strict two-dimensional bounds<br />- Inclusive minimum corner<br />- Inclusive maximum corner, greater than `min` on both axes                                                                                        |
-| `spacing` | `GridInput['spacing']`<br />`number` \| `Exclude<GridInput['spacing'], number>`<br />- `x:` `number`<br />- `y:` `number`                                                       | —<br />- —<br />- —                                                                                                | Positive spacing; a number applies one interval to both directions, while an object configures each axis<br />- x spacing between vertical lines<br />- y spacing between horizontal lines                            |
-| `origin?` | `Position`                                                                                                                                                                      | `bounds.min`                                                                                                       | Lattice alignment and major-line counting base used during lowering                                                                                                                                                   |
-| `lines?`  | `GridInput['lines']`<br />- `vertical?: boolean`<br />- `horizontal?: boolean`<br />- `includeBoundary?: boolean`<br />- `style?: IRStandardPathStrokeStyle`                    | `{ vertical: true, horizontal: true, includeBoundary: false }`<br />- `true`<br />- `true`<br />- `false`<br />- — | Ordinary grid-line configuration<br />- Emits vertical lines<br />- Emits horizontal lines<br />- Adds bounds edges when no lattice line lands there<br />- Path stroke fields for ordinary lines                     |
-| `major?`  | `GridInput['major']`<br />- `every: number`<br />- `offset?: number`<br />- `style?: IRStandardPathStrokeStyle`                                                                 | —<br />- —<br />- `0`<br />- —                                                                                     | Optional major-line configuration<br />- Major interval in lattice indices<br />- Integer index offset relative to `origin`<br />- Path stroke fields shallowly overriding ordinary lines                             |
-| `border?` | `GridInput['border']`<br />- `padding?: number`<br />- `order?:` <ApiValues name="GridBorderOrder" /><br />- `extendLines?: boolean`<br />- `style?: IRStandardPathBorderStyle` | —<br />- `0`<br />- `'front'`<br />- `false`<br />- —                                                              | Optional border configuration<br />- Uniform outward padding<br />- Emits the border behind or in front of grid lines<br />- Extends grid lines to the padded border bounds<br />- Border Path stroke and fill fields |
+| Prop      | Type                                                                                                                                                                                                                                                                                                                                                                           | Default                                                                                                                             | Description                                                                                                                                                                                                                                                  |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `bounds`  | `GridInput['bounds']`<br />- `{ start: Position; end: Position }`<br />- `{ position: Position \| PolarPosition; width: number; height: number }`                                                                                                                                                                                                                              | —<br />- —<br />- —                                                                                                                 | Grid bounds; the two forms are mutually exclusive<br />- Two unordered Cartesian corners, sorted independently on x and y during lowering<br />- Geometric center and non-negative dimensions; Core resolves PolarPosition as the center of a Cartesian grid |
+| `line?`   | `GridInput['line']`<br />- `boolean`<br />- `GridLineInput`<br />- `{ vertical: GridLineInput; horizontal: GridLineInput }`<br /><br />`GridLineInput`<br />- `spacing?: number`<br />- `origin?: number`<br />- `includeBoundary?: boolean`<br />- `style?: IRStandardPathStrokeStyle`<br />- `major?: { every: number; offset?: number; style?: IRStandardPathStrokeStyle }` | `true`<br />- both directions, spacing `10`<br />- `false` disables both directions<br />- shared object applies to both directions | Shared or direction-specific line configuration; `origin`, `includeBoundary`, `style`, and `major` are interpreted independently for vertical and horizontal lines when the pair form is used. `major.offset` defaults to `0`                                |
+| `border?` | `GridInput['border']`<br />- `padding?: number`<br />- `order?:` <ApiValues name="GridBorderOrder" /><br />- `extendLines?: boolean`<br />- `style?: IRStandardPathBorderStyle`                                                                                                                                                                                                | —<br />- `0`<br />- `'front'`<br />- `false`<br />- —                                                                               | Optional border configuration<br />- Uniform outward padding<br />- Emits the border behind or in front of grid lines<br />- Extends grid lines to the padded border bounds<br />- Border Path stroke and fill fields                                        |
 
 ## Related
 

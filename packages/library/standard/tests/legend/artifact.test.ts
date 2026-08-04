@@ -6,7 +6,7 @@ import type {
   LegendItemsArtifact,
   LegendPlacedChildArtifact,
   LegendRampArtifact,
-} from '../../src/composites/presentation/legend/artifact-types';
+} from '../../src/composites/presentation/legend/types';
 
 import {
   LegendArtifactGeometrySchema,
@@ -14,7 +14,7 @@ import {
   LegendItemsArtifactSchema,
   LegendPlacedChildArtifactSchema,
   LegendRampArtifactSchema,
-} from '../../src/composites/presentation/legend/artifact-schema';
+} from '../../src/composites/presentation/legend/schema';
 
 const rect = { x: 0, y: 0, width: 10, height: 8 } as const;
 const geometry = { allocationBounds: rect, visualBounds: rect, visibleBounds: rect } as const;

@@ -83,7 +83,7 @@ body 至少包含一个直接 Core Node。Path、Coordinate、Scope 或 foreign 
 
 React 公开独立 `<Frame>`, `<FrameTitle>` 与 `<FrameDescription>`。header part 只能作为 Frame direct child，重复、无效 child 或独立渲染都会 fail-loud。React 通过公开 Node JSX → IR 转换复用 Node authoring，不复制 Kernel builder 或 hydration event props。
 
-Vanilla 公开 `frame()`、`frameTitle()` 与 `frameDescription()`；两个 header builder 只生成 JSON-safe Node-like input，不注册独立 composite。React 与 Vanilla 贡献同一 `FrameDefinition`，直接 IR 通过 `FrameModule` 或 Standard bundle 接入。
+Vanilla 公开 `frame()`、`frameTitle()` 与 `frameDescription()`；两个 header builder 只生成 JSON-safe Node-like input，不注册独立 composite。React 与 Vanilla 贡献同一 `FrameDefinition`，直接 IR 通过 `composites: [FrameDefinition]` 接入
 
 ## 被否决的方案
 

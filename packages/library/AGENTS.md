@@ -2,6 +2,8 @@
 
 本文件覆盖 `packages/library/`。全仓通用规则见根 [`AGENTS.md`](../../AGENTS.md)。
 
+涉及 Standard 能力归属、Core / Standard 边界或公共契约拆分时，先读 [`Standard Drawing Library 设计`](_notes/architecture/standard-library-design.md)，并按根规则读取能力完备性文档与 `standard-structure` skill
+
 ## 分组职责
 
 `library` 是官方维护、相对 Core 可选安装、供作者和官方 Tier 2 包跨领域复用的绘图能力库分组。它承接移除 Plot、Table、Graph、Flow、Workspace 等领域词汇后仍成立的常用 Drawing Complete 能力，例如可注册的箭头 / shape / connector 定义、通用容器与排版 composite，以及它们的 React / Vanilla authoring。
@@ -10,11 +12,11 @@
 
 ## 包家族
 
-| 包                         | 解决的问题                                       | 拥有                                                                | 不拥有                                           |
-| -------------------------- | ------------------------------------------------ | ------------------------------------------------------------------- | ------------------------------------------------ |
-| `@retikz/standard`         | 为作者与官方 Tier 2 包提供宿主无关的通用绘图能力 | definition / factory、通用 Tier 2 composite、lowering 与按需 preset | Core 契约、renderer、领域解析、框架 runtime      |
-| `@retikz/standard-react`   | 用 React 使用 Standard 能力                      | JSX sugar、props → Standard 输入、React runtime 接线                | Standard schema、lowering、registry 与 Core 语义 |
-| `@retikz/standard-vanilla` | 用无框架 API 使用 Standard 能力                  | builder、SSR / mount 编排、Vanilla runtime 接线                     | Standard schema、lowering、registry 与 Core 语义 |
+| 包                         | 解决的问题                                       | 拥有                                                                         | 不拥有                                           |
+| -------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------ |
+| `@retikz/standard`         | 为作者与官方 Tier 2 包提供宿主无关的通用绘图能力 | definition / factory、通用 Tier 2 composite、lowering 与按需 Definition 导出 | Core 契约、renderer、领域解析、框架 runtime      |
+| `@retikz/standard-react`   | 用 React 使用 Standard 能力                      | JSX sugar、props → Standard 输入、React runtime 接线                         | Standard schema、lowering、registry 与 Core 语义 |
+| `@retikz/standard-vanilla` | 用无框架 API 使用 Standard 能力                  | builder、SSR / mount 编排、Vanilla runtime 接线                              | Standard schema、lowering、registry 与 Core 语义 |
 
 标准包家族使用独立 release group `standard`，不与 kernel / viz lockstep；领域包按兼容版本单向依赖所需 Standard capability。
 
@@ -25,8 +27,8 @@
 - `standard-react` 只消费 `standard` 与 `@retikz/react` 的公开能力；`standard-vanilla` 只消费 `standard` 与 `@retikz/vanilla` 的公开能力
 - 含独立持久化语义的 Tier 2 能力必须 JSON-safe，并通过 Core composite / lowering 下沉为 Core IR；不得建立平行 Scene 或 renderer 分支
 - 只有去除领域词汇后仍成立、至少有两个独立消费场景且可通过公开 Core 契约闭环的能力才可进入本组
-- `preset` 只是按需组合 definition / factory 的二级出口，不替代 Tier 2 的 schema、contract 或 lowering owner
+- Standard 不拥有跨 composite 的 preset 组合层；每个 composite owner 直接导出 Definition、factory、schema 与 lowering
 
 ## 当前状态
 
-Standard v0.1 alpha.1 已初始化三个 npm 包与独立 release group，并提供 Grid、Axes、Frame 三个 Tier 2 composite、capability module / bundle / preset、React JSX 与 Vanilla authoring。新增能力继续由对应 milestone ADR 冻结 schema、definition、lowering、adapter、测试与文档闭环。
+Standard v0.1 alpha.1 已初始化三个 npm 包与独立 release group，并提供 Grid、Axes、Frame 三个 Tier 2 composite、直接 Definition 注入、React JSX 与 Vanilla authoring。新增能力继续由对应 milestone ADR 冻结 schema、definition、lowering、adapter、测试与文档闭环。

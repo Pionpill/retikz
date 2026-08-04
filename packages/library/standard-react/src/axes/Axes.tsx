@@ -6,6 +6,8 @@ import { AxesDefinition, createAxes } from '@retikz/standard';
 
 import type { StandardEmbeddableComponent } from '../shared';
 
+import { StandardAxesReactNamespace } from '../shared';
+
 /** React Axes 组件接受的 Standard authoring 输入 */
 export type AxesProps = AxesInput;
 
@@ -14,7 +16,7 @@ const makeAxesComposites = () => [AxesDefinition];
 
 const axesEmbeddableAdapter: EmbeddableTier2Adapter<AxesProps> = {
   displayName: 'Axes',
-  namespace: 'standard.axes',
+  namespace: StandardAxesReactNamespace,
   contribute: props => ({
     node: createAxes(props),
     datasets: {},

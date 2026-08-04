@@ -10,7 +10,7 @@ import type {
 import type { EmbeddableContribution, EmbeddableTier2Adapter, LayoutProps, ScopeProps } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { lowerPlots, lowerPlotWithLineage } from '@retikz/plot';
+import { lowerPlots, lowerPlotWithLineage, PLOT_NAMESPACE } from '@retikz/plot';
 import { Layout } from '@retikz/react';
 import { useEffect, useRef } from 'react';
 
@@ -121,7 +121,7 @@ const wrapPanelScope = (node: IRPlotSpec, props: PlotPanelProps): EmbeddableCont
 
 const plotEmbeddableAdapter: EmbeddableTier2Adapter<PlotProps> = {
   displayName: 'Plot',
-  namespace: 'plot',
+  namespace: PLOT_NAMESPACE,
   contribute: props => {
     const { spec, datasets, lowerOptions } = resolvePlotRuntime(props, { embedded: true });
     return {

@@ -3,6 +3,7 @@ import type { z } from 'zod';
 
 import type { GridAutoFlow, GridOverlap } from './constants';
 import type {
+  GridLayoutArtifactSchema,
   GridLayoutItemSchema,
   GridLayoutSchema,
   GridPlacementSchema,
@@ -45,3 +46,6 @@ export type IRGridLayout = z.infer<typeof GridLayoutSchema>;
 
 /** GridLayout factory 接受的作者输入 */
 export type GridLayoutInput = Omit<z.input<typeof GridLayoutSchema>, 'namespace' | 'type'>;
+
+/** GridLayout 的 JSON-safe compile artifact payload */
+export type GridLayoutArtifact = z.infer<typeof GridLayoutArtifactSchema>;

@@ -11,14 +11,15 @@ import { LayoutAxisProposalKind, LayoutChildProbeKind, LayoutIntrinsicMode } fro
 
 import type { LayoutRect } from '../../layout/internal';
 import type { LayoutArtifactItemBase } from '../../layout/shared';
+import type { LegendItemLine, LegendItemSlots, MeasuredLegendChild, MeasuredLegendItem } from './items';
 import type {
+  IRLegend,
+  IRLegendItem,
   LegendArtifact,
   LegendArtifactGeometry,
   LegendPlacedChildArtifact,
   LegendRampArtifact,
-} from './artifact-types';
-import type { LegendItemLine, LegendItemSlots, MeasuredLegendChild, MeasuredLegendItem } from './items';
-import type { IRLegend, IRLegendItem } from './types';
+} from './types';
 
 import {
   compensatedLayoutSum,

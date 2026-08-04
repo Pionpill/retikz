@@ -1,155 +1,118 @@
 ---
-title: Capability Loading
-description: Select Standard definitions for direct IR, React, and Vanilla through capability modules and explicit bundles without global registration.
+title: Direct Definition Loading
+description: Inject the Standard Definitions needed by a figure through Core CompileOptions.composites without a Standard bundle, preset, or global registry
 ---
 
-When compiling persisted Standard IR directly, combine the modules required by the task and pass the bundle's compile fragment to Core:
+Persisted Standard IR contains only JSON-safe data. Definitions contain functions, so the host injects them explicitly at compile time through Core's `CompileOptions.composites`:
 
 ```ts
 import { compileToScene } from '@retikz/core';
-import { createStandardBundle, FrameModule, GridModule } from '@retikz/standard';
+import { FrameDefinition, GridDefinition } from '@retikz/standard';
 
-const drawingBundle = createStandardBundle([GridModule, FrameModule]);
-const scene = compileToScene(persistedIR, drawingBundle.compile);
+const scene = compileToScene(persistedIR, {
+  composites: [GridDefinition, FrameDefinition],
+});
 ```
 
-Modules and bundles are runtime configuration. They contain definition functions and cannot be persisted in JSON IR.
+Standard no longer provides `StandardCapabilityModule`, `StandardBundle`, `createStandardBundle()`, `*Module`, `StandardAllPreset`, or `StandardLayoutPreset`. Select the Definitions used by the current figure and pass the array directly to Core's single registry
 
 ## Scope
 
-Use a bundle for server-side compilation, file restoration, LLM-generated IR, and tooling that needs a stable capability catalog. React JSX already contributes definitions through component static adapters, so JSX-only figures do not need a preset.
+This path is for server-side compilation, file restoration, LLM-generated IR, and tooling that needs a controlled dependency set. It answers which Definitions are available during compilation; it does not provide dynamic import, runtime package splitting, renderer settings, layout policy, or host lifecycle state
 
-A bundle only combines `CompositeDefinition` values. It does not merge renderer settings, layout policy, warning handlers, React Context, or Vanilla lifecycle state, and importing it never mutates global state.
+React JSX and Vanilla embeds remain authoring surfaces owned by their adapters. They contribute the same Definitions for the content they author, while direct IR hosts provide `composites` explicitly
 
-## Define a Capability
+## Define a capability
 
-The built-in modules are `GridModule`, `AxesModule`, `FrameModule`, `FlexLayoutModule`, `GridLayoutModule`, `OverlayLayoutModule`, and `LegendModule`. Third-party composites still use Core `defineComposite()` as their source of truth. Wrap a definition in an ordinary structural module only when it needs to participate in the same composition step:
+Each Standard composite owner directly exports its Definition, factory, schema, artifact, and lowering:
 
 ```ts
-import { CompositeBaseSchema, defineComposite } from '@retikz/core';
-import type { StandardCapabilityModule } from '@retikz/standard';
-import { z } from 'zod';
+import { createGrid, GridDefinition, GridSchema } from '@retikz/standard';
 
-const BadgeDefinition = defineComposite({
-  namespace: 'example',
-  type: 'badge',
-  schema: CompositeBaseSchema.extend({
-    namespace: z.literal('example'),
-    type: z.literal('badge'),
-    text: z.string(),
-  }),
-  expand: (node, _context) => ({ type: 'node', position: [0, 0], text: node.text }),
-});
-
-const BadgeModule = {
-  name: 'example.badge',
-  composites: [BadgeDefinition],
-} satisfies StandardCapabilityModule;
+const grid = GridSchema.parse(createGrid({ bounds: { start: [20, 20], end: [260, 150] }, line: { spacing: 20 } }));
+const compileOptions = { composites: [GridDefinition] };
 ```
 
-`name` is only a bundle-level diagnostic key for conflicts between different objects. Composite lookup still uses each definition's `namespace` and `type`. Repeating the same module object reference is idempotent and preserves its first position. Different objects cannot share a `name`, even when their structures match.
+Third-party composites use Core's `defineComposite()` in the same way, then pass their Definition alongside the required Standard Definitions. `namespace` and `type` form the Core lookup key; persisted JSON contains the discriminator and data, not the Definition
 
-## Inject into a Host
+## Inject into a host
 
-### Direct IR and React IR mode
-
-Core, React `ir` mode, and Vanilla direct IR all consume the same definitions:
+### Direct IR and React `ir` mode
 
 ```tsx
 import { Layout } from '@retikz/react';
-import { StandardAllPreset } from '@retikz/standard';
+import { FrameDefinition, GridDefinition } from '@retikz/standard';
 
-<Layout ir={persistedIR} composites={StandardAllPreset.compile.composites} />;
+<Layout ir={persistedIR} composites={[GridDefinition, FrameDefinition]} />;
 ```
 
-`StandardAllPreset` contains every Standard module published by the current version. Use `createStandardBundle([GridModule, FrameModule])` for a smaller selection.
-
-Use `StandardLayoutPreset` when only the layout family is needed. It provides FlexLayout, GridLayout, and OverlayLayout definitions in that order.
+If a Definition is missing, Core retains its `COMPOSITE_NOT_REGISTERED` diagnostic. Core-native children and other registered composites continue according to Core semantics
 
 ### React JSX
 
-`<Grid>`, `<Axes>`, `<Frame>`, `<Legend>`, and the three layout containers contribute definitions through static adapters. Nested layouts share the `standard.layout` namespace and maker, so the outer `Layout` receives one family contribution. Hosts still combine those contributions by definition identity and Core provider key; Standard does not add a second overwrite priority.
+`<Grid>`, `<Axes>`, `<Frame>`, `<Legend>`, and the three layout containers continue to contribute Definitions through static adapters. Nested layouts share the `standard.layout` contribution; Standard does not create a second registry or publish an adapter-owned ordered array as a Standard preset
 
 ### Vanilla
 
-Vanilla embeds use adapters for authoring lowering. Pass a partial adapter list explicitly, or use the shallow-frozen `StandardVanillaAdapters` array for the current complete catalog:
+Vanilla builders continue to use adapters for authoring. Pass only the adapters used by the current figure, or use `StandardVanillaAdapters` as the adapter convenience array:
 
 ```ts
-import { StandardVanillaAdapters } from '@retikz/standard-vanilla';
-import { mountSvg } from '@retikz/vanilla';
+import { GridDefinition } from '@retikz/standard';
+import { renderToSvgString } from '@retikz/vanilla';
 
-mountSvg(container, figure, { adapters: StandardVanillaAdapters });
+const svg = renderToSvgString(persistedIR, {
+  compile: { composites: [GridDefinition] },
+});
 ```
 
-Direct Standard IR does not use adapters. Put `bundle.compile` in the runtime `compile` option instead.
+`StandardLayoutVanillaAdapters` and `StandardVanillaAdapters` are authoring conveniences from `@retikz/standard-vanilla`, not Standard compile presets
 
-Use `StandardLayoutVanillaAdapters` for layout embeds only. The complete `StandardVanillaAdapters` currently orders Grid, Axes, Frame, the three layouts, and Legend.
+## Execution model
 
-Static adapters and explicit bundles are alternative loading sources for the same capability, not mutual deduplication layers. If JSX or an embed already contributes a definition and the host also injects the same provider key through a bundle, Core fails loudly with `duplicate composite registration`.
-
-## Execution Model
-
-1. A capability module contributes Core definitions in declaration order.
-2. `createStandardBundle()` first merges repeated module object identities, rejects same-name different objects, copies names and definition references, and shallow-freezes returned containers.
-3. The host passes `bundle.compile.composites` to the Core composite registry.
-4. Core looks up provider keys, validates nodes, and expands Standard IR.
+1. The host selects the Definitions needed by the current figure from `@retikz/standard`
+2. The host places the Definition array in Core `CompileOptions.composites`
+3. Core builds the composite registry for this compilation from `namespace` and `type`
+4. Core validates IR, expands Definitions, and produces Scene, diagnostics, and applicable typed artifacts
 
 <SourceLinks
   sources={[
     {
-      label: 'Public module and bundle contracts',
-      path: 'packages/library/standard/src/capability/types.ts',
-      startLine: 7,
-      endLine: 26,
+      label: 'Grid Definition and public composite contract',
+      path: 'packages/library/standard/src/composites/presentation/grid/definition.ts',
     },
     {
-      label: 'Bundle ordering, validation, and freezing',
-      path: 'packages/library/standard/src/capability/create.ts',
-      startLine: 9,
-      endLine: 37,
+      label: 'Layout Definition',
+      path: 'packages/library/standard/src/composites/layout/flex-layout/definition.ts',
     },
   ]}
 />
 
-## Errors and Limits
+## Errors and limits
 
-| Situation                               | Result                                                                |
-| --------------------------------------- | --------------------------------------------------------------------- |
-| Module name is empty or whitespace-only | `createStandardBundle()` throws immediately                           |
-| The same module object appears again    | It merges idempotently at its first position and contributes once     |
-| Different module objects share one name | Standard throws instead of overwriting by name or structure           |
-| Different modules share a provider key  | Core reports `duplicate composite registration`                       |
-| JSX / embed and a bundle inject one key | Core reports `duplicate composite registration` instead of deduping   |
-| IR references an unselected composite   | Core emits `COMPOSITE_NOT_REGISTERED`, skips that node, and continues |
+| Situation                                                            | Result                                                                             |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| IR references a Standard composite whose Definition was not injected | Core emits `COMPOSITE_NOT_REGISTERED` with an explicit diagnostic                  |
+| The same Definition appears twice in the array                       | Standard does not silently deduplicate it; Core reports the duplicate registration |
+| Different objects use the same `namespace` / `type`                  | Core reports `duplicate composite registration`                                    |
+| A Definition is placed in persisted JSON                             | Not allowed; JSON contains schema-defined data only                                |
+| Direct IR and JSX / an embed inject the same provider key            | Core fails loudly; Standard adds no overwrite priority                             |
 
-Modules, bundles, and adapters cannot enter persisted IR. `StandardAllPreset` and `StandardVanillaAdapters` grow with the capabilities published by a Standard version; they are not fixed across versions.
+## API reference
 
-## API Reference
+| Export                                                                    | Package                    | Responsibility                                              |
+| ------------------------------------------------------------------------- | -------------------------- | ----------------------------------------------------------- |
+| `GridDefinition`, `AxesDefinition`, `FrameDefinition`                     | `@retikz/standard`         | Core Definitions for the presentation composites            |
+| `FlexLayoutDefinition`, `GridLayoutDefinition`, `OverlayLayoutDefinition` | `@retikz/standard`         | Core Definitions for the layout composites                  |
+| `LegendDefinition`                                                        | `@retikz/standard`         | Legend Definition and artifact contract                     |
+| `GridSchema`, `createGrid()`, and peers                                   | `@retikz/standard`         | Validate and construct JSON-safe Standard input             |
+| `StandardLayoutVanillaAdapters`                                           | `@retikz/standard-vanilla` | Convenience array for the three layout authoring adapters   |
+| `StandardVanillaAdapters`                                                 | `@retikz/standard-vanilla` | Convenience array for the current Standard Vanilla adapters |
 
-| Export                          | Package                    | Responsibility                                    |
-| ------------------------------- | -------------------------- | ------------------------------------------------- |
-| `StandardCapabilityModule`      | `@retikz/standard`         | Group Core composite definitions under one name   |
-| `StandardBundle`                | `@retikz/standard`         | Hold module names and a required compile fragment |
-| `createStandardBundle()`        | `@retikz/standard`         | Validate, combine, and freeze selected modules    |
-| `GridModule`                    | `@retikz/standard`         | Official Grid module                              |
-| `AxesModule`                    | `@retikz/standard`         | Official Axes module                              |
-| `FrameModule`                   | `@retikz/standard`         | Official Frame module                             |
-| `LegendModule`                  | `@retikz/standard`         | Official Legend module                            |
-| `FlexLayoutModule`              | `@retikz/standard`         | Official FlexLayout module                        |
-| `GridLayoutModule`              | `@retikz/standard`         | Official GridLayout module                        |
-| `OverlayLayoutModule`           | `@retikz/standard`         | Official OverlayLayout module                     |
-| `StandardLayoutPreset`          | `@retikz/standard`         | Bundle containing the three layout definitions    |
-| `StandardAllPreset`             | `@retikz/standard`         | Bundle of all current Standard modules            |
-| `StandardLayoutVanillaAdapters` | `@retikz/standard-vanilla` | The three layout Vanilla adapters                 |
-| `StandardVanillaAdapters`       | `@retikz/standard-vanilla` | All current Standard Vanilla adapters             |
-
-`StandardCapabilityModule` contains `name: string` and `composites: ReadonlyArray<CompositeDefinition>`. `StandardBundle` contains `modules: ReadonlyArray<string>` and required `compile.composites`; even an empty bundle returns an empty array without an optional branch.
-
-All three packages expose only their root package entry. Capabilities are named exports from that root; there are no per-component package subpaths such as `/grid` or `/axes` to maintain.
+All three Standard packages still expose only their root entry. Definitions are named exports, so consumers' bundlers can tree-shake by reference. On-demand use means selecting Definitions for compilation; it is not runtime dynamic loading
 
 ## Related
 
-- [Get Started](/standard/get-start): run one Grid through React, Vanilla, and persisted JSON
-- [Composites](/standard/composite): browse the current Standard composite catalog
+- [Get Started](/standard/get-start): use one Grid through React, Vanilla, and persisted JSON
+- [Composites](/standard/composite): browse the Standard composite catalog
 - [Layout Containers](/standard/layout): Flex, Grid, Overlay, and typed artifacts
-- [Core Extension Mechanisms](/kernel/reference/runtime/extensions): define and register third-party Core definitions
+- [Core Extension Mechanisms](/kernel/reference/runtime/extensions): define and register third-party Core Definitions

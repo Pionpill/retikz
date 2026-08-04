@@ -133,7 +133,7 @@ describe('<Frame>', () => {
   it('coexists with Grid and Axes under distinct contribution namespaces', () => {
     const result = buildIRWithContributions(
       <>
-        <Grid bounds={{ min: [0, 0], max: [20, 20] }} spacing={10} />
+        <Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />
         <Axes extent={{ x: 20, y: 20 }} />
         <Frame id="group/frame">
           <FrameTitle>Group</FrameTitle>
