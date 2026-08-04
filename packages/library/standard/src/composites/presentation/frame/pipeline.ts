@@ -68,15 +68,14 @@ export const lowerFrame = (frame: IRFrame): IRScope => {
     namespace: _namespace,
     type: _type,
     id,
+    border: borderConfig,
     padding,
     gap,
     headerDirection,
-    cornerRadius,
-    zIndex,
     title,
     description,
     children,
-    ...borderStyle
+    ...scopeProps
   } = frame;
   void _namespace;
   void _type;
@@ -87,16 +86,16 @@ export const lowerFrame = (frame: IRFrame): IRScope => {
   const titleId = title?.id ?? `${id}/title`;
 
   const border: IRPath = {
-    ...borderStyle,
+    ...borderConfig.style,
     type: 'path',
-    zIndex: -1,
+    zIndex: borderConfig.style.zIndex ?? -1,
     children: [
       {
         type: 'step',
         kind: 'rectangle',
         from: { id, anchor: 'top-left', offset: [-insets.left, -insets.top] },
         to: { id, anchor: 'bottom-right', offset: [insets.right, insets.bottom] },
-        ...(cornerRadius !== undefined ? { cornerRadius } : {}),
+        ...(borderConfig.cornerRadius !== undefined ? { cornerRadius: borderConfig.cornerRadius } : {}),
       },
     ],
   };
@@ -165,10 +164,8 @@ export const lowerFrame = (frame: IRFrame): IRScope => {
 
   return {
     type: 'scope',
+    ...scopeProps,
     id,
-    localNamespace: false,
-    boundingShape: 'rectangle',
-    ...(zIndex !== undefined ? { zIndex } : {}),
     children: [border, content, ...loweredHeaders],
   };
 };

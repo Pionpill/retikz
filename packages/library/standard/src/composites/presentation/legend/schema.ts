@@ -1,4 +1,4 @@
-import { ChildSchema, CompositeBaseSchema } from '@retikz/core';
+import { ChildSchema, CompositeBaseSchema, ScopePropsSchema } from '@retikz/core';
 import { z } from 'zod';
 
 import {
@@ -86,6 +86,7 @@ const LegendContentSchema = z
 const LegendBaseSchema = CompositeBaseSchema.extend({
   namespace: z.literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
   type: z.literal('legend').describe('Composite type for an already-resolved visual legend.'),
+  ...ScopePropsSchema.shape,
   title: ChildSchema.optional().describe('Optional JSON-safe Core child displayed above the legend body.'),
   titleGap: z
     .number()

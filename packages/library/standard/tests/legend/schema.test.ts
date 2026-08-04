@@ -205,10 +205,26 @@ describe('Legend schema and factory', () => {
     );
   });
 
-  it('rejects root id and non-child title, sample, and label values', () => {
+  it('accepts root Scope identity and rejects non-child title, sample, and label values', () => {
     const base = createLegend({ content: { kind: LegendContentKind.Items, items: [] } });
 
-    expectIssuePath({ ...base, id: 'legend' }, '');
+    const scoped = createLegend({
+      id: 'legend',
+      localNamespace: true,
+      zIndex: 2,
+      stroke: '#334155',
+      transforms: [{ kind: 'translate', x: 4, y: 5 }],
+      meta: { source: 'test' },
+      content: { kind: LegendContentKind.Items, items: [] },
+    });
+    expect(scoped).toMatchObject({
+      id: 'legend',
+      localNamespace: true,
+      zIndex: 2,
+      stroke: '#334155',
+      transforms: [{ kind: 'translate', x: 4, y: 5 }],
+      meta: { source: 'test' },
+    });
     expectIssuePath({ ...base, title: 'Legend' }, 'title');
     expectIssuePath(
       { ...base, content: { kind: 'items', items: [{ key: 'item', sample: 'line' }] } },

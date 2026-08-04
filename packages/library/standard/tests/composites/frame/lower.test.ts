@@ -261,8 +261,8 @@ describe('lowerFrame', () => {
   });
 
   it('forwards zero and positive corner radius only to the border rectangle step', () => {
-    const rounded = lowerFrame(createFrame({ id: 'rounded', cornerRadius: 6, children: [...children] }));
-    const sharp = lowerFrame(createFrame({ id: 'sharp', cornerRadius: 0, children: [...children] }));
+    const rounded = lowerFrame(createFrame({ id: 'rounded', border: { cornerRadius: 6 }, children: [...children] }));
+    const sharp = lowerFrame(createFrame({ id: 'sharp', border: { cornerRadius: 0 }, children: [...children] }));
     const roundedBorder = rounded.children[0] as IRPath;
     const sharpBorder = sharp.children[0] as IRPath;
 

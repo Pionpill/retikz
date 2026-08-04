@@ -1,4 +1,5 @@
 import type {
+  CompositeCompileScopeProps,
   IRChild,
   LayoutAxisProposal,
   LayoutChildResult,
@@ -65,6 +66,32 @@ type FinalPlacedChild = Readonly<{
   /** 对外暴露的 Legend child placement artifact */
   artifact: LegendPlacedChildArtifact;
 }>;
+
+/** 从 Legend 领域字段中分离 authored root Scope 的 Core 属性 */
+const authoredScopePropsOf = (node: IRLegend): CompositeCompileScopeProps => {
+  const {
+    namespace: _namespace,
+    type: _type,
+    title,
+    titleGap,
+    contentAlign,
+    size,
+    padding,
+    overflow,
+    content,
+    ...scopeProps
+  } = node;
+  void _namespace;
+  void _type;
+  void title;
+  void titleGap;
+  void contentAlign;
+  void size;
+  void padding;
+  void overflow;
+  void content;
+  return scopeProps;
+};
 
 /** 构造单轴 minimum 或 natural intrinsic proposal */
 const intrinsicAxisProposal = (mode: 'minimum' | 'natural'): LayoutAxisProposal => ({
@@ -247,6 +274,7 @@ const compileLegendRamp = (
   context: LayoutCompositeCompileContext,
 ): LayoutCompositeCompileResult<LegendRampArtifact> => {
   if (node.content.kind !== LegendContentKind.Ramp) throw new Error('Expected Legend ramp content');
+  const authoredScopeProps = authoredScopePropsOf(node);
   const ramp = node.content;
   let nextOccurrence = 0;
   const titleHandle =
@@ -342,13 +370,14 @@ const compileLegendRamp = (
       transforms: [{ kind: 'translate', x: placed.translation.x, y: placed.translation.y }],
     }),
   );
-  const scope = context.scope(
+  const allocationScope = context.scope(
     node.overflow === LayoutOverflow.Clip ? { clip: layoutClipOf(allocation) } : {},
     replayed,
   );
+  const authoredRootScope = context.scope(authoredScopeProps, [allocationScope]);
 
   return {
-    children: [scope],
+    children: [authoredRootScope],
     allocationBounds: allocation,
     artifact: Object.freeze({
       kind: LegendContentKind.Ramp,
@@ -378,6 +407,7 @@ export const compileLegend = (
   context: LayoutCompositeCompileContext,
 ): LayoutCompositeCompileResult<LegendArtifact> => {
   if (node.content.kind === LegendContentKind.Ramp) return compileLegendRamp(node, context);
+  const authoredScopeProps = authoredScopePropsOf(node);
 
   let nextOccurrence = 0;
   const titleHandle =
@@ -530,10 +560,11 @@ export const compileLegend = (
       transforms: [{ kind: 'translate', x: placed.translation.x, y: placed.translation.y }],
     }),
   );
-  const scope = context.scope(
+  const allocationScope = context.scope(
     node.overflow === LayoutOverflow.Clip ? { clip: layoutClipOf(allocation) } : {},
     replayed,
   );
+  const authoredRootScope = context.scope(authoredScopeProps, [allocationScope]);
   const artifactItems = finalItems.map(item =>
     Object.freeze({
       key: item.measured.authored.key,
@@ -545,7 +576,7 @@ export const compileLegend = (
   );
 
   return {
-    children: [scope],
+    children: [authoredRootScope],
     allocationBounds: allocation,
     artifact: Object.freeze({
       kind: LegendContentKind.Items,

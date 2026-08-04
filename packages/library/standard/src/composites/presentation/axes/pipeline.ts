@@ -1,4 +1,4 @@
-import type { IRNode, IRPath, IRPosition, IRTextBlock } from '@retikz/core';
+import type { IRNode, IRPath, IRPosition, IRScope, IRTextBlock } from '@retikz/core';
 
 import type { IRStandardPathStrokeStyle } from '../shared/types';
 import type { IRAxes } from './types';
@@ -16,17 +16,20 @@ type AxesAxisLabel = Exclude<AxesAxis['label'], false>;
 type AxesOriginLabel = Exclude<IRAxes['origin']['label'], false>;
 
 /** 将 Standard Axes 规则确定性下沉为已有 Core Path 与 Node */
-export const lowerAxes = (axes: IRAxes): Array<AxesChild> => {
+export const lowerAxes = (axes: IRAxes): IRScope => {
+  const { namespace: _namespace, type: _type, origin, x, y, ...scopeProps } = axes;
+  void _namespace;
+  void _type;
   const children: Array<AxesChild> = [];
-  const [originX, originY] = axes.origin.position;
-  const extentX = resolveAxesExtent(axes.x.extent);
-  const extentY = resolveAxesExtent(axes.y.extent);
+  const [originX, originY] = origin.position;
+  const extentX = resolveAxesExtent(x.extent);
+  const extentY = resolveAxesExtent(y.extent);
   const minX = originX - extentX.negative;
   const maxX = originX + extentX.positive;
   const minY = originY - extentY.positive;
   const maxY = originY + extentY.negative;
 
-  const xGrid = axes.x.grid;
+  const xGrid = x.grid;
   if (xGrid !== undefined && xGrid !== false) {
     enumerateLattice({
       min: -extentX.negative,
@@ -38,7 +41,7 @@ export const lowerAxes = (axes: IRAxes): Array<AxesChild> => {
       children.push(createLinePath([originX + line.value, minY], [originX + line.value, maxY], xGrid.style));
     });
   }
-  const yGrid = axes.y.grid;
+  const yGrid = y.grid;
   if (yGrid !== undefined && yGrid !== false) {
     enumerateLattice({
       min: -extentY.negative,
@@ -47,35 +50,35 @@ export const lowerAxes = (axes: IRAxes): Array<AxesChild> => {
       origin: yGrid.offset,
       includeBoundary: false,
     }).forEach(line => {
-      const y = originY - line.value;
-      children.push(createLinePath([minX, y], [maxX, y], yGrid.style));
+      const lineY = originY - line.value;
+      children.push(createLinePath([minX, lineY], [maxX, lineY], yGrid.style));
     });
   }
 
-  if (axes.x.line !== false) {
-    children.push(createAxisPath([minX, originY], [maxX, originY], axes.x.line));
+  if (x.line !== false) {
+    children.push(createAxisPath([minX, originY], [maxX, originY], x.line));
   }
-  if (axes.y.line !== false) {
-    children.push(createAxisPath([originX, maxY], [originX, minY], axes.y.line));
-  }
-
-  appendAxisTicks(children, 'x', axes.x, axes.x.extent, axes.origin.position);
-  appendAxisTicks(children, 'y', axes.y, axes.y.extent, axes.origin.position);
-
-  appendTickLabels(children, 'x', axes.x, axes.origin.position);
-  appendTickLabels(children, 'y', axes.y, axes.origin.position);
-
-  if (axes.x.label !== false) {
-    children.push(createAxisLabel('x', axes.x.label, axes.origin.position, extentX));
-  }
-  if (axes.y.label !== false) {
-    children.push(createAxisLabel('y', axes.y.label, axes.origin.position, extentY));
-  }
-  if (axes.origin.label !== false) {
-    children.push(createOriginLabel(axes.origin.label, axes.origin.position));
+  if (y.line !== false) {
+    children.push(createAxisPath([originX, maxY], [originX, minY], y.line));
   }
 
-  return children;
+  appendAxisTicks(children, 'x', x, x.extent, origin.position);
+  appendAxisTicks(children, 'y', y, y.extent, origin.position);
+
+  appendTickLabels(children, 'x', x, origin.position);
+  appendTickLabels(children, 'y', y, origin.position);
+
+  if (x.label !== false) {
+    children.push(createAxisLabel('x', x.label, origin.position, extentX));
+  }
+  if (y.label !== false) {
+    children.push(createAxisLabel('y', y.label, origin.position, extentY));
+  }
+  if (origin.label !== false) {
+    children.push(createOriginLabel(origin.label, origin.position));
+  }
+
+  return { type: 'scope', ...scopeProps, children };
 };
 
 const appendAxisTicks = (

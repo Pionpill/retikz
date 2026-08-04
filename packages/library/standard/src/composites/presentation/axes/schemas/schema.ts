@@ -3,6 +3,7 @@ import {
   CompositeBaseSchema,
   LabelVisualStyleSchema,
   PositionSchema,
+  ScopePropsSchema,
   TextBlockSchema,
 } from '@retikz/core';
 import { z } from 'zod';
@@ -141,6 +142,7 @@ const AxesOriginSchema = z.strictObject({
 const AxesBaseSchema = CompositeBaseSchema.extend({
   namespace: z.literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
   type: z.literal('axes').describe('Composite type for static Cartesian reference axes.'),
+  ...ScopePropsSchema.shape,
   origin: AxesOriginSchema.default({ position: [0, 0], label: false }),
   x: AxesXAxisSchema.describe('Horizontal axis configuration and its perpendicular grid projection.'),
   y: AxesYAxisSchema.describe('Vertical axis configuration and its perpendicular grid projection.'),

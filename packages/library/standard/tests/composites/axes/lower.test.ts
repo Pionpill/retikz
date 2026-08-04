@@ -1,4 +1,4 @@
-import type { IRNode, IRPath } from '@retikz/core';
+import type { IRNode, IRPath, ScenePrimitive } from '@retikz/core';
 
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -6,12 +6,18 @@ import { describe, expect, it } from 'vitest';
 import { AxesDefinition, createAxes, lowerAxes } from '../../../src';
 
 const endpoints = (path: IRPath) => path.children.map(step => ('to' in step ? step.to : undefined));
+const lowerAxesChildren = (input: Parameters<typeof lowerAxes>[0]): Array<IRNode | IRPath> =>
+  lowerAxes(input).children as Array<IRNode | IRPath>;
+const scenePathsOf = (children: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
+  children.flatMap(child =>
+    child.type === 'path' ? [child] : child.type === 'group' ? scenePathsOf(child.children) : [],
+  );
 
 const hiddenAxis = { extent: 20, line: false, ticks: false, grid: false, label: false } as const;
 
 describe('lowerAxes', () => {
   it('lowers asymmetric extents, independent grids, axes, ticks, and static labels in stable order', () => {
-    const lowered = lowerAxes(
+    const lowered = lowerAxesChildren(
       createAxes({
         origin: {
           position: [100, 80],
@@ -93,8 +99,34 @@ describe('lowerAxes', () => {
     ] satisfies Array<IRNode>);
   });
 
-  it('places arrow marks at independently configured axis endpoints', () => {
+  it('preserves authored Scope props on one stable root', () => {
     const lowered = lowerAxes(
+      createAxes({
+        id: 'axes-root',
+        localNamespace: true,
+        zIndex: 3,
+        stroke: '#334155',
+        transforms: [{ kind: 'translate', x: 4, y: 5 }],
+        meta: { source: 'test' },
+        x: { extent: 20, label: false },
+        y: { extent: 20, label: false },
+      }),
+    );
+
+    expect(lowered).toMatchObject({
+      type: 'scope',
+      id: 'axes-root',
+      localNamespace: true,
+      zIndex: 3,
+      stroke: '#334155',
+      transforms: [{ kind: 'translate', x: 4, y: 5 }],
+      meta: { source: 'test' },
+    });
+    expect(lowered.children).toHaveLength(2);
+  });
+
+  it('places arrow marks at independently configured axis endpoints', () => {
+    const lowered = lowerAxesChildren(
       createAxes({
         x: { extent: 20, line: { arrows: 'negative' }, label: false },
         y: { extent: 20, line: { arrows: 'both' }, label: false },
@@ -109,7 +141,7 @@ describe('lowerAxes', () => {
   });
 
   it('merges shared and endpoint arrow details onto negative and positive marks', () => {
-    const lowered = lowerAxes(
+    const lowered = lowerAxesChildren(
       createAxes({
         x: {
           extent: 20,
@@ -142,7 +174,7 @@ describe('lowerAxes', () => {
   });
 
   it('uses independent axis-local grid offsets without moving the shared origin or extents', () => {
-    const lowered = lowerAxes(
+    const lowered = lowerAxesChildren(
       createAxes({
         origin: { position: [100, 80] },
         x: {
@@ -194,12 +226,12 @@ describe('lowerAxes', () => {
         [120, 65],
       ],
     ]);
-    expect((lowered[0] as IRPath).stroke).toBe('#ef4444');
-    expect((lowered[4] as IRPath).stroke).toBe('#3b82f6');
+    expect(lowered[0].stroke).toBe('#ef4444');
+    expect(lowered[4].stroke).toBe('#3b82f6');
   });
 
   it('supports a single number line and keeps ticks when its line is hidden', () => {
-    const numberLine = lowerAxes(
+    const numberLine = lowerAxesChildren(
       createAxes({
         origin: { position: [50, 40] },
         x: {
@@ -211,7 +243,7 @@ describe('lowerAxes', () => {
         y: hiddenAxis,
       }),
     );
-    const hiddenLine = lowerAxes(
+    const hiddenLine = lowerAxesChildren(
       createAxes({
         origin: { position: [50, 40] },
         x: {
@@ -233,7 +265,7 @@ describe('lowerAxes', () => {
   });
 
   it('places tick segments on the configured perpendicular side and keeps labels on their default side', () => {
-    const lowered = lowerAxes(
+    const lowered = lowerAxesChildren(
       createAxes({
         origin: { position: [50, 40] },
         x: {
@@ -276,7 +308,7 @@ describe('lowerAxes', () => {
   });
 
   it('filters spacing and explicit ticks near either endpoint while preserving the exact gap boundary', () => {
-    const lowered = lowerAxes(
+    const lowered = lowerAxesChildren(
       createAxes({
         origin: { position: [30, 30] },
         x: {
@@ -309,7 +341,7 @@ describe('lowerAxes', () => {
   });
 
   it('keeps endpoint ticks when endpointGap is zero', () => {
-    const lowered = lowerAxes(
+    const lowered = lowerAxesChildren(
       createAxes({
         origin: { position: [30, 30] },
         x: {
@@ -329,7 +361,7 @@ describe('lowerAxes', () => {
   });
 
   it('uses a ten-unit origin-label offset for shorthand text', () => {
-    const lowered = lowerAxes(
+    const lowered = lowerAxesChildren(
       createAxes({
         origin: { position: [50, 40], label: '0' },
         x: { extent: 20, line: false, label: false },
@@ -359,7 +391,7 @@ describe('lowerAxes', () => {
     ).scene;
 
     expect(warnings).toEqual([]);
-    expect(scene.primitives.filter(primitive => primitive.type === 'path')).toHaveLength(2);
+    expect(scenePathsOf(scene.primitives)).toHaveLength(2);
   });
 
   it('keeps Core diagnostics for direct Axes IR without its definition', () => {
