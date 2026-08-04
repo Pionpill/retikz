@@ -14,6 +14,15 @@ export const kernelV05: Release = {
       highlights: [],
       subVersions: [
         {
+          version: 'alpha.2',
+          date: '2026-08-04',
+          summary: {
+            zh: '随 Kernel release group lockstep 升级；不新增 math 能力。',
+            en: 'Version-only alignment with the Kernel release group; no new math capabilities.',
+          },
+          items: [],
+        },
+        {
           version: 'alpha.1',
           date: '2026-07-26',
           summary: {
@@ -71,7 +80,7 @@ export const kernelV05: Release = {
       subVersions: [
         {
           version: 'alpha.2',
-          date: '2026-07-29',
+          date: '2026-08-04',
           summary: {
             zh: '交付 performance trace、Owner / Program / participant typed identity、同步 transaction、fallback、diagnostic queue 与 exactly-once lifecycle。',
             en: 'Ships performance traces, typed Owner/Program/participant identity, synchronous transactions, fallback, diagnostic queues, and exactly-once lifecycle management.',
@@ -134,7 +143,7 @@ export const kernelV05: Release = {
       subVersions: [
         {
           version: 'alpha.2',
-          date: '2026-07-29',
+          date: '2026-08-04',
           summary: {
             zh: '交付 Core Runtime Program、单 root Node fill 局部增量闭环、布局感知 Composite proposal / probe 合同，以及 Scene / Scope 可继承 Theme 环境。',
             en: 'Ships the Core Runtime Program, the one-root Node fill incremental path, layout-aware composite proposal / probe contracts, and the inherited Scene / Scope Theme environment.',
@@ -200,7 +209,7 @@ export const kernelV05: Release = {
       subVersions: [
         {
           version: 'alpha.2',
-          date: '2026-07-29',
+          date: '2026-08-04',
           summary: {
             zh: '交付 retained renderer contract、内置SVG/Canvas事务后端、共享 inspection palette / hatch、capability fallback、hydration/resource/animation同步提交与5000规模性能门禁。',
             en: 'Ships the retained renderer contract, transactional built-in SVG/Canvas backends, a shared inspection palette and hatch geometry, capability fallback, synchronized hydration/resource/animation commits, and 5,000-entity performance gates.',
@@ -259,7 +268,7 @@ export const kernelV05: Release = {
       subVersions: [
         {
           version: 'alpha.2',
-          date: '2026-07-29',
+          date: '2026-08-04',
           summary: {
             zh: '交付 Layout 的 retained / static 执行模式与 auto / full 更新策略，并补齐 SSR handoff、transaction diagnostic、commit 后 artifact/ref 出口与第三方 renderer 注入。',
             en: 'Ships retained / static Layout execution modes and auto / full update strategies, plus SSR handoff, transaction diagnostics, post-commit artifact/ref outputs, and third-party renderer injection.',
@@ -303,7 +312,7 @@ export const kernelV05: Release = {
       subVersions: [
         {
           version: 'alpha.2',
-          date: '2026-07-29',
+          date: '2026-08-04',
           summary: {
             zh: '交付 SVG/Canvas retained / static view、auto / full 更新策略、transactional update/diagnostics/hydration、第三方 renderer 注入与 plain-spec composite callback transaction。',
             en: 'Ships retained / static SVG and Canvas views, auto / full update strategies, transactional updates/diagnostics/hydration, third-party renderer injection, and plain-spec composite callback transactions.',
@@ -352,6 +361,15 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.2',
+          date: '2026-08-04',
+          summary: {
+            zh: '随 Kernel release group lockstep 升级；不新增 TeX 能力。',
+            en: 'Version-only alignment with the Kernel release group; no new TeX capabilities.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.1',
           date: '2026-07-26',
