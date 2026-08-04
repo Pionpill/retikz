@@ -25,7 +25,7 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 ## 动态规则
 
 - 任务开始先按“任务规模与执行策略”判定小 / 中 / 大，再加载对应 flow；多个条件并存时取最高级。
-- 改文件分层、依赖方向、shared / schemas / contract / providers / pipeline / compile，或 define-registry 能力前，先读 `.agents/skills/standard-structure/SKILL.md`，再按实际层级读取 `standard-shared` / `standard-schema` / `standard-contract` / `standard-providers` / `standard-pipeline-compile`。
+- 改文件分层、依赖方向、shared / schemas / contract / providers / pipeline / compile、define-registry 能力，或进行 Tier 2 composite 设计 / review 前，先读 `.agents/skills/standard-structure/SKILL.md`，再按实际层级读取 `standard-shared` / `standard-schema` / `standard-contract` / `standard-providers` / `standard-pipeline-compile` / `standard-tier2-reuse`。
 - 写 `apps/docs` 正文、demo、导航、i18n、schema registry 前，先读 `docs-doc-principle`；组件页 / 示例页 / 分组页 / 概念页 / blog 再读对应 docs skill。
 - 只有大型任务在执行计划获用户确认后才读 `flow-long-task`；主模型为 Sol 且计划已授权多 agent 协作时再读 `codex-develop-flow`，最后分流到具体 flow / develop skill。中型任务不读 `flow-long-task`；只有包含可分离功能实现且计划明确授权 Sol / Luna 分工时可单独读 `codex-develop-flow`。中小型任务不因多文件、多步骤或可能多 commit 自动升级。
 - 发包、alpha/beta/rc 流程、跨模型评审、文档外站转换等长流程按对应 skill 执行，不把步骤复制进 AGENTS。
