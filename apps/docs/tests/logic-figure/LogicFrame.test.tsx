@@ -24,12 +24,16 @@ describe('LogicFrame', () => {
     );
 
     expect(frame).toMatchObject({
-      stroke: 'lightgray',
-      fill: 'lightgray',
-      fillOpacity: 0.04,
-      dashPattern: [4, 3],
+      border: {
+        style: {
+          stroke: 'lightgray',
+          fill: 'lightgray',
+          fillOpacity: 0.04,
+          dashPattern: [4, 3],
+        },
+        cornerRadius: 4,
+      },
       padding: 10,
-      cornerRadius: 4,
       title: {
         text: 'Core',
         textColor: 'gray',
@@ -48,12 +52,16 @@ describe('LogicFrame', () => {
     const frame = readFrame(
       <LogicFrame
         id="custom"
-        stroke="darkorange"
-        fill="darkorange"
-        fillOpacity={0.12}
-        dashPattern={undefined}
+        border={{
+          style: {
+            stroke: 'darkorange',
+            fill: 'darkorange',
+            fillOpacity: 0.12,
+            dashPattern: undefined,
+          },
+          cornerRadius: 0,
+        }}
         padding={{ x: 16, y: 8 }}
-        cornerRadius={0}
       >
         <LogicFrameTitle textColor="currentColor" font={{ weight: 700 }}>
           Custom
@@ -66,11 +74,15 @@ describe('LogicFrame', () => {
     );
 
     expect(frame).toMatchObject({
-      stroke: 'darkorange',
-      fill: 'darkorange',
-      fillOpacity: 0.12,
+      border: {
+        style: {
+          stroke: 'darkorange',
+          fill: 'darkorange',
+          fillOpacity: 0.12,
+        },
+        cornerRadius: 0,
+      },
       padding: { x: 16, y: 8 },
-      cornerRadius: 0,
       title: {
         textColor: 'currentColor',
         font: { size: 12, weight: 700 },
@@ -80,7 +92,7 @@ describe('LogicFrame', () => {
         font: { family: 'serif', size: 11 },
       },
     });
-    expect(frame.dashPattern).toBeUndefined();
+    expect(frame.border.style.dashPattern).toBeUndefined();
   });
 
   it('rejects semantic header parts used outside LogicFrame', () => {
