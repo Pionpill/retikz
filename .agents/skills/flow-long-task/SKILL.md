@@ -1,110 +1,76 @@
 ---
 name: flow-long-task
-description: Use when retikz work is a large, long-running, batch, multi-commit, or context-compaction-prone task that needs a durable execution reference, staged commit review, and final whole-change review.
+description: Use when an approved large retikz task is functionally or architecturally significant, ADR-backed, long-running, batch-executed, or context-compaction-prone and needs durable execution state.
 ---
 
 # 长任务总入口
 
-面向会跨多轮上下文、批量执行或产生多次 commit 的任务。它只负责编排、恢复和 review gate；具体实现仍分流到 `flow-alpha` / `flow-beta` / `flow-rc` / `develop-refactor` / `package-publish` 等 skill。
+只编排已判定为大型的功能性或架构性任务。中小型任务、多文件但范围清楚的调整、普通多步骤工作或仅可能产生多个 commit，不因此启动本 skill。具体设计与实现仍分流到 `flow-alpha` / `flow-beta` / `flow-rc` / `develop-refactor` / `package-publish`。
 
 ## 启动关卡
 
-执行前先确认：
+执行前必须先按根 `AGENTS.md` 在对话中给出并取得用户对完整执行计划的确认。计划至少确认：
 
-1. 任务 source of truth：Alpha 功能的长期契约用 ADR，执行用其 ignored 镜像 `PLAN.md` / `TEST_CONTRACT.md`；非功能重构用 `superpowers:writing-plans` 产出的 plan；Beta / RC / 发布用 roadmap、plan 或发布清单。
-2. 是否允许批量执行、是否允许 LLM 分步 commit。
-3. Architecture / Plan Gate 使用根规则的常驻只读授权；其它批量自动 commit 前 review、最终整体 review 先按根规则判定风险，再确认所需授权。
-4. 临时状态文件位置。Alpha 必须使用 ADR 的 `**/_notes/plans/` 镜像目录；其它任务使用 `.gitignore` 覆盖的 `notes/plans/` 或就近 `**/_notes/plans/`。
+1. 规模依据、source of truth、目标 / 非目标、文件与包 scope、阶段和依赖。
+2. 是否批量执行、是否使用状态文件、预期 commit 切分和验证命令。
+3. 是否调度 subagent、角色 / 模型 / 数量 / 并发波次、常规单 reviewer 的时点与最大循环次数。
+4. 是否在最终阶段执行 `cross-review`、预计轮数和最大轮数。
+5. Git 身份以及 stage / commit 权限；push / tag / publish 仍分别授权。
 
-未确认 source of truth 前不改代码；Alpha 必须在 Architecture Gate、人工 ADR 确认、镜像 plan 与 Plan Gate 均通过且已有实现授权后执行。未授权 commit 前不 commit；常驻 Gate 之外未授权 subagent / 外部模型前不调度 review。
+未完成确认不读作“默认同意”，不改产品文件、不派 agent。确认后按计划连续执行；常规阶段不重复询问。scope、架构、公开契约或授权动作超出计划，或达到失败阈值时才停止交人工。
 
 ## 分流
 
-- 功能迭代：读 `flow-alpha`，再按 ADR 阶段读取 `develop-design` / `develop-implement` / `develop-test` / `develop-document` / `develop-wrapup`。
-- 非功能重构：读 `develop-refactor`，plan 作为执行参考。
-- beta / rc：读 `flow-beta` / `flow-rc`。
-- 发布：读 `package-publish`。
-- 涉及分层、schema、contract、providers、pipeline、compile 时，按 `standard-structure` 读取对应 `standard-*`。
+- ADR / Alpha 功能：`flow-alpha`，再按阶段读取对应 `develop-*`
+- 优化 / 重构：`develop-refactor`；只有功能型大型重构留在本 flow
+- beta / rc：`flow-beta` / `flow-rc`
+- 发布：`package-publish`
+- 分层、schema、contract、providers、pipeline、compile：按 `standard-structure` 读取对应 `standard-*`
+
+主模型为 Sol 且执行计划已授权多 agent 分工时，再读取 `codex-develop-flow`；该 skill 只映射模型角色，不新增 gate。
 
 ## 状态文件
 
-为防上下文压缩失忆，长任务必须维护 ignored 状态文件。Alpha 使用镜像 plan：
+大型任务维护 ignored 状态文件。Alpha 使用 ADR 镜像目录；其它任务使用 `.gitignore` 覆盖的 `notes/plans/` 或就近 `**/_notes/plans/`：
 
 ```text
 packages/<group>/_notes/decisions/<relative>/<NN>-<slug>.md
 -> packages/<group>/_notes/plans/<relative>/<NN>-<slug>/TASK_STATE.md
 
-# 非 ADR 长任务
+# 非 ADR 大型任务
 notes/plans/<task>/TASK_STATE.md
 ```
 
-状态文件至少包含：
-
-- 目标、非目标、source docs、当前阶段。
-- 文件 scope、分步计划、commit 切分。
-- 已完成 commit、验证命令、review 结论。
-- 人工裁决、阻塞点、风险和下一步。
-- 恢复指令：下一轮先读哪些文件、从哪一步继续。
-
-每次 commit 后、停止前、预计可能压缩前都更新。状态文件默认不 stage / commit；不要把文件索引、LLM 执行 checklist、review prompt 等临时材料塞进最终 ADR。
+至少记录目标 / 非目标、source docs、当前阶段、文件 scope、计划、依赖、已完成验证、review finding、人工裁决、风险和恢复指令。每个计划阶段完成后、停止前和预计压缩前更新；默认不 stage / commit。
 
 ## 恢复流程
 
-上下文恢复或接手长任务时，按顺序读取：
+恢复时依次读取根 `AGENTS.md` 与本 skill、source docs、确认过的 plan / 测试契约 / 状态 / review 记录、当前 git 状态与本阶段具体 skill。先复述当前阶段、下一步和风险；状态与 git 不一致时停止并对齐事实。
 
-1. 根 `AGENTS.md` 与本 skill。
-2. source docs：ADR / roadmap / 发布清单。
-3. reviewed `PLAN.md`、`TEST_CONTRACT.md`、`TASK_STATE.md`、`REVIEW.md`；不适用的文件跳过。
-4. `git status --short`、最近 commits、当前 staged diff。
-5. 本阶段需要的具体 flow / develop / standard skill。
+## 常规单 Reviewer 循环
 
-恢复后先复述当前阶段、下一步和风险；发现状态文件与 git 不一致时 halt，先对齐事实。
+plan、实现阶段、阶段性 diff 和 commit 前 review 默认不使用 `cross-review`。只有执行计划已授权时才调度一个只读 reviewer：
 
-## Commit 前 Review
+1. 固定当前 plan、diff 或 staged diff，附 source docs、适用规则和验证结果。
+2. reviewer 输出 `BLOCKING / WARNING / INFO`，不修改仓库。
+3. 主 agent 核实 finding，在已确认 scope 内修改并验证。
+4. 有修订时复用同一 reviewer 检查新快照；无 BLOCKING 且 WARNING 已处置时结束循环。
 
-用户批准批量执行并授权 LLM 自行 commit 时，先逐 commit 判定风险。改动面大、核心能力、公开契约、跨包边界或高风险 commit 必须单独过 gate；非 ADR、scope 明确且仅涉及文档、文案、链接、格式或机械性调整，并且不改变公开契约、schema、runtime 行为或跨包边界时，可跳过 subagent review 并在 `TASK_STATE.md` 记录理由。其余情况按根规则询问用户。需要 review 时：
+循环次数不得超过执行计划声明的上限；达到上限、快照无法固定或 finding 要求扩大 scope 时停止交人工。未授权 reviewer 时由主 agent 自审。commit 是否执行仍取决于已确认的 Git 权限，不因 review 通过自动获得授权。
 
-1. 只 stage 本 commit 文件，不用 `git add -A`。
-2. 跑受影响验证；验证失败不进入 review。
-3. 按 `cross-review` 冻结 staged diff，同轮并发派发 2–3 个 fresh 独立 reviewer；优先不同模型，只有一个非主模型时使用两个同模型 fresh 实例。
-4. 主 AI 收齐同轮结果后归并；修复 BLOCKING 后冻结新 staged snapshot，用 fresh agents 复审。WARNING 需要人工裁决或记录理由。
-5. commit 成功后更新 `TASK_STATE.md`。
-
-Review 输入只给：长期 ADR / source doc、reviewed plan、相关 AGENTS / standard skill、staged diff、验证结果。所有模型得到相同输入，同轮互不可见结论；不要传主 AI 的预判。
-
-Review 固定检查：
-
-- 文件结构、依赖方向、分层位置是否符合就近 AGENTS 和 `standard-structure`。
-- 命名是否符合项目规则；barrel 是否默认 `export *`，避免无必要的 `export { ... }` 聚合。
-- 导出类型、接口、函数、组件、重要 helper、public props、复杂字段的 JSDoc 是否完备。
-- 注释 / JSDoc 是否中文；Zod `.describe(...)` 是否英文契约描述。
-- 是否偏离 ADR / plan、混入额外目标、弱化测试或漏同步 docs。
-
-Review 输出只分：
-
-- `BLOCKING`：必须修或人工裁决后才能 commit。
-- `WARNING`：可由人工裁决或记录风险。
-- `INFO`：可选建议。
-
-每个 commit review 最多 9 轮。最新一轮至少两个 fresh 独立 reviewer 完成、无 BLOCKING、WARNING 已裁决时立即 PASS，不再追加下一轮；只有修订后才使用 fresh agents 复审。无法完成两个 fresh 独立 reviewer、快照漂移或第 9 轮未通过时 halt，交人工决策。
+常规 reviewer 重点检查文件结构与依赖方向、命名 / barrel / JSDoc / 中文注释、计划偏差、测试弱化和 docs 遗漏。每个 checkpoint 使用单 reviewer，不为“更多视角”临时追加 agent。
 
 ## 最终整体 Review
 
-全部实现完成后，先按根规则判定整体 review 风险；低风险明确改动可跳过并记录理由，需要 review 时再按用户授权和 `cross-review` 对固定完整 working-tree diff 或 commit range 并发派发 2–3 个 fresh 独立 reviewer，并由 `cross-review` 选择异模型优先或同模型双实例降级阵容。没有 commit 授权时使用 working-tree diff，不得为了整体 review 提前 commit；已有多个 commit 时使用固定 range。输入包含 ADR / source docs、reviewed plan、`TASK_STATE.md`、commit list（如有）、完整 diff 与验证结果。
+全部实现和验证完成后，由计划决定最终检查：
 
-整体 review 检查：
+- 未授权 `cross-review`：主 agent 做整体一致性检查并交付
+- 已授权大型任务最终 `cross-review`：冻结完整 working-tree diff 或 commit range，按 `cross-review` 使用计划内阵容和轮数
+- 用户在任务过程中明确新增交叉验证要求：先确认快照、阵容和轮数，再执行
 
-- source docs 与最终实现、测试、docs / changelog 是否一致。
-- 多 commit 间是否命名漂移、结构不一致、重复抽象或 public surface 漏迁移。
-- 是否有遗漏的 `standard-*` 约束、JSDoc、中文注释、barrel 规则。
-- 验证范围是否足够；是否需要补测或扩大到跨包验证。
-
-最终 BLOCKING 清空后，再进入 wrapup、roadmap / ADR 状态更新或交付汇报。
-
-整体 review 同样按轮次归并；当前轮无 BLOCKING、WARNING 已处置时立即 PASS。只有修订后才使用新的完整 working-tree diff 或 commit range 与 fresh agents 进入下一轮，最多 9 轮；第 9 轮仍未 PASS 时交人工。不得串行把一个模型的结论喂给同轮其它模型。
+最终检查覆盖 source docs、实现、测试、docs / changelog、多阶段命名与 public surface 一致性。`cross-review` 不用于逐 commit 或普通阶段 gate。
 
 ## 失败与暂停
 
-- ADR / plan 自相矛盾、scope 膨胀、git 状态不明、连续 3 轮验证失败、第 9 轮 review 仍有 BLOCKING：halt，汇报事实和选项并交人工决策。
-- 不 push / tag / publish；这些始终需要单独授权。
-- 不提交临时 plan、状态文件、review 报告，除非用户明确要求转为正式文档。
+- ADR / plan 自相矛盾、scope 或授权超出确认、git 状态不明、连续 3 轮验证失败、单 reviewer 循环达到计划上限或最终 review 达到授权上限时停止并报告事实与选项。
+- 不提交 ignored plan、状态或 review 报告；不自动 push / tag / publish。
