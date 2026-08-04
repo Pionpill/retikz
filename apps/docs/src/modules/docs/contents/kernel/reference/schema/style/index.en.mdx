@@ -5,6 +5,40 @@ description: Shared visual fields for Node, Path, and Scope, plus JSON contracts
 
 Core separates common appearance into two layers: `GraphicStyleSchema` defines fields used directly by a host, while `PaintSpecSchema` describes structured paints that a single CSS color cannot express. Node, Path, and Scope reuse these schemas instead of maintaining parallel color and opacity semantics.
 
+The four schemas below are reusable strict field fragments. Standard, Plot, and other Tier 2 owners may compose them with their own defaults and field restrictions. They do not add drawing capability, a compile / lowering entry point, or a preset bundle; complete drawable entities still use their existing aggregate contracts.
+
+<span id="graphicpaint"></span>
+
+## GraphicPaint
+
+`GraphicPaintSchema` groups the color, fill, and stroke paint fields shared by primary geometry. It only defines the JSON field boundary and does not change the existing `GraphicStyleSchema` aggregate semantics.
+
+<ZodSchema name="GraphicPaintSchema" />
+
+<span id="graphicopacity"></span>
+
+## GraphicOpacity
+
+`GraphicOpacitySchema` groups whole-element, fill-only, and stroke-only opacity. Each field remains an optional `0..1` value; the host owns its defaults and inheritance behavior.
+
+<ZodSchema name="GraphicOpacitySchema" />
+
+<span id="graphiceffects"></span>
+
+## GraphicEffects
+
+`GraphicEffectsSchema` groups shadows and blend modes for primary geometry. Cascading Scope style continues to exclude these fields under its existing contract.
+
+<ZodSchema name="GraphicEffectsSchema" />
+
+<span id="strokestyle"></span>
+
+## StrokeStyle
+
+`StrokeStyleSchema` is the reusable stroke fragment for drawable geometry, covering width and dash parameters. Path-specific endpoint and join fields are documented by [PathStroke](/kernel/reference/schema/path#pathstroke).
+
+<ZodSchema name="StrokeStyleSchema" />
+
 <span id="graphicstyle"></span>
 
 ## GraphicStyle

@@ -14,7 +14,7 @@ description: Use when independently reviewing retikz docs pages or docs diffs fo
 - 用户单独说“审一下这篇文档 / 这个 docs 改动 / 这些 demo”
 - 新增页面或大规模文档重构后，确认没有把页面写成作者自嗨的内部说明
 
-普通文档审查可以由主 AI 直接执行。新增页面或命中 `docs-doc-principle`“大改”条件时，必须由一个新的只读 subagent 在改稿与机械验证完成后独立执行；主 agent 自评不能替代。默认**只评审、不改文件**；用户明确要求“顺手修掉”时，才按评审结果改稿。
+普通文档和未授权 subagent 的大改由主 agent 直接审查。新增页面或命中 `docs-doc-principle`“大改”条件时，按任务开始时确认的中型执行计划决定是否使用一个只读 subagent；有修订时复用同一 reviewer，不新增并行 reviewer。默认**只评审、不改文件**；用户明确要求“顺手修掉”时，才按评审结果改稿。
 
 ## 输入
 

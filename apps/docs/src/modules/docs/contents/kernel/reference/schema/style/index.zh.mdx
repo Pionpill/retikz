@@ -5,6 +5,71 @@ description: Node、Path 与 Scope 共用的视觉字段，以及渐变、图案
 
 Core 把通用视觉外观拆成两层：`GraphicStyleSchema` 定义宿主可直接使用的字段，`PaintSpecSchema` 定义不能用单个 CSS color 表达的结构化 paint。Node、Path 与 Scope 复用这些 schema，不各自维护一套颜色和透明度语义。
 
+以下四个 schema 是可复用的严格字段片段，用于让 Standard、Plot 和其它 Tier 2 owner 按自己的默认值与字段边界组合 Core 语义。它们不是新的绘图能力、compile / lowering 入口或 preset bundle；完整图元仍须使用对应的聚合契约。
+
+<span id="graphicpaint"></span>
+
+## 图形 paint
+
+`GraphicPaintSchema` 收拢主几何共用的颜色、填充和描边 paint 字段。它只描述 JSON 字段边界，不改变 `GraphicStyleSchema` 的现有聚合语义。
+
+<ZodSchema
+  name="GraphicPaintSchema"
+  description="主几何共用的颜色、填充和描边 paint 字段。"
+  descriptions={{
+    color: '主色；stroke、fill、label 与 arrow 未单独设置时可回退到它',
+    fill: '填充 paint：CSS color 字符串或 PaintSpec',
+    stroke: '描边 paint：CSS color 字符串或 PaintSpec',
+  }}
+/>
+
+<span id="graphicopacity"></span>
+
+## 图形透明度
+
+`GraphicOpacitySchema` 收拢主几何的整体、填充和描边透明度。各字段仍是可选的 0..1 数值，并由宿主决定默认值与继承方式。
+
+<ZodSchema
+  name="GraphicOpacitySchema"
+  description="主几何共用的整体、填充和描边透明度字段。"
+  descriptions={{
+    opacity: '作用于主要几何整体的透明度 0..1',
+    fillOpacity: '只作用于填充的透明度 0..1',
+    strokeOpacity: '只作用于描边的透明度 0..1',
+  }}
+/>
+
+<span id="graphiceffects"></span>
+
+## 图形效果
+
+`GraphicEffectsSchema` 收拢主几何的阴影与混合模式。Scope 的级联样式仍按既有契约排除这两个字段。
+
+<ZodSchema
+  name="GraphicEffectsSchema"
+  description="主几何共用的阴影和混合模式字段。"
+  descriptions={{
+    shadow: '阴影 preset，或显式 DropShadowSpec',
+    blendMode: '与已绘制内容的混合模式；省略或 normal 使用普通 source-over',
+  }}
+/>
+
+<span id="strokestyle"></span>
+
+## 描边样式
+
+`StrokeStyleSchema` 是跨 drawable 几何复用的描边片段，包含宽度与虚线参数；Path 额外的端点和拐角字段见 [PathStroke](/kernel/reference/schema/path#pathstroke)。
+
+<ZodSchema
+  name="StrokeStyleSchema"
+  description="可绘制几何共用的描边宽度与虚线字段。"
+  descriptions={{
+    strokeWidth: '描边宽度（用户单位）',
+    dashPattern: 'dash/gap 长度序列（如 [4, 2]）；省略 = 实线',
+    dashOffset: '虚线起点偏移（用户单位），可为正数、0 或负数；省略 = 0',
+  }}
+/>
+
 <span id="graphicstyle"></span>
 
 ## 图形样式

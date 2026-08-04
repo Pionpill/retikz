@@ -45,6 +45,69 @@ const pathPrims = (ir: IRScene): Array<PathPrim> =>
   );
 
 describe('Drawable shared style resolution', () => {
+  it('drawable-shared-path-default-stroke-full：stroke path 消费 pathDefault 的适用字段', () => {
+    const compiled = compileToScene(
+      scene([
+        {
+          type: 'scope',
+          pathDefault: {
+            color: '#0f766e',
+            fill: '#ccfbf1',
+            stroke: '#134e4a',
+            strokeWidth: 2,
+            dashPattern: [4, 2],
+            dashOffset: 1,
+            lineCap: 'round',
+            lineJoin: 'bevel',
+            fillRule: 'evenodd',
+            roundedCorners: 5,
+            rotate: 30,
+            scale: 2,
+          },
+          children: [
+            linePath({
+              children: [
+                { type: 'step', kind: 'move', to: [0, 0] },
+                { type: 'step', kind: 'line', to: [100, 0] },
+                { type: 'step', kind: 'line', to: [100, 100] },
+              ],
+            }),
+          ],
+        },
+      ]),
+      { padding: 0 },
+    ).scene;
+    const primitives = flatten(compiled.primitives);
+    const prim = primitives.find((primitive): primitive is PathPrim => primitive.type === 'path');
+    const transformGroup = primitives.find(
+      primitive =>
+        primitive.type === 'group' &&
+        primitive.transforms?.some(transform => transform.kind === 'rotate') &&
+        primitive.transforms.some(transform => transform.kind === 'scale'),
+    );
+    if (!prim) throw new Error('Expected compiled stroke path primitive');
+
+    expect(prim.fill).toBe('#ccfbf1');
+    expect(prim.fillRule).toBe('evenodd');
+    expect(prim.stroke).toBe('#134e4a');
+    expect(prim.strokeWidth).toBe(2);
+    expect(prim.dashPattern).toEqual([4, 2]);
+    expect(prim.dashOffset).toBe(1);
+    expect(prim.strokeLinecap).toBe('round');
+    expect(prim.strokeLinejoin).toBe('bevel');
+    expect(prim.commands.some(command => command.kind === 'arc')).toBe(true);
+    expect(
+      transformGroup?.type === 'group' &&
+        transformGroup.transforms?.some(transform => transform.kind === 'rotate' && transform.degrees === 30),
+    ).toBe(true);
+    expect(
+      transformGroup?.type === 'group' &&
+        transformGroup.transforms?.some(
+          transform => transform.kind === 'scale' && transform.x === 2 && (transform.y ?? transform.x) === 2,
+        ),
+    ).toBe(true);
+  });
+
   it('drawable-shared-path-default-ribbon-subset：pathDefault 的共享字段会作用到 ribbon', () => {
     const [prim] = pathPrims(
       scene([

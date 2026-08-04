@@ -146,8 +146,8 @@
 - completeness 文档定义各能力域解决的问题、边界和闭环标准。
 - 根与就近 `AGENTS.md`、`standard-*` skills 负责执行包职责和代码落层。
 - ADR 证明单次迭代符合适用完备目标；roadmap 只安排已确认缺口的实施顺序。
-- Alpha ADR 草案在人工确认和实现前，必须通过 `develop-completeness` 的 `adr-gate`：由新的只读 subagent 检查问题归属、包边界、define-registry 与端到端闭环，主 AI 修订后换新主体复检；最多 3 轮，仍未 PASS 时交人工决策。
-- Beta milestone 在实施前和全部 TODO 集成后，分别对 Drawing、Data、Visualization 执行 `code-audit`。入口 findings 只生成候选 TODO，scope 经人工确认后才能实施；出口只允许自动修复已批准 scope 内的 beta 问题并换新主体复检，最多 3 轮。需要净新增公开能力、组件、IR、schema 或用户可见行为契约的缺口必须退回 Alpha 或延期。
-- 自动派遣授权只覆盖只读审计；ADR 修订与 Beta 修复仍受对应 flow 和当前任务授权约束，不替代人工 scope、commit 或发布授权。
+- Alpha ADR 草案在人工确认和实现前，必须通过 `develop-completeness` 的 `adr-gate`。主 agent 先自审；只有已确认执行计划授权时才增加一个只读 reviewer，并在修订后复用同一 reviewer 检查新快照。循环上限以计划为准，达到上限仍未 PASS 时交人工决策。
+- Beta milestone 在实施前和全部 TODO 集成后，分别对 Drawing、Data、Visualization 执行 `code-audit`。入口 findings 只生成候选 TODO，scope 经人工确认后才能实施；出口只允许修复已批准 scope 内的 beta 问题。需要净新增公开能力、组件、IR、schema 或用户可见行为契约的缺口必须退回 Alpha 或延期。
+- subagent、reviewer 与评审轮次必须来自已确认的任务计划，不存在自动派遣授权；ADR 修订与 Beta 修复仍受对应 flow 和当前任务授权约束，不替代人工 scope、commit 或发布授权。
 
 修改能力域定义、主责包或关键输入输出属于架构变更，必须同步受影响 completeness 文档和包级 AGENTS，并通过 ADR 说明迁移范围。不能为解释既有局部实现而悄悄放宽边界。
