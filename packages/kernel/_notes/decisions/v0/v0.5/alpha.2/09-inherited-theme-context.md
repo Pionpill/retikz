@@ -2,6 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-08-03
+- 接受日期：2026-08-03
 - 关联：[alpha.2 roadmap](./roadmap.md) · [通用视觉主题设计](../../../../../../../notes/architecture/visual-theme-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
 ## 背景与目标

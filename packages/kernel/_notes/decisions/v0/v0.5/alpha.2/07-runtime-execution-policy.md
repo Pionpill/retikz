@@ -2,6 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-07-29
+- 接受日期：2026-07-29
 - 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-03](./03-program-transaction-lifecycle.md) · [ADR-04](./04-incremental-core-compile.md) · [ADR-05](./05-scene-patch-retained-renderer.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md)
 
 ## 背景
@@ -115,9 +116,9 @@ type BenchmarkExecution = Readonly<{
 
 Static场景的`full`来自公开`view.mode === 'static'`与static update完整重绘契约，source固定为`static-view`；retained场景必须从Runtime/Core/Render trace取得唯一outcome，source为`runtime-trace`，漏报或多报使场景失败。三路都与独立full oracle对账。
 
-六个deterministic场景进入tracked`apps/bench/baselines/deterministic.json`，baseline逐字段对账execution；三组wall-clock会写入ignored report，用于手动A/B，但本ADR不把新场景加入`relativeGuards`，也不修改fingerprint timing baseline。待稳定样本人工审查后再独立批准timing gate，不能用当前机器一次结果直接冻结绝对预算。
+六个deterministic场景进入tracked baseline并逐字段对账execution；三组wall-clock只写入ignored report用于手动A/B，本ADR不把新场景加入`relativeGuards`，也不修改fingerprint timing baseline。待稳定样本人工审查后再独立批准timing gate，不能用当前机器一次结果直接冻结绝对预算。
 
-## 测试设计
+## 测试策略摘要
 
 - Runtime：默认 auto 调用 Program update；full 跳过 update 并以 full outcome 调用 run；invalid strategy fail-loud；fallback 与 upstream full 语义不变；rollback、bailout、无关 Program 与 continuous participant 不退化。
 - Core / Render：forced full 产出 replaceScene；Core trace 为 full；Render直接replace为full、capability扩大为fallback、局部Patch为incremental；三者均与完整Snapshot一致。
@@ -125,8 +126,6 @@ Static场景的`full`来自公开`view.mode === 'static'`与static update完整�
 - Vanilla：IR与plain spec的static mount/update完整重绘且保留root identity、runtimeMeta、artifacts、hydration与animation语义；retained + full保留事务；默认行为不变；预编译Scene继续拒绝runtime。
 - Bench：同一场景显式运行 retained auto、retained full 与 static full，并按上述结构分别报告 execution outcome；deterministic进入tracked baseline，新增wall-clock仅进入ignored report。
 - Docs：React / Vanilla 中英文包页面同步参数、默认值、内存与能力差异以及可运行示例。
-
-详细行为、反例与最低测试层见 ignored 矩阵 `notes/plans/kernel-v0.5-alpha2-adr07/TEST_CONTRACT.md`。
 
 ## 实现摘要与验证
 
@@ -136,7 +135,7 @@ Static场景的`full`来自公开`view.mode === 'static'`与static update完整�
 - Bench为SVG/Canvas加入六个共享5000实体确定性场景与ignored wall-clock A/B；tracked baseline冻结execution来源与工作量，不扩张timing guard。
 - React/Vanilla中英文包页面与v0.5 changelog已同步参数、默认值、内存/rollback差异及失败语义。
 
-最终scoped验证通过：Runtime 175 tests、Core 2827 tests、Render 519 tests、React 442 tests、Vanilla 116 tests、Bench 46 tests；`bench:check`通过24项deterministic budget，docs完整性检查覆盖14个package页面并通过TypeScript检查。
+验证覆盖 Runtime/Core/Render 的策略传播与可观察 outcome、React/Vanilla 三种公开执行组合、SVG/Canvas 完整 oracle、确定性 budget 和双语文档一致性。
 
 ## 影响
 

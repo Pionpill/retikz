@@ -112,14 +112,7 @@ Program trace 使用固定的 `update/ir-child` 与 `update/scene-change`：
 
 ## 验证
 
-2026-07-28 对 `packages/kernel/core/tests/compile/incremental` 执行定向 Vitest：
-
-- 4 个测试文件、58 项测试通过
-- 覆盖 full oracle、public types、options 隔离、warning/失败隔离、canonical topology、stable/nested Diff、ChangeSet mismatch、full fallback 与单 Node fill 局部更新
-- 局部更新测试同时比较 fresh `compileToScene()`，并锁定 trace 与 Patch operation
-- 引用 position 与可读取 fill 的自定义 ShapeDefinition 明确保守 fallback
-
-最终收口使用 Node 24.18.0，完成相关 Markdown / TypeScript 格式检查、Core 与 docs 类型检查、Core 增量定向测试及 changelog 数据测试。
+验证覆盖 full oracle、公共类型、options 隔离、warning / 失败隔离、canonical topology、stable / nested Diff、ChangeSet mismatch、full fallback 与单 Node fill 局部更新。局部路径始终与 fresh `compileToScene()` 对账，并锁定 trace 与 Patch operation；引用 position、自定义 shape 和无法证明安全的变化保持保守 fallback。
 
 ## 公开影响与兼容性
 
@@ -131,8 +124,6 @@ Program trace 使用固定的 `update/ir-child` 与 `update/scene-change`：
 
 - 通用 contribution tree、依赖传播、资源重排、artifact / warning locator rebasing尚未交付
 - Node 文本/几何、Path target、Scope subtree、insert/remove/reorder 与 Tier 2 nested 仍完整 fallback
-- 5,000 实体 deterministic budget 与真实持续更新收益由 alpha.2 后续性能批次补齐
-- ADR-06 双轴 layout constraint 与 replay wrapper 完成后，layout-aware subtree 的增量失效需要独立证明
-- ADR-05 仍需接通 retained SVG / Canvas participant 与 React / Vanilla session
+- layout-aware subtree 的局部失效仍需要独立的 identity、依赖与 allocation-boundary 证明
 
 这些遗留项不削弱已接受安全子集的正确性，但不得从本 ADR 推断为已经具备任意 IR 的通用局部编译。

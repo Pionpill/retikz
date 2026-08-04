@@ -129,24 +129,9 @@ Core 不新增持久化 IR、Scene schema、registry、baseline guide、overflow
 
 ## 验证
 
-长期回归证据位于：
-
-- `packages/kernel/core/tests/compile/box-layout-composite.test.ts`
-- `packages/kernel/core/tests/compile/layout-aware-composite*.test.ts`
-- `packages/kernel/core/tests/compile/layout-aware-wrapper.test.ts`
-- `packages/kernel/core/tests/compile/incremental/runtime-topology.test.ts`
-- `packages/viz/table/tests/pipeline/layout-transaction.test.ts`
-
 覆盖双轴 bounded / exact / indefinite / zero、给定宽度后的换行高度、nested constraint、显式与空 allocation、overflow、constraint mutation、result forgery、duplicate / cross-session replay、wrapper clip / transform / resource / z-index、empty / fully-clipped bounds、非法极值与 full-fallback 等价。
 
-收尾验证结果：
-
-- Core `test:changed`：145 files、2107 tests 通过
-- Table `test:changed`：18 files、205 tests 通过
-- Docs `test:changed`：54 files、450 tests 通过；changelog 3 files、22 tests 通过
-- Core、Table、Docs `tsc --noEmit` 与定向 ESLint 通过
-- Kernel docs integrity：83 pages 通过
-- 独立 Bug Hunter 最终 adversarial scratch：8 / 8 通过，BLOCKING / WARNING 为 0
+验证同时对账 Core、Table consumer、增量 fallback、公开类型和双语文档，确保 replay wrapper 与 allocation / visual bounds 的可观察结果保持一致。
 
 ## 遗留边界
 
