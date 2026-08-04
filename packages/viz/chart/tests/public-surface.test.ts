@@ -4,8 +4,6 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { ChartResolution } from '../src';
 // @ts-expect-error presentation content resolver 结果必须保持 owner-private
 import type { ResolvedChartPresentation } from '../src';
-// @ts-expect-error infrastructure fixture 类型必须保持 owner-private
-import type { InfrastructureChartSpec } from '../src';
 // @ts-expect-error recipe 基础类型必须保持 owner-private
 import type { InternalChartSpecBound } from '../src';
 import type {
@@ -48,7 +46,6 @@ describe('@retikz/chart package root', () => {
   it('拒绝 owner-private 类型从包根导入', () => {
     expectTypeOf<ChartResolution>();
     expectTypeOf<ResolvedChartPresentation>();
-    expectTypeOf<InfrastructureChartSpec>();
     expectTypeOf<InternalChartSpecBound>();
   });
 

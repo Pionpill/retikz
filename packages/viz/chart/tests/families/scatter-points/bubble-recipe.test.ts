@@ -27,12 +27,7 @@ const bubble = (overrides: Record<string, unknown> = {}) =>
 
 describe('Bubble Chart recipe', () => {
   it('registers Bubble as a closed peer between Scatter and Connected Scatter', () => {
-    expect(BUILTIN_CHART_RECIPES.map(recipe => recipe.type)).toEqual([
-      '__infrastructure-fixture',
-      'scatter',
-      'bubble',
-      'connected-scatter',
-    ]);
+    expect(BUILTIN_CHART_RECIPES.map(recipe => recipe.type)).toEqual(['scatter', 'bubble', 'connected-scatter']);
   });
 
   it('builds an independent Point recipe with an implicit descriptor-owned size guide', () => {

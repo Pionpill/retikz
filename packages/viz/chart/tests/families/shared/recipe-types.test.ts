@@ -7,7 +7,7 @@ import { z as zod } from 'zod';
 import type { ChartRecipe, ChartRecipeSeed, ChartRecipeStyleContext } from '../../../src/families/shared';
 
 import { ConnectedScatterChartRecipe } from '../../../src/families/scatter-points/connected-scatter';
-import { InfrastructureChartRecipe } from '../../../src/internal/fixture';
+import { ScatterChartRecipe } from '../../../src/families/scatter-points/scatter';
 import { chartRecipeOf } from '../../../src/resolution/catalog';
 import { assertChartSpatialRoot, ChartSharedBaseSchema } from '../../../src/schemas/common';
 
@@ -35,13 +35,13 @@ const styleContext: ChartRecipeStyleContext = {
 
 describe('Chart recipe typing', () => {
   it('让每个 recipe leaf bind 都移除显式 undefined 并保持 JSON round-trip', () => {
-    const infrastructure = chartRecipeOf(InfrastructureChartRecipe).bind({
+    const scatter = chartRecipeOf(ScatterChartRecipe).bind({
       namespace: 'chart',
-      type: '__infrastructure-fixture',
+      type: 'scatter',
       id: undefined,
       data: { reference: 'rows' },
-      encoding: { x: 'amount', y: 'margin' },
-      mark: { size: undefined, opacity: { kind: 'constant', value: 0.5 } },
+      encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
+      mark: { opacity: { kind: 'constant', value: 0.5 } },
     }).spec;
     const connectedScatter = chartRecipeOf(ConnectedScatterChartRecipe).bind({
       namespace: 'chart',
@@ -57,8 +57,8 @@ describe('Chart recipe typing', () => {
       components: { connection: undefined },
     }).spec;
 
-    expect(Object.hasOwn(infrastructure, 'id')).toBe(false);
-    expect(JSON.parse(JSON.stringify(infrastructure))).toEqual(infrastructure);
+    expect(Object.hasOwn(scatter, 'id')).toBe(false);
+    expect(JSON.parse(JSON.stringify(scatter))).toEqual(scatter);
     expect(Object.hasOwn(connectedScatter, 'id')).toBe(false);
     expect(JSON.parse(JSON.stringify(connectedScatter))).toEqual(connectedScatter);
   });

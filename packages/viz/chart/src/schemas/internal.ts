@@ -8,11 +8,5 @@ export {
   type IRConnectedScatterChartSpec,
 } from '../families/scatter-points/connected-scatter';
 export { type IRScatterChartSpec, ScatterChartSpecSchema } from '../families/scatter-points/scatter';
-export {
-  type InfrastructureChartSpec,
-  InfrastructureChartSpecSchema,
-  InfrastructureComponentPatchSchema,
-  InfrastructureMarkPatchSchema,
-} from '../internal/fixture';
 export * from './chart';
 export * from './constants';

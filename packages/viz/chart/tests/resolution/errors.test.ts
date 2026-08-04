@@ -4,14 +4,14 @@ import { z } from 'zod';
 
 import type { ChartRecipeSeed } from '../../src/families/shared';
 
-import { InfrastructureChartRecipe } from '../../src/internal/fixture';
+import { ScatterChartRecipe } from '../../src/families/scatter-points/scatter';
 import { ChartResolveError, resolveChartSpec } from '../../src/resolution';
 
 const base = {
   namespace: 'chart',
-  type: '__infrastructure-fixture',
+  type: 'scatter',
   data: { reference: 'rows' },
-  encoding: { x: 'amount', y: 'margin' },
+  encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
 } as const;
 
 const bubble = {
@@ -71,19 +71,6 @@ describe('Chart resolution errors', () => {
       'invalid-chart-spec',
       ['presentation', 'children', 0, 'key'],
     ],
-    [{ ...base, components: [{ target: 'missing', grid: true }] }, 'unknown-target', ['components', 0, 'target']],
-    [
-      {
-        ...base,
-        components: [
-          { target: 'guide.x', grid: true },
-          { target: 'guide.x', grid: false },
-        ],
-      },
-      'duplicate-target',
-      ['components', 1, 'target'],
-    ],
-    [{ ...base, components: [{ target: 'mark.main', grid: true }] }, 'protected-field', ['components', 0, 'grid']],
     [
       {
         ...base,
@@ -96,25 +83,9 @@ describe('Chart resolution errors', () => {
       ['scales', 1, 'name'],
     ],
     [
-      {
-        ...base,
-        composition: {
-          defaultView: 'main',
-          views: [{ id: 'main', coordinate: { type: 'cartesian2D' } }],
-        },
-      },
-      'coordinate-conflict',
-      ['composition'],
-    ],
-    [{ ...base, coordinate: { type: 'cartesian2D', x: 'wrong', y: 'y' } }, 'core-recipe-violation', ['coordinate']],
-    [
-      {
-        ...base,
-        guides: [],
-        components: [{ target: 'guide.x', grid: true }],
-      },
-      'unknown-target',
-      ['components', 0, 'target'],
+      { ...base, coordinate: { type: 'cartesian1D', x: '__chart.scatter.scale.x' } },
+      'core-recipe-violation',
+      ['coordinate'],
     ],
   ] as const)('把失败映射为 %s', (input, code, path) => {
     const error = resolveErrorOf(input);
@@ -162,7 +133,7 @@ describe('Chart resolution errors', () => {
   });
 
   it.each([
-    ['__chart.__infrastructure-fixture.mark.main', 'duplicate-id'],
+    ['__chart.scatter.mark.main', 'duplicate-id'],
     ['__chart.user.mark', 'reserved-id'],
   ] as const)('按 recipe/reserved 优先级诊断 id %s', (id, code) => {
     const error = resolveErrorOf({
@@ -194,12 +165,12 @@ describe('Chart resolution errors', () => {
   });
 
   it('保留 invalid Chart spec 的 Zod cause', () => {
-    expect(resolveErrorOf({ ...base, encoding: { x: '', y: 'margin' } }).cause).toBeDefined();
+    expect(resolveErrorOf({ ...base, encoding: { x: { field: '' }, y: { field: 'margin' } } }).cause).toBeDefined();
   });
 
   it('不吞掉无关 provider error', () => {
     const providerError = new Error('provider failure');
-    const validateCore = vi.spyOn(InfrastructureChartRecipe, 'validateCore').mockImplementationOnce(() => {
+    const validateCore = vi.spyOn(ScatterChartRecipe, 'validateCore').mockImplementationOnce(() => {
       throw providerError;
     });
     try {
@@ -211,7 +182,7 @@ describe('Chart resolution errors', () => {
 
   it('不吞掉 createSeed 抛出的非 Zod provider error', () => {
     const providerError = new Error('create seed failure');
-    const createSeed = vi.spyOn(InfrastructureChartRecipe, 'createSeed').mockImplementationOnce(() => {
+    const createSeed = vi.spyOn(ScatterChartRecipe, 'createSeed').mockImplementationOnce(() => {
       throw providerError;
     });
     try {
@@ -223,7 +194,7 @@ describe('Chart resolution errors', () => {
 
   it('不把 createSeed 抛出的 ZodError 误译为 resolved Plot failure', () => {
     const providerError = new z.ZodError([{ code: 'custom', path: ['seed'], message: 'provider seed failure' }]);
-    const createSeed = vi.spyOn(InfrastructureChartRecipe, 'createSeed').mockImplementationOnce(() => {
+    const createSeed = vi.spyOn(ScatterChartRecipe, 'createSeed').mockImplementationOnce(() => {
       throw providerError;
     });
     let thrown: unknown;
@@ -238,8 +209,8 @@ describe('Chart resolution errors', () => {
   });
 
   it('不把 merge 内非 member schema 的 ZodError 误译为 resolved Plot failure', () => {
-    const originalCreateSeed = InfrastructureChartRecipe.createSeed;
-    const createSeed = vi.spyOn(InfrastructureChartRecipe, 'createSeed').mockImplementationOnce((spec, style) => {
+    const originalCreateSeed = ScatterChartRecipe.createSeed;
+    const createSeed = vi.spyOn(ScatterChartRecipe, 'createSeed').mockImplementationOnce((spec, style) => {
       const seed = originalCreateSeed(spec, style);
       return {
         ...seed,

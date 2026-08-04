@@ -3,7 +3,6 @@ import type { AnyChartRecipe, ChartRecipe, InternalChartSpecBound } from '../fam
 import { BubbleChartRecipe } from '../families/scatter-points/bubble';
 import { ConnectedScatterChartRecipe } from '../families/scatter-points/connected-scatter';
 import { ScatterChartRecipe } from '../families/scatter-points/scatter';
-import { InfrastructureChartRecipe } from '../internal/fixture';
 
 /** 把具体 variant recipe 绑定为异构 tuple 可统一消费的闭包表面 */
 export const chartRecipeOf = <TSpec extends InternalChartSpecBound>(recipe: ChartRecipe<TSpec>): AnyChartRecipe => ({
@@ -20,7 +19,6 @@ export const chartRecipeOf = <TSpec extends InternalChartSpecBound>(recipe: Char
 
 /** 当前版本封闭的内建 Chart recipe tuple */
 export const BUILTIN_CHART_RECIPES = [
-  chartRecipeOf(InfrastructureChartRecipe),
   chartRecipeOf(ScatterChartRecipe),
   chartRecipeOf(BubbleChartRecipe),
   chartRecipeOf(ConnectedScatterChartRecipe),

@@ -6,17 +6,16 @@ describe('Chart inspection', () => {
   it('按最终 Plot collection 顺序输出完整 member literal', () => {
     const result = resolveChartSpec({
       namespace: 'chart',
-      type: '__infrastructure-fixture',
+      type: 'scatter',
       id: 'sales',
       data: { reference: 'rows' },
-      encoding: { x: 'amount', y: 'margin' },
+      encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
       transform: [{ kind: 'sort', field: 'margin', order: 'descending' }],
       scales: [
-        { type: 'log', name: 'x', base: 2 },
+        { type: 'log', name: '__chart.scatter.scale.x', base: 2 },
         { type: 'linear', name: 'z' },
       ],
       mark: { opacity: { kind: 'constant', value: 0.5 } },
-      components: [{ target: 'guide.x', grid: true }],
       marks: [
         {
           type: 'point',
@@ -30,7 +29,7 @@ describe('Chart inspection', () => {
     expect(style).toMatchObject({ preset: 'neutral', mode: 'light', authoredOverrides: [] });
     expect(style.tokenSources).toHaveLength(75);
     expect(inspection).toEqual({
-      chart: { type: '__infrastructure-fixture', id: 'sales' },
+      chart: { type: 'scatter', id: 'sales' },
       plot: { id: 'sales/plot' },
       presentation: {
         contentKind: 'plot',
@@ -45,19 +44,12 @@ describe('Chart inspection', () => {
           sources: [{ kind: 'user-override', path: '$spec/transform/0' }],
         },
         {
-          target: 'transform.order-x',
-          kind: 'transform',
-          core: true,
-          value: { kind: 'sort', field: 'amount', order: 'ascending' },
-          sources: [{ kind: 'type-default', path: '$recipe/__infrastructure-fixture/transform.order-x' }],
-        },
-        {
           target: 'scale.x',
           kind: 'scale',
           core: true,
-          value: { type: 'log', name: 'x', base: 2 },
+          value: { type: 'log', name: '__chart.scatter.scale.x', base: 2 },
           sources: [
-            { kind: 'type-default', path: '$recipe/__infrastructure-fixture/scale.x' },
+            { kind: 'type-default', path: '$recipe/scatter/scale.x' },
             { kind: 'user-override', path: '$spec/scales/0' },
           ],
         },
@@ -65,8 +57,8 @@ describe('Chart inspection', () => {
           target: 'scale.y',
           kind: 'scale',
           core: true,
-          value: { type: 'linear', name: 'y' },
-          sources: [{ kind: 'type-default', path: '$recipe/__infrastructure-fixture/scale.y' }],
+          value: { type: 'linear', name: '__chart.scatter.scale.y' },
+          sources: [{ kind: 'type-default', path: '$recipe/scatter/scale.y' }],
         },
         {
           target: 'extension.scale.2',
@@ -79,22 +71,22 @@ describe('Chart inspection', () => {
           target: 'coordinate.main',
           kind: 'coordinate',
           core: true,
-          value: { type: 'cartesian2D', x: 'x', y: 'y' },
-          sources: [{ kind: 'type-default', path: '$recipe/__infrastructure-fixture/coordinate.main' }],
+          value: { type: 'cartesian2D', x: '__chart.scatter.scale.x', y: '__chart.scatter.scale.y' },
+          sources: [{ kind: 'type-default', path: '$recipe/scatter/coordinate.main' }],
         },
         {
           target: 'mark.main',
           kind: 'mark',
-          id: '__chart.__infrastructure-fixture.mark.main',
+          id: '__chart.scatter.mark.main',
           core: true,
           value: {
             type: 'point',
-            id: '__chart.__infrastructure-fixture.mark.main',
+            id: '__chart.scatter.mark.main',
             encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
             opacity: { kind: 'constant', value: 0.5 },
           },
           sources: [
-            { kind: 'type-default', path: '$recipe/__infrastructure-fixture/mark.main' },
+            { kind: 'type-default', path: '$recipe/scatter/mark.main' },
             { kind: 'user-override', path: '$spec/mark' },
           ],
         },
@@ -113,31 +105,27 @@ describe('Chart inspection', () => {
         {
           target: 'guide.x',
           kind: 'guide',
-          id: '__chart.__infrastructure-fixture.guide.x',
+          id: '__chart.scatter.guide.x',
           core: false,
           value: {
             type: 'axis',
-            id: '__chart.__infrastructure-fixture.guide.x',
+            id: '__chart.scatter.guide.x',
             dimension: 'x',
-            grid: true,
           },
-          sources: [
-            { kind: 'type-default', path: '$recipe/__infrastructure-fixture/guide.x' },
-            { kind: 'user-override', path: '$spec/components/0' },
-          ],
+          sources: [{ kind: 'type-default', path: '$recipe/scatter/guide.x' }],
         },
         {
           target: 'guide.y',
           kind: 'guide',
-          id: '__chart.__infrastructure-fixture.guide.y',
+          id: '__chart.scatter.guide.y',
           core: false,
           value: {
             type: 'axis',
-            id: '__chart.__infrastructure-fixture.guide.y',
+            id: '__chart.scatter.guide.y',
             dimension: 'y',
             grid: true,
           },
-          sources: [{ kind: 'type-default', path: '$recipe/__infrastructure-fixture/guide.y' }],
+          sources: [{ kind: 'type-default', path: '$recipe/scatter/guide.y' }],
         },
       ],
     });
@@ -146,9 +134,9 @@ describe('Chart inspection', () => {
   it('guide replacement 使用 final-index extension target', () => {
     const result = resolveChartSpec({
       namespace: 'chart',
-      type: '__infrastructure-fixture',
+      type: 'scatter',
       data: { reference: 'rows' },
-      encoding: { x: 'amount', y: 'margin' },
+      encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
       guides: [{ type: 'axis', id: 'user.axis', dimension: 'x' }],
     });
 
@@ -167,9 +155,9 @@ describe('Chart inspection', () => {
   it('按 authored order 记录 presentation item identity 与 source，不复制 payload', () => {
     const result = resolveChartSpec({
       namespace: 'chart',
-      type: '__infrastructure-fixture',
+      type: 'scatter',
       data: { reference: 'rows' },
-      encoding: { x: 'amount', y: 'margin' },
+      encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
       presentation: {
         children: [
           {

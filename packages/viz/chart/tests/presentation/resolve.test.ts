@@ -11,9 +11,9 @@ import { ChartStyleToken, getChartStylePreset } from '../../src/style';
 
 const base = {
   namespace: 'chart',
-  type: '__infrastructure-fixture',
+  type: 'scatter',
   data: { reference: 'rows' },
-  encoding: { x: 'amount', y: 'margin' },
+  encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
 } as const;
 
 const plotSpec = resolveChartSpec(base).plotSpec;

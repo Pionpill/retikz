@@ -4,10 +4,10 @@ import { resolveChartSpec } from '../../src/resolution';
 
 const base = {
   namespace: 'chart',
-  type: '__infrastructure-fixture',
+  type: 'scatter',
   id: 'sales',
   data: { reference: 'rows' },
-  encoding: { x: 'amount', y: 'margin' },
+  encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
 } as const;
 
 describe('resolveChartSpec merge', () => {
@@ -16,11 +16,10 @@ describe('resolveChartSpec merge', () => {
       ...base,
       transform: [{ kind: 'sort', field: 'margin', order: 'descending' }],
       scales: [
-        { type: 'log', name: 'x', base: 2 },
+        { type: 'log', name: '__chart.scatter.scale.x', base: 2 },
         { type: 'linear', name: 'z' },
       ],
       mark: { opacity: { kind: 'constant', value: 0.5 } },
-      components: [{ target: 'guide.x', grid: true }],
       marks: [
         {
           type: 'point',
@@ -30,19 +29,16 @@ describe('resolveChartSpec merge', () => {
       ],
     });
 
-    expect(result.plotSpec.transform).toEqual([
-      { kind: 'sort', field: 'margin', order: 'descending' },
-      { kind: 'sort', field: 'amount', order: 'ascending' },
-    ]);
+    expect(result.plotSpec.transform).toEqual([{ kind: 'sort', field: 'margin', order: 'descending' }]);
     expect(result.plotSpec.scales).toEqual([
-      { type: 'log', name: 'x', base: 2 },
-      { type: 'linear', name: 'y' },
+      { type: 'log', name: '__chart.scatter.scale.x', base: 2 },
+      { type: 'linear', name: '__chart.scatter.scale.y' },
       { type: 'linear', name: 'z' },
     ]);
     expect(result.plotSpec.marks).toEqual([
       {
         type: 'point',
-        id: '__chart.__infrastructure-fixture.mark.main',
+        id: '__chart.scatter.mark.main',
         encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
         opacity: { kind: 'constant', value: 0.5 },
       },
@@ -54,9 +50,8 @@ describe('resolveChartSpec merge', () => {
     ]);
     expect(result.plotSpec.guides?.[0]).toEqual({
       type: 'axis',
-      id: '__chart.__infrastructure-fixture.guide.x',
+      id: '__chart.scatter.guide.x',
       dimension: 'x',
-      grid: true,
     });
   });
 
@@ -75,8 +70,8 @@ describe('resolveChartSpec merge', () => {
     expect(
       resolveChartSpec({
         ...base,
-        coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+        coordinate: { type: 'cartesian2D', x: '__chart.scatter.scale.x', y: '__chart.scatter.scale.y' },
       }).plotSpec.coordinate,
-    ).toEqual({ type: 'cartesian2D', x: 'x', y: 'y' });
+    ).toEqual({ type: 'cartesian2D', x: '__chart.scatter.scale.x', y: '__chart.scatter.scale.y' });
   });
 });

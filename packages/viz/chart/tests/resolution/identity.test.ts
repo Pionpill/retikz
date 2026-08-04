@@ -4,9 +4,9 @@ import { resolveChartSpec } from '../../src/resolution';
 
 const base = {
   namespace: 'chart',
-  type: '__infrastructure-fixture',
+  type: 'scatter',
   data: { reference: 'rows' },
-  encoding: { x: 'amount', y: 'margin' },
+  encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
 } as const;
 
 describe('Chart identity', () => {

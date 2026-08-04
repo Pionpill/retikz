@@ -5,10 +5,10 @@ import { ChartStyleToken, getChartStylePreset, materializeChartPlotTheme, mergeC
 
 const base = {
   namespace: 'chart',
-  type: '__infrastructure-fixture',
+  type: 'scatter',
   id: 'sales',
   data: { reference: 'rows' },
-  encoding: { x: 'amount', y: 'margin' },
+  encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
 } as const;
 
 describe('Chart style resolution', () => {
@@ -95,23 +95,6 @@ describe('Chart style resolution', () => {
         guides: [{ type: 'axis', id: 'explicit', dimension: 'x', grid: true }],
       }).plotSpec.guides,
     ).toEqual([{ type: 'axis', id: 'explicit', dimension: 'x', grid: true }]);
-  });
-
-  it('axis 默认关闭时 type-specific patch 只恢复自身 target', () => {
-    expect(
-      resolveChartSpec({
-        ...base,
-        styleTokens: { 'axis.enabled': false },
-        components: [{ target: 'guide.x', grid: true }],
-      }).plotSpec.guides,
-    ).toEqual([
-      {
-        type: 'axis',
-        id: '__chart.__infrastructure-fixture.guide.x',
-        dimension: 'x',
-        grid: true,
-      },
-    ]);
   });
 
   it('style 切换不改变 data、transform、核心 mark/encoding、scale、空间根与 identity', () => {

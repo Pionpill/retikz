@@ -21,6 +21,7 @@ describe('Chart semantic source layout', () => {
     const paths = (await sourceFilesUnder(sourceRoot)).map(path => relative(sourceRoot, path).replaceAll('\\', '/'));
 
     expect(paths.some(path => path.startsWith('pipeline/') || path.startsWith('providers/'))).toBe(false);
+    expect(paths.some(path => path.startsWith('internal/'))).toBe(false);
   });
 
   it('keeps lower shared and family owners independent from higher resolution owners', async () => {
@@ -48,6 +49,6 @@ describe('Chart semantic source layout', () => {
     const schemaFiles = [join(sourceRoot, 'schemas/chart.ts'), join(sourceRoot, 'schemas/internal.ts')];
     const contents = await Promise.all(schemaFiles.map(path => readFile(path, 'utf8')));
 
-    expect(contents.some(content => /families\/.*\/schema|internal\/fixture\/schema/.test(content))).toBe(false);
+    expect(contents.some(content => /families\/.*\/schema/.test(content))).toBe(false);
   });
 });

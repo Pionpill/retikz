@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import type { ChartRecipeSeed } from '../../src/families/shared';
 
-import { InfrastructureChartSpecSchema } from '../../src/internal/fixture';
+import { ScatterChartSpecSchema } from '../../src/families/scatter-points/scatter';
 import { ChartResolveError, mergeChartSeed } from '../../src/resolution';
 
-const spec = InfrastructureChartSpecSchema.parse({
+const spec = ScatterChartSpecSchema.parse({
   namespace: 'chart',
-  type: '__infrastructure-fixture',
+  type: 'scatter',
   data: { reference: 'rows' },
-  encoding: { x: 'amount', y: 'margin' },
+  encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
 });
 
 const seedWith = (patches: ChartRecipeSeed['patches']): ChartRecipeSeed => ({
@@ -19,7 +19,7 @@ const seedWith = (patches: ChartRecipeSeed['patches']): ChartRecipeSeed => ({
     data: { reference: 'rows' },
     scales: [{ type: 'linear', name: 'x' }],
     coordinate: { type: 'cartesian2D', x: 'x' },
-    marks: [{ type: 'point', id: '__chart.fixture.mark', encoding: { x: { field: 'amount' } } }],
+    marks: [{ type: 'point', id: '__chart.scatter.mark', encoding: { x: { field: 'amount' } } }],
   },
   members: [
     {
@@ -29,7 +29,7 @@ const seedWith = (patches: ChartRecipeSeed['patches']): ChartRecipeSeed => ({
       value: { type: 'linear', name: 'x' },
       plotPath: ['scales', 0],
       patchablePaths: [],
-      sourcePath: '$recipe/fixture/scale.x',
+      sourcePath: '$recipe/scatter/scale.x',
     },
     {
       target: 'coordinate.main',
@@ -38,16 +38,16 @@ const seedWith = (patches: ChartRecipeSeed['patches']): ChartRecipeSeed => ({
       value: { type: 'cartesian2D', x: 'x' },
       plotPath: ['coordinate'],
       patchablePaths: [],
-      sourcePath: '$recipe/fixture/coordinate.main',
+      sourcePath: '$recipe/scatter/coordinate.main',
     },
     {
       target: 'mark.main',
       kind: 'mark',
       core: true,
-      value: { type: 'point', id: '__chart.fixture.mark', encoding: { x: { field: 'amount' } } },
+      value: { type: 'point', id: '__chart.scatter.mark', encoding: { x: { field: 'amount' } } },
       plotPath: ['marks', 0],
       patchablePaths: [['opacity']],
-      sourcePath: '$recipe/fixture/mark.main',
+      sourcePath: '$recipe/scatter/mark.main',
     },
   ],
   patches,
@@ -157,13 +157,13 @@ describe('mergeChartSeed malformed patch seam', () => {
   });
 
   it.each([
-    ['missing path', ['marks', 1], { type: 'point', id: '__chart.fixture.mark', encoding: { x: { field: 'amount' } } }],
+    ['missing path', ['marks', 1], { type: 'point', id: '__chart.scatter.mark', encoding: { x: { field: 'amount' } } }],
     [
       'mismatched value',
       ['marks', 0],
       {
         type: 'point',
-        id: '__chart.fixture.mark',
+        id: '__chart.scatter.mark',
         opacity: { kind: 'constant', value: 0.5 },
         encoding: { x: { field: 'amount' } },
       },

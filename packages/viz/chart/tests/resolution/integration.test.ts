@@ -8,8 +8,8 @@ import { FlexLayoutDefinition } from '@retikz/standard';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { InfrastructureChartSpecSchema } from '../../src/internal/fixture';
-import { InfrastructureChartDefinition, resolveChartSpec } from '../../src/resolution';
+import { ScatterChartSpecSchema } from '../../src/families/scatter-points/scatter';
+import { resolveChartSpec,ScatterChartDefinition } from '../../src/resolution';
 
 const rows = [
   { key: 'r2', x: 2, y: 20, series: 'north' },
@@ -19,12 +19,13 @@ const rows = [
 
 const datasets: ExternalDatasets = { sales: rows };
 
-const chartSpec = InfrastructureChartSpecSchema.parse({
+const chartSpec = ScatterChartSpecSchema.parse({
   namespace: 'chart',
-  type: '__infrastructure-fixture',
+  type: 'scatter',
   id: 'sales',
   data: { reference: 'sales' },
-  encoding: { x: 'x', y: 'y' },
+  encoding: { x: { field: 'x' }, y: { field: 'y' } },
+  transform: [{ kind: 'sort', field: 'x', order: 'ascending' }],
   marks: [
     {
       type: 'path',
@@ -43,14 +44,14 @@ const barePlotSpec: IRPlotSpec = PlotSpecSchema.parse({
   data: { reference: 'sales' },
   transform: [{ kind: 'sort', field: 'x', order: 'ascending' }],
   scales: [
-    { type: 'linear', name: 'x' },
-    { type: 'linear', name: 'y' },
+    { type: 'linear', name: '__chart.scatter.scale.x' },
+    { type: 'linear', name: '__chart.scatter.scale.y' },
   ],
-  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  coordinate: { type: 'cartesian2D', x: '__chart.scatter.scale.x', y: '__chart.scatter.scale.y' },
   marks: [
     {
       type: 'point',
-      id: '__chart.__infrastructure-fixture.mark.main',
+      id: '__chart.scatter.mark.main',
       encoding: { x: { field: 'x' }, y: { field: 'y' } },
     },
     {
@@ -62,12 +63,12 @@ const barePlotSpec: IRPlotSpec = PlotSpecSchema.parse({
     },
   ],
   guides: [
-    { type: 'axis', id: '__chart.__infrastructure-fixture.guide.x', dimension: 'x' },
-    { type: 'axis', id: '__chart.__infrastructure-fixture.guide.y', dimension: 'y', grid: true },
+    { type: 'axis', id: '__chart.scatter.guide.x', dimension: 'x' },
+    { type: 'axis', id: '__chart.scatter.guide.y', dimension: 'y', grid: true },
   ],
 });
 
-const presentedChartSpec = InfrastructureChartSpecSchema.parse({
+const presentedChartSpec = ScatterChartSpecSchema.parse({
   ...chartSpec,
   presentation: {
     layout: { rowGap: 8, alignItems: 'start' },
@@ -137,7 +138,7 @@ describe('Chart composite recursive integration', () => {
     const warnings: Array<CompileWarning> = [];
 
     compileToScene(sceneOf(chartSpec), {
-      composites: [InfrastructureChartDefinition],
+      composites: [ScatterChartDefinition],
       onWarn: warning => warnings.push(warning),
     });
 
@@ -153,7 +154,7 @@ describe('Chart composite recursive integration', () => {
     const resolution = resolveChartSpec(chartSpec);
     const warnings: Array<CompileWarning> = [];
 
-    expect(InfrastructureChartDefinition.expand(chartSpec)).toEqual(resolution.node);
+    expect(ScatterChartDefinition.expand(chartSpec)).toEqual(resolution.node);
     expect(resolution.node).toMatchObject({
       type: 'scope',
       id: 'sales',
@@ -161,7 +162,7 @@ describe('Chart composite recursive integration', () => {
     });
 
     const result = compileToScene(sceneOf(chartSpec), {
-      composites: [InfrastructureChartDefinition, ...lowerPlots(datasets, compileOptions)],
+      composites: [ScatterChartDefinition, ...lowerPlots(datasets, compileOptions)],
       onWarn: warning => warnings.push(warning),
     });
 
@@ -173,7 +174,7 @@ describe('Chart composite recursive integration', () => {
     const warnings: Array<CompileWarning> = [];
 
     compileToScene(sceneOf(presentedChartSpec), {
-      composites: [InfrastructureChartDefinition, ...lowerPlots(datasets, compileOptions)],
+      composites: [ScatterChartDefinition, ...lowerPlots(datasets, compileOptions)],
       onWarn: warning => warnings.push(warning),
     });
 
@@ -189,7 +190,7 @@ describe('Chart composite recursive integration', () => {
     const warnings: Array<CompileWarning> = [];
     const resolution = resolveChartSpec(presentedChartSpec);
 
-    expect(InfrastructureChartDefinition.expand(presentedChartSpec)).toEqual(resolution.node);
+    expect(ScatterChartDefinition.expand(presentedChartSpec)).toEqual(resolution.node);
     expect(resolution.node).toMatchObject({
       type: 'scope',
       id: 'sales',
@@ -208,7 +209,7 @@ describe('Chart composite recursive integration', () => {
     });
 
     const result = compileToScene(sceneOf(presentedChartSpec), {
-      composites: [InfrastructureChartDefinition, FlexLayoutDefinition, ...lowerPlots(datasets, compileOptions)],
+      composites: [ScatterChartDefinition, FlexLayoutDefinition, ...lowerPlots(datasets, compileOptions)],
       onWarn: warning => warnings.push(warning),
     });
 
@@ -228,11 +229,11 @@ const diagnosticMark = (suffix: string) =>
     lower: mark => ({ type: 'node', id: `custom-${suffix}`, position: [0, 0], text: mark.text }),
   });
 
-const chartWithCustomMark = InfrastructureChartSpecSchema.parse({
+const chartWithCustomMark = ScatterChartSpecSchema.parse({
   namespace: 'chart',
-  type: '__infrastructure-fixture',
+  type: 'scatter',
   data: { reference: 'sales' },
-  encoding: { x: 'x', y: 'y' },
+  encoding: { x: { field: 'x' }, y: { field: 'y' } },
   marks: [{ type: 'diagnostic', text: 'custom mark reached Plot' }],
 });
 
@@ -240,7 +241,7 @@ describe('Plot definition pass-through', () => {
   it('uses a custom mark definition supplied only through lowerPlots', () => {
     const scene = compileToScene(sceneOf(chartWithCustomMark), {
       composites: [
-        InfrastructureChartDefinition,
+        ScatterChartDefinition,
         ...lowerPlots(datasets, { ...compileOptions, markDefinitions: [diagnosticMark('one')] }),
       ],
       onWarn: () => undefined,
@@ -252,7 +253,7 @@ describe('Plot definition pass-through', () => {
   it('keeps the existing Plot diagnostic for a missing custom mark definition', () => {
     expect(() =>
       compileToScene(sceneOf(chartWithCustomMark), {
-        composites: [InfrastructureChartDefinition, ...lowerPlots(datasets, compileOptions)],
+        composites: [ScatterChartDefinition, ...lowerPlots(datasets, compileOptions)],
         onWarn: () => undefined,
       }),
     ).toThrow(/mark type "diagnostic" is not registered/);
@@ -262,7 +263,7 @@ describe('Plot definition pass-through', () => {
     expect(() =>
       compileToScene(sceneOf(chartWithCustomMark), {
         composites: [
-          InfrastructureChartDefinition,
+          ScatterChartDefinition,
           ...lowerPlots(datasets, {
             ...compileOptions,
             markDefinitions: [diagnosticMark('one'), diagnosticMark('two')],
@@ -286,7 +287,7 @@ describe('Plot trace continuity', () => {
       onWarn: () => undefined,
     }).scene;
     const wrappedScene = compileToScene(sceneOf(presentedChartSpec), {
-      composites: [InfrastructureChartDefinition, FlexLayoutDefinition, ...lowerPlots(datasets, compileOptions)],
+      composites: [ScatterChartDefinition, FlexLayoutDefinition, ...lowerPlots(datasets, compileOptions)],
       onWarn: () => undefined,
     }).scene;
     const bareTrace = collectPlotTrace(bareScene.primitives);
@@ -325,7 +326,7 @@ describe('Plot trace continuity', () => {
       plotId: 'sales/plot',
       dataReference: 'sales',
       marks: [
-        { markIndex: 0, markType: 'point', markId: '__chart.__infrastructure-fixture.mark.main' },
+        { markIndex: 0, markType: 'point', markId: '__chart.scatter.mark.main' },
         { markIndex: 1, markType: 'path', markId: 'trend' },
       ],
     });
