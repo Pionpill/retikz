@@ -226,7 +226,7 @@ export type CompileCompositeOptions<
 > = {
   /**
    * 运行时注入的 Tier 2 composite 展开逻辑
-   * @description 未注册的 namespace/type 会触发 warning，并跳过该 composite 节点
+   * @description Core 不预留官方 namespace 名称；未注册的 namespace/type 会触发 warning，并跳过该 composite 节点，重复的完整 namespace/type 键在注册期报错
    * @default 空注册表
    */
   composites?: TComposites;

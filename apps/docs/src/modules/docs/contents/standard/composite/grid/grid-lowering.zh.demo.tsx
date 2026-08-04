@@ -10,7 +10,7 @@ const Demo: FC = () => (
       position={[-310, 0]}
       text={[
         { text: 'Grid IR', font: { size: 14, weight: 'bold' } },
-        { text: '范围 · 间距 · 样式', fill: 'gray', font: { size: 12 } },
+        { text: '范围 · 格线 · 定位', fill: 'gray', font: { size: 12 } },
       ]}
       stroke="darkorange"
       fill="darkorange"
@@ -23,7 +23,7 @@ const Demo: FC = () => (
       position={[-160, 0]}
       text={[
         { text: '规范化输入', font: { size: 14, weight: 'bold' } },
-        { text: 'origin · spacing · 范围', fill: 'gray', font: { size: 12 } },
+        { text: '角点排序 · 局部中心', fill: 'gray', font: { size: 12 } },
       ]}
       stroke="gray"
       fill="gray"
@@ -49,7 +49,7 @@ const Demo: FC = () => (
       position={[165, 0]}
       text={[
         { text: '分类与组装', font: { size: 14, weight: 'bold' } },
-        { text: '普通线 · 主线 · 边框', fill: 'gray', font: { size: 12 } },
+        { text: '格线 · 主线 · 边框', fill: 'gray', font: { size: 12 } },
       ]}
       stroke="gray"
       fill="gray"
@@ -61,8 +61,8 @@ const Demo: FC = () => (
       id="paths"
       position={[315, 0]}
       text={[
-        { text: 'Core Path[]', font: { size: 14, weight: 'bold' } },
-        { text: 'move · line · cycle', fill: 'gray', font: { size: 12 } },
+        { text: 'Core Path[] / Scope', font: { size: 14, weight: 'bold' } },
+        { text: '中心定位由 Core 解析', fill: 'gray', font: { size: 12 } },
       ]}
       stroke="dodgerblue"
       fill="dodgerblue"

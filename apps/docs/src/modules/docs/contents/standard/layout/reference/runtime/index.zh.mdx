@@ -1,23 +1,21 @@
 ---
 title: 运行时
-description: 查询 Standard 布局定义（Definition）、能力预设、Core 测量与回放，以及 React 和 Vanilla 适配器如何汇入同一次编译。
+description: 查询 Standard 布局 Definition、Core 测量与回放，以及 React 和 Vanilla 适配器如何汇入同一次编译。
 ---
 
-布局 schema 只保存容器与子项配置；定义（Definition）、能力预设、Core 编译上下文和适配器属于运行时。Standard 负责通用布局求解，Core 负责对子图形提出双轴空间条件、隔离测量候选、回放最终候选并发布类型化产物。
+布局 schema 只保存容器与子项配置；Definition、Core 编译上下文和适配器属于运行时。Standard 负责通用布局求解，Core 负责对子图形提出双轴空间条件、隔离测量候选、回放最终候选并发布类型化产物。
 
-> 这里解释能力装载与执行逻辑，不重复 schema 字段。持久化配置见[输入契约](/standard/layout/reference/contract-input)，求解结果见[产物契约](/standard/layout/reference/contract-artifact)。
+> 这里解释 Definition 接入与执行逻辑，不重复 schema 字段。持久化配置见[输入契约](/standard/layout/reference/contract-input)，求解结果见[产物契约](/standard/layout/reference/contract-artifact)。
 
-## 能力如何装载
+## 如何接入 Definition
 
 | 粒度     | 公开入口                                                                  | 用途                                              |
 | -------- | ------------------------------------------------------------------------- | ------------------------------------------------- |
 | 单一定义 | `FlexLayoutDefinition`、`GridLayoutDefinition`、`OverlayLayoutDefinition` | 只向 Core 注册一个布局复合组件                    |
-| 单一模块 | `FlexLayoutModule`、`GridLayoutModule`、`OverlayLayoutModule`             | 通过 Standard 能力模块装载一个布局家族成员        |
-| 布局预设 | `StandardLayoutPreset`                                                    | 一次装载三种布局定义                              |
 | React    | `FlexLayout`、`GridLayout`、`OverlayLayout`、`LayoutItem`                 | 从组件树生成规范 IR，并向外层 `<Layout>` 贡献定义 |
 | Vanilla  | `StandardLayoutVanillaAdapters`                                           | 让 Figure、挂载与 SSR 入口识别三种布局嵌入项      |
 
-`StandardLayoutPreset.compile.composites` 是交给 `compileToScene()` 的 Core 复合组件定义数组。预设不创建第二条编译管线；React 与 Vanilla 适配器也只是生成相同的 Standard IR，并贡献同一组 Definition。
+将一个或多个布局 Definition 直接放入 `CompileOptions.composites`。React 与 Vanilla 适配器生成相同的 Standard IR，并贡献所需的 Definition；adapter 便利数组不成为 Standard compile preset
 
 ## 一次布局事务
 
@@ -37,16 +35,23 @@ description: 查询 Standard 布局定义（Definition）、能力预设、Core 
 
 ```ts
 import { compileToScene } from '@retikz/core';
-import { FlexLayoutArtifactSchema, StandardLayoutPreset } from '@retikz/standard';
+import {
+  FlexLayoutArtifactSchema,
+  FlexLayoutDefinition,
+  GridLayoutDefinition,
+  OverlayLayoutDefinition,
+} from '@retikz/standard';
 
-const output = compileToScene(scene, StandardLayoutPreset.compile);
+const output = compileToScene(scene, {
+  composites: [FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition],
+});
 const envelope = output.artifacts.find(
   artifact => artifact.kind === 'composite' && artifact.namespace === 'standard' && artifact.type === 'flexLayout',
 );
 const artifact = FlexLayoutArtifactSchema.parse(envelope?.value);
 ```
 
-如果宿主只装载单一容器，可以把对应 Definition 放入 `compile.composites`；需要完整布局家族时使用 `StandardLayoutPreset.compile`。产物信封中的 `occurrence.sourcePath` 与 `occurrence.expansionPath` 用于区分嵌套或重复实例，`value` 再由对应的 `XxxLayoutArtifactSchema` 精确解析。
+如果宿主只使用单一容器，可以只把对应 Definition 放入 `compile.composites`；图中使用完整布局家族时再加入其它 Definition。产物信封中的 `occurrence.sourcePath` 与 `occurrence.expansionPath` 用于区分嵌套或重复实例，`value` 再由对应的 `XxxLayoutArtifactSchema` 精确解析
 
 ## React
 
@@ -60,7 +65,7 @@ React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 De
 
 `flexLayout()`、`gridLayout()` 与 `overlayLayout()` 返回 `VanillaEmbedSpec`。Figure、挂载或 SSR 宿主需要传入对应适配器；完整布局家族使用 `StandardLayoutVanillaAdapters`。
 
-每个适配器调用与 React 相同的 `createXxxLayout()` 工厂生成规范 IR，并贡献 `StandardLayoutPreset.compile.composites` 的副本。Vanilla 因而与直接 Core 编译、React 入口共享同一套 schema、Definition、求解器和产物语义。
+每个适配器调用与 React 相同的 `createXxxLayout()` 工厂生成规范 IR，并贡献该布局家族所需的 Definition。Vanilla 因而与直接 Core 编译、React 入口共享同一套 schema、Definition、求解器和产物语义
 
 ## 布局检查器
 
@@ -183,7 +188,10 @@ React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 De
 
 <SourceLinks
   sources={[
-    { label: '布局能力预设', path: 'packages/library/standard/src/preset/layout.ts' },
+    {
+      label: 'FlexLayout Definition',
+      path: 'packages/library/standard/src/composites/layout/flex-layout/definition.ts',
+    },
     {
       label: '弹性布局定义与类型化产物',
       path: 'packages/library/standard/src/composites/layout/flex-layout/definition.ts',
@@ -198,13 +206,13 @@ React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 De
     },
     {
       label: 'Standard 布局专属检查选项',
-      path: 'packages/library/standard/src/composites/layout/shared/inspect-schema.ts',
+      path: 'packages/library/standard/src/composites/layout/shared/schema.ts',
     },
     {
       label: 'Standard spacing、ring 与分层 lowering',
       path: 'packages/library/standard/src/composites/layout/internal/inspect.ts',
     },
-    { label: 'Vanilla 布局适配器预设', path: 'packages/library/standard-vanilla/src/preset/index.ts' },
+    { label: 'Vanilla 布局适配器数组', path: 'packages/library/standard-vanilla/src/preset/index.ts' },
   ]}
 />
 

@@ -7,6 +7,7 @@ import {
 } from '@retikz/core';
 import { z } from 'zod';
 
+import { STANDARD_NAMESPACE } from '../../shared';
 import { getLatticeRangeError } from '../shared/lattice';
 import { StandardGridSpacingSchema, StandardPathStrokeStyleSchema } from '../shared/schemas';
 import { enumerateAxesTickValues, resolveAxesExtent, resolveAxesTickRange } from './axis';
@@ -132,7 +133,7 @@ const AxesOriginLabelObjectSchema = z.strictObject({
 const AxesOriginLabelSchema = z.union([z.literal(false), TextBlockSchema, AxesOriginLabelObjectSchema]);
 
 const AxesBaseSchema = CompositeBaseSchema.extend({
-  namespace: z.literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
+  namespace: z.literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
   type: z.literal('axes').describe('Composite type for static Cartesian reference axes.'),
   origin: PositionSchema.default([0, 0]).describe('Screen-space origin shared by axes, grid, ticks, and labels.'),
   extent: z.strictObject({

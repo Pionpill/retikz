@@ -2,7 +2,12 @@ import type { ValueOf } from '@retikz/core';
 import type { z } from 'zod';
 
 import type { LayoutSizeParticipation, OverlayPlacementKind } from './constants';
-import type { OverlayLayoutItemSchema, OverlayLayoutSchema, OverlayPlacementSchema } from './schema';
+import type {
+  OverlayLayoutArtifactSchema,
+  OverlayLayoutItemSchema,
+  OverlayLayoutSchema,
+  OverlayPlacementSchema,
+} from './schema';
 
 /** Overlay placement 判别值 */
 export type OverlayPlacementKindValue = ValueOf<typeof OverlayPlacementKind>;
@@ -27,3 +32,6 @@ export type IROverlayLayout = z.infer<typeof OverlayLayoutSchema>;
 
 /** OverlayLayout factory 接受的作者输入 */
 export type OverlayLayoutInput = Omit<z.input<typeof OverlayLayoutSchema>, 'namespace' | 'type'>;
+
+/** OverlayLayout 的 JSON-safe compile artifact payload */
+export type OverlayLayoutArtifact = z.infer<typeof OverlayLayoutArtifactSchema>;

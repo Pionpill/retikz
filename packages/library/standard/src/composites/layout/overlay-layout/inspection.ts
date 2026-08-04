@@ -1,7 +1,7 @@
 import type { InspectionPrimitive } from '@retikz/core';
 
 import type { ResolvedOverlayLayoutInspectLocalOptions, StandardLayoutInspectContext } from '../shared';
-import type { OverlayLayoutArtifact } from './artifact-types';
+import type { OverlayLayoutArtifact } from './types';
 
 import { inspectLayoutArtifactBase, normalizeLayoutBoundaryGroups } from '../internal';
 

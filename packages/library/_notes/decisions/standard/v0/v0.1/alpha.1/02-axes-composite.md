@@ -52,7 +52,7 @@ lowering 顺序固定为 grid、x/y 轴线、x/y 刻度、刻度文字、轴名�
 
 ### 宿主入口
 
-React `<Axes>` 与 Vanilla `axes()` 接收同一 `AxesInput`、产生同一 `IRAxes`，并在当前图内贡献同一 `AxesDefinition`。直接 IR 通过 `AxesModule` 或 Standard bundle 显式接入 Core compile options。
+React `<Axes>` 与 Vanilla `axes()` 接收同一 `AxesInput`、产生同一 `IRAxes`，并在当前图内贡献同一 `AxesDefinition`。直接 IR 通过 `composites: [AxesDefinition]` 显式接入 Core compile options
 
 ## 被否决的方案
 

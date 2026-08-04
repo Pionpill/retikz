@@ -19,9 +19,8 @@ const Demo: FC = () => {
     <Layout width={600} height={360} lowerTex={lowerTex}>
       {/* 背景网格 */}
       <Grid
-        bounds={{ min: [-100, -100], max: [100, 100] }}
-        spacing={50}
-        lines={{ style: { stroke: 'lightgray', strokeWidth: 0.5 } }}
+        bounds={{ start: [-100, -100], end: [100, 100] }}
+        line={{ spacing: 50, style: { stroke: 'lightgray', strokeWidth: 0.5 } }}
       />
 
       {/* 单位圆 */}

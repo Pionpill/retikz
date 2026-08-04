@@ -56,7 +56,7 @@ const LegendWithNestedStandardDemo: FC = () => (
             <LayoutItem
               kind="flex"
               itemKey="grid"
-              ir={createGrid({ bounds: { min: [0, 0], max: [20, 20] }, spacing: 10 })}
+              ir={createGrid({ bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })}
             />
           </FlexLayout>
         }
@@ -142,13 +142,13 @@ const demos: ReadonlyArray<Readonly<{ name: string; Component: FC }>> = [
 ];
 
 describe('Standard layout documentation demos', () => {
-  it('loads transitive nested Standard modules for a Legend Vanilla preview', () => {
+  it('loads transitive nested Standard definitions for a Legend Vanilla preview', () => {
     const preview = buildPreviewIR(LegendWithNestedStandardDemo);
     const vanilla = buildVanillaPreview(preview);
 
     expect(vanilla.code).toContain("legend('preview-legend-1'");
-    expect(vanilla.code).toContain('createStandardBundle([FlexLayoutModule, GridModule])');
-    expect(vanilla.code).not.toContain('LegendModule');
+    expect(vanilla.code).toContain('const standardCompile = { composites: [FlexLayoutDefinition, GridDefinition] };');
+    expect(vanilla.code).not.toContain('LegendDefinition');
     expect(vanilla.code).not.toContain('Unsupported Standard composite');
     expect(vanilla.svg).toContain('<svg');
     expect(vanilla.svg).toContain('Nested');

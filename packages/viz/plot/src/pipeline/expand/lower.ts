@@ -34,6 +34,7 @@ import {
   AxisGridApplyTo,
   CoordinateArrangementKind,
   CoordinateViewPlacementKind,
+  PLOT_NAMESPACE,
   PlotLayerZIndex,
   PlotSpecSchema,
 } from '../../schemas';
@@ -740,9 +741,9 @@ const expandPlot = (node: IRPlotSpec, datasets: ExternalDatasets, options: Lower
 export const lowerPlots = (datasets: ExternalDatasets, options: LowerPlotsOptions = {}) =>
   [
     defineComposite({
-      namespace: 'plot',
+      namespace: PLOT_NAMESPACE,
       type: 'plot',
       schema: PlotSpecSchema,
       expand: (node: IRPlotSpec) => expandPlot(node, datasets, options),
     }),
-  ] satisfies Array<ExpandCompositeDefinition<IRPlotSpec, 'plot', 'plot'>>;
+  ] satisfies Array<ExpandCompositeDefinition<IRPlotSpec, typeof PLOT_NAMESPACE, 'plot'>>;

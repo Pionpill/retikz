@@ -3,7 +3,8 @@ import type { VanillaEmbedSpec, VanillaTier2Adapter } from '@retikz/vanilla';
 
 import { createFlexLayout, FlexLayoutInspectOptionsInputSchema } from '@retikz/standard';
 
-import { makeVanillaStandardLayoutComposites, StandardLayoutVanillaNamespace } from './layout-family';
+import { StandardLayoutVanillaNamespace } from './constants';
+import { makeVanillaStandardLayoutComposites } from './layout-family';
 
 /** Vanilla FlexLayout embed 的稳定 kind */
 const FlexLayoutEmbedKind = 'standard.flexLayout';
