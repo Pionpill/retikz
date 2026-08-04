@@ -19,9 +19,9 @@ Table 保留自身复杂的 body layout；Legend stack、body 与未来 title/de
 本 ADR 进入实现前，当前分支必须能从 `@retikz/standard` package root 消费 Accepted：
 
 1. JSON-safe `LegendInput` / `LegendSchema`、`createLegend()` 与 canonical `IRLegend`，覆盖 `items | ramp` 与任意 `IRChild` sample
-2. `LegendDefinition`、`LegendModule`、`createFlexLayout()` 与 `FlexLayoutModule`
+2. `LegendDefinition`、`createFlexLayout()` 与 `FlexLayoutDefinition`
 3. constrained layout、layout-aware compile 与 typed Legend/Flex artifacts；Flex 把每个 authored item key 关联到最终 replayed child occurrence
-4. capability bundle 对领域包传递引入与调用方显式引入同一 module 的确定幂等/冲突语义
+4. direct Definition 接入对领域包显式传入与调用方重复传入 Definition 的确定冲突语义
 5. direct IR、React 与 Vanilla 的等价契约
 
 Core 还必须提供 compile-local 的 parent-owned key → replayed child occurrence artifact link，并在 child 经过嵌套 replay container 导入与 occurrence remap 后仍传播到最终 occurrence。Standard Flex 必须用该能力发布 authored item key 到其 replayed child occurrence 的 typed link。现有 layout callback 不能安全预测最终 child occurrence；该能力未就绪时，不得从 probe/replay index 反推 locator，也不得在 Table artifact 中伪造关联。
@@ -88,11 +88,11 @@ label 规则：ordinal value 使用确定性 `String(value)`；continuous endpoi
 
 Standard input 不包含 Table field、selector、rule、formatter ref、Cell ids、style token map 或 interaction state。
 
-### Capability loading
+### Definition loading
 
-`@retikz/table` 声明兼容的 `@retikz/standard` 运行依赖。direct compile 与共享 Table runtime contribution 在 Core registry 冻结前无条件组合同一个 `LegendModule` 与 `FlexLayoutModule`；不能等 Table callback 解析出 descriptor 后再动态注册。
+`@retikz/table` 声明兼容的 `@retikz/standard` 运行依赖。direct compile 与共享 Table runtime contribution 在 Core registry 冻结前显式传入同一个 `LegendDefinition` 与 `FlexLayoutDefinition`；不能等 Table callback 解析出 descriptor 后再动态发现或注册。
 
-没有 Legend 的 Table 只是不使用这两个 definitions，不改变输出。调用方同时显式提供同一 module object 时，严格采用 Standard Accepted 的 capability-loading 语义；Table 不按 namespace/name 私自去重，也不吞掉真实不同 definition 冲突。
+没有 Legend 的 Table 只是不使用这两个 definitions，不改变输出。调用方同时显式提供同一 Definition 时，重复 composite key 严格交由 Core 诊断；Table 不按 namespace/name 私自去重，也不吞掉真实不同 definition 冲突。
 
 ### Standard 外围组合
 
@@ -166,20 +166,20 @@ const spec = {
 - Table 拥有 descriptor mapping、label semantics、right/bottom placement intent、Table body layout 与领域 lineage
 - Standard 拥有 Legend visual structure、内部 layout、外围 Box Layout、lowering 与 typed artifacts
 - Core 拥有 composite execution、measurement、replay、artifact tree、nested replay link propagation 与 compile-local artifact link
-- adapters 只贡献 capability 并消费同一 manifest/link helper
+- adapters 只贡献 Definition 并消费同一 manifest/link helper
 
 ## 兼容性与影响
 
 - `@retikz/table` 增加兼容的 Standard 运行依赖
 - `TableSpec` additive 增加 `legendLayout`
-- compile/runtime contribution 无条件携带 Legend/Flex modules
+- compile/runtime contribution 显式携带 `LegendDefinition`/`FlexLayoutDefinition`
 - manifest additive 增加 legend lineage，compile result 增加同次 artifact links
 - Table 与 Standard release group 不 lockstep，但 Table alpha.3 发布受可消费的 Standard alpha.2 契约 gating
 
 ## 测试策略摘要
 
 - mapping contract 证明 ordinal/threshold/continuous 到 Standard items/ramp、label/sample 与 stable key 的映射
-- capability contract 证明 direct/transitive/duplicate/conflicting module 语义
+- Definition contract 证明 direct/transitive/duplicate/conflicting Definition 语义
 - composition contract 证明 JSON-safe body boundary、right/bottom、多 Legend、gap/alignment、无 descriptor 与 Standard-only layout
 - artifact contract 证明 Legend Flex item key 等于 `legendId`，nested replay 后的 Core link occurrence 可查询同次 Standard typed artifact，不预测 probe/replay index
 - parity 证明 direct/React/Vanilla/SSR 的 Scene、artifacts、manifest 与 lineage 等价

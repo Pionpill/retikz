@@ -6,7 +6,7 @@
 
 Standard 家族是官方维护、相对 Core 可选安装的跨领域绘图能力库：通过 Core 公开的 definition / registry / composite 契约，为直接作者和 Plot、Table 等官方 Tier 2 包提供常用绘图实现、通用布局积木与 JSON-safe 语义组件，并统一 lowering 为 Core IR。
 
-- `@retikz/standard` 拥有宿主无关的 schema、definition / factory、composite、capability module 与 lowering
+- `@retikz/standard` 拥有宿主无关的 schema、definition / factory、composite 与 lowering
 - `@retikz/standard-react` / `@retikz/standard-vanilla` 只负责等价 authoring 与宿主接入
 - Standard 拥有的 Tier 2 schema 以 Core composite IR 持久化，是需要供工具链或 LLM 理解与编辑的语义真源；lowering 后的 Kernel IR / Scene 是派生产物，不要求反向推断原始 Standard 语义
 - Standard 不拥有 Core IR / Scene、renderer、领域数据模型、完整逻辑关系图、算法布局、自动路由或编辑器状态
@@ -19,7 +19,7 @@ Standard 家族是官方维护、相对 Core 可选安装的跨领域绘图能�
 v0.1 建立 Standard 三包的首个完整闭环，覆盖：
 
 - Grid、Axes、Frame 等首批宿主无关 Tier 2 composite
-- capability module、不可变 bundle、按需与全量 preset
+- 按项 Definition 接入、Core compile options 与直接/adapter authoring parity
 - Flex、GridLayout、Overlay 等不理解领域模型的通用布局 composite
 - 由 Plot、Table 与直接作者共同消费的通用 Legend 呈现
 - `Stage`、`Decision`、`Terminal`、`Junction` 等逻辑节点语义

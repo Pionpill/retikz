@@ -3,8 +3,13 @@ import type { z } from 'zod';
 
 import type { LegendContentKind, LegendDirection, LegendSampleAlignment, LegendWrap } from './constants';
 import type {
+  LegendArtifactGeometrySchema,
+  LegendArtifactSchema,
+  LegendItemsArtifactSchema,
   LegendItemSchema,
   LegendItemsContentSchema,
+  LegendPlacedChildArtifactSchema,
+  LegendRampArtifactSchema,
   LegendRampContentSchema,
   LegendSchema,
   LegendTickSchema,
@@ -39,3 +44,18 @@ export type IRLegend = z.infer<typeof LegendSchema>;
 
 /** 创建 Legend 时允许省略固定 discriminator 与 schema 默认字段的输入 */
 export type LegendInput = Omit<z.input<typeof LegendSchema>, 'namespace' | 'type'>;
+
+/** Legend 呈现区域的可观察几何 */
+export type LegendArtifactGeometry = z.infer<typeof LegendArtifactGeometrySchema>;
+
+/** Legend 单个 child 的可观察 placement */
+export type LegendPlacedChildArtifact = z.infer<typeof LegendPlacedChildArtifactSchema>;
+
+/** 离散条目 Legend 的 typed artifact */
+export type LegendItemsArtifact = z.infer<typeof LegendItemsArtifactSchema>;
+
+/** 连续样本 Legend 的 typed artifact */
+export type LegendRampArtifact = z.infer<typeof LegendRampArtifactSchema>;
+
+/** Standard Legend 的 typed artifact */
+export type LegendArtifact = z.infer<typeof LegendArtifactSchema>;

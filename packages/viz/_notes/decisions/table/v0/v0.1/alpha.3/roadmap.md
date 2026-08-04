@@ -43,7 +43,7 @@
 
 ADR-04/05 必须作为同一产品单元实施、验证与交付，避免临时 palette、无 consumer token、双映射真源或 only-explicit-range 中间态。
 
-ADR-04 的 ordinal/threshold mapping 属于 Table；continuous mapping 必须消费 Core 冻结的 context-free canonical RGBA 与 gradient-stop 求值语义。ADR-06 只有在当前分支能从 Standard package root 消费 Accepted Legend/Flex schema、Definition、module、artifact 与 capability-loading，Table body 已能通过 lowering-only composite boundary 表达为 JSON-safe `IRChild`，且 Core/Standard 能把 Flex authored item key 穿过 nested replay 关联到最终 child occurrence 后才能实现。Gate 未满足时不建立 Table-local Legend、外围 solver、placeholder API，也不预测 child occurrence path。
+ADR-04 的 ordinal/threshold mapping 属于 Table；continuous mapping 必须消费 Core 冻结的 context-free canonical RGBA 与 gradient-stop 求值语义。ADR-06 只有在当前分支能从 Standard package root 消费 Accepted Legend/Flex schema、Definition、artifact 与 direct Definition contract，Table body 已能通过 lowering-only composite boundary 表达为 JSON-safe `IRChild`，且 Core/Standard 能把 Flex authored item key 穿过 nested replay 关联到最终 child occurrence 后才能实现。Gate 未满足时不建立 Table-local Legend、外围 solver、placeholder API，也不预测 child occurrence path。
 
 ## Milestone 边界
 

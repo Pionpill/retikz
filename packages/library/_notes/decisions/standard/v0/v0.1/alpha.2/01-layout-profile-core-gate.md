@@ -133,7 +133,7 @@ const compile = (node: IRContainer, context: LayoutCompositeCompileContext) => {
 
 - Layout schema、size/alignment/overflow 字段
 - Flex、Grid、Overlay 具体算法
-- artifact payload、capability module、React/Vanilla API
+- artifact payload、Definition 接入与 React/Vanilla API
 - Core ADR-08 的实现修改、接受、版本 bump 或发布
 
 ## 最终实现摘要

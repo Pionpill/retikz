@@ -11,11 +11,15 @@ export const previewControls = gridPlaygroundControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const bounds = {
-    min: values.boundsMin,
-    max: values.boundsMax,
+    start: values.boundsStart,
+    end: values.boundsEnd,
   };
-  const spacing = values.spacingMode === 'uniform' ? values.spacing : { x: values.spacingX, y: values.spacingY };
-  const origin = values.originEnabled ? ([values.originX, values.originY] as [number, number]) : undefined;
+  const lineStyle = {
+    stroke: values.lineStroke,
+    strokeWidth: values.lineStrokeWidth,
+    strokeOpacity: values.lineOpacity,
+    ...(values.lineDashed ? { dashPattern: [6, 4] } : {}),
+  };
   const major = values.majorEnabled
     ? {
         every: values.majorEvery,
@@ -43,22 +47,25 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         },
       }
     : undefined;
+  const line = {
+    vertical: {
+      spacing: values.spacingMode === 'uniform' ? values.spacing : values.spacingX,
+      ...(values.originEnabled ? { origin: values.originX } : {}),
+      includeBoundary: values.includeBoundary,
+      style: lineStyle,
+      ...(major === undefined ? {} : { major }),
+    },
+    horizontal: {
+      spacing: values.spacingMode === 'uniform' ? values.spacing : values.spacingY,
+      ...(values.originEnabled ? { origin: values.originY } : {}),
+      includeBoundary: values.includeBoundary,
+      style: lineStyle,
+      ...(major === undefined ? {} : { major }),
+    },
+  };
   const gridInput = {
     bounds,
-    spacing,
-    lines: {
-      vertical: values.direction !== 'horizontal',
-      horizontal: values.direction !== 'vertical',
-      includeBoundary: values.includeBoundary,
-      style: {
-        stroke: values.lineStroke,
-        strokeWidth: values.lineStrokeWidth,
-        strokeOpacity: values.lineOpacity,
-        ...(values.lineDashed ? { dashPattern: [6, 4] } : {}),
-      },
-    },
-    ...(origin === undefined ? {} : { origin }),
-    ...(major === undefined ? {} : { major }),
+    line,
     ...(border === undefined ? {} : { border }),
   };
 

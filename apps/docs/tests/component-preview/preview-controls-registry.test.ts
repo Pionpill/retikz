@@ -1469,12 +1469,12 @@ describe('preview controls registry', () => {
     );
     expect(getPreviewControlFields(zhDefinition as PreviewControlsDefinition).slice(0, 2)).toMatchObject([
       {
-        id: 'boundsMin',
+        id: 'boundsStart',
         kind: 'point',
         defaultValue: [60, 50],
       },
       {
-        id: 'boundsMax',
+        id: 'boundsEnd',
         kind: 'point',
         defaultValue: [340, 230],
       },

@@ -2,7 +2,12 @@ import type { ValueOf } from '@retikz/core';
 import type { z } from 'zod';
 
 import type { FlexLayoutDirection, FlexLayoutWrap } from './constants';
-import type { FlexLayoutItemSchema, FlexLayoutSchema, FlexMainDistributionSchema } from './schema';
+import type {
+  FlexLayoutArtifactSchema,
+  FlexLayoutItemSchema,
+  FlexLayoutSchema,
+  FlexMainDistributionSchema,
+} from './schema';
 
 /** FlexLayout 主轴方向取值 */
 export type FlexLayoutDirectionValue = ValueOf<typeof FlexLayoutDirection>;
@@ -24,3 +29,6 @@ export type IRFlexLayout = z.infer<typeof FlexLayoutSchema>;
 
 /** 创建 FlexLayout 时允许省略固定 discriminator 与 schema 默认字段的输入 */
 export type FlexLayoutInput = Omit<z.input<typeof FlexLayoutSchema>, 'namespace' | 'type'>;
+
+/** FlexLayout 的 JSON-safe compile artifact payload */
+export type FlexLayoutArtifact = z.infer<typeof FlexLayoutArtifactSchema>;

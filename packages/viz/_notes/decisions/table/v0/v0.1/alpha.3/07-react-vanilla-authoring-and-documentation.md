@@ -63,7 +63,7 @@ TableSpec 的 `style` 保留领域名，在 Detail/Manual JSX 中表示 `neutral
 
 `renderTable()` 通过 lowering options 接受四类 definitions，并在 artifacts 开启时返回 typed Table manifest。SSR 在无 DOM 环境完成 formatter、rule、encoding、style token resolution、Standard Flex/Legend lowering 与 manifest join；相同 measurer/Core options 下与 direct/React 输出等价。
 
-Runtime contribution 对 structure kind、formatter name、presentation name、visual scale name 与 Core composite key 使用同一确定合并语义：同 key 同对象引用幂等，不同引用 fail-loud；输入数组防御复制并冻结，首次出现顺序稳定。Standard Flex/Legend modules 只通过 ADR-06 的共享 Table contribution 加载，adapters 不单独注册或重定义重复语义。
+Runtime contribution 对 structure kind、formatter name、presentation name、visual scale name 与 Core composite key 使用同一确定合并语义：同 key 同对象引用幂等，不同引用 fail-loud；输入数组防御复制并冻结，首次出现顺序稳定。Standard Flex/Legend Definitions 只通过 ADR-06 的共享 Table contribution 传入，adapters 不单独注册或重定义重复语义。
 
 ### Manifest consumption
 
@@ -139,7 +139,7 @@ React runtime rows 与 `containerStyle` 不进入 TableSpec；其余 authoring i
 
 - authoring parity 证明 framework-neutral、React、Vanilla 产生 schema-equal IR
 - public/runtime guards 证明 style/containerStyle、manual Cell union 与 Presentation ABI migration
-- contribution/SSR 证明四类 definitions、冲突、freeze、Standard modules 与无 DOM 执行
+- contribution/SSR 证明四类 definitions、冲突、freeze、Standard Definitions 与无 DOM 执行
 - manifest parity 证明 direct/React/Vanilla/SSR 使用同一 helper、occurrence 与 diagnostics
 - docs integrity/browser 证明 schema、SourceLink、demo、README/changelog 与真实输出一致
 

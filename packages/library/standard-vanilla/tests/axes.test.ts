@@ -37,7 +37,10 @@ describe('axes()', () => {
       {
         type: 'figure',
         version: 1,
-        children: [grid('paper', { bounds: { min: [-2, -1], max: [2, 1] }, spacing: 1 }), axes('plane', input)],
+        children: [
+          grid('paper', { bounds: { start: [-2, -1], end: [2, 1] }, line: { spacing: 1 } }),
+          axes('plane', input),
+        ],
       },
       { adapters: [GridVanillaAdapter, AxesVanillaAdapter] },
     );

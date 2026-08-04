@@ -7,20 +7,19 @@ import type { AnyVanillaTier2Adapter, VanillaChildSpec } from '@retikz/vanilla';
 import { PlotSpecSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
 import {
-  AxesModule,
+  AxesDefinition,
   AxesSchema,
-  createStandardBundle,
-  FlexLayoutModule,
+  FlexLayoutDefinition,
   FlexLayoutSchema,
-  FrameModule,
+  FrameDefinition,
   FrameSchema,
-  GridLayoutModule,
+  GridDefinition,
+  GridLayoutDefinition,
   GridLayoutSchema,
-  GridModule,
   GridSchema,
-  LegendModule,
+  LegendDefinition,
   LegendSchema,
-  OverlayLayoutModule,
+  OverlayLayoutDefinition,
   OverlayLayoutSchema,
 } from '@retikz/standard';
 import {
@@ -46,7 +45,7 @@ import { figure, renderToSvgString, scope } from '@retikz/vanilla';
 import type { PreviewIR } from '../utils/build-preview-ir';
 import type { BuildVanillaPreviewOptions, VanillaPreviewArtifact } from './types';
 
-import { collectStandardPreviewModules, formatVanillaValue, irToVanillaCode } from '../utils/ir-to-vanilla-code';
+import { collectStandardPreviewDefinitions, formatVanillaValue, irToVanillaCode } from '../utils/ir-to-vanilla-code';
 
 type CompositeChild = IRChild & { namespace: string; type: string };
 
@@ -228,14 +227,14 @@ const standardAdapters = (state: StandardConversionState): ReadonlyArray<AnyVani
   ...(state.adapters.has('legend') ? [LegendVanillaAdapter as AnyVanillaTier2Adapter] : []),
 ];
 
-const moduleByName = {
-  GridModule,
-  AxesModule,
-  FrameModule,
-  FlexLayoutModule,
-  GridLayoutModule,
-  OverlayLayoutModule,
-  LegendModule,
+const definitionByName = {
+  GridDefinition,
+  AxesDefinition,
+  FrameDefinition,
+  FlexLayoutDefinition,
+  GridLayoutDefinition,
+  OverlayLayoutDefinition,
+  LegendDefinition,
 } as const;
 
 const buildStandardPreview = (preview: PreviewIR): VanillaPreviewArtifact => {
@@ -252,9 +251,9 @@ const buildStandardPreview = (preview: PreviewIR): VanillaPreviewArtifact => {
       convertStandardChild(child, state, [{ kind: 'sceneChild', index }]),
     ),
   });
-  const moduleNames = collectStandardPreviewModules(preview.ir.children, new Set(state.adapters));
-  const modules = moduleNames.map(name => moduleByName[name]);
-  const compile = modules.length === 0 ? undefined : createStandardBundle(modules).compile;
+  const definitionNames = collectStandardPreviewDefinitions(preview.ir.children, new Set(state.adapters));
+  const definitions = definitionNames.map(name => definitionByName[name]);
+  const compile = definitions.length === 0 ? undefined : { composites: definitions };
   return {
     code: irToVanillaCode(preview.ir, { inspect: preview.inspect, componentInspections }),
     svg: renderToSvgString(input, {

@@ -31,7 +31,7 @@ import { GridLayout, LayoutItem } from '@retikz/standard-react';
 </Layout>
 ```
 
-JSON/IR 路径使用 `createGridLayout()` 与 `GridLayoutDefinition`；Vanilla 使用 `gridLayout()` 与 `GridLayoutVanillaAdapter`。完整布局家族可通过 `StandardLayoutPreset` 或 `StandardLayoutVanillaAdapters` 装载。
+JSON/IR 路径使用 `createGridLayout()` 与 `GridLayoutDefinition`；Vanilla 使用 `gridLayout()` 与 `GridLayoutVanillaAdapter`。完整布局家族可在 `composites` 中传入三个 layout Definition，或使用 `StandardLayoutVanillaAdapters` 装载 Vanilla embed
 
 | 场景        | 公开入口                                                                                   |
 | ----------- | ------------------------------------------------------------------------------------------ |
@@ -79,7 +79,7 @@ GridLayout 使用固定的物理 x→y 求解顺序：
     { label: 'GridLayout 输入契约', path: 'packages/library/standard/src/composites/layout/grid-layout/schema.ts' },
     { label: '网格自动放置', path: 'packages/library/standard/src/composites/layout/grid-layout/placement.ts' },
     { label: '网格轨道求解器', path: 'packages/library/standard/src/composites/layout/grid-layout/tracks.ts' },
-    { label: 'GridLayout 编译', path: 'packages/library/standard/src/composites/layout/grid-layout/compile.ts' },
+    { label: 'GridLayout 编译', path: 'packages/library/standard/src/composites/layout/grid-layout/pipeline.ts' },
   ]}
 />
 

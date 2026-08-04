@@ -310,24 +310,24 @@ const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
   'LegendVanillaAdapter',
 ];
 
-/** docs 预览能够显式装载的 Standard capability module 名 */
-export type StandardPreviewModuleName =
-  | 'GridModule'
-  | 'AxesModule'
-  | 'FrameModule'
-  | 'FlexLayoutModule'
-  | 'GridLayoutModule'
-  | 'OverlayLayoutModule'
-  | 'LegendModule';
+/** docs 预览能够显式注入的 Standard definition 名 */
+export type StandardPreviewDefinitionName =
+  | 'GridDefinition'
+  | 'AxesDefinition'
+  | 'FrameDefinition'
+  | 'FlexLayoutDefinition'
+  | 'GridLayoutDefinition'
+  | 'OverlayLayoutDefinition'
+  | 'LegendDefinition';
 
-const STANDARD_MODULE_BY_KIND: Readonly<Record<string, StandardPreviewModuleName>> = {
-  grid: 'GridModule',
-  axes: 'AxesModule',
-  frame: 'FrameModule',
-  flexLayout: 'FlexLayoutModule',
-  gridLayout: 'GridLayoutModule',
-  overlayLayout: 'OverlayLayoutModule',
-  legend: 'LegendModule',
+const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefinitionName>> = {
+  grid: 'GridDefinition',
+  axes: 'AxesDefinition',
+  frame: 'FrameDefinition',
+  flexLayout: 'FlexLayoutDefinition',
+  gridLayout: 'GridLayoutDefinition',
+  overlayLayout: 'OverlayLayoutDefinition',
+  legend: 'LegendDefinition',
 };
 
 const standardOwnedChildren = (child: IRChild & { namespace: string; type: string }): Array<IRChild> => {
@@ -357,15 +357,15 @@ const standardOwnedChildren = (child: IRChild & { namespace: string; type: strin
 };
 
 /**
- * 从 Core child graph 递归收集 adapter 尚未提供的已知 Standard modules
+ * 从 Core child graph 递归收集 adapter 尚未提供的已知 Standard definitions
  *
  * @remarks 只遍历各 Standard composite 明确拥有的 child-bearing fields，不猜测未知 Tier 2
  */
-export const collectStandardPreviewModules = (
+export const collectStandardPreviewDefinitions = (
   children: ReadonlyArray<IRChild>,
   adapterKinds: ReadonlySet<string>,
-): Array<StandardPreviewModuleName> => {
-  const modules = new Set<StandardPreviewModuleName>();
+): Array<StandardPreviewDefinitionName> => {
+  const definitions = new Set<StandardPreviewDefinitionName>();
   const providedKinds = new Set(adapterKinds);
   if (['flexLayout', 'gridLayout', 'overlayLayout'].some(kind => adapterKinds.has(kind))) {
     providedKinds.add('flexLayout');
@@ -377,20 +377,20 @@ export const collectStandardPreviewModules = (
       if (child.namespace !== 'standard') {
         throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
       }
-      const moduleName = (STANDARD_MODULE_BY_KIND as Readonly<Record<string, StandardPreviewModuleName | undefined>>)[
-        child.type
-      ];
-      if (moduleName === undefined) {
+      const definitionName = (
+        STANDARD_DEFINITION_BY_KIND as Readonly<Record<string, StandardPreviewDefinitionName | undefined>>
+      )[child.type];
+      if (definitionName === undefined) {
         throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
       }
-      if (!providedKinds.has(child.type)) modules.add(moduleName);
+      if (!providedKinds.has(child.type)) definitions.add(definitionName);
       standardOwnedChildren(child).forEach(visit);
       return;
     }
     if (child.type === 'scope') child.children.forEach(visit);
   };
   children.forEach(visit);
-  return Array.from(modules);
+  return Array.from(definitions);
 };
 
 const standardCompositeCode = (
@@ -488,27 +488,27 @@ export const irToVanillaCode = (ir: IRScene, options: VanillaCodeOptions = {}): 
   if (ctx.usesDrawWay) imports.push("import { DrawWay } from '@retikz/core';");
   const standardHelpers = STANDARD_HELPER_ORDER.filter(name => ctx.standardHelpers.has(name));
   const standardAdapters = STANDARD_ADAPTER_ORDER.filter(name => ctx.standardAdapters.has(name));
-  const standardModules = collectStandardPreviewModules(ir.children, new Set(ctx.standardCounts.keys()));
+  const standardDefinitions = collectStandardPreviewDefinitions(ir.children, new Set(ctx.standardCounts.keys()));
   if (standardHelpers.length > 0) {
     imports.push(`import { ${[...standardHelpers, ...standardAdapters].join(', ')} } from '@retikz/standard-vanilla';`);
   }
-  if (standardModules.length > 0) {
-    imports.push(`import { createStandardBundle, ${standardModules.join(', ')} } from '@retikz/standard';`);
+  if (standardDefinitions.length > 0) {
+    imports.push(`import { ${standardDefinitions.join(', ')} } from '@retikz/standard';`);
   }
 
   const adapters = standardAdapters.length > 0 ? `\nconst adapters = [${standardAdapters.join(', ')}];\n` : '';
-  const bundle =
-    standardModules.length > 0
-      ? `\nconst standardBundle = createStandardBundle([${standardModules.join(', ')}]);\n`
+  const compile =
+    standardDefinitions.length > 0
+      ? `\nconst standardCompile = { composites: [${standardDefinitions.join(', ')}] };\n`
       : '';
   const renderOptions = [
     `inspect: ${formatValue(options.inspect, 0)}`,
     ...(standardAdapters.length > 0 ? ['adapters'] : []),
-    ...(standardModules.length > 0 ? ['compile: standardBundle.compile'] : []),
+    ...(standardDefinitions.length > 0 ? ['compile: standardCompile'] : []),
   ].join(', ');
   const render =
     options.inspect === undefined ? '' : `\nexport const svg = renderToSvgString(fig, { ${renderOptions} });\n`;
-  return `${imports.join('\n')}\n\nconst fig = figure(${figureArgs});\n${adapters}${bundle}${render}`;
+  return `${imports.join('\n')}\n\nconst fig = figure(${figureArgs});\n${adapters}${compile}${render}`;
 };
 
 /** 把 JSON-safe 值格式化为 Vanilla 示例使用的 TypeScript 字面量。 */

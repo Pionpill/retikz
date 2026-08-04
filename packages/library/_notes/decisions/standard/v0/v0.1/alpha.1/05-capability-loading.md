@@ -1,6 +1,6 @@
 # ADR-05：建立 Standard capability module 与显式 preset
 
-- 状态：Accepted
+- 状态：Superseded（由 [alpha.3 ADR-06](../alpha.3/06-direct-definition-loading.md) 取代）
 - 决策日期：2026-07-26
 - 关联：[Standard v0.1 roadmap](../roadmap.md) · [alpha.1 roadmap](./roadmap.md) · [ADR-01](./01-grid-composite.md) · [ADR-02](./02-axes-composite.md) · [ADR-04](./04-frame-header-composition.md) · [Standard Drawing Library 设计](../../../../../architecture/standard-library-design.md) · [Drawing Complete](../../../../../../../kernel/_notes/architecture/core-drawing-complete.md)
 
@@ -72,6 +72,8 @@ Vanilla 公开浅冻结的 `StandardVanillaAdapters`，按 Grid、Axes、Frame �
 - `@retikz/standard-react` 不新增 bundle API，继续使用静态 adapter
 - module / bundle / preset 不进入 IR、Scene、manifest 或 renderer descriptor
 - 后续 Standard composite 必须提供 module，并在发布时显式决定是否进入 all preset 与 Vanilla adapter 数组
+
+本 ADR 保留 alpha.1 capability loading 的历史决策与验证记录，不再定义当前 Standard 的公开入口。当前直接 IR 与跨包 compile 接线以 [alpha.3 ADR-06](../alpha.3/06-direct-definition-loading.md) 为准；Standard 不再发布 capability module、bundle 或 preset 组合 API
 
 ## 最终实现与验证摘要
 

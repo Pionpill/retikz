@@ -8,11 +8,11 @@ export const gridPlaygroundControls = definePreviewControls({
   title: 'Grid 参数',
   sections: [
     {
-      label: '范围与间距',
+      label: '范围与格线',
       controls: [
         {
           kind: 'point',
-          id: 'boundsMin',
+          id: 'boundsStart',
           label: '起始',
           defaultValue: [60, 50],
           min: [24, 24],
@@ -21,7 +21,7 @@ export const gridPlaygroundControls = definePreviewControls({
         },
         {
           kind: 'point',
-          id: 'boundsMax',
+          id: 'boundsEnd',
           label: '终止',
           defaultValue: [340, 230],
           min: [184, 124],
@@ -93,17 +93,6 @@ export const gridPlaygroundControls = definePreviewControls({
           max: 280,
           step: 4,
           visibleWhen: { controlId: 'originEnabled', oneOf: [true] },
-        },
-        {
-          kind: 'select',
-          id: 'direction',
-          label: '方向',
-          defaultValue: 'both',
-          options: [
-            { value: 'both', label: '双向' },
-            { value: 'vertical', label: '仅竖线' },
-            { value: 'horizontal', label: '仅横线' },
-          ],
         },
         { kind: 'switch', id: 'includeBoundary', label: '包含边界', defaultValue: false },
         { kind: 'color', id: 'lineStroke', label: '普通线颜色', defaultValue: '#d3d3d3' },
@@ -264,8 +253,8 @@ export const gridPlaygroundControls = definePreviewControls({
 export const previewControlContract = {
   controls: gridPlaygroundControls,
   canonicalValues: {
-    boundsMin: [60, 50],
-    boundsMax: [340, 230],
+    boundsStart: [60, 50],
+    boundsEnd: [340, 230],
     spacingMode: 'uniform',
     spacing: 24,
     spacingX: 24,
@@ -273,7 +262,6 @@ export const previewControlContract = {
     originEnabled: false,
     originX: 200,
     originY: 140,
-    direction: 'both',
     includeBoundary: false,
     lineStroke: '#d3d3d3',
     lineStrokeWidth: 1,
@@ -297,15 +285,5 @@ export const previewControlContract = {
     borderFill: '#ffffff',
     borderFillOpacity: 0,
   },
-  relatedApis: [
-    'Grid.bounds',
-    'Grid.spacing',
-    'Grid.origin',
-    'Grid.lines.vertical',
-    'Grid.lines.horizontal',
-    'Grid.lines.includeBoundary',
-    'Grid.lines.style',
-    'Grid.major',
-    'Grid.border',
-  ],
+  relatedApis: ['Grid.bounds', 'Grid.line', 'Grid.border'],
 } satisfies PreviewControlContract;

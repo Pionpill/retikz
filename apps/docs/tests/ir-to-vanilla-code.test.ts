@@ -311,7 +311,7 @@ describe('irToVanillaCode fallback', () => {
     expect(code).toContain('OverlayLayoutVanillaAdapter');
   });
 
-  it('为 Legend 生成 authoring builder、adapter 与嵌套 Standard capability bundle', () => {
+  it('为 Legend 生成 authoring builder、adapter 与嵌套 Standard definitions', () => {
     const code = irToVanillaCode(
       ir([
         {
@@ -356,9 +356,8 @@ describe('irToVanillaCode fallback', () => {
                       child: {
                         namespace: 'standard',
                         type: 'grid',
-                        bounds: { min: [0, 0], max: [20, 20] },
-                        spacing: 10,
-                        lines: { vertical: true, horizontal: true, includeBoundary: false },
+                        bounds: { start: [0, 0], end: [20, 20] },
+                        line: { spacing: 10, includeBoundary: false },
                       },
                     },
                   ],
@@ -373,7 +372,7 @@ describe('irToVanillaCode fallback', () => {
 
     expect(code).toContain("legend('preview-legend-1'");
     expect(code).toContain('LegendVanillaAdapter');
-    expect(code).toContain('createStandardBundle([FlexLayoutModule, GridModule])');
-    expect(code).not.toContain('LegendModule');
+    expect(code).toContain('const standardCompile = { composites: [FlexLayoutDefinition, GridDefinition] };');
+    expect(code).not.toContain('LegendDefinition');
   });
 });

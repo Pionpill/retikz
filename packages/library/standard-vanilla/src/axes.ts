@@ -3,16 +3,15 @@ import type { VanillaEmbedSpec, VanillaTier2Adapter } from '@retikz/vanilla';
 
 import { AxesDefinition, createAxes } from '@retikz/standard';
 
-/** Vanilla Axes embed 的稳定 kind */
-const AxesEmbedKind = 'standard.axes';
+import { StandardAxesVanillaNamespace } from './constants';
 
 /** 当前 Figure 内局部贡献 AxesDefinition 的稳定 maker */
 const makeAxesComposites = () => [AxesDefinition];
 
 /** Standard Axes 的 Vanilla Tier 2 adapter */
 export const AxesVanillaAdapter: VanillaTier2Adapter<AxesInput> = {
-  kind: AxesEmbedKind,
-  namespace: 'standard.axes',
+  kind: StandardAxesVanillaNamespace,
+  namespace: StandardAxesVanillaNamespace,
   lower: props => ({
     node: createAxes(props),
     datasets: {},
@@ -23,7 +22,7 @@ export const AxesVanillaAdapter: VanillaTier2Adapter<AxesInput> = {
 /** 创建由 AxesVanillaAdapter 下沉的 Standard Axes embed */
 export const axes = (id: string, input: AxesInput): VanillaEmbedSpec<AxesInput> => ({
   type: 'embed',
-  kind: AxesEmbedKind,
+  kind: StandardAxesVanillaNamespace,
   id,
   props: input,
 });

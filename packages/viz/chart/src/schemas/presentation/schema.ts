@@ -8,6 +8,7 @@ import {
   FlexLayoutWrap,
   LayoutDistribution,
   LayoutItemKind,
+  STANDARD_NAMESPACE,
 } from '@retikz/standard';
 import { z } from 'zod';
 
@@ -223,7 +224,7 @@ type ChartPresentationInput = {
 const validateStandardFlexContract = (presentation: ChartPresentationInput, context: z.RefinementCtx): void => {
   const placeholder: IRChild = { type: 'scope', children: [] };
   const result = FlexLayoutSchema.safeParse({
-    namespace: 'standard',
+    namespace: STANDARD_NAMESPACE,
     type: 'flexLayout',
     direction: FlexLayoutDirection.Column,
     wrap: FlexLayoutWrap.NoWrap,

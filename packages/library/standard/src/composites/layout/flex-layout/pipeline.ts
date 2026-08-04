@@ -17,8 +17,7 @@ import {
 
 import type { LayoutInsets, LayoutRect } from '../internal';
 import type { LayoutSpacingArtifact } from '../shared';
-import type { FlexLayoutArtifact } from './artifact-types';
-import type { IRFlexLayout, IRFlexLayoutItem } from './types';
+import type { FlexLayoutArtifact, IRFlexLayout, IRFlexLayoutItem } from './types';
 
 import {
   alignAllocationInSlot,

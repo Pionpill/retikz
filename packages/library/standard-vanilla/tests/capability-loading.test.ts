@@ -1,4 +1,4 @@
-import { createGrid, createStandardBundle, GridModule, LegendContentKind } from '@retikz/standard';
+import { createGrid, GridDefinition, LegendContentKind } from '@retikz/standard';
 import {
   axes,
   AxesVanillaAdapter,
@@ -20,7 +20,7 @@ const figure = {
   type: 'figure' as const,
   version: 1 as const,
   children: [
-    grid('paper', { bounds: { min: [0, 0], max: [20, 20] }, spacing: 10 }),
+    grid('paper', { bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } }),
     axes('plane', { extent: { x: 20, y: 20 } }),
     frame('contract', { children: [{ type: 'node', position: [0, 0], text: 'Contract' }] }),
     legend('status', {
@@ -32,7 +32,7 @@ const figure = {
   ],
 };
 
-describe('Standard Vanilla capability loading', () => {
+describe('Standard Vanilla definition loading', () => {
   it('provides the current adapter catalog once in stable frozen order', () => {
     expect(StandardVanillaAdapters).toEqual([
       GridVanillaAdapter,
@@ -60,27 +60,27 @@ describe('Standard Vanilla capability loading', () => {
     );
   });
 
-  it('compiles direct Standard IR with a bundle and no adapters', () => {
+  it('compiles direct Standard IR with explicit definitions and no adapters', () => {
     const ir = {
       type: 'scene' as const,
       version: 1 as const,
-      children: [createGrid({ bounds: { min: [0, 0], max: [20, 20] }, spacing: 10 })],
+      children: [createGrid({ bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })],
     };
 
-    expect(() => renderToSvgString(ir, { compile: createStandardBundle([GridModule]).compile })).not.toThrow();
+    expect(() => renderToSvgString(ir, { compile: { composites: [GridDefinition] } })).not.toThrow();
   });
 
-  it('leaves duplicate adapter and bundle registration fail-loud', () => {
+  it('leaves duplicate adapter and explicit definition registration fail-loud', () => {
     expect(() =>
       renderToSvgString(
         {
           type: 'figure',
           version: 1,
-          children: [grid('paper', { bounds: { min: [0, 0], max: [20, 20] }, spacing: 10 })],
+          children: [grid('paper', { bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })],
         },
         {
           adapters: [GridVanillaAdapter],
-          compile: createStandardBundle([GridModule]).compile,
+          compile: { composites: [GridDefinition] },
         },
       ),
     ).toThrow(/duplicate composite registration.*standard\.grid/i);

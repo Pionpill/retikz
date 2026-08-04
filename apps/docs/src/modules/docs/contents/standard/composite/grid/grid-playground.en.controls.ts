@@ -8,12 +8,12 @@ export const gridPlaygroundEnControls = definePreviewControls({
   title: 'Grid parameters',
   sections: [
     {
-      label: 'Bounds and spacing',
+      label: 'Bounds and line',
       controls: [
         {
           kind: 'point',
-          id: 'boundsMin',
-          label: 'bounds.min',
+          id: 'boundsStart',
+          label: 'bounds.start',
           defaultValue: [60, 50],
           min: [24, 24],
           max: [80, 64],
@@ -21,8 +21,8 @@ export const gridPlaygroundEnControls = definePreviewControls({
         },
         {
           kind: 'point',
-          id: 'boundsMax',
-          label: 'bounds.max',
+          id: 'boundsEnd',
+          label: 'bounds.end',
           defaultValue: [340, 230],
           min: [184, 124],
           max: [360, 244],
@@ -31,7 +31,7 @@ export const gridPlaygroundEnControls = definePreviewControls({
         {
           kind: 'select',
           id: 'spacingMode',
-          label: 'spacing',
+          label: 'line',
           defaultValue: 'uniform',
           options: [
             { value: 'uniform', label: 'Uniform' },
@@ -41,7 +41,7 @@ export const gridPlaygroundEnControls = definePreviewControls({
         {
           kind: 'range',
           id: 'spacing',
-          label: 'Uniform spacing',
+          label: 'line.spacing',
           defaultValue: 24,
           min: 10,
           max: 48,
@@ -51,7 +51,7 @@ export const gridPlaygroundEnControls = definePreviewControls({
         {
           kind: 'range',
           id: 'spacingX',
-          label: 'spacing.x',
+          label: 'line.vertical.spacing',
           defaultValue: 24,
           min: 10,
           max: 48,
@@ -61,7 +61,7 @@ export const gridPlaygroundEnControls = definePreviewControls({
         {
           kind: 'range',
           id: 'spacingY',
-          label: 'spacing.y',
+          label: 'line.horizontal.spacing',
           defaultValue: 18,
           min: 10,
           max: 48,
@@ -71,13 +71,13 @@ export const gridPlaygroundEnControls = definePreviewControls({
       ],
     },
     {
-      label: 'Alignment and lines',
+      label: 'Line alignment and style',
       controls: [
-        { kind: 'switch', id: 'originEnabled', label: 'Custom origin', defaultValue: false },
+        { kind: 'switch', id: 'originEnabled', label: 'Custom line origin', defaultValue: false },
         {
           kind: 'range',
           id: 'originX',
-          label: 'origin.x',
+          label: 'line.vertical.origin',
           defaultValue: 200,
           min: 0,
           max: 400,
@@ -87,29 +87,34 @@ export const gridPlaygroundEnControls = definePreviewControls({
         {
           kind: 'range',
           id: 'originY',
-          label: 'origin.y',
+          label: 'line.horizontal.origin',
           defaultValue: 140,
           min: 0,
           max: 280,
           step: 4,
           visibleWhen: { controlId: 'originEnabled', oneOf: [true] },
         },
+        { kind: 'switch', id: 'includeBoundary', label: 'line.includeBoundary', defaultValue: false },
+        { kind: 'color', id: 'lineStroke', label: 'line.style.stroke', defaultValue: '#d3d3d3' },
         {
-          kind: 'select',
-          id: 'direction',
-          label: 'Direction',
-          defaultValue: 'both',
-          options: [
-            { value: 'both', label: 'Both' },
-            { value: 'vertical', label: 'Vertical only' },
-            { value: 'horizontal', label: 'Horizontal only' },
-          ],
+          kind: 'range',
+          id: 'lineStrokeWidth',
+          label: 'line.style.strokeWidth',
+          defaultValue: 1,
+          min: 0.5,
+          max: 4,
+          step: 0.5,
         },
-        { kind: 'switch', id: 'includeBoundary', label: 'includeBoundary', defaultValue: false },
-        { kind: 'color', id: 'lineStroke', label: 'Line color', defaultValue: '#d3d3d3' },
-        { kind: 'range', id: 'lineStrokeWidth', label: 'Line width', defaultValue: 1, min: 0.5, max: 4, step: 0.5 },
-        { kind: 'switch', id: 'lineDashed', label: 'Dashed lines', defaultValue: false },
-        { kind: 'range', id: 'lineOpacity', label: 'Line opacity', defaultValue: 1, min: 0.1, max: 1, step: 0.1 },
+        { kind: 'switch', id: 'lineDashed', label: 'line.style.dashPattern', defaultValue: false },
+        {
+          kind: 'range',
+          id: 'lineOpacity',
+          label: 'line.style.strokeOpacity',
+          defaultValue: 1,
+          min: 0.1,
+          max: 1,
+          step: 0.1,
+        },
       ],
     },
     {
@@ -119,7 +124,7 @@ export const gridPlaygroundEnControls = definePreviewControls({
         {
           kind: 'range',
           id: 'majorEvery',
-          label: 'major.every',
+          label: 'line.major.every',
           defaultValue: 4,
           min: 2,
           max: 8,
@@ -129,7 +134,7 @@ export const gridPlaygroundEnControls = definePreviewControls({
         {
           kind: 'range',
           id: 'majorOffset',
-          label: 'major.offset',
+          label: 'line.major.offset',
           defaultValue: 0,
           min: -4,
           max: 4,
@@ -264,8 +269,8 @@ export const gridPlaygroundEnControls = definePreviewControls({
 export const previewControlContract = {
   controls: gridPlaygroundEnControls,
   canonicalValues: {
-    boundsMin: [60, 50],
-    boundsMax: [340, 230],
+    boundsStart: [60, 50],
+    boundsEnd: [340, 230],
     spacingMode: 'uniform',
     spacing: 24,
     spacingX: 24,
@@ -273,7 +278,6 @@ export const previewControlContract = {
     originEnabled: false,
     originX: 200,
     originY: 140,
-    direction: 'both',
     includeBoundary: false,
     lineStroke: '#d3d3d3',
     lineStrokeWidth: 1,
@@ -297,15 +301,5 @@ export const previewControlContract = {
     borderFill: '#ffffff',
     borderFillOpacity: 0,
   },
-  relatedApis: [
-    'Grid.bounds',
-    'Grid.spacing',
-    'Grid.origin',
-    'Grid.lines.vertical',
-    'Grid.lines.horizontal',
-    'Grid.lines.includeBoundary',
-    'Grid.lines.style',
-    'Grid.major',
-    'Grid.border',
-  ],
+  relatedApis: ['Grid.bounds', 'Grid.line', 'Grid.border'],
 } satisfies PreviewControlContract;

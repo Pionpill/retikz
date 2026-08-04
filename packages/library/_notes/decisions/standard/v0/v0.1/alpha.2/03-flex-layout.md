@@ -225,9 +225,9 @@ line formation、freeze/redistribute、line cross metrics、distribution 和 pla
 
 ## 影响
 
-- 新增 `standard.flexLayout` layout-aware Composite、factory、module与公共类型
+- 新增 `standard.flexLayout` layout-aware Composite、factory、Definition与公共类型
 - 不改变 Core、renderer 或 alpha.1 composite
-- StandardAllPreset、React/Vanilla 与 docs接线在 ADR-06 统一修改
+- React/Vanilla 与 docs 接线在 alpha.3 ADR-06 统一修改
 - 新增公开 IR，无兼容迁移负担
 
 ## 能力完备性检查
@@ -252,7 +252,7 @@ line formation、freeze/redistribute、line cross metrics、distribution 和 pla
 
 ## 最终实现摘要
 
-- 实现 `standard.flexLayout` strict schema、factory、Definition、capability module、line formation、wrap/reverse 与有界 grow/shrink freeze solver
+- 实现 `standard.flexLayout` strict schema、factory、Definition、line formation、wrap/reverse 与有界 grow/shrink freeze solver
 - compile 通过 Core contextual probe 处理 minimum/natural、exact slot、文本主轴到交叉轴反馈、baseline、stretch refusal、overflow/clip 与 nested layout
 - authored order 与 paint order 保持稳定，reverse 只改变 traversal/placement；typed lines 与 adapter/docs 由 ADR-06 收口
 

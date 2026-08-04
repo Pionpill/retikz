@@ -22,8 +22,8 @@ export const standardV01: Release = {
         {
           label: { zh: '显式能力装载', en: 'Explicit capability loading' },
           content: {
-            zh: '每项能力提供 module；`createStandardBundle()` 支持部分组合，`StandardAllPreset` 提供当前版本全量 definitions。所有入口都复用 Core registry，不建立全局注册或第二套冲突规则。',
-            en: 'Each capability provides a module; `createStandardBundle()` composes selected definitions, while `StandardAllPreset` exposes the current full set. Every path reuses the Core registry without global registration or a second conflict model.',
+            zh: '每项能力直接提供 Definition；宿主通过 Core `CompileOptions.composites` 选择当前图需要的 definitions。所有入口都复用 Core registry，不建立全局注册或第二套冲突规则。',
+            en: 'Each capability directly provides a Definition; hosts select the definitions needed by the current figure through Core `CompileOptions.composites`. Every path reuses the Core registry without global registration or a second conflict model.',
           },
         },
         {
@@ -53,15 +53,15 @@ export const standardV01: Release = {
             {
               label: { zh: 'Typed artifact 与装载', en: 'Typed artifacts and loading' },
               content: {
-                zh: '每种容器返回 strict JSON artifact，记录 container、items 与 line / track / paint order 结果；Flex 与 Grid 额外以必填 `spacing` 区分固定 gap 和正自由空间分布。`StandardLayoutPreset` 可只装载布局 definitions，`StandardAllPreset` 同步纳入三项能力。',
-                en: 'Each container returns a strict JSON artifact with container, item, and line, track, or paint-order results. Flex and Grid additionally require `spacing` to distinguish fixed gaps from positive free-space distribution. `StandardLayoutPreset` loads only layout definitions, while `StandardAllPreset` now includes all three.',
+                zh: '每种容器返回 strict JSON artifact，记录 container、items 与 line / track / paint order 结果；Flex 与 Grid 额外以必填 `spacing` 区分固定 gap 和正自由空间分布。布局 Definition 通过 Core `composites` 按需注入。',
+                en: 'Each container returns a strict JSON artifact with container, item, and line, track, or paint-order results. Flex and Grid additionally require `spacing` to distinguish fixed gaps from positive free-space distribution. Layout Definitions are injected on demand through Core `composites`.',
               },
             },
             {
               label: { zh: '通用 Legend 呈现', en: 'Generic Legend presentation' },
               content: {
-                zh: '`standard.legend` 接收已解析的离散样本或连续 ramp，使用 Core minimum / natural / exact probe 与 replay 求解标题、标签、换行和溢出，并发布按 key 与 authored order 稳定的 strict typed artifact。`LegendModule` 已进入 `StandardAllPreset`；同一 module object 可幂等汇合，同名异对象仍 fail-loud。',
-                en: '`standard.legend` accepts resolved discrete samples or a continuous ramp, solves titles, labels, wrapping, and overflow through Core minimum, natural, and exact probes plus replay, and publishes a strict typed artifact stable by key and authored order. `LegendModule` joins `StandardAllPreset`; repeating the same module object is idempotent while same-name different objects still fail loudly.',
+                zh: '`standard.legend` 接收已解析的离散样本或连续 ramp，使用 Core minimum / natural / exact probe 与 replay 求解标题、标签、换行和溢出，并发布按 key 与 authored order 稳定的 strict typed artifact。调用方直接向 Core 注入 `LegendDefinition`；嵌套样本依赖仍需显式提供。',
+                en: '`standard.legend` accepts resolved discrete samples or a continuous sample and solves titles, labels, wrapping, and overflow through Core minimum, natural, and exact probes plus replay. Hosts inject `LegendDefinition` directly into Core, and nested sample dependencies remain explicit.',
               },
             },
             {
@@ -77,8 +77,8 @@ export const standardV01: Release = {
           version: 'alpha.1',
           date: '2026-07-26',
           summary: {
-            zh: '初始化 Standard 包家族，交付 Grid、Axes、Frame 与显式 capability module / bundle / preset。',
-            en: 'Initializes the Standard package family with Grid, Axes, Frame, and explicit capability modules, bundles, and presets.',
+            zh: '初始化 Standard 包家族，交付 Grid、Axes、Frame 与按需注入 Core 的 Definition。',
+            en: 'Initializes the Standard package family with Grid, Axes, Frame, and Definitions injected into Core on demand.',
           },
           items: [
             {
