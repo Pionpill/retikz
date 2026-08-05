@@ -1,7 +1,7 @@
 import type { InspectionLinePrimitive, InspectionPrimitive } from '@retikz/core';
 
-import type { ResolvedFlexLayoutInspectLocalOptions, StandardLayoutInspectContext } from '../shared';
-import type { FlexLayoutArtifact } from './types';
+import type { StandardLayoutInspectContext } from '../shared';
+import type { FlexLayoutArtifact, ResolvedFlexLayoutInspectLocalOptions } from './types';
 
 import {
   inspectLayoutArtifactBase,
