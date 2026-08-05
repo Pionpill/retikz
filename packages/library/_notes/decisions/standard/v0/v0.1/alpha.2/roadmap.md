@@ -2,7 +2,7 @@
 
 > 状态：进行中；ADR-01～07 已 Accepted，ADR-08～10 Proposed，alpha.2 为 Layout Inspector 视觉语义、通用 Legend 与 Presentation lower reuse 收口重新打开
 >
-> 主题：由 Standard 提供 renderer-agnostic 的高层 Box Layout 容器与已解析 Legend 呈现，让调用方复用确定性布局、视觉解释结构与 artifact
+> 主题：由 Standard 提供 renderer-agnostic 的高层 Box/Flex/Overlay Layout 容器与已解析 Legend 呈现，让调用方复用确定性布局、视觉解释结构与 artifact
 >
 > 关联：[Standard v0.1 roadmap](../roadmap.md) · [Standard library design](../../../../../architecture/standard-library-design.md) · [能力完备性与模块边界](../../../../../../../../notes/architecture/capability-design.md) · [Core layout-aware composite ADR](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.1/07-layout-aware-composite.md) · [Core proposal / probe ADR](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/08-layout-proposal-probe-contract.md) · [Core complete Scope output ADR](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/11-layout-aware-scope-output.md)
 
@@ -53,6 +53,7 @@ Row、Column、Stack 若未来提供 convenience authoring，只能归一为已�
 - Layout IR schema 与 schema-derived public types
 - LayoutItem、Box sizing、spacing、alignment、distribution 与 overflow 词汇
 - Flex line formation 与 grow / shrink solver
+- Legend 的 title/body/items 流式排版复用同一纯 Flex engine；Legend ramp 复用 Overlay positioned 语义，不引入第三套顺序流 solver
 - Grid track sizing、span 与稳定 auto-placement solver
 - Overlay alignment、container-local position 与 size participation
 - Standard layout diagnostics 与 artifact payload
@@ -97,6 +98,7 @@ adapter 不复制 Standard schema、solver、layout state、diagnostics 或 lowe
 - Flex、Grid 与 Overlay 是三个明确 solver，不建立万能 Layout 或可替换 layout solver registry
 - Generic container 只消费任意 `IRChild`，不理解 Plot、Table、Gantt、Graph 或文档领域语义
 - Legend 只消费领域已解析的 visual sample、label 与 normalized tick，不理解 scale、channel、Cell 或 relation role
+- Legend 不把公开 authoring schema lower 成嵌套 `IRFlexLayout`；共享 engine 是内部布局来源，`LegendDefinition` 的 loading 边界与 `LegendArtifact` 语义保持独立
 
 具体 schema 字段、默认值、Box edge 口径、Flex freeze/redistribute、Grid track 求解、Overlay placement 与 artifact payload 由对应 ADR 冻结，roadmap 不替代公开契约或算法设计。
 
@@ -176,7 +178,7 @@ Core ADR-08 实现 / 出口审计 / 可消费版本
 - 每项 capability 接入 alpha.1 已建立的 Definition 与 adapter 机制，直接使用 Core `CompileOptions.composites`，不使用包根导入副作用或隐式全局注册
 - Frame 默认继续使用现有纯 `expand` 主链；没有独立 ADR 证明时不迁入 layout-aware compile
 - ADR-08 重新打开 alpha.2，只收口既有 Layout Inspector 的公开 DTO、resolved spacing artifact、正交 inspection authoring option 与双后端视觉语义；不新增交互能力或其它 Tier 2 适配
-- ADR-09 依赖 Core ADR-11 的完整 authored Scope output；Legend 仍复用已发布前的 Box Layout 底座，不等待独立 alpha.3
+- ADR-09 依赖 Core ADR-11 的完整 authored Scope output；Legend 的流式部分复用共享 Flex engine，ramp 复用 Overlay positioned 语义，不等待独立 alpha.3
 - ADR-10 依赖 Core ADR-11 与 ADR-09 的共同契约；Axes / Grid / Frame 的 expand root 和 Legend 的 authored root 在同一批次完成审计，不迁移其它 Tier 2
 - ADR-09 只发布 Standard 可消费组件与跨包契约；Plot/Table/逻辑组件的实际迁移仍由各自 milestone 负责
 

@@ -1,21 +1,25 @@
 import type {
   CompositeCompileScopeProps,
-  IRChild,
-  LayoutAxisProposal,
   LayoutChildResult,
   LayoutCompositeCompileContext,
   LayoutCompositeCompileResult,
-  LayoutProposal,
 } from '@retikz/core';
 
-import { LayoutAxisProposalKind, LayoutChildProbeKind, LayoutIntrinsicMode } from '@retikz/core';
+import { LayoutAxisProposalKind } from '@retikz/core';
 
-import type { LayoutRect } from '../../layout/internal';
+import type {
+  LayoutChildHandle,
+  LayoutRect,
+  PairedFlowItem,
+  PairedFlowPlan,
+  PlacedLayoutChild,
+} from '../../layout/internal';
 import type { LayoutArtifactItemBase } from '../../layout/shared';
-import type { LegendItemLine, LegendItemSlots, MeasuredLegendChild, MeasuredLegendItem } from './providers';
+import type { MeasuredLegendChild, MeasuredLegendItem } from './providers';
 import type {
   IRLegend,
   IRLegendItem,
+  IRLegendItemsContent,
   LegendArtifact,
   LegendArtifactGeometry,
   LegendPlacedChildArtifact,
@@ -26,46 +30,38 @@ import {
   compensatedLayoutSum,
   contentRectOf,
   createLayoutArtifactContainer,
-  createLayoutArtifactItem,
-  layoutClipOf,
+  intrinsicLayoutProposal,
+  measureLayoutChild,
   normalizeLayoutSpacing,
+  placeLayoutChild,
+  replayLayoutChildren,
+  requiredLayoutProbe,
+  resolveFlexLineCrossMetrics,
+  resolveFlexLineMainProfile,
   resolveLayoutAxisSize,
+  resolvePairedFlowIntrinsicMainProfile,
+  resolvePairedFlowPlan,
+  translatePairedFlowPlan,
   unionLayoutArtifactRects,
 } from '../../layout/internal';
-import { LayoutAlignment, LayoutAxisSizeKind, LayoutOverflow } from '../../layout/shared';
+import { LayoutAlignment, LayoutAxisSizeKind } from '../../layout/shared';
 import { LegendContentKind, LegendDirection } from './constants';
-import {
-  formedLinesCrossProfile,
-  formedLinesMainProfile,
-  formLegendItemLines,
-  intrinsicItemsMainProfile,
-  placeLegendItems,
-} from './providers';
+import { pairedFlowItemsOf } from './providers';
 import { createLegendRampStructure, translateLegendRampStructure } from './providers';
-
-/** 绑定待 probe 的 child 与稳定 inspection occurrence */
-type ChildHandle = Readonly<{ child: IRChild; occurrence: number }>;
 
 /** 把已度量 item 与最终 probe 所需 handle 组合 */
 type CompileMeasuredItem = MeasuredLegendItem &
   Readonly<{
-    sampleHandle: ChildHandle;
-    labelHandle?: ChildHandle;
+    sampleHandle: LayoutChildHandle;
+    labelHandle?: LayoutChildHandle;
   }>;
 
-/** 保存 child 最终放置、replay 与 artifact 所需状态 */
-type FinalPlacedChild = Readonly<{
-  /** 最终 exact probe 结果 */
-  result: LayoutChildResult;
-  /** child 在 Legend allocation 坐标中的结构 slot */
-  slotBounds: LayoutRect;
-  /** 从 child allocation 原点移动到目标 slot 的平移 */
-  translation: Readonly<{ x: number; y: number }>;
-  /** 供 container 汇总几何的共享布局 artifact */
-  baseArtifact: LayoutArtifactItemBase;
-  /** 对外暴露的 Legend child placement artifact */
-  artifact: LegendPlacedChildArtifact;
-}>;
+/** 保存 child 最终放置与 Legend 专属 artifact 所需状态 */
+type FinalPlacedChild = PlacedLayoutChild &
+  Readonly<{
+    /** 对外暴露的 Legend child placement artifact */
+    artifact: LegendPlacedChildArtifact;
+  }>;
 
 /** 从 Legend 领域字段中分离 authored root Scope 的 Core 属性 */
 const authoredScopePropsOf = (node: IRLegend): CompositeCompileScopeProps => {
@@ -93,42 +89,6 @@ const authoredScopePropsOf = (node: IRLegend): CompositeCompileScopeProps => {
   return scopeProps;
 };
 
-/** 构造单轴 minimum 或 natural intrinsic proposal */
-const intrinsicAxisProposal = (mode: 'minimum' | 'natural'): LayoutAxisProposal => ({
-  kind: LayoutAxisProposalKind.Intrinsic,
-  mode: mode === 'minimum' ? LayoutIntrinsicMode.Minimum : LayoutIntrinsicMode.Natural,
-});
-
-/** 构造双轴 minimum 或 natural intrinsic proposal */
-const intrinsicProposal = (mode: 'minimum' | 'natural'): LayoutProposal => ({
-  x: intrinsicAxisProposal(mode),
-  y: intrinsicAxisProposal(mode),
-});
-
-/** 按结构 slot 构造双轴 exact proposal */
-const exactProposal = (slot: LayoutRect): LayoutProposal => ({
-  x: { kind: LayoutAxisProposalKind.Exact, value: slot.width },
-  y: { kind: LayoutAxisProposalKind.Exact, value: slot.height },
-});
-
-/** 执行一次必须成功的 child probe，并保留 Core failure occurrence */
-const requiredProbe = (
-  context: LayoutCompositeCompileContext,
-  handle: ChildHandle,
-  proposal: LayoutProposal,
-): LayoutChildResult => {
-  const probe = context.layoutChild(handle.child, proposal, context.inspection.child(handle.occurrence));
-  if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
-  return probe.result;
-};
-
-/** 取得 child 的 minimum / natural 双轴结构 contribution */
-const measureChild = (context: LayoutCompositeCompileContext, handle: ChildHandle): MeasuredLegendChild =>
-  Object.freeze({
-    minimum: requiredProbe(context, handle, intrinsicProposal('minimum')),
-    natural: requiredProbe(context, handle, intrinsicProposal('natural')),
-  });
-
 /** 计算指定物理轴两端 padding 的补偿求和 */
 const paddingAxisSize = (
   padding: Readonly<{ top: number; right: number; bottom: number; left: number }>,
@@ -147,24 +107,64 @@ const titleAxisProfile = (
   natural: title === undefined ? 0 : axis === 'x' ? title.natural.slotSize.width : title.natural.slotSize.height,
 });
 
+/** 把 title 或 body 的 intrinsic profile 映射成无 margin 的 Flex item */
+const profileFlexItemOf = (
+  key: string,
+  sourceIndex: number,
+  profile: Readonly<{ minimum: number; natural: number }>,
+): Readonly<{
+  key: string;
+  sourceIndex: number;
+  flexBaseSlot: number;
+  min: number;
+  grow: number;
+  shrink: number;
+  marginStart: number;
+  marginEnd: number;
+}> =>
+  Object.freeze({
+    key,
+    sourceIndex,
+    flexBaseSlot: profile.natural,
+    min: profile.minimum,
+    grow: 0,
+    shrink: 0,
+    marginStart: 0,
+    marginEnd: 0,
+  });
+
+/** 使用共享 Flex cross metrics 读取两个结构块的最大 cross profile */
+const flexCrossProfileOf = (
+  first: Readonly<{ minimum: number; natural: number }>,
+  second: Readonly<{ minimum: number; natural: number }>,
+): Readonly<{ minimum: number; natural: number }> => ({
+  minimum: resolveFlexLineCrossMetrics([
+    { slotSize: first.minimum, marginStart: 0, marginEnd: 0, alignment: LayoutAlignment.Start },
+    { slotSize: second.minimum, marginStart: 0, marginEnd: 0, alignment: LayoutAlignment.Start },
+  ]).size,
+  natural: resolveFlexLineCrossMetrics([
+    { slotSize: first.natural, marginStart: 0, marginEnd: 0, alignment: LayoutAlignment.Start },
+    { slotSize: second.natural, marginStart: 0, marginEnd: 0, alignment: LayoutAlignment.Start },
+  ]).size,
+});
+
 /** 合并 title、body、gap 与 padding 为根容器轴向 profile */
 const rootProfile = (
-  axis: 'x' | 'y',
   title: Readonly<{ minimum: number; natural: number }>,
   body: Readonly<{ minimum: number; natural: number }>,
   paddingSize: number,
   titleGap: number,
   stackTitle: boolean,
-): Readonly<{ minimum: number; natural: number }> =>
-  stackTitle
-    ? {
-        minimum: compensatedLayoutSum([paddingSize, title.minimum, titleGap, body.minimum]),
-        natural: compensatedLayoutSum([paddingSize, title.natural, titleGap, body.natural]),
-      }
-    : {
-        minimum: compensatedLayoutSum([paddingSize, Math.max(title.minimum, body.minimum)]),
-        natural: compensatedLayoutSum([paddingSize, Math.max(title.natural, body.natural)]),
-      };
+): Readonly<{ minimum: number; natural: number }> => {
+  const profileItems = [profileFlexItemOf('title', 0, title), profileFlexItemOf('body', 1, body)];
+  const profile = stackTitle
+    ? resolveFlexLineMainProfile(profileItems, [0, 1], titleGap)
+    : flexCrossProfileOf(title, body);
+  return Object.freeze({
+    minimum: compensatedLayoutSum([paddingSize, profile.minimum]),
+    natural: compensatedLayoutSum([paddingSize, profile.natural]),
+  });
+};
 
 /** 通过共享 Box size policy 解析 Legend 单轴 allocation */
 const resolveAxis = (
@@ -181,17 +181,52 @@ const resolveAxis = (
     naturalContribution: profile.natural,
   }).allocationSize;
 
+/** 从 Legend items 语义生成共享 paired flow 的纯 layout 输入 */
+const pairedFlowOptionsOf = (content: IRLegendItemsContent, items: ReadonlyArray<PairedFlowItem>) => ({
+  direction: content.direction,
+  wrap: content.wrap,
+  gap: content.gap,
+  pairGap: content.sampleGap,
+  primaryAlignment: content.sampleAlign,
+  secondaryAlignment: content.sampleAlign,
+  secondaryAlignmentBasis: 'pair' as const,
+  items,
+});
+
+/** 读取 paired flow plan 在指定物理轴上的 minimum/natural profile */
+const pairedFlowAxisProfileOf = (
+  plan: PairedFlowPlan,
+  direction: IRLegendItemsContent['direction'],
+  axis: 'x' | 'y',
+): Readonly<{ minimum: number; natural: number }> => {
+  const mainAxis = direction === LegendDirection.Horizontal ? 'x' : 'y';
+  return mainAxis === axis
+    ? { minimum: plan.minimumMainSize, natural: plan.naturalMainSize }
+    : { minimum: plan.minimumCrossSize, natural: plan.naturalCrossSize };
+};
+
+/** 调用共享 paired flow plan，并只在需要时提供最终内容预算 */
+const pairedFlowPlanOf = (
+  content: IRLegendItemsContent,
+  items: ReadonlyArray<PairedFlowItem>,
+  options: Readonly<{ availableMainSize?: number }> = {},
+): PairedFlowPlan =>
+  resolvePairedFlowPlan({
+    ...pairedFlowOptionsOf(content, items),
+    ...(options.availableMainSize === undefined ? {} : { availableMainSize: options.availableMainSize }),
+  });
+
 /** 在最终 content width 下取得 title 的 range / natural probe */
 const finalTitleProbe = (
   context: LayoutCompositeCompileContext,
-  handle: ChildHandle | undefined,
+  handle: LayoutChildHandle | undefined,
   contentWidth: number,
 ): LayoutChildResult | undefined =>
   handle === undefined
     ? undefined
-    : requiredProbe(context, handle, {
+    : requiredLayoutProbe(context, handle, {
         x: { kind: LayoutAxisProposalKind.Range, min: 0, max: contentWidth },
-        y: intrinsicAxisProposal('natural'),
+        y: intrinsicLayoutProposal('natural').y,
       });
 
 /** 按 Legend content box 的物理 x 轴对齐结构块，不钳制负剩余空间 */
@@ -222,7 +257,7 @@ const stripPlacedArtifact = (artifact: LayoutArtifactItemBase): LegendPlacedChil
 /** 完成 child exact probe、平移与可观察 placement artifact */
 const placeFinalChild = (
   context: LayoutCompositeCompileContext,
-  handle: ChildHandle,
+  handle: LayoutChildHandle,
   slotBounds: LayoutRect,
   key: string,
   sourceIndex: number,
@@ -230,27 +265,19 @@ const placeFinalChild = (
   overflow: IRLegend['overflow'],
   existingResult?: LayoutChildResult,
 ): FinalPlacedChild => {
-  const result = existingResult ?? requiredProbe(context, handle, exactProposal(slotBounds));
-  const translation = Object.freeze({
-    x: slotBounds.x - result.allocationBounds.x,
-    y: slotBounds.y - result.allocationBounds.y,
-  });
-  const baseArtifact = createLayoutArtifactItem({
+  const placed = placeLayoutChild({
+    context,
+    handle,
+    slotBounds,
     key,
     sourceIndex,
-    margin: { top: 0, right: 0, bottom: 0, left: 0 },
-    slotBounds,
-    result,
-    translation,
     containerAllocation,
     overflow,
+    ...(existingResult === undefined ? {} : { existingResult }),
   });
   return Object.freeze({
-    result,
-    slotBounds,
-    translation,
-    baseArtifact,
-    artifact: stripPlacedArtifact(baseArtifact),
+    ...placed,
+    artifact: stripPlacedArtifact(placed.baseArtifact),
   });
 };
 
@@ -285,15 +312,15 @@ const compileLegendRamp = (
       tick.label === undefined ? undefined : Object.freeze({ child: tick.label, occurrence: nextOccurrence++ });
     return Object.freeze({ ...(labelHandle === undefined ? {} : { labelHandle }) });
   });
-  const titleMeasured = titleHandle === undefined ? undefined : measureChild(context, titleHandle);
-  const sampleMeasured = measureChild(context, sampleHandle);
+  const titleMeasured = titleHandle === undefined ? undefined : measureLayoutChild(context, titleHandle);
+  const sampleMeasured = measureLayoutChild(context, sampleHandle);
   const measuredTicks = ramp.ticks.map((tick, sourceIndex) => {
     const labelHandle = tickHandles[sourceIndex].labelHandle;
     return Object.freeze({
       key: tick.key,
       sourceIndex,
       offset: tick.offset,
-      ...(labelHandle === undefined ? {} : { labelHandle, label: measureChild(context, labelHandle).natural }),
+      ...(labelHandle === undefined ? {} : { labelHandle, label: measureLayoutChild(context, labelHandle).natural }),
     });
   });
   const localStructure = createLegendRampStructure(ramp, sampleMeasured.natural, measuredTicks);
@@ -302,7 +329,7 @@ const compileLegendRamp = (
   const paddingY = paddingAxisSize(padding, 'y');
   const titleX = titleAxisProfile(titleMeasured, 'x');
   const bodyX = { minimum: localStructure.bounds.width, natural: localStructure.bounds.width };
-  const allocationWidth = resolveAxis(node, context, 'x', rootProfile('x', titleX, bodyX, paddingX, 0, false));
+  const allocationWidth = resolveAxis(node, context, 'x', rootProfile(titleX, bodyX, paddingX, 0, false));
   const contentWidth = Math.max(0, allocationWidth - paddingX);
   const titleResult = finalTitleProbe(context, titleHandle, contentWidth);
   const titleHeight = titleResult?.slotSize.height ?? 0;
@@ -312,7 +339,7 @@ const compileLegendRamp = (
     node,
     context,
     'y',
-    rootProfile('y', { minimum: titleHeight, natural: titleHeight }, bodyY, paddingY, effectiveTitleGap, true),
+    rootProfile({ minimum: titleHeight, natural: titleHeight }, bodyY, paddingY, effectiveTitleGap, true),
   );
   const allocation = Object.freeze({ x: 0, y: 0, width: allocationWidth, height: allocationHeight });
   const contentBounds = contentRectOf(allocation, padding);
@@ -365,15 +392,7 @@ const compileLegendRamp = (
     sample,
     ...finalTicks.flatMap(tick => (tick.label === null ? [] : [tick.label])),
   ];
-  const replayed = allPlaced.map(placed =>
-    context.replay(placed.result, {
-      transforms: [{ kind: 'translate', x: placed.translation.x, y: placed.translation.y }],
-    }),
-  );
-  const allocationScope = context.scope(
-    node.overflow === LayoutOverflow.Clip ? { clip: layoutClipOf(allocation) } : {},
-    replayed,
-  );
+  const allocationScope = replayLayoutChildren(context, allPlaced, allocation, node.overflow);
   const authoredRootScope = context.scope(authoredScopeProps, [allocationScope]);
 
   return {
@@ -418,14 +437,14 @@ export const compileLegend = (
       item.label === undefined ? undefined : Object.freeze({ child: item.label, occurrence: nextOccurrence++ });
     return Object.freeze({ sampleHandle, ...(labelHandle === undefined ? {} : { labelHandle }) });
   });
-  const titleMeasured = titleHandle === undefined ? undefined : measureChild(context, titleHandle);
+  const titleMeasured = titleHandle === undefined ? undefined : measureLayoutChild(context, titleHandle);
   const measured: Array<CompileMeasuredItem> = node.content.items.map((authored: IRLegendItem, sourceIndex) => {
     const handles = itemHandles[sourceIndex];
     return Object.freeze({
       authored,
       sourceIndex,
-      sample: measureChild(context, handles.sampleHandle),
-      ...(handles.labelHandle === undefined ? {} : { label: measureChild(context, handles.labelHandle) }),
+      sample: measureLayoutChild(context, handles.sampleHandle),
+      ...(handles.labelHandle === undefined ? {} : { label: measureLayoutChild(context, handles.labelHandle) }),
       ...handles,
     });
   });
@@ -435,23 +454,29 @@ export const compileLegend = (
   const hasBody = measured.length > 0;
   const effectiveTitleGap = titleMeasured !== undefined && hasBody ? node.titleGap : 0;
   const titleX = titleAxisProfile(titleMeasured, 'x');
-  const intrinsicMain = intrinsicItemsMainProfile(node.content, measured);
-  const unwrappedLines = formLegendItemLines(node.content, measured, Number.MAX_VALUE);
-  const unwrappedCross = formedLinesCrossProfile(node.content, unwrappedLines);
+  const flowItems = pairedFlowItemsOf(measured);
+  const flowOptions = pairedFlowOptionsOf(node.content, flowItems);
+  const intrinsicMain = resolvePairedFlowIntrinsicMainProfile(flowOptions);
+  const unwrappedPlan = resolvePairedFlowPlan({ ...flowOptions, wrap: 'nowrap' });
+  const unwrappedCross = pairedFlowAxisProfileOf(
+    unwrappedPlan,
+    node.content.direction,
+    node.content.direction === LegendDirection.Horizontal ? 'y' : 'x',
+  );
 
   let allocationWidth: number;
   let allocationHeight: number;
-  let lines: ReadonlyArray<LegendItemLine>;
+  let flowPlan: PairedFlowPlan;
   let titleResult: LayoutChildResult | undefined;
 
   if (node.content.direction === LegendDirection.Horizontal) {
-    const preliminaryX = rootProfile('x', titleX, intrinsicMain, paddingX, 0, false);
+    const preliminaryX = rootProfile(titleX, intrinsicMain, paddingX, 0, false);
     allocationWidth = resolveAxis(node, context, 'x', preliminaryX);
     const preliminaryContentWidth = Math.max(0, allocationWidth - paddingX);
-    lines = formLegendItemLines(node.content, measured, preliminaryContentWidth);
+    flowPlan = pairedFlowPlanOf(node.content, flowItems, { availableMainSize: preliminaryContentWidth });
     if (node.size.x.kind === LayoutAxisSizeKind.Content && context.proposal.x.kind !== LayoutAxisProposalKind.Exact) {
-      const formedMain = formedLinesMainProfile(lines);
-      allocationWidth = resolveAxis(node, context, 'x', rootProfile('x', titleX, formedMain, paddingX, 0, false));
+      const formedMain = pairedFlowAxisProfileOf(flowPlan, node.content.direction, 'x');
+      allocationWidth = resolveAxis(node, context, 'x', rootProfile(titleX, formedMain, paddingX, 0, false));
     }
     const contentWidth = Math.max(0, allocationWidth - paddingX);
     titleResult = finalTitleProbe(context, titleHandle, contentWidth);
@@ -459,38 +484,38 @@ export const compileLegend = (
       minimum: titleResult?.slotSize.height ?? 0,
       natural: titleResult?.slotSize.height ?? 0,
     };
-    const rowsCross = formedLinesCrossProfile(node.content, lines);
+    const rowsCross = pairedFlowAxisProfileOf(flowPlan, node.content.direction, 'y');
     allocationHeight = resolveAxis(
       node,
       context,
       'y',
-      rootProfile('y', finalTitleY, rowsCross, paddingY, effectiveTitleGap, true),
+      rootProfile(finalTitleY, rowsCross, paddingY, effectiveTitleGap, true),
     );
   } else {
     const preliminaryCross = unwrappedCross;
-    allocationWidth = resolveAxis(node, context, 'x', rootProfile('x', titleX, preliminaryCross, paddingX, 0, false));
+    allocationWidth = resolveAxis(node, context, 'x', rootProfile(titleX, preliminaryCross, paddingX, 0, false));
     const preliminaryContentWidth = Math.max(0, allocationWidth - paddingX);
     titleResult = finalTitleProbe(context, titleHandle, preliminaryContentWidth);
     const finalTitleY = {
       minimum: titleResult?.slotSize.height ?? 0,
       natural: titleResult?.slotSize.height ?? 0,
     };
-    const preliminaryY = rootProfile('y', finalTitleY, intrinsicMain, paddingY, effectiveTitleGap, true);
+    const preliminaryY = rootProfile(finalTitleY, intrinsicMain, paddingY, effectiveTitleGap, true);
     allocationHeight = resolveAxis(node, context, 'y', preliminaryY);
     const preliminaryBodyHeight = Math.max(0, allocationHeight - paddingY - finalTitleY.natural - effectiveTitleGap);
-    lines = formLegendItemLines(node.content, measured, preliminaryBodyHeight);
+    flowPlan = pairedFlowPlanOf(node.content, flowItems, { availableMainSize: preliminaryBodyHeight });
     if (node.size.y.kind === LayoutAxisSizeKind.Content && context.proposal.y.kind !== LayoutAxisProposalKind.Exact) {
-      const formedMain = formedLinesMainProfile(lines);
+      const formedMain = pairedFlowAxisProfileOf(flowPlan, node.content.direction, 'y');
       allocationHeight = resolveAxis(
         node,
         context,
         'y',
-        rootProfile('y', finalTitleY, formedMain, paddingY, effectiveTitleGap, true),
+        rootProfile(finalTitleY, formedMain, paddingY, effectiveTitleGap, true),
       );
     }
     if (node.size.x.kind === LayoutAxisSizeKind.Content && context.proposal.x.kind !== LayoutAxisProposalKind.Exact) {
-      const reconciledCross = formedLinesCrossProfile(node.content, lines);
-      const reconciled = resolveAxis(node, context, 'x', rootProfile('x', titleX, reconciledCross, paddingX, 0, false));
+      const reconciledCross = pairedFlowAxisProfileOf(flowPlan, node.content.direction, 'x');
+      const reconciled = resolveAxis(node, context, 'x', rootProfile(titleX, reconciledCross, paddingX, 0, false));
       allocationWidth = Math.max(allocationWidth, reconciled);
     }
   }
@@ -498,33 +523,30 @@ export const compileLegend = (
   const allocation = Object.freeze({ x: 0, y: 0, width: allocationWidth, height: allocationHeight });
   const contentBounds = contentRectOf(allocation, padding);
   const titleHeight = titleResult?.slotSize.height ?? 0;
-  const structuralBodyWidth =
-    node.content.direction === LegendDirection.Horizontal
-      ? formedLinesMainProfile(lines).natural
-      : formedLinesCrossProfile(node.content, lines).natural;
+  const structuralBodyWidth = flowPlan.bounds.width;
   const bodyOrigin = Object.freeze({
     x: alignedContentX(contentBounds, structuralBodyWidth, node.contentAlign),
     y: contentBounds.y + titleHeight + effectiveTitleGap,
   });
-  const structuralPlacement = placeLegendItems(node.content, measured, lines, bodyOrigin);
-  const finalItems = structuralPlacement.slots.map((slots: LegendItemSlots) => {
+  const structuralPlacement = translatePairedFlowPlan(flowPlan, bodyOrigin);
+  const finalItems = structuralPlacement.slots.map(slots => {
     const measuredItem = measured[slots.sourceIndex];
     const sample = placeFinalChild(
       context,
       measuredItem.sampleHandle,
-      slots.sample,
+      slots.primary,
       `sample:${measuredItem.authored.key}`,
       measuredItem.sourceIndex,
       allocation,
       node.overflow,
     );
     const label =
-      slots.label === null || measuredItem.labelHandle === undefined
+      slots.secondary === null || measuredItem.labelHandle === undefined
         ? null
         : placeFinalChild(
             context,
             measuredItem.labelHandle,
-            slots.label,
+            slots.secondary,
             `label:${measuredItem.authored.key}`,
             measuredItem.sourceIndex,
             allocation,
@@ -535,9 +557,9 @@ export const compileLegend = (
   });
   const bodyAllocationRects = finalItems.map(item => item.geometry.allocationBounds);
   const bodyBounds =
-    structuralPlacement.bodyBounds === null
+    structuralPlacement.lines.length === 0
       ? null
-      : unionLayoutArtifactRects([structuralPlacement.bodyBounds, ...bodyAllocationRects]);
+      : unionLayoutArtifactRects([structuralPlacement.bounds, ...bodyAllocationRects]);
   const titleSlot =
     titleResult === undefined
       ? undefined
@@ -555,15 +577,7 @@ export const compileLegend = (
     ...(titlePlaced === null ? [] : [titlePlaced]),
     ...finalItems.flatMap(item => (item.label === null ? [item.sample] : [item.sample, item.label])),
   ];
-  const replayed = allPlaced.map(placed =>
-    context.replay(placed.result, {
-      transforms: [{ kind: 'translate', x: placed.translation.x, y: placed.translation.y }],
-    }),
-  );
-  const allocationScope = context.scope(
-    node.overflow === LayoutOverflow.Clip ? { clip: layoutClipOf(allocation) } : {},
-    replayed,
-  );
+  const allocationScope = replayLayoutChildren(context, allPlaced, allocation, node.overflow);
   const authoredRootScope = context.scope(authoredScopeProps, [allocationScope]);
   const artifactItems = finalItems.map(item =>
     Object.freeze({

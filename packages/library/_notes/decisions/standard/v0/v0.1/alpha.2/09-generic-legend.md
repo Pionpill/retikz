@@ -18,7 +18,7 @@ Plot 已经可以根据 channel、scale 与 guide 解析 color、size、opacity�
 
 Standard 因此不能把 Plot guide 提升为公共模型，也不能用自由文本或封闭的 swatch / line / symbol 枚举限制未来 Tier 2。它需要保留结构化 Legend 语义，同时把视觉样本开放到 Core 已有的通用绘图表达。
 
-alpha.2 尚未发布，且已经具备任意 `IRChild` 的双轴 probe、Box Layout、replay 与 typed artifact 底座。本能力直接进入 alpha.2，取代原先单独安排的 alpha.3 Legend milestone。
+alpha.2 尚未发布，且已经具备任意 `IRChild` 的双轴 probe、Box Layout、replay 与 typed artifact 底座。本能力直接进入 alpha.2，取代原先单独安排的 alpha.3 Legend milestone。Legend 的流式排版复用 Standard FlexLayout 的纯计算语义，连续 ramp 的定位复用 OverlayLayout 的 positioned 语义；这两者都是内部布局来源，不改变 Legend 的高层 authoring 形态。
 
 ## 目标
 
@@ -26,7 +26,7 @@ alpha.2 尚未发布，且已经具备任意 `IRChild` 的双轴 probe、Box Lay
 2. 同时覆盖离散条目与连续样本，并允许线、面、symbol、节点或任意注册 Tier 2 composite 作为视觉样本
 3. 让直接 IR、Standard React、Standard Vanilla、Plot、Table 与未来 Tier 2 进入同一 schema、布局、compile 与 artifact 主链
 4. 保持领域解析、formatter、provenance、locator 与交互意图在各自领域 owner 内
-5. 只复用 Core Composite registry 与 Standard Box Layout，不新增 renderer 分支、私有测量或 Legend sample registry
+5. 只复用 Core Composite registry、Standard 共享 Box/Flex/Overlay 布局语义，不新增 renderer 分支、私有测量或 Legend sample registry
 
 ## 核心决策
 
@@ -43,7 +43,7 @@ Plot / Table / Logic / 未来 Tier 2
    Standard Legend input
           │ 约束布局与 compile
           ▼
- Standard Box Layout / Core
+ Standard Box/Flex/Overlay Layout / Core
 ```
 
 Plot 继续拥有 channel / scale 绑定、domain、ticks、formatter、theme 映射、guide resolve、provenance / locator 与交互意图。Table 继续拥有 visual encoding、selector / rule、formatter、theme precedence、Cell lineage 与 descriptor。逻辑组件继续拥有 relation role、style resolution 与语义 identity。
@@ -114,6 +114,8 @@ Standard 不新增 reference sandbox、不阻断合法 ancestor reference，也�
 为了让同一 Legend input 可跨宿主和位置复用，领域 resolver 应优先构造内部闭合的 sample；这是 portability 建议，不是 Standard 复制 Core 引用校验的理由。
 
 ### 4. 离散条目与连续样本具有不同布局合同
+
+Legend 的 `title`、`body` 与离散 `items` 的顺序流使用与公开 FlexLayout 相同的纯 line formation、主轴分配、交叉轴 placement、proposal 和 overflow 语义。Legend 负责把 sample + label 映射为内部 Flex item，并把 `contentAlign`、`sampleAlign`、`titleGap` 与领域 artifact 投影接回自身契约；它不在运行时嵌套调用 `FlexLayoutDefinition`，也不把 synthetic Flex key 暴露为 authored identity。`ramp` 的 normalized tick 是以 sample slot 为参照的 positioned child，使用 OverlayLayout 的 positioned placement 语义；它不被伪造成普通 Flex 顺序项。
 
 title 始终位于 body 上方；只有 title 与非空 body 同时存在时才插入 `titleGap`。`contentAlign` 沿物理 x 轴控制 title slot 与 body structural block 在最终 content box 内的独立对齐，可取 `start | center | end`，默认 `start`。两个区域分别按自身 resolved structural width 对齐，因此 start 共享左边缘、center 共享中心线、end 共享右边缘；它不改变 title child 自己的文字或内部图元对齐，也不改变 body 内部的 sample / label 排列。title-only 与 body-only 仍使用同一 content-box 对齐规则；title 与 body 都不存在时 content 为原点处的零矩形，minimum / natural contribution 只包含 resolved padding，最终 container allocation 仍由 content / fixed / fill 与父 proposal 共同决定。`items` form 负责一组 sample + label 映射：
 
@@ -228,7 +230,7 @@ type LegendArtifact =
     };
 ```
 
-`items` 与 `ticks` 数组严格保持 authored order；key 用于 identity 与 join，不改写数组顺序，也不转成以用户字符串为属性名的 map。Legend root Scope identity 不写入 item / tick artifact；`container`、placed child 与 overflow 语义直接复用 Standard Box Layout artifact vocabulary。内部 allocation / replay Scope 不产生公开 authored identity，也不成为 artifact item。
+`items` 与 `ticks` 数组严格保持 authored order；key 用于 identity 与 join，不改写数组顺序，也不转成以用户字符串为属性名的 map。Legend root Scope identity 不写入 item / tick artifact；`container`、placed child 与 overflow 语义直接复用 Standard Box/Flex/Overlay layout artifact vocabulary。内部 allocation / replay Scope 不产生公开 authored identity，也不成为 artifact item。
 
 几何 union 口径固定为：
 
@@ -254,7 +256,7 @@ Legend 通过 `LegendDefinition` 接入 Core `CompileOptions.composites`、React
 - 不同 object 但相同 composite key 的输入继续由 Core 诊断
 - 缺失 sample 所需 definition 时保留明确的 provider key 与 occurrence diagnostic
 
-LegendDefinition 只贡献 Legend 自身 definition。它复用 Standard 已有 Box 词汇与 Core layout-aware contract，但不要求调用方同时提供 FlexLayout、GridLayout 或 OverlayLayout definition，也不自动收集 sample 所需的未知 Tier 2 capability
+LegendDefinition 只贡献 Legend 自身 definition。它复用 Standard 已有 Box、Flex 与 Overlay 的纯布局语义以及 Core layout-aware contract，但不要求调用方同时提供 FlexLayout、GridLayout 或 OverlayLayout definition，也不自动收集 sample 所需的未知 Tier 2 capability。内部 engine 不改变 Definition loading 边界，也不把 nested layout implementation identity 写入 Legend artifact
 
 ### 7. React 使用无头组合 authoring，Vanilla 保持 plain-data authoring
 
@@ -358,14 +360,14 @@ Plot 当前 `IRPlotLegendGuide`、Table 当前 Legend descriptor 与未来逻辑
 - **所属能力域与能力面**：Drawing Complete 在 Core 之上的可选通用 Tier 2 呈现；依赖 Core ADR-11 的完整 authored Scope output；协作 Visualization Complete 与 Tabular Visualization Complete
 - **解决的问题**：让多个领域把已经解析好的视觉解释结构复用为同一持久化 schema、约束布局、compile 与 artifact
 - **主责包与协作包**：Standard 主责 Legend 呈现；Plot/Table/逻辑组件主责领域解析、formatter、provenance / locator 与交互；Core/Math 提供 IR、text、measurement、replay 与 registry；adapters 等价暴露
-- **是否可由现有能力组合**：Core ADR-11 的完整 Scope output、Core layout-aware composite 与 Standard Box Layout 提供机制；本 ADR 只扩展 Legend 持久化语义、Definition 与 artifact，不在 Legend 中补 Scope / replay 旁路
+- **是否可由现有能力组合**：Core ADR-11 的完整 Scope output、Core layout-aware composite 与 Standard 共享 Box/Flex/Overlay 布局语义提供机制；本 ADR 只扩展 Legend 持久化语义、Definition 与 artifact，不在 Legend 中补 Scope / replay 旁路
 - **是否需要下沉到依赖能力域**：不下沉 Legend；若任意 IRChild 仍无法沿当前 reference、probe / replay 合同布局，只补 Core 通用机制，不在 Standard 建旁路
-- **内部表达链路**：strict Legend schema + Core authored Scope props → layout-aware CompositeDefinition → Standard Box Layout / Core probe-replay → authored Scope + typed artifact
+- **内部表达链路**：strict Legend schema + Core authored Scope props → layout-aware CompositeDefinition → Standard shared Flex/Overlay engine + Core probe-replay → authored Scope + typed artifact
 - **外部扩展链路**：视觉 sample 直接使用 Core IR 或任意注册 CompositeDefinition；不新增 Legend 专用 provider family
 - **define-registry**：Legend 自身沿用 Core CompositeDefinition registry；sample 开放性也由同一 registry 提供，因此新的 LegendSampleDefinition / registry 不适用
 - **下游执行 / adapter 等价性**：renderer 不认识 Legend 私有类型；React marker 只作为同步 authoring sugar 降为同一 `LegendInput`，直接 IR、React、Vanilla 与领域 adapters 复用同一 compile 主链
 - **不支持边界与诊断**：不拥有 scale / channel / Table rule / relation model、formatter、interaction、自动 placement 或 renderer measurement；非法输入、缺失 capability、引用错误与布局失败均 fail-loud
-- **本轮结论**：扩展 Standard，复用 Core ADR-11、Core registry 与 Standard Box Layout；领域包单向依赖，不在 Core 或领域包建立平行 Legend
+- **本轮结论**：扩展 Standard，复用 Core ADR-11、Core registry 与 Standard shared Flex/Overlay engine；领域包单向依赖，不在 Core 或领域包建立平行 Legend
 
 ## 不在范围
 

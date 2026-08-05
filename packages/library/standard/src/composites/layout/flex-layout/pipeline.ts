@@ -28,15 +28,20 @@ import {
   createLayoutArtifactAlignmentGuide,
   createLayoutArtifactContainer,
   createLayoutArtifactItem,
+  formFlexLines,
   layoutClipOf,
   layoutEpsilon,
   normalizeLayoutSpacing,
+  resolveFlexItemCrossSlotStart,
+  resolveFlexLineCrossMetrics,
+  resolveFlexLineDistribution,
+  resolveFlexLineMainSizes,
+  resolveFlexSpaceDistribution,
   resolveLayoutAxisSize,
   sortLayoutSpacing,
 } from '../internal';
-import { LayoutAlignment, LayoutAxisSizeKind, LayoutDistribution, LayoutOverflow, LayoutSpacingKind } from '../shared';
+import { LayoutAlignment, LayoutAxisSizeKind, LayoutOverflow, LayoutSpacingKind } from '../shared';
 import { FlexLayoutDirection, FlexLayoutWrap } from './constants';
-import { formFlexLines, resolveFlexLineMainSizes, resolveFlexSpaceDistribution } from './solve';
 
 type PhysicalAxis = 'x' | 'y';
 
@@ -225,85 +230,6 @@ const structuralGuideOffset = (
   };
 };
 
-/** 计算一条 line 的结构 cross size 与 baseline target */
-const resolveLineCrossMetrics = (
-  itemIndexes: ReadonlyArray<number>,
-  items: ReadonlyArray<MeasuredFlexItem>,
-  crossResults: ReadonlyArray<LayoutChildResult>,
-  crossAxis: PhysicalAxis,
-  alignItems: IRFlexLayout['alignItems'],
-): Readonly<{ size: number; firstTarget?: number; lastTarget?: number }> => {
-  let ordinary = 0;
-  let firstAscent = 0;
-  let firstDescent = 0;
-  let lastAscent = 0;
-  let lastDescent = 0;
-  let hasFirst = false;
-  let hasLast = false;
-  for (const index of itemIndexes) {
-    const item = items[index];
-    const result = crossResults[index];
-    const margins = crossMarginsOf(item.margin, crossAxis);
-    const slotSize = slotSizeOn(result, crossAxis);
-    const alignment = item.authored.alignSelf ?? alignItems;
-    ordinary = Math.max(ordinary, compensatedLayoutSum([margins.start, slotSize, margins.end]));
-    if (alignment === LayoutAlignment.FirstBaseline) {
-      const guide = structuralGuideOffset(result, crossAxis, LayoutAlignmentGuideName.FirstBaseline);
-      firstAscent = Math.max(firstAscent, margins.start + guide.offset);
-      firstDescent = Math.max(firstDescent, slotSize - guide.offset + margins.end);
-      hasFirst = true;
-    }
-    if (alignment === LayoutAlignment.LastBaseline) {
-      const guide = structuralGuideOffset(result, crossAxis, LayoutAlignmentGuideName.LastBaseline);
-      lastAscent = Math.max(lastAscent, margins.start + guide.offset);
-      lastDescent = Math.max(lastDescent, slotSize - guide.offset + margins.end);
-      hasLast = true;
-    }
-  }
-  const size = Math.max(ordinary, firstAscent + firstDescent, lastAscent + lastDescent);
-  return {
-    size,
-    ...(hasFirst ? { firstTarget: firstAscent } : {}),
-    ...(hasLast ? { lastTarget: size - lastDescent } : {}),
-  };
-};
-
-/** 把 alignContent 剩余空间解析为 line slot 扩张、起始偏移与附加 gap */
-const resolveLineDistribution = (
-  distribution: IRFlexLayout['alignContent'],
-  remaining: number,
-  lineCount: number,
-): Readonly<{ leading: number; between: number; stretch: number }> => {
-  if (distribution === LayoutDistribution.Stretch && remaining > 0 && lineCount > 0) {
-    return { leading: 0, between: 0, stretch: remaining / lineCount };
-  }
-  const nonStretch = distribution === LayoutDistribution.Stretch ? LayoutDistribution.Start : distribution;
-  const resolved = resolveFlexSpaceDistribution(nonStretch, remaining, lineCount);
-  return { ...resolved, stretch: 0 };
-};
-
-/** 计算一个 alignment 在 line cross slot 中的 child slot 起点 */
-const itemCrossSlotStart = (
-  line: FlexLineState,
-  slotSize: number,
-  margins: Readonly<{ start: number; end: number }>,
-  alignment: IRFlexLayout['alignItems'],
-  guideOffset: number,
-): number => {
-  if (alignment === LayoutAlignment.End) return line.crossStart + line.finalCrossSize - margins.end - slotSize;
-  if (alignment === LayoutAlignment.Center) {
-    const available = Math.max(0, line.finalCrossSize - margins.start - margins.end);
-    return line.crossStart + margins.start + (available - slotSize) / 2;
-  }
-  if (alignment === LayoutAlignment.FirstBaseline && line.firstTarget !== undefined) {
-    return line.crossStart + line.firstTarget - guideOffset;
-  }
-  if (alignment === LayoutAlignment.LastBaseline && line.lastTarget !== undefined) {
-    return line.crossStart + line.lastTarget - guideOffset;
-  }
-  return line.crossStart + margins.start;
-};
-
 /** 读取 placement translation 后的真实 guide 或 allocation edge 坐标 */
 const placedGuideCoordinate = (
   placed: PlacedFlexItem,
@@ -485,7 +411,22 @@ export const compileFlexLayout = (
     ),
   );
   lineStates.forEach(line => {
-    const metrics = resolveLineCrossMetrics(line.itemIndexes, measured, crossResults, axes.cross, node.alignItems);
+    const metrics = resolveFlexLineCrossMetrics(
+      line.itemIndexes.map(index => {
+        const item = measured[index];
+        const result = crossResults[index];
+        const margins = crossMarginsOf(item.margin, axes.cross);
+        const alignment = item.authored.alignSelf ?? node.alignItems;
+        return {
+          slotSize: slotSizeOn(result, axes.cross),
+          marginStart: margins.start,
+          marginEnd: margins.end,
+          alignment,
+          firstBaselineOffset: structuralGuideOffset(result, axes.cross, LayoutAlignmentGuideName.FirstBaseline).offset,
+          lastBaselineOffset: structuralGuideOffset(result, axes.cross, LayoutAlignmentGuideName.LastBaseline).offset,
+        };
+      }),
+    );
     line.initialCrossSize = metrics.size;
     line.finalCrossSize = metrics.size;
     line.firstTarget = metrics.firstTarget;
@@ -515,7 +456,7 @@ export const compileFlexLayout = (
   const crossRemaining = crossContent.size - initialLineCrossTotal;
   const lineDistribution =
     lineStates.length > 1
-      ? resolveLineDistribution(node.alignContent, crossRemaining, lineStates.length)
+      ? resolveFlexLineDistribution(node.alignContent, crossRemaining, lineStates.length)
       : { leading: 0, between: 0, stretch: 0 };
   if (lineStates.length > 1 && lineDistribution.stretch !== 0) {
     lineStates.forEach(line => (line.finalCrossSize += lineDistribution.stretch));
@@ -585,7 +526,7 @@ export const compileFlexLayout = (
           ? LayoutAlignmentGuideName.LastBaseline
           : LayoutAlignmentGuideName.FirstBaseline;
       const guideOffset = structuralGuideOffset(finalResult, axes.cross, guideName).offset;
-      const crossSlotStart = itemCrossSlotStart(line, crossSlotSize, crossMargins, alignment, guideOffset);
+      const crossSlotStart = resolveFlexItemCrossSlotStart(line, crossSlotSize, crossMargins, alignment, guideOffset);
       const physicalSlot: LayoutRect =
         axes.main === 'x'
           ? { x: mainSlotStart, y: crossSlotStart, width: mainSlot, height: crossSlotSize }
