@@ -1,4 +1,4 @@
-import { FontSchema, FontSizeSchema, NodeSchema } from '@retikz/core';
+import { FontSchema, FontSizeSchema, NodeSchema, ThemeMode, ThemeStyle } from '@retikz/core';
 import {
   AxisGridLineStyleSchema,
   AxisLineStyleSchema,
@@ -10,7 +10,7 @@ import {
 import { LayoutContainerBoxSchema } from '@retikz/standard';
 import { z } from 'zod';
 
-import { ChartStyle, ChartStyleToken, ChartThemeMode } from './constants';
+import { ChartStyleToken } from './constants';
 
 const PaintTokenSchema = z.string().min(1);
 const NonNegativeTokenSchema = z.number().nonnegative();
@@ -160,8 +160,8 @@ export const ChartResolvedStyleTokensSchema = z
 /** 所有 Chart variant 共享的主题输入字段 */
 export const ChartStyleSurfaceSchema = z
   .strictObject({
-    style: z.enum(ChartStyle).optional().describe('Built-in Chart visual-language preset'),
-    themeMode: z.enum(ChartThemeMode).optional().describe('Light or dark paint environment'),
+    style: z.enum(ThemeStyle).optional().describe('Built-in Chart visual-language preset'),
+    themeMode: z.enum(ThemeMode).optional().describe('Light or dark paint environment'),
     styleTokens: ChartStyleTokenOverridesSchema.optional().describe('Sparse canonical Chart token overrides'),
     colors: PlotSpecSchema.shape.colors.unwrap().optional().describe('Plot palette shorthand override'),
   })

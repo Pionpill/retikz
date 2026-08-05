@@ -49,19 +49,15 @@ export type {
   ChartStyleAuthoredOverrideValue,
   ChartStyleTokenSourceValue,
   ChartStyleTokenValue,
-  ChartStyleValue,
-  ChartThemeModeValue,
   IRChartResolvedStyleTokens,
   IRChartStyleSurface,
   IRChartStyleTokenOverrides,
 } from './style';
 export {
   ChartResolvedStyleTokensSchema,
-  ChartStyle,
   ChartStyleAuthoredOverride,
   ChartStyleSurfaceSchema,
   ChartStyleToken,
   ChartStyleTokenOverridesSchema,
   ChartStyleTokenSource,
-  ChartThemeMode,
 } from './style';

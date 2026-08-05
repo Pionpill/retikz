@@ -1,9 +1,11 @@
-import { NodeTextAlign } from '@retikz/core';
+import type { ThemeModeValue, ThemeStyleValue } from '@retikz/core';
+
+import { NodeTextAlign, ThemeMode, ThemeStyle } from '@retikz/core';
 import { AxisTickMarkKind, LegendSymbolFit } from '@retikz/plot';
 
-import type { ChartStyleTokenValue, ChartStyleValue, ChartThemeModeValue, IRChartResolvedStyleTokens } from './types';
+import type { ChartStyleTokenValue, IRChartResolvedStyleTokens } from './types';
 
-import { ChartStyle, ChartStyleToken, ChartThemeMode } from './constants';
+import { ChartStyleToken } from './constants';
 import { ChartResolvedStyleTokensSchema } from './schema';
 
 /** 单个 preset 在 light/dark 间保持不变的结构与尺寸 */
@@ -92,8 +94,8 @@ type PresentationTokenGroup = {
 };
 
 /** 各 preset 在明暗模式间共享的结构与尺寸 */
-const structures: Record<ChartStyleValue, PresetStructure> = {
-  [ChartStyle.Neutral]: {
+const structures: Record<ThemeStyleValue, PresetStructure> = {
+  [ThemeStyle.Neutral]: {
     padding: 16,
     gap: 6,
     fontFamily: 'system-ui, Segoe UI, sans-serif',
@@ -117,7 +119,7 @@ const structures: Record<ChartStyleValue, PresetStructure> = {
     sequential: 'cividis',
     diverging: 'brbg',
   },
-  [ChartStyle.Academic]: {
+  [ThemeStyle.Academic]: {
     padding: 16,
     gap: 6,
     fontFamily: 'Inter, Helvetica Neue, Arial, sans-serif',
@@ -141,7 +143,7 @@ const structures: Record<ChartStyleValue, PresetStructure> = {
     sequential: 'cividis',
     diverging: 'rdbu',
   },
-  [ChartStyle.Vibrant]: {
+  [ThemeStyle.Vibrant]: {
     padding: 16,
     gap: 8,
     fontFamily: 'Inter, Segoe UI, Arial, sans-serif',
@@ -165,7 +167,7 @@ const structures: Record<ChartStyleValue, PresetStructure> = {
     sequential: 'turbo',
     diverging: 'spectral',
   },
-  [ChartStyle.Clean]: {
+  [ThemeStyle.Clean]: {
     padding: 12,
     gap: 4,
     fontFamily: 'system-ui, Segoe UI, sans-serif',
@@ -192,8 +194,8 @@ const structures: Record<ChartStyleValue, PresetStructure> = {
 };
 
 /** 各 preset 的六个 presentation slot 排版值 */
-const typography: Record<ChartStyleValue, SlotTypography> = {
-  [ChartStyle.Neutral]: [
+const typography: Record<ThemeStyleValue, SlotTypography> = {
+  [ThemeStyle.Neutral]: [
     [18, 600, 22],
     [13, 400, 18],
     [12, 400, 17],
@@ -201,7 +203,7 @@ const typography: Record<ChartStyleValue, SlotTypography> = {
     [11, 500, 15],
     [11, 500, 15],
   ],
-  [ChartStyle.Academic]: [
+  [ThemeStyle.Academic]: [
     [18, 600, 22],
     [13, 400, 18],
     [12, 400, 17],
@@ -209,7 +211,7 @@ const typography: Record<ChartStyleValue, SlotTypography> = {
     [11, 400, 15],
     [11, 400, 15],
   ],
-  [ChartStyle.Vibrant]: [
+  [ThemeStyle.Vibrant]: [
     [20, 700, 24],
     [14, 500, 19],
     [12, 400, 17],
@@ -217,7 +219,7 @@ const typography: Record<ChartStyleValue, SlotTypography> = {
     [11, 500, 15],
     [11, 500, 15],
   ],
-  [ChartStyle.Clean]: [
+  [ThemeStyle.Clean]: [
     [17, 600, 21],
     [12, 400, 17],
     [11, 400, 15],
@@ -228,8 +230,8 @@ const typography: Record<ChartStyleValue, SlotTypography> = {
 };
 
 /** 各 preset 的浅色模式 paint */
-const lightPaints: Record<ChartStyleValue, PresetPaint> = {
-  [ChartStyle.Neutral]: {
+const lightPaints: Record<ThemeStyleValue, PresetPaint> = {
+  [ThemeStyle.Neutral]: {
     canvas: '#FFFFFF',
     plot: '#FAFAFA',
     plotForeground: '#18181B',
@@ -239,7 +241,7 @@ const lightPaints: Record<ChartStyleValue, PresetPaint> = {
     legend: ['#3F3F46', '#52525B'],
     palette: ['#E76E50', '#2A9D90', '#274754', '#E8C468', '#F4A462'],
   },
-  [ChartStyle.Academic]: {
+  [ThemeStyle.Academic]: {
     canvas: '#FFFFFF',
     plot: '#FFFFFF',
     plotForeground: '#1F2937',
@@ -260,7 +262,7 @@ const lightPaints: Record<ChartStyleValue, PresetPaint> = {
       '#BAB0AC',
     ],
   },
-  [ChartStyle.Vibrant]: {
+  [ThemeStyle.Vibrant]: {
     canvas: '#F8FAFC',
     plot: '#E5ECF6',
     plotForeground: '#2A3F5F',
@@ -281,7 +283,7 @@ const lightPaints: Record<ChartStyleValue, PresetPaint> = {
       '#FECB52',
     ],
   },
-  [ChartStyle.Clean]: {
+  [ThemeStyle.Clean]: {
     canvas: '#FFFFFF',
     plot: '#FFFFFF',
     plotForeground: '#111827',
@@ -294,8 +296,8 @@ const lightPaints: Record<ChartStyleValue, PresetPaint> = {
 };
 
 /** 各 preset 的深色模式 paint */
-const darkPaints: Record<ChartStyleValue, PresetPaint> = {
-  [ChartStyle.Neutral]: {
+const darkPaints: Record<ThemeStyleValue, PresetPaint> = {
+  [ThemeStyle.Neutral]: {
     canvas: '#09090B',
     plot: '#18181B',
     plotForeground: '#FAFAFA',
@@ -305,7 +307,7 @@ const darkPaints: Record<ChartStyleValue, PresetPaint> = {
     legend: ['#E4E4E7', '#D4D4D8'],
     palette: ['#4C78A8', '#59A14F', '#F28E2B', '#B07AA1', '#E15759'],
   },
-  [ChartStyle.Academic]: {
+  [ThemeStyle.Academic]: {
     canvas: '#0F172A',
     plot: '#111827',
     plotForeground: '#E5E7EB',
@@ -326,7 +328,7 @@ const darkPaints: Record<ChartStyleValue, PresetPaint> = {
       '#CBD5E1',
     ],
   },
-  [ChartStyle.Vibrant]: {
+  [ThemeStyle.Vibrant]: {
     canvas: '#111827',
     plot: '#1E293B',
     plotForeground: '#F8FAFC',
@@ -347,7 +349,7 @@ const darkPaints: Record<ChartStyleValue, PresetPaint> = {
       '#FECB52',
     ],
   },
-  [ChartStyle.Clean]: {
+  [ThemeStyle.Clean]: {
     canvas: '#0B0F14',
     plot: '#0B0F14',
     plotForeground: '#F3F4F6',
@@ -407,7 +409,7 @@ const presentationTokenGroups: ReadonlyArray<PresentationTokenGroup> = [
 
 /** 生成六个 presentation slot 的 canonical token */
 const presentationTokens = (
-  style: ChartStyleValue,
+  style: ThemeStyleValue,
   paint: PresetPaint,
 ): Partial<Record<ChartStyleTokenValue, unknown>> =>
   Object.fromEntries(
@@ -424,9 +426,9 @@ const presentationTokens = (
   );
 
 /** 组装并校验单个 preset/mode 的完整 canonical token map */
-const createPreset = (style: ChartStyleValue, mode: ChartThemeModeValue): IRChartResolvedStyleTokens => {
+const createPreset = (style: ThemeStyleValue, mode: ThemeModeValue): IRChartResolvedStyleTokens => {
   const structure = structures[style];
-  const paint = mode === ChartThemeMode.Light ? lightPaints[style] : darkPaints[style];
+  const paint = mode === ThemeMode.Light ? lightPaints[style] : darkPaints[style];
   const draft: Partial<Record<ChartStyleTokenValue, unknown>> = {
     [ChartStyleToken.ChartCanvasFill]: paint.canvas,
     [ChartStyleToken.ChartPadding]: structure.padding,
@@ -443,7 +445,7 @@ const createPreset = (style: ChartStyleValue, mode: ChartThemeModeValue): IRChar
     [ChartStyleToken.AxisLineStrokeWidth]: 1,
     [ChartStyleToken.AxisLineDrawOpacity]: 1,
     [ChartStyleToken.AxisTickMark]:
-      style === ChartStyle.Academic
+      style === ThemeStyle.Academic
         ? { kind: AxisTickMarkKind.Line, length: 4, line: { stroke: paint.axis[0], strokeWidth: 1 } }
         : false,
     [ChartStyleToken.AxisTickLabelEnabled]: true,
@@ -494,13 +496,13 @@ const deepFreeze = <T>(value: T): T => {
 /** 内建 Chart style catalog */
 export const BUILTIN_CHART_STYLE_PRESETS = deepFreeze(
   Object.fromEntries(
-    Object.values(ChartStyle).map(style => [
+    Object.values(ThemeStyle).map(style => [
       style,
-      Object.fromEntries(Object.values(ChartThemeMode).map(mode => [mode, createPreset(style, mode)])),
+      Object.fromEntries(Object.values(ThemeMode).map(mode => [mode, createPreset(style, mode)])),
     ]),
-  ) as Record<ChartStyleValue, Record<ChartThemeModeValue, IRChartResolvedStyleTokens>>,
+  ) as Record<ThemeStyleValue, Record<ThemeModeValue, IRChartResolvedStyleTokens>>,
 );
 
 /** 返回隔离于内建 catalog 的完整 preset token clone */
-export const getChartStylePreset = (style: ChartStyleValue, mode: ChartThemeModeValue): IRChartResolvedStyleTokens =>
+export const getChartStylePreset = (style: ThemeStyleValue, mode: ThemeModeValue): IRChartResolvedStyleTokens =>
   structuredClone(BUILTIN_CHART_STYLE_PRESETS[style][mode]);

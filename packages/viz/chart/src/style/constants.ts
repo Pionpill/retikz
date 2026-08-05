@@ -1,16 +1,4 @@
-/** Chart 内建视觉人格 */
-export const ChartStyle = {
-  Neutral: 'neutral',
-  Academic: 'academic',
-  Vibrant: 'vibrant',
-  Clean: 'clean',
-} as const;
-
-/** Chart 主题明暗模式 */
-export const ChartThemeMode = {
-  Light: 'light',
-  Dark: 'dark',
-} as const;
+import type { ValueOf } from '@retikz/core';
 
 /** Chart 样式 token 的 canonical key */
 export const ChartStyleToken = {
@@ -112,4 +100,3 @@ export const ChartStyleAuthoredOverride = {
 
 /** Chart style 后续用户覆盖入口取值 */
 export type ChartStyleAuthoredOverrideValue = ValueOf<typeof ChartStyleAuthoredOverride>;
-import type { ValueOf } from '@retikz/core';

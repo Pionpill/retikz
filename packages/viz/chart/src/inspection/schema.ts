@@ -1,17 +1,15 @@
 import type { IRJsonObject, ValueOf } from '@retikz/core';
 import type { z } from 'zod';
 
-import { JsonObjectSchema } from '@retikz/core';
+import { JsonObjectSchema, ThemeMode, ThemeStyle } from '@retikz/core';
 import { z as zod } from 'zod';
 
 import { ChartPresentationInspectionSchema } from '../presentation';
 import {
   ChartResolvedStyleTokensSchema,
-  ChartStyle,
   ChartStyleAuthoredOverride,
   ChartStyleToken,
   ChartStyleTokenSource,
-  ChartThemeMode,
 } from '../style';
 
 /** Chart member 的 contribution 来源 */
@@ -86,8 +84,8 @@ const ChartStyleAuthoredOverrideSchema = zod
 
 const ChartInspectionStyleSchema = zod
   .strictObject({
-    preset: zod.enum(ChartStyle).describe('Applied built-in Chart style preset'),
-    mode: zod.enum(ChartThemeMode).describe('Applied Chart theme mode'),
+    preset: zod.enum(ThemeStyle).describe('Applied built-in Chart style preset'),
+    mode: zod.enum(ThemeMode).describe('Applied Chart theme mode'),
     tokens: ChartResolvedStyleTokensSchema.describe('Complete resolved Chart style token map'),
     tokenSources: zod
       .array(ChartStyleTokenSourceSchema)

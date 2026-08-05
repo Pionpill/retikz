@@ -1,19 +1,18 @@
+import type { ThemeModeValue, ThemeStyleValue } from '@retikz/core';
 import type { IRPlotTheme } from '@retikz/plot';
 
 import type {
   ChartStyleAuthoredOverrideRecord,
   ChartStyleTokenSourceRecord,
-  ChartStyleValue,
-  ChartThemeModeValue,
   IRChartResolvedStyleTokens,
 } from './types';
 
 /** Chart theme 解析后供 recipe、Plot mapping 与 inspection 共享的上下文 */
 export type ResolvedChartStyleContext = {
   /** 采用的内建 preset */
-  style: ChartStyleValue;
+  style: ThemeStyleValue;
   /** 采用的明暗模式 */
-  themeMode: ChartThemeModeValue;
+  themeMode: ThemeModeValue;
   /** preset 与稀疏覆盖合并后的完整 token */
   tokens: IRChartResolvedStyleTokens;
   /** canonical 顺序的一 token 一来源 */

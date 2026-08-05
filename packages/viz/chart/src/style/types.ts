@@ -1,20 +1,8 @@
 import type { ValueOf } from '@retikz/core';
 import type { z } from 'zod';
 
-import type {
-  ChartStyle,
-  ChartStyleAuthoredOverrideValue,
-  ChartStyleToken,
-  ChartStyleTokenSourceValue,
-  ChartThemeMode,
-} from './constants';
+import type { ChartStyleAuthoredOverrideValue, ChartStyleToken, ChartStyleTokenSourceValue } from './constants';
 import type { ChartResolvedStyleTokensSchema, ChartStyleSurfaceSchema, ChartStyleTokenOverridesSchema } from './schema';
-
-/** Chart 内建视觉人格取值 */
-export type ChartStyleValue = ValueOf<typeof ChartStyle>;
-
-/** Chart 主题明暗模式取值 */
-export type ChartThemeModeValue = ValueOf<typeof ChartThemeMode>;
 
 /** Chart 样式 token canonical key */
 export type ChartStyleTokenValue = ValueOf<typeof ChartStyleToken>;

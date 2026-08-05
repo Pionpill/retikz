@@ -1,3 +1,6 @@
+import type { ThemeModeValue, ThemeStyleValue } from '@retikz/core';
+
+import { ThemeMode, ThemeStyle } from '@retikz/core';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 // @ts-expect-error Chart resolver 结果必须保持 owner-private
@@ -6,6 +9,10 @@ import type { ChartResolution } from '../src';
 import type { ResolvedChartPresentation } from '../src';
 // @ts-expect-error recipe 基础类型必须保持 owner-private
 import type { InternalChartSpecBound } from '../src';
+// @ts-expect-error 通用 style 取值类型由 Core 所有
+import type { ChartStyleValue } from '../src';
+// @ts-expect-error 通用 mode 取值类型由 Core 所有
+import type { ChartThemeModeValue } from '../src';
 import type {
   ChartContributionSourceValue,
   ChartPresentationDefaultItemKeyValue,
@@ -15,8 +22,6 @@ import type {
   ChartStyleAuthoredOverrideValue,
   ChartStyleTokenSourceValue,
   ChartStyleTokenValue,
-  ChartStyleValue,
-  ChartThemeModeValue,
   IRChartInspection,
   IRChartInspectionMember,
   IRChartPresentation,
@@ -47,6 +52,8 @@ describe('@retikz/chart package root', () => {
     expectTypeOf<ChartResolution>();
     expectTypeOf<ResolvedChartPresentation>();
     expectTypeOf<InternalChartSpecBound>();
+    expectTypeOf<ChartStyleValue>();
+    expectTypeOf<ChartThemeModeValue>();
   });
 
   it('只暴露 shared、presentation、inspection 与 theme 数据契约', () => {
@@ -76,23 +83,25 @@ describe('@retikz/chart package root', () => {
       'ChartPresentationTextSchema',
       'ChartResolvedStyleTokensSchema',
       'ChartSharedSchema',
-      'ChartStyle',
       'ChartStyleAuthoredOverride',
       'ChartStyleSurfaceSchema',
       'ChartStyleToken',
       'ChartStyleTokenOverridesSchema',
       'ChartStyleTokenSource',
-      'ChartThemeMode',
     ]);
     expect(chart.ChartStyleTokenSource).toEqual({ Preset: 'preset', StyleToken: 'style-token' });
     expect(chart.ChartStyleAuthoredOverride).toEqual({ Colors: 'colors', Theme: 'theme' });
+    expect(chart).not.toHaveProperty('ChartStyle');
+    expect(chart).not.toHaveProperty('ChartThemeMode');
+    expect(ThemeStyle).toEqual({ Neutral: 'neutral', Academic: 'academic', Vibrant: 'vibrant', Clean: 'clean' });
+    expect(ThemeMode).toEqual({ Light: 'light', Dark: 'dark' });
     expect(chart.ChartPresentationDefaultItemKey.Plot).toBe('chart.plot');
     expect(chart.ChartPresentationPreset).toHaveProperty('Title', 'title');
   });
 
   it('公开 schema 派生 presentation union 而不公开 resolver 或 recipe', () => {
-    const style: ChartStyleValue = 'neutral';
-    const mode: ChartThemeModeValue = 'dark';
+    const style: ThemeStyleValue = ThemeStyle.Neutral;
+    const mode: ThemeModeValue = ThemeMode.Dark;
     const token: ChartStyleTokenValue = 'axis.enabled';
     const tokenSource: ChartStyleTokenSourceValue = 'style-token';
     const authoredOverride: ChartStyleAuthoredOverrideValue = 'theme';

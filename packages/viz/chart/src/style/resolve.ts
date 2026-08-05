@@ -1,23 +1,19 @@
+import { ThemeMode, ThemeStyle } from '@retikz/core';
+
 import type { ChartRecipeStyleContext } from '../families/shared';
 import type { IRChartShared } from '../schemas';
 import type { ResolvedChartStyleContext } from './resolved';
 
 import { getChartStylePreset } from './catalog';
-import {
-  ChartStyle,
-  ChartStyleAuthoredOverride,
-  ChartStyleToken,
-  ChartStyleTokenSource,
-  ChartThemeMode,
-} from './constants';
+import { ChartStyleAuthoredOverride, ChartStyleToken, ChartStyleTokenSource } from './constants';
 import { ChartResolvedStyleTokensSchema } from './schema';
 
 /** 解析默认 preset/mode、稀疏 token 与稳定 inspection 来源 */
 export const resolveChartStyle = (
   spec: Pick<IRChartShared, 'style' | 'themeMode' | 'styleTokens' | 'colors' | 'theme'>,
 ): ResolvedChartStyleContext => {
-  const style = spec.style ?? ChartStyle.Neutral;
-  const themeMode = spec.themeMode ?? ChartThemeMode.Light;
+  const style = spec.style ?? ThemeStyle.Neutral;
+  const themeMode = spec.themeMode ?? ThemeMode.Light;
   const preset = getChartStylePreset(style, themeMode);
   const overrides = spec.styleTokens ?? {};
   const tokens = ChartResolvedStyleTokensSchema.parse({ ...preset, ...structuredClone(overrides) });

@@ -1,24 +1,32 @@
+import { ThemeMode, ThemeStyle } from '@retikz/core';
 import { LayoutContainerBoxSchema } from '@retikz/standard';
 import { describe, expect, it } from 'vitest';
 
 import {
   ChartResolvedStyleTokensSchema,
-  ChartStyle,
   ChartStyleSurfaceSchema,
   ChartStyleToken,
   ChartStyleTokenOverridesSchema,
-  ChartThemeMode,
 } from '../../src/style';
 
 describe('Chart style schema', () => {
   it('冻结四个 preset、两个 mode 与完整 canonical token 列表', () => {
-    expect(Object.values(ChartStyle)).toEqual(['neutral', 'academic', 'vibrant', 'clean']);
-    expect(Object.values(ChartThemeMode)).toEqual(['light', 'dark']);
+    expect(Object.values(ThemeStyle)).toEqual(['neutral', 'academic', 'vibrant', 'clean']);
+    expect(Object.values(ThemeMode)).toEqual(['light', 'dark']);
     expect(Object.values(ChartStyleToken)).toHaveLength(75);
     expect(new Set(Object.values(ChartStyleToken)).size).toBe(75);
     expect(Object.values(ChartStyleToken)).toContain('chart.canvas.fill');
     expect(Object.values(ChartStyleToken)).toContain('axis.tick.mark');
     expect(Object.values(ChartStyleToken)).toContain('data.palette.diverging');
+  });
+
+  it('复用 Core style/mode vocabulary 并拒绝未知取值', () => {
+    expect(ChartStyleSurfaceSchema.parse({ style: ThemeStyle.Clean, themeMode: ThemeMode.Dark })).toEqual({
+      style: ThemeStyle.Clean,
+      themeMode: ThemeMode.Dark,
+    });
+    expect(ChartStyleSurfaceSchema.safeParse({ style: 'unknown' }).success).toBe(false);
+    expect(ChartStyleSurfaceSchema.safeParse({ themeMode: 'sepia' }).success).toBe(false);
   });
 
   it('为每个公开 token 提供唯一的字段级 schema 描述', () => {
@@ -66,8 +74,8 @@ describe('Chart style schema', () => {
     );
 
     const surface = ChartStyleSurfaceSchema.parse({
-      style: ChartStyle.Clean,
-      themeMode: ChartThemeMode.Dark,
+      style: ThemeStyle.Clean,
+      themeMode: ThemeMode.Dark,
       styleTokens: { 'chart.padding': padding },
       colors: ['#111827', '#f97316'],
     });

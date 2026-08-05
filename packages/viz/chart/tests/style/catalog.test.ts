@@ -1,16 +1,11 @@
+import { ThemeMode, ThemeStyle } from '@retikz/core';
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 
-import {
-  ChartResolvedStyleTokensSchema,
-  ChartStyle,
-  ChartStyleToken,
-  ChartThemeMode,
-  getChartStylePreset,
-} from '../../src/style';
+import { ChartResolvedStyleTokensSchema, ChartStyleToken, getChartStylePreset } from '../../src/style';
 
-const styles = Object.values(ChartStyle);
-const modes = Object.values(ChartThemeMode);
+const styles = Object.values(ThemeStyle);
+const modes = Object.values(ThemeMode);
 const canonicalKeys = Object.values(ChartStyleToken);
 
 describe('Chart style preset catalog', () => {
@@ -67,10 +62,10 @@ describe('Chart style preset catalog', () => {
     ]);
 
     for (const style of styles) {
-      const light = getChartStylePreset(style, ChartThemeMode.Light);
-      const dark = getChartStylePreset(style, ChartThemeMode.Dark);
+      const light = getChartStylePreset(style, ThemeMode.Light);
+      const dark = getChartStylePreset(style, ThemeMode.Dark);
       for (const key of canonicalKeys) {
-        if (key === ChartStyleToken.AxisTickMark && style === ChartStyle.Academic) {
+        if (key === ChartStyleToken.AxisTickMark && style === ThemeStyle.Academic) {
           const lightTick = light[key];
           const darkTick = dark[key];
           if (
