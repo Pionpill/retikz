@@ -26,6 +26,7 @@ describe('CompileOptions.onWarn', () => {
     expect(warnings[0]).toMatchObject({
       code: 'PATH_TOO_SHORT',
       path: 'children[0].path.children',
+      origin: { kind: 'primary' },
     });
     expect(warnings[0].message).toContain('at least 2 steps');
   });
@@ -258,6 +259,7 @@ describe('CompileWarningCode 收编与导出', () => {
       code: CompileWarningCode.UnresolvedNodeReference,
       message: "references undefined node id 'x'",
       path: 'children[0].to',
+      origin: { kind: 'primary' },
     });
     expect(msg).toContain('[retikz]');
     expect(msg).toContain('UNRESOLVED_NODE_REFERENCE');

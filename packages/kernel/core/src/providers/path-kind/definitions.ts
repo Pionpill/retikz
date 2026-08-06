@@ -1,14 +1,18 @@
 import { z } from 'zod';
 
-import type { PathKindDefinition } from '../../contract';
+import type { AnyPathKindDefinition } from '../../contract';
 
 import { definePathKind } from '../../contract';
+import { StrokePathInspectionSubjectSchema } from '../../contract';
 import { PathKind } from '../../schemas';
+import { strokePathInspector } from './stroke-inspector';
 
 /** 标准描边 path kind：复用 core 的 stroke emission */
 const strokePathKind = definePathKind({
   schema: z.object({ kind: z.literal(PathKind.Stroke) }),
-  compile: context => context.emitStroke(context.path),
+  inspectionSubjectSchema: StrokePathInspectionSubjectSchema,
+  inspector: strokePathInspector,
+  compile: context => context.emitStroke(context.path, { includeInspectionSubject: true }),
 });
 
 /** 标准 ribbon path kind：复用 core 的 ribbon emission */
@@ -18,4 +22,4 @@ const ribbonPathKind = definePathKind({
 });
 
 /** 内置 path kind provider 注册项 */
-export const BUILTIN_PATH_KINDS: ReadonlyArray<PathKindDefinition> = [strokePathKind, ribbonPathKind];
+export const BUILTIN_PATH_KINDS: ReadonlyArray<AnyPathKindDefinition> = [strokePathKind, ribbonPathKind];

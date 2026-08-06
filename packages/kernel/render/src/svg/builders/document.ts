@@ -164,7 +164,18 @@ export const buildSvgFrameDocument = (frame: StaticRenderFrame, options: BuildDo
     attrs: { viewBox: formatViewBox(scene.layout) },
     children: [
       ...buildSvgFragment(scene, options),
-      ...(frame.inspection === null ? [] : [buildSvgInspectionGroup(frame.inspection)]),
+      ...(frame.inspection === null
+        ? []
+        : [
+            buildSvgInspectionGroup(frame.inspection, (entryScene, entryIndex) =>
+              buildSvgFragment(entryScene, {
+                ...options,
+                idPrefix: `${options.idPrefix}-inspection-${entryIndex}`,
+                animate: false,
+                trace: undefined,
+              }),
+            ),
+          ]),
     ],
   };
   if (options.trace !== undefined) {

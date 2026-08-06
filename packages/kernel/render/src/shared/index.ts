@@ -4,7 +4,6 @@
  */
 export * from './color';
 export * from './gradient';
-export * from './inspection';
 export * from './path-bounds';
 export * from './path-command';
 export * from './scene-count';

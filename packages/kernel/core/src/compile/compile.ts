@@ -6,15 +6,15 @@ import type { AnyCompositeDefinition, Scene } from '../contract';
 import type { IRScene } from '../schemas';
 import type { RuntimePrimitiveMetadataTable } from './orchestration';
 import type { CompileOptions, CompileResult, CompositeArtifactOf } from './types';
-import type { CompileWarning } from './warning';
+import type { CompileWarning, CompileWarningInput } from './warning';
 
 import {
   compileChildrenToPrimitives,
+  compileInspectionPlane,
   createCompileContext,
   createRuntimeTopologyTracker,
   filterAnimations,
   orderCompileWarnings,
-  sealInspectionPlane,
 } from './orchestration';
 import { assertFiniteLayout, computeLayoutFromBounds, viewBoxToLayout } from './scene';
 import { formatCompileWarning } from './warning';
@@ -54,7 +54,7 @@ export const compileCoreSnapshot = <const TComposites extends ReadonlyArray<AnyC
   options?: CompileOptions<TComposites>,
   execution: CoreCompileExecutionOptions = {},
 ): CoreCompileSnapshot<TComposites> => {
-  const diagnostics: Array<CompileWarning> = [];
+  const diagnostics: Array<CompileWarningInput> = [];
   const context = createCompileContext(ir, { ...(options ?? {}), onWarn: warning => diagnostics.push(warning) });
   const { loweredIr, layoutPadding, round, onWarn, paint, clip } = context;
   const identityTracker =
@@ -78,6 +78,7 @@ export const compileCoreSnapshot = <const TComposites extends ReadonlyArray<AnyC
     ...(resources.length > 0 ? { resources } : {}),
     ...(rootAnimations !== undefined ? { animations: rootAnimations } : {}),
   };
+  const inspection = compileInspectionPlane(inspections, context);
   if (context.trace !== undefined) {
     context.trace.reporter.report({
       phase: PerformanceTracePhase.Compile,
@@ -92,7 +93,7 @@ export const compileCoreSnapshot = <const TComposites extends ReadonlyArray<AnyC
     result: Object.freeze({
       scene,
       artifacts: Object.freeze(artifacts),
-      inspection: sealInspectionPlane(inspections),
+      inspection,
     }) as CompileResult<CompositeArtifactOf<TComposites[number]>>,
     diagnostics: Object.freeze(orderCompileWarnings(diagnostics)),
     ...(identityTracker === undefined ? {} : { primitiveMetadata: identityTracker.metadata }),

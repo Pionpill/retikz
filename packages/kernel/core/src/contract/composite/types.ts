@@ -12,11 +12,10 @@ import type {
 } from '../../schemas';
 import type { ResolvedTheme, ValueOf } from '../../shared';
 import type {
+  AnyInspectorDefinition,
   CompositeInspectionChild,
-  CompositeInspectorContext,
-  InspectionPrimitive,
+  InspectorDefinition,
   LayoutCompositeInspectionContext,
-  ResolvedBaseLayoutInspectOptions,
 } from '../inspection';
 import type { Transform } from '../scene';
 import type {
@@ -224,33 +223,7 @@ export type LayoutCompositeCompileResult<TArtifact extends JsonValue = never> = 
 }> &
   ([TArtifact] extends [never] ? { artifact?: never } : { artifact?: TArtifact });
 
-/** layout-aware Composite 可选的 artifact inspector */
-export type CompositeInspectorDefinition<
-  TArtifact extends JsonValue,
-  TLocalShape extends z.ZodRawShape,
-  TResolvedLocalOptions extends IRJsonObject,
-> = Readonly<{
-  /** inspector 类别 */
-  kind: 'layout';
-  /** family-local sparse admission schema */
-  localOptionsInputSchema: z.ZodObject<TLocalShape>;
-  /** family-local canonical resolved schema */
-  localOptionsSchema: ZodType<TResolvedLocalOptions, z.output<z.ZodObject<TLocalShape>>>;
-  /** 把最终 typed artifact lowering 为受限 inspection primitives */
-  inspect: (
-    artifact: TArtifact,
-    context: CompositeInspectorContext<TResolvedLocalOptions> &
-      Readonly<{ baseOptions: ResolvedBaseLayoutInspectOptions }>,
-  ) => ReadonlyArray<InspectionPrimitive>;
-}>;
-
-/** registry 中安全擦除后的 inspector callable boundary */
-export type AnyCompositeInspectorDefinition = Readonly<{
-  kind: 'layout';
-  localOptionsInputSchema: z.ZodObject;
-  localOptionsSchema: ZodType;
-  inspect: (artifact: never, context: never) => ReadonlyArray<InspectionPrimitive>;
-}>;
+type ErasedCompositeInspector = AnyInspectorDefinition & Readonly<{ kind: 'composite' }>;
 
 type LayoutCompositeBranch<
   TNode,
@@ -268,7 +241,12 @@ type LayoutCompositeBranch<
       expand?: never;
       compile: (node: TNode, context: LayoutCompositeCompileContext) => LayoutCompositeCompileResult<TArtifact>;
       artifactSchema: ZodType<TArtifact>;
-      inspector?: CompositeInspectorDefinition<TArtifact, TLocalShape, TResolvedLocalOptions>;
+      inspector?: InspectorDefinition<
+        'composite',
+        TArtifact,
+        z.input<z.ZodObject<TLocalShape>> & IRJsonObject,
+        TResolvedLocalOptions
+      >;
     };
 
 /**
@@ -349,7 +327,7 @@ export type AnyLayoutCompositeDefinition =
       expand?: never;
       compile: (node: never, context: LayoutCompositeCompileContext) => LayoutCompositeCompileResult<JsonValue>;
       artifactSchema: ZodType<JsonValue>;
-      inspector?: AnyCompositeInspectorDefinition;
+      inspector?: ErasedCompositeInspector;
     };
 
 /** registry、adapter 与 provider resolver 使用的安全异构 composite 容器 */

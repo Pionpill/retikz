@@ -1,6 +1,9 @@
-import { compileToScene, NodeTextColor, ThemeMode, ThemeStyle } from '@retikz/core';
+import type { IRChild, PathKindCompileResult } from '@retikz/core';
+
+import { compileToScene, defineInspector, definePathKind, NodeTextColor, ThemeMode, ThemeStyle } from '@retikz/core';
 import { Fragment } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { z } from 'zod';
 
 import { Coordinate } from '../../../src/kernel';
 import { Node } from '../../../src/kernel';
@@ -8,7 +11,7 @@ import { Path } from '../../../src/kernel';
 import { Scope } from '../../../src/kernel';
 import { Step } from '../../../src/kernel';
 import { Text } from '../../../src/kernel';
-import { buildIR } from '../../../src/kernel/adapter';
+import { buildIR, buildIRWithContributions } from '../../../src/kernel/adapter';
 import { Draw } from '../../../src/sugar';
 import { EdgeLabel } from '../../../src/sugar';
 
@@ -48,6 +51,82 @@ describe('buildIR', () => {
         },
       ],
     });
+  });
+
+  it('Path inspect 只生成 target=path 的运行时 sidecar，并保留 Scope 屏障与扩展选项', () => {
+    const result = buildIRWithContributions(
+      <Scope inspect={{ enabled: false }}>
+        <Path inspect={{ labels: true, providerOption: 'kept' }}>
+          <Step kind="move" to={[0, 0]} />
+          <Step kind="cubic" control1={[10, 0]} control2={[20, 10]} to={[30, 10]} />
+        </Path>
+      </Scope>,
+    );
+
+    expect(result.ir.children).toEqual([
+      {
+        type: 'scope',
+        children: [
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'cubic', control1: [10, 0], control2: [20, 10], to: [30, 10] },
+            ],
+          },
+        ],
+      },
+    ]);
+    expect(result.inspectionRoots).toEqual([
+      {
+        locator: {
+          target: 'path',
+          path: [
+            { kind: 'sceneChild', index: 0 },
+            { kind: 'scopeChild', index: 0 },
+          ],
+        },
+        tree: {
+          policy: {
+            inherited: { enabled: false },
+            self: { labels: true, providerOption: 'kept' },
+          },
+        },
+      },
+    ]);
+  });
+
+  it('Path inspect 的扩展选项由自定义 Path kind schema 解析后到达 Inspector callback', () => {
+    const observed = vi.fn();
+    const inspector = defineInspector({
+      kind: 'path',
+      optionsInputSchema: z.strictObject({ providerOption: z.string().optional() }),
+      optionsSchema: z
+        .strictObject({ providerOption: z.string().optional() })
+        .transform(value => ({ providerOption: value.providerOption ?? 'default' })),
+      inspect: (_subject: { point: [number, number] }, context): IRChild => {
+        observed(context.options);
+        return { type: 'node', position: [0, 0] };
+      },
+    });
+    const pathKind = definePathKind({
+      schema: z.object({ kind: z.literal('react-inspected') }),
+      inspectionSubjectSchema: z.strictObject({ point: z.tuple([z.number(), z.number()]) }),
+      inspector,
+      compile: (): PathKindCompileResult<{ point: [number, number] }> => ({
+        primitives: [{ type: 'rect', x: 0, y: 0, width: 1, height: 1 }],
+        boundsPoints: [[0, 0]],
+        inspectionSubject: { point: [0, 0] },
+      }),
+    });
+    const built = buildIRWithContributions(<Path kind="react-inspected" inspect={{ providerOption: 'react' }} />);
+
+    compileToScene(built.ir, {
+      pathKinds: [pathKind],
+      inspection: { roots: built.inspectionRoots },
+    });
+
+    expect(observed).toHaveBeenCalledWith({ providerOption: 'react' });
   });
 
   it('单个 <Node> → IR scene', () => {

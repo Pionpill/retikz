@@ -2,7 +2,7 @@ import type { AnyCompositeDefinition, CompositeExpandContext } from '../../contr
 import type { IRChild, IRScene } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { LoweredIRScene } from '../types';
-import type { CompileWarning } from '../warning';
+import type { CompileWarningInput } from '../warning';
 
 import { CompileWarningCode } from '../constants';
 import { CompileInvariantError } from '../probe-failure';
@@ -14,7 +14,7 @@ import { DEFAULT_RESOLVED_THEME, resolveTheme } from './theme';
 export const DEFAULT_MAX_COMPOSITE_DEPTH = 32;
 
 type LowerOptions = {
-  onWarn: (warning: CompileWarning) => void;
+  onWarn: (warning: CompileWarningInput) => void;
   /** 未注册 composite 的 fail-loud 钩子；缺省继续走 compile warning + skip */
   onUnregistered?: (key: string, path: string) => never;
   /**

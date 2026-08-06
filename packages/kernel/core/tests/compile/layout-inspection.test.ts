@@ -1,14 +1,23 @@
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import type { IRChild, IRScene, LayoutCompositeCompileContext } from '../../src';
+import type {
+  InspectionDiagnosticOrigin,
+  IRChild,
+  IRScene,
+  LayoutCompositeCompileContext,
+  ScenePrimitive,
+} from '../../src';
 
 import {
+  BaseLayoutInspectOptionsInputSchema,
   compileToScene,
   CompositeBaseSchema,
   defineComposite,
+  defineInspector,
   LayoutChildProbeKind,
   NaturalLayoutProposal,
+  resolveBaseLayoutInspectOptions,
 } from '../../src';
 
 const scene = (type: string): IRScene => ({
@@ -17,40 +26,57 @@ const scene = (type: string): IRScene => ({
   children: [{ namespace: 'test', type }],
 });
 
-const definitionOf = (type: string, inspect = vi.fn()) =>
-  defineComposite({
+const flatten = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
+  primitives.flatMap(primitive =>
+    primitive.type === 'group' ? [primitive, ...flatten(primitive.children)] : [primitive],
+  );
+
+const thrownBy = (callback: () => unknown): Error & Readonly<{ origin?: InspectionDiagnosticOrigin }> => {
+  try {
+    callback();
+  } catch (error) {
+    if (error instanceof Error) return error;
+    throw error;
+  }
+  throw new Error('Expected callback to throw.');
+};
+
+const definitionOf = (type: string, inspect = vi.fn()) => {
+  const optionsInputSchema = BaseLayoutInspectOptionsInputSchema.extend({ guides: z.boolean().optional() });
+  return defineComposite({
     namespace: 'test',
     type,
     schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal(type) }),
     artifactSchema: z.strictObject({ width: z.number(), height: z.number() }),
-    inspector: {
-      kind: 'layout',
-      localOptionsInputSchema: z.strictObject({ guides: z.boolean().optional() }),
-      localOptionsSchema: z
-        .strictObject({ guides: z.boolean().optional() })
-        .transform(value => ({ guides: value.guides ?? true })),
-      inspect: (artifact, context) => {
+    inspector: defineInspector({
+      kind: 'composite',
+      optionsInputSchema,
+      optionsSchema: optionsInputSchema.transform(value => ({
+        ...resolveBaseLayoutInspectOptions(value),
+        guides: value.guides ?? true,
+      })),
+      inspect: (artifact: { width: number; height: number }, context): IRChild => {
         inspect(artifact, context);
-        return [
-          {
-            kind: 'rect' as const,
-            role: 'test.container',
-            x: 0,
-            y: 0,
-            width: artifact.width,
-            height: artifact.height,
-            presentation: 'outline' as const,
-            tone: 'scope' as const,
-            lineStyle: 'dashed' as const,
-          },
-        ];
+        return {
+          type: 'path',
+          stroke: context.appearance.scopeColor,
+          dashPattern: [4, 4],
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [artifact.width, 0] },
+            { type: 'step', kind: 'line', to: [artifact.width, artifact.height] },
+            { type: 'step', kind: 'line', to: [0, artifact.height] },
+            { type: 'step', kind: 'cycle' },
+          ],
+        };
       },
-    },
+    }),
     compile: () => ({
       children: [{ type: 'node', position: [0, 0], text: 'content' }],
       artifact: { width: 40, height: 20 },
     }),
   });
+};
 
 describe('layout inspection compile channel', () => {
   it('returns null and leaves the primary result unchanged when inspection is disabled', () => {
@@ -69,7 +95,7 @@ describe('layout inspection compile channel', () => {
     expect(observe).not.toHaveBeenCalled();
   });
 
-  it('runs the selected definition inspector once from the final typed artifact', () => {
+  it('runs the selected definition Inspector once from the final typed artifact', () => {
     const observe = vi.fn();
     const definition = definitionOf('enabled', observe);
     const result = compileToScene(scene('enabled'), {
@@ -82,32 +108,19 @@ describe('layout inspection compile channel', () => {
       { width: 40, height: 20 },
       expect.objectContaining({
         occurrence: { sourcePath: 'children[0]', expansionPath: [] },
-        baseOptions: expect.objectContaining({ overflow: false }),
-        options: { guides: true },
+        options: expect.objectContaining({ overflow: false, guides: true }),
+        appearance: { colorScope: 0, scopeColor: '#2563eb', warningColor: '#dc2626' },
       }),
     );
-    expect(result.inspection).toEqual({
-      entries: [
-        {
-          occurrence: { sourcePath: 'children[0]', expansionPath: [] },
-          colorScope: 0,
-          transform: [1, 0, 0, 1, 0, 0],
-          primitives: [
-            {
-              kind: 'rect',
-              role: 'test.container',
-              x: 0,
-              y: 0,
-              width: 40,
-              height: 20,
-              presentation: 'outline',
-              tone: 'scope',
-              lineStyle: 'dashed',
-            },
-          ],
-        },
-      ],
+    expect(result.inspection?.entries[0]).toMatchObject({
+      owner: { kind: 'composite', namespace: 'test', type: 'enabled' },
+      occurrence: { sourcePath: 'children[0]', expansionPath: [] },
+      colorScope: 0,
+      transform: [1, 0, 0, 1, 0, 0],
     });
+    expect(flatten(result.inspection!.entries[0].scene.primitives)).toContainEqual(
+      expect.objectContaining({ type: 'path', stroke: '#2563eb', dashPattern: [4, 4] }),
+    );
     expect(result.artifacts).toHaveLength(1);
   });
 
@@ -123,10 +136,7 @@ describe('layout inspection compile channel', () => {
           { namespace: 'test', type: 'first' },
         ],
       },
-      {
-        composites: [first, second],
-        inspection: { root: { layout: true } },
-      },
+      { composites: [first, second], inspection: { root: { layout: true } } },
     );
 
     expect(result.inspection?.entries.map(entry => [entry.occurrence.sourcePath, entry.colorScope])).toEqual([
@@ -135,7 +145,7 @@ describe('layout inspection compile channel', () => {
     ]);
   });
 
-  it('merges Layout, authored subtree, and component fields before resolving one canonical request', () => {
+  it('merges Layout, authored subtree, and self fields into one canonical options object', () => {
     const observe = vi.fn();
     const definition = definitionOf('cascade', observe);
 
@@ -145,11 +155,11 @@ describe('layout inspection compile channel', () => {
         root: { layout: { bounds: { slot: false }, alignmentGuides: false } },
         roots: [
           {
-            locator: { path: [{ kind: 'sceneChild', index: 0 }] },
+            locator: { target: 'composite', path: [{ kind: 'sceneChild', index: 0 }] },
             tree: {
               policy: {
                 inherited: { layout: { bounds: { visual: true }, labels: true } },
-                component: { overflow: false },
+                self: { overflow: false },
               },
             },
           },
@@ -157,28 +167,22 @@ describe('layout inspection compile channel', () => {
       },
     });
 
-    expect(observe).toHaveBeenCalledTimes(1);
     expect(observe).toHaveBeenCalledWith(
       { width: 40, height: 20 },
       expect.objectContaining({
-        baseOptions: {
-          bounds: {
-            container: true,
-            content: true,
-            slot: false,
-            allocation: true,
-            visual: true,
-          },
+        options: {
+          bounds: { container: true, content: true, slot: false, allocation: true, visual: true },
           spacing: { padding: true, margin: true },
           overflow: false,
           alignmentGuides: false,
           labels: true,
+          guides: true,
         },
       }),
     );
   });
 
-  it('routes spacing through base options and merges Layout, Scope, and component-local values', () => {
+  it('merges nested spacing values across inherited and self policies', () => {
     const observe = vi.fn();
     const definition = definitionOf('spacingCascade', observe);
 
@@ -188,11 +192,11 @@ describe('layout inspection compile channel', () => {
         root: { layout: { spacing: false } },
         roots: [
           {
-            locator: { path: [{ kind: 'sceneChild', index: 0 }] },
+            locator: { target: 'composite', path: [{ kind: 'sceneChild', index: 0 }] },
             tree: {
               policy: {
                 inherited: { layout: { spacing: { padding: true } } },
-                component: { spacing: { margin: false } },
+                self: { spacing: { margin: false } },
               },
             },
           },
@@ -200,17 +204,13 @@ describe('layout inspection compile channel', () => {
       },
     });
 
-    expect(observe).toHaveBeenCalledTimes(1);
     expect(observe).toHaveBeenCalledWith(
       { width: 40, height: 20 },
-      expect.objectContaining({
-        baseOptions: expect.objectContaining({ spacing: { padding: true, margin: false } }),
-        options: { guides: true },
-      }),
+      expect.objectContaining({ options: expect.objectContaining({ spacing: { padding: true, margin: false } }) }),
     );
   });
 
-  it('keeps an authored enabled:false barrier closed against component re-enabling', () => {
+  it('keeps an authored enabled:false barrier closed against self re-enabling', () => {
     const observe = vi.fn();
     const definition = definitionOf('blocked', observe);
     const result = compileToScene(scene('blocked'), {
@@ -219,13 +219,8 @@ describe('layout inspection compile channel', () => {
         root: { layout: true },
         roots: [
           {
-            locator: { path: [{ kind: 'sceneChild', index: 0 }] },
-            tree: {
-              policy: {
-                inherited: { enabled: false },
-                component: true,
-              },
-            },
+            locator: { target: 'composite', path: [{ kind: 'sceneChild', index: 0 }] },
+            tree: { policy: { inherited: { enabled: false }, self: true } },
           },
         ],
       },
@@ -235,22 +230,62 @@ describe('layout inspection compile channel', () => {
     expect(result.inspection).toBeNull();
   });
 
-  it('fails loudly when an enabled selected inspector has no artifact value', () => {
+  it('fails loudly when an enabled selected Inspector has no artifact value', () => {
     const base = definitionOf('missingArtifact');
     const missing = defineComposite({
-      ...base,
+      namespace: 'test',
+      type: 'missingArtifact',
+      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('missingArtifact') }),
+      artifactSchema: z.strictObject({ width: z.number(), height: z.number() }),
+      inspector: base.inspector,
       compile: () => ({ children: [] }),
     });
 
-    expect(() =>
+    const error = thrownBy(() =>
       compileToScene(scene('missingArtifact'), {
         composites: [missing],
         inspection: { root: { layout: true } },
       }),
-    ).toThrow(/COMPOSITE_INSPECTION_ARTIFACT_MISSING.*test\.missingArtifact/i);
+    );
+
+    expect(error.message).toMatch(/COMPOSITE_INSPECTION_ARTIFACT_MISSING.*test\.missingArtifact/i);
+    expect(error.origin).toEqual({
+      kind: 'inspection',
+      stage: 'resolve',
+      site: 'occurrence',
+      owner: { kind: 'composite', namespace: 'test', type: 'missingArtifact' },
+      occurrence: { sourcePath: 'children[0]', expansionPath: [] },
+    });
   });
 
-  it('binds an authored child forest to the selected layoutChild probe and replay', () => {
+  it('attaches occurrence resolve origin when a selected Inspector artifact fails its schema', () => {
+    const base = definitionOf('invalidArtifact');
+    const invalid = defineComposite({
+      namespace: 'test',
+      type: 'invalidArtifact',
+      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('invalidArtifact') }),
+      artifactSchema: z.strictObject({ width: z.number(), height: z.number() }),
+      inspector: base.inspector,
+      compile: () => ({ children: [], artifact: { width: 'invalid', height: 20 } as never }),
+    });
+
+    const error = thrownBy(() =>
+      compileToScene(scene('invalidArtifact'), {
+        composites: [invalid],
+        inspection: { root: { layout: true } },
+      }),
+    );
+
+    expect(error.origin).toEqual({
+      kind: 'inspection',
+      stage: 'resolve',
+      site: 'occurrence',
+      owner: { kind: 'composite', namespace: 'test', type: 'invalidArtifact' },
+      occurrence: { sourcePath: 'children[0]', expansionPath: [] },
+    });
+  });
+
+  it('binds an authored child forest to the selected layoutChild replay', () => {
     const inspectLeaf = vi.fn();
     const leaf = definitionOf('nestedLeaf', inspectLeaf);
     const container = defineComposite({
@@ -284,13 +319,13 @@ describe('layout inspection compile channel', () => {
       inspection: {
         roots: [
           {
-            locator: { path: [{ kind: 'sceneChild', index: 0 }] },
+            locator: { target: 'composite', path: [{ kind: 'sceneChild', index: 0 }] },
             tree: {
               children: [
                 [
                   {
-                    locator: { path: [] },
-                    tree: { policy: { component: true } },
+                    locator: { target: 'composite', path: [] },
+                    tree: { policy: { self: true } },
                   },
                 ],
               ],
@@ -302,10 +337,12 @@ describe('layout inspection compile channel', () => {
 
     expect(inspectLeaf).toHaveBeenCalledTimes(1);
     expect(result.inspection?.entries).toHaveLength(1);
-    expect(result.inspection?.entries[0].primitives[0]).toMatchObject({ role: 'test.container' });
+    expect(flatten(result.inspection!.entries[0].scene.primitives)).toContainEqual(
+      expect.objectContaining({ type: 'path', dashPattern: [4, 4] }),
+    );
   });
 
-  it('does not allocate a color scope to a discarded layoutChild probe', () => {
+  it('does not publish a request from a discarded layoutChild probe', () => {
     const inspectLeaf = vi.fn();
     const leaf = definitionOf('discardedProbeLeaf', inspectLeaf);
     const container = defineComposite({
@@ -340,13 +377,13 @@ describe('layout inspection compile channel', () => {
         inspection: {
           roots: [
             {
-              locator: { path: [{ kind: 'sceneChild', index: 0 }] },
+              locator: { target: 'composite', path: [{ kind: 'sceneChild', index: 0 }] },
               tree: {
                 children: [
                   [
                     {
-                      locator: { path: [] },
-                      tree: { policy: { component: true } },
+                      locator: { target: 'composite', path: [] },
+                      tree: { policy: { self: true } },
                     },
                   ],
                 ],
@@ -357,7 +394,7 @@ describe('layout inspection compile channel', () => {
       },
     );
 
-    expect(inspectLeaf).toHaveBeenCalledTimes(2);
+    expect(inspectLeaf).toHaveBeenCalledTimes(1);
     expect(result.inspection?.entries.map(entry => entry.colorScope)).toEqual([0]);
   });
 
@@ -370,7 +407,7 @@ describe('layout inspection compile channel', () => {
         inspection: {
           roots: [
             {
-              locator: { path: [{ kind: 'sceneChild', index: 0 }] },
+              locator: { target: 'composite', path: [{ kind: 'sceneChild', index: 0 }] },
               tree: { children: sparseChildren },
             },
           ],
@@ -411,7 +448,7 @@ describe('layout inspection compile channel', () => {
         inspection: {
           roots: [
             {
-              locator: { path: [{ kind: 'sceneChild', index: 0 }] },
+              locator: { target: 'composite', path: [{ kind: 'sceneChild', index: 0 }] },
               tree: { children: [[]] },
             },
           ],
