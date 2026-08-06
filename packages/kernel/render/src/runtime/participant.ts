@@ -14,6 +14,7 @@ import {
   PerformanceTraceOutcome,
   PerformanceTracePhase,
   PerformanceTraceUnit,
+  RuntimeProgramPhase,
 } from '@retikz/runtime';
 
 import type { AnimationControls } from '../animation';
@@ -476,7 +477,7 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
     prepare: (candidate, context) => {
       const core = candidate.artifact(captured.coreProgram).value;
       const config: RenderRuntimeConfig = candidate.snapshot(RenderRuntimeOwnerDefinition).value;
-      if (candidate.phase === 'initial') {
+      if (candidate.phase === RuntimeProgramPhase.Initial) {
         validateSceneRuntimeSnapshot(core.snapshot);
         const frame = Object.freeze({ primary: core.snapshot, inspection: core.output.result.inspection });
         if (

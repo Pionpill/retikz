@@ -19,6 +19,7 @@ import {
   createRuntimeProgramRegistry,
   createRuntimeSession,
   defineRuntimeCommitParticipant,
+  RuntimeProgramPhase,
 } from '@retikz/runtime';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -490,7 +491,7 @@ describe('builtin retained renderers', () => {
       tracePhases: [],
       prepare: candidate => ({
         commit: () => {
-          if (candidate.phase === 'update') {
+          if (candidate.phase === RuntimeProgramPhase.Update) {
             host.querySelector('[data-retikz-id="node-a"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
           }
         },
@@ -4178,7 +4179,7 @@ describe('builtin retained renderers', () => {
       revisionPolicy: 'continuous',
       tracePhases: [],
       prepare: candidate => {
-        if (candidate.phase === 'update') throw new Error('late prepare failed');
+        if (candidate.phase === RuntimeProgramPhase.Update) throw new Error('late prepare failed');
         return { commit: () => undefined, rollback: () => undefined, dispose: () => undefined };
       },
       read: () => Object.freeze({ ok: true as const }),
@@ -5310,7 +5311,7 @@ describe('builtin retained renderers', () => {
       tracePhases: [],
       prepare: candidate => ({
         commit: () => {
-          if (candidate.phase === 'update') throw new Error('reject image candidate');
+          if (candidate.phase === RuntimeProgramPhase.Update) throw new Error('reject image candidate');
         },
         rollback: () => undefined,
         dispose: () => undefined,
@@ -5435,7 +5436,7 @@ describe('builtin retained renderers', () => {
       tracePhases: [],
       prepare: candidate => ({
         commit: () => {
-          if (candidate.phase === 'update') throw new Error('late commit failed');
+          if (candidate.phase === RuntimeProgramPhase.Update) throw new Error('late commit failed');
         },
         rollback: () => undefined,
         dispose: () => undefined,

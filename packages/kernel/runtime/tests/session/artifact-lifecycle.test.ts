@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { RuntimeProgramArtifactDefinitionInput } from '../../src/program';
 
 import { defineRuntimeOwner } from '../../src/owner';
-import { defineRuntimeProgram } from '../../src/program';
+import { defineRuntimeProgram, RuntimeProgramKind } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
 import { createRuntimeSession } from '../../src/session';
 import { createRuntimeOwnerInput, createRuntimeOwnerUpdate } from '../../src/transaction';
@@ -86,7 +86,7 @@ describe('runtime Program artifact lifecycle', () => {
       programs: [],
       tracePhases: [],
       artifact: testCase.artifact(cause, artifactDispose),
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
 
@@ -189,8 +189,8 @@ describe('runtime Program artifact lifecycle', () => {
         read: value => value.value,
         dispose: artifactDispose,
       },
-      run: () => ({ kind: 'full', artifact: 1 }),
-      update: () => ({ kind: 'incremental', artifact: 2 }),
+      run: () => ({ kind: RuntimeProgramKind.Full, artifact: 1 }),
+      update: () => ({ kind: RuntimeProgramKind.Incremental, artifact: 2 }),
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
     const session = createRuntimeSession({
@@ -242,8 +242,8 @@ describe('runtime Program artifact lifecycle', () => {
         },
         dispose: artifactDispose,
       },
-      run: () => ({ kind: 'full', artifact: 1 }),
-      update: () => ({ kind: 'incremental', artifact: 2 }),
+      run: () => ({ kind: RuntimeProgramKind.Full, artifact: 1 }),
+      update: () => ({ kind: RuntimeProgramKind.Incremental, artifact: 2 }),
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
     const session = createRuntimeSession({

@@ -5,6 +5,8 @@ import {
   PerformanceTraceOutcome,
   PerformanceTracePhase,
   PerformanceTraceUnit,
+  RuntimeProgramKind,
+  RuntimeProgramPhase,
 } from '@retikz/runtime';
 
 import type { AnyCompositeDefinition } from '../../contract';
@@ -98,7 +100,7 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
         view.candidateRevision,
         compiled.primitiveMetadata,
       );
-      const isUpdate = view.phase === 'update';
+      const isUpdate = view.phase === RuntimeProgramPhase.Update;
       const publicRead = Object.freeze({
         output: Object.freeze({ result: compiled.result, diagnostics: compiled.diagnostics }),
         snapshot,
@@ -131,7 +133,7 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
         });
       }
       return {
-        kind: 'full',
+        kind: RuntimeProgramKind.Full,
         artifact: Object.freeze({
           publicRead,
           state: Object.freeze({ source, index: createCoreSnapshotIndex(source) }),
@@ -139,20 +141,20 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
       };
     },
     update: (previous, view, context) => {
-      if (view.phase !== 'update') return { kind: 'fallback' };
+      if (view.phase !== RuntimeProgramPhase.Update) return { kind: RuntimeProgramKind.Fallback };
       if (invalidationOwners.some(owner => view.changed(owner))) {
-        return { kind: 'fallback' };
+        return { kind: RuntimeProgramKind.Fallback };
       }
       const changeSet = view.changeSet(CoreOwnerDefinition);
       const nextSource = view.snapshot(CoreOwnerDefinition).value;
       const nextIndex = createCoreSnapshotIndex(nextSource);
       if (changeSet !== undefined && !coreChangeSetMatchesSnapshots(previous.state.index, nextIndex, changeSet)) {
         return {
-          kind: 'fallback',
+          kind: RuntimeProgramKind.Fallback,
           diagnostics: [
             {
               code: 'CORE_CHANGESET_MISMATCH',
-              phase: 'update',
+              phase: RuntimeProgramPhase.Update,
               message: 'Core ChangeSet does not match the previous and next canonical Snapshots; using full fallback',
             },
           ],
@@ -166,7 +168,7 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
         view.baseRevision,
         view.candidateRevision,
       );
-      if (incremental === undefined) return { kind: 'fallback' };
+      if (incremental === undefined) return { kind: RuntimeProgramKind.Fallback };
       context.trace.report({
         phase: PerformanceTracePhase.Update,
         unit: PerformanceTraceUnit.IrChild,
@@ -183,7 +185,7 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
         reused: 0,
         changed: incremental.operationCount,
       });
-      return { kind: 'incremental', artifact: incremental.artifact };
+      return { kind: RuntimeProgramKind.Incremental, artifact: incremental.artifact };
     },
     observeCommit: event => {
       event.artifact.value.output.diagnostics.forEach(warningSink);

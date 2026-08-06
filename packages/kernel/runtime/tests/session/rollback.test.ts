@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { defineRuntimeOwner } from '../../src/owner';
-import { defineRuntimeProgram } from '../../src/program';
+import { defineRuntimeProgram, RuntimeProgramKind } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
 import { createRuntimeSession } from '../../src/session';
 import { createRuntimeOwnerInput, createRuntimeOwnerUpdate } from '../../src/transaction';
@@ -139,9 +139,9 @@ describe('runtime session rollback', () => {
         read: value => value.value,
         dispose: value => retired.push(`artifact:a:${value.value}`),
       },
-      run: view => ({ kind: 'full', artifact: view.snapshot(firstOwner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(firstOwner).value }),
       update: (_previous, view) => ({
-        kind: 'incremental',
+        kind: RuntimeProgramKind.Incremental,
         artifact: view.snapshot(firstOwner).value,
       }),
     });
@@ -156,9 +156,9 @@ describe('runtime session rollback', () => {
         read: value => value.value,
         dispose: value => retired.push(`artifact:b:${value.value}`),
       },
-      run: view => ({ kind: 'full', artifact: view.snapshot(secondOwner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(secondOwner).value }),
       update: (_previous, view) => ({
-        kind: 'incremental',
+        kind: RuntimeProgramKind.Incremental,
         artifact: view.snapshot(secondOwner).value,
       }),
     });
@@ -169,7 +169,7 @@ describe('runtime session rollback', () => {
       programs: [firstProgram, secondProgram],
       tracePhases: [],
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: view.snapshot(thirdOwner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(thirdOwner).value }),
       update: () => {
         throw cause;
       },

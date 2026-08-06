@@ -4,11 +4,11 @@ import type { RuntimeProgramDefinitionInput } from '../../src/program';
 import type { RuntimeSessionUpdate } from '../../src/transaction';
 
 import { defineRuntimeOwner } from '../../src/owner';
-import { defineRuntimeProgram } from '../../src/program';
+import { defineRuntimeProgram, RuntimeProgramKind, RuntimeProgramPhase } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
 import { createRuntimeSession } from '../../src/session';
-import { createRuntimeOwnerInput, createRuntimeOwnerUpdate } from '../../src/transaction';
 import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '../../src/trace';
+import { createRuntimeOwnerInput, createRuntimeOwnerUpdate } from '../../src/transaction';
 
 const defineOwner = () =>
   defineRuntimeOwner<number, number, number, never>({
@@ -57,7 +57,7 @@ describe('runtime session malformed JavaScript input', () => {
     const owner = defineOwner();
     const owners = createRuntimeOwnerRegistry({ builtins: [owner] });
     const update = vi.fn((_previous, view) => ({
-      kind: 'incremental' as const,
+      kind: RuntimeProgramKind.Incremental,
       artifact: view.snapshot(owner).value,
     }));
     const program = defineRuntimeProgram<number, number, number, number>({
@@ -66,7 +66,7 @@ describe('runtime session malformed JavaScript input', () => {
       programs: [],
       tracePhases: [],
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
       update,
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
@@ -84,7 +84,7 @@ describe('runtime session malformed JavaScript input', () => {
         baseRevision: session.revision(),
         owners: [createRuntimeOwnerUpdate(owner, 2)],
       }).outcome,
-    ).toBe('incremental');
+    ).toBe(RuntimeProgramKind.Incremental);
     expect(update).toHaveBeenCalledTimes(1);
   });
 
@@ -125,10 +125,10 @@ describe('runtime session malformed JavaScript input', () => {
     const update = session.update as (value: unknown) => unknown;
 
     expect(() => update(null)).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_REVISION_INVALID', phase: 'update' }),
+      expect.objectContaining({ code: 'RUNTIME_REVISION_INVALID', phase: RuntimeProgramPhase.Update }),
     );
     expect(() => update('invalid')).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_REVISION_INVALID', phase: 'update' }),
+      expect.objectContaining({ code: 'RUNTIME_REVISION_INVALID', phase: RuntimeProgramPhase.Update }),
     );
   });
 
@@ -221,7 +221,7 @@ describe('runtime session malformed JavaScript input', () => {
         read: (value: number) => value,
       },
       run: (view: Parameters<RuntimeProgramDefinitionInput<number, number, number, number>['run']>[0]) => ({
-        kind: 'full',
+        kind: RuntimeProgramKind.Full,
         artifact: view.snapshot(owner).value,
       }),
       update: () =>
@@ -252,14 +252,14 @@ describe('runtime session malformed JavaScript input', () => {
         baseRevision: session.revision(),
         owners: [createRuntimeOwnerUpdate(owner, 2)],
       }),
-    ).toEqual(expect.objectContaining({ revision: 1, outcome: 'incremental' }));
+    ).toEqual(expect.objectContaining({ revision: 1, outcome: RuntimeProgramKind.Incremental }));
     expect(kindReads).toBe(1);
     expect(session.revision()).toBe(1);
   });
 
   it.each([
     { name: 'unknown kind', result: { kind: 'unknown' } },
-    { name: 'malformed fallback diagnostics', result: { kind: 'fallback', diagnostics: [null] } },
+    { name: 'malformed fallback diagnostics', result: { kind: RuntimeProgramKind.Fallback, diagnostics: [null] } },
   ])('拒绝 $name update result，不把它误判为合法 fallback', testCase => {
     const owner = defineOwner();
     const owners = createRuntimeOwnerRegistry({ builtins: [owner] });
@@ -274,7 +274,7 @@ describe('runtime session malformed JavaScript input', () => {
         read: (value: number) => value,
       },
       run: (view: Parameters<RuntimeProgramDefinitionInput<number, number, number, number>['run']>[0]) => ({
-        kind: 'full',
+        kind: RuntimeProgramKind.Full,
         artifact: view.snapshot(owner).value,
       }),
       update: () => testCase.result,
@@ -295,7 +295,7 @@ describe('runtime session malformed JavaScript input', () => {
     ).toThrowError(
       expect.objectContaining({
         code: 'RUNTIME_PROGRAM_UPDATE_FAILED',
-        phase: 'update',
+        phase: RuntimeProgramPhase.Update,
         program: { owner: 'counter', key: 'program' },
         cause: testCase.result,
       }),
@@ -315,7 +315,7 @@ describe('runtime session malformed JavaScript input', () => {
     const malformed = { baseRevision: session.revision() } as unknown as RuntimeSessionUpdate;
 
     expect(() => session.update(malformed)).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_OWNER_COMMAND_INVALID', phase: 'update' }),
+      expect.objectContaining({ code: 'RUNTIME_OWNER_COMMAND_INVALID', phase: RuntimeProgramPhase.Update }),
     );
   });
 
@@ -333,13 +333,13 @@ describe('runtime session malformed JavaScript input', () => {
         read: (value: number) => value,
       },
       run: view => ({
-        kind: 'full',
+        kind: RuntimeProgramKind.Full,
         artifact: view.snapshot(owner).value,
       }),
       update: (_previous, _view, context) => {
         const diagnose = context.diagnose as (value: unknown) => void;
-        diagnose({ code: 'BROKEN', phase: 'update' });
-        return { kind: 'bailout' as const };
+        diagnose({ code: 'BROKEN', phase: RuntimeProgramPhase.Update });
+        return { kind: RuntimeProgramKind.Bailout };
       },
     } satisfies RuntimeProgramDefinitionInput<number, number, number, number>;
     const program = defineRuntimeProgram(input);
@@ -358,7 +358,7 @@ describe('runtime session malformed JavaScript input', () => {
     ).toThrowError(
       expect.objectContaining({
         code: 'RUNTIME_PROGRAM_UPDATE_FAILED',
-        phase: 'update',
+        phase: RuntimeProgramPhase.Update,
       }),
     );
     expect(session.diagnostics()).toEqual([]);
@@ -384,7 +384,7 @@ describe('runtime session malformed JavaScript input', () => {
           },
         ) as Readonly<{ code: string; phase: string; message: string }>;
         context.diagnose(diagnostic);
-        return { kind: 'full', artifact: view.snapshot(owner).value };
+        return { kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value };
       },
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
@@ -424,7 +424,7 @@ describe('runtime session malformed JavaScript input', () => {
         });
         const drain = Reflect.get(context.trace, 'diagnostics');
         if (typeof drain === 'function') Reflect.apply(drain, context.trace, []);
-        return { kind: 'full', artifact: view.snapshot(owner).value };
+        return { kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value };
       },
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });

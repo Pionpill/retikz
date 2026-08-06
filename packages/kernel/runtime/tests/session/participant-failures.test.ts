@@ -13,6 +13,7 @@ import {
   PerformanceTraceOutcome,
   PerformanceTracePhase,
   PerformanceTraceUnit,
+  RuntimeProgramPhase,
 } from '../../src';
 
 const defineCounterOwner = () =>
@@ -337,7 +338,7 @@ describe('runtime session participant failure lifecycle', () => {
           commit: () => undefined,
           rollback: () => undefined,
           dispose: () => {
-            if (candidate.phase === 'initial') throw trigger;
+            if (candidate.phase === RuntimeProgramPhase.Initial) throw trigger;
           },
         }),
       read: () => Object.freeze({ value: 1 }),

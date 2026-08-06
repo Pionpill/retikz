@@ -4,6 +4,7 @@ import {
   createRuntimeOwnerUpdate,
   createRuntimeProgramRegistry,
   createRuntimeSession,
+  RuntimeProgramKind,
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 
@@ -51,7 +52,7 @@ describe('Core Runtime owner', () => {
       owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, sceneWithText('A'))],
     });
 
-    expect(result.outcome).toBe('bailout');
+    expect(result.outcome).toBe(RuntimeProgramKind.Bailout);
     expect(session.revision()).toBe(0);
   });
 
@@ -67,7 +68,7 @@ describe('Core Runtime owner', () => {
       owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, reordered)],
     });
 
-    expect(equalResult.outcome).toBe('bailout');
+    expect(equalResult.outcome).toBe(RuntimeProgramKind.Bailout);
     expect(session.revision()).toBe(0);
 
     session.update({

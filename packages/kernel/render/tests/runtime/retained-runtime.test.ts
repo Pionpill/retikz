@@ -14,6 +14,7 @@ import {
   PerformanceTracePhase,
   PerformanceTraceUnit,
   RuntimeError,
+  RuntimeProgramKind,
 } from '@retikz/runtime';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
@@ -583,12 +584,12 @@ describe('createRetainedRenderParticipant', () => {
       programs: [],
       tracePhases: [],
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: artifact(snapshot(view.candidateRevision, false)) }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: artifact(snapshot(view.candidateRevision, false)) }),
       update: (_previous, view) => {
         const next = snapshot(view.candidateRevision, view.snapshot(sourceOwner).value);
         if (view.baseRevision === undefined) throw new Error('expected update base revision');
         return {
-          kind: 'incremental',
+          kind: RuntimeProgramKind.Incremental,
           artifact: artifact(
             next,
             Object.freeze({

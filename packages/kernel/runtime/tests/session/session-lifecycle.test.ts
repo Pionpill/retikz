@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { RuntimeCommitEvent } from '../../src/program';
 
 import { defineRuntimeOwner } from '../../src/owner';
-import { defineRuntimeProgram } from '../../src/program';
+import { defineRuntimeProgram, RuntimeProgramKind, RuntimeProgramPhase } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
 import { createRuntimeSession } from '../../src/session';
 import { createRuntimeChangeSet, createRuntimeOwnerInput, createRuntimeOwnerUpdate } from '../../src/transaction';
@@ -35,8 +35,8 @@ describe('runtime session lifecycle', () => {
         readForProgram: artifact => artifact.value,
         read: artifact => `sum:${artifact.value}`,
       },
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
-      update: (_previous, view) => ({ kind: 'incremental', artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
+      update: (_previous, view) => ({ kind: RuntimeProgramKind.Incremental, artifact: view.snapshot(owner).value }),
       observeCommit: event => events.push(event),
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
@@ -51,9 +51,9 @@ describe('runtime session lifecycle', () => {
     expect(session.artifact(program)).toEqual({ revision: 0, value: 'sum:1' });
     expect(events).toEqual([
       expect.objectContaining({
-        phase: 'initial',
+        phase: RuntimeProgramPhase.Initial,
         revision: 0,
-        outcome: 'full',
+        outcome: RuntimeProgramKind.Full,
         artifact: { revision: 0, value: 'sum:1' },
         diagnostics: [],
       }),
@@ -65,16 +65,16 @@ describe('runtime session lifecycle', () => {
       owners: [createRuntimeOwnerUpdate(owner, 2, createRuntimeChangeSet(baseRevision, [{ delta: 1 }]))],
     });
 
-    expect(result).toEqual({ revision: 1, outcome: 'incremental', diagnostics: [] });
+    expect(result).toEqual({ revision: 1, outcome: RuntimeProgramKind.Incremental, diagnostics: [] });
     expect(session.revision()).toBe(1);
     expect(session.snapshot(owner)).toEqual({ revision: 1, value: 2 });
     expect(session.artifact(program)).toEqual({ revision: 1, value: 'sum:2' });
     expect(events.at(-1)).toEqual(
       expect.objectContaining({
-        phase: 'update',
+        phase: RuntimeProgramPhase.Update,
         baseRevision: 0,
         revision: 1,
-        outcome: 'incremental',
+        outcome: RuntimeProgramKind.Incremental,
         artifact: { revision: 1, value: 'sum:2' },
         diagnostics: [],
       }),
@@ -93,7 +93,7 @@ describe('runtime session lifecycle', () => {
 
     expect(session.update({ baseRevision: session.revision(), owners: [] })).toEqual({
       revision: 0,
-      outcome: 'bailout',
+      outcome: RuntimeProgramKind.Bailout,
       diagnostics: [],
     });
     expect(
@@ -101,7 +101,7 @@ describe('runtime session lifecycle', () => {
         baseRevision: session.revision(),
         owners: [createRuntimeOwnerUpdate(owner, 1)],
       }),
-    ).toEqual({ revision: 0, outcome: 'bailout', diagnostics: [] });
+    ).toEqual({ revision: 0, outcome: RuntimeProgramKind.Bailout, diagnostics: [] });
 
     const result = session.update({
       baseRevision: session.revision(),

@@ -12,6 +12,8 @@ import {
   PerformanceTraceOutcome,
   PerformanceTracePhase,
   PerformanceTraceUnit,
+  RuntimeProgramKind,
+  RuntimeProgramPhase,
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 
@@ -171,7 +173,7 @@ describe('Core Runtime Program initial full run', () => {
     });
     const artifact = session.artifact(program).value;
 
-    expect(result.outcome).toBe('fallback');
+    expect(result.outcome).toBe(RuntimeProgramKind.Fallback);
     expect(result.diagnostics).toEqual([expect.objectContaining({ code: 'RUNTIME_CHANGESET_FALLBACK' })]);
     expect(artifact.patch?.operations).toEqual([
       expect.objectContaining({ kind: 'replaceScene', snapshot: artifact.snapshot }),
@@ -220,7 +222,7 @@ describe('Core Runtime Program initial full run', () => {
       owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
     });
 
-    expect(result.outcome).toBe('incremental');
+    expect(result.outcome).toBe(RuntimeProgramKind.Incremental);
     expect(session.artifact(program).value.patch?.operations).toEqual([expect.objectContaining({ kind: 'update' })]);
   });
 
@@ -519,7 +521,7 @@ describe('Core Runtime Program full fallback update', () => {
         .map(node => identityKey(node.identity))
         .sort();
 
-    expect(result.outcome).toBe('fallback');
+    expect(result.outcome).toBe(RuntimeProgramKind.Fallback);
     expect(after.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
     expect(stableIdentityKeys(after.snapshot.topology, 'node-a')).toEqual(stableIdentityKeys(before, 'node-a'));
     expect(stableIdentityKeys(after.snapshot.topology, 'node-b')).toEqual(stableIdentityKeys(before, 'node-b'));
@@ -601,9 +603,9 @@ describe('Core Runtime Program full fallback update', () => {
       owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, sceneWithText('C'))],
     });
 
-    expect(hinted.outcome).toBe('fallback');
+    expect(hinted.outcome).toBe(RuntimeProgramKind.Fallback);
     expect(hinted.diagnostics).toEqual([]);
-    expect(snapshotOnly.outcome).toBe('fallback');
+    expect(snapshotOnly.outcome).toBe(RuntimeProgramKind.Fallback);
     expect(snapshotOnly.diagnostics).toEqual([]);
   });
 
@@ -648,11 +650,11 @@ describe('Core Runtime Program full fallback update', () => {
       ],
     });
 
-    expect(result.outcome).toBe('fallback');
+    expect(result.outcome).toBe(RuntimeProgramKind.Fallback);
     expect(result.diagnostics).toEqual([
       {
         code: 'CORE_CHANGESET_MISMATCH',
-        phase: 'update',
+        phase: RuntimeProgramPhase.Update,
         severity: 'warning',
         message: 'Core ChangeSet does not match the previous and next canonical Snapshots; using full fallback',
         owner: CORE_OWNER_KEY,
@@ -866,7 +868,7 @@ describe('Core Runtime Program incremental style update', () => {
     });
     const after = session.artifact(program).value;
 
-    expect(result.outcome).toBe('incremental');
+    expect(result.outcome).toBe(RuntimeProgramKind.Incremental);
     expect(after.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
     expect(after.patch?.operations).toHaveLength(1);
     const operation = after.patch?.operations[0];
@@ -930,7 +932,7 @@ describe('Core Runtime Program incremental style update', () => {
     });
     const after = session.artifact(program).value;
 
-    expect(result.outcome).toBe('full');
+    expect(result.outcome).toBe(RuntimeProgramKind.Full);
     expect(after.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
     expect(after.patch?.operations).toEqual([
       expect.objectContaining({ kind: 'replaceScene', snapshot: after.snapshot }),
@@ -984,7 +986,7 @@ describe('Core Runtime Program incremental style update', () => {
       owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
     });
 
-    expect(result.outcome).toBe('fallback');
+    expect(result.outcome).toBe(RuntimeProgramKind.Fallback);
     expect(session.artifact(program).value.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
 
     const changedReferenceNode: IRScene = {
@@ -995,7 +997,7 @@ describe('Core Runtime Program incremental style update', () => {
       baseRevision: session.revision(),
       owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, changedReferenceNode)],
     });
-    expect(changedReferenceResult.outcome).toBe('fallback');
+    expect(changedReferenceResult.outcome).toBe(RuntimeProgramKind.Fallback);
     expect(session.artifact(program).value.output.result).toEqual(
       compileToScene(changedReferenceNode, { onWarn: () => {} }),
     );
@@ -1044,7 +1046,7 @@ describe('Core Runtime Program incremental style update', () => {
       owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
     });
 
-    expect(result.outcome).toBe('fallback');
+    expect(result.outcome).toBe(RuntimeProgramKind.Fallback);
     expect(session.artifact(program).value.output.result).toEqual(compileToScene(next, options));
   });
 });
