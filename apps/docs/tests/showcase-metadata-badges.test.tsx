@@ -45,7 +45,7 @@ describe('<ShowcaseMetadataBadges>', () => {
     roots.push(root);
 
     act(() => {
-      root.render(<ShowcaseMetadataBadges family="point" usage="distribution" />);
+      root.render(<ShowcaseMetadataBadges family="scatter-points" usage="distribution" />);
     });
 
     const badges = Array.from(container.querySelectorAll('[data-slot="badge"]'));
@@ -61,7 +61,7 @@ describe('<ShowcaseMetadataBadges>', () => {
     roots.push(root);
 
     act(() => {
-      root.render(<ShowcaseMetadataBadges family="point" usage="distribution" />);
+      root.render(<ShowcaseMetadataBadges family="scatter-points" usage="distribution" />);
     });
 
     const triggers = Array.from(container.querySelectorAll<HTMLElement>('[data-slot="tooltip-trigger"]'));

@@ -4,6 +4,9 @@ import type { z } from 'zod';
 import type { FlexLayoutDirection, FlexLayoutWrap } from './constants';
 import type {
   FlexLayoutArtifactSchema,
+  FlexLayoutInspectLocalOptionsInputSchema,
+  FlexLayoutInspectLocalOptionsSchema,
+  FlexLayoutInspectOptionsInputSchema,
   FlexLayoutItemSchema,
   FlexLayoutSchema,
   FlexMainDistributionSchema,
@@ -32,3 +35,12 @@ export type FlexLayoutInput = Omit<z.input<typeof FlexLayoutSchema>, 'namespace'
 
 /** FlexLayout 的 JSON-safe compile artifact payload */
 export type FlexLayoutArtifact = z.infer<typeof FlexLayoutArtifactSchema>;
+
+/** FlexLayout inspector 的作者输入 */
+export type FlexLayoutInspectOptions = z.input<typeof FlexLayoutInspectOptionsInputSchema>;
+
+/** FlexLayout inspector 的局部作者输入 */
+export type FlexLayoutInspectLocalOptions = z.input<typeof FlexLayoutInspectLocalOptionsInputSchema>;
+
+/** FlexLayout inspector 的规范化局部选项 */
+export type ResolvedFlexLayoutInspectLocalOptions = z.output<typeof FlexLayoutInspectLocalOptionsSchema>;

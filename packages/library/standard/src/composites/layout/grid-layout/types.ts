@@ -1,14 +1,18 @@
 import type { ValueOf } from '@retikz/core';
 import type { z } from 'zod';
 
-import type { GridAutoFlow, GridOverlap } from './constants';
+import type { GridAutoFlow, GridOverlap, LayoutTrackSourceKind } from './constants';
 import type {
   GridLayoutArtifactSchema,
+  GridLayoutInspectLocalOptionsInputSchema,
+  GridLayoutInspectLocalOptionsSchema,
+  GridLayoutInspectOptionsInputSchema,
   GridLayoutItemSchema,
   GridLayoutSchema,
   GridPlacementSchema,
   GridTrackBreadthSchema,
   GridTrackSchema,
+  LayoutTrackArtifactSchema,
 } from './schema';
 
 /** GridLayout 自动放置流向取值 */
@@ -49,3 +53,18 @@ export type GridLayoutInput = Omit<z.input<typeof GridLayoutSchema>, 'namespace'
 
 /** GridLayout 的 JSON-safe compile artifact payload */
 export type GridLayoutArtifact = z.infer<typeof GridLayoutArtifactSchema>;
+
+/** GridLayout 轨道产物来源取值 */
+export type LayoutTrackSourceKindValue = ValueOf<typeof LayoutTrackSourceKind>;
+
+/** GridLayout 的 resolved track artifact */
+export type LayoutTrackArtifact = z.infer<typeof LayoutTrackArtifactSchema>;
+
+/** GridLayout inspector 的作者输入 */
+export type GridLayoutInspectOptions = z.input<typeof GridLayoutInspectOptionsInputSchema>;
+
+/** GridLayout inspector 的局部作者输入 */
+export type GridLayoutInspectLocalOptions = z.input<typeof GridLayoutInspectLocalOptionsInputSchema>;
+
+/** GridLayout inspector 的规范化局部选项 */
+export type ResolvedGridLayoutInspectLocalOptions = z.output<typeof GridLayoutInspectLocalOptionsSchema>;

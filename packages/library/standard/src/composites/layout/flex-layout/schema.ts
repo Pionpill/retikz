@@ -1,4 +1,4 @@
-import { CompositeBaseSchema, LayoutAlignmentGuideDimension } from '@retikz/core';
+import { BaseLayoutInspectOptionsInputSchema, CompositeBaseSchema, LayoutAlignmentGuideDimension } from '@retikz/core';
 import { z } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
@@ -206,3 +206,31 @@ const refineFlexLayoutArtifact = (artifact: z.infer<typeof FlexLayoutArtifactBas
 export const FlexLayoutArtifactSchema = FlexLayoutArtifactBaseSchema.superRefine(refineFlexLayoutArtifact).describe(
   'Canonical JSON-safe FlexLayout compile artifact payload.',
 );
+
+/** FlexLayout family-local inspector sparse schema */
+export const FlexLayoutInspectLocalOptionsInputSchema = z
+  .strictObject({
+    lines: z.boolean().optional().describe('Whether to draw FlexLayout line regions.'),
+    gaps: z.boolean().optional().describe('Whether to shade authored FlexLayout row and column gaps.'),
+    distributedSpace: z
+      .boolean()
+      .optional()
+      .describe(
+        'Whether to draw only the dashed perimeter of positive free space introduced by FlexLayout content distribution, leaving its interior transparent.',
+      ),
+  })
+  .describe('Sparse FlexLayout-specific inspection options.');
+
+/** FlexLayout inspector 完整 authoring schema */
+export const FlexLayoutInspectOptionsInputSchema = BaseLayoutInspectOptionsInputSchema.safeExtend(
+  FlexLayoutInspectLocalOptionsInputSchema.shape,
+).describe('Sparse shared and FlexLayout-specific inspection options.');
+
+/** FlexLayout family-local canonical schema */
+export const FlexLayoutInspectLocalOptionsSchema = FlexLayoutInspectLocalOptionsInputSchema.transform(value =>
+  Object.freeze({
+    lines: value.lines ?? true,
+    gaps: value.gaps ?? true,
+    distributedSpace: value.distributedSpace ?? true,
+  }),
+).describe('Canonical FlexLayout-specific inspection options.');

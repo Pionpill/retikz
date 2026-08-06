@@ -8,15 +8,8 @@ import type {
   LayoutItemKind,
   LayoutOverflow,
   LayoutSpacingKind,
-  LayoutTrackSourceKind,
 } from './constants';
 import type {
-  FlexLayoutInspectLocalOptionsInputSchema,
-  FlexLayoutInspectLocalOptionsSchema,
-  FlexLayoutInspectOptionsInputSchema,
-  GridLayoutInspectLocalOptionsInputSchema,
-  GridLayoutInspectLocalOptionsSchema,
-  GridLayoutInspectOptionsInputSchema,
   LayoutArtifactAlignmentGuideSchema,
   LayoutArtifactContainerSchema,
   LayoutArtifactItemBaseSchema,
@@ -27,10 +20,6 @@ import type {
   LayoutItemBaseSchema,
   LayoutSizeSchema,
   LayoutSpacingArtifactSchema,
-  LayoutTrackArtifactSchema,
-  OverlayLayoutInspectLocalOptionsInputSchema,
-  OverlayLayoutInspectLocalOptionsSchema,
-  OverlayLayoutInspectOptionsInputSchema,
 } from './schema';
 
 /** 单轴容器尺寸策略判别值 */
@@ -78,10 +67,8 @@ export type LayoutDistributionValue = ValueOf<typeof LayoutDistribution>;
 /** 容器视觉溢出策略取值 */
 export type LayoutOverflowValue = ValueOf<typeof LayoutOverflow>;
 
+/** 布局产物中间距区域的语义取值 */
 export type LayoutSpacingKindValue = ValueOf<typeof LayoutSpacingKind>;
-
-/** Layout artifact track 来源取值 */
-export type LayoutTrackSourceKindValue = ValueOf<typeof LayoutTrackSourceKind>;
 
 /** Layout artifact 的 container-local 矩形 */
 export type LayoutArtifactRect = z.infer<typeof LayoutArtifactRectSchema>;
@@ -100,36 +87,6 @@ export type LayoutArtifactItemBase = z.infer<typeof LayoutArtifactItemBaseSchema
 
 /** 三种布局 container 共用的几何 artifact */
 export type LayoutArtifactContainer = z.infer<typeof LayoutArtifactContainerSchema>;
-
-/** GridLayout resolved track artifact */
-export type LayoutTrackArtifact = z.infer<typeof LayoutTrackArtifactSchema>;
-
-/** FlexLayout inspector authoring options */
-export type FlexLayoutInspectOptions = z.input<typeof FlexLayoutInspectOptionsInputSchema>;
-
-/** GridLayout inspector authoring options */
-export type GridLayoutInspectOptions = z.input<typeof GridLayoutInspectOptionsInputSchema>;
-
-/** OverlayLayout inspector authoring options */
-export type OverlayLayoutInspectOptions = z.input<typeof OverlayLayoutInspectOptionsInputSchema>;
-
-/** FlexLayout family-local sparse options */
-export type FlexLayoutInspectLocalOptions = z.input<typeof FlexLayoutInspectLocalOptionsInputSchema>;
-
-/** GridLayout family-local sparse options */
-export type GridLayoutInspectLocalOptions = z.input<typeof GridLayoutInspectLocalOptionsInputSchema>;
-
-/** OverlayLayout family-local sparse options */
-export type OverlayLayoutInspectLocalOptions = z.input<typeof OverlayLayoutInspectLocalOptionsInputSchema>;
-
-/** FlexLayout family-local canonical options */
-export type ResolvedFlexLayoutInspectLocalOptions = z.output<typeof FlexLayoutInspectLocalOptionsSchema>;
-
-/** GridLayout family-local canonical options */
-export type ResolvedGridLayoutInspectLocalOptions = z.output<typeof GridLayoutInspectLocalOptionsSchema>;
-
-/** OverlayLayout family-local canonical options */
-export type ResolvedOverlayLayoutInspectLocalOptions = z.output<typeof OverlayLayoutInspectLocalOptionsSchema>;
 
 /** Standard family inspector lowering context */
 export type StandardLayoutInspectContext<TOptions> = Readonly<{

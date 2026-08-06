@@ -1,4 +1,5 @@
 import type { IRBoxSpacing, IRClipSpec, LayoutAxisProposal } from '@retikz/core';
+import type { BoundsRect } from '@retikz/math';
 
 import { resolveBoxSpacing } from '@retikz/core';
 
@@ -7,7 +8,7 @@ import type { IRLayoutAxisSize, LayoutAlignmentValue } from '../shared';
 import { LayoutAlignment, LayoutAxisSizeKind } from '../shared';
 
 /** Layout solver 使用的有限非负矩形 */
-export type LayoutRect = Readonly<{ x: number; y: number; width: number; height: number }>;
+export type LayoutRect = Readonly<BoundsRect>;
 
 /** Layout solver 使用的四边 spacing */
 export type LayoutInsets = Readonly<{ top: number; right: number; bottom: number; left: number }>;

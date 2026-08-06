@@ -60,20 +60,6 @@ export const LayoutOverflow = {
   Clip: 'clip',
 } as const;
 
-/** GridLayout 布局产物中轨道的定义尺寸来源 */
-export const LayoutTrackSourceKind = {
-  /** 固定轨道尺寸 */
-  Fixed: 'fixed',
-  /** 根据内容最小尺寸确定轨道 */
-  ContentMinimum: 'content-minimum',
-  /** 根据内容自然尺寸确定轨道 */
-  ContentNatural: 'content-natural',
-  /** 根据剩余空间比例确定轨道 */
-  Fraction: 'fraction',
-  /** 根据最小值和最大值共同确定轨道 */
-  Minmax: 'minmax',
-} as const;
-
 /** 布局产物中间距区域的语义种类 */
 export const LayoutSpacingKind = {
   /** 项目之间的固定间距 */

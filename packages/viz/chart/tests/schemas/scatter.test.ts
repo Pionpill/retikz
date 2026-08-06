@@ -3,16 +3,15 @@ import type { IRPlotPointEncoding } from '@retikz/plot';
 import { PointMarkSchema } from '@retikz/plot';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import type { IRScatterPointPatch } from '../../src/schemas';
+import type { IRScatterPointPatch } from '../../src/families/scatter-points/shared';
 
+import { ScatterChartSpecSchema } from '../../src/families/scatter-points/scatter';
 import {
-  ChartSpecSchema,
-  ChartType,
-  ScatterChartSpecSchema,
   ScatterPointPatchSchema,
   StrictColorChannelSchema,
   StrictSizeChannelSchema,
-} from '../../src/schemas';
+} from '../../src/families/scatter-points/shared';
+import { ChartSpecSchema, ChartType } from '../../src/schemas/internal';
 
 const minimalScatter = {
   namespace: 'chart',

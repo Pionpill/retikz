@@ -179,7 +179,7 @@ Private executor的 `prepare/compare/validateChangeSet`成功返回 `RuntimeOwne
 - builtin/custom owner 复用同一 define、merge、resolve 和重复 key 诊断；Runtime 只验证结构与生命周期，不读取领域 value/change 语义。
 - capture/read/equals/dispose、identity collector 与 registry 均使用稳定错误 code/phase，并在失败时保持 candidate 隔离和剩余资源清理。
 - 自动化验证覆盖 Unicode/特殊 segment、owner mismatch、duplicate path、mutable alias、异构 typed registry、动态 string lookup 拒绝和 lifecycle failure。
-- 2026-07-27 收尾验证通过：Runtime `tsc --noEmit` 与 19 files / 135 tests 全部通过。
+- 类型与自动化验证已覆盖公共泛型恢复、registry dispatch、identity 校验、只读隔离和生命周期失败路径。
 - 中英文 Runtime package 文档与 alpha.2 changelog 已同步 identity、Owner Definition、registry 和生命周期边界。
 
 ## 公开影响

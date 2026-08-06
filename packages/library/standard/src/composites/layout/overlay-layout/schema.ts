@@ -1,3 +1,4 @@
+import { BaseLayoutInspectOptionsInputSchema } from '@retikz/core';
 import { z } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
@@ -198,3 +199,26 @@ const refineOverlayLayoutArtifact = (
 export const OverlayLayoutArtifactSchema = OverlayLayoutArtifactBaseSchema.superRefine(
   refineOverlayLayoutArtifact,
 ).describe('Canonical JSON-safe OverlayLayout compile artifact payload.');
+
+/** OverlayLayout family-local inspector sparse schema */
+export const OverlayLayoutInspectLocalOptionsInputSchema = z
+  .strictObject({
+    placements: z.boolean().optional().describe('Whether to draw OverlayLayout placement relations.'),
+    anchors: z.boolean().optional().describe('Whether to draw positioned OverlayLayout item anchors.'),
+    stacking: z.boolean().optional().describe('Whether to label OverlayLayout stacking order.'),
+  })
+  .describe('Sparse OverlayLayout-specific inspection options.');
+
+/** OverlayLayout inspector 完整 authoring schema */
+export const OverlayLayoutInspectOptionsInputSchema = BaseLayoutInspectOptionsInputSchema.safeExtend(
+  OverlayLayoutInspectLocalOptionsInputSchema.shape,
+).describe('Sparse shared and OverlayLayout-specific inspection options.');
+
+/** OverlayLayout family-local canonical schema */
+export const OverlayLayoutInspectLocalOptionsSchema = OverlayLayoutInspectLocalOptionsInputSchema.transform(value =>
+  Object.freeze({
+    placements: value.placements ?? true,
+    anchors: value.anchors ?? true,
+    stacking: value.stacking ?? false,
+  }),
+).describe('Canonical OverlayLayout-specific inspection options.');

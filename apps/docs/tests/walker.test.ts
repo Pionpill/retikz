@@ -97,6 +97,21 @@ describe('walker — tuple / lazy / union / discriminatedUnion', () => {
     if (r.kind === 'union') expect(r.members).toHaveLength(2);
   });
 
+  it('falls back to a transform pipe input when the output is opaque', () => {
+    const schema = z
+      .union([z.number(), z.strictObject({ row: z.number(), column: z.number() })])
+      .transform(value => (typeof value === 'number' ? { row: value, column: value } : value));
+    const r = walkType(schema);
+
+    expect(r).toMatchObject({
+      kind: 'union',
+      members: [
+        { kind: 'primitive', name: 'number' },
+        { kind: 'object', fields: [{ name: 'row' }, { name: 'column' }] },
+      ],
+    });
+  });
+
   it('resolves union members to ref when registered', async () => {
     // 用 IR 真实 schema 验证：CoordinateSchema.position 是 union of Position / PolarPosition / AtPosition / OffsetPosition / BetweenPosition，五者均注册
     const { CoordinateSchema } = await import('@retikz/core');

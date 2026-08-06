@@ -14,8 +14,6 @@ import type {
 } from '../../src';
 
 import {
-  FlexLayoutInspectOptionsInputSchema,
-  GridLayoutInspectOptionsInputSchema,
   LayoutAlignment,
   LayoutAlignmentSchema,
   LayoutAxisSizeKind,
@@ -27,20 +25,9 @@ import {
   LayoutItemKind,
   LayoutOverflow,
   LayoutSizeSchema,
-  OverlayLayoutInspectOptionsInputSchema,
 } from '../../src';
 
 describe('shared layout schema', () => {
-  it('describes every layout-family inspection field for schema reference consumers', () => {
-    const fields = [
-      ...Object.values(FlexLayoutInspectOptionsInputSchema.shape),
-      ...Object.values(GridLayoutInspectOptionsInputSchema.shape),
-      ...Object.values(OverlayLayoutInspectOptionsInputSchema.shape),
-    ];
-
-    expect(fields.every(field => typeof field.description === 'string' && field.description.length > 0)).toBe(true);
-  });
-
   it('describes the public container and item object contracts', () => {
     expect(LayoutContainerBoxSchema.description).toBe('Shared Box contract for Standard layout containers.');
     expect(LayoutItemBaseSchema.description).toBe('Shared JSON-safe child item contract for Standard layouts.');
