@@ -42,7 +42,9 @@ const stableRootNodeId = (child: IRScene['children'][number]): string | undefine
 
 /** 判断两个 Node 是否只发生无资源 fill string 变化 */
 const isFillOnlyUpdate = (previous: Readonly<IRNode>, next: Readonly<IRNode>): boolean => {
-  if (typeof previous.fill !== 'string' || typeof next.fill !== 'string' || previous.fill === next.fill) return false;
+  const previousSolidFill = previous.fill === undefined || typeof previous.fill === 'string';
+  const nextSolidFill = next.fill === undefined || typeof next.fill === 'string';
+  if (!previousSolidFill || !nextSolidFill || previous.fill === next.fill) return false;
   const { fill: previousFill, ...previousRest } = previous;
   const { fill: nextFill, ...nextRest } = next;
   void previousFill;
@@ -230,7 +232,11 @@ export const tryCompileRootNodeStyleUpdate = <
     operations: Object.freeze(operations),
   });
   const publicRead = Object.freeze({
-    output: Object.freeze({ result, diagnostics: previous.output.diagnostics }),
+    output: Object.freeze({
+      result,
+      diagnostics: previous.output.diagnostics,
+      observerOutputs: previous.output.observerOutputs,
+    }),
     snapshot,
     patch,
   });

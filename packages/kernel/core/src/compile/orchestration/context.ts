@@ -13,7 +13,7 @@ import type { IRScene } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { CompileOptions } from '../types';
 import type { CompileWarningInput } from '../warning';
-import type { PreparedCompileInspection } from './inspection';
+import type { CompileObservationRuntime } from './observation';
 
 import { resolveArrowRegistry } from '../../providers/arrow';
 import { resolveBoundaryRegistry } from '../../providers/boundary';
@@ -30,7 +30,6 @@ import { createRound, DEFAULT_PRECISION } from '../scene';
 import { fallbackMeasurer } from '../text';
 import { formatCompileWarning } from '../warning';
 import { DEFAULT_MAX_COMPOSITE_DEPTH } from './composite';
-import { prepareCompileInspection } from './inspection';
 import { DEFAULT_RESOLVED_THEME, resolveTheme } from './theme';
 
 /**
@@ -54,8 +53,8 @@ export type CompileContext = {
   maxCompositeDepth: number;
   /** 本次请求的 artifact 开关 */
   artifacts: CompileOptions['artifacts'];
-  /** admission 后的 runtime-only inspection sidecar */
-  inspection: PreparedCompileInspection | undefined;
+  /** 显式 observed compile 的本次 session */
+  observation: CompileObservationRuntime | undefined;
   /** 本次 full compile 共享的可选 trace 计数器 */
   trace: { reporter: NonNullable<CompileOptions['trace']>; visited: number } | undefined;
   /** Scene 输出 rounder */
@@ -93,6 +92,7 @@ export type CompileContext = {
 /** 创建内部编译上下文时允许接收尚未补全 origin 的 warning */
 type CreateCompileContextOptions = Omit<CompileOptions, 'onWarn'> & {
   onWarn?: (warning: CompileWarningInput) => void;
+  observation?: CompileObservationRuntime;
 };
 
 /** 创建 compile 编排所需的不可变依赖上下文 */
@@ -122,7 +122,7 @@ export const createCompileContext = (ir: IRScene, options: CreateCompileContextO
     composites,
     maxCompositeDepth: options.maxCompositeDepth ?? DEFAULT_MAX_COMPOSITE_DEPTH,
     artifacts: options.artifacts,
-    inspection: prepareCompileInspection(ir, options.inspection),
+    observation: options.observation,
     trace: options.trace === undefined ? undefined : { reporter: options.trace, visited: 0 },
     round,
     layoutPadding: options.padding ?? DEFAULT_LAYOUT_PADDING,

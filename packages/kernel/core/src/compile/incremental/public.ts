@@ -1,6 +1,12 @@
 import type { RuntimeOwnerToken, RuntimeProgramDefinition } from '@retikz/runtime';
 
-import type { AnyCompositeDefinition, ScenePatch, SceneRuntimeSnapshot } from '../../contract';
+import type {
+  AnyCompositeDefinition,
+  CompileObserverDefinition,
+  CompileObserverOutput,
+  ScenePatch,
+  SceneRuntimeSnapshot,
+} from '../../contract';
 import type { CompileOptions, CompileResult, CompositeArtifactOf } from '../types';
 import type { CompileWarning } from '../warning';
 import type { CoreProgramArtifact, CoreProgramArtifactInput, CoreProgramRead } from './types';
@@ -19,6 +25,8 @@ export type CoreProgramOptions<
 export type CoreProgramRuntimeOptions = Readonly<{
   /** 只负责使固定 compile definitions 外部状态失效的 owner；其 value 不进入 Core IR */
   invalidationOwners?: ReadonlyArray<RuntimeOwnerToken>;
+  /** Program session 生命周期内固定的 observer definitions */
+  observers?: ReadonlyArray<CompileObserverDefinition>;
 }>;
 
 /** Core Program 对外提供的完整编译输出 */
@@ -27,6 +35,8 @@ export type CoreProgramOutput<TComposites extends ReadonlyArray<AnyCompositeDefi
   result: CompileResult<CompositeArtifactOf<TComposites[number]>>;
   /** 按 canonical compile 顺序收集的 warnings */
   diagnostics: ReadonlyArray<CompileWarning>;
+  /** 与 primary result 同一 candidate revision 的 observer outputs */
+  observerOutputs: ReadonlyArray<CompileObserverOutput>;
 }>;
 
 /** 下游 Program、participant 与 session caller 可见的 Core artifact */

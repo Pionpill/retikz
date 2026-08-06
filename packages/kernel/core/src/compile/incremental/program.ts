@@ -41,6 +41,7 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
 ): CoreProgramDefinition<TComposites> => {
   const fixedOptions = copyCoreProgramOptions(options);
   const invalidationOwners = Object.freeze([...(runtimeOptions.invalidationOwners ?? [])]);
+  const observers = Object.freeze([...(runtimeOptions.observers ?? [])]);
   const warningSink = fixedOptions.onWarn ?? dispatchDefaultWarning;
 
   const definition = defineRuntimeProgram<
@@ -88,7 +89,7 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
           onWarn: undefined,
           trace: counter,
         },
-        { candidateRevision: view.candidateRevision },
+        { candidateRevision: view.candidateRevision, observers },
       );
       freezeProgramOutput(compiled.result);
       freezeProgramOutput(compiled.diagnostics);
@@ -102,7 +103,11 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
       );
       const isUpdate = view.phase === RuntimeProgramPhase.Update;
       const publicRead = Object.freeze({
-        output: Object.freeze({ result: compiled.result, diagnostics: compiled.diagnostics }),
+        output: Object.freeze({
+          result: compiled.result,
+          diagnostics: compiled.diagnostics,
+          observerOutputs: compiled.observerOutputs,
+        }),
         snapshot,
         ...(isUpdate
           ? {
@@ -145,6 +150,7 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
       if (invalidationOwners.some(owner => view.changed(owner))) {
         return { kind: RuntimeProgramKind.Fallback };
       }
+      if (observers.length > 0) return { kind: RuntimeProgramKind.Fallback };
       const changeSet = view.changeSet(CoreOwnerDefinition);
       const nextSource = view.snapshot(CoreOwnerDefinition).value;
       const nextIndex = createCoreSnapshotIndex(nextSource);

@@ -41,8 +41,8 @@ export const buildPathTransforms = ({ rotate, scale, center, round }: BuildPathT
   return out;
 };
 
-/** 构造可由辅助 IR Scope 复用的 Path 自身变换 */
-export const buildPathInspectionTransforms = ({
+/** 构造可由所属者产物复用的 Path 自身变换 */
+export const buildPathOwnerOutputTransforms = ({
   rotate,
   scale,
   center,
