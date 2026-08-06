@@ -3,7 +3,13 @@
 - 状态：Accepted
 - 日期：2026-07-31
 - 范围：Core inspection contract、Render frame、React / Vanilla authoring、Standard Flex / Grid / Overlay inspector
-- 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-06](./06-layout-artifacts-capabilities-adapters.md)
+- 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-06](./06-layout-artifacts-capabilities-adapters.md) · [Kernel ADR-11](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/11-extensible-inspector-content.md)
+
+## 后续演进
+
+[Kernel ADR-11](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/11-extensible-inspector-content.md) 取代本 ADR 中 Inspector 只能返回专用辅助图元、Core 分别解析 Base 与家族选项、Render 解释专用辅助图元的契约，并将组件局部策略由 `component` 统一命名为 `self`
+
+本 ADR 冻结的 runtime sidecar、最终 occurrence、最终 replay、独立 inspection plane、主 Scene 不受辅助内容影响以及完整 frame 原子提交语义继续有效。Inspector 的新输出契约、辅助 Scene 隔离、诊断来源与 renderer 执行路径以 Kernel ADR-11 为准
 
 ## 背景
 

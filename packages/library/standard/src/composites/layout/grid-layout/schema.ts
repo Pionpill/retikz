@@ -1,4 +1,4 @@
-import { BaseLayoutInspectOptionsInputSchema } from '@retikz/core';
+import { BaseLayoutInspectOptionsInputSchema, resolveBaseLayoutInspectOptions } from '@retikz/core';
 import { z } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
@@ -234,7 +234,7 @@ export const GridLayoutArtifactSchema = GridLayoutArtifactBaseSchema.superRefine
 );
 
 /** GridLayout family-local inspector sparse schema */
-export const GridLayoutInspectLocalOptionsInputSchema = z
+const GridLayoutInspectFamilyOptionsInputSchema = z
   .strictObject({
     tracks: z.boolean().optional().describe('Whether to draw GridLayout track boundaries.'),
     cells: z.boolean().optional().describe('Whether to draw individual GridLayout cell bounds.'),
@@ -251,16 +251,17 @@ export const GridLayoutInspectLocalOptionsInputSchema = z
 
 /** GridLayout inspector 完整 authoring schema */
 export const GridLayoutInspectOptionsInputSchema = BaseLayoutInspectOptionsInputSchema.safeExtend(
-  GridLayoutInspectLocalOptionsInputSchema.shape,
+  GridLayoutInspectFamilyOptionsInputSchema.shape,
 ).describe('Sparse shared and GridLayout-specific inspection options.');
 
-/** GridLayout family-local canonical schema */
-export const GridLayoutInspectLocalOptionsSchema = GridLayoutInspectLocalOptionsInputSchema.transform(value =>
+/** GridLayout Inspector 的完整 canonical schema */
+export const GridLayoutInspectOptionsSchema = GridLayoutInspectOptionsInputSchema.transform(value =>
   Object.freeze({
+    ...resolveBaseLayoutInspectOptions(value),
     tracks: value.tracks ?? true,
     cells: value.cells ?? false,
     gaps: value.gaps ?? true,
     distributedSpace: value.distributedSpace ?? true,
     spans: value.spans ?? true,
   }),
-).describe('Canonical GridLayout-specific inspection options.');
+).describe('Canonical shared and GridLayout-specific inspection options.');

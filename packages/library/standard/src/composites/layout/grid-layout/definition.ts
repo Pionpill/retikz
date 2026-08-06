@@ -1,16 +1,16 @@
 import type { CompositeArtifactOf, LayoutCompositeDefinition } from '@retikz/core';
 
-import { defineComposite } from '@retikz/core';
+import { defineComposite, defineInspector } from '@retikz/core';
 
-import type { GridLayoutArtifact, IRGridLayout, ResolvedGridLayoutInspectLocalOptions } from './types';
+import type { GridLayoutArtifact, IRGridLayout, ResolvedGridLayoutInspectOptions } from './types';
 
 import { STANDARD_NAMESPACE } from '../../shared';
 import { inspectGridLayoutArtifact } from './inspection';
 import { compileGridLayout } from './pipeline';
 import {
   GridLayoutArtifactSchema,
-  GridLayoutInspectLocalOptionsInputSchema,
-  GridLayoutInspectLocalOptionsSchema,
+  GridLayoutInspectOptionsInputSchema,
+  GridLayoutInspectOptionsSchema,
   GridLayoutSchema,
 } from './schema';
 
@@ -20,20 +20,20 @@ export const GridLayoutDefinition: LayoutCompositeDefinition<
   typeof STANDARD_NAMESPACE,
   'gridLayout',
   GridLayoutArtifact,
-  typeof GridLayoutInspectLocalOptionsInputSchema.shape,
-  ResolvedGridLayoutInspectLocalOptions
+  typeof GridLayoutInspectOptionsInputSchema.shape,
+  ResolvedGridLayoutInspectOptions
 > = defineComposite({
   namespace: STANDARD_NAMESPACE,
   type: 'gridLayout',
   schema: GridLayoutSchema,
   compile: compileGridLayout,
   artifactSchema: GridLayoutArtifactSchema,
-  inspector: {
-    kind: 'layout',
-    localOptionsInputSchema: GridLayoutInspectLocalOptionsInputSchema,
-    localOptionsSchema: GridLayoutInspectLocalOptionsSchema,
+  inspector: defineInspector({
+    kind: 'composite',
+    optionsInputSchema: GridLayoutInspectOptionsInputSchema,
+    optionsSchema: GridLayoutInspectOptionsSchema,
     inspect: inspectGridLayoutArtifact,
-  },
+  }),
 });
 
 /** GridLayout definition 推导出的公开 compile artifact envelope */

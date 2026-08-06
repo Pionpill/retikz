@@ -1,4 +1,9 @@
-import { BaseLayoutInspectOptionsInputSchema, CompositeBaseSchema, LayoutAlignmentGuideDimension } from '@retikz/core';
+import {
+  BaseLayoutInspectOptionsInputSchema,
+  CompositeBaseSchema,
+  LayoutAlignmentGuideDimension,
+  resolveBaseLayoutInspectOptions,
+} from '@retikz/core';
 import { z } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
@@ -195,7 +200,7 @@ export const FlexLayoutArtifactSchema = FlexLayoutArtifactBaseSchema.superRefine
 );
 
 /** FlexLayout family-local inspector sparse schema */
-export const FlexLayoutInspectLocalOptionsInputSchema = z
+const FlexLayoutInspectFamilyOptionsInputSchema = z
   .strictObject({
     lines: z.boolean().optional().describe('Whether to draw FlexLayout line regions.'),
     gaps: z.boolean().optional().describe('Whether to shade authored FlexLayout row and column gaps.'),
@@ -210,14 +215,15 @@ export const FlexLayoutInspectLocalOptionsInputSchema = z
 
 /** FlexLayout inspector 完整 authoring schema */
 export const FlexLayoutInspectOptionsInputSchema = BaseLayoutInspectOptionsInputSchema.safeExtend(
-  FlexLayoutInspectLocalOptionsInputSchema.shape,
+  FlexLayoutInspectFamilyOptionsInputSchema.shape,
 ).describe('Sparse shared and FlexLayout-specific inspection options.');
 
-/** FlexLayout family-local canonical schema */
-export const FlexLayoutInspectLocalOptionsSchema = FlexLayoutInspectLocalOptionsInputSchema.transform(value =>
+/** FlexLayout Inspector 的完整 canonical schema */
+export const FlexLayoutInspectOptionsSchema = FlexLayoutInspectOptionsInputSchema.transform(value =>
   Object.freeze({
+    ...resolveBaseLayoutInspectOptions(value),
     lines: value.lines ?? true,
     gaps: value.gaps ?? true,
     distributedSpace: value.distributedSpace ?? true,
   }),
-).describe('Canonical FlexLayout-specific inspection options.');
+).describe('Canonical shared and FlexLayout-specific inspection options.');

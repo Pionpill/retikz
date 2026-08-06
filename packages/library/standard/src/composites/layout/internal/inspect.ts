@@ -1,4 +1,10 @@
-import type { InspectionLinePrimitive, InspectionPrimitive, ResolvedBaseLayoutInspectOptions } from '@retikz/core';
+import type {
+  InspectionAppearance,
+  IRGraphicStyle,
+  IRNode,
+  IRPath,
+  ResolvedBaseLayoutInspectOptions,
+} from '@retikz/core';
 
 import type {
   LayoutArtifactContainer,
@@ -9,14 +15,108 @@ import type {
 
 import { LayoutSpacingKind } from '../shared';
 
-const outline = (role: string, rect: LayoutArtifactRect): InspectionPrimitive => ({
-  kind: 'rect' as const,
-  role,
-  ...rect,
-  presentation: 'outline' as const,
-  tone: 'scope',
-  lineStyle: 'dashed' as const,
-});
+/** 布局辅助边界使用的 canonical 虚线周期 */
+const LayoutInspectionDashPattern = Object.freeze([6, 4]);
+
+/** 布局辅助纹理在用户坐标中的 canonical 周期 */
+const LayoutInspectionPatternSize = 12;
+
+/** 布局辅助纹理的 canonical 线宽 */
+const LayoutInspectionPatternLineWidth = 1;
+
+/** 布局辅助纹理的 canonical 透明度 */
+const LayoutInspectionPatternOpacity = 0.55;
+
+/** 布局溢出警告填充的 canonical 透明度 */
+const LayoutInspectionWarningOpacity = 0.14;
+
+/** 布局辅助图形的共享语义信息 */
+type LayoutInspectionMarkBase = Readonly<{
+  /** 用于测试和诊断的布局语义角色，辅助 Scene seal 时会移除 */
+  role: string;
+}>;
+
+/** 一段布局辅助边界 */
+export type LayoutInspectionLineMark = LayoutInspectionMarkBase &
+  Readonly<{
+    kind: 'line';
+    /** 起点横坐标 */
+    x1: number;
+    /** 起点纵坐标 */
+    y1: number;
+    /** 终点横坐标 */
+    x2: number;
+    /** 终点纵坐标 */
+    y2: number;
+    /** 普通 Path 的描边颜色 */
+    color: string;
+    /** 是否使用布局辅助边界的 canonical 虚线 */
+    dashed: boolean;
+  }>;
+
+/** 一块尚未展开为四条边界的矩形轮廓 */
+export type LayoutInspectionOutlineMark = LayoutInspectionMarkBase &
+  Readonly<{
+    kind: 'outline';
+    /** 轮廓矩形 */
+    rect: LayoutArtifactRect;
+    /** 普通 Path 的描边颜色 */
+    color: string;
+  }>;
+
+/** 一块由普通 Node 填充的布局辅助区域 */
+type LayoutInspectionAreaMark = LayoutInspectionMarkBase &
+  Readonly<{
+    kind: 'area';
+    /** 填充矩形 */
+    rect: LayoutArtifactRect;
+    /** 普通 Node 使用的颜色或 paint */
+    fill: IRGraphicStyle['fill'];
+    /** 普通 Node 的整体透明度 */
+    opacity: number;
+  }>;
+
+/** 一条由普通 Node 承载的布局辅助标签 */
+type LayoutInspectionLabelMark = LayoutInspectionMarkBase &
+  Readonly<{
+    kind: 'label';
+    /** 标签横坐标 */
+    x: number;
+    /** 标签纵坐标 */
+    y: number;
+    /** 标签文本 */
+    text: string;
+    /** 标签文字颜色 */
+    color: string;
+  }>;
+
+/** Standard 布局内部用于排序与共线消重的辅助标记 */
+export type LayoutInspectionMark =
+  | LayoutInspectionLineMark
+  | LayoutInspectionOutlineMark
+  | LayoutInspectionAreaMark
+  | LayoutInspectionLabelMark;
+
+/** Standard 布局 Inspector 实际返回的普通 Core 子元素 */
+export type LayoutInspectionChild = IRPath | IRNode;
+
+/** 创建一块虚线矩形轮廓 */
+export const inspectLayoutOutline = (
+  role: string,
+  rect: LayoutArtifactRect,
+  color: string,
+): LayoutInspectionOutlineMark => ({ kind: 'outline', role, rect, color });
+
+/** 创建一段可选择实线或虚线的辅助边界 */
+export const inspectLayoutLine = (
+  role: string,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  color: string,
+  dashed: boolean,
+): LayoutInspectionLineMark => ({ kind: 'line', role, x1, y1, x2, y2, color, dashed });
 
 const positiveRect = (rect: LayoutArtifactRect): boolean => rect.width > 0 && rect.height > 0;
 
@@ -24,14 +124,18 @@ const sameCoordinate = (left: number, right: number): boolean => Math.abs(left -
 
 /** 用固定正交坐标与升序区间表示一段水平或垂直边界 */
 type AxisAlignedBoundarySegment = Readonly<{
+  /** 边界延伸的物理轴 */
   axis: 'x' | 'y';
+  /** 正交轴上的固定坐标 */
   fixed: number;
+  /** 主轴升序起点 */
   start: number;
+  /** 主轴升序终点 */
   end: number;
 }>;
 
-/** 把正交 line 转成便于区间运算的 canonical segment */
-const boundarySegmentOf = (line: InspectionLinePrimitive): AxisAlignedBoundarySegment | undefined => {
+/** 把正交边界转成便于区间运算的 canonical segment */
+const boundarySegmentOf = (line: LayoutInspectionLineMark): AxisAlignedBoundarySegment | undefined => {
   if (sameCoordinate(line.y1, line.y2)) {
     return { axis: 'x', fixed: line.y1, start: Math.min(line.x1, line.x2), end: Math.max(line.x1, line.x2) };
   }
@@ -62,11 +166,11 @@ const subtractCoveredBoundary = (
   return fragments;
 };
 
-/** 以来源 line 的方向和视觉语义恢复一个未覆盖区间 */
+/** 以来源边界的方向和视觉语义恢复一个未覆盖区间 */
 const lineFromBoundarySegment = (
-  source: InspectionLinePrimitive,
+  source: LayoutInspectionLineMark,
   segment: AxisAlignedBoundarySegment,
-): InspectionLinePrimitive => {
+): LayoutInspectionLineMark => {
   const forward = segment.axis === 'x' ? source.x1 <= source.x2 : source.y1 <= source.y2;
   const start = forward ? segment.start : segment.end;
   const end = forward ? segment.end : segment.start;
@@ -75,23 +179,13 @@ const lineFromBoundarySegment = (
     : { ...source, x1: segment.fixed, y1: start, x2: segment.fixed, y2: end };
 };
 
-/** 保留非边界 primitive，并把 outline 或正交 line 切成未覆盖片段 */
-const normalizeBoundaryPrimitive = (
-  primitive: InspectionPrimitive,
+/** 保留非边界标记，并把矩形轮廓或正交线切成未覆盖片段 */
+const normalizeBoundaryMark = (
+  mark: LayoutInspectionMark,
   covered: Array<AxisAlignedBoundarySegment>,
-): Array<InspectionPrimitive> => {
-  if (primitive.kind !== 'line' && !(primitive.kind === 'rect' && primitive.presentation === 'outline')) {
-    return [primitive];
-  }
-  const sourceLines =
-    primitive.kind === 'line'
-      ? [primitive]
-      : inspectLayoutStructureRect(primitive.role, primitive).map(line => ({
-          ...line,
-          tone: primitive.tone,
-          lineStyle: primitive.lineStyle,
-          ...(primitive.opacity === undefined ? {} : { opacity: primitive.opacity }),
-        }));
+): Array<LayoutInspectionMark> => {
+  if (mark.kind !== 'line' && mark.kind !== 'outline') return [mark];
+  const sourceLines = mark.kind === 'line' ? [mark] : inspectLayoutStructureRect(mark.role, mark.rect, mark.color);
   const fragments = sourceLines.flatMap(line => {
     const segment = boundarySegmentOf(line);
     if (segment === undefined) return [line];
@@ -100,7 +194,7 @@ const normalizeBoundaryPrimitive = (
     return uncovered.map(fragment => lineFromBoundarySegment(line, fragment));
   });
   const unchanged =
-    primitive.kind === 'rect' &&
+    mark.kind === 'outline' &&
     fragments.length === sourceLines.length &&
     fragments.every((line, index) => {
       const source = sourceLines[index];
@@ -111,59 +205,27 @@ const normalizeBoundaryPrimitive = (
         sameCoordinate(line.y2, source.y2)
       );
     });
-  return unchanged ? [primitive] : fragments;
+  return unchanged ? [mark] : fragments;
 };
 
 /** 按传入优先级切分共线边界，已覆盖区间保留更早语义 */
 export const normalizeLayoutBoundaryGroups = (
-  groups: ReadonlyArray<ReadonlyArray<InspectionPrimitive>>,
-): Array<Array<InspectionPrimitive>> => {
+  groups: ReadonlyArray<ReadonlyArray<LayoutInspectionMark>>,
+): Array<Array<LayoutInspectionMark>> => {
   const covered: Array<AxisAlignedBoundarySegment> = [];
-  return groups.map(group => group.flatMap(primitive => normalizeBoundaryPrimitive(primitive, covered)));
+  return groups.map(group => group.flatMap(mark => normalizeBoundaryMark(mark, covered)));
 };
 
-/** 把矩形结构区域展开为四条 dashed 边界线 */
-export const inspectLayoutStructureRect = (role: string, rect: LayoutArtifactRect): Array<InspectionLinePrimitive> => [
-  {
-    kind: 'line',
-    role,
-    x1: rect.x,
-    y1: rect.y,
-    x2: rect.x + rect.width,
-    y2: rect.y,
-    tone: 'scope',
-    lineStyle: 'dashed',
-  },
-  {
-    kind: 'line',
-    role,
-    x1: rect.x + rect.width,
-    y1: rect.y,
-    x2: rect.x + rect.width,
-    y2: rect.y + rect.height,
-    tone: 'scope',
-    lineStyle: 'dashed',
-  },
-  {
-    kind: 'line',
-    role,
-    x1: rect.x,
-    y1: rect.y + rect.height,
-    x2: rect.x + rect.width,
-    y2: rect.y + rect.height,
-    tone: 'scope',
-    lineStyle: 'dashed',
-  },
-  {
-    kind: 'line',
-    role,
-    x1: rect.x,
-    y1: rect.y,
-    x2: rect.x,
-    y2: rect.y + rect.height,
-    tone: 'scope',
-    lineStyle: 'dashed',
-  },
+/** 把矩形结构区域展开为四条虚线边界 */
+export const inspectLayoutStructureRect = (
+  role: string,
+  rect: LayoutArtifactRect,
+  color: string,
+): Array<LayoutInspectionLineMark> => [
+  inspectLayoutLine(role, rect.x, rect.y, rect.x + rect.width, rect.y, color, true),
+  inspectLayoutLine(role, rect.x + rect.width, rect.y, rect.x + rect.width, rect.y + rect.height, color, true),
+  inspectLayoutLine(role, rect.x, rect.y + rect.height, rect.x + rect.width, rect.y + rect.height, color, true),
+  inspectLayoutLine(role, rect.x, rect.y, rect.x, rect.y + rect.height, color, true),
 ];
 
 /** 返回 outer 减去裁剪后 inner 的最多四块非重叠矩形 */
@@ -188,19 +250,33 @@ const subtractRect = (outer: LayoutArtifactRect, inner: LayoutArtifactRect): Arr
   ].filter(positiveRect);
 };
 
+/** 创建普通 lines pattern paint，保留既有斜线方向 */
+const patternFill = (
+  color: string,
+  direction: 'forward-diagonal' | 'backward-diagonal',
+): NonNullable<IRGraphicStyle['fill']> => ({
+  kind: 'pattern',
+  shape: 'lines',
+  color,
+  size: LayoutInspectionPatternSize,
+  lineWidth: LayoutInspectionPatternLineWidth,
+  rotation: direction === 'forward-diagonal' ? -45 : 45,
+});
+
+/** 创建带纹理填充及内外虚线边界的矩形环 */
 const fillRing = (
   role: string,
   outer: LayoutArtifactRect,
   inner: LayoutArtifactRect,
-  fillPattern: 'forward-diagonal' | 'backward-diagonal',
-): Array<InspectionPrimitive> => {
-  const fills = subtractRect(outer, inner).map(rect => ({
-    kind: 'rect' as const,
+  direction: 'forward-diagonal' | 'backward-diagonal',
+  color: string,
+): Array<LayoutInspectionMark> => {
+  const fills: Array<LayoutInspectionMark> = subtractRect(outer, inner).map(rect => ({
+    kind: 'area',
     role,
-    ...rect,
-    presentation: 'fill' as const,
-    tone: 'scope' as const,
-    fillPattern,
+    rect,
+    fill: patternFill(color, direction),
+    opacity: LayoutInspectionPatternOpacity,
   }));
   if (fills.length === 0) return [];
   const outerRight = outer.x + outer.width;
@@ -212,28 +288,34 @@ const fillRing = (
     height: Math.max(0, Math.min(outerBottom, inner.y + inner.height) - Math.max(outer.y, inner.y)),
   };
   const boundaries = [
-    ...inspectLayoutStructureRect(role, outer),
-    ...(positiveRect(clippedInner) ? inspectLayoutStructureRect(role, clippedInner) : []),
+    ...inspectLayoutStructureRect(role, outer, color),
+    ...(positiveRect(clippedInner) ? inspectLayoutStructureRect(role, clippedInner, color) : []),
   ];
   return [...fills, ...boundaries];
 };
 
-/** 三种 layout family 共用的固定六层 inspection 分组 */
+/** 三种布局 family 共用的固定六层辅助内容分组 */
 export type LayoutInspectionLayers = Readonly<{
-  underlay: Array<InspectionPrimitive>;
-  boxes: Array<InspectionPrimitive>;
-  warnings: Array<InspectionPrimitive>;
-  guides: Array<InspectionPrimitive>;
-  labels: Array<InspectionPrimitive>;
+  /** spacing 纹理与边界 */
+  underlay: Array<LayoutInspectionMark>;
+  /** container 与 item 盒边界 */
+  boxes: Array<LayoutInspectionMark>;
+  /** 溢出警告 */
+  warnings: Array<LayoutInspectionMark>;
+  /** 对齐辅助线 */
+  guides: Array<LayoutInspectionMark>;
+  /** item 文本标签 */
+  labels: Array<LayoutInspectionMark>;
 }>;
 
-/** 把 resolved spacing artifact lowering 为 family-specific underlay */
+/** 把 resolved spacing artifact 转为 family-specific underlay */
 export const inspectLayoutSpacing = (
   family: 'flex' | 'grid',
   spacing: ReadonlyArray<LayoutSpacingArtifact>,
   options: Readonly<{ gaps: boolean; distributedSpace: boolean }>,
-): Array<InspectionPrimitive> => {
-  const inspected: Array<InspectionPrimitive> = [];
+  appearance: InspectionAppearance,
+): Array<LayoutInspectionMark> => {
+  const inspected: Array<LayoutInspectionMark> = [];
   spacing
     .filter(
       segment =>
@@ -244,37 +326,45 @@ export const inspectLayoutSpacing = (
       const role = `${family}.${segment.kind}`;
       if (segment.kind === LayoutSpacingKind.Gap) {
         inspected.push({
-          kind: 'rect',
+          kind: 'area',
           role,
-          ...segment.bounds,
-          presentation: 'fill',
-          tone: 'scope',
-          fillPattern: 'forward-diagonal',
+          rect: segment.bounds,
+          fill: patternFill(appearance.scopeColor, 'forward-diagonal'),
+          opacity: LayoutInspectionPatternOpacity,
         });
       }
-      inspected.push(...inspectLayoutStructureRect(role, segment.bounds));
+      inspected.push(...inspectLayoutStructureRect(role, segment.bounds, appearance.scopeColor));
     });
   return inspected;
 };
 
-/** 把三种 layout 共用 artifact 几何 lowering 为基础 inspection primitives */
+/** 把三种布局共用 artifact 几何转为基础辅助标记 */
 export const inspectLayoutArtifactBase = (
   container: LayoutArtifactContainer,
   items: ReadonlyArray<LayoutArtifactItemBase>,
   options: ResolvedBaseLayoutInspectOptions,
+  appearance: InspectionAppearance,
   alignmentGuideDimension: 'x' | 'y' = 'y',
 ): LayoutInspectionLayers => {
-  const underlay: Array<InspectionPrimitive> = [];
-  const boxes: Array<InspectionPrimitive> = [];
-  const warnings: Array<InspectionPrimitive> = [];
-  const guides: Array<InspectionPrimitive> = [];
-  const labels: Array<InspectionPrimitive> = [];
-  if (options.bounds.container) boxes.push(outline('layout.container', container.allocationBounds));
-  if (options.bounds.content) boxes.push(outline('layout.content', container.contentBounds));
+  const underlay: Array<LayoutInspectionMark> = [];
+  const boxes: Array<LayoutInspectionMark> = [];
+  const warnings: Array<LayoutInspectionMark> = [];
+  const guides: Array<LayoutInspectionMark> = [];
+  const labels: Array<LayoutInspectionMark> = [];
+  if (options.bounds.container) {
+    boxes.push(inspectLayoutOutline('layout.container', container.allocationBounds, appearance.scopeColor));
+  }
+  if (options.bounds.content) {
+    boxes.push(inspectLayoutOutline('layout.content', container.contentBounds, appearance.scopeColor));
+  }
   items.forEach(item => {
-    if (options.bounds.slot) boxes.push(outline('layout.slot', item.slotBounds));
-    if (options.bounds.allocation) boxes.push(outline('layout.allocation', item.allocationBounds));
-    if (options.bounds.visual) boxes.push(outline('layout.visual', item.visualBounds));
+    if (options.bounds.slot) boxes.push(inspectLayoutOutline('layout.slot', item.slotBounds, appearance.scopeColor));
+    if (options.bounds.allocation) {
+      boxes.push(inspectLayoutOutline('layout.allocation', item.allocationBounds, appearance.scopeColor));
+    }
+    if (options.bounds.visual) {
+      boxes.push(inspectLayoutOutline('layout.visual', item.visualBounds, appearance.scopeColor));
+    }
     if (
       options.overflow &&
       (item.overflow.allocation.x ||
@@ -284,26 +374,26 @@ export const inspectLayoutArtifactBase = (
         item.overflow.clipped)
     ) {
       warnings.push({
-        kind: 'rect',
+        kind: 'area',
         role: 'layout.overflow',
-        ...item.visualBounds,
-        presentation: 'fill',
-        tone: 'warning',
-        fillPattern: 'solid',
+        rect: item.visualBounds,
+        fill: appearance.warningColor,
+        opacity: LayoutInspectionWarningOpacity,
       });
     }
     if (options.alignmentGuides && item.alignmentGuide !== undefined) {
       const vertical = alignmentGuideDimension === 'x';
-      guides.push({
-        kind: 'line',
-        role: 'layout.alignment-guide',
-        x1: vertical ? item.alignmentGuide.position : item.slotBounds.x,
-        y1: vertical ? item.slotBounds.y : item.alignmentGuide.position,
-        x2: vertical ? item.alignmentGuide.position : item.slotBounds.x + item.slotBounds.width,
-        y2: vertical ? item.slotBounds.y + item.slotBounds.height : item.alignmentGuide.position,
-        tone: 'scope',
-        lineStyle: 'dashed',
-      });
+      guides.push(
+        inspectLayoutLine(
+          'layout.alignment-guide',
+          vertical ? item.alignmentGuide.position : item.slotBounds.x,
+          vertical ? item.slotBounds.y : item.alignmentGuide.position,
+          vertical ? item.alignmentGuide.position : item.slotBounds.x + item.slotBounds.width,
+          vertical ? item.slotBounds.y + item.slotBounds.height : item.alignmentGuide.position,
+          appearance.scopeColor,
+          true,
+        ),
+      );
     }
     if (options.labels) {
       labels.push({
@@ -312,19 +402,95 @@ export const inspectLayoutArtifactBase = (
         x: item.slotBounds.x + 3,
         y: item.slotBounds.y + 12,
         text: item.key,
-        tone: 'scope',
+        color: appearance.scopeColor,
       });
     }
   });
   if (options.spacing.padding) {
     underlay.push(
-      ...fillRing('layout.padding', container.allocationBounds, container.contentBounds, 'backward-diagonal'),
+      ...fillRing(
+        'layout.padding',
+        container.allocationBounds,
+        container.contentBounds,
+        'backward-diagonal',
+        appearance.scopeColor,
+      ),
     );
   }
   if (options.spacing.margin) {
     items.forEach(item =>
-      underlay.push(...fillRing('layout.margin', item.marginBounds, item.slotBounds, 'forward-diagonal')),
+      underlay.push(
+        ...fillRing('layout.margin', item.marginBounds, item.slotBounds, 'forward-diagonal', appearance.scopeColor),
+      ),
     );
   }
   return { underlay, boxes, warnings, guides, labels };
 };
+
+/** 把单个矩形轮廓转为普通 Core Path */
+const lowerOutline = (mark: LayoutInspectionOutlineMark): IRPath => {
+  const { x, y, width, height } = mark.rect;
+  return {
+    type: 'path',
+    stroke: mark.color,
+    strokeWidth: 1,
+    dashPattern: [...LayoutInspectionDashPattern],
+    meta: { inspectionRole: mark.role },
+    children: [
+      { type: 'step', kind: 'move', to: [x, y] },
+      { type: 'step', kind: 'line', to: [x + width, y] },
+      { type: 'step', kind: 'line', to: [x + width, y + height] },
+      { type: 'step', kind: 'line', to: [x, y + height] },
+      { type: 'step', kind: 'line', to: [x, y] },
+    ],
+  };
+};
+
+/** 把单个内部辅助标记转为普通 Core 子元素 */
+const lowerLayoutInspectionMark = (mark: LayoutInspectionMark): LayoutInspectionChild => {
+  if (mark.kind === 'outline') return lowerOutline(mark);
+  if (mark.kind === 'line') {
+    return {
+      type: 'path',
+      stroke: mark.color,
+      strokeWidth: 1,
+      ...(mark.dashed ? { dashPattern: [...LayoutInspectionDashPattern] } : {}),
+      meta: { inspectionRole: mark.role },
+      children: [
+        { type: 'step', kind: 'move', to: [mark.x1, mark.y1] },
+        { type: 'step', kind: 'line', to: [mark.x2, mark.y2] },
+      ],
+    };
+  }
+  if (mark.kind === 'area') {
+    return {
+      type: 'node',
+      position: [mark.rect.x + mark.rect.width / 2, mark.rect.y + mark.rect.height / 2],
+      shape: 'rectangle',
+      minimumSize: { width: mark.rect.width, height: mark.rect.height },
+      padding: 0,
+      fill: mark.fill,
+      opacity: mark.opacity,
+      strokeWidth: 0,
+      meta: { inspectionRole: mark.role },
+    };
+  }
+  return {
+    type: 'node',
+    position: [mark.x, mark.y],
+    text: mark.text,
+    textColor: mark.color,
+    fill: 'transparent',
+    strokeWidth: 0,
+    padding: 0,
+    font: {
+      family: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+      size: 10,
+    },
+    meta: { inspectionRole: mark.role },
+  };
+};
+
+/** 按既有绘制顺序把布局辅助标记 lowering 为普通 Core 子元素 */
+export const lowerLayoutInspectionMarks = (marks: ReadonlyArray<LayoutInspectionMark>): Array<LayoutInspectionChild> =>
+  marks.map(lowerLayoutInspectionMark);

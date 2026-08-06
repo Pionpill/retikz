@@ -1,16 +1,16 @@
 import type { CompositeArtifactOf, LayoutCompositeDefinition } from '@retikz/core';
 
-import { defineComposite } from '@retikz/core';
+import { defineComposite, defineInspector } from '@retikz/core';
 
-import type { FlexLayoutArtifact, IRFlexLayout, ResolvedFlexLayoutInspectLocalOptions } from './types';
+import type { FlexLayoutArtifact, IRFlexLayout, ResolvedFlexLayoutInspectOptions } from './types';
 
 import { STANDARD_NAMESPACE } from '../../shared';
 import { inspectFlexLayoutArtifact } from './inspection';
 import { compileFlexLayout } from './pipeline';
 import {
   FlexLayoutArtifactSchema,
-  FlexLayoutInspectLocalOptionsInputSchema,
-  FlexLayoutInspectLocalOptionsSchema,
+  FlexLayoutInspectOptionsInputSchema,
+  FlexLayoutInspectOptionsSchema,
   FlexLayoutSchema,
 } from './schema';
 
@@ -20,20 +20,20 @@ export const FlexLayoutDefinition: LayoutCompositeDefinition<
   typeof STANDARD_NAMESPACE,
   'flexLayout',
   FlexLayoutArtifact,
-  typeof FlexLayoutInspectLocalOptionsInputSchema.shape,
-  ResolvedFlexLayoutInspectLocalOptions
+  typeof FlexLayoutInspectOptionsInputSchema.shape,
+  ResolvedFlexLayoutInspectOptions
 > = defineComposite({
   namespace: STANDARD_NAMESPACE,
   type: 'flexLayout',
   schema: FlexLayoutSchema,
   compile: compileFlexLayout,
   artifactSchema: FlexLayoutArtifactSchema,
-  inspector: {
-    kind: 'layout',
-    localOptionsInputSchema: FlexLayoutInspectLocalOptionsInputSchema,
-    localOptionsSchema: FlexLayoutInspectLocalOptionsSchema,
+  inspector: defineInspector({
+    kind: 'composite',
+    optionsInputSchema: FlexLayoutInspectOptionsInputSchema,
+    optionsSchema: FlexLayoutInspectOptionsSchema,
     inspect: inspectFlexLayoutArtifact,
-  },
+  }),
 });
 
 /** FlexLayout definition 推导出的公开 compile artifact envelope */

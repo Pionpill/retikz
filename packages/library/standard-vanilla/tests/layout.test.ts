@@ -84,8 +84,8 @@ describe('Standard Vanilla layout family', () => {
     expect(normalized.ir.children[0]).not.toHaveProperty('inspect');
     expect(normalized.inspectionRoots).toEqual([
       {
-        locator: { path: [{ kind: 'sceneChild', index: 0 }] },
-        tree: { policy: { component: { gaps: false } } },
+        locator: { target: 'composite', path: [{ kind: 'sceneChild', index: 0 }] },
+        tree: { policy: { self: { gaps: false } } },
       },
     ]);
   });
