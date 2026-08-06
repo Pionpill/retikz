@@ -85,9 +85,11 @@ remain runtime inputs outside Table IR.
 
 Formatter, structure, presentation, and visual-scale definitions use the same `LowerTablesOptions`
 and lowering contract in standalone and embedded modes. Embedded roots additionally package those
-runtime inputs through `createTableRuntimeContribution()` for the outer Layout. Current visual
-encodings can suppress or emit descriptor data, but rendered Standard Legend composition and a
-final joined manifest are not yet part of this adapter.
+runtime inputs through `createTableRuntimeContribution()` for the outer Layout. A visual-scale
+resolution exposes `of`, `legendForm`, `domain`, `range`, and optional `edges`; opted-in encodings
+copy the descriptor fields into the Table manifest. Rendered Standard Legend composition and a
+final joined manifest are not yet part of this adapter, so it does not expose `legendLayout` or a
+private Legend child.
 
 ## Install
 

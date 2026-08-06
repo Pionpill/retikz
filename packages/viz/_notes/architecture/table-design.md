@@ -1,6 +1,6 @@
 # Table 表格语法与 lowering 总设计
 
-> **状态：长期模型已确认，alpha.2 布局基线与 alpha.3 ADR-01～05 呈现基线已实现。** 本文维护 Grammar of Tables、Table Algebra、Constraint Grid Layout 与跨包边界，不冻结具体字段。当前公开契约以 [`packages/viz/table/AGENTS.md`](../../table/AGENTS.md)、Accepted ADR、公开类型和用户文档为准。
+> **状态：长期模型已确认；alpha.2 布局基线已落定，alpha.3 已实现到呈现与 Legend descriptor seed，ADR 仍待治理收口。** 本文维护 Grammar of Tables、Table Algebra、Constraint Grid Layout 与跨包边界，不冻结具体字段。当前公开契约以 [`packages/viz/table/AGENTS.md`](../../table/AGENTS.md)、公开类型和用户文档为准。
 >
 > 关联：[`Table 表格可视化完备设计`](./table-visualization-complete.md) · [`Table 竞品与能力差距分析`](../analysis/table-compare-analysis.md) · [`table v0.1 roadmap`](../decisions/table/v0/v0.1/roadmap.md)
 
@@ -24,14 +24,16 @@ Table 的指导思想是：
 
 ## 2. 包定位
 
-`@retikz/table` 消费 `@retikz/data`、`@retikz/standard` 与 `@retikz/core`，负责 Table IR、语义模型、表格 body 布局和 lowering。它与 Plot 平行，不依赖 Plot；领域无关的外围 Box Layout 直接复用 Standard。
+`@retikz/table` 消费 `@retikz/data` 与 `@retikz/core`，负责 Table IR、语义模型、表格 body 布局和 lowering。它与 Plot 平行，不依赖 Plot；需要通用 Legend 与外围 Box Layout 时单向消费 Standard 的公开 capability。
 
 `@retikz/table-react` 与 `@retikz/table-vanilla` 只负责 authoring 和宿主接入，不拥有表格结构、规则、布局或 lowering 算法。
 
 Table 家族以展示为核心。v0.1 先完成确定性的静态表格编译；后续大表展示由 `@retikz/table` 提供 window / viewport 计算，由 adapter 接入实际滚动容器和生命周期。
 
 ```text
-Data ──▶ Table ──domain resolution──▶ Standard composition / Core IR ──▶ Renderer
+Data ──▶ Table ──body lowering──────────────▶ Core IR ──▶ Renderer
+           │
+           └─Legend descriptor seed──▶ Standard composition（待接入）
            ▲
      React / Vanilla
 ```
@@ -112,7 +114,7 @@ Table 的 Cell 拓扑保持正交矩形：地址是行列坐标，span 覆盖连
 
 `Table<PlotCell>` 是合法组合：Table 管理行列语义与 Cell box，Plot 管理 Cell 内部图形。Table 可以测量、放置和裁剪 Plot composite，但不能读取或自动协调多个 Plot Cell 的 scale、axis、grid 和 legend；这些语义由作者显式配置 Plot，或交给 Plot facet / 外部 Figure composition。
 
-Table 只拥有与网格拓扑有关的表头、行头、小计、总计和 Cell 注释关系。当前 Table 条件视觉编码先产生 Legend descriptor；Standard Legend gate 满足后再由 Table 将 descriptor 解析为 Standard Legend 输入。Table 可以保留 right / bottom 等领域 placement sugar，但生成的 Legend 与未来 title、description、caption、source 等外围内容必须作为 `IRChild` 进入同一 Standard Flex / Grid / Overlay composition，不建立 Table 私有停靠或文字布局器。
+Table 只拥有与网格拓扑有关的表头、行头、小计、总计和 Cell 注释关系。当前 Table 条件视觉编码产生 Legend descriptor seed；Standard Legend / Flex 公共能力已经存在，但 Table body 的 JSON-safe composition boundary 与 occurrence-safe artifact join 尚未接入。未来 Table 可以保留 right / bottom 等领域 placement sugar，但生成的 Legend 与 title、description、caption、source 等外围内容必须作为 `IRChild` 进入同一 Standard Flex / Grid / Overlay composition，不建立 Table 私有停靠或文字布局器。
 
 ## 7. 扩展机制
 
@@ -152,7 +154,7 @@ Lowering 最终只输出 Core IR，renderer 不感知 Table。Table 同时保留
 
 ## 9. 已实现基线与后续未决
 
-alpha.1 / alpha.2 与 alpha.3 ADR-01～05 当前已冻结并实现：
+alpha.1 / alpha.2 已落定；alpha.3 当前代码已经形成以下候选基线，仍需由对应 ADR 完成治理收口：
 
 - Table IR 与外部数据绑定，manual / detail / custom 三种精确 spec 变体与 framework-neutral authoring helpers
 - `SemanticTableModel` 纵向写入链路，以及 formatter / presentation 等统一 Definition / registry 消费方式
@@ -160,10 +162,10 @@ alpha.1 / alpha.2 与 alpha.3 ADR-01～05 当前已冻结并实现：
 - layout-aware composite 同次 compile、typed manifest / occurrence，以及 React / Vanilla 共享 runtime contribution 与 artifact contract
 - formatter / presentation、selector / rule、条件视觉 encoding、四种 style preset、闭合 style tokens，以及同源 Legend descriptor / manifest seed
 
-后续 ADR 只处理尚未闭环的能力：
+尚未闭环的能力继续由 ADR 处理：
 
 1. 分组、层级、汇总、交叉、矩阵与转置等 Table Algebra
-2. Standard Legend 消费、外围 Box Layout composition 与 occurrence-safe artifact join，以及后续 adapter / SSR / docs 闭环
+2. Table body 的 JSON-safe composition boundary、Standard Legend / Flex 消费与 occurrence-safe artifact join，以及最终 adapter / SSR / docs 闭环
 3. Fragmentation、重复 Cell instance 与跨页重复表头
 4. 更完整的 lineage、locator 与 diagnostics 查询面
 5. 大表 windowing、虚拟滚动与 adapter runtime 边界

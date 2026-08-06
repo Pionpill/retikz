@@ -42,9 +42,16 @@ with the same identity-based conflict rules as the built-in React and Vanilla ad
 contribution stores detached frozen containers while leaving caller-owned definition objects
 unchanged. This extension contract is runtime-only and does not enter Table IR.
 
-Table can emit JSON-safe Legend descriptors for opted-in visual encodings. Composing those
-descriptors with Standard Legend and layout components remains a later integration step; this
-package does not expose a Table-local Legend or a final joined manifest helper.
+Each visual-scale Definition returns one runtime resolution with `of`, `legendForm`, `domain`,
+`range`, and optional `edges`. Table validates its JSON/color shape and repeated-input determinism;
+custom Definition authors remain responsible for keeping the evaluator and descriptor data
+semantically aligned. An opted-in encoding copies descriptor data from that same resolution into the
+JSON-safe manifest seed.
+
+Standard already provides public Legend and Flex capabilities, but Table has not yet connected its
+body through a JSON-safe composition boundary or joined final Legend occurrences back into the
+manifest. This package therefore does not expose `legendLayout`, a Table-local Legend, or a final
+joined manifest helper.
 
 ## Install
 

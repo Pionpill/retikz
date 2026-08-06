@@ -8,21 +8,21 @@
 
 Formatter、rules、encodings、style tokens 与 Legend 都是用户可见能力。若只存在于 plain IR，React/Vanilla 作者会建立 callback、theme context 或私有样式映射，破坏同一 TableSpec 的持久化、SSR 与等价编译。
 
-alpha.2 已有 framework-neutral constructors、React marker components、Vanilla helpers、共享 runtime contribution 与 typed manifest。alpha.3 应沿这些入口 additive 扩展，不新增 fluent builder、函数 selector、ReactNode formatter 或 adapter-local Legend。
+alpha.2 已有 framework-neutral constructors、React marker components、Vanilla helpers、共享 runtime contribution 与 typed manifest。alpha.3 沿这些入口扩展，不新增 fluent builder、函数 selector、ReactNode formatter 或 adapter-local Legend。
 
-同时，TableSpec 新增的领域 `style` 与既有 React 宿主 CSS `style` 同名。该冲突必须通过明确的 breaking migration 解决，不能让一个 JSX prop 同时承担两种语义。
+TableSpec 的领域 `style` 与 React 宿主 CSS 需要两个不同入口，不能让一个 JSX prop 同时承担两种语义。
 
 ## 决策
 
-### 实现前置
+### 当前闭环与剩余前置
 
-本 ADR 依赖 ADR-01～06 的产品契约。ADR-06 的 Standard Legend hard gate 同样约束 adapter/SSR/manifest 路径；Standard capability 不可消费时，不实现或伪造 Legend/Flex 路径。当前只冻结与 Standard nominal contract 无关的 authoring、migration 与 docs obligations；Standard Legend Accepted 后必须与 ADR-06 一起按真实 package-root contract 对齐，再实现完整跨包链路。
+ADR-01～05 的 formatter、presentation、rule、encoding、style 与 descriptor seed 已沿三类入口形成共同产品链路。Standard Legend / Flex 已有 package-root 公共能力，但 ADR-06 所需的 Table body composition boundary 与 occurrence-safe artifact join 尚未形成，因此本 ADR 不暴露 `legendLayout`、不自动绘制 Legend，也不声明最终 joined manifest。
 
 ### Framework-neutral authoring
 
 `createDetailTableSpec()` 与 `createManualTableSpec()` 的 inputs 继续从 exact schema 派生，并表达：
 
-- root `rules`、`encodings`、`style`、`themeMode`、`styleTokens`、`legendLayout`
+- root `rules`、`encodings`、`style`、`themeMode`、`styleTokens`
 - detail column formatter
 - plain manual value Cell formatter
 
@@ -42,64 +42,54 @@ Manual React `Cell` 的公开 union：
 
 React 不提供函数 formatter/renderer、函数 selector、Cell/token style callback、CSS class mapping、theme context/hook 或 Table 私有 Legend child。Custom behavior 只通过 `defineTableStructure()`、`defineCellFormatter()`、`defineCellPresentation()`、`defineCellVisualScale()` 注入。
 
-### React `style` migration
+### React `style` ownership
 
-TableSpec 的 `style` 保留领域名，在 Detail/Manual JSX 中表示 `neutral | academic | vibrant | clean`。宿主 CSS style 破坏性重命名为 `containerStyle`：
+TableSpec 的 `style` 保留领域名，在 Detail / Manual JSX 中表示 `neutral | academic | vibrant | clean`。standalone 宿主 CSS 使用 `containerStyle`：
 
 ```tsx
 <DetailTable style="neutral" containerStyle={{ maxWidth: 720 }} {...props} />
 ```
 
 - 通用 `<Table>` 的 preset 只来自 `spec.style`，top-level `style` fail-loud，并同时指向 `spec.style` 与 `containerStyle`
-- Detail/Manual `style` 只接受 preset string；旧 CSS object 写法 fail-loud，并指向 `containerStyle`
+- Detail / Manual `style` 只接受 preset string；CSS object fail-loud，并指向 `containerStyle`
 - standalone 三种入口把 `containerStyle` 映射到宿主 Layout style
 - embedded 三种入口继续拒绝所有 host-only props，`containerStyle` 进入稳定 unsupported-props diagnostic
 
-不保留旧 CSS `style` overload，不增加 `tableStyle` alias。迁移必须同时由 public types、JavaScript runtime guard、双语 docs 与 changelog 证明。
+不增加双义 `style` overload 或 `tableStyle` alias。public types、JavaScript runtime guard 与双语 docs 共同说明这两个入口。
 
 ### Vanilla、SSR 与 runtime contribution
 
-`detailTable()`/`manualTable()` 是 framework-neutral constructors 的无语义包装；`embedTable()` 保留完整 spec；adapter 只按既有 host identity 规则增加 stable id，不改写 formatter、rule、encoding、style 或 Legend fields。
+`detailTable()` / `manualTable()` 是 framework-neutral constructors 的无语义包装；`embedTable()` 保留完整 spec；adapter 只按 host identity 规则增加 stable id，不改写 formatter、rule、encoding 或 style fields。
 
-`renderTable()` 通过 lowering options 接受四类 definitions，并在 artifacts 开启时返回 typed Table manifest。SSR 在无 DOM 环境完成 formatter、rule、encoding、style token resolution、Standard Flex/Legend lowering 与 manifest join；相同 measurer/Core options 下与 direct/React 输出等价。
+`renderTable()` 通过 lowering options 接受四类 definitions，并在 artifacts 开启时返回同次 compile 的 typed Table manifest。SSR 在无 DOM 环境完成 formatter、rule、encoding、style token resolution 与 Table lowering；相同 measurer / Core options 下与 direct / React 输出等价。
 
-Runtime contribution 对 structure kind、formatter name、presentation name、visual scale name 与 Core composite key 使用同一确定合并语义：同 key 同对象引用幂等，不同引用 fail-loud；输入数组防御复制并冻结，首次出现顺序稳定。Standard Flex/Legend Definitions 只通过 ADR-06 的共享 Table contribution 传入，adapters 不单独注册或重定义重复语义。
+Runtime contribution 对 structure kind、formatter name、presentation name、visual scale name 与 Core composite key 使用同一确定合并语义：同 key 同对象引用幂等，不同引用 fail-loud；输入数组防御复制并冻结，首次出现顺序稳定。未来 Standard Flex / Legend Definitions 只通过 ADR-06 的共享 Table contribution 传入，adapters 不单独注册或重定义重复语义。
 
 ### Manifest consumption
 
-所有 convenience paths 只调用 ADR-06 的 public `resolveTableManifest(artifacts, selector)`：
+当前 convenience paths 复用同一个 typed artifact contract：
 
-- direct compile 返回单根 convenience manifest
-- React standalone `onManifest` 从宿主 artifacts 解析
+- direct `compileTable()` 返回 canonical 单根 Table 的 exact root manifest
+- React standalone `onManifest` 只选择 `children[0]` 的 exact root Table artifact
 - Vanilla SSR 复用 direct compile 结果
-- embedded adapters 只把完整 artifact tree 交给宿主，由宿主以 unique tableId 或 exact occurrence 消歧
+- embedded adapters 只把完整 artifact tree 交给外层 host，由宿主按 occurrence 消歧
 
-任何入口都不得查找旧根 artifact、复制 join 或建立 adapter sidecar。Embedded Table 不新增局部 manifest callback，因为多 occurrence 的消歧上下文属于外层 host。
+任何入口都不得按公开 table id 猜测 occurrence、复制 manifest 或建立 adapter sidecar。ADR-06 完成后，Legend artifact join 只能扩展同一 occurrence 主链。
 
-### Breaking Presentation migration
+### Presentation callback ABI
 
-Custom presentation callback 的迁移为：
-
-```ts
-// old
-present: ({ value, cellId }) => child;
-
-// new
-present: ({ rawValue, value, context, appearance }) => child;
-```
-
-`cellId` 移到 `context.cellId`；`value` 继续是 formatter output；原 scalar 使用 `rawValue`；provider 需要遵循最终视觉默认时读取 `appearance`。JavaScript runtime 无法可靠检测 callback 解构方式，因此不伪造签名 warning；迁移由 types、docs 与 changelog明确。
+Custom Presentation 使用 `present({ rawValue, value, context, appearance })`。`context.cellId` 提供 Cell identity；`value` 是 formatter output；`rawValue` 保留原 scalar；`appearance` 是 preset、tokens、Cell 配置、encodings 与 rules 解析后的最终外观。Presentation 返回 JSON-safe Core child，不接收 adapter 或 DOM 状态。
 
 ### 文档闭环
 
 zh 是 source of truth，en 保持同结构与行为。文档需要同时覆盖：
 
-- 初学者：真实 detail Table 展示 formatter、neutral preset、rule、background encoding、opt-in Legend、clean 迁移与 `containerStyle`
-- 深度模型：raw→formatter→style→encoding→rules→presentation→styled child，以及 Table/Standard artifacts、body-local/composition-local coordinates
-- Reference：formatter、selector/rule、encoding、style/mode/tokens、legendLayout、definitions、manifest selector/fields 与 diagnostics
-- Package README/changelog：public manifest helper、style migration、custom Presentation callback 与默认 style breaking
+- 初学者：真实 detail Table 展示 formatter、neutral preset、rule、background encoding、clean preset 与 `containerStyle`
+- 深度模型：raw → formatter → style → encoding → rules → presentation → styled child，以及 Table-local coordinates / manifest
+- Reference：formatter、selector / rule、encoding、style / mode / tokens、四类 definitions、visual scale resolution、manifest fields 与 diagnostics
+- Package README / changelog：当前 authoring、runtime、descriptor seed 与 Standard Legend 边界
 
-Demo 必须使用真实 public API 和 compile output，不手写伪 manifest 或复制 pipeline。新增 schema、SourceLink、zh/en demo data/imports 与 docs registry 必须同步；浏览器需验证 desktop 与窄屏下 Table、Legend、代码和 API 表可读。
+Demo 必须使用真实 public API 和 compile output，不手写伪 manifest 或复制 pipeline。Legend composition 未实现前不展示伪 Legend、`legendLayout` 或 joined manifest。新增 schema、SourceLink、zh / en demo data / imports 与 docs registry 必须同步。
 
 ## DSL 表面
 
@@ -119,13 +109,13 @@ Demo 必须使用真实 public API 和 compile output，不手写伪 manifest �
 
 React runtime rows 与 `containerStyle` 不进入 TableSpec；其余 authoring input 必须与 Vanilla/framework-neutral constructors 解析成 schema-equal TableSpec。
 
-## 兼容性与影响
+## 影响
 
-- 三包 authoring additive 增加 alpha.3 fields 与开放 definition options
-- BREAKING：React host CSS `style` 改名 `containerStyle`
-- BREAKING：custom Presentation callback ABI 改变
-- BREAKING：默认视觉从无装饰变为 neutral/light；显式 clean 是迁移入口
-- generic artifact consumer 迁移到 public manifest helper
+- 三包 authoring 增加 alpha.3 fields 与开放 definition options
+- React Table preset 使用 `style`，standalone host CSS 使用 `containerStyle`
+- custom Presentation 使用 `rawValue` / `value` / `context` / `appearance` ABI
+- 默认视觉为 neutral / light；显式 clean 提供无装饰视觉
+- manifest consumer 使用同次 compile 的 exact occurrence artifact
 - 用户可见变化必须同步 zh/en docs、demo、API reference、README 与 changelog
 
 ## 功能与包边界
@@ -138,18 +128,16 @@ React runtime rows 与 `containerStyle` 不进入 TableSpec；其余 authoring i
 ## 测试策略摘要
 
 - authoring parity 证明 framework-neutral、React、Vanilla 产生 schema-equal IR
-- public/runtime guards 证明 style/containerStyle、manual Cell union 与 Presentation ABI migration
-- contribution/SSR 证明四类 definitions、冲突、freeze、Standard Definitions 与无 DOM 执行
-- manifest parity 证明 direct/React/Vanilla/SSR 使用同一 helper、occurrence 与 diagnostics
+- public / runtime guards 证明 style / containerStyle、manual Cell union 与 Presentation ABI
+- contribution / SSR 证明四类 definitions、冲突、freeze 与无 DOM 执行
+- manifest parity 证明 direct / React / Vanilla / SSR 使用同一 artifact contract、occurrence 与 diagnostics
 - docs integrity/browser 证明 schema、SourceLink、demo、README/changelog 与真实输出一致
-
-详细 case、文件/page 清单、路径、命令和正式证据位于对应 ignored mirror plan 的 `PLAN.md` 与 `TEST_CONTRACT.md`。
 
 ## 能力完备性与架构验证
 
 - **所属能力域**：Tabular Visualization Complete / authoring、runtime、docs 闭环
 - **问题归属**：Table contract 位于主包，adapters 只等价暴露，docs 只说明真实行为
-- **内部闭环**：authoring → exact TableSpec → shared contribution → Table/Standard/Core pipeline → artifacts/manifest
+- **内部闭环**：authoring → exact TableSpec → shared contribution → Table / Core pipeline → artifacts / manifest；Standard Legend join 由 ADR-06 后续扩展
 - **外部扩展**：custom definitions 在 direct/React/Vanilla/SSR 使用同一 contract 与 conflicts
 - **结论**：组合既有 adapters 与 docs，不新增 adapter-only Table capability
 

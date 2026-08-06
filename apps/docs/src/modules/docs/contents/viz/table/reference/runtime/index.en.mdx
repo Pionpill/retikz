@@ -136,6 +136,62 @@ The four definition categories and composites merge by stable key and object ide
 
 A Table used as a parent `<Layout>` child requires a non-empty stable id. Datasets, Table definitions, and `composites` contribute to the outer host. Local `onManifest` and every standalone host prop fail loudly in one diagnostic that asks callers to move them to the outer `<Layout>`. Use the host's `onArtifacts` when embedded artifacts are needed.
 
+## Custom Visual Scales
+
+A Visual Scale Definition's `resolve()` receives JSON-safe options, non-null raw values in canonical Cell order, and the same-transaction Table style palette. Each encoding resolves exactly once and returns a runtime-only resolution:
+
+```ts
+import { defineCellVisualScale } from '@retikz/table';
+import { z } from 'zod';
+
+const riskScale = defineCellVisualScale({
+  name: 'risk-color',
+  optionsSchema: z.strictObject({
+    edge: z.number(),
+    low: z.string(),
+    high: z.string(),
+  }),
+  resolve: options => ({
+    of: value => {
+      if (typeof value !== 'number') throw new Error('risk-color values must be numbers');
+      return value < options.edge ? options.low : options.high;
+    },
+    legendForm: 'swatch',
+    domain: [options.edge],
+    range: [options.low, options.high],
+    edges: [options.edge],
+  }),
+});
+```
+
+| Resolution field   | Purpose                                                                                |
+| ------------------ | -------------------------------------------------------------------------------------- |
+| `of(value)`        | Maps a canonical raw scalar to a color; `undefined` leaves that Cell channel unchanged |
+| `legendForm`       | Selects a `ramp` or `swatch` descriptor form                                           |
+| `domain` / `range` | JSON-safe domain and color sequence produced by the same resolution                    |
+| `edges?`           | Strictly increasing thresholds for a `swatch` descriptor                               |
+
+Table validates the JSON shape of options / domain, Core CSS colors from range / evaluator, form-array relationships, and deterministic repeated evaluation. It also copies and freezes descriptor data. Finite runtime checks cannot prove that an arbitrary evaluator matches every descriptor value, so a custom Definition author must keep `of()` semantically aligned with `legendForm`, `domain`, `range`, and `edges`.
+
+The built-ins are `ordinal-color`, `sequential-color`, and `threshold-color`. An encoding produces a descriptor seed only when it explicitly authors `legend: { ... }` and the resolution is nonempty. Table currently does not draw a Standard Legend automatically and exposes neither `legendLayout` nor a final Legend-artifact join.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Public Visual Scale Definition and resolution types',
+      path: 'packages/viz/table/src/contract/encoding/types.ts',
+      startLine: 9,
+      endLine: 53,
+    },
+    {
+      label: 'Runtime guards for options, resolution, and evaluator output',
+      path: 'packages/viz/table/src/providers/encoding/resolve.ts',
+      startLine: 42,
+      endLine: 114,
+    },
+  ]}
+/>
+
 ## Vanilla
 
 `detailTable()` / `manualTable()` construct plain specs; `embedTable()` with `createTableAdapter()` enters figure/mount composition; `renderTable()` is the one-shot SSR entry.

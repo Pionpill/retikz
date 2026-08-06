@@ -136,6 +136,62 @@ standalone runtime 构造 canonical `children[0]` 根 Scene，并从 `Layout.onA
 
 Table 作为父级 `<Layout>` child 时必须有非空稳定 id。datasets、Table definitions 与 `composites` 会贡献给外层宿主；局部 `onManifest` 和任一 standalone host prop 都会 fail-loud，并在同一错误中提示把字段移动到外层 `<Layout>`。宿主需要 artifact 时使用外层 `onArtifacts`。
 
+## 自定义视觉比例尺
+
+视觉比例尺 Definition 的 `resolve()` 接收 JSON-safe options、按 canonical Cell 顺序排列的 non-null 原始值，以及同次 Table style palette。每条 encoding 只解析一次，并返回一个 runtime-only resolution：
+
+```ts
+import { defineCellVisualScale } from '@retikz/table';
+import { z } from 'zod';
+
+const riskScale = defineCellVisualScale({
+  name: 'risk-color',
+  optionsSchema: z.strictObject({
+    edge: z.number(),
+    low: z.string(),
+    high: z.string(),
+  }),
+  resolve: options => ({
+    of: value => {
+      if (typeof value !== 'number') throw new Error('risk-color values must be numbers');
+      return value < options.edge ? options.low : options.high;
+    },
+    legendForm: 'swatch',
+    domain: [options.edge],
+    range: [options.low, options.high],
+    edges: [options.edge],
+  }),
+});
+```
+
+| Resolution 字段    | 作用                                                                       |
+| ------------------ | -------------------------------------------------------------------------- |
+| `of(value)`        | 把 canonical 原始 scalar 映射为颜色；返回 `undefined` 表示该 Cell 不写颜色 |
+| `legendForm`       | `ramp` 或 `swatch` descriptor 形态                                         |
+| `domain` / `range` | 与 evaluator 同次解析得到的 JSON-safe domain 与颜色序列                    |
+| `edges?`           | `swatch` 阈值分档的严格递增边界                                            |
+
+Table 会检查 options / domain 的 JSON 形状、range / evaluator 的 Core CSS color、form 数组关系，以及同一 scalar 重复求值的确定性，并复制、冻结 descriptor 数据。任意 evaluator 与 descriptor 的完整语义无法由有限运行时检查证明，因此 custom Definition 作者必须保证 `of()` 与 `legendForm` / `domain` / `range` / `edges` 表达同一映射。
+
+内置 Definition 为 `ordinal-color`、`sequential-color` 与 `threshold-color`。encoding 只有显式写 `legend: { ... }` 且 resolution 非空时才产生 descriptor seed；当前不会自动绘制 Standard Legend，也没有 `legendLayout` 或最终 Legend artifact join。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Visual Scale Definition 与 resolution 公共类型',
+      path: 'packages/viz/table/src/contract/encoding/types.ts',
+      startLine: 9,
+      endLine: 53,
+    },
+    {
+      label: 'Options、resolution 与 evaluator 运行时守卫',
+      path: 'packages/viz/table/src/providers/encoding/resolve.ts',
+      startLine: 42,
+      endLine: 114,
+    },
+  ]}
+/>
+
 ## Vanilla
 
 `detailTable()` / `manualTable()` 构造 plain spec；`embedTable()` 与 `createTableAdapter()` 接入 figure/mount；`renderTable()` 是一次性 SSR 入口。
