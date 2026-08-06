@@ -1,5 +1,7 @@
 import type { RuntimeRevision } from '@retikz/runtime';
 
+import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '@retikz/runtime';
+
 import type { AnyCompositeDefinition, Scene } from '../contract';
 import type { IRScene } from '../schemas';
 import type { RuntimePrimitiveMetadataTable } from './orchestration';
@@ -78,9 +80,9 @@ export const compileCoreSnapshot = <const TComposites extends ReadonlyArray<AnyC
   };
   if (context.trace !== undefined) {
     context.trace.reporter.report({
-      phase: 'compile',
-      unit: 'ir-child',
-      outcome: 'full',
+      phase: PerformanceTracePhase.Compile,
+      unit: PerformanceTraceUnit.IrChild,
+      outcome: PerformanceTraceOutcome.Full,
       visited: context.trace.visited,
       reused: 0,
       changed: context.trace.visited,

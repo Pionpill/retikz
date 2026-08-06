@@ -1,6 +1,8 @@
 import type { IRDropShadow, ResolvedArrowEndSpec, Scene, ScenePrimitive } from '@retikz/core';
 import type { RuntimeTraceReporter } from '@retikz/runtime';
 
+import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '@retikz/runtime';
+
 import type { EasingRegistry } from '../../animation/types';
 import type { StaticRenderFrame } from '../../runtime/frame';
 import type { SvgNode } from '../types';
@@ -168,9 +170,9 @@ export const buildSvgFrameDocument = (frame: StaticRenderFrame, options: BuildDo
   if (options.trace !== undefined) {
     const visited = countScenePrimitiveOccurrences(scene.primitives);
     options.trace.report({
-      phase: 'commit',
-      unit: 'scene-primitive',
-      outcome: 'full',
+      phase: PerformanceTracePhase.Commit,
+      unit: PerformanceTraceUnit.ScenePrimitive,
+      outcome: PerformanceTraceOutcome.Full,
       visited,
       reused: 0,
       changed: visited,

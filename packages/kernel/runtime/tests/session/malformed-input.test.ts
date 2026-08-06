@@ -8,6 +8,7 @@ import { defineRuntimeProgram } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
 import { createRuntimeSession } from '../../src/session';
 import { createRuntimeOwnerInput, createRuntimeOwnerUpdate } from '../../src/transaction';
+import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '../../src/trace';
 
 const defineOwner = () =>
   defineRuntimeOwner<number, number, number, never>({
@@ -404,13 +405,19 @@ describe('runtime session malformed JavaScript input', () => {
       id: { owner: 'counter', key: 'program' },
       owners: [owner],
       programs: [],
-      tracePhases: [{ phase: 'update', unit: 'program', outcomes: ['full'] }],
+      tracePhases: [
+        {
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.Program,
+          outcomes: [PerformanceTraceOutcome.Full],
+        },
+      ],
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
       run: (view, context) => {
         context.trace.report({
-          phase: 'update',
-          unit: 'program',
-          outcome: 'full',
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.Program,
+          outcome: PerformanceTraceOutcome.Full,
           visited: 0,
           reused: 1,
           changed: 0,

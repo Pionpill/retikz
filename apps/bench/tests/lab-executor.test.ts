@@ -1,3 +1,4 @@
+import { PerformanceTracePhase, PerformanceTraceUnit } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 
 import { LabLifecycleAvailability, LabOutcome, LabPolicyId } from '../src/playground/modules/kernel';
@@ -19,8 +20,8 @@ describe('browser Kernel Lab 结果映射', () => {
       trace: [
         {
           owner: '@retikz/core',
-          phase: 'update',
-          unit: 'ir-child',
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.IrChild,
           outcome: LabOutcome.Incremental,
           visited: 5_000,
           reused: 4_999,
@@ -45,8 +46,8 @@ describe('browser Kernel Lab 结果映射', () => {
       trace: [
         {
           owner: '@retikz/core',
-          phase: 'update',
-          unit: 'ir-child',
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.IrChild,
           outcome: LabOutcome.Fallback,
           visited: 5_000,
           reused: 0,

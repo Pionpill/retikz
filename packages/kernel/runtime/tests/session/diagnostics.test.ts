@@ -9,12 +9,13 @@ import { defineRuntimeProgram } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
 import { createRuntimeSession } from '../../src/session';
 import { createRuntimeOwnerInput, createRuntimeOwnerUpdate } from '../../src/transaction';
+import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '../../src/trace';
 
 const tracePhases = [
   {
-    phase: 'update' as const,
-    unit: 'program' as const,
-    outcomes: ['incremental' as const],
+    phase: PerformanceTracePhase.Update,
+    unit: PerformanceTraceUnit.Program,
+    outcomes: [PerformanceTraceOutcome.Incremental],
   },
 ];
 
@@ -40,9 +41,9 @@ describe('runtime session diagnostics', () => {
       run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
       update: (_previous, view, context) => {
         const invalidRecord = {
-          phase: 'update',
-          unit: 'program',
-          outcome: 'incremental',
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.Program,
+          outcome: PerformanceTraceOutcome.Incremental,
           visited: 0,
           reused: 1,
           changed: 0,
@@ -161,9 +162,9 @@ describe('runtime session diagnostics', () => {
           program: { owner: 'spoofed-owner', key: 'spoofed-program' },
         });
         context.trace.report({
-          phase: 'update',
-          unit: 'program',
-          outcome: 'incremental',
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.Program,
+          outcome: PerformanceTraceOutcome.Incremental,
           visited: 0,
           reused: 1,
           changed: 0,
@@ -475,9 +476,9 @@ describe('runtime session diagnostics', () => {
       expectedCode: 'RUNTIME_TRACE_REENTRANT',
       createSink: (readReporter: () => RuntimeProgramTraceReporter | undefined) => () => {
         readReporter()?.report({
-          phase: 'update',
-          unit: 'program',
-          outcome: 'incremental',
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.Program,
+          outcome: PerformanceTraceOutcome.Incremental,
           visited: 1,
           reused: 0,
           changed: 1,
@@ -505,9 +506,9 @@ describe('runtime session diagnostics', () => {
       update: (_previous, view, context) => {
         activeReporter = context.trace;
         context.trace.report({
-          phase: 'update',
-          unit: 'program',
-          outcome: 'incremental',
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.Program,
+          outcome: PerformanceTraceOutcome.Incremental,
           visited: 1,
           reused: 0,
           changed: 1,
@@ -690,9 +691,9 @@ describe('runtime session diagnostics', () => {
       run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
       update: (_previous, view, context) => {
         context.trace.report({
-          phase: 'update',
-          unit: 'program',
-          outcome: 'incremental',
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.Program,
+          outcome: PerformanceTraceOutcome.Incremental,
           visited: 0,
           reused: 1,
           changed: 0,

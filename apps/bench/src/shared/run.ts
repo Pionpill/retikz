@@ -8,6 +8,9 @@ import {
   createRuntimeProgramRegistry,
   createRuntimeSession,
   createRuntimeTraceReporter,
+  PerformanceTraceOutcome,
+  PerformanceTracePhase,
+  PerformanceTraceUnit,
 } from '@retikz/runtime';
 
 import type { BenchmarkExecution, DeterministicBenchmarkResult } from './budget';
@@ -44,13 +47,19 @@ export const runCoreDeterministicBenchmarks = (): ReadonlyArray<DeterministicBen
     const coreRecords: Array<PerformanceTraceRecord> = [];
     const reporter = createRuntimeTraceReporter({
       owner: '@retikz/core',
-      phases: [{ phase: 'compile', unit: 'ir-child', outcomes: ['full'] }],
+      phases: [
+        {
+          phase: PerformanceTracePhase.Compile,
+          unit: PerformanceTraceUnit.IrChild,
+          outcomes: [PerformanceTraceOutcome.Full],
+        },
+      ],
       sink: record => coreRecords.push(record),
     });
     const compiled = compileToScene(createSimpleNodeScene(size), { trace: reporter });
     const coreRecord = assertFullTrace(`core-full-${size}`, reporter, coreRecords, {
-      phase: 'compile',
-      unit: 'ir-child',
+      phase: PerformanceTracePhase.Compile,
+      unit: PerformanceTraceUnit.IrChild,
       visited: size,
     });
     const sceneOracle = stableHash(compiled.scene);
@@ -77,18 +86,18 @@ export const runCoreDeterministicBenchmarks = (): ReadonlyArray<DeterministicBen
     const artifact = session.artifact(program).value;
     const record = assertSingleTraceRecord('core-single-entity-update-5000', records, {
       owner: CORE_OWNER_KEY,
-      phase: 'update',
-      unit: 'ir-child',
-      outcome: 'incremental',
+      phase: PerformanceTracePhase.Update,
+      unit: PerformanceTraceUnit.IrChild,
+      outcome: PerformanceTraceOutcome.Incremental,
       visited: 5_000,
       reused: 4_999,
       changed: 1,
     });
     assertSingleTraceRecord('core-single-entity-update-5000', records, {
       owner: CORE_OWNER_KEY,
-      phase: 'update',
-      unit: 'scene-change',
-      outcome: 'incremental',
+      phase: PerformanceTracePhase.Update,
+      unit: PerformanceTraceUnit.SceneChange,
+      outcome: PerformanceTraceOutcome.Incremental,
       visited: 1,
       reused: 0,
       changed: 1,

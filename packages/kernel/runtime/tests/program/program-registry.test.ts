@@ -2,11 +2,17 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { RuntimeOwnerToken, RuntimeRevision } from '../../src/owner';
 import type { RuntimeCandidateView, RuntimeProgramDefinition, RuntimeProgramToken } from '../../src/program';
+import type { PerformanceTraceOutcomeValue } from '../../src/trace';
 
 import { defineRuntimeOwner } from '../../src/owner';
 import { defineRuntimeProgram, getRuntimeProgramDefinitionExecutor } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry, sortRuntimeProgramGraph } from '../../src/registry';
-import { createRuntimeTraceReporter } from '../../src/trace';
+import {
+  createRuntimeTraceReporter,
+  PerformanceTraceOutcome,
+  PerformanceTracePhase,
+  PerformanceTraceUnit,
+} from '../../src/trace';
 
 const defineOwner = (key: string) =>
   defineRuntimeOwner<number, number, number, never>({
@@ -57,8 +63,14 @@ describe('runtime program definition and registry', () => {
     const id = { owner: 'counter', key: 'stable' };
     const owners: Array<RuntimeOwnerToken> = [owner];
     const programs: Array<RuntimeProgramToken> = [];
-    const outcomes: Array<'full' | 'incremental'> = ['full'];
-    const tracePhases = [{ phase: 'update' as const, unit: 'program' as const, outcomes }];
+    const outcomes: Array<PerformanceTraceOutcomeValue> = [PerformanceTraceOutcome.Full];
+    const tracePhases = [
+      {
+        phase: PerformanceTracePhase.Update,
+        unit: PerformanceTraceUnit.Program,
+        outcomes,
+      },
+    ];
     const artifact = {
       capture: (value: number) => value,
       readForProgram: (value: number) => value,
@@ -108,7 +120,13 @@ describe('runtime program definition and registry', () => {
     expect(definition.id).toEqual({ owner: 'counter', key: 'stable' });
     expect(executor.owners).toEqual([owner]);
     expect(executor.programs).toEqual([]);
-    expect(executor.tracePhases).toEqual([{ phase: 'update', unit: 'program', outcomes: ['full'] }]);
+    expect(executor.tracePhases).toEqual([
+      {
+        phase: PerformanceTracePhase.Update,
+        unit: PerformanceTraceUnit.Program,
+        outcomes: [PerformanceTraceOutcome.Full],
+      },
+    ]);
     expect(executor.capture(1)).toBe(1);
     expect(executor.readForProgram(1)).toBe(1);
     expect(executor.read(1)).toBe(1);
@@ -122,23 +140,34 @@ describe('runtime program definition and registry', () => {
   });
 
   it.each([
-    { tracePhases: [{ phase: 'update', unit: 'program', outcomes: [] }], code: 'RUNTIME_TRACE_DEFINITION_INVALID' },
     {
-      tracePhases: [{ phase: 'invalid', unit: 'program', outcomes: ['full'] }],
+      tracePhases: [{ phase: PerformanceTracePhase.Update, unit: PerformanceTraceUnit.Program, outcomes: [] }],
       code: 'RUNTIME_TRACE_DEFINITION_INVALID',
     },
     {
-      tracePhases: [{ phase: 'update', unit: 'invalid', outcomes: ['full'] }],
+      tracePhases: [{ phase: 'invalid', unit: PerformanceTraceUnit.Program, outcomes: [PerformanceTraceOutcome.Full] }],
       code: 'RUNTIME_TRACE_DEFINITION_INVALID',
     },
     {
-      tracePhases: [{ phase: 'update', unit: 'program', outcomes: ['invalid'] }],
+      tracePhases: [{ phase: PerformanceTracePhase.Update, unit: 'invalid', outcomes: [PerformanceTraceOutcome.Full] }],
+      code: 'RUNTIME_TRACE_DEFINITION_INVALID',
+    },
+    {
+      tracePhases: [{ phase: PerformanceTracePhase.Update, unit: PerformanceTraceUnit.Program, outcomes: ['invalid'] }],
       code: 'RUNTIME_TRACE_DEFINITION_INVALID',
     },
     {
       tracePhases: [
-        { phase: 'update', unit: 'program', outcomes: ['full'] },
-        { phase: 'update', unit: 'program', outcomes: ['full'] },
+        {
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.Program,
+          outcomes: [PerformanceTraceOutcome.Full],
+        },
+        {
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.Program,
+          outcomes: [PerformanceTraceOutcome.Full],
+        },
       ],
       code: 'RUNTIME_TRACE_DEFINITION_INVALID',
     },

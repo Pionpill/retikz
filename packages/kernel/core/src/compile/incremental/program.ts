@@ -1,6 +1,11 @@
 import type { RuntimeTraceReporter } from '@retikz/runtime';
 
-import { defineRuntimeProgram } from '@retikz/runtime';
+import {
+  defineRuntimeProgram,
+  PerformanceTraceOutcome,
+  PerformanceTracePhase,
+  PerformanceTraceUnit,
+} from '@retikz/runtime';
 
 import type { AnyCompositeDefinition } from '../../contract';
 import type { CompileWarning } from '../warning';
@@ -46,8 +51,16 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
     owners: [CoreOwnerDefinition, ...invalidationOwners],
     programs: [],
     tracePhases: [
-      { phase: 'update', unit: 'ir-child', outcomes: ['full', 'incremental', 'fallback'] },
-      { phase: 'update', unit: 'scene-change', outcomes: ['full', 'incremental', 'fallback'] },
+      {
+        phase: PerformanceTracePhase.Update,
+        unit: PerformanceTraceUnit.IrChild,
+        outcomes: [PerformanceTraceOutcome.Full, PerformanceTraceOutcome.Incremental, PerformanceTraceOutcome.Fallback],
+      },
+      {
+        phase: PerformanceTracePhase.Update,
+        unit: PerformanceTraceUnit.SceneChange,
+        outcomes: [PerformanceTraceOutcome.Full, PerformanceTraceOutcome.Incremental, PerformanceTraceOutcome.Fallback],
+      },
     ],
     artifact: {
       capture: input => input,
@@ -60,7 +73,9 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
       const counter: RuntimeTraceReporter<'@retikz/core'> = Object.freeze({
         owner: '@retikz/core' as const,
         report: record => {
-          if (record.phase === 'compile' && record.unit === 'ir-child') visited = record.visited;
+          if (record.phase === PerformanceTracePhase.Compile && record.unit === PerformanceTraceUnit.IrChild) {
+            visited = record.visited;
+          }
         },
         diagnostics: () => Object.freeze([]),
       });
@@ -98,8 +113,8 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
           : {}),
       });
       context.trace.report({
-        phase: 'update',
-        unit: 'ir-child',
+        phase: PerformanceTracePhase.Update,
+        unit: PerformanceTraceUnit.IrChild,
         outcome: context.execution,
         visited,
         reused: 0,
@@ -107,8 +122,8 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
       });
       if (isUpdate) {
         context.trace.report({
-          phase: 'update',
-          unit: 'scene-change',
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.SceneChange,
           outcome: context.execution,
           visited: 1,
           reused: 0,
@@ -153,17 +168,17 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
       );
       if (incremental === undefined) return { kind: 'fallback' };
       context.trace.report({
-        phase: 'update',
-        unit: 'ir-child',
-        outcome: 'incremental',
+        phase: PerformanceTracePhase.Update,
+        unit: PerformanceTraceUnit.IrChild,
+        outcome: PerformanceTraceOutcome.Incremental,
         visited: incremental.reused + 1,
         reused: incremental.reused,
         changed: 1,
       });
       context.trace.report({
-        phase: 'update',
-        unit: 'scene-change',
-        outcome: 'incremental',
+        phase: PerformanceTracePhase.Update,
+        unit: PerformanceTraceUnit.SceneChange,
+        outcome: PerformanceTraceOutcome.Incremental,
         visited: incremental.operationCount,
         reused: 0,
         changed: incremental.operationCount,

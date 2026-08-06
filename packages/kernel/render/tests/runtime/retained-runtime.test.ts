@@ -10,6 +10,9 @@ import {
   createRuntimeSession,
   defineRuntimeOwner,
   defineRuntimeProgram,
+  PerformanceTraceOutcome,
+  PerformanceTracePhase,
+  PerformanceTraceUnit,
   RuntimeError,
 } from '@retikz/runtime';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
@@ -418,10 +421,14 @@ describe('createRetainedRenderParticipant', () => {
     expect(renderer.read).toHaveBeenCalledTimes(2);
     expect(renderer.patches[0]).toMatchObject({ baseRevision: 0, nextRevision: 1 });
     expect(renderer.patches[0]?.operations[0]?.kind).toBe('update');
-    expect(records.filter(record => record.owner === '@retikz/render:svg' && record.unit === 'scene-change')).toEqual([
+    expect(
+      records.filter(
+        record => record.owner === '@retikz/render:svg' && record.unit === PerformanceTraceUnit.SceneChange,
+      ),
+    ).toEqual([
       expect.objectContaining({
-        phase: 'update',
-        outcome: 'incremental',
+        phase: PerformanceTracePhase.Update,
+        outcome: PerformanceTraceOutcome.Incremental,
       }),
     ]);
   });
@@ -446,10 +453,14 @@ describe('createRetainedRenderParticipant', () => {
 
     expect(session.artifact(coreProgram).value.patch?.operations[0]?.kind).toBe('replaceScene');
     expect(renderer.patches[0]?.operations[0]?.kind).toBe('replaceScene');
-    expect(records.filter(record => record.owner === '@retikz/render:svg' && record.unit === 'scene-change')).toEqual([
+    expect(
+      records.filter(
+        record => record.owner === '@retikz/render:svg' && record.unit === PerformanceTraceUnit.SceneChange,
+      ),
+    ).toEqual([
       expect.objectContaining({
-        phase: 'update',
-        outcome: 'full',
+        phase: PerformanceTracePhase.Update,
+        outcome: PerformanceTraceOutcome.Full,
       }),
     ]);
   });
@@ -507,10 +518,14 @@ describe('createRetainedRenderParticipant', () => {
         phase: 'prepare',
       }),
     ]);
-    expect(records.filter(record => record.owner === '@retikz/render:svg' && record.unit === 'scene-change')).toEqual([
+    expect(
+      records.filter(
+        record => record.owner === '@retikz/render:svg' && record.unit === PerformanceTraceUnit.SceneChange,
+      ),
+    ).toEqual([
       expect.objectContaining({
-        phase: 'update',
-        outcome: 'fallback',
+        phase: PerformanceTracePhase.Update,
+        outcome: PerformanceTraceOutcome.Fallback,
       }),
     ]);
   });
