@@ -4,6 +4,20 @@ import { describe, expect, it } from 'vitest';
 import { Grid } from '../../src';
 
 describe('<Grid>', () => {
+  it('forwards authored root Scope identity and metadata unchanged', () => {
+    const input: Parameters<typeof Grid.embeddableAdapter.contribute>[0] = {
+      id: 'authored-grid',
+      meta: { source: 'react' },
+      bounds: { start: [0, 0], end: [20, 10] },
+      line: { spacing: 10 },
+    };
+
+    expect(Grid.embeddableAdapter.contribute(input).node).toMatchObject({
+      id: 'authored-grid',
+      meta: { source: 'react' },
+    });
+  });
+
   it('contributes the same Standard Grid IR and a stable local definition maker', () => {
     const first = Grid.embeddableAdapter.contribute({
       bounds: { start: [0, 0], end: [20, 10] },

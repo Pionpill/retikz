@@ -3,15 +3,16 @@ import {
   CompositeBaseSchema,
   LabelVisualStyleSchema,
   PositionSchema,
+  ScopePropsSchema,
   TextBlockSchema,
 } from '@retikz/core';
 import { z } from 'zod';
 
-import { STANDARD_NAMESPACE } from '../../shared';
-import { getLatticeRangeError } from '../shared/lattice';
-import { StandardGridSpacingSchema, StandardPathStrokeStyleSchema } from '../shared/schemas';
-import { enumerateAxesTickValues, resolveAxesExtent, resolveAxesTickRange } from './axis';
-import { AxesArrowMode, AxesLabelEnd, AxesTickExtent, AxesTickSide, AxesTickSourceKind } from './constants';
+import { STANDARD_NAMESPACE } from '../../../shared';
+import { getLatticeRangeError } from '../../shared/lattice';
+import { StandardPathStrokeStyleSchema } from '../../shared/schemas';
+import { AxesArrowMode, AxesLabelEnd, AxesTickExtent, AxesTickSide, AxesTickSourceKind } from '../constants';
+import { enumerateAxesTickValues, resolveAxesExtent, resolveAxesTickRange } from './utils';
 
 const AxesDirectionalExtentSchema = z.strictObject({
   negative: z.number().nonnegative().describe('Drawing length in the negative axis direction.'),
@@ -26,13 +27,9 @@ const AxesExtentSchema = z
   .describe('Symmetric or direction-specific axis drawing lengths.');
 
 const AxesGridSchema = z.strictObject({
-  spacing: StandardGridSpacingSchema.describe('Uniform or axis-specific positive grid spacing.'),
-  offset: PositionSchema.default([0, 0]).describe(
-    'Axis-local mathematical offset used as the grid lattice alignment origin.',
-  ),
-  style: StandardPathStrokeStyleSchema.optional().describe('Shared style defaults for both grid directions.'),
-  vertical: StandardPathStrokeStyleSchema.optional().describe('Style fields overriding vertical grid lines.'),
-  horizontal: StandardPathStrokeStyleSchema.optional().describe('Style fields overriding horizontal grid lines.'),
+  spacing: z.number().positive().describe('Positive grid spacing along the owning axis.'),
+  offset: z.number().default(0).describe('Axis-local mathematical offset used as the grid lattice alignment origin.'),
+  style: StandardPathStrokeStyleSchema.optional().describe('Stroke style for grid lines projected from this axis.'),
 });
 
 const AxesLineSchema = z.strictObject({
@@ -110,6 +107,7 @@ const AxesTicksSchema = z.strictObject({
 
 const createAxesAxisSchema = (defaultLabel: 'x' | 'y') =>
   z.strictObject({
+    extent: AxesExtentSchema.describe('Drawing lengths in the negative and positive directions of this axis.'),
     line: z
       .union([z.literal(false), AxesLineSchema])
       .default({ arrows: AxesArrowMode.Positive })
@@ -118,6 +116,10 @@ const createAxesAxisSchema = (defaultLabel: 'x' | 'y') =>
       .union([z.literal(false), AxesTicksSchema])
       .optional()
       .describe('Ticks and optional static tick labels for this axis.'),
+    grid: z
+      .union([z.literal(false), AxesGridSchema])
+      .optional()
+      .describe('Optional lightweight grid lines projected perpendicular to this axis.'),
     label: AxesAxisLabelSchema.default(defaultLabel).describe('Axis name, styled label, or false to hide it.'),
   });
 
@@ -132,41 +134,30 @@ const AxesOriginLabelObjectSchema = z.strictObject({
 
 const AxesOriginLabelSchema = z.union([z.literal(false), TextBlockSchema, AxesOriginLabelObjectSchema]);
 
+const AxesOriginSchema = z.strictObject({
+  position: PositionSchema.default([0, 0]).describe('Screen-space origin shared by axes, grids, ticks, and labels.'),
+  label: AxesOriginLabelSchema.default(false).describe('Optional single static label at the shared origin.'),
+});
+
 const AxesBaseSchema = CompositeBaseSchema.extend({
   namespace: z.literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
   type: z.literal('axes').describe('Composite type for static Cartesian reference axes.'),
-  origin: PositionSchema.default([0, 0]).describe('Screen-space origin shared by axes, grid, ticks, and labels.'),
-  extent: z.strictObject({
-    x: AxesExtentSchema.describe('Horizontal axis drawing lengths.'),
-    y: AxesExtentSchema.describe('Vertical axis drawing lengths with positive values mapped screen-up.'),
-  }),
-  grid: AxesGridSchema.optional().describe('Optional lightweight origin-aligned Cartesian grid.'),
-  x: z
-    .union([z.literal(false), AxesXAxisSchema])
-    .default({ line: { arrows: AxesArrowMode.Positive }, label: 'x' })
-    .describe('Horizontal axis configuration, or false to suppress all horizontal-axis artifacts.'),
-  y: z
-    .union([z.literal(false), AxesYAxisSchema])
-    .default({ line: { arrows: AxesArrowMode.Positive }, label: 'y' })
-    .describe('Vertical axis configuration, or false to suppress all vertical-axis artifacts.'),
-  originLabel: AxesOriginLabelSchema.default(false).describe('Optional single static label at the shared origin.'),
+  ...ScopePropsSchema.shape,
+  origin: AxesOriginSchema.default({ position: [0, 0], label: false }),
+  x: AxesXAxisSchema.describe('Horizontal axis configuration and its perpendicular grid projection.'),
+  y: AxesYAxisSchema.describe('Vertical axis configuration and its perpendicular grid projection.'),
 });
 
 type AxesRefinementInput = z.infer<typeof AxesBaseSchema>;
-type AxesAxisInput = Exclude<AxesRefinementInput['x'], false>;
+type AxesAxisInput = AxesRefinementInput['x'];
 
 const valuesEqual = (left: number, right: number): boolean =>
   Math.abs(left - right) <= Number.EPSILON * Math.max(1, Math.abs(left), Math.abs(right)) * 8;
 
-const refineAxisTicks = (
-  axis: AxesAxisInput,
-  extentInput: AxesRefinementInput['extent']['x'],
-  axisKey: 'x' | 'y',
-  ctx: z.RefinementCtx,
-): void => {
+const refineAxisTicks = (axis: AxesAxisInput, axisKey: 'x' | 'y', ctx: z.RefinementCtx): void => {
   if (axis.ticks === undefined || axis.ticks === false) return;
 
-  const extent = resolveAxesExtent(extentInput);
+  const extent = resolveAxesExtent(axis.extent);
   const ticks = axis.ticks;
   const source = ticks.source;
   if (source.kind === AxesTickSourceKind.Spacing) {
@@ -230,58 +221,45 @@ const refineAxisTicks = (
   });
 };
 
+const axisHasOutput = (axis: AxesAxisInput): boolean =>
+  axis.line !== false ||
+  (axis.ticks !== undefined && axis.ticks !== false) ||
+  (axis.grid !== undefined && axis.grid !== false) ||
+  axis.label !== false;
+
+const refineAxis = (axis: AxesAxisInput, axisKey: 'x' | 'y', ctx: z.RefinementCtx): void => {
+  const extent = resolveAxesExtent(axis.extent);
+  if (extent.negative === 0 && extent.positive === 0) {
+    ctx.addIssue({
+      code: 'custom',
+      path: [axisKey, 'extent'],
+      message: `${axisKey}.extent requires a positive direction length.`,
+    });
+  }
+
+  if (axis.grid !== undefined && axis.grid !== false) {
+    const error = getLatticeRangeError({
+      min: -extent.negative,
+      max: extent.positive,
+      spacing: axis.grid.spacing,
+      origin: axis.grid.offset,
+      includeBoundary: false,
+    });
+    if (error !== undefined) {
+      ctx.addIssue({ code: 'custom', path: [axisKey, 'grid', 'spacing'], message: error });
+    }
+  }
+
+  refineAxisTicks(axis, axisKey, ctx);
+};
+
 const refineAxes = (axes: AxesRefinementInput, ctx: z.RefinementCtx): void => {
-  const extentX = resolveAxesExtent(axes.extent.x);
-  const extentY = resolveAxesExtent(axes.extent.y);
-
-  if (extentX.negative === 0 && extentX.positive === 0) {
-    ctx.addIssue({ code: 'custom', path: ['extent', 'x'], message: 'extent.x requires a positive direction length.' });
-  }
-  if (extentY.negative === 0 && extentY.positive === 0) {
-    ctx.addIssue({ code: 'custom', path: ['extent', 'y'], message: 'extent.y requires a positive direction length.' });
-  }
-  if (axes.x === false && axes.y === false) {
-    ctx.addIssue({ code: 'custom', path: ['x'], message: 'Axes requires at least one enabled axis.' });
+  if (!axisHasOutput(axes.x) && !axisHasOutput(axes.y) && axes.origin.label === false) {
+    ctx.addIssue({ code: 'custom', path: ['x'], message: 'Axes requires at least one visible axis artifact.' });
   }
 
-  if (axes.grid !== undefined) {
-    const [spacingX, spacingY] =
-      typeof axes.grid.spacing === 'number'
-        ? [axes.grid.spacing, axes.grid.spacing]
-        : [axes.grid.spacing.x, axes.grid.spacing.y];
-    const [offsetX, offsetY] = axes.grid.offset;
-    const verticalError = getLatticeRangeError({
-      min: -extentX.negative,
-      max: extentX.positive,
-      spacing: spacingX,
-      origin: offsetX,
-      includeBoundary: false,
-    });
-    const horizontalError = getLatticeRangeError({
-      min: -extentY.negative,
-      max: extentY.positive,
-      spacing: spacingY,
-      origin: offsetY,
-      includeBoundary: false,
-    });
-    if (verticalError !== undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: typeof axes.grid.spacing === 'number' ? ['grid', 'spacing'] : ['grid', 'spacing', 'x'],
-        message: verticalError,
-      });
-    }
-    if (horizontalError !== undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: typeof axes.grid.spacing === 'number' ? ['grid', 'spacing'] : ['grid', 'spacing', 'y'],
-        message: horizontalError,
-      });
-    }
-  }
-
-  if (axes.x !== false) refineAxisTicks(axes.x, axes.extent.x, 'x', ctx);
-  if (axes.y !== false) refineAxisTicks(axes.y, axes.extent.y, 'y', ctx);
+  refineAxis(axes.x, 'x', ctx);
+  refineAxis(axes.y, 'y', ctx);
 };
 
 export const AxesSchema = AxesBaseSchema.superRefine(refineAxes);

@@ -180,21 +180,22 @@ Core `Node`、`Path`、`Scope` 等图元可以直接作为 `IRChild`。内嵌 Ti
 
 ### Legend
 
-| 属性           | 类型                               | 默认值       | 描述                                                       |
-| -------------- | ---------------------------------- | ------------ | ---------------------------------------------------------- |
-| `kind`         | `'items'` \| `'ramp'`              | —            | 显式选择 marker form，不从 children 推断                   |
-| `children`     | `ReactNode`                        | —            | 当前 form 允许的直属 marker；见[组合边界](#react-组合边界) |
-| `titleGap`     | `number`                           | `8`          | 标题与非空主体同时存在时的垂直间距                         |
-| `contentAlign` | `'start'` \| `'center'` \| `'end'` | `'start'`    | 标题与主体结构块在内容框内的物理 x 轴对齐                  |
-| `size`         | `LayoutSizeInput`                  | 内容尺寸     | 复用 Box Layout 的双轴尺寸策略                             |
-| `padding`      | `number` \| `IRBoxSpacing`         | `0`          | 容器四边内边距                                             |
-| `overflow`     | `'visible'` \| `'clip'`            | `'visible'`  | 分配范围之外内容的可见策略                                 |
-| `direction`    | `'vertical'` \| `'horizontal'`     | `'vertical'` | items 排列方向或 ramp 主轴方向                             |
-| `sampleGap`    | `number`                           | `8`          | 样本与其标签区域之间的物理间距                             |
-| `wrap`         | `'nowrap'` \| `'wrap'`             | `'nowrap'`   | 仅 items form：受约束时是否形成额外行或列                  |
-| `columnGap`    | `number`                           | `8`          | 仅 items form：相邻物理列间距                              |
-| `rowGap`       | `number`                           | `8`          | 仅 items form：相邻物理行间距                              |
-| `sampleAlign`  | `'start'` \| `'center'` \| `'end'` | `'center'`   | 仅 items form：样本与标签沿物理 y 轴对齐                   |
+| 属性           | 类型                                               | 默认值                        | 描述                                                       |
+| -------------- | -------------------------------------------------- | ----------------------------- | ---------------------------------------------------------- |
+| `kind`         | `'items'` \| `'ramp'`                              | —                             | 显式选择 marker form，不从 children 推断                   |
+| `children`     | `ReactNode`                                        | —                             | 当前 form 允许的直属 marker；见[组合边界](#react-组合边界) |
+| `titleGap`     | `number`                                           | `8`                           | 标题与非空主体同时存在时的垂直间距                         |
+| `contentAlign` | `'start'` \| `'center'` \| `'end'`                 | `'start'`                     | 标题与主体结构块在内容框内的物理 x 轴对齐                  |
+| `size`         | `LayoutSizeInput`                                  | 内容尺寸                      | 复用 Box Layout 的双轴尺寸策略                             |
+| `padding`      | `number` \| `IRBoxSpacing`                         | `0`                           | 容器四边内边距                                             |
+| `overflow`     | `'visible'` \| `'clip'`                            | `'visible'`                   | 分配范围之外内容的可见策略                                 |
+| `direction`    | `'vertical'` \| `'horizontal'`                     | `'vertical'`                  | items 排列方向或 ramp 主轴方向                             |
+| `sampleGap`    | `number`                                           | `8`                           | 样本与其标签区域之间的物理间距                             |
+| `wrap`         | `'nowrap'` \| `'wrap'`                             | `'nowrap'`                    | 仅 items form：受约束时是否形成额外行或列                  |
+| `gap`          | `number`<br />或 `{ row: number; column: number }` | `8` → `{ row: 8, column: 8 }` | 仅 items form：标量同时设置两轴，对象分别设置物理行列间距  |
+| ↳ `row`        | `number`                                           | `8`                           | `gap` 为对象时的物理行间距                                 |
+| ↳ `column`     | `number`                                           | `8`                           | `gap` 为对象时的物理列间距                                 |
+| `sampleAlign`  | `'start'` \| `'center'` \| `'end'`                 | `'center'`                    | 仅 items form：样本与标签沿物理 y 轴对齐                   |
 
 ### LegendTitle
 
@@ -231,7 +232,7 @@ Core `Node`、`Path`、`Scope` 等图元可以直接作为 `IRChild`。内嵌 Ti
 | `id`    | `string`      | —      | `legend()` 的 embed 身份，不写入 `IRLegend`                 |
 | `input` | `LegendInput` | —      | `legend()` 与 `createLegend()` 的 JSON-safe plain-data 输入 |
 
-`LegendInput` 省略固定的 `namespace` 与 `type`。常用默认值为：`titleGap: 8`、`contentAlign: 'start'`、内容尺寸、`padding: 0`、`overflow: 'visible'`；离散内容默认 `direction: 'vertical'`、`wrap: 'nowrap'`、`columnGap / rowGap / sampleGap: 8`、`sampleAlign: 'center'`。
+`LegendInput` 省略固定的 `namespace` 与 `type`。常用默认值为：`titleGap: 8`、`contentAlign: 'start'`、内容尺寸、`padding: 0`、`overflow: 'visible'`；离散内容默认 `direction: 'vertical'`、`wrap: 'nowrap'`、两轴 `gap: 8`、`sampleGap: 8`、`sampleAlign: 'center'`。解析后的 IR 会将其持久化为 `gap: { row: 8, column: 8 }`。
 
 ### LegendSchema
 

@@ -5,6 +5,24 @@ import { describe, expect, it } from 'vitest';
 import { grid, GridVanillaAdapter } from '../src';
 
 describe('grid()', () => {
+  it('keeps an authored root id distinct from the Vanilla embed id', () => {
+    const embed = grid('host-occurrence', {
+      id: 'authored-grid',
+      meta: { source: 'vanilla' },
+      bounds: { start: [0, 0], end: [20, 10] },
+      line: { spacing: 10 },
+    });
+    const contribution = GridVanillaAdapter.lower(embed.props, {
+      id: embed.id,
+      kind: embed.kind,
+      namespace: GridVanillaAdapter.namespace,
+      layerId: 'main',
+      identityPath: ['main', embed.id],
+    });
+
+    expect(contribution.node).toMatchObject({ id: 'authored-grid', meta: { source: 'vanilla' } });
+  });
+
   it('creates an embed whose adapter lowers to the same Standard Grid IR', () => {
     const embed = grid('paper', {
       bounds: { start: [0, 0], end: [20, 10] },

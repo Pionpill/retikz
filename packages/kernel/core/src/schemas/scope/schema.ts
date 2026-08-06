@@ -66,9 +66,8 @@ export const ScopePlacementSchema = z
   })
   .describe('Placement that aligns a transformed intrinsic Scope point to a parent-frame target.');
 
-export const ScopeSchema = z
-  .object({
-    type: z.literal('scope').describe('Discriminator marking this child as a scope container.'),
+export const ScopePropsSchema = z
+  .strictObject({
     ...CascadingGraphicStyleSchema.shape,
     theme: ThemeSchema.optional().describe('Sparse Theme override inherited by this Scope descendants.'),
     id: z
@@ -130,11 +129,17 @@ export const ScopeSchema = z
       .describe(
         'Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.',
       ),
+  })
+  .describe('Reusable authored properties for a Scope container.');
+
+export const ScopeSchema = z
+  .strictObject({
+    type: z.literal('scope').describe('Discriminator marking this child as a scope container.'),
+    ...ScopePropsSchema.shape,
     children: z
       .array(z.lazy(() => getRecursiveChildSchema()))
       .describe('Scope children: nested nodes, paths, coordinates, scopes, or composites.'),
   })
-  .strict()
   .describe(
     'Scope container: groups child IR elements, applies local transforms, and provides cascading style defaults.',
   );

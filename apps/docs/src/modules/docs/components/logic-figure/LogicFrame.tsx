@@ -14,13 +14,26 @@ export type LogicFrameTitleProps = FrameTitleProps;
 export type LogicFrameDescriptionProps = FrameDescriptionProps;
 
 const logicFrameDefaults = {
-  stroke: 'lightgray',
-  fill: 'lightgray',
-  fillOpacity: 0.04,
-  dashPattern: [4, 3],
+  border: {
+    style: {
+      stroke: 'lightgray',
+      fill: 'lightgray',
+      fillOpacity: 0.04,
+      dashPattern: [4, 3],
+    },
+    cornerRadius: 4,
+  },
   padding: 10,
-  cornerRadius: 4,
 } satisfies Partial<LogicFrameProps>;
+
+const resolveLogicFrameBorder = (border: LogicFrameProps['border']): NonNullable<LogicFrameProps['border']> => ({
+  ...logicFrameDefaults.border,
+  ...border,
+  style: {
+    ...logicFrameDefaults.border.style,
+    ...border?.style,
+  },
+});
 
 const withLogicFrameTitleDefaults = (props: LogicFrameTitleProps): LogicFrameTitleProps => ({
   textColor: 'gray',
@@ -60,11 +73,12 @@ const resolveLogicFrameChildren = (children: ReactNode): ReactNode =>
 
 /** 使用逻辑图默认样式组合 Standard Frame，并允许显式属性覆盖 */
 export const LogicFrame: FC<LogicFrameProps> = props => {
-  const { children, ...frameProps } = props;
+  const { children, border, ...frameProps } = props;
 
   return createElement(Frame, {
     ...logicFrameDefaults,
     ...frameProps,
+    border: resolveLogicFrameBorder(border),
     children: resolveLogicFrameChildren(children),
   });
 };

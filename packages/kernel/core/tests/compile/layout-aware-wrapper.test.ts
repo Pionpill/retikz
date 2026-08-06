@@ -216,7 +216,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     );
   });
 
-  it('keeps already-lowered non-origin rotation centers and the remaining structural Scope fields', () => {
+  it('keeps authored Scope transforms and the complete Scope fields', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'allFields',
@@ -227,7 +227,11 @@ describe('layout-aware composite runtime wrapper tree', () => {
             {
               id: 'all',
               localNamespace: true,
-              transforms: [{ kind: 'rotate', degrees: 30, cx: 4, cy: 5 }],
+              transforms: [{ kind: 'rotate', degrees: 30, pivot: [4, 5] }],
+              placement: { target: [20, 30], selfAnchor: [4, 5] },
+              fill: 'red',
+              nodeDefault: { fill: 'white' },
+              resetStyle: ['path'],
               clip: { kind: 'circle', cx: 0, cy: 0, r: 20 },
               zIndex: 2,
               boundingShape: 'circle',
@@ -247,10 +251,89 @@ describe('layout-aware composite runtime wrapper tree', () => {
     expect(result.scene.primitives[0]).toMatchObject({
       type: 'group',
       id: 'all',
-      transforms: [{ kind: 'rotate', degrees: 30, cx: 4, cy: 5 }],
       meta: { role: 'all' },
       animations: [fade],
     });
+    expect(result.scene.primitives[0]).toMatchObject({
+      transforms: [
+        { kind: 'translate', x: expect.any(Number), y: expect.any(Number) },
+        { kind: 'rotate', degrees: 30, cx: 4, cy: 5 },
+      ],
+    });
+  });
+
+  it('applies authored Scope style inheritance to a replay child inside Core', () => {
+    const definition = defineComposite({
+      namespace: 'test',
+      type: 'styledReplay',
+      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('styledReplay') }),
+      compile: (_value, context) => {
+        const laid = resolvedResultOf(context, node('replayed'));
+        return {
+          children: [
+            context.scope(
+              {
+                color: 'red',
+                nodeDefault: { shape: 'circle', fill: 'white' },
+                resetStyle: true,
+              },
+              [context.replay(laid)],
+            ),
+          ],
+        };
+      },
+    });
+
+    const result = compileToScene(
+      scene([
+        {
+          type: 'scope',
+          color: 'blue',
+          children: [{ namespace: 'test', type: 'styledReplay' }],
+        },
+      ]),
+      { composites: [definition], padding: 0 },
+    );
+    const leaves: Array<ScenePrimitive> = [];
+    const visit = (primitive: ScenePrimitive): void => {
+      if (primitive.type === 'group') primitive.children.forEach(visit);
+      else leaves.push(primitive);
+    };
+    result.scene.primitives.forEach(visit);
+
+    expect(leaves).toContainEqual(expect.objectContaining({ type: 'ellipse', fill: 'white', stroke: 'red' }));
+    expect(leaves.some(primitive => primitive.type === 'rect')).toBe(false);
+  });
+
+  it('re-materializes a nested layout-aware Composite under replay Scope style', () => {
+    const leaf = defineComposite({
+      namespace: 'test',
+      type: 'styledReplayLeaf',
+      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('styledReplayLeaf') }),
+      compile: () => ({ children: [node('nested-replayed')] }),
+    });
+    const owner = defineComposite({
+      namespace: 'test',
+      type: 'styledReplayOwner',
+      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('styledReplayOwner') }),
+      compile: (_value, context) => {
+        const laid = resolvedResultOf(context, { namespace: 'test', type: 'styledReplayLeaf' });
+        return { children: [context.scope({ fill: 'purple' }, [context.replay(laid)])] };
+      },
+    });
+
+    const result = compileToScene(scene([{ namespace: 'test', type: 'styledReplayOwner' }]), {
+      composites: [leaf, owner],
+      padding: 0,
+    });
+    const rects: Array<ScenePrimitive> = [];
+    const visit = (primitive: ScenePrimitive): void => {
+      if (primitive.type === 'group') primitive.children.forEach(visit);
+      else if (primitive.type === 'rect') rects.push(primitive);
+    };
+    result.scene.primitives.forEach(visit);
+
+    expect(rects).toContainEqual(expect.objectContaining({ id: 'nested-replayed', fill: 'purple' }));
   });
 
   it('rejects the same replay when it is reached through sibling wrapper branches', () => {
@@ -786,8 +869,6 @@ describe('layout-aware composite runtime wrapper tree', () => {
 
   it.each([
     ['unknown key', { unknown: true }],
-    ['placement', { placement: { target: [0, 0] } }],
-    ['style field', { fill: 'red' }],
     ['empty id', { id: '' }],
     ['invalid localNamespace', { localNamespace: 'yes' }],
     ['fractional zIndex', { zIndex: 1.5 }],

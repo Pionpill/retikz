@@ -41,7 +41,7 @@ const makeLegendComposites = () => [LegendDefinition];
 
 /** 将 items form 的提升字段与 marker tree 组装为 Standard LegendInput */
 const createItemsLegend = (props: LegendItemsFormProps) => {
-  const { kind, children, direction, wrap, columnGap, rowGap, sampleGap, sampleAlign, ...legend } = props;
+  const { kind, children, direction, wrap, gap, sampleGap, sampleAlign, ...legend } = props;
   const converted = convertLegendItemsChildren(children);
   return createLegend({
     ...legend,
@@ -51,8 +51,7 @@ const createItemsLegend = (props: LegendItemsFormProps) => {
       items: converted.items,
       ...(direction === undefined ? {} : { direction }),
       ...(wrap === undefined ? {} : { wrap }),
-      ...(columnGap === undefined ? {} : { columnGap }),
-      ...(rowGap === undefined ? {} : { rowGap }),
+      ...(gap === undefined ? {} : { gap }),
       ...(sampleGap === undefined ? {} : { sampleGap }),
       ...(sampleAlign === undefined ? {} : { sampleAlign }),
     },
