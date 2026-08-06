@@ -59,7 +59,7 @@ const loadImage = (href: string, onReady: () => void): HTMLImageElement | null =
 };
 
 export type CanvasHostProps = {
-  /** 已编译主图与检查辅助层 */
+  /** 已编译主图与只读辅助层 */
   frame: StaticRenderFrame;
   /**
    * 水合 handler 注册表（按图元 id）

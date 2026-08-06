@@ -41,6 +41,10 @@
     "./render": {
       "types": "./src/render/index.ts",
       "default": "./src/render/index.ts"
+    },
+    "./react": {
+      "types": "./src/react/index.ts",
+      "default": "./src/react/index.ts"
     }
   },
   "publishConfig": {
@@ -57,6 +61,11 @@
         "types": "./dist/types/render/index.d.ts",
         "import": "./dist/render/index.js",
         "default": "./dist/render/index.js"
+      },
+      "./react": {
+        "types": "./dist/types/react/index.d.ts",
+        "import": "./dist/react/index.js",
+        "default": "./dist/react/index.js"
       }
     }
   },
@@ -79,16 +88,29 @@
     "zod": "catalog:"
   },
   "peerDependencies": {
-    "@retikz/render": "workspace:*"
+    "@retikz/react": "workspace:*",
+    "@retikz/render": "workspace:*",
+    "react": ">=18"
   },
   "peerDependenciesMeta": {
     "@retikz/render": {
+      "optional": true
+    },
+    "@retikz/react": {
+      "optional": true
+    },
+    "react": {
       "optional": true
     }
   },
   "devDependencies": {
     "@retikz/render": "workspace:*",
+    "@retikz/react": "workspace:*",
     "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",

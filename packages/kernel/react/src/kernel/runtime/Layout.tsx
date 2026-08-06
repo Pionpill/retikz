@@ -7,7 +7,6 @@ import type {
   CompileArtifact,
   CompileArtifactOptions,
   CoreProgramOptions,
-  InspectOptions,
   IRAnimationTrack,
   IRScene,
   IRViewBox,
@@ -22,17 +21,18 @@ import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } fro
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { CSSProperties, FC, ReactNode, Ref } from 'react';
 
-import { compileToScene } from '@retikz/core';
 import { resolveAnimationEnabled } from '@retikz/render/animation';
-import { useId, useMemo } from 'react';
+import { useCallback, useId, useMemo } from 'react';
 
 import type { EmbeddableContributionRecord, EmbeddableTier2Adapter, ScopeStyleProps } from '../protocol';
+import type { LayoutCompileDriver, LayoutCompileDriverInput } from '../protocol';
 import type { LayoutRuntimeOptions } from './runtime-options';
 
 import { usePrefersReducedMotion } from '../../render/animation';
 import { RetainedHost, StaticHost } from '../../render/runtime';
 import { browserMeasurer } from '../../render/text';
 import { buildIRWithContributions, pickScopeStyle, wrapRootScope } from '../adapter';
+import { compileLayoutWithDriver, createLayoutCompileDriverSession, defaultLayoutCompileDriver } from '../protocol';
 import { useAnimationMode } from './animation-context';
 import { collectHydrationHandlers } from './collect-hydration-handlers';
 import { useRendererMode } from './renderer-context';
@@ -193,8 +193,13 @@ export type LayoutProps = ScopeStyleProps & {
   theme?: IRScene['theme'];
   /** Kernel/Sugar JSX children */
   children?: ReactNode;
-  /** 全图 Layout Inspector 策略；只进入 compile sidecar，不进入 IR */
-  inspect?: InspectOptions;
+  /** 可选 compile driver 自行解释的 runtime-only scene authoring 载荷，不进入 Core IR */
+  authoring?: unknown;
+  /**
+   * 领域中立 compile driver
+   * @default defaultLayoutCompileDriver
+   */
+  compileDriver?: LayoutCompileDriver;
   /**
    * `ir` prop 模式下按图元 id 提供的水合 handler 注册表（无 JSX children 可收集时用）
    * @description JSX 模式经组件 `on<Event>` props 收集，无需此 prop；直接传 `ir` 时无组件 props，
@@ -350,7 +355,8 @@ export const Layout: FC<LayoutProps> = props => {
     ir: irFromProp,
     theme,
     children,
-    inspect,
+    authoring,
+    compileDriver,
     width,
     height,
     viewBox,
@@ -462,10 +468,20 @@ export const Layout: FC<LayoutProps> = props => {
         ? {
             ir: irFromProp,
             contributions: [] as Array<EmbeddableContributionRecord>,
-            inspectionRoots: [],
+            authoringSites: Object.freeze([
+              Object.freeze({
+                kind: 'scene' as const,
+                sourcePath: '',
+                elementType: Layout,
+                props: Object.freeze(authoring === undefined ? {} : { authoring }),
+              }),
+            ]),
           }
-        : buildIRWithContributions(wrapRootScope(children, scopeStyle), stableEmbeddables),
-    [irFromProp, children, scopeStyle, stableEmbeddables],
+        : buildIRWithContributions(wrapRootScope(children, scopeStyle), stableEmbeddables, {
+            elementType: Layout,
+            props: Object.freeze(authoring === undefined ? {} : { authoring }),
+          }),
+    [irFromProp, children, scopeStyle, stableEmbeddables, authoring],
   );
   const ir = useMemo(() => {
     const base = built.ir;
@@ -490,16 +506,6 @@ export const Layout: FC<LayoutProps> = props => {
     () => (artifacts?.nodeLayouts === true ? { nodeLayouts: true } : undefined),
     [artifacts?.nodeLayouts],
   );
-  const compileInspection = useMemo(
-    () =>
-      inspect === undefined && built.inspectionRoots.length === 0
-        ? undefined
-        : {
-            ...(inspect === undefined ? {} : { root: inspect }),
-            ...(built.inspectionRoots.length === 0 ? {} : { roots: built.inspectionRoots }),
-          },
-    [inspect, built.inspectionRoots],
-  );
   const coreOptions = useMemo<CoreProgramOptions>(
     () => ({
       measureText,
@@ -516,7 +522,6 @@ export const Layout: FC<LayoutProps> = props => {
       composites: aggregatedComposites,
       lowerTex,
       artifacts: compileArtifacts,
-      inspection: compileInspection,
     }),
     [
       measureText,
@@ -533,14 +538,30 @@ export const Layout: FC<LayoutProps> = props => {
       aggregatedComposites,
       lowerTex,
       compileArtifacts,
-      compileInspection,
     ],
   );
-  const compiledLayout = useMemo(() => compileToScene(ir, coreOptions), [ir, coreOptions]);
-  const scene = compiledLayout.scene;
+  const driverInstance = useMemo(() => Object.freeze({}), []);
+  const driverInput = useMemo<LayoutCompileDriverInput>(
+    () => Object.freeze({ instance: driverInstance, source: ir, authoringSites: built.authoringSites, coreOptions }),
+    [driverInstance, ir, built.authoringSites, coreOptions],
+  );
+  const resolvedCompileDriver = compileDriver ?? defaultLayoutCompileDriver;
+  const driverSession = useMemo(
+    () => createLayoutCompileDriverSession(resolvedCompileDriver, driverInput),
+    [resolvedCompileDriver, driverInput],
+  );
+  const compiledLayout = useMemo(
+    () => compileLayoutWithDriver(driverInput, driverSession),
+    [driverInput, driverSession],
+  );
+  const scene = compiledLayout.primary.scene;
   const frame = useMemo(
-    () => Object.freeze({ primary: scene, inspection: compiledLayout.inspection }),
-    [scene, compiledLayout.inspection],
+    () => Object.freeze({ primary: scene, layers: compiledLayout.layers }),
+    [scene, compiledLayout.layers],
+  );
+  const publishCompileOutput = useCallback(
+    () => driverSession.commit?.(compiledLayout),
+    [driverSession, compiledLayout],
   );
 
   // useId 返回 ":r0:" 含冒号；SVG `url(#id)` 对冒号兼容性差，剥成纯字母数字。caller 显式 idPrefix 优先（SSR 水合对齐）
@@ -559,7 +580,7 @@ export const Layout: FC<LayoutProps> = props => {
         key={`${resolvedRuntime.mode}:${renderer}:${resolvedIdPrefix}`}
         backend={renderer}
         frame={frame}
-        artifacts={compiledLayout.artifacts}
+        artifacts={compiledLayout.primary.artifacts}
         handlers={resolvedHandlers}
         width={width}
         height={height}
@@ -572,6 +593,7 @@ export const Layout: FC<LayoutProps> = props => {
         animationProperties={animationProperties}
         idPrefix={resolvedIdPrefix}
         onArtifacts={onArtifacts}
+        onCompileCommit={publishCompileOutput}
       />
     );
   }
@@ -583,6 +605,7 @@ export const Layout: FC<LayoutProps> = props => {
       source={ir}
       initialFrame={frame}
       coreOptions={coreOptions}
+      compileSession={driverSession}
       handlers={resolvedHandlers}
       width={width}
       height={height}

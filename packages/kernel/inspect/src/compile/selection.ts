@@ -148,6 +148,13 @@ const targetMatches = (target: InspectionSelectionTarget, observation: CompileOb
     : occurrenceEquals(observation.occurrence, target.locator.occurrence);
 };
 
+/** 判断 scene 或 subtree barrier 是否覆盖给定 authored source path */
+const barrierContainsSourcePath = (
+  target: Extract<InspectionSelectionTarget, { kind: 'scene' | 'subtree' }>,
+  sourcePath: string,
+): boolean =>
+  target.kind === 'scene' || sourcePath === target.sourcePath || sourcePath.startsWith(`${target.sourcePath}.`);
+
 /** 对全部 final observations 求值 selection 并分配连续 appearance */
 export const resolveInspectionSelection = ({
   ir,
@@ -163,6 +170,18 @@ export const resolveInspectionSelection = ({
   const admitted = admitInspectionSelection(ir, registry, selection);
   for (const { index, rule } of admitted) {
     if (rule.kind !== 'request' || rule.target.kind !== 'self' || rule.value === false) continue;
+    const sourcePath =
+      rule.target.locator.kind === 'authored'
+        ? rule.target.locator.sourcePath
+        : rule.target.locator.occurrence.sourcePath;
+    if (
+      admitted.some(
+        ({ rule: candidate }) =>
+          candidate.kind === 'barrier' && barrierContainsSourcePath(candidate.target, sourcePath),
+      )
+    ) {
+      continue;
+    }
     const definition = registry.require(rule.inspector);
     const matches = observations.filter(observation => targetMatches(rule.target, observation));
     try {
@@ -269,13 +288,7 @@ export const selectionMayRequestSite = (
   owner: CompileObservationOwner,
   sourcePath: string,
 ): boolean =>
-  !admitted.some(
-    ({ rule }) =>
-      rule.kind === 'barrier' &&
-      (rule.target.kind === 'scene' ||
-        sourcePath === rule.target.sourcePath ||
-        sourcePath.startsWith(`${rule.target.sourcePath}.`)),
-  ) &&
+  !admitted.some(({ rule }) => rule.kind === 'barrier' && barrierContainsSourcePath(rule.target, sourcePath)) &&
   admitted.some(({ rule }) => {
     if (rule.kind !== 'request' || rule.value === false) return false;
     const definition = registry.get(rule.inspector);
