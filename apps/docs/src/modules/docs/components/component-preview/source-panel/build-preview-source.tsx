@@ -95,7 +95,6 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
       resolvedPreviewIr = {
         ir,
         contributions: [],
-        inspectionRoots: [],
         width: undefined,
         height: undefined,
       };
@@ -106,7 +105,6 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
     resolvedPreviewIr = {
       ir: exportedPreviewIR,
       contributions: [],
-      inspectionRoots: [],
       width: undefined,
       height: undefined,
     };

@@ -102,7 +102,7 @@ import { Path, Step } from '@retikz/react';
 
 #### 控制点检查
 
-`inspect` 只为当前 Path occurrence 开启运行时辅助层，不会写进 Core IR。内置 `stroke` Inspector 从最终 settled commands 读取二次 / 三次贝塞尔控制点，输出普通 Path 控制柄与 Node 标记；`labels` 可额外显示控制点编号。它不改变主路径边界、资源、命中测试或动画。
+安装 `@retikz/inspect` 后，用 `InspectLayout` 和 `InspectPath` 为当前 Path occurrence 声明运行时选择。内置 stroke Path Inspector 从最终 settled commands 读取二次 / 三次贝塞尔控制点，输出普通 Path 控制柄与 Node 标记；`labels` 可额外显示控制点编号。选择不进入 Core IR，也不改变主路径边界、资源、命中测试或动画。注册表与宿主接线见 [`@retikz/inspect`](/kernel/packages/inspect)。
 
 <ComponentPreview files="path-inspector" size="sm" />
 
@@ -229,7 +229,6 @@ import { Path, Step } from '@retikz/react';
 | `meta`           | `IRPathBase['meta']`                                | —              | provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 plot 等高层 lowering 注入（标记来自哪个 datum / series / layer），供交互层命中后反查来源。须为 JSON 可序列化对象 |
 | `kind`           | <ApiValues name="PathKind" /> \| `string`           | `'stroke'`     | Path kind provider；内置 `'stroke'` 与 [`'ribbon'`](/kernel/components/draw/ribbon)，外部 kind 通过 Path kind contract 注册                                                                                       |
 | `kindOptions`    | `IRPathBase['kindOptions']`                         | —              | 传给自定义 Path kind provider 的 JSON 参数；内置 `stroke` / `ribbon` 不使用                                                                                                                                       |
-| `inspect`        | `PathInspectionAuthoring`                           | `false`        | 只开启当前 occurrence；`true` 默认显示控制点、不显示标签。额外字段原样交给当前 Path kind 的 Inspector schema；Scope `enabled:false` 是不可越过的硬屏障                                                            |
 | `color`          | `string`                                            | —              | 主色；`stroke` / 箭头 / step label 未单设则随它（跟主色不跟 `stroke`）                                                                                                                                            |
 | `stroke`         | `string` \| `IRPaintSpec`                           | `currentColor` | 描边 paint：CSS 颜色或 IRPaintSpec（渐变 / pattern / image）；箭头继承时需给箭头显式纯色                                                                                                                          |
 | `strokeWidth`    | `number`                                            | `1`            | 描边宽度                                                                                                                                                                                                          |

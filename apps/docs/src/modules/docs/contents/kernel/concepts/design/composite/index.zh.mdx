@@ -43,7 +43,6 @@ Core 只按顶层 `namespace + type` 路由 composite，不读取领域 schema �
 | `expand`         | 读取有效 Theme 后生成 Tier 1 / Tier 2  | 与 `compile` 互斥，最终收敛到 Tier 1  |
 | `compile`        | 在完整编译环境中测量、约束并放置子内容 | 与 `expand` 互斥                      |
 | `artifactSchema` | 校验 `compile` 同次返回的领域 artifact | 有 artifact 类型时必填                |
-| `inspector`      | 把已校验 artifact 转为普通辅助子元素   | 仅用于带 `artifactSchema` 的编译分支  |
 
 编译器按 `${namespace}.${type}` 查注册表，校验节点后调用对应分支。嵌套 composite 会继续处理，直到最终输出只含 Tier 1 与已提交 replay。未注册节点产生 warning 并跳过，循环或超过深度限制则报错。完整字段、诊断与独立 lowering 入口见[编译](/kernel/reference/runtime/compile)。
 
@@ -144,7 +143,7 @@ Replay wrapper 先用 `transforms` 把 child 放进 parent allocation coordinate
 
 布局感知定义可以声明 `artifactSchema` 并从 `compile` 返回 JSON-safe `artifact`。Core 在 `CompileResult.artifacts` 中用 `namespace`、`type` 和 occurrence locator 封装它；locator 由原始 `sourcePath` 与结构化 expansion / output / replay 路径组成，不依赖全局 Map、回调捕获或第二次遍历。宿主因而能从同一次 compile 同时得到 Scene 与领域产物。
 
-同一个 artifact 也可以作为开发辅助内容的稳定 subject。下面只展示在已有 `CardSchema` / `compileCard` 上增加 Inspector 的接线；`compileCard` 必须返回符合 `CardArtifactSchema` 的 `artifact`。
+同一个 artifact 也可以成为外部观察者的稳定 owner output。下面在 `@retikz/inspect` 中独立定义 Card Inspector；`compileCard` 仍只负责返回符合 `CardArtifactSchema` 的 artifact。
 
 ```ts
 const CardArtifactSchema = z.strictObject({
@@ -159,7 +158,10 @@ const CardArtifactSchema = z.strictObject({
 type CardArtifact = z.infer<typeof CardArtifactSchema>;
 
 const CardInspector = defineInspector({
-  kind: 'composite',
+  namespace: 'demo',
+  name: 'card-bounds',
+  owner: { kind: 'composite', namespace: 'demo', type: 'card' },
+  subjectSchema: CardArtifactSchema,
   optionsInputSchema: z.strictObject({}),
   optionsSchema: z.strictObject({}),
   inspect: (artifact: CardArtifact, context) => ({
@@ -182,11 +184,12 @@ export const CardDefinition = defineComposite({
   schema: CardSchema,
   compile: compileCard,
   artifactSchema: CardArtifactSchema,
-  inspector: CardInspector,
 });
+
+const inspectorRegistry = createInspectorRegistry([CardInspector]);
 ```
 
-`inspect()` 返回普通 `IRChild` 或稠密只读数组，不声明 `outputSchema`。Core 在独立环境中编译每项输出，并强制关闭辅助编译里的 Inspector，避免返回的 Path 或 Composite 再次触发递归。subject 来自同次已校验 artifact，不从最终 Scene 反推。
+`inspect()` 返回普通 `IRChild` 或稠密只读数组，不声明 `outputSchema`。Core 只发布最终 occurrence 的已校验 artifact；`@retikz/inspect` 再校验 `subjectSchema`，并在独立环境中编译辅助输出，默认不递归触发观察者。选择与注册不进入 Composite Definition，详见 [`@retikz/inspect`](/kernel/packages/inspect)。
 
 `lowerIRToKernel()` 只支持可独立执行的 `expand` 分支。它遇到布局感知 composite 会明确报错，因为正确结果依赖完整 compile 环境。
 
@@ -216,7 +219,7 @@ PGFPlots 位于 TikZ 基础图元之上；同样地，`@retikz/plot` 通过 comp
       label: '校验 definition key 与 schema literal',
       path: 'packages/kernel/core/src/contract/composite/define.ts',
       startLine: 30,
-      endLine: 90,
+      endLine: 89,
     },
     {
       label: 'proposal、probe、guide 与 callback 公共合同',
@@ -234,7 +237,7 @@ PGFPlots 位于 TikZ 基础图元之上；同样地，`@retikz/plot` 通过 comp
       label: 'compile-local replay 与 Scope builder',
       path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
       startLine: 214,
-      endLine: 277,
+      endLine: 240,
     },
     {
       label: 'replay root 的 placement 与各类 sink 提交',

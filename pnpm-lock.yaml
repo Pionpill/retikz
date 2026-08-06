@@ -353,6 +353,9 @@ importers:
       '@retikz/data':
         specifier: workspace:*
         version: link:../../packages/viz/data
+      '@retikz/inspect':
+        specifier: workspace:*
+        version: link:../../packages/kernel/inspect
       '@retikz/math':
         specifier: workspace:*
         version: link:../../packages/kernel/math

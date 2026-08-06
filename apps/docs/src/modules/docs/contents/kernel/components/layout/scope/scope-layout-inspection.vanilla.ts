@@ -1,6 +1,13 @@
 import type { FlexLayoutInput } from '@retikz/standard';
 
-import { flexLayout, StandardLayoutVanillaAdapters } from '@retikz/standard-vanilla';
+import { createInspectionVanillaAuthoring } from '@retikz/inspect/vanilla';
+import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/standard/inspect';
+import { StandardLayoutVanillaAdapters } from '@retikz/standard-vanilla';
+import {
+  createStandardInspectionBarrier,
+  createStandardInspectionVanillaDriver,
+  inspectFlexLayout,
+} from '@retikz/standard-vanilla/inspect';
 import { figure, renderToSvgString, scope } from '@retikz/vanilla';
 
 const flexInput = (first: string, second: string): FlexLayoutInput => ({
@@ -23,17 +30,24 @@ const flexInput = (first: string, second: string): FlexLayoutInput => ({
 });
 
 const fig = figure({
+  authoring: createInspectionVanillaAuthoring({ inspector: FLEX_LAYOUT_INSPECTOR_KEY, value: true }),
   viewBox: { x: 0, y: 0, width: 520, height: 190 },
   children: [
-    scope({ transforms: [{ kind: 'translate', x: 20, y: 34 }] }, [flexLayout('inherited', flexInput('A1', 'A2'))]),
-    scope({ inspect: { enabled: false }, transforms: [{ kind: 'translate', x: 280, y: 34 }] }, [
-      flexLayout('blocked', flexInput('B1', 'B2')),
+    scope({ transforms: [{ kind: 'translate', x: 20, y: 34 }] }, [
+      inspectFlexLayout('inherited', flexInput('A1', 'A2')),
     ]),
+    scope(
+      {
+        authoring: createStandardInspectionBarrier(),
+        transforms: [{ kind: 'translate', x: 280, y: 34 }],
+      },
+      [inspectFlexLayout('blocked', flexInput('B1', 'B2'))],
+    ),
   ],
 });
 
 export const svg = renderToSvgString(fig, {
   adapters: StandardLayoutVanillaAdapters,
-  inspect: { layout: true },
+  compileDriver: createStandardInspectionVanillaDriver(),
   output: { width: 520, height: 190 },
 });

@@ -1,4 +1,4 @@
-import type { BaseLayoutInspectOptions } from '@retikz/core';
+import type { BaseLayoutInspectOptions } from '@retikz/standard/inspect';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
 

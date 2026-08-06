@@ -33,6 +33,7 @@ import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 | ---------------- | ----------------------------------------------------------------------------------------- |
 | React            | `FlexLayout`, `LayoutItem` (`@retikz/standard-react`)                                     |
 | Vanilla          | `flexLayout`, `FlexLayoutVanillaAdapter` (`@retikz/standard-vanilla`)                     |
+| Optional inspect | `InspectFlexLayout` (`@retikz/standard-react/inspect`), `inspectFlexLayout` (Vanilla)     |
 | IR / persistence | `FlexLayoutSchema`, `createFlexLayout`, `IRFlexLayout`, `FlexLayoutDefinition` (Standard) |
 
 ## Examples
@@ -97,13 +98,13 @@ Each line runs bounded grow/shrink independently. An item freezes when it reache
 
 React `FlexLayoutProps` mirrors the container fields below but changes `children` to direct `LayoutItem` elements. `FlexLayoutItemProps` renames JSON `key` to `itemKey` and requires exactly one of `children` or `ir`.
 
-### React inspection
+### Optional React inspection component
 
-| Prop       | Type                                    | Default   | Description                                                                                                              |
-| ---------- | --------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `inspect?` | `boolean` \| `FlexLayoutInspectOptions` | Inherited | Omission inherits Layout or the nearest Scope; `false` disables only this occurrence and leaves nested layouts unchanged |
+| Prop       | Type                                            | Default | Description                                                                             |
+| ---------- | ----------------------------------------------- | ------- | --------------------------------------------------------------------------------------- |
+| `inspect?` | `false` \| `true` \| `FlexLayoutInspectOptions` | `true`  | `InspectFlexLayout` requests this occurrence; `false` only cancels the current instance |
 
-The object form can control `lines`, fixed `gaps`, and `distributedSpace` in addition to shared bounds, box spacing, overflow, and alignment guides. Flex lines and boundaries emit ordinary Core Paths, fixed gaps use ordinary pattern paints, and distributed space keeps only a dashed perimeter. See [Runtime Reference](/standard/layout/reference/runtime#layout-inspector) for every field and root or Scope policies.
+Base `FlexLayout` has no `inspect` prop. After installing the optional package, import `InspectFlexLayout` from `@retikz/standard-react/inspect`. Its object form controls `lines`, fixed `gaps`, and `distributedSpace` in addition to shared bounds, box spacing, overflow, and alignment guides. See [Runtime Reference](/standard/layout/reference/runtime#layout-inspector) for every field and host or Scope rules.
 
 ### `FlexLayoutInput`
 
