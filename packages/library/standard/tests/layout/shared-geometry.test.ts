@@ -8,6 +8,7 @@ import {
   layoutClipOf,
   normalizeLayoutSpacing,
   outsetLayoutRect,
+  positionedLayoutSlotOf,
   resolveLayoutAxisSize,
 } from '../../src/composites/layout/internal';
 
@@ -162,6 +163,18 @@ describe('shared layout Box geometry', () => {
     expect(alignAllocationInSlot(slot, child, 'x', LayoutAlignment.Center)).toBe(115);
     expect(alignAllocationInSlot(slot, child, 'x', LayoutAlignment.End)).toBe(125);
     expect(alignAllocationInSlot(slot, child, 'y', LayoutAlignment.End)).toBe(37);
+  });
+
+  it('resolves a positioned slot from a content origin, target, anchor, and offset', () => {
+    expect(
+      positionedLayoutSlotOf({
+        content: { x: 10, y: 20, width: 100, height: 50 },
+        at: { x: 50, y: 25 },
+        anchor: { x: 0.5, y: 1 },
+        offset: { x: 2, y: -1 },
+        size: { width: 20, height: 10 },
+      }),
+    ).toEqual({ x: 52, y: 34, width: 20, height: 10 });
   });
 
   it('uses a rect clip for positive area and a closed degenerate path for zero area', () => {

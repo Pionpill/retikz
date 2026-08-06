@@ -82,7 +82,7 @@ Batch 0 只锁定当前 full compile / full renderer commit 的工作量与功�
 
 CI 硬门槛使用 visited/reused/changed、发射基数、输出等价、retained handle / resource 数量等确定性指标。内存硬门槛不直接使用 GC 后 heap 字节；dispose 后 live handle、listener、index 与 resource reference 必须回到 fixture 起始计数。Heap 只在 Node `--expose-gc` 或 browser runner 提供显式 GC 时作为非阻断报告。
 
-机器可读 `apps/bench/environment.json` 冻结：Node `24.x`、pnpm lockfile 对应的 Chromium build、`1440 × 900` viewport、DPR 1、关闭动画、固定字体与 locale/timezone。每个 wall-clock 场景 warm-up 5 次、测量 30 次，报告 median / p95 / max；只在 environment fingerprint 完全一致时比较。`bench:check` 只读验证确定性预算，`bench:report` 生成 ignored 时间报告，`bench:update-baseline` 只生成候选 diff且必须人工审查，不由普通验证或 CI 自动改预算。
+机器可读环境描述冻结 Node `24.x`、pnpm lockfile 对应的 Chromium build、`1440 × 900` viewport、DPR 1、关闭动画、固定字体与 locale/timezone。每个 wall-clock 场景 warm-up 5 次、测量 30 次，报告 median / p95 / max；只在 environment fingerprint 完全一致时比较。确定性预算只读验证，时间报告保持 ignored，baseline 更新只生成需人工审查的候选 diff，不由普通验证或 CI 自动改预算。
 
 理由：
 
@@ -104,7 +104,7 @@ CI 硬门槛使用 visited/reused/changed、发射基数、输出等价、retain
 - Core compile、SVG build 与 Canvas draw 接入相同工作量口径；未注入 trace 时不改变产品输出。
 - 新增 private `@retikz/bench`，固定 Node/browser fixture、环境描述、结构化报告、deterministic baseline 与预算比较。
 - 自动化验证覆盖 record 校验、owner 越权、sink throw/reentry、Core/Render 发射基数、fixture 重建、预算超限和 browser runner。
-- 2026-07-27 收尾验证通过：Runtime 19 files / 135 tests、Bench 6 files / 15 tests 与 9 项 deterministic budgets、Core trace 3/3、Render trace 2/2。
+- 验证覆盖 Runtime trace、Bench fixture 与预算、Core/Render trace 基数以及错误隔离；功能 oracle 通过后才允许比较性能结果。
 - alpha.2 后续 ADR 继续复用该 contract；增量、fallback、Scene Patch 与连续 revision 的预算由各自实现补齐，不回写本 ADR 的 batch-0 baseline。
 
 ## 公开影响

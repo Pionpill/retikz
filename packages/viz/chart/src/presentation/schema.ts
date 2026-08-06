@@ -84,11 +84,7 @@ export const ChartPresentationLayoutSchema = z
       .optional()
       .describe('Optional Standard Flex main-axis direction'),
     wrap: FlexLayoutSchema.shape.wrap.unwrap().optional().describe('Optional Standard Flex wrapping policy'),
-    columnGap: FlexLayoutSchema.shape.columnGap
-      .unwrap()
-      .optional()
-      .describe('Optional Standard Flex physical horizontal gap'),
-    rowGap: FlexLayoutSchema.shape.rowGap.unwrap().optional().describe('Optional Standard Flex physical vertical gap'),
+    gap: FlexLayoutSchema.shape.gap.unwrap().optional().describe('Optional Standard Flex physical gap'),
     justifyContent: FlexLayoutSchema.shape.justifyContent
       .unwrap()
       .optional()
@@ -228,8 +224,7 @@ const validateStandardFlexContract = (presentation: ChartPresentationInput, cont
     type: 'flexLayout',
     direction: FlexLayoutDirection.Column,
     wrap: FlexLayoutWrap.NoWrap,
-    columnGap: 0,
-    rowGap: 0,
+    gap: { column: 0, row: 0 },
     justifyContent: LayoutDistribution.Start,
     alignContent: LayoutDistribution.Start,
     ...presentation.layout,

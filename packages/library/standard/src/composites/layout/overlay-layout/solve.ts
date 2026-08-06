@@ -6,7 +6,7 @@ import type { LayoutInsets, LayoutRect } from '../internal';
 import type { LayoutAlignmentValue } from '../shared';
 import type { IROverlayPlacement, LayoutSizeParticipationValue } from './types';
 
-import { alignAllocationInSlot, compensatedLayoutSum } from '../internal';
+import { alignAllocationInSlot, compensatedLayoutSum, positionedLayoutSlotOf } from '../internal';
 import { LayoutSizeParticipation, OverlayPlacementKind } from './constants';
 
 /** Overlay 单个 profile 的结构输入 */
@@ -134,18 +134,13 @@ export const placeOverlayItem = (input: PlaceOverlayItemInput): PlacedOverlayGeo
           height: Math.max(0, input.content.height - input.margin.top - input.margin.bottom),
         })
       : Object.freeze({
-          x:
-            input.content.x +
-            input.placement.at.x +
-            input.offset.x -
-            input.placement.anchor.x * input.result.slotSize.width,
-          y:
-            input.content.y +
-            input.placement.at.y +
-            input.offset.y -
-            input.placement.anchor.y * input.result.slotSize.height,
-          width: input.result.slotSize.width,
-          height: input.result.slotSize.height,
+          ...positionedLayoutSlotOf({
+            content: input.content,
+            at: input.placement.at,
+            anchor: input.placement.anchor,
+            offset: input.offset,
+            size: input.result.slotSize,
+          }),
         });
   const base = Object.freeze({
     x: alignAllocationInSlot(slot, input.result.allocationBounds, 'x', input.justify),

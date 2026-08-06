@@ -771,6 +771,9 @@ importers:
       '@retikz/core':
         specifier: workspace:^
         version: link:../../kernel/core
+      '@retikz/math':
+        specifier: workspace:^
+        version: link:../../kernel/math
       zod:
         specifier: 'catalog:'
         version: 4.4.3

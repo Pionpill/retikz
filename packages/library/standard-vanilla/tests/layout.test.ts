@@ -55,6 +55,7 @@ describe('Standard Vanilla layout family', () => {
       version: 1 as const,
       children: [
         flexLayout('flex', {
+          gap: { column: 4, row: 8 },
           children: [{ kind: LayoutItemKind.Flex, key: 'nested', child: nestedGrid }],
         }),
         gridLayout('grid', { columns: [{ kind: 'fixed', value: 10 }] }),
@@ -69,6 +70,7 @@ describe('Standard Vanilla layout family', () => {
       'standard.overlayLayout',
     ]);
     expect(normalized.ir.children.map(child => child.type)).toEqual(['flexLayout', 'gridLayout', 'overlayLayout']);
+    expect(normalized.ir.children[0]).toMatchObject({ gap: { column: 4, row: 8 } });
     expect(normalized.composites).toEqual([FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition]);
   });
 

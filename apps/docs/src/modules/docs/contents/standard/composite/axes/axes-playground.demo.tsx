@@ -8,7 +8,7 @@ import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { axesPlaygroundControls, previewControlContract } from './axes-playground.controls';
 
-type AxisInput = Exclude<AxesInput['x'], false | undefined>;
+type AxisInput = AxesInput['x'];
 type AxisTicksInput = Exclude<AxisInput['ticks'], false | undefined>;
 type DashMode = 'solid' | 'dashed' | 'dotted';
 type TickMode = 'none' | 'spacing' | 'spacingLabels' | 'values' | 'valuesLabels';
@@ -38,6 +38,7 @@ type CreateTicksOptions = {
 };
 
 type CreateAxisOptions = {
+  extent: AxisInput['extent'];
   lineMode: string;
   lineStroke: string;
   lineStrokeWidth: number;
@@ -200,20 +201,18 @@ const createAxis = (options: CreateAxisOptions): AxisInput => {
           },
         };
 
-  return { line, ...(ticks === undefined ? {} : { ticks }), label };
+  return { extent: options.extent, line, ...(ticks === undefined ? {} : { ticks }), label };
 };
 
 export const previewControls = axesPlaygroundControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const extent: AxesInput['extent'] =
-    values.extentMode === 'symmetric'
-      ? { x: values.extentX, y: values.extentY }
-      : {
-          x: { negative: values.xNegative, positive: values.xPositive },
-          y: { negative: values.yNegative, positive: values.yPositive },
-        };
+  const xExtent: AxisInput['extent'] =
+    values.extentMode === 'symmetric' ? values.extentX : { negative: values.xNegative, positive: values.xPositive };
+  const yExtent: AxisInput['extent'] =
+    values.extentMode === 'symmetric' ? values.extentY : { negative: values.yNegative, positive: values.yPositive };
   const x = createAxis({
+    extent: xExtent,
     lineMode: values.xLineMode,
     lineStroke: values.xLineStroke,
     lineStrokeWidth: values.xLineStrokeWidth,
@@ -252,6 +251,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     labelOpacity: values.xLabelOpacity,
   });
   const y = createAxis({
+    extent: yExtent,
     lineMode: values.yLineMode,
     lineStroke: values.yLineStroke,
     lineStrokeWidth: values.yLineStrokeWidth,
@@ -290,47 +290,52 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     labelOpacity: values.yLabelOpacity,
   });
   const gridDashPattern = resolveDashPattern(values.gridDash);
-  const axesInput: AxesInput = {
-    origin: [values.originX, values.originY],
+  const gridStyle = {
+    stroke: values.gridStroke,
+    strokeWidth: values.gridStrokeWidth,
+    dashOffset: values.gridDashOffset,
+    lineCap: resolveLineCap(values.gridLineCap),
+    opacity: values.gridOpacity,
+    ...(gridDashPattern === undefined ? {} : { dashPattern: gridDashPattern }),
+  };
+  const xGrid = values.gridEnabled
+    ? {
+        spacing: values.gridSpacingMode === 'uniform' ? values.gridSpacing : values.gridSpacingX,
+        offset: values.gridOffsetX,
+        style: values.gridSeparateDirections ? { ...gridStyle, stroke: values.gridVerticalStroke } : gridStyle,
+      }
+    : false;
+  const yGrid = values.gridEnabled
+    ? {
+        spacing: values.gridSpacingMode === 'uniform' ? values.gridSpacing : values.gridSpacingY,
+        offset: values.gridOffsetY,
+        style: values.gridSeparateDirections ? { ...gridStyle, stroke: values.gridHorizontalStroke } : gridStyle,
+      }
+    : false;
+  const hiddenAxis = (extent: AxisInput['extent']): AxisInput => ({
     extent,
-    ...(values.gridEnabled
-      ? {
-          grid: {
-            spacing:
-              values.gridSpacingMode === 'uniform'
-                ? values.gridSpacing
-                : { x: values.gridSpacingX, y: values.gridSpacingY },
-            offset: [values.gridOffsetX, values.gridOffsetY],
+    line: false,
+    ticks: false,
+    grid: false,
+    label: false,
+  });
+  const axesInput: AxesInput = {
+    origin: {
+      position: [values.originX, values.originY],
+      label: values.originEnabled
+        ? {
+            text: values.originText,
+            offset: values.originOffset,
             style: {
-              stroke: values.gridStroke,
-              strokeWidth: values.gridStrokeWidth,
-              dashOffset: values.gridDashOffset,
-              lineCap: resolveLineCap(values.gridLineCap),
-              opacity: values.gridOpacity,
-              ...(gridDashPattern === undefined ? {} : { dashPattern: gridDashPattern }),
+              textColor: values.originColor,
+              font: { size: values.originSize },
+              opacity: values.originOpacity,
             },
-            ...(values.gridSeparateDirections
-              ? {
-                  vertical: { stroke: values.gridVerticalStroke },
-                  horizontal: { stroke: values.gridHorizontalStroke },
-                }
-              : {}),
-          },
-        }
-      : {}),
-    x: values.axisMode === 'y' ? false : x,
-    y: values.axisMode === 'x' ? false : y,
-    originLabel: values.originLabelEnabled
-      ? {
-          text: values.originLabelText,
-          offset: values.originLabelOffset,
-          style: {
-            textColor: values.originLabelColor,
-            font: { size: values.originLabelSize },
-            opacity: values.originLabelOpacity,
-          },
-        }
-      : false,
+          }
+        : false,
+    },
+    x: values.axisMode === 'y' ? hiddenAxis(xExtent) : { ...x, grid: xGrid },
+    y: values.axisMode === 'x' ? hiddenAxis(yExtent) : { ...y, grid: yGrid },
   };
 
   return (

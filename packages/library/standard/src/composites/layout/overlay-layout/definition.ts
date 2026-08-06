@@ -2,14 +2,17 @@ import type { CompositeArtifactOf, LayoutCompositeDefinition } from '@retikz/cor
 
 import { defineComposite } from '@retikz/core';
 
-import type { ResolvedOverlayLayoutInspectLocalOptions } from '../shared';
-import type { IROverlayLayout, OverlayLayoutArtifact } from './types';
+import type { IROverlayLayout, OverlayLayoutArtifact, ResolvedOverlayLayoutInspectLocalOptions } from './types';
 
 import { STANDARD_NAMESPACE } from '../../shared';
-import { OverlayLayoutInspectLocalOptionsInputSchema, OverlayLayoutInspectLocalOptionsSchema } from '../shared';
-import { compileOverlayLayout } from './pipeline';
 import { inspectOverlayLayoutArtifact } from './inspection';
-import { OverlayLayoutArtifactSchema, OverlayLayoutSchema } from './schema';
+import { compileOverlayLayout } from './pipeline';
+import {
+  OverlayLayoutArtifactSchema,
+  OverlayLayoutInspectLocalOptionsInputSchema,
+  OverlayLayoutInspectLocalOptionsSchema,
+  OverlayLayoutSchema,
+} from './schema';
 
 /** Standard OverlayLayout 的官方 Core layout-aware composite definition */
 export const OverlayLayoutDefinition: LayoutCompositeDefinition<

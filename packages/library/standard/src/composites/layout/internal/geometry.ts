@@ -1,4 +1,5 @@
 import type { IRBoxSpacing, IRClipSpec, LayoutAxisProposal } from '@retikz/core';
+import type { BoundsRect } from '@retikz/math';
 
 import { resolveBoxSpacing } from '@retikz/core';
 
@@ -7,10 +8,19 @@ import type { IRLayoutAxisSize, LayoutAlignmentValue } from '../shared';
 import { LayoutAlignment, LayoutAxisSizeKind } from '../shared';
 
 /** Layout solver 使用的有限非负矩形 */
-export type LayoutRect = Readonly<{ x: number; y: number; width: number; height: number }>;
+export type LayoutRect = Readonly<BoundsRect>;
 
 /** Layout solver 使用的四边 spacing */
 export type LayoutInsets = Readonly<{ top: number; right: number; bottom: number; left: number }>;
+
+/** 以 content-box、target、anchor 与 offset 构造 positioned child slot */
+export type PositionedLayoutSlotInput = Readonly<{
+  content: LayoutRect;
+  at: Readonly<{ x: number; y: number }>;
+  anchor: Readonly<{ x: number; y: number }>;
+  offset: Readonly<{ x: number; y: number }>;
+  size: Readonly<{ width: number; height: number }>;
+}>;
 
 /** 单轴容器尺寸求值输入 */
 export type ResolveLayoutAxisSizeInput = Readonly<{
@@ -42,6 +52,18 @@ const finiteLayoutRect = (rect: LayoutRect, label: string): LayoutRect => {
   finiteNonNegative(rect.height, `${label} height`);
   return rect;
 };
+
+/** 复用 Overlay positioned placement 的 container-local slot 公式 */
+export const positionedLayoutSlotOf = (input: PositionedLayoutSlotInput): LayoutRect =>
+  finiteLayoutRect(
+    {
+      x: input.content.x + input.at.x + input.offset.x - input.anchor.x * input.size.width,
+      y: input.content.y + input.at.y + input.offset.y - input.anchor.y * input.size.height,
+      width: input.size.width,
+      height: input.size.height,
+    },
+    'Positioned layout slot',
+  );
 
 /** 按可选作者边界钳制尺寸 */
 const clampAuthoredSize = (value: number, policy: IRLayoutAxisSize): number => {

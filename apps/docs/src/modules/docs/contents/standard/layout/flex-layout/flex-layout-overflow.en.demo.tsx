@@ -6,7 +6,7 @@ import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 /** Compares visible and clipped output when fixed geometry refuses a smaller slot */
 const Demo: FC = () => (
   <Layout width={460} height={170}>
-    <FlexLayout direction="column" rowGap={18}>
+    <FlexLayout direction="column" gap={18}>
       <LayoutItem kind="flex" itemKey="visible-row">
         <FlexLayout
           size={{ x: { kind: 'fixed', value: 170 }, y: { kind: 'fixed', value: 52 } }}

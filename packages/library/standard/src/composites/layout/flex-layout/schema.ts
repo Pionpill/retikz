@@ -1,4 +1,4 @@
-import { CompositeBaseSchema, LayoutAlignmentGuideDimension } from '@retikz/core';
+import { BaseLayoutInspectOptionsInputSchema, CompositeBaseSchema, LayoutAlignmentGuideDimension } from '@retikz/core';
 import { z } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
@@ -16,6 +16,20 @@ import {
 import { FlexLayoutDirection, FlexLayoutWrap } from './constants';
 
 const FLEX_LAYOUT_CONTENT_BASIS = 'content' as const;
+
+const FlexLayoutGapSchema = z
+  .union([
+    z.number().nonnegative().describe('Uniform physical gap applied to both columns and rows.'),
+    z
+      .strictObject({
+        column: z.number().nonnegative().describe('Physical horizontal gap between items or lines.'),
+        row: z.number().nonnegative().describe('Physical vertical gap between items or lines.'),
+      })
+      .describe('Independent physical column and row gaps.'),
+  ])
+  .transform(gap => (typeof gap === 'number' ? { column: gap, row: gap } : gap))
+  .default({ column: 0, row: 0 })
+  .describe('Physical gaps between items and lines; a number applies uniformly to both axes.');
 
 export const FlexMainDistributionSchema = z
   .enum([
@@ -60,8 +74,7 @@ const FlexLayoutBaseSchema = CompositeBaseSchema.extend({
   ...LayoutContainerBoxSchema.shape,
   direction: z.enum(FlexLayoutDirection).default(FlexLayoutDirection.Row).describe('Physical main-axis direction.'),
   wrap: z.enum(FlexLayoutWrap).default(FlexLayoutWrap.NoWrap).describe('Line wrapping and cross traversal policy.'),
-  columnGap: z.number().nonnegative().default(0).describe('Physical horizontal gap between items or lines.'),
-  rowGap: z.number().nonnegative().default(0).describe('Physical vertical gap between items or lines.'),
+  gap: FlexLayoutGapSchema,
   justifyContent: FlexMainDistributionSchema.default(LayoutDistribution.Start).describe(
     'Distribution of remaining main-axis space within each line.',
   ),
@@ -193,3 +206,31 @@ const refineFlexLayoutArtifact = (artifact: z.infer<typeof FlexLayoutArtifactBas
 export const FlexLayoutArtifactSchema = FlexLayoutArtifactBaseSchema.superRefine(refineFlexLayoutArtifact).describe(
   'Canonical JSON-safe FlexLayout compile artifact payload.',
 );
+
+/** FlexLayout family-local inspector sparse schema */
+export const FlexLayoutInspectLocalOptionsInputSchema = z
+  .strictObject({
+    lines: z.boolean().optional().describe('Whether to draw FlexLayout line regions.'),
+    gaps: z.boolean().optional().describe('Whether to shade authored FlexLayout row and column gaps.'),
+    distributedSpace: z
+      .boolean()
+      .optional()
+      .describe(
+        'Whether to draw only the dashed perimeter of positive free space introduced by FlexLayout content distribution, leaving its interior transparent.',
+      ),
+  })
+  .describe('Sparse FlexLayout-specific inspection options.');
+
+/** FlexLayout inspector 完整 authoring schema */
+export const FlexLayoutInspectOptionsInputSchema = BaseLayoutInspectOptionsInputSchema.safeExtend(
+  FlexLayoutInspectLocalOptionsInputSchema.shape,
+).describe('Sparse shared and FlexLayout-specific inspection options.');
+
+/** FlexLayout family-local canonical schema */
+export const FlexLayoutInspectLocalOptionsSchema = FlexLayoutInspectLocalOptionsInputSchema.transform(value =>
+  Object.freeze({
+    lines: value.lines ?? true,
+    gaps: value.gaps ?? true,
+    distributedSpace: value.distributedSpace ?? true,
+  }),
+).describe('Canonical FlexLayout-specific inspection options.');

@@ -10,46 +10,57 @@ const Demo: FC = () => (
       Positive half-axes
     </Node>
     <Axes
-      origin={[38, 118]}
-      extent={{ x: { negative: 0, positive: 120 }, y: { negative: 0, positive: 70 } }}
-      x={{ ticks: { source: { kind: 'spacing', spacing: 30, extent: 'positive' } }, label: false }}
-      y={{ ticks: { source: { kind: 'spacing', spacing: 20, extent: 'positive' } }, label: false }}
+      origin={{ position: [38, 118] }}
+      x={{
+        extent: { negative: 0, positive: 120 },
+        ticks: { source: { kind: 'spacing', spacing: 30, extent: 'positive' } },
+        label: false,
+      }}
+      y={{
+        extent: { negative: 0, positive: 70 },
+        ticks: { source: { kind: 'spacing', spacing: 20, extent: 'positive' } },
+        label: false,
+      }}
     />
 
     <Node position={[285, 18]} stroke="none" fill="none" padding={0} font={{ size: 12 }}>
       Two-ended number line
     </Node>
     <Axes
-      origin={[285, 82]}
-      extent={{ x: 72, y: 20 }}
-      y={false}
+      origin={{ position: [285, 82], label: '0' }}
       x={{
+        extent: 72,
         line: { arrows: 'both' },
         ticks: { source: { kind: 'values', values: [-40, 40] }, side: 'positive' },
         label: 't',
       }}
-      originLabel="0"
+      y={{ extent: 20, line: false, ticks: false, grid: false, label: false }}
     />
 
     <Node position={[475, 18]} stroke="none" fill="none" padding={0} font={{ size: 12 }}>
       Asymmetric extents
     </Node>
     <Axes
-      origin={[465, 78]}
-      extent={{ x: { negative: 55, positive: 75 }, y: { negative: 30, positive: 55 } }}
-      grid={{ spacing: 20, style: { stroke: 'lightgray' } }}
-      x={{ label: false }}
-      y={{ label: false }}
+      origin={{ position: [465, 78] }}
+      x={{
+        extent: { negative: 55, positive: 75 },
+        grid: { spacing: 20, style: { stroke: 'lightgray' } },
+        label: false,
+      }}
+      y={{
+        extent: { negative: 30, positive: 55 },
+        grid: { spacing: 20, style: { stroke: 'lightgray' } },
+        label: false,
+      }}
     />
 
     <Node position={[665, 18]} stroke="none" fill="none" padding={0} font={{ size: 12 }}>
       Ticks without a line
     </Node>
     <Axes
-      origin={[665, 82]}
-      extent={{ x: 72, y: 20 }}
-      y={false}
+      origin={{ position: [665, 82] }}
       x={{
+        extent: 72,
         line: false,
         ticks: {
           source: { kind: 'values', values: [-60, -40, -20, 20, 40, 60] },
@@ -66,6 +77,7 @@ const Demo: FC = () => (
         },
         label: false,
       }}
+      y={{ extent: 20, line: false, ticks: false, grid: false, label: false }}
     />
   </Layout>
 );

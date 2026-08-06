@@ -9,7 +9,7 @@ const Demo: FC = () => (
     <FlexLayout
       size={{ x: { kind: 'fixed', value: 360 }, y: { kind: 'fixed', value: 96 } }}
       padding={12}
-      columnGap={8}
+      gap={{ column: 8, row: 4 }}
       alignItems="center"
     >
       <LayoutItem kind="flex" itemKey="symbol" basis={48} shrink={0}>

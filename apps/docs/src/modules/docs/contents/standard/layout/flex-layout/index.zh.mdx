@@ -14,7 +14,7 @@ import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 
 ```tsx
 <Layout width={360} height={120}>
-  <FlexLayout columnGap={8}>
+  <FlexLayout gap={8}>
     <LayoutItem kind="flex" itemKey="label" grow={1}>
       <Node position={[0, 0]} text="标签" />
     </LayoutItem>
@@ -27,6 +27,8 @@ import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 
 `itemKey` 是布局容器内由作者声明的标识，不读取 React 保留的 `key`。每个 `LayoutItem` 恰好接受一个可绘制子元素，或用 `ir` 显式传入一个 `IRChild`。
 
+`gap` 可以写成数字，也可以写成 `{ column, row }` 对象。数字同时设置两个物理轴；对象允许分别设置列间距与行间距，且不随 `direction` 改变字段含义。
+
 | 场景        | 公开入口                                                                                   |
 | ----------- | ------------------------------------------------------------------------------------------ |
 | React       | `FlexLayout`、`LayoutItem`（`@retikz/standard-react`）                                     |
@@ -37,7 +39,7 @@ import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 
 ### 基础分配
 
-下面三个子项保持作者声明的绘制顺序。中间标签接收剩余主轴空间；两侧子项不参与收缩，`columnGap` 始终表示物理水平方向的间距。
+下面三个子项保持作者声明的绘制顺序。中间标签接收剩余主轴空间；两侧子项不参与收缩，`gap.column` 与 `gap.row` 始终分别表示物理水平方向和垂直方向的间距。
 
 <ComponentPreview files="flex-layout-basic" size="sm" />
 
@@ -78,7 +80,7 @@ FlexLayout 先用 `intrinsic.minimum` 与 `intrinsic.natural` 测量子图形，
       label: 'FlexLayout 空间提案与放置',
       path: 'packages/library/standard/src/composites/layout/flex-layout/pipeline.ts',
     },
-    { label: '弹性布局行纯求解', path: 'packages/library/standard/src/composites/layout/flex-layout/solve.ts' },
+    { label: '弹性布局共享求解引擎', path: 'packages/library/standard/src/composites/layout/internal/flex-engine.ts' },
     { label: 'FlexLayout React 适配器', path: 'packages/library/standard-react/src/flex-layout/FlexLayout.tsx' },
   ]}
 />
@@ -99,19 +101,20 @@ React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为�
 
 ### `FlexLayoutInput`
 
-| 属性              | 类型                                     | 默认值                | 描述                                                        |
-| ----------------- | ---------------------------------------- | --------------------- | ----------------------------------------------------------- |
-| `size?`           | `LayoutSizeInput`                        | `content` / `content` | 双轴分配策略；`fixed` 保留作者尺寸，`fill` 需要有限父级空间 |
-| `padding?`        | `number` \| `IRBoxSpacing`               | `0`                   | 从分配区域到内容区域的内边距                                |
-| `overflow?`       | <ApiValues name="LayoutOverflow" />      | `'visible'`           | `clip` 在容器分配区域上创建一个 Scope 裁切                  |
-| `direction?`      | <ApiValues name="FlexLayoutDirection" /> | `'row'`               | 主轴及正反向遍历                                            |
-| `wrap?`           | <ApiValues name="FlexLayoutWrap" />      | `'nowrap'`            | 单行、换行或反向交叉轴放置                                  |
-| `columnGap?`      | `number`                                 | `0`                   | 物理水平方向的子项或布局行间距                              |
-| `rowGap?`         | `number`                                 | `0`                   | 物理垂直方向的子项或布局行间距                              |
-| `justifyContent?` | `FlexMainDistributionValue`              | `'start'`             | 每条布局行的主轴剩余空间分布                                |
-| `alignItems?`     | <ApiValues name="LayoutAlignment" />     | `'stretch'`           | 默认交叉轴对齐；纵向主轴不接受基线对齐                      |
-| `alignContent?`   | <ApiValues name="LayoutDistribution" />  | `'start'`             | 多条布局行的交叉轴剩余空间分布                              |
-| `children?`       | `Array<FlexLayoutItemInput>`             | `[]`                  | 作者声明的子项；同一容器内 `key` 必须唯一                   |
+| 属性              | 类型                                               | 默认值                        | 描述                                                        |
+| ----------------- | -------------------------------------------------- | ----------------------------- | ----------------------------------------------------------- |
+| `size?`           | `LayoutSizeInput`                                  | `content` / `content`         | 双轴分配策略；`fixed` 保留作者尺寸，`fill` 需要有限父级空间 |
+| `padding?`        | `number` \| `IRBoxSpacing`                         | `0`                           | 从分配区域到内容区域的内边距                                |
+| `overflow?`       | <ApiValues name="LayoutOverflow" />                | `'visible'`                   | `clip` 在容器分配区域上创建一个 Scope 裁切                  |
+| `direction?`      | <ApiValues name="FlexLayoutDirection" />           | `'row'`                       | 主轴及正反向遍历                                            |
+| `wrap?`           | <ApiValues name="FlexLayoutWrap" />                | `'nowrap'`                    | 单行、换行或反向交叉轴放置                                  |
+| `gap?`            | `number`<br />或 `{ column: number; row: number }` | `0` → `{ column: 0, row: 0 }` | 数字同时设置两个物理轴；对象分别设置列、行间距              |
+| ↳ `column`        | `number`                                           | `0`                           | `gap` 为对象时的物理水平方向间距                            |
+| ↳ `row`           | `number`                                           | `0`                           | `gap` 为对象时的物理垂直方向间距                            |
+| `justifyContent?` | `FlexMainDistributionValue`                        | `'start'`                     | 每条布局行的主轴剩余空间分布                                |
+| `alignItems?`     | <ApiValues name="LayoutAlignment" />               | `'stretch'`                   | 默认交叉轴对齐；纵向主轴不接受基线对齐                      |
+| `alignContent?`   | <ApiValues name="LayoutDistribution" />            | `'start'`                     | 多条布局行的交叉轴剩余空间分布                              |
+| `children?`       | `Array<FlexLayoutItemInput>`                       | `[]`                          | 作者声明的子项；同一容器内 `key` 必须唯一                   |
 
 ### `FlexLayoutItemInput`
 

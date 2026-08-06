@@ -2,14 +2,17 @@ import type { CompositeArtifactOf, LayoutCompositeDefinition } from '@retikz/cor
 
 import { defineComposite } from '@retikz/core';
 
-import type { ResolvedFlexLayoutInspectLocalOptions } from '../shared';
-import type { FlexLayoutArtifact, IRFlexLayout } from './types';
+import type { FlexLayoutArtifact, IRFlexLayout, ResolvedFlexLayoutInspectLocalOptions } from './types';
 
 import { STANDARD_NAMESPACE } from '../../shared';
-import { FlexLayoutInspectLocalOptionsInputSchema, FlexLayoutInspectLocalOptionsSchema } from '../shared';
-import { compileFlexLayout } from './pipeline';
 import { inspectFlexLayoutArtifact } from './inspection';
-import { FlexLayoutArtifactSchema, FlexLayoutSchema } from './schema';
+import { compileFlexLayout } from './pipeline';
+import {
+  FlexLayoutArtifactSchema,
+  FlexLayoutInspectLocalOptionsInputSchema,
+  FlexLayoutInspectLocalOptionsSchema,
+  FlexLayoutSchema,
+} from './schema';
 
 /** Standard FlexLayout 的官方 Core layout-aware composite definition */
 export const FlexLayoutDefinition: LayoutCompositeDefinition<

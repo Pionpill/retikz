@@ -10,7 +10,7 @@ const Demo: FC = () => (
       size={{ x: { kind: 'fixed', value: 430 }, y: { kind: 'fixed', value: 190 } }}
       direction="column"
       padding={12}
-      rowGap={10}
+      gap={10}
     >
       <LayoutItem kind="flex" itemKey="header" shrink={0}>
         <Node position={[0, 0]} text="Layout containers compose recursively" fill="#e0f2fe" stroke="#0284c7" />

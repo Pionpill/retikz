@@ -17,7 +17,7 @@ import {
 
 const input: FrameVanillaInput = {
   padding: 12,
-  cornerRadius: 6,
+  border: { style: { stroke: '#0284c7', zIndex: 4 }, cornerRadius: 6 },
   headerDirection: 'vertical',
   title: frameTitle({ text: 'Contract', font: { family: 'serif' } }),
   description: frameDescription({ text: 'One registry contract.', maxTextWidth: 220 }),
@@ -51,7 +51,7 @@ describe('frame()', () => {
         version: 1,
         children: [
           grid('paper', { bounds: { start: [-2, -1], end: [2, 1] }, line: { spacing: 1 } }),
-          axes('plane', { extent: { x: 20, y: 20 } }),
+          axes('plane', { x: { extent: 20 }, y: { extent: 20 } }),
           frame('definition-contract', input),
         ],
       },

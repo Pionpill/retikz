@@ -1,4 +1,4 @@
-# plot v0.2-alpha.1：Spatial Mapping 重构
+# plot v0.2-alpha.1：Spatial Mapping 重构与主题所有权
 
 > milestone 执行路线。长期决策放同目录的 `NN-*.md` ADR；本文件可更新。
 > 关联：[`plot v0.2 roadmap`](../roadmap.md) · [`plot v0 roadmap`](../../roadmap.md) · [`plot-design §1 / §2 / §8`](../../../../../architecture/plot-design.md) · [`_template.md`](../../../../_template.md)
@@ -17,7 +17,11 @@
 
 Chart 在本 milestone 中只作为消费者。若 Chart 需求暴露通用映射缺口，可追加到本 milestone 的候选 ADR；Chart type、recipe、presentation 和默认值不进入 Plot。
 
+在进入 Spatial Mapping 设计前，Plot theme token ownership 已由 ADR-01 先行接受：Plot 消费 Core effective Theme 并拥有领域 token、preset、cascade 与 inspection，Chart 只组合或传递 Plot 公开契约。该先行决策与本 milestone 的映射契约共用同一条 Plot / Core lowering 主链。
+
 ## ADR 清单
+
+完整 milestone 的先行 ADR-01 是同目录已接受的 Plot theme token ownership 与 Chart consumption boundary；下表保留 Spatial Mapping 重构的历史草案编号，作为该能力的设计子序列，不替换先行 ADR-01。
 
 | ADR | 主题                                                                                                                                  | Level | 依赖                                      | 状态   |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------- | ----- | ----------------------------------------- | ------ |
@@ -25,7 +29,7 @@ Chart 在本 milestone 中只作为消费者。若 Chart 需求暴露通用映�
 | 02  | **Structured Mapping 内容契约**：命名内容端口、任意 JSON-safe 集合 / 关系、多输出空间化结果、identity / provenance 与确定性           | red   | ADR-01、data view / lineage               | 待起草 |
 | 03  | **通用局部坐标与自定义坐标扩展**：局部 frame、维度 / 轴粒度、切向 / 法向组合、coordinate / mark / guide / locator 的共同消费边界      | red   | ADR-01、plot v0.1 coordinate registry     | 待起草 |
 
-旧的 `01-chart-layering.md` 是已 Superseded 的 Chart 草案，保留为历史记录，不作为本 milestone 输入。
+ADR-01 已冻结 Plot 的主题所有权；旧版 Chart layering 方向已迁移到 chart v0.1 路线，不作为本 milestone 输入。
 
 ## 前置
 

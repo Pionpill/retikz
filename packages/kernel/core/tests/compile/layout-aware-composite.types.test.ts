@@ -16,6 +16,7 @@ import type {
   CompositeReplayWrapper,
   IRChild,
   IRScene,
+  IRScopeProps,
   JsonValue,
   LayoutAlignmentGuide,
   LayoutAxisProposal,
@@ -36,6 +37,7 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
+  ScopePropsSchema,
 } from '../../src';
 
 const scene: IRScene = { version: 1, type: 'scene', children: [] };
@@ -107,7 +109,13 @@ const wrapped = defineComposite({
       theme: { mode: 'dark' },
       clip: { kind: 'rect', x: 0, y: 0, width: 20, height: 10 },
       meta: { role: 'cell' },
+      fill: 'red',
+      placement: { target: [10, 12] as [number, number] },
+      nodeDefault: { fill: 'white' },
+      resetStyle: ['label'] as const,
     } satisfies CompositeCompileScopeProps;
+    const parsedScopeProps = ScopePropsSchema.parse(scopeProps);
+    expectTypeOf(parsedScopeProps).toEqualTypeOf<IRScopeProps>();
     const wrapper = context.scope(scopeProps, [placed]);
 
     expectTypeOf(wrapper).toEqualTypeOf<CompositeCompileChild>();
@@ -164,10 +172,9 @@ const wrapped = defineComposite({
     };
     void directPlacement;
 
-    // @ts-expect-error replay 后的 runtime Scope 不开放 placement
     context.scope({ placement: { target: [0, 0] } }, []);
-    // @ts-expect-error replay 后的 runtime Scope 不开放样式默认
     context.scope({ fill: 'red' }, []);
+    context.scope({ nodeDefault: { fill: 'white' }, resetStyle: ['node'] }, []);
     // @ts-expect-error replay token 不能作为 output child
     context.scope({}, [laid.replay]);
     // @ts-expect-error 任意对象不能作为 output child

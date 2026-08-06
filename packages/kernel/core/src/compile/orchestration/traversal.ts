@@ -9,6 +9,8 @@ import type {
   CompositeReplay,
   CompositeReplayWrapper,
   GroupPrim,
+  LayoutChildResult,
+  LayoutProposal,
   PaintValue,
   PathKindCompileResult,
   ScenePrimitive,
@@ -33,6 +35,7 @@ import type { InternalScenePrimitive } from './primitive';
 import type {
   CallableLayoutCompositeDefinition,
   CompositeCompileOwner,
+  CompositeReplayMaterializeContext,
   CompositeReplayTransaction,
   CompositeRuntimeOutputChild,
   CoordinateChild,
@@ -40,6 +43,7 @@ import type {
   NodeChild,
   PathChild,
   PendingPathEmission,
+  PreparedCompositeInspectionChildForest,
   RuntimeSemanticOwner,
   ScopeChild,
   ScopeLayoutPlaceholder,
@@ -134,6 +138,25 @@ import {
 import { createRuntimeTopologyTracker } from './runtime-topology';
 import { resolveTheme } from './theme';
 import { optionalVisualBoundsOfPrimitives, visualBoundsOfPrimitives } from './visual-bounds';
+
+/** 只保留会改变 Scope 样式级联结果的 frame，避免空 Scope frame 触发 replay 重编译 */
+const replayStyleFingerprint = (styleStack: TraversalFrame['styleStack']): string => {
+  const effectiveFrames = styleStack.filter(frame => {
+    const reset = frame.resetStyle;
+    return (
+      Object.keys(frame.cascade).length > 0 ||
+      frame.nodeDefault !== undefined ||
+      frame.pathDefault !== undefined ||
+      frame.labelDefault !== undefined ||
+      frame.arrowDefault !== undefined ||
+      (reset !== undefined && reset !== false && (!Array.isArray(reset) || reset.length > 0))
+    );
+  });
+  return JSON.stringify(effectiveFrames);
+};
+
+/** 对 resolved Theme 做 compile-local 稳定比较 */
+const replayThemeFingerprint = (theme: TraversalFrame['theme']): string => JSON.stringify(theme);
 
 /** 编译 child 树，完成 namespace 注册、延迟 path 回填、zIndex 排序和自动 layout bbox 收集 */
 export const compileChildrenToPrimitives = (
@@ -738,8 +761,7 @@ export const compileChildrenToPrimitives = (
     generatedOccurrence?: CompileOccurrenceLocator,
     compositeDepth = options.compositeDepth ?? 0,
     semanticOwner?: RuntimeSemanticOwner,
-    compileNested?: (scopeFrame: TraversalFrame) => void,
-    preLoweredTransforms?: ReadonlyArray<Transform>,
+    compileNested?: (scopeFrame: TraversalFrame, preliminaryTransforms: ReadonlyArray<Transform> | undefined) => void,
     preResolvedClipShape?: ClipShape,
   ): void => {
     const { locatorPrefix, styleStack } = frame;
@@ -748,12 +770,10 @@ export const compileChildrenToPrimitives = (
         ? `${locatorPrefix}children[${index}].scope.theme`
         : `${formatCompileOccurrence(generatedOccurrence)}.scope.theme`;
     const theme = resolveTheme(frame.theme, child.theme, themePath);
-    const placementTarget =
-      preLoweredTransforms === undefined ? resolveScopePlacementTarget(child, index, frame) : undefined;
+    const placementTarget = resolveScopePlacementTarget(child, index, frame);
     // runtime Scope 可能包住在当前 frame 外完成的 replay probe，因此它的数值 transform
     // 必须在 Scope 收尾时统一投影到普通 child 与 replay 导入的 publication/observation
-    const preliminaryTransforms =
-      preLoweredTransforms === undefined ? resolvePreliminaryScopeTransforms(child, index, frame) : undefined;
+    const preliminaryTransforms = resolvePreliminaryScopeTransforms(child, index, frame);
     const preliminaryScopeChain =
       preliminaryTransforms === undefined ? frame.scopeChain : [...frame.scopeChain, ...preliminaryTransforms];
     const layoutPlaceholder = registerScopeLayoutPlaceholder(child, { index, frame });
@@ -796,14 +816,18 @@ export const compileChildrenToPrimitives = (
       if (compileNested === undefined) {
         compileChildren(child.children, scopeFrame, false, generatedOccurrence, compositeDepth);
       } else {
-        compileNested(scopeFrame);
+        compileNested(scopeFrame, preliminaryTransforms);
       }
 
       const intrinsicLayout = createIntrinsicScopeLayout(child, scopeLayouts);
-      scopeTransforms =
-        preLoweredTransforms === undefined
-          ? resolveFinalScopeTransforms(child, index, frame, intrinsicLayout, placementTarget, preliminaryTransforms)
-          : [...preLoweredTransforms];
+      scopeTransforms = resolveFinalScopeTransforms(
+        child,
+        index,
+        frame,
+        intrinsicLayout,
+        placementTarget,
+        preliminaryTransforms,
+      );
       const postTransforms =
         preliminaryTransforms === undefined
           ? scopeTransforms
@@ -1024,12 +1048,25 @@ export const compileChildrenToPrimitives = (
     outputIndex: number,
     preparedReplays: ReadonlyMap<CompositeReplay, PreparedReplay>,
     semanticOwner?: RuntimeSemanticOwner,
+    authoredPreliminaryTransforms?: ReadonlyArray<Transform>,
   ): void => {
     const prepared = preparedReplays.get(token);
     if (prepared === undefined) throw new CompileInvariantError('internal: replay was not preflighted before commit');
-    const { transaction, wrapperClipShape } = prepared;
+    const { wrapperClipShape } = prepared;
+    const transaction =
+      prepared.transaction.materialize !== undefined &&
+      (prepared.transaction.styleFingerprint !== replayStyleFingerprint(frame.styleStack) ||
+        prepared.transaction.themeFingerprint !== replayThemeFingerprint(frame.theme))
+        ? prepared.transaction.materialize({
+            scopeChain: frame.scopeChain,
+            styleStack: frame.styleStack,
+            theme: frame.theme,
+          })
+        : prepared.transaction;
+    validateReplayResourceRefs(transaction);
 
     const transforms = wrapper?.transforms;
+    const authoredPreliminary = transaction.scopeChainApplied ? undefined : authoredPreliminaryTransforms;
     const resourceIds = new Map<string, string>();
     for (const resource of transaction.resources) {
       if (resource.kind === 'paint') {
@@ -1075,9 +1112,14 @@ export const compileChildrenToPrimitives = (
     }
 
     const suppressedNamespaceWarnings = new Set<CompileWarning>();
+    const namespaceParentChain =
+      authoredPreliminary === undefined
+        ? frame.scopeChain
+        : frame.scopeChain.slice(0, frame.scopeChain.length - authoredPreliminary.length);
+    const namespaceTransforms = [...(authoredPreliminary ?? []), ...(transforms ?? [])];
     for (const [changeIndex, change] of transaction.namespaceChanges.entries()) {
-      if (transforms !== undefined && transforms.length > 0) {
-        applyOwnTransformsToPublishedLayout(change.entry.layout, frame.scopeChain, transforms);
+      if (namespaceTransforms.length > 0) {
+        applyOwnTransformsToPublishedLayout(change.entry.layout, namespaceParentChain, namespaceTransforms);
       }
       const changeOccurrence = transaction.namespaceChangeOccurrences[changeIndex] ?? occurrence;
       const committedAgainstBaseline = withWarningOccurrence(
@@ -1122,6 +1164,9 @@ export const compileChildrenToPrimitives = (
       );
     }
     for (const observation of transaction.observations) {
+      if (authoredPreliminary !== undefined && authoredPreliminary.length > 0) {
+        observation.scopeChain.splice(frame.scopeChain.length - authoredPreliminary.length, 0, ...authoredPreliminary);
+      }
       if (transforms !== undefined && transforms.length > 0) {
         observation.scopeChain.splice(frame.scopeChain.length, 0, ...transforms);
       }
@@ -1154,6 +1199,9 @@ export const compileChildrenToPrimitives = (
       );
     }
     for (const inspection of transaction.inspections) {
+      if (authoredPreliminary !== undefined && authoredPreliminary.length > 0) {
+        inspection.scopeChain.splice(frame.scopeChain.length - authoredPreliminary.length, 0, ...authoredPreliminary);
+      }
       if (transforms !== undefined && transforms.length > 0) {
         inspection.scopeChain.splice(frame.scopeChain.length, 0, ...transforms);
       }
@@ -1257,18 +1305,16 @@ export const compileChildrenToPrimitives = (
   };
 
   /** 把 runtime Scope props 投影到普通 Scope orchestration 接受的结构 child */
-  const runtimeScopeChildOf = (props: CompositeCompileScopeProps): ScopeChild => ({
-    type: 'scope',
-    ...(props.theme === undefined ? {} : { theme: props.theme }),
-    ...(props.id === undefined ? {} : { id: props.id }),
-    ...(props.localNamespace === undefined ? {} : { localNamespace: props.localNamespace }),
-    ...(props.clip === undefined ? {} : { clip: props.clip }),
-    ...(props.zIndex === undefined ? {} : { zIndex: props.zIndex }),
-    ...(props.boundingShape === undefined ? {} : { boundingShape: props.boundingShape }),
-    ...(props.meta === undefined ? {} : { meta: props.meta }),
-    ...(props.animations === undefined ? {} : { animations: [...props.animations] }),
-    children: [],
-  });
+  const runtimeScopeChildOf = (props: CompositeCompileScopeProps): ScopeChild => {
+    const { transforms, animations, ...rest } = props;
+    return {
+      type: 'scope',
+      ...rest,
+      ...(transforms === undefined ? {} : { transforms: [...transforms] }),
+      ...(animations === undefined ? {} : { animations: [...animations] }),
+      children: [],
+    };
+  };
 
   /** 递归提交当前 callback 的 runtime output child */
   const compileRuntimeOutputChild = (
@@ -1282,9 +1328,19 @@ export const compileChildrenToPrimitives = (
     prepared: PreparedCompositeOutputs,
     semanticOwner?: RuntimeSemanticOwner,
     preparedScopeClipShape?: ClipShape,
+    authoredPreliminaryTransforms?: ReadonlyArray<Transform>,
   ): void => {
     if (output.kind === 'replay') {
-      commitReplay(output.replay, output.wrapper, frame, parentOccurrence, index, prepared.replays, semanticOwner);
+      commitReplay(
+        output.replay,
+        output.wrapper,
+        frame,
+        parentOccurrence,
+        index,
+        prepared.replays,
+        semanticOwner,
+        authoredPreliminaryTransforms,
+      );
       return;
     }
     const runtimeScopeChild = runtimeScopeChildOf(output.props);
@@ -1303,7 +1359,7 @@ export const compileChildrenToPrimitives = (
       scopeOccurrence,
       compositeDepth,
       scopeSemanticOwner,
-      scopeFrame => {
+      (scopeFrame, scopePreliminaryTransforms) => {
         for (const [childIndex, child] of output.children.entries()) {
           if (!isCompositeOutputHandle(child)) {
             const childOccurrence: CompileOccurrenceLocator = {
@@ -1338,10 +1394,10 @@ export const compileChildrenToPrimitives = (
             prepared,
             scopeSemanticOwner,
             preparedChild.scopeClipShape,
+            scopePreliminaryTransforms,
           );
         }
       },
-      output.props.transforms,
       preparedScopeClipShape,
     );
   };
@@ -1426,6 +1482,117 @@ export const compileChildrenToPrimitives = (
     });
     let callbackResult: unknown;
     let layoutProbeIndex = 0;
+
+    const probeLayoutChild = (
+      clonedChild: IRChild,
+      clonedProposal: LayoutProposal,
+      inspectionForest: PreparedCompositeInspectionChildForest | undefined,
+      probeOccurrence: CompileOccurrenceLocator,
+      probeScopeChain: ReadonlyArray<Transform>,
+      probeStyleStack: TraversalFrame['styleStack'],
+      probeTheme: TraversalFrame['theme'],
+      scopeChainApplied = false,
+    ): Readonly<{ layoutResult: LayoutChildResult; transaction: CompositeReplayTransaction }> => {
+      const warnings: Array<CompileWarning> = [];
+      const namespaceBaselineWarnings: Array<{ id: string; warning: CompileWarning }> = [];
+      const captureWarning = (warning: CompileWarning): void => {
+        if (
+          warning.code === CompileWarningCode.UnresolvedNodeReference ||
+          warning.code === CompileWarningCode.OffsetBaseUnresolved ||
+          warning.code === CompileWarningCode.PolarOriginUnresolved ||
+          warning.code === CompileWarningCode.AtTargetUnresolved
+        ) {
+          throw new Error(
+            `Composite '${key}' at ${formatCompileOccurrence(occurrence)} cannot layout child with an unresolved reference: ${warning.message}`,
+          );
+        }
+        warnings.push(warning);
+      };
+      const paint = createPaintRegistry(context.patterns, context.round);
+      const clip = createClipRegistry(context.round, context.clips);
+      const probeIdentityTracker =
+        runtime.state.identityTracker === undefined
+          ? undefined
+          : createRuntimeTopologyTracker(runtime.state.identityTracker.revision);
+      let probeWarningOccurrence = probeOccurrence;
+      const registrationOccurrences = new Map<string, CompileOccurrenceLocator>();
+      const registrationKey = (frameDepth: number, id: string): string => `${frameDepth}\u0000${id}`;
+      const namespaceBaseline = runtime.state.namespaceStack.fork();
+      const namespaceStack = namespaceBaseline.fork({
+        onDuplicate: info => {
+          const warning = withCompileWarningOccurrence(createDuplicateWarning(info), probeWarningOccurrence);
+          captureWarning(warning);
+          if (info.overwroteForkBaseline) namespaceBaselineWarnings.push({ id: info.id, warning });
+        },
+        onRegister: info =>
+          registrationOccurrences.set(
+            registrationKey(info.frameDepth, info.id),
+            freezeOccurrence(probeWarningOccurrence),
+          ),
+      });
+      const sandboxContext: CompileContext = {
+        ...context,
+        onWarn: captureWarning,
+        paint,
+        clip,
+      };
+      const laid = compileChildrenToPrimitives([clonedChild], sandboxContext, {
+        namespaceStack,
+        scopeChain: probeScopeChain,
+        styleStack: probeStyleStack,
+        theme: probeTheme,
+        occurrence: probeOccurrence,
+        compositeDepth: compositeDepth + 1,
+        generated: true,
+        probe: true,
+        proposal: clonedProposal,
+        session: runtime.context.session,
+        inheritedInspection: inspection.inherited,
+        ...(inspectionForest === undefined ? {} : { inspectionForest }),
+        ...(probeIdentityTracker === undefined ? {} : { identityTracker: probeIdentityTracker }),
+        observeWarningOccurrence: current => {
+          probeWarningOccurrence = current ?? probeOccurrence;
+        },
+      });
+      const token = Object.freeze({}) as CompositeReplay;
+      const resources: Array<SceneResource> = [...paint.resources(), ...clip.resources()];
+      const namespaceChanges = namespaceStack.diffTopFrame(namespaceBaseline);
+      const probeFrameDepth = namespaceStack.depth - 1;
+      const allocationBounds = validateAllocationBounds(boundsRectOf(laid), key, probeOccurrence);
+      const layoutResult: LayoutChildResult = Object.freeze({
+        allocationBounds,
+        slotSize: resolveLayoutSlotSize(allocationBounds, clonedProposal),
+        visualBounds: visualBoundsOfPrimitives(laid.primitives, resources),
+        ...(laid.alignmentGuides === undefined ? {} : { alignmentGuides: laid.alignmentGuides }),
+        replay: token,
+      });
+      const transaction: CompositeReplayTransaction = {
+        owner,
+        originOccurrence: probeOccurrence,
+        used: false,
+        primitives: laid.primitives,
+        primitiveZIndices: laid.primitiveZIndices,
+        layouts: laid.layouts,
+        bounds: laid.bounds,
+        allocations: laid.allocations,
+        observations: laid.observations,
+        namespaceChanges,
+        namespaceChangeOccurrences: namespaceChanges.map(
+          change => registrationOccurrences.get(registrationKey(probeFrameDepth, change.id)) ?? probeOccurrence,
+        ),
+        topologyIdentityIds: [...(probeIdentityTracker?.rootIdentityRegistrations() ?? [])],
+        namespaceBaselineWarnings,
+        resources,
+        warnings,
+        artifacts: laid.artifacts,
+        inspections: laid.inspections,
+        styleFingerprint: replayStyleFingerprint(probeStyleStack),
+        themeFingerprint: replayThemeFingerprint(probeTheme),
+        ...(scopeChainApplied ? { scopeChainApplied: true } : {}),
+      };
+      return Object.freeze({ layoutResult, transaction });
+    };
+
     try {
       callbackResult = callable.compile(parsed, {
         theme: frame.theme,
@@ -1447,101 +1614,33 @@ export const compileChildrenToPrimitives = (
             expansionPath: [...occurrence.expansionPath, { kind: 'probe', index: layoutProbeIndex }],
           });
           layoutProbeIndex += 1;
-          const warnings: Array<CompileWarning> = [];
-          const namespaceBaselineWarnings: Array<{ id: string; warning: CompileWarning }> = [];
-          const captureWarning = (warning: CompileWarning): void => {
-            if (
-              warning.code === CompileWarningCode.UnresolvedNodeReference ||
-              warning.code === CompileWarningCode.OffsetBaseUnresolved ||
-              warning.code === CompileWarningCode.PolarOriginUnresolved ||
-              warning.code === CompileWarningCode.AtTargetUnresolved
-            ) {
-              throw new Error(
-                `Composite '${key}' at ${formatCompileOccurrence(occurrence)} cannot layout child with an unresolved reference: ${warning.message}`,
-              );
-            }
-            warnings.push(warning);
-          };
-          const paint = createPaintRegistry(context.patterns, context.round);
-          const clip = createClipRegistry(context.round, context.clips);
-          const probeIdentityTracker =
-            runtime.state.identityTracker === undefined
-              ? undefined
-              : createRuntimeTopologyTracker(runtime.state.identityTracker.revision);
-          let probeWarningOccurrence = probeOccurrence;
-          const registrationOccurrences = new Map<string, CompileOccurrenceLocator>();
-          const registrationKey = (frameDepth: number, id: string): string => `${frameDepth}\u0000${id}`;
-          const namespaceStack = runtime.state.namespaceStack.fork({
-            onDuplicate: info => {
-              const warning = withCompileWarningOccurrence(createDuplicateWarning(info), probeWarningOccurrence);
-              captureWarning(warning);
-              if (info.overwroteForkBaseline) namespaceBaselineWarnings.push({ id: info.id, warning });
-            },
-            onRegister: info =>
-              registrationOccurrences.set(
-                registrationKey(info.frameDepth, info.id),
-                freezeOccurrence(probeWarningOccurrence),
-              ),
-          });
-          const sandboxContext: CompileContext = {
-            ...context,
-            onWarn: captureWarning,
-            paint,
-            clip,
-          };
           try {
-            const laid = compileChildrenToPrimitives([clonedChild], sandboxContext, {
-              namespaceStack,
-              scopeChain: frame.scopeChain,
-              styleStack: frame.styleStack,
-              theme: frame.theme,
-              occurrence: probeOccurrence,
-              compositeDepth: compositeDepth + 1,
-              generated: true,
-              probe: true,
-              proposal: clonedProposal,
-              session: runtime.context.session,
-              inheritedInspection: inspection.inherited,
-              ...(inspectionForest === undefined ? {} : { inspectionForest }),
-              ...(probeIdentityTracker === undefined ? {} : { identityTracker: probeIdentityTracker }),
-              observeWarningOccurrence: current => {
-                probeWarningOccurrence = current ?? probeOccurrence;
-              },
-            });
-            const token = Object.freeze({}) as CompositeReplay;
-            const resources: Array<SceneResource> = [...paint.resources(), ...clip.resources()];
-            const namespaceChanges = namespaceStack.diffTopFrame(runtime.state.namespaceStack);
-            const probeFrameDepth = namespaceStack.depth - 1;
-            const allocationBounds = validateAllocationBounds(boundsRectOf(laid), key, probeOccurrence);
-            const layoutResult = Object.freeze({
-              allocationBounds,
-              slotSize: resolveLayoutSlotSize(allocationBounds, clonedProposal),
-              visualBounds: visualBoundsOfPrimitives(laid.primitives, resources),
-              ...(laid.alignmentGuides === undefined ? {} : { alignmentGuides: laid.alignmentGuides }),
-              replay: token,
-            });
-            runtime.context.session.replayTransactions.set(token, {
-              owner,
-              originOccurrence: probeOccurrence,
-              used: false,
-              primitives: laid.primitives,
-              primitiveZIndices: laid.primitiveZIndices,
-              layouts: laid.layouts,
-              bounds: laid.bounds,
-              allocations: laid.allocations,
-              observations: laid.observations,
-              namespaceChanges,
-              namespaceChangeOccurrences: namespaceChanges.map(
-                change => registrationOccurrences.get(registrationKey(probeFrameDepth, change.id)) ?? probeOccurrence,
-              ),
-              topologyIdentityIds: [...(probeIdentityTracker?.rootIdentityRegistrations() ?? [])],
-              namespaceBaselineWarnings,
-              resources,
-              warnings,
-              artifacts: laid.artifacts,
-              inspections: laid.inspections,
-            });
-            runtime.context.session.layoutResults.set(layoutResult, Object.freeze({ owner, replay: token }));
+            const probed = probeLayoutChild(
+              clonedChild,
+              clonedProposal,
+              inspectionForest,
+              probeOccurrence,
+              frame.scopeChain,
+              frame.styleStack,
+              frame.theme,
+            );
+            const { layoutResult, transaction } = probed;
+            transaction.materialize = ({ scopeChain, styleStack, theme }: CompositeReplayMaterializeContext) =>
+              probeLayoutChild(
+                clonedChild,
+                clonedProposal,
+                inspectionForest,
+                probeOccurrence,
+                scopeChain,
+                styleStack,
+                theme,
+                true,
+              ).transaction;
+            runtime.context.session.replayTransactions.set(layoutResult.replay, transaction);
+            runtime.context.session.layoutResults.set(
+              layoutResult,
+              Object.freeze({ owner, replay: layoutResult.replay }),
+            );
             return Object.freeze({ kind: LayoutChildProbeKind.Resolved, result: layoutResult });
           } catch (thrown) {
             if (isFatalProbeError(thrown)) throw thrown;

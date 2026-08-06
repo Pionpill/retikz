@@ -6,13 +6,10 @@ import { Axes } from '@retikz/standard-react';
 const Demo: FC = () => (
   <Layout width={280} height={170} style={{ maxWidth: '100%', height: 'auto' }}>
     <Axes
-      origin={[140, 90]}
-      extent={{
-        x: { negative: 110, positive: 110 },
-        y: { negative: 50, positive: 60 },
-      }}
-      grid={{ spacing: 20, style: { stroke: 'lightgray', strokeWidth: 1 } }}
+      origin={{ position: [140, 90], label: { text: '0', style: { font: { size: 10 }, textColor: 'gray' } } }}
       x={{
+        extent: { negative: 110, positive: 110 },
+        grid: { spacing: 20, style: { stroke: 'lightgray', strokeWidth: 1 } },
         line: { style: { stroke: 'currentColor', strokeWidth: 1.5 } },
         ticks: {
           source: { kind: 'spacing', spacing: 20 },
@@ -29,6 +26,8 @@ const Demo: FC = () => (
         },
       }}
       y={{
+        extent: { negative: 50, positive: 60 },
+        grid: { spacing: 20, style: { stroke: 'lightgray', strokeWidth: 1 } },
         line: { style: { stroke: 'currentColor', strokeWidth: 1.5 } },
         ticks: {
           source: { kind: 'spacing', spacing: 20, extent: 'positive' },
@@ -42,7 +41,6 @@ const Demo: FC = () => (
           },
         },
       }}
-      originLabel={{ text: '0', style: { font: { size: 10 }, textColor: 'gray' } }}
     />
   </Layout>
 );

@@ -35,8 +35,7 @@ describe('FlexLayout schema and factory', () => {
       overflow: 'visible',
       direction: 'row',
       wrap: 'nowrap',
-      columnGap: 0,
-      rowGap: 0,
+      gap: { column: 0, row: 0 },
       justifyContent: 'start',
       alignItems: 'stretch',
       alignContent: 'start',
@@ -57,6 +56,18 @@ describe('FlexLayout schema and factory', () => {
     expectTypeOf(parsed.children[0]).toEqualTypeOf<IRFlexLayoutItem>();
   });
 
+  it('normalizes uniform gap shorthand while preserving independent physical axes', () => {
+    const uniform = createFlexLayout({ gap: 6 });
+    const independent = createFlexLayout({ gap: { column: 4, row: 8 } });
+    const zero = createFlexLayout({ gap: 0 });
+
+    expect(uniform.gap).toEqual({ column: 6, row: 6 });
+    expect(independent.gap).toEqual({ column: 4, row: 8 });
+    expect(zero.gap).toEqual({ column: 0, row: 0 });
+    expectTypeOf(uniform.gap).toEqualTypeOf<{ column: number; row: number }>();
+    expectTypeOf<IRFlexLayout['gap']>().toEqualTypeOf<{ column: number; row: number }>();
+  });
+
   it('keeps every nested object strict and rejects invalid numeric contracts', () => {
     const base = { children: [{ kind: 'flex', key: 'label', child }] } satisfies FlexLayoutInput;
 
@@ -70,8 +81,27 @@ describe('FlexLayout schema and factory', () => {
         children: [{ ...base.children[0], extra: true }],
       }).success,
     ).toBe(false);
-    expect(() => createFlexLayout({ ...base, columnGap: -1 })).toThrow();
-    expect(() => createFlexLayout({ ...base, rowGap: Number.POSITIVE_INFINITY })).toThrow();
+    expect(
+      FlexLayoutSchema.safeParse({
+        namespace: 'standard',
+        type: 'flexLayout',
+        ...base,
+        gap: { column: 0, row: 0, extra: true },
+      }).success,
+    ).toBe(false);
+    expect(
+      FlexLayoutSchema.safeParse({
+        namespace: 'standard',
+        type: 'flexLayout',
+        ...base,
+        gap: 0,
+        columnGap: 0,
+      }).success,
+    ).toBe(false);
+    expect(() => createFlexLayout({ ...base, gap: -1 })).toThrow();
+    expect(() => createFlexLayout({ ...base, gap: Number.POSITIVE_INFINITY })).toThrow();
+    expect(() => createFlexLayout({ ...base, gap: { column: 1, row: -1 } })).toThrow();
+    expect(() => createFlexLayout({ ...base, gap: { column: 1, row: Number.POSITIVE_INFINITY } })).toThrow();
     expect(() => createFlexLayout({ children: [{ ...base.children[0], grow: -1 }] })).toThrow();
     expect(() => createFlexLayout({ children: [{ ...base.children[0], shrink: Number.NaN }] })).toThrow();
     expect(() => createFlexLayout({ children: [{ ...base.children[0], min: 20, max: 10 }] })).toThrow();

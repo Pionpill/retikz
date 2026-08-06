@@ -3,7 +3,7 @@
 - 状态：Accepted
 - 决策日期：2026-08-03
 - 接受日期：2026-08-04
-- 关联：[alpha.2 roadmap](./roadmap.md) · [能力完备性与模块边界](../../../../../../../notes/architecture/capability-design.md) · [Core 绘图完备设计](../../../../architecture/core-drawing-complete.md) · [Schema 设计](../../../../../../../notes/architecture/schema-design.md)
+- 关联：[alpha.2 roadmap](./roadmap.md) · [原子契约与组合设计](../../../../../../../notes/architecture/atomic-contract-design.md) · [能力完备性与模块边界](../../../../../../../notes/architecture/capability-design.md) · [Core 绘图完备设计](../../../../architecture/core-drawing-complete.md) · [Schema 设计](../../../../../../../notes/architecture/schema-design.md)
 
 ## 背景与目标
 

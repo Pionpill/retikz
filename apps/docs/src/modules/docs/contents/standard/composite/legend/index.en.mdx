@@ -180,21 +180,22 @@ An unregistered Legend produces `COMPOSITE_NOT_REGISTERED`. If a nested composit
 
 ### Legend
 
-| Prop           | Type                               | Default      | Description                                                                               |
-| -------------- | ---------------------------------- | ------------ | ----------------------------------------------------------------------------------------- |
-| `kind`         | `'items'` \| `'ramp'`              | —            | Selects the marker form explicitly; never inferred                                        |
-| `children`     | `ReactNode`                        | —            | Direct markers for that form; see the [composition boundary](#react-composition-boundary) |
-| `titleGap`     | `number`                           | `8`          | Vertical gap when both title and non-empty body exist                                     |
-| `contentAlign` | `'start'` \| `'center'` \| `'end'` | `'start'`    | Physical x alignment of title and body structural blocks                                  |
-| `size`         | `LayoutSizeInput`                  | content size | Reuses the two-axis Box Layout sizing policy                                              |
-| `padding`      | `number` \| `IRBoxSpacing`         | `0`          | Padding on the four container sides                                                       |
-| `overflow`     | `'visible'` \| `'clip'`            | `'visible'`  | Visibility outside the resolved allocation                                                |
-| `direction`    | `'vertical'` \| `'horizontal'`     | `'vertical'` | Item direction or ramp main axis                                                          |
-| `sampleGap`    | `number`                           | `8`          | Physical gap from a sample to its label region                                            |
-| `wrap`         | `'nowrap'` \| `'wrap'`             | `'nowrap'`   | Items only: whether constraints form more rows or columns                                 |
-| `columnGap`    | `number`                           | `8`          | Items only: gap between physical columns                                                  |
-| `rowGap`       | `number`                           | `8`          | Items only: gap between physical rows                                                     |
-| `sampleAlign`  | `'start'` \| `'center'` \| `'end'` | `'center'`   | Items only: sample-label alignment on the physical y axis                                 |
+| Prop           | Type                                               | Default                       | Description                                                                               |
+| -------------- | -------------------------------------------------- | ----------------------------- | ----------------------------------------------------------------------------------------- |
+| `kind`         | `'items'` \| `'ramp'`                              | —                             | Selects the marker form explicitly; never inferred                                        |
+| `children`     | `ReactNode`                                        | —                             | Direct markers for that form; see the [composition boundary](#react-composition-boundary) |
+| `titleGap`     | `number`                                           | `8`                           | Vertical gap when both title and non-empty body exist                                     |
+| `contentAlign` | `'start'` \| `'center'` \| `'end'`                 | `'start'`                     | Physical x alignment of title and body structural blocks                                  |
+| `size`         | `LayoutSizeInput`                                  | content size                  | Reuses the two-axis Box Layout sizing policy                                              |
+| `padding`      | `number` \| `IRBoxSpacing`                         | `0`                           | Padding on the four container sides                                                       |
+| `overflow`     | `'visible'` \| `'clip'`                            | `'visible'`                   | Visibility outside the resolved allocation                                                |
+| `direction`    | `'vertical'` \| `'horizontal'`                     | `'vertical'`                  | Item direction or ramp main axis                                                          |
+| `sampleGap`    | `number`                                           | `8`                           | Physical gap from a sample to its label region                                            |
+| `wrap`         | `'nowrap'` \| `'wrap'`                             | `'nowrap'`                    | Items only: whether constraints form more rows or columns                                 |
+| `gap`          | `number`<br />or `{ row: number; column: number }` | `8` → `{ row: 8, column: 8 }` | Items only: a number applies to both axes; the object sets physical row and column gaps   |
+| ↳ `row`        | `number`                                           | `8`                           | Gap between physical rows when `gap` is an object                                         |
+| ↳ `column`     | `number`                                           | `8`                           | Gap between physical columns when `gap` is an object                                      |
+| `sampleAlign`  | `'start'` \| `'center'` \| `'end'`                 | `'center'`                    | Items only: sample-label alignment on the physical y axis                                 |
 
 ### LegendTitle
 
@@ -231,7 +232,7 @@ An unregistered Legend produces `COMPOSITE_NOT_REGISTERED`. If a nested composit
 | `id`      | `string`      | —       | Embed identity passed to `legend()`; it is not persisted       |
 | `input`   | `LegendInput` | —       | JSON-safe plain-data input for `legend()` and `createLegend()` |
 
-`LegendInput` omits the fixed `namespace` and `type`. Common defaults are `titleGap: 8`, `contentAlign: 'start'`, content sizing, `padding: 0`, and `overflow: 'visible'`. Discrete content defaults to `direction: 'vertical'`, `wrap: 'nowrap'`, `columnGap / rowGap / sampleGap: 8`, and `sampleAlign: 'center'`.
+`LegendInput` omits the fixed `namespace` and `type`. Common defaults are `titleGap: 8`, `contentAlign: 'start'`, content sizing, `padding: 0`, and `overflow: 'visible'`. Discrete content defaults to `direction: 'vertical'`, `wrap: 'nowrap'`, `gap: 8` on both axes, `sampleGap: 8`, and `sampleAlign: 'center'`. The parsed IR persists this as `gap: { row: 8, column: 8 }`.
 
 ### LegendSchema
 
