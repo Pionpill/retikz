@@ -5,7 +5,6 @@ export const CHART_NAMESPACE = 'chart' as const;
 
 /** Chart owner 内建 variant 的封闭判别值 */
 export const ChartType = {
-  InfrastructureFixture: '__infrastructure-fixture',
   Scatter: 'scatter',
   Bubble: 'bubble',
   ConnectedScatter: 'connected-scatter',

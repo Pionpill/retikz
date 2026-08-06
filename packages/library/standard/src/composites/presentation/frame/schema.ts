@@ -1,4 +1,4 @@
-import { BoxSpacingSchema, CompositeBaseSchema, NodeSchema, RectangleStepSchema } from '@retikz/core';
+import { BoxSpacingSchema, CompositeBaseSchema, NodeSchema, RectangleStepSchema, ScopePropsSchema } from '@retikz/core';
 import { z } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
@@ -17,19 +17,23 @@ export const FrameDescriptionSchema = z
   .strictObject(FrameHeaderShape)
   .describe('Node-like supporting description authored without an explicit position.');
 
-const FrameBorderStyleSchema = StandardPathBorderStyleSchema.omit({
-  color: true,
-  opacity: true,
-  zIndex: true,
-});
-
 const FramePaddingSchema = z.union([z.number().nonnegative(), BoxSpacingSchema]);
+
+export const FrameBorderSchema = z.strictObject({
+  style: StandardPathBorderStyleSchema.default({ stroke: 'currentColor', strokeWidth: 1 }),
+  cornerRadius: RectangleStepSchema.shape.cornerRadius,
+});
 
 const FrameBaseSchema = CompositeBaseSchema.extend({
   namespace: z.literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
   type: z.literal('frame').describe('Composite type for a bordered semantic group of Core nodes.'),
-  ...FrameBorderStyleSchema.shape,
+  ...ScopePropsSchema.shape,
   id: z.string().min(1).describe('Stable identity for the lowered outer Scope.'),
+  localNamespace: ScopePropsSchema.shape.localNamespace.default(false),
+  boundingShape: ScopePropsSchema.shape.boundingShape.default('rectangle'),
+  border: FrameBorderSchema.default({ style: { stroke: 'currentColor', strokeWidth: 1 } }).describe(
+    'Border Path style and corner radius, separate from the root Scope cascade.',
+  ),
   padding: FramePaddingSchema.default(8).describe(
     'Border padding around the final body and header bounds. Side fields override axis fields, then default.',
   ),
@@ -42,12 +46,6 @@ const FrameBaseSchema = CompositeBaseSchema.extend({
     .enum(FrameHeaderDirection)
     .default(FrameHeaderDirection.Horizontal)
     .describe('Horizontal or vertical arrangement of the optional title and description.'),
-  stroke: FrameBorderStyleSchema.shape.stroke.default('currentColor'),
-  strokeWidth: FrameBorderStyleSchema.shape.strokeWidth.default(1),
-  cornerRadius: RectangleStepSchema.shape.cornerRadius.describe(
-    'Uniform corner radius for the rectangular Frame border; omitted keeps sharp corners.',
-  ),
-  zIndex: NodeSchema.shape.zIndex.describe('Stacking order of the complete lowered Frame Scope.'),
   title: FrameTitleSchema.optional().describe('Optional Node-like primary title arranged above the Frame body.'),
   description: FrameDescriptionSchema.optional().describe(
     'Optional Node-like supporting description arranged above the Frame body.',

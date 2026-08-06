@@ -16,9 +16,9 @@ import {
 } from '@retikz/core';
 
 import type { LayoutInsets, LayoutRect } from '../internal';
-import type { LayoutSpacingArtifact, LayoutTrackSourceKindValue } from '../shared';
+import type { LayoutSpacingArtifact } from '../shared';
 import type { GridTrackConstraint } from './tracks';
-import type { GridLayoutArtifact, IRGridLayout, IRGridLayoutItem } from './types';
+import type { GridLayoutArtifact, IRGridLayout, IRGridLayoutItem, LayoutTrackSourceKindValue } from './types';
 
 import {
   alignAllocationInSlot,
@@ -36,13 +36,8 @@ import {
   resolveLayoutAxisSize,
   sortLayoutSpacing,
 } from '../internal';
-import {
-  LayoutAlignment,
-  LayoutAxisSizeKind,
-  LayoutOverflow,
-  LayoutSpacingKind,
-  LayoutTrackSourceKind,
-} from '../shared';
+import { LayoutAlignment, LayoutAxisSizeKind, LayoutOverflow, LayoutSpacingKind } from '../shared';
+import { LayoutTrackSourceKind } from './constants';
 import { resolveGridPlacements } from './placement';
 import {
   gridItemSlot,

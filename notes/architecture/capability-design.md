@@ -15,6 +15,8 @@
 
 所有影响公开能力、IR / schema、definition / registry、pipeline / lowering、Scene / manifest、跨包职责或 adapter 独有能力的迭代，都必须执行适用能力域的完备性检查。纯 bugfix、文案和行为等价重构仍受本文边界约束，但只需确认没有改变能力归属或闭环，不强制填写完整检查表。
 
+原子 schema、type、contract、theme token 与上层组合的长期规则见[`原子契约与组合设计`](./atomic-contract-design.md)。
+
 ## 2. 核心术语
 
 ### 2.1 能力域

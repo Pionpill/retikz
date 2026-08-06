@@ -7,6 +7,8 @@ import { describe, expect, it } from 'vitest';
 import { legend, LegendVanillaAdapter } from '../src';
 
 const input = {
+  id: 'authored-legend',
+  meta: { source: 'vanilla' },
   title: { type: 'node', position: [0, 0], text: 'Status' },
   contentAlign: LayoutAlignment.End,
   content: {

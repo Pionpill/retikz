@@ -5,11 +5,28 @@ import { describe, expect, it } from 'vitest';
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '../../src';
 
 describe('<Frame>', () => {
+  it('keeps root Scope fields separate from the nested border Path fields', () => {
+    const contribution = Frame.embeddableAdapter.contribute({
+      id: 'root/frame',
+      stroke: '#0f172a',
+      meta: { source: 'react' },
+      border: { style: { stroke: '#0284c7', zIndex: 4 }, cornerRadius: 3 },
+      children: <Node position={[0, 0]} />,
+    });
+
+    expect(contribution.node).toMatchObject({
+      id: 'root/frame',
+      stroke: '#0f172a',
+      meta: { source: 'react' },
+      border: { style: { stroke: '#0284c7', zIndex: 4 }, cornerRadius: 3 },
+    });
+  });
+
   it('converts semantic header parts and body Nodes to canonical Frame IR', () => {
     const props = {
       id: 'definition-contract/frame',
       padding: 12,
-      cornerRadius: 6,
+      border: { cornerRadius: 6 },
       headerDirection: 'vertical' as const,
       children: (
         <>
@@ -28,7 +45,7 @@ describe('<Frame>', () => {
       createFrame({
         id: 'definition-contract/frame',
         padding: 12,
-        cornerRadius: 6,
+        border: { cornerRadius: 6 },
         headerDirection: 'vertical',
         title: { text: 'Explicit title', font: { family: 'serif' } },
         description: { text: 'One registry contract.', maxTextWidth: 220 },
@@ -134,7 +151,7 @@ describe('<Frame>', () => {
     const result = buildIRWithContributions(
       <>
         <Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />
-        <Axes extent={{ x: 20, y: 20 }} />
+        <Axes x={{ extent: 20 }} y={{ extent: 20 }} />
         <Frame id="group/frame">
           <FrameTitle>Group</FrameTitle>
           <Node position={[0, 0]} text="A" />

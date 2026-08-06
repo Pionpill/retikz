@@ -4,7 +4,7 @@
 >
 > **状态：直接导出已实现，版本化分片产物未实现。** Core / Plot 已用 `z.toJSONSchema()` 测试锁定 schema 可导出性，eval 也可直接消费；本文设计的分片、索引、漂移守门、package exports 与随包发布尚未落地。设计期原型数据只作参考，正式实现前仍需按当前 schema 图复验。
 >
-> 关联：`packages/kernel/core/src/schemas/**`（IR zod schema，含 `.describe()`）· `packages/viz/plot/src/schemas/**`。
+> 关联：`packages/kernel/core/src/schemas/**`（IR zod schema，含 `.describe()`）· `packages/viz/plot/src/schemas/**` · [`原子契约与组合设计`](./atomic-contract-design.md)。
 
 ---
 

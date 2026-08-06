@@ -48,9 +48,9 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         ribbon={{
           width: resolvedValues.width,
           align: resolvedValues.align,
-          start: { direction, cap },
+          start: { ...(direction === undefined ? {} : { direction }), cap },
           end: {
-            direction,
+            ...(direction === undefined ? {} : { direction }),
             cap:
               resolvedValues.cap === 'arc'
                 ? { type: 'arc', center: [190, 20], radius: resolvedValues.width / 2 }

@@ -51,8 +51,10 @@ export type IRFlexLayout = Readonly<{
   overflow: LayoutOverflowValue;
   direction: FlexLayoutDirectionValue;
   wrap: FlexLayoutWrapValue;
-  columnGap: number;
-  rowGap: number;
+  gap: {
+    column: number;
+    row: number;
+  };
   justifyContent: FlexMainDistributionValue;
   alignItems: LayoutAlignmentValue;
   alignContent: LayoutDistributionValue;
@@ -60,12 +62,12 @@ export type IRFlexLayout = Readonly<{
 }>;
 ```
 
-`IRFlexLayout`/`IRFlexLayoutItem` 是schema parsed output；`FlexLayoutInput`/`FlexLayoutItemInput` 使用 `z.input` 并允许省略下列默认字段。`createFlexLayout(input)` 接收去掉namespace/type的Input并返回canonical IR。`FlexMainDistributionValue` 从shared distribution排除stretch，不能用宽类型掩盖schema限制。
+`IRFlexLayout`/`IRFlexLayoutItem` 是schema parsed output；`FlexLayoutInput`/`FlexLayoutItemInput` 使用 `z.input` 并允许省略下列默认字段。`FlexLayoutInput.gap` 接受非负数字或严格的 `{ column, row }` 对象，数字在 schema 边界归一化为两个轴相同的 canonical 对象。`createFlexLayout(input)` 接收去掉namespace/type的Input并返回canonical IR。`FlexMainDistributionValue` 从shared distribution排除stretch，不能用宽类型掩盖schema限制。
 
 默认值：
 
 - direction `row`，wrap `nowrap`
-- columnGap/rowGap `0`
+- gap `{ column: 0, row: 0 }`；输入数字 `0` 归一化为该对象
 - justifyContent/alignContent `start`
 - alignItems `stretch`
 - item basis `content`、grow `0`、shrink `1`
@@ -74,7 +76,7 @@ export type IRFlexLayout = Readonly<{
 
 justifyContent 不接受 `stretch` 或 baseline；alignContent 接受 distribution 全集，但单 line 的 `nowrap` 不应用 alignContent；alignItems/alignSelf 接受 alignment 全集。主轴为 y 的 column/column-reverse 不允许 baseline cross alignment，因为 Core baseline guide 属于 y dimension，不能拿来对齐 x。
 
-`columnGap` 永远是物理水平方向 gap，`rowGap` 永远是物理垂直方向 gap：row 的 item gap 使用 columnGap、line gap 使用 rowGap；column 相反。这样 nested Flex/Grid 共享同一术语，不随 direction 改字段含义。
+`gap.column` 永远是物理水平方向 gap，`gap.row` 永远是物理垂直方向 gap：row 的 item gap 使用 `gap.column`、line gap 使用 `gap.row`；column 相反。这样 nested Flex/Grid 共享同一术语，不随 direction 改字段含义。旧 `columnGap` / `rowGap` 字段不再属于 FlexLayout 输入或 canonical IR。
 
 ### 求解阶段
 
@@ -191,7 +193,7 @@ line formation、freeze/redistribute、line cross metrics、distribution 和 pla
 <FlexLayout
   direction="row"
   size={{ x: { kind: 'fill' }, y: { kind: 'content' } }}
-  columnGap={8}
+  gap={{ column: 8, row: 4 }}
   alignItems="first-baseline"
 >
   <LayoutItem kind="flex" itemKey="symbol" shrink={0}>
@@ -228,7 +230,7 @@ line formation、freeze/redistribute、line cross metrics、distribution 和 pla
 - 新增 `standard.flexLayout` layout-aware Composite、factory、Definition与公共类型
 - 不改变 Core、renderer 或 alpha.1 composite
 - React/Vanilla 与 docs 接线在 alpha.3 ADR-06 统一修改
-- 新增公开 IR，无兼容迁移负担
+- 公开 FlexLayout 间距契约使用 `gap`；旧 `columnGap` / `rowGap` 写法需要迁移，不提供兼容别名
 
 ## 能力完备性检查
 
@@ -252,7 +254,7 @@ line formation、freeze/redistribute、line cross metrics、distribution 和 pla
 
 ## 最终实现摘要
 
-- 实现 `standard.flexLayout` strict schema、factory、Definition、line formation、wrap/reverse 与有界 grow/shrink freeze solver
+- 实现 `standard.flexLayout` strict schema、factory、Definition、line formation、wrap/reverse 与有界 grow/shrink freeze solver；`gap` 输入在 schema 边界归一化为 canonical `{ column, row }`
 - compile 通过 Core contextual probe 处理 minimum/natural、exact slot、文本主轴到交叉轴反馈、baseline、stretch refusal、overflow/clip 与 nested layout
 - authored order 与 paint order 保持稳定，reverse 只改变 traversal/placement；typed lines 与 adapter/docs 由 ADR-06 收口
 

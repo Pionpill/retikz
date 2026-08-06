@@ -1,10 +1,25 @@
 import { describe, expect, it } from 'vitest';
 
 import { FrameDescriptionSchema, FrameHeaderDirection, FrameSchema, FrameTitleSchema } from '../../../src';
+import { fullScopeProps } from '../presentation/scope-props';
 
 const node = { type: 'node', position: [0, 0], text: 'A' } as const;
 
 describe('FrameSchema', () => {
+  it('reuses the complete Core Scope authored surface while keeping border fields nested', () => {
+    const parsed = FrameSchema.parse({
+      namespace: 'standard',
+      type: 'frame',
+      ...fullScopeProps,
+      id: 'frame-root',
+      border: { style: { stroke: '#0284c7' }, cornerRadius: 4 },
+      children: [node],
+    });
+
+    expect(parsed).toMatchObject({ ...fullScopeProps, id: 'frame-root', border: { cornerRadius: 4 } });
+    expect(FrameSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
+  });
+
   it('fills stable border, padding, and header gap defaults and round-trips through JSON', () => {
     const parsed = FrameSchema.parse({
       namespace: 'standard',
@@ -17,10 +32,11 @@ describe('FrameSchema', () => {
       padding: 8,
       gap: 4,
       headerDirection: FrameHeaderDirection.Horizontal,
-      stroke: 'currentColor',
-      strokeWidth: 1,
+      border: { style: { stroke: 'currentColor', strokeWidth: 1 } },
+      localNamespace: false,
+      boundingShape: 'rectangle',
     });
-    expect(parsed.cornerRadius).toBeUndefined();
+    expect(parsed.border.cornerRadius).toBeUndefined();
     expect(FrameSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
@@ -58,7 +74,7 @@ describe('FrameSchema', () => {
     expect(FrameDescriptionSchema.safeParse({ opacity: 0.5 }).success).toBe(false);
   });
 
-  it('accepts top-level border styles, box padding, and optional Node-like headers', () => {
+  it('separates root Scope styles from the nested border Path style', () => {
     const parsed = FrameSchema.parse({
       namespace: 'standard',
       type: 'frame',
@@ -67,8 +83,8 @@ describe('FrameSchema', () => {
       gap: 0,
       headerDirection: FrameHeaderDirection.Vertical,
       fill: '#fff',
-      dashPattern: [4, 2],
-      cornerRadius: 6,
+      opacity: 0.8,
+      border: { style: { stroke: '#334155', fill: '#f8fafc', zIndex: -3 }, cornerRadius: 6 },
       zIndex: 3,
       title: { text: 'Group' },
       description: { text: 'Details', maxTextWidth: 160 },
@@ -80,8 +96,8 @@ describe('FrameSchema', () => {
       gap: 0,
       headerDirection: 'vertical',
       fill: '#fff',
-      dashPattern: [4, 2],
-      cornerRadius: 6,
+      opacity: 0.8,
+      border: { style: { stroke: '#334155', fill: '#f8fafc', zIndex: -3 }, cornerRadius: 6 },
       zIndex: 3,
       title: { text: 'Group' },
       description: { text: 'Details', maxTextWidth: 160 },
@@ -108,7 +124,7 @@ describe('FrameSchema', () => {
       },
       {
         input: { namespace: 'standard', type: 'frame', id: 'group', cornerRadius: -1, children: [node] },
-        path: ['cornerRadius'],
+        path: [],
       },
       {
         input: { namespace: 'standard', type: 'frame', id: 'group', headerDirection: 'diagonal', children: [node] },
@@ -119,8 +135,14 @@ describe('FrameSchema', () => {
         path: [],
       },
       {
-        input: { namespace: 'standard', type: 'frame', id: 'group', border: {}, children: [node] },
-        path: [],
+        input: {
+          namespace: 'standard',
+          type: 'frame',
+          id: 'group',
+          border: { style: { unsupported: true } },
+          children: [node],
+        },
+        path: ['border', 'style'],
       },
     ];
 

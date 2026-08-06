@@ -219,7 +219,7 @@ describe('layout compile artifacts', () => {
       createFlexLayout({
         size: { x: { kind: 'fixed', value: 25 }, y: { kind: 'fixed', value: 20 } },
         wrap: FlexLayoutWrap.Wrap,
-        columnGap: 6,
+        gap: { column: 6, row: 0 },
         overflow: LayoutOverflow.Clip,
         children: [
           {
@@ -255,8 +255,7 @@ describe('layout compile artifacts', () => {
         size: { x: { kind: 'fixed', value: 60 }, y: { kind: 'fixed', value: 50 } },
         direction: FlexLayoutDirection.RowReverse,
         wrap: FlexLayoutWrap.WrapReverse,
-        columnGap: 5,
-        rowGap: 5,
+        gap: { column: 5, row: 5 },
         alignItems: LayoutAlignment.Start,
         children: ['a', 'b', 'c'].map(key => ({
           kind: LayoutItemKind.Flex,

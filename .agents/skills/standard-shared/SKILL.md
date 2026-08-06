@@ -31,6 +31,11 @@ description: Use when changing retikz shared layer code, dependency-free vocabul
 - 消费 shared vocabulary 时使用枚举成员，不写裸字符串。
 - 避免无意义别名，例如不要把 `WebSide` 原样包成 `NodeLabelBoundarySide`。
 
+## JSDoc
+
+- `const` 变量默认写中文 JSDoc；只有特别简单、局部且名称已完整表达语义的常量可以省略。
+- 导出的 const object enum、映射表、关键字集合及其有契约语义的成员或属性必须逐项说明。
+
 ## 改代码前检查
 
 1. 逻辑是否无业务依赖、无状态、可被多层消费？

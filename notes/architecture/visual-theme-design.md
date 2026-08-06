@@ -4,7 +4,7 @@
 >
 > 适用范围：Chart、Plot、Table、Standard 与未来 Geo 等可视化能力。本文不约束 `apps/docs` 的 shadcn UI、CSS variables、站点 chrome，也不定义宿主应用自身的设计系统。
 >
-> 关联：[`能力完备性与模块边界`](./capability-design.md) · [`包拓扑`](./package-topology.md)
+> 关联：[`能力完备性与模块边界`](./capability-design.md) · [`原子契约与组合设计`](./atomic-contract-design.md) · [`包拓扑`](./package-topology.md)
 
 ---
 
@@ -256,6 +256,18 @@ Core default neutral + light
 | React / Vanilla adapters          | 同一 JSON-safe Scene / Scope Theme 的等价 authoring 表面                                                            | 新 token、不同默认、CSS-only 主题语义                    |
 | SVG / Canvas renderer             | 对统一 Scene 的等价呈现                                                                                             | preset 解析、token merge 与领域 mapping                  |
 | `apps/docs` / host application    | 站点或产品 UI 主题、CSS variables、chrome 与交互外壳                                                                | 改写可视化 spec 的主题契约或静默补可视化默认             |
+
+### 9.1 主题传播与消费边界
+
+Theme 的职责分为三层：Kernel / Core 提供主题协议与传播，上层视觉能力物化主题，renderer 执行已经物化的样式。这里的“主题化”不是所有包都各自提供一套 Theme，而是所有拥有可视表现语义的包都成为同一 Theme 环境的 consumer。
+
+- `@retikz/core` 提供 `ThemeStyle`、`ThemeMode`、Scene / Scope 继承和 Composite context，但原始 Core `Node`、`Path`、Coordinate 与 renderer 不直接按 preset 分支
+- Standard 的通用 presentation，以及 Plot、Chart、Table、Geo 等视觉能力必须消费有效 Theme，并解析自己拥有的 token family；Plot 即使处于比 Chart 更底层的纵向能力层，也不能因为被 Chart 复用而跳过主题解析
+- Chart 可以编排 Chart presentation 并把 Plot 相关语义交给 Plot owner；Table 可以解析 Table presentation 并消费 Standard / Core 的公开 fragment，但任何一方都不能复制另一方的 token vocabulary 或 resolver
+- Plot / Chart / Table 解析出的主题默认必须在 lowering 前物化为正式 Core / Standard 输入；最终 Core primitive 只接收显式 `fill`、`stroke`、`font` 等值，不再次读取 `ThemeStyle`
+- React / Vanilla adapter 只提供等价的主题 authoring 与传递；SVG / Canvas renderer 只执行统一 Scene，不解析 preset；Data、Math 和其它没有视觉表现语义的包不提供可视化 Theme consumer
+
+因此，在同一 `academic + light` 环境下，直接使用的 Plot、BubbleChart、DetailTable 都应分别得到自己的 academic token map；由这些能力生成的 Core 图元也会带有已经物化的样式。裸 Core `Node` 若没有显式样式则保持 Core 默认，不因所在 Scope 的 preset 自动改变。若产品要求裸 Node 也随 preset 改变，应另行定义 Theme-aware Core / Standard composite 或 Core primitive fallback 契约，不能让 renderer 私自补主题。
 
 一个应用可以同时使用 shadcn UI 主题和 retikz visual theme，但两者是相邻系统：宿主可以显式选择或桥接 style / mode / token，不能假定同名 CSS variable 自动成为 retikz 主题真源。
 
