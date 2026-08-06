@@ -1,7 +1,8 @@
-import type { InspectorContext } from '@retikz/core';
+import type { InspectorContext } from '@retikz/inspect';
 
-import type { LayoutInspectionChild, LayoutInspectionMark } from '../internal';
-import type { OverlayLayoutArtifact, ResolvedOverlayLayoutInspectOptions } from './types';
+import type { OverlayLayoutArtifact } from '../../composites/layout/overlay-layout';
+import type { LayoutInspectionChild, LayoutInspectionMark } from '../shared';
+import type { ResolvedOverlayLayoutInspectOptions } from './types';
 
 import {
   inspectLayoutArtifactBase,
@@ -9,9 +10,9 @@ import {
   inspectLayoutOutline,
   lowerLayoutInspectionMarks,
   normalizeLayoutBoundaryGroups,
-} from '../internal';
+} from '../shared';
 
-/** 把 OverlayLayout 布局产物转换为普通 Core 辅助子元素 */
+/** 把 Overlay 布局产物转换为普通 Core 辅助子元素 */
 export const inspectOverlayLayoutArtifact = (
   artifact: OverlayLayoutArtifact,
   context: InspectorContext<ResolvedOverlayLayoutInspectOptions>,

@@ -22,6 +22,14 @@ describe('React authored sites', () => {
       contribute: () => ({
         node: { namespace: 'fixture', type: 'embedded' },
         datasets: {},
+        authoringSites: [
+          {
+            kind: 'path',
+            owner: { kind: 'pathKind', name: 'stroke' },
+            elementType: Embedded,
+            props: { authoring: { role: 'nested' } },
+          },
+        ],
         makeComposites: () => [],
       }),
     };
@@ -55,14 +63,23 @@ describe('React authored sites', () => {
       {
         kind: 'path',
         sourcePath: 'children[0].scope.children[0].path',
+        owner: { kind: 'pathKind', name: 'stroke' },
         elementType: Path,
         props: expect.objectContaining({ authoring: pathAuthoring }),
       },
       {
         kind: 'embeddable',
         sourcePath: 'children[0].scope.children[1]',
+        owner: { kind: 'composite', namespace: 'fixture', type: 'embedded' },
         elementType: Embedded,
         props: expect.objectContaining({ authoring: embeddedAuthoring }),
+      },
+      {
+        kind: 'path',
+        sourcePath: 'children[0].scope.children[1]',
+        owner: { kind: 'pathKind', name: 'stroke' },
+        elementType: Embedded,
+        props: { authoring: { role: 'nested' } },
       },
     ]);
     expect(result).not.toHaveProperty('inspectionRoots');

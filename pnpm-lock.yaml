@@ -824,6 +824,9 @@ importers:
         specifier: 'catalog:'
         version: 4.4.3
     devDependencies:
+      '@retikz/inspect':
+        specifier: workspace:*
+        version: link:../../kernel/inspect
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0
@@ -849,6 +852,9 @@ importers:
         specifier: workspace:*
         version: link:../standard
     devDependencies:
+      '@retikz/inspect':
+        specifier: workspace:*
+        version: link:../../kernel/inspect
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0
@@ -889,6 +895,9 @@ importers:
         specifier: workspace:^
         version: link:../../kernel/vanilla
     devDependencies:
+      '@retikz/inspect':
+        specifier: workspace:*
+        version: link:../../kernel/inspect
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0

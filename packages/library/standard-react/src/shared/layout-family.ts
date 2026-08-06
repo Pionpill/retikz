@@ -22,6 +22,9 @@ type LayoutItemInputByKind = Readonly<{
   overlay: OverlayLayoutItemInput;
 }>;
 
+/** 布局项目内部转发给外层贡献的声明位置 */
+type NestedAuthoringSite = NonNullable<EmbeddableContribution['authoringSites']>[number];
+
 /** 为每次 React family contribution 返回可变的布局 definition 副本 */
 export const makeReactStandardLayoutComposites = (): ReturnType<EmbeddableContribution['makeComposites']> => [
   FlexLayoutDefinition,
@@ -62,32 +65,31 @@ const validateNestedLayoutContributions = (
 const resolveLayoutItemChild = (
   props: LayoutItemProps,
 ): Readonly<{
+  /** 当前布局项目包含的 Core 子元素 */
   child: LayoutItemInputByKind[LayoutItemKindValue]['child'];
-  inspection: NonNullable<EmbeddableContribution['inspectionRoots']> | null;
+  /** 子元素内部按声明顺序收集的位置 */
+  authoringSites: ReadonlyArray<NestedAuthoringSite>;
 }> => {
   const hasIR = props.ir !== undefined;
   const hasChildren = props.children !== undefined;
   if (hasIR === hasChildren) throw new Error('Standard LayoutItem requires exactly one of children or ir');
-  if (hasIR) return { child: props.ir, inspection: null };
+  if (hasIR) return Object.freeze({ child: props.ir, authoringSites: Object.freeze([]) });
   const built = buildIRWithContributions(props.children);
   if (built.ir.children.length !== 1) {
     throw new Error('Standard LayoutItem React child must produce exactly one IRChild');
   }
   validateNestedLayoutContributions(built.contributions);
-  const inspection = built.inspectionRoots.map(root => {
-    const [sceneSegment, ...path] = root.locator.path;
-    if (sceneSegment.index !== 0) {
-      throw new Error('Standard LayoutItem inspection root must be relative to its sole IRChild');
-    }
-    return Object.freeze({
-      locator: Object.freeze({ target: root.locator.target, path }),
-      tree: root.tree,
-    });
-  });
-  return {
+  return Object.freeze({
     child: built.ir.children[0],
-    inspection: inspection.length === 0 ? null : Object.freeze(inspection),
-  };
+    authoringSites: Object.freeze(
+      built.authoringSites
+        .filter(site => site.kind !== 'scene')
+        .map(({ sourcePath, ...site }) => {
+          void sourcePath;
+          return Object.freeze(site) as NestedAuthoringSite;
+        }),
+    ),
+  });
 };
 
 /** 解析一个容器的直属 LayoutItem，并按期望 kind 生成 Standard authoring inputs */
@@ -95,10 +97,12 @@ export const resolveReactLayoutItems = <TKind extends LayoutItemKindValue>(
   children: ReactNode,
   expectedKind: TKind,
 ): Readonly<{
+  /** 传给对应 Standard 布局定义的项目输入 */
   items: Array<LayoutItemInputByKind[TKind]>;
-  inspectionChildren: Array<NonNullable<EmbeddableContribution['inspectionRoots']> | null>;
+  /** 所有项目内部按声明顺序收集的位置 */
+  authoringSites: ReadonlyArray<NestedAuthoringSite>;
 }> => {
-  const inspectionChildren: Array<NonNullable<EmbeddableContribution['inspectionRoots']> | null> = [];
+  const authoringSites: Array<NestedAuthoringSite> = [];
   const items = flattenLayoutChildren(children).map(child => {
     if (!isValidElement(child) || child.type !== LayoutItem) {
       throw new Error('Standard layout container direct children must be LayoutItem');
@@ -111,23 +115,8 @@ export const resolveReactLayoutItems = <TKind extends LayoutItemKindValue>(
     void itemChildren;
     void ir;
     const resolved = resolveLayoutItemChild(props);
-    inspectionChildren.push(resolved.inspection);
+    authoringSites.push(...resolved.authoringSites);
     return { ...item, key: itemKey, child: resolved.child } as LayoutItemInputByKind[TKind];
   });
-  return Object.freeze({ items, inspectionChildren });
+  return Object.freeze({ items, authoringSites: Object.freeze(authoringSites) });
 };
-
-/** 为一个 Standard layout contribution 创建相对单 node 的 inspection tree */
-export const createReactLayoutInspectionRoots = (
-  inspect: boolean | Readonly<Record<string, unknown>> | undefined,
-  children: Array<NonNullable<EmbeddableContribution['inspectionRoots']> | null>,
-): NonNullable<EmbeddableContribution['inspectionRoots']> =>
-  Object.freeze([
-    Object.freeze({
-      locator: Object.freeze({ target: 'composite', path: [] }),
-      tree: Object.freeze({
-        ...(inspect === undefined ? {} : { policy: Object.freeze({ self: inspect }) }),
-        ...(children.every(child => child === null) ? {} : { children: Object.freeze(children) }),
-      }),
-    }),
-  ]);

@@ -17,7 +17,7 @@ import type {
 } from '@retikz/core';
 import type { ReactElement, ReactNode } from 'react';
 
-import { AxisLineTargetSchema, CURRENT_IR_VERSION, parsePathThickness, parseTargetSugar } from '@retikz/core';
+import { AxisLineTargetSchema, CURRENT_IR_VERSION, parsePathThickness, parseTargetSugar, PathKind } from '@retikz/core';
 import { Children, createElement, Fragment, isValidElement } from 'react';
 
 import type { CoordinateProps } from '../components';
@@ -676,6 +676,7 @@ const readSceneChildren = (children: ReactNode, ctx?: BuildContext): Array<IRChi
                 createLayoutAuthoringSite({
                   kind: 'path',
                   sourcePath: `${childSourcePath(ctx, index)}.path`,
+                  owner: { kind: 'pathKind', name: props.kind ?? PathKind.Stroke },
                   elementType: child.type,
                   props: opaqueAuthoringProps(props.authoring),
                 }),
@@ -705,13 +706,26 @@ const readSceneChildren = (children: ReactNode, ctx?: BuildContext): Array<IRChi
           const outputIndex = out.length;
           out.push(contribution.node);
           if (ctx !== undefined) {
+            const sourcePath = childSourcePath(ctx, outputIndex);
             ctx.authoringSites.push(
               createLayoutAuthoringSite({
                 kind: 'embeddable',
-                sourcePath: childSourcePath(ctx, outputIndex),
+                sourcePath,
+                ...('namespace' in contribution.node
+                  ? {
+                      owner: {
+                        kind: 'composite' as const,
+                        namespace: contribution.node.namespace,
+                        type: contribution.node.type,
+                      },
+                    }
+                  : {}),
                 elementType: child.type,
                 props: opaqueAuthoringProps(Reflect.get(child.props, 'authoring')),
               }),
+            );
+            contribution.authoringSites?.forEach(site =>
+              ctx.authoringSites.push(createLayoutAuthoringSite({ ...site, sourcePath })),
             );
           }
           ctx?.contributions.push({

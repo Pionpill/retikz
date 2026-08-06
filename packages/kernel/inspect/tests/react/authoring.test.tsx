@@ -8,7 +8,13 @@ import { act } from 'react-dom/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BUILTIN_INSPECTORS, createInspectorRegistry, STROKE_PATH_INSPECTOR_KEY } from '../../src';
-import { InspectLayout, InspectPath, InspectScope } from '../../src/react';
+import {
+  createInspectionLayoutDriver,
+  createInspectionReactAuthoring,
+  InspectLayout,
+  InspectPath,
+  InspectScope,
+} from '../../src/react';
 
 const registry = createInspectorRegistry(BUILTIN_INSPECTORS);
 
@@ -73,6 +79,40 @@ describe('@retikz/inspect/react authoring and driver', () => {
 
     expect(html).not.toContain('data-retikz-readonly-layer');
     expect(html).not.toContain('#2563eb');
+  });
+
+  it('rejects a self request whose authored site owner does not match the Inspector owner', () => {
+    const driver = createInspectionLayoutDriver({ registry });
+    const session = driver.create({
+      instance: {},
+      source: {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [10, 0] },
+            ],
+          },
+        ],
+      },
+      authoringSites: [
+        {
+          kind: 'path',
+          sourcePath: 'children[0].path',
+          owner: { kind: 'composite', namespace: 'fixture', type: 'box' },
+          elementType: InspectPath,
+          props: {
+            authoring: createInspectionReactAuthoring({ inspector: STROKE_PATH_INSPECTOR_KEY, value: true }),
+          },
+        },
+      ],
+      coreOptions: {},
+    });
+
+    expect(() => session.observers[0]?.createSession()).toThrow(/owner/i);
   });
 
   it('Inspect 根入口源码不静态加载 React optional peer', () => {

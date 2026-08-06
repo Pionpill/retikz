@@ -1,38 +1,34 @@
-import type {
-  InspectionAppearance,
-  IRGraphicStyle,
-  IRNode,
-  IRPath,
-  ResolvedBaseLayoutInspectOptions,
-} from '@retikz/core';
+import type { IRGraphicStyle, IRNode, IRPath } from '@retikz/core';
+import type { InspectionAppearance } from '@retikz/inspect';
 
 import type {
   LayoutArtifactContainer,
   LayoutArtifactItemBase,
   LayoutArtifactRect,
   LayoutSpacingArtifact,
-} from '../shared';
+} from '../../composites/layout/shared';
+import type { ResolvedBaseLayoutInspectOptions } from './types';
 
-import { LayoutSpacingKind } from '../shared';
+import { LayoutSpacingKind } from '../../composites/layout/shared';
 
-/** 布局辅助边界使用的 canonical 虚线周期 */
+/** 布局辅助边界使用的标准虚线周期 */
 const LayoutInspectionDashPattern = Object.freeze([6, 4]);
 
-/** 布局辅助纹理在用户坐标中的 canonical 周期 */
+/** 布局辅助纹理在用户坐标中的标准周期 */
 const LayoutInspectionPatternSize = 12;
 
-/** 布局辅助纹理的 canonical 线宽 */
+/** 布局辅助纹理的标准线宽 */
 const LayoutInspectionPatternLineWidth = 1;
 
-/** 布局辅助纹理的 canonical 透明度 */
+/** 布局辅助纹理的标准透明度 */
 const LayoutInspectionPatternOpacity = 0.55;
 
-/** 布局溢出警告填充的 canonical 透明度 */
+/** 布局溢出警告填充的标准透明度 */
 const LayoutInspectionWarningOpacity = 0.14;
 
 /** 布局辅助图形的共享语义信息 */
 type LayoutInspectionMarkBase = Readonly<{
-  /** 用于测试和诊断的布局语义角色，辅助 Scene seal 时会移除 */
+  /** 用于测试和诊断的布局语义角色，辅助场景封装时会移除 */
   role: string;
 }>;
 
@@ -48,9 +44,9 @@ export type LayoutInspectionLineMark = LayoutInspectionMarkBase &
     x2: number;
     /** 终点纵坐标 */
     y2: number;
-    /** 普通 Path 的描边颜色 */
+    /** 普通路径的描边颜色 */
     color: string;
-    /** 是否使用布局辅助边界的 canonical 虚线 */
+    /** 是否使用布局辅助边界的标准虚线 */
     dashed: boolean;
   }>;
 
@@ -60,23 +56,23 @@ export type LayoutInspectionOutlineMark = LayoutInspectionMarkBase &
     kind: 'outline';
     /** 轮廓矩形 */
     rect: LayoutArtifactRect;
-    /** 普通 Path 的描边颜色 */
+    /** 普通路径的描边颜色 */
     color: string;
   }>;
 
-/** 一块由普通 Node 填充的布局辅助区域 */
+/** 一块由普通节点填充的布局辅助区域 */
 type LayoutInspectionAreaMark = LayoutInspectionMarkBase &
   Readonly<{
     kind: 'area';
     /** 填充矩形 */
     rect: LayoutArtifactRect;
-    /** 普通 Node 使用的颜色或 paint */
+    /** 普通节点使用的颜色或填充 */
     fill: IRGraphicStyle['fill'];
-    /** 普通 Node 的整体透明度 */
+    /** 普通节点的整体透明度 */
     opacity: number;
   }>;
 
-/** 一条由普通 Node 承载的布局辅助标签 */
+/** 一条由普通节点承载的布局辅助标签 */
 type LayoutInspectionLabelMark = LayoutInspectionMarkBase &
   Readonly<{
     kind: 'label';
@@ -97,7 +93,7 @@ export type LayoutInspectionMark =
   | LayoutInspectionAreaMark
   | LayoutInspectionLabelMark;
 
-/** Standard 布局 Inspector 实际返回的普通 Core 子元素 */
+/** Standard 布局检查器实际返回的普通 Core 子元素 */
 export type LayoutInspectionChild = IRPath | IRNode;
 
 /** 创建一块虚线矩形轮廓 */
@@ -134,7 +130,7 @@ type AxisAlignedBoundarySegment = Readonly<{
   end: number;
 }>;
 
-/** 把正交边界转成便于区间运算的 canonical segment */
+/** 把正交边界转成便于区间运算的标准线段 */
 const boundarySegmentOf = (line: LayoutInspectionLineMark): AxisAlignedBoundarySegment | undefined => {
   if (sameCoordinate(line.y1, line.y2)) {
     return { axis: 'x', fixed: line.y1, start: Math.min(line.x1, line.x2), end: Math.max(line.x1, line.x2) };
@@ -228,7 +224,7 @@ export const inspectLayoutStructureRect = (
   inspectLayoutLine(role, rect.x, rect.y, rect.x, rect.y + rect.height, color, true),
 ];
 
-/** 返回 outer 减去裁剪后 inner 的最多四块非重叠矩形 */
+/** 返回外层矩形减去裁剪后内层矩形所得的非重叠区域 */
 const subtractRect = (outer: LayoutArtifactRect, inner: LayoutArtifactRect): Array<LayoutArtifactRect> => {
   if (!positiveRect(outer)) return [];
   const outerRight = outer.x + outer.width;
@@ -250,7 +246,7 @@ const subtractRect = (outer: LayoutArtifactRect, inner: LayoutArtifactRect): Arr
   ].filter(positiveRect);
 };
 
-/** 创建普通 lines pattern paint，保留既有斜线方向 */
+/** 创建普通线条纹理填充，并保留既有斜线方向 */
 const patternFill = (
   color: string,
   direction: 'forward-diagonal' | 'backward-diagonal',
@@ -294,21 +290,21 @@ const fillRing = (
   return [...fills, ...boundaries];
 };
 
-/** 三种布局 family 共用的固定六层辅助内容分组 */
+/** 三种布局类型共用的固定辅助内容分组 */
 export type LayoutInspectionLayers = Readonly<{
-  /** spacing 纹理与边界 */
+  /** 间距纹理与边界 */
   underlay: Array<LayoutInspectionMark>;
-  /** container 与 item 盒边界 */
+  /** 容器与项目盒边界 */
   boxes: Array<LayoutInspectionMark>;
   /** 溢出警告 */
   warnings: Array<LayoutInspectionMark>;
   /** 对齐辅助线 */
   guides: Array<LayoutInspectionMark>;
-  /** item 文本标签 */
+  /** 项目文本标签 */
   labels: Array<LayoutInspectionMark>;
 }>;
 
-/** 把 resolved spacing artifact 转为 family-specific underlay */
+/** 把已解析的间距产物转换为对应布局类型的底层辅助内容 */
 export const inspectLayoutSpacing = (
   family: 'flex' | 'grid',
   spacing: ReadonlyArray<LayoutSpacingArtifact>,
@@ -338,7 +334,7 @@ export const inspectLayoutSpacing = (
   return inspected;
 };
 
-/** 把三种布局共用 artifact 几何转为基础辅助标记 */
+/** 把三种布局共用的产物几何转换为基础辅助标记 */
 export const inspectLayoutArtifactBase = (
   container: LayoutArtifactContainer,
   items: ReadonlyArray<LayoutArtifactItemBase>,
@@ -427,7 +423,7 @@ export const inspectLayoutArtifactBase = (
   return { underlay, boxes, warnings, guides, labels };
 };
 
-/** 把单个矩形轮廓转为普通 Core Path */
+/** 把单个矩形轮廓转换为普通 Core 路径 */
 const lowerOutline = (mark: LayoutInspectionOutlineMark): IRPath => {
   const { x, y, width, height } = mark.rect;
   return {
@@ -491,6 +487,6 @@ const lowerLayoutInspectionMark = (mark: LayoutInspectionMark): LayoutInspection
   };
 };
 
-/** 按既有绘制顺序把布局辅助标记 lowering 为普通 Core 子元素 */
+/** 按既有绘制顺序把布局辅助标记下沉为普通 Core 子元素 */
 export const lowerLayoutInspectionMarks = (marks: ReadonlyArray<LayoutInspectionMark>): Array<LayoutInspectionChild> =>
   marks.map(lowerLayoutInspectionMark);

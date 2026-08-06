@@ -1,7 +1,8 @@
-import type { InspectorContext } from '@retikz/core';
+import type { InspectorContext } from '@retikz/inspect';
 
-import type { LayoutInspectionChild, LayoutInspectionLineMark } from '../internal';
-import type { FlexLayoutArtifact, ResolvedFlexLayoutInspectOptions } from './types';
+import type { FlexLayoutArtifact } from '../../composites/layout/flex-layout';
+import type { LayoutInspectionChild, LayoutInspectionLineMark } from '../shared';
+import type { ResolvedFlexLayoutInspectOptions } from './types';
 
 import {
   inspectLayoutArtifactBase,
@@ -9,9 +10,9 @@ import {
   inspectLayoutStructureRect,
   lowerLayoutInspectionMarks,
   normalizeLayoutBoundaryGroups,
-} from '../internal';
+} from '../shared';
 
-/** 把 FlexLayout 布局产物转换为普通 Core 辅助子元素 */
+/** 把 Flex 布局产物转换为普通 Core 辅助子元素 */
 export const inspectFlexLayoutArtifact = (
   artifact: FlexLayoutArtifact,
   context: InspectorContext<ResolvedFlexLayoutInspectOptions>,

@@ -77,9 +77,8 @@ const requiredProbe = (
   context: LayoutCompositeCompileContext,
   child: IROverlayLayoutItem['child'],
   proposal: LayoutProposal,
-  childIndex: number,
 ): LayoutChildResult => {
-  const probe = context.layoutChild(child, proposal, context.inspection.child(childIndex));
+  const probe = context.layoutChild(child, proposal);
   if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
   return probe.result;
 };
@@ -146,7 +145,7 @@ const probeOverlayProfile = (
       : finiteYLimit === undefined
         ? intrinsicProposal('natural')
         : boundedProposal(Math.max(0, finiteYLimit - item.margin.top - item.margin.bottom));
-  const xResult = requiredProbe(context, item.authored.child, { x: xProposal, y: yBasis }, item.sourceIndex);
+  const xResult = requiredProbe(context, item.authored.child, { x: xProposal, y: yBasis });
 
   let contextualX: LayoutAxisProposal;
   if (placement.kind === OverlayPlacementKind.Positioned) {
@@ -162,7 +161,7 @@ const probeOverlayProfile = (
     placement.kind === OverlayPlacementKind.Positioned && placement.height !== undefined
       ? exactProposal(placement.height)
       : intrinsicProposal(mode);
-  const yResult = requiredProbe(context, item.authored.child, { x: contextualX, y: yProposal }, item.sourceIndex);
+  const yResult = requiredProbe(context, item.authored.child, { x: contextualX, y: yProposal });
   return Object.freeze({ xResult, yResult });
 };
 
@@ -253,29 +252,19 @@ export const compileOverlayLayout = (
     const placement = item.authored.placement;
     if (placement.kind === OverlayPlacementKind.Positioned) {
       const natural = naturalResults[sourceIndex];
-      return requiredProbe(
-        context,
-        item.authored.child,
-        {
-          x: exactProposal(placement.width ?? natural.xResult.slotSize.width),
-          y: exactProposal(placement.height ?? natural.yResult.slotSize.height),
-        },
-        sourceIndex,
-      );
+      return requiredProbe(context, item.authored.child, {
+        x: exactProposal(placement.width ?? natural.xResult.slotSize.width),
+        y: exactProposal(placement.height ?? natural.yResult.slotSize.height),
+      });
     }
     const availableWidth = Math.max(0, content.width - item.margin.left - item.margin.right);
     const availableHeight = Math.max(0, content.height - item.margin.top - item.margin.bottom);
     const justify = item.authored.justifySelf ?? node.justifyItems;
     const align = item.authored.alignSelf ?? node.alignItems;
-    return requiredProbe(
-      context,
-      item.authored.child,
-      {
-        x: justify === LayoutAlignment.Stretch ? exactProposal(availableWidth) : boundedProposal(availableWidth),
-        y: align === LayoutAlignment.Stretch ? exactProposal(availableHeight) : boundedProposal(availableHeight),
-      },
-      sourceIndex,
-    );
+    return requiredProbe(context, item.authored.child, {
+      x: justify === LayoutAlignment.Stretch ? exactProposal(availableWidth) : boundedProposal(availableWidth),
+      y: align === LayoutAlignment.Stretch ? exactProposal(availableHeight) : boundedProposal(availableHeight),
+    });
   });
 
   const baselineTargetOf = (name: 'first-baseline' | 'last-baseline'): number | undefined => {

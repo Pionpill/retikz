@@ -45,6 +45,25 @@ const observation = (index: number): CompileObservation => ({
   value: { value: index },
 });
 
+const colocatedObservation = (index: number): CompileObservation => ({
+  ...observation(0),
+  occurrence: {
+    sourcePath: 'children[0].scope.children[0]',
+    expansionPath: index === 0 ? [] : [{ kind: 'replay', index: index - 1 }],
+  },
+  provenance: {
+    origin: {
+      sourcePath: 'children[0].scope.children[0]',
+      expansionPath: index === 0 ? [] : [{ kind: 'probe', index: index - 1 }],
+    },
+    final: {
+      sourcePath: 'children[0].scope.children[0]',
+      expansionPath: index === 0 ? [] : [{ kind: 'replay', index: index - 1 }],
+    },
+  },
+  value: { value: index },
+});
+
 describe('Inspection selection', () => {
   it('evaluates scene, outer subtree, inner self and allocates appearance after stable sorting', () => {
     const resolved = resolveInspectionSelection({
@@ -191,6 +210,61 @@ describe('Inspection selection', () => {
     expect(resolved[0]?.owner).toEqual(owner);
   });
 
+  it('按 occurrenceIndex 区分同 source path 与 owner 的嵌套 occurrence', () => {
+    const resolved = resolveInspectionSelection({
+      ir,
+      registry,
+      observations: [colocatedObservation(1), colocatedObservation(0)],
+      selection: {
+        rules: [
+          {
+            kind: 'request',
+            inspector: key,
+            target: {
+              kind: 'self',
+              locator: {
+                kind: 'authored',
+                sourcePath: 'children[0].scope.children[0]',
+                occurrenceIndex: 1,
+              },
+            },
+            value: true,
+          },
+        ],
+      },
+    });
+
+    expect(resolved).toHaveLength(1);
+    expect(resolved[0]?.occurrence.expansionPath).toEqual([{ kind: 'replay', index: 0 }]);
+  });
+
+  it('rejects an authored occurrenceIndex outside the final owner occurrences', () => {
+    expect(() =>
+      resolveInspectionSelection({
+        ir,
+        registry,
+        observations: [colocatedObservation(0), colocatedObservation(1)],
+        selection: {
+          rules: [
+            {
+              kind: 'request',
+              inspector: key,
+              target: {
+                kind: 'self',
+                locator: {
+                  kind: 'authored',
+                  sourcePath: 'children[0].scope.children[0]',
+                  occurrenceIndex: 2,
+                },
+              },
+              value: true,
+            },
+          ],
+        },
+      }),
+    ).toThrow(/final owner output/i);
+  });
+
   it('requires explicit self selection for every Path Inspector, including third-party definitions', () => {
     const pathKey = { namespace: 'third-party', name: 'path-geometry' };
     const pathDefinition = defineInspector({
@@ -263,6 +337,26 @@ describe('Inspection selection', () => {
             kind: 'request',
             inspector: key,
             target: { kind: 'subtree', sourcePath: 'children[99].scope' },
+            value: true,
+          },
+        ],
+      },
+    ],
+    [
+      'invalid authored occurrence index',
+      {
+        rules: [
+          {
+            kind: 'request',
+            inspector: key,
+            target: {
+              kind: 'self',
+              locator: {
+                kind: 'authored',
+                sourcePath: 'children[0].scope.children[0]',
+                occurrenceIndex: -1,
+              },
+            },
             value: true,
           },
         ],

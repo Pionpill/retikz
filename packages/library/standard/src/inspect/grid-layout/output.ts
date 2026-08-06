@@ -1,7 +1,8 @@
-import type { InspectorContext } from '@retikz/core';
+import type { InspectorContext } from '@retikz/inspect';
 
-import type { LayoutInspectionChild, LayoutInspectionLineMark, LayoutInspectionMark } from '../internal';
-import type { GridLayoutArtifact, ResolvedGridLayoutInspectOptions } from './types';
+import type { GridLayoutArtifact } from '../../composites/layout/grid-layout';
+import type { LayoutInspectionChild, LayoutInspectionLineMark, LayoutInspectionMark } from '../shared';
+import type { ResolvedGridLayoutInspectOptions } from './types';
 
 import {
   inspectLayoutArtifactBase,
@@ -10,9 +11,9 @@ import {
   inspectLayoutSpacing,
   lowerLayoutInspectionMarks,
   normalizeLayoutBoundaryGroups,
-} from '../internal';
+} from '../shared';
 
-/** 把 GridLayout 布局产物转换为普通 Core 辅助子元素 */
+/** 把 Grid 布局产物转换为普通 Core 辅助子元素 */
 export const inspectGridLayoutArtifact = (
   artifact: GridLayoutArtifact,
   context: InspectorContext<ResolvedGridLayoutInspectOptions>,

@@ -132,9 +132,8 @@ const requiredProbe = (
   context: LayoutCompositeCompileContext,
   child: IRFlexLayoutItem['child'],
   proposal: LayoutProposal,
-  childIndex: number,
 ): LayoutChildResult => {
-  const probe = context.layoutChild(child, proposal, context.inspection.child(childIndex));
+  const probe = context.layoutChild(child, proposal);
   if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
   return probe.result;
 };
@@ -299,7 +298,6 @@ export const compileFlexLayout = (
       context,
       authored.child,
       physicalProposal(axes.main, intrinsicProposal('minimum'), crossBasis),
-      sourceIndex,
     );
     const childMinimum = slotSizeOn(minimumResult, axes.main);
     const flexBaseSlot =
@@ -309,7 +307,6 @@ export const compileFlexLayout = (
               context,
               authored.child,
               physicalProposal(axes.main, intrinsicProposal('natural'), crossBasis),
-              sourceIndex,
             ),
             axes.main,
           )
@@ -407,7 +404,6 @@ export const compileFlexLayout = (
           ? intrinsicProposal('natural')
           : { kind: LayoutAxisProposalKind.Range, min: 0, max: finiteCrossLimit },
       ),
-      sourceIndex,
     ),
   );
   lineStates.forEach(line => {
@@ -517,7 +513,6 @@ export const compileFlexLayout = (
           context,
           item.authored.child,
           physicalProposal(axes.main, exactProposal(mainSlot), exactProposal(itemCrossSlot)),
-          sourceIndex,
         );
       }
       const crossSlotSize = slotSizeOn(finalResult, axes.cross);

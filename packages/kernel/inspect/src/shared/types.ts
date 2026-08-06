@@ -98,7 +98,12 @@ export type InspectionSelectionTarget =
   | Readonly<{
       kind: 'self';
       locator:
-        | Readonly<{ kind: 'authored'; sourcePath: string }>
+        | Readonly<{
+            kind: 'authored';
+            sourcePath: string;
+            /** 同一来源路径与所属者下按最终实例顺序选择的序号；省略表示全部 */
+            occurrenceIndex?: number;
+          }>
         | Readonly<{ kind: 'occurrence'; occurrence: CompileOccurrenceLocator }>;
     }>;
 

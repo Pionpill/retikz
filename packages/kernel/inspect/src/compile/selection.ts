@@ -56,7 +56,8 @@ const occurrenceEquals = (left: CompileObservation['occurrence'], right: Compile
 const targetKey = (target: InspectionSelectionTarget): string => {
   if (target.kind === 'scene') return 'scene';
   if (target.kind === 'subtree') return `subtree:${target.sourcePath}`;
-  if (target.locator.kind === 'authored') return `self:authored:${target.locator.sourcePath}`;
+  if (target.locator.kind === 'authored')
+    return `self:authored:${target.locator.sourcePath}:${target.locator.occurrenceIndex ?? '*'}`;
   return `self:occurrence:${target.locator.occurrence.sourcePath}:${target.locator.occurrence.expansionPath
     .map(segment => `${segment.kind}[${segment.index}]`)
     .join('/')}`;
@@ -92,6 +93,13 @@ const validateTarget = (target: InspectionSelectionTarget, paths: ReturnType<typ
   }
   if (target.locator.kind === 'authored' && !paths.self.has(target.locator.sourcePath)) {
     throw new Error(`Invalid inspection self locator '${target.locator.sourcePath}'`);
+  }
+  if (
+    target.locator.kind === 'authored' &&
+    target.locator.occurrenceIndex !== undefined &&
+    (!Number.isSafeInteger(target.locator.occurrenceIndex) || target.locator.occurrenceIndex < 0)
+  ) {
+    throw new Error('Invalid inspection authored occurrence index');
   }
   if (
     target.locator.kind === 'occurrence' &&
@@ -135,7 +143,12 @@ export const admitInspectionSelection = (
   );
 };
 
-const targetMatches = (target: InspectionSelectionTarget, observation: CompileObservation): boolean => {
+const targetMatches = (
+  target: InspectionSelectionTarget,
+  observation: CompileObservation,
+  observations: ReadonlyArray<CompileObservation>,
+  owner: CompileObservationOwner,
+): boolean => {
   if (target.kind === 'scene') return true;
   if (target.kind === 'subtree') {
     return (
@@ -143,9 +156,15 @@ const targetMatches = (target: InspectionSelectionTarget, observation: CompileOb
       observation.occurrence.sourcePath.startsWith(`${target.sourcePath}.`)
     );
   }
-  return target.locator.kind === 'authored'
-    ? observation.occurrence.sourcePath === target.locator.sourcePath
-    : occurrenceEquals(observation.occurrence, target.locator.occurrence);
+  const locator = target.locator;
+  if (locator.kind === 'occurrence') return occurrenceEquals(observation.occurrence, locator.occurrence);
+  if (observation.occurrence.sourcePath !== locator.sourcePath) return false;
+  if (locator.occurrenceIndex === undefined) return true;
+  const selected = observations
+    .filter(candidate => candidate.occurrence.sourcePath === locator.sourcePath && ownerEquals(candidate.owner, owner))
+    .sort((left, right) => compareInspectionOccurrences(left.occurrence, right.occurrence))
+    .at(locator.occurrenceIndex);
+  return selected !== undefined && occurrenceEquals(observation.occurrence, selected.occurrence);
 };
 
 /** 判断 scene 或 subtree barrier 是否覆盖给定 authored source path */
@@ -168,6 +187,9 @@ export const resolveInspectionSelection = ({
   observations: ReadonlyArray<CompileObservation>;
 }>): ReadonlyArray<ResolvedInspectionRequest> => {
   const admitted = admitInspectionSelection(ir, registry, selection);
+  const orderedObservations = [...observations].sort((left, right) =>
+    compareInspectionOccurrences(left.occurrence, right.occurrence),
+  );
   for (const { index, rule } of admitted) {
     if (rule.kind !== 'request' || rule.target.kind !== 'self' || rule.value === false) continue;
     const sourcePath =
@@ -183,7 +205,9 @@ export const resolveInspectionSelection = ({
       continue;
     }
     const definition = registry.require(rule.inspector);
-    const matches = observations.filter(observation => targetMatches(rule.target, observation));
+    const matches = orderedObservations.filter(observation =>
+      targetMatches(rule.target, observation, orderedObservations, definition.owner),
+    );
     try {
       if (matches.length === 0) throw new Error('Explicit self target has no final owner output');
       if (!matches.some(observation => ownerEquals(observation.owner, definition.owner))) {
@@ -195,13 +219,12 @@ export const resolveInspectionSelection = ({
   }
 
   const pending: Array<Omit<ResolvedInspectionRequest, 'appearance'>> = [];
-  const orderedObservations = [...observations].sort((left, right) =>
-    compareInspectionOccurrences(left.occurrence, right.occurrence),
-  );
   for (const observation of orderedObservations) {
     for (const definition of registry.definitions) {
       if (!ownerEquals(observation.owner, definition.owner)) continue;
-      const matching = admitted.filter(({ rule }) => targetMatches(rule.target, observation));
+      const matching = admitted.filter(({ rule }) =>
+        targetMatches(rule.target, observation, orderedObservations, definition.owner),
+      );
       if (matching.some(({ rule }) => rule.kind === 'barrier')) continue;
       const requests = matching
         .filter(

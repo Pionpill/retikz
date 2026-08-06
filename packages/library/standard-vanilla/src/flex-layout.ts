@@ -1,15 +1,15 @@
-import type { FlexLayoutInput, FlexLayoutInspectOptions } from '@retikz/standard';
+import type { FlexLayoutInput } from '@retikz/standard';
 import type { VanillaEmbedSpec, VanillaTier2Adapter } from '@retikz/vanilla';
 
-import { createFlexLayout, FlexLayoutInspectOptionsInputSchema } from '@retikz/standard';
+import { createFlexLayout } from '@retikz/standard';
 
 import { StandardLayoutVanillaNamespace } from './constants';
 import { makeVanillaStandardLayoutComposites } from './layout-family';
 
-/** Vanilla FlexLayout embed 的稳定 kind */
+/** Vanilla Flex 布局嵌入项的稳定类别 */
 const FlexLayoutEmbedKind = 'standard.flexLayout';
 
-/** Standard FlexLayout 的 Vanilla Tier 2 adapter */
+/** Standard Flex 布局的 Vanilla 适配器 */
 export const FlexLayoutVanillaAdapter: VanillaTier2Adapter<FlexLayoutInput> = {
   kind: FlexLayoutEmbedKind,
   namespace: StandardLayoutVanillaNamespace,
@@ -20,17 +20,15 @@ export const FlexLayoutVanillaAdapter: VanillaTier2Adapter<FlexLayoutInput> = {
   }),
 };
 
-/** 创建由 FlexLayoutVanillaAdapter 下沉的 Standard FlexLayout embed */
+/** 创建由 Standard 适配器下沉的 Flex 布局嵌入项 */
 export const flexLayout = (
   id: string,
   input: FlexLayoutInput,
-  inspect?: boolean | FlexLayoutInspectOptions,
-): VanillaEmbedSpec<FlexLayoutInput, FlexLayoutInspectOptions> => ({
+  authoring?: unknown,
+): VanillaEmbedSpec<FlexLayoutInput> => ({
   type: 'embed',
   kind: FlexLayoutEmbedKind,
   id,
   props: input,
-  ...(inspect === undefined
-    ? {}
-    : { inspect: typeof inspect === 'object' ? FlexLayoutInspectOptionsInputSchema.parse(inspect) : inspect }),
+  ...(authoring === undefined ? {} : { authoring }),
 });
