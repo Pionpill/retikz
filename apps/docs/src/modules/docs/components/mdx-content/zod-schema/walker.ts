@@ -85,6 +85,7 @@ function walkTypeImpl(schema: AnySchema, skipRegistry: boolean, ctx: WalkCtx = R
     return walkTypeImpl(schema.unwrap(), false, next);
   }
   if (schema instanceof z.ZodPipe) {
+    if (schema.out instanceof z.ZodTransform) return walkTypeImpl(schema.in, false, next);
     return walkTypeImpl(schema.out, false, next);
   }
   if (schema instanceof z.ZodUnion) {

@@ -62,9 +62,15 @@ describe('Chart resolution errors', () => {
       ['presentation', 'children', 0, 'content', 'text'],
     ],
     [
-      { ...base, presentation: { layout: { rowGap: -1 }, children: [{ content: { kind: 'plot' } }] } },
+      {
+        ...base,
+        presentation: {
+          layout: { gap: { column: 0, row: -1 } },
+          children: [{ content: { kind: 'plot' } }],
+        },
+      },
       'invalid-chart-spec',
-      ['presentation', 'layout', 'rowGap'],
+      ['presentation', 'layout', 'gap', 'row'],
     ],
     [
       { ...base, presentation: { children: [{ key: 'main', content: { kind: 'plot' } }] } },

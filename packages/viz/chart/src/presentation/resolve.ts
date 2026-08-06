@@ -233,8 +233,7 @@ export const resolveChartPresentation = (
   const content = createFlexLayout({
     direction: FlexLayoutDirection.Column,
     wrap: FlexLayoutWrap.NoWrap,
-    columnGap: 0,
-    rowGap: tokens[ChartStyleToken.ChartGap],
+    gap: { column: 0, row: tokens[ChartStyleToken.ChartGap] },
     justifyContent: LayoutDistribution.Start,
     alignContent: LayoutDistribution.Start,
     ...presentation.layout,

@@ -2,14 +2,17 @@ import type { CompositeArtifactOf, LayoutCompositeDefinition } from '@retikz/cor
 
 import { defineComposite } from '@retikz/core';
 
-import type { ResolvedGridLayoutInspectLocalOptions } from '../shared';
-import type { GridLayoutArtifact, IRGridLayout } from './types';
+import type { GridLayoutArtifact, IRGridLayout, ResolvedGridLayoutInspectLocalOptions } from './types';
 
 import { STANDARD_NAMESPACE } from '../../shared';
-import { GridLayoutInspectLocalOptionsInputSchema, GridLayoutInspectLocalOptionsSchema } from '../shared';
 import { inspectGridLayoutArtifact } from './inspection';
 import { compileGridLayout } from './pipeline';
-import { GridLayoutArtifactSchema, GridLayoutSchema } from './schema';
+import {
+  GridLayoutArtifactSchema,
+  GridLayoutInspectLocalOptionsInputSchema,
+  GridLayoutInspectLocalOptionsSchema,
+  GridLayoutSchema,
+} from './schema';
 
 /** Standard GridLayout 的官方 Core layout-aware composite definition */
 export const GridLayoutDefinition: LayoutCompositeDefinition<

@@ -1588,6 +1588,7 @@ describe('preview controls registry', () => {
       'borderStroke',
       'strokeWidth',
       'strokeOpacity',
+      'borderCornerRadius',
       'borderLineStyle',
       'fillOpacity',
       'titlePadding',

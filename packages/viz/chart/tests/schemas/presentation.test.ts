@@ -51,8 +51,7 @@ describe('Chart presentation schema', () => {
         overflow: 'clip',
         direction: 'row',
         wrap: 'wrap',
-        columnGap: 4,
-        rowGap: 6,
+        gap: { column: 4, row: 6 },
         justifyContent: 'space-between',
         alignItems: 'first-baseline',
         alignContent: 'center',
@@ -182,7 +181,7 @@ describe('Chart presentation schema', () => {
 
   it('拒绝未知字段与显式 undefined', () => {
     expect(() => ChartPresentationSchema.parse({ children: [plotItem], toolbar: true })).toThrow();
-    expect(() => ChartPresentationSchema.parse({ layout: { gap: 4 }, children: [plotItem] })).toThrow();
+    expect(() => ChartPresentationSchema.parse({ layout: { columnGap: 4 }, children: [plotItem] })).toThrow();
     expect(() => ChartPresentationSchema.parse({ children: [{ ...plotItem, grow: 1, extra: true }] })).toThrow();
     expect(() =>
       ChartPresentationSchema.parse({

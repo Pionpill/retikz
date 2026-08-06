@@ -47,13 +47,13 @@ describe('Chart shared schemas', () => {
       ChartSharedSchema.parse({
         data: { reference: 'rows' },
         presentation: {
-          layout: { rowGap: 6, alignItems: 'start' },
+          layout: { gap: { column: 0, row: 6 }, alignItems: 'start' },
           children: [{ content: { kind: 'preset', preset: 'title', text: 'Revenue' } }, { content: { kind: 'plot' } }],
         },
       }),
     ).toMatchObject({
       presentation: {
-        layout: { rowGap: 6, alignItems: 'start' },
+        layout: { gap: { column: 0, row: 6 }, alignItems: 'start' },
         children: [{ content: { kind: 'preset', preset: 'title', text: 'Revenue' } }, { content: { kind: 'plot' } }],
       },
     });

@@ -126,7 +126,7 @@ describe('@retikz/chart package root', () => {
     const presetItem: IRChartPresentationPresetItem = { content: presetContent };
     const childItem: IRChartPresentationChildItem = { key: 'badge', content: childContent };
     const item: IRChartPresentationItem = presetItem;
-    const presentationLayout: IRChartPresentationLayout = { rowGap: 8, alignItems: 'start' };
+    const presentationLayout: IRChartPresentationLayout = { gap: { column: 0, row: 8 }, alignItems: 'start' };
     const presentation: IRChartPresentation = {
       layout: presentationLayout,
       children: [presetItem, plotItem, childItem],

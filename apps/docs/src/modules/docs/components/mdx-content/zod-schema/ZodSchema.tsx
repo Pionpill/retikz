@@ -87,6 +87,9 @@ const branchLabel = (type: TypeRepr & { kind: 'union' }, index: number): string 
 };
 
 const expandTypeRows = (type: TypeRepr, paths: PathVariants, depth: number): Array<TableRow> => {
+  if (type.kind === 'default') {
+    return expandTypeRows(type.inner, paths, depth);
+  }
   if (type.kind === 'object') return flattenNestedFields(type.fields, paths, depth);
   if (type.kind === 'array') return expandTypeRows(type.element, appendPath(paths, { kind: 'array' }), depth);
   if (type.kind === 'tuple') {

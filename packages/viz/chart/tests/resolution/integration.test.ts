@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import { ScatterChartSpecSchema } from '../../src/families/scatter-points/scatter';
-import { resolveChartSpec,ScatterChartDefinition } from '../../src/resolution';
+import { resolveChartSpec, ScatterChartDefinition } from '../../src/resolution';
 
 const rows = [
   { key: 'r2', x: 2, y: 20, series: 'north' },
@@ -71,7 +71,7 @@ const barePlotSpec: IRPlotSpec = PlotSpecSchema.parse({
 const presentedChartSpec = ScatterChartSpecSchema.parse({
   ...chartSpec,
   presentation: {
-    layout: { rowGap: 8, alignItems: 'start' },
+    layout: { gap: { column: 0, row: 8 }, alignItems: 'start' },
     children: [
       { content: { kind: 'preset', preset: 'title', text: 'Revenue' } },
       { content: { kind: 'plot' } },
