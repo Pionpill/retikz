@@ -1,16 +1,7 @@
 // @vitest-environment jsdom
-import type { AnyCompositeDefinition, IRChild, PathKindCompileResult } from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
 
-import {
-  compileToScene,
-  CompositeBaseSchema,
-  defineComposite,
-  defineInspector,
-  definePathKind,
-  NodeTextColor,
-  ThemeMode,
-  ThemeStyle,
-} from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, NodeTextColor, ThemeMode, ThemeStyle } from '@retikz/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
@@ -196,103 +187,29 @@ describe('@retikz/vanilla plain spec', () => {
     });
   });
 
-  it('Path inspect 在 normalization 时剥离，并生成与 Scope 屏障合并的 target=path sidecar', () => {
+  it('authoring 只进入领域中立 sites，不写入 Core IR 或 inspection sidecar', () => {
+    const authoring = Object.freeze({ extension: 'fixture' });
     const normalized = normalizeFigureSpec(
-      figure([
-        scope({ inspect: { enabled: false } }, [
-          path('curve', {
-            way: [
-              [0, 0],
-              {
-                cubic: [
-                  [10, 0],
-                  [20, 10],
-                ],
-              },
-              [30, 10],
-            ],
-            inspect: { labels: true, providerOption: 'kept' },
-          }),
-        ]),
-      ]),
-    );
-
-    expect(normalized.ir.children).toEqual([
-      {
-        type: 'scope',
+      figure({
+        authoring,
         children: [
-          {
-            type: 'path',
-            id: 'curve',
-            children: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              { type: 'step', kind: 'cubic', control1: [10, 0], control2: [20, 10], to: [30, 10] },
-            ],
-          },
+          scope({ authoring }, [
+            path('curve', {
+              authoring,
+              way: [
+                [0, 0],
+                [30, 10],
+              ],
+            }),
+          ]),
         ],
-      },
-    ]);
-    expect(normalized.inspectionRoots).toEqual([
-      {
-        locator: {
-          target: 'path',
-          path: [
-            { kind: 'sceneChild', index: 0 },
-            { kind: 'scopeChild', index: 0 },
-          ],
-        },
-        tree: {
-          policy: {
-            inherited: { enabled: false },
-            self: { labels: true, providerOption: 'kept' },
-          },
-        },
-      },
-    ]);
-  });
-
-  it('Path inspect 的扩展选项由自定义 Path kind schema 解析后到达 Inspector callback', () => {
-    const observed = vi.fn();
-    const inspector = defineInspector({
-      kind: 'path',
-      optionsInputSchema: z.strictObject({ providerOption: z.string().optional() }),
-      optionsSchema: z
-        .strictObject({ providerOption: z.string().optional() })
-        .transform(value => ({ providerOption: value.providerOption ?? 'default' })),
-      inspect: (_subject: { point: [number, number] }, context): IRChild => {
-        observed(context.options);
-        return { type: 'node', position: [0, 0] };
-      },
-    });
-    const pathKind = definePathKind({
-      schema: z.object({ kind: z.literal('vanilla-inspected') }),
-      inspectionSubjectSchema: z.strictObject({ point: z.tuple([z.number(), z.number()]) }),
-      inspector,
-      compile: (): PathKindCompileResult<{ point: [number, number] }> => ({
-        primitives: [{ type: 'rect', x: 0, y: 0, width: 1, height: 1 }],
-        boundsPoints: [[0, 0]],
-        inspectionSubject: { point: [0, 0] },
       }),
-    });
-    const normalized = normalizeFigureSpec(
-      figure([
-        path('custom', {
-          kind: 'vanilla-inspected',
-          way: [
-            [0, 0],
-            [1, 0],
-          ],
-          inspect: { providerOption: 'vanilla' },
-        }),
-      ]),
     );
 
-    compileToScene(normalized.ir, {
-      pathKinds: [pathKind],
-      inspection: { roots: normalized.inspectionRoots },
-    });
-
-    expect(observed).toHaveBeenCalledWith({ providerOption: 'vanilla' });
+    expect(normalized.authoringSites.map(site => site.authoring)).toEqual([authoring, authoring, authoring]);
+    expect(normalized).not.toHaveProperty('inspectionRoots');
+    expect(JSON.stringify(normalized.ir)).not.toContain('authoring');
+    expect(JSON.stringify(normalized.ir)).not.toContain('inspect');
   });
 
   it('node helper 透传 anchor-to-anchor position', () => {

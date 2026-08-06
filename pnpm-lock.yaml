@@ -594,6 +594,9 @@ importers:
       '@retikz/render':
         specifier: workspace:*
         version: link:../render
+      '@retikz/vanilla':
+        specifier: workspace:*
+        version: link:../vanilla
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0

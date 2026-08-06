@@ -1,12 +1,4 @@
-import type {
-  InspectionOptionsInputObject,
-  IRCoordinate,
-  IRNode,
-  IRPath,
-  PathInspectionAuthoring,
-  PathThicknessValue,
-  WayDSL,
-} from '@retikz/core';
+import type { IRCoordinate, IRNode, IRPath, PathThicknessValue, WayDSL } from '@retikz/core';
 
 import { parsePathThickness, parseWay } from '@retikz/core';
 
@@ -22,7 +14,7 @@ import type {
 import { cloneThemeInput } from './theme-input';
 
 /** Vanilla 图形辅助函数的输入配置 */
-export type VanillaFigureInput = Pick<VanillaFigureSpec, 'id' | 'theme' | 'viewBox' | 'animations'> &
+export type VanillaFigureInput = Pick<VanillaFigureSpec, 'id' | 'theme' | 'viewBox' | 'animations' | 'authoring'> &
   ({ children?: Array<VanillaChildSpec>; layers?: never } | { layers: Array<VanillaLayerSpec>; children?: never });
 
 /** Vanilla 节点普通规格辅助函数 */
@@ -62,8 +54,8 @@ export type VanillaPathConfig = Omit<IRPath, 'type' | 'id' | 'children'> & {
   way: WayDSL;
   /** 路径描边宽度语法糖 */
   thickness?: PathThicknessValue;
-  /** 只开启当前路径 occurrence 的运行时 Inspector，不进入 Core IR */
-  inspect?: PathInspectionAuthoring;
+  /** 可选编译驱动自行解释的运行时载荷，不进入 Core IR */
+  authoring?: unknown;
 };
 
 type AnonymousVanillaPathConfig = Omit<VanillaPathConfig, 'id'>;
@@ -119,20 +111,17 @@ export const layer = (
 };
 
 /** Vanilla Tier2 嵌入节点普通规格辅助函数 */
-export const embed = <
-  TProps = Record<string, unknown>,
-  TInspect extends InspectionOptionsInputObject = InspectionOptionsInputObject,
->(
+export const embed = <TProps = Record<string, unknown>>(
   kind: string,
   id: string,
   props: TProps,
-  inspect?: boolean | TInspect,
-): VanillaEmbedSpec<TProps, TInspect> => ({
+  authoring?: unknown,
+): VanillaEmbedSpec<TProps> => ({
   type: 'embed',
   kind,
   id,
   props,
-  ...(inspect === undefined ? {} : { inspect }),
+  ...(authoring === undefined ? {} : { authoring }),
 });
 
 /** Vanilla 图形普通规格辅助函数 */
@@ -145,6 +134,7 @@ export const figure = (input?: VanillaFigureInput | Array<VanillaChildSpec>): Va
     ...(input?.theme !== undefined ? { theme: cloneThemeInput(input.theme) } : {}),
     ...(input?.viewBox !== undefined ? { viewBox: input.viewBox } : {}),
     ...(input?.animations !== undefined ? { animations: input.animations } : {}),
+    ...(input?.authoring !== undefined ? { authoring: input.authoring } : {}),
   };
   if (input?.layers !== undefined) return { ...base, layers: input.layers };
   return { ...base, children: input?.children ?? [] };

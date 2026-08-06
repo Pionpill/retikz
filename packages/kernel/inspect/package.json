@@ -45,6 +45,10 @@
     "./react": {
       "types": "./src/react/index.ts",
       "default": "./src/react/index.ts"
+    },
+    "./vanilla": {
+      "types": "./src/vanilla/index.ts",
+      "default": "./src/vanilla/index.ts"
     }
   },
   "publishConfig": {
@@ -66,6 +70,11 @@
         "types": "./dist/types/react/index.d.ts",
         "import": "./dist/react/index.js",
         "default": "./dist/react/index.js"
+      },
+      "./vanilla": {
+        "types": "./dist/types/vanilla/index.d.ts",
+        "import": "./dist/vanilla/index.js",
+        "default": "./dist/vanilla/index.js"
       }
     }
   },
@@ -90,6 +99,7 @@
   "peerDependencies": {
     "@retikz/react": "workspace:*",
     "@retikz/render": "workspace:*",
+    "@retikz/vanilla": "workspace:*",
     "react": ">=18"
   },
   "peerDependenciesMeta": {
@@ -99,6 +109,9 @@
     "@retikz/react": {
       "optional": true
     },
+    "@retikz/vanilla": {
+      "optional": true
+    },
     "react": {
       "optional": true
     }
@@ -106,6 +119,7 @@
   "devDependencies": {
     "@retikz/render": "workspace:*",
     "@retikz/react": "workspace:*",
+    "@retikz/vanilla": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

@@ -18,13 +18,17 @@ describe('@retikz/inspect public exports', () => {
     expect(api).not.toHaveProperty('inspectionPlaneToReadonlyLayers');
   });
 
-  it('does not evaluate the optional Render peer from the root entry', async () => {
+  it('does not evaluate optional host peers from the root entry', async () => {
     vi.resetModules();
     vi.doMock('@retikz/render/runtime', () => {
       throw new Error('optional Render peer evaluated');
     });
+    vi.doMock('@retikz/vanilla', () => {
+      throw new Error('optional Vanilla peer evaluated');
+    });
     await expect(import('../../src/index')).resolves.toBeDefined();
     const root = await readFile(new URL('../../src/index.ts', import.meta.url), 'utf8');
     expect(root).not.toContain('@retikz/render');
+    expect(root).not.toContain('@retikz/vanilla');
   });
 });
