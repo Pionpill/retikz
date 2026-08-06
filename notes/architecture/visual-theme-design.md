@@ -103,17 +103,17 @@ Theme 环境与领域输入必须共同无歧义地表达：
 
 全仓 vocabulary 按语义 family 演进。下列 family 是稳定分区，不是当前版本的精确 key 清单：
 
-| Family           | 表达范围                                                       | 典型 owner / consumer                         |
-| ---------------- | -------------------------------------------------------------- | --------------------------------------------- |
-| `surface.*`      | canvas、panel、plot area 等表面 paint、border 与层级           | Standard / Core drawing                       |
-| `layout.*`       | 主题可控制的 padding、gap、inset 与对齐默认                    | Standard layout / domain composition          |
-| `typography.*`   | 全局或语义层级的字体、字号、字重、行高与 foreground            | Core text fragments / Standard presentation   |
-| `axis.*`         | 默认轴、baseline、tick、tick label、title 与 grid 的表现性配置 | Plot / Geo guide resolution，Standard drawing |
-| `legend.*`       | 默认 legend、title、entry、symbol / swatch 与间距              | Plot / Table / Geo guide resolution           |
-| `data.palette.*` | categorical、sequential、diverging 与状态色序列                | domain scale / visual encoding                |
-| `<domain>.*`     | 只在特定领域成立的表现语义，例如 `chart.*`、`table.*`、`geo.*` | 对应领域 owner                                |
+| Family           | 表达范围                                                        | 典型 owner / consumer                         |
+| ---------------- | --------------------------------------------------------------- | --------------------------------------------- |
+| `surface.*`      | canvas、panel、plot area 等表面 paint、border 与层级            | Standard / Core drawing                       |
+| `layout.*`       | 主题可控制的 padding、gap、inset 与对齐默认                     | Standard layout / domain composition          |
+| `typography.*`   | 全局或语义层级的字体、字号、字重、行高与 foreground             | Core text fragments / Standard presentation   |
+| `axis.*`         | 已有 axis 的 baseline、tick、tick label、title 与 grid 视觉默认 | Plot / Geo guide resolution，Standard drawing |
+| `legend.*`       | 已有 legend 的 title、entry、symbol / swatch 与间距默认         | Plot / Table / Geo guide resolution           |
+| `plot.palette.*` | Plot categorical、series、sector、sequential 与 diverging 色彩  | Plot scale / channel / visual encoding        |
+| `<domain>.*`     | 只在特定领域成立的表现语义，例如 `chart.*`、`table.*`、`geo.*`  | 对应领域 owner                                |
 
-token 的 owner 由它表达的语义决定，不能只根据字符串前缀或当前代码位置判断。只有去除领域词汇后仍成立、被多个领域复用且已有正式能力承接的 token，才应上移到共享 family；否则保留在领域 namespace。
+token 的 owner 由它表达的语义决定，不能只根据字符串前缀或当前代码位置判断。只有去除领域词汇后仍成立、被多个领域复用且已有正式能力承接的 token，才应上移到共享 family；否则保留在领域 namespace。数据包本身不因提供 rows / fields 而拥有视觉 palette；Plot palette 使用 `plot.palette.*`，其它领域需要 palette 时由各自 owner 冻结 namespace。
 
 ### 4.3 Key 与 value 治理
 
@@ -247,15 +247,16 @@ Core default neutral + light
 
 ## 9. Owner 与 package 边界
 
-| 层级 / 包                         | 拥有                                                                                                                | 不拥有                                                   |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| 根架构                            | 通用 theme 模型、style 人格、token 治理、cascade 与跨包不变量                                                       | 具体 key、hex、尺寸、schema 和版本范围                   |
-| Chart / Plot / Table / future Geo | 领域 token vocabulary、preset 具体值、领域 mapping、resolver 与诊断                                                 | Core drawing、Standard layout、renderer 私有默认         |
-| `@retikz/standard`                | 去除领域词汇后的通用 presentation / layout / composite capability                                                   | Plot guide、Table model、Chart type 与数据 palette 语义  |
-| `@retikz/core`                    | Theme style / mode 词汇、Scene / Scope Theme IR、继承与 Composite context，以及权威 drawing / text / paint fragment | 领域 token、preset 具体值、领域 mapping 与 token cascade |
-| React / Vanilla adapters          | 同一 JSON-safe Scene / Scope Theme 的等价 authoring 表面                                                            | 新 token、不同默认、CSS-only 主题语义                    |
-| SVG / Canvas renderer             | 对统一 Scene 的等价呈现                                                                                             | preset 解析、token merge 与领域 mapping                  |
-| `apps/docs` / host application    | 站点或产品 UI 主题、CSS variables、chrome 与交互外壳                                                                | 改写可视化 spec 的主题契约或静默补可视化默认             |
+| 层级 / 包                      | 拥有                                                                                                                | 不拥有                                                      |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| 根架构                         | 通用 theme 模型、style 人格、token 治理、cascade 与跨包不变量                                                       | 具体 key、hex、尺寸、schema 和版本范围                      |
+| Plot / Table / future Geo      | 各自领域 token vocabulary、preset 具体值、领域 mapping、resolver 与诊断                                             | 其它领域 token、Core drawing、Standard layout               |
+| Chart                          | Chart canvas / presentation / recipe-default token、preset、mapping、resolver 与诊断；转发 Plot 公开 token 输入     | Plot token、Plot preset / resolver、Plot native theme merge |
+| `@retikz/standard`             | 去除领域词汇后的通用 presentation / layout / composite capability                                                   | Plot guide、Table model、Chart type 与数据 palette 语义     |
+| `@retikz/core`                 | Theme style / mode 词汇、Scene / Scope Theme IR、继承与 Composite context，以及权威 drawing / text / paint fragment | 领域 token、preset 具体值、领域 mapping 与 token cascade    |
+| React / Vanilla adapters       | 同一 JSON-safe Scene / Scope Theme 的等价 authoring 表面                                                            | 新 token、不同默认、CSS-only 主题语义                       |
+| SVG / Canvas renderer          | 对统一 Scene 的等价呈现                                                                                             | preset 解析、token merge 与领域 mapping                     |
+| `apps/docs` / host application | 站点或产品 UI 主题、CSS variables、chrome 与交互外壳                                                                | 改写可视化 spec 的主题契约或静默补可视化默认                |
 
 ### 9.1 主题传播与消费边界
 
@@ -263,7 +264,7 @@ Theme 的职责分为三层：Kernel / Core 提供主题协议与传播，上层
 
 - `@retikz/core` 提供 `ThemeStyle`、`ThemeMode`、Scene / Scope 继承和 Composite context，但原始 Core `Node`、`Path`、Coordinate 与 renderer 不直接按 preset 分支
 - Standard 的通用 presentation，以及 Plot、Chart、Table、Geo 等视觉能力必须消费有效 Theme，并解析自己拥有的 token family；Plot 即使处于比 Chart 更底层的纵向能力层，也不能因为被 Chart 复用而跳过主题解析
-- Chart 可以编排 Chart presentation 并把 Plot 相关语义交给 Plot owner；Table 可以解析 Table presentation 并消费 Standard / Core 的公开 fragment，但任何一方都不能复制另一方的 token vocabulary 或 resolver
+- Chart 可以编排 Chart presentation、解析 Chart-owned recipe token，并把 `plotStyleTokens`、`colors` 与 Plot native `theme` 交给 Plot owner；Table 可以解析 Table presentation 并消费 Standard / Core 的公开 fragment，但任何一方都不能复制另一方的 token vocabulary、preset、resolver 或 merge 规则
 - Plot / Chart / Table 解析出的主题默认必须在 lowering 前物化为正式 Core / Standard 输入；最终 Core primitive 只接收显式 `fill`、`stroke`、`font` 等值，不再次读取 `ThemeStyle`
 - React / Vanilla adapter 只提供等价的主题 authoring 与传递；SVG / Canvas renderer 只执行统一 Scene，不解析 preset；Data、Math 和其它没有视觉表现语义的包不提供可视化 Theme consumer
 

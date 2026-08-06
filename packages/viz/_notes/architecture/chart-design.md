@@ -47,14 +47,14 @@ Chart 不建立新的绘图、数据或运行时能力轴。若一个图表只�
 
 ## 3. 包角色与依赖方向
 
-| 角色                | 包                          | 责任                                                                                                                 | 不拥有                                       |
-| ------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| 数据底座            | `@retikz/data`              | 数据引用、字段模型、通用 transform / statistics、lineage                                                             | Chart type、Mark、Scale、Guide               |
-| 可视化底座          | `@retikz/plot`              | PlotSpec、GoG 成员、definition / registry、lowering、provenance / locator                                            | Chart type 与 Chart 默认策略                 |
-| Chart 核心          | `@retikz/chart`             | ChartSpec、封闭 Canonical Type 目录、类型配方、默认解析、配方所需的具体 Plot definitions、可选单图展示语义与组合编排 | 新 GoG 能力轴、renderer、Chart 扩展 registry |
-| 通用图形能力        | `@retikz/standard`          | 被 Plot 或 Chart 解析后消费的领域无关 composite、布局与呈现                                                          | Chart / Plot IR、类型配方与字段角色          |
-| 图形底座            | `@retikz/core`              | Core IR、Scene、manifest 与通用编译                                                                                  | Chart / Plot 领域语义                        |
-| authoring / runtime | chart-react / chart-vanilla | 构造同一 ChartSpec、注入 datasets / definitions、接入宿主生命周期                                                    | Chart 配方、Plot 算法或私有 IR               |
+| 角色                | 包                          | 责任                                                                                                                                           | 不拥有                                                                       |
+| ------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| 数据底座            | `@retikz/data`              | 数据引用、字段模型、通用 transform / statistics、lineage                                                                                       | Chart type、Mark、Scale、Guide                                               |
+| 可视化底座          | `@retikz/plot`              | PlotSpec、GoG 成员、Plot token / preset / resolver、definition / registry、lowering、provenance / locator                                      | Chart type、Chart presentation 与 recipe token                               |
+| Chart 核心          | `@retikz/chart`             | ChartSpec、封闭 Canonical Type 目录、类型配方、Chart canvas / presentation / recipe token、Plot 主题输入转发、具体 Plot definitions 与组合编排 | Plot token / preset / resolver、新 GoG 能力轴、renderer、Chart 扩展 registry |
+| 通用图形能力        | `@retikz/standard`          | 被 Plot 或 Chart 解析后消费的领域无关 composite、布局与呈现                                                                                    | Chart / Plot IR、类型配方与字段角色                                          |
+| 图形底座            | `@retikz/core`              | Core IR、Scene、manifest 与通用编译                                                                                                            | Chart / Plot 领域语义                                                        |
+| authoring / runtime | chart-react / chart-vanilla | 构造同一 ChartSpec、注入 datasets / definitions、接入宿主生命周期                                                                              | Chart 配方、Plot 算法或私有 IR                                               |
 
 依赖只能沿以下方向：
 
@@ -88,18 +88,19 @@ ChartSpec 不是缩减版 PlotSpec。图本体配置应沿用 Plot 的结构轴�
 
 精确字段形态由 ADR 冻结；长期语义先保持：
 
-| 成员                         | Chart 层语义                                                                                                                                                         |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `data`                       | 单一外部数据引用及可选模型，不保存真实数据                                                                                                                           |
-| `encoding`                   | 声明该类型需要的数据角色与用户覆盖的视觉通道                                                                                                                         |
-| `mark`                       | 投影隐式主 Mark 的完整 Plot 契约，只排除 type、稳定 identity、核心 encoding role、必需 transform 与 view ownership 等 recipe-owned 成员，不改变其 Mark type 或存在性 |
-| `transform`                  | 调整隐式主 Transform 的允许参数，并允许追加显式 Transform；必需 Transform 不可撤销                                                                                   |
-| `scales`                     | 调整类型默认 scale，或增加 Plot 可识别的 scale 配置                                                                                                                  |
-| `coordinate` / `composition` | 调整类型默认空间与组合；type 可以隐式生成多视图 / track 配方，结构性不变量不能被破坏                                                                                 |
-| `guides`                     | 调整、关闭、替换或追加表现性 guide                                                                                                                                   |
-| `theme` / Plot `layout`      | 调整图本体的 Plot 呈现，不建立 Chart 平行 GoG 样式系统                                                                                                               |
-| `marks`                      | 在类型生成的主 Mark 之外追加正式、JSON-safe 的 Plot Mark                                                                                                             |
-| 单图展示                     | 以唯一主 Plot 占位、有序 renderer-neutral children、文本 preset 与外框表达完整 Chart；布局和绘制复用 Standard / Core                                                 |
+| 成员                                        | Chart 层语义                                                                                                                                                         |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data`                                      | 单一外部数据引用及可选模型，不保存真实数据                                                                                                                           |
+| `encoding`                                  | 声明该类型需要的数据角色与用户覆盖的视觉通道                                                                                                                         |
+| `mark`                                      | 投影隐式主 Mark 的完整 Plot 契约，只排除 type、稳定 identity、核心 encoding role、必需 transform 与 view ownership 等 recipe-owned 成员，不改变其 Mark type 或存在性 |
+| `transform`                                 | 调整隐式主 Transform 的允许参数，并允许追加显式 Transform；必需 Transform 不可撤销                                                                                   |
+| `scales`                                    | 调整类型默认 scale，或增加 Plot 可识别的 scale 配置                                                                                                                  |
+| `coordinate` / `composition`                | 调整类型默认空间与组合；type 可以隐式生成多视图 / track 配方，结构性不变量不能被破坏                                                                                 |
+| `guides`                                    | 调整、关闭、替换或追加表现性 guide                                                                                                                                   |
+| `plotStyleTokens` / `theme` / Plot `layout` | 转发或调整图本体的 Plot 呈现，不建立 Chart 平行 Plot token / preset / resolver                                                                                       |
+| Chart `styleTokens`                         | 只调整 Chart canvas、presentation 与 recipe 表现性默认                                                                                                               |
+| `marks`                                     | 在类型生成的主 Mark 之外追加正式、JSON-safe 的 Plot Mark                                                                                                             |
+| 单图展示                                    | 以唯一主 Plot 占位、有序 renderer-neutral children、文本 preset 与外框表达完整 Chart；布局和绘制复用 Standard / Core                                                 |
 
 这里必须避免把所有文字统称为 `label`：
 
@@ -116,7 +117,7 @@ Canonical Type 不是主 Mark 的别名，而是一套完整 GoG 配方。它可
 - 一个或多个 Transform
 - 主 Mark 或 Mark 组合
 - Scale 与 Coordinate / Composition
-- Guide、Theme、Plot Layout 与 Plot Label 默认值
+- Guide、Plot Layout 与 Plot Label 等 type-specific 表现性默认
 
 `type` 是持续成立的语义契约，不是生成后即可任意改写的 preset。配方中定义类型身份的成员构成 **type 核心配方**：只要 ChartSpec 仍声明该 type，这些成员就必须保留并参与最终 PlotSpec，用户配置与追加内容都不能删除、关闭、替换或使其失效。
 
@@ -169,7 +170,9 @@ Type 核心配方定义该 type 的身份，例如：
 
 表现性默认负责开箱可读性，例如 guide 可见性、Plot label、theme、palette、Plot spacing 和部分 scale 呈现。它们允许调整、关闭或替换。
 
-Chart 的 style、明暗模式和公开 token 消费全仓 [`通用视觉主题设计`](../../../../notes/architecture/visual-theme-design.md)：preset 提供视觉人格，mode 负责 light / dark 适配，公开 strict token map 承载稀疏自定义。Chart 只拥有领域 token、preset 具体值和到 Plot / Standard 正式能力的映射，不建立平行 theme、layout 或 renderer 语义。
+Chart 的视觉环境消费全仓 [`通用视觉主题设计`](../../../../notes/architecture/visual-theme-design.md)：Core Scene / Scope Theme 提供有效 style / mode，Chart 不在 ChartSpec 重复声明同义字段。Chart 只拥有 canvas、presentation 与 recipe-default token、对应 preset / resolver、到 Standard / recipe 的 mapping 和 inspection；Plot surface、guide、label 与 palette token、preset、resolver 和 native theme merge 由 Plot owner 独立维护。
+
+ChartSpec 的主题 authoring surface 分成两条 owner 明确的输入：`styleTokens` 只接受 Chart-owned key；`plotStyleTokens` 复用 Plot 公开 sparse token contract，并与 `colors`、Plot `theme` 原样进入最终 PlotSpec。Chart 不复制 Plot schema，不把 resolved Plot token 物化回 PlotSpec；recipe 必须读取 palette 等 Plot 结果时，只调用 Plot 公开纯 resolver。
 
 标题、说明、来源等单图展示内容没有值时不得由 type 凭空生成，也不构成 Canonical Type 身份。Chart 可以提供文本 preset、默认 column Flex 参数和间距，但 children 的 authored order、重复 preset、自定义 renderer-neutral child 与 item-local Flex 参数由用户决定；用户也可以省略整套展示外壳。
 
@@ -179,16 +182,21 @@ Chart 的 style、明暗模式和公开 token 消费全仓 [`通用视觉主题�
 
 ```text
 不可撤销的 type 核心配方
-  + (Plot 内建默认
-     < Chart type 表现性默认
-     < Chart preset / mode tokens
+  + (Core effective Theme
+     < Chart preset tokens
      < ChartSpec styleTokens
+     < ChartSpec 允许的 presentation / recipe 覆盖)
+
+内部完整 PlotSpec
+  + (Core effective Theme
+     < Plot preset tokens
+     < ChartSpec plotStyleTokens
      < ChartSpec colors
      < ChartSpec theme
      < ChartSpec 允许的具体 GoG 成员覆盖)
 ```
 
-具体 Mark、Scale 或 Guide 的显式配置优先于 theme。追加的 Plot 成员遵守 Plot 自身的 theme 与局部配置规则，不继承主成员的局部覆盖。
+Chart recipe toggle 只能决定默认 guide 是否生成，不能过滤显式 guides。具体 Mark、Scale 或 Guide 的显式配置优先于 Plot theme；追加的 Plot 成员遵守 Plot 自身的 token、theme 与局部配置规则，不继承主成员的局部覆盖。
 
 上述优先级只处理可配置值，不授予后层配置撤销 type 核心配方的权力。
 
@@ -289,10 +297,10 @@ Chart lowering 需要完成两个彼此可观察但最终合流的阶段：
 
 1. 校验 ChartSpec 与 Canonical Type 数据角色及核心配方不变量
 2. 选择完整 type recipe，应用稀疏覆盖并追加显式 Plot operations
-3. 解析 Plot 默认优先级并产出可独立检查、通过 PlotSpec schema 的完整 PlotSpec
+3. 产出可独立检查、通过 PlotSpec schema 的完整 PlotSpec，并保留 Plot-owned token / theme 原始输入
 4. 解析可选的 Chart presentation children、唯一主 Plot 占位与 Flex defaults
 5. 按 authored order 通过 Standard FlexLayout 把 presentation children 与 PlotSpec 组合为一个完整 Chart 结果
-6. 让 Plot 与 Standard 分别沿自身正式 lowering 链进入 Core
+6. 让 Plot 从同一 effective Theme 独立解析 Plot preset / token / native theme，并与 Standard 分别沿自身正式 lowering 链进入 Core
 
 Chart 的最终执行出口不是裸 PlotSpec，也不能是 adapter 私下拼装的 DOM 外壳。长期契约需要同时保证：完整 PlotSpec 可检查，完整 Chart 又是单个 JSON-safe、renderer-neutral 的可组合结果。最终公开函数名与中间结果形态由对应公开契约冻结，不在架构层预设 `ResolvedChart` 等具体类型。
 

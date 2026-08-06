@@ -10,7 +10,7 @@ alpha.1 证明一条统一的 type-first 路径可以在不裁剪 Plot 能力的
 
 1. 建立 `@retikz/chart`、`@retikz/chart-react`、`@retikz/chart-vanilla` 三包及封闭 type recipe 主链
 2. 让 ChartSpec 保持 JSON-safe、单根 data、结构轴与 Plot 自洽，并可确定性解析为完整 PlotSpec
-3. 提供默认 `neutral` 及 `academic` / `vibrant` / `clean` 四套 style preset、独立 light / dark mode、公开严格 `styleTokens`，并与 `colors`、Plot `theme`、显式 GoG 配置形成统一优先级
+3. 消费 Core effective Theme；为 Chart canvas / presentation / recipe defaults 提供严格 `styleTokens`，并把 Plot-owned `plotStyleTokens`、`colors`、Plot `theme` 转发到完整 PlotSpec
 4. 用 Standard FlexLayout 按 authored order 组合唯一主 Plot 占位、可选文本 preset 与任意 renderer-neutral `IRChild`
 5. 按 `scatter` / `bubble`、`connected-scatter`、`regression`、`ranged-dot`、`strip` 顺序逐 type 建立闭环；Scatter 与 Bubble 是共享 Point 能力但保留独立身份的平级 Canonical Type
 6. 保持手写 JSON、React JSX、Vanilla builder 的 ChartSpec、完整 PlotSpec 与最终组合结果等价
@@ -35,16 +35,16 @@ Chart 不提供 `defineChart`、Chart registry 或自定义 type。官方 recipe
 
 ## 3. ADR 顺序
 
-| ADR | 主题                             | 核心产出                                                                                                                         | 前置                                                                                                                               | 实现状态                                                  |
-| --- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| 01  | Chart 基础设施与封闭 recipe 主链 | 可实施内部 schema / resolver / inspection / authoring normalizer；逐 type composite contract；首个公开入口在 ADR-04 原子接线     | 内部子集依赖 Plot v0.1、Data v0.1；公开 adapter 依赖 Kernel gate                                                                   | 内部完成 / 公开接线受门控                                 |
-| 02  | Style preset、mode 与 token      | `neutral` / `academic` / `vibrant` / `clean` × light / dark、公开严格 token、colors / theme / member 优先级、canvas surface gate | ADR-01、Standard arbitrary-child surface composite                                                                                 | 待人工 Accept / 底座阻塞                                  |
-| 03  | Presentation 与 Standard layout  | 唯一主 Plot 占位、有序 preset / custom children、完整 Flex item / container authoring；headless adapter parity 继续受门控        | owner-local 依赖 ADR-01、ADR-02 与 Standard FlexLayout；公开接线依赖 surface、Kernel contribution 聚合与 Core spatial transparency | Proposed / owner-local 已实现 / 等待 ADR-02 Accept 后复验 |
-| 04  | Scatter 与 Bubble                | 首批两个平级 ChartSpec variants、共享 Point 主 Mark 能力、二维关系与必需面积量级角色                                             | ADR-01–03；owner-local Plot quantitative size dependency 已满足                                                                    | Proposed / owner-local 已实现 / 公开接线受门控            |
-| 05  | Connected Scatter                | Point + Path + 稳定 order                                                                                                        | ADR-04                                                                                                                             | 待人工 Accept                                             |
-| 06  | Regression                       | Point + mark-local Smooth + Path                                                                                                 | ADR-05、Data / Plot transform output reservation                                                                                   | **阻塞**                                                  |
-| 07  | Ranged Dot                       | 两端 Point + projected Relation                                                                                                  | ADR-06、Plot range-row atomicity                                                                                                   | **阻塞**                                                  |
-| 08  | Strip                            | 分类位置 + 数据驱动 offset + Point                                                                                               | ADR-07 + Plot offset capability                                                                                                    | **阻塞**                                                  |
+| ADR | 主题                             | 核心产出                                                                                                                                | 前置                                                                                                                               | 实现状态                                                  |
+| --- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| 01  | Chart 基础设施与封闭 recipe 主链 | 可实施内部 schema / resolver / inspection / authoring normalizer；逐 type composite contract；首个公开入口在 ADR-04 原子接线            | 内部子集依赖 Plot v0.1、Data v0.1；公开 adapter 依赖 Kernel gate                                                                   | 内部完成 / 公开接线受门控                                 |
+| 02  | Chart token 与 Plot token 转发   | Core effective Theme；Chart canvas / presentation / recipe token；`plotStyleTokens` / `colors` / Plot `theme` 转发；canvas surface gate | ADR-01、Plot theme ownership ADR-01、Standard arbitrary-child surface composite                                                    | 待人工 Accept / Plot 主题实现与 surface 底座阻塞          |
+| 03  | Presentation 与 Standard layout  | 唯一主 Plot 占位、有序 preset / custom children、完整 Flex item / container authoring；headless adapter parity 继续受门控               | owner-local 依赖 ADR-01、ADR-02 与 Standard FlexLayout；公开接线依赖 surface、Kernel contribution 聚合与 Core spatial transparency | Proposed / owner-local 已实现 / 等待 ADR-02 Accept 后复验 |
+| 04  | Scatter 与 Bubble                | 首批两个平级 ChartSpec variants、共享 Point 主 Mark 能力、二维关系与必需面积量级角色                                                    | ADR-01–03；owner-local Plot quantitative size dependency 已满足                                                                    | Proposed / owner-local 已实现 / 公开接线受门控            |
+| 05  | Connected Scatter                | Point + Path + 稳定 order                                                                                                               | ADR-04                                                                                                                             | 待人工 Accept                                             |
+| 06  | Regression                       | Point + mark-local Smooth + Path                                                                                                        | ADR-05、Data / Plot transform output reservation                                                                                   | **阻塞**                                                  |
+| 07  | Ranged Dot                       | 两端 Point + projected Relation                                                                                                         | ADR-06、Plot range-row atomicity                                                                                                   | **阻塞**                                                  |
+| 08  | Strip                            | 分类位置 + 数据驱动 offset + Point                                                                                                      | ADR-07 + Plot offset capability                                                                                                    | **阻塞**                                                  |
 
 实施是严格串行链。类型 ADR 必须把自己的 variant 加入同一个 `ChartSpecSchema` discriminated union 和同一个封闭 resolver，不复制 package、style、presentation、diagnostics 或 adapter 主链。
 
@@ -52,7 +52,7 @@ ADR-03 的 owner-local contract 已有实现证据，但在 ADR-02 Accepted 并�
 
 ## 4. 契约真源
 
-Chart 的长期结构、能力归属与跨 ADR 约束以 [`Chart 总设计`](../../../../../architecture/chart-design.md) 为准；style、presentation 与各 type 的公开契约分别由对应 ADR 维护。roadmap 只记录 milestone 顺序、依赖 gate、状态与退出条件，不重复定义字段、覆盖算法、recipe 或测试矩阵。
+Chart 的长期结构、能力归属与跨 ADR 约束以 [`Chart 总设计`](../../../../../architecture/chart-design.md) 为准；Plot token 所有权以 [`Plot 主题所有权 ADR-01`](../../../../plot/v0/v0.2/alpha.1/01-chart-layering.md) 为准；Chart token、presentation 与各 type 的公开契约分别由对应 ADR 维护。roadmap 只记录 milestone 顺序、依赖 gate、状态与退出条件，不重复定义字段、覆盖算法、recipe 或测试矩阵。
 
 ## 5. Strip capability gate
 
@@ -123,10 +123,10 @@ alpha.1 只有同时满足以下条件才可结束：
 1. ADR-01–07 已 Accepted 并实现；Regression transform output reservation 与 Ranged Dot row atomicity gates 已解除；ADR-08 的延期边界已确认，Plot capability gate 解除后新建的 Strip implementation ADR 也已 Accepted 并实现
 2. 六个 type 都由同一封闭 resolver 展开，不存在 type-specific adapter 或 renderer 路径；Scatter 与 Bubble 保留平级 identity 并共享 Point / size / guide 正式主链
 3. ChartSpec、resolved PlotSpec、最终 Standard composition 与 inspection 均可单独观察
-4. style、themeMode、styleTokens、colors、theme、显式成员的优先级有精确测试
+4. Core effective Theme、Chart `styleTokens`、Plot `plotStyleTokens`、`colors`、Plot `theme` 与显式成员的两条 owner cascade 有精确测试；ChartSpec 不再包含 `style` / `themeMode`
 5. 没有 presentation 时不生成可见文本；有 presentation 时 Plot 仍保持自己的 id、provenance、locator 与 lineage
 6. 完整 Chart canvas 由 renderer-neutral Standard surface 覆盖裸 Plot与 presentation；若 Standard 依赖 Core 新底座，该 dependency 已先闭环；light / dark 切换不改变布局
-7. docs 为已实现 Canonical Type 提供最小配置、核心 recipe、允许覆盖、Plot 混合与不适用场景；Style 页面提供四 preset × 两 mode gallery 与 token explorer；Strip 在独立 implementation ADR完成前只标记 planned
+7. docs 为已实现 Canonical Type 提供最小配置、核心 recipe、允许覆盖、Plot 混合与不适用场景；主题页面区分 Chart / Plot token owner，并提供四 preset × 两 mode gallery 与各自 token explorer；Strip 在独立 implementation ADR完成前只标记 planned
 8. Kernel dependency preflight 与 Core spatial transparency gates 已解除；缺失 dependency、selector target 或 namespace 越界均 fail-loud
 9. Plot size / legend dependency 已解除；field-bound size 的 quantitative type validation、逐行缺值跳过、scale 校验与 legend descriptor identity 不随退化数据或多 descriptor 组合失真
 

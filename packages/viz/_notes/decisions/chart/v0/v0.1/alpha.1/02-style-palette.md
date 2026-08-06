@@ -1,175 +1,104 @@
-# ADR-02：Style preset、明暗模式与公开样式 token
+# ADR-02：Chart presentation / recipe token 与 Plot token 转发
 
 - 状态：Proposed
-- 决策日期：2026-07-31
-- 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-01](./01-chart-infrastructure.md) · [ADR-03](./03-presentation-standard-layout.md) · [Chart 总设计 §6](../../../../../architecture/chart-design.md) · [通用视觉主题设计](../../../../../../../../notes/architecture/visual-theme-design.md)
+- 决策日期：2026-08-06
+- 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-01](./01-chart-infrastructure.md) · [ADR-03](./03-presentation-standard-layout.md) · [Plot 主题所有权 ADR-01](../../../../plot/v0/v0.2/alpha.1/01-chart-layering.md) · [Chart 总设计 §6](../../../../../architecture/chart-design.md) · [通用视觉主题设计](../../../../../../../../notes/architecture/visual-theme-design.md) · [原子契约与组合设计](../../../../../../../../notes/architecture/atomic-contract-design.md)
 
 ## 背景与目标
 
-Chart 的 `style` 表达一套开箱即用的视觉人格，而不是给 Plot `theme` 与颜色数组换名。alpha.1 复用 Core 提供的四个通用 style 取值：`neutral`、`academic`、`vibrant`、`clean`，并由 Chart 为这些取值提供自己的 preset catalog。其中 `neutral` 参考 shadcn 的安静界面框架、清晰内容层级与克制数据色彩，并作为默认风格；其它 preset 分别表达出版型、明快型和极简型人格，但不承诺与任何开源库像素兼容。
+Chart 是 Plot 之上的封闭类型封装。它需要为完整 Chart canvas、title / subtitle / caption / note / source / credit 等 presentation，以及 recipe 默认 axis / grid / legend 是否生成，提供稳定、可覆盖的表现性默认。
 
-明暗环境与视觉人格正交。同一 preset 在 light / dark 下保持 guide 拓扑、排版、间距和装饰密度连续，只调整依赖背景的 paint、opacity 与 palette。因此 `light` / `dark` 是 mode，不是 style 名称。
+Plot surface、Plot typography / label、Axis / Legend 视觉样式与 palette 则属于 Visualization Complete。早期 Chart 主题目录同时声明这些 Plot token，并把 resolved 结果映射成 Plot theme，导致直接 Plot 无法独立响应 Core effective Theme，也让 Chart 与 Plot 拥有同义 schema、preset、resolver 和 cascade。
 
-用户需要像覆盖 VS Code theme colors 一样稀疏覆盖稳定 token，例如关闭默认轴、替换 tick 图元或调整 legend 间距。主题协议必须公开、严格、JSON-safe、renderer-neutral，并映射回 Plot / Standard 的正式能力，而不是形成平行 style engine。
+本 ADR 按 Plot 主题所有权 ADR-01 重构 Chart 公开面：
 
-## 决策：四个 preset × 两个 mode 解析为严格 token map
+1. Chart 只拥有 Chart presentation 与 Chart recipe default token
+2. Plot token 通过 Plot 的公开 contract 原样进入最终 PlotSpec
+3. style / mode 只由 Core Scene / Scope Theme 选择，ChartSpec 不重复声明
+4. Chart 与内部 Plot 在同一 effective Theme 下分别沿自己的 owner 主链解析
 
-```ts
-import { ThemeMode, ThemeStyle } from '@retikz/core';
-import type { ThemeModeValue, ThemeStyleValue } from '@retikz/core';
+## 决策：Chart token 与 Plot token 分离
 
-type ChartStyleSurface = {
-  style?: ThemeStyleValue;
-  themeMode?: ThemeModeValue;
-  styleTokens?: IRChartStyleTokenOverrides;
-  colors?: IRPlotSpec['colors'];
-};
-```
+Chart 继续为 Core 的四种通用 style——`neutral`、`academic`、`vibrant`、`clean`——在 light / dark mode 下提供 Chart-owned preset。该 preset 只包含 Chart canvas、presentation 与 recipe defaults；不包含 Plot surface、Plot label / typography、Axis / Legend 视觉 token 或 palette。
 
-`ThemeStyle` 与 `ThemeMode` 是 Core 的通用词汇真源；Chart 不再定义或转出同义的 `ChartStyle`、`ChartThemeMode` 及其取值类型
+Plot 由 `@retikz/plot` 独立提供同一 effective Theme 下的 Plot preset、token resolver、native theme mapping、palette 与 inspection。Chart 可以转发 Plot 公开输入，也可以在需要稳定 recipe identity 时调用 Plot 公开纯 resolver读取瞬时结果，但不能复制 Plot token schema、preset、merge 规则，或把 resolved Plot theme 写回 PlotSpec。
 
-默认值是 `style: 'neutral'` 与 `themeMode: 'light'`。内置 catalog 为四个 preset 的两个 mode 分别提供完整 token map；用户 `styleTokens` 只对 canonical key 做稀疏覆盖。内置 map、稀疏覆盖和最终 resolved map 复用同一份字段契约，未知 key、错误值、空 palette、非法 tick 图元或完整 map 缺 key 均 fail-loud。
-
-token map 是闭合数据，不执行代码、不按名称 dispatch，也不拥有 provider 生命周期，因此不采用 define-registry。用户可以直接共享合法 JSON / npm 数据包；未来若需要主题命名、继承或动态加载，再由独立 ADR 设计 registry / loader。
+Core 继续拥有 `ThemeStyle`、`ThemeMode`、Scene / Scope Theme 继承与 Composite effective Theme context；Chart 不定义、转出或持久化同义 style / mode 字段。
 
 ## 基础数据结构与公开契约
 
-`styleTokens` 是 dot-namespaced flat object，不接受开放嵌套对象：
+### ChartSpec 主题 authoring surface
 
-```json
-{
-  "axis.line.enabled": false,
-  "axis.tick.mark": {
-    "kind": "circle",
-    "size": 5,
-    "fill": "#ffffff",
-    "stroke": "#111827"
-  },
-  "data.palette.categorical": ["#2563eb", "#f97316", "#16a34a"]
-}
+```ts
+type IRChartShared = {
+  styleTokens?: IRChartStyleTokenOverrides;
+  plotStyleTokens?: IRPlotStyleTokenOverrides;
+  colors?: IRPlotSpec['colors'];
+  theme?: IRPlotSpec['theme'];
+};
 ```
 
-公开 schema 分为两种严格形态：稀疏 overrides 的所有 token optional；resolved tokens 的所有 token required。公开 token catalog 固定如下；paint 都是 non-empty renderer-neutral paint string，font / tick / padding 等复用表中 owner 的公开 fragment，不平行定义近似类型。
+- `styleTokens` 只接受 Chart-owned canonical key
+- `plotStyleTokens` 复用 Plot 公开的严格 sparse token schema，并原样进入最终 `PlotSpec.styleTokens`
+- `colors` 与 `theme` 原样进入最终 PlotSpec 的同名字段
+- ChartSpec 不包含 `style` 或 `themeMode`；Chart Composite 从当前位置读取完整 Core effective Theme
+- Chart 不转出 Plot token key、schema 或派生类型；使用方直接从 Plot owner 导入
 
-### Chart、Plot 与 presentation
+Chart sparse override 与 complete resolved map 必须组合同一份 canonical field contract，并从严格 schema 派生公开类型。内置 preset 必须通过 required resolved schema；不得为 sparse、resolved 与 preset 分别手写同义字段或 TypeScript interface。
 
-| Token                      | Value contract             | 正式消费方                          |
-| -------------------------- | -------------------------- | ----------------------------------- |
-| `chart.canvas.fill`        | paint                      | Standard Chart surface              |
-| `chart.padding`            | Standard padding           | Standard surface inset              |
-| `chart.gap`                | finite non-negative number | presentation default column row gap |
-| `chart.font.family`        | non-empty string           | Chart / Plot typography fallback    |
-| `chart.<slot>.foreground`  | paint                      | slot text foreground                |
-| `chart.<slot>.font.size`   | Core font size             | slot font size                      |
-| `chart.<slot>.font.weight` | Core font weight           | slot font weight                    |
-| `chart.<slot>.lineHeight`  | Core line height           | slot line height                    |
-| `chart.<slot>.align`       | Core text align            | slot text align                     |
-| `plot.surface.fill`        | paint                      | Plot background                     |
-| `plot.foreground`          | paint                      | Plot guide typography fallback      |
-| `plot.label.foreground`    | paint                      | Plot static label foreground        |
-| `plot.label.font.size`     | Core font size             | Plot static label size              |
+### Chart canonical token
 
-`<slot>` 是闭合集合 `title`、`subtitle`、`caption`、`note`、`source`、`credit`；上表的五个 slot token 分别对六个 slot 展开，不接受其它 key。
+`styleTokens` 是 strict、flat、dot-namespaced、JSON-safe object。canonical token 固定为：
 
-### Axis
+| Token family      | Canonical keys                                                                                                                   | Value contract                                     | 正式消费位置                            |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | --------------------------------------- |
+| Canvas            | `chart.canvas.fill`                                                                                                              | Core paint atom                                    | Standard arbitrary-child surface        |
+| Layout            | `chart.padding`、`chart.gap`                                                                                                     | Standard padding、finite non-negative gap          | Standard surface / Flex input           |
+| Typography        | `chart.font.family`                                                                                                              | Core font family atom                              | Chart presentation text fallback        |
+| Presentation slot | `chart.<slot>.foreground`、`chart.<slot>.font.size`、`chart.<slot>.font.weight`、`chart.<slot>.lineHeight`、`chart.<slot>.align` | Core paint / font / line-height / text-align atoms | 对应 Chart text preset                  |
+| Axis recipe       | `chart.axis.enabled`、`chart.axis.grid.enabled`                                                                                  | boolean                                            | recipe 是否生成默认 AxisGuide / grid    |
+| Legend recipe     | `chart.legend.enabled`                                                                                                           | boolean                                            | recipe 是否生成可成立的默认 LegendGuide |
 
-| Token                       | Value contract             | 正式消费方               |
-| --------------------------- | -------------------------- | ------------------------ |
-| `axis.enabled`              | boolean                    | recipe default AxisGuide |
-| `axis.line.enabled`         | boolean                    | Plot axis line default   |
-| `axis.line.stroke`          | paint                      | Plot axis line           |
-| `axis.line.strokeWidth`     | finite non-negative number | Plot axis line           |
-| `axis.line.drawOpacity`     | normalized opacity         | Plot axis line           |
-| `axis.tick.mark`            | Plot AxisTickMark contract | Plot tick glyph          |
-| `axis.tickLabel.enabled`    | boolean                    | Plot tick label default  |
-| `axis.tickLabel.foreground` | paint                      | Plot tick label          |
-| `axis.tickLabel.font.size`  | Core font size             | Plot tick label          |
-| `axis.tickLabel.gap`        | finite non-negative number | tick-to-label gap        |
-| `axis.title.foreground`     | paint                      | Plot axis title          |
-| `axis.title.font.size`      | Core font size             | Plot axis title          |
-| `axis.title.font.weight`    | Core font weight           | Plot axis title          |
-| `axis.grid.enabled`         | boolean                    | recipe default grid      |
-| `axis.grid.stroke`          | paint                      | Plot grid                |
-| `axis.grid.strokeWidth`     | finite non-negative number | Plot grid                |
-| `axis.grid.drawOpacity`     | normalized opacity         | Plot grid                |
+`<slot>` 是闭合集合 `title`、`subtitle`、`caption`、`note`、`source`、`credit`。未知 slot、未知 key、错误 value 与开放嵌套对象均 fail-loud。
 
-`axis.enabled` 与 `axis.grid.enabled` 只控制 recipe 表现性 defaults，不过滤显式 guides，也不改变 tick source / density / format、grid projection、Coordinate 或 type 核心语义。
+这些 key 的 owner 与边界固定如下：
 
-### Legend
+- `chart.axis.enabled` 与 `chart.axis.grid.enabled` 只决定 Chart recipe 是否创建默认 guide，不过滤显式 `guides`，也不改变 tick source / density / format、grid projection、Coordinate 或 type 核心语义
+- `chart.legend.enabled: true` 只允许 recipe 在存在可图例化 channel 时创建默认 legend；它不凭空制造 channel 或 descriptor
+- 显式 `guides` 按 Chart recipe contract 替换表现性 guide defaults，不能撤销 type 核心配方
+- Plot 对已有 Axis / Legend 的视觉呈现继续由 Plot token、native theme 与 local config 决定
 
-| Token                      | Value contract             | 正式消费方                 |
-| -------------------------- | -------------------------- | -------------------------- |
-| `legend.enabled`           | boolean                    | recipe default LegendGuide |
-| `legend.title.foreground`  | paint                      | Plot legend title          |
-| `legend.title.font.size`   | Core font size             | Plot legend title          |
-| `legend.title.font.weight` | Core font weight           | Plot legend title          |
-| `legend.label.foreground`  | paint                      | Plot legend label          |
-| `legend.label.font.size`   | Core font size             | Plot legend label          |
-| `legend.swatch.size`       | finite positive number     | Plot swatch size           |
-| `legend.swatch.gap`        | finite non-negative number | Plot swatch gap            |
-| `legend.entry.gap`         | finite non-negative number | Plot entry gap             |
-| `legend.title.gap`         | finite non-negative number | Plot title gap             |
-| `legend.ramp.length`       | finite positive number     | Plot ramp length           |
-| `legend.ramp.thickness`    | finite positive number     | Plot ramp thickness        |
-| `legend.symbol.size`       | finite positive number     | Plot symbol size           |
-| `legend.symbol.scale`      | finite positive number     | Plot symbol scale          |
-| `legend.symbol.fit`        | Plot LegendSymbolFit       | Plot symbol fit            |
+Chart 不接受以下 key：
 
-`legend.enabled: true` 不为没有可图例化 channel 的 Chart 凭空生成 legend；显式 guide 始终具有更高优先级。
+- Plot-owned `plot.surface.*`、`plot.typography.*`、`plot.label.*`
+- Plot-owned `axis.line.*`、`axis.tick.*`、`axis.tickLabel.*`、`axis.title.*`、`axis.grid.*`
+- Plot-owned `legend.title.*`、`legend.label.*`、`legend.swatch.*`、`legend.ramp.*`、`legend.symbol.*`
+- Plot-owned `plot.palette.*`
+- 无 owner 的旧 `data.palette.*`、`axis.enabled`、`axis.grid.enabled`、`legend.enabled`
 
-### Data palette
+### Preset 与 mode 行为
 
-| Token                      | Value contract             | 正式消费方                |
-| -------------------------- | -------------------------- | ------------------------- |
-| `data.palette.categorical` | non-empty color array      | categorical scale default |
-| `data.palette.series`      | non-empty color array      | mark / series default     |
-| `data.palette.sector`      | non-empty color array      | sector default            |
-| `data.palette.sequential`  | non-empty Plot scheme name | sequential scale default  |
-| `data.palette.diverging`   | non-empty Plot scheme name | diverging scale default   |
+四种 Chart preset 的稳定人格与通用主题设计一致：
 
-Scheme 名只在 token schema 校验 JSON 形态，是否注册由 Plot resolver fail-loud。数组与 scalar 按 token key 整体替换，不逐项合并。
+| Preset     | Chart-owned 倾向                                 |
+| ---------- | ------------------------------------------------ |
+| `neutral`  | 安静 canvas、清晰层级、克制间距，作为默认        |
+| `academic` | 高可读、低干扰、适合出版的 presentation          |
+| `vibrant`  | 更明确的 canvas 层级、较活跃的 presentation 层次 |
+| `clean`    | 减少非数据装饰和外层留白，但保留必要可读性       |
 
-alpha.1 不增加 `mark.*` token。当前 Mark 类型没有足够稳定的共享 style contract；主 Mark 与追加 Mark 继续通过 type-specific patch 或正式 Plot mark 配置表达。
+Mode 只改变依赖背景的 Chart paint。padding、gap、font、字号、字重、行高、对齐与 recipe guide topology 在 light / dark 之间保持不变。
 
-## Preset 与 mode 行为
+第一版 mode-invariant Chart 值固定为：
 
-| Preset     | 稳定人格                             | 主要结构倾向                                |
-| ---------- | ------------------------------------ | ------------------------------------------- |
-| `neutral`  | 安静框架、清晰层级、克制数据色彩     | 弱边界、低对比 grid、清晰文字，默认使用     |
-| `academic` | 面向论文、出版与严肃分析             | 高可读、低干扰、适合打印的轴与刻度          |
-| `vibrant`  | 清晰 panel、鲜明层级、受控高辨识色彩 | 更明确的层次和更活跃的数据 palette          |
-| `clean`    | 最大限度减少非数据装饰               | 保留必要可读性，弱化 baseline、tick 与 grid |
-
-同一 preset 的 light / dark 结果具有完全相同的 token key，并保持 guide 是否存在、tick glyph、padding、gap、字号、字重和 legend 尺寸不变。alpha.1 的规范 resolved values 如下。
-
-### Mode-invariant 结构、尺寸与 scheme
-
-| Token                                   |                           neutral |                                   academic |                              vibrant |                             clean |
-| --------------------------------------- | --------------------------------: | -----------------------------------------: | -----------------------------------: | --------------------------------: |
-| `chart.padding`                         |                                16 |                                         16 |                                   16 |                                12 |
-| `chart.gap`                             |                                 6 |                                          6 |                                    8 |                                 4 |
-| `chart.font.family`                     | `system-ui, Segoe UI, sans-serif` | `Inter, Helvetica Neue, Arial, sans-serif` | `Inter, Segoe UI, Arial, sans-serif` | `system-ui, Segoe UI, sans-serif` |
-| `plot.label.font.size`                  |                                11 |                                         11 |                                   12 |                                10 |
-| `axis.enabled`                          |                              true |                                       true |                                 true |                              true |
-| `axis.line.enabled`                     |                             false |                                       true |                                false |                             false |
-| `axis.line.strokeWidth` / `drawOpacity` |                             1 / 1 |                                      1 / 1 |                                1 / 1 |                             1 / 1 |
-| `axis.tick.mark`                        |                             false |                    line, length 4, width 1 |                                false |                             false |
-| `axis.tickLabel.enabled`                |                              true |                                       true |                                 true |                              true |
-| `axis.tickLabel.font.size` / gap        |                            11 / 5 |                                     11 / 5 |                               12 / 6 |                            10 / 4 |
-| `axis.title.font.size` / weight         |                          12 / 600 |                                   12 / 600 |                             13 / 600 |                          11 / 600 |
-| `axis.grid.enabled`                     |                              true |                                       true |                                 true |                             false |
-| `axis.grid.strokeWidth` / `drawOpacity` |                          1 / 0.55 |                                    1 / 0.6 |                                1 / 1 |                             1 / 1 |
-| `legend.enabled`                        |                              true |                                       true |                                 true |                              true |
-| `legend.title.font.size` / weight       |                          12 / 600 |                                   12 / 600 |                             13 / 700 |                          11 / 600 |
-| `legend.label.font.size`                |                                11 |                                         11 |                                   12 |                                10 |
-| `legend.swatch.size` / gap              |                            12 / 6 |                                     12 / 6 |                               14 / 7 |                            10 / 5 |
-| `legend.entry.gap` / title gap          |                             6 / 6 |                                      6 / 6 |                                8 / 8 |                             5 / 5 |
-| `legend.ramp.length` / thickness        |                           96 / 10 |                                   100 / 10 |                             112 / 14 |                            88 / 8 |
-| `legend.symbol.size` / scale / fit      |                      12 / 1 / fit |                               12 / 1 / fit |                         14 / 1 / fit |                      10 / 1 / fit |
-| `data.palette.sequential`               |                           cividis |                                    cividis |                                turbo |                           cividis |
-| `data.palette.diverging`                |                              brbg |                                       rdbu |                             spectral |                              rdbu |
-
-academic 的 tick line 完整值为 `{ kind: 'line', length: 4, line: { stroke: <effective axis.line.stroke>, strokeWidth: 1 } }`。
+| Token                     |                           neutral |                                   academic |                              vibrant |                             clean |
+| ------------------------- | --------------------------------: | -----------------------------------------: | -----------------------------------: | --------------------------------: |
+| `chart.padding`           |                                16 |                                         16 |                                   16 |                                12 |
+| `chart.gap`               |                                 6 |                                          6 |                                    8 |                                 4 |
+| `chart.font.family`       | `system-ui, Segoe UI, sans-serif` | `Inter, Helvetica Neue, Arial, sans-serif` | `Inter, Segoe UI, Arial, sans-serif` | `system-ui, Segoe UI, sans-serif` |
+| `chart.axis.enabled`      |                              true |                                       true |                                 true |                              true |
+| `chart.axis.grid.enabled` |                              true |                                       true |                                 true |                             false |
+| `chart.legend.enabled`    |                              true |                                       true |                                 true |                              true |
 
 Presentation typography 以 `size / weight / lineHeight / align` 表示：
 
@@ -181,108 +110,115 @@ Presentation typography 以 `size / weight / lineHeight / align` 表示：
 | note            | 11 / 400 / 15 / start | 11 / 400 / 15 / start | 11 / 400 / 15 / start | 10 / 400 / 14 / start |
 | source / credit | 11 / 500 / 15 / start | 11 / 400 / 15 / start | 11 / 500 / 15 / start | 10 / 400 / 14 / start |
 
-### Light paint 与 palette
+Light paint：
 
-下表斜杠顺序与 group label 一一对应：canvas / plot 是 `chart.canvas.fill` / `plot.surface.fill`；plot foreground / label 是 `plot.foreground` / `plot.label.foreground`；六个 presentation slot 按各自行写入 `chart.<slot>.foreground`；axis 四元组是 line / tick label / title / grid 的 stroke 或 foreground；legend 二元组是 title / label foreground。Dark 表同义。
+| Token group         | neutral               | academic              | vibrant               | clean                 |
+| ------------------- | --------------------- | --------------------- | --------------------- | --------------------- |
+| `chart.canvas.fill` | `#FFFFFF`             | `#FFFFFF`             | `#F8FAFC`             | `#FFFFFF`             |
+| title / subtitle    | `#09090B` / `#3F3F46` | `#111827` / `#374151` | `#172B4D` / `#425466` | `#111827` / `#374151` |
+| caption / note      | `#52525B` / `#71717A` | `#4B5563` / `#6B7280` | `#52616B` / `#66788A` | `#4B5563` / `#6B7280` |
+| source / credit     | `#71717A` / `#71717A` | `#6B7280` / `#6B7280` | `#66788A` / `#66788A` | `#6B7280` / `#6B7280` |
 
-| Token group                           | neutral                                       | academic                                      | vibrant                                       | clean                                         |
-| ------------------------------------- | --------------------------------------------- | --------------------------------------------- | --------------------------------------------- | --------------------------------------------- |
-| canvas / plot                         | `#FFFFFF` / `#FAFAFA`                         | `#FFFFFF` / `#FFFFFF`                         | `#F8FAFC` / `#E5ECF6`                         | `#FFFFFF` / `#FFFFFF`                         |
-| plot foreground / label               | `#18181B` / `#3F3F46`                         | `#1F2937` / `#374151`                         | `#2A3F5F` / `#2A3F5F`                         | `#111827` / `#374151`                         |
-| title / subtitle                      | `#09090B` / `#3F3F46`                         | `#111827` / `#374151`                         | `#172B4D` / `#425466`                         | `#111827` / `#374151`                         |
-| caption / note                        | `#52525B` / `#71717A`                         | `#4B5563` / `#6B7280`                         | `#52616B` / `#66788A`                         | `#4B5563` / `#6B7280`                         |
-| source / credit                       | `#71717A` / `#71717A`                         | `#6B7280` / `#6B7280`                         | `#66788A` / `#66788A`                         | `#6B7280` / `#6B7280`                         |
-| axis line / tick label / title / grid | `#D4D4D8` / `#52525B` / `#3F3F46` / `#E4E4E7` | `#9CA3AF` / `#4B5563` / `#374151` / `#D1D5DB` | `#AAB8C2` / `#2A3F5F` / `#2A3F5F` / `#FFFFFF` | `#9CA3AF` / `#374151` / `#374151` / `#E5E7EB` |
-| legend title / label                  | `#3F3F46` / `#52525B`                         | `#374151` / `#4B5563`                         | `#2A3F5F` / `#425466`                         | `#374151` / `#4B5563`                         |
+Dark paint：
 
-```text
-neutral:  #E76E50 #2A9D90 #274754 #E8C468 #F4A462
-academic: #4E79A7 #F28E2B #E15759 #76B7B2 #59A14F #EDC948 #B07AA1 #FF9DA7 #9C755F #BAB0AC
-vibrant:  #636EFA #EF553B #00CC96 #AB63FA #FFA15A #19D3F3 #FF6692 #B6E880 #FF97FF #FECB52
-clean:    #0072B2 #E69F00 #009E73 #CC79A7 #56B4E9 #D55E00 #F0E442 #000000
-```
+| Token group         | neutral               | academic              | vibrant               | clean                 |
+| ------------------- | --------------------- | --------------------- | --------------------- | --------------------- |
+| `chart.canvas.fill` | `#09090B`             | `#0F172A`             | `#111827`             | `#0B0F14`             |
+| title / subtitle    | `#FAFAFA` / `#D4D4D8` | `#F9FAFB` / `#D1D5DB` | `#FFFFFF` / `#E2E8F0` | `#F9FAFB` / `#D1D5DB` |
+| caption / note      | `#A1A1AA` / `#A1A1AA` | `#CBD5E1` / `#94A3B8` | `#CBD5E1` / `#94A3B8` | `#D1D5DB` / `#9CA3AF` |
+| source / credit     | `#A1A1AA` / `#A1A1AA` | `#94A3B8` / `#94A3B8` | `#94A3B8` / `#94A3B8` | `#9CA3AF` / `#9CA3AF` |
 
-### Dark paint 与 palette
+Plot canvas、guide、label 与 palette 的具体值不在本 ADR 中冻结；它们由 Plot owner 的同 style / mode preset 决定。
 
-| Token group                           | neutral                                       | academic                                      | vibrant                                       | clean                                         |
-| ------------------------------------- | --------------------------------------------- | --------------------------------------------- | --------------------------------------------- | --------------------------------------------- |
-| canvas / plot                         | `#09090B` / `#18181B`                         | `#0F172A` / `#111827`                         | `#111827` / `#1E293B`                         | `#0B0F14` / `#0B0F14`                         |
-| plot foreground / label               | `#FAFAFA` / `#D4D4D8`                         | `#E5E7EB` / `#D1D5DB`                         | `#F8FAFC` / `#E2E8F0`                         | `#F3F4F6` / `#D1D5DB`                         |
-| title / subtitle                      | `#FAFAFA` / `#D4D4D8`                         | `#F9FAFB` / `#D1D5DB`                         | `#FFFFFF` / `#E2E8F0`                         | `#F9FAFB` / `#D1D5DB`                         |
-| caption / note                        | `#A1A1AA` / `#A1A1AA`                         | `#CBD5E1` / `#94A3B8`                         | `#CBD5E1` / `#94A3B8`                         | `#D1D5DB` / `#9CA3AF`                         |
-| source / credit                       | `#A1A1AA` / `#A1A1AA`                         | `#94A3B8` / `#94A3B8`                         | `#94A3B8` / `#94A3B8`                         | `#9CA3AF` / `#9CA3AF`                         |
-| axis line / tick label / title / grid | `#3F3F46` / `#D4D4D8` / `#E4E4E7` / `#3F3F46` | `#64748B` / `#CBD5E1` / `#E2E8F0` / `#334155` | `#64748B` / `#E2E8F0` / `#F1F5F9` / `#475569` | `#6B7280` / `#D1D5DB` / `#E5E7EB` / `#374151` |
-| legend title / label                  | `#E4E4E7` / `#D4D4D8`                         | `#E2E8F0` / `#CBD5E1`                         | `#F1F5F9` / `#E2E8F0`                         | `#E5E7EB` / `#D1D5DB`                         |
+## Resolution、cascade 与 inspection
+
+Chart 与 Plot 从同一个 Core effective Theme 开始，但分别解析：
 
 ```text
-neutral:  #4C78A8 #59A14F #F28E2B #B07AA1 #E15759
-academic: #60A5FA #FDBA74 #F87171 #5EEAD4 #86EFAC #FDE047 #D8B4FE #FDA4AF #D6A77A #CBD5E1
-vibrant:  #636EFA #EF553B #00CC96 #AB63FA #FFA15A #19D3F3 #FF6692 #B6E880 #FF97FF #FECB52
-clean:    #56B4E9 #F0B44D #4DD4AC #E58AC8 #7AC7F0 #FF7A59 #F6E36B #E5E7EB
+Core effective Theme
+  -> Chart preset tokens
+  -> ChartSpec styleTokens
+  -> explicit Chart presentation / recipe config
+
+Core effective Theme
+  -> Plot preset tokens
+  -> PlotSpec styleTokens
+  -> PlotSpec colors
+  -> PlotSpec theme
+  -> local guide / mark / scale config
 ```
 
-每套 palette 同时写入 categorical、series 与 sector。以上 structure table 是 mode-invariant；light / dark 表覆盖全部 mode-sensitive paint 与 palette，因此八个 resolved maps 都可确定性展开，无未声明默认。
+- Chart token 按 canonical key 整体替换；不 deep merge composite value
+- `plotStyleTokens`、`colors` 与 `theme` 只沿第二条链生效，不进入 Chart resolved token map
+- Chart resolver 不读取 dataset、adapter 或 renderer 状态，也不根据 Plot preset 名称分支
+- recipe 因稳定 identity 需要 palette 等 Plot 结果时，调用 Plot 公开纯 resolver；最终 PlotSpec 仍保留原始 Plot 输入，并由 Plot 再沿同一确定性主链解析
 
-## Cascade、失败语义与兼容性
+Chart inspection 至少公开 effective style / mode、complete resolved Chart token map、每个 Chart token 的来源、Chart token 到 Standard / recipe 配置的 mapping，以及对 Plot inspection 的 owner-preserving 引用或组合。它不能复制 Plot resolved token map并重新标记为 Chart-owned，也不能把 `plotStyleTokens` 伪装成 Chart token 来源。
 
-低到高优先级固定为：
+Token map 是闭合数据，不执行代码、不按名称 dispatch，因此本 ADR 不引入 theme registry。未知 key、错误 value、缺失 required Chart token、未消费 Chart token 或无法映射的 token 必须 fail-loud。
 
-```text
-Plot built-in defaults
-  < type recipe presentational defaults
-  < built-in style tokens[style][themeMode]
-  < user styleTokens
-  < colors
-  < raw Plot theme
-  < explicit guide / mark / component config
-```
+## 行为、失败语义与兼容性
 
-- token override 按 canonical key 整体替换；palette array 不逐项合并
-- Plot theme 的对象值按其稳定语义保留未覆盖 sibling；scalar、array、`false` 或 discriminator 改变时整体替换
-- 显式 `guides` 整体替换 recipe guide defaults，topology token 不得删除显式 guide
-- `colors` 与 raw Plot theme 继续交给 Plot 正式 resolver；显式 scale range / scheme 保持最高的领域局部优先级
-- theme 只影响可撤销的表现性默认，不能改变数据角色、主 Mark、Transform、Coordinate、guide 语义或 Chart type identity
-- 这是 alpha.1 新公开协议，不为早期草案名 `light`、`dark`、`simple` 或 `dashboard` 保留别名
-
-## Inspection 契约
-
-ADR-02 扩展 ADR-01 的唯一 inspection：公开实际采用的 style / mode、完整 resolved token map、每个 token 的 preset 或用户来源，以及 token 之后生效的 `colors` / raw Plot theme 覆盖来源。来源顺序必须确定，locator 使用 owner-qualified canonical path；inspection 不复制 PlotSpec、Plot provenance 或 lineage。
+- Core 默认 `neutral + light` 下，Chart-owned canvas、presentation 与 recipe defaults 保持上述基线
+- 非默认 Scene / Scope Theme 同时驱动 Chart presentation 与内部 Plot，但两者分别由 Chart / Plot owner 解析
+- 同一 PlotSpec 在相同 effective Theme 下，不因直接使用或位于 Chart 中而得到不同 Plot preset
+- Chart type 核心 recipe、数据角色、必需 Transform、Mark 组合与 composition 不因 theme 改变
+- React、Vanilla、SSR 与手写 JSON 表达同一 Chart / Plot token 输入；adapter 不补 preset 或默认
+- 本次为未稳定 Chart 公开面的破坏性重构：移除 ChartSpec `style`、`themeMode`，移除 Chart `styleTokens` 中的 Plot key，并增加 `plotStyleTokens`
+- 不为旧 `data.palette.*`、无 Chart namespace 的 recipe toggle、Chart-owned Plot token、`style` 或 `themeMode` 保留 alias、双读或迁移 bridge
 
 ## 功能与包边界
 
-- `@retikz/core` 拥有跨领域的 `ThemeStyle` / `ThemeMode` 词汇及其取值类型；`@retikz/chart` 拥有 Chart preset、领域 token vocabulary、catalog、resolver、mapping 与 inspection
-- `@retikz/plot` 拥有 Plot theme、guide、tick glyph、palette / scheme 与 scale 消费
-- `@retikz/standard` 拥有可包装任意 child 的 renderer-neutral surface / background / padding capability
-- Core 还拥有跨领域的 Theme style / mode 词汇；Chart 的具体 preset token 值仍归 Chart 所有
-- chart-react / chart-vanilla 只透传同一 ChartSpec，不新增 CSS theme 或 adapter-only props
+| Owner               | 拥有                                                                                                                | 不拥有                                                                   |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `@retikz/chart`     | ChartSpec、封闭 recipe、Chart canvas / presentation / recipe token、Chart preset / resolver / mapping / inspection  | Plot token、Plot preset / resolver / native theme merge、Standard solver |
+| `@retikz/plot`      | Plot surface / typography / label、Axis / Legend 视觉 token、palette、Plot preset / resolver / mapping / inspection | Chart presentation、Chart recipe toggle、Core Theme 继承                 |
+| `@retikz/standard`  | 去除领域词汇后的 surface、layout、presentation 与通用 composite                                                     | Plot guide / palette、Chart type                                         |
+| `@retikz/core`      | Theme style / mode、Scene / Scope 继承、Composite context、paint / font 等原子与 Scene compile                      | 领域 token、preset、领域 cascade                                         |
+| adapters / renderer | 等价 authoring / runtime 接线；执行统一 Scene                                                                       | 新 token、preset 选择、不同 merge 或 renderer-only theme                 |
 
-`plot.surface.fill` 可以映射到 Plot panel；`chart.canvas.fill` 与 `chart.padding` 必须覆盖整个 Chart，包括裸 Plot 和带 presentation 的组合。现有能力无法完整表达时，必须先由 Standard ADR 补齐 arbitrary-child surface，必要的 Core 缺口再由 Core owner 处理。该 gate 未解除前可以验证 token catalog 与纯 resolution，但不得宣称完整 canvas、dark mode 或最终 Chart composition 已闭环。
+完整 Chart canvas 仍依赖 Standard arbitrary-child surface。该 capability 未闭环前，不允许 Chart 私造 layout / bbox / background primitive，不允许 adapter 用 DOM / CSS 替代，也不得宣称完整 canvas 或 dark mode 已实现。
 
-## 架构验证
+## 架构验证与能力完备性检查
 
-- 归属结论：preset / token 属于 Chart 封装的表现性默认；Plot / Standard / Core 各消费自己拥有的正式能力
-- 内部表达：strict token map 能确定性映射为 recipe guide defaults、Plot theme / palette 与 presentation / surface 输入
-- 外部扩展：自定义 sparse map 与内置 catalog 同 schema、同 resolver、同 consumer；闭合数据无需 registry
-- 下游闭环：Chart 只做纯映射，不生成 renderer 图元或计算布局；Plot 与 Standard 分别 lower 到 Core
-- adapter parity：JSON、React、Vanilla 解析相同 style / mode / token 输入
-- capability 结论：token / preset 扩展 Chart 当前域；完整 canvas 先下沉 Standard 并保持公开入口 gate
+- 所属能力域与能力面：Chart Encapsulation 的 Default Resolution / Presentation，以及 Visualization Complete 的 Plot theme consumption boundary
+- 解决的问题：阻止 Chart 复制 Plot 视觉语义，同时保留 Chart presentation 与 recipe default 的稳定自定义面
+- 主责包与协作包：Chart 主责 Chart token；Plot 主责 Plot token；Core 提供环境；Standard 消费通用呈现
+- 是否可由现有能力组合：Chart 复用 Core effective Theme、Plot 公开 token / resolver 与 Standard presentation，不新增能力轴
+- 是否需要下沉：Chart canvas 需要 Standard surface；Core 只在 Standard 证明缺少通用底座时协作
+- 内部表达链路：Chart effective Theme + Chart sparse token 映射为 presentation / recipe defaults；Plot 输入原样进入完整 PlotSpec
+- 外部扩展链路：Chart / Plot token 都是闭合数据，不采用 registry；Plot scheme 仍沿 Plot 现有 built-in + custom resolver
+- 下游闭环：Chart 生成完整 PlotSpec 与 Standard composition，Plot / Standard 分别 lower，Core / renderer 执行已物化结果
+- adapter 等价性：React、Vanilla、JSON 共享同一 ChartSpec、effective Theme 与 owner resolver
+- 本轮结论：组合现有 Core / Plot / Standard 能力，并收窄 Chart 主题所有权；不在 Chart 扩展 Plot token 能力
 
 ## 被否决方案
 
-- 把 `light` / `dark` 当作 preset：混淆视觉人格与 canvas 环境
-- 只提供不透明 `theme + colors` bundle：无法形成稳定 token 自定义与 inspection
-- token resolver 直接绘制 axis、legend 或 surface：会绕过 Plot / Standard owner
-- adapter / renderer 私补 dark mode：破坏 renderer-neutral 与入口等价
-- alpha.1 泛化 `mark.*`：会把不同 Mark 的专有语义压成不稳定最小公分母
+- 继续由 Chart 维护 Plot token catalog：会让直接 Plot 与 Chart 内 Plot 分叉
+- 把全部领域 token 上移 Core：会形成带 Plot / Chart / Table 词汇的巨型 Theme schema
+- 在 ChartSpec 重复 style / mode：会绕开 Scene / Scope 继承
+- Chart 先 materialize 完整 Plot theme 再交给 Plot：会遮蔽来源并复制 cascade
+- 用无 namespace 的 `axis.enabled` / `legend.enabled` 混合 recipe 与 Plot 视觉语义：owner 不清且无法稳定扩展
+- adapter、CSS 或 renderer 根据 preset 名称补默认：破坏 JSON、React、Vanilla 与 renderer parity
 
 ## 测试策略摘要
 
-需要 schema、catalog、resolution / cascade、Plot mapping、presentation handoff、inspection、adapter parity、renderer parity 与视觉验收证据。关键不变量是八个 built-in 组合都生成 complete valid map，mode 只改变声明为 mode-sensitive 的值，稀疏覆盖拒绝未知 key，高优先级输入按冻结 cascade 生效，theme 不撤销 type 核心语义，且上游 surface gate 到位后三入口和 SVG / Canvas 消费等价 lowering 结果。
+需要以下稳定证据层：
+
+- schema / type 证明 Chart sparse、resolved 与 preset 复用单一字段契约，并拒绝 Plot key、旧 key、未知 key 与错误 value
+- preset 证明四 style × 两 mode complete，mode 只改变声明的 Chart paint
+- Chart resolution 证明 recipe toggle 只控制 default guide，显式 guides 与 type 核心不变量优先
+- Plot handoff 证明 `plotStyleTokens`、`colors`、`theme` 原样进入 PlotSpec，且 Chart 不 materialize 或复制 Plot theme
+- Core / Composite 集成证明 Scene / Scope effective Theme 同时进入 Chart 与内部 Plot
+- inspection 证明 Chart / Plot token owner、来源和 mapping 不混淆
+- React / Vanilla / JSON 与 SVG / Canvas parity 证明 adapter、renderer 不维护独立主题默认
+- Standard surface 证明 canvas 覆盖裸 Plot 与带 presentation 的完整 Chart
 
 ## 不在本 ADR 范围
 
-- 用户注册命名 preset、preset 继承与远程主题 loader
+- Plot canonical token、preset 具体值、native theme merge 与 palette resolver
+- 用户注册命名 preset、preset 继承与远程 theme loader
 - 自动读取系统 dark mode 或 CSS media query
 - CSS class、React style object 或 renderer-specific theme
-- accessibility contrast 自动修正或强制 recolor 用户 palette
 - 通用 `mark.*` token、tooltip、interaction、toolbar、export 与 dashboard state
+- 实现文件、执行步骤、测试 case、验证命令与 commit 切分

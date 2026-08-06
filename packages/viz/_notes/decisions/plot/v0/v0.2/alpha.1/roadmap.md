@@ -21,15 +21,16 @@ Chart 在本 milestone 中只作为消费者。若 Chart 需求暴露通用映�
 
 ## ADR 清单
 
-完整 milestone 的先行 ADR-01 是同目录已接受的 Plot theme token ownership 与 Chart consumption boundary；下表保留 Spatial Mapping 重构的历史草案编号，作为该能力的设计子序列，不替换先行 ADR-01。
+完整 milestone 的 ADR-01 是同目录已接受的 Plot theme token ownership 与 Chart consumption boundary。Spatial Mapping 候选从 ADR-02 顺延编号，避免与已接受决策冲突。
 
-| ADR | 主题                                                                                                                                  | Level | 依赖                                      | 状态   |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------- | ----- | ----------------------------------------- | ------ |
-| 01  | **Spatial Mapping 抽象与所有权**：统一映射逻辑概念，划分 Coordinate Mapping / Structured Mapping 的职责、输入输出边界与 registry 关系 | red   | plot v0.1 coordinate / transform registry | 待起草 |
-| 02  | **Structured Mapping 内容契约**：命名内容端口、任意 JSON-safe 集合 / 关系、多输出空间化结果、identity / provenance 与确定性           | red   | ADR-01、data view / lineage               | 待起草 |
-| 03  | **通用局部坐标与自定义坐标扩展**：局部 frame、维度 / 轴粒度、切向 / 法向组合、coordinate / mark / guide / locator 的共同消费边界      | red   | ADR-01、plot v0.1 coordinate registry     | 待起草 |
+| ADR | 主题                                                                                                                                  | Level | 依赖                                      | 状态     |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------- | ----- | ----------------------------------------- | -------- |
+| 01  | **Plot 主题 token 所有权与 Chart 消费边界**：Plot 拥有领域 token / preset / resolver，Chart 只组合或转发 Plot 公开 contract           | red   | Core effective Theme、plot v0.1 theme     | Accepted |
+| 02  | **Spatial Mapping 抽象与所有权**：统一映射逻辑概念，划分 Coordinate Mapping / Structured Mapping 的职责、输入输出边界与 registry 关系 | red   | plot v0.1 coordinate / transform registry | 待起草   |
+| 03  | **Structured Mapping 内容契约**：命名内容端口、任意 JSON-safe 集合 / 关系、多输出空间化结果、identity / provenance 与确定性           | red   | ADR-02、data view / lineage               | 待起草   |
+| 04  | **通用局部坐标与自定义坐标扩展**：局部 frame、维度 / 轴粒度、切向 / 法向组合、coordinate / mark / guide / locator 的共同消费边界      | red   | ADR-02、plot v0.1 coordinate registry     | 待起草   |
 
-ADR-01 已冻结 Plot 的主题所有权；旧版 Chart layering 方向已迁移到 chart v0.1 路线，不作为本 milestone 输入。
+ADR-01 已冻结 Plot 的主题所有权；旧版由 Chart 拥有 Plot token 的方向已被否决，Chart type / recipe / presentation 继续由 chart v0.1 路线维护。
 
 ## 前置
 
@@ -63,6 +64,7 @@ ADR-01 已冻结 Plot 的主题所有权；旧版 Chart layering 方向已迁移
 
 ## 退出条件
 
+- Plot 直接使用与 Chart 内部使用都从 Core effective Theme 解析同一 Plot preset / token / native theme 主链；Chart 不复制 Plot token、preset、resolver 或 merge。
 - Plot 可以用统一的 Spatial Mapping 语言描述 coordinate mapping 与 structured mapping 的关系，同时保留两类专门契约。
 - `nodes`、`links` 等命名内容可以作为结构化输入，不再被 rows-only transform 模型限制。
 - 映射可以改变数量、顺序或拓扑时，identity、provenance、失败语义和确定性边界仍然清楚。
