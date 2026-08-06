@@ -39,6 +39,41 @@ const highlight = definePathKind({
 
 `schema.shape.kind.value` is the registry key. `kindOptions` passes through `optionsSchema` and remains JSON-safe. The definition and compile function are runtime capability and never enter IR.
 
+### Optional Inspector
+
+When this Path kind needs development-only auxiliary content, place its settled-subject schema and Inspector on the same Definition. This example reuses standard stroke compilation and exposes final commands as the subject; the Inspector returns an ordinary Node instead of a backend-specific DTO.
+
+```tsx
+const InspectInputSchema = z.strictObject({ summary: z.boolean().optional() });
+const InspectOptionsSchema = InspectInputSchema.transform(value => ({
+  summary: value.summary ?? true,
+}));
+
+const highlightInspector = defineInspector({
+  kind: 'path',
+  optionsInputSchema: InspectInputSchema,
+  optionsSchema: InspectOptionsSchema,
+  inspect: (subject: StrokePathInspectionSubject, context) =>
+    context.options.summary
+      ? {
+          type: 'node',
+          position: [0, 0],
+          text: `${subject.commands.length} commands`,
+          textColor: context.appearance.scopeColor,
+        }
+      : [],
+});
+
+const highlight = definePathKind({
+  schema: z.strictObject({ kind: z.literal('highlight') }),
+  inspectionSubjectSchema: StrokePathInspectionSubjectSchema,
+  inspector: highlightInspector,
+  compile: context => context.emitStroke(context.path, { includeInspectionSubject: true }),
+});
+```
+
+`inspectionSubjectSchema`, `inspector`, and the non-null compile result's `inspectionSubject` form one conditional branch and must exist together. The Inspector's `optionsInputSchema` accepts sparse runtime-sidecar input, while `optionsSchema` produces complete canonical options. `inspect()` returns `IRChild | ReadonlyArray<IRChild>` and has no `outputSchema`. When compile returns `null`, Core neither reads the subject nor calls the Inspector.
+
 ## Inject into the host
 
 React injects definitions through `<Layout pathKinds>`; direct core calls use `CompileOptions.pathKinds`. A Path references only the registered name and instance options.
@@ -90,6 +125,9 @@ A provider may create new Scene primitives directly, or call `emitStroke` / `emi
 | Path references an unknown kind             | Compile lists available names and `options.pathKinds`     |
 | `kindOptions` fails its schema              | Error includes kind name and the relevant IR path         |
 | Provider returns `null`                     | The Path produces no primitives                           |
+| Subject schema or Inspector appears alone   | `definePathKind` rejects the Definition immediately       |
+| Selected non-null result omits its subject  | Inspector resolution fails loudly                         |
+| Inspector returns an invalid Core child     | Error includes owner, occurrence, and output index        |
 | `boundsPoints` misses actual output bounds  | Auto layout and Path-level rotate/scale become inaccurate |
 
 A custom kind must return renderer-neutral Scene primitives. It cannot embed SVG elements, Canvas instances, ReactNode values, or functions, and it cannot require renderers to understand the custom `kind`.
@@ -98,11 +136,22 @@ A custom kind must return renderer-neutral Scene primitives. It cannot embed SVG
 
 ### PathKindDefinition
 
-| Field           | Type                            | Default                 | Description                                   |
-| --------------- | ------------------------------- | ----------------------- | --------------------------------------------- |
-| `schema`        | `PathKindDefinition['schema']`  | —                       | Declares Path shape and provides registry key |
-| `optionsSchema` | `ZodType<IRJsonObject>`         | Raw `kindOptions ?? {}` | Validates custom instance options             |
-| `compile`       | `PathKindDefinition['compile']` | —                       | Emits whole-Path Scene primitives and bounds  |
+| Field                     | Type                               | Default                 | Description                                                |
+| ------------------------- | ---------------------------------- | ----------------------- | ---------------------------------------------------------- |
+| `schema`                  | `PathKindDefinition['schema']`     | —                       | Declares Path shape and provides registry key              |
+| `optionsSchema`           | `ZodType<IRJsonObject>`            | Raw `kindOptions ?? {}` | Validates custom instance options                          |
+| `compile`                 | `PathKindDefinition['compile']`    | —                       | Emits whole-Path Scene primitives and bounds               |
+| `inspectionSubjectSchema` | `ZodType<JsonValue>`               | —                       | Validates the final subject together with the Inspector    |
+| `inspector`               | `InspectorDefinition<'path', ...>` | —                       | Converts the validated subject into ordinary Core children |
+
+### InspectorDefinition
+
+| Field                | Type                             | Default | Description                                               |
+| -------------------- | -------------------------------- | ------- | --------------------------------------------------------- |
+| `kind`               | `'path'`                         | —       | Declares the current owner family                         |
+| `optionsInputSchema` | strict `ZodObject`               | —       | Validates sparse runtime input and must accept `{}`       |
+| `optionsSchema`      | `ZodType<IRJsonObject>`          | —       | Resolves sparse input into complete JSON-safe options     |
+| `inspect`            | `InspectorDefinition['inspect']` | —       | Returns one ordinary Core child or a dense readonly array |
 
 ### Compile context
 
@@ -115,10 +164,11 @@ A custom kind must return renderer-neutral Scene primitives. It cannot embed SVG
 
 ### PathKindCompileResult
 
-| Field          | Type                    | Default | Description                                     |
-| -------------- | ----------------------- | ------- | ----------------------------------------------- |
-| `primitives`   | `Array<ScenePrimitive>` | —       | Actual output in current Path-local coordinates |
-| `boundsPoints` | `Array<Position>`       | —       | Key points for auto layout and Path transforms  |
+| Field               | Type                    | Default | Description                                                   |
+| ------------------- | ----------------------- | ------- | ------------------------------------------------------------- |
+| `primitives`        | `Array<ScenePrimitive>` | —       | Actual output in current Path-local coordinates               |
+| `boundsPoints`      | `Array<Position>`       | —       | Key points for auto layout and Path transforms                |
+| `inspectionSubject` | `TInspectionSubject`    | —       | Settled subject required when the Definition has an Inspector |
 
 ## Related
 

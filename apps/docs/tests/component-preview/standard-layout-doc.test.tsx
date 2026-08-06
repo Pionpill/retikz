@@ -281,7 +281,7 @@ describe('Standard layout documentation demos', () => {
     const vanilla = buildVanillaPreview(preview);
 
     expect(preview.inspectionRoots).toHaveLength(1);
-    expect(preview.inspectionRoots[0].tree.policy?.component).toMatchObject({
+    expect(preview.inspectionRoots[0].tree.policy?.self).toMatchObject({
       bounds: {
         container: false,
         content: true,
@@ -358,6 +358,7 @@ describe('Standard layout documentation demos', () => {
     expect(preview.inspectionRoots).toEqual([
       {
         locator: {
+          target: 'composite',
           path: [
             { kind: 'sceneChild', index: 0 },
             { kind: 'scopeChild', index: 0 },
@@ -367,6 +368,7 @@ describe('Standard layout documentation demos', () => {
       },
       {
         locator: {
+          target: 'composite',
           path: [
             { kind: 'sceneChild', index: 1 },
             { kind: 'scopeChild', index: 0 },

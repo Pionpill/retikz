@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest';
 import { buildPreviewSource } from '../../src/modules/docs/components/component-preview/source-panel';
 import { buildPreviewIR, formatIR, irHasAnimations } from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
+import PathInspectorDemo from '../../src/modules/docs/contents/kernel/components/draw/path/path-inspector.demo';
 import FramePlaygroundDemo, {
   previewSource as framePlaygroundPreviewSource,
 } from '../../src/modules/docs/contents/standard/composite/frame/frame-playground.demo';
@@ -97,6 +98,15 @@ const createInput = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe('buildPreviewSource', () => {
+  it('为 Path Inspector 保留等价 Vanilla sidecar 与真实辅助 SVG', () => {
+    const preview = buildPreviewIR(PathInspectorDemo);
+    const vanilla = buildVanillaPreview(preview);
+
+    expect(vanilla.code).toContain('inspect: { controlPoints: true, labels: true }');
+    expect(vanilla.svg).toContain('pointer-events="none"');
+    expect(vanilla.svg).toContain('C1.1');
+  });
+
   it('默认从静态 demo 派生 React、IR 与 Vanilla 源码', () => {
     const result = buildPreviewSource(createInput());
 

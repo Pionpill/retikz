@@ -196,7 +196,9 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
 
 `Layout` 会把文本测量器、Definition registries、TeX lowerer 等宿主能力作为 compile options 注入，但这些选项不会把 React 写进 IR 或 Scene。直接传 `ir` prop 时会跳过 JSX builder。`artifacts` prop 请求 opt-in 产物，`onArtifacts` 在所选 host 发布后接收同次 compile 的 immutable artifacts；不会为通知再编译一次。
 
-`<Layout inspect>` 提供整图策略，`<Scope inspect>` 提供 authored 子树策略，带 inspector 的 Tier 2 组件可以提供当前 occurrence 的局部开关。Builder 只构造 authored sidecar，`inspect` 不进入 `IRScene` / `IRScope`。Static host 直接物化主图与辅助层；retained host 在同一 revision 原子提交两者。SVG SSR seed 也包含辅助层，首次 hydration 采用同一 frame，后续策略变化通过新 session 原子接管。
+`<Layout inspect>` 提供整图布局策略，`<Scope inspect>` 提供 authored 子树策略；带 Inspector 的 Tier 2 组件和 `<Path inspect>` 可以只开启当前 occurrence。Builder 为每个目标生成带 `target: 'composite' | 'path'` 与 `policy.self` 的 authored sidecar，`inspect` 不进入 `IRScene`、`IRScope` 或 `IRPath`。`enabled: false` 对两类目标都是后代不可越过的硬屏障。
+
+Static host 直接物化主图与辅助层；retained host 在同一 revision 原子提交两者。SVG SSR seed 也包含辅助层，首次 hydration 采用同一 frame，后续策略变化通过新 session 原子接管。Inspector 需要 authored occurrence、对应 Definition 与 settled subject；只剩预编译 Scene 的 Render 入口不能事后恢复这些信息。
 
 <SourceLinks
   sources={[

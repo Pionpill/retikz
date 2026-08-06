@@ -81,11 +81,44 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 两个分支都从 `context.theme` 读取当前位置完整、冻结的 `ResolvedTheme`。解析顺序固定为 `neutral + light` → Scene → 外层 Scope → 内层 Scope，每层只覆盖显式字段。`lowerIRToKernel()` 对 `expand` 使用同一解析器；layout-aware definition 仍在 callback 前 fail-loud。Theme 只供 Composite 物化自己的领域默认，最终 Scene 与 renderer 不携带或解释 Theme。
 
-带 `artifactSchema` 的 layout-aware definition 还可以声明 `inspector`。Inspector 与 compile 仍属于同一个 `CompositeDefinition` 和同一个 registry key；Core 不维护第二张 inspector 注册表。选中 occurrence 后，callback 接收同次 compile 已校验的 artifact、完整通用选项和 definition 专属选项，只能返回严格的 rect / line / label 检查 DTO。`expand` 分支、没有 `artifactSchema` 的 compile 分支或已开启但未返回 artifact 的 occurrence 都会 fail-loud。
+带 `artifactSchema` 的 layout-aware definition 还可以声明 `inspector`。Inspector 与 compile 仍属于同一个 `CompositeDefinition` 和同一个 registry key；Core 不维护第二张 Inspector 注册表。选中 occurrence 后，callback 接收同次 compile 已校验的 artifact，并从 `InspectorContext` 读取 canonical options、occurrence 与推荐外观。`expand` 分支、没有 `artifactSchema` 的 compile 分支或已开启但未返回 artifact 的 occurrence 都会 fail-loud。
 
-检查 DTO 使用 occurrence identity、spacing pattern 与 geometry line style 三条独立通道。Core 对最终排序后的 entry 连续分配 `colorScope`；普通 primitive 的 tone 为 `scope`，warning 为 `warning`。`rect` 的 `outline` 分支必须带 `lineStyle`，`fill` 分支必须带 `fillPattern`，不能依赖旧的 `neutral | accent | guide` tone 或缺省 presentation 字段。
+`defineInspector()` 要求 strict、可接受空对象的 `optionsInputSchema`，以及能从空输入解析出完整 JSON-safe 对象的 `optionsSchema`。`inspect()` 直接返回一个普通 `IRChild` 或稠密数组；没有 `outputSchema`，也没有 Inspector 专用 primitive。Core 会先分离并冻结输出，再用当前 compile 的 provider definitions、Theme 与 Scope 样式在独立环境中编译每个 entry。
 
-`CompileInspectionOptions.root` 承载全图稀疏策略；`roots` 是 React / Vanilla 等 authoring adapter 构造的 authored occurrence sidecar。它不进入 IR，也不要求第三方调用方预测 probe / replay 的动态路径。省略 `inspection` 时 inspector 不运行，主 Scene 与 artifacts 保持原行为。
+下面是 Composite Inspector 的最小迁移形态：把原先的辅助 DTO 改成普通 Path / Node，并把颜色从 `context.appearance` 写进 IR。
+
+```ts
+const CardInspectInputSchema = z.strictObject({ bounds: z.boolean().optional() });
+const CardInspectOptionsSchema = CardInspectInputSchema.transform(value => ({
+  bounds: value.bounds ?? true,
+}));
+
+const cardInspector = defineInspector({
+  kind: 'composite',
+  optionsInputSchema: CardInspectInputSchema,
+  optionsSchema: CardInspectOptionsSchema,
+  inspect: (artifact: CardArtifact, context) =>
+    context.options.bounds
+      ? {
+          type: 'path',
+          stroke: context.appearance.scopeColor,
+          dashPattern: [6, 4],
+          children: rectSteps(artifact.bounds),
+        }
+      : [],
+});
+
+export const CardDefinition = defineComposite({
+  namespace: 'acme',
+  type: 'card',
+  schema: CardSchema,
+  compile: compileCard,
+  artifactSchema: CardArtifactSchema,
+  inspector: cardInspector,
+});
+```
+
+`CompileInspectionOptions.root` 承载全图稀疏策略；`roots` 是 React / Vanilla 等 authoring adapter 构造的 authored occurrence sidecar。每个 locator 必须用 `target: 'composite' | 'path'` 声明预期 owner，当前 occurrence 的开关使用 `policy.self`；target 不匹配、重复或越界会在 provider callback 前失败。它不进入 IR，也不要求第三方调用方预测 probe / replay 的动态路径。省略 `inspection` 时不读取 subject、不调用 Inspector、也不运行辅助编译，主 Scene 与 artifacts 保持原行为。
 
 `BaseLayoutInspectOptions` 把 box 边界与间距层拆成相互独立的 `bounds` 和 `spacing`。Core canonical profile 默认开启 `spacing.padding` 与 `spacing.margin`；`spacing: false | true` 会整体关闭或恢复这两个默认值，对象形式只覆盖显式提供的成员。相邻层都是对象时按字段 sparse merge；boolean 与 object 互换时由后者替换整个分组，最后再补 canonical defaults。修改 `bounds` 不会隐式修改 `spacing`，反之亦然。
 
@@ -102,9 +135,9 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
   }}
 />
 
-Adapter 把 `<Layout>`、`<Scope>` 与组件本地配置分别映射为全图 root、authored subtree 的 inherited policy 和 component policy。Core 固定按 Layout → Scope → component-local 的顺序合并，每一级只覆盖自己提供的值；`enabled: false` 仍是后代不能重新开启的硬屏障。Docs 的“推荐”预设显式把 padding / margin 设为 `false`，不改变 Core 的全量诊断默认值。
+Adapter 把 `<Layout>`、`<Scope>` 与组件本地配置分别映射为全图 root、authored subtree 的 inherited policy 和 `self` policy。Core 固定按 Layout → Scope → self 的顺序合并，每一级只覆盖自己提供的值；`enabled: false` 对 Composite 与 Path 都是后代不能重新开启的硬屏障。Layout 的 inherited policy 只选择布局 Composite，不会隐式开启 Path。Docs 的“推荐”预设显式把 padding / margin 设为 `false`，不改变 Core 的全量诊断默认值。
 
-手写 `InspectionPlane` 的调用方必须为 entry 提供非负安全整数 `colorScope`；正常 `compileToScene()` 调用由 Core 在丢弃 probe 后统一分配。该 breaking contract 不改变 `CompileOptions.inspection`、`CompileResult.inspection` 或主 Scene 的外层形状。
+每个 `InspectionPlaneEntry` 都记录 owner、最终 occurrence、`colorScope`、occurrence-local 到主 Scene 的 `transform`，以及已经 seal 的普通静态 `scene`。Core 在丢弃 probe 后统一排序和分配颜色；空输出占用色域但不形成 entry。辅助 Scene 的资源、namespace、artifact、诊断与公共 identity 都和主 Scene及其它 entry 隔离。
 
 `LayoutProposal` 必须恰好包含 `x` 与 `y`；每条轴使用 `LayoutAxisProposal`：
 
@@ -182,11 +215,12 @@ Node label 会把一次测量阶段得到的 `width` / `height` / `ascent` / `de
 
 `CompileWarning` 是机器可读的同步 warning：
 
-| Field     | Type   | 说明                                               |
-| --------- | ------ | -------------------------------------------------- |
-| `code`    | string | warning 类型代码                                   |
-| `message` | string | 英文人类可读消息                                   |
-| `path`    | string | IR locator，例如 `children[3].path.children[1].to` |
+| Field     | Type                         | 说明                                               |
+| --------- | ---------------------------- | -------------------------------------------------- |
+| `code`    | string                       | warning 类型代码                                   |
+| `message` | string                       | 英文人类可读消息                                   |
+| `path`    | string                       | IR locator，例如 `children[3].path.children[1].to` |
+| `origin`  | `InspectionDiagnosticOrigin` | 主编译或 Inspector resolve / inspect / output 来源 |
 
 当前内置 code（机器可读常量 `CompileWarningCode` 已公开导出，可按枚举引用而非硬编码字符串）：
 
@@ -212,6 +246,8 @@ Node label 会把一次测量阶段得到的 `width` / `height` / `ascent` / `de
 
 大多数 warning 不会中断编译。但 coordinate / node 自身位置无法解析时**直接抛错、不发 warning**（源码刻意如此：warn 后立即 throw 会让收集器记录一条永不产出 Scene 的死告警），因为它属于「定义位置」的实体，会破坏后续引用合同。
 
+公开 warning 的 `origin` 始终必填。普通编译使用 `{ kind: 'primary' }`；Inspector 在绑定前的 authoring 失败保留原 locator，绑定后的 resolve / inspect / output 则携 owner 与 occurrence，output 还携 `outputIndex`。辅助输出引用主 Scene 或其它 entry identity 时会提升为致命错误，避免提交局部失真的辅助层。
+
 自动对比色 warning 的 `path` 固定为当前 Node locator，`message` 会包含无法解析的 fill、原因与固定 fallback。同一 Node 即使有多段正文、公式、label 或 pin，也最多发一次；没有消费者继承 Node 文字颜色时不会解析关键字或发 warning。
 
 ## 输出
@@ -224,7 +260,7 @@ Node label 会把一次测量阶段得到的 `width` / `height` / `ascent` / `de
 | `artifacts`  | `ReadonlyArray<CompileArtifact>` | 与 `scene` 同一次 canonical compile 产生的 immutable typed artifacts |
 | `inspection` | `InspectionPlane \| null`        | 与主 Scene 隔离的检查辅助层；关闭时为 `null`                         |
 
-`inspection` 不属于 `scene`：它不会扩大 `scene.layout`、添加资源或 identity，也不改变命中测试。Render 的 static frame 与 retained frame 会把 primary Scene 和 inspection plane 作为同一 revision 的两个平面一起物化。
+`inspection` 不属于 `scene`：它不会扩大 `scene.layout`、添加主资源或 identity，也不改变命中测试。每个 entry 的 `scene` 是普通、可直接执行的静态 Scene，只是资源与身份被隔离。Render 的 static frame 与 retained frame 会把 primary Scene 和 inspection plane 作为同一 revision 的两个平面一起物化。
 
 其中 `scene` 包含：
 

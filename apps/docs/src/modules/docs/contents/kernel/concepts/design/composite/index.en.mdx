@@ -43,6 +43,7 @@ Core routes composites only by the top-level `namespace + type`; it does not int
 | `expand`         | Emit Tier 1 or nested Tier 2 from the effective Theme  | Exclusive with `compile`; must reach Tier 1       |
 | `compile`        | Measure, constrain, and place children in full compile | Exclusive with `expand`                           |
 | `artifactSchema` | Validate a domain artifact returned by `compile`       | Required when the definition has an artifact type |
+| `inspector`      | Convert a validated artifact into auxiliary children   | Compile branch with `artifactSchema` only         |
 
 The compiler looks up `${namespace}.${type}`, validates the node, and calls the selected branch. Nested composites continue until final output contains only Tier 1 and committed replay results. An unregistered node warns and is skipped; cycles or excess depth throw. See [Compile](/kernel/reference/runtime/compile) for complete fields, diagnostics, and standalone lowering behavior.
 
@@ -142,6 +143,50 @@ A replay wrapper first places the child with `transforms`, then applies `clip` i
 ### Typed artifacts from the same compile
 
 A layout-aware definition can declare `artifactSchema` and return a JSON-safe `artifact` from `compile`. Core wraps it in `CompileResult.artifacts` with `namespace`, `type`, and an occurrence locator. The locator combines the original `sourcePath` with structured expansion / output / replay segments, without a global Map, callback capture, or second traversal. Hosts therefore receive the Scene and domain artifacts from one canonical compile.
+
+The same artifact can be the stable subject for development-only auxiliary content. This minimal addition assumes existing `CardSchema` and `compileCard` values; `compileCard` must return an `artifact` accepted by `CardArtifactSchema`.
+
+```ts
+const CardArtifactSchema = z.strictObject({
+  bounds: z.strictObject({
+    x: z.number(),
+    y: z.number(),
+    width: z.number().nonnegative(),
+    height: z.number().nonnegative(),
+  }),
+});
+
+type CardArtifact = z.infer<typeof CardArtifactSchema>;
+
+const CardInspector = defineInspector({
+  kind: 'composite',
+  optionsInputSchema: z.strictObject({}),
+  optionsSchema: z.strictObject({}),
+  inspect: (artifact: CardArtifact, context) => ({
+    type: 'path',
+    stroke: context.appearance.scopeColor,
+    children: [
+      { type: 'step', kind: 'move', to: [artifact.bounds.x, artifact.bounds.y] },
+      {
+        type: 'step',
+        kind: 'rectangle',
+        to: [artifact.bounds.x + artifact.bounds.width, artifact.bounds.y + artifact.bounds.height],
+      },
+    ],
+  }),
+});
+
+export const CardDefinition = defineComposite({
+  namespace: 'demo',
+  type: 'card',
+  schema: CardSchema,
+  compile: compileCard,
+  artifactSchema: CardArtifactSchema,
+  inspector: CardInspector,
+});
+```
+
+`inspect()` returns an ordinary `IRChild` or dense readonly array and declares no `outputSchema`. Core compiles every output in an isolated environment with Inspectors forcibly disabled, so a returned Path or Composite cannot recursively inspect itself. The subject comes from the validated same-compile artifact rather than being reconstructed from the final Scene.
 
 `lowerIRToKernel()` only supports independently executable `expand` branches. It fails explicitly on a layout-aware composite because the correct result depends on the full compile environment.
 
