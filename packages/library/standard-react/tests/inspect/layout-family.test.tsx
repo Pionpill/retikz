@@ -8,7 +8,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { FlexLayout, LayoutItem } from '../../src';
-import { InspectFlexLayout, InspectGridLayout, StandardInspectLayout } from '../../src/inspect';
+import { InspectFlexLayout, InspectGridLayout, StandardInspectLayout, StandardInspectScope } from '../../src/inspect';
 import { makeReactStandardLayoutComposites } from '../../src/shared';
 
 describe('@retikz/standard-react/inspect', () => {
@@ -99,5 +99,32 @@ describe('@retikz/standard-react/inspect', () => {
     expect(entries?.every(entry => entry.owner.kind === 'composite' && entry.owner.type === expectedType)).toBe(true);
     expect(entries?.every(entry => entry.occurrence.expansionPath.length > 0)).toBe(true);
     expect(new Set(entries?.map(entry => entry.colorScope))).toEqual(new Set([0]));
+  });
+
+  it('贡献内部 Scope 检查无法定位时明确拒绝，避免误选父布局', () => {
+    const built = buildIRWithContributions(
+      <FlexLayout>
+        <LayoutItem kind="flex" itemKey="nested">
+          <StandardInspectScope request={false}>
+            <InspectFlexLayout>
+              <LayoutItem kind="flex" itemKey="leaf">
+                <Node position={[0, 0]} text="leaf" />
+              </LayoutItem>
+            </InspectFlexLayout>
+          </StandardInspectScope>
+        </LayoutItem>
+      </FlexLayout>,
+    );
+    const driver = createInspectionLayoutDriver({
+      registry: createInspectorRegistry([FLEX_LAYOUT_INSPECTOR]),
+    });
+    const session = driver.create({
+      instance: {},
+      source: built.ir,
+      authoringSites: built.authoringSites,
+      coreOptions: { composites: makeReactStandardLayoutComposites(), padding: 0 },
+    });
+
+    expect(() => session.observers[0]?.createSession()).toThrow(/nested Scope/i);
   });
 });

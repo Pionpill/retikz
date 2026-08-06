@@ -23,6 +23,14 @@ const observationOwnerKey = (owner: CompileObservationOwner): string =>
 const observationOwnerEquals = (left: CompileObservationOwner, right: CompileObservationOwner): boolean =>
   observationOwnerKey(left) === observationOwnerKey(right);
 
+/** 判断 Scope 是否来自已折叠来源路径的嵌入贡献，因而无法无歧义定位子树 */
+const isCollapsedContributionScope = (
+  site: LayoutCompileDriverInput['authoringSites'][number],
+  sites: LayoutCompileDriverInput['authoringSites'],
+): boolean =>
+  site.kind === 'scope' &&
+  sites.some(candidate => candidate.sourcePath === site.sourcePath && candidate.owner !== undefined);
+
 /** React 检查编译驱动的固定配置 */
 export type CreateInspectionLayoutDriverOptions = Readonly<{
   /** 本次布局使用的检查器注册表 */
@@ -65,6 +73,10 @@ const resolveReactSelection = (
 ): InspectionSelection => {
   const occurrenceCounts = new Map<string, number>();
   const authoredRules = input.authoringSites.flatMap(site => {
+    const siteRules = inspectionRulesFromReactSite(site);
+    if (siteRules.length > 0 && isCollapsedContributionScope(site, input.authoringSites)) {
+      throw new Error('Inspect React nested Scope inside an embeddable contribution cannot be located');
+    }
     const owner = site.owner;
     let occurrenceIndex: number | undefined;
     if (owner !== undefined) {
@@ -72,7 +84,7 @@ const resolveReactSelection = (
       occurrenceIndex = occurrenceCounts.get(countKey) ?? 0;
       occurrenceCounts.set(countKey, occurrenceIndex + 1);
     }
-    return inspectionRulesFromReactSite(site).map(rule => {
+    return siteRules.map(rule => {
       if (rule.kind !== 'request' || rule.target.kind !== 'self' || rule.target.locator.kind !== 'authored') {
         return rule;
       }
