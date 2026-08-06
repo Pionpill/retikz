@@ -123,6 +123,31 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/reference/schema/entity#coordinate',
   },
   FontSchema: { schema: IR.FontSchema, label: 'Font', url: '/kernel/reference/schema/entity#font' },
+  FontFamilySchema: {
+    schema: IR.FontFamilySchema,
+    label: 'FontFamily',
+    url: '/kernel/reference/schema/entity#fontfamily',
+  },
+  FontWeightSchema: {
+    schema: IR.FontWeightSchema,
+    label: 'FontWeight',
+    url: '/kernel/reference/schema/entity#fontweight',
+  },
+  FontStyleSchema: {
+    schema: IR.FontStyleSchema,
+    label: 'FontStyle',
+    url: '/kernel/reference/schema/entity#fontstyle',
+  },
+  TextAlignSchema: {
+    schema: IR.TextAlignSchema,
+    label: 'TextAlign',
+    url: '/kernel/reference/schema/entity#textalign',
+  },
+  LineHeightSchema: {
+    schema: IR.LineHeightSchema,
+    label: 'LineHeight',
+    url: '/kernel/reference/schema/entity#lineheight',
+  },
   TextBlockSchema: { schema: IR.TextBlockSchema, label: 'TextBlock', url: '/kernel/reference/schema/entity#textblock' },
   LineSpecSchema: { schema: IR.LineSpecSchema, label: 'LineSpec', url: '/kernel/reference/schema/entity#linespec' },
   StyledLineSchema: {
@@ -255,6 +280,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IR.StrokeStyleSchema,
     label: 'StrokeStyle',
     url: '/kernel/reference/schema/style#strokestyle',
+  },
+  StrokeWidthSchema: {
+    schema: IR.StrokeWidthSchema,
+    label: 'StrokeWidth',
+    url: '/kernel/reference/schema/style#strokewidth',
   },
   PaintValueSchema: {
     schema: IR.PaintValueSchema,

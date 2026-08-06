@@ -68,7 +68,7 @@ type IRPlotSpec = {
 | --------------------------------- | -------------------------------------------------------------------------------------------------- |
 | surface / guide line paint        | Core `PaintValueSchema` / `IRPaintValue`                                                           |
 | guide text foreground             | Plot `GuideTextStyleSchema` 的 `textColor` 字段                                                    |
-| font family / size / weight       | Core `FontSchema` / `FontSizeSchema` 的对应字段                                                    |
+| font family / size / weight       | Core `FontFamilySchema` / `FontSizeSchema` / `FontWeightSchema`                                    |
 | opacity                           | Core `OpacitySchema`                                                                               |
 | axis line / grid / tick / gap     | Plot `AxisLineStyleSchema`、`AxisGridLineStyleSchema`、`AxisTickMarkSchema` 与 tick-label gap 字段 |
 | legend title / label text         | Core text / font atoms，经 Plot guide text contract 收窄                                           |
