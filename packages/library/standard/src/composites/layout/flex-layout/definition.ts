@@ -7,8 +7,8 @@ import type { FlexLayoutArtifact, IRFlexLayout } from './types';
 
 import { STANDARD_NAMESPACE } from '../../shared';
 import { FlexLayoutInspectLocalOptionsInputSchema, FlexLayoutInspectLocalOptionsSchema } from '../shared';
-import { compileFlexLayout } from './pipeline';
 import { inspectFlexLayoutArtifact } from './inspection';
+import { compileFlexLayout } from './pipeline';
 import { FlexLayoutArtifactSchema, FlexLayoutSchema } from './schema';
 
 /** Standard FlexLayout 的官方 Core layout-aware composite definition */

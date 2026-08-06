@@ -7,8 +7,8 @@ import type { GridLayoutArtifact, IRGridLayout } from './types';
 
 import { STANDARD_NAMESPACE } from '../../shared';
 import { GridLayoutInspectLocalOptionsInputSchema, GridLayoutInspectLocalOptionsSchema } from '../shared';
-import { compileGridLayout } from './pipeline';
 import { inspectGridLayoutArtifact } from './inspection';
+import { compileGridLayout } from './pipeline';
 import { GridLayoutArtifactSchema, GridLayoutSchema } from './schema';
 
 /** Standard GridLayout 的官方 Core layout-aware composite definition */
