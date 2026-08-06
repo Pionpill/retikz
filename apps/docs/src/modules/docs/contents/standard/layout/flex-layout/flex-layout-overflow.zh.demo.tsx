@@ -6,7 +6,7 @@ import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 /** 对比 fixed child 拒绝较小 slot 时 visible 与 clip 的表现 */
 const Demo: FC = () => (
   <Layout width={460} height={170}>
-    <FlexLayout direction="column" rowGap={18}>
+    <FlexLayout direction="column" gap={18}>
       <LayoutItem kind="flex" itemKey="visible-row">
         <FlexLayout
           size={{ x: { kind: 'fixed', value: 170 }, y: { kind: 'fixed', value: 52 } }}

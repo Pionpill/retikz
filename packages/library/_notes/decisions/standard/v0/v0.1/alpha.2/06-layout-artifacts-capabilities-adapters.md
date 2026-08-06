@@ -229,7 +229,7 @@ foreign/custom canonical IR child的definitions仍由宿主compile options显式
 
 ```tsx
 <Layout>
-  <FlexLayout direction="row" columnGap={8}>
+  <FlexLayout direction="row" gap={8}>
     <LayoutItem kind="flex" itemKey="plot" grow={1}>
       <GridLayout columns={[{ kind: 'fraction', factor: 1 }]}>
         <LayoutItem kind="grid" itemKey="mark">

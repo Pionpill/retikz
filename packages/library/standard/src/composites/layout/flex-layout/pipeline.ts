@@ -327,8 +327,8 @@ export const compileFlexLayout = (
     });
   });
   const mainItems = measured.map(item => mainSolverItemOf(item, node.direction));
-  const mainGap = axes.main === 'x' ? node.columnGap : node.rowGap;
-  const crossGap = axes.cross === 'x' ? node.columnGap : node.rowGap;
+  const mainGap = axes.main === 'x' ? node.gap.column : node.gap.row;
+  const crossGap = axes.cross === 'x' ? node.gap.column : node.gap.row;
   const mainPadding =
     axes.main === 'x' ? { start: padding.left, end: padding.right } : { start: padding.top, end: padding.bottom };
   const crossPadding =

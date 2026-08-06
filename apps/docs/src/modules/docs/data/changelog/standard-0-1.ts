@@ -51,6 +51,13 @@ export const standardV01: Release = {
               },
             },
             {
+              label: { zh: 'BREAKING：FlexLayout 间距输入', en: 'BREAKING: FlexLayout spacing input' },
+              content: {
+                zh: '`FlexLayout` 删除 `columnGap` / `rowGap`，统一使用 `gap`。`gap` 接受数字或 `{ column, row }`；数字在 schema 边界归一化为两个轴相同的 canonical 对象。旧字段需要迁移且不保留兼容别名。',
+                en: '`FlexLayout` removes `columnGap` and `rowGap` in favor of one `gap` input. `gap` accepts a number or `{ column, row }`; numbers normalize at the schema boundary to a canonical object with the same value on both axes. Migrate old fields; no compatibility aliases are retained.',
+              },
+            },
+            {
               label: { zh: 'Typed artifact 与装载', en: 'Typed artifacts and loading' },
               content: {
                 zh: '每种容器返回 strict JSON artifact，记录 container、items 与 line / track / paint order 结果；Flex 与 Grid 额外以必填 `spacing` 区分固定 gap 和正自由空间分布。布局 Definition 通过 Core `composites` 按需注入。',
@@ -139,6 +146,13 @@ export const standardV01: Release = {
               },
             },
             {
+              label: { zh: 'BREAKING：FlexLayout builder 间距', en: 'BREAKING: FlexLayout builder spacing' },
+              content: {
+                zh: '`flexLayout()` 的输入改用 `gap`，可传数字或 `{ column, row }`；`columnGap` / `rowGap` 不再接受。',
+                en: '`flexLayout()` now accepts `gap` as a number or `{ column, row }`; `columnGap` and `rowGap` are no longer accepted.',
+              },
+            },
+            {
               label: { zh: '局部检查开关', en: 'Local inspection switches' },
               content: {
                 zh: '`flexLayout()`、`gridLayout()` 与 `overlayLayout()` 的第三个参数可为当前容器开启、关闭或细化检查辅助层；省略时继承宿主策略。',
@@ -195,6 +209,13 @@ export const standardV01: Release = {
               content: {
                 zh: '`LayoutItem` 用 `itemKey` 保存容器内 identity，可接一个 React drawable child 或显式 `ir`；三种布局任意嵌套时仍只贡献一组有序 definitions。',
                 en: '`LayoutItem` stores container-local identity through `itemKey` and accepts either one React drawable child or explicit `ir`. Arbitrary nesting among the three layouts still contributes one ordered definition set.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：FlexLayout gap 属性', en: 'BREAKING: FlexLayout gap prop' },
+              content: {
+                zh: '`<FlexLayout>` 删除 `columnGap` / `rowGap` props，改用 `gap`；数字设置两个物理轴，对象可分别设置 `column` 与 `row`。',
+                en: '`<FlexLayout>` removes the `columnGap` and `rowGap` props in favor of `gap`; a number sets both physical axes, while an object sets `column` and `row` independently.',
               },
             },
             {

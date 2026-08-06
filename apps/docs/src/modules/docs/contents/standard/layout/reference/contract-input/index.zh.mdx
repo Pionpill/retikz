@@ -22,14 +22,15 @@ description: 查询 Standard 布局容器与 LayoutItem 联合的 JSON schema、
     overflow: '视觉溢出保持可见或裁切到容器分配区域的策略。',
     direction: '主轴的物理方向。',
     wrap: '换行与交叉轴遍历策略。',
-    columnGap: '子项或布局行之间的水平间距。',
-    rowGap: '子项或布局行之间的垂直间距。',
+    gap: '数字同时设置两个物理轴的间距；对象分别设置 column 与 row。',
     justifyContent: '每条布局行内主轴剩余空间的分布方式。',
     alignItems: '弹性子项默认的交叉轴对齐方式。',
     alignContent: '多条布局行之间交叉轴剩余空间的分布方式。',
     children: '按稳定绘制顺序排列、由作者声明的弹性子项。',
   }}
 />
+
+`FlexLayoutSchema` 的 `gap` 接受非负数字或严格的 `{ column, row }` 对象；数字输入会在 schema 边界归一化为两个轴相同的 canonical 对象。
 
 ### GridLayoutSchema
 
