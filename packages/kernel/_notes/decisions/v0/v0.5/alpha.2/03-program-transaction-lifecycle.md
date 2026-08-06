@@ -292,7 +292,7 @@ Renderer commit participant、prepare/commit/rollback token、不可恢复 rollb
 - initial full、incremental、bailout、fallback 和 empty Program 共用同一稳定拓扑执行；candidate 在 publish 前隔离，成功后一次切换 revision。
 - artifact 与 owner value 按 acquire/rollback/retire/dispose 路径 exactly-once 管理；primary error 保持 code/cause，secondary lifecycle failure 进入 immutable diagnostics。
 - 自动化验证覆盖 graph/cycle/undeclared dependency、stale base、multi-owner ChangeSet、revision exhaustion、callback phase failure、rollback、observer reentry、资源所有权和 compile-time generic lookup。
-- 2026-07-27 收尾验证通过：Runtime `tsc --noEmit` 与 19 files / 135 tests 全部通过。
+- 类型与自动化验证已覆盖同步 transaction、泛型 lookup、资源所有权、错误优先级和诊断队列。
 - Runtime package/session 中英文文档、执行逻辑图和 alpha.2 changelog 已同步当前同步事务合同。
 
 ## 公开影响

@@ -33,10 +33,10 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-04 已完成 canonical Scene topology、Core Program full oracle、ChangeSet/Snapshot 校验、stable/nested Diff、full fallback 与单 root Node fill 局部增量闭环，并于 2026-07-28 按当前安全子集获人工接受；通用 contribution 与其它图元局部失效不属于本次 Accepted 事实。
 - ADR-05 已完成 Runtime commit participant、Render retained runtime、SVG/Canvas事务后端、React/Vanilla session接线、5000规模确定性/计时门禁与双语文档，并于2026-07-29获人工接受。
 - ADR-06 已完成双轴 constraint、`slotSize`、显式 composite allocation、完整 replay wrapper、Table consumer 迁移、对抗测试与双语文档，并于 2026-07-28 获人工接受。
-- ADR-07 已完成 Architecture Gate、Runtime/Core/Render/React/Vanilla实现、SVG/Canvas三策略Bench A/B、对抗测试与双语文档，并于2026-07-29获人工接受。
-- ADR-08 已完成双轴 proposal、resolved slot、真实 allocation / visual bounds、alignment guide、隔离 failure、one-use replay、Table consumer 迁移、对抗测试与双语文档；Architecture Gate Round 3/3 PASS，并于 2026-07-30 获人工接受。
-- ADR-09 已完成严格 JSON Theme IR、Scene / Scope 字段级继承、expand 与 layout-aware Composite context、runtime Scope、probe / replay、lowering、retained fallback、React / Vanilla parity、renderer parity、对抗复验与双语文档；Architecture Gate Round 2 PASS、Plan Gate Round 4 PASS，并于 2026-08-03 完成 Accepted 收口。
-- ADR-10 已于 2026-08-04 完成 Architecture Gate、Plan Gate、Core 原子 schema/type 实现、Tier 2 / Tier 3 直接消费迁移、测试与双语文档，并获人工接受。
+- ADR-07 已完成 Runtime/Core/Render/React/Vanilla 实现、SVG/Canvas 三策略 Bench A/B、对抗测试与双语文档，并于 2026-07-29 获人工接受。
+- ADR-08 已完成双轴 proposal、resolved slot、真实 allocation / visual bounds、alignment guide、隔离 failure、one-use replay、Table consumer 迁移、对抗测试与双语文档，并于 2026-07-30 获人工接受。
+- ADR-09 已完成严格 JSON Theme IR、Scene / Scope 字段级继承、Composite context、runtime Scope、probe / replay、lowering、retained fallback、adapter / renderer parity、对抗复验与双语文档，并于 2026-08-03 获人工接受。
+- ADR-10 已完成 Core 原子 schema/type、Tier 2 / Tier 3 直接消费迁移、测试与双语文档，并于 2026-08-04 获人工接受。
 
 ## 执行批次
 

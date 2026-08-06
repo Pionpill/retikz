@@ -1,4 +1,4 @@
-# plot v0.2-alpha.1 实施待办：交互地基 + layout transform 地基
+# plot v0.2-alpha.1 实施待办：主题所有权 + 交互与 layout transform 地基
 
 > milestone 执行路线。长期决策放同目录 `NN-*.md` ADR；本文件可更新。
 > 关联：[`plot v0.2 roadmap`](../roadmap.md) · [`plot v0 roadmap`](../../roadmap.md) · [`plot-design §7 / §10 / §13`](../../../../../architecture/plot-design.md) · [`_template.md`](../../../../_template.md)
@@ -6,20 +6,22 @@
 
 ## 目标
 
-在 v0.1 GoG 基座之上，先打通 v0.2 两条能力轴的最小纵向闭环：
+在 v0.1 GoG 基座之上，先修正 Plot / Chart 的主题所有权，再打通 v0.2 两条能力轴的最小纵向闭环：
 
-1. **交互地基**：让 locator / provenance / layer identity 能被 runtime 消费，支撑 tooltip、hover、selection、brush、legend interaction 与 overlay 的后续实现。
-2. **layout transform 地基**：建立结构化布局算法的 registry / contract，让 tree、network、word cloud、treemap、gauge、progress、pictogram 等算法产出普通 rows / derived fields，再交给 plot mark 渲染。
-3. **Chart 消费边界**：chart v0.1 可消费本 milestone 产出的 PlotSpec 能力，但 chart 自身 roadmap 独立维护，不在 plot v0.2-alpha.1 里实现。
+1. **主题所有权**：Plot 消费 Core effective Theme，拥有 Plot token、preset、cascade 与 inspection；Chart 只组合或传递 Plot 公开契约。
+2. **交互地基**：让 locator / provenance / layer identity 能被 runtime 消费，支撑 tooltip、hover、selection、brush、legend interaction 与 overlay 的后续实现。
+3. **layout transform 地基**：建立结构化布局算法的 registry / contract，让 tree、network、word cloud、treemap、gauge、progress、pictogram 等算法产出普通 rows / derived fields，再交给 plot mark 渲染。
+4. **Chart 消费边界**：chart v0.1 可消费本 milestone 产出的 PlotSpec 能力，但 ChartSpec、recipe 与 presentation 由 chart 自身 roadmap 维护。
 
 ## ADR 清单
 
-| ADR | 主题                                                                                                                                     | Level | 依赖                               | 状态   |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----- | ---------------------------------- | ------ |
-| 01  | **interaction runtime contract**：locator / provenance 的 runtime 消费、事件回调、overlay scope、交互状态与 PlotSpec JSON-safe 边界      | red   | v0.1 alpha.5 / alpha.14 / alpha.15 | 待起草 |
-| 02  | **layout transform registry**：结构化布局算法的 definition / registry、输入输出 rows、derived field 命名、与普通 transform / mark 的边界 | red   | v0.1 stat / mark / composition     | 待起草 |
+| ADR | 主题                                                                                                                                                        | Level | 依赖                                                | 状态     |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | --------------------------------------------------- | -------- |
+| 01  | **Plot theme token ownership and Chart consumption boundary**：Plot 拥有领域 token、preset、cascade 与 Theme context 消费；Chart 保持封闭 PlotSpec producer | red   | Core inherited Theme / Plot v0.1 theme / Chart v0.1 | Accepted |
+| 02  | **interaction runtime contract**：locator / provenance 的 runtime 消费、事件回调、overlay scope、交互状态与 PlotSpec JSON-safe 边界                         | red   | v0.1 alpha.5 / alpha.14 / alpha.15                  | 待起草   |
+| 03  | **layout transform registry**：结构化布局算法的 definition / registry、输入输出 rows、derived field 命名、与普通 transform / mark 的边界                    | red   | v0.1 stat / mark / composition                      | 待起草   |
 
-> 旧的 `01-chart-layering.md` 是 2026-06-13 的 chart 草案，已被新的「chart v0.1 独立路线 + Tier 3 ChartSpec」取代；保留为 superseded 历史文件，不再作为本 milestone 输入。
+ADR-01 已按当前 Tier 3 ChartSpec 与 Core inherited Theme 重写：Chart 的具体 schema、recipe 和 presentation 继续由 chart v0.1 路线维护；本 milestone 只冻结 Plot 的上游所有权与跨包消费边界。
 
 ## 前置
 

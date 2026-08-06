@@ -1,3 +1,4 @@
+import { BaseLayoutInspectOptionsInputSchema } from '@retikz/core';
 import { z } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
@@ -13,9 +14,8 @@ import {
   LayoutItemBaseSchema,
   LayoutItemKind,
   LayoutSpacingArtifactSchema,
-  LayoutTrackArtifactSchema,
 } from '../shared';
-import { GRID_LAYOUT_MAX_TRACKS_PER_AXIS, GridAutoFlow, GridOverlap } from './constants';
+import { GRID_LAYOUT_MAX_TRACKS_PER_AXIS, GridAutoFlow, GridOverlap, LayoutTrackSourceKind } from './constants';
 
 const GridFixedTrackBreadthSchema = z
   .strictObject({
@@ -155,6 +155,16 @@ export const GridLayoutSchema = GridLayoutBaseSchema.superRefine(refineGridLayou
   'Canonical JSON-safe Standard GridLayout composite.',
 );
 
+export const LayoutTrackArtifactSchema = z
+  .strictObject({
+    index: z.number().int().safe().nonnegative().describe('Contiguous zero-based resolved track index.'),
+    start: z.number().describe('Finite physical track start in container allocation coordinates.'),
+    size: z.number().nonnegative().describe('Finite non-negative resolved track size.'),
+    sourceKind: z.enum(LayoutTrackSourceKind).describe('Authored or implicit outer sizing source for the track.'),
+    implicit: z.boolean().describe('Whether the track was materialized beyond the authored explicit track list.'),
+  })
+  .describe('Resolved GridLayout track geometry and source classification.');
+
 const GridLayoutArtifactItemSchema = LayoutArtifactItemBaseSchema.extend({
   column: z.number().int().safe().nonnegative().describe('Resolved zero-based column start.'),
   row: z.number().int().safe().nonnegative().describe('Resolved zero-based row start.'),
@@ -222,3 +232,35 @@ const refineGridLayoutArtifact = (artifact: z.infer<typeof GridLayoutArtifactBas
 export const GridLayoutArtifactSchema = GridLayoutArtifactBaseSchema.superRefine(refineGridLayoutArtifact).describe(
   'Canonical JSON-safe GridLayout compile artifact payload.',
 );
+
+/** GridLayout family-local inspector sparse schema */
+export const GridLayoutInspectLocalOptionsInputSchema = z
+  .strictObject({
+    tracks: z.boolean().optional().describe('Whether to draw GridLayout track boundaries.'),
+    cells: z.boolean().optional().describe('Whether to draw individual GridLayout cell bounds.'),
+    gaps: z.boolean().optional().describe('Whether to shade authored GridLayout row and column gaps.'),
+    distributedSpace: z
+      .boolean()
+      .optional()
+      .describe(
+        'Whether to draw only the dashed perimeter of positive free space introduced by GridLayout content distribution, leaving its interior transparent.',
+      ),
+    spans: z.boolean().optional().describe('Whether to mark items that span multiple GridLayout tracks.'),
+  })
+  .describe('Sparse GridLayout-specific inspection options.');
+
+/** GridLayout inspector 完整 authoring schema */
+export const GridLayoutInspectOptionsInputSchema = BaseLayoutInspectOptionsInputSchema.safeExtend(
+  GridLayoutInspectLocalOptionsInputSchema.shape,
+).describe('Sparse shared and GridLayout-specific inspection options.');
+
+/** GridLayout family-local canonical schema */
+export const GridLayoutInspectLocalOptionsSchema = GridLayoutInspectLocalOptionsInputSchema.transform(value =>
+  Object.freeze({
+    tracks: value.tracks ?? true,
+    cells: value.cells ?? false,
+    gaps: value.gaps ?? true,
+    distributedSpace: value.distributedSpace ?? true,
+    spans: value.spans ?? true,
+  }),
+).describe('Canonical GridLayout-specific inspection options.');
