@@ -7,9 +7,9 @@
 
 ## 后续演进
 
-[Kernel ADR-12](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/12-extensible-inspector-content.md) 取代本 ADR 中 Inspector 只能返回专用辅助图元、Core 分别解析 Base 与家族选项、Render 解释专用辅助图元的契约，并将组件局部策略由 `component` 统一命名为 `self`
+[Kernel ADR-12](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/12-extensible-inspector-content.md) 进一步取代本 ADR 中由 Core、Render 与基础 adapter 内置 Inspector 的归属。Core 只保留最终 occurrence 观测与隔离片段编译；Inspector contract、选择策略、辅助平面和宿主接线迁入可选 `@retikz/inspect`，Layout 实现迁入 `@retikz/standard/inspect`
 
-本 ADR 冻结的 runtime sidecar、最终 occurrence、最终 replay、独立 inspection plane、主 Scene 不受辅助内容影响以及完整 frame 原子提交语义继续有效。Inspector 的新输出契约、辅助 Scene 隔离、诊断来源与 renderer 执行路径以 Kernel ADR-12 为准
+本 ADR 冻结的运行时选择、最终 occurrence、最终 replay、独立辅助平面、主 Scene 不受辅助内容影响以及完整帧原子提交语义继续有效。它们由可选 Inspect 编译驱动和 Render 的普通只读图层能力实现，不再要求 `CompileResult`、基础 adapter 或 Render 公共面包含 inspection 专用字段
 
 ## 背景
 
