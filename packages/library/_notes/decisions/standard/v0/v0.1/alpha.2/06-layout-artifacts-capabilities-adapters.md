@@ -147,7 +147,7 @@ Flex items数组保持authored sourceIndex顺序；lines按最终物理cross pla
 
 overflow是正常可观察状态，不自动发warning。非法输入、solver非有限状态、selected failure和Core contract violation继续fail-loud；clip只把artifact `clipped`/visibleBounds与Scene Scope表现对齐。
 
-三种item schema完成后，`composites/layout-item/` 只做公共聚合：
+三种item schema完成后，`composites/layout/` family root 统一做公共聚合：
 
 ```ts
 export const LayoutItemSchema = z.discriminatedUnion('kind', [
