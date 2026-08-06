@@ -95,12 +95,12 @@ describe('layout utils', () => {
       .map(node => node.path)
       .filter(path => path.startsWith('/viz/chart/'));
 
-    expect(points?.meta).toMatchObject({ pageType: 'group', capability: 'chart.points' });
+    expect(points?.meta).toMatchObject({ pageType: 'group', capability: 'chart.scatter-points' });
     expect(scatter?.meta).toMatchObject({
       pageType: 'concept',
       layout: 'showcase',
       capability: 'showcase.scatter',
-      showcase: { family: 'points', role: 'primary', preview: 'scatter-basic', order: 10 },
+      showcase: { family: 'scatter-points', role: 'primary', preview: 'scatter-basic', order: 10 },
     });
     expect(bubble?.meta).toMatchObject({
       pageType: 'concept',
@@ -108,7 +108,7 @@ describe('layout utils', () => {
       layout: 'showcase',
       capability: 'showcase.bubble',
       sourceOfTruth: 'docs',
-      showcase: { family: 'points', role: 'primary', preview: 'bubble-basic', order: 20 },
+      showcase: { family: 'scatter-points', role: 'primary', preview: 'bubble-basic', order: 20 },
     });
     expect(chartPaths).toEqual(['/viz/chart/points/scatter', '/viz/chart/points/bubble']);
     expect(chartPaths).not.toContain('/viz/chart/scatter');

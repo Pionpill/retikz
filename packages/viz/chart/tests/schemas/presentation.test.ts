@@ -8,7 +8,7 @@ import {
   ChartPresentationResolvedContentKind,
   ChartPresentationSchema,
   ChartPresentationTextBlockSchema,
-} from '../../src/schemas';
+} from '../../src/presentation';
 
 const plotItem = { content: { kind: 'plot' } } as const;
 

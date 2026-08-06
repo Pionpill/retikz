@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { getChartStylePreset } from '../../src/providers';
-import { ChartInspectionSchema, ChartSharedSchema, ChartStyleToken } from '../../src/schemas';
+import { ChartInspectionSchema } from '../../src/inspection';
+import { ChartSharedSchema } from '../../src/schemas/common';
+import { ChartStyleToken, getChartStylePreset } from '../../src/style';
 
 describe('Chart shared schemas', () => {
   it('复用 Data 与 Plot 字段契约', () => {

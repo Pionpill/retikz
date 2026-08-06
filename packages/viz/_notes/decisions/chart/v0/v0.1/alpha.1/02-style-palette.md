@@ -6,7 +6,7 @@
 
 ## 背景与目标
 
-Chart 的 `style` 表达一套开箱即用的视觉人格，而不是给 Plot `theme` 与颜色数组换名。alpha.1 采用四个通用 preset：`neutral`、`academic`、`vibrant`、`clean`。其中 `neutral` 参考 shadcn 的安静界面框架、清晰内容层级与克制数据色彩，并作为默认风格；其它 preset 分别表达出版型、明快型和极简型人格，但不承诺与任何开源库像素兼容。
+Chart 的 `style` 表达一套开箱即用的视觉人格，而不是给 Plot `theme` 与颜色数组换名。alpha.1 复用 Core 提供的四个通用 style 取值：`neutral`、`academic`、`vibrant`、`clean`，并由 Chart 为这些取值提供自己的 preset catalog。其中 `neutral` 参考 shadcn 的安静界面框架、清晰内容层级与克制数据色彩，并作为默认风格；其它 preset 分别表达出版型、明快型和极简型人格，但不承诺与任何开源库像素兼容。
 
 明暗环境与视觉人格正交。同一 preset 在 light / dark 下保持 guide 拓扑、排版、间距和装饰密度连续，只调整依赖背景的 paint、opacity 与 palette。因此 `light` / `dark` 是 mode，不是 style 名称。
 
@@ -15,25 +15,18 @@ Chart 的 `style` 表达一套开箱即用的视觉人格，而不是给 Plot `t
 ## 决策：四个 preset × 两个 mode 解析为严格 token map
 
 ```ts
-export const ChartStyle = {
-  Neutral: 'neutral',
-  Academic: 'academic',
-  Vibrant: 'vibrant',
-  Clean: 'clean',
-} as const;
-
-export const ChartThemeMode = {
-  Light: 'light',
-  Dark: 'dark',
-} as const;
+import { ThemeMode, ThemeStyle } from '@retikz/core';
+import type { ThemeModeValue, ThemeStyleValue } from '@retikz/core';
 
 type ChartStyleSurface = {
-  style?: ChartStyleValue;
-  themeMode?: ChartThemeModeValue;
+  style?: ThemeStyleValue;
+  themeMode?: ThemeModeValue;
   styleTokens?: IRChartStyleTokenOverrides;
   colors?: IRPlotSpec['colors'];
 };
 ```
+
+`ThemeStyle` 与 `ThemeMode` 是 Core 的通用词汇真源；Chart 不再定义或转出同义的 `ChartStyle`、`ChartThemeMode` 及其取值类型
 
 默认值是 `style: 'neutral'` 与 `themeMode: 'light'`。内置 catalog 为四个 preset 的两个 mode 分别提供完整 token map；用户 `styleTokens` 只对 canonical key 做稀疏覆盖。内置 map、稀疏覆盖和最终 resolved map 复用同一份字段契约，未知 key、错误值、空 palette、非法 tick 图元或完整 map 缺 key 均 fail-loud。
 
@@ -257,10 +250,10 @@ ADR-02 扩展 ADR-01 的唯一 inspection：公开实际采用的 style / mode�
 
 ## 功能与包边界
 
-- `@retikz/chart` 拥有 preset、mode、领域 token vocabulary、catalog、resolver、mapping 与 inspection
+- `@retikz/core` 拥有跨领域的 `ThemeStyle` / `ThemeMode` 词汇及其取值类型；`@retikz/chart` 拥有 Chart preset、领域 token vocabulary、catalog、resolver、mapping 与 inspection
 - `@retikz/plot` 拥有 Plot theme、guide、tick glyph、palette / scheme 与 scale 消费
 - `@retikz/standard` 拥有可包装任意 child 的 renderer-neutral surface / background / padding capability
-- Core 只拥有 Standard 所需的通用 layout / drawing 底座
+- Core 还拥有跨领域的 Theme style / mode 词汇；Chart 的具体 preset token 值仍归 Chart 所有
 - chart-react / chart-vanilla 只透传同一 ChartSpec，不新增 CSS theme 或 adapter-only props
 
 `plot.surface.fill` 可以映射到 Plot panel；`chart.canvas.fill` 与 `chart.padding` 必须覆盖整个 Chart，包括裸 Plot 和带 presentation 的组合。现有能力无法完整表达时，必须先由 Standard ADR 补齐 arbitrary-child surface，必要的 Core 缺口再由 Core owner 处理。该 gate 未解除前可以验证 token catalog 与纯 resolution，但不得宣称完整 canvas、dark mode 或最终 Chart composition 已闭环。

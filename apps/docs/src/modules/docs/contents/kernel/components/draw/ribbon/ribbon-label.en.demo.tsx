@@ -4,7 +4,7 @@ import { Layout, Path, Step } from '@retikz/react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract,ribbonLabelControls } from './ribbon-label.en.controls';
+import { previewControlContract, ribbonLabelControls } from './ribbon-label.en.controls';
 
 export const previewControls = ribbonLabelControls;
 

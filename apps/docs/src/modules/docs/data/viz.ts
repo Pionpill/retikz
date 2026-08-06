@@ -134,7 +134,7 @@ export const vizSection: Array<Section> = [
               sourceOfTruth: 'docs',
               layout: 'showcase',
               showcase: {
-                family: 'points',
+                family: 'scatter-points',
                 role: 'primary',
                 preview: 'scatter-basic',
                 order: 10,
@@ -151,7 +151,7 @@ export const vizSection: Array<Section> = [
               sourceOfTruth: 'docs',
               layout: 'showcase',
               showcase: {
-                family: 'points',
+                family: 'scatter-points',
                 role: 'primary',
                 preview: 'bubble-basic',
                 order: 20,
@@ -162,7 +162,7 @@ export const vizSection: Array<Section> = [
         meta: {
           pageType: 'group',
           audience: 'user',
-          capability: 'chart.points',
+          capability: 'chart.scatter-points',
           sourceOfTruth: 'architecture',
         },
       },
