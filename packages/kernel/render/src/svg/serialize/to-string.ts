@@ -4,6 +4,7 @@ import type { StaticRenderFrame } from '../../runtime/frame';
 import type { BuildDocumentOptions } from '../builders/document';
 import type { SvgNode, SvgStyle } from '../types';
 
+import { EMPTY_READONLY_LAYERS } from '../../runtime';
 import { buildSvgFrameDocument } from '../builders/document';
 
 /** 转义 attribute 值里的 XML 特殊字符（`&` 必须先转，避免二次转义） */
@@ -76,6 +77,6 @@ const withRootSize = (root: SvgNode, width?: number, height?: number): SvgNode =
 export const renderFrameToSvgString = (frame: StaticRenderFrame, options: RenderToStringOptions): string =>
   serializeNode(withRootSize(buildSvgFrameDocument(frame, options), options.width, options.height));
 
-/** Scene → SVG 字符串，等价于不带 inspection 的静态 frame */
+/** Scene → SVG 字符串，等价于使用空只读图层的静态 frame */
 export const renderToSvgString = (scene: Scene, options: RenderToStringOptions): string =>
-  renderFrameToSvgString({ primary: scene, inspection: null }, options);
+  renderFrameToSvgString({ primary: scene, layers: EMPTY_READONLY_LAYERS }, options);

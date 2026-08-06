@@ -9,7 +9,7 @@ export const RetainedRenderErrorCode = {
   RetainedRendererInvalid: 'RETAINED_RENDERER_INVALID',
   RetainedRendererPrepareFailed: 'RETAINED_RENDERER_PREPARE_FAILED',
   RetainedRendererDisposed: 'RETAINED_RENDERER_DISPOSED',
-  RetainedRendererInspectionUnsupported: 'RETAINED_RENDERER_INSPECTION_UNSUPPORTED',
+  RetainedRendererReadonlyLayerUnsupported: 'RETAINED_RENDERER_READONLY_LAYER_UNSUPPORTED',
   RetainedRendererInitialFrameMismatch: 'RETAINED_RENDERER_INITIAL_FRAME_MISMATCH',
   RetainedRenderParticipantInputInvalid: 'RETAINED_RENDER_PARTICIPANT_INPUT_INVALID',
   RetainedRuntimeInputInvalid: 'RETAINED_RUNTIME_INPUT_INVALID',

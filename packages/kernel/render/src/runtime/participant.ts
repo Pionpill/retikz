@@ -1,6 +1,7 @@
 import type {
   AnyCompositeDefinition,
   CoreProgramDefinition,
+  CoreProgramOutput,
   RuntimeScenePrimitive,
   Scene,
   ScenePatch,
@@ -20,6 +21,7 @@ import {
 import type { AnimationControls } from '../animation';
 import type { RenderRuntimeConfig } from './config';
 import type { RenderFrameSnapshot, StaticRenderFrame } from './frame';
+import type { RenderReadonlyLayer } from './readonly-layer';
 import type {
   RetainedCanvasRendererImmutableOptions,
   RetainedRenderer,
@@ -31,6 +33,7 @@ import type { RuntimeIdentityMap } from './shared';
 
 import { RenderRuntimeOwnerDefinition } from './config';
 import { isRetainedRenderError, RetainedRenderError, RetainedRenderErrorCode } from './error';
+import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from './readonly-layer';
 import { getRetainedRendererExecutor, isCanvasHost, isRetainedRenderer, isSvgHost } from './renderer';
 import { createRuntimeIdentityMap, isPlainObject, runtimeStructuralEquals } from './shared';
 import { sceneRuntimeSnapshotEquals, validateScenePatch, validateSceneRuntimeSnapshot } from './validator';
@@ -54,7 +57,13 @@ type RetainedRenderParticipantOptionsBase<TComposites extends ReadonlyArray<AnyC
   rendererFactory: RetainedRendererFactory;
   /** 同一 session 使用的 Core Program */
   coreProgram: CoreProgramDefinition<TComposites>;
-  /** 首次 mount 策略；SSR handoff 使用 adopt
+  /**
+   * 从同一 candidate 的 Core 输出解析有序只读 Scene 图层
+   * @default 冻结空数组
+   */
+  resolveReadonlyLayers?: (coreOutput: CoreProgramOutput<TComposites>) => ReadonlyArray<RenderReadonlyLayer>;
+  /**
+   * 首次 mount 策略；SSR handoff 使用 adopt
    * @default create
    */
   mountMode?: 'create' | 'adopt';
@@ -298,7 +307,7 @@ const normalizeRendererReadUnsafe = (
   validateSceneRuntimeSnapshot(frame.primary);
   if (
     !sceneRuntimeSnapshotEquals(frame.primary, lineage.primary) ||
-    !runtimeStructuralEquals(frame.inspection, lineage.inspection)
+    !runtimeStructuralEquals(frame.layers, lineage.layers)
   ) {
     throw new RetainedRenderError({
       code: RetainedRenderErrorCode.ScenePatchSnapshotMismatch,
@@ -343,6 +352,7 @@ const captureOptionsUnsafe = <TComposites extends ReadonlyArray<AnyCompositeDefi
   const mountMode = Reflect.get(candidate, 'mountMode');
   const coreProgram = Reflect.get(candidate, 'coreProgram');
   const expectedInitialFrame = Reflect.get(candidate, 'expectedInitialFrame');
+  const resolveReadonlyLayers = Reflect.get(candidate, 'resolveReadonlyLayers');
   if (typeof immutableOptions !== 'object' || immutableOptions === null || !isPlainObject(immutableOptions)) {
     return invalidInput(options);
   }
@@ -360,7 +370,8 @@ const captureOptionsUnsafe = <TComposites extends ReadonlyArray<AnyCompositeDefi
     coreProgram === null ||
     (expectedInitialFrame !== undefined &&
       (typeof expectedInitialFrame !== 'object' || expectedInitialFrame === null)) ||
-    (mountMode !== undefined && mountMode !== 'create' && mountMode !== 'adopt')
+    (mountMode !== undefined && mountMode !== 'create' && mountMode !== 'adopt') ||
+    (resolveReadonlyLayers !== undefined && typeof resolveReadonlyLayers !== 'function')
   ) {
     return invalidInput(options);
   }
@@ -382,6 +393,13 @@ const captureOptionsUnsafe = <TComposites extends ReadonlyArray<AnyCompositeDefi
         ...(devicePixelRatio === undefined ? {} : { devicePixelRatio }),
       }),
       coreProgram: coreProgram as CoreProgramDefinition<TComposites>,
+      ...(resolveReadonlyLayers === undefined
+        ? {}
+        : {
+            resolveReadonlyLayers: resolveReadonlyLayers as (
+              coreOutput: CoreProgramOutput<TComposites>,
+            ) => ReadonlyArray<RenderReadonlyLayer>,
+          }),
       ...(mountMode === undefined ? {} : { mountMode }),
     });
   }
@@ -391,6 +409,13 @@ const captureOptionsUnsafe = <TComposites extends ReadonlyArray<AnyCompositeDefi
     rendererFactory,
     immutableOptions: Object.freeze({ backend, idPrefix }),
     coreProgram: coreProgram as CoreProgramDefinition<TComposites>,
+    ...(resolveReadonlyLayers === undefined
+      ? {}
+      : {
+          resolveReadonlyLayers: resolveReadonlyLayers as (
+            coreOutput: CoreProgramOutput<TComposites>,
+          ) => ReadonlyArray<RenderReadonlyLayer>,
+        }),
     ...(expectedInitialFrame === undefined ? {} : { expectedInitialFrame: expectedInitialFrame as StaticRenderFrame }),
     ...(mountMode === undefined ? {} : { mountMode }),
   });
@@ -453,9 +478,11 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
   }
   let committedFrame: RenderFrameSnapshot | undefined;
   const animationControlsCache = new WeakMap<object, AnimationControls>();
-  const assertInspectionSupported = (frame: RenderFrameSnapshot): void => {
-    if (frame.inspection === null || renderer.inspectionCapability === 'supported') return;
-    throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererInspectionUnsupported });
+  const resolveReadonlyLayers = (output: CoreProgramOutput<TComposites>): ReadonlyArray<RenderReadonlyLayer> =>
+    validateReadonlyLayers(captured.resolveReadonlyLayers?.(output) ?? EMPTY_READONLY_LAYERS);
+  const assertReadonlyLayersSupported = (frame: RenderFrameSnapshot): void => {
+    if (frame.layers.length === 0 || renderer.readonlyLayerCapability === 'supported') return;
+    throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererReadonlyLayerUnsupported });
   };
   const participant = defineRuntimeCommitParticipant<RetainedRendererRead>({
     key: captured.backend === 'svg' ? RETAINED_SVG_PARTICIPANT_KEY : RETAINED_CANVAS_PARTICIPANT_KEY,
@@ -479,7 +506,7 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
       const config: RenderRuntimeConfig = candidate.snapshot(RenderRuntimeOwnerDefinition).value;
       if (candidate.phase === RuntimeProgramPhase.Initial) {
         validateSceneRuntimeSnapshot(core.snapshot);
-        const frame = Object.freeze({ primary: core.snapshot, inspection: core.output.result.inspection });
+        const frame = Object.freeze({ primary: core.snapshot, layers: resolveReadonlyLayers(core.output) });
         if (
           captured.backend === 'svg' &&
           captured.expectedInitialFrame !== undefined &&
@@ -487,11 +514,11 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
             canonicalizeStaticScene(captured.expectedInitialFrame.primary),
             frame.primary.scene,
           ) ||
-            !runtimeStructuralEquals(captured.expectedInitialFrame.inspection, frame.inspection))
+            !runtimeStructuralEquals(validateReadonlyLayers(captured.expectedInitialFrame.layers), frame.layers))
         ) {
           throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererInitialFrameMismatch });
         }
-        assertInspectionSupported(frame);
+        assertReadonlyLayersSupported(frame);
         const rendererToken = callRendererPrepare(() =>
           executor.prepareMount(frame, config, captured.mountMode ?? 'create'),
         );
@@ -526,7 +553,7 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
         : createConfigOnlySnapshot(committedFrame.primary, candidate.candidateRevision);
       const nextFrame = Object.freeze({
         primary: next,
-        inspection: hasCandidateCoreSnapshot ? core.output.result.inspection : committedFrame.inspection,
+        layers: resolveReadonlyLayers(core.output),
       });
       const patch =
         hasCandidateCoreSnapshot && core.patch !== undefined
@@ -543,7 +570,7 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
           message: `Renderer capability "${renderer.capability}" requires a full Scene replacement`,
         });
       }
-      assertInspectionSupported(nextFrame);
+      assertReadonlyLayersSupported(nextFrame);
       const rendererToken = callRendererPrepare(() => executor.prepare(rendererPatch, nextFrame, config));
       const previous = committedFrame;
       return Object.freeze({
