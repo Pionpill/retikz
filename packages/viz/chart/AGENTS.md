@@ -10,15 +10,35 @@
 - **输入与输出**：接收 JSON-safe Chart variant 输入，输出完整 PlotSpec、裸 Plot 或 Standard Flex content、Chart identity node 与 inspection；不直接输出 Core primitives、Scene、DOM、SVG 或 Canvas
 - **缺口流向**：数据能力下沉 `@retikz/data`；可视化 operation 与 lowering 进入 `@retikz/plot`；通用布局进入 `@retikz/standard`；composite / adapter 聚合与 identity 进入 Kernel owner；React / Vanilla authoring 进入对应 adapter
 
-## 分层
+## 源码 owner 与依赖方向
+
+Chart 是 Tier 3 的横向类型封装，不以 `schemas/providers/pipeline` 作为主要导航轴。源码按语义 owner 组织：
 
 ```text
-schemas/    Chart IR fragments 与 inspection schema
-providers/  静态内建 recipe 及其 invariant
-pipeline/   recipe dispatch、merge、validation、inspection 与 composite 编排
+shared/       Chart-wide 基础词汇、JSON helper 与无状态 ID 工具
+schemas/      Chart-wide ChartSpec contract、公共 schema fragments 与封闭 union
+families/     正式 Chart family 与 family/type-specific schema、recipe、invariant、definition factory
+presentation/ Chart-level presentation schema、Standard Flex 投影与 presentation inspection
+style/        preset、mode、token、palette 与 Plot theme 投影
+inspection/   中立 contribution/member records 到公开 inspection 的投影
+resolution/   closed catalog、dispatch、通用 merge/validation、错误归一化与 owner 接线
+internal/     仅供测试路径使用的 private fixture，不属于正式 family 或 public surface
 ```
 
-- `schemas` 不依赖 providers / pipeline
-- `providers` 只依赖 schemas 与下层公开数据类型，不依赖 pipeline
-- `pipeline` 只消费 providers 结果，不复制 recipe 或 Plot lowering
-- 包根只导出明确允许公开的 shared / presentation / inspection data symbols，私有 fixture、recipe 与 pipeline 不得泄漏
+正式 family 使用 roadmap 的语义分类：`scatter-points`、`line-area`、`bar-column`。`point`、`path`、`interval` 是 Plot Mark 骨架，不是 Chart family。当前已实现的 `scatter`、`bubble`、`connected-scatter` 位于 `families/scatter-points/`，其中 `scatter` 与 `bubble` 是平级 Canonical Type。
+
+允许的主要方向为：
+
+```text
+shared -> schemas / presentation / style / inspection / families/shared
+schemas + families/shared -> families/<family>/<type>
+style -> presentation -> Standard
+families + schemas + presentation + style + inspection -> resolution
+```
+
+- 根 `shared` 不得依赖 presentation、style 或 resolution；当前 `schemas/shared.ts` 组合了高层 ChartSpec 字段，迁移后归 `schemas/common.ts`
+- type owner 拥有自己的 schema、recipe、invariant 与 definition factory，不得导入 resolution；definition factory 通过中立 `ChartExpand` callback 接入
+- `resolution` 只聚合 recipe、dispatch、通用 merge/validation、错误归一化与 composite 接线，不复制 type recipe、Plot lowering 或 inspection provenance
+- `inspection` 只消费中立的 final member/contribution 输入，不依赖 `MergedChartMember` 等 resolver 私有类型，也不通过 Plot 数组下标猜来源
+- `presentation` 消费 resolved style token 并投影到 Standard；Standard 继续拥有 Flex schema、布局语义与求解
+- 包根只导出明确允许公开的 shared / presentation / inspection / style data symbols；ChartSpec union、recipe、catalog、resolver、definition 与 fixture 不得泄漏

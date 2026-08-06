@@ -91,8 +91,7 @@ export const LegendPlaygroundPreview = (values: LegendPlaygroundValues) => (
         direction={values.direction}
         wrap={values.wrap}
         sampleAlign={values.sampleAlign}
-        columnGap={values.columnGap}
-        rowGap={values.rowGap}
+        gap={{ row: values.gapRow, column: values.gapColumn }}
         sampleGap={values.sampleGap}
       >
         {title(values)}

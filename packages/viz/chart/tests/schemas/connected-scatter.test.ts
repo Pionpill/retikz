@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  ChartSpecSchema,
-  ChartType,
   ConnectedPathPatchSchema,
   ConnectedPointPatchSchema,
   ConnectedScatterChartSpecSchema,
-} from '../../src/schemas';
+} from '../../src/families/scatter-points/connected-scatter';
+import { ChartSpecSchema, ChartType } from '../../src/schemas/internal';
 
 const minimalConnectedScatter = {
   namespace: 'chart',

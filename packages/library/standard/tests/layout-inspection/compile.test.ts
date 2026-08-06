@@ -26,7 +26,7 @@ const children: IRScene['children'] = [
   createFlexLayout({
     size: { x: { kind: 'fixed', value: 60 }, y: { kind: 'fixed', value: 30 } },
     padding: 4,
-    columnGap: 6,
+    gap: 6,
     children: ['a', 'b'].map(key => ({ kind: LayoutItemKind.Flex, key, child: node(key) })),
   }),
   createGridLayout({

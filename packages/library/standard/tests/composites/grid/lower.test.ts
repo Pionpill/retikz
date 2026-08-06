@@ -4,14 +4,22 @@ import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { createGrid, GridDefinition, lowerGrid } from '../../../src';
+import { fullScopeProps } from '../presentation/scope-props';
 
-const findGridGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrim | undefined =>
-  primitives.find(
-    (primitive): primitive is GroupPrim =>
-      primitive.type === 'group' && primitive.children.some(child => child.type === 'path'),
-  );
+const findGridGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrim | undefined => {
+  for (const primitive of primitives) {
+    if (primitive.type !== 'group') continue;
+    if (primitive.children.some(child => child.type === 'path')) return primitive;
+    const nested = findGridGroup(primitive.children);
+    if (nested !== undefined) return nested;
+  }
+  return undefined;
+};
 
-type LoweredChild = ReturnType<typeof lowerGrid>[number];
+const lowerGridChildren = (input: Parameters<typeof lowerGrid>[0]): Array<IRPath | IRScope> =>
+  lowerGrid(input).children as Array<IRPath | IRScope>;
+
+type LoweredChild = ReturnType<typeof lowerGridChildren>[number];
 
 const firstStepPosition = (child: LoweredChild): unknown => {
   if (child.type !== 'path') throw new Error('expected a path');
@@ -21,7 +29,7 @@ const firstStepPosition = (child: LoweredChild): unknown => {
 
 describe('GridDefinition', () => {
   it('lowers a uniform grid to ordered Core paths', () => {
-    const lowered = lowerGrid(createGrid({ bounds: { start: [0, 0], end: [20, 10] } }));
+    const lowered = lowerGridChildren(createGrid({ bounds: { start: [0, 0], end: [20, 10] } }));
 
     expect(lowered).toEqual([
       {
@@ -62,15 +70,28 @@ describe('GridDefinition', () => {
     ]);
   });
 
+  it('preserves authored Scope props on one stable root', () => {
+    const lowered = lowerGrid(
+      createGrid({
+        ...fullScopeProps,
+        bounds: { start: [0, 0], end: [20, 10] },
+      }),
+    );
+
+    expect(lowered).toMatchObject({ type: 'scope', ...fullScopeProps });
+    expect(lowered.children).toHaveLength(5);
+    expect(lowered.children.every(child => child.id === undefined)).toBe(true);
+  });
+
   it('normalizes reversed corners independently on both axes', () => {
-    const ordered = lowerGrid(createGrid({ bounds: { start: [0, 0], end: [20, 10] }, line: { spacing: 10 } }));
-    const reversed = lowerGrid(createGrid({ bounds: { start: [20, 0], end: [0, 10] }, line: { spacing: 10 } }));
+    const ordered = lowerGridChildren(createGrid({ bounds: { start: [0, 0], end: [20, 10] }, line: { spacing: 10 } }));
+    const reversed = lowerGridChildren(createGrid({ bounds: { start: [20, 0], end: [0, 10] }, line: { spacing: 10 } }));
 
     expect(reversed).toEqual(ordered);
   });
 
   it('uses direction-specific spacing, line styles, and major styles', () => {
-    const lowered = lowerGrid(
+    const lowered = lowerGridChildren(
       createGrid({
         bounds: { start: [0, 0], end: [25, 20] },
         line: {
@@ -112,7 +133,7 @@ describe('GridDefinition', () => {
   });
 
   it('disables all grid lines without disabling the border', () => {
-    const lowered = lowerGrid(
+    const lowered = lowerGridChildren(
       createGrid({
         bounds: { start: [0, 0], end: [20, 10] },
         line: false,
@@ -125,7 +146,7 @@ describe('GridDefinition', () => {
   });
 
   it('lowers center bounds in local coordinates inside an offset Scope', () => {
-    const lowered = lowerGrid(
+    const lowered = lowerGridChildren(
       createGrid({ bounds: { position: [10, 5], width: 20, height: 10 }, line: { spacing: 10 } }),
     );
 
@@ -143,11 +164,32 @@ describe('GridDefinition', () => {
     });
   });
 
+  it('keeps centered-position allocation separate from the authored root Scope', () => {
+    const lowered = lowerGrid(
+      createGrid({
+        ...fullScopeProps,
+        bounds: { position: [30, 20], width: 25, height: 15 },
+        line: { spacing: 10 },
+      }),
+    );
+    const allocationScope = lowered.children[0];
+
+    expect(lowered).toMatchObject({ type: 'scope', ...fullScopeProps });
+    expect(allocationScope).toMatchObject({
+      type: 'scope',
+      transforms: [{ kind: 'offset-translate', of: [30, 20] }],
+    });
+    expect(allocationScope).not.toHaveProperty('id');
+    expect(allocationScope).not.toHaveProperty('meta');
+    expect(allocationScope).not.toHaveProperty('clip');
+    expect(allocationScope).not.toHaveProperty('placement');
+  });
+
   it('keeps center origin local and defaults it to the local top-left corner', () => {
-    const defaultOrigin = lowerGrid(
+    const defaultOrigin = lowerGridChildren(
       createGrid({ bounds: { position: [30, 20], width: 25, height: 15 }, line: { spacing: 10 } }),
     )[0] as IRScope;
-    const explicitOrigin = lowerGrid(
+    const explicitOrigin = lowerGridChildren(
       createGrid({
         bounds: { position: [30, 20], width: 25, height: 15 },
         line: { spacing: 10, origin: 0 },
@@ -169,10 +211,10 @@ describe('GridDefinition', () => {
   });
 
   it('lowers zero-width and zero-height center bounds to finite degenerate paths', () => {
-    const zeroWidth = lowerGrid(
+    const zeroWidth = lowerGridChildren(
       createGrid({ bounds: { position: [10, 5], width: 0, height: 10 }, line: { spacing: 10 } }),
     )[0] as IRScope;
-    const zeroHeight = lowerGrid(
+    const zeroHeight = lowerGridChildren(
       createGrid({ bounds: { position: [10, 5], width: 20, height: 0 }, line: { spacing: 10 } }),
     )[0] as IRScope;
 
@@ -189,7 +231,7 @@ describe('GridDefinition', () => {
   });
 
   it('keeps major identity origin-relative when boundary insertion changes output positions', () => {
-    const lowered = lowerGrid(
+    const lowered = lowerGridChildren(
       createGrid({
         bounds: { start: [1, 0], end: [25, 10] },
         line: {
@@ -221,7 +263,7 @@ describe('GridDefinition', () => {
   });
 
   it('emits an extended behind border before grid lines', () => {
-    const lowered = lowerGrid(
+    const lowered = lowerGridChildren(
       createGrid({
         bounds: { start: [0, 0], end: [10, 10] },
         line: { spacing: 10 },
@@ -234,15 +276,16 @@ describe('GridDefinition', () => {
       }),
     );
 
-    expect(lowered[0]?.stroke).toBe('#64748b');
     expect(lowered[0]?.type).toBe('path');
     if (lowered[0]?.type === 'path') {
-      expect(lowered[0].children.map(step => ('to' in step ? step.to : undefined))).toEqual([
-        [-2, -2],
-        [12, -2],
-        [12, 12],
-        [-2, 12],
-        undefined,
+      expect(lowered[0].stroke).toBe('#64748b');
+      expect(lowered[0].children).toEqual([
+        {
+          type: 'step',
+          kind: 'rectangle',
+          from: [-2, -2],
+          to: [12, 12],
+        },
       ]);
     }
     expect(lowered[1]).toMatchObject({
@@ -330,7 +373,7 @@ describe('GridDefinition', () => {
 
   it('fails fast when unchecked corner or center IR would produce non-finite lattice indices', () => {
     expect(() =>
-      lowerGrid({
+      lowerGridChildren({
         namespace: 'standard',
         type: 'grid',
         bounds: { start: [-1, -1], end: [1, 1] },
@@ -341,7 +384,7 @@ describe('GridDefinition', () => {
       }),
     ).toThrow(/finite safe integers/i);
     expect(() =>
-      lowerGrid({
+      lowerGridChildren({
         namespace: 'standard',
         type: 'grid',
         bounds: { position: [0, 0], width: 2, height: 2 },

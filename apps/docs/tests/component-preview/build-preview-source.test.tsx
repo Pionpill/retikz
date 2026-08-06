@@ -41,7 +41,7 @@ const AlternateDemo: FC = () => (
 const StandardCompositeDemo: FC = () => (
   <Layout width={100} height={80}>
     <Grid bounds={{ start: [10, 10], end: [90, 70] }} line={{ spacing: 20 }} />
-    <Axes extent={{ x: 40, y: 30 }} />
+    <Axes x={{ extent: 40 }} y={{ extent: 30 }} />
     <Frame id="group/frame" padding={{ x: 8, y: 10 }} gap={4} headerDirection="vertical">
       <FrameTitle>Group</FrameTitle>
       <FrameDescription>Preview source</FrameDescription>

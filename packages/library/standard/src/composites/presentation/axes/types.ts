@@ -2,7 +2,7 @@ import type { ValueOf } from '@retikz/core';
 import type { z } from 'zod';
 
 import type { AxesArrowMode, AxesLabelEnd, AxesTickExtent, AxesTickSide, AxesTickSourceKind } from './constants';
-import type { AxesSchema } from './schema';
+import type { AxesSchema } from './schemas';
 
 /** Axes 坐标轴端点箭头模式取值 */
 export type AxesArrowModeValue = ValueOf<typeof AxesArrowMode>;

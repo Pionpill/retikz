@@ -21,7 +21,7 @@ const figure = {
   version: 1 as const,
   children: [
     grid('paper', { bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } }),
-    axes('plane', { extent: { x: 20, y: 20 } }),
+    axes('plane', { x: { extent: 20 }, y: { extent: 20 } }),
     frame('contract', { children: [{ type: 'node', position: [0, 0], text: 'Contract' }] }),
     legend('status', {
       content: {

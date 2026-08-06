@@ -2,7 +2,7 @@
 
 - 状态：Proposed
 - 决策日期：2026-08-02
-- 关联：[alpha.2 roadmap](./roadmap.md) · [Standard v0.1 roadmap](../roadmap.md) · [Standard Drawing Library 设计](../../../../../architecture/standard-library-design.md) · [能力完备性总纲](../../../../../../../../notes/architecture/capability-design.md) · [Plot completeness](../../../../../../../viz/_notes/architecture/plot-visualization-complete.md) · [Table completeness](../../../../../../../viz/_notes/architecture/table-visualization-complete.md)
+- 关联：[alpha.2 roadmap](./roadmap.md) · [Standard v0.1 roadmap](../roadmap.md) · [Presentation lower reuse](./10-presentation-composite-reuse.md) · [Core complete Scope output](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/11-layout-aware-scope-output.md) · [Standard Drawing Library 设计](../../../../../architecture/standard-library-design.md) · [能力完备性总纲](../../../../../../../../notes/architecture/capability-design.md) · [Plot completeness](../../../../../../../viz/_notes/architecture/plot-visualization-complete.md) · [Table completeness](../../../../../../../viz/_notes/architecture/table-visualization-complete.md)
 
 ## 背景
 
@@ -18,7 +18,7 @@ Plot 已经可以根据 channel、scale 与 guide 解析 color、size、opacity�
 
 Standard 因此不能把 Plot guide 提升为公共模型，也不能用自由文本或封闭的 swatch / line / symbol 枚举限制未来 Tier 2。它需要保留结构化 Legend 语义，同时把视觉样本开放到 Core 已有的通用绘图表达。
 
-alpha.2 尚未发布，且已经具备任意 `IRChild` 的双轴 probe、Box Layout、replay 与 typed artifact 底座。本能力直接进入 alpha.2，取代原先单独安排的 alpha.3 Legend milestone。
+alpha.2 尚未发布，且已经具备任意 `IRChild` 的双轴 probe、Box Layout、replay 与 typed artifact 底座。本能力直接进入 alpha.2，取代原先单独安排的 alpha.3 Legend milestone。Legend 的流式排版复用 Standard FlexLayout 的纯计算语义，连续 ramp 的定位复用 OverlayLayout 的 positioned 语义；这两者都是内部布局来源，不改变 Legend 的高层 authoring 形态。
 
 ## 目标
 
@@ -26,7 +26,7 @@ alpha.2 尚未发布，且已经具备任意 `IRChild` 的双轴 probe、Box Lay
 2. 同时覆盖离散条目与连续样本，并允许线、面、symbol、节点或任意注册 Tier 2 composite 作为视觉样本
 3. 让直接 IR、Standard React、Standard Vanilla、Plot、Table 与未来 Tier 2 进入同一 schema、布局、compile 与 artifact 主链
 4. 保持领域解析、formatter、provenance、locator 与交互意图在各自领域 owner 内
-5. 只复用 Core Composite registry 与 Standard Box Layout，不新增 renderer 分支、私有测量或 Legend sample registry
+5. 只复用 Core Composite registry、Standard 共享 Box/Flex/Overlay 布局语义，不新增 renderer 分支、私有测量或 Legend sample registry
 
 ## 核心决策
 
@@ -43,7 +43,7 @@ Plot / Table / Logic / 未来 Tier 2
    Standard Legend input
           │ 约束布局与 compile
           ▼
- Standard Box Layout / Core
+ Standard Box/Flex/Overlay Layout / Core
 ```
 
 Plot 继续拥有 channel / scale 绑定、domain、ticks、formatter、theme 映射、guide resolve、provenance / locator 与交互意图。Table 继续拥有 visual encoding、selector / rule、formatter、theme precedence、Cell lineage 与 descriptor。逻辑组件继续拥有 relation role、style resolution 与语义 identity。
@@ -53,7 +53,7 @@ Plot 继续拥有 channel / scale 绑定、domain、ticks、formatter、theme �
 Legend 顶层是 `standard.legend` composite，内容以 `kind` 区分离散条目和连续样本：
 
 ```ts
-type LegendInput = {
+type LegendInput = IRScopeProps & {
   title?: IRChild;
   titleGap?: number;
   contentAlign?: 'start' | 'center' | 'end';
@@ -67,8 +67,7 @@ type LegendItemsContentInput = {
   kind: 'items';
   direction?: 'vertical' | 'horizontal';
   wrap?: 'nowrap' | 'wrap';
-  columnGap?: number;
-  rowGap?: number;
+  gap?: number | { row: number; column: number };
   sampleGap?: number;
   sampleAlign?: 'start' | 'center' | 'end';
   items: Array<LegendItemInput>;
@@ -95,7 +94,7 @@ type LegendTickInput = {
 };
 ```
 
-以上是允许省略固定 discriminator 与默认字段的持久化 author input 最小公开结构；实际类型由 strict schema 推导，不维护手写平行类型。`createLegend()` 与 Vanilla 接收 `LegendInput`，React 则把组合式 JSX authoring 同步转换为同一输入；三者统一注入 `namespace: 'standard'` / `type: 'legend'` 并解析。schema 解析后的 canonical `IRLegend` 必须显式包含固定 discriminator、`titleGap`、`contentAlign`、`size.x / size.y`、`padding`、`overflow`，items form 必须包含 `direction`、`wrap`、`columnGap`、`rowGap`、`sampleGap`、`sampleAlign`，ramp form 必须包含 `direction` 与 `sampleGap`；只有 `title`、item / tick 的 `label` 继续可省略。直接 IR authoring 接受完整 canonical `IRLegend`；factory、React 与 Vanilla 产生该 parsed output，持久化、diff、compile 与 parity 都以它为真值，不能由 adapter 决定是否保留默认字段。
+以上是允许省略固定 discriminator 与默认字段的持久化 author input 最小公开结构；`IRScopeProps` 的字段在 root 上扁平出现，不再额外包一层 `scope` 对象。实际类型由 strict schema 推导，不维护手写平行类型。`createLegend()` 与 Vanilla 接收 `LegendInput`，React 则把组合式 JSX authoring 同步转换为同一输入；三者统一注入 `namespace: 'standard'` / `type: 'legend'` 并解析。schema 解析后的 canonical `IRLegend` 必须显式包含固定 discriminator、Core Scope props 的规范化值、`titleGap`、`contentAlign`、`size.x / size.y`、`padding`、`overflow`，items form 必须包含 `direction`、`wrap`、canonical `gap: { row: number; column: number }`、`sampleGap`、`sampleAlign`，ramp form 必须包含 `direction` 与 `sampleGap`；输入层的 `gap` 允许标量 shorthand，解析时将其复制到两个物理轴；只有 `title`、item / tick 的 `label` 继续可省略。直接 IR authoring 接受完整 canonical `IRLegend`；factory、React 与 Vanilla 产生该 parsed output，持久化、diff、compile 与 parity 都以它为真值，不能由 adapter 决定是否保留默认字段。
 
 `sample` 可以是 Node、Path、Scope 或任意已注册 Composite。实线、虚线与点线直接使用具有对应 stroke 的 Path；色块或 symbol 使用 Node；连续颜色或透明度使用相应 Core child；未来 Stage、Decision、Connector 等能力可以直接提供自己的 composite sample。
 
@@ -116,17 +115,19 @@ Standard 不新增 reference sandbox、不阻断合法 ancestor reference，也�
 
 ### 4. 离散条目与连续样本具有不同布局合同
 
+Legend 的 `title`、`body` 与离散 `items` 的顺序流使用与公开 FlexLayout 相同的纯 line formation、主轴分配、交叉轴 placement、proposal 和 overflow 语义。Legend 负责把 sample + label 映射为内部 Flex item，并把 `contentAlign`、`sampleAlign`、`titleGap` 与领域 artifact 投影接回自身契约；它不在运行时嵌套调用 `FlexLayoutDefinition`，也不把 synthetic Flex key 暴露为 authored identity。`ramp` 的 normalized tick 是以 sample slot 为参照的 positioned child，使用 OverlayLayout 的 positioned placement 语义；它不被伪造成普通 Flex 顺序项。
+
 title 始终位于 body 上方；只有 title 与非空 body 同时存在时才插入 `titleGap`。`contentAlign` 沿物理 x 轴控制 title slot 与 body structural block 在最终 content box 内的独立对齐，可取 `start | center | end`，默认 `start`。两个区域分别按自身 resolved structural width 对齐，因此 start 共享左边缘、center 共享中心线、end 共享右边缘；它不改变 title child 自己的文字或内部图元对齐，也不改变 body 内部的 sample / label 排列。title-only 与 body-only 仍使用同一 content-box 对齐规则；title 与 body 都不存在时 content 为原点处的零矩形，minimum / natural contribution 只包含 resolved padding，最终 container allocation 仍由 content / fixed / fill 与父 proposal 共同决定。`items` form 负责一组 sample + label 映射：
 
 - `direction` 默认 `vertical`
 - `wrap` 默认 `nowrap`
-- `columnGap`、`rowGap`、`sampleGap` 与 `titleGap` 默认均为 8 user units；gap 只出现在两个实际存在的相邻区域之间，不形成首尾留白
+- `gap` 的 `row` 与 `column`、`sampleGap` 与 `titleGap` 默认均为 8 user units；标量 `gap` shorthand 同时设置两个物理轴，gap 只出现在两个实际存在的相邻区域之间，不形成首尾留白
 - `contentAlign` 只分配 content box 与 title / body structural width 之间的物理 x 轴剩余空间，不引入 stretch、space-between 或逐 item 对齐语义
 - 每个 item 内部固定为 sample 在左、可选 label 在右；label 存在时由 `sampleGap` 分隔，`sampleAlign` 沿物理 y 轴对齐两者且默认 `center`
 - vertical 模式沿 y 轴按声明顺序排列 item；同一 wrap column 内使用最大的 natural sample slot width，使 label 从同一物理 x 起点开始
 - horizontal 模式沿 x 轴按声明顺序排列 item；每个 item 的 label 跟随自身 sample，不对不同 item 建立共享 sample 列
 - 开启 wrap 时只依据 size policy / 父 proposal 解析出的 content-box budget 与真实 intrinsic contribution，按 authored order 使用 greedy line formation：horizontal 超出 resolved width 时形成新 row，vertical 超出扣除 title 后的 resolved body height 时形成新 column；加入当前 line 前先计入相邻物理 gap，超限则从该 item 开新 line，不回溯、不均衡
-- wrap budget 始终取 resolved content-box 主轴尺寸；单个 item 自身超过该 budget 时独占一条 line，保留真实 allocation / visual overflow，不拆分或缩放；`rowGap` 与 `columnGap` 始终按物理轴解释
+- wrap budget 始终取 resolved content-box 主轴尺寸；单个 item 自身超过该 budget 时独占一条 line，保留真实 allocation / visual overflow，不拆分或缩放；canonical `gap.row` 与 `gap.column` 始终按物理轴解释
 - sample 保持自身 intrinsic geometry，Legend 不因 primitive kind 自动改写颜色、stroke、半径或比例
 
 `ramp` form 负责一个连续视觉样本及其 normalized ticks：
@@ -156,7 +157,7 @@ root allocation 与内部布局按以下单向顺序求值，不做 child-result
 2. items main axis 先以未换行的 minimum / natural profile 调用共享 resolver 得到 preliminary allocation，再以每个 item 的 natural outer size 和真实 gap 对其 content-box main size执行一次 authored-order greedy line formation。每条已形成 line 同时保存 minimum / natural profile。`content` 在非 exact proposal 下以形成后的 line profile 再次调用同一 resolver 得到 final main allocation；`fixed`、`fill` 与任意 exact proposal 保持 preliminary allocation，不做 shrink-to-fit
 3. content 的第二次求值只替换 body main-axis profile，继续使用同一 title、padding、size policy 与父 proposal，不再次成行。intrinsic minimum 使用形成后最宽 line 的 minimum profile；intrinsic natural 与 range 使用最宽 line 的 natural profile。因而 natural/range shrink-to-fit 后仍容纳已形成 line，intrinsic minimum 可以小于 natural structural slot并显式形成 allocation overflow；父 `min` 可以扩张 final allocation。若作者边界与父 proposal 无交集，仍按共享 Box 合同保留作者硬边界并让 overflow 可见
 4. horizontal items 先完成 x 的 preliminary → rows → final 顺序，再在 final content width 下 probe title，并以 rows cross contribution、final title height、effective titleGap 与 padding 求 y allocation
-5. vertical items 先按单 column 与 title intrinsic width 求 preliminary x、在该 content width 下 probe title，再按 title + 单 column profile 求 preliminary y；以 `max(0, contentHeight - titleHeight - effectiveTitleGap)` 成 column，并按第 3 步得到 final y。全部 column 的 structural cross extent——各 column structural width 之和加真实相邻 `columnGap`——随后只用于 x 轴 reconciliation：`content` 在非 exact proposal 下以该 extent、既有 title width、padding、作者边界与同一父 proposal再次调用共享 resolver；`fixed`、`fill` 与任意 exact proposal保持 preliminary x。reconciled x 不触发 title re-probe 或 column reflow；若完整 columns extent 宽于保留的 allocation，只按 `contentAlign` 形成 structural overflow
+5. vertical items 先按单 column 与 title intrinsic width 求 preliminary x、在该 content width 下 probe title，再按 title + 单 column profile 求 preliminary y；以 `max(0, contentHeight - titleHeight - effectiveTitleGap)` 成 column，并按第 3 步得到 final y。全部 column 的 structural cross extent——各 column structural width 之和加真实相邻 `gap.column`——随后只用于 x 轴 reconciliation：`content` 在非 exact proposal 下以该 extent、既有 title width、padding、作者边界与同一父 proposal再次调用共享 resolver；`fixed`、`fill` 与任意 exact proposal保持 preliminary x。reconciled x 不触发 title re-probe 或 column reflow；若完整 columns extent 宽于保留的 allocation，只按 `contentAlign` 形成 structural overflow
 6. ramp 不形成 line，也不从 container available 反推 sample slot；它先由 sample 与全部 tick label 的 intrinsic natural `slotSize` 建立并规范化 body structural bounds，再依次求 root x、title final probe 与 root y
 
 wrap 的唯一 main-axis budget 是 preliminary container allocation 减去 padding，并在 vertical 方向继续扣除 title 与 effective `titleGap` 后的非负 body size。content、fixed、fill 在 intrinsic / range / exact 下都使用这个规则：默认 natural content 的 preliminary allocation 本身可以容纳单 line，因此通常不换行；intrinsic minimum、authored `max`、fixed、finite range / fill 或 exact 产生更小 allocation 时可以换行；unbounded range 的 content 使用 natural contribution，fill 仍 fail-loud。作者 `max` 既限制 preliminary allocation，也因此形成 wrap budget，不存在“只 clamp allocation 但按更大父空间排版”的第二语义。content shrink-to-fit 发生在 line formation 后；fixed / fill / exact 不收缩，任何 final allocation 都不触发第二次换行。
@@ -181,7 +182,9 @@ title、item label 与 tick label 都是可独立 probe/replay 的 `IRChild`；�
 
 ### 5. identity 与 artifact 只保存通用呈现语义
 
-Legend 自身不新增 `id` 字段；每个 Legend 实例由 Core `CompileOccurrenceLocator` envelope 标识，避免与 Core reference namespace 建立第二身份通道。同一 Legend 中的 item key 必须唯一，tick key 也必须唯一；item key 与 tick key 各自在自身 form 内建立稳定 authored identity，不复用数组 index，也不要求等于 sample 内部 id。
+Legend root 复用 Core authored Scope identity，`id` 可选并直接注册到父 namespace；Core `CompileOccurrenceLocator` 仍独立标识一次 compile occurrence。两者不是第二身份通道，而是不同生命周期的 Scope identity 与编译定位。同一 Legend 中的 item key 必须唯一，tick key 也必须唯一；item key 与 tick key 各自在自身 form 内建立稳定 authored identity，不复用数组 index，也不要求等于 sample 内部 id。React / Vanilla 的 host occurrence、React element key 与 builder handle 不得替代 Legend root `id`。
+
+Legend root 的 `theme`、graphic cascade、四个 default channel、`resetStyle`、`transforms`、`placement`、`clip`、`zIndex`、`meta` 与 `animations` 使用 Core ADR-11 的完整 Scope contract。Legend 的 `overflow: 'clip'` 另外产生内部 allocation-coordinate clip；它与 authored root `clip` 都保留，前者不覆盖后者。root props 不复制到 item / tick child，也不改变 item / tick key 或 nested sample artifact 的 owner。
 
 Legend compile 产出以下 strict、JSON-safe typed artifact；所有矩形与 anchor 都使用 Legend allocation coordinate，`visibleBounds` 在 clip 后无正面积时为 `null`：
 
@@ -227,7 +230,7 @@ type LegendArtifact =
     };
 ```
 
-`items` 与 `ticks` 数组严格保持 authored order；key 用于 identity 与 join，不改写数组顺序，也不转成以用户字符串为属性名的 map。`container`、placed child 与 overflow 语义直接复用 Standard Box Layout artifact vocabulary。
+`items` 与 `ticks` 数组严格保持 authored order；key 用于 identity 与 join，不改写数组顺序，也不转成以用户字符串为属性名的 map。Legend root Scope identity 不写入 item / tick artifact；`container`、placed child 与 overflow 语义直接复用 Standard Box/Flex/Overlay layout artifact vocabulary。内部 allocation / replay Scope 不产生公开 authored identity，也不成为 artifact item。
 
 几何 union 口径固定为：
 
@@ -253,7 +256,7 @@ Legend 通过 `LegendDefinition` 接入 Core `CompileOptions.composites`、React
 - 不同 object 但相同 composite key 的输入继续由 Core 诊断
 - 缺失 sample 所需 definition 时保留明确的 provider key 与 occurrence diagnostic
 
-LegendDefinition 只贡献 Legend 自身 definition。它复用 Standard 已有 Box 词汇与 Core layout-aware contract，但不要求调用方同时提供 FlexLayout、GridLayout 或 OverlayLayout definition，也不自动收集 sample 所需的未知 Tier 2 capability
+LegendDefinition 只贡献 Legend 自身 definition。它复用 Standard 已有 Box、Flex 与 Overlay 的纯布局语义以及 Core layout-aware contract，但不要求调用方同时提供 FlexLayout、GridLayout 或 OverlayLayout definition，也不自动收集 sample 所需的未知 Tier 2 capability。内部 engine 不改变 Definition loading 边界，也不把 nested layout implementation identity 写入 Legend artifact
 
 ### 7. React 使用无头组合 authoring，Vanilla 保持 plain-data authoring
 
@@ -295,7 +298,7 @@ LegendDefinition 只贡献 Legend 自身 definition。它复用 Standard 已有 
 </Legend>
 ```
 
-`Legend` props 是以显式 `kind` 判别的联合。两种 form 共用 `titleGap`、`contentAlign`、`size`、`padding` 与 `overflow`；`items` form 把 `direction`、`wrap`、`columnGap`、`rowGap`、`sampleGap` 与 `sampleAlign` 提升为容器 props，`ramp` form 把 `direction` 与 `sampleGap` 提升为容器 props。React 不根据 children 推断 form，也不继续接受 plain-data `content` 或 `title` prop。
+`Legend` props 是以显式 `kind` 判别的联合，并与 Core authored Scope props 共用同一 root surface；React 入口对这些 root props 的表达必须与直接 IR / Vanilla 等价。两种 form 共用 `titleGap`、`contentAlign`、`size`、`padding` 与 `overflow`；`items` form 把 `direction`、`wrap`、`gap`、`sampleGap` 与 `sampleAlign` 提升为容器 props，`ramp` form 把 `direction` 与 `sampleGap` 提升为容器 props。React 不根据 children 推断 form，也不继续接受 plain-data `content` 或 `title` prop。
 
 `Legend` 最多接受一个 `LegendTitle` marker；省略 marker 表示没有 title，marker 一旦出现，其 children 就是 required title slot。`LegendItem` 以必填 `itemKey` 与 required `sample` prop 声明离散项，并以可选 children 声明 label；ramp form 必须且只能包含一个 `LegendRamp` marker，其 children 是 required continuous sample slot；`LegendTick` 以必填 `tickKey`、`offset` 与可选 label children 声明连续刻度。`itemKey` 与 `tickKey` 分别映射 canonical `key`，避免与 React 保留的元素 `key` 混淆。title、item sample 与 ramp sample 必须各同步转换为恰好一个 JSON-safe `IRChild`；item / tick label 可以省略或只包含 React empty node，此时 canonical label 缺省，提供任意非空内容时必须转换为恰好一个 `IRChild`。
 
@@ -311,18 +314,18 @@ React adapter 把 marker tree 同步转换为 `LegendInput` 后，必须调用�
 
 ## 用户可观察行为与失败语义
 
-- strict schema 拒绝未知字段、非 JSON 值、空白 key、重复 key、负 spacing、非法 `contentAlign`、非法 overflow 与 form 不匹配字段
+- strict schema 拒绝未知字段、非 JSON 值、空白 key、重复 key、负 spacing、非法 `contentAlign`、非法 overflow、非法 Core Scope props 与 form 不匹配字段
 - React 拒绝旧 `content` / `title` props、未知或 form 不匹配的 marker、重复 title、空 `LegendTitle`、缺失或重复 ramp、空 required sample、slot 中的非空非 element / 混合 sibling，以及不能转换为恰好一个 `IRChild` 的非空 title / sample / label；只有可选 label slot 中的 `null`、`undefined` 与 boolean 可以共同表示缺省，其它 slot 只把它们作为基数计算前的 React empty node，不会让 required slot 变为可选
 - 根 `size` 默认两轴 content；content / fixed / fill 对 intrinsic、range 与 exact proposal 的 allocation、无界 fill 失败、有限空间 wrap 与 overflow 均沿用共享 Box 合同
 - ramp offset 非有限、超出 `[0, 1]` 或逆序时在输入校验阶段拒绝
-- title/sample/label custom composite 未注册、引用未解析或者 probe/replay 失败时形成 Core failed probe 并由 Legend 提升，不产生 warning + skip 或 placeholder；duplicate id 保持 Core warning + last-wins
+- title/sample/label custom composite 未注册、引用未解析或者 probe/replay 失败时形成 Core failed probe 并由 Legend 提升，不产生 warning + skip 或 placeholder；root / nested duplicate id 保持 Core 的既有 identity 诊断，不由 Legend 或 adapter 自动改名
 - constrained space 下 content alignment、wrap、overflow 与 clip 只根据 Core proposal、structural slot、真实 allocation / visual bounds 与 Standard Box contract 决定，不使用文字宽度估算或 renderer 回读
 - sample 的自然尺寸、stroke、fill、opacity、dash、shape 与 nested artifact 保持原样；Legend 只负责放置
 - 相同输入、capability 与 proposal 产生相同 child 顺序、bounds、artifact 与 diagnostics
 
 ## 迁移与兼容性
 
-Standard alpha.2 尚未发布，本 ADR 可以直接新增公共能力；Definition 重复注册继续由 Core 统一诊断。React 直接移除接受 plain-data `content` / `title` 的旧 props，不保留双入口、兼容 alias 或 deprecation bridge；`LegendInput`、canonical `IRLegend` 与 Vanilla authoring 不受该 React surface 调整影响。
+Standard alpha.2 尚未发布，本 ADR 可以直接新增公共能力；Definition 重复注册继续由 Core 统一诊断。Legend 新增扁平的 Core authored Scope surface 与可选 root `id`，并把 layout-aware output 固定为 authored root Scope + 内部 allocation / replay Scope；不保留把这些字段塞进 replay wrapper 的兼容别名。React 直接移除接受 plain-data `content` / `title` 的旧 props，不保留双入口、兼容 alias 或 deprecation bridge；`LegendInput`、canonical `IRLegend` 与 Vanilla authoring 不受该 React surface 调整影响。
 
 Plot 当前 `IRPlotLegendGuide`、Table 当前 Legend descriptor 与未来逻辑组件仍是各自领域真源。本 ADR 不直接修改这些领域 API；它们迁移时只把解析后的呈现段改为构造 `IRLegend`，并保持自己的默认值、locator、provenance 与交互契约。
 
@@ -340,13 +343,13 @@ Plot 当前 `IRPlotLegendGuide`、Table 当前 Legend descriptor 与未来逻辑
 - **React 继续接收完整 plain-data `content`**：使 JSX 作者必须离开组件树拼装 sample / label，并让 controls 与条件组合维护第二套对象结构
 - **通过 React Context 运行时注册 marker**：引入 render 时机、SSR 与顺序依赖，而同步静态读取已足以确定生成同一 JSON-safe 输入
 - **从 marker children 自动推断 `items | ramp`**：条件 children 会让 form 与错误边界隐式漂移，也无法让 controls 直接切换稳定 discriminator
-- **将 Legend 下沉 Core**：Legend 是可选的高层解释性绘图结构，不是 Drawing Complete 的基础图元
+- **将 Legend 下沉 Core**：Legend 是可选的高层解释性绘图结构，不是 Drawing Complete 的基础图元；Core 只提供完整 Scope output、probe / replay 与 lower child contract
 
 ## 测试策略摘要
 
-- schema / contract 证据锁定 strict JSON、content union、默认 size / gap、identity、normalized tick 与非法状态拒绝
+- schema / contract 证据锁定 strict JSON、Core Scope props composition、content union、默认 size / gap、标量 gap shorthand 的 canonical 归一、root identity、normalized tick 与非法状态拒绝
 - compile contract 使用 Core primitive、显式文本 Node、registered custom composite 与 nested Standard component 证明 title/sample/label 的开放性、Core 引用语义与缺失 capability 诊断
-- layout contract 证明 heterogeneous sample、title、空内容、content / fixed / fill 对各类父 proposal 的双轴 allocation、title / body content alignment、约束换行、ramp tick、overflow / clip 与 artifact bounds 只经 layout-aware probe/replay
+- layout contract 证明 heterogeneous sample、title、空内容、content / fixed / fill 对各类父 proposal 的双轴 allocation、title / body content alignment、约束换行、ramp tick、authored clip + allocation clip、root Scope props 与 artifact bounds 只经 Core layout-aware probe/replay
 - Definition 接入证明直接 Definition、领域显式传递、重复 composite key 与缺失 nested Definition 的确定结果
 - adapter parity 证明直接 IR、React 无头 marker tree 与 Vanilla plain data 产生同一 Standard input、Core 语义与 typed artifact；React 类型与失败证据同时锁定显式 form、marker 合法组合、Fragment 顺序、empty node、严格单 element / 单 `IRChild` 转换、混合 sibling 拒绝和旧 props 移除
 - 跨领域集成证据证明 Plot、Table 与逻辑组件可以生成同一通用 input，同时领域 provenance / locator 与交互状态不进入 Standard
@@ -354,17 +357,17 @@ Plot 当前 `IRPlotLegendGuide`、Table 当前 Legend descriptor 与未来逻辑
 
 ## 能力完备性检查
 
-- **所属能力域与能力面**：Drawing Complete 在 Core 之上的可选通用 Tier 2 呈现；协作 Visualization Complete 与 Tabular Visualization Complete
+- **所属能力域与能力面**：Drawing Complete 在 Core 之上的可选通用 Tier 2 呈现；依赖 Core ADR-11 的完整 authored Scope output；协作 Visualization Complete 与 Tabular Visualization Complete
 - **解决的问题**：让多个领域把已经解析好的视觉解释结构复用为同一持久化 schema、约束布局、compile 与 artifact
 - **主责包与协作包**：Standard 主责 Legend 呈现；Plot/Table/逻辑组件主责领域解析、formatter、provenance / locator 与交互；Core/Math 提供 IR、text、measurement、replay 与 registry；adapters 等价暴露
-- **是否可由现有能力组合**：Core layout-aware composite 与 Standard Box Layout 已提供机制，但缺少 Legend 持久化语义、Definition 与 artifact，需要扩展 Standard
+- **是否可由现有能力组合**：Core ADR-11 的完整 Scope output、Core layout-aware composite 与 Standard 共享 Box/Flex/Overlay 布局语义提供机制；本 ADR 只扩展 Legend 持久化语义、Definition 与 artifact，不在 Legend 中补 Scope / replay 旁路
 - **是否需要下沉到依赖能力域**：不下沉 Legend；若任意 IRChild 仍无法沿当前 reference、probe / replay 合同布局，只补 Core 通用机制，不在 Standard 建旁路
-- **内部表达链路**：strict Legend schema → layout-aware CompositeDefinition → Standard Box Layout → Core IR + typed artifact
+- **内部表达链路**：strict Legend schema + Core authored Scope props → layout-aware CompositeDefinition → Standard shared Flex/Overlay engine + Core probe-replay → authored Scope + typed artifact
 - **外部扩展链路**：视觉 sample 直接使用 Core IR 或任意注册 CompositeDefinition；不新增 Legend 专用 provider family
 - **define-registry**：Legend 自身沿用 Core CompositeDefinition registry；sample 开放性也由同一 registry 提供，因此新的 LegendSampleDefinition / registry 不适用
 - **下游执行 / adapter 等价性**：renderer 不认识 Legend 私有类型；React marker 只作为同步 authoring sugar 降为同一 `LegendInput`，直接 IR、React、Vanilla 与领域 adapters 复用同一 compile 主链
 - **不支持边界与诊断**：不拥有 scale / channel / Table rule / relation model、formatter、interaction、自动 placement 或 renderer measurement；非法输入、缺失 capability、引用错误与布局失败均 fail-loud
-- **本轮结论**：扩展 Standard，复用现有 Core registry 与 Standard Box Layout；领域包单向依赖，不在 Core 或领域包建立平行 Legend
+- **本轮结论**：扩展 Standard，复用 Core ADR-11、Core registry 与 Standard shared Flex/Overlay engine；领域包单向依赖，不在 Core 或领域包建立平行 Legend
 
 ## 不在范围
 

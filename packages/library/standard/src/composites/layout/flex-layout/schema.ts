@@ -22,6 +22,20 @@ import { FlexLayoutDirection, FlexLayoutWrap } from './constants';
 
 const FLEX_LAYOUT_CONTENT_BASIS = 'content' as const;
 
+const FlexLayoutGapSchema = z
+  .union([
+    z.number().nonnegative().describe('Uniform physical gap applied to both columns and rows.'),
+    z
+      .strictObject({
+        column: z.number().nonnegative().describe('Physical horizontal gap between items or lines.'),
+        row: z.number().nonnegative().describe('Physical vertical gap between items or lines.'),
+      })
+      .describe('Independent physical column and row gaps.'),
+  ])
+  .transform(gap => (typeof gap === 'number' ? { column: gap, row: gap } : gap))
+  .default({ column: 0, row: 0 })
+  .describe('Physical gaps between items and lines; a number applies uniformly to both axes.');
+
 export const FlexMainDistributionSchema = z
   .enum([
     LayoutDistribution.Start,
@@ -65,8 +79,7 @@ const FlexLayoutBaseSchema = CompositeBaseSchema.extend({
   ...LayoutContainerBoxSchema.shape,
   direction: z.enum(FlexLayoutDirection).default(FlexLayoutDirection.Row).describe('Physical main-axis direction.'),
   wrap: z.enum(FlexLayoutWrap).default(FlexLayoutWrap.NoWrap).describe('Line wrapping and cross traversal policy.'),
-  columnGap: z.number().nonnegative().default(0).describe('Physical horizontal gap between items or lines.'),
-  rowGap: z.number().nonnegative().default(0).describe('Physical vertical gap between items or lines.'),
+  gap: FlexLayoutGapSchema,
   justifyContent: FlexMainDistributionSchema.default(LayoutDistribution.Start).describe(
     'Distribution of remaining main-axis space within each line.',
   ),

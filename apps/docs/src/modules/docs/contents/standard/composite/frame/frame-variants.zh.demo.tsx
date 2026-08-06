@@ -6,7 +6,10 @@ import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react';
 /** Frame header 缺省、横向与纵向组合的中文并列对比 */
 const Demo: FC = () => (
   <Layout width={680} height={175} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Frame id="body-only" stroke="lightgray" dashPattern={[5, 4]} fill="lightgray" fillOpacity={0.04}>
+    <Frame
+      id="body-only"
+      border={{ style: { stroke: 'lightgray', dashPattern: [5, 4], fill: 'lightgray', fillOpacity: 0.04 } }}
+    >
       <Node
         position={[90, 145]}
         text="仅内容"
@@ -18,7 +21,10 @@ const Demo: FC = () => (
       />
     </Frame>
 
-    <Frame id="horizontal" stroke="lightgray" dashPattern={[5, 4]} fill="lightgray" fillOpacity={0.04}>
+    <Frame
+      id="horizontal"
+      border={{ style: { stroke: 'lightgray', dashPattern: [5, 4], fill: 'lightgray', fillOpacity: 0.04 } }}
+    >
       <FrameTitle>标题</FrameTitle>
       <FrameDescription>补充说明</FrameDescription>
       <Node
@@ -35,10 +41,7 @@ const Demo: FC = () => (
     <Frame
       id="vertical"
       headerDirection="vertical"
-      stroke="lightgray"
-      dashPattern={[5, 4]}
-      fill="lightgray"
-      fillOpacity={0.04}
+      border={{ style: { stroke: 'lightgray', dashPattern: [5, 4], fill: 'lightgray', fillOpacity: 0.04 } }}
     >
       <FrameTitle>标题</FrameTitle>
       <FrameDescription>补充说明</FrameDescription>

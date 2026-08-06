@@ -1,15 +1,7 @@
 import type { BoundsRect } from '@retikz/math';
 import type { z, ZodType } from 'zod';
 
-import type {
-  IRAnimationTrack,
-  IRChild,
-  IRClipSpec,
-  IRJsonObject,
-  IRTheme,
-  JsonValue,
-  ScopeBoundingShapeValue,
-} from '../../schemas';
+import type { IRChild, IRClipSpec, IRJsonObject, IRScopeProps, JsonValue } from '../../schemas';
 import type { ResolvedTheme, ValueOf } from '../../shared';
 import type {
   AnyInspectorDefinition,
@@ -143,27 +135,15 @@ export type CompositeCompileChild = Readonly<{
   [compositeCompileChildBrand]: never;
 }>;
 
-/** runtime Scope 允许的结构属性 */
-export type CompositeCompileScopeProps = Readonly<{
-  /** 仅覆盖已声明字段的局部 Theme */
-  theme?: IRTheme;
-  /** 注册到父命名空间的 Scope id */
-  id?: string;
-  /** 是否隔离 Scope 子树内部命名 */
-  localNamespace?: boolean;
-  /** 已 lowering 的纯数值 Scene transforms */
-  transforms?: ReadonlyArray<Transform>;
-  /** Scope 局部坐标系中的裁剪区域 */
-  clip?: IRClipSpec;
-  /** Scope 作为一个同层单元参与排序的层级 */
-  zIndex?: number;
-  /** 有 id Scope 的包络形状 */
-  boundingShape?: ScopeBoundingShapeValue;
-  /** 透传到 Scene group 的 JSON 元数据 */
-  meta?: IRJsonObject;
-  /** 透传到 Scene group 的动画轨道 */
-  animations?: ReadonlyArray<IRAnimationTrack>;
-}>;
+/** layout-aware Composite 创建的完整 authored Scope props */
+export type CompositeCompileScopeProps = Readonly<
+  Omit<IRScopeProps, 'transforms' | 'animations'> & {
+    /** Scope authored transform，沿普通 Scope pipeline 在 compile 阶段 lowering */
+    transforms?: ReadonlyArray<NonNullable<IRScopeProps['transforms']>[number]>;
+    /** Scope group 的声明式动画轨道 */
+    animations?: ReadonlyArray<NonNullable<IRScopeProps['animations']>[number]>;
+  }
+>;
 
 /** replay 外层允许附加的无 identity Scope 语义 */
 export type CompositeReplayWrapper = Readonly<{
@@ -196,8 +176,8 @@ export type LayoutCompositeCompileContext = Readonly<{
   raise: (failure: LayoutChildFailure) => never;
   /**
    * 创建递归 runtime Scope output child
-   * @description 只支持结构属性，不重新施加样式默认、引用变换或 placement
-   * @param props Scope 结构属性
+   * @description props 沿普通 Scope orchestration 消费；replay child 仍只通过 replay wrapper 接收布局提交变换与裁剪
+   * @param props 完整 authored Scope props
    * @param children 普通 IR child 或当前 callback 创建的 opaque child
    */
   scope: (

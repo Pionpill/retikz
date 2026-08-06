@@ -14,7 +14,7 @@ import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 
 ```tsx
 <Layout width={360} height={120}>
-  <FlexLayout columnGap={8}>
+  <FlexLayout gap={8}>
     <LayoutItem kind="flex" itemKey="label" grow={1}>
       <Node position={[0, 0]} text="Label" />
     </LayoutItem>
@@ -27,6 +27,8 @@ import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 
 `itemKey` is the authored identity local to the layout container and never reads React's reserved `key`. Each `LayoutItem` accepts exactly one drawable child or one explicit `IRChild` through `ir`.
 
+`gap` accepts either a number or a `{ column, row }` object. A number applies to both physical axes; the object sets column and row spacing independently, without changing field meaning when `direction` changes.
+
 | Scenario         | Public entry                                                                              |
 | ---------------- | ----------------------------------------------------------------------------------------- |
 | React            | `FlexLayout`, `LayoutItem` (`@retikz/standard-react`)                                     |
@@ -37,7 +39,7 @@ import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 
 ### Basic allocation
 
-The three items keep authored paint order. The middle label receives remaining main-axis space, the side items do not shrink, and `columnGap` always means physical horizontal spacing.
+The three items keep authored paint order. The middle label receives remaining main-axis space, the side items do not shrink, and `gap.column` and `gap.row` always mean physical horizontal and vertical spacing respectively.
 
 <ComponentPreview files="flex-layout-basic" size="sm" />
 
@@ -81,7 +83,10 @@ Each line runs bounded grow/shrink independently. An item freezes when it reache
       label: 'FlexLayout proposals and placement',
       path: 'packages/library/standard/src/composites/layout/flex-layout/pipeline.ts',
     },
-    { label: 'Pure flex line solver', path: 'packages/library/standard/src/composites/layout/flex-layout/solve.ts' },
+    {
+      label: 'Shared flex layout engine',
+      path: 'packages/library/standard/src/composites/layout/internal/flex-engine.ts',
+    },
     { label: 'FlexLayout React adapter', path: 'packages/library/standard-react/src/flex-layout/FlexLayout.tsx' },
   ]}
 />
@@ -102,19 +107,20 @@ The object form can control `lines`, fixed `gaps`, and `distributedSpace` in add
 
 ### `FlexLayoutInput`
 
-| Prop              | Type                                     | Default               | Description                                                     |
-| ----------------- | ---------------------------------------- | --------------------- | --------------------------------------------------------------- |
-| `size?`           | `LayoutSizeInput`                        | `content` / `content` | Per-axis allocation policy; `fill` requires finite parent space |
-| `padding?`        | `number` \| `IRBoxSpacing`               | `0`                   | Insets from the allocation box to the content box               |
-| `overflow?`       | <ApiValues name="LayoutOverflow" />      | `'visible'`           | `clip` creates one Scope clip at the container allocation       |
-| `direction?`      | <ApiValues name="FlexLayoutDirection" /> | `'row'`               | Main axis and forward or reverse traversal                      |
-| `wrap?`           | <ApiValues name="FlexLayoutWrap" />      | `'nowrap'`            | One line, wrapping, or reversed cross placement                 |
-| `columnGap?`      | `number`                                 | `0`                   | Physical horizontal item or line gap                            |
-| `rowGap?`         | `number`                                 | `0`                   | Physical vertical item or line gap                              |
-| `justifyContent?` | `FlexMainDistributionValue`              | `'start'`             | Main-axis free-space distribution within each line              |
-| `alignItems?`     | <ApiValues name="LayoutAlignment" />     | `'stretch'`           | Default cross alignment; column directions reject baseline      |
-| `alignContent?`   | <ApiValues name="LayoutDistribution" />  | `'start'`             | Cross-axis free-space distribution between multiple lines       |
-| `children?`       | `Array<FlexLayoutItemInput>`             | `[]`                  | Authored items with keys unique within this container           |
+| Prop              | Type                                               | Default                       | Description                                                                               |
+| ----------------- | -------------------------------------------------- | ----------------------------- | ----------------------------------------------------------------------------------------- |
+| `size?`           | `LayoutSizeInput`                                  | `content` / `content`         | Per-axis allocation policy; `fill` requires finite parent space                           |
+| `padding?`        | `number` \| `IRBoxSpacing`                         | `0`                           | Insets from the allocation box to the content box                                         |
+| `overflow?`       | <ApiValues name="LayoutOverflow" />                | `'visible'`                   | `clip` creates one Scope clip at the container allocation                                 |
+| `direction?`      | <ApiValues name="FlexLayoutDirection" />           | `'row'`                       | Main axis and forward or reverse traversal                                                |
+| `wrap?`           | <ApiValues name="FlexLayoutWrap" />                | `'nowrap'`                    | One line, wrapping, or reversed cross placement                                           |
+| `gap?`            | `number`<br />or `{ column: number; row: number }` | `0` → `{ column: 0, row: 0 }` | A number applies to both physical axes; the object sets column and row gaps independently |
+| ↳ `column`        | `number`                                           | `0`                           | Physical horizontal gap when `gap` is an object                                           |
+| ↳ `row`           | `number`                                           | `0`                           | Physical vertical gap when `gap` is an object                                             |
+| `justifyContent?` | `FlexMainDistributionValue`                        | `'start'`                     | Main-axis free-space distribution within each line                                        |
+| `alignItems?`     | <ApiValues name="LayoutAlignment" />               | `'stretch'`                   | Default cross alignment; column directions reject baseline                                |
+| `alignContent?`   | <ApiValues name="LayoutDistribution" />            | `'start'`                     | Cross-axis free-space distribution between multiple lines                                 |
+| `children?`       | `Array<FlexLayoutItemInput>`                       | `[]`                          | Authored items with keys unique within this container                                     |
 
 ### `FlexLayoutItemInput`
 

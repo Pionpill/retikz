@@ -5,8 +5,56 @@ import {
   LabelDefaultSchema,
   NodeDefaultSchema,
   PathDefaultSchema,
+  ScopePropsSchema,
   ScopeSchema,
 } from '../../src/schemas';
+
+describe('ScopePropsSchema 可复用 Scope authored fragment', () => {
+  it('接受完整 authored Scope props，但不接受 type / children', () => {
+    expect(
+      ScopePropsSchema.safeParse({
+        theme: { mode: 'dark' },
+        id: 'wrapper',
+        localNamespace: true,
+        transforms: [{ kind: 'translate', x: 10, y: 20 }],
+        placement: { target: [30, 40], selfAnchor: 'center' },
+        fill: 'lightblue',
+        opacity: 0.8,
+        nodeDefault: { shape: 'circle', fill: 'white' },
+        resetStyle: ['path'],
+        zIndex: 2,
+        clip: { kind: 'rect', x: 0, y: 0, width: 20, height: 10 },
+        boundingShape: 'circle',
+        meta: { role: 'wrapper' },
+        animations: [],
+      }).success,
+    ).toBe(true);
+    expect(ScopePropsSchema.safeParse({ type: 'scope' }).success).toBe(false);
+    expect(ScopePropsSchema.safeParse({ children: [] }).success).toBe(false);
+  });
+
+  it('与完整 Scope 共享字段校验并保持 JSON round-trip', () => {
+    const props = {
+      fill: 'lightblue',
+      transforms: [{ kind: 'scale' as const, x: 1.5, pivot: [2, 3] as [number, number] }],
+      placement: { target: [10, 20] as [number, number] },
+      nodeDefault: { fill: 'white' },
+      resetStyle: ['label' as const],
+    };
+    const parsed = ScopePropsSchema.parse(JSON.parse(JSON.stringify(props)));
+    expect(parsed).toEqual(props);
+    expect(ScopeSchema.parse({ type: 'scope', ...parsed, children: [] })).toEqual({
+      type: 'scope',
+      ...props,
+      children: [],
+    });
+  });
+
+  it('拒绝未知字段和非 JSON authored props', () => {
+    expect(ScopePropsSchema.safeParse({ unknown: true }).success).toBe(false);
+    expect(ScopePropsSchema.safeParse({ meta: { value: undefined } }).success).toBe(false);
+  });
+});
 
 describe('NodeDefaultSchema（every node 默认）', () => {
   it('接受 node 样式字段子集', () => {

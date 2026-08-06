@@ -39,7 +39,7 @@ Foreign.embeddableAdapter = {
 describe('Standard React layout family', () => {
   it('converts nested Flex/Grid/Overlay JSX and folds definitions into one family contribution', () => {
     const result = buildIRWithContributions(
-      <FlexLayout direction="row" columnGap={4}>
+      <FlexLayout direction="row" gap={{ column: 4, row: 8 }}>
         <>
           <LayoutItem kind="flex" itemKey="grid" grow={1}>
             <GridLayout columns={[{ kind: 'fixed', value: 20 }]}>
@@ -59,7 +59,7 @@ describe('Standard React layout family', () => {
     expect(result.ir.children).toEqual([
       createFlexLayout({
         direction: 'row',
-        columnGap: 4,
+        gap: { column: 4, row: 8 },
         children: [
           {
             kind: LayoutItemKind.Flex,
