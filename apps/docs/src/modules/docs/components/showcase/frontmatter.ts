@@ -2,7 +2,7 @@ import type { ValueOf } from '@retikz/core';
 
 /** Showcase 图表家族 frontmatter 值 */
 export const ShowcaseFamily = {
-  Point: 'point',
+  ScatterPoints: 'scatter-points',
 } as const;
 
 /** Showcase 图表家族 frontmatter 值 */
@@ -18,7 +18,7 @@ export type ShowcaseUsageValue = ValueOf<typeof ShowcaseUsage>;
 
 /** Showcase 图表家族到 i18n key 的映射 */
 export const SHOWCASE_FAMILY_LABELS: Record<ShowcaseFamilyValue, 'viz.chartScatterPoints'> = {
-  point: 'viz.chartScatterPoints',
+  'scatter-points': 'viz.chartScatterPoints',
 };
 
 /** Showcase 使用场景到 i18n key 的映射 */

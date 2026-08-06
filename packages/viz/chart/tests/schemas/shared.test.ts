@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { getChartStylePreset } from '../../src/providers';
-import { ChartInspectionSchema, ChartSharedSchema, ChartStyleToken } from '../../src/schemas';
+import { ChartInspectionSchema } from '../../src/inspection';
+import { ChartSharedSchema } from '../../src/schemas/common';
+import { ChartStyleToken, getChartStylePreset } from '../../src/style';
 
 describe('Chart shared schemas', () => {
   it('复用 Data 与 Plot 字段契约', () => {
@@ -46,13 +47,13 @@ describe('Chart shared schemas', () => {
       ChartSharedSchema.parse({
         data: { reference: 'rows' },
         presentation: {
-          layout: { rowGap: 6, alignItems: 'start' },
+          layout: { gap: { column: 0, row: 6 }, alignItems: 'start' },
           children: [{ content: { kind: 'preset', preset: 'title', text: 'Revenue' } }, { content: { kind: 'plot' } }],
         },
       }),
     ).toMatchObject({
       presentation: {
-        layout: { rowGap: 6, alignItems: 'start' },
+        layout: { gap: { column: 0, row: 6 }, alignItems: 'start' },
         children: [{ content: { kind: 'preset', preset: 'title', text: 'Revenue' } }, { content: { kind: 'plot' } }],
       },
     });

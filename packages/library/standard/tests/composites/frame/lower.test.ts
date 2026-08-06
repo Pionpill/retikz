@@ -4,6 +4,7 @@ import { compileToScene, isNodeLayoutCompileArtifact, rect as rectOps } from '@r
 import { describe, expect, it } from 'vitest';
 
 import { createFrame, FrameDefinition, FrameHeaderDirection, lowerFrame } from '../../../src';
+import { fullScopeProps } from '../presentation/scope-props';
 
 const children = [
   { type: 'node', id: 'body-a', position: [0, 0], text: 'A' },
@@ -44,6 +45,30 @@ describe('lowerFrame', () => {
         },
       ],
     });
+  });
+
+  it('keeps the full authored Scope surface on the root and separates border style ownership', () => {
+    const lowered = lowerFrame(
+      createFrame({
+        ...fullScopeProps,
+        id: 'frame-root',
+        stroke: '#0f172a',
+        border: {
+          style: { stroke: '#0284c7', strokeWidth: 2, zIndex: 5, fill: '#e0f2fe' },
+          cornerRadius: 4,
+        },
+        children: [...children],
+      }),
+    );
+    const border = lowered.children[0] as IRPath;
+    const content = lowered.children[1] as IRScope;
+
+    expect(lowered).toMatchObject({ type: 'scope', ...fullScopeProps, id: 'frame-root', stroke: '#0f172a' });
+    expect(border).toMatchObject({ stroke: '#0284c7', strokeWidth: 2, zIndex: 5, fill: '#e0f2fe' });
+    expect(border.children[0]).toMatchObject({ kind: 'rectangle', cornerRadius: 4 });
+    expect(border).not.toHaveProperty('meta');
+    expect(content).not.toHaveProperty('meta');
+    expect(content).not.toHaveProperty('stroke');
   });
 
   it('defaults to a horizontal title and description row above the body', () => {
@@ -261,8 +286,8 @@ describe('lowerFrame', () => {
   });
 
   it('forwards zero and positive corner radius only to the border rectangle step', () => {
-    const rounded = lowerFrame(createFrame({ id: 'rounded', cornerRadius: 6, children: [...children] }));
-    const sharp = lowerFrame(createFrame({ id: 'sharp', cornerRadius: 0, children: [...children] }));
+    const rounded = lowerFrame(createFrame({ id: 'rounded', border: { cornerRadius: 6 }, children: [...children] }));
+    const sharp = lowerFrame(createFrame({ id: 'sharp', border: { cornerRadius: 0 }, children: [...children] }));
     const roundedBorder = rounded.children[0] as IRPath;
     const sharpBorder = sharp.children[0] as IRPath;
 

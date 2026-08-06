@@ -1,7 +1,7 @@
 import type { LayoutDistributionValue } from '../shared';
 import type { IRGridTrack } from './types';
 
-import { compensatedLayoutSum, distributeWeightedLayoutSizes, layoutEpsilon } from '../internal';
+import { compensatedLayoutSum, distributeWeightedLayoutSizes, layoutEpsilon } from '../internal/distribution';
 import { LayoutDistribution } from '../shared';
 
 /** 同一 Grid track span 的 minimum 与 natural contribution */

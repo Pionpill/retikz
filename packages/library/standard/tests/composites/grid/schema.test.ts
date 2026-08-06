@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { GridSchema } from '../../../src';
+import { fullScopeProps } from '../presentation/scope-props';
 
 const base = (overrides: Record<string, unknown> = {}) => ({
   namespace: 'standard' as const,
@@ -10,6 +11,18 @@ const base = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe('GridSchema', () => {
+  it('reuses the complete Core Scope authored surface', () => {
+    const parsed = GridSchema.parse({
+      namespace: 'standard',
+      type: 'grid',
+      ...fullScopeProps,
+      bounds: { start: [0, 0], end: [20, 10] },
+    });
+
+    expect(parsed).toMatchObject(fullScopeProps);
+    expect(GridSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
+  });
+
   it('uses both line directions with default spacing when line is omitted', () => {
     const result = GridSchema.safeParse(base());
 

@@ -1,4 +1,4 @@
-import { CompositeBaseSchema, PolarPositionSchema, PositionSchema } from '@retikz/core';
+import { CompositeBaseSchema, PolarPositionSchema, PositionSchema, ScopePropsSchema } from '@retikz/core';
 import { z } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
@@ -66,6 +66,7 @@ const GridBorderSchema = z.strictObject({
 const GridBaseSchema = CompositeBaseSchema.extend({
   namespace: z.literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
   type: z.literal('grid').describe('Composite type for a regular Cartesian grid.'),
+  ...ScopePropsSchema.shape,
   bounds: GridBoundsSchema.describe('Unordered Cartesian corners or a center position with non-negative dimensions.'),
   line: GridLineSchema,
   border: GridBorderSchema.optional().describe('Optional padded border and its drawing order.'),

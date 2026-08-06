@@ -68,15 +68,14 @@ export const lowerFrame = (frame: IRFrame): IRScope => {
     namespace: _namespace,
     type: _type,
     id,
+    border: borderConfig,
     padding,
     gap,
     headerDirection,
-    cornerRadius,
-    zIndex,
     title,
     description,
     children,
-    ...borderStyle
+    ...scopeProps
   } = frame;
   void _namespace;
   void _type;
@@ -87,16 +86,16 @@ export const lowerFrame = (frame: IRFrame): IRScope => {
   const titleId = title?.id ?? `${id}/title`;
 
   const border: IRPath = {
-    ...borderStyle,
+    ...borderConfig.style,
     type: 'path',
-    zIndex: -1,
+    zIndex: borderConfig.style.zIndex ?? -1,
     children: [
       {
         type: 'step',
         kind: 'rectangle',
         from: { id, anchor: 'top-left', offset: [-insets.left, -insets.top] },
         to: { id, anchor: 'bottom-right', offset: [insets.right, insets.bottom] },
-        ...(cornerRadius !== undefined ? { cornerRadius } : {}),
+        ...(borderConfig.cornerRadius !== undefined ? { cornerRadius: borderConfig.cornerRadius } : {}),
       },
     ],
   };
@@ -108,7 +107,6 @@ export const lowerFrame = (frame: IRFrame): IRScope => {
     zIndex: 0,
     children,
   };
-  const loweredChildren: IRScope['children'] = [border, content];
 
   const lowerTitle = (target: IRNodeTarget): IRNode | undefined =>
     title === undefined
@@ -134,10 +132,11 @@ export const lowerFrame = (frame: IRFrame): IRScope => {
     anchor: 'top-left',
     offset: [0, gap === 0 ? 0 : -gap],
   };
+  const loweredHeaders: Array<IRNode> = [];
 
   if (headerDirection === FrameHeaderDirection.Horizontal) {
     const loweredTitle = lowerTitle(contentTopTarget);
-    if (loweredTitle !== undefined) loweredChildren.push(loweredTitle);
+    if (loweredTitle !== undefined) loweredHeaders.push(loweredTitle);
     const loweredDescription = lowerDescription(
       loweredTitle === undefined
         ? contentTopTarget
@@ -147,10 +146,10 @@ export const lowerFrame = (frame: IRFrame): IRScope => {
             offset: [gap, 0],
           },
     );
-    if (loweredDescription !== undefined) loweredChildren.push(loweredDescription);
+    if (loweredDescription !== undefined) loweredHeaders.push(loweredDescription);
   } else {
     const loweredDescription = lowerDescription(contentTopTarget);
-    if (loweredDescription !== undefined) loweredChildren.push(loweredDescription);
+    if (loweredDescription !== undefined) loweredHeaders.push(loweredDescription);
     const loweredTitle = lowerTitle(
       loweredDescription === undefined
         ? contentTopTarget
@@ -160,15 +159,13 @@ export const lowerFrame = (frame: IRFrame): IRScope => {
             offset: [0, gap === 0 ? 0 : -gap],
           },
     );
-    if (loweredTitle !== undefined) loweredChildren.push(loweredTitle);
+    if (loweredTitle !== undefined) loweredHeaders.push(loweredTitle);
   }
 
   return {
     type: 'scope',
+    ...scopeProps,
     id,
-    localNamespace: false,
-    boundingShape: 'rectangle',
-    ...(zIndex !== undefined ? { zIndex } : {}),
-    children: loweredChildren,
+    children: [border, content, ...loweredHeaders],
   };
 };

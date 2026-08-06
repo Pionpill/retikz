@@ -1,0 +1,4 @@
+interface:
+  display_name: "Standard Tier 2 Reuse"
+  short_description: "Tier 2 scope and lowering reuse rules"
+  default_prompt: "Use $standard-tier2-reuse to audit a Tier 2 composite scope, contract, and lowering design."

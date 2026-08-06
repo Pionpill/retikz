@@ -230,8 +230,7 @@ describe('FlexLayout compile contract', () => {
         size: { x: { kind: 'fixed', value: 60 }, y: { kind: 'fixed', value: 50 } },
         direction: FlexLayoutDirection.RowReverse,
         wrap: FlexLayoutWrap.WrapReverse,
-        columnGap: 5,
-        rowGap: 5,
+        gap: { column: 5, row: 5 },
         alignItems: LayoutAlignment.Start,
         alignContent: LayoutDistribution.Start,
         children: ['a', 'b', 'c'].map(key => ({
@@ -266,7 +265,7 @@ describe('FlexLayout compile contract', () => {
     const minimum = compileFlex(
       createFlexLayout({
         wrap: FlexLayoutWrap.Wrap,
-        rowGap: 5,
+        gap: { column: 0, row: 5 },
         alignItems: LayoutAlignment.Start,
         children: children.slice(0, 2),
       }),
@@ -279,8 +278,7 @@ describe('FlexLayout compile contract', () => {
       createFlexLayout({
         size: { x: { kind: 'content', max: 60 } },
         wrap: FlexLayoutWrap.Wrap,
-        columnGap: 5,
-        rowGap: 5,
+        gap: { column: 5, row: 5 },
         alignItems: LayoutAlignment.Start,
         children,
       }),
@@ -336,7 +334,7 @@ describe('FlexLayout compile contract', () => {
         createFlexLayout({
           size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 20 } },
           direction,
-          columnGap: 10,
+          gap: { column: 10, row: 0 },
           justifyContent: LayoutDistribution.SpaceBetween,
           alignItems: LayoutAlignment.Start,
           children: ['a', 'b'].map(key => ({
@@ -367,7 +365,7 @@ describe('FlexLayout compile contract', () => {
         createFlexLayout({
           size: { x: { kind: 'fixed', value: 20 }, y: { kind: 'fixed', value: 100 } },
           direction,
-          rowGap: 10,
+          gap: { column: 0, row: 10 },
           justifyContent: LayoutDistribution.SpaceBetween,
           alignItems: LayoutAlignment.Start,
           children: ['a', 'b'].map(key => ({
@@ -397,7 +395,7 @@ describe('FlexLayout compile contract', () => {
         createFlexLayout({
           size: { x: { kind: 'fixed', value: 30 }, y: { kind: 'fixed', value: 100 } },
           wrap,
-          rowGap: 10,
+          gap: { column: 0, row: 10 },
           alignItems: LayoutAlignment.Start,
           alignContent: LayoutDistribution.SpaceBetween,
           children: ['a', 'b'].map(key => ({
@@ -425,7 +423,7 @@ describe('FlexLayout compile contract', () => {
       createFlexLayout({
         size: { x: { kind: 'fixed', value: 30 }, y: { kind: 'fixed', value: 100 } },
         wrap: FlexLayoutWrap.Wrap,
-        rowGap: 10,
+        gap: { column: 0, row: 10 },
         alignContent: LayoutDistribution.Stretch,
         children: ['a', 'b'].map(key => ({
           kind: LayoutItemKind.Flex,
@@ -440,7 +438,7 @@ describe('FlexLayout compile contract', () => {
     const overflowing = compileFlex(
       createFlexLayout({
         size: { x: { kind: 'fixed', value: 30 }, y: { kind: 'fixed', value: 10 } },
-        columnGap: 10,
+        gap: { column: 10, row: 0 },
         justifyContent: LayoutDistribution.End,
         alignItems: LayoutAlignment.Start,
         children: ['a', 'b'].map(key => ({

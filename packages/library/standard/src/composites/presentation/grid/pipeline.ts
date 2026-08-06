@@ -28,66 +28,72 @@ type GridLineConfig = IRGridLine;
 type GridLinePair = { vertical: GridLineConfig; horizontal: GridLineConfig };
 
 /** 将 Standard Grid 规则确定性下沉为已有 Core Path 或带中心定位的 Scope */
-export const lowerGrid = (grid: IRGrid): Array<IRPath | IRScope> => {
-  const normalized = normalizeGrid(grid);
+export const lowerGrid = (grid: IRGrid): IRScope => {
+  const { namespace: _namespace, type: _type, bounds, line, border, ...scopeProps } = grid;
+  void _namespace;
+  void _type;
+  const normalized = normalizeGrid(bounds);
   const { minX, minY, maxX, maxY } = normalized;
-  const line = normalizeGridLine(grid.line);
-  const borderPadding = grid.border?.padding ?? 0;
+  const resolvedLine = normalizeGridLine(line);
+  const borderPadding = border?.padding ?? 0;
   const lineBounds: GridLineBounds = {
     minX,
     maxX,
     minY,
     maxY,
-    lineMinX: grid.border?.extendLines ? minX - borderPadding : minX,
-    lineMaxX: grid.border?.extendLines ? maxX + borderPadding : maxX,
-    lineMinY: grid.border?.extendLines ? minY - borderPadding : minY,
-    lineMaxY: grid.border?.extendLines ? maxY + borderPadding : maxY,
+    lineMinX: border?.extendLines ? minX - borderPadding : minX,
+    lineMaxX: border?.extendLines ? maxX + borderPadding : maxX,
+    lineMinY: border?.extendLines ? minY - borderPadding : minY,
+    lineMaxY: border?.extendLines ? maxY + borderPadding : maxY,
   };
   const paths: Array<IRPath> = [];
 
-  if (grid.border?.order === GridBorderOrder.Behind) {
-    paths.push(createGridBorderPath(minX, minY, maxX, maxY, borderPadding, grid.border.style));
+  if (border?.order === GridBorderOrder.Behind) {
+    paths.push(createGridBorderPath(minX, minY, maxX, maxY, borderPadding, border.style));
   }
 
-  if (line !== false) {
-    appendGridLines(paths, 'vertical', normalized, lineBounds, line.vertical);
-    appendGridLines(paths, 'horizontal', normalized, lineBounds, line.horizontal);
+  if (resolvedLine !== false) {
+    appendGridLines(paths, 'vertical', normalized, lineBounds, resolvedLine.vertical);
+    appendGridLines(paths, 'horizontal', normalized, lineBounds, resolvedLine.horizontal);
   }
 
-  if (grid.border !== undefined && grid.border.order === GridBorderOrder.Front) {
-    paths.push(createGridBorderPath(minX, minY, maxX, maxY, borderPadding, grid.border.style));
+  if (border !== undefined && border.order === GridBorderOrder.Front) {
+    paths.push(createGridBorderPath(minX, minY, maxX, maxY, borderPadding, border.style));
   }
 
-  if (normalized.position === undefined) return paths;
-
-  const scope: IRScope = {
-    type: 'scope',
-    transforms: [{ kind: 'offset-translate', of: normalized.position }],
-    children: paths,
-  };
-  return [scope];
+  const children: Array<IRPath | IRScope> =
+    normalized.position === undefined
+      ? paths
+      : [
+          {
+            type: 'scope',
+            transforms: [{ kind: 'offset-translate', of: normalized.position }],
+            children: paths,
+          },
+        ];
+  return { type: 'scope', ...scopeProps, children };
 };
 
-const normalizeGrid = (grid: IRGrid): NormalizedGrid => {
+const normalizeGrid = (bounds: IRGrid['bounds']): NormalizedGrid => {
   let minX: number;
   let minY: number;
   let maxX: number;
   let maxY: number;
   let position: NormalizedGrid['position'];
 
-  if ('start' in grid.bounds) {
-    const [startX, startY] = grid.bounds.start;
-    const [endX, endY] = grid.bounds.end;
+  if ('start' in bounds) {
+    const [startX, startY] = bounds.start;
+    const [endX, endY] = bounds.end;
     minX = Math.min(startX, endX);
     minY = Math.min(startY, endY);
     maxX = Math.max(startX, endX);
     maxY = Math.max(startY, endY);
   } else {
-    minX = -grid.bounds.width / 2;
-    minY = -grid.bounds.height / 2;
-    maxX = grid.bounds.width / 2;
-    maxY = grid.bounds.height / 2;
-    position = grid.bounds.position;
+    minX = -bounds.width / 2;
+    minY = -bounds.height / 2;
+    maxX = bounds.width / 2;
+    maxY = bounds.height / 2;
+    position = bounds.position;
   }
 
   return {
@@ -165,10 +171,11 @@ const createGridBorderPath = (
   ...style,
   type: 'path',
   children: [
-    { type: 'step', kind: 'move', to: [minX - padding, minY - padding] },
-    { type: 'step', kind: 'line', to: [maxX + padding, minY - padding] },
-    { type: 'step', kind: 'line', to: [maxX + padding, maxY + padding] },
-    { type: 'step', kind: 'line', to: [minX - padding, maxY + padding] },
-    { type: 'step', kind: 'cycle' },
+    {
+      type: 'step',
+      kind: 'rectangle',
+      from: [minX - padding, minY - padding],
+      to: [maxX + padding, maxY + padding],
+    },
   ],
 });

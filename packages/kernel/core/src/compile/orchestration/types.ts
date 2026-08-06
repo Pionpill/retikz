@@ -81,6 +81,15 @@ export type TraversalResult = {
 };
 
 /** layout-aware child probe 保存的全部可提交贡献 */
+export type CompositeReplayMaterializeContext = Readonly<{
+  /** replay child 在最终 authored Scope 中继承的样式栈 */
+  styleStack: ReadonlyArray<StyleFrame>;
+  /** replay child 在最终 authored Scope 中继承的 Theme */
+  theme: ResolvedTheme;
+  /** replay child 所处 Scope 的 preliminary transform chain */
+  scopeChain: ReadonlyArray<Transform>;
+}>;
+
 export type CompositeReplayTransaction = {
   /** 创建 transaction 的 layout-aware composite callback owner */
   owner: CompositeCompileOwner;
@@ -116,6 +125,14 @@ export type CompositeReplayTransaction = {
   artifacts: Array<CompositeCompileArtifact | NodeLayoutCompileArtifact>;
   /** 仅在 replay 时发布的 inspection entries */
   inspections: Array<PendingInspectionEntry>;
+  /** probe 时的有效样式语义指纹，用于判断 replay 是否需要在新 Scope 中重新物化 */
+  styleFingerprint: string;
+  /** probe 时的有效 Theme 语义指纹，用于判断 replay 是否需要在新 Scope 中重新物化 */
+  themeFingerprint: string;
+  /** replay transaction 是否已经在当前 Scope preliminary chain 中完成 layout publication 投影 */
+  scopeChainApplied?: boolean;
+  /** 在 authored Scope 样式 / Theme 改变时重新走 Core probe channel 的内部物化器 */
+  materialize?: (context: CompositeReplayMaterializeContext) => CompositeReplayTransaction;
 };
 
 /** runtime output tree 中的递归节点 */

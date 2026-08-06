@@ -16,6 +16,8 @@ This page is the authoritative contract for persisted Standard layout input. Rea
   description="Canonical input for one-dimensional grow, shrink, wrap, and baseline layout."
 />
 
+`FlexLayoutSchema` accepts a non-negative number or a strict `{ column, row }` object for `gap`; a number is normalized at the schema boundary to a canonical object with the same value on both axes.
+
 ### GridLayoutSchema
 
 <ZodSchema

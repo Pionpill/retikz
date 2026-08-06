@@ -1,14 +1,10 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import type { IRBubblePointPatch } from '../../src/schemas';
+import type { IRBubblePointPatch } from '../../src/families/scatter-points/shared';
 
-import {
-  BubbleChartSpecSchema,
-  BubblePointPatchSchema,
-  ChartSpecSchema,
-  ChartType,
-  StrictSizeFieldChannelSchema,
-} from '../../src/schemas';
+import { BubbleChartSpecSchema } from '../../src/families/scatter-points/bubble';
+import { BubblePointPatchSchema, StrictSizeFieldChannelSchema } from '../../src/families/scatter-points/shared';
+import { ChartSpecSchema, ChartType } from '../../src/schemas/internal';
 
 const minimalBubble = {
   namespace: 'chart',

@@ -16,6 +16,14 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       : values.borderLineStyle === 'dotted'
         ? { dashPattern: [1, 4], lineCap: 'round' as const }
         : {};
+  const borderStyle = {
+    stroke: values.borderStroke,
+    strokeWidth: values.strokeWidth,
+    strokeOpacity: values.strokeOpacity,
+    fill: 'dodgerblue',
+    fillOpacity: values.fillOpacity,
+    ...borderLineStyle,
+  };
 
   return (
     <Layout
@@ -29,12 +37,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         padding={{ x: values.paddingX, y: values.paddingY }}
         gap={values.gap}
         headerDirection={values.headerDirection}
-        stroke={values.borderStroke}
-        strokeWidth={values.strokeWidth}
-        strokeOpacity={values.strokeOpacity}
-        fill="dodgerblue"
-        fillOpacity={values.fillOpacity}
-        {...borderLineStyle}
+        border={{ style: borderStyle, cornerRadius: values.borderCornerRadius }}
       >
         <FrameTitle
           padding={values.titlePadding}
