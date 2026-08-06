@@ -1,9 +1,4 @@
-import type {
-  AnyCompositeDefinition,
-  AnyCompositeInspectorDefinition,
-  AnyExpandCompositeDefinition,
-  AnyLayoutCompositeDefinition,
-} from '@retikz/core';
+import type { AnyCompositeDefinition, AnyExpandCompositeDefinition, AnyLayoutCompositeDefinition } from '@retikz/core';
 
 import { RetainedRenderError, RetainedRenderErrorCode } from '@retikz/render/runtime';
 import { defineRuntimeOwner } from '@retikz/runtime';
@@ -12,6 +7,9 @@ type CompositeSlot = {
   /** 当前 transaction 可见的 composite Definition */
   current: AnyCompositeDefinition;
 };
+
+/** retained Composite 代理使用的擦除 Inspector 契约 */
+type ErasedCompositeInspector = NonNullable<AnyLayoutCompositeDefinition['inspector']>;
 
 /** 一次 composite definition callback 切换的提交句柄 */
 export type PreparedCompositeDefinitions = Readonly<{
@@ -69,13 +67,10 @@ const createExpandDelegate = (
 });
 
 /** 用稳定 callable 包装 normalization 每轮生成的 inspector callback */
-const createInspectorDelegate = (
-  initial: AnyCompositeInspectorDefinition,
-  slot: CompositeSlot,
-): AnyCompositeInspectorDefinition => ({
-  kind: 'layout',
-  localOptionsInputSchema: initial.localOptionsInputSchema,
-  localOptionsSchema: initial.localOptionsSchema,
+const createInspectorDelegate = (initial: ErasedCompositeInspector, slot: CompositeSlot): ErasedCompositeInspector => ({
+  kind: 'composite',
+  optionsInputSchema: initial.optionsInputSchema,
+  optionsSchema: initial.optionsSchema,
   inspect: (artifact: never, context: never) => {
     const inspector = slot.current.inspector;
     if (inspector === undefined) return invalidDefinitions(slot.current);
@@ -125,8 +120,8 @@ const assertCompatibleDefinition = (initial: AnyCompositeDefinition, next: AnyCo
     (initialInspector === undefined) !== (nextInspector === undefined) ||
     (initialInspector !== undefined &&
       nextInspector !== undefined &&
-      (initialInspector.localOptionsInputSchema !== nextInspector.localOptionsInputSchema ||
-        initialInspector.localOptionsSchema !== nextInspector.localOptionsSchema))
+      (initialInspector.optionsInputSchema !== nextInspector.optionsInputSchema ||
+        initialInspector.optionsSchema !== nextInspector.optionsSchema))
   ) {
     invalidDefinitions({ initial, next });
   }

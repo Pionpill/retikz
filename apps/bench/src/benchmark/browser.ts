@@ -7,13 +7,19 @@ import type {
   RetainedRendererFactoryInput,
   RetainedSvgRenderer,
 } from '@retikz/render/runtime';
-import type { PerformanceTraceRecord } from '@retikz/runtime';
+import type { PerformanceTraceOutcomeValue, PerformanceTraceRecord } from '@retikz/runtime';
 
 import { compileToScene, CORE_OWNER_KEY, CoreOwnerDefinition } from '@retikz/core';
 import { drawScene, renderToCanvas } from '@retikz/render/canvas';
 import { builtinRetainedRendererFactory, defineRetainedRenderer } from '@retikz/render/runtime';
 import { buildSvgDocument, renderToSvgString } from '@retikz/render/svg';
-import { createRuntimeOwnerUpdate, createRuntimeTraceReporter } from '@retikz/runtime';
+import {
+  createRuntimeOwnerUpdate,
+  createRuntimeTraceReporter,
+  PerformanceTraceOutcome,
+  PerformanceTracePhase,
+  PerformanceTraceUnit,
+} from '@retikz/runtime';
 import { mountCanvas, mountSvg } from '@retikz/vanilla';
 
 import type {
@@ -224,12 +230,12 @@ const readRetainedUpdateRecord = (
   id: string,
   backend: 'svg' | 'canvas',
   records: ReadonlyArray<PerformanceTraceRecord>,
-  outcome: 'full' | 'incremental' | 'fallback',
+  outcome: PerformanceTraceOutcomeValue,
 ): PerformanceTraceRecord => {
   return assertSingleTraceRecord(id, records, {
     owner: `@retikz/render:${backend}`,
-    phase: 'update',
-    unit: 'scene-change',
+    phase: PerformanceTracePhase.Update,
+    unit: PerformanceTraceUnit.SceneChange,
     outcome,
     visited: 1,
     reused: 0,
@@ -387,7 +393,13 @@ const runDeterministicBrowserBenchmarks = (): ReadonlyArray<DeterministicBenchma
     const svgRecords: Array<PerformanceTraceRecord> = [];
     const svgReporter = createRuntimeTraceReporter({
       owner: '@retikz/render:svg',
-      phases: [{ phase: 'commit', unit: 'scene-primitive', outcomes: ['full'] }],
+      phases: [
+        {
+          phase: PerformanceTracePhase.Commit,
+          unit: PerformanceTraceUnit.ScenePrimitive,
+          outcomes: [PerformanceTraceOutcome.Full],
+        },
+      ],
       sink: record => svgRecords.push(record),
     });
     const svg = buildSvgDocument(scene, {
@@ -396,8 +408,8 @@ const runDeterministicBrowserBenchmarks = (): ReadonlyArray<DeterministicBenchma
       trace: svgReporter,
     });
     const svgRecord = assertFullTrace(`svg-full-${size}`, svgReporter, svgRecords, {
-      phase: 'commit',
-      unit: 'scene-primitive',
+      phase: PerformanceTracePhase.Commit,
+      unit: PerformanceTraceUnit.ScenePrimitive,
       visited: size,
     });
     results.push(toResult(`svg-full-${size}`, stableHash(svg), svgRecord));
@@ -406,13 +418,19 @@ const runDeterministicBrowserBenchmarks = (): ReadonlyArray<DeterministicBenchma
     const canvasRecords: Array<PerformanceTraceRecord> = [];
     const canvasReporter = createRuntimeTraceReporter({
       owner: '@retikz/render:canvas',
-      phases: [{ phase: 'commit', unit: 'scene-primitive', outcomes: ['full'] }],
+      phases: [
+        {
+          phase: PerformanceTracePhase.Commit,
+          unit: PerformanceTraceUnit.ScenePrimitive,
+          outcomes: [PerformanceTraceOutcome.Full],
+        },
+      ],
       sink: record => canvasRecords.push(record),
     });
     drawScene(context, scene, { trace: canvasReporter });
     const canvasRecord = assertFullTrace(`canvas-full-${size}`, canvasReporter, canvasRecords, {
-      phase: 'commit',
-      unit: 'scene-primitive',
+      phase: PerformanceTracePhase.Commit,
+      unit: PerformanceTraceUnit.ScenePrimitive,
       visited: size,
     });
     results.push(toResult(`canvas-full-${size}`, hashCanvasPixels(context), canvasRecord));
@@ -427,9 +445,9 @@ const readRetainedFullRecord = (
 ): PerformanceTraceRecord => {
   return assertSingleTraceRecord(id, records, {
     owner: `@retikz/render:${backend}`,
-    phase: 'commit',
-    unit: 'scene-primitive',
-    outcome: 'full',
+    phase: PerformanceTracePhase.Commit,
+    unit: PerformanceTraceUnit.ScenePrimitive,
+    outcome: PerformanceTraceOutcome.Full,
     visited: 5_000,
     reused: 0,
     changed: 5_000,
@@ -570,7 +588,13 @@ const runPolicyDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchmar
     const staticRecords: Array<PerformanceTraceRecord> = [];
     const staticReporter = createRuntimeTraceReporter({
       owner: '@retikz/core',
-      phases: [{ phase: 'compile', unit: 'ir-child', outcomes: ['full'] }],
+      phases: [
+        {
+          phase: PerformanceTracePhase.Compile,
+          unit: PerformanceTraceUnit.IrChild,
+          outcomes: [PerformanceTraceOutcome.Full],
+        },
+      ],
       sink: record => staticRecords.push(record),
     });
     const container = document.createElement('div');
@@ -593,13 +617,13 @@ const runPolicyDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchmar
       staticView.update(next);
       assertStaticViewMode(staticId, staticView);
       const record = assertFullTrace(staticId, staticReporter, staticRecords, {
-        phase: 'compile',
-        unit: 'ir-child',
+        phase: PerformanceTracePhase.Compile,
+        unit: PerformanceTraceUnit.IrChild,
         visited: 5_000,
       });
       const execution: BenchmarkExecution = Object.freeze({
         mode: 'static',
-        outcome: 'full',
+        outcome: PerformanceTraceOutcome.Full,
         source: 'static-view',
       });
       results.push(
@@ -634,11 +658,11 @@ const runPolicyDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchmar
           baseRevision: value.session.revision(),
           owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
         });
-        const outcome = updateStrategy === 'full' ? 'full' : 'incremental';
+        const outcome = updateStrategy === 'full' ? PerformanceTraceOutcome.Full : PerformanceTraceOutcome.Incremental;
         const work = assertSingleTraceRecord(id, records, {
           owner: CORE_OWNER_KEY,
-          phase: 'update',
-          unit: 'ir-child',
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.IrChild,
           outcome,
           visited: 5_000,
           reused: updateStrategy === 'full' ? 0 : 4_999,

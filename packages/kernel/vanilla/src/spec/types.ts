@@ -1,14 +1,16 @@
 import type {
   AnyCompositeDefinition,
   CompileOptions,
-  CompositeInspectionAuthoringRoot,
-  CompositeInspectionChildForest,
+  InspectionAuthoringRoot,
+  InspectionChildForest,
   InspectionOptionsInputObject,
   InspectOptions,
   IRChild,
+  IRPath,
   IRScene,
   IRScope,
   IRViewBox,
+  PathInspectionAuthoring,
   ValueOf,
 } from '@retikz/core';
 
@@ -17,8 +19,19 @@ import type { VanillaLayerCache } from './constants';
 /** Vanilla 分层缓存提示取值 */
 export type VanillaLayerCacheValue = ValueOf<typeof VanillaLayerCache>;
 
+/** Vanilla 路径 authoring；inspect 只进入 normalization sidecar */
+export type VanillaPathSpec = IRPath &
+  Readonly<{
+    /** 只开启当前路径 occurrence 的运行时 Inspector，不进入 Core IR */
+    inspect?: PathInspectionAuthoring;
+  }>;
+
 /** Vanilla 普通规格中可直接写入分层或作用域的子节点 */
-export type VanillaChildSpec = Exclude<IRChild, IRScope> | VanillaScopeSpec | AnyVanillaEmbedSpec;
+export type VanillaChildSpec =
+  | Exclude<IRChild, IRScope | IRPath>
+  | VanillaPathSpec
+  | VanillaScopeSpec
+  | AnyVanillaEmbedSpec;
 
 /** Vanilla Scope authoring；inspect 只进入 normalization sidecar */
 export type VanillaScopeSpec = Omit<IRScope, 'children'> &
@@ -98,7 +111,7 @@ export type VanillaTier2Contribution = {
   /** 由引用键索引的外部数据集表；不进入 IR */
   datasets: Record<string, unknown>;
   /** 相对 contribution.node 的 runtime-only inspection roots */
-  inspectionRoots?: CompositeInspectionChildForest;
+  inspectionRoots?: InspectionChildForest;
   /** 合并同命名空间数据集后生成组合定义；同命名空间贡献必须稳定复用同一个函数引用 */
   makeComposites: (mergedDatasets: Record<string, unknown>) => Array<AnyCompositeDefinition>;
 };
@@ -153,7 +166,7 @@ export type VanillaNormalizedFigure = {
   /** 运行时元数据，不进入核心 IR */
   runtimeMeta: VanillaRuntimeMeta;
   /** 可交给 Core compile 的 Scene authored inspection roots */
-  inspectionRoots: Array<CompositeInspectionAuthoringRoot>;
+  inspectionRoots: Array<InspectionAuthoringRoot>;
 };
 
 /** Vanilla 规格规范化选项 */

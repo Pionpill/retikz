@@ -1,12 +1,169 @@
-import type { ResolvedBaseLayoutInspectOptions } from '@retikz/core';
+import type { InspectorContext, IRJsonObject, IRPath, ResolvedBaseLayoutInspectOptions } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
 import type { FlexLayoutArtifact, GridLayoutArtifact, OverlayLayoutArtifact } from '../../src';
+import type { LayoutInspectionChild } from '../../src/composites/layout/internal';
 
-import { inspectFlexLayoutArtifact } from '../../src/composites/layout/flex-layout/inspection';
-import { inspectGridLayoutArtifact } from '../../src/composites/layout/grid-layout/inspection';
-import { inspectOverlayLayoutArtifact } from '../../src/composites/layout/overlay-layout/inspection';
+import { inspectFlexLayoutArtifact as inspectFlexLayoutArtifactIR } from '../../src/composites/layout/flex-layout/inspection';
+import { inspectGridLayoutArtifact as inspectGridLayoutArtifactIR } from '../../src/composites/layout/grid-layout/inspection';
+import { inspectOverlayLayoutArtifact as inspectOverlayLayoutArtifactIR } from '../../src/composites/layout/overlay-layout/inspection';
+
+type LayoutInspectionRecord =
+  | Readonly<{
+      kind: 'line';
+      role: string;
+      x1: number;
+      y1: number;
+      x2: number;
+      y2: number;
+      tone: 'scope' | 'warning';
+      lineStyle: 'dashed' | 'solid';
+    }>
+  | Readonly<{
+      kind: 'rect';
+      role: string;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      presentation: 'outline' | 'fill';
+      tone: 'scope' | 'warning';
+      lineStyle?: 'dashed' | 'solid';
+      fillPattern?: 'forward-diagonal' | 'backward-diagonal' | 'solid';
+    }>
+  | Readonly<{
+      kind: 'label';
+      role: string;
+      x: number;
+      y: number;
+      text: string;
+      tone: 'scope' | 'warning';
+    }>;
+
+const appearance = {
+  colorScope: 0,
+  scopeColor: '#2563eb',
+  warningColor: '#dc2626',
+} as const;
+
+const inspectionContext = <TOptions extends IRJsonObject>(options: TOptions): InspectorContext<TOptions> => ({
+  occurrence: { sourcePath: 'children[0]', expansionPath: [] },
+  options,
+  appearance,
+});
+
+const roleOf = (child: LayoutInspectionChild): string => {
+  const role = child.meta?.inspectionRole;
+  if (typeof role !== 'string') throw new Error('Expected layout inspection role metadata');
+  return role;
+};
+
+const positionOf = (step: NonNullable<IRPath['children']>[number]): readonly [number, number] => {
+  if (!('to' in step) || !Array.isArray(step.to)) {
+    throw new Error('Expected a Cartesian layout inspection path step');
+  }
+  return step.to;
+};
+
+const recordOf = (child: LayoutInspectionChild): LayoutInspectionRecord => {
+  if (child.type === 'node' && typeof child.text === 'string') {
+    if (!Array.isArray(child.position)) {
+      throw new Error('Expected a positioned layout inspection label');
+    }
+    return {
+      kind: 'label',
+      role: roleOf(child),
+      x: child.position[0],
+      y: child.position[1],
+      text: child.text,
+      tone: child.textColor === appearance.warningColor ? 'warning' : 'scope',
+    };
+  }
+  if (child.type === 'node') {
+    if (!Array.isArray(child.position)) {
+      throw new Error('Expected a positioned layout inspection area');
+    }
+    const width = typeof child.minimumSize === 'object' ? child.minimumSize.width : child.minimumSize;
+    const height = typeof child.minimumSize === 'object' ? child.minimumSize.height : child.minimumSize;
+    if (width === undefined || height === undefined) throw new Error('Expected a sized layout inspection area');
+    const pattern = typeof child.fill === 'object' && child.fill.kind === 'pattern' ? child.fill : undefined;
+    return {
+      kind: 'rect',
+      role: roleOf(child),
+      x: child.position[0] - width / 2,
+      y: child.position[1] - height / 2,
+      width,
+      height,
+      presentation: 'fill',
+      tone: child.fill === appearance.warningColor ? 'warning' : 'scope',
+      fillPattern:
+        pattern === undefined ? 'solid' : pattern.rotation === -45 ? 'forward-diagonal' : 'backward-diagonal',
+    };
+  }
+  const role = roleOf(child);
+  const tone = child.stroke === appearance.warningColor || child.fill === appearance.warningColor ? 'warning' : 'scope';
+  if (child.children.length === 2) {
+    const [x1, y1] = positionOf(child.children[0]);
+    const [x2, y2] = positionOf(child.children[1]);
+    return {
+      kind: 'line',
+      role,
+      x1,
+      y1,
+      x2,
+      y2,
+      tone,
+      lineStyle: child.dashPattern === undefined ? 'solid' : 'dashed',
+    };
+  }
+  const [x, y] = positionOf(child.children[0]);
+  const [right] = positionOf(child.children[1]);
+  const [, bottom] = positionOf(child.children[2]);
+  return {
+    kind: 'rect',
+    role,
+    x,
+    y,
+    width: right - x,
+    height: bottom - y,
+    presentation: 'outline',
+    tone,
+    lineStyle: child.dashPattern === undefined ? 'solid' : 'dashed',
+  };
+};
+
+const recordsOf = (children: ReadonlyArray<LayoutInspectionChild>): Array<LayoutInspectionRecord> =>
+  children.map(recordOf);
+
+const inspectFlexLayoutArtifact = (
+  artifact: FlexLayoutArtifact,
+  context: Readonly<{
+    sharedOptions: ResolvedBaseLayoutInspectOptions;
+    options: Readonly<{ lines: boolean; gaps: boolean; distributedSpace: boolean }>;
+  }>,
+): Array<LayoutInspectionRecord> =>
+  recordsOf(inspectFlexLayoutArtifactIR(artifact, inspectionContext({ ...context.sharedOptions, ...context.options })));
+
+const inspectGridLayoutArtifact = (
+  artifact: GridLayoutArtifact,
+  context: Readonly<{
+    sharedOptions: ResolvedBaseLayoutInspectOptions;
+    options: Readonly<{ tracks: boolean; cells: boolean; gaps: boolean; distributedSpace: boolean; spans: boolean }>;
+  }>,
+): Array<LayoutInspectionRecord> =>
+  recordsOf(inspectGridLayoutArtifactIR(artifact, inspectionContext({ ...context.sharedOptions, ...context.options })));
+
+const inspectOverlayLayoutArtifact = (
+  artifact: OverlayLayoutArtifact,
+  context: Readonly<{
+    sharedOptions: ResolvedBaseLayoutInspectOptions;
+    options: Readonly<{ placements: boolean; anchors: boolean; stacking: boolean }>;
+  }>,
+): Array<LayoutInspectionRecord> =>
+  recordsOf(
+    inspectOverlayLayoutArtifactIR(artifact, inspectionContext({ ...context.sharedOptions, ...context.options })),
+  );
 
 const base: ResolvedBaseLayoutInspectOptions = {
   bounds: { container: true, content: true, slot: true, allocation: true, visual: false },
@@ -53,7 +210,7 @@ describe('Standard layout artifact inspection lowering', () => {
       ],
     };
     const primitives = inspectFlexLayoutArtifact(artifact, {
-      baseOptions: { ...base, labels: true },
+      sharedOptions: { ...base, labels: true },
       options: { lines: true, gaps: true, distributedSpace: true },
     });
 
@@ -154,7 +311,7 @@ describe('Standard layout artifact inspection lowering', () => {
     };
 
     const primitives = inspectFlexLayoutArtifact(artifact, {
-      baseOptions: {
+      sharedOptions: {
         bounds: { container: false, content: false, slot: false, allocation: false, visual: false },
         spacing: { padding: true, margin: true },
         overflow: false,
@@ -204,7 +361,7 @@ describe('Standard layout artifact inspection lowering', () => {
     };
 
     const primitives = inspectFlexLayoutArtifact(artifact, {
-      baseOptions: {
+      sharedOptions: {
         bounds: { container: false, content: true, slot: true, allocation: false, visual: false },
         spacing: { padding: false, margin: false },
         overflow: false,
@@ -255,7 +412,7 @@ describe('Standard layout artifact inspection lowering', () => {
     };
 
     const primitives = inspectFlexLayoutArtifact(artifact, {
-      baseOptions: {
+      sharedOptions: {
         bounds: { container: true, content: true, slot: true, allocation: true, visual: true },
         spacing: { padding: false, margin: false },
         overflow: false,
@@ -285,7 +442,7 @@ describe('Standard layout artifact inspection lowering', () => {
     };
 
     const primitives = inspectFlexLayoutArtifact(artifact, {
-      baseOptions: {
+      sharedOptions: {
         bounds: { container: false, content: true, slot: false, allocation: false, visual: false },
         spacing: { padding: false, margin: false },
         overflow: false,
@@ -319,7 +476,7 @@ describe('Standard layout artifact inspection lowering', () => {
     };
 
     const primitives = inspectFlexLayoutArtifact(artifact, {
-      baseOptions: {
+      sharedOptions: {
         bounds: { container: false, content: true, slot: false, allocation: false, visual: false },
         spacing: { padding: false, margin: false },
         overflow: false,
@@ -383,7 +540,7 @@ describe('Standard layout artifact inspection lowering', () => {
     };
 
     const primitives = inspectFlexLayoutArtifact(artifact, {
-      baseOptions: {
+      sharedOptions: {
         bounds: { container: false, content: true, slot: false, allocation: false, visual: false },
         spacing: { padding: false, margin: false },
         overflow: false,
@@ -447,7 +604,7 @@ describe('Standard layout artifact inspection lowering', () => {
     };
 
     const padding = inspectFlexLayoutArtifact(artifact, {
-      baseOptions: {
+      sharedOptions: {
         bounds: { container: false, content: true, slot: false, allocation: false, visual: false },
         spacing: { padding: true, margin: false },
         overflow: false,
@@ -482,7 +639,7 @@ describe('Standard layout artifact inspection lowering', () => {
     };
 
     const guide = inspectFlexLayoutArtifact(artifact, {
-      baseOptions: base,
+      sharedOptions: base,
       options: { lines: false, gaps: false, distributedSpace: false },
     }).find(primitive => primitive.role === 'layout.alignment-guide');
 
@@ -505,7 +662,7 @@ describe('Standard layout artifact inspection lowering', () => {
       ],
     };
     const primitives = inspectGridLayoutArtifact(artifact, {
-      baseOptions: {
+      sharedOptions: {
         ...base,
         bounds: { ...base.bounds, slot: false, allocation: false },
       },
@@ -581,7 +738,7 @@ describe('Standard layout artifact inspection lowering', () => {
     };
 
     const primitives = inspectGridLayoutArtifact(artifact, {
-      baseOptions: {
+      sharedOptions: {
         bounds: { container: false, content: true, slot: false, allocation: false, visual: false },
         spacing: { padding: false, margin: false },
         overflow: false,
@@ -643,7 +800,7 @@ describe('Standard layout artifact inspection lowering', () => {
     };
 
     const primitives = inspectGridLayoutArtifact(artifact, {
-      baseOptions: {
+      sharedOptions: {
         bounds: { container: false, content: false, slot: true, allocation: false, visual: false },
         spacing: { padding: false, margin: false },
         overflow: false,
@@ -680,7 +837,7 @@ describe('Standard layout artifact inspection lowering', () => {
       paintOrder: ['a'],
     } as OverlayLayoutArtifact;
     const primitives = inspectOverlayLayoutArtifact(artifact, {
-      baseOptions: {
+      sharedOptions: {
         ...base,
         bounds: { ...base.bounds, slot: false, allocation: false },
       },
@@ -716,7 +873,7 @@ describe('Standard layout artifact inspection lowering', () => {
     } as OverlayLayoutArtifact;
 
     const primitives = inspectOverlayLayoutArtifact(artifact, {
-      baseOptions: {
+      sharedOptions: {
         bounds: { container: false, content: false, slot: true, allocation: false, visual: false },
         spacing: { padding: false, margin: false },
         overflow: false,

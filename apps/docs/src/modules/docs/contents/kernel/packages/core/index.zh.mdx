@@ -64,11 +64,11 @@ const { output, snapshot, patch } = session.artifact(coreProgram).value;
 | `snapshot`           | 当前 Session revision 的 deeply immutable Scene、document root identity 与 topology             |
 | `patch`              | 相对 base revision 的原子 Scene Patch；initial full run 不提供                                  |
 
-`CompileOptions.inspection` 是 runtime-only authored sidecar。Core 按 `CompositeDefinition.inspector` 解析级联策略，并把严格 rect / line / label DTO 汇总到 `CompileResult.inspection`；它与主 Scene 隔离，不进入 Snapshot identity、资源、layout bounds 或 Patch diff。Program full fallback 时仍在同一 revision 重新生成主 Scene、artifacts 与 inspection plane。
+`CompileOptions.inspection` 是仅在运行时存在的 authored sidecar。Core 先用 locator 的 `target` 精确绑定 Composite 或 Path occurrence，再从对应 `CompositeDefinition` / `PathKindDefinition` 读取 Inspector；Inspector 仍依附原 Definition，不建立第二张注册表。生成的 `CompileResult.inspection` 与主 Scene 隔离，不进入 Snapshot identity、主资源、layout bounds 或 Patch diff。Program full fallback 时仍在同一 revision 重新生成主 Scene、artifacts 与 inspection plane。
 
-每个最终 `InspectionPlaneEntry` 都有必填的非负安全整数 `colorScope`。Core 先按 occurrence 与最终提交顺序稳定排序 entry，再从 `0` 连续编号；被丢弃的 probe 不占号，编号也不从 `sourcePath` 文本或 Scope 深度推导。普通 primitive 使用 `tone: 'scope'`，warning 使用固定的 `tone: 'warning'`。
+Core 先稳定排序最终请求，再从 `0` 连续分配 `colorScope`，并通过 `InspectionAppearance` 把推荐的常规色与警告色传给 Inspector。被丢弃的 probe 不占号；已执行但返回空数组的请求占号但不形成 entry，因此后续 occurrence 的颜色不受前一项输出数量影响。
 
-矩形 DTO 按 `presentation` 严格分支：`outline` 必须提供 `lineStyle`，`fill` 必须提供 `fillPattern: 'solid' | 'forward-diagonal' | 'backward-diagonal' | 'crosshatch'`，两类字段不能混用。自定义 inspector 需要返回新 tone 和对应 presentation 字段；手写 `InspectionPlane` 还需要为每个 entry 提供 `colorScope`，通过 `compileToScene()` 组装时则由 Core 自动分配。
+`InspectorDefinition.inspect()` 返回一个普通 `IRChild` 或稠密 `ReadonlyArray<IRChild>`，没有 `outputSchema`。Core 为每个 entry 在隔离环境中复用正常 child 编译流程、当前 Theme / Scope 样式和 provider definitions，再把结果封装为 occurrence-local 的静态 `scene`；seal 后不保留公共 `id`、`meta` 或动画，entry 内资源仍可正常引用。自定义 Composite 与 Path kind 因而可以使用 Node、Path、Coordinate、Scope 或已注册 Composite 表达辅助内容，Render 无需理解 Inspector 专用图元。
 
 初始运行执行完整编译。update 无法安全局部证明时，Program 会 full fallback，并在 `patch.operations` 中发布唯一的 `replaceScene`；调用方仍只消费同一个 Snapshot / Patch envelope，不需要切换协议。
 
@@ -172,14 +172,24 @@ session.update({
 | `CoreProgramDefinition<TComposites>`                   | 保留 artifact input、owned artifact、private/public read 泛型 |
 | `RuntimeScene` / `SceneRuntimeSnapshot` / `ScenePatch` | deeply readonly Scene 与原子 Patch DTO                        |
 | `InspectOptions` / `CompileInspectionOptions`          | Layout / Scope 级联策略与 compile authored sidecar            |
-| `InspectionPlane` / `InspectionPlaneEntry`             | 与主 Scene 隔离、按最终 occurrence 分配颜色范围的辅助层 DTO   |
-| `InspectionPrimitive` / `InspectionFillPatternSchema`  | 严格 rect / line / label 与后端中立的填充纹理契约             |
-| `CompositeInspectorDefinition`                         | 与 layout-aware composite definition 同 registry 的 inspector |
+| `InspectionPlane` / `InspectionPlaneEntry`             | 与主 Scene 隔离、每项携带普通静态 `scene` 的辅助平面          |
+| `InspectorDefinition` / `defineInspector`              | owner-neutral 的 Inspector 契约与定义 helper                  |
+| `InspectorOutput` / `InspectorContext`                 | 普通 Core 子元素输出与 canonical options / appearance 上下文  |
+| `InspectionAppearance` / `InspectionOwner`             | Core 解析的 occurrence 外观与 Definition owner 身份           |
+| `PathInspectionAuthoring` / `PathInspectOptions`       | React / Vanilla Path 的 occurrence-local 运行时开启参数       |
 
 ## 源码
 
 <SourceLinks
   sources={[
+    {
+      label: 'Inspector 定义与 authored sidecar 契约',
+      path: 'packages/kernel/core/src/contract/inspection/types.ts',
+    },
+    {
+      label: '普通子元素到隔离辅助 Scene 的编译',
+      path: 'packages/kernel/core/src/compile/orchestration/inspection.ts',
+    },
     {
       label: 'Core owner identity 与 change hint',
       path: 'packages/kernel/core/src/contract/runtime/types.ts',

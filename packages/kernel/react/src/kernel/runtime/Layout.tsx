@@ -1,5 +1,6 @@
 import type {
   AnyCompositeDefinition,
+  AnyPathKindDefinition,
   ArrowDefinition,
   BoundaryDefinition,
   ClipDefinition,
@@ -12,7 +13,6 @@ import type {
   IRViewBox,
   LowerTex,
   PathGeneratorDefinition,
-  PathKindDefinition,
   PatternDefinition,
   RibbonWidthProfileDefinition,
   ShapeDefinition,
@@ -309,7 +309,7 @@ export type LayoutProps = ScopeStyleProps & {
    * 运行时注入的第三方 / 自定义 Path kind
    * @description `<Path kind="...">` 写路径类型名，具体整条路径的生成逻辑通过本 prop 注册
    */
-  pathKinds?: ReadonlyArray<PathKindDefinition>;
+  pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
   /** 运行时注入的 ribbon 宽度 profile；ribbon path 可按名称引用这些宽度曲线 */
   ribbonWidthProfiles?: ReadonlyArray<RibbonWidthProfileDefinition>;
   /**

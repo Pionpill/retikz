@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { RuntimeOwnerUpdate } from '../../src/transaction';
 
 import { defineRuntimeOwner } from '../../src/owner';
-import { defineRuntimeProgram } from '../../src/program';
+import { defineRuntimeProgram, RuntimeProgramKind } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
 import { createRuntimeSession } from '../../src/session';
 import { createRuntimeChangeSet, createRuntimeOwnerInput, createRuntimeOwnerUpdate } from '../../src/transaction';
@@ -114,7 +114,7 @@ describe('runtime session validation', () => {
       programs: [],
       tracePhases: [],
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: view.snapshot(hidden).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(hidden).value }),
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
 
@@ -136,7 +136,7 @@ describe('runtime session validation', () => {
       programs: [],
       tracePhases: [],
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
     });
     const hiddenReader = defineRuntimeProgram<number, number, number, number>({
       id: { owner: 'counter', key: 'b-hidden-reader' },
@@ -144,7 +144,7 @@ describe('runtime session validation', () => {
       programs: [],
       tracePhases: [],
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: view.artifact(upstream).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.artifact(upstream).value }),
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [hiddenReader, upstream] });
 

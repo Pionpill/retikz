@@ -1,52 +1,35 @@
-import type { InspectionPrimitive } from '@retikz/core';
+import type { InspectorContext } from '@retikz/core';
 
-import type { StandardLayoutInspectContext } from '../shared';
-import type { OverlayLayoutArtifact, ResolvedOverlayLayoutInspectLocalOptions } from './types';
+import type { LayoutInspectionChild, LayoutInspectionMark } from '../internal';
+import type { OverlayLayoutArtifact, ResolvedOverlayLayoutInspectOptions } from './types';
 
-import { inspectLayoutArtifactBase, normalizeLayoutBoundaryGroups } from '../internal';
+import {
+  inspectLayoutArtifactBase,
+  inspectLayoutLine,
+  inspectLayoutOutline,
+  lowerLayoutInspectionMarks,
+  normalizeLayoutBoundaryGroups,
+} from '../internal';
 
-/** 把 OverlayLayout typed artifact lowering 为受限 inspection primitives */
+/** 把 OverlayLayout 布局产物转换为普通 Core 辅助子元素 */
 export const inspectOverlayLayoutArtifact = (
   artifact: OverlayLayoutArtifact,
-  context: StandardLayoutInspectContext<ResolvedOverlayLayoutInspectLocalOptions>,
-): ReadonlyArray<InspectionPrimitive> => {
-  const base = inspectLayoutArtifactBase(artifact.container, artifact.items, context.baseOptions);
-  const structure: Array<InspectionPrimitive> = [];
-  const guides: Array<InspectionPrimitive> = [];
-  const labels: Array<InspectionPrimitive> = [];
+  context: InspectorContext<ResolvedOverlayLayoutInspectOptions>,
+): ReadonlyArray<LayoutInspectionChild> => {
+  const base = inspectLayoutArtifactBase(artifact.container, artifact.items, context.options, context.appearance);
+  const structure: Array<LayoutInspectionMark> = [];
+  const guides: Array<LayoutInspectionMark> = [];
+  const labels: Array<LayoutInspectionMark> = [];
   artifact.items.forEach(item => {
     if (context.options.placements) {
-      structure.push({
-        kind: 'rect',
-        role: 'overlay.placement',
-        ...item.slotBounds,
-        presentation: 'outline',
-        tone: 'scope',
-        lineStyle: 'dashed',
-      });
+      structure.push(inspectLayoutOutline('overlay.placement', item.slotBounds, context.appearance.scopeColor));
     }
     if (context.options.anchors && item.position !== undefined) {
       const { x, y } = item.position.target;
-      guides.push({
-        kind: 'line',
-        role: 'overlay.anchor',
-        x1: x - 5,
-        y1: y,
-        x2: x + 5,
-        y2: y,
-        tone: 'scope',
-        lineStyle: 'solid',
-      });
-      guides.push({
-        kind: 'line',
-        role: 'overlay.anchor',
-        x1: x,
-        y1: y - 5,
-        x2: x,
-        y2: y + 5,
-        tone: 'scope',
-        lineStyle: 'solid',
-      });
+      guides.push(
+        inspectLayoutLine('overlay.anchor', x - 5, y, x + 5, y, context.appearance.scopeColor, false),
+        inspectLayoutLine('overlay.anchor', x, y - 5, x, y + 5, context.appearance.scopeColor, false),
+      );
     }
     if (context.options.stacking) {
       labels.push({
@@ -55,7 +38,7 @@ export const inspectOverlayLayoutArtifact = (
         x: item.slotBounds.x + 3,
         y: item.slotBounds.y + 12,
         text: `z:${item.zIndex}`,
-        tone: 'scope',
+        color: context.appearance.scopeColor,
       });
     }
   });
@@ -64,7 +47,7 @@ export const inspectOverlayLayoutArtifact = (
     structure,
     base.underlay,
   ]);
-  return [
+  return lowerLayoutInspectionMarks([
     ...underlay,
     ...normalizedStructure,
     ...boxes,
@@ -73,5 +56,5 @@ export const inspectOverlayLayoutArtifact = (
     ...guides,
     ...base.labels,
     ...labels,
-  ];
+  ]);
 };

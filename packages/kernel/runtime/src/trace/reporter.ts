@@ -1,34 +1,29 @@
+import type { PerformanceTracePhaseValue } from './constants';
 import type {
   CreateRuntimeTraceReporterInput,
   PerformanceTraceDiagnostic,
-  PerformanceTracePhase,
   PerformanceTraceRecord,
   RuntimeTracePhaseDefinition,
   RuntimeTraceReporter,
 } from './types';
 
+import {
+  PerformanceTraceOutcome,
+  PerformanceTracePhase as PerformanceTracePhaseConstants,
+  PerformanceTraceUnit,
+} from './constants';
 import { notifyRuntimeTraceReporterDiagnostic, recordRuntimeTraceReporterDiagnosticDrain } from './internal';
 
-const performanceTracePhases: ReadonlySet<unknown> = new Set<PerformanceTracePhase>(['compile', 'commit', 'update']);
-const performanceTraceUnits: ReadonlySet<unknown> = new Set<PerformanceTraceRecord['unit']>([
-  'ir-child',
-  'scene-primitive',
-  'program',
-  'scene-change',
-]);
-const performanceTraceOutcomes: ReadonlySet<unknown> = new Set<PerformanceTraceRecord['outcome']>([
-  'full',
-  'incremental',
-  'bailout',
-  'fallback',
-  'commit',
-]);
+const performanceTracePhases: ReadonlySet<unknown> = new Set(Object.values(PerformanceTracePhaseConstants));
+const performanceTraceUnits: ReadonlySet<unknown> = new Set(Object.values(PerformanceTraceUnit));
+const performanceTraceOutcomes: ReadonlySet<unknown> = new Set(Object.values(PerformanceTraceOutcome));
 const isValidCount = (value: number): boolean => Number.isSafeInteger(value) && value >= 0;
 
-const isPerformanceTracePhase = (value: unknown): value is PerformanceTracePhase => performanceTracePhases.has(value);
+const isPerformanceTracePhase = (value: unknown): value is PerformanceTracePhaseValue =>
+  performanceTracePhases.has(value);
 
 /** 为 phase 与 unit 组合生成无碰撞 definition key */
-const traceDefinitionKey = (phase: PerformanceTracePhase, unit: PerformanceTraceRecord['unit']): string =>
+const traceDefinitionKey = (phase: PerformanceTracePhaseValue, unit: PerformanceTraceRecord['unit']): string =>
   `${phase.length}:${phase}${unit}`;
 
 const hasValidRecordShape = (record: unknown): record is Omit<PerformanceTraceRecord, 'owner'> => {
@@ -52,7 +47,7 @@ const isValidRecord = (record: unknown, definitions: ReadonlyMap<string, Runtime
     return false;
   }
   if (record.reused > record.visited || record.changed > record.visited) return false;
-  return record.outcome !== 'bailout' || record.changed === 0;
+  return record.outcome !== PerformanceTraceOutcome.Bailout || record.changed === 0;
 };
 
 const normalizePhaseDefinitions = (
@@ -90,10 +85,10 @@ const normalizePhaseDefinitions = (
 const resolveDiagnosticPhase = (
   record: unknown,
   definitions: ReadonlyMap<string, RuntimeTracePhaseDefinition>,
-): PerformanceTracePhase => {
+): PerformanceTracePhaseValue => {
   const phase = typeof record === 'object' && record !== null ? Reflect.get(record, 'phase') : undefined;
   if (isPerformanceTracePhase(phase)) return phase;
-  return definitions.values().next().value?.phase ?? 'update';
+  return definitions.values().next().value?.phase ?? PerformanceTracePhaseConstants.Update;
 };
 
 /** 创建一个固定 owner 且失败隔离的同步 trace reporter */
@@ -114,7 +109,7 @@ export const createRuntimeTraceReporter = <const TOwner extends string>(
   let reporting = false;
   const reporterRef: { current?: RuntimeTraceReporter<TOwner> } = {};
 
-  const appendDiagnostic = (code: PerformanceTraceDiagnostic['code'], phase: PerformanceTracePhase): void => {
+  const appendDiagnostic = (code: PerformanceTraceDiagnostic['code'], phase: PerformanceTracePhaseValue): void => {
     const diagnostic = Object.freeze({ code, owner, phase });
     diagnostics.push(diagnostic);
     if (reporterRef.current !== undefined) {

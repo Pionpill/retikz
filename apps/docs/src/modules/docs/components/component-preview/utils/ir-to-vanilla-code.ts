@@ -12,6 +12,7 @@ import type {
   IRScene,
   IRScope,
   IRStep,
+  PathInspectionAuthoring,
 } from '@retikz/core';
 
 const INDENT = '  ';
@@ -91,6 +92,7 @@ type Ctx = {
   standardAdapters: Set<string>;
   standardCounts: Map<string, number>;
   componentInspections: ReadonlyMap<string, boolean | InspectionOptionsInputObject>;
+  pathInspections: ReadonlyMap<string, PathInspectionAuthoring>;
 };
 
 const inspectionPathKey = (path: ReadonlyArray<Readonly<{ kind: string; index: number }>>): string =>
@@ -236,8 +238,13 @@ const isWayRepresentableStep = (step: IRStep): boolean => {
 const rawIrChildCode = (child: IRChild, indent: number, reason: string): string =>
   `/* ${reason}; raw IR child, switch to IR view for structure. */ ${formatObject(child, indent)}`;
 
-const pathCode = (path: IRPathBase, indent: number, ctx: Ctx): string => {
-  if (path.kind === 'ribbon') return ribbonCode(path, indent, ctx);
+const pathCode = (
+  path: IRPathBase,
+  indent: number,
+  ctx: Ctx,
+  locator: ReadonlyArray<Readonly<{ kind: string; index: number }>>,
+): string => {
+  if (path.kind === 'ribbon') return ribbonCode(path, indent, ctx, locator);
   if (path.children === undefined) {
     return rawIrChildCode(path, indent, 'missing path steps');
   }
@@ -246,7 +253,8 @@ const pathCode = (path: IRPathBase, indent: number, ctx: Ctx): string => {
   }
   ctx.used.add('path');
   const id = path.id;
-  const config = stripKeys(path, ['type', 'children', 'id']);
+  const inspect = ctx.pathInspections.get(inspectionPathKey(locator));
+  const config = { ...stripKeys(path, ['type', 'children', 'id']), ...(inspect === undefined ? {} : { inspect }) };
   const wayStr = formatWay(stepsToWay(path.children, ctx, indent + 1), indent);
   const pathConfig = formatObject({ way: path.children.length === 0 ? [] : `__WAY__`, ...config }, indent).replace(
     "'__WAY__'",
@@ -255,7 +263,12 @@ const pathCode = (path: IRPathBase, indent: number, ctx: Ctx): string => {
   return id !== undefined ? `path(${formatString(id)}, ${pathConfig})` : `path(${pathConfig})`;
 };
 
-const ribbonCode = (path: IRPathBase, indent: number, ctx: Ctx): string => {
+const ribbonCode = (
+  path: IRPathBase,
+  indent: number,
+  ctx: Ctx,
+  locator: ReadonlyArray<Readonly<{ kind: string; index: number }>>,
+): string => {
   const ribbon = path.ribbon;
   if (ribbon === undefined) return rawIrChildCode(path, indent, 'missing ribbon options');
 
@@ -270,7 +283,8 @@ const ribbonCode = (path: IRPathBase, indent: number, ctx: Ctx): string => {
   }
   ctx.used.add('path');
   const id = path.id;
-  const config = stripKeys(path, ['type', 'children', 'id']);
+  const inspect = ctx.pathInspections.get(inspectionPathKey(locator));
+  const config = { ...stripKeys(path, ['type', 'children', 'id']), ...(inspect === undefined ? {} : { inspect }) };
   const wayStr = formatWay(stepsToWay(path.children, ctx, indent + 1), indent);
   const pathConfig = formatObject({ way: path.children.length === 0 ? [] : `__WAY__`, ...config }, indent).replace(
     "'__WAY__'",
@@ -431,7 +445,7 @@ const childCode = (
     case 'coordinate':
       return coordinateCode(child, indent, ctx);
     case 'path':
-      return pathCode(child, indent, ctx);
+      return pathCode(child, indent, ctx, path);
     case 'scope':
       return scopeCode(child, indent, ctx, path);
   }
@@ -460,6 +474,8 @@ export type VanillaCodeOptions = Readonly<{
   inspect?: InspectOptions;
   /** 由 authored locator key 索引的组件局部检查策略 */
   componentInspections?: ReadonlyMap<string, boolean | InspectionOptionsInputObject>;
+  /** 由 authored locator key 索引的 Path 局部检查策略 */
+  pathInspections?: ReadonlyMap<string, PathInspectionAuthoring>;
 }>;
 
 export const irToVanillaCode = (ir: IRScene, options: VanillaCodeOptions = {}): string => {
@@ -470,6 +486,7 @@ export const irToVanillaCode = (ir: IRScene, options: VanillaCodeOptions = {}): 
     standardAdapters: new Set(),
     standardCounts: new Map(),
     componentInspections: options.componentInspections ?? new Map(),
+    pathInspections: options.pathInspections ?? new Map(),
   };
   const childrenStr = childListCode(ir.children, 0, ctx);
   const figureConfig = {

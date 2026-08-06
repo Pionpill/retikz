@@ -94,7 +94,7 @@ This physical x-to-y order lets text determine height after column width is know
 | ---------- | --------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `inspect?` | `boolean` \| `GridLayoutInspectOptions` | Inherited | Omission inherits Layout or the nearest Scope; `false` disables only this occurrence and leaves nested layouts unchanged |
 
-The object form controls `tracks`, `cells`, fixed `gaps`, `distributedSpace`, and `spans` independently. See [Runtime Reference](/standard/layout/reference/runtime#layout-inspector) for shared fields and root or Scope policies.
+The object form controls `tracks`, `cells`, fixed `gaps`, `distributedSpace`, and `spans` independently. Tracks, cells, and span marks emit ordinary Core Paths, fixed gaps use ordinary pattern paints, and distributed space keeps only a dashed perimeter. See [Runtime Reference](/standard/layout/reference/runtime#layout-inspector) for shared fields and root or Scope policies.
 
 ### `GridLayoutInput`
 

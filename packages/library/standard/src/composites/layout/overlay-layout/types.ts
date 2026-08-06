@@ -4,9 +4,8 @@ import type { z } from 'zod';
 import type { LayoutSizeParticipation, OverlayPlacementKind } from './constants';
 import type {
   OverlayLayoutArtifactSchema,
-  OverlayLayoutInspectLocalOptionsInputSchema,
-  OverlayLayoutInspectLocalOptionsSchema,
   OverlayLayoutInspectOptionsInputSchema,
+  OverlayLayoutInspectOptionsSchema,
   OverlayLayoutItemSchema,
   OverlayLayoutSchema,
   OverlayPlacementSchema,
@@ -42,8 +41,5 @@ export type OverlayLayoutArtifact = z.infer<typeof OverlayLayoutArtifactSchema>;
 /** OverlayLayout inspector 的作者输入 */
 export type OverlayLayoutInspectOptions = z.input<typeof OverlayLayoutInspectOptionsInputSchema>;
 
-/** OverlayLayout inspector 的局部作者输入 */
-export type OverlayLayoutInspectLocalOptions = z.input<typeof OverlayLayoutInspectLocalOptionsInputSchema>;
-
-/** OverlayLayout inspector 的规范化局部选项 */
-export type ResolvedOverlayLayoutInspectLocalOptions = z.output<typeof OverlayLayoutInspectLocalOptionsSchema>;
+/** OverlayLayout Inspector 的完整 canonical 选项 */
+export type ResolvedOverlayLayoutInspectOptions = z.output<typeof OverlayLayoutInspectOptionsSchema>;

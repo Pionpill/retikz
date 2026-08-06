@@ -361,11 +361,16 @@ const createCanvasImageLoader = (onReady: () => void): CanvasImageLoader => {
   });
 };
 
-/** 收集 snapshot 当前由 paint resource 消费的 image href */
-const collectCanvasImageHrefs = (snapshot: SceneRuntimeSnapshot): ReadonlySet<string> =>
+/** 收集完整 frame 当前由 paint resource 消费的 image href */
+const collectCanvasImageHrefs = (
+  snapshot: SceneRuntimeSnapshot,
+  inspection: InspectionPlane | null,
+): ReadonlySet<string> =>
   new Set(
-    snapshot.scene.resources.flatMap(resource =>
-      resource.kind === 'paint' && resource.spec.kind === 'image' ? [resource.spec.href] : [],
+    [snapshot.scene, ...(inspection?.entries.map(entry => entry.scene) ?? [])].flatMap(scene =>
+      (scene.resources ?? []).flatMap(resource =>
+        resource.kind === 'paint' && resource.spec.kind === 'image' ? [resource.spec.href] : [],
+      ),
     ),
   );
 
@@ -1369,7 +1374,7 @@ export const createBuiltinCanvasRetainedRenderer = (
     config: RenderRuntimeConfig,
   ): RuntimePreparedCommit => {
     const snapshot = frame.primary;
-    const imageStage = imageLoader.stage(collectCanvasImageHrefs(snapshot));
+    const imageStage = imageLoader.stage(collectCanvasImageHrefs(snapshot, frame.inspection));
     try {
       const animationDiff = diffSceneAnimationDescriptors(currentSnapshot, snapshot);
       const replaceScene = patch?.operations.some(operation => operation.kind === 'replaceScene') === true;

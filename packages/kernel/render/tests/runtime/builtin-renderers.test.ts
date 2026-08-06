@@ -19,6 +19,7 @@ import {
   createRuntimeProgramRegistry,
   createRuntimeSession,
   defineRuntimeCommitParticipant,
+  RuntimeProgramPhase,
 } from '@retikz/runtime';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -42,22 +43,45 @@ const frameOf = (primary: SceneRuntimeSnapshot): RenderFrameSnapshot => Object.f
 const inspectionAt = (x: number): InspectionPlane => ({
   entries: [
     {
+      owner: { kind: 'composite', namespace: 'test', type: 'inspection' },
       occurrence: { sourcePath: '$.children[0]', expansionPath: [] },
       colorScope: 0,
       transform: [1, 0, 0, 1, 0, 0],
-      primitives: [
-        {
-          kind: 'rect' as const,
-          role: 'layout.container',
-          x,
-          y: 0,
-          width: 20,
-          height: 10,
-          presentation: 'outline' as const,
-          tone: 'scope' as const,
-          lineStyle: 'dashed' as const,
-        },
-      ],
+      scene: {
+        layout: { x, y: 0, width: 20, height: 10 },
+        primitives: [{ type: 'rect', x, y: 0, width: 20, height: 10, stroke: '#2563eb' }],
+      },
+    },
+  ],
+});
+
+const imageInspection = (href: string): InspectionPlane => ({
+  entries: [
+    {
+      owner: { kind: 'pathKind', name: 'stroke' },
+      occurrence: { sourcePath: '$.children[0]', expansionPath: [] },
+      colorScope: 0,
+      transform: [1, 0, 0, 1, 0, 0],
+      scene: {
+        layout: { x: 0, y: 0, width: 20, height: 10 },
+        resources: [
+          {
+            kind: 'paint',
+            id: 'inspection-image',
+            spec: { kind: 'image', href },
+          },
+        ],
+        primitives: [
+          {
+            type: 'rect',
+            x: 0,
+            y: 0,
+            width: 20,
+            height: 10,
+            fill: { kind: 'resourceRef', id: 'inspection-image' },
+          },
+        ],
+      },
     },
   ],
 });
@@ -224,6 +248,33 @@ describe('builtin retained renderers', () => {
     mount.dispose();
     expect(host.querySelector('[data-retikz-inspection="layout"] rect')?.getAttribute('x')).toBe('4');
     expect(host.querySelector('[data-retikz-inspection="layout"]')?.getAttribute('pointer-events')).toBe('none');
+    expect(host.querySelector('[data-retikz-inspection="layout"]')?.getAttribute('aria-hidden')).toBe('true');
+
+    const invalidPrimitive = Object.defineProperty({}, 'type', {
+      get: () => {
+        throw new Error('invalid auxiliary Scene');
+      },
+    });
+    const invalidInspection = {
+      entries: [
+        ...inspectionAt(14).entries,
+        {
+          owner: { kind: 'pathKind', name: 'stroke' },
+          occurrence: { sourcePath: '$.children[1]', expansionPath: [] },
+          colorScope: 1,
+          transform: [1, 0, 0, 1, 0, 0],
+          scene: {
+            layout: { x: 0, y: 0, width: 1, height: 1 },
+            primitives: [invalidPrimitive],
+          },
+        },
+      ],
+    } as unknown as InspectionPlane;
+    expect(() =>
+      executor.prepare(pair.patch, Object.freeze({ primary: pair.next, inspection: invalidInspection }), {}),
+    ).toThrow('invalid auxiliary Scene');
+    expect(host.querySelector('[data-retikz-inspection="layout"] rect')?.getAttribute('x')).toBe('4');
+    expect(executor.read().frame.inspection).toBe(initialFrame.inspection);
 
     const prepared = executor.prepare(pair.patch, nextFrame, {});
     prepared.commit();
@@ -287,6 +338,58 @@ describe('builtin retained renderers', () => {
     host.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 100, clientY: 50 }));
 
     expect(click).toHaveBeenCalledTimes(1);
+    executor.dispose();
+  });
+
+  it('Canvas retained renderer 在 prepare 阶段收集并执行辅助 Scene 的 image resource', () => {
+    class TestImage {
+      static latest: TestImage | undefined;
+      onload: ((event: Event) => void) | null = null;
+      onerror: ((event: Event) => void) | null = null;
+      src = '';
+      constructor() {
+        TestImage.latest = this;
+      }
+    }
+    vi.stubGlobal('Image', TestImage);
+    const drawImage = vi.fn();
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+      return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
+        get: (target, key) => {
+          if (key === 'drawImage') return drawImage;
+          if (key === 'measureText') return () => ({ width: 0 });
+          if (key === 'createLinearGradient' || key === 'createRadialGradient') {
+            return () => ({ addColorStop: vi.fn() });
+          }
+          if (key in target) return Reflect.get(target, key);
+          return vi.fn();
+        },
+        set: (target, key, value) => Reflect.set(target, key, value),
+      });
+    });
+    const primary = createCorePair(scene('#ef4444'), scene('#22c55e')).current;
+    const host = document.createElement('canvas');
+    host.width = 200;
+    host.height = 100;
+    const renderer = builtinRetainedRendererFactory({
+      backend: 'canvas',
+      host,
+      immutableOptions: { backend: 'canvas', idPrefix: 'inspection-image', devicePixelRatio: 1 },
+    });
+    const executor = getRetainedRendererExecutor(renderer);
+    if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+    const mount = executor.prepareMount(
+      Object.freeze({ primary, inspection: imageInspection('inspection.png') }),
+      {},
+      'create',
+    );
+    const image = TestImage.latest;
+
+    expect(image?.src).toBe('inspection.png');
+    mount.commit();
+    mount.dispose();
+    image?.onload?.(new Event('load'));
+    expect(drawImage.mock.calls.some(([source]) => source === image)).toBe(true);
     executor.dispose();
   });
 
@@ -490,7 +593,7 @@ describe('builtin retained renderers', () => {
       tracePhases: [],
       prepare: candidate => ({
         commit: () => {
-          if (candidate.phase === 'update') {
+          if (candidate.phase === RuntimeProgramPhase.Update) {
             host.querySelector('[data-retikz-id="node-a"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
           }
         },
@@ -4178,7 +4281,7 @@ describe('builtin retained renderers', () => {
       revisionPolicy: 'continuous',
       tracePhases: [],
       prepare: candidate => {
-        if (candidate.phase === 'update') throw new Error('late prepare failed');
+        if (candidate.phase === RuntimeProgramPhase.Update) throw new Error('late prepare failed');
         return { commit: () => undefined, rollback: () => undefined, dispose: () => undefined };
       },
       read: () => Object.freeze({ ok: true as const }),
@@ -5310,7 +5413,7 @@ describe('builtin retained renderers', () => {
       tracePhases: [],
       prepare: candidate => ({
         commit: () => {
-          if (candidate.phase === 'update') throw new Error('reject image candidate');
+          if (candidate.phase === RuntimeProgramPhase.Update) throw new Error('reject image candidate');
         },
         rollback: () => undefined,
         dispose: () => undefined,
@@ -5435,7 +5538,7 @@ describe('builtin retained renderers', () => {
       tracePhases: [],
       prepare: candidate => ({
         commit: () => {
-          if (candidate.phase === 'update') throw new Error('late commit failed');
+          if (candidate.phase === RuntimeProgramPhase.Update) throw new Error('late commit failed');
         },
         rollback: () => undefined,
         dispose: () => undefined,

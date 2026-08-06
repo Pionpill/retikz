@@ -1,9 +1,11 @@
 import type {
-  PerformanceTracePhase,
+  PerformanceTracePhaseValue,
   PerformanceTraceRecord,
-  PerformanceTraceUnit,
+  PerformanceTraceUnitValue,
   RuntimeTraceReporter,
 } from '@retikz/runtime';
+
+import { PerformanceTraceOutcome } from '@retikz/runtime';
 
 /** 校验一次 full-path trace 的发射基数、诊断与精确工作量 */
 export const assertFullTrace = (
@@ -11,8 +13,8 @@ export const assertFullTrace = (
   reporter: RuntimeTraceReporter,
   records: ReadonlyArray<PerformanceTraceRecord>,
   expected: Readonly<{
-    phase: PerformanceTracePhase;
-    unit: PerformanceTraceUnit;
+    phase: PerformanceTracePhaseValue;
+    unit: PerformanceTraceUnitValue;
     visited: number;
   }>,
 ): PerformanceTraceRecord => {
@@ -26,7 +28,7 @@ export const assertFullTrace = (
     record.owner !== reporter.owner ||
     record.phase !== expected.phase ||
     record.unit !== expected.unit ||
-    record.outcome !== 'full'
+    record.outcome !== PerformanceTraceOutcome.Full
   ) {
     throw new Error(`${id}: full trace identity mismatch`);
   }

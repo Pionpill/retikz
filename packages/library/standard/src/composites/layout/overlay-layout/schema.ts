@@ -1,4 +1,4 @@
-import { BaseLayoutInspectOptionsInputSchema } from '@retikz/core';
+import { BaseLayoutInspectOptionsInputSchema, resolveBaseLayoutInspectOptions } from '@retikz/core';
 import { z } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
@@ -201,7 +201,7 @@ export const OverlayLayoutArtifactSchema = OverlayLayoutArtifactBaseSchema.super
 ).describe('Canonical JSON-safe OverlayLayout compile artifact payload.');
 
 /** OverlayLayout family-local inspector sparse schema */
-export const OverlayLayoutInspectLocalOptionsInputSchema = z
+const OverlayLayoutInspectFamilyOptionsInputSchema = z
   .strictObject({
     placements: z.boolean().optional().describe('Whether to draw OverlayLayout placement relations.'),
     anchors: z.boolean().optional().describe('Whether to draw positioned OverlayLayout item anchors.'),
@@ -211,14 +211,15 @@ export const OverlayLayoutInspectLocalOptionsInputSchema = z
 
 /** OverlayLayout inspector 完整 authoring schema */
 export const OverlayLayoutInspectOptionsInputSchema = BaseLayoutInspectOptionsInputSchema.safeExtend(
-  OverlayLayoutInspectLocalOptionsInputSchema.shape,
+  OverlayLayoutInspectFamilyOptionsInputSchema.shape,
 ).describe('Sparse shared and OverlayLayout-specific inspection options.');
 
-/** OverlayLayout family-local canonical schema */
-export const OverlayLayoutInspectLocalOptionsSchema = OverlayLayoutInspectLocalOptionsInputSchema.transform(value =>
+/** OverlayLayout Inspector 的完整 canonical schema */
+export const OverlayLayoutInspectOptionsSchema = OverlayLayoutInspectOptionsInputSchema.transform(value =>
   Object.freeze({
+    ...resolveBaseLayoutInspectOptions(value),
     placements: value.placements ?? true,
     anchors: value.anchors ?? true,
     stacking: value.stacking ?? false,
   }),
-).describe('Canonical OverlayLayout-specific inspection options.');
+).describe('Canonical shared and OverlayLayout-specific inspection options.');

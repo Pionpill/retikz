@@ -27,12 +27,16 @@ export type {
   RuntimeProgramContext,
   RuntimeProgramDefinition,
   RuntimeProgramDefinitionInput,
+  RuntimeProgramExecutionValue,
+  RuntimeProgramKindValue,
+  RuntimeProgramPhaseValue,
   RuntimeProgramToken,
   RuntimeProgramTraceReporter,
   RuntimeProgramWarningInput,
   RuntimeRunResult,
   RuntimeUpdateResult,
 } from './program';
+export { RuntimeProgramExecution, RuntimeProgramKind, RuntimeProgramPhase } from './program';
 export { defineRuntimeProgram } from './program';
 export type {
   RuntimeOwnerRegistry,

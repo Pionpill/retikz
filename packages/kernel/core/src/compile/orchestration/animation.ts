@@ -1,5 +1,5 @@
 import type { IRAnimationTrack } from '../../schemas';
-import type { CompileWarning } from '../warning';
+import type { CompileWarningInput } from '../warning';
 
 import { CompileWarningCode } from '../constants';
 
@@ -8,7 +8,7 @@ export type FilterAnimationsContext = {
   /** 校验目标层级 */
   target: 'element' | 'root';
   /** warning 收集器 */
-  onWarn: (warning: CompileWarning) => void;
+  onWarn: (warning: CompileWarningInput) => void;
   /** 当前 IR locator */
   irPath: string;
 };

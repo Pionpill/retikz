@@ -12,56 +12,66 @@ const primary: Scene = {
 const inspection: InspectionPlane = {
   entries: [
     {
+      owner: { kind: 'pathKind', name: 'stroke' },
       occurrence: { sourcePath: '$.children[0]', expansionPath: [] },
       colorScope: 1,
       transform: [1, 0, 0, 1, 12, 8],
-      primitives: [
-        {
-          kind: 'rect',
-          role: 'layout.slot',
-          x: 0,
-          y: 0,
-          width: 30,
-          height: 20,
-          presentation: 'outline',
-          tone: 'scope',
-          lineStyle: 'dashed',
-        },
-        {
-          kind: 'line',
-          role: 'layout.guide',
-          x1: 0,
-          y1: 10,
-          x2: 30,
-          y2: 10,
-          tone: 'scope',
-          lineStyle: 'dotted',
-        },
-        {
-          kind: 'rect',
-          role: 'layout.gap',
-          x: 0,
-          y: 2,
-          width: 20,
-          height: 6,
-          presentation: 'fill',
-          tone: 'scope',
-          fillPattern: 'crosshatch',
-          opacity: 0.5,
-        },
-        {
-          kind: 'rect',
-          role: 'layout.overflow',
-          x: 28,
-          y: 0,
-          width: 4,
-          height: 20,
-          presentation: 'fill',
-          tone: 'warning',
-          fillPattern: 'solid',
-        },
-        { kind: 'label', role: 'layout.label', x: 4, y: 6, text: 'slot 0', tone: 'scope' },
-      ],
+      scene: {
+        layout: { x: 0, y: 0, width: 32, height: 20 },
+        resources: [
+          {
+            kind: 'paint',
+            id: 'paint-1',
+            spec: {
+              kind: 'linearGradient',
+              stops: [
+                { offset: 0, color: '#7c3aed' },
+                { offset: 1, color: '#ffffff' },
+              ],
+            },
+          },
+        ],
+        primitives: [
+          {
+            type: 'rect',
+            x: 0,
+            y: 0,
+            width: 30,
+            height: 20,
+            fill: { kind: 'resourceRef', id: 'paint-1' },
+          },
+          {
+            type: 'path',
+            commands: [
+              { kind: 'move', to: [0, 10] },
+              { kind: 'line', to: [30, 10] },
+            ],
+            stroke: '#7c3aed',
+            dashPattern: [1, 4],
+          },
+          {
+            type: 'ellipse',
+            cx: 15,
+            cy: 10,
+            rx: 3,
+            ry: 3,
+            fill: '#dc2626',
+          },
+          {
+            type: 'text',
+            x: 4,
+            y: 6,
+            lines: [{ text: 'control' }],
+            fontSize: 10,
+            align: 'start',
+            baseline: 'bottom',
+            lineHeight: 12,
+            measuredWidth: 42,
+            measuredHeight: 12,
+            fill: '#7c3aed',
+          },
+        ],
+      },
     },
   ],
 };
@@ -85,6 +95,7 @@ describe('SVG static render frame', () => {
     expect(group).not.toBeTypeOf('string');
     if (typeof group === 'string') throw new Error('expected inspection group');
     expect(group.attrs['pointer-events']).toBe('none');
+    expect(group.attrs['aria-hidden']).toBe('true');
     expect(group.children?.[0]).toMatchObject({
       tag: 'g',
       attrs: { transform: 'matrix(1 0 0 1 12 8)' },
@@ -93,44 +104,77 @@ describe('SVG static render frame', () => {
     expect(entry).not.toBeTypeOf('string');
     if (entry === undefined || typeof entry === 'string') throw new Error('expected inspection entry group');
     expect(entry.children?.map(child => (typeof child === 'string' ? child : child.tag))).toEqual([
+      'defs',
       'rect',
-      'line',
       'path',
-      'rect',
+      'ellipse',
       'text',
     ]);
-    expect(entry.children?.[2]).toMatchObject({
-      tag: 'path',
-      attrs: {
-        d: 'M 4.5 7.5 L 9.5 2.5 M 16.5 7.5 L 19.5 4.5 M 14.5 2.5 L 19.5 7.5 M 2.5 2.5 L 7.5 7.5',
-        fill: 'none',
-        stroke: '#7c3aed',
-        'stroke-width': 1,
-        opacity: 0.275,
-      },
-    });
-    expect(
-      entry.children?.some(
-        child =>
-          typeof child !== 'string' &&
-          child.tag === 'rect' &&
-          child.attrs.x === 0 &&
-          child.attrs.y === 2 &&
-          child.attrs.width === 20 &&
-          child.attrs.height === 6,
-      ),
-    ).toBe(false);
 
     const output = renderFrameToSvgString({ primary, inspection }, { idPrefix: 'frame' });
     expect(output).toContain('data-retikz-inspection="layout"');
     expect(output).toContain('<rect');
-    expect(output).toContain('<line');
     expect(output).toContain('<path');
+    expect(output).toContain('<ellipse');
     expect(output).toContain('<text');
     expect(output).toContain('#7c3aed');
     expect(output).toContain('#dc2626');
-    expect(output).not.toContain('url(#');
+    expect(output).toContain('id="retikz-paint-frame-inspection-0-paint-1"');
+    expect(output).toContain('url(#retikz-paint-frame-inspection-0-paint-1)');
     expect(output).not.toContain('data-retikz-id="layout.');
+  });
+
+  it('为 primary 与每个辅助 Scene 隔离同名资源 id', () => {
+    const sceneWithPaint = (color: string): Scene => ({
+      layout: { x: 0, y: 0, width: 10, height: 10 },
+      resources: [
+        {
+          kind: 'paint',
+          id: 'shared',
+          spec: {
+            kind: 'linearGradient',
+            stops: [
+              { offset: 0, color },
+              { offset: 1, color: '#ffffff' },
+            ],
+          },
+        },
+      ],
+      primitives: [{ type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: { kind: 'resourceRef', id: 'shared' } }],
+    });
+    const output = renderFrameToSvgString(
+      {
+        primary: sceneWithPaint('#111111'),
+        inspection: {
+          entries: [
+            {
+              owner: { kind: 'pathKind', name: 'stroke' },
+              occurrence: { sourcePath: '$.children[0]', expansionPath: [] },
+              colorScope: 0,
+              transform: [1, 0, 0, 1, 0, 0],
+              scene: sceneWithPaint('#222222'),
+            },
+            {
+              owner: { kind: 'composite', namespace: 'test', type: 'layout' },
+              occurrence: { sourcePath: '$.children[1]', expansionPath: [] },
+              colorScope: 1,
+              transform: [1, 0, 0, 1, 12, 0],
+              scene: sceneWithPaint('#333333'),
+            },
+          ],
+        },
+      },
+      { idPrefix: 'resource-frame' },
+    );
+
+    [
+      'retikz-paint-resource-frame-shared',
+      'retikz-paint-resource-frame-inspection-0-shared',
+      'retikz-paint-resource-frame-inspection-1-shared',
+    ].forEach(id => {
+      expect(output).toContain(`id="${id}"`);
+      expect(output).toContain(`url(#${id})`);
+    });
   });
 
   it('Scene-only API 等价委托 inspection:null', () => {

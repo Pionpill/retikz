@@ -1,7 +1,7 @@
 import { boundsCenter, boundsOf, isFinitePoint } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
-import type { IRPathScale, IRPosition } from '../../../schemas';
+import type { IRPathScale, IRPosition, IRTransform } from '../../../schemas';
 
 import { applyTransformChain } from '../../transform';
 
@@ -37,6 +37,24 @@ export const buildPathTransforms = ({ rotate, scale, center, round }: BuildPathT
       x: round(-center[0]),
       y: round(-center[1]),
     });
+  }
+  return out;
+};
+
+/** 构造可由辅助 IR Scope 复用的 Path 自身变换 */
+export const buildPathInspectionTransforms = ({
+  rotate,
+  scale,
+  center,
+  round,
+}: BuildPathTransformsInput): Array<IRTransform> => {
+  const pivot: IRPosition = [round(center[0]), round(center[1])];
+  const out: Array<IRTransform> = [];
+  if (rotate !== undefined) out.push({ kind: 'rotate', degrees: rotate, pivot });
+  if (scale !== undefined) {
+    out.push(
+      typeof scale === 'number' ? { kind: 'scale', x: scale, pivot } : { kind: 'scale', x: scale.x, y: scale.y, pivot },
+    );
   }
   return out;
 };

@@ -3,6 +3,7 @@ import type { ZodType } from 'zod';
 
 import type {
   AnyCompositeDefinition,
+  AnyPathKindDefinition,
   ArrowDefinition,
   BoundaryDefinition,
   ClipDefinition,
@@ -10,7 +11,6 @@ import type {
   CompileOccurrenceLocator,
   InspectionPlane,
   PathGeneratorDefinition,
-  PathKindDefinition,
   PatternDefinition,
   RibbonWidthProfileDefinition,
   Scene,
@@ -211,7 +211,7 @@ export type CompileProviderOptions = {
    * 运行时注入的 path kind providers
    * @default BUILTIN_PATH_KINDS
    */
-  pathKinds?: ReadonlyArray<PathKindDefinition>;
+  pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
   /**
    * 运行时注入的 ribbon 宽度 profile
    * @description profile 函数从这里注入，永不进入 IR

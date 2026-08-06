@@ -64,11 +64,11 @@ The fixed identities are `CORE_OWNER_KEY = '@retikz/core/document'` and `CORE_PR
 | `snapshot`           | Deeply immutable Scene, document root identity, and topology for the current Session revision               |
 | `patch`              | Atomic Scene Patch relative to the base revision; absent on the initial full run                            |
 
-`CompileOptions.inspection` is a runtime-only authored sidecar. Core resolves cascade policies through `CompositeDefinition.inspector` and assembles strict rect, line, and label DTOs in `CompileResult.inspection`. The plane is isolated from the primary Scene and never enters Snapshot identity, resources, layout bounds, or Patch diff. A Program full fallback regenerates the primary Scene, artifacts, and inspection plane in the same revision.
+`CompileOptions.inspection` is a runtime-only authored sidecar. Core first binds a Composite or Path occurrence through the locator's exact `target`, then reads its Inspector from the matching `CompositeDefinition` or `PathKindDefinition`. Inspectors remain attached to their owner Definitions; there is no second registry. The resulting `CompileResult.inspection` stays outside Snapshot identity, primary resources, layout bounds, and Patch diff. A Program full fallback regenerates the primary Scene, artifacts, and inspection plane in the same revision.
 
-Every final `InspectionPlaneEntry` has a required non-negative safe-integer `colorScope`. Core stably sorts entries by occurrence and final commit order before numbering them continuously from `0`. Discarded probes consume no number, and numbering is not derived from `sourcePath` text or Scope depth. Regular primitives use `tone: 'scope'`; warnings use the fixed `tone: 'warning'`.
+Core stably sorts final requests before assigning continuous `colorScope` values from `0`, then supplies the recommended regular and warning colors through `InspectionAppearance`. Discarded probes consume no value. An executed request that returns an empty array consumes its value but creates no entry, so later occurrence colors do not depend on how many children an earlier Inspector emits.
 
-Rectangle DTOs branch strictly on `presentation`: `outline` requires `lineStyle`, while `fill` requires `fillPattern: 'solid' | 'forward-diagonal' | 'backward-diagonal' | 'crosshatch'`; the fields cannot be mixed. Custom inspectors must return the new tone and matching presentation field. Handwritten `InspectionPlane` values must also provide `colorScope` per entry; Core assigns it automatically when assembling the plane through `compileToScene()`.
+`InspectorDefinition.inspect()` returns one ordinary `IRChild` or a dense `ReadonlyArray<IRChild>`; there is no `outputSchema`. Core compiles every entry through the normal child pipeline in an isolated environment with the current Theme, Scope style, and provider Definitions, then stores the result as an occurrence-local static `scene`. Sealing removes public `id`, `meta`, and animation state while preserving entry-local resource references. Custom Composite and Path-kind Inspectors can therefore use Node, Path, Coordinate, Scope, or registered Composite content without any Inspector-specific renderer primitive.
 
 The initial run performs a full compile. When an update cannot be proven locally safe, the Program falls back to a full compile and publishes one `replaceScene` in `patch.operations`. Callers still consume the same Snapshot / Patch envelope instead of switching protocols.
 
@@ -172,14 +172,24 @@ session.update({
 | `CoreProgramDefinition<TComposites>`                   | Artifact-input, owned-artifact, and private/public read generic relationship |
 | `RuntimeScene` / `SceneRuntimeSnapshot` / `ScenePatch` | Deeply readonly Scene and atomic Patch DTOs                                  |
 | `InspectOptions` / `CompileInspectionOptions`          | Layout or Scope cascade policy and compile authored sidecar                  |
-| `InspectionPlane` / `InspectionPlaneEntry`             | Overlay DTOs isolated from the Scene and color-scoped by final occurrence    |
-| `InspectionPrimitive` / `InspectionFillPatternSchema`  | Strict rect, line, label, and renderer-neutral fill-pattern contract         |
-| `CompositeInspectorDefinition`                         | Inspector attached to a layout-aware composite in the same registry          |
+| `InspectionPlane` / `InspectionPlaneEntry`             | Isolated auxiliary plane whose entries contain ordinary static Scenes        |
+| `InspectorDefinition` / `defineInspector`              | Owner-neutral Inspector contract and definition helper                       |
+| `InspectorOutput` / `InspectorContext`                 | Ordinary Core-child output and canonical options / appearance context        |
+| `InspectionAppearance` / `InspectionOwner`             | Core-resolved occurrence appearance and Definition-owner identity            |
+| `PathInspectionAuthoring` / `PathInspectOptions`       | Occurrence-local runtime authoring for React and Vanilla Paths               |
 
 ## Source
 
 <SourceLinks
   sources={[
+    {
+      label: 'Inspector definitions and authored sidecar contracts',
+      path: 'packages/kernel/core/src/contract/inspection/types.ts',
+    },
+    {
+      label: 'Ordinary child compilation into isolated auxiliary Scenes',
+      path: 'packages/kernel/core/src/compile/orchestration/inspection.ts',
+    },
     {
       label: 'Core owner identity and change hints',
       path: 'packages/kernel/core/src/contract/runtime/types.ts',

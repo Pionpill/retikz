@@ -2,7 +2,14 @@ import type { IRScene } from '@retikz/core';
 import type { PerformanceTraceRecord } from '@retikz/runtime';
 
 import { CORE_OWNER_KEY, CoreOwnerDefinition } from '@retikz/core';
-import { createRuntimeOwnerUpdate, createRuntimeTraceReporter, RuntimeUpdateStrategy } from '@retikz/runtime';
+import {
+  createRuntimeOwnerUpdate,
+  createRuntimeTraceReporter,
+  PerformanceTraceOutcome,
+  PerformanceTracePhase,
+  PerformanceTraceUnit,
+  RuntimeUpdateStrategy,
+} from '@retikz/runtime';
 import { mountCanvas, mountSvg, VanillaViewMode } from '@retikz/vanilla';
 
 import type { LabOutcomeValue, LabPolicyIdValue, LabPolicyResult } from './model';
@@ -70,8 +77,8 @@ const resolveLabOutcome = (record: PerformanceTraceRecord): LabOutcomeValue => {
 /** 把公共 trace、Patch 与 timing 样本整理为 UI 稳定结果 */
 export const createLabPolicyResult = (input: CreateLabPolicyResultInput): LabPolicyResult => {
   const work =
-    input.trace.find(record => record.owner === CORE_OWNER_KEY && record.phase === 'update') ??
-    input.trace.find(record => record.owner === '@retikz/core' && record.phase === 'compile') ??
+    input.trace.find(record => record.owner === CORE_OWNER_KEY && record.phase === PerformanceTracePhase.Update) ??
+    input.trace.find(record => record.owner === '@retikz/core' && record.phase === PerformanceTracePhase.Compile) ??
     input.trace.at(0);
   if (work === undefined) throw new Error(`${input.policyId}: Kernel Lab trace is unavailable`);
   const duration = summarizeSamples(input.samples);
@@ -187,7 +194,13 @@ const executeStaticPolicy = (input: KernelLabPolicyInput, first: IRScene, second
   const records: Array<PerformanceTraceRecord> = [];
   const reporter = createRuntimeTraceReporter({
     owner: '@retikz/core',
-    phases: [{ phase: 'compile', unit: 'ir-child', outcomes: ['full'] }],
+    phases: [
+      {
+        phase: PerformanceTracePhase.Compile,
+        unit: PerformanceTraceUnit.IrChild,
+        outcomes: [PerformanceTraceOutcome.Full],
+      },
+    ],
     sink: record => records.push(record),
   });
   const container = document.createElement('div');

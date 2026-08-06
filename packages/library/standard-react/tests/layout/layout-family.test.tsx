@@ -140,6 +140,7 @@ describe('Standard React layout family', () => {
     expect(result.inspectionRoots).toEqual([
       {
         locator: {
+          target: 'composite',
           path: [
             { kind: 'sceneChild', index: 0 },
             { kind: 'scopeChild', index: 0 },
@@ -148,13 +149,13 @@ describe('Standard React layout family', () => {
         tree: {
           policy: {
             inherited: { layout: { overflow: false } },
-            component: { gaps: false },
+            self: { gaps: false },
           },
           children: [
             [
               {
-                locator: { path: [] },
-                tree: { policy: { component: { tracks: false } } },
+                locator: { target: 'composite', path: [] },
+                tree: { policy: { self: { tracks: false } } },
               },
             ],
           ],

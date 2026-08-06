@@ -3,6 +3,7 @@ import type {
   IRCoordinate,
   IRNode,
   IRPath,
+  PathInspectionAuthoring,
   PathThicknessValue,
   WayDSL,
 } from '@retikz/core';
@@ -14,6 +15,7 @@ import type {
   VanillaEmbedSpec,
   VanillaFigureSpec,
   VanillaLayerSpec,
+  VanillaPathSpec,
   VanillaScopeSpec,
 } from './types';
 
@@ -60,21 +62,23 @@ export type VanillaPathConfig = Omit<IRPath, 'type' | 'id' | 'children'> & {
   way: WayDSL;
   /** 路径描边宽度语法糖 */
   thickness?: PathThicknessValue;
+  /** 只开启当前路径 occurrence 的运行时 Inspector，不进入 Core IR */
+  inspect?: PathInspectionAuthoring;
 };
 
 type AnonymousVanillaPathConfig = Omit<VanillaPathConfig, 'id'>;
 
 /** Vanilla 路径普通规格辅助函数 */
 type PathFn = {
-  (id: string, config: AnonymousVanillaPathConfig): IRPath;
-  (config: AnonymousVanillaPathConfig): IRPath;
+  (id: string, config: AnonymousVanillaPathConfig): VanillaPathSpec;
+  (config: AnonymousVanillaPathConfig): VanillaPathSpec;
 };
 
 /** 从 way DSL 创建 Vanilla 路径 IR，并解析路径粗细语法糖 */
 export const path: PathFn = (
   idOrConfig: string | AnonymousVanillaPathConfig,
   maybeConfig?: AnonymousVanillaPathConfig,
-): IRPath => {
+): VanillaPathSpec => {
   const named = typeof idOrConfig === 'string';
   const config = named ? maybeConfig : idOrConfig;
   if (config === undefined) throw new Error('path: config is required.');

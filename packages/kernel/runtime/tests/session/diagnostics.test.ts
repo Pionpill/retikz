@@ -5,16 +5,17 @@ import type { RuntimeSession } from '../../src/session';
 
 import { RuntimeError } from '../../src/error';
 import { defineRuntimeOwner } from '../../src/owner';
-import { defineRuntimeProgram } from '../../src/program';
+import { defineRuntimeProgram, RuntimeProgramKind, RuntimeProgramPhase } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
 import { createRuntimeSession } from '../../src/session';
+import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '../../src/trace';
 import { createRuntimeOwnerInput, createRuntimeOwnerUpdate } from '../../src/transaction';
 
 const tracePhases = [
   {
-    phase: 'update' as const,
-    unit: 'program' as const,
-    outcomes: ['incremental' as const],
+    phase: PerformanceTracePhase.Update,
+    unit: PerformanceTraceUnit.Program,
+    outcomes: [PerformanceTraceOutcome.Incremental],
   },
 ];
 
@@ -37,22 +38,22 @@ describe('runtime session diagnostics', () => {
       programs: [],
       tracePhases,
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
       update: (_previous, view, context) => {
         const invalidRecord = {
-          phase: 'update',
-          unit: 'program',
-          outcome: 'incremental',
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.Program,
+          outcome: PerformanceTraceOutcome.Incremental,
           visited: 0,
           reused: 1,
           changed: 0,
         } as const;
         context.trace.report(invalidRecord);
         context.trace.report(invalidRecord);
-        return { kind: 'incremental', artifact: view.snapshot(owner).value };
+        return { kind: RuntimeProgramKind.Incremental, artifact: view.snapshot(owner).value };
       },
       observeCommit: event => {
-        if (event.phase === 'initial') return;
+        if (event.phase === RuntimeProgramPhase.Initial) return;
         observedPrefixes.push(event.diagnostics);
         throw observerCause;
       },
@@ -63,10 +64,10 @@ describe('runtime session diagnostics', () => {
       programs: [],
       tracePhases: [],
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
-      update: (_previous, view) => ({ kind: 'incremental', artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
+      update: (_previous, view) => ({ kind: RuntimeProgramKind.Incremental, artifact: view.snapshot(owner).value }),
       observeCommit: event => {
-        if (event.phase === 'update') observedPrefixes.push(event.diagnostics);
+        if (event.phase === RuntimeProgramPhase.Update) observedPrefixes.push(event.diagnostics);
       },
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [second, first] });
@@ -149,7 +150,7 @@ describe('runtime session diagnostics', () => {
           if (value.candidate) throw disposeCause;
         },
       },
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
       update: (_previous, view, context) => {
         const diagnose = context.diagnose as (diagnostic: unknown) => void;
         diagnose({
@@ -161,14 +162,14 @@ describe('runtime session diagnostics', () => {
           program: { owner: 'spoofed-owner', key: 'spoofed-program' },
         });
         context.trace.report({
-          phase: 'update',
-          unit: 'program',
-          outcome: 'incremental',
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.Program,
+          outcome: PerformanceTraceOutcome.Incremental,
           visited: 0,
           reused: 1,
           changed: 0,
         });
-        return { kind: 'incremental', artifact: view.snapshot(owner).value };
+        return { kind: RuntimeProgramKind.Incremental, artifact: view.snapshot(owner).value };
       },
     });
     const downstream = defineRuntimeProgram<number, number, number, number>({
@@ -177,7 +178,7 @@ describe('runtime session diagnostics', () => {
       programs: [upstream],
       tracePhases: [],
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: view.artifact(upstream).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.artifact(upstream).value }),
       update: () => {
         throw updateCause;
       },
@@ -242,12 +243,12 @@ describe('runtime session diagnostics', () => {
       programs: [],
       tracePhases: [],
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
       update: (_previous, view, context) => {
         updates += 1;
         const spoofedWarning = {
           code: updates === 1 ? 'CONTEXT_WARNING' : 'FALLBACK_WARNING',
-          phase: 'update',
+          phase: RuntimeProgramPhase.Update,
           message: 'Runtime must inject attribution',
           severity: 'error',
           owner: 'spoofed-owner',
@@ -256,10 +257,10 @@ describe('runtime session diagnostics', () => {
         if (updates === 1) {
           const diagnose = context.diagnose as (diagnostic: unknown) => void;
           diagnose(spoofedWarning);
-          return { kind: 'incremental', artifact: view.snapshot(owner).value };
+          return { kind: RuntimeProgramKind.Incremental, artifact: view.snapshot(owner).value };
         }
         return {
-          kind: 'fallback',
+          kind: RuntimeProgramKind.Fallback,
           diagnostics: [spoofedWarning],
         };
       },
@@ -278,7 +279,7 @@ describe('runtime session diagnostics', () => {
     expect(contextResult.diagnostics).toEqual([
       {
         code: 'CONTEXT_WARNING',
-        phase: 'update',
+        phase: RuntimeProgramPhase.Update,
         severity: 'warning',
         message: 'Runtime must inject attribution',
         owner: 'counter',
@@ -291,11 +292,11 @@ describe('runtime session diagnostics', () => {
       baseRevision: session.revision(),
       owners: [createRuntimeOwnerUpdate(owner, 3)],
     });
-    expect(fallbackResult.outcome).toBe('fallback');
+    expect(fallbackResult.outcome).toBe(RuntimeProgramKind.Fallback);
     expect(fallbackResult.diagnostics).toEqual([
       {
         code: 'FALLBACK_WARNING',
-        phase: 'update',
+        phase: RuntimeProgramPhase.Update,
         severity: 'warning',
         message: 'Runtime must inject attribution',
         owner: 'counter',
@@ -346,7 +347,7 @@ describe('runtime session diagnostics', () => {
       programs: [],
       tracePhases: [],
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
     const session = createRuntimeSession({
@@ -415,7 +416,7 @@ describe('runtime session diagnostics', () => {
           throw new Error('program a dispose failed');
         },
       },
-      run: view => ({ kind: 'full', artifact: view.snapshot(ownerA).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(ownerA).value }),
     });
     const programB = defineRuntimeProgram<number, Readonly<{ value: number }>, number, number>({
       id: { owner: 'b', key: 'derive' },
@@ -432,7 +433,7 @@ describe('runtime session diagnostics', () => {
         },
       },
       run: view => ({
-        kind: 'full',
+        kind: RuntimeProgramKind.Full,
         artifact: view.artifact(programA).value + view.snapshot(ownerB).value,
       }),
     });
@@ -475,9 +476,9 @@ describe('runtime session diagnostics', () => {
       expectedCode: 'RUNTIME_TRACE_REENTRANT',
       createSink: (readReporter: () => RuntimeProgramTraceReporter | undefined) => () => {
         readReporter()?.report({
-          phase: 'update',
-          unit: 'program',
-          outcome: 'incremental',
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.Program,
+          outcome: PerformanceTraceOutcome.Incremental,
           visited: 1,
           reused: 0,
           changed: 1,
@@ -501,18 +502,18 @@ describe('runtime session diagnostics', () => {
       programs: [],
       tracePhases,
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
       update: (_previous, view, context) => {
         activeReporter = context.trace;
         context.trace.report({
-          phase: 'update',
-          unit: 'program',
-          outcome: 'incremental',
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.Program,
+          outcome: PerformanceTraceOutcome.Incremental,
           visited: 1,
           reused: 0,
           changed: 1,
         });
-        return { kind: 'incremental', artifact: view.snapshot(owner).value };
+        return { kind: RuntimeProgramKind.Incremental, artifact: view.snapshot(owner).value };
       },
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
@@ -569,7 +570,7 @@ describe('runtime session diagnostics', () => {
 
     expect(result).toEqual({
       revision: 0,
-      outcome: 'bailout',
+      outcome: RuntimeProgramKind.Bailout,
       diagnostics: [
         expect.objectContaining({
           code: 'RUNTIME_OWNER_DISPOSE_FAILED',
@@ -687,17 +688,17 @@ describe('runtime session diagnostics', () => {
         readForProgram: value => value,
         read: value => value,
       },
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
       update: (_previous, view, context) => {
         context.trace.report({
-          phase: 'update',
-          unit: 'program',
-          outcome: 'incremental',
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.Program,
+          outcome: PerformanceTraceOutcome.Incremental,
           visited: 0,
           reused: 1,
           changed: 0,
         });
-        return { kind: 'incremental', artifact: view.snapshot(owner).value };
+        return { kind: RuntimeProgramKind.Incremental, artifact: view.snapshot(owner).value };
       },
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });

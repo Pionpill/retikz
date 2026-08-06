@@ -3,9 +3,7 @@ import { z } from 'zod';
 import type { IRJsonObject, JsonValue } from '../../schemas';
 import type { CompositeDefinition } from './types';
 
-import { cloneAndFreezeJson } from '../../shared/json';
-
-const InspectorBaseKeys = new Set(['bounds', 'overflow', 'alignmentGuides', 'labels']);
+import { defineInspector } from '../inspection';
 
 /** 校验 inspector local schemas 可从空输入形成 strict、JSON-safe canonical profile */
 const validateInspector = (definition: Readonly<Record<string, unknown>>): void => {
@@ -20,42 +18,8 @@ const validateInspector = (definition: Readonly<Record<string, unknown>>): void 
     throw new Error('defineComposite: inspector requires the compile branch and artifactSchema.');
   }
   const record = inspector as Readonly<Record<string, unknown>>;
-  if (record.kind !== 'layout') throw new Error('defineComposite: inspector.kind must be "layout".');
-  const inputSchema = record.localOptionsInputSchema;
-  const resolvedSchema = record.localOptionsSchema;
-  if (!(inputSchema instanceof z.ZodObject)) {
-    throw new Error('defineComposite: inspector localOptionsInputSchema must be a direct strict ZodObject.');
-  }
-  if (!(resolvedSchema instanceof z.ZodType)) {
-    throw new Error('defineComposite: inspector localOptionsSchema must be a Zod schema.');
-  }
-  const conflict = Object.keys(inputSchema.shape).find(key => InspectorBaseKeys.has(key));
-  if (conflict !== undefined) {
-    throw new Error(`defineComposite: inspector local option "${conflict}" conflicts with a Core Base option.`);
-  }
-  let sentinel = '__retikzInspectionUnknown__';
-  while (Object.hasOwn(inputSchema.shape, sentinel)) sentinel = `_${sentinel}`;
-  if (inputSchema.safeParse({ [sentinel]: true }).success) {
-    throw new Error('defineComposite: inspector localOptionsInputSchema must reject unknown keys as a strict object.');
-  }
-  if (!inputSchema.safeParse({}).success) {
-    throw new Error('defineComposite: inspector localOptionsInputSchema must accept an empty local options object.');
-  }
-  const resolved = resolvedSchema.safeParse({});
-  if (!resolved.success) {
-    throw new Error('defineComposite: inspector localOptionsSchema must resolve an empty local options object.');
-  }
-  try {
-    const frozen = cloneAndFreezeJson(resolved.data, 'Composite inspector local options');
-    if (frozen === null || typeof frozen !== 'object' || Array.isArray(frozen)) {
-      throw new Error('resolved local options must be a JSON object');
-    }
-  } catch (cause) {
-    throw new Error('defineComposite: inspector localOptionsSchema must resolve to a JSON-safe object.', { cause });
-  }
-  if (typeof record.inspect !== 'function') {
-    throw new Error('defineComposite: inspector.inspect must be a function.');
-  }
+  if (record.kind !== 'composite') throw new Error('defineComposite: inspector.kind must be "composite".');
+  defineInspector(record as Parameters<typeof defineInspector>[0]);
 };
 
 /** 把 composite registration schema 规范化为可读取 provider key 的对象分支 */

@@ -1,7 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { defineRuntimeOwner } from '../../src/owner';
-import { defineRuntimeProgram } from '../../src/program';
+import {
+  defineRuntimeProgram,
+  RuntimeProgramExecution,
+  RuntimeProgramKind,
+  RuntimeProgramPhase,
+} from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
 import { createRuntimeSession } from '../../src/session';
 import { createRuntimeChangeSet, createRuntimeOwnerInput, createRuntimeOwnerUpdate } from '../../src/transaction';
@@ -31,11 +36,11 @@ describe('runtime Program execution', () => {
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
       run: (view, context) => {
         executions.push(context.execution);
-        return { kind: 'full', artifact: view.snapshot(owner).value };
+        return { kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value };
       },
       update: (_previous, view, context) => {
         executions.push(context.execution);
-        return { kind: 'incremental', artifact: view.snapshot(owner).value };
+        return { kind: RuntimeProgramKind.Incremental, artifact: view.snapshot(owner).value };
       },
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
@@ -50,15 +55,15 @@ describe('runtime Program execution', () => {
       owners: [createRuntimeOwnerUpdate(owner, 2)],
     });
 
-    expect(result.outcome).toBe('incremental');
-    expect(executions).toEqual(['full', 'incremental']);
+    expect(result.outcome).toBe(RuntimeProgramKind.Incremental);
+    expect(executions).toEqual([RuntimeProgramExecution.Full, RuntimeProgramExecution.Incremental]);
   });
 
   it('full strategy 跳过 Program update 并只以 full execution 调用 run', () => {
     const owner = defineCounterOwner();
     const owners = createRuntimeOwnerRegistry({ builtins: [owner] });
     const executions: Array<unknown> = [];
-    const update = vi.fn(() => ({ kind: 'incremental' as const, artifact: 999 }));
+    const update = vi.fn(() => ({ kind: RuntimeProgramKind.Incremental, artifact: 999 }));
     const program = defineRuntimeProgram<number, number, number, number>({
       id: { owner: 'counter', key: 'forced-full' },
       owners: [owner],
@@ -67,7 +72,7 @@ describe('runtime Program execution', () => {
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
       run: (view, context) => {
         executions.push(context.execution);
-        return { kind: 'full', artifact: view.snapshot(owner).value };
+        return { kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value };
       },
       update,
     });
@@ -84,9 +89,9 @@ describe('runtime Program execution', () => {
       owners: [createRuntimeOwnerUpdate(owner, 2)],
     });
 
-    expect(result).toEqual({ revision: 1, outcome: 'full', diagnostics: [] });
+    expect(result).toEqual({ revision: 1, outcome: RuntimeProgramKind.Full, diagnostics: [] });
     expect(update).not.toHaveBeenCalled();
-    expect(executions).toEqual(['full', 'full']);
+    expect(executions).toEqual([RuntimeProgramExecution.Full, RuntimeProgramExecution.Full]);
     expect(session.artifact(program)).toEqual({ revision: 1, value: 2 });
   });
 
@@ -101,10 +106,10 @@ describe('runtime Program execution', () => {
       programs: [],
       tracePhases: [],
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: view.snapshot(primaryOwner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(primaryOwner).value }),
       update: (_previous, view) => {
         observations.push(Object.freeze([view.changed(primaryOwner), view.changed(stableOwner)]));
-        return { kind: 'incremental', artifact: view.snapshot(primaryOwner).value };
+        return { kind: RuntimeProgramKind.Incremental, artifact: view.snapshot(primaryOwner).value };
       },
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
@@ -126,11 +131,11 @@ describe('runtime Program execution', () => {
     const primaryOwner = defineCounterOwner('primary');
     const unrelatedOwner = defineCounterOwner('unrelated');
     const owners = createRuntimeOwnerRegistry({ builtins: [primaryOwner, unrelatedOwner] });
-    const directRun = vi.fn(view => ({ kind: 'full' as const, artifact: view.snapshot(primaryOwner).value }));
+    const directRun = vi.fn(view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(primaryOwner).value }));
     const directCapture = vi.fn((value: number) => value);
     const directObserver = vi.fn();
     const directUpdate = vi.fn((_previous: number, view) => ({
-      kind: 'incremental' as const,
+      kind: RuntimeProgramKind.Incremental,
       artifact: view.snapshot(primaryOwner).value,
     }));
     const direct = defineRuntimeProgram<number, number, number, number>({
@@ -143,11 +148,14 @@ describe('runtime Program execution', () => {
       update: directUpdate,
       observeCommit: directObserver,
     });
-    const transitiveRun = vi.fn(view => ({ kind: 'full' as const, artifact: view.artifact(direct).value * 10 }));
+    const transitiveRun = vi.fn(view => ({
+      kind: RuntimeProgramKind.Full,
+      artifact: view.artifact(direct).value * 10,
+    }));
     const transitiveCapture = vi.fn((value: number) => value);
     const transitiveObserver = vi.fn();
     const transitiveUpdate = vi.fn((_previous: number, view) => ({
-      kind: 'incremental' as const,
+      kind: RuntimeProgramKind.Incremental,
       artifact: view.artifact(direct).value * 10,
     }));
     const transitive = defineRuntimeProgram<number, number, number, number>({
@@ -160,11 +168,14 @@ describe('runtime Program execution', () => {
       update: transitiveUpdate,
       observeCommit: transitiveObserver,
     });
-    const unrelatedRun = vi.fn(view => ({ kind: 'full' as const, artifact: view.snapshot(unrelatedOwner).value }));
+    const unrelatedRun = vi.fn(view => ({
+      kind: RuntimeProgramKind.Full,
+      artifact: view.snapshot(unrelatedOwner).value,
+    }));
     const unrelatedCapture = vi.fn((value: number) => value);
     const unrelatedObserver = vi.fn();
     const unrelatedUpdate = vi.fn((_previous: number, view) => ({
-      kind: 'incremental' as const,
+      kind: RuntimeProgramKind.Incremental,
       artifact: view.snapshot(unrelatedOwner).value,
     }));
     const unrelated = defineRuntimeProgram<number, number, number, number>({
@@ -237,10 +248,10 @@ describe('runtime Program execution', () => {
       programs: [],
       tracePhases: [],
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
       update: (_previous, view) => {
         hints.push(view.changeSet(owner));
-        return { kind: 'incremental', artifact: view.snapshot(owner).value };
+        return { kind: RuntimeProgramKind.Incremental, artifact: view.snapshot(owner).value };
       },
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
@@ -255,7 +266,7 @@ describe('runtime Program execution', () => {
       owners: [createRuntimeOwnerUpdate(owner, 2)],
     });
 
-    expect(result.outcome).toBe('incremental');
+    expect(result.outcome).toBe(RuntimeProgramKind.Incremental);
     expect(hints).toEqual([undefined]);
     expect(session.artifact(program)).toEqual({ revision: 1, value: 2 });
   });
@@ -277,10 +288,10 @@ describe('runtime Program execution', () => {
       programs: [],
       tracePhases: [],
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
       update: (_previous, view) => {
         hints.push(view.changeSet(owner));
-        return { kind: 'incremental', artifact: view.snapshot(owner).value };
+        return { kind: RuntimeProgramKind.Incremental, artifact: view.snapshot(owner).value };
       },
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
@@ -297,15 +308,15 @@ describe('runtime Program execution', () => {
       owners: [createRuntimeOwnerUpdate(owner, 2, changeSet)],
     });
 
-    expect(result).toEqual({ revision: 1, outcome: 'incremental', diagnostics: [] });
+    expect(result).toEqual({ revision: 1, outcome: RuntimeProgramKind.Incremental, diagnostics: [] });
     expect(hints).toEqual([changeSet]);
   });
 
   it('invalid change hint 跳过 update、执行 full，并提交 fallback diagnostic', () => {
     const owner = defineCounterOwner();
     const owners = createRuntimeOwnerRegistry({ builtins: [owner] });
-    const run = vi.fn(view => ({ kind: 'full' as const, artifact: view.snapshot(owner).value }));
-    const update = vi.fn(() => ({ kind: 'incremental' as const, artifact: 999 }));
+    const run = vi.fn(view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }));
+    const update = vi.fn(() => ({ kind: RuntimeProgramKind.Incremental, artifact: 999 }));
     const program = defineRuntimeProgram<number, number, number, number>({
       id: { owner: 'counter', key: 'program' },
       owners: [owner],
@@ -329,7 +340,7 @@ describe('runtime Program execution', () => {
       owners: [createRuntimeOwnerUpdate(owner, 2, createRuntimeChangeSet(baseRevision, [{ delta: 100 }]))],
     });
 
-    expect(result.outcome).toBe('fallback');
+    expect(result.outcome).toBe(RuntimeProgramKind.Fallback);
     expect(result.diagnostics).toEqual([
       expect.objectContaining({
         code: 'RUNTIME_CHANGESET_FALLBACK',
@@ -345,7 +356,7 @@ describe('runtime Program execution', () => {
   it('upstream full 强制 downstream full，不调用 downstream update', () => {
     const owner = defineCounterOwner();
     const owners = createRuntimeOwnerRegistry({ builtins: [owner] });
-    const upstreamRun = vi.fn(view => ({ kind: 'full' as const, artifact: view.snapshot(owner).value }));
+    const upstreamRun = vi.fn(view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }));
     const upstream = defineRuntimeProgram<number, number, number, number>({
       id: { owner: 'counter', key: 'upstream' },
       owners: [owner],
@@ -357,10 +368,10 @@ describe('runtime Program execution', () => {
     const downstreamExecutions: Array<unknown> = [];
     const downstreamRun = vi.fn((view, context) => {
       downstreamExecutions.push(context.execution);
-      return { kind: 'full' as const, artifact: view.artifact(upstream).value * 10 };
+      return { kind: RuntimeProgramKind.Full, artifact: view.artifact(upstream).value * 10 };
     });
     const downstreamUpdate = vi.fn((_previous, view) => ({
-      kind: 'incremental' as const,
+      kind: RuntimeProgramKind.Incremental,
       artifact: view.artifact(upstream).value * 10,
     }));
     const downstream = defineRuntimeProgram<number, number, number, number>({
@@ -384,11 +395,11 @@ describe('runtime Program execution', () => {
       owners: [createRuntimeOwnerUpdate(owner, 2)],
     });
 
-    expect(result.outcome).toBe('full');
+    expect(result.outcome).toBe(RuntimeProgramKind.Full);
     expect(upstreamRun).toHaveBeenCalledTimes(2);
     expect(downstreamRun).toHaveBeenCalledTimes(2);
     expect(downstreamUpdate).not.toHaveBeenCalled();
-    expect(downstreamExecutions).toEqual(['full', 'full']);
+    expect(downstreamExecutions).toEqual([RuntimeProgramExecution.Full, RuntimeProgramExecution.Full]);
     expect(session.artifact(upstream)).toEqual({ revision: 1, value: 2 });
     expect(session.artifact(downstream)).toEqual({ revision: 1, value: 20 });
   });
@@ -396,15 +407,17 @@ describe('runtime Program execution', () => {
   it('Program fallback 调用 full run并归属 warning；upstream bailout 不触发下游', () => {
     const owner = defineCounterOwner();
     const owners = createRuntimeOwnerRegistry({ builtins: [owner] });
-    const upstreamRun = vi.fn(view => ({ kind: 'full' as const, artifact: view.snapshot(owner).value }));
+    const upstreamRun = vi.fn(view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }));
     const upstreamObserver = vi.fn();
     const upstreamUpdate = vi
       .fn()
       .mockReturnValueOnce({
-        kind: 'fallback',
-        diagnostics: [{ code: 'PROGRAM_FALLBACK', phase: 'update', message: 'incremental unavailable' }],
+        kind: RuntimeProgramKind.Fallback,
+        diagnostics: [
+          { code: 'PROGRAM_FALLBACK', phase: RuntimeProgramPhase.Update, message: 'incremental unavailable' },
+        ],
       })
-      .mockReturnValueOnce({ kind: 'bailout' });
+      .mockReturnValueOnce({ kind: RuntimeProgramKind.Bailout });
     const upstream = defineRuntimeProgram<number, number, number, number>({
       id: { owner: 'counter', key: 'upstream' },
       owners: [owner],
@@ -418,11 +431,11 @@ describe('runtime Program execution', () => {
     const fallbackDownstreamExecutions: Array<unknown> = [];
     const downstreamRun = vi.fn((view, context) => {
       fallbackDownstreamExecutions.push(context.execution);
-      return { kind: 'full' as const, artifact: view.artifact(upstream).value * 10 };
+      return { kind: RuntimeProgramKind.Full, artifact: view.artifact(upstream).value * 10 };
     });
     const downstreamObserver = vi.fn();
     const downstreamUpdate = vi.fn((_previous, view) => ({
-      kind: 'incremental' as const,
+      kind: RuntimeProgramKind.Incremental,
       artifact: view.artifact(upstream).value * 10,
     }));
     const downstream = defineRuntimeProgram<number, number, number, number>({
@@ -447,11 +460,11 @@ describe('runtime Program execution', () => {
       owners: [createRuntimeOwnerUpdate(owner, 2)],
     });
 
-    expect(fallback.outcome).toBe('fallback');
+    expect(fallback.outcome).toBe(RuntimeProgramKind.Fallback);
     expect(fallback.diagnostics).toEqual([
       {
         code: 'PROGRAM_FALLBACK',
-        phase: 'update',
+        phase: RuntimeProgramPhase.Update,
         severity: 'warning',
         message: 'incremental unavailable',
         owner: 'counter',
@@ -460,7 +473,7 @@ describe('runtime Program execution', () => {
     ]);
     expect(downstreamRun).toHaveBeenCalledTimes(2);
     expect(downstreamUpdate).not.toHaveBeenCalled();
-    expect(fallbackDownstreamExecutions).toEqual(['full', 'fallback']);
+    expect(fallbackDownstreamExecutions).toEqual([RuntimeProgramExecution.Full, RuntimeProgramExecution.Fallback]);
     expect(upstreamObserver).toHaveBeenCalledTimes(2);
     expect(downstreamObserver).toHaveBeenCalledTimes(2);
     expect(session.artifact(downstream)).toEqual({ revision: 1, value: 20 });
@@ -476,7 +489,7 @@ describe('runtime Program execution', () => {
     expect(session.artifact(downstream)).toEqual({ revision: 2, value: 20 });
     expect(downstreamRun).toHaveBeenCalledTimes(2);
     expect(downstreamUpdate).not.toHaveBeenCalled();
-    expect(fallbackDownstreamExecutions).toEqual(['full', 'fallback']);
+    expect(fallbackDownstreamExecutions).toEqual([RuntimeProgramExecution.Full, RuntimeProgramExecution.Fallback]);
     expect(upstreamObserver).toHaveBeenCalledTimes(2);
     expect(downstreamObserver).toHaveBeenCalledTimes(2);
   });

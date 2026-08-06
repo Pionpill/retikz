@@ -1,4 +1,4 @@
-import type { AnyCompositeDefinition, CompositeInspectionChildForest, IRChild } from '@retikz/core';
+import type { AnyCompositeDefinition, InspectionChildForest, IRChild } from '@retikz/core';
 
 /** 嵌入组件可附带的外部数据集表：reference 键 → 任意载荷 */
 export type EmbeddableDatasets = Record<string, unknown>;
@@ -8,7 +8,7 @@ export type EmbeddableContribution = {
   node: IRChild;
   datasets: EmbeddableDatasets;
   /** 相对当前 node 的 runtime-only inspection sidecar roots */
-  inspectionRoots?: CompositeInspectionChildForest;
+  inspectionRoots?: InspectionChildForest;
   /** 使用同一 namespace 的贡献必须稳定复用同一个函数引用 */
   makeComposites: (mergedDatasets: EmbeddableDatasets) => Array<AnyCompositeDefinition>;
 };

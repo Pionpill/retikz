@@ -12,7 +12,10 @@ import type {
   RuntimeProgramContext,
   RuntimeProgramDefinition,
   RuntimeProgramDefinitionInput,
+  RuntimeProgramExecutionValue,
   RuntimeProgramId,
+  RuntimeProgramKindValue,
+  RuntimeProgramPhaseValue,
   RuntimeProgramRegistry,
   RuntimeProgramRegistryInput,
   RuntimeProgramToken,
@@ -36,11 +39,17 @@ import {
   createRuntimeSession,
   defineRuntimeProgram,
   RuntimeError,
+  RuntimeProgramExecution,
+  RuntimeProgramKind,
+  RuntimeProgramPhase,
 } from '../../src';
 
 describe('runtime public surface', () => {
   it('从 package root 公开 Program、transaction、Session、diagnostic 与 RuntimeError', () => {
     expectTypeOf(defineRuntimeProgram).toBeFunction();
+    expectTypeOf(RuntimeProgramExecution).toBeObject();
+    expectTypeOf(RuntimeProgramKind).toBeObject();
+    expectTypeOf(RuntimeProgramPhase).toBeObject();
     expectTypeOf(createRuntimeProgramRegistry).toBeFunction();
     expectTypeOf(createRuntimeChangeSet).toBeFunction();
     expectTypeOf(createRuntimeOwnerInput).toBeFunction();
@@ -62,6 +71,9 @@ describe('runtime public surface', () => {
     expectTypeOf<RuntimeProgramContext>().toBeObject();
     expectTypeOf<RuntimeProgramDefinition<unknown, unknown, unknown>>().toBeObject();
     expectTypeOf<RuntimeProgramDefinitionInput<unknown, unknown, unknown, unknown>>().toBeObject();
+    expectTypeOf<RuntimeProgramExecutionValue>().toBeString();
+    expectTypeOf<RuntimeProgramKindValue>().toBeString();
+    expectTypeOf<RuntimeProgramPhaseValue>().toBeString();
     expectTypeOf<RuntimeProgramId>().toEqualTypeOf<Readonly<{ owner: string; key: string }>>();
     expectTypeOf<RuntimeProgramRegistry>().toBeObject();
     expectTypeOf<RuntimeProgramRegistryInput>().toBeObject();

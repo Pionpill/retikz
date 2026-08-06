@@ -4,7 +4,7 @@ import type { RuntimeSession } from '../../src/session';
 
 import { RuntimeError } from '../../src/error';
 import { defineRuntimeOwner } from '../../src/owner';
-import { defineRuntimeProgram } from '../../src/program';
+import { defineRuntimeProgram, RuntimeProgramKind, RuntimeProgramPhase } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
 import { createRuntimeSession } from '../../src/session';
 import { createRuntimeOwnerInput, createRuntimeOwnerUpdate } from '../../src/transaction';
@@ -101,7 +101,7 @@ describe('runtime session failure isolation', () => {
       programs: [],
       tracePhases: [],
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
       update: () => {
         throw cause;
       },
@@ -128,7 +128,7 @@ describe('runtime session failure isolation', () => {
     expect(thrown).toEqual(
       expect.objectContaining({
         code: 'RUNTIME_PROGRAM_UPDATE_FAILED',
-        phase: 'update',
+        phase: RuntimeProgramPhase.Update,
         program: { owner: 'counter', key: 'program' },
         cause,
       }),
@@ -166,7 +166,7 @@ describe('runtime session failure isolation', () => {
       programs: [],
       tracePhases: [],
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: view.snapshot(declared).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(declared).value }),
       update: (_previous, view) => {
         if (view.snapshot(declared).value === 2) {
           try {
@@ -175,7 +175,7 @@ describe('runtime session failure isolation', () => {
             if (!(error instanceof RuntimeError)) throw error;
             replayed = error;
           }
-          return { kind: 'incremental', artifact: 2 };
+          return { kind: RuntimeProgramKind.Incremental, artifact: 2 };
         }
         if (replayed === undefined) throw new Error('expected captured Runtime contract error');
         throw replayed;
@@ -192,7 +192,7 @@ describe('runtime session failure isolation', () => {
         baseRevision: session.revision(),
         owners: [createRuntimeOwnerUpdate(declared, 2)],
       }),
-    ).toEqual(expect.objectContaining({ revision: 1, outcome: 'incremental' }));
+    ).toEqual(expect.objectContaining({ revision: 1, outcome: RuntimeProgramKind.Incremental }));
 
     let thrown: unknown;
     try {
@@ -209,7 +209,7 @@ describe('runtime session failure isolation', () => {
     expect(thrown).toEqual(
       expect.objectContaining({
         code: 'RUNTIME_PROGRAM_UPDATE_FAILED',
-        phase: 'update',
+        phase: RuntimeProgramPhase.Update,
         program: { owner: 'declared', key: 'program' },
         cause: replayed,
       }),
@@ -240,13 +240,13 @@ describe('runtime session failure isolation', () => {
       programs: [],
       tracePhases: [],
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
       update: (_previous, view) => ({
-        kind: 'incremental',
+        kind: RuntimeProgramKind.Incremental,
         artifact: view.snapshot(owner).value,
       }),
       observeCommit: event => {
-        if (event.phase === 'initial') return;
+        if (event.phase === RuntimeProgramPhase.Initial) return;
         const activeSession = sessionRef.current;
         if (activeSession === undefined) throw new Error('test session was not assigned');
         const reentrantCalls = [
@@ -269,13 +269,13 @@ describe('runtime session failure isolation', () => {
       programs: [],
       tracePhases: [],
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
       update: (_previous, view) => ({
-        kind: 'incremental',
+        kind: RuntimeProgramKind.Incremental,
         artifact: view.snapshot(owner).value,
       }),
       observeCommit: event => {
-        if (event.phase === 'update') secondObserver(event);
+        if (event.phase === RuntimeProgramPhase.Update) secondObserver(event);
       },
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [second, first] });
@@ -331,7 +331,7 @@ describe('runtime session failure isolation', () => {
           phase: 'run',
           message: 'initial warning',
         });
-        return { kind: 'full', artifact: view.snapshot(owner).value };
+        return { kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value };
       },
       observeCommit: event => {
         observedPrefixes.push(event.diagnostics);
@@ -345,7 +345,7 @@ describe('runtime session failure isolation', () => {
       programs: [],
       tracePhases: [],
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
       observeCommit: event => {
         observedPrefixes.push(event.diagnostics);
         secondObserver(event);

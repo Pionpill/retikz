@@ -32,7 +32,7 @@ import {
   createSvgAnimationControls,
   resolvePointViaLayout,
 } from '../hydration';
-import { buildSvgDocument } from '../svg';
+import { buildSvgDocument, buildSvgFragment } from '../svg';
 import { buildSvgInspectionGroup } from '../svg/builders/inspection';
 import { mergeRenderHandlers } from './handlers';
 import { defineRetainedRenderer } from './renderer';
@@ -1543,10 +1543,28 @@ export const createBuiltinSvgRetainedRenderer = (
     const previousElement =
       currentInspectionElement ??
       (adoptedInspection instanceof host.ownerDocument.defaultView!.SVGElement ? adoptedInspection : undefined);
-    const candidateElement =
-      frame.inspection === null
-        ? undefined
-        : createSvgElement(host.ownerDocument, buildSvgInspectionGroup(frame.inspection));
+    let candidateElement: SVGElement | undefined;
+    try {
+      candidateElement =
+        frame.inspection === null
+          ? undefined
+          : createSvgElement(
+              host.ownerDocument,
+              buildSvgInspectionGroup(frame.inspection, (entryScene, entryIndex) =>
+                buildSvgFragment(entryScene, {
+                  idPrefix: `${options.idPrefix}-inspection-${entryIndex}`,
+                  animate: false,
+                }),
+              ),
+            );
+    } catch (cause) {
+      try {
+        runBestEffortCleanup([() => primaryToken.rollback(), () => primaryToken.dispose()]);
+      } catch {
+        // 辅助 Scene 物化错误保持为 prepare 的主因
+      }
+      throw cause;
+    }
     let committed = false;
     return Object.freeze({
       commit: () => {

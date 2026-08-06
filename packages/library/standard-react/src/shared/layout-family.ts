@@ -79,7 +79,10 @@ const resolveLayoutItemChild = (
     if (sceneSegment.index !== 0) {
       throw new Error('Standard LayoutItem inspection root must be relative to its sole IRChild');
     }
-    return Object.freeze({ locator: Object.freeze({ path }), tree: root.tree });
+    return Object.freeze({
+      locator: Object.freeze({ target: root.locator.target, path }),
+      tree: root.tree,
+    });
   });
   return {
     child: built.ir.children[0],
@@ -121,9 +124,9 @@ export const createReactLayoutInspectionRoots = (
 ): NonNullable<EmbeddableContribution['inspectionRoots']> =>
   Object.freeze([
     Object.freeze({
-      locator: Object.freeze({ path: [] }),
+      locator: Object.freeze({ target: 'composite', path: [] }),
       tree: Object.freeze({
-        ...(inspect === undefined ? {} : { policy: Object.freeze({ component: inspect }) }),
+        ...(inspect === undefined ? {} : { policy: Object.freeze({ self: inspect }) }),
         ...(children.every(child => child === null) ? {} : { children: Object.freeze(children) }),
       }),
     }),

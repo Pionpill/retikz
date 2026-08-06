@@ -1,6 +1,11 @@
 import type { PerformanceTraceRecord } from '@retikz/runtime';
 
-import { createRuntimeTraceReporter } from '@retikz/runtime';
+import {
+  createRuntimeTraceReporter,
+  PerformanceTraceOutcome,
+  PerformanceTracePhase,
+  PerformanceTraceUnit,
+} from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -21,7 +26,13 @@ describe('compileToScene performance trace', () => {
     const records: Array<PerformanceTraceRecord> = [];
     const trace = createRuntimeTraceReporter({
       owner: '@retikz/core',
-      phases: [{ phase: 'compile', unit: 'ir-child', outcomes: ['full'] }],
+      phases: [
+        {
+          phase: PerformanceTracePhase.Compile,
+          unit: PerformanceTraceUnit.IrChild,
+          outcomes: [PerformanceTraceOutcome.Full],
+        },
+      ],
       sink: record => records.push(record),
     });
 
@@ -39,9 +50,9 @@ describe('compileToScene performance trace', () => {
     expect(records).toEqual([
       {
         owner: '@retikz/core',
-        phase: 'compile',
-        unit: 'ir-child',
-        outcome: 'full',
+        phase: PerformanceTracePhase.Compile,
+        unit: PerformanceTraceUnit.IrChild,
+        outcome: PerformanceTraceOutcome.Full,
         visited: 3,
         reused: 0,
         changed: 3,
@@ -53,7 +64,13 @@ describe('compileToScene performance trace', () => {
     const records: Array<PerformanceTraceRecord> = [];
     const trace = createRuntimeTraceReporter({
       owner: '@retikz/core',
-      phases: [{ phase: 'compile', unit: 'ir-child', outcomes: ['full'] }],
+      phases: [
+        {
+          phase: PerformanceTracePhase.Compile,
+          unit: PerformanceTraceUnit.IrChild,
+          outcomes: [PerformanceTraceOutcome.Full],
+        },
+      ],
       sink: record => records.push(record),
     });
     const input = scene([]);
@@ -65,9 +82,9 @@ describe('compileToScene performance trace', () => {
     expect(records).toEqual([
       {
         owner: '@retikz/core',
-        phase: 'compile',
-        unit: 'ir-child',
-        outcome: 'full',
+        phase: PerformanceTracePhase.Compile,
+        unit: PerformanceTraceUnit.IrChild,
+        outcome: PerformanceTraceOutcome.Full,
         visited: 0,
         reused: 0,
         changed: 0,
@@ -79,7 +96,13 @@ describe('compileToScene performance trace', () => {
     const records: Array<PerformanceTraceRecord> = [];
     const trace = createRuntimeTraceReporter({
       owner: '@retikz/core',
-      phases: [{ phase: 'compile', unit: 'ir-child', outcomes: ['full'] }],
+      phases: [
+        {
+          phase: PerformanceTracePhase.Compile,
+          unit: PerformanceTraceUnit.IrChild,
+          outcomes: [PerformanceTraceOutcome.Full],
+        },
+      ],
       sink: record => records.push(record),
     });
     const composite = defineComposite({

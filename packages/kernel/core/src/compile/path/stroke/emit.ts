@@ -9,6 +9,7 @@ import type { PathEmitOptions, PathPrimitiveEmitResult } from '../types';
 
 import { resolveArrowRegistry } from '../../../providers';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
+import { cloneAndFreezeJson } from '../../../shared/json';
 import { CompileWarningCode } from '../../constants';
 import { fallbackMeasurer } from '../../text';
 import { normalizePathSteps } from '../host/relative';
@@ -25,6 +26,7 @@ import { isStrokeSegmentStep, lowerSegmentStep } from './segments';
 import { isStrokeShapeStep, lowerShapeStep } from './shapes';
 import { applyArrowShrinks } from './shrink';
 import { splitSubPathsForEndpointArrows } from './split';
+import { bboxCenter, buildPathInspectionTransforms } from './transform';
 
 /** 普通 path emit 所需的编译上下文 */
 export type EmitPathPrimitiveContext = {
@@ -311,6 +313,26 @@ export const emitPathPrimitive = (
   const shrinkStart = arrows.shrinkStart + (endpointSource.firstAutoBoundary ? arrows.boundaryOuterInsetStart : 0);
   const shrinkEnd = arrows.shrinkEnd + (endpointSource.lastAutoBoundary ? arrows.boundaryOuterInsetEnd : 0);
   applyArrowShrinks(commands, { shrinkStart, shrinkEnd, strokeWidth, round });
+
+  if (pathEmitOptions.captureInspectionSubject !== undefined) {
+    pathEmitOptions.captureInspectionSubject(
+      cloneAndFreezeJson(
+        {
+          commands,
+          transforms:
+            boundsPoints.length === 0
+              ? []
+              : buildPathInspectionTransforms({
+                  rotate: path.rotate,
+                  scale: path.scale,
+                  center: bboxCenter(boundsPoints),
+                  round,
+                }),
+        },
+        'Stroke Path inspection subject',
+      ),
+    );
+  }
 
   const endpointSpecs = pathEndpointArrowSpecs(arrows);
   const { primitive } = splitSubPathsForEndpointArrows(commands, baseProps, endpointSpecs);
