@@ -39,6 +39,41 @@ const highlight = definePathKind({
 
 `schema.shape.kind.value` 是 registry key。`kindOptions` 会先经过 `optionsSchema`，并保持 JSON-safe；definition 与 compile 函数只存在于运行时，不进入 IR。
 
+### 可选 Inspector
+
+需要为当前 Path kind 提供开发辅助内容时，把 settled subject schema 与 Inspector 一起放进同一个 Definition。下面复用标准描边编译，并把最终 commands 作为 subject；Inspector 返回普通 Node，而不是后端专用 DTO。
+
+```tsx
+const InspectInputSchema = z.strictObject({ summary: z.boolean().optional() });
+const InspectOptionsSchema = InspectInputSchema.transform(value => ({
+  summary: value.summary ?? true,
+}));
+
+const highlightInspector = defineInspector({
+  kind: 'path',
+  optionsInputSchema: InspectInputSchema,
+  optionsSchema: InspectOptionsSchema,
+  inspect: (subject: StrokePathInspectionSubject, context) =>
+    context.options.summary
+      ? {
+          type: 'node',
+          position: [0, 0],
+          text: `${subject.commands.length} commands`,
+          textColor: context.appearance.scopeColor,
+        }
+      : [],
+});
+
+const highlight = definePathKind({
+  schema: z.strictObject({ kind: z.literal('highlight') }),
+  inspectionSubjectSchema: StrokePathInspectionSubjectSchema,
+  inspector: highlightInspector,
+  compile: context => context.emitStroke(context.path, { includeInspectionSubject: true }),
+});
+```
+
+`inspectionSubjectSchema`、`inspector` 与非空 compile result 的 `inspectionSubject` 是同一条件分支，必须同时存在。Inspector 的 `optionsInputSchema` 接收 runtime sidecar 的稀疏输入，`optionsSchema` 负责生成完整 canonical options；`inspect()` 返回 `IRChild | ReadonlyArray<IRChild>`，没有 `outputSchema`。如果 compile 返回 `null`，Core 不读取 subject，也不调用 Inspector。
+
 ## 注入宿主
 
 React 通过 `<Layout pathKinds>` 注入；直接调用 core 时使用 `CompileOptions.pathKinds`。Path 只引用注册名与实例配置。
@@ -90,6 +125,9 @@ provider 可以完全创建新的 Scene primitive，也可以调用 `emitStroke`
 | Path 引用未注册 kind                 | 编译列出可用名称与 `options.pathKinds` 注入提示 |
 | `kindOptions` 不符合 schema          | 错误包含 kind 名和对应 IR 路径                  |
 | provider 返回 `null`                 | 该 Path 不产生图元                              |
+| subject schema 与 Inspector 只给一个 | `definePathKind` 立即拒绝                       |
+| 已选非空结果缺少 subject             | Inspector resolve 阶段 fail-loud                |
+| Inspector 返回非法 Core child        | 错误携 owner、occurrence 与 output index        |
 | `boundsPoints` 不覆盖真实输出边界    | 自动布局与 Path 级 rotate / scale 依据会失真    |
 
 自定义 kind 返回的是后端中立 Scene primitive，不能把 SVG element、Canvas 实例、ReactNode 或函数塞进结果，也不能要求 renderer 识别自定义 `kind`。
@@ -98,11 +136,22 @@ provider 可以完全创建新的 Scene primitive，也可以调用 `emitStroke`
 
 ### PathKindDefinition
 
-| 字段            | 类型                            | 默认值                   | 描述                                  |
-| --------------- | ------------------------------- | ------------------------ | ------------------------------------- |
-| `schema`        | `PathKindDefinition['schema']`  | —                        | 声明 Path 形态并提供 registry key     |
-| `optionsSchema` | `ZodType<IRJsonObject>`         | 原始 `kindOptions ?? {}` | 校验自定义实例配置                    |
-| `compile`       | `PathKindDefinition['compile']` | —                        | 为整条 Path 生成 Scene 图元与边界依据 |
+| 字段                      | 类型                               | 默认值                   | 描述                                  |
+| ------------------------- | ---------------------------------- | ------------------------ | ------------------------------------- |
+| `schema`                  | `PathKindDefinition['schema']`     | —                        | 声明 Path 形态并提供 registry key     |
+| `optionsSchema`           | `ZodType<IRJsonObject>`            | 原始 `kindOptions ?? {}` | 校验自定义实例配置                    |
+| `compile`                 | `PathKindDefinition['compile']`    | —                        | 为整条 Path 生成 Scene 图元与边界依据 |
+| `inspectionSubjectSchema` | `ZodType<JsonValue>`               | —                        | 与 Inspector 共同校验最终 subject     |
+| `inspector`               | `InspectorDefinition<'path', ...>` | —                        | 把已校验 subject 转为普通 Core 子元素 |
+
+### InspectorDefinition
+
+| 字段                 | 类型                             | 默认值 | 描述                                          |
+| -------------------- | -------------------------------- | ------ | --------------------------------------------- |
+| `kind`               | `'path'`                         | —      | 声明当前 owner family                         |
+| `optionsInputSchema` | strict `ZodObject`               | —      | 校验可为空的 runtime 稀疏输入                 |
+| `optionsSchema`      | `ZodType<IRJsonObject>`          | —      | 把稀疏输入解析为完整 JSON-safe options        |
+| `inspect`            | `InspectorDefinition['inspect']` | —      | 返回一个普通 Core child 或稠密只读 child 数组 |
 
 ### compile 上下文
 
@@ -115,10 +164,11 @@ provider 可以完全创建新的 Scene primitive，也可以调用 `emitStroke`
 
 ### PathKindCompileResult
 
-| 字段           | 类型                    | 默认值 | 描述                                   |
-| -------------- | ----------------------- | ------ | -------------------------------------- |
-| `primitives`   | `Array<ScenePrimitive>` | —      | 当前 Path 局部坐标中的实际输出         |
-| `boundsPoints` | `Array<Position>`       | —      | 自动布局与 Path 级变换使用的关键边界点 |
+| 字段                | 类型                    | 默认值 | 描述                                               |
+| ------------------- | ----------------------- | ------ | -------------------------------------------------- |
+| `primitives`        | `Array<ScenePrimitive>` | —      | 当前 Path 局部坐标中的实际输出                     |
+| `boundsPoints`      | `Array<Position>`       | —      | 自动布局与 Path 级变换使用的关键边界点             |
+| `inspectionSubject` | `TInspectionSubject`    | —      | Definition 声明 Inspector 时必填的 settled subject |
 
 ## 相关
 

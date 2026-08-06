@@ -18,6 +18,8 @@ type SpyCanvasContext = Pick<
   | 'beginPath'
   | 'clearRect'
   | 'clip'
+  | 'createLinearGradient'
+  | 'createPattern'
   | 'fill'
   | 'fillText'
   | 'lineTo'
@@ -61,6 +63,14 @@ const createSpyCanvasContext = (): SpyCanvasContext => {
     beginPath: record('beginPath'),
     clearRect: record('clearRect'),
     clip: record('clip'),
+    createLinearGradient: (...args: Array<unknown>) => {
+      record('createLinearGradient')(...args);
+      return { addColorStop: vi.fn() };
+    },
+    createPattern: (...args: Array<unknown>) => {
+      record('createPattern')(...args);
+      return { setTransform: vi.fn() };
+    },
     fill: record('fill'),
     fillText: record('fillText'),
     lineTo: record('lineTo'),
@@ -102,85 +112,109 @@ describe('renderToCanvas 规格', () => {
     const inspection: InspectionPlane = {
       entries: [
         {
+          owner: { kind: 'pathKind', name: 'stroke' },
           occurrence: { sourcePath: '$.children[0]', expansionPath: [] },
           colorScope: 1,
           transform: [1, 0, 0, 1, 12, 8],
-          primitives: [
-            {
-              kind: 'line',
-              role: 'layout.guide',
-              x1: 0,
-              y1: 0,
-              x2: 20,
-              y2: 0,
-              tone: 'scope',
-              lineStyle: 'dotted',
-            },
-            {
-              kind: 'rect',
-              role: 'layout.gap',
-              x: 0,
-              y: 2,
-              width: 20,
-              height: 6,
-              presentation: 'fill',
-              tone: 'scope',
-              fillPattern: 'crosshatch',
-              opacity: 0.5,
-            },
-            {
-              kind: 'rect',
-              role: 'layout.overflow',
-              x: 22,
-              y: 2,
-              width: 4,
-              height: 6,
-              presentation: 'fill',
-              tone: 'warning',
-              fillPattern: 'solid',
-            },
-          ],
+          scene: {
+            layout: { x: 0, y: 0, width: 26, height: 8 },
+            resources: [
+              {
+                kind: 'paint',
+                id: 'paint-1',
+                spec: {
+                  kind: 'linearGradient',
+                  stops: [
+                    { offset: 0, color: '#7c3aed' },
+                    { offset: 1, color: '#ffffff' },
+                  ],
+                },
+              },
+            ],
+            primitives: [
+              {
+                type: 'path',
+                commands: [
+                  { kind: 'move', to: [0, 0] },
+                  { kind: 'line', to: [20, 0] },
+                ],
+                stroke: '#7c3aed',
+                dashPattern: [1, 4],
+              },
+              {
+                type: 'rect',
+                x: 22,
+                y: 2,
+                width: 4,
+                height: 6,
+                fill: { kind: 'resourceRef', id: 'paint-1' },
+              },
+            ],
+          },
+        },
+        {
+          owner: { kind: 'composite', namespace: 'test', type: 'layout' },
+          occurrence: { sourcePath: '$.children[1]', expansionPath: [] },
+          colorScope: 2,
+          transform: [1, 0, 0, 1, -4, 6],
+          scene: {
+            layout: { x: 0, y: 0, width: 12, height: 12 },
+            resources: [
+              {
+                kind: 'paint',
+                id: 'paint-1',
+                spec: { kind: 'pattern', shape: 'lines', size: 8 },
+                tile: {
+                  size: 8,
+                  motif: [
+                    {
+                      type: 'path',
+                      commands: [
+                        { kind: 'move', to: [0, 0] },
+                        { kind: 'line', to: [8, 8] },
+                      ],
+                      stroke: '#dc2626',
+                      strokeWidth: 1,
+                    },
+                  ],
+                },
+              },
+            ],
+            primitives: [
+              {
+                type: 'rect',
+                x: 0,
+                y: 0,
+                width: 12,
+                height: 12,
+                fill: { kind: 'resourceRef', id: 'paint-1' },
+              },
+            ],
+          },
         },
       ],
     };
+    const offscreen = createSpyCanvasContext();
+    Object.assign(offscreen, { canvas: {} });
 
-    renderFrameToCanvas(canvas, { primary: frameScene, inspection }, { devicePixelRatio: 2 });
+    renderFrameToCanvas(
+      canvas,
+      { primary: frameScene, inspection },
+      {
+        devicePixelRatio: 2,
+        createOffscreen: () => offscreen as unknown as CanvasRenderingContext2D,
+      },
+    );
 
     const rectIndex = context.calls.findIndex(call => call.name === 'rect');
     const lineIndex = context.calls.findIndex(call => call.name === 'lineTo');
     expect(rectIndex).toBeGreaterThanOrEqual(0);
     expect(lineIndex).toBeGreaterThan(rectIndex);
-    const clipIndex = context.calls.findIndex(call => call.name === 'clip');
-    const patternSaveIndex = context.calls.slice(0, clipIndex).findLastIndex(call => call.name === 'save');
-    const hatchStrokeIndex = context.calls.findIndex((call, index) => call.name === 'stroke' && index > clipIndex);
-    const patternRestoreIndex = context.calls.findIndex((call, index) => call.name === 'restore' && index > clipIndex);
     const fillIndices = context.calls.flatMap((call, index) => (call.name === 'fill' ? [index] : []));
-    expect(clipIndex).toBeGreaterThan(patternSaveIndex);
-    expect(fillIndices).toHaveLength(2);
-    expect(fillIndices[0]).toBeLessThan(patternSaveIndex);
-    expect(fillIndices[1]).toBeGreaterThan(patternRestoreIndex);
-    expect(hatchStrokeIndex).toBeGreaterThan(clipIndex);
-    expect(patternRestoreIndex).toBeGreaterThan(hatchStrokeIndex);
-    expect(
-      context.calls
-        .slice(clipIndex, hatchStrokeIndex)
-        .filter(call => call.name === 'moveTo' || call.name === 'lineTo')
-        .map(call => [call.name, ...call.args]),
-    ).toEqual([
-      ['moveTo', 4.5, 7.5],
-      ['lineTo', 9.5, 2.5],
-      ['moveTo', 16.5, 7.5],
-      ['lineTo', 19.5, 4.5],
-      ['moveTo', 14.5, 2.5],
-      ['lineTo', 19.5, 7.5],
-      ['moveTo', 2.5, 2.5],
-      ['lineTo', 7.5, 7.5],
-    ]);
-    expect(context.calls[hatchStrokeIndex]).toMatchObject({
-      globalAlpha: 0.275,
-      lineWidth: 1,
-      strokeStyle: '#7c3aed',
-    });
+    expect(fillIndices).toHaveLength(3);
+    expect(context.calls.some(call => call.name === 'createLinearGradient')).toBe(true);
+    expect(context.calls.some(call => call.name === 'createPattern')).toBe(true);
+    expect(context.calls).toContainEqual(expect.objectContaining({ name: 'transform', args: [1, 0, 0, 1, 12, 8] }));
     expect(context.calls.filter(call => call.name === 'setTransform')).toHaveLength(2);
     expect(context.calls.filter(call => call.name === 'setTransform')[1].args).toEqual([3, 0, 0, 3, -30, -60]);
   });

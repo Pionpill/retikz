@@ -9,7 +9,13 @@ import type {
 } from '@retikz/core';
 import type { RuntimeCommitParticipant, RuntimePreparedCommit, RuntimeSession } from '@retikz/runtime';
 
-import { defineRuntimeCommitParticipant } from '@retikz/runtime';
+import {
+  defineRuntimeCommitParticipant,
+  PerformanceTraceOutcome,
+  PerformanceTracePhase,
+  PerformanceTraceUnit,
+  RuntimeProgramPhase,
+} from '@retikz/runtime';
 
 import type { AnimationControls } from '../animation';
 import type { RenderRuntimeConfig } from './config';
@@ -457,13 +463,21 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
     programs: [captured.coreProgram],
     revisionPolicy: 'continuous',
     tracePhases: [
-      { phase: 'commit', unit: 'scene-primitive', outcomes: ['full'] },
-      { phase: 'update', unit: 'scene-change', outcomes: ['full', 'incremental', 'fallback'] },
+      {
+        phase: PerformanceTracePhase.Commit,
+        unit: PerformanceTraceUnit.ScenePrimitive,
+        outcomes: [PerformanceTraceOutcome.Full],
+      },
+      {
+        phase: PerformanceTracePhase.Update,
+        unit: PerformanceTraceUnit.SceneChange,
+        outcomes: [PerformanceTraceOutcome.Full, PerformanceTraceOutcome.Incremental, PerformanceTraceOutcome.Fallback],
+      },
     ],
     prepare: (candidate, context) => {
       const core = candidate.artifact(captured.coreProgram).value;
       const config: RenderRuntimeConfig = candidate.snapshot(RenderRuntimeOwnerDefinition).value;
-      if (candidate.phase === 'initial') {
+      if (candidate.phase === RuntimeProgramPhase.Initial) {
         validateSceneRuntimeSnapshot(core.snapshot);
         const frame = Object.freeze({ primary: core.snapshot, inspection: core.output.result.inspection });
         if (
@@ -488,9 +502,9 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
             committedFrame = frame;
             const count = countPrimitives(core.snapshot.scene.primitives);
             context.trace.report({
-              phase: 'commit',
-              unit: 'scene-primitive',
-              outcome: 'full',
+              phase: PerformanceTracePhase.Commit,
+              unit: PerformanceTraceUnit.ScenePrimitive,
+              outcome: PerformanceTraceOutcome.Full,
               visited: count,
               reused: 0,
               changed: count,
@@ -537,9 +551,13 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
           rendererToken.commit();
           committedFrame = nextFrame;
           context.trace.report({
-            phase: 'update',
-            unit: 'scene-change',
-            outcome: fallback ? 'fallback' : directReplace ? 'full' : 'incremental',
+            phase: PerformanceTracePhase.Update,
+            unit: PerformanceTraceUnit.SceneChange,
+            outcome: fallback
+              ? PerformanceTraceOutcome.Fallback
+              : directReplace
+                ? PerformanceTraceOutcome.Full
+                : PerformanceTraceOutcome.Incremental,
             visited: rendererPatch.operations.length,
             reused: 0,
             changed: rendererPatch.operations.length,

@@ -1,4 +1,4 @@
-import type { CompositeInspectionAuthoringRoot, InspectOptions, IRScene, PathKindDefinition } from '@retikz/core';
+import type { AnyPathKindDefinition, InspectionAuthoringRoot, InspectOptions, IRScene } from '@retikz/core';
 import type { EmbeddableContributionRecord } from '@retikz/react';
 import type { FC, ReactElement, ReactNode } from 'react';
 
@@ -58,12 +58,12 @@ export type PreviewIR = {
   ir: IRScene;
   contributions: Array<EmbeddableContributionRecord>;
   /** React authoring 收集的组件 occurrence 检查旁路数据 */
-  inspectionRoots: Array<CompositeInspectionAuthoringRoot>;
+  inspectionRoots: Array<InspectionAuthoringRoot>;
   /** `<Layout inspect>` 声明的整图检查策略 */
   inspect?: InspectOptions;
   width?: number | string;
   height?: number | string;
-  pathKinds?: ReadonlyArray<PathKindDefinition>;
+  pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
 };
 
 /** 从 React demo 派生 preview IR。 */
@@ -86,7 +86,7 @@ export const buildPreviewIR = (Component: FC): PreviewIR => {
       : {
           ir: props.ir,
           contributions: [] as Array<EmbeddableContributionRecord>,
-          inspectionRoots: [] as Array<CompositeInspectionAuthoringRoot>,
+          inspectionRoots: [] as Array<InspectionAuthoringRoot>,
         };
   const isLayout = rootElement?.type === Layout;
   const viewBox = isLayout ? rootElement.props.viewBox : undefined;
@@ -97,7 +97,7 @@ export const buildPreviewIR = (Component: FC): PreviewIR => {
   const ownsOutputSize = isLayout || isEmbeddableRoot;
   const width = ownsOutputSize ? (props.width as number | string | undefined) : undefined;
   const height = ownsOutputSize ? (props.height as number | string | undefined) : undefined;
-  const pathKinds = isLayout ? (props.pathKinds as ReadonlyArray<PathKindDefinition> | undefined) : undefined;
+  const pathKinds = isLayout ? (props.pathKinds as ReadonlyArray<AnyPathKindDefinition> | undefined) : undefined;
   const inspect = isLayout ? props.inspect : undefined;
   return {
     ir,

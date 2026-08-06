@@ -14,6 +14,8 @@ import type {
   TextPrim,
 } from '@retikz/core';
 
+import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '@retikz/runtime';
+
 import type { CanvasWarning, DrawOptions, UnsupportedCanvasFeature } from './types';
 
 import {
@@ -858,9 +860,9 @@ export const drawScene = (ctx: CanvasRenderingContext2D, scene: Scene, options: 
   if (options.trace !== undefined) {
     const visited = countScenePrimitiveOccurrences(scene.primitives);
     options.trace.report({
-      phase: 'commit',
-      unit: 'scene-primitive',
-      outcome: 'full',
+      phase: PerformanceTracePhase.Commit,
+      unit: PerformanceTraceUnit.ScenePrimitive,
+      outcome: PerformanceTraceOutcome.Full,
       visited,
       reused: 0,
       changed: visited,

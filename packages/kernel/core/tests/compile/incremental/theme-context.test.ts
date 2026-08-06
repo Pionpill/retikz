@@ -4,6 +4,7 @@ import {
   createRuntimeOwnerUpdate,
   createRuntimeProgramRegistry,
   createRuntimeSession,
+  RuntimeProgramKind,
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -64,7 +65,7 @@ describe('Theme retained invalidation', () => {
 
     const update = runUpdate(initial, next);
 
-    expect(update.result.outcome).toBe('fallback');
+    expect(update.result.outcome).toBe(RuntimeProgramKind.Fallback);
     expect(update.actual).toEqual(update.expected);
   });
 
@@ -89,7 +90,7 @@ describe('Theme retained invalidation', () => {
 
     const update = runUpdate(initial, next);
 
-    expect(update.result.outcome).toBe('fallback');
+    expect(update.result.outcome).toBe(RuntimeProgramKind.Fallback);
     expect(update.actual).toEqual(update.expected);
   });
 });

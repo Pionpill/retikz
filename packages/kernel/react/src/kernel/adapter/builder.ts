@@ -1,7 +1,7 @@
 import type {
-  CompositeInspectionAuthoringRoot,
-  CompositeInspectionAuthoringTree,
-  CompositeInspectionChildForest,
+  InspectionAuthoringRoot,
+  InspectionAuthoringTree,
+  InspectionChildForest,
   InspectOptions,
   IRArrowMark,
   IRChild,
@@ -599,7 +599,7 @@ const buildCoordinateFromProps = (props: CoordinateProps): IRChild => ({
  */
 type BuildContext = {
   contributions: Array<EmbeddableContributionRecord>;
-  inspectionRoots: Array<CompositeInspectionAuthoringRoot>;
+  inspectionRoots: Array<InspectionAuthoringRoot>;
   inspectionPath: Array<SceneInspectionAuthoringPathSegment | ScopeInspectionAuthoringPathSegment>;
   inheritedInspection?: InspectOptions;
   embeddables?: ReadonlyArray<EmbeddableTier2Adapter>;
@@ -607,9 +607,9 @@ type BuildContext = {
 
 /** 把 ancestor Scope policy 合入一个 embeddable root tree */
 const inheritInspectionTree = (
-  tree: CompositeInspectionAuthoringTree,
+  tree: InspectionAuthoringTree,
   inherited: InspectOptions | undefined,
-): CompositeInspectionAuthoringTree => {
+): InspectionAuthoringTree => {
   const merged = mergeInspectOptions(inherited, tree.policy?.inherited);
   if (merged === undefined) return tree;
   return Object.freeze({
@@ -631,25 +631,46 @@ const inspectionChildPath = (
 const collectContributionInspectionRoots = (
   context: BuildContext,
   index: number,
-  forest: CompositeInspectionChildForest | undefined,
+  forest: InspectionChildForest | undefined,
 ): void => {
   if (forest === undefined) return;
   const basePath = inspectionChildPath(context, index);
   const sceneSegment = basePath[0] as SceneInspectionAuthoringPathSegment;
   const scopePath = basePath.slice(1) as Array<ScopeInspectionAuthoringPathSegment>;
   forest.forEach(root => {
-    const path: CompositeInspectionAuthoringRoot['locator']['path'] = [
-      sceneSegment,
-      ...scopePath,
-      ...root.locator.path,
-    ];
+    const path: InspectionAuthoringRoot['locator']['path'] = [sceneSegment, ...scopePath, ...root.locator.path];
     context.inspectionRoots.push(
       Object.freeze({
-        locator: Object.freeze({ path }),
+        locator: Object.freeze({ target: root.locator.target, path }),
         tree: inheritInspectionTree(root.tree, context.inheritedInspection),
       }),
     );
   });
+};
+
+/** 为当前 authored Path 收集 occurrence-local Inspector sidecar */
+const collectPathInspectionRoot = (context: BuildContext, index: number, props: PathProps): void => {
+  if (props.inspect === undefined) return;
+  const authoredPath = inspectionChildPath(context, index);
+  const [sceneSegment, ...scopePath] = authoredPath;
+  if (
+    sceneSegment.kind !== 'sceneChild' ||
+    !scopePath.every((segment): segment is ScopeInspectionAuthoringPathSegment => segment.kind === 'scopeChild')
+  ) {
+    throw new Error('internal: React Path inspection path must start at a Scene child');
+  }
+  const path: InspectionAuthoringRoot['locator']['path'] = [sceneSegment, ...scopePath];
+  context.inspectionRoots.push(
+    Object.freeze({
+      locator: Object.freeze({ target: 'path', path }),
+      tree: Object.freeze({
+        policy: Object.freeze({
+          ...(context.inheritedInspection === undefined ? {} : { inherited: context.inheritedInspection }),
+          self: props.inspect,
+        }),
+      }),
+    }),
+  );
 };
 
 /** `<Scope>` props → IRScope；inspect 只进入 authoring sidecar，其余字段与 children 进入 canonical IR */
@@ -708,7 +729,15 @@ const readSceneChildren = (children: ReactNode, ctx?: BuildContext): Array<IRChi
           out.push(buildNodeFromProps(child.props as NodeProps));
           return;
         case TIKZ_PATH:
-          out.push(buildPathFromProps(child.props as PathProps));
+          {
+            const props = child.props as PathProps;
+            const index = out.length;
+            out.push(buildPathFromProps(props));
+            if (props.inspect !== undefined) {
+              if (ctx === undefined) throw new Error('internal: Path inspection context is unavailable');
+              collectPathInspectionRoot(ctx, index, props);
+            }
+          }
           return;
         case TIKZ_COORDINATE:
           out.push(buildCoordinateFromProps(child.props as CoordinateProps));
@@ -800,10 +829,10 @@ export const buildIRWithContributions = (
 ): {
   ir: IRScene;
   contributions: Array<EmbeddableContributionRecord>;
-  inspectionRoots: Array<CompositeInspectionAuthoringRoot>;
+  inspectionRoots: Array<InspectionAuthoringRoot>;
 } => {
   const contributions: Array<EmbeddableContributionRecord> = [];
-  const inspectionRoots: Array<CompositeInspectionAuthoringRoot> = [];
+  const inspectionRoots: Array<InspectionAuthoringRoot> = [];
   const sceneChildren = readSceneChildren(children, {
     contributions,
     inspectionRoots,

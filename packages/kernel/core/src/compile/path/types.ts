@@ -1,9 +1,9 @@
 ﻿import type { PathGeneratorDefinition, Transform } from '../../contract';
-import type { ScenePrimitive } from '../../contract';
+import type { ScenePrimitive, StrokePathInspectionSubject } from '../../contract';
 import type { IRPosition } from '../../schemas';
 import type { PaintResolver } from '../resource';
 import type { LowerTex } from '../text';
-import type { CompileWarning } from '../warning';
+import type { CompileWarningInput } from '../warning';
 import type { ResolvedArrowRegistry } from './stroke/shrink';
 
 /** path emit 阶段产出的 Scene primitive 与 bbox 采样点 */
@@ -20,7 +20,7 @@ export type PathEmitOptions = {
    * 警告收集器（由 compileToScene 传入）
    * 缺省时不发出警告
    */
-  onWarn?: (warning: CompileWarning) => void;
+  onWarn?: (warning: CompileWarningInput) => void;
   /**
    * 当前 path 在 IR 中的 locator 前缀（如 `'children[3].path'`）
    * @default 'path'
@@ -41,4 +41,6 @@ export type PathEmitOptions = {
   lowerTex?: LowerTex;
   /** preset 与 rem 字号解析的根字号 */
   rootFontSize?: number;
+  /** 仅在 owner 明确请求时接收最终 settled command snapshot */
+  captureInspectionSubject?: (subject: StrokePathInspectionSubject) => void;
 };

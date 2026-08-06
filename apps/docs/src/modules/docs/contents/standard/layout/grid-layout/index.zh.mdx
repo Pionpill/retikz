@@ -91,7 +91,7 @@ GridLayout 使用固定的物理 x→y 求解顺序：
 | ---------- | --------------------------------------- | ------ | --------------------------------------------------------------------------------------- |
 | `inspect?` | `boolean` \| `GridLayoutInspectOptions` | 继承   | 省略时继承 Layout / 最近 Scope；`false` 只关闭当前 occurrence，且不会关闭或开启嵌套布局 |
 
-对象形式可分别控制 `tracks`、`cells`、固定 `gaps`、`distributedSpace` 与 `spans`。完整通用字段和全图 / Scope 策略见[运行时参考](/standard/layout/reference/runtime#布局检查器)。
+对象形式可分别控制 `tracks`、`cells`、固定 `gaps`、`distributedSpace` 与 `spans`。轨道、单元格与跨轨标记输出普通 Core Path，固定 gap 使用普通 pattern paint，自由空间只保留虚线周界。完整通用字段和全图 / Scope 策略见[运行时参考](/standard/layout/reference/runtime#布局检查器)。
 
 ### `GridLayoutInput`
 

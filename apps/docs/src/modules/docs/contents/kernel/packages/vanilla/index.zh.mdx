@@ -199,7 +199,7 @@ mount(svgRoot, spec, {
 
 `figure()` 只描述图；`output` 控制显示尺寸和资源 id，`compile` 注入 Core 编译能力，`inspect` 是整张图的 runtime-only 布局检查策略，`animation` 控制播放或截帧，`canvas` 只给 Canvas mount 使用。`compile` 的公开类型显式排除 `inspection`，避免与顶层 `inspect` 提交两份冲突策略。`runtime.mode` 默认是 `retained`，`runtime.updateStrategy` 默认是 `auto`；`rendererFactory` 只在 retained IR / plain spec mount 中替换内置 factory。static 与 `updateStrategy` / `rendererFactory` 互斥，非法 mode、primitive 或 accessor 都会在创建 DOM 前抛 `RETAINED_RUNTIME_INPUT_INVALID`。
 
-Plain spec 还支持 `VanillaScopeSpec.inspect` 的 authored 子树策略，以及每个 `VanillaEmbedSpec.inspect` 的 occurrence-local 策略；Standard 的 `flexLayout()` / `gridLayout()` / `overlayLayout()` 第三个参数提供精确 family 类型。Normalization 只生成 Core authored sidecar，不把这些字段写入 `IRScope` 或 embed props。retained 更新改变 sidecar 时会完整创建候选 Session，成功后原子替换并释放旧 Session；失败时保留旧 frame。
+Plain spec 还支持 `VanillaScopeSpec.inspect` 的 authored 子树策略、`VanillaEmbedSpec.inspect` 的 Composite-local 策略，以及 `VanillaPathSpec.inspect` 的 Path-local 策略。`path({ way: [...], inspect: true })` 会在 normalization 时剥离该字段并生成 `target:'path' + policy.self` sidecar；对象形式保留第三方 Path kind 的开放字段，由 owner schema 统一校验。Standard 的 `flexLayout()` / `gridLayout()` / `overlayLayout()` 第三个参数继续提供精确 family 类型。Normalization 不把这些字段写入最终 Core IR。retained 更新改变 sidecar 时会完整创建候选 Session，成功后原子替换并释放旧 Session；失败时保留旧 frame。
 
 `RenderToStringOptions`、`StaticMountOptions`、`StaticMountCanvasOptions` 与 `StaticMountUnifiedOptions` 是 SSR / 预编译 Scene 的既有 static 配置，继续拒绝整个 `runtime` 字段。raw-input static 则使用 `RawStaticMountOptions` / `RawStaticMountCanvasOptions`，必须显式传 `runtime: { mode: 'static' }`。
 
@@ -287,6 +287,7 @@ plain-spec retained update 可以替换同一 composite key/schema/执行分支�
 | `CommonOptions`                 | type          | 输出、compile、根 inspect、动画与 adapter 配置 |
 | `VanillaFigureSpec`             | type          | 可携带根 `theme` 的 version 1 plain spec       |
 | `VanillaScopeSpec`              | type          | 可携带局部 Theme 与 authored inspect 的 Scope  |
+| `VanillaPathSpec`               | type          | 可携带 occurrence-local `inspect` 的 Core Path |
 | `VanillaEmbedSpec`              | type          | 可携带 occurrence-local inspect 的 Tier 2 spec |
 | `isVanillaFigureSpec`           | normalization | 判断输入是否为 version 1 plain spec            |
 | `normalizeFigureSpec`           | normalization | 生成 Core IR、composites 与 runtime metadata   |

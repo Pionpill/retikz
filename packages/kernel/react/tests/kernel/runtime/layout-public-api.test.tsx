@@ -1,5 +1,7 @@
+import { definePathKind } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, expectTypeOf, it } from 'vitest';
+import { z } from 'zod';
 
 import type { LayoutProps, LayoutRuntimeOptions } from '../../../src';
 
@@ -28,5 +30,17 @@ describe('Layout public API', () => {
       mode: 'static' as const,
       updateStrategy: 'full' as const,
     }).not.toMatchTypeOf<LayoutRuntimeOptions>();
+  });
+
+  it('pathKinds 接受保留精确 options 泛型的自定义 Definition', () => {
+    const optionsSchema = z.strictObject({ width: z.number().positive() });
+    const definition = definePathKind<z.infer<typeof optionsSchema>>({
+      schema: z.strictObject({ kind: z.literal('precise-options') }),
+      optionsSchema,
+      compile: context => context.emitStroke({ ...context.path, strokeWidth: context.options.width }),
+    });
+    const pathKinds: NonNullable<LayoutProps['pathKinds']> = [definition];
+
+    expect(pathKinds).toEqual([definition]);
   });
 });

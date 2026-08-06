@@ -3,6 +3,12 @@ import type { RuntimeProgramId } from '../identity';
 import type { RuntimeChangeSet, RuntimeOwnerDefinition, RuntimeOwnerToken, RuntimeRevision } from '../owner';
 import type { RuntimeTracePhaseDefinition, RuntimeTraceReporter } from '../trace';
 import type { RuntimeSnapshot } from '../transaction';
+import type {
+  RuntimeProgramExecutionValue,
+  RuntimeProgramKind,
+  RuntimeProgramKindValue,
+  RuntimeProgramPhase,
+} from './constants';
 
 declare const RuntimeProgramTokenBrand: unique symbol;
 declare const RuntimeProgramType: unique symbol;
@@ -48,7 +54,7 @@ export type RuntimeProgramTraceReporter = Pick<RuntimeTraceReporter, 'owner' | '
 /** Program callback 可用的 trace 与 warning context */
 export type RuntimeProgramContext = Readonly<{
   /** 当前 callback 的实际执行方式 */
-  execution: 'full' | 'incremental' | 'fallback';
+  execution: RuntimeProgramExecutionValue;
   /** 固定绑定 Program owner 的 trace reporter */
   trace: RuntimeProgramTraceReporter;
   /** 追加由 Runtime 统一归属的 commit-safe warning */
@@ -78,7 +84,7 @@ export type RuntimeCandidateView =
   | (RuntimeCandidateLookup &
       Readonly<{
         /** initial session 的 full prepare */
-        phase: 'initial';
+        phase: typeof RuntimeProgramPhase.Initial;
         /** initial candidate 不存在 base revision */
         baseRevision?: never;
         /** candidate 完整发布后使用的 revision */
@@ -87,7 +93,7 @@ export type RuntimeCandidateView =
   | (RuntimeCandidateLookup &
       Readonly<{
         /** 已有 session 的 update prepare */
-        phase: 'update';
+        phase: typeof RuntimeProgramPhase.Update;
         /** update 基于的 current revision */
         baseRevision: RuntimeRevision;
         /** candidate 完整发布后使用的 revision */
@@ -97,7 +103,7 @@ export type RuntimeCandidateView =
 /** full Program 执行产生的新 artifact 输入 */
 export type RuntimeRunResult<TArtifactInput> = Readonly<{
   /** full 执行判别字段 */
-  kind: 'full';
+  kind: typeof RuntimeProgramKind.Full;
   /** 交给 artifact capture 的新输入 */
   artifact: TArtifactInput;
 }>;
@@ -106,17 +112,17 @@ export type RuntimeRunResult<TArtifactInput> = Readonly<{
 export type RuntimeUpdateResult<TArtifactInput> =
   | Readonly<{
       /** incremental 执行判别字段 */
-      kind: 'incremental';
+      kind: typeof RuntimeProgramKind.Incremental;
       /** 交给 artifact capture 的新输入 */
       artifact: TArtifactInput;
     }>
   | Readonly<{
       /** 复用 committed artifact 的判别字段 */
-      kind: 'bailout';
+      kind: typeof RuntimeProgramKind.Bailout;
     }>
   | Readonly<{
       /** 放弃增量路径并执行 full run 的判别字段 */
-      kind: 'fallback';
+      kind: typeof RuntimeProgramKind.Fallback;
       /** 随成功 full 结果提交的可选 warnings */
       diagnostics?: ReadonlyArray<RuntimeProgramWarningInput>;
     }>;
@@ -137,13 +143,13 @@ export type RuntimeProgramArtifactDefinitionInput<TArtifactInput, TArtifact, TPr
 export type RuntimeCommitEvent<TPublicRead> =
   | Readonly<{
       /** 初始提交判别字段 */
-      phase: 'initial';
+      phase: typeof RuntimeProgramPhase.Initial;
       /** 初始提交不存在 base revision */
       baseRevision?: never;
       /** 已发布的 session revision */
       revision: RuntimeRevision;
       /** 初始 Program 固定使用 full outcome */
-      outcome: 'full';
+      outcome: typeof RuntimeProgramKind.Full;
       /** 已发布 artifact 的 public Snapshot */
       artifact: RuntimeSnapshot<TPublicRead>;
       /** publish 前冻结的 commit-safe diagnostics */
@@ -151,13 +157,13 @@ export type RuntimeCommitEvent<TPublicRead> =
     }>
   | Readonly<{
       /** 更新提交判别字段 */
-      phase: 'update';
+      phase: typeof RuntimeProgramPhase.Update;
       /** update 基于的 previous revision */
       baseRevision: RuntimeRevision;
       /** 已发布的 next revision */
       revision: RuntimeRevision;
       /** 当前 Program 的实际执行结果 */
-      outcome: 'full' | 'incremental' | 'fallback';
+      outcome: Exclude<RuntimeProgramKindValue, typeof RuntimeProgramKind.Bailout>;
       /** 已发布 artifact 的 public Snapshot */
       artifact: RuntimeSnapshot<TPublicRead>;
       /** publish 前冻结的 commit-safe diagnostics */

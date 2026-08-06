@@ -12,7 +12,7 @@ import {
   PathLineCap,
   PathLineJoin,
 } from '../schemas';
-import { CompositeContractError, isCompositeContractError } from './probe-failure';
+import { CompositeContractError, isCompositeContractError, isFatalProbeError } from './probe-failure';
 
 /** provider output runtime validation 使用的 marker 子集验证入口 */
 export type MarkerPrimitiveValidator = (owner: string, marker: unknown) => ReadonlyArray<MarkerPrimitive>;
@@ -22,7 +22,7 @@ export const withProviderOutputValidationBoundary = <T>(owner: string, validate:
   try {
     return validate();
   } catch (cause) {
-    if (isCompositeContractError(cause)) throw cause;
+    if (isCompositeContractError(cause) || isFatalProbeError(cause)) throw cause;
     throw new CompositeContractError(`${owner} output validation failed.`, { cause });
   }
 };

@@ -69,19 +69,19 @@ React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 De
 
 ## 布局检查器
 
-布局检查器（Layout Inspector）是运行时开发辅助层，不进入 Standard IR，也不修改类型化布局产物。SVG 把它绘制在主图之后的 `pointer-events="none"` 分组中；Canvas 在主图之后单独绘制，但不把辅助图元加入命中测试。两种后端都只用主 Scene 决定 viewBox、资源、动画和正常交互。
+布局检查器（Layout Inspector）是运行时开发辅助层，不进入 Standard IR，也不修改类型化布局产物。Flex、Grid 与 Overlay Inspector 把同次 compile 的类型化 artifact 转为普通 Core Path / Node / pattern paint；Core 再把这些子元素编译为隔离的 entry Scene。SVG 把 entry 绘制在主图之后的 `pointer-events="none"` 分组中；Canvas 在主图之后单独绘制，但不把辅助图元加入命中测试。两种后端都只用主 Scene 决定 viewBox、主资源、动画和正常交互。
 
 ### 颜色、纹理与线型
 
 辅助层用三条正交通道表达不同信息，不再用一种颜色同时暗示边界类别与嵌套层级：
 
-| 通道 | 表达内容            | 规则                                                                                                                                 |
-| ---- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| 颜色 | 最终布局 occurrence | Core 按最终 entry 顺序分配 `colorScope`；Render 在九色数组中循环取色，warning 始终为红色                                             |
-| 纹理 | 空间语义            | margin 与固定 gap 为 `/`，padding 为反向 `\`；三者只绘斜线、不铺底色；distributed space 不使用纹理或背景色；斜线间距为 12 user units |
-| 线型 | 几何类别            | 容器、内容、item box、Flex line、Grid track/cell/span、Overlay placement 与 alignment guide 统一使用虚线；anchor crosshair 使用实线  |
+| 通道 | 表达内容            | 规则                                                                                                                                              |
+| ---- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 颜色 | 最终布局 occurrence | Core 按最终请求顺序分配 `colorScope`，并通过 `InspectionAppearance` 提供九色循环中的常规色与固定警告色                                            |
+| 纹理 | 空间语义            | Standard 用普通 `lines` pattern paint 表达：margin 与固定 gap 为 `-45°` 的 `/`，padding 为 `45°` 的 `\`；size 为 12、lineWidth 为 1，三者不铺底色 |
+| 线型 | 几何类别            | 容器、内容、item box、Flex line、Grid track/cell/span、Overlay placement 与 alignment guide 统一使用虚线；anchor crosshair 使用实线               |
 
-同一个 occurrence 的普通辅助图元共享颜色；嵌套容器按各自最终 occurrence 取得颜色。颜色数组在第十个 occurrence 开始循环，因此颜色只用于快速归属，精确身份仍由 occurrence locator 表达。
+同一个 occurrence 的普通辅助图元共享颜色；嵌套容器按各自最终 occurrence 取得颜色。颜色数组在第十个 occurrence 开始循环，因此颜色只用于快速归属，精确身份仍由 occurrence locator 表达。溢出警告是普通半透明 fill，辅助标签也是普通 Node。
 
 绘制顺序固定为 spacing hatch / boundary underlay → family structure → box outline → overflow warning → guide/anchor → label。`bounds.content` 与 `bounds.slot` 只控制对应 outline；`spacing.padding` 与 `spacing.margin` 独立控制两种纹理和边界。margin、padding 与固定 gap 使用独立 dashed line 表达边界；ring 只描内外周长，不描四块纹理分片之间的接缝。`distributedSpace` 只显示未占用 content 的 dashed perimeter，内部保持透明留白。若 spacing boundary 已被 content/slot outline 或 Flex line / Grid track 完整覆盖，同一线段只绘制一次；单独开启任一类别时仍保留其完整可见边界。
 
@@ -184,7 +184,7 @@ React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 De
   }}
 />
 
-`inspect` 只接受稀疏 authoring 值；未知字段或错误类型会 fail-loud。编译完成后，Core 才把级联策略求值为完整默认轮廓，并让 Standard 检查器只读取同次 compile 的类型化 artifact。切换 retained view 的检查选项会原子提交主图、产物和辅助层；失败时不会发布半帧。
+`inspect` 只接受稀疏 authoring 值；未知字段或错误类型会 fail-loud。编译完成后，Core 才把级联策略求值为完整默认轮廓，并让 Standard Inspector 只读取同次 compile 的类型化 artifact、返回普通 Core 子元素，不声明 `outputSchema`。切换 retained view 的检查选项会原子提交主图、产物和辅助层；失败时不会发布半帧。
 
 <SourceLinks
   sources={[

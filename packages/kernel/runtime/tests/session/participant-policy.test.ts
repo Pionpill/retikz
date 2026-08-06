@@ -9,6 +9,7 @@ import {
   defineRuntimeCommitParticipant,
   defineRuntimeOwner,
   defineRuntimeProgram,
+  RuntimeProgramKind,
 } from '../../src';
 
 const defineCounterOwner = (key: string) =>
@@ -57,8 +58,8 @@ describe('runtime session participant revision policy', () => {
         readForProgram: value => value,
         read: value => Object.freeze({ value }),
       },
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
-      update: (_previous, view) => ({ kind: 'incremental', artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
+      update: (_previous, view) => ({ kind: RuntimeProgramKind.Incremental, artifact: view.snapshot(owner).value }),
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
     const preparedValues: Array<number> = [];
@@ -164,7 +165,7 @@ describe('runtime session participant revision policy', () => {
         baseRevision: session.revision(),
         owners: [createRuntimeOwnerUpdate(unrelated, 2)],
       }).outcome,
-    ).toBe('bailout');
+    ).toBe(RuntimeProgramKind.Bailout);
     expect(continuousCalls).toEqual([1]);
 
     session.update({
@@ -189,8 +190,8 @@ describe('runtime session participant revision policy', () => {
         readForProgram: value => value,
         read: value => value,
       },
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
-      update: (_previous, view) => ({ kind: 'incremental', artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
+      update: (_previous, view) => ({ kind: RuntimeProgramKind.Incremental, artifact: view.snapshot(owner).value }),
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
     const preparedRevisions: Array<number> = [];
@@ -229,7 +230,7 @@ describe('runtime session participant revision policy', () => {
         baseRevision: session.revision(),
         owners: [createRuntimeOwnerUpdate(owner, 2)],
       }),
-    ).toEqual({ revision: 1, outcome: 'full', diagnostics: [] });
+    ).toEqual({ revision: 1, outcome: RuntimeProgramKind.Full, diagnostics: [] });
     expect(preparedRevisions).toEqual([1]);
     expect(committedRevisions).toEqual([1]);
     session.dispose();
@@ -263,7 +264,7 @@ describe('runtime session participant revision policy', () => {
           artifactDisposeCalls += 1;
         },
       },
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
     const calls: Array<string> = [];

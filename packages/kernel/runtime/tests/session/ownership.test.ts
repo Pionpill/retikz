@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { defineRuntimeOwner } from '../../src/owner';
-import { defineRuntimeProgram } from '../../src/program';
+import { defineRuntimeProgram, RuntimeProgramKind } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
 import { createRuntimeSession } from '../../src/session';
 import { createRuntimeOwnerInput, createRuntimeOwnerUpdate } from '../../src/transaction';
@@ -41,9 +41,9 @@ describe('runtime session ownership', () => {
         read: artifact => artifact.value,
         dispose: artifactDispose,
       },
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
       update: (_previous, view) => ({
-        kind: 'incremental',
+        kind: RuntimeProgramKind.Incremental,
         artifact: view.snapshot(owner).value,
       }),
     });
@@ -59,7 +59,7 @@ describe('runtime session ownership', () => {
         baseRevision: session.revision(),
         owners: [createRuntimeOwnerUpdate(owner, 1)],
       }).outcome,
-    ).toBe('bailout');
+    ).toBe(RuntimeProgramKind.Bailout);
     expect(ownerDispose).toHaveBeenCalledTimes(1);
     expect(ownerDispose.mock.calls.at(0)?.[0]).toBe(capturedOwners[1]);
     expect(artifactDispose).not.toHaveBeenCalled();
@@ -69,7 +69,7 @@ describe('runtime session ownership', () => {
         baseRevision: session.revision(),
         owners: [createRuntimeOwnerUpdate(owner, 2)],
       }).outcome,
-    ).toBe('incremental');
+    ).toBe(RuntimeProgramKind.Incremental);
     expect(ownerDispose).toHaveBeenCalledTimes(2);
     expect(ownerDispose.mock.calls.at(0)?.[0]).toBe(capturedOwners[1]);
     expect(ownerDispose.mock.calls.at(1)?.[0]).toBe(capturedOwners[0]);
@@ -114,8 +114,8 @@ describe('runtime session ownership', () => {
         read: artifact => artifact.value,
         dispose: artifactDispose,
       },
-      run: view => ({ kind: 'full', artifact: view.snapshot(owner).value }),
-      update: () => ({ kind: 'fallback' }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value }),
+      update: () => ({ kind: RuntimeProgramKind.Fallback }),
     });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
     const session = createRuntimeSession({
@@ -129,7 +129,7 @@ describe('runtime session ownership', () => {
         baseRevision: session.revision(),
         owners: [createRuntimeOwnerUpdate(owner, 2)],
       }).outcome,
-    ).toBe('fallback');
+    ).toBe(RuntimeProgramKind.Fallback);
     expect(artifactDispose).toHaveBeenCalledTimes(1);
     expect(artifactDispose.mock.calls.at(0)?.[0]).toBe(capturedArtifacts[0]);
     expect(session.artifact(program)).toEqual({ revision: 1, value: 2 });

@@ -145,15 +145,15 @@ export const kernelV05: Release = {
           version: 'alpha.2',
           date: '2026-08-04',
           summary: {
-            zh: '交付 Core Runtime Program、单 root Node fill 局部增量闭环、布局感知 Composite proposal / probe 合同，以及 Scene / Scope 可继承 Theme 环境。',
-            en: 'Ships the Core Runtime Program, the one-root Node fill incremental path, layout-aware composite proposal / probe contracts, and the inherited Scene / Scope Theme environment.',
+            zh: '交付 Core Runtime Program、单 root Node fill 局部增量闭环、布局感知 Composite proposal / probe 合同、可继承 Theme 环境与可扩展 Inspector 内容。',
+            en: 'Ships the Core Runtime Program, the one-root Node fill incremental path, layout-aware composite proposal / probe contracts, inherited Theme, and extensible Inspector content.',
           },
           items: [
             {
-              label: { zh: 'Inspection DTO 规范化', en: 'Normalized inspection DTOs' },
+              label: { zh: 'BREAKING：可扩展 Inspector 内容', en: 'BREAKING: Extensible Inspector content' },
               content: {
-                zh: '`InspectionPlaneEntry.colorScope` 由 Core 按最终 entry 顺序连续分配；普通 tone 收敛为 `scope`，warning 保持独立。outline rect 必填 `lineStyle`，fill rect 必填后端中立 `fillPattern`。`spacing.padding / margin` 默认开启，支持 boolean 整组切换与对象 sparse merge，并与 `bounds` 解耦后按 Layout → Scope → component-local 级联；不保留旧 tone 或缺字段兼容分支。',
-                en: 'Core assigns `InspectionPlaneEntry.colorScope` continuously in final entry order. Regular tone narrows to `scope`, while warnings remain independent. Outline rects require `lineStyle` and fill rects require a renderer-neutral `fillPattern`. `spacing.padding / margin` default to enabled, support boolean group toggles and sparse object merges, remain independent from `bounds`, and cascade in Layout → Scope → component-local order, with no compatibility branch for old tones or omitted fields.',
+                zh: 'Inspector 现在依附 Composite / PathKind Definition，通过 `defineInspector()` 把 settled artifact / subject 转为普通 Core `IRChild`，再隔离编译为每个 entry 的静态 `scene`；不提供 `outputSchema`。BREAKING：移除 `InspectionPrimitive`、`InspectionTone` 与 `CompositeInspectorDefinition`；entry 的 `primitives` 改为 `scene`，locator 必填 `target`，policy 的 `component` 改为 `self`，公开 `CompileWarning.origin` 改为必填。旧 API 不保留别名或兼容桥。',
+                en: 'Inspectors now attach to Composite or PathKind Definitions and use `defineInspector()` to convert settled artifacts or subjects into ordinary Core `IRChild` values, isolated into one static `scene` per entry with no `outputSchema`. BREAKING: removes `InspectionPrimitive`, `InspectionTone`, and `CompositeInspectorDefinition`; replaces entry `primitives` with `scene`; requires locator `target`; renames policy `component` to `self`; and makes public `CompileWarning.origin` required. No aliases or compatibility bridge remain.',
               },
             },
             {
@@ -211,15 +211,15 @@ export const kernelV05: Release = {
           version: 'alpha.2',
           date: '2026-08-04',
           summary: {
-            zh: '交付 retained renderer contract、内置SVG/Canvas事务后端、共享 inspection palette / hatch、capability fallback、hydration/resource/animation同步提交与5000规模性能门禁。',
-            en: 'Ships the retained renderer contract, transactional built-in SVG/Canvas backends, a shared inspection palette and hatch geometry, capability fallback, synchronized hydration/resource/animation commits, and 5,000-entity performance gates.',
+            zh: '交付 retained renderer contract、内置 SVG / Canvas 事务后端、普通 Scene 辅助层执行、capability fallback、hydration / resource / animation 同步提交与 5000 规模性能门禁。',
+            en: 'Ships the retained renderer contract, transactional built-in SVG/Canvas backends, ordinary-Scene auxiliary execution, capability fallback, synchronized hydration/resource/animation commits, and 5,000-entity performance gates.',
           },
           items: [
             {
-              label: { zh: 'Inspection 后端对齐', en: 'Inspection backend parity' },
+              label: { zh: 'Inspection 普通 Scene 执行', en: 'Ordinary Scene inspection execution' },
               content: {
-                zh: 'SVG 与 Canvas 共用九色 occurrence palette、固定 warning 红色、alpha 公式和 12 user-unit hatch 几何；共享几何会把 1 user unit 宽的 hatch stroke 收进 rect，pattern 不铺底色或隐式边界。SVG 使用无全局 id 的局部 path，Canvas 在 clip 生命周期内只绘制同坐标纹理线。',
-                en: 'SVG and Canvas share a nine-color occurrence palette, fixed warning red, alpha formulas, and 12-user-unit hatch geometry. Shared geometry keeps each hatch stroke of width 1 user unit inside its rect, and patterns add neither a base fill nor an implicit border. SVG uses local paths with no global id, while Canvas paints the same hatch coordinates inside one clip lifecycle.',
+                zh: 'SVG 与 Canvas 删除 Inspector 专用 primitive、palette 与 hatch consumer，改为在 occurrence transform 下执行普通静态 Scene。每个 entry 的资源命名空间独立；辅助内容不进入 hydration、hit-test、动画或 retained identity，prepare / commit / rollback 仍与主 Scene 原子切换。',
+                en: 'SVG and Canvas remove Inspector-specific primitives, palettes, and hatch consumers and execute ordinary static Scenes under occurrence transforms instead. Every entry has an isolated resource namespace; auxiliary content stays out of hydration, hit testing, animation, and retained identity while prepare, commit, and rollback remain atomic with the primary Scene.',
               },
             },
           ],
@@ -273,7 +273,15 @@ export const kernelV05: Release = {
             zh: '交付 Layout 的 retained / static 执行模式与 auto / full 更新策略，并补齐 SSR handoff、transaction diagnostic、commit 后 artifact/ref 出口与第三方 renderer 注入。',
             en: 'Ships retained / static Layout execution modes and auto / full update strategies, plus SSR handoff, transaction diagnostics, post-commit artifact/ref outputs, and third-party renderer injection.',
           },
-          items: [],
+          items: [
+            {
+              label: { zh: 'Path Inspector authoring', en: 'Path Inspector authoring' },
+              content: {
+                zh: '`<Path inspect>` 为当前 Path occurrence 生成 runtime-only `target:path + self` sidecar；boolean 与开放对象形式都不会进入 Core IR，第三方 Path kind 的额外字段由其 Inspector schema 统一校验。Scope `enabled:false` 同时阻断 Composite 与 Path 后代。',
+                en: '`<Path inspect>` creates a runtime-only `target:path + self` sidecar for the current Path occurrence. Boolean and open-object forms never enter Core IR, and a third-party Path kind validates extra keys through its Inspector schema. Scope `enabled:false` blocks both Composite and Path descendants.',
+              },
+            },
+          ],
         },
         {
           version: 'alpha.1',
@@ -317,7 +325,15 @@ export const kernelV05: Release = {
             zh: '交付 SVG/Canvas retained / static view、auto / full 更新策略、transactional update/diagnostics/hydration、第三方 renderer 注入与 plain-spec composite callback transaction。',
             en: 'Ships retained / static SVG and Canvas views, auto / full update strategies, transactional updates/diagnostics/hydration, third-party renderer injection, and plain-spec composite callback transactions.',
           },
-          items: [],
+          items: [
+            {
+              label: { zh: 'Path Inspector authoring', en: 'Path Inspector authoring' },
+              content: {
+                zh: '`VanillaPathSpec.inspect` 在 normalization 时从 Path IR 剥离，并生成与 React 同构的 `target:path + self` sidecar。内置与第三方 Path kind 的开放选项保持原样到达 owner schema；raw static 与 retained IR / plain-spec 路径共享该行为。',
+                en: '`VanillaPathSpec.inspect` is stripped from Path IR during normalization and creates the same `target:path + self` sidecar as React. Open options for built-in and third-party Path kinds reach the owner schema unchanged across raw-static and retained IR or plain-spec paths.',
+              },
+            },
+          ],
         },
         {
           version: 'alpha.1',

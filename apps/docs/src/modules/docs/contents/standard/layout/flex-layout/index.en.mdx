@@ -103,7 +103,7 @@ React `FlexLayoutProps` mirrors the container fields below but changes `children
 | ---------- | --------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `inspect?` | `boolean` \| `FlexLayoutInspectOptions` | Inherited | Omission inherits Layout or the nearest Scope; `false` disables only this occurrence and leaves nested layouts unchanged |
 
-The object form can control `lines`, fixed `gaps`, and `distributedSpace` in addition to shared bounds, box spacing, overflow, and alignment guides. See [Runtime Reference](/standard/layout/reference/runtime#layout-inspector) for every field and root or Scope policies.
+The object form can control `lines`, fixed `gaps`, and `distributedSpace` in addition to shared bounds, box spacing, overflow, and alignment guides. Flex lines and boundaries emit ordinary Core Paths, fixed gaps use ordinary pattern paints, and distributed space keeps only a dashed perimeter. See [Runtime Reference](/standard/layout/reference/runtime#layout-inspector) for every field and root or Scope policies.
 
 ### `FlexLayoutInput`
 

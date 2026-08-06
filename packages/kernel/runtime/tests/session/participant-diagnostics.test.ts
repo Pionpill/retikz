@@ -9,6 +9,9 @@ import {
   createRuntimeSession,
   defineRuntimeCommitParticipant,
   defineRuntimeOwner,
+  PerformanceTraceOutcome,
+  PerformanceTracePhase,
+  PerformanceTraceUnit,
   RuntimeError,
 } from '../../src';
 import { getRuntimeTraceReporterDiagnosticDrainCount } from '../../src/trace/internal';
@@ -34,13 +37,19 @@ describe('runtime session participant diagnostics', () => {
       owners: [owner],
       programs: [],
       revisionPolicy: 'continuous',
-      tracePhases: [{ phase: 'update', unit: 'scene-change', outcomes: ['incremental'] }],
+      tracePhases: [
+        {
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.SceneChange,
+          outcomes: [PerformanceTraceOutcome.Incremental],
+        },
+      ],
       prepare: (_candidate, context) => {
         capturedContext = context;
         context.trace.report({
-          phase: 'update',
-          unit: 'scene-change',
-          outcome: 'incremental',
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.SceneChange,
+          outcome: PerformanceTraceOutcome.Incremental,
           visited: 1,
           reused: 0,
           changed: 1,
@@ -116,7 +125,13 @@ describe('runtime session participant diagnostics', () => {
       owners: [owner],
       programs: [],
       revisionPolicy: 'continuous',
-      tracePhases: [{ phase: 'update', unit: 'scene-change', outcomes: ['incremental'] }],
+      tracePhases: [
+        {
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.SceneChange,
+          outcomes: [PerformanceTraceOutcome.Incremental],
+        },
+      ],
       prepare: (_candidate, context) => {
         const report = context.trace.report as (record: unknown) => void;
         report({ phase: 'invalid' });

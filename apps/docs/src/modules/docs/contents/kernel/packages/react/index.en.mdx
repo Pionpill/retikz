@@ -196,7 +196,9 @@ Changing `updateStrategy` between `auto` and `full` on a retained host disposes 
 
 `Layout` injects host capabilities such as text measurement, Definition registries, and the TeX lowerer as compile options, but those options do not put React into IR or Scene. Passing the `ir` prop skips the JSX builder. The `artifacts` prop requests opt-in outputs, while `onArtifacts` receives immutable same-compile artifacts after the selected host publishes; notification does not trigger another compile.
 
-`<Layout inspect>` supplies the whole-figure policy, `<Scope inspect>` supplies an authored-subtree policy, and an inspectable Tier 2 component may select its own occurrence. The builder creates an authored sidecar only; `inspect` never enters `IRScene` or `IRScope`. A static host materializes the primary figure and overlay directly, while a retained host commits both in one revision. An SVG SSR seed includes the same overlay for first hydration, and later policy changes are adopted atomically through a new session.
+`<Layout inspect>` supplies the whole-figure layout policy, while `<Scope inspect>` supplies an authored-subtree policy. An inspectable Tier 2 component or `<Path inspect>` can select only its own occurrence. The builder emits an authored sidecar with `target: 'composite' | 'path'` and `policy.self`; `inspect` never enters `IRScene`, `IRScope`, or `IRPath`. `enabled: false` is an unbreakable descendant barrier for both targets.
+
+A static host materializes the primary figure and overlay directly, while a retained host commits both in one revision. An SVG SSR seed includes the same overlay for first hydration, and later policy changes are adopted atomically through a new session. Inspectors require an authored occurrence, its Definition, and a settled subject; a Render entry that receives only a precompiled Scene cannot reconstruct them afterward.
 
 <SourceLinks
   sources={[

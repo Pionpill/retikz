@@ -1,41 +1,33 @@
 import type {
-  AnyCompositeInspectorDefinition,
-  BaseLayoutInspectOptions,
+  AnyInspectorDefinition,
+  ChildInspectionAuthoringLocator,
   CompileInspectionOptions,
   CompileOccurrenceLocator,
-  CompositeInspectionAuthoringTree,
   CompositeInspectionChild,
-  CompositeInspectionChildForest,
+  InspectionAuthoringTargetKind,
+  InspectionAuthoringTree,
+  InspectionChildForest,
+  InspectionDiagnosticOrigin,
   InspectionOptionsInputObject,
-  InspectionPlane,
-  InspectionPrimitive,
+  InspectionOwner,
   InspectOptions,
-  ResolvedBaseLayoutInspectOptions,
+  SceneInspectionAuthoringLocator,
 } from '../../contract';
-import type { IRChild, IRJsonObject, IRScene, JsonValue } from '../../schemas';
+import type { IRChild, IRJsonObject, IRScene } from '../../schemas';
 import type {
   CompositeCompileOwner,
   CompositeCompileSession,
   InheritedInspectionState,
-  PendingInspectionEntry,
   PreparedCompositeInspectionChildForest,
 } from './types';
 
-import {
-  BaseLayoutInspectOptionsInputSchema,
-  BaseLayoutInspectOptionsSchema,
-  InspectionPlaneSchema,
-  InspectionPrimitiveSchema,
-  InspectOptionsInputSchema,
-} from '../../contract';
+import { InspectOptionsInputSchema } from '../../contract';
 import { cloneAndFreezeJson } from '../../shared/json';
-import { applyTransformChain } from '../transform';
-import { compareCompileOccurrences, freezeOccurrence } from './artifact';
-
-const BaseKeys = new Set(['bounds', 'spacing', 'overflow', 'alignmentGuides', 'labels']);
+import { inspectionOccurrenceResolveOrigin, wrapInspectionError } from './inspection-error';
 
 type PreparedInspectionRoot = Readonly<{
-  tree: CompositeInspectionAuthoringTree;
+  target: InspectionAuthoringTargetKind;
+  tree: InspectionAuthoringTree;
 }>;
 
 /** compile 入口完成 admission 后的 inspection sidecar */
@@ -44,23 +36,35 @@ export type PreparedCompileInspection = Readonly<{
   roots: ReadonlyMap<string, PreparedInspectionRoot>;
 }>;
 
-/** 单个 Composite inspector 的完整求值请求 */
-export type ResolvedCompositeInspection = Readonly<{
-  baseOptions: ResolvedBaseLayoutInspectOptions;
-  options: IRJsonObject;
-}>;
+/** 单个 owner Inspector 的完整 canonical options 请求 */
+export type ResolvedInspectionRequest = Readonly<{ options: IRJsonObject }>;
 
-/** 当前 Composite occurrence 的 inspection 求值上下文 */
-export type ResolvedCompositeInspectionContext = Readonly<{
+/** 当前 occurrence 的 inherited、authored tree 与可选请求 */
+export type ResolvedInspectionContext = Readonly<{
   inherited: InheritedInspectionState;
-  tree?: CompositeInspectionAuthoringTree;
-  request?: ResolvedCompositeInspection;
+  tree?: InspectionAuthoringTree;
+  request?: ResolvedInspectionRequest;
 }>;
 
 const isScope = (child: IRChild): child is Extract<IRChild, { type: 'scope' }> =>
   !('namespace' in child) && child.type === 'scope';
 
-const sceneSourcePathOf = (ir: IRScene, path: ReadonlyArray<{ kind: string; index: number }>): string => {
+const targetKindOf = (child: IRChild): InspectionAuthoringTargetKind | undefined => {
+  if ('namespace' in child) return 'composite';
+  return child.type === 'path' ? 'path' : undefined;
+};
+
+const assertTarget = (child: IRChild, target: InspectionAuthoringTargetKind, label: string): void => {
+  const actual = targetKindOf(child);
+  if (actual === target) return;
+  const actualLabel = actual === 'composite' ? 'Composite' : actual === 'path' ? 'Path' : child.type;
+  throw new Error(`${label} target '${target}' does not match authored ${actualLabel} child.`);
+};
+
+const resolveSceneTarget = (
+  ir: IRScene,
+  path: ReadonlyArray<{ kind: string; index: number }>,
+): Readonly<{ child: IRChild; sourcePath: string }> => {
   if (path.length === 0 || path[0]?.kind !== 'sceneChild') {
     throw new Error('CompileOptions.inspection root locator must start with sceneChild.');
   }
@@ -71,32 +75,26 @@ const sceneSourcePathOf = (ir: IRScene, path: ReadonlyArray<{ kind: string; inde
     if (Reflect.get(segment, 'kind') !== 'scopeChild' || !isScope(child)) {
       throw new Error('CompileOptions.inspection root locator may only descend through IRScope children.');
     }
-    const next: unknown = Reflect.get(child.children, segment.index);
+    const next = Reflect.get(child.children, segment.index) as IRChild | undefined;
     if (next === undefined) throw new Error('CompileOptions.inspection root locator is out of bounds.');
-    child = next as IRChild;
+    child = next;
     sourcePath += `.scope.children[${segment.index}]`;
   }
-  if (!('namespace' in child)) {
-    throw new Error('CompileOptions.inspection root locator must target a Composite occurrence.');
-  }
-  return sourcePath;
+  return Object.freeze({ child, sourcePath });
 };
 
 const childLocatorKey = (path: ReadonlyArray<{ kind: 'scopeChild'; index: number }>): string =>
   path.map(segment => `scope.children[${segment.index}]`).join('.');
 
-const childTargetOf = (root: IRChild, path: ReadonlyArray<{ kind: 'scopeChild'; index: number }>): IRChild => {
+const resolveChildTarget = (root: IRChild, path: ReadonlyArray<{ kind: 'scopeChild'; index: number }>): IRChild => {
   let child = root;
   for (const segment of path) {
     if (!isScope(child)) {
-      throw new Error('Composite inspection child locator may only descend through IRScope children.');
+      throw new Error('Inspection child locator may only descend through IRScope children.');
     }
     const next = Reflect.get(child.children, segment.index) as IRChild | undefined;
-    if (next === undefined) throw new Error('Composite inspection child locator is out of bounds.');
+    if (next === undefined) throw new Error('Inspection child locator is out of bounds.');
     child = next;
-  }
-  if (!('namespace' in child)) {
-    throw new Error('Composite inspection child locator must target a Composite occurrence.');
   }
   return child;
 };
@@ -108,30 +106,58 @@ const validateInputObject = (value: unknown, label: string): InspectionOptionsIn
   return value as InspectionOptionsInputObject;
 };
 
-const validateTree = (tree: CompositeInspectionAuthoringTree, label: string): void => {
+const validateTargetKind = (value: unknown, label: string): InspectionAuthoringTargetKind => {
+  if (value !== 'composite' && value !== 'path') {
+    throw new Error(`${label} must be 'composite' or 'path'.`);
+  }
+  return value;
+};
+
+const validateTree = (tree: InspectionAuthoringTree, label: string, target: InspectionAuthoringTargetKind): void => {
   if (tree.policy?.inherited !== undefined) InspectOptionsInputSchema.parse(tree.policy.inherited);
-  if (tree.policy?.component !== undefined && typeof tree.policy.component !== 'boolean') {
-    validateInputObject(tree.policy.component, `${label}.policy.component`);
+  if (tree.policy?.self !== undefined && typeof tree.policy.self !== 'boolean') {
+    validateInputObject(tree.policy.self, `${label}.policy.self`);
   }
   const children = tree.children;
+  if (target === 'path' && children !== undefined) {
+    throw new Error(`${label}.children must be omitted for a Path inspection target.`);
+  }
   if (children === undefined) return;
   for (let childIndex = 0; childIndex < children.length; childIndex += 1) {
     if (!(childIndex in children)) throw new Error(`${label}.children must be dense.`);
-    const forest = Reflect.get(children, childIndex) as CompositeInspectionChildForest | null | undefined;
+    const forest = Reflect.get(children, childIndex) as InspectionChildForest | null | undefined;
     if (forest === undefined || forest === null) continue;
     for (let rootIndex = 0; rootIndex < forest.length; rootIndex += 1) {
       if (!(rootIndex in forest)) throw new Error(`${label}.children[${childIndex}] must be dense.`);
       const root = forest[rootIndex];
+      const rootTarget = validateTargetKind(
+        Reflect.get(root.locator, 'target'),
+        `${label}.children[${childIndex}][${rootIndex}].locator.target`,
+      );
       root.locator.path.forEach((segment, segmentIndex) => {
         const segmentRecord = segment as unknown as Readonly<Record<string, unknown>>;
         if (segmentRecord.kind !== 'scopeChild' || !Number.isSafeInteger(segment.index) || segment.index < 0) {
           throw new Error(`${label}.children[${childIndex}][${rootIndex}].locator.path[${segmentIndex}] is invalid.`);
         }
       });
-      validateTree(root.tree, `${label}.children[${childIndex}][${rootIndex}].tree`);
+      validateTree(root.tree, `${label}.children[${childIndex}][${rootIndex}].tree`, rootTarget);
     }
   }
 };
+
+const sceneAuthoringOrigin = (locator: SceneInspectionAuthoringLocator): InspectionDiagnosticOrigin => ({
+  kind: 'inspection',
+  stage: 'resolve',
+  site: 'authoring',
+  locator: { kind: 'scene', value: locator },
+});
+
+const childAuthoringOrigin = (locator: ChildInspectionAuthoringLocator): InspectionDiagnosticOrigin => ({
+  kind: 'inspection',
+  stage: 'resolve',
+  site: 'authoring',
+  locator: { kind: 'child', value: locator },
+});
 
 /** 校验并索引 compile inspection sidecar */
 export const prepareCompileInspection = (
@@ -142,15 +168,28 @@ export const prepareCompileInspection = (
   const root = input.root === undefined ? undefined : InspectOptionsInputSchema.parse(input.root);
   const roots = new Map<string, PreparedInspectionRoot>();
   input.roots?.forEach((candidate, index) => {
-    candidate.locator.path.forEach((segment, segmentIndex) => {
-      if (!Number.isSafeInteger(segment.index) || segment.index < 0) {
-        throw new Error(`CompileOptions.inspection roots[${index}].locator.path[${segmentIndex}] is invalid.`);
+    const target = validateTargetKind(
+      Reflect.get(candidate.locator, 'target'),
+      `CompileOptions.inspection roots[${index}].locator.target`,
+    );
+    const locator = cloneAndFreezeJson(candidate.locator, `CompileOptions.inspection roots[${index}].locator`);
+    try {
+      locator.path.forEach((segment, segmentIndex) => {
+        if (!Number.isSafeInteger(segment.index) || segment.index < 0) {
+          throw new Error(`CompileOptions.inspection roots[${index}].locator.path[${segmentIndex}] is invalid.`);
+        }
+      });
+      const resolved = resolveSceneTarget(ir, locator.path);
+      assertTarget(resolved.child, target, `CompileOptions.inspection roots[${index}].locator`);
+      const occurrenceSourcePath = target === 'path' ? `${resolved.sourcePath}.path` : resolved.sourcePath;
+      if (roots.has(occurrenceSourcePath)) {
+        throw new Error(`CompileOptions.inspection has duplicate root '${occurrenceSourcePath}'.`);
       }
-    });
-    const sourcePath = sceneSourcePathOf(ir, candidate.locator.path);
-    if (roots.has(sourcePath)) throw new Error(`CompileOptions.inspection has duplicate root '${sourcePath}'.`);
-    validateTree(candidate.tree, `CompileOptions.inspection roots[${index}].tree`);
-    roots.set(sourcePath, Object.freeze({ tree: candidate.tree }));
+      validateTree(candidate.tree, `CompileOptions.inspection roots[${index}].tree`, target);
+      roots.set(occurrenceSourcePath, Object.freeze({ target, tree: candidate.tree }));
+    } catch (cause) {
+      throw wrapInspectionError(sceneAuthoringOrigin(locator), cause);
+    }
   });
   return Object.freeze({ ...(root === undefined ? {} : { root }), roots });
 };
@@ -158,22 +197,31 @@ export const prepareCompileInspection = (
 /** 校验 layoutChild authored forest，并按相对 Scope path 建立只读索引 */
 export const prepareCompositeInspectionChildForest = (
   child: IRChild,
-  forest: CompositeInspectionChildForest,
+  forest: InspectionChildForest,
 ): PreparedCompositeInspectionChildForest => {
-  const prepared = new Map<string, CompositeInspectionAuthoringTree>();
+  const prepared = new Map<string, InspectionAuthoringTree>();
   forest.forEach((root, index) => {
-    root.locator.path.forEach((segment, segmentIndex) => {
-      const segmentRecord = segment as unknown as Readonly<Record<string, unknown>>;
-      if (segmentRecord.kind !== 'scopeChild' || !Number.isSafeInteger(segment.index) || segment.index < 0) {
-        throw new Error(`Composite inspection child forest[${index}].locator.path[${segmentIndex}] is invalid.`);
-      }
-    });
-    childTargetOf(child, root.locator.path);
-    const key = childLocatorKey(root.locator.path);
-    if (prepared.has(key)) {
-      throw new Error(`Composite inspection child forest has duplicate locator '${key || '<root>'}'.`);
+    const target = validateTargetKind(
+      Reflect.get(root.locator, 'target'),
+      `Inspection child forest[${index}].locator.target`,
+    );
+    const locator = cloneAndFreezeJson(root.locator, `Inspection child forest[${index}].locator`);
+    try {
+      locator.path.forEach((segment, segmentIndex) => {
+        const segmentRecord = segment as unknown as Readonly<Record<string, unknown>>;
+        if (segmentRecord.kind !== 'scopeChild' || !Number.isSafeInteger(segment.index) || segment.index < 0) {
+          throw new Error(`Inspection child forest[${index}].locator.path[${segmentIndex}] is invalid.`);
+        }
+      });
+      const targetChild = resolveChildTarget(child, locator.path);
+      assertTarget(targetChild, target, `Inspection child forest[${index}].locator`);
+      validateTree(root.tree, `Inspection child forest[${index}].tree`, target);
+      const key = childLocatorKey(locator.path);
+      if (prepared.has(key)) throw new Error(`Inspection child forest has duplicate locator '${key || '<root>'}'.`);
+      prepared.set(key, root.tree);
+    } catch (cause) {
+      throw wrapInspectionError(childAuthoringOrigin(locator), cause);
     }
-    prepared.set(key, root.tree);
   });
   return prepared;
 };
@@ -183,7 +231,7 @@ export const lookupCompositeInspectionChildTree = (
   forest: PreparedCompositeInspectionChildForest | undefined,
   rootOccurrence: CompileOccurrenceLocator | undefined,
   occurrence: CompileOccurrenceLocator,
-): CompositeInspectionAuthoringTree | undefined => {
+): InspectionAuthoringTree | undefined => {
   if (forest === undefined || rootOccurrence === undefined || occurrence.sourcePath !== rootOccurrence.sourcePath) {
     return undefined;
   }
@@ -193,40 +241,37 @@ export const lookupCompositeInspectionChildTree = (
     const candidate = Reflect.get(occurrence.expansionPath, index) as
       | CompileOccurrenceLocator['expansionPath'][number]
       | undefined;
-    if (candidate === undefined || candidate.kind !== segment.kind || candidate.index !== segment.index)
+    if (candidate === undefined || candidate.kind !== segment.kind || candidate.index !== segment.index) {
       return undefined;
+    }
   }
   const suffix = occurrence.expansionPath.slice(prefix.length);
   if (suffix.some(segment => segment.kind !== 'scopeChild')) return undefined;
   return forest.get(childLocatorKey(suffix as ReadonlyArray<{ kind: 'scopeChild'; index: number }>));
 };
 
-const mergeBase = (current: BaseLayoutInspectOptions, next: BaseLayoutInspectOptions): BaseLayoutInspectOptions => {
-  const currentBounds = current.bounds;
-  const nextBounds = next.bounds;
-  const currentSpacing = current.spacing;
-  const nextSpacing = next.spacing;
-  return {
-    ...current,
-    ...next,
-    ...(nextBounds === undefined
-      ? {}
-      : {
-          bounds:
-            typeof nextBounds === 'object' && typeof currentBounds === 'object'
-              ? { ...currentBounds, ...nextBounds }
-              : nextBounds,
-        }),
-    ...(nextSpacing === undefined
-      ? {}
-      : {
-          spacing:
-            typeof nextSpacing === 'object' && typeof currentSpacing === 'object'
-              ? { ...currentSpacing, ...nextSpacing }
-              : nextSpacing,
-        }),
-  };
-};
+const mergeNestedInput = (
+  current: InspectionOptionsInputObject,
+  next: InspectionOptionsInputObject,
+): InspectionOptionsInputObject => ({
+  ...current,
+  ...next,
+  ...(['bounds', 'spacing'] as const).reduce<Record<string, unknown>>((merged, key) => {
+    const currentValue = Reflect.get(current, key);
+    const nextValue = Reflect.get(next, key);
+    if (nextValue === undefined) return merged;
+    merged[key] =
+      typeof currentValue === 'object' &&
+      currentValue !== null &&
+      !Array.isArray(currentValue) &&
+      typeof nextValue === 'object' &&
+      nextValue !== null &&
+      !Array.isArray(nextValue)
+        ? { ...currentValue, ...nextValue }
+        : nextValue;
+    return merged;
+  }, {}),
+});
 
 const applyInherited = (
   state: InheritedInspectionState,
@@ -242,77 +287,92 @@ const applyInherited = (
   }
   return Object.freeze({
     blocked: false,
-    layout: mergeBase(state.layout === false ? {} : state.layout, parsed.layout),
+    layout: mergeNestedInput(state.layout === false ? {} : state.layout, parsed.layout),
   });
 };
 
-const splitComponentOptions = (
-  input: InspectionOptionsInputObject,
-): Readonly<{ base: BaseLayoutInspectOptions; local: InspectionOptionsInputObject }> => {
-  const base: Record<string, unknown> = {};
-  const local: Record<string, unknown> = {};
-  Object.entries(input).forEach(([key, value]) => (BaseKeys.has(key) ? (base[key] = value) : (local[key] = value)));
-  return Object.freeze({
-    base: BaseLayoutInspectOptionsInputSchema.parse(base),
-    local: Object.freeze(local),
-  });
-};
-
-const resolveInspectionRequest = (
-  state: InheritedInspectionState,
-  tree: CompositeInspectionAuthoringTree | undefined,
-  inspector: AnyCompositeInspectorDefinition | undefined,
-): ResolvedCompositeInspection | undefined => {
-  if (inspector === undefined || state.blocked) return undefined;
-  const component = tree?.policy?.component;
-  if (component === false) return undefined;
-  const inheritedEnabled = state.layout !== false;
-  if (component === undefined && !inheritedEnabled) return undefined;
-
-  let base = state.layout === false ? {} : state.layout;
-  let local: InspectionOptionsInputObject = {};
-  if (component !== undefined && component !== true) {
-    const split = splitComponentOptions(validateInputObject(component, 'Composite inspection component'));
-    base = mergeBase(base, split.base);
-    local = split.local;
-  }
-
-  const localInput = inspector.localOptionsInputSchema.parse(local);
-  const resolvedLocal = inspector.localOptionsSchema.parse(localInput);
-  const frozenLocal = cloneAndFreezeJson(resolvedLocal, 'Composite inspector local options');
-  if (frozenLocal === null || typeof frozenLocal !== 'object' || Array.isArray(frozenLocal)) {
-    throw new Error('Composite inspector local options must resolve to a JSON object.');
-  }
-  return Object.freeze({
-    baseOptions: BaseLayoutInspectOptionsSchema.parse(base),
-    options: frozenLocal as IRJsonObject,
-  });
-};
-
-/** 求值当前 occurrence 的 inherited、component 与 child forest inspection 上下文 */
-export const resolveCompositeInspection = (
+const resolveContext = (
   prepared: PreparedCompileInspection | undefined,
   occurrence: CompileOccurrenceLocator,
-  inspector: AnyCompositeInspectorDefinition | undefined,
   inherited?: InheritedInspectionState,
-  authoredTree?: CompositeInspectionAuthoringTree,
-): ResolvedCompositeInspectionContext => {
+  authoredTree?: InspectionAuthoringTree,
+): Readonly<{ inherited: InheritedInspectionState; tree?: InspectionAuthoringTree }> => {
   const tree = authoredTree ?? (inherited === undefined ? prepared?.roots.get(occurrence.sourcePath)?.tree : undefined);
   const rootState = inherited ?? applyInherited(Object.freeze({ blocked: false, layout: false }), prepared?.root);
   const state = applyInherited(rootState, tree?.policy?.inherited);
-  const request = resolveInspectionRequest(state, tree, inspector);
-  return Object.freeze({
-    inherited: state,
-    ...(tree === undefined ? {} : { tree }),
-    ...(request === undefined ? {} : { request }),
-  });
+  return Object.freeze({ inherited: state, ...(tree === undefined ? {} : { tree }) });
+};
+
+const parseRequest = (
+  inspector: AnyInspectorDefinition,
+  input: InspectionOptionsInputObject,
+  label: string,
+): ResolvedInspectionRequest => {
+  const admitted = inspector.optionsInputSchema.parse(input);
+  const resolved = inspector.optionsSchema.parse(admitted);
+  const frozen = cloneAndFreezeJson(resolved, `${label} options`);
+  if (frozen === null || typeof frozen !== 'object' || Array.isArray(frozen)) {
+    throw new Error(`${label} options must resolve to a JSON object.`);
+  }
+  return Object.freeze({ options: frozen as IRJsonObject });
+};
+
+/** 求值当前 Composite occurrence 的 inherited 与 self request */
+export const resolveCompositeInspection = (
+  prepared: PreparedCompileInspection | undefined,
+  occurrence: CompileOccurrenceLocator,
+  owner: InspectionOwner & Readonly<{ kind: 'composite' }>,
+  inspector: (AnyInspectorDefinition & Readonly<{ kind: 'composite' }>) | undefined,
+  inherited?: InheritedInspectionState,
+  authoredTree?: InspectionAuthoringTree,
+): ResolvedInspectionContext => {
+  try {
+    const context = resolveContext(prepared, occurrence, inherited, authoredTree);
+    const self = context.tree?.policy?.self;
+    const selected =
+      !context.inherited.blocked && self !== false && (self !== undefined || context.inherited.layout !== false);
+    if (!selected) return context;
+    if (inspector === undefined) {
+      if (self !== undefined) throw new Error('Explicit Composite inspection target has no Inspector definition.');
+      return context;
+    }
+    const inheritedInput = context.inherited.layout === false ? {} : context.inherited.layout;
+    const input =
+      self === undefined || self === true
+        ? inheritedInput
+        : mergeNestedInput(inheritedInput, validateInputObject(self, 'Composite inspection self'));
+    return Object.freeze({ ...context, request: parseRequest(inspector, input, 'Composite Inspector') });
+  } catch (cause) {
+    throw wrapInspectionError(inspectionOccurrenceResolveOrigin(owner, occurrence), cause);
+  }
+};
+
+/** 求值当前 Path occurrence 的显式 self request */
+export const resolvePathInspection = (
+  prepared: PreparedCompileInspection | undefined,
+  occurrence: CompileOccurrenceLocator,
+  owner: InspectionOwner & Readonly<{ kind: 'pathKind' }>,
+  inspector: (AnyInspectorDefinition & Readonly<{ kind: 'path' }>) | undefined,
+  inherited?: InheritedInspectionState,
+  authoredTree?: InspectionAuthoringTree,
+): ResolvedInspectionContext => {
+  try {
+    const context = resolveContext(prepared, occurrence, inherited, authoredTree);
+    const self = context.tree?.policy?.self;
+    if (context.inherited.blocked || self === undefined || self === false) return context;
+    if (inspector === undefined) throw new Error('Explicit Path inspection target has no Inspector definition.');
+    const input = self === true ? {} : validateInputObject(self, 'Path inspection self');
+    return Object.freeze({ ...context, request: parseRequest(inspector, input, 'Path Inspector') });
+  } catch (cause) {
+    throw wrapInspectionError(inspectionOccurrenceResolveOrigin(owner, occurrence), cause);
+  }
 };
 
 /** 为当前 callback 暴露稳定复用的 opaque inspection child handles */
 export const createLayoutCompositeInspectionContext = (
   session: CompositeCompileSession,
   owner: CompositeCompileOwner,
-  tree: CompositeInspectionAuthoringTree | undefined,
+  tree: InspectionAuthoringTree | undefined,
 ) => {
   const handles = new Map<number, CompositeInspectionChild>();
   return Object.freeze({
@@ -353,61 +413,4 @@ export const resolveLayoutChildInspection = (
   entry.boundChild = child;
   entry.prepared ??= prepareCompositeInspectionChildForest(child, entry.forest);
   return entry.prepared;
-};
-
-/** 调用 erased inspector，并校验、克隆和冻结受限 primitive 输出 */
-export const runCompositeInspector = (
-  inspector: AnyCompositeInspectorDefinition,
-  artifact: JsonValue,
-  occurrence: CompileOccurrenceLocator,
-  resolved: ResolvedCompositeInspection,
-): ReadonlyArray<InspectionPrimitive> => {
-  const inspect = inspector.inspect as unknown as (
-    value: JsonValue,
-    context: Readonly<{
-      occurrence: CompileOccurrenceLocator;
-      baseOptions: ResolvedBaseLayoutInspectOptions;
-      options: IRJsonObject;
-    }>,
-  ) => unknown;
-  const output = inspect(artifact, {
-    occurrence,
-    baseOptions: resolved.baseOptions,
-    options: resolved.options,
-  });
-  if (!Array.isArray(output)) throw new Error('Composite inspector must return an array of inspection primitives.');
-  const parsed = output.map(value => InspectionPrimitiveSchema.parse(value));
-  return cloneAndFreezeJson(parsed, 'Composite inspector primitives');
-};
-
-const matrixOf = (entry: PendingInspectionEntry): readonly [number, number, number, number, number, number] => {
-  const origin = applyTransformChain([0, 0], entry.scopeChain);
-  const xBasis = applyTransformChain([1, 0], entry.scopeChain);
-  const yBasis = applyTransformChain([0, 1], entry.scopeChain);
-  return [
-    xBasis[0] - origin[0],
-    xBasis[1] - origin[1],
-    yBasis[0] - origin[0],
-    yBasis[1] - origin[1],
-    origin[0],
-    origin[1],
-  ];
-};
-
-/** 把 pending entries 排序并封装为独立 inspection plane */
-export const sealInspectionPlane = (entries: ReadonlyArray<PendingInspectionEntry>): InspectionPlane | null => {
-  if (entries.length === 0) return null;
-  const ordered = entries
-    .map((entry, index) => ({ entry, index }))
-    .sort(
-      (left, right) =>
-        compareCompileOccurrences(left.entry.occurrence, right.entry.occurrence) || left.index - right.index,
-    )
-    .map(({ entry }, colorScope) => ({
-      occurrence: freezeOccurrence(entry.occurrence),
-      colorScope,
-      transform: matrixOf(entry),
-      primitives: entry.primitives,
-    }));
-  return cloneAndFreezeJson(InspectionPlaneSchema.parse({ entries: ordered }), 'Inspection plane');
 };

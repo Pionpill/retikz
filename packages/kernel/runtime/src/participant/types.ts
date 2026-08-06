@@ -1,5 +1,10 @@
 import type { RuntimeOwnerDefinition, RuntimeOwnerToken, RuntimeRevision } from '../owner';
-import type { RuntimeProgramDefinition, RuntimeProgramToken, RuntimeProgramTraceReporter } from '../program';
+import type {
+  RuntimeProgramDefinition,
+  RuntimeProgramPhase,
+  RuntimeProgramToken,
+  RuntimeProgramTraceReporter,
+} from '../program';
 import type { RuntimeTracePhaseDefinition } from '../trace';
 import type { RuntimeSnapshot } from '../transaction';
 
@@ -77,7 +82,7 @@ export type RuntimeParticipantCandidateView =
   | (RuntimeParticipantCandidateLookup &
       Readonly<{
         /** initial session candidate */
-        phase: 'initial';
+        phase: typeof RuntimeProgramPhase.Initial;
         /** initial candidate 不存在 base revision */
         baseRevision?: never;
         /** candidate 完整发布后使用的 revision */
@@ -86,7 +91,7 @@ export type RuntimeParticipantCandidateView =
   | (RuntimeParticipantCandidateLookup &
       Readonly<{
         /** update session candidate */
-        phase: 'update';
+        phase: typeof RuntimeProgramPhase.Update;
         /** update 基于的 current revision */
         baseRevision: RuntimeRevision;
         /** candidate 完整发布后使用的 revision */

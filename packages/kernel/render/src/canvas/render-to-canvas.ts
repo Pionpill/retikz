@@ -86,14 +86,15 @@ export const renderFrameToCanvas = (
       devicePixelRatio,
     ),
   );
-  drawScene(ctx, scene, {
+  const drawOptions = {
     ...options,
     defaultFontFamily: options.defaultFontFamily ?? getCanvasDefaultFontFamily(canvas),
     currentColor: options.currentColor ?? getCanvasCurrentColor(canvas),
     createOffscreen: options.createOffscreen ?? createOffscreenContext,
     resolveCssColor: options.resolveCssColor ?? normalizeCssColorViaCanvas,
-  });
-  if (frame.inspection !== null) drawInspectionPlane(ctx, frame.inspection);
+  };
+  drawScene(ctx, scene, drawOptions);
+  if (frame.inspection !== null) drawInspectionPlane(ctx, frame.inspection, drawOptions);
 };
 
 /** 将 Scene 渲染到 HTMLCanvasElement，等价于不带 inspection 的静态 frame */

@@ -1,16 +1,16 @@
 import type { CompositeArtifactOf, LayoutCompositeDefinition } from '@retikz/core';
 
-import { defineComposite } from '@retikz/core';
+import { defineComposite, defineInspector } from '@retikz/core';
 
-import type { IROverlayLayout, OverlayLayoutArtifact, ResolvedOverlayLayoutInspectLocalOptions } from './types';
+import type { IROverlayLayout, OverlayLayoutArtifact, ResolvedOverlayLayoutInspectOptions } from './types';
 
 import { STANDARD_NAMESPACE } from '../../shared';
 import { inspectOverlayLayoutArtifact } from './inspection';
 import { compileOverlayLayout } from './pipeline';
 import {
   OverlayLayoutArtifactSchema,
-  OverlayLayoutInspectLocalOptionsInputSchema,
-  OverlayLayoutInspectLocalOptionsSchema,
+  OverlayLayoutInspectOptionsInputSchema,
+  OverlayLayoutInspectOptionsSchema,
   OverlayLayoutSchema,
 } from './schema';
 
@@ -20,20 +20,20 @@ export const OverlayLayoutDefinition: LayoutCompositeDefinition<
   typeof STANDARD_NAMESPACE,
   'overlayLayout',
   OverlayLayoutArtifact,
-  typeof OverlayLayoutInspectLocalOptionsInputSchema.shape,
-  ResolvedOverlayLayoutInspectLocalOptions
+  typeof OverlayLayoutInspectOptionsInputSchema.shape,
+  ResolvedOverlayLayoutInspectOptions
 > = defineComposite({
   namespace: STANDARD_NAMESPACE,
   type: 'overlayLayout',
   schema: OverlayLayoutSchema,
   compile: compileOverlayLayout,
   artifactSchema: OverlayLayoutArtifactSchema,
-  inspector: {
-    kind: 'layout',
-    localOptionsInputSchema: OverlayLayoutInspectLocalOptionsInputSchema,
-    localOptionsSchema: OverlayLayoutInspectLocalOptionsSchema,
+  inspector: defineInspector({
+    kind: 'composite',
+    optionsInputSchema: OverlayLayoutInspectOptionsInputSchema,
+    optionsSchema: OverlayLayoutInspectOptionsSchema,
     inspect: inspectOverlayLayoutArtifact,
-  },
+  }),
 });
 
 /** OverlayLayout definition 推导出的公开 compile artifact envelope */

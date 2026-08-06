@@ -10,6 +10,7 @@ import {
   createRuntimeSession,
   defineRuntimeCommitParticipant,
   defineRuntimeOwner,
+  RuntimeProgramPhase,
 } from '../../src';
 
 const defineCounterOwner = () =>
@@ -336,10 +337,10 @@ describe('runtime session participant lifecycle', () => {
       prepare: candidate => {
         const previous = participantRead;
         const next = Object.freeze({ value: candidate.snapshot(owner).value });
-        if (candidate.phase === 'update') captureReentry(() => sessionRef.current?.snapshot(owner));
+        if (candidate.phase === RuntimeProgramPhase.Update) captureReentry(() => sessionRef.current?.snapshot(owner));
         return Object.freeze({
           commit: () => {
-            if (candidate.phase === 'update') {
+            if (candidate.phase === RuntimeProgramPhase.Update) {
               captureReentry(() => sessionRef.current?.participant(participant));
             }
             participantRead = next;
@@ -348,7 +349,7 @@ describe('runtime session participant lifecycle', () => {
             participantRead = previous;
           },
           dispose: () => {
-            if (candidate.phase === 'update') captureReentry(() => sessionRef.current?.diagnostics());
+            if (candidate.phase === RuntimeProgramPhase.Update) captureReentry(() => sessionRef.current?.diagnostics());
           },
         });
       },

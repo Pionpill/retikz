@@ -10,7 +10,11 @@ import {
   createRuntimeSession,
   defineRuntimeOwner,
   defineRuntimeProgram,
+  PerformanceTraceOutcome,
+  PerformanceTracePhase,
+  PerformanceTraceUnit,
   RuntimeError,
+  RuntimeProgramKind,
 } from '@retikz/runtime';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
@@ -418,10 +422,14 @@ describe('createRetainedRenderParticipant', () => {
     expect(renderer.read).toHaveBeenCalledTimes(2);
     expect(renderer.patches[0]).toMatchObject({ baseRevision: 0, nextRevision: 1 });
     expect(renderer.patches[0]?.operations[0]?.kind).toBe('update');
-    expect(records.filter(record => record.owner === '@retikz/render:svg' && record.unit === 'scene-change')).toEqual([
+    expect(
+      records.filter(
+        record => record.owner === '@retikz/render:svg' && record.unit === PerformanceTraceUnit.SceneChange,
+      ),
+    ).toEqual([
       expect.objectContaining({
-        phase: 'update',
-        outcome: 'incremental',
+        phase: PerformanceTracePhase.Update,
+        outcome: PerformanceTraceOutcome.Incremental,
       }),
     ]);
   });
@@ -446,10 +454,14 @@ describe('createRetainedRenderParticipant', () => {
 
     expect(session.artifact(coreProgram).value.patch?.operations[0]?.kind).toBe('replaceScene');
     expect(renderer.patches[0]?.operations[0]?.kind).toBe('replaceScene');
-    expect(records.filter(record => record.owner === '@retikz/render:svg' && record.unit === 'scene-change')).toEqual([
+    expect(
+      records.filter(
+        record => record.owner === '@retikz/render:svg' && record.unit === PerformanceTraceUnit.SceneChange,
+      ),
+    ).toEqual([
       expect.objectContaining({
-        phase: 'update',
-        outcome: 'full',
+        phase: PerformanceTracePhase.Update,
+        outcome: PerformanceTraceOutcome.Full,
       }),
     ]);
   });
@@ -507,10 +519,14 @@ describe('createRetainedRenderParticipant', () => {
         phase: 'prepare',
       }),
     ]);
-    expect(records.filter(record => record.owner === '@retikz/render:svg' && record.unit === 'scene-change')).toEqual([
+    expect(
+      records.filter(
+        record => record.owner === '@retikz/render:svg' && record.unit === PerformanceTraceUnit.SceneChange,
+      ),
+    ).toEqual([
       expect.objectContaining({
-        phase: 'update',
-        outcome: 'fallback',
+        phase: PerformanceTracePhase.Update,
+        outcome: PerformanceTraceOutcome.Fallback,
       }),
     ]);
   });
@@ -568,12 +584,12 @@ describe('createRetainedRenderParticipant', () => {
       programs: [],
       tracePhases: [],
       artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: 'full', artifact: artifact(snapshot(view.candidateRevision, false)) }),
+      run: view => ({ kind: RuntimeProgramKind.Full, artifact: artifact(snapshot(view.candidateRevision, false)) }),
       update: (_previous, view) => {
         const next = snapshot(view.candidateRevision, view.snapshot(sourceOwner).value);
         if (view.baseRevision === undefined) throw new Error('expected update base revision');
         return {
-          kind: 'incremental',
+          kind: RuntimeProgramKind.Incremental,
           artifact: artifact(
             next,
             Object.freeze({

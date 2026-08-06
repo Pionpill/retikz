@@ -2,11 +2,23 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { RuntimeOwnerToken, RuntimeRevision } from '../../src/owner';
 import type { RuntimeCandidateView, RuntimeProgramDefinition, RuntimeProgramToken } from '../../src/program';
+import type { PerformanceTraceOutcomeValue } from '../../src/trace';
 
 import { defineRuntimeOwner } from '../../src/owner';
-import { defineRuntimeProgram, getRuntimeProgramDefinitionExecutor } from '../../src/program';
+import {
+  defineRuntimeProgram,
+  getRuntimeProgramDefinitionExecutor,
+  RuntimeProgramExecution,
+  RuntimeProgramKind,
+  RuntimeProgramPhase,
+} from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry, sortRuntimeProgramGraph } from '../../src/registry';
-import { createRuntimeTraceReporter } from '../../src/trace';
+import {
+  createRuntimeTraceReporter,
+  PerformanceTraceOutcome,
+  PerformanceTracePhase,
+  PerformanceTraceUnit,
+} from '../../src/trace';
 
 const defineOwner = (key: string) =>
   defineRuntimeOwner<number, number, number, never>({
@@ -25,7 +37,7 @@ const defineProgram = (
     programs,
     tracePhases: [],
     artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-    run: () => ({ kind: 'full', artifact: 1 }),
+    run: () => ({ kind: RuntimeProgramKind.Full, artifact: 1 }),
   });
 
 describe('runtime program definition and registry', () => {
@@ -57,8 +69,14 @@ describe('runtime program definition and registry', () => {
     const id = { owner: 'counter', key: 'stable' };
     const owners: Array<RuntimeOwnerToken> = [owner];
     const programs: Array<RuntimeProgramToken> = [];
-    const outcomes: Array<'full' | 'incremental'> = ['full'];
-    const tracePhases = [{ phase: 'update' as const, unit: 'program' as const, outcomes }];
+    const outcomes: Array<PerformanceTraceOutcomeValue> = [PerformanceTraceOutcome.Full];
+    const tracePhases = [
+      {
+        phase: PerformanceTracePhase.Update,
+        unit: PerformanceTraceUnit.Program,
+        outcomes,
+      },
+    ];
     const artifact = {
       capture: (value: number) => value,
       readForProgram: (value: number) => value,
@@ -70,7 +88,7 @@ describe('runtime program definition and registry', () => {
       programs,
       tracePhases,
       artifact,
-      run: () => ({ kind: 'full' as const, artifact: 1 }),
+      run: () => ({ kind: RuntimeProgramKind.Full, artifact: 1 }),
     };
     const definition = defineRuntimeProgram(input);
     const executor = getRuntimeProgramDefinitionExecutor(definition);
@@ -79,14 +97,14 @@ describe('runtime program definition and registry', () => {
     id.key = 'mutated';
     owners.length = 0;
     programs.push(definition);
-    outcomes.push('incremental');
+    outcomes.push(PerformanceTraceOutcome.Incremental);
     tracePhases.length = 0;
     artifact.capture = () => 99;
     artifact.readForProgram = () => 99;
     artifact.read = () => 99;
-    input.run = () => ({ kind: 'full', artifact: 99 });
+    input.run = () => ({ kind: RuntimeProgramKind.Full, artifact: 99 });
     const view: RuntimeCandidateView = Object.freeze({
-      phase: 'initial',
+      phase: RuntimeProgramPhase.Initial,
       candidateRevision: 0 as RuntimeRevision,
       snapshot: () => {
         throw new Error('unused owner lookup');
@@ -108,37 +126,54 @@ describe('runtime program definition and registry', () => {
     expect(definition.id).toEqual({ owner: 'counter', key: 'stable' });
     expect(executor.owners).toEqual([owner]);
     expect(executor.programs).toEqual([]);
-    expect(executor.tracePhases).toEqual([{ phase: 'update', unit: 'program', outcomes: ['full'] }]);
+    expect(executor.tracePhases).toEqual([
+      {
+        phase: PerformanceTracePhase.Update,
+        unit: PerformanceTraceUnit.Program,
+        outcomes: [PerformanceTraceOutcome.Full],
+      },
+    ]);
     expect(executor.capture(1)).toBe(1);
     expect(executor.readForProgram(1)).toBe(1);
     expect(executor.read(1)).toBe(1);
     expect(
       executor.run(view, {
-        execution: 'full',
+        execution: RuntimeProgramExecution.Full,
         trace: createRuntimeTraceReporter({ owner: 'counter', phases: [], sink: () => undefined }),
         diagnose: () => undefined,
       }),
-    ).toEqual({ kind: 'full', artifact: 1 });
+    ).toEqual({ kind: RuntimeProgramKind.Full, artifact: 1 });
   });
 
   it.each([
-    { tracePhases: [{ phase: 'update', unit: 'program', outcomes: [] }], code: 'RUNTIME_TRACE_DEFINITION_INVALID' },
     {
-      tracePhases: [{ phase: 'invalid', unit: 'program', outcomes: ['full'] }],
+      tracePhases: [{ phase: PerformanceTracePhase.Update, unit: PerformanceTraceUnit.Program, outcomes: [] }],
       code: 'RUNTIME_TRACE_DEFINITION_INVALID',
     },
     {
-      tracePhases: [{ phase: 'update', unit: 'invalid', outcomes: ['full'] }],
+      tracePhases: [{ phase: 'invalid', unit: PerformanceTraceUnit.Program, outcomes: [PerformanceTraceOutcome.Full] }],
       code: 'RUNTIME_TRACE_DEFINITION_INVALID',
     },
     {
-      tracePhases: [{ phase: 'update', unit: 'program', outcomes: ['invalid'] }],
+      tracePhases: [{ phase: PerformanceTracePhase.Update, unit: 'invalid', outcomes: [PerformanceTraceOutcome.Full] }],
+      code: 'RUNTIME_TRACE_DEFINITION_INVALID',
+    },
+    {
+      tracePhases: [{ phase: PerformanceTracePhase.Update, unit: PerformanceTraceUnit.Program, outcomes: ['invalid'] }],
       code: 'RUNTIME_TRACE_DEFINITION_INVALID',
     },
     {
       tracePhases: [
-        { phase: 'update', unit: 'program', outcomes: ['full'] },
-        { phase: 'update', unit: 'program', outcomes: ['full'] },
+        {
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.Program,
+          outcomes: [PerformanceTraceOutcome.Full],
+        },
+        {
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.Program,
+          outcomes: [PerformanceTraceOutcome.Full],
+        },
       ],
       code: 'RUNTIME_TRACE_DEFINITION_INVALID',
     },
@@ -151,7 +186,7 @@ describe('runtime program definition and registry', () => {
         programs: [],
         tracePhases: tracePhases as never,
         artifact: { capture: (value: number) => value, readForProgram: value => value, read: value => value },
-        run: () => ({ kind: 'full', artifact: 1 }),
+        run: () => ({ kind: RuntimeProgramKind.Full, artifact: 1 }),
       }),
     ).toThrowError(expect.objectContaining({ code }));
   });
@@ -236,7 +271,7 @@ describe('runtime program definition and registry', () => {
       programs: [],
       tracePhases: [],
       artifact: { capture: (value: number) => value, readForProgram: value => value, read: value => value },
-      run: () => ({ kind: 'full', artifact: 1 }),
+      run: () => ({ kind: RuntimeProgramKind.Full, artifact: 1 }),
     });
     expect(() => createRuntimeProgramRegistry({ owners, custom: [foreign] })).toThrowError(
       expect.objectContaining({ code: 'RUNTIME_PROGRAM_TOKEN_INVALID' }),

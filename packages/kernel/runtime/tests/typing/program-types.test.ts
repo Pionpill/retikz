@@ -1,14 +1,40 @@
-import { describe, expectTypeOf, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import type { RuntimeOwnerDefinition } from '../../src/owner';
-import type { RuntimeCandidateView, RuntimeProgramDefinition, RuntimeProgramToken } from '../../src/program';
+import type {
+  RuntimeCandidateView,
+  RuntimeProgramDefinition,
+  RuntimeProgramExecutionValue,
+  RuntimeProgramKindValue,
+  RuntimeProgramPhaseValue,
+  RuntimeProgramToken,
+} from '../../src/program';
 
 import { defineRuntimeOwner } from '../../src/owner';
-import { defineRuntimeProgram } from '../../src/program';
+import {
+  defineRuntimeProgram,
+  RuntimeProgramExecution,
+  RuntimeProgramKind,
+  RuntimeProgramPhase,
+} from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
 import { createRuntimeChangeSet, createRuntimeOwnerInput, createRuntimeOwnerUpdate } from '../../src/transaction';
 
 describe('runtime program types', () => {
+  it('公开 Program phase、kind 与 execution 常量及取值类型', () => {
+    expect(RuntimeProgramPhase).toEqual({ Initial: 'initial', Update: 'update' });
+    expect(RuntimeProgramKind).toEqual({
+      Full: 'full',
+      Incremental: 'incremental',
+      Bailout: 'bailout',
+      Fallback: 'fallback',
+    });
+    expect(RuntimeProgramExecution).toEqual({ Full: 'full', Incremental: 'incremental', Fallback: 'fallback' });
+    expectTypeOf<RuntimeProgramPhaseValue>().toEqualTypeOf<'initial' | 'update'>();
+    expectTypeOf<RuntimeProgramKindValue>().toEqualTypeOf<'full' | 'incremental' | 'bailout' | 'fallback'>();
+    expectTypeOf<RuntimeProgramExecutionValue>().toEqualTypeOf<'full' | 'incremental' | 'fallback'>();
+  });
+
   it('Program token、CandidateView 与 registry 保留具体泛型', () => {
     const owner = defineRuntimeOwner<number, number, number, { delta: number }>({
       key: 'counter',
@@ -30,11 +56,11 @@ describe('runtime program types', () => {
         expectTypeOf(view.changeSet(owner)).toEqualTypeOf<
           ReturnType<typeof createRuntimeChangeSet<{ delta: number }>> | undefined
         >();
-        return { kind: 'full', artifact: view.snapshot(owner).value };
+        return { kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value };
       },
       update: (previous, view) => {
         expectTypeOf(previous).toEqualTypeOf<number>();
-        return { kind: 'incremental', artifact: view.snapshot(owner).value };
+        return { kind: RuntimeProgramKind.Incremental, artifact: view.snapshot(owner).value };
       },
     });
     const registry = createRuntimeProgramRegistry({
