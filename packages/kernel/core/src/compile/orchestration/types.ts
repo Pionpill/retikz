@@ -2,17 +2,17 @@ import type { AxisAlignedBounds } from '@retikz/math';
 import type { RuntimeIdentity, RuntimeRevision } from '@retikz/runtime';
 
 import type {
-  AnyCompositeInspectorDefinition,
+  AnyInspectorDefinition,
   BaseLayoutInspectOptions,
   ClipShape,
   CompileOccurrenceLocator,
   CompositeCompileChild,
   CompositeCompileScopeProps,
-  CompositeInspectionAuthoringTree,
-  CompositeInspectionChildForest,
   CompositeReplay,
   CompositeReplayWrapper,
-  InspectionPrimitive,
+  InspectionAuthoringTree,
+  InspectionChildForest,
+  InspectionOwner,
   LayoutAlignmentGuide,
   LayoutCompositeCompileContext,
   LayoutCompositeCompileResult,
@@ -21,14 +21,14 @@ import type {
   SceneResource,
   Transform,
 } from '../../contract';
-import type { IRChild, IRPathBase, IRPosition, JsonValue, ResolvedDropShadow } from '../../schemas';
+import type { IRChild, IRJsonObject, IRPathBase, IRPosition, JsonValue, ResolvedDropShadow } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { NamespaceFrameChange, NamespaceStack } from '../namespace';
 import type { NodeLayout } from '../node';
 import type { LayoutProbeFailureEntry } from '../probe-failure';
 import type { StyleFrame } from '../style';
 import type { CompositeCompileArtifact, NodeLayoutCompileArtifact } from '../types';
-import type { CompileWarning } from '../warning';
+import type { CompileWarningInput } from '../warning';
 import type { CompileContext } from './context';
 import type { InternalScenePrimitive, PathPlaceholder, PrimitiveZIndexTable } from './primitive';
 
@@ -50,6 +50,12 @@ export type PendingPathEmission = {
   placeholderSlot: { primitiveSink: Array<InternalScenePrimitive>; placeholder: PathPlaceholder };
   /** path 的完整 canonical occurrence */
   occurrence: CompileOccurrenceLocator;
+  /** Path Inspector request 的最终输出容器 */
+  inspectionSink: Array<PendingInspectionEntry>;
+  /** Path occurrence 捕获的有效 Theme */
+  theme: ResolvedTheme;
+  /** Path occurrence 捕获的完整样式栈 */
+  styleStack: ReadonlyArray<StyleFrame>;
   /** 产生 path primitive 的语义 owner */
   semanticOwner?: RuntimeSemanticOwner;
   /** 编译期排序用 zIndex，不写入 Scene primitive */
@@ -116,11 +122,11 @@ export type CompositeReplayTransaction = {
   /** probe root namespace frame 内全部 Kernel identity registrations */
   topologyIdentityIds: Array<string>;
   /** probe 中由 fork baseline collision 产生的 duplicate warning */
-  namespaceBaselineWarnings: Array<{ id: string; warning: CompileWarning }>;
+  namespaceBaselineWarnings: Array<{ id: string; warning: CompileWarningInput }>;
   /** probe 已解析资源 */
   resources: Array<SceneResource>;
   /** 仅在 replay 时发布的 warning */
-  warnings: Array<CompileWarning>;
+  warnings: Array<CompileWarningInput>;
   /** 仅在 replay 时发布的 artifacts */
   artifacts: Array<CompositeCompileArtifact | NodeLayoutCompileArtifact>;
   /** 仅在 replay 时发布的 inspection entries */
@@ -187,12 +193,12 @@ export type InheritedInspectionState = Readonly<{
 }>;
 
 /** 已按 layoutChild authoring locator 索引的 inspection forest */
-export type PreparedCompositeInspectionChildForest = ReadonlyMap<string, CompositeInspectionAuthoringTree>;
+export type PreparedCompositeInspectionChildForest = ReadonlyMap<string, InspectionAuthoringTree>;
 
 /** opaque inspection child handle 的 callback-local 绑定记录 */
 export type CompositeInspectionChildEntry = {
   owner: CompositeCompileOwner;
-  forest: CompositeInspectionChildForest;
+  forest: InspectionChildForest;
   boundChild?: IRChild;
   prepared?: PreparedCompositeInspectionChildForest;
 };
@@ -229,6 +235,8 @@ export type TraversalCompileOptions = {
   inspectionForest?: PreparedCompositeInspectionChildForest;
   /** 向隔离 namespace callback 暴露当前 warning occurrence */
   observeWarningOccurrence?: (occurrence: CompileOccurrenceLocator | undefined) => void;
+  /** 向辅助编译边界暴露最接近失败点的 child IR path */
+  observeFailurePath?: (path: string) => void;
 };
 
 /** 整棵 child 树遍历期间共享的可变状态 */
@@ -424,12 +432,22 @@ export type PendingNodeLayoutObservation = {
 
 /** 等最终 Scope/replay transform 与 occurrence remap 完成后发布的 inspection entry */
 export type PendingInspectionEntry = {
-  /** 最终 Composite occurrence locator */
+  /** 产生辅助内容的语义 owner */
+  owner: InspectionOwner;
+  /** 最终 owner occurrence locator */
   occurrence: CompileOccurrenceLocator;
-  /** 从当前 artifact local coordinate 到 root 的 transform chain */
+  /** 从当前 subject local coordinate 到 root 的 transform chain */
   scopeChain: Array<Transform>;
-  /** 已校验和冻结的受限 primitives */
-  primitives: ReadonlyArray<InspectionPrimitive>;
+  /** 已解析并冻结的 settled subject */
+  subject: JsonValue;
+  /** owner definition 绑定的 Inspector */
+  inspector: AnyInspectorDefinition;
+  /** owner schema 解析后的 canonical options */
+  options: IRJsonObject;
+  /** owner occurrence 捕获的有效 Theme */
+  theme: ResolvedTheme;
+  /** owner occurrence 捕获的完整样式栈 */
+  styleStack: ReadonlyArray<StyleFrame>;
 };
 
 /** 紧邻 schema parse 后可调用的 layout-aware composite 形态 */
@@ -437,6 +455,6 @@ export type CallableLayoutCompositeDefinition = {
   namespace: string;
   type: string;
   artifactSchema?: { parse: (value: unknown) => JsonValue };
-  inspector?: AnyCompositeInspectorDefinition;
+  inspector?: AnyInspectorDefinition & Readonly<{ kind: 'composite' }>;
   compile: (node: unknown, context: LayoutCompositeCompileContext) => LayoutCompositeCompileResult<JsonValue>;
 };

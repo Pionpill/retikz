@@ -83,10 +83,11 @@ describe('Path kind registry', () => {
   });
 
   it('throws for unknown path kinds until a provider is registered', () => {
-    expect(() =>
-      compileToScene(
-        scene([{ type: 'path', kind: 'missing', kindOptions: {}, children: steps }] as IRScene['children']),
-      ).scene,
+    expect(
+      () =>
+        compileToScene(
+          scene([{ type: 'path', kind: 'missing', kindOptions: {}, children: steps }] as IRScene['children']),
+        ).scene,
     ).toThrow(/Unknown path kind 'missing'/);
   });
 
@@ -119,6 +120,24 @@ describe('Path kind registry', () => {
     );
 
     expect(prim.stroke).toBe('gold');
+  });
+
+  it('keeps the no-Inspector emitStroke result free of inspection-only subject data', () => {
+    const observed: Array<ReadonlyArray<string>> = [];
+    const plain = definePathKind({
+      schema: z.object({ kind: z.literal('plain-stroke') }),
+      compile: context => {
+        const result = context.emitStroke();
+        if (result !== null) observed.push(Object.keys(result));
+        return result;
+      },
+    });
+
+    pathPrims(scene([{ type: 'path', kind: 'plain-stroke', children: steps }] as IRScene['children']), {
+      pathKinds: [plain],
+    });
+
+    expect(observed).toEqual([['primitives', 'boundsPoints']]);
   });
 
   it('keeps custom path kind primitives in the transformed owner group', () => {

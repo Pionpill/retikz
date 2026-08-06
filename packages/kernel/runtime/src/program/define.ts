@@ -15,6 +15,7 @@ import type {
 } from './types';
 
 import { RuntimeError } from '../error';
+import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '../trace/constants';
 
 /** Program prepare 完成但尚未发布的 artifact 与双层 read cache */
 export type RuntimePreparedProgramArtifact<TArtifact, TProgramRead, TPublicRead> = Readonly<{
@@ -75,9 +76,9 @@ export type RuntimeProgramErasedExecutor = Readonly<{
 
 const runtimeProgramTokens = new WeakSet<object>();
 const runtimeProgramExecutors = new WeakMap<object, RuntimeProgramErasedExecutor>();
-const tracePhases: ReadonlySet<unknown> = new Set(['compile', 'commit', 'update']);
-const traceUnits: ReadonlySet<unknown> = new Set(['ir-child', 'scene-primitive', 'program', 'scene-change']);
-const traceOutcomes: ReadonlySet<unknown> = new Set(['full', 'incremental', 'bailout', 'fallback', 'commit']);
+const tracePhases: ReadonlySet<unknown> = new Set(Object.values(PerformanceTracePhase));
+const traceUnits: ReadonlySet<unknown> = new Set(Object.values(PerformanceTraceUnit));
+const traceOutcomes: ReadonlySet<unknown> = new Set(Object.values(PerformanceTraceOutcome));
 
 /** 创建 artifact dispose 失败的非致命诊断 */
 const artifactDisposeDiagnostic = (program: RuntimeProgramToken, cause: unknown): RuntimeDiagnostic =>

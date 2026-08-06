@@ -69,19 +69,19 @@ Each adapter calls the same `createXxxLayout()` factory as direct authoring and 
 
 ## Layout Inspector
 
-Layout Inspector is a runtime-only development overlay. It never enters Standard IR or changes typed layout artifacts. SVG appends a `pointer-events="none"` group after the primary figure. Canvas draws the overlay after the primary bitmap without adding its primitives to hit testing. Both backends derive viewBox, resources, animation, and normal interaction from the primary Scene only.
+Layout Inspector is a runtime-only development overlay. It never enters Standard IR or changes typed layout artifacts. Flex, Grid, and Overlay Inspectors convert typed artifacts from the same compile into ordinary Core Path, Node, and pattern-paint children; Core then compiles those children into isolated entry Scenes. SVG appends them in a `pointer-events="none"` group after the primary figure. Canvas draws them after the primary bitmap without adding auxiliary primitives to hit testing. Both backends derive viewBox, primary resources, animation, and normal interaction from the primary Scene only.
 
 ### Color, pattern, and line style
 
 The overlay uses three independent visual channels instead of overloading color with both geometry class and nesting depth:
 
-| Channel    | Meaning                 | Rule                                                                                                                                                                                                             |
-| ---------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Color      | Final layout occurrence | Core assigns `colorScope` in final entry order. Render cycles a nine-color palette, while warnings stay red                                                                                                      |
-| Pattern    | Spacing semantics       | Margin and fixed gaps use `/`, while padding uses the opposite `\`. These three draw hatches without a base fill. Distributed space uses neither a pattern nor a background fill. Hatch spacing is 12 user units |
-| Line style | Geometry class          | Container, content, item boxes, Flex lines, Grid tracks/cells/spans, Overlay placements, and alignment guides are dashed; anchor crosshairs are solid                                                            |
+| Channel    | Meaning                 | Rule                                                                                                                                                                |
+| ---------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Color      | Final layout occurrence | Core assigns `colorScope` in final request order and supplies a regular color from the nine-color cycle plus the fixed warning color through `InspectionAppearance` |
+| Pattern    | Spacing semantics       | Standard uses ordinary `lines` pattern paints: margin and fixed gaps use `-45°` `/`, padding uses `45°` `\`, size is 12, and line width is 1; none adds a base fill |
+| Line style | Geometry class          | Container, content, item boxes, Flex lines, Grid tracks/cells/spans, Overlay placements, and alignment guides are dashed; anchor crosshairs are solid               |
 
-Regular primitives from one occurrence share a color. Nested containers receive colors from their own final occurrences. The palette repeats from the tenth occurrence, so color is a quick ownership cue; the occurrence locator remains the exact identity.
+Regular auxiliary content from one occurrence shares a color. Nested containers receive colors from their own final occurrences. The palette repeats from the tenth occurrence, so color is a quick ownership cue; the occurrence locator remains the exact identity. Overflow warnings are ordinary translucent fills, and labels are ordinary Nodes.
 
 Paint order is spacing hatch / boundary underlay → family structure → box outline → overflow warning → guide/anchor → label. `bounds.content` and `bounds.slot` control only their outlines; `spacing.padding` and `spacing.margin` independently control both texture and boundary. Margin, padding, and fixed gaps use independent dashed lines for their boundaries. A ring outlines only its outer and inner perimeter, never the seams between its hatch pieces. `distributedSpace` shows only the dashed perimeter of unused content and keeps its interior transparent. If a spacing boundary is already fully covered by a content or slot outline, Flex line, or Grid track, that segment is painted once; enabling any category alone still keeps its complete visible boundary.
 
@@ -131,7 +131,7 @@ Flex enables `lines`, `gaps`, and `distributedSpace` by default. Grid enables `t
 
 For Flex and Grid, `gaps` controls resolved authored gaps and `distributedSpace` controls positive free space introduced by `justifyContent` or `alignContent`. Fixed gaps use `/`, opposite the padding hatch; distributed space keeps a transparent interior and contributes only uncovered dashed perimeter segments. The inspector consumes resolved `artifact.spacing` segments and does not classify every empty interval between slots or tracks as a gap.
 
-`inspect` accepts sparse authoring values only; unknown keys or invalid types fail loudly. Core resolves the cascade exactly once, then a Standard inspector reads only the typed artifact from that same compilation. A retained update commits the primary frame, artifacts, and overlay atomically; a failure publishes no partial frame.
+`inspect` accepts sparse authoring values only; unknown keys or invalid types fail loudly. Core resolves the cascade exactly once, then a Standard Inspector reads only the typed artifact from that same compilation and returns ordinary Core children without declaring an `outputSchema`. A retained update commits the primary frame, artifacts, and overlay atomically; a failure publishes no partial frame.
 
 <SourceLinks
   sources={[

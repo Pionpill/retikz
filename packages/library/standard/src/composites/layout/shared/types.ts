@@ -1,4 +1,4 @@
-import type { ResolvedBaseLayoutInspectOptions, ValueOf } from '@retikz/core';
+import type { ValueOf } from '@retikz/core';
 import type { z } from 'zod';
 
 import type {
@@ -87,9 +87,3 @@ export type LayoutArtifactItemBase = z.infer<typeof LayoutArtifactItemBaseSchema
 
 /** 三种布局 container 共用的几何 artifact */
 export type LayoutArtifactContainer = z.infer<typeof LayoutArtifactContainerSchema>;
-
-/** Standard family inspector lowering context */
-export type StandardLayoutInspectContext<TOptions> = Readonly<{
-  baseOptions: ResolvedBaseLayoutInspectOptions;
-  options: TOptions;
-}>;

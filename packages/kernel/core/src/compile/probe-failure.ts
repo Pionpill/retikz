@@ -6,6 +6,7 @@ import { formatCompileOccurrence } from './artifact';
 const layoutProbeRecoverableErrors = new WeakSet<object>();
 const compositeContractErrors = new WeakSet<object>();
 const compileInvariantErrors = new WeakSet<object>();
+const additionalFatalProbeErrors = new WeakSet<object>();
 
 /** layout probe 内可被 solver 丢弃或选择提升的 candidate failure */
 export class LayoutProbeRecoverableError extends Error {
@@ -71,11 +72,16 @@ export const isLayoutProbeRecoverableError = (error: unknown): error is LayoutPr
 export const isCompositeContractError = (error: unknown): error is CompositeContractError =>
   error !== null && typeof error === 'object' && compositeContractErrors.has(error);
 
+/** 登记必须穿透 layout probe recoverable boundary 的领域错误 */
+export const registerFatalProbeError = (error: object): void => {
+  additionalFatalProbeErrors.add(error);
+};
+
 /** 判断 catch boundary 必须立即穿透的 fatal error，不触发 hostile Proxy trap */
-export const isFatalProbeError = (error: unknown): error is CompositeContractError | CompileInvariantError =>
+export const isFatalProbeError = (error: unknown): error is Error =>
   error !== null &&
   typeof error === 'object' &&
-  (compositeContractErrors.has(error) || compileInvariantErrors.has(error));
+  (compositeContractErrors.has(error) || compileInvariantErrors.has(error) || additionalFatalProbeErrors.has(error));
 
 /** 安全判断 ordinary Error identity，任何 prototype trap 都视为非 Error */
 const isOrdinaryError = (value: unknown): value is Error => {

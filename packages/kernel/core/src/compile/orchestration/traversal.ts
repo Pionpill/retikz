@@ -4,20 +4,25 @@ import { boundsToRect } from '@retikz/math';
 
 import type {
   ClipShape,
+  CompileOccurrenceLocator,
   CompositeCompileChild,
   CompositeCompileScopeProps,
   CompositeReplay,
   CompositeReplayWrapper,
+  EmitStroke,
+  EmitStrokeInspectionOptions,
   GroupPrim,
+  InspectionOwner,
   LayoutChildResult,
   LayoutProposal,
   PaintValue,
+  PathKindCompileContext,
   PathKindCompileResult,
   ScenePrimitive,
   SceneResource,
+  StrokePathInspectionSubject,
   Transform,
 } from '../../contract';
-import type { CompileOccurrenceLocator } from '../../contract';
 import type {
   IRChild,
   IRPathBase,
@@ -29,7 +34,7 @@ import type {
 } from '../../schemas';
 import type { NodeLayout } from '../node';
 import type { CompositeCompileArtifact } from '../types';
-import type { CompileWarning, CompileWarningCodeValue } from '../warning';
+import type { CompileWarningCodeValue, CompileWarningInput } from '../warning';
 import type { CompileContext } from './context';
 import type { InternalScenePrimitive } from './primitive';
 import type {
@@ -125,8 +130,9 @@ import {
   lookupCompositeInspectionChildTree,
   resolveCompositeInspection,
   resolveLayoutChildInspection,
-  runCompositeInspector,
+  resolvePathInspection,
 } from './inspection';
+import { inspectionOccurrenceResolveOrigin, wrapInspectionError } from './inspection-error';
 import { cloneLayoutProposal, resolveLayoutSlotSize } from './layout-proposal';
 import {
   collectPlaceholderLocators,
@@ -172,7 +178,7 @@ export const compileChildrenToPrimitives = (
     inspectionChildren: new WeakMap(),
   };
   const warningOccurrences: Array<CompileOccurrenceLocator> = [];
-  const dispatchWarning = (warning: CompileWarning): void => {
+  const dispatchWarning = (warning: CompileWarningInput): void => {
     context.onWarn(withCompileWarningOccurrence(warning, warningOccurrences.at(-1)));
   };
   /** 在同步 child 编译或延迟 emit 期间绑定当前 warning occurrence */
@@ -226,7 +232,13 @@ export const compileChildrenToPrimitives = (
   };
 
   /** 校验并脱离 PathKind provider 返回的 primitive 与 bounds point */
-  const validatePathKindCompileResult = (kind: string, value: unknown): PathKindCompileResult | null =>
+  const validatePathKindCompileResult = (
+    kind: string,
+    value: unknown,
+  ): Readonly<{
+    result: PathKindCompileResult;
+    source: Record<string, unknown>;
+  }> | null =>
     withProviderOutputValidationBoundary(`Path kind '${kind}'`, () => {
       if (value === null) return null;
       if (typeof value !== 'object') {
@@ -243,20 +255,60 @@ export const compileChildrenToPrimitives = (
         (point, index): IRPosition =>
           snapshotProviderPosition(`Path kind '${kind}' bounds point at index ${index}`, point),
       );
-      return Object.freeze({ primitives, boundsPoints });
+      return Object.freeze({
+        result: Object.freeze({ primitives, boundsPoints }),
+        source: result,
+      });
     });
 
+  /** 仅为最终选中的 Path Inspector 解析并冻结 settled subject */
+  const snapshotPathInspectionSubject = (
+    kind: string,
+    source: Record<string, unknown>,
+    schema: { parse: (value: unknown) => unknown },
+    owner: InspectionOwner,
+    occurrence: CompileOccurrenceLocator,
+  ): JsonValue => {
+    try {
+      let parsedSubject: unknown;
+      try {
+        parsedSubject = schema.parse(Reflect.get(source, 'inspectionSubject'));
+      } catch (cause) {
+        throw new CompositeContractError(`Path kind '${kind}' returned an invalid inspection subject.`, { cause });
+      }
+      try {
+        return cloneAndFreezeJson(parsedSubject, `Path kind '${kind}' inspection subject`) as JsonValue;
+      } catch (cause) {
+        throw new CompositeContractError(`Path kind '${kind}' returned a non-JSON inspection subject.`, { cause });
+      }
+    } catch (cause) {
+      throw wrapInspectionError(inspectionOccurrenceResolveOrigin(owner, occurrence), cause);
+    }
+  };
+
   /** 按 path.kind 查找 path kind provider，并提供内置 stroke / ribbon emit 回调 */
-  const emitPathKindPrimitive = (
-    path: IRPathBase,
-    irPath: string,
-    scopeChain: ReadonlyArray<Transform>,
-  ): PathKindCompileResult | null => {
+  const emitPathKindPrimitive = (pendingPath: PendingPathEmission): PathKindCompileResult | null => {
+    const { path, irPath, scopeChain } = pendingPath;
     const kind = path.kind ?? 'stroke';
     const definition = providerDefinitionOf(runtime.context.pathKinds, kind, {
       capability: 'path kind',
       optionName: 'pathKinds',
     });
+    const authoredInspectionTree = lookupCompositeInspectionChildTree(
+      options.inspectionForest,
+      options.occurrence,
+      pendingPath.occurrence,
+    );
+    const inspectionOwner = Object.freeze({ kind: 'pathKind' as const, name: kind });
+    const inspection = resolvePathInspection(
+      runtime.context.inspection,
+      pendingPath.occurrence,
+      inspectionOwner,
+      definition.inspector,
+      options.inheritedInspection,
+      authoredInspectionTree,
+    );
+    const inspectionRequest = inspection.request;
     const optionsValue = definition.optionsSchema
       ? parseProviderPayload({
           capability: 'path kind',
@@ -277,16 +329,30 @@ export const compileChildrenToPrimitives = (
       lowerTex: runtime.context.lowerTex,
       rootFontSize: runtime.context.rootFontSize,
     };
-    const produced = definition.compile({
+    const emitStroke = ((nextPath?: IRPathBase, request?: EmitStrokeInspectionOptions) => {
+      let inspectionSubject: StrokePathInspectionSubject | undefined;
+      const emitted = emitPathPrimitive(nextPath ?? path, {
+        namespaceStack: runtime.state.namespaceStack,
+        round: runtime.context.round,
+        measureText: runtime.context.measureText,
+        options: {
+          ...emitOptions,
+          ...(request?.includeInspectionSubject === true
+            ? { captureInspectionSubject: subject => (inspectionSubject = subject) }
+            : {}),
+        },
+      });
+      if (emitted === null || request?.includeInspectionSubject !== true) return emitted;
+      if (inspectionSubject === undefined) {
+        throw new CompileInvariantError('internal: stroke emitter did not capture its inspection subject');
+      }
+      return { ...emitted, inspectionSubject };
+    }) as EmitStroke;
+    const compilePathKind = definition.compile as unknown as (context: PathKindCompileContext<unknown>) => unknown;
+    const produced = compilePathKind({
       path,
       options: optionsValue,
-      emitStroke: nextPath =>
-        emitPathPrimitive(nextPath ?? path, {
-          namespaceStack: runtime.state.namespaceStack,
-          round: runtime.context.round,
-          measureText: runtime.context.measureText,
-          options: emitOptions,
-        }),
+      emitStroke,
       emitRibbon: nextPath =>
         emitRibbonPrimitive(nextPath ?? path, {
           namespaceStack: runtime.state.namespaceStack,
@@ -298,7 +364,31 @@ export const compileChildrenToPrimitives = (
           },
         }),
     });
-    return validatePathKindCompileResult(kind, produced);
+    const validated = validatePathKindCompileResult(kind, produced);
+    if (validated === null) return null;
+    if (inspectionRequest !== undefined) {
+      if (definition.inspector === undefined || definition.inspectionSubjectSchema === undefined) {
+        throw new CompileInvariantError('internal: selected Path inspection request has no definition or subject');
+      }
+      const inspectionSubject = snapshotPathInspectionSubject(
+        kind,
+        validated.source,
+        definition.inspectionSubjectSchema,
+        inspectionOwner,
+        pendingPath.occurrence,
+      );
+      pendingPath.inspectionSink.push({
+        owner: inspectionOwner,
+        occurrence: freezeOccurrence(pendingPath.occurrence),
+        scopeChain: [...scopeChain],
+        subject: inspectionSubject,
+        inspector: definition.inspector,
+        options: inspectionRequest.options,
+        theme: pendingPath.theme,
+        styleStack: [...pendingPath.styleStack],
+      });
+    }
+    return validated.result;
   };
 
   /** 把 allocation contribution 绑定到最近的显式 composite allocation boundary */
@@ -320,27 +410,30 @@ export const compileChildrenToPrimitives = (
     runtime.state.namespaceStack.enterResolvingPhase();
     try {
       for (const pendingPath of pendingPaths) {
-        const result = withWarningOccurrence(pendingPath.occurrence, () =>
-          emitPathKindPrimitive(pendingPath.path, pendingPath.irPath, pendingPath.scopeChain),
-        );
-        const rawPrimitives = result?.primitives ?? [];
-        const primitives = runtime.state.identityTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
-        const idx = pendingPath.placeholderSlot.primitiveSink.indexOf(pendingPath.placeholderSlot.placeholder);
-        if (idx === -1) {
-          throw new CompileInvariantError('internal: path placeholder missing from its sink');
-        }
-        pendingPath.placeholderSlot.primitiveSink.splice(idx, 1, ...primitives);
-        if (pendingPath.semanticOwner !== undefined) {
-          runtime.state.identityTracker?.recordPrimitives(primitives, pendingPath.semanticOwner, 'path');
-        }
-        runtime.state.placeholderBalance--;
-        for (const prim of primitives) recordPrimitiveZIndex(runtime.state.zIndexOf, prim, pendingPath.zIndex);
-        if (result !== null) {
-          pendingPath.boundsSink.push({
-            points: [...result.boundsPoints],
-            shadow: resolveShadow(pendingPath.path.shadow),
-          });
-          pushAllocation(pendingPath.allocationSink, [...result.boundsPoints], pendingPath.allocationBoundary);
+        try {
+          const result = withWarningOccurrence(pendingPath.occurrence, () => emitPathKindPrimitive(pendingPath));
+          const rawPrimitives = result?.primitives ?? [];
+          const primitives = runtime.state.identityTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
+          const idx = pendingPath.placeholderSlot.primitiveSink.indexOf(pendingPath.placeholderSlot.placeholder);
+          if (idx === -1) {
+            throw new CompileInvariantError('internal: path placeholder missing from its sink');
+          }
+          pendingPath.placeholderSlot.primitiveSink.splice(idx, 1, ...primitives);
+          if (pendingPath.semanticOwner !== undefined) {
+            runtime.state.identityTracker?.recordPrimitives(primitives, pendingPath.semanticOwner, 'path');
+          }
+          runtime.state.placeholderBalance--;
+          for (const prim of primitives) recordPrimitiveZIndex(runtime.state.zIndexOf, prim, pendingPath.zIndex);
+          if (result !== null) {
+            pendingPath.boundsSink.push({
+              points: [...result.boundsPoints],
+              shadow: resolveShadow(pendingPath.path.shadow),
+            });
+            pushAllocation(pendingPath.allocationSink, [...result.boundsPoints], pendingPath.allocationBoundary);
+          }
+        } catch (thrown) {
+          options.observeFailurePath?.(pendingPath.irPath);
+          throw thrown;
         }
       }
     } finally {
@@ -492,6 +585,9 @@ export const compileChildrenToPrimitives = (
       ...(frame.allocationBoundary === undefined ? {} : { allocationBoundary: frame.allocationBoundary }),
       placeholderSlot: { primitiveSink, placeholder },
       occurrence,
+      inspectionSink: frame.inspectionSink,
+      theme: frame.theme,
+      styleStack: [...styleStack],
       ...(semanticOwner === undefined ? {} : { semanticOwner }),
       zIndex: child.zIndex,
     };
@@ -843,7 +939,6 @@ export const compileChildrenToPrimitives = (
       frame.artifactSink.push(...scopeArtifacts);
       for (const inspection of scopeInspections) {
         inspection.scopeChain.splice(frame.scopeChain.length, 0, ...postTransforms);
-        frame.inspectionSink.push(inspection);
       }
       for (const pendingPath of scopePendingPaths) {
         pendingPath.scopeChain.splice(frame.scopeChain.length, 0, ...postTransforms);
@@ -869,6 +964,7 @@ export const compileChildrenToPrimitives = (
         frame.publicationSink.push(globalEnvelope);
       }
       flushPendingPathEmissions(scopePendingPaths);
+      frame.inspectionSink.push(...scopeInspections);
       for (const contribution of scopeBounds) {
         frame.boundsSink.push({
           points: contribution.points.map(point => applyTransformChain(point, scopeTransforms)),
@@ -1111,7 +1207,7 @@ export const compileChildrenToPrimitives = (
       );
     }
 
-    const suppressedNamespaceWarnings = new Set<CompileWarning>();
+    const suppressedNamespaceWarnings = new Set<CompileWarningInput>();
     const namespaceParentChain =
       authoredPreliminary === undefined
         ? frame.scopeChain
@@ -1411,7 +1507,26 @@ export const compileChildrenToPrimitives = (
     semanticOwner?: RuntimeSemanticOwner,
   ): void => {
     const key = `${child.namespace}.${child.type}`;
+    const compositeIrPath = `${frame.locatorPrefix}children[${index}]`;
     const definition = runtime.context.composites.get(key);
+    const authoredInspectionTree = lookupCompositeInspectionChildTree(
+      options.inspectionForest,
+      options.occurrence,
+      occurrence,
+    );
+    const inspectionOwner = Object.freeze({
+      kind: 'composite' as const,
+      namespace: child.namespace,
+      type: child.type,
+    });
+    const inspection = resolveCompositeInspection(
+      runtime.context.inspection,
+      occurrence,
+      inspectionOwner,
+      definition?.inspector,
+      options.inheritedInspection,
+      authoredInspectionTree,
+    );
     if (definition === undefined) {
       if (options.probe === true) {
         throw new LayoutProbeRecoverableError(
@@ -1422,7 +1537,7 @@ export const compileChildrenToPrimitives = (
       runtime.context.onWarn({
         code: CompileWarningCode.CompositeNotRegistered,
         message: `No composite registered for '${key}'; the node is skipped.`,
-        path: occurrence.sourcePath,
+        path: compositeIrPath,
       });
       return;
     }
@@ -1464,19 +1579,12 @@ export const compileChildrenToPrimitives = (
       return;
     }
     const callable = callableLayoutDefinition(definition);
-    const authoredInspectionTree = lookupCompositeInspectionChildTree(
-      options.inspectionForest,
-      options.occurrence,
-      occurrence,
-    );
-    const inspection = resolveCompositeInspection(
-      runtime.context.inspection,
-      occurrence,
-      callable.inspector,
-      options.inheritedInspection,
-      authoredInspectionTree,
-    );
     const inspectionRequest = inspection.request;
+    /** 已选中 Inspector 时把 artifact subject 失败绑定到当前 owner occurrence */
+    const bindInspectionArtifactError = (cause: CompositeContractError): Error =>
+      inspectionRequest === undefined
+        ? cause
+        : wrapInspectionError(inspectionOccurrenceResolveOrigin(inspectionOwner, occurrence), cause);
     const owner: CompositeCompileOwner = Object.freeze({
       label: `Composite '${key}' at ${formatCompileOccurrence(occurrence)}`,
     });
@@ -1493,9 +1601,9 @@ export const compileChildrenToPrimitives = (
       probeTheme: TraversalFrame['theme'],
       scopeChainApplied = false,
     ): Readonly<{ layoutResult: LayoutChildResult; transaction: CompositeReplayTransaction }> => {
-      const warnings: Array<CompileWarning> = [];
-      const namespaceBaselineWarnings: Array<{ id: string; warning: CompileWarning }> = [];
-      const captureWarning = (warning: CompileWarning): void => {
+      const warnings: Array<CompileWarningInput> = [];
+      const namespaceBaselineWarnings: Array<{ id: string; warning: CompileWarningInput }> = [];
+      const captureWarning = (warning: CompileWarningInput): void => {
         if (
           warning.code === CompileWarningCode.UnresolvedNodeReference ||
           warning.code === CompileWarningCode.OffsetBaseUnresolved ||
@@ -1710,20 +1818,26 @@ export const compileChildrenToPrimitives = (
       let compositeArtifact: CompositeCompileArtifact | undefined;
       if (resultArtifact !== undefined) {
         if (callable.artifactSchema === undefined) {
-          throw new CompositeContractError(`Composite '${key}' returned artifact without artifactSchema.`);
+          throw bindInspectionArtifactError(
+            new CompositeContractError(`Composite '${key}' returned artifact without artifactSchema.`),
+          );
         }
         let parsedArtifact: JsonValue;
         try {
           parsedArtifact = callable.artifactSchema.parse(resultArtifact);
         } catch (cause) {
-          throw new CompositeContractError(`${owner.label} returned an invalid artifact.`, { cause });
+          throw bindInspectionArtifactError(
+            new CompositeContractError(`${owner.label} returned an invalid artifact.`, { cause }),
+          );
         }
         let frozenArtifact: JsonValue;
         try {
           frozenArtifact = cloneAndFreezeJson(parsedArtifact, `Composite '${key}' artifact`);
         } catch (cause) {
           const detail = safeThrownDetail(cause);
-          throw new CompositeContractError(`${owner.label} returned a non-JSON artifact: ${detail}`, { cause });
+          throw bindInspectionArtifactError(
+            new CompositeContractError(`${owner.label} returned a non-JSON artifact: ${detail}`, { cause }),
+          );
         }
         compositeArtifact = freezeCompileArtifact({
           kind: 'composite',
@@ -1738,26 +1852,25 @@ export const compileChildrenToPrimitives = (
     const { children, explicitAllocation, explicitAlignmentGuides, compositeArtifact } = validatedResult;
     if (inspectionRequest !== undefined) {
       if (compositeArtifact === undefined) {
-        throw new CompositeContractError(
-          `COMPOSITE_INSPECTION_ARTIFACT_MISSING: Composite '${key}' at ${formatCompileOccurrence(occurrence)} enabled an inspector but returned no artifact.`,
+        throw bindInspectionArtifactError(
+          new CompositeContractError(
+            `COMPOSITE_INSPECTION_ARTIFACT_MISSING: Composite '${key}' at ${formatCompileOccurrence(occurrence)} enabled an inspector but returned no artifact.`,
+          ),
         );
       }
-      const primitives = runCompositeInspector(
-        callable.inspector ??
-          (() => {
-            throw new CompileInvariantError('internal: resolved inspection request has no inspector definition');
-          })(),
-        compositeArtifact.value,
-        occurrence,
-        inspectionRequest,
-      );
-      if (primitives.length > 0) {
-        frame.inspectionSink.push({
-          occurrence: freezeOccurrence(occurrence),
-          scopeChain: [...frame.scopeChain],
-          primitives,
-        });
+      if (callable.inspector === undefined) {
+        throw new CompileInvariantError('internal: resolved inspection request has no inspector definition');
       }
+      frame.inspectionSink.push({
+        owner: inspectionOwner,
+        occurrence: freezeOccurrence(occurrence),
+        scopeChain: [...frame.scopeChain],
+        subject: compositeArtifact.value,
+        inspector: callable.inspector,
+        options: inspectionRequest.options,
+        theme: frame.theme,
+        styleStack: [...frame.styleStack],
+      });
     }
     const outputFrame: TraversalFrame = {
       ...frame,
@@ -1838,6 +1951,8 @@ export const compileChildrenToPrimitives = (
         }
       });
     } catch (thrown) {
+      const entityPath = `${frame.locatorPrefix}children[${index}]`;
+      options.observeFailurePath?.('namespace' in child ? entityPath : `${entityPath}.${child.type}`);
       if (isFatalProbeError(thrown)) throw thrown;
       const providerKey = 'namespace' in child ? `${child.namespace}.${child.type}` : child.type;
       if (isLayoutProbeRecoverableError(thrown)) {

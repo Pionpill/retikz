@@ -1,10 +1,10 @@
 ﻿import type {
   AnyCompositeDefinition,
+  AnyPathKindDefinition,
   ArrowDefinition,
   BoundaryDefinition,
   ClipDefinition,
   PathGeneratorDefinition,
-  PathKindDefinition,
   PatternDefinition,
   RibbonWidthProfileDefinition,
   ShapeDefinition,
@@ -12,7 +12,7 @@
 import type { IRScene } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { CompileOptions } from '../types';
-import type { CompileWarning } from '../warning';
+import type { CompileWarningInput } from '../warning';
 import type { PreparedCompileInspection } from './inspection';
 
 import { resolveArrowRegistry } from '../../providers/arrow';
@@ -47,7 +47,7 @@ export type CompileContext = {
   /** 运行时注入的 TeX lowering 钩子 */
   lowerTex: CompileOptions['lowerTex'];
   /** 编译 warning dispatcher */
-  onWarn: (warning: CompileWarning) => void;
+  onWarn: (warning: CompileWarningInput) => void;
   /** layout-aware composite 注册表 */
   composites: ReadonlyMap<string, AnyCompositeDefinition>;
   /** expand 与 layout-aware compile 共用的嵌套深度上限 */
@@ -81,7 +81,7 @@ export type CompileContext = {
   /** path generator provider 注册表 */
   pathGenerators: ReadonlyMap<string, PathGeneratorDefinition>;
   /** path kind provider 注册表 */
-  pathKinds: ReadonlyMap<string, PathKindDefinition>;
+  pathKinds: ReadonlyMap<string, AnyPathKindDefinition>;
   /** ribbon width profile provider 注册表 */
   ribbonWidthProfiles: ReadonlyMap<string, RibbonWidthProfileDefinition>;
   /** paint 资源注册表 */
@@ -90,17 +90,22 @@ export type CompileContext = {
   clip: ReturnType<typeof createClipRegistry>;
 };
 
+/** 创建内部编译上下文时允许接收尚未补全 origin 的 warning */
+type CreateCompileContextOptions = Omit<CompileOptions, 'onWarn'> & {
+  onWarn?: (warning: CompileWarningInput) => void;
+};
+
 /** 创建 compile 编排所需的不可变依赖上下文 */
-export const createCompileContext = (ir: IRScene, options: CompileOptions): CompileContext => {
+export const createCompileContext = (ir: IRScene, options: CreateCompileContextOptions): CompileContext => {
   const round = createRound(options.precision ?? DEFAULT_PRECISION);
   const labelDistance = options.labelDistance ?? DEFAULT_LABEL_DISTANCE;
   if (!Number.isFinite(labelDistance) || labelDistance < 0) {
     throw new Error(`CompileOptions.labelDistance '${labelDistance}' must be a non-negative finite number`);
   }
 
-  const defaultWarnDispatcher = (warning: CompileWarning): void => {
+  const defaultWarnDispatcher = (warning: CompileWarningInput): void => {
     if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') return;
-    console.warn(formatCompileWarning(warning));
+    console.warn(formatCompileWarning({ ...warning, origin: warning.origin ?? { kind: 'primary' } }));
   };
   const onWarn = options.onWarn ?? defaultWarnDispatcher;
 

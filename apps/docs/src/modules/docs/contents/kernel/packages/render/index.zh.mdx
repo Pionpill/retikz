@@ -31,11 +31,9 @@ description: 把渲染目标无关的 Scene 落到 SVG / Canvas，并以 retaine
 
 Static API 使用 `StaticRenderFrame { primary: Scene, inspection }`，retained renderer 使用 `RenderFrameSnapshot { primary: SceneRuntimeSnapshot, inspection }`。两者都把主图和完整检查辅助层作为一个 frame 物化；retained transaction 失败时不会出现新主图配旧辅助线。
 
-SVG 在主图之后追加 `pointer-events="none"` 的检查分组，不写 hydration id。Canvas 在主图之后绘制检查 DTO，但 `hitTest` 仍只读取主 Scene。辅助层不会决定 viewBox、资源、动画或主图 identity。第三方 retained renderer 必须通过 `inspectionCapability: 'supported' | 'unsupported'` 明确声明支持情况；收到非空辅助层但声明 unsupported 时会 fail-loud，不会静默丢弃。
+每个 `InspectionPlaneEntry` 都携带 occurrence-local 的普通静态 `scene` 和到主 Scene 坐标的 `transform`。SVG 在主图之后追加 `pointer-events="none"` 的检查分组，用普通 Scene fragment 路径执行每个 entry，并为其资源生成独立前缀，不写 hydration id。Canvas 套用 entry transform 后调用普通 Scene 绘制路径；`hitTest` 仍只读取主 Scene。辅助层不会决定 viewBox、主资源、动画或主图 identity。第三方 retained renderer 必须通过 `inspectionCapability: 'supported' | 'unsupported'` 明确声明支持情况；收到非空辅助层但声明 unsupported 时会 fail-loud，不会静默丢弃。
 
-内置 SVG 与 Canvas 后端共用一份九色 occurrence palette、固定红色 warning、alpha 规则和 hatch segment 生成器。普通颜色为 `palette[colorScope % 9]`；`solid` fill 的基础 alpha 为 `0.14 × opacity`，斜线 / 交叉斜线不绘制底色，只使用 `0.55 × opacity` 的纹理线。
-
-`forward-diagonal` 在屏幕坐标中显示为 `/`，`backward-diagonal` 显示为 `\`，`crosshatch` 合并两组斜线。SVG 只输出已裁到矩形内的局部 `<path>`，不创建 document-global pattern id；Canvas 在 `save → clip → hatch stroke → restore` 生命周期内绘制。canonical pitch 为 12 user units，会随图形 transform 一起缩放。pattern 自身不隐式生成边界；需要边界的上游 inspector 必须另发 outline 或 line primitive。
+Render 不再拥有 Inspector palette、tone、rect / line / label switch 或 hatch 几何。颜色由 Core 在调用 Inspector 前通过 `InspectionAppearance` 分配，owner 把它写入普通 IR；斜线区域使用普通 pattern paint，节点、路径、渐变、图片、裁剪和自定义 Composite 也都沿正常 Scene 语义执行。这样新增辅助内容只需 Core 能编译、目标后端能渲染对应普通 Scene 能力，不需要扩展 Renderer 专用 DTO。
 
 ### 静态帧 API
 

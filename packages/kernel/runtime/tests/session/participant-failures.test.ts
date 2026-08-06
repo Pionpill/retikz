@@ -10,6 +10,10 @@ import {
   createRuntimeSession,
   defineRuntimeCommitParticipant,
   defineRuntimeOwner,
+  PerformanceTraceOutcome,
+  PerformanceTracePhase,
+  PerformanceTraceUnit,
+  RuntimeProgramPhase,
 } from '../../src';
 
 const defineCounterOwner = () =>
@@ -261,7 +265,13 @@ describe('runtime session participant failure lifecycle', () => {
       owners: [owner],
       programs: [],
       revisionPolicy: 'affected',
-      tracePhases: [{ phase: 'update', unit: 'scene-change', outcomes: ['incremental'] }],
+      tracePhases: [
+        {
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.SceneChange,
+          outcomes: [PerformanceTraceOutcome.Incremental],
+        },
+      ],
       prepare: (_candidate, context) =>
         Object.freeze({
           commit: () => undefined,
@@ -328,7 +338,7 @@ describe('runtime session participant failure lifecycle', () => {
           commit: () => undefined,
           rollback: () => undefined,
           dispose: () => {
-            if (candidate.phase === 'initial') throw trigger;
+            if (candidate.phase === RuntimeProgramPhase.Initial) throw trigger;
           },
         }),
       read: () => Object.freeze({ value: 1 }),

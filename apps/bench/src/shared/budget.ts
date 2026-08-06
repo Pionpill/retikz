@@ -1,3 +1,14 @@
+import type { PerformanceTraceOutcomeValue } from '@retikz/runtime';
+import type { PerformanceTraceOutcome } from '@retikz/runtime';
+
+/** Benchmark execution 允许展示的 trace 结果取值类型 */
+export type BenchmarkExecutionOutcomeValue = Extract<
+  PerformanceTraceOutcomeValue,
+  | typeof PerformanceTraceOutcome.Full
+  | typeof PerformanceTraceOutcome.Incremental
+  | typeof PerformanceTraceOutcome.Fallback
+>;
+
 /** 策略 A/B 场景的执行模式与可观察结果 */
 export type BenchmarkExecution = Readonly<{
   /** 是否创建 retained Runtime Session */
@@ -5,7 +16,7 @@ export type BenchmarkExecution = Readonly<{
   /** retained Program 更新策略；static 不存在 */
   updateStrategy?: 'auto' | 'full';
   /** 本次更新实际执行结果 */
-  outcome: 'full' | 'incremental' | 'fallback';
+  outcome: BenchmarkExecutionOutcomeValue;
   /** outcome 的公共契约来源 */
   source: 'static-view' | 'runtime-trace';
 }>;

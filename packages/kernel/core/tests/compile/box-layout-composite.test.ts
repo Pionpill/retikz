@@ -4,6 +4,7 @@ import {
   createRuntimeOwnerUpdate,
   createRuntimeProgramRegistry,
   createRuntimeSession,
+  RuntimeProgramKind,
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -810,7 +811,7 @@ describe('Box Layout Composite contract', () => {
       onWarn: warning => freshDiagnostics.push(warning),
     });
 
-    expect(result.outcome).toBe('fallback');
+    expect(result.outcome).toBe(RuntimeProgramKind.Fallback);
     expect(artifact.patch).toEqual({
       baseRevision: 0,
       nextRevision: 1,

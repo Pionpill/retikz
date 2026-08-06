@@ -22,6 +22,9 @@ import type {
   RuntimeProgramContext,
   RuntimeProgramDefinition,
   RuntimeProgramErasedExecutor,
+  RuntimeProgramExecutionValue,
+  RuntimeProgramKindValue,
+  RuntimeProgramPhaseValue,
   RuntimeProgramToken,
 } from '../program';
 import type { RuntimeOwnerRegistry } from '../registry';
@@ -42,6 +45,7 @@ import {
   getRuntimeCommitParticipantExecutor,
   isRuntimeCommitParticipant,
 } from '../participant/internal';
+import { RuntimeProgramExecution, RuntimeProgramKind, RuntimeProgramPhase } from '../program';
 import { getRuntimeProgramOwnerRegistry, getRuntimeProgramRegistryExecutor } from '../registry';
 import { createRuntimeTraceReporter } from '../trace';
 import { observeRuntimeTraceReporterDiagnostics } from '../trace/internal';
@@ -64,7 +68,7 @@ type RuntimeProgramState = Readonly<{
   prepared: RuntimePreparedProgramArtifact<unknown, unknown, unknown>;
 }>;
 
-type RuntimeProgramOutcome = 'full' | 'incremental' | 'fallback';
+type RuntimeProgramOutcome = Exclude<RuntimeProgramKindValue, typeof RuntimeProgramKind.Bailout>;
 
 type RuntimePreparedParticipantState = Readonly<{
   executor: RuntimeCommitParticipantExecutor;
@@ -72,13 +76,13 @@ type RuntimePreparedParticipantState = Readonly<{
   takeDiagnostics: () => ReadonlyArray<RuntimeDiagnostic>;
 }>;
 
-type NormalizedRunResult = Readonly<{ kind: 'full'; artifact: unknown }>;
+type NormalizedRunResult = Readonly<{ kind: typeof RuntimeProgramKind.Full; artifact: unknown }>;
 
 type NormalizedUpdateResult =
-  | Readonly<{ kind: 'bailout' }>
-  | Readonly<{ kind: 'incremental'; artifact: unknown }>
+  | Readonly<{ kind: typeof RuntimeProgramKind.Bailout }>
+  | Readonly<{ kind: typeof RuntimeProgramKind.Incremental; artifact: unknown }>
   | Readonly<{
-      kind: 'fallback';
+      kind: typeof RuntimeProgramKind.Fallback;
       diagnostics?: ReadonlyArray<Readonly<{ code: string; phase: string; message: string }>>;
     }>;
 
@@ -363,10 +367,10 @@ const normalizeRunResult = (result: unknown, definition: RuntimeProgramToken): N
   } catch (cause) {
     throw programError('RUNTIME_PROGRAM_RUN_FAILED', 'run', definition, cause);
   }
-  if (kind !== 'full' || !hasArtifact) {
+  if (kind !== RuntimeProgramKind.Full || !hasArtifact) {
     throw programError('RUNTIME_PROGRAM_RUN_FAILED', 'run', definition, result);
   }
-  return Object.freeze({ kind: 'full', artifact });
+  return Object.freeze({ kind: RuntimeProgramKind.Full, artifact });
 };
 
 /** 单次读取并归一化 JavaScript incremental callback 返回值 */
@@ -380,8 +384,8 @@ const normalizeUpdateResult = (result: unknown, definition: RuntimeProgramToken)
   } catch (cause) {
     throw programError('RUNTIME_PROGRAM_UPDATE_FAILED', 'update', definition, cause);
   }
-  if (kind === 'bailout') return Object.freeze({ kind });
-  if (kind === 'incremental') {
+  if (kind === RuntimeProgramKind.Bailout) return Object.freeze({ kind });
+  if (kind === RuntimeProgramKind.Incremental) {
     let hasArtifact: boolean;
     let artifact: unknown;
     try {
@@ -392,7 +396,7 @@ const normalizeUpdateResult = (result: unknown, definition: RuntimeProgramToken)
     }
     if (hasArtifact) return Object.freeze({ kind, artifact });
   }
-  if (kind === 'fallback') {
+  if (kind === RuntimeProgramKind.Fallback) {
     let fallbackDiagnostics: unknown;
     try {
       fallbackDiagnostics = Reflect.get(result, 'diagnostics');
@@ -498,7 +502,7 @@ const prepareInitialOwners = (
 
 /** 为当前 Program 构造只允许已声明依赖的 typed candidate view */
 const createCandidateView = (
-  phase: 'initial' | 'update',
+  phase: RuntimeProgramPhaseValue,
   baseRevision: RuntimeRevision | undefined,
   candidateRevision: RuntimeRevision,
   ownerStates: ReadonlyMap<RuntimeOwnerToken, RuntimeOwnerState>,
@@ -556,7 +560,7 @@ const createCandidateView = (
       return state.executor.snapshot(dependency, state.prepared, candidateRevision);
     },
   });
-  return phase === 'initial'
+  return phase === RuntimeProgramPhase.Initial
     ? Object.freeze({ ...lookup, phase, candidateRevision })
     : Object.freeze({
         ...lookup,
@@ -568,7 +572,7 @@ const createCandidateView = (
 
 /** 运行一个 Program callback 并捕获 artifact 双层 read */
 const runProgram = (
-  phase: 'initial' | 'update',
+  phase: RuntimeProgramPhaseValue,
   baseRevision: RuntimeRevision | undefined,
   candidateRevision: RuntimeRevision,
   ownerStates: ReadonlyMap<RuntimeOwnerToken, RuntimeOwnerState>,
@@ -578,7 +582,7 @@ const runProgram = (
   definition: RuntimeProgramToken,
   executor: RuntimeProgramErasedExecutor,
   trace: RuntimeSessionOptions['trace'],
-  mode: 'full' | 'incremental' | 'fallback',
+  mode: RuntimeProgramExecutionValue,
   previous?: RuntimeProgramState,
 ): Readonly<{
   state?: RuntimeProgramState;
@@ -642,8 +646,8 @@ const runProgram = (
       },
     });
 
-  if (mode === 'incremental' && executor.update !== undefined && previous !== undefined) {
-    const context = createContext('incremental');
+  if (mode === RuntimeProgramExecution.Incremental && executor.update !== undefined && previous !== undefined) {
+    const context = createContext(RuntimeProgramExecution.Incremental);
     let callbackResult;
     try {
       callbackResult = executor.update<unknown, unknown>(previous.prepared.programRead, view, context);
@@ -664,24 +668,24 @@ const runProgram = (
       }
       throw cause;
     }
-    if (result.kind === 'bailout') {
+    if (result.kind === RuntimeProgramKind.Bailout) {
       return Object.freeze({ diagnostics: Object.freeze([...diagnostics]) });
     }
-    if (result.kind === 'incremental') {
+    if (result.kind === RuntimeProgramKind.Incremental) {
       return Object.freeze({
         state: Object.freeze({
           definition,
           executor,
           prepared: prepareProgramArtifact(definition, executor, result.artifact, previous, executionDiagnostics),
         }),
-        outcome: 'incremental' as const,
+        outcome: RuntimeProgramKind.Incremental,
         diagnostics: Object.freeze([...diagnostics]),
       });
     }
     for (const diagnostic of result.diagnostics ?? []) context.diagnose(diagnostic);
   }
 
-  const context = createContext(mode === 'incremental' ? 'fallback' : mode);
+  const context = createContext(mode === RuntimeProgramExecution.Incremental ? RuntimeProgramExecution.Fallback : mode);
   let callbackResult;
   try {
     callbackResult = executor.run<unknown>(view, context);
@@ -708,7 +712,10 @@ const runProgram = (
       executor,
       prepared: prepareProgramArtifact(definition, executor, result.artifact, previous, executionDiagnostics),
     }),
-    outcome: mode === 'incremental' || mode === 'fallback' ? ('fallback' as const) : ('full' as const),
+    outcome:
+      mode === RuntimeProgramExecution.Incremental || mode === RuntimeProgramExecution.Fallback
+        ? RuntimeProgramKind.Fallback
+        : RuntimeProgramKind.Full,
     diagnostics: Object.freeze([...diagnostics]),
   });
 };
@@ -812,7 +819,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
     for (const definition of options.programs.definitions()) {
       const executor = getRuntimeProgramRegistryExecutor(options.programs, definition);
       const prepared = runProgram(
-        'initial',
+        RuntimeProgramPhase.Initial,
         undefined,
         currentRevision,
         ownerStates,
@@ -822,7 +829,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
         definition,
         executor,
         options.trace,
-        'full',
+        RuntimeProgramExecution.Full,
       );
       if (prepared.state === undefined) throw new Error('runtime session: initial Program returned no artifact');
       programStates.set(definition, prepared.state);
@@ -835,7 +842,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
       const declaredOwners = new Set(participant.owners);
       const declaredPrograms = new Set(participant.programs);
       const view = Object.freeze({
-        phase: 'initial' as const,
+        phase: RuntimeProgramPhase.Initial,
         candidateRevision: currentRevision,
         snapshot: <TInput, TValue, TRead, TChange>(
           owner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
@@ -1031,7 +1038,11 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
           throw sessionError('RUNTIME_OWNER_COMMAND_INVALID', 'update', update.owners);
         }
         if (update.owners.length === 0) {
-          return Object.freeze({ revision: currentRevision, outcome: 'bailout', diagnostics: Object.freeze([]) });
+          return Object.freeze({
+            revision: currentRevision,
+            outcome: RuntimeProgramKind.Bailout,
+            diagnostics: Object.freeze([]),
+          });
         }
 
         const commands = new Map<RuntimeOwnerToken, RuntimeOwnerCommandExecutor>();
@@ -1125,7 +1136,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
           diagnosticQueue.push(...bailoutDiagnostics);
           return Object.freeze({
             revision: currentRevision,
-            outcome: 'bailout',
+            outcome: RuntimeProgramKind.Bailout,
             diagnostics: bailoutDiagnostics,
           });
         }
@@ -1145,12 +1156,12 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
               .map(program => programOutcomes.get(program))
               .filter((outcome): outcome is RuntimeProgramOutcome => outcome !== undefined);
             if (!directOwnerChange && upstreamOutcomes.length === 0) continue;
-            const upstreamFallback = upstreamOutcomes.some(outcome => outcome === 'fallback');
-            const upstreamFull = upstreamOutcomes.some(outcome => outcome === 'full');
+            const upstreamFallback = upstreamOutcomes.some(outcome => outcome === RuntimeProgramKind.Fallback);
+            const upstreamFull = upstreamOutcomes.some(outcome => outcome === RuntimeProgramKind.Full);
             const previous = programStates.get(definition);
             if (previous === undefined) throw new Error('runtime session: missing committed Program state');
             const prepared = runProgram(
-              'update',
+              RuntimeProgramPhase.Update,
               currentRevision,
               candidateRevision,
               nextOwnerStates,
@@ -1161,10 +1172,10 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
               executor,
               options.trace,
               directInvalidHint || upstreamFallback
-                ? 'fallback'
+                ? RuntimeProgramExecution.Fallback
                 : updateStrategy === RuntimeUpdateStrategy.Full || upstreamFull || executor.update === undefined
-                  ? 'full'
-                  : 'incremental',
+                  ? RuntimeProgramExecution.Full
+                  : RuntimeProgramExecution.Incremental,
               previous,
             );
             candidateDiagnostics.push(...prepared.diagnostics);
@@ -1184,7 +1195,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
             const declaredOwners = new Set(participant.owners);
             const declaredPrograms = new Set(participant.programs);
             const view = Object.freeze({
-              phase: 'update' as const,
+              phase: RuntimeProgramPhase.Update,
               baseRevision: currentRevision,
               candidateRevision,
               snapshot: <TInput, TValue, TRead, TChange>(
@@ -1388,7 +1399,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
           const programState = programStates.get(definition);
           if (programState === undefined || programState.executor.observeCommit === undefined) continue;
           const event: RuntimeCommitEvent<unknown> = Object.freeze({
-            phase: 'update',
+            phase: RuntimeProgramPhase.Update,
             baseRevision,
             revision: currentRevision,
             outcome,
@@ -1436,12 +1447,14 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
 
         const resultDiagnostics = Object.freeze([...candidateDiagnostics]);
         diagnosticQueue.push(...resultDiagnostics);
-        const outcome: RuntimeSessionResult['outcome'] = [...programOutcomes.values()].includes('fallback')
-          ? 'fallback'
-          : [...programOutcomes.values()].includes('full')
-            ? 'full'
-            : [...programOutcomes.values()].includes('incremental')
-              ? 'incremental'
+        const outcome: RuntimeSessionResult['outcome'] = [...programOutcomes.values()].includes(
+          RuntimeProgramKind.Fallback,
+        )
+          ? RuntimeProgramKind.Fallback
+          : [...programOutcomes.values()].includes(RuntimeProgramKind.Full)
+            ? RuntimeProgramKind.Full
+            : [...programOutcomes.values()].includes(RuntimeProgramKind.Incremental)
+              ? RuntimeProgramKind.Incremental
               : 'committed';
         return Object.freeze({ revision: currentRevision, outcome, diagnostics: resultDiagnostics });
       } finally {
@@ -1546,9 +1559,9 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
     const programState = programStates.get(definition);
     if (programState === undefined || programState.executor.observeCommit === undefined) continue;
     const event: RuntimeCommitEvent<unknown> = Object.freeze({
-      phase: 'initial',
+      phase: RuntimeProgramPhase.Initial,
       revision: currentRevision,
-      outcome: 'full',
+      outcome: RuntimeProgramKind.Full,
       artifact: programState.executor.snapshotToken(definition, programState.prepared, currentRevision),
       diagnostics: frozenInitialDiagnostics,
     });

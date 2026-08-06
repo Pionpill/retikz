@@ -41,8 +41,14 @@ describe('runtime commit participant definition', () => {
   });
 
   it('校验输入并深复制冻结 trace declarations', () => {
-    const outcomes: Array<'incremental'> = ['incremental'];
-    const tracePhases = [{ phase: 'update' as const, unit: 'scene-change' as const, outcomes }];
+    const outcomes: Array<runtime.PerformanceTraceOutcomeValue> = [runtime.PerformanceTraceOutcome.Incremental];
+    const tracePhases = [
+      {
+        phase: runtime.PerformanceTracePhase.Update,
+        unit: runtime.PerformanceTraceUnit.SceneChange,
+        outcomes,
+      },
+    ];
     const participant = runtime.defineRuntimeCommitParticipant({
       key: 'renderer',
       owners: [],
@@ -56,7 +62,13 @@ describe('runtime commit participant definition', () => {
     outcomes.push('incremental');
     tracePhases[0] = { ...tracePhases[0], outcomes };
 
-    expect(participant.tracePhases).toEqual([{ phase: 'update', unit: 'scene-change', outcomes: ['incremental'] }]);
+    expect(participant.tracePhases).toEqual([
+      {
+        phase: runtime.PerformanceTracePhase.Update,
+        unit: runtime.PerformanceTraceUnit.SceneChange,
+        outcomes: [runtime.PerformanceTraceOutcome.Incremental],
+      },
+    ]);
     expect(Object.isFrozen(participant.tracePhases[0])).toBe(true);
     expect(Object.isFrozen(participant.tracePhases[0]?.outcomes)).toBe(true);
 

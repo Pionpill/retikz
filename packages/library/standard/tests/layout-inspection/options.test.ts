@@ -1,29 +1,23 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  FlexLayoutInspectLocalOptionsInputSchema,
-  FlexLayoutInspectLocalOptionsSchema,
   FlexLayoutInspectOptionsInputSchema,
-  GridLayoutInspectLocalOptionsInputSchema,
-  GridLayoutInspectLocalOptionsSchema,
+  FlexLayoutInspectOptionsSchema,
   GridLayoutInspectOptionsInputSchema,
-  OverlayLayoutInspectLocalOptionsInputSchema,
-  OverlayLayoutInspectLocalOptionsSchema,
+  GridLayoutInspectOptionsSchema,
   OverlayLayoutInspectOptionsInputSchema,
+  OverlayLayoutInspectOptionsSchema,
 } from '../../src';
 
 describe('Standard layout inspection options', () => {
   it('describes every public family option schema for schema reference consumers', () => {
     const schemas = [
-      FlexLayoutInspectLocalOptionsInputSchema,
-      GridLayoutInspectLocalOptionsInputSchema,
-      OverlayLayoutInspectLocalOptionsInputSchema,
       FlexLayoutInspectOptionsInputSchema,
       GridLayoutInspectOptionsInputSchema,
       OverlayLayoutInspectOptionsInputSchema,
-      FlexLayoutInspectLocalOptionsSchema,
-      GridLayoutInspectLocalOptionsSchema,
-      OverlayLayoutInspectLocalOptionsSchema,
+      FlexLayoutInspectOptionsSchema,
+      GridLayoutInspectOptionsSchema,
+      OverlayLayoutInspectOptionsSchema,
     ];
 
     expect(schemas.every(schema => typeof schema.description === 'string' && schema.description.length > 0)).toBe(true);
@@ -60,20 +54,40 @@ describe('Standard layout inspection options', () => {
     expect(() => GridLayoutInspectOptionsInputSchema.parse({ lines: true })).toThrow();
   });
 
-  it('resolves the frozen family canonical defaults', () => {
-    expect(FlexLayoutInspectLocalOptionsSchema.parse({})).toEqual({
+  it('resolves shared and family fields into one frozen canonical options object', () => {
+    const flex = FlexLayoutInspectOptionsSchema.parse({});
+    expect(flex).toEqual({
+      bounds: { container: true, content: true, slot: true, allocation: true, visual: false },
+      spacing: { padding: true, margin: true },
+      overflow: true,
+      alignmentGuides: true,
+      labels: false,
       lines: true,
       gaps: true,
       distributedSpace: true,
     });
-    expect(GridLayoutInspectLocalOptionsSchema.parse({})).toEqual({
+    expect(Object.isFrozen(flex)).toBe(true);
+    expect(Object.isFrozen(flex.bounds)).toBe(true);
+    expect(Object.isFrozen(flex.spacing)).toBe(true);
+
+    expect(GridLayoutInspectOptionsSchema.parse({})).toEqual({
+      bounds: { container: true, content: true, slot: true, allocation: true, visual: false },
+      spacing: { padding: true, margin: true },
+      overflow: true,
+      alignmentGuides: true,
+      labels: false,
       tracks: true,
       cells: false,
       gaps: true,
       distributedSpace: true,
       spans: true,
     });
-    expect(OverlayLayoutInspectLocalOptionsSchema.parse({})).toEqual({
+    expect(OverlayLayoutInspectOptionsSchema.parse({})).toEqual({
+      bounds: { container: true, content: true, slot: true, allocation: true, visual: false },
+      spacing: { padding: true, margin: true },
+      overflow: true,
+      alignmentGuides: true,
+      labels: false,
       placements: true,
       anchors: true,
       stacking: false,

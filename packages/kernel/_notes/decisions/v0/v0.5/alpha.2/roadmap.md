@@ -1,6 +1,6 @@
-# v0.5.0-alpha.2 增量性能、Runtime 策略、Box Layout、Theme 与 Scope reuse 基建
+# v0.5.0-alpha.2 增量性能、Runtime 策略、Box Layout、Theme、Scope reuse 与 Inspector 基建
 
-- 状态：ADR-01～10 已完成实现、测试、双语文档与 Accepted 收口，ADR-11 Proposed
+- 状态：ADR-01～10 已完成实现、测试、双语文档与 Accepted 收口；ADR-11 与 ADR-12 Proposed，alpha.2 为 authored Scope output 与 Inspector 内容抽象重新打开
 - 目标版本：`0.5.0-alpha.2`
 - 关联：[v0.5 roadmap](../roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
@@ -11,6 +11,8 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 本 milestone 另补一条可持久化的通用 Theme 环境：Scene / Scope 保存共享 style 与 mode，Core 按字段继承并把完整有效 Theme 交给 Composite；领域 owner 继续拥有自己的 token vocabulary、preset 具体值和 mapping，Core primitive 与 renderer 不按主题分支。
 
 在 Standard presentation composite 暴露完整 Scope-backed lower contract 前，Core 还需要冻结 layout-aware Composite 的 authored Scope output：普通 Scope 的完整 props 必须沿 Core 主链作用于 probe / replay 结果，compile-local replay wrapper 只能保留布局提交所需的数值变换和 allocation clip。该能力由 ADR-11 提供，作为 Standard Axes、Grid、Frame、Legend 以及未来其它 Tier 2 lower reuse 的通用前置能力。
+
+本 milestone 同时重新打开后，把现有 Layout Inspector 的闭合辅助图元升级为 owner-attached 的通用 Inspector contract。Inspector 返回普通 Core IR 子元素，由 Core 在隔离辅助 channel 中复用现有 schema、Definition registry 与 compile 能力生成 occurrence-local Scene；Render 只执行普通 Scene，不再维护平行 inspection primitive。内置 stroke Path kind 以 quadratic / cubic 控制点作为首个非 Composite 闭环，该能力由 ADR-12 提供。
 
 本 milestone 不以极限大数据吞吐为目标，而以中等规模图形持续更新时减少无效工作、缩短更新延迟和 renderer commit 为验收重点。首次完整渲染不得明显退化。
 
@@ -29,6 +31,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | [ADR-09](./09-inherited-theme-context.md)            | Accepted | 可继承 Theme IR 与 Composite context   | 冻结 Scene / Scope Theme、字段级继承、Composite 消费与领域边界                                      |
 | [ADR-10](./10-core-atomic-contracts.md)              | Accepted | Core 原子契约与 Tier 2 / Tier 3 组合   | 冻结 Core fragment、上层组合、领域收窄与单一真源原则                                                |
 | [ADR-11](./11-layout-aware-scope-output.md)          | Proposed | Layout-aware Composite 完整 Scope 输出 | 冻结 Scope props fragment、authored Scope、replay wrapper、placement / clip / style / identity 编排 |
+| [ADR-12](./12-extensible-inspector-content.md)       | Proposed | 可扩展 Inspector 内容                  | 冻结 owner-attached Inspector、可编译辅助 IR、隔离 Scene 与 Path 控制点闭环                         |
 
 ## 当前进度
 
@@ -36,11 +39,12 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-04 已完成 canonical Scene topology、Core Program full oracle、ChangeSet/Snapshot 校验、stable/nested Diff、full fallback 与单 root Node fill 局部增量闭环，并于 2026-07-28 按当前安全子集获人工接受；通用 contribution 与其它图元局部失效不属于本次 Accepted 事实。
 - ADR-05 已完成 Runtime commit participant、Render retained runtime、SVG/Canvas事务后端、React/Vanilla session接线、5000规模确定性/计时门禁与双语文档，并于2026-07-29获人工接受。
 - ADR-06 已完成双轴 constraint、`slotSize`、显式 composite allocation、完整 replay wrapper、Table consumer 迁移、对抗测试与双语文档，并于 2026-07-28 获人工接受。
-- ADR-07 已完成 Architecture Gate、Runtime/Core/Render/React/Vanilla实现、SVG/Canvas三策略Bench A/B、对抗测试与双语文档，并于2026-07-29获人工接受。
-- ADR-08 已完成双轴 proposal、resolved slot、真实 allocation / visual bounds、alignment guide、隔离 failure、one-use replay、Table consumer 迁移、对抗测试与双语文档；Architecture Gate Round 3/3 PASS，并于 2026-07-30 获人工接受。
-- ADR-09 已完成严格 JSON Theme IR、Scene / Scope 字段级继承、expand 与 layout-aware Composite context、runtime Scope、probe / replay、lowering、retained fallback、React / Vanilla parity、renderer parity、对抗复验与双语文档；Architecture Gate Round 2 PASS、Plan Gate Round 4 PASS，并于 2026-08-03 完成 Accepted 收口。
-- ADR-10 已于 2026-08-04 完成 Architecture Gate、Plan Gate、Core 原子 schema/type 实现、Tier 2 / Tier 3 直接消费迁移、测试与双语文档，并获人工接受。
-- ADR-11 因 Standard presentation composite 的 Scope-backed reuse 审计于 2026-08-04 提出，目标是补齐 layout-aware output 对普通 Scope 完整 authored surface 的消费能力；尚未实现或接受。
+- ADR-07 已完成 Architecture Gate、Runtime/Core/Render/React/Vanilla 实现、SVG/Canvas 三策略 Bench A/B、对抗测试与双语文档，并于 2026-07-29 获人工接受。
+- ADR-08 已完成双轴 proposal、resolved slot、真实 allocation / visual bounds、alignment guide、隔离 failure、one-use replay、Table consumer 迁移、对抗测试与双语文档，并于 2026-07-30 获人工接受。
+- ADR-09 已完成严格 JSON Theme IR、Scene / Scope 字段级继承、Composite context、runtime Scope、probe / replay、lowering、retained fallback、adapter / renderer parity、对抗复验与双语文档，并于 2026-08-03 获人工接受。
+- ADR-10 已完成 Core 原子 schema/type、Tier 2 / Tier 3 直接消费迁移、测试与双语文档，并于 2026-08-04 获人工接受。
+- ADR-11 已完成 Proposed 设计并完成 Core 实现、Standard consumers、测试与双语文档，尚未获得人工 Accepted 收口。
+- ADR-12 已完成 Proposed 设计并获得人工方向确认与实现授权；普通 IR child、既有 Definition registry、Path kind 非 Composite 挂载、测试与双语文档已落地，正在进行完整改动评审，尚未获得人工 Accepted 收口。
 
 ## 执行批次
 
@@ -57,6 +61,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | 8    | ADR-09 | 通用视觉主题 owner 与 Scene / Scope 继承方向已人工确认                         | Theme IR、Composite context、第三方消费边界与入口等价性稳定                            |
 | 9    | ADR-10 | ADR-09 Accepted；原子 schema/type 目标已获人工确认                             | Core 原子契约、兼容聚合与 Tier 2 / Tier 3 组合边界稳定                                 |
 | 10   | ADR-11 | ADR-08～10 Accepted；Standard presentation reuse 的 Core capability gap 已冻结 | authored Scope 完整 surface、replay wrapper 窄职责与 bounds / clip / identity 编排稳定 |
+| 11   | ADR-12 | Standard Layout Inspector 已暴露闭合 primitive 限制                            | owner subject、通用 sidecar、静态辅助 Scene、诊断 provenance 与 Path 控制点闭环稳定    |
 
 批次存在硬依赖，不并行实施。每条 ADR 依次完成 Architecture Gate、人工确认、`test-contract` / Plan Gate 与人工实现授权。
 
@@ -70,6 +75,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 6. 内置与第三方 Program 使用同一 full-run、incremental、fallback 与 diagnostics 边界。
 7. Theme 选择持久化在 Scene / Scope IR；Core 只解析继承并传递有效环境，领域 owner 自行物化默认 token，renderer 不读取 style / mode。
 8. layout-aware Composite 的 authored Scope props、普通 child 与 replay child 必须沿同一 Core Scope / style / theme / identity / bounds / clip / diagnostics 主链消费；compile-local replay wrapper 不承担普通 Scope 语义。
+9. Inspector 只读取最终 settled subject；辅助内容继承 occurrence 的有效 Theme / style 并复用普通 IR / Definition / compile，但使用隔离 namespace，seal 后不保留 public id / meta / animation，且与主 Scene 的 layout、resource、identity、artifact、patch、命中和水合语义隔离。
 
 ## Milestone 验收
 
@@ -83,6 +89,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - Scene / Scope Theme 可 JSON 往返并按字段继承，两类第三方 Composite 在相同位置读取同一有效 Theme；runtime Scope 与 probe / replay 语义明确，Core-only 子树保持输出不变。领域默认物化与旧字段迁移由各领域后续 ADR 验收。
 - Core 提供可独立复用的 style、stroke 与 Path 原子 schema/type；既有聚合 schema、IR、compile、Scene 与 Tier 2 / Tier 3 可观察行为保持等价。
 - ADR-11 在接受前必须证明 `ScopePropsSchema` / `IRScopeProps` 与完整 Scope 等价，layout-aware authored Scope 的 placement、style/default/resetStyle、Theme、identity、metadata、animation、bounds 与 authored / allocation clip 均可观察且不由 Standard 或 adapter 旁路实现。
+- ADR-12 在接受前必须证明 Inspector 可以返回任意已注册、可编译的 Core IR child，并在关闭递归 inspection 的隔离 channel 中生成 occurrence-local 静态 Scene；内置与第三方 owner 依附既有 Definition registry，Path kind subject/schema、Composite / Path target sidecar 和 inspection diagnostic origin 可追溯，quadratic / cubic Path 控制点在 React / Vanilla 与 SVG / Canvas 上等价，且主 Scene 保持不变。
 
 ## 后续性能遗留
 

@@ -1,10 +1,18 @@
 # ADR-08：统一 Layout Inspector 的颜色、纹理与线型语义
 
-- 状态：Proposed
+- 状态：Superseded
 - 日期：2026-07-31
 - Level：red
 - 范围：Core inspection DTO 与 plane assembly、Render SVG / Canvas inspection theme、Standard Layout artifact 与 inspector、双语文档
-- 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-07](./07-layout-inspector.md) · [Core Drawing Complete](../../../../../../../kernel/_notes/architecture/core-drawing-complete.md)
+- 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-07](./07-layout-inspector.md) · [Kernel ADR-12](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/12-extensible-inspector-content.md) · [Core Drawing Complete](../../../../../../../kernel/_notes/architecture/core-drawing-complete.md)
+
+## 取代关系
+
+本 ADR 冻结的 spacing artifact、bounds 与 spacing 选项拆分、颜色区分 occurrence、纹理区分 spacing、线型区分几何类别、绘制顺序与共线消重目标继续有效
+
+[Kernel ADR-12](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/12-extensible-inspector-content.md) 取代本文的 `InspectionPrimitive`、`InspectionTone`、pattern DTO、Render palette 与专用 hatch 执行路径。Standard 改用普通 Core Path、Node、Text 与 pattern paint 表达相同视觉语义，颜色由 `context.appearance` 提供，Render 只执行隔离的普通辅助 Scene
+
+本文其余专用 DTO 与 renderer 设计仅保留为历史记录，不再作为实施真源
 
 ## 背景
 

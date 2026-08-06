@@ -1,7 +1,13 @@
 import type { IRScene } from '@retikz/core';
 import type { RuntimePreparedCommit } from '@retikz/runtime';
 
-import { CompositeBaseSchema, CoreOwnerDefinition, createCoreProgram, defineComposite } from '@retikz/core';
+import {
+  CompositeBaseSchema,
+  CoreOwnerDefinition,
+  createCoreProgram,
+  defineComposite,
+  defineInspector,
+} from '@retikz/core';
 import {
   createRuntimeOwnerInput,
   createRuntimeOwnerRegistry,
@@ -27,24 +33,23 @@ const layoutDefinition = defineComposite({
   type: 'layout',
   schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('layout') }),
   artifactSchema: z.strictObject({ width: z.number(), height: z.number() }),
-  inspector: {
-    kind: 'layout',
-    localOptionsInputSchema: z.strictObject({}),
-    localOptionsSchema: z.strictObject({}),
-    inspect: artifact => [
-      {
-        kind: 'rect',
-        role: 'test.container',
-        x: 0,
-        y: 0,
-        width: artifact.width,
-        height: artifact.height,
-        presentation: 'outline',
-        tone: 'scope',
-        lineStyle: 'dashed',
-      },
-    ],
-  },
+  inspector: defineInspector({
+    kind: 'composite',
+    optionsInputSchema: z.strictObject({}),
+    optionsSchema: z.strictObject({}),
+    inspect: (artifact: { width: number; height: number }) => ({
+      type: 'path',
+      stroke: '#2563eb',
+      dashPattern: [6, 4],
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [artifact.width, 0] },
+        { type: 'step', kind: 'line', to: [artifact.width, artifact.height] },
+        { type: 'step', kind: 'line', to: [0, artifact.height] },
+        { type: 'step', kind: 'line', to: [0, 0] },
+      ],
+    }),
+  }),
   compile: () => ({
     children: [{ type: 'node', position: [0, 0], text: 'content' }],
     artifact: { width: 40, height: 20 },

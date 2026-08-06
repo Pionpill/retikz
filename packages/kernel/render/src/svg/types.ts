@@ -81,6 +81,8 @@ export type SvgPresentationAttrs = {
   'stroke-linejoin'?: 'miter' | 'round' | 'bevel';
   /** 元素是否参与指针命中 */
   'pointer-events'?: string;
+  /** 元素及其后代是否从无障碍树中隐藏 */
+  'aria-hidden'?: 'true' | 'false';
   'font-size'?: number | string;
   'font-family'?: string;
   'font-weight'?: number | string;

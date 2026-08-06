@@ -1,7 +1,12 @@
 import type { Scene } from '@retikz/core';
 import type { PerformanceTraceRecord } from '@retikz/runtime';
 
-import { createRuntimeTraceReporter } from '@retikz/runtime';
+import {
+  createRuntimeTraceReporter,
+  PerformanceTraceOutcome,
+  PerformanceTracePhase,
+  PerformanceTraceUnit,
+} from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 
 import { drawScene } from '../../src/canvas';
@@ -25,7 +30,13 @@ describe('drawScene performance trace', () => {
     const records: Array<PerformanceTraceRecord> = [];
     const trace = createRuntimeTraceReporter({
       owner: '@retikz/render:canvas',
-      phases: [{ phase: 'commit', unit: 'scene-primitive', outcomes: ['full'] }],
+      phases: [
+        {
+          phase: PerformanceTracePhase.Commit,
+          unit: PerformanceTraceUnit.ScenePrimitive,
+          outcomes: [PerformanceTraceOutcome.Full],
+        },
+      ],
       sink: record => records.push(record),
     });
 
@@ -34,9 +45,9 @@ describe('drawScene performance trace', () => {
     expect(records).toEqual([
       {
         owner: '@retikz/render:canvas',
-        phase: 'commit',
-        unit: 'scene-primitive',
-        outcome: 'full',
+        phase: PerformanceTracePhase.Commit,
+        unit: PerformanceTraceUnit.ScenePrimitive,
+        outcome: PerformanceTraceOutcome.Full,
         visited: 3,
         reused: 0,
         changed: 3,

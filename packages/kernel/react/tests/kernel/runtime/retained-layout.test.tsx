@@ -8,7 +8,7 @@ import type {
 } from '@retikz/render/runtime';
 import type { RuntimePreparedCommit } from '@retikz/runtime';
 
-import { CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineInspector } from '@retikz/core';
 import { defineRetainedRenderer } from '@retikz/render/runtime';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
@@ -51,24 +51,20 @@ const inspectionComposite = defineComposite({
     type: z.literal('inspection'),
   }),
   artifactSchema: z.strictObject({ width: z.number(), height: z.number() }),
-  inspector: {
-    kind: 'layout',
-    localOptionsInputSchema: z.strictObject({}),
-    localOptionsSchema: z.strictObject({}),
-    inspect: artifact => [
-      {
-        kind: 'rect',
-        role: 'fixture.inspection',
-        x: 0,
-        y: 0,
-        width: artifact.width,
-        height: artifact.height,
-        presentation: 'outline',
-        tone: 'scope',
-        lineStyle: 'dashed',
-      },
-    ],
-  },
+  inspector: defineInspector({
+    kind: 'composite',
+    optionsInputSchema: z.strictObject({}),
+    optionsSchema: z.strictObject({}),
+    inspect: (artifact: { width: number; height: number }) => ({
+      type: 'path',
+      stroke: '#2563eb',
+      dashPattern: [4, 2],
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [artifact.width, artifact.height] },
+      ],
+    }),
+  }),
   compile: () => ({
     children: [{ type: 'node', id: 'inspection-node', position: [0, 0], shape: 'rectangle' }],
     artifact: { width: 20, height: 20 },

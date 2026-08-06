@@ -103,7 +103,7 @@ JSON/IR 路径使用 `createOverlayLayout()` 与 `OverlayLayoutDefinition`；Van
 | ---------- | ------------------------------------------ | ------ | --------------------------------------------------------------------------------------- |
 | `inspect?` | `boolean` \| `OverlayLayoutInspectOptions` | 继承   | 省略时继承 Layout / 最近 Scope；`false` 只关闭当前 occurrence，且不会关闭或开启嵌套布局 |
 
-对象形式可分别控制 `placements`、`anchors` 与 `stacking`，并复用通用边界与盒模型间距开关。完整字段和全图 / Scope 策略见[运行时参考](/standard/layout/reference/runtime#布局检查器)。
+对象形式可分别控制 `placements`、`anchors` 与 `stacking`，并复用通用边界与盒模型间距开关。放置边界、定位关系与锚点输出普通 Core Path / Node；Overlay 不提供无意义的 gap 选项。完整字段和全图 / Scope 策略见[运行时参考](/standard/layout/reference/runtime#布局检查器)。
 
 ### `OverlayLayoutInput`
 
