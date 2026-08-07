@@ -114,13 +114,13 @@ const connectedUnitScale = defineScale({
 
 const chartWithCustomCoordinate = {
   ...base,
-  styleTokens: { 'axis.enabled': false },
+  chartThemeTokens: { 'chart.axis.enabled': false },
   coordinate: { type: 'connected-test-2d' },
 } as const;
 
 const chartWithCustomScale = {
   ...base,
-  styleTokens: { 'axis.enabled': false },
+  chartThemeTokens: { 'chart.axis.enabled': false },
   scales: [
     { type: 'connected-unit', name: '__chart.connected-scatter.scale.x' },
     { type: 'linear', name: '__chart.connected-scatter.scale.y' },
@@ -360,7 +360,7 @@ describe('Connected Scatter Chart resolution', () => {
         { type: 'axis', id: '__chart.connected-scatter.guide.y', dimension: 'y', grid: true },
         { type: 'legend', channel: 'color', scale: '__chart.connected-scatter.scale.series-color' },
       ],
-      theme: resolution.plotSpec.theme,
+      plotTheme: resolution.plotSpec.plotTheme,
     });
     const options = {
       width: 320,

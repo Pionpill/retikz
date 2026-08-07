@@ -60,7 +60,7 @@ describe('layout utils', () => {
       .map(node => node.path)
       .filter(path => path.startsWith('/viz/plot/'));
 
-    expect(plotPaths.slice(-12)).toEqual([
+    expect(plotPaths.slice(-13)).toEqual([
       '/viz/plot/reference/plot',
       '/viz/plot/reference/encoding',
       '/viz/plot/reference/transform',
@@ -72,6 +72,7 @@ describe('layout utils', () => {
       '/viz/plot/reference/layer',
       '/viz/plot/reference/theme',
       '/viz/plot/reference/runtime',
+      '/viz/plot/changelog/v0-2',
       '/viz/plot/changelog/v0-1',
     ]);
   });

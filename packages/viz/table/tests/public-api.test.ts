@@ -28,9 +28,9 @@ type PublicContractTypes = [
   TableTypes.CellVisualScaleDefinition,
   TableTypes.AnyCellVisualScaleDefinition,
   TableTypes.TableLegendDescriptor,
-  TableTypes.IRTableStyleTokens,
-  TableTypes.TableStyleTokenMap,
-  TableTypes.TableStyleTokenKey,
+  TableTypes.IRTableThemeTokenOverrides,
+  TableTypes.TableThemeTokenMap,
+  TableTypes.TableThemeTokenKey,
 ];
 
 // @ts-expect-error 旧 addressed manual Cell 类型不再从包根导出
@@ -111,13 +111,15 @@ describe('@retikz/table public API', () => {
     expect(Table).toHaveProperty('TableVisualScaleRefSchema');
     expect(Table).toHaveProperty('TableLegendDescriptorSchema');
     expect(Table).toHaveProperty('defineCellVisualScale');
-    expect(Table).toHaveProperty('TableStyle');
-    expect(Table).toHaveProperty('TableThemeMode');
-    expect(Table).toHaveProperty('TableStyleTokenKeySchema');
-    expect(Table).toHaveProperty('TableStyleBorderTokenSchema');
-    expect(Table).toHaveProperty('TableStyleTokensSchema');
-    expect(Table).toHaveProperty('TableStyleTokenMapSchema');
-    expect(Table).toHaveProperty('BUILTIN_TABLE_STYLE_TOKENS');
+    expect(Table).toHaveProperty('TableThemeTokenDefinition');
+    expect(Table).toHaveProperty('defineTableThemeTokens');
+    expect(Table).toHaveProperty('TableThemeTokenKeySchema');
+    expect(Table).toHaveProperty('TableThemeTokenBorderSchema');
+    expect(Table).toHaveProperty('TableThemeTokenOverridesSchema');
+    expect(Table).toHaveProperty('TableThemeTokenMapSchema');
+    expect(Table).toHaveProperty('BUILTIN_TABLE_THEME_TOKENS');
+    expect(Table).not.toHaveProperty('TableStyle');
+    expect(Table).not.toHaveProperty('TableThemeMode');
     expect(Table).not.toHaveProperty('TableStyleTokenShape');
     expect(Table).toHaveProperty('TableCellSourceKind');
     expect(StructurePublic).not.toHaveProperty('TableCellSourceKind');
@@ -143,7 +145,7 @@ describe('@retikz/table public API', () => {
     expect(Table).not.toHaveProperty('matchesTableCellSelector');
     expect(Table).not.toHaveProperty('matchesTableValuePredicate');
     expect(Table).not.toHaveProperty('resolveTableCellPlans');
-    expect(Table).not.toHaveProperty('resolveTableStyleTokens');
+    expect(Table).toHaveProperty('resolveTableThemeTokens');
     expect(Table).not.toHaveProperty('resolveCellVisualScale');
   });
 

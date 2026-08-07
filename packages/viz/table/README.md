@@ -15,14 +15,22 @@ are derived by Table. Scalar entries are value shorthands, `null` leaves a coord
 `{ value: null }` stores a real null Cell. Both helpers return plain, JSON-safe precise specs while
 sharing structure normalization, presentation, layout, and lowering.
 
-Table first resolves one deterministic Cell plan: built-in preset, user token overlay, Cell-local
+Table first resolves one deterministic Cell plan: the Core host Theme selects a built-in preset,
+shared categorical colors project into the Table data channel, inherited `theme.tokens.table` and
+local `tableThemeTokens` provide sparse Table token overlays, then Cell-local
 formatter/presentation/appearance, ordered visual encodings, and ordered root rules contribute in
 increasing priority. Value Cells then run the winning formatter and presentation with that final
 appearance.
 The built-in `neutral`, `academic`, `vibrant`, and `clean` presets provide complete light/dark token
-maps; `styleTokens` is a strict partial overlay for the selected mode. Unknown token keys fail
-loudly. Content Cells already own renderable children and therefore bypass formatter and
-presentation dispatch.
+maps. `theme.style` / `theme.mode` select the preset; `theme.tokens.table` is inherited and
+`tableThemeTokens` is the local TableSpec overlay. Unknown token keys fail loudly. Content Cells
+already own renderable children and therefore bypass formatter and presentation dispatch.
+
+`TableThemeTokenDefinition` and `defineTableThemeTokens()` expose the owner namespace contract for
+Core theme-token registry aggregation. `compileTable(spec, datasets, { theme })` accepts a sparse
+root Core Theme; `tableThemeTokens` stays in the JSON-safe TableSpec and is resolved after inherited
+tokens. The resolved `TableLayoutManifest` records effective `style`, `themeMode`, complete tokens,
+and per-token sources as output metadata.
 
 Use `lowerTables(datasets, options)` to register the layout-aware Table composite definition with
 `@retikz/core`. For a standalone Table, `compileTable(spec, datasets, options)` performs one Core
@@ -42,9 +50,16 @@ with the same identity-based conflict rules as the built-in React and Vanilla ad
 contribution stores detached frozen containers while leaving caller-owned definition objects
 unchanged. This extension contract is runtime-only and does not enter Table IR.
 
-Table can emit JSON-safe Legend descriptors for opted-in visual encodings. Composing those
-descriptors with Standard Legend and layout components remains a later integration step; this
-package does not expose a Table-local Legend or a final joined manifest helper.
+Each visual-scale Definition returns one runtime resolution with `of`, `legendForm`, `domain`,
+`range`, and optional `edges`. Table validates its JSON/color shape and repeated-input determinism;
+custom Definition authors remain responsible for keeping the evaluator and descriptor data
+semantically aligned. An opted-in encoding copies descriptor data from that same resolution into the
+JSON-safe manifest seed.
+
+Standard already provides public Legend and Flex capabilities, but alpha.3 intentionally stops at
+the descriptor seed. The JSON-safe Table-body composition boundary, rendered Standard Legend, and
+final occurrence join are planned for Table alpha.6. This package therefore does not expose
+`legendLayout`, a Table-local Legend, or a final joined manifest helper in alpha.3.
 
 ## Install
 

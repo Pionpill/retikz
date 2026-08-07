@@ -1,6 +1,7 @@
 import type {
   AnyCompositeDefinition,
   AnyPathKindDefinition,
+  AnyThemeTokenDefinition,
   ArrowDefinition,
   BoundaryDefinition,
   ClipDefinition,
@@ -46,6 +47,7 @@ const styleFontFamily = (style: CSSProperties | undefined): string | undefined =
 /** 同一条诊断消息进程内只 `console.warn` 一次，避免组件重复 render 时刷屏 */
 const warnedMessages = new Set<string>();
 const EMPTY_COMPOSITES: ReadonlyArray<AnyCompositeDefinition> = Object.freeze([]);
+const EMPTY_THEME_TOKEN_DEFINITIONS: ReadonlyArray<AnyThemeTokenDefinition> = Object.freeze([]);
 
 type DefinitionArrayNode = {
   children: WeakMap<object, DefinitionArrayNode>;
@@ -176,6 +178,22 @@ const aggregateEmbeddableComposites = (
     out.push(...group.maker(Object.fromEntries(group.merged)));
   }
   return out;
+};
+
+/** 按嵌入出现顺序收集 owner Theme definition，并按对象 identity 去重 */
+const aggregateEmbeddableThemeTokenDefinitions = (
+  contributions: ReadonlyArray<EmbeddableContributionRecord>,
+): ReadonlyArray<AnyThemeTokenDefinition> => {
+  const definitions: Array<AnyThemeTokenDefinition> = [];
+  const seen = new Set<AnyThemeTokenDefinition>();
+  for (const contribution of contributions) {
+    for (const definition of contribution.themeTokenDefinitions ?? []) {
+      if (seen.has(definition)) continue;
+      seen.add(definition);
+      definitions.push(definition);
+    }
+  }
+  return definitions.length === 0 ? EMPTY_THEME_TOKEN_DEFINITIONS : Object.freeze(definitions);
 };
 
 /**
@@ -322,6 +340,8 @@ export type LayoutProps = ScopeStyleProps & {
    * @description 带 `namespace` / `type` 的高层节点通过本 prop 注册并展开；未注册时会发出 warning 并跳过
    */
   composites?: ReadonlyArray<AnyCompositeDefinition>;
+  /** 运行时注入的 Tier 2 Theme token owner definition singleton */
+  themeTokenDefinitions?: ReadonlyArray<AnyThemeTokenDefinition>;
   /**
    * 运行时注入的公式渲染能力
    * @description `<Node>` 文本中的 `$...$`、`$$...$$` 或显式 tex run 会通过它转成可渲染字形。
@@ -381,6 +401,7 @@ export const Layout: FC<LayoutProps> = props => {
     pathKinds,
     ribbonWidthProfiles,
     composites,
+    themeTokenDefinitions,
     lowerTex,
     artifacts,
     onArtifacts,
@@ -398,6 +419,7 @@ export const Layout: FC<LayoutProps> = props => {
   const stablePathKinds = canonicalizeDefinitionArray(pathKinds);
   const stableRibbonWidthProfiles = canonicalizeDefinitionArray(ribbonWidthProfiles);
   const stableComposites = canonicalizeDefinitionArray(composites);
+  const stableThemeTokenDefinitions = canonicalizeDefinitionArray(themeTokenDefinitions);
   const stableEmbeddables = canonicalizeDefinitionArray(embeddables);
   const reducedMotion = usePrefersReducedMotion();
   const animationMode = useAnimationMode();
@@ -500,6 +522,12 @@ export const Layout: FC<LayoutProps> = props => {
     if (fromEmbeddables.length === 0) return stableComposites ?? EMPTY_COMPOSITES;
     return stableComposites !== undefined ? [...fromEmbeddables, ...stableComposites] : fromEmbeddables;
   }, [built.contributions, stableComposites]);
+  const aggregatedThemeTokenDefinitions = useMemo(() => {
+    const fromEmbeddables = aggregateEmbeddableThemeTokenDefinitions(built.contributions);
+    if (fromEmbeddables.length === 0) return stableThemeTokenDefinitions;
+    if (stableThemeTokenDefinitions === undefined) return fromEmbeddables;
+    return Object.freeze([...fromEmbeddables, ...stableThemeTokenDefinitions]);
+  }, [built.contributions, stableThemeTokenDefinitions]);
   const defaultFontFamily = styleFontFamily(style);
   const measureText = useMemo(() => withDefaultFontFamily(browserMeasurer, defaultFontFamily), [defaultFontFamily]);
   const compileArtifacts = useMemo<CompileArtifactOptions | undefined>(
@@ -520,6 +548,7 @@ export const Layout: FC<LayoutProps> = props => {
       pathKinds: stablePathKinds,
       ribbonWidthProfiles: stableRibbonWidthProfiles,
       composites: aggregatedComposites,
+      themeTokenDefinitions: aggregatedThemeTokenDefinitions,
       lowerTex,
       artifacts: compileArtifacts,
     }),
@@ -536,6 +565,7 @@ export const Layout: FC<LayoutProps> = props => {
       stablePathKinds,
       stableRibbonWidthProfiles,
       aggregatedComposites,
+      aggregatedThemeTokenDefinitions,
       lowerTex,
       compileArtifacts,
     ],

@@ -1,3 +1,4 @@
+import type { IRScene } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type {
   IRPlotSpec,
@@ -8,24 +9,32 @@ import type {
 } from '@retikz/plot';
 
 import { compileToScene } from '@retikz/core';
-import { lowerPlots, lowerPlotWithLineage, PlotSpecSchema } from '@retikz/plot';
+import { lowerPlots, lowerPlotWithLineage, PlotSpecSchema, PlotThemeTokenDefinition } from '@retikz/plot';
 import { renderToSvgString } from '@retikz/vanilla';
 
-/** renderPlot 的默认选项；不启用图元链路时保持 SVG 字符串返回值 */
-export type RenderPlotOptions = LowerPlotsOptions & {
-  /** 图元链路开关；默认关闭，显式 false 时仍返回 SVG 字符串 */
-  lineage?: false;
-  /** 宿主 metadata 只在链路模式下消费 */
-  hostLineageMetadata?: never;
+/** renderPlot 两种返回模式共享的根 Scene Theme 输入 */
+type RenderPlotThemeOptions = {
+  /** 在根 Scene 的 Core effective Theme 位置生效 */
+  theme?: IRScene['theme'];
 };
 
+/** renderPlot 的默认选项；不启用图元链路时保持 SVG 字符串返回值 */
+export type RenderPlotOptions = LowerPlotsOptions &
+  RenderPlotThemeOptions & {
+    /** 图元链路开关；默认关闭，显式 false 时仍返回 SVG 字符串 */
+    lineage?: false;
+    /** 宿主 metadata 只在链路模式下消费 */
+    hostLineageMetadata?: never;
+  };
+
 /** renderPlot 的图元链路模式选项 */
-export type RenderPlotLineageOptions = LowerPlotsOptions & {
-  /** 图元链路记录配置；传对象时返回 SVG 与 runtime-only 链路产物 */
-  lineage: PlotLineageOptions;
-  /** 宿主侧查询、AI 与权限 metadata；由 lineage.hostMetadata 独立控制透传 */
-  hostLineageMetadata?: PlotHostLineageMetadata;
-};
+export type RenderPlotLineageOptions = LowerPlotsOptions &
+  RenderPlotThemeOptions & {
+    /** 图元链路记录配置；传对象时返回 SVG 与 runtime-only 链路产物 */
+    lineage: PlotLineageOptions;
+    /** 宿主侧查询、AI 与权限 metadata；由 lineage.hostMetadata 独立控制透传 */
+    hostLineageMetadata?: PlotHostLineageMetadata;
+  };
 
 /** renderPlot 图元链路模式返回值 */
 export type RenderPlotLineageResult = {
@@ -51,8 +60,13 @@ const renderPlotImpl = (
 ): string | RenderPlotLineageResult => {
   const validated = PlotSpecSchema.parse(spec);
   const scene = compileToScene(
-    { version: 1, type: 'scene', children: [validated] },
-    { composites: lowerPlots(data, options) },
+    {
+      version: 1,
+      type: 'scene',
+      ...(options.theme !== undefined ? { theme: options.theme } : {}),
+      children: [validated],
+    },
+    { composites: lowerPlots(data, options), themeTokenDefinitions: [PlotThemeTokenDefinition] },
   ).scene;
   const svg = renderToSvgString(scene, { output: { width: options.width, height: options.height } });
   if (!isLineageOptions(options)) return svg;

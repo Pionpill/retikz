@@ -1,12 +1,12 @@
 import type { z } from 'zod';
 
 import type { DirectionalAnchorInput, SideInput, ValueOf } from '../../shared';
+import type { NodeTextAlign } from '../text';
 import type {
   BuiltinShape,
   NodeLabelPlacement,
   NodeLabelPosition,
   NodeLabelRotateMode,
-  NodeTextAlign,
   NodeTextColor,
 } from './constants';
 import type {

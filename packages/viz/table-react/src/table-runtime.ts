@@ -39,6 +39,7 @@ export const TABLE_LAYOUT_HOST_PROP_KEYS = [
   'width',
   'height',
   'viewBox',
+  'theme',
   'className',
   'containerStyle',
   'renderer',
@@ -122,18 +123,22 @@ const unsupportedEmbeddedPropsOf = (props: TableCommonProps): Array<string> => {
 };
 
 /** 在 schema 解析前报告 React 宿主 style 迁移错误 */
-const validateHostStyleMigration = (kind: ReactTableRuntimeKindValue, props: AnyTableProps): void => {
-  const plainProps = props as AnyTableProps & { style?: unknown };
-  if (kind === ReactTableRuntimeKind.Table && Object.hasOwn(plainProps, 'style')) {
+const validateHostStyleMigration = (props: AnyTableProps): void => {
+  const plainProps = props as AnyTableProps & {
+    style?: unknown;
+    themeMode?: unknown;
+    styleTokens?: unknown;
+  };
+  if (Object.hasOwn(plainProps, 'style')) {
     throw new Error(
-      'table react: Table top-level style is unsupported; use spec.style for the Table preset and containerStyle for standalone host CSS',
+      'table react: top-level style is unsupported; use containerStyle for host CSS and theme for Core Theme',
     );
   }
-  if (plainProps.style !== null && typeof plainProps.style === 'object') {
-    const componentName = kind === ReactTableRuntimeKind.Detail ? 'DetailTable' : 'ManualTable';
-    throw new Error(
-      `table react: ${componentName} style accepts a Table preset; move standalone host CSS to containerStyle`,
-    );
+  if (Object.hasOwn(plainProps, 'themeMode')) {
+    throw new Error('table react: top-level themeMode is unsupported; use theme.mode for Core Theme');
+  }
+  if (Object.hasOwn(plainProps, 'styleTokens')) {
+    throw new Error('table react: top-level styleTokens is unsupported; use tableThemeTokens for Table tokens');
   }
 };
 
@@ -183,9 +188,7 @@ const detailSpecOf = (props: DetailTableProps): IRDetailTableSpec => {
     ...(props.meta === undefined ? {} : { meta: props.meta }),
     ...(props.rules === undefined ? {} : { rules: props.rules }),
     ...(props.encodings === undefined ? {} : { encodings: props.encodings }),
-    ...(props.style === undefined ? {} : { style: props.style }),
-    ...(props.themeMode === undefined ? {} : { themeMode: props.themeMode }),
-    ...(props.styleTokens === undefined ? {} : { styleTokens: props.styleTokens }),
+    ...(props.tableThemeTokens === undefined ? {} : { tableThemeTokens: props.tableThemeTokens }),
   });
 };
 
@@ -199,9 +202,7 @@ const manualSpecOf = (props: ManualTableProps): IRManualTableSpec => {
     ...(props.meta === undefined ? {} : { meta: props.meta }),
     ...(props.rules === undefined ? {} : { rules: props.rules }),
     ...(props.encodings === undefined ? {} : { encodings: props.encodings }),
-    ...(props.style === undefined ? {} : { style: props.style }),
-    ...(props.themeMode === undefined ? {} : { themeMode: props.themeMode }),
-    ...(props.styleTokens === undefined ? {} : { styleTokens: props.styleTokens }),
+    ...(props.tableThemeTokens === undefined ? {} : { tableThemeTokens: props.tableThemeTokens }),
   });
 };
 
@@ -211,7 +212,7 @@ export const resolveReactTableRuntime = (
   props: AnyTableProps,
   options: Readonly<{ embedded?: boolean }> = {},
 ): ReactTableRuntime => {
-  validateHostStyleMigration(kind, props);
+  validateHostStyleMigration(props);
   let spec: IRTableSpec;
   let datasets: ExternalDatasets;
   let datasetSource: ExternalDatasets | Array<ExternalRow>;

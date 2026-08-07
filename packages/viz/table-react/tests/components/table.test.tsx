@@ -72,7 +72,7 @@ describe('Table React components', () => {
     );
   });
 
-  it('keeps style fields, encodings, and custom visual scales equal in standalone and embedded Table runtimes', () => {
+  it('keeps Table tokens, encodings, and custom visual scales equal in standalone and embedded runtimes', () => {
     const visualScale = defineCellVisualScale({
       name: 'react-palette',
       optionsSchema: z.strictObject({}),
@@ -86,9 +86,7 @@ describe('Table React components', () => {
     const spec = createManualTableSpec({
       id: 'encoded',
       rows: [[1]],
-      style: 'clean',
-      themeMode: 'dark',
-      styleTokens: { 'data.categorical': ['#123456'] },
+      tableThemeTokens: { 'data.categorical': ['#123456'] },
       encodings: [
         {
           id: 'palette',
@@ -112,9 +110,11 @@ describe('Table React components', () => {
     expect(embedded).toContain('1');
   });
 
-  it('keeps the neutral light default distinct from the explicit clean migration style', () => {
+  it('uses the effective Core Theme to select a different Table preset', () => {
     const neutral = renderToStaticMarkup(<Table spec={createManualTableSpec({ rows: [['Ada']] })} />);
-    const clean = renderToStaticMarkup(<Table spec={createManualTableSpec({ rows: [['Ada']], style: 'clean' })} />);
+    const clean = renderToStaticMarkup(
+      <Table spec={createManualTableSpec({ rows: [['Ada']] })} theme={{ style: 'clean', mode: 'light' }} />,
+    );
 
     expect(neutral).toContain('#ffffff');
     expect(neutral).toContain('#18181b');
@@ -300,9 +300,9 @@ describe('Table React components', () => {
         containerStyle,
       }),
     ).toThrow(/containerStyle.*outer.*Layout/i);
-    expect(() =>
-      adapterOf(ManualTable).contribute({ id: 'manual-style', rows: [[1]], containerStyle }),
-    ).toThrow(/containerStyle.*outer.*Layout/i);
+    expect(() => adapterOf(ManualTable).contribute({ id: 'manual-style', rows: [[1]], containerStyle })).toThrow(
+      /containerStyle.*outer.*Layout/i,
+    );
   });
 
   it('passes nested composite definitions through standalone Table runtime', () => {

@@ -862,7 +862,7 @@ export const compileChildrenToPrimitives = (
       generatedOccurrence === undefined
         ? `${locatorPrefix}children[${index}].scope.theme`
         : `${formatCompileOccurrence(generatedOccurrence)}.scope.theme`;
-    const theme = resolveTheme(frame.theme, child.theme, themePath);
+    const theme = resolveTheme(frame.theme, child.theme, themePath, context.themeTokenDefinitions);
     const placementTarget = resolveScopePlacementTarget(child, index, frame);
     // runtime Scope 可能包住在当前 frame 外完成的 replay probe，因此它的数值 transform
     // 必须在 Scope 收尾时统一投影到普通 child 与 replay 导入的 publication/observation

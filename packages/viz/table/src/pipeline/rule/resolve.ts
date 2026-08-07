@@ -12,7 +12,7 @@ import type {
   IRTableCellVisualEncoding,
   IRTableFormatterRef,
   IRTablePresentationRef,
-  IRTableStyleBorderToken,
+  IRTableThemeTokenBorder,
 } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
 import type {
@@ -81,15 +81,16 @@ type AppearanceStyleTokenKey =
   | 'columnHeader.border.bottom';
 
 /** 构造单个 appearance style token winner source */
-const styleTokenSourceOf = (key: AppearanceStyleTokenKey, options: ResolveTableCellPlansOptions): TableCellPlanSource =>
+const themeTokenSourceOf = (key: AppearanceStyleTokenKey, options: ResolveTableCellPlansOptions): TableCellPlanSource =>
   TableCellPlanSourceSchema.parse({
     kind: TableCellPlanSourceKind.StyleToken,
     tokenKey: key,
-    tokenSource: options.styleTokens?.sources[key] ?? 'preset',
+    tokenSource: options.tableThemeTokens?.sources[key].kind ?? 'preset',
+    tokenPath: options.tableThemeTokens?.sources[key].path ?? `$preset/neutral/light/${key}`,
   });
 
 /** 把 style border token 物化为固定低优先级 Cell candidate */
-const styleBorderOf = (border: DeepReadonly<IRTableStyleBorderToken>): IRTableBorder =>
+const themeBorderOf = (border: DeepReadonly<IRTableThemeTokenBorder>): IRTableBorder =>
   TableBorderSchema.parse({ ...structuredClone(border), priority: -100 });
 
 /** 从 resolved style tokens 构造 Cell appearance 与逐叶 winner */
@@ -97,7 +98,7 @@ const styleAppearanceOf = (
   cell: SemanticTableCell,
   options: ResolveTableCellPlansOptions,
 ): Readonly<{ appearance: IRTableCellAppearance; trace: TableCellAppearanceTrace }> => {
-  const resolved = options.styleTokens;
+  const resolved = options.tableThemeTokens;
   if (resolved === undefined) return { appearance: {}, trace: {} };
   const tokens = resolved.tokens;
   const header = cell.location === TableCellLocation.ColumnHeader;
@@ -119,8 +120,8 @@ const styleAppearanceOf = (
       fill: structuredClone(fill),
       ...(opacity === null ? {} : { fillOpacity: opacity }),
     });
-    trace['/background/fill'] = styleTokenSourceOf(fillKey, options);
-    if (opacity !== null) trace['/background/fillOpacity'] = styleTokenSourceOf(opacityKey, options);
+    trace['/background/fill'] = themeTokenSourceOf(fillKey, options);
+    if (opacity !== null) trace['/background/fillOpacity'] = themeTokenSourceOf(opacityKey, options);
   }
   if (color !== null || family !== null || weight !== null) {
     appearance.content = {
@@ -134,20 +135,20 @@ const styleAppearanceOf = (
             },
           }),
     };
-    if (color !== null) trace['/content/color'] = styleTokenSourceOf(colorKey, options);
+    if (color !== null) trace['/content/color'] = themeTokenSourceOf(colorKey, options);
     if (family !== null) {
-      trace['/content/nodeDefault/font/family'] = styleTokenSourceOf(familyKey, options);
-      trace['/content/labelDefault/font/family'] = styleTokenSourceOf(familyKey, options);
+      trace['/content/nodeDefault/font/family'] = themeTokenSourceOf(familyKey, options);
+      trace['/content/labelDefault/font/family'] = themeTokenSourceOf(familyKey, options);
     }
     if (weight !== null) {
-      trace['/content/nodeDefault/font/weight'] = styleTokenSourceOf(weightKey, options);
-      trace['/content/labelDefault/font/weight'] = styleTokenSourceOf(weightKey, options);
+      trace['/content/nodeDefault/font/weight'] = themeTokenSourceOf(weightKey, options);
+      trace['/content/labelDefault/font/weight'] = themeTokenSourceOf(weightKey, options);
     }
   }
   const headerBorder = header ? tokens['columnHeader.border.bottom'] : null;
   if (headerBorder !== null) {
-    appearance.borders = { bottom: styleBorderOf(headerBorder) };
-    trace['/borders/bottom'] = styleTokenSourceOf('columnHeader.border.bottom', options);
+    appearance.borders = { bottom: themeBorderOf(headerBorder) };
+    trace['/borders/bottom'] = themeTokenSourceOf('columnHeader.border.bottom', options);
   }
   return { appearance: TableCellAppearanceSchema.parse(appearance), trace };
 };

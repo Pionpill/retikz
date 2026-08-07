@@ -164,6 +164,16 @@ export const kernelV05: Release = {
               },
             },
             {
+              label: {
+                zh: 'BREAKING：namespaced Theme tokens 与 shared colors',
+                en: 'BREAKING: Namespaced Theme tokens and shared colors',
+              },
+              content: {
+                zh: '`Theme` 现在是稀疏 `style / mode / tokens`；Core 内置 `core` namespace，`ResolvedTheme` 额外提供 detached/frozen 的 `colors.semantic` 与非空 `colors.categorical`。`defineCoreThemeTokens`、`composeThemeTokenOverrides` 与 `themeTokenDefinitions` 支持 Core、Plot、Chart、Table 及自定义 owner 通过同一 registry 校验和聚合；未知 namespace/key/value 与冲突 Definition fail-loud。React `Layout` 与 Vanilla normalization 都会聚合嵌入 owner Definition，standalone 与 embedded compile 使用同一语义。',
+                en: '`Theme` is now sparse `style / mode / tokens`; Core registers the built-in `core` namespace, and `ResolvedTheme` adds a detached, frozen `colors.semantic` view plus a non-empty `colors.categorical` palette. `defineCoreThemeTokens`, `composeThemeTokenOverrides`, and `themeTokenDefinitions` let Core, Plot, Chart, Table, and custom owners validate and aggregate through one registry; unknown namespaces, keys, values, and conflicting Definitions fail loudly. React `Layout` and Vanilla normalization aggregate embedded owner Definitions, so standalone and embedded compile paths share the same semantics.',
+              },
+            },
+            {
               label: { zh: '原子绘图 schema / type 片段', en: 'Atomic drawing schema/type fragments' },
               content: {
                 zh: 'Core 公开 `GraphicPaint`、`GraphicOpacity`、`GraphicEffects`、`StrokeStyle` 与五个 `Path` fragment 的严格 schema 及 `IRXxx` 类型；完整 `PathSchema`、`PathDefaultSchema` 与既有 compile / Scene / lowering 语义保持不变，fragment 只提供可组合的 JSON 契约，不成为独立编译入口。',

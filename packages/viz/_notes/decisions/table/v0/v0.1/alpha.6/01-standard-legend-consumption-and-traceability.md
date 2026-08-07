@@ -1,12 +1,12 @@
-# ADR-06：Standard Legend 消费、外围组合与追溯
+# ADR-01：Standard Legend 消费、外围组合与追溯
 
 - 状态：Proposed
 - 决策日期：2026-07-31
-- 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-04 descriptor](./04-conditional-visual-encoding-and-scale.md) · [Standard alpha.2 roadmap](../../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/roadmap.md) · [Standard Legend ADR-09](../../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/09-generic-legend.md) · [Standard FlexLayout](../../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/03-flex-layout.md)
+- 关联：[alpha.6 roadmap](./roadmap.md) · [alpha.3 ADR-04 descriptor](../alpha.3/04-conditional-visual-encoding-and-scale.md) · [Standard alpha.2 roadmap](../../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/roadmap.md) · [Standard Legend ADR-09](../../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/09-generic-legend.md) · [Standard FlexLayout](../../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/03-flex-layout.md)
 
 ## 背景与目标
 
-ADR-04 的 Table Legend descriptor 保存 encoding id、channel、scale name、title 与 detached declarative mapping。该 mapping 同时是 Cell evaluator 和 Legend 呈现的唯一真源，但 descriptor 还不是可绘制内容。通用 title、`items | ramp`、任意 `IRChild` sample、内部布局、layout-aware compile 与 artifact 属于 `@retikz/standard`。
+ADR-04 的 Table Legend descriptor 保存 encoding id、channel、scale name、title，以及同次 visual scale resolution 产出的 `form` / `domain` / `range` / `edges`。descriptor 还不是可绘制内容。通用 title、`items | ramp`、任意 `IRChild` sample、内部布局、layout-aware compile 与 artifact 属于 `@retikz/standard`。
 
 Table 仍需完成自己的领域链路：把 descriptor 解析为 Standard Legend 输入，把所需 capability 显式贡献给 Core compile，在 Table body 旁排列一个或多个 Legend，并把 encoding、Cell、Legend occurrence 与 bounds 关联起来。
 
@@ -14,24 +14,25 @@ Table 保留自身复杂的 body layout；Legend stack、body 与未来 title/de
 
 ## 决策
 
-### 设计与实现 hard gate
+### 公共能力现状与剩余 hard gate
 
-本 ADR 进入实现前，当前分支必须能从 `@retikz/standard` package root 消费 Accepted：
+当前已能从 `@retikz/standard` package root 消费以下真实公共能力：
 
 1. JSON-safe `LegendInput` / `LegendSchema`、`createLegend()` 与 canonical `IRLegend`，覆盖 `items | ramp` 与任意 `IRChild` sample
 2. `LegendDefinition`、`createFlexLayout()` 与 `FlexLayoutDefinition`
-3. constrained layout、layout-aware compile 与 typed Legend/Flex artifacts；Flex 把每个 authored item key 关联到最终 replayed child occurrence
-4. direct Definition 接入对领域包显式传入与调用方重复传入 Definition 的确定冲突语义
-5. direct IR、React 与 Vanilla 的等价契约
+3. constrained layout、layout-aware compile 与 typed Legend / Flex artifacts
+4. direct Definition 接入及重复 composite key 的确定冲突语义
+5. direct IR、React 与 Vanilla 的等价 authoring 契约
 
-Core 还必须提供 compile-local 的 parent-owned key → replayed child occurrence artifact link，并在 child 经过嵌套 replay container 导入与 occurrence remap 后仍传播到最终 occurrence。Standard Flex 必须用该能力发布 authored item key 到其 replayed child occurrence 的 typed link。现有 layout callback 不能安全预测最终 child occurrence；该能力未就绪时，不得从 probe/replay index 反推 locator，也不得在 Table artifact 中伪造关联。
+Standard Legend / Flex 本体不再阻塞 Table。本 ADR 仍有两个 hard gate：
 
-当前 Table layout transaction 的 body 输出包含 callback-local opaque replay handle，不能作为 `FlexLayoutInput` 的 JSON-safe `IRChild`。ADR-06 实现必须先建立 Table-owned、lowering-only 的 body composite boundary，使 Table root 能把 body 表达为 canonical JSON-safe `IRChild` 再与 Standard Legend 组合；该边界不增加第二套 body layout，不暴露新的 authoring surface，也不得把 `CompositeCompileChild` 序列化或跨 callback 传给 Standard。该边界未形成前，外围 Flex 同样保持实现 gate。
+1. Table body 必须形成 Table-owned、lowering-only、JSON-safe 的 `IRChild` composition boundary，才能与 Standard Legend 进入同一 Flex tree；compile-local replay handle 不得进入 IR 或跨 callback 传递
+2. Core / Standard 必须提供 compile-local 的 parent-owned item key → replayed child occurrence link，并让该 link 穿过 nested replay occurrence remap；Table 不得从 probe / replay index、artifact 数组位置或结构路径猜测关联
 
-Table 只使用 Standard package root 的真实公共 API，不建立 alias、镜像 schema、deep import 或临时兼容层。Gate 未满足时：
+Table 只使用 Standard package root 的真实公共 API，不建立 alias、镜像 schema、deep import 或临时层。Gate 未满足时：
 
-- ADR-06 保持 Proposed，alpha.3 milestone 不能完成
-- ADR-01～05 的独立能力不因此失效
+- 本 ADR 保持 Proposed，alpha.6 的 Legend composition 不能进入实现
+- alpha.3 已完成的 descriptor seed 能力不因此失效
 - 不新增 Table-local Legend、外围 solver、renderer 或 placeholder public API
 
 ### Table placement sugar
@@ -56,21 +57,21 @@ type IRTableSpec = {
 
 默认值：`position: 'right'`、`gap: 16`、`itemGap: 8`、`align: 'start'`。gap/itemGap 必须是有限非负数。没有 descriptor 时忽略 `legendLayout`，不产生空占位或无意义 wrapper。
 
-alpha.3 只支持 right/bottom。left/top、overlay、floating 与完全自定义 Figure 应在 Table 外直接组合 Standard Flex/Grid/Overlay；Table 不镜像 Standard 通用 layout props。
+alpha.6 只支持 right/bottom。left/top、overlay、floating 与完全自定义 Figure 应在 Table 外直接组合 Standard Flex/Grid/Overlay；Table 不镜像 Standard 通用 layout props。
 
 ### Descriptor 到 Standard Legend
 
 Table 把 `TableLegendDescriptor` 与 root table id 解析为 Standard public `LegendInput` plain JSON，再由 `createLegend()` 取得 canonical `IRLegend`。Table 不返回自有 Legend input 类型，也不镜像 Standard schema。
 
-| Table descriptor             | Standard Legend 语义                                                                     |
-| ---------------------------- | ---------------------------------------------------------------------------------------- |
-| `encodingId`                 | Table 领域 legend identity 与 item/tick key 的命名空间，不写入 Standard 领域字段         |
-| `title`                      | 文本进入显式 Core Node child；不存在时省略 title                                         |
-| `mapping.kind: 'ordinal'`    | `kind: 'items'`；entries 同序，每项生成稳定 key、swatch sample 与 value label            |
-| `mapping.kind: 'threshold'`  | `kind: 'items'`；每个 color 对应一个由 edges 定义的阈值区间 item                         |
-| `mapping.kind: 'continuous'` | `kind: 'ramp'`；stops 直接生成 gradient sample，domain endpoints 生成 offset `0/1` ticks |
+| Table descriptor                | Standard Legend 语义                                                                |
+| ------------------------------- | ----------------------------------------------------------------------------------- |
+| `encodingId`                    | Table 领域 legend identity 与 item / tick key 的命名空间，不写入 Standard 领域字段  |
+| `title`                         | 文本进入显式 Core Node child；不存在时省略 title                                    |
+| `form: 'swatch'` 且无 `edges`   | `kind: 'items'`；domain / range 同序生成离散 item                                   |
+| `form: 'swatch'` 且存在 `edges` | `kind: 'items'`；每个 range color 对应一个由 edges 定义的阈值区间 item              |
+| `form: 'ramp'`                  | `kind: 'ramp'`；range 生成 gradient stops，domain endpoints 生成 offset `0/1` ticks |
 
-Standard form 严格由 mapping kind 派生。descriptor 不保存可与 mapping 漂移的 form/domain/range/edges 副本；opaque resolution 不产生 descriptor，因此不能进入 Standard 链路。
+descriptor 字段已经由 ADR-04 的同次 resolution 守卫。Table 直接消费这些字段，不重新调用 visual scale Definition、不抽样 evaluator，也不重新训练 domain。
 
 稳定 Table legend id 为 `table/${utf16Token(tableId)}/legend/${utf16Token(encodingId)}`。`utf16Token` 按顺序把每个 UTF-16 code unit 编为四位小写十六进制并连接，对分隔符、astral character 与孤立 surrogate 都保持确定且无碰撞。它只建立 Table manifest 的领域 lineage，不写入 `IRLegend`，也不作为 Standard artifact 查询键。
 
@@ -80,7 +81,7 @@ item/tick key 不使用数组 index：
 - threshold item：空 edges 使用唯一 `${legendId}/item/all` key 且省略 label；非空 edges 的首区间为 `${legendId}/item/lt/${numberToken(firstEdge)}`，中间区间为 `${legendId}/item/gte/${numberToken(leftEdge)}/lt/${numberToken(rightEdge)}`，末区间为 `${legendId}/item/gte/${numberToken(lastEdge)}`
 - ramp tick：固定使用 `${legendId}/tick/start` 与 `${legendId}/tick/end`，即使两端值相等也保留两个 authored role
 
-`numberToken` 先把 `-0` 规范为 `0`，再使用 ECMAScript `Number.prototype.toString()` 的十进制结果；mapping 已拒绝 `NaN` 与无穷值。
+`numberToken` 先把 `-0` 规范为 `0`，再使用 ECMAScript `Number.prototype.toString()` 的十进制结果；descriptor guard 已拒绝 `NaN` 与无穷值。
 
 Table 构造的 title/label 是无隐式外观的 Core text Node；swatch 是固定 `16×16`、无描边的 color Node；vertical ramp 是固定 `16×120`、无描边的 linear-gradient Node。continuous stops 原样进入 gradient，start/end tick offset 固定为 `0/1`。这些 child 都经过 Standard 对任意 `IRChild` 的通用 probe/replay，不引入 Legend sample registry。
 
@@ -90,7 +91,7 @@ Standard input 不包含 Table field、selector、rule、formatter ref、Cell id
 
 ### Definition loading
 
-`@retikz/table` 声明兼容的 `@retikz/standard` 运行依赖。direct compile 与共享 Table runtime contribution 在 Core registry 冻结前显式传入同一个 `LegendDefinition` 与 `FlexLayoutDefinition`；不能等 Table callback 解析出 descriptor 后再动态发现或注册。
+`@retikz/table` 声明 `@retikz/standard` 运行依赖。direct compile 与共享 Table runtime contribution 在 Core registry 冻结前显式传入同一个 `LegendDefinition` 与 `FlexLayoutDefinition`；不能等 Table callback 解析出 descriptor 后再动态发现或注册。
 
 没有 Legend 的 Table 只是不使用这两个 definitions，不改变输出。调用方同时显式提供同一 Definition 时，重复 composite key 严格交由 Core 诊断；Table 不按 namespace/name 私自去重，也不吞掉真实不同 definition 冲突。
 
@@ -163,18 +164,18 @@ const spec = {
 
 ## 功能与包边界
 
-- Table 拥有 descriptor mapping、label semantics、right/bottom placement intent、Table body layout 与领域 lineage
+- Table 拥有 descriptor 解析、label semantics、right / bottom placement intent、Table body layout 与领域 lineage
 - Standard 拥有 Legend visual structure、内部 layout、外围 Box Layout、lowering 与 typed artifacts
 - Core 拥有 composite execution、measurement、replay、artifact tree、nested replay link propagation 与 compile-local artifact link
 - adapters 只贡献 Definition 并消费同一 manifest/link helper
 
-## 兼容性与影响
+## 影响
 
-- `@retikz/table` 增加兼容的 Standard 运行依赖
-- `TableSpec` additive 增加 `legendLayout`
+- `@retikz/table` 增加 Standard 运行依赖
+- `TableSpec` 增加 `legendLayout`
 - compile/runtime contribution 显式携带 `LegendDefinition`/`FlexLayoutDefinition`
-- manifest additive 增加 legend lineage，compile result 增加同次 artifact links
-- Table 与 Standard release group 不 lockstep，但 Table alpha.3 发布受可消费的 Standard alpha.2 契约 gating
+- manifest 增加 legend lineage，compile result 增加同次 artifact links
+- Table 与 Standard release group 不 lockstep，但本能力进入实现前必须能消费稳定的 Standard Legend / Flex 公共契约
 
 ## 测试策略摘要
 
@@ -184,14 +185,12 @@ const spec = {
 - artifact contract 证明 Legend Flex item key 等于 `legendId`，nested replay 后的 Core link occurrence 可查询同次 Standard typed artifact，不预测 probe/replay index
 - parity 证明 direct/React/Vanilla/SSR 的 Scene、artifacts、manifest 与 lineage 等价
 
-详细 tree、identity helper、case、路径、命令和正式证据位于对应 ignored mirror plan 的 `PLAN.md` 与 `TEST_CONTRACT.md`。
-
 ## 能力完备性与架构验证
 
 - **所属能力域**：Table Visual Encoding/Traceability 与 Standard Drawing Presentation/Box Layout
 - **问题归属**：Table 解析 descriptor/placement/lineage，Standard 负责通用 Legend 与外围布局，Core 负责 occurrence-safe artifact link
-- **内部闭环**：Table body composite + declarative descriptor → Standard Legend/Flex input → Core Scene/artifacts → Table lineage + artifact links
-- **外部扩展**：custom Table scale 只有返回 declarative resolution 时进入同一链路；其它领域复用同一 Standard definitions
+- **内部闭环**：Table body composite + descriptor → Standard Legend / Flex input → Core Scene / artifacts → Table lineage + artifact links
+- **外部扩展**：builtin / custom Table scale 产出的合法 descriptor 进入同一链路；其它领域复用同一 Standard definitions
 - **结论**：组合 Standard 与 Core，Table 不新增通用布局、artifact 副本或 renderer 能力
 
 ## 被否决方案

@@ -6,6 +6,7 @@ import { compileToScene } from '@retikz/core';
 import type { IRTableSpec } from '../schemas';
 import type { CompileTableOptions, CompileTableResult, TableCompileArtifact } from './types';
 
+import { TableThemeTokenDefinition } from '../contract';
 import { TABLE_NAMESPACE, TableComposite, TableSpecSchema } from '../schemas';
 import { lowerTables } from './resolve';
 
@@ -26,7 +27,19 @@ export const compileTable = <const TComposites extends ReadonlyArray<AnyComposit
   const compileOptions = options.compile ?? {};
   const tableDefinitions = lowerTables(datasets, options.lower);
   const composites = [...tableDefinitions, ...(compileOptions.composites ?? [])];
-  const result = compileToScene({ type: 'scene', version: 1, children: [parsed] }, { ...compileOptions, composites });
+  const result = compileToScene(
+    {
+      type: 'scene',
+      version: 1,
+      ...(options.theme === undefined ? {} : { theme: options.theme }),
+      children: [parsed],
+    },
+    {
+      ...compileOptions,
+      composites,
+      themeTokenDefinitions: [TableThemeTokenDefinition, ...(compileOptions.themeTokenDefinitions ?? [])],
+    },
+  );
   const matches = result.artifacts.filter(isRootTableArtifact);
   if (matches.length !== 1) {
     throw new Error(`table: compileTable expected exactly one root table.table artifact, received ${matches.length}`);

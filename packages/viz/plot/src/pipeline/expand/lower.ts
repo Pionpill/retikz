@@ -1,7 +1,7 @@
-import type { ExpandCompositeDefinition, IRChild, IRJsonObject, IRNode, IRScope } from '@retikz/core';
+import type { ExpandCompositeDefinition, IRChild, IRJsonObject, IRNode, IRScope, ResolvedTheme } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 
-import { defineComposite } from '@retikz/core';
+import { categoricalColorAt, defineComposite, resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
 import { applyTransforms, tagSourceIndex } from '@retikz/data';
 import { assertAllValuesValid, validateBoundData } from '@retikz/data';
 
@@ -22,7 +22,7 @@ import type {
 import type { LowerPlotsOptions, MarkDataView } from './types';
 
 import { rootMeta, slug } from '../../contract';
-import { resolveAxisGuideTokens, resolvePlotTheme } from '../../providers';
+import { resolveAxisGuideTokens, resolvePlotGuideTheme, resolvePlotTheme } from '../../providers';
 import {
   channelKindsForMark,
   lowerMark,
@@ -69,12 +69,8 @@ import { prepareRows, resolveMarkRows } from './data';
 import { resolveFrame, resolveScopedFrames } from './frame';
 import { buildLegendLayers, collectChannelDescriptors, reserveLegendBands } from './legend';
 
-const defaultColorOf = (colors: ReadonlyArray<string>, markIndex: number): string => {
-  return colors[markIndex % colors.length];
-};
-
-const plotBackgroundNode = (width: number, height: number, fill: string | undefined): IRNode | null =>
-  fill === undefined
+const plotBackgroundNode = (width: number, height: number, fill: IRNode['fill'] | undefined): IRNode | null =>
+  fill === undefined || fill === 'none'
     ? null
     : {
         type: 'node',
@@ -109,7 +105,12 @@ const withFacetGuideContext = (
  * @description 编排：校验 ref/scale → 收集轴值 → 建归一化 scale → 建投影器（resolveFrame）→ 各 mark 下沉 → 包 localNamespace Scope。
  *   root id → Scope.id（plot-design §8.1）；provenance 开 → 外层 Scope + 各层 / datum 带来源 meta + `<plotId>.` 内部 id
  */
-const expandPlot = (node: IRPlotSpec, datasets: ExternalDatasets, options: LowerPlotsOptions): IRChild => {
+const expandPlot = (
+  node: IRPlotSpec,
+  datasets: ExternalDatasets,
+  options: LowerPlotsOptions,
+  effectiveTheme: ResolvedTheme,
+): IRChild => {
   // 自描述尺寸：节点自带 width/height 优先（组合时各面板本性尺寸），缺省回退全局选项、再回退默认
   const width = node.width ?? options.width ?? DEFAULT_PLOT_WIDTH;
   const height = node.height ?? options.height ?? DEFAULT_PLOT_HEIGHT;
@@ -183,7 +184,12 @@ const expandPlot = (node: IRPlotSpec, datasets: ExternalDatasets, options: Lower
     hasFacets: compositionFacets.length > 0,
     hasScaffolds: compositionScaffolds.length > 0,
   };
-  const resolvedTheme = resolvePlotTheme(node.theme, node.colors);
+  const themeResolution = resolvePlotTheme(effectiveTheme, {
+    plotThemeTokens: node.plotThemeTokens,
+    colors: node.colors,
+    plotTheme: node.plotTheme,
+  });
+  const resolvedTheme = resolvePlotGuideTheme(themeResolution.plotTheme, themeResolution.palette);
   const labelReserve = resolveLabelReserve({
     layout: node.layout,
     labels: node.labels ?? [],
@@ -532,7 +538,7 @@ const expandPlot = (node: IRPlotSpec, datasets: ExternalDatasets, options: Lower
               mark,
               { ...channelCtx, rows: markRows },
               channelRegistry,
-              defaultColorOf(resolvedTheme.palette.series, markIndex),
+              categoricalColorAt(resolvedTheme.palette.series, markIndex),
               channelKindsForMark(mark, markRegistry),
             ),
             {
@@ -634,7 +640,7 @@ const expandPlot = (node: IRPlotSpec, datasets: ExternalDatasets, options: Lower
           mark,
           { ...channelCtx, rows: markRows },
           channelRegistry,
-          defaultColorOf(resolvedTheme.palette.series, markIndex),
+          categoricalColorAt(resolvedTheme.palette.series, markIndex),
           channelKindsForMark(mark, markRegistry),
         ),
         {
@@ -672,7 +678,7 @@ const expandPlot = (node: IRPlotSpec, datasets: ExternalDatasets, options: Lower
       channelCtx,
       channelRegistry,
       markRegistry,
-      defaultColorOf(resolvedTheme.palette.series, 0),
+      categoricalColorAt(resolvedTheme.palette.series, 0),
       markDataViews,
     );
     const bands = reserveLegendBands(legendGuides, width, height, plotArea);
@@ -744,6 +750,17 @@ export const lowerPlots = (datasets: ExternalDatasets, options: LowerPlotsOption
       namespace: PLOT_NAMESPACE,
       type: 'plot',
       schema: PlotSpecSchema,
-      expand: (node: IRPlotSpec) => expandPlot(node, datasets, options),
+      expand: (node: IRPlotSpec, context?) =>
+        expandPlot(
+          node,
+          datasets,
+          options,
+          context?.theme ?? {
+            style: ThemeStyle.Neutral,
+            mode: ThemeMode.Light,
+            tokens: {},
+            colors: resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light),
+          },
+        ),
     }),
   ] satisfies Array<ExpandCompositeDefinition<IRPlotSpec, typeof PLOT_NAMESPACE, 'plot'>>;

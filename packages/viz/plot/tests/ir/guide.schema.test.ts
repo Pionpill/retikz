@@ -368,7 +368,7 @@ describe('GuideSchema contract', () => {
       type: 'plot',
       data: { values: [{ x: 1, y: 2 }] },
       marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
-      theme: {
+      plotTheme: {
         axis: {
           line: {
             arrow: { positive: true },
@@ -391,7 +391,7 @@ describe('GuideSchema contract', () => {
         ],
         coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
         marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
-        theme: { axis: { ticks: { mark: { kind: 'circle', size: 4 } } } },
+        plotTheme: { axis: { ticks: { mark: { kind: 'circle', size: 4 } } } },
       }),
     ).not.toThrow();
     expect(() =>
@@ -405,7 +405,7 @@ describe('GuideSchema contract', () => {
         ],
         coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
         marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
-        theme: { axis: { ticks: { count: 5 } } },
+        plotTheme: { axis: { ticks: { count: 5 } } },
       }),
     ).toThrow();
     expect(() =>
@@ -419,7 +419,7 @@ describe('GuideSchema contract', () => {
         ],
         coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
         marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
-        theme: { axis: { ticks: { density: { kind: 'sample', maxCount: 4 } } } },
+        plotTheme: { axis: { ticks: { density: { kind: 'sample', maxCount: 4 } } } },
       }),
     ).toThrow();
   });
@@ -436,7 +436,7 @@ describe('GuideSchema contract', () => {
         ],
         coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
         marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
-        theme: { axis: { tickLabels: { layout: { hide: { strategy: 'greedy' } } } } },
+        plotTheme: { axis: { tickLabels: { layout: { hide: { strategy: 'greedy' } } } } },
       }),
     ).not.toThrow();
     expect(() =>
@@ -450,7 +450,7 @@ describe('GuideSchema contract', () => {
         ],
         coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
         marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
-        theme: { axis: { tickLabels: { format: '.2f' } } },
+        plotTheme: { axis: { tickLabels: { format: '.2f' } } },
       }),
     ).toThrow();
   });
@@ -467,7 +467,7 @@ describe('GuideSchema contract', () => {
         ],
         coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
         marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
-        theme: { axis: { grid: { stroke: '#ddd', lineCap: 'round' } } },
+        plotTheme: { axis: { grid: { stroke: '#ddd', lineCap: 'round' } } },
       }),
     ).not.toThrow();
 
@@ -490,7 +490,7 @@ describe('GuideSchema contract', () => {
           ],
           coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
           marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
-          theme: { axis: { grid } },
+          plotTheme: { axis: { grid } },
         }),
       ).toThrow();
     }

@@ -1,5 +1,6 @@
 import type { ExternalDatasets, IRDataModel } from '@retikz/data';
 import type { IRPlotSpec, PlotLineageRun } from '@retikz/plot';
+import type { ScopeProps } from '@retikz/react';
 
 import { lowerPlots } from '@retikz/plot';
 import { Layout } from '@retikz/react';
@@ -32,6 +33,10 @@ const data: ExternalDatasets = {
   ],
 };
 
+const plotSurfaceTheme = {
+  tokens: { plot: { 'plot.surface.fill': '#123456' } },
+} satisfies NonNullable<ScopeProps['theme']>;
+
 const revenue = [
   { quarter: 'Q1', value: 18 },
   { quarter: 'Q2', value: 24 },
@@ -63,6 +68,25 @@ describe('<Plot spec data> 薄包装', () => {
     const svg = renderToStaticMarkup(<Plot spec={spec} data={data} />);
     expect(svg).toContain('<svg');
     expect(svg).toContain('<ellipse');
+  });
+
+  it('standalone Plot theme 在该 Plot 的 Core effective Theme 位置生效', () => {
+    const svg = renderToStaticMarkup(
+      <Plot spec={spec} data={data} theme={plotSurfaceTheme} width={480} height={300} />,
+    );
+
+    expect(svg).toContain('fill="#123456"');
+  });
+
+  it('embedded Plot theme 只在该 Plot 的 Core effective Theme 位置生效', () => {
+    const svg = renderToStaticMarkup(
+      <Layout width={960} height={300}>
+        <Plot spec={spec} data={data} theme={plotSurfaceTheme} width={480} height={300} />
+        <Plot spec={spec} data={data} x={480} width={480} height={300} />
+      </Layout>,
+    );
+
+    expect(svg.match(/fill="#123456"/g)).toHaveLength(1);
   });
 
   it('data 缺 spec 引用的数据集 → 渲染期抛错', () => {

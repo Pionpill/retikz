@@ -8,13 +8,6 @@ export const BuiltinShape = {
   Diamond: 'diamond',
 } as const;
 
-/** 节点文本对齐 */
-export const NodeTextAlign = {
-  Start: 'start',
-  Middle: 'middle',
-  End: 'end',
-} as const;
-
 /** Node 文字颜色的宿主专用关键字 */
 export const NodeTextColor = {
   /** 根据静态不透明 fill 自动选择黑色或白色 */

@@ -1,10 +1,10 @@
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlotSpec, IRPlotThemeResolution } from '@retikz/plot';
 
 import { JsonObjectSchema } from '@retikz/core';
 
 import type { InternalChartSpecBound } from '../families/shared';
 import type { IRChartPresentationInspection } from '../presentation';
-import type { ResolvedChartStyleContext } from '../style';
+import type { ResolvedChartThemeContext } from '../style';
 import type { ChartInspectionMemberInput, IRChartInspection } from './schema';
 
 import { ChartInspectionMemberKind, ChartInspectionSchema } from './schema';
@@ -35,7 +35,8 @@ export const createChartInspection = (
   spec: InternalChartSpecBound,
   plotSpec: IRPlotSpec,
   members: ReadonlyArray<ChartInspectionMemberInput>,
-  style: ResolvedChartStyleContext,
+  style: ResolvedChartThemeContext,
+  plotStyle: IRPlotThemeResolution,
   presentation: IRChartPresentationInspection,
 ): IRChartInspection => {
   const finalMembers = orderedMembers(members).map(member => {
@@ -56,11 +57,13 @@ export const createChartInspection = (
     chart: { type: spec.type, ...(spec.id === undefined ? {} : { id: spec.id }) },
     plot: { ...(plotSpec.id === undefined ? {} : { id: plotSpec.id }) },
     style: {
-      preset: style.style,
-      mode: style.themeMode,
-      tokens: style.tokens,
-      tokenSources: style.tokenSources,
-      authoredOverrides: style.authoredOverrides,
+      chart: {
+        style: style.style,
+        mode: style.mode,
+        tokens: style.tokens,
+        tokenSources: style.tokenSources,
+      },
+      plot: plotStyle,
     },
     presentation,
     members: finalMembers,

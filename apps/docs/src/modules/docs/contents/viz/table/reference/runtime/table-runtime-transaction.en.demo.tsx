@@ -54,7 +54,7 @@ const Demo: FC = () => (
           >
             <Text font={{ size: 14, weight: 'bold' }}>Canonical model</Text>
             <Text fill="gray" font={{ size: 11 }}>
-              parse · normalize · present
+              parse · Theme · normalize · present
             </Text>
           </Node>
           <Node
@@ -136,7 +136,7 @@ const Demo: FC = () => (
         >
           <Text font={{ size: 13, weight: 'bold' }}>Runtime inputs</Text>
           <Text fill="gray" font={{ size: 11 }}>
-            datasets · Definitions
+            Theme · datasets · Definitions
           </Text>
         </Node>
         <Node
@@ -207,7 +207,7 @@ const Demo: FC = () => (
             id: 'mobile-canonical',
             position: [-40, -150],
             title: 'Canonical model',
-            detail: 'parse · normalize · present',
+            detail: 'parse · Theme · normalize · present',
             width: 200,
             color: 'darkorange',
           })}
@@ -249,7 +249,7 @@ const Demo: FC = () => (
           id: 'mobile-runtime-inputs',
           position: [0, -220],
           title: 'Runtime inputs',
-          detail: 'datasets · Definitions',
+          detail: 'Theme · datasets · Definitions',
           width: 180,
           color: 'gray',
         })}

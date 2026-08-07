@@ -1,19 +1,22 @@
-/** Table 内置视觉样式 */
-export const TableStyle = {
-  /** 中性默认样式 */
-  Neutral: 'neutral',
-  /** 出版物式样式 */
-  Academic: 'academic',
-  /** 高区分度数据画布样式 */
-  Vibrant: 'vibrant',
-  /** 无装饰兼容样式 */
-  Clean: 'clean',
-} as const;
-
-/** Table 显式主题模式 */
-export const TableThemeMode = {
-  /** 浅色 token map */
-  Light: 'light',
-  /** 深色 token map */
-  Dark: 'dark',
+/** Table 主题 token 的 canonical key */
+export const TableThemeToken = {
+  CellBackgroundFill: 'cell.background.fill',
+  CellBackgroundFillOpacity: 'cell.background.fillOpacity',
+  CellContentColor: 'cell.content.color',
+  CellContentFontFamily: 'cell.content.font.family',
+  CellContentFontWeight: 'cell.content.font.weight',
+  ColumnHeaderBackgroundFill: 'columnHeader.background.fill',
+  ColumnHeaderBackgroundFillOpacity: 'columnHeader.background.fillOpacity',
+  ColumnHeaderContentColor: 'columnHeader.content.color',
+  ColumnHeaderContentFontFamily: 'columnHeader.content.font.family',
+  ColumnHeaderContentFontWeight: 'columnHeader.content.font.weight',
+  TableBorderTop: 'table.border.top',
+  TableBorderRight: 'table.border.right',
+  TableBorderBottom: 'table.border.bottom',
+  TableBorderLeft: 'table.border.left',
+  TableBorderHorizontal: 'table.border.horizontal',
+  TableBorderVertical: 'table.border.vertical',
+  ColumnHeaderBorderBottom: 'columnHeader.border.bottom',
+  DataCategorical: 'data.categorical',
+  DataSequential: 'data.sequential',
 } as const;

@@ -117,6 +117,36 @@ Core parses only deterministic named, hex, `rgb()`, and `hsl()` colors; it never
 
 ## Font
 
-`FontSchema` is shared by node text, node labels, and per-line text overrides. All fields are optional. `size` accepts a positive number, a Web preset such as `sm` / `lg`, or an `em` / `rem` string; omitted sizes use `CompileOptions.fontSize`. TikZ-style sizes are handled by higher-level sugar, not core IR.
+`FontSchema` is shared by node text, node labels, and per-line text overrides. All fields are optional, while family, size, weight, and style reuse Core's named value schemas. `size` accepts a positive number, a Web preset such as `sm` / `lg`, or an `em` / `rem` string; omitted sizes use `CompileOptions.fontSize`. TikZ-style sizes are handled by higher-level sugar, not core IR.
 
 <ZodSchema name="FontSchema" />
+
+<span id="fontfamily"></span>
+
+### FontFamily value
+
+<ZodSchema name="FontFamilySchema" />
+
+<span id="fontweight"></span>
+
+### FontWeight value
+
+<ZodSchema name="FontWeightSchema" />
+
+<span id="fontstyle"></span>
+
+### FontStyle value
+
+<ZodSchema name="FontStyleSchema" />
+
+<span id="textalign"></span>
+
+### TextAlign value
+
+<ZodSchema name="TextAlignSchema" />
+
+<span id="lineheight"></span>
+
+### LineHeight value
+
+<ZodSchema name="LineHeightSchema" />

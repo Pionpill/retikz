@@ -1,6 +1,6 @@
 ---
 title: 契约 - 产物
-description: 查询 Table compile 产出的轨道、Cell、border、来源与 locator DTO schema。
+description: 查询 Table compile 产出的轨道、Cell、视觉编码、图例描述、border 与来源 DTO schema。
 ---
 
 `TableLayoutManifest` 是同次 Table compile 产出的 JSON-safe、detached、递归冻结 typed artifact payload。运行时如何取得 exact root manifest 见[运行时](/viz/table/reference/runtime#table-compile-api)；本页只列输出形状与嵌套 DTO。
@@ -28,8 +28,27 @@ description: 查询 Table compile 产出的轨道、Cell、border、来源与 lo
     columns: '按 canonical 顺序保存的列轨道几何。',
     cells: '按 canonical 顺序保存的 Cell 几何与来源。',
     borders: '可见 border edge 的几何与冲突解析来源。',
+    style: 'resolved Table style。',
+    encodings: '有序 visual encoding lineage。',
+    legendDescriptors: '有序 Legend descriptor seeds。',
   }}
 />
+
+Manifest 的 `style` 区域还保存 effective Core `style`、`themeMode`、完整 resolved Table `tokens` 与逐 key `sources`。这里的 `themeMode` 是同次 compile 的输出元数据，用于说明选择了哪一份 preset；TableSpec 的输入字段仍是 host `theme` 与 `tableThemeTokens`，二者不是同一个层级。
+
+## 视觉编码与图例描述
+
+`encodings` 记录每条 visual encoding 实际着色的 Cell；`legendDescriptors` 只记录显式 opt-in 的领域 descriptor。两者来自同一次 visual scale resolution，并通过 `encodingId`、`channel` 与 `scaleName` 对账。
+
+| Descriptor 字段                        | 内容                                    |
+| -------------------------------------- | --------------------------------------- |
+| `encodingId` / `channel` / `scaleName` | 指回同一 manifest 中的 encoding seed    |
+| `title?`                               | 作者提供的可选标题                      |
+| `form`                                 | `ramp` 或 `swatch`                      |
+| `domain` / `range`                     | detached resolved domain 与非空颜色序列 |
+| `edges?`                               | threshold swatch 的严格递增边界         |
+
+descriptor 不是 Standard Legend IR，也不包含 placement、bounds 或最终 Legend occurrence。alpha.3 manifest 明确只到 descriptor seed；Table body 与 Standard Legend / Flex 的 composition 及 artifact join 计划在 Table alpha.6 接入。
 
 ## 轨道与 Cell
 
