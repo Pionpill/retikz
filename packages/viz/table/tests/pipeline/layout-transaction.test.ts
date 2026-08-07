@@ -60,7 +60,7 @@ describe('Table layout transaction', () => {
         columnGap: 2,
       },
     };
-    const result = compileTable(spec, {}, { compile: { padding: 0 } });
+    const result = compileTable(spec, {}, { theme: { style: 'clean', mode: 'light' }, compile: { padding: 0 } });
 
     expect(result.manifest.allocationBounds).toEqual({ x: 0, y: 0, width: 64, height: 12 });
     expect(result.manifest.columns.map(column => [column.offset, column.size])).toEqual([
@@ -78,7 +78,6 @@ describe('Table layout transaction', () => {
     const spec: IRTableSpec = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
-      style: 'clean',
       structure: {
         kind: 'manual',
         rows: [
@@ -102,7 +101,14 @@ describe('Table layout transaction', () => {
         rowSize: { kind: 'fixed', value: 50 },
       },
     };
-    const result = compileTable(spec, {}, { compile: { padding: 0, artifacts: { nodeLayouts: true } } });
+    const result = compileTable(
+      spec,
+      {},
+      {
+        theme: { style: 'clean', mode: 'light' },
+        compile: { padding: 0, artifacts: { nodeLayouts: true } },
+      },
+    );
     const cell = result.manifest.cells[0];
     const nodeArtifact = result.artifacts.find(
       (artifact): artifact is NodeLayoutCompileArtifact =>
@@ -153,7 +159,6 @@ describe('Table layout transaction', () => {
     const spec: IRTableSpec = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
-      style: 'clean',
       structure: {
         kind: 'manual',
         rows: [
@@ -167,7 +172,14 @@ describe('Table layout transaction', () => {
       },
       layout: { columnSize: { kind: 'fixed', value: 60 }, rowSize: { kind: 'auto' } },
     };
-    const result = compileTable(spec, {}, { compile: { composites: [probe], padding: 0 } });
+    const result = compileTable(
+      spec,
+      {},
+      {
+        theme: { style: 'clean', mode: 'light' },
+        compile: { composites: [probe], padding: 0 },
+      },
+    );
     const probeArtifacts = result.artifacts.filter(
       artifact => artifact.kind === 'composite' && artifact.namespace === 'fixture',
     );
@@ -432,7 +444,7 @@ describe('Table layout transaction', () => {
 
     let thrown: unknown;
     try {
-      compileTable(spec, {}, { compile: { composites: [failing] } });
+      compileTable(spec, {}, { theme: { style: 'clean', mode: 'light' }, compile: { composites: [failing] } });
     } catch (error) {
       thrown = error;
     }
@@ -540,7 +552,6 @@ describe('Table layout transaction', () => {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'orders',
-      style: 'clean',
       structure: {
         kind: 'manual',
         rows: [
@@ -552,7 +563,7 @@ describe('Table layout transaction', () => {
 
     let thrown: unknown;
     try {
-      compileTable(spec, {}, { compile: { composites: [failing] } });
+      compileTable(spec, {}, { theme: { style: 'clean', mode: 'light' }, compile: { composites: [failing] } });
     } catch (error) {
       thrown = error;
     }

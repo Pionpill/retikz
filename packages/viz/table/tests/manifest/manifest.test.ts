@@ -24,7 +24,6 @@ describe('Table layout manifest', () => {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'people',
-      style: 'clean',
       data: { reference: 'people' },
       structure: {
         kind: 'detail',
@@ -44,7 +43,11 @@ describe('Table layout manifest', () => {
         rowGap: 2,
       },
     };
-    const result = compileTable(spec, { people: [{ name: 'Ada' }] }, { compile: { padding: 0 } });
+    const result = compileTable(
+      spec,
+      { people: [{ name: 'Ada' }] },
+      { theme: { style: 'clean', mode: 'light' }, compile: { padding: 0 } },
+    );
 
     expect(TableLayoutManifestSchema.parse(result.manifest)).toEqual(result.manifest);
     expect(result.manifest).toMatchObject({

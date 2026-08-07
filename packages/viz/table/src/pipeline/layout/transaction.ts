@@ -16,20 +16,21 @@ import {
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
   NaturalLayoutProposal,
+  resolveCoreThemeColors,
+  ThemeMode,
+  ThemeStyle,
 } from '@retikz/core';
 import { ScalarValueSchema } from '@retikz/data';
 import { z } from 'zod';
 
 import type { PresentedTableModel, SemanticTableCell, TableLayoutManifest } from '../../contract';
-import type { ResolvedTableStyleTokens } from '../../providers/style';
+import type { ResolvedTableThemeTokens } from '../../providers/style';
 import type {
   IRTableBorder,
   IRTableCellBorders,
   IRTableLayout,
   IRTableSpec,
-  IRTableStyleBorderToken,
-  TableStyleValue,
-  TableThemeModeValue,
+  IRTableThemeTokenBorder,
 } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
 import type { ResolvedTablePlan, TableCellAppearanceTrace } from '../rule';
@@ -43,7 +44,7 @@ import type {
   TableTrackLayout,
 } from './types';
 
-import { resolveTableStyleTokens } from '../../providers/style';
+import { resolveTableThemeTokens } from '../../providers/style';
 import {
   TableBorderKind,
   TableBorderMode,
@@ -51,8 +52,6 @@ import {
   TableCellPayloadKind,
   TableRowKind,
   TableSpecSchema,
-  TableStyle,
-  TableThemeMode,
 } from '../../schemas';
 import { deepFreeze } from '../../shared';
 import { formatTable } from '../formatter';
@@ -87,11 +86,8 @@ export type PresentedTableTransactionInput = Readonly<{
   /** 与 canonical semantic model 严格对齐的呈现结果 */
   presented: PresentedTableModel;
   /** 同次 style resolution 与选择值 */
-  resolvedStyle?: Readonly<{
-    style: TableStyleValue;
-    themeMode: TableThemeModeValue;
-    tokens: ResolvedTableStyleTokens;
-  }>;
+  theme?: LayoutCompositeCompileContext['theme'];
+  tableThemeTokens?: ResolvedTableThemeTokens;
   /** 同次 Cell/encoding plan bundle */
   plan?: ResolvedTablePlan;
 }>;
@@ -231,12 +227,19 @@ const resolveStyleBorderCandidate = (
     | 'table.border.horizontal'
     | 'table.border.vertical'
     | 'columnHeader.border.bottom',
-  border: DeepReadonly<IRTableStyleBorderToken>,
-  tokens: ResolvedTableStyleTokens,
+  border: DeepReadonly<IRTableThemeTokenBorder>,
+  tokens: ResolvedTableThemeTokens,
 ): ResolvedTableBorderCandidate => {
   const resolved = resolveBorderCandidate({ ...structuredClone(border), priority: -100 });
   if (resolved.kind !== 'line') throw new Error('table: internal style border must resolve to a line');
-  return { ...resolved, styleToken: { key, source: tokens.sources[key] } };
+  return {
+    ...resolved,
+    styleToken: {
+      key,
+      source: tokens.sources[key].kind,
+      path: tokens.sources[key].path,
+    },
+  };
 };
 
 /** 把 Cell 四侧 border 按固定物理顺序物化为 Border Graph 输入 */
@@ -254,7 +257,10 @@ const resolveCellBorders = (
         [
           side,
           source?.kind === 'styleToken' && resolved.kind === 'line'
-            ? { ...resolved, styleToken: { key: source.tokenKey, source: source.tokenSource } }
+            ? {
+                ...resolved,
+                styleToken: { key: source.tokenKey, source: source.tokenSource, path: source.tokenPath },
+              }
             : resolved,
         ],
       ];
@@ -389,13 +395,15 @@ export const resolvePresentedTableTransaction = (
   assertPresentedAlignment(presented);
   const semantic = presented.semantic;
   const resolved = resolveTableLayoutSpec(input.layout);
-  const manifestStyle =
-    input.resolvedStyle ??
+  const manifestTheme =
+    input.theme ??
     ({
-      style: TableStyle.Clean,
-      themeMode: TableThemeMode.Light,
-      tokens: resolveTableStyleTokens(TableStyle.Clean, TableThemeMode.Light),
+      style: ThemeStyle.Clean,
+      mode: ThemeMode.Light,
+      tokens: {},
+      colors: resolveCoreThemeColors(ThemeStyle.Clean, ThemeMode.Light),
     } as const);
+  const tableThemeTokens = input.tableThemeTokens ?? resolveTableThemeTokens(manifestTheme);
 
   const intrinsic = presented.cells.map(cell =>
     resultOfTableProbe(
@@ -535,8 +543,6 @@ export const resolvePresentedTableTransaction = (
           const candidate = resolveBorderCandidate(resolved.borders.outer);
           return { outer: { top: candidate, right: candidate, bottom: candidate, left: candidate } };
         }
-        const resolvedStyle = input.resolvedStyle;
-        if (resolvedStyle === undefined) return {};
         const keys = {
           top: 'table.border.top',
           right: 'table.border.right',
@@ -545,31 +551,31 @@ export const resolvePresentedTableTransaction = (
         } as const;
         const outer = Object.fromEntries(
           Object.entries(keys).flatMap(([side, key]) => {
-            const border = resolvedStyle.tokens.tokens[key];
-            return border === null ? [] : [[side, resolveStyleBorderCandidate(key, border, resolvedStyle.tokens)]];
+            const border = tableThemeTokens.tokens[key];
+            return border === null ? [] : [[side, resolveStyleBorderCandidate(key, border, tableThemeTokens)]];
           }),
         );
         return Object.keys(outer).length === 0 ? {} : { outer };
       })(),
       ...(resolved.borders?.horizontal === undefined
-        ? input.resolvedStyle?.tokens.tokens['table.border.horizontal'] === null || input.resolvedStyle === undefined
+        ? tableThemeTokens.tokens['table.border.horizontal'] === null
           ? {}
           : {
               horizontal: resolveStyleBorderCandidate(
                 'table.border.horizontal',
-                input.resolvedStyle.tokens.tokens['table.border.horizontal'],
-                input.resolvedStyle.tokens,
+                tableThemeTokens.tokens['table.border.horizontal'],
+                tableThemeTokens,
               ),
             }
         : { horizontal: resolveBorderCandidate(resolved.borders.horizontal) }),
       ...(resolved.borders?.vertical === undefined
-        ? input.resolvedStyle?.tokens.tokens['table.border.vertical'] === null || input.resolvedStyle === undefined
+        ? tableThemeTokens.tokens['table.border.vertical'] === null
           ? {}
           : {
               vertical: resolveStyleBorderCandidate(
                 'table.border.vertical',
-                input.resolvedStyle.tokens.tokens['table.border.vertical'],
-                input.resolvedStyle.tokens,
+                tableThemeTokens.tokens['table.border.vertical'],
+                tableThemeTokens,
               ),
             }
         : { vertical: resolveBorderCandidate(resolved.borders.vertical) }),
@@ -622,9 +628,9 @@ export const resolvePresentedTableTransaction = (
   return deepFreeze({
     children: [root],
     manifest: buildTableLayoutManifest(tableId, semantic, layout, graph.edges, {
-      style: manifestStyle.style,
-      themeMode: manifestStyle.themeMode,
-      styleTokens: manifestStyle.tokens,
+      style: manifestTheme.style,
+      themeMode: manifestTheme.mode,
+      tableThemeTokens,
       presented,
       ...(input.plan === undefined ? {} : { plans: input.plan.cells, encodings: input.plan.encodings }),
       legendDescriptors: input.plan?.legendDescriptors ?? [],
@@ -645,17 +651,15 @@ export const resolveTableTransaction = (
     datasets,
     structureDefinitions: options.structureDefinitions,
   });
-  const style = parsed.style ?? TableStyle.Neutral;
-  const themeMode = parsed.themeMode ?? TableThemeMode.Light;
-  const styleTokens = resolveTableStyleTokens(style, themeMode, parsed.styleTokens);
+  const tableThemeTokens = resolveTableThemeTokens(context.theme, parsed.tableThemeTokens);
   const plan = resolveTableCellPlans(semantic, {
     rules: parsed.rules,
     encodings: parsed.encodings,
     visualScaleDefinitions: options.visualScaleDefinitions,
-    styleTokens,
+    tableThemeTokens,
     scaleContext: {
-      categoricalColors: styleTokens.tokens['data.categorical'],
-      sequentialColors: [styleTokens.tokens['data.sequential'][0], styleTokens.tokens['data.sequential'][1]],
+      categoricalColors: tableThemeTokens.tokens['data.categorical'],
+      sequentialColors: [tableThemeTokens.tokens['data.sequential'][0], tableThemeTokens.tokens['data.sequential'][1]],
     },
   });
   const formatted = formatTable(semantic, { cells: plan.cells, formatterDefinitions: options.formatterDefinitions });
@@ -669,7 +673,8 @@ export const resolveTableTransaction = (
       ...(parsed.meta === undefined ? {} : { meta: parsed.meta }),
       ...(parsed.layout === undefined ? {} : { layout: parsed.layout }),
       presented,
-      resolvedStyle: { style, themeMode, tokens: styleTokens },
+      theme: context.theme,
+      tableThemeTokens,
       plan,
     },
     context,

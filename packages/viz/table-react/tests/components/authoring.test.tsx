@@ -357,9 +357,8 @@ describe('Table React composition root integration', () => {
       meta: { source: 'root-props-test' },
       rules,
       encodings,
-      style: 'academic',
-      themeMode: 'dark',
-      styleTokens: { 'cell.content.color': '#fafafa' },
+      theme: { style: 'academic', mode: 'dark' },
+      tableThemeTokens: { 'cell.content.color': '#fafafa' },
       children: <DetailColumn id="name" field="name" formatter={{ name: 'root-props-formatter' }} />,
       structureDefinitions,
       formatterDefinitions,
@@ -391,9 +390,7 @@ describe('Table React composition root integration', () => {
       meta: { source: 'root-props-test' },
       rules,
       encodings,
-      style: 'academic',
-      themeMode: 'dark',
-      styleTokens: { 'cell.content.color': '#fafafa' },
+      tableThemeTokens: { 'cell.content.color': '#fafafa' },
     });
     expect(runtime.datasets).toMatchObject({ people: [{ name: 'Ada' }] });
     expect(runtime.lowerOptions).toEqual({
@@ -407,6 +404,7 @@ describe('Table React composition root integration', () => {
     expect(runtime.display).toEqual({
       width: 640,
       height: 320,
+      theme: { style: 'academic', mode: 'dark' },
       className: 'table-fixture',
       style: containerStyle,
       renderer: 'svg',
@@ -466,9 +464,7 @@ describe('Table React composition root integration', () => {
           legend: false as const,
         },
       ],
-      style: 'vibrant' as const,
-      themeMode: 'dark' as const,
-      styleTokens: { 'cell.content.color': '#fafafa' },
+      tableThemeTokens: { 'cell.content.color': '#fafafa' },
     };
     const propsRuntime = resolveReactTableRuntime(ReactTableRuntimeKind.Manual, {
       ...root,
@@ -508,10 +504,52 @@ describe('Table React composition root integration', () => {
     } as unknown as ManualTableProps;
 
     expect(() => resolveReactTableRuntime(ReactTableRuntimeKind.Table, generic)).toThrow(
-      /Table.*spec\.style.*containerStyle/,
+      /top-level style.*containerStyle/,
     );
-    expect(() => resolveReactTableRuntime(ReactTableRuntimeKind.Detail, detail)).toThrow(/DetailTable.*containerStyle/);
-    expect(() => resolveReactTableRuntime(ReactTableRuntimeKind.Manual, manual)).toThrow(/ManualTable.*containerStyle/);
+    expect(() => resolveReactTableRuntime(ReactTableRuntimeKind.Detail, detail)).toThrow(
+      /top-level style.*containerStyle/,
+    );
+    expect(() => resolveReactTableRuntime(ReactTableRuntimeKind.Manual, manual)).toThrow(
+      /top-level style.*containerStyle/,
+    );
+  });
+
+  it('rejects legacy DetailTable themeMode and styleTokens before spec reconstruction', () => {
+    const base = {
+      dataRef: 'people',
+      data: [],
+      columns: [{ id: 'score', field: 'score' }],
+    };
+
+    expect(() =>
+      resolveReactTableRuntime(ReactTableRuntimeKind.Detail, {
+        ...base,
+        themeMode: 'dark',
+      } as unknown as DetailTableProps),
+    ).toThrow(/top-level themeMode.*theme/);
+    expect(() =>
+      resolveReactTableRuntime(ReactTableRuntimeKind.Detail, {
+        ...base,
+        styleTokens: { 'cell.content.color': '#18181b' },
+      } as unknown as DetailTableProps),
+    ).toThrow(/top-level styleTokens.*tableThemeTokens/);
+  });
+
+  it('rejects legacy ManualTable themeMode and styleTokens before spec reconstruction', () => {
+    const base = { rows: [[1]] };
+
+    expect(() =>
+      resolveReactTableRuntime(ReactTableRuntimeKind.Manual, {
+        ...base,
+        themeMode: 'dark',
+      } as unknown as ManualTableProps),
+    ).toThrow(/top-level themeMode.*theme/);
+    expect(() =>
+      resolveReactTableRuntime(ReactTableRuntimeKind.Manual, {
+        ...base,
+        styleTokens: { 'cell.content.color': '#18181b' },
+      } as unknown as ManualTableProps),
+    ).toThrow(/top-level styleTokens.*tableThemeTokens/);
   });
 
   it('uses rule-selected custom formatter definitions in standalone rendering', () => {

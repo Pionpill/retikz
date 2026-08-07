@@ -5,7 +5,7 @@ import type {
   TableCellPlanSource,
   TableLegendDescriptor,
 } from '../../contract';
-import type { ResolvedTableStyleTokens } from '../../providers/style';
+import type { ResolvedTableThemeTokens } from '../../providers/style';
 import type {
   IRTableCellAppearance,
   IRTableCellRule,
@@ -72,10 +72,10 @@ export type ResolveTableCellPlansOptions = Readonly<{
   encodings?: ReadonlyArray<IRTableCellVisualEncoding>;
   /** 自定义视觉 scale definitions */
   visualScaleDefinitions?: ReadonlyArray<AnyCellVisualScaleDefinition>;
-  /** 同次 style resolution 产生的 required palette */
+  /** 同次 Table theme resolution 产生的 required palette */
   scaleContext: CellVisualScaleResolveContext;
-  /** 同次 style resolution 产生的完整 Cell/token seeds */
-  styleTokens?: ResolvedTableStyleTokens;
+  /** 同次 Table theme resolution 产生的完整 Cell/token seeds */
+  tableThemeTokens?: ResolvedTableThemeTokens;
 }>;
 
 /** manifest 消费的单个 encoding 解析摘要 */

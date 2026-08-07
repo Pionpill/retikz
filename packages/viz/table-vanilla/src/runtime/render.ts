@@ -20,7 +20,11 @@ const renderTableImpl = (
   }
   const data = options.data ?? {};
   const lowerOptions = options.lowerOptions ?? {};
-  const result = compileTable(spec, data, { lower: lowerOptions, compile: options.compile });
+  const result = compileTable(spec, data, {
+    lower: lowerOptions,
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
+    compile: options.compile,
+  });
   const svg = renderToSvgString(result.scene, { output: options.output, animation: options.animation });
   if (!requestsArtifacts(options)) return svg;
   return Object.freeze({ svg, manifest: result.manifest });

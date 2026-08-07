@@ -12,6 +12,14 @@ export const TableCellPlanSourceKind = {
   RootRule: 'rootRule',
 } as const;
 
+/** Table theme token 的最终 cascade 来源 */
+export const TableThemeTokenSourceKind = {
+  Preset: 'preset',
+  SharedCategorical: 'shared-categorical',
+  InheritedThemeToken: 'inherited-theme-token',
+  LocalThemeToken: 'local-theme-token',
+} as const;
+
 /** Cell appearance winner trace 的规范叶路径 */
 export const TableCellAppearanceTracePath = {
   /** Cell 背景填充 */
