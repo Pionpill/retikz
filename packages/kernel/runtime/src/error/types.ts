@@ -1,3 +1,5 @@
+import type { RuntimeDiagnosticCode } from '../diagnostic';
+
 /** Runtime owner 执行阶段 */
 export type RuntimeOwnerPhase =
   | 'capture'
@@ -22,7 +24,7 @@ export type RuntimeOwnerErrorCode =
 /** Runtime owner value 释放失败的非致命诊断 */
 export type RuntimeOwnerLifecycleDiagnostic = Readonly<{
   /** 诊断分类 */
-  code: 'RUNTIME_OWNER_DISPOSE_FAILED';
+  code: typeof RuntimeDiagnosticCode.OwnerDisposeFailed;
   /** 发生失败的 owner */
   owner: string;
   /** 释放阶段 */

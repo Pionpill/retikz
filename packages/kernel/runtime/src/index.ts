@@ -1,4 +1,5 @@
-export type { RuntimeDiagnostic, RuntimeWarningDiagnostic } from './diagnostic';
+export type { RuntimeDiagnostic, RuntimeDiagnosticCodeValue, RuntimeDiagnosticPhaseValue } from './diagnostic';
+export { RuntimeDiagnosticCode, RuntimeDiagnosticPhase } from './diagnostic';
 export type {
   RuntimeErrorCode,
   RuntimeOwnerErrorCode,
@@ -47,6 +48,7 @@ export type {
 export { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from './registry';
 export type { RuntimeSession, RuntimeSessionOptions, RuntimeUpdateStrategyValue } from './session';
 export { createRuntimeSession, RuntimeUpdateStrategy } from './session';
+export type { OpenString } from './shared';
 export * from './trace';
 export type {
   RuntimeOwnerInput,

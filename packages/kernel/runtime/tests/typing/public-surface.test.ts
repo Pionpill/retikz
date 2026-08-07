@@ -1,10 +1,12 @@
-import { describe, expectTypeOf, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import type {
   RuntimeCandidateView,
   RuntimeChangeSet,
   RuntimeCommitEvent,
   RuntimeDiagnostic,
+  RuntimeDiagnosticCodeValue,
+  RuntimeDiagnosticPhaseValue,
   RuntimeErrorCode,
   RuntimeOwnerInput,
   RuntimeOwnerUpdate,
@@ -28,8 +30,8 @@ import type {
   RuntimeSessionUpdate,
   RuntimeSnapshot,
   RuntimeUpdateResult,
-  RuntimeWarningDiagnostic,
 } from '../../src';
+import type { RuntimeDiagnosticPhaseValue as RuntimeDiagnosticPhaseTypeValue } from '../../src/diagnostic/types';
 
 import {
   createRuntimeChangeSet,
@@ -38,6 +40,8 @@ import {
   createRuntimeProgramRegistry,
   createRuntimeSession,
   defineRuntimeProgram,
+  RuntimeDiagnosticCode,
+  RuntimeDiagnosticPhase,
   RuntimeError,
   RuntimeProgramExecution,
   RuntimeProgramKind,
@@ -64,6 +68,13 @@ describe('runtime public surface', () => {
     expectTypeOf<RuntimeChangeSet<unknown>>().toBeObject();
     expectTypeOf<RuntimeCommitEvent<unknown>>().toBeObject();
     expectTypeOf<RuntimeDiagnostic>().toBeObject();
+    expectTypeOf(RuntimeDiagnosticCode).toBeObject();
+    expectTypeOf<RuntimeDiagnosticCodeValue>().toBeString();
+    expectTypeOf(RuntimeDiagnosticPhase).toBeObject();
+    expectTypeOf<RuntimeDiagnostic['phase']>().toEqualTypeOf<RuntimeDiagnosticPhaseValue>();
+    expectTypeOf<RuntimeDiagnosticPhaseTypeValue>().toEqualTypeOf<RuntimeDiagnosticPhaseValue>();
+    expect(RuntimeDiagnosticPhase.Run).toBe('run');
+    expect(RuntimeDiagnosticCode.TraceSinkFailed).toBe('RUNTIME_TRACE_SINK_FAILED');
     expectTypeOf<RuntimeErrorCode>().toBeString();
     expectTypeOf<RuntimeOwnerInput>().toBeObject();
     expectTypeOf<RuntimeOwnerUpdate>().toBeObject();
@@ -87,6 +98,5 @@ describe('runtime public surface', () => {
     expectTypeOf<RuntimeSessionUpdate>().toBeObject();
     expectTypeOf<RuntimeSnapshot<unknown>>().toBeObject();
     expectTypeOf<RuntimeUpdateResult<unknown>>().toBeObject();
-    expectTypeOf<RuntimeWarningDiagnostic>().toBeObject();
   });
 });

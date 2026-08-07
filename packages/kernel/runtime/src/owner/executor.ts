@@ -4,6 +4,7 @@ import type { RuntimeOwnerRegistry } from '../registry';
 import type { RuntimeOwnerErasedExecutor } from './define';
 import type { RuntimeChangeSet, RuntimeOwnerDefinition, RuntimeOwnerToken } from './types';
 
+import { RuntimeDiagnosticCode } from '../diagnostic';
 import { RuntimeError, RuntimeOwnerError } from '../error';
 import { createRuntimeIdentityIndex } from '../identity';
 import { getRuntimeOwnerRegistryExecutor } from '../registry';
@@ -50,7 +51,7 @@ const errorMessage = (cause: unknown): string => (cause instanceof Error ? cause
 
 const createDisposeDiagnostic = (owner: string, cause: unknown): RuntimeOwnerLifecycleDiagnostic =>
   Object.freeze({
-    code: 'RUNTIME_OWNER_DISPOSE_FAILED',
+    code: RuntimeDiagnosticCode.OwnerDisposeFailed,
     owner,
     phase: 'retire',
     message: errorMessage(cause),
