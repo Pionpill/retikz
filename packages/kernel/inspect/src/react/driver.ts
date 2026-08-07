@@ -15,13 +15,43 @@ import { inspectionRulesFromReactSite } from './authoring';
 
 const EMPTY_SELECTION: InspectionSelection = Object.freeze({ rules: Object.freeze([]) });
 
-/** 生成用于同一来源路径实例计数的所属者键 */
-const observationOwnerKey = (owner: CompileObservationOwner): string =>
-  owner.kind === 'pathKind' ? `pathKind:${owner.name}` : `composite:${owner.namespace}:${owner.type}`;
-
 /** 判断两个领域中立观测所属者是否相同 */
 const observationOwnerEquals = (left: CompileObservationOwner, right: CompileObservationOwner): boolean =>
-  observationOwnerKey(left) === observationOwnerKey(right);
+  left.kind === right.kind &&
+  (left.kind === 'pathKind'
+    ? right.kind === 'pathKind' && left.name === right.name
+    : right.kind === 'composite' && left.namespace === right.namespace && left.type === right.type);
+
+type ObservationOwnerCounts = {
+  pathKinds: Map<string, number>;
+  composites: Map<string, Map<string, number>>;
+};
+
+/** 按来源路径与结构化 owner 取得当前实例序号并推进计数 */
+const takeObservationOwnerIndex = (
+  countsBySourcePath: Map<string, ObservationOwnerCounts>,
+  sourcePath: string,
+  owner: CompileObservationOwner,
+): number => {
+  let counts = countsBySourcePath.get(sourcePath);
+  if (counts === undefined) {
+    counts = { pathKinds: new Map(), composites: new Map() };
+    countsBySourcePath.set(sourcePath, counts);
+  }
+  if (owner.kind === 'pathKind') {
+    const index = counts.pathKinds.get(owner.name) ?? 0;
+    counts.pathKinds.set(owner.name, index + 1);
+    return index;
+  }
+  let typeCounts = counts.composites.get(owner.namespace);
+  if (typeCounts === undefined) {
+    typeCounts = new Map();
+    counts.composites.set(owner.namespace, typeCounts);
+  }
+  const index = typeCounts.get(owner.type) ?? 0;
+  typeCounts.set(owner.type, index + 1);
+  return index;
+};
 
 /** 判断 Scope 是否来自已折叠来源路径的嵌入贡献，因而无法无歧义定位子树 */
 const isCollapsedContributionScope = (
@@ -71,19 +101,15 @@ const resolveReactSelection = (
   selection: InspectionSelection,
   registry: InspectorRegistry,
 ): InspectionSelection => {
-  const occurrenceCounts = new Map<string, number>();
+  const occurrenceCounts = new Map<string, ObservationOwnerCounts>();
   const authoredRules = input.authoringSites.flatMap(site => {
     const siteRules = inspectionRulesFromReactSite(site);
     if (siteRules.length > 0 && isCollapsedContributionScope(site, input.authoringSites)) {
       throw new Error('Inspect React nested Scope inside an embeddable contribution cannot be located');
     }
     const owner = site.owner;
-    let occurrenceIndex: number | undefined;
-    if (owner !== undefined) {
-      const countKey = `${site.sourcePath}\u0000${observationOwnerKey(owner)}`;
-      occurrenceIndex = occurrenceCounts.get(countKey) ?? 0;
-      occurrenceCounts.set(countKey, occurrenceIndex + 1);
-    }
+    const occurrenceIndex =
+      owner === undefined ? undefined : takeObservationOwnerIndex(occurrenceCounts, site.sourcePath, owner);
     return siteRules.map(rule => {
       if (rule.kind !== 'request' || rule.target.kind !== 'self' || rule.target.locator.kind !== 'authored') {
         return rule;

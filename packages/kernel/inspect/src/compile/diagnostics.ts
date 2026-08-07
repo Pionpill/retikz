@@ -14,7 +14,7 @@ export class InspectionCompileError extends Error {
 }
 
 /** 创建 selection admission 的结构化 origin */
-export const selectionOrigin = (ruleIndex: number, target: InspectionSelectionTarget) =>
+export const selectionOrigin = (ruleIndex: number, target: InspectionSelectionTarget | null) =>
   Object.freeze({ stage: 'selection' as const, ruleIndex, target });
 
 /** 用 Inspect origin 包装任意同步失败 */

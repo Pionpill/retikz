@@ -166,7 +166,7 @@ export type InspectionPlane = Readonly<{
 
 /** Inspect fail-loud 错误及非致命 fragment diagnostic 的结构化来源 */
 export type InspectionDiagnosticOrigin =
-  | Readonly<{ stage: 'selection'; ruleIndex: number; target: InspectionSelectionTarget }>
+  | Readonly<{ stage: 'selection'; ruleIndex: number; target: InspectionSelectionTarget | null }>
   | Readonly<{
       stage: 'subject' | 'inspect';
       inspector: InspectorKey;

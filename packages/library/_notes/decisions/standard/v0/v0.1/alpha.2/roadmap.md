@@ -228,19 +228,19 @@ Gate 至少证明：
 
 - [x] Core ADR-08 已 Accepted，并有 Standard 可消费的 Kernel 版本
 - [x] ADR-01～07 均完成 test contract、Architecture Gate、人工设计确认并进入 Accepted
-- [ ] Kernel ADR-12 完成 `@retikz/inspect` 与 Core 观测底座；Standard Layout Inspector 迁入 `/inspect` 子入口并完成自测、双语文档与视觉验证；ADR-08 保持 Superseded
+- [x] Kernel ADR-12 完成 `@retikz/inspect` 与 Core 观测底座；Standard Layout Inspector 迁入 `/inspect` 子入口并完成自测、双语文档与视觉验证；ADR-08 保持 Superseded
 - [ ] ADR-09 完成 test contract、Architecture Gate、实现、自测、双语文档与真实直接 authoring 消费并进入 Accepted
 - [x] FlexLayout、GridLayout、OverlayLayout、LayoutItem 与 layout artifact 的 schema、solver、layout-aware compile、diagnostics 与公共 exports 形成闭环
 - [x] 全部能力接入 direct Definition、React 与 Vanilla，不引入隐式注册或 adapter 私有语义
 - [x] 任意 `IRChild`、nested layout、文本双轴 proposal、baseline、non-zero bounds、overflow / clip 和失败路径均有自动化证据
-- [ ] Flex/Grid/Overlay Inspector 在可选 `/inspect` 入口支持单组件、Scope 子树与 Layout 全图开关，SVG/Canvas、static/retained 等价且不污染主 Scene；Standard 根入口不加载 Inspect
-- [ ] Layout Inspector 用颜色区分 final occurrence；margin/padding/gap 只绘制无底色的 12-unit 斜线和单份 dashed boundary，distributed 仅绘制 dashed perimeter、内部保持透明；box 与内部结构统一 dashed 且共线不重画；bounds 与 spacing 可独立配置，推荐态显示 content outline、内部结构线与固定 gap，且 Flex/Grid 不再从相邻空白误判 gap
+- [x] Flex/Grid/Overlay Inspector 在可选 `/inspect` 入口支持单组件、Scope 子树与 Layout 全图开关，SVG/Canvas、static/retained 等价且不污染主 Scene；Standard 根入口不加载 Inspect
+- [x] Layout Inspector 用颜色区分 final occurrence；margin/padding/gap 只绘制无底色的 12-unit 斜线和单份 dashed boundary，distributed 仅绘制 dashed perimeter、内部保持透明；box 与内部结构统一 dashed 且共线不重画；bounds 与 spacing 可独立配置，推荐态显示 content outline、内部结构线与固定 gap，且 Flex/Grid 不再从相邻空白误判 gap
 - [ ] Core ADR-11、Standard ADR-10 与 ADR-09 完成 Architecture Gate、实现、自测、双语文档与人工确认；Legend 以 items / ramp 结构接收任意 IRChild sample，直接 IR、React、Vanilla 具有等价 Scene / artifact，且 nested Definition 依赖保持显式
 - [ ] Axes、Grid、Frame、Legend 的 root Scope surface 和所有已开放 lower-facing 字段均沿 Core / Standard canonical pipeline 消费，无静默丢字段、局部重写 lower 算法或 adapter 私有语义
 - [x] 现有 `Grid` 与新 `GridLayout` 无概念、schema、definition key 或文档歧义
-- [ ] Standard 中英文文档和真实示例完整，不修改其它 Tier 2 的领域文档或公开契约
-- [ ] Standard 三包与 docs 完成受影响范围的格式、lint、类型、测试、构建和 package exports 验证
-- [ ] adversarial testing 无未处理 BLOCKING，milestone 经人工确认可以收口
+- [x] Standard 中英文文档和真实示例完整，不修改其它 Tier 2 的领域文档或公开契约
+- [x] Standard 三包与 docs 完成受影响范围的格式、lint、类型、测试、构建和 package exports 验证
+- [x] adversarial testing 无未处理 BLOCKING，milestone 经人工确认可以收口
 
 ## 不在 alpha.2 范围
 

@@ -1,7 +1,8 @@
 # ADR-12：将 Inspector 抽离为可选扩展包
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-06
+- 接受日期：2026-08-07
 - 关联：[alpha.2 roadmap](./roadmap.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [Standard Layout Inspector ADR-07](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/07-layout-inspector.md) · [Standard Inspector 视觉语义 ADR-08](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/08-layout-inspector-visual-semantics.md)
 
 ## 背景与目标
@@ -215,7 +216,7 @@ type InspectionDiagnosticOrigin =
   | Readonly<{
       stage: 'selection';
       ruleIndex: number;
-      target: InspectionSelectionTarget;
+      target: InspectionSelectionTarget | null;
     }>
   | Readonly<{
       stage: 'subject' | 'inspect';
@@ -274,7 +275,11 @@ type InspectionSelectionTarget =
   | Readonly<{
       kind: 'self';
       locator:
-        | Readonly<{ kind: 'authored'; sourcePath: string }>
+        | Readonly<{
+            kind: 'authored';
+            sourcePath: string;
+            occurrenceIndex?: number;
+          }>
         | Readonly<{ kind: 'occurrence'; occurrence: CompileOccurrenceLocator }>;
     }>;
 
@@ -304,17 +309,19 @@ type ResolvedInspectionRequest = Readonly<{
 }>;
 ```
 
-`scene` 规则作用于整张 authored scene；`subtree` 以 `sourcePath` 作用于该 Scope / Composite 来源的最终后代；`self` 可以选择一个 authored source 的全部最终映射，也可以精确选择一个 final occurrence。规则按 scene → 包含当前 occurrence 的 subtree 由外到内 → self 求值；同一 target 对同一 Inspector key 出现重复 request fail-loud，不使用数组后项覆盖
+`scene` 规则作用于整张 authored scene；`subtree` 以 `sourcePath` 作用于该 Scope / Composite 来源的最终后代；`self` 可以选择一个 authored source 的全部最终映射，也可以精确选择一个 final occurrence。同一 `sourcePath` 与 owner 对应多个嵌套 occurrence 时，`occurrenceIndex` 按最终 occurrence 顺序选择其中一个；省略仍表示选择全部映射。规则按 scene → 包含当前 occurrence 的 subtree 由外到内 → self 求值；同一 target 对同一 Inspector key 出现重复 request fail-loud，不使用数组后项覆盖
 
 `true` 表示 canonical 空输入，object 按 Definition 的 options merge 契约级联，`false` 关闭该 Inspector 在当前规则范围的继承但允许更深层显式重开。`barrier` 关闭目标子树内所有 Inspector，并禁止任何后代规则重开。无效 sourcePath、越界 self occurrence、重复规则、barrier 作用于 self 或 options schema 失败都在 callback 前 fail-loud
 
 scene / subtree 规则只选择 owner 与目标 InspectorDefinition 匹配的 final occurrence，不因普通 child 没有匹配 Inspector 报错；显式 self 请求的 key 未注册、owner 不匹配或目标没有 owner output 时 fail-loud。所有规则求值后先生成 `ResolvedInspectionRequest`，按 final occurrence comparator、Inspector key 排序，再分配连续 `colorScope` 和 appearance，之后才调用 callback。空 callback 输出仍占用自己的 colorScope，但不形成 plane entry；所有输出为空时 plane 为 `null`
 
-Layout 全图、Scope 子树、组件局部与自身关闭由 `@retikz/standard/inspect` 分别生成 scene、subtree、self request；`enabled: false` 生成通用 barrier，因此 Path 和其它 Inspector 也不能在该 authored 子树重新开启。Flex、Grid、Overlay 的 sparse options merge 由各自 InspectorDefinition 提供，不由 Core 或 adapter 解释。Path 默认只在显式 self 规则选中时开启；全图 Path 策略仍不在本轮冻结
+Layout 全图、Scope 子树、组件局部与关闭值由 `@retikz/standard/inspect` 分别生成 scene、subtree、self request 与通用 barrier；barrier 内的 Path 和其它 Inspector 也不能由后代重新开启。Flex、Grid、Overlay 的 sparse options merge 由各自 InspectorDefinition 提供，不由 Core 或 adapter 解释。Path 默认只在显式 self 规则选中时开启；全图 Path 策略仍不在本轮冻结
 
 React 与 Vanilla 的基础包不再拥有 `inspect` prop、inspection sidecar 或输出解释。`@retikz/inspect` 提供与 Core 编译签名兼容的可选编译驱动，并通过可选宿主入口把相同选择请求接入 React 与 Vanilla。宿主只负责收集 locator 和调用该驱动，选项解析、所属者匹配、辅助编译与诊断仍在 Inspect 包中
 
 组件局部 authoring sugar 只由相应的可选 `/inspect` 入口导出；基础 adapter 根入口不得静态导入 Inspect。React 与 Vanilla 必须表达同一 `InspectionSelection` 并得到结构等价的 plane，不能各自维护内置 Inspector key 或选项白名单
+
+React 可嵌入贡献可以转发其内部按 authored 顺序收集的领域中立 authoring sites。每个 site 可以携带 observation owner；外层 builder 只把内部 site 绑定到贡献节点的 `sourcePath` 并保持顺序，不解释 Inspector key、options 或 barrier。当同一贡献位置出现同 owner 的父子 occurrence 时，Inspect React driver 依据这些 sites 的稳定 authored ordinal 生成明确的 `occurrenceIndex`，从而只选择包装组件对应的 occurrence，不误选父级或相邻 occurrence。基础 React adapter 不生成 Inspector selection，也不把该序号写入 IR
 
 ### Standard 的可选 `/inspect` 子入口
 
@@ -390,7 +397,7 @@ primary patch 只描述 primary identity 变化；任一 layer 或其顺序变�
 
 Inspector 输出为空是合法结果，不形成 entry。已选择 Inspector 的 subject、options、callback、输出或片段编译失败时，整个 Inspect 编译驱动 fail-loud，不返回只有主 Scene 的部分结果；retained 宿主保留上一 committed frame
 
-selection admission 失败使用 `stage: 'selection'` 并保留原始 rule index 与 target，不伪造尚不存在的 owner / occurrence；subject 与 callback 失败使用已绑定的 Inspector key、owner 和 final occurrence；输出规范化及片段编译失败再携带精确 output index。Core fragment diagnostic 的 code、message 与 child path 作为 cause 保留，不能折叠为 entry 根路径或伪装成 primary warning
+selection admission 失败使用 `stage: 'selection'` 并保留原始 rule index；target 结构有效时原样保留，尚未形成合法 target 时为 `null`，不伪造 owner / occurrence；subject 与 callback 失败使用已绑定的 Inspector key、owner 和 final occurrence；输出规范化及片段编译失败再携带精确 output index。Core fragment diagnostic 的 code、message 与 child path 作为 cause 保留，不能折叠为 entry 根路径或伪装成 primary warning
 
 非致命 fragment warning 只进入 `InspectionCompileResult.diagnostics`，不写入 `primary.warnings`。每项诊断保留对应的 `InspectionDiagnosticOrigin`，并把 Core warning 的 `code`、`message` 与 `path` 原样放入 `cause`；结果先按 resolved request 的稳定顺序，再按 `outputIndex` 和 Core fragment 的产生顺序排列。没有诊断时返回深冻结的空数组
 
@@ -448,9 +455,15 @@ selection admission 失败使用 `stage: 'selection'` 并保留原始 rule index
 
 ## 测试策略摘要
 
-需要 Core contract / compile 证据锁定 observer 的显式注册、按需 owner output、最终 occurrence、probe/replay provenance、Theme/style 捕获、隔离片段编译和主 Scene 不变量；需要 Inspect contract / registry 证据锁定内置与第三方同路、重复 key、同 owner 多 Inspector、subject/options/output 失败、非递归、跨平面引用、identity / resource 隔离和原子结果
+测试按 Core 观测契约、Inspect 注册与选择、Render 只读图层、React / Vanilla 宿主等价性及 Standard 可选入口五层验证。重点不变量是最终 occurrence、按需产物、主图隔离、失败原子性、宿主模式等价与根入口不加载可选依赖；具体案例与命令由实施期测试契约维护
 
-需要用内置 quadratic / cubic stroke Path 与 Standard Flex / Grid / Overlay 两类所属者证明独立注册闭环，并验证 Standard 根入口没有 Inspect 静态依赖、`/inspect` 子入口可显式组合。React / Vanilla、SVG / Canvas、static / SSR / retained 必须证明同一选择与普通 Scene 图层等价执行；公共类型测试需证明 Core、Render 与基础 adapter 不再导出 inspection-specific 契约
+## 最终实现与验证
+
+Core 已收敛为领域中立的所属者产物、最终 occurrence 观测与隔离片段编译底座；Inspector 的定义、注册、选择、诊断、辅助平面、内置 Path 实现及宿主驱动均由可选 `@retikz/inspect` 提供。Render 只执行普通只读 Scene 图层，Standard 三包通过显式 `/inspect` 子入口提供布局辅助能力，基础入口不加载可选依赖
+
+验收覆盖 Core、Render、Inspect、React、Vanilla、Standard 三包的契约、类型、全量测试与生产构建，以及 Standard 可选入口的缺失依赖、显式安装和发布产物边界。中英文文档、示例、导航与生产构建已同步验证；最终整体审计无未处理阻塞项
+
+当前真实限制是贡献内部 Scope 尚无独立 subtree locator，因此无法无歧义定位时会明确失败；Path 的全图与 Scope 批量策略、Inspector 增量更新及交互式控制点仍留待后续能力设计
 
 ## 不在本 ADR 范围
 

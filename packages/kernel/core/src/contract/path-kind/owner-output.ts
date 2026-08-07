@@ -1,7 +1,5 @@
 import { z } from 'zod';
 
-import type { PathCommand } from '../scene';
-
 import { PathCommandSchema, TransformSchema } from '../../schemas';
 
 /** 内置 stroke Path 发布的最终命令与 Path-local transform 产物 */
@@ -15,7 +13,4 @@ export const StrokePathOwnerOutputSchema = z
   .describe('Settled stroke Path output exposed to compile observers.');
 
 /** 内置 stroke Path 的最终所属者产物 */
-export type StrokePathOwnerOutput = {
-  commands: Array<PathCommand>;
-  transforms: Array<z.infer<typeof TransformSchema>>;
-};
+export type StrokePathOwnerOutput = z.infer<typeof StrokePathOwnerOutputSchema>;

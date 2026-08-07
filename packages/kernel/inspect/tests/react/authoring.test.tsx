@@ -6,8 +6,9 @@ import { createRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { z } from 'zod';
 
-import { BUILTIN_INSPECTORS, createInspectorRegistry, STROKE_PATH_INSPECTOR_KEY } from '../../src';
+import { BUILTIN_INSPECTORS, createInspectorRegistry, defineInspector, STROKE_PATH_INSPECTOR_KEY } from '../../src';
 import {
   createInspectionLayoutDriver,
   createInspectionReactAuthoring,
@@ -113,6 +114,78 @@ describe('@retikz/inspect/react authoring and driver', () => {
     });
 
     expect(() => session.observers[0]?.createSession()).toThrow(/owner/i);
+  });
+
+  it('counts composite owners structurally when namespace or type contains a colon', () => {
+    const firstOwner = { kind: 'composite' as const, namespace: 'a:b', type: 'c' };
+    const secondOwner = { kind: 'composite' as const, namespace: 'a', type: 'b:c' };
+    const firstKey = { namespace: 'fixture', name: 'first' };
+    const secondKey = { namespace: 'fixture', name: 'second' };
+    const definitionFor = (key: typeof firstKey, owner: typeof firstOwner) =>
+      defineInspector({
+        ...key,
+        owner,
+        subjectSchema: z.null(),
+        optionsInputSchema: z.strictObject({}),
+        optionsSchema: z.strictObject({}),
+        inspect: () => [],
+      });
+    const colonRegistry = createInspectorRegistry([
+      definitionFor(firstKey, firstOwner),
+      definitionFor(secondKey, secondOwner),
+    ]);
+    const source = {
+      version: 1 as const,
+      type: 'scene' as const,
+      children: [{ namespace: 'fixture', type: 'host' }],
+    };
+    const driver = createInspectionLayoutDriver({ registry: colonRegistry });
+    const session = driver.create({
+      instance: {},
+      source,
+      authoringSites: [
+        {
+          kind: 'embeddable',
+          sourcePath: 'children[0]',
+          owner: firstOwner,
+          elementType: 'first',
+          props: { authoring: createInspectionReactAuthoring({ inspector: firstKey, value: true }) },
+        },
+        {
+          kind: 'embeddable',
+          sourcePath: 'children[0]',
+          owner: secondOwner,
+          elementType: 'second',
+          props: { authoring: createInspectionReactAuthoring({ inspector: secondKey, value: true }) },
+        },
+      ],
+      coreOptions: {},
+    });
+    const observer = session.observers[0].createSession();
+    const context = { compileFragment: () => ({ scene: {}, artifacts: [], diagnostics: [] }) } as never;
+    const occurrence = { sourcePath: 'children[0]', expansionPath: [] };
+    observer.observe(
+      {
+        owner: firstOwner,
+        occurrence,
+        provenance: { origin: occurrence, final: occurrence },
+        transform: [1, 0, 0, 1, 0, 0],
+        value: null,
+      },
+      context,
+    );
+    observer.observe(
+      {
+        owner: secondOwner,
+        occurrence,
+        provenance: { origin: occurrence, final: occurrence },
+        transform: [1, 0, 0, 1, 0, 0],
+        value: null,
+      },
+      context,
+    );
+
+    expect(() => observer.complete()).not.toThrow();
   });
 
   it('Inspect 根入口源码不静态加载 React optional peer', () => {

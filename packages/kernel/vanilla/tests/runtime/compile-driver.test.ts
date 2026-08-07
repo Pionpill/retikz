@@ -2,7 +2,7 @@ import type { AnyCompositeDefinition, CompileObserverDefinition, CoreProgramOutp
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 
 import { compileToScene } from '@retikz/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { VanillaCompileDriver, VanillaCompileOutput } from '../../src';
 
@@ -96,6 +96,30 @@ describe('Vanilla compile driver', () => {
       layers: [layer],
       diagnostics: ['same-revision'],
     } satisfies VanillaCompileOutput);
+  });
+
+  it('static observed driver 保留 Core onWarn 通知', () => {
+    const onWarn = vi.fn();
+    const input = Object.freeze({
+      instance: {},
+      source: {
+        version: 1 as const,
+        type: 'scene' as const,
+        children: [{ namespace: 'missing', type: 'composite' }],
+      },
+      authoringSites: Object.freeze([]),
+      coreOptions: { onWarn },
+    });
+    const session = createVanillaCompileDriverSession(
+      Object.freeze({
+        create: () => ({ observers: [observer], resolve: defaultVanillaCompileDriver.create(input).resolve }),
+      }),
+      input,
+    );
+
+    compileVanillaWithDriver(input, session);
+
+    expect(onWarn).toHaveBeenCalledTimes(1);
   });
 
   it('非法 resolver output 统一抛出可由 retained host 回滚的结构化错误', () => {

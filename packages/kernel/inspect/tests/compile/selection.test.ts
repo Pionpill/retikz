@@ -5,7 +5,12 @@ import { z } from 'zod';
 
 import type { InspectionSelection } from '../../src';
 
-import { createInspectorRegistry, defineInspector, resolveInspectionSelection } from '../../src';
+import {
+  createInspectorRegistry,
+  defineInspector,
+  InspectionCompileError,
+  resolveInspectionSelection,
+} from '../../src';
 
 const owner = { kind: 'composite' as const, namespace: 'demo', type: 'box' };
 const key = { namespace: 'test', name: 'box' };
@@ -379,5 +384,27 @@ describe('Inspection selection', () => {
         selection: selection as unknown as InspectionSelection,
       }),
     ).toThrow();
+  });
+
+  it.each([
+    ['null rule', { rules: [null] }],
+    ['primitive rule', { rules: [1] }],
+    ['missing target', { rules: [{ kind: 'request', inspector: key, value: true }] }],
+    ['sparse rules', { rules: new Array(1) }],
+  ] as const)('wraps malformed %s as a selection error', (_label, selection) => {
+    let failure: unknown;
+    try {
+      resolveInspectionSelection({
+        ir,
+        registry,
+        observations: [observation(0)],
+        selection: selection as unknown as InspectionSelection,
+      });
+    } catch (cause) {
+      failure = cause;
+    }
+
+    expect(failure).toBeInstanceOf(InspectionCompileError);
+    expect((failure as InspectionCompileError).origin).toMatchObject({ stage: 'selection', ruleIndex: 0 });
   });
 });

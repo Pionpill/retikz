@@ -33,6 +33,20 @@ export type {
 } from './types';
 export type { CompileWarning } from './warning';
 
+/** 把完整编译产生的 canonical warning 派发到调用方或默认开发期出口 */
+const dispatchCompileDiagnostics = (
+  diagnostics: ReadonlyArray<CompileWarning>,
+  onWarn: CompileOptions['onWarn'],
+): void => {
+  const warningSink =
+    onWarn ??
+    ((warning: CompileWarning): void => {
+      if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') return;
+      console.warn(formatCompileWarning(warning));
+    });
+  diagnostics.forEach(warningSink);
+};
+
 /** Core full compile 的内部输出，供同步入口与 Runtime Program 共享 */
 export type CoreCompileSnapshot<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
   /** 完整 compile result */
@@ -117,13 +131,7 @@ export const compileToScene = <const TComposites extends ReadonlyArray<AnyCompos
   options?: CompileOptions<TComposites>,
 ): CompileResult<CompositeArtifactOf<TComposites[number]>> => {
   const snapshot = compileCoreSnapshot(ir, options);
-  const warningSink =
-    options?.onWarn ??
-    ((warning: CompileWarning): void => {
-      if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') return;
-      console.warn(formatCompileWarning(warning));
-    });
-  snapshot.diagnostics.forEach(warningSink);
+  dispatchCompileDiagnostics(snapshot.diagnostics, options?.onWarn);
   return snapshot.result;
 };
 
@@ -134,6 +142,7 @@ export const observeCompileToScene = <const TComposites extends ReadonlyArray<An
   observers: ReadonlyArray<CompileObserverDefinition>,
 ): ObservedCompileResult => {
   const snapshot = compileCoreSnapshot(ir, options, { observers });
+  dispatchCompileDiagnostics(snapshot.diagnostics, options?.onWarn);
   return Object.freeze({
     primary: snapshot.result,
     observerOutputs: snapshot.observerOutputs,

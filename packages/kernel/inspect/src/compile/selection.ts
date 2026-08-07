@@ -16,6 +16,38 @@ import { cloneAndFreezeInspectionJson } from './output';
 
 type IndexedRule = Readonly<{ index: number; rule: InspectionSelectionRule }>;
 
+const isRecord = (value: unknown): value is Readonly<Record<PropertyKey, unknown>> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/** 在访问 locator 字段前校验 selection target 的运行时结构 */
+const readSelectionTarget = (value: unknown): InspectionSelectionTarget => {
+  if (!isRecord(value)) throw new Error('Inspection selection target must be an object');
+  if (value.kind === 'scene') return value as InspectionSelectionTarget;
+  if (value.kind === 'subtree' && typeof value.sourcePath === 'string') return value as InspectionSelectionTarget;
+  if (value.kind !== 'self' || !isRecord(value.locator)) {
+    throw new Error('Inspection selection target must identify scene, subtree, or self');
+  }
+  if (value.locator.kind === 'authored' && typeof value.locator.sourcePath === 'string') {
+    return value as InspectionSelectionTarget;
+  }
+  if (
+    value.locator.kind === 'occurrence' &&
+    isRecord(value.locator.occurrence) &&
+    typeof value.locator.occurrence.sourcePath === 'string' &&
+    Array.isArray(value.locator.occurrence.expansionPath) &&
+    value.locator.occurrence.expansionPath.every(
+      segment =>
+        isRecord(segment) &&
+        (segment.kind === 'probe' || segment.kind === 'replay') &&
+        Number.isSafeInteger(segment.index) &&
+        (segment.index as number) >= 0,
+    )
+  ) {
+    return value as InspectionSelectionTarget;
+  }
+  throw new Error('Inspection self target must provide a valid authored or occurrence locator');
+};
+
 /** Core canonical occurrence preorder 的包内等价比较器 */
 export const compareInspectionOccurrences = (
   left: CompileObservation['occurrence'],
@@ -116,26 +148,33 @@ export const admitInspectionSelection = (
   registry: InspectorRegistry,
   selection: InspectionSelection,
 ): ReadonlyArray<IndexedRule> => {
-  if (!Array.isArray(selection.rules)) throw new Error('Inspection selection rules must be an array');
+  if (!isRecord(selection) || !Array.isArray(selection.rules)) {
+    throw wrapInspectionError(selectionOrigin(0, null), new Error('Inspection selection rules must be an array'));
+  }
   const paths = collectAuthoredPaths(ir);
   const requestKeys = new Set<string>();
   return Object.freeze(
-    selection.rules.map((rule, index) => {
-      const target = Reflect.get(rule, 'target') as InspectionSelectionTarget;
+    Array.from(selection.rules, (rule, index) => {
+      let target: InspectionSelectionTarget | null = null;
       try {
+        if (!isRecord(rule)) throw new Error('Inspection selection rule must be an object');
+        target = readSelectionTarget(rule.target);
         if (rule.kind !== 'request' && rule.kind !== 'barrier') throw new Error('Unknown inspection selection rule');
-        if (rule.kind === 'barrier' && target.kind === 'self') throw new Error('Inspection barrier cannot target self');
+        const admittedRule = rule as InspectionSelectionRule;
+        if (admittedRule.kind === 'barrier' && target.kind === 'self') {
+          throw new Error('Inspection barrier cannot target self');
+        }
         validateTarget(target, paths);
-        if (rule.kind === 'request') {
-          const definition = registry.require(rule.inspector);
-          const duplicateKey = `${targetKey(target)}\u0000${inspectorRegistryKey(rule.inspector)}`;
+        if (admittedRule.kind === 'request') {
+          const definition = registry.require(admittedRule.inspector);
+          const duplicateKey = `${targetKey(target)}\u0000${inspectorRegistryKey(admittedRule.inspector)}`;
           if (requestKeys.has(duplicateKey)) throw new Error('Duplicate inspection target and Inspector key');
           requestKeys.add(duplicateKey);
-          if (rule.value !== false) {
-            definition.optionsInputSchema.parse(rule.value === true ? {} : rule.value);
+          if (admittedRule.value !== false) {
+            definition.optionsInputSchema.parse(admittedRule.value === true ? {} : admittedRule.value);
           }
         }
-        return Object.freeze({ index, rule });
+        return Object.freeze({ index, rule: admittedRule });
       } catch (cause) {
         throw wrapInspectionError(selectionOrigin(index, target), cause);
       }

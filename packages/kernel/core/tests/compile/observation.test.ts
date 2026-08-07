@@ -161,6 +161,22 @@ describe('Core observed compile', () => {
     expect(completed).toBe(1);
     expect(result.observerOutputs).toEqual([{ key: 'empty', value: [] }]);
   });
+
+  it('dispatches primary warnings through onWarn during observed compile', () => {
+    const warnings: Array<unknown> = [];
+    const observer: CompileObserverDefinition = {
+      key: 'test/warnings',
+      createSession: () => ({ select: () => false, observe: () => undefined, complete: () => null }),
+    };
+
+    observedCompile(
+      scene([{ namespace: 'missing', type: 'composite' }]),
+      { onWarn: (warning: unknown) => warnings.push(warning) },
+      [observer],
+    );
+
+    expect(warnings).toHaveLength(1);
+  });
 });
 
 void (undefined as unknown as LayoutChildProbeKindValue);

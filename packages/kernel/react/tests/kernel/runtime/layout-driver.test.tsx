@@ -11,6 +11,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { LayoutCompileDriver, LayoutCompileOutput } from '../../../src';
 
 import {
+  compileLayoutWithDriver,
   createLayoutCompileDriverSession,
   defaultLayoutCompileDriver,
   Layout,
@@ -154,6 +155,25 @@ describe('Layout compile driver', () => {
 
     expect(staticHtml.match(/<path/g)).toHaveLength(2);
     expect(normalizeEmptyElements(retainedHtml)).toBe(normalizeEmptyElements(staticHtml));
+  });
+
+  it('static observed driver 保留 Core onWarn 通知', () => {
+    const onWarn = vi.fn();
+    const input = Object.freeze({
+      instance: {},
+      source: {
+        version: 1 as const,
+        type: 'scene' as const,
+        children: [{ namespace: 'missing', type: 'composite' }],
+      },
+      authoringSites: Object.freeze([]),
+      coreOptions: { onWarn },
+    });
+    const session = createLayoutCompileDriverSession(createDriver(), input);
+
+    compileLayoutWithDriver(input, session);
+
+    expect(onWarn).toHaveBeenCalledTimes(1);
   });
 
   it('retained 只在整帧提交后发布同 revision output，driver 失败保留上一帧', async () => {

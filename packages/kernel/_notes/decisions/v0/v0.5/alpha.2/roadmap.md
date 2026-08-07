@@ -1,6 +1,6 @@
 # v0.5.0-alpha.2 增量性能、Runtime 策略、Box Layout、Theme、Scope reuse 与可选 Inspector
 
-- 状态：ADR-01～10 已完成实现、测试、双语文档与 Accepted 收口；ADR-11 与 ADR-12 Proposed，alpha.2 为 authored Scope output 与 Inspector 内容抽象重新打开
+- 状态：ADR-01～10、ADR-12 已完成实现、测试、双语文档与 Accepted 收口；ADR-11 Proposed，alpha.2 仍为 authored Scope output 收口重新打开
 - 目标版本：`0.5.0-alpha.2`
 - 关联：[v0.5 roadmap](../roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
@@ -31,7 +31,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | [ADR-09](./09-inherited-theme-context.md)            | Accepted | 可继承 Theme IR 与 Composite context   | 冻结 Scene / Scope Theme、字段级继承、Composite 消费与领域边界                                      |
 | [ADR-10](./10-core-atomic-contracts.md)              | Accepted | Core 原子契约与 Tier 2 / Tier 3 组合   | 冻结 Core fragment、上层组合、领域收窄与单一真源原则                                                |
 | [ADR-11](./11-layout-aware-scope-output.md)          | Proposed | Layout-aware Composite 完整 Scope 输出 | 冻结 Scope props fragment、authored Scope、replay wrapper、placement / clip / style / identity 编排 |
-| [ADR-12](./12-extensible-inspector-content.md)       | Proposed | 可选 Inspector 扩展包                  | 冻结 Core 观测底座、独立 Inspect 包、Standard `/inspect` 与 Path 控制点闭环                         |
+| [ADR-12](./12-extensible-inspector-content.md)       | Accepted | 可选 Inspector 扩展包                  | 冻结 Core 观测底座、独立 Inspect 包、Standard `/inspect` 与 Path 控制点闭环                         |
 
 ## 当前进度
 
@@ -44,7 +44,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-09 已完成严格 JSON Theme IR、Scene / Scope 字段级继承、Composite context、runtime Scope、probe / replay、lowering、retained fallback、adapter / renderer parity、对抗复验与双语文档，并于 2026-08-03 获人工接受。
 - ADR-10 已完成 Core 原子 schema/type、Tier 2 / Tier 3 直接消费迁移、测试与双语文档，并于 2026-08-04 获人工接受。
 - ADR-11 已完成 Proposed 设计并完成 Core 实现、Standard consumers、测试与双语文档，尚未获得人工 Accepted 收口。
-- ADR-12 早期的 Core 内置方案已落地，但因默认依赖和能力归属问题重新进入 Proposed 设计；当前冻结独立 `@retikz/inspect`、Core 领域中立观测能力与 Standard 可选子入口，尚未获得新的实现授权和 Accepted 收口。
+- ADR-12 已完成 Core 领域中立观测底座、独立 `@retikz/inspect`、Render 普通只读图层、React / Vanilla 通用驱动和 Standard 可选子入口迁移，并于 2026-08-07 获人工接受。
 
 ## 执行批次
 
