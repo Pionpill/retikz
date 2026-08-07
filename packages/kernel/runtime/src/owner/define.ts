@@ -26,29 +26,14 @@ export type RuntimeOwnerErasedExecutor = Readonly<{
   ) => 'valid' | 'fallback';
 }>;
 
-/** 校验并复制 owner Definition 作者输入，隔离后续对象修改 */
+/** 校验 owner key 并复制 Definition 作者输入，隔离后续对象修改 */
 const copyDefinitionInput = <TInput, TValue, TRead, TChange>(
   input: RuntimeOwnerDefinitionInput<TInput, TValue, TRead, TChange>,
 ): RuntimeOwnerDefinitionInput<TInput, TValue, TRead, TChange> => {
-  const candidate: unknown = input;
-  if (typeof candidate !== 'object' || candidate === null || !('key' in candidate) || !('value' in candidate)) {
-    throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_TOKEN_INVALID', '', candidate);
-  }
-  const owner = typeof candidate.key === 'string' ? candidate.key : '';
-  if (owner.length === 0 || typeof candidate.value !== 'object' || candidate.value === null) {
-    throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_TOKEN_INVALID', owner, candidate);
-  }
-  const { capture, read, equals, dispose } = input.value;
-  if (
-    typeof capture !== 'function' ||
-    typeof read !== 'function' ||
-    typeof equals !== 'function' ||
-    (dispose !== undefined && typeof dispose !== 'function') ||
-    (input.collectIdentities !== undefined && typeof input.collectIdentities !== 'function') ||
-    (input.validateChangeSet !== undefined && typeof input.validateChangeSet !== 'function')
-  ) {
+  if (input.key.length === 0) {
     throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_TOKEN_INVALID', input.key, input);
   }
+  const { capture, read, equals, dispose } = input.value;
   return Object.freeze({
     key: input.key,
     value: Object.freeze({ capture, read, equals, dispose }),
@@ -83,14 +68,6 @@ export const isRuntimeOwnerDefinition = (value: unknown): value is RuntimeOwnerT
 
 /** 读取 define 时创建的 callback 擦除视图，仅供 registry 建立 token/executor 配对 */
 export const getRuntimeOwnerDefinitionExecutor = (definition: RuntimeOwnerToken): RuntimeOwnerErasedExecutor => {
-  if (!isRuntimeOwnerDefinition(definition)) {
-    const candidate: unknown = definition;
-    const owner =
-      typeof candidate === 'object' && candidate !== null && 'key' in candidate && typeof candidate.key === 'string'
-        ? candidate.key
-        : '';
-    throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_TOKEN_INVALID', owner, definition);
-  }
   const executor = runtimeOwnerExecutors.get(definition);
   if (executor === undefined) throw new Error(`runtime owner definition: missing executor for "${definition.key}"`);
   return executor;

@@ -16,6 +16,7 @@ retikz 模块按“shared → schemas → contract → providers → pipeline/co
 - 内部调度按 TypeScript 类型契约设计，消费方通过明确的类型调用；不为纯 JavaScript 调度额外维护类型校验和错误分支，纯 JavaScript 调用由第三方自行负责校验
 - JSON、持久化配置和其他类型不明确的数据，只在 parser / schema / adapter 入口完成一次解析、校验和归一化；进入内部实现后必须使用明确的数据类型，不以 `unknown` 或未收窄的宽联合继续传递
 - 优先让 TypeScript 表达类型约束，避免重复的 `typeof`、对象结构检查和对应的 `throw`；只保留入口校验以及 TypeScript 无法表达的真实业务不变量或查找失败诊断
+- 只在对象会暴露给外部，或会通过公开 API 返回给外部时使用 `Object.freeze`；纯内部使用的中间对象不做多余冻结，复制与明确的所有权边界已经足够时不要额外防御
 
 ## 按需加载
 
