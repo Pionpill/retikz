@@ -14,6 +14,7 @@ import type { PendingInspectionEntry } from './types';
 
 import { ChildSchema } from '../../schemas';
 import { cloneAndFreezeJson } from '../../shared/json';
+import { categoricalColorAt } from '../../shared/theme';
 import { CompileWarningCode } from '../constants';
 import { safeErrorMessage } from '../probe-failure';
 import { createClipRegistry, createPaintRegistry } from '../resource';
@@ -22,22 +23,6 @@ import { applyTransformChain } from '../transform';
 import { compareCompileOccurrences, freezeOccurrence } from './artifact';
 import { InspectionCompileError, wrapInspectionError } from './inspection-error';
 import { compileChildrenToPrimitives } from './traversal';
-
-/** Inspector occurrence 的 canonical 循环色板 */
-const InspectionScopePalette = [
-  '#2563eb',
-  '#7c3aed',
-  '#c026d3',
-  '#db2777',
-  '#ea580c',
-  '#a16207',
-  '#16a34a',
-  '#0f766e',
-  '#0891b2',
-] as const;
-
-/** Inspector 警告内容的 canonical 推荐颜色 */
-const InspectionWarningColor = '#dc2626';
 
 /** 辅助编译中必须提升为 fatal error 的跨命名空间引用 warning */
 const FatalAuxiliaryWarningCodes = new Set<string>([
@@ -223,8 +208,8 @@ export const compileInspectionPlane = (
   const sealedEntries = ordered.flatMap(({ entry }, colorScope) => {
     const appearance = Object.freeze({
       colorScope,
-      scopeColor: InspectionScopePalette[colorScope % InspectionScopePalette.length],
-      warningColor: InspectionWarningColor,
+      scopeColor: categoricalColorAt(entry.theme.colors.categorical, colorScope),
+      warningColor: entry.theme.colors.semantic.warning,
     });
     const children = normalizeOutput(entry, invokeInspector(entry, appearance));
     if (children.length === 0) return [];

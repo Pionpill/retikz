@@ -167,7 +167,7 @@ describe('extensible inspection compile channel', () => {
   it('compiles final typed artifact output as an owner-scoped ordinary Scene', () => {
     const inspect = vi.fn((artifact: { width: number }, context) => {
       expect(context.options).toEqual({ guides: false });
-      expect(context.appearance).toEqual({ colorScope: 0, scopeColor: '#2563eb', warningColor: '#dc2626' });
+      expect(context.appearance).toEqual({ colorScope: 0, scopeColor: '#2563eb', warningColor: '#d97706' });
       return {
         type: 'path' as const,
         stroke: context.appearance.scopeColor,
@@ -252,7 +252,7 @@ describe('extensible inspection compile channel', () => {
       '#0891b2',
       '#2563eb',
     ]);
-    expect(appearances.every(appearance => appearance.warningColor === '#dc2626')).toBe(true);
+    expect(appearances.every(appearance => appearance.warningColor === '#d97706')).toBe(true);
     expect(result.inspection).toBeNull();
   });
 

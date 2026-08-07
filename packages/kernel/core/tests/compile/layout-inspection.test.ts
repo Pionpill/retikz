@@ -109,7 +109,7 @@ describe('layout inspection compile channel', () => {
       expect.objectContaining({
         occurrence: { sourcePath: 'children[0]', expansionPath: [] },
         options: expect.objectContaining({ overflow: false, guides: true }),
-        appearance: { colorScope: 0, scopeColor: '#2563eb', warningColor: '#dc2626' },
+        appearance: { colorScope: 0, scopeColor: '#2563eb', warningColor: '#d97706' },
       }),
     );
     expect(result.inspection?.entries[0]).toMatchObject({

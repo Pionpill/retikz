@@ -164,7 +164,7 @@ describe('Standard Layout Inspector compile integration', () => {
       });
       const boundaryIndexes = primitives.flatMap((primitive, index) => (primitive.type === 'path' ? [index] : []));
       const warningIndexes = primitives.flatMap((primitive, index) =>
-        primitive.type === 'rect' && primitive.fill === '#dc2626' ? [index] : [],
+        primitive.type === 'rect' && primitive.fill === '#d97706' ? [index] : [],
       );
       const labelIndexes = primitives.flatMap((primitive, index) => (primitive.type === 'text' ? [index] : []));
 

@@ -1,5 +1,6 @@
 import type {
   AnyCompositeDefinition,
+  AnyThemeTokenDefinition,
   InspectionAuthoringRoot,
   InspectionAuthoringTree,
   InspectionChildForest,
@@ -36,6 +37,8 @@ type ContributionRecord = {
   namespace: string;
   /** 该嵌入节点带来的外部数据集表 */
   datasets: Record<string, unknown>;
+  /** 该嵌入 owner 贡献的 Theme token definition singleton 列表 */
+  themeTokenDefinitions?: ReadonlyArray<AnyThemeTokenDefinition>;
   /** 命名空间级 composite 生成器；同一命名空间必须保持同一个函数引用 */
   makeComposites: (mergedDatasets: Record<string, unknown>) => Array<AnyCompositeDefinition>;
 };
@@ -148,6 +151,22 @@ const aggregateComposites = (contributions: ReadonlyArray<ContributionRecord>): 
   const out: Array<AnyCompositeDefinition> = [];
   for (const group of groups.values()) out.push(...group.maker(Object.fromEntries(group.merged)));
   return out;
+};
+
+/** 按嵌入出现顺序收集 Theme definition，并按对象 identity 去重 */
+const aggregateThemeTokenDefinitions = (
+  contributions: ReadonlyArray<ContributionRecord>,
+): Array<AnyThemeTokenDefinition> => {
+  const definitions: Array<AnyThemeTokenDefinition> = [];
+  const seen = new Set<AnyThemeTokenDefinition>();
+  for (const contribution of contributions) {
+    for (const definition of contribution.themeTokenDefinitions ?? []) {
+      if (seen.has(definition)) continue;
+      seen.add(definition);
+      definitions.push(definition);
+    }
+  }
+  return definitions;
 };
 
 /** 注册 adapter 输出的公开身份标识，并要求它被当前 embed id 命名空间约束 */
@@ -275,6 +294,9 @@ const lowerEmbed = (embed: AnyVanillaEmbedSpec, ctx: NormalizeContext): IRChild 
   ctx.contributions.push({
     namespace: adapter.namespace,
     datasets: contribution.datasets,
+    ...(contribution.themeTokenDefinitions === undefined
+      ? {}
+      : { themeTokenDefinitions: contribution.themeTokenDefinitions }),
     makeComposites: contribution.makeComposites,
   });
   validateAdapterOutputIdentities(contribution.node, {
@@ -409,6 +431,7 @@ export const normalizeFigureSpec = (
   return {
     ir,
     composites: [...aggregateComposites(contributions), ...(options.composites ?? [])],
+    themeTokenDefinitions: aggregateThemeTokenDefinitions(contributions),
     runtimeMeta,
     inspectionRoots,
   };

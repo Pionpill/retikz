@@ -24,4 +24,11 @@ const copyConfigValue = <T>(value: T, ancestors: ReadonlySet<object>): T => {
 /** 隔离 factory 输入后续修改并冻结 Program 生命周期配置 */
 export const copyCoreProgramOptions = <TComposites extends ReadonlyArray<AnyCompositeDefinition>>(
   options: CoreProgramOptions<TComposites>,
-): CoreProgramOptions<TComposites> => copyConfigValue(options, new Set());
+): CoreProgramOptions<TComposites> => {
+  const copied = copyConfigValue(options, new Set());
+  if (options.themeTokenDefinitions === undefined) return copied;
+  return Object.freeze({
+    ...copied,
+    themeTokenDefinitions: Object.freeze([...options.themeTokenDefinitions]),
+  });
+};

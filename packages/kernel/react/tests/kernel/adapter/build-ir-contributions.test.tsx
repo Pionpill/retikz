@@ -1,7 +1,9 @@
 import type { FC } from 'react';
 
+import { defineThemeTokenNamespace } from '@retikz/core';
 import { createElement } from 'react';
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 
 import type { EmbeddableTier2Adapter } from '../../../src';
 
@@ -46,6 +48,31 @@ const makeFixture = (options: { marked?: boolean; withAdapter?: boolean } = {}) 
 };
 
 describe('buildIRWithContributions', () => {
+  it('嵌入适配器贡献 owner Theme definition singleton', () => {
+    const definition = defineThemeTokenNamespace({
+      namespace: 'demo',
+      schema: z.strictObject({ 'surface.fill': z.string().optional() }),
+    });
+    const adapter: EmbeddableTier2Adapter<FixtureProps> = {
+      displayName: 'ThemeFixture',
+      namespace: 'demo',
+      contribute: props => ({
+        node: { type: 'node', id: props.id, position: [0, 0] },
+        datasets: {},
+        makeComposites: () => [],
+        themeTokenDefinitions: [definition],
+      }),
+    };
+    const ThemeFixture: EmbeddableFixture = () => null;
+    ThemeFixture.displayName = 'ThemeFixture';
+    ThemeFixture.isTier2Embeddable = true;
+    ThemeFixture.embeddableAdapter = adapter as EmbeddableTier2Adapter;
+
+    const result = buildIRWithContributions(<ThemeFixture id="theme" data={null} />);
+
+    expect(result.contributions[0]?.themeTokenDefinitions).toEqual([definition]);
+  });
+
   it('单个可嵌入子组件 → 贡献节点入 IR、记录入 contributions、fixture body 不被调用', () => {
     const { Fixture, state } = makeFixture();
     const result = buildIRWithContributions(<Fixture id="a" data={{ value: 1 }} />);

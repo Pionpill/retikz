@@ -1,4 +1,4 @@
-import type { AnyCompositeDefinition, InspectionChildForest, IRChild } from '@retikz/core';
+import type { AnyCompositeDefinition, AnyThemeTokenDefinition, InspectionChildForest, IRChild } from '@retikz/core';
 
 /** 嵌入组件可附带的外部数据集表：reference 键 → 任意载荷 */
 export type EmbeddableDatasets = Record<string, unknown>;
@@ -7,6 +7,8 @@ export type EmbeddableDatasets = Record<string, unknown>;
 export type EmbeddableContribution = {
   node: IRChild;
   datasets: EmbeddableDatasets;
+  /** 该 owner 复用的冻结 Theme token definition singleton 列表 */
+  themeTokenDefinitions?: ReadonlyArray<AnyThemeTokenDefinition>;
   /** 相对当前 node 的 runtime-only inspection sidecar roots */
   inspectionRoots?: InspectionChildForest;
   /** 使用同一 namespace 的贡献必须稳定复用同一个函数引用 */
@@ -24,6 +26,8 @@ export type EmbeddableTier2Adapter<TProps = Record<string, unknown>> = {
 export type EmbeddableContributionRecord = {
   namespace: string;
   datasets: EmbeddableDatasets;
+  /** 由嵌入 owner 注入、供 Layout 聚合到 Core compile options 的 definition singleton 列表 */
+  themeTokenDefinitions?: ReadonlyArray<AnyThemeTokenDefinition>;
   /** 使用同一 namespace 的贡献必须稳定复用同一个函数引用 */
   makeComposites: (mergedDatasets: EmbeddableDatasets) => Array<AnyCompositeDefinition>;
 };

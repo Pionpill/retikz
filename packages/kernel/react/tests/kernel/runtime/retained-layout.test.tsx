@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { IRScene, ScenePatch } from '@retikz/core';
+import type { AnyThemeTokenDefinition, IRScene, ScenePatch } from '@retikz/core';
 import type {
   RenderFrameSnapshot,
   RenderRuntimeConfig,
@@ -7,13 +7,16 @@ import type {
   RetainedRendererFactoryInput,
 } from '@retikz/render/runtime';
 import type { RuntimePreparedCommit } from '@retikz/runtime';
+import type { FC, ReactNode } from 'react';
 
-import { CompositeBaseSchema, defineComposite, defineInspector } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineInspector, defineThemeTokenNamespace } from '@retikz/core';
 import { defineRetainedRenderer } from '@retikz/render/runtime';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
+
+import type { EmbeddableTier2Adapter } from '../../../src';
 
 import { Layout, Node } from '../../../src';
 import { createGeometryContext } from '../../helpers/geometry-context';
@@ -77,6 +80,76 @@ const inspectionSource: IRScene = {
   children: [{ namespace: 'fixture', type: 'inspection' }],
 };
 
+type ThemeTokenFixture = FC<{ id: string }> & {
+  isTier2Embeddable?: boolean;
+  embeddableAdapter?: EmbeddableTier2Adapter;
+};
+
+const retainedThemeComposite = defineComposite({
+  namespace: 'retained-theme-token',
+  type: 'box',
+  schema: CompositeBaseSchema.extend({
+    namespace: z.literal('retained-theme-token'),
+    type: z.literal('box'),
+    id: z.string(),
+  }),
+  expand: (node, context) => {
+    const tokens = Object.hasOwn(context.theme.tokens, 'retained-theme-token')
+      ? context.theme.tokens['retained-theme-token']
+      : undefined;
+    const fill = tokens?.fill;
+    return {
+      type: 'node',
+      id: node.id,
+      position: [0, 0],
+      fill: typeof fill === 'string' ? fill : '#eeeeee',
+    };
+  },
+});
+
+const makeRetainedThemeComposites = () => [retainedThemeComposite];
+
+const createThemeTokenFixture = (displayName: string, definition: AnyThemeTokenDefinition): ThemeTokenFixture => {
+  const adapter: EmbeddableTier2Adapter<{ id: string }> = {
+    displayName,
+    namespace: 'retained-theme-token',
+    contribute: props => ({
+      node: { namespace: 'retained-theme-token', type: 'box', id: props.id },
+      datasets: {},
+      makeComposites: makeRetainedThemeComposites,
+      themeTokenDefinitions: [definition],
+    }),
+  };
+  const Fixture: ThemeTokenFixture = () => null;
+  Fixture.displayName = displayName;
+  Fixture.isTier2Embeddable = true;
+  Fixture.embeddableAdapter = adapter as EmbeddableTier2Adapter;
+  return Fixture;
+};
+
+/** 捕获 React client render fail-loud，并在返回前恢复全局错误处理 */
+const captureClientRenderError = async (root: ReturnType<typeof createRoot>, element: ReactNode): Promise<Error> => {
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  let reportedError: Error | undefined;
+  const preventReportedError = (event: ErrorEvent): void => {
+    event.preventDefault();
+    if (reportedError === undefined && event.error instanceof Error) reportedError = event.error;
+  };
+  window.addEventListener('error', preventReportedError);
+  let thrown: unknown;
+  try {
+    await act(() => root.render(element));
+  } catch (cause) {
+    thrown = cause;
+  } finally {
+    window.removeEventListener('error', preventReportedError);
+    consoleError.mockRestore();
+  }
+  const error = thrown instanceof Error ? thrown : reportedError;
+  if (error === undefined) throw new Error('expected React client render to fail');
+  return error;
+};
+
 /** 构造只保留 committed snapshot 的第三方 renderer */
 const createMemoryRendererFactory = (
   capability: 'none' | 'entity',
@@ -130,6 +203,82 @@ afterEach(() => {
 });
 
 describe('React Layout retained Runtime', () => {
+  it('createRoot rerender 在 embedded definition add/remove 时重建 retained session 且不保留 stale owner', async () => {
+    const definition = defineThemeTokenNamespace({
+      namespace: 'retained-theme-token',
+      schema: z.strictObject({ fill: z.string().optional() }),
+    });
+    const Fixture = createThemeTokenFixture('RetainedThemeFixture', definition);
+    const container = document.createElement('div');
+    const root = createRoot(container);
+
+    try {
+      await act(() =>
+        root.render(
+          <Layout>
+            <Node id="plain-before" position={[0, 0]} />
+          </Layout>,
+        ),
+      );
+      await act(() =>
+        root.render(
+          <Layout theme={{ tokens: { 'retained-theme-token': { fill: '#123456' } } }}>
+            <Fixture id="embedded-token-node" />
+          </Layout>,
+        ),
+      );
+
+      expect(container.querySelector('[data-retikz-id="embedded-token-node"]')?.getAttribute('fill')).toBe('#123456');
+
+      const error = await captureClientRenderError(
+        root,
+        <Layout theme={{ tokens: { 'retained-theme-token': { fill: '#654321' } } }}>
+          <Node id="owner-removed" position={[0, 0]} />
+        </Layout>,
+      );
+
+      expect(error.message).toMatch(/scene\.theme\.tokens\.retained-theme-token.*unknown Theme token namespace/i);
+    } finally {
+      await act(() => root.unmount());
+    }
+  });
+
+  it('createRoot retained rerender 对同 namespace 不同 embedded definition identity fail-loud', async () => {
+    const firstDefinition = defineThemeTokenNamespace({
+      namespace: 'retained-theme-token',
+      schema: z.strictObject({ fill: z.string().optional() }),
+    });
+    const conflictingDefinition = defineThemeTokenNamespace({
+      namespace: 'retained-theme-token',
+      schema: z.strictObject({ fill: z.string().optional() }),
+    });
+    const First = createThemeTokenFixture('RetainedThemeFirst', firstDefinition);
+    const Conflict = createThemeTokenFixture('RetainedThemeConflict', conflictingDefinition);
+    const container = document.createElement('div');
+    const root = createRoot(container);
+
+    try {
+      await act(() =>
+        root.render(
+          <Layout>
+            <First id="first-token-node" />
+          </Layout>,
+        ),
+      );
+      const error = await captureClientRenderError(
+        root,
+        <Layout>
+          <First id="first-token-node" />
+          <Conflict id="conflict-token-node" />
+        </Layout>,
+      );
+
+      expect(error.message).toMatch(/retained-theme-token.*conflict/i);
+    } finally {
+      await act(() => root.unmount());
+    }
+  });
+
   it('recreates a retained session when inspect changes without comparing the new frame to the stale SSR seed', async () => {
     const container = document.createElement('div');
     const root = createRoot(container);

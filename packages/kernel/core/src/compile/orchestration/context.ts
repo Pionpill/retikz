@@ -1,6 +1,7 @@
 ﻿import type {
   AnyCompositeDefinition,
   AnyPathKindDefinition,
+  AnyThemeTokenDefinition,
   ArrowDefinition,
   BoundaryDefinition,
   ClipDefinition,
@@ -24,6 +25,7 @@ import { resolvePathKindRegistry } from '../../providers/path-kind';
 import { resolvePatternRegistry } from '../../providers/pattern';
 import { resolveRibbonWidthProfileRegistry } from '../../providers/ribbon';
 import { resolveShapeRegistry } from '../../providers/shape';
+import { resolveThemeTokenRegistry } from '../../providers/theme-token';
 import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE, DEFAULT_LAYOUT_PADDING, DEFAULT_NODE_DISTANCE } from '../constants';
 import { createClipRegistry, createPaintRegistry } from '../resource';
 import { createRound, DEFAULT_PRECISION } from '../scene';
@@ -42,6 +44,8 @@ export type CompileContext = {
   loweredIr: IRScene;
   /** Scene 根解析后的完整 Theme */
   theme: ResolvedTheme;
+  /** Theme token owner definitions 的 identity registry */
+  themeTokenDefinitions: ReadonlyMap<string, AnyThemeTokenDefinition>;
   /** 文字度量函数 */
   measureText: NonNullable<CompileOptions['measureText']>;
   /** 运行时注入的 TeX lowering 钩子 */
@@ -112,10 +116,12 @@ export const createCompileContext = (ir: IRScene, options: CreateCompileContextO
   const clips = resolveClipRegistry(options.clips);
   const patterns = resolvePatternRegistry(options.patterns);
   const composites = resolveCompositeRegistry(options.composites);
+  const themeTokenDefinitions = resolveThemeTokenRegistry(options.themeTokenDefinitions);
 
   return {
     loweredIr: ir,
-    theme: resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme'),
+    theme: resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme', themeTokenDefinitions),
+    themeTokenDefinitions,
     measureText: options.measureText ?? fallbackMeasurer,
     lowerTex: options.lowerTex,
     onWarn,

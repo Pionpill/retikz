@@ -1,4 +1,11 @@
-import type { AnyCompositeDefinition, CompileArtifact, CoreProgramOptions, IRScene, Scene } from '@retikz/core';
+import type {
+  AnyCompositeDefinition,
+  AnyThemeTokenDefinition,
+  CompileArtifact,
+  CoreProgramOptions,
+  IRScene,
+  Scene,
+} from '@retikz/core';
 import type { RenderHandlerContribution, RenderRuntimeConfigInput, RetainedRendererRead } from '@retikz/render/runtime';
 import type { RuntimeDiagnostic, RuntimeSession } from '@retikz/runtime';
 
@@ -67,6 +74,7 @@ const captureRetainedMountOptions = (options: RetainedMountCanvasOptions): Retai
     Object.freeze({ kind: adapter.kind, namespace: adapter.namespace, lower: adapter.lower }),
   );
   const composites = options.compile?.composites?.map(captureCompositeDefinition);
+  const themeTokenDefinitions = options.compile?.themeTokenDefinitions;
   return Object.freeze({
     ...options,
     ...(adapters === undefined ? {} : { adapters: Object.freeze(adapters) }),
@@ -76,9 +84,25 @@ const captureRetainedMountOptions = (options: RetainedMountCanvasOptions): Retai
           compile: Object.freeze({
             ...options.compile,
             ...(composites === undefined ? {} : { composites: Object.freeze(composites) }),
+            ...(themeTokenDefinitions === undefined
+              ? {}
+              : { themeTokenDefinitions: Object.freeze([...themeTokenDefinitions]) }),
           }),
         }),
   });
+};
+
+/** 判断两组 Theme definition 是否保持相同的声明顺序与 runtime identity */
+const sameThemeTokenDefinitionIdentity = (
+  left: ReadonlyArray<AnyThemeTokenDefinition> | undefined,
+  right: ReadonlyArray<AnyThemeTokenDefinition> | undefined,
+): boolean => {
+  const leftDefinitions = left ?? [];
+  const rightDefinitions = right ?? [];
+  return (
+    leftDefinitions.length === rightDefinitions.length &&
+    leftDefinitions.every((definition, index) => definition === rightDefinitions[index])
+  );
 };
 
 /** Retained session 创建所需的规范化输入 */
@@ -121,6 +145,14 @@ export const prepareRetainedInput = (input: RetainedRenderInput, options: Common
       coreOptions: {
         ...coreOptions,
         composites: normalized.composites,
+        ...(normalized.themeTokenDefinitions.length === 0
+          ? {}
+          : {
+              themeTokenDefinitions: [
+                ...normalized.themeTokenDefinitions,
+                ...(coreOptions.themeTokenDefinitions ?? []),
+              ],
+            }),
         ...(options.inspect === undefined && normalized.inspectionRoots.length === 0
           ? {}
           : {
@@ -268,6 +300,7 @@ const createVanillaRetainedSessionImplementation = (
   /** 一组使用固定 Core Program options 的 Vanilla retained 执行资源 */
   type ActiveRetainedSession = {
     compositeDefinitions: ReturnType<typeof createRetainedCompositeDefinitions>;
+    themeTokenDefinitions: ReadonlyArray<AnyThemeTokenDefinition>;
     coreProgram: ReturnType<typeof createCoreProgram>;
     participant: ReturnType<typeof createRetainedRenderParticipant>;
     session: RuntimeSession;
@@ -319,7 +352,14 @@ const createVanillaRetainedSessionImplementation = (
         createRuntimeOwnerInput(VanillaCompositeRevisionOwnerDefinition, 0),
       ],
     });
-    return { compositeDefinitions, coreProgram, participant, session, compositeRevision: 0 };
+    return {
+      compositeDefinitions,
+      themeTokenDefinitions: Object.freeze([...(prepared.coreOptions.themeTokenDefinitions ?? [])]),
+      coreProgram,
+      participant,
+      session,
+      compositeRevision: 0,
+    };
   };
 
   let active = createActiveSession(initial, initialConfig);
@@ -373,7 +413,12 @@ const createVanillaRetainedSessionImplementation = (
         canvas: ('canvas' in capturedOptions ? capturedOptions.canvas : undefined) ?? state.canvas,
         runtimeMeta: prepared.runtimeMeta,
       });
-      if (JSON.stringify(prepared.coreOptions.inspection) !== JSON.stringify(committedInspection)) {
+      const inspectionChanged = JSON.stringify(prepared.coreOptions.inspection) !== JSON.stringify(committedInspection);
+      const themeTokenDefinitionsChanged = !sameThemeTokenDefinitionIdentity(
+        active.themeTokenDefinitions,
+        prepared.coreOptions.themeTokenDefinitions,
+      );
+      if (inspectionChanged || themeTokenDefinitionsChanged) {
         const candidate = createActiveSession(
           prepared,
           createRenderConfig(nextState, handlerContributions, canvasSize),

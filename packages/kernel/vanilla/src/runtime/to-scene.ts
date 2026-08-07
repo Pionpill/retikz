@@ -49,6 +49,11 @@ export const toSceneResult = (input: RenderInput, options: CommonOptions): Scene
     const compileOptions = {
       ...baseOptions,
       composites: normalized.composites,
+      ...(normalized.themeTokenDefinitions.length === 0
+        ? {}
+        : {
+            themeTokenDefinitions: [...normalized.themeTokenDefinitions, ...(baseOptions.themeTokenDefinitions ?? [])],
+          }),
       ...(options.inspect === undefined && normalized.inspectionRoots.length === 0
         ? {}
         : {
