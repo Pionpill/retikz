@@ -23,7 +23,7 @@ alpha.3 建设 Standard 自身可独立绘制、可跨领域复用的局部逻�
 - 建立内容 headless、外观中性可用的 `LogicBlockBase`，用任意 `IRChild` 组合 header 与 authored-order sections
 - 建立统一的整体 / section target 输入；alpha.3 先以当前 Core 闭环整体 target，带 section 的输入明确 fail-loud，后续随 Core composite-owned structured subtarget 联动接通
 - 支持直线、显式折线、TikZ 风格正交折线、quadratic、cubic 与 bend 曲线
-- 复用 Core layout-aware composite、Path host label、target / anchor、Scope 与 Standard Box Layout 词汇，不建立私有测量、target resolver、路径采样或 renderer 路径
+- 复用 Core layout-aware composite、Path step label、target / anchor、Scope 与 Standard Box Layout 词汇，不建立私有测量、target resolver、路径采样或 renderer 路径
 - 接入各项 Definition、React / Vanilla 等价 authoring 与双语文档 dogfood
 
 ## 能力边界
@@ -60,7 +60,7 @@ alpha.3 建设 Standard 自身可独立绘制、可跨领域复用的局部逻�
 - 基础逻辑单元全部使用 `content: IRChild`；`Decision` 不拥有 condition 专有字段或 outcome 列表
 - branch 语义只保存在 `Connector`，不同时写入 `Decision`
 - Connector 是局部关系 composite，不是 Edge 集合；它不统计连接数量、不验证拓扑，也不自动移动端点组件
-- Connector label 直接复用 Core `IRGeometryLabelInput` 与 Path host label，不接受任意复合 `IRChild`，也不由 Standard 测量或放置
+- Connector label 直接复用 Core `IRGeometryLabelInput` 与最后一个 drawable step 的 label，不接受任意复合 `IRChild`，也不由 Standard 测量或放置；polyline 明确把 label 放在连接终点段
 - Connector 直接 lower 为同 id 的 Core Path，不重复输出 typed path artifact；路径几何与 bounds 由 Core 主链拥有，Scene id 只 stamp 到 Path 最外层主体，附属 label / mark 不建立第二 identity
 - Connector 不提供 compile artifact locator；领域 provenance 在 lowering 前通过 authored id join，不从 Scene 或 Core IR 反推 Standard role / endpoint
 - Connector 整体 target 随 Core pending Path 在 namespace 注册闭合后解析，允许同一可见 namespace 内的前后目标；Callout 复用 authored Scope placement，只读取此前已发布的整体 target，不等待 forward target；带 section 的 target 当前明确拒绝
@@ -76,7 +76,7 @@ alpha.3 建设 Standard 自身可独立绘制、可跨领域复用的局部逻�
 - `Terminal` 默认使用 start / end 语义与 capsule 外观，`Stage` 默认 rounded rectangle，`Decision` 默认 diamond，`Junction` 默认 dot / bar preset
 - Logic Unit 的 shape-specific 参数只存在于完整 `IRShapeRef.params`；显式 shape 替换不继承旧 preset params，不暴露对部分 shape 静默失效的通用 cornerRadius
 - 未知 category / role 合法并保持原值，但不会触发未声明的样式或路由
-- Connector label 的 position、side、sloped、文本 / TeX 与样式默认完全沿用 Core Path host label；正交三段的中间带默认位于两端间的 `0.5`
+- Connector label 的 position、side、sloped、文本 / TeX 与样式默认完全沿用 Core step label；正交三段的中间带默认位于两端间的 `0.5`
 - 缺失 definition、Callout 缺失或 forward id / section / anchor、以及 child layout failure 均 fail-loud；Connector unresolved target 发 Core Path warning 并跳过整条 Path。两者都不使用 placeholder 或隐式 fallback，Connector 解析后退化行为沿用 Core Path
 
 ## Architecture Gate
@@ -90,7 +90,7 @@ Gate 至少证明：
 - section target 保留稳定公开输入与 artifact geometry；当前 Core 无结构化 lookup 时 fail-loud，不暴露调用方必须手写的内部 id，也不派生可与 authored id 冲突的扁平字符串
 - 直接 IR、React、Vanilla 与显式 Definition 注入进入同一 schema、definition 与 compile 主链；布局组件 artifact 和 Connector lowered Scene 主体 id 保持跨入口等价
 - 内部 Process / Class / Data recipe 不进入 package exports 或 schema registry
-- 后续接通 section target 前，Core 必须冻结 composite-owned structured subtarget 的 pending-Path / previous-placement 两种 lookup 生命周期；当前 Callout 使用已有 authored Scope placement，Connector label 使用已有 built-in stroke Path host label
+- 后续接通 section target 前，Core 必须冻结 composite-owned structured subtarget 的 pending-Path / previous-placement 两种 lookup 生命周期；当前 Callout 使用已有 authored Scope placement，Connector label 使用已有 built-in stroke Path step label
 
 以下方案不能通过 Gate：
 
@@ -119,7 +119,7 @@ Gate 至少证明：
 - [ ] 直接 IR、React 与 Vanilla authoring 产生等价 canonical IR 与 Scene，并保持适用 artifact / Connector lowered Scene 主体 identity 等价
 - [ ] straight、polyline、`-|`、`|-`、`-|-`、`|-|`、quadratic、cubic 与 bend 均有确定结果和失败诊断
 - [ ] 整体 Block 与普通逻辑单元可以被 Connector / Callout 稳定定位；Connector 支持 pending forward whole target，Callout 保持 previous-only placement；带 section 的 target 明确 fail-loud
-- [ ] Core built-in stroke Path host label 与 authored Scope placement 已复用；Standard 未复制 Path sampling、target resolver 或扁平派生 id，structured section target 作为 Core 联动项保留
+- [ ] Core built-in stroke Path step label 与 authored Scope placement 已复用；Standard 未复制 Path sampling、target resolver 或扁平派生 id，structured section target 作为 Core 联动项保留
 - [ ] Process / Class / Data recipe 只存在于 docs 内部实现，且至少服务三类真实逻辑图
 - [ ] Standard 三包与双语 docs 完成受影响范围验证，无 renderer 特判、隐式 registry 或领域反向依赖
 
