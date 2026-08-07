@@ -113,12 +113,69 @@ mountSvg(container, scene, {
 
 如果 `GridDefinition` 没有传入，Core 会产生 `COMPOSITE_NOT_REGISTERED` 诊断并跳过 Grid；其它已注册或 Core 原生 child 仍会继续编译。需要多个 Standard composite 时，直接把对应 Definition 放入同一个 `composites` 数组
 
+## 逻辑组件
+
+Logic 家族也遵循三种装载路径。React 组件在局部贡献 Definition；直接 IR 只注入当前 scene 使用的 Definition；Vanilla adapter 下沉 embed 并派生 canonical ID。
+
+```tsx
+import { Layout, Node, Scope } from '@retikz/react';
+import { Connector, Stage, Terminal } from '@retikz/standard-react';
+
+<Layout width={360} height={140}>
+  <Scope transforms={[{ kind: 'translate', x: 24, y: 50 }]}>
+    <Terminal id="start" role="start">
+      <Node position={[0, 0]} text="Start" />
+    </Terminal>
+  </Scope>
+  <Scope transforms={[{ kind: 'translate', x: 190, y: 50 }]}>
+    <Stage id="step">
+      <Node position={[0, 0]} text="Step" />
+    </Stage>
+  </Scope>
+  <Connector id="edge" from={{ id: 'start' }} to={{ id: 'step' }} label={{ text: 'next' }} />
+</Layout>;
+```
+
+对应的 Vanilla target 是 `{ id: 'start/terminal' }`，因为 `terminal('start', input)` 会派生 `start/terminal`；`stage('step', input)` 同理派生 `step/stage`。
+
+```ts
+import {
+  connector,
+  ConnectorVanillaAdapter,
+  stage,
+  StageVanillaAdapter,
+  terminal,
+  TerminalVanillaAdapter,
+} from '@retikz/standard-vanilla';
+import { figure, renderToSvgString, scope } from '@retikz/vanilla';
+
+const input = figure({
+  viewBox: { x: 0, y: 0, width: 360, height: 140 },
+  children: [
+    scope({ transforms: [{ kind: 'translate', x: 24, y: 50 }] }, [
+      terminal('start', { role: 'start', content: { type: 'node', position: [0, 0], text: 'Start' } }),
+    ]),
+    scope({ transforms: [{ kind: 'translate', x: 190, y: 50 }] }, [
+      stage('step', { content: { type: 'node', position: [0, 0], text: 'Step' } }),
+    ]),
+    connector('edge', { from: { id: 'start/terminal' }, to: { id: 'step/stage' }, label: { text: 'next' } }),
+  ],
+});
+
+const svg = renderToSvgString(input, {
+  adapters: [TerminalVanillaAdapter, StageVanillaAdapter, ConnectorVanillaAdapter],
+  output: { width: 360, height: 140 },
+});
+```
+
+持久化逻辑 IR 请解析 `TerminalSchema`、`StageSchema` 或其它成员 schema，并在 `CompileOptions.composites` 中传入匹配的 `*Definition`。完整映射见[逻辑 API 参考](/standard/logic/api-reference)。
+
 ## 下一步：用布局容器替代手写坐标
 
 布局 JSX 使用 `FlexLayout`、`GridLayout`、`OverlayLayout` 与直属 `LayoutItem`。三者共享一次 `standard.layout` contribution；直接 IR 可注入 `[FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition]`，Vanilla 可传 `StandardLayoutVanillaAdapters`
 
 ```tsx
-import { Layout, Node } from '@retikz/react';
+import { Layout, Node, Scope } from '@retikz/react';
 import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 
 <Layout width={320} height={120}>
@@ -135,11 +192,12 @@ import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 
 ## 接下来
 
-| 页面                                                           | 继续了解什么                                 |
-| -------------------------------------------------------------- | -------------------------------------------- |
-| [网格](/standard/composite/grid)                               | 格距、主线、边界和边框                       |
-| [坐标轴](/standard/composite/axes)                             | 箭头、刻度、轴名和分方向网格                 |
-| [分组框](/standard/composite/frame)                            | 自动 bounds、间距、边框和标签                |
-| [图例](/standard/composite/legend)                             | 离散样本、连续 ramp、probe 与 typed artifact |
-| [布局容器](/standard/layout)                                   | Flex、Grid、Overlay 与 typed artifacts       |
-| [直接 Definition 装载](/standard/extension/capability-loading) | Definition 选择、Core 注入与宿主边界         |
+| 页面                                                           | 继续了解什么                                   |
+| -------------------------------------------------------------- | ---------------------------------------------- |
+| [网格](/standard/composite/grid)                               | 格距、主线、边界和边框                         |
+| [坐标轴](/standard/composite/axes)                             | 箭头、刻度、轴名和分方向网格                   |
+| [分组框](/standard/composite/frame)                            | 自动 bounds、间距、边框和标签                  |
+| [图例](/standard/composite/legend)                             | 离散样本、连续 ramp、probe 与 typed artifact   |
+| [布局容器](/standard/layout)                                   | Flex、Grid、Overlay 与 typed artifacts         |
+| [逻辑组件](/standard/logic)                                    | LogicBlockBase、语义单元、Connector 与 Callout |
+| [直接 Definition 装载](/standard/extension/capability-loading) | Definition 选择、Core 注入与宿主边界           |

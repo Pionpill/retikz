@@ -88,6 +88,7 @@ type Ctx = {
   standardHelpers: Set<string>;
   standardAdapters: Set<string>;
   standardCounts: Map<string, number>;
+  standardIds: Map<string, string>;
 };
 
 type WayFrag = { text: string; comment?: boolean };
@@ -288,6 +289,13 @@ const STANDARD_HELPER_ORDER: ReadonlyArray<string> = [
   'gridLayout',
   'overlayLayout',
   'legend',
+  'logicBlockBase',
+  'terminal',
+  'stage',
+  'decision',
+  'junction',
+  'connector',
+  'callout',
 ];
 const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
   'GridVanillaAdapter',
@@ -297,6 +305,13 @@ const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
   'GridLayoutVanillaAdapter',
   'OverlayLayoutVanillaAdapter',
   'LegendVanillaAdapter',
+  'LogicBlockBaseVanillaAdapter',
+  'TerminalVanillaAdapter',
+  'StageVanillaAdapter',
+  'DecisionVanillaAdapter',
+  'JunctionVanillaAdapter',
+  'ConnectorVanillaAdapter',
+  'CalloutVanillaAdapter',
 ];
 
 /** docs 预览能够显式注入的 Standard definition 名 */
@@ -307,7 +322,14 @@ export type StandardPreviewDefinitionName =
   | 'FlexLayoutDefinition'
   | 'GridLayoutDefinition'
   | 'OverlayLayoutDefinition'
-  | 'LegendDefinition';
+  | 'LegendDefinition'
+  | 'LogicBlockBaseDefinition'
+  | 'TerminalDefinition'
+  | 'StageDefinition'
+  | 'DecisionDefinition'
+  | 'JunctionDefinition'
+  | 'ConnectorDefinition'
+  | 'CalloutDefinition';
 
 const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefinitionName>> = {
   grid: 'GridDefinition',
@@ -317,6 +339,13 @@ const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefini
   gridLayout: 'GridLayoutDefinition',
   overlayLayout: 'OverlayLayoutDefinition',
   legend: 'LegendDefinition',
+  logicBlockBase: 'LogicBlockBaseDefinition',
+  terminal: 'TerminalDefinition',
+  stage: 'StageDefinition',
+  decision: 'DecisionDefinition',
+  junction: 'JunctionDefinition',
+  connector: 'ConnectorDefinition',
+  callout: 'CalloutDefinition',
 };
 
 const standardOwnedChildren = (child: IRChild & { namespace: string; type: string }): Array<IRChild> => {
@@ -325,6 +354,25 @@ const standardOwnedChildren = (child: IRChild & { namespace: string; type: strin
     const items = record.children as ReadonlyArray<{ child: IRChild }> | undefined;
     return items?.map(item => item.child) ?? [];
   }
+  if (child.type === 'logicBlockBase') {
+    const owned: Array<IRChild> = [];
+    const header = record.header as { child?: IRChild } | undefined;
+    if (header?.child !== undefined) owned.push(header.child);
+    const sections = record.sections as ReadonlyArray<{ child: IRChild }> | undefined;
+    sections?.forEach(section => owned.push(section.child));
+    return owned;
+  }
+  if (
+    child.type === 'terminal' ||
+    child.type === 'stage' ||
+    child.type === 'decision' ||
+    child.type === 'junction' ||
+    child.type === 'callout'
+  ) {
+    const content = record.content as IRChild | undefined;
+    return content === undefined ? [] : [content];
+  }
+  if (child.type === 'connector') return [];
   if (child.type !== 'legend') return [];
   const owned: Array<IRChild> = [];
   if (record.title !== undefined) owned.push(record.title as IRChild);
@@ -382,6 +430,83 @@ export const collectStandardPreviewDefinitions = (
   return Array.from(definitions);
 };
 
+const standardCanonicalId = (kind: string, embedId: string): string => {
+  switch (kind) {
+    case 'logicBlockBase':
+      return `${embedId}/logicBlockBase`;
+    case 'terminal':
+      return `${embedId}/terminal`;
+    case 'stage':
+      return `${embedId}/stage`;
+    case 'decision':
+      return `${embedId}/decision`;
+    case 'junction':
+      return `${embedId}/junction`;
+    case 'connector':
+      return `${embedId}/connector`;
+    case 'callout':
+      return `${embedId}/callout`;
+    case 'frame':
+      return `${embedId}/frame`;
+    default:
+      return embedId;
+  }
+};
+
+const reserveStandardIds = (children: ReadonlyArray<IRChild>, ctx: Ctx): void => {
+  const visit = (child: IRChild): void => {
+    if ('namespace' in child) {
+      if (child.namespace === 'standard' && typeof (child as { id?: unknown }).id === 'string') {
+        const kind = child.type;
+        if (STANDARD_HELPER_ORDER.includes(kind)) {
+          const authoredId = (child as unknown as { id: string }).id;
+          const count = (ctx.standardCounts.get(kind) ?? 0) + 1;
+          ctx.standardCounts.set(kind, count);
+          const embedId = `preview-${kind}-${count}`;
+          const generatedId = standardCanonicalId(kind, embedId);
+          ctx.standardIds.set(authoredId, generatedId);
+          ctx.standardIds.set(generatedId, generatedId);
+          ctx.standardIds.set(`${authoredId}/${kind}`, generatedId);
+        }
+      }
+      return;
+    }
+    if (child.type === 'scope') child.children.forEach(visit);
+  };
+  children.forEach(visit);
+  // The counters are consumed again while emitting helpers.
+  ctx.standardCounts.clear();
+};
+
+const rewriteStandardTarget = (value: unknown, ctx: Ctx): unknown => {
+  if (typeof value !== 'object' || value === null || !('id' in value)) return value;
+  const target = value as { id: string; [key: string]: unknown };
+  const id = ctx.standardIds.get(target.id) ?? target.id;
+  return id === target.id ? value : { ...target, id };
+};
+
+const rewriteStandardInput = (kind: string, input: Record<string, unknown>, ctx: Ctx): Record<string, unknown> => {
+  if (kind === 'connector') {
+    return {
+      ...input,
+      from: rewriteStandardTarget(input.from, ctx),
+      to: rewriteStandardTarget(input.to, ctx),
+      ...(Array.isArray((input.routing as { points?: unknown } | undefined)?.points)
+        ? {
+            routing: {
+              ...(input.routing as Record<string, unknown>),
+              points: (input.routing as { points: Array<unknown> }).points.map(point =>
+                rewriteStandardTarget(point, ctx),
+              ),
+            },
+          }
+        : {}),
+    };
+  }
+  if (kind === 'callout') return { ...input, target: rewriteStandardTarget(input.target, ctx) };
+  return input;
+};
+
 const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   const record = child as IRChild & { namespace: string; type: string; id?: string };
   const adapterName = `${record.type.charAt(0).toUpperCase()}${record.type.slice(1)}VanillaAdapter`;
@@ -393,8 +518,22 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
   ctx.standardCounts.set(record.type, count);
   ctx.standardHelpers.add(record.type);
   ctx.standardAdapters.add(adapterName);
-  const input = stripKeys(record, record.type === 'frame' ? ['namespace', 'type', 'id'] : ['namespace', 'type']);
-  return `${record.type}(${formatString(`preview-${record.type}-${count}`)}, ${formatObject(input, indent)})`;
+  const generatedId = `preview-${record.type}-${count}`;
+  const needsDerivedId =
+    record.type === 'frame' ||
+    record.type === 'logicBlockBase' ||
+    record.type === 'terminal' ||
+    record.type === 'stage' ||
+    record.type === 'decision' ||
+    record.type === 'junction' ||
+    record.type === 'connector' ||
+    record.type === 'callout';
+  const input = rewriteStandardInput(
+    record.type,
+    stripKeys(record, needsDerivedId ? ['namespace', 'type', 'id'] : ['namespace', 'type']),
+    ctx,
+  );
+  return `${record.type}(${formatString(generatedId)}, ${formatObject(input, indent)})`;
 };
 
 const childCode = (child: IRChild, indent: number, ctx: Ctx): string => {
@@ -430,7 +569,9 @@ export const irToVanillaCode = (ir: IRScene): string => {
     standardHelpers: new Set(),
     standardAdapters: new Set(),
     standardCounts: new Map(),
+    standardIds: new Map(),
   };
+  reserveStandardIds(ir.children, ctx);
   const childrenStr = childListCode(ir.children, 0, ctx);
   const figureConfig = {
     ...(ir.viewBox ? { viewBox: ir.viewBox } : {}),

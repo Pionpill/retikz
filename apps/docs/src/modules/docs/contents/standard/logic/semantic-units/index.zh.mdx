@@ -1,0 +1,115 @@
+---
+title: 语义单元
+description: 使用 Terminal、Stage、Decision 与 Junction 表达中性的带 content 逻辑单元。
+---
+
+语义单元家族为常见逻辑节点提供稳定语义，但不绑定领域图模型。每个单元都有 authored `id`、中性外观，以及按组件要求提供的 Core child content。
+
+## 用法
+
+```tsx
+import { Layout, Node, Scope } from '@retikz/react';
+import { Decision, Junction, Stage, Terminal } from '@retikz/standard-react';
+```
+
+```tsx
+<Layout width={440} height={180}>
+  <Scope transforms={[{ kind: 'translate', x: 20, y: 70 }]}>
+    <Terminal id="start" role="start">
+      <Node position={[0, 0]} text="Start" />
+    </Terminal>
+  </Scope>
+  <Scope transforms={[{ kind: 'translate', x: 130, y: 70 }]}>
+    <Stage id="step">
+      <Node position={[0, 0]} text="Process" />
+    </Stage>
+  </Scope>
+  <Scope transforms={[{ kind: 'translate', x: 250, y: 70 }]}>
+    <Decision id="check">
+      <Node position={[0, 0]} text="Ready?" />
+    </Decision>
+  </Scope>
+  <Scope transforms={[{ kind: 'translate', x: 380, y: 80 }]}>
+    <Junction id="join" />
+  </Scope>
+</Layout>
+```
+
+`Terminal` 的 content 可选，`Stage` 与 `Decision` 必须有 content，`Junction` 的 content 可选。`role` 与 `category` 是 authored 字段，不会调用隐藏 registry。
+
+## 示例
+
+<ComponentPreview files="semantic-units" size="lg" />
+
+直接 IR 使用 `createTerminal`、`createStage`、`createDecision` 或 `createJunction`，并注入匹配的 Definition。Vanilla 使用对应 builder 与 adapter；adapter 会从 embed id 派生 canonical identity。
+
+```ts
+import { StageDefinition, createStage } from '@retikz/standard';
+
+const stage = createStage({ id: 'step', content: { type: 'node', position: [0, 0], text: 'Process' } });
+const compile = { composites: [StageDefinition] };
+```
+
+```ts
+import { StageVanillaAdapter, stage } from '@retikz/standard-vanilla';
+
+const embed = stage('step', { content: { type: 'node', position: [0, 0], text: 'Process' } });
+const adapters = [StageVanillaAdapter];
+```
+
+以下 recipe 只存在于文档中，是组合示例，不会新增 `Process`、`Class` 或 `Data` export。
+
+<ComponentPreview files="class-recipe" size="lg" caption="使用 block header 与 typed section 的 Class recipe" />
+
+<ComponentPreview files="data-recipe" size="lg" caption="使用中性 stage 与 decision 的 Data recipe" />
+
+## 技术原理
+
+<ComponentAlert type="tip" title="日常使用可跳过" description="只有核对 content 要求或中性外观默认值时才需要阅读本节" />
+
+四个单元都通过同一套 Core child 与 layout 契约下沉。语义类型选择默认值与 artifact kind，不会选择领域 registry 或自动图行为。
+
+## API 参考
+
+### Terminal
+
+| 字段          | 类型                      | 默认值                                                                                                         | 说明                                           |
+| ------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `id`          | `string`                  | —                                                                                                              | 稳定的 authored Terminal identity              |
+| `role`        | `'start' \| 'end'`        | —                                                                                                              | 闭合的 terminal role                           |
+| `content?`    | `IRChild`                 | 省略                                                                                                           | 放入胶囊内部的可选 Core child                  |
+| `appearance?` | `TerminalAppearanceInput` | size 最小 `48 × 24`、padding `{ x: 12, y: 6 }`、capsule、visible、中性 style、`boundary: 'shape'`、`zIndex: 0` | 尺寸、形状、边界、style、dash 与 stacking 覆盖 |
+
+### Stage
+
+| 字段          | 类型                   | 默认值                                                                                         | 说明                                           |
+| ------------- | ---------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `id`          | `string`               | —                                                                                              | 稳定的 authored Stage identity                 |
+| `category?`   | `string`               | 省略                                                                                           | 开放的 authored category                       |
+| `content`     | `IRChild`              | —                                                                                              | 放入圆角矩形内部的必需 Core child              |
+| `appearance?` | `StageAppearanceInput` | content size、padding `8`、矩形圆角 `8`、visible、中性 style、`boundary: 'shape'`、`zIndex: 0` | 尺寸、形状、边界、style、dash 与 stacking 覆盖 |
+
+### Decision
+
+| 字段          | 类型                      | 默认值                                                                                     | 说明                                           |
+| ------------- | ------------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------- |
+| `id`          | `string`                  | —                                                                                          | 稳定的 authored Decision identity              |
+| `content`     | `IRChild`                 | —                                                                                          | 放入菱形内部的必需 Core child                  |
+| `appearance?` | `DecisionAppearanceInput` | content size、padding `12`、diamond、visible、中性 style、`boundary: 'shape'`、`zIndex: 0` | 尺寸、形状、边界、style、dash 与 stacking 覆盖 |
+
+### Junction
+
+| 字段          | 类型                      | 默认值                                                                                                                                                   | 说明                                           |
+| ------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `id`          | `string`                  | —                                                                                                                                                        | 稳定的 authored Junction identity              |
+| `role?`       | `string`                  | 省略                                                                                                                                                     | 开放的 authored role                           |
+| `content?`    | `IRChild`                 | 省略                                                                                                                                                     | 可选 Core child；省略时使用 dot 外观           |
+| `appearance?` | `JunctionAppearanceInput` | 无 content：size 最小 `8 × 8`、padding `0`、circle、dot style（`fill: currentColor`）、visible、`boundary: 'shape'`、`zIndex: 0`；有 content：中性 style | 尺寸、形状、边界、style、dash 与 stacking 覆盖 |
+
+`appearance` 是每个 unit input 的顶层对象；`size`、`padding`、`overflow`、`shape`、`boundary`、`style`、`dash` 与 `zIndex` 都是 `appearance` 内的字段。直接 JSON 的 content 必须是 Core child，不能是 React node。
+
+## 相关
+
+- [LogicBlockBase](/standard/logic/logic-block)：把单元放进可复用区域
+- [Connector](/standard/logic/connector)：连接 authored unit identity
+- [Callout](/standard/logic/callout)：在 previous unit 旁放置解释

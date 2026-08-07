@@ -1,0 +1,63 @@
+---
+title: 逻辑 API 参考
+description: 查询逻辑 schema、factory、Definition、adapter 与 canonical target identity。
+---
+
+Standard Logic 按职责拆分 API：`@retikz/standard` 拥有 canonical JSON 与 lowering，`@retikz/standard-react` 拥有 React authoring，`@retikz/standard-vanilla` 拥有 plain embed 与 adapter。
+
+## 公开导出
+
+| Composite      | Schema / IR                                | Factory 与 Definition                              | React                                                     | Vanilla                                          |
+| -------------- | ------------------------------------------ | -------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------ |
+| LogicBlockBase | `LogicBlockBaseSchema`、`IRLogicBlockBase` | `createLogicBlockBase`、`LogicBlockBaseDefinition` | `LogicBlockBase`、`LogicBlockHeader`、`LogicBlockSection` | `logicBlockBase`、`LogicBlockBaseVanillaAdapter` |
+| Terminal       | `TerminalSchema`、`IRTerminal`             | `createTerminal`、`TerminalDefinition`             | `Terminal`                                                | `terminal`、`TerminalVanillaAdapter`             |
+| Stage          | `StageSchema`、`IRStage`                   | `createStage`、`StageDefinition`                   | `Stage`                                                   | `stage`、`StageVanillaAdapter`                   |
+| Decision       | `DecisionSchema`、`IRDecision`             | `createDecision`、`DecisionDefinition`             | `Decision`                                                | `decision`、`DecisionVanillaAdapter`             |
+| Junction       | `JunctionSchema`、`IRJunction`             | `createJunction`、`JunctionDefinition`             | `Junction`                                                | `junction`、`JunctionVanillaAdapter`             |
+| Connector      | `ConnectorSchema`、`IRConnector`           | `createConnector`、`ConnectorDefinition`           | `Connector`                                               | `connector`、`ConnectorVanillaAdapter`           |
+| Callout        | `CalloutSchema`、`IRCallout`               | `createCallout`、`CalloutDefinition`               | `Callout`                                                 | `callout`、`CalloutVanillaAdapter`               |
+
+同时导出 `LogicBlockBase`、Terminal、Stage、Decision、Junction 与 Callout 的 typed compile result artifact schema。Connector 是 expansion composite，只输出 Core Path，明确没有 typed Connector artifact schema。
+
+## 直接注入 Definition
+
+Definition 是运行时函数，永不进入持久化 JSON。直接 IR 组装的 scene 只注入当前使用的能力：
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { ConnectorDefinition, StageDefinition, TerminalDefinition } from '@retikz/standard';
+
+const compile = {
+  composites: [TerminalDefinition, StageDefinition, ConnectorDefinition],
+};
+
+compileToScene(scene, compile);
+```
+
+嵌套 Standard child 遵循同一规则。包含 `Stage` 的 `LogicBlockBase` 需要两个 Definition；只有 Core child 时不需要 Standard Definition。
+
+## Vanilla canonical identity
+
+Vanilla embed 的 authoring identity 与 canonical composite identity 分离。adapter 会追加稳定 suffix：
+
+| Builder                          | Canonical id           |
+| -------------------------------- | ---------------------- |
+| `terminal('start', input)`       | `start/terminal`       |
+| `stage('step', input)`           | `step/stage`           |
+| `decision('check', input)`       | `check/decision`       |
+| `junction('join', input)`        | `join/junction`        |
+| `connector('edge', input)`       | `edge/connector`       |
+| `callout('note', input)`         | `note/callout`         |
+| `logicBlockBase('block', input)` | `block/logicBlockBase` |
+
+Connector 与 Callout target 应使用 canonical 值。例如 Vanilla `terminal('start', ...)` 的 target 应为 `{ id: 'start/terminal' }`，而不是 `{ id: 'start' }`。
+
+## 边界与诊断
+
+Logic 拥有中性语义、authored target 契约、显式路由与 target-relative 放置。不拥有 graph store、自动布局、自动避障、交互或领域 recipe。缺少 Definition 时 Core 发出 `COMPOSITE_NOT_REGISTERED` 诊断；Connector 与 Callout 的非法 section target 会分别在 lowering 或放置前 fail-loud。
+
+## 相关
+
+- [逻辑组件](/standard/logic)：家族边界与页面地图
+- [Definition 装载](/standard/extension/capability-loading)：宿主能力选择
+- [布局 API 参考](/standard/layout/reference)：共享布局 artifact

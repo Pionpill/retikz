@@ -1,0 +1,63 @@
+---
+title: Logic API Reference
+description: Look up logic schemas, factories, Definitions, adapters, and canonical target identity.
+---
+
+The Standard Logic API is split by responsibility: `@retikz/standard` owns canonical JSON and lowering, `@retikz/standard-react` owns React authoring, and `@retikz/standard-vanilla` owns plain embeds and adapters.
+
+## Public exports
+
+| Composite      | Schema / IR                                | Factory and Definition                             | React                                                     | Vanilla                                          |
+| -------------- | ------------------------------------------ | -------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------ |
+| LogicBlockBase | `LogicBlockBaseSchema`, `IRLogicBlockBase` | `createLogicBlockBase`, `LogicBlockBaseDefinition` | `LogicBlockBase`, `LogicBlockHeader`, `LogicBlockSection` | `logicBlockBase`, `LogicBlockBaseVanillaAdapter` |
+| Terminal       | `TerminalSchema`, `IRTerminal`             | `createTerminal`, `TerminalDefinition`             | `Terminal`                                                | `terminal`, `TerminalVanillaAdapter`             |
+| Stage          | `StageSchema`, `IRStage`                   | `createStage`, `StageDefinition`                   | `Stage`                                                   | `stage`, `StageVanillaAdapter`                   |
+| Decision       | `DecisionSchema`, `IRDecision`             | `createDecision`, `DecisionDefinition`             | `Decision`                                                | `decision`, `DecisionVanillaAdapter`             |
+| Junction       | `JunctionSchema`, `IRJunction`             | `createJunction`, `JunctionDefinition`             | `Junction`                                                | `junction`, `JunctionVanillaAdapter`             |
+| Connector      | `ConnectorSchema`, `IRConnector`           | `createConnector`, `ConnectorDefinition`           | `Connector`                                               | `connector`, `ConnectorVanillaAdapter`           |
+| Callout        | `CalloutSchema`, `IRCallout`               | `createCallout`, `CalloutDefinition`               | `Callout`                                                 | `callout`, `CalloutVanillaAdapter`               |
+
+Artifact schemas are exported for typed compile results from `LogicBlockBase`, Terminal, Stage, Decision, Junction, and Callout. Connector is an expansion composite: it emits a Core Path and intentionally has no typed Connector artifact schema.
+
+## Direct Definition loading
+
+Definitions are runtime functions and never belong in persisted JSON. When compiling a scene assembled from direct IR, inject exactly the capabilities used by that scene:
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { ConnectorDefinition, StageDefinition, TerminalDefinition } from '@retikz/standard';
+
+const compile = {
+  composites: [TerminalDefinition, StageDefinition, ConnectorDefinition],
+};
+
+compileToScene(scene, compile);
+```
+
+Nested Standard children have the same rule. A `LogicBlockBase` containing a `Stage` needs both Definitions; a Core-only child needs no Standard Definition.
+
+## Vanilla canonical identity
+
+Vanilla embeds separate authoring identity from canonical composite identity. The adapter appends a stable suffix:
+
+| Builder                          | Canonical id           |
+| -------------------------------- | ---------------------- |
+| `terminal('start', input)`       | `start/terminal`       |
+| `stage('step', input)`           | `step/stage`           |
+| `decision('check', input)`       | `check/decision`       |
+| `junction('join', input)`        | `join/junction`        |
+| `connector('edge', input)`       | `edge/connector`       |
+| `callout('note', input)`         | `note/callout`         |
+| `logicBlockBase('block', input)` | `block/logicBlockBase` |
+
+Use the canonical value in Connector and Callout targets. For example, a Vanilla target to `terminal('start', ...)` is `{ id: 'start/terminal' }`, not `{ id: 'start' }`.
+
+## Boundary and diagnostics
+
+Logic owns neutral semantics, authored target contracts, explicit routes, and target-relative placement. It does not own graph stores, automatic layout, obstacle avoidance, interaction, or domain recipes. Missing Definitions produce Core `COMPOSITE_NOT_REGISTERED` diagnostics; invalid section targets in Connector and Callout fail loudly before lowering or placement.
+
+## Related
+
+- [Logic Components](/standard/logic): family boundary and page map
+- [Definition Loading](/standard/extension/capability-loading): host capability selection
+- [Layout API Reference](/standard/layout/reference): shared layout artifacts

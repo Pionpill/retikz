@@ -1,0 +1,56 @@
+---
+title: Logic Components
+description: Compose domain-neutral logic components from a block shell, semantic units, connectors, and callouts.
+---
+
+Standard Logic provides a small vocabulary for diagrams whose meaning comes from authored identities and relationships. `LogicBlockBase` owns a reusable shell and regions; Terminal, Stage, Decision, and Junction express semantic units; Connector and Callout add relationships and explanations.
+
+The family is deliberately renderer- and domain-neutral. It does not own a `GraphModel`, automatic layout, obstacle avoidance, hit testing, or interaction state. Place units with Core positions or another Standard layout, then use stable `id` values for explicit targets.
+
+## Responsibilities at a glance
+
+| Member           | Owns                                                           | Does not own                            |
+| ---------------- | -------------------------------------------------------------- | --------------------------------------- |
+| `LogicBlockBase` | A shell, header, ordered sections, and reusable region layout  | Graph topology or automatic placement   |
+| Semantic units   | Neutral shape, content, sizing, and semantic role              | Domain-specific state machines          |
+| `Connector`      | One Core Path route and an optional final-step label           | Automatic routing or obstacle avoidance |
+| `Callout`        | Content placed beside a previous target and an optional leader | Global annotation management            |
+
+All members lower to existing Core primitives and can be authored through React, direct JSON/IR, or Vanilla embeds. Definitions are injected per figure; they never enter persisted JSON.
+
+## In this section
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/standard/logic/logic-block">
+    <span className="font-semibold">LogicBlockBase</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Shells, headers, sections, and FlexLayout reuse
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/standard/logic/semantic-units">
+    <span className="font-semibold">Semantic units</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Terminal, Stage, Decision, and Junction</span>
+  </LinkedCard>
+  <LinkedCard href="/standard/logic/connector">
+    <span className="font-semibold">Connector</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Routes, targets, and end-step labels</span>
+  </LinkedCard>
+  <LinkedCard href="/standard/logic/callout">
+    <span className="font-semibold">Callout</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Placement, previous-only targets, and leaders
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/standard/logic/api-reference">
+    <span className="font-semibold">Logic API Reference</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Schemas, factories, Definitions, and adapter identity
+    </span>
+  </LinkedCard>
+</div>
+
+## Related
+
+- [Layout containers](/standard/layout): generic Flex, Grid, and Overlay arrangement
+- [Get Started](/standard/get-start): React, Vanilla, and persisted IR loading
+- [Core paths](/kernel/components/draw/overview): the primitive output used by Connector

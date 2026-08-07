@@ -1,6 +1,6 @@
 # Standard v0.1 alpha.3 Roadmap：语义逻辑图组件
 
-> 状态：设计已确认，尚未进入实现；ADR-01～06 均为 Accepted
+> 状态：已完成；ADR-01～06 均为 Accepted
 >
 > 主题：提供可持久化的基础逻辑单元、headless `LogicBlockBase`、局部连接与说明能力，让作者、工具与 LLM 不必从 shape、颜色或坐标反推逻辑图语义
 >
@@ -114,14 +114,14 @@ Gate 至少证明：
 
 ## 完成标准
 
-- [ ] ADR-01～05 完成 test contract、Architecture Gate 与人工确认
-- [ ] `LogicBlockBase`、四个基础逻辑单元与 Callout 的 schema、Definition、artifact 与 factory 形成闭环；Connector 的 schema、Definition、同 id Core Path lowering 与 factory 形成闭环
-- [ ] 直接 IR、React 与 Vanilla authoring 产生等价 canonical IR 与 Scene，并保持适用 artifact / Connector lowered Scene 主体 identity 等价
-- [ ] straight、polyline、`-|`、`|-`、`-|-`、`|-|`、quadratic、cubic 与 bend 均有确定结果和失败诊断
-- [ ] 整体 Block 与普通逻辑单元可以被 Connector / Callout 稳定定位；Connector 支持 pending forward whole target，Callout 保持 previous-only placement；带 section 的 target 明确 fail-loud
-- [ ] Core built-in stroke Path step label 与 authored Scope placement 已复用；Standard 未复制 Path sampling、target resolver 或扁平派生 id，structured section target 作为 Core 联动项保留
-- [ ] Process / Class / Data recipe 只存在于 docs 内部实现，且至少服务三类真实逻辑图
-- [ ] Standard 三包与双语 docs 完成受影响范围验证，无 renderer 特判、隐式 registry 或领域反向依赖
+- [x] ADR-01～05 完成 test contract、Architecture Gate 与人工确认
+- [x] `LogicBlockBase`、四个基础逻辑单元与 Callout 的 schema、Definition、artifact 与 factory 形成闭环；Connector 的 schema、Definition、同 id Core Path lowering 与 factory 形成闭环
+- [x] 直接 IR、React 与 Vanilla authoring 产生等价 canonical IR 与 Scene，并保持适用 artifact / Connector lowered Scene 主体 identity 等价
+- [x] straight、polyline、`-|`、`|-`、`-|-`、`|-|`、quadratic、cubic 与 bend 均有确定结果和失败诊断
+- [x] 整体 Block 与普通逻辑单元可以被 Connector / Callout 稳定定位；Connector 支持 pending forward whole target，Callout 保持 previous-only placement；带 section 的 target 明确 fail-loud
+- [x] Core built-in stroke Path step label 与 authored Scope placement 已复用；Standard 未复制 Path sampling、target resolver 或扁平派生 id，structured section target 作为 Core 联动项保留
+- [x] Process / Class / Data recipe 只存在于 docs 内部实现，且至少服务三类真实逻辑图
+- [x] Standard 三包与双语 docs 完成受影响范围验证，无 renderer 特判、隐式 registry 或领域反向依赖
 
 ## 不在 alpha.3 范围
 
