@@ -72,9 +72,9 @@ export const createRuntimeIdentityLookup = (
   assertNonEmptyString(owner, owner);
   const root: MutableIdentityTrieNode = { terminal: false, children: new Map() };
   const copied: Array<RuntimeIdentity> = [];
-  for (const input of identities) {
-    if (input.owner !== owner) throw new RuntimeIdentityError(owner, input);
-    const identity = copyIdentity(input);
+  for (const oriIdentity of identities) {
+    if (oriIdentity.owner !== owner) throw new RuntimeIdentityError(owner, oriIdentity);
+    const identity = copyIdentity(oriIdentity);
     let current = root;
     for (const segment of identity.path) {
       const existing = current.children.get(segment);
