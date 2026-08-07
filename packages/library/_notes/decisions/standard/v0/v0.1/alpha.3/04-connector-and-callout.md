@@ -1,6 +1,6 @@
 # ADR-04：Connector 路由与显式 Callout
 
-- 状态：Proposed
+- 状态：Accepted（2026-08-08，人工确认）
 - 决策日期：2026-08-01
 - 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01](./01-logic-diagram-profile.md) · [ADR-02](./02-headless-logic-block-base.md) · [ADR-03](./03-semantic-logic-units.md) · [Core Path contract](../../../../../../../kernel/_notes/decisions/v0/v0.5/roadmap.md)
 
@@ -73,7 +73,7 @@ quadratic、cubic 与 bend 字段直接复用 Core curve / cubic / bend 的公�
 - appearance 只开放上方列出的 Core stroke Path 字段，不接受 fill、path kind、children、label、id、meta、animation、rotate 或 scale。默认是 1-unit solid currentColor stroke 与 Core 默认 end arrow mark，roundedCorners 为 0，zIndex 为 0；显式字段逐项覆盖默认值，其中 `marks` 替换默认 end arrow mark 而不是与其合并
 - label 完整复用 Core `IRGeometryLabelInput`：支持文本 / TeX、字体、颜色、side、sloped、distance 与 position，不增加 Connector 私有 label 字段，也不接受任意复合 `IRChild`
 - label 直接进入 lowered Core Path 的 host label；position 的默认值、归一化范围、整条路径采样与失败语义完全沿用 Core Path，不由 Standard 重新测量或计算
-- from / to 与中间 target 在所在 namespace 注册阶段闭合后随 Core pending Path 解析，可以引用同一可见 namespace 中位于 Connector 前后的目标；LogicBlock section target 通过 ADR-02 的公开映射参与同一延迟 lookup
+- from / to 与中间整体 target 在所在 namespace 注册阶段闭合后随 Core pending Path 解析，可以引用同一可见 namespace 中位于 Connector 前后的目标；带 `section` 的 LogicBlock target 在当前 Core 下明确 fail-loud，不编码为扁平 id
 - appearance 复用 Core stroke、dash、mark 与 z-index，不创建 Connector paint registry
 - 同一个 from / to 可以出现多个 Connector；Standard 不去重或合并局部关系
 
@@ -100,7 +100,7 @@ type CalloutInput = {
 
 Callout 根据 target 最终 boundary 与显式 side 放置 content container；gap 默认 8，offset 默认 0。content container 默认复用 Stage 的 rounded rectangle、8-unit padding、中性 style 与 visible overflow，显式 appearance 逐字段覆盖。leader 默认开启并连接 target anchor 与 Callout boundary，使用 1-unit solid currentColor stroke 且不带 mark；显式 leader object 逐字段覆盖该无箭头默认，`marks` 不注入 Connector 的默认 end arrow。`false` 只关闭 leader，不改变 placement。Callout 不尝试比较其它元素、翻转 side、缩短内容或寻找最佳位置。
 
-Callout target 在自身 layout-aware compile 时从只读 previous-target snapshot 解析，只能引用 authored order 中此前已经发布的普通单元、整体 Block 或 section。它不等待后续 sibling，也不对 forward placement 做拓扑排序或第二次 traversal。
+Callout 使用当前 Core authored Scope placement，只能引用 authored order 中此前已经发布的普通单元或整体 Block。它不等待后续 sibling，也不对 forward placement 做拓扑排序或第二次 traversal；带 `section` 的 target 在进入 placement 前明确 fail-loud。
 
 Callout placement 使用最终 target boundary 与最终 Callout outer boundary 的标准 side anchor，坐标系沿用 x 向右、y 向下的 Core user space。四个 side 的公开几何固定为：
 
@@ -143,11 +143,11 @@ artifact 使用 strict JSON schema；container、content、leader point 与 boun
 ## 行为、失败语义与兼容性
 
 - 默认行为：Connector 默认 straight，label position 沿用 Core host label 默认值；Callout 默认 gap 8、leader 开启；role / appearance 与 geometry 各自正交
-- 失败与诊断：非法 ratio / Core label、负或非有限 Callout gap、非有限 placement offset / control / angle 与 Callout content probe failure fail-loud。Connector unresolved id / section 沿用 Core Path warning + skip 合同，其余 anchor / geometry 失败也不改写 Core Path；Callout 缺失或 forward id / section / anchor fail-loud；Connector 的解析后退化行为同样沿用 Core Path
+- 失败与诊断：非法 ratio / Core label、负或非有限 Callout gap、非有限 placement offset / control / angle 与 Callout content probe failure fail-loud。Connector unresolved whole-target id 沿用 Core Path warning + skip 合同，其余 anchor / geometry 失败也不改写 Core Path；带 `section` 的 Connector / Callout target 在当前 Core 下以明确 unsupported diagnostic fail-loud；Callout 缺失或 forward whole-target id / anchor fail-loud；Connector 的解析后退化行为同样沿用 Core Path
 - 兼容性：新增 Standard composite，不新增 Scene primitive 或 renderer API；前置 Core contract 由独立 Kernel ADR 负责
 - React / Vanilla 等价性：adapter 只把 Callout React content、Connector label input 与 plain routing input 归一为 canonical Standard IR；路由只在 Standard / Core compile 主链执行
 
-缺失 section 不回退到整个 Block：Connector 跳过整条 lowered Path，Callout 终止 placement。非法 curve 不退化为 straight，Callout placement 失败不静默换边。duplicate id 与 namespace shadowing 继续使用 Core 诊断。
+带 `section` 的 target 不回退到整个 Block，也不生成扁平内部 id；当前版本在 lowering / placement 前明确终止。非法 curve 不退化为 straight，Callout placement 失败不静默换边。duplicate id 与 namespace shadowing 继续使用 Core 诊断。
 
 ## 功能与包边界
 
@@ -167,15 +167,15 @@ artifact 使用 strict JSON schema；container、content、leader point 与 boun
 - provenance / locator 是否适用：Connector 只提供同 id Scene 主体挂点，不提供 compile artifact locator；Callout 通过 typed artifact 定位。role、endpoint target 与 section key 保留在 Standard canonical IR，业务 edge provenance 在 lowering 前由上层 join
 - 结论：扩展 Standard，复用 Core Path，不建立 Graph / Flow
 
-## 实现前 Core capability gate
+## 当前 Core capability 映射
 
-alpha.3 不得用 Standard 私有 target resolver、派生全局 id 或路径采样绕过 Core。实现前必须确认三项 Core 能力闭环：
+alpha.3 不得用 Standard 私有 target resolver、派生全局 id 或路径采样绕过 Core。当前交付按以下映射闭环：
 
-1. built-in stroke Path 必须按公开 host label 契约消费 `IRPathBase.label`，并在整条最终路径上提供与其它 path-like host 一致的 position、side、sloped、文本 / TeX、样式、bounds 与诊断语义。Connector 只把 `IRGeometryLabelInput` 透传到该入口
-2. Core 必须提供 collision-safe 的 composite-owned subtarget 注册与结构化 lookup，使 Standard 能把 `{ kind: 'logicBlock', id, section }` 映射为 Block identity 下的 section key，而不编码到扁平全局 id。该合同必须覆盖 duplicate owner / section、嵌套 Scope 与 anchor，并冻结两种 lookup 生命周期：pending Path 在 owner namespace 注册闭合后可解析前后目标，最终 unresolved 时按 Path warning + skip；layout placement 只读此前已发布的 target snapshot，forward / missing 时 fail-loud
-3. layout-aware composite 必须能先 probe 任意 child，再在同一次 compile 中根据 previous-target snapshot 已解析的 boundary 对 opaque replay child 做延迟 placement。该入口仍由 Core 解析 namespace、anchor、boundary 与 scope transform；Standard 只能提供显式 side / gap / offset 并消费解析结果，不能等待后续 sibling 或发起第二次 traversal
+1. Connector 把 `IRGeometryLabelInput` 原样交给 built-in stroke Path host label，并沿用其 position、side、sloped、文本 / TeX、样式、bounds 与诊断语义
+2. 普通单元与整体 Block 使用 Core 当前 string id、namespace、anchor 与 pending Path lookup；Callout 使用 authored Scope placement 的 previous-only target 语义
+3. `LogicBlockBaseArtifact` 保留 authored section key 与 geometry，但 Core 提供 composite-owned structured subtarget 前，带 `section` 的 Connector / Callout target 明确 fail-loud
 
-第 2、3 项公共 Core contract 必须先由独立 Kernel ADR 冻结并通过自身 Architecture Gate。当前 namespace 只有扁平 string id，`LayoutCompositeCompileContext.scope()` 也只接受已经 lowering 的数值 transform，不能安全注册 section subtarget 或在 previous-target 解析后移动 opaque replay child。这些缺口未下沉闭环前，section target 与 `Callout` 必须保持未实现并 fail-loud；不得把 target geometry、source-order index 或派生 id 复制到 Standard、adapter 或 renderer。Core gate 不改变本 ADR 的 Standard 公开输入。
+后续 Core 增加 structured subtarget 时，Standard 只替换这一消费映射并补齐对应测试，不改变 `LogicDiagramTarget` 公开输入。当前版本不得把 target geometry、source-order index 或派生 id 复制到 Standard、adapter 或 renderer。
 
 ## 被否决方案
 

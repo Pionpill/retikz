@@ -1,6 +1,6 @@
 # Standard v0.1 alpha.3 Roadmap：语义逻辑图组件
 
-> 状态：设计中；ADR-01～05 为 Proposed
+> 状态：设计已确认，尚未进入实现；ADR-01～06 均为 Accepted
 >
 > 主题：提供可持久化的基础逻辑单元、headless `LogicBlockBase`、局部连接与说明能力，让作者、工具与 LLM 不必从 shape、颜色或坐标反推逻辑图语义
 >
@@ -21,7 +21,7 @@ alpha.3 建设 Standard 自身可独立绘制、可跨领域复用的局部逻�
 
 - 以独立 Standard discriminator 持久化 `Terminal`、`Stage`、`Decision` 与 `Junction`，默认形状只是可替换 preset
 - 建立内容 headless、外观中性可用的 `LogicBlockBase`，用任意 `IRChild` 组合 header 与 authored-order sections
-- 建立统一的整体 / section target，并以前置 Core composite-owned subtarget contract 避免调用方拼接内部 id 或 Standard 派生扁平全局 id
+- 建立统一的整体 / section target 输入；alpha.3 先以当前 Core 闭环整体 target，带 section 的输入明确 fail-loud，后续随 Core composite-owned structured subtarget 联动接通
 - 支持直线、显式折线、TikZ 风格正交折线、quadratic、cubic 与 bend 曲线
 - 复用 Core layout-aware composite、Path host label、target / anchor、Scope 与 Standard Box Layout 词汇，不建立私有测量、target resolver、路径采样或 renderer 路径
 - 接入各项 Definition、React / Vanilla 等价 authoring 与双语文档 dogfood
@@ -39,11 +39,11 @@ alpha.3 建设 Standard 自身可独立绘制、可跨领域复用的局部逻�
 
 | ADR                                     | 主题                    | 主要决策                                                                           | 依赖                                       | 状态     |
 | --------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------ | -------- |
-| [01](./01-logic-diagram-profile.md)     | Logic Diagram Profile   | 冻结能力归属、identity、共享 target、开放 role、外观与 locator / artifact 公共边界 | alpha.1 composite；Core target / composite | Proposed |
-| [02](./02-headless-logic-block-base.md) | Headless LogicBlockBase | 冻结 header / sections、纵向约束布局、中性外观、section target 与 typed artifact   | ADR-01；alpha.2 Box Layout                 | Proposed |
-| [03](./03-semantic-logic-units.md)      | Semantic Logic Units    | 冻结 Terminal / Stage / Decision / Junction 的统一 content、默认形状与覆盖语义     | ADR-01                                     | Proposed |
-| [04](./04-connector-and-callout.md)     | Connector 与 Callout    | 冻结局部 target、关系 role、标签、折线 / 正交 / 曲线路由与显式 Callout placement   | ADR-01～03；Core Path                      | Proposed |
-| [05](./05-capability-and-authoring.md)  | Definition 与 Authoring | 冻结按项 Definition、React / Vanilla / 直接 IR 等价与内部 recipe 边界              | ADR-01～04；alpha.3 ADR-06                 | Proposed |
+| [01](./01-logic-diagram-profile.md)     | Logic Diagram Profile   | 冻结能力归属、identity、共享 target、开放 role、外观与 locator / artifact 公共边界 | alpha.1 composite；Core target / composite | Accepted |
+| [02](./02-headless-logic-block-base.md) | Headless LogicBlockBase | 冻结 header / sections、纵向约束布局、中性外观、section target 与 typed artifact   | ADR-01；alpha.2 Box Layout                 | Accepted |
+| [03](./03-semantic-logic-units.md)      | Semantic Logic Units    | 冻结 Terminal / Stage / Decision / Junction 的统一 content、默认形状与覆盖语义     | ADR-01                                     | Accepted |
+| [04](./04-connector-and-callout.md)     | Connector 与 Callout    | 冻结局部 target、关系 role、标签、折线 / 正交 / 曲线路由与显式 Callout placement   | ADR-01～03；Core Path                      | Accepted |
+| [05](./05-capability-and-authoring.md)  | Definition 与 Authoring | 冻结按项 Definition、React / Vanilla / 直接 IR 等价与内部 recipe 边界              | ADR-01～04；alpha.3 ADR-06                 | Accepted |
 
 ```text
 01 shared profile
@@ -63,7 +63,7 @@ alpha.3 建设 Standard 自身可独立绘制、可跨领域复用的局部逻�
 - Connector label 直接复用 Core `IRGeometryLabelInput` 与 Path host label，不接受任意复合 `IRChild`，也不由 Standard 测量或放置
 - Connector 直接 lower 为同 id 的 Core Path，不重复输出 typed path artifact；路径几何与 bounds 由 Core 主链拥有，Scene id 只 stamp 到 Path 最外层主体，附属 label / mark 不建立第二 identity
 - Connector 不提供 compile artifact locator；领域 provenance 在 lowering 前通过 authored id join，不从 Scene 或 Core IR 反推 Standard role / endpoint
-- Connector target 随 Core pending Path 在 namespace 注册闭合后解析，允许同一可见 namespace 内的前后目标；Callout placement 只读取此前已发布的 target snapshot，不等待 forward target
+- Connector 整体 target 随 Core pending Path 在 namespace 注册闭合后解析，允许同一可见 namespace 内的前后目标；Callout 复用 authored Scope placement，只读取此前已发布的整体 target，不等待 forward target；带 section 的 target 当前明确拒绝
 - Callout placement 必须显式，不执行碰撞检测或最佳位置搜索
 - Callout side 固定 target / shell 对向 side anchor；gap 沿 outward normal，offset 沿屏幕正 x / y 切向，leader 连接解析后 target anchor 与最终 shell anchor
 - `LogicBlockBase`、基础逻辑单元与 Callout artifact 都使用 strict JSON schema；`LogicLayoutItemArtifact` 去除单一 content 不适用的 key / sourceIndex，`LogicOuterArtifact` 独立合并 shell、content 与 divider / leader，且不改写 alpha.2 `LayoutArtifactContainer` 的 item-union 原义
@@ -87,10 +87,10 @@ Gate 至少证明：
 - `LogicBlockBase` 的开放性来自任意 `IRChild` 与显式 appearance，而不是新 Block registry 或 callback
 - 语义单元的 discriminator 与默认 shape 分离；替换 shape 后语义和 artifact 不变
 - Connector routing 只组合 Core Path step，未复制 curve / fold 数学，也未建立自动 routing pipeline
-- section target 通过前置 Core composite-owned subtarget contract 安全映射，不暴露调用方必须手写的内部 id，也不派生可与 authored id 冲突的扁平字符串
+- section target 保留稳定公开输入与 artifact geometry；当前 Core 无结构化 lookup 时 fail-loud，不暴露调用方必须手写的内部 id，也不派生可与 authored id 冲突的扁平字符串
 - 直接 IR、React、Vanilla 与显式 Definition 注入进入同一 schema、definition 与 compile 主链；布局组件 artifact 和 Connector lowered Scene 主体 id 保持跨入口等价
 - 内部 Process / Class / Data recipe 不进入 package exports 或 schema registry
-- section target / Callout 实现前，独立 Kernel ADR 必须冻结 composite-owned subtarget 的 pending-Path / previous-placement 两种 lookup 生命周期与 target-aware opaque replay；Connector label 实现前，Core built-in stroke Path 必须闭环公开 host label 契约
+- 后续接通 section target 前，Core 必须冻结 composite-owned structured subtarget 的 pending-Path / previous-placement 两种 lookup 生命周期；当前 Callout 使用已有 authored Scope placement，Connector label 使用已有 built-in stroke Path host label
 
 以下方案不能通过 Gate：
 
@@ -118,8 +118,8 @@ Gate 至少证明：
 - [ ] `LogicBlockBase`、四个基础逻辑单元与 Callout 的 schema、Definition、artifact 与 factory 形成闭环；Connector 的 schema、Definition、同 id Core Path lowering 与 factory 形成闭环
 - [ ] 直接 IR、React 与 Vanilla authoring 产生等价 canonical IR 与 Scene，并保持适用 artifact / Connector lowered Scene 主体 identity 等价
 - [ ] straight、polyline、`-|`、`|-`、`-|-`、`|-|`、quadratic、cubic 与 bend 均有确定结果和失败诊断
-- [ ] 整体 Block、section 与普通逻辑单元可以被 Connector / Callout 稳定定位；Connector 支持 pending forward target，Callout 保持 previous-only placement
-- [ ] Core built-in stroke Path host label 闭环，且 composite-owned subtarget / target-aware opaque replay 已由独立 Kernel ADR 冻结并实现；Standard 未复制 Path sampling、target resolver 或扁平派生 id
+- [ ] 整体 Block 与普通逻辑单元可以被 Connector / Callout 稳定定位；Connector 支持 pending forward whole target，Callout 保持 previous-only placement；带 section 的 target 明确 fail-loud
+- [ ] Core built-in stroke Path host label 与 authored Scope placement 已复用；Standard 未复制 Path sampling、target resolver 或扁平派生 id，structured section target 作为 Core 联动项保留
 - [ ] Process / Class / Data recipe 只存在于 docs 内部实现，且至少服务三类真实逻辑图
 - [ ] Standard 三包与双语 docs 完成受影响范围验证，无 renderer 特判、隐式 registry 或领域反向依赖
 

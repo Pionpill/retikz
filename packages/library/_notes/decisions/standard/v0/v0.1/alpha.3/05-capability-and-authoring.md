@@ -1,6 +1,6 @@
 # ADR-05：Logic Diagram 跨 adapter authoring 与内部 recipe
 
-- 状态：Proposed
+- 状态：Accepted（2026-08-08，人工确认）
 - 决策日期：2026-08-01
 - 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01](./01-logic-diagram-profile.md) · [ADR-02](./02-headless-logic-block-base.md) · [ADR-03](./03-semantic-logic-units.md) · [ADR-04](./04-connector-and-callout.md) · [ADR-06](./06-direct-definition-loading.md)
 

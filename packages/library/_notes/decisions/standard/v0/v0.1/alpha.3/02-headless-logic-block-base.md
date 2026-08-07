@@ -1,6 +1,6 @@
 # ADR-02：Headless LogicBlockBase
 
-- 状态：Proposed
+- 状态：Accepted（2026-08-08，人工确认）
 - 决策日期：2026-08-01
 - 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01](./01-logic-diagram-profile.md) · [alpha.2 Box Layout](../alpha.2/roadmap.md) · [Core layout-aware composite](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.1/07-layout-aware-composite.md)
 
@@ -91,7 +91,7 @@ type LogicBlockBaseArtifact = {
 
 artifact 使用 strict JSON schema；所有 rect 与 translation 都沿用 alpha.2 layout artifact 合同，位于当前 Block allocation coordinate。`container` 只描述 header / section content layout，contentBounds 包含 padding，visual / visible 不包含 outer shell 或 divider。`outer.shellVisualBounds` 包含 Block fill、outline 与 shadow；`dividerVisualBounds` 按实际 paint order 保存每条 divider 的可见包络。`outer.visualBounds` 是 shell、container.visualBounds 与全部 divider 的 union；`outer.visibleBounds` 是 shell、container.visibleBounds 与 divider 的 union，content overflow 不裁剪 shell 或 divider。header 独立保存，sections 数组顺序和 key 与 authored sections 完全一致，因此不需要伪造 `LayoutArtifactItemBase.key/sourceIndex`。
 
-整体与每个 section 都可由 `LogicDiagramTarget` 定位。内部 Scope / Coordinate id 是 lowering 细节；调用方只保存 Block id 与 authored section key。
+整体 Block 可立即由 `LogicDiagramTarget` 定位；artifact 仍完整保存每个 authored section 的 key 与 geometry。当前 Core 没有 composite-owned structured subtarget，因此带 `section` 的 target 在消费方明确 fail-loud，不生成内部扁平全局 id；Core 能力补齐后沿同一 Block id 与 authored section key 接通。
 
 ## 布局与用户可观察行为
 
@@ -118,14 +118,14 @@ artifact 使用 strict JSON schema；所有 rect 与 translation 都沿用 alpha
 
 - 所属能力域与解决的问题：Standard Drawing Complete 的 headless 结构化容器，统一逻辑图富内容外壳、测量和定位
 - 主责包与协作包：Standard 拥有 schema、layout、appearance 与 artifact；Core 拥有 probe / replay、IRChild、Scope、target 与 Scene；adapter 只归一 authoring
-- 拥有：纵向 region 布局、默认外框、section identity、整体 / section bounds 与 target 映射
+- 拥有：纵向 region 语义组合、默认外框、section identity、整体 / section bounds、整体 target 与未来 structured section target 的稳定输入
 - 不拥有：header / section 内部模型、Process / Class / Data schema、syntax highlighting、业务 category、Graph port 或交互状态
 - 外部扩展与下游闭环：任意注册 Core / Tier 2 composite 都可作为 child；未知 role 保留；appearance 显式覆盖
 - 不支持边界：需要自定义非纵向外壳时直接组合 Flex / Grid / Overlay / Frame，不为 LogicBlockBase 增加 layout registry
 
 ## 架构验证
 
-- 是否可由现有能力组合：FlexLayout 能排列 children，但不提供稳定 header / section identity、统一外框、section target 与 Block artifact，因此需要新的 Standard 语义 composite
+- 是否可由现有能力组合：FlexLayout 提供 canonical region 排列，LogicBlockBase 只补稳定 header / section identity、统一外框、整体 target 与 Block artifact；structured section target 等待 Core owner 补齐
 - 责任切分：Standard 组合 Box contract 与外框；Core 测量 / replay；renderer 只绘制降低后的 Node / Path / Scope
 - 是否需要新 IR / contract / registry：新增 `standard.logicBlockBase` schema 与 CompositeDefinition；content 扩展完全复用 `IRChild`，不增加 Block registry
 - pipeline / lowering / renderer / diagnostics 如何闭环：canonical IR → layout-aware definition → Core children + typed artifact → Scene；所有失败沿 Core layout failure

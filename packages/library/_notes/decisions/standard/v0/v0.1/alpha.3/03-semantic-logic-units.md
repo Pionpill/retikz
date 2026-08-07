@@ -1,6 +1,6 @@
 # ADR-03：Terminal、Stage、Decision 与 Junction 语义单元
 
-- 状态：Proposed
+- 状态：Accepted（2026-08-08，人工确认）
 - 决策日期：2026-08-01
 - 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01](./01-logic-diagram-profile.md) · [ADR-02](./02-headless-logic-block-base.md) · [Standard Drawing Library](../../../../../architecture/standard-library-design.md)
 
