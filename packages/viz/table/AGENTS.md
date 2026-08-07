@@ -28,7 +28,7 @@ pipeline/     数据接入、结构规范化、呈现、布局、lowering 与 lo
 - 闭合 style token 不建立 Definition / registry；内置 preset 与用户 overlay 必须经过同一 strict schema、leaf resolver 与消费链路，未知 token fail-loud
 - Cell 是 Table 的语义与布局槽位，内容统一使用 Core `IRChild`，不建立平行内容 IR
 - 显式 Plot 等 Tier 2 Cell 走通用 `IRChild` 测量、放置和 composite lowering；不得在 Table 中按 namespace 特判
-- Table 可以消费 Data、Standard 与 Core，但不得依赖 Plot、React、DOM 或 renderer；当前 visual encoding 只产生 Legend descriptor 与 manifest seed，领域 placement intent 与 lineage 仍由 Table 解析；Standard Legend / Flex 公共能力已存在，但 Table body composition 与 occurrence-safe artifact join 尚未接入，禁止建立 Table 私有停靠、文字布局或 bounds-union solver
+- Table 可以消费 Data、Standard 与 Core，但不得依赖 Plot、React、DOM 或 renderer；alpha.3 visual encoding 只产生 Legend descriptor 与 manifest seed，领域 placement intent 与 lineage 仍由 Table 解析；Standard Legend / Flex 公共能力已存在，Table body composition 与 occurrence-safe artifact join 由 alpha.6 收口，禁止建立 Table 私有停靠、文字布局或 bounds-union solver
 - 通用 `IRChild` 测量缺口优先补 Core，不在 Table 内建立私有 bbox 系统
 - 虚拟滚动等大表展示能力必须复用 Table layout / manifest；核心只拥有 window 计算，瞬时滚动状态和 DOM 生命周期留在 adapter
 
@@ -36,7 +36,7 @@ pipeline/     数据接入、结构规范化、呈现、布局、lowering 与 lo
 
 ## 当前状态
 
-`0.1.0-alpha.3` 当前在 alpha.2 二维约束布局基线上实现 formatter / presentation、selector / rule、条件视觉 encoding、四种 style preset、闭合 style tokens 与同次 resolution 的 Legend descriptor / manifest seed。Standard Legend / Flex 本体已可从公共入口消费；Table body 的 JSON-safe composition boundary、外围 composition、occurrence-safe artifact join 及最终 adapter / SSR / docs 闭环仍未完成。
+`0.1.0-alpha.3` 已在 alpha.2 二维约束布局基线上实现 formatter / presentation、selector / rule、条件视觉 encoding、四种 style preset、闭合 style tokens 与同次 resolution 的 Legend descriptor / manifest seed。该版本在 descriptor seed 处闭环；Table body 的 JSON-safe composition boundary、Standard Legend / Flex 外围组合、occurrence-safe artifact join 及最终 adapter / SSR / docs 链路进入 alpha.6。
 
 ## 验证
 

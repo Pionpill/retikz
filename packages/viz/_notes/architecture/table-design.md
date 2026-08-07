@@ -114,7 +114,7 @@ Table 的 Cell 拓扑保持正交矩形：地址是行列坐标，span 覆盖连
 
 `Table<PlotCell>` 是合法组合：Table 管理行列语义与 Cell box，Plot 管理 Cell 内部图形。Table 可以测量、放置和裁剪 Plot composite，但不能读取或自动协调多个 Plot Cell 的 scale、axis、grid 和 legend；这些语义由作者显式配置 Plot，或交给 Plot facet / 外部 Figure composition。
 
-Table 只拥有与网格拓扑有关的表头、行头、小计、总计和 Cell 注释关系。当前 Table 条件视觉编码产生 Legend descriptor seed；Standard Legend / Flex 公共能力已经存在，但 Table body 的 JSON-safe composition boundary 与 occurrence-safe artifact join 尚未接入。未来 Table 可以保留 right / bottom 等领域 placement sugar，但生成的 Legend 与 title、description、caption、source 等外围内容必须作为 `IRChild` 进入同一 Standard Flex / Grid / Overlay composition，不建立 Table 私有停靠或文字布局器。
+Table 只拥有与网格拓扑有关的表头、行头、小计、总计和 Cell 注释关系。alpha.3 条件视觉编码截止于 Legend descriptor seed；Standard Legend / Flex 公共能力已经存在，但 Table body 的 JSON-safe composition boundary 与 occurrence-safe artifact join 尚未接入，统一由 alpha.6 收口。未来 Table 可以保留 right / bottom 等领域 placement sugar，但生成的 Legend 与 title、description、caption、source 等外围内容必须作为 `IRChild` 进入同一 Standard Flex / Grid / Overlay composition，不建立 Table 私有停靠或文字布局器。
 
 ## 7. 扩展机制
 
@@ -165,7 +165,7 @@ alpha.1 / alpha.2 已落定；alpha.3 当前代码已经形成以下候选基线
 尚未闭环的能力继续由 ADR 处理：
 
 1. 分组、层级、汇总、交叉、矩阵与转置等 Table Algebra
-2. Table body 的 JSON-safe composition boundary、Standard Legend / Flex 消费与 occurrence-safe artifact join，以及最终 adapter / SSR / docs 闭环
+2. alpha.6 的 Table body JSON-safe composition boundary、Standard Legend / Flex 消费与 occurrence-safe artifact join，以及最终 adapter / SSR / docs 闭环
 3. Fragmentation、重复 Cell instance 与跨页重复表头
 4. 更完整的 lineage、locator 与 diagnostics 查询面
 5. 大表 windowing、虚拟滚动与 adapter runtime 边界

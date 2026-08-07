@@ -1003,8 +1003,8 @@ export const vizV01: Release = {
             {
               label: { zh: 'Legend 组合仍待后续', en: 'Legend composition remains deferred' },
               content: {
-                zh: '本阶段可生成 JSON-safe encoding descriptor，但不提供 Table-local Legend、`legendLayout` 或最终 joined manifest；Standard Legend/Flex 组合在后续集成。',
-                en: 'This phase can emit JSON-safe encoding descriptors but does not expose a Table-local Legend, `legendLayout`, or final joined manifest; Standard Legend/Flex composition follows in a later integration.',
+                zh: '本阶段在 JSON-safe encoding descriptor seed 处闭环，不提供 Table-local Legend、`legendLayout` 或最终 joined manifest；Standard Legend/Flex 组合计划在 Table alpha.6 接入。',
+                en: 'This phase closes at the JSON-safe encoding descriptor seed and does not expose a Table-local Legend, `legendLayout`, or final joined manifest; Standard Legend/Flex composition is planned for Table alpha.6.',
               },
             },
           ],
@@ -1276,8 +1276,8 @@ export const vizV01: Release = {
             {
               label: { zh: 'Legend 产物未合并', en: 'Legend artifacts are not joined yet' },
               content: {
-                zh: 'Vanilla/SSR 不预测或手工拼接 Standard Legend artifact；最终 Table+Legend manifest 等后续跨包门禁完成后再提供。',
-                en: 'Vanilla/SSR does not predict or manually join Standard Legend artifacts; a final Table+Legend manifest follows after the remaining cross-package gates.',
+                zh: 'Vanilla/SSR 不预测或手工拼接 Standard Legend artifact；最终 Table+Legend manifest 随 Table alpha.6 的跨包门禁完成后提供。',
+                en: 'Vanilla/SSR does not predict or manually join Standard Legend artifacts; the final Table+Legend manifest follows with the cross-package gates planned for Table alpha.6.',
               },
             },
           ],

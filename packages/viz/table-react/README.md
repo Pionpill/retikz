@@ -87,9 +87,9 @@ Formatter, structure, presentation, and visual-scale definitions use the same `L
 and lowering contract in standalone and embedded modes. Embedded roots additionally package those
 runtime inputs through `createTableRuntimeContribution()` for the outer Layout. A visual-scale
 resolution exposes `of`, `legendForm`, `domain`, `range`, and optional `edges`; opted-in encodings
-copy the descriptor fields into the Table manifest. Rendered Standard Legend composition and a
-final joined manifest are not yet part of this adapter, so it does not expose `legendLayout` or a
-private Legend child.
+copy the descriptor fields into the Table manifest. Alpha.3 intentionally ends at that seed;
+rendered Standard Legend composition and a final joined manifest are planned for Table alpha.6, so
+this adapter exposes neither `legendLayout` nor a private Legend child in alpha.3.
 
 ## Install
 

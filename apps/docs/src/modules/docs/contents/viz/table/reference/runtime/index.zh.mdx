@@ -173,7 +173,7 @@ const riskScale = defineCellVisualScale({
 
 Table 会检查 options / domain 的 JSON 形状、range / evaluator 的 Core CSS color、form 数组关系，以及同一 scalar 重复求值的确定性，并复制、冻结 descriptor 数据。任意 evaluator 与 descriptor 的完整语义无法由有限运行时检查证明，因此 custom Definition 作者必须保证 `of()` 与 `legendForm` / `domain` / `range` / `edges` 表达同一映射。
 
-内置 Definition 为 `ordinal-color`、`sequential-color` 与 `threshold-color`。encoding 只有显式写 `legend: { ... }` 且 resolution 非空时才产生 descriptor seed；当前不会自动绘制 Standard Legend，也没有 `legendLayout` 或最终 Legend artifact join。
+内置 Definition 为 `ordinal-color`、`sequential-color` 与 `threshold-color`。encoding 只有显式写 `legend: { ... }` 且 resolution 非空时才产生 descriptor seed。alpha.3 在这里闭环；自动绘制 Standard Legend、`legendLayout` 与最终 Legend artifact join 计划在 Table alpha.6 接入。
 
 <SourceLinks
   sources={[

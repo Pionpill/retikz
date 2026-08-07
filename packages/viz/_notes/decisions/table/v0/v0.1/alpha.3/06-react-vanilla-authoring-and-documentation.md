@@ -1,12 +1,12 @@
-# ADR-07：React / Vanilla authoring、runtime 与文档闭环
+# ADR-06：React / Vanilla authoring、runtime 与文档闭环
 
 - 状态：Proposed
 - 决策日期：2026-07-31
-- 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01 formatter](./01-cell-formatter-and-formatted-value.md) · [ADR-02 appearance](./02-presentation-context-and-cell-appearance.md) · [ADR-03 cascade](./03-cell-selector-and-rule-cascade.md) · [ADR-04 encoding](./04-conditional-visual-encoding-and-scale.md) · [ADR-05 style tokens](./05-style-preset-and-token-resolution.md) · [ADR-06 Legend](./06-standard-legend-consumption-and-traceability.md) · [alpha.2 adapter parity](../alpha.2/07-react-vanilla-authoring-and-documentation.md)
+- 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01 formatter](./01-cell-formatter-and-formatted-value.md) · [ADR-02 appearance](./02-presentation-context-and-cell-appearance.md) · [ADR-03 cascade](./03-cell-selector-and-rule-cascade.md) · [ADR-04 encoding](./04-conditional-visual-encoding-and-scale.md) · [ADR-05 style tokens](./05-style-preset-and-token-resolution.md) · [alpha.6 ADR-01 Legend](../alpha.6/01-standard-legend-consumption-and-traceability.md) · [alpha.2 adapter parity](../alpha.2/07-react-vanilla-authoring-and-documentation.md)
 
 ## 背景与目标
 
-Formatter、rules、encodings、style tokens 与 Legend 都是用户可见能力。若只存在于 plain IR，React/Vanilla 作者会建立 callback、theme context 或私有样式映射，破坏同一 TableSpec 的持久化、SSR 与等价编译。
+Formatter、rules、encodings、style tokens 与 Legend descriptor 都是用户可见能力。若只存在于 plain IR，React/Vanilla 作者会建立 callback、theme context 或私有样式映射，破坏同一 TableSpec 的持久化、SSR 与等价编译。
 
 alpha.2 已有 framework-neutral constructors、React marker components、Vanilla helpers、共享 runtime contribution 与 typed manifest。alpha.3 沿这些入口扩展，不新增 fluent builder、函数 selector、ReactNode formatter 或 adapter-local Legend。
 
@@ -16,7 +16,7 @@ TableSpec 的领域 `style` 与 React 宿主 CSS 需要两个不同入口，不�
 
 ### 当前闭环与剩余前置
 
-ADR-01～05 的 formatter、presentation、rule、encoding、style 与 descriptor seed 已沿三类入口形成共同产品链路。Standard Legend / Flex 已有 package-root 公共能力，但 ADR-06 所需的 Table body composition boundary 与 occurrence-safe artifact join 尚未形成，因此本 ADR 不暴露 `legendLayout`、不自动绘制 Legend，也不声明最终 joined manifest。
+ADR-01～05 的 formatter、presentation、rule、encoding、style 与 descriptor seed 已沿三类入口形成共同产品链路。alpha.3 的 adapter、SSR 与文档只闭合这条已实现链路，不暴露 `legendLayout`、不自动绘制 Legend，也不声明最终 joined manifest；完整 Standard Legend composition 与 occurrence-safe artifact join 由 alpha.6 ADR-01 处理。
 
 ### Framework-neutral authoring
 
@@ -63,7 +63,7 @@ TableSpec 的 `style` 保留领域名，在 Detail / Manual JSX 中表示 `neutr
 
 `renderTable()` 通过 lowering options 接受四类 definitions，并在 artifacts 开启时返回同次 compile 的 typed Table manifest。SSR 在无 DOM 环境完成 formatter、rule、encoding、style token resolution 与 Table lowering；相同 measurer / Core options 下与 direct / React 输出等价。
 
-Runtime contribution 对 structure kind、formatter name、presentation name、visual scale name 与 Core composite key 使用同一确定合并语义：同 key 同对象引用幂等，不同引用 fail-loud；输入数组防御复制并冻结，首次出现顺序稳定。未来 Standard Flex / Legend Definitions 只通过 ADR-06 的共享 Table contribution 传入，adapters 不单独注册或重定义重复语义。
+Runtime contribution 对 structure kind、formatter name、presentation name、visual scale name 与 Core composite key 使用同一确定合并语义：同 key 同对象引用幂等，不同引用 fail-loud；输入数组防御复制并冻结，首次出现顺序稳定。未来 Standard Flex / Legend Definitions 只通过 alpha.6 ADR-01 的共享 Table contribution 传入，adapters 不单独注册或重定义重复语义。
 
 ### Manifest consumption
 
@@ -74,7 +74,7 @@ Runtime contribution 对 structure kind、formatter name、presentation name、v
 - Vanilla SSR 复用 direct compile 结果
 - embedded adapters 只把完整 artifact tree 交给外层 host，由宿主按 occurrence 消歧
 
-任何入口都不得按公开 table id 猜测 occurrence、复制 manifest 或建立 adapter sidecar。ADR-06 完成后，Legend artifact join 只能扩展同一 occurrence 主链。
+任何入口都不得按公开 table id 猜测 occurrence、复制 manifest 或建立 adapter sidecar。alpha.6 扩展 Legend artifact join 时只能沿用同一 occurrence 主链。
 
 ### Presentation callback ABI
 
@@ -89,7 +89,7 @@ zh 是 source of truth，en 保持同结构与行为。文档需要同时覆盖�
 - Reference：formatter、selector / rule、encoding、style / mode / tokens、四类 definitions、visual scale resolution、manifest fields 与 diagnostics
 - Package README / changelog：当前 authoring、runtime、descriptor seed 与 Standard Legend 边界
 
-Demo 必须使用真实 public API 和 compile output，不手写伪 manifest 或复制 pipeline。Legend composition 未实现前不展示伪 Legend、`legendLayout` 或 joined manifest。新增 schema、SourceLink、zh / en demo data / imports 与 docs registry 必须同步。
+Demo 必须使用真实 public API 和 compile output，不手写伪 manifest 或复制 pipeline。alpha.3 不展示伪 Legend、`legendLayout` 或 joined manifest；这些内容随 alpha.6 的真实产品链路补齐。新增 schema、SourceLink、zh / en demo data / imports 与 docs registry 必须同步。
 
 ## DSL 表面
 
@@ -137,7 +137,7 @@ React runtime rows 与 `containerStyle` 不进入 TableSpec；其余 authoring i
 
 - **所属能力域**：Tabular Visualization Complete / authoring、runtime、docs 闭环
 - **问题归属**：Table contract 位于主包，adapters 只等价暴露，docs 只说明真实行为
-- **内部闭环**：authoring → exact TableSpec → shared contribution → Table / Core pipeline → artifacts / manifest；Standard Legend join 由 ADR-06 后续扩展
+- **内部闭环**：authoring → exact TableSpec → shared contribution → Table / Core pipeline → artifacts / manifest；Standard Legend join 由 alpha.6 ADR-01 后续扩展
 - **外部扩展**：custom definitions 在 direct/React/Vanilla/SSR 使用同一 contract 与 conflicts
 - **结论**：组合既有 adapters 与 docs，不新增 adapter-only Table capability
 

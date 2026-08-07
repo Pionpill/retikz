@@ -173,7 +173,7 @@ const riskScale = defineCellVisualScale({
 
 Table validates the JSON shape of options / domain, Core CSS colors from range / evaluator, form-array relationships, and deterministic repeated evaluation. It also copies and freezes descriptor data. Finite runtime checks cannot prove that an arbitrary evaluator matches every descriptor value, so a custom Definition author must keep `of()` semantically aligned with `legendForm`, `domain`, `range`, and `edges`.
 
-The built-ins are `ordinal-color`, `sequential-color`, and `threshold-color`. An encoding produces a descriptor seed only when it explicitly authors `legend: { ... }` and the resolution is nonempty. Table currently does not draw a Standard Legend automatically and exposes neither `legendLayout` nor a final Legend-artifact join.
+The built-ins are `ordinal-color`, `sequential-color`, and `threshold-color`. An encoding produces a descriptor seed only when it explicitly authors `legend: { ... }` and the resolution is nonempty. Alpha.3 closes at that seed; automatic Standard Legend rendering, `legendLayout`, and the final Legend-artifact join are planned for Table alpha.6.
 
 <SourceLinks
   sources={[

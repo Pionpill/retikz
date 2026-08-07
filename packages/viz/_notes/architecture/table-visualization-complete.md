@@ -131,9 +131,9 @@ Table alpha.2 已通过 Core layout-aware composite 在同一次 compile 内完�
 - auto / fraction / minmax 轨道、矩形 span、padding、alignment、fit / overflow / clip、文本换行、自动行高与 Border Graph 进入同一确定性约束布局
 - lowering 在同次 Core compile 中产出 Scene 与 typed manifest，React / Vanilla adapter 共用 runtime contribution 与 artifact contract
 - formatter / presentation、selector / rule、条件视觉 encoding、四种 style preset 与闭合 style tokens 沿同一 canonical pipeline 消费
-- visual encoding 与 Legend descriptor / manifest seed 来自同一次 scale resolution；Standard Legend / Flex 公共能力已经存在，Table body composition boundary 与最终 occurrence-safe artifact join 尚未闭环
+- visual encoding 与 Legend descriptor / manifest seed 来自同一次 scale resolution；alpha.3 在此形成闭环，Table body composition、Standard Legend / Flex 消费与最终 occurrence-safe artifact join 由 alpha.6 收口
 
-尚未实现的分组、层级、汇总、交叉、转置、fragmentation、复杂 header region、Table body 与 Standard Legend / Flex 的外围 composition、最终 artifact join、完整 adapter / docs 闭环和大表 windowing 仍按本能力边界逐项进入后续 ADR；它们不能被当前基线默认为已完成。
+尚未实现的分组、层级、汇总、交叉、转置、复杂 header region 和大表 windowing 仍按本能力边界逐项进入后续 ADR；Table body 与 Standard Legend / Flex 的外围 composition、最终 artifact join、fragmentation、重复 header 和完整追溯明确进入 alpha.6。它们不能被当前基线默认为已完成。
 
 “Table 完备”不等于实现所有 data grid 功能，而是保证：
 

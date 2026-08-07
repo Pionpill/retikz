@@ -48,10 +48,10 @@ custom Definition authors remain responsible for keeping the evaluator and descr
 semantically aligned. An opted-in encoding copies descriptor data from that same resolution into the
 JSON-safe manifest seed.
 
-Standard already provides public Legend and Flex capabilities, but Table has not yet connected its
-body through a JSON-safe composition boundary or joined final Legend occurrences back into the
-manifest. This package therefore does not expose `legendLayout`, a Table-local Legend, or a final
-joined manifest helper.
+Standard already provides public Legend and Flex capabilities, but alpha.3 intentionally stops at
+the descriptor seed. The JSON-safe Table-body composition boundary, rendered Standard Legend, and
+final occurrence join are planned for Table alpha.6. This package therefore does not expose
+`legendLayout`, a Table-local Legend, or a final joined manifest helper in alpha.3.
 
 ## Install
 

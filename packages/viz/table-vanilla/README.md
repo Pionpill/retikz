@@ -44,8 +44,8 @@ top-level `composites` option is not retained as an alias.
 Custom formatter, structure, presentation, and visual-scale definitions enter through
 `lowerOptions`. A visual-scale resolution uses `of`, `legendForm`, `domain`, `range`, and optional
 `edges`; opted-in encodings can add a JSON-safe Legend descriptor seed to the returned manifest.
-Table-to-Standard Legend composition and the final occurrence join are not yet exposed by this
-adapter.
+Alpha.3 intentionally ends at that seed. Table-to-Standard Legend composition and the final
+occurrence join are planned for Table alpha.6 rather than exposed by this adapter today.
 
 The API is based on plain functions and data, not a fluent builder. The adapter is SSR-safe and does
 not own table structure, presentation, layout, lowering, a renderer, or a private Table IR.

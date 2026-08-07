@@ -1,8 +1,8 @@
-# ADR-06：Standard Legend 消费、外围组合与追溯
+# ADR-01：Standard Legend 消费、外围组合与追溯
 
 - 状态：Proposed
 - 决策日期：2026-07-31
-- 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-04 descriptor](./04-conditional-visual-encoding-and-scale.md) · [Standard alpha.2 roadmap](../../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/roadmap.md) · [Standard Legend ADR-09](../../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/09-generic-legend.md) · [Standard FlexLayout](../../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/03-flex-layout.md)
+- 关联：[alpha.6 roadmap](./roadmap.md) · [alpha.3 ADR-04 descriptor](../alpha.3/04-conditional-visual-encoding-and-scale.md) · [Standard alpha.2 roadmap](../../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/roadmap.md) · [Standard Legend ADR-09](../../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/09-generic-legend.md) · [Standard FlexLayout](../../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/03-flex-layout.md)
 
 ## 背景与目标
 
@@ -24,15 +24,15 @@ Table 保留自身复杂的 body layout；Legend stack、body 与未来 title/de
 4. direct Definition 接入及重复 composite key 的确定冲突语义
 5. direct IR、React 与 Vanilla 的等价 authoring 契约
 
-Standard Legend / Flex 本体不再阻塞 Table。ADR-06 仍有两个 hard gate：
+Standard Legend / Flex 本体不再阻塞 Table。本 ADR 仍有两个 hard gate：
 
 1. Table body 必须形成 Table-owned、lowering-only、JSON-safe 的 `IRChild` composition boundary，才能与 Standard Legend 进入同一 Flex tree；compile-local replay handle 不得进入 IR 或跨 callback 传递
 2. Core / Standard 必须提供 compile-local 的 parent-owned item key → replayed child occurrence link，并让该 link 穿过 nested replay occurrence remap；Table 不得从 probe / replay index、artifact 数组位置或结构路径猜测关联
 
 Table 只使用 Standard package root 的真实公共 API，不建立 alias、镜像 schema、deep import 或临时层。Gate 未满足时：
 
-- ADR-06 保持 Proposed，alpha.3 milestone 不能完成
-- ADR-01～05 的独立能力不因此失效
+- 本 ADR 保持 Proposed，alpha.6 的 Legend composition 不能进入实现
+- alpha.3 已完成的 descriptor seed 能力不因此失效
 - 不新增 Table-local Legend、外围 solver、renderer 或 placeholder public API
 
 ### Table placement sugar
@@ -57,7 +57,7 @@ type IRTableSpec = {
 
 默认值：`position: 'right'`、`gap: 16`、`itemGap: 8`、`align: 'start'`。gap/itemGap 必须是有限非负数。没有 descriptor 时忽略 `legendLayout`，不产生空占位或无意义 wrapper。
 
-alpha.3 只支持 right/bottom。left/top、overlay、floating 与完全自定义 Figure 应在 Table 外直接组合 Standard Flex/Grid/Overlay；Table 不镜像 Standard 通用 layout props。
+alpha.6 只支持 right/bottom。left/top、overlay、floating 与完全自定义 Figure 应在 Table 外直接组合 Standard Flex/Grid/Overlay；Table 不镜像 Standard 通用 layout props。
 
 ### Descriptor 到 Standard Legend
 
@@ -175,7 +175,7 @@ const spec = {
 - `TableSpec` 增加 `legendLayout`
 - compile/runtime contribution 显式携带 `LegendDefinition`/`FlexLayoutDefinition`
 - manifest 增加 legend lineage，compile result 增加同次 artifact links
-- Table 与 Standard release group 不 lockstep，但 Table alpha.3 发布受可消费的 Standard alpha.2 契约 gating
+- Table 与 Standard release group 不 lockstep，但本能力进入实现前必须能消费稳定的 Standard Legend / Flex 公共契约
 
 ## 测试策略摘要
 
