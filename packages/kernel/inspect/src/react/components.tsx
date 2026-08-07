@@ -4,8 +4,8 @@ import type { FC } from 'react';
 import { Layout, Path, Scope } from '@retikz/react';
 import { useMemo } from 'react';
 
-import type { InspectorRegistry } from '../providers/inspector';
-import type { InspectionCompileResult, InspectionDiagnostic, InspectionSelection } from '../shared';
+import type { InspectionCompileResult, InspectionDiagnostic, InspectionSelection } from '../compile';
+import type { InspectorRegistry } from '../providers';
 import type { InspectionReactAuthoringInput } from './authoring';
 
 import { createInspectionReactAuthoring } from './authoring';

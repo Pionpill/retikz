@@ -31,6 +31,22 @@ describe('Inspector registry', () => {
     expect(() => createInspectorRegistry([definition('same', 'key'), definition('same', 'key')])).toThrow(/duplicate/i);
   });
 
+  it('keeps distinct keys separate when namespace or name contains a NUL character', () => {
+    const first = definition('a\u0000b', 'c');
+    const second = definition('a', 'b\u0000c');
+
+    const registry = createInspectorRegistry([first, second]);
+
+    expect(registry.get({ namespace: first.namespace, name: first.name })).toMatchObject({
+      namespace: first.namespace,
+      name: first.name,
+    });
+    expect(registry.get({ namespace: second.namespace, name: second.name })).toMatchObject({
+      namespace: second.namespace,
+      name: second.name,
+    });
+  });
+
   it('registers the stroke builtin through the same default path', () => {
     const registry = createDefaultInspectorRegistry([definition('third-party', 'points')]);
     expect(registry.get(STROKE_PATH_INSPECTOR_KEY)).toBeDefined();

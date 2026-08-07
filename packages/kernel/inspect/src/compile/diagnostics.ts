@@ -1,4 +1,4 @@
-import type { InspectionDiagnosticOrigin, InspectionSelectionTarget } from '../shared';
+import type { InspectionDiagnosticOrigin, InspectionSelectionTarget } from './types';
 
 /** Inspect fail-loud 错误，保留结构化 origin 与原始 cause */
 export class InspectionCompileError extends Error {

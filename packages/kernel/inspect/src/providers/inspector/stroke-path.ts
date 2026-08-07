@@ -3,7 +3,7 @@ import type { IRChild, IRPosition, PathCommand, StrokePathOwnerOutput } from '@r
 import { StrokePathOwnerOutputSchema } from '@retikz/core';
 import { z } from 'zod';
 
-import { defineInspector } from '../../contract/inspector';
+import { defineInspector } from '../../contract';
 
 /** 内置 stroke Path Inspector key */
 export const STROKE_PATH_INSPECTOR_KEY = Object.freeze({ namespace: 'retikz', name: 'stroke-path' });

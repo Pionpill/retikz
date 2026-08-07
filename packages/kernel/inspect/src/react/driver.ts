@@ -6,8 +6,8 @@ import type {
   LayoutCompileOutput,
 } from '@retikz/react';
 
-import type { InspectorRegistry } from '../providers/inspector';
-import type { InspectionCompileResult, InspectionDiagnostic, InspectionSelection } from '../shared';
+import type { InspectionCompileResult, InspectionDiagnostic, InspectionSelection } from '../compile';
+import type { InspectorRegistry } from '../providers';
 
 import { createInspectionObserver, resolveInspectionObserverOutput } from '../compile';
 import { inspectionPlaneToReadonlyLayers } from '../render';

@@ -2,7 +2,7 @@ import type { IRChild, Scene, ScenePrimitive } from '@retikz/core';
 
 import { ChildSchema } from '@retikz/core';
 
-import type { InspectorOutput } from '../shared';
+import type { InspectorOutput } from '../contract';
 
 /** 校验、脱离并深冻结 JSON-safe plain data */
 export const cloneAndFreezeInspectionJson = <T>(value: T, label: string): T => {

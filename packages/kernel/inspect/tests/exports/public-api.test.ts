@@ -23,12 +23,26 @@ describe('@retikz/inspect public exports', () => {
     vi.doMock('@retikz/render/runtime', () => {
       throw new Error('optional Render peer evaluated');
     });
+    vi.doMock('@retikz/react', () => {
+      throw new Error('optional React peer evaluated');
+    });
     vi.doMock('@retikz/vanilla', () => {
       throw new Error('optional Vanilla peer evaluated');
     });
+    vi.doMock('react', () => {
+      throw new Error('optional React runtime evaluated');
+    });
     await expect(import('../../src/index')).resolves.toBeDefined();
     const root = await readFile(new URL('../../src/index.ts', import.meta.url), 'utf8');
+    expect(root.trim().split(/\r?\n/)).toEqual([
+      "export * from './compile';",
+      "export * from './contract';",
+      "export * from './providers';",
+    ]);
     expect(root).not.toContain('@retikz/render');
     expect(root).not.toContain('@retikz/vanilla');
+    await expect(readFile(new URL('../../src/shared/index.ts', import.meta.url), 'utf8')).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
   });
 });

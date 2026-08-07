@@ -1,6 +1,7 @@
-import type { AnyInspectorDefinition, InspectorKey } from '../../shared';
+import type { AnyInspectorDefinition, InspectorKey } from '../../contract';
 
-import { normalizeInspectorDefinition } from '../../contract/inspector';
+import { normalizeInspectorDefinition } from '../../contract';
+import { BUILTIN_INSPECTORS } from './definitions';
 
 /** Inspector Definition 的 immutable registry */
 export type InspectorRegistry = Readonly<{
@@ -12,8 +13,8 @@ export type InspectorRegistry = Readonly<{
   require: (key: InspectorKey) => AnyInspectorDefinition;
 }>;
 
-/** 把公开 Inspector key 转为 registry 内部键 */
-export const inspectorRegistryKey = (key: InspectorKey): string => `${key.namespace}\u0000${key.name}`;
+/** 把公开 Inspector key 转为无歧义的 registry 内部键 */
+export const inspectorRegistryKey = (key: InspectorKey): string => JSON.stringify([key.namespace, key.name]);
 
 /** 创建无全局状态的 Inspector registry */
 export const createInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorDefinition>): InspectorRegistry => {
@@ -39,3 +40,7 @@ export const createInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorD
     },
   });
 };
+
+/** 创建内置优先、第三方同路的默认 Inspector registry */
+export const createDefaultInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorDefinition> = []) =>
+  createInspectorRegistry([...BUILTIN_INSPECTORS, ...definitions]);

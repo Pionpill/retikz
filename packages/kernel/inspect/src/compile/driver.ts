@@ -12,18 +12,18 @@ import type {
 
 import { observeCompileToScene } from '@retikz/core';
 
-import type { InspectorRegistry } from '../providers/inspector';
+import type { InspectorContext } from '../contract';
+import type { InspectorRegistry } from '../providers';
 import type {
   InspectionCompileResult,
   InspectionDiagnostic,
   InspectionDiagnosticOrigin,
   InspectionPlaneEntry,
   InspectionSelection,
-  InspectorContext,
   ResolvedInspectionRequest,
-} from '../shared';
+} from './types';
 
-import { INSPECTION_OBSERVER_KEY } from '../shared';
+import { INSPECTION_OBSERVER_KEY } from './constants';
 import { InspectionCompileError, wrapInspectionError } from './diagnostics';
 import { cloneAndFreezeInspectionJson, normalizeInspectorOutput, sealInspectionScene } from './output';
 import { admitInspectionSelection, resolveInspectionSelection, selectionMayRequestSite } from './selection';

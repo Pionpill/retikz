@@ -1,16 +1,16 @@
 import type { CompileObservation, CompileObservationOwner, IRChild, IRJsonObject, IRScene } from '@retikz/core';
 
-import type { InspectorRegistry } from '../providers/inspector';
+import type { InspectionAppearance } from '../contract';
+import type { InspectorRegistry } from '../providers';
 import type {
-  InspectionAppearance,
   InspectionSelection,
   InspectionSelectionRule,
   InspectionSelectionTarget,
   ResolvedInspectionRequest,
-} from '../shared';
+} from './types';
 
-import { inspectorRegistryKey } from '../providers/inspector';
-import { INSPECTION_SCOPE_PALETTE, INSPECTION_WARNING_COLOR } from '../shared';
+import { inspectorRegistryKey } from '../providers';
+import { INSPECTION_SCOPE_PALETTE, INSPECTION_WARNING_COLOR } from './constants';
 import { selectionOrigin, wrapInspectionError } from './diagnostics';
 import { cloneAndFreezeInspectionJson } from './output';
 

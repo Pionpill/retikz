@@ -1,7 +1,8 @@
 import type { IRJsonObject } from '@retikz/core';
 import type { VanillaAuthoringSite } from '@retikz/vanilla';
 
-import type { InspectionSelectionRule, InspectorKey } from '../shared';
+import type { InspectionSelectionRule } from '../compile';
+import type { InspectorKey } from '../contract';
 
 const INSPECTION_VANILLA_AUTHORING_TOKEN = Object.freeze({});
 
