@@ -1,6 +1,6 @@
 # Table 表格可视化完备设计
 
-> **状态：长期能力准入真源，alpha.2 布局基线与 alpha.3 现有呈现代码已落地；alpha.3 ADR-01～05 仍为 Proposed，ADR-05 正在重塑主题契约。** 本文回答“什么属于 `@retikz/table`”以及“怎样才算形成表格能力闭环”，不维护具体公开字段。当前实现基线以 [`packages/viz/table/AGENTS.md`](../../table/AGENTS.md)、公开类型与代码为准，长期方向以 Accepted / Proposed ADR 为准。
+> **状态：长期能力准入真源；alpha.2 布局基线已落定，alpha.3 已实现到呈现与 Legend descriptor seed，ADR 仍待治理收口。** 本文回答“什么属于 `@retikz/table`”以及“怎样才算形成表格能力闭环”，不维护具体公开字段。当前包职责与实现基线以 [`packages/viz/table/AGENTS.md`](../../table/AGENTS.md)、公开类型和用户文档为准。
 >
 > 关联：[`能力完备性与模块边界`](../../../../notes/architecture/capability-design.md) · [`Data 能力完备设计`](./data-capability-complete.md) · [`Plot 可视化完备设计`](./plot-visualization-complete.md) · [`Core 绘图完备设计`](../../../kernel/_notes/architecture/core-drawing-complete.md) · [`Table 总设计`](./table-design.md)
 
@@ -38,7 +38,7 @@ Data ──▶ Table ──domain resolution──▶ Standard composite / Core 
     React / Vanilla adapter
 ```
 
-Table 可以消费 Data、Standard 与 Core，但不依赖 Plot。Core 通过 `theme.tokens.table` 传递 inherited namespace、使用 `TableThemeTokenDefinition` 做 owner schema validation，并提供一套 shared colors；Table 负责自己的 vocabulary、preset、resolver、mapping 与消费。Plot 等 Tier 2 内容通过 Core 的通用 `IRChild` / composite 能力进入单元格；Table 负责 Cell box、测量请求、对齐、fit、裁剪和追溯，不解析内容内部的 mark、scale 或 guide。Table 自身的 visual encoding 可以把 shared categorical 投影为 `data.categorical` baseline，并解析出领域无关 Legend 输入与 right / bottom placement intent；Legend 以及未来 title、description、caption、source 等外围内容统一交给 Standard Box Layout 组合，但 Standard 只消费 Table 已解析输入与 `InspectionAppearance`，不读取 Table token bag。
+Table 可以消费 Data、Standard 与 Core，但不依赖 Plot。Core 通过 `theme.tokens.table` 传递 inherited namespace、使用 `TableThemeTokenDefinition` 做 owner schema validation，并提供一套 shared colors；Table 负责自己的 vocabulary、preset、resolver、mapping 与消费。Plot 等 Tier 2 内容通过 Core 的通用 `IRChild` / composite 能力进入单元格；Table 负责 Cell box、测量请求、对齐、fit、裁剪和追溯，不解析内容内部的 mark、scale 或 guide。Table 自身的 visual encoding 当前产生 Legend descriptor seed，并在 body composition boundary 完成后解析领域无关 Legend 输入与 right / bottom placement intent；Standard 只消费 Table 已解析输入，不读取 Table token bag、field、selector、rule 或 lineage。
 
 ## 3. 能力边界与能力面
 
@@ -88,8 +88,8 @@ Table 区分：
 
 - Formatter：原始值到展示值
 - Presentation：展示值到 `IRChild`
-- Visual Encoding：数值或状态到 Cell 视觉属性，并与可选 legend descriptor 保持同源；Table 把 descriptor 解析为 Standard Legend 输入，不复制通用呈现
-- Style preset / `tableThemeTokens` / Rule：决定单元格的视觉呈现和覆盖关系
+- Visual Encoding：把数值或状态映射到 Cell 视觉属性；可选 Legend descriptor seed 来自同次 resolution，后续由 Table 解析为 Standard Legend 输入，不复制通用呈现
+- Style preset / token / Rule：决定单元格的视觉呈现和覆盖关系
 
 具有算法 dispatch 的内置与自定义能力应经过统一的 Definition / registry，而不是分成内置白名单和扩展补丁。Table theme token 是 plain-data value vocabulary，通过 Core `ThemeTokenDefinition` registry 绑定 Table owner schema；它不建立 Table 私有行为 registry。内置 preset 与用户 `tableThemeTokens` overlay 必须经过同一 strict schema、resolver 与正式 consumer。
 
@@ -130,10 +130,10 @@ Table alpha.2 已通过 Core layout-aware composite 在同一次 compile 内完�
 - manual / detail / custom 结构共用 `SemanticTableModel`，Cell value / content 经 formatter / presentation contract 进入布局
 - auto / fraction / minmax 轨道、矩形 span、padding、alignment、fit / overflow / clip、文本换行、自动行高与 Border Graph 进入同一确定性约束布局
 - lowering 在同次 Core compile 中产出 Scene 与 typed manifest，React / Vanilla adapter 共用 runtime contribution 与 artifact contract
-- formatter / presentation、selector / rule、条件视觉 encoding、旧主题字段与四种 style preset 已有代码基线；`tableThemeTokens`、inherited namespace 与 shared categorical projection 由 alpha.3 Proposed ADR-05 重塑，尚未实现
-- visual encoding 与 Legend descriptor / manifest seed 的长期同源要求已形成；Standard Legend 呈现、外围 Box Layout composition、最终 artifact join 与 alpha.3 主题实现仍受对应 gate / ADR 阻塞
+- formatter / presentation、selector / rule、条件视觉 encoding、四种 style preset 与闭合 style tokens 沿同一 canonical pipeline 消费
+- visual encoding 与 Legend descriptor / manifest seed 来自同一次 scale resolution；alpha.3 在此形成闭环，Table body composition、Standard Legend / Flex 消费与最终 occurrence-safe artifact join 由 alpha.6 收口
 
-尚未实现的分组、层级、汇总、交叉、转置、fragmentation、复杂 header region、Standard Legend 消费、外围 composition、完整 adapter/docs 闭环和大表 windowing 仍按本能力边界逐项进入后续 ADR；它们不能被当前基线默认为已完成。
+尚未实现的分组、层级、汇总、交叉、转置、复杂 header region 和大表 windowing 仍按本能力边界逐项进入后续 ADR；Table body 与 Standard Legend / Flex 的外围 composition、最终 artifact join、fragmentation、重复 header 和完整追溯明确进入 alpha.6。它们不能被当前基线默认为已完成。
 
 “Table 完备”不等于实现所有 data grid 功能，而是保证：
 
