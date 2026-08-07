@@ -1,25 +1,15 @@
 import type { ThemeModeValue, ThemeStyleValue } from '@retikz/core';
-import type { IRPlotTheme } from '@retikz/plot';
 
-import type {
-  ChartStyleAuthoredOverrideRecord,
-  ChartStyleTokenSourceRecord,
-  IRChartResolvedStyleTokens,
-} from './types';
+import type { ChartThemeTokenSourceRecord, IRChartResolvedThemeTokens } from './types';
 
-/** Chart theme 解析后供 recipe、Plot mapping 与 inspection 共享的上下文 */
-export type ResolvedChartStyleContext = {
-  /** 采用的内建 preset */
+/** Chart theme 解析后供 presentation、recipe 与 inspection 共享的上下文 */
+export type ResolvedChartThemeContext = {
+  /** effective Theme 选择的内建 preset */
   style: ThemeStyleValue;
-  /** 采用的明暗模式 */
-  themeMode: ThemeModeValue;
-  /** preset 与稀疏覆盖合并后的完整 token */
-  tokens: IRChartResolvedStyleTokens;
+  /** effective Theme 选择的明暗模式 */
+  mode: ThemeModeValue;
+  /** preset 与稀疏覆盖合并后的完整 Chart token */
+  tokens: IRChartResolvedThemeTokens;
   /** canonical 顺序的一 token 一来源 */
-  tokenSources: Array<ChartStyleTokenSourceRecord>;
-  /** 用户编写的 Plot palette/theme 覆盖入口 */
-  authoredOverrides: Array<ChartStyleAuthoredOverrideRecord>;
+  tokenSources: Array<ChartThemeTokenSourceRecord>;
 };
-
-/** Chart token 投影到 Plot 正式 theme 后的类型 */
-export type ChartPlotTheme = IRPlotTheme;

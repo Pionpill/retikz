@@ -1,14 +1,15 @@
 ---
 title: 能力包
-description: 按真实包名选择 Runtime、React、无框架、公式、计算几何和渲染入口，并理解它们如何围绕 core 协作。
+description: 按真实包名选择 Inspector、Runtime、React、无框架、公式、计算几何和渲染入口，并理解它们如何围绕 core 协作。
 ---
 
-能力包分组面向需要选择安装入口或理解包职责的读者。`@retikz/core` 是整套 Kernel 文档共同讲解的主体，不在这里重复设页；本组按真实 npm 包名介绍 Runtime、React、无框架、公式、纯计算几何和渲染入口，它们都围绕同一份 core 契约协作。
+能力包分组面向需要选择安装入口或理解包职责的读者。`@retikz/core` 是领域中立编译真源；其它包围绕同一份 Core 契约提供可选观测、宿主、计算与渲染能力。
 
 ## 职责一览
 
 | 能力包            | 职责                             | 何时查阅                        |
 | ----------------- | -------------------------------- | ------------------------------- |
+| `@retikz/inspect` | 编译结果选择、辅助内容与宿主接线 | 显示路径控制点或布局辅助层      |
 | `@retikz/runtime` | identity、ownership 与执行观测   | 定义跨 revision 状态所有权      |
 | `@retikz/react`   | JSX 组件、IR 适配与 React 宿主   | 在 React 中声明并渲染图形       |
 | `@retikz/vanilla` | Plain spec、浏览器挂载与 SSR     | 不使用 React 或需要服务端字符串 |
@@ -19,6 +20,10 @@ description: 按真实包名选择 Runtime、React、无框架、公式、计算
 ## 章节内容
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/packages/inspect">
+    <span className="font-semibold">@retikz/inspect</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">可选 Inspector 注册、选择与宿主接线</span>
+  </LinkedCard>
   <LinkedCard href="/kernel/packages/runtime">
     <span className="font-semibold">@retikz/runtime</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Identity、owner registry 与执行 trace</span>

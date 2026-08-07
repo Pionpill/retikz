@@ -17,8 +17,14 @@ import { AngleDegreesSchema, NormalizedFractionSchema } from '../scalar';
 import { ShapeRefSchema } from '../shape';
 import { StrokeDashOffsetSchema, StrokeDashPatternSchema } from '../stroke';
 import { CssColorSchema, GraphicStyleSchema } from '../style';
-import { createLabelVisualStyleShape, LabelTextContentSchema, TextBlockSchema } from '../text';
-import { NodeLabelPlacement, NodeLabelPosition, NodeLabelRotateMode, NodeTextAlign } from './constants';
+import {
+  createLabelVisualStyleShape,
+  LabelTextContentSchema,
+  LineHeightSchema,
+  TextAlignSchema,
+  TextBlockSchema,
+} from '../text';
+import { NodeLabelPlacement, NodeLabelPosition, NodeLabelRotateMode } from './constants';
 
 export const NodeLabelBoundaryPositionSchema = z
   .object({
@@ -194,15 +200,12 @@ export const NodeSchema = z
     text: TextBlockSchema.optional().describe(
       'Optional node text content. Accepts a string, an array of lines, styled line objects, or mixed text/math runs. Newlines are hard line breaks; math sugar requires lowerTex.',
     ),
-    align: z
-      .enum(NodeTextAlign)
-      .optional()
-      .describe('Multi-line text alignment within the text block. Omitted fields use middle.'),
-    lineHeight: z
-      .number()
-      .positive()
-      .optional()
-      .describe('Line height in user units; falls back to `font.size × 1.2` when omitted.'),
+    align: TextAlignSchema.optional().describe(
+      'Multi-line text alignment within the text block. Omitted fields use middle.',
+    ),
+    lineHeight: LineHeightSchema.optional().describe(
+      'Line height in user units; falls back to `font.size × 1.2` when omitted.',
+    ),
     maxTextWidth: z
       .number()
       .positive()

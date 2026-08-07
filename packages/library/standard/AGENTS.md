@@ -17,4 +17,4 @@
 - 布局私有纯逻辑进入 `composites/layout/internal/`；`internal/` 不得进入向上公共 barrel
 - 各 family 的 shared 目录按职责使用 `schemas/`、`types/` 或语义子域；包内共享但不公开的子域可以有自己的 barrel，但不得进入向上公共 barrel
 - 新能力仍需在 ADR 中确认 package metadata、release group、schema、definition / registry、lowering 和文档闭环
-- package exports 只保留根入口；组件增长通过根入口 named exports 与 `sideEffects: false` 支持按需消费，不逐组件扩展 subpath
+- package exports 默认只保留根入口；`/inspect` 是横切可选检查能力的受控例外，不代表允许按组件扩展 subpath

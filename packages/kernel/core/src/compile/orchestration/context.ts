@@ -1,6 +1,7 @@
 ﻿import type {
   AnyCompositeDefinition,
   AnyPathKindDefinition,
+  AnyThemeTokenDefinition,
   ArrowDefinition,
   BoundaryDefinition,
   ClipDefinition,
@@ -13,7 +14,7 @@ import type { IRScene } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { CompileOptions } from '../types';
 import type { CompileWarningInput } from '../warning';
-import type { PreparedCompileInspection } from './inspection';
+import type { CompileObservationRuntime } from './observation';
 
 import { resolveArrowRegistry } from '../../providers/arrow';
 import { resolveBoundaryRegistry } from '../../providers/boundary';
@@ -24,13 +25,13 @@ import { resolvePathKindRegistry } from '../../providers/path-kind';
 import { resolvePatternRegistry } from '../../providers/pattern';
 import { resolveRibbonWidthProfileRegistry } from '../../providers/ribbon';
 import { resolveShapeRegistry } from '../../providers/shape';
+import { resolveThemeTokenRegistry } from '../../providers/theme-token';
 import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE, DEFAULT_LAYOUT_PADDING, DEFAULT_NODE_DISTANCE } from '../constants';
 import { createClipRegistry, createPaintRegistry } from '../resource';
 import { createRound, DEFAULT_PRECISION } from '../scene';
 import { fallbackMeasurer } from '../text';
 import { formatCompileWarning } from '../warning';
 import { DEFAULT_MAX_COMPOSITE_DEPTH } from './composite';
-import { prepareCompileInspection } from './inspection';
 import { DEFAULT_RESOLVED_THEME, resolveTheme } from './theme';
 
 /**
@@ -42,6 +43,8 @@ export type CompileContext = {
   loweredIr: IRScene;
   /** Scene 根解析后的完整 Theme */
   theme: ResolvedTheme;
+  /** Theme token owner definitions 的 identity registry */
+  themeTokenDefinitions: ReadonlyMap<string, AnyThemeTokenDefinition>;
   /** 文字度量函数 */
   measureText: NonNullable<CompileOptions['measureText']>;
   /** 运行时注入的 TeX lowering 钩子 */
@@ -54,8 +57,8 @@ export type CompileContext = {
   maxCompositeDepth: number;
   /** 本次请求的 artifact 开关 */
   artifacts: CompileOptions['artifacts'];
-  /** admission 后的 runtime-only inspection sidecar */
-  inspection: PreparedCompileInspection | undefined;
+  /** 显式 observed compile 的本次 session */
+  observation: CompileObservationRuntime | undefined;
   /** 本次 full compile 共享的可选 trace 计数器 */
   trace: { reporter: NonNullable<CompileOptions['trace']>; visited: number } | undefined;
   /** Scene 输出 rounder */
@@ -93,6 +96,7 @@ export type CompileContext = {
 /** 创建内部编译上下文时允许接收尚未补全 origin 的 warning */
 type CreateCompileContextOptions = Omit<CompileOptions, 'onWarn'> & {
   onWarn?: (warning: CompileWarningInput) => void;
+  observation?: CompileObservationRuntime;
 };
 
 /** 创建 compile 编排所需的不可变依赖上下文 */
@@ -112,17 +116,19 @@ export const createCompileContext = (ir: IRScene, options: CreateCompileContextO
   const clips = resolveClipRegistry(options.clips);
   const patterns = resolvePatternRegistry(options.patterns);
   const composites = resolveCompositeRegistry(options.composites);
+  const themeTokenDefinitions = resolveThemeTokenRegistry(options.themeTokenDefinitions);
 
   return {
     loweredIr: ir,
-    theme: resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme'),
+    theme: resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme', themeTokenDefinitions),
+    themeTokenDefinitions,
     measureText: options.measureText ?? fallbackMeasurer,
     lowerTex: options.lowerTex,
     onWarn,
     composites,
     maxCompositeDepth: options.maxCompositeDepth ?? DEFAULT_MAX_COMPOSITE_DEPTH,
     artifacts: options.artifacts,
-    inspection: prepareCompileInspection(ir, options.inspection),
+    observation: options.observation,
     trace: options.trace === undefined ? undefined : { reporter: options.trace, visited: 0 },
     round,
     layoutPadding: options.padding ?? DEFAULT_LAYOUT_PADDING,

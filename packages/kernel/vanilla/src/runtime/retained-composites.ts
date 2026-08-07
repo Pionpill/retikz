@@ -8,9 +8,6 @@ type CompositeSlot = {
   current: AnyCompositeDefinition;
 };
 
-/** retained Composite 代理使用的擦除 Inspector 契约 */
-type ErasedCompositeInspector = NonNullable<AnyLayoutCompositeDefinition['inspector']>;
-
 /** 一次 composite definition callback 切换的提交句柄 */
 export type PreparedCompositeDefinitions = Readonly<{
   /** 本次 candidate 是否替换了任一 callback identity */
@@ -66,18 +63,6 @@ const createExpandDelegate = (
   },
 });
 
-/** 用稳定 callable 包装 normalization 每轮生成的 inspector callback */
-const createInspectorDelegate = (initial: ErasedCompositeInspector, slot: CompositeSlot): ErasedCompositeInspector => ({
-  kind: 'composite',
-  optionsInputSchema: initial.optionsInputSchema,
-  optionsSchema: initial.optionsSchema,
-  inspect: (artifact: never, context: never) => {
-    const inspector = slot.current.inspector;
-    if (inspector === undefined) return invalidDefinitions(slot.current);
-    return inspector.inspect(artifact, context);
-  },
-});
-
 /** 用稳定 callback 包装 normalization 每轮生成的 layout-aware definition */
 const createLayoutDelegate = (
   initial: AnyLayoutCompositeDefinition,
@@ -93,7 +78,6 @@ const createLayoutDelegate = (
       return compile(node, context);
     },
     ...(initial.artifactSchema === undefined ? {} : { artifactSchema: initial.artifactSchema }),
-    ...(initial.inspector === undefined ? {} : { inspector: createInspectorDelegate(initial.inspector, slot) }),
   };
   return delegate as AnyLayoutCompositeDefinition;
 };
@@ -109,19 +93,12 @@ const createDelegate = (slot: CompositeSlot): AnyCompositeDefinition => {
 const assertCompatibleDefinition = (initial: AnyCompositeDefinition, next: AnyCompositeDefinition): void => {
   const initialExpand = typeof initial.expand === 'function';
   const nextExpand = typeof next.expand === 'function';
-  const initialInspector = initial.inspector;
-  const nextInspector = next.inspector;
   if (
     initial.namespace !== next.namespace ||
     initial.type !== next.type ||
     initial.schema !== next.schema ||
     initialExpand !== nextExpand ||
-    initial.artifactSchema !== next.artifactSchema ||
-    (initialInspector === undefined) !== (nextInspector === undefined) ||
-    (initialInspector !== undefined &&
-      nextInspector !== undefined &&
-      (initialInspector.optionsInputSchema !== nextInspector.optionsInputSchema ||
-        initialInspector.optionsSchema !== nextInspector.optionsSchema))
+    initial.artifactSchema !== next.artifactSchema
   ) {
     invalidDefinitions({ initial, next });
   }

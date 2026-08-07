@@ -24,7 +24,7 @@ Table 的指导思想是：
 
 ## 2. 包定位
 
-`@retikz/table` 消费 `@retikz/data` 与 `@retikz/core`，负责 Table IR、语义模型、表格 body 布局和 lowering。它与 Plot 平行，不依赖 Plot；需要通用 Legend 与外围 Box Layout 时单向消费 Standard 的公开 capability。
+`@retikz/table` 消费 `@retikz/data`、`@retikz/standard` 与 `@retikz/core`，负责 Table IR、语义模型、表格 body 布局、Theme token resolver、Legend descriptor 与 lowering。它与 Plot 平行，不依赖 Plot；需要通用 Legend 与外围 Box Layout 时单向消费 Standard 的公开 capability。Core 负责 namespaced Theme 传递、ThemeTokenDefinition registry、owner schema validation 与 shared colors，Table 负责自己的 vocabulary、preset、mapping 与消费。
 
 `@retikz/table-react` 与 `@retikz/table-vanilla` 只负责 authoring 和宿主接入，不拥有表格结构、规则、布局或 lowering 算法。
 
@@ -74,7 +74,7 @@ TableSpec
 
 ### 4.2 PresentedTableModel
 
-在语义结构上解析 formatter、presentation、rules、style tokens 和最终 Cell 内容，但还没有绝对几何。
+在语义结构上解析 formatter、presentation、rules、`tableThemeTokens`、shared categorical projection 和最终 Cell 内容，但还没有绝对几何。
 
 ### 4.3 TableLayout
 
@@ -127,7 +127,9 @@ Table 只拥有与网格拓扑有关的表头、行头、小计、总计和 Cell
 
 内置与自定义能力经过相同的注册、解析和消费链路。
 
-Style 不属于行为 Definition。Table 维护闭合、扁平、命名空间化的公开 token vocabulary；内置 preset 与用户 token overlay 经过同一 strict schema、leaf resolver 和消费链路。`TableSpec.styleTokens` 只接收当前 `themeMode` 下的 partial overlay；外部主题包可以导出已知 token 的完整 light / dark map，由宿主选择一份作为 overlay 输入，但不能注册未知 token 或 token 消费器。
+Style token 不属于 Table 行为 Definition，但 Table theme schema 必须通过 Core 的 `ThemeTokenDefinition<'table', ...>` registry 绑定 owner validation。Table 维护闭合、扁平、命名空间化的公开 token vocabulary；内置 preset 与用户 `tableThemeTokens` overlay 经过同一 strict schema、resolver 和消费链路。`theme.tokens.table` 由 Core Scope 继承，Table 不保存重复 `style` / `themeMode`，也不允许外部包注册未知 token 或 token consumer。
+
+Core 只提供一套当前生效的非空 active `palette.categorical`。Table 将其 detached 投影为 `data.categorical` baseline；Table token、encoding range、rule 和 Cell configuration 由 Table resolver 按正式优先级覆盖。Standard 只消费 Table 已解析的 Legend / layout input 与 Core `InspectionAppearance`，不读取 Table token bag 或重建颜色分配。
 
 地址、span 合法性、布局不变量、border conflict 和 lowering 正确性属于 Table 核心合同，不应为了扩展性暴露任意执行钩子。
 
@@ -160,7 +162,7 @@ alpha.1 / alpha.2 已落定；alpha.3 当前代码已经形成以下候选基线
 - `SemanticTableModel` 纵向写入链路，以及 formatter / presentation 等统一 Definition / registry 消费方式
 - fixed / auto / fraction / minmax 轨道、矩形 span、真实 `IRChild` intrinsic / constrained measurement、fit / overflow / clip 与 Border Graph
 - layout-aware composite 同次 compile、typed manifest / occurrence，以及 React / Vanilla 共享 runtime contribution 与 artifact contract
-- formatter / presentation、selector / rule、条件视觉 encoding、四种 style preset、闭合 style tokens，以及同源 Legend descriptor / manifest seed
+- formatter / presentation、selector / rule、条件视觉 encoding、四种 style preset 与闭合 `tableThemeTokens` 沿同一 canonical pipeline 消费；Core inherited namespace 与 shared categorical projection 已接入，外围 composition 与 artifact join 由 alpha.6 收口
 
 尚未闭环的能力继续由 ADR 处理：
 

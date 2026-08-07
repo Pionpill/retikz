@@ -1,15 +1,15 @@
-import type { GridLayoutInput, GridLayoutInspectOptions } from '@retikz/standard';
+import type { GridLayoutInput } from '@retikz/standard';
 import type { VanillaEmbedSpec, VanillaTier2Adapter } from '@retikz/vanilla';
 
-import { createGridLayout, GridLayoutInspectOptionsInputSchema } from '@retikz/standard';
+import { createGridLayout } from '@retikz/standard';
 
 import { StandardLayoutVanillaNamespace } from './constants';
 import { makeVanillaStandardLayoutComposites } from './layout-family';
 
-/** Vanilla GridLayout embed 的稳定 kind */
+/** Vanilla Grid 布局嵌入项的稳定类别 */
 const GridLayoutEmbedKind = 'standard.gridLayout';
 
-/** Standard GridLayout 的 Vanilla Tier 2 adapter */
+/** Standard Grid 布局的 Vanilla 适配器 */
 export const GridLayoutVanillaAdapter: VanillaTier2Adapter<GridLayoutInput> = {
   kind: GridLayoutEmbedKind,
   namespace: StandardLayoutVanillaNamespace,
@@ -20,17 +20,15 @@ export const GridLayoutVanillaAdapter: VanillaTier2Adapter<GridLayoutInput> = {
   }),
 };
 
-/** 创建由 GridLayoutVanillaAdapter 下沉的 Standard GridLayout embed */
+/** 创建由 Standard 适配器下沉的 Grid 布局嵌入项 */
 export const gridLayout = (
   id: string,
   input: GridLayoutInput,
-  inspect?: boolean | GridLayoutInspectOptions,
-): VanillaEmbedSpec<GridLayoutInput, GridLayoutInspectOptions> => ({
+  authoring?: unknown,
+): VanillaEmbedSpec<GridLayoutInput> => ({
   type: 'embed',
   kind: GridLayoutEmbedKind,
   id,
   props: input,
-  ...(inspect === undefined
-    ? {}
-    : { inspect: typeof inspect === 'object' ? GridLayoutInspectOptionsInputSchema.parse(inspect) : inspect }),
+  ...(authoring === undefined ? {} : { authoring }),
 });

@@ -172,6 +172,7 @@ export const kernelSection: Array<Section> = [
     document: true,
     pages: [
       { id: 'core', label: 'kernel.pkgCore' },
+      { id: 'inspect', label: 'kernel.pkgInspect', meta: extensionGuide('kernel.inspect') },
       {
         id: 'runtime',
         label: 'kernel.pkgRuntime',

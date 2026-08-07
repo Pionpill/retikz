@@ -1,7 +1,8 @@
+import { ThemeMode, ThemeStyle } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { resolveChartSpec } from '../../src/resolution';
-import { ChartStyleToken, getChartStylePreset, materializeChartPlotTheme, mergeChartPlotTheme } from '../../src/style';
+import { ChartThemeToken } from '../../src/style';
 
 const base = {
   namespace: 'chart',
@@ -12,94 +13,68 @@ const base = {
 } as const;
 
 describe('Chart style resolution', () => {
-  it('默认解析 neutral/light，并把完整 token 投影到 Plot theme 与 inspection', () => {
+  it('默认解析 neutral/light，并保持 Plot authoring 输入未物化', () => {
     const result = resolveChartSpec(base);
-
-    expect(result.plotSpec.theme).toMatchObject({
-      background: '#FAFAFA',
-      typography: { font: { family: 'system-ui, Segoe UI, sans-serif' }, textColor: '#18181B' },
-      axis: { line: false, tickLabels: { textColor: '#52525B' }, grid: { stroke: '#E4E4E7' } },
-      palette: { categorical: ['#E76E50', '#2A9D90', '#274754', '#E8C468', '#F4A462'] },
-    });
-    expect(result.inspection.style).toMatchObject({
-      preset: 'neutral',
+    expect(result.plotSpec.plotTheme).toBeUndefined();
+    expect(result.plotSpec.plotThemeTokens).toBeUndefined();
+    expect(result.inspection.style.chart).toMatchObject({
+      style: 'neutral',
       mode: 'light',
-      tokens: { [ChartStyleToken.ChartCanvasFill]: '#FFFFFF' },
+      tokens: { [ChartThemeToken.ChartCanvasFill]: '#FFFFFF' },
     });
-    expect(result.inspection.style.tokenSources).toHaveLength(75);
+    expect(result.inspection.style.chart.tokenSources).toHaveLength(37);
+    expect(result.inspection.style.plot).toMatchObject({ style: 'neutral', mode: 'light' });
+    expect(result.inspection.style.plot.tokenSources).toHaveLength(40);
   });
 
-  it('按 preset < styleTokens < colors < raw theme 合并且保留 object sibling', () => {
-    const result = resolveChartSpec({
+  it('分别解析 Chart token 与 Plot cascade，并原样转发 Plot 输入', () => {
+    const input = {
       ...base,
-      style: 'academic',
-      themeMode: 'dark',
-      styleTokens: {
+      chartThemeTokens: { 'chart.padding': 20 },
+      plotThemeTokens: {
         'plot.label.font.size': 14,
-        'data.palette.categorical': ['#token'],
+        'plot.palette.categorical': ['#token'],
       },
       colors: ['#colors-a', '#colors-b'],
-      theme: {
+      plotTheme: {
         labelText: { font: { weight: 700 } },
         palette: { series: ['#raw-series'] },
       },
-    });
+    } as const;
+    const result = resolveChartSpec(input, { style: ThemeStyle.Academic, mode: ThemeMode.Dark });
 
-    expect(result.plotSpec.theme?.labelText).toEqual({
-      font: { family: 'Inter, Helvetica Neue, Arial, sans-serif', size: 14, weight: 700 },
-      textColor: '#D1D5DB',
-    });
-    expect(result.plotSpec.theme?.palette).toMatchObject({
+    expect(result.plotSpec.plotThemeTokens).toEqual(input.plotThemeTokens);
+    expect(result.plotSpec.colors).toEqual(input.colors);
+    expect(result.plotSpec.plotTheme).toEqual(input.plotTheme);
+    expect(result.inspection.style.chart.tokens['chart.padding']).toBe(20);
+    expect(result.inspection.style.plot.plotTheme.labelText).toMatchObject({ font: { size: 14, weight: 700 } });
+    expect(result.inspection.style.plot.palette).toMatchObject({
       categorical: ['#colors-a', '#colors-b'],
       series: ['#raw-series'],
       sector: ['#colors-a', '#colors-b'],
-      sequential: 'cividis',
-      diverging: 'rdbu',
     });
-    expect(result.inspection.style.authoredOverrides).toEqual([
+    expect(result.inspection.style.plot.authoredOverrides).toEqual([
       { kind: 'colors', path: '$spec/colors' },
-      { kind: 'theme', path: '$spec/theme' },
+      { kind: 'plot-theme', path: '$spec/plotTheme' },
     ]);
   });
 
-  it('discriminator 改变时整体替换 tick mark，不继承旧 kind 字段', () => {
-    expect(
-      mergeChartPlotTheme(
-        { axis: { ticks: { mark: { kind: 'line', length: 4, line: { stroke: '#111', strokeWidth: 1 } } } } },
-        { axis: { ticks: { mark: { kind: 'circle', size: 6, fill: '#fff' } } } },
-      ),
-    ).toEqual({ axis: { ticks: { mark: { kind: 'circle', size: 6, fill: '#fff' } } } });
-  });
-
-  it('preset 覆盖 recipe theme default，raw theme 再覆盖 preset', () => {
-    const tokens = getChartStylePreset('neutral', 'light');
-    expect(
-      materializeChartPlotTheme(
-        tokens,
-        undefined,
-        { background: '#raw' },
-        { background: '#recipe', palette: { sequential: 'recipe-scheme' } },
-      ),
-    ).toMatchObject({
-      background: '#raw',
-      palette: { sequential: 'cividis' },
-    });
-  });
-
   it('topology token 只控制 recipe defaults，显式 guide 保持最高优先级', () => {
-    expect(resolveChartSpec({ ...base, styleTokens: { 'axis.enabled': false } }).plotSpec.guides).toEqual([]);
+    expect(resolveChartSpec({ ...base, chartThemeTokens: { 'chart.axis.enabled': false } }).plotSpec.guides).toEqual(
+      [],
+    );
     expect(
       resolveChartSpec({
         ...base,
-        styleTokens: { 'axis.enabled': false, 'axis.grid.enabled': false },
+        chartThemeTokens: { 'chart.axis.enabled': false, 'chart.axis.grid.enabled': false },
         guides: [{ type: 'axis', id: 'explicit', dimension: 'x', grid: true }],
       }).plotSpec.guides,
     ).toEqual([{ type: 'axis', id: 'explicit', dimension: 'x', grid: true }]);
   });
 
-  it('style 切换不改变 data、transform、核心 mark/encoding、scale、空间根与 identity', () => {
+  it('effective Theme 切换不改变 data、核心 recipe、空间根与 identity', () => {
     const neutral = resolveChartSpec(base);
-    const clean = resolveChartSpec({ ...base, style: 'clean', themeMode: 'dark' });
+    const clean = resolveChartSpec(base, { style: ThemeStyle.Clean, mode: ThemeMode.Dark });
     const stableProjection = (result: typeof neutral) => ({
       data: result.plotSpec.data,
       transform: result.plotSpec.transform,
@@ -113,7 +88,6 @@ describe('Chart style resolution', () => {
         .filter(member => member.kind !== 'guide')
         .map(member => [member.kind, member.target]),
     });
-
     expect(stableProjection(clean)).toEqual(stableProjection(neutral));
   });
 });

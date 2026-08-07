@@ -2,7 +2,7 @@
 
 > **状态：架构总则，运行时基础已部分实现，Headless Interaction 尚未实现。** `@retikz/runtime` 已承接 identity、ownership、program 与 transaction 基础；事件、behavior、presentation、intent 和交互 program 仍由后续 ADR 冻结。本文只维护统一方向、跨包契约和职责边界，不替代当前公开类型。
 >
-> 关联：[`性能与增量运行时设计`](./performance-design.md) · [`能力完备性与模块边界`](./capability-design.md) · [`包拓扑`](./package-topology.md) · [`Core 绘图完备设计`](../../packages/kernel/_notes/architecture/core-drawing-complete.md) · [`Kernel v0.5 路线`](../../packages/kernel/_notes/decisions/v0/v0.5/roadmap.md)
+> 关联：[`性能与增量运行时设计`](./performance-design.md) · [`Editor 编辑运行时架构设计`](./editor-design.md) · [`能力完备性与模块边界`](./capability-design.md) · [`包拓扑`](./package-topology.md) · [`Core 绘图完备设计`](../../packages/kernel/_notes/architecture/core-drawing-complete.md) · [`Kernel v0.5 路线`](../../packages/kernel/_notes/decisions/v0/v0.5/roadmap.md)
 >
 > 本文主责事件、ownership routing、behavior、presentation、intent 与动画；Snapshot / ChangeSet、逐 Tier 增量、调度、retained patch、渐进物化、LLM generation 以及共享运行时基础以性能设计为准。本文只补充这些基础契约在交互侧的消费约束，不建立第二份真源。
 
@@ -200,12 +200,12 @@ Tier 2 与宿主 adapter 负责装配自己的 program；`@retikz/runtime` 是�
 - 通过通用 child program 契约组合其它 Tier 2。
 - 不绕过 Core 直接生成 Scene 或 renderer 命令。
 
-### Interaction
+### Kernel Interaction 基础
 
-- 拥有 framework-neutral 的事件归一化、behavior、瞬时状态、intent 与动画编排。
+- 拥有 framework-neutral 的事件归一化、behavior 执行、瞬时 presentation、intent 路由与动画编排。
 - 通过 ownership 把事件路由给 Core 或 Tier 2 owner。
 - 通过 presentation 提供即时反馈，通过 domain transaction 提交持久化结果。
-- 不拥有 Plot、Table 或业务编辑器的领域策略。
+- 不拥有 Editor 的 selection store、tool、command、history，也不拥有 Plot、Table 或业务编辑器的领域策略。
 
 ## 7. 增量、并发与交互的关系
 
@@ -229,6 +229,8 @@ Tier 2 与宿主 adapter 负责装配自己的 program；`@retikz/runtime` 是�
 - 动画过程中的重定向，以及交互完成后的持久化提交。
 
 Kernel 只提供通用表达与执行通道。Plot brush、Table Cell 编辑、Graph 节点连接等语义仍由各领域模块定义，因此上层能力不会被 Kernel 固定为一组内置交互白名单。
+
+hover、tooltip、brush 等消费态 interaction 可以直接使用这条 Kernel 通道；选择、拖拽、变换、candidate transaction 和 history 等作者编辑语义由独立的 [`@retikz/editor` 架构](./editor-design.md) 承接。Kernel 能承载 selection / drag behavior，不等于拥有当前 selection 或完整编辑状态机。
 
 ## 9. 正确性不变量
 
@@ -268,4 +270,4 @@ v0.5 先完成性能底座，再建设交互能力，但性能 ADR 必须用真�
 - 让 Tier 2 绕过 Core 建立平行 Scene。
 - 把交互语义集中到 Kernel 内置白名单。
 - 为现有 `0.x` API 保留兼容桥接。
-- 完整 Workspace、history、协作或 CRDT 设计。
+- 完整 Editor、history、协作或 CRDT 设计；Editor 的长期边界见 [`Editor 编辑运行时架构设计`](./editor-design.md)。

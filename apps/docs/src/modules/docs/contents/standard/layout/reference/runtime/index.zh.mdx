@@ -69,7 +69,9 @@ React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 De
 
 ## 布局检查器
 
-布局检查器（Layout Inspector）是运行时开发辅助层，不进入 Standard IR，也不修改类型化布局产物。Flex、Grid 与 Overlay Inspector 把同次 compile 的类型化 artifact 转为普通 Core Path / Node / pattern paint；Core 再把这些子元素编译为隔离的 entry Scene。SVG 把 entry 绘制在主图之后的 `pointer-events="none"` 分组中；Canvas 在主图之后单独绘制，但不把辅助图元加入命中测试。两种后端都只用主 Scene 决定 viewBox、主资源、动画和正常交互。
+布局检查器是可选的运行时开发辅助能力，不进入 Standard IR，也不修改类型化布局产物。`@retikz/standard/inspect` 拥有三种 Inspector Definition、选项 schema 与预设；`@retikz/standard-react/inspect` 和 `@retikz/standard-vanilla/inspect` 负责宿主接线。基础 Standard 入口不依赖 `@retikz/inspect`。
+
+Flex、Grid 与 Overlay Inspector 读取 Core 观测到的最终类型化 artifact，返回普通 Core Path、Node 与 pattern paint。`@retikz/inspect` 用隔离片段编译这些内容，再转换为 Render 的普通只读图层。SVG 在主图之后绘制 `pointer-events="none"` 分组；Canvas 在主图之后单独绘制，但不把辅助图元加入命中测试。viewBox、主资源、动画和正常交互始终只由主 Scene 决定。
 
 ### 颜色、纹理与线型
 
@@ -77,7 +79,7 @@ React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 De
 
 | 通道 | 表达内容            | 规则                                                                                                                                              |
 | ---- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 颜色 | 最终布局 occurrence | Core 按最终请求顺序分配 `colorScope`，并通过 `InspectionAppearance` 提供九色循环中的常规色与固定警告色                                            |
+| 颜色 | 最终布局 occurrence | Inspect 按最终请求顺序分配 `colorScope`，并通过 `InspectionAppearance` 提供九色循环中的常规色与固定警告色                                         |
 | 纹理 | 空间语义            | Standard 用普通 `lines` pattern paint 表达：margin 与固定 gap 为 `-45°` 的 `/`，padding 为 `45°` 的 `\`；size 为 12、lineWidth 为 1，三者不铺底色 |
 | 线型 | 几何类别            | 容器、内容、item box、Flex line、Grid track/cell/span、Overlay placement 与 alignment guide 统一使用虚线；anchor crosshair 使用实线               |
 
@@ -85,27 +87,19 @@ React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 De
 
 绘制顺序固定为 spacing hatch / boundary underlay → family structure → box outline → overflow warning → guide/anchor → label。`bounds.content` 与 `bounds.slot` 只控制对应 outline；`spacing.padding` 与 `spacing.margin` 独立控制两种纹理和边界。margin、padding 与固定 gap 使用独立 dashed line 表达边界；ring 只描内外周长，不描四块纹理分片之间的接缝。`distributedSpace` 只显示未占用 content 的 dashed perimeter，内部保持透明留白。若 spacing boundary 已被 content/slot outline 或 Flex line / Grid track 完整覆盖，同一线段只绘制一次；单独开启任一类别时仍保留其完整可见边界。
 
-### 三种开启范围
+### 三种选择范围
 
-| 范围          | React                                 | Vanilla                            | 级联语义                                      |
-| ------------- | ------------------------------------- | ---------------------------------- | --------------------------------------------- |
-| 整张图        | `<Layout inspect={{ layout: true }}>` | mount / SSR options 的 `inspect`   | 作用于所有已注册且带检查器的布局 occurrence   |
-| authored 子树 | `<Scope inspect={{ layout: true }}>`  | `VanillaScopeSpec.inspect`         | 只作用于该 Scope 的 authored 后代             |
-| 单个容器      | `<FlexLayout inspect>` 等             | `flexLayout('id', input, true)` 等 | 只作用于当前 occurrence，不自动传播到嵌套布局 |
+| 范围          | React                                                              | Vanilla                                                                  | 语义                                        |
+| ------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------ | ------------------------------------------- |
+| 整张图        | `StandardInspectLayout request={...}`                              | figure 的 `createInspectionVanillaAuthoring(...)`                        | 按 Inspector key 选择全部匹配 occurrence    |
+| authored 子树 | `StandardInspectScope request={...}`                               | Scope 的 `createInspectionVanillaAuthoring(...)`                         | 只选择该 Scope 的 authored 后代             |
+| 单个容器      | `InspectFlexLayout` / `InspectGridLayout` / `InspectOverlayLayout` | `inspectFlexLayout()` / `inspectGridLayout()` / `inspectOverlayLayout()` | 只选择当前 occurrence，不自动传播到嵌套布局 |
 
-策略按 Layout → 最近的 Scope → 当前组件逐字段合并。`bounds` 与 `spacing` 的对象形式逐项合并，boolean 与对象互换时由后写值替换整组。`layout: false` 只把当前级联值覆盖为关闭，更深的 Scope 或组件仍可重新开启；`enabled: false` 才是后代不能越过的子树硬屏障。组件自身的 `inspect={false}` 只关闭当前 occurrence。省略所有 `inspect` 时不运行检查器，`CompileResult.inspection` 为 `null`。
+React 必须由 `StandardInspectLayout` 提供预注册三种 Definition 的检查宿主；Vanilla 必须把 `createStandardInspectionVanillaDriver()` 传给 render / mount 的 `compileDriver`。`StandardInspectScope request={false}` 与 `createStandardInspectionBarrier()` 都建立后代不能越过的硬屏障。
 
-### 通用策略与边界
+同一个 Inspector 的 scene → 外层 subtree → 内层 subtree → self 请求按范围与声明顺序求值。`bounds` 与 `spacing` 的对象形式逐项合并，boolean 与对象互换时由后写值替换整组；请求值 `false` 关闭当前层选择，但更深请求仍可重新开启。省略全部请求时 observer 不捕获布局产物，也不会产生只读图层。
 
-<ZodSchema
-  name="InspectOptionsInputSchema"
-  description="Layout 与 Scope 使用的稀疏检查策略。"
-  descriptions={{
-    enabled: '是否允许当前 authored 子树使用检查辅助层；false 是不可由后代覆盖的硬屏障。',
-    layout:
-      '是否启用布局检查器，或用稀疏通用选项覆盖继承值；false 只关闭当前级联值，后代仍可重新开启，只有 enabled: false 会建立硬屏障。',
-  }}
-/>
+### 通用选项与边界
 
 <ZodSchema
   name="BaseLayoutInspectOptionsInputSchema"
@@ -116,6 +110,17 @@ React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 De
     overflow: '是否显示真实占用或视觉包络超出父级分配区域的阴影。',
     alignmentGuides: '是否显示容器最终采用的对齐参考线。',
     labels: '是否显示辅助层文字标签；默认关闭。',
+  }}
+/>
+
+### LayoutInspectSpacingOptionsInputSchema
+
+<ZodSchema
+  name="LayoutInspectSpacingOptionsInputSchema"
+  description="布局检查器共用的稀疏盒模型间距选择。"
+  descriptions={{
+    padding: '是否为容器已解析的 padding 绘制阴影。',
+    margin: '是否为子项已解析的 margin 绘制阴影。',
   }}
 />
 
@@ -131,7 +136,7 @@ React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 De
   }}
 />
 
-`layout: true` 使用唯一完整轮廓：`container`、`content`、`slot`、`allocation`、padding、margin、`overflow` 与 `alignmentGuides` 开启，`visual` 与 `labels` 关闭。对象形式只覆盖显式字段；例如 `{ layout: { spacing: { padding: false } } }` 只关闭 padding 纹理。
+请求值 `true` 使用完整默认轮廓：`container`、`content`、`slot`、`allocation`、padding、margin、`overflow` 与 `alignmentGuides` 开启，`visual` 与 `labels` 关闭。对象形式只覆盖显式字段；例如 `{ spacing: { padding: false } }` 只关闭 padding 纹理。
 
 文档 playground 的“推荐”不是完整轮廓：Flex 显示 content outline、Flex 行区域与固定 gap，Grid 显示 content outline、轨道边界与固定 gap，Overlay 只显示 content outline。选择“全部”会打开每个细节；“关闭”只关闭总开关；Reset 回到推荐值。
 
@@ -184,7 +189,7 @@ React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 De
   }}
 />
 
-`inspect` 只接受稀疏 authoring 值；未知字段或错误类型会 fail-loud。编译完成后，Core 才把级联策略求值为完整默认轮廓，并让 Standard Inspector 只读取同次 compile 的类型化 artifact、返回普通 Core 子元素，不声明 `outputSchema`。切换 retained view 的检查选项会原子提交主图、产物和辅助层；失败时不会发布半帧。
+每个 `InspectXxxLayout` 的 `inspect` 只接受 `false`、`true` 或对应的稀疏选项；未知字段和错误类型会直接报错。Inspect 在 Core traversal 前校验选择与选项输入，最终 occurrence 确定后再合并并解析完整选项。Standard Inspector 只读取同次 compile 的类型化 artifact，并返回普通 Core 子元素。Retained 更新会原子提交主图、产物和只读图层；失败时不发布半帧。
 
 <SourceLinks
   sources={[
@@ -201,16 +206,24 @@ React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 De
       path: 'packages/library/standard-react/src/shared/layout-family.ts',
     },
     {
-      label: '布局检查器通用策略与默认值',
-      path: 'packages/kernel/core/src/contract/inspection/options-schema.ts',
+      label: 'Standard 布局检查器通用 schema 与默认值',
+      path: 'packages/library/standard/src/inspect/shared/schema.ts',
     },
     {
       label: 'Standard 布局专属检查选项',
-      path: 'packages/library/standard/src/composites/layout/shared/schema.ts',
+      path: 'packages/library/standard/src/inspect/index.ts',
     },
     {
       label: 'Standard spacing、ring 与分层 lowering',
-      path: 'packages/library/standard/src/composites/layout/internal/inspect.ts',
+      path: 'packages/library/standard/src/inspect/shared/output.ts',
+    },
+    {
+      label: 'React 检查宿主与默认注册表',
+      path: 'packages/library/standard-react/src/inspect/Layout.tsx',
+    },
+    {
+      label: 'Vanilla 检查驱动与屏障',
+      path: 'packages/library/standard-vanilla/src/inspect/layout-family.ts',
     },
     { label: 'Vanilla 布局适配器数组', path: 'packages/library/standard-vanilla/src/preset/index.ts' },
   ]}

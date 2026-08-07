@@ -1,27 +1,28 @@
 import type { z } from 'zod';
 
-import type { TableStyle, TableThemeMode } from './constants';
+import type { TableThemeToken } from './constants';
 import type {
-  TableStyleBorderTokenSchema,
-  TableStyleTokenKeySchema,
-  TableStyleTokenMapSchema,
-  TableStyleTokensSchema,
+  TableThemeTokenBorderSchema,
+  TableThemeTokenKeySchema,
+  TableThemeTokenMapSchema,
+  TableThemeTokenOverridesSchema,
+  TableThemeTokenPresetMapSchema,
 } from './schema';
 
-/** Table 内置样式值 */
-export type TableStyleValue = (typeof TableStyle)[keyof typeof TableStyle];
+/** Table 主题 token key */
+export type TableThemeTokenKey = z.infer<typeof TableThemeTokenKeySchema>;
 
-/** Table 显式主题模式值 */
-export type TableThemeModeValue = (typeof TableThemeMode)[keyof typeof TableThemeMode];
+/** Table 主题 token 中的 border 值 */
+export type IRTableThemeTokenBorder = z.infer<typeof TableThemeTokenBorderSchema>;
 
-/** Table 闭合样式 token key */
-export type TableStyleTokenKey = z.infer<typeof TableStyleTokenKeySchema>;
+/** Table root 或 inherited Theme 的 partial token overlay */
+export type IRTableThemeTokenOverrides = z.infer<typeof TableThemeTokenOverridesSchema>;
 
-/** Table 样式 border token */
-export type IRTableStyleBorderToken = z.infer<typeof TableStyleBorderTokenSchema>;
+/** 完整 19 项 Table theme token map */
+export type TableThemeTokenMap = z.infer<typeof TableThemeTokenMapSchema>;
 
-/** Table root 的 partial 样式 token overlay */
-export type IRTableStyleTokens = z.infer<typeof TableStyleTokensSchema>;
+/** 不含 shared categorical projection 的 Table preset map */
+export type TableThemeTokenPresetMap = z.infer<typeof TableThemeTokenPresetMapSchema>;
 
-/** 完整 19 项 Table 样式 token map */
-export type TableStyleTokenMap = z.infer<typeof TableStyleTokenMapSchema>;
+/** Table theme token 的 canonical key value */
+export type TableThemeTokenValue = (typeof TableThemeToken)[keyof typeof TableThemeToken];

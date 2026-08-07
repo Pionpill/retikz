@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { RuntimeIdentityError } from '../../src';
 
-import { createRuntimeIdentity, createRuntimeIdentityIndex, runtimeIdentityEquals } from '../../src';
+import { createRuntimeIdentity, createRuntimeIdentityLookup, runtimeIdentityEquals } from '../../src';
 
 describe('runtime identity', () => {
   it('复制并冻结 owner 与 segment path', () => {
@@ -36,43 +36,43 @@ describe('runtime identity', () => {
     expect(runtimeIdentityEquals(segmented, normalized)).toBe(false);
   });
 
-  it('建立按 code-unit path 排序的 immutable owner index', () => {
+  it('建立按 code-unit path 排序的 immutable owner lookup', () => {
     const z = createRuntimeIdentity('owner', ['z']);
     const nested = createRuntimeIdentity('owner', ['a', 'b']);
     const a = createRuntimeIdentity('owner', ['a']);
-    const index = createRuntimeIdentityIndex('owner', [z, nested, a]);
+    const lookup = createRuntimeIdentityLookup('owner', [z, nested, a]);
 
-    expect(index.owner).toBe('owner');
-    expect(index.size).toBe(3);
-    expect(index.values()).toEqual([a, nested, z]);
-    expect(Object.isFrozen(index.values())).toBe(true);
-    expect(index.has(createRuntimeIdentity('owner', ['a', 'b']))).toBe(true);
-    expect(index.has(createRuntimeIdentity('owner', ['missing']))).toBe(false);
+    expect(lookup.owner).toBe('owner');
+    expect(lookup.size).toBe(3);
+    expect(lookup.values()).toEqual([a, nested, z]);
+    expect(Object.isFrozen(lookup.values())).toBe(true);
+    expect(lookup.has(createRuntimeIdentity('owner', ['a', 'b']))).toBe(true);
+    expect(lookup.has(createRuntimeIdentity('owner', ['missing']))).toBe(false);
   });
 
-  it('复制 index 输入且每次返回 immutable copy', () => {
+  it('复制 lookup 输入且每次返回 immutable copy', () => {
     const identity = createRuntimeIdentity('owner', ['a']);
     const source = [identity];
-    const index = createRuntimeIdentityIndex('owner', source);
+    const lookup = createRuntimeIdentityLookup('owner', source);
     source.length = 0;
 
-    expect(index.size).toBe(1);
-    expect(index.values()).not.toBe(index.values());
-    expect(index.values()).toEqual([identity]);
+    expect(lookup.size).toBe(1);
+    expect(lookup.values()).not.toBe(lookup.values());
+    expect(lookup.values()).toEqual([identity]);
   });
 
   it.each([
     [createRuntimeIdentity('other', ['a']), createRuntimeIdentity('owner', ['b'])],
     [createRuntimeIdentity('owner', ['a']), createRuntimeIdentity('owner', ['a'])],
   ])('拒绝 owner mismatch 与重复 segment path', (...identities) => {
-    expect(() => createRuntimeIdentityIndex('owner', identities)).toThrowError(
+    expect(() => createRuntimeIdentityLookup('owner', identities)).toThrowError(
       expect.objectContaining<Partial<RuntimeIdentityError>>({ code: 'RUNTIME_IDENTITY_INVALID' }),
     );
   });
 
   it('接受空 identity 集合', () => {
-    const index = createRuntimeIdentityIndex('owner', []);
-    expect(index.size).toBe(0);
-    expect(index.values()).toEqual([]);
+    const lookup = createRuntimeIdentityLookup('owner', []);
+    expect(lookup.size).toBe(0);
+    expect(lookup.values()).toEqual([]);
   });
 });

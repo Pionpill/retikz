@@ -62,7 +62,7 @@ describe('Table plain authoring', () => {
     expect(TableSpecSchema.parse(spec)).toEqual(spec);
   });
 
-  it('preserves and detaches detail formatter, rules, encodings, and style fields', () => {
+  it('preserves and detaches detail formatter, rules, encodings, and Table tokens', () => {
     const formatter = { name: 'number', options: { maximumFractionDigits: 1 } };
     const rules: NonNullable<DetailTableSpecInput['rules']> = [
       { selector: { fields: ['score'] }, appearance: { content: { color: '#b91c1c' } } },
@@ -76,15 +76,13 @@ describe('Table plain authoring', () => {
         legend: false,
       },
     ];
-    const styleTokens = { 'cell.content.color': '#27272a' } as const;
+    const tableThemeTokens = { 'cell.content.color': '#27272a' } as const;
     const input: DetailTableSpecInput = {
       dataRef: 'scores',
       columns: [{ id: 'score', field: 'score', formatter }],
       rules,
       encodings,
-      style: 'academic',
-      themeMode: 'dark',
-      styleTokens,
+      tableThemeTokens,
     };
     const spec = createDetailTableSpec(input);
 
@@ -92,14 +90,12 @@ describe('Table plain authoring', () => {
       structure: { columns: [{ id: 'score', field: 'score', formatter }] },
       rules,
       encodings,
-      style: 'academic',
-      themeMode: 'dark',
-      styleTokens,
+      tableThemeTokens,
     });
     expect(spec.structure.columns[0]).not.toBe(input.columns[0]);
     expect(spec.rules).not.toBe(rules);
     expect(spec.encodings).not.toBe(encodings);
-    expect(spec.styleTokens).not.toBe(styleTokens);
+    expect(spec.tableThemeTokens).not.toBe(tableThemeTokens);
 
     formatter.options.maximumFractionDigits = 3;
     rules[0].selector.fields!.push('ignored');
@@ -143,7 +139,7 @@ describe('Table plain authoring', () => {
     expect(TableSpecSchema.parse(spec)).toEqual(spec);
   });
 
-  it('preserves and detaches manual formatter, rules, encodings, and style fields', () => {
+  it('preserves and detaches manual formatter, rules, encodings, and Table tokens', () => {
     const rows: ManualTableSpecInput['rows'] = [
       [{ value: 98, formatter: { name: 'number', options: { maximumFractionDigits: 0 } } }],
     ];
@@ -159,14 +155,12 @@ describe('Table plain authoring', () => {
         legend: false,
       },
     ];
-    const styleTokens = { 'cell.background.fill': '#18181b' } as const;
+    const tableThemeTokens = { 'cell.background.fill': '#18181b' } as const;
     const input: ManualTableSpecInput = {
       rows,
       rules,
       encodings,
-      style: 'vibrant',
-      themeMode: 'light',
-      styleTokens,
+      tableThemeTokens,
     };
     const spec = createManualTableSpec(input);
 
@@ -174,15 +168,13 @@ describe('Table plain authoring', () => {
       structure: { rows },
       rules,
       encodings,
-      style: 'vibrant',
-      themeMode: 'light',
-      styleTokens,
+      tableThemeTokens,
     });
     expect(spec.structure.rows).not.toBe(rows);
     expect(spec.structure.rows[0]?.[0]).not.toBe(rows[0]?.[0]);
     expect(spec.rules).not.toBe(rules);
     expect(spec.encodings).not.toBe(encodings);
-    expect(spec.styleTokens).not.toBe(styleTokens);
+    expect(spec.tableThemeTokens).not.toBe(tableThemeTokens);
 
     const inputCell = rows[0]?.[0];
     if (typeof inputCell !== 'object' || inputCell === null || !('formatter' in inputCell)) {

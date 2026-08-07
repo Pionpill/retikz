@@ -1,35 +1,101 @@
 import { z } from 'zod';
 
+import type { ThemeTokenNamespaceBag } from './types';
+
 import { ThemeMode, ThemeStyle } from '../../shared';
 
-/** 判断输入是否为可无损遍历且不会执行 accessor 的普通 JSON 对象 */
-const isPlainJsonObject = (input: unknown): input is Record<string, unknown> => {
+type JsonValidationFailure = Readonly<{ path: Array<PropertyKey> }>;
+
+/** 定位第一个非 JSON-safe 值，不读取 accessor */
+const findJsonValidationFailure = (
+  input: unknown,
+  ancestors: ReadonlySet<object> = new Set(),
+  path: Array<PropertyKey> = [],
+): JsonValidationFailure | undefined => {
+  if (input === null || typeof input === 'string' || typeof input === 'boolean') return undefined;
+  if (typeof input === 'number') return Number.isFinite(input) ? undefined : { path };
+  if (typeof input !== 'object' || ancestors.has(input)) return { path };
+
+  try {
+    const symbols = Object.getOwnPropertySymbols(input);
+    if (symbols.length > 0) return { path: [...path, symbols[0]] };
+    const nextAncestors = new Set(ancestors);
+    nextAncestors.add(input);
+    if (Array.isArray(input)) {
+      if (Object.getPrototypeOf(input) !== Array.prototype) return { path };
+      const names = Object.getOwnPropertyNames(input);
+      if (names.length !== input.length + 1 || !names.includes('length')) {
+        const unexpected = names.find(name => name !== 'length' && !/^(0|[1-9]\d*)$/.test(name));
+        return { path: unexpected === undefined ? path : [...path, unexpected] };
+      }
+      for (let index = 0; index < input.length; index += 1) {
+        const descriptor = Object.getOwnPropertyDescriptor(input, String(index));
+        const itemPath = [...path, index];
+        if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) return { path: itemPath };
+        const failure = findJsonValidationFailure(descriptor.value, nextAncestors, itemPath);
+        if (failure !== undefined) return failure;
+      }
+      return undefined;
+    }
+    const prototype = Object.getPrototypeOf(input);
+    if (prototype !== Object.prototype && prototype !== null) return { path };
+    for (const key of Object.getOwnPropertyNames(input)) {
+      const descriptor = Object.getOwnPropertyDescriptor(input, key);
+      const valuePath = [...path, key];
+      if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) return { path: valuePath };
+      const failure = findJsonValidationFailure(descriptor.value, nextAncestors, valuePath);
+      if (failure !== undefined) return failure;
+    }
+    return undefined;
+  } catch {
+    return { path };
+  }
+};
+
+const isPlainJsonObject = (input: unknown): input is Record<string, unknown> =>
+  input !== null &&
+  typeof input === 'object' &&
+  !Array.isArray(input) &&
+  findJsonValidationFailure(input) === undefined;
+
+const isPlainObjectContainer = (input: unknown): input is Record<string, unknown> => {
   if (input === null || typeof input !== 'object' || Array.isArray(input)) return false;
   try {
     const prototype = Object.getPrototypeOf(input);
-    if (prototype !== Object.prototype && prototype !== null) return false;
-    return Reflect.ownKeys(input).every(key => {
-      if (typeof key !== 'string') return false;
-      const descriptor = Object.getOwnPropertyDescriptor(input, key);
-      return (
-        descriptor !== undefined && descriptor.enumerable && 'value' in descriptor && descriptor.value !== undefined
-      );
-    });
+    return prototype === Object.prototype || prototype === null;
   } catch {
     return false;
   }
 };
 
+const isThemeTokenNamespaceBag = (input: unknown): input is ThemeTokenNamespaceBag =>
+  isPlainJsonObject(input) &&
+  Object.keys(input).every(
+    namespace => namespace.trim().length > 0 && isPlainJsonObject(Reflect.get(input, namespace)),
+  );
+
+const ThemeTokenNamespaceBagSchema = z
+  .custom<ThemeTokenNamespaceBag>(isThemeTokenNamespaceBag, {
+    error: 'Theme tokens must be a plain object of non-empty namespace objects.',
+  })
+  .describe('Sparse namespace bag whose owner keys are validated by the compile-time Theme token registry.');
+
 const ThemeObjectSchema = z.strictObject({
   style: z.enum(ThemeStyle).optional().describe('Sparse visual personality inherited from the enclosing Theme.'),
   mode: z.enum(ThemeMode).optional().describe('Sparse light or dark environment inherited from the enclosing Theme.'),
+  tokens: ThemeTokenNamespaceBagSchema.optional().describe('Sparse owner namespace token overrides.'),
 });
 
 const ThemeInputSchema = z
-  .custom<Record<string, unknown>>(isPlainJsonObject, { error: 'Theme must be a plain JSON object.' })
+  .custom<Record<string, unknown>>(isPlainObjectContainer, { error: 'Theme must be a plain JSON object.' })
   .superRefine((input, context) => {
+    const failure = findJsonValidationFailure(input);
+    if (failure !== undefined) {
+      context.addIssue({ code: 'custom', path: failure.path, message: 'Theme must be a plain JSON object.' });
+      return;
+    }
     for (const key of Reflect.ownKeys(input)) {
-      if (key === 'style' || key === 'mode') continue;
+      if (key === 'style' || key === 'mode' || key === 'tokens') continue;
       context.addIssue({ code: 'custom', path: [key], message: `Unrecognized Theme field: "${String(key)}".` });
     }
   });

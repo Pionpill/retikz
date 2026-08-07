@@ -2,21 +2,21 @@ import { describe, expect, it } from 'vitest';
 
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { resolveTableCellPlans } from '../../src/pipeline/rule';
-import { resolveTableStyleTokens } from '../../src/providers/style';
+import { resolveTableThemeTokens } from '../../src/providers/style';
 
 const scaleContext = { categoricalColors: ['red'], sequentialColors: ['white', 'black'] } as const;
 
-describe('style token Cell mapping', () => {
+describe('theme token Cell mapping', () => {
   it('maps body/header slots, both font leaves, and exact token winner traces', () => {
     const model = normalizeTableStructure(
       { kind: 'detail', columns: [{ id: 'value', field: 'value' }] },
       { data: { reference: 'rows' }, datasets: { rows: [{ value: 1 }] } },
     );
-    const styleTokens = resolveTableStyleTokens('neutral', 'light', {
+    const tableThemeTokens = resolveTableThemeTokens(undefined, {
       'cell.content.font.family': 'monospace',
       'columnHeader.content.color': '#123456',
     });
-    const result = resolveTableCellPlans(model, { styleTokens, scaleContext });
+    const result = resolveTableCellPlans(model, { tableThemeTokens, scaleContext });
 
     expect(result.cells[0]).toMatchObject({
       appearance: {
@@ -33,7 +33,8 @@ describe('style token Cell mapping', () => {
           '/content/color': {
             kind: 'styleToken',
             tokenKey: 'columnHeader.content.color',
-            tokenSource: 'user',
+            tokenSource: 'local-theme-token',
+            tokenPath: '$spec/tableThemeTokens/columnHeader.content.color',
           },
           '/content/nodeDefault/font/family': {
             kind: 'styleToken',
@@ -64,13 +65,13 @@ describe('style token Cell mapping', () => {
       { kind: 'detail', columns: [{ id: 'value', field: 'value' }] },
       { data: { reference: 'rows' }, datasets: { rows: [{ value: 1 }] } },
     );
-    const styleTokens = resolveTableStyleTokens('neutral', 'light', {
+    const tableThemeTokens = resolveTableThemeTokens(undefined, {
       'cell.background.fill': null,
       'cell.background.fillOpacity': 0.5,
       'columnHeader.background.fill': null,
       'columnHeader.background.fillOpacity': 0.25,
     });
-    const result = resolveTableCellPlans(model, { styleTokens, scaleContext });
+    const result = resolveTableCellPlans(model, { tableThemeTokens, scaleContext });
 
     for (const cell of result.cells) {
       expect(cell.appearance).not.toHaveProperty('background');

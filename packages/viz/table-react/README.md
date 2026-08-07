@@ -14,7 +14,8 @@ import { DetailTable } from '@retikz/table-react';
   id="scores"
   dataRef="scores"
   data={rows}
-  style="neutral"
+  theme={{ style: 'academic', mode: 'light' }}
+  tableThemeTokens={{ 'cell.content.color': '#1e3a8a' }}
   columns={[
     { id: 'name', field: 'name', header: 'Name', bodyLayout: { padding: 6, wrap: true } },
     {
@@ -72,16 +73,18 @@ formatter/presentation references, semantic fields, or direct Core/Tier 2 conten
 presentation references only apply to scalar value Cells; content Cells reject both because they
 already carry renderable children.
 
-Detail and manual roots forward the JSON-safe `rules`, `encodings`, `style`, `themeMode`, and
-`styleTokens` fields to the same TableSpec contract as plain authoring. `style` selects the Table
-preset. Standalone host CSS uses `containerStyle`; the former CSS-object `style` prop is removed,
-and embedded Tables reject `containerStyle` together with the other standalone-only host props.
+Detail and manual roots forward the JSON-safe `rules`, `encodings`, and `tableThemeTokens` fields
+to the same TableSpec contract as plain authoring. Core `theme.style` / `theme.mode` selects the
+Table preset, while inherited `theme.tokens.table` and local `tableThemeTokens` form the sparse
+Table token cascade. Standalone host CSS uses `containerStyle`; embedded Tables receive Theme and
+other host capabilities from the outer `Layout` and reject standalone-only host props.
 
 All three root components work standalone or as Tier 2 children of `@retikz/react` `Layout`.
 Standalone roots reuse the supported `Layout` host surface and observe `onManifest` from the same
-compile artifact. Embedded usage requires a stable spec id and rejects standalone host props or local
-`onManifest`; move them to the outer `Layout`. Datasets, custom definitions, and extra composites
-remain runtime inputs outside Table IR.
+compile artifact. A standalone `theme` writes the root Core Scene Theme; embedded usage requires a
+stable spec id and receives the root Theme from the outer `Layout`. Embedded roots reject
+standalone host props or local `onManifest`; move them to the outer `Layout`. Datasets, custom
+definitions, and extra composites remain runtime inputs outside Table IR.
 
 Formatter, structure, presentation, and visual-scale definitions use the same `LowerTablesOptions`
 and lowering contract in standalone and embedded modes. Embedded roots additionally package those

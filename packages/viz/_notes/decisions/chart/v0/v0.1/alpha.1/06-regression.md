@@ -64,9 +64,9 @@ const trendPath = {
 
 用户可以调整 Smooth method、sample count、extent 与两种 Mark 的表现样式，但不能移除 Smooth、改变其 kind / input / output、把 transform 移到 root，或改写核心 Point / Path identity 和 view。
 
-Point 与 trend Path 的颜色使用同一个 resolved color channel：显式 `color` constant 让两者使用同一常量；显式 `color` field 让两者使用同一 field binding 与同一 scale identity。显式 field 未指定 scale 时，recipe 使用保留 identity `__chart.regression.scale.color` 的 Plot ordinal scale，并把最终 `data.palette.categorical` 物化为 range；省略 `color` 而存在 `series` 时，将 `series` 作为两者共同的 field-bound color，使用保留 identity `__chart.regression.scale.series-color`，并把最终 `data.palette.series` 物化为 range。用户可以通过正式 `scales` 成员按对应 identity 调整合成 scale。
+Point 与 trend Path 的颜色使用同一个 resolved color channel：显式 `color` constant 让两者使用同一常量；显式 `color` field 让两者使用同一 field binding 与同一 scale identity。显式 field 未指定 scale 时，recipe 使用保留 identity `__chart.regression.scale.color` 的 Plot ordinal scale，并把 Plot resolver 的最终 `plot.palette.categorical` 物化为 range；省略 `color` 而存在 `series` 时，将 `series` 作为两者共同的 field-bound color，使用保留 identity `__chart.regression.scale.series-color`，并把最终 `plot.palette.series` 物化为 range。用户可以通过正式 `scales` 成员按对应 identity 调整合成 scale。
 
-Smooth `groupBy` 由本段颜色规则确定。省略 `series` 而使用 color field 时，该 field 同时成为 Smooth grouping 与 trend Path `series`。`series` 与不同 color field 同时存在时，Smooth `groupBy` 同时包含 series 与 color field，使两个字段都保留在趋势输出中；trend Path 仍按 `series` 分组，并由 Plot 对输出 rows 验证每个 series 内颜色恒定，不恒定时整体 fail-loud。两者都省略时，recipe 从最终 Chart / Plot series palette 第一项解析同一个常量，分别写入 Point color 与 trend Path stroke，不合成 scale、descriptor 或 legend。显式 color 始终优先于 series-only 和 palette default。
+Smooth `groupBy` 由本段颜色规则确定。省略 `series` 而使用 color field 时，该 field 同时成为 Smooth grouping 与 trend Path `series`。`series` 与不同 color field 同时存在时，Smooth `groupBy` 同时包含 series 与 color field，使两个字段都保留在趋势输出中；trend Path 仍按 `series` 分组，并由 Plot 对输出 rows 验证每个 series 内颜色恒定，不恒定时整体 fail-loud。两者都省略时，recipe 调用 Plot 公开纯 resolver，从最终 series palette 第一项解析同一个常量，分别写入 Point color 与 trend Path stroke，不合成 scale、descriptor 或 legend。显式 color 始终优先于 series-only 和 palette default。
 
 field-bound color 在 default legend 允许时生成一个绑定实际共享 scale identity 的 color legend；constant 与 palette default 不生成 color legend，显式 `guides` 仍整体替换表现性 defaults。
 

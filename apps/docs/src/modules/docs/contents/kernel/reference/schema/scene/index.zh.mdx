@@ -11,7 +11,8 @@ description: IR 根 —— 一份 retikz 绘制的 JSON 化描述
   descriptions={{
     version: 'IR 主版本号；schema 出现破坏性变更时才递增',
     type: '判别字段，标记该对象为 scene 根节点',
-    theme: '全图稀疏 Theme；从 neutral + light 基线开始逐字段覆盖，并由后代 Scope 继续继承',
+    theme:
+      '全图稀疏 Theme；包含 style、mode 与 owner namespace token bag，从 neutral + light 基线开始继承，并由后代 Scope 继续覆盖',
     children: 'scene 的顶层子节点列表；node 注册的 id 可被 path 引用',
     viewBox:
       '显式视框 `{ x, y, width, height }`，覆盖自动算的布局范围（固定尺寸 / 裁剪 / 多图对齐）；设值后 Scene.layout 直接用它、忽略 padding；省略则自动取 AABB + padding',
@@ -22,7 +23,9 @@ description: IR 根 —— 一份 retikz 绘制的 JSON 化描述
 
 ## Theme
 
-`ThemeSchema` 是 Scene 与 Scope 共用的稀疏环境。`style` 与 `mode` 独立继承；默认解析为 `neutral + light`。它只交给当前位置的 Tier 2 Composite，普通 Core 图元与最终 Scene 不按 Theme 分支。
+`ThemeSchema` 是 Scene 与 Scope 共用的稀疏环境，字段为 `style`、`mode` 与 `tokens`。`tokens` 按 owner namespace 保存 sparse token key；每层只覆盖自己声明的 namespace/key，Core 内置 `core` namespace，Plot、Chart、Table 等 owner 通过 `themeTokenDefinitions` 注册各自 schema。未知 namespace、key、值或冲突 Definition 会 fail-loud。
+
+编译后 Composite 收到完整、冻结的 `ResolvedTheme`：除了继承后的 `style`、`mode`、`tokens`，还包含 detached/frozen 的 `colors.semantic` 与非空 `colors.categorical`。这些 colors 是 Core shared view；普通 Core 图元、最终 Scene 与 renderer 不会自动读取 Theme 或替换自身颜色。
 
 <ZodSchema name="ThemeSchema" />
 

@@ -70,15 +70,17 @@ All three packages share the IR and lowering source of truth in `@retikz/plot`. 
 
 ## What Plot owns—and what it does not
 
-| Plot owns                                           | Owned elsewhere                                                                                       |
-| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Plot IR and graphic-grammar contracts               | Field models, parsing, general transforms, and provenance belong to [Data](/viz/data)                 |
-| Channels, scales, coordinates, marks, and guides    | Core IR, layout, reference resolution, and Scene compilation belong to [Kernel](/kernel/introduction) |
-| Composition and Plot-to-Core lowering               | SVG / Canvas output belongs to renderers                                                              |
-| Definitions, registries, resolvers, and diagnostics | React / Vanilla lifecycles and host wiring belong to adapters                                         |
-| Chart-oriented semantic mapping                     | Row / column structure, Cell semantics, and table layout belong to [Table](/viz/table)                |
+| Plot owns                                                   | Owned elsewhere                                                                                       |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Plot IR, domain theme tokens, and graphic-grammar contracts | Field models, parsing, general transforms, and provenance belong to [Data](/viz/data)                 |
+| Channels, scales, coordinates, marks, and guides            | Core IR, layout, reference resolution, and Scene compilation belong to [Kernel](/kernel/introduction) |
+| Composition and Plot-to-Core lowering                       | SVG / Canvas output belongs to renderers                                                              |
+| Definitions, registries, resolvers, and diagnostics         | React / Vanilla lifecycles and host wiring belong to adapters                                         |
+| Chart-oriented semantic mapping and theme lowering          | Row / column structure, Cell semantics, and table layout belong to [Table](/viz/table)                |
 
 If a capability does not depend on chart field mapping—general data transforms, low-level geometry, or table Cells, for example—it should not enter Plot. Conversely, a new scale, coordinate, mark, or guide should first become a registerable Definition, then use the same path as built-ins.
+
+Plot also owns canonical theme tokens for surfaces, guides, labels, and palettes. It consumes the Core effective Theme to select a domain preset, then maps inherited `tokens.plot`, local `plotThemeTokens`, `colors`, and native `plotTheme` into the same lowering path. The adapter injects the Plot token Definition into the Core registry, so React and Vanilla use the same owner schema. See the [theme contract](/viz/plot/reference/theme) for the complete key set and precedence.
 
 ## Pages
 

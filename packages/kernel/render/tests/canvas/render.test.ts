@@ -1,6 +1,8 @@
-import type { InspectionPlane, Scene } from '@retikz/core';
+import type { Scene } from '@retikz/core';
 
 import { describe, expect, it, vi } from 'vitest';
+
+import type { RenderReadonlyLayer } from '../../src/runtime';
 
 import { renderFrameToCanvas, renderToCanvas } from '../../src/canvas';
 
@@ -106,100 +108,94 @@ const frameScene: Scene = {
 };
 
 describe('renderToCanvas 规格', () => {
-  it('render frame 在同一 fit/DPR transform 下先绘制 primary、再绘制 inspection', () => {
+  it('render frame 在同一 fit/DPR transform 下先绘制 primary、再顺序绘制 readonly layers', () => {
     const context = createSpyCanvasContext();
     const { canvas } = createCanvas(context as unknown as CanvasRenderingContext2D);
-    const inspection: InspectionPlane = {
-      entries: [
-        {
-          owner: { kind: 'pathKind', name: 'stroke' },
-          occurrence: { sourcePath: '$.children[0]', expansionPath: [] },
-          colorScope: 1,
-          transform: [1, 0, 0, 1, 12, 8],
-          scene: {
-            layout: { x: 0, y: 0, width: 26, height: 8 },
-            resources: [
-              {
-                kind: 'paint',
-                id: 'paint-1',
-                spec: {
-                  kind: 'linearGradient',
-                  stops: [
-                    { offset: 0, color: '#7c3aed' },
-                    { offset: 1, color: '#ffffff' },
-                  ],
-                },
-              },
-            ],
-            primitives: [
-              {
-                type: 'path',
-                commands: [
-                  { kind: 'move', to: [0, 0] },
-                  { kind: 'line', to: [20, 0] },
+    const layers: ReadonlyArray<RenderReadonlyLayer> = [
+      {
+        key: 'first',
+        transform: [1, 0, 0, 1, 12, 8],
+        scene: {
+          layout: { x: 0, y: 0, width: 26, height: 8 },
+          resources: [
+            {
+              kind: 'paint',
+              id: 'paint-1',
+              spec: {
+                kind: 'linearGradient',
+                stops: [
+                  { offset: 0, color: '#7c3aed' },
+                  { offset: 1, color: '#ffffff' },
                 ],
-                stroke: '#7c3aed',
-                dashPattern: [1, 4],
               },
-              {
-                type: 'rect',
-                x: 22,
-                y: 2,
-                width: 4,
-                height: 6,
-                fill: { kind: 'resourceRef', id: 'paint-1' },
-              },
-            ],
-          },
+            },
+          ],
+          primitives: [
+            {
+              type: 'path',
+              commands: [
+                { kind: 'move', to: [0, 0] },
+                { kind: 'line', to: [20, 0] },
+              ],
+              stroke: '#7c3aed',
+              dashPattern: [1, 4],
+            },
+            {
+              type: 'rect',
+              x: 22,
+              y: 2,
+              width: 4,
+              height: 6,
+              fill: { kind: 'resourceRef', id: 'paint-1' },
+            },
+          ],
         },
-        {
-          owner: { kind: 'composite', namespace: 'test', type: 'layout' },
-          occurrence: { sourcePath: '$.children[1]', expansionPath: [] },
-          colorScope: 2,
-          transform: [1, 0, 0, 1, -4, 6],
-          scene: {
-            layout: { x: 0, y: 0, width: 12, height: 12 },
-            resources: [
-              {
-                kind: 'paint',
-                id: 'paint-1',
-                spec: { kind: 'pattern', shape: 'lines', size: 8 },
-                tile: {
-                  size: 8,
-                  motif: [
-                    {
-                      type: 'path',
-                      commands: [
-                        { kind: 'move', to: [0, 0] },
-                        { kind: 'line', to: [8, 8] },
-                      ],
-                      stroke: '#dc2626',
-                      strokeWidth: 1,
-                    },
-                  ],
-                },
+      },
+      {
+        key: 'second',
+        transform: [1, 0, 0, 1, -4, 6],
+        scene: {
+          layout: { x: 0, y: 0, width: 12, height: 12 },
+          resources: [
+            {
+              kind: 'paint',
+              id: 'paint-1',
+              spec: { kind: 'pattern', shape: 'lines', size: 8 },
+              tile: {
+                size: 8,
+                motif: [
+                  {
+                    type: 'path',
+                    commands: [
+                      { kind: 'move', to: [0, 0] },
+                      { kind: 'line', to: [8, 8] },
+                    ],
+                    stroke: '#dc2626',
+                    strokeWidth: 1,
+                  },
+                ],
               },
-            ],
-            primitives: [
-              {
-                type: 'rect',
-                x: 0,
-                y: 0,
-                width: 12,
-                height: 12,
-                fill: { kind: 'resourceRef', id: 'paint-1' },
-              },
-            ],
-          },
+            },
+          ],
+          primitives: [
+            {
+              type: 'rect',
+              x: 0,
+              y: 0,
+              width: 12,
+              height: 12,
+              fill: { kind: 'resourceRef', id: 'paint-1' },
+            },
+          ],
         },
-      ],
-    };
+      },
+    ];
     const offscreen = createSpyCanvasContext();
     Object.assign(offscreen, { canvas: {} });
 
     renderFrameToCanvas(
       canvas,
-      { primary: frameScene, inspection },
+      { primary: frameScene, layers },
       {
         devicePixelRatio: 2,
         createOffscreen: () => offscreen as unknown as CanvasRenderingContext2D,

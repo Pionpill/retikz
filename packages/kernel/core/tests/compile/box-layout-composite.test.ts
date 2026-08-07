@@ -817,7 +817,7 @@ describe('Box Layout Composite contract', () => {
       nextRevision: 1,
       operations: [{ kind: 'replaceScene', snapshot: artifact.snapshot }],
     });
-    expect(artifact.output).toEqual({ result: freshResult, diagnostics: freshDiagnostics });
+    expect(artifact.output).toEqual({ result: freshResult, diagnostics: freshDiagnostics, observerOutputs: [] });
     expect(artifact.output.diagnostics.map(warning => warning.code)).toContain(CompileWarningCode.DuplicateNodeId);
   });
 });

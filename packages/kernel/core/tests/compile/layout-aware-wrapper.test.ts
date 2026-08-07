@@ -477,7 +477,6 @@ describe('layout-aware composite runtime wrapper tree', () => {
       layoutResults: new WeakMap(),
       outputChildren: new WeakMap(),
       failures: new WeakMap(),
-      inspectionChildren: new WeakMap(),
     };
     expect(() =>
       compileChildrenToPrimitives(failingIr.children, context, {

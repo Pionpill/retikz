@@ -4,7 +4,13 @@ import type { TableCompileArtifact } from '@retikz/table';
 import type { FC } from 'react';
 
 import { Layout } from '@retikz/react';
-import { lowerTables, TABLE_NAMESPACE, TableComposite, TableSpecSchema } from '@retikz/table';
+import {
+  lowerTables,
+  TABLE_NAMESPACE,
+  TableComposite,
+  TableSpecSchema,
+  TableThemeTokenDefinition,
+} from '@retikz/table';
 import { useCallback, useMemo, useRef } from 'react';
 
 import type { ReactTableRuntime } from './table-runtime';
@@ -64,6 +70,7 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
     <Layout
       ir={scene}
       composites={mergedComposites}
+      themeTokenDefinitions={[TableThemeTokenDefinition]}
       onArtifacts={onManifest === undefined ? undefined : handleArtifacts}
       {...display}
     />

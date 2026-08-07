@@ -2,17 +2,13 @@ import type { AxisAlignedBounds } from '@retikz/math';
 import type { RuntimeIdentity, RuntimeRevision } from '@retikz/runtime';
 
 import type {
-  AnyInspectorDefinition,
-  BaseLayoutInspectOptions,
   ClipShape,
+  CompileObservationOwner,
   CompileOccurrenceLocator,
   CompositeCompileChild,
   CompositeCompileScopeProps,
   CompositeReplay,
   CompositeReplayWrapper,
-  InspectionAuthoringTree,
-  InspectionChildForest,
-  InspectionOwner,
   LayoutAlignmentGuide,
   LayoutCompositeCompileContext,
   LayoutCompositeCompileResult,
@@ -21,7 +17,7 @@ import type {
   SceneResource,
   Transform,
 } from '../../contract';
-import type { IRChild, IRJsonObject, IRPathBase, IRPosition, JsonValue, ResolvedDropShadow } from '../../schemas';
+import type { IRChild, IRPathBase, IRPosition, JsonValue, ResolvedDropShadow } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { NamespaceFrameChange, NamespaceStack } from '../namespace';
 import type { NodeLayout } from '../node';
@@ -50,8 +46,10 @@ export type PendingPathEmission = {
   placeholderSlot: { primitiveSink: Array<InternalScenePrimitive>; placeholder: PathPlaceholder };
   /** path 的完整 canonical occurrence */
   occurrence: CompileOccurrenceLocator;
-  /** Path Inspector request 的最终输出容器 */
-  inspectionSink: Array<PendingInspectionEntry>;
+  /** Path owner output observation 的最终输出容器 */
+  observationSink: Array<PendingCompileObservation>;
+  /** 当前 authored Path site 选中的 observer keys */
+  observerKeys?: ReadonlyArray<string>;
   /** Path occurrence 捕获的有效 Theme */
   theme: ResolvedTheme;
   /** Path occurrence 捕获的完整样式栈 */
@@ -80,8 +78,8 @@ export type TraversalResult = {
   observations: Array<PendingNodeLayoutObservation>;
   /** 本次 traversal 最终逻辑树的 artifacts */
   artifacts: Array<CompositeCompileArtifact | NodeLayoutCompileArtifact>;
-  /** 本次 traversal 最终逻辑树的 inspection entries */
-  inspections: Array<PendingInspectionEntry>;
+  /** 本次 traversal 最终逻辑树的 compile observation entries */
+  compileObservations: Array<PendingCompileObservation>;
   /** 顶层 child 向父布局暴露的无歧义 alignment guides */
   alignmentGuides?: ReadonlyArray<LayoutAlignmentGuide>;
 };
@@ -129,8 +127,8 @@ export type CompositeReplayTransaction = {
   warnings: Array<CompileWarningInput>;
   /** 仅在 replay 时发布的 artifacts */
   artifacts: Array<CompositeCompileArtifact | NodeLayoutCompileArtifact>;
-  /** 仅在 replay 时发布的 inspection entries */
-  inspections: Array<PendingInspectionEntry>;
+  /** 仅在 replay 时发布的 compile observation entries */
+  compileObservations: Array<PendingCompileObservation>;
   /** probe 时的有效样式语义指纹，用于判断 replay 是否需要在新 Scope 中重新物化 */
   styleFingerprint: string;
   /** probe 时的有效 Theme 语义指纹，用于判断 replay 是否需要在新 Scope 中重新物化 */
@@ -182,25 +180,6 @@ export type CompositeCompileSession = {
   outputChildren: WeakMap<object, CompositeRuntimeOutputEntry>;
   /** opaque LayoutChildFailure identity → callback/compile-local failure metadata */
   failures: WeakMap<object, LayoutProbeFailureEntry>;
-  /** opaque inspection child handle → callback-local authored sidecar */
-  inspectionChildren: WeakMap<object, CompositeInspectionChildEntry>;
-};
-
-/** 只向 nested layout 传播的 sparse inherited inspection 状态 */
-export type InheritedInspectionState = Readonly<{
-  blocked: boolean;
-  layout: false | BaseLayoutInspectOptions;
-}>;
-
-/** 已按 layoutChild authoring locator 索引的 inspection forest */
-export type PreparedCompositeInspectionChildForest = ReadonlyMap<string, InspectionAuthoringTree>;
-
-/** opaque inspection child handle 的 callback-local 绑定记录 */
-export type CompositeInspectionChildEntry = {
-  owner: CompositeCompileOwner;
-  forest: InspectionChildForest;
-  boundChild?: IRChild;
-  prepared?: PreparedCompositeInspectionChildForest;
 };
 
 /** 单次 traversal 的可选隔离输入 */
@@ -229,10 +208,6 @@ export type TraversalCompileOptions = {
   identityTracker?: RuntimeTopologyTracker;
   /** 隔离 traversal 继承的 semantic owner */
   semanticOwner?: RuntimeSemanticOwner;
-  /** layoutChild 自动下传的 inherited inspection 状态 */
-  inheritedInspection?: InheritedInspectionState;
-  /** layoutChild opaque handle 绑定的 authored inspection forest */
-  inspectionForest?: PreparedCompositeInspectionChildForest;
   /** 向隔离 namespace callback 暴露当前 warning occurrence */
   observeWarningOccurrence?: (occurrence: CompileOccurrenceLocator | undefined) => void;
   /** 向辅助编译边界暴露最接近失败点的 child IR path */
@@ -276,7 +251,7 @@ export type TraversalContext = Pick<
   | 'composites'
   | 'maxCompositeDepth'
   | 'artifacts'
-  | 'inspection'
+  | 'observation'
 > & {
   /** 当前 traversal 接收到的完整双轴 proposal */
   proposal: LayoutProposal;
@@ -324,8 +299,8 @@ export type TraversalFrame = {
   observationSink: Array<PendingNodeLayoutObservation>;
   /** 最终逻辑树 artifact 输出容器 */
   artifactSink: Array<CompositeCompileArtifact | NodeLayoutCompileArtifact>;
-  /** 最终逻辑树 inspection 输出容器 */
-  inspectionSink: Array<PendingInspectionEntry>;
+  /** 最终逻辑树 compile observation 输出容器 */
+  compileObservationSink: Array<PendingCompileObservation>;
   /** 当前 frame 的稳定或 candidate-local semantic owner */
   semanticOwner?: RuntimeSemanticOwner;
 };
@@ -430,20 +405,20 @@ export type PendingNodeLayoutObservation = {
   occurrence: CompileOccurrenceLocator;
 };
 
-/** 等最终 Scope/replay transform 与 occurrence remap 完成后发布的 inspection entry */
-export type PendingInspectionEntry = {
+/** 等最终 Scope/replay transform 与 occurrence remap 完成后发布的 observation entry */
+export type PendingCompileObservation = {
   /** 产生辅助内容的语义 owner */
-  owner: InspectionOwner;
+  owner: CompileObservationOwner;
   /** 最终 owner occurrence locator */
   occurrence: CompileOccurrenceLocator;
+  /** replay remap 前的所属者 occurrence */
+  origin: CompileOccurrenceLocator;
   /** 从当前 subject local coordinate 到 root 的 transform chain */
   scopeChain: Array<Transform>;
-  /** 已解析并冻结的 settled subject */
-  subject: JsonValue;
-  /** owner definition 绑定的 Inspector */
-  inspector: AnyInspectorDefinition;
-  /** owner schema 解析后的 canonical options */
-  options: IRJsonObject;
+  /** 已按 owner schema 解析并冻结的最终产物 */
+  value: JsonValue;
+  /** 选中该 authored site 的 observer keys */
+  observerKeys: ReadonlyArray<string>;
   /** owner occurrence 捕获的有效 Theme */
   theme: ResolvedTheme;
   /** owner occurrence 捕获的完整样式栈 */
@@ -455,6 +430,5 @@ export type CallableLayoutCompositeDefinition = {
   namespace: string;
   type: string;
   artifactSchema?: { parse: (value: unknown) => JsonValue };
-  inspector?: AnyInspectorDefinition & Readonly<{ kind: 'composite' }>;
   compile: (node: unknown, context: LayoutCompositeCompileContext) => LayoutCompositeCompileResult<JsonValue>;
 };

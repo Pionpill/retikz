@@ -14,7 +14,7 @@ description: 把渲染目标无关的 Scene 落到 SVG / Canvas，并以 retaine
 | SVG              | Scene → 矢量 DOM，或 SSR / 构建期的字符串输出          | 默认选它：要清晰矢量、CSS 命中、无障碍 |
 | Canvas           | Scene → 像素位图，即时模式绘制 + 命中查询              | 图元成百上千、高频重绘、性能优先       |
 | Retained Runtime | 在 Runtime transaction 中 prepare / commit Scene Patch | 需要稳定宿主 identity 与增量更新       |
-| 检查辅助层       | 在主图之后物化独立开发辅助层                           | 查看布局边界、溢出与对齐参考线         |
+| 只读图层         | 在主图之后物化领域中立的普通 Scene 图层                | 接入检查器、编辑器或其它只读辅助内容   |
 | 水合             | 静态出图后按 id 把事件 handler 绑回图元（两后端共用）  | 给图加点击 / 悬停等交互                |
 
 ## Retained Runtime
@@ -27,13 +27,13 @@ description: 把渲染目标无关的 Scene 落到 SVG / Canvas，并以 retaine
 
 这些 retained API 从 `@retikz/render/runtime` 导入，不从 `@retikz/render` package root 导出。第三方后端通过 `RetainedRendererFactory` 创建 nominal SVG / Canvas renderer，并声明 `none` / `group` / `entity` capability。Render participant 会校验 Snapshot / Patch lineage；后端无法解释某个 Patch 时，统一降级为完整 Scene replacement 并发布 diagnostic。
 
-### 主图与检查辅助层
+### 主图与只读图层
 
-Static API 使用 `StaticRenderFrame { primary: Scene, inspection }`，retained renderer 使用 `RenderFrameSnapshot { primary: SceneRuntimeSnapshot, inspection }`。两者都把主图和完整检查辅助层作为一个 frame 物化；retained transaction 失败时不会出现新主图配旧辅助线。
+Static API 使用 `StaticRenderFrame { primary: Scene, layers }`，retained renderer 使用 `RenderFrameSnapshot { primary: SceneRuntimeSnapshot, layers }`。两者都把主图和有序只读图层作为一个 frame 物化；retained transaction 失败时不会发布新主图配旧图层。
 
-每个 `InspectionPlaneEntry` 都携带 occurrence-local 的普通静态 `scene` 和到主 Scene 坐标的 `transform`。SVG 在主图之后追加 `pointer-events="none"` 的检查分组，用普通 Scene fragment 路径执行每个 entry，并为其资源生成独立前缀，不写 hydration id。Canvas 套用 entry transform 后调用普通 Scene 绘制路径；`hitTest` 仍只读取主 Scene。辅助层不会决定 viewBox、主资源、动画或主图 identity。第三方 retained renderer 必须通过 `inspectionCapability: 'supported' | 'unsupported'` 明确声明支持情况；收到非空辅助层但声明 unsupported 时会 fail-loud，不会静默丢弃。
+每个 `RenderReadonlyLayer` 都携带单帧唯一的 `key`、普通静态 `scene` 和到主 Scene 坐标的 `transform`。SVG 在主图之后追加 `pointer-events="none"` 的分组，用普通 Scene fragment 路径执行每个图层，并为其资源生成独立前缀，不写 hydration id。Canvas 套用图层 transform 后调用普通 Scene 绘制路径；`hitTest` 仍只读取主 Scene。只读图层不会决定 viewBox、主资源、动画或主图 identity，也不能包含公共 `id`、`meta` 或动画字段。
 
-Render 不再拥有 Inspector palette、tone、rect / line / label switch 或 hatch 几何。颜色由 Core 在调用 Inspector 前通过 `InspectionAppearance` 分配，owner 把它写入普通 IR；斜线区域使用普通 pattern paint，节点、路径、渐变、图片、裁剪和自定义 Composite 也都沿正常 Scene 语义执行。这样新增辅助内容只需 Core 能编译、目标后端能渲染对应普通 Scene 能力，不需要扩展 Renderer 专用 DTO。
+第三方 retained renderer 通过 `readonlyLayerCapability: 'supported' | 'unsupported'` 明确声明支持情况；收到非空图层但声明 unsupported 时会直接报错，不会静默丢弃。Render 不认识 Inspector、配色或具体辅助图元；`@retikz/inspect` 只是只读图层的一个外部生产者，编辑器和其它工具也可复用同一能力。
 
 ### 静态帧 API
 
@@ -41,7 +41,7 @@ Render 不再拥有 Inspector palette、tone、rect / line / label switch 或 ha
 
 | API                                            | 导入路径                | 产物                            |
 | ---------------------------------------------- | ----------------------- | ------------------------------- |
-| `buildSvgFrameDocument(frame, options)`        | `@retikz/render/svg`    | 包含主图与检查分组的 `SvgNode`  |
+| `buildSvgFrameDocument(frame, options)`        | `@retikz/render/svg`    | 包含主图与只读图层的 `SvgNode`  |
 | `renderFrameToSvgString(frame, options)`       | `@retikz/render/svg`    | 可用于 SSR 的完整 SVG 字符串    |
 | `renderFrameToCanvas(canvas, frame, options?)` | `@retikz/render/canvas` | 原子绘制到目标 Canvas，无返回值 |
 
@@ -176,6 +176,10 @@ Render 不再拥有 Inspector palette、tone、rect / line / label switch 或 ha
     {
       label: 'Static 与 retained frame 契约',
       path: 'packages/kernel/render/src/runtime/frame.ts',
+    },
+    {
+      label: '只读图层校验与冻结',
+      path: 'packages/kernel/render/src/runtime/readonly-layer.ts',
     },
     {
       label: 'Retained renderer definition 与 factory contract',

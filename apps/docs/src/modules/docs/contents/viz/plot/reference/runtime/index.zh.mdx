@@ -13,6 +13,8 @@ Plot 运行时把“怎样声明图”和“怎样执行图”分开：React、V
 
 React 与 Vanilla 提供不同的 authoring 和宿主接线，但不复制 Plot 算法。Standalone `<Plot>` 把规格包装成 Scene IR 并向 `<Layout>` 注入 `lowerPlots`；`embedPlot()` 与 `createPlotAdapter()` 把同一规格接入 Kernel Vanilla 的 figure / layer。`renderPlot()` 则保留为独立的无 DOM SSR 与 lineage 入口。
 
+`<Plot theme>` 是 Plot 面板所在 Core Scope 的局部 Theme：standalone 与 embedded 都把它包在 Plot node 外层，因此只覆盖该 Plot 的 `style`、`mode` 与 namespaced `tokens`。它不同于 Plot spec 内的 `plotThemeTokens` / `plotTheme`，后两者是 Plot owner 的视觉字段。Vanilla `renderPlot(spec, data, { theme })` 则把 `theme` 写入根 `IRScene.theme`，作为整个编译 Scene 的 Core Theme；它不会改写 `spec.plotThemeTokens` 或 `spec.plotTheme`。
+
 三条入口最终都委托 `@retikz/plot` 解析数据、比例尺、坐标系、图元与辅助，再把 Core IR 交还统一编译链。SVG、Canvas 与 SVG 字符串是输出形态；SSR 是 Vanilla 可运行的宿主场景，不是另一套 Plot 语义。
 
 ## 声明与运行时边界
@@ -42,14 +44,14 @@ React DSL 通过 `buildPlotSpec` 收集 JSX，Vanilla 的 `plot()` 接收 plain 
 
 ## 入口与输出
 
-| 场景             | 入口                                            | 主要输出                         |
-| ---------------- | ----------------------------------------------- | -------------------------------- |
-| React standalone | `<Plot>`                                        | `<Layout>` 管理的 SVG / Canvas   |
-| React embedded   | `<Layout><Plot /></Layout>`                     | 与其它 Tier 2 内容合编的 Scene   |
-| Vanilla embedded | `embedPlot()` + `createPlotAdapter()`           | Kernel figure / layer 中的 Scene |
-| Vanilla / SSR    | `renderPlot(spec, datasets, options)`           | SVG 字符串或 `{ svg, lineage }`  |
-| 自定义宿主       | `lowerPlots(datasets, options)` + Core compile  | Core IR → Scene                  |
-| 审计与交互       | `lowerPlotWithLineage()`、`createPlotLocator()` | runtime-only lineage / anchor    |
+| 场景             | 入口                                                | 主要输出                                      |
+| ---------------- | --------------------------------------------------- | --------------------------------------------- |
+| React standalone | `<Plot>`                                            | `<Layout>` 管理的 SVG / Canvas                |
+| React embedded   | `<Layout><Plot /></Layout>`                         | 与其它 Tier 2 内容合编的 Scene                |
+| Vanilla embedded | `embedPlot()` + `createPlotAdapter()`               | Kernel figure / layer 中的 Scene              |
+| Vanilla / SSR    | `renderPlot(spec, datasets, { theme, ...options })` | 根 Theme 下的 SVG 字符串或 `{ svg, lineage }` |
+| 自定义宿主       | `lowerPlots(datasets, options)` + Core compile      | Core IR → Scene                               |
+| 审计与交互       | `lowerPlotWithLineage()`、`createPlotLocator()`     | runtime-only lineage / anchor                 |
 
 <SourceLinks
   sources={[

@@ -18,4 +18,4 @@
 
 ## 当前状态
 
-v0.1 alpha.1 已提供 Grid、Axes、Frame、FrameTitle 与 FrameDescription。package exports 只保留根入口，组件继续通过根入口 named exports 公开。
+v0.1 alpha.1 已提供 Grid、Axes、Frame、FrameTitle 与 FrameDescription。package exports 默认只保留根入口；`/inspect` 是横切可选检查能力的受控例外，不代表允许按组件扩展 subpath。

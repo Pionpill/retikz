@@ -54,7 +54,7 @@ const createDisposeRecordingFactory = (disposeCounts: Array<number>): RetainedRe
     };
     const definition = {
       capability: 'entity' as const,
-      inspectionCapability: 'supported' as const,
+      readonlyLayerCapability: 'supported' as const,
       prepareMount: (frame: RenderFrameSnapshot) => prepare(frame),
       prepare: (_patch: unknown, frame: RenderFrameSnapshot) => prepare(frame),
       read: () => {

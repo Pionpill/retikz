@@ -1,6 +1,6 @@
 import type { RuntimeIdentity } from '@retikz/runtime';
 
-import { createRuntimeIdentityIndex, runtimeIdentityEquals } from '@retikz/runtime';
+import { createRuntimeIdentityLookup, runtimeIdentityEquals } from '@retikz/runtime';
 
 import type { HydrationController } from '../hydration';
 
@@ -38,7 +38,7 @@ export const createRuntimeIdentityMap = <TValue>(
     identities.push(identity);
     byOwner.set(identity.owner, identities);
   }
-  for (const [owner, identities] of byOwner) createRuntimeIdentityIndex(owner, identities);
+  for (const [owner, identities] of byOwner) createRuntimeIdentityLookup(owner, identities);
 
   const locate = (identity: RuntimeIdentity, create: boolean): RuntimeIdentityMapNode<TValue> | undefined => {
     runtimeIdentityEquals(identity, identity);

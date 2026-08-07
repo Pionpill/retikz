@@ -9,7 +9,8 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 | API                           | Signature                                                              | 用途                                                                |
 | ----------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `compileToScene`              | `(ir: IRScene, options?: CompileOptions) => CompileResult`             | 主编译入口；同次返回 `scene`、immutable `artifacts` 与 `inspection` |
+| `compileToScene`              | `(ir: IRScene, options?: CompileOptions) => CompileResult`             | 主编译入口；同次返回 `scene` 与 immutable `artifacts`               |
+| `observeCompileToScene`       | `(ir, options, observers) => ObservedCompileResult`                    | 显式创建观测会话，返回主结果与按 definition 排序的 observer outputs |
 | `lowerIRToKernel`             | `(ir: IRScene, options?: LowerIRToKernelOptions) => LoweredIRScene`    | 只递归展开 composite，返回不含 Tier 2 节点的 Kernel IR              |
 | `computeLayout`               | `(points, padding, round) => Layout`                                   | 从 bbox 候选点计算场景边界；通常由 `compileToScene` 内部调用        |
 | `resolveBoxSpacing`           | `(value, fallback) => BoundsInsets`                                    | 把统一值或按边覆盖值归一化为完整四边间距                            |
@@ -42,15 +43,14 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 ### 布局与输出
 
-| Option          | Type                       | Default | 说明                                                                                      |
-| --------------- | -------------------------- | ------- | ----------------------------------------------------------------------------------------- |
-| `padding`       | `number`                   | `10`    | layout 外围留白，单位为 user units                                                        |
-| `precision`     | `number`                   | `2`     | 输出 Scene 图元坐标、结构化 path command 与 layout 数值的小数位；内部几何保持 double 精度 |
-| `nodeDistance`  | `number`                   | `24`    | `AtPosition` 未写 `distance` 时使用的默认距离                                             |
-| `labelDistance` | `number`                   | `12`    | `Node.label.distance` 未设置时，节点边界到旋转后标签视觉框的默认净距；必须为有限非负数    |
-| `fontSize`      | `number`                   | `16`    | 默认字号；同时作为字号 preset 与 `rem` 的根字号，不改变显式数字字号                       |
-| `artifacts`     | `CompileArtifactOptions`   | `{}`    | opt-in 通用产物；`{ nodeLayouts: true }` 返回真实 Node 的 `CompiledNodeLayout` 布局快照   |
-| `inspection`    | `CompileInspectionOptions` | —       | runtime-only 检查 sidecar；`root` 是全图策略，`roots` 绑定 authored occurrence            |
+| Option          | Type                     | Default | 说明                                                                                      |
+| --------------- | ------------------------ | ------- | ----------------------------------------------------------------------------------------- |
+| `padding`       | `number`                 | `10`    | layout 外围留白，单位为 user units                                                        |
+| `precision`     | `number`                 | `2`     | 输出 Scene 图元坐标、结构化 path command 与 layout 数值的小数位；内部几何保持 double 精度 |
+| `nodeDistance`  | `number`                 | `24`    | `AtPosition` 未写 `distance` 时使用的默认距离                                             |
+| `labelDistance` | `number`                 | `12`    | `Node.label.distance` 未设置时，节点边界到旋转后标签视觉框的默认净距；必须为有限非负数    |
+| `fontSize`      | `number`                 | `16`    | 默认字号；同时作为字号 preset 与 `rem` 的根字号，不改变显式数字字号                       |
+| `artifacts`     | `CompileArtifactOptions` | `{}`    | opt-in 通用产物；`{ nodeLayouts: true }` 返回真实 Node 的 `CompiledNodeLayout` 布局快照   |
 
 ### 扩展注册表
 
@@ -67,6 +67,14 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 传入的 definitions 会追加到对应 `BUILTIN_*` 集合；空 key 或与内置 / 同批自定义项重名都会立即抛错，不会覆盖已有 provider。
 
+### Theme token owner registry
+
+| Option                  | Type                                     | Default     | 说明                                                                                                              |
+| ----------------------- | ---------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------- |
+| `themeTokenDefinitions` | `ReadonlyArray<AnyThemeTokenDefinition>` | Core `core` | 追加 Plot、Chart、Table 或自定义 owner 的冻结 Definition；Core 内置 namespace 始终注册，同 namespace 冲突立即抛错 |
+
+每个 Definition 绑定一个非空 namespace 与 strict Zod schema。Core 在 Scene / Scope 解析时校验 `theme.tokens` 的 namespace、token key 与值：未注册 namespace、未知 key、非法值和不同 Definition 占用同一 namespace 都 fail-loud。Core 不读取或解释 owner token 的领域含义。
+
 ### Composite
 
 | Option              | Type                                    | Default | 说明                                                                                  |
@@ -79,65 +87,9 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 - `expand(node, context)` 在当前 Theme 上下文中做结构展开；
 - `compile(node, context)` 通过 `context.proposal` 与 `layoutChild(child, proposal)` 在完整 compile 环境中求值真实子内容。
 
-两个分支都从 `context.theme` 读取当前位置完整、冻结的 `ResolvedTheme`。解析顺序固定为 `neutral + light` → Scene → 外层 Scope → 内层 Scope，每层只覆盖显式字段。`lowerIRToKernel()` 对 `expand` 使用同一解析器；layout-aware definition 仍在 callback 前 fail-loud。Theme 只供 Composite 物化自己的领域默认，最终 Scene 与 renderer 不携带或解释 Theme。
+两个分支都从 `context.theme` 读取当前位置完整、冻结的 `ResolvedTheme`。解析顺序固定为 `neutral + light` → Scene → 外层 Scope → 内层 Scope，每层只覆盖显式 `style`、`mode` 或 namespace/token key。`ResolvedTheme` 还提供递归冻结的 `tokens` 与 detached/frozen 的 `colors` shared view；`colors.semantic` 固定提供 error/success/warning，`colors.categorical` 始终非空，重复值按稳定 index 取余消费。`lowerIRToKernel()` 对 `expand` 使用同一解析器；layout-aware definition 仍在 callback 前 fail-loud。Theme 只供 Composite 物化自己的领域默认，最终 Scene 与 renderer 不携带或解释 Theme。
 
-带 `artifactSchema` 的 layout-aware definition 还可以声明 `inspector`。Inspector 与 compile 仍属于同一个 `CompositeDefinition` 和同一个 registry key；Core 不维护第二张 Inspector 注册表。选中 occurrence 后，callback 接收同次 compile 已校验的 artifact，并从 `InspectorContext` 读取 canonical options、occurrence 与推荐外观。`expand` 分支、没有 `artifactSchema` 的 compile 分支或已开启但未返回 artifact 的 occurrence 都会 fail-loud。
-
-`defineInspector()` 要求 strict、可接受空对象的 `optionsInputSchema`，以及能从空输入解析出完整 JSON-safe 对象的 `optionsSchema`。`inspect()` 直接返回一个普通 `IRChild` 或稠密数组；没有 `outputSchema`，也没有 Inspector 专用 primitive。Core 会先分离并冻结输出，再用当前 compile 的 provider definitions、Theme 与 Scope 样式在独立环境中编译每个 entry。
-
-下面是 Composite Inspector 的最小迁移形态：把原先的辅助 DTO 改成普通 Path / Node，并把颜色从 `context.appearance` 写进 IR。
-
-```ts
-const CardInspectInputSchema = z.strictObject({ bounds: z.boolean().optional() });
-const CardInspectOptionsSchema = CardInspectInputSchema.transform(value => ({
-  bounds: value.bounds ?? true,
-}));
-
-const cardInspector = defineInspector({
-  kind: 'composite',
-  optionsInputSchema: CardInspectInputSchema,
-  optionsSchema: CardInspectOptionsSchema,
-  inspect: (artifact: CardArtifact, context) =>
-    context.options.bounds
-      ? {
-          type: 'path',
-          stroke: context.appearance.scopeColor,
-          dashPattern: [6, 4],
-          children: rectSteps(artifact.bounds),
-        }
-      : [],
-});
-
-export const CardDefinition = defineComposite({
-  namespace: 'acme',
-  type: 'card',
-  schema: CardSchema,
-  compile: compileCard,
-  artifactSchema: CardArtifactSchema,
-  inspector: cardInspector,
-});
-```
-
-`CompileInspectionOptions.root` 承载全图稀疏策略；`roots` 是 React / Vanilla 等 authoring adapter 构造的 authored occurrence sidecar。每个 locator 必须用 `target: 'composite' | 'path'` 声明预期 owner，当前 occurrence 的开关使用 `policy.self`；target 不匹配、重复或越界会在 provider callback 前失败。它不进入 IR，也不要求第三方调用方预测 probe / replay 的动态路径。省略 `inspection` 时不读取 subject、不调用 Inspector、也不运行辅助编译，主 Scene 与 artifacts 保持原行为。
-
-`BaseLayoutInspectOptions` 把 box 边界与间距层拆成相互独立的 `bounds` 和 `spacing`。Core canonical profile 默认开启 `spacing.padding` 与 `spacing.margin`；`spacing: false | true` 会整体关闭或恢复这两个默认值，对象形式只覆盖显式提供的成员。相邻层都是对象时按字段 sparse merge；boolean 与 object 互换时由后者替换整个分组，最后再补 canonical defaults。修改 `bounds` 不会隐式修改 `spacing`，反之亦然。
-
-### LayoutInspectSpacingOptionsInputSchema
-
-`spacing` 写成对象时使用这个 sparse schema：只写需要覆盖的层，未写成员继续由相邻 policy 或 canonical profile 决定。
-
-<ZodSchema
-  name="LayoutInspectSpacingOptionsInputSchema"
-  description="布局检查器共用的稀疏盒模型间距选择。"
-  descriptions={{
-    padding: '是否为容器已解析的 padding 绘制阴影。',
-    margin: '是否为子项已解析的 margin 绘制阴影。',
-  }}
-/>
-
-Adapter 把 `<Layout>`、`<Scope>` 与组件本地配置分别映射为全图 root、authored subtree 的 inherited policy 和 `self` policy。Core 固定按 Layout → Scope → self 的顺序合并，每一级只覆盖自己提供的值；`enabled: false` 对 Composite 与 Path 都是后代不能重新开启的硬屏障。Layout 的 inherited policy 只选择布局 Composite，不会隐式开启 Path。Docs 的“推荐”预设显式把 padding / margin 设为 `false`，不改变 Core 的全量诊断默认值。
-
-每个 `InspectionPlaneEntry` 都记录 owner、最终 occurrence、`colorScope`、occurrence-local 到主 Scene 的 `transform`，以及已经 seal 的普通静态 `scene`。Core 在丢弃 probe 后统一排序和分配颜色；空输出占用色域但不形成 entry。辅助 Scene 的资源、namespace、artifact、诊断与公共 identity 都和主 Scene及其它 entry 隔离。
+带 `artifactSchema` 的 layout-aware definition 可以在同一次 `compile` 返回 JSON-safe `artifact`。该 schema 既约束公开 `CompileResult.artifacts`，也是显式 observer 读取最终 Composite 所属者产物的契约；Composite 本身不包含 Inspector 定义。
 
 `LayoutProposal` 必须恰好包含 `x` 与 `y`；每条轴使用 `LayoutAxisProposal`：
 
@@ -194,6 +146,20 @@ Occurrence 的 `probe[index]` segment 表示候选 `layoutChild()` dispatch；�
 
 带 `artifactSchema` 的 layout-aware definition 可在同一次 `compile` 返回 JSON-safe `artifact`。`compileToScene` 会把它封装为 `{ kind:'composite', namespace, type, occurrence, value }`；`occurrence` 由原始 `sourcePath` 和结构化 `expansionPath` 标识，不依赖全局 Map 或 callback capture。精确的 definition tuple 会让 `CompileResult` 推导对应 artifact union。
 
+## 显式编译观测
+
+`observeCompileToScene()` 复用同一条完整编译管线，但为每个 `CompileObserverDefinition` 创建独占 session。普通 `compileToScene()` 不创建 session，也不捕获额外所属者产物。
+
+| 阶段 | 回调                            | 作用                                                                       |
+| ---- | ------------------------------- | -------------------------------------------------------------------------- |
+| 选择 | `select(site)`                  | 在所属者编译前按 `owner` 与 authored `sourcePath` 决定是否请求产物         |
+| 观测 | `observe(observation, context)` | 消费最终 occurrence、已校验产物、局部到主 Scene 的变换及 probe/replay 来源 |
+| 完成 | `complete()`                    | 在全部事件完成后返回领域自定义结果；Core 递归冻结输出                      |
+
+Composite 复用 `artifactSchema` 与 `compile` 返回的 `artifact`。Path kind 则显式声明 `ownerOutput: { schema }`，并只在 `context.ownerOutput.requested` 为真时调用 `publish(value)`；被选择却没有发布、重复发布或 schema 校验失败都会直接报错。失败和被丢弃的 probe 不触发 `observe()`，最终事件按 occurrence 与 owner 稳定排序。
+
+`context.compileFragment(children)` 可在当前 occurrence 的 Theme、Scope 样式与 provider 环境中编译普通 Core 子元素。片段返回独立 `scene`、artifacts 与 diagnostics，不写回主编译结果；跨片段或指向主图的公共身份引用会失败。Core 不约束 `complete()` 的结果结构，因此统计、分析和 [`@retikz/inspect`](/kernel/packages/inspect) 都能复用这条能力。
+
 ## 文字度量
 
 `TextMeasurer` 是 compile 层唯一需要外部环境帮助的地方：
@@ -215,12 +181,12 @@ Node label 会把一次测量阶段得到的 `width` / `height` / `ascent` / `de
 
 `CompileWarning` 是机器可读的同步 warning：
 
-| Field     | Type                         | 说明                                               |
-| --------- | ---------------------------- | -------------------------------------------------- |
-| `code`    | string                       | warning 类型代码                                   |
-| `message` | string                       | 英文人类可读消息                                   |
-| `path`    | string                       | IR locator，例如 `children[3].path.children[1].to` |
-| `origin`  | `InspectionDiagnosticOrigin` | 主编译或 Inspector resolve / inspect / output 来源 |
+| Field     | Type                   | 说明                                               |
+| --------- | ---------------------- | -------------------------------------------------- |
+| `code`    | string                 | warning 类型代码                                   |
+| `message` | string                 | 英文人类可读消息                                   |
+| `path`    | string                 | IR locator，例如 `children[3].path.children[1].to` |
+| `origin`  | `CompileWarningOrigin` | 主编译或所属者 / 隔离片段观测来源                  |
 
 当前内置 code（机器可读常量 `CompileWarningCode` 已公开导出，可按枚举引用而非硬编码字符串）：
 
@@ -246,7 +212,7 @@ Node label 会把一次测量阶段得到的 `width` / `height` / `ascent` / `de
 
 大多数 warning 不会中断编译。但 coordinate / node 自身位置无法解析时**直接抛错、不发 warning**（源码刻意如此：warn 后立即 throw 会让收集器记录一条永不产出 Scene 的死告警），因为它属于「定义位置」的实体，会破坏后续引用合同。
 
-公开 warning 的 `origin` 始终必填。普通编译使用 `{ kind: 'primary' }`；Inspector 在绑定前的 authoring 失败保留原 locator，绑定后的 resolve / inspect / output 则携 owner 与 occurrence，output 还携 `outputIndex`。辅助输出引用主 Scene 或其它 entry identity 时会提升为致命错误，避免提交局部失真的辅助层。
+公开 warning 的 `origin` 始终必填。普通编译使用 `{ kind: 'primary' }`；观测所属者或隔离片段产生的 warning 使用 `{ kind: 'observation', owner, occurrence, stage }`。隔离片段引用主 Scene 或其它片段的公共 identity 时会提升为致命错误，避免发布局部失真的结果。
 
 自动对比色 warning 的 `path` 固定为当前 Node locator，`message` 会包含无法解析的 fill、原因与固定 fallback。同一 Node 即使有多段正文、公式、label 或 pin，也最多发一次；没有消费者继承 Node 文字颜色时不会解析关键字或发 warning。
 
@@ -254,13 +220,12 @@ Node label 会把一次测量阶段得到的 `width` / `height` / `ascent` / `de
 
 `compileToScene` 返回 `CompileResult`：
 
-| Field        | Type                             | 说明                                                                 |
-| ------------ | -------------------------------- | -------------------------------------------------------------------- |
-| `scene`      | `Scene`                          | 已布局、可直接交给 renderer 的场景                                   |
-| `artifacts`  | `ReadonlyArray<CompileArtifact>` | 与 `scene` 同一次 canonical compile 产生的 immutable typed artifacts |
-| `inspection` | `InspectionPlane \| null`        | 与主 Scene 隔离的检查辅助层；关闭时为 `null`                         |
+| Field       | Type                             | 说明                                                                 |
+| ----------- | -------------------------------- | -------------------------------------------------------------------- |
+| `scene`     | `Scene`                          | 已布局、可直接交给 renderer 的场景                                   |
+| `artifacts` | `ReadonlyArray<CompileArtifact>` | 与 `scene` 同一次 canonical compile 产生的 immutable typed artifacts |
 
-`inspection` 不属于 `scene`：它不会扩大 `scene.layout`、添加主资源或 identity，也不改变命中测试。每个 entry 的 `scene` 是普通、可直接执行的静态 Scene，只是资源与身份被隔离。Render 的 static frame 与 retained frame 会把 primary Scene 和 inspection plane 作为同一 revision 的两个平面一起物化。
+`observeCompileToScene()` 返回 `{ primary, observerOutputs }`。`primary` 与同一 IR/options 下的普通 `compileToScene()` 等价；`observerOutputs` 按传入 definitions 的顺序排列，每项包含稳定 `key` 与该 session 的完成值。
 
 其中 `scene` 包含：
 
@@ -288,6 +253,14 @@ Node label 会把一次测量阶段得到的 `width` / `height` / `ascent` / `de
       endLine: 128,
     },
     {
+      label: 'observer、所属者产物与隔离片段合同',
+      path: 'packages/kernel/core/src/contract/observation/types.ts',
+    },
+    {
+      label: '最终 occurrence 观测提交',
+      path: 'packages/kernel/core/src/compile/orchestration/observation-output.ts',
+    },
+    {
       label: 'layout proposal、probe、guide 与 context 公共合同',
       path: 'packages/kernel/core/src/contract/composite/types.ts',
       startLine: 20,
@@ -309,7 +282,7 @@ Node label 会把一次测量阶段得到的 `width` / `height` / `ascent` / `de
       label: 'compile-local replay 与 Scope builder',
       path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
       startLine: 214,
-      endLine: 277,
+      endLine: 240,
     },
     {
       label: 'replay root 的 placement 与各类 sink 提交',

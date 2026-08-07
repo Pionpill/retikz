@@ -3,7 +3,8 @@ import type { Scene } from '@retikz/core';
 import type { StaticRenderFrame } from '../runtime/frame';
 import type { RenderOptions } from './types';
 
-import { drawInspectionPlane } from './draw-inspection';
+import { validateReadonlyLayers } from '../runtime';
+import { drawReadonlyLayer } from './draw-readonly-layer';
 import { drawScene } from './draw-scene';
 import { createCssColorNormalizer, sceneFitMatrix } from './shared';
 
@@ -57,6 +58,7 @@ export const renderFrameToCanvas = (
   options: RenderOptions = {},
 ): void => {
   const scene = frame.primary;
+  const layers = validateReadonlyLayers(frame.layers);
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('renderToCanvas: unable to acquire 2d canvas context.');
 
@@ -94,9 +96,9 @@ export const renderFrameToCanvas = (
     resolveCssColor: options.resolveCssColor ?? normalizeCssColorViaCanvas,
   };
   drawScene(ctx, scene, drawOptions);
-  if (frame.inspection !== null) drawInspectionPlane(ctx, frame.inspection, drawOptions);
+  for (const layer of layers) drawReadonlyLayer(ctx, layer, drawOptions);
 };
 
-/** 将 Scene 渲染到 HTMLCanvasElement，等价于不带 inspection 的静态 frame */
+/** 将 Scene 渲染到 HTMLCanvasElement，等价于使用空只读图层的静态 frame */
 export const renderToCanvas = (canvas: HTMLCanvasElement, scene: Scene, options: RenderOptions = {}): void =>
-  renderFrameToCanvas(canvas, { primary: scene, inspection: null }, options);
+  renderFrameToCanvas(canvas, { primary: scene, layers: Object.freeze([]) }, options);

@@ -89,7 +89,6 @@ describe('Table layout-aware lowering', () => {
     const spec: IRTableSpec = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
-      style: 'clean',
       structure: {
         kind: 'manual',
         rows: [
@@ -104,7 +103,7 @@ describe('Table layout-aware lowering', () => {
         rowGap: 3,
       },
     };
-    const result = compileTable(spec, {}, { compile: { padding: 0 } });
+    const result = compileTable(spec, {}, { theme: { style: 'clean', mode: 'light' }, compile: { padding: 0 } });
 
     expect(result.manifest.allocationBounds).toEqual({ x: 0, y: 0, width: 310, height: 63 });
     expect(result.manifest.visualOverflowBounds).toEqual({ x: 0, y: 0, width: 0, height: 0 });

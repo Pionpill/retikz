@@ -22,20 +22,21 @@ Chart 是 Tier 3 封装层，不是新的 capability domain。它的完备方向
 
 ## 2. 包角色与端到端闭环
 
-| 角色                | 主责包 / 协作包             | 在 Chart 闭环中的责任                                                                                   | 不拥有                                      |
-| ------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| 数据能力            | `@retikz/data`              | 数据引用、字段解析、通用 transform / statistics、lineage                                                | Chart type 与视觉默认                       |
-| 可视化能力          | `@retikz/plot`              | GoG schema、definition / registry、lowering、diagnostics、provenance / locator                          | Chart type 目录                             |
-| Chart 主责          | `@retikz/chart`             | ChartSpec、Canonical Type 配方、默认 / override 解析、具体 Plot definitions、单图展示语义与最终组合编排 | 新 GoG 能力轴、renderer、开放 type registry |
-| 通用呈现            | `@retikz/standard`          | 由 Plot 或 Chart 解析后消费的领域无关 composite、布局和呈现                                             | Chart / Plot 语义与字段角色                 |
-| 图形执行            | Core / Render               | 编译 Plot 与 Standard lowering 产物并渲染                                                               | Chart / Plot 领域语义                       |
-| authoring / runtime | chart-react / chart-vanilla | 构造同一 ChartSpec、传递 datasets / definitions、接入宿主                                               | Chart 默认算法与私有 IR                     |
+| 角色                | 主责包 / 协作包             | 在 Chart 闭环中的责任                                                                                                                                            | 不拥有                                                                      |
+| ------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 数据能力            | `@retikz/data`              | 数据引用、字段解析、通用 transform / statistics、lineage                                                                                                         | Chart type 与视觉默认                                                       |
+| 可视化能力          | `@retikz/plot`              | GoG schema、Plot token / preset / resolver、shared categorical projection、definition / registry、lowering、diagnostics、provenance / locator                    | Chart type、Chart presentation / recipe token                               |
+| Chart 主责          | `@retikz/chart`             | ChartSpec、Canonical Type 配方、Chart token、默认 / override 解析、`plotThemeTokens` / `plotTheme` 转发、Chart + Plot definition aggregation、单图展示与组合编排 | Plot token / preset / resolver、新 GoG 能力轴、renderer、开放 type registry |
+| 通用呈现            | `@retikz/standard`          | 由 Plot 或 Chart 解析后消费的领域无关 composite、布局和呈现                                                                                                      | Chart / Plot 语义与字段角色                                                 |
+| 图形执行            | Core / Render               | 编译 Plot 与 Standard lowering 产物并渲染                                                                                                                        | Chart / Plot 领域语义                                                       |
+| authoring / runtime | chart-react / chart-vanilla | 构造同一 ChartSpec、传递 datasets / definitions、接入宿主                                                                                                        | Chart 默认算法与私有 IR                                                     |
 
 完整链路必须保持：
 
 ```text
 Chart authoring / JSON
   -> ChartSpec schema
+  + Core effective Theme / namespace definitions
   -> Canonical Type recipe
   -> default + override + extension resolution
   -> complete PlotSpec
@@ -48,6 +49,8 @@ Chart authoring / JSON
 ```
 
 任一 type 若只能在 React、某个 renderer、某个 demo 或未序列化的 helper 中成立，都不算 Chart 封装闭环。
+
+Chart 的主题 context 由 Core 统一传播和校验。Chart resolver 只消费 inherited `theme.tokens.chart` 与 local `chartThemeTokens`；内部 Plot resolver 消费同一份 inherited `theme.tokens.plot` 与 local `plotThemeTokens`。Chart adapter 必须聚合 Chart 与 Plot definitions，direct headless 使用方显式注入两者；Chart 不静态解释 Plot token。
 
 ## 3. 封装能力面
 
@@ -90,13 +93,26 @@ ChartSpec 的省略语义由 `type` 决定：省略代表使用类型默认，�
 
 ```text
 non-revocable type core recipe
-  + (Plot built-in defaults
-     < Chart type Plot presentational defaults
-     < ChartSpec theme
+  + (Core effective Theme
+    < Chart preset tokens
+    < inherited chart namespace
+    < ChartSpec chartThemeTokens
+     < explicit Chart presentation / recipe config)
+
+complete PlotSpec
+  + (Core effective Theme
+    < Plot preset tokens
+    < shared categorical projection
+    < inherited plot namespace
+    < forwarded ChartSpec plotThemeTokens
+    < ChartSpec colors
+    < ChartSpec plotTheme
      < allowed GoG member overrides)
 ```
 
-Type 核心配方只能在允许范围内调整，不能删除、关闭、替换或失效；表现性默认允许调整、关闭或替换。具体成员配置优先于 theme，但该优先级不能越过核心配方不变量。
+Type 核心配方只能在允许范围内调整，不能删除、关闭、替换或失效；表现性默认允许调整、关闭或替换。Chart-owned recipe token 只决定默认 guide 是否生成，不能过滤显式 guides；具体 Plot member 配置优先于 Plot theme，但该优先级不能越过核心配方不变量。
+
+ChartSpec 不重复持久化 Core 的 style / mode。`chartThemeTokens` 只接受 Chart canvas、presentation 与 recipe-default key；`plotThemeTokens`、`colors` 与 Plot `plotTheme` 原样进入完整 PlotSpec，并由 Plot owner 在同一 effective Theme 下解析。Chart recipe 需要默认 series color 时只读取 Plot resolver 的最终 palette，不直接索引 Core shared categorical array。Chart 不复制 Plot token schema、preset、resolver、merge 或 resolved inspection。
 
 封装闭环必须避免：
 
@@ -105,6 +121,7 @@ Type 核心配方只能在允许范围内调整，不能删除、关闭、替换
 - 用浅拷贝或无语义 deep merge 处理有顺序、identity 或跨字段约束的成员
 - 通过数组下标定位多个隐式同类成员
 - 在 adapter 中补一套与核心不同的默认值
+- 在 Chart 中复制 Plot surface、axis、legend、label 或 palette token / preset / merge
 - lower 后继续由 renderer 猜测或补齐 Chart 默认
 
 多个隐式同类成员需要稳定语义目标。其公开表达由 ADR 冻结，但完备标准是不依赖声明顺序和内部实现偶然性。
@@ -146,6 +163,8 @@ Chart 不提供：
 这不是扩展缺口，而是包使命的闭合边界。Chart 负责精选、稳定、低学习成本的官方类型；用户若需要设计新配方，应直接组合 Plot，若需要新增具体 provider，则沿 Plot registry 横向扩展。开放 Chart registry 会复制 Plot 的扩展问题，并让 Chart 用户额外学习配方 schema、注册、部署和冲突解析，违背封装层目标。
 
 因此，`define-registry` 检查在 Chart type 层的结论固定为“不适用且禁止”；但每个 type 依赖的 Plot capability 仍必须证明其 definition / registry / lowering 闭环。
+
+Chart theme token schema 不属于 Chart type registry，但属于 Core 通用 ThemeTokenDefinition registry 的 owner definition。Chart adapter 聚合 `ChartThemeTokenDefinition` 与 `PlotThemeTokenDefinition`；standalone、embedded 和 direct headless 入口必须使用同一 validation、去重和冲突语义。Standard 只消费 Chart / Plot 已解析的正式输入与 Core `InspectionAppearance`，不读取任一领域 token bag。
 
 ## 7. 混合表达完备
 
@@ -248,6 +267,7 @@ Chart 隐式内容越多，越需要可解释性。完整闭环至少要求：
 - 完整隐式 Plot 配方：
 - 不可撤销的 type 核心配方与允许调整范围：
 - 表现性默认及关闭 / 替换范围：
+- Chart-owned `chartThemeTokens`、Plot `plotThemeTokens` / `plotTheme` 转发、Chart + Plot definition aggregation 与 Core effective Theme 边界：
 - 可选 Chart presentation、默认排列与关闭语义：
 - Chart / Plot label 边界与 Standard composition：
 - 隐式 composition / track / facet 配方及其核心不变量：
@@ -287,6 +307,7 @@ Chart 隐式内容越多，越需要可解释性。完整闭环至少要求：
 - type recipe 把共享时间轴的价格 / 成交量轨道拆成多个 Chart，再在 Chart 内私造同步状态
 - Chart 私造 dashboard IR，拥有 linked selection、filter、scroll 或 responsive runtime state
 - 每个 type 各写一套 merge、默认轴、theme 或错误处理
+- Chart 复制 Plot token vocabulary、preset、resolver 或把 resolved Plot theme 物化回 PlotSpec
 - 用 `series[]` 给每个系列绑定独立 dataset，破坏 Plot 单根 data 模型
 - 为了用户自定义 type 增加 Chart registry，形成第二套扩展体系
 - 文档把 stacked / horizontal / smooth 等所有市场名称都固化成 type union

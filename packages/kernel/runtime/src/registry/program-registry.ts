@@ -2,7 +2,7 @@ import type { RuntimeProgramId } from '../identity';
 import type { RuntimeProgramDefinition, RuntimeProgramErasedExecutor, RuntimeProgramToken } from '../program';
 import type { RuntimeOwnerRegistry, RuntimeProgramRegistry, RuntimeProgramRegistryInput } from './types';
 
-import { RuntimeError } from '../error';
+import { RuntimeError, RuntimeErrorCode } from '../error';
 import { getRuntimeProgramDefinitionExecutor, isRuntimeProgramDefinition } from '../program';
 import { isRuntimeOwnerRegistry } from './owner-registry';
 
@@ -25,18 +25,17 @@ const comparePrograms = (left: RuntimeProgramToken, right: RuntimeProgramToken):
   return 0;
 };
 
+type RuntimeProgramRegistryErrorCode =
+  | typeof RuntimeErrorCode.ProgramDuplicate
+  | typeof RuntimeErrorCode.ProgramUnknown
+  | typeof RuntimeErrorCode.ProgramTokenInvalid
+  | typeof RuntimeErrorCode.ProgramCycle
+  | typeof RuntimeErrorCode.Unknown
+  | typeof RuntimeErrorCode.RegistryMismatch;
+
 /** 创建带 Program context 的 registry contract 错误 */
-const programError = (
-  code:
-    | 'RUNTIME_PROGRAM_DUPLICATE'
-    | 'RUNTIME_PROGRAM_UNKNOWN'
-    | 'RUNTIME_PROGRAM_TOKEN_INVALID'
-    | 'RUNTIME_PROGRAM_CYCLE'
-    | 'RUNTIME_OWNER_UNKNOWN'
-    | 'RUNTIME_REGISTRY_MISMATCH',
-  program: RuntimeProgramId | undefined,
-  cause: unknown,
-) => new RuntimeError({ code, phase: 'program-registry', program, cause });
+const programError = (code: RuntimeProgramRegistryErrorCode, program: RuntimeProgramId | undefined, cause: unknown) =>
+  new RuntimeError({ code, phase: 'program-registry', program, cause });
 
 /** 对 Program graph 执行依赖优先且稳定的拓扑排序 */
 export const sortRuntimeProgramGraph = (
@@ -50,7 +49,7 @@ export const sortRuntimeProgramGraph = (
     const dependencies = dependenciesFor(definition);
     for (const dependency of dependencies) {
       if (!members.has(dependency)) {
-        throw programError('RUNTIME_PROGRAM_UNKNOWN', definition.id, dependency);
+        throw programError(RuntimeErrorCode.ProgramUnknown, definition.id, dependency);
       }
       if (!dependents.get(dependency)?.has(definition)) {
         dependents.get(dependency)?.add(definition);
@@ -75,41 +74,34 @@ export const sortRuntimeProgramGraph = (
     }
   }
   if (sorted.length !== definitions.length) {
-    throw programError('RUNTIME_PROGRAM_CYCLE', undefined, definitions);
+    throw programError(RuntimeErrorCode.ProgramCycle, undefined, definitions);
   }
   return Object.freeze(sorted);
 };
 
 /** 合并 builtin/custom Program Definitions 并验证 owner binding 与 DAG */
 export const createRuntimeProgramRegistry = (input: RuntimeProgramRegistryInput): RuntimeProgramRegistry => {
-  const candidate: unknown = input;
-  if (typeof candidate !== 'object' || candidate === null) {
-    throw programError('RUNTIME_PROGRAM_TOKEN_INVALID', undefined, input);
-  }
   if (!isRuntimeOwnerRegistry(input.owners)) {
-    throw programError('RUNTIME_REGISTRY_MISMATCH', undefined, input.owners);
+    throw programError(RuntimeErrorCode.RegistryMismatch, undefined, input.owners);
   }
   const builtins = input.builtins ?? [];
   const custom = input.custom ?? [];
-  if (!Array.isArray(builtins) || !Array.isArray(custom)) {
-    throw programError('RUNTIME_PROGRAM_TOKEN_INVALID', undefined, input);
-  }
 
   const byId = new Map<string, RuntimeProgramToken>();
   const executors = new Map<RuntimeProgramToken, RuntimeProgramErasedExecutor>();
   for (const definition of [...builtins, ...custom]) {
     if (!isRuntimeProgramDefinition(definition)) {
-      throw programError('RUNTIME_PROGRAM_TOKEN_INVALID', undefined, definition);
+      throw programError(RuntimeErrorCode.ProgramTokenInvalid, undefined, definition);
     }
     const key = idKey(definition.id);
-    if (byId.has(key)) throw programError('RUNTIME_PROGRAM_DUPLICATE', definition.id, definition);
+    if (byId.has(key)) throw programError(RuntimeErrorCode.ProgramDuplicate, definition.id, definition);
     const executor = getRuntimeProgramDefinitionExecutor(definition);
     if (input.owners.find(definition.id.owner) === undefined) {
-      throw programError('RUNTIME_OWNER_UNKNOWN', definition.id, definition.id.owner);
+      throw programError(RuntimeErrorCode.Unknown, definition.id, definition.id.owner);
     }
     for (const owner of executor.owners) {
       if (input.owners.find(owner.key) !== owner) {
-        throw programError('RUNTIME_OWNER_UNKNOWN', definition.id, owner);
+        throw programError(RuntimeErrorCode.Unknown, definition.id, owner);
       }
     }
     byId.set(key, definition);
@@ -121,10 +113,10 @@ export const createRuntimeProgramRegistry = (input: RuntimeProgramRegistryInput)
       definition: RuntimeProgramDefinition<TArtifactInput, TArtifact, TProgramRead, TPublicRead>,
     ): RuntimeProgramDefinition<TArtifactInput, TArtifact, TProgramRead, TPublicRead> => {
       if (!isRuntimeProgramDefinition(definition)) {
-        throw programError('RUNTIME_PROGRAM_TOKEN_INVALID', undefined, definition);
+        throw programError(RuntimeErrorCode.ProgramTokenInvalid, undefined, definition);
       }
       if (byId.get(idKey(definition.id)) !== definition) {
-        throw programError('RUNTIME_PROGRAM_UNKNOWN', definition.id, definition);
+        throw programError(RuntimeErrorCode.ProgramUnknown, definition.id, definition);
       }
       return definition;
     },
@@ -148,9 +140,9 @@ export const getRuntimeProgramRegistryExecutor = (
   definition: RuntimeProgramToken,
 ): RuntimeProgramErasedExecutor => {
   if (!isRuntimeProgramDefinition(definition)) {
-    throw programError('RUNTIME_PROGRAM_TOKEN_INVALID', undefined, definition);
+    throw programError(RuntimeErrorCode.ProgramTokenInvalid, undefined, definition);
   }
   const executor = runtimeProgramRegistries.get(registry)?.executors.get(definition);
-  if (executor === undefined) throw programError('RUNTIME_PROGRAM_UNKNOWN', definition.id, definition);
+  if (executor === undefined) throw programError(RuntimeErrorCode.ProgramUnknown, definition.id, definition);
   return executor;
 };

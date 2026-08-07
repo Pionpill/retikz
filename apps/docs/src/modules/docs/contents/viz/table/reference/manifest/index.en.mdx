@@ -11,6 +11,8 @@ description: Look up the track, Cell, visual-encoding, Legend-descriptor, border
 
 <ZodSchema name="TableLayoutManifestSchema" />
 
+The manifest `style` region also records effective Core `style`, `themeMode`, the complete resolved Table `tokens` map, and one `sources` entry per token. Here `themeMode` is output metadata from the same compile, identifying the selected preset; TableSpec inputs remain the host `theme` and local `tableThemeTokens`, which belong to a different layer.
+
 ## Visual encoding and Legend descriptor seeds
 
 `encodings` records the Cells actually colored by each visual encoding. `legendDescriptors` contains only explicitly opted-in Table-domain descriptors. Both come from the same visual-scale resolution and agree through `encodingId`, `channel`, and `scaleName`.

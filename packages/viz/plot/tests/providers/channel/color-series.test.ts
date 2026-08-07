@@ -1,15 +1,16 @@
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
 
+import { resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { DEFAULT_PLOT_COLORS } from '../../../src/providers';
 import { PlotSpecSchema } from '../../../src/schemas';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
+const sharedCategorical = resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light).categorical;
 
 const expandOf = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
   const [def] = lowerPlots(datasets, cartOpts);
@@ -133,7 +134,7 @@ describe('color × series · B/C 收口（contract）', () => {
 });
 
 describe('plot colors default palette', () => {
-  it('mark_without_color_uses_scheme_category_10_by_default', () => {
+  it('mark_without_color_uses_shared_categorical_by_default', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -155,8 +156,8 @@ describe('plot colors default palette', () => {
       ],
     });
     const [lineLayer, barLayerNode] = root.children as Array<IRScope>;
-    expect(lineLayer.pathDefault?.stroke).toBe(DEFAULT_PLOT_COLORS[0]);
-    expect(barLayerNode.nodeDefault?.fill).toBe(DEFAULT_PLOT_COLORS[1]);
+    expect(lineLayer.pathDefault?.stroke).toBe(sharedCategorical[0]);
+    expect(barLayerNode.nodeDefault?.fill).toBe(sharedCategorical[1]);
   });
 
   it('mark_without_color_uses_plot_palette_by_layer_index', () => {

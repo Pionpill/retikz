@@ -102,7 +102,7 @@ const isOrdinaryError = (value: unknown): value is Error => {
 };
 
 /** 单次安全读取 ordinary Error identity 与 message */
-const inspectOrdinaryError = (thrown: unknown): Readonly<{ ordinary: boolean; message?: string }> => {
+const readOrdinaryError = (thrown: unknown): Readonly<{ ordinary: boolean; message?: string }> => {
   if (!isOrdinaryError(thrown)) return { ordinary: false };
   try {
     const message = Reflect.get(thrown, 'message');
@@ -114,13 +114,13 @@ const inspectOrdinaryError = (thrown: unknown): Readonly<{ ordinary: boolean; me
 
 /** 安全读取 ordinary Error message，读取失败时返回 fallback */
 export const safeErrorMessage = (thrown: unknown, fallback: string): string => {
-  const inspected = inspectOrdinaryError(thrown);
+  const inspected = readOrdinaryError(thrown);
   return inspected.message ?? fallback;
 };
 
 /** 安全描述任意 thrown value，hostile object 无法二次打断 catch boundary */
 export const safeThrownDetail = (thrown: unknown, fallback = 'unknown thrown value'): string => {
-  const inspected = inspectOrdinaryError(thrown);
+  const inspected = readOrdinaryError(thrown);
   if (inspected.ordinary) return inspected.message ?? fallback;
   if (thrown !== null && (typeof thrown === 'object' || typeof thrown === 'function')) return fallback;
   try {

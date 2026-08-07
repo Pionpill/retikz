@@ -72,7 +72,7 @@ describe('Table React manifest observation', () => {
     const spec = createManualTableSpec({
       id: 'encoded',
       rows: [[1]],
-      styleTokens: { 'data.categorical': ['#123456'] },
+      tableThemeTokens: { 'data.categorical': ['#123456'] },
       encodings: [
         {
           id: 'palette',

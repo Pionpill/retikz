@@ -14,6 +14,7 @@ import type {
   RuntimeUpdateResult,
 } from './types';
 
+import { RuntimeDiagnosticCode } from '../diagnostic';
 import { RuntimeError } from '../error';
 import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '../trace/constants';
 
@@ -83,7 +84,7 @@ const traceOutcomes: ReadonlySet<unknown> = new Set(Object.values(PerformanceTra
 /** 创建 artifact dispose 失败的非致命诊断 */
 const artifactDisposeDiagnostic = (program: RuntimeProgramToken, cause: unknown): RuntimeDiagnostic =>
   Object.freeze({
-    code: 'RUNTIME_ARTIFACT_DISPOSE_FAILED',
+    code: RuntimeDiagnosticCode.ArtifactDisposeFailed,
     phase: 'artifact-dispose',
     severity: 'error',
     message: cause instanceof Error ? cause.message : String(cause),

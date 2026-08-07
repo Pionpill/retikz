@@ -1,6 +1,8 @@
-import type { InspectionPlane, Scene } from '@retikz/core';
+import type { Scene } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
+
+import type { RenderReadonlyLayer } from '../../src/runtime';
 
 import { buildSvgDocument, buildSvgFrameDocument, renderFrameToSvgString } from '../../src/svg';
 
@@ -9,177 +11,73 @@ const primary: Scene = {
   primitives: [{ type: 'rect', id: 'primary', x: 10, y: 12, width: 20, height: 16, fill: '#ef4444' }],
 };
 
-const inspection: InspectionPlane = {
-  entries: [
+const layerScene = (color: string): Scene => ({
+  layout: { x: -100, y: -100, width: 500, height: 500 },
+  resources: [
     {
-      owner: { kind: 'pathKind', name: 'stroke' },
-      occurrence: { sourcePath: '$.children[0]', expansionPath: [] },
-      colorScope: 1,
-      transform: [1, 0, 0, 1, 12, 8],
-      scene: {
-        layout: { x: 0, y: 0, width: 32, height: 20 },
-        resources: [
-          {
-            kind: 'paint',
-            id: 'paint-1',
-            spec: {
-              kind: 'linearGradient',
-              stops: [
-                { offset: 0, color: '#7c3aed' },
-                { offset: 1, color: '#ffffff' },
-              ],
-            },
-          },
-        ],
-        primitives: [
-          {
-            type: 'rect',
-            x: 0,
-            y: 0,
-            width: 30,
-            height: 20,
-            fill: { kind: 'resourceRef', id: 'paint-1' },
-          },
-          {
-            type: 'path',
-            commands: [
-              { kind: 'move', to: [0, 10] },
-              { kind: 'line', to: [30, 10] },
-            ],
-            stroke: '#7c3aed',
-            dashPattern: [1, 4],
-          },
-          {
-            type: 'ellipse',
-            cx: 15,
-            cy: 10,
-            rx: 3,
-            ry: 3,
-            fill: '#dc2626',
-          },
-          {
-            type: 'text',
-            x: 4,
-            y: 6,
-            lines: [{ text: 'control' }],
-            fontSize: 10,
-            align: 'start',
-            baseline: 'bottom',
-            lineHeight: 12,
-            measuredWidth: 42,
-            measuredHeight: 12,
-            fill: '#7c3aed',
-          },
+      kind: 'paint',
+      id: 'shared',
+      spec: {
+        kind: 'linearGradient',
+        stops: [
+          { offset: 0, color },
+          { offset: 1, color: '#ffffff' },
         ],
       },
     },
   ],
-};
+  primitives: [{ type: 'rect', x: 0, y: 0, width: 30, height: 20, fill: { kind: 'resourceRef', id: 'shared' } }],
+});
 
-describe('SVG static render frame', () => {
-  it('在 primary 之后追加不可交互的 inspection group，并保留 occurrence transform', () => {
-    const document = buildSvgFrameDocument({ primary, inspection }, { idPrefix: 'frame' });
+const layers: ReadonlyArray<RenderReadonlyLayer> = [
+  { key: 'first', scene: layerScene('#7c3aed'), transform: [1, 0, 0, 1, 12, 8] },
+  { key: 'second', scene: layerScene('#dc2626'), transform: [1, 0, 0, 1, -4, 6] },
+];
+
+describe('SVG static readonly layers', () => {
+  it('keeps the primary viewport and appends ordinary layer Scenes in input order', () => {
+    const document = buildSvgFrameDocument({ primary, layers }, { idPrefix: 'frame' });
     const children = document.children ?? [];
     const primaryIndex = children.findIndex(
       child => typeof child !== 'string' && child.attrs['data-retikz-id'] === 'primary',
     );
-    const inspectionIndex = children.findIndex(
-      child => typeof child !== 'string' && child.attrs['data-retikz-inspection'] === 'layout',
+    const layerGroups = children.filter(
+      child => typeof child !== 'string' && child.attrs['data-retikz-readonly-layer'] !== undefined,
     );
 
     expect(document.attrs.viewBox).toBe('0 0 100 60');
     expect(primaryIndex).toBeGreaterThanOrEqual(0);
-    expect(inspectionIndex).toBeGreaterThan(primaryIndex);
-
-    const group = children[inspectionIndex];
-    expect(group).not.toBeTypeOf('string');
-    if (typeof group === 'string') throw new Error('expected inspection group');
-    expect(group.attrs['pointer-events']).toBe('none');
-    expect(group.attrs['aria-hidden']).toBe('true');
-    expect(group.children?.[0]).toMatchObject({
+    expect(
+      layerGroups.map(group => (typeof group === 'string' ? undefined : group.attrs['data-retikz-readonly-layer'])),
+    ).toEqual(['first', 'second']);
+    expect(children.indexOf(layerGroups[0])).toBeGreaterThan(primaryIndex);
+    expect(layerGroups[0]).toMatchObject({
       tag: 'g',
-      attrs: { transform: 'matrix(1 0 0 1 12 8)' },
+      attrs: {
+        'pointer-events': 'none',
+        'aria-hidden': 'true',
+        transform: 'matrix(1 0 0 1 12 8)',
+      },
     });
-    const entry = group.children?.[0];
-    expect(entry).not.toBeTypeOf('string');
-    if (entry === undefined || typeof entry === 'string') throw new Error('expected inspection entry group');
-    expect(entry.children?.map(child => (typeof child === 'string' ? child : child.tag))).toEqual([
-      'defs',
-      'rect',
-      'path',
-      'ellipse',
-      'text',
-    ]);
-
-    const output = renderFrameToSvgString({ primary, inspection }, { idPrefix: 'frame' });
-    expect(output).toContain('data-retikz-inspection="layout"');
-    expect(output).toContain('<rect');
-    expect(output).toContain('<path');
-    expect(output).toContain('<ellipse');
-    expect(output).toContain('<text');
-    expect(output).toContain('#7c3aed');
-    expect(output).toContain('#dc2626');
-    expect(output).toContain('id="retikz-paint-frame-inspection-0-paint-1"');
-    expect(output).toContain('url(#retikz-paint-frame-inspection-0-paint-1)');
-    expect(output).not.toContain('data-retikz-id="layout.');
   });
 
-  it('为 primary 与每个辅助 Scene 隔离同名资源 id', () => {
-    const sceneWithPaint = (color: string): Scene => ({
-      layout: { x: 0, y: 0, width: 10, height: 10 },
-      resources: [
-        {
-          kind: 'paint',
-          id: 'shared',
-          spec: {
-            kind: 'linearGradient',
-            stops: [
-              { offset: 0, color },
-              { offset: 1, color: '#ffffff' },
-            ],
-          },
-        },
-      ],
-      primitives: [{ type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: { kind: 'resourceRef', id: 'shared' } }],
-    });
-    const output = renderFrameToSvgString(
-      {
-        primary: sceneWithPaint('#111111'),
-        inspection: {
-          entries: [
-            {
-              owner: { kind: 'pathKind', name: 'stroke' },
-              occurrence: { sourcePath: '$.children[0]', expansionPath: [] },
-              colorScope: 0,
-              transform: [1, 0, 0, 1, 0, 0],
-              scene: sceneWithPaint('#222222'),
-            },
-            {
-              owner: { kind: 'composite', namespace: 'test', type: 'layout' },
-              occurrence: { sourcePath: '$.children[1]', expansionPath: [] },
-              colorScope: 1,
-              transform: [1, 0, 0, 1, 12, 0],
-              scene: sceneWithPaint('#333333'),
-            },
-          ],
-        },
-      },
-      { idPrefix: 'resource-frame' },
-    );
+  it('isolates same-named resources between primary and every layer namespace', () => {
+    const primaryWithResource = layerScene('#111111');
+    const output = renderFrameToSvgString({ primary: primaryWithResource, layers }, { idPrefix: 'resource-frame' });
 
     [
       'retikz-paint-resource-frame-shared',
-      'retikz-paint-resource-frame-inspection-0-shared',
-      'retikz-paint-resource-frame-inspection-1-shared',
+      'retikz-paint-resource-frame-layer-first-shared',
+      'retikz-paint-resource-frame-layer-second-shared',
     ].forEach(id => {
       expect(output).toContain(`id="${id}"`);
       expect(output).toContain(`url(#${id})`);
     });
   });
 
-  it('Scene-only API 等价委托 inspection:null', () => {
+  it('Scene-only API is equivalent to a frame with frozen empty layers', () => {
     expect(buildSvgDocument(primary, { idPrefix: 'scene-only' })).toEqual(
-      buildSvgFrameDocument({ primary, inspection: null }, { idPrefix: 'scene-only' }),
+      buildSvgFrameDocument({ primary, layers: Object.freeze([]) }, { idPrefix: 'scene-only' }),
     );
   });
 });

@@ -71,12 +71,12 @@ const mountStaticSvg = (
   const liveHydrationDisposers = new Set<() => void>();
 
   const renderInto = (next: RenderInput): void => {
-    const { scene, artifacts, inspection, runtimeMeta } = toSceneResult(next, options);
+    const { scene, artifacts, layers, runtimeMeta } = toSceneResult(next, options);
     currentScene = scene;
     currentArtifacts = artifacts;
     currentRuntimeMeta = runtimeMeta;
     const doc = buildSvgFrameDocument(
-      { primary: scene, inspection },
+      { primary: scene, layers },
       {
         idPrefix,
         animate,

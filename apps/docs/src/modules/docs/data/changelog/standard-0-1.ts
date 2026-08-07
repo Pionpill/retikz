@@ -39,8 +39,8 @@ export const standardV01: Release = {
           version: 'alpha.2',
           date: '2026-07-30',
           summary: {
-            zh: '新增三种通用布局容器、公共 LayoutItem、领域无关 Legend、typed artifacts、能力 preset 与开发期布局检查器。',
-            en: 'Adds three general layout containers, shared LayoutItem vocabulary, a domain-neutral Legend, typed artifacts, capability presets, and a development-time Layout Inspector.',
+            zh: '新增三种通用布局容器、公共 LayoutItem、领域无关 Legend、typed artifacts、能力 preset 与可选布局检查入口。',
+            en: 'Adds three general layout containers, shared LayoutItem vocabulary, a domain-neutral Legend, typed artifacts, capability presets, and optional Layout Inspector entries.',
           },
           items: [
             {
@@ -72,10 +72,10 @@ export const standardV01: Release = {
               },
             },
             {
-              label: { zh: '布局检查器', en: 'Layout Inspector' },
+              label: { zh: '可选布局检查入口', en: 'Optional Layout Inspector entry' },
               content: {
-                zh: 'Flex、Grid 与 Overlay 可逐个开启辅助层；Layout 提供整图策略，Scope 提供 authored 子树策略。Inspector 读取同次 compile 的类型化 artifact，并输出普通 Core Path、Node 与 `lines` pattern paint：margin 与固定 gap 使用 size 12、lineWidth 1、rotation -45 的 `/`，padding 使用 rotation 45 的反向 `\\`；三者不铺底色。distributed space 仅显示虚线周界，box、内部结构与 spacing 共线时不重复描边。SVG / Canvas、static / retained 与 SSR 执行同一组隔离静态 Scene，不改变主图边界、资源或命中测试。',
-                en: 'Flex, Grid, and Overlay can enable overlays per occurrence. Layout supplies a whole-figure policy, while Scope supplies an authored-subtree policy. Inspectors read typed artifacts from the same compile and emit ordinary Core Paths, Nodes, and `lines` pattern paints: margin and fixed gaps use size 12, line width 1, and rotation -45 for `/`, while padding uses rotation 45 for the opposite `\\`; none adds a base fill. Distributed space keeps only a dashed perimeter, and coincident box, family-structure, and spacing boundaries are painted once. SVG and Canvas, static and retained hosts, and SSR execute the same isolated static Scenes without changing primary bounds, resources, or hit testing.',
+                zh: '`@retikz/standard/inspect` 显式导出 Flex、Grid、Overlay Inspector、共享选项与选择 helper，并以可选 peer 复用 `@retikz/inspect`。Standard 根入口只保留布局 schema、Definition、solver 与 artifact；辅助内容仍以普通 Core IR 和隔离 Scene 执行，不改变主图。',
+                en: '`@retikz/standard/inspect` explicitly exports Flex, Grid, and Overlay Inspectors, shared options, and selection helpers through the optional `@retikz/inspect` peer. The Standard root keeps only layout schemas, Definitions, solvers, and artifacts; auxiliary content still executes as ordinary Core IR and isolated Scenes without changing the primary figure.',
               },
             },
           ],
@@ -153,10 +153,10 @@ export const standardV01: Release = {
               },
             },
             {
-              label: { zh: '局部检查开关', en: 'Local inspection switches' },
+              label: { zh: 'BREAKING：可选检查 helper', en: 'BREAKING: Optional inspection helpers' },
               content: {
-                zh: '`flexLayout()`、`gridLayout()` 与 `overlayLayout()` 的第三个参数可为当前容器开启、关闭或细化检查辅助层；省略时继承宿主策略。',
-                en: 'The third argument of `flexLayout()`, `gridLayout()`, and `overlayLayout()` enables, disables, or refines the inspection overlay for that container; omission inherits the host policy.',
+                zh: '基础 `flexLayout()`、`gridLayout()` 与 `overlayLayout()` 不再接受第三个检查参数。安装 `@retikz/inspect` 后，从 `@retikz/standard-vanilla/inspect` 使用 `inspectFlexLayout()`、`inspectGridLayout()`、`inspectOverlayLayout()` 与 `createStandardInspectionVanillaDriver()`。',
+                en: 'Base `flexLayout()`, `gridLayout()`, and `overlayLayout()` no longer accept a third inspection argument. After installing `@retikz/inspect`, use `inspectFlexLayout()`, `inspectGridLayout()`, `inspectOverlayLayout()`, and `createStandardInspectionVanillaDriver()` from `@retikz/standard-vanilla/inspect`.',
               },
             },
             {
@@ -219,10 +219,10 @@ export const standardV01: Release = {
               },
             },
             {
-              label: { zh: '容器检查 prop', en: 'Container inspection props' },
+              label: { zh: 'BREAKING：可选检查组件', en: 'BREAKING: Optional inspection components' },
               content: {
-                zh: '`FlexLayout`、`GridLayout` 与 `OverlayLayout` 新增 `inspect` prop，可为当前 occurrence 开启、关闭或细化辅助层；省略时继承 Layout / Scope。',
-                en: '`FlexLayout`, `GridLayout`, and `OverlayLayout` add an `inspect` prop that enables, disables, or refines the overlay for the current occurrence; omission inherits Layout or Scope.',
+                zh: '基础 `FlexLayout`、`GridLayout` 与 `OverlayLayout` 不再提供 `inspect` prop。安装 `@retikz/inspect` 后，从 `@retikz/standard-react/inspect` 使用 `StandardInspectLayout`、`StandardInspectScope` 与 `InspectFlexLayout`、`InspectGridLayout`、`InspectOverlayLayout`。',
+                en: 'Base `FlexLayout`, `GridLayout`, and `OverlayLayout` no longer expose an `inspect` prop. After installing `@retikz/inspect`, use `StandardInspectLayout`, `StandardInspectScope`, `InspectFlexLayout`, `InspectGridLayout`, and `InspectOverlayLayout` from `@retikz/standard-react/inspect`.',
               },
             },
             {

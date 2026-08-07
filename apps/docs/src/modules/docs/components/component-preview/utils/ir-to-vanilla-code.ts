@@ -1,6 +1,4 @@
 import type {
-  InspectionOptionsInputObject,
-  InspectOptions,
   IRArcStep,
   IRBendStep,
   IRChild,
@@ -12,7 +10,6 @@ import type {
   IRScene,
   IRScope,
   IRStep,
-  PathInspectionAuthoring,
 } from '@retikz/core';
 
 const INDENT = '  ';
@@ -91,12 +88,7 @@ type Ctx = {
   standardHelpers: Set<string>;
   standardAdapters: Set<string>;
   standardCounts: Map<string, number>;
-  componentInspections: ReadonlyMap<string, boolean | InspectionOptionsInputObject>;
-  pathInspections: ReadonlyMap<string, PathInspectionAuthoring>;
 };
-
-const inspectionPathKey = (path: ReadonlyArray<Readonly<{ kind: string; index: number }>>): string =>
-  path.map(segment => `${segment.kind}:${segment.index}`).join('/');
 
 type WayFrag = { text: string; comment?: boolean };
 
@@ -238,13 +230,8 @@ const isWayRepresentableStep = (step: IRStep): boolean => {
 const rawIrChildCode = (child: IRChild, indent: number, reason: string): string =>
   `/* ${reason}; raw IR child, switch to IR view for structure. */ ${formatObject(child, indent)}`;
 
-const pathCode = (
-  path: IRPathBase,
-  indent: number,
-  ctx: Ctx,
-  locator: ReadonlyArray<Readonly<{ kind: string; index: number }>>,
-): string => {
-  if (path.kind === 'ribbon') return ribbonCode(path, indent, ctx, locator);
+const pathCode = (path: IRPathBase, indent: number, ctx: Ctx): string => {
+  if (path.kind === 'ribbon') return ribbonCode(path, indent, ctx);
   if (path.children === undefined) {
     return rawIrChildCode(path, indent, 'missing path steps');
   }
@@ -253,8 +240,7 @@ const pathCode = (
   }
   ctx.used.add('path');
   const id = path.id;
-  const inspect = ctx.pathInspections.get(inspectionPathKey(locator));
-  const config = { ...stripKeys(path, ['type', 'children', 'id']), ...(inspect === undefined ? {} : { inspect }) };
+  const config = stripKeys(path, ['type', 'children', 'id']);
   const wayStr = formatWay(stepsToWay(path.children, ctx, indent + 1), indent);
   const pathConfig = formatObject({ way: path.children.length === 0 ? [] : `__WAY__`, ...config }, indent).replace(
     "'__WAY__'",
@@ -263,12 +249,7 @@ const pathCode = (
   return id !== undefined ? `path(${formatString(id)}, ${pathConfig})` : `path(${pathConfig})`;
 };
 
-const ribbonCode = (
-  path: IRPathBase,
-  indent: number,
-  ctx: Ctx,
-  locator: ReadonlyArray<Readonly<{ kind: string; index: number }>>,
-): string => {
+const ribbonCode = (path: IRPathBase, indent: number, ctx: Ctx): string => {
   const ribbon = path.ribbon;
   if (ribbon === undefined) return rawIrChildCode(path, indent, 'missing ribbon options');
 
@@ -283,8 +264,7 @@ const ribbonCode = (
   }
   ctx.used.add('path');
   const id = path.id;
-  const inspect = ctx.pathInspections.get(inspectionPathKey(locator));
-  const config = { ...stripKeys(path, ['type', 'children', 'id']), ...(inspect === undefined ? {} : { inspect }) };
+  const config = stripKeys(path, ['type', 'children', 'id']);
   const wayStr = formatWay(stepsToWay(path.children, ctx, indent + 1), indent);
   const pathConfig = formatObject({ way: path.children.length === 0 ? [] : `__WAY__`, ...config }, indent).replace(
     "'__WAY__'",
@@ -293,15 +273,10 @@ const ribbonCode = (
   return id !== undefined ? `path(${formatString(id)}, ${pathConfig})` : `path(${pathConfig})`;
 };
 
-const scopeCode = (
-  scope: IRScope,
-  indent: number,
-  ctx: Ctx,
-  path: ReadonlyArray<Readonly<{ kind: string; index: number }>>,
-): string => {
+const scopeCode = (scope: IRScope, indent: number, ctx: Ctx): string => {
   ctx.used.add('scope');
   const config = stripKeys(scope, ['type', 'children']);
-  const childrenStr = childListCode(scope.children, indent, ctx, path, 'scopeChild');
+  const childrenStr = childListCode(scope.children, indent, ctx);
   return `scope(${formatObject(config, indent)}, ${childrenStr})`;
 };
 
@@ -407,12 +382,7 @@ export const collectStandardPreviewDefinitions = (
   return Array.from(definitions);
 };
 
-const standardCompositeCode = (
-  child: IRChild,
-  indent: number,
-  ctx: Ctx,
-  path: ReadonlyArray<Readonly<{ kind: string; index: number }>>,
-): string => {
+const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   const record = child as IRChild & { namespace: string; type: string; id?: string };
   const adapterName = `${record.type.charAt(0).toUpperCase()}${record.type.slice(1)}VanillaAdapter`;
   if (!STANDARD_HELPER_ORDER.includes(record.type) || !STANDARD_ADAPTER_ORDER.includes(adapterName)) {
@@ -424,19 +394,12 @@ const standardCompositeCode = (
   ctx.standardHelpers.add(record.type);
   ctx.standardAdapters.add(adapterName);
   const input = stripKeys(record, record.type === 'frame' ? ['namespace', 'type', 'id'] : ['namespace', 'type']);
-  const inspect = ctx.componentInspections.get(inspectionPathKey(path));
-  const inspectArg = inspect === undefined ? '' : `, ${formatValue(inspect, indent)}`;
-  return `${record.type}(${formatString(`preview-${record.type}-${count}`)}, ${formatObject(input, indent)}${inspectArg})`;
+  return `${record.type}(${formatString(`preview-${record.type}-${count}`)}, ${formatObject(input, indent)})`;
 };
 
-const childCode = (
-  child: IRChild,
-  indent: number,
-  ctx: Ctx,
-  path: ReadonlyArray<Readonly<{ kind: string; index: number }>>,
-): string => {
+const childCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   if ('namespace' in child) {
-    if (child.namespace === 'standard') return standardCompositeCode(child, indent, ctx, path);
+    if (child.namespace === 'standard') return standardCompositeCode(child, indent, ctx);
     throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
   }
   switch (child.type) {
@@ -445,48 +408,28 @@ const childCode = (
     case 'coordinate':
       return coordinateCode(child, indent, ctx);
     case 'path':
-      return pathCode(child, indent, ctx, path);
+      return pathCode(child, indent, ctx);
     case 'scope':
-      return scopeCode(child, indent, ctx, path);
+      return scopeCode(child, indent, ctx);
   }
 };
 
-const childListCode = (
-  children: ReadonlyArray<IRChild>,
-  indent: number,
-  ctx: Ctx,
-  parentPath: ReadonlyArray<Readonly<{ kind: string; index: number }>> = [],
-  segmentKind: 'sceneChild' | 'scopeChild' = 'sceneChild',
-): string => {
+const childListCode = (children: ReadonlyArray<IRChild>, indent: number, ctx: Ctx): string => {
   if (children.length === 0) return '[]';
-  const lines = children.map(
-    (child, index) =>
-      `${pad(indent + 1)}${childCode(child, indent + 1, ctx, [...parentPath, { kind: segmentKind, index }])},`,
-  );
+  const lines = children.map(child => `${pad(indent + 1)}${childCode(child, indent + 1, ctx)},`);
   return `[\n${lines.join('\n')}\n${pad(indent)}]`;
 };
 
-const HELPER_ORDER: ReadonlyArray<string> = ['figure', 'node', 'path', 'coordinate', 'scope', 'renderToSvgString'];
+const HELPER_ORDER: ReadonlyArray<string> = ['figure', 'node', 'path', 'coordinate', 'scope'];
 
-/** Vanilla 示例代码生成时保留的 runtime-only authoring 信息 */
-export type VanillaCodeOptions = Readonly<{
-  /** 整张图的检查策略 */
-  inspect?: InspectOptions;
-  /** 由 authored locator key 索引的组件局部检查策略 */
-  componentInspections?: ReadonlyMap<string, boolean | InspectionOptionsInputObject>;
-  /** 由 authored locator key 索引的 Path 局部检查策略 */
-  pathInspections?: ReadonlyMap<string, PathInspectionAuthoring>;
-}>;
-
-export const irToVanillaCode = (ir: IRScene, options: VanillaCodeOptions = {}): string => {
+/** 从纯 IR 生成不含运行时 authoring sidecar 的 Vanilla 示例代码 */
+export const irToVanillaCode = (ir: IRScene): string => {
   const ctx: Ctx = {
     used: new Set(['figure']),
     usesDrawWay: false,
     standardHelpers: new Set(),
     standardAdapters: new Set(),
     standardCounts: new Map(),
-    componentInspections: options.componentInspections ?? new Map(),
-    pathInspections: options.pathInspections ?? new Map(),
   };
   const childrenStr = childListCode(ir.children, 0, ctx);
   const figureConfig = {
@@ -499,7 +442,6 @@ export const irToVanillaCode = (ir: IRScene, options: VanillaCodeOptions = {}): 
     childrenStr,
   );
 
-  if (options.inspect !== undefined) ctx.used.add('renderToSvgString');
   const helpers = HELPER_ORDER.filter(name => ctx.used.has(name));
   const imports = [`import { ${helpers.join(', ')} } from '@retikz/vanilla';`];
   if (ctx.usesDrawWay) imports.push("import { DrawWay } from '@retikz/core';");
@@ -518,14 +460,7 @@ export const irToVanillaCode = (ir: IRScene, options: VanillaCodeOptions = {}): 
     standardDefinitions.length > 0
       ? `\nconst standardCompile = { composites: [${standardDefinitions.join(', ')}] };\n`
       : '';
-  const renderOptions = [
-    `inspect: ${formatValue(options.inspect, 0)}`,
-    ...(standardAdapters.length > 0 ? ['adapters'] : []),
-    ...(standardDefinitions.length > 0 ? ['compile: standardCompile'] : []),
-  ].join(', ');
-  const render =
-    options.inspect === undefined ? '' : `\nexport const svg = renderToSvgString(fig, { ${renderOptions} });\n`;
-  return `${imports.join('\n')}\n\nconst fig = figure(${figureArgs});\n${adapters}${compile}${render}`;
+  return `${imports.join('\n')}\n\nconst fig = figure(${figureArgs});\n${adapters}${compile}`;
 };
 
 /** 把 JSON-safe 值格式化为 Vanilla 示例使用的 TypeScript 字面量。 */

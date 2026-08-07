@@ -13,15 +13,22 @@ const copyConfigValue = <T>(value: T, ancestors: ReadonlySet<object>): T => {
   const nextAncestors = new Set(ancestors);
   nextAncestors.add(value);
   if (Array.isArray(value)) {
-    return Object.freeze(value.map(item => copyConfigValue(item, nextAncestors))) as T;
+    return value.map(item => copyConfigValue(item, nextAncestors)) as T;
   }
 
   const copy = Object.create(Object.getPrototypeOf(value)) as Record<string, unknown>;
   for (const [key, item] of Object.entries(value)) copy[key] = copyConfigValue(item, nextAncestors);
-  return Object.freeze(copy) as T;
+  return copy as T;
 };
 
-/** 隔离 factory 输入后续修改并冻结 Program 生命周期配置 */
+/** 隔离 factory 输入与 Program 生命周期配置的所有权 */
 export const copyCoreProgramOptions = <TComposites extends ReadonlyArray<AnyCompositeDefinition>>(
   options: CoreProgramOptions<TComposites>,
-): CoreProgramOptions<TComposites> => copyConfigValue(options, new Set());
+): CoreProgramOptions<TComposites> => {
+  const copied = copyConfigValue(options, new Set());
+  if (options.themeTokenDefinitions === undefined) return copied;
+  return Object.freeze({
+    ...copied,
+    themeTokenDefinitions: Object.freeze([...options.themeTokenDefinitions]),
+  });
+};

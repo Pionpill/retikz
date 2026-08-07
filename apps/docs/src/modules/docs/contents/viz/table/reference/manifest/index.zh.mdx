@@ -34,6 +34,8 @@ description: 查询 Table compile 产出的轨道、Cell、视觉编码、图例
   }}
 />
 
+Manifest 的 `style` 区域还保存 effective Core `style`、`themeMode`、完整 resolved Table `tokens` 与逐 key `sources`。这里的 `themeMode` 是同次 compile 的输出元数据，用于说明选择了哪一份 preset；TableSpec 的输入字段仍是 host `theme` 与 `tableThemeTokens`，二者不是同一个层级。
+
 ## 视觉编码与图例描述
 
 `encodings` 记录每条 visual encoding 实际着色的 Cell；`legendDescriptors` 只记录显式 opt-in 的领域 descriptor。两者来自同一次 visual scale resolution，并通过 `encodingId`、`channel` 与 `scaleName` 对账。

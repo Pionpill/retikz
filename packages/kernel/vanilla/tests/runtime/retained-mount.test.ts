@@ -8,7 +8,13 @@ import type {
 } from '@retikz/render/runtime';
 import type { RuntimePreparedCommit } from '@retikz/runtime';
 
-import { compileToScene, CompositeBaseSchema, defineComposite, defineInspector } from '@retikz/core';
+import {
+  compileToScene,
+  CompositeBaseSchema,
+  defineComposite,
+  defineThemeTokenNamespace,
+  resolveCoreThemeColors,
+} from '@retikz/core';
 import { defineRetainedRenderer, RetainedRenderErrorCode } from '@retikz/render/runtime';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
@@ -18,6 +24,7 @@ import type {
   StaticMountCanvasOptions,
   StaticMountOptions,
   StaticMountUnifiedOptions,
+  VanillaCompileDriver,
   VanillaFigureSpec,
   VanillaTier2Adapter,
 } from '../../src';
@@ -96,7 +103,7 @@ const createMemoryRendererFactory = (
     };
     const definition = {
       capability,
-      inspectionCapability: 'supported' as const,
+      readonlyLayerCapability: 'supported' as const,
       prepareMount: (frame: RenderFrameSnapshot, config: RenderRuntimeConfig) => {
         const shouldFail = typeof failMount === 'function' ? failMount() : failMount;
         if (shouldFail) throw new Error('expected mount failure');
@@ -158,48 +165,63 @@ const datasetFigure = (color: string): VanillaFigureSpec => ({
   children: [{ type: 'embed', kind: 'fixture-dataset', id: 'dataset', props: { color } }],
 });
 
-const inspectionDefinition = defineComposite({
-  namespace: 'fixture',
-  type: 'inspectionBox',
-  schema: CompositeBaseSchema.extend({
-    namespace: z.literal('fixture'),
-    type: z.literal('inspectionBox'),
-  }),
-  artifactSchema: z.strictObject({ width: z.number(), height: z.number() }),
-  inspector: defineInspector({
-    kind: 'composite',
-    optionsInputSchema: z.strictObject({}),
-    optionsSchema: z.strictObject({}),
-    inspect: (artifact: { width: number; height: number }) => ({
-      type: 'path',
-      stroke: '#2563eb',
-      dashPattern: [4, 2],
-      children: [
-        { type: 'step', kind: 'move', to: [0, 0] },
-        { type: 'step', kind: 'line', to: [artifact.width, artifact.height] },
-      ],
-    }),
-  }),
-  compile: () => ({
-    children: [{ type: 'node', id: 'inspection-box', position: [0, 0], shape: 'rectangle' }],
-    artifact: { width: 20, height: 20 },
-  }),
-});
+const readonlyLayerScene = compileToScene({
+  type: 'scene',
+  version: 1,
+  children: [{ type: 'node', position: [0, 0], shape: 'rectangle' }],
+}).scene;
 
-const inspectionAdapter: VanillaTier2Adapter<Record<string, never>> = {
-  kind: 'fixture-inspection',
-  namespace: 'fixture',
-  lower: () => ({
-    node: { namespace: 'fixture', type: 'inspectionBox' },
-    datasets: {},
-    makeComposites: () => [inspectionDefinition],
-  }),
+const createLayerDriver = (): VanillaCompileDriver => {
+  const sessions = new WeakMap<
+    object,
+    { update: (authoring: unknown) => void; session: ReturnType<VanillaCompileDriver['create']> }
+  >();
+  return Object.freeze({
+    create: input => {
+      const existing = sessions.get(input.instance);
+      const authoring = input.authoringSites[0]?.authoring;
+      if (existing !== undefined) {
+        existing.update(authoring);
+        return existing.session;
+      }
+      let currentAuthoring = authoring;
+      const session = Object.freeze({
+        observers: Object.freeze([]),
+        resolve: (coreOutput: Parameters<ReturnType<VanillaCompileDriver['create']>['resolve']>[0]) => {
+          if (currentAuthoring === 'fail') throw new Error('expected compile driver failure');
+          return Object.freeze({
+            primary: coreOutput.result,
+            observerOutputs: coreOutput.observerOutputs,
+            layers:
+              currentAuthoring === true
+                ? Object.freeze([
+                    Object.freeze({
+                      key: 'fixture-layer',
+                      scene: readonlyLayerScene,
+                      transform: [1, 0, 0, 1, 0, 0] as const,
+                    }),
+                  ])
+                : Object.freeze([]),
+            diagnostics: Object.freeze([]),
+          });
+        },
+      });
+      sessions.set(input.instance, {
+        update: next => {
+          currentAuthoring = next;
+        },
+        session,
+      });
+      return session;
+    },
+  });
 };
 
-const inspectionFigure = (inspect: boolean): VanillaFigureSpec => ({
+const layerFigure = (authoring: unknown): VanillaFigureSpec => ({
   type: 'figure',
   version: 1,
-  children: [{ type: 'embed', kind: 'fixture-inspection', id: 'inspection', props: {}, inspect }],
+  authoring,
+  children: [{ type: 'node', id: 'layer-box', position: [0, 0], shape: 'rectangle' }],
 });
 
 beforeEach(() => {
@@ -212,106 +234,56 @@ afterEach(() => {
 });
 
 describe('@retikz/vanilla retained mount', () => {
-  it('updates an embed inspection sidecar by atomically rebuilding the retained frame', () => {
+  it('同一 retained session 原子提交编译驱动产生的只读图层', () => {
     const frames: Array<RenderFrameSnapshot> = [];
     const configs: Array<RenderRuntimeConfig> = [];
+    const dispose = vi.fn();
     const rendererFactory = createMemoryRendererFactory(
       'entity',
       false,
       config => configs.push(config),
       undefined,
-      undefined,
+      dispose,
       frame => frames.push(frame),
     );
-    const view = mountSvg(document.createElement('div'), inspectionFigure(false), {
-      adapters: [inspectionAdapter],
+    const view = mountSvg(document.createElement('div'), layerFigure(false), {
+      compileDriver: createLayerDriver(),
       runtime: { rendererFactory },
     });
     const handler = vi.fn();
-    view.hydrate({ handlers: { 'inspection-box': { click: handler } } });
+    view.hydrate({ handlers: { 'layer-box': { click: handler } } });
 
-    view.update(inspectionFigure(true));
+    view.update(layerFigure(true));
 
-    expect(frames.at(-2)?.inspection).toBeNull();
-    expect(frames.at(-1)?.inspection?.entries).toHaveLength(1);
+    expect(frames.at(-2)?.layers).toEqual([]);
+    expect(frames.at(-1)?.layers).toHaveLength(1);
     expect(configs.at(-1)?.handlerContributions).toEqual([
-      expect.objectContaining({ handlers: { 'inspection-box': { click: handler } } }),
+      expect.objectContaining({ handlers: { 'layer-box': { click: handler } } }),
     ]);
     view.dispose();
-  });
-
-  it('releases a successfully retired inspection session exactly once', () => {
-    const dispose = vi.fn();
-    const view = mountSvg(document.createElement('div'), inspectionFigure(false), {
-      adapters: [inspectionAdapter],
-      runtime: {
-        rendererFactory: createMemoryRendererFactory('entity', false, undefined, undefined, dispose),
-      },
-    });
-
-    view.update(inspectionFigure(true));
+    view.dispose();
     expect(dispose).toHaveBeenCalledTimes(1);
-
-    view.dispose();
-    view.dispose();
-    expect(dispose).toHaveBeenCalledTimes(2);
   });
 
-  it('retries a failed retired inspection session cleanup until it succeeds', () => {
-    const disposeFailure = new Error('retired dispose failed');
-    let remainingFailures = 2;
-    const dispose = vi.fn(() => {
-      if (remainingFailures > 0) {
-        remainingFailures -= 1;
-        throw disposeFailure;
-      }
-    });
-    const view = mountSvg(document.createElement('div'), inspectionFigure(false), {
-      adapters: [inspectionAdapter],
+  it('编译驱动解析失败时保留上一帧和 committed metadata', () => {
+    const frames: Array<RenderFrameSnapshot> = [];
+    const view = mountSvg(document.createElement('div'), layerFigure(true), {
+      compileDriver: createLayerDriver(),
       runtime: {
-        rendererFactory: createMemoryRendererFactory('entity', false, undefined, undefined, dispose),
+        rendererFactory: createMemoryRendererFactory('entity', false, undefined, undefined, undefined, frame =>
+          frames.push(frame),
+        ),
       },
-    });
-
-    view.update(inspectionFigure(true));
-    expect(dispose).toHaveBeenCalledTimes(2);
-    expect(view.diagnostics()).toEqual([
-      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED', cause: disposeFailure }),
-      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED', cause: disposeFailure }),
-    ]);
-    expect(view.diagnostics()).toEqual([]);
-
-    view.dispose();
-    expect(dispose).toHaveBeenCalledTimes(4);
-    view.dispose();
-    expect(dispose).toHaveBeenCalledTimes(4);
-  });
-
-  it('keeps the previous retained frame usable when an inspection sidecar rebuild fails', () => {
-    let mountCount = 0;
-    const rendererFactory = createMemoryRendererFactory(
-      'entity',
-      false,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      () => {
-        mountCount += 1;
-        return mountCount === 2;
-      },
-    );
-    const view = mountSvg(document.createElement('div'), inspectionFigure(false), {
-      adapters: [inspectionAdapter],
-      runtime: { rendererFactory },
     });
     const artifacts = view.artifacts;
     const runtimeMeta = view.runtimeMeta;
+    const committed = frames.at(-1);
 
-    expect(() => view.update(inspectionFigure(true))).toThrow(/RUNTIME_PARTICIPANT_PREPARE_FAILED/);
+    expect(() => view.update(layerFigure('fail'))).toThrow(/RUNTIME_PARTICIPANT_PREPARE_FAILED/);
+    expect(frames.at(-1)).toBe(committed);
     expect(view.artifacts).toBe(artifacts);
     expect(view.runtimeMeta).toBe(runtimeMeta);
-    expect(() => view.update(inspectionFigure(false))).not.toThrow();
+    expect(() => view.update(layerFigure(false))).not.toThrow();
     view.dispose();
   });
 
@@ -322,7 +294,14 @@ describe('@retikz/vanilla retained mount', () => {
     const delegate = retained.definitions[0];
     if (typeof delegate.expand !== 'function') throw new Error('expected expand delegate');
     const node = { namespace: 'fixture', type: 'datasetBox' } as never;
-    const context = { theme: { style: 'neutral', mode: 'light' } } as const;
+    const context = {
+      theme: {
+        style: 'neutral',
+        mode: 'light',
+        tokens: {},
+        colors: resolveCoreThemeColors('neutral', 'light'),
+      },
+    } as const;
 
     const prepared = retained.prepare([candidate]);
     expect(delegate.expand(node, context)).toMatchObject({ fill: '#22c55e' });
@@ -350,7 +329,14 @@ describe('@retikz/vanilla retained mount', () => {
     const retained = createRetainedCompositeDefinitions([initial]);
     const delegate = retained.definitions[0];
     if (typeof delegate.expand !== 'function') throw new Error('expected expand delegate');
-    const context = { theme: { style: 'academic', mode: 'dark' } } as const;
+    const context = {
+      theme: {
+        style: 'academic',
+        mode: 'dark',
+        tokens: {},
+        colors: resolveCoreThemeColors('academic', 'dark'),
+      },
+    } as const;
 
     expect(delegate.expand({ namespace: 'fixture', type: 'themeDelegate' } as never, context)).toMatchObject({
       fill: '#111111',
@@ -501,6 +487,53 @@ describe('@retikz/vanilla retained mount', () => {
     view.update(datasetFigure('#22c55e'));
 
     expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#22c55e');
+  });
+
+  it('plain spec update 移除 embed Theme definition 后不复用 retained registry', () => {
+    const themeDefinition = defineThemeTokenNamespace({
+      namespace: 'retained-theme',
+      schema: z.strictObject({ value: z.string() }),
+    });
+    const composite = defineComposite({
+      namespace: 'retained-theme',
+      type: 'box',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('retained-theme'),
+        type: z.literal('box'),
+      }),
+      expand: (_node, context) => {
+        const fill = context.theme.tokens['retained-theme'].value;
+        if (typeof fill !== 'string') throw new Error('expected retained theme token');
+        return {
+          type: 'node',
+          position: [0, 0],
+          shape: 'rectangle',
+          fill,
+        };
+      },
+    });
+    const adapter: VanillaTier2Adapter<{ includeTheme: boolean }> = {
+      kind: 'retained-theme',
+      namespace: 'retained-theme',
+      lower: props => ({
+        node: { namespace: 'retained-theme', type: 'box' },
+        datasets: {},
+        makeComposites: () => [composite],
+        ...(props.includeTheme ? { themeTokenDefinitions: [themeDefinition] } : {}),
+      }),
+    };
+    const figure = (includeTheme: boolean): VanillaFigureSpec => ({
+      type: 'figure',
+      version: 1,
+      theme: { tokens: { 'retained-theme': { value: '#123456' } } },
+      children: [{ type: 'embed', kind: 'retained-theme', id: 'theme-box', props: { includeTheme } }],
+    });
+    const container = document.createElement('div');
+    const view = mountSvg(container, figure(true), { adapters: [adapter] });
+
+    expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#123456');
+    expect(() => view.update(figure(false))).toThrow(/RUNTIME_PROGRAM_RUN_FAILED/);
+    expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#123456');
   });
 
   it('mount 后修改 adapter callback 不改变 retained session compile 语义', () => {

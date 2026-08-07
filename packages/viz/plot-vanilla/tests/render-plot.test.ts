@@ -1,3 +1,4 @@
+import type { IRScene } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlotSpec } from '@retikz/plot';
 
@@ -46,6 +47,10 @@ const data: ExternalDatasets = {
   ],
 };
 
+const plotSurfaceTheme = {
+  tokens: { plot: { 'plot.surface.fill': '#123456' } },
+} satisfies NonNullable<IRScene['theme']>;
+
 type ScenePrimLike = { type: string; id?: string; children?: Array<ScenePrimLike> };
 
 /** 收集 Canvas / SVG 共用 Scene 中的语义分组 id */
@@ -77,6 +82,12 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
   it('省略 options 时用默认尺寸仍渲染', () => {
     const svg = renderPlot(spec, data);
     expect(svg).toContain('<ellipse');
+  });
+
+  it('options.theme 作为根 Scene Theme 进入 Core effective Theme', () => {
+    const svg = renderPlot(spec, data, { width: 480, height: 300, theme: plotSurfaceTheme });
+
+    expect(svg).toContain('fill="#123456"');
   });
 
   it('data 缺 spec 引用的数据集 → 调用期抛错', () => {

@@ -975,8 +975,8 @@ export const vizV01: Release = {
           version: 'alpha.3',
           date: '2026-08-03',
           summary: {
-            zh: '补齐 Cell formatter、扁平 selector 与有序 rule cascade、视觉 encoding、neutral/academic/vibrant/clean style preset，以及可追溯的 style token resolution。',
-            en: 'Adds Cell formatters, flat selectors with an ordered rule cascade, visual encodings, neutral/academic/vibrant/clean style presets, and traceable style-token resolution.',
+            zh: '补齐 Cell formatter、扁平 selector 与有序 rule cascade、视觉 encoding、Core Theme namespace、shared categorical projection，以及可追溯的 Table token resolution。',
+            en: 'Adds Cell formatters, flat selectors with an ordered rule cascade, visual encodings, Core Theme namespaces, shared categorical projection, and traceable Table-token resolution.',
           },
           items: [
             {
@@ -989,15 +989,25 @@ export const vizV01: Release = {
             {
               label: { zh: '确定性视觉级联', en: 'Deterministic visual cascade' },
               content: {
-                zh: '闭合 selector、ordinal/threshold/sequential scale 与单通道 encoding 使用 canonical raw value；preset tokens < user overlay < Cell < encodings < ordered rules，manifest 保留 winner/source trace。',
-                en: 'Closed selectors, ordinal/threshold/sequential scales, and single-channel encodings use canonical raw values. Preset tokens < user overlay < Cell < encodings < ordered rules, with winner/source trace retained in manifests.',
+                zh: '闭合 selector、ordinal/threshold/sequential scale 与单通道 encoding 使用 canonical raw value；Core preset < shared categorical < inherited `theme.tokens.table` < local `tableThemeTokens` < Cell < encodings < ordered rules，manifest 保留 winner/source trace。',
+                en: 'Closed selectors, ordinal/threshold/sequential scales, and single-channel encodings use canonical raw values. Core preset < shared categorical < inherited `theme.tokens.table` < local `tableThemeTokens` < Cell < encodings < ordered rules, with winner/source trace retained in manifests.',
               },
             },
             {
-              label: { zh: 'BREAKING：默认 neutral', en: 'BREAKING: Neutral is the default' },
+              label: {
+                zh: 'BREAKING：Table 视觉输入迁移到 Core Theme',
+                en: 'BREAKING: Table visuals move to Core Theme',
+              },
               content: {
-                zh: '省略 style/themeMode 时按 neutral/light 解析；要保留 alpha.2 的极简无装饰视觉需显式写 `style: "clean"`。未知 style token 会报告精确 key 并 fail-loud。',
-                en: 'Omitted style/themeMode now resolves as neutral/light. Use `style: "clean"` explicitly for the alpha.2 minimal undecorated look. Unknown style-token keys identify the exact key and fail loudly.',
+                zh: 'TableSpec 与 Detail/Manual React props 不再接收旧的 preset、mode 或 flat token 字段；Core host `theme.style` / `theme.mode` 选择 preset，`theme.tokens.table` 提供 inherited namespace，`tableThemeTokens` 提供 local overlay。未知 token key/value 仍会按 owner schema fail-loud。',
+                en: 'TableSpec and Detail/Manual React props no longer accept the former preset, mode, or flat-token fields. Core host `theme.style` / `theme.mode` selects the preset, `theme.tokens.table` supplies the inherited namespace, and `tableThemeTokens` supplies the local overlay. Unknown token keys/values still fail loudly through the owner schema.',
+              },
+            },
+            {
+              label: { zh: 'shared categorical 投影', en: 'Shared categorical projection' },
+              content: {
+                zh: 'Core `colors.categorical` 是非空、可重复的 shared palette；Table visual scale 将其稳定投影到 `data.categorical`，不再让 Table preset 维护第二份 shared palette 真源。',
+                en: 'Core `colors.categorical` is a non-empty, repeatable shared palette. Table visual scales project it deterministically into `data.categorical`, so Table presets no longer maintain a second shared-palette source of truth.',
               },
             },
             {
@@ -1129,22 +1139,22 @@ export const vizV01: Release = {
           version: 'alpha.3',
           date: '2026-08-03',
           summary: {
-            zh: 'Detail/Manual React authoring 补齐 formatter、rules/encodings 与 style token 字段，并把宿主 CSS 与 Table preset 明确拆开。',
-            en: 'Completes Detail/Manual React authoring for formatter, rules/encodings, and style-token fields while separating host CSS from the Table preset.',
+            zh: 'Detail/Manual React authoring 补齐 formatter、rules/encodings 与 namespaced Table token 字段，并把 Core Theme、Table overlay 与宿主 CSS 明确拆开。',
+            en: 'Completes Detail/Manual React authoring for formatter, rules/encodings, and namespaced Table tokens while separating Core Theme, Table overlays, and host CSS.',
           },
           items: [
             {
-              label: { zh: 'BREAKING：宿主 CSS 改用 containerStyle', en: 'BREAKING: Host CSS uses containerStyle' },
+              label: { zh: 'BREAKING：Theme 与宿主 CSS 分层', en: 'BREAKING: Theme and host CSS are separated' },
               content: {
-                zh: '三个 standalone root 的宿主 CSS prop 从 `style` 改为 `containerStyle`；Detail/Manual 的 `style` 只选择 Table preset，generic `Table` 则使用 `spec.style`。三种 root 的旧 CSS-object `style` 都会在 schema 前给出迁移诊断，不保留 overload 或 alias。',
-                en: 'Host CSS on all three standalone roots moves from `style` to `containerStyle`. Detail/Manual `style` selects a Table preset, while generic `Table` uses `spec.style`. Each root reports the old CSS-object `style` before schema construction, with no overload or alias.',
+                zh: '三个 standalone root 用 `containerStyle` 承载宿主 CSS；standalone `theme` 写入根 Core Scene，embedded Table 从外层 `Layout` 继承 Theme，`tableThemeTokens` 只属于 TableSpec local overlay。三种 root 的宿主能力仍在同一 Layout runtime 中透传。',
+                en: 'All three standalone roots use `containerStyle` for host CSS. Standalone `theme` writes the root Core Scene, embedded Tables inherit Theme from the outer `Layout`, and `tableThemeTokens` remains a TableSpec-local overlay. Host capabilities continue through the same Layout runtime.',
               },
             },
             {
               label: { zh: '完整 root 与 Cell authoring', en: 'Complete root and Cell authoring' },
               content: {
-                zh: 'DetailColumn 与 value/children Cell 转发 formatter；Detail/Manual 两种模式均转发 `rules`、`encodings`、`style`、`themeMode` 与 `styleTokens`。content Cell 在类型和 runtime 同时拒绝 formatter/presentation。',
-                en: 'DetailColumn and value/children Cells forward formatters. Both Detail/Manual modes forward `rules`, `encodings`, `style`, `themeMode`, and `styleTokens`; content Cells reject formatter/presentation in types and runtime.',
+                zh: 'DetailColumn 与 value/children Cell 转发 formatter；Detail/Manual 两种模式均转发 `rules`、`encodings` 与 `tableThemeTokens`。content Cell 在类型和 runtime 同时拒绝 formatter/presentation。',
+                en: 'DetailColumn and value/children Cells forward formatters. Both Detail/Manual modes forward `rules`, `encodings`, and `tableThemeTokens`; content Cells reject formatter/presentation in types and runtime.',
               },
             },
             {
@@ -1262,8 +1272,8 @@ export const vizV01: Release = {
             {
               label: { zh: 'spec fidelity', en: 'Spec fidelity' },
               content: {
-                zh: '`detailTable()` / `manualTable()` 保留 formatter、rules/encodings 与 style token 字段；embedded contextualization 只改根 id，不重排或重写这些字段。',
-                en: '`detailTable()` / `manualTable()` preserve formatter, rules/encodings, and style-token fields. Embedded contextualization changes only the root id without reordering or rewriting them.',
+                zh: '`detailTable()` / `manualTable()` 保留 formatter、rules/encodings 与 `tableThemeTokens`；embedded contextualization 只改根 id，不重排或重写这些字段，Core host Theme 仍由外层宿主提供。',
+                en: '`detailTable()` / `manualTable()` preserve formatter, rules/encodings, and `tableThemeTokens`; embedded contextualization changes only the root id without reordering or rewriting them, while the Core host Theme still comes from the outer host.',
               },
             },
             {

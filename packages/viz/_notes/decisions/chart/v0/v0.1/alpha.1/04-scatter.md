@@ -88,10 +88,10 @@ Scatter 的 `size`、`color`、`shape`、`opacity`、`text`、`label` 及其它 
 Scatter 默认 size legend 以应用 `mark` 投影后的最终有效 Point size 为准；Bubble 则始终以必填 `encoding.size` 为准。Chart 只决定是否需要 size legend 及其来源，不推导或拼接 Plot 的隐式 scale identity：
 
 - 最终 size 缺省或为 constant 时不生成自动 size legend
-- `guides` 缺省、resolved `legend.enabled` 为 true 且最终 size 为 field 时生成自动 size legend；field binding 显式引用 scale 时可以沿用该引用，否则默认 guide 不写猜测出的 scale 名，由 Plot 从正式 descriptor 选择唯一的实际 scale identity
+- `guides` 缺省、resolved `chart.legend.enabled` 为 true 且最终 size 为 field 时生成自动 size legend；field binding 显式引用 scale 时可以沿用该引用，否则默认 guide 不写猜测出的 scale 名，由 Plot 从正式 descriptor 选择唯一的实际 scale identity
 - `encoding.size.field` 被 `mark.size.constant` 覆盖时移除原自动 legend；`encoding.size.value` 被 `mark.size.field` 覆盖时生成 field legend；两处绑定不同 field / scale 时只解释最终 `mark.size`
 - 显式 `guides` 仍整体替换包括 size legend 在内的全部表现性默认
-- Bubble 在上述默认生成条件满足时生成绑定其 size descriptor 的 legend；`legend.enabled: false` 或显式 `guides` 都可以省略该表现性 guide，但不能撤销 field-bound size 核心
+- Bubble 在上述默认生成条件满足时生成绑定其 size descriptor 的 legend；`chart.legend.enabled: false` 或显式 `guides` 都可以省略该表现性 guide，但不能撤销 field-bound size 核心
 
 统一 inspection 必须能区分最终 Point size binding、Chart 默认 guide 与用户显式 guides 的来源，并沿 Plot 正式 channel descriptor / guide 选择链观察实际 scale identity。Bubble 复用这份 Chart / Plot inspection，不新增 Bubble 私有 descriptor、scale 命名或 provenance 结构。
 
@@ -101,7 +101,7 @@ Scatter 默认 size legend 以应用 `mark` 投影后的最终有效 Point size 
 - coordinate 与 composition 互斥；composition 的 active/default view 必须提供精确二维角色，核心 Point 与 axes 始终属于同一 view
 - 位置 scale 由 Plot 根据 binding、data model 与显式 scale 解析；Chart 不猜测重绑定未引用 scale
 - `color` 支持严格 field binding 或 string constant；其它视觉角色复用 Plot 的正式 channel contract
-- 最终有效 size 绑定字段时沿用 Plot 的 sqrt radius scale；`guides` 缺省且 resolved `legend.enabled` 为 true 时 Scatter 加入 size legend default，显式 `guides` 按 ChartCommon 规则整体替换包括该 legend 在内的表现性 defaults
+- 最终有效 size 绑定字段时沿用 Plot 的 sqrt radius scale；`guides` 缺省且 resolved `chart.legend.enabled` 为 true 时 Scatter 加入 size legend default，显式 `guides` 按 ChartCommon 规则整体替换包括该 legend 在内的表现性 defaults
 - 最终有效 size 绑定常量时直接作为最终 Point 半径，不产生 field descriptor 或 size legend default
 - Bubble 缺少 field-bound size、提供 constant size、通过 `mark.size` 提供第二个尺寸来源或引用非 sqrt scale 时 fail-loud
 - Bubble size field 的 data-model type 已知为 categorical、temporal 或其它非 quantitative 类型时，必须沿 Plot 正式 size channel 诊断 fail-loud；Chart 不自行推断或预扫描 rows

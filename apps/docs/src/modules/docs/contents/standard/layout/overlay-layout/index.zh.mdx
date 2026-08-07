@@ -37,6 +37,7 @@ JSON/IR 路径使用 `createOverlayLayout()` 与 `OverlayLayoutDefinition`；Van
 | ----------- | ------------------------------------------------------------------------------------------------------ |
 | React       | `OverlayLayout`、`LayoutItem`（`@retikz/standard-react`）                                              |
 | Vanilla     | `overlayLayout`、`OverlayLayoutVanillaAdapter`（`@retikz/standard-vanilla`）                           |
+| 可选检查    | `InspectOverlayLayout`（`@retikz/standard-react/inspect`）、`inspectOverlayLayout`（Vanilla）          |
 | IR / 持久化 | `OverlayLayoutSchema`、`createOverlayLayout`、`IROverlayLayout`、`OverlayLayoutDefinition`（Standard） |
 
 ## 例子
@@ -97,13 +98,13 @@ JSON/IR 路径使用 `createOverlayLayout()` 与 `OverlayLayoutDefinition`；Van
 
 ## API 参考
 
-### React 检查选项
+### 可选 React 检查组件
 
-| 属性       | 类型                                       | 默认值 | 描述                                                                                    |
-| ---------- | ------------------------------------------ | ------ | --------------------------------------------------------------------------------------- |
-| `inspect?` | `boolean` \| `OverlayLayoutInspectOptions` | 继承   | 省略时继承 Layout / 最近 Scope；`false` 只关闭当前 occurrence，且不会关闭或开启嵌套布局 |
+| 属性       | 类型                                               | 默认值 | 描述                                                                      |
+| ---------- | -------------------------------------------------- | ------ | ------------------------------------------------------------------------- |
+| `inspect?` | `false` \| `true` \| `OverlayLayoutInspectOptions` | `true` | `InspectOverlayLayout` 为当前 occurrence 声明请求；`false` 只取消当前实例 |
 
-对象形式可分别控制 `placements`、`anchors` 与 `stacking`，并复用通用边界与盒模型间距开关。放置边界、定位关系与锚点输出普通 Core Path / Node；Overlay 不提供无意义的 gap 选项。完整字段和全图 / Scope 策略见[运行时参考](/standard/layout/reference/runtime#布局检查器)。
+基础 `OverlayLayout` 没有 `inspect` 属性。可选的 `InspectOverlayLayout` 对象形式可分别控制 `placements`、`anchors` 与 `stacking`，并复用通用边界与盒模型间距开关。完整字段和宿主 / Scope 规则见[运行时参考](/standard/layout/reference/runtime#布局检查器)。
 
 ### `OverlayLayoutInput`
 

@@ -5,7 +5,7 @@ import type { IRPlotChannel, IRPlotMarkOperation, IRPlotSpec, LegendChannelValue
 import type { DimensionRole } from './coordinate';
 import type { AnyScaleDefinition, ChannelScaleResolution } from './scale';
 
-/** 通道解析可见的 palette 默认值；由 PlotSpec.theme / colors 在 lowering 前解析 */
+/** 通道解析可见的 palette 默认值；由 PlotSpec.plotTheme / colors 在 lowering 前解析 */
 export type ChannelPaletteContext = {
   /** 分类 scale 默认颜色 */
   categorical: ReadonlyArray<string>;

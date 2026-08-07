@@ -16,7 +16,7 @@ The example below uses Flex for lines, Grid for columns, and Overlay for a badge
   caption="The inspection overlay is separate from the real figure: it does not expand layout bounds or participate in hit testing."
 />
 
-This example enables layout guides for the whole figure with `<Layout inspect={{ layout: true }}>`. Use a container's own `inspect` prop for one occurrence, or declare `<Scope inspect={{ layout: true }}>` to affect one authored subtree.
+This example uses `StandardInspectLayout` from `@retikz/standard-react/inspect` to install the layout Inspectors, then selects individual occurrences with `InspectFlexLayout`, `InspectGridLayout`, and `InspectOverlayLayout`. Use `StandardInspectScope request={false}` as a hard barrier when one authored subtree must not inherit inspection requests. Base Standard entries do not depend on the Inspect package.
 
 ## Responsibilities
 

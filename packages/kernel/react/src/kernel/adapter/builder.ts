@@ -1,8 +1,4 @@
 import type {
-  InspectionAuthoringRoot,
-  InspectionAuthoringTree,
-  InspectionChildForest,
-  InspectOptions,
   IRArrowMark,
   IRChild,
   IRLineSpec,
@@ -18,18 +14,10 @@ import type {
   IRTarget,
   IRTransform,
   IRTransformInput,
-  SceneInspectionAuthoringPathSegment,
-  ScopeInspectionAuthoringPathSegment,
 } from '@retikz/core';
 import type { ReactElement, ReactNode } from 'react';
 
-import {
-  AxisLineTargetSchema,
-  CURRENT_IR_VERSION,
-  mergeInspectOptions,
-  parsePathThickness,
-  parseTargetSugar,
-} from '@retikz/core';
+import { AxisLineTargetSchema, CURRENT_IR_VERSION, parsePathThickness, parseTargetSugar, PathKind } from '@retikz/core';
 import { Children, createElement, Fragment, isValidElement } from 'react';
 
 import type { CoordinateProps } from '../components';
@@ -40,6 +28,7 @@ import type { StepProps } from '../components';
 import type { TextProps } from '../components';
 import type { ScopeStyleProps } from '../protocol';
 import type { EmbeddableContributionRecord, EmbeddableTier2Adapter } from '../protocol';
+import type { LayoutAuthoringSite } from './authoring-site';
 
 import { Scope } from '../components';
 import {
@@ -53,6 +42,7 @@ import {
   TIKZ_TEXT,
 } from '../protocol';
 import { resolveEmbeddableAdapter } from '../protocol';
+import { createLayoutAuthoringSite } from './authoring-site';
 import { NODE_FIELDS, PATH_FIELDS, pickDefined, SCOPE_FIELDS, SCOPE_STYLE_FIELDS } from './fields';
 
 // NODE_FIELDS / PATH_FIELDS / pickDefined 抽到 fields.ts 与 unbuilder 共享
@@ -599,91 +589,39 @@ const buildCoordinateFromProps = (props: CoordinateProps): IRChild => ({
  */
 type BuildContext = {
   contributions: Array<EmbeddableContributionRecord>;
-  inspectionRoots: Array<InspectionAuthoringRoot>;
-  inspectionPath: Array<SceneInspectionAuthoringPathSegment | ScopeInspectionAuthoringPathSegment>;
-  inheritedInspection?: InspectOptions;
+  authoringSites: Array<LayoutAuthoringSite>;
+  sourcePath: string;
   embeddables?: ReadonlyArray<EmbeddableTier2Adapter>;
 };
 
-/** 把 ancestor Scope policy 合入一个 embeddable root tree */
-const inheritInspectionTree = (
-  tree: InspectionAuthoringTree,
-  inherited: InspectOptions | undefined,
-): InspectionAuthoringTree => {
-  const merged = mergeInspectOptions(inherited, tree.policy?.inherited);
-  if (merged === undefined) return tree;
-  return Object.freeze({
-    ...tree,
-    policy: Object.freeze({ ...tree.policy, inherited: merged }),
-  });
-};
+/** 读取当前父容器中一个 IR child 的 authored source path */
+const childSourcePath = (context: BuildContext, index: number): string =>
+  context.sourcePath.length === 0 ? `children[${index}]` : `${context.sourcePath}.children[${index}]`;
 
-/** 读取当前父容器中一个 IR child 的 authored locator path */
-const inspectionChildPath = (
-  context: BuildContext,
-  index: number,
-): Array<SceneInspectionAuthoringPathSegment | ScopeInspectionAuthoringPathSegment> => [
-  ...context.inspectionPath,
-  context.inspectionPath.length === 0 ? { kind: 'sceneChild', index } : { kind: 'scopeChild', index },
-];
+/** 只保留基础 adapter 不解释的 authoring 载荷 */
+const opaqueAuthoringProps = (authoring: unknown): Readonly<Record<string, unknown>> =>
+  Object.freeze(authoring === undefined ? {} : { authoring });
 
-/** 把 embeddable 相对单 node 的 sidecar forest 提升为 Scene roots */
-const collectContributionInspectionRoots = (
-  context: BuildContext,
-  index: number,
-  forest: InspectionChildForest | undefined,
-): void => {
-  if (forest === undefined) return;
-  const basePath = inspectionChildPath(context, index);
-  const sceneSegment = basePath[0] as SceneInspectionAuthoringPathSegment;
-  const scopePath = basePath.slice(1) as Array<ScopeInspectionAuthoringPathSegment>;
-  forest.forEach(root => {
-    const path: InspectionAuthoringRoot['locator']['path'] = [sceneSegment, ...scopePath, ...root.locator.path];
-    context.inspectionRoots.push(
-      Object.freeze({
-        locator: Object.freeze({ target: root.locator.target, path }),
-        tree: inheritInspectionTree(root.tree, context.inheritedInspection),
-      }),
-    );
-  });
-};
-
-/** 为当前 authored Path 收集 occurrence-local Inspector sidecar */
-const collectPathInspectionRoot = (context: BuildContext, index: number, props: PathProps): void => {
-  if (props.inspect === undefined) return;
-  const authoredPath = inspectionChildPath(context, index);
-  const [sceneSegment, ...scopePath] = authoredPath;
-  if (
-    sceneSegment.kind !== 'sceneChild' ||
-    !scopePath.every((segment): segment is ScopeInspectionAuthoringPathSegment => segment.kind === 'scopeChild')
-  ) {
-    throw new Error('internal: React Path inspection path must start at a Scene child');
-  }
-  const path: InspectionAuthoringRoot['locator']['path'] = [sceneSegment, ...scopePath];
-  context.inspectionRoots.push(
-    Object.freeze({
-      locator: Object.freeze({ target: 'path', path }),
-      tree: Object.freeze({
-        policy: Object.freeze({
-          ...(context.inheritedInspection === undefined ? {} : { inherited: context.inheritedInspection }),
-          self: props.inspect,
-        }),
-      }),
-    }),
-  );
-};
-
-/** `<Scope>` props → IRScope；inspect 只进入 authoring sidecar，其余字段与 children 进入 canonical IR */
+/** `<Scope>` props → IRScope，并报告领域中立 authored site */
 const buildScopeFromProps = (
   props: ScopeProps,
+  elementType: unknown,
   ctx: BuildContext,
-  inspectionPath: BuildContext['inspectionPath'],
+  sourcePath: string,
 ): IRScope => {
   const scopeFields = pickDefined(props, SCOPE_FIELDS) as Omit<IRScope, 'type' | 'children' | 'transforms'>;
+  const scopeSourcePath = `${sourcePath}.scope`;
+  ctx.authoringSites.push(
+    createLayoutAuthoringSite({
+      kind: 'scope',
+      sourcePath: scopeSourcePath,
+      elementType,
+      props: opaqueAuthoringProps(props.authoring),
+    }),
+  );
   const nestedContext: BuildContext = {
     ...ctx,
-    inspectionPath,
-    inheritedInspection: mergeInspectOptions(ctx.inheritedInspection, props.inspect),
+    sourcePath: scopeSourcePath,
   };
   const scope: IRScope = {
     type: 'scope',
@@ -733,18 +671,24 @@ const readSceneChildren = (children: ReactNode, ctx?: BuildContext): Array<IRChi
             const props = child.props as PathProps;
             const index = out.length;
             out.push(buildPathFromProps(props));
-            if (props.inspect !== undefined) {
-              if (ctx === undefined) throw new Error('internal: Path inspection context is unavailable');
-              collectPathInspectionRoot(ctx, index, props);
-            }
+            if (ctx !== undefined)
+              ctx.authoringSites.push(
+                createLayoutAuthoringSite({
+                  kind: 'path',
+                  sourcePath: `${childSourcePath(ctx, index)}.path`,
+                  owner: { kind: 'pathKind', name: props.kind ?? PathKind.Stroke },
+                  elementType: child.type,
+                  props: opaqueAuthoringProps(props.authoring),
+                }),
+              );
           }
           return;
         case TIKZ_COORDINATE:
           out.push(buildCoordinateFromProps(child.props as CoordinateProps));
           return;
         case TIKZ_SCOPE:
-          if (ctx === undefined) throw new Error('internal: Scope inspection context is unavailable');
-          out.push(buildScopeFromProps(child.props as ScopeProps, ctx, inspectionChildPath(ctx, out.length)));
+          if (ctx === undefined) throw new Error('internal: Scope authoring context is unavailable');
+          out.push(buildScopeFromProps(child.props as ScopeProps, child.type, ctx, childSourcePath(ctx, out.length)));
           return;
       }
       if (typeof child.type === 'function') {
@@ -762,11 +706,34 @@ const readSceneChildren = (children: ReactNode, ctx?: BuildContext): Array<IRChi
           const outputIndex = out.length;
           out.push(contribution.node);
           if (ctx !== undefined) {
-            collectContributionInspectionRoots(ctx, outputIndex, contribution.inspectionRoots);
+            const sourcePath = childSourcePath(ctx, outputIndex);
+            ctx.authoringSites.push(
+              createLayoutAuthoringSite({
+                kind: 'embeddable',
+                sourcePath,
+                ...('namespace' in contribution.node
+                  ? {
+                      owner: {
+                        kind: 'composite' as const,
+                        namespace: contribution.node.namespace,
+                        type: contribution.node.type,
+                      },
+                    }
+                  : {}),
+                elementType: child.type,
+                props: opaqueAuthoringProps(Reflect.get(child.props, 'authoring')),
+              }),
+            );
+            contribution.authoringSites?.forEach(site =>
+              ctx.authoringSites.push(createLayoutAuthoringSite({ ...site, sourcePath })),
+            );
           }
           ctx?.contributions.push({
             namespace: adapter.namespace,
             datasets: contribution.datasets,
+            ...(contribution.themeTokenDefinitions === undefined
+              ? {}
+              : { themeTokenDefinitions: contribution.themeTokenDefinitions }),
             makeComposites: contribution.makeComposites,
           });
           return;
@@ -826,23 +793,34 @@ export const wrapRootScope = (children: ReactNode, style: ScopeStyleProps): Reac
 export const buildIRWithContributions = (
   children: ReactNode,
   embeddables?: ReadonlyArray<EmbeddableTier2Adapter>,
+  sceneSite?: Readonly<{ elementType: unknown; props: Readonly<Record<string, unknown>> }>,
 ): {
   ir: IRScene;
   contributions: Array<EmbeddableContributionRecord>;
-  inspectionRoots: Array<InspectionAuthoringRoot>;
+  authoringSites: ReadonlyArray<LayoutAuthoringSite>;
 } => {
   const contributions: Array<EmbeddableContributionRecord> = [];
-  const inspectionRoots: Array<InspectionAuthoringRoot> = [];
+  const authoringSites: Array<LayoutAuthoringSite> = [];
+  if (sceneSite !== undefined) {
+    authoringSites.push(
+      createLayoutAuthoringSite({
+        kind: 'scene',
+        sourcePath: '',
+        elementType: sceneSite.elementType,
+        props: sceneSite.props,
+      }),
+    );
+  }
   const sceneChildren = readSceneChildren(children, {
     contributions,
-    inspectionRoots,
-    inspectionPath: [],
+    authoringSites,
+    sourcePath: '',
     embeddables,
   });
   return {
     ir: { version: CURRENT_IR_VERSION, type: 'scene', children: sceneChildren },
     contributions,
-    inspectionRoots,
+    authoringSites: Object.freeze(authoringSites),
   };
 };
 

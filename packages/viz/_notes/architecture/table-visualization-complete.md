@@ -18,13 +18,13 @@ Table 是与 Plot 平行的 Tier 2 能力，不是 Plot 的封装层，也不是
 
 ## 2. 包角色与端到端管线
 
-| 角色                 | 主责包 / 协作包                 | 责任                                                                                     | 不拥有                                             |
-| -------------------- | ------------------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| 数据底座             | `@retikz/data`                  | 数据模型、字段解析、通用 transform / statistics 与 lineage                               | Table 结构、Cell 呈现、表格布局                    |
-| Table 主责           | `@retikz/table`                 | Table IR、结构与呈现、body 约束布局、外围 placement intent、lowering、manifest / lineage | 通用数据算法、外围 Box Layout、Core 测量、renderer |
-| 通用 Tier 2 图形能力 | `@retikz/standard`              | 接收 Table 已解析的领域无关绘图输入，提供 Legend、外围 Box Layout、lowering 与 artifact  | Table structure、visual encoding、lineage 与交互   |
-| 图形与测量底座       | `@retikz/core` / `@retikz/math` | `IRChild` 测量、布局感知 composite、Core IR / Scene 与通用几何                           | Table 结构、Table track solver                     |
-| authoring / runtime  | table-react / table-vanilla     | 构造 Table 输入、注入数据与 definitions、接入宿主生命周期和滚动容器                      | Table schema、布局算法、lowering 或 renderer 语义  |
+| 角色                 | 主责包 / 协作包                 | 责任                                                                                                           | 不拥有                                                              |
+| -------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| 数据底座             | `@retikz/data`                  | 数据模型、字段解析、通用 transform / statistics 与 lineage                                                     | Table 结构、Cell 呈现、表格布局                                     |
+| Table 主责           | `@retikz/table`                 | Table IR、结构与呈现、body 约束布局、Theme token resolver、外围 placement intent、lowering、manifest / lineage | 通用数据算法、Core Theme 传播、外围 Box Layout、Core 测量、renderer |
+| 通用 Tier 2 图形能力 | `@retikz/standard`              | 接收 Table 已解析的领域无关绘图输入，提供 Legend、外围 Box Layout、lowering 与 artifact                        | Table structure、visual encoding、lineage 与交互                    |
+| 图形与测量底座       | `@retikz/core` / `@retikz/math` | `IRChild` 测量、布局感知 composite、Core IR / Scene 与通用几何                                                 | Table 结构、Table track solver                                      |
+| authoring / runtime  | table-react / table-vanilla     | 构造 Table 输入、聚合 Table definition、注入数据与 definitions、接入宿主生命周期和滚动容器                     | Table schema、Theme preset、布局算法、lowering 或 renderer 语义     |
 
 依赖主链保持：
 
@@ -38,7 +38,7 @@ Data ──▶ Table ──domain resolution──▶ Standard composite / Core 
     React / Vanilla adapter
 ```
 
-Table 可以消费 Data、Standard 与 Core，但不依赖 Plot。Plot 等 Tier 2 内容通过 Core 的通用 `IRChild` / composite 能力进入单元格；Table 负责 Cell box、测量请求、对齐、fit、裁剪和追溯，不解析内容内部的 mark、scale 或 guide。Table 自身的 visual encoding 当前产生 Legend descriptor seed；body composition boundary 完成后，再由 Table 解析领域无关 Legend 输入与 right / bottom placement intent。Legend 以及未来 title、description、caption、source 等外围内容统一交给 Standard Box Layout 组合，但 Standard 不读取 Table field、selector、rule 或 lineage。
+Table 可以消费 Data、Standard 与 Core，但不依赖 Plot。Core 通过 `theme.tokens.table` 传递 inherited namespace、使用 `TableThemeTokenDefinition` 做 owner schema validation，并提供一套 shared colors；Table 负责自己的 vocabulary、preset、resolver、mapping 与消费。Plot 等 Tier 2 内容通过 Core 的通用 `IRChild` / composite 能力进入单元格；Table 负责 Cell box、测量请求、对齐、fit、裁剪和追溯，不解析内容内部的 mark、scale 或 guide。Table 自身的 visual encoding 当前产生 Legend descriptor seed，并在 body composition boundary 完成后解析领域无关 Legend 输入与 right / bottom placement intent；Standard 只消费 Table 已解析输入，不读取 Table token bag、field、selector、rule 或 lineage。
 
 ## 3. 能力边界与能力面
 
@@ -46,7 +46,7 @@ Table 拥有：
 
 - 行、列、单元格、表头、表体、表尾，以及 spanner、stub、corner、row group 等层级区域语义
 - 明细、分组、层级、汇总、交叉和显式矩阵等表格结构
-- 表格专用的格式化、单元格呈现、条件视觉编码、规则、style preset 与 tokens
+- 表格专用的格式化、单元格呈现、条件视觉编码、规则、style preset、`tableThemeTokens` 与 mapping
 - 条件视觉编码到通用 Legend 输入的 descriptor、领域解析、style token mapping 与 lineage / locator
 - 列宽、行高、跨度、内边距、对齐、内容 fit、overflow、表线和分片等布局语义
 - 大表展示所需的 viewport / window 计算、可见区布局映射与虚拟化契约
@@ -91,7 +91,7 @@ Table 区分：
 - Visual Encoding：把数值或状态映射到 Cell 视觉属性；可选 Legend descriptor seed 来自同次 resolution，后续由 Table 解析为 Standard Legend 输入，不复制通用呈现
 - Style preset / token / Rule：决定单元格的视觉呈现和覆盖关系
 
-具有算法 dispatch 的内置与自定义能力应经过统一的 Definition / registry，而不是分成内置白名单和扩展补丁。闭合 style token 是 plain-data value vocabulary：内置 preset 与用户 overlay 必须经过同一 strict schema、resolver 与消费链路，但不为有限 token 值建立行为 registry。
+具有算法 dispatch 的内置与自定义能力应经过统一的 Definition / registry，而不是分成内置白名单和扩展补丁。Table theme token 是 plain-data value vocabulary，通过 Core `ThemeTokenDefinition` registry 绑定 Table owner schema；它不建立 Table 私有行为 registry。内置 preset 与用户 `tableThemeTokens` overlay 必须经过同一 strict schema、resolver 与正式 consumer。
 
 ### 3.4 Layout
 

@@ -1,13 +1,11 @@
-import { OpacitySchema, PaintValueSchema } from '@retikz/core';
+import { OpacitySchema, PaintValueSchema, ThemeMode, ThemeStyle } from '@retikz/core';
 import { z } from 'zod';
 
 import { TableCellLocationSchema, TableCellRoleSchema } from '../../schemas';
 import {
   TableCellAppearanceSchema,
-  TableStyleSchema,
-  TableStyleTokenKeySchema,
-  TableStyleTokenMapSchema,
-  TableThemeModeSchema,
+  TableThemeTokenKeySchema,
+  TableThemeTokenMapSchema,
   TableVisualChannel,
 } from '../../schemas';
 import { TableLegendDescriptorSchema } from '../encoding';
@@ -35,7 +33,10 @@ export const TableBorderStyleTokenKeySchema = z
 
 const TableBorderStyleTokenProvenanceSchema = z.strictObject({
   key: TableBorderStyleTokenKeySchema.describe('Border style token mapped to this geometric source.'),
-  source: z.enum(['preset', 'user']).describe('Preset or user overlay winner for the border token.'),
+  source: z
+    .enum(['preset', 'shared-categorical', 'inherited-theme-token', 'local-theme-token'])
+    .describe('Cascade layer that supplied the border token.'),
+  path: z.string().min(1).describe('Stable effective Theme or TableSpec source path.'),
 });
 
 const TableBorderVertexSchema = z.strictObject({
@@ -212,23 +213,26 @@ export const TableCellManifestEntrySchema = z
   })
   .describe('Resolved Table Cell geometry, identity, and provenance.');
 
+const TableThemeTokenSourceRecordSchema = z.strictObject({
+  key: TableThemeTokenKeySchema.describe('Canonical Table theme token key.'),
+  source: z
+    .enum(['preset', 'shared-categorical', 'inherited-theme-token', 'local-theme-token'])
+    .describe('Cascade layer that supplied the resolved token.'),
+  path: z.string().min(1).describe('Stable effective Theme or TableSpec source path.'),
+});
+
 const TableManifestStyleSchema = z
   .strictObject({
-    style: TableStyleSchema.describe('Resolved built-in Table style preset.'),
-    themeMode: TableThemeModeSchema.describe('Resolved explicit Table theme mode.'),
-    tokens: TableStyleTokenMapSchema.describe('Complete resolved Table style token map.'),
+    style: z.enum(ThemeStyle).describe('Effective Core Theme style selecting the Table preset.'),
+    themeMode: z.enum(ThemeMode).describe('Effective Core Theme mode selecting the Table preset.'),
+    tokens: TableThemeTokenMapSchema.describe('Complete resolved Table theme token map.'),
     sources: z
-      .array(
-        z.strictObject({
-          key: TableStyleTokenKeySchema.describe('Canonical Table style token key.'),
-          source: z.enum(['preset', 'user']).describe('Preset or user overlay winner.'),
-        }),
-      )
+      .array(TableThemeTokenSourceRecordSchema)
       .length(19)
       .describe('Token winners in canonical schema key order.'),
   })
   .superRefine((style, context) => {
-    TableStyleTokenKeySchema.options.forEach((key, index) => {
+    TableThemeTokenKeySchema.options.forEach((key, index) => {
       if (style.sources[index]?.key !== key) {
         context.addIssue({
           code: 'custom',
@@ -291,8 +295,8 @@ const validateBorderStyleTokenProvenance = (
       message: 'Border style token key must match its geometric source and Cell location',
     });
   }
-  const expectedSource = style.sources.find(entry => entry.key === token.key)?.source;
-  if (token.source !== expectedSource) {
+  const expectedSource = style.sources.find(entry => entry.key === token.key);
+  if (expectedSource === undefined || token.source !== expectedSource.source || token.path !== expectedSource.path) {
     context.addIssue({
       code: 'custom',
       path: [...path, 'styleToken', 'source'],

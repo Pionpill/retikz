@@ -1,3 +1,4 @@
+import type { TableThemeTokenSourceKindValue } from '../../../contract';
 import type {
   ResolvedTableBorderLine,
   TableBorderContribution,
@@ -13,7 +14,7 @@ export type ResolvedTableBorderCandidate =
       kind: 'line';
       priority: number;
       line: ResolvedTableBorderLine;
-      styleToken?: Readonly<{ key: TableBorderStyleTokenKey; source: 'preset' | 'user' }>;
+      styleToken?: Readonly<{ key: TableBorderStyleTokenKey; source: TableThemeTokenSourceKindValue; path: string }>;
     }>;
 
 /** Border Graph 支持的物理 Cell side */

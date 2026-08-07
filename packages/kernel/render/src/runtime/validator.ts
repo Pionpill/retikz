@@ -10,7 +10,7 @@ import type {
 } from '@retikz/core';
 import type { RuntimeIdentity } from '@retikz/runtime';
 
-import { createRuntimeIdentityIndex, runtimeIdentityEquals } from '@retikz/runtime';
+import { createRuntimeIdentityLookup, runtimeIdentityEquals } from '@retikz/runtime';
 
 import type { RuntimeIdentityMap } from './shared';
 
@@ -81,7 +81,7 @@ const validateUniqueIdentities = (identities: ReadonlyArray<RuntimeIdentity>): v
     values.push(identity);
     byOwner.set(identity.owner, values);
   }
-  for (const [owner, values] of byOwner) createRuntimeIdentityIndex(owner, values);
+  for (const [owner, values] of byOwner) createRuntimeIdentityLookup(owner, values);
 };
 
 const primitiveKinds = new Set(['rect', 'ellipse', 'text', 'path', 'group']);

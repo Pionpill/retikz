@@ -6,7 +6,7 @@ import { TableCellVisualEncodingSchema } from '../encoding';
 import { TableLayoutSchema } from '../layout';
 import { TableCellRuleSchema } from '../rule';
 import { CustomTableStructureSchema, DetailTableStructureSchema, ManualTableStructureSchema } from '../structure';
-import { TableStyleSchema, TableStyleTokensSchema, TableThemeModeSchema } from '../style';
+import { TableThemeTokenOverridesSchema } from '../style';
 import { TABLE_NAMESPACE, TableComposite } from './constants';
 
 const TableSpecBaseSchema = CompositeBaseSchema.extend({
@@ -24,9 +24,9 @@ const TableSpecBaseSchema = CompositeBaseSchema.extend({
     .array(TableCellVisualEncodingSchema)
     .optional()
     .describe('Ordered Table Cell visual encodings. Omission is runtime-equivalent to an empty array.'),
-  style: TableStyleSchema.optional().describe('Built-in Table style preset. Omitted fields use neutral at runtime.'),
-  themeMode: TableThemeModeSchema.optional().describe('Explicit token mode. Omitted fields use light at runtime.'),
-  styleTokens: TableStyleTokensSchema.optional().describe('Partial closed token overlay for the selected mode.'),
+  tableThemeTokens: TableThemeTokenOverridesSchema.optional().describe(
+    'Partial strict Table token overlay applied after inherited Theme tokens.',
+  ),
 });
 
 type TableRootSemanticInput = Readonly<{

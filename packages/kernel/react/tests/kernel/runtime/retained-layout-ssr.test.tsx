@@ -3,7 +3,7 @@ import type { IRScene } from '@retikz/core';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
-import { Layout, Path, Step } from '../../../src';
+import { Layout } from '../../../src';
 
 const source: IRScene = {
   version: 1,
@@ -28,25 +28,6 @@ describe('React Layout retained SSR', () => {
     const staticHtml = renderToString(<Layout ir={source} idPrefix="ssr-policy" runtime={{ mode: 'static' }} />);
 
     expect(staticHtml.replace('></rect>', ' />')).toBe(retained);
-  });
-
-  it('带 Path Inspector 时 static SVG SSR 与默认 retained seed 仍输出同一完整 frame', () => {
-    const content = (
-      <Path inspect={{ controlPoints: true }}>
-        <Step kind="move" to={[0, 0]} />
-        <Step kind="cubic" control1={[10, 12]} control2={[20, 12]} to={[30, 0]} />
-      </Path>
-    );
-    const retained = renderToString(<Layout idPrefix="inspection-ssr">{content}</Layout>);
-    const staticHtml = renderToString(
-      <Layout idPrefix="inspection-ssr" runtime={{ mode: 'static' }}>
-        {content}
-      </Layout>,
-    );
-    const normalizeEmptyElements = (value: string): string => value.replace(/><\/(ellipse|path|rect)>/g, ' />');
-
-    expect(retained).toContain('data-retikz-inspection="layout"');
-    expect(normalizeEmptyElements(staticHtml)).toBe(normalizeEmptyElements(retained));
   });
 
   it('static Canvas SSR 输出与 retained 相同尺寸的 host shell', () => {

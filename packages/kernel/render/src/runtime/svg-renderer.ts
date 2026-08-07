@@ -1,5 +1,4 @@
 import type {
-  InspectionPlane,
   IRAnimationTrack,
   RuntimeScenePrimitive,
   Scene,
@@ -16,6 +15,7 @@ import type { HydrationController, HydrationTarget } from '../hydration';
 import type { SvgNode } from '../svg';
 import type { RenderRuntimeConfig } from './config';
 import type { RenderFrameSnapshot } from './frame';
+import type { RenderReadonlyLayer } from './readonly-layer';
 import type { RetainedSvgRenderer, RetainedSvgRendererImmutableOptions } from './renderer';
 import type { SceneAnimationDescriptorDiff } from './runtime-options';
 import type { RuntimeIdentityMap } from './shared';
@@ -33,8 +33,9 @@ import {
   resolvePointViaLayout,
 } from '../hydration';
 import { buildSvgDocument, buildSvgFragment } from '../svg';
-import { buildSvgInspectionGroup } from '../svg/builders/inspection';
+import { buildSvgReadonlyLayer } from '../svg/builders/readonly-layer';
 import { mergeRenderHandlers } from './handlers';
+import { validateReadonlyLayers } from './readonly-layer';
 import { defineRetainedRenderer } from './renderer';
 import {
   diffSceneAnimationDescriptors,
@@ -408,7 +409,7 @@ const descriptorMatchesElement = (element: SVGElement, node: SvgNode, root: bool
     ? Array.from(element.childNodes).filter(
         child =>
           !(child instanceof element.ownerDocument.defaultView!.SVGElement) ||
-          child.getAttribute('data-retikz-inspection') !== 'layout',
+          child.getAttribute('data-retikz-readonly-layer') === null,
       )
     : Array.from(element.childNodes);
   if (actualChildren.length !== children.length) return false;
@@ -1148,8 +1149,8 @@ export const createBuiltinSvgRetainedRenderer = (
   options: RetainedSvgRendererImmutableOptions,
 ): RetainedSvgRenderer => {
   let currentSnapshot: SceneRuntimeSnapshot | undefined;
-  let currentInspection: InspectionPlane | null = null;
-  let currentInspectionElement: SVGElement | undefined;
+  let currentLayers: ReadonlyArray<RenderReadonlyLayer> = Object.freeze([]);
+  let currentLayerElements: ReadonlyArray<SVGElement> = Object.freeze([]);
   let currentAnimation: SvgAnimationState | undefined;
   let currentHydration: HydrationController | undefined;
   let currentOwnedAttributes = new Set<string>();
@@ -1534,29 +1535,35 @@ export const createBuiltinSvgRetainedRenderer = (
     config: RenderRuntimeConfig,
     mode: 'create' | 'adopt' = 'create',
   ): RuntimePreparedCommit => {
+    const layers = validateReadonlyLayers(frame.layers);
     const primaryToken = prepare(scenePatch, frame.primary, config, mode);
-    const previousInspection = currentInspection;
-    const adoptedInspection =
+    const previousLayers = currentLayers;
+    const adoptedLayerElements =
       mode === 'adopt'
-        ? Array.from(host.children).find(child => child.getAttribute('data-retikz-inspection') === 'layout')
-        : undefined;
-    const previousElement =
-      currentInspectionElement ??
-      (adoptedInspection instanceof host.ownerDocument.defaultView!.SVGElement ? adoptedInspection : undefined);
-    let candidateElement: SVGElement | undefined;
+        ? Array.from(host.children).filter(child => child.getAttribute('data-retikz-readonly-layer') !== null)
+        : [];
+    const previousElements =
+      currentLayerElements.length > 0
+        ? currentLayerElements
+        : adoptedLayerElements.filter(
+            (element): element is SVGElement => element instanceof host.ownerDocument.defaultView!.SVGElement,
+          );
+    let candidateElements: ReadonlyArray<SVGElement> = Object.freeze([]);
     try {
-      candidateElement =
-        frame.inspection === null
-          ? undefined
-          : createSvgElement(
-              host.ownerDocument,
-              buildSvgInspectionGroup(frame.inspection, (entryScene, entryIndex) =>
-                buildSvgFragment(entryScene, {
-                  idPrefix: `${options.idPrefix}-inspection-${entryIndex}`,
-                  animate: false,
-                }),
-              ),
-            );
+      candidateElements = Object.freeze(
+        layers.map(layer =>
+          createSvgElement(
+            host.ownerDocument,
+            buildSvgReadonlyLayer(
+              layer,
+              buildSvgFragment(layer.scene, {
+                idPrefix: `${options.idPrefix}-layer-${layer.key}`,
+                animate: false,
+              }),
+            ),
+          ),
+        ),
+      );
     } catch (cause) {
       try {
         runBestEffortCleanup([() => primaryToken.rollback(), () => primaryToken.dispose()]);
@@ -1569,22 +1576,22 @@ export const createBuiltinSvgRetainedRenderer = (
     return Object.freeze({
       commit: () => {
         primaryToken.commit();
-        previousElement?.remove();
-        if (candidateElement !== undefined) host.appendChild(candidateElement);
-        currentInspection = frame.inspection;
-        currentInspectionElement = candidateElement;
+        for (const element of previousElements) element.remove();
+        for (const element of candidateElements) host.appendChild(element);
+        currentLayers = layers;
+        currentLayerElements = candidateElements;
         committed = true;
       },
       rollback: () => {
         primaryToken.rollback();
-        candidateElement?.remove();
-        if (previousElement !== undefined && previousElement.parentNode !== host) host.appendChild(previousElement);
-        currentInspection = previousInspection;
-        currentInspectionElement = previousElement;
+        for (const element of candidateElements) element.remove();
+        for (const element of previousElements) if (element.parentNode !== host) host.appendChild(element);
+        currentLayers = previousLayers;
+        currentLayerElements = previousElements;
       },
       dispose: () => {
         primaryToken.dispose();
-        if (!committed) candidateElement?.remove();
+        if (!committed) for (const element of candidateElements) element.remove();
       },
     });
   };
@@ -1593,13 +1600,13 @@ export const createBuiltinSvgRetainedRenderer = (
     backend: 'svg',
     host,
     capability: 'entity',
-    inspectionCapability: 'supported',
+    readonlyLayerCapability: 'supported',
     prepareMount: (frame, config, mode) => prepareFrame(undefined, frame, config, mode),
     prepare: (scenePatch, frame, config) => prepareFrame(scenePatch, frame, config),
     read: () => {
       if (currentSnapshot === undefined) throw new Error('SVG retained renderer is not committed');
       return Object.freeze({
-        frame: Object.freeze({ primary: currentSnapshot, inspection: currentInspection }),
+        frame: Object.freeze({ primary: currentSnapshot, layers: currentLayers }),
         ...(currentAnimation === undefined ? {} : { animation: currentAnimation.controls }),
       });
     },
@@ -1619,8 +1626,8 @@ export const createBuiltinSvgRetainedRenderer = (
         () => candidateAnimationCleanup.disposePending(),
         () => {
           currentSnapshot = undefined;
-          currentInspection = null;
-          currentInspectionElement = undefined;
+          currentLayers = Object.freeze([]);
+          currentLayerElements = Object.freeze([]);
           currentOwnedAttributes = new Set();
           currentOwnedStyles = new Set();
           currentElements = createRuntimeIdentityMap([]);

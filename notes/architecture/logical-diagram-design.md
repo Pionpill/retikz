@@ -1,8 +1,8 @@
 # 逻辑制图能力域设计
 
-> **状态：Graph / Flow / Workspace 方向已确认，当前不实现。** 本文沉淀逻辑关系模型、人工几何、算法布局与交互编辑的长期能力边界，用于后续 Graph / Flow / Workspace 设计与包规划。文中的 `diagram` 与 `workspace` 均是能力组工作名，具体包结构、发布组和公开 API 仍需通过 roadmap / ADR 确认；文中依赖的 Standard 基础包已完成 alpha.1 基线，不属于待建能力组。
+> **状态：Graph / Flow / Editor 方向已确认，当前不实现。** 本文沉淀逻辑关系模型、人工几何、算法布局与交互编辑的长期能力边界，用于后续 Graph / Flow / Editor 设计与包规划。文中的 `diagram` 是能力组工作名；Editor 的整体边界见 [`Editor 编辑运行时架构设计`](./editor-design.md)。具体包结构、发布组和公开 API 仍需通过 roadmap / ADR 确认；文中依赖的 Standard 基础包已完成 alpha.1 基线，不属于待建能力组。
 >
-> 关联：[`能力完备性与模块边界`](./capability-design.md) · [`包拓扑`](./package-topology.md) · [`Standard Drawing Library`](../../packages/library/_notes/architecture/standard-library-design.md)
+> 关联：[`Editor 编辑运行时架构设计`](./editor-design.md) · [`能力完备性与模块边界`](./capability-design.md) · [`包拓扑`](./package-topology.md) · [`Standard Drawing Library`](../../packages/library/_notes/architecture/standard-library-design.md)
 
 ---
 
@@ -18,7 +18,7 @@ retikz 当前已经能通过 Core IR 手写 Node、Path、Scope、Coordinate 等
 2. **几何如何产生**：由算法生成，还是由作者直接提供并持久化。
 3. **内容如何编辑**：如何选择、拖拽、连线、缩放和撤销。
 
-前两件事属于 Diagram：Graph 保存关系与几何，Flow 可选地计算算法几何。第三件事属于跨领域的 Workspace：它通过 adapter 编辑 Graph，也可以接入普通 Core IR 或其它领域模型。Diagram 不应为了交互编辑而保存 viewport、selection 或 history，Workspace 也不应反向拥有 Graph 关系语义。
+前两件事属于 Diagram：Graph 保存关系与几何，Flow 可选地计算算法几何。第三件事属于跨领域的 Editor：它通过领域 editor adapter 编辑 Graph，也可以接入普通 Core IR 或其它领域模型。Diagram 不应为了交互编辑而保存 viewport、selection 或 history，Editor 也不应反向拥有 Graph 关系语义。
 
 ---
 
@@ -39,7 +39,7 @@ Graph 不依赖 `@retikz/data`，Flow 也不属于 Viz。某个血缘产品可�
 结构化数据 ─→ Data ─→ Plot ─────────────────────────────→ Core IR
 逻辑关系 ───→ GraphModel ─┬─→ Flow ─→ GraphGeometry ─┐
                           └─→ manual GraphGeometry ───┤→ Graph lowering ─→ Core IR
-交互操作 ───→ Workspace Graph adapter ─→ GraphDocument patch
+交互操作 ───→ Graph editor adapter ─→ GraphDocument change
 ```
 
 ---
@@ -53,9 +53,9 @@ Diagram
 ├─ Graph：关系模型、几何契约与统一 lowering
 └─ Flow：算法布局与连线路由
 
-Workspace
-├─ Workspace：无 UI 的交互编辑运行时
-└─ Workspace Graph adapter：GraphDocument 编辑接入
+Editor
+├─ Editor：无 UI 的交互编辑运行时
+└─ Graph editor adapter：GraphDocument 编辑接入
 ```
 
 三者与 Kernel / Standard Library 的关系：
@@ -63,7 +63,7 @@ Workspace
 ```text
 GraphModel ──┬─→ Flow：系统计算 ─→ algorithm GraphGeometry ─┐
              └─→ 作者直接提供 ──→ manual GraphGeometry ─────┤
-Workspace Graph adapter ────────→ model / geometry patch ───┤
+Graph editor adapter ───────────→ model / geometry change ──┤
                                                               ↓
 Standard Library：Frame / Stack / Align 等通用绘图积木 ─→ Graph presentation / lowering
                                                               ↓
@@ -72,7 +72,7 @@ Standard Library：Frame / Stack / Align 等通用绘图积木 ─→ Graph pres
                                                             Scene
 ```
 
-Graph、Flow 和 Workspace 不拥有 renderer。GraphDocument 无论来自人工几何、Flow 计算还是 Workspace 编辑，都复用 Graph 的 presentation / lowering，通过公开 Core IR / composite / definition 契约进入 Kernel 编译与 SVG、Canvas 等后端。
+Graph、Flow 和 Editor 不拥有 renderer。GraphDocument 无论来自人工几何、Flow 计算还是 Editor 编辑，都复用 Graph 的 presentation / lowering，通过公开 Core IR / composite / definition 契约进入 Kernel 编译与 SVG、Canvas 等后端。
 
 ---
 
@@ -94,7 +94,7 @@ Graph 不理解数据库字段、Plot channel、业务执行函数或 ReactNode�
 
 ### 4.2 GraphGeometry
 
-Graph 包定义作者输入、Flow 和 Workspace 交换结果时共用的几何数据契约，但不提供布局算法：
+Graph 包定义作者输入、Flow 和 Graph editor adapter 交换结果时共用的几何数据契约，但不提供布局算法：
 
 - 节点位置与尺寸。
 - 分组边界等可持久化几何。
@@ -110,11 +110,11 @@ type GraphDocument = {
 };
 ```
 
-这里的关键不是字段名，而是 GraphModel 与 GraphGeometry 必须分离：关系变化不等于几何变化，重新布局也不能破坏关系真源。作者可以直接提供 manual geometry，不依赖 Workspace 或 Flow；Workspace 只是修改 geometry 的一种交互入口。
+这里的关键不是字段名，而是 GraphModel 与 GraphGeometry 必须分离：关系变化不等于几何变化，重新布局也不能破坏关系真源。作者可以直接提供 manual geometry，不依赖 Editor 或 Flow；Editor 只是通过 Graph editor adapter 修改 geometry 的一种交互入口。
 
 ### 4.3 Presentation 与 lowering
 
-GraphDocument 必须有一条不依赖 Flow 或 Workspace 的公共 presentation / lowering 主链：
+GraphDocument 必须有一条不依赖 Flow 或 Editor 的公共 presentation / lowering 主链：
 
 ```text
 GraphModel + GraphGeometry
@@ -123,9 +123,9 @@ GraphModel + GraphGeometry
   → Core IR
 ```
 
-Flow 计算出的 algorithm geometry、作者手写的 manual geometry 和 Workspace 保存的 geometry 都进入同一条主链。Graph 可以定义 Node、Port、Edge、Group 到 Core 图形的映射契约及必要的内置 presentation，但通用图元、样式、容器和 renderer 语义仍由 Core / Standard 拥有。
+Flow 计算出的 algorithm geometry、作者手写的 manual geometry 和 Graph editor adapter 保存的 geometry 都进入同一条主链。Graph 可以定义 Node、Port、Edge、Group 到 Core 图形的映射契约及必要的内置 presentation，但通用图元、样式、容器和 renderer 语义仍由 Core / Standard 拥有。
 
-如果 lowering 由 Flow 独占，手写坐标或 Workspace 编辑后的 Graph 仍会被迫依赖算法包；如果由 Workspace adapter 复制，React、Vanilla 和非交互环境又会产生多条不一致的渲染主链。因此统一 lowering 必须随 GraphDocument 的稳定语义归入 Graph。
+如果 lowering 由 Flow 独占，手写坐标或 Editor 编辑后的 Graph 仍会被迫依赖算法包；如果由 Graph editor adapter 复制，React、Vanilla 和非交互环境又会产生多条不一致的渲染主链。因此统一 lowering 必须随 GraphDocument 的稳定语义归入 Graph。
 
 ### 4.4 Graph 不拥有
 
@@ -164,46 +164,46 @@ Flow 中的人工拖动不应直接把算法布局退化成自由画布。它应
 
 ---
 
-## 6. Workspace：跨领域交互编辑
+## 6. Editor：跨领域交互编辑
 
-Workspace 是 Diagram 之外的跨领域能力组，负责让用户直接操作图形或领域文档。它解决的是无 UI 的交互编辑运行时，不是新的 renderer、领域模型或另一套 Core IR。
+Editor 是 Diagram 之外的跨领域能力组，负责让用户直接操作图形或领域文档。它解决的是无 UI 的交互编辑运行时，不是新的 renderer、领域模型或另一套 Core IR。完整职责、状态模型和 adapter 协议以 [`Editor 编辑运行时架构设计`](./editor-design.md) 为准；本节只保留与 Graph / Flow 的交界。
 
-`@retikz/workspace` 的长期能力可能包括：
+`@retikz/editor` 的长期能力包括：
 
-- 选择、框选、多选、组合和图层操作。
+- 选择、框选、多选和 selection command 编排。
 - 拖拽、缩放、旋转、snapping 和参考线。
 - viewport、缩放、平移、快捷键和剪贴板。
-- 命令、事务、撤销重做和持久化 patch。
+- 命令、candidate transaction、撤销重做和 history 协调。
 - 面向 Core IR 与不同领域文档的 adapter 契约。
 
-Graph-specific 的 Port 命中、创建连接、重连、waypoint 编辑和模型校验进入 `@retikz/workspace-graph`。该 adapter 把通用 Workspace command 映射为 GraphModel / GraphGeometry patch，不把 Node / Port / Edge 规则写入 Workspace 基础包。
+Graph-specific 的 Port 命中、创建连接、重连、waypoint 编辑和模型校验进入独立 sibling 包 `@retikz/graph-editor`。该 adapter 把通用 Editor command / intent 映射为 GraphModel / GraphGeometry change，不把 Node / Port / Edge 规则写入 Editor 基础包，也不要求 `@retikz/graph` 反向依赖 Editor。
 
-Workspace 直接编辑 Graph 时，节点位置写入 GraphGeometry，成为作者拥有的持久化结果。除非用户显式执行 Arrange，否则系统不自动覆盖这些坐标。
+Editor 通过 Graph editor adapter 编辑 Graph 时，节点位置写入 GraphGeometry，成为作者拥有的持久化结果。除非用户显式执行 Arrange，否则系统不自动覆盖这些坐标。
 
 ```text
 GraphModel + GraphGeometry
-  → Workspace Graph adapter
+  → Graph editor adapter
   → 修改关系或几何
   → GraphDocument
   → Graph presentation / lowering
 ```
 
-Workspace 也可以不经过 Graph，直接编辑普通 Core IR / Standard composite，或在未来接入其它领域模型。`Board` 可以保留为自由白板 preset、宿主组件或产品名称，但不再作为 Diagram 子包或底层能力 owner。
+Editor 也可以不经过 Graph，通过独立领域 adapter 编辑普通 Core IR / Standard composite，或在未来接入其它领域模型。`Board` 可以保留为自由白板 preset、宿主组件或产品名称，但不再作为 Diagram 子包或底层能力 owner。
 
 ---
 
 ## 7. 两种几何所有权
 
-算法布局和人工几何的根本差异不是“有没有交互界面”，而是几何结果由谁拥有。人工几何不是另一种布局算法：它表示作者直接提供并持久化位置、尺寸或 waypoint；Workspace 只是创建和修改这类 geometry 的一种方式。
+算法布局和人工几何的根本差异不是“有没有交互界面”，而是几何结果由谁拥有。人工几何不是另一种布局算法：它表示作者直接提供并持久化位置、尺寸或 waypoint；Editor 只是通过领域 adapter 创建和修改这类 geometry 的一种方式。
 
-| 模式            | 关系真源   | 几何真源                 | 调整方式                              | 重新布局                       |
-| --------------- | ---------- | ------------------------ | ------------------------------------- | ------------------------------ |
-| Flow 算法几何   | GraphModel | Flow 计算结果与布局约束  | 修改关系或 pin / rank 等约束          | 可重复执行并替换 GraphGeometry |
-| Manual geometry | GraphModel | 作者保存的 GraphGeometry | 手写坐标或通过 Workspace 直接编辑几何 | 只在作者显式请求时执行         |
+| 模式            | 关系真源   | 几何真源                 | 调整方式                           | 重新布局                       |
+| --------------- | ---------- | ------------------------ | ---------------------------------- | ------------------------------ |
+| Flow 算法几何   | GraphModel | Flow 计算结果与布局约束  | 修改关系或 pin / rank 等约束       | 可重复执行并替换 GraphGeometry |
+| Manual geometry | GraphModel | 作者保存的 GraphGeometry | 手写坐标或通过 Editor 直接编辑几何 | 只在作者显式请求时执行         |
 
 当 Flow 与人工几何联合使用时，需要明确当前操作的语义：
 
-- **constraint**：Workspace 中的拖动转成 Flow 约束，之后仍由算法拥有整体布局。
+- **constraint**：Editor 中的拖动经 Graph editor adapter 转成 Flow 约束，之后仍由算法拥有整体布局。
 - **arrange once**：Flow 计算一次 geometry，写回 GraphDocument，随后切换为 manual geometry，由作者拥有位置。
 - **detach / bake**：把关系图固化为普通 Core / Standard 内容，允许脱离 Graph 编辑，但不再保证可恢复原 Graph / Flow 语义。
 
@@ -213,24 +213,24 @@ Workspace 也可以不经过 Graph，直接编辑普通 Core IR / Standard compo
 
 ## 8. 典型场景
 
-| 场景                        | 能力组合                                   | 几何所有者                        |
-| --------------------------- | ------------------------------------------ | --------------------------------- |
-| 静态流程图、架构图          | Graph + Flow                               | Flow                              |
-| 手写坐标的静态关系图        | Graph                                      | 作者保存的 GraphGeometry          |
-| 可交互流程图                | Graph + Flow + Workspace Graph adapter     | Flow 约束，Workspace 提供交互入口 |
-| 血缘图浏览                  | Graph + Flow                               | Flow                              |
-| 血缘图探索与人工整理        | Graph + Flow + Workspace Graph adapter     | Flow 初始生成，之后切换为 manual  |
-| Blender / Gaea / UE5 节点图 | Graph + Workspace Graph adapter            | 作者保存的 GraphGeometry          |
-| 节点图“自动整理”            | Graph + Workspace Graph adapter，按需 Flow | Flow 单次生成，之后切换为 manual  |
-| 纯自由白板                  | Workspace + Kernel / Standard              | 作者；不属于 Diagram 能力域       |
+| 场景                        | 能力组合                                | 几何所有者                       |
+| --------------------------- | --------------------------------------- | -------------------------------- |
+| 静态流程图、架构图          | Graph + Flow                            | Flow                             |
+| 手写坐标的静态关系图        | Graph                                   | 作者保存的 GraphGeometry         |
+| 可交互流程图                | Graph + Flow + Graph editor adapter     | Flow 约束，Editor 提供交互入口   |
+| 血缘图浏览                  | Graph + Flow                            | Flow                             |
+| 血缘图探索与人工整理        | Graph + Flow + Graph editor adapter     | Flow 初始生成，之后切换为 manual |
+| Blender / Gaea / UE5 节点图 | Graph + Graph editor adapter            | 作者保存的 GraphGeometry         |
+| 节点图“自动整理”            | Graph + Graph editor adapter，按需 Flow | Flow 单次生成，之后切换为 manual |
+| 纯自由白板                  | Editor + Kernel / Standard adapter      | 作者；不属于 Diagram 能力域      |
 
-这组场景证明 Graph 可以脱离 Flow 和 Workspace 独立表达人工几何；Flow 与 Workspace Graph adapter 都是 GraphDocument 的消费者。Graph 不应因为某个消费方需要数据或交互而反向拥有 Data、Flow 或 Workspace 状态。
+这组场景证明 Graph 可以脱离 Flow 和 Editor 独立表达人工几何；Flow 与 Graph editor adapter 都是 GraphDocument 的消费者。Graph 不应因为某个消费方需要数据或交互而反向拥有 Data、Flow 或 Editor 状态。
 
 ---
 
 ## 9. Standard：跨域绘图积木
 
-Graph、Flow 和 Workspace 会共享一部分绘图能力，例如根据 children 边界生成带 title、padding、background 和 border 的容器。这类能力不属于 Graph 关系模型或 Workspace 状态，也不应把 Core Scope 扩张成可见 UI 容器。
+Graph、Flow 和 Editor 会共享一部分绘图能力，例如根据 children 边界生成带 title、padding、background 和 border 的容器。这类能力不属于 Graph 关系模型或 Editor 状态，也不应把 Core Scope 扩张成可见 UI 容器。
 
 通用能力进入已经建立的 `@retikz/standard`：
 
@@ -243,11 +243,11 @@ Graph、Flow 和 Workspace 会共享一部分绘图能力，例如根据 childre
 └─ 其它可选 Drawing Complete 扩展
 ```
 
-其中 Frame 已验证的边界是：测量已经布局的 children，应用 padding / minSize，为 title 或 header 预留空间，并生成背景、边框和整体 anchor。Flow 负责 Group 在图中的算法位置，Workspace 负责用户如何移动 Frame；Standard 不理解 Flow 或 Workspace。未来 Stack、Align / Distribute 等候选仍按 Standard 自己的 roadmap 与 ADR 演进，不由本文预先冻结。
+其中 Frame 已验证的边界是：测量已经布局的 children，应用 padding / minSize，为 title 或 header 预留空间，并生成背景、边框和整体 anchor。Flow 负责 Group 在图中的算法位置，Editor 与领域 adapter 负责用户如何移动 Frame；Standard 不理解 Flow 或 Editor。未来 Stack、Align / Distribute 等候选仍按 Standard 自己的 roadmap 与 ADR 演进，不由本文预先冻结。
 
 通用能力进入 Standard 至少满足：
 
-1. 移除 Graph、Flow、Workspace、Plot 等领域词汇后仍然成立。
+1. 移除 Graph、Flow、Editor、Plot 等领域词汇后仍然成立。
 2. 有两个以上独立消费场景。
 3. 通过公开 Core definition / composite / lowering 契约实现。
 4. IR JSON-safe，React / Vanilla 可表达同一语义。
@@ -268,11 +268,12 @@ packages/
 │  └─ standard-vanilla
 ├─ diagram/
 │  ├─ graph
+│  ├─ graph-editor
 │  └─ flow
-├─ workspace/
-│  ├─ workspace
-│  ├─ workspace-react
-│  └─ workspace-graph
+├─ editor/
+│  ├─ editor
+│  ├─ editor-react
+│  └─ editor-vanilla
 └─ viz/
    ├─ data
    └─ plot
@@ -283,8 +284,8 @@ packages/
 ```text
 Flow ─────→ Graph + Core / Math ─→ GraphGeometry ─┐
 Graph ────→ Core / Standard ──────────────────────┤→ Core IR → Scene
-Workspace ─→ Kernel 公开 runtime / interaction 契约
-Workspace Graph adapter ─→ Workspace + Graph
+Editor ─────────────→ Kernel 公开 runtime / interaction 契约
+Graph editor adapter ─→ Editor + Graph
 
 Plot ─────→ Data + Core
 ```
@@ -293,12 +294,12 @@ Plot ─────→ Data + Core
 
 - Graph 依赖 Data 或进入 Viz 能力域。
 - Flow 依赖 Plot、Viz adapter 或具体 renderer。
-- Workspace 把 selection、viewport、history 等运行时状态写进 Graph IR 或 Core IR。
-- Standard 反向依赖 Graph、Flow 或 Workspace 领域语义。
-- Flow 或 Workspace adapter 复制 Graph presentation / lowering。
-- Graph / Flow / Workspace 建立平行于 Core IR / Scene 的渲染语义。
+- Editor 把 selection、viewport、history 等运行时状态写进 Graph IR 或 Core IR。
+- Standard 反向依赖 Graph、Flow 或 Editor 领域语义。
+- Flow 或 Graph editor adapter 复制 Graph presentation / lowering。
+- Graph / Flow / Editor 建立平行于 Core IR / Scene 的渲染语义。
 
-领域目录只表达代码归属，不自动决定 release group。Graph、Flow、Workspace 是否独立发布、Flow adapters 是否 lockstep、Workspace adapter 如何拆分，必须在首个实现 ADR 中单独决定。
+领域目录只表达代码归属，不自动决定 release group。Graph、Flow、Editor 是否独立发布、Flow adapters 是否 lockstep、Graph editor adapter 与 Graph 是否 lockstep，必须在首个实现 ADR 中单独决定。
 
 ---
 
@@ -309,13 +310,13 @@ Plot ─────→ Data + Core
 - `diagram`：逻辑制图领域目录，不要求存在 `@retikz/diagram` 包。
 - `@retikz/graph`：关系模型、几何契约与统一 presentation / lowering。
 - `@retikz/flow`：算法布局与连线路由。
-- `workspace`：跨领域交互编辑能力组工作名。
-- `@retikz/workspace`：无 UI 的编辑运行时工作名。
-- `@retikz/workspace-graph`：Workspace 与 GraphDocument 的领域 adapter 工作名。
+- `editor`：跨领域交互编辑能力组与候选目录名。
+- `@retikz/editor`：无 UI 的图形编辑运行时。
+- `@retikz/graph-editor`：Editor 与 GraphDocument 的独立领域 adapter。
 
 `diagram` 的备选名是 `schematic`，但后者偏向技术原理图，不能完整覆盖流程、血缘与通用节点关系。`graph` 是 Node / Port / Edge / Group 模型的行业通用术语；`topology`、`relation` 和 `network` 分别过窄或容易与其它领域混淆。
 
-`Workspace` 表达 selection、viewport、tools、commands、history 和 adapter 共同存在的无 UI 编辑上下文，但它不拥有项目、文件、面板、协作或具体产品外壳。`Board` 只保留为未来可能的自由白板 preset、宿主组件或产品名，不作为当前底层包名。所有名称仍需由首个真实实现 ADR 验证。
+`Editor` 明确表达 selection、viewport、tools、commands、history 和 adapter 共同存在的无 UI 图形编辑上下文。`Workspace` 留给项目、文件、tab 和资源容器等产品 Shell 概念；`Board` 只保留为未来可能的自由白板 preset、宿主组件或产品名。领域 adapter 采用 `graph-editor`、`plot-editor` 等领域优先命名，不使用领域主包 subpath 导出。release group 与兼容策略仍需由首个真实实现 ADR 验证。
 
 ---
 
@@ -323,11 +324,11 @@ Plot ─────→ Data + Core
 
 - **反对把 Flow 与 Viz 合并。** 逻辑关系不是结构化数据的 visual grammar。
 - **反对把 manual geometry 当作另一种布局算法。** 它是作者拥有并持久化的 GraphGeometry，不需要单独的 layouter。
-- **反对把 Workspace 放进 Diagram。** 交互编辑运行时可以服务 Graph、Core IR 和未来其它领域模型。
+- **反对把 Editor 放进 Diagram。** 交互编辑运行时可以服务 Graph、Core IR 和未来其它领域模型。
 - **反对让 Graph 决定具体布局算法。** Graph 拥有关系、geometry 与统一 lowering，不拥有算法策略。
-- **反对让 Flow 或 Workspace adapter 独占 Graph lowering。** 人工、算法与交互三条输入必须共用同一 presentation 主链。
-- **反对把通用 Frame / Stack 复制到 Flow 与 Workspace。** 去领域化后成立的绘图积木进入 Standard。
-- **反对把 Workspace 状态塞进 Core、Graph IR 或 Standard。** 持久化领域文档与运行时编辑状态必须分离。
+- **反对让 Flow 或 Graph editor adapter 独占 Graph lowering。** 人工、算法与交互三条输入必须共用同一 presentation 主链。
+- **反对把通用 Frame / Stack 复制到 Flow 与 Editor。** 去领域化后成立的绘图积木进入 Standard。
+- **反对把 Editor 状态塞进 Core、Graph IR 或 Standard。** 持久化领域文档与运行时编辑状态必须分离。
 - **反对现在冻结完整公开 API。** 本文定义能力边界，不替代 Alpha ADR、completeness gate 和实现验证。
 
 ---
@@ -336,11 +337,11 @@ Plot ─────→ Data + Core
 
 ### 阶段 0：沉淀边界
 
-本文已经完成 Graph / Flow / Workspace 的阶段 0 边界沉淀。当前不为这三个工作名新建包，也不提前改变 package-topology 或 release group 真源；Standard 的既有包与发布组不受此限制。
+本文已经完成 Graph / Flow 与其 Editor 接入的阶段 0 边界沉淀。当前不为这些候选名称新建包，也不提前改变 package-topology 或 release group 真源；Standard 的既有包与发布组不受此限制。
 
 ### 阶段 1：Graph 最小契约
 
-从真实 Flow 与节点图示例确认 Node、Port、Edge、Group、GraphGeometry、presentation / lowering 和诊断的最小闭环。手写 manual geometry 必须不依赖 Flow 或 Workspace 完成 Core IR 下沉；不得为了交互提前加入 viewport、selection 或 history。
+从真实 Flow 与节点图示例确认 Node、Port、Edge、Group、GraphGeometry、presentation / lowering 和诊断的最小闭环。手写 manual geometry 必须不依赖 Flow 或 Editor 完成 Core IR 下沉；不得为了交互提前加入 viewport、selection 或 history。
 
 ### 阶段 2：Flow 算法布局闭环
 
@@ -348,28 +349,28 @@ Plot ─────→ Data + Core
 
 ### 阶段 3：Standard 通用积木
 
-**已完成基础验证。** Standard alpha.1 已用 Grid、Axes、Frame 验证官方可选能力、Core composite 与 React / Vanilla authoring 闭环。Graph / Flow / Workspace 后续只消费公开 Standard 能力；若出现新的跨域绘图缺口，仍按 Standard 准入规则与独立 ADR 处理。
+**已完成基础验证。** Standard alpha.1 已用 Grid、Axes、Frame 验证官方可选能力、Core composite 与 React / Vanilla authoring 闭环。Graph / Flow / Editor 后续只消费公开 Standard 能力；若出现新的跨域绘图缺口，仍按 Standard 准入规则与独立 ADR 处理。
 
-### 阶段 4：Workspace 交互闭环
+### 阶段 4：Editor 交互闭环
 
-在真实自由绘图或节点图需求出现后，再定义无 UI 的 selection、transform、command / history、viewport 和 adapter 契约，并通过 Workspace Graph adapter 修改 GraphDocument。第一版不要求同时编辑 Flow 约束、manual geometry 和普通 Core IR。
+在真实自由绘图或节点图需求出现后，按 Editor 总设计定义无 UI 的 selection、transform、candidate transaction、command / history、viewport 和 adapter 契约，并通过 `@retikz/graph-editor` 修改 GraphDocument。第一版不要求同时编辑 Flow 约束、manual geometry 和普通 Core IR。
 
-### 阶段 5：Flow / Workspace 协作
+### 阶段 5：Flow / Editor 协作
 
-在 Flow 与 Workspace Graph adapter 两条主链稳定后，定义 constraint、arrange-once、detach / bake 三种显式转换，避免 manual geometry 与 algorithm geometry 隐式覆盖。
+在 Flow 与 Graph editor adapter 两条主链稳定后，定义 constraint、arrange-once、detach / bake 三种显式转换，避免 manual geometry 与 algorithm geometry 隐式覆盖。
 
 ---
 
 ## 14. 待决策
 
 - `diagram` 是否作为最终领域目录名，还是改为 `schematic`。
-- GraphGeometry 哪些字段属于持久化契约，哪些只是 Flow 或 Workspace 的运行时缓存。
+- GraphGeometry 哪些字段属于持久化契约，哪些只是 Flow 或 Graph editor adapter 的运行时缓存。
 - Graph 的 presentation / lowering 如何注入 Node、Port、Edge、Group 的内置与自定义定义，同时避免吸收通用 Core / Standard 语义。
 - Flow 是否按布局算法、图类型或 definition provider 扩展。
-- Workspace 是否作为最终能力组与包名，以及 Graph adapter、React adapter、宿主 UI 的拆分方式。
+- `@retikz/graph-editor` 与 Graph 的 release group、版本兼容和首批 edit capability。
 - Flow 的 pin / rank / order 等约束是否进入 GraphModel、GraphGeometry，还是独立 LayoutConstraint。
-- Graph / Flow / Workspace 的发布组与版本兼容策略。
-- Graph / Flow / Workspace 是否只需消费现有 Frame，还是会提出新的领域中立 Standard 能力；新增能力必须通过 Standard 自己的准入与 ADR 验证。
+- Graph / Flow / Editor 的发布组与版本兼容策略。
+- Graph / Flow / Editor 是否只需消费现有 Frame，还是会提出新的领域中立 Standard 能力；新增能力必须通过 Standard 自己的准入与 ADR 验证。
 
 ---
 
@@ -379,9 +380,9 @@ Plot ─────→ Data + Core
 
 1. 同一 GraphModel 可以由 Flow 自动生成 geometry，也可以直接携带作者提供的 manual geometry。
 2. 重新布局只替换 geometry，不破坏节点、端口、边和分组关系。
-3. 手写坐标和 Blender 类节点图无需依赖 Flow 或 Workspace，也能通过 GraphDocument 完成 lowering；Workspace 只是可选编辑入口。
+3. 手写坐标和 Blender 类节点图无需依赖 Flow 或 Editor，也能通过 GraphDocument 完成 lowering；Editor 只是可选编辑入口。
 4. 血缘图可以先由 Flow 生成，再显式切换为 manual geometry 或继续保持 Flow 约束。
-5. Graph / Flow 不依赖 Viz / Data 语义或具体 renderer；Workspace 基础包不吸收 Graph 等领域语义。
+5. Graph / Flow 不依赖 Viz / Data 语义或具体 renderer；Editor 基础包不吸收 Graph 等领域语义。
 6. 通用 Frame 等能力只实现一次，并通过 Standard 供多个领域复用。
 7. Flow algorithm geometry、作者 manual geometry 与 detach 后普通 Core IR 的所有权转换清晰、可诊断。
 8. 人工、算法与交互输入共用 Graph lowering，并通过 Core 公开 contract 下沉，不引入平行 IR、Scene 或 renderer 特判。

@@ -41,11 +41,11 @@ marks, dashPattern, shadow, blendMode, label
 
 两个核心 Mark 的颜色使用同一个 resolved color 语义。constant color 分别写入 Point 的 `color` 与 Path 的 `stroke`；field color 写入 Point 的 field-bound `color` 与 Path 的 `encoding.color`，并共享同一 scale identity。这样既复用两个 Plot owner 的正式形态，也让后应用的 `mark.color` 或 `components.connection.stroke` 能覆盖对应核心成员的 recipe color，而不暴露任意 Path encoding。
 
-显式 color field 使用 authored `color.scale`；未 authored scale 时使用保留 identity `__chart.connected-scatter.scale.color` 的 Plot ordinal scale，并把最终 `data.palette.categorical` 物化为它的 range。省略 `color` 而存在 `series` 时，recipe 将 `series` 作为两者共同的 field-bound color，使用保留 identity `__chart.connected-scatter.scale.series-color` 的 Plot ordinal scale，并把最终 `data.palette.series` 物化为 range。用户可以通过正式 `scales` 成员按对应 identity 调整 Chart 合成的 scale；字段类型与 scale family 的兼容性仍由 Plot fail-loud。省略 `series` 而使用 color field 时，该 field 同时成为 Path series。
+显式 color field 使用 authored `color.scale`；未 authored scale 时使用保留 identity `__chart.connected-scatter.scale.color` 的 Plot ordinal scale，并把 Plot resolver 的最终 `plot.palette.categorical` 物化为它的 range。省略 `color` 而存在 `series` 时，recipe 将 `series` 作为两者共同的 field-bound color，使用保留 identity `__chart.connected-scatter.scale.series-color` 的 Plot ordinal scale，并把最终 `plot.palette.series` 物化为 range。用户可以通过正式 `scales` 成员按对应 identity 调整 Chart 合成的 scale；字段类型与 scale family 的兼容性仍由 Plot fail-loud。省略 `series` 而使用 color field 时，该 field 同时成为 Path series。
 
-field color 与 series-only 两个 field-bound 分支在默认 legend 允许时各生成一个 Plot color legend，并绑定上述实际共享的 scale identity。`legend.enabled: false` 抑制该 default；显式 `guides` 按 ChartCommon 规则整体替换所有表现性 defaults。显式 constant color（无论是否同时存在 `series`）和 `color` / `series` 都省略的共享 constant 都不生成 color scale、descriptor 或 legend。
+field color 与 series-only 两个 field-bound 分支在默认 legend 允许时各生成一个 Plot color legend，并绑定上述实际共享的 scale identity。`chart.legend.enabled: false` 抑制该 default；显式 `guides` 按 ChartCommon 规则整体替换所有表现性 defaults。显式 constant color（无论是否同时存在 `series`）和 `color` / `series` 都省略的共享 constant 都不生成 color scale、descriptor 或 legend。
 
-`color` 与 `series` 都省略时，recipe 从最终 Chart / Plot series palette 的第一项解析一个共享 constant color，再分别写入 Point `color` 与 Path `stroke`；最终 palette 已应用 preset / mode / `styleTokens`、`colors` 与 `theme` 的既定级联，因此 Chart 不硬编码颜色，也不依赖 Plot 按 mark index 选择两个可能不同的默认色。该共享 constant 是可被 `mark.color` / `components.connection.stroke` 继续覆盖的 type presentational default，不合成 scale、descriptor 或 legend。显式 color 始终优先于 series-only 和无分组默认，但不改变 Path grouping 规则。
+`color` 与 `series` 都省略时，recipe 调用 Plot 公开纯 resolver，从最终 series palette 第一项解析一个共享 constant color，再分别写入 Point `color` 与 Path `stroke`；最终 palette 已应用 Core effective Theme 选择的 Plot preset、`plotStyleTokens`、`colors` 与 `theme` 级联。Chart 不复制 Plot palette 或 resolver，也不依赖 mark index 选择两个可能不同的默认色。该共享 constant 是可被 `mark.color` / `components.connection.stroke` 继续覆盖的 type presentational default，不合成 scale、descriptor 或 legend。显式 color 始终优先于 series-only 和无分组默认，但不改变 Path grouping 规则。
 
 ## 行为、失败语义与兼容性
 

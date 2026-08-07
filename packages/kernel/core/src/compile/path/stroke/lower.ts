@@ -30,7 +30,7 @@ const parseGeneratedCommand = (name: string, command: unknown): PathCommand => {
     const length = value.length;
     const x = value[0];
     const y = value[1];
-    const point = [x, y] as unknown;
+    const point = [x, y];
     if (length !== 2 || !isFinitePoint(point)) return invalidPoint();
     return point;
   };
@@ -147,13 +147,13 @@ export const lowerGeneratorStepToCommands = (args: {
     schema: JsonObjectSchema,
     value: parsed,
   });
-  const paramsObj = parsed as Record<string, unknown>;
+  const paramsObj = parsed;
 
   const resolvedTargets: Record<string, IRPosition> = {};
   for (const key of def.targetParams ?? []) {
     if (key.includes('.')) continue;
+    if (!Object.hasOwn(paramsObj, key)) continue;
     const raw = paramsObj[key];
-    if (raw === undefined) continue;
     if (raw === null || (typeof raw !== 'string' && typeof raw !== 'object')) {
       throw new Error(
         `path generator '${step.name}' targetParams key '${key}' must be a target (node id, coordinate, or target object); got ${raw === null ? 'null' : typeof raw}.`,

@@ -1,11 +1,4 @@
-import {
-  AxisLineStepSchema,
-  CoordinateSchema,
-  LayoutInspectSpacingOptionsInputSchema,
-  MoveStepSchema,
-  RelativeTargetSchema,
-  SceneSchema,
-} from '@retikz/core';
+import { AxisLineStepSchema, CoordinateSchema, MoveStepSchema, RelativeTargetSchema, SceneSchema } from '@retikz/core';
 import {
   CoordinateSchema as PlotCoordinateSchema,
   EncodingSchema,
@@ -19,6 +12,7 @@ import {
   TransformSchema,
 } from '@retikz/plot';
 import { LegendArtifactSchema, LegendSchema } from '@retikz/standard';
+import { LayoutInspectSpacingOptionsInputSchema } from '@retikz/standard/inspect';
 import { TableSpecSchema } from '@retikz/table';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -69,15 +63,15 @@ describe('SCHEMA_REGISTRY', () => {
     expect(lookupSchema(AxisLineStepSchema)?.url).toBe('/kernel/reference/schema/path#axis-line');
     expect(lookupSchema(RelativeTargetSchema)?.url).toBe('/kernel/reference/schema/path#relative');
     expect(lookupSchema(LayoutInspectSpacingOptionsInputSchema)?.url).toBe(
-      '/kernel/reference/runtime/compile#layoutinspectspacingoptionsinputschema',
+      '/standard/layout/reference/runtime#layoutinspectspacingoptionsinputschema',
     );
     expect(lookupSchema(TableSpecSchema)?.url).toBe('/viz/table/reference/contract-table#tablespecschema');
     expect(lookupSchema(LegendSchema)?.url).toBe('/standard/composite/legend#legendschema');
     expect(lookupSchema(LegendArtifactSchema)?.url).toBe('/standard/composite/legend#legendartifactschema');
   });
 
-  it('documents the Layout Inspector spacing schema on the Kernel compile reference page', () => {
-    const referenceRoot = resolve(process.cwd(), 'src/modules/docs/contents/kernel/reference/runtime/compile');
+  it('documents the Layout Inspector spacing schema on the Standard runtime reference page', () => {
+    const referenceRoot = resolve(process.cwd(), 'src/modules/docs/contents/standard/layout/reference/runtime');
     const zhSource = readFileSync(resolve(referenceRoot, 'index.zh.mdx'), 'utf8');
     const enSource = readFileSync(resolve(referenceRoot, 'index.en.mdx'), 'utf8');
 

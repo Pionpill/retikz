@@ -1,0 +1,104 @@
+---
+title: '@retikz/inspect'
+description: Observe final compile outputs on demand and use an explicit registry plus runtime selection to produce path controls, layout bounds, and other auxiliary content without changing the primary figure.
+---
+
+`@retikz/inspect` is an optional development package. It reads final occurrences and owner outputs published by Core, then compiles ordinary Core children returned by an Inspector into readonly layers. Selection exists only at runtime and never enters IR, Scene, or snapshots.
+
+```bash
+pnpm add @retikz/inspect
+```
+
+```tsx
+import { createDefaultInspectorRegistry, STROKE_PATH_INSPECTOR_KEY } from '@retikz/inspect';
+import { InspectLayout, InspectPath } from '@retikz/inspect/react';
+import { Step } from '@retikz/react';
+
+const registry = createDefaultInspectorRegistry();
+
+<InspectLayout registry={registry}>
+  <InspectPath
+    request={{
+      inspector: STROKE_PATH_INSPECTOR_KEY,
+      value: { controlPoints: true, labels: true },
+    }}
+  >
+    <Step kind="move" to={[0, 0]} />
+    <Step kind="cubic" control1={[20, -30]} control2={[80, 30]} to={[100, 0]} />
+  </InspectPath>
+</InspectLayout>;
+```
+
+## Scope
+
+Use an Inspector for final control points, bounds, spacing, alignment guides, or domain diagnostics. It does not change layout solving, primary Scene bounds, resources, hit testing, or animation, and it does not persist development-time selection.
+
+Core owns only domain-neutral owner outputs, final-occurrence observation, and isolated fragment compilation. This package or a third-party Inspector owns what to observe, how to select it, and how to draw the result.
+
+## Define a capability
+
+Third-party Inspectors use `defineInspector()` to declare a registry key, target owner, subject schema, option schemas, and output callback. The built-in stroke Path Inspector follows the same path; there is no built-in allowlist.
+
+```ts
+import { defineInspector } from '@retikz/inspect';
+
+const inspector = defineInspector({
+  namespace: 'acme',
+  name: 'bounds',
+  owner,
+  subjectSchema,
+  optionsInputSchema,
+  optionsSchema,
+  inspect: (subject, context) => buildAuxiliaryChildren(subject, context.appearance),
+});
+```
+
+`namespace + name` must be unique in one registry, while one owner may have several Inspectors. Subject and options must pass their schemas, and output is an ordinary `IRChild` or readonly array of children.
+
+## Inject the host
+
+The root entry does not load React, Vanilla, or Render. Import the host subentry explicitly:
+
+| Entry                     | Responsibility                                                                             |
+| ------------------------- | ------------------------------------------------------------------------------------------ |
+| `@retikz/inspect`         | Definitions, registry, selection, diagnostics, compile driver, and built-in Path Inspector |
+| `@retikz/inspect/react`   | `InspectLayout`, `InspectPath`, `InspectScope`, and the React compile driver               |
+| `@retikz/inspect/vanilla` | Authoring markers and the Vanilla compile driver                                           |
+| `@retikz/inspect/render`  | One-to-one conversion from a plane to ordinary readonly layers                             |
+
+Standard layouts use `@retikz/standard/inspect`, `@retikz/standard-react/inspect`, or `@retikz/standard-vanilla/inspect`. These entries depend explicitly on this package; Standard root entries remain usable without it.
+
+## Execution
+
+1. The host collects runtime selection rules and gives the registry to an optional compile driver.
+2. Core captures final outputs only for selected owners and discards probe candidates, failed branches, and unused replays.
+3. Inspect sorts by occurrence and Inspector key, resolves options, and invokes the Definition.
+4. Ordinary IR output compiles in the current theme, Scope style, and provider environment, then loses public identity, metadata, and animation semantics.
+5. Render commits the result as `pointer-events: none` readonly layers; primary and auxiliary layers succeed or roll back in the same revision.
+
+## Errors and limits
+
+- Duplicate keys, invalid locators, out-of-range occurrences, owner mismatches, and schema failures fail loudly without returning partial auxiliary output.
+- A `barrier` applies only to the whole scene or an authored subtree and prevents descendants from reopening any Inspector.
+- A nested Scope inside a contribution is rejected when it cannot be located unambiguously. Supporting it requires a more precise contribution-subtree locator contract.
+- Ordinary `compileToScene()` creates no Inspector session and performs no auxiliary compilation.
+
+## API reference
+
+| Export                                        | Responsibility                                                      |
+| --------------------------------------------- | ------------------------------------------------------------------- |
+| `defineInspector()` and `InspectorDefinition` | Define owner, schemas, option merging, and auxiliary output         |
+| `createInspectorRegistry()`                   | Build an explicit registry and reject duplicate keys                |
+| `createDefaultInspectorRegistry()`            | Include the built-in stroke Path Inspector                          |
+| `compileInspectionToScene()`                  | Run one atomic primary and auxiliary compile                        |
+| `STROKE_PATH_INSPECTOR_KEY`                   | Select the built-in stroke Path Inspector                           |
+| `InspectionSelection`                         | Describe runtime scene, subtree, or self rules                      |
+| `InspectionCompileResult`                     | Return primary output, an optional plane, and Inspector diagnostics |
+
+## Related
+
+- [Path](/kernel/components/draw/path): built-in control-point Inspector
+- [Scope](/kernel/components/layout/scope): subtree selection and hard barriers
+- [Core](/kernel/packages/core): domain-neutral compile observation
+- [Render](/kernel/packages/render): ordinary readonly layer materialization
+- [Standard layout runtime](/standard/layout/reference/runtime): Flex, Grid, and Overlay Inspectors

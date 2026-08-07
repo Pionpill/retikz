@@ -14,9 +14,7 @@ describe('Table Vanilla plain authoring', () => {
       columns: [{ id: 'name', field: 'name', header: 'Name' }],
     };
     const manualInput = {
-      style: 'clean' as const,
-      themeMode: 'dark' as const,
-      styleTokens: { 'data.categorical': ['#123456'] },
+      tableThemeTokens: { 'data.categorical': ['#123456'] },
       encodings: [
         {
           id: 'score',

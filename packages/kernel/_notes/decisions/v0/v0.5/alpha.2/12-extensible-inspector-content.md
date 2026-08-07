@@ -1,343 +1,475 @@
-# ADR-12：以可编译辅助内容统一 Inspector 输出
+# ADR-12：将 Inspector 抽离为可选扩展包
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-06
+- 接受日期：2026-08-07
 - 关联：[alpha.2 roadmap](./roadmap.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [Standard Layout Inspector ADR-07](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/07-layout-inspector.md) · [Standard Inspector 视觉语义 ADR-08](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/08-layout-inspector-visual-semantics.md)
 
 ## 背景与目标
 
-现有 Inspector 只依附带 typed artifact 的 layout-aware Composite，`inspect()` 也只能返回由矩形、直线和标签组成的 `InspectionPrimitive` 数组。Core 为这些 DTO 建立独立 schema 与 occurrence plane，Render 再分别实现 SVG / Canvas 的专用绘制路径。
+现有 Inspector 已能读取最终布局产物或 Path 几何，并以普通 IR 子元素生成隔离辅助 Scene；但它的定义、选项、选择策略、色板、诊断、辅助编译编排和内置 Path 控制点实现都位于 Core，Render、React 与 Vanilla 也直接认识 inspection plane
 
-这套合同可以解释布局盒模型，但把 Inspector 固定成了一套平行的微型图元系统：曲线、椭圆、箭头、资源、自定义 Composite 或未来其它辅助内容都必须先扩展闭合 primitive union，再同步修改每个 renderer。即使只为贝塞尔曲线显示控制柄，也无法直接复用现有 Path、Node、style、resource 与 Composite 编译能力。
+这使一个默认关闭的开发期能力进入基础编译、渲染和宿主入口。随着 Plot、Chart、Table、贝塞尔曲线及其它能力增加各自的辅助内容，Core 会持续吸收领域选项、注册关系和辅助呈现逻辑，未使用 Inspector 的应用也必须携带相关公共契约与接线代码
 
-仅给 `inspect()` 增加任意 JSON `outputSchema` 不能解决该问题。Schema 只能证明数据形状合法，不能决定如何把任意 payload 转成 Scene；Core 仍需建立第二套 consumer / registry，renderer 也必须认识每一种自定义结果。
+Inspector 的根问题不是新的绘图语义，而是观察一次确定编译的最终产物，再用既有绘图能力生成不影响主图的辅助内容。Core 应提供稳定、领域中立的观测与片段编译底座；具体观察什么、如何选择、如何呈现和如何接入宿主，应由可选扩展拥有
 
-本 ADR 的目标是让 Inspector 返回任意可由当前 Core registry 与编译管线解析的辅助子元素，同时保持以下既有约束：
+本 ADR 的目标是：
 
-1. Inspector 只读取同次最终提交的 settled subject，不重新运行主图 solver，也不从 renderer 反向测量
-2. 辅助内容与主 Scene 同 revision 原子产生，但不改变主 Scene 的布局、资源、identity、artifact、命中或水合语义
-3. 内置与第三方 Inspector 依附各自既有 Definition 和 registry，不建立平行 inspector registry
-4. 未开启 Inspector 时不调用回调，也不产生辅助编译成本
+1. 新增独立的 `@retikz/inspect` 包，并加入 Kernel 发布组的版本联动
+2. Core 只保留最终编译观测、所属者产物、来源追踪和隔离片段编译能力
+3. Inspector 定义、注册、选择、辅助平面、色板、诊断和内置 stroke Path Inspector 全部迁入 `@retikz/inspect`
+4. Standard 通过可选 `/inspect` 子入口提供 Flex、Grid 与 Overlay Layout Inspector，根入口不静态导入 Inspector
+5. 未安装或未注册 Inspector 时，Core、Render、React、Vanilla 与 Standard 根入口没有 Inspector 默认行为和额外编译成本
 
 ## 与既有 Standard 决策的关系
 
-[Standard Layout Inspector ADR-07](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/07-layout-inspector.md) 已冻结 runtime sidecar、最终 replay、独立 plane 与完整 frame 原子提交，这些长期语义继续保留；其中“Composite Inspector 只能返回专用 primitive”以及“Render 解释专用 primitive”的部分由本 ADR 取代。
+[Standard Layout Inspector ADR-07](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/07-layout-inspector.md) 冻结的最终 occurrence、最终 replay、运行时选择、主图隔离和完整帧原子提交语义继续有效，但其实现归属从 Core、Render 与基础 adapter 迁移到可选 Inspect 能力
 
-[Standard Inspector 视觉语义 ADR-08](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/08-layout-inspector-visual-semantics.md) 已标记为 Superseded。其 Layout spacing artifact、选项拆分和视觉区分目标仍归 Standard；`InspectionTone`、pattern DTO 与 Render palette owner 则由本 ADR 取代。Standard 改用普通 IR style / paint 表达线型与纹理，Core 解析 occurrence appearance，Render 不再持有 inspection-only palette，两份 ADR 不再形成并行实施真源。
+[Standard Inspector 视觉语义 ADR-08](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/08-layout-inspector-visual-semantics.md) 保留真实 spacing artifact、选项拆分、occurrence 配色、纹理、线型、绘制顺序和共线消重目标。色板、辅助 IR 与视觉实现归 `@retikz/inspect` 和 `@retikz/standard/inspect`，不再由 Core 或 Render 持有 inspection 专用语义
 
-## 决策：Inspector 返回普通 IR 子元素并编译为隔离辅助 Scene
+## 决策：以 Core 通用观测能力支撑独立 Inspect 包
 
-Core 提供 owner-neutral 的 `InspectorDefinition`。具体能力仍由拥有 subject 的 Definition 承载 Inspector：Composite 继续通过 `CompositeDefinition` 注册，Path kind 通过 `PathKindDefinition` 注册；未来其它开放能力也必须依附自己的现有 Definition / registry。Core 内建的闭合能力可以使用同一协议提供 built-in Inspector，但不会获得绕过公开契约的第二条消费路径。
+整体依赖方向固定为：
 
-`inspect()` 返回一个或多个普通 `IRChild`。Core 把回调结果视为不可信 provider output，完成脱离、JSON-safe 校验与冻结后，按正常 child discriminator、schema、Definition registry 和 compile 语义解析。Inspector 不声明 `outputSchema`；每个返回 child 的权威 schema 与 Definition 就是它的输出契约。
+```text
+@retikz/core
+  ├─ 最终 occurrence 观测
+  ├─ 所属者产物与来源追踪
+  └─ 隔离 IR 片段编译
+          │
+          ▼
+@retikz/inspect
+  ├─ Inspector Definition 与注册表
+  ├─ 选择、选项、色板与诊断
+  ├─ InspectionPlane 与编译编排
+  └─ 内置 stroke Path Inspector
+          ▲
+          │
+@retikz/standard/inspect
+  └─ Flex / Grid / Overlay Layout Inspector
+```
 
-解析后的辅助内容进入隔离的 inspection compile channel，并形成 occurrence-local Scene。该 channel 复用当前 compile 注入的 provider、Composite、文字 / TeX 测量、Theme 与资源能力，但强制关闭所有 Inspector，防止辅助 Path 再触发自己的 Inspector 或形成递归。它不重新求值主图 occurrence，也不能复用或提交主图的 probe / replay token。
+Core、Render、React、Vanilla 与 Standard 根入口都不得反向依赖 `@retikz/inspect`。`@retikz/inspect` 是 Kernel 发布组中的独立 npm 包，但安装和导入保持可选
 
-主 Scene 与 inspection plane 使用同一最终 revision。任一已选择 Inspector 失败时，整次 compile fail-loud，不返回或提交只有主 Scene 的部分结果。
+### Core 提供的领域中立底座
 
-## 基础数据结构与公开契约
+Core 公开四项稳定能力：
 
-以下形态冻结长期语义；具体泛型排列与 schema 组合可以在实现计划中细化，但不得改变 subject、options、appearance 与可编译 child 的职责边界：
+1. **所属者产物**：开放 Definition 可以为最终编译结果声明带 schema 的 JSON-safe 产物。layout-aware Composite 复用已解析的 typed artifact；Path kind 可以声明自己的最终产物。内置 stroke Path 公开由最终 move、line、quadratic、cubic 等命令及必要局部几何组成的产物，但不包含控制点呈现逻辑
+2. **最终 occurrence 观测**：外部观察者按所属者选择感兴趣的 occurrence。Core 只发布最终逻辑树中实际提交的结果，丢弃 probe、失败候选、未选 replay 和空 Path 结果；事件携带所属者、compile-local occurrence、最终变换与 probe/replay 来源
+3. **按需捕获**：没有观察者或没有观察者选择当前所属者时，Core 不为观察用途读取、克隆或校验额外产物。观察者只能读取 schema 已验证并冻结的 JSON-safe snapshot
+4. **隔离片段编译**：观察者可以在当前 occurrence 的有效 Theme、Scope 样式、provider 与文字度量环境中，把普通 `IRChild` 片段编译为局部 Scene。片段使用新的 namespace、resource、artifact、identity 与 diagnostic staging，默认不再次触发观察者，也不能读取主 Scene 身份
+
+这些能力使用 `observation`、`owner output` 或同义的领域中立命名，不在 Core 公共面出现 Inspector、InspectionPlane、色板、控制点或 Layout Inspector 选项。具体泛型和函数排列由实施计划细化，但必须保留以下最小跨包契约：
 
 ```ts
-export type InspectorOutput = IRChild | ReadonlyArray<IRChild>;
+type CompileObservationOwner =
+  | Readonly<{ kind: 'composite'; namespace: string; type: string }>
+  | Readonly<{ kind: 'pathKind'; name: string }>;
 
-export type InspectionOwner =
-  | Readonly<{
-      kind: 'composite';
-      namespace: string;
-      type: string;
-    }>
-  | Readonly<{
-      kind: 'pathKind';
-      name: string;
-    }>;
+type CompileOwnerOutputDefinition<TValue extends JsonValue> = Readonly<{
+  schema: ZodType<TValue>;
+}>;
 
-export type InspectionAppearance = Readonly<{
+type CompileOwnerOutputPublisher<TValue extends JsonValue> = Readonly<{
+  requested: boolean;
+  publish: (value: TValue) => void;
+}>;
+
+type CompileObservationSite = Readonly<{
+  owner: CompileObservationOwner;
+  sourcePath: string;
+}>;
+
+type CompileObservationProvenance = Readonly<{
+  origin: CompileOccurrenceLocator;
+  final: CompileOccurrenceLocator;
+}>;
+
+type CompileObservation<TValue extends JsonValue = JsonValue> = Readonly<{
+  owner: CompileObservationOwner;
+  occurrence: CompileOccurrenceLocator;
+  value: TValue;
+  transform: readonly [number, number, number, number, number, number];
+  provenance: CompileObservationProvenance;
+}>;
+
+type CompileObserverDefinition<TOutput = unknown> = Readonly<{
+  key: string;
+  createSession: () => CompileObserverSession<TOutput>;
+}>;
+
+type CompileObserverSession<TOutput> = Readonly<{
+  select: (site: CompileObservationSite) => boolean;
+  observe: (observation: CompileObservation, context: CompileObservationContext) => void;
+  complete: () => TOutput;
+}>;
+
+type CompileObservationContext = Readonly<{
+  compileFragment: (children: IRChild | ReadonlyArray<IRChild>) => CompiledSceneFragment;
+}>;
+
+type CompiledSceneFragment = Readonly<{
+  scene: Scene;
+  artifacts: ReadonlyArray<CompileArtifact>;
+  diagnostics: ReadonlyArray<CompileWarning>;
+}>;
+
+type CompileObserverOutput<TOutput> = Readonly<{
+  key: string;
+  value: TOutput;
+}>;
+
+type ObservedCompileResult<TOutput = unknown> = Readonly<{
+  primary: CompileResult;
+  observerOutputs: ReadonlyArray<CompileObserverOutput<TOutput>>;
+}>;
+
+declare const observeCompileToScene: (
+  ir: IRScene,
+  options: CompileOptions,
+  observers: ReadonlyArray<CompileObserverDefinition>,
+) => ObservedCompileResult;
+```
+
+`CompileObservationProvenance.origin` 是所属者产物在最终 replay remap 前的 occurrence，`final` 与公开 `occurrence` 相同；两者的结构化 `expansionPath` 使用既有 `probe` / `replay` 段表达来源。直接产物的 `origin` 与 `final` 相同。外部选择不解析私有 traversal 状态，只依赖这两个公开 locator
+
+所属者产物的声明和捕获固定为：
+
+- layout-aware Composite 的既有 `artifactSchema` 同时是 `CompileOwnerOutputDefinition.schema`，最终 replay 发布的 typed artifact 是 owner output。观察者选中声明 typed artifact 的最终 occurrence 后缺少 artifact 属于 Core contract failure；expand-only 或未声明 artifact 的 Composite 没有 owner output
+- Path kind 使用可选 `ownerOutput: CompileOwnerOutputDefinition<TValue>` 声明产物，其 compile context 获得同泛型的 `ownerOutput: CompileOwnerOutputPublisher<TValue>`：只有至少一个 observer 选择当前 site 时 `requested` 才为 true；非空 Path 结果必须恰好 publish 一次，`null` 结果不得 publish。未请求时 Core 不读取、克隆或校验 owner output
+- Composite 与 Path kind 最终都进入同一个 `CompileObservation` envelope、schema 校验、冻结、排序和 observer dispatch；不存在 Inspector 专用 subject 字段或第二条消费路径
+
+`select()` 只接收 owner 与 authored `sourcePath`，可以在候选编译前请求按需产物；它本身不代表 observable occurrence。Core 可以为 probe 候选捕获被请求的产物，但只对最终选中 replay 调用 `observe()`。`observe()` 事件先按既有 final occurrence comparator 排序，同 occurrence 再按 owner key 排序
+
+观察者通过显式运行时注册进入一次 observed compile，不进入 IR、Snapshot 或 Scene。每个 Definition 为每次编译创建独立 session；observer definition 的 `key` 在编译前查重，重复 key fail-loud。Core 按稳定顺序调用 `observe()`，即使没有事件也对每个 session 调用一次 `complete()`；`observerOutputs` 按 definitions 输入顺序返回，每个 key 恰有一项，空观察结果由该 observer 的 canonical output 表达
+
+`compileFragment()` 以当前 observation 捕获的 Theme、resolved Scope style、providers、host measurer 与局部坐标为输入，返回独立 Scene、artifact 和 diagnostics；默认 observer 集合为空。fragment 的 artifact 与 diagnostics 只存在于返回值，不写入 primary。Core 不负责移除 fragment 的公共身份，具体扩展在消费前自行 seal
+
+任一 observer session 创建、`select()`、owner output、`observe()`、fragment compile 或 `complete()` 失败时，observed compile 整体 fail-loud，不返回 primary 或部分 outputs。未使用 observed 入口的普通 `compileToScene()` 不创建 session，也不受 observer failure 影响。Core 不维护全局可变注册表，不自动发现包，也不区分内置与第三方观察者
+
+普通 `compileToScene()` 继续只返回主 Scene、artifact 与普通诊断；不再返回 `inspection`。Core 另提供显式 observed compile 入口，输入 observer definitions 并返回主结果与 observer outputs。需要辅助内容的调用方使用 `@retikz/inspect` 提供的编译驱动，它为每次调用创建 Inspector observer session，不复用上次编译状态
+
+### `@retikz/inspect` 拥有 Inspector 完整语义
+
+`@retikz/inspect` 根入口是宿主无关的 Inspector 真源，至少拥有：
+
+- `InspectorDefinition`、`defineInspector()`、注册表解析与重复 key 诊断
+- occurrence 选择、选项解析、继承与关闭策略
+- `InspectionOwner`、`InspectionAppearance`、`InspectionPlane` 与稳定排序
+- canonical scope palette、warning color 与 appearance 分配
+- Inspector callback、普通 IR 输出规范化、隔离片段编译编排和 inspection-specific error origin
+- 主图结果与辅助平面的原子 `InspectionCompileResult`
+- 内置 stroke Path Inspector 及其控制点、控制柄与标签选项
+
+Inspector 独立注册，不再挂载到 `CompositeDefinition` 或 `PathKindDefinition`。注册键是 `namespace + name`，Core 观测所属者是 Definition 的独立目标字段；内置与第三方 Inspector 经过同一 `defineInspector()`、注册表、选项解析、callback 与输出编译路径。重复键 fail-loud，不使用内置白名单或 import 副作用覆盖
+
+```ts
+type InspectorDefinition<
+  TSubject extends JsonValue,
+  TOptionsInput extends IRJsonObject,
+  TResolvedOptions extends IRJsonObject,
+> = Readonly<{
+  namespace: string;
+  name: string;
+  owner: CompileObservationOwner;
+  subjectSchema: ZodType<TSubject>;
+  optionsInputSchema: ZodType<TOptionsInput>;
+  optionsSchema: ZodType<TResolvedOptions, TOptionsInput>;
+  mergeOptionsInput?: (inherited: TOptionsInput, local: TOptionsInput) => TOptionsInput;
+  inspect: (subject: TSubject, context: InspectorContext<TResolvedOptions>) => InspectorOutput;
+}>;
+
+type InspectorOutput = IRChild | ReadonlyArray<IRChild>;
+
+type InspectorKey = Readonly<{ namespace: string; name: string }>;
+
+type InspectionAppearance = Readonly<{
   colorScope: number;
   scopeColor: string;
   warningColor: string;
 }>;
 
-export type InspectorContext<TOptions extends IRJsonObject> = Readonly<{
+type InspectorContext<TOptions extends IRJsonObject> = Readonly<{
+  inspector: InspectorKey;
+  owner: CompileObservationOwner;
   occurrence: CompileOccurrenceLocator;
+  provenance: CompileObservationProvenance;
   options: TOptions;
   appearance: InspectionAppearance;
 }>;
 
-export type InspectorDefinition<
-  TKind extends string,
-  TSubject extends JsonValue,
-  TOptionsInput extends IRJsonObject,
-  TResolvedOptions extends IRJsonObject,
-> = Readonly<{
-  kind: TKind;
-  optionsInputSchema: ZodType<TOptionsInput>;
-  optionsSchema: ZodType<TResolvedOptions, TOptionsInput>;
-  inspect: (subject: TSubject, context: InspectorContext<TResolvedOptions>) => InspectorOutput;
-}>;
-
-export type PathKindCompileResult<TInspectionSubject extends JsonValue = never> = Readonly<{
-  primitives: ReadonlyArray<ScenePrimitive>;
-  boundsPoints: ReadonlyArray<IRPosition>;
-}> &
-  ([TInspectionSubject] extends [never] ? { inspectionSubject?: never } : { inspectionSubject: TInspectionSubject });
-
-export type PathKindInspectionContract<
-  TInspectionSubject extends JsonValue,
-  TOptionsInput extends IRJsonObject,
-  TResolvedOptions extends IRJsonObject,
-> = Readonly<{
-  inspectionSubjectSchema: ZodType<TInspectionSubject>;
-  inspector: InspectorDefinition<'path', TInspectionSubject, TOptionsInput, TResolvedOptions>;
-}>;
-
-export type PathKindInspectionBranch<
-  TInspectionSubject extends JsonValue,
-  TOptionsInput extends IRJsonObject,
-  TResolvedOptions extends IRJsonObject,
-> = [TInspectionSubject] extends [never]
-  ? Readonly<{
-      inspectionSubjectSchema?: never;
-      inspector?: never;
-    }>
-  : PathKindInspectionContract<TInspectionSubject, TOptionsInput, TResolvedOptions>;
-
-export type InspectionDiagnosticOrigin =
-  | Readonly<{ kind: 'primary' }>
-  | Readonly<{
-      kind: 'inspection';
-      stage: 'resolve';
-      site: 'authoring';
-      locator:
-        | Readonly<{ kind: 'scene'; value: SceneInspectionAuthoringLocator }>
-        | Readonly<{ kind: 'child'; value: ChildInspectionAuthoringLocator }>;
-    }>
-  | Readonly<{
-      kind: 'inspection';
-      stage: 'resolve';
-      site: 'occurrence';
-      owner: InspectionOwner;
-      occurrence: CompileOccurrenceLocator;
-    }>
-  | Readonly<{
-      kind: 'inspection';
-      stage: 'inspect';
-      owner: InspectionOwner;
-      occurrence: CompileOccurrenceLocator;
-    }>
-  | Readonly<{
-      kind: 'inspection';
-      stage: 'output';
-      owner: InspectionOwner;
-      occurrence: CompileOccurrenceLocator;
-      outputIndex: number;
-    }>;
-
-export type InspectionPlaneEntry = Readonly<{
-  owner: InspectionOwner;
+type InspectionPlaneEntry = Readonly<{
+  inspector: InspectorKey;
+  owner: CompileObservationOwner;
   occurrence: CompileOccurrenceLocator;
   colorScope: number;
   transform: readonly [number, number, number, number, number, number];
   scene: Scene;
 }>;
 
-export type InspectionPlane = Readonly<{
+type InspectionPlane = Readonly<{
   entries: ReadonlyArray<InspectionPlaneEntry>;
 }>;
+
+type InspectionDiagnosticOrigin =
+  | Readonly<{
+      stage: 'selection';
+      ruleIndex: number;
+      target: InspectionSelectionTarget | null;
+    }>
+  | Readonly<{
+      stage: 'subject' | 'inspect';
+      inspector: InspectorKey;
+      owner: CompileObservationOwner;
+      occurrence: CompileOccurrenceLocator;
+    }>
+  | Readonly<{
+      stage: 'output' | 'fragment';
+      inspector: InspectorKey;
+      owner: CompileObservationOwner;
+      occurrence: CompileOccurrenceLocator;
+      outputIndex: number;
+    }>;
+
+type InspectionDiagnostic = Readonly<{
+  origin: InspectionDiagnosticOrigin;
+  cause: Readonly<Pick<CompileWarning, 'code' | 'message' | 'path'>>;
+}>;
+
+type InspectionCompileResult = Readonly<{
+  primary: CompileResult;
+  inspection: InspectionPlane | null;
+  diagnostics: ReadonlyArray<InspectionDiagnostic>;
+}>;
 ```
 
-`PathKindDefinition` 的 `compile()` 返回类型必须使用同一个 `TInspectionSubject` 参数，并与 `PathKindInspectionBranch<TInspectionSubject, ...>` 相交；异构 Path kind registry 擦除后只能在对应 kind schema parse、普通 compile result 校验和 subject schema parse 三个边界连续成功时恢复 Inspector callback。不得把 `inspectionSubjectSchema` 或 `inspector` 作为与 compile result 泛型无关的可选字段拼接。
+`namespace + name` 是 Inspector registry key，`owner` 是被观察的 Core 所属者。`subjectSchema` 在外部注册表恢复具体所属者产物类型，不替代 Core owner output schema。两者必须连续成功：Core 先保证所属者产物符合其 Definition 契约，Inspect 再保证该 Inspector 与目标所属者约定的 subject 一致
 
-`TSubject` 是 owner 在正常编译中已经求值完成、由 Core 脱离并冻结的 JSON-safe snapshot，不是 authored props、可变 provider result 或主 Scene 的无类型切片：
+`optionsInputSchema` 接受 runtime-only sparse input，`optionsSchema` 产出 JSON-safe canonical options。多层规则默认由更具体输入整体替换；需要稀疏合并的 Inspector 显式提供 `mergeOptionsInput()`，内置与第三方使用同一回调边界。合并结果必须再次经过 input schema 和 canonical schema，不能由 adapter 预先按内置 key 裁剪
 
-- layout-aware Composite 的 subject 是与最终 replay occurrence 同次发布、经过 `artifactSchema` 解析的 typed artifact
-- Path kind 的 `compile()` 返回 `null` 或与 Definition 泛型绑定的 `PathKindCompileResult<TInspectionSubject>`；声明 Inspector 时，非空结果必须同时返回 `inspectionSubject`，Definition 必须声明 `inspectionSubjectSchema`
-- Core 先完成 Path kind 普通 `primitives` / `boundsPoints` 合同校验；仅当该 Path 被选中 inspection 时，再以 `inspectionSubjectSchema` 解析、脱离并冻结 subject，随后调用 Inspector。未开启时不得读取或校验 inspection-only subject
-- 内置 stroke Path kind 的 subject 是由最终 move / line / quadratic / cubic 等 settled command 与必要局部几何组成的 JSON snapshot；第三方 Path kind 可以定义自己的 JSON subject，但必须使用同一 `PathKindDefinition` conditional branch、schema 校验与 callback 路径
-- Path kind `compile()` 返回 `null` 表示该 occurrence 没有 settled visual output；即使 authored sidecar 已选择 Inspector，也不读取 subject、不调用回调且不创建 entry。非空结果缺少或违反声明 subject 才是 contract failure
-- 新 owner 若不能提供稳定、JSON-safe、可归属到 occurrence 的 settled subject，就不能注册 Inspector
+canonical scope palette 沿用 `#2563eb`、`#7c3aed`、`#c026d3`、`#db2777`、`#ea580c`、`#a16207`、`#16a34a`、`#0f766e`、`#0891b2` 的顺序并按 `colorScope % 9` 取值，warning color 为 `#dc2626`。这些默认值迁入 `@retikz/inspect`，Render 与 Standard 不得维护副本
 
-`defineInspector()` 作为 nested Definition 的 authoring hook，校验 kind、options schema、空输入 canonical resolve 与 callback 形态。Inspector 不独立注册；拥有它的 `defineComposite()`、`definePathKind()` 或未来同类 define helper 负责验证 subject 类型并把它带入既有 registry。
+同一 owner 可以注册多个不同 key 的 Inspector，例如控制点、曲率或边界视图；一次选择明确指定 Inspector key。重复 key fail-loud，不能以 owner 重复为由阻止独立扩展，也不能 last-wins 覆盖内置定义
 
-`optionsInputSchema` 接收 runtime sidecar 的 strict sparse object，必须接受空对象；`optionsSchema` 产出完整、JSON-safe 的 canonical options。layout family 把既有 Base 与 family-local 选项合并成一个 `context.options`，不再让通用 `InspectorContext` 固定携带 layout-only 的 `baseOptions`。
+`@retikz/inspect` 导出内置 Inspector 集合和显式的默认注册表构造器。使用默认构造器可以获得 stroke Path Inspector；自定义注册表必须显式组合所需定义，不存在进程级自动注册。选择请求必须指明 Inspector key 和目标 locator，避免同一 owner 存在多个定义时产生隐式优先级
 
-`InspectionAppearance` 只提供 Core 已解析的稳定 occurrence 色域与推荐常规 / 警告颜色。Core 拥有唯一 canonical inspection palette，并在调用回调前按 `colorScope` 解析为普通 CSS color；Inspector 可以用普通 IR style 覆盖它，线型、纹理、paint、文字和几何都继续使用 Core 现有 IR。由于最终颜色已经进入辅助 Scene，Render 不再拥有一套按 `InspectionTone` 二次解释的专用 palette，也不能为 SVG / Canvas 选择不同颜色。
+### Inspect 包入口与依赖
 
-canonical scope palette 沿用 `#2563eb`、`#7c3aed`、`#c026d3`、`#db2777`、`#ea580c`、`#a16207`、`#16a34a`、`#0f766e`、`#0891b2` 的顺序并按 `colorScope % 9` 取值，warning color 为 `#dc2626`。这些值从 Standard ADR-08 的 Render 私有常量迁入 Core appearance 默认；本 ADR 不开放用户 palette，但后端也不得自行覆写。
+`@retikz/inspect` 根入口只依赖 Core，提供宿主无关的 Definition、registry、选择、编译驱动与辅助平面。可选集成使用独立子入口：
 
-`InspectionPlaneEntry.scene` 是当前 occurrence 局部坐标中的正常 Scene 结果，`transform` 仍由 Core 从最终 occurrence scope chain 生成。Core 先按所有最终选中的 Inspector occurrence 稳定排序，再为每个请求分配 `colorScope` 并调用一次回调；空输出会占用自己的色域但不形成 entry，因此后续 occurrence 的颜色不随前项是否产出图形而漂移。Render 使用主 Scene 的 camera / fit / DPR 解释完整 frame，不以辅助 Scene 的 layout 扩张主 viewBox。
+- `@retikz/inspect/render`：把 plane 适配为 Render 普通只读图层
+- `@retikz/inspect/react`：为 React 宿主提供选择收集和编译驱动接线
+- `@retikz/inspect/vanilla`：为 Vanilla 宿主提供同构接线
 
-## Inspector 挂载与 authoring 边界
+Render、React 与 Vanilla 只作为相应子入口的 optional peer dependency；导入 Inspect 根入口不得加载 renderer 或框架代码。子入口共享根入口契约，不复制 registry、selection 或 compile orchestration
 
-Inspector 是 owner Definition 的可选能力，不是新的顶层 provider：
+### 选择与 authoring 边界
 
-1. `CompositeDefinition.inspector` 改为通用 `InspectorDefinition`，subject 仍是 typed artifact；Standard Flex、Grid、Overlay 继续走 Composite registry
-2. `PathKindDefinition` 以 conditional generic branch 同时绑定 `compile()` 的 `inspectionSubject`、`inspectionSubjectSchema` 与 `inspector`；三者不能各自擦除或单独出现。内置 stroke Path kind 用同一入口提供 quadratic / cubic 控制点、控制柄与可选标签辅助内容
-3. 第三方 Path kind 可以随自身 Definition 提供 Inspector，不需要向 Core 白名单或 Render 注册新图元
-4. 未来 Shape、Effect 等 owner 是否开放 Inspector，由各自能力 ADR 决定；不得先向独立 Inspector registry 注册并从 Scene 反推 subject
-
-`CompileOptions.inspection` 继续是唯一 Core 编译入口，仍属于 runtime-only authoring sidecar，不进入 IR、Snapshot 或 AI 生成契约。Core sidecar 的稳定形态泛化为：
+Inspector 选择是 `@retikz/inspect` 的 runtime-only 输入，不进入 Core 或 Standard IR。基础选择以 Inspector key、所属者和 authored / final occurrence locator 为依据；Core 只提供稳定来源追踪和 replay remap，不解释启用、继承或 family 选项
 
 ```ts
-export type InspectionAuthoringTargetKind = 'composite' | 'path';
+type InspectionSelectionTarget =
+  | Readonly<{ kind: 'scene' }>
+  | Readonly<{ kind: 'subtree'; sourcePath: string }>
+  | Readonly<{
+      kind: 'self';
+      locator:
+        | Readonly<{
+            kind: 'authored';
+            sourcePath: string;
+            occurrenceIndex?: number;
+          }>
+        | Readonly<{ kind: 'occurrence'; occurrence: CompileOccurrenceLocator }>;
+    }>;
 
-export type SceneInspectionAuthoringLocator = Readonly<{
-  target: InspectionAuthoringTargetKind;
-  path: readonly [SceneInspectionAuthoringPathSegment, ...Array<ScopeInspectionAuthoringPathSegment>];
+type InspectionSelectionRule =
+  | Readonly<{
+      kind: 'request';
+      inspector: InspectorKey;
+      target: InspectionSelectionTarget;
+      value: false | true | IRJsonObject;
+    }>
+  | Readonly<{
+      kind: 'barrier';
+      target: Extract<InspectionSelectionTarget, { kind: 'scene' | 'subtree' }>;
+    }>;
+
+type InspectionSelection = Readonly<{
+  rules: ReadonlyArray<InspectionSelectionRule>;
 }>;
 
-export type ChildInspectionAuthoringLocator = Readonly<{
-  target: InspectionAuthoringTargetKind;
-  path: ReadonlyArray<ScopeInspectionAuthoringPathSegment>;
-}>;
-
-export type InspectionAuthoringPolicy<TLocal extends InspectionOptionsInputObject = InspectionOptionsInputObject> =
-  Readonly<{
-    inherited?: InspectOptions;
-    self?: boolean | TLocal;
-  }>;
-
-export type InspectionAuthoringTree<TLocal extends InspectionOptionsInputObject = InspectionOptionsInputObject> =
-  Readonly<{
-    policy?: InspectionAuthoringPolicy<TLocal>;
-    children?: ReadonlyArray<InspectionChildForest | null>;
-  }>;
-
-export type InspectionAuthoringRoot = Readonly<{
-  locator: SceneInspectionAuthoringLocator;
-  tree: InspectionAuthoringTree;
-}>;
-
-export type InspectionChildRoot = Readonly<{
-  locator: ChildInspectionAuthoringLocator;
-  tree: InspectionAuthoringTree;
-}>;
-
-export type InspectionChildForest = ReadonlyArray<InspectionChildRoot>;
-
-export type CompileInspectionOptions = Readonly<{
-  root?: InspectOptions;
-  roots?: ReadonlyArray<InspectionAuthoringRoot>;
+type ResolvedInspectionRequest = Readonly<{
+  inspector: InspectorKey;
+  owner: CompileObservationOwner;
+  occurrence: CompileOccurrenceLocator;
+  provenance: CompileObservationProvenance;
+  options: IRJsonObject;
+  appearance: InspectionAppearance;
 }>;
 ```
 
-`locator.target` 与最终 authored IR child 必须一致：`composite` 目标从 `namespace + type` 绑定 owner，`path` 目标从解析后的 Path kind 绑定 owner；目标越界、target 与 child 不符或重复 locator 均在调用 provider 前 fail-loud。Nested `layoutChild()` forest 继续按相对 Scope path remap，但 forest root 也携带 target，因此可以选中 layout child 内 authored Composite 或 Path。
+`scene` 规则作用于整张 authored scene；`subtree` 以 `sourcePath` 作用于该 Scope / Composite 来源的最终后代；`self` 可以选择一个 authored source 的全部最终映射，也可以精确选择一个 final occurrence。同一 `sourcePath` 与 owner 对应多个嵌套 occurrence 时，`occurrenceIndex` 按最终 occurrence 顺序选择其中一个；省略仍表示选择全部映射。规则按 scene → 包含当前 occurrence 的 subtree 由外到内 → self 求值；同一 target 对同一 Inspector key 出现重复 request fail-loud，不使用数组后项覆盖
 
-只有 Composite target 可以携带 `tree.children` 并把 child forest 交给 `layoutChild()`；Path target 的 `children` 必须省略，非空或稀疏数组均 fail-loud。两类 target 都可以携带 inherited policy 与当前 `self`，但不会把 Path 的局部选项传播给后代。
+`true` 表示 canonical 空输入，object 按 Definition 的 options merge 契约级联，`false` 关闭该 Inspector 在当前规则范围的继承但允许更深层显式重开。`barrier` 关闭目标子树内所有 Inspector，并禁止任何后代规则重开。无效 sourcePath、越界 self occurrence、重复规则、barrier 作用于 self 或 options schema 失败都在 callback 前 fail-loud
 
-求值顺序固定为：
+scene / subtree 规则只选择 owner 与目标 InspectorDefinition 匹配的 final occurrence，不因普通 child 没有匹配 Inspector 报错；显式 self 请求的 key 未注册、owner 不匹配或目标没有 owner output 时 fail-loud。所有规则求值后先生成 `ResolvedInspectionRequest`，按 final occurrence comparator、Inspector key 排序，再分配连续 `colorScope` 和 appearance，之后才调用 callback。空 callback 输出仍占用自己的 colorScope，但不形成 plane entry；所有输出为空时 plane 为 `null`
 
-1. Layout / Scope `InspectOptions.enabled: false` 是所有 Inspector family 的 authored 子树硬屏障；后代的 Composite 或 Path `self` 都不能重新开启
-2. `enabled` 未阻断时，`InspectOptions.layout` 只参与 layout Composite 的 inherited 求值，不隐式开启 Path；`layout: false` 也不关闭显式 Path `self`
-3. `policy.self` 取代 layout-only 的 `component` 命名。`false` 只关闭当前 occurrence，`true` 使用 owner Inspector 的 canonical 空输入，对象由该 owner 的 options schema 解析
-4. Path 当前没有 inherited family policy，因此只有显式 `self: true | object` 才会请求 Inspector；省略 `self` 不产生请求
-5. 显式 `self` 请求的非空 target 没有 Inspector 时 fail-loud；全图 / Scope 的 inherited layout 策略仍只选择实际带 Inspector 的 layout Composite，不把普通 child 视为错误
+Layout 全图、Scope 子树、组件局部与关闭值由 `@retikz/standard/inspect` 分别生成 scene、subtree、self request 与通用 barrier；barrier 内的 Path 和其它 Inspector 也不能由后代重新开启。Flex、Grid、Overlay 的 sparse options merge 由各自 InspectorDefinition 提供，不由 Core 或 adapter 解释。Path 默认只在显式 self 规则选中时开启；全图 Path 策略仍不在本轮冻结
 
-本 ADR 为 authored Path 增加 occurrence-local 开关，使 React 与 Vanilla 可以等价开启当前 Path 的控制点 Inspector：
+React 与 Vanilla 的基础包不再拥有 `inspect` prop、inspection sidecar 或输出解释。`@retikz/inspect` 提供与 Core 编译签名兼容的可选编译驱动，并通过可选宿主入口把相同选择请求接入 React 与 Vanilla。宿主只负责收集 locator 和调用该驱动，选项解析、所属者匹配、辅助编译与诊断仍在 Inspect 包中
+
+组件局部 authoring sugar 只由相应的可选 `/inspect` 入口导出；基础 adapter 根入口不得静态导入 Inspect。React 与 Vanilla 必须表达同一 `InspectionSelection` 并得到结构等价的 plane，不能各自维护内置 Inspector key 或选项白名单
+
+React 可嵌入贡献可以转发其内部按 authored 顺序收集的领域中立 authoring sites。每个 site 可以携带 observation owner；外层 builder 只把内部 site 绑定到贡献节点的 `sourcePath` 并保持顺序，不解释 Inspector key、options 或 barrier。当同一贡献位置出现同 owner 的父子 occurrence 时，Inspect React driver 依据这些 sites 的稳定 authored ordinal 生成明确的 `occurrenceIndex`，从而只选择包装组件对应的 occurrence，不误选父级或相邻 occurrence。基础 React adapter 不生成 Inspector selection，也不把该序号写入 IR
+
+### Standard 的可选 `/inspect` 子入口
+
+`@retikz/standard` 根入口继续拥有 Layout schema、Definition、solver、artifact 与 lowering，不导出 Inspector、Inspect options、色板或辅助内容 helper，也不在 Flex、Grid、Overlay Definition 上挂载 Inspector
+
+`@retikz/standard/inspect` 作为显式子入口导出：
+
+- Flex、Grid、Overlay 的 `InspectorDefinition`
+- 共享与 family-local 的 Layout Inspect 选项 schema、类型和预设
+- Layout / Scope / component-local 选择策略构造器
+- Layout artifact 到普通 Core Path、Node、paint 的辅助内容生成逻辑
+
+Standard 包家族固定提供三个可选入口：
+
+- `@retikz/standard/inspect`：宿主无关 Definition、options、preset 与 selection helper
+- `@retikz/standard-react/inspect`：把 Layout、Scope 与组件局部 sugar 转为同一 `InspectionSelection`
+- `@retikz/standard-vanilla/inspect`：提供与 React 结构等价的无框架 authoring 与编译驱动接线
+
+这是对 Standard 现有“package exports 只保留根入口”规则的受控例外，只服务可选横切能力，不为普通组件逐项增加 subpath。三个根入口均不得 re-export `/inspect` 内容或静态导入 `@retikz/inspect`
+
+三个 `/inspect` 入口都把 `@retikz/inspect` 声明为 optional peer dependency，并在各自开发依赖中完成构建。只导入任一根入口时，即使未安装该 peer 也必须正常工作；显式导入 `/inspect` 而缺少 peer 时由模块解析 fail-loud，不提供静默空实现、动态自动安装或降级到 Core 内置路径
+
+未来 Plot、Chart、Table 等领域包沿用 `@retikz/plot/inspect`、`@retikz/chart/inspect`、`@retikz/table/inspect` 这类子入口提供领域 Inspector，不为每种领域 Inspector 新建薄 npm 包，也不把领域选项下沉到 Core 或 `@retikz/inspect`
+
+### Render 与完整帧
+
+`InspectionPlane` 不再属于 Core，Render 也不再拥有 inspection-specific frame、capability、palette、SVG builder 或 Canvas 绘制器
+
+Render 只提供领域中立的只读 Scene 图层契约：
 
 ```ts
-export type PathInspectOptions = Readonly<
-  {
-    controlPoints?: boolean;
-    labels?: boolean;
-  } & Record<string, unknown>
->;
+type RenderReadonlyLayer = Readonly<{
+  key: string;
+  scene: Scene;
+  transform: readonly [number, number, number, number, number, number];
+}>;
 
-export type PathInspectionAuthoring = boolean | PathInspectOptions;
+type StaticRenderFrame = Readonly<{
+  primary: Scene;
+  layers: ReadonlyArray<RenderReadonlyLayer>;
+}>;
+
+type RenderFrameSnapshot = Readonly<{
+  primary: SceneRuntimeSnapshot;
+  layers: ReadonlyArray<RenderReadonlyLayer>;
+}>;
 ```
 
-`true` 等价于空对象的 canonical profile；内置 stroke Inspector 的 `controlPoints` 默认开启，`labels` 默认关闭。`PathInspectOptions` 是开放的 runtime authoring object，只为内置 stroke keys 提供类型提示，不代替具体 owner 的 strict input schema：内置 stroke 拒绝其它 key，第三方 Path kind 可以声明自己的 sparse keys，并由自身 Inspector options schema 接受或拒绝。React `Path` 与 Vanilla Path spec 暴露同一 `inspect` sidecar，adapter / normalization 必须在进入 Core IR 前剥离该字段，并生成 `locator.target: 'path' + policy.self` 的同构 `InspectionAuthoringRoot`。Scope hard barrier 在两套 adapter 中都只贡献 inherited `enabled: false`，最终阻断由 Core 统一求值；target mismatch、owner schema 拒绝的 option 与缺失 owner Inspector 也都在 Core 形成同一失败。两套 adapter 对擦除后的开放输入保持同一运行时语义，不能在 adapter 层按内置 stroke 白名单预先裁剪第三方 key。
+`layers` 是稳定有序的后置绘制序列，默认空数组。`key` 在单帧内唯一并作为 renderer resource namespace；空 key、重复 key、非法 transform、带公共 id / meta / animation 的 layer Scene 在 prepare 前 fail-loud。Render 为 primary 和每个 layer 使用独立资源前缀，同名 paint、clip 或 image 不得跨层解析
 
-全图或 Scope 级 Path family 继承策略不在本轮冻结；需要批量开启时应由后续需求证明其选项合并语义，不能把开放字符串 map 当成未经校验的全局策略。
+主 Scene 单独决定 camera、fit、viewBox、layout、交互身份和增量 patch。只读 layer 固定不参与 viewport、hit-test、pointer、hydration、animation runtime、accessibility 或 primary identity topology；这些不是调用方可切换的布尔选项，避免外部包把只读层升级成第二套交互 Scene
 
-预编译 Scene 没有 authored occurrence、owner Definition 与 settled subject，继续不能事后开启 Inspector。调用方必须从 IR 及相同 definitions 重新编译。
+静态 SVG、Canvas 与 SSR 接收同一 `StaticRenderFrame`，先物化 primary，再按数组顺序物化 layers。retained renderer 的通用 `readonlyLayerCapability` 取代 inspection capability：空 layers 对 unsupported renderer 合法，非空 layers 在 prepare 前 fail-loud；supported renderer 必须在一个 prepared token 中验证 primary 与全部 layer Scene / resources，commit 或 rollback 整帧，`read()` 只返回最近一次 committed `RenderFrameSnapshot`
 
-## 辅助编译隔离与确定性
+primary patch 只描述 primary identity 变化；任一 layer 或其顺序变化时，renderer 可以整体替换只读层，但不能把 layer identity 混入 primary patch。layer prepare、resource 或绘制失败不得提交新的 primary candidate
 
-Inspector output 可以包含 Node、Path、Coordinate、Scope，以及当前 compile options 已注册的 Composite；它不能包含 `CompositeCompileChild`、probe result、replay token、callback 或 renderer object。
+`@retikz/inspect/render` 只把每个 `InspectionPlaneEntry` 一对一映射为 `RenderReadonlyLayer`：稳定 key 来自 Inspector key 与 entry 顺序，Scene 和 occurrence transform 原样进入 layer。它不改变 camera、资源执行或 retained transaction。SVG 与 Canvas 复用正常 Scene primitive / resource 执行能力，不认识 Inspector role、tone、palette 或 options；Render 的任何公共 frame 字段都不得使用 inspection 命名
 
-隔离边界固定如下：
+## 辅助内容隔离与确定性
 
-- 辅助 child 从当前 occurrence 捕获的有效 Theme 与完整 resolved Scope style defaults 开始，在 occurrence 局部坐标中使用同一组 provider definitions 编译；它不是从全局默认 style 重新开始，也不能读取之后 sibling 的 Scope 状态
-- Inspector 在辅助 channel 中始终关闭；返回 Path 或 Composite 不会递归生成下一层 inspection plane
-- 每个 entry 使用新的 auxiliary namespace stack，初始不含主图 id；辅助内容内部按正常 Scope / id 规则建立和解析引用，引用主 Scene identity 必然 unresolved 并 fail-loud
-- 普通主图 compile 对 unresolved reference 可以 warning 后跳过图形；辅助 channel 必须在自己的 warning dispatcher 中识别 `UNRESOLVED_NODE_REFERENCE`、`OFFSET_BASE_UNRESOLVED`、`POLAR_ORIGIN_UNRESOLVED` 与 `AT_TARGET_UNRESOLVED`，把它们提升为带当前 output origin 的 fatal inspection error。其它普通辅助 warning 继续进入独立 diagnostic staging
-- 每个 entry 使用独立 resource、artifact、diagnostic 与 identity staging；资源 id 在 seal 时进入 entry-local namespace，Render 在同一 SVG / Canvas frame 物化时再与 primary 和其它 entry 隔离
-- 辅助 compile 产生的 Composite / Node artifacts 不追加到主 `CompileResult.artifacts`
-- 主 Scene 的 layout、resources、animations、identity topology、runtime metadata、patch 与 hit-test index不因 Inspector 开启而改变
-- 同一 IR、definitions、inspection sidecar 与 host options 必须得到同序、深冻结且结构等价的 inspection plane
+`@retikz/inspect` 调用 Core 隔离片段编译时必须满足：
 
-辅助 channel 可以借助临时 id 完成 entry 内引用，但 seal 后的 `InspectionPlaneEntry.scene` 必须是静态、无公共身份的 Scene：Core 递归移除 element / group 的 public `id`、`meta` 与 `animations`，根 Scene 也不得保留 animation track；resource id / ref 作为渲染内部连接保留并隔离。`id`、`meta` 与 animation 被明确规范化掉，不进入 retained identity、SSR hydration、时间轴、hit-test、accessibility 或 inspection patch。entry 的 `owner + occurrence` 是辅助 Scene 唯一公开 provenance。
+- 只读取同次最终提交的 settled observation，不重新运行主图 layout 或 Path solver
+- callback 输出先规范化为稠密 `IRChild` 序列，完成 JSON-safe 脱离、schema / provider 校验与冻结
+- 捕获当前 occurrence 的有效 Theme 与完整 Scope style defaults，不从全局默认重新开始
+- 观察者在辅助片段中默认关闭，返回带 Inspector 的 Path 或 Composite 不产生递归
+- 每个 entry 使用独立 namespace、resource、artifact、diagnostic 与 identity staging
+- entry 内部引用按正常 Core 规则解析；引用主 Scene 或其它 entry 必须 fail-loud
+- 辅助 artifact 不进入主 `CompileResult.artifacts`，辅助诊断具有 Inspect 自己的 owner、occurrence 与 output index 来源
+- seal 后辅助 Scene 不保留公共 id、meta、animation、hit target 或 hydration identity；资源内部连接保留并隔离
+- 主 Scene、artifact、layout、resource、identity topology、runtime metadata、patch 与 hit-test index 在开关 Inspector 前后结构等价
+- 相同 IR、definitions、observer registry、Inspector registry、选择与 host options 得到同序、深冻结且结构等价的结果
 
-回调输出先按单值或数组规范化；稀疏数组、非 JSON 值、非法顶层 discriminator、schema / provider 失败和 hostile getter 都以 inspector owner key、输出索引与原始 occurrence fail-loud。普通辅助 child 在正常 compile 中会产生的 warning 继续可观察，但 `CompileWarning` 增加必填 `origin: InspectionDiagnosticOrigin`：主图 warning 使用 `{ kind: 'primary' }`；provider 尚未解析前的 locator target mismatch、越界、重复或非法 child forest 使用 `stage: 'resolve' + site: 'authoring'`，并携 Scene root 或 layoutChild root 的原始 runtime locator；已经绑定 Definition / occurrence 后的 owner、options 与 subject 解析使用 `stage: 'resolve' + site: 'occurrence'`；callback 使用 `stage: 'inspect'`；已规范化 child 的 schema / compile 使用带 `outputIndex` 的 `stage: 'output'`。authoring resolve origin 不伪造尚不存在的 owner 或 canonical occurrence，occurrence resolve、inspect 与 output origin 则必须携二者。原有 `path` 保留辅助 child 内相对路径。辅助 error 使用同一 origin 数据形成 cause 与稳定格式化消息，因此不能伪装成主图 warning，也不能丢失 nested child 的相对路径。
+Inspector 输出为空是合法结果，不形成 entry。已选择 Inspector 的 subject、options、callback、输出或片段编译失败时，整个 Inspect 编译驱动 fail-loud，不返回只有主 Scene 的部分结果；retained 宿主保留上一 committed frame
 
-## Render frame 与后端行为
+selection admission 失败使用 `stage: 'selection'` 并保留原始 rule index；target 结构有效时原样保留，尚未形成合法 target 时为 `null`，不伪造 owner / occurrence；subject 与 callback 失败使用已绑定的 Inspector key、owner 和 final occurrence；输出规范化及片段编译失败再携带精确 output index。Core fragment diagnostic 的 code、message 与 child path 作为 cause 保留，不能折叠为 entry 根路径或伪装成 primary warning
 
-`CompileResult.inspection`、`StaticRenderFrame.inspection` 与 retained frame 继续使用 `InspectionPlane | null`，但 entry 的受限 `primitives` 被 occurrence-local `scene` 取代。这样保留 plane 与主 Scene 的原子关系、occurrence metadata 和 transform，同时让每个后端复用正常 Scene primitive / resource 执行能力。
+非致命 fragment warning 只进入 `InspectionCompileResult.diagnostics`，不写入 `primary.warnings`。每项诊断保留对应的 `InspectionDiagnosticOrigin`，并把 Core warning 的 `code`、`message` 与 `path` 原样放入 `cause`；结果先按 resolved request 的稳定顺序，再按 `outputIndex` 和 Core fragment 的产生顺序排列。没有诊断时返回深冻结的空数组
 
-retained frame 继续只为 primary 持有 `SceneRuntimeSnapshot`；inspection plane 是每次 Core candidate 随 revision 产生的深冻结静态 overlay，不建立第二套 runtime identity 或动画时钟。prepare 必须同时验证 primary candidate 与全部静态 entry Scene，commit / rollback 一次切换完整 frame。
-
-所有 renderer 必须保持：
-
-- 先绘制 primary，再按 entry 顺序绘制辅助 Scene
-- inspection plane 已不含 public id、meta 或 animation，不进入 pointer、hit-test、hydration identity、时间轴或 accessibility tree
-- primary 与各 entry 的 resource id 在同一输出文档中隔离，SVG / Canvas 不因同名资源互相引用
-- static、SSR、retained prepare / commit / rollback 对完整 frame 原子等价
-- custom renderer 若声明支持 inspection，必须至少支持自己已经声明可执行的普通 Scene 能力；不能只实现旧 rect / line / label 白名单
-
-Scene-only API 仍等价于 `inspection: null`。inspection capability negotiation 保留，因为“能够渲染一张 Scene”不自动表示宿主可以正确叠加、隔离命中并原子提交第二平面。
+需要 fail-loud 的 selection、subject、callback、输出或 fragment 错误由 Inspect 抛出携带同一 origin 与原始 cause 的错误，不返回 primary、plane、diagnostics 或其它部分结果；由 fragment warning 提升的错误保留相同的 `code`、`message` 与 `path` cause。retained 宿主把 primary、plane 与 diagnostics 作为同一 revision 的候选一起 prepare、commit 或 rollback，不能提交跨 revision 的组合
 
 ## 行为、失败语义与兼容性
 
-- 默认行为：未声明任何 inspection sidecar 时 `inspection` 为 `null`，不调用 Inspector，不执行辅助 compile
-- 最终 occurrence：只对主图最终逻辑树中的 settled occurrence 调用一次 Inspector；layout Composite 必须来自最终选中的 replay，Path 必须来自实际提交的非空 Path kind result。丢弃 probe、失败候选和未 replay 结果保持零可观察
-- 空输出：合法，且不创建 plane entry；Path kind 的普通 compile 返回 `null` 也按空输出处理。所有选中 Inspector 都为空时结果为 `null`
-- 失败与诊断：显式 `self` 选中但非空 owner 没有 Inspector、非空 Path result 缺少 / 违反 subject、Composite 缺少 required artifact、options 无效、callback 抛错、输出非法或辅助编译失败均携 structured inspection origin fail-loud；retained runtime 保留上一 committed frame
-- React / Vanilla 等价性：两者只构造同一 runtime sidecar，Core 负责 locator remap、options resolve、subject 绑定与辅助 compile；adapter 不解释输出
-- renderer 等价性：SVG / Canvas 及 custom renderer 消费同一 entry Scene，不建立 inspector-specific shape fallback
-- 兼容性：这是 `0.x` breaking change，不保留别名或双轨。移除 `InspectionPrimitive*` / `InspectionTone*` 公共 schema 与类型，`InspectionPlaneEntry.primitives` 改为 `owner + scene`，`CompositeInspectorDefinition` 由通用 `InspectorDefinition` 取代，sidecar `component` 改为 `self` 并给 locator 增加 target，`CompileWarning` 增加必填 origin；旧 custom inspector 必须返回 IR child
-- 持久化兼容性：不修改 Core / Standard authored IR schema；新增 Path `inspect` 仍是 runtime sidecar
+- 默认行为：未注册 Core observer 时不捕获额外所属者产物；未使用 `@retikz/inspect` 时没有 Inspector callback、辅助编译或辅助 plane
+- 注册行为：Inspector 必须显式加入一次编译使用的注册表；内置 stroke Inspector 与第三方定义使用同一冲突和查找规则，同一 owner 的不同 key 可以共存
+- 最终结果：只观察主图最终逻辑树中实际提交的 occurrence；probe、失败候选、未 replay 结果和空 Path 不可观察
+- 失败与诊断：无效 observer、owner output、Inspector、选择 locator、options、subject、callback 输出、跨平面引用或辅助编译均在所属包边界 fail-loud，并保留 Core occurrence provenance
+- React / Vanilla 等价性：两者调用同一 Inspect 编译驱动并构造同一选择请求；基础 adapter 不解释 Inspector
+- renderer 等价性：SVG / Canvas 消费同一普通只读 Scene 图层，不维护 Inspector 图元分支
+- 兼容性：这是 `0.x` breaking change，不保留双轨或别名。Core 移除 inspection contract、`CompileOptions.inspection`、`CompileResult.inspection`、Definition 上的 inspector 字段和内置 stroke Inspector；Render 移除 inspection-specific frame / capability；基础 React / Vanilla 与 Standard 根入口移除 inspection-specific authoring 与导出
+- 持久化兼容性：不修改 Core / Standard authored IR schema；Inspector 选择仍是 runtime-only 数据
 
 ## 功能与包边界
 
-- 所属能力域与解决的问题：Drawing Complete 的 Composition、Primitive / Scene 与 Interaction Readiness 辅助面，解决开发期辅助内容被闭合 DTO 和专用 renderer 限制的问题
-- 主责包与协作包：Core 主责 Inspector contract、settled subject、通用 sidecar target、有效 Theme / style 捕获、辅助 compile、静态 plane 与诊断 provenance；Render 执行普通 Scene 并隔离辅助平面；React / Vanilla 等价构造 sidecar；Standard 和其它 Tier 2 owner 生成自己的辅助 IR
-- Core 拥有：`InspectorDefinition`、`defineInspector()`、Path kind subject branch、可编译输出边界、appearance、owner / occurrence、静态 Scene seal、资源 / namespace / identity 隔离与结构化诊断 origin
-- Core 不拥有：Flex / Grid / Overlay 求解语义、领域 artifact、用户 DevTools 状态、交互编辑、renderer 私有对象或领域 Inspector 选项
-- 外部扩展与下游闭环：内置与第三方 Composite / Path kind 都在原 Definition registry 中携带 Inspector；Path subject 由同一 conditional result / schema contract 验证，两类 owner 返回同一 Core IR，并经过同一辅助 compile、静态 seal 与 Render Scene 路径
-- 不支持边界：Inspector 不能修改主图、跨 plane 引用、返回任意未注册 JSON、持久化 UI 状态或获得 DOM / Canvas / SVG 句柄
+- 所属能力域与解决的问题：Drawing Complete 的编译可观测性与 Composition 协作面；解决可选开发辅助能力污染 Core 所有权和默认依赖的问题
+- Core 拥有：所属者产物、最终 occurrence、probe/replay provenance、观察者注册入口和隔离片段编译
+- `@retikz/inspect` 拥有：Inspector contract / registry、选择、options、appearance、palette、plane、诊断、辅助编译编排、内置 Path Inspector 与宿主接入
+- Render 拥有：领域中立的普通 Scene 图层执行和完整帧原子提交，不拥有 Inspector 语义
+- Standard 拥有：Layout artifact；其 `/inspect` 子入口拥有 Layout Inspector 定义、选项、策略和视觉生成
+- 外部扩展与下游闭环：第三方 owner 通过 Core Definition 发布稳定产物，第三方 Inspector 在 Inspect registry 独立注册，两者经 Inspector key、owner selector、subject schema、final occurrence、普通 IR 与隔离片段编译闭环
+- 不支持边界：Inspector 不能修改主图、跨平面引用、获得 renderer / DOM 句柄、返回未注册 JSON、持久化 UI 状态或建立第二套绘图 IR
 
 ## 架构验证
 
-- 是否可由现有能力组合：可以复用现有 IR、schema、Definition registry、compile 与 Scene；需要扩展 Inspector contract、挂载 owner 和隔离输出 channel，不能继续组合闭合 `InspectionPrimitive`
-- math / core / render / adapter 责任切分：不新增 math 能力；Core 解析并编译辅助 IR；Render 只执行普通 Scene 和 frame isolation；adapter 只映射 authoring sidecar
-- 是否需要新 IR / contract / registry：新增通用 nested `InspectorDefinition`、Path kind conditional subject、通用 sidecar target 与 diagnostic origin contract，不新增持久化 IR 或独立 registry；`defineInspector()` 是 authoring hook，真正 registration 仍由 owner Definition 完成
-- Scene / manifest / renderer / diagnostics 如何闭环：settled subject → owner Inspector → IR child → 捕获 Theme / style 的隔离辅助 compile → identity-free 静态 Scene → owner / occurrence plane → frame renderer；warning / error origin 保留 owner、occurrence 与输出索引，辅助 artifact 不进入主 manifest
-- provenance / locator / Interaction Readiness 是否适用：sidecar locator 显式携 target，entry 保留 owner + compile-local occurrence 与稳定顺序；辅助 Scene 的 public id / meta / animation 在 seal 时移除，不形成交互 target 或第二 runtime。未来控制点拖拽必须另建 interaction identity 与编辑事务
-- 结论：扩展当前 Drawing Complete 能力域，用现有可编译内容替代平行 inspection primitive，并以 owner-attached Definition 保持内置与第三方同路
+- 是否可由现有能力组合：现有 typed artifact、Path settled command、occurrence、Theme/style context 与普通 IR compile 已提供大部分底座；需要把它们抽象为无 Inspector 词汇的公开观测与隔离片段能力
+- math / core / render / adapter 责任切分：Math 不新增职责；Core 观测与编译；Render 执行普通图层；adapter 注入可选编译驱动；Inspect 与领域子入口拥有辅助语义
+- 是否需要新 IR / contract / registry：不新增持久化 IR；Core 新增 observer 与 owner output contract；Inspect 新增独立 Inspector registry。内置与自定义 Inspector 同路，独立 registry 不再与 owner Definition 注册混合
+- Scene / manifest / renderer / diagnostics 如何闭环：最终 owner output → Core observation → Inspect registry / selection → 普通 IR → Core isolated fragment → Inspect plane → Render normal layers。主 manifest 不包含辅助 identity，inspection-specific diagnostics 由 Inspect 拥有
+- provenance / locator / Interaction Readiness 是否适用：Core 提供 final occurrence 与 replay provenance；Inspect entry 保留 owner + occurrence。辅助 Scene 不进入交互 target；未来可编辑控制点必须另建稳定 identity 与编辑事务
+- 结论：把 Inspector 上移为可选 Kernel 扩展包，只把领域中立观测和片段编译能力下沉到 Core
+
+## 能力完备性检查
+
+- 所属能力面：Drawing Complete 的 compile / provenance / Composition 扩展协作面
+- 内部表达链路：owner Definition 产物 → final observation → isolated fragment compile → 普通 Scene
+- 外部扩展链路：Core observer 与 Inspect registry 都显式注入、无全局状态；内置和第三方使用同一路径
+- 下游执行 / adapter 等价性：Inspect 提供共享编译驱动，Render 执行普通只读图层，React / Vanilla 只做等价宿主接线
+- 不支持边界与诊断：Core 不拥有 Inspector 选项、palette、plane 或领域实现；未安装 Inspect 时不存在隐式降级或默认注册
+- 本轮结论：扩展 Core 的领域中立观测底座，并新增可选 `@retikz/inspect` 协作包形成完整闭环
 
 ## 被否决方案
 
-- 扩充 `InspectionPrimitive` union：每增加一种辅助图形都要同步 Core schema 和所有 renderer，继续维护平行图元系统
-- `outputSchema + arbitrary JSON`：只能校验 payload，无法确定 Scene lowering 与 consumer ownership，最终仍需要第二套 registry
-- 直接返回 `ScenePrimitive` 或 `Scene`：绕过 IR schema、Definition registry、Theme 与正常 provider 校验，也让 Inspector 自己承担资源和 occurrence transform
-- 建立独立 Inspector registry：Composite / Path kind 的 owner key、subject 与 options 会被拆成两套注册和冲突路径
-- 把辅助 child 合并进主 IR / Scene：会改变 viewBox、资源、identity、patch、hit-test 与持久化语义
-- 在 Inspector 内重跑 layout / path solver：不能保证与最终 replay / path command 同源，并产生重复测量与 provider side effects
-- 让 Render 解释 role、tone 或任意自定义 payload：把绘图语义下推到后端，并使 SVG / Canvas / custom renderer 分叉
+- **继续内置在 Core**：每增加一种领域 Inspector 都会扩大基础编译、renderer 和 adapter 公共面，无法兑现可选能力边界
+- **使用 `@retikz/core/inspect` 子入口**：源码可以拆分，但发布依赖与包使命仍属于 Core，Standard 和领域包也会继续把 Inspector 当成 Core 默认能力
+- **只把视觉 helper 移出 Core**：Definition、selection、plane 和 frame 仍会让 Core / Render 依赖 Inspector，不能解决所有权与打包边界
+- **Inspector 继续挂载 owner Definition**：未安装 Inspect 时 owner contract 仍携带可选字段，Core 仍需验证、解析和执行 Inspector
+- **从最终 Scene 反推 subject**：会丢失 layout artifact、Path 命令来源和 probe/replay 关系，也无法支持稳定的第三方 owner output
+- **让每个领域发布独立 Inspector npm 包**：会形成大量薄包和版本关系；领域实现优先使用现有包的 `/inspect` 子入口
+- **把辅助 IR 合并进主 Scene**：会改变 viewBox、资源、identity、patch、hit-test 与持久化语义
+- **让 Render 解释任意 Inspector payload**：会建立第二套 renderer 协议并使 SVG、Canvas 与第三方 renderer 分叉
 
 ## 测试策略摘要
 
-需要 contract / type 证据锁定 `InspectorDefinition`、Path kind conditional subject / schema / null result、canonical options、target locator、universal hard barrier、空输出和 IR child 返回边界；compile contract 证明普通 Node、Path、Scope 与自定义 Composite 可作为辅助内容，非法 / hostile 输出 fail-loud，辅助 Inspector 不递归，主 Scene、artifact、identity、resource、layout 与 warning ownership不漂移。需要以最终 quadratic / cubic path control handle 覆盖首个非 Composite owner、相对坐标和 nested transform。
+测试按 Core 观测契约、Inspect 注册与选择、Render 只读图层、React / Vanilla 宿主等价性及 Standard 可选入口五层验证。重点不变量是最终 occurrence、按需产物、主图隔离、失败原子性、宿主模式等价与根入口不加载可选依赖；具体案例与命令由实施期测试契约维护
 
-需要验证辅助 compile 捕获同一有效 Theme / Scope style、使用全新 namespace、只解析 entry 内引用，并给 warning / error 附加结构化 inspection origin；seal 后递归移除 public id / meta / animation，同时保留隔离 resource connection。React / Vanilla authoring parity 必须证明 layout 既有三层策略与 authored Path occurrence-local 开关映射到同一 Core sidecar；SVG / Canvas、static / SSR / retained frame 必须证明普通 Scene primitive / resource 等价执行、静态 overlay、资源隔离、pointer / hit / hydration / animation 排除和失败回滚。公共类型、schema reference、Layout Inspector 与 Path authoring文档必须同步，旧 custom Inspector / renderer 的 breaking migration 需要显式说明。
+## 最终实现与验证
+
+Core 已收敛为领域中立的所属者产物、最终 occurrence 观测与隔离片段编译底座；Inspector 的定义、注册、选择、诊断、辅助平面、内置 Path 实现及宿主驱动均由可选 `@retikz/inspect` 提供。Render 只执行普通只读 Scene 图层，Standard 三包通过显式 `/inspect` 子入口提供布局辅助能力，基础入口不加载可选依赖
+
+验收覆盖 Core、Render、Inspect、React、Vanilla、Standard 三包的契约、类型、全量测试与生产构建，以及 Standard 可选入口的缺失依赖、显式安装和发布产物边界。中英文文档、示例、导航与生产构建已同步验证；最终整体审计无未处理阻塞项
+
+当前真实限制是贡献内部 Scope 尚无独立 subtree locator，因此无法无歧义定位时会明确失败；Path 的全图与 Scope 批量策略、Inspector 增量更新及交互式控制点仍留待后续能力设计
 
 ## 不在本 ADR 范围
 
 - 控制点选择、hover、拖拽、键盘操作、吸附、history、编辑事务或跨 compile 稳定 handle identity
-- 全图 / Scope 级 Path Inspector 批量策略，以及 Shape、Effect、Plot、Table、Gantt 等其它 owner 的具体 Inspector
-- inspection 增量 patch、跨 compile cache、独立刷新频率或 worker 编译
+- 全图 / Scope 级 Path Inspector 批量策略，以及 Plot、Chart、Table、Gantt 等具体领域 Inspector
+- inspection 增量 patch、跨 compile cache、独立刷新频率、worker 编译或性能预算
 - 用户 palette、CSS 注入、屏幕像素恒定线宽 / 纹理或 DevTools 面板
-- 允许 Inspector 返回完整 `IRScene`、DOM、SVG 字符串、Canvas 命令、ReactNode 或任意未注册 JSON
-- 从预编译 Scene 反推 subject，或允许辅助内容引用主 Scene identity / resource
+- 从预编译 Scene 反推 owner output，或允许辅助内容引用主 Scene identity / resource
+- 为旧 Core 内置 Inspector、旧 Render frame 或旧 adapter `inspect` prop 保留兼容桥接
