@@ -10,11 +10,11 @@ import { ChartResolvedStyleTokensSchema, ChartStyleTokenOverridesSchema } from '
 
 /** 解析 effective Theme、Chart preset、稀疏 token 与稳定来源 */
 export const resolveChartStyle = (
-  effectiveTheme: ResolvedTheme,
-  spec: Pick<IRChartShared, 'styleTokens'>,
+  effectiveTheme: Pick<ResolvedTheme, 'style' | 'mode'>,
+  spec: Pick<IRChartShared, 'chartThemeTokens'>,
 ): ResolvedChartStyleContext => {
   const preset = getChartStylePreset(effectiveTheme.style, effectiveTheme.mode);
-  const overrides = ChartStyleTokenOverridesSchema.parse(spec.styleTokens ?? {});
+  const overrides = ChartStyleTokenOverridesSchema.parse(spec.chartThemeTokens ?? {});
   const tokens = ChartResolvedStyleTokensSchema.parse({ ...preset, ...structuredClone(overrides) });
   const tokenSources = Object.values(ChartStyleToken).map(token => {
     const overridden = Object.hasOwn(overrides, token);
@@ -22,7 +22,7 @@ export const resolveChartStyle = (
       token,
       kind: overridden ? ChartStyleTokenSource.StyleToken : ChartStyleTokenSource.Preset,
       path: overridden
-        ? `$spec/styleTokens/${token}`
+        ? `$spec/chartThemeTokens/${token}`
         : `$preset/${effectiveTheme.style}/${effectiveTheme.mode}/${token}`,
     };
   });

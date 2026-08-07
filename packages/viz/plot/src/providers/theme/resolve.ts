@@ -1,36 +1,59 @@
 import type { ResolvedTheme } from '@retikz/core';
 
-import type { IRPlotSpec, IRPlotThemeResolution, PlotStyleTokenValue } from '../../schemas';
+import { resolveCoreThemeColors } from '@retikz/core';
+
+import type { IRPlotSpec, IRPlotThemeResolution, PlotThemeTokenValue } from '../../schemas';
 
 import {
-  PlotResolvedStyleTokensSchema,
-  PlotStyleToken,
-  PlotStyleTokenOverridesSchema,
-  PlotStyleTokenSource,
+  PlotResolvedThemeTokensSchema,
   PlotThemeResolutionSchema,
   PlotThemeSchema,
+  PlotThemeToken,
+  PlotThemeTokenOverridesSchema,
+  PlotThemeTokenSource,
 } from '../../schemas';
-import { getPlotStylePreset } from './catalog';
+import { getPlotThemePreset } from './catalog';
 import { applyPlotThemeToTokens, mergePlotTheme, plotThemeFromTokens } from './mapping';
 
-/** 按 effective Theme、Plot token、colors 与 native theme 顺序解析 Plot 主题 */
+type PlotThemeContext = Pick<ResolvedTheme, 'style' | 'mode'> & Partial<Pick<ResolvedTheme, 'tokens' | 'colors'>>;
+
+/** 按 Plot preset、Core shared colors、inherited/local token、colors 与 native Plot theme 顺序解析主题 */
 export const resolvePlotTheme = (
-  effectiveTheme: ResolvedTheme,
-  input: Pick<IRPlotSpec, 'styleTokens' | 'colors' | 'theme'> = {},
+  effectiveTheme: PlotThemeContext,
+  input: Pick<IRPlotSpec, 'plotThemeTokens' | 'colors' | 'plotTheme'> = {},
 ): IRPlotThemeResolution => {
-  const styleTokens = PlotStyleTokenOverridesSchema.parse(input.styleTokens ?? {});
+  const style = effectiveTheme.style;
+  const mode = effectiveTheme.mode;
+  const sharedColors = effectiveTheme.colors ?? resolveCoreThemeColors(style, mode);
+  const inheritedTokens = effectiveTheme.tokens?.plot;
+  const plotThemeTokens = PlotThemeTokenOverridesSchema.parse(input.plotThemeTokens ?? {});
   const colors = input.colors === undefined ? undefined : structuredClone(input.colors);
-  const authoredTheme = input.theme === undefined ? undefined : PlotThemeSchema.parse(input.theme);
-  const preset = getPlotStylePreset(effectiveTheme.style, effectiveTheme.mode);
-  const tokensAfterStyle = PlotResolvedStyleTokensSchema.parse({ ...preset, ...structuredClone(styleTokens) });
+  const authoredTheme = input.plotTheme === undefined ? undefined : PlotThemeSchema.parse(input.plotTheme);
+  const preset = getPlotThemePreset(style, mode);
+  const sharedCategorical = [...sharedColors.categorical];
+  const tokensAfterShared = PlotResolvedThemeTokensSchema.parse({
+    ...preset,
+    [PlotThemeToken.PlotPaletteCategorical]: sharedCategorical,
+    [PlotThemeToken.PlotPaletteSeries]: [...sharedCategorical],
+    [PlotThemeToken.PlotPaletteSector]: [...sharedCategorical],
+  });
+  const inherited = PlotThemeTokenOverridesSchema.parse(inheritedTokens ?? {});
+  const tokensAfterInherited = PlotResolvedThemeTokensSchema.parse({
+    ...tokensAfterShared,
+    ...structuredClone(inherited),
+  });
+  const tokensAfterLocal = PlotResolvedThemeTokensSchema.parse({
+    ...tokensAfterInherited,
+    ...structuredClone(plotThemeTokens),
+  });
   const tokensAfterColors =
     colors === undefined
-      ? tokensAfterStyle
-      : PlotResolvedStyleTokensSchema.parse({
-          ...tokensAfterStyle,
-          [PlotStyleToken.PlotPaletteCategorical]: colors,
-          [PlotStyleToken.PlotPaletteSeries]: colors,
-          [PlotStyleToken.PlotPaletteSector]: colors,
+      ? tokensAfterLocal
+      : PlotResolvedThemeTokensSchema.parse({
+          ...tokensAfterLocal,
+          [PlotThemeToken.PlotPaletteCategorical]: colors,
+          [PlotThemeToken.PlotPaletteSeries]: [...colors],
+          [PlotThemeToken.PlotPaletteSector]: [...colors],
         });
   const tokenTheme = plotThemeFromTokens(tokensAfterColors);
   const theme = authoredTheme === undefined ? tokenTheme : mergePlotTheme(tokenTheme, authoredTheme);
@@ -38,48 +61,56 @@ export const resolvePlotTheme = (
     authoredTheme === undefined
       ? { tokens: tokensAfterColors, overrides: [] }
       : applyPlotThemeToTokens(tokensAfterColors, theme, authoredTheme);
-  const tokens = PlotResolvedStyleTokensSchema.parse(nativeResult.tokens);
+  const tokens = PlotResolvedThemeTokensSchema.parse(nativeResult.tokens);
   const nativeSources = new Map(nativeResult.overrides.map(source => [source.token, source.path]));
-  const colorTokens = new Set<PlotStyleTokenValue>([
-    PlotStyleToken.PlotPaletteCategorical,
-    PlotStyleToken.PlotPaletteSeries,
-    PlotStyleToken.PlotPaletteSector,
+  const colorTokens = new Set<PlotThemeTokenValue>([
+    PlotThemeToken.PlotPaletteCategorical,
+    PlotThemeToken.PlotPaletteSeries,
+    PlotThemeToken.PlotPaletteSector,
   ]);
-  const tokenSources = Object.values(PlotStyleToken).map(token => {
+  const tokenSources = Object.values(PlotThemeToken).map(token => {
     const nativePath = nativeSources.get(token);
     if (nativePath !== undefined) {
-      return { token, kind: PlotStyleTokenSource.Theme, path: nativePath };
+      return { token, kind: PlotThemeTokenSource.PlotTheme, path: nativePath };
     }
     if (colors !== undefined && colorTokens.has(token)) {
-      return { token, kind: PlotStyleTokenSource.Colors, path: '$spec/colors' };
+      return { token, kind: PlotThemeTokenSource.Colors, path: '$spec/colors' };
     }
-    if (Object.hasOwn(styleTokens, token)) {
-      return { token, kind: PlotStyleTokenSource.StyleToken, path: `$spec/styleTokens/${token}` };
+    if (Object.hasOwn(plotThemeTokens, token)) {
+      return { token, kind: PlotThemeTokenSource.Local, path: `$spec/plotThemeTokens/${token}` };
+    }
+    if (Object.hasOwn(inherited, token)) {
+      return { token, kind: PlotThemeTokenSource.Inherited, path: `$theme/tokens/plot/${token}` };
+    }
+    if (colorTokens.has(token)) {
+      return { token, kind: PlotThemeTokenSource.SharedCategorical, path: '$theme/colors/categorical' };
     }
     return {
       token,
-      kind: PlotStyleTokenSource.Preset,
-      path: `$preset/${effectiveTheme.style}/${effectiveTheme.mode}/${token}`,
+      kind: PlotThemeTokenSource.Preset,
+      path: `$preset/${style}/${mode}/${token}`,
     };
   });
   const palette = {
-    categorical: [...tokens[PlotStyleToken.PlotPaletteCategorical]],
-    series: [...tokens[PlotStyleToken.PlotPaletteSeries]],
-    sector: [...tokens[PlotStyleToken.PlotPaletteSector]],
-    sequential: tokens[PlotStyleToken.PlotPaletteSequential],
-    diverging: tokens[PlotStyleToken.PlotPaletteDiverging],
+    categorical: [...tokens[PlotThemeToken.PlotPaletteCategorical]],
+    series: [...tokens[PlotThemeToken.PlotPaletteSeries]],
+    sector: [...tokens[PlotThemeToken.PlotPaletteSector]],
+    sequential: tokens[PlotThemeToken.PlotPaletteSequential],
+    diverging: tokens[PlotThemeToken.PlotPaletteDiverging],
   };
   const authoredOverrides: IRPlotThemeResolution['authoredOverrides'] = [
-    ...(colors === undefined ? [] : [{ kind: PlotStyleTokenSource.Colors, path: '$spec/colors' } as const]),
-    ...(authoredTheme === undefined ? [] : [{ kind: PlotStyleTokenSource.Theme, path: '$spec/theme' } as const]),
+    ...(colors === undefined ? [] : [{ kind: PlotThemeTokenSource.Colors, path: '$spec/colors' } as const]),
+    ...(authoredTheme === undefined
+      ? []
+      : [{ kind: PlotThemeTokenSource.PlotTheme, path: '$spec/plotTheme' } as const]),
   ];
   return PlotThemeResolutionSchema.parse({
-    style: effectiveTheme.style,
-    mode: effectiveTheme.mode,
+    style,
+    mode,
     tokens,
     tokenSources,
     authoredOverrides,
-    theme,
+    plotTheme: theme,
     palette,
   });
 };

@@ -10,7 +10,7 @@ import type {
 import type { EmbeddableContribution, EmbeddableTier2Adapter, LayoutProps, ScopeProps } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { lowerPlots, lowerPlotWithLineage, PLOT_NAMESPACE } from '@retikz/plot';
+import { lowerPlots, lowerPlotWithLineage, PLOT_NAMESPACE, PlotThemeTokenDefinition } from '@retikz/plot';
 import { Layout } from '@retikz/react';
 import { useEffect, useRef } from 'react';
 
@@ -49,11 +49,11 @@ export type PlotLineageProps = {
 
 export type PlotColorProps = {
   /** Plot-owned canonical theme token 稀疏覆盖 */
-  styleTokens?: IRPlotSpec['styleTokens'];
+  plotThemeTokens?: IRPlotSpec['plotThemeTokens'];
   /** 默认颜色数组：分类 color scale 的 range；无 color 编码的 mark 按图层序取色，`currentColor` 表示继承当前文字颜色 */
   colors?: Array<string>;
   /** Plot theme：背景、typography、axis、legend、palette 的 JSON-safe 默认值 */
-  theme?: IRPlotSpec['theme'];
+  plotTheme?: IRPlotSpec['plotTheme'];
   /** 整图 label 空间布局策略 */
   layout?: IRPlotSpec['layout'];
 };
@@ -129,6 +129,7 @@ const plotEmbeddableAdapter: EmbeddableTier2Adapter<PlotProps> = {
     return {
       node: wrapPanelScope(spec, props),
       datasets: withEmbeddedPlotRuntime(datasets, lowerOptions),
+      themeTokenDefinitions: [PlotThemeTokenDefinition],
       makeComposites: makeEmbeddedPlotComposites,
     };
   },
@@ -169,6 +170,7 @@ export const Plot: EmbeddablePlotComponent = props => {
     <Layout
       ir={{ version: 1, type: 'scene', children: [wrapPanelScope(spec, props)] }}
       composites={lowerPlots(datasets, lowerOptions)}
+      themeTokenDefinitions={[PlotThemeTokenDefinition]}
       width={width}
       height={height}
       className={className}

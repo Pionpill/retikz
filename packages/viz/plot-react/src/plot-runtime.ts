@@ -97,14 +97,17 @@ const withPlotColors = (spec: IRPlotSpec, colors: Array<string> | undefined): IR
   ...(colors !== undefined ? { colors } : {}),
 });
 
-const withPlotStyleTokens = (spec: IRPlotSpec, styleTokens: IRPlotSpec['styleTokens'] | undefined): IRPlotSpec => ({
+const withPlotThemeTokens = (
+  spec: IRPlotSpec,
+  plotThemeTokens: IRPlotSpec['plotThemeTokens'] | undefined,
+): IRPlotSpec => ({
   ...spec,
-  ...(styleTokens !== undefined ? { styleTokens } : {}),
+  ...(plotThemeTokens !== undefined ? { plotThemeTokens } : {}),
 });
 
-const withPlotTheme = (spec: IRPlotSpec, theme: IRPlotSpec['theme'] | undefined): IRPlotSpec => ({
+const withPlotTheme = (spec: IRPlotSpec, plotTheme: IRPlotSpec['plotTheme'] | undefined): IRPlotSpec => ({
   ...spec,
-  ...(theme !== undefined ? { theme } : {}),
+  ...(plotTheme !== undefined ? { plotTheme } : {}),
 });
 
 const withPlotLayout = (spec: IRPlotSpec, layout: IRPlotSpec['layout'] | undefined): IRPlotSpec => ({
@@ -144,7 +147,10 @@ export const resolvePlotRuntime = (props: PlotProps, options: { embedded?: boole
   let collectedResolveLabel: ResolveLabelMap | undefined;
   if (props.spec) {
     spec = withPlotLayout(
-      withPlotTheme(withPlotColors(withPlotStyleTokens(props.spec, props.styleTokens), props.colors), props.theme),
+      withPlotTheme(
+        withPlotColors(withPlotThemeTokens(props.spec, props.plotThemeTokens), props.colors),
+        props.plotTheme,
+      ),
       props.layout,
     );
     datasets = props.data;
@@ -159,9 +165,9 @@ export const resolvePlotRuntime = (props: PlotProps, options: { embedded?: boole
       composition: props.composition,
       model: props.model,
       dataFieldNames: dataFieldNamesOf(props.data),
-      styleTokens: props.styleTokens,
+      plotThemeTokens: props.plotThemeTokens,
       colors: props.colors,
-      theme: props.theme,
+      plotTheme: props.plotTheme,
       layout: props.layout,
       transforms: props.dataTransforms,
       markTransformShortcuts: props.markTransformShortcuts,

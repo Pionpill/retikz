@@ -1,7 +1,7 @@
 import type { ExpandCompositeDefinition, IRChild, IRJsonObject, IRNode, IRScope, ResolvedTheme } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 
-import { defineComposite, ThemeMode, ThemeStyle } from '@retikz/core';
+import { categoricalColorAt, defineComposite, resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
 import { applyTransforms, tagSourceIndex } from '@retikz/data';
 import { assertAllValuesValid, validateBoundData } from '@retikz/data';
 
@@ -68,10 +68,6 @@ import {
 import { prepareRows, resolveMarkRows } from './data';
 import { resolveFrame, resolveScopedFrames } from './frame';
 import { buildLegendLayers, collectChannelDescriptors, reserveLegendBands } from './legend';
-
-const defaultColorOf = (colors: ReadonlyArray<string>, markIndex: number): string => {
-  return colors[markIndex % colors.length];
-};
 
 const plotBackgroundNode = (width: number, height: number, fill: IRNode['fill'] | undefined): IRNode | null =>
   fill === undefined || fill === 'none'
@@ -189,11 +185,11 @@ const expandPlot = (
     hasScaffolds: compositionScaffolds.length > 0,
   };
   const themeResolution = resolvePlotTheme(effectiveTheme, {
-    styleTokens: node.styleTokens,
+    plotThemeTokens: node.plotThemeTokens,
     colors: node.colors,
-    theme: node.theme,
+    plotTheme: node.plotTheme,
   });
-  const resolvedTheme = resolvePlotGuideTheme(themeResolution.theme, themeResolution.palette);
+  const resolvedTheme = resolvePlotGuideTheme(themeResolution.plotTheme, themeResolution.palette);
   const labelReserve = resolveLabelReserve({
     layout: node.layout,
     labels: node.labels ?? [],
@@ -542,7 +538,7 @@ const expandPlot = (
               mark,
               { ...channelCtx, rows: markRows },
               channelRegistry,
-              defaultColorOf(resolvedTheme.palette.series, markIndex),
+              categoricalColorAt(resolvedTheme.palette.series, markIndex),
               channelKindsForMark(mark, markRegistry),
             ),
             {
@@ -644,7 +640,7 @@ const expandPlot = (
           mark,
           { ...channelCtx, rows: markRows },
           channelRegistry,
-          defaultColorOf(resolvedTheme.palette.series, markIndex),
+          categoricalColorAt(resolvedTheme.palette.series, markIndex),
           channelKindsForMark(mark, markRegistry),
         ),
         {
@@ -682,7 +678,7 @@ const expandPlot = (
       channelCtx,
       channelRegistry,
       markRegistry,
-      defaultColorOf(resolvedTheme.palette.series, 0),
+      categoricalColorAt(resolvedTheme.palette.series, 0),
       markDataViews,
     );
     const bands = reserveLegendBands(legendGuides, width, height, plotArea);
@@ -755,6 +751,16 @@ export const lowerPlots = (datasets: ExternalDatasets, options: LowerPlotsOption
       type: 'plot',
       schema: PlotSpecSchema,
       expand: (node: IRPlotSpec, context?) =>
-        expandPlot(node, datasets, options, context?.theme ?? { style: ThemeStyle.Neutral, mode: ThemeMode.Light }),
+        expandPlot(
+          node,
+          datasets,
+          options,
+          context?.theme ?? {
+            style: ThemeStyle.Neutral,
+            mode: ThemeMode.Light,
+            tokens: {},
+            colors: resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light),
+          },
+        ),
     }),
   ] satisfies Array<ExpandCompositeDefinition<IRPlotSpec, typeof PLOT_NAMESPACE, 'plot'>>;

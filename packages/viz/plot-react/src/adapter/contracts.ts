@@ -105,9 +105,9 @@ export type BuildPlotSpecOptions = {
   /** 分类颜色比例尺的默认 range；`currentColor` 表示继承当前文字颜色 */
   colors?: Array<string>;
   /** Plot-owned canonical theme token 稀疏覆盖 */
-  styleTokens?: IRPlotSpec['styleTokens'];
+  plotThemeTokens?: IRPlotSpec['plotThemeTokens'];
   /** Plot 主题 */
-  theme?: IRPlotSpec['theme'];
+  plotTheme?: IRPlotSpec['plotTheme'];
   /** Plot 级标签布局策略 */
   layout?: IRPlotSpec['layout'];
   /** 标题、说明、注记或来源文本等静态 Plot 标签 */

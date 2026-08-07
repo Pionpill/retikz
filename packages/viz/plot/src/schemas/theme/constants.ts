@@ -1,7 +1,7 @@
 import type { ValueOf } from '@retikz/core';
 
 /** Plot 主题 token 的 canonical key */
-export const PlotStyleToken = {
+export const PlotThemeToken = {
   PlotSurfaceFill: 'plot.surface.fill',
   PlotTypographyForeground: 'plot.typography.foreground',
   PlotTypographyFontFamily: 'plot.typography.font.family',
@@ -45,15 +45,17 @@ export const PlotStyleToken = {
 } as const;
 
 /** Plot 主题 token key 取值 */
-export type PlotStyleTokenValue = ValueOf<typeof PlotStyleToken>;
+export type PlotThemeTokenValue = ValueOf<typeof PlotThemeToken>;
 
 /** Plot token 最终来源分类 */
-export const PlotStyleTokenSource = {
+export const PlotThemeTokenSource = {
   Preset: 'preset',
-  StyleToken: 'style-token',
+  SharedCategorical: 'shared-categorical',
+  Inherited: 'inherited',
+  Local: 'local',
   Colors: 'colors',
-  Theme: 'theme',
+  PlotTheme: 'plot-theme',
 } as const;
 
 /** Plot token 最终来源分类取值 */
-export type PlotStyleTokenSourceValue = ValueOf<typeof PlotStyleTokenSource>;
+export type PlotThemeTokenSourceValue = ValueOf<typeof PlotThemeTokenSource>;

@@ -8,7 +8,7 @@ import type {
 } from '@retikz/plot';
 
 import { compileToScene } from '@retikz/core';
-import { lowerPlots, lowerPlotWithLineage, PlotSpecSchema } from '@retikz/plot';
+import { lowerPlots, lowerPlotWithLineage, PlotSpecSchema, PlotThemeTokenDefinition } from '@retikz/plot';
 import { renderToSvgString } from '@retikz/vanilla';
 
 /** renderPlot 的默认选项；不启用图元链路时保持 SVG 字符串返回值 */
@@ -52,7 +52,7 @@ const renderPlotImpl = (
   const validated = PlotSpecSchema.parse(spec);
   const scene = compileToScene(
     { version: 1, type: 'scene', children: [validated] },
-    { composites: lowerPlots(data, options) },
+    { composites: lowerPlots(data, options), themeTokenDefinitions: [PlotThemeTokenDefinition] },
   ).scene;
   const svg = renderToSvgString(scene, { output: { width: options.width, height: options.height } });
   if (!isLineageOptions(options)) return svg;

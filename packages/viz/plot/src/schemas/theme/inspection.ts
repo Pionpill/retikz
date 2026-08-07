@@ -1,24 +1,24 @@
 import { ThemeMode, ThemeStyle } from '@retikz/core';
 import { z } from 'zod';
 
-import { PlotStyleToken, PlotStyleTokenSource } from './constants';
+import { PlotThemeToken, PlotThemeTokenSource } from './constants';
 import { PlotThemeSchema } from './schema';
-import { PlotColorPaletteSchema, PlotResolvedStyleTokensSchema } from './style';
+import { PlotColorPaletteSchema, PlotResolvedThemeTokensSchema } from './style';
 
 /** 单个 Plot token 的最终 cascade 来源 */
-export const PlotStyleTokenSourceRecordSchema = z
+export const PlotThemeTokenSourceRecordSchema = z
   .strictObject({
-    token: z.enum(PlotStyleToken).describe('Canonical Plot style token'),
-    kind: z.enum(PlotStyleTokenSource).describe('Winning Plot token source layer'),
+    token: z.enum(PlotThemeToken).describe('Canonical Plot theme token'),
+    kind: z.enum(PlotThemeTokenSource).describe('Winning Plot token source layer'),
     path: z.string().min(1).describe('Stable source path for this resolved Plot token'),
   })
   .describe('Winning cascade source for one resolved Plot style token');
 
 /** Plot shorthand 或 native theme 的 authored 入口 */
-export const PlotStyleAuthoredOverrideRecordSchema = z
+export const PlotThemeAuthoredOverrideRecordSchema = z
   .strictObject({
     kind: z
-      .enum([PlotStyleTokenSource.Colors, PlotStyleTokenSource.Theme])
+      .enum([PlotThemeTokenSource.Colors, PlotThemeTokenSource.PlotTheme])
       .describe('Authored Plot shorthand or native theme source'),
     path: z.string().min(1).describe('Stable authored Plot input path'),
   })
@@ -40,16 +40,16 @@ export const PlotThemeResolutionSchema = z
   .strictObject({
     style: z.enum(ThemeStyle).describe('Effective Theme style selecting the Plot preset'),
     mode: z.enum(ThemeMode).describe('Effective Theme mode selecting Plot paints'),
-    tokens: PlotResolvedStyleTokensSchema.describe('Complete resolved Plot style token map'),
-    tokenSources: z.array(PlotStyleTokenSourceRecordSchema).describe('Canonical one-source-per-token records'),
+    tokens: PlotResolvedThemeTokensSchema.describe('Complete resolved Plot theme token map'),
+    tokenSources: z.array(PlotThemeTokenSourceRecordSchema).describe('Canonical one-source-per-token records'),
     authoredOverrides: z
-      .array(PlotStyleAuthoredOverrideRecordSchema)
-      .describe('Authored colors and native theme inputs in cascade order'),
-    theme: PlotThemeSchema.describe('Complete resolved native Plot theme'),
+      .array(PlotThemeAuthoredOverrideRecordSchema)
+      .describe('Authored colors and native Plot theme inputs in cascade order'),
+    plotTheme: PlotThemeSchema.describe('Complete resolved native Plot theme'),
     palette: ResolvedPlotPaletteSchema.describe('Complete resolved Plot palette'),
   })
   .superRefine((resolution, context) => {
-    const canonical = Object.values(PlotStyleToken);
+    const canonical = Object.values(PlotThemeToken);
     if (
       resolution.tokenSources.length !== canonical.length ||
       resolution.tokenSources.some((source, index) => source.token !== canonical[index])
@@ -61,14 +61,14 @@ export const PlotThemeResolutionSchema = z
       });
     }
     const authoredKinds = resolution.authoredOverrides.map(source => source.kind);
-    const expected = [PlotStyleTokenSource.Colors, PlotStyleTokenSource.Theme].filter(kind =>
+    const expected = [PlotThemeTokenSource.Colors, PlotThemeTokenSource.PlotTheme].filter(kind =>
       authoredKinds.includes(kind),
     );
     if (authoredKinds.length !== expected.length || authoredKinds.some((kind, index) => kind !== expected[index])) {
       context.addIssue({
         code: 'custom',
         path: ['authoredOverrides'],
-        message: 'Plot authored overrides must be unique and ordered as colors then theme',
+        message: 'Plot authored overrides must be unique and ordered as colors then plotTheme',
       });
     }
   })

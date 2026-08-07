@@ -53,7 +53,7 @@ describe('Chart style schema', () => {
   it('拒绝显式 undefined token override', () => {
     expect(
       ChartStyleSurfaceSchema.safeParse({
-        styleTokens: { [ChartStyleToken.ChartAxisEnabled]: undefined },
+        chartThemeTokens: { [ChartStyleToken.ChartAxisEnabled]: undefined },
       }).success,
     ).toBe(false);
   });
@@ -68,8 +68,8 @@ describe('Chart style schema', () => {
       LayoutContainerBoxSchema.shape.padding.unwrap().parse(padding),
     );
     const surface = ChartStyleSurfaceSchema.parse({
-      styleTokens: { 'chart.padding': padding },
-      plotStyleTokens: { 'plot.palette.series': ['#2563eb'] },
+      chartThemeTokens: { 'chart.padding': padding },
+      plotThemeTokens: { 'plot.palette.series': ['#2563eb'] },
       colors: ['#111827', '#f97316'],
     });
     expect(JSON.parse(JSON.stringify(surface))).toEqual(surface);

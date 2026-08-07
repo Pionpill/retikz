@@ -97,7 +97,7 @@ describe('plot theme schema and lowering', () => {
     expect(() =>
       PlotSpecSchema.parse(
         baseSpec({
-          theme: {
+          plotTheme: {
             background: '#ffffff',
             typography: { font: { size: 11 }, textColor: '#334155' },
             axis: { grid: { stroke: '#cbd5e1', drawOpacity: 0.5 } },
@@ -111,14 +111,14 @@ describe('plot theme schema and lowering', () => {
     expect(() =>
       PlotSpecSchema.parse(
         baseSpec({
-          theme: { palette: { categorical: ['#2563eb'], unknown: true } } as IRPlotSpec['theme'],
+          plotTheme: { palette: { categorical: ['#2563eb'], unknown: true } } as IRPlotSpec['plotTheme'],
         }),
       ),
     ).toThrow();
   });
 
   it('background_emits_panel_background_when_configured', () => {
-    const root = expandOf(baseSpec({ theme: { background: '#f8fafc' } }));
+    const root = expandOf(baseSpec({ plotTheme: { background: '#f8fafc' } }));
     const background = root.children[0] as IRNode;
     expect(background.type).toBe('node');
     expect(background.fill).toBe('#f8fafc');
@@ -152,7 +152,7 @@ describe('plot theme schema and lowering', () => {
     const root = expandOf(
       baseSpec({
         colors: ['#000000'],
-        theme: { palette: { categorical: ['#111111', '#222222'] } },
+        plotTheme: { palette: { categorical: ['#111111', '#222222'] } },
       }),
     );
     const markLayer = root.children[0] as IRScope;
@@ -168,7 +168,7 @@ describe('plot theme schema and lowering', () => {
           { type: 'linear', name: 'y' },
           { type: 'ordinal', name: 'color', range: ['#aaaaaa', '#bbbbbb'] },
         ],
-        theme: { palette: { categorical: ['#111111', '#222222'] } },
+        plotTheme: { palette: { categorical: ['#111111', '#222222'] } },
       }),
     );
     const markLayer = root.children[0] as IRScope;
@@ -183,7 +183,7 @@ describe('plot theme schema and lowering', () => {
           { type: 'path', order: 'x', encoding: { x: { field: 'x' }, y: { field: 'y' } } },
           { type: 'interval', encoding: { x: { field: 'x' }, y: { field: 'value' } } },
         ],
-        theme: { palette: { series: ['#0f766e', '#f97316'] } },
+        plotTheme: { palette: { series: ['#0f766e', '#f97316'] } },
       }),
     );
     const [lineLayer, intervalLayer] = root.children as Array<IRScope>;
@@ -202,7 +202,7 @@ describe('plot theme schema and lowering', () => {
             tickLabels: { textColor: '#2563eb' },
           },
         ],
-        theme: {
+        plotTheme: {
           axis: {
             line: { lineCap: 'round' },
             ticks: { mark: { kind: 'circle', size: 4, fill: '#111827' } },
@@ -227,7 +227,7 @@ describe('plot theme schema and lowering', () => {
     const root = expandOf(
       baseSpec({
         guides: [{ type: 'axis', dimension: 'x', tickLabels: { rotate: 0, layout: false, textColor: '#0891b2' } }],
-        theme: {
+        plotTheme: {
           axis: {
             tickLabels: {
               rotate: -90,
@@ -247,7 +247,7 @@ describe('plot theme schema and lowering', () => {
     const root = expandOf(
       baseSpec({
         guides: [{ type: 'axis', dimension: 'y', title: { text: 'y', orientation: 'horizontal' } }],
-        theme: {
+        plotTheme: {
           axis: {
             title: { rotate: 90 },
           },
@@ -263,7 +263,7 @@ describe('plot theme schema and lowering', () => {
     const root = expandOf(
       baseSpec({
         guides: [{ type: 'axis', dimension: 'x', title: { text: 'x', padding: 4 } }],
-        theme: {
+        plotTheme: {
           axis: {
             title: { padding: 20 },
           },
@@ -273,7 +273,7 @@ describe('plot theme schema and lowering', () => {
     const themeRoot = expandOf(
       baseSpec({
         guides: [{ type: 'axis', dimension: 'x', title: 'x' }],
-        theme: {
+        plotTheme: {
           axis: {
             title: { padding: 20 },
           },
@@ -290,88 +290,88 @@ describe('plot theme schema and lowering', () => {
     expect(() =>
       PlotSpecSchema.parse(
         baseSpec({
-          theme: {
+          plotTheme: {
             axis: {
               crossing: { tick: 'hide' },
             },
-          } as IRPlotSpec['theme'],
+          } as IRPlotSpec['plotTheme'],
         }),
       ),
     ).toThrow();
     expect(() =>
       PlotSpecSchema.parse(
         baseSpec({
-          theme: {
+          plotTheme: {
             axis: {
               ticks: { endpoint: { hideWhenArrow: true } },
             },
-          } as IRPlotSpec['theme'],
+          } as IRPlotSpec['plotTheme'],
         }),
       ),
     ).toThrow();
     expect(() =>
       PlotSpecSchema.parse(
         baseSpec({
-          theme: {
+          plotTheme: {
             axis: {
               title: { placement: 'at-end' },
             },
-          } as IRPlotSpec['theme'],
+          } as IRPlotSpec['plotTheme'],
         }),
       ),
     ).toThrow();
     expect(() =>
       PlotSpecSchema.parse(
         baseSpec({
-          theme: {
+          plotTheme: {
             axis: {
               title: { orientation: 'horizontal' },
             },
-          } as IRPlotSpec['theme'],
+          } as IRPlotSpec['plotTheme'],
         }),
       ),
     ).toThrow();
     expect(() =>
       PlotSpecSchema.parse(
         baseSpec({
-          theme: {
+          plotTheme: {
             axis: {
               title: { gap: 4 },
             },
-          } as IRPlotSpec['theme'],
+          } as IRPlotSpec['plotTheme'],
         }),
       ),
     ).toThrow();
     expect(() =>
       PlotSpecSchema.parse(
         baseSpec({
-          theme: {
+          plotTheme: {
             axis: {
               title: { anchor: { align: 'end' } },
             },
-          } as IRPlotSpec['theme'],
+          } as IRPlotSpec['plotTheme'],
         }),
       ),
     ).toThrow();
     expect(() =>
       PlotSpecSchema.parse(
         baseSpec({
-          theme: {
+          plotTheme: {
             axis: {
               title: { shift: { normal: 2 } },
             },
-          } as IRPlotSpec['theme'],
+          } as IRPlotSpec['plotTheme'],
         }),
       ),
     ).toThrow();
     expect(() =>
       PlotSpecSchema.parse(
         baseSpec({
-          theme: {
+          plotTheme: {
             axis: {
               title: { layout: false },
             },
-          } as IRPlotSpec['theme'],
+          } as IRPlotSpec['plotTheme'],
         }),
       ),
     ).toThrow();
@@ -388,7 +388,7 @@ describe('plot theme schema and lowering', () => {
             style: { swatchSize: 8, label: { textColor: '#dc2626' } },
           },
         ],
-        theme: { legend: { swatchSize: 20, label: { textColor: '#475569' } } },
+        plotTheme: { legend: { swatchSize: 20, label: { textColor: '#475569' } } },
       }),
     );
     const legend = scopesOf(root).find(scope => typeof scope.id === 'string' && scope.id.startsWith('legend'));

@@ -34,6 +34,8 @@ const DispatchEnvelopeSchema = z
   })
   .describe('Minimal envelope used to dispatch a Chart input to its closed recipe');
 
+type ChartThemeContext = Pick<ResolvedTheme, 'style' | 'mode'> & Partial<Pick<ResolvedTheme, 'tokens' | 'colors'>>;
+
 /** 把首个 Zod issue 归一为稳定且可定位的 Chart error path */
 const issuePathOf = (error: z.ZodError): ReadonlyArray<string | number> => {
   const issue = error.issues.at(0);
@@ -52,7 +54,7 @@ const invalidSchemaError = (
 /** 通过封闭 recipe tuple 解析一个私有 Chart spec */
 export const resolveChartSpec = (
   input: unknown,
-  effectiveTheme: ResolvedTheme = { style: ThemeStyle.Neutral, mode: ThemeMode.Light },
+  effectiveTheme: ChartThemeContext = { style: ThemeStyle.Neutral, mode: ThemeMode.Light },
 ): ChartResolution => {
   let envelope: z.infer<typeof DispatchEnvelopeSchema>;
   try {
@@ -76,9 +78,9 @@ export const resolveChartSpec = (
   }
   const style = resolveChartStyle(effectiveTheme, bound.spec);
   const plotStyle = resolvePlotTheme(effectiveTheme, {
-    styleTokens: bound.spec.plotStyleTokens,
+    plotThemeTokens: bound.spec.plotThemeTokens,
     colors: bound.spec.colors,
-    theme: bound.spec.theme,
+    plotTheme: bound.spec.plotTheme,
   });
   const seriesColor = plotStyle.palette.series.at(0);
   if (seriesColor === undefined) throw new Error('Chart style must resolve a non-empty Plot series palette');
@@ -93,21 +95,21 @@ export const resolveChartSpec = (
     throw error;
   }
   const {
-    styleTokens: recipeStyleTokens,
+    plotThemeTokens: recipeThemeTokens,
     colors: recipeColors,
-    theme: recipeTheme,
+    plotTheme: recipeTheme,
     ...plotWithoutThemeInputs
   } = merged.plotSpec;
-  void recipeStyleTokens;
+  void recipeThemeTokens;
   void recipeColors;
   void recipeTheme;
   merged = {
     ...merged,
     plotSpec: {
       ...plotWithoutThemeInputs,
-      ...(bound.spec.plotStyleTokens === undefined ? {} : { styleTokens: bound.spec.plotStyleTokens }),
+      ...(bound.spec.plotThemeTokens === undefined ? {} : { plotThemeTokens: bound.spec.plotThemeTokens }),
       ...(bound.spec.colors === undefined ? {} : { colors: bound.spec.colors }),
-      ...(bound.spec.theme === undefined ? {} : { theme: bound.spec.theme }),
+      ...(bound.spec.plotTheme === undefined ? {} : { plotTheme: bound.spec.plotTheme }),
     },
   };
   try {

@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import * as plot from '../../src';
 import {
-  PlotResolvedStyleTokensSchema,
+  PlotResolvedThemeTokensSchema,
   PlotSpecSchema,
-  PlotStyleToken,
-  PlotStyleTokenOverridesSchema,
+  PlotThemeToken,
+  PlotThemeTokenOverridesSchema,
 } from '../../src';
 
 const baseSpec = {
@@ -25,15 +25,15 @@ describe('Plot style token contract', () => {
   it('从 Plot 根入口公开 canonical token 与 sparse/required schema', () => {
     const api = plot as Record<string, unknown>;
 
-    expect(api.PlotStyleToken).toBeDefined();
-    expect(api.PlotStyleTokenOverridesSchema).toBeDefined();
-    expect(api.PlotResolvedStyleTokensSchema).toBeDefined();
+    expect(api.PlotThemeToken).toBeDefined();
+    expect(api.PlotThemeTokenOverridesSchema).toBeDefined();
+    expect(api.PlotResolvedThemeTokensSchema).toBeDefined();
   });
 
-  it('让 PlotSpec 接受 strict flat styleTokens', () => {
+  it('让 PlotSpec 接受 strict flat plotThemeTokens', () => {
     const parsed = PlotSpecSchema.safeParse({
       ...baseSpec,
-      styleTokens: {
+      plotThemeTokens: {
         'plot.surface.fill': 'none',
         'plot.palette.series': ['#2563eb', '#f97316'],
       },
@@ -43,24 +43,24 @@ describe('Plot style token contract', () => {
     expect(
       PlotSpecSchema.safeParse({
         ...baseSpec,
-        styleTokens: { plot: { surface: { fill: 'none' } } },
+        plotThemeTokens: { plot: { surface: { fill: 'none' } } },
       }).success,
     ).toBe(false);
   });
 
   it('对未知 token、错误原子、显式 undefined 与空 palette 给出可定位失败', () => {
-    const unknown = PlotStyleTokenOverridesSchema.safeParse({ 'chart.canvas.fill': '#ffffff' });
+    const unknown = PlotThemeTokenOverridesSchema.safeParse({ 'chart.canvas.fill': '#ffffff' });
     expect(unknown.success).toBe(false);
     if (!unknown.success) {
       expect(unknown.error.issues[0]).toMatchObject({ code: 'unrecognized_keys', keys: ['chart.canvas.fill'] });
     }
 
     for (const [value, path] of [
-      [{ [PlotStyleToken.AxisLineStrokeWidth]: -1 }, [PlotStyleToken.AxisLineStrokeWidth]],
-      [{ [PlotStyleToken.PlotPaletteSeries]: [] }, [PlotStyleToken.PlotPaletteSeries]],
-      [{ [PlotStyleToken.PlotSurfaceFill]: undefined }, [PlotStyleToken.PlotSurfaceFill]],
+      [{ [PlotThemeToken.AxisLineStrokeWidth]: -1 }, [PlotThemeToken.AxisLineStrokeWidth]],
+      [{ [PlotThemeToken.PlotPaletteSeries]: [] }, [PlotThemeToken.PlotPaletteSeries]],
+      [{ [PlotThemeToken.PlotSurfaceFill]: undefined }, [PlotThemeToken.PlotSurfaceFill]],
     ] as const) {
-      const result = PlotStyleTokenOverridesSchema.safeParse(value);
+      const result = PlotThemeTokenOverridesSchema.safeParse(value);
       expect(result.success).toBe(false);
       if (!result.success)
         expect(result.error.issues.some(issue => issue.path.join('.') === path.join('.'))).toBe(true);
@@ -68,15 +68,15 @@ describe('Plot style token contract', () => {
   });
 
   it('让 sparse 与 PlotSpec token 输入保持 JSON round-trip，并让 required map 拒绝缺项', () => {
-    const styleTokens = PlotStyleTokenOverridesSchema.parse({
-      [PlotStyleToken.PlotSurfaceFill]: 'none',
-      [PlotStyleToken.AxisTickMark]: { kind: 'circle', size: 5 },
-      [PlotStyleToken.PlotPaletteSeries]: ['#2563eb', '#f97316'],
+    const plotThemeTokens = PlotThemeTokenOverridesSchema.parse({
+      [PlotThemeToken.PlotSurfaceFill]: 'none',
+      [PlotThemeToken.AxisTickMark]: { kind: 'circle', size: 5 },
+      [PlotThemeToken.PlotPaletteSeries]: ['#2563eb', '#f97316'],
     });
-    const parsed = PlotSpecSchema.parse({ ...baseSpec, styleTokens });
+    const parsed = PlotSpecSchema.parse({ ...baseSpec, plotThemeTokens });
 
-    expect(JSON.parse(JSON.stringify(styleTokens))).toEqual(styleTokens);
+    expect(JSON.parse(JSON.stringify(plotThemeTokens))).toEqual(plotThemeTokens);
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
-    expect(PlotResolvedStyleTokensSchema.safeParse(styleTokens).success).toBe(false);
+    expect(PlotResolvedThemeTokensSchema.safeParse(plotThemeTokens).success).toBe(false);
   });
 });

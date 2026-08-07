@@ -34,7 +34,7 @@ export const ChartSharedBaseSchema = z
       .array(MarkOperationSchema)
       .optional()
       .describe('Explicit Plot mark extensions appended after recipe marks'),
-    theme: PlotThemeSchema.optional().describe('Plot theme forwarded to the resolved Plot'),
+    plotTheme: PlotThemeSchema.optional().describe('Plot theme forwarded to the resolved Plot'),
     layout: PlotLayoutSchema.optional().describe('Plot label layout forwarded to the resolved Plot'),
     width: z.number().positive().optional().describe('Resolved Plot intrinsic width in user units'),
     height: z.number().positive().optional().describe('Resolved Plot intrinsic height in user units'),

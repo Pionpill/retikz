@@ -103,8 +103,8 @@ describe('@retikz/chart package root', () => {
     const tokenSource: ChartStyleTokenSourceValue = 'style-token';
     const overrides: IRChartStyleTokenOverrides = { [token]: false };
     const surface: IRChartStyleSurface = {
-      styleTokens: overrides,
-      plotStyleTokens: { 'plot.palette.series': ['#2563eb'] },
+      chartThemeTokens: overrides,
+      plotThemeTokens: { 'plot.palette.series': ['#2563eb'] },
     };
     const shared: IRChartShared = { data: { reference: 'rows' }, ...surface };
     const preset: ChartPresentationPresetValue = 'title';

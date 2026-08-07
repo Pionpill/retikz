@@ -7,7 +7,7 @@ import {
   PaintValueSchema,
   TextAlignSchema,
 } from '@retikz/core';
-import { PlotSpecSchema, PlotStyleTokenOverridesSchema } from '@retikz/plot';
+import { PlotSpecSchema, PlotThemeTokenOverridesSchema } from '@retikz/plot';
 import { LayoutContainerBoxSchema, LayoutGapSchema } from '@retikz/standard';
 import { z } from 'zod';
 
@@ -81,8 +81,8 @@ export const ChartResolvedStyleTokensSchema = z
 /** 所有 Chart variant 共享的主题输入字段 */
 export const ChartStyleSurfaceSchema = z
   .strictObject({
-    styleTokens: ChartStyleTokenOverridesSchema.optional().describe('Sparse canonical Chart token overrides'),
-    plotStyleTokens: PlotStyleTokenOverridesSchema.optional().describe(
+    chartThemeTokens: ChartStyleTokenOverridesSchema.optional().describe('Sparse canonical Chart token overrides'),
+    plotThemeTokens: PlotThemeTokenOverridesSchema.optional().describe(
       'Plot-owned token overrides forwarded unchanged',
     ),
     colors: PlotSpecSchema.shape.colors.unwrap().optional().describe('Plot palette shorthand forwarded unchanged'),

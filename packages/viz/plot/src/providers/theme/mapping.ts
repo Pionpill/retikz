@@ -1,13 +1,13 @@
-import type { IRPlotResolvedStyleTokens, IRPlotTheme, PlotStyleTokenValue } from '../../schemas';
+import type { IRPlotResolvedThemeTokens, IRPlotTheme, PlotThemeTokenValue } from '../../schemas';
 
-import { PlotStyleToken, PlotThemeSchema } from '../../schemas';
+import { PlotThemeSchema, PlotThemeToken } from '../../schemas';
 
 type JsonObject = Record<string, unknown>;
 
 /** 原生 Plot theme 覆盖到 canonical token 时的来源记录 */
 export type PlotThemeTokenOverride = Readonly<{
   /** 被覆盖的 canonical token */
-  token: PlotStyleTokenValue;
+  token: PlotThemeTokenValue;
   /** 原生 Plot theme 中的 authored path */
   path: string;
 }>;
@@ -35,133 +35,141 @@ export const mergePlotTheme = (base: IRPlotTheme, override: IRPlotTheme): IRPlot
   PlotThemeSchema.parse(mergeThemeValue(base, override));
 
 /** 把完整 Plot token map 映射为正式原生 Plot theme */
-export const plotThemeFromTokens = (tokens: IRPlotResolvedStyleTokens): IRPlotTheme =>
+export const plotThemeFromTokens = (tokens: IRPlotResolvedThemeTokens): IRPlotTheme =>
   PlotThemeSchema.parse({
-    background: tokens[PlotStyleToken.PlotSurfaceFill],
+    background: tokens[PlotThemeToken.PlotSurfaceFill],
     typography: {
       font: {
-        family: tokens[PlotStyleToken.PlotTypographyFontFamily],
-        size: tokens[PlotStyleToken.PlotTypographyFontSize],
+        family: tokens[PlotThemeToken.PlotTypographyFontFamily],
+        size: tokens[PlotThemeToken.PlotTypographyFontSize],
       },
-      textColor: tokens[PlotStyleToken.PlotTypographyForeground],
+      textColor: tokens[PlotThemeToken.PlotTypographyForeground],
     },
     labelText: {
-      font: { size: tokens[PlotStyleToken.PlotLabelFontSize] },
-      textColor: tokens[PlotStyleToken.PlotLabelForeground],
+      font: { size: tokens[PlotThemeToken.PlotLabelFontSize] },
+      textColor: tokens[PlotThemeToken.PlotLabelForeground],
     },
     axis: {
-      line: tokens[PlotStyleToken.AxisLineEnabled]
+      line: tokens[PlotThemeToken.AxisLineEnabled]
         ? {
-            stroke: tokens[PlotStyleToken.AxisLineStroke],
-            strokeWidth: tokens[PlotStyleToken.AxisLineStrokeWidth],
-            drawOpacity: tokens[PlotStyleToken.AxisLineDrawOpacity],
+            stroke: tokens[PlotThemeToken.AxisLineStroke],
+            strokeWidth: tokens[PlotThemeToken.AxisLineStrokeWidth],
+            drawOpacity: tokens[PlotThemeToken.AxisLineDrawOpacity],
           }
         : false,
-      ticks: { mark: tokens[PlotStyleToken.AxisTickMark] },
-      tickLabels: tokens[PlotStyleToken.AxisTickLabelEnabled]
+      ticks: { mark: tokens[PlotThemeToken.AxisTickMark] },
+      tickLabels: tokens[PlotThemeToken.AxisTickLabelEnabled]
         ? {
-            gap: tokens[PlotStyleToken.AxisTickLabelGap],
-            font: { size: tokens[PlotStyleToken.AxisTickLabelFontSize] },
-            textColor: tokens[PlotStyleToken.AxisTickLabelForeground],
+            gap: tokens[PlotThemeToken.AxisTickLabelGap],
+            font: { size: tokens[PlotThemeToken.AxisTickLabelFontSize] },
+            textColor: tokens[PlotThemeToken.AxisTickLabelForeground],
           }
         : false,
       title: {
         font: {
-          size: tokens[PlotStyleToken.AxisTitleFontSize],
-          weight: tokens[PlotStyleToken.AxisTitleFontWeight],
+          size: tokens[PlotThemeToken.AxisTitleFontSize],
+          weight: tokens[PlotThemeToken.AxisTitleFontWeight],
         },
-        textColor: tokens[PlotStyleToken.AxisTitleForeground],
+        textColor: tokens[PlotThemeToken.AxisTitleForeground],
       },
       grid: {
-        stroke: tokens[PlotStyleToken.AxisGridStroke],
-        strokeWidth: tokens[PlotStyleToken.AxisGridStrokeWidth],
-        drawOpacity: tokens[PlotStyleToken.AxisGridDrawOpacity],
+        stroke: tokens[PlotThemeToken.AxisGridStroke],
+        strokeWidth: tokens[PlotThemeToken.AxisGridStrokeWidth],
+        drawOpacity: tokens[PlotThemeToken.AxisGridDrawOpacity],
       },
     },
     legend: {
       title: {
         font: {
-          size: tokens[PlotStyleToken.LegendTitleFontSize],
-          weight: tokens[PlotStyleToken.LegendTitleFontWeight],
+          size: tokens[PlotThemeToken.LegendTitleFontSize],
+          weight: tokens[PlotThemeToken.LegendTitleFontWeight],
         },
-        textColor: tokens[PlotStyleToken.LegendTitleForeground],
+        textColor: tokens[PlotThemeToken.LegendTitleForeground],
       },
       label: {
-        font: { size: tokens[PlotStyleToken.LegendLabelFontSize] },
-        textColor: tokens[PlotStyleToken.LegendLabelForeground],
+        font: { size: tokens[PlotThemeToken.LegendLabelFontSize] },
+        textColor: tokens[PlotThemeToken.LegendLabelForeground],
       },
-      swatchSize: tokens[PlotStyleToken.LegendSwatchSize],
-      swatchGap: tokens[PlotStyleToken.LegendSwatchGap],
-      entryGap: tokens[PlotStyleToken.LegendEntryGap],
-      titleGap: tokens[PlotStyleToken.LegendTitleGap],
-      rampLength: tokens[PlotStyleToken.LegendRampLength],
-      rampThickness: tokens[PlotStyleToken.LegendRampThickness],
-      symbolSize: tokens[PlotStyleToken.LegendSymbolSize],
-      symbolScale: tokens[PlotStyleToken.LegendSymbolScale],
-      symbolFit: tokens[PlotStyleToken.LegendSymbolFit],
+      swatchSize: tokens[PlotThemeToken.LegendSwatchSize],
+      swatchGap: tokens[PlotThemeToken.LegendSwatchGap],
+      entryGap: tokens[PlotThemeToken.LegendEntryGap],
+      titleGap: tokens[PlotThemeToken.LegendTitleGap],
+      rampLength: tokens[PlotThemeToken.LegendRampLength],
+      rampThickness: tokens[PlotThemeToken.LegendRampThickness],
+      symbolSize: tokens[PlotThemeToken.LegendSymbolSize],
+      symbolScale: tokens[PlotThemeToken.LegendSymbolScale],
+      symbolFit: tokens[PlotThemeToken.LegendSymbolFit],
     },
     palette: {
-      categorical: tokens[PlotStyleToken.PlotPaletteCategorical],
-      series: tokens[PlotStyleToken.PlotPaletteSeries],
-      sector: tokens[PlotStyleToken.PlotPaletteSector],
-      sequential: tokens[PlotStyleToken.PlotPaletteSequential],
-      diverging: tokens[PlotStyleToken.PlotPaletteDiverging],
+      categorical: tokens[PlotThemeToken.PlotPaletteCategorical],
+      series: tokens[PlotThemeToken.PlotPaletteSeries],
+      sector: tokens[PlotThemeToken.PlotPaletteSector],
+      sequential: tokens[PlotThemeToken.PlotPaletteSequential],
+      diverging: tokens[PlotThemeToken.PlotPaletteDiverging],
     },
   });
 
-type MutablePlotTokens = { -readonly [K in keyof IRPlotResolvedStyleTokens]: IRPlotResolvedStyleTokens[K] };
+type MutablePlotTokens = { -readonly [K in keyof IRPlotResolvedThemeTokens]: IRPlotResolvedThemeTokens[K] };
 
 /**
  * 把原生 Plot theme 中可映射的 authored 值投影回 complete token map
  * @description 原生 theme 额外字段保留在最终 theme 中，不伪造并不存在的 canonical token
  */
 export const applyPlotThemeToTokens = (
-  baseTokens: IRPlotResolvedStyleTokens,
+  baseTokens: IRPlotResolvedThemeTokens,
   resolvedTheme: IRPlotTheme,
   authoredTheme: IRPlotTheme,
-): Readonly<{ tokens: IRPlotResolvedStyleTokens; overrides: Array<PlotThemeTokenOverride> }> => {
+): Readonly<{ tokens: IRPlotResolvedThemeTokens; overrides: Array<PlotThemeTokenOverride> }> => {
   const tokens: MutablePlotTokens = structuredClone(baseTokens);
   const overrides: Array<PlotThemeTokenOverride> = [];
-  const set = <TToken extends PlotStyleTokenValue>(token: TToken, value: MutablePlotTokens[TToken], path: string) => {
+  const set = <TToken extends PlotThemeTokenValue>(token: TToken, value: MutablePlotTokens[TToken], path: string) => {
     tokens[token] = structuredClone(value);
     overrides.push({ token, path });
   };
   const has = (value: object, key: PropertyKey): boolean => Object.hasOwn(value, key);
 
   if (has(authoredTheme, 'background')) {
-    set(PlotStyleToken.PlotSurfaceFill, resolvedTheme.background!, '$spec/theme/background');
+    set(PlotThemeToken.PlotSurfaceFill, resolvedTheme.background!, '$spec/plotTheme/background');
   }
   if (authoredTheme.typography !== undefined) {
     if (has(authoredTheme.typography, 'textColor')) {
       set(
-        PlotStyleToken.PlotTypographyForeground,
+        PlotThemeToken.PlotTypographyForeground,
         resolvedTheme.typography!.textColor!,
-        '$spec/theme/typography/textColor',
+        '$spec/plotTheme/typography/textColor',
       );
     }
     if (authoredTheme.typography.font !== undefined) {
       if (has(authoredTheme.typography.font, 'family')) {
         set(
-          PlotStyleToken.PlotTypographyFontFamily,
+          PlotThemeToken.PlotTypographyFontFamily,
           resolvedTheme.typography!.font!.family!,
-          '$spec/theme/typography/font/family',
+          '$spec/plotTheme/typography/font/family',
         );
       }
       if (has(authoredTheme.typography.font, 'size')) {
         set(
-          PlotStyleToken.PlotTypographyFontSize,
+          PlotThemeToken.PlotTypographyFontSize,
           resolvedTheme.typography!.font!.size!,
-          '$spec/theme/typography/font/size',
+          '$spec/plotTheme/typography/font/size',
         );
       }
     }
   }
   if (authoredTheme.labelText !== undefined) {
     if (has(authoredTheme.labelText, 'textColor')) {
-      set(PlotStyleToken.PlotLabelForeground, resolvedTheme.labelText!.textColor!, '$spec/theme/labelText/textColor');
+      set(
+        PlotThemeToken.PlotLabelForeground,
+        resolvedTheme.labelText!.textColor!,
+        '$spec/plotTheme/labelText/textColor',
+      );
     }
     if (authoredTheme.labelText.font !== undefined && has(authoredTheme.labelText.font, 'size')) {
-      set(PlotStyleToken.PlotLabelFontSize, resolvedTheme.labelText!.font!.size!, '$spec/theme/labelText/font/size');
+      set(
+        PlotThemeToken.PlotLabelFontSize,
+        resolvedTheme.labelText!.font!.size!,
+        '$spec/plotTheme/labelText/font/size',
+      );
     }
   }
 
@@ -170,69 +178,69 @@ export const applyPlotThemeToTokens = (
   if (authoredAxis !== undefined && axis !== undefined) {
     if (has(authoredAxis, 'line')) {
       if (authoredAxis.line === false) {
-        set(PlotStyleToken.AxisLineEnabled, false, '$spec/theme/axis/line');
+        set(PlotThemeToken.AxisLineEnabled, false, '$spec/plotTheme/axis/line');
       } else if (authoredAxis.line !== undefined && axis.line !== false && axis.line !== undefined) {
-        set(PlotStyleToken.AxisLineEnabled, true, '$spec/theme/axis/line');
+        set(PlotThemeToken.AxisLineEnabled, true, '$spec/plotTheme/axis/line');
         if (has(authoredAxis.line, 'stroke')) {
-          set(PlotStyleToken.AxisLineStroke, axis.line.stroke!, '$spec/theme/axis/line/stroke');
+          set(PlotThemeToken.AxisLineStroke, axis.line.stroke!, '$spec/plotTheme/axis/line/stroke');
         }
         if (has(authoredAxis.line, 'strokeWidth')) {
-          set(PlotStyleToken.AxisLineStrokeWidth, axis.line.strokeWidth!, '$spec/theme/axis/line/strokeWidth');
+          set(PlotThemeToken.AxisLineStrokeWidth, axis.line.strokeWidth!, '$spec/plotTheme/axis/line/strokeWidth');
         }
         if (has(authoredAxis.line, 'drawOpacity')) {
-          set(PlotStyleToken.AxisLineDrawOpacity, axis.line.drawOpacity!, '$spec/theme/axis/line/drawOpacity');
+          set(PlotThemeToken.AxisLineDrawOpacity, axis.line.drawOpacity!, '$spec/plotTheme/axis/line/drawOpacity');
         }
       }
     }
     if (authoredAxis.ticks !== undefined && has(authoredAxis.ticks, 'mark')) {
-      set(PlotStyleToken.AxisTickMark, axis.ticks!.mark!, '$spec/theme/axis/ticks/mark');
+      set(PlotThemeToken.AxisTickMark, axis.ticks!.mark!, '$spec/plotTheme/axis/ticks/mark');
     }
     if (has(authoredAxis, 'tickLabels')) {
       if (authoredAxis.tickLabels === false) {
-        set(PlotStyleToken.AxisTickLabelEnabled, false, '$spec/theme/axis/tickLabels');
+        set(PlotThemeToken.AxisTickLabelEnabled, false, '$spec/plotTheme/axis/tickLabels');
       } else if (authoredAxis.tickLabels !== undefined && axis.tickLabels !== false && axis.tickLabels !== undefined) {
-        set(PlotStyleToken.AxisTickLabelEnabled, true, '$spec/theme/axis/tickLabels');
+        set(PlotThemeToken.AxisTickLabelEnabled, true, '$spec/plotTheme/axis/tickLabels');
         if (has(authoredAxis.tickLabels, 'textColor')) {
           set(
-            PlotStyleToken.AxisTickLabelForeground,
+            PlotThemeToken.AxisTickLabelForeground,
             axis.tickLabels.textColor!,
-            '$spec/theme/axis/tickLabels/textColor',
+            '$spec/plotTheme/axis/tickLabels/textColor',
           );
         }
         if (has(authoredAxis.tickLabels, 'gap')) {
-          set(PlotStyleToken.AxisTickLabelGap, axis.tickLabels.gap!, '$spec/theme/axis/tickLabels/gap');
+          set(PlotThemeToken.AxisTickLabelGap, axis.tickLabels.gap!, '$spec/plotTheme/axis/tickLabels/gap');
         }
         if (authoredAxis.tickLabels.font !== undefined && has(authoredAxis.tickLabels.font, 'size')) {
           set(
-            PlotStyleToken.AxisTickLabelFontSize,
+            PlotThemeToken.AxisTickLabelFontSize,
             axis.tickLabels.font!.size!,
-            '$spec/theme/axis/tickLabels/font/size',
+            '$spec/plotTheme/axis/tickLabels/font/size',
           );
         }
       }
     }
     if (authoredAxis.title !== undefined && axis.title !== undefined) {
       if (has(authoredAxis.title, 'textColor')) {
-        set(PlotStyleToken.AxisTitleForeground, axis.title.textColor!, '$spec/theme/axis/title/textColor');
+        set(PlotThemeToken.AxisTitleForeground, axis.title.textColor!, '$spec/plotTheme/axis/title/textColor');
       }
       if (authoredAxis.title.font !== undefined) {
         if (has(authoredAxis.title.font, 'size')) {
-          set(PlotStyleToken.AxisTitleFontSize, axis.title.font!.size!, '$spec/theme/axis/title/font/size');
+          set(PlotThemeToken.AxisTitleFontSize, axis.title.font!.size!, '$spec/plotTheme/axis/title/font/size');
         }
         if (has(authoredAxis.title.font, 'weight')) {
-          set(PlotStyleToken.AxisTitleFontWeight, axis.title.font!.weight!, '$spec/theme/axis/title/font/weight');
+          set(PlotThemeToken.AxisTitleFontWeight, axis.title.font!.weight!, '$spec/plotTheme/axis/title/font/weight');
         }
       }
     }
     if (authoredAxis.grid !== undefined && axis.grid !== undefined) {
       if (has(authoredAxis.grid, 'stroke')) {
-        set(PlotStyleToken.AxisGridStroke, axis.grid.stroke!, '$spec/theme/axis/grid/stroke');
+        set(PlotThemeToken.AxisGridStroke, axis.grid.stroke!, '$spec/plotTheme/axis/grid/stroke');
       }
       if (has(authoredAxis.grid, 'strokeWidth')) {
-        set(PlotStyleToken.AxisGridStrokeWidth, axis.grid.strokeWidth!, '$spec/theme/axis/grid/strokeWidth');
+        set(PlotThemeToken.AxisGridStrokeWidth, axis.grid.strokeWidth!, '$spec/plotTheme/axis/grid/strokeWidth');
       }
       if (has(authoredAxis.grid, 'drawOpacity')) {
-        set(PlotStyleToken.AxisGridDrawOpacity, axis.grid.drawOpacity!, '$spec/theme/axis/grid/drawOpacity');
+        set(PlotThemeToken.AxisGridDrawOpacity, axis.grid.drawOpacity!, '$spec/plotTheme/axis/grid/drawOpacity');
       }
     }
   }
@@ -242,38 +250,42 @@ export const applyPlotThemeToTokens = (
   if (authoredLegend !== undefined && legend !== undefined) {
     if (authoredLegend.title !== undefined && legend.title !== undefined) {
       if (has(authoredLegend.title, 'textColor')) {
-        set(PlotStyleToken.LegendTitleForeground, legend.title.textColor!, '$spec/theme/legend/title/textColor');
+        set(PlotThemeToken.LegendTitleForeground, legend.title.textColor!, '$spec/plotTheme/legend/title/textColor');
       }
       if (authoredLegend.title.font !== undefined) {
         if (has(authoredLegend.title.font, 'size')) {
-          set(PlotStyleToken.LegendTitleFontSize, legend.title.font!.size!, '$spec/theme/legend/title/font/size');
+          set(PlotThemeToken.LegendTitleFontSize, legend.title.font!.size!, '$spec/plotTheme/legend/title/font/size');
         }
         if (has(authoredLegend.title.font, 'weight')) {
-          set(PlotStyleToken.LegendTitleFontWeight, legend.title.font!.weight!, '$spec/theme/legend/title/font/weight');
+          set(
+            PlotThemeToken.LegendTitleFontWeight,
+            legend.title.font!.weight!,
+            '$spec/plotTheme/legend/title/font/weight',
+          );
         }
       }
     }
     if (authoredLegend.label !== undefined && legend.label !== undefined) {
       if (has(authoredLegend.label, 'textColor')) {
-        set(PlotStyleToken.LegendLabelForeground, legend.label.textColor!, '$spec/theme/legend/label/textColor');
+        set(PlotThemeToken.LegendLabelForeground, legend.label.textColor!, '$spec/plotTheme/legend/label/textColor');
       }
       if (authoredLegend.label.font !== undefined && has(authoredLegend.label.font, 'size')) {
-        set(PlotStyleToken.LegendLabelFontSize, legend.label.font!.size!, '$spec/theme/legend/label/font/size');
+        set(PlotThemeToken.LegendLabelFontSize, legend.label.font!.size!, '$spec/plotTheme/legend/label/font/size');
       }
     }
     const legendTokens = [
-      [PlotStyleToken.LegendSwatchSize, 'swatchSize'],
-      [PlotStyleToken.LegendSwatchGap, 'swatchGap'],
-      [PlotStyleToken.LegendEntryGap, 'entryGap'],
-      [PlotStyleToken.LegendTitleGap, 'titleGap'],
-      [PlotStyleToken.LegendRampLength, 'rampLength'],
-      [PlotStyleToken.LegendRampThickness, 'rampThickness'],
-      [PlotStyleToken.LegendSymbolSize, 'symbolSize'],
-      [PlotStyleToken.LegendSymbolScale, 'symbolScale'],
-      [PlotStyleToken.LegendSymbolFit, 'symbolFit'],
+      [PlotThemeToken.LegendSwatchSize, 'swatchSize'],
+      [PlotThemeToken.LegendSwatchGap, 'swatchGap'],
+      [PlotThemeToken.LegendEntryGap, 'entryGap'],
+      [PlotThemeToken.LegendTitleGap, 'titleGap'],
+      [PlotThemeToken.LegendRampLength, 'rampLength'],
+      [PlotThemeToken.LegendRampThickness, 'rampThickness'],
+      [PlotThemeToken.LegendSymbolSize, 'symbolSize'],
+      [PlotThemeToken.LegendSymbolScale, 'symbolScale'],
+      [PlotThemeToken.LegendSymbolFit, 'symbolFit'],
     ] as const;
     for (const [token, field] of legendTokens) {
-      if (has(authoredLegend, field)) set(token, legend[field]!, `$spec/theme/legend/${field}`);
+      if (has(authoredLegend, field)) set(token, legend[field]!, `$spec/plotTheme/legend/${field}`);
     }
   }
 
@@ -281,14 +293,14 @@ export const applyPlotThemeToTokens = (
   const palette = resolvedTheme.palette;
   if (authoredPalette !== undefined && palette !== undefined) {
     const paletteTokens = [
-      [PlotStyleToken.PlotPaletteCategorical, 'categorical'],
-      [PlotStyleToken.PlotPaletteSeries, 'series'],
-      [PlotStyleToken.PlotPaletteSector, 'sector'],
-      [PlotStyleToken.PlotPaletteSequential, 'sequential'],
-      [PlotStyleToken.PlotPaletteDiverging, 'diverging'],
+      [PlotThemeToken.PlotPaletteCategorical, 'categorical'],
+      [PlotThemeToken.PlotPaletteSeries, 'series'],
+      [PlotThemeToken.PlotPaletteSector, 'sector'],
+      [PlotThemeToken.PlotPaletteSequential, 'sequential'],
+      [PlotThemeToken.PlotPaletteDiverging, 'diverging'],
     ] as const;
     for (const [token, field] of paletteTokens) {
-      if (has(authoredPalette, field)) set(token, palette[field]!, `$spec/theme/palette/${field}`);
+      if (has(authoredPalette, field)) set(token, palette[field]!, `$spec/plotTheme/palette/${field}`);
     }
   }
 

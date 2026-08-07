@@ -16,27 +16,27 @@ describe('Chart theme token ownership', () => {
     expect(
       ChartSharedSchema.safeParse({
         ...base,
-        styleTokens: {
+        chartThemeTokens: {
           'chart.axis.enabled': false,
           'chart.axis.grid.enabled': false,
           'chart.legend.enabled': true,
         },
       }).success,
     ).toBe(true);
-    expect(ChartSharedSchema.safeParse({ ...base, styleTokens: { 'plot.palette.series': ['#2563eb'] } }).success).toBe(
-      false,
-    );
+    expect(
+      ChartSharedSchema.safeParse({ ...base, chartThemeTokens: { 'plot.palette.series': ['#2563eb'] } }).success,
+    ).toBe(false);
   });
 
   it('接受独立的 Plot token 转发入口并拒绝旧 palette namespace', () => {
     expect(
       ChartSharedSchema.safeParse({
         ...base,
-        plotStyleTokens: { 'plot.palette.series': ['#2563eb'] },
+        plotThemeTokens: { 'plot.palette.series': ['#2563eb'] },
       }).success,
     ).toBe(true);
     expect(
-      ChartSharedSchema.safeParse({ ...base, plotStyleTokens: { 'data.palette.series': ['#2563eb'] } }).success,
+      ChartSharedSchema.safeParse({ ...base, plotThemeTokens: { 'data.palette.series': ['#2563eb'] } }).success,
     ).toBe(false);
   });
 
@@ -78,9 +78,9 @@ describe('Chart theme token ownership', () => {
   });
 
   it.each(['data.palette.series', 'axis.enabled', 'axis.grid.enabled', 'legend.enabled'])(
-    '拒绝 Chart styleTokens 中的非 canonical key：%s',
+    '拒绝 Chart chartThemeTokens 中的非 canonical key：%s',
     token => {
-      expect(ChartSharedSchema.safeParse({ ...base, styleTokens: { [token]: true } }).success).toBe(false);
+      expect(ChartSharedSchema.safeParse({ ...base, chartThemeTokens: { [token]: true } }).success).toBe(false);
     },
   );
 });

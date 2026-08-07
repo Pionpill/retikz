@@ -17,7 +17,7 @@ describe('Chart shared schemas', () => {
         coordinate: { type: 'cartesian2D', x: 'x' },
         guides: [{ type: 'axis', dimension: 'x' }],
         marks: [{ type: 'point', encoding: { x: { field: 'amount', scale: 'x' } } }],
-        theme: { background: '#ffffff' },
+        plotTheme: { background: '#ffffff' },
         layout: { autoPadding: true },
         width: 480,
         height: 300,
@@ -31,7 +31,7 @@ describe('Chart shared schemas', () => {
       coordinate: { type: 'cartesian2D', x: 'x' },
       guides: [{ type: 'axis', dimension: 'x' }],
       marks: [{ type: 'point', encoding: { x: { field: 'amount', scale: 'x' } } }],
-      theme: { background: '#ffffff' },
+      plotTheme: { background: '#ffffff' },
       layout: { autoPadding: true },
       width: 480,
       height: 300,
@@ -158,7 +158,7 @@ describe('Chart shared schemas', () => {
         style: {
           ...style,
           authoredOverrides: [
-            { kind: 'theme', path: '$spec/theme' },
+            { kind: 'plot-theme', path: '$spec/plotTheme' },
             { kind: 'colors', path: '$spec/colors' },
           ],
         },

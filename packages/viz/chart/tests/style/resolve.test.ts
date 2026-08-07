@@ -15,8 +15,8 @@ const base = {
 describe('Chart style resolution', () => {
   it('默认解析 neutral/light，并保持 Plot authoring 输入未物化', () => {
     const result = resolveChartSpec(base);
-    expect(result.plotSpec.theme).toBeUndefined();
-    expect(result.plotSpec.styleTokens).toBeUndefined();
+    expect(result.plotSpec.plotTheme).toBeUndefined();
+    expect(result.plotSpec.plotThemeTokens).toBeUndefined();
     expect(result.inspection.style.chart).toMatchObject({
       style: 'neutral',
       mode: 'light',
@@ -30,24 +30,24 @@ describe('Chart style resolution', () => {
   it('分别解析 Chart token 与 Plot cascade，并原样转发 Plot 输入', () => {
     const input = {
       ...base,
-      styleTokens: { 'chart.padding': 20 },
-      plotStyleTokens: {
+      chartThemeTokens: { 'chart.padding': 20 },
+      plotThemeTokens: {
         'plot.label.font.size': 14,
         'plot.palette.categorical': ['#token'],
       },
       colors: ['#colors-a', '#colors-b'],
-      theme: {
+      plotTheme: {
         labelText: { font: { weight: 700 } },
         palette: { series: ['#raw-series'] },
       },
     } as const;
     const result = resolveChartSpec(input, { style: ThemeStyle.Academic, mode: ThemeMode.Dark });
 
-    expect(result.plotSpec.styleTokens).toEqual(input.plotStyleTokens);
+    expect(result.plotSpec.plotThemeTokens).toEqual(input.plotThemeTokens);
     expect(result.plotSpec.colors).toEqual(input.colors);
-    expect(result.plotSpec.theme).toEqual(input.theme);
+    expect(result.plotSpec.plotTheme).toEqual(input.plotTheme);
     expect(result.inspection.style.chart.tokens['chart.padding']).toBe(20);
-    expect(result.inspection.style.plot.theme.labelText).toMatchObject({ font: { size: 14, weight: 700 } });
+    expect(result.inspection.style.plot.plotTheme.labelText).toMatchObject({ font: { size: 14, weight: 700 } });
     expect(result.inspection.style.plot.palette).toMatchObject({
       categorical: ['#colors-a', '#colors-b'],
       series: ['#raw-series'],
@@ -55,16 +55,18 @@ describe('Chart style resolution', () => {
     });
     expect(result.inspection.style.plot.authoredOverrides).toEqual([
       { kind: 'colors', path: '$spec/colors' },
-      { kind: 'theme', path: '$spec/theme' },
+      { kind: 'plot-theme', path: '$spec/plotTheme' },
     ]);
   });
 
   it('topology token 只控制 recipe defaults，显式 guide 保持最高优先级', () => {
-    expect(resolveChartSpec({ ...base, styleTokens: { 'chart.axis.enabled': false } }).plotSpec.guides).toEqual([]);
+    expect(resolveChartSpec({ ...base, chartThemeTokens: { 'chart.axis.enabled': false } }).plotSpec.guides).toEqual(
+      [],
+    );
     expect(
       resolveChartSpec({
         ...base,
-        styleTokens: { 'chart.axis.enabled': false, 'chart.axis.grid.enabled': false },
+        chartThemeTokens: { 'chart.axis.enabled': false, 'chart.axis.grid.enabled': false },
         guides: [{ type: 'axis', id: 'explicit', dimension: 'x', grid: true }],
       }).plotSpec.guides,
     ).toEqual([{ type: 'axis', id: 'explicit', dimension: 'x', grid: true }]);

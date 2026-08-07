@@ -2,9 +2,9 @@ import type { ThemeModeValue, ThemeStyleValue } from '@retikz/core';
 
 import { ThemeMode, ThemeStyle } from '@retikz/core';
 
-import type { IRPlotResolvedStyleTokens } from '../../schemas';
+import type { IRPlotResolvedThemeTokens } from '../../schemas';
 
-import { LegendSymbolFit, PlotResolvedStyleTokensSchema, PlotStyleToken } from '../../schemas';
+import { LegendSymbolFit, PlotResolvedThemeTokensSchema, PlotThemeToken } from '../../schemas';
 import { DEFAULT_PLOT_COLORS, PlotColorScheme } from '../scale/shared';
 
 type PresetStructure = Readonly<{
@@ -12,7 +12,7 @@ type PresetStructure = Readonly<{
   fontSize: number;
   labelSize: number;
   axisLineEnabled: boolean;
-  tickMark: IRPlotResolvedStyleTokens['axis.tick.mark'];
+  tickMark: IRPlotResolvedThemeTokens['axis.tick.mark'];
   tickLabelSize: number;
   tickLabelGap: number;
   axisTitleSize: number;
@@ -294,7 +294,7 @@ const paints: Record<ThemeStyleValue, Record<ThemeModeValue, PresetPaint>> = {
   },
 };
 
-const createPreset = (style: ThemeStyleValue, mode: ThemeModeValue): IRPlotResolvedStyleTokens => {
+const createPreset = (style: ThemeStyleValue, mode: ThemeModeValue): IRPlotResolvedThemeTokens => {
   const structure = structures[style];
   const paint = paints[style][mode];
   const tickMark =
@@ -304,47 +304,47 @@ const createPreset = (style: ThemeStyleValue, mode: ThemeModeValue): IRPlotResol
           line: { ...(structure.tickMark.line === false ? {} : structure.tickMark.line), stroke: paint.axisLine },
         }
       : structure.tickMark;
-  return PlotResolvedStyleTokensSchema.parse({
-    [PlotStyleToken.PlotSurfaceFill]: paint.surface,
-    [PlotStyleToken.PlotTypographyForeground]: paint.foreground,
-    [PlotStyleToken.PlotTypographyFontFamily]: structure.fontFamily,
-    [PlotStyleToken.PlotTypographyFontSize]: structure.fontSize,
-    [PlotStyleToken.PlotLabelForeground]: paint.label,
-    [PlotStyleToken.PlotLabelFontSize]: structure.labelSize,
-    [PlotStyleToken.AxisLineEnabled]: structure.axisLineEnabled,
-    [PlotStyleToken.AxisLineStroke]: paint.axisLine,
-    [PlotStyleToken.AxisLineStrokeWidth]: 1,
-    [PlotStyleToken.AxisLineDrawOpacity]: 1,
-    [PlotStyleToken.AxisTickMark]: tickMark,
-    [PlotStyleToken.AxisTickLabelEnabled]: true,
-    [PlotStyleToken.AxisTickLabelForeground]: paint.tickLabel,
-    [PlotStyleToken.AxisTickLabelFontSize]: structure.tickLabelSize,
-    [PlotStyleToken.AxisTickLabelGap]: structure.tickLabelGap,
-    [PlotStyleToken.AxisTitleForeground]: paint.axisTitle,
-    [PlotStyleToken.AxisTitleFontSize]: structure.axisTitleSize,
-    [PlotStyleToken.AxisTitleFontWeight]: 600,
-    [PlotStyleToken.AxisGridStroke]: paint.grid,
-    [PlotStyleToken.AxisGridStrokeWidth]: 1,
-    [PlotStyleToken.AxisGridDrawOpacity]: paint.gridOpacity,
-    [PlotStyleToken.LegendTitleForeground]: paint.legendTitle,
-    [PlotStyleToken.LegendTitleFontSize]: structure.legendTitleSize,
-    [PlotStyleToken.LegendTitleFontWeight]: structure.legendTitleWeight,
-    [PlotStyleToken.LegendLabelForeground]: paint.legendLabel,
-    [PlotStyleToken.LegendLabelFontSize]: structure.legendLabelSize,
-    [PlotStyleToken.LegendSwatchSize]: structure.swatchSize,
-    [PlotStyleToken.LegendSwatchGap]: structure.swatchGap,
-    [PlotStyleToken.LegendEntryGap]: structure.entryGap,
-    [PlotStyleToken.LegendTitleGap]: structure.titleGap,
-    [PlotStyleToken.LegendRampLength]: structure.rampLength,
-    [PlotStyleToken.LegendRampThickness]: structure.rampThickness,
-    [PlotStyleToken.LegendSymbolSize]: structure.symbolSize,
-    [PlotStyleToken.LegendSymbolScale]: 1,
-    [PlotStyleToken.LegendSymbolFit]: LegendSymbolFit.Fit,
-    [PlotStyleToken.PlotPaletteCategorical]: [...paint.palette],
-    [PlotStyleToken.PlotPaletteSeries]: [...paint.palette],
-    [PlotStyleToken.PlotPaletteSector]: [...paint.palette],
-    [PlotStyleToken.PlotPaletteSequential]: structure.sequential,
-    [PlotStyleToken.PlotPaletteDiverging]: structure.diverging,
+  return PlotResolvedThemeTokensSchema.parse({
+    [PlotThemeToken.PlotSurfaceFill]: paint.surface,
+    [PlotThemeToken.PlotTypographyForeground]: paint.foreground,
+    [PlotThemeToken.PlotTypographyFontFamily]: structure.fontFamily,
+    [PlotThemeToken.PlotTypographyFontSize]: structure.fontSize,
+    [PlotThemeToken.PlotLabelForeground]: paint.label,
+    [PlotThemeToken.PlotLabelFontSize]: structure.labelSize,
+    [PlotThemeToken.AxisLineEnabled]: structure.axisLineEnabled,
+    [PlotThemeToken.AxisLineStroke]: paint.axisLine,
+    [PlotThemeToken.AxisLineStrokeWidth]: 1,
+    [PlotThemeToken.AxisLineDrawOpacity]: 1,
+    [PlotThemeToken.AxisTickMark]: tickMark,
+    [PlotThemeToken.AxisTickLabelEnabled]: true,
+    [PlotThemeToken.AxisTickLabelForeground]: paint.tickLabel,
+    [PlotThemeToken.AxisTickLabelFontSize]: structure.tickLabelSize,
+    [PlotThemeToken.AxisTickLabelGap]: structure.tickLabelGap,
+    [PlotThemeToken.AxisTitleForeground]: paint.axisTitle,
+    [PlotThemeToken.AxisTitleFontSize]: structure.axisTitleSize,
+    [PlotThemeToken.AxisTitleFontWeight]: 600,
+    [PlotThemeToken.AxisGridStroke]: paint.grid,
+    [PlotThemeToken.AxisGridStrokeWidth]: 1,
+    [PlotThemeToken.AxisGridDrawOpacity]: paint.gridOpacity,
+    [PlotThemeToken.LegendTitleForeground]: paint.legendTitle,
+    [PlotThemeToken.LegendTitleFontSize]: structure.legendTitleSize,
+    [PlotThemeToken.LegendTitleFontWeight]: structure.legendTitleWeight,
+    [PlotThemeToken.LegendLabelForeground]: paint.legendLabel,
+    [PlotThemeToken.LegendLabelFontSize]: structure.legendLabelSize,
+    [PlotThemeToken.LegendSwatchSize]: structure.swatchSize,
+    [PlotThemeToken.LegendSwatchGap]: structure.swatchGap,
+    [PlotThemeToken.LegendEntryGap]: structure.entryGap,
+    [PlotThemeToken.LegendTitleGap]: structure.titleGap,
+    [PlotThemeToken.LegendRampLength]: structure.rampLength,
+    [PlotThemeToken.LegendRampThickness]: structure.rampThickness,
+    [PlotThemeToken.LegendSymbolSize]: structure.symbolSize,
+    [PlotThemeToken.LegendSymbolScale]: 1,
+    [PlotThemeToken.LegendSymbolFit]: LegendSymbolFit.Fit,
+    [PlotThemeToken.PlotPaletteCategorical]: [...paint.palette],
+    [PlotThemeToken.PlotPaletteSeries]: [...paint.palette],
+    [PlotThemeToken.PlotPaletteSector]: [...paint.palette],
+    [PlotThemeToken.PlotPaletteSequential]: structure.sequential,
+    [PlotThemeToken.PlotPaletteDiverging]: structure.diverging,
   });
 };
 
@@ -353,8 +353,8 @@ const presets = Object.fromEntries(
     style,
     Object.fromEntries(Object.values(ThemeMode).map(mode => [mode, createPreset(style, mode)])),
   ]),
-) as Record<ThemeStyleValue, Record<ThemeModeValue, IRPlotResolvedStyleTokens>>;
+) as Record<ThemeStyleValue, Record<ThemeModeValue, IRPlotResolvedThemeTokens>>;
 
 /** 读取一个内建 Plot style/mode 的完整 token map */
-export const getPlotStylePreset = (style: ThemeStyleValue, mode: ThemeModeValue): IRPlotResolvedStyleTokens =>
+export const getPlotThemePreset = (style: ThemeStyleValue, mode: ThemeModeValue): IRPlotResolvedThemeTokens =>
   structuredClone(presets[style][mode]);
