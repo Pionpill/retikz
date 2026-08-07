@@ -62,6 +62,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     ...(options.id === undefined ? {} : { id: options.id }),
     data,
     ...members,
+    ...(options.styleTokens === undefined ? {} : { styleTokens: options.styleTokens }),
     ...(options.colors === undefined ? {} : { colors: options.colors }),
     ...(options.theme === undefined ? {} : { theme: options.theme }),
     ...(options.layout === undefined ? {} : { layout: options.layout }),

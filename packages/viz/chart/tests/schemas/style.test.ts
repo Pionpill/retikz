@@ -10,26 +10,24 @@ import {
 } from '../../src/style';
 
 describe('Chart style schema', () => {
-  it('冻结四个 preset、两个 mode 与完整 canonical token 列表', () => {
+  it('只冻结 Chart-owned canonical token，不复制 Plot token', () => {
     expect(Object.values(ThemeStyle)).toEqual(['neutral', 'academic', 'vibrant', 'clean']);
     expect(Object.values(ThemeMode)).toEqual(['light', 'dark']);
-    expect(Object.values(ChartStyleToken)).toHaveLength(75);
-    expect(new Set(Object.values(ChartStyleToken)).size).toBe(75);
+    expect(Object.values(ChartStyleToken)).toHaveLength(37);
+    expect(new Set(Object.values(ChartStyleToken)).size).toBe(37);
     expect(Object.values(ChartStyleToken)).toContain('chart.canvas.fill');
-    expect(Object.values(ChartStyleToken)).toContain('axis.tick.mark');
-    expect(Object.values(ChartStyleToken)).toContain('data.palette.diverging');
+    expect(Object.values(ChartStyleToken)).toContain('chart.axis.enabled');
+    expect(Object.values(ChartStyleToken)).not.toContain('axis.tick.mark');
+    expect(Object.values(ChartStyleToken)).not.toContain('data.palette.diverging');
   });
 
-  it('复用 Core style/mode vocabulary 并拒绝未知取值', () => {
-    expect(ChartStyleSurfaceSchema.parse({ style: ThemeStyle.Clean, themeMode: ThemeMode.Dark })).toEqual({
-      style: ThemeStyle.Clean,
-      themeMode: ThemeMode.Dark,
-    });
-    expect(ChartStyleSurfaceSchema.safeParse({ style: 'unknown' }).success).toBe(false);
-    expect(ChartStyleSurfaceSchema.safeParse({ themeMode: 'sepia' }).success).toBe(false);
+  it('从 authoring surface 删除 spec-local style/mode', () => {
+    expect(ChartStyleSurfaceSchema.safeParse({ style: ThemeStyle.Clean }).success).toBe(false);
+    expect(ChartStyleSurfaceSchema.safeParse({ themeMode: ThemeMode.Dark }).success).toBe(false);
+    expect(ChartStyleSurfaceSchema.parse({})).toEqual({});
   });
 
-  it('为每个公开 token 提供唯一的字段级 schema 描述', () => {
+  it('为每个公开 token 提供字段级 schema 描述', () => {
     const descriptions = Object.values(ChartStyleToken).map(
       token => ChartResolvedStyleTokensSchema.shape[token].description,
     );
@@ -37,27 +35,25 @@ describe('Chart style schema', () => {
       token => ChartStyleTokenOverridesSchema.shape[token].unwrap().description,
     );
     expect(descriptions.every(description => typeof description === 'string' && description.length > 0)).toBe(true);
-    expect(new Set(descriptions).size).toBe(75);
     expect(overrideDescriptions).toEqual(descriptions);
   });
 
-  it('接受 strict flat sparse overrides 并拒绝未知 key 与非法 value', () => {
+  it('接受 strict flat Chart overrides 并拒绝 Plot key、旧 key 与非法 value', () => {
     const value = {
-      'axis.line.enabled': false,
-      'axis.tick.mark': { kind: 'circle', size: 5, fill: '#fff', stroke: '#111827' },
-      'data.palette.categorical': ['#2563eb', '#f97316'],
+      'chart.axis.enabled': false,
+      'chart.axis.grid.enabled': false,
+      'chart.legend.enabled': true,
     };
     expect(ChartStyleTokenOverridesSchema.parse(value)).toEqual(value);
-    expect(ChartStyleTokenOverridesSchema.safeParse({ 'axis.unknown': true }).success).toBe(false);
-    expect(ChartStyleTokenOverridesSchema.safeParse({ 'axis.line.strokeWidth': -1 }).success).toBe(false);
-    expect(ChartStyleTokenOverridesSchema.safeParse({ 'data.palette.categorical': [] }).success).toBe(false);
-    expect(ChartStyleTokenOverridesSchema.safeParse({ axis: { enabled: true } }).success).toBe(false);
+    expect(ChartStyleTokenOverridesSchema.safeParse({ 'axis.enabled': true }).success).toBe(false);
+    expect(ChartStyleTokenOverridesSchema.safeParse({ 'plot.palette.series': ['#2563eb'] }).success).toBe(false);
+    expect(ChartStyleTokenOverridesSchema.safeParse({ chart: { axis: { enabled: true } } }).success).toBe(false);
   });
 
-  it('拒绝显式 undefined token override，避免合法输入在 resolver 阶段失败', () => {
+  it('拒绝显式 undefined token override', () => {
     expect(
       ChartStyleSurfaceSchema.safeParse({
-        styleTokens: { [ChartStyleToken.AxisEnabled]: undefined },
+        styleTokens: { [ChartStyleToken.ChartAxisEnabled]: undefined },
       }).success,
     ).toBe(false);
   });
@@ -66,17 +62,14 @@ describe('Chart style schema', () => {
     expect(ChartResolvedStyleTokensSchema.safeParse({}).success).toBe(false);
   });
 
-  it('复用 Standard padding contract 并保持 style surface JSON-safe', () => {
+  it('复用 Standard padding 并原样接受 Plot token 转发面', () => {
     const padding = { x: 8, top: 12 };
-    expect(LayoutContainerBoxSchema.shape.padding.unwrap().parse(padding)).toEqual(padding);
     expect(ChartStyleTokenOverridesSchema.shape['chart.padding'].parse(padding)).toEqual(
       LayoutContainerBoxSchema.shape.padding.unwrap().parse(padding),
     );
-
     const surface = ChartStyleSurfaceSchema.parse({
-      style: ThemeStyle.Clean,
-      themeMode: ThemeMode.Dark,
       styleTokens: { 'chart.padding': padding },
+      plotStyleTokens: { 'plot.palette.series': ['#2563eb'] },
       colors: ['#111827', '#f97316'],
     });
     expect(JSON.parse(JSON.stringify(surface))).toEqual(surface);

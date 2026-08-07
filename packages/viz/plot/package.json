@@ -70,6 +70,7 @@
     "@retikz/core": "workspace:^",
     "@retikz/data": "workspace:^",
     "@retikz/math": "workspace:^",
+    "@retikz/standard": "workspace:^",
     "@types/d3-scale": "catalog:",
     "d3-array": "catalog:",
     "d3-format": "catalog:",

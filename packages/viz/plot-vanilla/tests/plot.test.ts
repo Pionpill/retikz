@@ -115,6 +115,17 @@ describe('plot', () => {
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 
+  it('透传 Plot styleTokens', () => {
+    const spec = plot({
+      data: { reference: 'sales' },
+      scales: [],
+      coordinate: { type: 'cartesian2D' },
+      styleTokens: { 'plot.palette.series': ['#2563eb'] },
+      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+    });
+    expect(spec.styleTokens).toEqual({ 'plot.palette.series': ['#2563eb'] });
+  });
+
   it('透传 layout 与 labels', () => {
     const spec = plot({
       data: { reference: 'sales' },

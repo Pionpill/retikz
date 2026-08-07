@@ -1,7 +1,8 @@
-import type { IRChild } from '@retikz/core';
+import type { IRChild, ResolvedTheme } from '@retikz/core';
 import type { IRPlotSpec } from '@retikz/plot';
 
-import { PlotSpecSchema } from '@retikz/plot';
+import { ThemeMode, ThemeStyle } from '@retikz/core';
+import { PlotSpecSchema, resolvePlotTheme } from '@retikz/plot';
 import { z } from 'zod';
 
 import type { InternalChartSpecBound } from '../families/shared';
@@ -11,7 +12,7 @@ import { ChartRecipeInvariantError } from '../families/shared';
 import { createChartInspection } from '../inspection';
 import { resolveChartPresentation } from '../presentation';
 import { CHART_NAMESPACE } from '../schemas';
-import { chartRecipeStyleContextOf, materializeChartPlotTheme, resolveChartStyle } from '../style';
+import { chartRecipeStyleContextOf, resolveChartStyle } from '../style';
 import { BUILTIN_CHART_RECIPES } from './catalog';
 import { ChartResolveError, ChartResolveErrorCode } from './errors';
 import { chartInspectionMemberInputsOf, ChartMemberParseError, mergeChartSeed } from './merge';
@@ -49,7 +50,10 @@ const invalidSchemaError = (
 ): ChartResolveError => new ChartResolveError(code, { path: issuePathOf(error), cause });
 
 /** 通过封闭 recipe tuple 解析一个私有 Chart spec */
-export const resolveChartSpec = (input: unknown): ChartResolution => {
+export const resolveChartSpec = (
+  input: unknown,
+  effectiveTheme: ResolvedTheme = { style: ThemeStyle.Neutral, mode: ThemeMode.Light },
+): ChartResolution => {
   let envelope: z.infer<typeof DispatchEnvelopeSchema>;
   try {
     envelope = DispatchEnvelopeSchema.parse(input);
@@ -70,9 +74,13 @@ export const resolveChartSpec = (input: unknown): ChartResolution => {
     if (error instanceof z.ZodError) throw invalidSchemaError(ChartResolveErrorCode.InvalidChartSpec, error);
     throw error;
   }
-  const style = resolveChartStyle(bound.spec);
-  const authoredPlotTheme = materializeChartPlotTheme(style.tokens, bound.spec.colors, bound.spec.theme);
-  const seriesColor = authoredPlotTheme.palette?.series?.at(0);
+  const style = resolveChartStyle(effectiveTheme, bound.spec);
+  const plotStyle = resolvePlotTheme(effectiveTheme, {
+    styleTokens: bound.spec.plotStyleTokens,
+    colors: bound.spec.colors,
+    theme: bound.spec.theme,
+  });
+  const seriesColor = plotStyle.palette.series.at(0);
   if (seriesColor === undefined) throw new Error('Chart style must resolve a non-empty Plot series palette');
   const seed = bound.createSeed(chartRecipeStyleContextOf(style, seriesColor));
   let merged: ReturnType<typeof mergeChartSeed>;
@@ -84,12 +92,22 @@ export const resolveChartSpec = (input: unknown): ChartResolution => {
     }
     throw error;
   }
+  const {
+    styleTokens: recipeStyleTokens,
+    colors: recipeColors,
+    theme: recipeTheme,
+    ...plotWithoutThemeInputs
+  } = merged.plotSpec;
+  void recipeStyleTokens;
+  void recipeColors;
+  void recipeTheme;
   merged = {
     ...merged,
     plotSpec: {
-      ...merged.plotSpec,
+      ...plotWithoutThemeInputs,
+      ...(bound.spec.plotStyleTokens === undefined ? {} : { styleTokens: bound.spec.plotStyleTokens }),
       ...(bound.spec.colors === undefined ? {} : { colors: bound.spec.colors }),
-      theme: materializeChartPlotTheme(style.tokens, bound.spec.colors, bound.spec.theme, merged.plotSpec.theme),
+      ...(bound.spec.theme === undefined ? {} : { theme: bound.spec.theme }),
     },
   };
   try {
@@ -118,6 +136,7 @@ export const resolveChartSpec = (input: unknown): ChartResolution => {
     plotSpec,
     chartInspectionMemberInputsOf(plotSpec, merged.members),
     style,
+    plotStyle,
     presentation.inspection,
   );
   const node: IRChild =

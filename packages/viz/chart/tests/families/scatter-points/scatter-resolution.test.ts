@@ -118,13 +118,13 @@ const scatterUnitScale = defineScale({
 
 const chartWithCustomCoordinate = {
   ...base,
-  styleTokens: { 'axis.enabled': false },
+  styleTokens: { 'chart.axis.enabled': false },
   coordinate: { type: 'scatter-test-2d' },
 } as const;
 
 const chartWithCustomScale = {
   ...base,
-  styleTokens: { 'axis.enabled': false },
+  styleTokens: { 'chart.axis.enabled': false },
   scales: [
     { type: 'scatter-unit', name: '__chart.scatter.scale.x' },
     { type: 'linear', name: '__chart.scatter.scale.y' },
@@ -133,9 +133,7 @@ const chartWithCustomScale = {
 
 describe('Scatter Chart resolution', () => {
   it('resolves the canonical variant through the closed recipe tuple', () => {
-    const { theme, ...plot } = resolveChartSpec(base).plotSpec;
-
-    expect(theme).toBeDefined();
+    const plot = resolveChartSpec(base).plotSpec;
     expect(plot).toMatchObject({
       namespace: 'plot',
       type: 'plot',
@@ -406,7 +404,7 @@ describe('Scatter Chart resolution', () => {
   });
 
   it('keeps Plot diagnostics for missing definitions and non-two-dimensional coordinates', () => {
-    const customBase = { ...base, styleTokens: { 'axis.enabled': false } } as const;
+    const customBase = { ...base, styleTokens: { 'chart.axis.enabled': false } } as const;
     expect(() =>
       compileToScene(sceneOf(chartWithCustomCoordinate), {
         composites: [ScatterChartDefinition, ...lowerPlots(datasets, { width: 320, height: 180 })],

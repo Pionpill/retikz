@@ -11,6 +11,8 @@ description: Query the JSON schemas for the PlotSpec root, coordinate views, fac
 
 Exactly one of `coordinate` and `composition` must be present. Scale names, view ids, and arrangement ids must be unique within one Plot; every `coordinateView` referenced by a mark or axis must already be registered.
 
+Theme inputs resolve in this order: Core effective Theme preset → `styleTokens` → `colors` → `theme` → local guide / mark / scale configuration. See the [theme contract](/viz/plot/reference/theme) for the complete token catalog and cascade.
+
 ## CoordinateCompositionSchema
 
 <ZodSchema name="CoordinateCompositionSchema" />

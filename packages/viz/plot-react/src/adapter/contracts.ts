@@ -104,6 +104,8 @@ export type BuildPlotSpecOptions = {
   markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
   /** 分类颜色比例尺的默认 range；`currentColor` 表示继承当前文字颜色 */
   colors?: Array<string>;
+  /** Plot-owned canonical theme token 稀疏覆盖 */
+  styleTokens?: IRPlotSpec['styleTokens'];
   /** Plot 主题 */
   theme?: IRPlotSpec['theme'];
   /** Plot 级标签布局策略 */

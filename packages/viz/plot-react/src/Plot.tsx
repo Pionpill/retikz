@@ -48,6 +48,8 @@ export type PlotLineageProps = {
 };
 
 export type PlotColorProps = {
+  /** Plot-owned canonical theme token 稀疏覆盖 */
+  styleTokens?: IRPlotSpec['styleTokens'];
   /** 默认颜色数组：分类 color scale 的 range；无 color 编码的 mark 按图层序取色，`currentColor` 表示继承当前文字颜色 */
   colors?: Array<string>;
   /** Plot theme：背景、typography、axis、legend、palette 的 JSON-safe 默认值 */

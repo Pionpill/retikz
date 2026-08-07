@@ -1,13 +1,18 @@
 ﻿import {
   ArrowEndDetailSchema,
+  CssColorSchema,
   FontSchema,
   GeometryLabelPosition,
-  NodeTextAlign,
+  LineHeightSchema,
+  OpacitySchema,
   PaintValueSchema,
   PathLineCapSchema,
   ShapeRefSchema,
+  StrokeWidthSchema,
+  TextAlignSchema,
   TextBlockSchema,
 } from '@retikz/core';
+import { LayoutGapSchema } from '@retikz/standard';
 import { z } from 'zod';
 
 import { PlotLayerSchema } from '../layer';
@@ -101,7 +106,6 @@ export const AxisPlacementSchema = z
     'Axis placement mode: automatic coordinate default, cardinal plot-area side, coordinate-native edge, or cartesian origin',
   );
 
-const OpacitySchema = z.number().min(0).max(1).describe('Opacity fraction in [0, 1]');
 const NonNegativeFiniteSchema = z.number().nonnegative();
 const NormalizedRatioSchema = z.number().min(0).max(1);
 
@@ -135,7 +139,7 @@ const LegendTitleTextSchema = nonEmptyTextBlockSchema('legend title');
 export const GuideLineStyleSchema = z
   .strictObject({
     stroke: PaintValueSchema.optional().describe('Guide line stroke paint; omit to inherit currentColor'),
-    strokeWidth: z.number().nonnegative().optional().describe('Guide line stroke width in user units'),
+    strokeWidth: StrokeWidthSchema.optional().describe('Guide line stroke width in user units'),
     drawOpacity: OpacitySchema.optional().describe('Guide line stroke opacity'),
     dashPattern: z
       .array(z.number().nonnegative())
@@ -161,10 +165,10 @@ export const AxisGridLineStyleSchema = GuideLineStyleSchema.extend({
 export const GuideTextStyleSchema = z
   .strictObject({
     font: FontSchema.optional().describe('Guide text font; missing fields inherit the plot text default'),
-    textColor: z.string().min(1).optional().describe('Guide text color; omit to inherit currentColor'),
+    textColor: CssColorSchema.optional().describe('Guide text color; omit to inherit currentColor'),
     opacity: OpacitySchema.optional().describe('Guide text opacity'),
-    align: z.enum(NodeTextAlign).optional().describe('Multi-line guide text alignment'),
-    lineHeight: z.number().positive().optional().describe('Guide text line height in user units'),
+    align: TextAlignSchema.optional().describe('Multi-line guide text alignment'),
+    lineHeight: LineHeightSchema.optional().describe('Guide text line height in user units'),
     maxTextWidth: z.number().positive().optional().describe('Maximum guide text line width before wrapping'),
   })
   .describe('Shared guide text style fields mapped to core node text vocabulary');
@@ -450,10 +454,15 @@ export const AxisTickLabelLayoutSchema = z
   ])
   .describe('Axis tick label adaptive layout strategy');
 
+/** Axis tick 与 label 中心之间的非负间距 */
+export const AxisTickLabelGapSchema = LayoutGapSchema.describe(
+  'Non-negative gap between an axis tick end and its label center.',
+);
+
 export const AxisTickLabelsSchema = z
   .strictObject({
     ...GuideTickLabelFormatSchema.shape,
-    gap: z.number().nonnegative().optional().describe('Gap between tick end and tick label center, in user units'),
+    gap: AxisTickLabelGapSchema.optional().describe('Gap between tick end and tick label center, in user units'),
     rotate: z.number().optional().describe('Tick label rotation in degrees around the label center'),
     anchor: z.string().min(1).optional().describe('Semantic text anchor hint reserved for theme/layout resolvers'),
     layout: AxisTickLabelLayoutSchema.optional().describe(
@@ -569,32 +578,43 @@ export const AxisTitleSchema = z
   })
   .describe('Axis title text block and style');
 
+/** Legend swatch 的基准尺寸 */
+export const LegendSwatchSizeSchema = z.number().positive().describe('Positive legend swatch size in user units.');
+
+/** Legend ramp 的主轴长度 */
+export const LegendRampLengthSchema = z.number().positive().describe('Positive legend ramp length in user units.');
+
+/** Legend ramp 的短轴厚度 */
+export const LegendRampThicknessSchema = z
+  .number()
+  .positive()
+  .describe('Positive legend ramp thickness in user units.');
+
+/** Legend symbol 的目标视觉盒尺寸 */
+export const LegendSymbolSizeSchema = z.number().positive().describe('Positive legend symbol box size in user units.');
+
+/** Legend symbol 在 fit 后应用的正比例 */
+export const LegendSymbolScaleSchema = z.number().positive().describe('Positive legend symbol scale factor.');
+
+/** Legend 内部相邻内容的非负间距 */
+export const LegendLayoutGapSchema = LayoutGapSchema.describe('Non-negative legend layout gap in user units.');
+
 export const LegendGuideStyleSchema = z
   .strictObject({
-    swatchSize: z.number().positive().optional().describe('Legend swatch baseline size in user units'),
-    swatchGap: z.number().nonnegative().optional().describe('Gap between a legend swatch and its label, in user units'),
-    entryGap: z.number().nonnegative().optional().describe('Gap between adjacent legend entries, in user units'),
-    titleGap: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Gap between legend title and the first entry, in user units'),
-    rampLength: z.number().positive().optional().describe('Continuous legend ramp long edge length in user units'),
-    rampThickness: z
-      .number()
-      .positive()
-      .optional()
-      .describe('Continuous legend ramp short edge thickness in user units'),
-    symbolSize: z
-      .number()
-      .positive()
-      .optional()
-      .describe('Target visual box size for symbol-like legend entries; omit = swatchSize'),
-    symbolScale: z
-      .number()
-      .positive()
-      .optional()
-      .describe('Scale factor applied to legend symbols after the fit strategy; omit = 1'),
+    swatchSize: LegendSwatchSizeSchema.optional().describe('Legend swatch baseline size in user units'),
+    swatchGap: LegendLayoutGapSchema.optional().describe('Gap between a legend swatch and its label, in user units'),
+    entryGap: LegendLayoutGapSchema.optional().describe('Gap between adjacent legend entries, in user units'),
+    titleGap: LegendLayoutGapSchema.optional().describe('Gap between legend title and the first entry, in user units'),
+    rampLength: LegendRampLengthSchema.optional().describe('Continuous legend ramp long edge length in user units'),
+    rampThickness: LegendRampThicknessSchema.optional().describe(
+      'Continuous legend ramp short edge thickness in user units',
+    ),
+    symbolSize: LegendSymbolSizeSchema.optional().describe(
+      'Target visual box size for symbol-like legend entries; omit = swatchSize',
+    ),
+    symbolScale: LegendSymbolScaleSchema.optional().describe(
+      'Scale factor applied to legend symbols after the fit strategy; omit = 1',
+    ),
     symbolFit: z
       .enum(LegendSymbolFit)
       .optional()

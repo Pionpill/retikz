@@ -1364,6 +1364,21 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PlotLayer',
     url: '/viz/plot/reference/layer#plotlayerschema',
   },
+  PlotStyleTokenOverridesSchema: {
+    schema: PlotIR.PlotStyleTokenOverridesSchema,
+    label: 'PlotStyleTokenOverrides',
+    url: '/viz/plot/reference/theme#plotstyletokenoverridesschema',
+  },
+  PlotResolvedStyleTokensSchema: {
+    schema: PlotIR.PlotResolvedStyleTokensSchema,
+    label: 'PlotResolvedStyleTokens',
+    url: '/viz/plot/reference/theme#plotresolvedstyletokensschema',
+  },
+  PlotThemeResolutionSchema: {
+    schema: PlotIR.PlotThemeResolutionSchema,
+    label: 'PlotThemeResolution',
+    url: '/viz/plot/reference/theme#inspection',
+  },
   PlotAxisThemeSchema: {
     schema: PlotIR.PlotAxisThemeSchema,
     label: 'PlotAxisTheme',

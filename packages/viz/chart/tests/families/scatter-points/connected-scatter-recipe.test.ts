@@ -1,3 +1,5 @@
+import { ThemeMode, ThemeStyle } from '@retikz/core';
+import { resolvePlotTheme } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import type { ChartRecipeStyleContext } from '../../../src/families/shared';
@@ -6,7 +8,7 @@ import {
   ConnectedScatterChartRecipe,
   ConnectedScatterChartSpecSchema,
 } from '../../../src/families/scatter-points/connected-scatter';
-import { chartRecipeStyleContextOf, materializeChartPlotTheme, resolveChartStyle } from '../../../src/style';
+import { chartRecipeStyleContextOf, resolveChartStyle } from '../../../src/style';
 
 const visibleStyle: ChartRecipeStyleContext = {
   axisEnabled: true,
@@ -230,17 +232,22 @@ describe('Connected Scatter Chart recipe', () => {
 
   it('uses the final style token, colors, and raw theme cascade for the shared default color', () => {
     const spec = connectedScatter({
-      styleTokens: { 'data.palette.series': ['#111111'] },
+      plotStyleTokens: { 'plot.palette.series': ['#111111'] },
       colors: ['#222222'],
       theme: { palette: { series: ['#333333'] } },
     });
-    const resolved = resolveChartStyle(spec);
-    const plotTheme = materializeChartPlotTheme(resolved.tokens, spec.colors, spec.theme);
-    const seriesColor = plotTheme.palette?.series?.[0];
+    const effectiveTheme = { style: ThemeStyle.Neutral, mode: ThemeMode.Light } as const;
+    const resolved = resolveChartStyle(effectiveTheme, spec);
+    const plotTheme = resolvePlotTheme(effectiveTheme, {
+      styleTokens: spec.plotStyleTokens,
+      colors: spec.colors,
+      theme: spec.theme,
+    });
+    const seriesColor = plotTheme.palette.series[0];
 
     expect(seriesColor).toBe('#333333');
-    expect(chartRecipeStyleContextOf(resolved, seriesColor as string).seriesColor).toBe('#333333');
-    expect(connectionAndPoints({}, { ...visibleStyle, seriesColor: seriesColor as string }).points).toMatchObject({
+    expect(chartRecipeStyleContextOf(resolved, seriesColor).seriesColor).toBe('#333333');
+    expect(connectionAndPoints({}, { ...visibleStyle, seriesColor }).points).toMatchObject({
       color: { kind: 'constant', value: '#333333' },
     });
   });

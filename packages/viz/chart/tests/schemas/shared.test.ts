@@ -1,3 +1,5 @@
+import { ThemeMode, ThemeStyle } from '@retikz/core';
+import { resolvePlotTheme } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { ChartInspectionSchema } from '../../src/inspection';
@@ -98,15 +100,17 @@ describe('Chart shared schemas', () => {
   it('校验 inspection 的公开 JSON 结构', () => {
     const tokens = getChartStylePreset('neutral', 'light');
     const style = {
-      preset: 'neutral',
-      mode: 'light',
-      tokens,
-      tokenSources: Object.values(ChartStyleToken).map(token => ({
-        token,
-        kind: 'preset',
-        path: `$preset/neutral/light/${token}`,
-      })),
-      authoredOverrides: [],
+      chart: {
+        style: 'neutral',
+        mode: 'light',
+        tokens,
+        tokenSources: Object.values(ChartStyleToken).map(token => ({
+          token,
+          kind: 'preset',
+          path: `$preset/neutral/light/${token}`,
+        })),
+      },
+      plot: resolvePlotTheme({ style: ThemeStyle.Neutral, mode: ThemeMode.Light }),
     } as const;
     expect(
       ChartInspectionSchema.parse({

@@ -1,5 +1,6 @@
-import type { IRNode, IRPath, IRScope } from '@retikz/core';
+import type { IRNode, IRPath, IRScope, ScenePrimitive } from '@retikz/core';
 
+import { compileToScene, ThemeMode, ThemeStyle } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { IRPlotSpec } from '../../src/schemas';
@@ -66,6 +67,12 @@ const nodesOf = (root: IRScope): Array<IRNode> => {
   return out;
 };
 
+const primitiveFillsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<unknown> =>
+  primitives.flatMap(primitive => [
+    ...('fill' in primitive ? [primitive.fill] : []),
+    ...(primitive.type === 'group' ? primitiveFillsOf(primitive.children) : []),
+  ]);
+
 const pathsOf = (root: IRScope): Array<IRPath> => {
   const out: Array<IRPath> = [];
   const visit = (children: ReadonlyArray<unknown>): void => {
@@ -116,6 +123,29 @@ describe('plot theme schema and lowering', () => {
     expect(background.type).toBe('node');
     expect(background.fill).toBe('#f8fafc');
     expect(hasMinimumSize(background, 480, 300)).toBe(true);
+  });
+
+  it('Scene 与 Scope effective Theme 进入 Plot lowering', () => {
+    const scene = compileToScene(
+      {
+        version: 1,
+        type: 'scene',
+        theme: { style: ThemeStyle.Academic, mode: ThemeMode.Dark },
+        children: [
+          baseSpec({ id: 'scene-theme-plot' }),
+          {
+            type: 'scope',
+            theme: { style: ThemeStyle.Vibrant, mode: ThemeMode.Light },
+            children: [baseSpec({ id: 'scope-theme-plot' })],
+          },
+        ],
+      },
+      { composites: lowerPlots({ d: ROWS }, { width: 480, height: 300 }) },
+    ).scene;
+    const fills = primitiveFillsOf(scene.primitives);
+
+    expect(fills).toContain('#111827');
+    expect(fills).toContain('#E5ECF6');
   });
 
   it('theme_palette_categorical_beats_colors_for_ordinal_scale', () => {

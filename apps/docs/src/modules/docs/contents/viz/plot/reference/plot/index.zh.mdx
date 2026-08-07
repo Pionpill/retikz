@@ -19,8 +19,9 @@ description: 查询 PlotSpec 根、坐标视图、Facet 与 Tracks 组合的 JSO
     'data.model': '可选字段模型，为通道、比例尺与辅助提供类型信息。',
     transform: '在比例尺推断和图元 lowering 前按顺序执行的数据变换。',
     scales: '具名比例尺操作；内置变体在此校验，自定义变体在 lowering 时校验。',
-    colors: '兼容性调色板简写；显式 theme palette 或 scale range / scheme 优先级更高。',
-    theme: 'Plot lowering 消费的 JSON-safe 视觉默认值。',
+    styleTokens: '严格、稀疏的 Plot canonical theme token 覆盖；每个 token 按完整值替换。',
+    colors: '分类、series 与 sector 调色板简写；显式 theme palette 或 scale range / scheme 优先级更高。',
+    theme: 'Plot lowering 消费的 JSON-safe 原生视觉覆盖，优先级高于 styleTokens 与 colors。',
     layout: 'Plot 标签、图例和辅助预留空间的布局策略。',
     labels: '标题、说明、来源等静态 Plot 文本。',
     width: '图区内在宽度；省略时回退到 lowering 全局宽度和内置默认值。',
@@ -34,6 +35,8 @@ description: 查询 PlotSpec 根、坐标视图、Facet 与 Tracks 组合的 JSO
 />
 
 `coordinate` 与 `composition` 必须且只能出现一个。同一 Plot 中的 scale name 、view id 和 arrangement id 必须唯一，图元或坐标轴引用的 `coordinateView` 必须已注册。
+
+主题输入按 Core effective Theme preset → `styleTokens` → `colors` → `theme` → 局部 guide / mark / scale 配置解析。完整 token 与级联规则见[主题契约](/viz/plot/reference/theme)。
 
 ## CoordinateCompositionSchema
 

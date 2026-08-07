@@ -26,8 +26,10 @@ describe('Chart inspection', () => {
     });
 
     const { style, ...inspection } = result.inspection;
-    expect(style).toMatchObject({ preset: 'neutral', mode: 'light', authoredOverrides: [] });
-    expect(style.tokenSources).toHaveLength(75);
+    expect(style.chart).toMatchObject({ style: 'neutral', mode: 'light' });
+    expect(style.chart.tokenSources).toHaveLength(37);
+    expect(style.plot).toMatchObject({ style: 'neutral', mode: 'light', authoredOverrides: [] });
+    expect(style.plot.tokenSources).toHaveLength(40);
     expect(inspection).toEqual({
       chart: { type: 'scatter', id: 'sales' },
       plot: { id: 'sales/plot' },

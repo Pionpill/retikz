@@ -19,7 +19,6 @@ import type {
   ChartPresentationItemContentKindValue,
   ChartPresentationPresetValue,
   ChartPresentationResolvedContentKindValue,
-  ChartStyleAuthoredOverrideValue,
   ChartStyleTokenSourceValue,
   ChartStyleTokenValue,
   IRChartInspection,
@@ -83,14 +82,12 @@ describe('@retikz/chart package root', () => {
       'ChartPresentationTextSchema',
       'ChartResolvedStyleTokensSchema',
       'ChartSharedSchema',
-      'ChartStyleAuthoredOverride',
       'ChartStyleSurfaceSchema',
       'ChartStyleToken',
       'ChartStyleTokenOverridesSchema',
       'ChartStyleTokenSource',
     ]);
     expect(chart.ChartStyleTokenSource).toEqual({ Preset: 'preset', StyleToken: 'style-token' });
-    expect(chart.ChartStyleAuthoredOverride).toEqual({ Colors: 'colors', Theme: 'theme' });
     expect(chart).not.toHaveProperty('ChartStyle');
     expect(chart).not.toHaveProperty('ChartThemeMode');
     expect(ThemeStyle).toEqual({ Neutral: 'neutral', Academic: 'academic', Vibrant: 'vibrant', Clean: 'clean' });
@@ -102,11 +99,13 @@ describe('@retikz/chart package root', () => {
   it('公开 schema 派生 presentation union 而不公开 resolver 或 recipe', () => {
     const style: ThemeStyleValue = ThemeStyle.Neutral;
     const mode: ThemeModeValue = ThemeMode.Dark;
-    const token: ChartStyleTokenValue = 'axis.enabled';
+    const token: ChartStyleTokenValue = 'chart.axis.enabled';
     const tokenSource: ChartStyleTokenSourceValue = 'style-token';
-    const authoredOverride: ChartStyleAuthoredOverrideValue = 'theme';
     const overrides: IRChartStyleTokenOverrides = { [token]: false };
-    const surface: IRChartStyleSurface = { style, themeMode: mode, styleTokens: overrides };
+    const surface: IRChartStyleSurface = {
+      styleTokens: overrides,
+      plotStyleTokens: { 'plot.palette.series': ['#2563eb'] },
+    };
     const shared: IRChartShared = { data: { reference: 'rows' }, ...surface };
     const preset: ChartPresentationPresetValue = 'title';
     const itemContentKind: ChartPresentationItemContentKindValue = 'preset';
@@ -149,14 +148,15 @@ describe('@retikz/chart package root', () => {
       value: { type: 'point' },
       sources: [{ kind: source, path: '$recipe/scatter/mark.main' }],
     };
-    expectTypeOf<IRChartResolvedStyleTokens>().toMatchTypeOf<IRChartInspection['style']['tokens']>();
+    expectTypeOf<IRChartResolvedStyleTokens>().toMatchTypeOf<IRChartInspection['style']['chart']['tokens']>();
     expectTypeOf<IRChartInspectionMember>().toMatchTypeOf<typeof member>();
 
     expect({
       shared,
       member,
+      style,
+      mode,
       tokenSource,
-      authoredOverride,
       presentation,
       presentationInspection,
       content,

@@ -11,14 +11,21 @@ import { PlotSpecSchema } from '../../../src/schemas';
 /** 笛卡尔默认画布：x [0,..]→[0,480]，y range [300,0]（无 axis → plot area = 整图） */
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 
-const expandOf = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
-  const [def] = lowerPlots(datasets, cartOpts);
+const expandOf = (
+  spec: IRPlotSpec,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  options: LowerPlotsOptions = {},
+): IRScope => {
+  const [def] = lowerPlots(datasets, { ...cartOpts, ...options });
   return def.expand(spec) as IRScope;
 };
 
 /** 取第一个 mark 图层 scope（外层 plot scope 的第一个子 scope） */
-const firstLayer = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
-  expandOf(spec, datasets).children[0] as IRScope;
+const firstLayer = (
+  spec: IRPlotSpec,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  options: LowerPlotsOptions = {},
+): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 深度收集图层内所有 point node（连续色按色分组到子 Scope，fill 落在子 Scope.nodeDefault） */
 const collectNodes = (layer: IRScope): Array<IRNode> => {
@@ -70,7 +77,7 @@ const nodeFills = (layer: IRScope): Array<string | undefined> => {
 };
 
 /** 建单 point mark 的 cartesian spec，x/y linear + 给定连续色 scale，color 引用之 */
-const pointSpec = (colorScale: Record<string, unknown>): IRPlotSpec =>
+const pointSpec = (colorScale: Record<string, unknown>, theme?: IRPlotSpec['theme']): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -88,6 +95,7 @@ const pointSpec = (colorScale: Record<string, unknown>): IRPlotSpec =>
         encoding: { x: { field: 'x' }, y: { field: 'y' } },
       },
     ],
+    theme,
   });
 
 describe('连续色 · sequential 求值（contract）', () => {
@@ -193,6 +201,48 @@ describe('连续色 · diverging 求值（contract）', () => {
     );
     expect(lowSeq[0]?.toLowerCase()).toContain('12');
     expect(fills[0]).not.toEqual(fills[1]);
+  });
+});
+
+describe('连续色 · Plot theme scheme 消费（contract）', () => {
+  const data = [
+    { x: 0, y: 0, v: -100 },
+    { x: 1, y: 1, v: 0 },
+    { x: 2, y: 2, v: 100 },
+  ];
+
+  it('让 theme sequential/diverging scheme 通过 options.colorSchemes 进入 scale 求值', () => {
+    const colorSchemes = {
+      'theme-sequential': (t: number): string => (t < 0.5 ? '#102030' : '#d0e0f0'),
+      'theme-diverging': (t: number): string => (t < 0.5 ? '#ff0000' : t > 0.5 ? '#0000ff' : '#ffffff'),
+    };
+    const sequential = nodeFills(
+      firstLayer(
+        pointSpec({ type: 'sequential', domain: [-100, 100] }, { palette: { sequential: 'theme-sequential' } }),
+        { d: data },
+        { colorSchemes },
+      ),
+    );
+    const diverging = nodeFills(
+      firstLayer(
+        pointSpec({ type: 'diverging', domain: [-100, 0, 100] }, { palette: { diverging: 'theme-diverging' } }),
+        { d: data },
+        { colorSchemes },
+      ),
+    );
+
+    expect(sequential[0]).not.toEqual(sequential[2]);
+    expect(diverging[0]).not.toEqual(diverging[1]);
+    expect(diverging[1]).not.toEqual(diverging[2]);
+  });
+
+  it('让未注册的 theme scheme 在实际 scale 消费时 fail-loud', () => {
+    expect(() =>
+      firstLayer(
+        pointSpec({ type: 'sequential', domain: [-100, 100] }, { palette: { sequential: 'missing-theme-scheme' } }),
+        { d: data },
+      ),
+    ).toThrow('unknown color scheme "missing-theme-scheme"');
   });
 });
 

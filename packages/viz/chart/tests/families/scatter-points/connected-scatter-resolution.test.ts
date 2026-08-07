@@ -114,13 +114,13 @@ const connectedUnitScale = defineScale({
 
 const chartWithCustomCoordinate = {
   ...base,
-  styleTokens: { 'axis.enabled': false },
+  styleTokens: { 'chart.axis.enabled': false },
   coordinate: { type: 'connected-test-2d' },
 } as const;
 
 const chartWithCustomScale = {
   ...base,
-  styleTokens: { 'axis.enabled': false },
+  styleTokens: { 'chart.axis.enabled': false },
   scales: [
     { type: 'connected-unit', name: '__chart.connected-scatter.scale.x' },
     { type: 'linear', name: '__chart.connected-scatter.scale.y' },

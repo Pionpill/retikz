@@ -3,7 +3,6 @@ import type { IRNode, IRPath } from '@retikz/core';
 import type { IRPlotAxisGuide, IRPlotLegendGuide, IRPlotTheme } from '../../schemas';
 
 import { LegendSymbolFit } from '../../schemas';
-import { DEFAULT_PLOT_COLORS, PlotColorScheme } from '../scale/shared';
 
 type GuidePathStyle = Partial<
   Pick<IRPath, 'stroke' | 'strokeWidth' | 'strokeOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>
@@ -54,9 +53,9 @@ export type ResolvedLegendGuideTokens = Required<
 };
 
 /** Plot theme 解析结果：lowering 只消费 resolved token，不直接读原始 theme */
-export type ResolvedPlotTheme = {
+export type ResolvedPlotGuideTheme = {
   /** 可选背景填充；省略表示透明 */
-  background?: string;
+  background?: IRPlotTheme['background'];
   /** 全局 guide 文本默认样式 */
   typography: GuideTextStyle;
   /** 解析后的 palette */
@@ -103,36 +102,19 @@ const mergePathStyle = <T extends GuidePathStyle>(base: GuidePathStyle | undefin
   return { ...base, ...override };
 };
 
-const resolvePalette = (
-  palette: IRPlotTheme['palette'] | undefined,
-  colors: ReadonlyArray<string> | undefined,
-): ResolvedPlotPalette => {
-  const categorical = [...(palette?.categorical ?? colors ?? DEFAULT_PLOT_COLORS)];
-  return {
-    categorical,
-    series: [...(palette?.series ?? palette?.categorical ?? colors ?? DEFAULT_PLOT_COLORS)],
-    sector: [...(palette?.sector ?? palette?.categorical ?? colors ?? DEFAULT_PLOT_COLORS)],
-    sequential: palette?.sequential ?? PlotColorScheme.Viridis,
-    diverging: palette?.diverging ?? PlotColorScheme.RdBu,
-  };
-};
-
 /**
- * 解析 PlotSpec.theme。
- * @description 只处理视觉 token、typography、palette 和 background；domain、tick source、format 等语义字段不进入 theme
+ * 把完整原生 Plot theme 解析为 guide lowering 消费态
+ * @description token cascade 已由 resolvePlotTheme 完成；此处只补齐 guide 文本继承并保留正式 Plot theme 语义
  */
-export const resolvePlotTheme = (
-  theme: IRPlotTheme | undefined,
-  colors: ReadonlyArray<string> | undefined,
-): ResolvedPlotTheme => {
-  const typography = mergeTextStyle(DEFAULT_TYPOGRAPHY, theme?.typography);
-  const legend = theme?.legend;
+export const resolvePlotGuideTheme = (theme: IRPlotTheme, palette: ResolvedPlotPalette): ResolvedPlotGuideTheme => {
+  const typography = mergeTextStyle(DEFAULT_TYPOGRAPHY, theme.typography);
+  const legend = theme.legend;
   return {
-    ...(theme?.background !== undefined ? { background: theme.background } : {}),
+    ...(theme.background !== undefined ? { background: theme.background } : {}),
     typography,
-    palette: resolvePalette(theme?.palette, colors),
-    axis: theme?.axis ?? {},
-    labelText: mergeTextStyle(typography, theme?.labelText),
+    palette: structuredClone(palette),
+    axis: theme.axis ?? {},
+    labelText: mergeTextStyle(typography, theme.labelText),
     legend: {
       swatchSize: legend?.swatchSize ?? DEFAULT_LEGEND.swatchSize,
       swatchGap: legend?.swatchGap ?? DEFAULT_LEGEND.swatchGap,
@@ -240,7 +222,7 @@ const mergeAxisGrid = (
  * 合并 axis guide 的主题 token。
  * @description 只合并 line/tick line/tick label/title/grid 的视觉字段；ticks.values、ticks.count、tickLabels.format、title.text 和 grid projection 保持 local 语义
  */
-export const resolveAxisGuideTokens = (theme: ResolvedPlotTheme, guide: IRPlotAxisGuide): IRPlotAxisGuide => ({
+export const resolveAxisGuideTokens = (theme: ResolvedPlotGuideTheme, guide: IRPlotAxisGuide): IRPlotAxisGuide => ({
   ...guide,
   ...(theme.axis.line !== undefined
     ? {
@@ -271,7 +253,7 @@ export const resolveAxisGuideTokens = (theme: ResolvedPlotTheme, guide: IRPlotAx
  * @description position、orient、channel、scale、ticks、tickLabels.format 等语义字段不参与合并
  */
 export const resolveLegendGuideTokens = (
-  theme: ResolvedPlotTheme,
+  theme: ResolvedPlotGuideTheme,
   local: LegendStyle | undefined,
 ): ResolvedLegendGuideTokens => ({
   swatchSize: local?.swatchSize ?? theme.legend.swatchSize,

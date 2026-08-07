@@ -325,7 +325,10 @@ export const vizSection: Array<Section> = [
       {
         id: 'changelog',
         label: 'viz.changelog',
-        children: [{ id: 'v0-1', label: 'viz.changelogV01' }],
+        children: [
+          { id: 'v0-2', label: 'viz.changelogV02' },
+          { id: 'v0-1', label: 'viz.changelogV01' },
+        ],
         meta: {
           pageType: 'release',
           audience: 'user',

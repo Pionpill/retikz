@@ -46,7 +46,6 @@ export {
 export type { IRChartShared } from './schemas';
 export { ChartSharedSchema } from './schemas';
 export type {
-  ChartStyleAuthoredOverrideValue,
   ChartStyleTokenSourceValue,
   ChartStyleTokenValue,
   IRChartResolvedStyleTokens,
@@ -55,7 +54,6 @@ export type {
 } from './style';
 export {
   ChartResolvedStyleTokensSchema,
-  ChartStyleAuthoredOverride,
   ChartStyleSurfaceSchema,
   ChartStyleToken,
   ChartStyleTokenOverridesSchema,

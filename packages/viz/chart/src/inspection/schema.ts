@@ -2,15 +2,11 @@ import type { IRJsonObject, ValueOf } from '@retikz/core';
 import type { z } from 'zod';
 
 import { JsonObjectSchema, ThemeMode, ThemeStyle } from '@retikz/core';
+import { PlotThemeResolutionSchema } from '@retikz/plot';
 import { z as zod } from 'zod';
 
 import { ChartPresentationInspectionSchema } from '../presentation';
-import {
-  ChartResolvedStyleTokensSchema,
-  ChartStyleAuthoredOverride,
-  ChartStyleToken,
-  ChartStyleTokenSource,
-} from '../style';
+import { ChartResolvedStyleTokensSchema, ChartStyleToken, ChartStyleTokenSource } from '../style';
 
 /** Chart member 的 contribution 来源 */
 export const ChartContributionSource = {
@@ -54,10 +50,10 @@ export const ChartInspectionMemberSchema = zod
   })
   .describe('Normalized final Plot member and its ordered Chart contributions');
 
-/** Chart inspection member 的 JSON-safe 类型 */
+/** Chart resolution inspection member 的 JSON-safe 类型 */
 export type IRChartInspectionMember = z.infer<typeof ChartInspectionMemberSchema>;
 
-/** 交给 inspection 的中立最终 member record，不暴露 resolver 私有类型 */
+/** 交给 inspection 的中立最终 member record */
 export type ChartInspectionMemberInput = {
   target: string;
   kind: IRChartInspectionMember['kind'];
@@ -70,56 +66,34 @@ export type ChartInspectionMemberInput = {
 const ChartStyleTokenSourceSchema = zod
   .strictObject({
     token: zod.enum(ChartStyleToken).describe('Canonical Chart style token'),
-    kind: zod.enum(ChartStyleTokenSource).describe('Winning token source layer'),
-    path: zod.string().min(1).describe('Stable source path for this resolved token'),
+    kind: zod.enum(ChartStyleTokenSource).describe('Winning Chart token source layer'),
+    path: zod.string().min(1).describe('Stable source path for this resolved Chart token'),
   })
   .describe('Winning cascade source for one resolved Chart style token');
 
-const ChartStyleAuthoredOverrideSchema = zod
+const ChartOwnedStyleInspectionSchema = zod
   .strictObject({
-    kind: zod.enum(ChartStyleAuthoredOverride).describe('Authored Plot style override entry'),
-    path: zod.string().min(1).describe('Stable Chart input path'),
-  })
-  .describe('Authored Plot override applied after the resolved Chart token map');
-
-const ChartInspectionStyleSchema = zod
-  .strictObject({
-    preset: zod.enum(ThemeStyle).describe('Applied built-in Chart style preset'),
-    mode: zod.enum(ThemeMode).describe('Applied Chart theme mode'),
-    tokens: ChartResolvedStyleTokensSchema.describe('Complete resolved Chart style token map'),
+    style: zod.enum(ThemeStyle).describe('Effective Theme style selecting the Chart preset'),
+    mode: zod.enum(ThemeMode).describe('Effective Theme mode selecting Chart paints'),
+    tokens: ChartResolvedStyleTokensSchema.describe('Complete resolved Chart-owned token map'),
     tokenSources: zod
       .array(ChartStyleTokenSourceSchema)
-      .describe('One winning source for each token in canonical order'),
-    authoredOverrides: zod
-      .array(ChartStyleAuthoredOverrideSchema)
-      .describe('Authored colors and raw Plot theme override inputs in cascade order'),
+      .describe('One winning source for each Chart token in canonical order'),
   })
-  .superRefine((style, ctx) => {
+  .superRefine((style, context) => {
     const canonical = Object.values(ChartStyleToken);
     if (
       style.tokenSources.length !== canonical.length ||
       style.tokenSources.some((source, index) => source.token !== canonical[index])
     ) {
-      ctx.addIssue({
+      context.addIssue({
         code: 'custom',
         path: ['tokenSources'],
-        message: 'Chart style token sources must contain every canonical token exactly once and in order',
-      });
-    }
-    const authoredKinds = style.authoredOverrides.map(source => source.kind);
-    const expectedKinds = Object.values(ChartStyleAuthoredOverride).filter(kind => authoredKinds.includes(kind));
-    if (
-      authoredKinds.length !== expectedKinds.length ||
-      authoredKinds.some((kind, index) => kind !== expectedKinds[index])
-    ) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['authoredOverrides'],
-        message: 'Chart style authored overrides must be unique and ordered as colors then theme',
+        message: 'Chart token sources must contain every canonical token exactly once and in order',
       });
     }
   })
-  .describe('Resolved Chart style and stable cascade provenance');
+  .describe('Resolved Chart-owned presentation and recipe style');
 
 /** Chart resolution 的只读 inspection 契约 */
 export const ChartInspectionSchema = zod
@@ -135,7 +109,12 @@ export const ChartInspectionSchema = zod
         id: zod.string().min(1).optional().describe('Optional resolved Plot identity'),
       })
       .describe('Resolved Plot identity'),
-    style: ChartInspectionStyleSchema.describe('Resolved visual-language state'),
+    style: zod
+      .strictObject({
+        chart: ChartOwnedStyleInspectionSchema.describe('Chart-owned token resolution'),
+        plot: PlotThemeResolutionSchema.describe('Plot-owned token and native theme resolution'),
+      })
+      .describe('Owner-preserving Chart and Plot style inspection'),
     presentation: ChartPresentationInspectionSchema.describe('Resolved presentation content and item identities'),
     members: zod.array(ChartInspectionMemberSchema).describe('Final Plot members in normalized collection order'),
   })

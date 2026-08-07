@@ -9,7 +9,7 @@ const modes = Object.values(ThemeMode);
 const canonicalKeys = Object.values(ChartStyleToken);
 
 describe('Chart style preset catalog', () => {
-  it('精确锁定 ADR 的八份完整 resolved map', () => {
+  it('精确锁定八份 Chart-owned resolved map', () => {
     const digests = Object.fromEntries(
       styles.flatMap(style =>
         modes.map(mode => [
@@ -20,16 +20,15 @@ describe('Chart style preset catalog', () => {
         ]),
       ),
     );
-
     expect(digests).toEqual({
-      'neutral/light': '21ad623daa2f76b83796c0711110dc46ab9f885c3d06ffe7d6f60ff1967c8451',
-      'neutral/dark': '32f8ed34888405bdb1c27560983adc761318e301dba397e7d1914dad2b2a7825',
-      'academic/light': 'ef45f435feb7618d23ad9819ea88ce2e292abdf66e551bea1809f9d0a57327e0',
-      'academic/dark': '992af5cf55dda48d9c5b85aa158f3dbda2cbc6dde201fb28275053e98d4a5aac',
-      'vibrant/light': '69490527113ed843e3f7f9df98d71625318535c981ad455f32e71393c573891b',
-      'vibrant/dark': '44ae6e828061687773fd64380f8e8a8fd7763f4226f3aa00be4157291667df4b',
-      'clean/light': 'b3059bb9fb28867f595a0db7b6b541ec68ef39c6e7697575190a8896ba7ada55',
-      'clean/dark': '713cfd44fcffa18103d4c206669f9456e5f8d2124185e9cafeca72463441d8c9',
+      'neutral/light': 'a59c84ccca39ea8b0407ba523315ced24a8aa2410969cf2ed8f9bc65c02df0bf',
+      'neutral/dark': '5a2f75fe92ff743fec711930ed1e6b4a3ed2ee8d127b9f4293b197ce55767458',
+      'academic/light': '2fbd2a966941b8e8e356d7ec051db5c8e2fdebf40f1e7f0d2c31dd854322ebca',
+      'academic/dark': '71744045c47787e9fd0367311a1efcff1ae4f47b3e788cdd72475d4b64ec1efb',
+      'vibrant/light': '696a0075edb5aa568e842c09b4cb2d97d6aedf9b0a6fd4c11e2c701900cd4fcf',
+      'vibrant/dark': '5632c48d1f4dc1946b8583786876059a3e1c458825e24f9b433890ee75085ac0',
+      'clean/light': '3c685fde6be4a3cdb442c2e1a509f948a19d0a878409036841ba872deda77641',
+      'clean/dark': 'a169c975761cc5a1b696f9a816c993b30cd42955c7b5a52b5a711abb65dbd98e',
     });
   });
 
@@ -43,78 +42,36 @@ describe('Chart style preset catalog', () => {
     }
   });
 
-  it('mode 只改变 paint 与 palette，保持 topology、排版、尺寸和 scheme', () => {
+  it('mode 只改变 Chart paint，保持排版、布局和 recipe defaults', () => {
     const modeSensitive = new Set([
-      'chart.canvas.fill',
-      'plot.surface.fill',
-      'plot.foreground',
-      'plot.label.foreground',
+      ChartStyleToken.ChartCanvasFill,
       ...['title', 'subtitle', 'caption', 'note', 'source', 'credit'].map(slot => `chart.${slot}.foreground`),
-      'axis.line.stroke',
-      'axis.tickLabel.foreground',
-      'axis.title.foreground',
-      'axis.grid.stroke',
-      'legend.title.foreground',
-      'legend.label.foreground',
-      'data.palette.categorical',
-      'data.palette.series',
-      'data.palette.sector',
     ]);
-
     for (const style of styles) {
       const light = getChartStylePreset(style, ThemeMode.Light);
       const dark = getChartStylePreset(style, ThemeMode.Dark);
       for (const key of canonicalKeys) {
-        if (key === ChartStyleToken.AxisTickMark && style === ThemeStyle.Academic) {
-          const lightTick = light[key];
-          const darkTick = dark[key];
-          if (
-            lightTick === false ||
-            darkTick === false ||
-            lightTick.kind !== 'line' ||
-            darkTick.kind !== 'line' ||
-            lightTick.line === false ||
-            darkTick.line === false ||
-            lightTick.line === undefined ||
-            darkTick.line === undefined
-          ) {
-            throw new Error('academic tick must stay a styled line mark');
-          }
-          expect({ ...lightTick, line: { ...lightTick.line, stroke: undefined } }).toEqual({
-            ...darkTick,
-            line: { ...darkTick.line, stroke: undefined },
-          });
-          expect(lightTick.line.stroke).toBe(light[ChartStyleToken.AxisLineStroke]);
-          expect(darkTick.line.stroke).toBe(dark[ChartStyleToken.AxisLineStroke]);
-        } else if (!modeSensitive.has(key)) {
-          expect(dark[key]).toEqual(light[key]);
-        }
+        if (!modeSensitive.has(key)) expect(dark[key]).toEqual(light[key]);
       }
     }
   });
 
-  it('冻结 ADR 中的结构倾向与 palette', () => {
+  it('冻结 presentation 与 recipe 结构倾向', () => {
     expect(getChartStylePreset('neutral', 'light')).toMatchObject({
+      'chart.canvas.fill': '#FFFFFF',
       'chart.padding': 16,
-      'axis.line.enabled': false,
-      'axis.grid.enabled': true,
-      'data.palette.categorical': ['#E76E50', '#2A9D90', '#274754', '#E8C468', '#F4A462'],
+      'chart.axis.enabled': true,
+      'chart.axis.grid.enabled': true,
+      'chart.legend.enabled': true,
     });
-    expect(getChartStylePreset('academic', 'light')['axis.tick.mark']).toEqual({
-      kind: 'line',
-      length: 4,
-      line: { stroke: '#9CA3AF', strokeWidth: 1 },
-    });
-    expect(getChartStylePreset('vibrant', 'dark')['data.palette.sequential']).toBe('turbo');
-    expect(getChartStylePreset('clean', 'light')['axis.grid.enabled']).toBe(false);
+    expect(getChartStylePreset('vibrant', 'dark')['chart.title.font.size']).toBe(20);
+    expect(getChartStylePreset('clean', 'light')['chart.axis.grid.enabled']).toBe(false);
   });
 
-  it('每次返回独立 clone，调用方 mutation 不污染 catalog', () => {
+  it('每次返回独立 clone', () => {
     const first = getChartStylePreset('neutral', 'light');
-    first['data.palette.categorical'][0] = '#000000';
-    first['axis.line.enabled'] = true;
+    first['chart.padding'] = 0;
     const second = getChartStylePreset('neutral', 'light');
-    expect(second['data.palette.categorical'][0]).toBe('#E76E50');
-    expect(second['axis.line.enabled']).toBe(false);
+    expect(second['chart.padding']).toBe(16);
   });
 });

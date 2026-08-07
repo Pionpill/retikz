@@ -17,6 +17,12 @@ const ShadowText: FC<TextProps> = () => null;
 ShadowText.displayName = Text.displayName;
 
 describe('buildPlotSpec 装配', () => {
+  it('透传 Plot styleTokens 到 canonical PlotSpec', () => {
+    const styleTokens: NonNullable<IRPlotSpec['styleTokens']> = { 'plot.palette.series': ['#2563eb'] };
+    const spec = buildPlotSpec(<PathMark x="month" y="revenue" />, '__plot', { styleTokens });
+    expect(spec.styleTokens).toEqual(styleTokens);
+  });
+
   it('单 line：装配出等价手写 IRPlotSpec（薄 Plot：无默认 guides）', () => {
     const spec = buildPlotSpec(<PathMark x="month" y="revenue" order="month" />, '__plot');
     const expected: IRPlotSpec = {
