@@ -52,14 +52,12 @@ export type RuntimeOwnerExecutor = Readonly<{
   ) => RuntimeOwnerExecutionResult<void>;
 }>;
 
-const errorMessage = (cause: unknown): string => (cause instanceof Error ? cause.message : String(cause));
-
 const createDisposeDiagnostic = (owner: string, cause: unknown): RuntimeOwnerLifecycleDiagnostic =>
   Object.freeze({
     code: RuntimeDiagnosticCode.OwnerDisposeFailed,
     owner,
     phase: RuntimeOwnerPhase.Retire,
-    message: errorMessage(cause),
+    message: (cause instanceof Error ? cause.message : String(cause)),
     cause,
   });
 
