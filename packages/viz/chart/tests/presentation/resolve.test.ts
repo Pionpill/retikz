@@ -7,7 +7,7 @@ import type { IRChartPresentation } from '../../src/presentation';
 import { resolveChartPresentation } from '../../src/presentation';
 import { ChartPresentationSchema } from '../../src/presentation';
 import { resolveChartSpec } from '../../src/resolution';
-import { ChartStyleToken, getChartStylePreset } from '../../src/style';
+import { ChartThemeToken, getChartThemePreset } from '../../src/style';
 
 const base = {
   namespace: 'chart',
@@ -17,57 +17,57 @@ const base = {
 } as const;
 
 const plotSpec = resolveChartSpec(base).plotSpec;
-const tokens = getChartStylePreset('neutral', 'light');
+const tokens = getChartThemePreset('neutral', 'light');
 const plotItem = { content: { kind: 'plot' } } as const;
 
 const presetTokenCases = [
   [
     'title',
-    ChartStyleToken.ChartTitleForeground,
-    ChartStyleToken.ChartTitleFontSize,
-    ChartStyleToken.ChartTitleFontWeight,
-    ChartStyleToken.ChartTitleLineHeight,
-    ChartStyleToken.ChartTitleAlign,
+    ChartThemeToken.ChartTitleForeground,
+    ChartThemeToken.ChartTitleFontSize,
+    ChartThemeToken.ChartTitleFontWeight,
+    ChartThemeToken.ChartTitleLineHeight,
+    ChartThemeToken.ChartTitleAlign,
   ],
   [
     'subtitle',
-    ChartStyleToken.ChartSubtitleForeground,
-    ChartStyleToken.ChartSubtitleFontSize,
-    ChartStyleToken.ChartSubtitleFontWeight,
-    ChartStyleToken.ChartSubtitleLineHeight,
-    ChartStyleToken.ChartSubtitleAlign,
+    ChartThemeToken.ChartSubtitleForeground,
+    ChartThemeToken.ChartSubtitleFontSize,
+    ChartThemeToken.ChartSubtitleFontWeight,
+    ChartThemeToken.ChartSubtitleLineHeight,
+    ChartThemeToken.ChartSubtitleAlign,
   ],
   [
     'caption',
-    ChartStyleToken.ChartCaptionForeground,
-    ChartStyleToken.ChartCaptionFontSize,
-    ChartStyleToken.ChartCaptionFontWeight,
-    ChartStyleToken.ChartCaptionLineHeight,
-    ChartStyleToken.ChartCaptionAlign,
+    ChartThemeToken.ChartCaptionForeground,
+    ChartThemeToken.ChartCaptionFontSize,
+    ChartThemeToken.ChartCaptionFontWeight,
+    ChartThemeToken.ChartCaptionLineHeight,
+    ChartThemeToken.ChartCaptionAlign,
   ],
   [
     'note',
-    ChartStyleToken.ChartNoteForeground,
-    ChartStyleToken.ChartNoteFontSize,
-    ChartStyleToken.ChartNoteFontWeight,
-    ChartStyleToken.ChartNoteLineHeight,
-    ChartStyleToken.ChartNoteAlign,
+    ChartThemeToken.ChartNoteForeground,
+    ChartThemeToken.ChartNoteFontSize,
+    ChartThemeToken.ChartNoteFontWeight,
+    ChartThemeToken.ChartNoteLineHeight,
+    ChartThemeToken.ChartNoteAlign,
   ],
   [
     'source',
-    ChartStyleToken.ChartSourceForeground,
-    ChartStyleToken.ChartSourceFontSize,
-    ChartStyleToken.ChartSourceFontWeight,
-    ChartStyleToken.ChartSourceLineHeight,
-    ChartStyleToken.ChartSourceAlign,
+    ChartThemeToken.ChartSourceForeground,
+    ChartThemeToken.ChartSourceFontSize,
+    ChartThemeToken.ChartSourceFontWeight,
+    ChartThemeToken.ChartSourceLineHeight,
+    ChartThemeToken.ChartSourceAlign,
   ],
   [
     'credit',
-    ChartStyleToken.ChartCreditForeground,
-    ChartStyleToken.ChartCreditFontSize,
-    ChartStyleToken.ChartCreditFontWeight,
-    ChartStyleToken.ChartCreditLineHeight,
-    ChartStyleToken.ChartCreditAlign,
+    ChartThemeToken.ChartCreditForeground,
+    ChartThemeToken.ChartCreditFontSize,
+    ChartThemeToken.ChartCreditFontWeight,
+    ChartThemeToken.ChartCreditLineHeight,
+    ChartThemeToken.ChartCreditAlign,
   ],
 ] as const;
 
@@ -76,7 +76,7 @@ describe('Chart presentation content', () => {
     const result = resolveChartPresentation(undefined, plotSpec, tokens);
 
     expect(result.content).toBe(plotSpec);
-    expect(result.surfacePadding).toEqual(tokens[ChartStyleToken.ChartPadding]);
+    expect(result.surfacePadding).toEqual(tokens[ChartThemeToken.ChartPadding]);
     expect(result.inspection).toEqual({
       contentKind: 'plot',
       items: [{ key: 'chart.plot', contentKind: 'plot', sourcePath: '$resolved/plot' }],
@@ -95,7 +95,7 @@ describe('Chart presentation content', () => {
       overflow: 'visible',
       direction: 'column',
       wrap: 'nowrap',
-      gap: { column: 0, row: tokens[ChartStyleToken.ChartGap] },
+      gap: { column: 0, row: tokens[ChartThemeToken.ChartGap] },
       justifyContent: 'start',
       alignItems: 'stretch',
       alignContent: 'start',
@@ -184,7 +184,7 @@ describe('Chart presentation content', () => {
       alignSelf: 'last-baseline',
     });
     expect(content.children[2]).toMatchObject({ key: 'chart.plot', grow: 2, child: plotSpec });
-    expect(result.surfacePadding).toEqual(tokens[ChartStyleToken.ChartPadding]);
+    expect(result.surfacePadding).toEqual(tokens[ChartThemeToken.ChartPadding]);
     expect(result.inspection).toEqual({
       contentKind: 'flex-layout',
       items: [
@@ -248,9 +248,9 @@ describe('Chart presentation content', () => {
       text,
       textColor: '#00ff00',
       font: {
-        family: tokens[ChartStyleToken.ChartFontFamily],
+        family: tokens[ChartThemeToken.ChartFontFamily],
         size: 99,
-        weight: tokens[ChartStyleToken.ChartTitleFontWeight],
+        weight: tokens[ChartThemeToken.ChartTitleFontWeight],
         style: 'oblique',
       },
       align: 'end',
@@ -276,7 +276,7 @@ describe('Chart presentation content', () => {
         text: preset,
         textColor: tokens[foreground],
         font: {
-          family: tokens[ChartStyleToken.ChartFontFamily],
+          family: tokens[ChartThemeToken.ChartFontFamily],
           size: tokens[fontSize],
           weight: tokens[fontWeight],
         },
@@ -294,7 +294,7 @@ describe('Chart presentation content', () => {
     );
 
     expect(result.content).toMatchObject({ padding: { x: 18 } });
-    expect(result.surfacePadding).toEqual(tokens[ChartStyleToken.ChartPadding]);
+    expect(result.surfacePadding).toEqual(tokens[ChartThemeToken.ChartPadding]);
   });
 
   it('content、surface handoff 与 inspection 不共享 authored mutable references', () => {
@@ -327,7 +327,7 @@ describe('Chart presentation content', () => {
     const content = FlexLayoutSchema.parse(result.content);
     expect(NodeSchema.parse(content.children[0]?.child).font?.family).toBe('Custom');
     expect(content.padding).toEqual({ x: 8 });
-    expect(result.surfacePadding).toEqual(tokens[ChartStyleToken.ChartPadding]);
+    expect(result.surfacePadding).toEqual(tokens[ChartThemeToken.ChartPadding]);
     expect(JSON.parse(JSON.stringify(result))).toEqual(result);
   });
 

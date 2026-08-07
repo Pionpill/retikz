@@ -2,10 +2,10 @@ import type { ThemeModeValue, ThemeStyleValue } from '@retikz/core';
 
 import { NodeTextAlign, ThemeMode, ThemeStyle } from '@retikz/core';
 
-import type { ChartStyleTokenValue, IRChartResolvedStyleTokens } from './types';
+import type { ChartThemeTokenValue, IRChartResolvedThemeTokens } from './types';
 
-import { ChartStyleToken } from './constants';
-import { ChartResolvedStyleTokensSchema } from './schema';
+import { ChartThemeToken } from './constants';
+import { ChartResolvedThemeTokensSchema } from './schema';
 
 type PresetStructure = Readonly<{
   padding: number;
@@ -20,11 +20,11 @@ type PresetPaint = Readonly<{
 }>;
 
 type PresentationTokenGroup = Readonly<{
-  foreground: ChartStyleTokenValue;
-  fontSize: ChartStyleTokenValue;
-  fontWeight: ChartStyleTokenValue;
-  lineHeight: ChartStyleTokenValue;
-  align: ChartStyleTokenValue;
+  foreground: ChartThemeTokenValue;
+  fontSize: ChartThemeTokenValue;
+  fontWeight: ChartThemeTokenValue;
+  lineHeight: ChartThemeTokenValue;
+  align: ChartThemeTokenValue;
 }>;
 
 const structures: Record<ThemeStyleValue, PresetStructure> = {
@@ -134,53 +134,53 @@ const paints: Record<ThemeStyleValue, Record<ThemeModeValue, PresetPaint>> = {
 
 const presentationTokenGroups: ReadonlyArray<PresentationTokenGroup> = [
   {
-    foreground: ChartStyleToken.ChartTitleForeground,
-    fontSize: ChartStyleToken.ChartTitleFontSize,
-    fontWeight: ChartStyleToken.ChartTitleFontWeight,
-    lineHeight: ChartStyleToken.ChartTitleLineHeight,
-    align: ChartStyleToken.ChartTitleAlign,
+    foreground: ChartThemeToken.ChartTitleForeground,
+    fontSize: ChartThemeToken.ChartTitleFontSize,
+    fontWeight: ChartThemeToken.ChartTitleFontWeight,
+    lineHeight: ChartThemeToken.ChartTitleLineHeight,
+    align: ChartThemeToken.ChartTitleAlign,
   },
   {
-    foreground: ChartStyleToken.ChartSubtitleForeground,
-    fontSize: ChartStyleToken.ChartSubtitleFontSize,
-    fontWeight: ChartStyleToken.ChartSubtitleFontWeight,
-    lineHeight: ChartStyleToken.ChartSubtitleLineHeight,
-    align: ChartStyleToken.ChartSubtitleAlign,
+    foreground: ChartThemeToken.ChartSubtitleForeground,
+    fontSize: ChartThemeToken.ChartSubtitleFontSize,
+    fontWeight: ChartThemeToken.ChartSubtitleFontWeight,
+    lineHeight: ChartThemeToken.ChartSubtitleLineHeight,
+    align: ChartThemeToken.ChartSubtitleAlign,
   },
   {
-    foreground: ChartStyleToken.ChartCaptionForeground,
-    fontSize: ChartStyleToken.ChartCaptionFontSize,
-    fontWeight: ChartStyleToken.ChartCaptionFontWeight,
-    lineHeight: ChartStyleToken.ChartCaptionLineHeight,
-    align: ChartStyleToken.ChartCaptionAlign,
+    foreground: ChartThemeToken.ChartCaptionForeground,
+    fontSize: ChartThemeToken.ChartCaptionFontSize,
+    fontWeight: ChartThemeToken.ChartCaptionFontWeight,
+    lineHeight: ChartThemeToken.ChartCaptionLineHeight,
+    align: ChartThemeToken.ChartCaptionAlign,
   },
   {
-    foreground: ChartStyleToken.ChartNoteForeground,
-    fontSize: ChartStyleToken.ChartNoteFontSize,
-    fontWeight: ChartStyleToken.ChartNoteFontWeight,
-    lineHeight: ChartStyleToken.ChartNoteLineHeight,
-    align: ChartStyleToken.ChartNoteAlign,
+    foreground: ChartThemeToken.ChartNoteForeground,
+    fontSize: ChartThemeToken.ChartNoteFontSize,
+    fontWeight: ChartThemeToken.ChartNoteFontWeight,
+    lineHeight: ChartThemeToken.ChartNoteLineHeight,
+    align: ChartThemeToken.ChartNoteAlign,
   },
   {
-    foreground: ChartStyleToken.ChartSourceForeground,
-    fontSize: ChartStyleToken.ChartSourceFontSize,
-    fontWeight: ChartStyleToken.ChartSourceFontWeight,
-    lineHeight: ChartStyleToken.ChartSourceLineHeight,
-    align: ChartStyleToken.ChartSourceAlign,
+    foreground: ChartThemeToken.ChartSourceForeground,
+    fontSize: ChartThemeToken.ChartSourceFontSize,
+    fontWeight: ChartThemeToken.ChartSourceFontWeight,
+    lineHeight: ChartThemeToken.ChartSourceLineHeight,
+    align: ChartThemeToken.ChartSourceAlign,
   },
   {
-    foreground: ChartStyleToken.ChartCreditForeground,
-    fontSize: ChartStyleToken.ChartCreditFontSize,
-    fontWeight: ChartStyleToken.ChartCreditFontWeight,
-    lineHeight: ChartStyleToken.ChartCreditLineHeight,
-    align: ChartStyleToken.ChartCreditAlign,
+    foreground: ChartThemeToken.ChartCreditForeground,
+    fontSize: ChartThemeToken.ChartCreditFontSize,
+    fontWeight: ChartThemeToken.ChartCreditFontWeight,
+    lineHeight: ChartThemeToken.ChartCreditLineHeight,
+    align: ChartThemeToken.ChartCreditAlign,
   },
 ];
 
 const presentationTokens = (
   style: ThemeStyleValue,
   paint: PresetPaint,
-): Partial<Record<ChartStyleTokenValue, unknown>> =>
+): Partial<Record<ChartThemeTokenValue, unknown>> =>
   Object.fromEntries(
     presentationTokenGroups.flatMap((tokens, index) => {
       const [size, weight, lineHeight] = typography[style][index];
@@ -194,18 +194,18 @@ const presentationTokens = (
     }),
   );
 
-const createPreset = (style: ThemeStyleValue, mode: ThemeModeValue): IRChartResolvedStyleTokens => {
+const createPreset = (style: ThemeStyleValue, mode: ThemeModeValue): IRChartResolvedThemeTokens => {
   const structure = structures[style];
   const paint = paints[style][mode];
-  return ChartResolvedStyleTokensSchema.parse({
-    [ChartStyleToken.ChartCanvasFill]: paint.canvas,
-    [ChartStyleToken.ChartPadding]: structure.padding,
-    [ChartStyleToken.ChartGap]: structure.gap,
-    [ChartStyleToken.ChartFontFamily]: structure.fontFamily,
+  return ChartResolvedThemeTokensSchema.parse({
+    [ChartThemeToken.ChartCanvasFill]: paint.canvas,
+    [ChartThemeToken.ChartPadding]: structure.padding,
+    [ChartThemeToken.ChartGap]: structure.gap,
+    [ChartThemeToken.ChartFontFamily]: structure.fontFamily,
     ...presentationTokens(style, paint),
-    [ChartStyleToken.ChartAxisEnabled]: true,
-    [ChartStyleToken.ChartAxisGridEnabled]: structure.gridEnabled,
-    [ChartStyleToken.ChartLegendEnabled]: true,
+    [ChartThemeToken.ChartAxisEnabled]: true,
+    [ChartThemeToken.ChartAxisGridEnabled]: structure.gridEnabled,
+    [ChartThemeToken.ChartLegendEnabled]: true,
   });
 };
 
@@ -214,8 +214,8 @@ const presets = Object.fromEntries(
     style,
     Object.fromEntries(Object.values(ThemeMode).map(mode => [mode, createPreset(style, mode)])),
   ]),
-) as Record<ThemeStyleValue, Record<ThemeModeValue, IRChartResolvedStyleTokens>>;
+) as Record<ThemeStyleValue, Record<ThemeModeValue, IRChartResolvedThemeTokens>>;
 
 /** 读取一个内建 Chart style/mode 的完整 token map */
-export const getChartStylePreset = (style: ThemeStyleValue, mode: ThemeModeValue): IRChartResolvedStyleTokens =>
+export const getChartThemePreset = (style: ThemeStyleValue, mode: ThemeModeValue): IRChartResolvedThemeTokens =>
   structuredClone(presets[style][mode]);

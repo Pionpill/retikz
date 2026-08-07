@@ -2,7 +2,7 @@ import { ThemeMode, ThemeStyle } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { resolveChartSpec } from '../../src/resolution';
-import { ChartStyleToken } from '../../src/style';
+import { ChartThemeToken } from '../../src/style';
 
 const base = {
   namespace: 'chart',
@@ -20,7 +20,7 @@ describe('Chart style resolution', () => {
     expect(result.inspection.style.chart).toMatchObject({
       style: 'neutral',
       mode: 'light',
-      tokens: { [ChartStyleToken.ChartCanvasFill]: '#FFFFFF' },
+      tokens: { [ChartThemeToken.ChartCanvasFill]: '#FFFFFF' },
     });
     expect(result.inspection.style.chart.tokenSources).toHaveLength(37);
     expect(result.inspection.style.plot).toMatchObject({ style: 'neutral', mode: 'light' });

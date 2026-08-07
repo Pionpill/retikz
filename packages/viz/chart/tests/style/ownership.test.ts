@@ -13,6 +13,8 @@ describe('Chart theme token ownership', () => {
   it('删除 spec-local style/themeMode 并只接受 Chart-owned style token', () => {
     expect(ChartSharedSchema.safeParse({ ...base, style: 'clean' }).success).toBe(false);
     expect(ChartSharedSchema.safeParse({ ...base, themeMode: 'dark' }).success).toBe(false);
+    expect(ChartSharedSchema.safeParse({ ...base, styleTokens: { 'chart.padding': 8 } }).success).toBe(false);
+    expect(ChartSharedSchema.safeParse({ ...base, theme: { palette: {} } }).success).toBe(false);
     expect(
       ChartSharedSchema.safeParse({
         ...base,
@@ -37,6 +39,9 @@ describe('Chart theme token ownership', () => {
     ).toBe(true);
     expect(
       ChartSharedSchema.safeParse({ ...base, plotThemeTokens: { 'data.palette.series': ['#2563eb'] } }).success,
+    ).toBe(false);
+    expect(
+      ChartSharedSchema.safeParse({ ...base, plotStyleTokens: { 'plot.palette.series': ['#2563eb'] } }).success,
     ).toBe(false);
   });
 

@@ -6,7 +6,7 @@ import { PlotThemeResolutionSchema } from '@retikz/plot';
 import { z as zod } from 'zod';
 
 import { ChartPresentationInspectionSchema } from '../presentation';
-import { ChartResolvedStyleTokensSchema, ChartStyleToken, ChartStyleTokenSource } from '../style';
+import { ChartResolvedThemeTokensSchema, ChartThemeToken, ChartThemeTokenSource } from '../style';
 
 /** Chart member 的 contribution 来源 */
 export const ChartContributionSource = {
@@ -63,10 +63,10 @@ export type ChartInspectionMemberInput = {
   sources: IRChartInspectionMember['sources'];
 };
 
-const ChartStyleTokenSourceSchema = zod
+const ChartThemeTokenSourceSchema = zod
   .strictObject({
-    token: zod.enum(ChartStyleToken).describe('Canonical Chart style token'),
-    kind: zod.enum(ChartStyleTokenSource).describe('Winning Chart token source layer'),
+    token: zod.enum(ChartThemeToken).describe('Canonical Chart style token'),
+    kind: zod.enum(ChartThemeTokenSource).describe('Winning Chart token source layer'),
     path: zod.string().min(1).describe('Stable source path for this resolved Chart token'),
   })
   .describe('Winning cascade source for one resolved Chart style token');
@@ -75,13 +75,13 @@ const ChartOwnedStyleInspectionSchema = zod
   .strictObject({
     style: zod.enum(ThemeStyle).describe('Effective Theme style selecting the Chart preset'),
     mode: zod.enum(ThemeMode).describe('Effective Theme mode selecting Chart paints'),
-    tokens: ChartResolvedStyleTokensSchema.describe('Complete resolved Chart-owned token map'),
+    tokens: ChartResolvedThemeTokensSchema.describe('Complete resolved Chart-owned token map'),
     tokenSources: zod
-      .array(ChartStyleTokenSourceSchema)
+      .array(ChartThemeTokenSourceSchema)
       .describe('One winning source for each Chart token in canonical order'),
   })
   .superRefine((style, context) => {
-    const canonical = Object.values(ChartStyleToken);
+    const canonical = Object.values(ChartThemeToken);
     if (
       style.tokenSources.length !== canonical.length ||
       style.tokenSources.some((source, index) => source.token !== canonical[index])

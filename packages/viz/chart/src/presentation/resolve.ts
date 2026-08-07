@@ -12,13 +12,13 @@ import {
   LayoutItemKind,
 } from '@retikz/standard';
 
-import type { IRChartResolvedStyleTokens } from '../style';
+import type { IRChartResolvedThemeTokens } from '../style';
 import type { ChartPresentationPresetValue } from './constants';
 import type { IRChartPresentationItemInspection } from './inspection';
 import type { ResolvedChartPresentation } from './resolved';
 import type { IRChartPresentation, IRChartPresentationStyledText, IRChartPresentationText } from './types';
 
-import { ChartStyleToken } from '../style';
+import { ChartThemeToken } from '../style';
 import {
   CHART_PRESENTATION_RESOLVED_PLOT_SOURCE_PATH,
   ChartPresentationDefaultItemKey,
@@ -32,86 +32,86 @@ import { ChartPresentationInspectionSchema } from './inspection';
 /** 单个 presentation preset 使用的五个 resolved token key */
 type PresentationPresetTokenKeys = {
   foreground:
-    | typeof ChartStyleToken.ChartTitleForeground
-    | typeof ChartStyleToken.ChartSubtitleForeground
-    | typeof ChartStyleToken.ChartCaptionForeground
-    | typeof ChartStyleToken.ChartNoteForeground
-    | typeof ChartStyleToken.ChartSourceForeground
-    | typeof ChartStyleToken.ChartCreditForeground;
+    | typeof ChartThemeToken.ChartTitleForeground
+    | typeof ChartThemeToken.ChartSubtitleForeground
+    | typeof ChartThemeToken.ChartCaptionForeground
+    | typeof ChartThemeToken.ChartNoteForeground
+    | typeof ChartThemeToken.ChartSourceForeground
+    | typeof ChartThemeToken.ChartCreditForeground;
   fontSize:
-    | typeof ChartStyleToken.ChartTitleFontSize
-    | typeof ChartStyleToken.ChartSubtitleFontSize
-    | typeof ChartStyleToken.ChartCaptionFontSize
-    | typeof ChartStyleToken.ChartNoteFontSize
-    | typeof ChartStyleToken.ChartSourceFontSize
-    | typeof ChartStyleToken.ChartCreditFontSize;
+    | typeof ChartThemeToken.ChartTitleFontSize
+    | typeof ChartThemeToken.ChartSubtitleFontSize
+    | typeof ChartThemeToken.ChartCaptionFontSize
+    | typeof ChartThemeToken.ChartNoteFontSize
+    | typeof ChartThemeToken.ChartSourceFontSize
+    | typeof ChartThemeToken.ChartCreditFontSize;
   fontWeight:
-    | typeof ChartStyleToken.ChartTitleFontWeight
-    | typeof ChartStyleToken.ChartSubtitleFontWeight
-    | typeof ChartStyleToken.ChartCaptionFontWeight
-    | typeof ChartStyleToken.ChartNoteFontWeight
-    | typeof ChartStyleToken.ChartSourceFontWeight
-    | typeof ChartStyleToken.ChartCreditFontWeight;
+    | typeof ChartThemeToken.ChartTitleFontWeight
+    | typeof ChartThemeToken.ChartSubtitleFontWeight
+    | typeof ChartThemeToken.ChartCaptionFontWeight
+    | typeof ChartThemeToken.ChartNoteFontWeight
+    | typeof ChartThemeToken.ChartSourceFontWeight
+    | typeof ChartThemeToken.ChartCreditFontWeight;
   lineHeight:
-    | typeof ChartStyleToken.ChartTitleLineHeight
-    | typeof ChartStyleToken.ChartSubtitleLineHeight
-    | typeof ChartStyleToken.ChartCaptionLineHeight
-    | typeof ChartStyleToken.ChartNoteLineHeight
-    | typeof ChartStyleToken.ChartSourceLineHeight
-    | typeof ChartStyleToken.ChartCreditLineHeight;
+    | typeof ChartThemeToken.ChartTitleLineHeight
+    | typeof ChartThemeToken.ChartSubtitleLineHeight
+    | typeof ChartThemeToken.ChartCaptionLineHeight
+    | typeof ChartThemeToken.ChartNoteLineHeight
+    | typeof ChartThemeToken.ChartSourceLineHeight
+    | typeof ChartThemeToken.ChartCreditLineHeight;
   align:
-    | typeof ChartStyleToken.ChartTitleAlign
-    | typeof ChartStyleToken.ChartSubtitleAlign
-    | typeof ChartStyleToken.ChartCaptionAlign
-    | typeof ChartStyleToken.ChartNoteAlign
-    | typeof ChartStyleToken.ChartSourceAlign
-    | typeof ChartStyleToken.ChartCreditAlign;
+    | typeof ChartThemeToken.ChartTitleAlign
+    | typeof ChartThemeToken.ChartSubtitleAlign
+    | typeof ChartThemeToken.ChartCaptionAlign
+    | typeof ChartThemeToken.ChartNoteAlign
+    | typeof ChartThemeToken.ChartSourceAlign
+    | typeof ChartThemeToken.ChartCreditAlign;
 };
 
 /** 六个文本 preset 与 Chart style token 的固定映射 */
 const PRESENTATION_PRESET_TOKEN_KEYS: Readonly<Record<ChartPresentationPresetValue, PresentationPresetTokenKeys>> =
   Object.freeze({
     [ChartPresentationPreset.Title]: {
-      foreground: ChartStyleToken.ChartTitleForeground,
-      fontSize: ChartStyleToken.ChartTitleFontSize,
-      fontWeight: ChartStyleToken.ChartTitleFontWeight,
-      lineHeight: ChartStyleToken.ChartTitleLineHeight,
-      align: ChartStyleToken.ChartTitleAlign,
+      foreground: ChartThemeToken.ChartTitleForeground,
+      fontSize: ChartThemeToken.ChartTitleFontSize,
+      fontWeight: ChartThemeToken.ChartTitleFontWeight,
+      lineHeight: ChartThemeToken.ChartTitleLineHeight,
+      align: ChartThemeToken.ChartTitleAlign,
     },
     [ChartPresentationPreset.Subtitle]: {
-      foreground: ChartStyleToken.ChartSubtitleForeground,
-      fontSize: ChartStyleToken.ChartSubtitleFontSize,
-      fontWeight: ChartStyleToken.ChartSubtitleFontWeight,
-      lineHeight: ChartStyleToken.ChartSubtitleLineHeight,
-      align: ChartStyleToken.ChartSubtitleAlign,
+      foreground: ChartThemeToken.ChartSubtitleForeground,
+      fontSize: ChartThemeToken.ChartSubtitleFontSize,
+      fontWeight: ChartThemeToken.ChartSubtitleFontWeight,
+      lineHeight: ChartThemeToken.ChartSubtitleLineHeight,
+      align: ChartThemeToken.ChartSubtitleAlign,
     },
     [ChartPresentationPreset.Caption]: {
-      foreground: ChartStyleToken.ChartCaptionForeground,
-      fontSize: ChartStyleToken.ChartCaptionFontSize,
-      fontWeight: ChartStyleToken.ChartCaptionFontWeight,
-      lineHeight: ChartStyleToken.ChartCaptionLineHeight,
-      align: ChartStyleToken.ChartCaptionAlign,
+      foreground: ChartThemeToken.ChartCaptionForeground,
+      fontSize: ChartThemeToken.ChartCaptionFontSize,
+      fontWeight: ChartThemeToken.ChartCaptionFontWeight,
+      lineHeight: ChartThemeToken.ChartCaptionLineHeight,
+      align: ChartThemeToken.ChartCaptionAlign,
     },
     [ChartPresentationPreset.Note]: {
-      foreground: ChartStyleToken.ChartNoteForeground,
-      fontSize: ChartStyleToken.ChartNoteFontSize,
-      fontWeight: ChartStyleToken.ChartNoteFontWeight,
-      lineHeight: ChartStyleToken.ChartNoteLineHeight,
-      align: ChartStyleToken.ChartNoteAlign,
+      foreground: ChartThemeToken.ChartNoteForeground,
+      fontSize: ChartThemeToken.ChartNoteFontSize,
+      fontWeight: ChartThemeToken.ChartNoteFontWeight,
+      lineHeight: ChartThemeToken.ChartNoteLineHeight,
+      align: ChartThemeToken.ChartNoteAlign,
     },
     [ChartPresentationPreset.Source]: {
-      foreground: ChartStyleToken.ChartSourceForeground,
-      fontSize: ChartStyleToken.ChartSourceFontSize,
-      fontWeight: ChartStyleToken.ChartSourceFontWeight,
-      lineHeight: ChartStyleToken.ChartSourceLineHeight,
-      align: ChartStyleToken.ChartSourceAlign,
+      foreground: ChartThemeToken.ChartSourceForeground,
+      fontSize: ChartThemeToken.ChartSourceFontSize,
+      fontWeight: ChartThemeToken.ChartSourceFontWeight,
+      lineHeight: ChartThemeToken.ChartSourceLineHeight,
+      align: ChartThemeToken.ChartSourceAlign,
     },
     [ChartPresentationPreset.Credit]: {
-      foreground: ChartStyleToken.ChartCreditForeground,
-      fontSize: ChartStyleToken.ChartCreditFontSize,
-      fontWeight: ChartStyleToken.ChartCreditFontWeight,
-      lineHeight: ChartStyleToken.ChartCreditLineHeight,
-      align: ChartStyleToken.ChartCreditAlign,
+      foreground: ChartThemeToken.ChartCreditForeground,
+      fontSize: ChartThemeToken.ChartCreditFontSize,
+      fontWeight: ChartThemeToken.ChartCreditFontWeight,
+      lineHeight: ChartThemeToken.ChartCreditLineHeight,
+      align: ChartThemeToken.ChartCreditAlign,
     },
   });
 
@@ -123,7 +123,7 @@ const isStyledText = (text: IRChartPresentationText): text is IRChartPresentatio
 const createPresentationTextNode = (
   preset: ChartPresentationPresetValue,
   value: IRChartPresentationText,
-  tokens: IRChartResolvedStyleTokens,
+  tokens: IRChartResolvedThemeTokens,
 ): IRChild => {
   const authored = isStyledText(value) ? value : undefined;
   const tokenKeys = PRESENTATION_PRESET_TOKEN_KEYS[preset];
@@ -138,7 +138,7 @@ const createPresentationTextNode = (
     text: authored?.text ?? value,
     textColor: authored?.textColor ?? tokens[tokenKeys.foreground],
     font: {
-      family: tokens[ChartStyleToken.ChartFontFamily],
+      family: tokens[ChartThemeToken.ChartFontFamily],
       size: tokens[tokenKeys.fontSize],
       weight: tokens[tokenKeys.fontWeight],
       ...authored?.font,
@@ -170,7 +170,7 @@ const resolvePresentationItem = (
   item: IRChartPresentation['children'][number],
   index: number,
   plotSpec: IRPlotSpec,
-  tokens: IRChartResolvedStyleTokens,
+  tokens: IRChartResolvedThemeTokens,
 ): { flexItem: FlexLayoutItemInput; inspection: IRChartPresentationItemInspection } => {
   const { content } = item;
   const flex = presentationFlexFieldsOf(item);
@@ -209,9 +209,9 @@ const resolvePresentationItem = (
 export const resolveChartPresentation = (
   presentation: IRChartPresentation | undefined,
   plotSpec: IRPlotSpec,
-  tokens: IRChartResolvedStyleTokens,
+  tokens: IRChartResolvedThemeTokens,
 ): ResolvedChartPresentation => {
-  const surfacePadding = LayoutContainerBoxSchema.shape.padding.parse(tokens[ChartStyleToken.ChartPadding]);
+  const surfacePadding = LayoutContainerBoxSchema.shape.padding.parse(tokens[ChartThemeToken.ChartPadding]);
   if (presentation === undefined) {
     return {
       content: plotSpec,
@@ -233,7 +233,7 @@ export const resolveChartPresentation = (
   const content = createFlexLayout({
     direction: FlexLayoutDirection.Column,
     wrap: FlexLayoutWrap.NoWrap,
-    gap: { column: 0, row: tokens[ChartStyleToken.ChartGap] },
+    gap: { column: 0, row: tokens[ChartThemeToken.ChartGap] },
     justifyContent: LayoutDistribution.Start,
     alignContent: LayoutDistribution.Start,
     ...presentation.layout,

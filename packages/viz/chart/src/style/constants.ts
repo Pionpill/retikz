@@ -1,7 +1,7 @@
 import type { ValueOf } from '@retikz/core';
 
 /** Chart presentation 与 recipe 默认值的 canonical token key */
-export const ChartStyleToken = {
+export const ChartThemeToken = {
   ChartCanvasFill: 'chart.canvas.fill',
   ChartPadding: 'chart.padding',
   ChartGap: 'chart.gap',
@@ -42,12 +42,14 @@ export const ChartStyleToken = {
 } as const;
 
 /** Chart style token 的最终来源层 */
-export const ChartStyleTokenSource = {
+export const ChartThemeTokenSource = {
   /** effective Theme 选择的内建 preset */
   Preset: 'preset',
-  /** 用户稀疏 Chart token 覆盖 */
-  StyleToken: 'style-token',
+  /** Core effective Theme 继承的 Chart token */
+  Inherited: 'inherited',
+  /** 当前 Chart 输入的稀疏 token 覆盖 */
+  Local: 'local',
 } as const;
 
 /** Chart style token 最终来源层取值 */
-export type ChartStyleTokenSourceValue = ValueOf<typeof ChartStyleTokenSource>;
+export type ChartThemeTokenSourceValue = ValueOf<typeof ChartThemeTokenSource>;

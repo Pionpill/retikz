@@ -1,24 +1,24 @@
 import type { ValueOf } from '@retikz/core';
 import type { z } from 'zod';
 
-import type { ChartStyleToken, ChartStyleTokenSourceValue } from './constants';
-import type { ChartResolvedStyleTokensSchema, ChartStyleSurfaceSchema, ChartStyleTokenOverridesSchema } from './schema';
+import type { ChartThemeToken, ChartThemeTokenSourceValue } from './constants';
+import type { ChartResolvedThemeTokensSchema, ChartThemeSurfaceSchema, ChartThemeTokenOverridesSchema } from './schema';
 
 /** Chart 样式 token canonical key */
-export type ChartStyleTokenValue = ValueOf<typeof ChartStyleToken>;
+export type ChartThemeTokenValue = ValueOf<typeof ChartThemeToken>;
 
 /** 用户可稀疏覆盖的 Chart token */
-export type IRChartStyleTokenOverrides = z.infer<typeof ChartStyleTokenOverridesSchema>;
+export type IRChartThemeTokenOverrides = z.infer<typeof ChartThemeTokenOverridesSchema>;
 
 /** preset 与用户覆盖解析后的完整 Chart token */
-export type IRChartResolvedStyleTokens = z.infer<typeof ChartResolvedStyleTokensSchema>;
+export type IRChartResolvedThemeTokens = z.infer<typeof ChartResolvedThemeTokensSchema>;
 
 /** Chart 与转发 Plot 的共享主题输入 */
-export type IRChartStyleSurface = z.infer<typeof ChartStyleSurfaceSchema>;
+export type IRChartThemeSurface = z.infer<typeof ChartThemeSurfaceSchema>;
 
 /** 一个 Chart token 的稳定来源记录 */
-export type ChartStyleTokenSourceRecord = {
-  token: ChartStyleTokenValue;
-  kind: ChartStyleTokenSourceValue;
+export type ChartThemeTokenSourceRecord = {
+  token: ChartThemeTokenValue;
+  kind: ChartThemeTokenSourceValue;
   path: string;
 };

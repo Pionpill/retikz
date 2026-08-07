@@ -46,16 +46,18 @@ export {
 export type { IRChartShared } from './schemas';
 export { ChartSharedSchema } from './schemas';
 export type {
-  ChartStyleTokenSourceValue,
-  ChartStyleTokenValue,
-  IRChartResolvedStyleTokens,
-  IRChartStyleSurface,
-  IRChartStyleTokenOverrides,
+  ChartThemeTokenSourceValue,
+  ChartThemeTokenValue,
+  IRChartResolvedThemeTokens,
+  IRChartThemeSurface,
+  IRChartThemeTokenOverrides,
 } from './style';
 export {
-  ChartResolvedStyleTokensSchema,
-  ChartStyleSurfaceSchema,
-  ChartStyleToken,
-  ChartStyleTokenOverridesSchema,
-  ChartStyleTokenSource,
+  ChartResolvedThemeTokensSchema,
+  ChartThemeSurfaceSchema,
+  ChartThemeToken,
+  ChartThemeTokenDefinition,
+  ChartThemeTokenOverridesSchema,
+  ChartThemeTokenSource,
+  defineChartThemeTokens,
 } from './style';

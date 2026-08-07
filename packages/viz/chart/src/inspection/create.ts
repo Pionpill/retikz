@@ -4,7 +4,7 @@ import { JsonObjectSchema } from '@retikz/core';
 
 import type { InternalChartSpecBound } from '../families/shared';
 import type { IRChartPresentationInspection } from '../presentation';
-import type { ResolvedChartStyleContext } from '../style';
+import type { ResolvedChartThemeContext } from '../style';
 import type { ChartInspectionMemberInput, IRChartInspection } from './schema';
 
 import { ChartInspectionMemberKind, ChartInspectionSchema } from './schema';
@@ -35,7 +35,7 @@ export const createChartInspection = (
   spec: InternalChartSpecBound,
   plotSpec: IRPlotSpec,
   members: ReadonlyArray<ChartInspectionMemberInput>,
-  style: ResolvedChartStyleContext,
+  style: ResolvedChartThemeContext,
   plotStyle: IRPlotThemeResolution,
   presentation: IRChartPresentationInspection,
 ): IRChartInspection => {

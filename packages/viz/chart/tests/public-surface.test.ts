@@ -19,8 +19,8 @@ import type {
   ChartPresentationItemContentKindValue,
   ChartPresentationPresetValue,
   ChartPresentationResolvedContentKindValue,
-  ChartStyleTokenSourceValue,
-  ChartStyleTokenValue,
+  ChartThemeTokenSourceValue,
+  ChartThemeTokenValue,
   IRChartInspection,
   IRChartInspectionMember,
   IRChartPresentation,
@@ -38,10 +38,10 @@ import type {
   IRChartPresentationStyledText,
   IRChartPresentationText,
   IRChartPresentationTextBlock,
-  IRChartResolvedStyleTokens,
+  IRChartResolvedThemeTokens,
   IRChartShared,
-  IRChartStyleSurface,
-  IRChartStyleTokenOverrides,
+  IRChartThemeSurface,
+  IRChartThemeTokenOverrides,
 } from '../src';
 
 import * as chart from '../src';
@@ -53,6 +53,7 @@ describe('@retikz/chart package root', () => {
     expectTypeOf<InternalChartSpecBound>();
     expectTypeOf<ChartStyleValue>();
     expectTypeOf<ChartThemeModeValue>();
+    expectTypeOf<typeof chart.ChartThemeTokenDefinition>();
   });
 
   it('只暴露 shared、presentation、inspection 与 theme 数据契约', () => {
@@ -80,14 +81,16 @@ describe('@retikz/chart package root', () => {
       'ChartPresentationStyledTextSchema',
       'ChartPresentationTextBlockSchema',
       'ChartPresentationTextSchema',
-      'ChartResolvedStyleTokensSchema',
+      'ChartResolvedThemeTokensSchema',
       'ChartSharedSchema',
-      'ChartStyleSurfaceSchema',
-      'ChartStyleToken',
-      'ChartStyleTokenOverridesSchema',
-      'ChartStyleTokenSource',
+      'ChartThemeSurfaceSchema',
+      'ChartThemeToken',
+      'ChartThemeTokenDefinition',
+      'ChartThemeTokenOverridesSchema',
+      'ChartThemeTokenSource',
+      'defineChartThemeTokens',
     ]);
-    expect(chart.ChartStyleTokenSource).toEqual({ Preset: 'preset', StyleToken: 'style-token' });
+    expect(chart.ChartThemeTokenSource).toEqual({ Preset: 'preset', Inherited: 'inherited', Local: 'local' });
     expect(chart).not.toHaveProperty('ChartStyle');
     expect(chart).not.toHaveProperty('ChartThemeMode');
     expect(ThemeStyle).toEqual({ Neutral: 'neutral', Academic: 'academic', Vibrant: 'vibrant', Clean: 'clean' });
@@ -99,10 +102,10 @@ describe('@retikz/chart package root', () => {
   it('公开 schema 派生 presentation union 而不公开 resolver 或 recipe', () => {
     const style: ThemeStyleValue = ThemeStyle.Neutral;
     const mode: ThemeModeValue = ThemeMode.Dark;
-    const token: ChartStyleTokenValue = 'chart.axis.enabled';
-    const tokenSource: ChartStyleTokenSourceValue = 'style-token';
-    const overrides: IRChartStyleTokenOverrides = { [token]: false };
-    const surface: IRChartStyleSurface = {
+    const token: ChartThemeTokenValue = 'chart.axis.enabled';
+    const tokenSource: ChartThemeTokenSourceValue = 'local';
+    const overrides: IRChartThemeTokenOverrides = { [token]: false };
+    const surface: IRChartThemeSurface = {
       chartThemeTokens: overrides,
       plotThemeTokens: { 'plot.palette.series': ['#2563eb'] },
     };
@@ -148,7 +151,7 @@ describe('@retikz/chart package root', () => {
       value: { type: 'point' },
       sources: [{ kind: source, path: '$recipe/scatter/mark.main' }],
     };
-    expectTypeOf<IRChartResolvedStyleTokens>().toMatchTypeOf<IRChartInspection['style']['chart']['tokens']>();
+    expectTypeOf<IRChartResolvedThemeTokens>().toMatchTypeOf<IRChartInspection['style']['chart']['tokens']>();
     expectTypeOf<IRChartInspectionMember>().toMatchTypeOf<typeof member>();
 
     expect({

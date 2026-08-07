@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ChartInspectionSchema } from '../../src/inspection';
 import { ChartSharedSchema } from '../../src/schemas/common';
-import { ChartStyleToken, getChartStylePreset } from '../../src/style';
+import { ChartThemeToken, getChartThemePreset } from '../../src/style';
 
 describe('Chart shared schemas', () => {
   it('复用 Data 与 Plot 字段契约', () => {
@@ -98,13 +98,13 @@ describe('Chart shared schemas', () => {
   });
 
   it('校验 inspection 的公开 JSON 结构', () => {
-    const tokens = getChartStylePreset('neutral', 'light');
+    const tokens = getChartThemePreset('neutral', 'light');
     const style = {
       chart: {
         style: 'neutral',
         mode: 'light',
         tokens,
-        tokenSources: Object.values(ChartStyleToken).map(token => ({
+        tokenSources: Object.values(ChartThemeToken).map(token => ({
           token,
           kind: 'preset',
           path: `$preset/neutral/light/${token}`,
