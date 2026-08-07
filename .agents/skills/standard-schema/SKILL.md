@@ -12,6 +12,7 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 - IR 必须 100% JSON 可序列化，不接收函数、ReactNode、class 实例或 renderer 专属对象。
 - 公开 IR 数据类型用 `z.infer<typeof XxxSchema>` 派生，不手写平行 interface。
 - schema 负责输入契约和跨字段语义校验；provider / compile / lowering 负责查 registry、运行时能力、emit 和 renderer 策略。
+- JSON、持久化配置等外部数据在 schema / parser 入口完成一次解析和归一化，后续层只消费明确的 `z.infer` 类型；不要在内部重复做类型判断、携带 `unknown` 或为 TypeScript 已经排除的类型错误增加 `throw`
 - 闭合对象 schema 优先用 `z.strictObject({...})`；不要新增 `z.object({...}).strict()`，除非已有链式组合无法直接表达。
 - 字段级约束写在字段 schema 上；跨字段、跨 kind 规则放最终 schema 的 `.superRefine(...)`。
 - schema 改动影响公开 IR / DSL / docs demo 时，同步 docs、schema registry、测试和示例。
