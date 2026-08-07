@@ -36,7 +36,7 @@ export type CoreRootNodeStyleCandidate<TComposites extends ReadonlyArray<AnyComp
 
 /** 读取只含一个根 Node 的稳定 id */
 const stableRootNodeId = (child: IRScene['children'][number]): string | undefined =>
-  !('namespace' in child) && child.type === 'node' && typeof child.id === 'string' && child.id.length > 0
+  !('namespace' in child) && child.type === 'node' && child.id !== undefined && child.id.length > 0
     ? child.id
     : undefined;
 

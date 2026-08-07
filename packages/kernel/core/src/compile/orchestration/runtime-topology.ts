@@ -18,7 +18,7 @@ const childKind = (child: IRChild): string =>
 /** 读取 Kernel child 的可选公开 id，Composite payload 不提升为稳定 identity */
 const stableIdOf = (child: IRChild): string | undefined => {
   if ('namespace' in child || !('id' in child)) return undefined;
-  return typeof child.id === 'string' && child.id.length > 0 ? child.id : undefined;
+  return child.id !== undefined && child.id.length > 0 ? child.id : undefined;
 };
 
 /** 为每个 Scene primitive occurrence 创建独立对象，避免 provider 复用引用混淆 topology */
@@ -51,7 +51,7 @@ export const createRuntimeTopologyTracker = (revision: RuntimeRevision): Runtime
   const namespaceFrames: Array<Map<string, Array<RuntimeSemanticOwner>>> = [new Map()];
 
   const createOwnerHandle = (state: RuntimeOwnerState): RuntimeSemanticOwner => {
-    const owner = Object.freeze({}) as RuntimeSemanticOwner;
+    const owner = {} as RuntimeSemanticOwner;
     ownerStates.set(owner, state);
     return owner;
   };
@@ -116,7 +116,7 @@ export const createRuntimeTopologyTracker = (revision: RuntimeRevision): Runtime
     parent: RuntimeSemanticOwner,
     generated: boolean,
   ): ReadonlyArray<RuntimeSemanticOwner> =>
-    Object.freeze(children.map((child, index) => createChildOwner(child, index, parent, generated)));
+    children.map((child, index) => createChildOwner(child, index, parent, generated));
 
   const recordPrimitives = (
     primitives: ReadonlyArray<ScenePrimitive>,
@@ -137,7 +137,7 @@ export const createRuntimeTopologyTracker = (revision: RuntimeRevision): Runtime
     primitives.forEach(visit);
   };
 
-  return Object.freeze({
+  return {
     root: rootOwner,
     revision,
     createChildOwners,
@@ -150,16 +150,15 @@ export const createRuntimeTopologyTracker = (revision: RuntimeRevision): Runtime
       }
       namespaceFrames.pop();
     },
-    rootIdentityRegistrations: () =>
-      Object.freeze([...namespaceFrames[0]].flatMap(([id, occurrences]) => occurrences.map(() => id))),
+    rootIdentityRegistrations: () => [...namespaceFrames[0]].flatMap(([id, occurrences]) => occurrences.map(() => id)),
     materializePrimitives: primitives => primitives.map(clonePrimitiveOccurrence),
     recordPrimitives,
-    metadata: Object.freeze({
+    metadata: {
       get: (primitive: ScenePrimitive): RuntimePrimitiveMetadata | undefined => {
         const emission = primitiveEmissions.get(primitive);
         if (emission === undefined) return undefined;
         const semanticOwner = identityOf(emission.owner);
-        return Object.freeze({
+        return {
           identity: createRuntimeIdentity(CORE_OWNER_KEY, [
             ...semanticOwner.path,
             'emission',
@@ -167,8 +166,8 @@ export const createRuntimeTopologyTracker = (revision: RuntimeRevision): Runtime
             String(emission.ordinal),
           ]),
           semanticOwner,
-        });
+        };
       },
-    }),
-  });
+    },
+  };
 };

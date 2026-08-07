@@ -228,11 +228,12 @@ const normalizeLabel = (l: WayLabel): IRStepLabel => {
 /** sugar `{position,type}` → IR `{relative}|{relativeAccumulate}`；其它形态原样返回 */
 const desugarRelativeItem = (item: WayItem): WayItem => {
   if (!isWayRelativeItem(item)) return item;
-  const candidate = item as WayRelativeInput;
-  if (candidate.type === DrawWay.Accumulate) {
+  const candidate = item;
+  const type: unknown = candidate.type;
+  if (type === DrawWay.Accumulate) {
     return { relativeAccumulate: candidate.position };
   }
-  if (candidate.type === DrawWay.Relative) {
+  if (type === DrawWay.Relative) {
     return { relative: candidate.position };
   }
   throw new Error(`parseWay: WayRelativeItem.type must be DrawWay.Relative or DrawWay.Accumulate`);

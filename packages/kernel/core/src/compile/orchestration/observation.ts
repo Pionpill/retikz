@@ -56,11 +56,11 @@ export const createCompileObservationRuntime = (
     if (!isCompileObserverSession(session)) {
       throw new Error(`observeCompileToScene: observer '${normalized.key}' created an invalid session.`);
     }
-    return Object.freeze({ definition: normalized, session });
+    return { definition: normalized, session };
   });
   const byKey = new Map(entries.map(entry => [entry.definition.key, entry] as const));
 
-  return Object.freeze({
+  return {
     hasObservers: entries.length > 0,
     select: (site: CompileObservationSite): ReadonlyArray<string> => {
       const selected: Array<string> = [];
@@ -71,7 +71,7 @@ export const createCompileObservationRuntime = (
         }
         if (value) selected.push(entry.definition.key);
       }
-      return Object.freeze(selected);
+      return selected;
     },
     dispatch: (
       observation: CompileObservation,
@@ -93,7 +93,7 @@ export const createCompileObservationRuntime = (
           }),
         ),
       ),
-  });
+  };
 };
 
 /** observer output 只做 compile 生命周期内的递归冻结，不复制用户定义的 canonical value */

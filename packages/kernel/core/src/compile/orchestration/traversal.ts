@@ -245,10 +245,10 @@ export const compileChildrenToPrimitives = (
         (point, index): IRPosition =>
           snapshotProviderPosition(`Path kind '${kind}' bounds point at index ${index}`, point),
       );
-      return Object.freeze({
-        result: Object.freeze({ primitives, boundsPoints }),
+      return {
+        result: { primitives, boundsPoints },
         source: result,
-      });
+      };
     });
 
   /** 为一个 owner site 创建按需产物 publisher，并记录被选中的 observer keys */
@@ -264,7 +264,7 @@ export const compileChildrenToPrimitives = (
   }> => {
     const keys =
       definition === undefined || runtime.context.observation === undefined
-        ? Object.freeze([])
+        ? []
         : runtime.context.observation.select(Object.freeze({ owner, sourcePath }));
     let hasPublished = false;
     let published: JsonValue | undefined;
@@ -292,7 +292,7 @@ export const compileChildrenToPrimitives = (
         hasPublished = true;
       },
     });
-    return Object.freeze({ keys, publisher, hasPublished: () => hasPublished, value: () => published });
+    return { keys, publisher, hasPublished: () => hasPublished, value: () => published };
   };
 
   /** 按 path.kind 查找 path kind provider，并提供内置 stroke / ribbon emit 回调 */
@@ -1394,7 +1394,7 @@ export const compileChildrenToPrimitives = (
     for (const output of outputs) if (isCompositeOutputHandle(output)) visitHandle(output);
     entriesToConsume.forEach(entry => (entry.used = true));
     transactionsToConsume.forEach(transaction => (transaction.used = true));
-    return Object.freeze({ outputs: preparedOutputs, replays: preparedReplays });
+    return { outputs: preparedOutputs, replays: preparedReplays };
   };
 
   /** 把 runtime Scope props 投影到普通 Scope orchestration 接受的结构 child */
@@ -1565,13 +1565,13 @@ export const compileChildrenToPrimitives = (
     });
     const observerKeys =
       callable.artifactSchema === undefined || runtime.context.observation === undefined
-        ? Object.freeze([])
+        ? []
         : runtime.context.observation.select(
             Object.freeze({ owner: observationOwner, sourcePath: occurrence.sourcePath }),
           );
-    const owner: CompositeCompileOwner = Object.freeze({
+    const owner: CompositeCompileOwner = {
       label: `Composite '${key}' at ${formatCompileOccurrence(occurrence)}`,
-    });
+    };
     let callbackResult: unknown;
     let layoutProbeIndex = 0;
 
@@ -1679,7 +1679,7 @@ export const compileChildrenToPrimitives = (
         themeFingerprint: replayThemeFingerprint(probeTheme),
         ...(scopeChainApplied ? { scopeChainApplied: true } : {}),
       };
-      return Object.freeze({ layoutResult, transaction });
+      return { layoutResult, transaction };
     };
 
     try {
@@ -1710,10 +1710,7 @@ export const compileChildrenToPrimitives = (
               probeLayoutChild(clonedChild, clonedProposal, probeOccurrence, scopeChain, styleStack, theme, true)
                 .transaction;
             runtime.context.session.replayTransactions.set(layoutResult.replay, transaction);
-            runtime.context.session.layoutResults.set(
-              layoutResult,
-              Object.freeze({ owner, replay: layoutResult.replay }),
-            );
+            runtime.context.session.layoutResults.set(layoutResult, { owner, replay: layoutResult.replay });
             return Object.freeze({ kind: LayoutChildProbeKind.Resolved, result: layoutResult });
           } catch (thrown) {
             if (isFatalProbeError(thrown)) throw thrown;
@@ -1765,12 +1762,10 @@ export const compileChildrenToPrimitives = (
           `${owner.label} returned an invalid compile result; children must be an array.`,
         );
       }
-      const children = Object.freeze(
-        Array.from(resultChildren, (output, outputIndex): IRChild | CompositeCompileChild => {
-          if (isCompositeOutputHandle(output)) return output;
-          return snapshotCompositeOutputChild(owner.label, output, outputIndex);
-        }),
-      );
+      const children = Array.from(resultChildren, (output, outputIndex): IRChild | CompositeCompileChild => {
+        if (isCompositeOutputHandle(output)) return output;
+        return snapshotCompositeOutputChild(owner.label, output, outputIndex);
+      });
       const explicitAllocation =
         resultAllocationBounds === undefined
           ? undefined
@@ -1806,7 +1801,7 @@ export const compileChildrenToPrimitives = (
           value: frozenArtifact,
         });
       }
-      return Object.freeze({ children, explicitAllocation, explicitAlignmentGuides, compositeArtifact });
+      return { children, explicitAllocation, explicitAlignmentGuides, compositeArtifact };
     });
     const { children, explicitAllocation, explicitAlignmentGuides, compositeArtifact } = validatedResult;
     if (observerKeys.length > 0) {
@@ -1829,7 +1824,7 @@ export const compileChildrenToPrimitives = (
     const outputFrame: TraversalFrame = {
       ...frame,
       alignmentGuideSink: [],
-      ...(explicitAllocation === undefined ? {} : { allocationBoundary: Object.freeze({}) }),
+      ...(explicitAllocation === undefined ? {} : { allocationBoundary: {} }),
     };
     const preparedOutputs = preflightCompositeOutputs(children, owner);
     if (compositeArtifact !== undefined) frame.artifactSink.push(compositeArtifact);

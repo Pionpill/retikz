@@ -71,7 +71,7 @@ export const defineComposite = <
   if (hasExpand === hasCompile) {
     throw new Error('defineComposite: exactly one of expand or compile must be provided.');
   }
-  const runtimeArtifactSchema = (definition as { artifactSchema?: unknown }).artifactSchema;
+  const runtimeArtifactSchema = definition.artifactSchema;
   if (hasExpand && runtimeArtifactSchema !== undefined) {
     throw new Error('defineComposite: artifactSchema is only valid for the compile branch.');
   }

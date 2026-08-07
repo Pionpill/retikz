@@ -26,7 +26,7 @@ export const compileObservedFragment = (
   context: CompileContext,
 ): CompiledSceneFragment => {
   const values = Array.isArray(children) ? children : [children];
-  const warnings = [] as Array<Parameters<CompileContext['onWarn']>[0]>;
+  const warnings: Array<Parameters<CompileContext['onWarn']>[0]> = [];
   const paint = createPaintRegistry(context.patterns, context.round);
   const clip = createClipRegistry(context.round, context.clips);
   const sandbox: CompileContext = {
